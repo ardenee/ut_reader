@@ -36,10 +36,20 @@ final class PdoBackgroundJobDisplayCountQuery
             'partial_archive' => 0,
         ];
 
-        $operatorStatusSql = BackgroundJobDisplaySql::operatorStatus('j');
-        $sql = 'SELECT ' . $operatorStatusSql . ' AS operator_status,j.status,j.display_status,j.job_type,COUNT(*) AS total FROM ' . $fromSql
+        /*
+         * Do not GROUP BY BackgroundJobDisplaySql::operatorStatus(). That expression
+         * contains an EXISTS(child) lookup, so grouping a large operator ledger can
+         * make MySQL evaluate a correlated child query for every visible job while
+         * also building a temporary aggregate. This previously allowed one browser
+         * poll to run for thousands of seconds.
+         *
+         * First aggregate only persisted/indexed status columns. Then perform one
+         * separate indexed count for the only synthetic state we need: a queued
+         * top-level workflow with a currently-running child is shown as Running.
+         */
+        $sql = 'SELECT j.status,j.display_status,j.job_type,COUNT(*) AS total FROM ' . $fromSql
             . ($whereSql !== '' ? ' WHERE ' . $whereSql : '')
-            . ' GROUP BY operator_status,j.status,j.display_status,j.job_type';
+            . ' GROUP BY j.status,j.display_status,j.job_type';
         $statement = $this->db->prepare($sql);
         $statement->execute($params);
         foreach ($statement->fetchAll(PDO::FETCH_ASSOC) ?: [] as $row) {
@@ -54,14 +64,36 @@ final class PdoBackgroundJobDisplayCountQuery
                 $counts['partial_archive'] += $amount;
             }
 
-            $operatorStatus = strtolower(trim((string)($row['operator_status'] ?? $queueStatus)));
-            $group = $operatorStatus !== $queueStatus
-                ? $operatorStatus
-                : CatalogJobDisplayStatus::groupDisplayStatus($queueStatus, $displayStatus);
+            $group = CatalogJobDisplayStatus::groupDisplayStatus($queueStatus, $displayStatus);
             if (array_key_exists($group, $counts)) {
                 $counts[$group] += $amount;
             }
         }
+
+        if ($counts['queued'] > 0) {
+            $promotionWhere = [];
+            if ($whereSql !== '') {
+                $promotionWhere[] = '(' . $whereSql . ')';
+            }
+            $promotionWhere[] = 'j.parent_job_id IS NULL';
+            $promotionWhere[] = 'j.status="queued"';
+            $promotionWhere[] = 'EXISTS('
+                . 'SELECT 1 FROM ue_background_jobs running_child '
+                . 'WHERE running_child.parent_job_id=j.id '
+                . 'AND running_child.status="running" LIMIT 1'
+                . ')';
+
+            $promotion = $this->db->prepare(
+                'SELECT COUNT(*) FROM ' . $fromSql . ' WHERE ' . implode(' AND ', $promotionWhere)
+            );
+            $promotion->execute($params);
+            $promoted = max(0, min($counts['queued'], (int)$promotion->fetchColumn()));
+            if ($promoted > 0) {
+                $counts['queued'] -= $promoted;
+                $counts['running'] += $promoted;
+            }
+        }
+
         return $counts;
     }
 }
