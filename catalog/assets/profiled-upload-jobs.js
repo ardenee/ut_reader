@@ -22,6 +22,7 @@
     const chunkCsrf = progress.dataset.chunkCsrf || '';
     const hashWorkerUrl = progress.dataset.hashWorkerUrl || 'assets/profiled-upload-hash-worker.js';
     const configuredChunkBytes = Math.max(1024 * 1024, Number(progress.dataset.chunkBytes || 16 * 1024 * 1024));
+    const ARCHIVE_EXTENSIONS = new Set(['zip', '7z', 'rar', 'umod', 'ut2mod', 'ut4mod']);
     const MAX_LOG_ROWS = 250;
 
     let activeBatchId = '';
@@ -82,7 +83,7 @@
     }
 
     function isArchive(file) {
-        return ['zip', '7z', 'rar'].includes(extensionOf(file));
+        return ARCHIVE_EXTENSIONS.has(extensionOf(file));
     }
 
     function preflightEligible(file) {
