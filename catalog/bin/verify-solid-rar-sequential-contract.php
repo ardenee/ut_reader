@@ -10,9 +10,11 @@ if (PHP_SAPI !== 'cli') {
 
 $root = realpath(dirname(__DIR__)) ?: dirname(__DIR__);
 $readerPath = $root . '/src/Infrastructure/Archive/CatalogSequentialArchiveReader.php';
+$externalPath = $root . '/src/Infrastructure/Archive/CatalogExternalArchiveReader.php';
 $handlerPath = $root . '/src/Infrastructure/Jobs/CatalogArchiveImportJobHandler.php';
 $workerPath = $root . '/src/Infrastructure/Jobs/CatalogWorkerCodeVersion.php';
 $reader = (string)@file_get_contents($readerPath);
+$external = (string)@file_get_contents($externalPath);
 $handler = (string)@file_get_contents($handlerPath);
 $worker = (string)@file_get_contents($workerPath);
 
@@ -26,7 +28,7 @@ $record = static function (string $name, bool $ok, string $detail) use (&$checks
 };
 
 $syntaxFailures = [];
-foreach ([$readerPath, $handlerPath, $workerPath] as $path) {
+foreach ([$readerPath, $externalPath, $handlerPath, $workerPath] as $path) {
     $pipes = [];
     $process = @proc_open([PHP_BINARY, '-l', $path], [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
     if (!is_resource($process)) {
@@ -92,17 +94,57 @@ $record(
 );
 
 $record(
-    'solid_capability_error_is_only_terminal_fallback',
-    str_contains($handler, 'even during sequential streaming')
-        && str_contains($handler, 'isTerminalArchiveCapabilityFailure')
-        && str_contains($handler, 'source archive retained'),
-    'If the installed libarchive genuinely cannot decode a solid stream, the archive must finish visibly as partial only after the sequential strategy was attempted.'
+    'libarchive_stream_warning_is_preserved',
+    str_contains($reader, 'set_error_handler(static function (int $severity, string $message) use (&$warning): bool')
+        && str_contains($reader, 'Decoder: ' . "' . \$warning")
+        && str_contains($reader, 'parsing filters is unsupported'),
+    'fread(false) from ext-archive must retain the underlying libarchive warning so unsupported RAR filters are diagnosable.'
 );
 
 $record(
-    'worker_fingerprint_tracks_sequential_reader',
-    str_contains($worker, '/src/Infrastructure/Archive/CatalogSequentialArchiveReader.php'),
-    'Changing solid-archive streaming code must invalidate detached workers.'
+    'rar_capability_failure_can_fall_back_to_7zip',
+    str_contains($reader, 'new CatalogExternalArchiveReader($this->config)')
+        && str_contains($reader, '$external->isAvailable()')
+        && str_contains($reader, '$external->walk(')
+        && str_contains($reader, '__unrealdb_external_replay_skip')
+        && str_contains($reader, 'rar-7zip-cli'),
+    'When libarchive cannot decode a RAR member, the reader must be able to resume through 7-Zip without replaying already-completed callbacks.'
+);
+
+$record(
+    'external_rar_reader_is_bounded_and_shell_free',
+    str_contains($external, "[$binary, 'l', '-slt'")
+        && str_contains($external, "[$binary, 'x', '-so'")
+        && str_contains($external, "['bypass_shell' => true]")
+        && str_contains($external, 'External RAR member exceeded its configured import limit')
+        && str_contains($external, 'Archive contains too many entries')
+        && str_contains($external, 'safeMemberPath('),
+    'The optional 7-Zip fallback must use argument-array process execution and preserve path, entry-count and byte limits.'
+);
+
+$record(
+    'external_rar_fallback_autodetects_windows_7zip',
+    str_contains($external, "PHP_OS_FAMILY === 'Windows'")
+        && str_contains($external, "'\\\\7-Zip\\\\'")
+        && str_contains($external, 'UNREALDB_7ZIP_BINARY')
+        && str_contains($external, "external_7zip_binary"),
+    'Windows servers should use a normal 7-Zip installation automatically while retaining explicit configuration/environment overrides.'
+);
+
+$record(
+    'missing_external_decoder_finishes_as_retained_partial',
+    str_contains($reader, 'RAR solid archive support unavailable or RAR filter decoding unsupported')
+        && str_contains($reader, 'external 7-Zip fallback unavailable')
+        && str_contains($handler, 'isTerminalArchiveCapabilityFailure')
+        && str_contains($handler, 'source archive retained'),
+    'If neither decoder can handle the RAR, the immutable source must be retained as partial instead of burning three identical retries.'
+);
+
+$record(
+    'worker_fingerprint_tracks_archive_decoders',
+    str_contains($worker, '/src/Infrastructure/Archive/CatalogSequentialArchiveReader.php')
+        && str_contains($worker, '/src/Infrastructure/Archive/CatalogExternalArchiveReader.php'),
+    'Changing either archive decoder path must invalidate detached workers.'
 );
 
 $result = [
