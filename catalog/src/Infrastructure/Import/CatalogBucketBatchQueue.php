@@ -12,6 +12,7 @@ namespace UnrealDb\Catalog\Infrastructure\Import;
 use PDO;
 use Throwable;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
+use UnrealDb\Catalog\Infrastructure\Archive\CatalogArchiveExtractor;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 
 final class CatalogBucketBatchQueue
@@ -72,9 +73,8 @@ final class CatalogBucketBatchQueue
         $size = (int)($manifest['file_size'] ?? 0);
         $relativePath = CatalogImportPathPolicy::relative((string)($manifest['relative_path'] ?? ''));
         $originalName = $this->requiredName(basename(str_replace('\\', '/', $relativePath)));
-        $extension = strtolower((string)pathinfo($originalName, PATHINFO_EXTENSION));
         $redirect = \catalog_redirect_archive_is_supported_filename($originalName);
-        $archive = in_array($extension, ['zip', '7z', 'rar'], true);
+        $archive = CatalogArchiveExtractor::isArchiveName($originalName);
         $transportContainer = $redirect || $archive;
         $fingerprint = $this->fingerprint($manifest);
         if ($size < 1 || $relativePath === '' || $fingerprint === '' || !is_file($sourcePath)) {
