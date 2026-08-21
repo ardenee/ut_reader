@@ -61,7 +61,7 @@ $record(
 );
 $record(
     'worker_url_versions_compatibility_and_delegate',
-    str_contains($uploadPage, "$delegatedInspectorPath = __DIR__ . '/assets/upload-file-inspector-worker.js';")
+    str_contains($uploadPage, "\$delegatedInspectorPath = __DIR__ . '/assets/upload-file-inspector-worker.js';")
         && str_contains($uploadPage, '$workerScriptVersion = max(')
         && str_contains($uploadPage, 'filemtime($workerScriptPath)')
         && str_contains($uploadPage, 'filemtime($delegatedInspectorPath)'),
