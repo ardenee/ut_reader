@@ -6,7 +6,9 @@
  * separate list pass or reopening the archive for every selected member can
  * therefore make later members undecodable. This reader keeps one libarchive
  * handle alive, fully consumes every regular member in archive order and only
- * writes selected members to controlled temporary storage.
+ * writes selected members to controlled temporary storage. If the installed
+ * libarchive cannot decode a RAR filter/solid member, an optional 7-Zip fallback
+ * resumes the archive without repeating already-completed callbacks.
  */
 declare(strict_types=1);
 
@@ -81,6 +83,8 @@ final class CatalogSequentialArchiveReader
         $entries = 0;
         $decodedBytes = 0;
         $ordinal = 0;
+        /** @var array<string,int> $completedPathCounts */
+        $completedPathCounts = [];
 
         foreach ($archive as $archiveEntry) {
             $index = $ordinal++;
@@ -147,6 +151,7 @@ final class CatalogSequentialArchiveReader
             // does not want to extract it, complete the bookkeeping directly.
             if ($declaredSize !== null && (int)$declaredSize === 0 && !$extract) {
                 $complete($entry, null, $state);
+                $this->markCompletedPath($completedPathCounts, (string)$entry['path']);
                 continue;
             }
 
@@ -206,6 +211,63 @@ final class CatalogSequentialArchiveReader
                     $this->verifyTemporary($temporary, $actualBytes, $entryLimit);
                 }
             } catch (\Throwable $error) {
+                if (is_resource($input)) {
+                    fclose($input);
+                    $input = null;
+                }
+                if (is_resource($output)) {
+                    fclose($output);
+                    $output = null;
+                }
+                if ($temporary !== null && is_file($temporary)) {
+                    @unlink($temporary);
+                    $temporary = null;
+                }
+
+                if ($format === 'rar' && $this->isRarDecoderCapabilityFailure($error)) {
+                    $external = new CatalogExternalArchiveReader($this->config);
+                    if ($external->isAvailable()) {
+                        $remainingCompleted = $completedPathCounts;
+                        $fallbackPlan = function (array $fallbackEntry) use ($plan, &$remainingCompleted): array {
+                            $key = $this->pathKey((string)($fallbackEntry['path'] ?? ''));
+                            if (($remainingCompleted[$key] ?? 0) > 0) {
+                                $remainingCompleted[$key]--;
+                                return [
+                                    'extract' => false,
+                                    'state' => ['__unrealdb_external_replay_skip' => true],
+                                ];
+                            }
+                            return $plan($fallbackEntry);
+                        };
+                        $fallbackComplete = static function (array $fallbackEntry, ?string $fallbackTemp, mixed $fallbackState) use ($complete): void {
+                            if (is_array($fallbackState) && !empty($fallbackState['__unrealdb_external_replay_skip'])) {
+                                return;
+                            }
+                            $complete($fallbackEntry, $fallbackTemp, $fallbackState);
+                        };
+                        $fallback = $external->walk(
+                            $archivePath,
+                            $archiveName,
+                            max(1, $maxDecodedBytes - $decodedBytes),
+                            $fallbackPlan,
+                            $fallbackComplete,
+                            $heartbeat
+                        );
+                        return [
+                            'entries' => max($entries, (int)($fallback['entries'] ?? 0)),
+                            'decoded_bytes' => $decodedBytes + max(0, (int)($fallback['decoded_bytes'] ?? 0)),
+                            'format' => 'rar-7zip-cli',
+                        ];
+                    }
+
+                    throw new \RuntimeException(
+                        'RAR solid archive support unavailable or RAR filter decoding unsupported by installed libarchive; '
+                        . 'external 7-Zip fallback unavailable. Decoder: ' . $this->errorText($error),
+                        (int)$error->getCode(),
+                        $error
+                    );
+                }
+
                 $label = $format === '7z' ? '7-Zip' : strtoupper($format);
                 throw new \RuntimeException(
                     $label . ' sequential archive member "' . (string)$entry['path'] . '" failed: '
@@ -227,6 +289,7 @@ final class CatalogSequentialArchiveReader
             // lifecycle must see their original exception type and semantics.
             try {
                 $complete($entry, $temporary, $state);
+                $this->markCompletedPath($completedPathCounts, (string)$entry['path']);
             } finally {
                 if ($temporary !== null && is_file($temporary)) {
                     @unlink($temporary);
@@ -273,9 +336,24 @@ final class CatalogSequentialArchiveReader
             if ($expectedBytes > 0) {
                 $readBytes = min($readBytes, $expectedBytes - $written);
             }
-            $buffer = fread($input, $readBytes);
+
+            // ext-archive reports some decoder errors as PHP stream warnings plus
+            // fread(false). Preserve the warning text so capability detection can
+            // distinguish unsupported RAR filters from an ordinary I/O failure.
+            $warning = '';
+            set_error_handler(static function (int $severity, string $message) use (&$warning): bool {
+                $warning = trim($message);
+                return true;
+            });
+            try {
+                $buffer = fread($input, $readBytes);
+            } finally {
+                restore_error_handler();
+            }
             if (!is_string($buffer)) {
-                throw new \RuntimeException('Could not read libarchive member stream.');
+                throw new \RuntimeException(
+                    'Could not read libarchive member stream.' . ($warning !== '' ? ' Decoder: ' . $warning : '')
+                );
             }
             if ($buffer === '') {
                 if ($expectedBytes < 1 && feof($input)) {
@@ -453,6 +531,36 @@ final class CatalogSequentialArchiveReader
             return ['', 'path is too long'];
         }
         return [$safe, ''];
+    }
+
+    /** @param array<string,int> $counts */
+    private function markCompletedPath(array &$counts, string $path): void
+    {
+        $key = $this->pathKey($path);
+        $counts[$key] = ($counts[$key] ?? 0) + 1;
+    }
+
+    private function pathKey(string $path): string
+    {
+        return strtolower(str_replace('\\', '/', trim($path)));
+    }
+
+    private function isRarDecoderCapabilityFailure(\Throwable $error): bool
+    {
+        $message = strtolower($this->errorText($error));
+        foreach ([
+            'parsing filters is unsupported',
+            'rar solid archive support unavailable',
+            'could not read libarchive member stream',
+            'libarchive member stream stopped unexpectedly',
+            'could not open libarchive current-member stream',
+            'error reading data block',
+        ] as $marker) {
+            if (str_contains($message, $marker)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private function verifyTemporary(string $path, int $expectedBytes, int $maxBytes): void
