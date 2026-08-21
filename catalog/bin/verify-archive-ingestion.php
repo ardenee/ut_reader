@@ -1,6 +1,6 @@
 #!/usr/bin/env php
 <?php
-/** Read-only/no-database regression verifier for ZIP/7z/RAR ingestion plumbing. */
+/** Read-only/no-database regression verifier for ZIP/7z/RAR/UMOD-family ingestion plumbing. */
 declare(strict_types=1);
 
 use UnrealDb\Catalog\Domain\Jobs\JobResourcePolicy;
@@ -25,6 +25,8 @@ $record = static function (string $name, bool $ok, string $detail = '') use (&$c
 
 $phpFiles = [
     'src/Infrastructure/Archive/CatalogArchiveExtractor.php',
+    'src/Infrastructure/Archive/CatalogUmodArchiveReader.php',
+    'src/Infrastructure/Downloads/CatalogUmodBinaryCodec.php',
     'src/Infrastructure/Jobs/CatalogArchiveImportJobHandler.php',
     'src/Infrastructure/Jobs/CatalogBucketStagedPackageJobHandler.php',
     'src/Infrastructure/Jobs/CatalogBackgroundJobResultHydrator.php',
@@ -69,6 +71,7 @@ $record('php_syntax', $syntaxFailures === [], implode(' | ', $syntaxFailures));
 require_once $root . '/bootstrap/autoload.php';
 
 $extractorSource = (string)@file_get_contents($root . '/src/Infrastructure/Archive/CatalogArchiveExtractor.php');
+$umodReaderSource = (string)@file_get_contents($root . '/src/Infrastructure/Archive/CatalogUmodArchiveReader.php');
 $archiveHandlerSource = (string)@file_get_contents($root . '/src/Infrastructure/Jobs/CatalogArchiveImportJobHandler.php');
 $repairQueueSource = (string)@file_get_contents($root . '/bin/repair-archive-child-queues.php');
 $configSource = (string)@file_get_contents($root . '/config.example.php');
@@ -82,11 +85,15 @@ $record(
         && !str_contains($extractorSource, 'shell_exec(')
         && !str_contains($extractorSource, 'exec(')
         && !str_contains($extractorSource, 'popen(')
+        && !str_contains($umodReaderSource, 'proc_open(')
+        && !str_contains($umodReaderSource, 'shell_exec(')
+        && !str_contains($umodReaderSource, 'exec(')
+        && !str_contains($umodReaderSource, 'popen(')
         && !str_contains($extractorSource, 'sevenZipBinary')
         && !str_contains($extractorSource, 'UNREALDB_7ZIP_BINARY')
         && !str_contains($configSource, 'seven_zip_binary')
         && !str_contains($configSource, 'UNREALDB_7ZIP_BINARY'),
-    'ZIP/RAR/7z runtime decoding must be performed only through PHP extensions; no 7z/unrar executable configuration or subprocess fallback may remain.'
+    'Archive runtime decoding must remain entirely in-process through PHP extensions or the native UMOD parser; no 7z/unrar executable configuration or subprocess fallback may remain.'
 );
 
 $record(
@@ -94,8 +101,12 @@ $record(
     CatalogArchiveExtractor::isArchiveName('x.zip')
         && CatalogArchiveExtractor::isArchiveName('x.7z')
         && CatalogArchiveExtractor::isArchiveName('x.rar')
-        && !CatalogArchiveExtractor::isArchiveName('x.uz3'),
-    'ZIP, 7z and RAR are unpack-only containers; redirect wrappers remain separate.'
+        && CatalogArchiveExtractor::isArchiveName('x.umod')
+        && CatalogArchiveExtractor::isArchiveName('x.ut2mod')
+        && CatalogArchiveExtractor::isArchiveName('x.ut4mod')
+        && !CatalogArchiveExtractor::isArchiveName('x.uz3')
+        && !CatalogArchiveExtractor::isArchiveName('x.exe'),
+    'ZIP, 7z, RAR and UMOD-family files are unpack-only containers; redirect wrappers and EXE files remain separate.'
 );
 
 $capabilities = CatalogArchiveExtractor::runtimeCapabilities();
@@ -115,7 +126,7 @@ $libarchiveAutomaticApi = $libarchiveClass
 $record(
     'libarchive_php_extension_available',
     !empty($capabilities['libarchive']) && $libarchiveStream,
-    'RAR and 7z require PHP ext-archive (cataphract/libarchive). Released 0.2.0 exposes currentEntryStream() and extractCurrent(); newer builds may also expose explicit format restriction.'
+    '7z and the libarchive compatibility paths require PHP ext-archive (cataphract/libarchive). Released 0.2.0 exposes currentEntryStream() and extractCurrent(); newer builds may also expose explicit format restriction.'
 );
 $record(
     'libarchive_native_extraction_available',
@@ -128,9 +139,12 @@ $record(
     'Supported APIs are released 0.2.0 automatic format detection or the newer explicit supportFormats()/FORMAT_* API as a complete set.'
 );
 $record(
-    'archive_capabilities_cover_zip_rar_7z',
-    !empty($capabilities['zip']) && !empty($capabilities['rar']) && !empty($capabilities['seven_zip']),
-    'The active PHP runtime must provide ZIP, RAR and 7z archive readers through ext-zip/ext-archive.'
+    'archive_capabilities_cover_zip_rar_7z_umod',
+    !empty($capabilities['zip'])
+        && !empty($capabilities['rar'])
+        && !empty($capabilities['seven_zip'])
+        && !empty($capabilities['umod_family']),
+    'The active runtime must provide ZIP/RAR/7z readers and native UMOD-family parsing.'
 );
 
 $record(
@@ -206,8 +220,10 @@ $record(
 $record(
     'archive_worker_fingerprint_tracks_backend',
     str_contains($workerVersion, 'CatalogArchiveExtractor.php')
-        && str_contains($workerVersion, 'CatalogArchiveImportJobHandler.php'),
-    'Changing archive decoding code must invalidate the detached-worker fingerprint so stale workers are reconciled.'
+        && str_contains($workerVersion, 'CatalogArchiveImportJobHandler.php')
+        && str_contains($workerVersion, 'CatalogUmodArchiveReader.php')
+        && str_contains($workerVersion, 'CatalogUmodBinaryCodec.php'),
+    'Changing archive or UMOD decoding code must invalidate the detached-worker fingerprint so stale workers are reconciled.'
 );
 
 $record(
@@ -219,7 +235,7 @@ $record(
 );
 
 $archiveProfile = JobResourcePolicy::for(JobType::IMPORT_STAGED_ARCHIVE, ['game_id' => 7]);
-$bucketArchiveProfile = JobResourcePolicy::for(JobType::PROCESS_BUCKET_ARCHIVE, ['staged_path' => 'jobs/incoming/archive.zip']);
+$bucketArchiveProfile = JobResourcePolicy::for(JobType::PROCESS_BUCKET_ARCHIVE, ['staged_path' => 'jobs/incoming/archive.umod']);
 $bucketMemberProfile = JobResourcePolicy::for(JobType::PROCESS_BUCKET_STAGED_PACKAGE, ['staged_path' => 'jobs/incoming/Test.utx']);
 $record(
     'archive_resource_profiles_registered',
@@ -246,9 +262,11 @@ $profiledChunkApi = (string)@file_get_contents($root . '/api/v1/profiled-upload-
 $record(
     'upload_ingress_recognizes_archives',
     str_contains($bucketApi, 'archive_container')
-        && str_contains($profiledBatchApi, "['zip', '7z', 'rar']")
-        && str_contains($profiledChunkApi, "['zip', '7z', 'rar']"),
-    'Both Upload Bucket and selected-game upload ingress must recognize archive containers.'
+        && str_contains($profiledBatchApi, 'CatalogArchiveExtractor::archiveExtensions()')
+        && str_contains($profiledBatchApi, 'CatalogArchiveExtractor::isArchiveName($originalName)')
+        && str_contains($profiledChunkApi, 'CatalogArchiveExtractor::archiveExtensions()')
+        && str_contains($profiledChunkApi, 'CatalogArchiveExtractor::isArchiveName($originalName)'),
+    'Both Upload Bucket and selected-game upload ingress must share the complete archive-container policy, including UMOD/UT2MOD/UT4MOD.'
 );
 
 $profiledClient = (string)@file_get_contents($root . '/assets/profiled-upload-jobs.js');
@@ -259,14 +277,16 @@ $record(
         && str_contains($profiledClient, 'return isPak(file) || isArchive(file) ||')
         && str_contains($profiledClient, 'const container = isPak(file) || isArchive(file);')
         && str_contains($profiledClient, 'archive/container limit'),
-    'Selected-game browser uploads must treat ZIP/7z/RAR as resumable containers, not normal package files.'
+    'Selected-game browser uploads must keep archive containers out of ordinary package handling.'
 );
 $record(
     'bucket_inspector_skips_archive_package_hashing',
-    str_contains($bucketInspector, "['zip', '7z', 'rar'].includes(extension)")
+    str_contains($bucketInspector, "new Set(['zip', '7z', 'rar', 'umod', 'ut2mod', 'ut4mod'])")
+        && str_contains($bucketInspector, "new Set(['umod', 'ut2mod', 'ut4mod'])")
+        && str_contains($bucketInspector, 'await umodHeader(file, extension)')
         && str_contains($bucketInspector, 'archive: true')
         && !str_contains($bucketInspector, "replace(/\\.uz$/i, '.uz3')"),
-    'Upload Bucket preflight must not hash archive bytes as package identity or relabel a 5678 .uz wrapper as UT3 .uz3.'
+    'Upload Bucket preflight must not hash archive bytes as package identity; UMOD-family files use a bounded footer check and a 5678 .uz remains .uz.'
 );
 
 $hydrator = new CatalogBackgroundJobResultHydrator(['storage_path' => sys_get_temp_dir()]);
