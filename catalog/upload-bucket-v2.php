@@ -79,8 +79,15 @@ try {
         . '; the server may reduce the effective chunk size to fit PHP upload_max_filesize and post_max_size.</p>';
 
     $workerScriptPath = __DIR__ . '/assets/upload-file-inspector-worker-compatible.js';
-    $workerScriptVersion = is_file($workerScriptPath) ? (string)(filemtime($workerScriptPath) ?: 1) : '1';
-    $workerUrl = 'assets/upload-file-inspector-worker-compatible.js?v=' . rawurlencode($workerScriptVersion);
+    $delegatedInspectorPath = __DIR__ . '/assets/upload-file-inspector-worker.js';
+    // The compatibility worker lazy-loads the full package inspector using this
+    // same query string. Version by both files so changing only the delegated
+    // hash implementation cannot leave Chrome running a cached stale worker.
+    $workerScriptVersion = max(
+        is_file($workerScriptPath) ? (int)(filemtime($workerScriptPath) ?: 1) : 1,
+        is_file($delegatedInspectorPath) ? (int)(filemtime($delegatedInspectorPath) ?: 1) : 1
+    );
+    $workerUrl = 'assets/upload-file-inspector-worker-compatible.js?v=' . rawurlencode((string)$workerScriptVersion);
 
     echo '<div id="bucket-progress" class="bucket-progress" hidden'
         . ' data-chunk-url="api/v1/upload-bucket-chunk.php"'
