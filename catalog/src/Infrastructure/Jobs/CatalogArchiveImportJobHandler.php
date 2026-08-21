@@ -19,7 +19,6 @@ use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Archive\CatalogArchiveExtractor;
 use UnrealDb\Catalog\Infrastructure\Archive\CatalogSequentialArchiveReader;
-use UnrealDb\Catalog\Infrastructure\Import\CatalogChunkedUploadCleanup;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogImportPathPolicy;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogIncomingFileStore;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogUploadBucketFilePolicy;
@@ -594,10 +593,16 @@ final class CatalogArchiveImportJobHandler implements JobHandler
         bool $sequential = false,
         string $format = ''
     ): array {
-        $sourceRetained = $failed > 0;
-        if (!$sourceRetained) {
-            $this->deleteSource($stagedPath, $incoming);
-        }
+        /*
+         * Archive-member jobs are asynchronous. Successful extraction only means
+         * the child work was queued; it does not mean those Unreal packages will
+         * parse/import successfully. The parent must therefore keep ownership of
+         * the immutable archive bytes until normal background-job history cleanup
+         * deliberately removes the terminal job. Otherwise a child can fail after
+         * this method returns and the projected partial_archive row has nothing
+         * left to retry.
+         */
+        $sourceRetained = true;
 
         $status = $failed > 0 ? 'partial' : 'completed';
         $message = 'Archive expansion complete: ' . number_format($queued) . ' Unreal file(s) queued';
@@ -605,11 +610,12 @@ final class CatalogArchiveImportJobHandler implements JobHandler
             $message .= ', ' . number_format($skipped) . ' unsupported member(s) skipped';
         }
         if ($failed > 0) {
-            $message .= ', ' . number_format($failed) . ' member(s) failed; source archive retained';
+            $message .= ', ' . number_format($failed) . ' member(s) failed';
         }
+        $message .= '; source archive retained for asynchronous member recovery';
         if ($sequential) {
             $label = $format === '7z' ? '7-Zip' : strtoupper($format);
-            $message .= '; ' . ($label !== '' ? $label . ' ' : '') . 'members were consumed sequentially on one libarchive handle';
+            $message .= '; ' . ($label !== '' ? $label . ' ' : '') . 'members were consumed sequentially';
         }
         $message .= '.';
 
@@ -628,6 +634,7 @@ final class CatalogArchiveImportJobHandler implements JobHandler
             'status' => $status,
             'sequential_archive' => $sequential,
             'archive_format' => $format,
+            'source_retained' => true,
             'message' => $message,
         ]);
 
@@ -686,6 +693,7 @@ final class CatalogArchiveImportJobHandler implements JobHandler
             'errors' => $errors,
             'status' => 'partial',
             'sequential_archive' => true,
+            'source_retained' => true,
             'message' => $message,
         ]);
         return [
@@ -881,14 +889,5 @@ final class CatalogArchiveImportJobHandler implements JobHandler
             return PHP_INT_MAX;
         }
         return max(1024 * 1024 * 1024, $container * 4);
-    }
-
-    private function deleteSource(string $stagedPath, CatalogIncomingFileStore $incoming): void
-    {
-        if (preg_match('/^chunk-upload:([a-f0-9]{64})$/', $stagedPath, $match) === 1) {
-            (new CatalogChunkedUploadCleanup($this->config))->delete($match[1]);
-            return;
-        }
-        $incoming->delete($stagedPath);
     }
 }
