@@ -1,14 +1,13 @@
 <?php
 /**
- * Streams libarchive-backed containers in one forward-only pass.
+ * Streams non-ZIP libarchive-backed containers in one forward-only pass.
  *
- * Solid RAR archives carry decompression state across member boundaries. A
- * separate list pass or reopening the archive for every selected member can
- * therefore make later members undecodable. This reader keeps one libarchive
- * handle alive, fully consumes every regular member in archive order and only
- * writes selected members to controlled temporary storage. If the installed
- * libarchive cannot decode a RAR filter/solid member, an optional 7-Zip fallback
- * resumes the archive without repeating already-completed callbacks.
+ * RAR handling prefers the PHP rar extension (RarArchive/RarEntry) whenever it
+ * is loaded. That decoder supports RAR features which libarchive does not, and
+ * using it from member zero avoids trying to recover after libarchive has already
+ * lost solid/filter state. 7z, and RAR only when ext-rar is unavailable, retain
+ * the forward-only libarchive path. No archive executable or shell process is
+ * used by this reader.
  */
 declare(strict_types=1);
 
@@ -30,7 +29,8 @@ final class CatalogSequentialArchiveReader
         $format = $this->detectFormat($archivePath, $archiveName);
 
         // ext-zip can safely seek/reopen ordinary ZIP members and remains the
-        // preferred ZIP implementation. RAR/7z always use the forward stream.
+        // preferred ZIP implementation. RAR/7z use a forward reader; walk()
+        // selects ext-rar as the primary RAR implementation when available.
         if ($format === 'zip' && class_exists(\ZipArchive::class)) {
             $zip = new \ZipArchive();
             try {
@@ -49,17 +49,11 @@ final class CatalogSequentialArchiveReader
     }
 
     /**
-     * Walk every regular member exactly once on one libarchive handle.
+     * Walk every regular member exactly once.
      *
-     * $plan receives safe metadata before the current member is consumed and
-     * returns:
-     *   - extract: whether bytes should be copied to a temporary file;
-     *   - max_bytes: selected-member extraction ceiling;
-     *   - state: arbitrary caller state returned to $complete.
-     *
-     * $complete runs only after the current member has been fully consumed. Its
-     * temporary path is non-null only for extract=true and is deleted after the
-     * callback returns, so callers must copy/stage it before returning.
+     * RAR is delegated directly to the PHP rar extension when it is loaded.
+     * Otherwise the installed libarchive extension is used as a best-effort
+     * compatibility reader. 7z always uses the forward-only libarchive path.
      *
      * @param callable(array<string,mixed>):array{extract:bool,max_bytes?:int,state?:mixed} $plan
      * @param callable(array<string,mixed>,?string,mixed):void $complete
@@ -76,225 +70,186 @@ final class CatalogSequentialArchiveReader
     ): array {
         $this->requireSource($archivePath, $archiveName);
         $format = $this->detectFormat($archivePath, $archiveName);
-        $this->requireLibarchive($format);
         $maxDecodedBytes = max(1, $maxDecodedBytes);
 
+        // Do not send a RAR through libarchive first and attempt to recover later.
+        // Unsupported filters/solid state can fail while the libarchive iterator
+        // advances to the next header, outside a current-member stream catch. Once
+        // ext-rar is present it is therefore the authoritative RAR decoder.
+        if ($format === 'rar' && class_exists(\RarArchive::class)) {
+            return (new CatalogExternalArchiveReader($this->config))->walk(
+                $archivePath,
+                $archiveName,
+                $maxDecodedBytes,
+                $plan,
+                $complete,
+                $heartbeat
+            );
+        }
+
+        $this->requireLibarchive($format);
         $archive = $this->newArchive($archivePath, $format);
         $entries = 0;
         $decodedBytes = 0;
         $ordinal = 0;
-        /** @var array<string,int> $completedPathCounts */
-        $completedPathCounts = [];
 
-        foreach ($archive as $archiveEntry) {
-            $index = $ordinal++;
-            if ($heartbeat !== null) {
-                $heartbeat();
-            }
-            if (!is_object($archiveEntry)) {
-                continue;
-            }
-
-            $rawPath = trim((string)($archiveEntry->pathname ?? ''));
-            $normalizedRawPath = str_replace('\\', '/', $rawPath);
-            if ($rawPath === '' || str_ends_with($normalizedRawPath, '/')) {
-                continue;
-            }
-
-            [$safePath, $reason] = $this->safeMemberPath($rawPath);
-            $declaredSize = $archiveEntry->size ?? null;
-            $entry = [
-                'index' => $index,
-                'path' => $safePath !== '' ? $safePath : $normalizedRawPath,
-                'size' => $declaredSize !== null ? max(0, (int)$declaredSize) : 0,
-                'encrypted' => false,
-                'safe' => $safePath !== '',
-                'reason' => $reason,
-                'backend' => 'libarchive-sequential',
-                'format' => $format,
-            ];
-            $entries++;
-            if ($entries > $this->maxEntries()) {
-                throw new \RuntimeException(
-                    'Archive contains too many entries; limit is ' . number_format($this->maxEntries()) . '.'
-                );
-            }
-
-            $decision = $plan($entry);
-            if (!is_array($decision) || !array_key_exists('extract', $decision)) {
-                throw new \LogicException('Sequential archive plan must return an extract decision.');
-            }
-            $extract = (bool)$decision['extract'];
-            $entryLimit = max(1, (int)($decision['max_bytes'] ?? $maxDecodedBytes));
-            $state = $decision['state'] ?? null;
-
-            $remainingTotal = $maxDecodedBytes - $decodedBytes;
-            if ($remainingTotal < 1) {
-                throw new \RuntimeException(
-                    'Archive expansion exceeds the configured total unpacked-data limit of '
-                    . number_format($maxDecodedBytes) . ' bytes.'
-                );
-            }
-            if ((int)$entry['size'] > 0 && (int)$entry['size'] > $remainingTotal) {
-                throw new \RuntimeException(
-                    'Archive expansion exceeds the configured total unpacked-data limit of '
-                    . number_format($maxDecodedBytes) . ' bytes.'
-                );
-            }
-
-            // libarchive RAR frequently exposes directory records without a
-            // trailing slash (for example "Maps") but with an authoritative
-            // declared size of zero. Asking currentEntryStream() for such a record
-            // can return an empty read while feof() remains false, which used to
-            // turn a harmless directory into a dead-letter archive job. A known
-            // zero-byte member has no payload to advance through; when the caller
-            // does not want to extract it, complete the bookkeeping directly.
-            if ($declaredSize !== null && (int)$declaredSize === 0 && !$extract) {
-                $complete($entry, null, $state);
-                $this->markCompletedPath($completedPathCounts, (string)$entry['path']);
-                continue;
-            }
-
-            $input = null;
-            $output = null;
-            $temporary = null;
-            $actualBytes = 0;
-            try {
-                $input = $archive->currentEntryStream();
-                if (!is_resource($input)) {
-                    throw new \RuntimeException('Could not open libarchive current-member stream.');
+        try {
+            foreach ($archive as $archiveEntry) {
+                $index = $ordinal++;
+                if ($heartbeat !== null) {
+                    $heartbeat();
+                }
+                if (!is_object($archiveEntry)) {
+                    continue;
                 }
 
-                $streamLimit = $extract ? min($entryLimit, $remainingTotal) : $remainingTotal;
-                if ($extract) {
-                    $temporary = $this->temporaryPath();
-                    $output = fopen($temporary, 'wb');
-                    if (!is_resource($output)) {
-                        throw new \RuntimeException('Could not create temporary archive member.');
-                    }
+                $rawPath = trim((string)($archiveEntry->pathname ?? ''));
+                $normalizedRawPath = str_replace('\\', '/', $rawPath);
+                if ($rawPath === '' || str_ends_with($normalizedRawPath, '/')) {
+                    continue;
                 }
 
-                $actualBytes = $this->consumeStream(
-                    $input,
-                    $output,
-                    $streamLimit,
-                    $format,
-                    (string)$entry['path'],
-                    max(0, (int)$entry['size'])
-                );
-                $decodedBytes += $actualBytes;
-                if ((int)$entry['size'] > 0 && $actualBytes !== (int)$entry['size']) {
+                [$safePath, $reason] = $this->safeMemberPath($rawPath);
+                $declaredSize = $archiveEntry->size ?? null;
+                $entry = [
+                    'index' => $index,
+                    'path' => $safePath !== '' ? $safePath : $normalizedRawPath,
+                    'size' => $declaredSize !== null ? max(0, (int)$declaredSize) : 0,
+                    'encrypted' => false,
+                    'safe' => $safePath !== '',
+                    'reason' => $reason,
+                    'backend' => 'libarchive-sequential',
+                    'format' => $format,
+                ];
+                $entries++;
+                if ($entries > $this->maxEntries()) {
                     throw new \RuntimeException(
-                        'Archive member output size does not match its declared size; expected '
-                        . number_format((int)$entry['size']) . ' bytes, got '
-                        . number_format($actualBytes) . ' bytes.'
+                        'Archive contains too many entries; limit is ' . number_format($this->maxEntries()) . '.'
                     );
                 }
-                if ((int)$entry['size'] < 1) {
-                    $entry['size'] = $actualBytes;
+
+                $decision = $plan($entry);
+                if (!is_array($decision) || !array_key_exists('extract', $decision)) {
+                    throw new \LogicException('Sequential archive plan must return an extract decision.');
                 }
-                if ($extract && $actualBytes < 1) {
-                    throw new \RuntimeException('Archive member produced no data.');
+                $extract = (bool)$decision['extract'];
+                $entryLimit = max(1, (int)($decision['max_bytes'] ?? $maxDecodedBytes));
+                $state = $decision['state'] ?? null;
+
+                $remainingTotal = $maxDecodedBytes - $decodedBytes;
+                if ($remainingTotal < 1) {
+                    throw new \RuntimeException(
+                        'Archive expansion exceeds the configured total unpacked-data limit of '
+                        . number_format($maxDecodedBytes) . ' bytes.'
+                    );
+                }
+                if ((int)$entry['size'] > 0 && (int)$entry['size'] > $remainingTotal) {
+                    throw new \RuntimeException(
+                        'Archive expansion exceeds the configured total unpacked-data limit of '
+                        . number_format($maxDecodedBytes) . ' bytes.'
+                    );
                 }
 
-                if (is_resource($output)) {
-                    fflush($output);
-                    fclose($output);
-                    $output = null;
-                }
-                if (is_resource($input)) {
-                    fclose($input);
-                    $input = null;
+                // libarchive can expose RAR directory records without a trailing
+                // slash but with a declared zero size. There are no bytes to drain.
+                if ($declaredSize !== null && (int)$declaredSize === 0 && !$extract) {
+                    $complete($entry, null, $state);
+                    continue;
                 }
 
-                if ($temporary !== null) {
-                    $this->verifyTemporary($temporary, $actualBytes, $entryLimit);
-                }
-            } catch (\Throwable $error) {
-                if (is_resource($input)) {
-                    fclose($input);
-                    $input = null;
-                }
-                if (is_resource($output)) {
-                    fclose($output);
-                    $output = null;
-                }
-                if ($temporary !== null && is_file($temporary)) {
-                    @unlink($temporary);
-                    $temporary = null;
-                }
-
-                if ($format === 'rar' && $this->isRarDecoderCapabilityFailure($error)) {
-                    $external = new CatalogExternalArchiveReader($this->config);
-                    if ($external->isAvailable()) {
-                        $remainingCompleted = $completedPathCounts;
-                        $fallbackPlan = function (array $fallbackEntry) use ($plan, &$remainingCompleted): array {
-                            $key = $this->pathKey((string)($fallbackEntry['path'] ?? ''));
-                            if (($remainingCompleted[$key] ?? 0) > 0) {
-                                $remainingCompleted[$key]--;
-                                return [
-                                    'extract' => false,
-                                    'state' => ['__unrealdb_external_replay_skip' => true],
-                                ];
-                            }
-                            return $plan($fallbackEntry);
-                        };
-                        $fallbackComplete = static function (array $fallbackEntry, ?string $fallbackTemp, mixed $fallbackState) use ($complete): void {
-                            if (is_array($fallbackState) && !empty($fallbackState['__unrealdb_external_replay_skip'])) {
-                                return;
-                            }
-                            $complete($fallbackEntry, $fallbackTemp, $fallbackState);
-                        };
-                        $fallback = $external->walk(
-                            $archivePath,
-                            $archiveName,
-                            max(1, $maxDecodedBytes - $decodedBytes),
-                            $fallbackPlan,
-                            $fallbackComplete,
-                            $heartbeat
-                        );
-                        return [
-                            'entries' => max($entries, (int)($fallback['entries'] ?? 0)),
-                            'decoded_bytes' => $decodedBytes + max(0, (int)($fallback['decoded_bytes'] ?? 0)),
-                            'format' => 'rar-7zip-cli',
-                        ];
+                $input = null;
+                $output = null;
+                $temporary = null;
+                $actualBytes = 0;
+                try {
+                    $input = $archive->currentEntryStream();
+                    if (!is_resource($input)) {
+                        throw new \RuntimeException('Could not open libarchive current-member stream.');
                     }
 
+                    $streamLimit = $extract ? min($entryLimit, $remainingTotal) : $remainingTotal;
+                    if ($extract) {
+                        $temporary = $this->temporaryPath();
+                        $output = fopen($temporary, 'wb');
+                        if (!is_resource($output)) {
+                            throw new \RuntimeException('Could not create temporary archive member.');
+                        }
+                    }
+
+                    $actualBytes = $this->consumeStream(
+                        $input,
+                        $output,
+                        $streamLimit,
+                        $format,
+                        (string)$entry['path'],
+                        max(0, (int)$entry['size'])
+                    );
+                    $decodedBytes += $actualBytes;
+                    if ((int)$entry['size'] > 0 && $actualBytes !== (int)$entry['size']) {
+                        throw new \RuntimeException(
+                            'Archive member output size does not match its declared size; expected '
+                            . number_format((int)$entry['size']) . ' bytes, got '
+                            . number_format($actualBytes) . ' bytes.'
+                        );
+                    }
+                    if ((int)$entry['size'] < 1) {
+                        $entry['size'] = $actualBytes;
+                    }
+                    if ($extract && $actualBytes < 1) {
+                        throw new \RuntimeException('Archive member produced no data.');
+                    }
+
+                    if (is_resource($output)) {
+                        fflush($output);
+                        fclose($output);
+                        $output = null;
+                    }
+                    if (is_resource($input)) {
+                        fclose($input);
+                        $input = null;
+                    }
+
+                    if ($temporary !== null) {
+                        $this->verifyTemporary($temporary, $actualBytes, $entryLimit);
+                    }
+                } catch (\Throwable $error) {
+                    $label = $format === '7z' ? '7-Zip' : strtoupper($format);
                     throw new \RuntimeException(
-                        'RAR solid archive support unavailable or RAR filter decoding unsupported by installed libarchive; '
-                        . 'external 7-Zip fallback unavailable. Decoder: ' . $this->errorText($error),
+                        $label . ' sequential archive member "' . (string)$entry['path'] . '" failed: '
+                        . $this->errorText($error),
                         (int)$error->getCode(),
                         $error
                     );
+                } finally {
+                    if (is_resource($input)) {
+                        fclose($input);
+                    }
+                    if (is_resource($output)) {
+                        fclose($output);
+                    }
                 }
 
-                $label = $format === '7z' ? '7-Zip' : strtoupper($format);
+                // Coordinator callbacks can throw cancellation, lease-loss or DB
+                // exceptions. Do not recast those as decoder failures.
+                try {
+                    $complete($entry, $temporary, $state);
+                } finally {
+                    if ($temporary !== null && is_file($temporary)) {
+                        @unlink($temporary);
+                    }
+                }
+            }
+        } catch (\Throwable $error) {
+            if ($format === 'rar' && $this->isRarDecoderCapabilityFailure($error)) {
                 throw new \RuntimeException(
-                    $label . ' sequential archive member "' . (string)$entry['path'] . '" failed: '
+                    'RAR solid archive support unavailable: installed PHP libarchive cannot decode this RAR feature '
+                    . 'and the PHP rar extension (RarArchive) is not loaded in this worker process. Decoder: '
                     . $this->errorText($error),
                     (int)$error->getCode(),
                     $error
                 );
-            } finally {
-                if (is_resource($input)) {
-                    fclose($input);
-                }
-                if (is_resource($output)) {
-                    fclose($output);
-                }
             }
-
-            // Coordinator callbacks can throw cancellation, lease-loss or DB
-            // exceptions. Do not recast those as decoder failures; the worker
-            // lifecycle must see their original exception type and semantics.
-            try {
-                $complete($entry, $temporary, $state);
-                $this->markCompletedPath($completedPathCounts, (string)$entry['path']);
-            } finally {
-                if ($temporary !== null && is_file($temporary)) {
-                    @unlink($temporary);
-                }
-            }
+            throw $error;
         }
 
         return [
@@ -322,24 +277,12 @@ final class CatalogSequentialArchiveReader
             );
         }
 
-        /*
-         * Released ext-archive/currentEntryStream builds can return an empty read
-         * at the exact end of a member while PHP still reports feof()=false. An
-         * additional read then looks like a decoder failure even though the full
-         * declared member has already been produced. When libarchive supplies a
-         * declared size, make that size the forward-stream boundary and never ask
-         * the wrapper for bytes from the following member. Unknown-size members
-         * retain the ordinary EOF-driven path.
-         */
         while ($expectedBytes > 0 ? $written < $expectedBytes : !feof($input)) {
             $readBytes = 1024 * 1024;
             if ($expectedBytes > 0) {
                 $readBytes = min($readBytes, $expectedBytes - $written);
             }
 
-            // ext-archive reports some decoder errors as PHP stream warnings plus
-            // fread(false). Preserve the warning text so capability detection can
-            // distinguish unsupported RAR filters from an ordinary I/O failure.
             $warning = '';
             set_error_handler(static function (int $severity, string $message) use (&$warning): bool {
                 $warning = trim($message);
@@ -407,11 +350,11 @@ final class CatalogSequentialArchiveReader
         ];
         $bestFormat = '';
         $bestOffset = PHP_INT_MAX;
-        foreach ($formats as $format => $signatures) {
+        foreach ($formats as $candidateFormat => $signatures) {
             foreach ($signatures as $signature) {
                 $offset = strpos($prefix, $signature);
                 if ($offset !== false && $offset < $bestOffset) {
-                    $bestFormat = $format;
+                    $bestFormat = $candidateFormat;
                     $bestOffset = $offset;
                 }
             }
@@ -533,18 +476,6 @@ final class CatalogSequentialArchiveReader
         return [$safe, ''];
     }
 
-    /** @param array<string,int> $counts */
-    private function markCompletedPath(array &$counts, string $path): void
-    {
-        $key = $this->pathKey($path);
-        $counts[$key] = ($counts[$key] ?? 0) + 1;
-    }
-
-    private function pathKey(string $path): string
-    {
-        return strtolower(str_replace('\\', '/', trim($path)));
-    }
-
     private function isRarDecoderCapabilityFailure(\Throwable $error): bool
     {
         $message = strtolower($this->errorText($error));
@@ -555,6 +486,7 @@ final class CatalogSequentialArchiveReader
             'libarchive member stream stopped unexpectedly',
             'could not open libarchive current-member stream',
             'error reading data block',
+            'error moving to next header',
         ] as $marker) {
             if (str_contains($message, $marker)) {
                 return true;
