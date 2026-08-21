@@ -61,6 +61,12 @@
         return Number.isFinite(number) ? Math.max(0, Math.trunc(number)) : 0;
     };
 
+    const setText = (element, text) => {
+        if (!element) return;
+        const next = String(text == null ? '' : text);
+        if (element.textContent !== next) element.textContent = next;
+    };
+
     const formatError = (record) => {
         if (!record || typeof record !== 'object') return '';
         const file = String(record.file || '').trim();
@@ -143,15 +149,16 @@
 
     const syncRecoveryRows = () => {
         if (!tableBody) return;
+        const retryTitle = 'Replay the retained source archive. Already queued successful members are reused.';
         tableBody.querySelectorAll('.jobs-main-row[data-job-id]').forEach((row) => {
             const id = Number(row.dataset.jobId || 0);
             if (!retainedArchiveIds.has(id)) return;
             const button = row.querySelector('.jobs-actions button');
             if (!button) return;
-            button.hidden = false;
-            button.dataset.action = 'restart';
-            button.textContent = 'Retry archive';
-            button.title = 'Replay the retained source archive. Already queued successful members are reused.';
+            if (button.hidden) button.hidden = false;
+            if (button.dataset.action !== 'restart') button.dataset.action = 'restart';
+            setText(button, 'Retry archive');
+            if (button.title !== retryTitle) button.title = retryTitle;
         });
     };
 
@@ -162,9 +169,9 @@
         const active = partialTabActive();
         retryMatchingButton.hidden = !active;
         retryMatchingButton.disabled = !active || retainedArchiveCount < 1;
-        retryMatchingButton.textContent = retainedArchiveCount > 0
+        setText(retryMatchingButton, retainedArchiveCount > 0
             ? 'Retry all ' + retainedArchiveCount + ' matching archives'
-            : 'Retry all matching archives';
+            : 'Retry all matching archives');
     };
 
     const postBulkRetry = async () => {
@@ -198,10 +205,10 @@
             let text = 'Retried ' + String(data.affected || 0) + ' retained archive job(s).';
             if (data.limited) text += ' The 10,000-job safety limit was reached; retry the remaining matching archives again.';
             if (data.worker_error) text += ' Jobs were queued, but the worker could not start: ' + String(data.worker_error);
-            if (notice) notice.textContent = text;
+            if (notice) setText(notice, text);
             if (refreshButton) refreshButton.click();
         } catch (error) {
-            if (notice) notice.textContent = error && error.message ? error.message : 'Could not retry retained archives.';
+            if (notice) setText(notice, error && error.message ? error.message : 'Could not retry retained archives.');
         } finally {
             retryMatchingButton.disabled = false;
         }
@@ -211,20 +218,18 @@
         const params = new URLSearchParams(window.location.search);
         if (String(params.get('status') || '').toLowerCase() !== 'partial_archive') return;
 
-        // The base Background Jobs client predates this synthetic status and may
-        // already have started its first unfiltered request. Clicking once during
-        // that in-flight refresh updates its state but cannot start a second fetch.
-        // Retry activation for a bounded period so, as soon as the initial request
-        // settles or times out, the dedicated retained-archive request starts.
+        // The stable client now recognises partial_archive before its initial fetch.
+        // Keep this bounded activation only as a compatibility fallback for an old
+        // cached base script; it must never spin indefinitely.
         let attempts = 0;
         const activate = () => {
             const tab = ensureRecoveryTab();
-            if (!tab || partialTabActive() || attempts >= 40) return;
+            if (!tab || partialTabActive() || attempts >= 6) return;
             attempts++;
             tab.click();
             if (!partialTabActive()) window.setTimeout(activate, 500);
         };
-        activate();
+        window.setTimeout(activate, 0);
     };
 
     const installRecoveryControls = () => {
@@ -247,13 +252,11 @@
                 attributeFilter: ['aria-selected']
             });
         }
-        if (tableBody && typeof MutationObserver !== 'undefined') {
-            new MutationObserver(() => window.queueMicrotask(syncRecoveryRows)).observe(tableBody, {
-                subtree: true,
-                childList: true
-            });
-        }
 
+        // Do not observe table childList mutations here. The former observer
+        // rewrote button.textContent while observing the same subtree, which can
+        // recursively schedule MutationObserver microtasks and hang Chromium.
+        // Every successful status response schedules one bounded row sync below.
         activateRetainedArchiveDeepLink();
         syncRecoveryControls();
     };
