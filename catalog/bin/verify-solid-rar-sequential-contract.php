@@ -101,7 +101,7 @@ $record(
     str_contains($rar, 'class_exists(\\RarArchive::class)')
         && str_contains($rar, '\\RarArchive::open($archivePath)')
         && str_contains($rar, '$rarEntry->getStream()')
-        && str_contains($rar, "$rarEntry->extract('', $temporary)")
+        && str_contains($rar, '$rarEntry->extract(\'\', $temporary)')
         && str_contains($rar, "'backend' => 'php-rar-extension'")
         && !str_contains($rar, 'proc_open(')
         && !str_contains($rar, 'shell_exec(')
@@ -115,9 +115,9 @@ $record(
 $record(
     'php_rar_zero_byte_stream_uses_native_extension_fallback',
     str_contains($rar, 'isImmediateStreamFailure($streamError)')
-        && str_contains($rar, "str_contains($message, 'after 0 bytes')")
+        && str_contains($rar, 'str_contains($message, \'after 0 bytes\')')
         && str_contains($rar, 'extractEntryToTemporary(')
-        && str_contains($rar, "$rarEntry->extract('', $temporary)")
+        && str_contains($rar, '$rarEntry->extract(\'\', $temporary)')
         && str_contains($rar, 'RarEntry::extract() output size does not match its declared size'),
     'If ext-rar returns a readable handle but zero bytes for a non-empty member, retry only that member through RarEntry::extract() into controlled temporary storage and re-verify its size.'
 );
