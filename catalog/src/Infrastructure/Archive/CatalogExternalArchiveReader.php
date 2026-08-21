@@ -155,7 +155,7 @@ final class CatalogExternalArchiveReader
     private function listEntries(string $binary, string $archivePath, ?callable $heartbeat): array
     {
         [$stdout, $stderr, $exit] = $this->runCapture(
-            [$binary, 'l', '-slt', '-ba', '-bd', '-sccUTF-8', '--', $archivePath],
+            [$binary, 'l', '-slt', '-ba', '-bd', '-bsp0', '-bse2', '-sccUTF-8', '--', $archivePath],
             self::LIST_OUTPUT_LIMIT,
             $heartbeat
         );
@@ -213,8 +213,10 @@ final class CatalogExternalArchiveReader
         }
 
         $pipes = [];
+        // -so is the binary member stream. Suppress normal/progress output and
+        // force diagnostics to stderr so no 7-Zip text can contaminate the file.
         $process = @proc_open(
-            [$binary, 'x', '-so', '-y', '-bd', '-sccUTF-8', '--', $archivePath, $memberPath],
+            [$binary, 'x', '-so', '-y', '-bd', '-bso0', '-bsp0', '-bse2', '-sccUTF-8', '--', $archivePath, $memberPath],
             [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
             $pipes,
             null,
