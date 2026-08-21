@@ -78,11 +78,13 @@ final class PdoBackgroundJobBulkAction
             array_push($params, ...$condition['params']);
         }
 
+        $retryableArchive = '(j.status="completed" AND j.job_type IN ("' . JobType::PROCESS_BUCKET_ARCHIVE . '","'
+            . JobType::IMPORT_STAGED_ARCHIVE . '") AND j.display_status="partial" AND NOT '
+            . self::decoderBlockedArchiveSql('j') . ')';
         $actionCondition = match ($action) {
             'restart' => '(j.status IN ("cancelled","failed","dead_letter") '
                 . 'OR (j.status="completed" AND j.display_status IN ("failed","rejected","unverified")) '
-                . 'OR (j.status="completed" AND j.job_type IN ("' . JobType::PROCESS_BUCKET_ARCHIVE . '","'
-                . JobType::IMPORT_STAGED_ARCHIVE . '") AND j.display_status="partial"))',
+                . 'OR ' . $retryableArchive . ')',
             'cancel' => 'j.status="queued"',
             // Queued/deferred rows are safe to purge only after they are first
             // atomically moved to cancelled below. Running rows are deliberately
@@ -275,6 +277,21 @@ final class PdoBackgroundJobBulkAction
         $payload['processed_total'] = max($resumeOffset, (int)($payload['processed_total'] ?? 0));
         $encoded = json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         return is_string($encoded) ? $encoded : null;
+    }
+
+    private static function decoderBlockedArchiveSql(string $alias): string
+    {
+        $alias = trim($alias);
+        if ($alias === '' || preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $alias) !== 1) {
+            throw new \InvalidArgumentException('Invalid background-job SQL alias.');
+        }
+        $result = 'LOWER(COALESCE(' . $alias . '.result_json,""))';
+        return '('
+            . $result . ' LIKE "%installed php archive decoder cannot decode this archive/member encoding%" '
+            . 'OR ' . $result . ' LIKE "%unsupported zip compression method%" '
+            . 'OR ' . $result . ' LIKE "%rarentry::extract() returned failure%" '
+            . 'OR ' . $result . ' LIKE "%rarentry::extract() also failed%"'
+            . ')';
     }
 
     private function setShortLockWait(): void
