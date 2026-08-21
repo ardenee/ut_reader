@@ -53,7 +53,18 @@ $record(
         && str_contains($handler, 'handleSequentialArchive(')
         && strpos($handler, '$sequential->shouldUse($sourcePath, $originalName)')
             < strpos($handler, '$extractor->entries($sourcePath, $originalName)'),
-    'RAR/7z routing must reach the forward reader before any pre-list pass can disturb a solid libarchive stream.'
+    'RAR/7z routing must reach the forward reader before any generic pre-list pass.'
+);
+
+$rarPrimary = strpos($reader, "if (\$format === 'rar' && class_exists(\\RarArchive::class))");
+$libarchiveGate = strpos($reader, '$this->requireLibarchive($format);');
+$record(
+    'ext_rar_is_primary_rar_decoder',
+    $rarPrimary !== false
+        && $libarchiveGate !== false
+        && $rarPrimary < $libarchiveGate
+        && str_contains($reader, 'return (new CatalogExternalArchiveReader($this->config))->walk('),
+    'When RarArchive is loaded, RAR must enter ext-rar from member zero instead of trying libarchive first.'
 );
 
 $record(
@@ -68,7 +79,14 @@ $record(
     'libarchive_rar_directory_records_are_not_streamed',
     str_contains($reader, '$declaredSize !== null && (int)$declaredSize === 0 && !$extract')
         && str_contains($reader, '$complete($entry, null, $state);'),
-    'Known zero-byte RAR directory records must not be opened as data streams.'
+    'The libarchive compatibility path must not open known zero-byte RAR directory records as data streams.'
+);
+
+$record(
+    'libarchive_iterator_capability_failures_are_classified',
+    str_contains($reader, "'error moving to next header'")
+        && str_contains($reader, 'PHP rar extension (RarArchive) is not loaded in this worker process'),
+    'A RAR capability failure raised while advancing the libarchive iterator must become a deterministic retained-capability result.'
 );
 
 $record(
@@ -104,11 +122,10 @@ $record(
 
 $record(
     'missing_php_rar_extension_finishes_as_retained_partial',
-    str_contains($rar, 'RAR solid archive support unavailable: the PHP rar extension')
-        && str_contains($rar, 'source archive retained')
+    str_contains($reader, 'RAR solid archive support unavailable: installed PHP libarchive cannot decode this RAR feature')
         && str_contains($handler, 'isTerminalArchiveCapabilityFailure')
         && str_contains($handler, 'source archive retained'),
-    'If libarchive lacks a required RAR feature and ext-rar is unavailable, the immutable archive must be retained as partial instead of burning identical retries.'
+    'If ext-rar is absent and libarchive lacks a required RAR feature, retain the immutable archive instead of retrying identical bytes.'
 );
 
 $record(
