@@ -512,6 +512,16 @@
         activeInspectorReject = null;
     }
 
+    function inspectorWorkerError(event, relativePath) {
+        const message = event && typeof event.message === 'string' ? event.message.trim() : '';
+        const filename = event && typeof event.filename === 'string' ? event.filename.trim() : '';
+        const line = event && Number(event.lineno || 0) > 0 ? Number(event.lineno) : 0;
+        const column = event && Number(event.colno || 0) > 0 ? Number(event.colno) : 0;
+        const location = filename ? ' [' + filename + (line ? ':' + line : '') + (column ? ':' + column : '') + ']' : '';
+        return 'Browser file-inspection worker runtime error for ' + relativePath + ': '
+            + (message || 'Chrome terminated the worker without an error message.') + location;
+    }
+
     function inspectFile(file, relativePath, index, total, lineId) {
         if (stopRequested) return Promise.reject(stoppedError());
         return new Promise(function (resolve, reject) {
@@ -540,12 +550,26 @@
                     reject(new Error(String(data.message || 'File inspection failed.')));
                 }
             };
-            worker.onerror = function () {
+            worker.onerror = function (event) {
+                if (event && typeof event.preventDefault === 'function') event.preventDefault();
+                const detail = inspectorWorkerError(event, relativePath);
                 activeInspectorReject = null;
                 terminateInspector();
-                reject(new Error('The browser file-inspection worker failed.'));
+                reject(new Error(detail));
             };
-            worker.postMessage({type: 'inspect', id: requestId, file: file});
+            worker.onmessageerror = function () {
+                activeInspectorReject = null;
+                terminateInspector();
+                reject(new Error('Browser file-inspection worker could not decode the File message for ' + relativePath + '.'));
+            };
+            try {
+                worker.postMessage({type: 'inspect', id: requestId, file: file});
+            } catch (error) {
+                activeInspectorReject = null;
+                terminateInspector();
+                reject(new Error('Browser could not send ' + relativePath + ' to the file-inspection worker: '
+                    + (error && error.message ? error.message : String(error || 'unknown message-clone failure'))));
+            }
         });
     }
 
