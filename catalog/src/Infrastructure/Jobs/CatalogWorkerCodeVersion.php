@@ -29,6 +29,7 @@ final class CatalogWorkerCodeVersion
             $this->catalogRoot . '/src/Infrastructure/Persistence/PdoJobQueue.php',
             $this->catalogRoot . '/src/Infrastructure/Persistence/PdoJobEnqueuer.php',
             $this->catalogRoot . '/src/Infrastructure/Persistence/PdoJobLeaseStore.php',
+            $this->catalogRoot . '/src/Infrastructure/Persistence/PdoWorkerOwnership.php',
             $this->catalogRoot . '/src/Infrastructure/Persistence/PdoGameCatalogStats.php',
             $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogJobResourceLimitStore.php',
             $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php',
