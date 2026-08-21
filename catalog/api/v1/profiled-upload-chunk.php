@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/_bootstrap.php';
 
+use UnrealDb\Catalog\Infrastructure\Archive\CatalogArchiveExtractor;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogChunkedUploadStore;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogProfiledUploadBatchStore;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogProfiledUploadQueue;
@@ -45,7 +46,7 @@ function profiled_chunk_extensions(mixed $raw): array
             $extensions[$extension] = $extension;
         }
     }
-    foreach (['zip', '7z', 'rar'] as $extension) {
+    foreach (CatalogArchiveExtractor::archiveExtensions() as $extension) {
         $extensions[$extension] = $extension;
     }
     return array_values($extensions);
@@ -57,7 +58,7 @@ function profiled_chunk_file_policy(string $originalName, string $engineKey, mix
     $extension = strtolower((string)pathinfo($originalName, PATHINFO_EXTENSION));
     $isPak = $extension === 'pak';
     $isRedirect = in_array($extension, ['uz', 'uz2', 'uz3'], true);
-    $isArchive = in_array($extension, ['zip', '7z', 'rar'], true);
+    $isArchive = CatalogArchiveExtractor::isArchiveName($originalName);
     $engineKey = strtoupper(trim($engineKey));
     if ($isPak) {
         $allowed = in_array($engineKey, ['UE4', 'UE5'], true);
