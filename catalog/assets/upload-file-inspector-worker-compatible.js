@@ -6,24 +6,29 @@
  * Transport containers deliberately bypass package hashing:
  * - `.uz` accepts both historic FCodec signatures 1234 and 5678 while retaining
  *   the `.uz` identity. A 5678 `.uz` is NOT UT3 `.uz3`.
- * - `.zip`, `.7z` and `.rar` are unpack-only transport containers. Package
- *   identity is calculated later from each extracted Unreal member.
+ * - `.zip`, `.7z`, `.rar`, `.umod`, `.ut2mod` and `.ut4mod` are unpack-only
+ *   transport containers. Package identity is calculated later from each
+ *   extracted Unreal member.
  *
- * Archive extensions are hints, not authoritative format declarations. ZIP and
- * self-extracting archives may contain a valid archive signature after a prepended
- * stub, while historic mirrors can also contain archives with the wrong suffix.
- * The browser therefore performs a bounded signature sniff for operator feedback
- * but never rejects an allowed archive extension solely because byte zero does
- * not match the suffix. The server archive parser remains authoritative.
+ * ZIP/7z/RAR extensions are hints, not authoritative format declarations. ZIP
+ * and self-extracting archives may contain a valid archive signature after a
+ * prepended stub, while historic mirrors can also contain archives with the wrong
+ * suffix. UMOD-family packages are different: their Unreal Setup identity lives
+ * in the 20-byte footer, so the browser validates that bounded footer instead of
+ * hashing the whole container. The server parser remains authoritative.
  *
  * Keep the transport-container path independent from the full package inspector.
  * Large archive uploads do not need MD5/SHA package hashing in the browser, and
- * an unrelated load/runtime failure in the package inspector must not reject ZIP,
- * 7-Zip or RAR before the file even reaches durable server staging.
+ * an unrelated load/runtime failure in the package inspector must not reject a
+ * transport container before the file even reaches durable server staging.
  */
 const nativeAddEventListener = self.addEventListener;
 const capturedMessageListeners = [];
 const ARCHIVE_SNIFF_BYTES = 64 * 1024;
+const UMOD_FOOTER_BYTES = 20;
+const UMOD_MAGIC = 0x9fe3c5a3;
+const UMOD_EXTENSIONS = new Set(['umod', 'ut2mod', 'ut4mod']);
+const TRANSPORT_ARCHIVE_EXTENSIONS = new Set(['zip', '7z', 'rar', 'umod', 'ut2mod', 'ut4mod']);
 let inspectorLoaded = false;
 let inspectorLoadError = null;
 let activeRequestId = '';
@@ -162,6 +167,40 @@ function archiveHeader(extension, bytes) {
     };
 }
 
+async function umodHeader(file, extension) {
+    const total = Math.max(0, Number(file.size || 0));
+    if (total < UMOD_FOOTER_BYTES) {
+        throw new Error('The .' + extension + ' file is too small to contain an Unreal Setup footer.');
+    }
+    const footer = new Uint8Array(await file.slice(total - UMOD_FOOTER_BYTES, total).arrayBuffer());
+    if (footer.length !== UMOD_FOOTER_BYTES) {
+        throw new Error('The .' + extension + ' Unreal Setup footer could not be read completely.');
+    }
+    const magic = littleU32(footer, 0);
+    const tableOffset = littleU32(footer, 4);
+    const declaredSize = littleU32(footer, 8);
+    const version = littleU32(footer, 12);
+    if (magic !== UMOD_MAGIC) {
+        throw new Error('The .' + extension + ' file does not contain the Unreal Setup UMOD-family footer magic.');
+    }
+    if (version !== 1) {
+        throw new Error('The .' + extension + ' file uses unsupported Unreal Setup archive version ' + version + '.');
+    }
+    if (declaredSize !== total) {
+        throw new Error('The .' + extension + ' footer size does not match the selected file size.');
+    }
+    if (tableOffset >= total - UMOD_FOOTER_BYTES) {
+        throw new Error('The .' + extension + ' directory-table offset is outside the archive payload.');
+    }
+    return {
+        kind: 'archive-' + extension,
+        detected_extension: extension,
+        signature_offset: total - UMOD_FOOTER_BYTES,
+        signature_verified: true,
+        description: extension.toUpperCase() + ' Unreal Setup footer verified; server will validate its directory and CRC'
+    };
+}
+
 nativeAddEventListener.call(self, 'message', async function (event) {
     const data = event.data || {};
     activeRequestId = String(data.id || '');
@@ -183,7 +222,7 @@ nativeAddEventListener.call(self, 'message', async function (event) {
 
     const name = String(file.name);
     const extension = name.includes('.') ? name.split('.').pop().toLowerCase() : '';
-    const archive = ['zip', '7z', 'rar'].includes(extension);
+    const archive = TRANSPORT_ARCHIVE_EXTENSIONS.has(extension);
     const legacyUz = extension === 'uz';
     if (!archive && !legacyUz) {
         try {
@@ -199,6 +238,23 @@ nativeAddEventListener.call(self, 'message', async function (event) {
     }
 
     try {
+        if (UMOD_EXTENSIONS.has(extension)) {
+            const header = await umodHeader(file, extension);
+            self.postMessage({
+                type: 'result',
+                id: String(data.id || ''),
+                result: {
+                    md5: '',
+                    sha1: '',
+                    extension: extension,
+                    redirect: false,
+                    archive: true,
+                    header: header
+                }
+            });
+            return;
+        }
+
         const readBytes = legacyUz ? 16 : Math.min(Math.max(16, Number(file.size || 0)), ARCHIVE_SNIFF_BYTES);
         const bytes = new Uint8Array(await file.slice(0, readBytes).arrayBuffer());
         if (legacyUz) {
