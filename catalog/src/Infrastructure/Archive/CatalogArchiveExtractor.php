@@ -1,16 +1,16 @@
 <?php
 /**
- * Safe unpack-only ZIP/7z/RAR reader used by catalog ingestion jobs.
+ * Safe unpack-only ZIP/7z/RAR/UMOD-family reader used by catalog ingestion jobs.
  *
- * Archive decoding is entirely in-process through PHP extensions. No shell,
- * command-line 7-Zip/unrar binary, or platform-specific executable is used.
- * ZIP prefers ext-zip (ZipArchive); RAR and 7z use ext-archive
- * (cataphract/libarchive), which also provides a ZIP fallback.
+ * Archive decoding is entirely in-process. ZIP prefers ext-zip (ZipArchive);
+ * RAR and 7z use PHP archive extensions, while .umod/.ut2mod/.ut4mod use the
+ * native Unreal Setup reader in CatalogUmodArchiveReader. No shell, command-line
+ * archive binary, or platform-specific executable is used.
  *
  * Archive filename extensions are transport hints rather than authoritative
- * format declarations. Historic mirrors can contain mislabeled archives and ZIP
- * files may contain a prepended self-extracting stub. The complete server-side
- * parser therefore determines the actual format before listing/extraction.
+ * format declarations for ZIP/7z/RAR. Historic mirrors can contain mislabeled
+ * archives and ZIP files may contain a prepended self-extracting stub. UMOD-family
+ * containers are validated by their Unreal Setup footer/table/CRC structure.
  *
  * Archives are never extracted wholesale into a filesystem tree. Entries are
  * listed first, validated, then one requested regular file is extracted to a
@@ -29,7 +29,7 @@ namespace UnrealDb\Catalog\Infrastructure\Archive;
 
 final class CatalogArchiveExtractor
 {
-    private const ARCHIVE_EXTENSIONS = ['zip', '7z', 'rar'];
+    private const ARCHIVE_EXTENSIONS = ['zip', '7z', 'rar', 'umod', 'ut2mod', 'ut4mod'];
     private const FORMAT_SNIFF_BYTES = 65536;
 
     /** @param array<string,mixed> $config */
@@ -37,12 +37,18 @@ final class CatalogArchiveExtractor
     {
     }
 
+    /** @return list<string> */
+    public static function archiveExtensions(): array
+    {
+        return self::ARCHIVE_EXTENSIONS;
+    }
+
     public static function isArchiveName(string $name): bool
     {
         return in_array(strtolower((string)pathinfo($name, PATHINFO_EXTENSION)), self::ARCHIVE_EXTENSIONS, true);
     }
 
-    /** @return array{zip:bool,libarchive:bool,rar:bool,seven_zip:bool} */
+    /** @return array{zip:bool,libarchive:bool,rar:bool,seven_zip:bool,umod_family:bool} */
     public static function runtimeCapabilities(): array
     {
         $libarchive = class_exists(\libarchive\Archive::class)
@@ -50,8 +56,9 @@ final class CatalogArchiveExtractor
         return [
             'zip' => class_exists(\ZipArchive::class) || $libarchive,
             'libarchive' => $libarchive,
-            'rar' => $libarchive,
+            'rar' => class_exists(\RarArchive::class) || $libarchive,
             'seven_zip' => $libarchive,
+            'umod_family' => true,
         ];
     }
 
@@ -70,6 +77,10 @@ final class CatalogArchiveExtractor
     public function entries(string $archivePath, string $archiveName): array
     {
         $this->requireArchive($archivePath, $archiveName);
+        if (CatalogUmodArchiveReader::isName($archiveName)) {
+            return (new CatalogUmodArchiveReader($this->config))->entries($archivePath, $archiveName);
+        }
+
         $declaredExtension = strtolower((string)pathinfo($archiveName, PATHINFO_EXTENSION));
         $format = $this->detectArchiveFormat($archivePath, $declaredExtension);
 
@@ -132,6 +143,12 @@ final class CatalogArchiveExtractor
         return match ((string)($entry['backend'] ?? '')) {
             'zip' => $this->extractZipEntry($archivePath, $entry, $maxBytes),
             'libarchive' => $this->extractLibarchiveEntry($archivePath, $format, $entry, $maxBytes),
+            'umod' => (new CatalogUmodArchiveReader($this->config))->extractToTemp(
+                $archivePath,
+                $archiveName,
+                $entry,
+                $maxBytes
+            ),
             default => throw new \RuntimeException('Archive member backend is unavailable or invalid.'),
         };
     }
@@ -450,6 +467,9 @@ final class CatalogArchiveExtractor
         $declaredExtension = strtolower(trim($declaredExtension));
         if (!in_array($declaredExtension, self::ARCHIVE_EXTENSIONS, true)) {
             throw new \InvalidArgumentException('Unsupported archive extension: ' . $declaredExtension);
+        }
+        if (CatalogUmodArchiveReader::isName('archive.' . $declaredExtension)) {
+            return $declaredExtension;
         }
 
         // ZipArchive is authoritative for ZIP and correctly accepts legal
