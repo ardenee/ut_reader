@@ -10,6 +10,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/_bootstrap.php';
 
 use UnrealDb\Catalog\Domain\Jobs\JobType;
+use UnrealDb\Catalog\Infrastructure\Archive\CatalogArchiveExtractor;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogIncomingFileStore;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogProfiledUploadBatchStore;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogQueueWorkerStarter;
@@ -42,7 +43,7 @@ function profiled_upload_allowed_extensions(mixed $json): array
             $result[$extension] = $extension;
         }
     }
-    foreach (['zip', '7z', 'rar'] as $extension) {
+    foreach (CatalogArchiveExtractor::archiveExtensions() as $extension) {
         $result[$extension] = $extension;
     }
     $result = array_values($result);
@@ -56,7 +57,7 @@ function profiled_upload_batch_file_policy(array $batch, string $originalName): 
     $extension = strtolower((string)pathinfo($originalName, PATHINFO_EXTENSION));
     $isPak = $extension === 'pak';
     $isRedirect = in_array($extension, ['uz', 'uz2', 'uz3'], true);
-    $isArchive = in_array($extension, ['zip', '7z', 'rar'], true);
+    $isArchive = CatalogArchiveExtractor::isArchiveName($originalName);
     $engine = strtoupper(trim((string)($batch['engine_key'] ?? '')));
 
     if ($isPak) {
