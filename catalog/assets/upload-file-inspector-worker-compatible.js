@@ -26,6 +26,37 @@ const capturedMessageListeners = [];
 const ARCHIVE_SNIFF_BYTES = 64 * 1024;
 let inspectorLoaded = false;
 let inspectorLoadError = null;
+let activeRequestId = '';
+
+function runtimeErrorMessage(event, fallback) {
+    const message = event && typeof event.message === 'string' ? event.message.trim() : '';
+    const file = event && typeof event.filename === 'string' ? event.filename.trim() : '';
+    const line = event && Number(event.lineno || 0) > 0 ? Number(event.lineno) : 0;
+    const column = event && Number(event.colno || 0) > 0 ? Number(event.colno) : 0;
+    let detail = message || fallback;
+    if (file) detail += ' at ' + file + (line ? ':' + line : '') + (column ? ':' + column : '');
+    return detail;
+}
+
+nativeAddEventListener.call(self, 'error', function (event) {
+    if (!activeRequestId) return;
+    self.postMessage({
+        type: 'error',
+        id: activeRequestId,
+        message: runtimeErrorMessage(event, 'Unhandled browser inspector runtime error.')
+    });
+    if (event && typeof event.preventDefault === 'function') event.preventDefault();
+});
+
+nativeAddEventListener.call(self, 'unhandledrejection', function (event) {
+    if (!activeRequestId) return;
+    const reason = event ? event.reason : null;
+    const message = reason && reason.message
+        ? String(reason.message)
+        : String(reason || 'Unhandled browser inspector promise rejection.');
+    self.postMessage({type: 'error', id: activeRequestId, message: message});
+    if (event && typeof event.preventDefault === 'function') event.preventDefault();
+});
 
 function ensureInspectorLoaded() {
     if (inspectorLoaded) return;
@@ -41,11 +72,8 @@ function ensureInspectorLoaded() {
     };
 
     try {
-        // The wrapper itself is cache-busted by upload-bucket-v2.php. Carry the
-        // same query string to the delegated inspector so a browser cannot keep
-        // an old package-inspector script beside a new compatibility wrapper.
-        // This wrapper revision also forces clients onto the allocation-bounded
-        // inspector used for very large, long-running folder uploads.
+        // The wrapper and delegated inspector share the page's cache-busting
+        // version, which is derived from both files by upload-bucket-v2.php.
         importScripts('upload-file-inspector-worker.js' + (self.location.search || ''));
         inspectorLoaded = true;
     } catch (error) {
@@ -136,6 +164,7 @@ function archiveHeader(extension, bytes) {
 
 nativeAddEventListener.call(self, 'message', async function (event) {
     const data = event.data || {};
+    activeRequestId = String(data.id || '');
     const file = data.file;
     const readableFile = file && typeof file.slice === 'function' && typeof file.name === 'string' && file.name !== '';
 
