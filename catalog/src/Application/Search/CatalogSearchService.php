@@ -9,10 +9,6 @@ declare(strict_types=1);
 
 namespace UnrealDb\Catalog\Application\Search;
 
-final class CatalogSearchUnavailableException extends \RuntimeException
-{
-}
-
 final class CatalogSearchService
 {
     public function __construct(private readonly CatalogSearchRepository $repository)
