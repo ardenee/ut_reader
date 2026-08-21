@@ -72,7 +72,7 @@ $check(
     'retained_archive_view_has_direct_count_path',
     str_contains($browser, "if (\$status === 'partial_archive' && \$search === '')")
         && str_contains($browser, 'SELECT COUNT(*) FROM ue_background_jobs j WHERE ')
-        && str_contains($browser, "$counts = ['partial_archive' => $total]"),
+        && str_contains($browser, '$counts = [\'partial_archive\' => $total]'),
     'The retained-archive view must count its small indexed root subset directly rather than invoke generic operator-history counts.'
 );
 $check(
