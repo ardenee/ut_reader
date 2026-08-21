@@ -1,6 +1,6 @@
 <?php
 /**
- * Expands uploaded ZIP/7z/RAR containers into ordinary durable Unreal import jobs.
+ * Expands uploaded ZIP/7z/RAR/UMOD-family containers into ordinary durable Unreal import jobs.
  *
  * The archive job only owns unpacking. Every supported member is copied into
  * controlled incoming storage and queued through the existing package/PAK or
@@ -58,7 +58,7 @@ final class CatalogArchiveImportJobHandler implements JobHandler
             throw new \InvalidArgumentException('Archive import job payload is incomplete.');
         }
         if (!CatalogArchiveExtractor::isArchiveName($originalName)) {
-            throw new \InvalidArgumentException('Archive job source is not a supported ZIP/7z/RAR file.');
+            throw new \InvalidArgumentException('Archive job source is not a supported archive container.');
         }
 
         $incoming = new CatalogIncomingFileStore($this->config);
@@ -152,10 +152,15 @@ final class CatalogArchiveImportJobHandler implements JobHandler
             }
 
             $entryBytes = max(0, (int)($entry['size'] ?? 0));
-            $entryLimit = $extension === 'pak' ? $this->containerLimitBytes() : $this->normalLimitBytes();
+            // Once an archive is durably on the server, its contained package is
+            // no longer a browser ingress request. Use the container/member bound,
+            // not max_upload_bytes, while the separate total-unpacked cap still
+            // limits decompression bombs across the whole archive.
+            $entryLimit = $this->containerLimitBytes();
             if ($entryBytes < 1 || $entryBytes > $entryLimit) {
                 $failed++;
-                $reason = 'Archive member ' . $entryPath . ' exceeds its configured import limit.';
+                $reason = 'Archive member ' . $entryPath . ' is ' . number_format($entryBytes)
+                    . ' bytes; configured archive-member limit is ' . number_format($entryLimit) . ' bytes.';
                 $errors = $this->retainError($errors, $entryPath, $reason);
                 $this->checkpoint($context, $index + 1, $total, $queued, $skipped, $failed, $unpackedBytes, $errors, $reason);
                 continue;
@@ -310,13 +315,14 @@ final class CatalogArchiveImportJobHandler implements JobHandler
             }
 
             $entryBytes = max(0, (int)($entry['size'] ?? 0));
-            $entryLimit = $extension === 'pak' ? $this->containerLimitBytes() : $this->normalLimitBytes();
+            $entryLimit = $this->containerLimitBytes();
             if ($entryBytes < 1 || $entryBytes > $entryLimit) {
                 return [
                     'extract' => false,
                     'state' => [
                         'kind' => 'failed',
-                        'reason' => 'Archive member ' . $entryPath . ' exceeds its configured import limit.',
+                        'reason' => 'Archive member ' . $entryPath . ' is ' . number_format($entryBytes)
+                            . ' bytes; configured archive-member limit is ' . number_format($entryLimit) . ' bytes.',
                     ],
                 ];
             }
