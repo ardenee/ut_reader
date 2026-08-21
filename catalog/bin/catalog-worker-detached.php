@@ -28,6 +28,7 @@ use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorker;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogJobWorkerFactory;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogOrphanedJobRecovery;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogWorkerPoolSelfHealer;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoWorkerOwnership;
 
 $options = getopt('', [
     'queue::',
@@ -91,6 +92,8 @@ if (!is_resource($lock)) {
     exit(0);
 }
 
+$ownership = new PdoWorkerOwnership($application->db);
+$ownershipLock = '';
 $processed = 0;
 $attempted = 0;
 $exitReason = 'queue_empty';
@@ -171,6 +174,13 @@ register_shutdown_function(static function () use (
 });
 
 try {
+    // Orphan recovery treats this MySQL connection-scoped lock as the primary
+    // proof that a worker process still exists. Detached workers previously held
+    // only the host-local flock(), so another worker could misclassify a live
+    // process on Windows and requeue its running job. Hold both locks for the
+    // complete detached-worker lifetime.
+    $ownershipLock = $ownership->acquire($queueName, $workerId);
+
     $controller->writeState($queueName, [
         'status' => 'running',
         'queue' => $queueName,
@@ -343,6 +353,9 @@ try {
     $normalExit = true;
     exit(1);
 } finally {
+    if ($ownershipLock !== '') {
+        $ownership->release($ownershipLock);
+    }
     flock($lock, LOCK_UN);
     fclose($lock);
 }
