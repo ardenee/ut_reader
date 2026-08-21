@@ -38,7 +38,7 @@ $record('php_syntax', $syntaxFailures === [], implode(' | ', $syntaxFailures));
 
 $record(
     'zip_stream_capability_is_probed_before_random_access',
-    str_contains($sequentialSource, "getStreamIndex($index, \\ZipArchive::FL_UNCHANGED)")
+    str_contains($sequentialSource, 'getStreamIndex($index, \\ZipArchive::FL_UNCHANGED)')
         && str_contains($sequentialSource, 'if (!is_resource($stream))')
         && str_contains($sequentialSource, 'return true;'),
     'A ZIP which can be listed but cannot open one of its member streams must switch to the PHP libarchive sequential path.'
@@ -46,7 +46,8 @@ $record(
 
 $record(
     'zip_sequential_backend_is_available',
-    str_contains($sequentialSource, "'zip' => $this->definedFormats(['libarchive\\\\FORMAT_ZIP'])")
+    str_contains($sequentialSource, '\'zip\' => $this->definedFormats')
+        && str_contains($sequentialSource, 'libarchive\\\\FORMAT_ZIP')
         && str_contains($sequentialSource, '$archive->currentEntryStream()'),
     'Legacy ZIP recovery must stay in-process through ext-archive/libarchive.'
 );
@@ -55,14 +56,17 @@ $record(
     'control_character_metadata_does_not_create_partial_archive',
     str_contains($sequentialSource, 'if ($this->hasControlCharacters($rawPath))')
         && str_contains($sequentialSource, 'continue;')
-        && str_contains($sequentialSource, "preg_match('/[\\x00-\\x1F\\x7F]/u', $path) === 1"),
+        && str_contains($sequentialSource, 'preg_match(\'/[\\x00-\\x1F\\x7F]/u\', $path) === 1'),
     'Unrepresentable control-character members such as classic Mac Icon metadata must be ignored rather than retained as retryable failures.'
 );
 
 $record(
     'archive_members_use_container_not_browser_ingress_limit',
     substr_count($handlerSource, '$entryLimit = $this->containerLimitBytes();') >= 2
-        && !str_contains($handlerSource, "$entryLimit = $extension === 'pak' ? $this->containerLimitBytes() : $this->normalLimitBytes();"),
+        && !str_contains(
+            $handlerSource,
+            '$entryLimit = $extension === \'pak\' ? $this->containerLimitBytes() : $this->normalLimitBytes();'
+        ),
     'A server-side archive member is bounded by archive/container policy and total expansion, not the ordinary browser upload-size limit.'
 );
 
