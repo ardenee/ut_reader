@@ -34,6 +34,15 @@ $record(
     'SHA-1 must not allocate a new 80-word typed array for every 64-byte block.'
 );
 $record(
+    'hash_blocks_use_offsets_not_subarray_views',
+    str_contains($worker, 'this.process(bytes, offset);')
+        && str_contains($worker, 'process(block, blockOffset)')
+        && str_contains($worker, 'const position = base + (index * 4);')
+        && !str_contains($worker, 'this.process(bytes.subarray(offset, offset + 64));')
+        && !str_contains($worker, 'this.process(finalBlock.subarray(offset, offset + 64));'),
+    'The hot 64-byte loop must process the existing chunk by offset; a subarray view per hash block still creates millions of temporary objects on large files.'
+);
+$record(
     'md5_tables_are_precomputed_once',
     str_contains($worker, 'const MD5_SHIFTS = new Uint8Array([')
         && str_contains($worker, 'const MD5_CONSTANTS = new Int32Array(64);')
@@ -51,6 +60,7 @@ $record(
 
 $node = getenv('NODE_BINARY') ?: 'node';
 $nodeCheck = ['ok' => false, 'detail' => 'node --check unavailable'];
+$hashCheck = ['ok' => false, 'detail' => 'node hash fixture unavailable'];
 if (function_exists('proc_open')) {
     $pipes = [];
     $process = @proc_open([$node, '--check', $workerPath], [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
@@ -62,8 +72,61 @@ if (function_exists('proc_open')) {
         $code = proc_close($process);
         $nodeCheck = ['ok' => $code === 0, 'detail' => trim($stdout . "\n" . $stderr)];
     }
+
+    $fixture = <<<'JS'
+const fs = require('fs');
+const vm = require('vm');
+const crypto = require('crypto');
+const source = fs.readFileSync(process.argv[1], 'utf8');
+const context = {
+    Uint8Array,
+    Int32Array,
+    Math,
+    Number,
+    Set,
+    Error,
+    self: {addEventListener() {}, postMessage() {}}
+};
+vm.createContext(context);
+vm.runInContext(source, context);
+const result = vm.runInContext(`(() => {
+    const input = new Uint8Array(4097);
+    for (let index = 0; index < input.length; index++) input[index] = index & 255;
+    const md5 = new Md5();
+    const sha1 = new Sha1();
+    md5.update(input.subarray(0, 17));
+    md5.update(input.subarray(17, 2049));
+    md5.update(input.subarray(2049));
+    sha1.update(input.subarray(0, 17));
+    sha1.update(input.subarray(17, 2049));
+    sha1.update(input.subarray(2049));
+    return {md5: md5.digestHex(), sha1: sha1.digestHex(), bytes: Array.from(input)};
+})()`, context);
+const buffer = Buffer.from(result.bytes);
+const expectedMd5 = crypto.createHash('md5').update(buffer).digest('hex');
+const expectedSha1 = crypto.createHash('sha1').update(buffer).digest('hex');
+if (result.md5 !== expectedMd5 || result.sha1 !== expectedSha1) {
+    console.error(JSON.stringify({result, expectedMd5, expectedSha1}));
+    process.exit(2);
+}
+JS;
+    $pipes = [];
+    $process = @proc_open([$node, '-e', $fixture, $workerPath], [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
+    if (is_resource($process)) {
+        $stdout = (string)stream_get_contents($pipes[1]);
+        $stderr = (string)stream_get_contents($pipes[2]);
+        fclose($pipes[1]);
+        fclose($pipes[2]);
+        $code = proc_close($process);
+        $hashCheck = ['ok' => $code === 0, 'detail' => trim($stdout . "\n" . $stderr)];
+    }
 }
 $record('javascript_syntax', $nodeCheck['ok'], $nodeCheck['detail']);
+$record(
+    'hash_fixture_matches_node_crypto',
+    $hashCheck['ok'],
+    $hashCheck['detail'] !== '' ? $hashCheck['detail'] : 'MD5/SHA-1 multi-update fixture must match Node crypto.'
+);
 
 echo json_encode([
     'ok' => $failures === [],
