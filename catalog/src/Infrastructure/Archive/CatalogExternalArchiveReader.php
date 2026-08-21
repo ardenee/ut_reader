@@ -147,10 +147,20 @@ final class CatalogExternalArchiveReader
                     );
                 }
 
-                $stream = $rarEntry->getStream();
+                $streamWarning = '';
+                set_error_handler(static function (int $severity, string $message) use (&$streamWarning): bool {
+                    $streamWarning = trim($message);
+                    return true;
+                });
+                try {
+                    $stream = $rarEntry->getStream();
+                } finally {
+                    restore_error_handler();
+                }
                 if (!is_resource($stream)) {
                     throw new \RuntimeException(
                         'PHP rar extension could not open RAR member stream for "' . (string)$entry['path'] . '".'
+                        . ($streamWarning !== '' ? ' Decoder: ' . $streamWarning : '')
                     );
                 }
                 $temporary = $this->temporaryPath();
@@ -162,13 +172,45 @@ final class CatalogExternalArchiveReader
                 }
 
                 try {
-                    $actualBytes = $this->copyStream(
-                        $stream,
-                        $output,
-                        min($entryLimit, $remainingTotal),
-                        $declaredSize,
-                        $heartbeat
-                    );
+                    try {
+                        $actualBytes = $this->copyStream(
+                            $stream,
+                            $output,
+                            min($entryLimit, $remainingTotal),
+                            $declaredSize,
+                            $heartbeat
+                        );
+                    } catch (\Throwable $streamError) {
+                        if (!$this->isImmediateStreamFailure($streamError) || !method_exists($rarEntry, 'extract')) {
+                            throw $streamError;
+                        }
+
+                        // Some RAR features are accepted by ext-rar's entry object
+                        // while its on-the-fly stream returns EOF at byte zero. In
+                        // that narrow case retry through the extension's native
+                        // RarEntry::extract() implementation. The destination is
+                        // still our random temporary path, never the archive path,
+                        // and the declared/member/total limits were checked above.
+                        fclose($stream);
+                        $stream = null;
+                        fclose($output);
+                        $output = null;
+                        @unlink($temporary);
+                        if ($heartbeat !== null) {
+                            $heartbeat();
+                        }
+                        $actualBytes = $this->extractEntryToTemporary(
+                            $rarEntry,
+                            $temporary,
+                            $declaredSize,
+                            min($entryLimit, $remainingTotal),
+                            $streamError
+                        );
+                        if ($heartbeat !== null) {
+                            $heartbeat();
+                        }
+                    }
+
                     if ($declaredSize > 0 && $actualBytes !== $declaredSize) {
                         throw new \RuntimeException(
                             'PHP RAR member output size does not match its declared size; expected '
@@ -182,11 +224,15 @@ final class CatalogExternalArchiveReader
                         $entry['size'] = $actualBytes;
                     }
                     $decodedBytes += $actualBytes;
-                    fflush($output);
-                    fclose($output);
-                    $output = null;
-                    fclose($stream);
-                    $stream = null;
+                    if (is_resource($output)) {
+                        fflush($output);
+                        fclose($output);
+                        $output = null;
+                    }
+                    if (is_resource($stream)) {
+                        fclose($stream);
+                        $stream = null;
+                    }
                     $this->verifyTemporary($temporary, $actualBytes, $entryLimit);
                     $complete($entry, $temporary, $state);
                 } finally {
@@ -229,9 +275,22 @@ final class CatalogExternalArchiveReader
             if ($expectedBytes > 0) {
                 $readBytes = min($readBytes, $expectedBytes - $written);
             }
-            $buffer = fread($input, $readBytes);
+
+            $warning = '';
+            set_error_handler(static function (int $severity, string $message) use (&$warning): bool {
+                $warning = trim($message);
+                return true;
+            });
+            try {
+                $buffer = fread($input, $readBytes);
+            } finally {
+                restore_error_handler();
+            }
             if (!is_string($buffer)) {
-                throw new \RuntimeException('Could not read PHP RAR member stream.');
+                throw new \RuntimeException(
+                    'Could not read PHP RAR member stream after ' . number_format($written) . ' bytes.'
+                    . ($warning !== '' ? ' Decoder: ' . $warning : '')
+                );
             }
             if ($buffer === '') {
                 if ($expectedBytes < 1 && feof($input)) {
@@ -239,6 +298,7 @@ final class CatalogExternalArchiveReader
                 }
                 throw new \RuntimeException(
                     'PHP RAR member stream stopped unexpectedly after ' . number_format($written) . ' bytes.'
+                    . ($warning !== '' ? ' Decoder: ' . $warning : '')
                 );
             }
             $length = strlen($buffer);
@@ -251,6 +311,76 @@ final class CatalogExternalArchiveReader
             }
         }
         return $written;
+    }
+
+    private function isImmediateStreamFailure(\Throwable $error): bool
+    {
+        $message = strtolower(trim($error->getMessage()));
+        return str_contains($message, 'after 0 bytes')
+            && (str_contains($message, 'php rar member stream stopped unexpectedly')
+                || str_contains($message, 'could not read php rar member stream'));
+    }
+
+    private function extractEntryToTemporary(
+        object $rarEntry,
+        string $temporary,
+        int $declaredSize,
+        int $maxBytes,
+        \Throwable $streamError
+    ): int {
+        @unlink($temporary);
+        $warning = '';
+        set_error_handler(static function (int $severity, string $message) use (&$warning): bool {
+            $warning = trim($message);
+            return true;
+        });
+        try {
+            try {
+                $extracted = $rarEntry->extract('', $temporary);
+            } catch (\Throwable $extractError) {
+                throw new \RuntimeException(
+                    'PHP RAR member stream failed at byte zero and RarEntry::extract() also failed: '
+                    . $this->errorText($extractError)
+                    . '. Stream: ' . $this->errorText($streamError),
+                    (int)$extractError->getCode(),
+                    $extractError
+                );
+            }
+        } finally {
+            restore_error_handler();
+        }
+
+        if ($extracted !== true) {
+            throw new \RuntimeException(
+                'PHP RAR member stream failed at byte zero and RarEntry::extract() returned failure.'
+                . ($warning !== '' ? ' Decoder: ' . $warning : '')
+                . ' Stream: ' . $this->errorText($streamError)
+            );
+        }
+
+        clearstatcache(true, $temporary);
+        if (!is_file($temporary) || is_link($temporary)) {
+            @unlink($temporary);
+            throw new \RuntimeException('RarEntry::extract() did not produce a regular temporary file.');
+        }
+        $size = filesize($temporary);
+        if ($size === false || (int)$size < 1) {
+            @unlink($temporary);
+            throw new \RuntimeException('RarEntry::extract() produced no readable member data.');
+        }
+        $actualBytes = (int)$size;
+        if ($actualBytes > $maxBytes) {
+            @unlink($temporary);
+            throw new \RuntimeException('RarEntry::extract() exceeded the configured archive-member limit.');
+        }
+        if ($declaredSize > 0 && $actualBytes !== $declaredSize) {
+            @unlink($temporary);
+            throw new \RuntimeException(
+                'RarEntry::extract() output size does not match its declared size; expected '
+                . number_format($declaredSize) . ' bytes, got ' . number_format($actualBytes) . ' bytes.'
+            );
+        }
+        return $actualBytes;
     }
 
     /** @return array{0:string,1:string} */
@@ -310,5 +440,11 @@ final class CatalogExternalArchiveReader
     private function maxEntries(): int
     {
         return max(1, min(100000, (int)($this->config['archive']['max_entries'] ?? 10000)));
+    }
+
+    private function errorText(\Throwable $error): string
+    {
+        $message = trim($error->getMessage());
+        return $message !== '' ? $message : get_class($error);
     }
 }
