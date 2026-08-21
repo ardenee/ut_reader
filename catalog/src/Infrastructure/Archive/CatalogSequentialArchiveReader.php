@@ -6,8 +6,9 @@
  * is loaded. That decoder supports RAR features which libarchive does not, and
  * using it from member zero avoids trying to recover after libarchive has already
  * lost solid/filter state. 7z, and RAR only when ext-rar is unavailable, retain
- * the forward-only libarchive path. No archive executable or shell process is
- * used by this reader.
+ * the forward-only libarchive path. Native UMOD-family containers deliberately
+ * bypass this reader and are handled by CatalogUmodArchiveReader instead.
+ * No archive executable or shell process is used by this reader.
  */
 declare(strict_types=1);
 
@@ -25,6 +26,9 @@ final class CatalogSequentialArchiveReader
 
     public function shouldUse(string $archivePath, string $archiveName): bool
     {
+        if (CatalogUmodArchiveReader::isName($archiveName)) {
+            return false;
+        }
         $this->requireSource($archivePath, $archiveName);
         $format = $this->detectFormat($archivePath, $archiveName);
 
