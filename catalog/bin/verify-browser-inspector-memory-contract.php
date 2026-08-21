@@ -10,7 +10,9 @@ if (PHP_SAPI !== 'cli') {
 
 $root = realpath(dirname(__DIR__)) ?: dirname(__DIR__);
 $workerPath = $root . '/assets/upload-file-inspector-worker.js';
+$uploadPagePath = $root . '/upload-bucket-v2.php';
 $worker = (string)@file_get_contents($workerPath);
+$uploadPage = (string)@file_get_contents($uploadPagePath);
 $checks = [];
 $failures = [];
 $record = static function (string $name, bool $ok, string $detail = '') use (&$checks, &$failures): void {
@@ -56,6 +58,14 @@ $record(
         && str_contains($worker, 'const end = Math.min(total, done + HASH_CHUNK_BYTES);')
         && str_contains($worker, 'await readBytes(file, done, end)'),
     'Hashing must continue to read one bounded file chunk at a time.'
+);
+$record(
+    'worker_url_versions_compatibility_and_delegate',
+    str_contains($uploadPage, "$delegatedInspectorPath = __DIR__ . '/assets/upload-file-inspector-worker.js';")
+        && str_contains($uploadPage, '$workerScriptVersion = max(')
+        && str_contains($uploadPage, 'filemtime($workerScriptPath)')
+        && str_contains($uploadPage, 'filemtime($delegatedInspectorPath)'),
+    'Changing only the delegated hashing worker must change the compatibility-worker URL so Chrome cannot keep stale inspector code cached.'
 );
 
 $node = getenv('NODE_BINARY') ?: 'node';
