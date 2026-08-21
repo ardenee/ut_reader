@@ -62,12 +62,12 @@ class Md5 {
             this.bufferLength += take;
             offset += take;
             if (this.bufferLength === 64) {
-                this.process(this.buffer);
+                this.process(this.buffer, 0);
                 this.bufferLength = 0;
             }
         }
         while (offset + 64 <= bytes.length) {
-            this.process(bytes.subarray(offset, offset + 64));
+            this.process(bytes, offset);
             offset += 64;
         }
         if (offset < bytes.length) {
@@ -76,10 +76,11 @@ class Md5 {
         }
     }
 
-    process(block) {
+    process(block, blockOffset) {
         const words = this.words;
+        const base = Number(blockOffset || 0);
         for (let index = 0; index < 16; index++) {
-            const position = index * 4;
+            const position = base + (index * 4);
             words[index] = (block[position]
                 | (block[position + 1] << 8)
                 | (block[position + 2] << 16)
@@ -136,7 +137,7 @@ class Md5 {
         finalBlock[end + 6] = (high >>> 16) & 0xff;
         finalBlock[end + 7] = (high >>> 24) & 0xff;
         for (let offset = 0; offset < paddedBytes; offset += 64) {
-            this.process(finalBlock.subarray(offset, offset + 64));
+            this.process(finalBlock, offset);
         }
         return littleWordHex(this.a) + littleWordHex(this.b) + littleWordHex(this.c) + littleWordHex(this.d);
     }
@@ -165,12 +166,12 @@ class Sha1 {
             this.bufferLength += take;
             offset += take;
             if (this.bufferLength === 64) {
-                this.process(this.buffer);
+                this.process(this.buffer, 0);
                 this.bufferLength = 0;
             }
         }
         while (offset + 64 <= bytes.length) {
-            this.process(bytes.subarray(offset, offset + 64));
+            this.process(bytes, offset);
             offset += 64;
         }
         if (offset < bytes.length) {
@@ -179,10 +180,11 @@ class Sha1 {
         }
     }
 
-    process(block) {
+    process(block, blockOffset) {
         const words = this.words;
+        const base = Number(blockOffset || 0);
         for (let index = 0; index < 16; index++) {
-            const position = index * 4;
+            const position = base + (index * 4);
             words[index] = ((block[position] << 24)
                 | (block[position + 1] << 16)
                 | (block[position + 2] << 8)
@@ -244,7 +246,7 @@ class Sha1 {
         finalBlock[end + 6] = (low >>> 8) & 0xff;
         finalBlock[end + 7] = low & 0xff;
         for (let offset = 0; offset < paddedBytes; offset += 64) {
-            this.process(finalBlock.subarray(offset, offset + 64));
+            this.process(finalBlock, offset);
         }
         return bigWordHex(this.h0) + bigWordHex(this.h1) + bigWordHex(this.h2)
             + bigWordHex(this.h3) + bigWordHex(this.h4);
