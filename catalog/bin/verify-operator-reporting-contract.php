@@ -43,8 +43,10 @@ $record(
         && str_contains($scope, 'SELECT root_job.* FROM ue_background_jobs root_job')
         && str_contains($scope, 'SELECT problem_child.* FROM ue_background_jobs problem_child')
         && str_contains($scope, 'UNION ALL')
-        && str_contains($displayCounts, 'BackgroundJobDisplaySql::operatorStatus('),
-    'Background Jobs and System Operations must derive job visibility/counts from the same persistence policy.'
+        && str_contains($displayCounts, 'GROUP BY j.status,j.display_status,j.job_type')
+        && str_contains($displayCounts, 'running_child.parent_job_id=j.id')
+        && !str_contains($displayCounts, 'GROUP BY operator_status'),
+    'Background Jobs and System Operations must derive job visibility/counts from the same persistence policy without correlated status expressions inside GROUP BY.'
 );
 $record(
     'operator_visibility_avoids_full_execution_ledger_or_scan',
@@ -55,6 +57,16 @@ $record(
         && substr_count($scope, 'queue_name=?') >= 2
         && !str_contains($scope, 'j.parent_job_id IS NULL OR '),
     'Routine operator polling must union indexed root/problem branches while keeping cancelled child execution history folded into the parent job.'
+);
+$record(
+    'operator_count_running_promotion_is_bounded',
+    str_contains($displayCounts, '$counts[\'queued\'] > 0')
+        && str_contains($displayCounts, 'j.parent_job_id IS NULL')
+        && str_contains($displayCounts, 'j.status="queued"')
+        && str_contains($displayCounts, 'running_child.status="running"')
+        && str_contains($displayCounts, '$counts[\'queued\'] -= $promoted')
+        && str_contains($displayCounts, '$counts[\'running\'] += $promoted'),
+    'Only queued parent workflows need the indexed running-child promotion query; ordinary status aggregation must remain persisted-column only.'
 );
 $record(
     'system_operations_does_not_count_raw_rows',
@@ -106,6 +118,7 @@ $record(
 $syntaxTargets = [
     'bin/verify-operator-reporting-contract.php',
     'src/Infrastructure/Persistence/PdoBackgroundJobSearchScope.php',
+    'src/Infrastructure/Persistence/PdoBackgroundJobDisplayCountQuery.php',
     'src/Infrastructure/Persistence/PdoBackgroundJobOperationalQuery.php',
     'src/Infrastructure/Persistence/PdoBackgroundJobOperatorSnapshotQuery.php',
     'src/Infrastructure/Persistence/PdoSystemOperationsQuery.php',
