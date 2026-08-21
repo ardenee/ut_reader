@@ -676,8 +676,8 @@ final class CatalogArchiveImportJobHandler implements JobHandler
         array $errors = []
     ): array {
         $decoderError = trim($error->getMessage()) !== '' ? trim($error->getMessage()) : get_class($error);
-        $message = 'Archive could not be fully expanded because solid RAR support is unavailable in the installed '
-            . 'libarchive build even during sequential streaming; source archive retained. Decoder: ' . $decoderError;
+        $message = 'Archive could not be fully expanded because the installed PHP archive decoder cannot decode '
+            . 'this archive/member encoding; source archive retained. Decoder: ' . $decoderError;
         $failed++;
         $errors = $this->retainError(
             $errors,
@@ -745,8 +745,12 @@ final class CatalogArchiveImportJobHandler implements JobHandler
     private function isTerminalArchiveCapabilityFailure(Throwable $error): bool
     {
         $message = strtolower(trim($error->getMessage()));
-        return str_contains($message, 'rar solid archive support unavailable')
-            || (str_contains($message, 'solid rar') && str_contains($message, 'unavailable'));
+        return str_contains($message, 'archive decoder capability unavailable')
+            || str_contains($message, 'rar solid archive support unavailable')
+            || (str_contains($message, 'solid rar') && str_contains($message, 'unavailable'))
+            || str_contains($message, 'unsupported zip compression method')
+            || str_contains($message, 'rarentry::extract() returned failure')
+            || str_contains($message, 'rarentry::extract() also failed');
     }
 
     /** @return array<string,bool> */
