@@ -56,12 +56,24 @@ $check(
     'Routine workflow children, including cancelled internal history, must stay folded into their parent; failed/dead-letter children remain directly actionable.'
 );
 $check(
-    'background_jobs_counts_use_operator_scope',
+    'background_jobs_counts_use_bounded_operator_scope',
     str_contains($browser, 'PdoBackgroundJobSearchScope')
         && str_contains($browser, 'PdoBackgroundJobDisplayCountQuery')
         && str_contains($browser, '$this->countQuery->counts(')
-        && str_contains($displayCounts, 'BackgroundJobDisplaySql::operatorStatus('),
-    'Tabs and result totals must derive from the same operator-visible scope/status rules as the displayed rows.'
+        && str_contains($displayCounts, 'GROUP BY j.status,j.display_status,j.job_type')
+        && !str_contains($displayCounts, 'GROUP BY operator_status')
+        && !str_contains($displayCounts, 'BackgroundJobDisplaySql::operatorStatus(')
+        && str_contains($displayCounts, 'running_child.parent_job_id=j.id')
+        && str_contains($displayCounts, '$counts[\'queued\'] -= $promoted')
+        && str_contains($displayCounts, '$counts[\'running\'] += $promoted'),
+    'Tabs and totals must use persisted status grouping plus one indexed queued-parent promotion count; never put a correlated child lookup inside GROUP BY.'
+);
+$check(
+    'retained_archive_view_has_direct_count_path',
+    str_contains($browser, "if (\$status === 'partial_archive' && \$search === '')")
+        && str_contains($browser, 'SELECT COUNT(*) FROM ue_background_jobs j WHERE ')
+        && str_contains($browser, "$counts = ['partial_archive' => $total]"),
+    'The retained-archive view must count its small indexed root subset directly rather than invoke generic operator-history counts.'
 );
 $check(
     'system_operations_reuses_operator_count_policy',
