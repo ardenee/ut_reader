@@ -44,6 +44,8 @@ function ensureInspectorLoaded() {
         // The wrapper itself is cache-busted by upload-bucket-v2.php. Carry the
         // same query string to the delegated inspector so a browser cannot keep
         // an old package-inspector script beside a new compatibility wrapper.
+        // This wrapper revision also forces clients onto the allocation-bounded
+        // inspector used for very large, long-running folder uploads.
         importScripts('upload-file-inspector-worker.js' + (self.location.search || ''));
         inspectorLoaded = true;
     } catch (error) {
