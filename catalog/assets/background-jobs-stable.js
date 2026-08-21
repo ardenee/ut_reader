@@ -41,7 +41,7 @@
 
     if (!tableBody || !message || !tabs || !workerState) return;
 
-    const validStatuses = ['', 'queued', 'running', 'completed', 'failed', 'dead_letter', 'cancelled'];
+    const validStatuses = ['', 'queued', 'running', 'completed', 'failed', 'dead_letter', 'partial_archive', 'cancelled'];
     const terminalQueueStatuses = ['completed', 'failed', 'dead_letter', 'cancelled'];
     const failedDisplayStatuses = ['failed', 'rejected', 'unverified'];
     const query = new URLSearchParams(window.location.search);
