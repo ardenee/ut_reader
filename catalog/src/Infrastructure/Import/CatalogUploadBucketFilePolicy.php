@@ -10,11 +10,10 @@ declare(strict_types=1);
 namespace UnrealDb\Catalog\Infrastructure\Import;
 
 use PDO;
+use UnrealDb\Catalog\Infrastructure\Archive\CatalogArchiveExtractor;
 
 final class CatalogUploadBucketFilePolicy
 {
-    private const ARCHIVE_EXTENSIONS = ['zip', '7z', 'rar'];
-
     /** @var list<string>|null */
     private ?array $allowedExtensions = null;
 
@@ -67,7 +66,7 @@ final class CatalogUploadBucketFilePolicy
             return $this->allowedExtensions;
         }
         $extensions = array_fill_keys($this->allowedPackageExtensions(), true);
-        foreach (self::ARCHIVE_EXTENSIONS as $extension) {
+        foreach (CatalogArchiveExtractor::archiveExtensions() as $extension) {
             $extensions[$extension] = true;
         }
         if ($this->pakContainerAllowed()) {
@@ -115,11 +114,7 @@ final class CatalogUploadBucketFilePolicy
 
     public function isArchive(string $name): bool
     {
-        return in_array(
-            \catalog_clean_unreal_extension((string)pathinfo($name, PATHINFO_EXTENSION)),
-            self::ARCHIVE_EXTENSIONS,
-            true
-        );
+        return CatalogArchiveExtractor::isArchiveName($name);
     }
 
     public function isPakContainer(string $name): bool
