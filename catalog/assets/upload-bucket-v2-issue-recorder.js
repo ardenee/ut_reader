@@ -13,7 +13,12 @@
 
     const issueUrl = progressBox.dataset.issueUrl || 'api/v1/upload-bucket-issue.php';
     const csrf = progressBox.dataset.chunkCsrf || '';
-    const storageKey = 'unrealdb.uploadBucketV2.pendingIssues';
+    // v1 could leave unsent failures behind while a flush was already active.
+    // Those stale rows were later replayed with a new server timestamp, making
+    // old browser failures look like current failures. Start the corrected
+    // protocol on a new key and deliberately discard the old diagnostic queue.
+    const storageKey = 'unrealdb.uploadBucketV2.pendingIssues.v2';
+    const legacyStorageKey = 'unrealdb.uploadBucketV2.pendingIssues';
     const nativePush = Array.prototype.push;
     const ERROR_ROW_HEIGHT = 22;
     const ERROR_OVERSCAN = 12;
@@ -23,6 +28,7 @@
     let uploadSessionId = '';
     let monitorTimer = 0;
     let flushing = false;
+    let flushTimer = 0;
     let batchPauseRecorded = false;
     let workerStartRecorded = false;
     let nextInspectIndex = 0;
@@ -50,6 +56,14 @@
             return Array.from(bytes, function (value) { return value.toString(16).padStart(2, '0'); }).join('');
         }
         return String(Date.now()) + '-' + Math.random().toString(16).slice(2);
+    }
+
+    function discardLegacyPending() {
+        try {
+            window.localStorage.removeItem(legacyStorageKey);
+        } catch (error) {
+            // Diagnostic persistence is optional; never block the uploader.
+        }
     }
 
     function isUploadLogLine(value) {
@@ -116,11 +130,22 @@
         }
     }
 
+    function schedulePendingFlush(delayMs) {
+        if (flushTimer) return;
+        flushTimer = window.setTimeout(function () {
+            flushTimer = 0;
+            flushPending();
+        }, Math.max(0, Number(delayMs || 0)));
+    }
+
     function queueIssue(payload) {
         const pending = loadPending();
-        pending.push(payload);
+        const item = Object.assign({}, payload, {
+            occurred_at: String(payload && payload.occurred_at ? payload.occurred_at : new Date().toISOString())
+        });
+        pending.push(item);
         savePending(pending);
-        flushPending();
+        schedulePendingFlush(0);
     }
 
     async function sendIssue(payload) {
@@ -160,6 +185,11 @@
             }
         } finally {
             flushing = false;
+            // New issues may have arrived while this async flush was active, and
+            // a bounded 100-record pass may intentionally leave more work. Always
+            // schedule another pass while anything remains instead of waiting for
+            // a future page load to replay stale diagnostics.
+            if (loadPending().length) schedulePendingFlush(500);
         }
     }
 
@@ -351,20 +381,21 @@
         renderErrorNow(false);
         captureCoordinatorLog();
         startMonitor();
-        flushPending();
+        schedulePendingFlush(0);
     }, true);
 
     document.addEventListener('visibilitychange', function () {
         if (!document.hidden) renderErrorNow(false);
     });
-    window.addEventListener('online', flushPending);
+    window.addEventListener('online', function () { schedulePendingFlush(0); });
     window.addEventListener('beforeunload', function () {
         inspectLines();
         inspectBatchMessages();
         restorePush();
     });
 
+    discardLegacyPending();
     applyLogFilter();
     renderErrorNow(false);
-    flushPending();
+    schedulePendingFlush(0);
 }());
