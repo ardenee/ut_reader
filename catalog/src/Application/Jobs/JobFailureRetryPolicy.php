@@ -18,14 +18,14 @@ final class JobFailureRetryPolicy
 {
     public static function retryDelaySeconds(ClaimedJob $job, Throwable $error): int
     {
-        if (self::isDeterministicArchiveDataFailure($job, $error)) {
+        if (self::isDeterministicArchiveFailure($job, $error)) {
             return 0;
         }
 
         return min(300, max(1, 2 ** min(8, $job->attempt)));
     }
 
-    private static function isDeterministicArchiveDataFailure(ClaimedJob $job, Throwable $error): bool
+    private static function isDeterministicArchiveFailure(ClaimedJob $job, Throwable $error): bool
     {
         if (!in_array($job->type, [
             JobType::PROCESS_BUCKET_ARCHIVE,
@@ -37,6 +37,22 @@ final class JobFailureRetryPolicy
         $message = strtolower(trim($error->getMessage()));
         if ($message === '') {
             return false;
+        }
+
+        // A missing durable source cannot become available by replaying the same
+        // job. This normally identifies legacy archive jobs whose chunk-upload
+        // bytes were removed before asynchronous member outcomes were known.
+        // Stop immediately instead of producing attempts 1/3, 2/3 and 3/3 for a
+        // source that must be re-uploaded by an operator.
+        foreach ([
+            'chunked upload was not found',
+            'chunked upload manifest is missing',
+            'completed chunked pak data is unavailable',
+            'staged import file is unavailable',
+        ] as $missingSourceMarker) {
+            if (str_contains($message, $missingSourceMarker)) {
+                return true;
+            }
         }
 
         $structuralMarkers = [
