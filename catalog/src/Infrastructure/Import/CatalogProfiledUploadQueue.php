@@ -13,12 +13,12 @@ use DateTimeImmutable;
 use DateTimeZone;
 use PDO;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
+use UnrealDb\Catalog\Infrastructure\Archive\CatalogArchiveExtractor;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 
 final class CatalogProfiledUploadQueue
 {
     private const BATCH_HOLD_SECONDS = 86400;
-    private const ARCHIVE_EXTENSIONS = ['zip', '7z', 'rar'];
 
     /** @param array<string,mixed> $config */
     public function __construct(
@@ -53,7 +53,7 @@ final class CatalogProfiledUploadQueue
         $size = (int)($staged['size'] ?? 0);
         $extension = strtolower((string)pathinfo($originalName, PATHINFO_EXTENSION));
         $isPak = $extension === 'pak';
-        $isArchive = in_array($extension, self::ARCHIVE_EXTENSIONS, true);
+        $isArchive = CatalogArchiveExtractor::isArchiveName($originalName);
         $limit = ($isPak || $isArchive)
             ? $this->containerLimitBytes()
             : (int)($this->config['max_upload_bytes'] ?? 0);
