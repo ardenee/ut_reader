@@ -103,19 +103,21 @@ $record(
 );
 
 $compatibleInspector = $read('catalog/assets/upload-file-inspector-worker-compatible.js');
-$archiveBranchPosition = strpos($compatibleInspector, "const archive = ['zip', '7z', 'rar'].includes(extension);");
+$archiveBranchPosition = strpos($compatibleInspector, 'const archive = TRANSPORT_ARCHIVE_EXTENSIONS.has(extension);');
 $delegatePosition = strpos($compatibleInspector, 'dispatchToInspector(data);', $archiveBranchPosition === false ? 0 : $archiveBranchPosition);
 $importPosition = strpos($compatibleInspector, "importScripts('upload-file-inspector-worker.js'");
 $record(
     'transport_archive_preflight_isolated',
     str_contains($compatibleInspector, 'function ensureInspectorLoaded()')
         && str_contains($compatibleInspector, "importScripts('upload-file-inspector-worker.js' + (self.location.search || ''))")
-        && str_contains($compatibleInspector, "const archive = ['zip', '7z', 'rar'].includes(extension);")
-        && str_contains($compatibleInspector, "archive: true")
+        && str_contains($compatibleInspector, "new Set(['zip', '7z', 'rar', 'umod', 'ut2mod', 'ut4mod'])")
+        && str_contains($compatibleInspector, 'UMOD_FOOTER_BYTES = 20')
+        && str_contains($compatibleInspector, 'UMOD_MAGIC = 0x9fe3c5a3')
+        && str_contains($compatibleInspector, 'archive: true')
         && $importPosition !== false
         && $archiveBranchPosition !== false
         && $delegatePosition !== false,
-    'ZIP/7z/RAR preflight must remain standalone; the full package inspector is lazy-loaded only for delegated file types'
+    'ZIP/7z/RAR/UMOD-family preflight must remain standalone; UMOD uses a bounded footer check and the full package inspector is lazy-loaded only for delegated file types'
 );
 
 $bucketHandler = $read('catalog/src/Infrastructure/Jobs/CatalogBucketUploadJobHandler.php');
@@ -268,11 +270,18 @@ $criticalPhp = [
     'catalog/unverified-game-matches-refresh.php',
     'catalog/api/v1/job-run.php',
     'catalog/api/v1/job-worker-status.php',
+    'catalog/api/v1/profiled-upload-batch.php',
+    'catalog/api/v1/profiled-upload-chunk.php',
     'catalog/src/Application/Jobs/CatalogWorkerStatusPolicy.php',
     'catalog/src/Application/Unverified/CatalogUnverifiedActionService.php',
+    'catalog/src/Infrastructure/Archive/CatalogArchiveExtractor.php',
     'catalog/src/Infrastructure/Archive/CatalogSequentialArchiveReader.php',
+    'catalog/src/Infrastructure/Archive/CatalogUmodArchiveReader.php',
     'catalog/src/Infrastructure/Import/CatalogBucketBatchFinalizer.php',
+    'catalog/src/Infrastructure/Import/CatalogBucketBatchQueue.php',
+    'catalog/src/Infrastructure/Import/CatalogProfiledUploadQueue.php',
     'catalog/src/Infrastructure/Jobs/CatalogAffectedDependencyRefreshCoordinator.php',
+    'catalog/src/Infrastructure/Jobs/CatalogProfiledUploadBatchJobHandler.php',
     'catalog/src/Infrastructure/Jobs/CatalogWorkerPoolReconciler.php',
     'catalog/src/Infrastructure/Jobs/CatalogWorkerPoolStaleRestartFailed.php',
     'catalog/src/Infrastructure/Unverified/CatalogUnverifiedImporterAdapter.php',
