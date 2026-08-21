@@ -1,16 +1,13 @@
 <?php
 /**
- * Streams libarchive-backed containers in one forward-only pass when the
- * format's primary random-access reader cannot safely consume every member.
+ * Streams archive containers in one forward-only pass when the format's primary
+ * random-access reader cannot safely consume every member.
  *
- * RAR handling prefers the PHP rar extension (RarArchive/RarEntry) whenever it
- * is loaded. That decoder supports RAR features which libarchive does not, and
- * using it from member zero avoids trying to recover after libarchive has already
- * lost solid/filter state. 7z, RAR only when ext-rar is unavailable, and legacy
- * ZIP files which ext-zip can list but cannot stream use the forward-only
- * libarchive path. Native UMOD-family containers deliberately bypass this reader
- * and are handled by CatalogUmodArchiveReader instead. No archive executable or
- * shell process is used by this reader.
+ * Historic ZIP files using PKZIP Implode (method 6) or Deflate64 (method 9) are
+ * routed to UnrealDB's native PHP compatibility decoder. RAR prefers the PHP rar
+ * extension; 7z and RAR when ext-rar is unavailable use PHP libarchive. Native
+ * UMOD-family containers deliberately bypass this reader. No archive executable
+ * or shell process is used.
  */
 declare(strict_types=1);
 
@@ -33,6 +30,13 @@ final class CatalogSequentialArchiveReader
         }
         $this->requireSource($archivePath, $archiveName);
         $format = $this->detectFormat($archivePath, $archiveName);
+
+        if ($format === 'zip') {
+            $nativeZip = new CatalogNativeZipArchiveReader($this->config);
+            if ($nativeZip->hasLegacyCompression($archivePath)) {
+                return true;
+            }
+        }
 
         // Ordinary ZIP files stay on ext-zip's efficient random-access path, but
         // opening the central directory is not enough proof that libzip can
@@ -87,10 +91,10 @@ final class CatalogSequentialArchiveReader
     /**
      * Walk every regular member exactly once.
      *
-     * RAR is delegated directly to the PHP rar extension when it is loaded.
-     * Otherwise the installed libarchive extension is used as a best-effort
-     * compatibility reader. 7z and ZIP compatibility decoding use the same
-     * forward-only libarchive path.
+     * ZIP method 6/9 archives use UnrealDB's native PHP decoder. RAR is delegated
+     * directly to the PHP rar extension when it is loaded. Otherwise the installed
+     * libarchive extension remains the compatibility reader for 7z/RAR and ZIP
+     * cases unrelated to methods 6/9.
      *
      * @param callable(array<string,mixed>):array{extract:bool,max_bytes?:int,state?:mixed} $plan
      * @param callable(array<string,mixed>,?string,mixed):void $complete
@@ -108,6 +112,20 @@ final class CatalogSequentialArchiveReader
         $this->requireSource($archivePath, $archiveName);
         $format = $this->detectFormat($archivePath, $archiveName);
         $maxDecodedBytes = max(1, $maxDecodedBytes);
+
+        if ($format === 'zip') {
+            $nativeZip = new CatalogNativeZipArchiveReader($this->config);
+            if ($nativeZip->hasLegacyCompression($archivePath)) {
+                return $nativeZip->walk(
+                    $archivePath,
+                    $archiveName,
+                    $maxDecodedBytes,
+                    $plan,
+                    $complete,
+                    $heartbeat
+                );
+            }
+        }
 
         // Do not send a RAR through libarchive first and attempt to recover later.
         // Unsupported filters/solid state can fail while the libarchive iterator
