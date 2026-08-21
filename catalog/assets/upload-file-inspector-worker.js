@@ -7,6 +7,16 @@ const LEGACY_PACKAGE_EXTENSIONS = new Set([
     'u', 'unr', 'utx', 'umx', 'uax', 'un2', 'ut2', 'usx', 'ukx', 'upx', 'ugx',
     'ut3', 'upk', 'uasset', 'umap'
 ]);
+const MD5_SHIFTS = new Uint8Array([
+    7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22,
+    5, 9, 14, 20, 5, 9, 14, 20, 5, 9, 14, 20, 5, 9, 14, 20,
+    4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23,
+    6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21
+]);
+const MD5_CONSTANTS = new Int32Array(64);
+for (let index = 0; index < 64; index++) {
+    MD5_CONSTANTS[index] = Math.floor(Math.abs(Math.sin(index + 1)) * 0x100000000) | 0;
+}
 
 function hexByte(value) {
     return (value < 16 ? '0' : '') + value.toString(16);
@@ -39,6 +49,7 @@ class Md5 {
         this.length = 0;
         this.buffer = new Uint8Array(64);
         this.bufferLength = 0;
+        this.words = new Int32Array(16);
     }
 
     update(input) {
@@ -66,7 +77,7 @@ class Md5 {
     }
 
     process(block) {
-        const words = new Int32Array(16);
+        const words = this.words;
         for (let index = 0; index < 16; index++) {
             const position = index * 4;
             words[index] = (block[position]
@@ -78,12 +89,6 @@ class Md5 {
         let b = this.b;
         let c = this.c;
         let d = this.d;
-        const shifts = [
-            7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22,
-            5, 9, 14, 20, 5, 9, 14, 20, 5, 9, 14, 20, 5, 9, 14, 20,
-            4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23,
-            6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21
-        ];
         for (let index = 0; index < 64; index++) {
             let functionValue;
             let wordIndex;
@@ -100,12 +105,11 @@ class Md5 {
                 functionValue = c ^ (b | ~d);
                 wordIndex = (7 * index) & 15;
             }
-            const constant = Math.floor(Math.abs(Math.sin(index + 1)) * 0x100000000) | 0;
             const previousD = d;
             d = c;
             c = b;
-            const sum = (a + functionValue + constant + words[wordIndex]) | 0;
-            b = (b + rotateLeft(sum, shifts[index])) | 0;
+            const sum = (a + functionValue + MD5_CONSTANTS[index] + words[wordIndex]) | 0;
+            b = (b + rotateLeft(sum, MD5_SHIFTS[index])) | 0;
             a = previousD;
         }
         this.a = (this.a + a) | 0;
@@ -148,6 +152,7 @@ class Sha1 {
         this.length = 0;
         this.buffer = new Uint8Array(64);
         this.bufferLength = 0;
+        this.words = new Int32Array(80);
     }
 
     update(input) {
@@ -175,7 +180,7 @@ class Sha1 {
     }
 
     process(block) {
-        const words = new Int32Array(80);
+        const words = this.words;
         for (let index = 0; index < 16; index++) {
             const position = index * 4;
             words[index] = ((block[position] << 24)
