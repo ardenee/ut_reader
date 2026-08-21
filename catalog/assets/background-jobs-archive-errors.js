@@ -20,6 +20,7 @@
         'catalog.import_staged_archive'
     ]);
     const retainedArchiveIds = new Set();
+    const blockedArchiveIds = new Set();
     let retainedArchiveCount = 0;
     let retryMatchingButton = null;
 
@@ -91,6 +92,31 @@
             && String(job.display_status || '').toLowerCase() === 'partial';
     };
 
+    const isBlockedRetainedArchive = (job) => {
+        if (!isRetainedPartialArchive(job)) return false;
+        const progress = job.progress && typeof job.progress === 'object' ? job.progress : {};
+        const result = job.result && typeof job.result === 'object' ? job.result : {};
+        if (progress.recovery_blocked === true || result.recovery_blocked === true) return true;
+
+        const errors = [];
+        if (Array.isArray(progress.errors)) errors.push(...progress.errors.map(formatError));
+        if (Array.isArray(result.errors)) errors.push(...result.errors.map(formatError));
+        const text = [
+            String(progress.message || ''),
+            String(result.message || ''),
+            String(job.last_error || ''),
+            ...errors
+        ].join(' ').toLowerCase();
+
+        return text.includes('installed php archive decoder cannot decode this archive/member encoding')
+            || text.includes('unsupported zip compression method')
+            || text.includes('rarentry::extract() returned failure')
+            || text.includes('rarentry::extract() also failed')
+            || text.includes('could not read zip member stream')
+            || text.includes('output size does not match its declared size')
+            || text.includes('configured archive-member limit') && text.includes(' is 0 bytes');
+    };
+
     const decorateArchiveJob = (job) => {
         if (!job || typeof job !== 'object' || !archiveTypes.has(String(job.job_type || ''))) return false;
         const progress = job.progress && typeof job.progress === 'object' ? job.progress : {};
@@ -150,34 +176,48 @@
     const syncRecoveryRows = () => {
         if (!tableBody) return;
         const retryTitle = 'Replay the retained source archive. Already queued successful members are reused.';
+        const blockedTitle = 'The retained source is preserved, but replaying it through the same PHP decoder cannot change this result.';
         tableBody.querySelectorAll('.jobs-main-row[data-job-id]').forEach((row) => {
             const id = Number(row.dataset.jobId || 0);
             if (!retainedArchiveIds.has(id)) return;
             const button = row.querySelector('.jobs-actions button');
             if (!button) return;
-            if (button.hidden) button.hidden = false;
+
+            if (blockedArchiveIds.has(id)) {
+                button.hidden = false;
+                button.disabled = true;
+                button.dataset.action = '';
+                setText(button, 'Recovery blocked');
+                if (button.title !== blockedTitle) button.title = blockedTitle;
+                return;
+            }
+
+            button.hidden = false;
+            button.disabled = false;
             if (button.dataset.action !== 'restart') button.dataset.action = 'restart';
             setText(button, 'Retry archive');
             if (button.title !== retryTitle) button.title = retryTitle;
         });
     };
 
+    const visibleRetryableCount = () => Math.max(0, retainedArchiveIds.size - blockedArchiveIds.size);
+
     const syncRecoveryControls = () => {
         ensureRecoveryTab();
         syncRecoveryRows();
         if (!retryMatchingButton || !tabs) return;
         const active = partialTabActive();
-        retryMatchingButton.hidden = !active;
-        retryMatchingButton.disabled = !active || retainedArchiveCount < 1;
-        setText(retryMatchingButton, retainedArchiveCount > 0
-            ? 'Retry all ' + retainedArchiveCount + ' matching archives'
-            : 'Retry all matching archives');
+        const retryable = visibleRetryableCount();
+        retryMatchingButton.hidden = !active || retryable < 1;
+        retryMatchingButton.disabled = !active || retryable < 1;
+        setText(retryMatchingButton, 'Retry retryable archives');
+        retryMatchingButton.title = 'Decoder-blocked retained archives are deliberately excluded.';
     };
 
     const postBulkRetry = async () => {
-        if (!bulkUrl || retainedArchiveCount < 1) return;
+        if (!bulkUrl || retainedArchiveCount < 1 || visibleRetryableCount() < 1) return;
         const search = searchInput ? String(searchInput.value || '').trim() : '';
-        if (!window.confirm('Retry all ' + retainedArchiveCount + ' retained archive job(s) matching the current search?')) return;
+        if (!window.confirm('Retry retained archives that are still recoverable with the current PHP decoder? Decoder-blocked archives will remain retained.')) return;
 
         retryMatchingButton.disabled = true;
         try {
@@ -202,7 +242,10 @@
                 throw new Error(message);
             }
             const data = body && body.data ? body.data : {};
-            let text = 'Retried ' + String(data.affected || 0) + ' retained archive job(s).';
+            const affected = integer(data.affected);
+            let text = affected > 0
+                ? 'Retried ' + affected + ' recoverable retained archive job(s). Decoder-blocked archives were left retained.'
+                : 'No retained archives are currently retryable; decoder-blocked sources remain safely retained.';
             if (data.limited) text += ' The 10,000-job safety limit was reached; retry the remaining matching archives again.';
             if (data.worker_error) text += ' Jobs were queued, but the worker could not start: ' + String(data.worker_error);
             if (notice) setText(notice, text);
@@ -239,7 +282,7 @@
             retryMatchingButton.id = 'jobs-retry-retained-matching';
             retryMatchingButton.type = 'button';
             retryMatchingButton.hidden = true;
-            retryMatchingButton.textContent = 'Retry all matching archives';
+            retryMatchingButton.textContent = 'Retry retryable archives';
             retryMatchingButton.addEventListener('click', postBulkRetry);
             selectMatchingButton.parentNode.insertBefore(retryMatchingButton, selectMatchingButton.nextSibling);
         }
@@ -271,9 +314,14 @@
         if (!jobs) return response;
 
         retainedArchiveIds.clear();
+        blockedArchiveIds.clear();
         let changed = false;
         jobs.forEach((job) => {
-            if (isRetainedPartialArchive(job)) retainedArchiveIds.add(Number(job.id || 0));
+            if (isRetainedPartialArchive(job)) {
+                const id = Number(job.id || 0);
+                retainedArchiveIds.add(id);
+                if (isBlockedRetainedArchive(job)) blockedArchiveIds.add(id);
+            }
             if (decorateArchiveJob(job)) changed = true;
         });
         const counts = body && body.meta && body.meta.counts && typeof body.meta.counts === 'object'
