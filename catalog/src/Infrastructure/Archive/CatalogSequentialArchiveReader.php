@@ -94,10 +94,11 @@ final class CatalogSequentialArchiveReader
     /**
      * Walk every regular member exactly once.
      *
-     * ZIP method 6/9 archives use UnrealDB's native PHP decoder. RAR is delegated
-     * directly to the PHP rar extension when it is loaded. Otherwise the installed
-     * libarchive extension remains the compatibility reader for 7z/RAR and ZIP
-     * cases unrelated to methods 6/9.
+     * ZIP method 6/9 archives use UnrealDB's native PHP decoder. ZIPs whose
+     * trustworthy local headers disagree with a stale final central directory use
+     * the local-header recovery walker so libarchive cannot abort before a member
+     * reaches the coordinator. RAR is delegated directly to the PHP rar extension
+     * when loaded. Otherwise PHP libarchive remains the sequential reader.
      *
      * @param callable(array<string,mixed>):array{extract:bool,max_bytes?:int,state?:mixed} $plan
      * @param callable(array<string,mixed>,?string,mixed):void $complete
@@ -120,6 +121,16 @@ final class CatalogSequentialArchiveReader
             $nativeZip = new CatalogNativeZipArchiveReader($this->config);
             if ($nativeZip->hasLegacyCompression($archivePath)) {
                 return $nativeZip->walk(
+                    $archivePath,
+                    $archiveName,
+                    $maxDecodedBytes,
+                    $plan,
+                    $complete,
+                    $heartbeat
+                );
+            }
+            if ((new CatalogZipMetadataConsistency())->hasTrustedLocalMetadataMismatch($archivePath)) {
+                return (new CatalogZipLocalHeaderRecoveryReader($this->config))->walk(
                     $archivePath,
                     $archiveName,
                     $maxDecodedBytes,
@@ -195,38 +206,14 @@ final class CatalogSequentialArchiveReader
                     );
                 }
 
-                $remainingBeforePlan = $maxDecodedBytes - $decodedBytes;
-                if ($remainingBeforePlan < 1) {
-                    throw new \RuntimeException(
-                        'Archive expansion exceeds the configured total unpacked-data limit of '
-                        . number_format($maxDecodedBytes) . ' bytes.'
-                    );
-                }
-
-                // ext-archive 0.2.0 can report a legitimate 7-Zip file as zero
-                // bytes when its size metadata is unavailable. Probe only those
-                // unknown-size 7z entries before policy planning so callers see
-                // the real bounded decoded size. A genuinely empty member remains
-                // size zero and is still rejected by the normal import policy.
-                $predecodedTemporary = null;
-                $predecodedBytes = null;
-                if ($format === '7z' && (int)$entry['size'] < 1) {
-                    [$predecodedTemporary, $predecodedBytes] = $this->decodeUnknownSizeEntry(
-                        $archive,
-                        $entry,
-                        $remainingBeforePlan,
-                        $heartbeat
-                    );
-                    if ($predecodedBytes > 0) {
-                        $entry['size'] = $predecodedBytes;
-                    }
-                }
-
+                // A zero size reported by libarchive is not enough evidence that a
+                // hidden payload can be decoded. In particular, 7-Zip can expose
+                // an empty/reference/anti-style record whose currentEntryStream()
+                // has no readable bytes. Let normal import policy retain the member
+                // as a deterministic partial failure instead of probing the stream
+                // and dead-lettering the entire parent archive.
                 $decision = $plan($entry);
                 if (!is_array($decision) || !array_key_exists('extract', $decision)) {
-                    if ($predecodedTemporary !== null) {
-                        @unlink($predecodedTemporary);
-                    }
                     throw new \LogicException('Sequential archive plan must return an extract decision.');
                 }
                 $extract = (bool)$decision['extract'];
@@ -235,35 +222,16 @@ final class CatalogSequentialArchiveReader
 
                 $remainingTotal = $maxDecodedBytes - $decodedBytes;
                 if ($remainingTotal < 1) {
-                    if ($predecodedTemporary !== null) {
-                        @unlink($predecodedTemporary);
-                    }
                     throw new \RuntimeException(
                         'Archive expansion exceeds the configured total unpacked-data limit of '
                         . number_format($maxDecodedBytes) . ' bytes.'
                     );
                 }
                 if ((int)$entry['size'] > 0 && (int)$entry['size'] > $remainingTotal) {
-                    if ($predecodedTemporary !== null) {
-                        @unlink($predecodedTemporary);
-                    }
                     throw new \RuntimeException(
                         'Archive expansion exceeds the configured total unpacked-data limit of '
                         . number_format($maxDecodedBytes) . ' bytes.'
                     );
-                }
-
-                if ($predecodedTemporary !== null) {
-                    $actual = max(0, (int)$predecodedBytes);
-                    $decodedBytes += $actual;
-                    try {
-                        $complete($entry, $extract && $actual > 0 ? $predecodedTemporary : null, $state);
-                    } finally {
-                        if (is_file($predecodedTemporary)) {
-                            @unlink($predecodedTemporary);
-                        }
-                    }
-                    continue;
                 }
 
                 // ZIP entries are independently compressed. Once the coordinator
@@ -277,8 +245,8 @@ final class CatalogSequentialArchiveReader
                     continue;
                 }
 
-                // libarchive can expose RAR directory records without a trailing
-                // slash but with a declared zero size. There are no bytes to drain.
+                // Zero-size/non-extract records have no payload that this reader
+                // needs to drain. This includes the 7-Zip retained-member case.
                 if ($declaredSize !== null && (int)$declaredSize === 0 && !$extract) {
                     $complete($entry, null, $state);
                     continue;
@@ -303,11 +271,6 @@ final class CatalogSequentialArchiveReader
                         }
                     }
 
-                    // For ZIP, read until the decoder reaches the actual member EOF
-                    // and compare afterward. Old mirrors can contain a stale final
-                    // central directory whose size is larger than the valid local
-                    // member. Other sequential formats keep their declared-size
-                    // bound because it is needed to detect truncated solid streams.
                     $actualBytes = $this->consumeStream(
                         $input,
                         $output,
@@ -405,75 +368,6 @@ final class CatalogSequentialArchiveReader
             'decoded_bytes' => $decodedBytes,
             'format' => $format,
         ];
-    }
-
-    /**
-     * Decode a 7-Zip member whose declared size is unavailable. The temporary
-     * output is only a bounded probe and is handed to the normal coordinator if
-     * the recovered size makes the member eligible for extraction.
-     *
-     * @param object $archive
-     * @param array<string,mixed> $entry
-     * @return array{0:string,1:int}
-     */
-    private function decodeUnknownSizeEntry(
-        object $archive,
-        array $entry,
-        int $remainingTotal,
-        ?callable $heartbeat
-    ): array {
-        $input = $archive->currentEntryStream();
-        if (!is_resource($input)) {
-            throw new \RuntimeException(
-                'Could not open libarchive current-member stream for unknown-size member '
-                . (string)($entry['path'] ?? '') . '.'
-            );
-        }
-        $temporary = $this->temporaryPath();
-        $output = @fopen($temporary, 'wb');
-        if (!is_resource($output)) {
-            fclose($input);
-            @unlink($temporary);
-            throw new \RuntimeException('Could not create temporary unknown-size archive member.');
-        }
-
-        try {
-            $actual = $this->consumeStream(
-                $input,
-                $output,
-                max(1, $remainingTotal),
-                '7z',
-                (string)($entry['path'] ?? ''),
-                0
-            );
-            if ($heartbeat !== null) {
-                $heartbeat();
-            }
-            fflush($output);
-            fclose($output);
-            $output = null;
-            fclose($input);
-            $input = null;
-            if ($actual > 0) {
-                $this->verifyTemporary($temporary, $actual, max(1, $remainingTotal));
-            }
-            return [$temporary, $actual];
-        } catch (\Throwable $error) {
-            @unlink($temporary);
-            throw new \RuntimeException(
-                '7-Zip unknown-size member "' . (string)($entry['path'] ?? '') . '" failed: '
-                . $this->errorText($error),
-                (int)$error->getCode(),
-                $error
-            );
-        } finally {
-            if (is_resource($input)) {
-                fclose($input);
-            }
-            if (is_resource($output)) {
-                fclose($output);
-            }
-        }
     }
 
     /**
