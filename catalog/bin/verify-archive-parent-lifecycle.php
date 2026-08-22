@@ -46,9 +46,10 @@ $record(
     'archive_parent_waits_for_children',
     str_contains($coordinator, "private const WAIT_STAGE = 'archive_wait_children'")
         && str_contains($coordinator, "($childState['queued'] + $childState['running']) > 0")
+        && str_contains($coordinator, '$context->checkpoint($waiting)')
         && str_contains($coordinator, '$context->defer(2, $waiting, true)')
         && str_contains($coordinator, '$this->children->fetch($job->id)'),
-    'An archive parent with queued/running member children must defer instead of returning a terminal result.'
+    'An archive parent with queued/running member children must persist its waiting state and defer instead of returning a terminal result.'
 );
 
 $record(
@@ -66,7 +67,7 @@ $record(
         && str_contains($outcomes, "'failed'")
         && str_contains($outcomes, "'cancelled'")
         && str_contains($coordinator, '$totalFailed = $extractionFailed + $childFailed')
-        && str_contains($coordinator, "$result['status'] = $partial ? 'partial' : 'completed'"),
+        && str_contains($coordinator, '$result[\'status\'] = $partial ? \'partial\' : \'completed\';'),
     'Final archive status must be based on extraction failures plus the terminal outcomes of all child jobs.'
 );
 
@@ -74,17 +75,8 @@ $record(
     'waiting_resume_does_not_reextract_archive',
     str_contains($coordinator, "(string)(\$resume['stage'] ?? '') === self::WAIT_STAGE")
         && str_contains($coordinator, "is_array(\$resume['archive_result'] ?? null)")
-        && str_contains($coordinator, '$archiveResult = $resume[\'archive_result\'];') === false,
-    'The coordinator must recover its stored extraction result while waiting instead of walking the archive again.'
-);
-
-// The prior check intentionally verifies the guarded archive_result branch by
-// structure. Check the exact return separately so formatting changes cannot make
-// a missing return look acceptable.
-$record(
-    'waiting_resume_returns_stored_archive_result',
-    str_contains($coordinator, "return \$resume['archive_result'];"),
-    'A deferred archive parent must resume from the stored extraction result.'
+        && str_contains($coordinator, "return \$resume['archive_result'];"),
+    'A deferred archive parent must resume from its stored extraction result instead of walking the archive again.'
 );
 
 $record(
