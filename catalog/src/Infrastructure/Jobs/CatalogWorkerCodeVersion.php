@@ -52,6 +52,7 @@ final class CatalogWorkerCodeVersion
             $this->catalogRoot . '/src/Infrastructure/Archive/CatalogArchiveExtractor.php',
             $this->catalogRoot . '/src/Infrastructure/Archive/CatalogSequentialArchiveReader.php',
             $this->catalogRoot . '/src/Infrastructure/Archive/CatalogZipMetadataConsistency.php',
+            $this->catalogRoot . '/src/Infrastructure/Archive/CatalogZipLocalHeaderRecoveryReader.php',
             $this->catalogRoot . '/src/Infrastructure/Archive/CatalogNativeZipArchiveReader.php',
             $this->catalogRoot . '/src/Infrastructure/Archive/CatalogZipBitReader.php',
             $this->catalogRoot . '/src/Infrastructure/Archive/CatalogZipHuffmanTree.php',
