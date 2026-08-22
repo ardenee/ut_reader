@@ -45,7 +45,7 @@ $record(
 $record(
     'archive_parent_waits_for_children',
     str_contains($coordinator, "private const WAIT_STAGE = 'archive_wait_children'")
-        && str_contains($coordinator, "($childState['queued'] + $childState['running']) > 0")
+        && str_contains($coordinator, "(\$childState['queued'] + \$childState['running']) > 0")
         && str_contains($coordinator, '$context->checkpoint($waiting)')
         && str_contains($coordinator, '$context->defer(2, $waiting, true)')
         && str_contains($coordinator, '$this->children->fetch($job->id)'),
