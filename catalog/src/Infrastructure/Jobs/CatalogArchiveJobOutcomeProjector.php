@@ -114,18 +114,39 @@ final class CatalogArchiveJobOutcomeProjector
             $profiled = (string)($row['job_type'] ?? '') === JobType::IMPORT_STAGED_ARCHIVE;
             $successLabel = $profiled ? 'imported' : 'added';
 
+            /*
+             * Child outcomes describe only members that were successfully
+             * extracted and queued. The archive parent separately records members
+             * that failed during container expansion (failed_files/progress.failed).
+             * Keep those two failure domains distinct in diagnostics, but add them
+             * for the human-facing summary so a retained archive can never say
+             * "0 failed" immediately before listing failed archive members.
+             */
+            $parentResult = is_array($row['result'] ?? null) ? $row['result'] : [];
+            $parentProgress = is_array($row['progress'] ?? null) ? $row['progress'] : [];
+            $archiveMemberFailed = max(
+                0,
+                (int)($parentResult['failed_files'] ?? 0),
+                (int)($parentProgress['failed'] ?? 0)
+            );
+            $childFailed = max(0, (int)$summary['failed']);
+            $totalFailed = $archiveMemberFailed + $childFailed;
+            $summary['archive_member_failed'] = $archiveMemberFailed;
+            $summary['child_failed'] = $childFailed;
+            $summary['total_failed'] = $totalFailed;
+
             if ($pending > 0) {
                 $message = 'Archive members: '
                     . number_format((int)$summary['successful']) . ' ' . $successLabel . ', '
                     . number_format((int)$summary['duplicate']) . ' duplicate, '
-                    . number_format((int)$summary['failed']) . ' failed, '
+                    . number_format($totalFailed) . ' failed, '
                     . number_format((int)$summary['waiting']) . ' waiting, '
                     . number_format((int)$summary['running']) . ' running.';
             } else {
                 $message = 'Archive processing complete: '
                     . number_format((int)$summary['successful']) . ' ' . $successLabel . ', '
                     . number_format((int)$summary['duplicate']) . ' duplicate, '
-                    . number_format((int)$summary['failed']) . ' failed';
+                    . number_format($totalFailed) . ' failed';
                 if ((int)$summary['cancelled'] > 0) {
                     $message .= ', ' . number_format((int)$summary['cancelled']) . ' cancelled';
                 }
@@ -141,7 +162,7 @@ final class CatalogArchiveJobOutcomeProjector
             $row['progress']['message'] = $message;
             $row['result']['archive_outcomes'] = $summary;
             $row['result']['message'] = $message;
-            if ($pending === 0 && ((int)$summary['failed'] > 0 || (int)$summary['cancelled'] > 0)) {
+            if ($pending === 0 && ($totalFailed > 0 || (int)$summary['cancelled'] > 0)) {
                 $row['result']['status'] = 'partial';
                 $row['progress']['status'] = 'partial';
             }
