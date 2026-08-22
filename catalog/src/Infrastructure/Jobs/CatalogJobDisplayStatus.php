@@ -103,7 +103,10 @@ final class CatalogJobDisplayStatus
         if ($status === 'completed') {
             return [
                 'sql' => $prefix . 'status="completed" AND '
-                    . $prefix . 'display_status NOT IN ("failed","rejected","unverified")',
+                    . $prefix . 'display_status NOT IN ("failed","rejected","unverified") AND NOT ('
+                    . $prefix . 'display_status="partial" AND '
+                    . $prefix . 'job_type IN ("' . JobType::PROCESS_BUCKET_ARCHIVE . '","'
+                    . JobType::IMPORT_STAGED_ARCHIVE . '"))',
                 'params' => [],
             ];
         }
