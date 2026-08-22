@@ -192,8 +192,38 @@ final class CatalogSequentialArchiveReader
                     );
                 }
 
+                $remainingBeforePlan = $maxDecodedBytes - $decodedBytes;
+                if ($remainingBeforePlan < 1) {
+                    throw new \RuntimeException(
+                        'Archive expansion exceeds the configured total unpacked-data limit of '
+                        . number_format($maxDecodedBytes) . ' bytes.'
+                    );
+                }
+
+                // ext-archive 0.2.0 can report a legitimate 7-Zip file as zero
+                // bytes when its size metadata is unavailable. Probe only those
+                // unknown-size 7z entries before policy planning so callers see
+                // the real bounded decoded size. A genuinely empty member remains
+                // size zero and is still rejected by the normal import policy.
+                $predecodedTemporary = null;
+                $predecodedBytes = null;
+                if ($format === '7z' && (int)$entry['size'] < 1) {
+                    [$predecodedTemporary, $predecodedBytes] = $this->decodeUnknownSizeEntry(
+                        $archive,
+                        $entry,
+                        $remainingBeforePlan,
+                        $heartbeat
+                    );
+                    if ($predecodedBytes > 0) {
+                        $entry['size'] = $predecodedBytes;
+                    }
+                }
+
                 $decision = $plan($entry);
                 if (!is_array($decision) || !array_key_exists('extract', $decision)) {
+                    if ($predecodedTemporary !== null) {
+                        @unlink($predecodedTemporary);
+                    }
                     throw new \LogicException('Sequential archive plan must return an extract decision.');
                 }
                 $extract = (bool)$decision['extract'];
@@ -202,16 +232,35 @@ final class CatalogSequentialArchiveReader
 
                 $remainingTotal = $maxDecodedBytes - $decodedBytes;
                 if ($remainingTotal < 1) {
+                    if ($predecodedTemporary !== null) {
+                        @unlink($predecodedTemporary);
+                    }
                     throw new \RuntimeException(
                         'Archive expansion exceeds the configured total unpacked-data limit of '
                         . number_format($maxDecodedBytes) . ' bytes.'
                     );
                 }
                 if ((int)$entry['size'] > 0 && (int)$entry['size'] > $remainingTotal) {
+                    if ($predecodedTemporary !== null) {
+                        @unlink($predecodedTemporary);
+                    }
                     throw new \RuntimeException(
                         'Archive expansion exceeds the configured total unpacked-data limit of '
                         . number_format($maxDecodedBytes) . ' bytes.'
                     );
+                }
+
+                if ($predecodedTemporary !== null) {
+                    $actual = max(0, (int)$predecodedBytes);
+                    $decodedBytes += $actual;
+                    try {
+                        $complete($entry, $extract && $actual > 0 ? $predecodedTemporary : null, $state);
+                    } finally {
+                        if (is_file($predecodedTemporary)) {
+                            @unlink($predecodedTemporary);
+                        }
+                    }
+                    continue;
                 }
 
                 // ZIP entries are independently compressed. Once the coordinator
@@ -261,11 +310,27 @@ final class CatalogSequentialArchiveReader
                     );
                     $decodedBytes += $actualBytes;
                     if ((int)$entry['size'] > 0 && $actualBytes !== (int)$entry['size']) {
-                        throw new \RuntimeException(
-                            'Archive member output size does not match its declared size; expected '
-                            . number_format((int)$entry['size']) . ' bytes, got '
-                            . number_format($actualBytes) . ' bytes.'
-                        );
+                        $recovered = false;
+                        if ($format === 'zip' && $temporary !== null) {
+                            if (is_resource($output)) {
+                                fflush($output);
+                            }
+                            $recovered = $this->zipLocalHeaderValidatesOutput(
+                                $archivePath,
+                                (string)$entry['path'],
+                                $temporary,
+                                $actualBytes
+                            );
+                        }
+                        if ($recovered) {
+                            $entry['size'] = $actualBytes;
+                        } else {
+                            throw new \RuntimeException(
+                                'Archive member output size does not match its declared size; expected '
+                                . number_format((int)$entry['size']) . ' bytes, got '
+                                . number_format($actualBytes) . ' bytes.'
+                            );
+                        }
                     }
                     if ((int)$entry['size'] < 1) {
                         $entry['size'] = $actualBytes;
@@ -332,6 +397,207 @@ final class CatalogSequentialArchiveReader
             'decoded_bytes' => $decodedBytes,
             'format' => $format,
         ];
+    }
+
+    /**
+     * Decode a 7-Zip member whose declared size is unavailable. The temporary
+     * output is only a bounded probe and is handed to the normal coordinator if
+     * the recovered size makes the member eligible for extraction.
+     *
+     * @param object $archive
+     * @param array<string,mixed> $entry
+     * @return array{0:string,1:int}
+     */
+    private function decodeUnknownSizeEntry(
+        object $archive,
+        array $entry,
+        int $remainingTotal,
+        ?callable $heartbeat
+    ): array {
+        $input = $archive->currentEntryStream();
+        if (!is_resource($input)) {
+            throw new \RuntimeException(
+                'Could not open libarchive current-member stream for unknown-size member '
+                . (string)($entry['path'] ?? '') . '.'
+            );
+        }
+        $temporary = $this->temporaryPath();
+        $output = @fopen($temporary, 'wb');
+        if (!is_resource($output)) {
+            fclose($input);
+            @unlink($temporary);
+            throw new \RuntimeException('Could not create temporary unknown-size archive member.');
+        }
+
+        try {
+            $actual = $this->consumeStream(
+                $input,
+                $output,
+                max(1, $remainingTotal),
+                '7z',
+                (string)($entry['path'] ?? ''),
+                0
+            );
+            if ($heartbeat !== null) {
+                $heartbeat();
+            }
+            fflush($output);
+            fclose($output);
+            $output = null;
+            fclose($input);
+            $input = null;
+            if ($actual > 0) {
+                $this->verifyTemporary($temporary, $actual, max(1, $remainingTotal));
+            }
+            return [$temporary, $actual];
+        } catch (\Throwable $error) {
+            @unlink($temporary);
+            throw new \RuntimeException(
+                '7-Zip unknown-size member "' . (string)($entry['path'] ?? '') . '" failed: '
+                . $this->errorText($error),
+                (int)$error->getCode(),
+                $error
+            );
+        } finally {
+            if (is_resource($input)) {
+                fclose($input);
+            }
+            if (is_resource($output)) {
+                fclose($output);
+            }
+        }
+    }
+
+    /**
+     * Accept stale ZIP central-directory size metadata only when an exact local
+     * header for the same path independently verifies the actual output size and
+     * CRC32. This preserves integrity checking while recovering old rewritten ZIPs.
+     */
+    private function zipLocalHeaderValidatesOutput(
+        string $archivePath,
+        string $entryPath,
+        string $temporary,
+        int $actualBytes
+    ): bool {
+        if ($actualBytes < 1 || !is_file($temporary) || is_link($temporary)) {
+            return false;
+        }
+        $actualCrc = strtolower((string)hash_file('crc32b', $temporary));
+        if ($actualCrc === '') {
+            return false;
+        }
+        $fileSize = filesize($archivePath);
+        if ($fileSize === false || (int)$fileSize < 30) {
+            return false;
+        }
+        $fileSize = (int)$fileSize;
+        $scan = @fopen($archivePath, 'rb');
+        $probe = @fopen($archivePath, 'rb');
+        if (!is_resource($scan) || !is_resource($probe)) {
+            if (is_resource($scan)) {
+                fclose($scan);
+            }
+            if (is_resource($probe)) {
+                fclose($probe);
+            }
+            return false;
+        }
+
+        try {
+            $offset = 0;
+            $carry = '';
+            while (!feof($scan)) {
+                $chunk = fread($scan, 1024 * 1024);
+                if (!is_string($chunk) || $chunk === '') {
+                    break;
+                }
+                $window = $carry . $chunk;
+                $baseOffset = $offset - strlen($carry);
+                $cursor = 0;
+                while (($position = strpos($window, "PK\x03\x04", $cursor)) !== false) {
+                    $candidateOffset = $baseOffset + $position;
+                    if ($candidateOffset >= 0 && $this->zipLocalHeaderMatchesOutput(
+                        $probe,
+                        $candidateOffset,
+                        $entryPath,
+                        $actualBytes,
+                        $actualCrc,
+                        $fileSize
+                    )) {
+                        return true;
+                    }
+                    $cursor = $position + 1;
+                }
+                $carry = strlen($window) > 3 ? substr($window, -3) : $window;
+                $offset += strlen($chunk);
+            }
+        } finally {
+            fclose($scan);
+            fclose($probe);
+        }
+        return false;
+    }
+
+    /** @param resource $handle */
+    private function zipLocalHeaderMatchesOutput(
+        $handle,
+        int $offset,
+        string $entryPath,
+        int $actualBytes,
+        string $actualCrc,
+        int $fileSize
+    ): bool {
+        if ($offset < 0 || $offset + 30 > $fileSize || fseek($handle, $offset, SEEK_SET) !== 0) {
+            return false;
+        }
+        $header = fread($handle, 30);
+        if (!is_string($header) || strlen($header) !== 30 || substr($header, 0, 4) !== "PK\x03\x04") {
+            return false;
+        }
+        $flags = $this->zipU16($header, 6);
+        if (($flags & 0x0008) !== 0) {
+            return false;
+        }
+        $crc = $this->zipU32($header, 14);
+        $compressed = $this->zipU32($header, 18);
+        $uncompressed = $this->zipU32($header, 22);
+        $nameLength = $this->zipU16($header, 26);
+        $extraLength = $this->zipU16($header, 28);
+        if ($nameLength < 1 || $nameLength > 2048 || $uncompressed !== $actualBytes || $compressed < 1) {
+            return false;
+        }
+        $dataOffset = $offset + 30 + $nameLength + $extraLength;
+        if ($dataOffset <= $offset || $dataOffset + $compressed > $fileSize) {
+            return false;
+        }
+        $rawName = fread($handle, $nameLength);
+        if (!is_string($rawName) || strlen($rawName) !== $nameLength) {
+            return false;
+        }
+        $localPath = str_replace('\\', '/', $rawName);
+        $expectedPath = str_replace('\\', '/', $entryPath);
+        if (!hash_equals($expectedPath, $localPath)) {
+            return false;
+        }
+        return hash_equals(strtolower(sprintf('%08x', $crc)), $actualCrc);
+    }
+
+    private function zipU16(string $data, int $offset): int
+    {
+        if ($offset < 0 || $offset + 2 > strlen($data)) {
+            return -1;
+        }
+        $value = unpack('vvalue', substr($data, $offset, 2));
+        return (int)($value['value'] ?? -1);
+    }
+
+    private function zipU32(string $data, int $offset): int
+    {
+        if ($offset < 0 || $offset + 4 > strlen($data)) {
+            return -1;
+        }
+        $value = unpack('Vvalue', substr($data, $offset, 4));
+        return (int)($value['value'] ?? -1);
     }
 
     /** @param resource $input @param resource|null $output */
