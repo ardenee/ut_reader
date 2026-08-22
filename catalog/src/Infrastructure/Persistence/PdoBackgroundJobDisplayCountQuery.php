@@ -61,7 +61,12 @@ final class PdoBackgroundJobDisplayCountQuery
             if ($queueStatus === 'completed'
                 && $displayStatus === 'partial'
                 && in_array($jobType, [JobType::PROCESS_BUCKET_ARCHIVE, JobType::IMPORT_STAGED_ARCHIVE], true)) {
+                // A partial archive is terminal, but it is not a successfully
+                // completed logical job. Keep it exclusively in the retained-
+                // archive/needs-attention counter rather than double-counting it
+                // as Completed as well.
                 $counts['partial_archive'] += $amount;
+                continue;
             }
 
             $group = CatalogJobDisplayStatus::groupDisplayStatus($queueStatus, $displayStatus);
