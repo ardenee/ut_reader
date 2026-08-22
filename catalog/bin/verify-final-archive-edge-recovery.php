@@ -16,7 +16,7 @@ $record = static function (string $name, bool $ok, string $detail) use (&$result
 $temp = [];
 try {
     $source = (string)file_get_contents($root . '/src/Infrastructure/Archive/CatalogSequentialArchiveReader.php');
-    $unknownMarker = "if ($format === '7z' && (int)$entry['size'] < 1)";
+    $unknownMarker = "if (\$format === '7z' && (int)\$entry['size'] < 1)";
     $unknownPos = strpos($source, $unknownMarker);
     $planPos = strpos($source, '$decision = $plan($entry);');
     $record(
