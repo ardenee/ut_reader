@@ -18,7 +18,8 @@ final class JobFailureRetryPolicy
 {
     public static function retryDelaySeconds(ClaimedJob $job, Throwable $error): int
     {
-        if (self::isDeterministicArchiveFailure($job, $error)) {
+        if (self::isDeterministicArchiveFailure($job, $error)
+            || self::isDeterministicPackageFailure($job, $error)) {
             return 0;
         }
 
@@ -81,5 +82,38 @@ final class JobFailureRetryPolicy
             && (str_contains($message, 'inconsistent')
                 || str_contains($message, 'corrupt')
                 || str_contains($message, 'malformed'));
+    }
+
+    private static function isDeterministicPackageFailure(ClaimedJob $job, Throwable $error): bool
+    {
+        if (!in_array($job->type, [
+            JobType::PROCESS_BUCKET_STAGED_PACKAGE,
+            JobType::IMPORT_STAGED_PACKAGE,
+        ], true)) {
+            return false;
+        }
+
+        $message = strtolower(trim($error->getMessage()));
+        if ($message === '') {
+            return false;
+        }
+
+        // These failures describe immutable package bytes that contradict their
+        // own UE serialization metadata. Retrying cannot add the missing bytes or
+        // change the recorded table/chunk boundaries. In particular, Epic UE3
+        // compressed packages declare physical CompressedOffset/CompressedSize;
+        // if a declared range extends past EOF the package is incomplete.
+        foreach ([
+            'epic ue3 compressed chunk exceeds physical package size',
+            'negative epic ue3 compressed chunk field',
+            'invalid first epic ue3 compressed chunk offset',
+            'overlapping epic ue3 compressed chunk ranges are invalid',
+        ] as $structuralMarker) {
+            if (str_contains($message, $structuralMarker)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
