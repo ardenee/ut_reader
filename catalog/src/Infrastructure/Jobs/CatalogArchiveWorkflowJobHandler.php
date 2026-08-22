@@ -55,11 +55,13 @@ final class CatalogArchiveWorkflowJobHandler implements JobHandler
         }
 
         if (($childState['queued'] + $childState['running']) > 0) {
-            $context->defer(
-                2,
-                $this->waitingProgress($archiveResult, $childState),
-                true
-            );
+            $waiting = $this->waitingProgress($archiveResult, $childState);
+            // The extraction delegate's final checkpoint describes the extraction
+            // phase, not the logical parent job. Immediately replace it with the
+            // authoritative waiting phase before releasing the worker so event and
+            // progress views never leave "complete" as the latest parent state.
+            $context->checkpoint($waiting);
+            $context->defer(2, $waiting, true);
         }
 
         return $this->finalResult($job, $archiveResult, $childState, $context);
@@ -83,12 +85,11 @@ final class CatalogArchiveWorkflowJobHandler implements JobHandler
             return $resume['archive_result'];
         }
 
-        // CatalogArchiveImportJobHandler currently persists its extraction result
-        // as stage=complete before returning it. If the worker dies immediately
-        // after that checkpoint, children already exist and the source archive may
-        // already have been released. Reconstruct the extraction result rather than
-        // replaying the archive. A manual retained-archive restart has no progress
-        // because PdoBackgroundJobBulkAction clears it deliberately.
+        // CatalogArchiveImportJobHandler persists its extraction result as
+        // stage=complete before returning it. If the worker dies in the very small
+        // window before this coordinator stores archive_wait_children, recover the
+        // extraction counters from that checkpoint rather than replaying the
+        // archive. A manual retained-archive restart clears progress deliberately.
         if ((string)($resume['stage'] ?? '') === 'complete'
             && (int)($resume['workflow_version'] ?? 0) > 0
             && (int)($children['total'] ?? 0) > 0) {
