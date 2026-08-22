@@ -14,6 +14,7 @@ namespace UnrealDb\Catalog\Infrastructure\Jobs;
 use PDO;
 use Throwable;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
+use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogIncomingFileStore;
 
 final class CatalogJobSourceContextResolver
@@ -23,7 +24,7 @@ final class CatalogJobSourceContextResolver
     /** @param array<string,mixed> $config */
     public function __construct(
         private readonly PDO $db,
-        array $config
+        private readonly array $config
     ) {
         $this->incoming = new CatalogIncomingFileStore($config);
     }
@@ -59,6 +60,7 @@ final class CatalogJobSourceContextResolver
             ? $row['payload']
             : $this->decodePayload($row['payload_json'] ?? null);
         $jobId = max(0, (int)($row['id'] ?? 0));
+        $jobType = trim((string)($row['job_type'] ?? ''));
         $parentJobId = max(
             0,
             (int)($row['parent_job_id'] ?? 0),
@@ -67,7 +69,7 @@ final class CatalogJobSourceContextResolver
 
         $context = [
             'job_id' => $jobId,
-            'job_type' => trim((string)($row['job_type'] ?? '')),
+            'job_type' => $jobType,
         ];
         $this->copyPayloadIdentity($context, 'job', $payload);
 
@@ -78,6 +80,10 @@ final class CatalogJobSourceContextResolver
         }
         if ($archiveEntryPath !== '') {
             $context['archive_entry_path'] = $archiveEntryPath;
+        }
+
+        if ($jobId > 0 && in_array($jobType, [JobType::PROCESS_BUCKET_ARCHIVE, JobType::IMPORT_STAGED_ARCHIVE], true)) {
+            $this->applyPreparedArchiveSource($context, $jobId);
         }
 
         if ($parentJobId < 1) {
@@ -103,19 +109,63 @@ final class CatalogJobSourceContextResolver
         if ($parentRelative !== '') {
             $context['archive_source_relative_path'] = $parentRelative;
         }
+
+        // The parent workflow's prepared archive is the authoritative recovery
+        // source. The original chunk/incoming reference is retained as provenance
+        // but may have been deliberately released after ownership transferred.
+        $this->applyPreparedArchiveSource($context, $parentJobId);
+
         $parentStaged = trim((string)($parentPayload['staged_path'] ?? ''));
         if ($parentStaged !== '') {
             $context['archive_staged_path'] = $parentStaged;
             $resolved = $this->resolveStaged($parentStaged);
             if ($resolved['full_path'] !== '') {
-                $context['archive_full_path'] = $resolved['full_path'];
-                $context['archive_full_path_exists'] = $resolved['exists'];
+                $context['archive_ingress_full_path'] = $resolved['full_path'];
+                $context['archive_ingress_full_path_exists'] = $resolved['exists'];
+                if (!isset($context['archive_full_path'])) {
+                    $context['archive_full_path'] = $resolved['full_path'];
+                    $context['archive_full_path_exists'] = $resolved['exists'];
+                    $context['archive_source_storage'] = 'ingress';
+                }
             } elseif ($resolved['error'] !== '') {
                 $context['archive_path_resolution_error'] = $resolved['error'];
             }
         }
 
         return $this->withoutEmptyValues($context);
+    }
+
+    /** @param array<string,mixed> $context */
+    private function applyPreparedArchiveSource(array &$context, int $jobId): void
+    {
+        if ($jobId < 1) {
+            return;
+        }
+        try {
+            $prepared = (new CatalogPreparedJobFileStore($this->config, $jobId, 'archive-source'))->load();
+        } catch (Throwable $error) {
+            $context['archive_prepared_path_error'] = trim($error->getMessage()) !== ''
+                ? trim($error->getMessage())
+                : get_class($error);
+            return;
+        }
+        if (!is_array($prepared)) {
+            return;
+        }
+
+        $path = trim((string)($prepared['path'] ?? ''));
+        if ($path === '') {
+            return;
+        }
+        $context['archive_prepared_path'] = $path;
+        $context['archive_prepared_bytes'] = max(0, (int)($prepared['size'] ?? 0));
+        $context['archive_full_path'] = $path;
+        $context['archive_full_path_exists'] = is_file($path);
+        $context['archive_source_storage'] = 'job-prepared';
+        $originalStaged = trim((string)($prepared['original_staged_path'] ?? ''));
+        if ($originalStaged !== '') {
+            $context['archive_original_staged_path'] = $originalStaged;
+        }
     }
 
     /** @param array<string,mixed> $context @param array<string,mixed> $payload */

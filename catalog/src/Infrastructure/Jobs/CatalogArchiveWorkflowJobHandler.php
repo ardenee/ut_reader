@@ -3,9 +3,9 @@
  * Coordinates the logical lifetime of an archive import job.
  *
  * CatalogArchiveImportJobHandler owns archive decoding and durable child creation.
- * This coordinator owns the parent lifecycle: once children exist, the parent is
- * deferred in archive_wait_children and cannot become terminal until every child
- * is terminal. The worker is released while children run.
+ * This coordinator owns the parent lifecycle and source ownership: ingress bytes
+ * are first transferred into job-owned prepared storage, then the parent is
+ * deferred in archive_wait_children until every child is terminal.
  */
 declare(strict_types=1);
 
@@ -25,12 +25,14 @@ final class CatalogArchiveWorkflowJobHandler implements JobHandler
 
     private readonly CatalogArchiveImportJobHandler $extractor;
     private readonly PdoArchiveChildOutcomeQuery $children;
+    private readonly CatalogArchiveSourceStore $sources;
 
     /** @param array<string,mixed> $config */
     public function __construct(PDO $db, array $config)
     {
         $this->extractor = new CatalogArchiveImportJobHandler($db, $config);
         $this->children = new PdoArchiveChildOutcomeQuery($db);
+        $this->sources = new CatalogArchiveSourceStore($config);
     }
 
     public function supports(string $jobType): bool
@@ -46,7 +48,11 @@ final class CatalogArchiveWorkflowJobHandler implements JobHandler
         $archiveResult = $this->resumeArchiveResult($job, $resume, $childState);
 
         if ($archiveResult === null) {
-            $archiveResult = $this->extractor->handle($job, $context);
+            // The archive workflow owns its immutable source before any extraction
+            // occurs. Browser chunk staging is ingress only and may be cleaned once
+            // the parent has atomically published its prepared archive source.
+            $ownedJob = $this->sources->prepareJob($job);
+            $archiveResult = $this->extractor->handle($ownedJob, $context);
             $childState = $this->children->fetch($job->id);
         }
 
@@ -71,7 +77,8 @@ final class CatalogArchiveWorkflowJobHandler implements JobHandler
      * Recover coordinator state without replaying extraction after a worker dies
      * between the extractor's final checkpoint and this coordinator's defer.
      * Retained-archive manual Restart explicitly clears progress_json, so a real
-     * administrator retry still performs a fresh archive walk.
+     * administrator retry still performs a fresh archive walk from the retained
+     * job-owned source.
      *
      * @param array<string,mixed> $resume
      * @param array<string,int> $children
