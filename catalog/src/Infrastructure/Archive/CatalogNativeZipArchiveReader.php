@@ -17,7 +17,24 @@ final class CatalogNativeZipArchiveReader
     private const CENTRAL_SIGNATURE = "PK\x01\x02";
     private const LOCAL_SIGNATURE = "PK\x03\x04";
     private const EOCD_MIN_BYTES = 22;
-    private const EOCD_SEARCH_BYTES = 65557;
+
+    // The ZIP specification only requires EOCD to be within 65,557 bytes of EOF,
+    // but historical download mirrors sometimes append transport/readme/padding
+    // data after a valid archive. Scan a bounded compatibility window and validate
+    // every candidate against the central directory before accepting it.
+    private const EOCD_SEARCH_BYTES = 16777216;
+
+    /** @var list<string> */
+    private const CP437_HIGH_CHARS = [
+        'Ç', 'ü', 'é', 'â', 'ä', 'à', 'å', 'ç', 'ê', 'ë', 'è', 'ï', 'î', 'ì', 'Ä', 'Å',
+        'É', 'æ', 'Æ', 'ô', 'ö', 'ò', 'û', 'ù', 'ÿ', 'Ö', 'Ü', '¢', '£', '¥', '₧', 'ƒ',
+        'á', 'í', 'ó', 'ú', 'ñ', 'Ñ', 'ª', 'º', '¿', '⌐', '¬', '½', '¼', '¡', '«', '»',
+        '░', '▒', '▓', '│', '┤', '╡', '╢', '╖', '╕', '╣', '║', '╗', '╝', '╜', '╛', '┐',
+        '└', '┴', '┬', '├', '─', '┼', '╞', '╟', '╚', '╔', '╩', '╦', '╠', '═', '╬', '╧',
+        '╨', '╤', '╥', '╙', '╘', '╒', '╓', '╫', '╪', '┘', '┌', '█', '▄', '▌', '▐', '▀',
+        'α', 'ß', 'Γ', 'π', 'Σ', 'σ', 'µ', 'τ', 'Φ', 'Θ', 'Ω', 'δ', '∞', 'φ', 'ε', '∩',
+        '≡', '±', '≥', '≤', '⌠', '⌡', '÷', '≈', '°', '∙', '·', '√', 'ⁿ', '²', '■', ' ',
+    ];
 
     /** @param array<string,mixed> $config */
     public function __construct(private readonly array $config)
@@ -470,22 +487,61 @@ final class CatalogNativeZipArchiveReader
             throw new \RuntimeException('Native ZIP EOCD search could not position the source.');
         }
         $tail = $this->readExact($handle, $readBytes, 'ZIP end-of-central-directory search');
-        $searchEnd = strlen($tail);
+        $tailLength = strlen($tail);
+        $searchEnd = $tailLength;
         while ($searchEnd >= 4) {
             $position = strrpos(substr($tail, 0, $searchEnd), self::EOCD_SIGNATURE);
             if ($position === false) {
                 break;
             }
-            if ($position + self::EOCD_MIN_BYTES <= strlen($tail)) {
+            if ($position + self::EOCD_MIN_BYTES <= $tailLength) {
                 $candidate = substr($tail, $position, self::EOCD_MIN_BYTES);
                 $commentLength = $this->u16($candidate, 20);
-                if ($position + self::EOCD_MIN_BYTES + $commentLength === strlen($tail)) {
-                    return [$start + $position, $candidate];
+                $recordEnd = $position + self::EOCD_MIN_BYTES + $commentLength;
+                $absoluteOffset = $start + $position;
+                if ($recordEnd <= $tailLength && $this->isPlausibleEocd($handle, $absoluteOffset, $candidate)) {
+                    return [$absoluteOffset, $candidate];
                 }
             }
             $searchEnd = $position;
         }
         throw new \RuntimeException('Native ZIP end-of-central-directory record was not found.');
+    }
+
+    /** @param resource $handle */
+    private function isPlausibleEocd($handle, int $eocdOffset, string $candidate): bool
+    {
+        try {
+            $diskNumber = $this->u16($candidate, 4);
+            $centralDisk = $this->u16($candidate, 6);
+            $entriesOnDisk = $this->u16($candidate, 8);
+            $entryCount = $this->u16($candidate, 10);
+            $centralSize = $this->u32($candidate, 12);
+            $recordedCentralOffset = $this->u32($candidate, 16);
+        } catch (\Throwable) {
+            return false;
+        }
+
+        if ($diskNumber !== 0 || $centralDisk !== 0 || $entriesOnDisk !== $entryCount) {
+            return false;
+        }
+        if ($entryCount === 0xffff || $centralSize === 0xffffffff || $recordedCentralOffset === 0xffffffff) {
+            return false;
+        }
+        if ($entryCount === 0) {
+            return $centralSize === 0;
+        }
+        if ($centralSize < 46 || $centralSize > $eocdOffset) {
+            return false;
+        }
+
+        $physicalCentralOffset = $eocdOffset - $centralSize;
+        if ($this->hasSignature($handle, $physicalCentralOffset, self::CENTRAL_SIGNATURE)) {
+            return true;
+        }
+        return $recordedCentralOffset >= 0
+            && $recordedCentralOffset < $eocdOffset
+            && $this->hasSignature($handle, $recordedCentralOffset, self::CENTRAL_SIGNATURE);
     }
 
     /** @param resource $handle */
@@ -562,15 +618,23 @@ final class CatalogNativeZipArchiveReader
     private function decodeName(string $rawName, int $flags): string
     {
         if (($flags & 0x0800) !== 0) {
-            return preg_match('//u', $rawName) === 1 ? $rawName : $rawName;
-        }
-        if (function_exists('mb_convert_encoding')) {
-            $converted = @mb_convert_encoding($rawName, 'UTF-8', 'CP437');
-            if (is_string($converted) && $converted !== '') {
-                return $converted;
+            if (preg_match('//u', $rawName) !== 1) {
+                throw new \RuntimeException('ZIP filename is marked UTF-8 but contains invalid UTF-8 bytes.');
             }
+            return $rawName;
         }
-        return $rawName;
+
+        // ZIP's historical default filename character set is IBM Code Page 437.
+        // Do not depend on mbstring/iconv aliases here: Windows PHP builds differ
+        // in which legacy encoding names they expose, and mb_convert_encoding()
+        // throws ValueError before decompression on builds where CP437 is absent.
+        $decoded = '';
+        $length = strlen($rawName);
+        for ($index = 0; $index < $length; $index++) {
+            $byte = ord($rawName[$index]);
+            $decoded .= $byte < 0x80 ? $rawName[$index] : self::CP437_HIGH_CHARS[$byte - 0x80];
+        }
+        return $decoded;
     }
 
     /** @return array{0:string,1:string} */
