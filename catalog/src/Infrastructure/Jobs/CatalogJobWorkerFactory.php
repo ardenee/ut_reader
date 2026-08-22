@@ -13,6 +13,7 @@ use PDO;
 use UnrealDb\Catalog\Application\Jobs\JobWorker;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoArchiveParentLifecycleRepair;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoContention;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 use UnrealDb\Catalog\Infrastructure\Telemetry\CatalogSystemErrorRecorder;
@@ -39,6 +40,21 @@ final class CatalogJobWorkerFactory
             (new CatalogJobResourceLimitStore($db, $queueName))->synchronizeQueuedPolicies();
         } catch (\Throwable $error) {
             error_log('[UnrealDB worker policy sync] ' . $error->getMessage());
+        }
+
+        // Older archive coordinators completed their parent row immediately after
+        // enqueueing children. Reopen only those completed parents that still have
+        // queued/running children so deploying the corrected lifecycle also repairs
+        // work that was already in flight. The operation is idempotent and bounded.
+        try {
+            $reopenedArchiveParents = (new PdoArchiveParentLifecycleRepair($db))
+                ->reopenCompletedParentsWithActiveChildren($queueName);
+            if ($reopenedArchiveParents > 0) {
+                error_log('[UnrealDB archive lifecycle] Reopened ' . $reopenedArchiveParents
+                    . ' completed archive parent(s) that still had active children.');
+            }
+        } catch (\Throwable $error) {
+            error_log('[UnrealDB archive lifecycle repair] ' . $error->getMessage());
         }
 
         $trustedImportConfig = $config;
