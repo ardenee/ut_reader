@@ -52,15 +52,17 @@ final class CatalogBucketBatchFinalizer
             $activeQueues = [];
             foreach ([$queue->queueName(), $queue->legacyQueueName()] as $queueName) {
                 $workerStatus = $launcher->status($queueName, false);
-                if ($prepareQueue && empty($workerStatus['active'])) {
+                $busy = !empty($workerStatus['active']) || (int)($workerStatus['launching_count'] ?? 0) > 0;
+                if ($prepareQueue && !$busy) {
                     $recovery = (new CatalogOrphanedJobRecovery($this->db, $this->config))
                         ->recoverInactiveQueue($queueName);
                     if (!empty($recovery['recovered'])) {
                         $orphanRecovery[$queueName] = $recovery;
                     }
                     $workerStatus = $launcher->status($queueName, false);
+                    $busy = !empty($workerStatus['active']) || (int)($workerStatus['launching_count'] ?? 0) > 0;
                 }
-                if (!empty($workerStatus['active'])) {
+                if ($busy) {
                     $activeQueues[] = $queueName;
                 }
             }

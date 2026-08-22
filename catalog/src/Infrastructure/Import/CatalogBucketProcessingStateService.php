@@ -34,12 +34,19 @@ final class CatalogBucketProcessingStateService
 
         foreach ([$queues->queueName(), $queues->legacyQueueName()] as $queueName) {
             $status = $launcher->status($queueName, false);
-            if ($requestPause && !empty($status['active'])) {
+            $busy = !empty($status['active']) || (int)($status['launching_count'] ?? 0) > 0;
+            if ($requestPause && $busy) {
+                // A worker slot that has published `launching` but has not yet
+                // acquired its runtime lock is still real queue activity. Mark
+                // the queue stopped now so that process exits as soon as it
+                // reaches its worker loop instead of racing batch finalisation.
                 $launcher->requestStop($queueName);
                 $status = $launcher->status($queueName, false);
+                $busy = !empty($status['active']) || (int)($status['launching_count'] ?? 0) > 0;
             }
             $active = !empty($status['active']);
-            if ($active) {
+            $launching = (int)($status['launching_count'] ?? 0);
+            if ($busy) {
                 $ready = false;
             }
 
@@ -57,6 +64,8 @@ final class CatalogBucketProcessingStateService
             $workers[] = [
                 'queue' => $queueName,
                 'active' => $active,
+                'launching' => $launching,
+                'busy' => $busy,
                 'stop_requested' => !empty($status['stop_requested']),
                 'state' => is_array($status['state'] ?? null) ? $status['state'] : [],
                 'running_job' => is_array($runningJob) ? [
