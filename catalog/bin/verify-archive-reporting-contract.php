@@ -42,6 +42,17 @@ $record(
 );
 
 $record(
+    'archive_summary_includes_parent_extraction_failures',
+    str_contains($projector, "\$parentResult['failed_files']")
+        && str_contains($projector, "\$parentProgress['failed']")
+        && str_contains($projector, "\$summary['archive_member_failed']")
+        && str_contains($projector, "\$summary['child_failed']")
+        && str_contains($projector, "\$summary['total_failed']")
+        && str_contains($projector, 'number_format($totalFailed) . \' failed\''),
+    'The visible failed count must combine archive-expansion failures retained by the parent with downstream child-job failures, while preserving both component counts for diagnostics.'
+);
+
+$record(
     'both_job_status_apis_apply_archive_projection',
     str_contains($statusApi, 'new CatalogArchiveJobOutcomeProjector($application->db)')
         && str_contains($cursorApi, 'new CatalogArchiveJobOutcomeProjector($application->db)'),
