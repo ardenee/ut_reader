@@ -300,13 +300,18 @@ final class CatalogSequentialArchiveReader
                         }
                     }
 
+                    // For ZIP, read until the decoder reaches the actual member EOF
+                    // and compare afterward. Old mirrors can contain a stale final
+                    // central directory whose size is larger than the valid local
+                    // member. Other sequential formats keep their declared-size
+                    // bound because it is needed to detect truncated solid streams.
                     $actualBytes = $this->consumeStream(
                         $input,
                         $output,
                         $streamLimit,
                         $format,
                         (string)$entry['path'],
-                        max(0, (int)$entry['size'])
+                        $format === 'zip' ? 0 : max(0, (int)$entry['size'])
                     );
                     $decodedBytes += $actualBytes;
                     if ((int)$entry['size'] > 0 && $actualBytes !== (int)$entry['size']) {
