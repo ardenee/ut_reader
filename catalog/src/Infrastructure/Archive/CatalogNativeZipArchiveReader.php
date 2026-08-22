@@ -322,6 +322,7 @@ final class CatalogNativeZipArchiveReader
         $method = (int)$entry['compression_method'];
         $compressedSize = max(0, (int)$entry['compressed_size']);
         $expectedBytes = max(0, (int)$entry['size']);
+        $centralBoundary = (int)($entry['central_boundary'] ?? 0);
         $zipFailure = null;
 
         // Stored and normal DEFLATE entries do not require our raw compatibility
@@ -348,8 +349,13 @@ final class CatalogNativeZipArchiveReader
                 (int)($entry['local_offset'] ?? -1),
                 $method,
                 (string)$entry['path'],
-                (int)($entry['central_boundary'] ?? 0)
+                $centralBoundary
             );
+            if ($dataOffset < 0 || $compressedSize < 0 || $dataOffset + $compressedSize > $centralBoundary) {
+                throw new \RuntimeException(
+                    'Native ZIP compressed member bounds are invalid for "' . (string)$entry['path'] . '".'
+                );
+            }
             if (fseek($input, $dataOffset, SEEK_SET) !== 0) {
                 throw new \RuntimeException('Native ZIP member payload could not be positioned.');
             }
