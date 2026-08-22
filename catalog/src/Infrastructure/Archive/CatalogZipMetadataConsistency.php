@@ -11,6 +11,7 @@ namespace UnrealDb\Catalog\Infrastructure\Archive;
 final class CatalogZipMetadataConsistency
 {
     private const LOCAL_SIGNATURE = "PK\x03\x04";
+    private const MAX_SCAN_BYTES = 16777216;
 
     public function hasTrustedLocalMetadataMismatch(string $archivePath): bool
     {
@@ -20,6 +21,11 @@ final class CatalogZipMetadataConsistency
             || is_link($archivePath)) {
             return false;
         }
+        $fileSize = filesize($archivePath);
+        if ($fileSize === false || (int)$fileSize < 30 || (int)$fileSize > self::MAX_SCAN_BYTES) {
+            return false;
+        }
+        $fileSize = (int)$fileSize;
 
         $zip = new \ZipArchive();
         $opened = $zip->open($archivePath, \ZipArchive::RDONLY);
@@ -51,11 +57,6 @@ final class CatalogZipMetadataConsistency
             return false;
         }
 
-        $fileSize = filesize($archivePath);
-        if ($fileSize === false || (int)$fileSize < 30) {
-            return false;
-        }
-        $fileSize = (int)$fileSize;
         $scan = @fopen($archivePath, 'rb');
         $probe = @fopen($archivePath, 'rb');
         if (!is_resource($scan) || !is_resource($probe)) {
