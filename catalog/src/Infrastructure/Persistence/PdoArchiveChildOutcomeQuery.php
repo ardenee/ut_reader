@@ -1,0 +1,102 @@
+<?php
+/**
+ * Canonical child-outcome projection for archive parent workflows.
+ *
+ * Archive parents remain non-terminal until every archive member child is
+ * terminal. This query keeps lifecycle/final-result classification independent
+ * of the browser read model so workers do not depend on presentation code.
+ */
+declare(strict_types=1);
+
+namespace UnrealDb\Catalog\Infrastructure\Persistence;
+
+use PDO;
+
+final class PdoArchiveChildOutcomeQuery
+{
+    public function __construct(private readonly PDO $db)
+    {
+    }
+
+    /**
+     * @return array{
+     *   total:int,queued:int,running:int,successful:int,duplicate:int,
+     *   failed:int,cancelled:int,dead_letter:int,terminal:int
+     * }
+     */
+    public function fetch(int $parentJobId): array
+    {
+        if ($parentJobId < 1) {
+            throw new \InvalidArgumentException('A positive archive parent job id is required.');
+        }
+
+        $state = [
+            'total' => 0,
+            'queued' => 0,
+            'running' => 0,
+            'successful' => 0,
+            'duplicate' => 0,
+            'failed' => 0,
+            'cancelled' => 0,
+            'dead_letter' => 0,
+            'terminal' => 0,
+        ];
+
+        $statement = $this->db->prepare(
+            'SELECT status,display_status,COUNT(*) c FROM ue_background_jobs '
+            . 'WHERE parent_job_id=? AND workflow_unit_key LIKE "archive:%" '
+            . 'GROUP BY status,display_status'
+        );
+        $statement->execute([$parentJobId]);
+
+        foreach ($statement->fetchAll(PDO::FETCH_ASSOC) ?: [] as $row) {
+            $count = max(0, (int)($row['c'] ?? 0));
+            if ($count < 1) {
+                continue;
+            }
+            $status = strtolower(trim((string)($row['status'] ?? '')));
+            $displayStatus = strtolower(trim((string)($row['display_status'] ?? '')));
+            $state['total'] += $count;
+
+            if ($status === 'queued') {
+                $state['queued'] += $count;
+                continue;
+            }
+            if ($status === 'running') {
+                $state['running'] += $count;
+                continue;
+            }
+
+            $state['terminal'] += $count;
+            if ($status === 'cancelled') {
+                $state['cancelled'] += $count;
+                continue;
+            }
+            if ($status === 'dead_letter') {
+                $state['dead_letter'] += $count;
+                $state['failed'] += $count;
+                continue;
+            }
+            if ($status === 'failed') {
+                $state['failed'] += $count;
+                continue;
+            }
+            if ($status === 'completed') {
+                if ($displayStatus === 'duplicate') {
+                    $state['duplicate'] += $count;
+                } elseif (in_array($displayStatus, ['failed', 'rejected', 'unverified', 'partial', 'error'], true)) {
+                    $state['failed'] += $count;
+                } else {
+                    $state['successful'] += $count;
+                }
+                continue;
+            }
+
+            // Unknown terminal states are failures for parent finalization. It is
+            // safer to report a partial archive than silently declare success.
+            $state['failed'] += $count;
+        }
+
+        return $state;
+    }
+}
