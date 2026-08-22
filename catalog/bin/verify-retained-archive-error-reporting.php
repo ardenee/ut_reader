@@ -5,9 +5,11 @@ declare(strict_types=1);
 
 $root = dirname(__DIR__);
 $handlerPath = $root . '/src/Infrastructure/Jobs/CatalogArchiveImportJobHandler.php';
+$backfillPath = __DIR__ . '/backfill-retained-archive-errors.php';
 $handler = @file_get_contents($handlerPath);
-if (!is_string($handler)) {
-    fwrite(STDERR, "[FAIL] handler_source — Could not read CatalogArchiveImportJobHandler.php\n");
+$backfill = @file_get_contents($backfillPath);
+if (!is_string($handler) || !is_string($backfill)) {
+    fwrite(STDERR, "[FAIL] source_files — Could not read retained archive reporting sources.\n");
     exit(1);
 }
 
@@ -42,6 +44,19 @@ $checks = [
         str_contains($handler, "\$status = \$failed > 0 ? 'partial' : 'completed';")
             && str_contains($handler, "'source_retained' => true"),
         'Logging must not convert the intended partial archive job into a failed/dead-letter job.',
+    ],
+    'existing_partial_jobs_can_be_backfilled' => [
+        str_contains($backfill, 'ArchivePartialFailure')
+            && str_contains($backfill, 'catalog.process_bucket_archive')
+            && str_contains($backfill, 'catalog.import_staged_archive')
+            && str_contains($backfill, "\$displayStatus !== 'partial'"),
+        'Already-completed retained archive jobs must be backfillable into System Errors.',
+    ],
+    'backfill_ignores_metadata_only_false_positives' => [
+        str_contains($backfill, 'retained_archive_is_ignorable_metadata_error')
+            && str_contains($backfill, 'Unsafe archive path: empty/control-character path')
+            && str_contains($backfill, '[IGNORED-METADATA]'),
+        'Existing metadata-only retained jobs must not create false System Errors during backfill.',
     ],
 ];
 
