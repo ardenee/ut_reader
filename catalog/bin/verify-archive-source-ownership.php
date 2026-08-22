@@ -61,15 +61,28 @@ $record(
     str_contains($sourceStore, '$prepared = $store->load();')
         && str_contains($sourceStore, '$prepared = $this->publish($job, $store);')
         && str_contains($sourceStore, '$this->cleanupTransferredIngress($prepared);')
-        && str_contains($sourceStore, 'CatalogChunkedUploadCleanup($this->config))->delete($match[1])'),
-    'Chunk-upload ingress may be removed only after the durable prepared archive has been published successfully.'
+        && str_contains($sourceStore, 'CatalogChunkedUploadCleanup($this->config))->delete($match[1])')
+        && str_contains($sourceStore, 'CatalogIncomingFileStore($this->config))->delete($stagedPath)'),
+    'Chunk/incoming ingress may be removed only after the durable prepared archive has been published successfully.'
 );
 
 $record(
-    'read_only_sources_are_copied_not_moved',
-    str_contains($sourceStore, '$transferIngress ? $source : $this->copyForPublish($source, $job->id)')
-        && str_contains($sourceStore, '!@link($source, $temporary) && !@copy($source, $temporary)'),
-    'Catalog-local/read-only sources must remain untouched while the parent takes its own durable copy.'
+    'ownership_publish_is_non_destructive',
+    str_contains($sourceStore, '$publishSource = $this->copyForPublish($source, $store->directory());')
+        && str_contains($sourceStore, '$linked = @link($source, $temporary);')
+        && str_contains($sourceStore, "if (!\$linked && !@copy(\$source, \$temporary))")
+        && str_contains($sourceStore, "hash_file('sha256', \$source)")
+        && str_contains($sourceStore, "hash_file('sha256', \$temporary)")
+        && str_contains($sourceStore, 'hash_equals($sourceHash, $copyHash)'),
+    'The only ingress copy must survive until a size/content-verified working copy has been successfully published.'
+);
+
+$record(
+    'ownership_temp_stays_inside_parent_workspace',
+    str_contains($sourceStore, '$store->directory()')
+        && str_contains($sourceStore, "'.ownership-'")
+        && !str_contains($sourceStore, "'archive-source-staging'"),
+    'A crash during source ownership transfer must leave any temporary inside the normal parent prepared workspace, not an unowned staging tree.'
 );
 
 $record(
