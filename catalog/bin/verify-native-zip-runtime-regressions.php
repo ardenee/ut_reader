@@ -13,12 +13,35 @@ $record = static function (string $name, bool $ok, string $detail = '') use (&$r
     $results[] = ['name' => $name, 'ok' => $ok, 'detail' => $detail];
 };
 
+$containsFunctionCall = static function (string $source, string $functionName): bool {
+    $tokens = token_get_all($source);
+    $count = count($tokens);
+    for ($index = 0; $index < $count; $index++) {
+        $token = $tokens[$index];
+        if (!is_array($token) || $token[0] !== T_STRING || strcasecmp($token[1], $functionName) !== 0) {
+            continue;
+        }
+        for ($next = $index + 1; $next < $count; $next++) {
+            $candidate = $tokens[$next];
+            if (is_array($candidate) && in_array($candidate[0], [T_WHITESPACE, T_COMMENT, T_DOC_COMMENT], true)) {
+                continue;
+            }
+            if ($candidate === '(') {
+                return true;
+            }
+            break;
+        }
+    }
+    return false;
+};
+
 $tempPaths = [];
 try {
     $reader = new CatalogNativeZipArchiveReader(['archive' => ['max_entries' => 100]]);
 
+    // Private methods are invokable through ReflectionMethod without setAccessible()
+    // on supported PHP versions. Avoid the PHP 8.5 deprecation warning entirely.
     $decodeName = new ReflectionMethod(CatalogNativeZipArchiveReader::class, 'decodeName');
-    $decodeName->setAccessible(true);
     $record(
         'cp437_ascii_name_without_mbstring_alias',
         $decodeName->invoke($reader, 'AS-Pollux/Maps/AS-Pollux.unr', 0) === 'AS-Pollux/Maps/AS-Pollux.unr',
@@ -86,7 +109,7 @@ try {
     $source = (string)@file_get_contents($root . '/src/Infrastructure/Archive/CatalogNativeZipArchiveReader.php');
     $record(
         'native_zip_filename_decode_has_no_mbstring_dependency',
-        !str_contains($source, 'mb_convert_encoding('),
+        !$containsFunctionCall($source, 'mb_convert_encoding'),
         'ZIP CP437 filename decoding must remain native PHP and independent of mbstring encoding aliases.'
     );
     $record(
