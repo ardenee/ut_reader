@@ -18,10 +18,6 @@ final class CatalogExternalArchiveReader
     {
     }
 
-    /**
-     * The adapter itself is always available to explain a missing PHP extension
-     * as a deterministic capability result. walk() performs the extension check.
-     */
     public function isAvailable(): bool
     {
         return true;
@@ -81,6 +77,8 @@ final class CatalogExternalArchiveReader
                 );
             }
 
+            $entryIndex = $this->indexEntriesBySafePath($entries);
+            $fileCopyTargets = (new CatalogRar5FileCopyMap())->targets($archivePath);
             $maxDecodedBytes = max(1, $maxDecodedBytes);
             $decodedBytes = 0;
             $processed = 0;
@@ -185,12 +183,6 @@ final class CatalogExternalArchiveReader
                             throw $streamError;
                         }
 
-                        // Some RAR features are accepted by ext-rar's entry object
-                        // while its on-the-fly stream returns EOF at byte zero. In
-                        // that narrow case retry through the extension's native
-                        // RarEntry::extract() implementation. The destination is
-                        // still our random temporary path, never the archive path,
-                        // and the declared/member/total limits were checked above.
                         fclose($stream);
                         $stream = null;
                         fclose($output);
@@ -199,13 +191,31 @@ final class CatalogExternalArchiveReader
                         if ($heartbeat !== null) {
                             $heartbeat();
                         }
-                        $actualBytes = $this->extractEntryToTemporary(
-                            $rarEntry,
-                            $temporary,
-                            $declaredSize,
-                            min($entryLimit, $remainingTotal),
-                            $streamError
-                        );
+
+                        try {
+                            $actualBytes = $this->extractEntryToTemporary(
+                                $rarEntry,
+                                $temporary,
+                                $declaredSize,
+                                min($entryLimit, $remainingTotal),
+                                $streamError
+                            );
+                        } catch (\Throwable $extractError) {
+                            $sourcePath = $this->resolveFileCopySource((string)$entry['path'], $fileCopyTargets);
+                            $sourceEntry = $sourcePath !== null ? ($entryIndex[$sourcePath] ?? null) : null;
+                            if (!is_object($sourceEntry)) {
+                                throw $extractError;
+                            }
+                            $actualBytes = $this->extractFileCopySourceToTemporary(
+                                $sourceEntry,
+                                $sourcePath,
+                                $temporary,
+                                $declaredSize,
+                                min($entryLimit, $remainingTotal),
+                                $extractError,
+                                $heartbeat
+                            );
+                        }
                         if ($heartbeat !== null) {
                             $heartbeat();
                         }
@@ -381,6 +391,115 @@ final class CatalogExternalArchiveReader
             );
         }
         return $actualBytes;
+    }
+
+    /**
+     * Materialize the exact RAR5 FILECOPY source recorded by the archive. The
+     * reference map comes from CRC-validated RAR5 headers, so no size/name guess
+     * is used to choose the source member.
+     */
+    private function extractFileCopySourceToTemporary(
+        object $sourceEntry,
+        string $sourcePath,
+        string $temporary,
+        int $declaredSize,
+        int $maxBytes,
+        \Throwable $referenceError,
+        ?callable $heartbeat
+    ): int {
+        if (!method_exists($sourceEntry, 'getStream') || !method_exists($sourceEntry, 'getUnpackedSize')) {
+            throw $referenceError;
+        }
+        $sourceSize = max(0, (int)$sourceEntry->getUnpackedSize());
+        if ($declaredSize > 0 && $sourceSize > 0 && $sourceSize !== $declaredSize) {
+            throw new \RuntimeException(
+                'RAR5 FILECOPY source size does not match the logical member size for "' . $sourcePath . '".'
+            );
+        }
+        if ($sourceSize > $maxBytes) {
+            throw new \RuntimeException('RAR5 FILECOPY source exceeds the configured archive-member limit.');
+        }
+
+        @unlink($temporary);
+        $stream = $sourceEntry->getStream();
+        if (!is_resource($stream)) {
+            throw new \RuntimeException(
+                'RAR5 FILECOPY source stream could not be opened for "' . $sourcePath . '". Reference failure: '
+                . $this->errorText($referenceError)
+            );
+        }
+        $output = @fopen($temporary, 'wb');
+        if (!is_resource($output)) {
+            fclose($stream);
+            @unlink($temporary);
+            throw new \RuntimeException('Could not create temporary RAR5 FILECOPY output.');
+        }
+
+        try {
+            $actual = $this->copyStream(
+                $stream,
+                $output,
+                $maxBytes,
+                $sourceSize > 0 ? $sourceSize : $declaredSize,
+                $heartbeat
+            );
+            fflush($output);
+        } catch (\Throwable $error) {
+            @unlink($temporary);
+            throw new \RuntimeException(
+                'RAR5 FILECOPY source "' . $sourcePath . '" could not be decoded: ' . $this->errorText($error),
+                (int)$error->getCode(),
+                $error
+            );
+        } finally {
+            fclose($stream);
+            fclose($output);
+        }
+
+        if ($actual < 1 || ($declaredSize > 0 && $actual !== $declaredSize)) {
+            @unlink($temporary);
+            throw new \RuntimeException('RAR5 FILECOPY source produced an invalid output size.');
+        }
+        $this->verifyTemporary($temporary, $actual, $maxBytes);
+        return $actual;
+    }
+
+    /** @param array<int,mixed> $entries @return array<string,object> */
+    private function indexEntriesBySafePath(array $entries): array
+    {
+        $index = [];
+        foreach ($entries as $entry) {
+            if (!is_object($entry) || !method_exists($entry, 'getName')) {
+                continue;
+            }
+            if (method_exists($entry, 'isDirectory') && $entry->isDirectory()) {
+                continue;
+            }
+            [$safe] = $this->safeMemberPath((string)$entry->getName());
+            if ($safe !== '') {
+                $index[$safe] = $entry;
+            }
+        }
+        return $index;
+    }
+
+    /** @param array<string,string> $targets */
+    private function resolveFileCopySource(string $path, array $targets): ?string
+    {
+        $current = str_replace('\\', '/', $path);
+        $seen = [];
+        for ($depth = 0; $depth < 32; $depth++) {
+            if (isset($seen[$current])) {
+                return null;
+            }
+            $seen[$current] = true;
+            $next = $targets[$current] ?? null;
+            if (!is_string($next) || $next === '') {
+                return $depth > 0 ? $current : null;
+            }
+            $current = $next;
+        }
+        return null;
     }
 
     /** @return array{0:string,1:string} */
