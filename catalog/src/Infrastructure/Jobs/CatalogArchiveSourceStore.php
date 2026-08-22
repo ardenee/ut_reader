@@ -80,8 +80,11 @@ final class CatalogArchiveSourceStore
 
         $source = (new CatalogIncomingFileStore($this->config))->resolve($stagedPath);
         $transferIngress = $this->isOwnedIngressReference($stagedPath);
-        $publishSource = $transferIngress ? $source : $this->copyForPublish($source, $job->id);
 
+        // Never let CatalogPreparedJobFileStore move/delete the only ingress copy.
+        // Create a verified same-volume hardlink when possible (copy fallback),
+        // publish that temporary, and release ingress only after publish succeeds.
+        $publishSource = $this->copyForPublish($source, $job->id);
         try {
             return $store->publish(
                 $publishSource,
@@ -94,7 +97,7 @@ final class CatalogArchiveSourceStore
                 ]
             );
         } finally {
-            if (!$transferIngress && $publishSource !== '' && is_file($publishSource)) {
+            if ($publishSource !== '' && is_file($publishSource)) {
                 @unlink($publishSource);
             }
         }
@@ -149,17 +152,24 @@ final class CatalogArchiveSourceStore
             return;
         }
         $stagedPath = trim((string)($prepared['original_staged_path'] ?? ''));
-        if (preg_match('/^chunk-upload:([a-f0-9]{64})$/', $stagedPath, $match) !== 1) {
+        if ($stagedPath === '') {
             return;
         }
 
         try {
-            // The payload bytes have already been atomically published into the
-            // parent job workspace. At this point only the obsolete chunk-upload
-            // manifest/directory is being discarded.
-            (new CatalogChunkedUploadCleanup($this->config))->delete($match[1]);
+            // The archive bytes are already present in the verified parent job
+            // workspace. The transport source may now be removed without affecting
+            // workflow retry/recovery.
+            if (preg_match('/^chunk-upload:([a-f0-9]{64})$/', $stagedPath, $match) === 1) {
+                (new CatalogChunkedUploadCleanup($this->config))->delete($match[1]);
+                return;
+            }
+            $normalized = ltrim(str_replace('\\', '/', $stagedPath), '/');
+            if (str_starts_with(strtolower($normalized), 'jobs/incoming/')) {
+                (new CatalogIncomingFileStore($this->config))->delete($stagedPath);
+            }
         } catch (\Throwable $error) {
-            error_log('[UnrealDB archive source ownership] Could not remove transferred chunk ingress: '
+            error_log('[UnrealDB archive source ownership] Could not remove transferred ingress: '
                 . $error->getMessage());
         }
     }
