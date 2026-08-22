@@ -5,8 +5,9 @@
  *
  * This intentionally uses the production reader so the values shown are exactly
  * the values the worker acted on. It never mutates the package or database.
- * A package can be supplied directly, or a retained archive-member child can be
- * resolved from its durable prepared-job workspace with --job=<id>.
+ * A package can be supplied directly, or --job=<id> can resolve either the
+ * child's retained prepared member or, when that short-lived copy is gone, the
+ * exact member from the parent archive's durable job-owned source.
  */
 declare(strict_types=1);
 
@@ -35,14 +36,56 @@ if ($jobId > 0) {
         'bucket-archive-member'
     );
     $prepared = $store->load();
-    if (!is_array($prepared) || trim((string)($prepared['path'] ?? '')) === '') {
-        fwrite(STDERR, 'No retained bucket archive-member prepared file exists for job #' . $jobId . '. ');
-        fwrite(STDERR, 'Expected workspace: ' . $store->directory() . PHP_EOL);
-        exit(2);
+    if (is_array($prepared) && trim((string)($prepared['path'] ?? '')) !== ''
+        && is_file((string)$prepared['path'])) {
+        $path = (string)$prepared['path'];
+        fwrite(STDOUT, 'Resolved retained child from background job #' . $jobId . ': '
+            . (string)($prepared['logical_name'] ?? basename($path)) . PHP_EOL);
+    } else {
+        $source = (new \UnrealDb\Catalog\Infrastructure\Jobs\CatalogJobSourceContextResolver(
+            $application->db,
+            $application->config
+        ))->forJobId($jobId);
+        $archivePath = trim((string)($source['archive_prepared_path'] ?? $source['archive_full_path'] ?? ''));
+        $archiveName = trim((string)($source['archive_source_name'] ?? $source['parent_original_name'] ?? ''));
+        $entryPath = trim(str_replace('\\', '/', (string)($source['archive_entry_path'] ?? '')), '/');
+        if ($archivePath === '' || !is_file($archivePath) || $archiveName === '' || $entryPath === '') {
+            fwrite(STDERR, 'No retained child or resolvable parent archive member exists for job #' . $jobId . '.' . PHP_EOL);
+            fwrite(STDERR, 'Child workspace: ' . $store->directory() . PHP_EOL);
+            if ($archivePath !== '') {
+                fwrite(STDERR, 'Archive candidate: ' . $archivePath . PHP_EOL);
+            }
+            exit(2);
+        }
+
+        $extractor = new \UnrealDb\Catalog\Infrastructure\Archive\CatalogArchiveExtractor($application->config);
+        $entry = null;
+        foreach ($extractor->entries($archivePath, $archiveName) as $candidate) {
+            $candidatePath = trim(str_replace('\\', '/', (string)($candidate['path'] ?? '')), '/');
+            if ($candidatePath !== '' && hash_equals($entryPath, $candidatePath)) {
+                $entry = $candidate;
+                break;
+            }
+        }
+        if (!is_array($entry)) {
+            fwrite(STDERR, 'Retained archive does not contain the exact recorded member "' . $entryPath . '".' . PHP_EOL);
+            fwrite(STDERR, 'Archive: ' . $archivePath . PHP_EOL);
+            exit(2);
+        }
+        $entrySize = max(0, (int)($entry['size'] ?? 0));
+        if ($entrySize < 1) {
+            fwrite(STDERR, 'Recorded archive member has no extractable byte size: ' . $entryPath . PHP_EOL);
+            exit(2);
+        }
+        $path = $extractor->extractToTemp($archivePath, $archiveName, $entry, $entrySize);
+        register_shutdown_function(static function () use ($path): void {
+            if ($path !== '' && is_file($path)) {
+                @unlink($path);
+            }
+        });
+        fwrite(STDOUT, 'Resolved exact member from retained archive for background job #' . $jobId . ': ' . $entryPath . PHP_EOL);
+        fwrite(STDOUT, 'Archive: ' . $archivePath . PHP_EOL);
     }
-    $path = (string)$prepared['path'];
-    fwrite(STDOUT, 'Resolved from background job #' . $jobId . ': '
-        . (string)($prepared['logical_name'] ?? basename($path)) . PHP_EOL);
 }
 
 if ($path === '' || !is_file($path)) {
