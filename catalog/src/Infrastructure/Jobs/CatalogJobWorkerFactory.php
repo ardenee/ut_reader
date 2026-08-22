@@ -134,7 +134,7 @@ final class CatalogJobWorkerFactory
             ),
             JobType::IMPORT_STAGED_PAK => static fn() => new CatalogPakImportJobHandler($db, $trustedImportConfig),
             JobType::IMPORT_STAGED_PAK_ENTRY => static fn() => new CatalogPakImportJobHandler($db, $trustedImportConfig),
-            JobType::IMPORT_STAGED_ARCHIVE => static fn() => new CatalogArchiveImportJobHandler($db, $trustedImportConfig),
+            JobType::IMPORT_STAGED_ARCHIVE => static fn() => new CatalogArchiveWorkflowJobHandler($db, $trustedImportConfig),
             JobType::PREPARE_BUCKET_REDIRECT => static fn() => new CatalogUnsupportedRedirectExclusionJobHandler(
                 new CatalogBucketRedirectJobHandler($db, $trustedImportConfig),
                 $db,
@@ -145,7 +145,7 @@ final class CatalogJobWorkerFactory
                 $db,
                 $trustedImportConfig
             ),
-            JobType::PROCESS_BUCKET_ARCHIVE => static fn() => new CatalogArchiveImportJobHandler($db, $trustedImportConfig),
+            JobType::PROCESS_BUCKET_ARCHIVE => static fn() => new CatalogArchiveWorkflowJobHandler($db, $trustedImportConfig),
             JobType::PROCESS_BUCKET_STAGED_PACKAGE => static fn() => new CatalogUnsupportedRedirectExclusionJobHandler(
                 new CatalogBucketStagedPackageJobHandler($db, $trustedImportConfig),
                 $db,
