@@ -23,9 +23,9 @@ $checks = [
         'A retained/partial archive must create a background-job system error without throwing the parent job.',
     ],
     'member_failures_preserved_in_context' => [
-        str_contains($handler, "'failed_files' => $failed")
-            && str_contains($handler, "'errors' => $errors")
-            && str_contains($handler, "'result_message' => $resultMessage"),
+        str_contains($handler, "'failed_files' => \$failed")
+            && str_contains($handler, "'errors' => \$errors")
+            && str_contains($handler, "'result_message' => \$resultMessage"),
         'The error record must retain failed-member details and the operator-facing archive result.',
     ],
     'terminal_decoder_failure_recorded' => [
@@ -39,7 +39,7 @@ $checks = [
         'Unrepresentable classic Mac/Finder metadata must be skipped instead of forcing partial retention.',
     ],
     'partial_job_behavior_preserved' => [
-        str_contains($handler, "$status = $failed > 0 ? 'partial' : 'completed';")
+        str_contains($handler, "\$status = \$failed > 0 ? 'partial' : 'completed';")
             && str_contains($handler, "'source_retained' => true"),
         'Logging must not convert the intended partial archive job into a failed/dead-letter job.',
     ],
