@@ -84,7 +84,7 @@ final class CatalogArchiveSourceStore
         // Never let CatalogPreparedJobFileStore move/delete the only ingress copy.
         // Create a verified same-volume hardlink when possible (copy fallback),
         // publish that temporary, and release ingress only after publish succeeds.
-        $publishSource = $this->copyForPublish($source, $job->id);
+        $publishSource = $this->copyForPublish($source, $store->directory());
         try {
             return $store->publish(
                 $publishSource,
@@ -113,24 +113,21 @@ final class CatalogArchiveSourceStore
     }
 
     /** @return string temporary source which CatalogPreparedJobFileStore may move */
-    private function copyForPublish(string $source, int $jobId): string
+    private function copyForPublish(string $source, string $ownerDirectory): string
     {
         if (!is_file($source) || !is_readable($source) || is_link($source)) {
             throw new \RuntimeException('Archive workflow source cannot be copied into durable job storage.');
         }
-
-        $storageRoot = rtrim((string)($this->config['storage_path'] ?? ''), DIRECTORY_SEPARATOR);
-        if ($storageRoot === '') {
-            throw new \RuntimeException('Catalog storage path is unavailable for archive source ownership.');
-        }
-        $directory = $storageRoot . DIRECTORY_SEPARATOR . 'jobs' . DIRECTORY_SEPARATOR . 'archive-source-staging';
-        if (!is_dir($directory) && !@mkdir($directory, 0750, true) && !is_dir($directory)) {
-            throw new \RuntimeException('Could not create archive source staging directory.');
+        if (!is_dir($ownerDirectory)
+            && !@mkdir($ownerDirectory, 0750, true)
+            && !is_dir($ownerDirectory)) {
+            throw new \RuntimeException('Could not create archive source owner workspace.');
         }
 
-        $temporary = $directory . DIRECTORY_SEPARATOR . 'job-' . $jobId . '-'
+        $temporary = $ownerDirectory . DIRECTORY_SEPARATOR . '.ownership-'
             . bin2hex(random_bytes(8)) . '.part';
-        if (!@link($source, $temporary) && !@copy($source, $temporary)) {
+        $linked = @link($source, $temporary);
+        if (!$linked && !@copy($source, $temporary)) {
             throw new \RuntimeException('Could not create a durable archive source working copy.');
         }
 
@@ -141,6 +138,14 @@ final class CatalogArchiveSourceStore
         if ($sourceSize === false || $copySize === false || (int)$sourceSize !== (int)$copySize) {
             @unlink($temporary);
             throw new \RuntimeException('Durable archive source working copy is incomplete.');
+        }
+        if (!$linked) {
+            $sourceHash = hash_file('sha256', $source);
+            $copyHash = hash_file('sha256', $temporary);
+            if (!is_string($sourceHash) || !is_string($copyHash) || !hash_equals($sourceHash, $copyHash)) {
+                @unlink($temporary);
+                throw new \RuntimeException('Durable archive source working copy failed content verification.');
+            }
         }
         return $temporary;
     }
