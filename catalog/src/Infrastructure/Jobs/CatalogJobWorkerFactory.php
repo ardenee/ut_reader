@@ -75,27 +75,65 @@ final class CatalogJobWorkerFactory
             $eventLog->append($jobId, $event);
         };
         $diagnosticEnabled = static fn(): bool => $logging->enabled('worker_diagnostics', false);
-        $failureReporter = static function (ClaimedJob $job, \Throwable $error, string $disposition): void {
+        $sourceContextResolver = new CatalogJobSourceContextResolver($db, $config);
+        $failureReporter = static function (
+            ClaimedJob $job,
+            \Throwable $error,
+            string $disposition
+        ) use ($sourceContextResolver): void {
             if ($disposition === 'retry_queued' && PdoContention::retryable($error)) {
                 return;
             }
+
+            $context = [
+                'job_id' => $job->id,
+                'job_type' => $job->type,
+                'attempt' => $job->attempt,
+                'max_attempts' => $job->maxAttempts,
+                'disposition' => $disposition,
+                'resource_class' => $job->resourceClass,
+                'concurrency_key' => $job->concurrencyKey,
+            ];
+            try {
+                // Failure provenance is diagnostic-only. If a source has already
+                // been cleaned up, preserve the actual job failure rather than
+                // allowing diagnostic enrichment to interfere with queue state.
+                $context = $context + $sourceContextResolver->forClaimedJob($job);
+            } catch (\Throwable $sourceError) {
+                $context['source_context_error'] = trim($sourceError->getMessage()) !== ''
+                    ? trim($sourceError->getMessage())
+                    : get_class($sourceError);
+            }
+
+            $message = $job->type . ' #' . $job->id . ' ' . $disposition . ': ' . $error->getMessage();
+            $archivePath = trim((string)($context['archive_full_path'] ?? ''));
+            $archiveRelative = trim((string)($context['archive_source_relative_path'] ?? ''));
+            $archiveName = trim((string)($context['archive_source_name'] ?? ''));
+            $archiveEntry = trim((string)($context['archive_entry_path'] ?? ''));
+            $jobPath = trim((string)($context['job_full_path'] ?? ''));
+
+            if ($archivePath !== '') {
+                $message .= ' Archive: ' . $archivePath;
+            } elseif ($archiveRelative !== '') {
+                $message .= ' Archive source: ' . $archiveRelative;
+            } elseif ($archiveName !== '') {
+                $message .= ' Archive source: ' . $archiveName;
+            } elseif ($jobPath !== '') {
+                $message .= ' Source: ' . $jobPath;
+            }
+            if ($archiveEntry !== '') {
+                $message .= ' Entry: ' . $archiveEntry;
+            }
+
             CatalogSystemErrorRecorder::record([
                 'source_kind' => 'background-job',
                 'severity' => 'error',
                 'error_type' => get_class($error),
-                'message' => $job->type . ' #' . $job->id . ' ' . $disposition . ': ' . $error->getMessage(),
+                'message' => $message,
                 'source_file' => $error->getFile(),
                 'source_line' => $error->getLine(),
                 'trace_text' => $error->getTraceAsString(),
-                'context' => [
-                    'job_id' => $job->id,
-                    'job_type' => $job->type,
-                    'attempt' => $job->attempt,
-                    'max_attempts' => $job->maxAttempts,
-                    'disposition' => $disposition,
-                    'resource_class' => $job->resourceClass,
-                    'concurrency_key' => $job->concurrencyKey,
-                ],
+                'context' => $context,
             ]);
         };
 
