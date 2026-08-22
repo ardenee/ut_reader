@@ -5,6 +5,8 @@
  *
  * This intentionally uses the production reader so the values shown are exactly
  * the values the worker acted on. It never mutates the package or database.
+ * A package can be supplied directly, or a retained archive-member child can be
+ * resolved from its durable prepared-job workspace with --job=<id>.
  */
 declare(strict_types=1);
 
@@ -13,9 +15,40 @@ if (PHP_SAPI !== 'cli') {
     exit(1);
 }
 
-$path = trim((string)($argv[1] ?? ''));
+$args = array_values(array_slice($argv, 1));
+$path = '';
+$jobId = 0;
+if (isset($args[0]) && preg_match('/^--job=(\d+)$/', (string)$args[0], $match) === 1) {
+    $jobId = (int)$match[1];
+} elseif (($args[0] ?? '') === '--job' && isset($args[1]) && ctype_digit((string)$args[1])) {
+    $jobId = (int)$args[1];
+} else {
+    $path = trim((string)($args[0] ?? ''));
+}
+
+if ($jobId > 0) {
+    require_once dirname(__DIR__) . '/bootstrap/operational.php';
+    $application = catalog_operational_application();
+    $store = new \UnrealDb\Catalog\Infrastructure\Jobs\CatalogPreparedJobFileStore(
+        $application->config,
+        $jobId,
+        'bucket-archive-member'
+    );
+    $prepared = $store->load();
+    if (!is_array($prepared) || trim((string)($prepared['path'] ?? '')) === '') {
+        fwrite(STDERR, 'No retained bucket archive-member prepared file exists for job #' . $jobId . '. ');
+        fwrite(STDERR, 'Expected workspace: ' . $store->directory() . PHP_EOL);
+        exit(2);
+    }
+    $path = (string)$prepared['path'];
+    fwrite(STDOUT, 'Resolved from background job #' . $jobId . ': '
+        . (string)($prepared['logical_name'] ?? basename($path)) . PHP_EOL);
+}
+
 if ($path === '' || !is_file($path)) {
-    fwrite(STDERR, "Usage: php catalog/bin/diagnose-ue3-package.php <package.upk|package.ut3>\n");
+    fwrite(STDERR, "Usage:\n");
+    fwrite(STDERR, "  php catalog/bin/diagnose-ue3-package.php <package.upk|package.ut3>\n");
+    fwrite(STDERR, "  php catalog/bin/diagnose-ue3-package.php --job=<background-job-id>\n");
     exit(2);
 }
 
