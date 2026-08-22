@@ -22,6 +22,15 @@ function retained_archive_decode_json(mixed $value): array
     return is_array($decoded) ? $decoded : [];
 }
 
+/** @param mixed $record */
+function retained_archive_is_ignorable_metadata_error(mixed $record): bool
+{
+    if (!is_array($record)) {
+        return false;
+    }
+    return trim((string)($record['error'] ?? '')) === 'Unsafe archive path: empty/control-character path';
+}
+
 $options = getopt('', ['job::', 'limit::']);
 $jobId = max(0, (int)($options['job'] ?? 0));
 $limit = max(1, min(100000, (int)($options['limit'] ?? 10000)));
@@ -48,6 +57,7 @@ try {
 
     $recorded = 0;
     $ignored = 0;
+    $metadataOnly = 0;
     foreach ($rows as $row) {
         $payload = retained_archive_decode_json($row['payload_json'] ?? null);
         $progress = retained_archive_decode_json($row['progress_json'] ?? null);
@@ -58,10 +68,22 @@ try {
             continue;
         }
 
-        $errors = is_array($result['errors'] ?? null)
+        $allErrors = is_array($result['errors'] ?? null)
             ? array_values($result['errors'])
             : (is_array($progress['errors'] ?? null) ? array_values($progress['errors']) : []);
-        $failed = max(0, (int)($result['failed_files'] ?? $progress['failed'] ?? count($errors)));
+        $errors = array_values(array_filter(
+            $allErrors,
+            static fn(mixed $record): bool => !retained_archive_is_ignorable_metadata_error($record)
+        ));
+        if ($allErrors !== [] && $errors === []) {
+            $metadataOnly++;
+            fwrite(STDOUT, '[IGNORED-METADATA] job #' . (int)$row['id'] . PHP_EOL);
+            continue;
+        }
+
+        $reportedFailed = max(0, (int)($result['failed_files'] ?? $progress['failed'] ?? count($allErrors)));
+        $ignoredMetadataFailures = max(0, count($allErrors) - count($errors));
+        $failed = max(0, $reportedFailed - $ignoredMetadataFailures);
         if ($failed < 1 && $errors === []) {
             $ignored++;
             continue;
@@ -104,6 +126,7 @@ try {
                 'skipped_files' => max(0, (int)($result['skipped_files'] ?? $progress['skipped'] ?? 0)),
                 'failed_files' => $failed,
                 'errors' => $errors,
+                'ignored_metadata_errors' => $ignoredMetadataFailures,
                 'result_message' => trim((string)($result['message'] ?? $progress['message'] ?? '')),
                 'backfilled' => true,
                 'completed_at' => $row['completed_at'] ?? null,
@@ -114,7 +137,9 @@ try {
     }
 
     fwrite(STDOUT, PHP_EOL . 'Retained archive error backfill complete: '
-        . number_format($recorded) . ' recorded, ' . number_format($ignored) . ' non-partial/empty skipped.' . PHP_EOL);
+        . number_format($recorded) . ' recorded, '
+        . number_format($metadataOnly) . ' metadata-only partial(s) ignored, '
+        . number_format($ignored) . ' non-partial/empty skipped.' . PHP_EOL);
     exit(0);
 } catch (Throwable $error) {
     fwrite(STDERR, '[FAIL] ' . get_class($error) . ': ' . $error->getMessage() . PHP_EOL);
