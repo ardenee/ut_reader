@@ -50,7 +50,7 @@ $record(
 
 $record(
     'archive_source_store_uses_prepared_workspace',
-    str_contains($sourceStore, "CatalogPreparedJobFileStore($this->config, $job->id, 'archive-source')")
+    str_contains($sourceStore, "CatalogPreparedJobFileStore(\$this->config, \$job->id, 'archive-source')")
         && str_contains($sourceStore, "'archive_source_owned' => true")
         && str_contains($sourceStore, "'local-catalog:'"),
     'The immutable archive must be atomically published into jobs/prepared/job-<id>/archive-source and re-enter the reader through a controlled catalog-local reference.'
@@ -87,7 +87,7 @@ $record(
 
 $record(
     'diagnostics_prefer_job_owned_archive',
-    str_contains($resolver, "CatalogPreparedJobFileStore($this->config, $jobId, 'archive-source')")
+    str_contains($resolver, "CatalogPreparedJobFileStore(\$this->config, \$jobId, 'archive-source')")
         && str_contains($resolver, "'archive_source_storage'] = 'job-prepared'")
         && str_contains($resolver, "'archive_prepared_path'"),
     'System Errors and locate-job-source must report the retained job-owned archive path even after browser ingress is released.'
