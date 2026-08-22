@@ -35,6 +35,7 @@ final class CatalogWorkerCodeVersion
             $this->catalogRoot . '/src/Infrastructure/Persistence/PdoArchiveParentLifecycleRepair.php',
             $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogJobResourceLimitStore.php',
             $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php',
+            $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogJobSourceContextResolver.php',
             $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogDependencyRefreshJobHandler.php',
             $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogAffectedDependencyRefreshJobHandler.php',
             $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogAffectedDependencyBatchService.php',
