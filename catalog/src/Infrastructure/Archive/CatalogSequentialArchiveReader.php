@@ -36,6 +36,9 @@ final class CatalogSequentialArchiveReader
             if ($nativeZip->hasLegacyCompression($archivePath)) {
                 return true;
             }
+            if ((new CatalogZipMetadataConsistency())->hasTrustedLocalMetadataMismatch($archivePath)) {
+                return true;
+            }
         }
 
         // Ordinary ZIP files stay on ext-zip's efficient random-access path, but
