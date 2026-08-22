@@ -23,6 +23,7 @@ use UnrealDb\Catalog\Infrastructure\Import\CatalogImportPathPolicy;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogIncomingFileStore;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogUploadBucketFilePolicy;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
+use UnrealDb\Catalog\Infrastructure\Telemetry\CatalogSystemErrorRecorder;
 
 final class CatalogArchiveImportJobHandler implements JobHandler
 {
@@ -89,6 +90,7 @@ final class CatalogArchiveImportJobHandler implements JobHandler
                 throw $error;
             }
             return $this->terminalArchiveCapabilityResult(
+                $job,
                 $context,
                 $profiled,
                 $originalName,
@@ -122,6 +124,21 @@ final class CatalogArchiveImportJobHandler implements JobHandler
             $entryPath = str_replace('\\', '/', (string)($entry['path'] ?? ''));
 
             if (empty($entry['safe'])) {
+                if ($this->isIgnorableUnsafeArchivePath($entry)) {
+                    $skipped++;
+                    $this->checkpoint(
+                        $context,
+                        $index + 1,
+                        $total,
+                        $queued,
+                        $skipped,
+                        $failed,
+                        $unpackedBytes,
+                        $errors,
+                        'Skipped unrepresentable archive metadata path ' . $entryPath . '.'
+                    );
+                    continue;
+                }
                 $failed++;
                 $reason = 'Unsafe archive path: ' . trim((string)($entry['reason'] ?? 'invalid member path'));
                 $errors = $this->retainError($errors, $entryPath, $reason);
@@ -227,6 +244,7 @@ final class CatalogArchiveImportJobHandler implements JobHandler
         }
 
         return $this->completeArchive(
+            $job,
             $context,
             $profiled,
             $stagedPath,
@@ -275,6 +293,15 @@ final class CatalogArchiveImportJobHandler implements JobHandler
         $plan = function (array $entry) use ($allowed, $queueName, $job): array {
             $entryPath = str_replace('\\', '/', (string)($entry['path'] ?? ''));
             if (empty($entry['safe'])) {
+                if ($this->isIgnorableUnsafeArchivePath($entry)) {
+                    return [
+                        'extract' => false,
+                        'state' => [
+                            'kind' => 'skipped',
+                            'reason' => 'Skipped unrepresentable archive metadata path ' . $entryPath . '.',
+                        ],
+                    ];
+                }
                 return [
                     'extract' => false,
                     'state' => [
@@ -498,6 +525,7 @@ final class CatalogArchiveImportJobHandler implements JobHandler
                 throw $error;
             }
             return $this->terminalArchiveCapabilityResult(
+                $job,
                 $context,
                 $profiled,
                 $originalName,
@@ -512,6 +540,7 @@ final class CatalogArchiveImportJobHandler implements JobHandler
         }
 
         return $this->completeArchive(
+            $job,
             $context,
             $profiled,
             $stagedPath,
@@ -584,6 +613,7 @@ final class CatalogArchiveImportJobHandler implements JobHandler
 
     /** @return array<string,mixed> */
     private function completeArchive(
+        ClaimedJob $job,
         JobExecutionContext $context,
         bool $profiled,
         string $stagedPath,
@@ -625,6 +655,20 @@ final class CatalogArchiveImportJobHandler implements JobHandler
         }
         $message .= '.';
 
+        if ($failed > 0) {
+            $this->recordRetainedArchiveFailure(
+                $job,
+                $originalName,
+                $sourceRelativePath,
+                $total,
+                $queued,
+                $skipped,
+                $failed,
+                $errors,
+                $message
+            );
+        }
+
         $context->checkpoint([
             'workflow_version' => self::WORKFLOW_VERSION,
             'stage' => 'complete',
@@ -664,6 +708,7 @@ final class CatalogArchiveImportJobHandler implements JobHandler
 
     /** @return array<string,mixed> */
     private function terminalArchiveCapabilityResult(
+        ClaimedJob $job,
         JobExecutionContext $context,
         bool $profiled,
         string $originalName,
@@ -685,6 +730,20 @@ final class CatalogArchiveImportJobHandler implements JobHandler
             $message
         );
         $total = max(1, $queued + $skipped + $failed);
+
+        $this->recordRetainedArchiveFailure(
+            $job,
+            $originalName,
+            $sourceRelativePath,
+            $total,
+            $queued,
+            $skipped,
+            $failed,
+            $errors,
+            $message,
+            $error
+        );
+
         $context->checkpoint([
             'workflow_version' => self::WORKFLOW_VERSION,
             'stage' => 'complete',
@@ -717,6 +776,71 @@ final class CatalogArchiveImportJobHandler implements JobHandler
             'errors' => $errors,
             'message' => $message,
         ];
+    }
+
+    /** @param array<string,mixed> $entry */
+    private function isIgnorableUnsafeArchivePath(array $entry): bool
+    {
+        // Classic Mac/Finder ZIP metadata commonly uses a filename ending in a
+        // carriage return. It cannot be represented on the Windows host and is
+        // not an Unreal package, so it must be skipped rather than force the
+        // entire otherwise-healthy archive into retained/partial state.
+        return trim((string)($entry['reason'] ?? '')) === 'empty/control-character path';
+    }
+
+    /** @param list<array{file:string,error:string}> $errors */
+    private function recordRetainedArchiveFailure(
+        ClaimedJob $job,
+        string $originalName,
+        string $sourceRelativePath,
+        int $total,
+        int $queued,
+        int $skipped,
+        int $failed,
+        array $errors,
+        string $resultMessage,
+        ?Throwable $cause = null
+    ): void {
+        if ($failed < 1) {
+            return;
+        }
+
+        $first = is_array($errors[0] ?? null) ? $errors[0] : [];
+        $firstFile = trim((string)($first['file'] ?? ''));
+        $firstError = trim((string)($first['error'] ?? ''));
+        $message = $job->type . ' #' . $job->id . ' partial_archive: '
+            . ($sourceRelativePath !== '' ? $sourceRelativePath : $originalName)
+            . ' retained with ' . number_format($failed) . ' failed archive member(s).';
+        if ($firstFile !== '' || $firstError !== '') {
+            $message .= ' First failure: ' . ($firstFile !== '' ? $firstFile . ' — ' : '') . $firstError;
+        }
+
+        CatalogSystemErrorRecorder::record([
+            'source_kind' => 'background-job',
+            'severity' => 'error',
+            'error_type' => 'ArchivePartialFailure',
+            'message' => $message,
+            'source_file' => $cause instanceof Throwable ? $cause->getFile() : __FILE__,
+            'source_line' => $cause instanceof Throwable ? $cause->getLine() : __LINE__,
+            'trace_text' => $cause instanceof Throwable ? $cause->getTraceAsString() : '',
+            'context' => [
+                'job_id' => $job->id,
+                'job_type' => $job->type,
+                'attempt' => $job->attempt,
+                'max_attempts' => $job->maxAttempts,
+                'disposition' => 'partial_archive',
+                'resource_class' => $job->resourceClass,
+                'concurrency_key' => $job->concurrencyKey,
+                'original_name' => $originalName,
+                'source_relative_path' => $sourceRelativePath,
+                'archive_entries' => $total,
+                'queued_files' => $queued,
+                'skipped_files' => $skipped,
+                'failed_files' => $failed,
+                'errors' => $errors,
+                'result_message' => $resultMessage,
+            ],
+        ]);
     }
 
     private function queueName(ClaimedJob $job): string
