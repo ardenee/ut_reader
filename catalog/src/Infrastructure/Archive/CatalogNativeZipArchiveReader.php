@@ -560,10 +560,15 @@ final class CatalogNativeZipArchiveReader
         if ($method !== $centralMethod) {
             throw new \RuntimeException('Native ZIP local/central compression methods disagree.');
         }
-        $localRawName = $this->readExact($handle, $nameLength, 'local ZIP filename');
-        if (!hash_equals($centralRawName, $localRawName)) {
-            throw new \RuntimeException('Native ZIP local/central member names disagree.');
-        }
+
+        // The central directory is the canonical filename index. Historical ZIP
+        // tools sometimes renamed or normalised a member only in the central
+        // directory, leaving different filename bytes in the local header. The
+        // local name is therefore consumed only to locate the payload; it is never
+        // used as the extraction/catalog path. Signature, method, payload bounds,
+        // decoded size and CRC32 remain independently verified.
+        $this->readExact($handle, $nameLength, 'local ZIP filename');
+
         return $localOffset + 30 + $nameLength + $extraLength;
     }
 
