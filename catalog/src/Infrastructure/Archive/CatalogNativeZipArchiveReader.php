@@ -24,6 +24,12 @@ final class CatalogNativeZipArchiveReader
     // every candidate against the central directory before accepting it.
     private const EOCD_SEARCH_BYTES = 16777216;
 
+    // Some historical ZIP writers recorded local-header offsets without later
+    // data-descriptor/rewriter adjustments. Only use this bounded recovery search
+    // when the recorded offset itself is not a valid header for the member.
+    private const LOCAL_HEADER_RECOVERY_BACKTRACK_BYTES = 65536;
+    private const LOCAL_HEADER_RECOVERY_FORWARD_BYTES = 4194304;
+
     /** @var list<string> */
     private const CP437_HIGH_CHARS = [
         'Ç', 'ü', 'é', 'â', 'ä', 'à', 'å', 'ç', 'ê', 'ë', 'è', 'ï', 'î', 'ì', 'Ä', 'Å',
@@ -43,6 +49,9 @@ final class CatalogNativeZipArchiveReader
 
     public function hasLegacyCompression(string $archivePath): bool
     {
+        // Legacy detection deliberately depends only on the central directory.
+        // A stale local offset on an unrelated ordinary member must not prevent
+        // discovery of a later method-6/method-9 entry.
         foreach ($this->entries($archivePath) as $entry) {
             if (in_array((int)$entry['compression_method'], [6, 9], true)) {
                 return true;
@@ -158,7 +167,7 @@ final class CatalogNativeZipArchiveReader
      * @return list<array{
      *   index:int,path:string,size:int,encrypted:bool,safe:bool,reason:string,
      *   backend:string,format:string,compression_method:int,flags:int,crc32:string,
-     *   compressed_size:int,data_offset:int
+     *   compressed_size:int,local_offset:int,central_boundary:int
      * }>
      */
     private function entries(string $archivePath): array
@@ -246,10 +255,7 @@ final class CatalogNativeZipArchiveReader
                 if ($commentLength > 0) {
                     $this->readExact($handle, $commentLength, 'central-directory comment');
                 }
-                $nextCentralOffset = ftell($handle);
-                if (!is_int($nextCentralOffset)) {
-                    throw new \RuntimeException('Native ZIP central-directory cursor could not be read.');
-                }
+
                 $name = $this->decodeName($rawName, $flags);
                 $normalized = str_replace('\\', '/', $name);
                 if ($normalized === '' || str_ends_with($normalized, '/')) {
@@ -264,14 +270,12 @@ final class CatalogNativeZipArchiveReader
                     $reason = 'symbolic-link entries are not accepted';
                 }
                 $encrypted = ($flags & 0x0001) !== 0;
+
+                // Keep the central-directory local offset as metadata only. It is
+                // resolved/validated lazily if this member is actually extracted.
+                // This prevents one stale ordinary member offset from blocking
+                // discovery of a later method-6/method-9 member.
                 $localOffset = $recordedLocalOffset + $offsetAdjustment;
-                $dataOffset = $this->memberDataOffset($handle, $localOffset, $method, $rawName);
-                if (fseek($handle, $nextCentralOffset, SEEK_SET) !== 0) {
-                    throw new \RuntimeException('Native ZIP central-directory cursor could not be restored.');
-                }
-                if ($dataOffset < 0 || $dataOffset + $compressedSize > $physicalCentralOffset) {
-                    throw new \RuntimeException('Native ZIP compressed member bounds are invalid for "' . $normalized . '".');
-                }
 
                 $entries[] = [
                     'index' => $index,
@@ -286,7 +290,8 @@ final class CatalogNativeZipArchiveReader
                     'flags' => $flags,
                     'crc32' => sprintf('%08x', $crc),
                     'compressed_size' => $compressedSize,
-                    'data_offset' => $dataOffset,
+                    'local_offset' => $localOffset,
+                    'central_boundary' => $physicalCentralOffset,
                 ];
             }
             return $entries;
@@ -317,14 +322,44 @@ final class CatalogNativeZipArchiveReader
         $method = (int)$entry['compression_method'];
         $compressedSize = max(0, (int)$entry['compressed_size']);
         $expectedBytes = max(0, (int)$entry['size']);
+        $centralBoundary = (int)($entry['central_boundary'] ?? 0);
+        $zipFailure = null;
+
+        // Stored and normal DEFLATE entries do not require our raw compatibility
+        // decoder. Prefer ext-zip by central-directory index, which also avoids
+        // depending on stale local-header offsets present in some old archives.
+        if (in_array($method, [0, 8], true)) {
+            try {
+                return $this->decodeViaZipExtension($archivePath, $entry, $output, $maxBytes, $heartbeat);
+            } catch (\RuntimeException $error) {
+                $zipFailure = $error;
+                if (ftruncate($output, 0) === false || fseek($output, 0, SEEK_SET) !== 0) {
+                    throw new \RuntimeException('Could not reset native ZIP temporary output after ZipArchive fallback.', 0, $error);
+                }
+            }
+        }
+
         $input = @fopen($archivePath, 'rb');
         if (!is_resource($input)) {
             throw new \RuntimeException('Native ZIP source could not be reopened for member extraction.');
         }
         try {
-            if (fseek($input, (int)$entry['data_offset'], SEEK_SET) !== 0) {
+            $dataOffset = $this->memberDataOffset(
+                $input,
+                (int)($entry['local_offset'] ?? -1),
+                $method,
+                (string)$entry['path'],
+                $centralBoundary
+            );
+            if ($dataOffset < 0 || $compressedSize < 0 || $dataOffset + $compressedSize > $centralBoundary) {
+                throw new \RuntimeException(
+                    'Native ZIP compressed member bounds are invalid for "' . (string)$entry['path'] . '".'
+                );
+            }
+            if (fseek($input, $dataOffset, SEEK_SET) !== 0) {
                 throw new \RuntimeException('Native ZIP member payload could not be positioned.');
             }
+
             return match ($method) {
                 0 => $this->decodeStored($input, $output, $compressedSize, $expectedBytes, $maxBytes, $heartbeat),
                 6 => (new CatalogZipImplodeDecoder())->decode(
@@ -347,6 +382,17 @@ final class CatalogNativeZipArchiveReader
                 ),
                 default => $this->decodeViaZipExtension($archivePath, $entry, $output, $maxBytes, $heartbeat),
             };
+        } catch (\Throwable $nativeFailure) {
+            if ($zipFailure instanceof \Throwable) {
+                throw new \RuntimeException(
+                    'ZipArchive could not decode "' . (string)$entry['path']
+                    . '" (' . $zipFailure->getMessage() . '); native local-header recovery also failed: '
+                    . $nativeFailure->getMessage(),
+                    0,
+                    $nativeFailure
+                );
+            }
+            throw $nativeFailure;
         } finally {
             fclose($input);
         }
@@ -545,31 +591,130 @@ final class CatalogNativeZipArchiveReader
     }
 
     /** @param resource $handle */
-    private function memberDataOffset($handle, int $localOffset, int $centralMethod, string $centralRawName): int
-    {
-        if ($localOffset < 0 || fseek($handle, $localOffset, SEEK_SET) !== 0) {
-            throw new \RuntimeException('Native ZIP local member header offset is invalid.');
+    private function memberDataOffset(
+        $handle,
+        int $recordedLocalOffset,
+        int $centralMethod,
+        string $centralPath,
+        int $centralBoundary
+    ): int {
+        $exact = $this->localHeaderCandidate(
+            $handle,
+            $recordedLocalOffset,
+            $centralMethod,
+            $centralPath,
+            $centralBoundary
+        );
+        if (is_array($exact)) {
+            return (int)$exact['data_offset'];
         }
-        $header = $this->readExact($handle, 30, 'local ZIP member header');
-        if (substr($header, 0, 4) !== self::LOCAL_SIGNATURE) {
-            throw new \RuntimeException('Native ZIP local member header signature is invalid.');
+
+        $scanStart = max(0, $recordedLocalOffset - self::LOCAL_HEADER_RECOVERY_BACKTRACK_BYTES);
+        $scanEnd = min(
+            max(0, $centralBoundary),
+            max(0, $recordedLocalOffset) + self::LOCAL_HEADER_RECOVERY_FORWARD_BYTES
+        );
+        if ($scanEnd <= $scanStart || $scanEnd - $scanStart < 4) {
+            throw new \RuntimeException(
+                'Native ZIP local member header signature is invalid at recorded offset '
+                . number_format($recordedLocalOffset) . ' for "' . $centralPath . '".'
+            );
         }
+        if (fseek($handle, $scanStart, SEEK_SET) !== 0) {
+            throw new \RuntimeException('Native ZIP local-header recovery search could not position the source.');
+        }
+        $window = $this->readExact($handle, $scanEnd - $scanStart, 'local-header recovery search');
+
+        $bestNameMatch = null;
+        $bestNameDistance = PHP_INT_MAX;
+        $bestMethodMatch = null;
+        $bestMethodDistance = PHP_INT_MAX;
+        $cursor = 0;
+        while (($relative = strpos($window, self::LOCAL_SIGNATURE, $cursor)) !== false) {
+            $candidateOffset = $scanStart + $relative;
+            $candidate = $this->localHeaderCandidate(
+                $handle,
+                $candidateOffset,
+                $centralMethod,
+                $centralPath,
+                $centralBoundary
+            );
+            if (is_array($candidate)) {
+                $distance = abs($candidateOffset - $recordedLocalOffset);
+                if (!empty($candidate['path_match'])) {
+                    if ($distance < $bestNameDistance) {
+                        $bestNameDistance = $distance;
+                        $bestNameMatch = $candidate;
+                    }
+                } elseif ($distance < $bestMethodDistance) {
+                    $bestMethodDistance = $distance;
+                    $bestMethodMatch = $candidate;
+                }
+            }
+            $cursor = $relative + 1;
+        }
+
+        $resolved = is_array($bestNameMatch) ? $bestNameMatch : $bestMethodMatch;
+        if (is_array($resolved)) {
+            return (int)$resolved['data_offset'];
+        }
+
+        throw new \RuntimeException(
+            'Native ZIP could not recover a valid local member header for "' . $centralPath
+            . '" near recorded offset ' . number_format($recordedLocalOffset) . '.'
+        );
+    }
+
+    /**
+     * @param resource $handle
+     * @return null|array{data_offset:int,path_match:bool}
+     */
+    private function localHeaderCandidate(
+        $handle,
+        int $offset,
+        int $centralMethod,
+        string $centralPath,
+        int $centralBoundary
+    ): ?array {
+        if ($offset < 0 || $centralBoundary < 1 || $offset + 30 > $centralBoundary) {
+            return null;
+        }
+        if (fseek($handle, $offset, SEEK_SET) !== 0) {
+            return null;
+        }
+        $header = fread($handle, 30);
+        if (!is_string($header) || strlen($header) !== 30 || substr($header, 0, 4) !== self::LOCAL_SIGNATURE) {
+            return null;
+        }
+
+        $flags = $this->u16($header, 6);
         $method = $this->u16($header, 8);
         $nameLength = $this->u16($header, 26);
         $extraLength = $this->u16($header, 28);
-        if ($method !== $centralMethod) {
-            throw new \RuntimeException('Native ZIP local/central compression methods disagree.');
+        if ($method !== $centralMethod || $nameLength < 1) {
+            return null;
         }
 
-        // The central directory is the canonical filename index. Historical ZIP
-        // tools sometimes renamed or normalised a member only in the central
-        // directory, leaving different filename bytes in the local header. The
-        // local name is therefore consumed only to locate the payload; it is never
-        // used as the extraction/catalog path. Signature, method, payload bounds,
-        // decoded size and CRC32 remain independently verified.
-        $this->readExact($handle, $nameLength, 'local ZIP filename');
+        $dataOffset = $offset + 30 + $nameLength + $extraLength;
+        if ($dataOffset <= $offset || $dataOffset > $centralBoundary) {
+            return null;
+        }
 
-        return $localOffset + 30 + $nameLength + $extraLength;
+        $rawName = fread($handle, $nameLength);
+        if (!is_string($rawName) || strlen($rawName) !== $nameLength) {
+            return null;
+        }
+        try {
+            $localPath = str_replace('\\', '/', $this->decodeName($rawName, $flags));
+        } catch (\Throwable) {
+            $localPath = '';
+        }
+        $centralNormalized = str_replace('\\', '/', $centralPath);
+
+        return [
+            'data_offset' => $dataOffset,
+            'path_match' => $localPath !== '' && hash_equals($centralNormalized, $localPath),
+        ];
     }
 
     /** @param resource $handle */
