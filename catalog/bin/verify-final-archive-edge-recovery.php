@@ -16,6 +16,7 @@ $record = static function (string $name, bool $ok, string $detail) use (&$result
 $temp = [];
 try {
     $source = (string)file_get_contents($root . '/src/Infrastructure/Archive/CatalogSequentialArchiveReader.php');
+    $consistencySource = (string)file_get_contents($root . '/src/Infrastructure/Archive/CatalogZipMetadataConsistency.php');
     $unknownMarker = "if (\$format === '7z' && (int)\$entry['size'] < 1)";
     $unknownPos = strpos($source, $unknownMarker);
     $planPos = strpos($source, '$decision = $plan($entry);');
@@ -24,6 +25,18 @@ try {
         $unknownPos !== false && $planPos !== false && $unknownPos < $planPos
             && str_contains($source, 'decodeUnknownSizeEntry('),
         '7-Zip members whose libarchive size metadata is zero must be bounded-decoded before import policy rejects them as empty.'
+    );
+    $record(
+        'stale_zip_metadata_routes_to_sequential_recovery',
+        str_contains($source, 'CatalogZipMetadataConsistency')
+            && str_contains($source, 'hasTrustedLocalMetadataMismatch($archivePath)'),
+        'ZIPs whose final central directory disagrees with trustworthy local metadata must use the verified sequential recovery path.'
+    );
+    $record(
+        'zip_metadata_probe_is_bounded',
+        str_contains($consistencySource, 'MAX_SCAN_BYTES = 16777216')
+            && str_contains($consistencySource, '(int)$fileSize > self::MAX_SCAN_BYTES'),
+        'Metadata-consistency probing must not add an unbounded full-archive scan to ordinary ZIP ingestion.'
     );
 
     $payload = "\xC1\x83\x2A\x9E" . str_repeat('ThunderStorm-local-header-recovery-', 128);
@@ -48,8 +61,8 @@ try {
         0
     ) . $name . $compressed;
 
-    // The verifier only needs a valid local member record because the recovery
-    // decision is intentionally independent of stale final central-directory data.
+    // The verifier only needs a valid local member record because the final
+    // acceptance decision is independently guarded by actual output size + CRC.
     $archivePath = tempnam(sys_get_temp_dir(), 'unrealdb-stale-zip-');
     $outputPath = tempnam(sys_get_temp_dir(), 'unrealdb-stale-out-');
     if (!is_string($archivePath) || !is_string($outputPath)) {
@@ -79,15 +92,16 @@ try {
 
     $record(
         'recovery_remains_in_process_php',
-        !preg_match('/\b(?:proc_open|shell_exec|popen|passthru|system|exec)\s*\(/', $source),
+        !preg_match('/\b(?:proc_open|shell_exec|popen|passthru|system|exec)\s*\(/', $source . "\n" . $consistencySource),
         'Archive edge recovery must not launch an external archive process.'
     );
 
     $worker = (string)file_get_contents($root . '/src/Infrastructure/Jobs/CatalogWorkerCodeVersion.php');
     $record(
-        'worker_fingerprint_tracks_sequential_reader',
-        str_contains($worker, '/Archive/CatalogSequentialArchiveReader.php'),
-        'Detached workers must reconcile when sequential archive recovery code changes.'
+        'worker_fingerprint_tracks_recovery_code',
+        str_contains($worker, '/Archive/CatalogSequentialArchiveReader.php')
+            && str_contains($worker, '/Archive/CatalogZipMetadataConsistency.php'),
+        'Detached workers must reconcile when sequential or ZIP metadata recovery code changes.'
     );
 } catch (Throwable $error) {
     $record('verifier_runtime', false, $error->getMessage());
