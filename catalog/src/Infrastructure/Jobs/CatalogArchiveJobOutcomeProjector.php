@@ -165,6 +165,11 @@ final class CatalogArchiveJobOutcomeProjector
             if ($pending === 0 && ($totalFailed > 0 || (int)$summary['cancelled'] > 0)) {
                 $row['result']['status'] = 'partial';
                 $row['progress']['status'] = 'partial';
+                // The queue row is terminally completed because the coordinator
+                // itself finished, but the operator-visible logical outcome is
+                // partial. The browser badge reads display_status first, so keep
+                // the projected status aligned with the projected child summary.
+                $row['display_status'] = 'partial';
             }
         }
         unset($row);
