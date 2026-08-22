@@ -59,6 +59,7 @@ final class CatalogWorkerCodeVersion
             $this->catalogRoot . '/src/Infrastructure/Archive/CatalogZipImplodeDecoder.php',
             $this->catalogRoot . '/src/Infrastructure/Archive/CatalogZipDeflate64Decoder.php',
             $this->catalogRoot . '/src/Infrastructure/Archive/CatalogExternalArchiveReader.php',
+            $this->catalogRoot . '/src/Infrastructure/Archive/CatalogRar5FileCopyMap.php',
             $this->catalogRoot . '/src/Infrastructure/Archive/CatalogUmodArchiveReader.php',
             $this->catalogRoot . '/src/Infrastructure/Downloads/CatalogUmodBinaryCodec.php',
             $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogArchiveImportJobHandler.php',
