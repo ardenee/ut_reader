@@ -18,28 +18,50 @@ final class JobFailureRetryPolicy
 {
     public static function retryDelaySeconds(ClaimedJob $job, Throwable $error): int
     {
-        if (self::isDeterministicArchiveFailure($job, $error)
-            || self::isDeterministicPackageFailure($job, $error)) {
+        if (self::isDeterministicFailure($job, $error)) {
             return 0;
         }
 
         return min(300, max(1, 2 ** min(8, $job->attempt)));
     }
 
-    private static function isDeterministicArchiveFailure(ClaimedJob $job, Throwable $error): bool
+    public static function isDeterministicFailure(ClaimedJob $job, Throwable $error): bool
     {
-        if (!in_array($job->type, [
-            JobType::PROCESS_BUCKET_ARCHIVE,
-            JobType::IMPORT_STAGED_ARCHIVE,
-        ], true)) {
-            return false;
-        }
+        return self::isDeterministicFailureText($job->type, $error->getMessage());
+    }
 
-        $message = strtolower(trim($error->getMessage()));
+    /**
+     * Classify an already-persisted failure without reconstructing a ClaimedJob or
+     * Throwable. Retained-archive recovery uses this to avoid automatically
+     * replaying child rows whose immutable bytes are already known to be invalid.
+     */
+    public static function isDeterministicFailureText(string $jobType, string $message): bool
+    {
+        $message = strtolower(trim($message));
         if ($message === '') {
             return false;
         }
 
+        if (in_array($jobType, [
+            JobType::PROCESS_BUCKET_ARCHIVE,
+            JobType::IMPORT_STAGED_ARCHIVE,
+        ], true)) {
+            return self::isDeterministicArchiveMessage($message);
+        }
+
+        if (in_array($jobType, [
+            JobType::PROCESS_BUCKET_UPLOAD,
+            JobType::PROCESS_BUCKET_STAGED_PACKAGE,
+            JobType::IMPORT_STAGED_PACKAGE,
+        ], true)) {
+            return self::isDeterministicPackageMessage($message);
+        }
+
+        return false;
+    }
+
+    private static function isDeterministicArchiveMessage(string $message): bool
+    {
         // A missing durable source cannot become available by replaying the same
         // job. This normally identifies legacy archive jobs whose chunk-upload
         // bytes were removed before asynchronous member outcomes were known.
@@ -84,24 +106,8 @@ final class JobFailureRetryPolicy
                 || str_contains($message, 'malformed'));
     }
 
-    private static function isDeterministicPackageFailure(ClaimedJob $job, Throwable $error): bool
+    private static function isDeterministicPackageMessage(string $message): bool
     {
-        // These job types all operate on an immutable staged/chunk-completed file.
-        // PROCESS_BUCKET_UPLOAD is included because the browser has already
-        // finalized the upload before a worker attempts package parsing.
-        if (!in_array($job->type, [
-            JobType::PROCESS_BUCKET_UPLOAD,
-            JobType::PROCESS_BUCKET_STAGED_PACKAGE,
-            JobType::IMPORT_STAGED_PACKAGE,
-        ], true)) {
-            return false;
-        }
-
-        $message = strtolower(trim($error->getMessage()));
-        if ($message === '') {
-            return false;
-        }
-
         // Archive-member jobs first try their own durable prepared source and then
         // reconstruct the exact member from the retained parent archive. If both
         // are gone, another attempt cannot manufacture those bytes.
