@@ -126,11 +126,6 @@ function catalog_admin_navigation_groups(string $root): array
             $backupGameVersion = is_file($backupGameScript) ? (string)filemtime($backupGameScript) : '1';
             echo '<script src="' . catalog_h($root . 'assets/game-backup-job-game.js?v=' . $backupGameVersion) . '"></script>';
         }
-        if ($currentScript === 'background-jobs.php') {
-            $deleteScript = __DIR__ . '/../assets/background-jobs-delete-nonrunning.js';
-            $deleteVersion = is_file($deleteScript) ? (string)filemtime($deleteScript) : '1';
-            echo '<script src="' . catalog_h($root . 'assets/background-jobs-delete-nonrunning.js?v=' . $deleteVersion) . '" defer></script>';
-        }
         $clientNavigationLoaded = true;
     }
 
