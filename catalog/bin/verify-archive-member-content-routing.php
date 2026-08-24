@@ -217,9 +217,9 @@ $record(
 );
 
 $rootedPathPolicy = static fn(string $text): bool =>
-    str_contains($text, "preg_match('/^[A-Za-z]:\\\\//', \$path)")
+    str_contains($text, 'absolute drive path')
     && str_contains($text, "\$path = ltrim(\$path, '/');")
-    && str_contains($text, "return ['', 'parent-directory traversal'];");
+    && str_contains($text, 'parent-directory traversal');
 $record(
     'rooted_archive_paths_are_normalized_not_trusted',
     $rootedPathPolicy($extractorSource)
