@@ -1,9 +1,9 @@
 <?php
 /**
- * UnrealDB PHP File Audit
- * Purpose: Renders the Background Jobs administrator page.
- * Why: The page selects a queue/read model and renders the stable UI; durable-job SQL lives in Infrastructure.
- * Role: Thin web UI entry point.
+ * File-centric Background Jobs administrator view.
+ *
+ * Durable job mechanics stay behind the page. The operator sees one source/file
+ * row, its current action/progress and expandable child files/work beneath it.
  */
 declare(strict_types=1);
 
@@ -28,25 +28,11 @@ try {
         $requestedQueue = '';
     }
 
-    // Queue summaries are used only to choose a queue containing live work. Raw
-    // durable-row counts are deliberately not rendered as operator job totals.
     $queueOptions = (new PdoBackgroundJobQueueSummaryQuery($db))->all();
     if (!isset($queueOptions[$configuredQueue])) {
         $queueOptions[$configuredQueue] = ['total' => 0, 'queued' => 0, 'running' => 0];
     }
-
-    $queueName = $requestedQueue;
-    if ($queueName === '') {
-        foreach ($queueOptions as $candidate => $summary) {
-            if (($summary['queued'] ?? 0) > 0 || ($summary['running'] ?? 0) > 0) {
-                $queueName = $candidate;
-                break;
-            }
-        }
-    }
-    if ($queueName === '') {
-        $queueName = $configuredQueue;
-    }
+    $queueName = $requestedQueue !== '' ? $requestedQueue : $configuredQueue;
     if (!isset($queueOptions[$queueName])) {
         $queueOptions[$queueName] = ['total' => 0, 'queued' => 0, 'running' => 0];
     }
@@ -54,190 +40,148 @@ try {
 
     catalog_head('Background Jobs');
     echo '<style>'
-        . '.jobs-queue-switcher{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:0 0 14px}'
-        . '.jobs-queue-switcher select{min-width:340px}'
-        . '.jobs-toolbar,.jobs-filterbar,.jobs-selectionbar,.jobs-pagination{display:flex;gap:10px;align-items:center;flex-wrap:wrap}'
-        . '.jobs-toolbar,.jobs-filterbar,.jobs-selectionbar{margin:0 0 14px}'
-        . '.jobs-toolbar .ui-toolbar__aside{margin-left:auto}'
-        . '.jobs-worker-state{font-weight:600}'
-        . '.jobs-worker-state[data-authoritative-status="running"]{color:#a7f3d0}'
-        . '.jobs-worker-state[data-authoritative-status="orphaned"]{color:#fecdd3}'
-        . '.jobs-worker-state[data-authoritative-status="stopped_with_queue"]{color:#fde68a}'
-        . '.jobs-tabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 14px;border-bottom:1px solid var(--line);padding-bottom:10px}'
-        . '.jobs-tabs button[aria-selected="true"]{font-weight:700;box-shadow:inset 0 -2px 0 currentColor}'
-        . '.jobs-search{min-width:260px;flex:1}'
-        . '.jobs-selection-summary{min-width:160px}'
-        . '.jobs-pagination{justify-content:space-between;margin-top:14px}'
-        . '.jobs-page-controls{display:flex;gap:8px;align-items:center}'
-        . '.jobs-running-for,.jobs-actions,.jobs-attempts,.jobs-created,.jobs-id{white-space:nowrap}'
-        . '.jobs-type,.jobs-col-type,.jobs-table thead th:nth-child(4){display:none!important}'
-        . '.jobs-target{min-width:0;max-width:none;overflow:visible;text-overflow:clip;white-space:normal!important;word-break:break-word!important;overflow-wrap:anywhere!important}'
-        . '.jobs-maintenance{margin-top:18px}'
-        . '.jobs-maintenance summary{cursor:pointer;font-weight:700}'
-        . '.jobs-maintenance-body{padding:14px 0 0}'
-        . '.jobs-empty{text-align:center;padding:30px}'
-        . '.jobs-row-checkbox{width:18px;height:18px}'
-        . '.jobs-table{table-layout:fixed;min-width:1000px}'
-        . '.jobs-table .jobs-col-select{width:42px}.jobs-table .jobs-col-id{width:72px}.jobs-table .jobs-col-status{width:118px}'
-        . '.jobs-table .jobs-col-runtime{width:135px}.jobs-table .jobs-col-attempts{width:82px}'
-        . '.jobs-table .jobs-col-created{width:175px}.jobs-table .jobs-col-action{width:110px}'
-        . '.jobs-main-row td{vertical-align:top;border-bottom:0;padding-bottom:7px}'
-        . '.jobs-main-row.is-running td{background:rgba(246,196,83,.025)}'
-        . '.jobs-detail-row td{padding-top:0;border-top:0}'
-        . '.jobs-detail-row td::before{display:none}'
-        . '.jobs-detail-card{display:grid;grid-template-columns:190px minmax(300px,1fr);gap:14px;align-items:start;padding:8px 12px 11px;border-left:3px solid var(--line2);background:rgba(255,255,255,.018)}'
-        . '.jobs-detail-row.is-running .jobs-detail-card{border-left-color:#f6c453;background:rgba(246,196,83,.035)}'
-        . '.jobs-detail-progress{display:grid;grid-template-columns:minmax(0,1fr) 44px;gap:8px;align-items:center;white-space:nowrap}'
-        . '.jobs-detail-progress progress{width:100%;height:13px}'
-        . '.jobs-detail-text strong,.jobs-detail-text span,.jobs-detail-meta span{display:block}'
-        . '.jobs-detail-text strong{text-transform:capitalize;margin-bottom:3px}'
-        . '.jobs-detail-text span{overflow-wrap:anywhere}'
-        . '.jobs-detail-meta{grid-column:1/-1;text-align:left;font-size:12px}'
-        . '.jobs-detail-error{margin-top:4px;color:#fecdd3;overflow-wrap:anywhere}'
-        . '.job-status{display:inline-block;min-width:84px;padding:3px 8px;border:1px solid var(--line);border-radius:999px;font-weight:700;text-align:center}'
-        . '.job-status-queued,.job-status-running{color:#ffe29a;border-color:rgba(246,196,83,.75);background:rgba(246,196,83,.10)}'
-        . '.job-status-completed,.job-status-imported,.job-status-verified,.job-status-alias,.job-status-bucketed,.job-status-decompressed{color:#a7f3d0;border-color:rgba(50,213,131,.75);background:rgba(50,213,131,.10)}'
-        . '.job-status-duplicate{color:#bfdbfe;border-color:rgba(96,165,250,.8);background:rgba(96,165,250,.12)}'
-        . '.job-status-failed,.job-status-rejected,.job-status-unverified,.job-status-dead_letter,.job-status-cancelled{color:#fecdd3;border-color:rgba(255,107,122,.75);background:rgba(255,107,122,.10)}'
-        . '@media(max-width:900px){.jobs-detail-card{grid-template-columns:1fr}.jobs-detail-meta{text-align:left}.jobs-toolbar .ui-toolbar__aside{width:100%;margin-left:0}}'
+        . '.jobs-file-worker,.jobs-file-filters,.jobs-file-pagination,.jobs-file-maintenance{display:flex;gap:9px;align-items:center;flex-wrap:wrap}'
+        . '.jobs-file-worker{margin:0 0 14px}'
+        . '.jobs-file-worker-state{margin-left:auto;font-weight:600}'
+        . '.jobs-file-queue{margin:0 0 14px}'
+        . '.jobs-file-queue select{min-width:260px}'
+        . '.jobs-file-tabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 12px;border-bottom:1px solid var(--line);padding-bottom:10px}'
+        . '.jobs-file-tabs button[aria-selected="true"]{font-weight:700;box-shadow:inset 0 -2px 0 currentColor}'
+        . '.jobs-file-filters{margin:0 0 12px}'
+        . '.jobs-file-search{min-width:280px;flex:1}'
+        . '.jobs-file-notice{margin:8px 0 12px}'
+        . '.jobs-file-table{table-layout:fixed;min-width:1120px}'
+        . '.jobs-file-table .col-id{width:82px}.jobs-file-table .col-size{width:100px}.jobs-file-table .col-action{width:340px}'
+        . '.jobs-file-table .col-progress{width:190px}.jobs-file-table .col-status{width:118px}.jobs-file-table .col-control{width:108px}'
+        . '.jobs-file-row td{vertical-align:top}'
+        . '.jobs-file-row-working td{background:rgba(246,196,83,.025)}'
+        . '.jobs-file-row-issue td{background:rgba(255,107,122,.035)}'
+        . '.jobs-file-id,.jobs-file-size,.jobs-file-control{white-space:nowrap}'
+        . '.jobs-file-tree{display:flex;gap:7px;align-items:flex-start;padding-left:calc(var(--tree-depth,0) * 22px)}'
+        . '.jobs-file-toggle{width:24px;height:24px;padding:0;line-height:1;flex:0 0 24px}'
+        . '.jobs-file-toggle-spacer{display:inline-block;width:24px;flex:0 0 24px}'
+        . '.jobs-file-identity{min-width:0}'
+        . '.jobs-file-identity strong,.jobs-file-path,.jobs-file-child-count,.jobs-file-action strong,.jobs-file-activity,.jobs-file-issue-text,.jobs-file-type,.jobs-file-result-label{display:block}'
+        . '.jobs-file-path,.jobs-file-activity,.jobs-file-issue-text{overflow-wrap:anywhere}'
+        . '.jobs-file-child-count,.jobs-file-type,.jobs-file-result-label{font-size:12px;margin-top:3px}'
+        . '.jobs-file-issue-text{color:#fecdd3;margin-top:4px;font-size:13px}'
+        . '.jobs-file-progress{display:grid;grid-template-columns:minmax(0,1fr) 70px;gap:8px;align-items:center}'
+        . '.jobs-file-progress progress{width:100%;height:14px}'
+        . '.jobs-file-status{display:inline-block;min-width:86px;padding:3px 8px;border:1px solid var(--line);border-radius:999px;font-weight:700;text-align:center}'
+        . '.jobs-file-status-working{color:#ffe29a;border-color:rgba(246,196,83,.75);background:rgba(246,196,83,.10)}'
+        . '.jobs-file-status-completed{color:#a7f3d0;border-color:rgba(50,213,131,.75);background:rgba(50,213,131,.10)}'
+        . '.jobs-file-status-issue{color:#fecdd3;border-color:rgba(255,107,122,.75);background:rgba(255,107,122,.10)}'
+        . '.jobs-file-status-stopped{color:#cbd5e1;border-color:rgba(148,163,184,.75);background:rgba(148,163,184,.10)}'
+        . '.jobs-file-replace{font-weight:700;color:#fecdd3}'
+        . '.jobs-file-empty{text-align:center;padding:32px}'
+        . '.jobs-file-more-row td,.jobs-file-loading-row td{background:rgba(255,255,255,.015)}'
+        . '.jobs-file-pagination{justify-content:space-between;margin-top:13px}'
+        . '.jobs-file-page-controls{display:flex;gap:8px;align-items:center}'
+        . '.jobs-file-maintenance-wrap{margin-top:18px}'
+        . '.jobs-file-maintenance-wrap summary{cursor:pointer;font-weight:700}'
+        . '.jobs-file-maintenance{padding-top:12px}'
+        . '@media(max-width:900px){.jobs-file-worker-state{width:100%;margin-left:0}}'
         . '</style>';
 
     catalog_page_header(
         'Background Jobs',
-        'Each job uses a fixed summary row plus a full-width live status row. Long workflows keep successful child units and retry only failed/incomplete work; routine child rows stay hidden unless they need attention.',
+        'File view: one row per source/file. Expand an archive, UMod or workflow to follow its child files and related work back to the original source.',
         [
-            'System Operations' => 'system-operations.php',
             'Upload Issues' => 'upload-issues.php',
             'Upload Bucket' => 'upload-bucket-v2.php',
-            'Upload Files' => 'profiled-upload.php',
-            'PAK Import' => 'pak-import.php',
+            'System Operations' => 'system-operations.php',
             'Dashboard' => 'dashboard.php',
         ]
     );
 
-    echo '<form method="get" class="jobs-queue-switcher">'
+    echo '<form method="get" class="jobs-file-queue">'
         . '<label><strong>Queue</strong> <select name="queue" onchange="this.form.submit()">';
-    foreach ($queueOptions as $name => $summary) {
-        echo '<option value="' . catalog_h($name) . '"' . ($name === $queueName ? ' selected' : '') . '>'
-            . catalog_h($name) . '</option>';
+    foreach ($queueOptions as $name => $queueSummary) {
+        echo '<option value="' . catalog_h($name) . '"' . ($name === $queueName ? ' selected' : '') . '>' . catalog_h($name) . '</option>';
     }
-    echo '</select></label><noscript><button type="submit">Open queue</button></noscript></form>';
+    echo '</select></label></form>';
 
     echo '<section class="ui-section"><div class="ui-section__body">';
     echo '<div id="background-jobs-app" '
         . 'data-queue="' . catalog_h($queueName) . '" '
-        . 'data-status-url="api/v1/job-status.php" '
-        . 'data-bulk-url="api/v1/job-bulk.php" '
-        . 'data-action-url="api/v1/job-action.php" '
+        . 'data-tree-url="api/v1/job-file-tree.php" '
         . 'data-run-url="api/v1/job-run.php" '
         . 'data-worker-status-url="api/v1/job-worker-status.php" '
         . 'data-worker-action-url="api/v1/job-worker-action.php" '
-        . 'data-pak-rerun-url="api/v1/job-rerun-pak.php" '
+        . 'data-action-url="api/v1/job-action.php" '
+        . 'data-bulk-url="api/v1/job-bulk.php" '
         . 'data-csrf="' . catalog_h(catalog_csrf('job_action')) . '">';
 
-    $toolbarActions = CatalogUi::button('Start / resume queue', [
-        'variant' => 'primary',
-        'attributes' => ['id' => 'jobs-start'],
-    ]) . CatalogUi::button('Stop worker', [
-        'variant' => 'danger',
-        'attributes' => ['id' => 'jobs-stop-worker'],
-    ]) . CatalogUi::button('Refresh', [
-        'variant' => 'secondary',
-        'attributes' => ['id' => 'jobs-refresh'],
-    ]);
-    $workerState = '<span id="jobs-worker-state" class="muted jobs-worker-state">Loading authoritative worker status…</span>';
-    echo CatalogUi::toolbar($toolbarActions, $workerState, [
-        'label' => 'Queue controls',
-        'class' => 'jobs-toolbar',
-    ]);
+    echo '<div class="jobs-file-worker">'
+        . '<label>Workers <select id="jobs-worker-count">';
+    for ($workers = 1; $workers <= 8; $workers++) {
+        echo '<option value="' . $workers . '"' . ($workers === 4 ? ' selected' : '') . '>' . $workers . '</option>';
+    }
+    echo '</select></label>'
+        . CatalogUi::button('Apply workers', ['variant' => 'secondary', 'attributes' => ['id' => 'jobs-apply-workers']])
+        . CatalogUi::button('Start / resume', ['variant' => 'primary', 'attributes' => ['id' => 'jobs-start']])
+        . CatalogUi::button('Stop workers', ['variant' => 'danger', 'attributes' => ['id' => 'jobs-stop-worker']])
+        . CatalogUi::button('Refresh', ['variant' => 'secondary', 'attributes' => ['id' => 'jobs-refresh']])
+        . '<span id="jobs-worker-state" class="muted jobs-file-worker-state">Loading worker state…</span>'
+        . '</div>';
 
-    echo '<nav id="jobs-status-tabs" class="jobs-tabs" aria-label="Job status">';
+    echo '<nav id="jobs-file-tabs" class="jobs-file-tabs" aria-label="File processing state">';
     foreach ([
-        '' => 'All',
-        'queued' => 'Queued',
-        'running' => 'Running',
+        'all' => 'All',
+        'working' => 'Working',
+        'issue' => 'Issues',
         'completed' => 'Completed',
-        'failed' => 'Failed',
-        'dead_letter' => 'Dead letter',
-        'cancelled' => 'Cancelled',
+        'stopped' => 'Stopped',
     ] as $value => $label) {
-        echo '<button type="button" data-status="' . catalog_h($value) . '" aria-selected="false">'
-            . catalog_h($label) . ' <span data-status-count="' . catalog_h($value !== '' ? $value : 'all') . '">0</span>'
-            . '</button>';
+        echo '<button type="button" data-state="' . $value . '" aria-selected="false">'
+            . $label . ' <span data-count>0</span></button>';
     }
     echo '</nav>';
 
-    echo '<div class="jobs-filterbar">'
-        . '<label class="jobs-search">Search <input id="jobs-search" type="search" placeholder="File path, job ID or error" autocomplete="off"></label>'
-        . '<label>Rows <select id="jobs-page-size">'
-        . '<option value="50">50</option><option value="100" selected>100</option><option value="250">250</option>'
-        . '<option value="500">500</option><option value="1000">1000</option>'
+    echo '<div class="jobs-file-filters">'
+        . '<label class="jobs-file-search">Search file/job <input id="jobs-file-search" type="search" placeholder="Filename, path, job ID or issue" autocomplete="off"></label>'
+        . '<label>Rows <select id="jobs-file-per-page">'
+        . '<option value="25">25</option><option value="50">50</option><option value="100" selected>100</option><option value="200">200</option>'
         . '</select></label>'
         . '</div>';
 
-    echo '<div class="jobs-selectionbar">'
-        . '<label><input id="jobs-select-page" type="checkbox" class="jobs-row-checkbox" aria-label="Select all jobs on this page"> Select page</label>'
-        . '<span id="jobs-selection-summary" class="jobs-selection-summary muted">Nothing selected</span>'
-        . '<button id="jobs-select-matching" type="button">Select all matching</button>'
-        . '<button id="jobs-clear-selection" type="button" disabled>Clear selection</button>'
-        . '<label>Action <select id="jobs-bulk-action"><option value="">Choose action</option></select></label>'
-        . '<button id="jobs-apply-action" type="button" disabled>Apply</button>'
-        . '</div>';
+    echo '<div id="jobs-file-notice" class="muted jobs-file-notice">Loading files…</div>';
 
-    echo CatalogUi::liveRegion('Loading jobs…', [
-        'id' => 'jobs-message',
-        'class' => 'muted',
-        'priority' => 'polite',
-    ]);
-
-    $table = '<table class="jobs-table"><caption class="ui-sr-only">Background jobs for queue ' . catalog_h($queueName) . '</caption><colgroup>'
-        . '<col class="jobs-col-select"><col class="jobs-col-id"><col class="jobs-col-status"><col class="jobs-col-type">'
-        . '<col><col class="jobs-col-runtime"><col class="jobs-col-attempts"><col class="jobs-col-created"><col class="jobs-col-action">'
-        . '</colgroup><thead><tr>'
-        . '<th scope="col"><span class="ui-sr-only">Select</span></th><th scope="col">ID</th><th scope="col">Status</th><th scope="col">Type</th><th scope="col">Full source path</th>'
-        . '<th scope="col">Running for</th><th scope="col">Attempts</th><th scope="col">Created</th><th scope="col">Action</th>'
-        . '</tr></thead><tbody id="jobs-table-body"><tr class="jobs-empty-row"><td colspan="9" class="jobs-empty muted">Loading…</td></tr></tbody></table>';
+    $table = '<table class="jobs-file-table"><caption class="ui-sr-only">File processing jobs for queue ' . catalog_h($queueName) . '</caption>'
+        . '<colgroup><col class="col-id"><col><col class="col-size"><col class="col-action"><col class="col-progress"><col class="col-status"><col class="col-control"></colgroup>'
+        . '<thead><tr><th>Job</th><th>File / source</th><th>Size</th><th>Current action / issue</th><th>Progress</th><th>Status</th><th></th></tr></thead>'
+        . '<tbody id="jobs-file-body"><tr><td colspan="7" class="jobs-file-empty muted">Loading…</td></tr></tbody></table>';
     echo CatalogUi::tableRegion($table, [
-        'id' => 'jobs-table-region',
-        'label' => 'Background jobs',
+        'id' => 'jobs-file-table-region',
+        'label' => 'File processing jobs',
         'focusable' => true,
     ]);
 
-    echo '<div class="jobs-pagination">'
-        . '<span id="jobs-page-summary" class="muted"></span>'
-        . '<div class="jobs-page-controls">'
-        . CatalogUi::button('First', ['variant' => 'secondary', 'size' => 'sm', 'attributes' => ['id' => 'jobs-first-page']])
-        . CatalogUi::button('Previous', ['variant' => 'secondary', 'size' => 'sm', 'attributes' => ['id' => 'jobs-previous-page']])
-        . '<span id="jobs-page-label">Page 1 of 1</span>'
-        . CatalogUi::button('Next', ['variant' => 'secondary', 'size' => 'sm', 'attributes' => ['id' => 'jobs-next-page']])
-        . CatalogUi::button('Last', ['variant' => 'secondary', 'size' => 'sm', 'attributes' => ['id' => 'jobs-last-page']])
+    echo '<div class="jobs-file-pagination">'
+        . '<span id="jobs-file-summary" class="muted"></span>'
+        . '<div class="jobs-file-page-controls">'
+        . CatalogUi::button('First', ['variant' => 'secondary', 'size' => 'sm', 'attributes' => ['id' => 'jobs-file-first']])
+        . CatalogUi::button('Previous', ['variant' => 'secondary', 'size' => 'sm', 'attributes' => ['id' => 'jobs-file-previous']])
+        . '<span id="jobs-file-page">Page 1 of 1</span>'
+        . CatalogUi::button('Next', ['variant' => 'secondary', 'size' => 'sm', 'attributes' => ['id' => 'jobs-file-next']])
+        . CatalogUi::button('Last', ['variant' => 'secondary', 'size' => 'sm', 'attributes' => ['id' => 'jobs-file-last']])
         . '</div></div>';
 
-    echo '<details class="jobs-maintenance"><summary>Maintenance</summary><div class="jobs-maintenance-body">'
-        . '<p class="muted">Recovery only acts on running jobs whose detached worker process is no longer active. A long-running live job is never recovered because of elapsed time; use Stop job if operator review shows it is genuinely stuck.</p>'
-        . '<p class="button-row">'
+    echo '<details class="jobs-file-maintenance-wrap"><summary>Maintenance</summary>'
+        . '<div class="jobs-file-maintenance">'
         . '<button id="jobs-recover" type="button">Recover orphaned jobs</button>'
-        . '<label>Delete terminal jobs older than <select id="jobs-cleanup-days">'
+        . '<label>Delete historical terminal jobs older than <select id="jobs-cleanup-days">'
         . '<option value="1">1 day</option><option value="7">7 days</option><option value="30" selected>30 days</option>'
         . '<option value="90">90 days</option><option value="365">1 year</option>'
         . '</select></label>'
         . '<button id="jobs-cleanup" type="button">Queue cleanup</button>'
-        . '</p></div></details>';
+        . '</div></details>';
 
     echo '</div></div></section>';
 
-    $bridge = __DIR__ . '/assets/background-jobs-cursor-bridge.js';
-    $bridgeVersion = is_file($bridge) ? (string)filemtime($bridge) : '1';
-    echo '<script src="assets/background-jobs-cursor-bridge.js?v=' . catalog_h($bridgeVersion) . '"></script>';
-    $script = __DIR__ . '/assets/background-jobs-stable.js';
+    $script = __DIR__ . '/assets/background-jobs-files.js';
     $version = is_file($script) ? (string)filemtime($script) : '1';
-    echo '<script src="assets/background-jobs-stable.js?v=' . catalog_h($version) . '"></script>';
-    $cleanupScript = __DIR__ . '/assets/background-jobs-async-cleanup.js';
-    $cleanupVersion = is_file($cleanupScript) ? (string)filemtime($cleanupScript) : '1';
-    echo '<script src="assets/background-jobs-async-cleanup.js?v=' . catalog_h($cleanupVersion) . '"></script>';
-    $archiveErrorScript = __DIR__ . '/assets/background-jobs-archive-errors.js';
-    $archiveErrorVersion = is_file($archiveErrorScript) ? (string)filemtime($archiveErrorScript) : '1';
-    echo '<script src="assets/background-jobs-archive-errors.js?v=' . catalog_h($archiveErrorVersion) . '"></script>';
+    echo '<script src="assets/background-jobs-files.js?v=' . catalog_h($version) . '"></script>';
     catalog_foot();
 } catch (Throwable $error) {
     error_log('[UnrealDB background jobs][' . catalog_request_id() . '] ' . $error->getMessage());
