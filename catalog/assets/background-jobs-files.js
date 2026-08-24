@@ -128,6 +128,31 @@
         return element;
     }
 
+    function rowBackground(depth, rootGroup) {
+        const alternate = Math.abs(Number(rootGroup || 0)) % 2;
+        if (depth < 1) {
+            return alternate === 0
+                ? 'rgba(255,255,255,0.012)'
+                : 'rgba(255,255,255,0.045)';
+        }
+
+        // Children use a subtle blue tint so an expanded branch remains visually
+        // separate from its parent. Deeper embedded archives get a slightly stronger
+        // tint while retaining the root parent's alternating group identity.
+        const base = alternate === 0 ? 0.052 : 0.072;
+        const alpha = Math.min(0.125, base + (Math.min(depth - 1, 4) * 0.012));
+        return 'rgba(96,165,250,' + alpha.toFixed(3) + ')';
+    }
+
+    function applyRowBackground(row, depth, rootGroup) {
+        const background = rowBackground(depth, rootGroup);
+        row.dataset.rootGroup = String(Math.abs(Number(rootGroup || 0)) % 2);
+        row.dataset.treeKind = depth > 0 ? 'child' : 'parent';
+        row.querySelectorAll('td').forEach(function (cell) {
+            cell.style.background = background;
+        });
+    }
+
     function statusClass(file) {
         return 'jobs-file-status jobs-file-status-' + String(file.operator_state || 'issue').replace(/[^a-z0-9_-]+/g, '-');
     }
@@ -148,7 +173,7 @@
         return null;
     }
 
-    function renderFileRow(file, depth) {
+    function renderFileRow(file, depth, rootGroup) {
         const row = document.createElement('tr');
         row.className = 'jobs-file-row jobs-file-row-' + String(file.operator_state || 'issue');
         row.dataset.jobId = String(file.id || '');
@@ -219,10 +244,11 @@
             }
         }
         row.appendChild(controlCell);
+        applyRowBackground(row, depth, rootGroup);
         return row;
     }
 
-    function renderLoadMore(parentId, depth, childState) {
+    function renderLoadMore(parentId, depth, childState, rootGroup) {
         const row = document.createElement('tr');
         row.className = 'jobs-file-more-row';
         const cell = document.createElement('td');
@@ -235,11 +261,12 @@
         });
         cell.appendChild(button);
         row.appendChild(cell);
+        applyRowBackground(row, Math.max(1, depth), rootGroup);
         return row;
     }
 
-    function appendBranch(fragment, file, depth) {
-        fragment.appendChild(renderFileRow(file, depth));
+    function appendBranch(fragment, file, depth, rootGroup) {
+        fragment.appendChild(renderFileRow(file, depth, rootGroup));
         const id = Number(file.id || 0);
         if (!id || !state.expanded.has(id)) return;
 
@@ -251,13 +278,14 @@
             cell.colSpan = 7;
             cell.style.paddingLeft = 'calc(18px + (' + (depth + 1) + ' * 22px))';
             loading.appendChild(cell);
+            applyRowBackground(loading, depth + 1, rootGroup);
             fragment.appendChild(loading);
             return;
         }
 
-        childState.rows.forEach(function (child) { appendBranch(fragment, child, depth + 1); });
+        childState.rows.forEach(function (child) { appendBranch(fragment, child, depth + 1, rootGroup); });
         if (childState.page < childState.pages) {
-            fragment.appendChild(renderLoadMore(id, depth + 1, childState));
+            fragment.appendChild(renderLoadMore(id, depth + 1, childState, rootGroup));
         }
     }
 
@@ -272,7 +300,7 @@
             row.appendChild(cell);
             fragment.appendChild(row);
         } else {
-            state.roots.forEach(function (file) { appendBranch(fragment, file, 0); });
+            state.roots.forEach(function (file, index) { appendBranch(fragment, file, 0, index % 2); });
         }
         body.replaceChildren(fragment);
     }
