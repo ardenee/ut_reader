@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace UnrealDb\Catalog\Infrastructure\Persistence;
 
 use PDO;
+use UnrealDb\Catalog\Application\Jobs\JobFailureRetryPolicy;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogBackgroundJobHistoryCleanupQueue;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogJobDisplayStatus;
@@ -182,10 +183,10 @@ final class PdoBackgroundJobBulkAction
         }
 
         // A retained partial archive must be replayed from the beginning of its
-        // container. Successful/duplicate/skipped descendants remain terminal,
-        // while failed/cancelled/rejected/unverified/partial descendants must be
-        // replayed too. Otherwise parent/member workflow idempotency simply returns
-        // the old terminal child and a newer reader/classifier never sees its bytes.
+        // container. Successful/duplicate/skipped descendants remain terminal.
+        // Recoverable problem descendants are replayed so newer reader/classifier
+        // code sees their bytes; deterministic immutable-source failures remain
+        // terminal and can still be restarted individually by an operator later.
         $archiveSelect = $this->db->prepare(
             'SELECT id FROM ue_background_jobs WHERE queue_name=? AND id IN (' . $idSql . ') '
             . 'AND status="completed" AND display_status="partial" '
@@ -201,10 +202,10 @@ final class PdoBackgroundJobBulkAction
             $archiveSelect->fetchAll(PDO::FETCH_COLUMN) ?: []
         )));
 
-        // Reset problem descendants before exposing the parent as queued. A worker
-        // may claim a child immediately; that is safe. The reverse order is not:
-        // a parent could otherwise observe the old terminal failure and finish
-        // partial again before its child had been reactivated.
+        // Reset recoverable problem descendants before exposing the parent as
+        // queued. A worker may claim a child immediately; that is safe. The reverse
+        // order is not: a parent could otherwise observe the old terminal failure
+        // and finish partial again before its child had been reactivated.
         if ($retainedArchiveIds !== []) {
             $problemDescendants = $this->archiveProblemDescendantIds($queueName, $retainedArchiveIds);
             $this->restartArchiveProblemDescendants($queueName, $problemDescendants, $now);
@@ -237,9 +238,9 @@ final class PdoBackgroundJobBulkAction
     }
 
     /**
-     * Return only terminal problem descendants under the retained archive roots.
-     * Parent/workflow identity is recursive because an archive member can itself
-     * become a nested archive workflow with its own package children.
+     * Return only recoverable terminal problem descendants under retained archive
+     * roots. Parent/workflow identity is recursive because an archive member can
+     * itself become a nested archive workflow with package children.
      *
      * @param list<int> $archiveIds
      * @return list<int>
@@ -253,23 +254,64 @@ final class PdoBackgroundJobBulkAction
         $rootSql = implode(',', array_fill(0, count($archiveIds), '?'));
         $statement = $this->db->prepare(
             'WITH RECURSIVE archive_descendants AS ('
-            . 'SELECT id,parent_job_id,status,display_status FROM ue_background_jobs '
+            . 'SELECT id,parent_job_id,job_type,status,display_status,last_error,result_json,progress_json '
+            . 'FROM ue_background_jobs '
             . 'WHERE queue_name=? AND parent_job_id IN (' . $rootSql . ') '
             . 'AND workflow_unit_key LIKE "archive:%" '
             . 'UNION ALL '
-            . 'SELECT j.id,j.parent_job_id,j.status,j.display_status FROM ue_background_jobs j '
+            . 'SELECT j.id,j.parent_job_id,j.job_type,j.status,j.display_status,j.last_error,j.result_json,j.progress_json '
+            . 'FROM ue_background_jobs j '
             . 'INNER JOIN archive_descendants d ON d.id=j.parent_job_id '
             . 'WHERE j.queue_name=? AND j.workflow_unit_key LIKE "archive:%"'
             . ') '
-            . 'SELECT DISTINCT id FROM archive_descendants WHERE '
+            . 'SELECT DISTINCT id,job_type,last_error,result_json,progress_json FROM archive_descendants WHERE '
             . '(status IN ("cancelled","failed","dead_letter") '
             . 'OR (status="completed" AND display_status IN ("failed","rejected","unverified","partial","error")))'
         );
         $statement->execute(array_merge([$queueName], $archiveIds, [$queueName]));
-        return array_values(array_unique(array_filter(
-            array_map('intval', $statement->fetchAll(PDO::FETCH_COLUMN) ?: []),
-            static fn(int $id): bool => $id > 0
-        )));
+
+        $ids = [];
+        foreach ($statement->fetchAll(PDO::FETCH_ASSOC) ?: [] as $row) {
+            $id = (int)($row['id'] ?? 0);
+            if ($id < 1) {
+                continue;
+            }
+            $jobType = trim((string)($row['job_type'] ?? ''));
+            $failureText = self::persistedFailureText($row);
+            if (JobFailureRetryPolicy::isDeterministicFailureText($jobType, $failureText)) {
+                continue;
+            }
+            $ids[$id] = true;
+        }
+        return array_map('intval', array_keys($ids));
+    }
+
+    /** @param array<string,mixed> $row */
+    private static function persistedFailureText(array $row): string
+    {
+        $lastError = trim((string)($row['last_error'] ?? ''));
+        if ($lastError !== '') {
+            return $lastError;
+        }
+
+        foreach (['result_json', 'progress_json'] as $column) {
+            $decoded = json_decode((string)($row[$column] ?? ''), true);
+            if (!is_array($decoded)) {
+                continue;
+            }
+            $message = trim((string)($decoded['message'] ?? ''));
+            if ($message !== '') {
+                return $message;
+            }
+            $errors = is_array($decoded['errors'] ?? null) ? $decoded['errors'] : [];
+            $first = is_array($errors[0] ?? null) ? $errors[0] : [];
+            $error = trim((string)($first['error'] ?? ''));
+            if ($error !== '') {
+                return $error;
+            }
+        }
+
+        return '';
     }
 
     /** @param list<int> $jobIds */
