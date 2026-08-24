@@ -610,8 +610,19 @@ final class CatalogArchiveExtractor
             return ['', 'empty/control-character path'];
         }
         $path = str_replace('\\', '/', $path);
-        if (str_starts_with($path, '/') || preg_match('/^[A-Za-z]:\//', $path) === 1) {
-            return ['', 'absolute path'];
+        if (preg_match('/^[A-Za-z]:\//', $path) === 1) {
+            return ['', 'absolute drive path'];
+        }
+
+        // A number of historic Unreal archives store entries as /System/Foo.u or
+        // /Maps/Map.ut2. UnrealDB never writes archive-controlled paths directly to
+        // disk; extraction goes to a random temporary file. Treat leading slashes
+        // as an archive-root marker, then apply the normal traversal/component
+        // checks to the resulting relative path. This recovers those archives
+        // without weakening the '..' or drive-path protections.
+        $path = ltrim($path, '/');
+        if ($path === '') {
+            return ['', 'empty normalized path'];
         }
 
         $parts = [];

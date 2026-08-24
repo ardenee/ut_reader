@@ -244,6 +244,8 @@ final class CatalogArchiveWorkflowJobHandler implements JobHandler
         $extractionFailed = max(0, (int)($archiveResult['failed_files'] ?? 0));
         $childFailed = max(0, (int)$children['failed']);
         $cancelled = max(0, (int)$children['cancelled']);
+        $skipped = max(0, (int)($children['skipped'] ?? 0));
+        $contentNested = max(0, (int)($children['nested_archive'] ?? 0));
         $totalFailed = $extractionFailed + $childFailed;
         $partial = $totalFailed > 0 || $cancelled > 0;
         $successLabel = $job->type === JobType::IMPORT_STAGED_ARCHIVE ? 'imported' : 'added';
@@ -251,6 +253,8 @@ final class CatalogArchiveWorkflowJobHandler implements JobHandler
         $message = 'Archive processing complete: '
             . number_format((int)$children['successful']) . ' ' . $successLabel . ', '
             . number_format((int)$children['duplicate']) . ' duplicate, '
+            . number_format($skipped) . ' skipped, '
+            . number_format($contentNested) . ' nested archive, '
             . number_format($totalFailed) . ' failed';
         if ($cancelled > 0) {
             $message .= ', ' . number_format($cancelled) . ' cancelled';
@@ -258,7 +262,7 @@ final class CatalogArchiveWorkflowJobHandler implements JobHandler
         $message .= '.';
         $nestedJobs = max(0, (int)($archiveResult['nested_archive_jobs'] ?? 0));
         if ($nestedJobs > 0) {
-            $message .= ' Nested archive workflows: ' . number_format($nestedJobs) . '.';
+            $message .= ' Extension-identified nested archive workflows: ' . number_format($nestedJobs) . '.';
         }
 
         $result = $archiveResult;
@@ -280,7 +284,7 @@ final class CatalogArchiveWorkflowJobHandler implements JobHandler
             'message' => $message,
             'children' => $children,
             'queued' => max(0, (int)($archiveResult['queued_files'] ?? 0)),
-            'skipped' => max(0, (int)($archiveResult['skipped_files'] ?? 0)),
+            'skipped' => max(0, (int)($archiveResult['skipped_files'] ?? 0)) + $skipped,
             'failed' => $extractionFailed,
             'errors' => is_array($archiveResult['errors'] ?? null) ? $archiveResult['errors'] : [],
             'source_retained' => !empty($archiveResult['source_retained']),

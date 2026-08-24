@@ -64,6 +64,8 @@ final class CatalogArchiveJobOutcomeProjector
                     'running' => 0,
                     'successful' => 0,
                     'duplicate' => 0,
+                    'skipped' => 0,
+                    'nested_archive' => 0,
                     'failed' => 0,
                     'cancelled' => 0,
                     'other_terminal' => 0,
@@ -104,6 +106,10 @@ final class CatalogArchiveJobOutcomeProjector
             } elseif ($status === 'completed') {
                 if ($resultStatus === 'duplicate') {
                     $summary['duplicate']++;
+                } elseif ($resultStatus === 'skipped') {
+                    $summary['skipped']++;
+                } elseif ($resultStatus === 'nested_archive') {
+                    $summary['nested_archive']++;
                 } elseif (in_array($resultStatus, ['failed', 'rejected', 'unverified', 'partial', 'error'], true)) {
                     $summary['failed']++;
                     $error = trim((string)($result['message'] ?? $child['last_error'] ?? ''));
@@ -158,6 +164,8 @@ final class CatalogArchiveJobOutcomeProjector
                 $message = 'Archive members: '
                     . number_format((int)$summary['successful']) . ' ' . $successLabel . ', '
                     . number_format((int)$summary['duplicate']) . ' duplicate, '
+                    . number_format((int)$summary['skipped']) . ' skipped, '
+                    . number_format((int)$summary['nested_archive']) . ' nested archive, '
                     . number_format($totalFailed) . ' failed, '
                     . number_format((int)$summary['waiting']) . ' waiting, '
                     . number_format((int)$summary['running']) . ' running.';
@@ -165,6 +173,8 @@ final class CatalogArchiveJobOutcomeProjector
                 $message = 'Archive processing complete: '
                     . number_format((int)$summary['successful']) . ' ' . $successLabel . ', '
                     . number_format((int)$summary['duplicate']) . ' duplicate, '
+                    . number_format((int)$summary['skipped']) . ' skipped, '
+                    . number_format((int)$summary['nested_archive']) . ' nested archive, '
                     . number_format($totalFailed) . ' failed';
                 if ((int)$summary['cancelled'] > 0) {
                     $message .= ', ' . number_format((int)$summary['cancelled']) . ' cancelled';

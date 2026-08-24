@@ -509,8 +509,12 @@ final class CatalogExternalArchiveReader
             return ['', 'empty/control-character path'];
         }
         $path = str_replace('\\', '/', $path);
-        if (str_starts_with($path, '/') || preg_match('/^[A-Za-z]:\//', $path) === 1) {
-            return ['', 'absolute path'];
+        if (preg_match('/^[A-Za-z]:\//', $path) === 1) {
+            return ['', 'absolute drive path'];
+        }
+        $path = ltrim($path, '/');
+        if ($path === '') {
+            return ['', 'empty normalized path'];
         }
         $parts = [];
         foreach (explode('/', $path) as $part) {

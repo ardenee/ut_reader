@@ -86,7 +86,11 @@ final class JobFailureRetryPolicy
 
     private static function isDeterministicPackageFailure(ClaimedJob $job, Throwable $error): bool
     {
+        // These job types all operate on an immutable staged/chunk-completed file.
+        // PROCESS_BUCKET_UPLOAD is included because the browser has already
+        // finalized the upload before a worker attempts package parsing.
         if (!in_array($job->type, [
+            JobType::PROCESS_BUCKET_UPLOAD,
             JobType::PROCESS_BUCKET_STAGED_PACKAGE,
             JobType::IMPORT_STAGED_PACKAGE,
         ], true)) {
@@ -108,6 +112,22 @@ final class JobFailureRetryPolicy
             'negative epic ue3 compressed chunk field',
             'invalid first epic ue3 compressed chunk offset',
             'overlapping epic ue3 compressed chunk ranges are invalid',
+            'nested archive depth limit of ',
+            'invalid names table count:',
+            'invalid names table offset:',
+            'invalid exports table count:',
+            'invalid exports table offset:',
+            'invalid imports table count:',
+            'invalid imports table offset:',
+            'invalid legacy package generation count:',
+            'legacy package seek is outside the file:',
+            'legacy package read exceeds the file:',
+            'legacy package read stopped before the requested bytes were available',
+            'invalid compact package index length',
+            'invalid legacy fstring byte length:',
+            'invalid legacy wide fstring length:',
+            'legacy package string has no terminator within the safe limit',
+            'the unreal package header is missing the required package guid',
         ] as $structuralMarker) {
             if (str_contains($message, $structuralMarker)) {
                 return true;

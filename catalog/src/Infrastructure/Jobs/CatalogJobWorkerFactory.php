@@ -177,9 +177,13 @@ final class CatalogJobWorkerFactory
                 new GameBackupImportJobHandler($db, $trustedImportConfig),
                 $trustedImportConfig
             ),
-            JobType::IMPORT_STAGED_PACKAGE => static fn() => new CatalogUnsupportedRedirectExclusionJobHandler(
-                new CatalogNonBlockingImportJobHandler(
-                    new CatalogStagedImportJobHandler($db, $trustedImportConfig),
+            JobType::IMPORT_STAGED_PACKAGE => static fn() => new CatalogArchiveMemberContentRoutingJobHandler(
+                new CatalogUnsupportedRedirectExclusionJobHandler(
+                    new CatalogNonBlockingImportJobHandler(
+                        new CatalogStagedImportJobHandler($db, $trustedImportConfig),
+                        $db,
+                        $trustedImportConfig
+                    ),
                     $db,
                     $trustedImportConfig
                 ),
@@ -200,8 +204,12 @@ final class CatalogJobWorkerFactory
                 $trustedImportConfig
             ),
             JobType::PROCESS_BUCKET_ARCHIVE => static fn() => new CatalogArchiveWorkflowJobHandler($db, $trustedImportConfig),
-            JobType::PROCESS_BUCKET_STAGED_PACKAGE => static fn() => new CatalogUnsupportedRedirectExclusionJobHandler(
-                new CatalogBucketStagedPackageJobHandler($db, $trustedImportConfig),
+            JobType::PROCESS_BUCKET_STAGED_PACKAGE => static fn() => new CatalogArchiveMemberContentRoutingJobHandler(
+                new CatalogUnsupportedRedirectExclusionJobHandler(
+                    new CatalogBucketStagedPackageJobHandler($db, $trustedImportConfig),
+                    $db,
+                    $trustedImportConfig
+                ),
                 $db,
                 $trustedImportConfig
             ),
