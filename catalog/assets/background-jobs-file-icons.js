@@ -39,8 +39,60 @@
         return extensionKey(name ? name.textContent : '');
     }
 
+    function hierarchyMarker(depth, rootGroup) {
+        const alternate = Math.abs(Number(rootGroup || 0)) % 2;
+        if (depth <= 1) {
+            return alternate === 0
+                ? 'rgba(148,163,184,0.90)'
+                : 'rgba(96,165,250,0.95)';
+        }
+        return alternate === 0
+            ? 'rgba(34,211,238,0.95)'
+            : 'rgba(167,139,250,0.95)';
+    }
+
+    function hierarchyIndent(depth) {
+        if (depth < 1) return 0;
+        // First-level archive members move in noticeably. Every nested archive
+        // level then gets a much larger step so embedded containers cannot read
+        // as a flat list beneath the top-level source.
+        return 42 + (Math.min(depth - 1, 5) * 64);
+    }
+
+    function applyHierarchy(row) {
+        if (!(row instanceof HTMLElement) || !row.classList.contains('jobs-file-row')) return;
+
+        const tree = row.querySelector('.jobs-file-tree');
+        const fileCell = row.querySelector('.jobs-file-name-cell');
+        if (!tree || !fileCell) return;
+
+        const depth = Math.max(0, parseInt(String(row.dataset.depth || '0'), 10) || 0);
+        const rootGroup = Number(row.dataset.rootGroup || 0);
+
+        // The old guide was painted on the table-cell edge, which made every
+        // descendant share one vertical rail. Remove it and put the rail at the
+        // actual nesting position instead.
+        fileCell.style.setProperty('border-left', '0', 'important');
+        tree.style.setProperty('padding-left', depth > 0 ? '12px' : '0', 'important');
+        tree.style.setProperty('margin-left', hierarchyIndent(depth) + 'px', 'important');
+
+        if (depth < 1) {
+            tree.style.removeProperty('border-left');
+            tree.style.removeProperty('box-shadow');
+            return;
+        }
+
+        const marker = hierarchyMarker(depth, rootGroup);
+        tree.style.setProperty('border-left', (depth > 1 ? '6px' : '4px') + ' solid ' + marker, 'important');
+        tree.style.setProperty('box-shadow', depth > 1
+            ? '-1px 0 0 rgba(15,23,42,0.65)'
+            : 'none', 'important');
+    }
+
     function addIcon(row) {
         if (!(row instanceof HTMLElement) || !row.classList.contains('jobs-file-row')) return;
+
+        applyHierarchy(row);
         if (row.querySelector('.jobs-file-type-icon')) return;
 
         const tree = row.querySelector('.jobs-file-tree');
