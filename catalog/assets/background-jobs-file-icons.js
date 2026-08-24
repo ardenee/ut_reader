@@ -8,9 +8,9 @@
         'default',
         'u', 'ut2', 'ut3', 'unr', 'un2', 'umap',
         'utx', 'usx', 'ukx', 'uax', 'umx', 'upx', 'ugx',
-        'upk', 'uasset', 'md5', 'bak',
-        'umod', 'ut2mod', 'ut3mod', 'ut4mod',
-        'zip', 'rar', '7z', 'pak', 'uz', 'uz2', 'uz3'
+        'uasset', 'md5', 'bak',
+        'umod', 'ut2mod', 'ut4mod',
+        'zip', 'rar', '7z', 'pak', 'upk', 'uz', 'uz2', 'uz3'
     ]);
 
     function detectedArchiveKey(identity) {
