@@ -89,15 +89,16 @@ final class CatalogBackgroundJobHistoryCleanupQueue
         $cutoff = gmdate('Y-m-d H:i:s', time() - ($retentionDays * 86400));
 
         /*
-         * Automatic history retention must never erase unresolved operator work.
-         * Keep failed/dead-letter and unsuccessful completed outcomes indefinitely
-         * until an administrator explicitly resolves/replaces/deletes them. Only
-         * successful completed history and deliberately stopped/cancelled history
-         * are eligible for age-based cleanup.
+         * Automatic history retention must never erase unresolved operator work
+         * or break file lineage. Snapshot top-level roots only; the cleanup worker
+         * removes a successful root and its complete subtree together. Failed,
+         * dead-letter, rejected, unverified and partial roots stay indefinitely
+         * until an administrator deliberately resolves/replaces/deletes them.
          */
-        $eligible = 'queue_name=? AND ('
+        $eligible = 'queue_name=? AND parent_job_id IS NULL AND ('
             . 'status="cancelled" OR '
-            . '(status="completed" AND display_status NOT IN ("failed","rejected","unverified","partial","error"))'
+            . '(status="completed" AND COALESCE(display_status,"completed") '
+            . 'NOT IN ("failed","rejected","unverified","partial","error"))'
             . ') AND COALESCE(completed_at,updated_at,created_at)<?';
 
         $count = $this->db->prepare(
