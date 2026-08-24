@@ -66,6 +66,17 @@ final class CatalogNestedArchiveJobEnqueuer
         $incoming = new CatalogIncomingFileStore($this->config);
         try {
             $sourcePath = $incoming->resolve($stagedPath);
+            $extractor = new CatalogArchiveExtractor($this->config);
+            $entries = $extractor->entries($sourcePath, $originalName);
+
+            // Listing the archive directory is cheap compared with decoding a
+            // solid/sequential RAR or 7z stream. If there is no embedded ZIP/RAR/7z
+            // member, stop here and let the established handler perform its normal
+            // single processing pass. This keeps the common case fast.
+            if (!$this->containsRecursiveArchive($entries)) {
+                return $result;
+            }
+
             $sequential = new CatalogSequentialArchiveReader($this->config);
             if ($sequential->shouldUse($sourcePath, $originalName)) {
                 return $this->enqueueSequential(
@@ -88,6 +99,8 @@ final class CatalogNestedArchiveJobEnqueuer
                 $job,
                 $context,
                 $incoming,
+                $extractor,
+                $entries,
                 $sourcePath,
                 $originalName,
                 $sourceRelativePath,
@@ -108,6 +121,7 @@ final class CatalogNestedArchiveJobEnqueuer
     }
 
     /**
+     * @param list<array<string,mixed>> $entries
      * @param array<string,mixed> $result
      * @return array<string,mixed>
      */
@@ -115,6 +129,8 @@ final class CatalogNestedArchiveJobEnqueuer
         ClaimedJob $job,
         JobExecutionContext $context,
         CatalogIncomingFileStore $incoming,
+        CatalogArchiveExtractor $extractor,
+        array $entries,
         string $sourcePath,
         string $originalName,
         string $sourceRelativePath,
@@ -124,8 +140,6 @@ final class CatalogNestedArchiveJobEnqueuer
         bool $strictProfile,
         array $result
     ): array {
-        $extractor = new CatalogArchiveExtractor($this->config);
-        $entries = $extractor->entries($sourcePath, $originalName);
         $queueName = $this->queueName($job);
         $queue = new PdoJobQueue($this->db);
         $entryLimit = $this->containerLimitBytes();
@@ -495,6 +509,21 @@ final class CatalogNestedArchiveJobEnqueuer
             'errors' => [],
             'preflight_error' => '',
         ];
+    }
+
+    /** @param list<array<string,mixed>> $entries */
+    private function containsRecursiveArchive(array $entries): bool
+    {
+        foreach ($entries as $entry) {
+            if (empty($entry['safe']) || !empty($entry['encrypted'])) {
+                continue;
+            }
+            $entryPath = str_replace('\\', '/', (string)($entry['path'] ?? ''));
+            if ($entryPath !== '' && $this->isRecursiveArchiveName(basename($entryPath))) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private function isRecursiveArchiveName(string $name): bool
