@@ -83,6 +83,7 @@ try {
         . '.jobs-file-select{text-align:center;vertical-align:middle!important}.jobs-file-select input,.jobs-file-select-all{width:16px;height:16px}'
         . '.jobs-file-id,.jobs-file-size,.jobs-file-control,.jobs-file-progress{white-space:nowrap}'
         . '.jobs-file-tree{display:flex;gap:7px;align-items:flex-start;padding-left:calc(var(--tree-depth,0) * 22px)}'
+        . '.jobs-file-type-icon{width:30px;height:30px;flex:0 0 30px;display:block;margin-top:-2px}'
         . '.jobs-file-toggle{width:24px;height:24px;padding:0;line-height:1;flex:0 0 24px}'
         . '.jobs-file-toggle-spacer{display:inline-block;width:24px;flex:0 0 24px}'
         . '.jobs-file-identity{min-width:0}'
@@ -105,7 +106,7 @@ try {
         . '.jobs-file-maintenance-wrap{margin-top:18px}'
         . '.jobs-file-maintenance-wrap summary{cursor:pointer;font-weight:700}'
         . '.jobs-file-maintenance{padding-top:12px}'
-        . '@media(max-width:900px){.jobs-file-worker-state{width:100%;margin-left:0}}'
+        . '@media(max-width:900px){.jobs-file-worker-state{width:100%;margin-left:0}.jobs-file-type-icon{width:26px;height:26px;flex-basis:26px}}'
         . '</style>';
 
     catalog_page_header(
@@ -224,6 +225,9 @@ try {
     $script = __DIR__ . '/assets/background-jobs-files.js';
     $version = is_file($script) ? (string)filemtime($script) : '1';
     echo '<script src="assets/background-jobs-files.js?v=' . catalog_h($version) . '"></script>';
+    $iconScript = __DIR__ . '/assets/background-jobs-file-icons.js';
+    $iconVersion = is_file($iconScript) ? (string)filemtime($iconScript) : '1';
+    echo '<script src="assets/background-jobs-file-icons.js?v=' . catalog_h($iconVersion) . '"></script>';
     catalog_foot();
 } catch (Throwable $error) {
     error_log('[UnrealDB background jobs][' . catalog_request_id() . '] ' . $error->getMessage());
