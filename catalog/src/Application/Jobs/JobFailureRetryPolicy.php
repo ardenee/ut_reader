@@ -102,6 +102,20 @@ final class JobFailureRetryPolicy
             return false;
         }
 
+        // Archive-member jobs first try their own durable prepared source and then
+        // reconstruct the exact member from the retained parent archive. If both
+        // are gone, another attempt cannot manufacture those bytes.
+        foreach ([
+            'staged import file is unavailable',
+            'archive member staged source is unavailable and retained-parent reconstruction failed:',
+            'retained parent archive source is unavailable for member reconstruction',
+            'retained parent archive no longer contains the exact recorded member',
+        ] as $missingSourceMarker) {
+            if (str_contains($message, $missingSourceMarker)) {
+                return true;
+            }
+        }
+
         // These failures describe immutable package bytes that contradict their
         // own UE serialization metadata. Retrying cannot add the missing bytes or
         // change the recorded table/chunk boundaries. In particular, Epic UE3
