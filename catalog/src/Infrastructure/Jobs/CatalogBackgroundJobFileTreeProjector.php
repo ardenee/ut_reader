@@ -134,16 +134,20 @@ final class CatalogBackgroundJobFileTreeProjector
         $done = max(0, (int)($progress['done'] ?? $progress['entry_cursor'] ?? 0));
         $total = max(0, (int)($progress['total'] ?? 0));
 
-        if ($childCount > 0 && (!$hasPercent || $state !== 'working')) {
-            $childDone = max(0, $childCount - $childActive);
-            if (!$hasPercent) {
-                $percent = min(100, (int)floor(($childDone * 100) / max(1, $childCount)));
-            }
-            if ($total < 1) {
-                $done = $childDone;
-                $total = $childCount;
-            }
+        // Once a container has active child files, its own extraction progress is
+        // no longer the meaningful operator progress. A ZIP can be 100% expanded
+        // while most extracted packages are still waiting/running. Project the
+        // direct child completion ratio until those children reach terminal state.
+        if ($childCount > 0 && $childActive > 0 && $state === 'working') {
+            $done = max(0, $childCount - $childActive);
+            $total = $childCount;
+            $percent = min(99, (int)floor(($done * 100) / max(1, $total)));
+        } elseif ($childCount > 0 && !$hasPercent) {
+            $done = max(0, $childCount - $childActive);
+            $total = $childCount;
+            $percent = min(100, (int)floor(($done * 100) / max(1, $total)));
         }
+
         if ($percent < 0) {
             $percent = $state === 'completed' ? 100 : 0;
         }
