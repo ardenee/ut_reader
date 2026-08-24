@@ -33,10 +33,12 @@ final class CatalogBackgroundJobFileTreeProjector
             $issueReason = ($state === 'issue' || $childIssues > 0)
                 ? $this->issueReason($row, $progress, $result, $childIssues)
                 : '';
+            $contentTypeLabel = $this->contentTypeLabel($payload, $progress, $result, $fileName);
 
             $row['file_name'] = $fileName;
             $row['file_path'] = $filePath;
             $row['size_bytes'] = $size;
+            $row['content_type_label'] = $contentTypeLabel;
             $row['operator_state'] = $state;
             $row['operator_status_label'] = match ($state) {
                 'working' => $childIssues > 0 ? 'Working · issue' : 'Working',
@@ -111,6 +113,32 @@ final class CatalogBackgroundJobFileTreeProjector
         return [$name, $path];
     }
 
+    /** @param array<string,mixed> $payload @param array<string,mixed> $progress @param array<string,mixed> $result */
+    private function contentTypeLabel(array $payload, array $progress, array $result, string $fileName): string
+    {
+        $format = strtolower(trim((string)(
+            $progress['detected_format']
+            ?? $result['detected_format']
+            ?? $payload['content_detected_archive']
+            ?? ''
+        )));
+        if (!in_array($format, ['zip', 'rar', '7z'], true)) {
+            return '';
+        }
+
+        $label = match ($format) {
+            'rar' => 'RAR archive',
+            '7z' => '7-Zip archive',
+            default => 'ZIP archive',
+        };
+        $extension = strtolower((string)pathinfo($fileName, PATHINFO_EXTENSION));
+        $expectedExtension = $format;
+        if ($extension !== '' && $extension !== $expectedExtension) {
+            $label .= ' · misnamed .' . $extension;
+        }
+        return $label;
+    }
+
     /** @param array<string,mixed> $payload @param array<string,mixed> $result */
     private function sizeBytes(array $payload, array $result): int
     {
@@ -137,10 +165,6 @@ final class CatalogBackgroundJobFileTreeProjector
         $done = max(0, (int)($progress['done'] ?? $progress['entry_cursor'] ?? 0));
         $total = max(0, (int)($progress['total'] ?? 0));
 
-        // Once a container has active child files, its own extraction progress is
-        // no longer the meaningful operator progress. A ZIP can be 100% expanded
-        // while most extracted packages are still waiting/running. Project the
-        // direct child completion ratio until those children reach terminal state.
         if ($childCount > 0 && $childActive > 0 && $state === 'working') {
             $done = max(0, $childCount - $childActive);
             $total = $childCount;
