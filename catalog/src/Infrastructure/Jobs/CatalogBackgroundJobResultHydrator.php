@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace UnrealDb\Catalog\Infrastructure\Jobs;
 
+use UnrealDb\Catalog\Application\Jobs\JobFailureRetryPolicy;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 
 final class CatalogBackgroundJobResultHydrator
@@ -36,6 +37,15 @@ final class CatalogBackgroundJobResultHydrator
                 $this->normalizeResult($row, $payload, $progress, $result);
             }
 
+            $failureText = self::failureText($row, $progress, $result);
+            $retryBlocked = JobFailureRetryPolicy::isDeterministicFailureText(
+                (string)($row['job_type'] ?? ''),
+                $failureText
+            );
+            $row['retry_blocked'] = $retryBlocked;
+            $row['retry_block_reason'] = $retryBlocked
+                ? 'The retained source bytes contradict their package/archive metadata; restarting cannot change this result.'
+                : '';
             $row['progress'] = $progress;
             $row['result'] = $result;
         }
@@ -168,6 +178,35 @@ final class CatalogBackgroundJobResultHydrator
             }
             $payload['source_relative_path'] = $label;
         }
+    }
+
+    /**
+     * @param array<string,mixed> $row
+     * @param array<string,mixed>|null $progress
+     * @param array<string,mixed>|null $result
+     */
+    private static function failureText(array $row, ?array $progress, ?array $result): string
+    {
+        $lastError = trim((string)($row['last_error'] ?? ''));
+        if ($lastError !== '') {
+            return $lastError;
+        }
+        foreach ([$result, $progress] as $state) {
+            if (!is_array($state)) {
+                continue;
+            }
+            $message = trim((string)($state['message'] ?? ''));
+            if ($message !== '') {
+                return $message;
+            }
+            $errors = is_array($state['errors'] ?? null) ? $state['errors'] : [];
+            $first = is_array($errors[0] ?? null) ? $errors[0] : [];
+            $error = trim((string)($first['error'] ?? ''));
+            if ($error !== '') {
+                return $error;
+            }
+        }
+        return '';
     }
 
     /** @return array<string,mixed>|null */
