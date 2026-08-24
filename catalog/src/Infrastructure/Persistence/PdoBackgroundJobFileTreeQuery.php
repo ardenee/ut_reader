@@ -45,8 +45,15 @@ final class PdoBackgroundJobFileTreeQuery
             array_push($baseParams, ...$searchParams);
         }
 
-        $issue = $this->rootIssueExpression('j');
-        $active = $this->rootActiveExpression('j');
+        /*
+         * Global counts/filtering deliberately use only the persisted root row.
+         * Child-state correlation across every historical root previously made
+         * Background Jobs polling catastrophically expensive on large ledgers.
+         * Child issue/active counts are looked up only for the bounded page rows
+         * below, where they enrich the visible status without affecting hot counts.
+         */
+        $issue = $this->ownIssueExpression('j');
+        $active = 'j.status IN ("queued","running")';
         $baseSql = implode(' AND ', $baseWhere);
 
         $countStatement = $this->db->prepare(
@@ -148,26 +155,6 @@ final class PdoBackgroundJobFileTreeQuery
             'stopped' => 'NOT (' . $issue . ') AND NOT (' . $active . ') AND ' . $alias . '.status="cancelled"',
             default => '',
         };
-    }
-
-    private function rootIssueExpression(string $alias): string
-    {
-        return '('
-            . $this->ownIssueExpression($alias)
-            . ' OR EXISTS(SELECT 1 FROM ue_background_jobs issue_child '
-            . 'WHERE issue_child.parent_job_id=' . $alias . '.id AND '
-            . $this->ownIssueExpression('issue_child') . ' LIMIT 1)'
-            . ')';
-    }
-
-    private function rootActiveExpression(string $alias): string
-    {
-        return '('
-            . $alias . '.status IN ("queued","running")'
-            . ' OR EXISTS(SELECT 1 FROM ue_background_jobs active_child '
-            . 'WHERE active_child.parent_job_id=' . $alias . '.id '
-            . 'AND active_child.status IN ("queued","running") LIMIT 1)'
-            . ')';
     }
 
     private function ownIssueExpression(string $alias): string
