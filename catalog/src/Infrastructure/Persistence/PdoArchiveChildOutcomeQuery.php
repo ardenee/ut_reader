@@ -20,7 +20,7 @@ final class PdoArchiveChildOutcomeQuery
 
     /**
      * @return array{
-     *   total:int,queued:int,running:int,successful:int,duplicate:int,
+     *   total:int,queued:int,running:int,successful:int,duplicate:int,skipped:int,nested_archive:int,
      *   failed:int,cancelled:int,dead_letter:int,terminal:int
      * }
      */
@@ -36,6 +36,8 @@ final class PdoArchiveChildOutcomeQuery
             'running' => 0,
             'successful' => 0,
             'duplicate' => 0,
+            'skipped' => 0,
+            'nested_archive' => 0,
             'failed' => 0,
             'cancelled' => 0,
             'dead_letter' => 0,
@@ -84,6 +86,10 @@ final class PdoArchiveChildOutcomeQuery
             if ($status === 'completed') {
                 if ($displayStatus === 'duplicate') {
                     $state['duplicate'] += $count;
+                } elseif ($displayStatus === 'skipped') {
+                    $state['skipped'] += $count;
+                } elseif ($displayStatus === 'nested_archive') {
+                    $state['nested_archive'] += $count;
                 } elseif (in_array($displayStatus, ['failed', 'rejected', 'unverified', 'partial', 'error'], true)) {
                     $state['failed'] += $count;
                 } else {
