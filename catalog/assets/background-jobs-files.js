@@ -37,6 +37,7 @@
     const selectVisible = document.getElementById('jobs-select-visible');
     const selectedCount = document.getElementById('jobs-selected-count');
     const retrySelectedButton = document.getElementById('jobs-retry-selected');
+    const stopSelectedButton = document.getElementById('jobs-stop-selected');
 
     if (!body || !tabs || !searchInput || !perPageSelect || !notice) return;
 
@@ -205,6 +206,15 @@
         return ids;
     }
 
+    function stoppableSelectedIds() {
+        const ids = [];
+        state.selected.forEach(function (id) {
+            const file = state.visibleFiles.get(id);
+            if (file && String(file.operator_state || '') === 'working') ids.push(id);
+        });
+        return ids;
+    }
+
     function updateSelectionControls() {
         const visible = state.visibleFiles.size;
         const selectedVisible = visibleSelectedCount();
@@ -220,6 +230,13 @@
             retrySelectedButton.title = retryable > 0
                 ? 'Retry ' + retryable + ' selected retryable job(s).'
                 : 'Select one or more retryable Issue/Stopped rows.';
+        }
+        if (stopSelectedButton) {
+            const stoppable = stoppableSelectedIds().length;
+            stopSelectedButton.disabled = stoppable === 0;
+            stopSelectedButton.title = stoppable > 0
+                ? 'Stop/cancel ' + stoppable + ' selected working job(s).'
+                : 'Select one or more Working rows.';
         }
     }
 
@@ -551,6 +568,36 @@
         }
     }
 
+    async function stopSelected() {
+        const ids = stoppableSelectedIds();
+        if (!ids.length) {
+            setNotice('No selected rows are currently working.', 5000);
+            return;
+        }
+        if (stopSelectedButton) stopSelectedButton.disabled = true;
+        let stopped = 0;
+        let failed = 0;
+        try {
+            for (let offset = 0; offset < ids.length; offset += 10) {
+                const batch = ids.slice(offset, offset + 10);
+                const results = await Promise.all(batch.map(function (id) {
+                    return postJson(actionUrl, {
+                        action: 'cancel',
+                        queue: queue,
+                        job_id: id,
+                        reason: 'Stopped manually from the file-centric Background Jobs view.'
+                    }).then(function () { return true; }).catch(function () { return false; });
+                }));
+                results.forEach(function (ok) { if (ok) stopped++; else failed++; });
+            }
+            setNotice('Stop selected: ' + stopped + ' requested' + (failed ? ', ' + failed + ' failed' : '') + '.', 7000);
+            state.selected.clear();
+        } finally {
+            await refresh();
+            updateSelectionControls();
+        }
+    }
+
     async function startWorkers() {
         if (startButton) startButton.disabled = true;
         try {
@@ -633,6 +680,7 @@
 
     if (selectVisible) selectVisible.addEventListener('change', function () { setVisibleSelection(selectVisible.checked); });
     if (retrySelectedButton) retrySelectedButton.addEventListener('click', retrySelected);
+    if (stopSelectedButton) stopSelectedButton.addEventListener('click', stopSelected);
     if (firstButton) firstButton.addEventListener('click', function () { state.page = 1; clearSelectionAndChildren(); refresh(); });
     if (previousButton) previousButton.addEventListener('click', function () { state.page = Math.max(1, state.page - 1); clearSelectionAndChildren(); refresh(); });
     if (nextButton) nextButton.addEventListener('click', function () { state.page = Math.min(Number(state.meta.pages || 1), state.page + 1); clearSelectionAndChildren(); refresh(); });
