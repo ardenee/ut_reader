@@ -38,6 +38,7 @@
     const selectedCount = document.getElementById('jobs-selected-count');
     const retrySelectedButton = document.getElementById('jobs-retry-selected');
     const stopSelectedButton = document.getElementById('jobs-stop-selected');
+    const deleteSelectedButton = document.getElementById('jobs-delete-selected');
 
     if (!body || !tabs || !searchInput || !perPageSelect || !notice) return;
 
@@ -137,6 +138,12 @@
             : 'rgba(96,165,250,0.95)';
     }
 
+    function nestedMarker(rootGroup) {
+        return Math.abs(Number(rootGroup || 0)) % 2 === 0
+            ? 'rgba(34,211,238,0.95)'
+            : 'rgba(167,139,250,0.95)';
+    }
+
     function rowBackground(depth, rootGroup) {
         const alternate = Math.abs(Number(rootGroup || 0)) % 2;
         if (depth < 1) {
@@ -144,26 +151,32 @@
                 ? 'rgba(255,255,255,0.030)'
                 : 'rgba(59,130,246,0.085)';
         }
+        if (depth === 1) {
+            return alternate === 0
+                ? 'rgba(148,163,184,0.115)'
+                : 'rgba(59,130,246,0.155)';
+        }
 
-        const base = alternate === 0 ? 0.115 : 0.155;
-        const alpha = Math.min(0.235, base + (Math.min(depth - 1, 4) * 0.022));
+        const alpha = Math.min(0.245, 0.155 + (Math.min(depth - 2, 3) * 0.025));
         return alternate === 0
-            ? 'rgba(148,163,184,' + alpha.toFixed(3) + ')'
-            : 'rgba(59,130,246,' + alpha.toFixed(3) + ')';
+            ? 'rgba(14,116,144,' + alpha.toFixed(3) + ')'
+            : 'rgba(79,70,229,' + alpha.toFixed(3) + ')';
     }
 
     function applyRowBackground(row, depth, rootGroup) {
         const background = rowBackground(depth, rootGroup);
         const marker = groupMarker(rootGroup);
+        const childMarker = depth > 1 ? nestedMarker(rootGroup) : marker;
         row.dataset.rootGroup = String(Math.abs(Number(rootGroup || 0)) % 2);
-        row.dataset.treeKind = depth > 0 ? 'child' : 'parent';
+        row.dataset.treeKind = depth > 0 ? (depth > 1 ? 'nested-child' : 'child') : 'parent';
         row.querySelectorAll('td').forEach(function (cell) {
             cell.style.background = background;
             if (depth === 0) cell.style.borderTop = '2px solid ' + marker;
+            if (depth > 1) cell.style.borderTop = '1px solid rgba(148,163,184,0.16)';
         });
         const fileCell = row.querySelector('.jobs-file-name-cell');
         if (fileCell && depth > 0) {
-            fileCell.style.borderLeft = '5px solid ' + marker;
+            fileCell.style.borderLeft = (depth > 1 ? '8px' : '5px') + ' solid ' + childMarker;
         }
     }
 
@@ -223,20 +236,26 @@
             selectVisible.indeterminate = selectedVisible > 0 && selectedVisible < visible;
             selectVisible.disabled = visible === 0;
         }
-        setText(selectedCount, state.selected.size === 1 ? '1 selected' : state.selected.size + ' selected');
+        setText(selectedCount, state.selected.size === 1 ? '1 source selected' : state.selected.size + ' sources selected');
         if (retrySelectedButton) {
             const retryable = retryableSelectedIds().length;
             retrySelectedButton.disabled = retryable === 0;
             retrySelectedButton.title = retryable > 0
-                ? 'Retry ' + retryable + ' selected retryable job(s).'
-                : 'Select one or more retryable Issue/Stopped rows.';
+                ? 'Retry ' + retryable + ' selected retryable source job(s).'
+                : 'Select one or more retryable Issue/Stopped source rows.';
         }
         if (stopSelectedButton) {
             const stoppable = stoppableSelectedIds().length;
             stopSelectedButton.disabled = stoppable === 0;
             stopSelectedButton.title = stoppable > 0
-                ? 'Stop/cancel ' + stoppable + ' selected working job(s).'
-                : 'Select one or more Working rows.';
+                ? 'Stop/cancel ' + stoppable + ' selected working source job(s).'
+                : 'Select one or more Working source rows.';
+        }
+        if (deleteSelectedButton) {
+            deleteSelectedButton.disabled = state.selected.size === 0;
+            deleteSelectedButton.title = state.selected.size > 0
+                ? 'Delete the selected source job(s) and their complete child job history. Running roots are skipped.'
+                : 'Select one or more source rows to delete.';
         }
     }
 
@@ -257,19 +276,21 @@
         row.dataset.depth = String(depth);
 
         const id = Number(file.id || 0);
-        if (id > 0) state.visibleFiles.set(id, file);
+        if (id > 0 && depth === 0) state.visibleFiles.set(id, file);
 
         const selectCell = create('td', 'jobs-file-select');
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.className = 'jobs-file-row-select';
-        checkbox.checked = state.selected.has(id);
-        checkbox.setAttribute('aria-label', 'Select job #' + String(file.id || ''));
-        checkbox.addEventListener('change', function () {
-            if (checkbox.checked) state.selected.add(id); else state.selected.delete(id);
-            updateSelectionControls();
-        });
-        selectCell.appendChild(checkbox);
+        if (depth === 0) {
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.className = 'jobs-file-row-select';
+            checkbox.checked = state.selected.has(id);
+            checkbox.setAttribute('aria-label', 'Select source job #' + String(file.id || ''));
+            checkbox.addEventListener('change', function () {
+                if (checkbox.checked) state.selected.add(id); else state.selected.delete(id);
+                updateSelectionControls();
+            });
+            selectCell.appendChild(checkbox);
+        }
         row.appendChild(selectCell);
 
         row.appendChild(create('td', 'jobs-file-id mono', '#' + String(file.id || '')));
@@ -325,13 +346,11 @@
         row.appendChild(statusCell);
 
         const controlCell = create('td', 'jobs-file-control');
-        if (supportsSourceDownload(file)) {
+        if (depth === 0 && supportsSourceDownload(file)) {
             const download = create('a', 'ui-icon-action ui-icon-action--secondary ui-icon-action--sm jobs-file-source-download');
             download.href = sourceDownloadUrl + '?' + new URLSearchParams({job_id: String(file.id || 0)}).toString();
-            download.setAttribute('aria-label', depth > 0 ? 'Download original retained parent source' : 'Download retained source');
-            download.title = depth > 0
-                ? 'Download the original retained parent/source file without generating a package.'
-                : 'Download this retained source file directly without generating a package.';
+            download.setAttribute('aria-label', 'Download retained source');
+            download.title = 'Download this retained source file directly without generating a package.';
             const icon = create('span', '', '⇩');
             icon.setAttribute('aria-hidden', 'true');
             download.appendChild(icon);
@@ -347,7 +366,7 @@
         row.className = 'jobs-file-more-row';
         const cell = document.createElement('td');
         cell.colSpan = 8;
-        cell.style.paddingLeft = 'calc(18px + (' + depth + ' * 22px))';
+        cell.style.paddingLeft = 'calc(18px + (' + depth + ' * 30px))';
         const button = create('button', '', 'Load more children (' + childState.rows.length + ' of ' + childState.total + ')');
         button.type = 'button';
         button.addEventListener('click', function () {
@@ -370,7 +389,7 @@
             loading.className = 'jobs-file-loading-row';
             const cell = create('td', 'muted', 'Loading child files/jobs…');
             cell.colSpan = 8;
-            cell.style.paddingLeft = 'calc(18px + (' + (depth + 1) + ' * 22px))';
+            cell.style.paddingLeft = 'calc(18px + (' + (depth + 1) + ' * 30px))';
             loading.appendChild(cell);
             applyRowBackground(loading, depth + 1, rootGroup);
             fragment.appendChild(loading);
@@ -539,7 +558,7 @@
     async function retrySelected() {
         const ids = retryableSelectedIds();
         if (!ids.length) {
-            setNotice('No selected rows can be retried. Structurally invalid sources must be replaced or fixed.', 7000);
+            setNotice('No selected source rows can be retried. Structurally invalid sources must be replaced or fixed.', 7000);
             return;
         }
         if (retrySelectedButton) retrySelectedButton.disabled = true;
@@ -574,7 +593,7 @@
     async function stopSelected() {
         const ids = stoppableSelectedIds();
         if (!ids.length) {
-            setNotice('No selected rows are currently working.', 5000);
+            setNotice('No selected source rows are currently working.', 5000);
             return;
         }
         if (stopSelectedButton) stopSelectedButton.disabled = true;
@@ -595,6 +614,46 @@
             }
             setNotice('Stop selected: ' + stopped + ' requested' + (failed ? ', ' + failed + ' failed' : '') + '.', 7000);
             state.selected.clear();
+        } finally {
+            await refresh();
+            updateSelectionControls();
+        }
+    }
+
+    async function deleteSelected() {
+        const ids = Array.from(state.selected).filter(function (id) { return state.visibleFiles.has(id); });
+        if (!ids.length) {
+            setNotice('Select one or more source rows to delete.', 5000);
+            return;
+        }
+        if (!window.confirm(
+            'Delete ' + ids.length + ' selected source job(s) and their complete child job history? '
+            + 'Running source jobs will be skipped.'
+        )) return;
+
+        if (deleteSelectedButton) deleteSelectedButton.disabled = true;
+        try {
+            const payload = await postJson(bulkUrl, {
+                action: 'delete',
+                scope: 'selected',
+                queue: queue,
+                status: '',
+                search: '',
+                job_ids: ids
+            });
+            const data = payload && payload.data ? payload.data : {};
+            const scheduled = Math.max(0, Number(data.scheduled || 0));
+            const skipped = Math.max(0, Number(data.skipped || 0));
+            setNotice(
+                'Delete selected: ' + scheduled + ' source tree(s) queued for cleanup'
+                + (skipped ? ', ' + skipped + ' skipped' : '') + '.',
+                8000
+            );
+            state.selected.clear();
+            state.expanded.clear();
+            state.children.clear();
+        } catch (error) {
+            setNotice(error.message || 'Could not delete selected source jobs.', 9000);
         } finally {
             await refresh();
             updateSelectionControls();
@@ -684,6 +743,7 @@
     if (selectVisible) selectVisible.addEventListener('change', function () { setVisibleSelection(selectVisible.checked); });
     if (retrySelectedButton) retrySelectedButton.addEventListener('click', retrySelected);
     if (stopSelectedButton) stopSelectedButton.addEventListener('click', stopSelected);
+    if (deleteSelectedButton) deleteSelectedButton.addEventListener('click', deleteSelected);
     if (firstButton) firstButton.addEventListener('click', function () { state.page = 1; clearSelectionAndChildren(); refresh(); });
     if (previousButton) previousButton.addEventListener('click', function () { state.page = Math.max(1, state.page - 1); clearSelectionAndChildren(); refresh(); });
     if (nextButton) nextButton.addEventListener('click', function () { state.page = Math.min(Number(state.meta.pages || 1), state.page + 1); clearSelectionAndChildren(); refresh(); });
