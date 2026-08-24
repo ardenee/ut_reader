@@ -27,6 +27,8 @@ final class CatalogArchiveMemberContentRoutingJobHandler implements JobHandler
 {
     private const WAIT_STAGE = 'archive_member_content_wait_child';
     private const ROUTER_VERSION = 1;
+    private const DEFAULT_MAX_NESTING_DEPTH = 4;
+    private const MAX_CONFIGURED_NESTING_DEPTH = 16;
 
     private readonly CatalogArchiveMemberContentClassifier $classifier;
     private readonly PdoArchiveChildOutcomeQuery $children;
@@ -203,6 +205,13 @@ final class CatalogArchiveMemberContentRoutingJobHandler implements JobHandler
         $parentArchiveId = $job->parentJobId ?? (int)($payload['archive_parent_job_id'] ?? 0);
         $parentArchive = $this->archiveParentPayload($parentArchiveId);
         $parentDepth = max(0, (int)($parentArchive['archive_depth'] ?? $payload['archive_depth'] ?? 0));
+        $maxDepth = $this->maxNestingDepth();
+        if ($parentDepth >= $maxDepth) {
+            throw new \RuntimeException(
+                'Nested archive depth limit of ' . $maxDepth . ' reached while content-routing ' . $originalName . '.'
+            );
+        }
+
         $rootJobId = max(0, (int)($parentArchive['archive_root_job_id'] ?? $payload['archive_root_job_id'] ?? 0));
         if ($rootJobId < 1) {
             $rootJobId = $parentArchiveId > 0 ? $parentArchiveId : $job->id;
@@ -259,7 +268,7 @@ final class CatalogArchiveMemberContentRoutingJobHandler implements JobHandler
     private function nestedChildDetail(int $jobId): string
     {
         $statement = $this->db->prepare(
-            'SELECT id,display_status,result_json,error_message FROM ue_background_jobs '
+            'SELECT id,display_status,result_json,last_error FROM ue_background_jobs '
             . 'WHERE parent_job_id=? AND workflow_unit_key LIKE "archive:%" ORDER BY id ASC LIMIT 1'
         );
         $statement->execute([$jobId]);
@@ -267,7 +276,7 @@ final class CatalogArchiveMemberContentRoutingJobHandler implements JobHandler
         if (!is_array($row)) {
             return '';
         }
-        $detail = trim((string)($row['error_message'] ?? ''));
+        $detail = trim((string)($row['last_error'] ?? ''));
         $result = json_decode((string)($row['result_json'] ?? ''), true);
         if ($detail === '' && is_array($result)) {
             $detail = trim((string)($result['message'] ?? ''));
@@ -304,6 +313,16 @@ final class CatalogArchiveMemberContentRoutingJobHandler implements JobHandler
             return $originalName;
         }
         return $originalName . '.' . $format;
+    }
+
+    private function maxNestingDepth(): int
+    {
+        $environment = getenv('UNREALDB_ARCHIVE_MAX_NESTING_DEPTH');
+        $configured = (int)($this->config['archive']['max_nesting_depth'] ?? (is_string($environment) ? $environment : 0));
+        if ($configured < 1) {
+            $configured = self::DEFAULT_MAX_NESTING_DEPTH;
+        }
+        return min(self::MAX_CONFIGURED_NESTING_DEPTH, max(1, $configured));
     }
 
     private function withOriginalName(
