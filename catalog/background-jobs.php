@@ -93,7 +93,7 @@ try {
         . '.jobs-detail-text strong{text-transform:capitalize;margin-bottom:3px}'
         . '.jobs-detail-text span{overflow-wrap:anywhere}'
         . '.jobs-detail-meta{grid-column:1/-1;text-align:left;font-size:12px}'
-        . '.jobs-detail-error{display:none!important}'
+        . '.jobs-detail-error{margin-top:4px;color:#fecdd3;overflow-wrap:anywhere}'
         . '.job-status{display:inline-block;min-width:84px;padding:3px 8px;border:1px solid var(--line);border-radius:999px;font-weight:700;text-align:center}'
         . '.job-status-queued,.job-status-running{color:#ffe29a;border-color:rgba(246,196,83,.75);background:rgba(246,196,83,.10)}'
         . '.job-status-completed,.job-status-imported,.job-status-verified,.job-status-alias,.job-status-bucketed,.job-status-decompressed{color:#a7f3d0;border-color:rgba(50,213,131,.75);background:rgba(50,213,131,.10)}'
@@ -107,6 +107,7 @@ try {
         'Each job uses a fixed summary row plus a full-width live status row. Long workflows keep successful child units and retry only failed/incomplete work; routine child rows stay hidden unless they need attention.',
         [
             'System Operations' => 'system-operations.php',
+            'Upload Issues' => 'upload-issues.php',
             'Upload Bucket' => 'upload-bucket-v2.php',
             'Upload Files' => 'profiled-upload.php',
             'PAK Import' => 'pak-import.php',
