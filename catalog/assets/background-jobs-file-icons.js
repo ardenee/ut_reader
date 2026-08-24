@@ -4,6 +4,7 @@
     const body = document.getElementById('jobs-file-body');
     if (!body) return;
 
+    const spriteUrl = 'assets/file-icons.svg?v=20260824-2';
     const supported = new Set([
         'default',
         'u', 'ut2', 'ut3', 'unr', 'un2', 'umap',
@@ -54,7 +55,7 @@
         svg.setAttribute('focusable', 'false');
 
         const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
-        use.setAttribute('href', 'assets/file-icons.svg#file-icon-' + key);
+        use.setAttribute('href', spriteUrl + '#file-icon-' + key);
         svg.appendChild(use);
         tree.insertBefore(svg, identity);
     }
