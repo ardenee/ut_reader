@@ -106,13 +106,19 @@ final class PdoBackgroundJobBulkAction
             . ' ORDER BY j.id ASC LIMIT ' . self::BATCH_LIMIT
         );
         $select->execute($params);
-        $eligibleIds = array_values(array_unique(array_map('intval', $select->fetchAll(PDO::FETCH_COLUMN) ?: [])));
+        $candidateIds = array_values(array_unique(array_map('intval', $select->fetchAll(PDO::FETCH_COLUMN) ?: [])));
+        $eligibleIds = $candidateIds;
+        $retryBlocked = 0;
+        if ($action === 'restart' && $eligibleIds !== []) {
+            $eligibleIds = $this->restartableJobIds($queueName, $eligibleIds);
+            $retryBlocked = max(0, count($candidateIds) - count($eligibleIds));
+        }
 
         $affected = 0;
         $scheduled = 0;
         $cleanupJobId = 0;
         $deletedStagedFiles = 0;
-        $limited = $requested > count($eligibleIds);
+        $limited = $requested > count($candidateIds);
         $now = gmdate('Y-m-d H:i:s');
 
         if ($action === 'restart' && $eligibleIds !== []) {
@@ -144,6 +150,12 @@ final class PdoBackgroundJobBulkAction
             $scheduled = (int)$queued['scheduled'];
         }
 
+        $skipped = match ($action) {
+            'restart' => $retryBlocked + max(0, count($eligibleIds) - $affected),
+            'delete' => max(0, count($candidateIds) - $scheduled),
+            default => max(0, count($candidateIds) - $affected),
+        };
+
         return [
             'action' => $action,
             'scope' => $scope,
@@ -152,9 +164,8 @@ final class PdoBackgroundJobBulkAction
             'affected' => $affected,
             'scheduled' => $scheduled,
             'cleanup_job_id' => $cleanupJobId,
-            'skipped' => $action === 'delete'
-                ? max(0, min($requested, count($eligibleIds)) - $scheduled)
-                : max(0, min($requested, count($eligibleIds)) - $affected),
+            'skipped' => $skipped,
+            'retry_blocked' => $retryBlocked,
             'deleted_staged_files' => $deletedStagedFiles,
             'limited' => $limited,
             'batch_limit' => self::BATCH_LIMIT,
@@ -163,6 +174,49 @@ final class PdoBackgroundJobBulkAction
             'worker_start_required' => ($action === 'restart' && $affected > 0)
                 || ($action === 'delete' && $cleanupJobId > 0),
         ];
+    }
+
+    /**
+     * Filter generic Restart through the same immutable-source policy used by the
+     * worker. This is authoritative server-side protection: a stale browser cannot
+     * requeue a job whose persisted failure proves the same bytes cannot succeed.
+     *
+     * @param list<int> $jobIds
+     * @return list<int>
+     */
+    private function restartableJobIds(string $queueName, array $jobIds): array
+    {
+        if ($jobIds === []) {
+            return [];
+        }
+
+        $allowed = [];
+        foreach (array_chunk($jobIds, self::ARCHIVE_DESCENDANT_UPDATE_BATCH) as $chunk) {
+            $idSql = implode(',', array_fill(0, count($chunk), '?'));
+            $statement = $this->db->prepare(
+                'SELECT id,job_type,last_error,result_json,progress_json FROM ue_background_jobs '
+                . 'WHERE queue_name=? AND id IN (' . $idSql . ')'
+            );
+            $statement->execute(array_merge([$queueName], $chunk));
+            foreach ($statement->fetchAll(PDO::FETCH_ASSOC) ?: [] as $row) {
+                $id = (int)($row['id'] ?? 0);
+                if ($id < 1) {
+                    continue;
+                }
+                if (JobFailureRetryPolicy::isDeterministicFailureText(
+                    (string)($row['job_type'] ?? ''),
+                    self::persistedFailureText($row)
+                )) {
+                    continue;
+                }
+                $allowed[$id] = true;
+            }
+        }
+
+        return array_values(array_filter(
+            $jobIds,
+            static fn(int $id): bool => isset($allowed[$id])
+        ));
     }
 
     /** @param list<int> $eligibleIds */
@@ -186,7 +240,7 @@ final class PdoBackgroundJobBulkAction
         // container. Successful/duplicate/skipped descendants remain terminal.
         // Recoverable problem descendants are replayed so newer reader/classifier
         // code sees their bytes; deterministic immutable-source failures remain
-        // terminal and can still be restarted individually by an operator later.
+        // terminal instead of being replayed by a generic administrator restart.
         $archiveSelect = $this->db->prepare(
             'SELECT id FROM ue_background_jobs WHERE queue_name=? AND id IN (' . $idSql . ') '
             . 'AND status="completed" AND display_status="partial" '
