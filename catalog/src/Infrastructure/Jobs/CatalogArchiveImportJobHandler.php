@@ -27,7 +27,7 @@ use UnrealDb\Catalog\Infrastructure\Telemetry\CatalogSystemErrorRecorder;
 
 final class CatalogArchiveImportJobHandler implements JobHandler
 {
-    private const WORKFLOW_VERSION = 2;
+    private const WORKFLOW_VERSION = 3;
     private const ERROR_RETENTION = 50;
 
     /** @param array<string,mixed> $config */
@@ -174,7 +174,13 @@ final class CatalogArchiveImportJobHandler implements JobHandler
             // not max_upload_bytes, while the separate total-unpacked cap still
             // limits decompression bombs across the whole archive.
             $entryLimit = $this->containerLimitBytes();
-            if ($entryBytes < 1 || $entryBytes > $entryLimit) {
+            if ($entryBytes === 0) {
+                $skipped++;
+                $reason = 'Skipped empty archive member ' . $entryPath . '.';
+                $this->checkpoint($context, $index + 1, $total, $queued, $skipped, $failed, $unpackedBytes, $errors, $reason);
+                continue;
+            }
+            if ($entryBytes > $entryLimit) {
                 $failed++;
                 $reason = 'Archive member ' . $entryPath . ' is ' . number_format($entryBytes)
                     . ' bytes; configured archive-member limit is ' . number_format($entryLimit) . ' bytes.';
@@ -343,7 +349,16 @@ final class CatalogArchiveImportJobHandler implements JobHandler
 
             $entryBytes = max(0, (int)($entry['size'] ?? 0));
             $entryLimit = $this->containerLimitBytes();
-            if ($entryBytes < 1 || $entryBytes > $entryLimit) {
+            if ($entryBytes === 0) {
+                return [
+                    'extract' => false,
+                    'state' => [
+                        'kind' => 'skipped',
+                        'reason' => 'Skipped empty archive member ' . $entryPath . '.',
+                    ],
+                ];
+            }
+            if ($entryBytes > $entryLimit) {
                 return [
                     'extract' => false,
                     'state' => [
@@ -643,7 +658,7 @@ final class CatalogArchiveImportJobHandler implements JobHandler
         $status = $failed > 0 ? 'partial' : 'completed';
         $message = 'Archive expansion complete: ' . number_format($queued) . ' Unreal file(s) queued';
         if ($skipped > 0) {
-            $message .= ', ' . number_format($skipped) . ' unsupported member(s) skipped';
+            $message .= ', ' . number_format($skipped) . ' member(s) skipped';
         }
         if ($failed > 0) {
             $message .= ', ' . number_format($failed) . ' member(s) failed';
