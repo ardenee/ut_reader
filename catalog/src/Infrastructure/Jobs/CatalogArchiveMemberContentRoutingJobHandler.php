@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace UnrealDb\Catalog\Infrastructure\Jobs;
 
 use PDO;
+use Throwable;
 use UnrealDb\Catalog\Application\Jobs\JobExecutionContext;
 use UnrealDb\Catalog\Application\Jobs\JobHandler;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
@@ -26,7 +27,7 @@ use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 final class CatalogArchiveMemberContentRoutingJobHandler implements JobHandler
 {
     private const WAIT_STAGE = 'archive_member_content_wait_child';
-    private const ROUTER_VERSION = 1;
+    private const ROUTER_VERSION = 2;
     private const DEFAULT_MAX_NESTING_DEPTH = 4;
     private const MAX_CONFIGURED_NESTING_DEPTH = 16;
 
@@ -70,7 +71,49 @@ final class CatalogArchiveMemberContentRoutingJobHandler implements JobHandler
         }
 
         $incoming = new CatalogIncomingFileStore($this->config);
-        $sourcePath = $incoming->resolve($stagedPath);
+        $preparedStore = new CatalogPreparedJobFileStore($this->config, $job->id, 'bucket-archive-member');
+        $prepared = $preparedStore->load();
+        $sourceFromPrepared = is_array($prepared);
+        $effectiveJob = $job;
+
+        if ($sourceFromPrepared) {
+            $sourcePath = (string)$prepared['path'];
+        } else {
+            try {
+                $sourcePath = $incoming->resolve($stagedPath);
+            } catch (Throwable $stagedError) {
+                try {
+                    $restored = (new CatalogRetainedArchiveMemberSourceRestorer($this->db, $this->config))->restore(
+                        $job,
+                        $incoming,
+                        $originalName,
+                        $entryPath
+                    );
+                } catch (Throwable $restoreError) {
+                    throw new \RuntimeException(
+                        'Archive member staged source is unavailable and retained-parent reconstruction failed: '
+                        . $this->errorText($restoreError)
+                        . ' Original staging error: ' . $this->errorText($stagedError),
+                        (int)$restoreError->getCode(),
+                        $restoreError
+                    );
+                }
+
+                $effectiveJob = $this->withStagedFile($job, $restored);
+                $stagedPath = (string)$restored['relative_path'];
+                $sourcePath = $incoming->resolve($stagedPath);
+                $payload = $effectiveJob->payload;
+                $context->checkpoint([
+                    'stage' => 'archive_member_source_restored',
+                    'done' => 1,
+                    'total' => 100,
+                    'percent' => 1,
+                    'message' => 'Restored missing archive-member staging from the retained parent archive.',
+                    'restored_bytes' => (int)($restored['size'] ?? 0),
+                ]);
+            }
+        }
+
         $classification = $this->classifier->classify($sourcePath, $originalName, $entryPath);
         $kind = (string)($classification['kind'] ?? 'unknown');
         $format = strtolower((string)($classification['format'] ?? ''));
@@ -78,6 +121,9 @@ final class CatalogArchiveMemberContentRoutingJobHandler implements JobHandler
 
         if ($kind === 'skip') {
             $incoming->delete($stagedPath);
+            if ($sourceFromPrepared) {
+                $preparedStore->clear();
+            }
             $message = 'Skipped archive member ' . $entryPath . ': ' . ($reason !== '' ? $reason : 'non-package metadata.');
             $context->checkpoint([
                 'stage' => 'complete',
@@ -99,6 +145,12 @@ final class CatalogArchiveMemberContentRoutingJobHandler implements JobHandler
         }
 
         if ($kind === 'redirect' && in_array($format, ['uz2', 'uz3'], true)) {
+            if ($sourceFromPrepared) {
+                $restaged = $incoming->stageLocalFile($sourcePath, $originalName);
+                $preparedStore->clear();
+                $effectiveJob = $this->withStagedFile($effectiveJob, $restaged);
+                $stagedPath = (string)$restaged['relative_path'];
+            }
             $syntheticName = $this->syntheticTransportName($originalName, $format);
             $context->checkpoint([
                 'stage' => 'content_redirect',
@@ -110,13 +162,19 @@ final class CatalogArchiveMemberContentRoutingJobHandler implements JobHandler
                 'detected_format' => $format,
             ]);
             return $this->inner->handle(
-                $this->withOriginalName($job, $syntheticName, $originalName, $format),
+                $this->withOriginalName($effectiveJob, $syntheticName, $originalName, $format),
                 $context
             );
         }
 
         if ($kind === 'archive' && in_array($format, ['zip', 'rar', '7z'], true)) {
-            $childId = $this->enqueueNestedArchive($job, $format, $originalName);
+            if ($sourceFromPrepared) {
+                $restaged = $incoming->stageLocalFile($sourcePath, $originalName);
+                $preparedStore->clear();
+                $effectiveJob = $this->withStagedFile($effectiveJob, $restaged);
+                $stagedPath = (string)$restaged['relative_path'];
+            }
+            $childId = $this->enqueueNestedArchive($effectiveJob, $format, $originalName);
             $waiting = [
                 'archive_member_router_version' => self::ROUTER_VERSION,
                 'stage' => self::WAIT_STAGE,
@@ -132,10 +190,10 @@ final class CatalogArchiveMemberContentRoutingJobHandler implements JobHandler
                 'source_relative_path' => trim((string)($payload['source_relative_path'] ?? $entryPath)),
             ];
             $context->checkpoint($waiting);
-            return $this->waitForNestedArchive($job, $context, $waiting);
+            return $this->waitForNestedArchive($effectiveJob, $context, $waiting);
         }
 
-        return $this->inner->handle($job, $context);
+        return $this->inner->handle($effectiveJob, $context);
     }
 
     /** @param array<string,mixed> $resume @return array<string,mixed> */
@@ -325,6 +383,20 @@ final class CatalogArchiveMemberContentRoutingJobHandler implements JobHandler
         return min(self::MAX_CONFIGURED_NESTING_DEPTH, max(1, $configured));
     }
 
+    /** @param array<string,mixed> $staged */
+    private function withStagedFile(ClaimedJob $job, array $staged): ClaimedJob
+    {
+        $payload = $job->payload;
+        $payload['staged_path'] = (string)($staged['relative_path'] ?? '');
+        $payload['size'] = max(0, (int)($staged['size'] ?? 0));
+        $sha256 = strtolower(trim((string)($staged['sha256'] ?? '')));
+        if ($sha256 !== '') {
+            $payload['sha256'] = $sha256;
+        }
+        $payload['archive_member_source_restored'] = true;
+        return $this->withPayload($job, $payload);
+    }
+
     private function withOriginalName(
         ClaimedJob $job,
         string $syntheticName,
@@ -335,7 +407,12 @@ final class CatalogArchiveMemberContentRoutingJobHandler implements JobHandler
         $payload['original_name'] = $syntheticName;
         $payload['content_original_name'] = $contentOriginalName;
         $payload['content_detected_redirect'] = $format;
+        return $this->withPayload($job, $payload);
+    }
 
+    /** @param array<string,mixed> $payload */
+    private function withPayload(ClaimedJob $job, array $payload): ClaimedJob
+    {
         return new ClaimedJob(
             $job->id,
             $job->queue,
@@ -352,5 +429,11 @@ final class CatalogArchiveMemberContentRoutingJobHandler implements JobHandler
             $job->parentJobId,
             $job->workflowUnitKey
         );
+    }
+
+    private function errorText(Throwable $error): string
+    {
+        $message = trim($error->getMessage());
+        return $message !== '' ? $message : get_class($error);
     }
 }
