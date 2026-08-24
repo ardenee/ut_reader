@@ -112,6 +112,7 @@ final class JobFailureRetryPolicy
             'negative epic ue3 compressed chunk field',
             'invalid first epic ue3 compressed chunk offset',
             'overlapping epic ue3 compressed chunk ranges are invalid',
+            'nested archive depth limit of ',
             'invalid names table count:',
             'invalid names table offset:',
             'invalid exports table count:',
