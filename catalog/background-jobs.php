@@ -179,6 +179,12 @@ try {
             'disabled' => true,
             'attributes' => ['id' => 'jobs-retry-selected'],
         ])
+        . CatalogUi::button('Stop selected', [
+            'variant' => 'danger',
+            'size' => 'sm',
+            'disabled' => true,
+            'attributes' => ['id' => 'jobs-stop-selected'],
+        ])
         . '</div>';
 
     $table = '<table class="jobs-file-table"><caption class="ui-sr-only">File processing jobs for queue ' . catalog_h($queueName) . '</caption>'
