@@ -62,7 +62,7 @@ try {
 
     catalog_head('Background Jobs');
     echo '<style>'
-        . '.jobs-file-worker,.jobs-file-filters,.jobs-file-pagination,.jobs-file-maintenance{display:flex;gap:9px;align-items:center;flex-wrap:wrap}'
+        . '.jobs-file-worker,.jobs-file-filters,.jobs-file-pagination,.jobs-file-maintenance,.jobs-file-bulk{display:flex;gap:9px;align-items:center;flex-wrap:wrap}'
         . '.jobs-file-worker{margin:0 0 14px}'
         . '.jobs-file-worker-state{margin-left:auto;font-weight:600}'
         . '.jobs-file-queue{margin:0 0 14px}'
@@ -71,14 +71,17 @@ try {
         . '.jobs-file-tabs button[aria-selected="true"]{font-weight:700;box-shadow:inset 0 -2px 0 currentColor}'
         . '.jobs-file-filters{margin:0 0 12px}'
         . '.jobs-file-search{min-width:280px;flex:1}'
-        . '.jobs-file-notice{margin:8px 0 12px}'
-        . '.jobs-file-table{table-layout:fixed;min-width:1120px}'
-        . '.jobs-file-table .col-id{width:82px}.jobs-file-table .col-size{width:100px}.jobs-file-table .col-action{width:340px}'
-        . '.jobs-file-table .col-progress{width:190px}.jobs-file-table .col-status{width:118px}.jobs-file-table .col-control{width:108px}'
+        . '.jobs-file-notice{margin:8px 0 10px}'
+        . '.jobs-file-bulk{margin:0 0 10px;min-height:34px}'
+        . '.jobs-file-bulk .muted{margin-right:auto}'
+        . '.jobs-file-table{table-layout:fixed;min-width:1040px}'
+        . '.jobs-file-table .col-select{width:42px}.jobs-file-table .col-id{width:82px}.jobs-file-table .col-size{width:96px}'
+        . '.jobs-file-table .col-action{width:360px}.jobs-file-table .col-progress{width:76px}.jobs-file-table .col-status{width:118px}.jobs-file-table .col-control{width:52px}'
         . '.jobs-file-row td{vertical-align:top}'
         . '.jobs-file-row-working td{background:rgba(246,196,83,.025)}'
         . '.jobs-file-row-issue td{background:rgba(255,107,122,.035)}'
-        . '.jobs-file-id,.jobs-file-size,.jobs-file-control{white-space:nowrap}'
+        . '.jobs-file-select{text-align:center;vertical-align:middle!important}.jobs-file-select input,.jobs-file-select-all{width:16px;height:16px}'
+        . '.jobs-file-id,.jobs-file-size,.jobs-file-control,.jobs-file-progress{white-space:nowrap}'
         . '.jobs-file-tree{display:flex;gap:7px;align-items:flex-start;padding-left:calc(var(--tree-depth,0) * 22px)}'
         . '.jobs-file-toggle{width:24px;height:24px;padding:0;line-height:1;flex:0 0 24px}'
         . '.jobs-file-toggle-spacer{display:inline-block;width:24px;flex:0 0 24px}'
@@ -87,14 +90,14 @@ try {
         . '.jobs-file-path,.jobs-file-activity,.jobs-file-issue-text{overflow-wrap:anywhere}'
         . '.jobs-file-child-count,.jobs-file-type,.jobs-file-result-label{font-size:12px;margin-top:3px}'
         . '.jobs-file-issue-text{color:#fecdd3;margin-top:4px;font-size:13px}'
-        . '.jobs-file-progress{display:grid;grid-template-columns:minmax(0,1fr) 70px;gap:8px;align-items:center}'
-        . '.jobs-file-progress progress{width:100%;height:14px}'
+        . '.jobs-file-progress{text-align:right;font-weight:700;vertical-align:middle!important}'
         . '.jobs-file-status{display:inline-block;min-width:86px;padding:3px 8px;border:1px solid var(--line);border-radius:999px;font-weight:700;text-align:center}'
         . '.jobs-file-status-working{color:#ffe29a;border-color:rgba(246,196,83,.75);background:rgba(246,196,83,.10)}'
         . '.jobs-file-status-completed{color:#a7f3d0;border-color:rgba(50,213,131,.75);background:rgba(50,213,131,.10)}'
         . '.jobs-file-status-issue{color:#fecdd3;border-color:rgba(255,107,122,.75);background:rgba(255,107,122,.10)}'
         . '.jobs-file-status-stopped{color:#cbd5e1;border-color:rgba(148,163,184,.75);background:rgba(148,163,184,.10)}'
-        . '.jobs-file-replace{font-weight:700;color:#fecdd3}'
+        . '.jobs-file-control{text-align:center;vertical-align:middle!important}'
+        . '.jobs-file-source-download{margin:auto}'
         . '.jobs-file-empty{text-align:center;padding:32px}'
         . '.jobs-file-more-row td,.jobs-file-loading-row td{background:rgba(255,255,255,.015)}'
         . '.jobs-file-pagination{justify-content:space-between;margin-top:13px}'
@@ -168,11 +171,21 @@ try {
         . '</div>';
 
     echo '<div id="jobs-file-notice" class="muted jobs-file-notice">Loading files…</div>';
+    echo '<div class="jobs-file-bulk">'
+        . '<span id="jobs-selected-count" class="muted">0 selected</span>'
+        . CatalogUi::button('Retry selected', [
+            'variant' => 'secondary',
+            'size' => 'sm',
+            'disabled' => true,
+            'attributes' => ['id' => 'jobs-retry-selected'],
+        ])
+        . '</div>';
 
     $table = '<table class="jobs-file-table"><caption class="ui-sr-only">File processing jobs for queue ' . catalog_h($queueName) . '</caption>'
-        . '<colgroup><col class="col-id"><col><col class="col-size"><col class="col-action"><col class="col-progress"><col class="col-status"><col class="col-control"></colgroup>'
-        . '<thead><tr><th>Job</th><th>File / source</th><th>Size</th><th>Current action / issue</th><th>Progress</th><th>Status</th><th></th></tr></thead>'
-        . '<tbody id="jobs-file-body"><tr><td colspan="7" class="jobs-file-empty muted">Loading…</td></tr></tbody></table>';
+        . '<colgroup><col class="col-select"><col class="col-id"><col><col class="col-size"><col class="col-action"><col class="col-progress"><col class="col-status"><col class="col-control"></colgroup>'
+        . '<thead><tr><th class="jobs-file-select"><input id="jobs-select-visible" class="jobs-file-select-all" type="checkbox" aria-label="Select all shown rows" title="Select all shown rows"></th>'
+        . '<th>Job</th><th>File / source</th><th>Size</th><th>Current action / issue</th><th>Progress</th><th>Status</th><th><span class="ui-sr-only">Download source</span></th></tr></thead>'
+        . '<tbody id="jobs-file-body"><tr><td colspan="8" class="jobs-file-empty muted">Loading…</td></tr></tbody></table>';
     echo CatalogUi::tableRegion($table, [
         'id' => 'jobs-file-table-region',
         'label' => 'File processing jobs',
