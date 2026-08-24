@@ -53,6 +53,7 @@ final class CatalogWorkerCodeVersion
             $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogArchiveMemberContentClassifier.php',
             $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogArchiveMemberContentRoutingJobHandler.php',
             $this->catalogRoot . '/src/Infrastructure/Readers/CatalogLegacyPackageReader.php',
+            $this->catalogRoot . '/src/Infrastructure/Import/CatalogIncomingFileStore.php',
             $this->catalogRoot . '/src/Infrastructure/Import/CatalogBucketPakContainerStore.php',
             $this->catalogRoot . '/src/Infrastructure/Archive/CatalogArchiveExtractor.php',
             $this->catalogRoot . '/src/Infrastructure/Archive/CatalogSequentialArchiveReader.php',
