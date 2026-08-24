@@ -82,8 +82,8 @@ try {
         . '.jobs-file-row-issue td{background:rgba(255,107,122,.035)}'
         . '.jobs-file-select{text-align:center;vertical-align:middle!important}.jobs-file-select input,.jobs-file-select-all{width:16px;height:16px}'
         . '.jobs-file-id,.jobs-file-size,.jobs-file-control,.jobs-file-progress{white-space:nowrap}'
-        . '.jobs-file-tree{display:flex;gap:7px;align-items:flex-start;padding-left:calc(var(--tree-depth,0) * 22px)}'
-        . '.jobs-file-type-icon{width:30px;height:30px;flex:0 0 30px;display:block;margin-top:-2px}'
+        . '.jobs-file-tree{display:flex;gap:8px;align-items:flex-start;padding-left:calc(var(--tree-depth,0) * 30px)}'
+        . '.jobs-file-type-icon{width:36px;height:36px;flex:0 0 36px;display:block;margin-top:-4px}'
         . '.jobs-file-toggle{width:24px;height:24px;padding:0;line-height:1;flex:0 0 24px}'
         . '.jobs-file-toggle-spacer{display:inline-block;width:24px;flex:0 0 24px}'
         . '.jobs-file-identity{min-width:0}'
@@ -106,7 +106,7 @@ try {
         . '.jobs-file-maintenance-wrap{margin-top:18px}'
         . '.jobs-file-maintenance-wrap summary{cursor:pointer;font-weight:700}'
         . '.jobs-file-maintenance{padding-top:12px}'
-        . '@media(max-width:900px){.jobs-file-worker-state{width:100%;margin-left:0}.jobs-file-type-icon{width:26px;height:26px;flex-basis:26px}}'
+        . '@media(max-width:900px){.jobs-file-worker-state{width:100%;margin-left:0}.jobs-file-type-icon{width:30px;height:30px;flex-basis:30px}.jobs-file-tree{padding-left:calc(var(--tree-depth,0) * 24px)}}'
         . '</style>';
 
     catalog_page_header(
@@ -186,11 +186,17 @@ try {
             'disabled' => true,
             'attributes' => ['id' => 'jobs-stop-selected'],
         ])
+        . CatalogUi::button('Delete selected', [
+            'variant' => 'danger',
+            'size' => 'sm',
+            'disabled' => true,
+            'attributes' => ['id' => 'jobs-delete-selected'],
+        ])
         . '</div>';
 
     $table = '<table class="jobs-file-table"><caption class="ui-sr-only">File processing jobs for queue ' . catalog_h($queueName) . '</caption>'
         . '<colgroup><col class="col-select"><col class="col-id"><col><col class="col-size"><col class="col-action"><col class="col-progress"><col class="col-status"><col class="col-control"></colgroup>'
-        . '<thead><tr><th class="jobs-file-select"><input id="jobs-select-visible" class="jobs-file-select-all" type="checkbox" aria-label="Select all shown rows" title="Select all shown rows"></th>'
+        . '<thead><tr><th class="jobs-file-select"><input id="jobs-select-visible" class="jobs-file-select-all" type="checkbox" aria-label="Select all shown source rows" title="Select all shown source rows"></th>'
         . '<th>Job</th><th>File / source</th><th>Size</th><th>Current action / issue</th><th>Progress</th><th>Status</th><th><span class="ui-sr-only">Download source</span></th></tr></thead>'
         . '<tbody id="jobs-file-body"><tr><td colspan="8" class="jobs-file-empty muted">Loading…</td></tr></tbody></table>';
     echo CatalogUi::tableRegion($table, [
