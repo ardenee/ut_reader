@@ -34,6 +34,9 @@
     const recoverButton = document.getElementById('jobs-recover');
     const cleanupButton = document.getElementById('jobs-cleanup');
     const cleanupDays = document.getElementById('jobs-cleanup-days');
+    const selectVisible = document.getElementById('jobs-select-visible');
+    const selectedCount = document.getElementById('jobs-selected-count');
+    const retrySelectedButton = document.getElementById('jobs-retry-selected');
 
     if (!body || !tabs || !searchInput || !perPageSelect || !notice) return;
 
@@ -51,6 +54,8 @@
         meta: {page: 1, pages: 1, total: 0, counts: {}},
         expanded: new Set(),
         children: new Map(),
+        selected: new Set(),
+        visibleFiles: new Map(),
         loading: false,
         searchTimer: 0,
         noticeUntil: 0,
@@ -62,10 +67,6 @@
 
     function setText(element, text) {
         if (element && element.textContent !== String(text)) element.textContent = String(text);
-    }
-
-    function escapeSelector(value) {
-        return String(value).replace(/[^a-zA-Z0-9_-]/g, '');
     }
 
     function setNotice(text, milliseconds) {
@@ -169,22 +170,6 @@
         return 'jobs-file-status jobs-file-status-' + String(file.operator_state || 'issue').replace(/[^a-z0-9_-]+/g, '-');
     }
 
-    function controlFor(file) {
-        const queueStatus = String(file.status || '').toLowerCase();
-        const operatorState = String(file.operator_state || 'issue');
-        if (operatorState === 'working') {
-            return {label: queueStatus === 'running' ? 'Stop' : 'Cancel', action: 'stop'};
-        }
-        if (operatorState === 'issue') {
-            if (file.retry_blocked === true) return {label: 'Replace / fix', action: ''};
-            return {label: 'Retry', action: 'retry'};
-        }
-        if (operatorState === 'stopped') {
-            return {label: 'Retry', action: 'retry'};
-        }
-        return null;
-    }
-
     function supportsSourceDownload(file) {
         return [
             'catalog.prepare_bucket_redirect',
@@ -198,22 +183,87 @@
         ].includes(String(file.job_type || ''));
     }
 
+    function isRetryCandidate(file) {
+        const operatorState = String(file.operator_state || '');
+        return (operatorState === 'issue' || operatorState === 'stopped') && file.retry_blocked !== true;
+    }
+
+    function visibleSelectedCount() {
+        let count = 0;
+        state.visibleFiles.forEach(function (_file, id) {
+            if (state.selected.has(id)) count++;
+        });
+        return count;
+    }
+
+    function retryableSelectedIds() {
+        const ids = [];
+        state.selected.forEach(function (id) {
+            const file = state.visibleFiles.get(id);
+            if (file && isRetryCandidate(file)) ids.push(id);
+        });
+        return ids;
+    }
+
+    function updateSelectionControls() {
+        const visible = state.visibleFiles.size;
+        const selectedVisible = visibleSelectedCount();
+        if (selectVisible) {
+            selectVisible.checked = visible > 0 && selectedVisible === visible;
+            selectVisible.indeterminate = selectedVisible > 0 && selectedVisible < visible;
+            selectVisible.disabled = visible === 0;
+        }
+        setText(selectedCount, state.selected.size === 1 ? '1 selected' : state.selected.size + ' selected');
+        if (retrySelectedButton) {
+            const retryable = retryableSelectedIds().length;
+            retrySelectedButton.disabled = retryable === 0;
+            retrySelectedButton.title = retryable > 0
+                ? 'Retry ' + retryable + ' selected retryable job(s).'
+                : 'Select one or more retryable Issue/Stopped rows.';
+        }
+    }
+
+    function setVisibleSelection(checked) {
+        state.visibleFiles.forEach(function (_file, id) {
+            if (checked) state.selected.add(id); else state.selected.delete(id);
+        });
+        body.querySelectorAll('input.jobs-file-row-select').forEach(function (checkbox) {
+            checkbox.checked = checked;
+        });
+        updateSelectionControls();
+    }
+
     function renderFileRow(file, depth, rootGroup) {
         const row = document.createElement('tr');
         row.className = 'jobs-file-row jobs-file-row-' + String(file.operator_state || 'issue');
         row.dataset.jobId = String(file.id || '');
         row.dataset.depth = String(depth);
 
-        const idCell = create('td', 'jobs-file-id mono', '#' + String(file.id || ''));
-        row.appendChild(idCell);
+        const id = Number(file.id || 0);
+        if (id > 0) state.visibleFiles.set(id, file);
+
+        const selectCell = create('td', 'jobs-file-select');
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.className = 'jobs-file-row-select';
+        checkbox.checked = state.selected.has(id);
+        checkbox.setAttribute('aria-label', 'Select job #' + String(file.id || ''));
+        checkbox.addEventListener('change', function () {
+            if (checkbox.checked) state.selected.add(id); else state.selected.delete(id);
+            updateSelectionControls();
+        });
+        selectCell.appendChild(checkbox);
+        row.appendChild(selectCell);
+
+        row.appendChild(create('td', 'jobs-file-id mono', '#' + String(file.id || '')));
 
         const fileCell = create('td', 'jobs-file-name-cell');
         const tree = create('div', 'jobs-file-tree');
         tree.style.setProperty('--tree-depth', String(depth));
         if (file.has_children) {
-            const toggle = create('button', 'jobs-file-toggle', state.expanded.has(Number(file.id)) ? '▼' : '▶');
+            const toggle = create('button', 'jobs-file-toggle', state.expanded.has(id) ? '▼' : '▶');
             toggle.type = 'button';
-            toggle.title = state.expanded.has(Number(file.id)) ? 'Collapse child files/jobs' : 'Show child files/jobs';
+            toggle.title = state.expanded.has(id) ? 'Collapse child files/jobs' : 'Show child files/jobs';
             toggle.addEventListener('click', function () { toggleChildren(file); });
             tree.appendChild(toggle);
         } else {
@@ -246,13 +296,8 @@
         actionCell.appendChild(create('span', 'muted mono jobs-file-type', file.job_type || ''));
         row.appendChild(actionCell);
 
-        const progressCell = create('td', 'jobs-file-progress');
-        const progress = document.createElement('progress');
-        progress.max = 100;
-        progress.value = Math.max(0, Math.min(100, Number(file.progress_percent || 0)));
-        progressCell.appendChild(progress);
-        progressCell.appendChild(create('span', 'mono', file.progress_text || (progress.value + '%')));
-        row.appendChild(progressCell);
+        const percent = Math.max(0, Math.min(100, Math.round(Number(file.progress_percent || 0))));
+        row.appendChild(create('td', 'jobs-file-progress mono', percent + '%'));
 
         const statusCell = create('td', 'jobs-file-status-cell');
         statusCell.appendChild(create('span', statusClass(file), file.operator_status_label || 'Issue'));
@@ -260,30 +305,17 @@
         row.appendChild(statusCell);
 
         const controlCell = create('td', 'jobs-file-control');
-        controlCell.style.display = 'flex';
-        controlCell.style.gap = '6px';
-        controlCell.style.alignItems = 'flex-start';
-        controlCell.style.flexWrap = 'wrap';
-
         if (supportsSourceDownload(file)) {
-            const download = create('a', 'button jobs-file-source-download', 'Download');
+            const download = create('a', 'ui-icon-action ui-icon-action--secondary ui-icon-action--sm jobs-file-source-download');
             download.href = sourceDownloadUrl + '?' + new URLSearchParams({job_id: String(file.id || 0)}).toString();
+            download.setAttribute('aria-label', depth > 0 ? 'Download original retained parent source' : 'Download retained source');
             download.title = depth > 0
                 ? 'Download the original retained parent/source file without generating a package.'
                 : 'Download this retained source file directly without generating a package.';
+            const icon = create('span', '', '⇩');
+            icon.setAttribute('aria-hidden', 'true');
+            download.appendChild(icon);
             controlCell.appendChild(download);
-        }
-
-        const control = controlFor(file);
-        if (control) {
-            if (control.action) {
-                const button = create('button', 'jobs-file-control-button', control.label);
-                button.type = 'button';
-                button.addEventListener('click', function () { runFileAction(file, control.action, button); });
-                controlCell.appendChild(button);
-            } else {
-                controlCell.appendChild(create('span', 'jobs-file-replace', control.label));
-            }
         }
         row.appendChild(controlCell);
         applyRowBackground(row, depth, rootGroup);
@@ -294,7 +326,7 @@
         const row = document.createElement('tr');
         row.className = 'jobs-file-more-row';
         const cell = document.createElement('td');
-        cell.colSpan = 7;
+        cell.colSpan = 8;
         cell.style.paddingLeft = 'calc(18px + (' + depth + ' * 22px))';
         const button = create('button', '', 'Load more children (' + childState.rows.length + ' of ' + childState.total + ')');
         button.type = 'button';
@@ -317,7 +349,7 @@
             const loading = document.createElement('tr');
             loading.className = 'jobs-file-loading-row';
             const cell = create('td', 'muted', 'Loading child files/jobs…');
-            cell.colSpan = 7;
+            cell.colSpan = 8;
             cell.style.paddingLeft = 'calc(18px + (' + (depth + 1) + ' * 22px))';
             loading.appendChild(cell);
             applyRowBackground(loading, depth + 1, rootGroup);
@@ -333,18 +365,20 @@
 
     function renderRows() {
         const fragment = document.createDocumentFragment();
+        state.visibleFiles = new Map();
         if (!state.roots.length) {
             const row = document.createElement('tr');
             const cell = create('td', 'jobs-file-empty muted', state.filter === 'issue'
                 ? 'No files currently need attention.'
                 : 'No files match the current view.');
-            cell.colSpan = 7;
+            cell.colSpan = 8;
             row.appendChild(cell);
             fragment.appendChild(row);
         } else {
             state.roots.forEach(function (file, index) { appendBranch(fragment, file, 0, index % 2); });
         }
         body.replaceChildren(fragment);
+        updateSelectionControls();
     }
 
     function renderTabs() {
@@ -482,38 +516,38 @@
         }
     }
 
-    async function runFileAction(file, action, button) {
-        button.disabled = true;
+    async function retrySelected() {
+        const ids = retryableSelectedIds();
+        if (!ids.length) {
+            setNotice('No selected rows can be retried. Structurally invalid sources must be replaced or fixed.', 7000);
+            return;
+        }
+        if (retrySelectedButton) retrySelectedButton.disabled = true;
         try {
-            if (action === 'stop') {
-                await postJson(actionUrl, {
-                    action: 'cancel',
-                    queue: queue,
-                    job_id: Number(file.id),
-                    reason: 'Stopped manually from the file-centric Background Jobs view.'
-                });
-                setNotice('Stopped job #' + file.id + '.', 5000);
-            } else if (action === 'retry') {
-                const payload = await postJson(bulkUrl, {
-                    action: 'restart',
-                    scope: 'selected',
-                    queue: queue,
-                    status: '',
-                    search: '',
-                    job_ids: [Number(file.id)]
-                });
-                const data = payload && payload.data ? payload.data : {};
-                if (Number(data.retry_blocked || 0) > 0) {
-                    setNotice('This source is structurally invalid and cannot succeed from the same retained bytes. Replace or fix the source file.', 9000);
-                } else {
-                    setNotice('Restarted job #' + file.id + '.', 5000);
-                }
-            }
+            const payload = await postJson(bulkUrl, {
+                action: 'restart',
+                scope: 'selected',
+                queue: queue,
+                status: '',
+                search: '',
+                job_ids: ids
+            });
+            const data = payload && payload.data ? payload.data : {};
+            const affected = Math.max(0, Number(data.affected || 0));
+            const blocked = Math.max(0, Number(data.retry_blocked || 0));
+            const skipped = Math.max(0, Number(data.skipped || 0));
+            setNotice(
+                'Retry selected: ' + affected + ' restarted'
+                + (blocked ? ', ' + blocked + ' blocked as non-retryable' : '')
+                + (skipped > blocked ? ', ' + (skipped - blocked) + ' skipped' : '') + '.',
+                8000
+            );
+            state.selected.clear();
         } catch (error) {
-            setNotice(error.message || 'The file action failed.', 9000);
+            setNotice(error.message || 'Could not retry selected jobs.', 9000);
         } finally {
-            button.disabled = false;
             await refresh();
+            updateSelectionControls();
         }
     }
 
@@ -564,13 +598,19 @@
         await refresh();
     }
 
+    function clearSelectionAndChildren() {
+        state.selected.clear();
+        state.expanded.clear();
+        state.children.clear();
+        updateSelectionControls();
+    }
+
     tabs.addEventListener('click', function (event) {
         const button = event.target.closest('button[data-state]');
         if (!button) return;
         state.filter = String(button.dataset.state || 'all');
         state.page = 1;
-        state.expanded.clear();
-        state.children.clear();
+        clearSelectionAndChildren();
         refresh();
     });
 
@@ -579,8 +619,7 @@
         state.searchTimer = window.setTimeout(function () {
             state.search = searchInput.value.trim();
             state.page = 1;
-            state.expanded.clear();
-            state.children.clear();
+            clearSelectionAndChildren();
             refresh();
         }, 350);
     });
@@ -588,15 +627,16 @@
     perPageSelect.addEventListener('change', function () {
         state.perPage = parseInt(perPageSelect.value || '100', 10) || 100;
         state.page = 1;
-        state.expanded.clear();
-        state.children.clear();
+        clearSelectionAndChildren();
         refresh();
     });
 
-    if (firstButton) firstButton.addEventListener('click', function () { state.page = 1; refresh(); });
-    if (previousButton) previousButton.addEventListener('click', function () { state.page = Math.max(1, state.page - 1); refresh(); });
-    if (nextButton) nextButton.addEventListener('click', function () { state.page = Math.min(Number(state.meta.pages || 1), state.page + 1); refresh(); });
-    if (lastButton) lastButton.addEventListener('click', function () { state.page = Math.max(1, Number(state.meta.pages || 1)); refresh(); });
+    if (selectVisible) selectVisible.addEventListener('change', function () { setVisibleSelection(selectVisible.checked); });
+    if (retrySelectedButton) retrySelectedButton.addEventListener('click', retrySelected);
+    if (firstButton) firstButton.addEventListener('click', function () { state.page = 1; clearSelectionAndChildren(); refresh(); });
+    if (previousButton) previousButton.addEventListener('click', function () { state.page = Math.max(1, state.page - 1); clearSelectionAndChildren(); refresh(); });
+    if (nextButton) nextButton.addEventListener('click', function () { state.page = Math.min(Number(state.meta.pages || 1), state.page + 1); clearSelectionAndChildren(); refresh(); });
+    if (lastButton) lastButton.addEventListener('click', function () { state.page = Math.max(1, Number(state.meta.pages || 1)); clearSelectionAndChildren(); refresh(); });
     if (refreshButton) refreshButton.addEventListener('click', refresh);
     if (startButton) startButton.addEventListener('click', startWorkers);
     if (applyWorkers) applyWorkers.addEventListener('click', resizeWorkers);
