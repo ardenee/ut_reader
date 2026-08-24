@@ -13,6 +13,8 @@ $classifierPath = $root . '/src/Infrastructure/Jobs/CatalogArchiveMemberContentC
 $routerPath = $root . '/src/Infrastructure/Jobs/CatalogArchiveMemberContentRoutingJobHandler.php';
 $factoryPath = $root . '/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php';
 $extractorPath = $root . '/src/Infrastructure/Archive/CatalogArchiveExtractor.php';
+$sequentialPath = $root . '/src/Infrastructure/Archive/CatalogSequentialArchiveReader.php';
+$externalRarPath = $root . '/src/Infrastructure/Archive/CatalogExternalArchiveReader.php';
 $incomingPath = $root . '/src/Infrastructure/Import/CatalogIncomingFileStore.php';
 $retryPath = $root . '/src/Application/Jobs/JobFailureRetryPolicy.php';
 $outcomeQueryPath = $root . '/src/Infrastructure/Persistence/PdoArchiveChildOutcomeQuery.php';
@@ -25,6 +27,8 @@ $files = [
     $routerPath,
     $factoryPath,
     $extractorPath,
+    $sequentialPath,
+    $externalRarPath,
     $incomingPath,
     $retryPath,
     $outcomeQueryPath,
@@ -168,6 +172,8 @@ $classifierSource = $source[$classifierPath];
 $routerSource = $source[$routerPath];
 $factorySource = $source[$factoryPath];
 $extractorSource = $source[$extractorPath];
+$sequentialSource = $source[$sequentialPath];
+$externalRarSource = $source[$externalRarPath];
 $incomingSource = $source[$incomingPath];
 $retrySource = $source[$retryPath];
 $querySource = $source[$outcomeQueryPath];
@@ -193,11 +199,33 @@ $record(
 );
 
 $record(
+    'content_detected_nesting_honors_depth_limit',
+    str_contains($routerSource, 'DEFAULT_MAX_NESTING_DEPTH = 4')
+        && str_contains($routerSource, 'MAX_CONFIGURED_NESTING_DEPTH = 16')
+        && str_contains($routerSource, 'UNREALDB_ARCHIVE_MAX_NESTING_DEPTH')
+        && str_contains($routerSource, 'Nested archive depth limit of ')
+        && str_contains($retrySource, "'nested archive depth limit of '"),
+    'A disguised nested container must obey the same bounded nesting policy and must not auto-retry until configuration changes.'
+);
+
+$record(
+    'nested_child_detail_uses_background_job_schema',
+    str_contains($routerSource, 'result_json,last_error FROM ue_background_jobs')
+        && str_contains($routerSource, "\$row['last_error']")
+        && !str_contains($routerSource, 'error_message FROM ue_background_jobs'),
+    'Nested archive detail reporting must read ue_background_jobs.last_error rather than a nonexistent error_message column.'
+);
+
+$rootedPathPolicy = static fn(string $text): bool =>
+    str_contains($text, "preg_match('/^[A-Za-z]:\\\\//', \$path)")
+    && str_contains($text, "\$path = ltrim(\$path, '/');")
+    && str_contains($text, "return ['', 'parent-directory traversal'];");
+$record(
     'rooted_archive_paths_are_normalized_not_trusted',
-    str_contains($extractorSource, "preg_match('/^[A-Za-z]:\\\\//', \$path)")
-        && str_contains($extractorSource, "\$path = ltrim(\$path, '/');")
-        && str_contains($extractorSource, "return ['', 'parent-directory traversal'];"),
-    'Leading archive-root slashes may be removed only while drive paths and parent traversal remain rejected.'
+    $rootedPathPolicy($extractorSource)
+        && $rootedPathPolicy($sequentialSource)
+        && $rootedPathPolicy($externalRarSource),
+    'ZIP, libarchive/7z and PHP-RAR paths may drop a leading archive-root slash only while drive paths and parent traversal remain rejected.'
 );
 
 $record(
