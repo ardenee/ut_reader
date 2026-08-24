@@ -170,7 +170,12 @@
         return String(job.status || '').toLowerCase();
     }
 
+    function retryBlocked(job) {
+        return Boolean(job && job.retry_blocked === true);
+    }
+
     function retryable(job) {
+        if (retryBlocked(job)) return false;
         return ['cancelled', 'failed', 'dead_letter'].includes(queueStatus(job)) || failedDisplayStatuses.includes(displayStatus(job));
     }
 
@@ -197,6 +202,14 @@
         const status = queueStatus(job);
         if (status === 'queued') return {label: 'Cancel', action: 'cancel'};
         if (status === 'running') return {label: 'Stop job', action: 'stop'};
+        if (retryBlocked(job) && (['cancelled', 'failed', 'dead_letter'].includes(status) || failedDisplayStatuses.includes(displayStatus(job)))) {
+            return {
+                label: 'Non-retryable',
+                action: '',
+                disabled: true,
+                title: String(job.retry_block_reason || 'The same retained bytes cannot succeed if restarted.')
+            };
+        }
         if (retryable(job)) return {label: 'Restart', action: 'restart'};
         if (status === 'completed' && String(job.job_type || '') === 'catalog.import_staged_pak') return {label: 'Re-run PAK', action: 'rerun_pak'};
         if (deletable(job)) return {label: 'Delete', action: 'delete'};
@@ -349,10 +362,14 @@
         if (action) {
             pair.actionButton.hidden = false;
             pair.actionButton.dataset.action = action.action;
+            pair.actionButton.disabled = Boolean(action.disabled);
+            pair.actionButton.title = String(action.title || '');
             setText(pair.actionButton, action.label);
         } else {
             pair.actionButton.hidden = true;
             pair.actionButton.dataset.action = '';
+            pair.actionButton.disabled = false;
+            pair.actionButton.title = '';
             setText(pair.actionButton, '');
         }
 
@@ -638,7 +655,10 @@
             const body = await postJson(bulkUrl, {action: action, scope: scope, queue: queue, status: state.status, search: state.search, job_ids: selectedIds});
             const data = body && body.data ? body.data : {};
             let text = verb + ' affected ' + String(data.affected || 0) + ' job(s).';
-            if (data.skipped) text += ' ' + String(data.skipped) + ' ineligible job(s) were skipped.';
+            const blocked = Number(data.retry_blocked || 0);
+            const skipped = Number(data.skipped || 0);
+            if (blocked > 0) text += ' ' + blocked + ' deterministic job(s) were not restarted.';
+            if (skipped > blocked) text += ' ' + String(skipped - blocked) + ' other ineligible job(s) were skipped.';
             if (data.deleted_staged_files) text += ' Removed ' + String(data.deleted_staged_files) + ' retained upload(s).';
             if (data.limited) text += ' The 10,000-job safety limit was reached; apply again for the remainder.';
             if (data.worker_error) text += ' Jobs were queued, but the worker could not start: ' + String(data.worker_error);
