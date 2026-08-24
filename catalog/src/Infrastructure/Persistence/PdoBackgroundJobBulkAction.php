@@ -17,6 +17,7 @@ use UnrealDb\Catalog\Infrastructure\Jobs\CatalogJobDisplayStatus;
 final class PdoBackgroundJobBulkAction
 {
     private const BATCH_LIMIT = 10000;
+    private const ARCHIVE_DESCENDANT_UPDATE_BATCH = 500;
 
     /** @param array<string,mixed> $config */
     public function __construct(
@@ -181,9 +182,10 @@ final class PdoBackgroundJobBulkAction
         }
 
         // A retained partial archive must be replayed from the beginning of its
-        // container. Existing successful archive-member child jobs are deduped by
-        // parent/member key, while members that never produced a child are tried
-        // again. Capture these IDs before result/status are reset.
+        // container. Successful/duplicate/skipped descendants remain terminal,
+        // while failed/cancelled/rejected/unverified/partial descendants must be
+        // replayed too. Otherwise parent/member workflow idempotency simply returns
+        // the old terminal child and a newer reader/classifier never sees its bytes.
         $archiveSelect = $this->db->prepare(
             'SELECT id FROM ue_background_jobs WHERE queue_name=? AND id IN (' . $idSql . ') '
             . 'AND status="completed" AND display_status="partial" '
@@ -198,6 +200,15 @@ final class PdoBackgroundJobBulkAction
             'intval',
             $archiveSelect->fetchAll(PDO::FETCH_COLUMN) ?: []
         )));
+
+        // Reset problem descendants before exposing the parent as queued. A worker
+        // may claim a child immediately; that is safe. The reverse order is not:
+        // a parent could otherwise observe the old terminal failure and finish
+        // partial again before its child had been reactivated.
+        if ($retainedArchiveIds !== []) {
+            $problemDescendants = $this->archiveProblemDescendantIds($queueName, $retainedArchiveIds);
+            $this->restartArchiveProblemDescendants($queueName, $problemDescendants, $now);
+        }
 
         $statement = $this->db->prepare(
             'UPDATE ue_background_jobs SET status="queued",attempts=0,available_at=?,worker_id=NULL,lease_token=NULL,'
@@ -222,6 +233,68 @@ final class PdoBackgroundJobBulkAction
             $resetArchive->execute(array_merge([$queueName], $retainedArchiveIds));
         }
 
+        return $affected;
+    }
+
+    /**
+     * Return only terminal problem descendants under the retained archive roots.
+     * Parent/workflow identity is recursive because an archive member can itself
+     * become a nested archive workflow with its own package children.
+     *
+     * @param list<int> $archiveIds
+     * @return list<int>
+     */
+    private function archiveProblemDescendantIds(string $queueName, array $archiveIds): array
+    {
+        if ($archiveIds === []) {
+            return [];
+        }
+
+        $rootSql = implode(',', array_fill(0, count($archiveIds), '?'));
+        $statement = $this->db->prepare(
+            'WITH RECURSIVE archive_descendants AS ('
+            . 'SELECT id,parent_job_id,status,display_status FROM ue_background_jobs '
+            . 'WHERE queue_name=? AND parent_job_id IN (' . $rootSql . ') '
+            . 'AND workflow_unit_key LIKE "archive:%" '
+            . 'UNION ALL '
+            . 'SELECT j.id,j.parent_job_id,j.status,j.display_status FROM ue_background_jobs j '
+            . 'INNER JOIN archive_descendants d ON d.id=j.parent_job_id '
+            . 'WHERE j.queue_name=? AND j.workflow_unit_key LIKE "archive:%"'
+            . ') '
+            . 'SELECT DISTINCT id FROM archive_descendants WHERE '
+            . '(status IN ("cancelled","failed","dead_letter") '
+            . 'OR (status="completed" AND display_status IN ("failed","rejected","unverified","partial","error")))'
+        );
+        $statement->execute(array_merge([$queueName], $archiveIds, [$queueName]));
+        return array_values(array_unique(array_filter(
+            array_map('intval', $statement->fetchAll(PDO::FETCH_COLUMN) ?: []),
+            static fn(int $id): bool => $id > 0
+        )));
+    }
+
+    /** @param list<int> $jobIds */
+    private function restartArchiveProblemDescendants(string $queueName, array $jobIds, string $now): int
+    {
+        if ($jobIds === []) {
+            return 0;
+        }
+
+        $affected = 0;
+        foreach (array_chunk($jobIds, self::ARCHIVE_DESCENDANT_UPDATE_BATCH) as $chunk) {
+            $idSql = implode(',', array_fill(0, count($chunk), '?'));
+            $statement = $this->db->prepare(
+                'UPDATE ue_background_jobs SET status="queued",attempts=0,available_at=?,'
+                . 'worker_id=NULL,lease_token=NULL,leased_at=NULL,lease_expires_at=NULL,last_heartbeat_at=NULL,'
+                . 'last_error=NULL,result_json=NULL,progress_json=NULL,progress_updated_at=NULL,'
+                . 'cancel_requested_at=NULL,cancel_requested_by=NULL,cancel_reason=NULL,'
+                . 'dead_lettered_at=NULL,completed_at=NULL,updated_at=? '
+                . 'WHERE queue_name=? AND id IN (' . $idSql . ') AND '
+                . '(status IN ("cancelled","failed","dead_letter") '
+                . 'OR (status="completed" AND display_status IN ("failed","rejected","unverified","partial","error")))'
+            );
+            $statement->execute(array_merge([$now, $now, $queueName], $chunk));
+            $affected += $statement->rowCount();
+        }
         return $affected;
     }
 
