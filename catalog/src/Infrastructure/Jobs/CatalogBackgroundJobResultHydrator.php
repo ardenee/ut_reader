@@ -64,11 +64,17 @@ final class CatalogBackgroundJobResultHydrator
         foreach ([
             'original_name',
             'source_relative_path',
+            'staged_path',
+            'source_kind',
             'queue_name',
             'queue_game_id',
             'game_id',
             'file_id',
+            'size',
             'expected_size',
+            'sha256',
+            'md5',
+            'upload_id',
             'max_files',
             'package_name',
             'affected_total',
@@ -84,8 +90,12 @@ final class CatalogBackgroundJobResultHydrator
             'batch_count',
             'batch_start',
             'batch_end',
+            'archive_parent_job_id',
+            'archive_root_job_id',
+            'archive_depth',
             'archive_source_name',
             'archive_entry_path',
+            'nested_archive',
         ] as $field) {
             if (array_key_exists($field, $decoded)) {
                 $payload[$field] = $decoded[$field];
