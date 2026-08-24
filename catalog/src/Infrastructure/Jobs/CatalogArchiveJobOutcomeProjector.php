@@ -256,7 +256,17 @@ final class CatalogArchiveJobOutcomeProjector
         if ($value === '' || strlen($value) <= $maxBytes) {
             return $value;
         }
-        return rtrim(substr($value, 0, max(1, $maxBytes - 1))) . '…';
+
+        $limit = max(1, $maxBytes - 3);
+        if (function_exists('mb_strcut')) {
+            $cut = mb_strcut($value, 0, $limit, 'UTF-8');
+        } else {
+            $cut = substr($value, 0, $limit);
+            while ($cut !== '' && preg_match('//u', $cut) !== 1) {
+                $cut = substr($cut, 0, -1);
+            }
+        }
+        return rtrim($cut) . '…';
     }
 
     /** @return array<string,mixed> */
