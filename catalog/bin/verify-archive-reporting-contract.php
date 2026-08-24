@@ -23,6 +23,7 @@ $statusApi = (string)@file_get_contents($root . '/api/v1/job-status.php');
 $cursorApi = (string)@file_get_contents($root . '/api/v1/job-status-cursor.php');
 $trace = (string)@file_get_contents($root . '/bin/trace-archive-job.php');
 $browserErrors = (string)@file_get_contents($root . '/assets/catalog-system-errors.js');
+$jobsPage = (string)@file_get_contents($root . '/background-jobs.php');
 
 $record(
     'archive_projector_imports_domain_job_type',
@@ -53,6 +54,27 @@ $record(
 );
 
 $record(
+    'archive_child_failures_keep_member_identity',
+    str_contains($projector, 'payload_json')
+        && str_contains($projector, "\$payload['archive_entry_path']")
+        && str_contains($projector, "\$payload['original_name']")
+        && str_contains($projector, "'failures' => []")
+        && str_contains($projector, "'member' => \$member")
+        && str_contains($projector, "'job_id' => max(0, \$jobId)")
+        && str_contains($projector, 'Failed member(s): '),
+    'A retained archive must show the failed child member path, child job id and actual error rather than only an aggregate failed count.'
+);
+
+$record(
+    'background_jobs_prioritizes_full_source_path',
+    str_contains($jobsPage, '.jobs-type,.jobs-col-type,.jobs-table thead th:nth-child(4){display:none!important}')
+        && str_contains($jobsPage, '.jobs-target{min-width:0;max-width:none;overflow:visible;text-overflow:clip;white-space:normal!important;')
+        && str_contains($jobsPage, '<th scope="col">Full source path</th>')
+        && str_contains($jobsPage, 'placeholder="File path, job ID or error"'),
+    'The operator table must hide the implementation job-type column and give the complete recorded source path the reclaimed width without ellipsis.'
+);
+
+$record(
     'both_job_status_apis_apply_archive_projection',
     str_contains($statusApi, 'new CatalogArchiveJobOutcomeProjector($application->db)')
         && str_contains($cursorApi, 'new CatalogArchiveJobOutcomeProjector($application->db)'),
@@ -75,8 +97,8 @@ $record(
 $record(
     'archive_projection_is_read_only',
     !preg_match('/\b(?:UPDATE|DELETE|INSERT)\s+ue_background_jobs\b/i', $projector)
-        && str_contains($projector, 'SELECT parent_job_id,status,result_json,last_error'),
-    'Archive reporting must derive outcomes without mutating job history.'
+        && str_contains($projector, 'SELECT id,parent_job_id,status,result_json,last_error,cancel_reason,payload_json '),
+    'Archive reporting must derive outcomes and member identity without mutating job history.'
 );
 
 $record(
@@ -107,6 +129,8 @@ $phpFiles = [
     $root . '/api/v1/job-status.php',
     $root . '/api/v1/job-status-cursor.php',
     $root . '/bin/trace-archive-job.php',
+    $root . '/background-jobs.php',
+    __FILE__,
 ];
 $syntaxFailures = [];
 foreach ($phpFiles as $path) {

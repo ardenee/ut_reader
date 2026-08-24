@@ -70,15 +70,16 @@ try {
         . '.jobs-pagination{justify-content:space-between;margin-top:14px}'
         . '.jobs-page-controls{display:flex;gap:8px;align-items:center}'
         . '.jobs-running-for,.jobs-actions,.jobs-attempts,.jobs-created,.jobs-id{white-space:nowrap}'
-        . '.jobs-type,.jobs-target{min-width:0;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap!important;word-break:normal!important;overflow-wrap:normal!important}'
+        . '.jobs-type,.jobs-col-type,.jobs-table thead th:nth-child(4){display:none!important}'
+        . '.jobs-target{min-width:0;max-width:none;overflow:visible;text-overflow:clip;white-space:normal!important;word-break:break-word!important;overflow-wrap:anywhere!important}'
         . '.jobs-maintenance{margin-top:18px}'
         . '.jobs-maintenance summary{cursor:pointer;font-weight:700}'
         . '.jobs-maintenance-body{padding:14px 0 0}'
         . '.jobs-empty{text-align:center;padding:30px}'
         . '.jobs-row-checkbox{width:18px;height:18px}'
-        . '.jobs-table{table-layout:fixed;min-width:1280px}'
+        . '.jobs-table{table-layout:fixed;min-width:1000px}'
         . '.jobs-table .jobs-col-select{width:42px}.jobs-table .jobs-col-id{width:72px}.jobs-table .jobs-col-status{width:118px}'
-        . '.jobs-table .jobs-col-type{width:310px}.jobs-table .jobs-col-runtime{width:135px}.jobs-table .jobs-col-attempts{width:82px}'
+        . '.jobs-table .jobs-col-runtime{width:135px}.jobs-table .jobs-col-attempts{width:82px}'
         . '.jobs-table .jobs-col-created{width:175px}.jobs-table .jobs-col-action{width:110px}'
         . '.jobs-main-row td{vertical-align:top;border-bottom:0;padding-bottom:7px}'
         . '.jobs-main-row.is-running td{background:rgba(246,196,83,.025)}'
@@ -166,7 +167,7 @@ try {
     echo '</nav>';
 
     echo '<div class="jobs-filterbar">'
-        . '<label class="jobs-search">Search <input id="jobs-search" type="search" placeholder="File, job ID, type or error" autocomplete="off"></label>'
+        . '<label class="jobs-search">Search <input id="jobs-search" type="search" placeholder="File path, job ID or error" autocomplete="off"></label>'
         . '<label>Rows <select id="jobs-page-size">'
         . '<option value="50">50</option><option value="100" selected>100</option><option value="250">250</option>'
         . '<option value="500">500</option><option value="1000">1000</option>'
@@ -192,7 +193,7 @@ try {
         . '<col class="jobs-col-select"><col class="jobs-col-id"><col class="jobs-col-status"><col class="jobs-col-type">'
         . '<col><col class="jobs-col-runtime"><col class="jobs-col-attempts"><col class="jobs-col-created"><col class="jobs-col-action">'
         . '</colgroup><thead><tr>'
-        . '<th scope="col"><span class="ui-sr-only">Select</span></th><th scope="col">ID</th><th scope="col">Status</th><th scope="col">Type</th><th scope="col">File / target</th>'
+        . '<th scope="col"><span class="ui-sr-only">Select</span></th><th scope="col">ID</th><th scope="col">Status</th><th scope="col">Type</th><th scope="col">Full source path</th>'
         . '<th scope="col">Running for</th><th scope="col">Attempts</th><th scope="col">Created</th><th scope="col">Action</th>'
         . '</tr></thead><tbody id="jobs-table-body"><tr class="jobs-empty-row"><td colspan="9" class="jobs-empty muted">Loading…</td></tr></tbody></table>';
     echo CatalogUi::tableRegion($table, [
