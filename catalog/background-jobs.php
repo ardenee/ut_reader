@@ -32,7 +32,29 @@ try {
     if (!isset($queueOptions[$configuredQueue])) {
         $queueOptions[$configuredQueue] = ['total' => 0, 'queued' => 0, 'running' => 0];
     }
-    $queueName = $requestedQueue !== '' ? $requestedQueue : $configuredQueue;
+
+    // Upload Bucket and other specialised work can run on child queues such as
+    // catalog:bucket-processing. If no queue was explicitly requested, open the
+    // queue that currently has live work instead of always falling back to the
+    // configured base queue and making active files appear to have disappeared.
+    $queueName = $requestedQueue;
+    if ($queueName === '') {
+        foreach ($queueOptions as $candidate => $queueSummary) {
+            if ((int)($queueSummary['running'] ?? 0) > 0 || (int)($queueSummary['queued'] ?? 0) > 0) {
+                $queueName = (string)$candidate;
+                break;
+            }
+        }
+    }
+    if ($queueName === '') {
+        $bucketQueue = $configuredQueue . ':bucket-processing';
+        if (isset($queueOptions[$bucketQueue]) && (int)($queueOptions[$bucketQueue]['total'] ?? 0) > 0) {
+            $queueName = $bucketQueue;
+        }
+    }
+    if ($queueName === '') {
+        $queueName = $configuredQueue;
+    }
     if (!isset($queueOptions[$queueName])) {
         $queueOptions[$queueName] = ['total' => 0, 'queued' => 0, 'running' => 0];
     }
@@ -170,11 +192,12 @@ try {
     echo '<details class="jobs-file-maintenance-wrap"><summary>Maintenance</summary>'
         . '<div class="jobs-file-maintenance">'
         . '<button id="jobs-recover" type="button">Recover orphaned jobs</button>'
-        . '<label>Delete historical terminal jobs older than <select id="jobs-cleanup-days">'
+        . '<label>Delete completed/stopped history older than <select id="jobs-cleanup-days">'
         . '<option value="1">1 day</option><option value="7">7 days</option><option value="30" selected>30 days</option>'
         . '<option value="90">90 days</option><option value="365">1 year</option>'
         . '</select></label>'
         . '<button id="jobs-cleanup" type="button">Queue cleanup</button>'
+        . '<span class="muted">Issues and their child lineage are retained.</span>'
         . '</div></details>';
 
     echo '</div></div></section>';
