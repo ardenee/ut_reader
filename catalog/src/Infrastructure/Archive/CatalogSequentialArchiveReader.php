@@ -476,8 +476,8 @@ final class CatalogSequentialArchiveReader
         if (!is_string($rawName) || strlen($rawName) !== $nameLength) {
             return false;
         }
-        $localPath = str_replace('\\', '/', $rawName);
-        $expectedPath = str_replace('\\', '/', $entryPath);
+        $localPath = ltrim(str_replace('\\', '/', $rawName), '/');
+        $expectedPath = ltrim(str_replace('\\', '/', $entryPath), '/');
         if (!hash_equals($expectedPath, $localPath)) {
             return false;
         }
@@ -696,8 +696,12 @@ final class CatalogSequentialArchiveReader
             return ['', 'empty/control-character path'];
         }
         $path = str_replace('\\', '/', $path);
-        if (str_starts_with($path, '/') || preg_match('/^[A-Za-z]:\//', $path) === 1) {
-            return ['', 'absolute path'];
+        if (preg_match('/^[A-Za-z]:\//', $path) === 1) {
+            return ['', 'absolute drive path'];
+        }
+        $path = ltrim($path, '/');
+        if ($path === '') {
+            return ['', 'empty normalized path'];
         }
 
         $parts = [];
