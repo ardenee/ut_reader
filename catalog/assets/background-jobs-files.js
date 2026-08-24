@@ -128,29 +128,40 @@
         return element;
     }
 
+    function groupMarker(rootGroup) {
+        return Math.abs(Number(rootGroup || 0)) % 2 === 0
+            ? 'rgba(148,163,184,0.90)'
+            : 'rgba(96,165,250,0.95)';
+    }
+
     function rowBackground(depth, rootGroup) {
         const alternate = Math.abs(Number(rootGroup || 0)) % 2;
         if (depth < 1) {
             return alternate === 0
-                ? 'rgba(255,255,255,0.012)'
-                : 'rgba(255,255,255,0.045)';
+                ? 'rgba(255,255,255,0.030)'
+                : 'rgba(59,130,246,0.085)';
         }
 
-        // Children use a subtle blue tint so an expanded branch remains visually
-        // separate from its parent. Deeper embedded archives get a slightly stronger
-        // tint while retaining the root parent's alternating group identity.
-        const base = alternate === 0 ? 0.052 : 0.072;
-        const alpha = Math.min(0.125, base + (Math.min(depth - 1, 4) * 0.012));
-        return 'rgba(96,165,250,' + alpha.toFixed(3) + ')';
+        const base = alternate === 0 ? 0.115 : 0.155;
+        const alpha = Math.min(0.235, base + (Math.min(depth - 1, 4) * 0.022));
+        return alternate === 0
+            ? 'rgba(148,163,184,' + alpha.toFixed(3) + ')'
+            : 'rgba(59,130,246,' + alpha.toFixed(3) + ')';
     }
 
     function applyRowBackground(row, depth, rootGroup) {
         const background = rowBackground(depth, rootGroup);
+        const marker = groupMarker(rootGroup);
         row.dataset.rootGroup = String(Math.abs(Number(rootGroup || 0)) % 2);
         row.dataset.treeKind = depth > 0 ? 'child' : 'parent';
         row.querySelectorAll('td').forEach(function (cell) {
             cell.style.background = background;
+            if (depth === 0) cell.style.borderTop = '2px solid ' + marker;
         });
+        const fileCell = row.querySelector('.jobs-file-name-cell');
+        if (fileCell && depth > 0) {
+            fileCell.style.borderLeft = '5px solid ' + marker;
+        }
     }
 
     function statusClass(file) {
@@ -198,6 +209,9 @@
         identity.appendChild(create('strong', '', file.file_name || ('Job #' + file.id)));
         if (file.file_path && file.file_path !== file.file_name) {
             identity.appendChild(create('span', 'mono muted jobs-file-path', file.file_path));
+        }
+        if (depth > 0 && Number(file.tree_parent_job_id || 0) > 0) {
+            identity.appendChild(create('span', 'muted jobs-file-child-count', 'Child of job #' + String(file.tree_parent_job_id)));
         }
         if (file.has_children) {
             identity.appendChild(create('span', 'muted jobs-file-child-count', String(file.child_count || 0) + ' child item(s)'));
