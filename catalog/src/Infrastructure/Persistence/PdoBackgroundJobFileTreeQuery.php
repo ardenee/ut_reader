@@ -8,10 +8,10 @@
  * execution ledger on every poll.
  *
  * Content-routing archive jobs are implementation details, not physical files.
- * If an extracted member has misleading package extension bytes that trigger an
- * internal ZIP/RAR/7z decoder, that decoder job is folded out. Its extracted
- * members stay attached to the real archive that supplied the member instead of
- * being presented as files contained by the misleading package filename.
+ * When a physical file is detected by bytes as ZIP/RAR/7z despite a misleading
+ * extension, the synthetic decoder row is folded out but the extracted members
+ * remain children of that physical file. This preserves true containment while
+ * avoiding fake names such as "map.ut2.rar" in the operator tree.
  */
 declare(strict_types=1);
 
@@ -180,9 +180,8 @@ final class PdoBackgroundJobFileTreeQuery
     /**
      * Visible children are:
      *  1. real direct child rows, excluding synthetic content-container jobs; and
-     *  2. members extracted by a synthetic decoder beneath one of those direct
-     *     files. Those members are hoisted one level so they remain attached to
-     *     the real archive source rather than the misleading package filename.
+     *  2. real files extracted by a synthetic decoder directly beneath the
+     *     requested physical parent. The synthetic decoder itself stays hidden.
      */
     private function visibleChildrenIdSql(): string
     {
@@ -190,11 +189,10 @@ final class PdoBackgroundJobFileTreeQuery
             . 'WHERE direct_child.queue_name=? AND direct_child.parent_job_id=? '
             . 'AND NOT (' . $this->syntheticArchiveExpression('direct_child') . ') '
             . 'UNION ALL '
-            . 'SELECT routed_child.id,1 AS tree_hoisted FROM ue_background_jobs physical_member '
-            . 'JOIN ue_background_jobs synthetic_parent ON synthetic_parent.parent_job_id=physical_member.id '
+            . 'SELECT routed_child.id,1 AS tree_hoisted FROM ue_background_jobs synthetic_parent '
             . 'JOIN ue_background_jobs routed_child ON routed_child.parent_job_id=synthetic_parent.id '
-            . 'WHERE physical_member.queue_name=? AND physical_member.parent_job_id=? '
-            . 'AND NOT (' . $this->syntheticArchiveExpression('physical_member') . ') '
+            . 'AND routed_child.queue_name=synthetic_parent.queue_name '
+            . 'WHERE synthetic_parent.queue_name=? AND synthetic_parent.parent_job_id=? '
             . 'AND ' . $this->syntheticArchiveExpression('synthetic_parent');
     }
 
@@ -203,9 +201,7 @@ final class PdoBackgroundJobFileTreeQuery
         return '('
             . $this->directChildCount('direct_count', $alias, '')
             . ' + '
-            . $this->routedGrandchildCount('member_count', 'synthetic_count', 'routed_count', $alias, '')
-            . ' + '
-            . $this->rootSyntheticChildCount('self_synthetic_count', 'self_routed_count', $alias, '')
+            . $this->syntheticRoutedChildCount('synthetic_count', 'routed_count', $alias, '')
             . ')';
     }
 
@@ -214,19 +210,11 @@ final class PdoBackgroundJobFileTreeQuery
         return '('
             . $this->directChildCount('direct_issue', $alias, 'AND ' . $this->ownIssueExpression('direct_issue'))
             . ' + '
-            . $this->routedGrandchildCount(
-                'member_issue',
+            . $this->syntheticRoutedChildCount(
                 'synthetic_issue',
                 'routed_issue',
                 $alias,
                 'AND ' . $this->ownIssueExpression('routed_issue')
-            )
-            . ' + '
-            . $this->rootSyntheticChildCount(
-                'self_synthetic_issue',
-                'self_routed_issue',
-                $alias,
-                'AND ' . $this->ownIssueExpression('self_routed_issue')
             )
             . ')';
     }
@@ -240,19 +228,11 @@ final class PdoBackgroundJobFileTreeQuery
                 'AND direct_active.status IN ("queued","running")'
             )
             . ' + '
-            . $this->routedGrandchildCount(
-                'member_active',
+            . $this->syntheticRoutedChildCount(
                 'synthetic_active',
                 'routed_active',
                 $alias,
                 'AND routed_active.status IN ("queued","running")'
-            )
-            . ' + '
-            . $this->rootSyntheticChildCount(
-                'self_synthetic_active',
-                'self_routed_active',
-                $alias,
-                'AND self_routed_active.status IN ("queued","running")'
             )
             . ')';
     }
@@ -265,28 +245,7 @@ final class PdoBackgroundJobFileTreeQuery
             . $extra . ')';
     }
 
-    private function routedGrandchildCount(
-        string $memberAlias,
-        string $syntheticAlias,
-        string $routedAlias,
-        string $parentAlias,
-        string $extra
-    ): string {
-        return '(SELECT COUNT(*) FROM ue_background_jobs ' . $memberAlias . ' '
-            . 'JOIN ue_background_jobs ' . $syntheticAlias . ' ON ' . $syntheticAlias . '.parent_job_id=' . $memberAlias . '.id '
-            . 'JOIN ue_background_jobs ' . $routedAlias . ' ON ' . $routedAlias . '.parent_job_id=' . $syntheticAlias . '.id '
-            . 'WHERE ' . $memberAlias . '.parent_job_id=' . $parentAlias . '.id '
-            . 'AND NOT (' . $this->syntheticArchiveExpression($memberAlias) . ') '
-            . 'AND ' . $this->syntheticArchiveExpression($syntheticAlias) . ' '
-            . $extra . ')';
-    }
-
-    /**
-     * A top-level source file can itself contain disguised archive bytes. With no
-     * outer archive available, its routed members remain legitimate children of
-     * that root source. Non-root package members never take this fallback path.
-     */
-    private function rootSyntheticChildCount(
+    private function syntheticRoutedChildCount(
         string $syntheticAlias,
         string $routedAlias,
         string $parentAlias,
@@ -294,8 +253,8 @@ final class PdoBackgroundJobFileTreeQuery
     ): string {
         return '(SELECT COUNT(*) FROM ue_background_jobs ' . $syntheticAlias . ' '
             . 'JOIN ue_background_jobs ' . $routedAlias . ' ON ' . $routedAlias . '.parent_job_id=' . $syntheticAlias . '.id '
-            . 'WHERE ' . $parentAlias . '.parent_job_id IS NULL '
-            . 'AND ' . $syntheticAlias . '.parent_job_id=' . $parentAlias . '.id '
+            . 'AND ' . $routedAlias . '.queue_name=' . $syntheticAlias . '.queue_name '
+            . 'WHERE ' . $syntheticAlias . '.parent_job_id=' . $parentAlias . '.id '
             . 'AND ' . $this->syntheticArchiveExpression($syntheticAlias) . ' '
             . $extra . ')';
     }
