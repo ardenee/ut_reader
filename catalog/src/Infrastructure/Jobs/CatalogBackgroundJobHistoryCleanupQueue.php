@@ -88,19 +88,27 @@ final class CatalogBackgroundJobHistoryCleanupQueue
         $retentionDays = max(1, min($retentionDays, 3650));
         $cutoff = gmdate('Y-m-d H:i:s', time() - ($retentionDays * 86400));
 
+        /*
+         * Automatic history retention must never erase unresolved operator work.
+         * Keep failed/dead-letter and unsuccessful completed outcomes indefinitely
+         * until an administrator explicitly resolves/replaces/deletes them. Only
+         * successful completed history and deliberately stopped/cancelled history
+         * are eligible for age-based cleanup.
+         */
+        $eligible = 'queue_name=? AND ('
+            . 'status="cancelled" OR '
+            . '(status="completed" AND display_status NOT IN ("failed","rejected","unverified","partial","error"))'
+            . ') AND COALESCE(completed_at,updated_at,created_at)<?';
+
         $count = $this->db->prepare(
-            'SELECT COUNT(*) FROM ue_background_jobs '
-            . 'WHERE queue_name=? AND status IN ("completed","failed","dead_letter","cancelled") '
-            . 'AND COALESCE(completed_at,updated_at,created_at)<?'
+            'SELECT COUNT(*) FROM ue_background_jobs WHERE ' . $eligible
         );
         $count->execute([$queueName, $cutoff]);
         $requested = max(0, (int)$count->fetchColumn());
 
         $select = $this->db->prepare(
-            'SELECT id FROM ue_background_jobs '
-            . 'WHERE queue_name=? AND status IN ("completed","failed","dead_letter","cancelled") '
-            . 'AND COALESCE(completed_at,updated_at,created_at)<? '
-            . 'ORDER BY id ASC LIMIT ' . self::SNAPSHOT_LIMIT
+            'SELECT id FROM ue_background_jobs WHERE ' . $eligible
+            . ' ORDER BY id ASC LIMIT ' . self::SNAPSHOT_LIMIT
         );
         $select->execute([$queueName, $cutoff]);
         $ids = array_map('intval', $select->fetchAll(PDO::FETCH_COLUMN) ?: []);
