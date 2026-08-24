@@ -2,10 +2,12 @@
 /**
  * Coordinates the logical lifetime of an archive import job.
  *
- * CatalogArchiveImportJobHandler owns archive decoding and durable child creation.
- * This coordinator owns the parent lifecycle and source ownership: ingress bytes
- * are first transferred into job-owned prepared storage, then the parent is
- * deferred in archive_wait_children until every child is terminal.
+ * CatalogArchiveImportJobHandler owns archive decoding and durable package-child
+ * creation. CatalogNestedArchiveJobEnqueuer discovers embedded ZIP/RAR/7z
+ * containers and queues each as its own durable archive child workflow. This
+ * coordinator owns the parent lifecycle and source ownership: ingress bytes are
+ * first transferred into job-owned prepared storage, then the parent is deferred
+ * in archive_wait_children until every direct child is terminal.
  */
 declare(strict_types=1);
 
@@ -20,10 +22,11 @@ use UnrealDb\Catalog\Infrastructure\Persistence\PdoArchiveChildOutcomeQuery;
 
 final class CatalogArchiveWorkflowJobHandler implements JobHandler
 {
-    private const WORKFLOW_VERSION = 1;
+    private const WORKFLOW_VERSION = 2;
     private const WAIT_STAGE = 'archive_wait_children';
 
     private readonly CatalogArchiveImportJobHandler $extractor;
+    private readonly CatalogNestedArchiveJobEnqueuer $nestedArchives;
     private readonly PdoArchiveChildOutcomeQuery $children;
     private readonly CatalogArchiveSourceStore $sources;
 
@@ -31,6 +34,7 @@ final class CatalogArchiveWorkflowJobHandler implements JobHandler
     public function __construct(PDO $db, array $config)
     {
         $this->extractor = new CatalogArchiveImportJobHandler($db, $config);
+        $this->nestedArchives = new CatalogNestedArchiveJobEnqueuer($db, $config);
         $this->children = new PdoArchiveChildOutcomeQuery($db);
         $this->sources = new CatalogArchiveSourceStore($config);
     }
@@ -52,7 +56,14 @@ final class CatalogArchiveWorkflowJobHandler implements JobHandler
             // occurs. Browser chunk staging is ingress only and may be cleaned once
             // the parent has atomically published its prepared archive source.
             $ownedJob = $this->sources->prepareJob($job);
+
+            // Embedded ZIP/RAR/7z containers become archive child workflows rather
+            // than being recursively expanded on this worker stack. The established
+            // extractor still performs its normal pass afterwards for ordinary
+            // Unreal members and keeps all existing decoder/recovery behaviour.
+            $nestedResult = $this->nestedArchives->enqueue($ownedJob, $context);
             $archiveResult = $this->extractor->handle($ownedJob, $context);
+            $archiveResult = $this->mergeNestedArchiveResult($archiveResult, $nestedResult);
             $childState = $this->children->fetch($job->id);
         }
 
@@ -71,6 +82,49 @@ final class CatalogArchiveWorkflowJobHandler implements JobHandler
         }
 
         return $this->finalResult($job, $archiveResult, $childState, $context);
+    }
+
+    /**
+     * The established extractor deliberately reports archive members as skipped.
+     * Nested ZIP/RAR/7z members are now owned by CatalogNestedArchiveJobEnqueuer,
+     * so remove only those classified members from skipped and fold their child
+     * jobs/failures into the extraction counters used by reporting and recovery.
+     *
+     * @param array<string,mixed> $archiveResult
+     * @param array<string,mixed> $nestedResult
+     * @return array<string,mixed>
+     */
+    private function mergeNestedArchiveResult(array $archiveResult, array $nestedResult): array
+    {
+        $handled = max(0, (int)($nestedResult['handled'] ?? 0));
+        $queued = max(0, (int)($nestedResult['queued'] ?? 0));
+        $reused = max(0, (int)($nestedResult['reused'] ?? 0));
+        $failed = max(0, (int)($nestedResult['failed'] ?? 0));
+        $nestedChildren = $queued + $reused;
+
+        $archiveResult['nested_archives'] = $nestedResult;
+        $archiveResult['nested_archive_jobs'] = $nestedChildren;
+        $archiveResult['queued_files'] = max(0, (int)($archiveResult['queued_files'] ?? 0)) + $nestedChildren;
+        $archiveResult['skipped_files'] = max(0, (int)($archiveResult['skipped_files'] ?? 0) - $handled);
+        $archiveResult['failed_files'] = max(0, (int)($archiveResult['failed_files'] ?? 0)) + $failed;
+        $archiveResult['unpacked_bytes'] = max(0, (int)($archiveResult['unpacked_bytes'] ?? 0))
+            + max(0, (int)($nestedResult['unpacked_bytes'] ?? 0));
+
+        $errors = is_array($archiveResult['errors'] ?? null) ? array_values($archiveResult['errors']) : [];
+        foreach (is_array($nestedResult['errors'] ?? null) ? $nestedResult['errors'] : [] as $error) {
+            if (is_array($error)) {
+                $errors[] = $error;
+            }
+        }
+        if (count($errors) > 50) {
+            $errors = array_slice($errors, -50);
+        }
+        $archiveResult['errors'] = $errors;
+
+        if ($failed > 0) {
+            $archiveResult['status'] = 'partial';
+        }
+        return $archiveResult;
     }
 
     /**
@@ -144,6 +198,11 @@ final class CatalogArchiveWorkflowJobHandler implements JobHandler
             . number_format((int)$children['running']) . ' running, '
             . number_format((int)$children['queued']) . ' queued.';
 
+        $nestedJobs = max(0, (int)($archiveResult['nested_archive_jobs'] ?? 0));
+        if ($nestedJobs > 0) {
+            $message .= ' ' . number_format($nestedJobs) . ' nested archive workflow(s).';
+        }
+
         return [
             'archive_workflow_version' => self::WORKFLOW_VERSION,
             'stage' => self::WAIT_STAGE,
@@ -165,6 +224,9 @@ final class CatalogArchiveWorkflowJobHandler implements JobHandler
             'source_retained' => !empty($archiveResult['source_retained']),
             'sequential_archive' => !empty($archiveResult['sequential_archive']),
             'archive_format' => (string)($archiveResult['archive_format'] ?? ''),
+            'nested_archives' => is_array($archiveResult['nested_archives'] ?? null)
+                ? $archiveResult['nested_archives']
+                : [],
         ];
     }
 
@@ -194,6 +256,10 @@ final class CatalogArchiveWorkflowJobHandler implements JobHandler
             $message .= ', ' . number_format($cancelled) . ' cancelled';
         }
         $message .= '.';
+        $nestedJobs = max(0, (int)($archiveResult['nested_archive_jobs'] ?? 0));
+        if ($nestedJobs > 0) {
+            $message .= ' Nested archive workflows: ' . number_format($nestedJobs) . '.';
+        }
 
         $result = $archiveResult;
         $result['status'] = $partial ? 'partial' : 'completed';
@@ -218,6 +284,9 @@ final class CatalogArchiveWorkflowJobHandler implements JobHandler
             'failed' => $extractionFailed,
             'errors' => is_array($archiveResult['errors'] ?? null) ? $archiveResult['errors'] : [],
             'source_retained' => !empty($archiveResult['source_retained']),
+            'nested_archives' => is_array($archiveResult['nested_archives'] ?? null)
+                ? $archiveResult['nested_archives']
+                : [],
         ]);
 
         return $result;
