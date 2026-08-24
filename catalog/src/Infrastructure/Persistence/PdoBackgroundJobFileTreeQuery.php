@@ -6,6 +6,12 @@
  * Direct children are loaded lazily so archive members, nested archives and
  * workflow units can be expanded without scanning/rendering the full durable
  * execution ledger on every poll.
+ *
+ * Content-routing archive jobs are implementation details, not physical files.
+ * A member such as map.ut2 whose bytes are actually RAR data can acquire an
+ * internal map.ut2.rar processing job. The operator tree folds that synthetic
+ * bridge out and hoists the archive's real extracted members directly beneath
+ * map.ut2, preserving physical source lineage rather than worker topology.
  */
 declare(strict_types=1);
 
@@ -16,6 +22,7 @@ use PDO;
 final class PdoBackgroundJobFileTreeQuery
 {
     private const ISSUE_DISPLAY_STATUSES = '"failed","rejected","unverified","partial","error"';
+    private const SYNTHETIC_ARCHIVE_WORKFLOW_PREFIX = 'archive:content-container:';
 
     public function __construct(private readonly PDO $db)
     {
@@ -117,10 +124,13 @@ final class PdoBackgroundJobFileTreeQuery
     public function children(string $queue, int $parentJobId, int $page, int $perPage): array
     {
         $perPage = max(25, min($perPage, 500));
+        $visibleSql = $this->visibleChildrenIdSql();
+        $visibleParams = [$queue, $parentJobId, $queue, $parentJobId];
+
         $count = $this->db->prepare(
-            'SELECT COUNT(*) FROM ue_background_jobs WHERE queue_name=? AND parent_job_id=?'
+            'SELECT COUNT(*) FROM (' . $visibleSql . ') visible_children'
         );
-        $count->execute([$queue, $parentJobId]);
+        $count->execute($visibleParams);
         $total = max(0, (int)$count->fetchColumn());
         $pages = max(1, (int)ceil($total / $perPage));
         $page = max(1, min($page, $pages));
@@ -131,11 +141,11 @@ final class PdoBackgroundJobFileTreeQuery
             . $this->childCountExpression('j') . ' AS child_count,'
             . $this->childIssueCountExpression('j') . ' AS child_issue_count,'
             . $this->childActiveCountExpression('j') . ' AS child_active_count '
-            . 'FROM ue_background_jobs j '
-            . 'WHERE j.queue_name=? AND j.parent_job_id=? '
+            . 'FROM (' . $visibleSql . ') visible_children '
+            . 'JOIN ue_background_jobs j ON j.id=visible_children.id '
             . 'ORDER BY j.id ASC LIMIT ' . $perPage . ' OFFSET ' . $offset
         );
-        $statement->execute([$queue, $parentJobId]);
+        $statement->execute($visibleParams);
 
         return [
             'rows' => $statement->fetchAll(PDO::FETCH_ASSOC) ?: [],
@@ -165,24 +175,72 @@ final class PdoBackgroundJobFileTreeQuery
             . ')';
     }
 
+    /**
+     * Visible children are real direct child rows plus the real extracted members
+     * beneath any synthetic content-container bridge. The bridge itself is an
+     * execution detail and therefore never appears as a file in the operator tree.
+     */
+    private function visibleChildrenIdSql(): string
+    {
+        return 'SELECT direct_child.id FROM ue_background_jobs direct_child '
+            . 'WHERE direct_child.queue_name=? AND direct_child.parent_job_id=? '
+            . 'AND NOT (' . $this->syntheticArchiveExpression('direct_child') . ') '
+            . 'UNION ALL '
+            . 'SELECT routed_child.id FROM ue_background_jobs synthetic_parent '
+            . 'JOIN ue_background_jobs routed_child ON routed_child.parent_job_id=synthetic_parent.id '
+            . 'WHERE synthetic_parent.queue_name=? AND synthetic_parent.parent_job_id=? '
+            . 'AND ' . $this->syntheticArchiveExpression('synthetic_parent');
+    }
+
     private function childCountExpression(string $alias): string
     {
-        return '(SELECT COUNT(*) FROM ue_background_jobs child_count '
-            . 'WHERE child_count.parent_job_id=' . $alias . '.id)';
+        return '('
+            . '(SELECT COUNT(*) FROM ue_background_jobs direct_count '
+            . 'WHERE direct_count.parent_job_id=' . $alias . '.id '
+            . 'AND NOT (' . $this->syntheticArchiveExpression('direct_count') . '))'
+            . ' + '
+            . '(SELECT COUNT(*) FROM ue_background_jobs synthetic_count '
+            . 'JOIN ue_background_jobs routed_count ON routed_count.parent_job_id=synthetic_count.id '
+            . 'WHERE synthetic_count.parent_job_id=' . $alias . '.id '
+            . 'AND ' . $this->syntheticArchiveExpression('synthetic_count') . ')'
+            . ')';
     }
 
     private function childIssueCountExpression(string $alias): string
     {
-        return '(SELECT COUNT(*) FROM ue_background_jobs child_issue '
-            . 'WHERE child_issue.parent_job_id=' . $alias . '.id AND '
-            . $this->ownIssueExpression('child_issue') . ')';
+        return '('
+            . '(SELECT COUNT(*) FROM ue_background_jobs direct_issue '
+            . 'WHERE direct_issue.parent_job_id=' . $alias . '.id '
+            . 'AND NOT (' . $this->syntheticArchiveExpression('direct_issue') . ') '
+            . 'AND ' . $this->ownIssueExpression('direct_issue') . ')'
+            . ' + '
+            . '(SELECT COUNT(*) FROM ue_background_jobs synthetic_issue '
+            . 'JOIN ue_background_jobs routed_issue ON routed_issue.parent_job_id=synthetic_issue.id '
+            . 'WHERE synthetic_issue.parent_job_id=' . $alias . '.id '
+            . 'AND ' . $this->syntheticArchiveExpression('synthetic_issue') . ' '
+            . 'AND ' . $this->ownIssueExpression('routed_issue') . ')'
+            . ')';
     }
 
     private function childActiveCountExpression(string $alias): string
     {
-        return '(SELECT COUNT(*) FROM ue_background_jobs child_active '
-            . 'WHERE child_active.parent_job_id=' . $alias . '.id '
-            . 'AND child_active.status IN ("queued","running"))';
+        return '('
+            . '(SELECT COUNT(*) FROM ue_background_jobs direct_active '
+            . 'WHERE direct_active.parent_job_id=' . $alias . '.id '
+            . 'AND NOT (' . $this->syntheticArchiveExpression('direct_active') . ') '
+            . 'AND direct_active.status IN ("queued","running"))'
+            . ' + '
+            . '(SELECT COUNT(*) FROM ue_background_jobs synthetic_active '
+            . 'JOIN ue_background_jobs routed_active ON routed_active.parent_job_id=synthetic_active.id '
+            . 'WHERE synthetic_active.parent_job_id=' . $alias . '.id '
+            . 'AND ' . $this->syntheticArchiveExpression('synthetic_active') . ' '
+            . 'AND routed_active.status IN ("queued","running"))'
+            . ')';
+    }
+
+    private function syntheticArchiveExpression(string $alias): string
+    {
+        return $alias . '.workflow_unit_key LIKE "' . self::SYNTHETIC_ARCHIVE_WORKFLOW_PREFIX . '%"';
     }
 
     /** @return array{0:string,1:list<mixed>} */
