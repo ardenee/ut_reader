@@ -30,7 +30,7 @@ final class CatalogBackgroundJobFileTreeProjector
             $size = $this->sizeBytes($payload, $result);
             [$percent, $progressText] = $this->progress($state, $progress, $childCount, $childActive);
             $activityDetail = $this->compact((string)($progress['message'] ?? $result['message'] ?? ''), 500);
-            $issueReason = $state === 'issue'
+            $issueReason = ($state === 'issue' || $childIssues > 0)
                 ? $this->issueReason($row, $progress, $result, $childIssues)
                 : '';
 
@@ -39,7 +39,7 @@ final class CatalogBackgroundJobFileTreeProjector
             $row['size_bytes'] = $size;
             $row['operator_state'] = $state;
             $row['operator_status_label'] = match ($state) {
-                'working' => 'Working',
+                'working' => $childIssues > 0 ? 'Working · issue' : 'Working',
                 'completed' => 'Completed',
                 'stopped' => 'Stopped',
                 default => 'Issue',
@@ -57,6 +57,7 @@ final class CatalogBackgroundJobFileTreeProjector
             $row['progress_percent'] = $percent;
             $row['progress_text'] = $progressText;
             $row['issue_reason'] = $issueReason;
+            $row['child_issue_count'] = $childIssues;
             $row['child_count'] = $childCount;
             $row['has_children'] = $childCount > 0;
             $row['result_label'] = $this->resultLabel($displayStatus, $result);
@@ -67,13 +68,15 @@ final class CatalogBackgroundJobFileTreeProjector
 
     private function state(string $queueStatus, string $displayStatus, int $childIssues, int $childActive): string
     {
-        if ($childIssues > 0
-            || in_array($queueStatus, ['failed', 'dead_letter'], true)
+        if (in_array($queueStatus, ['failed', 'dead_letter'], true)
             || in_array($displayStatus, self::ISSUE_DISPLAY_STATUSES, true)) {
             return 'issue';
         }
         if (in_array($queueStatus, ['queued', 'running'], true) || $childActive > 0) {
             return 'working';
+        }
+        if ($childIssues > 0) {
+            return 'issue';
         }
         if ($queueStatus === 'cancelled') {
             return 'stopped';
