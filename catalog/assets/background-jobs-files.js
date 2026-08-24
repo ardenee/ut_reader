@@ -288,6 +288,9 @@
         }
         const identity = create('div', 'jobs-file-identity');
         identity.appendChild(create('strong', '', file.file_name || ('Job #' + file.id)));
+        if (file.content_type_label) {
+            identity.appendChild(create('span', 'jobs-file-child-count', String(file.content_type_label)));
+        }
         if (file.file_path && file.file_path !== file.file_name) {
             identity.appendChild(create('span', 'mono muted jobs-file-path', file.file_path));
         }
