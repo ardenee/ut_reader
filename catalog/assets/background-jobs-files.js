@@ -11,6 +11,7 @@
     const workerActionUrl = String(app.dataset.workerActionUrl || 'api/v1/job-worker-action.php');
     const actionUrl = String(app.dataset.actionUrl || 'api/v1/job-action.php');
     const bulkUrl = String(app.dataset.bulkUrl || 'api/v1/job-bulk.php');
+    const sourceDownloadUrl = 'job-source-download.php';
     const csrf = String(app.dataset.csrf || '');
 
     const body = document.getElementById('jobs-file-body');
@@ -184,6 +185,19 @@
         return null;
     }
 
+    function supportsSourceDownload(file) {
+        return [
+            'catalog.prepare_bucket_redirect',
+            'catalog.process_bucket_upload',
+            'catalog.process_bucket_archive',
+            'catalog.process_bucket_staged_package',
+            'catalog.import_staged_package',
+            'catalog.import_staged_archive',
+            'catalog.import_staged_pak',
+            'catalog.import_staged_pak_entry'
+        ].includes(String(file.job_type || ''));
+    }
+
     function renderFileRow(file, depth, rootGroup) {
         const row = document.createElement('tr');
         row.className = 'jobs-file-row jobs-file-row-' + String(file.operator_state || 'issue');
@@ -246,6 +260,20 @@
         row.appendChild(statusCell);
 
         const controlCell = create('td', 'jobs-file-control');
+        controlCell.style.display = 'flex';
+        controlCell.style.gap = '6px';
+        controlCell.style.alignItems = 'flex-start';
+        controlCell.style.flexWrap = 'wrap';
+
+        if (supportsSourceDownload(file)) {
+            const download = create('a', 'button jobs-file-source-download', 'Download');
+            download.href = sourceDownloadUrl + '?' + new URLSearchParams({job_id: String(file.id || 0)}).toString();
+            download.title = depth > 0
+                ? 'Download the original retained parent/source file without generating a package.'
+                : 'Download this retained source file directly without generating a package.';
+            controlCell.appendChild(download);
+        }
+
         const control = controlFor(file);
         if (control) {
             if (control.action) {
