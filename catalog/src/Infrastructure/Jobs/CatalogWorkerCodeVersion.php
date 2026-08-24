@@ -50,6 +50,8 @@ final class CatalogWorkerCodeVersion
             $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogUnsupportedRedirectExclusionJobHandler.php',
             $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogBucketPakJobHandler.php',
             $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogBucketStagedPackageJobHandler.php',
+            $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogArchiveMemberContentClassifier.php',
+            $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogArchiveMemberContentRoutingJobHandler.php',
             $this->catalogRoot . '/src/Infrastructure/Readers/CatalogLegacyPackageReader.php',
             $this->catalogRoot . '/src/Infrastructure/Import/CatalogBucketPakContainerStore.php',
             $this->catalogRoot . '/src/Infrastructure/Archive/CatalogArchiveExtractor.php',
