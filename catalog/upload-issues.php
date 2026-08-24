@@ -12,6 +12,8 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
 
+use UnrealDb\Catalog\Application\Jobs\JobFailureRetryPolicy;
+use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogUploadBucketIssueStore;
 
 function upload_issue_status(string $value): string
@@ -26,6 +28,7 @@ function upload_issue_search(string $value): string
     return mb_strlen($value, 'UTF-8') > 200 ? mb_substr($value, 0, 200, 'UTF-8') : $value;
 }
 
+/** @return array{file:string,original_name:string,size:int,sha256:string,archive_source:string,archive_entry:string} */
 function upload_issue_payload_file(array $row): array
 {
     $payload = [];
@@ -35,10 +38,80 @@ function upload_issue_payload_file(array $row): array
     } catch (Throwable) {
         $payload = [];
     }
+
+    $originalName = trim((string)($payload['original_name'] ?? $payload['file'] ?? ''));
+    $archiveSource = trim((string)($payload['archive_source_name'] ?? ''));
+    $archiveEntry = trim((string)($payload['archive_entry_path'] ?? ''));
+    $relativePath = trim((string)($payload['source_relative_path'] ?? ''));
+    if ($relativePath === '' && $archiveSource !== '' && $archiveEntry !== '') {
+        $relativePath = rtrim($archiveSource, '/\\') . '/' . ltrim($archiveEntry, '/\\');
+    } elseif ($relativePath === '') {
+        $relativePath = $originalName;
+    }
+
     return [
-        'file' => trim((string)($payload['source_relative_path'] ?? $payload['original_name'] ?? $payload['file'] ?? '')),
-        'size' => (int)($payload['size'] ?? 0),
+        'file' => $relativePath,
+        'original_name' => $originalName,
+        'size' => max(0, (int)($payload['size'] ?? $payload['expected_size'] ?? 0)),
+        'sha256' => trim((string)($payload['sha256'] ?? '')),
+        'archive_source' => $archiveSource,
+        'archive_entry' => $archiveEntry,
     ];
+}
+
+function upload_issue_job_reason(array $row): string
+{
+    $lastError = trim((string)($row['last_error'] ?? ''));
+    if ($lastError !== '') {
+        return $lastError;
+    }
+
+    foreach (['result_json', 'progress_json'] as $column) {
+        try {
+            $decoded = json_decode((string)($row[$column] ?? ''), true, 128, JSON_THROW_ON_ERROR);
+        } catch (Throwable) {
+            $decoded = null;
+        }
+        if (!is_array($decoded)) {
+            continue;
+        }
+        $message = trim((string)($decoded['message'] ?? ''));
+        if ($message !== '') {
+            return $message;
+        }
+        $errors = is_array($decoded['errors'] ?? null) ? $decoded['errors'] : [];
+        $parts = [];
+        foreach (array_slice($errors, 0, 3) as $error) {
+            if (!is_array($error)) {
+                continue;
+            }
+            $file = trim((string)($error['file'] ?? ''));
+            $text = trim((string)($error['error'] ?? ''));
+            if ($file !== '' || $text !== '') {
+                $parts[] = ($file !== '' ? $file . ' — ' : '') . $text;
+            }
+        }
+        if ($parts !== []) {
+            return implode(' | ', $parts);
+        }
+    }
+
+    return 'The file did not complete processing, but no detailed reason was persisted.';
+}
+
+function upload_issue_attention_label(array $job, string $reason): string
+{
+    if (JobFailureRetryPolicy::isDeterministicFailureText((string)($job['job_type'] ?? ''), $reason)) {
+        return 'Replace / fix source';
+    }
+    $displayStatus = strtolower(trim((string)($job['display_status'] ?? '')));
+    if ($displayStatus === 'partial') {
+        return 'Inspect archive';
+    }
+    if (in_array($displayStatus, ['rejected', 'unverified'], true)) {
+        return 'Review source';
+    }
+    return 'Review / retry';
 }
 
 try {
@@ -129,15 +202,47 @@ try {
         $rows = $statement->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    // Background jobs all execute on the configured durable queue. Resource class
+    // controls concurrency; it is not a queue name. Older Upload Issues code looked
+    // for synthetic queue names such as catalog:bucket-processing, so current
+    // processing failures were invisible here even though the jobs still existed.
     $baseQueue = trim((string)($config['queue']['name'] ?? 'catalog')) ?: 'catalog';
-    $processingQueues = [$baseQueue . ':bucket-processing', $baseQueue . ':bucket-redirects'];
-    $processing = catalog_all(
-        $db,
-        'SELECT id,queue_name,job_type,status,payload_json,last_error,attempts,max_attempts,updated_at '
-        . 'FROM ue_background_jobs WHERE queue_name IN (?,?) AND status IN ("failed","dead_letter","cancelled") '
-        . 'ORDER BY updated_at DESC,id DESC LIMIT 200',
-        $processingQueues
+    $processingTypes = [
+        JobType::PREPARE_BUCKET_REDIRECT,
+        JobType::PROCESS_BUCKET_UPLOAD,
+        JobType::PROCESS_BUCKET_STAGED_PACKAGE,
+        JobType::PROCESS_BUCKET_ARCHIVE,
+        JobType::IMPORT_STAGED_PACKAGE,
+        JobType::IMPORT_STAGED_PAK,
+        JobType::IMPORT_STAGED_PAK_ENTRY,
+        JobType::IMPORT_STAGED_ARCHIVE,
+    ];
+    $processingTypeSql = implode(',', array_fill(0, count($processingTypes), '?'));
+    $processingWhere = 'j.queue_name=? AND j.job_type IN (' . $processingTypeSql . ') AND ('
+        . 'j.status IN ("failed","dead_letter") OR '
+        . '(j.status="completed" AND j.display_status IN ("failed","rejected","unverified","partial","error"))'
+        . ')';
+    $processingArgs = array_merge([$baseQueue], $processingTypes);
+    if ($search !== '') {
+        $processingWhere .= ' AND (j.payload_json LIKE ? OR COALESCE(j.last_error,"") LIKE ? OR COALESCE(j.result_json,"") LIKE ?)';
+        $processingLike = '%' . str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $search) . '%';
+        array_push($processingArgs, $processingLike, $processingLike, $processingLike);
+    }
+
+    $processingCount = $db->prepare('SELECT COUNT(*) FROM ue_background_jobs j WHERE ' . $processingWhere);
+    $processingCount->execute($processingArgs);
+    $processingTotal = max(0, (int)$processingCount->fetchColumn());
+    $processingPages = max(1, (int)ceil($processingTotal / $perPage));
+    $processingPage = min(max(1, (int)($_GET['job_p'] ?? 1)), $processingPages);
+    $processingOffset = ($processingPage - 1) * $perPage;
+    $processingStatement = $db->prepare(
+        'SELECT j.id,j.parent_job_id,j.queue_name,j.job_type,j.resource_class,j.status,j.display_status,'
+        . 'j.payload_json,j.progress_json,j.result_json,j.last_error,j.attempts,j.max_attempts,j.updated_at '
+        . 'FROM ue_background_jobs j WHERE ' . $processingWhere
+        . ' ORDER BY j.updated_at DESC,j.id DESC LIMIT ' . $perPage . ' OFFSET ' . $processingOffset
     );
+    $processingStatement->execute($processingArgs);
+    $processing = $processingStatement->fetchAll(PDO::FETCH_ASSOC) ?: [];
 
     catalog_head('Upload Issues');
     echo '<style>'
@@ -156,18 +261,21 @@ try {
         . '.upload-issue-pill-open{color:#fecdd3;border-color:rgba(255,107,122,.75)}'
         . '.upload-issue-pill-resolved{color:#a7f3d0;border-color:rgba(50,213,131,.75)}'
         . '.upload-issue-pill-ignored{color:#fde68a;border-color:rgba(246,196,83,.75)}'
+        . '.upload-issue-pill-review{color:#fde68a;border-color:rgba(246,196,83,.75)}'
         . '.upload-issue-pagination{justify-content:space-between;margin-top:12px}'
         . '.processing-issues{margin-top:18px}'
+        . '.processing-file-meta{display:block;margin-top:4px}'
+        . '.processing-action{font-weight:700}'
         . '@media(max-width:900px){.upload-issue-cards{grid-template-columns:1fr 1fr}}'
         . '</style>';
 
     catalog_page_header(
         'Upload Issues',
-        'Persistent failures from Upload Bucket v2 are retained here after the browser page is closed. Downstream processing failures remain authoritative Background Job records and are shown below.',
+        'Use this page as the operator list for files that did not make it through upload or package processing. Browser/transfer issues are persistent records; current processing failures are listed below with the exact file path and reason.',
         [
             'Upload Bucket' => 'upload-bucket-v2.php',
             'Review Unverified Files' => 'unverified-files.php?source_game_id=-1',
-            'Background Jobs' => 'background-jobs.php?queue=' . rawurlencode($processingQueues[0]),
+            'Background Jobs' => 'background-jobs.php?queue=' . rawurlencode($baseQueue),
         ]
     );
 
@@ -248,7 +356,7 @@ try {
         echo '</tbody></table></div></form>';
 
         $pages = max(1, (int)ceil($total / $perPage));
-        $queryBase = ['status' => $status, 'q' => $search, 'per_page' => $perPage];
+        $queryBase = ['status' => $status, 'q' => $search, 'per_page' => $perPage, 'job_p' => $processingPage];
         echo '<div class="upload-issue-pagination"><span class="muted">' . number_format($total) . ' matching issue(s) · Page ' . $page . ' of ' . $pages . '</span><span>';
         if ($page > 1) {
             echo '<a class="button secondary" href="?' . catalog_h(http_build_query($queryBase + ['p' => $page - 1])) . '">Previous</a> ';
@@ -260,26 +368,56 @@ try {
     }
     echo '</div></section>';
 
-    echo '<section class="ui-section processing-issues"><div class="ui-section__header"><div><h2>Processing job failures</h2>'
-        . '<p>These files reached the durable queue and then failed during decompression, duplicate inspection, inventory or package processing. These are Background Job records, so their lifecycle is managed from Background Jobs rather than deleted here.</p></div>'
-        . '<a class="button secondary" href="background-jobs.php?queue=' . rawurlencode($processingQueues[0]) . '">Open Background Jobs</a>'
+    echo '<section class="ui-section processing-issues"><div class="ui-section__header"><div><h2>Files needing attention (' . number_format($processingTotal) . ')</h2>'
+        . '<p>These files reached the durable queue but did not complete package/archive processing. Use the full source path and reason below to locate a bad file, replace it, repair it, or decide whether it should be ignored. Cancelled jobs are not included.</p></div>'
+        . '<a class="button secondary" href="background-jobs.php?queue=' . rawurlencode($baseQueue) . '">Open Background Jobs</a>'
         . '</div><div class="ui-section__body">';
     if ($processing === []) {
-        echo CatalogUi::emptyState('No processing failures', 'No failed, dead-lettered or cancelled Upload Bucket processing jobs were found.');
+        echo CatalogUi::emptyState('No files need attention', 'No failed, dead-lettered, rejected, unverified or partial upload/import jobs match the current search.');
     } else {
-        echo '<div class="table-wrap"><table><thead><tr><th>Job</th><th>Status</th><th>File</th><th>Reason</th><th>Attempts</th><th>Updated</th></tr></thead><tbody>';
+        echo '<div class="table-wrap"><table><thead><tr><th>Job</th><th>Status</th><th>File / source</th><th>Reason</th><th>Action needed</th><th>Updated</th></tr></thead><tbody>';
         foreach ($processing as $job) {
             $file = upload_issue_payload_file($job);
+            $reason = upload_issue_job_reason($job);
+            $attention = upload_issue_attention_label($job, $reason);
+            $displayStatus = trim((string)($job['display_status'] ?? ''));
+            $statusLabel = $displayStatus !== '' ? $displayStatus : (string)$job['status'];
+            $jobSearchUrl = 'background-jobs.php?queue=' . rawurlencode((string)$job['queue_name']) . '&search=' . (int)$job['id'];
+
             echo '<tr>';
-            echo '<td><a href="background-jobs.php?queue=' . rawurlencode((string)$job['queue_name']) . '">#' . (int)$job['id'] . '</a><br><span class="mono small muted">' . catalog_h((string)$job['job_type']) . '</span></td>';
-            echo '<td><span class="upload-issue-pill upload-issue-pill-open">' . catalog_h((string)$job['status']) . '</span></td>';
-            echo '<td class="upload-issue-path">' . catalog_h($file['file'] !== '' ? $file['file'] : 'Unknown file') . ($file['size'] > 0 ? '<br><span class="muted small">' . catalog_h(catalog_bytes($file['size'])) . '</span>' : '') . '</td>';
-            echo '<td class="upload-issue-error">' . catalog_h(trim((string)($job['last_error'] ?? '')) ?: 'No persisted error text.') . '</td>';
-            echo '<td>' . (int)$job['attempts'] . ' / ' . (int)$job['max_attempts'] . '</td>';
+            echo '<td><a href="' . catalog_h($jobSearchUrl) . '">#' . (int)$job['id'] . '</a><br><span class="mono small muted">' . catalog_h((string)$job['job_type']) . '</span></td>';
+            echo '<td><span class="upload-issue-pill upload-issue-pill-open">' . catalog_h($statusLabel) . '</span><br><span class="small muted">' . (int)$job['attempts'] . ' / ' . (int)$job['max_attempts'] . ' attempts</span></td>';
+            echo '<td class="upload-issue-path"><strong>' . catalog_h($file['file'] !== '' ? $file['file'] : ($file['original_name'] !== '' ? $file['original_name'] : 'Unknown file')) . '</strong>';
+            if ($file['archive_source'] !== '' || $file['archive_entry'] !== '') {
+                echo '<span class="processing-file-meta small muted">Archive: ' . catalog_h($file['archive_source'] !== '' ? $file['archive_source'] : 'unknown')
+                    . ($file['archive_entry'] !== '' ? '<br>Member: ' . catalog_h($file['archive_entry']) : '') . '</span>';
+            }
+            if ($file['size'] > 0) {
+                echo '<span class="processing-file-meta small muted">Size: ' . catalog_h(catalog_bytes($file['size'])) . '</span>';
+            }
+            if ($file['sha256'] !== '') {
+                echo '<span class="processing-file-meta mono small muted">SHA-256: ' . catalog_h($file['sha256']) . '</span>';
+            }
+            if ((int)($job['parent_job_id'] ?? 0) > 0) {
+                echo '<span class="processing-file-meta small muted">Archive workflow parent job #' . (int)$job['parent_job_id'] . '</span>';
+            }
+            echo '</td>';
+            echo '<td class="upload-issue-error">' . catalog_h($reason) . '</td>';
+            echo '<td><span class="processing-action">' . catalog_h($attention) . '</span></td>';
             echo '<td class="mono small">' . catalog_h((string)$job['updated_at']) . '</td>';
             echo '</tr>';
         }
         echo '</tbody></table></div>';
+
+        $processingQueryBase = ['status' => $status, 'q' => $search, 'per_page' => $perPage, 'p' => $page];
+        echo '<div class="upload-issue-pagination"><span class="muted">' . number_format($processingTotal) . ' problem file/job(s) · Page ' . $processingPage . ' of ' . $processingPages . '</span><span>';
+        if ($processingPage > 1) {
+            echo '<a class="button secondary" href="?' . catalog_h(http_build_query($processingQueryBase + ['job_p' => $processingPage - 1])) . '">Previous</a> ';
+        }
+        if ($processingPage < $processingPages) {
+            echo '<a class="button secondary" href="?' . catalog_h(http_build_query($processingQueryBase + ['job_p' => $processingPage + 1])) . '">Next</a>';
+        }
+        echo '</span></div>';
     }
     echo '</div></section>';
 
