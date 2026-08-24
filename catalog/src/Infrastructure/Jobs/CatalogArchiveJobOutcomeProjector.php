@@ -16,6 +16,8 @@ use UnrealDb\Catalog\Domain\Jobs\JobType;
 
 final class CatalogArchiveJobOutcomeProjector
 {
+    private const MAX_VISIBLE_FAILURES = 10;
+
     public function __construct(private readonly PDO $db)
     {
     }
@@ -42,7 +44,7 @@ final class CatalogArchiveJobOutcomeProjector
         $ids = array_keys($parentIds);
         $placeholders = implode(',', array_fill(0, count($ids), '?'));
         $statement = $this->db->prepare(
-            'SELECT parent_job_id,status,result_json,last_error '
+            'SELECT id,parent_job_id,status,result_json,last_error,cancel_reason,payload_json '
             . 'FROM ue_background_jobs '
             . 'WHERE parent_job_id IN (' . $placeholders . ') '
             . 'AND workflow_unit_key LIKE "archive:%"'
@@ -66,12 +68,14 @@ final class CatalogArchiveJobOutcomeProjector
                     'cancelled' => 0,
                     'other_terminal' => 0,
                     'errors' => [],
+                    'failures' => [],
                 ];
             }
             $summary =& $summaries[$parentId];
             $summary['total']++;
             $status = strtolower(trim((string)($child['status'] ?? '')));
             $result = $this->decode((string)($child['result_json'] ?? ''));
+            $payload = $this->decode((string)($child['payload_json'] ?? ''));
             $resultStatus = strtolower(trim((string)($result['status'] ?? '')));
 
             if ($status === 'queued') {
@@ -80,21 +84,36 @@ final class CatalogArchiveJobOutcomeProjector
                 $summary['running']++;
             } elseif ($status === 'cancelled') {
                 $summary['cancelled']++;
+                $this->appendFailure(
+                    $summary,
+                    (int)($child['id'] ?? 0),
+                    $payload,
+                    'cancelled',
+                    trim((string)($child['cancel_reason'] ?? '')) ?: 'Archive member job was cancelled.'
+                );
             } elseif (in_array($status, ['failed', 'dead_letter'], true)) {
                 $summary['failed']++;
                 $error = trim((string)($child['last_error'] ?? ''));
-                if ($error !== '' && count($summary['errors']) < 10) {
-                    $summary['errors'][] = $error;
-                }
+                $this->appendFailure(
+                    $summary,
+                    (int)($child['id'] ?? 0),
+                    $payload,
+                    $status,
+                    $error !== '' ? $error : 'Archive member job failed without an error message.'
+                );
             } elseif ($status === 'completed') {
                 if ($resultStatus === 'duplicate') {
                     $summary['duplicate']++;
                 } elseif (in_array($resultStatus, ['failed', 'rejected', 'unverified', 'partial', 'error'], true)) {
                     $summary['failed']++;
                     $error = trim((string)($result['message'] ?? $child['last_error'] ?? ''));
-                    if ($error !== '' && count($summary['errors']) < 10) {
-                        $summary['errors'][] = $error;
-                    }
+                    $this->appendFailure(
+                        $summary,
+                        (int)($child['id'] ?? 0),
+                        $payload,
+                        $resultStatus !== '' ? $resultStatus : 'failed',
+                        $error !== '' ? $error : 'Archive member completed with an unsuccessful result.'
+                    );
                 } else {
                     $summary['successful']++;
                 }
@@ -153,6 +172,11 @@ final class CatalogArchiveJobOutcomeProjector
                 $message .= '.';
             }
 
+            $failureDetail = $this->failureDetail($summary['failures']);
+            if ($failureDetail !== '') {
+                $message .= ' Failed member(s): ' . $failureDetail;
+            }
+
             if (!is_array($row['progress'] ?? null)) {
                 $row['progress'] = [];
             }
@@ -175,6 +199,64 @@ final class CatalogArchiveJobOutcomeProjector
         unset($row);
 
         return $rows;
+    }
+
+    /** @param array<string,mixed> $summary @param array<string,mixed> $payload */
+    private function appendFailure(
+        array &$summary,
+        int $jobId,
+        array $payload,
+        string $status,
+        string $error
+    ): void {
+        $error = $this->compactText($error, 600);
+        if ($error !== '' && count($summary['errors']) < self::MAX_VISIBLE_FAILURES) {
+            $summary['errors'][] = $error;
+        }
+        if (count($summary['failures']) >= self::MAX_VISIBLE_FAILURES) {
+            return;
+        }
+
+        $member = trim((string)($payload['archive_entry_path'] ?? ''));
+        if ($member === '') {
+            $member = trim((string)($payload['original_name'] ?? ''));
+        }
+        if ($member === '') {
+            $member = trim((string)($payload['source_relative_path'] ?? ''));
+        }
+        if ($member === '') {
+            $member = 'archive member';
+        }
+
+        $summary['failures'][] = [
+            'job_id' => max(0, $jobId),
+            'member' => $member,
+            'status' => $status,
+            'error' => $error,
+        ];
+    }
+
+    /** @param list<array<string,mixed>> $failures */
+    private function failureDetail(array $failures): string
+    {
+        $parts = [];
+        foreach ($failures as $failure) {
+            $member = trim((string)($failure['member'] ?? 'archive member'));
+            $jobId = max(0, (int)($failure['job_id'] ?? 0));
+            $error = trim((string)($failure['error'] ?? ''));
+            $label = $member . ($jobId > 0 ? ' (job #' . $jobId . ')' : '');
+            $parts[] = $error !== '' ? $label . ' — ' . $error : $label;
+        }
+        return implode(' | ', $parts);
+    }
+
+    private function compactText(string $value, int $maxBytes): string
+    {
+        $value = preg_replace('/\s+/', ' ', trim($value)) ?? trim($value);
+        if ($value === '' || strlen($value) <= $maxBytes) {
+            return $value;
+        }
+        return rtrim(substr($value, 0, max(1, $maxBytes - 1))) . '…';
     }
 
     /** @return array<string,mixed> */
