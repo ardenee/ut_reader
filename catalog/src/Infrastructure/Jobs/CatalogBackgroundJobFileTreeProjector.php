@@ -90,7 +90,10 @@ final class CatalogBackgroundJobFileTreeProjector
     /** @param array<string,mixed> $payload @param array<string,mixed> $row @return array{0:string,1:string} */
     private function fileIdentity(array $payload, array $row): array
     {
-        $path = trim(str_replace('\\', '/', (string)($payload['source_relative_path'] ?? '')));
+        $logicalPath = trim(str_replace('\\', '/', (string)($row['tree_source_relative_path'] ?? '')));
+        $path = $logicalPath !== ''
+            ? $logicalPath
+            : trim(str_replace('\\', '/', (string)($payload['source_relative_path'] ?? '')));
         $name = trim((string)($payload['original_name'] ?? ''));
         if ($name === '' && $path !== '') {
             $name = basename($path);
