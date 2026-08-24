@@ -49,10 +49,37 @@ final class CatalogSystemErrorNormalizer
             '{id}',
             mb_strtolower($message, 'UTF-8')
         ) ?? $message;
+        $fingerprintRoute = $route;
+
+        // Background-job diagnostics often append a temporary working path after
+        // the stable exception text. A retry can therefore produce the same job
+        // failure with a different upload-bucket timestamp/random filename and
+        // previously created a brand-new System Error row. Use the durable job id
+        // as the route identity and remove only trailing diagnostic path sections
+        // from the fingerprint; the full original message remains stored/displayed.
+        if ($sourceKind === 'background-job') {
+            $jobId = max(0, (int)($context['job_id'] ?? 0));
+            if ($jobId > 0) {
+                $disposition = self::identifier((string)($context['disposition'] ?? ''), 40, '');
+                $fingerprintRoute = 'job:' . $jobId . ($disposition !== '' ? ':' . $disposition : '');
+                foreach ([
+                    '/\s+file:\s+.*$/isu',
+                    '/\s+archive:\s+.*$/isu',
+                    '/\s+archive source:\s+.*$/isu',
+                    '/\s+source:\s+.*$/isu',
+                ] as $pattern) {
+                    $normalizedFingerprint = preg_replace($pattern, '', $fingerprintMessage);
+                    if (is_string($normalizedFingerprint) && trim($normalizedFingerprint) !== '') {
+                        $fingerprintMessage = $normalizedFingerprint;
+                    }
+                }
+            }
+        }
+
         $errorKey = hash('sha256', implode("\n", [
             $sourceKind,
             $errorType,
-            $route,
+            $fingerprintRoute,
             $sourceFile,
             (string)$sourceLine,
             $fingerprintMessage,
