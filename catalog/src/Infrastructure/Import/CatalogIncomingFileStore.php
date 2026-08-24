@@ -137,49 +137,61 @@ final class CatalogIncomingFileStore
     {
         $this->ensureDirectory();
         if ($sourcePath === '' || !is_file($sourcePath) || !is_readable($sourcePath) || is_link($sourcePath)) {
-            throw new \RuntimeException('Import source file is unavailable.');
+            throw new \RuntimeException('Import source file is unavailable: ' . $sourcePath);
         }
         $size = filesize($sourcePath);
         if ($size === false || $size <= 0) {
-            throw new \RuntimeException('Import source file is empty.');
+            throw new \RuntimeException('Import source file is empty: ' . $sourcePath);
         }
         $logicalName = $this->logicalName($originalName);
         $safeName = $this->safeName($logicalName);
         $dateDirectory = $this->directory . DIRECTORY_SEPARATOR . gmdate('Ymd');
         if (!is_dir($dateDirectory) && !mkdir($dateDirectory, 0750, true) && !is_dir($dateDirectory)) {
-            throw new \RuntimeException('Could not create staged import directory.');
+            throw new \RuntimeException('Could not create staged import directory: ' . $dateDirectory . '. ' . $this->lastFilesystemError());
         }
         $token = gmdate('His') . '-' . bin2hex(random_bytes(12));
         $destination = $dateDirectory . DIRECTORY_SEPARATOR . $token . '-' . $safeName;
         $part = $destination . '.part';
-        $stored = false;
         try {
             if ($move && is_uploaded_file($sourcePath)) {
-                $stored = move_uploaded_file($sourcePath, $part);
+                if (!move_uploaded_file($sourcePath, $part)) {
+                    throw new \RuntimeException($this->stageFailureMessage('move_uploaded_file failed', $sourcePath, $part, (int)$size));
+                }
             } elseif ($move) {
-                $stored = @rename($sourcePath, $part);
-                if (!$stored) {
-                    $stored = @copy($sourcePath, $part);
-                    if ($stored) {
-                        @unlink($sourcePath);
+                if (!@rename($sourcePath, $part)) {
+                    $this->copyLocalFileVerified($sourcePath, $part, (int)$size);
+                    if (!@unlink($sourcePath) && is_file($sourcePath)) {
+                        throw new \RuntimeException($this->stageFailureMessage('copied source but could not remove original', $sourcePath, $part, (int)$size));
                     }
                 }
             } else {
-                $stored = @copy($sourcePath, $part);
+                $this->copyLocalFileVerified($sourcePath, $part, (int)$size);
             }
-            if (!$stored || !is_file($part)) {
-                throw new \RuntimeException('Could not stage import source file.');
+
+            clearstatcache(true, $part);
+            $partSize = filesize($part);
+            if ($partSize === false || (int)$partSize !== (int)$size) {
+                throw new \RuntimeException(
+                    $this->stageFailureMessage(
+                        'staged byte count mismatch; expected=' . number_format((int)$size)
+                            . ', actual=' . ($partSize === false ? 'unknown' : number_format((int)$partSize)),
+                        $sourcePath,
+                        $part,
+                        (int)$size
+                    )
+                );
             }
+
             @chmod($part, 0640);
             if (!@rename($part, $destination)) {
-                throw new \RuntimeException('Could not publish staged import source file.');
+                throw new \RuntimeException($this->stageFailureMessage('could not publish staged import source file', $sourcePath, $destination, (int)$size));
             }
 
             $sha256 = '';
             if ($hashNow) {
                 $sha256 = hash_file('sha256', $destination);
                 if (!is_string($sha256) || preg_match('/^[a-f0-9]{64}$/', $sha256) !== 1) {
-                    throw new \RuntimeException('Could not hash staged import source file.');
+                    throw new \RuntimeException('Could not hash staged import source file: ' . $destination);
                 }
             }
 
@@ -197,10 +209,90 @@ final class CatalogIncomingFileStore
         }
     }
 
+    private function copyLocalFileVerified(string $sourcePath, string $destination, int $expectedBytes): void
+    {
+        $input = @fopen($sourcePath, 'rb');
+        if (!is_resource($input)) {
+            throw new \RuntimeException($this->stageFailureMessage('could not open local source for reading', $sourcePath, $destination, $expectedBytes));
+        }
+        $output = @fopen($destination, 'xb');
+        if (!is_resource($output)) {
+            fclose($input);
+            throw new \RuntimeException($this->stageFailureMessage('could not create staged temporary file', $sourcePath, $destination, $expectedBytes));
+        }
+
+        $written = 0;
+        try {
+            while (!feof($input)) {
+                $buffer = fread($input, 1024 * 1024);
+                if (!is_string($buffer)) {
+                    throw new \RuntimeException($this->stageFailureMessage('read failed during local staging copy', $sourcePath, $destination, $expectedBytes, $written));
+                }
+                if ($buffer === '') {
+                    if (feof($input)) {
+                        break;
+                    }
+                    throw new \RuntimeException($this->stageFailureMessage('local staging source stopped before EOF', $sourcePath, $destination, $expectedBytes, $written));
+                }
+
+                $offset = 0;
+                $length = strlen($buffer);
+                while ($offset < $length) {
+                    $count = fwrite($output, substr($buffer, $offset));
+                    if ($count === false || $count < 1) {
+                        throw new \RuntimeException($this->stageFailureMessage('write failed during local staging copy', $sourcePath, $destination, $expectedBytes, $written));
+                    }
+                    $offset += $count;
+                    $written += $count;
+                    if ($written > $expectedBytes) {
+                        throw new \RuntimeException($this->stageFailureMessage('local staging copy exceeded expected source size', $sourcePath, $destination, $expectedBytes, $written));
+                    }
+                }
+            }
+            if (!fflush($output)) {
+                throw new \RuntimeException($this->stageFailureMessage('could not flush staged temporary file', $sourcePath, $destination, $expectedBytes, $written));
+            }
+            if (function_exists('fsync')) {
+                @fsync($output);
+            }
+        } finally {
+            fclose($input);
+            fclose($output);
+        }
+
+        if ($written !== $expectedBytes) {
+            throw new \RuntimeException($this->stageFailureMessage('local staging copy is incomplete', $sourcePath, $destination, $expectedBytes, $written));
+        }
+    }
+
+    private function stageFailureMessage(
+        string $reason,
+        string $sourcePath,
+        string $destination,
+        int $expectedBytes,
+        ?int $writtenBytes = null
+    ): string {
+        $free = @disk_free_space(dirname($destination));
+        return 'Could not stage import source file: ' . $reason
+            . '; source=' . $sourcePath
+            . '; destination=' . $destination
+            . '; expected_bytes=' . $expectedBytes
+            . ($writtenBytes !== null ? '; written_bytes=' . $writtenBytes : '')
+            . '; free_bytes=' . ($free === false ? 'unknown' : (string)(int)$free)
+            . '; ' . $this->lastFilesystemError();
+    }
+
+    private function lastFilesystemError(): string
+    {
+        $last = error_get_last();
+        $message = is_array($last) ? trim((string)($last['message'] ?? '')) : '';
+        return $message !== '' ? 'filesystem_error=' . $message : 'filesystem_error=unavailable';
+    }
+
     private function ensureDirectory(): void
     {
         if (!is_dir($this->directory) && !mkdir($this->directory, 0750, true) && !is_dir($this->directory)) {
-            throw new \RuntimeException('Could not create staged import storage.');
+            throw new \RuntimeException('Could not create staged import storage: ' . $this->directory . '. ' . $this->lastFilesystemError());
         }
     }
 
