@@ -8,10 +8,10 @@
  * execution ledger on every poll.
  *
  * Content-routing archive jobs are implementation details, not physical files.
- * A member such as map.ut2 whose bytes are actually RAR data can acquire an
- * internal map.ut2.rar processing job. The operator tree folds that synthetic
- * bridge out and hoists the archive's real extracted members directly beneath
- * map.ut2, preserving physical source lineage rather than worker topology.
+ * If an extracted member has misleading package extension bytes that trigger an
+ * internal ZIP/RAR/7z decoder, that decoder job is folded out. Its extracted
+ * members stay attached to the real archive that supplied the member instead of
+ * being presented as files contained by the misleading package filename.
  */
 declare(strict_types=1);
 
@@ -137,7 +137,7 @@ final class PdoBackgroundJobFileTreeQuery
         $offset = ($page - 1) * $perPage;
 
         $statement = $this->db->prepare(
-            'SELECT ' . $this->columns('j') . ','
+            'SELECT ' . $this->columns('j') . ',visible_children.tree_hoisted,'
             . $this->childCountExpression('j') . ' AS child_count,'
             . $this->childIssueCountExpression('j') . ' AS child_issue_count,'
             . $this->childActiveCountExpression('j') . ' AS child_active_count '
@@ -146,9 +146,11 @@ final class PdoBackgroundJobFileTreeQuery
             . 'ORDER BY j.id ASC LIMIT ' . $perPage . ' OFFSET ' . $offset
         );
         $statement->execute($visibleParams);
+        $rows = $statement->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        $this->applyLogicalTreeContext($rows, $parentJobId);
 
         return [
-            'rows' => $statement->fetchAll(PDO::FETCH_ASSOC) ?: [],
+            'rows' => $rows,
             'total' => $total,
             'page' => $page,
             'pages' => $pages,
@@ -176,71 +178,198 @@ final class PdoBackgroundJobFileTreeQuery
     }
 
     /**
-     * Visible children are real direct child rows plus the real extracted members
-     * beneath any synthetic content-container bridge. The bridge itself is an
-     * execution detail and therefore never appears as a file in the operator tree.
+     * Visible children are:
+     *  1. real direct child rows, excluding synthetic content-container jobs; and
+     *  2. members extracted by a synthetic decoder beneath one of those direct
+     *     files. Those members are hoisted one level so they remain attached to
+     *     the real archive source rather than the misleading package filename.
      */
     private function visibleChildrenIdSql(): string
     {
-        return 'SELECT direct_child.id FROM ue_background_jobs direct_child '
+        return 'SELECT direct_child.id,0 AS tree_hoisted FROM ue_background_jobs direct_child '
             . 'WHERE direct_child.queue_name=? AND direct_child.parent_job_id=? '
             . 'AND NOT (' . $this->syntheticArchiveExpression('direct_child') . ') '
             . 'UNION ALL '
-            . 'SELECT routed_child.id FROM ue_background_jobs synthetic_parent '
+            . 'SELECT routed_child.id,1 AS tree_hoisted FROM ue_background_jobs physical_member '
+            . 'JOIN ue_background_jobs synthetic_parent ON synthetic_parent.parent_job_id=physical_member.id '
             . 'JOIN ue_background_jobs routed_child ON routed_child.parent_job_id=synthetic_parent.id '
-            . 'WHERE synthetic_parent.queue_name=? AND synthetic_parent.parent_job_id=? '
+            . 'WHERE physical_member.queue_name=? AND physical_member.parent_job_id=? '
+            . 'AND NOT (' . $this->syntheticArchiveExpression('physical_member') . ') '
             . 'AND ' . $this->syntheticArchiveExpression('synthetic_parent');
     }
 
     private function childCountExpression(string $alias): string
     {
         return '('
-            . '(SELECT COUNT(*) FROM ue_background_jobs direct_count '
-            . 'WHERE direct_count.parent_job_id=' . $alias . '.id '
-            . 'AND NOT (' . $this->syntheticArchiveExpression('direct_count') . '))'
+            . $this->directChildCount('direct_count', $alias, '')
             . ' + '
-            . '(SELECT COUNT(*) FROM ue_background_jobs synthetic_count '
-            . 'JOIN ue_background_jobs routed_count ON routed_count.parent_job_id=synthetic_count.id '
-            . 'WHERE synthetic_count.parent_job_id=' . $alias . '.id '
-            . 'AND ' . $this->syntheticArchiveExpression('synthetic_count') . ')'
+            . $this->routedGrandchildCount('member_count', 'synthetic_count', 'routed_count', $alias, '')
+            . ' + '
+            . $this->rootSyntheticChildCount('self_synthetic_count', 'self_routed_count', $alias, '')
             . ')';
     }
 
     private function childIssueCountExpression(string $alias): string
     {
         return '('
-            . '(SELECT COUNT(*) FROM ue_background_jobs direct_issue '
-            . 'WHERE direct_issue.parent_job_id=' . $alias . '.id '
-            . 'AND NOT (' . $this->syntheticArchiveExpression('direct_issue') . ') '
-            . 'AND ' . $this->ownIssueExpression('direct_issue') . ')'
+            . $this->directChildCount('direct_issue', $alias, 'AND ' . $this->ownIssueExpression('direct_issue'))
             . ' + '
-            . '(SELECT COUNT(*) FROM ue_background_jobs synthetic_issue '
-            . 'JOIN ue_background_jobs routed_issue ON routed_issue.parent_job_id=synthetic_issue.id '
-            . 'WHERE synthetic_issue.parent_job_id=' . $alias . '.id '
-            . 'AND ' . $this->syntheticArchiveExpression('synthetic_issue') . ' '
-            . 'AND ' . $this->ownIssueExpression('routed_issue') . ')'
+            . $this->routedGrandchildCount(
+                'member_issue',
+                'synthetic_issue',
+                'routed_issue',
+                $alias,
+                'AND ' . $this->ownIssueExpression('routed_issue')
+            )
+            . ' + '
+            . $this->rootSyntheticChildCount(
+                'self_synthetic_issue',
+                'self_routed_issue',
+                $alias,
+                'AND ' . $this->ownIssueExpression('self_routed_issue')
+            )
             . ')';
     }
 
     private function childActiveCountExpression(string $alias): string
     {
         return '('
-            . '(SELECT COUNT(*) FROM ue_background_jobs direct_active '
-            . 'WHERE direct_active.parent_job_id=' . $alias . '.id '
-            . 'AND NOT (' . $this->syntheticArchiveExpression('direct_active') . ') '
-            . 'AND direct_active.status IN ("queued","running"))'
+            . $this->directChildCount(
+                'direct_active',
+                $alias,
+                'AND direct_active.status IN ("queued","running")'
+            )
             . ' + '
-            . '(SELECT COUNT(*) FROM ue_background_jobs synthetic_active '
-            . 'JOIN ue_background_jobs routed_active ON routed_active.parent_job_id=synthetic_active.id '
-            . 'WHERE synthetic_active.parent_job_id=' . $alias . '.id '
-            . 'AND ' . $this->syntheticArchiveExpression('synthetic_active') . ' '
-            . 'AND routed_active.status IN ("queued","running"))'
+            . $this->routedGrandchildCount(
+                'member_active',
+                'synthetic_active',
+                'routed_active',
+                $alias,
+                'AND routed_active.status IN ("queued","running")'
+            )
+            . ' + '
+            . $this->rootSyntheticChildCount(
+                'self_synthetic_active',
+                'self_routed_active',
+                $alias,
+                'AND self_routed_active.status IN ("queued","running")'
+            )
             . ')';
+    }
+
+    private function directChildCount(string $childAlias, string $parentAlias, string $extra): string
+    {
+        return '(SELECT COUNT(*) FROM ue_background_jobs ' . $childAlias . ' '
+            . 'WHERE ' . $childAlias . '.parent_job_id=' . $parentAlias . '.id '
+            . 'AND NOT (' . $this->syntheticArchiveExpression($childAlias) . ') '
+            . $extra . ')';
+    }
+
+    private function routedGrandchildCount(
+        string $memberAlias,
+        string $syntheticAlias,
+        string $routedAlias,
+        string $parentAlias,
+        string $extra
+    ): string {
+        return '(SELECT COUNT(*) FROM ue_background_jobs ' . $memberAlias . ' '
+            . 'JOIN ue_background_jobs ' . $syntheticAlias . ' ON ' . $syntheticAlias . '.parent_job_id=' . $memberAlias . '.id '
+            . 'JOIN ue_background_jobs ' . $routedAlias . ' ON ' . $routedAlias . '.parent_job_id=' . $syntheticAlias . '.id '
+            . 'WHERE ' . $memberAlias . '.parent_job_id=' . $parentAlias . '.id '
+            . 'AND NOT (' . $this->syntheticArchiveExpression($memberAlias) . ') '
+            . 'AND ' . $this->syntheticArchiveExpression($syntheticAlias) . ' '
+            . $extra . ')';
+    }
+
+    /**
+     * A top-level source file can itself contain disguised archive bytes. With no
+     * outer archive available, its routed members remain legitimate children of
+     * that root source. Non-root package members never take this fallback path.
+     */
+    private function rootSyntheticChildCount(
+        string $syntheticAlias,
+        string $routedAlias,
+        string $parentAlias,
+        string $extra
+    ): string {
+        return '(SELECT COUNT(*) FROM ue_background_jobs ' . $syntheticAlias . ' '
+            . 'JOIN ue_background_jobs ' . $routedAlias . ' ON ' . $routedAlias . '.parent_job_id=' . $syntheticAlias . '.id '
+            . 'WHERE ' . $parentAlias . '.parent_job_id IS NULL '
+            . 'AND ' . $syntheticAlias . '.parent_job_id=' . $parentAlias . '.id '
+            . 'AND ' . $this->syntheticArchiveExpression($syntheticAlias) . ' '
+            . $extra . ')';
     }
 
     private function syntheticArchiveExpression(string $alias): string
     {
         return $alias . '.workflow_unit_key LIKE "' . self::SYNTHETIC_ARCHIVE_WORKFLOW_PREFIX . '%"';
+    }
+
+    /** @param list<array<string,mixed>> $rows */
+    private function applyLogicalTreeContext(array &$rows, int $parentJobId): void
+    {
+        if ($rows === []) {
+            return;
+        }
+
+        $parentPath = $this->jobSourceRelativePath($parentJobId);
+        foreach ($rows as &$row) {
+            $row['tree_parent_job_id'] = $parentJobId;
+            if ((int)($row['tree_hoisted'] ?? 0) !== 1 || $parentPath === '') {
+                continue;
+            }
+
+            $payload = $this->decodeObject((string)($row['payload_json'] ?? ''));
+            $entryPath = $this->cleanPath((string)($payload['archive_entry_path'] ?? ''));
+            if ($entryPath === '') {
+                $entryPath = $this->cleanPath((string)($payload['original_name'] ?? ''));
+            }
+            if ($entryPath !== '') {
+                $row['tree_source_relative_path'] = $this->joinPath($parentPath, $entryPath);
+            }
+        }
+        unset($row);
+    }
+
+    private function jobSourceRelativePath(int $jobId): string
+    {
+        if ($jobId < 1) {
+            return '';
+        }
+        $statement = $this->db->prepare('SELECT payload_json FROM ue_background_jobs WHERE id=? LIMIT 1');
+        $statement->execute([$jobId]);
+        $payload = $this->decodeObject((string)($statement->fetchColumn() ?: ''));
+        return $this->cleanPath((string)($payload['source_relative_path'] ?? $payload['original_name'] ?? ''));
+    }
+
+    /** @return array<string,mixed> */
+    private function decodeObject(string $json): array
+    {
+        if ($json === '') {
+            return [];
+        }
+        $decoded = json_decode($json, true);
+        return is_array($decoded) ? $decoded : [];
+    }
+
+    private function cleanPath(string $path): string
+    {
+        $path = str_replace('\\', '/', trim($path));
+        $path = preg_replace('#/+#', '/', $path) ?? $path;
+        return trim($path, '/ ');
+    }
+
+    private function joinPath(string $parent, string $child): string
+    {
+        $parent = $this->cleanPath($parent);
+        $child = $this->cleanPath($child);
+        if ($parent === '') {
+            return $child;
+        }
+        if ($child === '') {
+            return $parent;
+        }
+        return $parent . '/' . $child;
     }
 
     /** @return array{0:string,1:list<mixed>} */
