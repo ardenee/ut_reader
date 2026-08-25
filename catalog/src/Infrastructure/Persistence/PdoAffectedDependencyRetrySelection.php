@@ -1,14 +1,11 @@
 <?php
 /**
- * Restarts the terminal recovery children of operator-selected partial
- * affected-dependency coordinators.
+ * Restarts terminal recovery work for partial affected-dependency coordinators.
  *
- * The file-centric Background Jobs UI intentionally exposes only top-level source
- * rows as selectable units. Affected-dependency workflows can finalize their
- * coordinator as "partial" while leaving failed/dead-letter/cancelled affected:*
- * children for later recovery. Retrying must preserve completed work and each
- * recovery child's checkpoint, then return only the coordinator to its lightweight
- * wait/finalize stage so the Issue clears automatically after recovery succeeds.
+ * The file-centric Background Jobs UI exposes top-level sources as selectable
+ * units, while expanded terminal child rows may also be retried directly. Retry
+ * preserves completed work and each recovery child's checkpoint, then returns the
+ * coordinator only to its lightweight wait/finalize stage when required.
  */
 declare(strict_types=1);
 
@@ -95,6 +92,87 @@ final class PdoAffectedDependencyRetrySelection
         }
 
         return $this->result($rootIds, $requested, $affected, $retryBlocked);
+    }
+
+    /**
+     * Retry exactly one expanded affected-dependency child row.
+     *
+     * This is intentionally narrower than the parent bulk action: a stopped or
+     * failed batch resumes from its own progress_json and successful siblings are
+     * untouched. If the root coordinator already finalized partial, it is re-armed
+     * only at affected_wait so it can observe the recovered child and finalize.
+     *
+     * @return array{
+     *   handled:bool,job_id:int,parent_job_id:int,requested:int,affected:int,
+     *   retry_blocked:int,skipped:int,parent_requeued:bool
+     * }
+     */
+    public function restartChild(string $queueName, int $childJobId, string $now): array
+    {
+        if ($childJobId < 1) {
+            return $this->childResult(false, $childJobId, 0, 0, 0, 0, false);
+        }
+
+        $statement = $this->db->prepare(
+            'SELECT j.id,j.parent_job_id,j.job_type,j.status,j.last_error,j.result_json,j.progress_json,'
+            . 'p.id parent_id,p.parent_job_id parent_parent_job_id,p.job_type parent_job_type,'
+            . 'p.status parent_status,p.display_status parent_display_status,p.progress_json parent_progress_json '
+            . 'FROM ue_background_jobs j '
+            . 'JOIN ue_background_jobs p ON p.id=j.parent_job_id AND p.queue_name=j.queue_name '
+            . 'WHERE j.queue_name=? AND j.id=? AND j.parent_job_id IS NOT NULL '
+            . 'AND j.workflow_unit_key LIKE "affected:%" AND j.job_type=? '
+            . 'AND p.parent_job_id IS NULL AND p.job_type=? LIMIT 1'
+        );
+        $statement->execute([
+            $queueName,
+            $childJobId,
+            JobType::REBUILD_AFFECTED_DEPENDENCIES,
+            JobType::REBUILD_AFFECTED_DEPENDENCIES,
+        ]);
+        $row = $statement->fetch(PDO::FETCH_ASSOC);
+        if (!is_array($row)) {
+            return $this->childResult(false, $childJobId, 0, 0, 0, 0, false);
+        }
+
+        $parentId = (int)($row['parent_id'] ?? 0);
+        $childStatus = strtolower(trim((string)($row['status'] ?? '')));
+        $parentStatus = strtolower(trim((string)($row['parent_status'] ?? '')));
+        $parentDisplay = strtolower(trim((string)($row['parent_display_status'] ?? '')));
+        $parentRecoverable = in_array($parentStatus, ['queued', 'running'], true)
+            || ($parentStatus === 'completed' && $parentDisplay === 'partial');
+
+        if (!$parentRecoverable || !in_array($childStatus, ['cancelled', 'failed', 'dead_letter'], true)) {
+            return $this->childResult(true, $childJobId, $parentId, 1, 0, 0, false);
+        }
+
+        if (JobFailureRetryPolicy::isDeterministicFailureText(
+            (string)($row['job_type'] ?? ''),
+            self::persistedFailureText($row)
+        )) {
+            return $this->childResult(true, $childJobId, $parentId, 1, 0, 1, false);
+        }
+
+        $retry = $this->db->prepare(
+            'UPDATE ue_background_jobs SET status="queued",display_status=NULL,attempts=0,available_at=?,'
+            . 'worker_id=NULL,lease_token=NULL,leased_at=NULL,lease_expires_at=NULL,last_heartbeat_at=NULL,'
+            . 'last_error=NULL,result_json=NULL,'
+            . 'cancel_requested_at=NULL,cancel_requested_by=NULL,cancel_reason=NULL,'
+            . 'dead_lettered_at=NULL,completed_at=NULL,updated_at=? '
+            . 'WHERE queue_name=? AND id=? AND status IN ("cancelled","failed","dead_letter")'
+        );
+        $retry->execute([$now, $now, $queueName, $childJobId]);
+        $affected = $retry->rowCount();
+        $parentRequeued = false;
+
+        if ($affected === 1 && $parentStatus === 'completed' && $parentDisplay === 'partial') {
+            $this->requeueCoordinators($queueName, [[
+                'id' => $parentId,
+                'progress_json' => (string)($row['parent_progress_json'] ?? ''),
+            ]], $now);
+            $parentRequeued = true;
+        }
+
+        return $this->childResult(true, $childJobId, $parentId, 1, $affected, 0, $parentRequeued);
     }
 
     /**
@@ -238,6 +316,33 @@ final class PdoAffectedDependencyRetrySelection
             'affected' => max(0, $affected),
             'retry_blocked' => max(0, $retryBlocked),
             'skipped' => max(0, $requested - $affected),
+        ];
+    }
+
+    /**
+     * @return array{
+     *   handled:bool,job_id:int,parent_job_id:int,requested:int,affected:int,
+     *   retry_blocked:int,skipped:int,parent_requeued:bool
+     * }
+     */
+    private function childResult(
+        bool $handled,
+        int $jobId,
+        int $parentJobId,
+        int $requested,
+        int $affected,
+        int $retryBlocked,
+        bool $parentRequeued
+    ): array {
+        return [
+            'handled' => $handled,
+            'job_id' => max(0, $jobId),
+            'parent_job_id' => max(0, $parentJobId),
+            'requested' => max(0, $requested),
+            'affected' => max(0, $affected),
+            'retry_blocked' => max(0, $retryBlocked),
+            'skipped' => max(0, $requested - $affected),
+            'parent_requeued' => $parentRequeued,
         ];
     }
 }
