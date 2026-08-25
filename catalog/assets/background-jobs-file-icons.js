@@ -6,7 +6,7 @@
     if (!body || !app) return;
 
     const spriteUrl = 'assets/file-icons.svg?v=20260824-2';
-    const childRetryUrl = 'api/v1/job-child-retry.php';
+    const bulkUrl = String(app.dataset.bulkUrl || 'api/v1/job-bulk.php');
     const queue = String(app.dataset.queue || 'catalog');
     const csrf = String(app.dataset.csrf || '');
     const supported = new Set([
@@ -58,9 +58,6 @@
 
     function hierarchyIndent(depth) {
         if (depth < 1) return 0;
-        // First-level archive members move in noticeably. Every nested archive
-        // level then gets a much larger step so embedded containers cannot read
-        // as a flat list beneath the top-level source.
         return 42 + (Math.min(depth - 1, 5) * 64);
     }
 
@@ -74,9 +71,6 @@
         const depth = Math.max(0, parseInt(String(row.dataset.depth || '0'), 10) || 0);
         const rootGroup = Number(row.dataset.rootGroup || 0);
 
-        // The old guide was painted on the table-cell edge, which made every
-        // descendant share one vertical rail. Remove it and put the rail at the
-        // actual nesting position instead.
         fileCell.style.setProperty('border-left', '0', 'important');
         tree.style.setProperty('padding-left', depth > 0 ? '12px' : '0', 'important');
         tree.style.setProperty('margin-left', hierarchyIndent(depth) + 'px', 'important');
@@ -135,32 +129,40 @@
         }
     }
 
-    function isRetryableAffectedChild(row) {
+    function isRetryableDependencyParent(row) {
+        if (!(row instanceof HTMLElement) || !row.classList.contains('jobs-file-row')) return false;
         const depth = Math.max(0, parseInt(String(row.dataset.depth || '0'), 10) || 0);
-        if (depth < 1) return false;
+        if (depth !== 0) return false;
 
         const jobType = String(row.querySelector('.jobs-file-type')?.textContent || '').trim();
         if (jobType !== 'catalog.rebuild_affected_dependencies') return false;
 
         const status = String(row.querySelector('.jobs-file-status')?.textContent || '').trim().toLowerCase();
-        return status === 'stopped' || status === 'issue';
+        return status === 'issue' || status === 'stopped';
     }
 
-    async function retryChild(row, button) {
+    async function retryDependencyParent(row, button) {
         const jobId = Math.max(0, parseInt(String(row.dataset.jobId || '0'), 10) || 0);
         if (!jobId) return;
 
         button.disabled = true;
         button.textContent = 'Retrying…';
         try {
-            const response = await fetch(childRetryUrl, {
+            const response = await fetch(bulkUrl, {
                 method: 'POST',
                 credentials: 'same-origin',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-Token': csrf
                 },
-                body: JSON.stringify({queue: queue, job_id: jobId})
+                body: JSON.stringify({
+                    action: 'restart',
+                    scope: 'selected',
+                    queue: queue,
+                    status: '',
+                    search: '',
+                    job_ids: [jobId]
+                })
             });
             let payload = {};
             try {
@@ -176,35 +178,43 @@
             }
 
             const data = payload && payload.data ? payload.data : {};
-            const done = Math.max(0, Number(data.resume_done || 0));
-            const total = Math.max(0, Number(data.resume_total || 0));
-            const workerError = String(data.worker_error || '').trim();
-            let message = 'Child job #' + jobId + ' queued to resume';
-            if (total > 0) message += ' at ' + done + '/' + total;
-            else message += ' from its saved progress';
+            const queued = Math.max(0, Number(data.affected || 0));
+            const childCount = Math.max(0, Number(data.affected_dependency_recovery_jobs || 0));
+            const blocked = Math.max(0, Number(data.retry_blocked || 0));
+            const skipped = Math.max(0, Number(data.skipped || 0));
+
+            let message = 'Parent job #' + jobId + ': ' + queued + ' child recovery job(s) queued';
+            if (childCount > 0 && childCount !== queued) {
+                message += ' of ' + childCount + ' needing recovery';
+            }
+            if (blocked > 0) message += ', ' + blocked + ' blocked as non-retryable';
+            if (skipped > blocked) message += ', ' + (skipped - blocked) + ' skipped';
             message += '.';
+            const workerError = String(data.worker_error || '').trim();
             if (workerError) message += ' Worker start warning: ' + workerError;
 
             showNotice(message, 15000);
-            button.textContent = total > 0 ? 'Queued ' + done + '/' + total : 'Queued';
+            button.textContent = queued > 0 ? 'Queued ' + queued : 'Retry';
             button.title = message;
             window.setTimeout(function () {
                 const refresh = document.getElementById('jobs-refresh');
                 if (refresh instanceof HTMLElement) refresh.click();
             }, 350);
         } catch (error) {
-            const message = error && error.message ? error.message : 'Could not retry child job.';
-            showNotice('Retry child #' + jobId + ' failed: ' + message, 15000);
+            const message = error && error.message ? error.message : 'Could not retry this parent job.';
+            showNotice('Retry parent #' + jobId + ' failed: ' + message, 15000);
             button.disabled = false;
             button.textContent = 'Retry';
             button.title = message;
         }
     }
 
-    function addChildRetry(row) {
-        if (!(row instanceof HTMLElement) || !row.classList.contains('jobs-file-row')) return;
-        const existing = row.querySelector('.jobs-file-child-retry');
-        const retryable = isRetryableAffectedChild(row);
+    function addParentRetry(row) {
+        const existingChild = row.querySelector('.jobs-file-child-retry');
+        if (existingChild) existingChild.remove();
+
+        const existing = row.querySelector('.jobs-file-parent-retry');
+        const retryable = isRetryableDependencyParent(row);
         if (!retryable) {
             if (existing) existing.remove();
             return;
@@ -215,11 +225,11 @@
         if (!control) return;
         const button = document.createElement('button');
         button.type = 'button';
-        button.className = 'ui-button ui-button--primary ui-button--sm jobs-file-child-retry';
+        button.className = 'ui-button ui-button--primary ui-button--sm jobs-file-parent-retry';
         button.textContent = 'Retry';
-        button.title = 'Retry only this stopped/failed dependency child and resume it from its saved progress.';
+        button.title = 'Retry all failed, stopped or dead-letter dependency child jobs beneath this parent.';
         button.addEventListener('click', function () {
-            retryChild(row, button);
+            retryDependencyParent(row, button);
         });
         control.appendChild(button);
     }
@@ -229,11 +239,12 @@
         if (!button) return;
         button.classList.remove('ui-button--secondary');
         button.classList.add('ui-button--primary');
+        button.title = 'Retry the selected parent source job(s). Dependency parents automatically queue all failed/stopped child recovery work.';
     }
 
     function enhanceRow(row) {
         addIcon(row);
-        addChildRetry(row);
+        addParentRetry(row);
     }
 
     function refreshRows(root) {
