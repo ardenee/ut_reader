@@ -286,17 +286,49 @@ final class CatalogArchiveImportJobHandler implements JobHandler
         $queue = new PdoJobQueue($this->db);
         $maxTotalBytes = $this->maxTotalUnpackedBytes();
 
-        // A sequential retry must begin at the archive start to rebuild solid
-        // decompression state. Recompute counters from this pass; already-created
-        // child jobs are recognized by dedupe key and are not enqueued twice.
-        $processed = 0;
-        $queued = 0;
-        $skipped = 0;
-        $failed = 0;
-        $unpackedBytes = 0;
-        $errors = [];
+        // A checkpoint is written only after a member has been fully classified
+        // and, when applicable, its durable child job has been queued. After a
+        // process/server restart, restore that committed cursor and all counters.
+        // Some solid RAR/7z decoders still have to consume the compressed prefix
+        // to rebuild decoder state, but those prefix members are replay-only: they
+        // must not reset progress, mutate counters or enqueue duplicate children.
+        $resume = $context->resumeProgress();
+        $resumeStage = trim((string)($resume['stage'] ?? ''));
+        if ((int)($resume['workflow_version'] ?? 0) !== self::WORKFLOW_VERSION
+            || $resumeStage !== 'expand_archive_sequential'
+            || empty($resume['sequential_archive'])) {
+            $resume = [];
+        }
+        $resumeCursor = max(0, (int)($resume['entry_cursor'] ?? 0));
+        $processed = $resumeCursor;
+        $queued = max(0, (int)($resume['queued'] ?? 0));
+        $skipped = max(0, (int)($resume['skipped'] ?? 0));
+        $failed = max(0, (int)($resume['failed'] ?? 0));
+        $unpackedBytes = max(0, (int)($resume['unpacked_bytes'] ?? 0));
+        $errors = is_array($resume['errors'] ?? null) ? array_values($resume['errors']) : [];
+        $walkOrdinal = 0;
 
-        $plan = function (array $entry) use ($allowed, $queueName, $job): array {
+        if ($resumeCursor > 0) {
+            $resume['message'] = 'Resuming sequential archive after ' . number_format($resumeCursor)
+                . ' committed member(s); rebuilding decoder state only where required.';
+            $context->checkpoint($resume);
+        }
+
+        $plan = function (array $entry) use (
+            $allowed,
+            $queueName,
+            $job,
+            $resumeCursor,
+            &$walkOrdinal
+        ): array {
+            $ordinal = $walkOrdinal++;
+            if ($ordinal < $resumeCursor) {
+                return [
+                    'extract' => false,
+                    'state' => ['kind' => 'resume_replay'],
+                ];
+            }
+
             $entryPath = str_replace('\\', '/', (string)($entry['path'] ?? ''));
             if (empty($entry['safe'])) {
                 if ($this->isIgnorableUnsafeArchivePath($entry)) {
@@ -413,11 +445,15 @@ final class CatalogArchiveImportJobHandler implements JobHandler
             $sourceRelativePath,
             $incoming
         ): void {
+            $state = is_array($state) ? $state : [];
+            $kind = (string)($state['kind'] ?? 'failed');
+            if ($kind === 'resume_replay') {
+                return;
+            }
+
             $processed++;
             $entryPath = str_replace('\\', '/', (string)($entry['path'] ?? ''));
             $entryBytes = max(0, (int)($entry['size'] ?? 0));
-            $state = is_array($state) ? $state : [];
-            $kind = (string)($state['kind'] ?? 'failed');
 
             if ($kind === 'failed') {
                 $failed++;
@@ -551,6 +587,12 @@ final class CatalogArchiveImportJobHandler implements JobHandler
                 $error,
                 $failed,
                 $errors
+            );
+        }
+
+        if ($resumeCursor > 0 && $walkOrdinal < $resumeCursor) {
+            throw new \RuntimeException(
+                'Sequential archive resume cursor exceeds the number of readable archive members; source changed or is incomplete.'
             );
         }
 
