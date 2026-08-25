@@ -7,6 +7,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/_bootstrap.php';
 
+use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogBackgroundJobFileTreeProjector;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogBackgroundJobResultHydrator;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoBackgroundJobFileTreeQuery;
@@ -23,6 +24,7 @@ try {
     $queue = trim((string)($_GET['queue'] ?? ($application->config['queue']['name'] ?? 'catalog')));
     $state = strtolower(trim((string)($_GET['state'] ?? 'all')));
     $search = trim((string)($_GET['search'] ?? ''));
+    $jobType = trim((string)($_GET['job_type'] ?? ''));
     $parentJobId = max(0, (int)($_GET['parent_job_id'] ?? 0));
     $page = max(1, (int)($_GET['page'] ?? 1));
     $perPage = max(10, min((int)($_GET['per_page'] ?? ($parentJobId > 0 ? 200 : 100)), $parentJobId > 0 ? 500 : 200));
@@ -37,12 +39,17 @@ try {
         JsonResponse::error('invalid_search', 'Search text is too long.', 400);
     }
 
+    $jobTypes = JobType::all();
+    if ($jobType !== '' && !in_array($jobType, $jobTypes, true)) {
+        $jobType = '';
+    }
+
     $query = new PdoBackgroundJobFileTreeQuery($application->db);
     if ($parentJobId > 0) {
         $result = $query->children($queue, $parentJobId, $page, $perPage);
         $counts = null;
     } else {
-        $result = $query->roots($queue, $state, $search, $page, $perPage);
+        $result = $query->roots($queue, $state, $search, $jobType, $page, $perPage);
         $counts = $result['counts'];
     }
 
@@ -57,6 +64,8 @@ try {
             'queue' => $queue,
             'state' => $parentJobId > 0 ? null : $state,
             'search' => $parentJobId > 0 ? null : ($search !== '' ? $search : null),
+            'job_type' => $parentJobId > 0 ? null : ($jobType !== '' ? $jobType : null),
+            'job_types' => $parentJobId > 0 ? null : $jobTypes,
             'parent_job_id' => $parentJobId > 0 ? $parentJobId : null,
             'page' => $result['page'],
             'per_page' => $result['per_page'],
