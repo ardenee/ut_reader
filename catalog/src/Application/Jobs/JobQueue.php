@@ -33,7 +33,10 @@ interface JobQueue
         ?string $workflowUnitKey = null
     ): int;
 
-    /** Preferred root affinity only affects claim ordering; global runnable work remains eligible. */
+    /**
+     * A preferred root is strict worker affinity: while that root workflow still
+     * has queued/running work, unrelated roots are not eligible for this worker.
+     */
     public function claim(
         string $queue,
         string $workerId,
