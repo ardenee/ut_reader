@@ -17,6 +17,7 @@
         'umod', 'ut2mod', 'ut4mod',
         'zip', 'rar', '7z', 'pak', 'upk', 'uz', 'uz2', 'uz3'
     ]);
+    let stickyNotice = {text: '', until: 0};
 
     function detectedArchiveKey(identity) {
         if (!identity) return '';
@@ -116,6 +117,24 @@
         tree.insertBefore(svg, identity);
     }
 
+    function showNotice(text, milliseconds) {
+        const message = String(text || '').trim();
+        if (!message) return;
+        stickyNotice = {
+            text: message,
+            until: Date.now() + Math.max(3000, Number(milliseconds || 12000))
+        };
+        restoreStickyNotice();
+    }
+
+    function restoreStickyNotice() {
+        if (!stickyNotice.text || Date.now() >= stickyNotice.until) return;
+        const notice = document.getElementById('jobs-file-notice');
+        if (notice && notice.textContent !== stickyNotice.text) {
+            notice.textContent = stickyNotice.text;
+        }
+    }
+
     function isRetryableAffectedChild(row) {
         const depth = Math.max(0, parseInt(String(row.dataset.depth || '0'), 10) || 0);
         if (depth < 1) return false;
@@ -156,20 +175,29 @@
                 throw new Error(message);
             }
 
-            const notice = document.getElementById('jobs-file-notice');
-            if (notice) {
-                notice.textContent = 'Child job #' + jobId + ' queued to resume from its saved progress.';
-            }
-            button.textContent = 'Queued';
+            const data = payload && payload.data ? payload.data : {};
+            const done = Math.max(0, Number(data.resume_done || 0));
+            const total = Math.max(0, Number(data.resume_total || 0));
+            const workerError = String(data.worker_error || '').trim();
+            let message = 'Child job #' + jobId + ' queued to resume';
+            if (total > 0) message += ' at ' + done + '/' + total;
+            else message += ' from its saved progress';
+            message += '.';
+            if (workerError) message += ' Worker start warning: ' + workerError;
+
+            showNotice(message, 15000);
+            button.textContent = total > 0 ? 'Queued ' + done + '/' + total : 'Queued';
+            button.title = message;
             window.setTimeout(function () {
                 const refresh = document.getElementById('jobs-refresh');
                 if (refresh instanceof HTMLElement) refresh.click();
             }, 350);
         } catch (error) {
-            const notice = document.getElementById('jobs-file-notice');
-            if (notice) notice.textContent = error && error.message ? error.message : 'Could not retry child job.';
+            const message = error && error.message ? error.message : 'Could not retry child job.';
+            showNotice('Retry child #' + jobId + ' failed: ' + message, 15000);
             button.disabled = false;
             button.textContent = 'Retry';
+            button.title = message;
         }
     }
 
@@ -212,6 +240,7 @@
         if (root instanceof HTMLElement && root.classList.contains('jobs-file-row')) enhanceRow(root);
         (root || body).querySelectorAll('.jobs-file-row').forEach(enhanceRow);
         makeBulkRetryVisiblyPrimary();
+        restoreStickyNotice();
     }
 
     refreshRows(body);
