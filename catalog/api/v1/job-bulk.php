@@ -11,6 +11,7 @@ require_once __DIR__ . '/_bootstrap.php';
 
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogJobDisplayStatus;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogQueueWorkerStarter;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoAffectedDependencyRetrySelection;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoBackgroundJobBulkAction;
 use UnrealDb\Catalog\Presentation\Http\JsonResponse;
 
@@ -74,6 +75,15 @@ try {
         session_write_close();
     }
 
+    $selectedSourceJobs = count($jobIds);
+    $retrySelectionExpanded = false;
+    if ($action === 'restart' && $scope === 'selected' && $jobIds !== []) {
+        $expandedJobIds = (new PdoAffectedDependencyRetrySelection($application->db))
+            ->expand($queueName, $jobIds);
+        $retrySelectionExpanded = $expandedJobIds !== $jobIds;
+        $jobIds = $expandedJobIds;
+    }
+
     $result = (new PdoBackgroundJobBulkAction($application->db, $application->config))->execute(
         $action,
         $scope,
@@ -83,6 +93,12 @@ try {
         $jobIds,
         $userId
     );
+
+    if ($retrySelectionExpanded) {
+        $result['selected_source_jobs'] = $selectedSourceJobs;
+        $result['expanded_recovery_jobs'] = count($jobIds);
+        $result['retry_selection_expanded'] = true;
+    }
 
     if (!empty($result['worker_start_required'])) {
         $workerState = (new CatalogQueueWorkerStarter($application->db, $application->config))
