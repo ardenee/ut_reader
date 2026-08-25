@@ -76,27 +76,73 @@ try {
     }
 
     $selectedSourceJobs = count($jobIds);
-    $retrySelectionExpanded = false;
+    $affectedRecovery = [
+        'handled_root_ids' => [],
+        'requested' => 0,
+        'affected' => 0,
+        'retry_blocked' => 0,
+        'skipped' => 0,
+    ];
+
     if ($action === 'restart' && $scope === 'selected' && $jobIds !== []) {
-        $expandedJobIds = (new PdoAffectedDependencyRetrySelection($application->db))
-            ->expand($queueName, $jobIds);
-        $retrySelectionExpanded = $expandedJobIds !== $jobIds;
-        $jobIds = $expandedJobIds;
+        $affectedRecovery = (new PdoAffectedDependencyRetrySelection($application->db))
+            ->restartPartialRoots($queueName, $jobIds, gmdate('Y-m-d H:i:s'));
+        $handledRoots = array_fill_keys(
+            array_map('intval', $affectedRecovery['handled_root_ids'] ?? []),
+            true
+        );
+        if ($handledRoots !== []) {
+            $jobIds = array_values(array_filter(
+                $jobIds,
+                static fn(int $id): bool => !isset($handledRoots[$id])
+            ));
+        }
     }
 
-    $result = (new PdoBackgroundJobBulkAction($application->db, $application->config))->execute(
-        $action,
-        $scope,
-        $queueName,
-        $status,
-        $search,
-        $jobIds,
-        $userId
-    );
+    if ($scope !== 'selected' || $jobIds !== []) {
+        $result = (new PdoBackgroundJobBulkAction($application->db, $application->config))->execute(
+            $action,
+            $scope,
+            $queueName,
+            $status,
+            $search,
+            $jobIds,
+            $userId
+        );
+    } else {
+        $result = [
+            'action' => $action,
+            'scope' => $scope,
+            'queue' => $queueName,
+            'requested' => 0,
+            'affected' => 0,
+            'scheduled' => 0,
+            'cleanup_job_id' => 0,
+            'skipped' => 0,
+            'retry_blocked' => 0,
+            'deleted_staged_files' => 0,
+            'limited' => false,
+            'batch_limit' => 10000,
+            'worker' => null,
+            'worker_error' => '',
+            'worker_start_required' => false,
+        ];
+    }
 
-    if ($retrySelectionExpanded) {
+    if (($affectedRecovery['handled_root_ids'] ?? []) !== []) {
+        $recoveryRequested = max(0, (int)($affectedRecovery['requested'] ?? 0));
+        $recoveryAffected = max(0, (int)($affectedRecovery['affected'] ?? 0));
+        $recoveryBlocked = max(0, (int)($affectedRecovery['retry_blocked'] ?? 0));
+        $recoverySkipped = max(0, (int)($affectedRecovery['skipped'] ?? 0));
+
+        $result['requested'] = max(0, (int)($result['requested'] ?? 0)) + $recoveryRequested;
+        $result['affected'] = max(0, (int)($result['affected'] ?? 0)) + $recoveryAffected;
+        $result['retry_blocked'] = max(0, (int)($result['retry_blocked'] ?? 0)) + $recoveryBlocked;
+        $result['skipped'] = max(0, (int)($result['skipped'] ?? 0)) + $recoverySkipped;
+        $result['worker_start_required'] = !empty($result['worker_start_required']) || $recoveryAffected > 0;
         $result['selected_source_jobs'] = $selectedSourceJobs;
-        $result['expanded_recovery_jobs'] = count($jobIds);
+        $result['affected_dependency_source_jobs'] = count($affectedRecovery['handled_root_ids']);
+        $result['affected_dependency_recovery_jobs'] = $recoveryRequested;
         $result['retry_selection_expanded'] = true;
     }
 
