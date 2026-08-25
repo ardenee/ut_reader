@@ -216,8 +216,15 @@ $checks = [
         'forbid' => ['$_SESSION'],
     ],
     'src/Infrastructure/Persistence/PdoJobClaimer.php' => [
-        'require' => ['FOR UPDATE SKIP LOCKED', 'PdoJobAdmissionGuard', 'Root affinity is preference-only'],
-        'forbid' => ['requirePreferredRoot', 'SELECT COUNT(*) FROM ue_background_jobs rr'],
+        'require' => [
+            'FOR UPDATE SKIP LOCKED',
+            'PdoJobAdmissionGuard',
+            'Strict root affinity',
+            'WITH RECURSIVE root_scope AS',
+            'SELECT GET_LOCK(?,0)',
+            'workflowOpen(',
+        ],
+        'forbid' => ['requirePreferredRoot', 'SELECT COUNT(*) FROM ue_background_jobs rr', 'Root affinity is preference-only'],
     ],
     'src/Infrastructure/Persistence/PdoWorkerOwnership.php' => [
         'require' => ['GET_LOCK', 'IS_USED_LOCK', 'RELEASE_LOCK'],
@@ -300,8 +307,8 @@ foreach ([
     }
 }
 
-// Syntax-check the files directly changed by this retirement pass. This keeps
-// the manual verifier useful on the production PHP version without adding CI.
+// Syntax-check the files directly changed by this retirement pass and the root
+// affinity scheduler. This keeps the manual verifier useful on production PHP.
 if (function_exists('proc_open')) {
     $syntaxTargets = [
         'config.example.php',
@@ -314,6 +321,12 @@ if (function_exists('proc_open')) {
         'src/Presentation/Http/CatalogFileInfoRouteGuard.php',
         'src/Presentation/Http/CatalogFederationInventoryFailureHandler.php',
         'unverified-files-action.php',
+        'src/Domain/Jobs/ClaimedJob.php',
+        'src/Application/Jobs/JobQueue.php',
+        'src/Application/Jobs/JobWorker.php',
+        'src/Infrastructure/Persistence/PdoJobClaimer.php',
+        'src/Infrastructure/Jobs/CatalogWorkerCodeVersion.php',
+        'bin/verify-job-root-affinity-contract.php',
     ];
     foreach ($syntaxTargets as $relative) {
         $path = $root . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relative);
