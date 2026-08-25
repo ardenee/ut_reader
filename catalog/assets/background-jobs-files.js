@@ -197,9 +197,12 @@
         ].includes(String(file.job_type || ''));
     }
 
-    function isRetryCandidate(file) {
-        const operatorState = String(file.operator_state || '');
-        return (operatorState === 'issue' || operatorState === 'stopped') && file.retry_blocked !== true;
+    function selectedSourceIds() {
+        const ids = [];
+        state.selected.forEach(function (id) {
+            if (state.visibleFiles.has(id)) ids.push(id);
+        });
+        return ids;
     }
 
     function visibleSelectedCount() {
@@ -208,15 +211,6 @@
             if (state.selected.has(id)) count++;
         });
         return count;
-    }
-
-    function retryableSelectedIds() {
-        const ids = [];
-        state.selected.forEach(function (id) {
-            const file = state.visibleFiles.get(id);
-            if (file && isRetryCandidate(file)) ids.push(id);
-        });
-        return ids;
     }
 
     function stoppableSelectedIds() {
@@ -238,11 +232,11 @@
         }
         setText(selectedCount, state.selected.size === 1 ? '1 source selected' : state.selected.size + ' sources selected');
         if (retrySelectedButton) {
-            const retryable = retryableSelectedIds().length;
-            retrySelectedButton.disabled = retryable === 0;
-            retrySelectedButton.title = retryable > 0
-                ? 'Retry ' + retryable + ' selected retryable source job(s).'
-                : 'Select one or more retryable Issue/Stopped source rows.';
+            const selectedSources = selectedSourceIds().length;
+            retrySelectedButton.disabled = selectedSources === 0;
+            retrySelectedButton.title = selectedSources > 0
+                ? 'Retry/recover the selected source job(s). The server will skip or block sources that cannot safely be retried.'
+                : 'Select one or more source rows.';
         }
         if (stopSelectedButton) {
             const stoppable = stoppableSelectedIds().length;
@@ -556,9 +550,9 @@
     }
 
     async function retrySelected() {
-        const ids = retryableSelectedIds();
+        const ids = selectedSourceIds();
         if (!ids.length) {
-            setNotice('No selected source rows can be retried. Structurally invalid sources must be replaced or fixed.', 7000);
+            setNotice('Select one or more source rows to retry or recover.', 5000);
             return;
         }
         if (retrySelectedButton) retrySelectedButton.disabled = true;
