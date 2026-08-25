@@ -12,8 +12,8 @@ namespace UnrealDb\Catalog\Infrastructure\Email;
 use PDO;
 use RuntimeException;
 use Throwable;
-use UnrealDb\Catalog\Infrastructure\Security\CatalogFederationPeerSecretService;
 use UnrealDb\Catalog\Infrastructure\Security\CatalogPublicAccessSettingsStore;
+use UnrealDb\Catalog\Infrastructure\Security\FederationSecretStore;
 
 final class CatalogSmtpSettingsStore
 {
@@ -66,7 +66,14 @@ final class CatalogSmtpSettingsStore
         $password = $storedPassword;
         if ($storedPassword !== '') {
             try {
-                $password = CatalogFederationPeerSecretService::forCrypto($storedPassword);
+                // SMTP currently reuses the same encrypted-value codec/master key
+                // as federation secrets for storage compatibility, but it is not a
+                // federation peer secret. Peer-only strict plaintext policy must
+                // therefore never reject a legacy/plaintext SMTP password.
+                $secretStore = FederationSecretStore::fromEnvironment();
+                if ($secretStore->isEncrypted($storedPassword)) {
+                    $password = $secretStore->decrypt($storedPassword);
+                }
             } catch (Throwable $error) {
                 throw new RuntimeException(
                     'The saved SMTP password could not be decrypted: ' . $error->getMessage(),
