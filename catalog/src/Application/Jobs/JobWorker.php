@@ -1,7 +1,7 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Executes durable jobs while keeping a worker attached to one root workflow when useful.
+ * Purpose: Executes durable jobs while keeping a worker attached to one root workflow until that workflow is terminal.
  * Role: Application-layer orchestration shared by detached workers and other job runners.
  */
 declare(strict_types=1);
@@ -118,7 +118,11 @@ final class JobWorker
                 $this->reportFailure($job, $leaseError, 'cancel_persist_failed');
                 return $this->failureResult('lease_lost', $job, $leaseError);
             }
-            $this->releaseAffinity();
+            if ($job->parentJobId === null) {
+                $this->releaseAffinity();
+            } else {
+                $this->retainAffinity($rootJobId);
+            }
             return $this->failureResult('cancelled', $job, $exception);
         } catch (\Throwable $exception) {
             $this->diagnostic(
@@ -129,7 +133,12 @@ final class JobWorker
             );
             $delay = JobFailureRetryPolicy::retryDelaySeconds($job, $exception);
             $failure = $this->recordFailure($job, $exception, $delay);
-            $this->releaseAffinity();
+            $failureStatus = (string)($failure['status'] ?? 'failed');
+            if ($job->parentJobId !== null || $failureStatus === 'retry_queued') {
+                $this->retainAffinity($rootJobId);
+            } else {
+                $this->releaseAffinity();
+            }
             return $failure;
         }
 
@@ -144,13 +153,18 @@ final class JobWorker
             );
 
             if ($disposition === 'cancelled') {
-                $this->releaseAffinity();
+                if ($job->parentJobId === null) {
+                    $this->releaseAffinity();
+                } else {
+                    $this->retainAffinity($rootJobId);
+                }
                 return [
                     'status' => 'cancelled',
                     'job_id' => $job->id,
                     'root_job_id' => $rootJobId,
                     'type' => $job->type,
                     'result' => $result,
+                    'affinity_held' => $job->parentJobId !== null,
                 ];
             }
 
