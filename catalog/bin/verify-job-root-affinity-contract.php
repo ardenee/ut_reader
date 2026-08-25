@@ -6,19 +6,27 @@ $catalogRoot = dirname(__DIR__);
 $required = [
     'src/Domain/Jobs/ClaimedJob.php' => [
         'public readonly ?int $parentJobId = null',
+        'public readonly ?int $resolvedRootJobId = null',
         'public function rootJobId(): int',
+        '$this->resolvedRootJobId',
     ],
     'src/Application/Jobs/JobQueue.php' => [
         '?int $preferredRootJobId = null',
-        'Preferred root affinity only affects claim ordering',
+        'preferred root is strict worker affinity',
+        'unrelated roots are not eligible for this worker',
     ],
     'src/Infrastructure/Persistence/PdoJobClaimer.php' => [
         'FOR UPDATE SKIP LOCKED',
         'PdoJobAdmissionGuard',
-        '$preferred = $this->claimFromScope(',
-        'return $this->claimFromScope($queue, $workerId, $leaseSeconds, null, $guard);',
+        'WITH RECURSIVE root_scope AS',
+        'EXISTS (SELECT 1 FROM root_scope scope WHERE scope.id=j.id)',
+        'j.parent_job_id IS NULL',
+        'workflowOpen(',
+        'ensureRootAffinity(',
+        'SELECT GET_LOCK(?,0)',
+        'SELECT RELEASE_LOCK(?)',
+        'Strict root affinity',
         'COALESCE(j.available_at,j.created_at)<=UTC_TIMESTAMP()',
-        'Root affinity is preference-only',
     ],
     'src/Application/Jobs/JobDeferred.php' => [
         '$retainWorkerAffinity',
@@ -27,26 +35,21 @@ $required = [
         'private ?int $preferredRootJobId = null',
         '$job->rootJobId()',
         '$this->retainAffinity($rootJobId)',
-        '$this->releaseAffinity()',
+        '$failureStatus === \'retry_queued\'',
+    ],
+    'src/Infrastructure/Jobs/CatalogWorkerCodeVersion.php' => [
+        '/src/Domain/Jobs/ClaimedJob.php',
+        '/src/Infrastructure/Persistence/PdoJobClaimer.php',
     ],
 ];
 
 $forbidden = [
     'src/Application/Jobs/JobQueue.php' => [
-        'requirePreferredRoot',
-    ],
-    'src/Infrastructure/Persistence/PdoJobQueue.php' => [
-        'requirePreferredRoot',
+        'Preferred root affinity only affects claim ordering',
     ],
     'src/Infrastructure/Persistence/PdoJobClaimer.php' => [
-        'requirePreferredRoot',
-        'workflowOpen(',
-        'workflowHasReadyWork(',
-        '$blockedClasses',
-        '$blockedKeys',
-    ],
-    'src/Application/Jobs/JobWorker.php' => [
-        'requirePreferredRoot',
+        'Root affinity is preference-only',
+        '(j.id=? OR j.parent_job_id=?)',
     ],
 ];
 
@@ -84,4 +87,4 @@ if ($failures !== []) {
     exit(1);
 }
 
-fwrite(STDOUT, "Job root affinity contract passed: affinity is preference-only and valid global work remains claimable.\n");
+fwrite(STDOUT, "Job root affinity contract passed: each worker owns one root and drains its full descendant workflow before moving on.\n");
