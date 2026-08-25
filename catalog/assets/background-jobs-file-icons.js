@@ -2,9 +2,13 @@
     'use strict';
 
     const body = document.getElementById('jobs-file-body');
-    if (!body) return;
+    const app = document.getElementById('background-jobs-app');
+    if (!body || !app) return;
 
     const spriteUrl = 'assets/file-icons.svg?v=20260824-2';
+    const childRetryUrl = 'api/v1/job-child-retry.php';
+    const queue = String(app.dataset.queue || 'catalog');
+    const csrf = String(app.dataset.csrf || '');
     const supported = new Set([
         'default',
         'u', 'ut2', 'ut3', 'unr', 'un2', 'umap',
@@ -112,16 +116,109 @@
         tree.insertBefore(svg, identity);
     }
 
-    function refreshIcons(root) {
-        if (root instanceof HTMLElement && root.classList.contains('jobs-file-row')) addIcon(root);
-        (root || body).querySelectorAll('.jobs-file-row').forEach(addIcon);
+    function isRetryableAffectedChild(row) {
+        const depth = Math.max(0, parseInt(String(row.dataset.depth || '0'), 10) || 0);
+        if (depth < 1) return false;
+
+        const jobType = String(row.querySelector('.jobs-file-type')?.textContent || '').trim();
+        if (jobType !== 'catalog.rebuild_affected_dependencies') return false;
+
+        const status = String(row.querySelector('.jobs-file-status')?.textContent || '').trim().toLowerCase();
+        return status === 'stopped' || status === 'issue';
     }
 
-    refreshIcons(body);
+    async function retryChild(row, button) {
+        const jobId = Math.max(0, parseInt(String(row.dataset.jobId || '0'), 10) || 0);
+        if (!jobId) return;
+
+        button.disabled = true;
+        button.textContent = 'Retrying…';
+        try {
+            const response = await fetch(childRetryUrl, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': csrf
+                },
+                body: JSON.stringify({queue: queue, job_id: jobId})
+            });
+            let payload = {};
+            try {
+                payload = await response.json();
+            } catch (_error) {
+                payload = {};
+            }
+            if (!response.ok) {
+                const message = payload && payload.error && payload.error.message
+                    ? String(payload.error.message)
+                    : 'Retry failed with HTTP ' + response.status + '.';
+                throw new Error(message);
+            }
+
+            const notice = document.getElementById('jobs-file-notice');
+            if (notice) {
+                notice.textContent = 'Child job #' + jobId + ' queued to resume from its saved progress.';
+            }
+            button.textContent = 'Queued';
+            window.setTimeout(function () {
+                const refresh = document.getElementById('jobs-refresh');
+                if (refresh instanceof HTMLElement) refresh.click();
+            }, 350);
+        } catch (error) {
+            const notice = document.getElementById('jobs-file-notice');
+            if (notice) notice.textContent = error && error.message ? error.message : 'Could not retry child job.';
+            button.disabled = false;
+            button.textContent = 'Retry';
+        }
+    }
+
+    function addChildRetry(row) {
+        if (!(row instanceof HTMLElement) || !row.classList.contains('jobs-file-row')) return;
+        const existing = row.querySelector('.jobs-file-child-retry');
+        const retryable = isRetryableAffectedChild(row);
+        if (!retryable) {
+            if (existing) existing.remove();
+            return;
+        }
+        if (existing) return;
+
+        const control = row.querySelector('.jobs-file-control');
+        if (!control) return;
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'ui-button ui-button--primary ui-button--sm jobs-file-child-retry';
+        button.textContent = 'Retry';
+        button.title = 'Retry only this stopped/failed dependency child and resume it from its saved progress.';
+        button.addEventListener('click', function () {
+            retryChild(row, button);
+        });
+        control.appendChild(button);
+    }
+
+    function makeBulkRetryVisiblyPrimary() {
+        const button = document.getElementById('jobs-retry-selected');
+        if (!button) return;
+        button.classList.remove('ui-button--secondary');
+        button.classList.add('ui-button--primary');
+    }
+
+    function enhanceRow(row) {
+        addIcon(row);
+        addChildRetry(row);
+    }
+
+    function refreshRows(root) {
+        if (root instanceof HTMLElement && root.classList.contains('jobs-file-row')) enhanceRow(root);
+        (root || body).querySelectorAll('.jobs-file-row').forEach(enhanceRow);
+        makeBulkRetryVisiblyPrimary();
+    }
+
+    refreshRows(body);
     new MutationObserver(function (mutations) {
         mutations.forEach(function (mutation) {
             mutation.addedNodes.forEach(function (node) {
-                if (node instanceof HTMLElement) refreshIcons(node);
+                if (node instanceof HTMLElement) refreshRows(node);
             });
         });
     }).observe(body, {childList: true, subtree: true});
