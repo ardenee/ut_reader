@@ -39,12 +39,19 @@ final class PdoBackgroundJobFileTreeQuery
         string $queue,
         string $state,
         string $search,
+        string $jobType,
         int $page,
         int $perPage
     ): array {
         $perPage = max(10, min($perPage, 200));
         $baseWhere = ['j.queue_name=?', 'j.parent_job_id IS NULL'];
         $baseParams = [$queue];
+
+        $jobType = trim($jobType);
+        if ($jobType !== '') {
+            $baseWhere[] = 'j.job_type=?';
+            $baseParams[] = $jobType;
+        }
 
         if ($search !== '') {
             [$searchSql, $searchParams] = $this->rootSearchCondition($search);
