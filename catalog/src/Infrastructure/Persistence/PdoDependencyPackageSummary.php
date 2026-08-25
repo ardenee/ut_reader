@@ -16,6 +16,7 @@ use Throwable;
 final class PdoDependencyPackageSummary
 {
     private const BULK_FILE_BATCH = 250;
+    private const CONTENTION_ATTEMPTS = 5;
     private const TEXT_COLLATION = 'utf8mb4_unicode_ci';
 
     /** @var array<int,bool> */
@@ -82,10 +83,27 @@ final class PdoDependencyPackageSummary
             return ['files' => count($fileIds), 'summary_rows' => 0, 'available' => false];
         }
 
+        // Every publisher takes file locks in the same deterministic order. This
+        // materially reduces deadlock cycles when two dependency workflows touch
+        // overlapping file sets at the same time.
+        sort($fileIds, SORT_NUMERIC);
+        $exampleColumn = $this->hasExamplePathColumn();
         $summaryRows = 0;
         foreach (array_chunk($fileIds, self::BULK_FILE_BATCH) as $chunk) {
-            $placeholders = implode(',', array_fill(0, count($chunk), '?'));
-            $ownsTransaction = !$this->db->inTransaction();
+            $summaryRows += $this->rebuildChunk($chunk, $exampleColumn);
+        }
+
+        return ['files' => count($fileIds), 'summary_rows' => $summaryRows, 'available' => true];
+    }
+
+    /** @param list<int> $chunk */
+    private function rebuildChunk(array $chunk, bool $exampleColumn): int
+    {
+        $placeholders = implode(',', array_fill(0, count($chunk), '?'));
+        $ownsTransaction = !$this->db->inTransaction();
+        $maxAttempts = $ownsTransaction ? self::CONTENTION_ATTEMPTS : 1;
+
+        for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
             if ($ownsTransaction) {
                 $this->db->beginTransaction();
             }
@@ -96,7 +114,6 @@ final class PdoDependencyPackageSummary
                 );
                 $delete->execute($chunk);
 
-                $exampleColumn = $this->hasExamplePathColumn();
                 $insertColumns = 'game_id,file_id,required_package,'
                     . ($exampleColumn ? 'example_required_object_path,' : '')
                     . 'dependency_count,resolved_count,missing_count,package_only_count,common_count,summary_status,provider_file_id';
@@ -135,20 +152,32 @@ final class PdoDependencyPackageSummary
                     . 'GROUP BY f.game_id,l.file_id,l.required_package_term_id'
                 );
                 $insert->execute($chunk);
-                $summaryRows += $insert->rowCount();
+                $rows = max(0, $insert->rowCount());
 
                 if ($ownsTransaction) {
                     $this->db->commit();
                 }
+                return $rows;
             } catch (Throwable $error) {
                 if ($ownsTransaction && $this->db->inTransaction()) {
                     $this->db->rollBack();
                 }
-                throw $error;
+
+                // A deadlock/lock wait is a transient transaction outcome, not a
+                // corrupt dependency job. Retry the complete bounded chunk here so
+                // one MySQL collision does not consume a durable job attempt. When
+                // called inside an outer transaction, leave retry ownership to the
+                // outer boundary because MySQL may have rolled that transaction back.
+                if (!$ownsTransaction
+                    || !PdoContention::retryable($error)
+                    || $attempt >= $maxAttempts) {
+                    throw $error;
+                }
+                usleep(PdoContention::backoffMicros($attempt, 25000));
             }
         }
 
-        return ['files' => count($fileIds), 'summary_rows' => $summaryRows, 'available' => true];
+        throw new \LogicException('Dependency package summary contention retry loop exited unexpectedly.');
     }
 
     private function hasExamplePathColumn(): bool
