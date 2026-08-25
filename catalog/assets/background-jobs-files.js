@@ -16,6 +16,7 @@
 
     const body = document.getElementById('jobs-file-body');
     const tabs = document.getElementById('jobs-file-tabs');
+    const filters = document.querySelector('.jobs-file-filters');
     const searchInput = document.getElementById('jobs-file-search');
     const perPageSelect = document.getElementById('jobs-file-per-page');
     const notice = document.getElementById('jobs-file-notice');
@@ -39,21 +40,24 @@
     const retrySelectedButton = document.getElementById('jobs-retry-selected');
     const stopSelectedButton = document.getElementById('jobs-stop-selected');
     const deleteSelectedButton = document.getElementById('jobs-delete-selected');
+    let jobTypeSelect = null;
 
     if (!body || !tabs || !searchInput || !perPageSelect || !notice) return;
 
     const validStates = ['all', 'working', 'issue', 'completed', 'stopped'];
     const query = new URLSearchParams(window.location.search);
     const requestedState = String(query.get('state') || 'all').toLowerCase();
+    const requestedJobType = String(query.get('job_type') || '').trim();
     const requestedPerPage = parseInt(query.get('per_page') || '100', 10) || 100;
 
     const state = {
         filter: validStates.includes(requestedState) ? requestedState : 'all',
+        jobType: requestedJobType,
         search: String(query.get('search') || ''),
         page: Math.max(1, parseInt(query.get('page') || '1', 10) || 1),
         perPage: [25, 50, 100, 200].includes(requestedPerPage) ? requestedPerPage : 100,
         roots: [],
-        meta: {page: 1, pages: 1, total: 0, counts: {}},
+        meta: {page: 1, pages: 1, total: 0, counts: {}, job_types: []},
         expanded: new Set(),
         children: new Map(),
         selected: new Set(),
@@ -106,6 +110,7 @@
         const params = new URLSearchParams(window.location.search);
         params.set('queue', queue);
         if (state.filter !== 'all') params.set('state', state.filter); else params.delete('state');
+        if (state.jobType) params.set('job_type', state.jobType); else params.delete('job_type');
         if (state.search) params.set('search', state.search); else params.delete('search');
         if (state.page > 1) params.set('page', String(state.page)); else params.delete('page');
         if (state.perPage !== 100) params.set('per_page', String(state.perPage)); else params.delete('per_page');
@@ -131,6 +136,50 @@
         if (text != null) element.textContent = String(text);
         return element;
     }
+
+    function renderJobTypeOptions(jobTypes) {
+        if (!jobTypeSelect) return;
+        const types = Array.isArray(jobTypes) ? jobTypes.map(String) : [];
+        const fragment = document.createDocumentFragment();
+        const allOption = document.createElement('option');
+        allOption.value = '';
+        allOption.textContent = 'All job types';
+        fragment.appendChild(allOption);
+
+        if (state.jobType && !types.includes(state.jobType)) {
+            types.unshift(state.jobType);
+        }
+        Array.from(new Set(types)).forEach(function (jobType) {
+            if (!jobType) return;
+            const option = document.createElement('option');
+            option.value = jobType;
+            option.textContent = jobType;
+            fragment.appendChild(option);
+        });
+        jobTypeSelect.replaceChildren(fragment);
+        jobTypeSelect.value = state.jobType;
+    }
+
+    function ensureJobTypeFilter() {
+        if (!filters || jobTypeSelect) return;
+        const label = create('label', 'jobs-file-job-type-filter');
+        label.appendChild(document.createTextNode('Job type '));
+        jobTypeSelect = document.createElement('select');
+        jobTypeSelect.id = 'jobs-file-job-type';
+        jobTypeSelect.style.minWidth = '300px';
+        jobTypeSelect.setAttribute('aria-label', 'Filter by root job type');
+        label.appendChild(jobTypeSelect);
+        filters.insertBefore(label, filters.firstChild);
+        renderJobTypeOptions([]);
+        jobTypeSelect.addEventListener('change', function () {
+            state.jobType = String(jobTypeSelect.value || '').trim();
+            state.page = 1;
+            clearSelectionAndChildren();
+            refresh();
+        });
+    }
+
+    ensureJobTypeFilter();
 
     function groupMarker(rootGroup) {
         return Math.abs(Number(rootGroup || 0)) % 2 === 0
@@ -449,10 +498,15 @@
             page: String(state.page),
             per_page: String(state.perPage)
         });
+        if (state.jobType) params.set('job_type', state.jobType);
         if (state.search) params.set('search', state.search);
         const payload = await jsonRequest(treeUrl + '?' + params.toString(), {cache: 'no-store', credentials: 'same-origin'});
         state.roots = payload && payload.data && Array.isArray(payload.data.files) ? payload.data.files : [];
         state.meta = payload && payload.meta ? payload.meta : state.meta;
+        state.jobType = state.meta && state.meta.job_type ? String(state.meta.job_type) : '';
+        if (state.meta && Array.isArray(state.meta.job_types)) {
+            renderJobTypeOptions(state.meta.job_types);
+        }
         state.page = Math.max(1, Number(state.meta.page || 1));
     }
 
