@@ -37,12 +37,16 @@ final class ClaimedJob
         public readonly ?string $concurrencyKey = null,
         public readonly array $resumeProgress = [],
         public readonly ?int $parentJobId = null,
-        public readonly ?string $workflowUnitKey = null
+        public readonly ?string $workflowUnitKey = null,
+        public readonly ?int $resolvedRootJobId = null
     ) {
     }
 
     public function rootJobId(): int
     {
+        if ($this->resolvedRootJobId !== null && $this->resolvedRootJobId > 0) {
+            return $this->resolvedRootJobId;
+        }
         return $this->parentJobId !== null && $this->parentJobId > 0
             ? $this->parentJobId
             : $this->id;
