@@ -7,7 +7,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/_bootstrap.php';
 
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogQueueWorkerStarter;
-use UnrealDb\Catalog\Infrastructure\Persistence\PdoAffectedDependencyRetrySelection;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoAffectedDependencyChildRetry;
 use UnrealDb\Catalog\Presentation\Http\JsonResponse;
 
 try {
@@ -35,27 +35,28 @@ try {
         session_write_close();
     }
 
-    $result = (new PdoAffectedDependencyRetrySelection($application->db))
-        ->restartChild($queueName, $jobId, gmdate('Y-m-d H:i:s'));
+    $result = (new PdoAffectedDependencyChildRetry($application->db))
+        ->restart($queueName, $jobId, gmdate('Y-m-d H:i:s'));
+    $reason = trim((string)($result['reason'] ?? ''));
 
     if (empty($result['handled'])) {
         JsonResponse::error(
             'not_supported',
-            'This child job is not a retryable affected-dependency recovery unit.',
+            $reason !== '' ? $reason : 'This child job is not an affected-dependency recovery unit.',
             409
         );
     }
     if ((int)($result['retry_blocked'] ?? 0) > 0) {
         JsonResponse::error(
             'not_retryable',
-            'This child failure is deterministic and cannot succeed by replaying the same work.',
+            $reason !== '' ? $reason : 'This child failure cannot succeed by replaying the same work.',
             409
         );
     }
     if ((int)($result['affected'] ?? 0) < 1) {
         JsonResponse::error(
             'not_retryable',
-            'This child job is no longer in a stopped or failed state.',
+            $reason !== '' ? $reason : 'This child job is no longer in a stopped or failed state.',
             409
         );
     }
