@@ -141,19 +141,32 @@ $record(
 );
 
 $record(
-    'sequential_retry_restarts_and_dedupes_children',
-    str_contains($handler, 'A sequential retry must begin at the archive start')
-        && str_contains($handler, '$processed = 0;')
+    'sequential_restart_resumes_committed_cursor',
+    str_contains($handler, '$resumeStage !== \'expand_archive_sequential\'')
+        && str_contains($handler, '$resumeCursor = max(0, (int)($resume[\'entry_cursor\'] ?? 0));')
+        && str_contains($handler, '$processed = $resumeCursor;')
+        && str_contains($handler, "'kind' => 'resume_replay'")
+        && str_contains($handler, "if (\$kind === 'resume_replay')")
+        && str_contains($handler, 'Resuming sequential archive after ')
+        && str_contains($handler, 'Sequential archive resume cursor exceeds the number of readable archive members')
         && str_contains($handler, '$this->queuedChildExists($queueName, $dedupeKey)')
         && str_contains($handler, '\'archive-entry:\' . $jobId'),
-    'A retry/recovery pass must reuse already-created durable child jobs rather than enqueue duplicates.'
+    'A process/server restart must restore the last fully committed sequential member and counters; decoder-prefix replay may rebuild solid state but must not reset progress or enqueue prior members again.'
+);
+
+$record(
+    'terminal_archive_retry_does_not_skip_recovery_pass',
+    str_contains($handler, "$resumeStage !== 'expand_archive_sequential'")
+        && str_contains($handler, "'stage' => 'complete'"),
+    'Only an interrupted in-progress sequential expansion may resume its cursor; an operator retry of a terminal/partial archive must still perform a fresh recovery pass.'
 );
 
 $record(
     'worker_fingerprint_tracks_php_archive_readers',
     str_contains($worker, '/src/Infrastructure/Archive/CatalogSequentialArchiveReader.php')
-        && str_contains($worker, '/src/Infrastructure/Archive/CatalogExternalArchiveReader.php'),
-    'Changing either PHP archive decoder path must invalidate detached workers.'
+        && str_contains($worker, '/src/Infrastructure/Archive/CatalogExternalArchiveReader.php')
+        && str_contains($worker, '/src/Infrastructure/Jobs/CatalogArchiveImportJobHandler.php'),
+    'Changing the PHP archive decoder or archive coordinator path must invalidate detached workers.'
 );
 
 $result = [
