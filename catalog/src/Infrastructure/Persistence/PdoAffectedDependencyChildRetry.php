@@ -44,9 +44,6 @@ final class PdoAffectedDependencyChildRetry
 
         $this->db->beginTransaction();
         try {
-            // Discover the parent first, then lock parent -> child in a stable order.
-            // The locked child read below revalidates the relationship before any
-            // state is changed.
             $parentLookup = $this->db->prepare(
                 'SELECT parent_job_id FROM ue_background_jobs WHERE queue_name=? AND id=? LIMIT 1'
             );
@@ -57,6 +54,8 @@ final class PdoAffectedDependencyChildRetry
                 return $this->result(false, $childJobId, 0, 0, 0, false, 0, 0, '', 'The selected row is not a child recovery job.');
             }
 
+            // Lock parent first, then child, so concurrent operator retries use a
+            // stable lock order and cannot split the coordinator/child transition.
             $parentStatement = $this->db->prepare(
                 'SELECT id,parent_job_id,job_type,status,display_status,progress_json '
                 . 'FROM ue_background_jobs WHERE queue_name=? AND id=? LIMIT 1 FOR UPDATE'
@@ -69,7 +68,7 @@ final class PdoAffectedDependencyChildRetry
             }
 
             $childStatement = $this->db->prepare(
-                'SELECT id,parent_job_id,job_type,status,display_status,payload_json,progress_json,last_error,result_json '
+                'SELECT id,parent_job_id,job_type,status,payload_json,progress_json,last_error,result_json '
                 . 'FROM ue_background_jobs WHERE queue_name=? AND id=? LIMIT 1 FOR UPDATE'
             );
             $childStatement->execute([$queueName, $childJobId]);
@@ -150,10 +149,11 @@ final class PdoAffectedDependencyChildRetry
                 );
             }
 
-            // Keep progress_json intact. The affected-dependency handler checks its
-            // batch_key and resumes from progress.done when the batch still matches.
+            // display_status is a generated STORED column derived from status and
+            // result_json. Never assign it directly; MySQL rejects writes to it.
+            // Keep progress_json intact so a stopped batch resumes at progress.done.
             $retry = $this->db->prepare(
-                'UPDATE ue_background_jobs SET status="queued",display_status=NULL,attempts=0,available_at=?,'
+                'UPDATE ue_background_jobs SET status="queued",attempts=0,available_at=?,'
                 . 'worker_id=NULL,lease_token=NULL,leased_at=NULL,lease_expires_at=NULL,last_heartbeat_at=NULL,'
                 . 'last_error=NULL,result_json=NULL,progress_updated_at=?,'
                 . 'cancel_requested_at=NULL,cancel_requested_by=NULL,cancel_reason=NULL,'
@@ -182,7 +182,7 @@ final class PdoAffectedDependencyChildRetry
             if ($parentStatus === 'completed' && $parentDisplay === 'partial') {
                 $parentProgress = self::coordinatorProgress((string)($parent['progress_json'] ?? ''));
                 $parentUpdate = $this->db->prepare(
-                    'UPDATE ue_background_jobs SET status="queued",display_status=NULL,attempts=0,available_at=?,'
+                    'UPDATE ue_background_jobs SET status="queued",attempts=0,available_at=?,'
                     . 'worker_id=NULL,lease_token=NULL,leased_at=NULL,lease_expires_at=NULL,last_heartbeat_at=NULL,'
                     . 'last_error=NULL,result_json=NULL,progress_json=?,progress_updated_at=?,'
                     . 'cancel_requested_at=NULL,cancel_requested_by=NULL,cancel_reason=NULL,'
