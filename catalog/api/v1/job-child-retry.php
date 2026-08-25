@@ -69,5 +69,6 @@ try {
     JsonResponse::send(['data' => $result]);
 } catch (Throwable $error) {
     error_log('[UnrealDB child job retry] ' . get_class($error) . ': ' . $error->getMessage());
+    catalog_system_error_record_exception($error, 'api');
     JsonResponse::error('unavailable', catalog_public_error_message(), 500);
 }
