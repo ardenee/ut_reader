@@ -156,7 +156,7 @@ $record(
 
 $record(
     'terminal_archive_retry_does_not_skip_recovery_pass',
-    str_contains($handler, "$resumeStage !== 'expand_archive_sequential'")
+    str_contains($handler, '$resumeStage !== \'expand_archive_sequential\'')
         && str_contains($handler, "'stage' => 'complete'"),
     'Only an interrupted in-progress sequential expansion may resume its cursor; an operator retry of a terminal/partial archive must still perform a fresh recovery pass.'
 );
