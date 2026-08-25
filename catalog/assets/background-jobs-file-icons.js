@@ -9,6 +9,7 @@
     const bulkUrl = String(app.dataset.bulkUrl || 'api/v1/job-bulk.php');
     const queue = String(app.dataset.queue || 'catalog');
     const csrf = String(app.dataset.csrf || '');
+    const selectVisible = document.getElementById('jobs-select-visible');
     const supported = new Set([
         'default',
         'u', 'ut2', 'ut3', 'unr', 'un2', 'umap',
@@ -127,6 +128,38 @@
         if (notice && notice.textContent !== stickyNotice.text) {
             notice.textContent = stickyNotice.text;
         }
+    }
+
+    function setControlDisabled(button, disabled) {
+        if (!(button instanceof HTMLButtonElement)) return;
+        button.disabled = Boolean(disabled);
+        if (disabled) {
+            button.setAttribute('aria-disabled', 'true');
+        } else {
+            button.removeAttribute('aria-disabled');
+        }
+    }
+
+    function selectedRootRows() {
+        return Array.from(body.querySelectorAll('.jobs-file-row[data-depth="0"]')).filter(function (row) {
+            const checkbox = row.querySelector('input.jobs-file-row-select');
+            return checkbox instanceof HTMLInputElement && checkbox.checked;
+        });
+    }
+
+    function syncBulkControlState() {
+        const selectedRows = selectedRootRows();
+        const retry = document.getElementById('jobs-retry-selected');
+        const stop = document.getElementById('jobs-stop-selected');
+        const remove = document.getElementById('jobs-delete-selected');
+        const workingSelected = selectedRows.some(function (row) {
+            const status = String(row.querySelector('.jobs-file-status')?.textContent || '').trim().toLowerCase();
+            return status === 'working';
+        });
+
+        setControlDisabled(retry, selectedRows.length === 0);
+        setControlDisabled(remove, selectedRows.length === 0);
+        setControlDisabled(stop, !workingSelected);
     }
 
     function isRetryableDependencyParent(row) {
@@ -251,7 +284,20 @@
         if (root instanceof HTMLElement && root.classList.contains('jobs-file-row')) enhanceRow(root);
         (root || body).querySelectorAll('.jobs-file-row').forEach(enhanceRow);
         makeBulkRetryVisiblyPrimary();
+        syncBulkControlState();
         restoreStickyNotice();
+    }
+
+    body.addEventListener('change', function (event) {
+        const target = event.target;
+        if (target instanceof HTMLInputElement && target.classList.contains('jobs-file-row-select')) {
+            window.setTimeout(syncBulkControlState, 0);
+        }
+    });
+    if (selectVisible instanceof HTMLInputElement) {
+        selectVisible.addEventListener('change', function () {
+            window.setTimeout(syncBulkControlState, 0);
+        });
     }
 
     refreshRows(body);
