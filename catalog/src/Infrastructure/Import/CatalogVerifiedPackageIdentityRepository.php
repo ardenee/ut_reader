@@ -61,17 +61,14 @@ final class CatalogVerifiedPackageIdentityRepository implements VerifiedPackageI
         CatalogVerifiedPackageInspection $inspection,
         int $maintenanceReplaceFileId = 0
     ): ?array {
+        // ue_files.uq_ue_files_game_md5 is the authoritative physical identity
+        // rule. An identical MD5 within one game is the same physical package
+        // regardless of whether an older row has a blank/different parsed GUID.
+        // Keeping this lookup aligned with the unique constraint also makes the
+        // optimistic SELECT -> INSERT race recoverable as a normal duplicate.
         $sql = 'SELECT id, original_name, package_name, package_guid, file_size, md5 '
-            . 'FROM ue_files WHERE game_id=? AND scan_status="verified"';
-        $args = [$gameId];
-        if ($inspection->packageGuid !== '') {
-            $sql .= ' AND package_guid=? AND md5=?';
-            $args[] = $inspection->packageGuid;
-            $args[] = $inspection->md5;
-        } else {
-            $sql .= ' AND md5=? AND (package_guid IS NULL OR package_guid="")';
-            $args[] = $inspection->md5;
-        }
+            . 'FROM ue_files WHERE game_id=? AND scan_status="verified" AND md5=?';
+        $args = [$gameId, $inspection->md5];
         if ($maintenanceReplaceFileId > 0) {
             $sql .= ' AND id<>?';
             $args[] = $maintenanceReplaceFileId;
