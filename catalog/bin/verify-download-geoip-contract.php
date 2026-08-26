@@ -28,13 +28,29 @@ $checks = [
         $root . '/src/Infrastructure/Downloads/CatalogDownloadAuditService.php',
         '$this->geoIp->resolve($ipText)',
     ],
-    'log renders country flag' => [
+    'log renders country flag marker' => [
         $root . '/download-logs.php',
         'download-country-flag',
     ],
     'log country column is server-sortable' => [
         $root . '/download-logs.php',
         "a.country_name ' . strtoupper(\$direction)",
+    ],
+    'actual flag enhancer uses same-origin endpoint' => [
+        $root . '/assets/catalog-ui.js',
+        "country-flag.php?code=",
+    ],
+    'actual flag enhancer renders image element' => [
+        $root . '/assets/catalog-ui.js',
+        "document.createElement('img')",
+    ],
+    'country flag endpoint caches in catalog storage' => [
+        $root . '/country-flag.php',
+        '/storage/cache/country-flags',
+    ],
+    'country flag endpoint pins upstream flag set' => [
+        $root . '/country-flag.php',
+        'flag-icons@7.5.0',
     ],
     'CSV importer loads local ranges transactionally' => [
         $root . '/bin/import-geoip-country-csv.php',
@@ -122,6 +138,21 @@ if (!is_string($backfill)
     $failed[] = 'Historical GeoIP backfill must not hold multi-row audit locks';
 }
 
+$flagUiPath = $root . '/assets/catalog-ui.js';
+$flagUi = is_file($flagUiPath) ? file_get_contents($flagUiPath) : false;
+if (!is_string($flagUi)
+    || str_contains($flagUi, 'cdn.jsdelivr.net')
+    || str_contains($flagUi, 'raw.githubusercontent.com')) {
+    $failed[] = 'Browser flag rendering must remain same-origin';
+}
+
+$flagEndpointPath = $root . '/country-flag.php';
+$flagEndpoint = is_file($flagEndpointPath) ? file_get_contents($flagEndpointPath) : false;
+if (!is_string($flagEndpoint)
+    || !str_contains($flagEndpoint, "preg_match('/^[a-z]{2}$/', $code)")) {
+    $failed[] = 'Country flag endpoint must restrict requests to two-letter country codes';
+}
+
 $logPath = $root . '/download-logs.php';
 $log = is_file($logPath) ? file_get_contents($logPath) : false;
 if (!is_string($log)
@@ -135,4 +166,4 @@ if ($failed !== []) {
     exit(1);
 }
 
-echo "Download GeoIP contract passed (" . (count($checks) + 6) . " checks).\n";
+echo "Download GeoIP contract passed (" . (count($checks) + 8) . " checks).\n";
