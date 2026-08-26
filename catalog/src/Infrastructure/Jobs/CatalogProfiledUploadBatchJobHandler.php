@@ -118,7 +118,10 @@ final class CatalogProfiledUploadBatchJobHandler implements JobHandler
         ];
 
         if (empty($slice['eof'])) {
-            $context->defer(1, $progress);
+            // The batch row is only a planner. Its direct import children are
+            // independent source/file execution roots, so do not retain strict
+            // affinity to the coordinator while later manifest slices wait.
+            $context->defer(1, $progress, false);
         }
 
         $context->checkpoint(array_merge($progress, [
