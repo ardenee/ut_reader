@@ -25,7 +25,7 @@ $record = static function (string $name, bool $ok, string $detail) use (&$checks
 
 $record(
     'completed_archive_rerun_is_explicit_selection_only',
-    str_contains($api, "$action === 'restart' && $scope === 'selected'")
+    str_contains($api, '$action === \'restart\' && $scope === \'selected\'')
         && str_contains($api, 'new PdoCompletedArchiveRerunSelection($application->db)')
         && str_contains($api, '->rerunSelected($queueName, $jobIds, $now)'),
     'Only an explicit selected Retry request should opt completed archive roots into a fresh replay.'
