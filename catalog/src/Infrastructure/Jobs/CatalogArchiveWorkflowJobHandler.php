@@ -3,7 +3,7 @@
  * Coordinates the logical lifetime of an archive import job.
  *
  * CatalogArchiveImportJobHandler owns archive decoding and durable package-child
- * creation. CatalogNestedArchiveJobEnqueuer discovers embedded ZIP/RAR/7z
+ * creation. CatalogNestedArchiveJobEnqueuer discovers embedded supported archive
  * containers and queues each as its own durable archive child workflow. This
  * coordinator owns the parent lifecycle and source ownership: ingress bytes are
  * first transferred into job-owned prepared storage, then the parent is deferred
@@ -57,10 +57,10 @@ final class CatalogArchiveWorkflowJobHandler implements JobHandler
             // the parent has atomically published its prepared archive source.
             $ownedJob = $this->sources->prepareJob($job);
 
-            // Embedded ZIP/RAR/7z containers become archive child workflows rather
-            // than being recursively expanded on this worker stack. The established
-            // extractor still performs its normal pass afterwards for ordinary
-            // Unreal members and keeps all existing decoder/recovery behaviour.
+            // Embedded supported archive containers become archive child workflows
+            // rather than being recursively expanded on this worker stack. The
+            // established extractor still performs its normal pass afterwards for
+            // ordinary Unreal members and keeps all decoder/recovery behaviour.
             $nestedResult = $this->nestedArchives->enqueue($ownedJob, $context);
             $archiveResult = $this->extractor->handle($ownedJob, $context);
             $archiveResult = $this->mergeNestedArchiveResult($archiveResult, $nestedResult);
@@ -86,8 +86,8 @@ final class CatalogArchiveWorkflowJobHandler implements JobHandler
 
     /**
      * The established extractor deliberately reports archive members as skipped.
-     * Nested ZIP/RAR/7z members are now owned by CatalogNestedArchiveJobEnqueuer,
-     * so remove only those classified members from skipped and fold their child
+     * Nested archive members are owned by CatalogNestedArchiveJobEnqueuer, so
+     * remove only those classified members from skipped and fold their child
      * jobs/failures into the extraction counters used by reporting and recovery.
      *
      * @param array<string,mixed> $archiveResult
@@ -244,7 +244,9 @@ final class CatalogArchiveWorkflowJobHandler implements JobHandler
         $extractionFailed = max(0, (int)($archiveResult['failed_files'] ?? 0));
         $childFailed = max(0, (int)$children['failed']);
         $cancelled = max(0, (int)$children['cancelled']);
-        $skipped = max(0, (int)($children['skipped'] ?? 0));
+        $extractionSkipped = max(0, (int)($archiveResult['skipped_files'] ?? 0));
+        $childSkipped = max(0, (int)($children['skipped'] ?? 0));
+        $totalSkipped = $extractionSkipped + $childSkipped;
         $contentNested = max(0, (int)($children['nested_archive'] ?? 0));
         $totalFailed = $extractionFailed + $childFailed;
         $partial = $totalFailed > 0 || $cancelled > 0;
@@ -253,7 +255,7 @@ final class CatalogArchiveWorkflowJobHandler implements JobHandler
         $message = 'Archive processing complete: '
             . number_format((int)$children['successful']) . ' ' . $successLabel . ', '
             . number_format((int)$children['duplicate']) . ' duplicate, '
-            . number_format($skipped) . ' skipped, '
+            . number_format($totalSkipped) . ' skipped, '
             . number_format($contentNested) . ' nested archive, '
             . number_format($totalFailed) . ' failed';
         if ($cancelled > 0) {
@@ -269,6 +271,9 @@ final class CatalogArchiveWorkflowJobHandler implements JobHandler
         $result['status'] = $partial ? 'partial' : 'completed';
         $result['message'] = $message;
         $result['archive_outcomes'] = [
+            'archive_member_skipped' => $extractionSkipped,
+            'child_skipped' => $childSkipped,
+            'total_skipped' => $totalSkipped,
             'archive_member_failed' => $extractionFailed,
             'child_failed' => $childFailed,
             'total_failed' => $totalFailed,
@@ -284,7 +289,7 @@ final class CatalogArchiveWorkflowJobHandler implements JobHandler
             'message' => $message,
             'children' => $children,
             'queued' => max(0, (int)($archiveResult['queued_files'] ?? 0)),
-            'skipped' => max(0, (int)($archiveResult['skipped_files'] ?? 0)) + $skipped,
+            'skipped' => $totalSkipped,
             'failed' => $extractionFailed,
             'errors' => is_array($archiveResult['errors'] ?? null) ? $archiveResult['errors'] : [],
             'source_retained' => !empty($archiveResult['source_retained']),
