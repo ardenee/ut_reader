@@ -6,6 +6,7 @@ namespace UnrealDb\Catalog\Infrastructure\Persistence;
 use PDO;
 use PDOStatement;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
+use UnrealDb\Catalog\Domain\Jobs\JobType;
 
 /**
  * Claims the next runnable durable job.
@@ -80,9 +81,11 @@ final class PdoJobClaimer
             $this->releaseRootAffinity();
         }
 
-        // New work is selected only from top-level roots. The worker acquires a
-        // persistent root lock before leasing the root, preventing another worker
-        // from attaching itself to the same source while it is being processed.
+        // New work is selected from execution roots. Ordinary workflows use a
+        // persisted top-level row; direct source jobs created by a profiled upload
+        // batch are also roots because the batch is only a planning coordinator.
+        // Each selected source gets its own persistent root lock so workers drain
+        // that file/archive and all of its descendants independently.
         return $this->claimFromScope($queue, $workerId, $leaseSeconds, null, $guard, true);
     }
 
@@ -244,7 +247,13 @@ final class PdoJobClaimer
             if ($preferredRootJobId !== null) {
                 $where[] = 'EXISTS (SELECT 1 FROM root_scope scope WHERE scope.id=j.id)';
             } elseif ($rootOnly) {
-                $where[] = 'j.parent_job_id IS NULL';
+                $where[] = '('
+                    . 'j.parent_job_id IS NULL OR '
+                    . 'EXISTS(SELECT 1 FROM ue_background_jobs execution_parent '
+                    . 'WHERE execution_parent.id=j.parent_job_id '
+                    . 'AND execution_parent.queue_name=j.queue_name '
+                    . 'AND execution_parent.job_type="' . JobType::PROFILED_UPLOAD_BATCH . '")'
+                    . ')';
             }
 
             if ($blockedJobIds !== []) {
