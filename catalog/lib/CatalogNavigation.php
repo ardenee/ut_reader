@@ -33,6 +33,7 @@ function catalog_admin_navigation_groups(string $root): array
             'UPK Packages' => $root . 'upks.php',
             'Game Profiles' => $root . 'game-profiles.php',
             'Public Access & Mail' => $root . 'public-access-settings.php',
+            'File Feedback' => $root . 'file-feedback-admin.php',
             'Administrator Security' => $root . 'admin-security.php',
         ],
         'Catalog' => [
