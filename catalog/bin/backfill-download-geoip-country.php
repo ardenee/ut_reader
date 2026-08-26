@@ -20,7 +20,7 @@ if (PHP_SAPI !== 'cli') {
     exit(1);
 }
 
-$batchSize = (int)($argv[1] ?? 5000);
+$batchSize = (int)($argv[1] ?? 500);
 $batchSize = max(100, min(50000, $batchSize));
 
 $config = catalog_config();
