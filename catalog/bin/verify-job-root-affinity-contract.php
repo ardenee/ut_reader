@@ -21,12 +21,19 @@ $required = [
         'WITH RECURSIVE root_scope AS',
         'EXISTS (SELECT 1 FROM root_scope scope WHERE scope.id=j.id)',
         'j.parent_job_id IS NULL',
+        'JobType::PROFILED_UPLOAD_BATCH',
+        'execution_parent.id=j.parent_job_id',
+        'execution_parent.job_type=',
         'workflowOpen(',
         'ensureRootAffinity(',
         'SELECT GET_LOCK(?,0)',
         'SELECT RELEASE_LOCK(?)',
         'Strict root affinity',
         'COALESCE(j.available_at,j.created_at)<=UTC_TIMESTAMP()',
+    ],
+    'src/Infrastructure/Jobs/CatalogProfiledUploadBatchJobHandler.php' => [
+        '$context->defer(1, $progress, false);',
+        'independent source/file execution roots',
     ],
     'src/Application/Jobs/JobDeferred.php' => [
         '$retainWorkerAffinity',
@@ -87,4 +94,4 @@ if ($failures !== []) {
     exit(1);
 }
 
-fwrite(STDOUT, "Job root affinity contract passed: each worker owns one root and drains its full descendant workflow before moving on.\n");
+fwrite(STDOUT, "Job root affinity contract passed: each worker owns one source execution root and drains its full descendant workflow before moving on.\n");
