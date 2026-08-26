@@ -7,8 +7,8 @@
  * remain blank intentionally.
  *
  * Historical rows are resolved with the same indexed nearest-range lookup used
- * by live download ingestion. Do not join audit rows directly to every GeoIP
- * range: MySQL can choose a pathological range-join plan for that shape.
+ * by live download ingestion. Audit rows are updated one primary key at a time
+ * in autocommit mode so one live/locked row cannot stall an entire batch.
  */
 declare(strict_types=1);
 
@@ -25,6 +25,7 @@ $batchSize = max(100, min(50000, $batchSize));
 
 $config = catalog_config();
 $db = catalog_db($config);
+$db->exec('SET SESSION innodb_lock_wait_timeout=1');
 $resolver = new \UnrealDb\Catalog\Infrastructure\Downloads\CatalogGeoIpCountryResolver($db);
 
 function geoip_backfill_table_exists(PDO $db, string $table): bool
@@ -46,31 +47,13 @@ function geoip_backfill_column_exists(PDO $db, string $table, string $column): b
     return (int)$statement->fetchColumn() === 1;
 }
 
-/**
- * Persist one resolved country for the supplied row ids. Chunk the IN list so
- * this stays bounded even when a large audit batch contains one dominant IP.
- *
- * @param list<int> $ids
- */
-function geoip_backfill_update_ids(
-    PDO $db,
-    string $table,
-    array $ids,
-    string $countryCode,
-    string $countryName
-): int {
-    $updated = 0;
-    foreach (array_chunk($ids, 1000) as $chunk) {
-        $placeholders = implode(',', array_fill(0, count($chunk), '?'));
-        $statement = $db->prepare(
-            'UPDATE ' . $table . ' SET country_code=?,country_name=? '
-            . 'WHERE id IN (' . $placeholders . ') '
-            . 'AND (country_code IS NULL OR country_code="" OR country_name IS NULL OR country_name="")'
-        );
-        $statement->execute(array_merge([$countryCode, $countryName], $chunk));
-        $updated += $statement->rowCount();
+function geoip_backfill_is_lock_conflict(Throwable $error): bool
+{
+    if (!$error instanceof PDOException) {
+        return false;
     }
-    return $updated;
+    $driverCode = (int)($error->errorInfo[1] ?? 0);
+    return in_array($driverCode, [1205, 1213], true);
 }
 
 if (!geoip_backfill_table_exists($db, 'ue_geoip_country_ranges')) {
@@ -85,7 +68,8 @@ if ($rangeCount < 1) {
 }
 
 echo 'GeoIP ranges available: ' . number_format($rangeCount) . ".\n";
-echo 'Backfill batch size: ' . number_format($batchSize) . ".\n\n";
+echo 'Backfill batch size: ' . number_format($batchSize) . ".\n";
+echo "Audit-row lock wait: 1 second; locked rows are skipped and can be picked up by a later rerun.\n\n";
 
 $targets = [
     ['table' => 'ue_download_audit', 'ip' => 'ip_address', 'label' => 'download audit'],
@@ -94,7 +78,11 @@ $targets = [
 
 $overallCandidates = 0;
 $overallUpdated = 0;
+$overallLocked = 0;
 $overallStarted = microtime(true);
+
+/** @var array<string,array{country_code:string,country_name:string}> $countryCache */
+$countryCache = [];
 
 foreach ($targets as $target) {
     $table = $target['table'];
@@ -129,6 +117,7 @@ foreach ($targets as $target) {
     $cursor = 0;
     $processed = 0;
     $updated = 0;
+    $locked = 0;
     $uniqueLookups = 0;
     $started = microtime(true);
 
@@ -136,6 +125,10 @@ foreach ($targets as $target) {
         'SELECT id,INET6_NTOA(' . $ipColumn . ') ip_text FROM ' . $table . ' '
         . 'WHERE id>? AND ' . $ipColumn . ' IS NOT NULL AND ' . $blankPredicate . ' '
         . 'ORDER BY id LIMIT ' . $batchSize
+    );
+    $update = $db->prepare(
+        'UPDATE ' . $table . ' SET country_code=?,country_name=? '
+        . 'WHERE id=? AND (country_code IS NULL OR country_code="" OR country_name IS NULL OR country_name="")'
     );
 
     while (true) {
@@ -145,8 +138,6 @@ foreach ($targets as $target) {
             break;
         }
 
-        /** @var array<string,list<int>> $idsByIp */
-        $idsByIp = [];
         foreach ($rows as $row) {
             $id = (int)($row['id'] ?? 0);
             $ipText = trim((string)($row['ip_text'] ?? ''));
@@ -154,64 +145,53 @@ foreach ($targets as $target) {
                 continue;
             }
             $cursor = max($cursor, $id);
-            if ($ipText !== '') {
-                $idsByIp[$ipText][] = $id;
+            if ($ipText === '') {
+                continue;
             }
-        }
 
-        /** @var array<string,array{code:string,name:string,ids:list<int>}> $idsByCountry */
-        $idsByCountry = [];
-        foreach ($idsByIp as $ipText => $ids) {
-            $country = $resolver->resolve($ipText);
-            $uniqueLookups++;
+            if (!array_key_exists($ipText, $countryCache)) {
+                $countryCache[$ipText] = $resolver->resolve($ipText);
+                $uniqueLookups++;
+            }
+            $country = $countryCache[$ipText];
             $countryCode = strtoupper(trim((string)($country['country_code'] ?? '')));
             $countryName = trim((string)($country['country_name'] ?? ''));
             if ($countryCode === '' || $countryName === '') {
                 continue;
             }
-            $key = $countryCode . "\0" . $countryName;
-            if (!isset($idsByCountry[$key])) {
-                $idsByCountry[$key] = [
-                    'code' => $countryCode,
-                    'name' => $countryName,
-                    'ids' => [],
-                ];
-            }
-            array_push($idsByCountry[$key]['ids'], ...$ids);
-        }
 
-        try {
-            $db->beginTransaction();
-            foreach ($idsByCountry as $group) {
-                $updated += geoip_backfill_update_ids(
-                    $db,
-                    $table,
-                    $group['ids'],
-                    $group['code'],
-                    $group['name']
-                );
+            try {
+                $update->execute([$countryCode, $countryName, $id]);
+                $updated += $update->rowCount();
+            } catch (Throwable $error) {
+                if (geoip_backfill_is_lock_conflict($error)) {
+                    $locked++;
+                    continue;
+                }
+                throw $error;
             }
-            $db->commit();
-        } catch (Throwable $error) {
-            if ($db->inTransaction()) {
-                $db->rollBack();
-            }
-            throw $error;
         }
 
         $processed += count($rows);
         $elapsed = max(0.001, microtime(true) - $started);
         echo '  inspected ' . number_format($processed) . '/' . number_format($candidateCount)
             . '; resolved ' . number_format($updated)
-            . '; unique IP lookups ' . number_format($uniqueLookups)
+            . '; locked/skipped ' . number_format($locked)
+            . '; new unique IP lookups ' . number_format($uniqueLookups)
             . '; ' . number_format($processed / $elapsed, 0) . " rows/s\n";
     }
 
-    $unresolved = max(0, $candidateCount - $updated);
+    $leftBlank = max(0, $candidateCount - $updated);
     $overallUpdated += $updated;
+    $overallLocked += $locked;
     echo ucfirst($label) . ' complete: ' . number_format($updated) . ' resolved';
-    if ($unresolved > 0) {
-        echo '; ' . number_format($unresolved) . ' left blank (private/reserved/unknown/uncovered IPs)';
+    if ($leftBlank > 0) {
+        echo '; ' . number_format($leftBlank) . ' left blank';
+        if ($locked > 0) {
+            echo ' (' . number_format($locked) . ' temporarily locked; remainder private/reserved/unknown/uncovered)';
+        } else {
+            echo ' (private/reserved/unknown/uncovered IPs)';
+        }
     }
     echo ".\n\n";
 }
@@ -219,4 +199,8 @@ foreach ($targets as $target) {
 $seconds = max(0.001, microtime(true) - $overallStarted);
 echo 'GeoIP audit backfill complete: ' . number_format($overallUpdated) . ' of '
     . number_format($overallCandidates) . ' historical row(s) resolved in '
-    . number_format($seconds, 2) . "s.\n";
+    . number_format($seconds, 2) . 's';
+if ($overallLocked > 0) {
+    echo '; ' . number_format($overallLocked) . ' row(s) were locked and can be retried by running this command again';
+}
+echo ".\n";
