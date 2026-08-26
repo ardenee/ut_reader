@@ -1,6 +1,6 @@
 #!/usr/bin/env php
 <?php
-/** Read-only contract verifier for nested ZIP/RAR/7z archive ingestion. */
+/** Read-only contract verifier for nested archive ingestion. */
 declare(strict_types=1);
 
 if (PHP_SAPI !== 'cli') {
@@ -11,9 +11,11 @@ if (PHP_SAPI !== 'cli') {
 $root = realpath(dirname(__DIR__)) ?: dirname(__DIR__);
 $helperPath = $root . '/src/Infrastructure/Jobs/CatalogNestedArchiveJobEnqueuer.php';
 $workflowPath = $root . '/src/Infrastructure/Jobs/CatalogArchiveWorkflowJobHandler.php';
+$extractorPath = $root . '/src/Infrastructure/Archive/CatalogArchiveExtractor.php';
 $workerVersionPath = $root . '/src/Infrastructure/Jobs/CatalogWorkerCodeVersion.php';
 $helper = (string)@file_get_contents($helperPath);
 $workflow = (string)@file_get_contents($workflowPath);
+$extractor = (string)@file_get_contents($extractorPath);
 $workerVersion = (string)@file_get_contents($workerVersionPath);
 
 $checks = [];
@@ -26,9 +28,11 @@ $record = static function (string $name, bool $ok, string $detail) use (&$checks
 };
 
 $record(
-    'nested_formats_are_zip_rar_7z',
-    str_contains($helper, "private const RECURSIVE_EXTENSIONS = ['zip', 'rar', '7z'];"),
-    'Embedded ZIP, RAR and 7z members must be recognized as recursive archive workflows.'
+    'nested_formats_follow_authoritative_archive_registry',
+    str_contains($helper, 'return CatalogArchiveExtractor::isArchiveName($name);')
+        && !str_contains($helper, 'RECURSIVE_EXTENSIONS')
+        && str_contains($extractor, "private const ARCHIVE_EXTENSIONS = ['zip', '7z', 'rar', 'umod', 'ut2mod', 'ut4mod'];"),
+    'Nested routing must use the same ZIP/RAR/7z/UMOD/UT2MOD/UT4MOD registry as the production archive extractor.'
 );
 
 $record(
@@ -49,7 +53,7 @@ $record(
         && str_contains($helper, 'new CatalogSequentialArchiveReader($this->config)')
         && str_contains($helper, '$sequential->shouldUse($sourcePath, $originalName)')
         && str_contains($helper, '$reader->walk('),
-    'Nested discovery must work for ordinary random-access archives and the sequential ZIP/RAR/7z compatibility path.'
+    'Nested discovery must work for ordinary random-access archives and sequential outer RAR/7z compatibility paths.'
 );
 
 $record(
@@ -79,7 +83,7 @@ $record(
         && strpos($workflow, '$nestedResult = $this->nestedArchives->enqueue($ownedJob, $context);')
             < strpos($workflow, '$archiveResult = $this->extractor->handle($ownedJob, $context);')
         && str_contains($workflow, 'mergeNestedArchiveResult'),
-    'The job-owned archive must queue nested containers before the unchanged package-member extractor performs its normal pass.'
+    'The job-owned archive must queue nested containers before the package-member extractor performs its normal pass.'
 );
 
 $record(
@@ -88,13 +92,25 @@ $record(
         && str_contains($workflow, "\$archiveResult['nested_archive_jobs'] = \$nestedChildren;")
         && str_contains($workflow, "\$archiveResult['failed_files']")
         && str_contains($workflow, "\$nestedResult['failed']"),
-    'Members taken over by nested archive workflows must be removed from the old unsupported/skipped count and nested failures must remain visible.'
+    'Members taken over by nested archive workflows must be removed from the extractor skipped count and nested failures must remain visible.'
+);
+
+$record(
+    'final_reporting_includes_extraction_skips',
+    str_contains($workflow, '$extractionSkipped = max(0, (int)($archiveResult[\'skipped_files\'] ?? 0));')
+        && str_contains($workflow, '$totalSkipped = $extractionSkipped + $childSkipped;')
+        && str_contains($workflow, "'archive_member_skipped' => \$extractionSkipped")
+        && str_contains($workflow, "'total_skipped' => \$totalSkipped")
+        && str_contains($workflow, "'skipped' => \$totalSkipped"),
+    'The parent result must report unsupported/readme/installer members skipped during extraction instead of falsely showing zero skipped.'
 );
 
 $record(
     'worker_fingerprint_tracks_nested_archive_code',
-    str_contains($workerVersion, "/src/Infrastructure/Jobs/CatalogNestedArchiveJobEnqueuer.php'"),
-    'Detached workers must be reconciled after nested archive ingestion code changes.'
+    str_contains($workerVersion, "/src/Infrastructure/Jobs/CatalogNestedArchiveJobEnqueuer.php'")
+        && str_contains($workerVersion, "/src/Infrastructure/Jobs/CatalogArchiveWorkflowJobHandler.php'")
+        && str_contains($workerVersion, "/src/Infrastructure/Archive/CatalogArchiveExtractor.php'"),
+    'Detached workers must be reconciled after nested archive routing/extractor changes.'
 );
 
 $record(
@@ -104,7 +120,7 @@ $record(
 );
 
 $syntaxFailures = [];
-foreach ([$helperPath, $workflowPath, $workerVersionPath, __FILE__] as $path) {
+foreach ([$helperPath, $workflowPath, $extractorPath, $workerVersionPath, __FILE__] as $path) {
     $pipes = [];
     $process = @proc_open([PHP_BINARY, '-l', $path], [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
     if (!is_resource($process)) {
