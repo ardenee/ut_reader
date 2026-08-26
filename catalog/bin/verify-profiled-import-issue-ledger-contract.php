@@ -35,9 +35,17 @@ $checks = [
         $root . '/src/Infrastructure/Import/CatalogPackageImporterAdapter.php',
         '$this->identity->findVerifiedDuplicate($gameId, $inspection, 0)',
     ],
+    'verified identity lookup follows game plus MD5 unique rule' => [
+        $root . '/src/Infrastructure/Import/CatalogVerifiedPackageIdentityRepository.php',
+        'scan_status="verified" AND md5=?',
+    ],
     'worker fingerprint tracks verified import adapter' => [
         $root . '/src/Infrastructure/Jobs/CatalogWorkerCodeVersion.php',
         '/src/Infrastructure/Import/CatalogPackageImporterAdapter.php',
+    ],
+    'worker fingerprint tracks verified identity repository' => [
+        $root . '/src/Infrastructure/Jobs/CatalogWorkerCodeVersion.php',
+        '/src/Infrastructure/Import/CatalogVerifiedPackageIdentityRepository.php',
     ],
 ];
 
@@ -65,9 +73,17 @@ if (!is_string($scope) || !str_contains($scope, 'profiled_parent.id=profiled_sou
     $failed[] = 'bulk scope must preserve profiled source parent relationship';
 }
 
+$identityPath = $root . '/src/Infrastructure/Import/CatalogVerifiedPackageIdentityRepository.php';
+$identity = is_file($identityPath) ? file_get_contents($identityPath) : false;
+if (!is_string($identity)
+    || str_contains($identity, "if (\$inspection->packageGuid !== '')")
+    || str_contains($identity, 'AND package_guid=? AND md5=?')) {
+    $failed[] = 'verified duplicate lookup must not narrow game+MD5 identity by package GUID';
+}
+
 if ($failed !== []) {
     fwrite(STDERR, "Profiled import issue ledger contract FAILED:\n - " . implode("\n - ", $failed) . "\n");
     exit(1);
 }
 
-echo "Profiled import issue ledger contract passed (" . (count($checks) + 2) . " checks).\n";
+echo "Profiled import issue ledger contract passed (" . (count($checks) + 3) . " checks).\n";
