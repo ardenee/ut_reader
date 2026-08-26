@@ -64,9 +64,17 @@ $checks = [
         $root . '/bin/backfill-download-geoip-country.php',
         'CatalogGeoIpCountryResolver($db)',
     ],
-    'historical backfill groups resolved rows before updates' => [
+    'historical backfill uses primary-key row updates' => [
         $root . '/bin/backfill-download-geoip-country.php',
-        '$idsByCountry',
+        'WHERE id=? AND',
+    ],
+    'historical backfill has short row-lock wait' => [
+        $root . '/bin/backfill-download-geoip-country.php',
+        'innodb_lock_wait_timeout=1',
+    ],
+    'historical backfill skips transient lock conflicts' => [
+        $root . '/bin/backfill-download-geoip-country.php',
+        'geoip_backfill_is_lock_conflict',
     ],
 ];
 
@@ -108,6 +116,11 @@ if (!is_string($backfill)
     || str_contains($backfill, 'range_end>=a.')) {
     $failed[] = 'Historical GeoIP backfill must not use an audit-to-range non-equality join';
 }
+if (!is_string($backfill)
+    || str_contains($backfill, '$db->beginTransaction()')
+    || str_contains($backfill, 'WHERE id IN (')) {
+    $failed[] = 'Historical GeoIP backfill must not hold multi-row audit locks';
+}
 
 $logPath = $root . '/download-logs.php';
 $log = is_file($logPath) ? file_get_contents($logPath) : false;
@@ -122,4 +135,4 @@ if ($failed !== []) {
     exit(1);
 }
 
-echo "Download GeoIP contract passed (" . (count($checks) + 5) . " checks).\n";
+echo "Download GeoIP contract passed (" . (count($checks) + 6) . " checks).\n";
