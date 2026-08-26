@@ -42,6 +42,7 @@
     let filteredItemCount = 0;
     let stagedItemCount = 0;
     let failedItemCount = 0;
+    let folderSelectionStartedAt = 0;
 
     function installStatusStyles() {
         const style = document.createElement('style');
@@ -55,9 +56,65 @@
             '.upload-result-failed,.upload-result-invalid,.upload-result-rejected,.upload-result-unverified,.upload-result-dead_letter,.upload-result-cancelled { border-left-color:#ff6b7a; background:rgba(255,107,122,.08); }',
             '.upload-result-failed .upload-result-badge,.upload-result-invalid .upload-result-badge,.upload-result-rejected .upload-result-badge,.upload-result-unverified .upload-result-badge,.upload-result-dead_letter .upload-result-badge,.upload-result-cancelled .upload-result-badge { color:#fecdd3; }',
             '.upload-result-queued,.upload-result-running,.upload-result-uploading,.upload-result-staged,.upload-result-skipped { border-left-color:#f6c453; background:rgba(246,196,83,.08); }',
-            '.upload-result-queued .upload-result-badge,.upload-result-running .upload-result-badge,.upload-result-uploading .upload-result-badge,.upload-result-staged .upload-result-badge,.upload-result-skipped .upload-result-badge { color:#ffe29a; }'
+            '.upload-result-queued .upload-result-badge,.upload-result-running .upload-result-badge,.upload-result-uploading .upload-result-badge,.upload-result-staged .upload-result-badge,.upload-result-skipped .upload-result-badge { color:#ffe29a; }',
+            '.profiled-folder-status { display:block; margin-top:6px; }',
+            '.profiled-folder-status[aria-busy="true"]::before { content:""; display:inline-block; width:.8em; height:.8em; border:2px solid currentColor; border-right-color:transparent; border-radius:50%; margin-right:7px; vertical-align:-.1em; animation:profiled-folder-spin .8s linear infinite; }',
+            '@keyframes profiled-folder-spin { to { transform:rotate(360deg); } }'
         ].join('\n');
         document.head.appendChild(style);
+    }
+
+    function ensureFolderStatus() {
+        if (!folderInput) return null;
+        let status = document.getElementById('profiled-upload-folder-status');
+        if (status) return status;
+        status = document.createElement('span');
+        status.id = 'profiled-upload-folder-status';
+        status.className = 'muted small profiled-folder-status';
+        status.hidden = true;
+        status.setAttribute('role', 'status');
+        status.setAttribute('aria-live', 'polite');
+        folderInput.insertAdjacentElement('afterend', status);
+        return status;
+    }
+
+    const folderStatus = ensureFolderStatus();
+
+    function formatDuration(milliseconds) {
+        const seconds = Math.max(0, Math.round(Number(milliseconds || 0) / 1000));
+        if (seconds < 60) return seconds + 's';
+        const minutes = Math.floor(seconds / 60);
+        const remainder = seconds % 60;
+        return minutes + 'm ' + remainder + 's';
+    }
+
+    function beginFolderEnumeration() {
+        if (!folderStatus) return;
+        folderSelectionStartedAt = Date.now();
+        folderStatus.hidden = false;
+        folderStatus.setAttribute('aria-busy', 'true');
+        folderStatus.textContent = 'Folder picker opened. After you choose a large folder, the browser may need several minutes to read all files and subfolders before this page can continue.';
+    }
+
+    function finishFolderEnumeration() {
+        if (!folderStatus || !folderInput) return;
+        const count = Number((folderInput.files || []).length || 0);
+        const elapsed = folderSelectionStartedAt > 0 ? Date.now() - folderSelectionStartedAt : 0;
+        folderStatus.hidden = false;
+        folderStatus.setAttribute('aria-busy', 'false');
+        folderStatus.textContent = count > 0
+            ? count.toLocaleString() + ' file(s) selected from the folder tree'
+                + (elapsed >= 1000 ? ' after ' + formatDuration(elapsed) : '') + '. Ready for preflight/upload.'
+            : 'No folder files were selected.';
+        folderSelectionStartedAt = 0;
+    }
+
+    if (folderInput) {
+        folderInput.addEventListener('pointerdown', beginFolderEnumeration);
+        folderInput.addEventListener('keydown', function (event) {
+            if (event.key === 'Enter' || event.key === ' ') beginFolderEnumeration();
+        });
+        folderInput.addEventListener('change', finishFolderEnumeration);
     }
 
     function selectedFiles() {
@@ -210,7 +267,7 @@
                     return;
                 }
                 if (xhr.status < 200 || xhr.status >= 300 || !body.ok) {
-                    reject(new Error(responseError(body, (label || 'Upload request') + ' failed with HTTP ' + xhr.status + '.')));
+                    reject(new Error(responseError(body, (label || 'Upload request') + ' failed with HTTP ' + xhr.status + '.'));
                     return;
                 }
                 resolve(body);
@@ -331,7 +388,7 @@
                 if (message.type === 'error') {
                     cleanup();
                     destroyHashWorker();
-                    reject(new Error(String(message.message || 'Client hash failed.')));
+                    reject(new Error(String(message.message || 'Client hash failed.'));
                 }
             };
             worker.onerror = function () {
