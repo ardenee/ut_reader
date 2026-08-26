@@ -10,13 +10,30 @@ declare(strict_types=1);
 
 const CATALOG_FILE_FEEDBACK_MAX_LENGTH = 100;
 
+function catalog_file_feedback_return_path(): string
+{
+    $current = catalog_public_current_return_path();
+    $parts = parse_url($current);
+    if (!is_array($parts)) {
+        return 'index.php';
+    }
+
+    $path = (string)($parts['path'] ?? 'index.php');
+    $query = [];
+    parse_str((string)($parts['query'] ?? ''), $query);
+    unset($query['file_feedback']);
+
+    $encodedQuery = http_build_query($query, '', '&', PHP_QUERY_RFC3986);
+    return $path . ($encodedQuery !== '' ? '?' . $encodedQuery : '');
+}
+
 function catalog_file_feedback_form_html(int $fileId): string
 {
     if ($fileId <= 0) {
         return '';
     }
 
-    $returnTo = catalog_public_current_return_path();
+    $returnTo = catalog_file_feedback_return_path();
     $result = strtolower(trim((string)($_GET['file_feedback'] ?? '')));
     $notice = '';
     if ($result === 'sent') {
@@ -35,7 +52,7 @@ function catalog_file_feedback_form_html(int $fileId): string
         . '.file-feedback-card textarea{width:100%;max-width:720px;resize:vertical}'
         . '.file-feedback-card .file-feedback-honeypot{position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden}'
         . '</style>'
-        . '<details class="card file-feedback-card" id="file-feedback">'
+        . '<details class="card file-feedback-card" id="file-feedback"' . ($result !== '' ? ' open' : '') . '>'
         . '<summary>Report incorrect file information</summary>'
         . $notice
         . '<p class="muted">Tell us what may need correcting for this file. No name or email address is required.</p>'
