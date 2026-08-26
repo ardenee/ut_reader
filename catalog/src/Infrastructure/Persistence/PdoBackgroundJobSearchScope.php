@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace UnrealDb\Catalog\Infrastructure\Persistence;
 
 use PDO;
+use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogJobSearchProjectionRuntime;
 
 final class PdoBackgroundJobSearchScope
@@ -31,34 +32,57 @@ final class PdoBackgroundJobSearchScope
          * `parent IS NULL OR failed child` predicate allowed MySQL to scan that
          * ledger for every two-second browser poll.
          *
-         * Split visibility into two independently indexable branches instead:
-         * top-level jobs, plus only failed/dead-letter children that still need
-         * direct operator attention. Cancelled child execution units are routine
-         * workflow history, not jobs that require action. Keeping them folded into
-         * the parent is especially important after large workflow supersession or
-         * recovery operations, which can leave millions of cancelled child rows.
+         * Split visibility into independently indexable branches instead:
+         * top-level jobs; direct source jobs planned by a profiled/game upload
+         * batch; plus only failed/dead-letter children outside those promoted
+         * sources that still need direct operator attention. Cancelled routine
+         * child execution units remain folded into their source workflow.
          */
         $params = [];
+        $profiledType = JobType::PROFILED_UPLOAD_BATCH;
         if ($queue !== '') {
             $fromSql = '('
                 . 'SELECT root_job.* FROM ue_background_jobs root_job '
                 . 'WHERE root_job.queue_name=? AND root_job.parent_job_id IS NULL '
                 . 'UNION ALL '
+                . 'SELECT profiled_source.* FROM ue_background_jobs profiled_source '
+                . 'JOIN ue_background_jobs profiled_parent ON profiled_parent.id=profiled_source.parent_job_id '
+                . 'AND profiled_parent.queue_name=profiled_source.queue_name '
+                . 'WHERE profiled_source.queue_name=? AND profiled_parent.job_type=? '
+                . 'UNION ALL '
                 . 'SELECT problem_child.* FROM ue_background_jobs problem_child '
                 . 'WHERE problem_child.queue_name=? AND problem_child.parent_job_id IS NOT NULL '
-                . 'AND problem_child.status IN ("failed","dead_letter")'
+                . 'AND problem_child.status IN ("failed","dead_letter") '
+                . 'AND NOT EXISTS(SELECT 1 FROM ue_background_jobs problem_parent '
+                . 'WHERE problem_parent.id=problem_child.parent_job_id '
+                . 'AND problem_parent.queue_name=problem_child.queue_name '
+                . 'AND problem_parent.job_type=?)'
                 . ') j';
             $params[] = $queue;
             $params[] = $queue;
+            $params[] = $profiledType;
+            $params[] = $queue;
+            $params[] = $profiledType;
         } else {
             $fromSql = '('
                 . 'SELECT root_job.* FROM ue_background_jobs root_job '
                 . 'WHERE root_job.parent_job_id IS NULL '
                 . 'UNION ALL '
+                . 'SELECT profiled_source.* FROM ue_background_jobs profiled_source '
+                . 'JOIN ue_background_jobs profiled_parent ON profiled_parent.id=profiled_source.parent_job_id '
+                . 'AND profiled_parent.queue_name=profiled_source.queue_name '
+                . 'WHERE profiled_parent.job_type=? '
+                . 'UNION ALL '
                 . 'SELECT problem_child.* FROM ue_background_jobs problem_child '
                 . 'WHERE problem_child.parent_job_id IS NOT NULL '
-                . 'AND problem_child.status IN ("failed","dead_letter")'
+                . 'AND problem_child.status IN ("failed","dead_letter") '
+                . 'AND NOT EXISTS(SELECT 1 FROM ue_background_jobs problem_parent '
+                . 'WHERE problem_parent.id=problem_child.parent_job_id '
+                . 'AND problem_parent.queue_name=problem_child.queue_name '
+                . 'AND problem_parent.job_type=?)'
                 . ') j';
+            $params[] = $profiledType;
+            $params[] = $profiledType;
         }
 
         // Keep a non-empty base condition because several shared operator queries
