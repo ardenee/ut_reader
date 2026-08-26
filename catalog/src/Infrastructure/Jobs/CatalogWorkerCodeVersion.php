@@ -59,6 +59,7 @@ final class CatalogWorkerCodeVersion
             $this->catalogRoot . '/src/Infrastructure/Import/CatalogIncomingFileStore.php',
             $this->catalogRoot . '/src/Infrastructure/Import/CatalogBucketPakContainerStore.php',
             $this->catalogRoot . '/src/Infrastructure/Import/CatalogPackageImporterAdapter.php',
+            $this->catalogRoot . '/src/Infrastructure/Import/CatalogVerifiedPackageIdentityRepository.php',
             $this->catalogRoot . '/src/Infrastructure/Import/CatalogVerifiedPackagePublisher.php',
             $this->catalogRoot . '/src/Infrastructure/Persistence/PdoCatalogVerifiedPackagePersistence.php',
             $this->catalogRoot . '/src/Infrastructure/Archive/CatalogArchiveExtractor.php',
