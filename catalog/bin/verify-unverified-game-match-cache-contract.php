@@ -57,9 +57,24 @@ if (!is_string($pageContent) || str_contains($pageContent, 'PdoUnverifiedReferen
     $failed[] = 'page query must not run the old package-reference projection separately';
 }
 
+$refreshPath = $root . '/src/Infrastructure/Jobs/CatalogUnverifiedGameMatchRefreshJobHandler.php';
+$refreshContent = is_file($refreshPath) ? file_get_contents($refreshPath) : false;
+if (!is_string($refreshContent) || str_contains($refreshContent, 'unverified_queue_game_id=0')) {
+    $failed[] = 'bucket refresh must include unverified files assigned to physical game queues';
+}
+if (!is_string($refreshContent) || !str_contains($refreshContent, 'private const WORKFLOW_VERSION = 3;')) {
+    $failed[] = 'bucket refresh workflow version must invalidate old queue-zero-only plans';
+}
+
+$cachePath = $root . '/src/Infrastructure/Unverified/PdoUnverifiedGameMatchCache.php';
+$cacheContent = is_file($cachePath) ? file_get_contents($cachePath) : false;
+if (!is_string($cacheContent) || str_contains($cacheContent, 'unverified_queue_game_id=0')) {
+    $failed[] = 'bucket cache summary must include unverified files assigned to physical game queues';
+}
+
 if ($failed !== []) {
     fwrite(STDERR, "Unverified game-match cache contract FAILED:\n - " . implode("\n - ", $failed) . "\n");
     exit(1);
 }
 
-echo "Unverified game-match cache contract passed (" . (count($checks) + 2) . " checks).\n";
+echo "Unverified game-match cache contract passed (" . (count($checks) + 5) . " checks).\n";
