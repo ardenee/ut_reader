@@ -52,6 +52,18 @@ $checks = [
         $root . '/bin/import-geoip-country-csv.php',
         "if (\$code === 'ZZ')",
     ],
+    'historical backfill updates download audit' => [
+        $root . '/bin/backfill-download-geoip-country.php',
+        "'table' => 'ue_download_audit'",
+    ],
+    'historical backfill updates generation audit' => [
+        $root . '/bin/backfill-download-geoip-country.php',
+        "'table' => 'ue_generated_package_audit'",
+    ],
+    'historical backfill uses local ranges only' => [
+        $root . '/bin/backfill-download-geoip-country.php',
+        'JOIN ue_geoip_country_ranges r',
+    ],
 ];
 
 $failed = [];
@@ -79,9 +91,25 @@ if (!is_string($importer)
     $failed[] = 'DB-IP three-column import must not require ext-intl';
 }
 
+$backfillPath = $root . '/bin/backfill-download-geoip-country.php';
+$backfill = is_file($backfillPath) ? file_get_contents($backfillPath) : false;
+if (!is_string($backfill)
+    || preg_match('/https?:\/\//i', $backfill) === 1
+    || str_contains($backfill, 'curl_')) {
+    $failed[] = 'Historical GeoIP backfill must remain local-only';
+}
+
+$logPath = $root . '/download-logs.php';
+$log = is_file($logPath) ? file_get_contents($logPath) : false;
+if (!is_string($log)
+    || str_contains($log, '<th>Type</th>')
+    || str_contains($log, '<th>Range / HTTP</th>')) {
+    $failed[] = 'Download log table must keep Type and Range / HTTP out of visible columns';
+}
+
 if ($failed !== []) {
     fwrite(STDERR, "Download GeoIP contract FAILED:\n - " . implode("\n - ", $failed) . "\n");
     exit(1);
 }
 
-echo "Download GeoIP contract passed (" . (count($checks) + 2) . " checks).\n";
+echo "Download GeoIP contract passed (" . (count($checks) + 4) . " checks).\n";
