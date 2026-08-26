@@ -37,7 +37,19 @@ $checks = [
     ],
     'verified identity lookup follows game plus MD5 unique rule' => [
         $root . '/src/Infrastructure/Import/CatalogVerifiedPackageIdentityRepository.php',
-        'scan_status="verified" AND md5=?',
+        'game_id=? AND md5=?',
+    ],
+    'verified identity lookup recognises retired exact MD5 rows' => [
+        $root . '/src/Infrastructure/Import/CatalogVerifiedPackageIdentityRepository.php',
+        'scan_status IN ("verified","duplicate")',
+    ],
+    'retired exact MD5 lookup resolves canonical GUID row' => [
+        $root . '/src/Infrastructure/Import/CatalogVerifiedPackageIdentityRepository.php',
+        "package_guid=? AND scan_status=\"verified\"",
+    ],
+    'retired exact MD5 lookup retains source evidence marker' => [
+        $root . '/src/Infrastructure/Import/CatalogVerifiedPackageIdentityRepository.php',
+        'matched_retired_duplicate_id',
     ],
     'worker fingerprint tracks verified import adapter' => [
         $root . '/src/Infrastructure/Jobs/CatalogWorkerCodeVersion.php',
@@ -80,10 +92,15 @@ if (!is_string($identity)
     || str_contains($identity, 'AND package_guid=? AND md5=?')) {
     $failed[] = 'verified duplicate lookup must not narrow game+MD5 identity by package GUID';
 }
+if (!is_string($identity)
+    || !str_contains($identity, 'scan_status IN ("verified","duplicate")')
+    || str_contains($identity, 'scan_status IN ("verified","duplicate","failed")')) {
+    $failed[] = 'exact MD5 lookup must include retired duplicates without masking failed rows';
+}
 
 if ($failed !== []) {
     fwrite(STDERR, "Profiled import issue ledger contract FAILED:\n - " . implode("\n - ", $failed) . "\n");
     exit(1);
 }
 
-echo "Profiled import issue ledger contract passed (" . (count($checks) + 3) . " checks).\n";
+echo "Profiled import issue ledger contract passed (" . (count($checks) + 4) . " checks).\n";
