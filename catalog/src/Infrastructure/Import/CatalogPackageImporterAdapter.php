@@ -10,6 +10,7 @@ declare(strict_types=1);
 
 namespace UnrealDb\Catalog\Infrastructure\Import;
 
+use PDOException;
 use RuntimeException;
 use UnrealDb\Catalog\Application\Import\CatalogVerifiedPackageInspection;
 use UnrealDb\Catalog\Application\Import\Contract\VerifiedPackageDependencyPort;
@@ -115,14 +116,37 @@ final class CatalogPackageImporterAdapter implements CatalogPackageImporter
             );
         }
 
-        $fileId = $this->publisher->persist(
-            $gameId,
-            $temporaryPath,
-            $inspection,
-            $userId,
-            $progress,
-            $maintenanceReplaceFileId
-        );
+        try {
+            $fileId = $this->publisher->persist(
+                $gameId,
+                $temporaryPath,
+                $inspection,
+                $userId,
+                $progress,
+                $maintenanceReplaceFileId
+            );
+        } catch (PDOException $error) {
+            // The optimistic duplicate lookup above can race another worker that
+            // publishes the same game+MD5 between SELECT and INSERT. The database
+            // uniqueness constraint is the authoritative final arbiter. Re-read
+            // identity after that exact constraint wins and return the same normal
+            // duplicate/alias result as the pre-insert path instead of consuming
+            // durable retries and dead-lettering a perfectly valid source file.
+            if ($maintenanceReplaceFileId > 0 || !$this->isGameMd5DuplicateRace($error)) {
+                throw $error;
+            }
+            $duplicate = $this->identity->findVerifiedDuplicate($gameId, $inspection, 0);
+            if ($duplicate === null) {
+                throw $error;
+            }
+            return $this->handleDuplicate(
+                $gameId,
+                $duplicate,
+                $inspection,
+                $deferDependencyRebuild,
+                $progress
+            );
+        }
 
         $resultLabel = ($inspection->classification['compatibility_status'] ?? 'native') === 'legacy_compatible'
             ? ('; ' . (string)($inspection->classification['compatibility_label'] ?? 'legacy-compatible'))
@@ -258,5 +282,12 @@ final class CatalogPackageImporterAdapter implements CatalogPackageImporter
             $inspection->classification,
             $meta,
         ];
+    }
+
+    private function isGameMd5DuplicateRace(PDOException $error): bool
+    {
+        $message = strtolower($error->getMessage());
+        return str_contains($message, 'duplicate entry')
+            && str_contains($message, 'uq_ue_files_game_md5');
     }
 }
