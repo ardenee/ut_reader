@@ -46,10 +46,12 @@ final class CatalogExternalArchiveReader
         if (!is_file($archivePath) || !is_readable($archivePath) || is_link($archivePath)) {
             throw new \RuntimeException('Archive source is unavailable for PHP RAR decoding.');
         }
-        if (strtolower((string)pathinfo($archiveName, PATHINFO_EXTENSION)) !== 'rar') {
-            throw new \InvalidArgumentException('PHP RAR compatibility reader only accepts RAR archives.');
-        }
 
+        // CatalogSequentialArchiveReader selects this decoder only after the
+        // source bytes have been identified as RAR. Do not reject a valid RAR
+        // merely because an archive member was historically misnamed *.zip (or
+        // another extension). Content identity is authoritative; archiveName is
+        // retained only for diagnostics/provenance.
         $warning = '';
         set_error_handler(static function (int $severity, string $message) use (&$warning): bool {
             $warning = trim($message);
