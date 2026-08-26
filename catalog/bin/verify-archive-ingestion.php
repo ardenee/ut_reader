@@ -32,6 +32,8 @@ $phpFiles = [
     'src/Infrastructure/Jobs/CatalogBackgroundJobResultHydrator.php',
     'src/Domain/Jobs/JobType.php',
     'src/Domain/Jobs/JobResourcePolicy.php',
+    'src/Infrastructure/Persistence/PdoJobClaimer.php',
+    'src/Infrastructure/Jobs/CatalogJobResourceLimitStore.php',
     'src/Infrastructure/Jobs/CatalogJobWorkerFactory.php',
     'src/Infrastructure/Jobs/CatalogWorkerCodeVersion.php',
     'src/Infrastructure/Import/CatalogProfiledUploadQueue.php',
@@ -76,6 +78,7 @@ $archiveHandlerSource = (string)@file_get_contents($root . '/src/Infrastructure/
 $repairQueueSource = (string)@file_get_contents($root . '/bin/repair-archive-child-queues.php');
 $configSource = (string)@file_get_contents($root . '/config.example.php');
 $workerVersion = (string)@file_get_contents($root . '/src/Infrastructure/Jobs/CatalogWorkerCodeVersion.php');
+$resourceLimitStoreSource = (string)@file_get_contents($root . '/src/Infrastructure/Jobs/CatalogJobResourceLimitStore.php');
 $pageSource = (string)@file_get_contents($root . '/background-jobs.php');
 $archiveErrorClient = (string)@file_get_contents($root . '/assets/background-jobs-archive-errors.js');
 
@@ -222,8 +225,11 @@ $record(
     str_contains($workerVersion, 'CatalogArchiveExtractor.php')
         && str_contains($workerVersion, 'CatalogArchiveImportJobHandler.php')
         && str_contains($workerVersion, 'CatalogUmodArchiveReader.php')
-        && str_contains($workerVersion, 'CatalogUmodBinaryCodec.php'),
-    'Changing archive or UMOD decoding code must invalidate the detached-worker fingerprint so stale workers are reconciled.'
+        && str_contains($workerVersion, 'CatalogUmodBinaryCodec.php')
+        && str_contains($workerVersion, 'JobResourcePolicy.php')
+        && str_contains($workerVersion, 'CatalogJobResourceLimitStore.php')
+        && str_contains($workerVersion, 'PdoJobClaimer.php'),
+    'Changing archive decoding, source-root scheduling or archive resource policy must invalidate the detached-worker fingerprint so stale workers are reconciled.'
 );
 
 $record(
@@ -234,15 +240,32 @@ $record(
     'Archive coordinator and extracted Upload Bucket member job types must stay in the domain registry.'
 );
 
-$archiveProfile = JobResourcePolicy::for(JobType::IMPORT_STAGED_ARCHIVE, ['game_id' => 7]);
+$archiveProfile = JobResourcePolicy::for(JobType::IMPORT_STAGED_ARCHIVE, [
+    'game_id' => 7,
+    'staged_path' => 'jobs/incoming/source-archive.zip',
+]);
 $bucketArchiveProfile = JobResourcePolicy::for(JobType::PROCESS_BUCKET_ARCHIVE, ['staged_path' => 'jobs/incoming/archive.umod']);
 $bucketMemberProfile = JobResourcePolicy::for(JobType::PROCESS_BUCKET_STAGED_PACKAGE, ['staged_path' => 'jobs/incoming/Test.utx']);
 $record(
     'archive_resource_profiles_registered',
-    $archiveProfile->resourceClass === JobResourcePolicy::ARCHIVE_IMPORT_HEAVY
+    $archiveProfile->resourceClass === JobResourcePolicy::SOURCE_ARCHIVE_IMPORT
+        && $archiveProfile->limit === 4
+        && is_string($archiveProfile->concurrencyKey)
+        && str_starts_with($archiveProfile->concurrencyKey, 'import:file:')
+        && !str_starts_with($archiveProfile->concurrencyKey, 'import:game:')
         && $bucketArchiveProfile->resourceClass === JobResourcePolicy::ARCHIVE_IMPORT_HEAVY
         && $bucketMemberProfile->resourceClass === JobResourcePolicy::BUCKET_PROCESSING,
-    'Archive coordinators stay bounded while extracted Upload Bucket members use normal bucket-processing capacity.'
+    'Independent staged source archives use bounded parallel per-source admission; serial archive/backup coordinators remain on archive-import-heavy.'
+);
+
+$record(
+    'queued_staged_archives_are_reclassified_on_worker_start',
+    str_contains($resourceLimitStoreSource, 'JobResourcePolicy::SOURCE_ARCHIVE_IMPORT')
+        && str_contains($resourceLimitStoreSource, 'JobType::IMPORT_STAGED_PAK')
+        && str_contains($resourceLimitStoreSource, 'JobType::IMPORT_STAGED_ARCHIVE')
+        && str_contains($resourceLimitStoreSource, 'CONCAT("import:source-job:",id)')
+        && str_contains($resourceLimitStoreSource, '$sourceArchiveRows'),
+    'Already-queued staged source archives must learn the parallel per-source resource policy when workers restart; operators must not need to delete and requeue them.'
 );
 
 $factory = (string)@file_get_contents($root . '/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php');
@@ -254,6 +277,11 @@ $record(
         && str_contains($factory, 'new CatalogArchiveImportJobHandler')
         && str_contains($factory, 'new CatalogBucketStagedPackageJobHandler'),
     'Every archive job type must resolve to a worker handler.'
+);
+$record(
+    'worker_start_synchronizes_queued_resource_policy',
+    str_contains($factory, 'synchronizeQueuedPolicies()'),
+    'Worker startup must repair persisted queued resource policy before claiming work.'
 );
 
 $bucketApi = (string)@file_get_contents($root . '/api/v1/upload-bucket-chunk.php');
