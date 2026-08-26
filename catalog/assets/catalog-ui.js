@@ -809,3 +809,211 @@
 
     if (details.open) ensureMap();
 })();
+
+(function () {
+    'use strict';
+
+    var details = document.querySelector('[data-download-world-map]');
+    if (!details) return;
+    var stage = details.querySelector('.download-world-map-stage');
+    if (!stage) return;
+
+    var toolbar = document.createElement('div');
+    toolbar.className = 'download-world-map-controls';
+    toolbar.setAttribute('aria-label', 'World map zoom controls');
+
+    function controlButton(label, title) {
+        var button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'button download-world-map-control';
+        button.textContent = label;
+        button.title = title;
+        button.disabled = true;
+        return button;
+    }
+
+    var zoomOut = controlButton('−', 'Zoom out');
+    var zoomLabel = document.createElement('span');
+    zoomLabel.className = 'download-world-map-zoom-label mono small';
+    zoomLabel.textContent = '100%';
+    var zoomIn = controlButton('+', 'Zoom in');
+    var reset = controlButton('Reset', 'Reset map to the full world view');
+    toolbar.appendChild(zoomOut);
+    toolbar.appendChild(zoomLabel);
+    toolbar.appendChild(zoomIn);
+    toolbar.appendChild(reset);
+    stage.parentNode.insertBefore(toolbar, stage);
+
+    var style = document.createElement('style');
+    style.textContent = [
+        '.download-world-map-controls{display:flex;justify-content:flex-end;align-items:center;gap:7px;margin:0 0 8px}',
+        '.download-world-map-control{min-width:38px;padding:5px 10px}',
+        '.download-world-map-zoom-label{min-width:48px;text-align:center;color:var(--muted)}',
+        '.download-world-map-stage.download-world-map-interactive{cursor:grab;touch-action:none;user-select:none}',
+        '.download-world-map-stage.download-world-map-panning{cursor:grabbing}',
+        '@media(max-width:700px){.download-world-map-controls{justify-content:center}}'
+    ].join('\n');
+    document.head.appendChild(style);
+
+    var svg = null;
+    var base = null;
+    var view = null;
+    var dragging = false;
+    var dragPointerId = null;
+    var lastClientX = 0;
+    var lastClientY = 0;
+    var minScale = 1;
+    var maxScale = 10;
+
+    function parseViewBox(value) {
+        var parts = (value || '').trim().split(/\s+/).map(Number);
+        if (parts.length !== 4 || parts.some(function (number) { return !Number.isFinite(number); }) || parts[2] <= 0 || parts[3] <= 0) {
+            return null;
+        }
+        return { x: parts[0], y: parts[1], width: parts[2], height: parts[3] };
+    }
+
+    function currentScale() {
+        return base && view ? base.width / view.width : 1;
+    }
+
+    function clampView(candidate) {
+        if (!base) return candidate;
+        candidate.width = Math.min(base.width, Math.max(base.width / maxScale, candidate.width));
+        candidate.height = Math.min(base.height, Math.max(base.height / maxScale, candidate.height));
+        var maxX = base.x + base.width - candidate.width;
+        var maxY = base.y + base.height - candidate.height;
+        candidate.x = Math.min(maxX, Math.max(base.x, candidate.x));
+        candidate.y = Math.min(maxY, Math.max(base.y, candidate.y));
+        return candidate;
+    }
+
+    function applyView() {
+        if (!svg || !view || !base) return;
+        clampView(view);
+        svg.setAttribute('viewBox', [view.x, view.y, view.width, view.height].join(' '));
+        var scale = currentScale();
+        zoomLabel.textContent = Math.round(scale * 100) + '%';
+        zoomOut.disabled = scale <= minScale + 0.001;
+        zoomIn.disabled = scale >= maxScale - 0.001;
+        reset.disabled = scale <= minScale + 0.001 && Math.abs(view.x - base.x) < 0.01 && Math.abs(view.y - base.y) < 0.01;
+    }
+
+    function zoomTo(scale, focusX, focusY) {
+        if (!base || !view) return;
+        scale = Math.min(maxScale, Math.max(minScale, scale));
+        var oldWidth = view.width;
+        var oldHeight = view.height;
+        var newWidth = base.width / scale;
+        var newHeight = base.height / scale;
+        var ratioX = oldWidth > 0 ? (focusX - view.x) / oldWidth : 0.5;
+        var ratioY = oldHeight > 0 ? (focusY - view.y) / oldHeight : 0.5;
+        view = {
+            x: focusX - ratioX * newWidth,
+            y: focusY - ratioY * newHeight,
+            width: newWidth,
+            height: newHeight
+        };
+        applyView();
+    }
+
+    function zoomAtCenter(multiplier) {
+        if (!view) return;
+        zoomTo(currentScale() * multiplier, view.x + view.width / 2, view.y + view.height / 2);
+    }
+
+    function svgPointFromClient(clientX, clientY) {
+        if (!svg || !view) return null;
+        var rect = svg.getBoundingClientRect();
+        if (!rect.width || !rect.height) return null;
+        return {
+            x: view.x + ((clientX - rect.left) / rect.width) * view.width,
+            y: view.y + ((clientY - rect.top) / rect.height) * view.height
+        };
+    }
+
+    function resetView() {
+        if (!base) return;
+        view = { x: base.x, y: base.y, width: base.width, height: base.height };
+        applyView();
+    }
+
+    function attachMap(candidate) {
+        if (!candidate || candidate === svg) return;
+        var parsed = parseViewBox(candidate.getAttribute('viewBox'));
+        if (!parsed) return;
+        svg = candidate;
+        base = parsed;
+        view = { x: parsed.x, y: parsed.y, width: parsed.width, height: parsed.height };
+        stage.classList.add('download-world-map-interactive');
+        applyView();
+    }
+
+    zoomIn.addEventListener('click', function () { zoomAtCenter(1.5); });
+    zoomOut.addEventListener('click', function () { zoomAtCenter(1 / 1.5); });
+    reset.addEventListener('click', resetView);
+
+    stage.addEventListener('wheel', function (event) {
+        if (!svg || !view) return;
+        var point = svgPointFromClient(event.clientX, event.clientY);
+        if (!point) return;
+        event.preventDefault();
+        zoomTo(currentScale() * (event.deltaY < 0 ? 1.2 : 1 / 1.2), point.x, point.y);
+    }, { passive: false });
+
+    stage.addEventListener('dblclick', function (event) {
+        if (!svg || !view) return;
+        var point = svgPointFromClient(event.clientX, event.clientY);
+        if (!point) return;
+        event.preventDefault();
+        zoomTo(currentScale() * 1.5, point.x, point.y);
+    });
+
+    stage.addEventListener('pointerdown', function (event) {
+        if (!svg || !view || event.button !== 0 || currentScale() <= 1.001) return;
+        if (event.target.closest && event.target.closest('.download-world-map-dot')) return;
+        dragging = true;
+        dragPointerId = event.pointerId;
+        lastClientX = event.clientX;
+        lastClientY = event.clientY;
+        stage.classList.add('download-world-map-panning');
+        stage.setPointerCapture(event.pointerId);
+        event.preventDefault();
+    });
+
+    stage.addEventListener('pointermove', function (event) {
+        if (!dragging || event.pointerId !== dragPointerId || !svg || !view) return;
+        var rect = svg.getBoundingClientRect();
+        if (!rect.width || !rect.height) return;
+        var dx = event.clientX - lastClientX;
+        var dy = event.clientY - lastClientY;
+        lastClientX = event.clientX;
+        lastClientY = event.clientY;
+        view.x -= dx * (view.width / rect.width);
+        view.y -= dy * (view.height / rect.height);
+        applyView();
+    });
+
+    function stopDragging(event) {
+        if (!dragging || (event && event.pointerId !== dragPointerId)) return;
+        dragging = false;
+        stage.classList.remove('download-world-map-panning');
+        if (event && stage.hasPointerCapture && stage.hasPointerCapture(event.pointerId)) {
+            stage.releasePointerCapture(event.pointerId);
+        }
+        dragPointerId = null;
+    }
+
+    stage.addEventListener('pointerup', stopDragging);
+    stage.addEventListener('pointercancel', stopDragging);
+    stage.addEventListener('lostpointercapture', stopDragging);
+
+    var existingSvg = stage.querySelector('svg');
+    if (existingSvg) attachMap(existingSvg);
+
+    var observer = new MutationObserver(function () {
+        var candidate = stage.querySelector('svg');
+        if (candidate) attachMap(candidate);
+    });
+    observer.observe(stage, { childList: true, subtree: false });
+})();
