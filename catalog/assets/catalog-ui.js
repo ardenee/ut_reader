@@ -575,3 +575,237 @@
         flag.replaceWith(image);
     });
 })();
+
+(function () {
+    'use strict';
+
+    var statCards = document.querySelector('.download-log-cards');
+    var table = document.querySelector('table.download-log-table');
+    if (!statCards || !table || !table.tHead || !table.tBodies.length) return;
+
+    function codeFromCountryCell(cell) {
+        var image = cell.querySelector('img.download-country-flag-image');
+        if (image && /^[A-Za-z]{2}$/.test(image.alt || '')) return image.alt.toUpperCase();
+        var marker = cell.querySelector('.download-country-flag');
+        var text = marker ? (marker.textContent || '').trim() : '';
+        if (/^[A-Za-z]{2}$/.test(text)) return text.toUpperCase();
+        var symbols = Array.from(text);
+        if (symbols.length !== 2) return '';
+        var base = 0x1F1E6;
+        var first = symbols[0].codePointAt(0);
+        var second = symbols[1].codePointAt(0);
+        if (first < base || first > 0x1F1FF || second < base || second > 0x1F1FF) return '';
+        return String.fromCharCode(65 + first - base, 65 + second - base);
+    }
+
+    function countryNameFromCell(cell, code) {
+        var image = cell.querySelector('img.download-country-flag-image');
+        if (image && image.title) return image.title;
+        var marker = cell.querySelector('.download-country-flag');
+        return marker && (marker.title || marker.getAttribute('aria-label'))
+            ? (marker.title || marker.getAttribute('aria-label'))
+            : code;
+    }
+
+    var headers = Array.from(table.tHead.rows[0].cells).map(function (cell) {
+        return (cell.textContent || '').replace(/[▲▼]/g, '').trim().toLowerCase();
+    });
+    var ipIndex = headers.indexOf('ip');
+    var countryIndex = headers.indexOf('country');
+    if (ipIndex < 0 || countryIndex < 0) return;
+
+    var pointsByKey = Object.create(null);
+    Array.from(table.tBodies[0].rows).forEach(function (row) {
+        var ipCell = row.cells[ipIndex];
+        var countryCell = row.cells[countryIndex];
+        if (!ipCell || !countryCell) return;
+        var ip = (ipCell.textContent || '').trim();
+        var code = codeFromCountryCell(countryCell);
+        if (!ip || !/^[A-Z]{2}$/.test(code)) return;
+        var name = countryNameFromCell(countryCell, code);
+        var key = code + '|' + ip;
+        if (!pointsByKey[key]) {
+            pointsByKey[key] = { ip: ip, code: code, country: name, count: 0 };
+        }
+        pointsByKey[key].count++;
+    });
+    var points = Object.keys(pointsByKey).map(function (key) { return pointsByKey[key]; });
+
+    var details = document.createElement('details');
+    details.className = 'download-world-map';
+    details.setAttribute('data-download-world-map', '');
+
+    var storageKey = 'unrealdb.downloadLogs.worldMapOpen';
+    try {
+        details.open = window.localStorage.getItem(storageKey) !== '0';
+    } catch (error) {
+        details.open = true;
+    }
+
+    var summary = document.createElement('summary');
+    summary.textContent = 'World activity map · ' + points.length + ' unique IP' + (points.length === 1 ? '' : 's') + ' on this page';
+    details.appendChild(summary);
+
+    var content = document.createElement('div');
+    content.className = 'download-world-map-content';
+
+    var note = document.createElement('div');
+    note.className = 'download-world-map-note';
+    note.textContent = 'Country-level approximation from the stored GeoIP country snapshot. Only the currently displayed log rows are plotted.';
+    content.appendChild(note);
+
+    var stage = document.createElement('div');
+    stage.className = 'download-world-map-stage';
+    stage.textContent = points.length ? 'Loading world map…' : 'No country-resolved IP addresses are visible on this page.';
+    content.appendChild(stage);
+
+    var footer = document.createElement('div');
+    footer.className = 'download-world-map-credit';
+    footer.appendChild(document.createTextNode('Map: '));
+    var credit = document.createElement('a');
+    credit.href = 'https://github.com/melenaos/Menelabs.VectorAtlas';
+    credit.target = '_blank';
+    credit.rel = 'noopener noreferrer';
+    credit.textContent = 'VectorAtlas';
+    footer.appendChild(credit);
+    footer.appendChild(document.createTextNode(' / Natural Earth.'));
+    content.appendChild(footer);
+
+    details.appendChild(content);
+    statCards.parentNode.insertBefore(details, statCards);
+
+    var style = document.createElement('style');
+    style.textContent = [
+        '.download-world-map{margin:0 0 14px;border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.025);overflow:hidden}',
+        '.download-world-map>summary{cursor:pointer;padding:11px 14px;font-weight:800;user-select:none}',
+        '.download-world-map[open]>summary{border-bottom:1px solid var(--line)}',
+        '.download-world-map-content{padding:12px 14px 10px}',
+        '.download-world-map-note,.download-world-map-credit{font-size:.86rem;color:var(--muted)}',
+        '.download-world-map-note{margin-bottom:9px}',
+        '.download-world-map-credit{margin-top:7px;text-align:right}',
+        '.download-world-map-stage{min-height:220px;display:flex;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:rgba(0,0,0,.12);color:var(--muted)}',
+        '.download-world-map-stage svg{display:block;width:100%;height:auto;max-height:430px}',
+        '.download-world-map-stage svg path{fill:rgba(148,163,184,.22);stroke:rgba(148,163,184,.48);stroke-width:.9;vector-effect:non-scaling-stroke}',
+        '.download-world-map-stage svg path.download-world-map-country-active{fill:rgba(96,165,250,.28);stroke:rgba(147,197,253,.78)}',
+        '.download-world-map-stage .download-world-map-dot{fill:var(--amber);stroke:#fff;stroke-width:2.2;vector-effect:non-scaling-stroke;cursor:help}',
+        '.download-world-map-stage .download-world-map-dot:focus{outline:none;stroke-width:4}',
+        '@media(max-width:700px){.download-world-map-stage{min-height:160px}.download-world-map-content{padding:9px}}'
+    ].join('\n');
+    document.head.appendChild(style);
+
+    var loaded = false;
+    var loading = false;
+    var root = (function () {
+        var path = window.location.pathname || '/';
+        var marker = '/catalog/';
+        var index = path.indexOf(marker);
+        return index >= 0 ? path.slice(0, index + marker.length) : '/catalog/';
+    })();
+
+    function renderMap(svgText) {
+        var parsed = new DOMParser().parseFromString(svgText, 'image/svg+xml');
+        var sourceSvg = parsed.documentElement;
+        if (!sourceSvg || sourceSvg.nodeName.toLowerCase() !== 'svg' || parsed.querySelector('parsererror')) {
+            throw new Error('Invalid world map SVG.');
+        }
+
+        var namespace = 'http://www.w3.org/2000/svg';
+        var svg = document.createElementNS(namespace, 'svg');
+        svg.setAttribute('viewBox', sourceSvg.getAttribute('viewBox') || '0 0 2000 1001');
+        svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+        svg.setAttribute('role', 'img');
+        svg.setAttribute('aria-label', 'Approximate country locations of IP addresses in the currently displayed download logs');
+
+        sourceSvg.querySelectorAll('path[id][d]').forEach(function (sourcePath) {
+            var id = (sourcePath.getAttribute('id') || '').trim().toLowerCase();
+            var d = sourcePath.getAttribute('d') || '';
+            if (!/^[a-z0-9_-]{2,80}$/.test(id) || d === '' || d.length > 1000000) return;
+            var path = document.createElementNS(namespace, 'path');
+            path.setAttribute('id', id);
+            path.setAttribute('d', d);
+            svg.appendChild(path);
+        });
+
+        stage.textContent = '';
+        stage.appendChild(svg);
+
+        window.requestAnimationFrame(function () {
+            var byCountry = Object.create(null);
+            points.forEach(function (point) {
+                (byCountry[point.code] || (byCountry[point.code] = [])).push(point);
+            });
+
+            var mapped = 0;
+            Object.keys(byCountry).forEach(function (code) {
+                var countryPath = svg.querySelector('#' + code.toLowerCase());
+                if (!countryPath) return;
+                countryPath.classList.add('download-world-map-country-active');
+                var box;
+                try {
+                    box = countryPath.getBBox();
+                } catch (error) {
+                    return;
+                }
+                if (!box || !Number.isFinite(box.x) || !Number.isFinite(box.y)) return;
+
+                var group = byCountry[code];
+                var centerX = box.x + box.width / 2;
+                var centerY = box.y + box.height / 2;
+                group.forEach(function (point, index) {
+                    var count = group.length;
+                    var angle = count > 1 ? ((Math.PI * 2 * index) / count) - (Math.PI / 2) : 0;
+                    var spread = count > 1 ? Math.min(28, 8 + count * 1.4) : 0;
+                    var circle = document.createElementNS(namespace, 'circle');
+                    circle.classList.add('download-world-map-dot');
+                    circle.setAttribute('cx', String(centerX + Math.cos(angle) * spread));
+                    circle.setAttribute('cy', String(centerY + Math.sin(angle) * spread));
+                    circle.setAttribute('r', '8');
+                    circle.setAttribute('tabindex', '0');
+                    circle.setAttribute('role', 'img');
+                    var tooltip = point.ip + ' · ' + point.country + ' · ' + point.count + ' visible log entr' + (point.count === 1 ? 'y' : 'ies') + ' · country-level approximation';
+                    circle.setAttribute('aria-label', tooltip);
+                    var title = document.createElementNS(namespace, 'title');
+                    title.textContent = tooltip;
+                    circle.appendChild(title);
+                    svg.appendChild(circle);
+                    mapped++;
+                });
+            });
+
+            note.textContent = 'Country-level approximation from the stored GeoIP country snapshot. '
+                + mapped + ' of ' + points.length + ' unique IP' + (points.length === 1 ? '' : 's')
+                + ' on the current page mapped.';
+        });
+    }
+
+    function ensureMap() {
+        if (loaded || loading || !points.length) return;
+        loading = true;
+        fetch(root + 'world-map.php', { credentials: 'same-origin' })
+            .then(function (response) {
+                if (!response.ok) throw new Error('World map request returned HTTP ' + response.status + '.');
+                return response.text();
+            })
+            .then(function (svgText) {
+                renderMap(svgText);
+                loaded = true;
+            })
+            .catch(function (error) {
+                stage.textContent = 'World map could not be loaded: ' + error.message;
+            })
+            .finally(function () {
+                loading = false;
+            });
+    }
+
+    details.addEventListener('toggle', function () {
+        try {
+            window.localStorage.setItem(storageKey, details.open ? '1' : '0');
+        } catch (error) {
+            // Storage is optional; map visibility still works for this page view.
+        }
+        if (details.open) ensureMap();
+    });
+
+    if (details.open) ensureMap();
+})();
