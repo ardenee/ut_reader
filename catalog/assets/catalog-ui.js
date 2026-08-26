@@ -38,94 +38,6 @@
         return index >= 0 ? path.slice(0, index + marker.length) : '/catalog/';
     }
 
-    function adminNavigationGroups() {
-        return [
-            {
-                label: 'Admin',
-                links: [
-                    ['Dashboard', 'dashboard.php'],
-                    ['Setup', 'setup.php'],
-                    ['Library', 'library.php'],
-                    ['Game Browser', 'games.php'],
-                    ['Search', 'index.php?page=search'],
-                    ['Game Admin', 'game-manager.php'],
-                    ['Game Profiles', 'game-profiles.php'],
-                    ['Administrator Security', 'admin-security.php']
-                ]
-            },
-            {
-                label: 'Catalog',
-                links: [
-                    ['Missing Dependencies', 'missing.php'],
-                    ['Duplicate Files', 'duplicates.php'],
-                    ['Unverified Files', 'unverified-files.php'],
-                    ['Import Existing Unverified DB', 'unverified-database-import.php'],
-                    ['Base Game Protection', 'base-game-files.php'],
-                    ['Legacy Data Audit', 'legacy-data-audit.php']
-                ]
-            },
-            {
-                label: 'Imports',
-                links: [
-                    ['Game Sources', 'sources.php'],
-                    ['Local Source Scan', 'source-scan.php'],
-                    ['HTTP Source Scan', 'http-source-scan.php'],
-                    ['Upload Files', 'profiled-upload.php'],
-                    ['Upload Bucket', 'upload-bucket-v2.php'],
-                    ['PAK Import', 'pak-import.php'],
-                    ['Storage Audit', 'storage-audit.php']
-                ]
-            },
-            {
-                label: 'Maintenance',
-                links: [
-                    ['Background Jobs', 'background-jobs.php'],
-                    ['Full Sync', 'full-sync.php'],
-                    ['Dependency Refresh', 'dependency-refresh.php'],
-                    ['Asset Metadata Rebuild', 'asset-metadata-rebuild.php'],
-                    ['Source Identity Repair', 'source-identity-repair.php'],
-                    ['Package Normalizer', 'package-normalize.php'],
-                    ['GUID Normalizer', 'guid-normalize.php'],
-                    ['Maintenance Locks', 'maintenance-locks.php']
-                ]
-            },
-            {
-                label: 'Downloads',
-                links: [
-                    ['Transfers', 'transfers.php'],
-                    ['Download Administration', 'download-admin.php'],
-                    ['Package Download Settings', 'download-package-settings.php'],
-                    ['Mirror Providers', 'mirror-providers.php'],
-                    ['Mirror Links', 'mirror-links.php'],
-                    ['Mirror Queue', 'mirror-queue.php']
-                ]
-            },
-            {
-                label: 'Federation',
-                links: [
-                    ['Federation Admin', 'federation/admin.php'],
-                    ['Join Main Parent', 'federation/join-main-parent.php'],
-                    ['Settings', 'federation/settings.php'],
-                    ['Peers', 'federation/peers.php'],
-                    ['Peer Inventory', 'federation/peer-inventory.php'],
-                    ['Requests', 'federation/requests.php'],
-                    ['Approved Downloads', 'federation/approved-downloads.php'],
-                    ['Join Requests', 'federation/join-requests.php'],
-                    ['Queue', 'federation/queue.php'],
-                    ['Bulk Worker', 'federation/worker-run.php'],
-                    ['Conflicts', 'federation/conflicts.php'],
-                    ['Maintenance', 'federation/maintenance.php'],
-                    ['Logs', 'federation/logs.php'],
-                    ['Documentation', 'federation/docs.php'],
-                    ['Parent Pull', 'federation/parent-pull.php'],
-                    ['Push Inventory', 'federation/inventory-push.php'],
-                    ['Upload to Parent', 'federation/upload-to-parent.php'],
-                    ['Claim Parent', 'federation/claim-parent.php']
-                ]
-            }
-        ];
-    }
-
     function closeNavigationMenus(nav, except) {
         nav.querySelectorAll('details[data-admin-menu]').forEach(function (menu) {
             if (menu !== except) menu.open = false;
@@ -136,42 +48,18 @@
         var nav = document.querySelector('nav.primary-nav');
         if (!nav || !nav.querySelector('form.nav-logout')) return;
 
-        var logout = nav.querySelector('form.nav-logout');
-        var root = catalogRootPath();
         var currentUrl = new URL(window.location.href);
 
-        nav.querySelectorAll('details').forEach(function (menu) {
-            menu.remove();
-        });
-
-        adminNavigationGroups().forEach(function (group) {
-            var details = document.createElement('details');
-            details.className = 'nav-dropdown';
-            details.dataset.adminMenu = group.label;
-
-            var summary = document.createElement('summary');
-            summary.textContent = group.label;
-            summary.setAttribute('aria-label', group.label + ' menu');
-            details.appendChild(summary);
-
-            var menu = document.createElement('div');
-            menu.className = 'nav-menu';
-            menu.setAttribute('role', 'menu');
-
-            group.links.forEach(function (entry) {
-                var link = document.createElement('a');
-                var url = new URL(root + entry[1], window.location.origin);
-                link.href = url.pathname + url.search + url.hash;
-                link.textContent = entry[0];
-                link.setAttribute('role', 'menuitem');
-                if (currentUrl.pathname === url.pathname && currentUrl.search === url.search) {
-                    link.setAttribute('aria-current', 'page');
-                }
-                menu.appendChild(link);
-            });
-
-            details.appendChild(menu);
-            nav.insertBefore(details, logout);
+        // PHP owns the administrator navigation contents. JavaScript only
+        // enhances the server-rendered menus so new/removed admin pages cannot
+        // drift between two independent navigation definitions.
+        nav.querySelectorAll('details[data-admin-menu] .nav-menu a').forEach(function (link) {
+            var url = new URL(link.href, window.location.origin);
+            if (currentUrl.pathname === url.pathname && currentUrl.search === url.search) {
+                link.setAttribute('aria-current', 'page');
+            } else {
+                link.removeAttribute('aria-current');
+            }
         });
 
         addStyle([
