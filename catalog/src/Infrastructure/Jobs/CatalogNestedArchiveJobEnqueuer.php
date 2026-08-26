@@ -1,11 +1,12 @@
 <?php
 /**
- * Discovers ZIP/RAR/7z members inside an archive and queues them as child archive jobs.
+ * Discovers supported archive-container members inside an archive and queues them as child archive jobs.
  *
  * Nested containers are deliberately not recursively expanded inside the current
  * worker call. Each embedded archive becomes its own durable archive workflow so
  * source ownership, retries, cancellation, failure reporting and child waiting use
- * the same queue semantics as a top-level archive.
+ * the same queue semantics as a top-level archive. Archive format ownership stays
+ * with CatalogArchiveExtractor so ZIP/RAR/7z and UMOD-family support cannot drift.
  */
 declare(strict_types=1);
 
@@ -24,7 +25,6 @@ use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 
 final class CatalogNestedArchiveJobEnqueuer
 {
-    private const RECURSIVE_EXTENSIONS = ['zip', 'rar', '7z'];
     private const DEFAULT_MAX_NESTING_DEPTH = 4;
     private const MAX_CONFIGURED_NESTING_DEPTH = 16;
     private const ERROR_RETENTION = 50;
@@ -70,9 +70,9 @@ final class CatalogNestedArchiveJobEnqueuer
             $entries = $extractor->entries($sourcePath, $originalName);
 
             // Listing the archive directory is cheap compared with decoding a
-            // solid/sequential RAR or 7z stream. If there is no embedded ZIP/RAR/7z
-            // member, stop here and let the established handler perform its normal
-            // single processing pass. This keeps the common case fast.
+            // solid/sequential RAR or 7z stream. If there is no embedded archive
+            // format supported by CatalogArchiveExtractor, stop here and let the
+            // established handler perform its normal single processing pass.
             if (!$this->containsRecursiveArchive($entries)) {
                 return $result;
             }
@@ -528,7 +528,7 @@ final class CatalogNestedArchiveJobEnqueuer
 
     private function isRecursiveArchiveName(string $name): bool
     {
-        return in_array(strtolower((string)pathinfo($name, PATHINFO_EXTENSION)), self::RECURSIVE_EXTENSIONS, true);
+        return CatalogArchiveExtractor::isArchiveName($name);
     }
 
     private function dedupeKey(int $jobId, string $entryPath): string
