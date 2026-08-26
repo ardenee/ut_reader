@@ -16,6 +16,7 @@ final class JobResourcePolicy
     public const AFFECTED_DEPENDENCY_BATCH = 'affected-dependency-batch';
     public const SEARCH_HEAVY = 'search-heavy';
     public const IMPORT_HEAVY = 'import-heavy';
+    public const SOURCE_ARCHIVE_IMPORT = 'source-archive-import';
     public const ARCHIVE_IMPORT_HEAVY = 'archive-import-heavy';
     public const BUCKET_PROCESSING = 'bucket-processing';
     public const UNVERIFIED_MATCHES = 'unverified-matches';
@@ -56,10 +57,15 @@ final class JobResourcePolicy
                 'default' => 8,
                 'description' => 'Independent per-file Unreal package imports protected by per-file concurrency keys.',
             ],
+            self::SOURCE_ARCHIVE_IMPORT => [
+                'label' => 'Staged source archive imports',
+                'default' => 4,
+                'description' => 'Independent uploaded ZIP/7z/RAR/PAK source roots. Each worker stays with one source tree; this limit controls how many source archives may be expanded concurrently.',
+            ],
             self::ARCHIVE_IMPORT_HEAVY => [
-                'label' => 'Archive and backup imports',
+                'label' => 'Archive and backup coordinators',
                 'default' => 1,
-                'description' => 'PAK, ZIP/7z/RAR expansion and game-backup import coordinators/entry units. Archive coordinators remain serial by default to avoid sustained decompression/storage contention.',
+                'description' => 'Serial archive/backup coordinator and entry work that should not fan out as independent source roots.',
             ],
             self::BUCKET_PROCESSING => [
                 'label' => 'Upload Bucket processing',
@@ -200,9 +206,9 @@ final class JobResourcePolicy
             ),
             JobType::IMPORT_STAGED_PAK,
             JobType::IMPORT_STAGED_ARCHIVE => new JobResourceProfile(
-                self::ARCHIVE_IMPORT_HEAVY,
-                self::defaultLimit(1),
-                self::positiveKey('import:game:', $payload['game_id'] ?? null)
+                self::SOURCE_ARCHIVE_IMPORT,
+                self::defaultLimit(4),
+                self::importFileKey($payload)
             ),
             JobType::IMPORT_STAGED_PAK_ENTRY => new JobResourceProfile(
                 self::ARCHIVE_IMPORT_HEAVY,
