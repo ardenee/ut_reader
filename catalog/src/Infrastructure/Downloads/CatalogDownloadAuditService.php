@@ -14,8 +14,11 @@ use Throwable;
 
 final class CatalogDownloadAuditService
 {
+    private readonly CatalogGeoIpCountryResolver $geoIp;
+
     public function __construct(private readonly PDO $db)
     {
+        $this->geoIp = new CatalogGeoIpCountryResolver($db);
     }
 
     public static function text(mixed $value, int $maximum): string
@@ -43,13 +46,16 @@ final class CatalogDownloadAuditService
     public function generationQueued(array $data): void
     {
         try {
+            $ipText = (string)($data['ip_address'] ?? '');
+            $country = $this->geoIp->resolve($ipText);
             $statement = $this->db->prepare(
                 'INSERT INTO ue_generated_package_audit('
-                . 'job_id,file_id,game_id,user_id,request_ip,user_agent,package_format,package_name,package_version,'
+                . 'job_id,file_id,game_id,user_id,request_ip,country_code,country_name,user_agent,package_format,package_name,package_version,'
                 . 'include_dependencies,allow_incomplete,status,queued_at,updated_at'
-                . ') VALUES(?,?,?,?,?,?,?,?,?,?,?,"queued",CURRENT_TIMESTAMP(6),CURRENT_TIMESTAMP(6)) '
+                . ') VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,"queued",CURRENT_TIMESTAMP(6),CURRENT_TIMESTAMP(6)) '
                 . 'ON DUPLICATE KEY UPDATE '
                 . 'file_id=VALUES(file_id),game_id=VALUES(game_id),user_id=VALUES(user_id),request_ip=VALUES(request_ip),'
+                . 'country_code=VALUES(country_code),country_name=VALUES(country_name),'
                 . 'user_agent=VALUES(user_agent),package_format=VALUES(package_format),package_name=VALUES(package_name),'
                 . 'package_version=VALUES(package_version),include_dependencies=VALUES(include_dependencies),'
                 . 'allow_incomplete=VALUES(allow_incomplete),updated_at=CURRENT_TIMESTAMP(6)'
@@ -59,7 +65,9 @@ final class CatalogDownloadAuditService
                 max(1, (int)($data['file_id'] ?? 0)),
                 max(1, (int)($data['game_id'] ?? 0)),
                 isset($data['user_id']) && (int)$data['user_id'] > 0 ? (int)$data['user_id'] : null,
-                self::ip((string)($data['ip_address'] ?? '')),
+                self::ip($ipText),
+                $country['country_code'] !== '' ? $country['country_code'] : null,
+                $country['country_name'] !== '' ? $country['country_name'] : null,
                 self::text($data['user_agent'] ?? '', 500),
                 self::text($data['package_format'] ?? '', 32),
                 self::text($data['package_name'] ?? '', 255),
@@ -126,11 +134,13 @@ final class CatalogDownloadAuditService
     public function start(array $data): ?int
     {
         try {
+            $ipText = (string)($data['ip_address'] ?? '');
+            $country = $this->geoIp->resolve($ipText);
             $statement = $this->db->prepare(
                 'INSERT INTO ue_download_audit('
-                . 'download_type,file_id,game_id,job_id,user_id,ip_address,user_agent,download_name,package_format,'
+                . 'download_type,file_id,game_id,job_id,user_id,ip_address,country_code,country_name,user_agent,download_name,package_format,'
                 . 'artifact_size,range_start,range_end,bytes_requested,bytes_sent,status,http_status,started_at'
-                . ') VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,0,?,?,CURRENT_TIMESTAMP(6))'
+                . ') VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,0,?,?,CURRENT_TIMESTAMP(6))'
             );
             $statement->execute([
                 self::text($data['download_type'] ?? 'file', 32),
@@ -138,7 +148,9 @@ final class CatalogDownloadAuditService
                 isset($data['game_id']) && (int)$data['game_id'] > 0 ? (int)$data['game_id'] : null,
                 isset($data['job_id']) && (int)$data['job_id'] > 0 ? (int)$data['job_id'] : null,
                 isset($data['user_id']) && (int)$data['user_id'] > 0 ? (int)$data['user_id'] : null,
-                self::ip((string)($data['ip_address'] ?? '')),
+                self::ip($ipText),
+                $country['country_code'] !== '' ? $country['country_code'] : null,
+                $country['country_name'] !== '' ? $country['country_name'] : null,
                 self::text($data['user_agent'] ?? '', 500),
                 self::text($data['download_name'] ?? '', 255),
                 isset($data['package_format']) && trim((string)$data['package_format']) !== ''
