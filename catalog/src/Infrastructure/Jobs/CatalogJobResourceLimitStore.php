@@ -2,7 +2,7 @@
 /**
  * UnrealDB PHP File Audit
  * Purpose: Defines the infrastructure class `CatalogJobResourceLimitStore` for catalog job resource limit store.
- * Why: It keeps this responsibility in the namespaced architecture instead of repeating it in page, API, or worker
+ * Why: It keeps this responsibility in the namespaced architecture instead of repeating it in page, API, worker
  *      entry points.
  * Role: Infrastructure implementation for persistence, files, parsing, workers, security, storage, or external
  *       services.
@@ -165,11 +165,17 @@ final class CatalogJobResourceLimitStore
      * worker. Reclassify only queued file units to the bounded parallel class;
      * preserve their per-file concurrency keys and all retry/progress state.
      *
+     * Staged archive/PAK imports created by a profiled upload batch are source
+     * roots, not one game-wide critical section. Older queued rows used the
+     * archive coordinator class plus import:game:<id>, which serialized every
+     * source in the same game and made worker-count settings ineffective. Move
+     * those queued roots to the bounded source-archive class and a per-job key.
+     *
      * Affected-dependency coordinators also have a legacy rekey rule. Per-file
      * children and pre-upgrade batch compatibility rows are intentionally excluded
      * because their narrower concurrency keys are required for safe fan-out.
      *
-     * @return array{updated_jobs:int,updated_limits:int,projection_rows:int,dependency_file_rows:int,rekeyed_jobs:int,per_class:array<string,int>}
+     * @return array{updated_jobs:int,updated_limits:int,projection_rows:int,dependency_file_rows:int,source_archive_rows:int,rekeyed_jobs:int,per_class:array<string,int>}
      */
     public function synchronizeQueuedPolicies(): array
     {
@@ -179,6 +185,7 @@ final class CatalogJobResourceLimitStore
                 'updated_limits' => 0,
                 'projection_rows' => 0,
                 'dependency_file_rows' => 0,
+                'source_archive_rows' => 0,
                 'rekeyed_jobs' => 0,
                 'per_class' => [],
             ];
@@ -190,6 +197,8 @@ final class CatalogJobResourceLimitStore
         $dependencyLimit = $this->limits[JobResourcePolicy::DEPENDENCY_HEAVY] ?? $dependencyDefault;
         $dependencyFileDefault = self::limit((int)($definitions[JobResourcePolicy::AFFECTED_DEPENDENCY_BATCH]['default'] ?? 4));
         $dependencyFileLimit = $this->limits[JobResourcePolicy::AFFECTED_DEPENDENCY_BATCH] ?? $dependencyFileDefault;
+        $sourceArchiveDefault = self::limit((int)($definitions[JobResourcePolicy::SOURCE_ARCHIVE_IMPORT]['default'] ?? 4));
+        $sourceArchiveLimit = $this->limits[JobResourcePolicy::SOURCE_ARCHIVE_IMPORT] ?? $sourceArchiveDefault;
 
         $projection = $this->db->prepare(
             'UPDATE ue_background_jobs SET resource_class=?,resource_limit=?,concurrency_key=? '
@@ -223,6 +232,23 @@ final class CatalogJobResourceLimitStore
         ]);
         $dependencyFileRows = $dependencyFiles->rowCount();
 
+        $sourceArchives = $this->db->prepare(
+            'UPDATE ue_background_jobs SET resource_class=?,resource_limit=?,concurrency_key=CONCAT("import:source-job:",id) '
+            . 'WHERE queue_name=? AND status="queued" AND job_type IN (?,?) '
+            . 'AND (resource_class<>? OR resource_limit<>? OR concurrency_key IS NULL '
+            . 'OR concurrency_key<>CONCAT("import:source-job:",id))'
+        );
+        $sourceArchives->execute([
+            JobResourcePolicy::SOURCE_ARCHIVE_IMPORT,
+            $sourceArchiveLimit,
+            $this->queueName,
+            JobType::IMPORT_STAGED_PAK,
+            JobType::IMPORT_STAGED_ARCHIVE,
+            JobResourcePolicy::SOURCE_ARCHIVE_IMPORT,
+            $sourceArchiveLimit,
+        ]);
+        $sourceArchiveRows = $sourceArchives->rowCount();
+
         $updateLimit = $this->db->prepare(
             'UPDATE ue_background_jobs SET resource_limit=? '
             . 'WHERE queue_name=? AND status="queued" AND resource_class=? AND resource_limit<>?'
@@ -239,10 +265,11 @@ final class CatalogJobResourceLimitStore
 
         $rekeyedJobs = $this->rekeyQueuedAffectedDependencyJobs();
         return [
-            'updated_jobs' => $projectionRows + $dependencyFileRows + $updatedLimits,
+            'updated_jobs' => $projectionRows + $dependencyFileRows + $sourceArchiveRows + $updatedLimits,
             'updated_limits' => $updatedLimits,
             'projection_rows' => $projectionRows,
             'dependency_file_rows' => $dependencyFileRows,
+            'source_archive_rows' => $sourceArchiveRows,
             'rekeyed_jobs' => $rekeyedJobs,
             'per_class' => $perClass,
         ];
