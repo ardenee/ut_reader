@@ -13,6 +13,7 @@ use UnrealDb\Catalog\Infrastructure\Jobs\CatalogJobDisplayStatus;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogQueueWorkerStarter;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoAffectedDependencyRetrySelection;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoBackgroundJobBulkAction;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoCompletedArchiveRerunSelection;
 use UnrealDb\Catalog\Presentation\Http\JsonResponse;
 
 try {
@@ -83,10 +84,19 @@ try {
         'retry_blocked' => 0,
         'skipped' => 0,
     ];
+    $completedArchiveRerun = [
+        'handled_root_ids' => [],
+        'requested' => 0,
+        'affected' => 0,
+        'descendants_requeued' => 0,
+        'skipped' => 0,
+    ];
 
     if ($action === 'restart' && $scope === 'selected' && $jobIds !== []) {
+        $now = gmdate('Y-m-d H:i:s');
+
         $affectedRecovery = (new PdoAffectedDependencyRetrySelection($application->db))
-            ->restartPartialRoots($queueName, $jobIds, gmdate('Y-m-d H:i:s'));
+            ->restartPartialRoots($queueName, $jobIds, $now);
         $handledRoots = array_fill_keys(
             array_map('intval', $affectedRecovery['handled_root_ids'] ?? []),
             true
@@ -96,6 +106,26 @@ try {
                 $jobIds,
                 static fn(int $id): bool => !isset($handledRoots[$id])
             ));
+        }
+
+        // A completed archive is not a failed job, so the generic retry policy must
+        // remain failure-only. An explicit selection, however, is also the operator
+        // control for replaying retained archive bytes after parser/routing changes.
+        // Reset the completed archive tree here and remove those roots before the
+        // remaining failure-oriented bulk action is evaluated.
+        if ($jobIds !== []) {
+            $completedArchiveRerun = (new PdoCompletedArchiveRerunSelection($application->db))
+                ->rerunSelected($queueName, $jobIds, $now);
+            $rerunRoots = array_fill_keys(
+                array_map('intval', $completedArchiveRerun['handled_root_ids'] ?? []),
+                true
+            );
+            if ($rerunRoots !== []) {
+                $jobIds = array_values(array_filter(
+                    $jobIds,
+                    static fn(int $id): bool => !isset($rerunRoots[$id])
+                ));
+            }
         }
     }
 
@@ -144,6 +174,22 @@ try {
         $result['affected_dependency_source_jobs'] = count($affectedRecovery['handled_root_ids']);
         $result['affected_dependency_recovery_jobs'] = $recoveryRequested;
         $result['retry_selection_expanded'] = true;
+    }
+
+    if (($completedArchiveRerun['handled_root_ids'] ?? []) !== []) {
+        $archiveRequested = max(0, (int)($completedArchiveRerun['requested'] ?? 0));
+        $archiveAffected = max(0, (int)($completedArchiveRerun['affected'] ?? 0));
+        $archiveSkipped = max(0, (int)($completedArchiveRerun['skipped'] ?? 0));
+        $archiveDescendants = max(0, (int)($completedArchiveRerun['descendants_requeued'] ?? 0));
+
+        $result['requested'] = max(0, (int)($result['requested'] ?? 0)) + $archiveRequested;
+        $result['affected'] = max(0, (int)($result['affected'] ?? 0)) + $archiveAffected;
+        $result['skipped'] = max(0, (int)($result['skipped'] ?? 0)) + $archiveSkipped;
+        $result['worker_start_required'] = !empty($result['worker_start_required']) || $archiveAffected > 0;
+        $result['selected_source_jobs'] = $selectedSourceJobs;
+        $result['completed_archive_source_jobs'] = count($completedArchiveRerun['handled_root_ids']);
+        $result['completed_archive_descendant_jobs'] = $archiveDescendants;
+        $result['archive_rerun_expanded'] = true;
     }
 
     if (!empty($result['worker_start_required'])) {
