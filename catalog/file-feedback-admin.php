@@ -59,9 +59,10 @@ try {
             }
 
             $statement = $db->prepare(
-                'DELETE FROM ue_file_feedback WHERE submitted_at < DATE_SUB(CURRENT_TIMESTAMP(6), INTERVAL ? DAY)'
+                'DELETE FROM ue_file_feedback WHERE submitted_at < DATE_SUB(CURRENT_TIMESTAMP(6), INTERVAL '
+                . $days . ' DAY)'
             );
-            $statement->execute([$days]);
+            $statement->execute();
             $message = $statement->rowCount() . ' feedback record(s) older than ' . $days . ' day(s) deleted.';
         } else {
             throw new RuntimeException('Choose a feedback cleanup action.');
