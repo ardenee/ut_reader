@@ -222,10 +222,11 @@ $record(
 $record(
     'retained_archive_retry_controls_exist',
     str_contains($archiveRecoveryJs, 'Retry archive')
-        && str_contains($archiveRecoveryJs, 'Retry all ')
+        && str_contains($archiveRecoveryJs, 'Retry retryable archives')
         && str_contains($archiveRecoveryJs, "status: 'partial_archive'")
-        && str_contains($archiveRecoveryJs, "action: 'restart'"),
-    'Administrators need both per-archive retry and all-matching retained archive retry actions.'
+        && str_contains($archiveRecoveryJs, "action: 'restart'")
+        && str_contains($archiveRecoveryJs, 'Decoder-blocked archives'),
+    'Administrators need both per-archive retry and all-matching retryable retained archive actions while decoder-blocked sources remain retained.'
 );
 $record(
     'worker_fingerprint_tracks_reader_and_retry_policy',
