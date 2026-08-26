@@ -278,6 +278,10 @@ final class CatalogBackgroundJobFileTreeProjector
         if ($lastError !== '') {
             return $lastError;
         }
+        $archiveError = $this->retainedArchiveError($result, $progress);
+        if ($archiveError !== '') {
+            return $archiveError;
+        }
         $resultMessage = $this->compact((string)($result['message'] ?? ''), 900);
         if ($resultMessage !== '') {
             return $resultMessage;
@@ -290,6 +294,38 @@ final class CatalogBackgroundJobFileTreeProjector
             return number_format($childIssues) . ' child file(s) need attention. Expand this row to see them.';
         }
         return 'This file did not complete successfully. Expand related work or inspect the retained source.';
+    }
+
+    /** @param array<string,mixed> $result @param array<string,mixed> $progress */
+    private function retainedArchiveError(array $result, array $progress): string
+    {
+        $errors = is_array($result['errors'] ?? null)
+            ? array_values($result['errors'])
+            : (is_array($progress['errors'] ?? null) ? array_values($progress['errors']) : []);
+        if ($errors === []) {
+            return '';
+        }
+
+        $first = $errors[0] ?? null;
+        if (is_array($first)) {
+            $file = $this->compact((string)($first['file'] ?? $first['entry'] ?? $first['path'] ?? ''), 300);
+            $error = $this->compact((string)($first['error'] ?? $first['message'] ?? $first['reason'] ?? ''), 700);
+            if ($file !== '' || $error !== '') {
+                $detail = $file !== '' && $error !== '' ? $file . ' — ' . $error : ($file !== '' ? $file : $error);
+                $remaining = count($errors) - 1;
+                if ($remaining > 0) {
+                    $detail .= ' (+' . number_format($remaining) . ' more archive failure' . ($remaining === 1 ? '' : 's') . ')';
+                }
+                return $this->compact('Failed archive member: ' . $detail, 900);
+            }
+        } elseif (is_scalar($first)) {
+            $detail = $this->compact((string)$first, 850);
+            if ($detail !== '') {
+                return 'Failed archive member: ' . $detail;
+            }
+        }
+
+        return '';
     }
 
     /** @param array<string,mixed> $result */
