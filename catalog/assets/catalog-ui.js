@@ -530,3 +530,48 @@
     initExaminePage();
     initSearchHighlights();
 })();
+
+(function () {
+    'use strict';
+
+    function countryCodeFromFlagText(value) {
+        var text = (value || '').trim();
+        if (/^[A-Za-z]{2}$/.test(text)) return text.toUpperCase();
+        var symbols = Array.from(text);
+        if (symbols.length !== 2) return '';
+        var first = symbols[0].codePointAt(0);
+        var second = symbols[1].codePointAt(0);
+        var base = 0x1F1E6;
+        var end = 0x1F1FF;
+        if (first < base || first > end || second < base || second > end) return '';
+        return String.fromCharCode(65 + first - base, 65 + second - base);
+    }
+
+    var flags = document.querySelectorAll('.download-country-flag');
+    if (!flags.length) return;
+
+    var path = window.location.pathname || '/';
+    var marker = '/catalog/';
+    var index = path.indexOf(marker);
+    var root = index >= 0 ? path.slice(0, index + marker.length) : '/catalog/';
+
+    var style = document.createElement('style');
+    style.textContent = '.download-country-flag-image{display:inline-block;width:24px;height:18px;object-fit:cover;vertical-align:middle;border-radius:2px;box-shadow:0 0 0 1px rgba(255,255,255,.16);cursor:help}';
+    document.head.appendChild(style);
+
+    flags.forEach(function (flag) {
+        var code = countryCodeFromFlagText(flag.textContent || '');
+        if (!code) return;
+        var name = flag.getAttribute('title') || flag.getAttribute('aria-label') || code;
+        var image = document.createElement('img');
+        image.className = 'download-country-flag-image';
+        image.src = root + 'country-flag.php?code=' + encodeURIComponent(code);
+        image.alt = code;
+        image.title = name;
+        image.width = 24;
+        image.height = 18;
+        image.loading = 'lazy';
+        image.decoding = 'async';
+        flag.replaceWith(image);
+    });
+})();
