@@ -32,8 +32,7 @@ final class CatalogSequentialArchiveReader
         $format = $this->detectFormat($archivePath, $archiveName);
 
         if ($format === 'zip') {
-            $nativeZip = new CatalogNativeZipArchiveReader($this->config);
-            if ($nativeZip->hasLegacyCompression($archivePath)) {
+            if ($this->nativeZipHasLegacyCompression($archivePath)) {
                 return true;
             }
             if ((new CatalogZipMetadataConsistency())->hasTrustedLocalMetadataMismatch($archivePath)) {
@@ -118,9 +117,8 @@ final class CatalogSequentialArchiveReader
         $maxDecodedBytes = max(1, $maxDecodedBytes);
 
         if ($format === 'zip') {
-            $nativeZip = new CatalogNativeZipArchiveReader($this->config);
-            if ($nativeZip->hasLegacyCompression($archivePath)) {
-                return $nativeZip->walk(
+            if ($this->nativeZipHasLegacyCompression($archivePath)) {
+                return (new CatalogNativeZipArchiveReader($this->config))->walk(
                     $archivePath,
                     $archiveName,
                     $maxDecodedBytes,
@@ -368,6 +366,34 @@ final class CatalogSequentialArchiveReader
             'decoded_bytes' => $decodedBytes,
             'format' => $format,
         ];
+    }
+
+    /**
+     * The native ZIP reader exists specifically to identify and decode legacy
+     * method-6/method-9 members. Its metadata parser is deliberately narrower than
+     * modern ZipArchive/libarchive and, for example, does not own ZIP64. Failure of
+     * this *detector* must therefore not reject an otherwise valid modern ZIP.
+     * Only known metadata-capability/central-directory limitations fall through;
+     * unexpected programming/runtime failures still surface normally.
+     */
+    private function nativeZipHasLegacyCompression(string $archivePath): bool
+    {
+        try {
+            return (new CatalogNativeZipArchiveReader($this->config))->hasLegacyCompression($archivePath);
+        } catch (\RuntimeException $error) {
+            $message = strtolower($this->errorText($error));
+            foreach ([
+                'zip64 member fields',
+                'end-of-central-directory record was not found',
+                'central directory record was not found',
+                'central directory entry',
+            ] as $fallbackMarker) {
+                if (str_contains($message, $fallbackMarker)) {
+                    return false;
+                }
+            }
+            throw $error;
+        }
     }
 
     /**
