@@ -22,10 +22,6 @@ $checks = [
         $root . '/src/Domain/Jobs/JobType.php',
         'REFRESH_UNVERIFIED_GAME_MATCHES',
     ],
-    'worker routes refresh job' => [
-        $root . '/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php',
-        'JobType::REFRESH_UNVERIFIED_GAME_MATCHES => $unverifiedMatchRefresh',
-    ],
     'refresh jobs have bounded resource class' => [
         $root . '/src/Domain/Jobs/JobResourcePolicy.php',
         "UNVERIFIED_MATCHES = 'unverified-matches'",
@@ -46,6 +42,16 @@ foreach ($checks as $label => [$path, $needle]) {
     if (!is_string($content) || !str_contains($content, $needle)) {
         $failed[] = $label;
     }
+}
+
+$workerFactoryPath = $root . '/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php';
+$workerFactoryContent = is_file($workerFactoryPath) ? file_get_contents($workerFactoryPath) : false;
+if (
+    !is_string($workerFactoryContent)
+    || !str_contains($workerFactoryContent, 'JobType::REFRESH_UNVERIFIED_GAME_MATCHES')
+    || !str_contains($workerFactoryContent, 'new CatalogUnverifiedGameMatchRefreshJobHandler(')
+) {
+    $failed[] = 'worker routes refresh job';
 }
 
 $pageQuery = $root . '/src/Infrastructure/Unverified/PdoUnverifiedFilesPageQuery.php';
@@ -77,4 +83,4 @@ if ($failed !== []) {
     exit(1);
 }
 
-echo "Unverified game-match cache contract passed (" . (count($checks) + 5) . " checks).\n";
+echo "Unverified game-match cache contract passed (" . (count($checks) + 6) . " checks).\n";
