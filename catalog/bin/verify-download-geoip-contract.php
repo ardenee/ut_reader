@@ -40,6 +40,18 @@ $checks = [
         $root . '/bin/import-geoip-country-csv.php',
         '$db->beginTransaction()',
     ],
+    'CSV importer supplies PHP 8.4+ escape argument' => [
+        $root . '/bin/import-geoip-country-csv.php',
+        "fgetcsv(\$handle, null, ',', '\"', '')",
+    ],
+    'CSV importer has built-in country-name fallback' => [
+        $root . '/bin/import-geoip-country-csv.php',
+        'geoip_iso_country_names()',
+    ],
+    'CSV importer ignores DB-IP unknown ranges' => [
+        $root . '/bin/import-geoip-country-csv.php',
+        "if (\$code === 'ZZ')",
+    ],
 ];
 
 $failed = [];
@@ -59,9 +71,17 @@ if (!is_string($resolver)
     $failed[] = 'GeoIP resolution must remain local-only and fail open';
 }
 
+$importerPath = $root . '/bin/import-geoip-country-csv.php';
+$importer = is_file($importerPath) ? file_get_contents($importerPath) : false;
+if (!is_string($importer)
+    || str_contains($importer, 'Three-column files require ext-intl')
+    || str_contains($importer, 'enable PHP ext-intl')) {
+    $failed[] = 'DB-IP three-column import must not require ext-intl';
+}
+
 if ($failed !== []) {
     fwrite(STDERR, "Download GeoIP contract FAILED:\n - " . implode("\n - ", $failed) . "\n");
     exit(1);
 }
 
-echo "Download GeoIP contract passed (" . (count($checks) + 1) . " checks).\n";
+echo "Download GeoIP contract passed (" . (count($checks) + 2) . " checks).\n";
