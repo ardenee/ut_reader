@@ -251,7 +251,7 @@ try {
         . '.download-log-tabs,.download-log-toolbar,.download-log-pages{display:flex;gap:9px;align-items:center;flex-wrap:wrap}'
         . '.download-log-tabs,.download-log-toolbar{margin-bottom:12px}'
         . '.download-log-toolbar .search{min-width:280px;flex:1}'
-        . '.download-log-table{min-width:1510px}'
+        . '.download-log-table{min-width:1260px}'
         . '.download-log-pill{display:inline-block;padding:3px 8px;border:1px solid var(--line);border-radius:999px;font-weight:700}'
         . '.download-log-pill-completed{color:#a7f3d0;border-color:rgba(50,213,131,.75)}'
         . '.download-log-pill-failed,.download-log-pill-interrupted,.download-log-pill-cancelled{color:#fecdd3;border-color:rgba(255,107,122,.75)}'
@@ -339,9 +339,9 @@ try {
         );
     } elseif ($view === 'downloads') {
         echo '<div class="table-wrap"><table class="download-log-table"><thead><tr>'
-            . '<th>' . download_logs_sort_heading('Started', 'time', $sort, $direction) . '</th><th>Status</th><th>Type</th><th>File / package</th><th>Game</th><th>IP</th>'
+            . '<th>' . download_logs_sort_heading('Started', 'time', $sort, $direction) . '</th><th>Status</th><th>File / package</th><th>Game</th><th>IP</th>'
             . '<th class="download-country">' . download_logs_sort_heading('Country', 'country', $sort, $direction, $countryAvailable) . '</th>'
-            . '<th>Transferred</th><th>Range / HTTP</th><th>Job</th><th>User agent / error</th>'
+            . '<th>Transferred</th><th>Job</th><th>User agent / error</th>'
             . '</tr></thead><tbody>';
         foreach ($rows as $row) {
             $rowStatus = strtolower((string)$row['status']);
@@ -351,7 +351,6 @@ try {
             $countryName = trim((string)($row['country_name'] ?? ''));
             echo '<tr><td class="mono small">' . catalog_h((string)$row['started_at']) . '</td>';
             echo '<td><span class="download-log-pill download-log-pill-' . catalog_h($rowStatus) . '">' . catalog_h($rowStatus) . '</span></td>';
-            echo '<td>' . catalog_h(str_replace('_', ' ', (string)$row['download_type'])) . '</td>';
             echo '<td><strong>' . catalog_h((string)$row['download_name']) . '</strong>';
             if ((int)($row['file_id'] ?? 0) > 0) {
                 echo '<br><a class="small" href="file-info.php?id=' . (int)$row['file_id'] . '">File #' . (int)$row['file_id'] . '</a>';
@@ -370,8 +369,6 @@ try {
             }
             echo '</td>';
             echo '<td>' . catalog_h(catalog_bytes($sent)) . ' / ' . catalog_h(catalog_bytes($requested)) . '</td>';
-            echo '<td class="mono small">' . (isset($row['range_start']) ? (int)$row['range_start'] : 0) . '–' . (isset($row['range_end']) ? (int)$row['range_end'] : 0)
-                . '<br>HTTP ' . (int)$row['http_status'] . '</td>';
             echo '<td>' . ((int)($row['job_id'] ?? 0) > 0 ? '<a href="background-jobs.php?q=' . (int)$row['job_id'] . '">#' . (int)$row['job_id'] . '</a>' : '—') . '</td>';
             echo '<td class="download-log-agent"><span class="small">' . catalog_h((string)$row['user_agent']) . '</span>';
             if ((string)($row['error_message'] ?? '') !== '') {
