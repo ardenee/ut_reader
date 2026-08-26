@@ -326,15 +326,19 @@ $record(
     'Both Upload Bucket and selected-game upload ingress must share the complete archive-container policy, including UMOD/UT2MOD/UT4MOD.'
 );
 
-$profiledClient = (string)@file_get_contents($root . '/assets/profiled-upload-jobs.js');
+$profiledClientWrapper = (string)@file_get_contents($root . '/assets/profiled-upload-jobs.js');
+$profiledClientCore = (string)@file_get_contents($root . '/assets/profiled-upload-jobs-core.js');
 $bucketInspector = (string)@file_get_contents($root . '/assets/upload-file-inspector-worker-compatible.js');
 $record(
     'browser_archive_policy_uses_container_path',
-    str_contains($profiledClient, 'function isArchive(file)')
-        && str_contains($profiledClient, 'return isPak(file) || isArchive(file) ||')
-        && str_contains($profiledClient, 'const container = isPak(file) || isArchive(file);')
-        && str_contains($profiledClient, 'archive/container limit'),
-    'Selected-game browser uploads must keep archive containers out of ordinary package handling.'
+    str_contains($profiledClientWrapper, 'profiled-upload-jobs-core.js')
+        && str_contains($profiledClientCore, "const ARCHIVE_EXTENSIONS = new Set(['zip', '7z', 'rar', 'umod', 'ut2mod', 'ut4mod'])")
+        && str_contains($profiledClientCore, 'function isArchive(file)')
+        && str_contains($profiledClientCore, '!isArchive(file)')
+        && str_contains($profiledClientCore, 'return isPak(file) || isArchive(file) || Number(file.size')
+        && str_contains($profiledClientCore, 'if (isArchive(file))')
+        && str_contains($profiledClientCore, 'configured archive/container limit'),
+    'Selected-game browser uploads must load the upload core and keep archive containers out of ordinary package hashing/policy handling.'
 );
 $record(
     'bucket_inspector_skips_archive_package_hashing',
