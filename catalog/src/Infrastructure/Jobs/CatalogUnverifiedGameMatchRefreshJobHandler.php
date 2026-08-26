@@ -20,7 +20,7 @@ use UnrealDb\Catalog\Infrastructure\Unverified\PdoUnverifiedGameMatchQuery;
 
 final class CatalogUnverifiedGameMatchRefreshJobHandler implements JobHandler
 {
-    private const WORKFLOW_VERSION = 2;
+    private const WORKFLOW_VERSION = 3;
     private const PLAN_BATCH_SIZE = 500;
 
     private readonly PdoUnverifiedGameMatchCache $cache;
@@ -244,10 +244,13 @@ final class CatalogUnverifiedGameMatchRefreshJobHandler implements JobHandler
         $lastId = max(0, (int)($resume['plan_last_file_id'] ?? 0));
         $planned = max(0, (int)($resume['planned_units'] ?? 0));
         if ($snapshotMaxId < 1) {
+            // Physical queue assignment is an operator/import destination, not a
+            // dependency-evidence boundary. Every unverified package visible on
+            // unverified-files.php must participate in a bucket-wide refresh.
             $row = \catalog_one(
                 $this->db,
                 'SELECT COUNT(*) c,COALESCE(MAX(id),0) max_id FROM ue_files '
-                . 'WHERE scan_status="unverified" AND unverified_queue_game_id=0 '
+                . 'WHERE scan_status="unverified" '
                 . 'AND LOWER(COALESCE(extension,""))<>"pak"'
             ) ?: [];
             $snapshotMaxId = (int)($row['max_id'] ?? 0);
@@ -258,7 +261,7 @@ final class CatalogUnverifiedGameMatchRefreshJobHandler implements JobHandler
         }
 
         $statement = $this->db->prepare(
-            'SELECT id FROM ue_files WHERE scan_status="unverified" AND unverified_queue_game_id=0 '
+            'SELECT id FROM ue_files WHERE scan_status="unverified" '
             . 'AND LOWER(COALESCE(extension,""))<>"pak" '
             . 'AND id>? AND id<=? ORDER BY id LIMIT ' . self::PLAN_BATCH_SIZE
         );
