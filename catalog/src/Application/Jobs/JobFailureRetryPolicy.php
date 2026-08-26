@@ -88,6 +88,11 @@ final class JobFailureRetryPolicy
             'damaged zip',
             'ziparchive code 19',
             'ziparchive code 21',
+            // A sequential decoder has already opened the immutable archive and
+            // member stream. An empty read with eof=false/timed_out=false is a
+            // repeatable decoder/source-integrity failure; replaying identical
+            // bytes cannot make more member data appear.
+            'libarchive member stream stopped unexpectedly',
         ];
 
         foreach ($structuralMarkers as $marker) {
