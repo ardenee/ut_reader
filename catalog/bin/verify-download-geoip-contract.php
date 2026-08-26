@@ -60,9 +60,13 @@ $checks = [
         $root . '/bin/backfill-download-geoip-country.php',
         "'table' => 'ue_generated_package_audit'",
     ],
-    'historical backfill uses local ranges only' => [
+    'historical backfill reuses indexed live resolver' => [
         $root . '/bin/backfill-download-geoip-country.php',
-        'JOIN ue_geoip_country_ranges r',
+        'CatalogGeoIpCountryResolver($db)',
+    ],
+    'historical backfill groups resolved rows before updates' => [
+        $root . '/bin/backfill-download-geoip-country.php',
+        '$idsByCountry',
     ],
 ];
 
@@ -98,6 +102,12 @@ if (!is_string($backfill)
     || str_contains($backfill, 'curl_')) {
     $failed[] = 'Historical GeoIP backfill must remain local-only';
 }
+if (!is_string($backfill)
+    || str_contains($backfill, 'JOIN ue_geoip_country_ranges')
+    || str_contains($backfill, 'range_start<=a.')
+    || str_contains($backfill, 'range_end>=a.')) {
+    $failed[] = 'Historical GeoIP backfill must not use an audit-to-range non-equality join';
+}
 
 $logPath = $root . '/download-logs.php';
 $log = is_file($logPath) ? file_get_contents($logPath) : false;
@@ -112,4 +122,4 @@ if ($failed !== []) {
     exit(1);
 }
 
-echo "Download GeoIP contract passed (" . (count($checks) + 4) . " checks).\n";
+echo "Download GeoIP contract passed (" . (count($checks) + 5) . " checks).\n";
