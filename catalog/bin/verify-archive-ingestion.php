@@ -6,6 +6,7 @@ declare(strict_types=1);
 use UnrealDb\Catalog\Domain\Jobs\JobResourcePolicy;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Archive\CatalogArchiveExtractor;
+use UnrealDb\Catalog\Infrastructure\Jobs\CatalogBackgroundJobFileTreeProjector;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogBackgroundJobResultHydrator;
 
 if (PHP_SAPI !== 'cli') {
@@ -28,7 +29,9 @@ $phpFiles = [
     'src/Infrastructure/Archive/CatalogUmodArchiveReader.php',
     'src/Infrastructure/Downloads/CatalogUmodBinaryCodec.php',
     'src/Infrastructure/Jobs/CatalogArchiveImportJobHandler.php',
+    'src/Infrastructure/Jobs/CatalogArchiveWorkflowJobHandler.php',
     'src/Infrastructure/Jobs/CatalogBucketStagedPackageJobHandler.php',
+    'src/Infrastructure/Jobs/CatalogBackgroundJobFileTreeProjector.php',
     'src/Infrastructure/Jobs/CatalogBackgroundJobResultHydrator.php',
     'src/Domain/Jobs/JobType.php',
     'src/Domain/Jobs/JobResourcePolicy.php',
@@ -40,6 +43,7 @@ $phpFiles = [
     'src/Infrastructure/Import/CatalogUploadBucketFilePolicy.php',
     'src/Infrastructure/Import/CatalogBucketBatchQueue.php',
     'src/Infrastructure/Jobs/CatalogProfiledUploadBatchJobHandler.php',
+    'api/v1/job-file-tree.php',
     'api/v1/profiled-upload-batch.php',
     'api/v1/profiled-upload-chunk.php',
     'api/v1/upload-bucket-chunk.php',
@@ -75,12 +79,14 @@ require_once $root . '/bootstrap/autoload.php';
 $extractorSource = (string)@file_get_contents($root . '/src/Infrastructure/Archive/CatalogArchiveExtractor.php');
 $umodReaderSource = (string)@file_get_contents($root . '/src/Infrastructure/Archive/CatalogUmodArchiveReader.php');
 $archiveHandlerSource = (string)@file_get_contents($root . '/src/Infrastructure/Jobs/CatalogArchiveImportJobHandler.php');
+$archiveWorkflowSource = (string)@file_get_contents($root . '/src/Infrastructure/Jobs/CatalogArchiveWorkflowJobHandler.php');
 $repairQueueSource = (string)@file_get_contents($root . '/bin/repair-archive-child-queues.php');
 $configSource = (string)@file_get_contents($root . '/config.example.php');
 $workerVersion = (string)@file_get_contents($root . '/src/Infrastructure/Jobs/CatalogWorkerCodeVersion.php');
 $resourceLimitStoreSource = (string)@file_get_contents($root . '/src/Infrastructure/Jobs/CatalogJobResourceLimitStore.php');
 $pageSource = (string)@file_get_contents($root . '/background-jobs.php');
-$archiveErrorClient = (string)@file_get_contents($root . '/assets/background-jobs-archive-errors.js');
+$fileTreeApiSource = (string)@file_get_contents($root . '/api/v1/job-file-tree.php');
+$fileTreeClientSource = (string)@file_get_contents($root . '/assets/background-jobs-files.js');
 
 $record(
     'archive_runtime_uses_no_command_line_tools',
@@ -189,15 +195,38 @@ $record(
     'Released ext-archive 0.2.0 exposes pathname/size but not the richer entry-type/link/encryption virtual properties used by development builds.'
 );
 
+$archiveIssueRows = (new CatalogBackgroundJobFileTreeProjector())->project([[
+    'id' => 501,
+    'job_type' => JobType::IMPORT_STAGED_ARCHIVE,
+    'status' => 'completed',
+    'display_status' => 'partial',
+    'payload' => [
+        'original_name' => 'fixture.zip',
+        'source_relative_path' => 'Unreal/MapPacks/fixture.zip',
+        'size' => 1234,
+    ],
+    'progress' => ['stage' => 'complete', 'percent' => 100],
+    'result' => [
+        'status' => 'partial',
+        'message' => 'Archive processing complete: 0 imported, 0 duplicate, 0 skipped, 1 failed.',
+        'errors' => [[
+            'file' => 'Maps/Broken.ut2',
+            'error' => 'fixture decoder failure',
+        ]],
+    ],
+    'child_count' => 1,
+    'child_issue_count' => 1,
+    'child_active_count' => 0,
+]]);
+$archiveIssueReason = (string)($archiveIssueRows[0]['issue_reason'] ?? '');
 $record(
     'archive_failures_are_visible_in_background_jobs',
-    str_contains($pageSource, 'assets/background-jobs-archive-errors.js')
-        && str_contains($archiveErrorClient, 'result.errors')
-        && str_contains($archiveErrorClient, 'progress.errors')
-        && str_contains($archiveErrorClient, 'Failed archive member(s):')
-        && str_contains($archiveErrorClient, 'job.last_error = detail')
-        && str_contains($archiveErrorClient, 'archive_error_count'),
-    'Partial archive jobs must promote retained member errors into the normal Background Jobs detail/error display so operators do not need direct SQL to discover the cause.'
+    str_contains($pageSource, 'assets/background-jobs-files.js')
+        && str_contains($fileTreeApiSource, 'CatalogBackgroundJobFileTreeProjector')
+        && str_contains($fileTreeClientSource, 'file.issue_reason')
+        && str_contains($archiveIssueReason, 'Maps/Broken.ut2')
+        && str_contains($archiveIssueReason, 'fixture decoder failure'),
+    'Partial archive jobs must promote retained member errors into the file-centric Background Jobs issue reason while failed child files remain expandable.'
 );
 
 $record(
@@ -271,12 +300,12 @@ $record(
 $factory = (string)@file_get_contents($root . '/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php');
 $record(
     'archive_worker_routes_registered',
-    str_contains($factory, 'JobType::IMPORT_STAGED_ARCHIVE')
-        && str_contains($factory, 'JobType::PROCESS_BUCKET_ARCHIVE')
-        && str_contains($factory, 'JobType::PROCESS_BUCKET_STAGED_PACKAGE')
-        && str_contains($factory, 'new CatalogArchiveImportJobHandler')
+    str_contains($factory, 'JobType::IMPORT_STAGED_ARCHIVE => static fn() => new CatalogArchiveWorkflowJobHandler')
+        && str_contains($factory, 'JobType::PROCESS_BUCKET_ARCHIVE => static fn() => new CatalogArchiveWorkflowJobHandler')
+        && str_contains($factory, 'JobType::PROCESS_BUCKET_STAGED_PACKAGE => static fn() => new CatalogArchiveMemberContentRoutingJobHandler')
+        && str_contains($archiveWorkflowSource, 'new CatalogArchiveImportJobHandler')
         && str_contains($factory, 'new CatalogBucketStagedPackageJobHandler'),
-    'Every archive job type must resolve to a worker handler.'
+    'Archive roots must route through the lifecycle coordinator, which delegates extraction to CatalogArchiveImportJobHandler; staged archive members must retain content routing.'
 );
 $record(
     'worker_start_synchronizes_queued_resource_policy',
