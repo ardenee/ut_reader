@@ -11,6 +11,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
+require_once __DIR__ . '/lib/CatalogFileFeedback.php';
 
 use UnrealDb\Catalog\Application\Catalog\CatalogPackageHeaderInspector;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogQueueWorkerStarter;
@@ -231,6 +232,12 @@ require __DIR__ . '/file-examine-paged-core.php';
 $html = (string)ob_get_clean();
 $opaqueControlBytes = 0;
 $html = file_examine_render_opaque_controls($html, $opaqueControlBytes);
+
+$feedbackCardHtml = is_array($row ?? null) ? catalog_file_feedback_form_html($id) : '';
+if ($feedbackCardHtml !== '') {
+    $marker = '<div class="card"><h2>Package header</h2>';
+    $html = str_replace($marker, $feedbackCardHtml . $marker, $html);
+}
 
 if ($opaqueControlBytes > 0) {
     $notice = '<div class="card"><h2>Opaque serialized names</h2>'
