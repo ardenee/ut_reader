@@ -23,6 +23,7 @@ final class PdoBackgroundJobFileTreeQuery
 {
     private const ISSUE_DISPLAY_STATUSES = '"failed","rejected","unverified","partial","error"';
     private const SYNTHETIC_ARCHIVE_WORKFLOW_PREFIX = 'archive:content-container:';
+    private const PROFILED_UPLOAD_BATCH_JOB_TYPE = 'catalog.profiled_upload_batch';
 
     public function __construct(private readonly PDO $db)
     {
@@ -44,10 +45,20 @@ final class PdoBackgroundJobFileTreeQuery
         int $perPage
     ): array {
         $perPage = max(10, min($perPage, 200));
-        $baseWhere = ['j.queue_name=?', 'j.parent_job_id IS NULL'];
+        $jobType = trim($jobType);
+
+        // A profiled/game upload batch is a planning coordinator, not the source
+        // file the operator needs to track. While that coordinator is live or has
+        // itself failed it remains visible; once it completes, each direct staged
+        // import beneath it becomes a logical source root with its own archive/
+        // package descendants. An explicit coordinator job-type filter still
+        // exposes historical batch rows for diagnostics.
+        $rootScope = $jobType === self::PROFILED_UPLOAD_BATCH_JOB_TYPE
+            ? 'j.parent_job_id IS NULL'
+            : $this->logicalRootExpression('j');
+        $baseWhere = ['j.queue_name=?', $rootScope];
         $baseParams = [$queue];
 
-        $jobType = trim($jobType);
         if ($jobType !== '') {
             $baseWhere[] = 'j.job_type=?';
             $baseParams[] = $jobType;
@@ -60,8 +71,8 @@ final class PdoBackgroundJobFileTreeQuery
         }
 
         /*
-         * Global counts/filtering deliberately use only the persisted root row.
-         * Child-state correlation across every historical root previously made
+         * Global counts/filtering deliberately use only each logical source row.
+         * Child-state correlation across every historical source previously made
          * Background Jobs polling catastrophically expensive on large ledgers.
          * Child issue/active counts are looked up only for the bounded page rows
          * below, where they enrich the visible status without affecting hot counts.
@@ -181,6 +192,22 @@ final class PdoBackgroundJobFileTreeQuery
         return '('
             . $alias . '.status IN ("failed","dead_letter") OR '
             . $alias . '.display_status IN (' . self::ISSUE_DISPLAY_STATUSES . ')'
+            . ')';
+    }
+
+    private function logicalRootExpression(string $alias): string
+    {
+        $parentAlias = 'logical_root_parent';
+        return '('
+            . '(' . $alias . '.parent_job_id IS NULL AND ('
+            . $alias . '.job_type<>"' . self::PROFILED_UPLOAD_BATCH_JOB_TYPE . '" OR '
+            . $alias . '.status IN ("queued","running") OR '
+            . $this->ownIssueExpression($alias)
+            . ')) OR '
+            . 'EXISTS(SELECT 1 FROM ue_background_jobs ' . $parentAlias . ' WHERE '
+            . $parentAlias . '.id=' . $alias . '.parent_job_id '
+            . 'AND ' . $parentAlias . '.queue_name=' . $alias . '.queue_name '
+            . 'AND ' . $parentAlias . '.job_type="' . self::PROFILED_UPLOAD_BATCH_JOB_TYPE . '")'
             . ')';
     }
 
