@@ -38,7 +38,7 @@ $checks = [
     ],
     'actual flag enhancer uses same-origin endpoint' => [
         $root . '/assets/catalog-ui.js',
-        "country-flag.php?code=",
+        'country-flag.php?code=',
     ],
     'actual flag enhancer renders image element' => [
         $root . '/assets/catalog-ui.js',
@@ -51,6 +51,34 @@ $checks = [
     'country flag endpoint pins upstream flag set' => [
         $root . '/country-flag.php',
         'flag-icons@7.5.0',
+    ],
+    'download map reads only displayed log table' => [
+        $root . '/assets/catalog-ui.js',
+        "table.download-log-table",
+    ],
+    'download map is collapsible' => [
+        $root . '/assets/catalog-ui.js',
+        'data-download-world-map',
+    ],
+    'download map remembers visibility' => [
+        $root . '/assets/catalog-ui.js',
+        'unrealdb.downloadLogs.worldMapOpen',
+    ],
+    'download map uses same-origin world map endpoint' => [
+        $root . '/assets/catalog-ui.js',
+        "fetch(root + 'world-map.php'",
+    ],
+    'download map labels country-level approximation' => [
+        $root . '/assets/catalog-ui.js',
+        'country-level approximation',
+    ],
+    'world map endpoint caches in catalog storage' => [
+        $root . '/world-map.php',
+        '/storage/cache/world-map',
+    ],
+    'world map endpoint pins VectorAtlas revision' => [
+        $root . '/world-map.php',
+        '98bc8b95ee210012c32b02805d21a8de77a04507',
     ],
     'CSV importer loads local ranges transactionally' => [
         $root . '/bin/import-geoip-country-csv.php',
@@ -138,19 +166,27 @@ if (!is_string($backfill)
     $failed[] = 'Historical GeoIP backfill must not hold multi-row audit locks';
 }
 
-$flagUiPath = $root . '/assets/catalog-ui.js';
-$flagUi = is_file($flagUiPath) ? file_get_contents($flagUiPath) : false;
-if (!is_string($flagUi)
-    || str_contains($flagUi, 'cdn.jsdelivr.net')
-    || str_contains($flagUi, 'raw.githubusercontent.com')) {
-    $failed[] = 'Browser flag rendering must remain same-origin';
+$uiPath = $root . '/assets/catalog-ui.js';
+$ui = is_file($uiPath) ? file_get_contents($uiPath) : false;
+if (!is_string($ui)
+    || str_contains($ui, 'cdn.jsdelivr.net')
+    || str_contains($ui, 'raw.githubusercontent.com')) {
+    $failed[] = 'Browser flag and map rendering must remain same-origin';
 }
 
 $flagEndpointPath = $root . '/country-flag.php';
 $flagEndpoint = is_file($flagEndpointPath) ? file_get_contents($flagEndpointPath) : false;
 if (!is_string($flagEndpoint)
-    || !str_contains($flagEndpoint, "preg_match('/^[a-z]{2}$/', $code)")) {
+    || !str_contains($flagEndpoint, 'preg_match(\'/^[a-z]{2}$/\', $code)')) {
     $failed[] = 'Country flag endpoint must restrict requests to two-letter country codes';
+}
+
+$worldMapEndpointPath = $root . '/world-map.php';
+$worldMapEndpoint = is_file($worldMapEndpointPath) ? file_get_contents($worldMapEndpointPath) : false;
+if (!is_string($worldMapEndpoint)
+    || !str_contains($worldMapEndpoint, "stripos(\$svg, '<script') === false")
+    || !str_contains($worldMapEndpoint, "stripos(\$svg, '<foreignObject') === false")) {
+    $failed[] = 'World map endpoint must reject active SVG content';
 }
 
 $logPath = $root . '/download-logs.php';
@@ -166,4 +202,4 @@ if ($failed !== []) {
     exit(1);
 }
 
-echo "Download GeoIP contract passed (" . (count($checks) + 8) . " checks).\n";
+echo "Download GeoIP contract passed (" . (count($checks) + 9) . " checks).\n";
