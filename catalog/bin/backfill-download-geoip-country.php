@@ -5,6 +5,10 @@
  * Uses only the locally imported ue_geoip_country_ranges table. No network
  * lookups are performed. Rows with private, reserved, unknown or uncovered IPs
  * remain blank intentionally.
+ *
+ * Historical rows are resolved with the same indexed nearest-range lookup used
+ * by live download ingestion. Do not join audit rows directly to every GeoIP
+ * range: MySQL can choose a pathological range-join plan for that shape.
  */
 declare(strict_types=1);
 
@@ -21,6 +25,7 @@ $batchSize = max(100, min(50000, $batchSize));
 
 $config = catalog_config();
 $db = catalog_db($config);
+$resolver = new \UnrealDb\Catalog\Infrastructure\Downloads\CatalogGeoIpCountryResolver($db);
 
 function geoip_backfill_table_exists(PDO $db, string $table): bool
 {
@@ -39,6 +44,33 @@ function geoip_backfill_column_exists(PDO $db, string $table, string $column): b
     );
     $statement->execute([$table, $column]);
     return (int)$statement->fetchColumn() === 1;
+}
+
+/**
+ * Persist one resolved country for the supplied row ids. Chunk the IN list so
+ * this stays bounded even when a large audit batch contains one dominant IP.
+ *
+ * @param list<int> $ids
+ */
+function geoip_backfill_update_ids(
+    PDO $db,
+    string $table,
+    array $ids,
+    string $countryCode,
+    string $countryName
+): int {
+    $updated = 0;
+    foreach (array_chunk($ids, 1000) as $chunk) {
+        $placeholders = implode(',', array_fill(0, count($chunk), '?'));
+        $statement = $db->prepare(
+            'UPDATE ' . $table . ' SET country_code=?,country_name=? '
+            . 'WHERE id IN (' . $placeholders . ') '
+            . 'AND (country_code IS NULL OR country_code="" OR country_name IS NULL OR country_name="")'
+        );
+        $statement->execute(array_merge([$countryCode, $countryName], $chunk));
+        $updated += $statement->rowCount();
+    }
+    return $updated;
 }
 
 if (!geoip_backfill_table_exists($db, 'ue_geoip_country_ranges')) {
@@ -97,39 +129,81 @@ foreach ($targets as $target) {
     $cursor = 0;
     $processed = 0;
     $updated = 0;
+    $uniqueLookups = 0;
     $started = microtime(true);
 
     $select = $db->prepare(
-        'SELECT id FROM ' . $table . ' '
+        'SELECT id,INET6_NTOA(' . $ipColumn . ') ip_text FROM ' . $table . ' '
         . 'WHERE id>? AND ' . $ipColumn . ' IS NOT NULL AND ' . $blankPredicate . ' '
         . 'ORDER BY id LIMIT ' . $batchSize
-    );
-    $update = $db->prepare(
-        'UPDATE ' . $table . ' a '
-        . 'JOIN ue_geoip_country_ranges r ON '
-        . 'r.ip_version=CASE OCTET_LENGTH(a.' . $ipColumn . ') WHEN 4 THEN 4 WHEN 16 THEN 6 ELSE 0 END '
-        . 'AND r.range_start<=a.' . $ipColumn . ' AND r.range_end>=a.' . $ipColumn . ' '
-        . 'SET a.country_code=r.country_code,a.country_name=r.country_name '
-        . 'WHERE a.id>? AND a.id<=? AND a.' . $ipColumn . ' IS NOT NULL '
-        . 'AND (a.country_code IS NULL OR a.country_code="" OR a.country_name IS NULL OR a.country_name="")'
     );
 
     while (true) {
         $select->execute([$cursor]);
-        $ids = $select->fetchAll(PDO::FETCH_COLUMN);
-        if ($ids === []) {
+        $rows = $select->fetchAll(PDO::FETCH_ASSOC);
+        if ($rows === []) {
             break;
         }
 
-        $endId = (int)end($ids);
-        $update->execute([$cursor, $endId]);
-        $updated += $update->rowCount();
-        $processed += count($ids);
-        $cursor = $endId;
+        /** @var array<string,list<int>> $idsByIp */
+        $idsByIp = [];
+        foreach ($rows as $row) {
+            $id = (int)($row['id'] ?? 0);
+            $ipText = trim((string)($row['ip_text'] ?? ''));
+            if ($id < 1) {
+                continue;
+            }
+            $cursor = max($cursor, $id);
+            if ($ipText !== '') {
+                $idsByIp[$ipText][] = $id;
+            }
+        }
 
+        /** @var array<string,array{code:string,name:string,ids:list<int>}> $idsByCountry */
+        $idsByCountry = [];
+        foreach ($idsByIp as $ipText => $ids) {
+            $country = $resolver->resolve($ipText);
+            $uniqueLookups++;
+            $countryCode = strtoupper(trim((string)($country['country_code'] ?? '')));
+            $countryName = trim((string)($country['country_name'] ?? ''));
+            if ($countryCode === '' || $countryName === '') {
+                continue;
+            }
+            $key = $countryCode . "\0" . $countryName;
+            if (!isset($idsByCountry[$key])) {
+                $idsByCountry[$key] = [
+                    'code' => $countryCode,
+                    'name' => $countryName,
+                    'ids' => [],
+                ];
+            }
+            array_push($idsByCountry[$key]['ids'], ...$ids);
+        }
+
+        try {
+            $db->beginTransaction();
+            foreach ($idsByCountry as $group) {
+                $updated += geoip_backfill_update_ids(
+                    $db,
+                    $table,
+                    $group['ids'],
+                    $group['code'],
+                    $group['name']
+                );
+            }
+            $db->commit();
+        } catch (Throwable $error) {
+            if ($db->inTransaction()) {
+                $db->rollBack();
+            }
+            throw $error;
+        }
+
+        $processed += count($rows);
         $elapsed = max(0.001, microtime(true) - $started);
         echo '  inspected ' . number_format($processed) . '/' . number_format($candidateCount)
             . '; resolved ' . number_format($updated)
+            . '; unique IP lookups ' . number_format($uniqueLookups)
             . '; ' . number_format($processed / $elapsed, 0) . " rows/s\n";
     }
 
