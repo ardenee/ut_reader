@@ -262,6 +262,23 @@ final class JobWorker
         if (!$this->failureReporter instanceof Closure) {
             return;
         }
+
+        // Queue retries belong to job/event diagnostics, not the System Error
+        // ledger. A retry has not reached a terminal failure and otherwise creates
+        // a second red error row when the same attempt sequence eventually fails.
+        if ($disposition === 'retry_queued') {
+            return;
+        }
+
+        // Deterministic failures describe immutable source/package/archive bytes.
+        // They remain retained and visible in Background Jobs -> Issues, where an
+        // operator can replace/retry the source. They are not application defects
+        // and should not obscure genuine code/infrastructure failures in the
+        // System Error ledger.
+        if (JobFailureRetryPolicy::isDeterministicFailure($job, $exception)) {
+            return;
+        }
+
         try {
             ($this->failureReporter)($job, $exception, $disposition);
         } catch (\Throwable $reportError) {
@@ -343,7 +360,7 @@ final class JobWorker
             'root_job_id' => $job->rootJobId(),
             'job_type' => $job->type,
             'stage' => $stage,
-            'message' => trim($message) !== '' ? $message : 'Worker diagnostic message was empty.',
+            'message' => trim($message) !== '' ? trim($message) : 'Worker diagnostic message was empty.',
         ];
         try {
             error_log('[UnrealDB worker] ' . json_encode(
