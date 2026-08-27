@@ -47,6 +47,30 @@ final class CatalogInvalidUeFileReporter
             : ($sha1 !== '' ? 'sha1:' . $sha1 : 'job:' . max(1, $jobId));
         $route = 'invalid-ue-file:' . $identity;
 
+        $archiveMember = $parentJobId > 0 || $archiveSourceName !== '';
+        $context = [
+            'job_id' => $jobId,
+            'parent_job_id' => $parentJobId,
+            'job_type' => $jobType,
+            'disposition' => 'invalid_ue_file',
+            'source_provenance' => $archiveMember ? 'archive_member' : 'direct_file',
+            'file_id' => $fileId,
+            'game_id' => $gameId,
+            'file_name' => $fileName,
+            'source_relative_path' => $sourceRelativePath,
+            'size' => $size,
+            'md5' => $md5,
+            'sha1' => $sha1,
+        ];
+        if ($archiveMember) {
+            if ($archiveSourceName !== '') {
+                $context['archive_source_name'] = $archiveSourceName;
+            }
+            if ($archiveEntryPath !== '') {
+                $context['archive_entry_path'] = $archiveEntryPath;
+            }
+        }
+
         return CatalogSystemErrorRecorder::record([
             'source_kind' => 'unreal-file-validation',
             'severity' => 'error',
@@ -56,21 +80,7 @@ final class CatalogInvalidUeFileReporter
             'source_file' => __FILE__,
             'source_line' => 0,
             'user_id' => $userId,
-            'context' => [
-                'job_id' => $jobId,
-                'parent_job_id' => $parentJobId,
-                'job_type' => $jobType,
-                'disposition' => 'invalid_ue_file',
-                'file_id' => $fileId,
-                'game_id' => $gameId,
-                'file_name' => $fileName,
-                'source_relative_path' => $sourceRelativePath,
-                'archive_source_name' => $archiveSourceName,
-                'archive_entry_path' => $archiveEntryPath,
-                'size' => $size,
-                'md5' => $md5,
-                'sha1' => $sha1,
-            ],
+            'context' => $context,
         ]);
     }
 }
