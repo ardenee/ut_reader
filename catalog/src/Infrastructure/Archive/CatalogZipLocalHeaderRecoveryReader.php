@@ -180,7 +180,7 @@ final class CatalogZipLocalHeaderRecoveryReader
         int $maxBytes
     ): string {
         $this->requireSource($archivePath, 'recovery.zip');
-        $entryPath = ltrim(str_replace('\\\\', '/', trim($entryPath)), '/');
+        $entryPath = ltrim(str_replace('\\', '/', trim($entryPath)), '/');
         if ($entryPath === '') {
             throw new \InvalidArgumentException('ZIP local-header recovery requires an exact member path.');
         }
