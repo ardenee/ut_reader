@@ -8,6 +8,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/_bootstrap.php';
 
 use UnrealDb\Catalog\Domain\Jobs\JobType;
+use UnrealDb\Catalog\Infrastructure\Jobs\CatalogArchiveJobOutcomeProjector;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogBackgroundJobFileTreeProjector;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogBackgroundJobResultHydrator;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoBackgroundJobFileTreeQuery;
@@ -54,6 +55,11 @@ try {
     }
 
     $rows = (new CatalogBackgroundJobResultHydrator($application->config))->hydrate($result['rows']);
+    // The file-centric page must use the same archive-child outcome projection
+    // as the compatibility status APIs. Without this, a partial archive only
+    // exposes "N failed" and hides the child member name/job/error even though
+    // that diagnostic data is already durable in ue_background_jobs.
+    $rows = (new CatalogArchiveJobOutcomeProjector($application->db))->project($rows);
     $rows = (new CatalogBackgroundJobFileTreeProjector())->project($rows);
 
     JsonResponse::send([
