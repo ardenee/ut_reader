@@ -21,7 +21,7 @@ use PDO;
 
 final class PdoBackgroundJobFileTreeQuery
 {
-    private const ISSUE_DISPLAY_STATUSES = '"failed","rejected","unverified","partial","error"';
+    private const ISSUE_DISPLAY_STATUSES = '"failed","rejected","unverified","invalid_ue_package","invalid_files","partial","error"';
     private const SYNTHETIC_ARCHIVE_WORKFLOW_PREFIX = 'archive:content-container:';
     private const PROFILED_UPLOAD_BATCH_JOB_TYPE = 'catalog.profiled_upload_batch';
 
