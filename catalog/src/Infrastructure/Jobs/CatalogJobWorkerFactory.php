@@ -14,6 +14,7 @@ use UnrealDb\Catalog\Application\Jobs\JobWorker;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoArchiveParentLifecycleRepair;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoArchiveProfileMismatchOutcomeRepair;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoContention;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 use UnrealDb\Catalog\Infrastructure\Telemetry\CatalogSystemErrorRecorder;
@@ -40,6 +41,22 @@ final class CatalogJobWorkerFactory
             (new CatalogJobResourceLimitStore($db, $queueName))->synchronizeQueuedPolicies();
         } catch (\Throwable $error) {
             error_log('[UnrealDB worker policy sync] ' . $error->getMessage());
+        }
+
+        // Historical package/profile mismatches were retained correctly in
+        // Unverified Files but their generic "unverified" job outcome made archive
+        // parents look broken and retryable. Reclassify only those explicit
+        // Game/profile mismatch results, then re-run coordinator aggregation from
+        // existing child rows. No archive/package source bytes are re-read here.
+        try {
+            $profileMismatchRepair = (new PdoArchiveProfileMismatchOutcomeRepair($db))->repair($queueName);
+            if ($profileMismatchRepair['reclassified'] > 0 || $profileMismatchRepair['requeued'] > 0) {
+                error_log('[UnrealDB archive outcome repair] Reclassified '
+                    . $profileMismatchRepair['reclassified'] . ' valid profile mismatch child outcome(s); requeued '
+                    . $profileMismatchRepair['requeued'] . ' coordinator(s) for ledger-only aggregation.');
+            }
+        } catch (\Throwable $error) {
+            error_log('[UnrealDB archive profile mismatch repair] ' . $error->getMessage());
         }
 
         // Older archive coordinators completed their parent row immediately after
