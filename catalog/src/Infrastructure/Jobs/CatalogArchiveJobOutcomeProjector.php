@@ -201,11 +201,18 @@ final class CatalogArchiveJobOutcomeProjector
                 $message .= '.';
             }
 
-            $invalidDetail = $this->failureDetail($summary['failures'], 'invalid_ue_package');
+            $invalidDetail = $this->failureDetail(
+                $summary['failures'],
+                ['invalid_ue_package', 'invalid_files']
+            );
             if ($invalidDetail !== '') {
                 $message .= ' Invalid UE file(s): ' . $invalidDetail;
             }
-            $failureDetail = $this->failureDetail($summary['failures'], null, ['invalid_ue_package']);
+            $failureDetail = $this->failureDetail(
+                $summary['failures'],
+                [],
+                ['invalid_ue_package', 'invalid_files']
+            );
             if ($failureDetail !== '') {
                 $message .= ' Failed member(s): ' . $failureDetail;
             }
@@ -271,14 +278,15 @@ final class CatalogArchiveJobOutcomeProjector
 
     /**
      * @param list<array<string,mixed>> $failures
+     * @param list<string> $onlyStatuses
      * @param list<string> $excludedStatuses
      */
-    private function failureDetail(array $failures, ?string $onlyStatus = null, array $excludedStatuses = []): string
+    private function failureDetail(array $failures, array $onlyStatuses = [], array $excludedStatuses = []): string
     {
         $parts = [];
         foreach ($failures as $failure) {
             $status = strtolower(trim((string)($failure['status'] ?? '')));
-            if ($onlyStatus !== null && $status !== $onlyStatus) {
+            if ($onlyStatuses !== [] && !in_array($status, $onlyStatuses, true)) {
                 continue;
             }
             if (in_array($status, $excludedStatuses, true)) {
