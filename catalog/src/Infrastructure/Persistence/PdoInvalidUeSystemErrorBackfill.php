@@ -12,6 +12,7 @@ namespace UnrealDb\Catalog\Infrastructure\Persistence;
 
 use PDO;
 use UnrealDb\Catalog\Application\Jobs\JobFailureRetryPolicy;
+use UnrealDb\Catalog\Application\Telemetry\CatalogInvalidUeErrorClassifier;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Telemetry\CatalogInvalidUeFileReporter;
 
@@ -131,6 +132,10 @@ final class PdoInvalidUeSystemErrorBackfill
                     'md5' => (string)($result['md5'] ?? $identity['md5'] ?? ''),
                     'sha1' => (string)($result['sha1'] ?? $identity['sha1'] ?? ''),
                     'reason' => $reason,
+                    'error_code' => trim((string)($result['validation_code'] ?? '')),
+                    'arguments' => is_array($result['validation_arguments'] ?? null)
+                        ? $result['validation_arguments']
+                        : [],
                 ]);
                 if (!$ok) {
                     $failed++;
@@ -208,6 +213,13 @@ final class PdoInvalidUeSystemErrorBackfill
 
                 $fileName = trim((string)($payload['original_name'] ?? ''));
                 $sourceRelativePath = trim((string)($payload['source_relative_path'] ?? $fileName));
+                $validation = CatalogInvalidUeErrorClassifier::classify(
+                    $reason,
+                    trim((string)($result['validation_code'] ?? '')),
+                    is_array($result['validation_arguments'] ?? null)
+                        ? $result['validation_arguments']
+                        : []
+                );
                 $ok = CatalogInvalidUeFileReporter::record([
                     'job_id' => $id,
                     'parent_job_id' => $parentJobId,
@@ -222,7 +234,9 @@ final class PdoInvalidUeSystemErrorBackfill
                     'size' => max(0, (int)($result['bytes'] ?? $payload['size'] ?? $identity['file_size'] ?? 0)),
                     'md5' => (string)($result['md5'] ?? $payload['md5'] ?? $identity['md5'] ?? ''),
                     'sha1' => (string)($result['sha1'] ?? $payload['sha1'] ?? $identity['sha1'] ?? ''),
-                    'reason' => $reason,
+                    'reason' => $validation['reason'],
+                    'error_code' => $validation['code'],
+                    'arguments' => $validation['arguments'],
                 ]);
                 if (!$ok) {
                     $failed++;
