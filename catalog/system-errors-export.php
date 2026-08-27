@@ -89,9 +89,10 @@ try {
         $args[] = $errorType;
     }
     if ($search !== '') {
-        $where[] = '(message LIKE ? OR error_type LIKE ? OR route LIKE ? OR source_file LIKE ? OR request_id LIKE ?)';
+        $where[] = '(message LIKE ? OR error_type LIKE ? OR route LIKE ? OR source_file LIKE ? OR request_id LIKE ? '
+            . 'OR COALESCE(context_json,"") LIKE ?)';
         $like = '%' . str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $search) . '%';
-        array_push($args, $like, $like, $like, $like, $like);
+        array_push($args, $like, $like, $like, $like, $like, $like);
     }
     $whereSql = $where !== [] ? ' WHERE ' . implode(' AND ', $where) : '';
 
