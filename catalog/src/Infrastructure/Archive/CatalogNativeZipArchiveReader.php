@@ -241,19 +241,30 @@ final class CatalogNativeZipArchiveReader
                 $diskStart = $this->u16($header, 34);
                 $externalAttributes = $this->u32($header, 38);
                 $recordedLocalOffset = $this->u32($header, 42);
-                if ($compressedSize === 0xffffffff || $uncompressedSize === 0xffffffff || $recordedLocalOffset === 0xffffffff) {
-                    throw new \RuntimeException('Native legacy ZIP decoding does not support ZIP64 member fields.');
+
+                $rawName = $this->readExact($handle, $nameLength, 'central-directory filename');
+                $extra = $extraLength > 0
+                    ? $this->readExact($handle, $extraLength, 'central-directory extra data')
+                    : '';
+                if ($commentLength > 0) {
+                    $this->readExact($handle, $commentLength, 'central-directory comment');
+                }
+
+                if ($compressedSize === 0xffffffff
+                    || $uncompressedSize === 0xffffffff
+                    || $recordedLocalOffset === 0xffffffff
+                    || $diskStart === 0xffff) {
+                    [$uncompressedSize, $compressedSize, $recordedLocalOffset, $diskStart]
+                        = $this->resolveZip64MemberFields(
+                            $extra,
+                            $uncompressedSize,
+                            $compressedSize,
+                            $recordedLocalOffset,
+                            $diskStart
+                        );
                 }
                 if ($diskStart !== 0) {
                     throw new \RuntimeException('Native ZIP reader does not support members stored on another disk.');
-                }
-
-                $rawName = $this->readExact($handle, $nameLength, 'central-directory filename');
-                if ($extraLength > 0) {
-                    $this->readExact($handle, $extraLength, 'central-directory extra data');
-                }
-                if ($commentLength > 0) {
-                    $this->readExact($handle, $commentLength, 'central-directory comment');
                 }
 
                 $name = $this->decodeName($rawName, $flags);
@@ -763,6 +774,83 @@ final class CatalogNativeZipArchiveReader
         }
         $value = unpack('Vvalue', substr($data, $offset, 4));
         return (int)($value['value'] ?? 0);
+    }
+
+    /**
+     * Resolve ZIP64 sentinel values from the central-directory extra field.
+     *
+     * @return array{0:int,1:int,2:int,3:int}
+     */
+    private function resolveZip64MemberFields(
+        string $extra,
+        int $uncompressedSize,
+        int $compressedSize,
+        int $localOffset,
+        int $diskStart
+    ): array {
+        $zip64 = $this->extraField($extra, 0x0001);
+        if ($zip64 === null) {
+            throw new \RuntimeException('ZIP64 member fields are present but the ZIP64 extra record is missing.');
+        }
+
+        $cursor = 0;
+        if ($uncompressedSize === 0xffffffff) {
+            $uncompressedSize = $this->u64($zip64, $cursor, 'ZIP64 uncompressed size');
+            $cursor += 8;
+        }
+        if ($compressedSize === 0xffffffff) {
+            $compressedSize = $this->u64($zip64, $cursor, 'ZIP64 compressed size');
+            $cursor += 8;
+        }
+        if ($localOffset === 0xffffffff) {
+            $localOffset = $this->u64($zip64, $cursor, 'ZIP64 local-header offset');
+            $cursor += 8;
+        }
+        if ($diskStart === 0xffff) {
+            if ($cursor + 4 > strlen($zip64)) {
+                throw new \RuntimeException('ZIP64 disk-start field is truncated.');
+            }
+            $diskStart = $this->u32($zip64, $cursor);
+        }
+
+        return [$uncompressedSize, $compressedSize, $localOffset, $diskStart];
+    }
+
+    private function extraField(string $extra, int $wantedId): ?string
+    {
+        $cursor = 0;
+        $length = strlen($extra);
+        while ($cursor + 4 <= $length) {
+            $id = $this->u16($extra, $cursor);
+            $size = $this->u16($extra, $cursor + 2);
+            $cursor += 4;
+            if ($cursor + $size > $length) {
+                throw new \RuntimeException('ZIP central-directory extra field is truncated.');
+            }
+            $payload = substr($extra, $cursor, $size);
+            if ($id === $wantedId) {
+                return $payload;
+            }
+            $cursor += $size;
+        }
+        return null;
+    }
+
+    private function u64(string $data, int $offset, string $label): int
+    {
+        if (PHP_INT_SIZE < 8) {
+            throw new \RuntimeException($label . ' requires a 64-bit PHP runtime.');
+        }
+        if ($offset < 0 || $offset + 8 > strlen($data)) {
+            throw new \RuntimeException($label . ' is truncated.');
+        }
+        $parts = unpack('Vlow/Vhigh', substr($data, $offset, 8));
+        $low = (int)($parts['low'] ?? 0);
+        $high = (int)($parts['high'] ?? 0);
+        if ($high > 0x7fffffff) {
+            throw new \RuntimeException($label . ' exceeds the supported signed 64-bit range.');
+        }
+        return ($high << 32) | $low;
     }
 
     private function decodeName(string $rawName, int $flags): string
