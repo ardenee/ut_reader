@@ -105,11 +105,12 @@ $record(
 );
 $record(
     'corrupt_zip_markers_are_explicit',
-    str_contains($policy, "'extra data overflow'")
-        && str_contains($policy, "'ziparchive code 21'")
+    str_contains($policy, "'ziparchive code 21'")
         && str_contains($policy, 'PROCESS_BUCKET_ARCHIVE')
-        && str_contains($policy, 'IMPORT_STAGED_ARCHIVE'),
-    'The exact structural failure seen in dmsludge.zip must remain classified as deterministic archive data.'
+        && str_contains($policy, 'IMPORT_STAGED_ARCHIVE')
+        && str_contains($policy, 'Do not classify libarchive stream/header failures as immutable source')
+        && !str_contains($policy, "'extra data overflow'"),
+    'The dmsludge.zip composite failure is deterministic because ZipArchive code 21 proves a structural ZIP error; libarchive extra-data overflow alone must remain recoverable by native ZIP fallback.'
 );
 $record(
     'archive_uploads_dedupe_by_content_and_source_path',
@@ -213,7 +214,7 @@ $record(
     str_contains($outcomeProjector, "['invalid_ue_package', 'invalid_files', 'rejected']")
         && str_contains($outcomeProjector, '$summary[\'invalid_ue\']++')
         && str_contains($outcomeProjector, 'CatalogImportOutcome::ARCHIVE_INVALID_FILES')
-        && str_contains($outcomeProjector, "['invalid_ue_package']"),
+        && str_contains($outcomeProjector, "['invalid_ue_package', 'invalid_files']"),
     'A bad Unreal member must remain visible while the containing archive is excluded from extraction retry state.'
 );
 $record(
