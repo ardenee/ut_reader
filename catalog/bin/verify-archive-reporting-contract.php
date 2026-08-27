@@ -25,6 +25,7 @@ $fileTreeApi = (string)@file_get_contents($root . '/api/v1/job-file-tree.php');
 $trace = (string)@file_get_contents($root . '/bin/trace-archive-job.php');
 $browserErrors = (string)@file_get_contents($root . '/assets/catalog-system-errors.js');
 $jobsPage = (string)@file_get_contents($root . '/background-jobs.php');
+$filesUi = (string)@file_get_contents($root . '/assets/background-jobs-files.js');
 
 $record(
     'archive_projector_imports_domain_job_type',
@@ -68,11 +69,11 @@ $record(
 
 $record(
     'background_jobs_prioritizes_full_source_path',
-    str_contains($jobsPage, '.jobs-type,.jobs-col-type,.jobs-table thead th:nth-child(4){display:none!important}')
-        && str_contains($jobsPage, '.jobs-target{min-width:0;max-width:none;overflow:visible;text-overflow:clip;white-space:normal!important;')
-        && str_contains($jobsPage, '<th scope="col">Full source path</th>')
-        && str_contains($jobsPage, 'placeholder="File path, job ID or error"'),
-    'The operator table must hide the implementation job-type column and give the complete recorded source path the reclaimed width without ellipsis.'
+    str_contains($jobsPage, '<th>Job</th><th>File / source</th>')
+        && str_contains($jobsPage, '.jobs-file-path,.jobs-file-activity,.jobs-file-issue-text{overflow-wrap:anywhere}')
+        && str_contains($jobsPage, 'placeholder="Filename, path, job ID or issue"')
+        && str_contains($filesUi, "create('span', 'mono muted jobs-file-path', file.file_path)"),
+    'The current file-centric operator table must render the recorded source path without ellipsis, allow long paths to wrap, and keep filename/path/job/issue search available.'
 );
 
 $record(
