@@ -56,6 +56,13 @@ $record(
     'libarchive ZIP stream/header failures must be replayable after native/local-header decoder improvements.'
 );
 $record(
+    'bulk_retry_includes_profiled_upload_archive_roots',
+    str_contains($bulk, 'retained_parent.job_type="' . \UnrealDb\Catalog\Domain\Jobs\JobType::PROFILED_UPLOAD_BATCH . '"')
+        && str_contains($bulk, 'retained_parent.id=j.parent_job_id')
+        && str_contains($bulk, 'j.parent_job_id IS NULL OR EXISTS('),
+    'Retry-all retained archives must include direct archive source children of profiled upload batches, matching the Background Jobs logical-root model.'
+);
+$record(
     'bulk_retry_excludes_decoder_blocked_archives',
     str_contains($bulk, 'decoderBlockedArchiveSql(')
         && str_contains($bulk, 'AND NOT ')
