@@ -312,6 +312,9 @@ final class CatalogBucketStagedPackageJobHandler implements JobHandler
 
     private function isReaderValidationFailure(Throwable $error): bool
     {
+        if ($error instanceof CatalogInvalidPackageException) {
+            return true;
+        }
         return JobFailureRetryPolicy::isInvalidPackageContentText(
             JobType::PROCESS_BUCKET_STAGED_PACKAGE,
             $this->errorText($error)
