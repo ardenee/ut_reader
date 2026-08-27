@@ -61,8 +61,10 @@ $record(
 );
 $record(
     'bulk_retry_includes_profiled_upload_archive_roots',
-    str_contains($bulk, 'retained_parent.job_type="' . JobType::PROFILED_UPLOAD_BATCH . '"')
-        && str_contains($bulk, 'retained_parent.id=j.parent_job_id')
+    str_contains($bulk, 'retained_parent.id=j.parent_job_id')
+        && str_contains($bulk, 'retained_parent.queue_name=j.queue_name')
+        && str_contains($bulk, 'retained_parent.job_type="')
+        && str_contains($bulk, 'JobType::PROFILED_UPLOAD_BATCH')
         && str_contains($bulk, 'j.parent_job_id IS NULL OR EXISTS('),
     'Retry-all retained archives must include direct archive source children of profiled upload batches, matching the Background Jobs logical-root model.'
 );
