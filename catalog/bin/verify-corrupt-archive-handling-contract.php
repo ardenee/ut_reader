@@ -186,19 +186,19 @@ $record(
     str_contains($stagedPackage, 'isDeterministicNonPackage')
         && str_contains($stagedPackage, 'does not contain a supported unreal package header')
         && str_contains($stagedPackage, 'unreal package magic not found')
-        && str_contains($stagedPackage, "'status' => 'rejected'"),
-    'An archive member that is definitively not an Unreal package may complete as rejected instead of wasting retries.'
+        && str_contains($stagedPackage, 'CatalogImportOutcome::INVALID_UE_PACKAGE'),
+    'A successfully extracted member that is definitively not an Unreal package must be an invalid-file outcome, not an archive retry.'
 );
 $record(
-    'reader_validation_failures_are_retained_without_dead_letter_loop',
+    'reader_validation_failures_are_retained_without_archive_retry',
     str_contains($stagedPackage, 'isReaderValidationFailure')
         && str_contains($stagedPackage, "'invalid exports table offset:'")
         && str_contains($stagedPackage, "'invalid imports table offset:'")
         && str_contains($stagedPackage, "'invalid names table offset:'")
-        && str_contains($stagedPackage, "'status' => 'unverified'")
+        && str_contains($stagedPackage, 'CatalogImportOutcome::INVALID_UE_PACKAGE')
         && str_contains($stagedPackage, "'source_retained' => true")
-        && str_contains($stagedPackage, 'durable source retained for a future reader fix'),
-    'Deterministic reader-validation failures must stop automatic retries while preserving the archive member as unverified/restartable input.'
+        && str_contains($stagedPackage, 'archive extraction completed successfully'),
+    'Deterministic UE reader-validation failures must preserve the member as an invalid UE file without making the healthy archive retryable.'
 );
 $record(
     'completed_retained_sources_survive_storage_cleanup',
@@ -208,9 +208,12 @@ $record(
     'A completed unverified job with source_retained=true must remain a storage owner instead of losing its prepared bytes to routine cleanup.'
 );
 $record(
-    'archive_parent_reports_unverified_child_as_failed',
-    str_contains($outcomeProjector, "['failed', 'rejected', 'unverified', 'partial', 'error']"),
-    'Archive parent rollups must not count an unreadable/unverified child as a successful added file.'
+    'archive_parent_separates_invalid_ue_child_from_extraction_failure',
+    str_contains($outcomeProjector, "$resultStatus === 'invalid_ue_package'")
+        && str_contains($outcomeProjector, "$summary['invalid_ue']++")
+        && str_contains($outcomeProjector, 'CatalogImportOutcome::ARCHIVE_INVALID_FILES')
+        && str_contains($outcomeProjector, "['invalid_ue_package']"),
+    'A bad Unreal member must remain visible while the containing archive is excluded from extraction retry state.'
 );
 $record(
     'retained_archive_operator_controls_exist',
