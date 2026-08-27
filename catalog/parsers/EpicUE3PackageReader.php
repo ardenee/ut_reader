@@ -7,6 +7,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../lib/LzoDecoder.php';
+require_once __DIR__ . '/../lib/LzxDecoder.php';
 
 final class CatalogEpicUE3BinaryReader
 {
@@ -321,10 +322,7 @@ final class CatalogUE3PackageReader
         $flags=(int)$this->header['compressionFlags']; $algo=$flags&self::COMPRESS_TYPE_MASK;
         if ($algo===self::COMPRESS_ZLIB) { $out=@gzuncompress($src); if ($out===false) $out=@gzdecode($src); if ($out===false) throw new RuntimeException('Epic UE3 zlib decompression failed'); }
         elseif ($algo===self::COMPRESS_LZO) $out=CatalogLzoDecoder::decompressLzo1x($src,$expected);
-        elseif ($algo===self::COMPRESS_LZX) throw new RuntimeException(
-            'Epic UE3 LZX package compression is recognized but no LZX decoder is available'
-            . '; flags=' . sprintf('0x%08X',$flags)
-        );
+        elseif ($algo===self::COMPRESS_LZX) $out=CatalogLzxDecoder::decompress($src,$expected,17);
         else throw new RuntimeException('Unsupported Epic UE3 compression flags='.sprintf('0x%08X',$flags));
         if (strlen($out)!==$expected) throw new RuntimeException("Epic UE3 compressed block size mismatch expected=$expected got=".strlen($out)); return $out;
     }
