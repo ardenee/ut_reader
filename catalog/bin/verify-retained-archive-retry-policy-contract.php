@@ -35,12 +35,16 @@ $record(
     'Deterministic retained failures must not continue to present an active Retry archive control.'
 );
 $record(
-    'known_decoder_failures_are_blocked',
+    'known_decoder_capability_failures_are_blocked',
     str_contains($ui, "text.includes('unsupported zip compression method')")
-        && str_contains($ui, "text.includes('rarentry::extract() returned failure')")
-        && str_contains($ui, "text.includes('could not read zip member stream')")
-        && str_contains($ui, "text.includes('output size does not match its declared size')"),
-    'Current immutable ZIP/RAR decoder and integrity failures must be recognized as blocked recovery states.'
+        && str_contains($ui, "text.includes('rarentry::extract() returned failure')"),
+    'Known decoder-capability failures must remain blocked when replaying identical bytes cannot change the result.'
+);
+$record(
+    'zip_stream_and_size_failures_remain_retryable',
+    !str_contains($ui, "text.includes('could not read zip member stream')")
+        && !str_contains($ui, "text.includes('output size does not match its declared size')"),
+    'ZIP stream/size failures must remain operator-retryable because exact local-header recovery can now decode and CRC-verify those members.'
 );
 $record(
     'bulk_retry_excludes_decoder_blocked_archives',
