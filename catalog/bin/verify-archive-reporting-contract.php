@@ -21,6 +21,7 @@ $record = static function (string $name, bool $ok, string $detail) use (&$checks
 $projector = (string)@file_get_contents($root . '/src/Infrastructure/Jobs/CatalogArchiveJobOutcomeProjector.php');
 $statusApi = (string)@file_get_contents($root . '/api/v1/job-status.php');
 $cursorApi = (string)@file_get_contents($root . '/api/v1/job-status-cursor.php');
+$fileTreeApi = (string)@file_get_contents($root . '/api/v1/job-file-tree.php');
 $trace = (string)@file_get_contents($root . '/bin/trace-archive-job.php');
 $browserErrors = (string)@file_get_contents($root . '/assets/catalog-system-errors.js');
 $jobsPage = (string)@file_get_contents($root . '/background-jobs.php');
@@ -75,10 +76,11 @@ $record(
 );
 
 $record(
-    'both_job_status_apis_apply_archive_projection',
+    'all_background_job_apis_apply_archive_projection',
     str_contains($statusApi, 'new CatalogArchiveJobOutcomeProjector($application->db)')
-        && str_contains($cursorApi, 'new CatalogArchiveJobOutcomeProjector($application->db)'),
-    'Both offset and cursor Background Jobs endpoints must expose the same archive outcome projection.'
+        && str_contains($cursorApi, 'new CatalogArchiveJobOutcomeProjector($application->db)')
+        && str_contains($fileTreeApi, 'new CatalogArchiveJobOutcomeProjector($application->db)'),
+    'Offset, cursor and file-tree Background Jobs endpoints must expose the same archive child-outcome detail.'
 );
 
 $record(
