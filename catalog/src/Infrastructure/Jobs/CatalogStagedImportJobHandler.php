@@ -14,6 +14,7 @@ use Throwable;
 use UnrealDb\Catalog\Application\Jobs\JobCancellationRequested;
 use UnrealDb\Catalog\Application\Jobs\JobExecutionContext;
 use UnrealDb\Catalog\Application\Jobs\JobHandler;
+use UnrealDb\Catalog\Application\Jobs\JobFailureRetryPolicy;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogImportOutcome;
@@ -238,8 +239,13 @@ final class CatalogStagedImportJobHandler implements JobHandler
                 $workingPath = '';
                 $store->remove($relativePath);
                 $shortError = $this->shortError($error);
+                $invalidPackageContent = JobFailureRetryPolicy::isInvalidPackageContentText(
+                    JobType::IMPORT_STAGED_PACKAGE,
+                    $shortError
+                );
                 $profileMismatch = $staged !== null
-                    && CatalogImportOutcome::isProfileMismatchMessage($shortError);
+                    && CatalogImportOutcome::isProfileMismatchMessage($shortError)
+                    && !$invalidPackageContent;
                 $invalidUePackage = !$profileMismatch
                     && $error instanceof CatalogInvalidPackageException;
                 $outcomeStatus = $profileMismatch
