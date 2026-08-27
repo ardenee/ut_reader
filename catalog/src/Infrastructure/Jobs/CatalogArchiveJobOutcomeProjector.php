@@ -231,9 +231,9 @@ final class CatalogArchiveJobOutcomeProjector
                 $row['progress']['status'] = 'partial';
                 $row['display_status'] = 'partial';
             } elseif ($pending === 0 && (int)$summary['invalid_ue'] > 0) {
-                $row['result']['status'] = CatalogImportOutcome::ARCHIVE_INVALID_FILES;
-                $row['progress']['status'] = CatalogImportOutcome::ARCHIVE_INVALID_FILES;
-                $row['display_status'] = CatalogImportOutcome::ARCHIVE_INVALID_FILES;
+                $row['result']['status'] = 'completed';
+                $row['progress']['status'] = 'completed';
+                $row['display_status'] = 'completed';
             }
         }
         unset($row);
