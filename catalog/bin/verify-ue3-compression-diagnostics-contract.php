@@ -28,7 +28,7 @@ $record = static function (string $name, bool $ok, string $detail) use (&$checks
 
 $record(
     'compressed_package_detected_from_chunk_table',
-    str_contains($reader, "$h['compressed']=$cc>0")
+    str_contains($reader, '$h[\'compressed\']=$cc>0')
         && str_contains($reader, 'if ($cc) {')
         && str_contains($reader, '$this->inflatePackage();'),
     'A package is considered UE3 package-compressed only when its serialized CompressedChunks array is non-empty.'
@@ -66,9 +66,9 @@ $record(
 $record(
     'one_file_inspector_is_read_only',
     str_contains($inspector, "'read_only' => true")
-        && str_contains($inspector, "'compression_method' => $method")
-        && str_contains($inspector, "'chunk_bounds_ok' => $boundsOk")
-        && str_contains($inspector, "'chunks' => $chunkRows")
+        && str_contains($inspector, '\'compression_method\' => $method')
+        && str_contains($inspector, '\'chunk_bounds_ok\' => $boundsOk')
+        && str_contains($inspector, '\'chunks\' => $chunkRows')
         && !str_contains($inspector, 'PdoJobQueue')
         && !str_contains($inspector, 'enqueue(')
         && !str_contains($inspector, 'INSERT ')
