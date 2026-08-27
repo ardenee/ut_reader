@@ -62,11 +62,16 @@ $record(
 $record(
     'export_contains_copyable_diagnostics',
     str_contains($export, "'## Job #'")
-        && str_contains($export, "'**Issue**'")
-        && str_contains($export, "'**Activity**'")
-        && str_contains($export, "'**Result message**'")
-        && str_contains($export, "'**Progress message**'")
-        && str_contains($export, "'**Last error**'"),
+        && str_contains($export, '**Issue**')
+        && str_contains($export, '**Activity**')
+        && str_contains($export, '**Result message**')
+        && str_contains($export, '**Progress message**')
+        && str_contains($export, '**Last error**')
+        && str_contains($export, "'- File: '")
+        && str_contains($export, "'- Path: '")
+        && str_contains($export, "'- Job type: '")
+        && str_contains($export, "'- Queue status: '")
+        && str_contains($export, "'- Display status: '"),
     'The Markdown report must preserve the details that are difficult to copy from the interactive table.'
 );
 
