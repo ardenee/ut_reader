@@ -57,16 +57,37 @@ final class CatalogVerifiedPackageInspector implements VerifiedPackageInspectorP
 
         \scanner_emit_percent($progress, 'scan', 2, 'Reading package header');
         $classification = \gp_classify_file($this->db, $gameId, $temporaryPath, $originalName);
+
+        if (empty($classification['header_ok'])) {
+            $headerCode = trim((string)($classification['header_error_code'] ?? 'unreal.invalid_package'));
+            $headerArguments = is_array($classification['header_error_arguments'] ?? null)
+                ? $classification['header_error_arguments']
+                : [];
+            $headerReason = match ($headerCode) {
+                'unreal.magic_not_found' => 'Magic not found',
+                'unreal.header_too_short' => 'Package header too short',
+                'unreal.header_read_failed' => 'Could not read package header',
+                default => trim((string)(($classification['notes'][0] ?? 'Invalid Unreal package'))),
+            };
+            throw new CatalogInvalidPackageException($headerReason, $headerCode, $headerArguments);
+        }
+
         if ($strictProfile && empty($classification['ok_for_selected_game'])) {
             $suggested = [];
             foreach ($classification['suggested_games'] as $suggestion) {
                 $suggested[] = $suggestion['game_name'] . ' (' . $suggestion['engine_key'] . ')';
             }
-            throw new CatalogInvalidPackageException(
+            throw new CatalogProfileMismatchException(
                 'Game/profile mismatch. Detected=' . ($classification['detected_engine'] ?? 'unknown')
-                . ', profile=' . ($classification['selected_engine'] ?? 'unknown') . '. '
-                . implode(' ', $classification['notes'])
-                . ($suggested ? ' Suggested: ' . implode(', ', $suggested) : '')
+                . ', profile=' . ($classification['selected_engine'] ?? 'unknown') . '.'
+                . ($suggested ? ' Suggested: ' . implode(', ', $suggested) : ''),
+                [
+                    'detected_engine' => (string)($classification['detected_engine'] ?? 'UNKNOWN'),
+                    'selected_engine' => (string)($classification['selected_engine'] ?? 'UNKNOWN'),
+                    'package_version' => $classification['package_version'] ?? null,
+                    'licensee_version' => $classification['licensee_version'] ?? null,
+                    'suggested_games' => $classification['suggested_games'] ?? [],
+                ]
             );
         }
 
