@@ -15,6 +15,8 @@ $read = static function (string $relative) use ($root): string {
 };
 
 $outcome = $read('src/Infrastructure/Import/CatalogImportOutcome.php');
+$profileException = $read('src/Infrastructure/Import/CatalogProfileMismatchException.php');
+$verifiedInspector = $read('src/Infrastructure/Import/CatalogVerifiedPackageInspector.php');
 $staged = $read('src/Infrastructure/Jobs/CatalogStagedImportJobHandler.php');
 $children = $read('src/Infrastructure/Persistence/PdoArchiveChildOutcomeQuery.php');
 $workflow = $read('src/Infrastructure/Jobs/CatalogArchiveWorkflowJobHandler.php');
@@ -23,6 +25,7 @@ $fileTree = $read('src/Infrastructure/Jobs/CatalogBackgroundJobFileTreeProjector
 $repair = $read('src/Infrastructure/Persistence/PdoArchiveProfileMismatchOutcomeRepair.php');
 $factory = $read('src/Infrastructure/Jobs/CatalogJobWorkerFactory.php');
 $fingerprint = $read('src/Infrastructure/Jobs/CatalogWorkerCodeVersion.php');
+$invalidBackfill = $read('src/Infrastructure/Persistence/PdoInvalidUeSystemErrorBackfill.php');
 
 $checks = [];
 $failures = [];
@@ -34,6 +37,24 @@ $record = static function (string $name, bool $ok, string $detail) use (&$checks
 };
 
 $record(
+    'profile_mismatch_is_typed_before_job_handling',
+    str_contains($profileException, 'final class CatalogProfileMismatchException extends RuntimeException')
+        && str_contains($verifiedInspector, 'throw new CatalogProfileMismatchException(')
+        && str_contains($staged, '$error instanceof CatalogProfileMismatchException'),
+    'Known valid package/profile mismatches must use a typed non-error path rather than CatalogInvalidPackageException.'
+);
+
+$record(
+    'invalid_header_is_not_mislabeled_profile_mismatch',
+    str_contains($verifiedInspector, "if (empty(\$classification['header_ok']))")
+        && str_contains($verifiedInspector, "'unreal.magic_not_found' => 'Magic not found'")
+        && str_contains($verifiedInspector, 'throw new CatalogInvalidPackageException($headerReason, $headerCode, $headerArguments)')
+        && strpos($verifiedInspector, "if (empty(\$classification['header_ok']))")
+            < strpos($verifiedInspector, "if (\$strictProfile && empty(\$classification['ok_for_selected_game']))"),
+    'Missing/corrupt package headers must be classified before profile comparison.'
+);
+
+$record(
     'profile_mismatch_has_distinct_non_error_outcome',
     str_contains($outcome, "UNVERIFIED_PROFILE_MISMATCH = 'unverified_profile_mismatch'")
         && str_contains($outcome, 'str_starts_with(trim($message), \'Game/profile mismatch.\')'),
@@ -42,7 +63,8 @@ $record(
 
 $record(
     'wrong_profile_package_stays_in_unverified_storage',
-    str_contains($staged, 'CatalogImportOutcome::isProfileMismatchMessage($shortError)')
+    str_contains($staged, '$error instanceof CatalogProfileMismatchException')
+        && str_contains($staged, 'CatalogImportOutcome::isProfileMismatchMessage($shortError)')
         && str_contains($staged, '$staged !== null')
         && str_contains($staged, 'CatalogImportOutcome::UNVERIFIED_PROFILE_MISMATCH')
         && str_contains($staged, '\'unverified\' => $staged'),
@@ -90,6 +112,15 @@ $record(
 );
 
 $record(
+    'historical_system_errors_drop_profile_mismatch_only_rows',
+    str_contains($invalidBackfill, "\$profileMismatch = str_contains(\$lowerMessage, 'game/profile mismatch.')")
+        && str_contains($invalidBackfill, 'if ($profileMismatch && !$hasHeaderFailure)')
+        && str_contains($invalidBackfill, '$delete->execute([$id])')
+        && str_contains($invalidBackfill, "str_contains(\$lowerMessage, 'magic not found')"),
+    'Historical valid profile mismatches must be removed from System Errors while real header failures remain.'
+);
+
+$record(
     'historical_repair_preserves_real_errors',
     str_contains($repair, '$nextStatus = \'\';')
         && str_contains($repair, 'if ($nextStatus === \'\')')
@@ -105,18 +136,23 @@ $record(
         && str_contains($factory, 'package source bytes are re-read here.')
         && str_contains($fingerprint, 'PdoArchiveProfileMismatchOutcomeRepair.php')
         && str_contains($fingerprint, 'CatalogStagedImportJobHandler.php')
-        && str_contains($fingerprint, 'CatalogImportOutcome.php'),
+        && str_contains($fingerprint, 'CatalogImportOutcome.php')
+        && str_contains($fingerprint, 'CatalogProfileMismatchException.php')
+        && str_contains($fingerprint, '/lib/GameProfiles.php'),
     'Detached workers must pick up the new semantics and reconcile historical profile mismatches after deployment.'
 );
 
 $phpFiles = [
     $root . '/src/Infrastructure/Import/CatalogImportOutcome.php',
+    $root . '/src/Infrastructure/Import/CatalogProfileMismatchException.php',
+    $root . '/src/Infrastructure/Import/CatalogVerifiedPackageInspector.php',
     $root . '/src/Infrastructure/Jobs/CatalogStagedImportJobHandler.php',
     $root . '/src/Infrastructure/Persistence/PdoArchiveChildOutcomeQuery.php',
     $root . '/src/Infrastructure/Jobs/CatalogArchiveWorkflowJobHandler.php',
     $root . '/src/Infrastructure/Jobs/CatalogArchiveJobOutcomeProjector.php',
     $root . '/src/Infrastructure/Jobs/CatalogBackgroundJobFileTreeProjector.php',
     $root . '/src/Infrastructure/Persistence/PdoArchiveProfileMismatchOutcomeRepair.php',
+    $root . '/src/Infrastructure/Persistence/PdoInvalidUeSystemErrorBackfill.php',
     $root . '/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php',
     $root . '/src/Infrastructure/Jobs/CatalogWorkerCodeVersion.php',
     __FILE__,
