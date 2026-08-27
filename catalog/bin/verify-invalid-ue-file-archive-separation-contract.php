@@ -65,7 +65,8 @@ $record(
 $record(
     'invalid_profiled_import_reports_system_error',
     str_contains($staged, 'CatalogInvalidUeFileReporter::record([')
-        && str_contains($staged, '\'reason\' => $shortError')
+        && str_contains($staged, 'CatalogInvalidUeErrorClassifier::classify(')
+        && str_contains($staged, '\'reason\' => $validation[\'reason\']')
         && str_contains($staged, '\'system_error_recorded\' => $systemErrorRecorded'),
     'Invalid profiled package content must be recorded in System Errors when the terminal child outcome is produced.'
 );
