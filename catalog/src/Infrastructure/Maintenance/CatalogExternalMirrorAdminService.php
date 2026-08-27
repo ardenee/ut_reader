@@ -1,8 +1,8 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Owns administrator-facing external mirror jobs, providers, settings and link lifecycle.
- * Why: Mirror admin pages should not independently implement persistence and state transitions.
+ * Purpose: Owns administrator-facing external mirror jobs, providers and link lifecycle.
+ * Why: Mirror admin pages should not independently implement provider persistence and state transitions.
  * Role: Infrastructure maintenance service over the existing ExternalMirrors/FederationAuth compatibility layer.
  */
 declare(strict_types=1);
@@ -192,19 +192,6 @@ final class CatalogExternalMirrorAdminService
     /** @param array<string,mixed> $input */
     public function handleProviderAction(string $action, array $input): string
     {
-        if ($action === 'save_settings') {
-            foreach ([
-                'public_download_mode',
-                'external_mirror_auto_queue',
-                'external_mirror_expiry_days',
-                'external_mirror_require_admin_approval',
-                'external_mirror_max_file_size_mb',
-            ] as $key) {
-                \fed_set_setting($this->db, $key, trim((string)($input[$key] ?? '')));
-            }
-            return 'Public download settings saved.';
-        }
-
         if ($action === 'add_provider') {
             $key = strtolower(trim((string)($input['provider_key'] ?? '')));
             $name = trim((string)($input['provider_name'] ?? ''));
