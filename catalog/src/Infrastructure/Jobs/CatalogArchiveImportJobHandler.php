@@ -153,7 +153,29 @@ final class CatalogArchiveImportJobHandler implements JobHandler
                 continue;
             }
 
-            $entryName = CatalogImportPathPolicy::filename(basename($entryPath));
+            try {
+                $entryName = CatalogImportPathPolicy::filename(basename($entryPath));
+            } catch (\InvalidArgumentException $error) {
+                // One malformed directory record must not dead-letter an entire
+                // otherwise-readable archive. Retain the archive as partial and
+                // continue with every other member, exactly as for other unsafe
+                // member identities.
+                $failed++;
+                $reason = 'Archive member filename is invalid: ' . trim($error->getMessage());
+                $errors = $this->retainError($errors, $entryPath, $reason);
+                $this->checkpoint(
+                    $context,
+                    $index + 1,
+                    $total,
+                    $queued,
+                    $skipped,
+                    $failed,
+                    $unpackedBytes,
+                    $errors,
+                    $reason
+                );
+                continue;
+            }
             $extension = strtolower((string)pathinfo($entryName, PATHINFO_EXTENSION));
             if (CatalogArchiveExtractor::isArchiveName($entryName)) {
                 $skipped++;
@@ -358,7 +380,17 @@ final class CatalogArchiveImportJobHandler implements JobHandler
                 ];
             }
 
-            $entryName = CatalogImportPathPolicy::filename(basename($entryPath));
+            try {
+                $entryName = CatalogImportPathPolicy::filename(basename($entryPath));
+            } catch (\InvalidArgumentException $error) {
+                return [
+                    'extract' => false,
+                    'state' => [
+                        'kind' => 'failed',
+                        'reason' => 'Archive member filename is invalid: ' . trim($error->getMessage()),
+                    ],
+                ];
+            }
             $extension = strtolower((string)pathinfo($entryName, PATHINFO_EXTENSION));
             if (CatalogArchiveExtractor::isArchiveName($entryName)) {
                 return [
