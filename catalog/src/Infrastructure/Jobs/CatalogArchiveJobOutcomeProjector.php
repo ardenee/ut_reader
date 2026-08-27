@@ -13,6 +13,7 @@ namespace UnrealDb\Catalog\Infrastructure\Jobs;
 
 use PDO;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
+use UnrealDb\Catalog\Infrastructure\Import\CatalogImportOutcome;
 
 final class CatalogArchiveJobOutcomeProjector
 {
@@ -67,6 +68,7 @@ final class CatalogArchiveJobOutcomeProjector
                     'skipped' => 0,
                     'nested_archive' => 0,
                     'unverified' => 0,
+                    'invalid_ue' => 0,
                     'failed' => 0,
                     'cancelled' => 0,
                     'other_terminal' => 0,
@@ -113,7 +115,17 @@ final class CatalogArchiveJobOutcomeProjector
                     $summary['nested_archive']++;
                 } elseif ($resultStatus === 'unverified_profile_mismatch') {
                     $summary['unverified']++;
-                } elseif (in_array($resultStatus, ['failed', 'rejected', 'unverified', 'partial', 'error'], true)) {
+                } elseif (in_array($resultStatus, ['invalid_ue_package', 'rejected'], true)) {
+                    $summary['invalid_ue']++;
+                    $error = trim((string)($result['message'] ?? $child['last_error'] ?? ''));
+                    $this->appendFailure(
+                        $summary,
+                        (int)($child['id'] ?? 0),
+                        $payload,
+                        'invalid_ue_package',
+                        $error !== '' ? $error : 'Extracted member is not a valid supported Unreal package.'
+                    );
+                } elseif (in_array($resultStatus, ['failed', 'unverified', 'partial', 'error'], true)) {
                     $summary['failed']++;
                     $error = trim((string)($result['message'] ?? $child['last_error'] ?? ''));
                     $this->appendFailure(
@@ -170,6 +182,7 @@ final class CatalogArchiveJobOutcomeProjector
                     . number_format((int)$summary['skipped']) . ' skipped, '
                     . number_format((int)$summary['nested_archive']) . ' nested archive, '
                     . number_format((int)$summary['unverified']) . ' unverified/profile mismatch, '
+                    . number_format((int)$summary['invalid_ue']) . ' invalid UE file' . ((int)$summary['invalid_ue'] === 1 ? '' : 's') . ', '
                     . number_format($totalFailed) . ' failed, '
                     . number_format((int)$summary['waiting']) . ' waiting, '
                     . number_format((int)$summary['running']) . ' running.';
@@ -180,6 +193,7 @@ final class CatalogArchiveJobOutcomeProjector
                     . number_format((int)$summary['skipped']) . ' skipped, '
                     . number_format((int)$summary['nested_archive']) . ' nested archive, '
                     . number_format((int)$summary['unverified']) . ' unverified/profile mismatch, '
+                    . number_format((int)$summary['invalid_ue']) . ' invalid UE file' . ((int)$summary['invalid_ue'] === 1 ? '' : 's') . ', '
                     . number_format($totalFailed) . ' failed';
                 if ((int)$summary['cancelled'] > 0) {
                     $message .= ', ' . number_format((int)$summary['cancelled']) . ' cancelled';
@@ -204,11 +218,11 @@ final class CatalogArchiveJobOutcomeProjector
             if ($pending === 0 && ($totalFailed > 0 || (int)$summary['cancelled'] > 0)) {
                 $row['result']['status'] = 'partial';
                 $row['progress']['status'] = 'partial';
-                // The queue row is terminally completed because the coordinator
-                // itself finished, but the operator-visible logical outcome is
-                // partial. The browser badge reads display_status first, so keep
-                // the projected status aligned with the projected child summary.
                 $row['display_status'] = 'partial';
+            } elseif ($pending === 0 && (int)$summary['invalid_ue'] > 0) {
+                $row['result']['status'] = CatalogImportOutcome::ARCHIVE_INVALID_FILES;
+                $row['progress']['status'] = CatalogImportOutcome::ARCHIVE_INVALID_FILES;
+                $row['display_status'] = CatalogImportOutcome::ARCHIVE_INVALID_FILES;
             }
         }
         unset($row);
