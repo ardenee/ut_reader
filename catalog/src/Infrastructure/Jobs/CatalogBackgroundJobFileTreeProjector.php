@@ -10,7 +10,7 @@ namespace UnrealDb\Catalog\Infrastructure\Jobs;
 
 final class CatalogBackgroundJobFileTreeProjector
 {
-    private const ISSUE_DISPLAY_STATUSES = ['failed', 'rejected', 'unverified', 'invalid_ue_package', 'invalid_files', 'partial', 'error'];
+    private const ISSUE_DISPLAY_STATUSES = ['failed', 'rejected', 'unverified', 'invalid_ue_package', 'partial', 'error'];
 
     /** @param list<array<string,mixed>> $rows @return list<array<string,mixed>> */
     public function project(array $rows): array
@@ -198,9 +198,6 @@ final class CatalogBackgroundJobFileTreeProjector
         if ($state === 'issue' && !in_array($queueStatus, ['queued', 'running'], true)) {
             if ($displayStatus === 'invalid_ue_package') {
                 return 'Invalid UE file';
-            }
-            if ($displayStatus === 'invalid_files') {
-                return 'Contains invalid UE file';
             }
             return 'Could not process';
         }
