@@ -20,7 +20,7 @@ use UnrealDb\Catalog\Infrastructure\Import\CatalogImportOutcome;
 final class PdoArchiveProfileMismatchOutcomeRepair
 {
     private const BATCH_LIMIT = 1000;
-    private const MAX_BATCHES = 20;
+    private const MAX_BATCHES = 100;
     private const MAX_ANCESTOR_DEPTH = 24;
 
     public function __construct(private readonly PDO $db)
@@ -44,7 +44,7 @@ final class PdoArchiveProfileMismatchOutcomeRepair
 
         $select = $this->db->prepare(
             'SELECT id,parent_job_id,job_type,result_json FROM ue_background_jobs '
-            . 'WHERE queue_name=? AND status="completed" '
+            . 'WHERE queue_name=? AND id>? AND status="completed" '
             . 'AND job_type IN (?,?) '
             . 'AND workflow_unit_key LIKE "archive:%" '
             . 'AND display_status IN ("unverified","rejected") '
@@ -61,9 +61,11 @@ final class PdoArchiveProfileMismatchOutcomeRepair
             . 'AND display_status IN ("unverified","rejected")'
         );
 
+        $afterId = 0;
         for ($batch = 0; $batch < self::MAX_BATCHES; $batch++) {
             $select->execute([
                 $queueName,
+                $afterId,
                 JobType::IMPORT_STAGED_PACKAGE,
                 JobType::PROCESS_BUCKET_STAGED_PACKAGE,
             ]);
@@ -73,8 +75,8 @@ final class PdoArchiveProfileMismatchOutcomeRepair
             }
 
             $now = gmdate('Y-m-d H:i:s');
-            $changedThisBatch = 0;
             foreach ($rows as $row) {
+                $afterId = max($afterId, (int)($row['id'] ?? 0));
                 $id = max(0, (int)($row['id'] ?? 0));
                 $jobType = trim((string)($row['job_type'] ?? ''));
                 $result = $this->jsonObject((string)($row['result_json'] ?? ''));
@@ -113,7 +115,6 @@ final class PdoArchiveProfileMismatchOutcomeRepair
                     continue;
                 }
 
-                $changedThisBatch++;
                 if ($nextStatus === CatalogImportOutcome::UNVERIFIED_PROFILE_MISMATCH) {
                     $profileMismatchReclassified++;
                 } else {
@@ -126,10 +127,10 @@ final class PdoArchiveProfileMismatchOutcomeRepair
                 }
             }
 
-            // The SELECT may contain unrelated unverified/rejected rows. Once a
-            // complete batch yields no changes, later batches cannot advance
-            // because ordering is stable and changed rows leave this scope.
-            if ($changedThisBatch === 0 || count($rows) < self::BATCH_LIMIT) {
+            // Advance by id even when this page contains unrelated historical
+            // unverified rows; later ids may still contain package-validation
+            // outcomes that need reclassification.
+            if (count($rows) < self::BATCH_LIMIT) {
                 break;
             }
         }
