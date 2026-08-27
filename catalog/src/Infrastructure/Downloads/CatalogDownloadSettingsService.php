@@ -11,6 +11,7 @@ namespace UnrealDb\Catalog\Infrastructure\Downloads;
 
 use PDO;
 use RuntimeException;
+use Throwable;
 use UnrealDb\Catalog\Infrastructure\Security\CatalogPublicAccessSettingsStore;
 
 final class CatalogDownloadSettingsService
@@ -80,12 +81,28 @@ final class CatalogDownloadSettingsService
                 1048576
             ),
         ];
-        // Persist only after the complete form has been normalized and validated.
-        $this->publicAccess->save($this->db, $publicValues);
-        foreach ($mirrorValues as $name => $value) {
-            \fed_set_setting($this->db, $name, $value);
+        // Persist the complete download-settings form as one DB transaction.
+        // This avoids a separate autocommit/fsync for every setting row.
+        if ($this->db->inTransaction()) {
+            throw new RuntimeException('Download settings cannot be saved inside an existing database transaction.');
         }
 
+        $this->db->beginTransaction();
+        try {
+            $publicValues = $this->publicAccess->saveDatabase($this->db, $publicValues);
+            foreach ($mirrorValues as $name => $value) {
+                \fed_set_setting($this->db, $name, $value);
+            }
+            $this->db->commit();
+        } catch (Throwable $error) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            throw $error;
+        }
+
+        // Publish the compact runtime settings cache only after the DB commit.
+        $this->publicAccess->publish($publicValues);
         \catalog_public_cache_invalidate($this->config);
         return 'Download settings saved. Public download controls were refreshed.';
     }
