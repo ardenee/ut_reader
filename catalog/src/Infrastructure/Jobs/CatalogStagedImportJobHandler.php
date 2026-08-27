@@ -16,6 +16,7 @@ use UnrealDb\Catalog\Application\Jobs\JobExecutionContext;
 use UnrealDb\Catalog\Application\Jobs\JobHandler;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
+use UnrealDb\Catalog\Infrastructure\Import\CatalogImportOutcome;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogIncomingFileStore;
 use UnrealDb\Catalog\Infrastructure\Import\PdoCatalogPackageImporter;
 use UnrealDb\Catalog\Infrastructure\Legacy\LegacyUnverifiedFileStager;
@@ -236,26 +237,35 @@ final class CatalogStagedImportJobHandler implements JobHandler
                 $workingPath = '';
                 $store->remove($relativePath);
                 $shortError = $this->shortError($error);
+                $profileMismatch = $staged !== null
+                    && CatalogImportOutcome::isProfileMismatchMessage($shortError);
+                $outcomeStatus = $staged === null
+                    ? 'rejected'
+                    : ($profileMismatch ? CatalogImportOutcome::UNVERIFIED_PROFILE_MISMATCH : 'unverified');
                 $retentionMessage = $staged !== null
-                    ? 'Package could not be verified and was retained in the unverified queue'
+                    ? ($profileMismatch
+                        ? 'Valid Unreal package retained in the unverified queue because it does not match the selected game profile'
+                        : 'Package could not be verified and was retained in the unverified queue')
                     : 'Unsupported or invalid input was discarded';
                 $context->checkpoint([
-                    'stage' => $staged !== null ? 'unverified' : 'rejected',
+                    'stage' => $profileMismatch ? 'unverified_profile_mismatch' : ($staged !== null ? 'unverified' : 'rejected'),
                     'done' => 100,
                     'total' => 100,
                     'percent' => 100,
-                    'status' => $staged !== null ? 'unverified' : 'rejected',
+                    'status' => $outcomeStatus,
                     'message' => $retentionMessage . ': ' . $shortError,
                     'error' => $shortError,
+                    'outcome_class' => $profileMismatch ? 'profile_mismatch' : '',
                 ]);
                 return [
                     'operation' => 'import_staged_package',
-                    'status' => $staged !== null ? 'unverified' : 'rejected',
+                    'status' => $outcomeStatus,
                     'file_id' => (int)($staged['file_id'] ?? 0),
                     'message' => $shortError,
                     'original_name' => $workingName,
                     'source_relative_path' => $sourceRelativePath,
                     'unverified' => $staged,
+                    'outcome_class' => $profileMismatch ? 'profile_mismatch' : '',
                 ];
             }
             throw $error;
