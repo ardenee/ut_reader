@@ -11,6 +11,7 @@ namespace UnrealDb\Catalog\Infrastructure\Jobs;
 use PDO;
 use Throwable;
 use UnrealDb\Catalog\Application\Jobs\JobFailureRetryPolicy;
+use UnrealDb\Catalog\Application\Telemetry\CatalogInvalidUeErrorClassifier;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogImportOutcome;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogInvalidPackageException;
 use UnrealDb\Catalog\Application\Jobs\JobExecutionContext;
@@ -174,6 +175,11 @@ final class CatalogBucketStagedPackageJobHandler implements JobHandler
                 $message = $this->errorText($error) . ' ' . $this->firstBytesDiagnostic($preparedPath);
                 $incoming->delete($stagedPath);
                 $preparedStore->clear();
+                $validation = CatalogInvalidUeErrorClassifier::classify(
+                    $this->errorText($error),
+                    $error instanceof CatalogInvalidPackageException ? $error->validationCode() : '',
+                    $error instanceof CatalogInvalidPackageException ? $error->validationArguments() : []
+                );
                 $systemErrorRecorded = CatalogInvalidUeFileReporter::record([
                     'job_id' => $job->id,
                     'parent_job_id' => $job->parentJobId ?? 0,
@@ -186,9 +192,9 @@ final class CatalogBucketStagedPackageJobHandler implements JobHandler
                     'size' => is_file($preparedPath) ? (int)(filesize($preparedPath) ?: 0) : 0,
                     'md5' => $md5,
                     'sha1' => $sha1,
-                    'reason' => $this->errorText($error),
-                    'error_code' => $error instanceof CatalogInvalidPackageException ? $error->validationCode() : '',
-                    'arguments' => $error instanceof CatalogInvalidPackageException ? $error->validationArguments() : [],
+                    'reason' => $validation['reason'],
+                    'error_code' => $validation['code'],
+                    'arguments' => $validation['arguments'],
                 ]);
                 $context->checkpoint([
                     'stage' => 'complete',
@@ -198,6 +204,8 @@ final class CatalogBucketStagedPackageJobHandler implements JobHandler
                     'status' => CatalogImportOutcome::INVALID_UE_PACKAGE,
                     'message' => $message,
                     'system_error_recorded' => $systemErrorRecorded,
+                    'validation_code' => $validation['code'],
+                    'validation_arguments' => $validation['arguments'],
                 ]);
                 return $this->terminalResult(
                     CatalogImportOutcome::INVALID_UE_PACKAGE,
@@ -210,7 +218,9 @@ final class CatalogBucketStagedPackageJobHandler implements JobHandler
                     $md5,
                     $sha1,
                     false,
-                    $systemErrorRecorded
+                    $systemErrorRecorded,
+                    $validation['code'],
+                    $validation['arguments']
                 );
             }
 
@@ -224,6 +234,11 @@ final class CatalogBucketStagedPackageJobHandler implements JobHandler
                     . $this->errorText($error)
                     . ' SHA1=' . $sha1 . '. '
                     . $this->firstBytesDiagnostic($preparedPath);
+                $validation = CatalogInvalidUeErrorClassifier::classify(
+                    $this->errorText($error),
+                    $error instanceof CatalogInvalidPackageException ? $error->validationCode() : '',
+                    $error instanceof CatalogInvalidPackageException ? $error->validationArguments() : []
+                );
                 $systemErrorRecorded = CatalogInvalidUeFileReporter::record([
                     'job_id' => $job->id,
                     'parent_job_id' => $job->parentJobId ?? 0,
@@ -236,9 +251,9 @@ final class CatalogBucketStagedPackageJobHandler implements JobHandler
                     'size' => is_file($preparedPath) ? (int)(filesize($preparedPath) ?: 0) : 0,
                     'md5' => $md5,
                     'sha1' => $sha1,
-                    'reason' => $this->errorText($error),
-                    'error_code' => $error instanceof CatalogInvalidPackageException ? $error->validationCode() : '',
-                    'arguments' => $error instanceof CatalogInvalidPackageException ? $error->validationArguments() : [],
+                    'reason' => $validation['reason'],
+                    'error_code' => $validation['code'],
+                    'arguments' => $validation['arguments'],
                 ]);
                 $context->checkpoint([
                     'stage' => 'complete',
@@ -249,6 +264,8 @@ final class CatalogBucketStagedPackageJobHandler implements JobHandler
                     'message' => $message,
                     'source_retained' => true,
                     'system_error_recorded' => $systemErrorRecorded,
+                    'validation_code' => $validation['code'],
+                    'validation_arguments' => $validation['arguments'],
                 ]);
                 return $this->terminalResult(
                     CatalogImportOutcome::INVALID_UE_PACKAGE,
@@ -261,7 +278,9 @@ final class CatalogBucketStagedPackageJobHandler implements JobHandler
                     $md5,
                     $sha1,
                     true,
-                    $systemErrorRecorded
+                    $systemErrorRecorded,
+                    $validation['code'],
+                    $validation['arguments']
                 );
             }
 
@@ -333,7 +352,9 @@ final class CatalogBucketStagedPackageJobHandler implements JobHandler
         string $md5,
         string $sha1,
         bool $sourceRetained,
-        bool $systemErrorRecorded = false
+        bool $systemErrorRecorded = false,
+        string $validationCode = '',
+        array $validationArguments = []
     ): array {
         return [
             'operation' => 'process_bucket_staged_package',
@@ -350,6 +371,8 @@ final class CatalogBucketStagedPackageJobHandler implements JobHandler
             'sha1' => $sha1,
             'source_retained' => $sourceRetained,
             'system_error_recorded' => $systemErrorRecorded,
+            'validation_code' => $validationCode,
+            'validation_arguments' => $validationArguments,
         ];
     }
 
