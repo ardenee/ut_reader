@@ -1,13 +1,9 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Provides shared catalog helper functions for catalog public rate limit.
- * Why: It centralizes behavior reused by multiple pages, APIs, workers, or maintenance scripts instead of repeating
- *      that behavior at each call site.
- * Role: Legacy/shared library layer; some files are transitional bridges while newer implementation code lives under
- *       `catalog/src`.
- * Audit: Shared code: reuse or migrate this responsibility before adding another implementation with the same
- *        purpose.
+ * Purpose: Provides shared public request rate-limit helpers for non-download workflows.
+ * Why: Search and federation pairing still use environment-backed request limits; public downloads use CatalogPublicAccessGuard.
+ * Role: Legacy/shared library layer retained for remaining non-download callers.
  */
 declare(strict_types=1);
 
@@ -63,15 +59,6 @@ function catalog_public_search_rate_limit(): void
         'public-search',
         catalog_public_rate_limit_value('UNREALDB_PUBLIC_SEARCH_MAX_REQUESTS', 60, 1, 5000),
         catalog_public_rate_limit_value('UNREALDB_PUBLIC_SEARCH_WINDOW_SECONDS', 600, 60, 86400)
-    );
-}
-
-function catalog_public_download_rate_limit(): void
-{
-    catalog_public_rate_limit_or_throw(
-        'public-download',
-        catalog_public_rate_limit_value('UNREALDB_PUBLIC_DOWNLOAD_MAX_REQUESTS', 30, 1, 1000),
-        catalog_public_rate_limit_value('UNREALDB_PUBLIC_DOWNLOAD_WINDOW_SECONDS', 600, 60, 86400)
     );
 }
 
