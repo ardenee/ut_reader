@@ -46,12 +46,22 @@ final class PdoBackgroundJobBulkAction
             && $status === 'partial_archive'
             && $search === '';
         if ($directRetainedArchiveScope) {
-            // Retained archives are completed top-level archive roots. Do not
-            // materialise the generic root/problem-child browser UNION merely to
-            // select this already-specific recovery set; large child ledgers made
-            // both the view and "Retry all" unnecessarily expensive.
+            // Retained archives shown as logical roots are either true top-level
+            // jobs or direct source children of a completed profiled-upload batch.
+            // The former parent_job_id IS NULL shortcut silently excluded almost
+            // every archive from large profiled imports, so "Retry retryable
+            // archives" only touched a handful of rows while the Issues count
+            // appeared stuck.
             $fromSql = 'ue_background_jobs j';
-            $where = ['j.parent_job_id IS NULL', 'j.queue_name=?'];
+            $where = [
+                '(j.parent_job_id IS NULL OR EXISTS('
+                    . 'SELECT 1 FROM ue_background_jobs retained_parent '
+                    . 'WHERE retained_parent.id=j.parent_job_id '
+                    . 'AND retained_parent.queue_name=j.queue_name '
+                    . 'AND retained_parent.job_type="' . JobType::PROFILED_UPLOAD_BATCH . '"'
+                . '))',
+                'j.queue_name=?',
+            ];
             $params = [$queueName];
         } else {
             // Use the exact same search/workflow-child visibility scope as the
