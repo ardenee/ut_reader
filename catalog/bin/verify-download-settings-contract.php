@@ -9,6 +9,8 @@ $root = dirname(__DIR__);
 $files = [
     'settings_page' => $root . '/downloads-settings.php',
     'settings_service' => $root . '/src/Infrastructure/Downloads/CatalogDownloadSettingsService.php',
+    'settings_store' => $root . '/src/Infrastructure/Security/CatalogPublicAccessSettingsStore.php',
+    'public_cache' => $root . '/src/Infrastructure/Cache/CatalogPublicResponseCacheService.php',
     'public_access_page' => $root . '/public-access-settings.php',
     'public_access_service' => $root . '/src/Infrastructure/Downloads/CatalogPublicAccessSettingsService.php',
     'mirror_providers' => $root . '/mirror-providers.php',
@@ -76,6 +78,29 @@ $requireContains(
     '\\fed_set_setting($this->db, $name, $value);',
     'Download Settings service'
 );
+foreach ([
+    '$this->db->beginTransaction();',
+    '$this->publicAccess->saveDatabase($this->db, $publicValues);',
+    '$this->db->commit();',
+    '$this->db->rollBack();',
+    '$this->publicAccess->publish($publicValues);',
+    '\\catalog_public_cache_invalidate($this->config);',
+] as $needle) {
+    $requireContains('settings_service', $needle, 'Transactional Download Settings save');
+}
+foreach ([
+    'public function saveDatabase(PDO $db, array $settings): array',
+    'public function publish(array $settings): array',
+] as $needle) {
+    $requireContains('settings_store', $needle, 'Public access settings store');
+}
+foreach ([
+    "'.generation'",
+    'private static function generationToken(',
+    '$generation . "\\n" . $script . "\\n" . $query',
+] as $needle) {
+    $requireContains('public_cache', $needle, 'Constant-time public cache invalidation');
+}
 
 foreach ([
     'name="public_download_max_files"',
