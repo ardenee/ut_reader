@@ -67,6 +67,7 @@ try {
         'all'
     );
     $source = preg_replace('/[^a-z0-9._:-]+/', '', strtolower(trim((string)($_GET['source'] ?? 'all')))) ?: 'all';
+    $errorType = preg_replace('/[^A-Za-z0-9._:-]+/', '', trim((string)($_GET['type'] ?? 'all'))) ?: 'all';
     $search = system_error_export_search((string)($_GET['q'] ?? ''));
 
     $where = [];
@@ -82,6 +83,10 @@ try {
     if ($source !== 'all') {
         $where[] = 'source_kind=?';
         $args[] = $source;
+    }
+    if ($errorType !== 'all') {
+        $where[] = 'error_type=?';
+        $args[] = $errorType;
     }
     if ($search !== '') {
         $where[] = '(message LIKE ? OR error_type LIKE ? OR route LIKE ? OR source_file LIKE ? OR request_id LIKE ?)';
@@ -111,6 +116,7 @@ try {
     echo '- Status: `' . $status . "`\n";
     echo '- Severity: `' . $severity . "`\n";
     echo '- Source: `' . $source . "`\n";
+    echo '- Type: `' . $errorType . "`\n";
     echo '- Search: ' . ($search !== '' ? '`' . str_replace('`', '\\`', $search) . '`' : 'none') . "\n";
     echo '- Matching records: ' . number_format($total) . "\n";
     echo '- Exported records: ' . number_format(count($rows)) . "\n";
