@@ -41,7 +41,20 @@ final class PdoJobQueueSupport
     /** @param array<string,mixed> $value */
     public static function encodeJson(array $value): string
     {
-        return json_encode($value, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        $flags = JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE;
+        try {
+            return json_encode($value, $flags);
+        } catch (\JsonException $error) {
+            if ($error->getCode() !== JSON_ERROR_UTF8) {
+                throw $error;
+            }
+
+            // Queue state must never be lost solely because a decoder surfaced a
+            // legacy byte string in diagnostic/progress data. Domain decoders are
+            // still responsible for normalizing identities at source; this is the
+            // persistence boundary safety net for any remaining invalid bytes.
+            return json_encode($value, $flags | JSON_INVALID_UTF8_SUBSTITUTE);
+        }
     }
 
     /** @return array<string,mixed> */
