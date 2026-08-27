@@ -15,6 +15,7 @@ use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoArchiveParentLifecycleRepair;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoArchiveProfileMismatchOutcomeRepair;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoInvalidUeSystemErrorBackfill;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoContention;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 use UnrealDb\Catalog\Infrastructure\Telemetry\CatalogSystemErrorRecorder;
@@ -61,6 +62,20 @@ final class CatalogJobWorkerFactory
             }
         } catch (\Throwable $error) {
             error_log('[UnrealDB archive outcome classification repair] ' . $error->getMessage());
+        }
+
+        // Invalid Unreal package content is a System Error/data-quality problem,
+        // not retryable archive work. Backfill historical completed child outcomes
+        // once from durable metadata; no archive/package bytes are reopened.
+        try {
+            $invalidUeBackfill = (new PdoInvalidUeSystemErrorBackfill($db))->run($queueName);
+            if ($invalidUeBackfill['recorded'] > 0 || $invalidUeBackfill['failed'] > 0) {
+                error_log('[UnrealDB invalid UE System Error backfill] Recorded '
+                    . $invalidUeBackfill['recorded'] . ' invalid UE file error(s); '
+                    . $invalidUeBackfill['failed'] . ' persistence failure(s).');
+            }
+        } catch (\Throwable $error) {
+            error_log('[UnrealDB invalid UE System Error backfill] ' . $error->getMessage());
         }
 
         // Older archive coordinators completed their parent row immediately after
