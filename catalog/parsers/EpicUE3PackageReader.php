@@ -244,9 +244,28 @@ final class CatalogUE3PackageReader
         $physicalSize=filesize($this->path);
         if ($physicalSize===false || $physicalSize<1) throw new RuntimeException('Could not determine Epic UE3 physical package size');
         $logicalSize=(int)$physicalSize;
-        foreach ($chunks as $c) {
-            $logicalSize=max($logicalSize,(int)$c['uOff']+(int)$c['uLen']);
-            if ((int)$c['cOff']+(int)$c['cLen']>$physicalSize) throw new RuntimeException('Epic UE3 compressed chunk exceeds physical package size');
+        foreach ($chunks as $index => $c) {
+            $uOff=(int)$c['uOff'];
+            $uLen=(int)$c['uLen'];
+            $cOff=(int)$c['cOff'];
+            $cLen=(int)$c['cLen'];
+            $logicalSize=max($logicalSize,$uOff+$uLen);
+            if ($cOff+$cLen>$physicalSize) {
+                throw new RuntimeException(
+                    'Epic UE3 compressed chunk exceeds physical package size: '
+                    . 'chunk=' . $index
+                    . ' compressed_offset=' . $cOff
+                    . ' compressed_size=' . $cLen
+                    . ' compressed_end=' . ($cOff+$cLen)
+                    . ' physical_size=' . $physicalSize
+                    . ' uncompressed_offset=' . $uOff
+                    . ' uncompressed_size=' . $uLen
+                    . ' compression_flags=' . sprintf('0x%08X',(int)$this->header['compressionFlags'])
+                    . ' chunk_count=' . count($chunks)
+                    . ' package_version=' . (int)$this->header['version']
+                    . ' licensee_version=' . (int)$this->header['licenseeVersion']
+                );
+            }
         }
         usort($chunks,static fn(array $a,array $b):int=>(int)$a['uOff']<=>(int)$b['uOff']);
         $first=(int)$chunks[0]['uOff'];
