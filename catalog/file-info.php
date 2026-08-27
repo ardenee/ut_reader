@@ -221,6 +221,7 @@ CSS;
     echo '<div class="card">';
     echo '<div class="file-info-title"><h1>' . catalog_h($file['package_name']) . '</h1><span class="dep file-type-pill ' . catalog_h($fileTypeClass) . '">' . catalog_h($fileType) . '</span></div>';
     echo '<p class="file-info-context"><a href="' . $packageHref . '" title="Examine this file">' . catalog_h($file['original_name']) . '</a> / <a href="' . $gameHref . '" title="Open game files">' . catalog_h($file['game_name']) . '</a></p>';
+    echo '<p><a class="button" href="download.php?id=' . $id . '">Download file</a> <a class="button secondary" href="' . $packageHref . '">Examine file</a></p>';
     echo '<p><span class="dep ' . ($compressed ? 'compressed' : 'uncompressed') . '">' . ($compressed ? 'compressed' : 'uncompressed') . '</span> <span class="mono small">flags 0x' . strtoupper(str_pad(dechex((int)($file['compression_flags'] ?? 0)), 8, '0', STR_PAD_LEFT)) . '</span></p>';
     echo '<table><tr><th>MD5</th><td class="mono">' . catalog_h($file['md5']) . '</td></tr><tr><th>SHA1</th><td class="mono">' . catalog_h($file['sha1']) . '</td></tr><tr><th>GUID</th><td class="mono">' . catalog_h($file['package_guid']) . '</td></tr><tr><th>Status</th><td>' . catalog_h($file['scan_status']) . '</td></tr><tr><th>Tables</th><td><a href="' . $tableHref . '" title="Examine names, imports and exports">' . (int)$file['name_count'] . ' names / ' . (int)$file['import_count'] . ' imports / ' . (int)$file['export_count'] . ' exports</a></td></tr></table>';
     echo '</div>';
