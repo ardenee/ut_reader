@@ -11,6 +11,8 @@ declare(strict_types=1);
 namespace UnrealDb\Catalog\Infrastructure\Persistence;
 
 use PDO;
+use UnrealDb\Catalog\Application\Jobs\JobFailureRetryPolicy;
+use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Telemetry\CatalogInvalidUeFileReporter;
 
 final class PdoInvalidUeSystemErrorBackfill
@@ -22,7 +24,7 @@ final class PdoInvalidUeSystemErrorBackfill
     {
     }
 
-    /** @return array{recorded:int,failed:int,locked:bool} */
+    /** @return array{recorded:int,historical_terminal_recorded:int,failed:int,locked:bool} */
     public function run(string $queueName): array
     {
         $queueName = PdoJobQueueSupport::requiredIdentifier($queueName, 'queue');
@@ -30,7 +32,7 @@ final class PdoInvalidUeSystemErrorBackfill
         $lock = $this->db->prepare('SELECT GET_LOCK(?,0)');
         $lock->execute([$lockName]);
         if ((int)$lock->fetchColumn() !== 1) {
-            return ['recorded' => 0, 'failed' => 0, 'locked' => true];
+            return ['recorded' => 0, 'historical_terminal_recorded' => 0, 'failed' => 0, 'locked' => true];
         }
 
         try {
@@ -146,7 +148,104 @@ final class PdoInvalidUeSystemErrorBackfill
             }
         }
 
-        return ['recorded' => $recorded, 'failed' => $failed, 'locked' => false];
+        $historicalTerminalRecorded = 0;
+        $terminalSelect = $this->db->prepare(
+            'SELECT id,parent_job_id,job_type,payload_json,result_json,last_error FROM ue_background_jobs '
+            . 'WHERE queue_name=? AND id>? AND status IN ("failed","dead_letter") '
+            . 'AND job_type IN (?,?,?) AND COALESCE(last_error,"")<>"" '
+            . 'AND (NOT JSON_VALID(result_json) OR COALESCE(JSON_EXTRACT(result_json,"$.system_error_recorded"),false)<>true) '
+            . 'ORDER BY id ASC LIMIT ' . self::BATCH_LIMIT
+        );
+        $terminalMark = $this->db->prepare(
+            'UPDATE ue_background_jobs SET '
+            . 'result_json=JSON_SET(CASE WHEN JSON_VALID(result_json) THEN result_json ELSE JSON_OBJECT() END,'
+            . '"$.system_error_recorded",true,"$.system_error_type","InvalidUnrealPackage"),updated_at=? '
+            . 'WHERE id=? AND queue_name=? AND status IN ("failed","dead_letter")'
+        );
+
+        $afterTerminalId = 0;
+        for ($batch = 0; $batch < self::MAX_BATCHES; $batch++) {
+            $terminalSelect->execute([
+                $queueName,
+                $afterTerminalId,
+                JobType::PROCESS_BUCKET_UPLOAD,
+                JobType::PROCESS_BUCKET_STAGED_PACKAGE,
+                JobType::IMPORT_STAGED_PACKAGE,
+            ]);
+            $terminalRows = $terminalSelect->fetchAll(PDO::FETCH_ASSOC) ?: [];
+            if ($terminalRows === []) {
+                break;
+            }
+
+            foreach ($terminalRows as $row) {
+                $id = max(0, (int)($row['id'] ?? 0));
+                $afterTerminalId = max($afterTerminalId, $id);
+                $jobType = trim((string)($row['job_type'] ?? ''));
+                $reason = trim((string)($row['last_error'] ?? ''));
+                if ($id < 1 || !JobFailureRetryPolicy::isInvalidPackageContentText($jobType, $reason)) {
+                    continue;
+                }
+
+                $payload = $this->decode((string)($row['payload_json'] ?? ''));
+                $result = $this->decode((string)($row['result_json'] ?? ''));
+                $fileId = max(0, (int)($result['file_id'] ?? 0));
+                $identity = ['md5' => '', 'sha1' => '', 'file_size' => 0];
+                if ($fileId > 0) {
+                    $fileIdentity->execute([$fileId]);
+                    $found = $fileIdentity->fetch(PDO::FETCH_ASSOC);
+                    if (is_array($found)) {
+                        $identity = $found;
+                    }
+                }
+
+                $parentJobId = max(0, (int)($row['parent_job_id'] ?? 0));
+                $archiveSourceName = trim((string)($payload['archive_source_name'] ?? ''));
+                if ($archiveSourceName === '' && $parentJobId > 0) {
+                    $parentSource->execute([$parentJobId, $queueName]);
+                    $parentPayload = $this->decode((string)($parentSource->fetchColumn() ?: ''));
+                    $archiveSourceName = trim((string)($parentPayload['original_name'] ?? ''));
+                }
+
+                $fileName = trim((string)($payload['original_name'] ?? ''));
+                $sourceRelativePath = trim((string)($payload['source_relative_path'] ?? $fileName));
+                $ok = CatalogInvalidUeFileReporter::record([
+                    'job_id' => $id,
+                    'parent_job_id' => $parentJobId,
+                    'job_type' => $jobType,
+                    'user_id' => max(0, (int)($payload['user_id'] ?? 0)),
+                    'game_id' => max(0, (int)($payload['game_id'] ?? 0)),
+                    'file_id' => $fileId,
+                    'file_name' => $fileName,
+                    'source_relative_path' => $sourceRelativePath,
+                    'archive_source_name' => $archiveSourceName,
+                    'archive_entry_path' => (string)($payload['archive_entry_path'] ?? $fileName),
+                    'size' => max(0, (int)($result['bytes'] ?? $payload['size'] ?? $identity['file_size'] ?? 0)),
+                    'md5' => (string)($result['md5'] ?? $payload['md5'] ?? $identity['md5'] ?? ''),
+                    'sha1' => (string)($result['sha1'] ?? $payload['sha1'] ?? $identity['sha1'] ?? ''),
+                    'reason' => $reason,
+                ]);
+                if (!$ok) {
+                    $failed++;
+                    continue;
+                }
+
+                $terminalMark->execute([gmdate('Y-m-d H:i:s'), $id, $queueName]);
+                if ($terminalMark->rowCount() > 0) {
+                    $historicalTerminalRecorded++;
+                }
+            }
+
+            if (count($terminalRows) < self::BATCH_LIMIT) {
+                break;
+            }
+        }
+
+        return [
+            'recorded' => $recorded,
+            'historical_terminal_recorded' => $historicalTerminalRecorded,
+            'failed' => $failed,
+            'locked' => false,
+        ];
     }
 
     /** @return array<string,mixed> */
