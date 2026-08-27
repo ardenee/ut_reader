@@ -13,7 +13,7 @@ use UnrealDb\Catalog\Domain\Jobs\JobType;
 
 final class CatalogJobDisplayStatus
 {
-    private const FAILED_OUTCOMES = ['failed', 'rejected', 'unverified'];
+    private const FAILED_OUTCOMES = ['failed', 'rejected', 'unverified', 'invalid_ue_package'];
     private const FILTERS = ['queued', 'running', 'completed', 'failed', 'dead_letter', 'cancelled', 'partial_archive'];
 
     public static function normalize(string $queueStatus, ?string $resultStatus): string
@@ -96,14 +96,14 @@ final class CatalogJobDisplayStatus
         }
         if ($status === 'failed') {
             return [
-                'sql' => $prefix . 'display_status IN ("failed","rejected","unverified")',
+                'sql' => $prefix . 'display_status IN ("failed","rejected","unverified","invalid_ue_package")',
                 'params' => [],
             ];
         }
         if ($status === 'completed') {
             return [
                 'sql' => $prefix . 'status="completed" AND '
-                    . $prefix . 'display_status NOT IN ("failed","rejected","unverified") AND NOT ('
+                    . $prefix . 'display_status NOT IN ("failed","rejected","unverified","invalid_ue_package") AND NOT ('
                     . $prefix . 'display_status="partial" AND '
                     . $prefix . 'job_type IN ("' . JobType::PROCESS_BUCKET_ARCHIVE . '","'
                     . JobType::IMPORT_STAGED_ARCHIVE . '"))',
