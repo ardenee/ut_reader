@@ -270,7 +270,7 @@ try {
         [
             'Download Administration' => 'download-admin.php',
             'Package Settings' => 'download-package-settings.php',
-            'Public Access & Mail' => 'public-access-settings.php',
+            'Download Settings' => 'downloads-settings.php',
         ]
     );
 
