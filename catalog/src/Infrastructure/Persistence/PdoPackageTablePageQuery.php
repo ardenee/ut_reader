@@ -186,11 +186,14 @@ final class PdoPackageTablePageQuery
     {
         $out = [];
         foreach ($values as $value) {
-            $value = trim($value);
+            $value = trim((string)$value);
             if ($value !== '') {
-                $out[$value] = true;
+                // PHP converts numeric-string array keys (for example "123") to
+                // integers. Preserve the original string as the value so a
+                // numeric Unreal FName cannot become int 123 before trim()/lookup.
+                $out['s:' . $value] = $value;
             }
         }
-        return array_keys($out);
+        return array_values($out);
     }
 }
