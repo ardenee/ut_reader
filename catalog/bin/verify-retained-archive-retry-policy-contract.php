@@ -3,12 +3,16 @@
 /** Read-only contract for retained-archive retryability and operator controls. */
 declare(strict_types=1);
 
+use UnrealDb\Catalog\Domain\Jobs\JobType;
+
 if (PHP_SAPI !== 'cli') {
     fwrite(STDERR, "CLI only.\n");
     exit(1);
 }
 
 $root = realpath(dirname(__DIR__)) ?: dirname(__DIR__);
+require_once $root . '/bootstrap/autoload.php';
+
 $read = static function (string $relative) use ($root): string {
     $value = @file_get_contents($root . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relative));
     return is_string($value) ? $value : '';
@@ -57,7 +61,7 @@ $record(
 );
 $record(
     'bulk_retry_includes_profiled_upload_archive_roots',
-    str_contains($bulk, 'retained_parent.job_type="' . \UnrealDb\Catalog\Domain\Jobs\JobType::PROFILED_UPLOAD_BATCH . '"')
+    str_contains($bulk, 'retained_parent.job_type="' . JobType::PROFILED_UPLOAD_BATCH . '"')
         && str_contains($bulk, 'retained_parent.id=j.parent_job_id')
         && str_contains($bulk, 'j.parent_job_id IS NULL OR EXISTS('),
     'Retry-all retained archives must include direct archive source children of profiled upload batches, matching the Background Jobs logical-root model.'
