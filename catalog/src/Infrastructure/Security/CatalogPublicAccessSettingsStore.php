@@ -136,6 +136,13 @@ final class CatalogPublicAccessSettingsStore
     /** @param array<string,mixed> $settings @return array<string,mixed> */
     public function save(PDO $db, array $settings): array
     {
+        $settings = $this->saveDatabase($db, $settings);
+        return $this->publish($settings);
+    }
+
+    /** @param array<string,mixed> $settings @return array<string,mixed> */
+    public function saveDatabase(PDO $db, array $settings): array
+    {
         $settings = self::normalize($settings);
         $statement = $db->prepare(
             'INSERT INTO ue_federation_settings(setting_name,setting_value) VALUES(?,?) '
@@ -144,6 +151,13 @@ final class CatalogPublicAccessSettingsStore
         foreach ($settings as $name => $value) {
             $statement->execute([$name, is_bool($value) ? ($value ? '1' : '0') : (string)$value]);
         }
+        return $settings;
+    }
+
+    /** @param array<string,mixed> $settings @return array<string,mixed> */
+    public function publish(array $settings): array
+    {
+        $settings = self::normalize($settings);
         $this->writeCache($settings);
         self::$requestCache[$this->cachePath()] = $settings;
         return $settings;
