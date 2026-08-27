@@ -14,4 +14,24 @@ use RuntimeException;
 
 final class CatalogInvalidPackageException extends RuntimeException
 {
+    /** @param array<string,mixed> $validationArguments */
+    public function __construct(
+        string $message,
+        private readonly string $validationCode = 'unreal.invalid_package',
+        private readonly array $validationArguments = [],
+        ?\Throwable $previous = null
+    ) {
+        parent::__construct($message, 0, $previous);
+    }
+
+    public function validationCode(): string
+    {
+        return $this->validationCode;
+    }
+
+    /** @return array<string,mixed> */
+    public function validationArguments(): array
+    {
+        return $this->validationArguments;
+    }
 }
