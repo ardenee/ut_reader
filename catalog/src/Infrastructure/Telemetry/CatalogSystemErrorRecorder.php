@@ -21,10 +21,10 @@ final class CatalogSystemErrorRecorder
     private static ?bool $tableAvailable = null;
 
     /** @param array<string,mixed> $data */
-    public static function record(array $data): void
+    public static function record(array $data): bool
     {
         if (self::$busy) {
-            return;
+            return false;
         }
         self::$busy = true;
         try {
@@ -32,13 +32,13 @@ final class CatalogSystemErrorRecorder
             $db = self::connection();
             if (!$db instanceof PDO) {
                 self::fallback($normalized, 'independent error-log database connection unavailable');
-                return;
+                return false;
             }
 
             try {
                 if (!self::tableAvailable($db)) {
                     self::fallback($normalized, 'system error migration not applied');
-                    return;
+                    return false;
                 }
 
                 $now = gmdate('Y-m-d H:i:s');
@@ -71,8 +71,10 @@ final class CatalogSystemErrorRecorder
                     $now,
                     $now,
                 ]);
+                return true;
             } catch (Throwable $failure) {
                 self::fallback($normalized, $failure->getMessage());
+                return false;
             }
         } finally {
             self::$busy = false;
