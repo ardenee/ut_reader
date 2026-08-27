@@ -21,7 +21,7 @@ final class PdoArchiveChildOutcomeQuery
     /**
      * @return array{
      *   total:int,queued:int,running:int,successful:int,duplicate:int,skipped:int,nested_archive:int,
-     *   unverified:int,failed:int,cancelled:int,dead_letter:int,terminal:int
+     *   unverified:int,invalid_ue:int,failed:int,cancelled:int,dead_letter:int,terminal:int
      * }
      */
     public function fetch(int $parentJobId): array
@@ -39,6 +39,7 @@ final class PdoArchiveChildOutcomeQuery
             'skipped' => 0,
             'nested_archive' => 0,
             'unverified' => 0,
+            'invalid_ue' => 0,
             'failed' => 0,
             'cancelled' => 0,
             'dead_letter' => 0,
@@ -97,7 +98,12 @@ final class PdoArchiveChildOutcomeQuery
                     // This is not an archive/read failure and replaying the same
                     // bytes cannot improve the archive outcome.
                     $state['unverified'] += $count;
-                } elseif (in_array($displayStatus, ['failed', 'rejected', 'unverified', 'partial', 'error'], true)) {
+                } elseif (in_array($displayStatus, ['invalid_ue_package', 'rejected'], true)) {
+                    // Container extraction completed. The resulting member bytes
+                    // are not a valid supported Unreal package, so keep the file
+                    // issue separate from archive extraction/retry state.
+                    $state['invalid_ue'] += $count;
+                } elseif (in_array($displayStatus, ['failed', 'unverified', 'partial', 'error'], true)) {
                     $state['failed'] += $count;
                 } else {
                     $state['successful'] += $count;
