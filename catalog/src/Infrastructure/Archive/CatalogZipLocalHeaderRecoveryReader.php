@@ -167,6 +167,84 @@ final class CatalogZipLocalHeaderRecoveryReader
         ];
     }
 
+    /**
+     * Recover one exact ZIP member from authoritative local-header metadata.
+     *
+     * This is used only after the normal ZipArchive member read has failed. The
+     * recovered bytes are accepted only when the same-name local header provides
+     * bounded size/compressed-size metadata and the decoded CRC32 matches it.
+     */
+    public function extractExactMember(
+        string $archivePath,
+        string $entryPath,
+        int $maxBytes
+    ): string {
+        $this->requireSource($archivePath, 'recovery.zip');
+        $entryPath = ltrim(str_replace('\\\\', '/', trim($entryPath)), '/');
+        if ($entryPath === '') {
+            throw new \InvalidArgumentException('ZIP local-header recovery requires an exact member path.');
+        }
+
+        $central = null;
+        foreach ($this->centralEntries($archivePath) as $candidate) {
+            if (hash_equals($entryPath, (string)($candidate['path'] ?? ''))) {
+                $central = $candidate;
+                break;
+            }
+        }
+        if (!is_array($central)) {
+            throw new \RuntimeException(
+                'ZIP local-header recovery could not find central-directory member "' . $entryPath . '".'
+            );
+        }
+
+        $candidatesByPath = $this->localCandidates($archivePath);
+        $candidate = $this->bestCandidate($central, $candidatesByPath[$entryPath] ?? []);
+        if (!is_array($candidate)) {
+            throw new \RuntimeException(
+                'ZIP central directory references "' . $entryPath
+                . '" but no same-name recoverable local member header exists.'
+            );
+        }
+
+        $expected = max(0, (int)($candidate['size'] ?? 0));
+        $maxBytes = max(1, $maxBytes);
+        if ($expected < 1 || $expected > $maxBytes) {
+            throw new \RuntimeException(
+                'Recovered ZIP local member "' . $entryPath . '" has invalid/oversized size '
+                . number_format($expected) . ' bytes.'
+            );
+        }
+
+        $temporary = $this->temporaryPath();
+        $failure = '';
+        $result = $this->decodeCandidate(
+            $archivePath,
+            $candidate,
+            $temporary,
+            $maxBytes,
+            null,
+            $failure
+        );
+        if (!is_array($result)) {
+            @unlink($temporary);
+            throw new \RuntimeException(
+                'Recovered ZIP local member "' . $entryPath . '" could not be decoded: '
+                . ($failure !== '' ? $failure : 'unknown local-header decode failure')
+            );
+        }
+
+        clearstatcache(true, $temporary);
+        $actual = filesize($temporary);
+        if ($actual === false || (int)$actual !== (int)$result['bytes'] || (int)$actual !== $expected) {
+            @unlink($temporary);
+            throw new \RuntimeException(
+                'Recovered ZIP local member "' . $entryPath . '" output size verification failed.'
+            );
+        }
+        return $temporary;
+    }
+
     /** @return list<array<string,mixed>> */
     private function centralEntries(string $archivePath): array
     {
