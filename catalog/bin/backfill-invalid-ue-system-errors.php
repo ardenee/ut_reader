@@ -49,6 +49,12 @@ try {
                 $queues[] = $queue;
             }
         }
+        if ($queues === []) {
+            $fallbackQueue = trim((string)($config['queue']['name'] ?? 'catalog'));
+            if ($fallbackQueue !== '') {
+                $queues[] = $fallbackQueue;
+            }
+        }
     }
 
     $results = [];
