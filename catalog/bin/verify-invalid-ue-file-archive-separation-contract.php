@@ -27,6 +27,9 @@ $fileTreeProjector = $read('src/Infrastructure/Jobs/CatalogBackgroundJobFileTree
 $display = $read('src/Infrastructure/Jobs/CatalogJobDisplayStatus.php');
 $bulk = $read('src/Infrastructure/Persistence/PdoBackgroundJobBulkAction.php');
 $reporter = $read('src/Infrastructure/Telemetry/CatalogInvalidUeFileReporter.php');
+$classifier = $read('src/Application/Telemetry/CatalogInvalidUeErrorClassifier.php');
+$invalidException = $read('src/Infrastructure/Import/CatalogInvalidPackageException.php');
+$indexer = $read('src/Infrastructure/Import/CatalogUnverifiedPackageIndexer.php');
 $systemRecorder = $read('src/Infrastructure/Telemetry/CatalogSystemErrorRecorder.php');
 $backfill = $read('src/Infrastructure/Persistence/PdoInvalidUeSystemErrorBackfill.php');
 $repair = $read('src/Infrastructure/Persistence/PdoArchiveProfileMismatchOutcomeRepair.php');
@@ -80,13 +83,25 @@ $record(
 $record(
     'system_error_type_is_file_validation_not_job_retry',
     str_contains($reporter, "'source_kind' => 'unreal-file-validation'")
-        && str_contains($reporter, "'error_type' => 'InvalidUnrealPackage'")
-        && str_contains($reporter, '\'route\' => $route')
-        && str_contains($reporter, "'disposition' => 'invalid_ue_file'")
-        && str_contains($reporter, '\'source_provenance\' => $archiveMember ? \'archive_member\' : \'direct_file\'')
-        && str_contains($reporter, '$context[\'archive_source_name\'] = $archiveSourceName')
-        && str_contains($reporter, '\'md5\' => $md5'),
-    'System Errors must identify invalid UE content and distinguish direct files from archive members without inventing archive provenance.'
+        && str_contains($reporter, "'error_type' => \$classified['error_type']")
+        && str_contains($reporter, "'validation_code' => \$classified['code']")
+        && str_contains($reporter, "'validation_group' => \$classified['group']")
+        && str_contains($reporter, "'validation_arguments' => \$classified['arguments']")
+        && str_contains($reporter, "'source_file' => ''")
+        && !str_contains($reporter, "'trace_text' =>")
+        && str_contains($classifier, "'error_type' => 'InvalidUnrealPackage.' . \$code"),
+    'Invalid UE System Errors must use stable validation error types/arguments and omit parser traces.'
+);
+
+$record(
+    'structured_reader_validation_is_propagated',
+    str_contains($invalidException, 'function validationCode(): string')
+        && str_contains($invalidException, 'function validationArguments(): array')
+        && str_contains($indexer, "method_exists(\$reader, 'getValidationIssues')")
+        && str_contains($indexer, 'new CatalogInvalidPackageException(')
+        && str_contains($bucket, "\$error instanceof CatalogInvalidPackageException")
+        && str_contains($staged, "\$error->validationArguments()"),
+    'Reader validation codes and arguments must reach System Error reporting without being reconstructed from stack-trace text.'
 );
 
 $record(
@@ -207,6 +222,9 @@ $record(
 
 $syntaxFailures = [];
 foreach ([
+    $root . '/src/Application/Telemetry/CatalogInvalidUeErrorClassifier.php',
+    $root . '/src/Infrastructure/Import/CatalogInvalidPackageException.php',
+    $root . '/src/Infrastructure/Import/CatalogUnverifiedPackageIndexer.php',
     $root . '/src/Infrastructure/Telemetry/CatalogSystemErrorRecorder.php',
     $root . '/src/Infrastructure/Telemetry/CatalogInvalidUeFileReporter.php',
     $root . '/src/Infrastructure/Persistence/PdoInvalidUeSystemErrorBackfill.php',
