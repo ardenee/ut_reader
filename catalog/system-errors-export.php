@@ -36,8 +36,166 @@ function system_error_export_redact(mixed $value, string $key = ''): mixed
 
 function system_error_export_code_fence(string $value): string
 {
-    // A longer fence prevents trace/context content containing ``` from terminating the block.
     return "````text\n" . rtrim($value) . "\n````\n";
+}
+
+/** @return array<string,mixed> */
+function system_error_export_context(string $raw): array
+{
+    $raw = trim($raw);
+    if ($raw === '') {
+        return [];
+    }
+    try {
+        $decoded = json_decode($raw, true, 512, JSON_THROW_ON_ERROR);
+        return is_array($decoded) ? system_error_export_redact($decoded) : [];
+    } catch (Throwable) {
+        return [];
+    }
+}
+
+/** @param array<string,mixed> $context */
+function system_error_export_location(array $context): string
+{
+    foreach ([
+        'source_relative_path',
+        'job_source_relative_path',
+        'archive_source_relative_path',
+        'parent_source_relative_path',
+    ] as $key) {
+        $value = trim((string)($context[$key] ?? ''));
+        if ($value !== '') {
+            return $value;
+        }
+    }
+
+    $archive = trim((string)($context['archive_source_name'] ?? ''));
+    $entry = trim((string)($context['archive_entry_path'] ?? ''));
+    if ($archive !== '' && $entry !== '') {
+        return rtrim($archive, '/\\') . '/' . ltrim($entry, '/\\');
+    }
+    if ($archive !== '') {
+        return $archive;
+    }
+
+    foreach (['file_name', 'original_name', 'job_original_name'] as $key) {
+        $value = trim((string)($context[$key] ?? ''));
+        if ($value !== '') {
+            return $value;
+        }
+    }
+    return 'Unknown';
+}
+
+/** @param array<string,mixed> $context */
+function system_error_export_title(array $row, array $context): string
+{
+    foreach (['file_name', 'original_name', 'job_original_name', 'archive_source_name'] as $key) {
+        $value = trim((string)($context[$key] ?? ''));
+        if ($value !== '') {
+            return $value;
+        }
+    }
+    return trim((string)($row['error_type'] ?? 'System error')) ?: 'System error';
+}
+
+/** @param array<string,mixed> $context */
+function system_error_export_reason(array $row, array $context): string
+{
+    $message = trim((string)($row['message'] ?? ''));
+    $fileName = trim((string)($context['file_name'] ?? ''));
+    if ($fileName !== '' && str_starts_with($message, $fileName . ':')) {
+        $message = trim(substr($message, strlen($fileName) + 1));
+    }
+
+    $errors = is_array($context['errors'] ?? null) ? $context['errors'] : [];
+    if ($errors !== []) {
+        $parts = [];
+        foreach ($errors as $error) {
+            if (!is_array($error)) {
+                continue;
+            }
+            $member = trim((string)($error['file'] ?? ''));
+            $detail = trim((string)($error['error'] ?? ''));
+            if ($member !== '' || $detail !== '') {
+                $parts[] = ($member !== '' ? $member . ': ' : '') . $detail;
+            }
+        }
+        if ($parts !== []) {
+            return implode(' | ', $parts);
+        }
+    }
+
+    if (preg_match('/UMOD-family archive CRC does not match its footer/i', $message) === 1) {
+        return 'UMOD CRC mismatch';
+    }
+    if (preg_match('/ZIP decompression failed/i', $message) === 1) {
+        return 'ZIP decompression failed';
+    }
+
+    $message = preg_replace('/^catalog\.[^ ]+\s+#\d+\s+[a-z_]+:\s*/i', '', $message) ?? $message;
+    $message = preg_replace('/\s+Archive:\s+.+?(?:\s+Entry:\s+.+)?$/i', '', $message) ?? $message;
+    return trim($message) !== '' ? trim($message) : (string)($row['error_type'] ?? 'System error');
+}
+
+/**
+ * @param array<string,mixed> $context
+ * @return array<string,string|int|float|bool>
+ */
+function system_error_export_values(array $row, array $context): array
+{
+    $values = [];
+    $arguments = is_array($context['validation_arguments'] ?? null)
+        ? $context['validation_arguments']
+        : [];
+    foreach ($arguments as $key => $value) {
+        if (is_scalar($value) || $value === null) {
+            $values[(string)$key] = $value === null ? '' : $value;
+        }
+    }
+
+    if ($values === [] && (string)($row['error_type'] ?? '') === 'ArchivePartialFailure') {
+        foreach (['archive_entries', 'queued_files', 'skipped_files', 'failed_files'] as $key) {
+            if (isset($context[$key]) && is_scalar($context[$key])) {
+                $values[$key] = $context[$key];
+            }
+        }
+    }
+
+    $message = (string)($row['message'] ?? '');
+    if (preg_match(
+        '/expected=([0-9A-F]+);\s*actual=([0-9A-F]+);\s*checked_bytes=([0-9,]+)/i',
+        $message,
+        $match
+    ) === 1) {
+        $values['expected_crc'] = strtoupper($match[1]);
+        $values['actual_crc'] = strtoupper($match[2]);
+        $values['checked_bytes'] = (int)str_replace(',', '', $match[3]);
+    }
+    if (preg_match('/ZIP decompression failed\s*\((-?\d+)\)/i', $message, $match) === 1) {
+        $values['decoder_code'] = (int)$match[1];
+    }
+    if (preg_match('/archive member "([^"]+)"/i', $message, $match) === 1) {
+        $values['member'] = $match[1];
+    }
+
+    return $values;
+}
+
+/** @param array<string,string|int|float|bool> $values */
+function system_error_export_values_text(array $values): string
+{
+    if ($values === []) {
+        return 'none';
+    }
+    $parts = [];
+    foreach ($values as $key => $value) {
+        if (is_bool($value)) {
+            $value = $value ? 'true' : 'false';
+        }
+        $parts[] = $key . '=' . (string)$value;
+    }
+    return implode(', ', $parts);
 }
 
 try {
@@ -127,49 +285,16 @@ try {
     echo "\n";
 
     foreach ($rows as $row) {
-        echo '## #' . (int)$row['id'] . ' — ' . (string)$row['error_type'] . "\n\n";
-        echo '- Status: `' . (string)$row['status'] . "`\n";
-        echo '- Severity: `' . (string)$row['severity'] . "`\n";
-        echo '- Source: `' . (string)$row['source_kind'] . "`\n";
-        echo '- Occurrences: ' . number_format((int)$row['occurrence_count']) . "\n";
-        echo '- First seen: ' . (string)$row['first_seen_at'] . "\n";
-        echo '- Last seen: ' . (string)$row['last_seen_at'] . "\n";
-        if ((string)($row['resolved_at'] ?? '') !== '') {
-            echo '- Resolved: ' . (string)$row['resolved_at'] . "\n";
-        }
-        echo '- Request: `' . (string)$row['request_method'] . ' ' . (string)$row['route'] . "`\n";
-        echo '- HTTP: ' . (int)$row['http_status'] . "\n";
-        echo '- Request ID: `' . (string)$row['request_id'] . "`\n";
-        if ((string)$row['source_file'] !== '') {
-            echo '- Source location: `' . str_replace('`', '\\`', (string)$row['source_file']) . ':' . (int)$row['source_line'] . "`\n";
-        }
-        echo "\n**Message**\n\n" . trim((string)$row['message']) . "\n\n";
+        $context = system_error_export_context((string)($row['context_json'] ?? ''));
+        $title = system_error_export_title($row, $context);
+        $reason = system_error_export_reason($row, $context);
+        $values = system_error_export_values($row, $context);
+        $location = system_error_export_location($context);
 
-        $context = [];
-        $rawContext = trim((string)($row['context_json'] ?? ''));
-        if ($rawContext !== '') {
-            try {
-                $decoded = json_decode($rawContext, true, 512, JSON_THROW_ON_ERROR);
-                $context = is_array($decoded) ? system_error_export_redact($decoded) : [];
-            } catch (Throwable) {
-                $context = ['unparsed_context' => '[context JSON could not be decoded]'];
-            }
-        }
-        if ($context !== []) {
-            $encoded = json_encode($context, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-            if (is_string($encoded)) {
-                echo "**Context**\n\n" . system_error_export_code_fence($encoded) . "\n";
-            }
-        }
-
-        $trace = trim((string)($row['trace_text'] ?? ''));
-        if ($trace !== '') {
-            echo "**Trace**\n\n" . system_error_export_code_fence($trace) . "\n";
-        }
-        $resolution = trim((string)($row['resolution_note'] ?? ''));
-        if ($resolution !== '') {
-            echo "**Resolution note**\n\n" . $resolution . "\n\n";
-        }
+        echo '## ' . str_replace(["\r", "\n"], ' ', $title) . "\n\n";
+        echo '**Error:** ' . str_replace(["\r", "\n"], ' ', $reason) . "\n\n";
+        echo '**Values:** ' . system_error_export_values_text($values) . "\n\n";
+        echo '**Location:** `' . str_replace('`', '\\`', $location) . "`\n\n";
         echo "---\n\n";
     }
 } catch (Throwable $error) {
