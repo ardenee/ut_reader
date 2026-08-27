@@ -10,6 +10,8 @@ declare(strict_types=1);
 
 namespace UnrealDb\Catalog\Infrastructure\Telemetry;
 
+use UnrealDb\Catalog\Application\Telemetry\CatalogInvalidUeErrorClassifier;
+
 final class CatalogInvalidUeFileReporter
 {
     /** @param array<string,mixed> $data */
@@ -28,6 +30,12 @@ final class CatalogInvalidUeFileReporter
         $archiveSourceName = trim((string)($data['archive_source_name'] ?? ''));
         $archiveEntryPath = trim(str_replace('\\', '/', (string)($data['archive_entry_path'] ?? '')), '/');
         $reason = trim((string)($data['reason'] ?? 'Invalid Unreal package.'));
+        $classified = CatalogInvalidUeErrorClassifier::classify(
+            $reason,
+            trim((string)($data['error_code'] ?? '')),
+            is_array($data['arguments'] ?? null) ? $data['arguments'] : []
+        );
+        $reason = $classified['reason'];
         $md5 = strtolower(trim((string)($data['md5'] ?? '')));
         $sha1 = strtolower(trim((string)($data['sha1'] ?? '')));
         $size = max(0, (int)($data['size'] ?? 0));
@@ -54,6 +62,9 @@ final class CatalogInvalidUeFileReporter
             'job_type' => $jobType,
             'disposition' => 'invalid_ue_file',
             'source_provenance' => $archiveMember ? 'archive_member' : 'direct_file',
+            'validation_code' => $classified['code'],
+            'validation_group' => $classified['group'],
+            'validation_arguments' => $classified['arguments'],
             'file_id' => $fileId,
             'game_id' => $gameId,
             'file_name' => $fileName,
@@ -74,10 +85,10 @@ final class CatalogInvalidUeFileReporter
         return CatalogSystemErrorRecorder::record([
             'source_kind' => 'unreal-file-validation',
             'severity' => 'error',
-            'error_type' => 'InvalidUnrealPackage',
-            'message' => 'Invalid Unreal package ' . $fileName . ': ' . $reason,
+            'error_type' => $classified['error_type'],
+            'message' => $fileName . ': ' . $reason,
             'route' => $route,
-            'source_file' => __FILE__,
+            'source_file' => '',
             'source_line' => 0,
             'user_id' => $userId,
             'context' => $context,
