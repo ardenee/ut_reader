@@ -16,8 +16,10 @@ $read = static function (string $relative) use ($root): string {
 
 $uiPath = $root . '/assets/background-jobs-archive-errors.js';
 $bulkPath = $root . '/src/Infrastructure/Persistence/PdoBackgroundJobBulkAction.php';
+$retryPolicyPath = $root . '/src/Application/Jobs/JobFailureRetryPolicy.php';
 $ui = $read('assets/background-jobs-archive-errors.js');
 $bulk = $read('src/Infrastructure/Persistence/PdoBackgroundJobBulkAction.php');
+$retryPolicy = $read('src/Application/Jobs/JobFailureRetryPolicy.php');
 $checks = [];
 $failures = [];
 $record = static function (string $name, bool $ok, string $detail) use (&$checks, &$failures): void {
@@ -47,6 +49,13 @@ $record(
     'ZIP stream/size failures must remain operator-retryable because exact local-header recovery can now decode and CRC-verify those members.'
 );
 $record(
+    'libarchive_zip_failures_are_not_deterministic',
+    !str_contains($retryPolicy, "'extra data overflow',")
+        && !str_contains($retryPolicy, "'libarchive member stream stopped unexpectedly',")
+        && str_contains($retryPolicy, 'native ZIP/local-header recovery path may still decode'),
+    'libarchive ZIP stream/header failures must be replayable after native/local-header decoder improvements.'
+);
+$record(
     'bulk_retry_excludes_decoder_blocked_archives',
     str_contains($bulk, 'decoderBlockedArchiveSql(')
         && str_contains($bulk, 'AND NOT ')
@@ -64,7 +73,7 @@ $record(
 );
 
 $syntaxFailures = [];
-foreach ([$bulkPath] as $path) {
+foreach ([$bulkPath, $retryPolicyPath] as $path) {
     $pipes = [];
     $process = @proc_open([PHP_BINARY, '-l', $path], [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
     if (!is_resource($process)) {
