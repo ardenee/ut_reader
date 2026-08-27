@@ -12,6 +12,7 @@ use PDO;
 use Throwable;
 use UnrealDb\Catalog\Application\Jobs\JobFailureRetryPolicy;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogImportOutcome;
+use UnrealDb\Catalog\Infrastructure\Import\CatalogInvalidPackageException;
 use UnrealDb\Catalog\Application\Jobs\JobExecutionContext;
 use UnrealDb\Catalog\Application\Jobs\JobHandler;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
@@ -186,6 +187,8 @@ final class CatalogBucketStagedPackageJobHandler implements JobHandler
                     'md5' => $md5,
                     'sha1' => $sha1,
                     'reason' => $this->errorText($error),
+                    'error_code' => $error instanceof CatalogInvalidPackageException ? $error->validationCode() : '',
+                    'arguments' => $error instanceof CatalogInvalidPackageException ? $error->validationArguments() : [],
                 ]);
                 $context->checkpoint([
                     'stage' => 'complete',
@@ -234,6 +237,8 @@ final class CatalogBucketStagedPackageJobHandler implements JobHandler
                     'md5' => $md5,
                     'sha1' => $sha1,
                     'reason' => $this->errorText($error),
+                    'error_code' => $error instanceof CatalogInvalidPackageException ? $error->validationCode() : '',
+                    'arguments' => $error instanceof CatalogInvalidPackageException ? $error->validationArguments() : [],
                 ]);
                 $context->checkpoint([
                     'stage' => 'complete',
