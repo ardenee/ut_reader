@@ -23,6 +23,7 @@ use UnrealDb\Catalog\Infrastructure\Import\CatalogInvalidPackageException;
 $classifier = $read('src/Application/Telemetry/CatalogInvalidUeErrorClassifier.php');
 $exception = $read('src/Infrastructure/Import/CatalogInvalidPackageException.php');
 $indexer = $read('src/Infrastructure/Import/CatalogUnverifiedPackageIndexer.php');
+$verifiedInspector = $read('src/Infrastructure/Import/CatalogVerifiedPackageInspector.php');
 $reporter = $read('src/Infrastructure/Telemetry/CatalogInvalidUeFileReporter.php');
 $bucket = $read('src/Infrastructure/Jobs/CatalogBucketStagedPackageJobHandler.php');
 $staged = $read('src/Infrastructure/Jobs/CatalogStagedImportJobHandler.php');
@@ -159,6 +160,8 @@ $record(
     'structured_validation_reaches_system_errors',
     str_contains($indexer, 'method_exists($reader, \'getValidationIssues\')')
         && str_contains($indexer, 'new CatalogInvalidPackageException(')
+        && str_contains($verifiedInspector, 'method_exists($package, \'getValidationIssues\')')
+        && str_contains($verifiedInspector, 'new CatalogInvalidPackageException(')
         && str_contains($bucket, '\'error_code\' => $error instanceof CatalogInvalidPackageException')
         && str_contains($bucket, '\'arguments\' => $error instanceof CatalogInvalidPackageException')
         && str_contains($staged, '\'arguments\' => $error instanceof CatalogInvalidPackageException')
@@ -206,6 +209,7 @@ $record(
     str_contains($fingerprint, '/src/Application/Telemetry/CatalogInvalidUeErrorClassifier.php')
         && str_contains($fingerprint, '/src/Infrastructure/Import/CatalogInvalidPackageException.php')
         && str_contains($fingerprint, '/src/Infrastructure/Import/CatalogUnverifiedPackageIndexer.php')
+        && str_contains($fingerprint, '/src/Infrastructure/Import/CatalogVerifiedPackageInspector.php')
         && str_contains($fingerprint, '/parsers/EpicUE3PackageReader.php'),
     'Detached workers must restart when validation/error-standardization code changes.'
 );
@@ -215,6 +219,7 @@ foreach ([
     $root . '/src/Application/Telemetry/CatalogInvalidUeErrorClassifier.php',
     $root . '/src/Infrastructure/Import/CatalogInvalidPackageException.php',
     $root . '/src/Infrastructure/Import/CatalogUnverifiedPackageIndexer.php',
+    $root . '/src/Infrastructure/Import/CatalogVerifiedPackageInspector.php',
     $root . '/src/Infrastructure/Telemetry/CatalogInvalidUeFileReporter.php',
     $root . '/src/Infrastructure/Jobs/CatalogBucketStagedPackageJobHandler.php',
     $root . '/src/Infrastructure/Jobs/CatalogStagedImportJobHandler.php',
