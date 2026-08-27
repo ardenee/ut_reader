@@ -19,6 +19,7 @@ use UnrealDb\Catalog\Application\Jobs\JobExecutionContext;
 use UnrealDb\Catalog\Application\Jobs\JobHandler;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
+use UnrealDb\Catalog\Infrastructure\Import\CatalogImportOutcome;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogImportPathPolicy;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogIncomingFileStore;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoArchiveChildOutcomeQuery;
@@ -221,17 +222,23 @@ final class CatalogArchiveMemberContentRoutingJobHandler implements JobHandler
 
         $failed = max(0, (int)$state['failed']);
         $cancelled = max(0, (int)$state['cancelled']);
+        $invalidUe = max(0, (int)($state['invalid_ue'] ?? 0));
         $partial = $failed > 0 || $cancelled > 0;
         $childDetail = $this->nestedChildDetail($job->id);
         $message = $partial
             ? 'Nested archive content finished with ' . number_format($failed) . ' failed and '
                 . number_format($cancelled) . ' cancelled child workflow(s).'
-            : 'Nested archive content processed successfully.';
+            : ($invalidUe > 0
+                ? 'Nested archive extraction completed; '
+                    . number_format($invalidUe) . ' invalid UE file' . ($invalidUe === 1 ? '' : 's') . ' found.'
+                : 'Nested archive content processed successfully.');
         if ($childDetail !== '') {
             $message .= ' ' . $childDetail;
         }
 
-        $status = $partial ? 'partial' : 'nested_archive';
+        $status = $partial
+            ? 'partial'
+            : ($invalidUe > 0 ? CatalogImportOutcome::ARCHIVE_INVALID_FILES : 'nested_archive');
         $context->checkpoint([
             'archive_member_router_version' => self::ROUTER_VERSION,
             'stage' => 'complete',
