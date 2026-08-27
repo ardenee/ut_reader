@@ -149,6 +149,17 @@ $record(
 );
 
 $record(
+    'historical_parser_dead_letters_become_non_retryable_invalid_ue',
+    str_contains($repair, 'status IN ("failed","dead_letter")')
+        && str_contains($repair, 'JobType::PROCESS_BUCKET_UPLOAD')
+        && str_contains($repair, 'JobFailureRetryPolicy::isInvalidPackageContentText($jobType, $message)')
+        && str_contains($repair, 'status="completed",result_json=?,progress_json=?')
+        && str_contains($repair, 'CatalogImportOutcome::INVALID_UE_PACKAGE')
+        && str_contains($repair, "'system_error_recorded' => false"),
+    'Old deterministic package parser failures must be repaired from the ledger into invalid UE/System Error outcomes without another retry.'
+);
+
+$record(
     'historical_invalid_ue_backfill_is_idempotent_and_metadata_only',
     str_contains($backfill, 'display_status="invalid_ue_package"')
         && str_contains($backfill, '$.system_error_recorded')
