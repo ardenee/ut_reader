@@ -128,17 +128,42 @@ final class JobFailureRetryPolicy
             }
         }
 
+        return self::isInvalidPackageContentMessage($message);
+    }
+
+    /**
+     * True only when immutable member bytes themselves are not a valid supported
+     * Unreal package. This deliberately excludes missing storage/database/runtime
+     * failures even when those failures are also deterministic.
+     */
+    public static function isInvalidPackageContentText(string $jobType, string $message): bool
+    {
+        if (!in_array($jobType, [
+            JobType::PROCESS_BUCKET_UPLOAD,
+            JobType::PROCESS_BUCKET_STAGED_PACKAGE,
+            JobType::IMPORT_STAGED_PACKAGE,
+        ], true)) {
+            return false;
+        }
+        return self::isInvalidPackageContentMessage(strtolower(trim($message)));
+    }
+
+    private static function isInvalidPackageContentMessage(string $message): bool
+    {
+        if ($message === '') {
+            return false;
+        }
+
         // These failures describe immutable package bytes that contradict their
         // own UE serialization metadata. Retrying cannot add the missing bytes or
-        // change the recorded table/chunk boundaries. In particular, Epic UE3
-        // compressed packages declare physical CompressedOffset/CompressedSize;
-        // if a declared range extends past EOF the package is incomplete.
+        // change the recorded table/chunk boundaries.
         foreach ([
+            'does not contain a supported unreal package header',
+            'unreal package magic not found',
             'epic ue3 compressed chunk exceeds physical package size',
             'negative epic ue3 compressed chunk field',
             'invalid first epic ue3 compressed chunk offset',
             'overlapping epic ue3 compressed chunk ranges are invalid',
-            'nested archive depth limit of ',
             'invalid names table count:',
             'invalid names table offset:',
             'invalid exports table count:',
