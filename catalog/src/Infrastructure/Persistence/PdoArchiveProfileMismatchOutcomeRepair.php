@@ -14,6 +14,7 @@ namespace UnrealDb\Catalog\Infrastructure\Persistence;
 
 use PDO;
 use UnrealDb\Catalog\Application\Jobs\JobFailureRetryPolicy;
+use UnrealDb\Catalog\Application\Telemetry\CatalogInvalidUeErrorClassifier;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogImportOutcome;
 
@@ -178,6 +179,7 @@ final class PdoArchiveProfileMismatchOutcomeRepair
 
                 $payload = $this->jsonObject((string)($row['payload_json'] ?? ''));
                 $progress = $this->jsonObject((string)($row['progress_json'] ?? ''));
+                $validation = CatalogInvalidUeErrorClassifier::classify($message);
                 $originalName = trim((string)($payload['original_name'] ?? ''));
                 $sourceRelativePath = trim((string)($payload['source_relative_path'] ?? $originalName));
                 $operation = match ($jobType) {
@@ -189,10 +191,12 @@ final class PdoArchiveProfileMismatchOutcomeRepair
                 $result = [
                     'operation' => $operation,
                     'status' => CatalogImportOutcome::INVALID_UE_PACKAGE,
-                    'message' => $message,
+                    'message' => $validation['reason'],
                     'original_name' => $originalName,
                     'source_relative_path' => $sourceRelativePath,
                     'outcome_class' => 'invalid_ue_package',
+                    'validation_code' => $validation['code'],
+                    'validation_arguments' => $validation['arguments'],
                     'system_error_recorded' => false,
                 ];
                 foreach (['file_id', 'md5', 'sha1', 'size', 'bytes', 'archive_source_name', 'archive_entry_path'] as $field) {
@@ -206,9 +210,12 @@ final class PdoArchiveProfileMismatchOutcomeRepair
                 $progress['total'] = 100;
                 $progress['percent'] = 100;
                 $progress['status'] = CatalogImportOutcome::INVALID_UE_PACKAGE;
-                $progress['message'] = 'Invalid Unreal package; recorded as a non-retryable data-quality outcome. ' . $message;
-                $progress['error'] = $message;
+                $progress['message'] = 'Invalid Unreal package; recorded as a non-retryable data-quality outcome. '
+                    . $validation['reason'];
+                $progress['error'] = $validation['reason'];
                 $progress['outcome_class'] = 'invalid_ue_package';
+                $progress['validation_code'] = $validation['code'];
+                $progress['validation_arguments'] = $validation['arguments'];
                 $progress['system_error_recorded'] = false;
 
                 $now = gmdate('Y-m-d H:i:s');
