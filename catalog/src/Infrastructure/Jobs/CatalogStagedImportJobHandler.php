@@ -20,6 +20,7 @@ use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogImportOutcome;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogInvalidPackageException;
+use UnrealDb\Catalog\Infrastructure\Import\CatalogProfileMismatchException;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogIncomingFileStore;
 use UnrealDb\Catalog\Infrastructure\Import\PdoCatalogPackageImporter;
 use UnrealDb\Catalog\Infrastructure\Legacy\LegacyUnverifiedFileStager;
@@ -246,8 +247,13 @@ final class CatalogStagedImportJobHandler implements JobHandler
                     $shortError
                 );
                 $profileMismatch = $staged !== null
-                    && CatalogImportOutcome::isProfileMismatchMessage($shortError)
-                    && !$invalidPackageContent;
+                    && (
+                        $error instanceof CatalogProfileMismatchException
+                        || (
+                            CatalogImportOutcome::isProfileMismatchMessage($shortError)
+                            && !$invalidPackageContent
+                        )
+                    );
                 $invalidUePackage = !$profileMismatch
                     && $error instanceof CatalogInvalidPackageException;
                 $outcomeStatus = $profileMismatch
