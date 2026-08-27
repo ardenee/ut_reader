@@ -126,24 +126,37 @@ final class CatalogPublicResponseCacheService
     public static function invalidate(array $config): int
     {
         $directory = self::directory($config);
-        if (!is_dir($directory)) {
+        if (!is_dir($directory)
+            && !@mkdir($directory, 0775, true)
+            && !is_dir($directory)) {
             return 0;
         }
 
-        $removed = 0;
-        foreach (new FilesystemIterator($directory, FilesystemIterator::SKIP_DOTS) as $entry) {
-            if (!$entry instanceof SplFileInfo || !$entry->isFile()) {
-                continue;
-            }
-            $name = $entry->getFilename();
-            if (!str_ends_with($name, '.htmlcache')) {
-                continue;
-            }
-            if (@unlink($entry->getPathname())) {
-                $removed++;
-            }
+        // Invalidation must stay constant-time. Re-key the cache namespace with
+        // one tiny generation file instead of walking/deleting every cached page.
+        // Existing files immediately become unreachable and bounded pruning
+        // removes them later without delaying an administrator settings save.
+        $path = $directory . DIRECTORY_SEPARATOR . '.generation';
+        $handle = @fopen($path, 'c+b');
+        if (!is_resource($handle)) {
+            return 0;
         }
-        return $removed;
+        try {
+            if (!@flock($handle, LOCK_EX)) {
+                return 0;
+            }
+            $token = bin2hex(random_bytes(16));
+            rewind($handle);
+            if (!@ftruncate($handle, 0)
+                || @fwrite($handle, $token) !== strlen($token)
+                || !@fflush($handle)) {
+                return 0;
+            }
+            return 1;
+        } finally {
+            @flock($handle, LOCK_UN);
+            @fclose($handle);
+        }
     }
 
     public static function pruneDirectory(string $directory): void
@@ -264,7 +277,8 @@ final class CatalogPublicResponseCacheService
         }
 
         $cache = is_array($config['cache'] ?? null) ? $config['cache'] : [];
-        $identityHash = hash('sha256', $script . "\n" . $query);
+        $generation = self::generationToken($directory);
+        $identityHash = hash('sha256', $generation . "\n" . $script . "\n" . $query);
         $boundedSearch = self::isSearchRoute($script);
         if ($boundedSearch) {
             $slots = max(
@@ -403,6 +417,25 @@ final class CatalogPublicResponseCacheService
                 @flock($lock, LOCK_UN);
                 fclose($lock);
             }
+        }
+    }
+
+    private static function generationToken(string $directory): string
+    {
+        $path = rtrim($directory, '/\\') . DIRECTORY_SEPARATOR . '.generation';
+        $handle = @fopen($path, 'rb');
+        if (!is_resource($handle)) {
+            return '0';
+        }
+        try {
+            if (!@flock($handle, LOCK_SH)) {
+                return '0';
+            }
+            $token = trim((string)stream_get_contents($handle));
+            return preg_match('/^[a-f0-9]{32}$/', $token) === 1 ? $token : '0';
+        } finally {
+            @flock($handle, LOCK_UN);
+            @fclose($handle);
         }
     }
 
