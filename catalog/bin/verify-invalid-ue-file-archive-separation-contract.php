@@ -72,10 +72,18 @@ $record(
 $record(
     'archive_child_rollup_separates_invalid_ue',
     str_contains($children, "'invalid_ue' => 0")
-        && str_contains($children, "['invalid_ue_package', 'rejected']")
+        && str_contains($children, "['invalid_ue_package', 'invalid_files', 'rejected']")
         && str_contains($children, '$state[\'invalid_ue\'] += $count')
         && str_contains($children, "['failed', 'unverified', 'partial', 'error']"),
     'Invalid UE children must not increment the archive failed counter.'
+);
+
+$record(
+    'nested_archive_invalid_files_propagates_without_partial',
+    str_contains($children, "['invalid_ue_package', 'invalid_files', 'rejected']")
+        && str_contains($workflow, 'CatalogImportOutcome::ARCHIVE_INVALID_FILES')
+        && str_contains($projector, "['invalid_ue_package', 'invalid_files', 'rejected']"),
+    'Invalid UE status must survive nested archive layers without becoming an extraction failure.'
 );
 
 $record(
