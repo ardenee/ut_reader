@@ -52,7 +52,7 @@ $record(
     'libarchive_zip_failures_are_not_deterministic',
     !str_contains($retryPolicy, "'extra data overflow',")
         && !str_contains($retryPolicy, "'libarchive member stream stopped unexpectedly',")
-        && str_contains($retryPolicy, 'native ZIP/local-header recovery path may still decode'),
+        && str_contains($retryPolicy, 'Keeping these retryable also lets an operator re-run retained archives'),
     'libarchive ZIP stream/header failures must be replayable after native/local-header decoder improvements.'
 );
 $record(
@@ -67,7 +67,7 @@ $record(
 $record(
     'retry_all_is_explicitly_retryable_only',
     str_contains($ui, "setText(retryMatchingButton, 'Retry retryable archives')")
-        && str_contains($ui, 'Decoder-blocked archives are deliberately excluded.')
+        && str_contains($ui, 'Decoder-blocked retained archives are deliberately excluded.')
         && str_contains($ui, 'visibleRetryableCount() < 1'),
     'Bulk recovery controls must distinguish retained source count from currently retryable archive count.'
 );
