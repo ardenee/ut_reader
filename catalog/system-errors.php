@@ -91,6 +91,7 @@ try {
     $status = system_error_filter((string)($_GET['status'] ?? 'open'), ['open', 'resolved', 'ignored', 'all'], 'open');
     $severity = system_error_filter((string)($_GET['severity'] ?? 'all'), ['debug', 'info', 'warning', 'error', 'critical', 'all'], 'all');
     $source = preg_replace('/[^a-z0-9._:-]+/', '', strtolower(trim((string)($_GET['source'] ?? 'all')))) ?: 'all';
+    $errorType = preg_replace('/[^A-Za-z0-9._:-]+/', '', trim((string)($_GET['type'] ?? 'all'))) ?: 'all';
     $search = system_error_search((string)($_GET['q'] ?? ''));
     $perPage = (int)($_GET['per_page'] ?? 100);
     if (!in_array($perPage, [50, 100, 250, 500], true)) {
@@ -100,6 +101,7 @@ try {
 
     $counts = ['open' => 0, 'resolved' => 0, 'ignored' => 0, 'all' => 0];
     $sourceOptions = [];
+    $typeOptions = [];
     $rows = [];
     $total = 0;
     $pages = 1;
@@ -118,6 +120,12 @@ try {
                 $sourceOptions[$key] = (int)$row['c'];
             }
         }
+        foreach (catalog_all($db, 'SELECT error_type,COUNT(*) c FROM ue_system_errors GROUP BY error_type ORDER BY error_type') as $row) {
+            $key = trim((string)($row['error_type'] ?? ''));
+            if ($key !== '') {
+                $typeOptions[$key] = (int)$row['c'];
+            }
+        }
 
         $where = [];
         $args = [];
@@ -132,6 +140,10 @@ try {
         if ($source !== 'all') {
             $where[] = 'source_kind=?';
             $args[] = $source;
+        }
+        if ($errorType !== 'all') {
+            $where[] = 'error_type=?';
+            $args[] = $errorType;
         }
         if ($search !== '') {
             $where[] = '(message LIKE ? OR error_type LIKE ? OR route LIKE ? OR source_file LIKE ? OR request_id LIKE ? '
@@ -217,6 +229,11 @@ try {
         echo '<option value="' . catalog_h($value) . '"' . ($source === $value ? ' selected' : '') . '>'
             . catalog_h($value) . ' (' . $count . ')</option>';
     }
+    echo '</select></label><label>Type <select name="type"><option value="all">All</option>';
+    foreach ($typeOptions as $value => $count) {
+        echo '<option value="' . catalog_h($value) . '"' . ($errorType === $value ? ' selected' : '') . '>'
+            . catalog_h($value) . ' (' . $count . ')</option>';
+    }
     echo '</select></label>'
         . '<label class="search">Search <input type="search" name="q" value="' . catalog_h($search) . '" placeholder="Message, type, file, MD5, archive, job or reference"></label>'
         . '<label>Rows <select name="per_page">';
@@ -269,7 +286,7 @@ try {
         }
         echo '</tbody></table></div></form>';
 
-        $queryBase = ['status' => $status, 'severity' => $severity, 'source' => $source, 'q' => $search, 'per_page' => $perPage];
+        $queryBase = ['status' => $status, 'severity' => $severity, 'source' => $source, 'type' => $errorType, 'q' => $search, 'per_page' => $perPage];
         echo '<div class="system-error-pagination"><span class="muted">' . number_format($total) . ' matching error(s) · Page ' . $page . ' of ' . $pages . '</span><span>';
         if ($page > 1) {
             echo '<a class="button secondary" href="?' . catalog_h(http_build_query($queryBase + ['p' => $page - 1])) . '">Previous</a> ';
