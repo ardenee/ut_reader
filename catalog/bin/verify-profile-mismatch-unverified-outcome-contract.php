@@ -17,6 +17,9 @@ $read = static function (string $relative) use ($root): string {
 $outcome = $read('src/Infrastructure/Import/CatalogImportOutcome.php');
 $profileException = $read('src/Infrastructure/Import/CatalogProfileMismatchException.php');
 $verifiedInspector = $read('src/Infrastructure/Import/CatalogVerifiedPackageInspector.php');
+$promotion = $read('src/Infrastructure/Unverified/CatalogUnverifiedPromotion.php');
+$bulk = $read('src/Infrastructure/Jobs/CatalogUnverifiedBulkActionJobHandler.php');
+$singleAction = $read('unverified-files-action.php');
 $staged = $read('src/Infrastructure/Jobs/CatalogStagedImportJobHandler.php');
 $children = $read('src/Infrastructure/Persistence/PdoArchiveChildOutcomeQuery.php');
 $workflow = $read('src/Infrastructure/Jobs/CatalogArchiveWorkflowJobHandler.php');
@@ -59,6 +62,24 @@ $record(
     str_contains($outcome, "UNVERIFIED_PROFILE_MISMATCH = 'unverified_profile_mismatch'")
         && str_contains($outcome, 'str_starts_with(trim($message), \'Game/profile mismatch.\')'),
     'A valid package rejected only by the selected game/profile must have a stable non-error job outcome.'
+);
+
+$record(
+    'unverified_override_is_the_only_profile_bypass',
+    str_contains($promotion, 'if (!$allowProfileOverride && empty($classification[\'ok_for_selected_game\']))')
+        && str_contains($promotion, 'throw new CatalogProfileMismatchException(')
+        && str_contains($bulk, "'allow_profile_override' => !empty(\$payload['allow_profile_override'])"),
+    'A valid wrong-profile file stays Unverified unless the existing profile override is explicitly enabled.'
+);
+
+$record(
+    'profile_mismatch_is_non_error_for_single_and_bulk_actions',
+    str_contains($bulk, 'catch (CatalogProfileMismatchException)')
+        && str_contains($bulk, '$skipped++')
+        && str_contains($singleAction, 'catch (CatalogProfileMismatchException $error)')
+        && str_contains($singleAction, "'status' => 'unverified_profile_mismatch'")
+        && str_contains($singleAction, "'ok' => true"),
+    'Manual and bulk Unverified imports must treat profile mismatch as skipped/non-error, not a failed action.'
 );
 
 $record(
@@ -138,7 +159,9 @@ $record(
         && str_contains($fingerprint, 'CatalogStagedImportJobHandler.php')
         && str_contains($fingerprint, 'CatalogImportOutcome.php')
         && str_contains($fingerprint, 'CatalogProfileMismatchException.php')
-        && str_contains($fingerprint, '/lib/GameProfiles.php'),
+        && str_contains($fingerprint, '/lib/GameProfiles.php')
+        && str_contains($fingerprint, 'CatalogUnverifiedPromotion.php')
+        && str_contains($fingerprint, 'CatalogUnverifiedBulkActionJobHandler.php'),
     'Detached workers must pick up the new semantics and reconcile historical profile mismatches after deployment.'
 );
 
@@ -146,6 +169,10 @@ $phpFiles = [
     $root . '/src/Infrastructure/Import/CatalogImportOutcome.php',
     $root . '/src/Infrastructure/Import/CatalogProfileMismatchException.php',
     $root . '/src/Infrastructure/Import/CatalogVerifiedPackageInspector.php',
+    $root . '/src/Infrastructure/Unverified/CatalogUnverifiedPromotion.php',
+    $root . '/src/Infrastructure/Jobs/CatalogUnverifiedBulkActionJobHandler.php',
+    $root . '/unverified-files-action.php',
+    $root . '/lib/GameProfiles.php',
     $root . '/src/Infrastructure/Jobs/CatalogStagedImportJobHandler.php',
     $root . '/src/Infrastructure/Persistence/PdoArchiveChildOutcomeQuery.php',
     $root . '/src/Infrastructure/Jobs/CatalogArchiveWorkflowJobHandler.php',
