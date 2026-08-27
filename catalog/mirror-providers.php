@@ -2,7 +2,7 @@
 /**
  * UnrealDB PHP File Audit
  * Purpose: Renders and processes External Mirror Providers administration.
- * Why: Provider/settings persistence belongs to the shared external mirror admin service.
+ * Why: Provider lifecycle belongs here while site-wide download behavior is controlled from Download Settings.
  * Role: Presentation adapter; retains existing custom admin/CSRF behavior and HTML.
  */
 declare(strict_types=1);
@@ -41,7 +41,7 @@ try {
             throw new RuntimeException('Admin required');
         }
         mp_check_csrf();
-        $flash = $service->handleProviderAction((string)($_POST['action'] ?? 'save_settings'), $_POST);
+        $flash = $service->handleProviderAction((string)($_POST['action'] ?? ''), $_POST);
         if ($flash !== '') {
             $_SESSION['mirror_provider_flash'] = $flash;
         }
@@ -62,25 +62,7 @@ try {
         unset($_SESSION['mirror_provider_flash']);
     }
 
-    $settings = $service->settings();
-    echo '<div class="card"><h1>External Mirror Providers</h1><p class="muted">Site-wide public download control. Federation transfers bypass this completely.</p><p><a class="button" href="admin.php">Catalog Admin</a> <a class="button" href="mirror-links.php">Mirror Links</a> <a class="button" href="mirror-queue.php">Mirror Queue</a></p></div>';
-
-    echo '<div class="card"><h2>Public download mode</h2><form method="post"><input type="hidden" name="csrf" value="' . catalog_h(mp_csrf()) . '"><input type="hidden" name="action" value="save_settings"><table>';
-    echo '<tr><th>Mode</th><td><select name="public_download_mode">';
-    foreach (['local_direct'=>'Use own site / direct download','external_mirror'=>'External mirror only','external_mirror_preferred'=>'Prefer external mirror, fallback to own site','disabled'=>'Disable public downloads'] as $key => $label) {
-        $sel = (($settings['public_download_mode'] ?? 'local_direct') === $key) ? ' selected' : '';
-        echo '<option value="' . catalog_h($key) . '"' . $sel . '>' . catalog_h($label) . '</option>';
-    }
-    echo '</select></td></tr>';
-    foreach ([
-        'external_mirror_auto_queue' => 'Auto queue mirror job when missing, 0/1',
-        'external_mirror_expiry_days' => 'Default mirror expiry days',
-        'external_mirror_require_admin_approval' => 'Require admin approval before mirror job, 0/1',
-        'external_mirror_max_file_size_mb' => 'Max external mirror file size MB'
-    ] as $key => $label) {
-        echo '<tr><th>' . catalog_h($label) . '</th><td><input name="' . catalog_h($key) . '" value="' . catalog_h($settings[$key] ?? '') . '" style="width:160px"></td></tr>';
-    }
-    echo '</table><p><button>Save public download settings</button></p></form></div>';
+    echo '<div class="card"><h1>External Mirror Providers</h1><p class="muted">Manage provider definitions, priorities and provider-specific limits. Site-wide mode, mirror behavior and public download limits are controlled from Download Settings.</p><p><a class="button primary" href="downloads-settings.php">Download Settings</a> <a class="button" href="mirror-links.php">Mirror Links</a> <a class="button" href="mirror-queue.php">Mirror Queue</a></p></div>';
 
     $providers = $service->providers();
     echo '<div class="card"><h2>Providers</h2>';
