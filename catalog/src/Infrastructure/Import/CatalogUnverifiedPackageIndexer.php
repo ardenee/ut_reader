@@ -82,9 +82,23 @@ final class CatalogUnverifiedPackageIndexer
         $issues = method_exists($reader, 'validatePackage')
             ? $reader->validatePackage()
             : (method_exists($reader, 'getDebugErrors') ? $reader->getDebugErrors() : []);
+        $validationIssues = method_exists($reader, 'getValidationIssues')
+            ? $reader->getValidationIssues()
+            : [];
         [$fatal, $readerNotes] = $this->runtime->splitReaderIssues(is_array($issues) ? $issues : []);
         if ($fatal !== []) {
-            throw new \RuntimeException(implode("\n", $fatal));
+            $structured = is_array($validationIssues) && is_array($validationIssues[0] ?? null)
+                ? $validationIssues[0]
+                : [];
+            $reason = trim((string)($structured['reason'] ?? ''));
+            if ($reason === '') {
+                $reason = implode("\n", $fatal);
+            }
+            throw new CatalogInvalidPackageException(
+                $reason,
+                trim((string)($structured['code'] ?? 'unreal.invalid_package')),
+                is_array($structured['arguments'] ?? null) ? $structured['arguments'] : []
+            );
         }
         $notes = array_values($readerNotes);
         foreach (['getHeader', 'getNames', 'getImports', 'getExports'] as $method) {
