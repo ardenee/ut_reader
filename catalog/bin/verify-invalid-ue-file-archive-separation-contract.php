@@ -101,10 +101,10 @@ $record(
 
 $record(
     'archive_read_model_labels_invalid_members_separately',
-    str_contains($projector, "['invalid_ue_package', 'rejected']")
+    str_contains($projector, "['invalid_ue_package', 'invalid_files', 'rejected']")
         && str_contains($projector, '$summary[\'invalid_ue\']++')
         && str_contains($projector, 'Invalid UE file(s): ')
-        && str_contains($projector, "['invalid_ue_package']")
+        && str_contains($projector, "['invalid_ue_package', 'invalid_files']")
         && str_contains($projector, 'CatalogImportOutcome::ARCHIVE_INVALID_FILES'),
     'Operator reporting must say invalid UE file instead of Failed archive member for package-content failures.'
 );
