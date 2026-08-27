@@ -248,6 +248,7 @@ final class CatalogArchiveWorkflowJobHandler implements JobHandler
         $childSkipped = max(0, (int)($children['skipped'] ?? 0));
         $totalSkipped = $extractionSkipped + $childSkipped;
         $contentNested = max(0, (int)($children['nested_archive'] ?? 0));
+        $unverified = max(0, (int)($children['unverified'] ?? 0));
         $totalFailed = $extractionFailed + $childFailed;
         $partial = $totalFailed > 0 || $cancelled > 0;
         $successLabel = $job->type === JobType::IMPORT_STAGED_ARCHIVE ? 'imported' : 'added';
@@ -257,6 +258,7 @@ final class CatalogArchiveWorkflowJobHandler implements JobHandler
             . number_format((int)$children['duplicate']) . ' duplicate, '
             . number_format($totalSkipped) . ' skipped, '
             . number_format($contentNested) . ' nested archive, '
+            . number_format($unverified) . ' unverified/profile mismatch, '
             . number_format($totalFailed) . ' failed';
         if ($cancelled > 0) {
             $message .= ', ' . number_format($cancelled) . ' cancelled';
