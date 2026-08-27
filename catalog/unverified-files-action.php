@@ -7,6 +7,8 @@
  */
 declare(strict_types=1);
 
+use UnrealDb\Catalog\Infrastructure\Import\CatalogProfileMismatchException;
+
 ini_set('display_errors', '0');
 @set_time_limit(0);
 ob_start();
@@ -212,6 +214,27 @@ try {
     );
     $result['elapsed_ms'] = unverified_action_elapsed_ms();
     unverified_action_reply($result);
+} catch (CatalogProfileMismatchException $error) {
+    $message = 'File remains in Unverified because it does not match the selected game profile. '
+        . 'Enable profile override to import it into that game.';
+    if ($progressToken !== '') {
+        upload_progress_write($progressToken, [
+            'stage' => 'complete',
+            'done' => 100,
+            'total' => 100,
+            'percent' => 100,
+            'status' => 'unverified_profile_mismatch',
+            'message' => $message,
+            'elapsed_ms' => unverified_action_elapsed_ms(),
+        ]);
+    }
+    unverified_action_reply([
+        'ok' => true,
+        'status' => 'unverified_profile_mismatch',
+        'message' => $message,
+        'request_id' => catalog_request_id(),
+        'elapsed_ms' => unverified_action_elapsed_ms(),
+    ]);
 } catch (Throwable $error) {
     $requestId = catalog_request_id();
     $message = unverified_action_error_text($error);
