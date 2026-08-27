@@ -29,6 +29,9 @@ if (!is_file($path)) {
 $reader = new CatalogUE3PackageReader($path);
 $header = $reader->getHeader();
 $issues = $reader->getIssues();
+$validationIssues = method_exists($reader, 'getValidationIssues')
+    ? $reader->getValidationIssues()
+    : [];
 $physicalSize = filesize($path);
 $physicalSize = $physicalSize === false ? 0 : (int)$physicalSize;
 $chunks = is_array($header['chunks'] ?? null) ? $header['chunks'] : [];
@@ -80,6 +83,7 @@ $result = [
     'chunk_bounds_ok' => $boundsOk,
     'chunks' => $chunkRows,
     'reader_issues' => $issues,
+    'validation_issues' => $validationIssues,
 ];
 
 fwrite(STDOUT, json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . PHP_EOL);
