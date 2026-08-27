@@ -87,6 +87,8 @@ final class CatalogUE3PackageReader
     /** @var array<string,mixed> */ private array $header=[];
     /** @var array<int,array<string,mixed>> */ private array $names=[], $imports=[], $exports=[];
     /** @var array<int,string> */ private array $issues=[];
+    /** @var array<int,array{code:string,reason:string,arguments:array<string,mixed>}> */
+    private array $validationIssues=[];
 
     public function __construct(private readonly string $path)
     {
@@ -95,7 +97,10 @@ final class CatalogUE3PackageReader
             // PHP strings are copy-on-write, so this is one physical allocation
             // until compressed reconstruction starts.
             $this->physical=$this->logical=$bytes; unset($bytes); $this->parse();
-        } catch (Throwable $e) { $this->issues[]=$this->formatError($e); if (!$this->header) $this->header=$this->blankHeader(); }
+        } catch (Throwable $e) {
+            $this->recordValidationIssue('unreal.reader_validation_failure', $this->formatError($e));
+            if (!$this->header) $this->header=$this->blankHeader();
+        }
     }
     /** @return array<string,mixed> */
     private function blankHeader(): array
@@ -141,7 +146,22 @@ final class CatalogUE3PackageReader
         for ($i=0;$i<$cc;$i++) {
             $c=['uOff'=>$r->i32("CompressedChunks[$i].UncompressedOffset"),'uLen'=>$r->i32("CompressedChunks[$i].UncompressedSize"),
                 'cOff'=>$r->i32("CompressedChunks[$i].CompressedOffset"),'cLen'=>$r->i32("CompressedChunks[$i].CompressedSize")];
-            if (min($c)<0) throw new RuntimeException("Negative Epic UE3 compressed chunk field at index $i"); $h['chunks'][]=$c;
+            if (min($c)<0) {
+                $this->recordValidationIssue(
+                    'ue3.compressed_chunk_negative_field',
+                    'UE3 compressed chunk contains a negative serialized range value.',
+                    [
+                        'chunk_index' => $i,
+                        'uncompressed_offset' => (int)$c['uOff'],
+                        'uncompressed_size' => (int)$c['uLen'],
+                        'compressed_offset' => (int)$c['cOff'],
+                        'compressed_size' => (int)$c['cLen'],
+                    ]
+                );
+                $this->header=$h;
+                return;
+            }
+            $h['chunks'][]=$c;
         }
         $h['compressedChunks']=$h['chunks']; $h['compressed']=$cc>0; $h['packageSource']=$h['u3unk60']=$r->u32('PackageSource');
         if ($ver>=self::VER_ADDITIONAL_COOK_PACKAGE_SUMMARY) {
@@ -156,7 +176,9 @@ final class CatalogUE3PackageReader
             unset($r);
             $this->logical='';
             $this->physical='';
-            $this->inflatePackage();
+            if (!$this->inflatePackage()) {
+                return;
+            }
         }
         $this->header['logicalSize']=strlen($this->logical);
         $this->validateSummary(); $this->readNames(); $this->readImports(); $this->readExports();
@@ -238,39 +260,58 @@ final class CatalogUE3PackageReader
     {
         $base=(string)($this->names[$fname['index']]['name']??''); return $fname['number']!==0 && $base!==''?$base.'_'.$fname['number']:$base;
     }
-    private function inflatePackage(): void
+    private function inflatePackage(): bool
     {
         $chunks=(array)$this->header['chunks'];
-        if ($chunks===[]) return;
+        if ($chunks===[]) return true;
         $physicalSize=filesize($this->path);
-        if ($physicalSize===false || $physicalSize<1) throw new RuntimeException('Could not determine Epic UE3 physical package size');
-        $logicalSize=(int)$physicalSize;
+        if ($physicalSize===false || $physicalSize<1) {
+            $this->recordValidationIssue(
+                'ue3.physical_size_unavailable',
+                'Could not determine UE3 physical package size.'
+            );
+            return false;
+        }
+        $physicalSize=(int)$physicalSize;
+        $logicalSize=$physicalSize;
         foreach ($chunks as $index => $c) {
             $uOff=(int)$c['uOff'];
             $uLen=(int)$c['uLen'];
             $cOff=(int)$c['cOff'];
             $cLen=(int)$c['cLen'];
+            $compressedEnd=$cOff+$cLen;
             $logicalSize=max($logicalSize,$uOff+$uLen);
-            if ($cOff+$cLen>$physicalSize) {
-                throw new RuntimeException(
-                    'Epic UE3 compressed chunk exceeds physical package size: '
-                    . 'chunk=' . $index
-                    . ' compressed_offset=' . $cOff
-                    . ' compressed_size=' . $cLen
-                    . ' compressed_end=' . ($cOff+$cLen)
-                    . ' physical_size=' . $physicalSize
-                    . ' uncompressed_offset=' . $uOff
-                    . ' uncompressed_size=' . $uLen
-                    . ' compression_flags=' . sprintf('0x%08X',(int)$this->header['compressionFlags'])
-                    . ' chunk_count=' . count($chunks)
-                    . ' package_version=' . (int)$this->header['version']
-                    . ' licensee_version=' . (int)$this->header['licenseeVersion']
+            if ($cOff<0 || $cLen<0 || $compressedEnd>$physicalSize) {
+                $this->recordValidationIssue(
+                    'ue3.compressed_chunk_out_of_bounds',
+                    'UE3 compressed chunk is outside the physical package.',
+                    [
+                        'chunk_index' => (int)$index,
+                        'compressed_offset' => $cOff,
+                        'compressed_size' => $cLen,
+                        'compressed_end' => $compressedEnd,
+                        'physical_size' => $physicalSize,
+                        'uncompressed_offset' => $uOff,
+                        'uncompressed_size' => $uLen,
+                        'compression_flags' => sprintf('0x%08X',(int)$this->header['compressionFlags']),
+                        'chunk_count' => count($chunks),
+                        'package_version' => (int)$this->header['version'],
+                        'licensee_version' => (int)$this->header['licenseeVersion'],
+                    ]
                 );
+                return false;
             }
         }
         usort($chunks,static fn(array $a,array $b):int=>(int)$a['uOff']<=>(int)$b['uOff']);
         $first=(int)$chunks[0]['uOff'];
-        if ($first<0 || $first>$physicalSize) throw new RuntimeException('Invalid first Epic UE3 compressed chunk offset');
+        if ($first<0 || $first>$physicalSize) {
+            $this->recordValidationIssue(
+                'ue3.invalid_first_compressed_chunk_offset',
+                'First UE3 compressed chunk offset is outside the physical package.',
+                ['offset'=>$first,'physical_size'=>$physicalSize]
+            );
+            return false;
+        }
 
         $handle=fopen($this->path,'rb');
         if (!is_resource($handle)) throw new RuntimeException('Could not reopen Epic UE3 package for chunk decompression');
@@ -283,6 +324,9 @@ final class CatalogUE3PackageReader
                 if ($uOff>$cursor) $logical.=str_repeat("\0",$uOff-$cursor);
                 $payload=$this->readFileRange($handle,(int)$c['cOff'],(int)$c['cLen'],"compressed chunk $i");
                 $decoded=$this->inflateChunk($payload,$uLen,(int)$i);
+                if ($decoded===null) {
+                    return false;
+                }
                 $logical.=$decoded;
                 $cursor=$uOff+$uLen;
                 unset($payload,$decoded);
@@ -293,6 +337,7 @@ final class CatalogUE3PackageReader
             fclose($handle);
         }
         $this->header['logicalDecompressed']=true;
+        return true;
     }
     /** @param resource $handle */
     private function readFileRange($handle,int $offset,int $length,string $field): string
@@ -307,15 +352,112 @@ final class CatalogUE3PackageReader
         if (strlen($out)!==$length) throw new RuntimeException("Could not read complete Epic UE3 $field expected=$length got=".strlen($out));
         return $out;
     }
-    private function inflateChunk(string $payload,int $expected,int $index): string
+    private function inflateChunk(string $payload,int $expected,int $index): ?string
     {
-        $r=new CatalogEpicUE3BinaryReader($payload,0,$this->swap); if ($r->u32("CompressedChunk[$index].Tag")!==self::TAG) throw new RuntimeException('Invalid Epic UE3 compressed chunk tag');
-        $blockSize=$r->i32('CompressedChunk.BlockSize'); $compressedTotal=$r->i32('CompressedChunk.CompressedSize'); $total=$r->i32('CompressedChunk.UncompressedSize');
-        if ($blockSize<=0 || $compressedTotal<0 || $total<0 || ($expected>0 && $total!==$expected)) throw new RuntimeException("Invalid Epic UE3 compressed chunk header expected=$expected actual=$total");
-        $count=$total===0?0:(int)ceil($total/$blockSize); $this->arrayFits($r,$count,8,'CompressedChunk.Blocks'); $blocks=[];
-        for ($i=0;$i<$count;$i++) { $c=$r->i32("CompressedChunk.Block[$i].CompressedSize"); $u=$r->i32("CompressedChunk.Block[$i].UncompressedSize"); if ($c<0 || $u<0) throw new RuntimeException('Negative Epic UE3 compressed block size'); $blocks[]=[$c,$u]; }
-        $out=''; foreach ($blocks as $i=>[$c,$u]) $out.=$this->inflateBlock($r->bytes($c,"CompressedChunk.Block[$i].Data"),$u);
-        if (strlen($out)!==$total) throw new RuntimeException("Epic UE3 compressed chunk size mismatch expected=$total got=".strlen($out)); return $out;
+        $payloadSize=strlen($payload);
+        if ($payloadSize<16) {
+            $this->recordValidationIssue(
+                'ue3.compressed_chunk_header_out_of_bounds',
+                'UE3 compressed chunk is too small to contain its 16-byte header.',
+                ['chunk_index'=>$index,'payload_size'=>$payloadSize,'required_header_size'=>16]
+            );
+            return null;
+        }
+
+        $r=new CatalogEpicUE3BinaryReader($payload,0,$this->swap);
+        $tag=$r->u32("CompressedChunk[$index].Tag");
+        if ($tag!==self::TAG) {
+            $this->recordValidationIssue(
+                'ue3.invalid_compressed_chunk_tag',
+                'UE3 compressed chunk has an invalid package tag.',
+                ['chunk_index'=>$index,'actual_tag'=>sprintf('0x%08X',$tag),'expected_tag'=>sprintf('0x%08X',self::TAG)]
+            );
+            return null;
+        }
+
+        $blockSize=$r->i32('CompressedChunk.BlockSize');
+        $compressedTotal=$r->i32('CompressedChunk.CompressedSize');
+        $total=$r->i32('CompressedChunk.UncompressedSize');
+        if ($blockSize<=0 || $compressedTotal<0 || $total<0 || ($expected>0 && $total!==$expected)) {
+            $this->recordValidationIssue(
+                'ue3.invalid_compressed_chunk_header',
+                'UE3 compressed chunk header is inconsistent with the package summary.',
+                [
+                    'chunk_index'=>$index,
+                    'block_size'=>$blockSize,
+                    'compressed_size'=>$compressedTotal,
+                    'expected_uncompressed_size'=>$expected,
+                    'actual_uncompressed_size'=>$total,
+                    'payload_size'=>$payloadSize,
+                ]
+            );
+            return null;
+        }
+
+        $count=$total===0?0:(int)ceil($total/$blockSize);
+        $blockTableBytes=$count*8;
+        if ($count<0 || 16+$blockTableBytes>$payloadSize) {
+            $this->recordValidationIssue(
+                'ue3.compressed_block_table_out_of_bounds',
+                'UE3 compressed block table exceeds the compressed chunk payload.',
+                [
+                    'chunk_index'=>$index,
+                    'block_count'=>$count,
+                    'block_table_bytes'=>$blockTableBytes,
+                    'payload_size'=>$payloadSize,
+                ]
+            );
+            return null;
+        }
+
+        $blocks=[];
+        for ($i=0;$i<$count;$i++) {
+            $c=$r->i32("CompressedChunk.Block[$i].CompressedSize");
+            $u=$r->i32("CompressedChunk.Block[$i].UncompressedSize");
+            if ($c<0 || $u<0) {
+                $this->recordValidationIssue(
+                    'ue3.compressed_block_negative_size',
+                    'UE3 compressed block contains a negative serialized size.',
+                    ['chunk_index'=>$index,'block_index'=>$i,'compressed_size'=>$c,'uncompressed_size'=>$u]
+                );
+                return null;
+            }
+            $blocks[]=[$c,$u];
+        }
+
+        $remaining=$r->remaining();
+        $cursor=0;
+        foreach ($blocks as $blockIndex=>[$compressedSize,$uncompressedSize]) {
+            if ($compressedSize>$remaining-$cursor) {
+                $this->recordValidationIssue(
+                    'ue3.compressed_block_out_of_bounds',
+                    'UE3 compressed block exceeds the compressed chunk payload.',
+                    [
+                        'chunk_index'=>$index,
+                        'block_index'=>$blockIndex,
+                        'compressed_size'=>$compressedSize,
+                        'remaining'=>max(0,$remaining-$cursor),
+                        'payload_size'=>$payloadSize,
+                    ]
+                );
+                return null;
+            }
+            $cursor+=$compressedSize;
+        }
+
+        $out='';
+        foreach ($blocks as $i=>[$c,$u]) {
+            $out.=$this->inflateBlock($r->bytes($c,"CompressedChunk.Block[$i].Data"),$u);
+        }
+        if (strlen($out)!==$total) {
+            $this->recordValidationIssue(
+                'ue3.compressed_chunk_size_mismatch',
+                'UE3 compressed chunk output size does not match its serialized size.',
+                ['chunk_index'=>$index,'expected_size'=>$total,'actual_size'=>strlen($out)]
+            );
+            return null;
+        }
+        return $out;
     }
     private function inflateBlock(string $src,int $expected): string
     {
@@ -334,8 +476,33 @@ final class CatalogUE3PackageReader
     /** @return array<int,string> */ public function getIssues(): array { return $this->issues; }
     /** @return array<int,string> */ public function getDebugErrors(): array { return $this->issues; }
     /** @return array<int,string> */ public function validatePackage(): array { return $this->issues; }
+    /** @return array<int,array{code:string,reason:string,arguments:array<string,mixed>}> */
+    public function getValidationIssues(): array { return $this->validationIssues; }
+
+    /** @param array<string,mixed> $arguments */
+    private function recordValidationIssue(string $code,string $reason,array $arguments=[]): void
+    {
+        $reason=trim($reason)!==''?trim($reason):'Invalid UE3 package.';
+        $this->validationIssues[]=['code'=>$code,'reason'=>$reason,'arguments'=>$arguments];
+        $this->issues[]=$this->validationMessage($reason,$arguments);
+    }
+
+    /** @param array<string,mixed> $arguments */
+    private function validationMessage(string $reason,array $arguments): string
+    {
+        if ($arguments===[]) return $reason;
+        $parts=[];
+        foreach ($arguments as $key=>$value) {
+            if (is_scalar($value) || $value===null) {
+                $parts[]=$key.'='.(is_bool($value)?($value?'true':'false'):(string)$value);
+            }
+        }
+        return $reason.($parts!==[]?' '.implode(' ',$parts):'');
+    }
+
     private function formatError(Throwable $e): string
     {
-        return get_class($e).': '.$e->getMessage().' File: '.$e->getFile().':'.$e->getLine().' PHP: '.PHP_VERSION.' Package: '.$this->path.' Trace: '.$e->getTraceAsString();
+        $message=trim($e->getMessage());
+        return $message!==''?$message:get_class($e);
     }
 }
