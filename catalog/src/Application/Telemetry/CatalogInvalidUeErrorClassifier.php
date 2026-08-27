@@ -50,8 +50,10 @@ final class CatalogInvalidUeErrorClassifier
     public static function cleanReason(string $message): string
     {
         $message = trim($message);
-        $message = preg_replace('/^(?:(?:RuntimeException|OutOfBoundsException|Exception):\s*)+/i', '', $message) ?? $message;
+        $exceptionPrefix = '/^(?:(?:RuntimeException|OutOfBoundsException|Exception):\s*)+/i';
+        $message = preg_replace($exceptionPrefix, '', $message) ?? $message;
         $message = preg_replace('/^Invalid Unreal package\s+[^:]+:\s*/i', '', $message) ?? $message;
+        $message = preg_replace($exceptionPrefix, '', $message) ?? $message;
         $parts = preg_split('/\s+File:\s+|\s+PHP:\s+|\s+Package:\s+|\s+Trace:\s+/i', $message);
         $message = trim((string)($parts[0] ?? $message));
         return $message !== '' ? $message : 'Invalid Unreal package.';
