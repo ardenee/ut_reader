@@ -273,9 +273,7 @@ final class CatalogArchiveWorkflowJobHandler implements JobHandler
         }
 
         $result = $archiveResult;
-        $result['status'] = $partial
-            ? 'partial'
-            : ($invalidUe > 0 ? CatalogImportOutcome::ARCHIVE_INVALID_FILES : 'completed');
+        $result['status'] = $partial ? 'partial' : 'completed';
         $result['message'] = $message;
         $result['archive_outcomes'] = [
             'archive_member_skipped' => $extractionSkipped,
