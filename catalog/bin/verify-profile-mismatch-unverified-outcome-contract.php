@@ -79,7 +79,8 @@ $record(
 $record(
     'historical_repair_is_metadata_only',
     str_contains($repair, 'JSON_SET(result_json,"$.status",?')
-        && str_contains($repair, 'Game/profile mismatch.%')
+        && str_contains($repair, 'CatalogImportOutcome::isProfileMismatchMessage($message)')
+        && str_contains($repair, 'JobFailureRetryPolicy::isInvalidPackageContentText($jobType, $message)')
         && str_contains($repair, 'archive_wait_children')
         && str_contains($repair, 'archive_member_content_wait_child')
         && !str_contains($repair, 'CatalogArchiveExtractor')
@@ -89,15 +90,18 @@ $record(
 
 $record(
     'historical_repair_preserves_real_errors',
-    str_contains($repair, 'display_status="unverified"')
-        && str_contains($repair, 'LIKE "Game/profile mismatch.%"'),
-    'Historical reclassification must be narrowly limited to explicit Game/profile mismatch outcomes.'
+    str_contains($repair, '$nextStatus = \'\';')
+        && str_contains($repair, 'if ($nextStatus === \'\')')
+        && str_contains($repair, 'continue;')
+        && str_contains($repair, 'display_status IN ("unverified","rejected")'),
+    'Historical reclassification must leave unrelated worker/database/runtime failures untouched.'
 );
 
 $record(
     'worker_startup_runs_bounded_reconciliation',
     str_contains($factory, 'new PdoArchiveProfileMismatchOutcomeRepair($db)')
-        && str_contains($factory, 'No archive/package source bytes are re-read here.')
+        && str_contains($factory, 'No archive or')
+        && str_contains($factory, 'package source bytes are re-read here.')
         && str_contains($fingerprint, 'PdoArchiveProfileMismatchOutcomeRepair.php')
         && str_contains($fingerprint, 'CatalogStagedImportJobHandler.php')
         && str_contains($fingerprint, 'CatalogImportOutcome.php'),
