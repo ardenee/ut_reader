@@ -73,7 +73,7 @@ $requireContains(
 );
 $requireContains(
     'settings_service',
-    "\\fed_set_setting($this->db, $name, $value);",
+    '\\fed_set_setting($this->db, $name, $value);',
     'Download Settings service'
 );
 
