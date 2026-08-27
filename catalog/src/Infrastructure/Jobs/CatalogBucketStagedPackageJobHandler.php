@@ -10,6 +10,7 @@ namespace UnrealDb\Catalog\Infrastructure\Jobs;
 
 use PDO;
 use Throwable;
+use UnrealDb\Catalog\Application\Jobs\JobFailureRetryPolicy;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogImportOutcome;
 use UnrealDb\Catalog\Application\Jobs\JobExecutionContext;
 use UnrealDb\Catalog\Application\Jobs\JobHandler;
@@ -167,7 +168,7 @@ final class CatalogBucketStagedPackageJobHandler implements JobHandler
             if ($this->isDeterministicNonPackage($error)) {
                 // The bytes are durable and unchanged between attempts. A package
                 // extension whose content has no Unreal magic/header cannot become
-                // a valid package on retry, so record it as rejected content.
+                // a valid package on retry, so record it as an invalid UE file.
                 $message = $this->errorText($error) . ' ' . $this->firstBytesDiagnostic($preparedPath);
                 $incoming->delete($stagedPath);
                 $preparedStore->clear();
@@ -273,29 +274,10 @@ final class CatalogBucketStagedPackageJobHandler implements JobHandler
 
     private function isReaderValidationFailure(Throwable $error): bool
     {
-        $message = strtolower($this->errorText($error));
-        foreach ([
-            'invalid names table count:',
-            'invalid names table offset:',
-            'invalid exports table count:',
-            'invalid exports table offset:',
-            'invalid imports table count:',
-            'invalid imports table offset:',
-            'invalid legacy package generation count:',
-            'legacy package seek is outside the file:',
-            'legacy package read exceeds the file:',
-            'legacy package read stopped before the requested bytes were available',
-            'invalid compact package index length',
-            'invalid legacy fstring byte length:',
-            'invalid legacy wide fstring length:',
-            'legacy package string has no terminator within the safe limit',
-            'the unreal package header is missing the required package guid',
-        ] as $marker) {
-            if (str_contains($message, $marker)) {
-                return true;
-            }
-        }
-        return false;
+        return JobFailureRetryPolicy::isInvalidPackageContentText(
+            JobType::PROCESS_BUCKET_STAGED_PACKAGE,
+            $this->errorText($error)
+        );
     }
 
     /** @return array<string,mixed> */
