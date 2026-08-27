@@ -36,7 +36,7 @@ $record = static function (string $name, bool $ok, string $detail) use (&$checks
 $record(
     'profile_mismatch_has_distinct_non_error_outcome',
     str_contains($outcome, "UNVERIFIED_PROFILE_MISMATCH = 'unverified_profile_mismatch'")
-        && str_contains($outcome, "str_starts_with(trim($message), 'Game/profile mismatch.')"),
+        && str_contains($outcome, 'str_starts_with(trim($message), \'Game/profile mismatch.\')'),
     'A valid package rejected only by the selected game/profile must have a stable non-error job outcome.'
 );
 
@@ -45,7 +45,7 @@ $record(
     str_contains($staged, 'CatalogImportOutcome::isProfileMismatchMessage($shortError)')
         && str_contains($staged, '$staged !== null')
         && str_contains($staged, 'CatalogImportOutcome::UNVERIFIED_PROFILE_MISMATCH')
-        && str_contains($staged, "'unverified' => $staged"),
+        && str_contains($staged, '\'unverified\' => $staged'),
     'Profile mismatch is non-error only after the package was successfully retained/indexed in Unverified Files.'
 );
 
