@@ -15,6 +15,7 @@ $read = static function (string $relative) use ($root): string {
 };
 
 $reader = $read('parsers/EpicUE3PackageReader.php');
+$lzx = $read('lib/LzxDecoder.php');
 $inspector = $read('bin/inspect-ue3-compression.php');
 
 $checks = [];
@@ -44,9 +45,15 @@ $record(
 );
 
 $record(
-    'lzx_is_explicitly_recognized_not_mislabeled_corruption',
-    str_contains($reader, 'Epic UE3 LZX package compression is recognized but no LZX decoder is available'),
-    'LZX package compression must be reported as an unsupported decoder capability rather than generic invalid data.'
+    'lzx_is_natively_decompressed',
+    str_contains($reader, "require_once __DIR__ . '/../lib/LzxDecoder.php'")
+        && str_contains($reader, 'CatalogLzxDecoder::decompress($src,$expected,17)')
+        && str_contains($lzx, 'final class CatalogLzxDecoder')
+        && str_contains($lzx, 'private const FRAME_SIZE = 32768')
+        && str_contains($lzx, '15 => 30')
+        && str_contains($lzx, '17 => 34')
+        && str_contains($lzx, '21 => 50'),
+    'UE3 COMPRESS_LZX must use the native raw-LZX decoder with Epic-compatible 17-bit window semantics.'
 );
 
 $record(
@@ -61,6 +68,21 @@ $record(
         && str_contains($reader, 'chunk_count=')
         && str_contains($reader, 'package_version='),
     'A physical-size contradiction must include the exact serialized chunk range and package/compression metadata.'
+);
+
+$lzxFixture = hex2bin('003070000100000001000000010000004c5a582d55453300');
+$lzxFixtureOutput = '';
+$lzxFixtureError = '';
+try {
+    require_once $root . '/lib/LzxDecoder.php';
+    $lzxFixtureOutput = CatalogLzxDecoder::decompress($lzxFixture === false ? '' : $lzxFixture, 7, 17);
+} catch (Throwable $error) {
+    $lzxFixtureError = $error->getMessage();
+}
+$record(
+    'native_lzx_decoder_decompresses_valid_stream',
+    $lzxFixtureOutput === 'LZX-UE3',
+    $lzxFixtureError !== '' ? $lzxFixtureError : 'Expected LZX-UE3, got ' . bin2hex($lzxFixtureOutput)
 );
 
 $record(
@@ -79,6 +101,7 @@ $record(
 $syntaxFailures = [];
 foreach ([
     $root . '/parsers/EpicUE3PackageReader.php',
+    $root . '/lib/LzxDecoder.php',
     $root . '/bin/inspect-ue3-compression.php',
     __FILE__,
 ] as $file) {
