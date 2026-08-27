@@ -213,9 +213,9 @@ $record(
     'archive_parent_separates_invalid_ue_child_from_extraction_failure',
     str_contains($outcomeProjector, "['invalid_ue_package', 'invalid_files', 'rejected']")
         && str_contains($outcomeProjector, '$summary[\'invalid_ue\']++')
-        && str_contains($outcomeProjector, 'CatalogImportOutcome::ARCHIVE_INVALID_FILES')
-        && str_contains($outcomeProjector, "['invalid_ue_package', 'invalid_files']"),
-    'A bad Unreal member must remain visible while the containing archive is excluded from extraction retry state.'
+        && str_contains($outcomeProjector, "\$row['display_status'] = 'completed';")
+        && !str_contains($outcomeProjector, 'CatalogImportOutcome::ARCHIVE_INVALID_FILES'),
+    'A bad Unreal member is a System Error/data-quality outcome; the healthy containing archive must remain completed and outside extraction retry state.'
 );
 $record(
     'retained_archive_operator_controls_exist',
