@@ -60,11 +60,24 @@ final class CatalogUnverifiedPackageIndexer
 
         $this->emit($progress, 'engine_detect', 64, 'Detecting Unreal Engine generation and package summary.');
         [$detectedEngine, $summary] = $this->runtime->detectEngine($path, $originalName);
-        if (empty($summary['ok']) || !in_array($detectedEngine, ['UE1', 'UE2', 'UE3', 'UE4', 'UE5'], true)) {
-            $reasonText = trim((string)($summary['reason'] ?? ''));
-            throw new \RuntimeException(
-                'The uploaded file does not contain a supported Unreal package header.'
-                . ($reasonText !== '' ? ' ' . $reasonText . '.' : '')
+        if (empty($summary['ok'])) {
+            throw new CatalogInvalidPackageException(
+                trim((string)($summary['reason'] ?? 'Invalid Unreal package header'))
+                    ?: 'Invalid Unreal package header',
+                trim((string)($summary['error_code'] ?? 'unreal.invalid_package')),
+                is_array($summary['error_arguments'] ?? null) ? $summary['error_arguments'] : []
+            );
+        }
+        if (!in_array($detectedEngine, ['UE1', 'UE2', 'UE3', 'UE4', 'UE5'], true)) {
+            throw new CatalogInvalidPackageException(
+                'Serialized Unreal package version is not mapped to a supported engine reader.',
+                'unreal.unsupported_reader',
+                [
+                    'package_version' => (int)($summary['version'] ?? 0),
+                    'licensee_version' => ($summary['licensee'] ?? null) !== null
+                        ? (int)$summary['licensee']
+                        : null,
+                ]
             );
         }
 
