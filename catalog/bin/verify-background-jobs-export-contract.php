@@ -72,7 +72,8 @@ $record(
 
 $record(
     'export_contains_copyable_diagnostics',
-    str_contains($export, "'## Job #'")
+    str_contains($export, '$heading = str_repeat(\'#\', $headingLevel);')
+        && str_contains($export, '($depth > 0 ? \'Child \' : \'\') . \'Job #\'')
         && str_contains($export, '**Issue**')
         && str_contains($export, '**Activity**')
         && str_contains($export, '**Result message**')
