@@ -10,6 +10,7 @@ namespace UnrealDb\Catalog\Infrastructure\Jobs;
 
 use PDO;
 use Throwable;
+use UnrealDb\Catalog\Infrastructure\Import\CatalogImportOutcome;
 use UnrealDb\Catalog\Application\Jobs\JobExecutionContext;
 use UnrealDb\Catalog\Application\Jobs\JobHandler;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
@@ -175,11 +176,11 @@ final class CatalogBucketStagedPackageJobHandler implements JobHandler
                     'done' => 100,
                     'total' => 100,
                     'percent' => 100,
-                    'status' => 'rejected',
+                    'status' => CatalogImportOutcome::INVALID_UE_PACKAGE,
                     'message' => $message,
                 ]);
                 return $this->terminalResult(
-                    'rejected',
+                    CatalogImportOutcome::INVALID_UE_PACKAGE,
                     $message,
                     $workingName,
                     $relativePath,
@@ -193,12 +194,12 @@ final class CatalogBucketStagedPackageJobHandler implements JobHandler
             }
 
             if ($this->isReaderValidationFailure($error)) {
-                // Do not retry immutable bytes three times just because our reader
-                // cannot currently interpret them, and do not label the bytes as
-                // corrupt. Keep the durable prepared member so a later reader fix
-                // can be retried manually from Background Jobs without re-uploading
-                // or re-extracting the parent archive.
-                $message = 'Unreal package reader could not validate this archive member; durable source retained for a future reader fix. '
+                // Extraction succeeded, but the immutable member bytes contradict
+                // Unreal package serialization. This is an invalid UE file, not
+                // an archive extraction failure. Keep the durable prepared member
+                // for diagnostics or a future reader correction without making the
+                // parent archive retryable.
+                $message = 'Invalid Unreal package; archive extraction completed successfully and the durable member source was retained. '
                     . $this->errorText($error)
                     . ' SHA1=' . $sha1 . '. '
                     . $this->firstBytesDiagnostic($preparedPath);
@@ -207,12 +208,12 @@ final class CatalogBucketStagedPackageJobHandler implements JobHandler
                     'done' => 100,
                     'total' => 100,
                     'percent' => 100,
-                    'status' => 'unverified',
+                    'status' => CatalogImportOutcome::INVALID_UE_PACKAGE,
                     'message' => $message,
                     'source_retained' => true,
                 ]);
                 return $this->terminalResult(
-                    'unverified',
+                    CatalogImportOutcome::INVALID_UE_PACKAGE,
                     $message,
                     $workingName,
                     $relativePath,
