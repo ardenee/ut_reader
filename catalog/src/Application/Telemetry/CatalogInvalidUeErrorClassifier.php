@@ -50,7 +50,7 @@ final class CatalogInvalidUeErrorClassifier
     public static function cleanReason(string $message): string
     {
         $message = trim($message);
-        $message = preg_replace('/^(?:RuntimeException|OutOfBoundsException|Exception):\s*/i', '', $message) ?? $message;
+        $message = preg_replace('/^(?:(?:RuntimeException|OutOfBoundsException|Exception):\s*)+/i', '', $message) ?? $message;
         $message = preg_replace('/^Invalid Unreal package\s+[^:]+:\s*/i', '', $message) ?? $message;
         $parts = preg_split('/\s+File:\s+|\s+PHP:\s+|\s+Package:\s+|\s+Trace:\s+/i', $message);
         $message = trim((string)($parts[0] ?? $message));
@@ -204,10 +204,17 @@ final class CatalogInvalidUeErrorClassifier
                 $arguments['physical_size']
             )
                 ? 'UE3 compressed chunk ' . $arguments['chunk_index']
-                    . ' is outside the physical package: offset=' . $arguments['compressed_offset']
-                    . ', size=' . $arguments['compressed_size']
-                    . ', end=' . $arguments['compressed_end']
-                    . ', physical_size=' . $arguments['physical_size'] . '.'
+                    . ' is outside the physical package: compressed_offset=' . $arguments['compressed_offset']
+                    . ', compressed_size=' . $arguments['compressed_size']
+                    . ', compressed_end=' . $arguments['compressed_end']
+                    . ', physical_size=' . $arguments['physical_size']
+                    . (isset($arguments['uncompressed_offset']) ? ', uncompressed_offset=' . $arguments['uncompressed_offset'] : '')
+                    . (isset($arguments['uncompressed_size']) ? ', uncompressed_size=' . $arguments['uncompressed_size'] : '')
+                    . (isset($arguments['compression_flags']) ? ', compression_flags=' . $arguments['compression_flags'] : '')
+                    . (isset($arguments['chunk_count']) ? ', chunk_count=' . $arguments['chunk_count'] : '')
+                    . (isset($arguments['package_version']) ? ', package_version=' . $arguments['package_version'] : '')
+                    . (isset($arguments['licensee_version']) ? ', licensee_version=' . $arguments['licensee_version'] : '')
+                    . '.'
                 : 'UE3 compressed chunk is outside the physical package.',
             'ue3.compressed_block_size_mismatch' => isset($arguments['expected_size'], $arguments['actual_size'])
                 ? 'UE3 compressed block output size mismatch: expected=' . $arguments['expected_size']
@@ -229,8 +236,24 @@ final class CatalogInvalidUeErrorClassifier
                 ? 'Names table is outside the package: offset=' . $arguments['table_offset']
                     . ', physical_size=' . $arguments['physical_size'] . '.'
                 : $fallback,
-            default => $fallback,
+            default => self::appendArguments($fallback, $arguments),
         };
+    }
+
+    /** @param array<string,mixed> $arguments */
+    private static function appendArguments(string $reason, array $arguments): string
+    {
+        if ($arguments === []) {
+            return $reason;
+        }
+        $parts = [];
+        foreach ($arguments as $key => $value) {
+            if (is_bool($value)) {
+                $value = $value ? 'true' : 'false';
+            }
+            $parts[] = $key . '=' . (string)$value;
+        }
+        return rtrim($reason, " .\t\r\n") . ': ' . implode(', ', $parts) . '.';
     }
 
     private static function normalizeCode(string $code): string
