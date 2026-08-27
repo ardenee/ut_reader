@@ -201,7 +201,11 @@ final class CatalogArchiveJobOutcomeProjector
                 $message .= '.';
             }
 
-            $failureDetail = $this->failureDetail($summary['failures']);
+            $invalidDetail = $this->failureDetail($summary['failures'], 'invalid_ue_package');
+            if ($invalidDetail !== '') {
+                $message .= ' Invalid UE file(s): ' . $invalidDetail;
+            }
+            $failureDetail = $this->failureDetail($summary['failures'], null, ['invalid_ue_package']);
             if ($failureDetail !== '') {
                 $message .= ' Failed member(s): ' . $failureDetail;
             }
@@ -265,11 +269,21 @@ final class CatalogArchiveJobOutcomeProjector
         ];
     }
 
-    /** @param list<array<string,mixed>> $failures */
-    private function failureDetail(array $failures): string
+    /**
+     * @param list<array<string,mixed>> $failures
+     * @param list<string> $excludedStatuses
+     */
+    private function failureDetail(array $failures, ?string $onlyStatus = null, array $excludedStatuses = []): string
     {
         $parts = [];
         foreach ($failures as $failure) {
+            $status = strtolower(trim((string)($failure['status'] ?? '')));
+            if ($onlyStatus !== null && $status !== $onlyStatus) {
+                continue;
+            }
+            if (in_array($status, $excludedStatuses, true)) {
+                continue;
+            }
             $member = trim((string)($failure['member'] ?? 'archive member'));
             $jobId = max(0, (int)($failure['job_id'] ?? 0));
             $error = trim((string)($failure['error'] ?? ''));
