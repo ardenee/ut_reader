@@ -51,10 +51,10 @@ $record(
 
 $record(
     'invalid_or_unreadable_packages_remain_actionable',
-    str_contains($staged, ": 'unverified'")
-        && str_contains($staged, ": 'rejected'")
-        && str_contains($children, "['failed', 'rejected', 'unverified', 'partial', 'error']"),
-    'Generic unverified parse failures and rejected/non-package bytes must continue to count as actionable failures.'
+    str_contains($staged, 'CatalogImportOutcome::INVALID_UE_PACKAGE')
+        && str_contains($children, "['invalid_ue_package', 'invalid_files', 'rejected']")
+        && str_contains($children, "['failed', 'unverified', 'partial', 'error']"),
+    'Invalid UE content must remain actionable as a file issue while staying separate from archive extraction failures.'
 );
 
 $record(
