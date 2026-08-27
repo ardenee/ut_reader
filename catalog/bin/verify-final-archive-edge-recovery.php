@@ -19,6 +19,7 @@ try {
     $consistencySource = (string)file_get_contents($root . '/src/Infrastructure/Archive/CatalogZipMetadataConsistency.php');
     $extractorSource = (string)file_get_contents($root . '/src/Infrastructure/Archive/CatalogArchiveExtractor.php');
     $localRecoverySource = (string)file_get_contents($root . '/src/Infrastructure/Archive/CatalogZipLocalHeaderRecoveryReader.php');
+    $nativeZipSource = (string)file_get_contents($root . '/src/Infrastructure/Archive/CatalogNativeZipArchiveReader.php');
     $planPos = strpos($source, '$decision = $plan($entry);');
     $zeroSizeSkipPos = strpos(
         $source,
@@ -54,6 +55,20 @@ try {
             && str_contains($source, 'new CatalogNativeZipArchiveReader($this->config))->walk(')
             && str_contains($source, 'isNativeZipMetadataCapabilityFailure'),
         'ZIPs already known to have unreliable libzip streams must use native/local-header decoding before libarchive.'
+    );
+    $record(
+        'zip64_member_fields_are_resolved_natively',
+        str_contains($nativeZipSource, 'resolveZip64MemberFields(')
+            && str_contains($nativeZipSource, 'ZIP64 extra record is missing')
+            && !str_contains($nativeZipSource, 'does not support ZIP64 member fields'),
+        'ZIP64 per-member sentinels must resolve from the standard 0x0001 extra field instead of forcing libarchive.'
+    );
+    $record(
+        'missing_eocd_can_use_local_headers_only',
+        str_contains($source, 'walkLocalHeadersOnly(')
+            && str_contains($localRecoverySource, 'public function walkLocalHeadersOnly(')
+            && str_contains($localRecoverySource, 'local-header-only recovery found no recoverable member records'),
+        'A ZIP without a usable EOCD may recover only self-verifying local records and must not depend on libarchive decompression.'
     );
     $record(
         'zip_metadata_probe_is_bounded',
@@ -117,7 +132,7 @@ try {
         'recovery_remains_in_process_php',
         !preg_match(
             '/\b(?:proc_open|shell_exec|popen|passthru|system|exec)\s*\(/',
-            $source . "\n" . $consistencySource . "\n" . $extractorSource . "\n" . $localRecoverySource
+            $source . "\n" . $consistencySource . "\n" . $extractorSource . "\n" . $localRecoverySource . "\n" . $nativeZipSource
         ),
         'Archive edge recovery must not launch an external archive process.'
     );
@@ -128,7 +143,9 @@ try {
         str_contains($worker, '/Archive/CatalogSequentialArchiveReader.php')
             && str_contains($worker, '/Archive/CatalogZipMetadataConsistency.php')
             && str_contains($worker, '/Archive/CatalogArchiveExtractor.php')
-            && str_contains($worker, '/Archive/CatalogZipLocalHeaderRecoveryReader.php'),
+            && str_contains($worker, '/Archive/CatalogZipLocalHeaderRecoveryReader.php')
+            && str_contains($worker, '/Archive/CatalogNativeZipArchiveReader.php')
+            && str_contains($worker, '/Persistence/PdoJobQueueSupport.php'),
         'Detached workers must reconcile when sequential or ZIP metadata recovery code changes.'
     );
 } catch (Throwable $error) {
