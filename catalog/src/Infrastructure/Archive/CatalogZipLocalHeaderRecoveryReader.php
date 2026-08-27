@@ -62,8 +62,7 @@ final class CatalogZipLocalHeaderRecoveryReader
             }
             $processed++;
             $path = (string)$centralEntry['path'];
-            $candidates = $localCandidates[$path] ?? [];
-            $candidate = $this->bestCandidate($centralEntry, $candidates);
+            $candidate = $this->candidateForCentralEntry($centralEntry, $localCandidates);
 
             if (is_array($candidate)) {
                 $entry = $centralEntry;
@@ -98,7 +97,7 @@ final class CatalogZipLocalHeaderRecoveryReader
                     [
                         'kind' => 'failed',
                         'reason' => 'ZIP central directory references "' . $path
-                            . '" but no same-name recoverable local member header exists.',
+                            . '" but no same-name or uniquely metadata-matching recoverable local member header exists.',
                     ]
                 );
                 continue;
@@ -199,11 +198,11 @@ final class CatalogZipLocalHeaderRecoveryReader
         }
 
         $candidatesByPath = $this->localCandidates($archivePath);
-        $candidate = $this->bestCandidate($central, $candidatesByPath[$entryPath] ?? []);
+        $candidate = $this->candidateForCentralEntry($central, $candidatesByPath);
         if (!is_array($candidate)) {
             throw new \RuntimeException(
                 'ZIP central directory references "' . $entryPath
-                . '" but no same-name recoverable local member header exists.'
+                . '" but no same-name or uniquely metadata-matching recoverable local member header exists.'
             );
         }
 
@@ -402,6 +401,44 @@ final class CatalogZipLocalHeaderRecoveryReader
             'compressed_size' => $compressed,
             'size' => $uncompressed,
         ];
+    }
+
+    /**
+     * Prefer a same-name local record. If the local filename metadata is stale,
+     * accept a different-name record only when its method, sizes and CRC32 are an
+     * exact unique match for the central entry.
+     *
+     * @param array<string,mixed> $central
+     * @param array<string,list<array<string,mixed>>> $candidatesByPath
+     * @return null|array<string,mixed>
+     */
+    private function candidateForCentralEntry(array $central, array $candidatesByPath): ?array
+    {
+        $path = (string)($central['path'] ?? '');
+        $sameName = $this->bestCandidate($central, $candidatesByPath[$path] ?? []);
+        if (is_array($sameName)) {
+            return $sameName;
+        }
+
+        $matches = [];
+        foreach ($candidatesByPath as $candidates) {
+            foreach ($candidates as $candidate) {
+                if ((int)($candidate['compression_method'] ?? -1) !== (int)($central['compression_method'] ?? -2)
+                    || (int)($candidate['size'] ?? -1) !== (int)($central['size'] ?? -2)
+                    || (int)($candidate['compressed_size'] ?? -1) !== (int)($central['compressed_size'] ?? -2)
+                    || !hash_equals(
+                        strtolower((string)($candidate['crc32'] ?? '')),
+                        strtolower((string)($central['crc32'] ?? ''))
+                    )) {
+                    continue;
+                }
+                $matches[] = $candidate;
+                if (count($matches) > 1) {
+                    return null;
+                }
+            }
+        }
+        return count($matches) === 1 ? $matches[0] : null;
     }
 
     /**
