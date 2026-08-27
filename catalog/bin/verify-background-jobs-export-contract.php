@@ -60,6 +60,17 @@ $record(
 );
 
 $record(
+    'export_includes_descendant_job_tree',
+    str_contains($export, 'function background_jobs_export_tree(')
+        && str_contains($export, '$query->children($queue, $id, $page, 500)')
+        && str_contains($export, '$depth + 1')
+        && str_contains($export, "'- Parent job: #'")
+        && str_contains($export, "'- Tree depth: '")
+        && str_contains($export, 'Exported rows including descendants:'),
+    'Nested archive/member failures must be exported recursively instead of stopping at aggregate root summaries.'
+);
+
+$record(
     'export_contains_copyable_diagnostics',
     str_contains($export, "'## Job #'")
         && str_contains($export, '**Issue**')
@@ -81,7 +92,7 @@ $record(
         && str_contains($export, "Content-Type: text/markdown")
         && str_contains($export, 'Content-Disposition: attachment')
         && str_contains($export, 'Matching rows:')
-        && str_contains($export, 'Exported rows:'),
+        && str_contains($export, 'Exported rows including descendants:'),
     'The export must be a bounded downloadable Markdown report with explicit result counts.'
 );
 
