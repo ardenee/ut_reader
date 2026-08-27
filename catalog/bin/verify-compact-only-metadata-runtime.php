@@ -13,6 +13,7 @@ if (PHP_SAPI !== 'cli') {
 
 $root = realpath(dirname(__DIR__)) ?: dirname(__DIR__);
 require_once $root . '/src/Application/Maintenance/LegacyMetadataRuntimeAudit.php';
+require_once $root . '/src/Infrastructure/Persistence/PdoPackageTablePageQuery.php';
 
 $withDatabase = in_array('--database', array_slice($argv, 1), true);
 $checks = [];
@@ -45,6 +46,18 @@ $retiredReferences = static function (string $source): array {
     return \UnrealDb\Catalog\Application\Maintenance\LegacyMetadataRuntimeAudit::retiredMetadataReferences($source);
 };
 $legacyTables = \UnrealDb\Catalog\Application\Maintenance\LegacyMetadataRuntimeAudit::retiredMetadataTables();
+
+$uniqueValuesMethod = new ReflectionMethod(
+    \UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageTablePageQuery::class,
+    'uniqueValues'
+);
+$numericNames = $uniqueValuesMethod->invoke(null, ['Alpha', '123', '123', '0']);
+$record(
+    'file_examiner_preserves_numeric_fname_strings',
+    $numericNames === ['Alpha', '123', '0']
+        && array_reduce($numericNames, static fn(bool $allStrings, mixed $value): bool => $allStrings && is_string($value), true),
+    'numeric Unreal names must remain strings after deduplication'
+);
 
 $runtimeFiles = [
     'src/Infrastructure/Persistence/PdoDependencyReadSource.php',
