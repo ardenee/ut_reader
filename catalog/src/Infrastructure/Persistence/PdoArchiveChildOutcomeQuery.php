@@ -98,7 +98,7 @@ final class PdoArchiveChildOutcomeQuery
                     // This is not an archive/read failure and replaying the same
                     // bytes cannot improve the archive outcome.
                     $state['unverified'] += $count;
-                } elseif (in_array($displayStatus, ['invalid_ue_package', 'rejected'], true)) {
+                } elseif (in_array($displayStatus, ['invalid_ue_package', 'invalid_files', 'rejected'], true)) {
                     // Container extraction completed. The resulting member bytes
                     // are not a valid supported Unreal package, so keep the file
                     // issue separate from archive extraction/retry state.
