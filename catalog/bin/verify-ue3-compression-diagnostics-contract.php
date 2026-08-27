@@ -59,16 +59,17 @@ $record(
 
 $record(
     'chunk_bounds_error_contains_auditable_values',
-    str_contains($reader, 'compressed_offset=')
-        && str_contains($reader, 'compressed_size=')
-        && str_contains($reader, 'compressed_end=')
-        && str_contains($reader, 'physical_size=')
-        && str_contains($reader, 'uncompressed_offset=')
-        && str_contains($reader, 'uncompressed_size=')
-        && str_contains($reader, 'compression_flags=')
-        && str_contains($reader, 'chunk_count=')
-        && str_contains($reader, 'package_version='),
-    'A physical-size contradiction must include the exact serialized chunk range and package/compression metadata.'
+    str_contains($reader, "'ue3.compressed_chunk_out_of_bounds'")
+        && str_contains($reader, "'compressed_offset' => \$cOff")
+        && str_contains($reader, "'compressed_size' => \$cLen")
+        && str_contains($reader, "'compressed_end' => \$compressedEnd")
+        && str_contains($reader, "'physical_size' => \$physicalSize")
+        && str_contains($reader, "'uncompressed_offset' => \$uOff")
+        && str_contains($reader, "'uncompressed_size' => \$uLen")
+        && str_contains($reader, "'compression_flags' => sprintf")
+        && str_contains($reader, "'chunk_count' => count(\$chunks)")
+        && str_contains($reader, "'package_version' =>"),
+    'A physical-size contradiction must be a structured validation result with exact serialized range and compression metadata.'
 );
 
 $lzxFixture = hex2bin('003070000100000001000000010000004c5a582d55453300');
@@ -92,6 +93,17 @@ $record(
         && str_contains($fingerprint, "/lib/LzoDecoder.php")
         && str_contains($fingerprint, "/lib/LzxDecoder.php"),
     'Detached workers must be invalidated when UE3 package compression code changes.'
+);
+
+$record(
+    'ue3_overruns_exit_as_validation_results',
+    str_contains($reader, 'private function inflatePackage(): bool')
+        && str_contains($reader, "recordValidationIssue(")
+        && str_contains($reader, "'ue3.read_range_out_of_bounds'")
+        && str_contains($reader, "'ue3.compressed_block_out_of_bounds'")
+        && str_contains($reader, 'return false;')
+        && str_contains($inspector, "'validation_issues' => \$validationIssues"),
+    'Serialized UE3 overruns must stop cleanly before invalid reads and remain inspectable as structured validation results.'
 );
 
 $record(
