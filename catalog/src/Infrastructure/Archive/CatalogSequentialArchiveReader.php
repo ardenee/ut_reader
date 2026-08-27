@@ -161,6 +161,26 @@ final class CatalogSequentialArchiveReader
                 if (!$this->isNativeZipMetadataCapabilityFailure($error)) {
                     throw $error;
                 }
+
+                if ($this->isMissingZipCentralDirectoryFailure($error)) {
+                    try {
+                        return (new CatalogZipLocalHeaderRecoveryReader($this->config))->walkLocalHeadersOnly(
+                            $archivePath,
+                            $archiveName,
+                            $maxDecodedBytes,
+                            $plan,
+                            $complete,
+                            $heartbeat
+                        );
+                    } catch (\RuntimeException $localError) {
+                        if (!str_contains(
+                            strtolower($this->errorText($localError)),
+                            'local-header-only recovery found no recoverable member records'
+                        )) {
+                            throw $localError;
+                        }
+                    }
+                }
             }
         }
 
@@ -417,7 +437,6 @@ final class CatalogSequentialArchiveReader
     {
         $message = strtolower($this->errorText($error));
         foreach ([
-            'zip64 member fields',
             'zip64 central directories',
             'end-of-central-directory record was not found',
             'central directory record was not found',
@@ -430,6 +449,14 @@ final class CatalogSequentialArchiveReader
             }
         }
         return false;
+    }
+
+    private function isMissingZipCentralDirectoryFailure(\Throwable $error): bool
+    {
+        $message = strtolower($this->errorText($error));
+        return str_contains($message, 'end-of-central-directory record was not found')
+            || str_contains($message, 'central directory record was not found')
+            || str_contains($message, 'central-directory signature was not found');
     }
 
     /**
