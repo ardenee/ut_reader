@@ -20,6 +20,7 @@ $staged = $read('src/Infrastructure/Jobs/CatalogStagedImportJobHandler.php');
 $bucketMember = $read('src/Infrastructure/Jobs/CatalogBucketStagedPackageJobHandler.php');
 $children = $read('src/Infrastructure/Persistence/PdoArchiveChildOutcomeQuery.php');
 $workflow = $read('src/Infrastructure/Jobs/CatalogArchiveWorkflowJobHandler.php');
+$router = $read('src/Infrastructure/Jobs/CatalogArchiveMemberContentRoutingJobHandler.php');
 $projector = $read('src/Infrastructure/Jobs/CatalogArchiveJobOutcomeProjector.php');
 $fileTreeQuery = $read('src/Infrastructure/Persistence/PdoBackgroundJobFileTreeQuery.php');
 $fileTreeProjector = $read('src/Infrastructure/Jobs/CatalogBackgroundJobFileTreeProjector.php');
@@ -81,6 +82,9 @@ $record(
 $record(
     'nested_archive_invalid_files_propagates_without_partial',
     str_contains($children, "['invalid_ue_package', 'invalid_files', 'rejected']")
+        && str_contains($router, '$invalidUe = max(0, (int)($state[\'invalid_ue\'] ?? 0));')
+        && str_contains($router, 'CatalogImportOutcome::ARCHIVE_INVALID_FILES')
+        && str_contains($router, '$partial = $failed > 0 || $cancelled > 0;')
         && str_contains($workflow, 'CatalogImportOutcome::ARCHIVE_INVALID_FILES')
         && str_contains($projector, "['invalid_ue_package', 'invalid_files', 'rejected']"),
     'Invalid UE status must survive nested archive layers without becoming an extraction failure.'
@@ -141,7 +145,8 @@ $record(
         && str_contains($fingerprint, '/src/Infrastructure/Jobs/CatalogBucketStagedPackageJobHandler.php')
         && str_contains($fingerprint, '/src/Infrastructure/Persistence/PdoArchiveChildOutcomeQuery.php')
         && str_contains($fingerprint, '/src/Infrastructure/Persistence/PdoArchiveProfileMismatchOutcomeRepair.php')
-        && str_contains($fingerprint, '/src/Infrastructure/Jobs/CatalogArchiveWorkflowJobHandler.php'),
+        && str_contains($fingerprint, '/src/Infrastructure/Jobs/CatalogArchiveWorkflowJobHandler.php')
+        && str_contains($fingerprint, '/src/Infrastructure/Jobs/CatalogArchiveMemberContentRoutingJobHandler.php'),
     'Detached workers must restart when invalid-UE/archive-separation runtime changes.'
 );
 
@@ -153,6 +158,7 @@ foreach ([
     $root . '/src/Infrastructure/Jobs/CatalogBucketStagedPackageJobHandler.php',
     $root . '/src/Infrastructure/Persistence/PdoArchiveChildOutcomeQuery.php',
     $root . '/src/Infrastructure/Jobs/CatalogArchiveWorkflowJobHandler.php',
+    $root . '/src/Infrastructure/Jobs/CatalogArchiveMemberContentRoutingJobHandler.php',
     $root . '/src/Infrastructure/Jobs/CatalogArchiveJobOutcomeProjector.php',
     $root . '/src/Infrastructure/Persistence/PdoBackgroundJobFileTreeQuery.php',
     $root . '/src/Infrastructure/Jobs/CatalogBackgroundJobFileTreeProjector.php',
