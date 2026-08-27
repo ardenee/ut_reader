@@ -21,6 +21,7 @@ use UnrealDb\Catalog\Application\Telemetry\CatalogInvalidUeErrorClassifier;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogInvalidPackageException;
 
 $classifier = $read('src/Application/Telemetry/CatalogInvalidUeErrorClassifier.php');
+$profiles = $read('lib/GameProfiles.php');
 $exception = $read('src/Infrastructure/Import/CatalogInvalidPackageException.php');
 $indexer = $read('src/Infrastructure/Import/CatalogUnverifiedPackageIndexer.php');
 $verifiedInspector = $read('src/Infrastructure/Import/CatalogVerifiedPackageInspector.php');
@@ -64,6 +65,29 @@ $war = CatalogInvalidUeErrorClassifier::classify(
     $warArguments
 );
 
+$magic = CatalogInvalidUeErrorClassifier::classify(
+    'Game/profile mismatch. Detected=UNKNOWN, profile=UE1. Unreal package magic not found '
+    . 'The serialized package header does not identify a supported engine reader.'
+);
+$record(
+    'magic_not_found_is_terse_and_beats_unsupported_reader_text',
+    $magic['code'] === 'unreal.magic_not_found'
+        && $magic['error_type'] === 'InvalidUnrealPackage.unreal.magic_not_found'
+        && $magic['reason'] === 'Magic not found',
+    'Magic failure must group as Magic not found even when old messages also contain unsupported-reader/profile prose.'
+);
+
+$record(
+    'magic_header_capture_preserves_actual_bytes_and_text',
+    str_contains($profiles, "'header_hex' => \$headerHex")
+        && str_contains($profiles, "'header_text' => \$headerText")
+        && str_contains($profiles, "'actual_magic_hex'")
+        && str_contains($profiles, "'expected_magic_hex' => 'C1832A9E'")
+        && str_contains($profiles, "'reason' => 'Magic not found'")
+        && str_contains($indexer, "\$summary['error_arguments']")
+        && str_contains($verifiedInspector, "'unreal.magic_not_found' => 'Magic not found'"),
+    'New magic failures must retain the first header bytes and printable text as structured arguments.'
+);
 $record(
     'war_flurry_error_has_stable_type',
     $war['code'] === 'ue3.compressed_chunk_out_of_bounds'
@@ -204,6 +228,19 @@ $record(
 );
 
 $record(
+    'system_error_export_is_compact_troubleshooting_output',
+    str_contains($systemExport, '**Error:**')
+        && str_contains($systemExport, '**Values:**')
+        && str_contains($systemExport, '**Location:**')
+        && str_contains($systemExport, 'system_error_export_values(')
+        && str_contains($systemExport, 'system_error_export_location(')
+        && !str_contains($systemExport, '**Context**')
+        && !str_contains($systemExport, '**Trace**')
+        && !str_contains($systemExport, '- Request ID:')
+        && !str_contains($systemExport, '- HTTP:'),
+    'Markdown export must contain concise error, values and source location without raw request/context/trace noise.'
+);
+$record(
     'system_errors_can_filter_and_export_by_type',
     str_contains($systemErrors, '$_GET[\'type\']')
         && str_contains($systemErrors, 'SELECT error_type,COUNT(*) c')
@@ -234,6 +271,7 @@ $record(
 $syntaxFailures = [];
 foreach ([
     $root . '/src/Application/Telemetry/CatalogInvalidUeErrorClassifier.php',
+    $root . '/lib/GameProfiles.php',
     $root . '/src/Infrastructure/Import/CatalogInvalidPackageException.php',
     $root . '/src/Infrastructure/Import/CatalogUnverifiedPackageIndexer.php',
     $root . '/src/Infrastructure/Import/CatalogVerifiedPackageInspector.php',
