@@ -19,6 +19,7 @@ use UnrealDb\Catalog\Application\Jobs\JobHandler;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoArchiveChildOutcomeQuery;
+use UnrealDb\Catalog\Infrastructure\Import\CatalogImportOutcome;
 
 final class CatalogArchiveWorkflowJobHandler implements JobHandler
 {
@@ -249,6 +250,7 @@ final class CatalogArchiveWorkflowJobHandler implements JobHandler
         $totalSkipped = $extractionSkipped + $childSkipped;
         $contentNested = max(0, (int)($children['nested_archive'] ?? 0));
         $unverified = max(0, (int)($children['unverified'] ?? 0));
+        $invalidUe = max(0, (int)($children['invalid_ue'] ?? 0));
         $totalFailed = $extractionFailed + $childFailed;
         $partial = $totalFailed > 0 || $cancelled > 0;
         $successLabel = $job->type === JobType::IMPORT_STAGED_ARCHIVE ? 'imported' : 'added';
@@ -259,6 +261,7 @@ final class CatalogArchiveWorkflowJobHandler implements JobHandler
             . number_format($totalSkipped) . ' skipped, '
             . number_format($contentNested) . ' nested archive, '
             . number_format($unverified) . ' unverified/profile mismatch, '
+            . number_format($invalidUe) . ' invalid UE file' . ($invalidUe === 1 ? '' : 's') . ', '
             . number_format($totalFailed) . ' failed';
         if ($cancelled > 0) {
             $message .= ', ' . number_format($cancelled) . ' cancelled';
@@ -270,7 +273,9 @@ final class CatalogArchiveWorkflowJobHandler implements JobHandler
         }
 
         $result = $archiveResult;
-        $result['status'] = $partial ? 'partial' : 'completed';
+        $result['status'] = $partial
+            ? 'partial'
+            : ($invalidUe > 0 ? CatalogImportOutcome::ARCHIVE_INVALID_FILES : 'completed');
         $result['message'] = $message;
         $result['archive_outcomes'] = [
             'archive_member_skipped' => $extractionSkipped,
@@ -278,6 +283,7 @@ final class CatalogArchiveWorkflowJobHandler implements JobHandler
             'total_skipped' => $totalSkipped,
             'archive_member_failed' => $extractionFailed,
             'child_failed' => $childFailed,
+            'invalid_ue_files' => $invalidUe,
             'total_failed' => $totalFailed,
         ] + $children;
 
