@@ -1,17 +1,14 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Renders and/or processes the catalog page for PAK download blocked.
- * Why: It exists as a distinct user or administrator entry point for this catalog workflow.
- * Role: Web UI entry point; reusable application logic should be supplied by shared `lib`/`src` services rather than
- *       copied into peer pages.
- * Audit: Active page unless navigation/tests show otherwise; review large page-local helper blocks for extraction
- *        when similar logic appears elsewhere.
+ * Purpose: Streams stored original PAK archives when public download policy permits.
+ * Why: Original PAK downloads must use the same central per-IP limit and speed control as all other local downloads.
+ * Role: Web download endpoint; storage lookup and policy enforcement remain delegated to shared services.
  */
 declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
-require_once __DIR__ . '/lib/CatalogPublicRateLimit.php';
+require_once __DIR__ . '/lib/CatalogPublicAccess.php';
 require_once __DIR__ . '/lib/ExternalMirrors.php';
 require_once __DIR__ . '/lib/BaseGameProtection.php';
 
@@ -33,8 +30,8 @@ function pak_download_name(string $name): string
 try {
     $config = catalog_config();
     $db = catalog_db($config);
-    catalog_public_download_rate_limit();
     base_game_ensure($db);
+
     if (!CatalogPakArchiveStore::schemaInstalled($db)) {
         throw new RuntimeException('PAK archive management is not installed.');
     }
@@ -78,22 +75,47 @@ try {
     if ($size === false || (int)$size !== (int)$pak['file_size']) {
         throw new RuntimeException('Stored PAK size does not match the catalog record.');
     }
+
+    // Use the same persisted per-IP action limit and transfer-rate ceiling as
+    // download.php and generated-package-download.php.
+    catalog_public_download_limit($db);
+    $speedBytes = catalog_public_download_speed_bytes($db);
+
     $name = pak_download_name((string)$pak['original_name']);
     $fallback = preg_replace('/[^A-Za-z0-9._ -]+/', '_', $name) ?? 'archive.pak';
 
     if (session_status() === PHP_SESSION_ACTIVE) {
         session_write_close();
     }
+    @ini_set('zlib.output_compression', '0');
+    @ini_set('output_buffering', '0');
+    if (function_exists('apache_setenv')) {
+        @apache_setenv('no-gzip', '1');
+        @apache_setenv('dont-vary', '1');
+    }
+    while (ob_get_level() > 0) {
+        if (!@ob_end_clean()) {
+            break;
+        }
+    }
+    if (function_exists('header_remove')) {
+        header_remove('Content-Encoding');
+    }
+
     header('Content-Type: application/octet-stream');
     header('Content-Length: ' . (int)$size);
     header('Content-Disposition: attachment; filename="' . addcslashes($fallback, "\\\"")
         . '"; filename*=UTF-8\'\'' . rawurlencode($name));
     header('X-Content-Type-Options: nosniff');
-    header('Cache-Control: private, no-store');
-    readfile($path);
-    exit;
+    header('X-Accel-Buffering: no');
+    header('Cache-Control: private, no-store, no-transform');
+    if ($speedBytes > 0) {
+        header('X-UnrealDB-Rate-Limit: ' . $speedBytes . ' bytes/second');
+    }
+
+    catalog_public_stream_file($path, $speedBytes);
 } catch (Throwable $error) {
-    error_log('[UnrealDB PAK download][' . catalog_request_id() . '] ' . $error->getMessage());
+    error_log('[UnrealDB PAK download][' . catalog_request_id() . '] ' . get_class($error) . ': ' . $error->getMessage());
     if (!headers_sent()) {
         catalog_head('PAK download error');
     }
