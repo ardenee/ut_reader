@@ -56,7 +56,7 @@ final class CatalogDownloadSettingsService
             }
         }
         $values['public_block_crawlers'] = isset($input['public_block_crawlers']) ? '1' : '0';
-        $this->publicAccess->save($this->db, CatalogPublicAccessSettingsStore::normalize($values));
+        $publicValues = CatalogPublicAccessSettingsStore::normalize($values);
 
         $mode = strtolower(trim((string)($input['public_download_mode'] ?? 'local_direct')));
         if (!in_array($mode, ['local_direct', 'external_mirror', 'external_mirror_preferred', 'disabled'], true)) {
@@ -80,6 +80,8 @@ final class CatalogDownloadSettingsService
                 1048576
             ),
         ];
+        // Persist only after the complete form has been normalized and validated.
+        $this->publicAccess->save($this->db, $publicValues);
         foreach ($mirrorValues as $name => $value) {
             \fed_set_setting($this->db, $name, $value);
         }
