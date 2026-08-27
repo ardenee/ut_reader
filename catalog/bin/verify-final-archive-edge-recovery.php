@@ -17,6 +17,8 @@ $temp = [];
 try {
     $source = (string)file_get_contents($root . '/src/Infrastructure/Archive/CatalogSequentialArchiveReader.php');
     $consistencySource = (string)file_get_contents($root . '/src/Infrastructure/Archive/CatalogZipMetadataConsistency.php');
+    $extractorSource = (string)file_get_contents($root . '/src/Infrastructure/Archive/CatalogArchiveExtractor.php');
+    $localRecoverySource = (string)file_get_contents($root . '/src/Infrastructure/Archive/CatalogZipLocalHeaderRecoveryReader.php');
     $unknownMarker = "if (\$format === '7z' && (int)\$entry['size'] < 1)";
     $unknownPos = strpos($source, $unknownMarker);
     $planPos = strpos($source, '$decision = $plan($entry);');
@@ -31,6 +33,20 @@ try {
         str_contains($source, 'CatalogZipMetadataConsistency')
             && str_contains($source, 'hasTrustedLocalMetadataMismatch($archivePath)'),
         'ZIPs whose final central directory disagrees with trustworthy local metadata must use the verified sequential recovery path.'
+    );
+    $record(
+        'failed_zip_member_uses_exact_local_header_fallback',
+        str_contains($extractorSource, '->extractExactMember(')
+            && str_contains($localRecoverySource, 'public function extractExactMember(')
+            && str_contains($localRecoverySource, 'decoded CRC32 does not match local header'),
+        'A failed ZipArchive member read must retry only that exact member from bounded local-header bytes and still require CRC32 verification.'
+    );
+    $record(
+        'sequential_zip_probe_failure_prefers_native_reader',
+        str_contains($source, 'Prefer the native')
+            && str_contains($source, 'new CatalogNativeZipArchiveReader($this->config))->walk(')
+            && str_contains($source, 'isNativeZipMetadataCapabilityFailure'),
+        'ZIPs already known to have unreliable libzip streams must use native/local-header decoding before libarchive.'
     );
     $record(
         'zip_metadata_probe_is_bounded',
@@ -92,7 +108,10 @@ try {
 
     $record(
         'recovery_remains_in_process_php',
-        !preg_match('/\b(?:proc_open|shell_exec|popen|passthru|system|exec)\s*\(/', $source . "\n" . $consistencySource),
+        !preg_match(
+            '/\b(?:proc_open|shell_exec|popen|passthru|system|exec)\s*\(/',
+            $source . "\n" . $consistencySource . "\n" . $extractorSource . "\n" . $localRecoverySource
+        ),
         'Archive edge recovery must not launch an external archive process.'
     );
 
@@ -100,7 +119,9 @@ try {
     $record(
         'worker_fingerprint_tracks_recovery_code',
         str_contains($worker, '/Archive/CatalogSequentialArchiveReader.php')
-            && str_contains($worker, '/Archive/CatalogZipMetadataConsistency.php'),
+            && str_contains($worker, '/Archive/CatalogZipMetadataConsistency.php')
+            && str_contains($worker, '/Archive/CatalogArchiveExtractor.php')
+            && str_contains($worker, '/Archive/CatalogZipLocalHeaderRecoveryReader.php'),
         'Detached workers must reconcile when sequential or ZIP metadata recovery code changes.'
     );
 } catch (Throwable $error) {
