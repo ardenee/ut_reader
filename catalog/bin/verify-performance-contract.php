@@ -53,6 +53,22 @@ $record(
         && !str_contains($cache, 'random_int(1, 100)'),
     'request volume must not translate into probabilistic full cache-directory scans'
 );
+$invalidateStart = strpos($cache, 'public static function invalidate(array $config): int');
+$pruneStart = strpos($cache, 'public static function pruneDirectory(', $invalidateStart === false ? 0 : $invalidateStart);
+$invalidateBody = $invalidateStart !== false && $pruneStart !== false && $pruneStart > $invalidateStart
+    ? substr($cache, $invalidateStart, $pruneStart - $invalidateStart)
+    : '';
+$record(
+    'cache_invalidation_is_constant_time',
+    $invalidateBody !== ''
+        && str_contains($invalidateBody, "'.generation'")
+        && str_contains($invalidateBody, 'LOCK_EX')
+        && !str_contains($invalidateBody, 'FilesystemIterator')
+        && !str_contains($invalidateBody, '@unlink(')
+        && str_contains($cache, 'private static function generationToken(')
+        && str_contains($cache, '$generation . "\\n" . $script . "\\n" . $query'),
+    'settings changes must re-key the public cache in O(1), never walk/delete the full cache directory'
+);
 $lengthPos = strpos($cache, '$bodyLength = ob_get_length()');
 $contentsPos = strpos($cache, '$body = ob_get_contents()');
 $record(
