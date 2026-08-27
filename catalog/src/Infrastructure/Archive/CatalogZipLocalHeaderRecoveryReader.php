@@ -167,6 +167,132 @@ final class CatalogZipLocalHeaderRecoveryReader
     }
 
     /**
+     * Recover a ZIP whose central directory/EOCD is missing, using only local
+     * file headers which carry authoritative size and CRC values. Data-descriptor
+     * records are deliberately excluded by localCandidates().
+     *
+     * @param callable(array<string,mixed>):array{extract:bool,max_bytes?:int,state?:mixed} $plan
+     * @param callable(array<string,mixed>,?string,mixed):void $complete
+     * @param null|callable():void $heartbeat
+     * @return array{entries:int,decoded_bytes:int,format:string}
+     */
+    public function walkLocalHeadersOnly(
+        string $archivePath,
+        string $archiveName,
+        int $maxDecodedBytes,
+        callable $plan,
+        callable $complete,
+        ?callable $heartbeat = null
+    ): array {
+        $this->requireSource($archivePath, $archiveName);
+        $byPath = $this->localCandidates($archivePath);
+        $candidates = [];
+        foreach ($byPath as $pathCandidates) {
+            foreach ($pathCandidates as $candidate) {
+                $candidates[] = $candidate;
+            }
+        }
+        if ($candidates === []) {
+            throw new \RuntimeException('ZIP local-header-only recovery found no recoverable member records.');
+        }
+        usort(
+            $candidates,
+            static fn(array $left, array $right): int => (int)$left['offset'] <=> (int)$right['offset']
+        );
+
+        $maxDecodedBytes = max(1, $maxDecodedBytes);
+        $decodedBytes = 0;
+        $processed = 0;
+        foreach ($candidates as $candidate) {
+            if ($heartbeat !== null) {
+                $heartbeat();
+            }
+            $entry = [
+                'index' => $processed,
+                'path' => (string)$candidate['path'],
+                'size' => (int)$candidate['size'],
+                'encrypted' => false,
+                'safe' => true,
+                'reason' => '',
+                'backend' => 'php-native-zip-local-only',
+                'format' => 'zip',
+                'compression_method' => (int)$candidate['compression_method'],
+                'flags' => (int)$candidate['flags'],
+                'crc32' => (string)$candidate['crc32'],
+                'compressed_size' => (int)$candidate['compressed_size'],
+            ];
+            $processed++;
+
+            $decision = $plan($entry);
+            if (!is_array($decision) || !array_key_exists('extract', $decision)) {
+                throw new \LogicException('ZIP local-header-only plan must return an extract decision.');
+            }
+            $extract = (bool)$decision['extract'];
+            $state = $decision['state'] ?? null;
+            if (!$extract) {
+                $complete($entry, null, $state);
+                continue;
+            }
+
+            $entryLimit = max(1, (int)($decision['max_bytes'] ?? $maxDecodedBytes));
+            $expectedBytes = max(0, (int)$candidate['size']);
+            $remainingTotal = $maxDecodedBytes - $decodedBytes;
+            if ($expectedBytes < 1 || $expectedBytes > $entryLimit || $expectedBytes > $remainingTotal) {
+                $complete(
+                    $entry,
+                    null,
+                    [
+                        'kind' => 'failed',
+                        'reason' => 'Recovered ZIP local member "' . (string)$candidate['path']
+                            . '" has invalid/oversized size ' . number_format($expectedBytes) . ' bytes.',
+                    ]
+                );
+                continue;
+            }
+
+            $temporary = $this->temporaryPath();
+            $failure = '';
+            $result = $this->decodeCandidate(
+                $archivePath,
+                $candidate,
+                $temporary,
+                min($entryLimit, $remainingTotal),
+                $heartbeat,
+                $failure
+            );
+            if (!is_array($result)) {
+                @unlink($temporary);
+                $complete(
+                    $entry,
+                    null,
+                    [
+                        'kind' => 'failed',
+                        'reason' => 'Recovered ZIP local member "' . (string)$candidate['path']
+                            . '" could not be decoded: '
+                            . ($failure !== '' ? $failure : 'unknown local-header decode failure'),
+                    ]
+                );
+                continue;
+            }
+
+            $decodedBytes += (int)$result['bytes'];
+            try {
+                $complete($entry, $temporary, $state);
+            } finally {
+                if (is_file($temporary)) {
+                    @unlink($temporary);
+                }
+            }
+        }
+
+        return [
+            'entries' => $processed,
+            'decoded_bytes' => $decodedBytes,
+            'format' => 'zip-local-header-only',
+        ];
+    }
+
+    /**
      * Recover one exact ZIP member from authoritative local-header metadata.
      *
      * This is used only after the normal ZipArchive member read has failed. The
