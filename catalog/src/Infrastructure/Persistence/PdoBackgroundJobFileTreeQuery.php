@@ -21,7 +21,7 @@ use PDO;
 
 final class PdoBackgroundJobFileTreeQuery
 {
-    private const ISSUE_DISPLAY_STATUSES = '"failed","rejected","unverified","invalid_ue_package","invalid_files","partial","error"';
+    private const ISSUE_DISPLAY_STATUSES = '"failed","rejected","unverified","invalid_ue_package","partial","error"';
     private const SYNTHETIC_ARCHIVE_WORKFLOW_PREFIX = 'archive:content-container:';
     private const PROFILED_UPLOAD_BATCH_JOB_TYPE = 'catalog.profiled_upload_batch';
 
@@ -53,22 +53,31 @@ final class PdoBackgroundJobFileTreeQuery
         // import beneath it becomes a logical source root with its own archive/
         // package descendants. An explicit coordinator job-type filter still
         // exposes historical batch rows for diagnostics.
-        $rootScope = $jobType === self::PROFILED_UPLOAD_BATCH_JOB_TYPE
+        $logicalRootScope = $jobType === self::PROFILED_UPLOAD_BATCH_JOB_TYPE
             ? 'j.parent_job_id IS NULL'
             : $this->logicalRootExpression('j');
-        $baseWhere = ['j.queue_name=?', $rootScope];
-        $baseParams = [$queue];
 
+        // All/Working/Completed/Stopped remain source-root views. Issues is the
+        // exception: a successfully extracted invalid UE member is itself the
+        // actionable file, while its healthy archive container is not.
+        $pageRootScope = $state === 'issue' && $jobType !== self::PROFILED_UPLOAD_BATCH_JOB_TYPE
+            ? '(' . $logicalRootScope . ' OR ' . $this->invalidUeIssueLeafExpression('j') . ')'
+            : $logicalRootScope;
+
+        $commonWhere = ['j.queue_name=?'];
+        $commonParams = [$queue];
         if ($jobType !== '') {
-            $baseWhere[] = 'j.job_type=?';
-            $baseParams[] = $jobType;
+            $commonWhere[] = 'j.job_type=?';
+            $commonParams[] = $jobType;
         }
-
         if ($search !== '') {
             [$searchSql, $searchParams] = $this->rootSearchCondition($search);
-            $baseWhere[] = $searchSql;
-            array_push($baseParams, ...$searchParams);
+            $commonWhere[] = $searchSql;
+            array_push($commonParams, ...$searchParams);
         }
+
+        $baseWhere = array_merge($commonWhere, [$pageRootScope]);
+        $baseParams = $commonParams;
 
         /*
          * Global counts/filtering deliberately use only each logical source row.
@@ -79,7 +88,8 @@ final class PdoBackgroundJobFileTreeQuery
          */
         $issue = $this->ownIssueExpression('j');
         $active = 'j.status IN ("queued","running")';
-        $baseSql = implode(' AND ', $baseWhere);
+        $logicalCountWhere = array_merge($commonWhere, [$logicalRootScope]);
+        $logicalCountSql = implode(' AND ', $logicalCountWhere);
 
         $countStatement = $this->db->prepare(
             'SELECT COUNT(*) AS all_count,'
@@ -87,9 +97,9 @@ final class PdoBackgroundJobFileTreeQuery
             . 'SUM(CASE WHEN NOT (' . $issue . ') AND ' . $active . ' THEN 1 ELSE 0 END) AS working_count,'
             . 'SUM(CASE WHEN NOT (' . $issue . ') AND NOT (' . $active . ') AND j.status="completed" THEN 1 ELSE 0 END) AS completed_count,'
             . 'SUM(CASE WHEN NOT (' . $issue . ') AND NOT (' . $active . ') AND j.status="cancelled" THEN 1 ELSE 0 END) AS stopped_count '
-            . 'FROM ue_background_jobs j WHERE ' . $baseSql
+            . 'FROM ue_background_jobs j WHERE ' . $logicalCountSql
         );
-        $countStatement->execute($baseParams);
+        $countStatement->execute($commonParams);
         $countRow = $countStatement->fetch(PDO::FETCH_ASSOC) ?: [];
         $counts = [
             'all' => max(0, (int)($countRow['all_count'] ?? 0)),
@@ -98,6 +108,20 @@ final class PdoBackgroundJobFileTreeQuery
             'completed' => max(0, (int)($countRow['completed_count'] ?? 0)),
             'stopped' => max(0, (int)($countRow['stopped_count'] ?? 0)),
         ];
+
+        // Invalid UE archive members are file issues, not source-container issues.
+        // Count only non-root leaves here to avoid double-counting a direct source
+        // job that is already part of the logical-root issue count.
+        if ($jobType !== self::PROFILED_UPLOAD_BATCH_JOB_TYPE) {
+            $leafCount = $this->db->prepare(
+                'SELECT COUNT(*) FROM ue_background_jobs j WHERE '
+                . implode(' AND ', $commonWhere)
+                . ' AND ' . $this->invalidUeIssueLeafExpression('j')
+                . ' AND NOT (' . $logicalRootScope . ')'
+            );
+            $leafCount->execute($commonParams);
+            $counts['issue'] += max(0, (int)$leafCount->fetchColumn());
+        }
 
         $where = $baseWhere;
         $params = $baseParams;
@@ -195,6 +219,19 @@ final class PdoBackgroundJobFileTreeQuery
             . ')';
     }
 
+    private function invalidUeIssueLeafExpression(string $alias): string
+    {
+        return '(' . $alias . '.status="completed" '
+            . 'AND ' . $alias . '.display_status="invalid_ue_package" '
+            . 'AND ' . $alias . '.parent_job_id IS NOT NULL)';
+    }
+
+    private function propagatingChildIssueExpression(string $alias): string
+    {
+        return '(' . $this->ownIssueExpression($alias)
+            . ' AND ' . $alias . '.display_status<>"invalid_ue_package")';
+    }
+
     private function logicalRootExpression(string $alias): string
     {
         $parentAlias = 'logical_root_parent';
@@ -242,13 +279,13 @@ final class PdoBackgroundJobFileTreeQuery
     private function childIssueCountExpression(string $alias): string
     {
         return '('
-            . $this->directChildCount('direct_issue', $alias, 'AND ' . $this->ownIssueExpression('direct_issue'))
+            . $this->directChildCount('direct_issue', $alias, 'AND ' . $this->propagatingChildIssueExpression('direct_issue'))
             . ' + '
             . $this->syntheticRoutedChildCount(
                 'synthetic_issue',
                 'routed_issue',
                 $alias,
-                'AND ' . $this->ownIssueExpression('routed_issue')
+                'AND ' . $this->propagatingChildIssueExpression('routed_issue')
             )
             . ')';
     }
