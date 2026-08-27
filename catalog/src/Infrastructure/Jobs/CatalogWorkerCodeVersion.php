@@ -28,6 +28,7 @@ final class CatalogWorkerCodeVersion
             $this->catalogRoot . '/src/Application/Jobs/JobWorker.php',
             $this->catalogRoot . '/src/Application/Jobs/JobFailureRetryPolicy.php',
             $this->catalogRoot . '/src/Infrastructure/Persistence/PdoJobQueue.php',
+            $this->catalogRoot . '/src/Infrastructure/Persistence/PdoJobQueueSupport.php',
             $this->catalogRoot . '/src/Infrastructure/Persistence/PdoJobClaimer.php',
             $this->catalogRoot . '/src/Infrastructure/Persistence/PdoJobEnqueuer.php',
             $this->catalogRoot . '/src/Infrastructure/Persistence/PdoJobLeaseStore.php',
