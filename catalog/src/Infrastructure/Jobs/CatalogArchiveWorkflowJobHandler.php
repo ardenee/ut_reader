@@ -19,7 +19,6 @@ use UnrealDb\Catalog\Application\Jobs\JobHandler;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoArchiveChildOutcomeQuery;
-use UnrealDb\Catalog\Infrastructure\Import\CatalogImportOutcome;
 
 final class CatalogArchiveWorkflowJobHandler implements JobHandler
 {
