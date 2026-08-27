@@ -9,6 +9,8 @@ declare(strict_types=1);
 
 namespace UnrealDb\Catalog\Infrastructure\Unverified;
 
+use UnrealDb\Catalog\Infrastructure\Import\CatalogProfileMismatchException;
+
 use PDO;
 use Throwable;
 
@@ -73,11 +75,22 @@ final class CatalogUnverifiedPromotion
         try {
             $this->emit($emit, 'classifying', 12, 'Checking the selected game profile');
             $classification = \gp_classify_file($this->db, $targetGameId, $prepared['path'], $prepared['name']);
-            if (!$allowProfileOverride && empty($classification['ok_for_selected_game'])) {
+            if (empty($classification['header_ok'])) {
                 throw new \RuntimeException(
+                    trim((string)(($classification['notes'][0] ?? 'Invalid Unreal package header')))
+                        ?: 'Invalid Unreal package header'
+                );
+            }
+            if (!$allowProfileOverride && empty($classification['ok_for_selected_game'])) {
+                throw new CatalogProfileMismatchException(
                     'Game/profile mismatch. Detected=' . ($classification['detected_engine'] ?? 'unknown')
-                    . ', profile=' . ($classification['selected_engine'] ?? 'unknown') . '. '
-                    . implode(' ', (array)$classification['notes'])
+                    . ', profile=' . ($classification['selected_engine'] ?? 'unknown') . '.',
+                    [
+                        'detected_engine' => (string)($classification['detected_engine'] ?? 'UNKNOWN'),
+                        'selected_engine' => (string)($classification['selected_engine'] ?? 'UNKNOWN'),
+                        'package_version' => $classification['package_version'] ?? null,
+                        'licensee_version' => $classification['licensee_version'] ?? null,
+                    ]
                 );
             }
 
