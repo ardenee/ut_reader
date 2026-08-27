@@ -316,13 +316,32 @@ final class CatalogUE3PackageReader
         $handle=fopen($this->path,'rb');
         if (!is_resource($handle)) throw new RuntimeException('Could not reopen Epic UE3 package for chunk decompression');
         try {
-            $logical=$this->readFileRange($handle,0,$first,'uncompressed prefix');
+            $logical=$this->readFileRange($handle,0,$first,'uncompressed prefix',$physicalSize);
+            if ($logical===null) {
+                return false;
+            }
             $cursor=strlen($logical);
             foreach ($chunks as $i=>$c) {
                 $uOff=(int)$c['uOff']; $uLen=(int)$c['uLen'];
-                if ($uOff<$cursor) throw new RuntimeException('Overlapping Epic UE3 compressed chunk ranges are invalid');
+                if ($uOff<$cursor) {
+                    $this->recordValidationIssue(
+                        'ue3.overlapping_compressed_chunks',
+                        'UE3 compressed chunks overlap in logical package space.',
+                        ['chunk_index'=>(int)$i,'uncompressed_offset'=>$uOff,'previous_end'=>$cursor]
+                    );
+                    return false;
+                }
                 if ($uOff>$cursor) $logical.=str_repeat("\0",$uOff-$cursor);
-                $payload=$this->readFileRange($handle,(int)$c['cOff'],(int)$c['cLen'],"compressed chunk $i");
+                $payload=$this->readFileRange(
+                    $handle,
+                    (int)$c['cOff'],
+                    (int)$c['cLen'],
+                    "compressed chunk $i",
+                    $physicalSize
+                );
+                if ($payload===null) {
+                    return false;
+                }
                 $decoded=$this->inflateChunk($payload,$uLen,(int)$i);
                 if ($decoded===null) {
                     return false;
@@ -340,16 +359,51 @@ final class CatalogUE3PackageReader
         return true;
     }
     /** @param resource $handle */
-    private function readFileRange($handle,int $offset,int $length,string $field): string
+    private function readFileRange($handle,int $offset,int $length,string $field,int $physicalSize): ?string
     {
-        if ($offset<0 || $length<0 || fseek($handle,$offset,SEEK_SET)!==0) throw new RuntimeException("Could not seek Epic UE3 $field");
+        $end=$offset+$length;
+        if ($offset<0 || $length<0 || $end>$physicalSize) {
+            $this->recordValidationIssue(
+                'ue3.read_range_out_of_bounds',
+                'UE3 read range is outside the physical package.',
+                [
+                    'field'=>$field,
+                    'offset'=>$offset,
+                    'length'=>$length,
+                    'end'=>$end,
+                    'physical_size'=>$physicalSize,
+                ]
+            );
+            return null;
+        }
+        if (fseek($handle,$offset,SEEK_SET)!==0) {
+            $this->recordValidationIssue(
+                'ue3.read_seek_failed',
+                'Could not seek to a validated UE3 package range.',
+                ['field'=>$field,'offset'=>$offset,'length'=>$length]
+            );
+            return null;
+        }
         $out='';
         while (strlen($out)<$length) {
             $chunk=fread($handle,$length-strlen($out));
             if ($chunk===false || $chunk==='') break;
             $out.=$chunk;
         }
-        if (strlen($out)!==$length) throw new RuntimeException("Could not read complete Epic UE3 $field expected=$length got=".strlen($out));
+        if (strlen($out)!==$length) {
+            $this->recordValidationIssue(
+                'ue3.read_range_incomplete',
+                'UE3 package read ended before the validated range was complete.',
+                [
+                    'field'=>$field,
+                    'offset'=>$offset,
+                    'expected_size'=>$length,
+                    'actual_size'=>strlen($out),
+                    'physical_size'=>$physicalSize,
+                ]
+            );
+            return null;
+        }
         return $out;
     }
     private function inflateChunk(string $payload,int $expected,int $index): ?string
@@ -423,6 +477,27 @@ final class CatalogUE3PackageReader
                 return null;
             }
             $blocks[]=[$c,$u];
+        }
+
+        $sumCompressed=0;
+        $sumUncompressed=0;
+        foreach ($blocks as [$compressedSize,$uncompressedSize]) {
+            $sumCompressed+=$compressedSize;
+            $sumUncompressed+=$uncompressedSize;
+        }
+        if ($sumCompressed!==$compressedTotal || $sumUncompressed!==$total) {
+            $this->recordValidationIssue(
+                'ue3.compressed_chunk_totals_mismatch',
+                'UE3 compressed chunk block totals do not match the chunk header.',
+                [
+                    'chunk_index'=>$index,
+                    'header_compressed_size'=>$compressedTotal,
+                    'block_compressed_size'=>$sumCompressed,
+                    'header_uncompressed_size'=>$total,
+                    'block_uncompressed_size'=>$sumUncompressed,
+                ]
+            );
+            return null;
         }
 
         $remaining=$r->remaining();
