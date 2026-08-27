@@ -52,8 +52,12 @@ final class CatalogJobWorkerFactory
             $profileMismatchRepair = (new PdoArchiveProfileMismatchOutcomeRepair($db))->repair($queueName);
             if ($profileMismatchRepair['reclassified'] > 0 || $profileMismatchRepair['requeued'] > 0) {
                 error_log('[UnrealDB archive outcome repair] Reclassified '
-                    . $profileMismatchRepair['reclassified'] . ' valid profile mismatch child outcome(s); requeued '
-                    . $profileMismatchRepair['requeued'] . ' coordinator(s) for ledger-only aggregation.');
+                    . (int)($profileMismatchRepair['profile_mismatch_reclassified'] ?? 0)
+                    . ' profile mismatch and '
+                    . (int)($profileMismatchRepair['invalid_ue_reclassified'] ?? 0)
+                    . ' invalid UE child outcome(s); requeued '
+                    . $profileMismatchRepair['requeued']
+                    . ' coordinator(s) for ledger-only aggregation.');
             }
         } catch (\Throwable $error) {
             error_log('[UnrealDB archive profile mismatch repair] ' . $error->getMessage());
