@@ -275,6 +275,8 @@ final class PdoInvalidUeSystemErrorBackfill
             . 'WHERE source_kind="unreal-file-validation" '
             . 'AND (error_type="InvalidUnrealPackage" '
             . 'OR error_type NOT LIKE "InvalidUnrealPackage.%" '
+            . 'OR error_type="InvalidUnrealPackage.unreal.unsupported_reader" '
+            . 'OR message LIKE "%Game/profile mismatch.%" '
             . 'OR COALESCE(trace_text,"")<>"") '
             . 'ORDER BY id ASC LIMIT 100000'
         )->fetchAll(PDO::FETCH_ASSOC) ?: [];
@@ -305,12 +307,34 @@ final class PdoInvalidUeSystemErrorBackfill
             }
 
             $context = $this->decode((string)($row['context_json'] ?? ''));
+            $rawMessage = (string)($row['message'] ?? '');
+            $lowerMessage = strtolower($rawMessage);
+            $profileMismatch = str_contains($lowerMessage, 'game/profile mismatch.');
+            $hasHeaderFailure = str_contains($lowerMessage, 'magic not found')
+                || str_contains($lowerMessage, 'file too small')
+                || str_contains($lowerMessage, 'package header too short')
+                || str_contains($lowerMessage, 'could not read package header');
+
+            // A valid package that merely targets a different game/engine profile
+            // is an Unverified outcome, not a System Error.
+            if ($profileMismatch && !$hasHeaderFailure) {
+                $delete->execute([$id]);
+                $normalizedCount++;
+                continue;
+            }
+
             $arguments = is_array($context['validation_arguments'] ?? null)
                 ? $context['validation_arguments']
                 : [];
+            $existingCode = trim((string)($context['validation_code'] ?? ''));
+            if ($existingCode === 'unreal.unsupported_reader' && $hasHeaderFailure) {
+                // Older rows bundled the real header failure into a generic
+                // unsupported-reader/profile-mismatch message.
+                $existingCode = '';
+            }
             $classified = CatalogInvalidUeErrorClassifier::classify(
-                (string)($row['message'] ?? ''),
-                trim((string)($context['validation_code'] ?? '')),
+                $rawMessage,
+                $existingCode,
                 $arguments
             );
             $fileName = trim((string)($context['file_name'] ?? ''));
