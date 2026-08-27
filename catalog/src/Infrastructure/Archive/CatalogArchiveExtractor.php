@@ -276,6 +276,7 @@ final class CatalogArchiveExtractor
         $temporary = $this->temporaryPath();
         $input = null;
         $output = null;
+        $primaryError = null;
         try {
             if (method_exists($zip, 'getStreamIndex')) {
                 $input = $zip->getStreamIndex((int)$entry['index'], \ZipArchive::FL_UNCHANGED);
@@ -291,8 +292,7 @@ final class CatalogArchiveExtractor
             }
             $this->copyBoundedStream($input, $output, $maxBytes, 'ZIP');
         } catch (\Throwable $error) {
-            @unlink($temporary);
-            throw $error;
+            $primaryError = $error;
         } finally {
             if (is_resource($input)) {
                 fclose($input);
@@ -303,8 +303,35 @@ final class CatalogArchiveExtractor
             $zip->close();
         }
 
-        $this->verifyExtractedFile($temporary, (int)$entry['size'], $maxBytes);
-        return $temporary;
+        if (!$primaryError instanceof \Throwable) {
+            try {
+                $this->verifyExtractedFile($temporary, (int)$entry['size'], $maxBytes);
+                return $temporary;
+            } catch (\Throwable $error) {
+                $primaryError = $error;
+            }
+        }
+        @unlink($temporary);
+
+        // Some historic ZIPs have a usable same-name local member record even
+        // when libzip's central-directory stream is truncated or stale. Recover
+        // only that failed member and require local size + CRC32 verification;
+        // already-successful siblings are not replayed.
+        try {
+            return (new CatalogZipLocalHeaderRecoveryReader($this->config))->extractExactMember(
+                $archivePath,
+                (string)$entry['path'],
+                $maxBytes
+            );
+        } catch (\Throwable $recoveryError) {
+            throw new \RuntimeException(
+                'ZIP member "' . (string)$entry['path'] . '" failed normal extraction: '
+                . $this->errorText($primaryError)
+                . ' Local-header recovery also failed: ' . $this->errorText($recoveryError),
+                (int)$recoveryError->getCode(),
+                $recoveryError
+            );
+        }
     }
 
     /** @param array{index:int,path:string,size:int} $entry */
