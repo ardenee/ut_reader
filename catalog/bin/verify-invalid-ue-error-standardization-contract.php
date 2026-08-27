@@ -125,8 +125,8 @@ $record(
     'ue3_reader_returns_structured_validation_issues',
     str_contains($reader, 'function getValidationIssues(): array')
         && str_contains($reader, "'ue3.compressed_chunk_out_of_bounds'")
-        && str_contains($reader, "'compressed_offset' => $cOff")
-        && str_contains($reader, "'physical_size' => $physicalSize")
+        && str_contains($reader, '\'compressed_offset\' => $cOff')
+        && str_contains($reader, '\'physical_size\' => $physicalSize')
         && str_contains($reader, "'compression_flags' => sprintf")
         && !str_contains($reader, 'getTraceAsString'),
     'UE3 reader validation output must be structured and must not embed a stack trace.'
@@ -150,21 +150,21 @@ $record(
         && str_contains($reader, "'ue3.binary_seek_out_of_bounds'")
         && str_contains($reader, "'ue3.binary_read_out_of_bounds'")
         && str_contains($reader, "'ue3.serialized_array_out_of_bounds'")
-        && str_contains($reader, "'requested_length'=>$len")
-        && str_contains($reader, "'remaining'=>$remaining"),
+        && str_contains($reader, '\'requested_length\'=>$len')
+        && str_contains($reader, '\'remaining\'=>$remaining'),
     'Low-level UE3 binary bounds checks must preserve arguments rather than emitting opaque OutOfBoundsException text.'
 );
 
 $record(
     'structured_validation_reaches_system_errors',
-    str_contains($indexer, "method_exists($reader, 'getValidationIssues')")
+    str_contains($indexer, 'method_exists($reader, \'getValidationIssues\')')
         && str_contains($indexer, 'new CatalogInvalidPackageException(')
-        && str_contains($bucket, "'error_code' => $error instanceof CatalogInvalidPackageException")
-        && str_contains($bucket, "'arguments' => $error instanceof CatalogInvalidPackageException")
-        && str_contains($staged, "'arguments' => $error instanceof CatalogInvalidPackageException")
+        && str_contains($bucket, '\'error_code\' => $error instanceof CatalogInvalidPackageException')
+        && str_contains($bucket, '\'arguments\' => $error instanceof CatalogInvalidPackageException')
+        && str_contains($staged, '\'arguments\' => $error instanceof CatalogInvalidPackageException')
         && str_contains($reporter, 'CatalogInvalidUeErrorClassifier::classify(')
-        && str_contains($reporter, "'validation_code' => $classified['code']")
-        && str_contains($reporter, "'validation_arguments' => $classified['arguments']"),
+        && str_contains($reporter, '\'validation_code\' => $classified[\'code\']')
+        && str_contains($reporter, '\'validation_arguments\' => $classified[\'arguments\']'),
     'The reader code/arguments must survive every layer into System Error context.'
 );
 
@@ -172,7 +172,7 @@ $record(
     'expected_validation_errors_have_no_trace',
     str_contains($reporter, "'source_file' => ''")
         && !str_contains($reporter, "'trace_text' =>")
-        && str_contains($reporter, "'message' => $fileName . ': ' . $reason"),
+        && str_contains($reporter, '\'message\' => $fileName . \': \' . $reason'),
     'Expected invalid-file validation errors should store concise reason/context, not parser stack traces.'
 );
 
@@ -197,7 +197,7 @@ $record(
 
 $record(
     'inspector_exposes_structured_validation',
-    str_contains($inspector, "'validation_issues' => $validationIssues"),
+    str_contains($inspector, '\'validation_issues\' => $validationIssues'),
     'The one-file diagnostic tool must show the same structured validation result used by imports.'
 );
 
