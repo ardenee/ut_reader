@@ -80,7 +80,7 @@ final class CatalogUE3PackageReader
     private const TAG=0x9E2A83C1, TAG_SWAPPED=0xC1832A9E;
     private const VER_ADDITIONAL_COOK_PACKAGE_SUMMARY=516, VER_REMOVED_COMPONENT_MAP=543,
         VER_ASSET_THUMBNAILS_IN_PACKAGES=584, VER_ADDED_CROSSLEVEL_REFERENCES=623, MAX_EPIC_UE3_VERSION=867;
-    private const COMPRESS_ZLIB=1, COMPRESS_LZO=2, COMPRESS_TYPE_MASK=0x0F;
+    private const COMPRESS_ZLIB=1, COMPRESS_LZO=2, COMPRESS_LZX=4, COMPRESS_TYPE_MASK=0x0F;
 
     private string $physical='', $logical=''; private bool $swap=false;
     /** @var array<string,mixed> */ private array $header=[];
@@ -321,6 +321,10 @@ final class CatalogUE3PackageReader
         $flags=(int)$this->header['compressionFlags']; $algo=$flags&self::COMPRESS_TYPE_MASK;
         if ($algo===self::COMPRESS_ZLIB) { $out=@gzuncompress($src); if ($out===false) $out=@gzdecode($src); if ($out===false) throw new RuntimeException('Epic UE3 zlib decompression failed'); }
         elseif ($algo===self::COMPRESS_LZO) $out=CatalogLzoDecoder::decompressLzo1x($src,$expected);
+        elseif ($algo===self::COMPRESS_LZX) throw new RuntimeException(
+            'Epic UE3 LZX package compression is recognized but no LZX decoder is available'
+            . '; flags=' . sprintf('0x%08X',$flags)
+        );
         else throw new RuntimeException('Unsupported Epic UE3 compression flags='.sprintf('0x%08X',$flags));
         if (strlen($out)!==$expected) throw new RuntimeException("Epic UE3 compressed block size mismatch expected=$expected got=".strlen($out)); return $out;
     }
