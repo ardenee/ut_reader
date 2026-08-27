@@ -115,14 +115,14 @@ final class CatalogArchiveJobOutcomeProjector
                     $summary['nested_archive']++;
                 } elseif ($resultStatus === 'unverified_profile_mismatch') {
                     $summary['unverified']++;
-                } elseif (in_array($resultStatus, ['invalid_ue_package', 'rejected'], true)) {
+                } elseif (in_array($resultStatus, ['invalid_ue_package', 'invalid_files', 'rejected'], true)) {
                     $summary['invalid_ue']++;
                     $error = trim((string)($result['message'] ?? $child['last_error'] ?? ''));
                     $this->appendFailure(
                         $summary,
                         (int)($child['id'] ?? 0),
                         $payload,
-                        'invalid_ue_package',
+                        $resultStatus === 'invalid_files' ? 'invalid_files' : 'invalid_ue_package',
                         $error !== '' ? $error : 'Extracted member is not a valid supported Unreal package.'
                     );
                 } elseif (in_array($resultStatus, ['failed', 'unverified', 'partial', 'error'], true)) {
