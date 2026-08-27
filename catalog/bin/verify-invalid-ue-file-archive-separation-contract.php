@@ -60,8 +60,8 @@ $record(
 $record(
     'invalid_profiled_import_reports_system_error',
     str_contains($staged, 'CatalogInvalidUeFileReporter::record([')
-        && str_contains($staged, "'reason' => $shortError")
-        && str_contains($staged, "'system_error_recorded' => $systemErrorRecorded"),
+        && str_contains($staged, '\'reason\' => $shortError')
+        && str_contains($staged, '\'system_error_recorded\' => $systemErrorRecorded'),
     'Invalid profiled package content must be recorded in System Errors when the terminal child outcome is produced.'
 );
 
@@ -70,8 +70,8 @@ $record(
     substr_count($bucket, 'CatalogInvalidUeFileReporter::record([') >= 2
         && str_contains($bucket, "'archive_source_name' =>")
         && str_contains($bucket, "'archive_entry_path' =>")
-        && str_contains($bucket, "'md5' => $md5")
-        && str_contains($bucket, "'sha1' => $sha1"),
+        && str_contains($bucket, '\'md5\' => $md5')
+        && str_contains($bucket, '\'sha1\' => $sha1'),
     'Both non-package and parser-invalid extracted members must be recorded as System Errors with archive/file identity.'
 );
 
@@ -79,10 +79,10 @@ $record(
     'system_error_type_is_file_validation_not_job_retry',
     str_contains($reporter, "'source_kind' => 'unreal-file-validation'")
         && str_contains($reporter, "'error_type' => 'InvalidUnrealPackage'")
-        && str_contains($reporter, "'route' => $route")
+        && str_contains($reporter, '\'route\' => $route')
         && str_contains($reporter, "'disposition' => 'invalid_ue_file'")
-        && str_contains($reporter, "'md5' => $md5")
-        && str_contains($reporter, "'archive_source_name' => $archiveSourceName"),
+        && str_contains($reporter, '\'md5\' => $md5')
+        && str_contains($reporter, '\'archive_source_name\' => $archiveSourceName'),
     'System Errors must identify the invalid UE file/content and preserve archive provenance without calling the archive corrupt.'
 );
 
@@ -106,8 +106,8 @@ $record(
 $record(
     'archive_with_only_invalid_content_completes',
     str_contains($workflow, '$partial = $totalFailed > 0 || $cancelled > 0;')
-        && str_contains($workflow, "$result['status'] = $partial ? 'partial' : 'completed';")
-        && str_contains($workflow, "'invalid_ue_files' => $invalidUe")
+        && str_contains($workflow, '$result[\'status\'] = $partial ? \'partial\' : \'completed\';')
+        && str_contains($workflow, '\'invalid_ue_files\' => $invalidUe')
         && !str_contains($workflow, 'CatalogImportOutcome::ARCHIVE_INVALID_FILES'),
     'A healthy archive containing an invalid UE member must complete; only extraction/worker failure makes it partial.'
 );
@@ -115,7 +115,7 @@ $record(
 $record(
     'nested_archive_with_only_invalid_content_completes',
     str_contains($router, '$partial = $failed > 0 || $cancelled > 0;')
-        && str_contains($router, "$status = $partial ? 'partial' : 'nested_archive';")
+        && str_contains($router, '$status = $partial ? \'partial\' : \'nested_archive\';')
         && !str_contains($router, 'CatalogImportOutcome::ARCHIVE_INVALID_FILES'),
     'Invalid UE content must not turn a nested healthy archive into a retryable partial archive.'
 );
@@ -124,7 +124,7 @@ $record(
     'read_projection_keeps_historical_invalid_archives_completed',
     str_contains($projector, "['invalid_ue_package', 'invalid_files', 'rejected']")
         && str_contains($projector, '$summary[\'invalid_ue\']++')
-        && str_contains($projector, "$row['display_status'] = 'completed';")
+        && str_contains($projector, '$row[\'display_status\'] = \'completed\';')
         && !str_contains($projector, 'CatalogImportOutcome::ARCHIVE_INVALID_FILES'),
     'Historical invalid_files archive rows must project as completed when no actual extraction/child failure exists.'
 );
