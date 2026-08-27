@@ -29,6 +29,8 @@ $bulk = $read('src/Infrastructure/Persistence/PdoBackgroundJobBulkAction.php');
 $reporter = $read('src/Infrastructure/Telemetry/CatalogInvalidUeFileReporter.php');
 $systemRecorder = $read('src/Infrastructure/Telemetry/CatalogSystemErrorRecorder.php');
 $backfill = $read('src/Infrastructure/Persistence/PdoInvalidUeSystemErrorBackfill.php');
+$repair = $read('src/Infrastructure/Persistence/PdoArchiveProfileMismatchOutcomeRepair.php');
+$cliBackfill = $read('bin/backfill-invalid-ue-system-errors.php');
 $factory = $read('src/Infrastructure/Jobs/CatalogJobWorkerFactory.php');
 $fingerprint = $read('src/Infrastructure/Jobs/CatalogWorkerCodeVersion.php');
 
@@ -171,6 +173,18 @@ $record(
 );
 
 $record(
+    'ledger_only_cli_backfills_without_workers_or_source_reads',
+    str_contains($cliBackfill, "'mode' => 'ledger_only'")
+        && str_contains($cliBackfill, "'source_bytes_read' => false")
+        && str_contains($cliBackfill, "'workers_started' => false")
+        && str_contains($cliBackfill, 'new PdoInvalidUeSystemErrorBackfill($db)')
+        && !str_contains($cliBackfill, 'CatalogArchiveExtractor')
+        && !str_contains($cliBackfill, 'CatalogIncomingFileStore')
+        && !str_contains($cliBackfill, 'CatalogJobWorkerFactory'),
+    'The one-shot CLI must populate historical invalid UE System Errors entirely from ledger metadata without starting workers.'
+);
+
+$record(
     'worker_startup_runs_invalid_ue_system_error_backfill',
     str_contains($factory, 'new PdoInvalidUeSystemErrorBackfill($db)')
         && str_contains($factory, 'Invalid Unreal package content is a System Error/data-quality problem')
@@ -185,6 +199,8 @@ foreach ([
     $root . '/src/Infrastructure/Telemetry/CatalogSystemErrorRecorder.php',
     $root . '/src/Infrastructure/Telemetry/CatalogInvalidUeFileReporter.php',
     $root . '/src/Infrastructure/Persistence/PdoInvalidUeSystemErrorBackfill.php',
+    $root . '/src/Infrastructure/Persistence/PdoArchiveProfileMismatchOutcomeRepair.php',
+    $root . '/bin/backfill-invalid-ue-system-errors.php',
     $root . '/src/Infrastructure/Jobs/CatalogStagedImportJobHandler.php',
     $root . '/src/Infrastructure/Jobs/CatalogBucketStagedPackageJobHandler.php',
     $root . '/src/Infrastructure/Persistence/PdoArchiveChildOutcomeQuery.php',
