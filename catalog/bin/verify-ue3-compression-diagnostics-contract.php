@@ -32,8 +32,9 @@ $record(
     'compressed_package_detected_from_chunk_table',
     str_contains($reader, '$h[\'compressed\']=$cc>0')
         && str_contains($reader, 'if ($cc) {')
-        && str_contains($reader, '$this->inflatePackage();'),
-    'A package is considered UE3 package-compressed only when its serialized CompressedChunks array is non-empty.'
+        && str_contains($reader, 'if (!$this->inflatePackage()) {')
+        && str_contains($reader, 'return;'),
+    'A package is considered UE3 package-compressed only when its serialized CompressedChunks array is non-empty; failed decompression validation exits cleanly.'
 );
 
 $record(
