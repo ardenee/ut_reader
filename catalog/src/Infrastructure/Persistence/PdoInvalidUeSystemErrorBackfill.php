@@ -24,7 +24,7 @@ final class PdoInvalidUeSystemErrorBackfill
     {
     }
 
-    /** @return array{recorded:int,historical_terminal_recorded:int,failed:int,locked:bool} */
+    /** @return array{recorded:int,historical_terminal_recorded:int,provenance_normalized:int,failed:int,locked:bool} */
     public function run(string $queueName): array
     {
         $queueName = PdoJobQueueSupport::requiredIdentifier($queueName, 'queue');
@@ -32,7 +32,7 @@ final class PdoInvalidUeSystemErrorBackfill
         $lock = $this->db->prepare('SELECT GET_LOCK(?,0)');
         $lock->execute([$lockName]);
         if ((int)$lock->fetchColumn() !== 1) {
-            return ['recorded' => 0, 'historical_terminal_recorded' => 0, 'failed' => 0, 'locked' => true];
+            return ['recorded' => 0, 'historical_terminal_recorded' => 0, 'provenance_normalized' => 0, 'failed' => 0, 'locked' => true];
         }
 
         try {
@@ -240,12 +240,36 @@ final class PdoInvalidUeSystemErrorBackfill
             }
         }
 
+        $provenanceNormalized = $this->normalizeRecordedProvenance();
+
         return [
             'recorded' => $recorded,
             'historical_terminal_recorded' => $historicalTerminalRecorded,
+            'provenance_normalized' => $provenanceNormalized,
             'failed' => $failed,
             'locked' => false,
         ];
+    }
+
+    private function normalizeRecordedProvenance(): int
+    {
+        $statement = $this->db->prepare(
+            'UPDATE ue_system_errors SET context_json=CASE '
+            . 'WHEN COALESCE(CAST(JSON_UNQUOTE(JSON_EXTRACT(context_json,"$.parent_job_id")) AS UNSIGNED),0)=0 '
+            . 'AND COALESCE(JSON_UNQUOTE(JSON_EXTRACT(context_json,"$.archive_source_name")),"")="" '
+            . 'THEN JSON_REMOVE(JSON_SET(context_json,"$.source_provenance","direct_file"),'
+            . '"$.archive_source_name","$.archive_entry_path") '
+            . 'ELSE JSON_SET(context_json,"$.source_provenance","archive_member") END '
+            . 'WHERE source_kind="unreal-file-validation" AND error_type="InvalidUnrealPackage" '
+            . 'AND JSON_VALID(context_json) AND ('
+            . 'COALESCE(JSON_UNQUOTE(JSON_EXTRACT(context_json,"$.source_provenance")),"")="" '
+            . 'OR (COALESCE(CAST(JSON_UNQUOTE(JSON_EXTRACT(context_json,"$.parent_job_id")) AS UNSIGNED),0)=0 '
+            . 'AND COALESCE(JSON_UNQUOTE(JSON_EXTRACT(context_json,"$.archive_source_name")),"")="" '
+            . 'AND (JSON_CONTAINS_PATH(context_json,"one","$.archive_source_name")=1 '
+            . 'OR JSON_CONTAINS_PATH(context_json,"one","$.archive_entry_path")=1)))'
+        );
+        $statement->execute();
+        return max(0, $statement->rowCount());
     }
 
     /** @return array<string,mixed> */
