@@ -66,6 +66,7 @@ final class CatalogArchiveJobOutcomeProjector
                     'duplicate' => 0,
                     'skipped' => 0,
                     'nested_archive' => 0,
+                    'unverified' => 0,
                     'failed' => 0,
                     'cancelled' => 0,
                     'other_terminal' => 0,
@@ -110,6 +111,8 @@ final class CatalogArchiveJobOutcomeProjector
                     $summary['skipped']++;
                 } elseif ($resultStatus === 'nested_archive') {
                     $summary['nested_archive']++;
+                } elseif ($resultStatus === 'unverified_profile_mismatch') {
+                    $summary['unverified']++;
                 } elseif (in_array($resultStatus, ['failed', 'rejected', 'unverified', 'partial', 'error'], true)) {
                     $summary['failed']++;
                     $error = trim((string)($result['message'] ?? $child['last_error'] ?? ''));
@@ -166,6 +169,7 @@ final class CatalogArchiveJobOutcomeProjector
                     . number_format((int)$summary['duplicate']) . ' duplicate, '
                     . number_format((int)$summary['skipped']) . ' skipped, '
                     . number_format((int)$summary['nested_archive']) . ' nested archive, '
+                    . number_format((int)$summary['unverified']) . ' unverified/profile mismatch, '
                     . number_format($totalFailed) . ' failed, '
                     . number_format((int)$summary['waiting']) . ' waiting, '
                     . number_format((int)$summary['running']) . ' running.';
@@ -175,6 +179,7 @@ final class CatalogArchiveJobOutcomeProjector
                     . number_format((int)$summary['duplicate']) . ' duplicate, '
                     . number_format((int)$summary['skipped']) . ' skipped, '
                     . number_format((int)$summary['nested_archive']) . ' nested archive, '
+                    . number_format((int)$summary['unverified']) . ' unverified/profile mismatch, '
                     . number_format($totalFailed) . ' failed';
                 if ((int)$summary['cancelled'] > 0) {
                     $message .= ', ' . number_format((int)$summary['cancelled']) . ' cancelled';
