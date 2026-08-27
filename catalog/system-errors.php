@@ -134,9 +134,10 @@ try {
             $args[] = $source;
         }
         if ($search !== '') {
-            $where[] = '(message LIKE ? OR error_type LIKE ? OR route LIKE ? OR source_file LIKE ? OR request_id LIKE ?)';
+            $where[] = '(message LIKE ? OR error_type LIKE ? OR route LIKE ? OR source_file LIKE ? OR request_id LIKE ? '
+                . 'OR COALESCE(context_json,"") LIKE ?)';
             $like = '%' . str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $search) . '%';
-            array_push($args, $like, $like, $like, $like, $like);
+            array_push($args, $like, $like, $like, $like, $like, $like);
         }
         $whereSql = $where !== [] ? ' WHERE ' . implode(' AND ', $where) : '';
         $total = catalog_count($db, 'SELECT COUNT(*) c FROM ue_system_errors' . $whereSql, $args);
@@ -175,7 +176,7 @@ try {
 
     catalog_page_header(
         'System Errors',
-        'Central persistent errors from PHP runtime handlers, API error responses and browser JavaScript/resource failures. Repeated identical failures increase the occurrence count instead of flooding the table.',
+        'Central persistent errors from PHP/runtime handlers, APIs, browser resources and Unreal file validation. Repeated identical failures increase the occurrence count instead of flooding the table.',
         [
             'Upload Issues' => 'upload-issues.php',
             'Background Jobs' => 'background-jobs.php',
@@ -217,7 +218,7 @@ try {
             . catalog_h($value) . ' (' . $count . ')</option>';
     }
     echo '</select></label>'
-        . '<label class="search">Search <input type="search" name="q" value="' . catalog_h($search) . '" placeholder="Message, type, route, file or reference"></label>'
+        . '<label class="search">Search <input type="search" name="q" value="' . catalog_h($search) . '" placeholder="Message, type, file, MD5, archive, job or reference"></label>'
         . '<label>Rows <select name="per_page">';
     foreach ([50, 100, 250, 500] as $value) {
         echo '<option value="' . $value . '"' . ($perPage === $value ? ' selected' : '') . '>' . $value . '</option>';
