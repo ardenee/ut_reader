@@ -259,7 +259,13 @@ final class CatalogUmodArchiveReader
                 $footer['size'] - self::FOOTER_BYTES
             );
             if (($actual & 0xFFFFFFFF) !== ($footer['crc'] & 0xFFFFFFFF)) {
-                throw new \RuntimeException('UMOD-family archive CRC does not match its footer.');
+                throw new \RuntimeException(
+                    'UMOD-family archive CRC does not match its footer'
+                    . '; expected=' . sprintf('%08X', $footer['crc'] & 0xFFFFFFFF)
+                    . '; actual=' . sprintf('%08X', $actual & 0xFFFFFFFF)
+                    . '; checked_bytes=' . number_format($footer['size'] - self::FOOTER_BYTES)
+                    . '.'
+                );
             }
         }
         return $footer;
