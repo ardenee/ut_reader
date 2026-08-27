@@ -282,6 +282,8 @@ final class CatalogStagedImportJobHandler implements JobHandler
                         'md5' => (string)($identity['md5'] ?? ''),
                         'sha1' => (string)($identity['sha1'] ?? ''),
                         'reason' => $shortError,
+                        'error_code' => $error instanceof CatalogInvalidPackageException ? $error->validationCode() : '',
+                        'arguments' => $error instanceof CatalogInvalidPackageException ? $error->validationArguments() : [],
                     ]);
                 }
                 $context->checkpoint([
