@@ -56,6 +56,7 @@ try {
         'recorded' => 0,
         'historical_terminal_recorded' => 0,
         'provenance_normalized' => 0,
+        'validation_records_normalized' => 0,
         'failed' => 0,
     ];
     foreach ($queues as $queue) {
@@ -69,6 +70,10 @@ try {
         $totals['provenance_normalized'] += max(
             0,
             (int)($result['provenance_normalized'] ?? 0)
+        );
+        $totals['validation_records_normalized'] += max(
+            0,
+            (int)($result['validation_records_normalized'] ?? 0)
         );
         $totals['failed'] += max(0, (int)($result['failed'] ?? 0));
     }
