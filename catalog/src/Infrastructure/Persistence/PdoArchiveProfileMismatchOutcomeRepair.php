@@ -95,13 +95,23 @@ final class PdoArchiveProfileMismatchOutcomeRepair
         }
 
         $requeued = 0;
-        // Every affected ancestor is changed to queued before this method returns.
-        // Therefore an outer parent cannot race ahead of a nested coordinator and
-        // finalize against its stale historical child outcome.
-        foreach ($ancestors as $row) {
-            if ($this->requeueCoordinator($queueName, $row)) {
-                $requeued++;
+        // Publish the entire affected coordinator chain atomically. Multiple
+        // detached workers may start concurrently; none may observe an outer
+        // parent queued while a nested coordinator still carries its stale
+        // historical partial result.
+        $this->db->beginTransaction();
+        try {
+            foreach ($ancestors as $row) {
+                if ($this->requeueCoordinator($queueName, $row)) {
+                    $requeued++;
+                }
             }
+            $this->db->commit();
+        } catch (\Throwable $error) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            throw $error;
         }
 
         return ['reclassified' => $reclassified, 'requeued' => $requeued];
