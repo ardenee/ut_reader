@@ -83,9 +83,10 @@ $record(
         && str_contains($reporter, "'error_type' => 'InvalidUnrealPackage'")
         && str_contains($reporter, '\'route\' => $route')
         && str_contains($reporter, "'disposition' => 'invalid_ue_file'")
-        && str_contains($reporter, '\'md5\' => $md5')
-        && str_contains($reporter, '\'archive_source_name\' => $archiveSourceName'),
-    'System Errors must identify the invalid UE file/content and preserve archive provenance without calling the archive corrupt.'
+        && str_contains($reporter, '\'source_provenance\' => $archiveMember ? \'archive_member\' : \'direct_file\'')
+        && str_contains($reporter, '$context[\'archive_source_name\'] = $archiveSourceName')
+        && str_contains($reporter, '\'md5\' => $md5'),
+    'System Errors must identify invalid UE content and distinguish direct files from archive members without inventing archive provenance.'
 );
 
 $record(
@@ -170,6 +171,16 @@ $record(
         && !str_contains($backfill, 'CatalogArchiveExtractor')
         && !str_contains($backfill, 'CatalogIncomingFileStore'),
     'Existing invalid UE child jobs must be copied to System Errors once without reopening source bytes.'
+);
+
+$record(
+    'historical_system_errors_normalize_direct_file_provenance',
+    str_contains($backfill, 'private function normalizeRecordedProvenance(): int')
+        && str_contains($backfill, '"$.source_provenance","direct_file"')
+        && str_contains($backfill, '"$.source_provenance","archive_member"')
+        && str_contains($backfill, 'JSON_REMOVE(JSON_SET(context_json')
+        && str_contains($cliBackfill, "'provenance_normalized' => 0"),
+    'Existing System Errors must be normalized in place so direct files do not display empty archive fields.'
 );
 
 $record(
