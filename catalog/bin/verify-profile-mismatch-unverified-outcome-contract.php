@@ -97,7 +97,7 @@ $record(
 $record(
     'worker_startup_runs_bounded_reconciliation',
     str_contains($factory, 'new PdoArchiveProfileMismatchOutcomeRepair($db)')
-        && str_contains($factory, 'source bytes are not being re-extracted')
+        && str_contains($factory, 'No archive/package source bytes are re-read here.')
         && str_contains($fingerprint, 'PdoArchiveProfileMismatchOutcomeRepair.php')
         && str_contains($fingerprint, 'CatalogStagedImportJobHandler.php')
         && str_contains($fingerprint, 'CatalogImportOutcome.php'),
