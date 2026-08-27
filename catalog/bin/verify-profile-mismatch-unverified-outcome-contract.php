@@ -83,6 +83,13 @@ $record(
 );
 
 $record(
+    'override_does_not_bypass_invalid_header',
+    strpos($promotion, "if (empty(\$classification['header_ok']))")
+        < strpos($promotion, "if (!\$allowProfileOverride && empty(\$classification['ok_for_selected_game']))"),
+    'Profile override may bypass only the valid-profile mismatch gate; it must never bypass missing/corrupt package headers.'
+);
+
+$record(
     'wrong_profile_package_stays_in_unverified_storage',
     str_contains($staged, '$error instanceof CatalogProfileMismatchException')
         && str_contains($staged, 'CatalogImportOutcome::isProfileMismatchMessage($shortError)')
