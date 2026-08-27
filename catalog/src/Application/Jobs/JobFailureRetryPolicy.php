@@ -160,6 +160,8 @@ final class JobFailureRetryPolicy
         foreach ([
             'does not contain a supported unreal package header',
             'unreal package magic not found',
+            'the serialized package header does not identify a supported engine reader',
+            'no supported package reader can be selected from serialized header data',
             'epic ue3 compressed chunk exceeds physical package size',
             'negative epic ue3 compressed chunk field',
             'invalid first epic ue3 compressed chunk offset',
