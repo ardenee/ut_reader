@@ -121,17 +121,56 @@ function gp_read_legacy_summary(string $path): array
 {
     $fh = @fopen($path, 'rb');
     if (!$fh) {
-        return ['ok' => false, 'reason' => 'Could not open file'];
+        return ['ok' => false, 'reason' => 'Could not open file', 'error_code' => 'unreal.header_read_failed'];
     }
     $bytes = fread($fh, 16);
     fclose($fh);
-    if ($bytes === false || strlen($bytes) < 8) {
-        return ['ok' => false, 'reason' => 'File too small'];
+    if ($bytes === false) {
+        return ['ok' => false, 'reason' => 'Could not read package header', 'error_code' => 'unreal.header_read_failed'];
     }
 
+    $bytesRead = strlen($bytes);
+    $headerHex = strtoupper(bin2hex($bytes));
+    $headerText = '';
+    for ($i = 0; $i < $bytesRead; $i++) {
+        $value = ord($bytes[$i]);
+        $headerText .= ($value >= 32 && $value <= 126) ? chr($value) : '.';
+    }
+    $headerArguments = [
+        'bytes_read' => $bytesRead,
+        'header_hex' => $headerHex,
+        'header_text' => $headerText,
+        'expected_magic_hex' => 'C1832A9E',
+    ];
+
+    if ($bytesRead < 4) {
+        return [
+            'ok' => false,
+            'reason' => 'Magic not found',
+            'error_code' => 'unreal.magic_not_found',
+            'error_arguments' => $headerArguments,
+        ];
+    }
+
+    $actualMagicBytes = strtoupper(bin2hex(substr($bytes, 0, 4)));
+    $headerArguments['actual_magic_hex'] = $actualMagicBytes;
     $magic = unpack('V', substr($bytes, 0, 4))[1];
     if ($magic !== 0x9E2A83C1) {
-        return ['ok' => false, 'reason' => 'Unreal package magic not found'];
+        return [
+            'ok' => false,
+            'reason' => 'Magic not found',
+            'error_code' => 'unreal.magic_not_found',
+            'error_arguments' => $headerArguments,
+        ];
+    }
+
+    if ($bytesRead < 8) {
+        return [
+            'ok' => false,
+            'reason' => 'Package header too short',
+            'error_code' => 'unreal.header_too_short',
+            'error_arguments' => $headerArguments + ['minimum_header_bytes' => 8],
+        ];
     }
 
     $version = unpack('v', substr($bytes, 4, 2))[1];
@@ -180,6 +219,11 @@ function gp_classify_file(PDO $db, int $selectedGameId, string $path, string $or
     $selectedEngine = strtoupper((string)($profile['engine_key'] ?? ''));
     $notes = [];
     $signedPackageVersion = ($summary['format'] ?? '') === 'ue4_package';
+    $headerOk = !empty($summary['ok']);
+    $headerErrorCode = trim((string)($summary['error_code'] ?? ''));
+    $headerErrorArguments = is_array($summary['error_arguments'] ?? null)
+        ? $summary['error_arguments']
+        : [];
 
     if (!$profile || empty($profile['id'])) {
         $notes[] = 'No active game profile is assigned to selected game.';
@@ -193,6 +237,9 @@ function gp_classify_file(PDO $db, int $selectedGameId, string $path, string $or
             'compatibility_status' => 'mismatch',
             'compatibility_label' => null,
             'ok_for_selected_game' => false,
+            'header_ok' => $headerOk,
+            'header_error_code' => $headerErrorCode,
+            'header_error_arguments' => $headerErrorArguments,
             'notes' => $notes,
             'suggested_games' => [],
         ];
@@ -286,6 +333,9 @@ function gp_classify_file(PDO $db, int $selectedGameId, string $path, string $or
         'compatibility_status' => $compatible ? 'legacy_compatible' : 'native',
         'compatibility_label' => $compatible ? (string)$compatibility['label'] : null,
         'ok_for_selected_game' => $engineOk && $versionOk && !empty($summary['ok']),
+        'header_ok' => $headerOk,
+        'header_error_code' => $headerErrorCode,
+        'header_error_arguments' => $headerErrorArguments,
         'notes' => $notes,
         'suggested_games' => $suggested,
     ];
