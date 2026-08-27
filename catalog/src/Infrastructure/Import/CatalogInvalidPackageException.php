@@ -17,7 +17,7 @@ final class CatalogInvalidPackageException extends RuntimeException
     /** @param array<string,mixed> $validationArguments */
     public function __construct(
         string $message,
-        private readonly string $validationCode = 'unreal.invalid_package',
+        private readonly string $validationCode = '',
         private readonly array $validationArguments = [],
         ?\Throwable $previous = null
     ) {
