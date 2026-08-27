@@ -137,6 +137,31 @@ final class CatalogSequentialArchiveReader
                     $heartbeat
                 );
             }
+
+            // walk() is reached for an ordinary ZIP only when shouldUse() found
+            // that libzip could not reliably open at least one member stream (or
+            // another sequential-only compatibility condition). Prefer the native
+            // central/local-header reader before libarchive: it can fall back from
+            // a failed ZipArchive read to the exact member's bounded compressed
+            // bytes and verifies the central CRC32/size before completing it.
+            //
+            // Parser capability gaps such as ZIP64 still belong to libarchive.
+            // Those failures happen before any callback is invoked, so falling
+            // through here cannot duplicate already-completed members.
+            try {
+                return (new CatalogNativeZipArchiveReader($this->config))->walk(
+                    $archivePath,
+                    $archiveName,
+                    $maxDecodedBytes,
+                    $plan,
+                    $complete,
+                    $heartbeat
+                );
+            } catch (\RuntimeException $error) {
+                if (!$this->isNativeZipMetadataCapabilityFailure($error)) {
+                    throw $error;
+                }
+            }
         }
 
         // Do not send a RAR through libarchive first and attempt to recover later.
@@ -381,19 +406,29 @@ final class CatalogSequentialArchiveReader
         try {
             return (new CatalogNativeZipArchiveReader($this->config))->hasLegacyCompression($archivePath);
         } catch (\RuntimeException $error) {
-            $message = strtolower($this->errorText($error));
-            foreach ([
-                'zip64 member fields',
-                'end-of-central-directory record was not found',
-                'central directory record was not found',
-                'central directory entry',
-            ] as $fallbackMarker) {
-                if (str_contains($message, $fallbackMarker)) {
-                    return false;
-                }
+            if ($this->isNativeZipMetadataCapabilityFailure($error)) {
+                return false;
             }
             throw $error;
         }
+    }
+
+    private function isNativeZipMetadataCapabilityFailure(\Throwable $error): bool
+    {
+        $message = strtolower($this->errorText($error));
+        foreach ([
+            'zip64 member fields',
+            'zip64 central directories',
+            'end-of-central-directory record was not found',
+            'central directory record was not found',
+            'central-directory signature was not found',
+            'central-directory bounds are invalid',
+        ] as $fallbackMarker) {
+            if (str_contains($message, $fallbackMarker)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
