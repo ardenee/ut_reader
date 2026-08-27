@@ -7,6 +7,7 @@ use UnrealDb\Catalog\Infrastructure\Archive\CatalogArchiveExtractor;
 use UnrealDb\Catalog\Infrastructure\Archive\CatalogSequentialArchiveReader;
 use UnrealDb\Catalog\Infrastructure\Archive\CatalogUmodArchiveReader;
 use UnrealDb\Catalog\Infrastructure\Downloads\CatalogUmodBinaryCodec;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueueSupport;
 
 if (PHP_SAPI !== 'cli') {
     fwrite(STDERR, "CLI only.\n");
@@ -28,6 +29,7 @@ $phpFiles = [
     'src/Infrastructure/Archive/CatalogArchiveExtractor.php',
     'src/Infrastructure/Archive/CatalogSequentialArchiveReader.php',
     'src/Infrastructure/Downloads/CatalogUmodBinaryCodec.php',
+    'src/Infrastructure/Persistence/PdoJobQueueSupport.php',
     'src/Infrastructure/Import/CatalogUploadBucketFilePolicy.php',
     'src/Infrastructure/Import/CatalogBucketBatchQueue.php',
     'src/Infrastructure/Import/CatalogProfiledUploadQueue.php',
@@ -150,8 +152,33 @@ $record(
 $record(
     'worker_fingerprint_tracks_umod_reader_and_codec',
     str_contains($workerVersionSource, 'CatalogUmodArchiveReader.php')
-        && str_contains($workerVersionSource, 'CatalogUmodBinaryCodec.php'),
-    'Changing UMOD parsing or binary primitives must invalidate detached workers.'
+        && str_contains($workerVersionSource, 'CatalogUmodBinaryCodec.php')
+        && str_contains($workerVersionSource, 'PdoJobQueueSupport.php'),
+    'Changing UMOD parsing, binary primitives or queue JSON persistence must invalidate detached workers.'
+);
+
+$ansiOffset = 0;
+$ansiSerialized = CatalogUmodBinaryCodec::compactIndex(5) . "Caf\xE9\0";
+$ansiDecoded = CatalogUmodBinaryCodec::readUe1String($ansiSerialized, $ansiOffset);
+$record(
+    'legacy_umod_ansi_filename_is_utf8',
+    $ansiDecoded === "Café" && preg_match('//u', $ansiDecoded) === 1,
+    'Positive-length legacy UMOD FStrings must normalize Windows-1252 filename bytes to UTF-8 before path/job persistence.'
+);
+
+$jsonFallback = '';
+try {
+    $jsonFallback = PdoJobQueueSupport::encodeJson(['message' => "legacy-\xFF-name"]);
+} catch (Throwable) {
+    $jsonFallback = '';
+}
+$decodedFallback = $jsonFallback !== '' ? json_decode($jsonFallback, true) : null;
+$record(
+    'job_json_invalid_utf8_is_nonfatal',
+    is_array($decodedFallback)
+        && is_string($decodedFallback['message'] ?? null)
+        && preg_match('//u', (string)$decodedFallback['message']) === 1,
+    'A stray legacy byte in diagnostic/progress data must not kill a worker checkpoint.'
 );
 
 /**
