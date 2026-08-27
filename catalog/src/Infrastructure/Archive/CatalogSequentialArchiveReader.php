@@ -422,6 +422,7 @@ final class CatalogSequentialArchiveReader
             'end-of-central-directory record was not found',
             'central directory record was not found',
             'central-directory signature was not found',
+            'central-directory entry signature is invalid',
             'central-directory bounds are invalid',
         ] as $fallbackMarker) {
             if (str_contains($message, $fallbackMarker)) {
