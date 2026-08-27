@@ -98,7 +98,7 @@ final class CatalogUE3PackageReader
             // until compressed reconstruction starts.
             $this->physical=$this->logical=$bytes; unset($bytes); $this->parse();
         } catch (Throwable $e) {
-            $this->recordValidationIssue('unreal.reader_validation_failure', $this->formatError($e));
+            $this->recordValidationIssue('', $this->formatError($e));
             if (!$this->header) $this->header=$this->blankHeader();
         }
     }
