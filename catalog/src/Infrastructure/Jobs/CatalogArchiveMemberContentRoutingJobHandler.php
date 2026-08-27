@@ -236,9 +236,7 @@ final class CatalogArchiveMemberContentRoutingJobHandler implements JobHandler
             $message .= ' ' . $childDetail;
         }
 
-        $status = $partial
-            ? 'partial'
-            : ($invalidUe > 0 ? CatalogImportOutcome::ARCHIVE_INVALID_FILES : 'nested_archive');
+        $status = $partial ? 'partial' : 'nested_archive';
         $context->checkpoint([
             'archive_member_router_version' => self::ROUTER_VERSION,
             'stage' => 'complete',
