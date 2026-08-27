@@ -192,9 +192,10 @@ $record(
 $record(
     'reader_validation_failures_are_retained_without_archive_retry',
     str_contains($stagedPackage, 'isReaderValidationFailure')
-        && str_contains($stagedPackage, "'invalid exports table offset:'")
-        && str_contains($stagedPackage, "'invalid imports table offset:'")
-        && str_contains($stagedPackage, "'invalid names table offset:'")
+        && str_contains($stagedPackage, 'JobFailureRetryPolicy::isInvalidPackageContentText')
+        && str_contains($policy, "'invalid exports table offset:'")
+        && str_contains($policy, "'invalid imports table offset:'")
+        && str_contains($policy, "'invalid names table offset:'")
         && str_contains($stagedPackage, 'CatalogImportOutcome::INVALID_UE_PACKAGE')
         && str_contains($stagedPackage, "'source_retained' => true")
         && str_contains($stagedPackage, 'archive extraction completed successfully'),
