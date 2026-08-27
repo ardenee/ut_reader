@@ -19,14 +19,21 @@ try {
     $consistencySource = (string)file_get_contents($root . '/src/Infrastructure/Archive/CatalogZipMetadataConsistency.php');
     $extractorSource = (string)file_get_contents($root . '/src/Infrastructure/Archive/CatalogArchiveExtractor.php');
     $localRecoverySource = (string)file_get_contents($root . '/src/Infrastructure/Archive/CatalogZipLocalHeaderRecoveryReader.php');
-    $unknownMarker = "if (\$format === '7z' && (int)\$entry['size'] < 1)";
-    $unknownPos = strpos($source, $unknownMarker);
     $planPos = strpos($source, '$decision = $plan($entry);');
+    $zeroSizeSkipPos = strpos(
+        $source,
+        'if ($declaredSize !== null && (int)$declaredSize === 0 && !$extract)'
+    );
+    $streamOpenPos = strpos($source, '$input = $archive->currentEntryStream();');
     $record(
-        'seven_zip_unknown_size_is_probed_before_policy',
-        $unknownPos !== false && $planPos !== false && $unknownPos < $planPos
-            && str_contains($source, 'decodeUnknownSizeEntry('),
-        '7-Zip members whose libarchive size metadata is zero must be bounded-decoded before import policy rejects them as empty.'
+        'seven_zip_zero_size_metadata_is_policy_first',
+        $planPos !== false
+            && $zeroSizeSkipPos !== false
+            && $streamOpenPos !== false
+            && $planPos < $zeroSizeSkipPos
+            && $zeroSizeSkipPos < $streamOpenPos
+            && !str_contains($source, 'decodeUnknownSizeEntry('),
+        'Zero-size 7-Zip metadata must reach import policy before any stream probe; non-extract records are completed without probing an empty/reference/anti-style payload.'
     );
     $record(
         'stale_zip_metadata_routes_to_sequential_recovery',
