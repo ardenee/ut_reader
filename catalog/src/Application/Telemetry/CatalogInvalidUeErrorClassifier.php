@@ -97,6 +97,7 @@ final class CatalogInvalidUeErrorClassifier
             'ue3.zlib_decompression_failed' => '/Epic UE3 zlib decompression failed/i',
             'ue3.lzo_decompression_failed' => '/LZO (?:input overrun|literal input overrun|invalid match distance|output size mismatch)/i',
             'ue3.lzx_decompression_failed' => '/LZX (?:input overrun|invalid|output size mismatch|frame output mismatch)/i',
+            'unreal.magic_not_found' => '/(?:Unreal package magic not found|Magic not found|does not contain a supported Unreal package header)/i',
             'unreal.unsupported_reader' => '/(?:No supported package reader can be selected from serialized header data|serialized package header does not identify a supported engine reader)/i',
             'legacy.exports_table_out_of_bounds' => '/Invalid Exports table offset:\s*(\d+)\/(\d+)/i',
             'legacy.imports_table_out_of_bounds' => '/Invalid Imports table offset:\s*(\d+)\/(\d+)/i',
@@ -104,7 +105,6 @@ final class CatalogInvalidUeErrorClassifier
             'legacy.compact_index_invalid_length' => '/Invalid compact package index length/i',
             'legacy.fstring_invalid_wide_length' => '/Invalid legacy wide FString length:\s*(-?\d+)/i',
             'legacy.fstring_invalid_byte_length' => '/Invalid legacy FString byte length:\s*(-?\d+)/i',
-            'unreal.magic_not_found' => '/(?:Unreal package magic not found|does not contain a supported Unreal package header)/i',
             'unreal.required_guid_missing' => '/package header is missing the required package GUID/i',
         ];
 
@@ -228,6 +228,9 @@ final class CatalogInvalidUeErrorClassifier
     private static function renderReason(string $code, array $arguments, string $fallback): string
     {
         return match ($code) {
+            'unreal.magic_not_found' => 'Magic not found',
+            'unreal.header_too_short' => 'Package header too short',
+            'unreal.header_read_failed' => 'Could not read package header',
             'ue3.compressed_chunk_out_of_bounds' => isset(
                 $arguments['chunk_index'],
                 $arguments['compressed_offset'],
