@@ -13,7 +13,6 @@ namespace UnrealDb\Catalog\Infrastructure\Jobs;
 
 use PDO;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
-use UnrealDb\Catalog\Infrastructure\Import\CatalogImportOutcome;
 
 final class CatalogArchiveJobOutcomeProjector
 {
