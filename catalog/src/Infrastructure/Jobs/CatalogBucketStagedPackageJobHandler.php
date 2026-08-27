@@ -21,6 +21,7 @@ use UnrealDb\Catalog\Infrastructure\Import\CatalogImportPathPolicy;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogIncomingFileStore;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogUploadBucketFilePolicy;
 use UnrealDb\Catalog\Infrastructure\Redirect\CatalogRedirectArchiveProcessor;
+use UnrealDb\Catalog\Infrastructure\Telemetry\CatalogInvalidUeFileReporter;
 
 final class CatalogBucketStagedPackageJobHandler implements JobHandler
 {
@@ -172,6 +173,20 @@ final class CatalogBucketStagedPackageJobHandler implements JobHandler
                 $message = $this->errorText($error) . ' ' . $this->firstBytesDiagnostic($preparedPath);
                 $incoming->delete($stagedPath);
                 $preparedStore->clear();
+                $systemErrorRecorded = CatalogInvalidUeFileReporter::record([
+                    'job_id' => $job->id,
+                    'parent_job_id' => $job->parentJobId ?? 0,
+                    'job_type' => $job->type,
+                    'user_id' => $userId,
+                    'file_name' => $workingName,
+                    'source_relative_path' => $relativePath,
+                    'archive_source_name' => (string)($payload['archive_source_name'] ?? ''),
+                    'archive_entry_path' => (string)($payload['archive_entry_path'] ?? $workingName),
+                    'size' => is_file($preparedPath) ? (int)(filesize($preparedPath) ?: 0) : 0,
+                    'md5' => $md5,
+                    'sha1' => $sha1,
+                    'reason' => $this->errorText($error),
+                ]);
                 $context->checkpoint([
                     'stage' => 'complete',
                     'done' => 100,
@@ -179,6 +194,7 @@ final class CatalogBucketStagedPackageJobHandler implements JobHandler
                     'percent' => 100,
                     'status' => CatalogImportOutcome::INVALID_UE_PACKAGE,
                     'message' => $message,
+                    'system_error_recorded' => $systemErrorRecorded,
                 ]);
                 return $this->terminalResult(
                     CatalogImportOutcome::INVALID_UE_PACKAGE,
@@ -190,7 +206,8 @@ final class CatalogBucketStagedPackageJobHandler implements JobHandler
                     $decoder,
                     $md5,
                     $sha1,
-                    false
+                    false,
+                    $systemErrorRecorded
                 );
             }
 
@@ -204,6 +221,20 @@ final class CatalogBucketStagedPackageJobHandler implements JobHandler
                     . $this->errorText($error)
                     . ' SHA1=' . $sha1 . '. '
                     . $this->firstBytesDiagnostic($preparedPath);
+                $systemErrorRecorded = CatalogInvalidUeFileReporter::record([
+                    'job_id' => $job->id,
+                    'parent_job_id' => $job->parentJobId ?? 0,
+                    'job_type' => $job->type,
+                    'user_id' => $userId,
+                    'file_name' => $workingName,
+                    'source_relative_path' => $relativePath,
+                    'archive_source_name' => (string)($payload['archive_source_name'] ?? ''),
+                    'archive_entry_path' => (string)($payload['archive_entry_path'] ?? $workingName),
+                    'size' => is_file($preparedPath) ? (int)(filesize($preparedPath) ?: 0) : 0,
+                    'md5' => $md5,
+                    'sha1' => $sha1,
+                    'reason' => $this->errorText($error),
+                ]);
                 $context->checkpoint([
                     'stage' => 'complete',
                     'done' => 100,
@@ -212,6 +243,7 @@ final class CatalogBucketStagedPackageJobHandler implements JobHandler
                     'status' => CatalogImportOutcome::INVALID_UE_PACKAGE,
                     'message' => $message,
                     'source_retained' => true,
+                    'system_error_recorded' => $systemErrorRecorded,
                 ]);
                 return $this->terminalResult(
                     CatalogImportOutcome::INVALID_UE_PACKAGE,
@@ -223,7 +255,8 @@ final class CatalogBucketStagedPackageJobHandler implements JobHandler
                     $decoder,
                     $md5,
                     $sha1,
-                    true
+                    true,
+                    $systemErrorRecorded
                 );
             }
 
@@ -291,7 +324,8 @@ final class CatalogBucketStagedPackageJobHandler implements JobHandler
         string $decoder,
         string $md5,
         string $sha1,
-        bool $sourceRetained
+        bool $sourceRetained,
+        bool $systemErrorRecorded = false
     ): array {
         return [
             'operation' => 'process_bucket_staged_package',
@@ -307,6 +341,7 @@ final class CatalogBucketStagedPackageJobHandler implements JobHandler
             'md5' => $md5,
             'sha1' => $sha1,
             'source_retained' => $sourceRetained,
+            'system_error_recorded' => $systemErrorRecorded,
         ];
     }
 
