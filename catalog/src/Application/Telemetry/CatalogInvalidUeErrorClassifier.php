@@ -98,6 +98,7 @@ final class CatalogInvalidUeErrorClassifier
             'ue3.lzo_decompression_failed' => '/LZO (?:input overrun|literal input overrun|invalid match distance|output size mismatch)/i',
             'ue3.lzx_decompression_failed' => '/LZX (?:input overrun|invalid|output size mismatch|frame output mismatch)/i',
             'unreal.magic_not_found' => '/(?:Unreal package magic not found|Magic not found|does not contain a supported Unreal package header)/i',
+            'unreal.header_too_short' => '/(?:File too small|Package header too short)/i',
             'unreal.unsupported_reader' => '/(?:No supported package reader can be selected from serialized header data|serialized package header does not identify a supported engine reader)/i',
             'legacy.exports_table_out_of_bounds' => '/Invalid Exports table offset:\s*(\d+)\/(\d+)/i',
             'legacy.imports_table_out_of_bounds' => '/Invalid Imports table offset:\s*(\d+)\/(\d+)/i',
