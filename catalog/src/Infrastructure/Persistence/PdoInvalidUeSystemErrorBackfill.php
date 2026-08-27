@@ -13,6 +13,7 @@ namespace UnrealDb\Catalog\Infrastructure\Persistence;
 use PDO;
 use UnrealDb\Catalog\Application\Jobs\JobFailureRetryPolicy;
 use UnrealDb\Catalog\Application\Telemetry\CatalogInvalidUeErrorClassifier;
+use UnrealDb\Catalog\Application\Telemetry\CatalogSystemErrorNormalizer;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Telemetry\CatalogInvalidUeFileReporter;
 
@@ -25,7 +26,7 @@ final class PdoInvalidUeSystemErrorBackfill
     {
     }
 
-    /** @return array{recorded:int,historical_terminal_recorded:int,provenance_normalized:int,failed:int,locked:bool} */
+    /** @return array{recorded:int,historical_terminal_recorded:int,provenance_normalized:int,validation_records_normalized:int,failed:int,locked:bool} */
     public function run(string $queueName): array
     {
         $queueName = PdoJobQueueSupport::requiredIdentifier($queueName, 'queue');
@@ -33,7 +34,7 @@ final class PdoInvalidUeSystemErrorBackfill
         $lock = $this->db->prepare('SELECT GET_LOCK(?,0)');
         $lock->execute([$lockName]);
         if ((int)$lock->fetchColumn() !== 1) {
-            return ['recorded' => 0, 'historical_terminal_recorded' => 0, 'provenance_normalized' => 0, 'failed' => 0, 'locked' => true];
+            return ['recorded' => 0, 'historical_terminal_recorded' => 0, 'provenance_normalized' => 0, 'validation_records_normalized' => 0, 'failed' => 0, 'locked' => true];
         }
 
         try {
@@ -255,14 +256,135 @@ final class PdoInvalidUeSystemErrorBackfill
         }
 
         $provenanceNormalized = $this->normalizeRecordedProvenance();
+        $validationRecordsNormalized = $this->normalizeRecordedValidationErrors();
 
         return [
             'recorded' => $recorded,
             'historical_terminal_recorded' => $historicalTerminalRecorded,
             'provenance_normalized' => $provenanceNormalized,
+            'validation_records_normalized' => $validationRecordsNormalized,
             'failed' => $failed,
             'locked' => false,
         ];
+    }
+
+    private function normalizeRecordedValidationErrors(): int
+    {
+        $rows = $this->db->query(
+            'SELECT * FROM ue_system_errors '
+            . 'WHERE source_kind="unreal-file-validation" '
+            . 'AND (error_type="InvalidUnrealPackage" '
+            . 'OR error_type NOT LIKE "InvalidUnrealPackage.%" '
+            . 'OR COALESCE(trace_text,"")<>"") '
+            . 'ORDER BY id ASC LIMIT 100000'
+        )->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        if ($rows === []) {
+            return 0;
+        }
+
+        $findDuplicate = $this->db->prepare(
+            'SELECT id FROM ue_system_errors WHERE error_key=? AND id<>? LIMIT 1'
+        );
+        $update = $this->db->prepare(
+            'UPDATE ue_system_errors SET error_key=?,error_type=?,message=?,route=?,request_method=?,http_status=?,'
+            . 'source_file="",source_line=0,trace_text=NULL,context_json=?,request_id=?,user_id=? WHERE id=?'
+        );
+        $merge = $this->db->prepare(
+            'UPDATE ue_system_errors SET occurrence_count=occurrence_count+?,'
+            . 'first_seen_at=LEAST(first_seen_at,?),last_seen_at=GREATEST(last_seen_at,?),'
+            . 'status=CASE WHEN status="open" OR ?="open" THEN "open" ELSE status END '
+            . 'WHERE id=?'
+        );
+        $delete = $this->db->prepare('DELETE FROM ue_system_errors WHERE id=?');
+
+        $normalizedCount = 0;
+        foreach ($rows as $row) {
+            $id = max(0, (int)($row['id'] ?? 0));
+            if ($id < 1) {
+                continue;
+            }
+
+            $context = $this->decode((string)($row['context_json'] ?? ''));
+            $arguments = is_array($context['validation_arguments'] ?? null)
+                ? $context['validation_arguments']
+                : [];
+            $classified = CatalogInvalidUeErrorClassifier::classify(
+                (string)($row['message'] ?? ''),
+                trim((string)($context['validation_code'] ?? '')),
+                $arguments
+            );
+            $fileName = trim((string)($context['file_name'] ?? ''));
+            if ($fileName === '') {
+                $fileName = 'unknown Unreal file';
+            }
+            $context['validation_code'] = $classified['code'];
+            $context['validation_group'] = $classified['group'];
+            $context['validation_arguments'] = $classified['arguments'];
+
+            $normalized = CatalogSystemErrorNormalizer::normalize([
+                'source_kind' => 'unreal-file-validation',
+                'severity' => (string)($row['severity'] ?? 'error'),
+                'error_type' => $classified['error_type'],
+                'message' => $fileName . ': ' . $classified['reason'],
+                'route' => (string)($row['route'] ?? ''),
+                'request_method' => (string)($row['request_method'] ?? ''),
+                'http_status' => (int)($row['http_status'] ?? 0),
+                'source_file' => '',
+                'source_line' => 0,
+                'trace_text' => '',
+                'context' => $context,
+                'request_id' => (string)($row['request_id'] ?? ''),
+                'user_id' => max(0, (int)($row['user_id'] ?? 0)),
+            ]);
+
+            $alreadyNormalized = (string)($row['error_key'] ?? '') === $normalized['error_key']
+                && (string)($row['error_type'] ?? '') === $normalized['error_type']
+                && (string)($row['message'] ?? '') === $normalized['message']
+                && trim((string)($row['trace_text'] ?? '')) === ''
+                && (string)($row['source_file'] ?? '') === ''
+                && (int)($row['source_line'] ?? 0) === 0;
+            if ($alreadyNormalized) {
+                continue;
+            }
+
+            $this->db->beginTransaction();
+            try {
+                $findDuplicate->execute([$normalized['error_key'], $id]);
+                $duplicateId = max(0, (int)($findDuplicate->fetchColumn() ?: 0));
+                if ($duplicateId > 0) {
+                    $merge->execute([
+                        max(1, (int)($row['occurrence_count'] ?? 1)),
+                        (string)($row['first_seen_at'] ?? gmdate('Y-m-d H:i:s')),
+                        (string)($row['last_seen_at'] ?? gmdate('Y-m-d H:i:s')),
+                        (string)($row['status'] ?? 'open'),
+                        $duplicateId,
+                    ]);
+                    $delete->execute([$id]);
+                } else {
+                    $update->execute([
+                        $normalized['error_key'],
+                        $normalized['error_type'],
+                        $normalized['message'],
+                        $normalized['route'],
+                        $normalized['request_method'],
+                        $normalized['http_status'],
+                        $normalized['context_json'] !== '' ? $normalized['context_json'] : null,
+                        $normalized['request_id'],
+                        $normalized['user_id'] > 0 ? $normalized['user_id'] : null,
+                        $id,
+                    ]);
+                }
+                $this->db->commit();
+                $normalizedCount++;
+            } catch (\Throwable $error) {
+                if ($this->db->inTransaction()) {
+                    $this->db->rollBack();
+                }
+                throw $error;
+            }
+        }
+
+        return $normalizedCount;
     }
 
     private function normalizeRecordedProvenance(): int
