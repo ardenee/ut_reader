@@ -21,7 +21,7 @@ final class PdoArchiveChildOutcomeQuery
     /**
      * @return array{
      *   total:int,queued:int,running:int,successful:int,duplicate:int,skipped:int,nested_archive:int,
-     *   failed:int,cancelled:int,dead_letter:int,terminal:int
+     *   unverified:int,failed:int,cancelled:int,dead_letter:int,terminal:int
      * }
      */
     public function fetch(int $parentJobId): array
@@ -38,6 +38,7 @@ final class PdoArchiveChildOutcomeQuery
             'duplicate' => 0,
             'skipped' => 0,
             'nested_archive' => 0,
+            'unverified' => 0,
             'failed' => 0,
             'cancelled' => 0,
             'dead_letter' => 0,
@@ -90,6 +91,12 @@ final class PdoArchiveChildOutcomeQuery
                     $state['skipped'] += $count;
                 } elseif ($displayStatus === 'nested_archive') {
                     $state['nested_archive'] += $count;
+                } elseif ($displayStatus === 'unverified_profile_mismatch') {
+                    // The package was parsed successfully and retained in the
+                    // unverified queue because it belongs to another game/profile.
+                    // This is not an archive/read failure and replaying the same
+                    // bytes cannot improve the archive outcome.
+                    $state['unverified'] += $count;
                 } elseif (in_array($displayStatus, ['failed', 'rejected', 'unverified', 'partial', 'error'], true)) {
                     $state['failed'] += $count;
                 } else {
