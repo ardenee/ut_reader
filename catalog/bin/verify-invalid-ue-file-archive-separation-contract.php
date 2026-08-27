@@ -89,7 +89,7 @@ $record(
 
 $record(
     'archive_read_model_labels_invalid_members_separately',
-    str_contains($projector, '$resultStatus === \'invalid_ue_package\'')
+    str_contains($projector, "['invalid_ue_package', 'rejected']")
         && str_contains($projector, '$summary[\'invalid_ue\']++')
         && str_contains($projector, 'Invalid UE file(s): ')
         && str_contains($projector, "['invalid_ue_package']")
