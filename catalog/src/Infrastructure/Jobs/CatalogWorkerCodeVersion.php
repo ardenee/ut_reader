@@ -70,6 +70,7 @@ final class CatalogWorkerCodeVersion
             $this->catalogRoot . '/src/Infrastructure/Import/CatalogImportOutcome.php',
             $this->catalogRoot . '/src/Infrastructure/Import/CatalogInvalidPackageException.php',
             $this->catalogRoot . '/src/Infrastructure/Import/CatalogUnverifiedPackageIndexer.php',
+            $this->catalogRoot . '/src/Infrastructure/Import/CatalogVerifiedPackageInspector.php',
             $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogStagedImportJobHandler.php',
             $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogNonBlockingImportJobHandler.php',
             $this->catalogRoot . '/src/Infrastructure/Import/CatalogPackageImporterAdapter.php',
