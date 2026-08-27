@@ -9,6 +9,29 @@ declare(strict_types=1);
 require_once __DIR__ . '/../lib/LzoDecoder.php';
 require_once __DIR__ . '/../lib/LzxDecoder.php';
 
+final class CatalogUE3ValidationException extends RuntimeException
+{
+    /** @param array<string,mixed> $arguments */
+    public function __construct(
+        string $message,
+        private readonly string $validationCode,
+        private readonly array $arguments = []
+    ) {
+        parent::__construct($message);
+    }
+
+    public function validationCode(): string
+    {
+        return $this->validationCode;
+    }
+
+    /** @return array<string,mixed> */
+    public function validationArguments(): array
+    {
+        return $this->arguments;
+    }
+}
+
 final class CatalogEpicUE3BinaryReader
 {
     public function __construct(private readonly string $data, private int $pos = 0, private bool $swap = false) {}
@@ -17,12 +40,31 @@ final class CatalogEpicUE3BinaryReader
     public function setByteSwap(bool $swap): void { $this->swap = $swap; }
     public function seek(int $pos): void
     {
-        if ($pos < 0 || $pos > strlen($this->data)) throw new OutOfBoundsException("UE3 seek $pos outside " . strlen($this->data));
+        $size=strlen($this->data);
+        if ($pos < 0 || $pos > $size) {
+            throw new CatalogUE3ValidationException(
+                'UE3 binary seek is outside the available package data.',
+                'ue3.binary_seek_out_of_bounds',
+                ['position'=>$pos,'available_size'=>$size]
+            );
+        }
         $this->pos = $pos;
     }
     public function bytes(int $len, string $field): string
     {
-        if ($len < 0 || $len > $this->remaining()) throw new OutOfBoundsException("UE3 $field length=$len pos={$this->pos} remaining={$this->remaining()}");
+        $remaining=$this->remaining();
+        if ($len < 0 || $len > $remaining) {
+            throw new CatalogUE3ValidationException(
+                'UE3 binary read exceeds the available package data.',
+                'ue3.binary_read_out_of_bounds',
+                [
+                    'field'=>$field,
+                    'requested_length'=>$len,
+                    'position'=>$this->pos,
+                    'remaining'=>$remaining,
+                ]
+            );
+        }
         $out = substr($this->data, $this->pos, $len); $this->pos += $len; return $out;
     }
     public function u32(string $field): int
@@ -56,7 +98,14 @@ final class CatalogEpicUE3BinaryReader
             if (str_ends_with($raw,"\0")) $raw=substr($raw,0,-1);
             return $raw==='' ? '' : $this->ansiToUtf8($raw);
         }
-        $chars=-$len; if ($chars > intdiv(PHP_INT_MAX,2)) throw new OutOfBoundsException("UE3 $field Unicode length overflow");
+        $chars=-$len;
+        if ($chars > intdiv(PHP_INT_MAX,2)) {
+            throw new CatalogUE3ValidationException(
+                'UE3 Unicode FString length overflows the supported byte range.',
+                'ue3.fstring_length_overflow',
+                ['field'=>$field,'serialized_length'=>$len,'character_count'=>$chars]
+            );
+        }
         $raw=$this->bytes($chars*2,$field); if (str_ends_with($raw,"\0\0")) $raw=substr($raw,0,-2); if ($raw==='') return '';
         $enc=$this->swap?'UTF-16BE':'UTF-16LE';
         if (function_exists('mb_convert_encoding')) return (string)mb_convert_encoding($raw,'UTF-8',$enc);
@@ -98,7 +147,15 @@ final class CatalogUE3PackageReader
             // until compressed reconstruction starts.
             $this->physical=$this->logical=$bytes; unset($bytes); $this->parse();
         } catch (Throwable $e) {
-            $this->recordValidationIssue('', $this->formatError($e));
+            if ($e instanceof CatalogUE3ValidationException) {
+                $this->recordValidationIssue(
+                    $e->validationCode(),
+                    $this->formatError($e),
+                    $e->validationArguments()
+                );
+            } else {
+                $this->recordValidationIssue('', $this->formatError($e));
+            }
             if (!$this->header) $this->header=$this->blankHeader();
         }
     }
@@ -186,7 +243,20 @@ final class CatalogUE3PackageReader
     }
     private function arrayFits(CatalogEpicUE3BinaryReader $r,int $count,int $minBytes,string $field): void
     {
-        if ($count<0 || ($minBytes && $count>intdiv($r->remaining(),$minBytes))) throw new OutOfBoundsException("Epic UE3 $field=$count cannot fit remaining={$r->remaining()}");
+        $remaining=$r->remaining();
+        if ($count<0 || ($minBytes && $count>intdiv($remaining,$minBytes))) {
+            throw new CatalogUE3ValidationException(
+                'UE3 serialized array cannot fit in the remaining package data.',
+                'ue3.serialized_array_out_of_bounds',
+                [
+                    'field'=>$field,
+                    'count'=>$count,
+                    'minimum_entry_size'=>$minBytes,
+                    'remaining'=>$remaining,
+                    'minimum_required_bytes'=>$count>0?$count*$minBytes:0,
+                ]
+            );
+        }
     }
     private function validateSummary(): void
     {
