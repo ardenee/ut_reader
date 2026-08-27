@@ -56,7 +56,7 @@ $record(
     'profiled_import_marks_invalid_package_not_archive_failure',
     str_contains($staged, '$error instanceof CatalogInvalidPackageException')
         && str_contains($staged, 'CatalogImportOutcome::INVALID_UE_PACKAGE')
-        && str_contains($staged, "'outcome_class' => $outcomeClass"),
+        && str_contains($staged, '\'outcome_class\' => $outcomeClass'),
     'A package parser validation exception after successful extraction must produce invalid_ue_package.'
 );
 
@@ -83,7 +83,7 @@ $record(
     str_contains($workflow, '$invalidUe = max(0, (int)($children[\'invalid_ue\'] ?? 0));')
         && str_contains($workflow, '$partial = $totalFailed > 0 || $cancelled > 0;')
         && str_contains($workflow, 'CatalogImportOutcome::ARCHIVE_INVALID_FILES')
-        && str_contains($workflow, "'invalid_ue_files' => $invalidUe"),
+        && str_contains($workflow, '\'invalid_ue_files\' => $invalidUe'),
     'An otherwise healthy archive with invalid UE members must finish invalid_files rather than partial.'
 );
 
