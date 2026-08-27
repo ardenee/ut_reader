@@ -21,7 +21,7 @@ use PDO;
 
 final class PdoBackgroundJobFileTreeQuery
 {
-    private const ISSUE_DISPLAY_STATUSES = '"failed","rejected","unverified","invalid_ue_package","partial","error"';
+    private const ISSUE_DISPLAY_STATUSES = '"failed","rejected","unverified","partial","error"';
     private const SYNTHETIC_ARCHIVE_WORKFLOW_PREFIX = 'archive:content-container:';
     private const PROFILED_UPLOAD_BATCH_JOB_TYPE = 'catalog.profiled_upload_batch';
 
@@ -57,12 +57,7 @@ final class PdoBackgroundJobFileTreeQuery
             ? 'j.parent_job_id IS NULL'
             : $this->logicalRootExpression('j');
 
-        // All/Working/Completed/Stopped remain source-root views. Issues is the
-        // exception: a successfully extracted invalid UE member is itself the
-        // actionable file, while its healthy archive container is not.
-        $pageRootScope = $state === 'issue' && $jobType !== self::PROFILED_UPLOAD_BATCH_JOB_TYPE
-            ? '(' . $logicalRootScope . ' OR ' . $this->invalidUeIssueLeafExpression('j') . ')'
-            : $logicalRootScope;
+        $pageRootScope = $logicalRootScope;
 
         $commonWhere = ['j.queue_name=?'];
         $commonParams = [$queue];
@@ -108,20 +103,6 @@ final class PdoBackgroundJobFileTreeQuery
             'completed' => max(0, (int)($countRow['completed_count'] ?? 0)),
             'stopped' => max(0, (int)($countRow['stopped_count'] ?? 0)),
         ];
-
-        // Invalid UE archive members are file issues, not source-container issues.
-        // Count only non-root leaves here to avoid double-counting a direct source
-        // job that is already part of the logical-root issue count.
-        if ($jobType !== self::PROFILED_UPLOAD_BATCH_JOB_TYPE) {
-            $leafCount = $this->db->prepare(
-                'SELECT COUNT(*) FROM ue_background_jobs j WHERE '
-                . implode(' AND ', $commonWhere)
-                . ' AND ' . $this->invalidUeIssueLeafExpression('j')
-                . ' AND NOT (' . $logicalRootScope . ')'
-            );
-            $leafCount->execute($commonParams);
-            $counts['issue'] += max(0, (int)$leafCount->fetchColumn());
-        }
 
         $where = $baseWhere;
         $params = $baseParams;
@@ -219,17 +200,9 @@ final class PdoBackgroundJobFileTreeQuery
             . ')';
     }
 
-    private function invalidUeIssueLeafExpression(string $alias): string
-    {
-        return '(' . $alias . '.status="completed" '
-            . 'AND ' . $alias . '.display_status="invalid_ue_package" '
-            . 'AND ' . $alias . '.parent_job_id IS NOT NULL)';
-    }
-
     private function propagatingChildIssueExpression(string $alias): string
     {
-        return '(' . $this->ownIssueExpression($alias)
-            . ' AND ' . $alias . '.display_status<>"invalid_ue_package")';
+        return $this->ownIssueExpression($alias);
     }
 
     private function logicalRootExpression(string $alias): string
