@@ -135,6 +135,107 @@ final class PdoArchiveProfileMismatchOutcomeRepair
             }
         }
 
+        // Older workers allowed deterministic Unreal parser failures to exhaust
+        // retries and become failed/dead-letter jobs. Those bytes do not become
+        // valid by retrying. Convert the terminal ledger row directly to the
+        // modern invalid_ue_package outcome so System Error backfill can record
+        // the data-quality problem without reopening or reparsing the file.
+        $failedSelect = $this->db->prepare(
+            'SELECT id,parent_job_id,job_type,payload_json,progress_json,last_error FROM ue_background_jobs '
+            . 'WHERE queue_name=? AND id>? AND status IN ("failed","dead_letter") '
+            . 'AND job_type IN (?,?,?) AND COALESCE(last_error,"")<>"" '
+            . 'ORDER BY id ASC LIMIT ' . self::BATCH_LIMIT
+        );
+        $failedUpdate = $this->db->prepare(
+            'UPDATE ue_background_jobs SET status="completed",result_json=?,progress_json=?,'
+            . 'last_error=NULL,worker_id=NULL,lease_token=NULL,leased_at=NULL,lease_expires_at=NULL,'
+            . 'last_heartbeat_at=NULL,dead_lettered_at=NULL,completed_at=COALESCE(completed_at,?),updated_at=? '
+            . 'WHERE id=? AND queue_name=? AND status IN ("failed","dead_letter")'
+        );
+
+        $afterFailedId = 0;
+        for ($batch = 0; $batch < self::MAX_BATCHES; $batch++) {
+            $failedSelect->execute([
+                $queueName,
+                $afterFailedId,
+                JobType::PROCESS_BUCKET_UPLOAD,
+                JobType::PROCESS_BUCKET_STAGED_PACKAGE,
+                JobType::IMPORT_STAGED_PACKAGE,
+            ]);
+            $failedRows = $failedSelect->fetchAll(PDO::FETCH_ASSOC) ?: [];
+            if ($failedRows === []) {
+                break;
+            }
+
+            foreach ($failedRows as $row) {
+                $afterFailedId = max($afterFailedId, (int)($row['id'] ?? 0));
+                $id = max(0, (int)($row['id'] ?? 0));
+                $jobType = trim((string)($row['job_type'] ?? ''));
+                $message = trim((string)($row['last_error'] ?? ''));
+                if ($id < 1 || !JobFailureRetryPolicy::isInvalidPackageContentText($jobType, $message)) {
+                    continue;
+                }
+
+                $payload = $this->jsonObject((string)($row['payload_json'] ?? ''));
+                $progress = $this->jsonObject((string)($row['progress_json'] ?? ''));
+                $originalName = trim((string)($payload['original_name'] ?? ''));
+                $sourceRelativePath = trim((string)($payload['source_relative_path'] ?? $originalName));
+                $operation = match ($jobType) {
+                    JobType::PROCESS_BUCKET_UPLOAD => 'process_bucket_upload',
+                    JobType::PROCESS_BUCKET_STAGED_PACKAGE => 'process_bucket_staged_package',
+                    default => 'import_staged_package',
+                };
+
+                $result = [
+                    'operation' => $operation,
+                    'status' => CatalogImportOutcome::INVALID_UE_PACKAGE,
+                    'message' => $message,
+                    'original_name' => $originalName,
+                    'source_relative_path' => $sourceRelativePath,
+                    'outcome_class' => 'invalid_ue_package',
+                    'system_error_recorded' => false,
+                ];
+                foreach (['file_id', 'md5', 'sha1', 'size', 'bytes', 'archive_source_name', 'archive_entry_path'] as $field) {
+                    if (array_key_exists($field, $payload)) {
+                        $result[$field] = $payload[$field];
+                    }
+                }
+
+                $progress['stage'] = 'complete';
+                $progress['done'] = 100;
+                $progress['total'] = 100;
+                $progress['percent'] = 100;
+                $progress['status'] = CatalogImportOutcome::INVALID_UE_PACKAGE;
+                $progress['message'] = 'Invalid Unreal package; recorded as a non-retryable data-quality outcome. ' . $message;
+                $progress['error'] = $message;
+                $progress['outcome_class'] = 'invalid_ue_package';
+                $progress['system_error_recorded'] = false;
+
+                $now = gmdate('Y-m-d H:i:s');
+                $failedUpdate->execute([
+                    PdoJobQueueSupport::encodeJson($result),
+                    PdoJobQueueSupport::encodeJson($progress),
+                    $now,
+                    $now,
+                    $id,
+                    $queueName,
+                ]);
+                if ($failedUpdate->rowCount() < 1) {
+                    continue;
+                }
+
+                $invalidUeReclassified++;
+                $parentId = max(0, (int)($row['parent_job_id'] ?? 0));
+                if ($parentId > 0) {
+                    $parentIds[$parentId] = true;
+                }
+            }
+
+            if (count($failedRows) < self::BATCH_LIMIT) {
+                break;
+            }
+        }
+
         $reclassified = $profileMismatchReclassified + $invalidUeReclassified;
         if ($parentIds === []) {
             return [
