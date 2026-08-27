@@ -17,6 +17,7 @@ $read = static function (string $relative) use ($root): string {
 $reader = $read('parsers/EpicUE3PackageReader.php');
 $lzx = $read('lib/LzxDecoder.php');
 $inspector = $read('bin/inspect-ue3-compression.php');
+$fingerprint = $read('src/Infrastructure/Jobs/CatalogWorkerCodeVersion.php');
 
 $checks = [];
 $failures = [];
@@ -83,6 +84,14 @@ $record(
     'native_lzx_decoder_decompresses_valid_stream',
     $lzxFixtureOutput === 'LZX-UE3',
     $lzxFixtureError !== '' ? $lzxFixtureError : 'Expected LZX-UE3, got ' . bin2hex($lzxFixtureOutput)
+);
+
+$record(
+    'worker_fingerprint_tracks_ue3_codecs',
+    str_contains($fingerprint, "/parsers/EpicUE3PackageReader.php")
+        && str_contains($fingerprint, "/lib/LzoDecoder.php")
+        && str_contains($fingerprint, "/lib/LzxDecoder.php"),
+    'Detached workers must be invalidated when UE3 package compression code changes.'
 );
 
 $record(
