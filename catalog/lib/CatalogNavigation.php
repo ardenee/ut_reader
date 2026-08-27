@@ -78,12 +78,12 @@ function catalog_admin_navigation_groups(string $root): array
             'GUID Normalizer' => $root . 'guid-normalize.php',
             'Maintenance Locks' => $root . 'maintenance-locks.php',
         ],
-        'Downloads' => [
-            'Transfers' => $root . 'transfers.php',
-            'Download Logs' => $root . 'download-logs.php',
+        'Download' => [
             'Download Administration' => $root . 'download-admin.php',
-            'Public Access & Mail' => $root . 'public-access-settings.php',
-            'Package Download Settings' => $root . 'download-package-settings.php',
+            'Download Settings' => $root . 'downloads-settings.php',
+            'Download Logs' => $root . 'download-logs.php',
+            'Transfers' => $root . 'transfers.php',
+            'Package Export Settings' => $root . 'download-package-settings.php',
             'Mirror Providers' => $root . 'mirror-providers.php',
             'Mirror Links' => $root . 'mirror-links.php',
             'Mirror Queue' => $root . 'mirror-queue.php',
