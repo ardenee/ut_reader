@@ -22,6 +22,7 @@ use UnrealDb\Catalog\Infrastructure\Import\CatalogInvalidPackageException;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogIncomingFileStore;
 use UnrealDb\Catalog\Infrastructure\Import\PdoCatalogPackageImporter;
 use UnrealDb\Catalog\Infrastructure\Legacy\LegacyUnverifiedFileStager;
+use UnrealDb\Catalog\Infrastructure\Telemetry\CatalogInvalidUeFileReporter;
 
 final class CatalogStagedImportJobHandler implements JobHandler
 {
@@ -263,6 +264,26 @@ final class CatalogStagedImportJobHandler implements JobHandler
                         : ($staged !== null
                             ? 'Package could not be verified and was retained in the unverified queue'
                             : 'Unsupported or invalid input was discarded'));
+                $systemErrorRecorded = false;
+                if ($invalidUePackage) {
+                    $identity = $this->invalidFileIdentity((int)($staged['file_id'] ?? 0));
+                    $systemErrorRecorded = CatalogInvalidUeFileReporter::record([
+                        'job_id' => $job->id,
+                        'parent_job_id' => $job->parentJobId ?? 0,
+                        'job_type' => $job->type,
+                        'user_id' => $userId ?? 0,
+                        'game_id' => $gameId,
+                        'file_id' => (int)($staged['file_id'] ?? 0),
+                        'file_name' => $workingName,
+                        'source_relative_path' => $sourceRelativePath,
+                        'archive_source_name' => (string)($payload['archive_source_name'] ?? ''),
+                        'archive_entry_path' => (string)($payload['archive_entry_path'] ?? $workingName),
+                        'size' => (int)($identity['file_size'] ?? $staged['size'] ?? 0),
+                        'md5' => (string)($identity['md5'] ?? ''),
+                        'sha1' => (string)($identity['sha1'] ?? ''),
+                        'reason' => $shortError,
+                    ]);
+                }
                 $context->checkpoint([
                     'stage' => $profileMismatch
                         ? 'unverified_profile_mismatch'
@@ -274,6 +295,7 @@ final class CatalogStagedImportJobHandler implements JobHandler
                     'message' => $retentionMessage . ': ' . $shortError,
                     'error' => $shortError,
                     'outcome_class' => $outcomeClass,
+                    'system_error_recorded' => $systemErrorRecorded,
                 ]);
                 return [
                     'operation' => 'import_staged_package',
@@ -284,6 +306,7 @@ final class CatalogStagedImportJobHandler implements JobHandler
                     'source_relative_path' => $sourceRelativePath,
                     'unverified' => $staged,
                     'outcome_class' => $outcomeClass,
+                    'system_error_recorded' => $systemErrorRecorded,
                 ];
             }
             throw $error;
@@ -292,6 +315,28 @@ final class CatalogStagedImportJobHandler implements JobHandler
                 @unlink($workingPath);
             }
         }
+    }
+
+    /** @return array{md5:string,sha1:string,file_size:int} */
+    private function invalidFileIdentity(int $fileId): array
+    {
+        if ($fileId < 1) {
+            return ['md5' => '', 'sha1' => '', 'file_size' => 0];
+        }
+        $statement = $this->db->prepare(
+            'SELECT LOWER(COALESCE(md5,"")) md5,LOWER(COALESCE(sha1,"")) sha1,file_size '
+            . 'FROM ue_files WHERE id=? LIMIT 1'
+        );
+        $statement->execute([$fileId]);
+        $row = $statement->fetch(PDO::FETCH_ASSOC);
+        if (!is_array($row)) {
+            return ['md5' => '', 'sha1' => '', 'file_size' => 0];
+        }
+        return [
+            'md5' => (string)($row['md5'] ?? ''),
+            'sha1' => (string)($row['sha1'] ?? ''),
+            'file_size' => max(0, (int)($row['file_size'] ?? 0)),
+        ];
     }
 
     /** @param array<string,mixed> $payload */
