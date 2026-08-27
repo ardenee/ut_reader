@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace UnrealDb\Catalog\Infrastructure\Jobs;
 
+use UnrealDb\Catalog\Infrastructure\Import\CatalogProfileMismatchException;
 use PDO;
 use Throwable;
 use UnrealDb\Catalog\Application\Jobs\JobCancellationRequested;
@@ -302,6 +303,10 @@ final class CatalogUnverifiedBulkActionJobHandler implements JobHandler
                     $succeeded++;
                 } catch (JobCancellationRequested $error) {
                     throw $error;
+                } catch (CatalogProfileMismatchException) {
+                    // Valid package, wrong target profile. Leave it in Unverified;
+                    // this is a skipped import unless the operator enables override.
+                    $skipped++;
                 } catch (Throwable $error) {
                     $errorMessage = trim($error->getMessage());
                     if ($this->isAlreadyGone($errorMessage)) {
