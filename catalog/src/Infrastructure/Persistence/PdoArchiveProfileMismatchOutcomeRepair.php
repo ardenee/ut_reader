@@ -1,18 +1,19 @@
 <?php
 /**
- * Compatibility repair for historical archive children that were valid Unreal
- * packages but were marked as generic "unverified" because they did not match
- * the selected game profile.
+ * Compatibility repair for historical archive-member outcomes whose extracted
+ * bytes were classified before package/profile outcomes were separated from
+ * archive extraction failures.
  *
- * The repair changes only durable job outcome metadata. It then requeues the
- * affected archive/content-routing coordinators in their wait stage so existing
- * child rows are re-aggregated without re-reading or re-extracting source bytes.
+ * The repair changes durable job metadata only, then requeues affected archive
+ * coordinators in their wait stage so existing child rows are re-aggregated.
+ * It never re-reads or re-extracts archive/package source bytes.
  */
 declare(strict_types=1);
 
 namespace UnrealDb\Catalog\Infrastructure\Persistence;
 
 use PDO;
+use UnrealDb\Catalog\Application\Jobs\JobFailureRetryPolicy;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogImportOutcome;
 
@@ -26,46 +27,84 @@ final class PdoArchiveProfileMismatchOutcomeRepair
     {
     }
 
-    /** @return array{reclassified:int,requeued:int} */
+    /**
+     * @return array{
+     *   reclassified:int,
+     *   profile_mismatch_reclassified:int,
+     *   invalid_ue_reclassified:int,
+     *   requeued:int
+     * }
+     */
     public function repair(string $queueName): array
     {
         $queueName = PdoJobQueueSupport::requiredIdentifier($queueName, 'queue');
         $parentIds = [];
-        $reclassified = 0;
+        $profileMismatchReclassified = 0;
+        $invalidUeReclassified = 0;
 
         $select = $this->db->prepare(
-            'SELECT id,parent_job_id FROM ue_background_jobs '
-            . 'WHERE queue_name=? AND status="completed" AND job_type=? AND display_status="unverified" '
+            'SELECT id,parent_job_id,job_type,result_json FROM ue_background_jobs '
+            . 'WHERE queue_name=? AND status="completed" '
+            . 'AND job_type IN (?,?) '
+            . 'AND workflow_unit_key LIKE "archive:%" '
+            . 'AND display_status IN ("unverified","rejected") '
             . 'AND JSON_VALID(result_json) '
-            . 'AND LOWER(TRIM(COALESCE(JSON_UNQUOTE(JSON_EXTRACT(result_json,"$.status")),"")))="unverified" '
-            . 'AND COALESCE(JSON_UNQUOTE(JSON_EXTRACT(result_json,"$.message")),"") LIKE "Game/profile mismatch.%" '
             . 'ORDER BY id ASC LIMIT ' . self::BATCH_LIMIT
         );
         $updateChild = $this->db->prepare(
             'UPDATE ue_background_jobs SET '
-            . 'result_json=JSON_SET(result_json,"$.status",?,"$.outcome_class","profile_mismatch"),'
+            . 'result_json=JSON_SET(result_json,"$.status",?,"$.outcome_class",?),'
             . 'progress_json=CASE WHEN JSON_VALID(progress_json) '
-            . 'THEN JSON_SET(progress_json,"$.status",?,"$.outcome_class","profile_mismatch") ELSE progress_json END,'
+            . 'THEN JSON_SET(progress_json,"$.status",?,"$.outcome_class",?) ELSE progress_json END,'
             . 'last_error=NULL,updated_at=? '
-            . 'WHERE id=? AND queue_name=? AND status="completed" AND display_status="unverified"'
+            . 'WHERE id=? AND queue_name=? AND status="completed" '
+            . 'AND display_status IN ("unverified","rejected")'
         );
 
         for ($batch = 0; $batch < self::MAX_BATCHES; $batch++) {
-            $select->execute([$queueName, JobType::IMPORT_STAGED_PACKAGE]);
+            $select->execute([
+                $queueName,
+                JobType::IMPORT_STAGED_PACKAGE,
+                JobType::PROCESS_BUCKET_STAGED_PACKAGE,
+            ]);
             $rows = $select->fetchAll(PDO::FETCH_ASSOC) ?: [];
             if ($rows === []) {
                 break;
             }
 
             $now = gmdate('Y-m-d H:i:s');
+            $changedThisBatch = 0;
             foreach ($rows as $row) {
                 $id = max(0, (int)($row['id'] ?? 0));
-                if ($id < 1) {
+                $jobType = trim((string)($row['job_type'] ?? ''));
+                $result = $this->jsonObject((string)($row['result_json'] ?? ''));
+                $message = trim((string)($result['message'] ?? ''));
+                $currentStatus = strtolower(trim((string)($result['status'] ?? '')));
+                if ($id < 1 || $result === []) {
                     continue;
                 }
+
+                $nextStatus = '';
+                $outcomeClass = '';
+                if ($currentStatus === 'unverified'
+                    && CatalogImportOutcome::isProfileMismatchMessage($message)
+                    && !JobFailureRetryPolicy::isInvalidPackageContentText($jobType, $message)) {
+                    $nextStatus = CatalogImportOutcome::UNVERIFIED_PROFILE_MISMATCH;
+                    $outcomeClass = 'profile_mismatch';
+                } elseif (JobFailureRetryPolicy::isInvalidPackageContentText($jobType, $message)) {
+                    $nextStatus = CatalogImportOutcome::INVALID_UE_PACKAGE;
+                    $outcomeClass = 'invalid_ue_package';
+                }
+
+                if ($nextStatus === '') {
+                    continue;
+                }
+
                 $updateChild->execute([
-                    CatalogImportOutcome::UNVERIFIED_PROFILE_MISMATCH,
-                    CatalogImportOutcome::UNVERIFIED_PROFILE_MISMATCH,
+                    $nextStatus,
+                    $outcomeClass,
+                    $nextStatus,
+                    $outcomeClass,
                     $now,
                     $id,
                     $queueName,
@@ -73,32 +112,53 @@ final class PdoArchiveProfileMismatchOutcomeRepair
                 if ($updateChild->rowCount() < 1) {
                     continue;
                 }
-                $reclassified++;
+
+                $changedThisBatch++;
+                if ($nextStatus === CatalogImportOutcome::UNVERIFIED_PROFILE_MISMATCH) {
+                    $profileMismatchReclassified++;
+                } else {
+                    $invalidUeReclassified++;
+                }
+
                 $parentId = max(0, (int)($row['parent_job_id'] ?? 0));
                 if ($parentId > 0) {
                     $parentIds[$parentId] = true;
                 }
             }
 
-            if (count($rows) < self::BATCH_LIMIT) {
+            // The SELECT may contain unrelated unverified/rejected rows. Once a
+            // complete batch yields no changes, later batches cannot advance
+            // because ordering is stable and changed rows leave this scope.
+            if ($changedThisBatch === 0 || count($rows) < self::BATCH_LIMIT) {
                 break;
             }
         }
 
+        $reclassified = $profileMismatchReclassified + $invalidUeReclassified;
         if ($parentIds === []) {
-            return ['reclassified' => $reclassified, 'requeued' => 0];
+            return [
+                'reclassified' => $reclassified,
+                'profile_mismatch_reclassified' => $profileMismatchReclassified,
+                'invalid_ue_reclassified' => $invalidUeReclassified,
+                'requeued' => 0,
+            ];
         }
 
         $ancestors = $this->affectedAncestors($queueName, array_keys($parentIds));
         if ($ancestors === []) {
-            return ['reclassified' => $reclassified, 'requeued' => 0];
+            return [
+                'reclassified' => $reclassified,
+                'profile_mismatch_reclassified' => $profileMismatchReclassified,
+                'invalid_ue_reclassified' => $invalidUeReclassified,
+                'requeued' => 0,
+            ];
         }
 
         $requeued = 0;
         // Publish the entire affected coordinator chain atomically. Multiple
         // detached workers may start concurrently; none may observe an outer
-        // parent queued while a nested coordinator still carries its stale
-        // historical partial result.
+        // parent queued while a nested coordinator still carries stale outcome
+        // aggregation from the historical child status.
         $this->db->beginTransaction();
         try {
             foreach ($ancestors as $row) {
@@ -114,7 +174,12 @@ final class PdoArchiveProfileMismatchOutcomeRepair
             throw $error;
         }
 
-        return ['reclassified' => $reclassified, 'requeued' => $requeued];
+        return [
+            'reclassified' => $reclassified,
+            'profile_mismatch_reclassified' => $profileMismatchReclassified,
+            'invalid_ue_reclassified' => $invalidUeReclassified,
+            'requeued' => $requeued,
+        ];
     }
 
     /**
@@ -123,7 +188,10 @@ final class PdoArchiveProfileMismatchOutcomeRepair
      */
     private function affectedAncestors(string $queueName, array $initialIds): array
     {
-        $frontier = array_values(array_unique(array_filter(array_map('intval', $initialIds), static fn(int $id): bool => $id > 0)));
+        $frontier = array_values(array_unique(array_filter(
+            array_map('intval', $initialIds),
+            static fn(int $id): bool => $id > 0
+        )));
         $seen = [];
         $rowsById = [];
 
@@ -164,9 +232,6 @@ final class PdoArchiveProfileMismatchOutcomeRepair
             $frontier = $next;
         }
 
-        // Descendants first is useful for diagnostics; all rows are persisted as
-        // queued before any worker can claim them because this repair runs during
-        // worker construction.
         krsort($rowsById, SORT_NUMERIC);
         return array_values($rowsById);
     }
@@ -185,7 +250,7 @@ final class PdoArchiveProfileMismatchOutcomeRepair
 
         $result = $this->jsonObject((string)($row['result_json'] ?? ''));
         return (string)($result['operation'] ?? '') === 'archive_member_content_route'
-            && (string)($result['status'] ?? '') === 'partial';
+            && in_array((string)($result['status'] ?? ''), ['partial', CatalogImportOutcome::ARCHIVE_INVALID_FILES], true);
     }
 
     /** @param array<string,mixed> $row */
@@ -203,13 +268,13 @@ final class PdoArchiveProfileMismatchOutcomeRepair
             $progress['archive_workflow_version'] = 2;
             $progress['stage'] = 'archive_wait_children';
             $progress['status'] = 'running';
-            $progress['message'] = 'Recalculating archive child outcomes after profile-mismatch reclassification; source bytes are not being re-extracted.';
+            $progress['message'] = 'Recalculating archive child outcomes after outcome reclassification; source bytes are not being re-extracted.';
             $progress['archive_result'] = $result;
         } else {
             $progress['archive_member_router_version'] = 2;
             $progress['stage'] = 'archive_member_content_wait_child';
             $progress['status'] = 'running';
-            $progress['message'] = 'Recalculating nested archive outcome after profile-mismatch reclassification; source bytes are not being re-read.';
+            $progress['message'] = 'Recalculating nested archive outcome after outcome reclassification; source bytes are not being re-read.';
             foreach (['nested_archive_job_id', 'detected_format', 'original_name', 'source_relative_path'] as $field) {
                 if (!array_key_exists($field, $progress) && array_key_exists($field, $result)) {
                     $progress[$field] = $result[$field];
