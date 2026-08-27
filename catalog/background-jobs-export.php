@@ -18,6 +18,73 @@ function background_jobs_export_text(mixed $value): string
     return preg_replace('/\s+/u', ' ', $text) ?? $text;
 }
 
+/**
+ * @param list<array<string,mixed>> $rows
+ * @param array<int,bool> $seen
+ * @return list<array{row:array<string,mixed>,depth:int,parent_job_id:int}>
+ */
+function background_jobs_export_tree(
+    PdoBackgroundJobFileTreeQuery $query,
+    CatalogBackgroundJobResultHydrator $hydrator,
+    CatalogArchiveJobOutcomeProjector $archiveProjector,
+    CatalogBackgroundJobFileTreeProjector $fileProjector,
+    string $queue,
+    array $rows,
+    int $depth,
+    int $parentJobId,
+    int &$remaining,
+    array &$seen
+): array {
+    if ($remaining < 1 || $depth > 24 || $rows === []) {
+        return [];
+    }
+
+    $projected = $hydrator->hydrate($rows);
+    $projected = $archiveProjector->project($projected);
+    $projected = $fileProjector->project($projected);
+    $tree = [];
+
+    foreach ($projected as $row) {
+        if ($remaining < 1) {
+            break;
+        }
+        $id = max(0, (int)($row['id'] ?? 0));
+        if ($id < 1 || isset($seen[$id])) {
+            continue;
+        }
+        $seen[$id] = true;
+        $tree[] = ['row' => $row, 'depth' => $depth, 'parent_job_id' => $parentJobId];
+        $remaining--;
+
+        if ($remaining < 1 || max(0, (int)($row['child_count'] ?? 0)) < 1) {
+            continue;
+        }
+
+        $page = 1;
+        do {
+            $children = $query->children($queue, $id, $page, 500);
+            $tree = array_merge(
+                $tree,
+                background_jobs_export_tree(
+                    $query,
+                    $hydrator,
+                    $archiveProjector,
+                    $fileProjector,
+                    $queue,
+                    $children['rows'],
+                    $depth + 1,
+                    $id,
+                    $remaining,
+                    $seen
+                )
+            );
+            $page++;
+        } while ($remaining > 0 && $page <= (int)$children['pages']);
+    }
+
+    return $tree;
+}
+
 try {
     $config = catalog_config();
     $db = catalog_db($config);
@@ -55,24 +122,36 @@ try {
     $perPage = 200;
     $page = 1;
     $total = 0;
-    $rows = [];
+    $rootRows = [];
 
     do {
         $result = $query->roots($queue, $state, $search, $jobType, $page, $perPage);
         if ($page === 1) {
             $total = max(0, (int)$result['total']);
         }
-        $pageRows = $hydrator->hydrate($result['rows']);
-        $pageRows = $archiveProjector->project($pageRows);
-        $pageRows = $fileProjector->project($pageRows);
-        foreach ($pageRows as $row) {
-            $rows[] = $row;
-            if (count($rows) >= $limit) {
+        foreach ($result['rows'] as $row) {
+            $rootRows[] = $row;
+            if (count($rootRows) >= $limit) {
                 break 2;
             }
         }
         $page++;
     } while ($page <= (int)$result['pages']);
+
+    $remaining = $limit;
+    $seen = [];
+    $treeRows = background_jobs_export_tree(
+        $query,
+        $hydrator,
+        $archiveProjector,
+        $fileProjector,
+        $queue,
+        $rootRows,
+        0,
+        0,
+        $remaining,
+        $seen
+    );
 
     $generated = gmdate('Y-m-d H:i:s') . ' UTC';
     $filename = 'unrealdb-background-jobs-' . gmdate('Ymd-His') . '.md';
@@ -88,13 +167,17 @@ try {
     echo '- Job type: ' . ($jobType !== '' ? $jobType : 'all') . "\n";
     echo '- Search: ' . ($search !== '' ? $search : 'none') . "\n";
     echo '- Matching rows: ' . number_format($total) . "\n";
-    echo '- Exported rows: ' . number_format(count($rows)) . "\n";
-    if ($total > $limit) {
-        echo '- Warning: export limited to the newest ' . number_format($limit) . " matching rows.\n";
+    echo '- Exported source rows: ' . number_format(count($rootRows)) . "\n";
+    echo '- Exported rows including descendants: ' . number_format(count($treeRows)) . "\n";
+    if ($total > $limit || $remaining < 1) {
+        echo '- Warning: export limited to ' . number_format($limit) . " total job rows.\n";
     }
     echo "\n";
 
-    foreach ($rows as $row) {
+    foreach ($treeRows as $entry) {
+        $row = $entry['row'];
+        $depth = max(0, (int)$entry['depth']);
+        $parentJobId = max(0, (int)$entry['parent_job_id']);
         $id = max(0, (int)($row['id'] ?? 0));
         $fileName = background_jobs_export_text($row['file_name'] ?? '');
         $filePath = background_jobs_export_text($row['file_path'] ?? '');
@@ -117,7 +200,14 @@ try {
         $resultMessage = background_jobs_export_text($resultData['message'] ?? '');
         $progressMessage = background_jobs_export_text($progressData['message'] ?? '');
 
-        echo '## Job #' . $id . ' — ' . ($fileName !== '' ? $fileName : 'Unnamed source') . "\n\n";
+        $headingLevel = min(6, 2 + $depth);
+        $heading = str_repeat('#', $headingLevel);
+        echo $heading . ' ' . ($depth > 0 ? 'Child ' : '') . 'Job #' . $id . ' — '
+            . ($fileName !== '' ? $fileName : 'Unnamed source') . "\n\n";
+        if ($parentJobId > 0) {
+            echo '- Parent job: #' . $parentJobId . "\n";
+        }
+        echo '- Tree depth: ' . $depth . "\n";
         echo '- File: ' . $fileName . "\n";
         echo '- Path: ' . $filePath . "\n";
         echo '- Job type: ' . $jobTypeValue . "\n";
