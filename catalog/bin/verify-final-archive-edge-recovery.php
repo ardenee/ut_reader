@@ -3,7 +3,9 @@
 /** Read-only/no-database verifier for the final retained-archive recovery cases. */
 declare(strict_types=1);
 
+use UnrealDb\Catalog\Infrastructure\Archive\CatalogNativeZipArchiveReader;
 use UnrealDb\Catalog\Infrastructure\Archive\CatalogSequentialArchiveReader;
+use UnrealDb\Catalog\Infrastructure\Archive\CatalogZipLocalHeaderRecoveryReader;
 
 $root = dirname(__DIR__);
 require_once $root . '/bootstrap/autoload.php';
@@ -118,6 +120,120 @@ try {
         'zip_local_header_can_validate_stale_central_output',
         $accepted,
         'A matching local ZIP header must be allowed to validate actual decoded size + CRC when the final central directory is stale.'
+    );
+
+    $localOnlyRecovered = false;
+    $localOnly = new CatalogZipLocalHeaderRecoveryReader(['archive' => ['max_entries' => 100]]);
+    $localOnly->walkLocalHeadersOnly(
+        $archivePath,
+        'local-only.zip',
+        strlen($payload) * 2,
+        static fn(array $entry): array => [
+            'extract' => (string)($entry['path'] ?? '') === $name,
+            'max_bytes' => strlen($payload) * 2,
+            'state' => null,
+        ],
+        static function (array $entry, ?string $temporary) use (&$localOnlyRecovered, $payload, $name): void {
+            if ((string)($entry['path'] ?? '') !== $name || !is_string($temporary) || !is_file($temporary)) {
+                return;
+            }
+            $localOnlyRecovered = file_get_contents($temporary) === $payload;
+        }
+    );
+    $record(
+        'missing_eocd_runtime_recovers_crc_verified_local_member',
+        $localOnlyRecovered,
+        'A ZIP containing only a valid local file record must be recoverable without an EOCD when its decoded size and CRC32 verify.'
+    );
+
+    $zip64Payload = 'UNREALDB_ZIP64_MEMBER';
+    $zip64Name = 'Maps/ZIP64-Test.unr';
+    $zip64Crc = (int)sprintf('%u', crc32($zip64Payload));
+    $zip64Local = pack(
+        'VvvvvvVVVvv',
+        0x04034b50,
+        45,
+        0,
+        0,
+        0,
+        0,
+        $zip64Crc,
+        strlen($zip64Payload),
+        strlen($zip64Payload),
+        strlen($zip64Name),
+        0
+    ) . $zip64Name . $zip64Payload;
+    $zip64Extra = pack(
+        'vvVVVVVV',
+        0x0001,
+        24,
+        strlen($zip64Payload),
+        0,
+        strlen($zip64Payload),
+        0,
+        0,
+        0
+    );
+    $zip64Central = pack(
+        'VvvvvvvVVVvvvvvVV',
+        0x02014b50,
+        45,
+        45,
+        0,
+        0,
+        0,
+        0,
+        $zip64Crc,
+        0xffffffff,
+        0xffffffff,
+        strlen($zip64Name),
+        strlen($zip64Extra),
+        0,
+        0,
+        0,
+        0,
+        0xffffffff
+    ) . $zip64Name . $zip64Extra;
+    $zip64Eocd = pack(
+        'VvvvvVVv',
+        0x06054b50,
+        0,
+        0,
+        1,
+        1,
+        strlen($zip64Central),
+        strlen($zip64Local),
+        0
+    );
+    $zip64Path = tempnam(sys_get_temp_dir(), 'unrealdb-zip64-member-');
+    if (!is_string($zip64Path)) {
+        throw new RuntimeException('Could not allocate ZIP64 member verifier file.');
+    }
+    $temp[] = $zip64Path;
+    file_put_contents($zip64Path, $zip64Local . $zip64Central . $zip64Eocd);
+
+    $zip64Recovered = false;
+    $nativeZip = new CatalogNativeZipArchiveReader(['archive' => ['max_entries' => 100]]);
+    $nativeZip->walk(
+        $zip64Path,
+        'zip64-member.zip',
+        strlen($zip64Payload) * 2,
+        static fn(array $entry): array => [
+            'extract' => (string)($entry['path'] ?? '') === $zip64Name,
+            'max_bytes' => strlen($zip64Payload) * 2,
+            'state' => null,
+        ],
+        static function (array $entry, ?string $temporary) use (&$zip64Recovered, $zip64Payload, $zip64Name): void {
+            if ((string)($entry['path'] ?? '') !== $zip64Name || !is_string($temporary) || !is_file($temporary)) {
+                return;
+            }
+            $zip64Recovered = file_get_contents($temporary) === $zip64Payload;
+        }
+    );
+    $record(
+        'zip64_member_runtime_decodes_standard_extra_field',
+        $zip64Recovered,
+        'A normal-sized member using ZIP64 size/offset sentinels must resolve the standard 0x0001 extra field and extract exactly.'
     );
 
     file_put_contents($outputPath, $payload . 'tampered');
