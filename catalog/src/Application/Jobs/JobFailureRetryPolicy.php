@@ -79,7 +79,6 @@ final class JobFailureRetryPolicy
         }
 
         $structuralMarkers = [
-            'extra data overflow',
             'central directory',
             'unexpected end of archive',
             'unexpected end of file',
@@ -88,12 +87,14 @@ final class JobFailureRetryPolicy
             'damaged zip',
             'ziparchive code 19',
             'ziparchive code 21',
-            // A sequential decoder has already opened the immutable archive and
-            // member stream. An empty read with eof=false/timed_out=false is a
-            // repeatable decoder/source-integrity failure; replaying identical
-            // bytes cannot make more member data appear.
-            'libarchive member stream stopped unexpectedly',
         ];
+
+        // Do not classify libarchive stream/header failures as immutable source
+        // corruption. Historic ZIPs can expose valid central/local records while
+        // libarchive stops early or reports trailing-data overflow; the native
+        // ZIP/local-header recovery path may still decode and CRC-verify them.
+        // Keeping these retryable also lets an operator re-run retained archives
+        // after decoder improvements without re-uploading the original source.
 
         foreach ($structuralMarkers as $marker) {
             if (str_contains($message, $marker)) {
