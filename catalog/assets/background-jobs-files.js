@@ -19,6 +19,7 @@
     const filters = document.querySelector('.jobs-file-filters');
     const searchInput = document.getElementById('jobs-file-search');
     const perPageSelect = document.getElementById('jobs-file-per-page');
+    const exportLink = document.getElementById('jobs-file-export');
     const notice = document.getElementById('jobs-file-notice');
     const summary = document.getElementById('jobs-file-summary');
     const pageLabel = document.getElementById('jobs-file-page');
@@ -116,6 +117,13 @@
         if (state.perPage !== 100) params.set('per_page', String(state.perPage)); else params.delete('per_page');
         const text = params.toString();
         window.history.replaceState(null, '', window.location.pathname + (text ? '?' + text : ''));
+
+        if (exportLink) {
+            const exportParams = new URLSearchParams({queue: queue, state: state.filter});
+            if (state.jobType) exportParams.set('job_type', state.jobType);
+            if (state.search) exportParams.set('search', state.search);
+            exportLink.href = 'background-jobs-export.php?' + exportParams.toString();
+        }
     }
 
     function bytes(value) {
