@@ -27,6 +27,8 @@ $verifiedInspector = $read('src/Infrastructure/Import/CatalogVerifiedPackageInsp
 $reporter = $read('src/Infrastructure/Telemetry/CatalogInvalidUeFileReporter.php');
 $bucket = $read('src/Infrastructure/Jobs/CatalogBucketStagedPackageJobHandler.php');
 $staged = $read('src/Infrastructure/Jobs/CatalogStagedImportJobHandler.php');
+$backfill = $read('src/Infrastructure/Persistence/PdoInvalidUeSystemErrorBackfill.php');
+$repair = $read('src/Infrastructure/Persistence/PdoArchiveProfileMismatchOutcomeRepair.php');
 $reader = $read('parsers/EpicUE3PackageReader.php');
 $policy = $read('src/Application/Jobs/JobFailureRetryPolicy.php');
 $fingerprint = $read('src/Infrastructure/Jobs/CatalogWorkerCodeVersion.php');
@@ -172,6 +174,19 @@ $record(
 );
 
 $record(
+    'validation_details_are_durable_for_backfill',
+    str_contains($bucket, "'validation_code' => \$validation['code']")
+        && str_contains($bucket, "'validation_arguments' => \$validation['arguments']")
+        && str_contains($staged, "'validation_code' => \$validation['code']")
+        && str_contains($staged, "'validation_arguments' => \$validation['arguments']")
+        && str_contains($backfill, "'error_code' => trim((string)(\$result['validation_code'] ?? ''))")
+        && str_contains($backfill, "is_array(\$result['validation_arguments'] ?? null)")
+        && str_contains($repair, "'validation_code' => \$validation['code']")
+        && str_contains($repair, "'validation_arguments' => \$validation['arguments']"),
+    'Exact validation arguments must survive in terminal job metadata so ledger-only System Error recovery cannot lose them.'
+);
+
+$record(
     'expected_validation_errors_have_no_trace',
     str_contains($reporter, "'source_file' => ''")
         && !str_contains($reporter, "'trace_text' =>")
@@ -223,6 +238,8 @@ foreach ([
     $root . '/src/Infrastructure/Telemetry/CatalogInvalidUeFileReporter.php',
     $root . '/src/Infrastructure/Jobs/CatalogBucketStagedPackageJobHandler.php',
     $root . '/src/Infrastructure/Jobs/CatalogStagedImportJobHandler.php',
+    $root . '/src/Infrastructure/Persistence/PdoInvalidUeSystemErrorBackfill.php',
+    $root . '/src/Infrastructure/Persistence/PdoArchiveProfileMismatchOutcomeRepair.php',
     $root . '/src/Application/Jobs/JobFailureRetryPolicy.php',
     $root . '/parsers/EpicUE3PackageReader.php',
     $root . '/bin/inspect-ue3-compression.php',
