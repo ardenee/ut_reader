@@ -207,6 +207,7 @@ final class CatalogBackgroundJobFileTreeProjector
                 'skipped' => 'Skipped',
                 'bucketed' => 'Added to Upload Bucket',
                 'imported', 'verified' => 'Imported',
+                'unverified_profile_mismatch' => 'Stored in Unverified',
                 'decompressed' => 'Decompressed',
                 default => 'Completed',
             };
@@ -337,6 +338,7 @@ final class CatalogBackgroundJobFileTreeProjector
             'skipped' => 'Skipped',
             'bucketed' => 'Bucketed',
             'imported', 'verified' => 'Imported',
+            'unverified_profile_mismatch' => 'Unverified · profile mismatch',
             'decompressed' => 'Decompressed',
             default => '',
         };
