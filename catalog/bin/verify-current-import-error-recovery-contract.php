@@ -23,6 +23,8 @@ $paths = [
     'identity' => $root . '/src/Infrastructure/Import/CatalogVerifiedPackageIdentityRepository.php',
     'adapter' => $root . '/src/Infrastructure/Import/CatalogPackageImporterAdapter.php',
     'sequential' => $root . '/src/Infrastructure/Archive/CatalogSequentialArchiveReader.php',
+    'native_zip' => $root . '/src/Infrastructure/Archive/CatalogNativeZipArchiveReader.php',
+    'local_zip' => $root . '/src/Infrastructure/Archive/CatalogZipLocalHeaderRecoveryReader.php',
     'rar' => $root . '/src/Infrastructure/Archive/CatalogExternalArchiveReader.php',
     'policy' => $root . '/src/Application/Jobs/JobFailureRetryPolicy.php',
     'worker' => $root . '/src/Application/Jobs/JobWorker.php',
@@ -69,12 +71,19 @@ $record(
     'The database remains the final identity arbiter if another worker publishes between SELECT and INSERT.'
 );
 $record(
-    'legacy_zip_detector_failure_falls_through',
-    str_contains($content['sequential'], 'nativeZipHasLegacyCompression')
-        && str_contains($content['sequential'], "'zip64 member fields'")
-        && str_contains($content['sequential'], "'end-of-central-directory record was not found'")
-        && substr_count($content['sequential'], '->hasLegacyCompression($archivePath)') === 1,
-    'ZIP64/EOCD limitations in the narrow legacy detector must not prevent ext-zip/libarchive from inspecting the same source.'
+    'zip64_member_fields_are_native_supported',
+    str_contains($content['native_zip'], 'resolveZip64MemberFields(')
+        && str_contains($content['native_zip'], 'ZIP64 extra record is missing')
+        && !str_contains($content['native_zip'], 'does not support ZIP64 member fields')
+        && !str_contains($content['sequential'], "'zip64 member fields'"),
+    'ZIP64 per-member size/offset sentinels must be resolved natively instead of forcing the failing libarchive path.'
+);
+$record(
+    'missing_zip_central_directory_uses_bounded_local_records',
+    str_contains($content['sequential'], 'walkLocalHeadersOnly(')
+        && str_contains($content['local_zip'], 'public function walkLocalHeadersOnly(')
+        && str_contains($content['local_zip'], 'Data-descriptor'),
+    'A ZIP with a missing EOCD/central directory may recover only authoritative local-header records with bounded size and CRC.'
 );
 $record(
     'rar_decoder_trusts_signature_selected_content',
@@ -83,9 +92,11 @@ $record(
     'A RAR member misnamed with a .zip extension must remain processable after byte-level format detection selected RAR.'
 );
 $record(
-    'short_archive_stream_is_deterministic_source_issue',
-    str_contains($content['policy'], "'libarchive member stream stopped unexpectedly'"),
-    'A repeatable short stream from immutable archive bytes should not consume three worker attempts.'
+    'libarchive_short_stream_can_replay_through_native_recovery',
+    !str_contains($content['policy'], "'libarchive member stream stopped unexpectedly'")
+        && str_contains($content['sequential'], 'CatalogNativeZipArchiveReader')
+        && str_contains($content['sequential'], 'CatalogZipLocalHeaderRecoveryReader'),
+    'A libarchive short stream must remain retryable because native ZIP/ZIP64/local-header recovery may decode the same retained source.'
 );
 $record(
     'queued_retry_is_not_system_error',
@@ -105,6 +116,9 @@ $record(
         && str_contains($content['fingerprint'], '/src/Application/Jobs/JobFailureRetryPolicy.php')
         && str_contains($content['fingerprint'], '/src/Infrastructure/Import/CatalogVerifiedPackageIdentityRepository.php')
         && str_contains($content['fingerprint'], '/src/Infrastructure/Archive/CatalogSequentialArchiveReader.php')
+        && str_contains($content['fingerprint'], '/src/Infrastructure/Archive/CatalogNativeZipArchiveReader.php')
+        && str_contains($content['fingerprint'], '/src/Infrastructure/Archive/CatalogZipLocalHeaderRecoveryReader.php')
+        && str_contains($content['fingerprint'], '/src/Infrastructure/Persistence/PdoJobQueueSupport.php')
         && str_contains($content['fingerprint'], '/src/Infrastructure/Archive/CatalogExternalArchiveReader.php'),
     'Detached workers must exit/restart after these recovery/classification changes deploy.'
 );
@@ -120,12 +134,12 @@ $archiveJob = new ClaimedJob(
     new DateTimeImmutable('+2 minutes')
 );
 $record(
-    'short_stream_policy_returns_zero_retry_delay',
+    'short_stream_policy_allows_decoder_replay',
     JobFailureRetryPolicy::retryDelaySeconds(
         $archiveJob,
         new RuntimeException('ZIP sequential archive member "Map.unr" failed: libarchive member stream stopped unexpectedly; bytes_consumed=100; eof=false; timed_out=false.')
-    ) === 0,
-    'The exact current short-stream failure class should terminate after one attempt and remain in Issues.'
+    ) > 0,
+    'The current short-stream failure must be retryable so a retained archive can move through native ZIP/local-header recovery.'
 );
 $record(
     'zip64_capability_is_not_mislabeled_as_bad_source',
