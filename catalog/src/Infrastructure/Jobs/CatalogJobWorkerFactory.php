@@ -43,11 +43,11 @@ final class CatalogJobWorkerFactory
             error_log('[UnrealDB worker policy sync] ' . $error->getMessage());
         }
 
-        // Historical package/profile mismatches were retained correctly in
-        // Unverified Files but their generic "unverified" job outcome made archive
-        // parents look broken and retryable. Reclassify only those explicit
-        // Game/profile mismatch results, then re-run coordinator aggregation from
-        // existing child rows. No archive/package source bytes are re-read here.
+        // Historical profile mismatches and deterministic invalid-package
+        // outcomes were retained correctly but both were folded into generic
+        // archive failure state. Reclassify only content-proven outcomes, then
+        // re-run coordinator aggregation from existing child rows. No archive or
+        // package source bytes are re-read here.
         try {
             $profileMismatchRepair = (new PdoArchiveProfileMismatchOutcomeRepair($db))->repair($queueName);
             if ($profileMismatchRepair['reclassified'] > 0 || $profileMismatchRepair['requeued'] > 0) {
@@ -60,7 +60,7 @@ final class CatalogJobWorkerFactory
                     . ' coordinator(s) for ledger-only aggregation.');
             }
         } catch (\Throwable $error) {
-            error_log('[UnrealDB archive profile mismatch repair] ' . $error->getMessage());
+            error_log('[UnrealDB archive outcome classification repair] ' . $error->getMessage());
         }
 
         // Older archive coordinators completed their parent row immediately after
