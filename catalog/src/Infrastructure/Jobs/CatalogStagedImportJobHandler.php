@@ -15,6 +15,7 @@ use UnrealDb\Catalog\Application\Jobs\JobCancellationRequested;
 use UnrealDb\Catalog\Application\Jobs\JobExecutionContext;
 use UnrealDb\Catalog\Application\Jobs\JobHandler;
 use UnrealDb\Catalog\Application\Jobs\JobFailureRetryPolicy;
+use UnrealDb\Catalog\Application\Telemetry\CatalogInvalidUeErrorClassifier;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogImportOutcome;
@@ -265,7 +266,13 @@ final class CatalogStagedImportJobHandler implements JobHandler
                             ? 'Package could not be verified and was retained in the unverified queue'
                             : 'Unsupported or invalid input was discarded'));
                 $systemErrorRecorded = false;
+                $validation = ['code' => '', 'reason' => $shortError, 'arguments' => []];
                 if ($invalidUePackage) {
+                    $validation = CatalogInvalidUeErrorClassifier::classify(
+                        $shortError,
+                        $error instanceof CatalogInvalidPackageException ? $error->validationCode() : '',
+                        $error instanceof CatalogInvalidPackageException ? $error->validationArguments() : []
+                    );
                     $identity = $this->invalidFileIdentity((int)($staged['file_id'] ?? 0));
                     $systemErrorRecorded = CatalogInvalidUeFileReporter::record([
                         'job_id' => $job->id,
@@ -281,9 +288,9 @@ final class CatalogStagedImportJobHandler implements JobHandler
                         'size' => (int)($identity['file_size'] ?? $staged['size'] ?? 0),
                         'md5' => (string)($identity['md5'] ?? ''),
                         'sha1' => (string)($identity['sha1'] ?? ''),
-                        'reason' => $shortError,
-                        'error_code' => $error instanceof CatalogInvalidPackageException ? $error->validationCode() : '',
-                        'arguments' => $error instanceof CatalogInvalidPackageException ? $error->validationArguments() : [],
+                        'reason' => $validation['reason'],
+                        'error_code' => $validation['code'],
+                        'arguments' => $validation['arguments'],
                     ]);
                 }
                 $context->checkpoint([
@@ -298,6 +305,8 @@ final class CatalogStagedImportJobHandler implements JobHandler
                     'error' => $shortError,
                     'outcome_class' => $outcomeClass,
                     'system_error_recorded' => $systemErrorRecorded,
+                    'validation_code' => $validation['code'],
+                    'validation_arguments' => $validation['arguments'],
                 ]);
                 return [
                     'operation' => 'import_staged_package',
@@ -309,6 +318,8 @@ final class CatalogStagedImportJobHandler implements JobHandler
                     'unverified' => $staged,
                     'outcome_class' => $outcomeClass,
                     'system_error_recorded' => $systemErrorRecorded,
+                    'validation_code' => $validation['code'],
+                    'validation_arguments' => $validation['arguments'],
                 ];
             }
             throw $error;
