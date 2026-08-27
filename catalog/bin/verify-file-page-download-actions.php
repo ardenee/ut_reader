@@ -16,6 +16,7 @@ $read = static function (string $relative) use ($root): string {
 
 $examine = $read('file-examine-paged-core.php');
 $info = $read('file-info.php');
+$downloadInfo = $read('download-info.php');
 $download = $read('download.php');
 
 $checks = [];
@@ -29,26 +30,29 @@ $record = static function (string $name, bool $ok, string $detail) use (&$checks
 
 $record(
     'file_examine_has_download_action',
-    str_contains($examine, 'href="download.php?id=')
-        && str_contains($examine, '>Download file</a>'),
-    'file-examine.php must expose a direct Download file action for the displayed verified file.'
+    str_contains($examine, 'href="download-info.php?id=')
+        && str_contains($examine, '>Download options</a>'),
+    'file-examine.php must open the download options page before any transfer starts.'
 );
 
 $record(
     'file_info_has_download_action',
-    str_contains($info, 'href="download.php?id=')
-        && str_contains($info, '>Download file</a>'),
-    'file-info.php must expose a direct Download file action for the displayed file.'
+    str_contains($info, 'href="download-info.php?id=')
+        && str_contains($info, '>Download options</a>'),
+    'file-info.php must open the download options page before any transfer starts.'
 );
 
 $record(
-    'both_pages_reuse_canonical_download_route',
-    str_contains($download, 'public_download_send_local')
+    'both_pages_reuse_download_options_route',
+    str_contains($downloadInfo, 'Create mod/dependency package')
+        && str_contains($downloadInfo, 'download-package.php')
+        && str_contains($downloadInfo, 'download.php?id=')
+        && str_contains($download, 'public_download_send_local')
         && str_contains($download, 'catalog_download_audit_start')
         && str_contains($download, 'base_game_file_is_protected')
-        && !str_contains($examine, 'readfile(')
-        && !str_contains($info, 'readfile('),
-    'Detail pages must link to the existing audited/protected download route instead of serving files themselves.'
+        && !str_contains($examine, 'href="download.php?id=')
+        && !str_contains($info, 'href="download.php?id='),
+    'Detail pages must open download-info.php so users can choose the individual file or generated ZIP/UMOD package flow.'
 );
 
 $syntaxFailures = [];
