@@ -10,6 +10,8 @@ namespace UnrealDb\Catalog\Infrastructure\Import;
 final class CatalogImportOutcome
 {
     public const UNVERIFIED_PROFILE_MISMATCH = 'unverified_profile_mismatch';
+    public const INVALID_UE_PACKAGE = 'invalid_ue_package';
+    public const ARCHIVE_INVALID_FILES = 'invalid_files';
 
     public static function isProfileMismatchMessage(string $message): bool
     {
