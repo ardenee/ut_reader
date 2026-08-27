@@ -17,6 +17,7 @@ use UnrealDb\Catalog\Application\Jobs\JobHandler;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogImportOutcome;
+use UnrealDb\Catalog\Infrastructure\Import\CatalogInvalidPackageException;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogIncomingFileStore;
 use UnrealDb\Catalog\Infrastructure\Import\PdoCatalogPackageImporter;
 use UnrealDb\Catalog\Infrastructure\Legacy\LegacyUnverifiedFileStager;
@@ -239,23 +240,34 @@ final class CatalogStagedImportJobHandler implements JobHandler
                 $shortError = $this->shortError($error);
                 $profileMismatch = $staged !== null
                     && CatalogImportOutcome::isProfileMismatchMessage($shortError);
-                $outcomeStatus = $staged === null
-                    ? 'rejected'
-                    : ($profileMismatch ? CatalogImportOutcome::UNVERIFIED_PROFILE_MISMATCH : 'unverified');
-                $retentionMessage = $staged !== null
-                    ? ($profileMismatch
-                        ? 'Valid Unreal package retained in the unverified queue because it does not match the selected game profile'
-                        : 'Package could not be verified and was retained in the unverified queue')
-                    : 'Unsupported or invalid input was discarded';
+                $invalidUePackage = !$profileMismatch
+                    && $error instanceof CatalogInvalidPackageException;
+                $outcomeStatus = $profileMismatch
+                    ? CatalogImportOutcome::UNVERIFIED_PROFILE_MISMATCH
+                    : ($invalidUePackage ? CatalogImportOutcome::INVALID_UE_PACKAGE : ($staged !== null ? 'unverified' : 'rejected'));
+                $outcomeClass = $profileMismatch
+                    ? 'profile_mismatch'
+                    : ($invalidUePackage ? 'invalid_ue_package' : '');
+                $retentionMessage = $profileMismatch
+                    ? 'Valid Unreal package retained in the unverified queue because it does not match the selected game profile'
+                    : ($invalidUePackage
+                        ? ($staged !== null
+                            ? 'Invalid Unreal package retained in the unverified queue'
+                            : 'Invalid Unreal package was rejected')
+                        : ($staged !== null
+                            ? 'Package could not be verified and was retained in the unverified queue'
+                            : 'Unsupported or invalid input was discarded'));
                 $context->checkpoint([
-                    'stage' => $profileMismatch ? 'unverified_profile_mismatch' : ($staged !== null ? 'unverified' : 'rejected'),
+                    'stage' => $profileMismatch
+                        ? 'unverified_profile_mismatch'
+                        : ($invalidUePackage ? 'invalid_ue_package' : ($staged !== null ? 'unverified' : 'rejected')),
                     'done' => 100,
                     'total' => 100,
                     'percent' => 100,
                     'status' => $outcomeStatus,
                     'message' => $retentionMessage . ': ' . $shortError,
                     'error' => $shortError,
-                    'outcome_class' => $profileMismatch ? 'profile_mismatch' : '',
+                    'outcome_class' => $outcomeClass,
                 ]);
                 return [
                     'operation' => 'import_staged_package',
@@ -265,7 +277,7 @@ final class CatalogStagedImportJobHandler implements JobHandler
                     'original_name' => $workingName,
                     'source_relative_path' => $sourceRelativePath,
                     'unverified' => $staged,
-                    'outcome_class' => $profileMismatch ? 'profile_mismatch' : '',
+                    'outcome_class' => $outcomeClass,
                 ];
             }
             throw $error;
