@@ -112,8 +112,6 @@
             || text.includes('unsupported zip compression method')
             || text.includes('rarentry::extract() returned failure')
             || text.includes('rarentry::extract() also failed')
-            || text.includes('could not read zip member stream')
-            || text.includes('output size does not match its declared size')
             || text.includes('configured archive-member limit') && text.includes(' is 0 bytes');
     };
 
