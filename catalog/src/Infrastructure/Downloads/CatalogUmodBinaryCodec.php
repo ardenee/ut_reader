@@ -97,7 +97,29 @@ final class CatalogUmodBinaryCodec
         }
         $raw = substr($data, $offset, $length);
         $offset += $length;
-        return rtrim($raw, "\0");
+        $raw = rtrim($raw, "\0");
+        if ($raw === '' || preg_match('//u', $raw) === 1) {
+            return $raw;
+        }
+
+        // UE1 Setup archives written on Windows serialize positive-length
+        // FStrings as the process ANSI code page. Historic community UMODs
+        // therefore commonly contain Windows-1252 filename bytes rather than
+        // UTF-8. Normalize them here before paths reach JSON/job persistence.
+        if (function_exists('mb_convert_encoding')) {
+            $decoded = mb_convert_encoding($raw, 'UTF-8', 'Windows-1252');
+            if (is_string($decoded) && preg_match('//u', $decoded) === 1) {
+                return $decoded;
+            }
+        }
+        if (function_exists('iconv')) {
+            $decoded = @iconv('Windows-1252', 'UTF-8//TRANSLIT', $raw);
+            if (is_string($decoded) && preg_match('//u', $decoded) === 1) {
+                return $decoded;
+            }
+        }
+
+        throw new RuntimeException('Legacy UMOD archive string could not be converted from Windows-1252 to UTF-8.');
     }
 
     public static function packU32(int $value): string
