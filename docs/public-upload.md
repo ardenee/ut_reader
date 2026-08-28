@@ -115,7 +115,7 @@ A completed quarantine upload whose background job could not be secured also exp
 
 The root landing page links directly to the contribution uploader and reports cached verified storage usage/file count per game using \`ue_game_catalog_stats\`.
 
-The project-support section explains that the current locally hosted installation has limited redundancy and that hard-drive donations are a priority for increasing capacity and redundancy.
+The project-support section explains that the current locally hosted installation has limited redundancy. The project is not asking for money at this time; spare hard drives, including used drives that their owners already have and consider reliable enough for service, are the useful priority for increasing capacity and redundancy. The landing page links to the public feedback form for anyone who would like to offer a drive.
 
 ## Verification
 
