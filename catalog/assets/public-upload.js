@@ -45,12 +45,15 @@
     let inspectorSequence = 0;
     let inspectorPending = null;
     let processedFiles = 0;
+    let pendingValidation = [];
     const counters = {
         checked: 0,
         accepted: 0,
         skipped: 0,
         rejected: 0,
         uploaded: 0,
+        unverified: 0,
+        duplicates: 0,
         failed: 0
     };
 
@@ -98,7 +101,9 @@
             counters.accepted + ' accepted',
             counters.skipped + ' already held/pending',
             counters.rejected + ' rejected',
-            counters.uploaded + ' uploaded',
+            counters.uploaded + ' transferred',
+            counters.unverified + ' unverified',
+            counters.duplicates + ' post-upload duplicates',
             counters.failed + ' failed'
         ].join(' · ');
     }
@@ -435,6 +440,116 @@
         }
     }
 
+    async function fetchValidationStatuses(entries) {
+        const tokens = entries.map(function (entry) { return entry.token; });
+        const data = new FormData();
+        data.append('action', 'status_batch');
+        data.append('upload_tokens', JSON.stringify(tokens));
+
+        const controller = new AbortController();
+        activeController = controller;
+        try {
+            const response = await fetch(uploadUrl, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {'X-CSRF-Token': csrf},
+                body: data,
+                signal: controller.signal
+            });
+            const payload = await response.json().catch(function () { return {}; });
+            if (!response.ok) {
+                throw new Error(String(payload && payload.error && payload.error.message
+                    || payload.message || ('Status HTTP ' + response.status)));
+            }
+            return payload && payload.data && Array.isArray(payload.data.uploads)
+                ? payload.data.uploads
+                : [];
+        } finally {
+            if (activeController === controller) activeController = null;
+        }
+    }
+
+    function sleep(milliseconds) {
+        return new Promise(function (resolve) { window.setTimeout(resolve, milliseconds); });
+    }
+
+    async function waitForValidationResults(entries) {
+        let pending = entries.slice();
+        const deadline = Date.now() + 120000;
+        let delay = 1000;
+
+        while (pending.length > 0 && Date.now() < deadline) {
+            ensureRunning();
+            const nextPending = [];
+            for (let offset = 0; offset < pending.length; offset += 100) {
+                const batch = pending.slice(offset, offset + 100);
+                const rows = await fetchValidationStatuses(batch);
+                const byToken = new Map(rows.map(function (row) {
+                    return [String(row.upload_token || ''), row];
+                }));
+
+                batch.forEach(function (entry) {
+                    const row = byToken.get(entry.token);
+                    if (!row) {
+                        nextPending.push(entry);
+                        return;
+                    }
+                    const status = String(row.status || '').toLowerCase();
+                    const fileId = Number(row.unverified_file_id || 0);
+                    const message = String(row.result_message || '').trim();
+
+                    if (status === 'unverified') {
+                        counters.unverified++;
+                        addLog(
+                            'unverified',
+                            entry.label,
+                            'Ready for administrator review as unverified file #' + String(fileId || '?')
+                                + (message ? ' · ' + message : '')
+                        );
+                    } else if (status === 'duplicate') {
+                        counters.duplicates++;
+                        addLog(
+                            'duplicate',
+                            entry.label,
+                            (fileId > 0 ? 'Server validation matched existing file #' + String(fileId) + '.' : 'Server validation found an existing file.')
+                                + (message ? ' · ' + message : '')
+                        );
+                    } else if (status === 'failed') {
+                        counters.failed++;
+                        addLog(
+                            'failed',
+                            entry.label,
+                            message || 'Background validation failed; the original contribution was retained for diagnosis.'
+                        );
+                    } else {
+                        nextPending.push(entry);
+                    }
+                });
+            }
+
+            pending = nextPending;
+            renderSummary();
+            if (pending.length > 0) {
+                setProgress(
+                    100,
+                    'Waiting for background validation · ' + pending.length + ' contribution(s) still processing…',
+                    true
+                );
+                await sleep(delay);
+                delay = Math.min(5000, delay + 1000);
+            }
+        }
+
+        pending.forEach(function (entry) {
+            addLog(
+                'info',
+                entry.label,
+                'Transfer is complete and background validation is still pending. Check Background Jobs if it remains pending.'
+            );
+        });
+        renderSummary();
+    }
+
     async function wakePublicQueue(batchNumber) {
         const controller = new AbortController();
         activeController = controller;
@@ -485,14 +600,17 @@
             setProgress(100, 'Batch ' + batchNumber + ' · finalising upload ' + ordinal + '/' + totalAccepted + ' · ' + label, true);
             await postAction('complete', token, false);
             counters.uploaded++;
-            addLog('uploaded', label, 'Upload complete and queued for background validation/admin review.');
+            addLog('uploaded', label, 'Transfer complete and queued for background validation.');
+            renderSummary();
+            return true;
         } catch (error) {
             counters.failed++;
             addLog('failed', label, error.message || 'Upload failed.');
             await cancelReservation(token);
+            renderSummary();
             if (error && error.name === 'AbortError') throw error;
+            return false;
         }
-        renderSummary();
     }
 
     async function processBatch(items, batchNumber) {
@@ -503,7 +621,13 @@
         try {
             for (; index < accepted.length; index++) {
                 ensureRunning();
-                await uploadAccepted(accepted[index], index + 1, accepted.length, batchNumber);
+                const transferred = await uploadAccepted(accepted[index], index + 1, accepted.length, batchNumber);
+                if (transferred) {
+                    pendingValidation.push({
+                        token: accepted[index].token,
+                        label: accepted[index].entry.item.relativePath || accepted[index].entry.item.file.name
+                    });
+                }
             }
             if (accepted.length > 0) {
                 try {
@@ -547,6 +671,7 @@
     function resetCounters() {
         Object.keys(counters).forEach(function (key) { counters[key] = 0; });
         processedFiles = 0;
+        pendingValidation = [];
         log.textContent = '';
         renderSummary();
     }
@@ -602,7 +727,14 @@
             if (batch.length) {
                 await processBatch(batch, batchNumber);
             }
-            setProgress(100, 'Contribution upload finished. Uploaded files are being validated in background jobs for administrator review.', false);
+            if (pendingValidation.length > 0) {
+                await waitForValidationResults(pendingValidation);
+            }
+            setProgress(
+                100,
+                'Contribution upload finished. Terminal validation results are shown below; any remaining pending items continue in Background Jobs.',
+                false
+            );
         } catch (error) {
             if (error && error.name === 'AbortError') {
                 addLog('stopped', 'Upload', 'Stopped by user. Completed files remain queued; the active reservation was cancelled where possible.');
