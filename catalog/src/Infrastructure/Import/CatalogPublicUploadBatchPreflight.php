@@ -78,6 +78,10 @@ final class CatalogPublicUploadBatchPreflight
 
                 $relativePath = $this->relativePath((string)($item['relative_path'] ?? $name), $name);
                 $redirect = $policy->isRedirectWrapper($name);
+                $identitySize = (int)($item['identity_size'] ?? ($redirect ? 0 : $size));
+                if (!$redirect) {
+                    $identitySize = $size;
+                }
                 $md5 = strtolower(trim((string)($item['md5'] ?? '')));
                 $sha1 = strtolower(trim((string)($item['sha1'] ?? '')));
                 if (!$redirect && (preg_match('/^[a-f0-9]{32}$/', $md5) !== 1 || preg_match('/^[a-f0-9]{40}$/', $sha1) !== 1)) {
@@ -86,6 +90,13 @@ final class CatalogPublicUploadBatchPreflight
                 if ($redirect) {
                     $md5 = preg_match('/^[a-f0-9]{32}$/', $md5) === 1 ? $md5 : '';
                     $sha1 = preg_match('/^[a-f0-9]{40}$/', $sha1) === 1 ? $sha1 : '';
+                    $extension = strtolower((string)pathinfo($name, PATHINFO_EXTENSION));
+                    if (in_array($extension, ['uz2', 'uz3'], true)
+                        && ($md5 === '' || $sha1 === '' || $identitySize < 1)) {
+                        throw new InvalidArgumentException(
+                            'This redirect must be decoded and hashed in the browser before upload so catalog duplicates can be skipped.'
+                        );
+                    }
                 }
 
                 $guid = strtoupper(trim((string)($item['guid'] ?? '')));
@@ -118,6 +129,7 @@ final class CatalogPublicUploadBatchPreflight
                     'name' => $name,
                     'relative_path' => $relativePath,
                     'size' => $size,
+                    'identity_size' => $identitySize,
                     'md5' => $md5,
                     'sha1' => $sha1,
                     'guid' => $guid,
