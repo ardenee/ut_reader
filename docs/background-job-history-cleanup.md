@@ -15,11 +15,11 @@ The HTTP request:
 3. enqueues \`catalog.clean_background_job_history\`;
 4. wakes the worker and returns immediately.
 
-The 10,000-root value is now a **per-snapshot bound, not a total cleanup limit**. When a retention snapshot finishes, the same cleanup job requests the next bounded snapshot using the original cutoff. It continues until no eligible roots remain. Jobs becoming newer than that fixed cutoff are never swept into the same maintenance operation.
+The 10,000-root value is a **per-snapshot bound, not a total cleanup limit**. Snapshot selection fetches one extra row to determine whether another batch exists instead of running a full eligible-row `COUNT(*)` first. When a retention snapshot finishes, the same cleanup job requests the next bounded snapshot using the original cutoff. It continues until no eligible roots remain. Jobs becoming newer than that fixed cutoff are never swept into the same maintenance operation.
 
 ## Parent/child workflow rows
 
-Large workflow trees are drained leaf-first in bounded batches so one root deletion cannot trigger a huge unobservable foreign-key cascade.
+Large workflow trees are drained leaf-first in bounded batches so one root deletion cannot trigger a huge unobservable foreign-key cascade. Child/branch classification is done with set-based indexed queries rather than one existence query per child.
 
 Every hidden child row now goes through \`CatalogBackgroundJobCleanup\` before deletion. This means child event logs and owned \`staged_path\` sources are not skipped simply because the row was hidden from the operator view.
 
@@ -65,4 +65,4 @@ Run:
 php catalog/bin/verify-job-history-cleanup-contract.php
 \`\`\`
 
-The contract verifies bounded resumable workflow deletion, automatic retention continuation, staged-source reference protection, reclaimed-byte reporting, active UI wiring, worker-code reload coverage and PHP syntax.
+The contract verifies bounded resumable workflow deletion, set-based child detection, direct staged-source cleanup, count-free snapshot continuation, reclaimed-byte reporting, active UI wiring, worker-code reload coverage and PHP syntax.
