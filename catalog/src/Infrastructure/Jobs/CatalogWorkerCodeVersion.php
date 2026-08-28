@@ -73,6 +73,8 @@ final class CatalogWorkerCodeVersion
             $this->catalogRoot . '/src/Infrastructure/Import/CatalogProfileMismatchException.php',
             $this->catalogRoot . '/src/Infrastructure/Import/CatalogUnverifiedPackageIndexer.php',
             $this->catalogRoot . '/src/Infrastructure/Import/CatalogVerifiedPackageInspector.php',
+            $this->catalogRoot . '/src/Infrastructure/Metadata/CompressedMetadataLookupWriter.php',
+            $this->catalogRoot . '/src/Infrastructure/Metadata/CompactSearchProjectionWriter.php',
             $this->catalogRoot . '/src/Infrastructure/Unverified/CatalogUnverifiedPromotion.php',
             $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogUnverifiedBulkActionJobHandler.php',
             $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogStagedImportJobHandler.php',
