@@ -23,3 +23,6 @@ liblzo2.so
 liblzo2.so.*
 liblzo2-2.dll
 lzo2.dll
+
+# Installed browser archive decoder binary (verified by installer).
+/catalog/assets/vendor/7z-wasm/7zz.wasm
