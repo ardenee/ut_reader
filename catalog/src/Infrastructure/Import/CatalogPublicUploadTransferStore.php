@@ -130,6 +130,10 @@ final class CatalogPublicUploadTransferStore
         try {
             $row = $this->ownedRow($token, $ip, true);
             $status = strtolower(trim((string)($row['status'] ?? '')));
+            if (in_array($status, ['uploaded', 'processing', 'unverified', 'duplicate'], true)) {
+                $this->db->commit();
+                return $row;
+            }
             if (!in_array($status, ['reserved', 'uploading'], true)) {
                 throw new RuntimeException('This public upload reservation cannot be completed.');
             }
