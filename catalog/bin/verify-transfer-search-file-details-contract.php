@@ -118,8 +118,8 @@ $check(
     str_contains($source['search_repository'], "'ue_name_lookup', 'name_term_id'")
         && str_contains($source['search_repository'], "'Name'")
         && str_contains($source['search_writer'], 'INSERT INTO ue_name_lookup')
-        && str_contains($source['lookup_writer'], "yield (string)($row['name_text'] ?? '')")
-        && str_contains($source['overflow_writer'], "$add($row['name_text'] ?? '')")
+        && str_contains($source['lookup_writer'], 'yield (string)($row[\'name_text\'] ?? \'\')')
+        && str_contains($source['overflow_writer'], '$add($row[\'name_text\'] ?? \'\')')
         && str_contains($source['name_backfill'], 'CompactTermOverflowWriter')
         && str_contains($source['name_backfill'], "'names'")
         && str_contains($source['name_backfill'], '--all'),
