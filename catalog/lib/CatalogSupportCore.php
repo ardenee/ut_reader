@@ -343,6 +343,7 @@ function catalog_admin_nav(): void
     echo '<header class="site-header"><div class="brand"><a href="' . catalog_h($brandHref) . '">' . catalog_brand_mark($root) . '<span><strong>UnrealDB</strong><small>package catalog</small></span></a></div><nav class="primary-nav">';
     catalog_nav_link('Games', $root . 'games.php');
     catalog_nav_link('Search', $root . 'index.php?page=search');
+    catalog_nav_link('Contribute!', $root . 'public-upload.php');
     if (catalog_public_feedback_enabled()) {
         catalog_nav_link(
             'Feedback',
