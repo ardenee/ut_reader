@@ -85,7 +85,7 @@ $check(
 
 $check(
     'preflight_mysql_lock_name_stays_within_limit',
-    str_contains($preflight, "$lockName = 'udb-pubup-ip-' . substr(hash('sha256', $packedIp), 0, 40);")
+    str_contains($preflight, '$lockName = \'udb-pubup-ip-\' . substr(hash(\'sha256\', $packedIp), 0, 40);')
         && strlen('udb-pubup-ip-' . str_repeat('a', 40)) <= 64
         && str_contains($preflight, 'SELECT GET_LOCK(?,5)')
         && str_contains($preflight, 'SELECT RELEASE_LOCK(?)'),
