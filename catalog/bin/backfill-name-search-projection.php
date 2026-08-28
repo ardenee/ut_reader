@@ -14,6 +14,7 @@ require_once dirname(__DIR__) . '/bootstrap.php';
 
 use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataReader;
 use UnrealDb\Catalog\Infrastructure\Metadata\CompactSearchProjectionWriter;
+use UnrealDb\Catalog\Infrastructure\Metadata\CompactTermOverflowWriter;
 
 $limit = 500;
 $afterId = 0;
@@ -91,10 +92,9 @@ try {
                         . ': expected ' . $expectedNames . ', found ' . count($names) . '.'
                     );
                 }
-                $nameRows += $writer->writeNames(
-                    ['file' => ['id' => $fileId], 'names' => $names],
-                    $sqlBatches
-                );
+                $snapshot = ['file' => ['id' => $fileId], 'names' => $names];
+                $nameRows += $writer->writeNames($snapshot, $sqlBatches);
+                (new CompactTermOverflowWriter($db))->write($snapshot, $sqlBatches);
                 $processed++;
             } catch (Throwable $error) {
                 $errors[] = [
