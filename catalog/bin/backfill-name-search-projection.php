@@ -1,0 +1,106 @@
+#!/usr/bin/env php
+<?php
+/**
+ * Backfill exact compact Name-table search references for existing verified files.
+ */
+declare(strict_types=1);
+
+if (PHP_SAPI !== 'cli') {
+    http_response_code(404);
+    exit;
+}
+
+require_once dirname(__DIR__) . '/bootstrap.php';
+
+use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataSnapshotLoader;
+use UnrealDb\Catalog\Infrastructure\Metadata\CompactSearchProjectionWriter;
+
+$limit = 250;
+$afterId = 0;
+foreach (array_slice($argv, 1) as $argument) {
+    if (preg_match('/^--limit=([0-9]+)$/', (string)$argument, $match) === 1) {
+        $limit = max(1, min(5000, (int)$match[1]));
+    } elseif (preg_match('/^--after-id=([0-9]+)$/', (string)$argument, $match) === 1) {
+        $afterId = max(0, (int)$match[1]);
+    }
+}
+
+try {
+    $application = catalog_bootstrap();
+    $db = $application->db;
+    $storageRoot = rtrim((string)($application->config['storage_path'] ?? ''), DIRECTORY_SEPARATOR);
+    if ($storageRoot === '') {
+        throw new RuntimeException('Catalog storage path is not configured.');
+    }
+
+    $schema = $db->query(
+        'SELECT COUNT(*) FROM information_schema.TABLES '
+        . 'WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME="ue_name_lookup"'
+    );
+    if ((int)$schema->fetchColumn() !== 1) {
+        throw new RuntimeException('Run php catalog/bin/migrate.php migrate before backfilling Names search.');
+    }
+
+    $statement = $db->prepare(
+        'SELECT f.id,f.name_count FROM ue_files f '
+        . 'JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=2 '
+        . 'WHERE f.scan_status="verified" AND f.name_count>0 AND f.id>? '
+        . 'AND NOT EXISTS(SELECT 1 FROM ue_name_lookup n WHERE n.file_id=f.id LIMIT 1) '
+        . 'ORDER BY f.id ASC LIMIT ' . $limit
+    );
+    $statement->execute([$afterId]);
+    $files = $statement->fetchAll(PDO::FETCH_ASSOC) ?: [];
+
+    $loader = new BlockedCompressedMetadataSnapshotLoader($db, $storageRoot);
+    $writer = new CompactSearchProjectionWriter($db);
+    $processed = 0;
+    $nameRows = 0;
+    $sqlBatches = 0;
+    $lastId = $afterId;
+    $errors = [];
+
+    foreach ($files as $file) {
+        $fileId = (int)($file['id'] ?? 0);
+        if ($fileId < 1) {
+            continue;
+        }
+        $lastId = $fileId;
+        try {
+            $snapshot = $loader->load($fileId);
+            $nameRows += $writer->writeNames($snapshot, $sqlBatches);
+            $processed++;
+        } catch (Throwable $error) {
+            $errors[] = [
+                'file_id' => $fileId,
+                'error' => trim($error->getMessage()) ?: get_class($error),
+            ];
+        }
+    }
+
+    $remaining = (int)$db->query(
+        'SELECT COUNT(*) FROM ue_files f '
+        . 'JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=2 '
+        . 'WHERE f.scan_status="verified" AND f.name_count>0 '
+        . 'AND NOT EXISTS(SELECT 1 FROM ue_name_lookup n WHERE n.file_id=f.id LIMIT 1)'
+    )->fetchColumn();
+
+    fwrite(STDOUT, json_encode([
+        'ok' => $errors === [],
+        'processed_files' => $processed,
+        'name_rows' => $nameRows,
+        'sql_batches' => $sqlBatches,
+        'last_file_id' => $lastId,
+        'remaining_files' => $remaining,
+        'errors' => $errors,
+        'next_command' => $remaining > 0
+            ? 'php catalog/bin/backfill-name-search-projection.php --after-id=' . $lastId . ' --limit=' . $limit
+            : null,
+    ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . PHP_EOL);
+    exit($errors === [] ? 0 : 2);
+} catch (Throwable $error) {
+    fwrite(STDERR, json_encode([
+        'ok' => false,
+        'error' => trim($error->getMessage()) ?: get_class($error),
+    ], JSON_UNESCAPED_SLASHES) . PHP_EOL);
+    exit(1);
+}
