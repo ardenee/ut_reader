@@ -20,11 +20,23 @@ final class CatalogTransferBlocklist
         if ($packed === null) {
             return false;
         }
-        $statement = $this->db->prepare(
-            'SELECT 1 FROM ue_transfer_blocked_ips WHERE ip_address=? LIMIT 1'
-        );
-        $statement->execute([$packed]);
-        return $statement->fetchColumn() !== false;
+        try {
+            $statement = $this->db->prepare(
+                'SELECT 1 FROM ue_transfer_blocked_ips WHERE ip_address=? LIMIT 1'
+            );
+            $statement->execute([$packed]);
+            return $statement->fetchColumn() !== false;
+        } catch (\PDOException $error) {
+            // Deploying code immediately before its migration must not disable
+            // every transfer. Fail open only for the missing-table condition;
+            // all other database failures remain visible.
+            $sqlState = strtoupper((string)$error->getCode());
+            $message = strtolower($error->getMessage());
+            if ($sqlState === '42S02' || str_contains($message, 'ue_transfer_blocked_ips') && str_contains($message, 'doesn\'t exist')) {
+                return false;
+            }
+            throw $error;
+        }
     }
 
     public function block(string $ip, ?int $userId = null, string $note = ''): void
