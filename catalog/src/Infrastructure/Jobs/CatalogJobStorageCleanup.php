@@ -75,46 +75,89 @@ final class CatalogJobStorageCleanup
     /**
      * @return array<string,mixed>
      */
-    public function prune(int $minimumAgeSeconds = 300): array
-    {
+    public function prune(
+        int $minimumAgeSeconds = 300,
+        bool $manualCleanup = false,
+        ?callable $progress = null
+    ): array {
         $minimumAgeSeconds = max(60, min($minimumAgeSeconds, 30 * 86400));
-        $references = $this->recoveryReferences($minimumAgeSeconds);
+        $this->emitProgress($progress, 'references', 1, [], 0, 0);
+        $references = $this->recoveryReferences($minimumAgeSeconds, $manualCleanup);
 
-        return [
-            'root' => $this->jobsRoot,
-            'incoming' => $this->pruneIncoming($minimumAgeSeconds, $references['incoming']),
-            'backup_import' => $this->pruneBackupImport($minimumAgeSeconds, $references['backup_import_jobs']),
-            'prepared' => $this->pruneOwnedDirectories(
-                $this->preparedDirectory,
-                $minimumAgeSeconds,
-                $references['owner_jobs']
-            ),
-            'pak_import' => $this->pruneOwnedDirectories(
-                $this->pakImportDirectory,
-                $minimumAgeSeconds,
-                $references['owner_jobs']
-            ),
-            'chunked_uploads' => $this->pruneChunkedUploads(
-                $minimumAgeSeconds,
-                $references['chunked_uploads']
-            ),
-            'profiled_upload_batches' => $this->pruneProfiledUploadBatches(
-                $minimumAgeSeconds,
-                $references['profiled_batches']
-            ),
-            'events' => $this->pruneEventFiles($minimumAgeSeconds),
-            'bucket_working' => $this->pruneJobNamedFiles(
-                $this->bucketWorkingDirectory,
-                $minimumAgeSeconds,
-                $references['owner_jobs']
-            ),
-            'bucket_pak_publish' => $this->pruneJobNamedFiles(
-                $this->bucketPakPublishDirectory,
-                $minimumAgeSeconds,
-                $references['owner_jobs']
-            ),
-            'identity_locks' => $this->pruneIdentityLocks($minimumAgeSeconds),
-        ];
+        $result = ['root' => $this->jobsRoot, 'manual_cleanup' => $manualCleanup];
+
+        $result['incoming'] = $this->pruneIncoming(
+            $minimumAgeSeconds,
+            $references['incoming'],
+            $progress,
+            3,
+            20
+        );
+        $result['backup_import'] = $this->pruneBackupImport(
+            $minimumAgeSeconds,
+            $references['backup_import_jobs']
+        );
+        $this->emitProgress($progress, 'backup_import', 22, $result['backup_import']);
+
+        $result['prepared'] = $this->pruneOwnedDirectories(
+            $this->preparedDirectory,
+            $minimumAgeSeconds,
+            $references['owner_jobs'],
+            $progress,
+            'prepared',
+            22,
+            55
+        );
+        $result['pak_import'] = $this->pruneOwnedDirectories(
+            $this->pakImportDirectory,
+            $minimumAgeSeconds,
+            $references['owner_jobs'],
+            $progress,
+            'pak_import',
+            55,
+            62
+        );
+        $result['chunked_uploads'] = $this->pruneChunkedUploads(
+            $minimumAgeSeconds,
+            $references['chunked_uploads'],
+            $manualCleanup,
+            $progress,
+            62,
+            72
+        );
+        $result['profiled_upload_batches'] = $this->pruneProfiledUploadBatches(
+            $minimumAgeSeconds,
+            $references['profiled_batches'],
+            $manualCleanup,
+            $progress,
+            72,
+            77
+        );
+        $result['events'] = $this->pruneEventFiles($minimumAgeSeconds);
+        $this->emitProgress($progress, 'events', 80, $result['events']);
+
+        $result['bucket_working'] = $this->pruneJobNamedFiles(
+            $this->bucketWorkingDirectory,
+            $minimumAgeSeconds,
+            $references['owner_jobs']
+        );
+        $this->emitProgress($progress, 'bucket_working', 84, $result['bucket_working']);
+
+        $result['bucket_pak_publish'] = $this->pruneJobNamedFiles(
+            $this->bucketPakPublishDirectory,
+            $minimumAgeSeconds,
+            $references['owner_jobs']
+        );
+        $this->emitProgress($progress, 'bucket_pak_publish', 87, $result['bucket_pak_publish']);
+
+        $result['identity_locks'] = $this->pruneIdentityLocks(
+            $minimumAgeSeconds,
+            $progress,
+            87,
+            99
+        );
+        $this->emitProgress($progress, 'complete', 99, $this->aggregateStats($result));
+        return $result;
     }
 
     /**
@@ -126,7 +169,7 @@ final class CatalogJobStorageCleanup
      *   profiled_batches:array<string,true>
      * }
      */
-    private function recoveryReferences(int $minimumAgeSeconds): array
+    private function recoveryReferences(int $minimumAgeSeconds, bool $manualCleanup): array
     {
         $result = [
             'owner_jobs' => [],
@@ -162,7 +205,7 @@ final class CatalogJobStorageCleanup
         // A profiled browser batch exists before its coordinator DB job is
         // created. Protect files referenced by a genuinely active upload manifest
         // so maintenance cannot race an in-progress browser upload.
-        $this->collectActiveProfiledBatchReferences($result, $minimumAgeSeconds);
+        $this->collectActiveProfiledBatchReferences($result, $minimumAgeSeconds, $manualCleanup);
 
         return $result;
     }
@@ -206,13 +249,17 @@ final class CatalogJobStorageCleanup
     }
 
     /** @param array<string,mixed> $result */
-    private function collectActiveProfiledBatchReferences(array &$result, int $minimumAgeSeconds): void
+    private function collectActiveProfiledBatchReferences(
+        array &$result,
+        int $minimumAgeSeconds,
+        bool $manualCleanup
+    ): void
     {
         if (!is_dir($this->profiledUploadBatchDirectory)) {
             return;
         }
 
-        $staleSeconds = $this->uploadStaleSeconds();
+        $staleSeconds = $manualCleanup ? $minimumAgeSeconds : $this->uploadStaleSeconds();
         $now = time();
 
         foreach (glob($this->profiledUploadBatchDirectory . DIRECTORY_SEPARATOR . '*.json') ?: [] as $metadataPath) {
@@ -233,7 +280,12 @@ final class CatalogJobStorageCleanup
                 is_file($manifestPath) ? (int)(@filemtime($manifestPath) ?: 0) : 0
             );
 
-            $activeBrowserUpload = $status === 'uploading' && ($latest <= 0 || ($now - $latest) < $staleSeconds);
+            $lockPath = $this->profiledUploadBatchDirectory . DIRECTORY_SEPARATOR . $batchId . '.lock';
+            $activeBrowserUpload = $status === 'uploading'
+                && (
+                    ($latest > 0 && ($now - $latest) < $staleSeconds)
+                    || $this->isLocked($lockPath)
+                );
             $protectedCoordinator = isset($result['profiled_batches'][$batchId]);
             if (!$activeBrowserUpload && !$protectedCoordinator) {
                 continue;
@@ -273,7 +325,13 @@ final class CatalogJobStorageCleanup
     }
 
     /** @return array{scanned:int,referenced:int,recent:int,deleted:int,bytes:int,failed:int} */
-    private function pruneIncoming(int $minimumAgeSeconds, array $references): array
+    private function pruneIncoming(
+        int $minimumAgeSeconds,
+        array $references,
+        ?callable $progress = null,
+        int $startPercent = 0,
+        int $endPercent = 100
+    ): array
     {
         $result = ['scanned' => 0, 'referenced' => 0, 'recent' => 0, 'deleted' => 0, 'bytes' => 0, 'failed' => 0];
         if (!is_dir($this->incomingDirectory)) {
@@ -281,6 +339,7 @@ final class CatalogJobStorageCleanup
         }
 
         $threshold = time() - $minimumAgeSeconds;
+        $total = $this->countFiles($this->incomingDirectory);
         $iterator = new RecursiveIteratorIterator(
             new RecursiveDirectoryIterator($this->incomingDirectory, FilesystemIterator::SKIP_DOTS),
             RecursiveIteratorIterator::CHILD_FIRST
@@ -313,7 +372,9 @@ final class CatalogJobStorageCleanup
             } else {
                 $result['failed']++;
             }
+            $this->emitLoopProgress($progress, 'incoming', $startPercent, $endPercent, $result, $total);
         }
+        $this->emitProgress($progress, 'incoming', $endPercent, $result, $result['scanned'], $total);
         @rmdir($this->incomingDirectory);
         return $result;
     }
@@ -356,7 +417,15 @@ final class CatalogJobStorageCleanup
     }
 
     /** @return array{scanned:int,retained:int,recent:int,deleted:int,bytes:int,failed:int} */
-    private function pruneOwnedDirectories(string $root, int $minimumAgeSeconds, array $ownerJobs): array
+    private function pruneOwnedDirectories(
+        string $root,
+        int $minimumAgeSeconds,
+        array $ownerJobs,
+        ?callable $progress = null,
+        string $category = 'owned',
+        int $startPercent = 0,
+        int $endPercent = 100
+    ): array
     {
         $result = ['scanned' => 0, 'retained' => 0, 'recent' => 0, 'deleted' => 0, 'bytes' => 0, 'failed' => 0];
         if (!is_dir($root)) {
@@ -364,6 +433,7 @@ final class CatalogJobStorageCleanup
         }
 
         $threshold = time() - $minimumAgeSeconds;
+        $total = $this->countTopLevelDirectories($root);
         foreach (new FilesystemIterator($root, FilesystemIterator::SKIP_DOTS) as $entry) {
             if (!$entry instanceof \SplFileInfo || !$entry->isDir() || $entry->isLink()) {
                 continue;
@@ -387,13 +457,22 @@ final class CatalogJobStorageCleanup
             } else {
                 $result['failed']++;
             }
+            $this->emitLoopProgress($progress, $category, $startPercent, $endPercent, $result, $total);
         }
+        $this->emitProgress($progress, $category, $endPercent, $result, $result['scanned'], $total);
         @rmdir($root);
         return $result;
     }
 
     /** @return array{scanned:int,referenced:int,recent:int,deleted:int,bytes:int,failed:int} */
-    private function pruneChunkedUploads(int $minimumAgeSeconds, array $references): array
+    private function pruneChunkedUploads(
+        int $minimumAgeSeconds,
+        array $references,
+        bool $manualCleanup,
+        ?callable $progress = null,
+        int $startPercent = 0,
+        int $endPercent = 100
+    ): array
     {
         $result = ['scanned' => 0, 'referenced' => 0, 'recent' => 0, 'deleted' => 0, 'bytes' => 0, 'failed' => 0];
         if (!is_dir($this->chunkedUploadDirectory)) {
@@ -418,6 +497,7 @@ final class CatalogJobStorageCleanup
         $threshold = time() - $minimumAgeSeconds;
         $uploadStaleThreshold = time() - $this->uploadStaleSeconds();
         $cleanup = new CatalogChunkedUploadCleanup($this->config);
+        $total = count($directories);
 
         foreach ($directories as $uploadId => $directory) {
             $result['scanned']++;
@@ -435,14 +515,24 @@ final class CatalogJobStorageCleanup
                 ? (int)(@filemtime($manifestPath) ?: 0)
                 : $this->treeStats($directory)['modified'];
 
-            // A browser can still be uploading before a database job exists.
-            // Give genuinely in-progress chunk stores the configured stale window.
-            if ($status === 'uploading' && $modified >= $uploadStaleThreshold) {
-                $result['referenced']++;
-                continue;
-            }
-            if ($modified > $threshold) {
+            // Manual web cleanup keeps only genuinely active/recent uploads.
+            // Scheduled maintenance remains conservative and uses the configured
+            // browser-upload stale window.
+            if ($status === 'uploading') {
+                $lockPath = $directory . DIRECTORY_SEPARATOR . '.lock';
+                if ($this->isLocked($lockPath)) {
+                    $result['referenced']++;
+                    $this->emitLoopProgress($progress, 'chunked_uploads', $startPercent, $endPercent, $result, $total);
+                    continue;
+                }
+                if ($manualCleanup ? $modified > $threshold : $modified >= $uploadStaleThreshold) {
+                    $result['recent']++;
+                    $this->emitLoopProgress($progress, 'chunked_uploads', $startPercent, $endPercent, $result, $total);
+                    continue;
+                }
+            } elseif ($modified > $threshold) {
                 $result['recent']++;
+                $this->emitLoopProgress($progress, 'chunked_uploads', $startPercent, $endPercent, $result, $total);
                 continue;
             }
 
@@ -462,15 +552,24 @@ final class CatalogJobStorageCleanup
                     $result['failed']++;
                 }
             }
+            $this->emitLoopProgress($progress, 'chunked_uploads', $startPercent, $endPercent, $result, $total);
         }
 
+        $this->emitProgress($progress, 'chunked_uploads', $endPercent, $result, $result['scanned'], $total);
         $this->removeEmptyDirectories($this->chunkedUploadDirectory);
         @rmdir($this->chunkedUploadDirectory);
         return $result;
     }
 
     /** @return array{scanned:int,retained:int,recent:int,deleted:int,bytes:int,failed:int} */
-    private function pruneProfiledUploadBatches(int $minimumAgeSeconds, array $protectedBatches): array
+    private function pruneProfiledUploadBatches(
+        int $minimumAgeSeconds,
+        array $protectedBatches,
+        bool $manualCleanup,
+        ?callable $progress = null,
+        int $startPercent = 0,
+        int $endPercent = 100
+    ): array
     {
         $result = ['scanned' => 0, 'retained' => 0, 'recent' => 0, 'deleted' => 0, 'bytes' => 0, 'failed' => 0];
         if (!is_dir($this->profiledUploadBatchDirectory)) {
@@ -489,6 +588,7 @@ final class CatalogJobStorageCleanup
 
         $threshold = time() - $minimumAgeSeconds;
         $uploadStaleThreshold = time() - $this->uploadStaleSeconds();
+        $total = count($ids);
 
         foreach (array_keys($ids) as $batchId) {
             $result['scanned']++;
@@ -511,13 +611,25 @@ final class CatalogJobStorageCleanup
                 $bytes += max(0, (int)(@filesize($path) ?: 0));
             }
 
-            if (isset($protectedBatches[$batchId])
-                || ($status === 'uploading' && $latest >= $uploadStaleThreshold)) {
+            if (isset($protectedBatches[$batchId])) {
                 $result['retained']++;
+                $this->emitLoopProgress($progress, 'profiled_upload_batches', $startPercent, $endPercent, $result, $total);
                 continue;
             }
-            if ($latest > $threshold) {
+            if ($status === 'uploading') {
+                if ($this->isLocked($lockPath)) {
+                    $result['retained']++;
+                    $this->emitLoopProgress($progress, 'profiled_upload_batches', $startPercent, $endPercent, $result, $total);
+                    continue;
+                }
+                if ($manualCleanup ? $latest > $threshold : $latest >= $uploadStaleThreshold) {
+                    $result['recent']++;
+                    $this->emitLoopProgress($progress, 'profiled_upload_batches', $startPercent, $endPercent, $result, $total);
+                    continue;
+                }
+            } elseif ($latest > $threshold) {
                 $result['recent']++;
+                $this->emitLoopProgress($progress, 'profiled_upload_batches', $startPercent, $endPercent, $result, $total);
                 continue;
             }
 
@@ -554,8 +666,10 @@ final class CatalogJobStorageCleanup
             } else {
                 $result['failed']++;
             }
+            $this->emitLoopProgress($progress, 'profiled_upload_batches', $startPercent, $endPercent, $result, $total);
         }
 
+        $this->emitProgress($progress, 'profiled_upload_batches', $endPercent, $result, $result['scanned'], $total);
         @rmdir($this->profiledUploadBatchDirectory);
         return $result;
     }
@@ -659,7 +773,12 @@ final class CatalogJobStorageCleanup
     }
 
     /** @return array{scanned:int,active:int,recent:int,deleted:int,bytes:int,failed:int} */
-    private function pruneIdentityLocks(int $minimumAgeSeconds): array
+    private function pruneIdentityLocks(
+        int $minimumAgeSeconds,
+        ?callable $progress = null,
+        int $startPercent = 0,
+        int $endPercent = 100
+    ): array
     {
         $result = ['scanned' => 0, 'active' => 0, 'recent' => 0, 'deleted' => 0, 'bytes' => 0, 'failed' => 0];
         if (!is_dir($this->identityLockDirectory)) {
@@ -667,6 +786,7 @@ final class CatalogJobStorageCleanup
         }
 
         $threshold = time() - $minimumAgeSeconds;
+        $total = $this->countFiles($this->identityLockDirectory);
         $iterator = new RecursiveIteratorIterator(
             new RecursiveDirectoryIterator($this->identityLockDirectory, FilesystemIterator::SKIP_DOTS),
             RecursiveIteratorIterator::CHILD_FIRST
@@ -707,8 +827,10 @@ final class CatalogJobStorageCleanup
             } else {
                 $result['failed']++;
             }
+            $this->emitLoopProgress($progress, 'identity_locks', $startPercent, $endPercent, $result, $total);
         }
 
+        $this->emitProgress($progress, 'identity_locks', $endPercent, $result, $result['scanned'], $total);
         $this->removeEmptyDirectories($this->identityLockDirectory);
         @rmdir($this->identityLockDirectory);
         return $result;
@@ -767,6 +889,160 @@ final class CatalogJobStorageCleanup
         } catch (\JsonException) {
             return null;
         }
+    }
+
+    private function isLocked(string $path): bool
+    {
+        if (!is_file($path)) {
+            return false;
+        }
+        $handle = @fopen($path, 'c+b');
+        if (!is_resource($handle)) {
+            return true;
+        }
+        if (!@flock($handle, LOCK_EX | LOCK_NB)) {
+            fclose($handle);
+            return true;
+        }
+        @flock($handle, LOCK_UN);
+        fclose($handle);
+        return false;
+    }
+
+    private function countFiles(string $root): int
+    {
+        if (!is_dir($root)) {
+            return 0;
+        }
+        $count = 0;
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($root, FilesystemIterator::SKIP_DOTS)
+        );
+        foreach ($iterator as $entry) {
+            if ($entry instanceof \SplFileInfo && $entry->isFile() && !$entry->isLink()) {
+                $count++;
+            }
+        }
+        return $count;
+    }
+
+    private function countTopLevelDirectories(string $root): int
+    {
+        if (!is_dir($root)) {
+            return 0;
+        }
+        $count = 0;
+        foreach (new FilesystemIterator($root, FilesystemIterator::SKIP_DOTS) as $entry) {
+            if ($entry instanceof \SplFileInfo && $entry->isDir() && !$entry->isLink()) {
+                $count++;
+            }
+        }
+        return $count;
+    }
+
+    /** @param array<string,mixed> $stats */
+    private function emitLoopProgress(
+        ?callable $progress,
+        string $category,
+        int $startPercent,
+        int $endPercent,
+        array $stats,
+        int $total
+    ): void {
+        $scanned = max(0, (int)($stats['scanned'] ?? 0));
+        if ($scanned === 0 || ($scanned % 100) !== 0) {
+            return;
+        }
+        $range = max(0, $endPercent - $startPercent);
+        $fraction = $total > 0 ? min(1, $scanned / $total) : 0.0;
+        $percent = min($endPercent, $startPercent + (int)floor($range * $fraction));
+        $this->emitProgress($progress, $category, $percent, $stats, $scanned, $total);
+    }
+
+    /** @param array<string,mixed> $stats */
+    private function emitProgress(
+        ?callable $progress,
+        string $category,
+        int $percent,
+        array $stats = [],
+        int $done = 0,
+        int $total = 0
+    ): void {
+        if ($progress === null) {
+            return;
+        }
+        $deleted = max(0, (int)($stats['deleted'] ?? 0));
+        $bytes = max(0, (int)($stats['bytes'] ?? 0));
+        $label = str_replace('_', ' ', $category);
+        $message = 'Cleaning job storage: ' . $label;
+        if ($total > 0) {
+            $message .= ' — ' . number_format($done) . '/' . number_format($total) . ' checked';
+        } elseif ($done > 0) {
+            $message .= ' — ' . number_format($done) . ' checked';
+        }
+        if ($deleted > 0) {
+            $message .= '; ' . number_format($deleted) . ' deleted';
+        }
+        if ($bytes > 0) {
+            $message .= '; ' . $this->formatBytes($bytes) . ' reclaimed';
+        }
+        $message .= '.';
+
+        $progress([
+            'stage' => 'job_storage_cleanup',
+            'category' => $category,
+            'done' => $done,
+            'total' => max(1, $total),
+            'percent' => max(1, min(99, $percent)),
+            'scanned' => max(0, (int)($stats['scanned'] ?? $done)),
+            'deleted' => $deleted,
+            'reclaimed_bytes' => $bytes,
+            'recent' => max(0, (int)($stats['recent'] ?? 0)),
+            'retained' => max(
+                0,
+                (int)($stats['retained'] ?? 0) + (int)($stats['referenced'] ?? 0) + (int)($stats['active'] ?? 0)
+            ),
+            'failed' => max(0, (int)($stats['failed'] ?? 0)),
+            'message' => $message,
+        ]);
+    }
+
+    /** @param array<string,mixed> $result @return array<string,int> */
+    private function aggregateStats(array $result): array
+    {
+        $totals = ['scanned' => 0, 'deleted' => 0, 'bytes' => 0, 'recent' => 0, 'retained' => 0, 'failed' => 0];
+        foreach ($result as $value) {
+            if (!is_array($value)) {
+                continue;
+            }
+            $totals['scanned'] += max(0, (int)($value['scanned'] ?? 0));
+            $totals['deleted'] += max(0, (int)($value['deleted'] ?? 0));
+            $totals['bytes'] += max(0, (int)($value['bytes'] ?? 0));
+            $totals['recent'] += max(0, (int)($value['recent'] ?? 0));
+            $totals['retained'] += max(
+                0,
+                (int)($value['retained'] ?? 0) + (int)($value['referenced'] ?? 0) + (int)($value['active'] ?? 0)
+            );
+            $totals['failed'] += max(0, (int)($value['failed'] ?? 0));
+        }
+        return $totals;
+    }
+
+    private function formatBytes(int $bytes): string
+    {
+        $bytes = max(0, $bytes);
+        if ($bytes < 1024) {
+            return $bytes . ' B';
+        }
+        $units = ['KB', 'MB', 'GB', 'TB'];
+        $value = $bytes / 1024;
+        foreach ($units as $unit) {
+            if ($value < 1024 || $unit === 'TB') {
+                return number_format($value, $value >= 100 ? 0 : ($value >= 10 ? 1 : 2)) . ' ' . $unit;
+            }
+            $value /= 1024;
+        }
+        return $bytes . ' B';
     }
 
     private function uploadStaleSeconds(): int
