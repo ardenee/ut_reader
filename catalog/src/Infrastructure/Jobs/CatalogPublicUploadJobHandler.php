@@ -133,27 +133,35 @@ final class CatalogPublicUploadJobHandler implements JobHandler
                 'server_sha1' => $identity['sha1'],
             ]);
 
-            $existing = $this->exactExisting($identity['md5'], $identity['sha1'], $identity['size']);
+            $duplicateCheck = (new CatalogUploadDuplicateDetector($this->db, $this->config))->inspect(
+                $identity['size'],
+                $identity['md5'],
+                $identity['sha1']
+            );
+            $existing = is_array($duplicateCheck['duplicate'] ?? null)
+                ? $duplicateCheck['duplicate']
+                : null;
             if ($existing !== null) {
+                $existingFileId = max(0, (int)($existing['file_id'] ?? 0));
                 $store->removeQuarantine($token);
                 if ($decodedPath !== '' && is_file($decodedPath)) {
                     @unlink($decodedPath);
                 }
                 $this->updateLedger($publicUploadId, [
                     'status' => 'duplicate',
-                    'unverified_file_id' => (int)$existing['id'],
-                    'server_guid' => trim((string)($existing['package_guid'] ?? '')),
+                    'unverified_file_id' => $existingFileId,
+                    'server_guid' => '',
                     'active_identity_key' => null,
                     'quarantine_relative_path' => null,
-                    'result_message' => 'Server validation found identical bytes already stored as file #' . (int)$existing['id'] . '.',
+                    'result_message' => 'Server validation physically confirmed identical bytes as file #' . $existingFileId . '.',
                 ]);
                 return [
                     'status' => 'duplicate',
                     'public_upload_id' => $publicUploadId,
-                    'file_id' => (int)$existing['id'],
+                    'file_id' => $existingFileId,
                     'md5' => $identity['md5'],
                     'sha1' => $identity['sha1'],
-                    'message' => 'Identical bytes already exist as file #' . (int)$existing['id'] . '.',
+                    'message' => 'Physically confirmed identical bytes already exist as file #' . $existingFileId . '.',
                 ];
             }
 
@@ -342,17 +350,6 @@ final class CatalogPublicUploadJobHandler implements JobHandler
         ];
     }
 
-    /** @return array<string,mixed>|null */
-    private function exactExisting(string $md5, string $sha1, int $size): ?array
-    {
-        $statement = $this->db->prepare(
-            'SELECT id,package_guid,scan_status FROM ue_files '
-            . 'WHERE md5=? AND sha1=? AND file_size=? AND scan_status IN ("verified","unverified") ORDER BY id LIMIT 1'
-        );
-        $statement->execute([$md5, $sha1, $size]);
-        $row = $statement->fetch(PDO::FETCH_ASSOC);
-        return is_array($row) ? $row : null;
-    }
 
     /** @param array<string,mixed> $values */
     private function updateLedger(int $publicUploadId, array $values): void
