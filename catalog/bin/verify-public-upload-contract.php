@@ -197,8 +197,8 @@ $check(
         && str_contains($client, "status === 'duplicate'")
         && str_contains($client, "status === 'failed'")
         && str_contains($client, "'Ready for administrator review as unverified file #'")
-        && str_contains($client, "'post-upload duplicates'")
-        && str_contains($client, "'transferred'"),
+        && str_contains($client, "counters.duplicates + ' post-upload duplicates'")
+        && str_contains($client, "counters.uploaded + ' transferred'"),
     'The public page must distinguish transfer completion from terminal background validation and expose the resulting unverified/duplicate/failed state.'
 );
 
