@@ -6,7 +6,10 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/_bootstrap.php';
 
+use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogPublicUploadBatchPreflight;
+use UnrealDb\Catalog\Infrastructure\Jobs\CatalogQueueWorkerStarter;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 use UnrealDb\Catalog\Presentation\Http\JsonResponse;
 
 try {
@@ -27,6 +30,23 @@ try {
         catalog_client_ip(),
         (string)($_SERVER['HTTP_USER_AGENT'] ?? '')
     );
+
+    if ((int)($result['expired_released'] ?? 0) > 0) {
+        $configuredQueue = trim((string)($application->config['queue']['name'] ?? 'catalog')) ?: 'catalog';
+        $queueName = $configuredQueue . ':public-upload';
+        (new PdoJobQueue($application->db))->enqueue(
+            $queueName,
+            JobType::PRUNE_PUBLIC_UPLOADS,
+            ['source_relative_path' => 'Expired public upload quarantine cleanup'],
+            200,
+            null,
+            'public-upload-prune',
+            null,
+            3
+        );
+        (new CatalogQueueWorkerStarter($application->db, $application->config))->start($queueName, true, null);
+    }
+
     JsonResponse::send(['ok' => true, 'data' => $result], 200);
 } catch (\InvalidArgumentException $error) {
     JsonResponse::error('invalid_manifest', $error->getMessage(), 400);
