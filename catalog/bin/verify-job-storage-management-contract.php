@@ -45,7 +45,7 @@ $check = static function (string $name, bool $ok, string $detail) use (&$checks,
 
 $check(
     'cleanup_uses_runtime_storage_root',
-    str_contains($source['cleanup'], "$this->jobsRoot = $storageRoot . DIRECTORY_SEPARATOR . 'jobs'")
+    str_contains($source['cleanup'], '$this->jobsRoot = $storageRoot . DIRECTORY_SEPARATOR . \'jobs\'')
         && str_contains($source['cleanup'], 'public function root(): string')
         && str_contains($source['page'], '$jobStorageRoot = rtrim((string)($config[\'storage_path\'] ?? \'\')'),
     'Website cleanup must target the deployed storage_path/jobs tree, not a source-checkout-relative directory.'
@@ -88,15 +88,15 @@ $check(
 $check(
     'active_browser_uploads_are_protected',
     str_contains($source['cleanup'], 'collectActiveProfiledBatchReferences(')
-        && str_contains($source['cleanup'], "$status === 'uploading'")
+        && str_contains($source['cleanup'], '$status === \'uploading\'')
         && str_contains($source['cleanup'], 'uploadStaleSeconds()')
-        && str_contains($source['cleanup'], "'chunk-upload:"),
+        && str_contains($source['cleanup'], "preg_match('/^chunk-upload:"),
     'Cleanup must preserve a genuinely active browser upload even before its coordinator job exists.'
 );
 
 $check(
     'identity_lock_files_are_ephemeral',
-    str_contains($source['identity'], "stream_get_meta_data($handle)")
+    str_contains($source['identity'], 'stream_get_meta_data($handle)')
         && str_contains($source['identity'], '@unlink($path)')
         && str_contains($source['cleanup'], 'pruneIdentityLocks('),
     'Upload identity locks must be removed after use and old unlocked lock files must be reclaimable.'
@@ -106,7 +106,7 @@ $check(
     'profiled_batch_manifests_are_ephemeral',
     str_contains($source['batch_store'], 'public function delete(string $batchId): void')
         && str_contains($source['batch_handler'], '$store->delete($batchId);')
-        && str_contains($source['batch_handler'], "(string)($resume['stage'] ?? '') === 'complete'"),
+        && str_contains($source['batch_handler'], "(string)(\$resume['stage'] ?? '') === 'complete'"),
     'Completed profiled-upload manifests must be deleted behind a durable completion checkpoint.'
 );
 
@@ -116,15 +116,15 @@ $check(
         && str_contains($source['page'], 'Clean job storage')
         && str_contains($source['page'], 'Job storage:')
         && str_contains($source['js'], "action: 'cleanup_storage'")
-        && str_contains($source['action'], "if ($action === 'cleanup_storage')")
+        && str_contains($source['action'], "if (\$action === 'cleanup_storage')")
         && str_contains($source['action'], "'storage_only' => true"),
     'Background Jobs -> Maintenance must expose a background job-storage cleanup action.'
 );
 
 $check(
     'storage_cleanup_runs_in_worker',
-    str_contains($source['maintenance'], "$storageOnly ? ['job_storage'] : ['generated', 'job_storage']")
-        && str_contains($source['maintenance'], "new CatalogJobStorageCleanup($this->db, $this->config)")
+    str_contains($source['maintenance'], "\$storageOnly ? ['job_storage'] : ['generated', 'job_storage']")
+        && str_contains($source['maintenance'], 'new CatalogJobStorageCleanup($this->db, $this->config)')
         && str_contains($source['action'], 'CatalogQueueWorkerStarter'),
     'Large filesystem cleanup must run as a worker job rather than inside the browser request.'
 );
