@@ -252,6 +252,7 @@ final class CatalogJobWorkerFactory
             ),
             JobType::RECONCILE_UNVERIFIED_STORAGE => static fn() => new CatalogStorageMaintenanceJobHandler($db, $config),
             JobType::PRUNE_STALE_ARTIFACTS => static fn() => new CatalogStorageMaintenanceJobHandler($db, $config),
+            JobType::PRUNE_PUBLIC_UPLOADS => static fn() => new CatalogPublicUploadMaintenanceJobHandler($db, $config),
             JobType::PRUNE_UPLOAD_PROGRESS => static fn() => new CatalogMaintenanceJobHandler($db, $config),
         ];
 
