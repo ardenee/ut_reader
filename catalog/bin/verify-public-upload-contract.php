@@ -236,7 +236,7 @@ $check(
         && str_contains($landing, 'information_schema.tables')
         && str_contains($landing, 'Database size')
         && str_contains($landing, 'Data + indexes currently allocated by MySQL')
-        && str_contains($landing, 'File-storage figures are the summed sizes of verified catalog files, not free disk space.'),
+        && str_contains($landing, 'File-storage figures are the summed sizes of verified catalog files. Database size is MySQL\'s currently allocated data + index size.'),
     'Public landing/menu must advertise contributions, low-pressure drive support/contact, redundancy/capacity needs, database size, cached per-game storage and indexed file-state metrics without the DNS migration/main-path text.'
 );
 
