@@ -17,7 +17,16 @@ use UnrealDb\Catalog\Infrastructure\Settings\CatalogPublicUploadSettingsStore;
 try {
     $config = catalog_config();
     $db = catalog_db($config);
-    catalog_start_session();
+
+    // Public contribution upload is an anonymous stateful flow. Ordinary public
+    // GET pages intentionally avoid creating PHP sessions, but this page embeds
+    // a CSRF token used by later POST requests, so the session must exist before
+    // that token is generated.
+    catalog_start_session(true);
+    if (!headers_sent()) {
+        header('Cache-Control: no-store, private');
+        header('Pragma: no-cache');
+    }
 
     $settings = (new CatalogPublicUploadSettingsStore($db, $config))->settings();
     $policy = new CatalogUploadBucketFilePolicy($db, $config);
