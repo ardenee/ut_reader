@@ -6,11 +6,21 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/catalog/lib/CatalogSupport.php';
 
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoGameCatalogStats;
+
 catalog_start_session();
 
 $gameStorage = [];
 $totalCatalogFiles = 0;
 $totalCatalogBytes = 0;
+$databaseBytes = 0;
+$fileRecordStats = [
+    'file_count' => 0,
+    'verified_count' => 0,
+    'unverified_count' => 0,
+    'failed_count' => 0,
+    'duplicate_count' => 0,
+];
 try {
     $config = catalog_config();
     $db = catalog_db($config);
@@ -19,9 +29,31 @@ try {
         'SELECT g.id,g.name,COALESCE(s.verified_count,0) file_count,COALESCE(s.verified_size,0) storage_bytes '
         . 'FROM ue_games g LEFT JOIN ue_game_catalog_stats s ON s.game_id=g.id ORDER BY g.name'
     );
-    foreach ($gameStorage as $row) {
-        $totalCatalogFiles += max(0, (int)($row['file_count'] ?? 0));
-        $totalCatalogBytes += max(0, (int)($row['storage_bytes'] ?? 0));
+
+    $cachedGlobal = (new PdoGameCatalogStats($db))->global();
+    if ($cachedGlobal !== []) {
+        foreach (array_keys($fileRecordStats) as $key) {
+            $fileRecordStats[$key] = max(0, (int)($cachedGlobal[$key] ?? 0));
+        }
+        $totalCatalogFiles = $fileRecordStats['verified_count'];
+        $totalCatalogBytes = max(0, (int)($cachedGlobal['verified_size'] ?? 0));
+    } else {
+        foreach ($gameStorage as $row) {
+            $totalCatalogFiles += max(0, (int)($row['file_count'] ?? 0));
+            $totalCatalogBytes += max(0, (int)($row['storage_bytes'] ?? 0));
+        }
+        $fileRecordStats['file_count'] = $totalCatalogFiles;
+        $fileRecordStats['verified_count'] = $totalCatalogFiles;
+    }
+
+    $databaseName = trim((string)$db->query('SELECT DATABASE()')->fetchColumn());
+    if ($databaseName !== '') {
+        $sizeStatement = $db->prepare(
+            'SELECT COALESCE(SUM(data_length + index_length),0) '
+            . 'FROM information_schema.tables WHERE table_schema=?'
+        );
+        $sizeStatement->execute([$databaseName]);
+        $databaseBytes = max(0, (int)($sizeStatement->fetchColumn() ?: 0));
     }
 } catch (Throwable $error) {
     error_log('[UnrealDB][' . catalog_request_id() . '] landing storage summary unavailable: ' . $error->getMessage());
@@ -83,8 +115,10 @@ catalog_head('UnrealDB - Unreal File Catalog');
 <section class="card">
   <h2>Support the project</h2>
   <p>UnrealDB is currently hosted locally and, because of resource limitations, the project does not yet have the storage redundancy that a preservation catalog should have.</p>
-  <p><strong>Hard-drive donations are especially welcome.</strong> The immediate infrastructure priority is increasing storage capacity and adding redundancy so the growing file collection is better protected against hardware failure.</p>
-  <p class="muted">Additional capacity directly supports preservation, duplicate-safe public contributions, game coverage and future replicated storage.</p>
+  <p><strong>The project is not looking for money at this time.</strong> The immediate priority is storage capacity and redundancy, so hard drives are much more useful to the project right now.</p>
+  <p>There is no intention to burden anyone or ask people to buy new hardware. If you already have a hard drive lying around &mdash; including a used drive &mdash; and you know it is reliable enough to be put back into service, it would be very welcome and could directly help expand the catalog or add another copy of preserved files.</p>
+  <p class="muted">The main infrastructure priority is adding redundancy and capacity so the growing collection is better protected against hardware failure.</p>
+  <p><a class="button" href="catalog/feedback.php">Contact us about sending a drive</a></p>
 </section>
 
 <section class="card">
@@ -94,7 +128,37 @@ catalog_head('UnrealDB - Unreal File Catalog');
       <div class="stat">
         <h2><?= catalog_h(catalog_bytes($totalCatalogBytes)) ?></h2>
         <p>Total verified file storage used</p>
-        <p class="muted small"><?= catalog_h(number_format($totalCatalogFiles)) ?> files</p>
+        <p class="muted small"><?= catalog_h(number_format($totalCatalogFiles)) ?> verified files</p>
+      </div>
+      <div class="stat">
+        <h2><?= catalog_h(catalog_bytes($databaseBytes)) ?></h2>
+        <p>Database size</p>
+        <p class="muted small">Data + indexes currently allocated by MySQL</p>
+      </div>
+      <div class="stat">
+        <h2><?= catalog_h(number_format((int)$fileRecordStats['file_count'])) ?></h2>
+        <p>Total file records</p>
+        <p class="muted small">All catalog file states</p>
+      </div>
+      <div class="stat">
+        <h2><?= catalog_h(number_format((int)$fileRecordStats['verified_count'])) ?></h2>
+        <p>Verified records</p>
+        <p class="muted small">Accepted into the catalog</p>
+      </div>
+      <div class="stat">
+        <h2><?= catalog_h(number_format((int)$fileRecordStats['unverified_count'])) ?></h2>
+        <p>Unverified records</p>
+        <p class="muted small">Awaiting review/import decisions</p>
+      </div>
+      <div class="stat">
+        <h2><?= catalog_h(number_format((int)$fileRecordStats['failed_count'])) ?></h2>
+        <p>Failed records</p>
+        <p class="muted small">Recorded package-processing failures</p>
+      </div>
+      <div class="stat">
+        <h2><?= catalog_h(number_format((int)$fileRecordStats['duplicate_count'])) ?></h2>
+        <p>Duplicate records</p>
+        <p class="muted small">Catalogued duplicate identities</p>
       </div>
       <?php foreach ($gameStorage as $row): ?>
         <div class="stat">
@@ -104,7 +168,7 @@ catalog_head('UnrealDB - Unreal File Catalog');
         </div>
       <?php endforeach; ?>
     </div>
-    <p class="muted small">Storage figures are the summed sizes of verified catalog files, not free disk space.</p>
+    <p class="muted small">File-storage figures are the summed sizes of verified catalog files, not free disk space. Database size is MySQL's currently allocated data + index size and may not shrink immediately when rows are deleted.</p>
   <?php else: ?>
     <p class="muted">Catalog storage totals are temporarily unavailable.</p>
   <?php endif; ?>
