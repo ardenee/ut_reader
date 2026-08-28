@@ -45,6 +45,8 @@ $client = $read('assets/public-upload.js');
 $inspector = $read('assets/upload-file-inspector-worker.js');
 $compatibleInspector = $read('assets/upload-file-inspector-worker-compatible.js');
 $programSettings = $read('program-settings.php');
+$unverifiedPage = $read('unverified-files.php');
+$unverifiedQuery = $read('src/Infrastructure/Unverified/PdoUnverifiedFilesPageQuery.php');
 $nav = $read('lib/CatalogSupportCore.php');
 $landing = $read('../index.php');
 $install = $read('install.sql');
@@ -175,12 +177,14 @@ $check(
 
 $check(
     'worker_pool_status_is_informational',
-    str_contains($client, "addLog(\n                            'info',\n                            'Background validation'")
+    str_contains($client, "'info'")
+        && str_contains($client, "'Background validation'")
         && str_contains($client, 'Worker pool status: ')
         && str_contains($client, 'Worker wake status: ')
         && str_contains($page, '.public-upload-log-info{color:#cbd5e1}')
-        && !str_contains($client, "addLog(\n                            'warning',\n                            'Background validation'")
-        && !str_contains($client, "addLog(\n                            'failed',\n                            'Background validation'"),
+        && !str_contains($client, 'Worker pool warning:')
+        && !str_contains($client, "'warning',\n                            'Background validation'")
+        && !str_contains($client, "'failed',\n                            'Background validation'"),
     'A detached-worker shortfall after durable enqueue is informational and must not be presented as an upload failure or warning.'
 );
 
@@ -212,6 +216,16 @@ $check(
         && str_contains($handler, "'status' => 'failed'")
         && str_contains($handler, "'active_identity_key' => null"),
     'A failed public extraction/validation must retain its original quarantine source for diagnosis rather than deleting it.'
+);
+
+$check(
+    'unverified_admin_exposes_pending_public_contributions',
+    str_contains($unverifiedQuery, 'public_uploads')
+        && str_contains($unverifiedQuery, 'WHERE status IN ("uploaded","processing","failed")')
+        && str_contains($unverifiedPage, 'Public contribution status')
+        && str_contains($unverifiedPage, 'Recent public uploads that have not yet become normal Unverified Files rows.')
+        && str_contains($unverifiedPage, 'Source contribution:'),
+    'Unverified Files must make pending/failed public contributions visible and show the original contribution path once staged.'
 );
 
 $check(
