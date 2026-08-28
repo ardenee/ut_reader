@@ -354,20 +354,46 @@ final class CatalogStorageMaintenanceJobHandler implements JobHandler
     {
         $unit = trim((string)($job->payload['prune_unit'] ?? ''));
         $minimumAge = max(60, min((int)($job->payload['orphan_min_age_seconds'] ?? 172800), 30 * 86400));
+        $manualCleanup = !empty($job->payload['manual_cleanup']);
+
         $context->checkpoint([
-            'stage' => 'prune_unit', 'done' => 0, 'total' => 1, 'percent' => 1,
-            'message' => 'Running stale-artifact cleanup unit: ' . $unit . '.',
+            'stage' => 'prune_unit',
+            'done' => 0,
+            'total' => 1,
+            'percent' => 1,
+            'message' => $unit === 'job_storage'
+                ? 'Starting job-storage cleanup and filesystem inventory.'
+                : 'Running stale-artifact cleanup unit: ' . $unit . '.',
         ]);
+
         $result = match ($unit) {
             'generated' => (new GeneratedPackageStore((string)$this->config['storage_path']))->prune(),
-            'job_storage' => (new CatalogJobStorageCleanup($this->db, $this->config))->prune($minimumAge),
+            'job_storage' => (new CatalogJobStorageCleanup($this->db, $this->config))->prune(
+                $minimumAge,
+                $manualCleanup,
+                static function (array $progress) use ($context): void {
+                    $context->heartbeatIfDue($progress);
+                }
+            ),
             default => throw new \InvalidArgumentException('Unknown stale-artifact cleanup unit: ' . $unit),
         };
+
         $context->checkpoint([
-            'stage' => 'complete', 'done' => 1, 'total' => 1, 'percent' => 100, 'status' => 'completed',
-            'message' => 'Stale-artifact cleanup unit completed: ' . $unit . '.',
+            'stage' => 'complete',
+            'done' => 1,
+            'total' => 1,
+            'percent' => 100,
+            'status' => 'completed',
+            'message' => $unit === 'job_storage'
+                ? 'Job-storage cleanup completed.'
+                : 'Stale-artifact cleanup unit completed: ' . $unit . '.',
         ]);
-        return ['operation' => 'prune_stale_artifact_unit', 'unit' => $unit, 'result' => $result];
+        return [
+            'operation' => 'prune_stale_artifact_unit',
+            'unit' => $unit,
+            'manual_cleanup' => $manualCleanup,
+            'result' => $result,
+        ];
     }
 
     /** @return array{indexed:int,existing:int,missing:int,limit_reached:bool} */
