@@ -14,6 +14,7 @@ use UnrealDb\Catalog\Infrastructure\Import\CatalogBucketUploadIdentityStore;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogBucketUploadTransferStoreFactory;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogUploadBucketFilePolicy;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogUploadDuplicateDetector;
+use UnrealDb\Catalog\Infrastructure\Security\CatalogPublicAccessGuard;
 use UnrealDb\Catalog\Presentation\Http\JsonResponse;
 
 try {
@@ -37,6 +38,10 @@ try {
     }
 
     $action = strtolower(trim((string)($_POST['action'] ?? '')));
+    if (!in_array($action, ['batch_status', 'cancel'], true)) {
+        (new CatalogPublicAccessGuard($application->config))
+            ->transferAllowedOrThrow($application->db, 'Upload');
+    }
     $store = CatalogBucketUploadTransferStoreFactory::create($application->config);
     $identityStore = new CatalogBucketUploadIdentityStore($application->config);
     $filePolicy = new CatalogUploadBucketFilePolicy($application->db, $application->config);
