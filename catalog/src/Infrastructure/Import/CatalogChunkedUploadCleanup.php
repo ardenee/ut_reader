@@ -32,10 +32,18 @@ final class CatalogChunkedUploadCleanup
 
     public function delete(string $uploadId): bool
     {
+        return $this->deleteWithStats($uploadId)['deleted'];
+    }
+
+    /** @return array{deleted:bool,bytes:int} */
+    public function deleteWithStats(string $uploadId): array
+    {
         $directory = $this->directory($uploadId);
         if (!is_dir($directory)) {
-            return false;
+            return ['deleted' => false, 'bytes' => 0];
         }
+
+        $bytes = $this->directoryBytes($directory);
         $lock = $this->lock($directory);
         try {
             @unlink($directory . DIRECTORY_SEPARATOR . 'payload.part');
@@ -46,7 +54,8 @@ final class CatalogChunkedUploadCleanup
         @unlink($directory . DIRECTORY_SEPARATOR . '.lock');
         @rmdir($directory);
         @rmdir(dirname($directory));
-        return !is_dir($directory);
+        $deleted = !is_dir($directory);
+        return ['deleted' => $deleted, 'bytes' => $deleted ? $bytes : 0];
     }
 
     /** @return array{uploads:int,bytes:int} */
@@ -92,6 +101,18 @@ final class CatalogChunkedUploadCleanup
             }
         }
         return ['uploads' => $uploads, 'bytes' => $bytes];
+    }
+
+    private function directoryBytes(string $directory): int
+    {
+        $bytes = 0;
+        foreach (new \FilesystemIterator($directory, \FilesystemIterator::SKIP_DOTS) as $entry) {
+            if (!$entry instanceof \SplFileInfo || !$entry->isFile() || $entry->isLink()) {
+                continue;
+            }
+            $bytes += max(0, (int)$entry->getSize());
+        }
+        return $bytes;
     }
 
     /** @return array<string,mixed> */
