@@ -222,13 +222,22 @@ $check(
         && !str_contains(strtolower($landing), 'dns migration')
         && !str_contains($landing, 'Main app path:')
         && str_contains($landing, 'Contribute Unreal files')
-        && str_contains($landing, 'Hard-drive donations are especially welcome.')
-        && str_contains($landing, 'adding redundancy')
+        && str_contains($landing, 'The project is not looking for money at this time.')
+        && str_contains($landing, 'including a used drive')
+        && str_contains($landing, 'no intention to burden anyone')
+        && str_contains($landing, 'catalog/feedback.php')
+        && str_contains($landing, 'adding redundancy and capacity')
         && str_contains($landing, 'ue_game_catalog_stats')
+        && str_contains($landing, 'PdoGameCatalogStats')
         && str_contains($landing, 'verified_count')
-        && str_contains($landing, 'verified_size')
-        && str_contains($landing, 'Storage figures are the summed sizes of verified catalog files, not free disk space.'),
-    'Public landing/menu must advertise contributions, redundancy/capacity support and cached per-game storage usage without the DNS migration/main-path text.'
+        && str_contains($landing, 'unverified_count')
+        && str_contains($landing, 'failed_count')
+        && str_contains($landing, 'duplicate_count')
+        && str_contains($landing, 'information_schema.tables')
+        && str_contains($landing, 'Database size')
+        && str_contains($landing, 'Data + indexes currently allocated by MySQL')
+        && str_contains($landing, 'File-storage figures are the summed sizes of verified catalog files, not free disk space.'),
+    'Public landing/menu must advertise contributions, low-pressure drive support/contact, redundancy/capacity needs, database size and cached file-state/storage metrics without the DNS migration/main-path text.'
 );
 
 $syntaxFailures = [];
