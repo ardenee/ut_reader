@@ -112,8 +112,11 @@ $check(
     str_contains($duplicateDetector, 'public function locatePhysicalPath(array $row): ?string')
         && str_contains($preflight, '$locator->locatePhysicalPath($row)')
         && str_contains($preflight, '$physicalSize = filesize($physicalPath)')
-        && str_contains($preflight, '$md5 . "\\0" . $sha1 . "\\0" . $size'),
-    'Stale database identities must not suppress a contribution whose physical file is missing.'
+        && str_contains($preflight, '$md5 . "\\0" . $sha1 . "\\0" . $size')
+        && str_contains($preflight, "'confirmed' => \$matches")
+        && str_contains($preflight, "'unconfirmed' => \$unconfirmed")
+        && str_contains($preflight, 'Upload allowed as a repair candidate: catalog file #'),
+    'Stale/unresolvable database identities must not suppress a useful contribution; preflight must explain when an exact DB identity cannot be physically confirmed.'
 );
 
 $check(
@@ -229,7 +232,9 @@ $check(
         && str_contains($unverifiedPage, 'Delete selected entries')
         && str_contains($unverifiedPage, "name=\"public_upload_ids[]\"")
         && str_contains($unverifiedPage, 'uv-public-contribution')
-        && str_contains($transfer, 'public function deleteTerminalForAdmin(array $ids): array'),
+        && str_contains($unverifiedPage, "catalog_check_csrf('unverified-files')")
+        && str_contains($transfer, 'public function deleteTerminalForAdmin(array $ids): array')
+        && str_contains($transfer, 'AND status IN ("duplicate","failed","cancelled","expired","rejected")'),
     'Unverified Files must make pending/failed public contributions visible and show the original contribution path once staged.'
 );
 
@@ -374,6 +379,8 @@ foreach ([
     'api/v1/public-upload-preflight.php',
     'api/v1/public-upload.php',
     'public-upload.php',
+    'unverified-files.php',
+    'src/Infrastructure/Unverified/PdoUnverifiedFilesPageQuery.php',
     'program-settings.php',
     'lib/CatalogSupportCore.php',
     '../index.php',
