@@ -320,7 +320,7 @@ try {
             $queueName,
             JobType::PRUNE_STALE_ARTIFACTS,
             [
-                'storage_only' => true,
+                'prune_unit' => 'job_storage',
                 'orphan_min_age_seconds' => $minimumAge,
             ],
             20,
@@ -339,6 +339,7 @@ try {
                 'status' => 'queued',
                 'type' => JobType::PRUNE_STALE_ARTIFACTS,
                 'storage_only' => true,
+                'prune_unit' => 'job_storage',
                 'minimum_age_seconds' => $minimumAge,
                 'job_storage_root' => $storageRoot,
                 'worker' => $worker['worker'],
