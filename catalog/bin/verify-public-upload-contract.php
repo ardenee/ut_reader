@@ -84,6 +84,15 @@ $check(
 );
 
 $check(
+    'preflight_mysql_lock_name_stays_within_limit',
+    str_contains($preflight, "$lockName = 'udb-pubup-ip-' . substr(hash('sha256', $packedIp), 0, 40);")
+        && strlen('udb-pubup-ip-' . str_repeat('a', 40)) <= 64
+        && str_contains($preflight, 'SELECT GET_LOCK(?,5)')
+        && str_contains($preflight, 'SELECT RELEASE_LOCK(?)'),
+    'Public-upload per-IP MySQL lock names must remain at or below MySQL\'s 64-character user-lock limit.'
+);
+
+$check(
     'preflight_is_true_100_file_batch',
     str_contains($preflight, 'public const MAX_FILES = 100;')
         && str_contains($preflight, 'WHERE md5 IN (')
