@@ -47,17 +47,35 @@ final class CatalogProfiledUploadBatchJobHandler implements JobHandler
         }
 
         $store = new CatalogProfiledUploadBatchStore($this->config);
+        $resume = $context->resumeProgress();
+        if ((int)($resume['workflow_version'] ?? 0) !== self::WORKFLOW_VERSION) {
+            $resume = [];
+        }
+
+        // The final checkpoint is the recovery boundary. Once every staged item
+        // has been expanded into its own durable child job, the browser batch
+        // manifest is disposable and retries no longer need to read it.
+        if ((string)($resume['stage'] ?? '') === 'complete'
+            && strtolower((string)($resume['batch_id'] ?? '')) === $batchId) {
+            $store->delete($batchId);
+            $planned = max(0, (int)($resume['planned_items'] ?? 0));
+            return [
+                'operation' => 'profiled_upload_batch',
+                'status' => 'completed',
+                'batch_id' => $batchId,
+                'game_id' => $gameId,
+                'staged_items' => max(0, (int)($resume['total'] ?? $planned)),
+                'queued_import_jobs' => $planned,
+                'message' => 'Upload batch expansion complete.',
+            ];
+        }
+
         $batch = $store->info($batchId);
         if ((string)($batch['status'] ?? '') !== 'completed') {
             throw new \RuntimeException('Profiled upload batch is not finalized.');
         }
         if ((int)($batch['game_id'] ?? 0) !== $gameId || (int)($batch['user_id'] ?? 0) !== $userId) {
             throw new \RuntimeException('Profiled upload batch identity no longer matches its job.');
-        }
-
-        $resume = $context->resumeProgress();
-        if ((int)($resume['workflow_version'] ?? 0) !== self::WORKFLOW_VERSION) {
-            $resume = [];
         }
         $offset = max(0, (int)($resume['manifest_offset'] ?? 0));
         $planned = max(0, (int)($resume['planned_items'] ?? 0));
@@ -132,6 +150,8 @@ final class CatalogProfiledUploadBatchJobHandler implements JobHandler
             'message' => 'Upload batch expansion complete: ' . number_format($planned)
                 . ' import job(s) queued after browser upload completion.',
         ]));
+
+        $store->delete($batchId);
 
         return [
             'operation' => 'profiled_upload_batch',
