@@ -59,7 +59,7 @@ final class CatalogUploadDuplicateDetector
         $missingBaseGame = 0;
         $physicalIdentityMismatches = 0;
         foreach ($rows as $row) {
-            $physicalPath = $this->physicalPath($row);
+            $physicalPath = $this->locatePhysicalPath($row);
             if ($physicalPath === null) {
                 $missing++;
                 if (!empty($row['is_base_game'])) {
@@ -162,8 +162,15 @@ final class CatalogUploadDuplicateDetector
         ];
     }
 
-    /** @param array<string,mixed> $row */
-    private function physicalPath(array $row): ?string
+    /**
+     * Resolve a catalog identity row to controlled physical storage without
+     * re-hashing it. Public batch preflight uses this only after an indexed
+     * MD5/SHA-1/size match so stale database identities do not suppress a useful
+     * contribution.
+     *
+     * @param array<string,mixed> $row
+     */
+    public function locatePhysicalPath(array $row): ?string
     {
         if ((string)($row['scan_status'] ?? '') === 'unverified'
             && (int)($row['unverified_queue_game_id'] ?? -1) === 0) {
