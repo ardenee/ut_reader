@@ -228,7 +228,7 @@ $check(
         && str_contains($landing, 'catalog/feedback.php')
         && str_contains($landing, 'adding redundancy and capacity')
         && str_contains($landing, 'ue_game_catalog_stats')
-        && str_contains($landing, 'PdoGameCatalogStats')
+        && str_contains($landing, 'SELECT scan_status,COUNT(*) record_count FROM ue_files GROUP BY scan_status')
         && str_contains($landing, 'verified_count')
         && str_contains($landing, 'unverified_count')
         && str_contains($landing, 'failed_count')
@@ -237,7 +237,7 @@ $check(
         && str_contains($landing, 'Database size')
         && str_contains($landing, 'Data + indexes currently allocated by MySQL')
         && str_contains($landing, 'File-storage figures are the summed sizes of verified catalog files, not free disk space.'),
-    'Public landing/menu must advertise contributions, low-pressure drive support/contact, redundancy/capacity needs, database size and cached file-state/storage metrics without the DNS migration/main-path text.'
+    'Public landing/menu must advertise contributions, low-pressure drive support/contact, redundancy/capacity needs, database size, cached per-game storage and indexed file-state metrics without the DNS migration/main-path text.'
 );
 
 $syntaxFailures = [];
