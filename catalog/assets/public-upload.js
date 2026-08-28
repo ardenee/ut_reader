@@ -454,10 +454,6 @@
                 throw new Error(String(payload && payload.error && payload.error.message
                     || payload.message || ('Worker wake HTTP ' + response.status)));
             }
-            const workerError = String(payload && payload.data && payload.data.worker_error || '');
-            if (workerError) {
-                throw new Error(workerError);
-            }
             return payload;
         } finally {
             if (activeController === controller) activeController = null;
@@ -511,12 +507,21 @@
             }
             if (accepted.length > 0) {
                 try {
-                    await wakePublicQueue(batchNumber);
+                    const wake = await wakePublicQueue(batchNumber);
+                    const workerError = String(wake && wake.data && wake.data.worker_error || '');
+                    if (workerError) {
+                        addLog(
+                            'warning',
+                            'Background validation',
+                            'Uploads are queued. Worker pool warning: ' + workerError
+                        );
+                    }
                 } catch (wakeError) {
                     addLog(
-                        'failed',
+                        'warning',
                         'Background validation',
-                        (wakeError && wakeError.message) || 'Uploaded files are queued, but workers could not be started.'
+                        'Uploads are queued, but the worker wake request failed: '
+                            + ((wakeError && wakeError.message) || 'unknown error')
                     );
                 }
             }
