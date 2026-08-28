@@ -18,6 +18,7 @@ use UnrealDb\Catalog\Infrastructure\Import\CatalogProfiledUploadBatchStore;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogProfiledUploadQueue;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorker;
 use UnrealDb\Catalog\Infrastructure\Settings\CatalogProgramSettingsStore;
+use UnrealDb\Catalog\Infrastructure\Security\CatalogPublicAccessGuard;
 use UnrealDb\Catalog\Presentation\Http\JsonResponse;
 
 function profiled_chunk_original_name_from_state(array $state): string
@@ -120,6 +121,10 @@ try {
 
     $config = catalog_config();
     $action = strtolower(trim((string)($_POST['action'] ?? '')));
+    if (!in_array($action, ['status', 'cancel'], true)) {
+        $transferDb = catalog_db($config);
+        (new CatalogPublicAccessGuard($config))->transferAllowedOrThrow($transferDb, 'Upload');
+    }
     $batchId = strtolower(trim((string)($_POST['batch_id'] ?? '')));
     $batchStore = new CatalogProfiledUploadBatchStore($config);
     $store = new CatalogChunkedUploadStore($config);
