@@ -104,6 +104,9 @@ final class CatalogWorkerCodeVersion
             $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogBackgroundJobSubtreePruner.php',
             $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogBackgroundJobCleanup.php',
             $this->catalogRoot . '/src/Infrastructure/Import/CatalogChunkedUploadCleanup.php',
+            $this->catalogRoot . '/src/Infrastructure/Import/CatalogPublicUploadTransferStore.php',
+            $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogPublicUploadJobHandler.php',
+            $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogPublicUploadMaintenanceJobHandler.php',
         ];
         $parts = [];
         foreach ($paths as $path) {
