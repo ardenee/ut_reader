@@ -54,6 +54,7 @@ $check(
 
 foreach ([
     'incoming',
+    'backup_import',
     'prepared',
     'pak_import',
     'chunked_uploads',
@@ -65,8 +66,8 @@ foreach ([
 ] as $category) {
     $check(
         'cleanup_category_' . $category,
-        str_contains($source['cleanup'], "'" . $category . "' =>"),
-        'Job storage cleanup must report and reclaim the ' . $category . ' category.'
+        str_contains($source['cleanup'], "\$result['" . $category . "'] ="),
+        'Job storage cleanup must publish the ' . $category . ' category in its returned result.'
     );
 }
 
