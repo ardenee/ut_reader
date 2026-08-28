@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
 
+use UnrealDb\Catalog\Infrastructure\Import\CatalogPublicUploadTransferStore;
 use UnrealDb\Catalog\Infrastructure\Unverified\PdoUnverifiedFilesPageQuery;
 
 function uv_list_int(string $key, int $default = 0): int
@@ -139,6 +140,17 @@ try {
         exit;
     }
 
+    if ($_SERVER['REQUEST_METHOD'] === 'POST'
+        && (string)($_POST['action'] ?? '') === 'delete_public_uploads') {
+        catalog_check_csrf('unverified-files');
+        $ids = is_array($_POST['public_upload_ids'] ?? null) ? $_POST['public_upload_ids'] : [];
+        $result = (new CatalogPublicUploadTransferStore($db, $config))->deleteTerminalForAdmin($ids);
+        $location = 'unverified-files.php?public_upload_deleted=' . (int)$result['deleted']
+            . '&public_upload_ignored=' . (int)$result['ignored'];
+        header('Location: ' . $location, true, 303);
+        exit;
+    }
+
     $sourceGameId = uv_list_int('source_game_id', 0);
     $extension = strtolower(uv_list_text('extension'));
     $engine = strtoupper(uv_list_text('engine'));
@@ -149,6 +161,9 @@ try {
     $matchRefreshJobId = max(0, uv_list_int('match_refresh_job', 0));
     $matchRefreshQueued = uv_list_text('match_refresh') === 'queued';
     $matchRefreshWorkerManual = uv_list_text('match_refresh_worker') === 'manual';
+
+    $publicUploadDeleted = max(0, uv_list_int('public_upload_deleted', 0));
+    $publicUploadIgnored = max(0, uv_list_int('public_upload_ignored', 0));
 
     $model = (new PdoUnverifiedFilesPageQuery($db, $config))->fetch(
         $sourceGameId,
@@ -178,7 +193,7 @@ try {
     catalog_head('Unverified Files');
     echo <<<'CSS'
 <style>
-.uv-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}.uv-controls{display:grid;grid-template-columns:repeat(7,minmax(120px,1fr));gap:8px;align-items:end}.uv-controls label{display:flex;flex-direction:column;gap:4px}.uv-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:12px 0}.uv-table{min-width:1450px}.uv-table td{vertical-align:top}.uv-file strong{display:block}.uv-badge{display:inline-flex;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:700}.uv-badge.good{color:#b8f3cb;background:rgba(67,190,110,.15)}.uv-badge.bad{color:#ffb5b5;background:rgba(230,78,78,.14)}.uv-game-links{display:grid;gap:9px;min-width:290px}.uv-game-evidence{padding-bottom:8px;border-bottom:1px solid var(--line2)}.uv-game-evidence:last-child{padding-bottom:0;border-bottom:0}.uv-game-evidence small{display:block;color:var(--muted);margin-top:2px}.uv-evidence-badge{display:inline-flex;margin-left:7px;padding:2px 6px;border-radius:999px;font-size:10px;font-weight:700;vertical-align:1px}.uv-evidence-badge.good{color:#b8f3cb;background:rgba(67,190,110,.15)}.uv-evidence-badge.bad{color:#ffb5b5;background:rgba(230,78,78,.14)}.uv-evidence-badge.neutral{color:#f5d98b;background:rgba(246,196,83,.13)}.uv-note-row td{padding-top:0;border-top:0}.uv-note{padding:7px 10px;border-left:3px solid #f6c453;color:var(--muted)}.uv-note.bad{border-left-color:#e64e4e;background:rgba(230,78,78,.06)}.uv-pagination{display:flex;justify-content:space-between;align-items:center;margin:10px 0}.uv-evidence-help{margin:0 0 10px;padding:9px 11px;border:1px solid var(--line2);border-radius:8px;color:var(--muted);background:rgba(255,255,255,.025)}.uv-cache-panel{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}.uv-cache-panel p{margin:3px 0;color:var(--muted)}.uv-cache-state{margin:0 0 7px;padding:6px 8px;border-left:3px solid #f6c453;background:rgba(246,196,83,.06)}.uv-cache-state.failed{border-left-color:#e64e4e;background:rgba(230,78,78,.06)}.uv-cache-state strong,.uv-cache-state small,.uv-cache-time{display:block}.uv-cache-state small,.uv-cache-time{color:var(--muted);font-size:11px}.uv-cache-time{margin-bottom:6px}@media(max-width:1100px){.uv-controls{grid-template-columns:repeat(3,1fr)}.uv-summary{grid-template-columns:repeat(2,1fr)}}
+.uv-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}.uv-controls{display:grid;grid-template-columns:repeat(7,minmax(120px,1fr));gap:8px;align-items:end}.uv-controls label{display:flex;flex-direction:column;gap:4px}.uv-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:12px 0}.uv-table{min-width:1450px}.uv-table td{vertical-align:top}.uv-file strong{display:block}.uv-public-contribution strong,.uv-public-contribution small{display:block}.uv-public-contribution small{margin-top:4px}.uv-public-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 10px}.uv-badge{display:inline-flex;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:700}.uv-badge.good{color:#b8f3cb;background:rgba(67,190,110,.15)}.uv-badge.bad{color:#ffb5b5;background:rgba(230,78,78,.14)}.uv-game-links{display:grid;gap:9px;min-width:290px}.uv-game-evidence{padding-bottom:8px;border-bottom:1px solid var(--line2)}.uv-game-evidence:last-child{padding-bottom:0;border-bottom:0}.uv-game-evidence small{display:block;color:var(--muted);margin-top:2px}.uv-evidence-badge{display:inline-flex;margin-left:7px;padding:2px 6px;border-radius:999px;font-size:10px;font-weight:700;vertical-align:1px}.uv-evidence-badge.good{color:#b8f3cb;background:rgba(67,190,110,.15)}.uv-evidence-badge.bad{color:#ffb5b5;background:rgba(230,78,78,.14)}.uv-evidence-badge.neutral{color:#f5d98b;background:rgba(246,196,83,.13)}.uv-note-row td{padding-top:0;border-top:0}.uv-note{padding:7px 10px;border-left:3px solid #f6c453;color:var(--muted)}.uv-note.bad{border-left-color:#e64e4e;background:rgba(230,78,78,.06)}.uv-pagination{display:flex;justify-content:space-between;align-items:center;margin:10px 0}.uv-evidence-help{margin:0 0 10px;padding:9px 11px;border:1px solid var(--line2);border-radius:8px;color:var(--muted);background:rgba(255,255,255,.025)}.uv-cache-panel{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}.uv-cache-panel p{margin:3px 0;color:var(--muted)}.uv-cache-state{margin:0 0 7px;padding:6px 8px;border-left:3px solid #f6c453;background:rgba(246,196,83,.06)}.uv-cache-state.failed{border-left-color:#e64e4e;background:rgba(230,78,78,.06)}.uv-cache-state strong,.uv-cache-state small,.uv-cache-time{display:block}.uv-cache-state small,.uv-cache-time{color:var(--muted);font-size:11px}.uv-cache-time{margin-bottom:6px}@media(max-width:1100px){.uv-controls{grid-template-columns:repeat(3,1fr)}.uv-summary{grid-template-columns:repeat(2,1fr)}}
 </style>
 CSS;
 
@@ -202,6 +217,18 @@ CSS;
         );
     }
 
+    if ($publicUploadDeleted > 0 || $publicUploadIgnored > 0) {
+        echo CatalogUi::alert(
+            $publicUploadDeleted > 0 ? 'success' : 'warning',
+            $publicUploadDeleted . ' public contribution status entr'
+                . ($publicUploadDeleted === 1 ? 'y' : 'ies') . ' removed.',
+            $publicUploadIgnored > 0
+                ? $publicUploadIgnored . ' selected entr' . ($publicUploadIgnored === 1 ? 'y was' : 'ies were')
+                    . ' not terminal and were left in place.'
+                : ''
+        );
+    }
+
     echo '<div class="uv-summary">'
         . '<div class="stat"><h2>' . (int)($summary['indexed_count'] ?? 0) . '</h2><p>Indexed unverified files</p></div>'
         . '<div class="stat"><h2>' . $total . '</h2><p>Matching current filters</p></div>'
@@ -211,8 +238,16 @@ CSS;
 
     if ($publicUploads !== []) {
         echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Public contribution status</h2>'
-            . '<p>Recent public uploads that have not yet become normal Unverified Files rows.</p></div></div>'
-            . '<div class="ui-section__body"><div class="table-wrap"><table><thead><tr>'
+            . '<p>Recent public upload processing outcomes and items still waiting for background validation.</p></div></div>'
+            . '<div class="ui-section__body">'
+            . '<form method="post" onsubmit="return confirm(\'Delete the selected terminal public contribution status entries? Failed entries will also remove their retained diagnostic upload.\')">'
+            . '<input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('unverified-files')) . '">'
+            . '<input type="hidden" name="action" value="delete_public_uploads">'
+            . '<div class="uv-public-actions"><button type="submit" class="danger">Delete selected entries</button>'
+            . '<span class="muted">Duplicate and failed entries can be removed here. Active uploaded/processing entries are protected.</span></div>'
+            . '<div class="table-wrap"><table><thead><tr>'
+            . '<th><input type="checkbox" aria-label="Select terminal public contributions" '
+            . 'onclick="document.querySelectorAll(\'.public-upload-status-select:not(:disabled)\').forEach(c=>c.checked=this.checked)"></th>'
             . '<th>Contribution</th><th>Status</th><th>Background job</th><th>Result</th><th>Updated</th>'
             . '</tr></thead><tbody>';
         foreach ($publicUploads as $publicUpload) {
@@ -224,7 +259,11 @@ CSS;
                 $name = trim((string)($publicUpload['original_name'] ?? ''));
             }
             $badge = $status === 'failed' ? 'bad' : 'neutral';
-            echo '<tr><td><strong>' . catalog_h($name !== '' ? $name : 'Public upload #' . (int)$publicUpload['id']) . '</strong>'
+            $deletable = in_array($status, ['duplicate', 'failed', 'cancelled', 'expired', 'rejected'], true);
+            echo '<tr><td><input class="public-upload-status-select" type="checkbox" name="public_upload_ids[]" value="'
+                . (int)$publicUpload['id'] . '"' . ($deletable ? '' : ' disabled') . '></td>'
+                . '<td class="uv-public-contribution"><strong>'
+                . catalog_h($name !== '' ? $name : 'Public upload #' . (int)$publicUpload['id']) . '</strong>'
                 . '<small class="muted">Public upload #' . (int)$publicUpload['id'] . '</small></td>'
                 . '<td><span class="uv-badge ' . $badge . '">' . catalog_h(strtoupper($status)) . '</span></td>'
                 . '<td>' . ($jobId > 0
@@ -237,7 +276,7 @@ CSS;
                 . '</td>'
                 . '<td class="mono small">' . catalog_h((string)($publicUpload['updated_at'] ?? '')) . '</td></tr>';
         }
-        echo '</tbody></table></div></div></section>';
+        echo '</tbody></table></div></form></div></section>';
     }
 
     echo '<section class="ui-section"><div class="ui-section__body"><div class="uv-cache-panel"><div>'
