@@ -118,23 +118,25 @@ final class CatalogBackgroundJobHistoryCleanupQueue
             . 'NOT IN ("failed","rejected","unverified","partial","error"))'
             . ') AND COALESCE(completed_at,updated_at,created_at)<?';
 
-        $count = $this->db->prepare(
-            'SELECT COUNT(*) FROM ue_background_jobs WHERE ' . $eligible
-        );
-        $count->execute([$queueName, $cutoff]);
-        $requested = max(0, (int)$count->fetchColumn());
-
+        // Cleanup does not need an exact total before deleting. Fetch one
+        // extra row to detect continuation instead of scanning every eligible
+        // row with COUNT(*) before each snapshot.
         $select = $this->db->prepare(
             'SELECT id FROM ue_background_jobs WHERE ' . $eligible
-            . ' ORDER BY id ASC LIMIT ' . self::SNAPSHOT_LIMIT
+            . ' ORDER BY id ASC LIMIT ' . (self::SNAPSHOT_LIMIT + 1)
         );
         $select->execute([$queueName, $cutoff]);
-        $ids = array_map('intval', $select->fetchAll(PDO::FETCH_COLUMN) ?: []);
+        $rows = array_values(array_filter(
+            array_map('intval', $select->fetchAll(PDO::FETCH_COLUMN) ?: []),
+            static fn(int $id): bool => $id > 0
+        ));
+        $limited = count($rows) > self::SNAPSHOT_LIMIT;
+        $ids = array_slice($rows, 0, self::SNAPSHOT_LIMIT);
 
         return [
             'ids' => $ids,
-            'requested' => $requested,
-            'limited' => $requested > count($ids),
+            'requested' => count($ids) + ($limited ? 1 : 0),
+            'limited' => $limited,
             'cutoff' => $cutoff,
         ];
     }
