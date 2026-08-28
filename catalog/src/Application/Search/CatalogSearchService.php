@@ -16,8 +16,8 @@ final class CatalogSearchService
     }
 
     /** @return list<array<string,mixed>> */
-    public function findFiles(string $query, int $limit = 200, ?int $gameId = null): array
+    public function findFiles(string $query, int $limit = 200, ?int $gameId = null, array $filters = []): array
     {
-        return $this->repository->findFiles($query, $limit, $gameId);
+        return $this->repository->findFiles($query, $limit, $gameId, $filters);
     }
 }
