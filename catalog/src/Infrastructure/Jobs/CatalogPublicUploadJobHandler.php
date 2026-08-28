@@ -141,6 +141,7 @@ final class CatalogPublicUploadJobHandler implements JobHandler
                     'unverified_file_id' => (int)$existing['id'],
                     'server_guid' => trim((string)($existing['package_guid'] ?? '')),
                     'active_identity_key' => null,
+                    'quarantine_relative_path' => null,
                     'result_message' => 'Server validation found identical bytes already stored as file #' . (int)$existing['id'] . '.',
                 ]);
                 return [
@@ -189,6 +190,7 @@ final class CatalogPublicUploadJobHandler implements JobHandler
                 'unverified_file_id' => $fileId,
                 'server_guid' => $serverGuid,
                 'active_identity_key' => null,
+                'quarantine_relative_path' => null,
                 'result_message' => (string)($staged['message'] ?? 'Public contribution staged as unverified.'),
             ]);
 
@@ -229,6 +231,7 @@ final class CatalogPublicUploadJobHandler implements JobHandler
             $this->updateLedger($publicUploadId, [
                 'status' => 'failed',
                 'active_identity_key' => null,
+                'quarantine_relative_path' => null,
                 'result_message' => substr(trim($error->getMessage()) ?: get_class($error), 0, 1000),
             ]);
             throw $error;
@@ -321,6 +324,7 @@ final class CatalogPublicUploadJobHandler implements JobHandler
             'unverified_file_id' => $fileId,
             'server_guid' => $guid,
             'active_identity_key' => null,
+            'quarantine_relative_path' => null,
             'result_message' => $message,
         ]);
 
@@ -355,7 +359,7 @@ final class CatalogPublicUploadJobHandler implements JobHandler
         }
         $allowed = [
             'status', 'background_job_id', 'server_md5', 'server_sha1', 'server_guid',
-            'unverified_file_id', 'result_message', 'active_identity_key',
+            'unverified_file_id', 'result_message', 'active_identity_key', 'quarantine_relative_path',
         ];
         $sets = [];
         $params = [];
@@ -364,7 +368,9 @@ final class CatalogPublicUploadJobHandler implements JobHandler
                 continue;
             }
             $sets[] = $column . '=?';
-            $params[] = $value === '' && in_array($column, ['server_guid', 'active_identity_key'], true) ? null : $value;
+            $params[] = $value === '' && in_array($column, ['server_guid', 'active_identity_key', 'quarantine_relative_path'], true)
+                ? null
+                : $value;
         }
         if ($sets === []) {
             return;
