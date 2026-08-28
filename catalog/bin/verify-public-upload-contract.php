@@ -44,6 +44,9 @@ $page = $read('public-upload.php');
 $client = $read('assets/public-upload.js');
 $inspector = $read('assets/upload-file-inspector-worker.js');
 $compatibleInspector = $read('assets/upload-file-inspector-worker-compatible.js');
+$archiveWorker = $read('assets/public-upload-archive-worker.js');
+$archiveInstaller = $read('bin/install-browser-archive-decoder.php');
+$archiveVendorReadme = $read('assets/vendor/7z-wasm/README.md');
 $programSettings = $read('program-settings.php');
 $unverifiedPage = $read('unverified-files.php');
 $unverifiedQuery = $read('src/Infrastructure/Unverified/PdoUnverifiedFilesPageQuery.php');
@@ -147,8 +150,10 @@ $check(
         && str_contains($preflightApi, "catalog_api_require_csrf('public_upload')")
         && str_contains($uploadApi, "catalog_api_require_csrf('public_upload')")
         && str_contains($preflight, '$policy->isArchive($name) || $policy->isPakContainer($name)')
-        && str_contains($page, 'ZIP, 7z, RAR, UMOD-family archives and PAK containers are intentionally excluded'),
-    'The public route must not expose admin authorization/actions or high-risk archive/container ingestion.'
+        && str_contains($page, 'Selected ZIP, RAR and 7z archives are processed only in the browser')
+        && str_contains($page, 'the original archive is never uploaded')
+        && str_contains($page, 'UMOD-family archives and PAK containers remain excluded'),
+    'The public route must keep archive containers off the server while allowing browser-only ZIP/RAR/7z source inspection.'
 );
 
 $check(
@@ -240,6 +245,24 @@ $check(
 );
 
 $check(
+    'browser_archive_sources_are_member_only_and_memory_bounded',
+    str_contains($client, "const ARCHIVE_EXTENSIONS = new Set(['zip', 'rar', '7z'])")
+        && str_contains($client, 'await oneShotArchiveList(file, archiveLabel)')
+        && str_contains($client, 'await openArchiveMember(')
+        && str_contains($client, 'Original archive will not be uploaded.')
+        && str_contains($client, 'activeArchiveStops')
+        && str_contains($archiveWorker, 'module.FS.mount(module.WORKERFS, {files:[file]},')
+        && !str_contains($archiveWorker, 'file.arrayBuffer()')
+        && str_contains($archiveWorker, "['x', '-y', '-bd', '-bb0', '-spd', '-o/out'")
+        && str_contains($archiveWorker, 'offset !== nextReadOffset')
+        && str_contains($archiveWorker, 'Archive member path contains an unsafe path segment.')
+        && str_contains($archiveInstaller, 'EXPECTED_GIT_BLOB_SHA1')
+        && str_contains($archiveInstaller, '337cfa5ac2e9ed01d9dfc5b9aeb8f2742e025502')
+        && str_contains($archiveVendorReadme, 'WORKERFS'),
+    'ZIP/RAR/7z must remain browser-only sources, mount without whole-archive copies, expose one member sequentially, and free each member worker after use.'
+);
+
+$check(
     'client_checks_and_batches_before_upload',
     str_contains($client, 'const BATCH_FILES = 100;')
         && str_contains($client, 'new Worker(workerUrl)')
@@ -265,12 +288,27 @@ $check(
     'transport_is_sequential_token_bound_and_disk_safe',
     str_contains($transfer, 'Only one public upload may transfer at a time from this address.')
         && str_contains($transfer, 'Public upload chunk order mismatch: expected=')
-        && str_contains($transfer, '$free !== false && (int)$free - (int)$chunkBytes < (int)$settings[\'min_free_bytes\']')
+        && str_contains($transfer, '$free !== false && (int)$free - $maximumDecoded < (int)$settings[\'min_free_bytes\']')
         && str_contains($transfer, 'received_bytes=?')
         && str_contains($transfer, 'next_chunk_index=?')
         && str_contains($transfer, 'public-uploads')
         && str_contains($transfer, 'submitter_ip=?'),
-    'Public bytes must use a token/IP-bound secondary quarantine with ordered chunks and a hard free-space reserve.'
+    'Public bytes must use a token/IP-bound secondary quarantine with ordered logical chunks and a hard free-space reserve.'
+);
+
+$check(
+    'gzip_transport_preserves_original_package_identity',
+    str_contains($client, "new CompressionStream('gzip')")
+        && str_contains($client, 'TRANSPORT_COMPRESSION_RATIO = 0.90')
+        && str_contains($client, "data.append('content_encoding', contentEncoding || 'identity')")
+        && str_contains($uploadApi, "(string)(\$_POST['content_encoding'] ?? 'identity')")
+        && str_contains($transfer, "in_array(\$encoding, ['identity', 'gzip'], true)")
+        && str_contains($transfer, 'private function appendTransportChunk(')
+        && str_contains($transfer, '\$decodedBytes = \$this->appendTransportChunk(')
+        && str_contains($transfer, '@ftruncate(\$output, \$expectedOffset)')
+        && str_contains($transfer, '\$received + \$decodedBytes')
+        && str_contains($transfer, 'Decoded public upload chunk exceeds the allowed logical chunk size'),
+    'Optional gzip must be a per-chunk transport envelope only: staging and reservation byte counts remain original package bytes.'
 );
 
 $check(

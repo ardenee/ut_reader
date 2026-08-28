@@ -25,8 +25,10 @@ The browser:
 4. reads legacy UE1/UE2 package GUID only where the repository's package-summary layout is deterministic;
 5. sends at most 100 checked identities to \`api/v1/public-upload-preflight.php\`;
 6. receives \`upload\`, \`skip\` or \`reject\` per client ID;
-7. transfers only accepted files, one file at a time, through ordered chunks;
-8. supports Stop and immediately cancels the current/not-yet-started reservations from that accepted batch.
+7. for selected ZIP/RAR/7z source archives, mounts the browser File through WORKERFS, lists members without uploading the archive, and extracts/checks one eligible Unreal member at a time;
+8. transfers only accepted files, one file at a time, through ordered chunks; chunks may use gzip transport compression when it saves at least 10%, while reservation identity remains the original package bytes;
+9. terminates each archive-member worker immediately after skip/upload so its MEMFS/WASM heap can be reclaimed;
+10. supports Stop and immediately cancels the current/not-yet-started reservations from that accepted batch.
 
 The log is bounded so very large folder submissions do not create an ever-growing DOM.
 
@@ -76,6 +78,14 @@ Chunks are sequential, token/IP-bound and checked against the declared byte coun
 
 The completed HTTP request does not parse dependencies or promote a file. It atomically publishes the quarantine file and queues \`catalog.process_public_upload\`.
 
+Public transfer chunks may be sent as independent gzip streams when browser-side
+compression saves at least 10%. The server expands each chunk while holding the
+ordered staging lock, counts decoded bytes against the reservation, rolls the
+physical file back to the previous offset on any decode/write failure, and keeps
+the final quarantine file byte-for-byte identical to the original extracted
+Unreal member. Client MD5/SHA-1 and authoritative server hashing therefore refer
+to original package bytes, never the transport envelope.
+
 ## Background validation
 
 \`CatalogPublicUploadJobHandler\`:
@@ -96,14 +106,26 @@ A worker retry can recover the narrow crash window where the unverified writer a
 
 ## Public formats
 
-The anonymous surface currently accepts:
+The anonymous surface accepts:
 
 - active game-profile Unreal package extensions;
-- \`.uz\`;
 - \`.uz2\`;
-- \`.uz3\`.
+- \`.uz3\`;
+- ZIP, RAR and 7z as **local source archives only**.
 
-ZIP, 7z, RAR, UMOD-family archives and PAK containers remain administrator-only because anonymous container expansion creates a substantially larger decompression/resource attack surface.
+The ZIP/RAR/7z container itself is never reserved or uploaded. The browser lists
+the archive through a dedicated 7-Zip WASM worker using WORKERFS, ignores
+non-upload members without extraction, and extracts only one eligible Unreal
+member at a time. Each extracted member must pass the same header/hash preflight
+as a directly selected package before any bytes cross the network.
+
+Legacy \`.uz\`, UMOD-family archives and PAK containers remain excluded from the
+anonymous surface. Encrypted/link archive members are rejected. Archive-member
+size is bounded by the normal public file limit even when the source archive is
+larger.
+
+Install the pinned archive decoder with
+\`php catalog/bin/install-browser-archive-decoder.php\`.
 
 ## Cleanup
 
@@ -124,6 +146,7 @@ After migrations:
 \`\`\`powershell
 php catalog/bin/migrate.php migrate
 php catalog/bin/migrate.php verify
+php catalog/bin/install-browser-archive-decoder.php
 php catalog/bin/verify-public-upload-contract.php
 \`\`\`
 
