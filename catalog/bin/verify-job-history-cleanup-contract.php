@@ -99,7 +99,7 @@ $check(
     'retention_snapshot_is_bounded_and_continuous',
     str_contains($queue, 'public const SNAPSHOT_LIMIT = 10000;')
         && str_contains($queue, 'public function snapshotBefore(string $queueName, string $cutoff): array')
-        && str_contains($queue, "'retention_auto_continue' => true")
+        && str_contains($queue, "$payload['retention_auto_continue'] = true;")
         && str_contains($handler, 'retention_auto_continue')
         && str_contains($handler, 'snapshotBefore($targetQueue, $retentionCutoff)')
         && str_contains($handler, "'snapshot_ids' => $snapshotIds")
