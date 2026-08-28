@@ -104,12 +104,13 @@ $check(
 $check(
     'preflight_is_true_100_file_batch',
     str_contains($preflight, 'public const MAX_FILES = 100;')
-        && str_contains($preflight, 'WHERE md5 IN (')
+        && str_contains($preflight, 'WHERE f.md5 IN (')
         && str_contains($preflight, 'WHERE package_guid IN (')
         && str_contains($preflight, 'active_identity_key IN (')
         && str_contains($preflight, 'INSERT IGNORE INTO ue_public_uploads')
-        && !str_contains($preflight, '->inspect('),
-    'The server must use set-based identity queries and one multi-row reservation insert, never the per-file duplicate inspector.'
+        && !str_contains($preflight, '$locator->inspect(')
+        && !str_contains($preflight, 'CatalogUploadDuplicateDetector($this->db, $this->config))->inspect('),
+    'The server must use set-based identity queries and one multi-row reservation insert; the shared duplicate detector may resolve/verify physical paths but must never run its per-file inspect() loop during preflight.'
 );
 
 $check(
