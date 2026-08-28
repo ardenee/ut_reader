@@ -44,6 +44,7 @@ try {
         . '.public-upload-log-line{overflow-wrap:anywhere;padding:2px 0}'
         . '.public-upload-log-uploaded,.public-upload-log-accepted{color:#a7f3d0}'
         . '.public-upload-log-rejected,.public-upload-log-failed{color:#fecdd3}'
+        . '.public-upload-log-warning{color:#fde68a}'
         . '.public-upload-log-skipped{color:#bfdbfe}'
         . '</style>';
 
