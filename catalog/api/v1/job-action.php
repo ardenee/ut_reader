@@ -315,7 +315,7 @@ try {
     }
 
     if ($action === 'cleanup_storage') {
-        $minimumAge = max(60, min((int)($payload['minimum_age_seconds'] ?? 60), 30 * 86400));
+        $minimumAge = max(300, min((int)($payload['minimum_age_seconds'] ?? 300), 30 * 86400));
         $jobId = $queue->enqueue(
             $queueName,
             JobType::PRUNE_STALE_ARTIFACTS,
