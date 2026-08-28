@@ -109,6 +109,7 @@ A worker retry can recover the narrow crash window where the unverified writer a
 The anonymous surface accepts:
 
 - active game-profile Unreal package extensions;
+- \`.uz\`;
 - \`.uz2\`;
 - \`.uz3\`;
 - ZIP, RAR and 7z as **local source archives only**.
@@ -119,8 +120,9 @@ non-upload members without extraction, and extracts only one eligible Unreal
 member at a time. Each extracted member must pass the same header/hash preflight
 as a directly selected package before any bytes cross the network.
 
-Legacy \`.uz\`, UMOD-family archives and PAK containers remain excluded from the
-anonymous surface. Encrypted/link archive members are rejected. Archive-member
+UMOD-family archives and PAK containers remain excluded from the anonymous
+surface. Legacy \`.uz\` FCodec redirects are decoded in the browser before
+preflight so existing package bytes can still be skipped without upload. Encrypted/link archive members are rejected. Archive-member
 size is bounded by the normal public file limit even when the source archive is
 larger.
 
