@@ -13,6 +13,7 @@ use UnrealDb\Catalog\Application\Jobs\JobHandler;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogPublicUploadTransferStore;
+use UnrealDb\Catalog\Infrastructure\Import\CatalogUploadDuplicateDetector;
 use UnrealDb\Catalog\Infrastructure\Legacy\LegacyUnverifiedFileStager;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 use UnrealDb\Catalog\Infrastructure\Redirect\CatalogRedirectArchiveProcessor;
