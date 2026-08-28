@@ -42,13 +42,26 @@ final class CatalogPublicUploadJobHandler implements JobHandler
         }
 
         $store = new CatalogPublicUploadTransferStore($this->db, $this->config);
-        $row = $store->resolveForJob($publicUploadId, $token);
+        $row = $store->ledgerForJob($publicUploadId, $token);
         $status = strtolower(trim((string)($row['status'] ?? '')));
         if (in_array($status, ['unverified', 'duplicate'], true) && (int)($row['unverified_file_id'] ?? 0) > 0) {
             return $this->result($row, 'completed');
         }
         if (!in_array($status, ['uploaded', 'processing'], true)) {
             throw new RuntimeException('Public upload is not ready for background processing: status=' . $status . '.');
+        }
+
+        try {
+            $resolved = $store->resolveForJob($publicUploadId, $token);
+            $row = $resolved;
+        } catch (RuntimeException $resolveError) {
+            if ($status === 'processing') {
+                $recovered = $this->recoverPublishedStage($publicUploadId, $row);
+                if ($recovered !== null) {
+                    return $recovered;
+                }
+            }
+            throw $resolveError;
         }
 
         $this->updateLedger($publicUploadId, [
@@ -271,6 +284,54 @@ final class CatalogPublicUploadJobHandler implements JobHandler
             'md5' => hash_final($md5),
             'sha1' => hash_final($sha1),
             'size' => (int)$size,
+        ];
+    }
+
+    /** @param array<string,mixed> $ledger @return array<string,mixed>|null */
+    private function recoverPublishedStage(int $publicUploadId, array $ledger): ?array
+    {
+        $md5 = strtolower(trim((string)($ledger['server_md5'] ?? '')));
+        $sha1 = strtolower(trim((string)($ledger['server_sha1'] ?? '')));
+        if (preg_match('/^[a-f0-9]{32}$/', $md5) !== 1 || preg_match('/^[a-f0-9]{40}$/', $sha1) !== 1) {
+            return null;
+        }
+
+        $statement = $this->db->prepare(
+            'SELECT id,package_guid,scan_status FROM ue_files '
+            . 'WHERE md5=? AND sha1=? AND scan_status IN ("verified","unverified") ORDER BY id LIMIT 1'
+        );
+        $statement->execute([$md5, $sha1]);
+        $file = $statement->fetch(PDO::FETCH_ASSOC);
+        if (!is_array($file)) {
+            return null;
+        }
+
+        $fileId = max(0, (int)($file['id'] ?? 0));
+        if ($fileId < 1) {
+            return null;
+        }
+        $scanStatus = strtolower(trim((string)($file['scan_status'] ?? '')));
+        $ledgerStatus = $scanStatus === 'unverified' ? 'unverified' : 'duplicate';
+        $guid = trim((string)($file['package_guid'] ?? ''));
+        $message = 'Recovered public upload after staging completed before ledger publication; file #'
+            . $fileId . ' already holds the authoritative hashes.';
+
+        $this->updateLedger($publicUploadId, [
+            'status' => $ledgerStatus,
+            'unverified_file_id' => $fileId,
+            'server_guid' => $guid,
+            'active_identity_key' => null,
+            'result_message' => $message,
+        ]);
+
+        return [
+            'status' => $ledgerStatus,
+            'public_upload_id' => $publicUploadId,
+            'file_id' => $fileId,
+            'md5' => $md5,
+            'sha1' => $sha1,
+            'package_guid' => $guid,
+            'message' => $message,
         ];
     }
 
