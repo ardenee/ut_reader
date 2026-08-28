@@ -718,16 +718,11 @@ final class CatalogArchiveImportJobHandler implements JobHandler
         bool $sequential = false,
         string $format = ''
     ): array {
-        /*
-         * Archive-member jobs are asynchronous. Successful extraction only means
-         * the child work was queued; it does not mean those Unreal packages will
-         * parse/import successfully. The parent must therefore keep ownership of
-         * the immutable archive bytes until normal background-job history cleanup
-         * deliberately removes the terminal job. Otherwise a child can fail after
-         * this method returns and the projected partial_archive row has nothing
-         * left to retry.
-         */
-        $sourceRetained = true;
+        // The parent archive is only a recovery source for extraction/decoder
+        // problems. Once every selected member has been extracted and handed to
+        // its own durable child staging, retaining the parent archive duplicates
+        // data without helping child import retries.
+        $sourceRetained = $failed > 0;
 
         $status = $failed > 0 ? 'partial' : 'completed';
         $message = 'Archive expansion complete: ' . number_format($queued) . ' Unreal file(s) queued';
@@ -737,7 +732,11 @@ final class CatalogArchiveImportJobHandler implements JobHandler
         if ($failed > 0) {
             $message .= ', ' . number_format($failed) . ' member(s) failed';
         }
-        $message .= '; source archive retained for asynchronous member recovery';
+        if ($sourceRetained) {
+            $message .= '; source archive retained because extraction had unresolved failures';
+        } else {
+            $message .= '; source archive released after successful extraction';
+        }
         if ($sequential) {
             $label = $format === '7z' ? '7-Zip' : strtoupper($format);
             $message .= '; ' . ($label !== '' ? $label . ' ' : '') . 'members were consumed sequentially';
@@ -773,7 +772,7 @@ final class CatalogArchiveImportJobHandler implements JobHandler
             'status' => $status,
             'sequential_archive' => $sequential,
             'archive_format' => $format,
-            'source_retained' => true,
+            'source_retained' => $sourceRetained,
             'message' => $message,
         ]);
 
