@@ -3,9 +3,10 @@
  * Durable bulk cleanup for terminal background-job history.
  *
  * Workflow descendants are drained leaf-first in bounded batches. Every deleted
- * row still passes through staged-source cleanup, and retention cleanup keeps the
- * original fixed cutoff while automatically loading subsequent 10,000-root
- * snapshots until no eligible history remains.
+ * row still passes through direct staged-source cleanup. One claim can consume a
+ * full 10,000-root snapshot while periodic heartbeats keep cancellation responsive;
+ * retention then continues under the original fixed cutoff until no eligible
+ * history remains.
  */
 declare(strict_types=1);
 
@@ -18,7 +19,7 @@ use UnrealDb\Catalog\Domain\Jobs\JobType;
 
 final class CatalogBackgroundJobHistoryCleanupJobHandler implements JobHandler
 {
-    private const BATCH_SIZE = 200;
+    private const BATCH_SIZE = 10000;
     private const MAX_SNAPSHOT_IDS = 10000;
     private const MAX_WORKFLOW_ROWS_PER_CLAIM = 100000;
     private const MAX_STACK_DEPTH = 64;
@@ -164,7 +165,7 @@ final class CatalogBackgroundJobHistoryCleanupJobHandler implements JobHandler
                         $retentionCutoff
                     )
                 );
-                $context->checkpoint($progress);
+                $context->heartbeatIfDue($progress);
                 if ($workflowRowsThisClaim >= self::MAX_WORKFLOW_ROWS_PER_CLAIM) {
                     $context->defer(1, $progress);
                 }
@@ -215,7 +216,6 @@ final class CatalogBackgroundJobHistoryCleanupJobHandler implements JobHandler
                             $retentionCutoff
                         )
                     );
-                    $context->checkpoint($progress);
                     $context->defer(1, $progress);
                 }
                 continue;
@@ -234,7 +234,7 @@ final class CatalogBackgroundJobHistoryCleanupJobHandler implements JobHandler
             $activeRootId = 0;
             $stack = [];
 
-            $context->checkpoint($this->progress(
+            $context->heartbeatIfDue($this->progress(
                 $this->percent($deletedJobs + $skipped, $requested, false),
                 'Background-job history cleanup: batch ' . $snapshotBatch . ', '
                     . $offset . '/' . count($ids) . ' root job(s); '
