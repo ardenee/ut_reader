@@ -67,7 +67,7 @@ try {
         . '<p>Your browser checks extensions and Unreal package/redirect signatures before transfer. It calculates package MD5 and SHA-1 off the main browser thread; .uz2 and .uz3 redirects are decoded in the browser first so the underlying Unreal package identity can be checked before any redirect bytes are uploaded. UE1/UE2 package GUIDs are also supplied when they can be read safely.</p>'
         . '<p>Up to <strong>100 checked files</strong> are sent to UnrealDB as one small identity manifest. The server performs batched indexed duplicate checks and returns only the files that still need uploading. For redirects the identity size is the decoded package size, not the compressed wrapper size. Matching package MD5 + SHA-1 + size is treated as an exact duplicate and skipped. A matching GUID with different hashes is <strong>not</strong> discarded; it is uploaded and flagged for review.</p>'
         . '<p>Accepted files are uploaded <strong>one at a time</strong> into a separate public quarantine. The upload request only transfers bytes. Authoritative hashing, redirect decompression, package parsing and unverified indexing happen afterward in background jobs.</p>'
-        . '<p class="muted">Public upload currently accepts normal Unreal package files plus .uz, .uz2 and .uz3 redirects. ZIP, 7z, RAR, UMOD-family archives and PAK containers are intentionally excluded from the anonymous upload surface.</p>'
+        . '<p class="muted">Public upload currently accepts normal Unreal package files plus .uz2 and .uz3 redirects. Legacy .uz FCodec redirects are temporarily excluded because their decoded package identity is not yet available client-side, and this public uploader will not send files that cannot first be checked for an existing catalog duplicate. ZIP, 7z, RAR, UMOD-family archives and PAK containers are intentionally excluded from the anonymous upload surface.</p>'
         . '</section>';
 
     echo '<section class="card"><h2>Select files</h2>'
@@ -86,7 +86,7 @@ try {
         . '<p class="muted">Use this only if the Choose folder button is not supported by your browser.</p></details>'
         . '<p><strong>Accepted package extensions:</strong> '
         . catalog_h($allowedExtensions !== [] ? implode(', ', array_map(static fn(string $ext): string => '.' . $ext, $allowedExtensions)) : 'active game-profile package types')
-        . ', .uz, .uz2, .uz3.</p>'
+        . ', .uz2, .uz3.</p>'
         . '<p><strong>Maximum file size:</strong> ' . catalog_h(catalog_bytes((int)$settings['max_file_bytes'])) . '.</p>'
         . '<div class="public-upload-actions">'
         . '<button id="public-upload-start" type="submit">Check and contribute files</button>'
