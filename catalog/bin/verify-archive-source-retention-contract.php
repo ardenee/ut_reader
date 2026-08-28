@@ -37,19 +37,19 @@ $record = static function (string $name, bool $ok, string $detail) use (&$checks
 };
 
 $record(
-    'archive_parent_retains_source_after_expansion',
-    str_contains($handler, '$sourceRetained = true;')
-        && str_contains($handler, "'source_retained' => true")
-        && str_contains($handler, 'source archive retained for asynchronous member recovery')
-        && !str_contains($handler, '$this->deleteSource($stagedPath, $incoming);'),
-    'Successful extraction only queues asynchronous member jobs; the parent archive bytes must remain available if a child later fails.'
+    'archive_parent_releases_source_after_clean_expansion',
+    str_contains($handler, '$sourceRetained = $failed > 0;')
+        && str_contains($handler, "'source_retained' => $sourceRetained")
+        && str_contains($handler, 'source archive released after successful extraction'),
+    'Once extraction has handed every selected member to durable child staging, the parent archive must not be retained.'
 );
 
 $record(
-    'archive_handler_does_not_directly_delete_chunk_source',
-    !str_contains($handler, 'CatalogChunkedUploadCleanup')
-        && !str_contains($handler, 'private function deleteSource('),
-    'Archive processing must not delete its chunk-upload source before child outcomes are known.'
+    'archive_extraction_failures_retain_source',
+    str_contains($handler, 'source archive retained because extraction had unresolved failures')
+        && str_contains($handler, "'source_retained' => true")
+        && str_contains($handler, 'terminalArchiveCapabilityResult'),
+    'Only unresolved extraction/decoder failures should retain the archive recovery source.'
 );
 
 $leaseUntil = new DateTimeImmutable('+2 minutes');
