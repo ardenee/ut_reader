@@ -224,14 +224,64 @@ try {
         $gameId = catalog_search_game_id($games);
         $adminSearch = catalog_support_is_admin();
         $resultLimit = $adminSearch ? 200 : 100;
-        echo '<div class="card hero"><h1>Search</h1><form class="catalog-search-form"><input type="hidden" name="page" value="search"><label>Search <input name="q" value="' . catalog_h($query) . '" placeholder="GUID, MD5, SHA1, package, object, file name"></label><label>Game <select name="game_id"' . (!$adminSearch ? ' required' : '') . '>';
-        echo $adminSearch
-            ? '<option value="">All games</option>'
-            : '<option value="">Choose game</option>';
-        foreach ($games as $game) {
-            echo '<option value="' . (int)$game['id'] . '"' . ((int)$game['id'] === $gameId ? ' selected' : '') . '>' . catalog_h($game['name']) . '</option>';
+
+        $searchScopes = ['files', 'names', 'imports', 'exports', 'guid', 'md5', 'sha1'];
+        $selectedScopes = is_array($_GET['scope'] ?? null) ? $_GET['scope'] : [];
+        $selectedScopes = array_values(array_unique(array_filter(
+            array_map(static fn($value): string => strtolower(trim((string)$value)), $selectedScopes),
+            static fn(string $value): bool => in_array($value, $searchScopes, true)
+        )));
+        $fileTypes = [
+            '' => ['Any file type', []],
+            'map' => ['Maps', ['unr', 'un2', 'ut2', 'ut3', 'umap']],
+            'package' => ['Packages / scripts', ['u', 'upk', 'uasset']],
+            'texture' => ['Textures', ['utx']],
+            'sound' => ['Sounds', ['uax']],
+            'music' => ['Music', ['umx']],
+            'static_mesh' => ['Static meshes', ['usx']],
+            'animation' => ['Animations', ['ukx']],
+            'effect' => ['Particles / effects', ['upx']],
+            'gui' => ['GUI', ['ugx']],
+            'content' => ['Content', ['con']],
+        ];
+        $fileType = strtolower(trim((string)($_GET['file_type'] ?? '')));
+        if (!isset($fileTypes[$fileType])) {
+            $fileType = '';
         }
-        echo '</select></label><button>Search</button></form><p class="muted small">Public searches must be limited to one game. Logged-in administrators may search all games. Exact GUID, MD5 and SHA1 lookups use indexed identity searches. Filename/package search supports broad matching; compact object/import/export metadata uses indexed exact-term matching so a search cannot trigger a catalogue-wide metadata scan.</p></div>';
+
+        echo '<div class="card hero"><h1>Search</h1><form class="catalog-search-form">'
+            . '<input type="hidden" name="page" value="search">'
+            . '<label>Search <input name="q" value="' . catalog_h($query)
+            . '" placeholder="GUID, MD5, SHA1, package, object, file name"></label>'
+            . '<label>Game <select name="game_id"' . (!$adminSearch ? ' required' : '') . '>';
+        echo $adminSearch ? '<option value="">All games</option>' : '<option value="">Choose game</option>';
+        foreach ($games as $game) {
+            echo '<option value="' . (int)$game['id'] . '"' . ((int)$game['id'] === $gameId ? ' selected' : '') . '>'
+                . catalog_h($game['name']) . '</option>';
+        }
+        echo '</select></label><label>File type <select name="file_type">';
+        foreach ($fileTypes as $value => [$label]) {
+            echo '<option value="' . catalog_h($value) . '"' . ($fileType === $value ? ' selected' : '') . '>'
+                . catalog_h($label) . '</option>';
+        }
+        echo '</select></label><fieldset class="catalog-search-scopes"><legend>Search in <span class="muted small">(leave all blank for global)</span></legend>';
+        foreach ([
+            'files' => 'File / package',
+            'names' => 'Names',
+            'imports' => 'Imports',
+            'exports' => 'Exports',
+            'guid' => 'GUID',
+            'md5' => 'MD5',
+            'sha1' => 'SHA1',
+        ] as $value => $label) {
+            echo '<label><input type="checkbox" name="scope[]" value="' . $value . '"'
+                . (in_array($value, $selectedScopes, true) ? ' checked' : '') . '> ' . catalog_h($label) . '</label>';
+        }
+        echo '</fieldset><button>Search</button></form>'
+            . '<p class="muted small">Public searches must be limited to one game. Logged-in administrators may search all games. '
+            . 'Leave Search in blank for the normal global search, or select only the indexed areas needed. '
+            . 'Names, Imports and Exports use exact compact-term indexes; file/package names retain broad matching. '
+            . 'GUID, MD5 and SHA1 use exact identity indexes.</p></div>';
 
         // Authentication has already been resolved and the search page header is
         // rendered. Never hold PHP's per-session lock while MySQL performs a
@@ -249,7 +299,16 @@ try {
             } else {
                 catalog_public_search_rate_limit();
                 try {
-                    $rows = CatalogSearchService::findFiles($db, $query, $resultLimit + 1, $gameId ?: null);
+                    $rows = CatalogSearchService::findFiles(
+                        $db,
+                        $query,
+                        $resultLimit + 1,
+                        $gameId ?: null,
+                        [
+                            'fields' => $selectedScopes,
+                            'extensions' => $fileTypes[$fileType][1] ?? [],
+                        ]
+                    );
                     $truncated = count($rows) > $resultLimit;
                     if ($truncated) {
                         array_pop($rows);
