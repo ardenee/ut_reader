@@ -5,8 +5,8 @@
  * Parent jobs own their workflow ledger through an ON DELETE CASCADE foreign
  * key. Deleting a large parent directly can therefore turn one apparent job
  * deletion into a multi-million-row InnoDB cascade with no heartbeat. This
- * helper drains descendants explicitly from the leaves upward so each SQL
- * delete stays bounded and the cleanup worker can checkpoint between batches.
+ * helper drains descendants explicitly from the leaves upward in bounded,
+ * set-based pages so cleanup does not perform one child-existence query per row.
  */
 declare(strict_types=1);
 
@@ -34,21 +34,38 @@ final class CatalogBackgroundJobSubtreePruner
         }
         $limit = max(1, min(self::CHILD_SCAN_LIMIT, $limit));
         $statement = $this->db->prepare(
-            'SELECT c.id,EXISTS('
-            . 'SELECT 1 FROM ue_background_jobs gc WHERE gc.parent_job_id=c.id LIMIT 1'
-            . ') has_children '
-            . 'FROM ue_background_jobs c WHERE c.parent_job_id=? '
-            . 'ORDER BY c.id ASC LIMIT ' . $limit
+            'SELECT id FROM ue_background_jobs WHERE parent_job_id=? '
+            . 'ORDER BY id ASC LIMIT ' . $limit
         );
         $statement->execute([$parentJobId]);
+        $childIds = array_values(array_filter(
+            array_map('intval', $statement->fetchAll(PDO::FETCH_COLUMN) ?: []),
+            static fn(int $id): bool => $id > 0
+        ));
+        if ($childIds === []) {
+            return ['leaf_ids' => [], 'branch_ids' => []];
+        }
+
+        $branchLookup = [];
+        foreach (array_chunk($childIds, 1000) as $chunk) {
+            $placeholders = implode(',', array_fill(0, count($chunk), '?'));
+            $branches = $this->db->prepare(
+                'SELECT DISTINCT parent_job_id FROM ue_background_jobs '
+                . 'WHERE parent_job_id IN (' . $placeholders . ')'
+            );
+            $branches->execute($chunk);
+            foreach ($branches->fetchAll(PDO::FETCH_COLUMN) ?: [] as $branchId) {
+                $id = (int)$branchId;
+                if ($id > 0) {
+                    $branchLookup[$id] = true;
+                }
+            }
+        }
+
         $leafIds = [];
         $branchIds = [];
-        foreach ($statement->fetchAll(PDO::FETCH_ASSOC) ?: [] as $row) {
-            $id = (int)($row['id'] ?? 0);
-            if ($id < 1) {
-                continue;
-            }
-            if ((int)($row['has_children'] ?? 0) > 0) {
+        foreach ($childIds as $id) {
+            if (isset($branchLookup[$id])) {
                 $branchIds[] = $id;
             } else {
                 $leafIds[] = $id;
