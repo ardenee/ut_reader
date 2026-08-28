@@ -239,6 +239,7 @@ final class CatalogJobWorkerFactory
                 $db,
                 $trustedImportConfig
             ),
+            JobType::PROCESS_PUBLIC_UPLOAD => static fn() => new CatalogPublicUploadJobHandler($db, $trustedImportConfig),
             JobType::PROCESS_BUCKET_ARCHIVE => static fn() => new CatalogArchiveWorkflowJobHandler($db, $trustedImportConfig),
             JobType::PROCESS_BUCKET_STAGED_PACKAGE => static fn() => new CatalogArchiveMemberContentRoutingJobHandler(
                 new CatalogUnsupportedRedirectExclusionJobHandler(
