@@ -134,6 +134,7 @@ final class CatalogPublicUploadBatchPreflight
             }
         }
 
+        $this->releaseExpiredReservations();
         $existingByIdentity = $this->catalogIdentityMatches(array_keys($md5s));
         $pendingByIdentity = $this->pendingIdentityMatches(array_keys($identityKeys));
         $guidMatches = $this->guidMatches(array_keys($guids));
@@ -259,6 +260,15 @@ final class CatalogPublicUploadBatchPreflight
         ];
     }
 
+    private function releaseExpiredReservations(): void
+    {
+        $this->db->exec(
+            'UPDATE ue_public_uploads SET status="expired",active_identity_key=NULL,'
+            . 'result_message="Reservation expired before upload completed",updated_at=UTC_TIMESTAMP(6) '
+            . 'WHERE status IN ("reserved","uploading") AND reservation_expires_at<=UTC_TIMESTAMP(6) LIMIT 1000'
+        );
+    }
+
     /** @return array<string,array{file_id:int}> */
     private function catalogIdentityMatches(array $md5s): array
     {
@@ -377,7 +387,7 @@ final class CatalogPublicUploadBatchPreflight
         $values = [];
         $params = [];
         foreach ($reservations as $item) {
-            $values[] = '(?,?,?,?,?,?,?,?,?,?,?,DATE_ADD(UTC_TIMESTAMP(6),INTERVAL ? SECOND))';
+            $values[] = '(?,?,?,?,?,?,?,?,?,?,?,?)';
             array_push(
                 $params,
                 (string)$item['token'],
@@ -391,7 +401,7 @@ final class CatalogPublicUploadBatchPreflight
                 $item['active_identity_key'],
                 $packedIp,
                 $userAgent,
-                $reservationSeconds
+                gmdate('Y-m-d H:i:s', time() + $reservationSeconds)
             );
         }
 
