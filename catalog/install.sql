@@ -1208,6 +1208,15 @@ CREATE TABLE ue_terms (
   KEY idx_ue_terms_value_prefix (value_prefix(100))
 ) ENGINE=InnoDB;
 
+CREATE TABLE ue_name_lookup (
+  file_id BIGINT UNSIGNED NOT NULL,
+  name_index INT UNSIGNED NOT NULL,
+  name_term_id INT UNSIGNED NOT NULL,
+  PRIMARY KEY (file_id,name_index),
+  KEY idx_ue_name_lookup_term (name_term_id,file_id),
+  CONSTRAINT fk_ue_name_lookup_file FOREIGN KEY (file_id) REFERENCES ue_files(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE ue_export_lookup (
   file_id BIGINT UNSIGNED NOT NULL,
   export_index INT UNSIGNED NOT NULL,
@@ -1347,6 +1356,30 @@ CREATE TABLE ue_public_uploads (
   KEY idx_ue_public_uploads_status_expiry (status,reservation_expires_at,id),
   KEY idx_ue_public_uploads_job (background_job_id),
   KEY idx_ue_public_uploads_unverified (unverified_file_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 202608260002 + 202608280003: per-file feedback and transfer-only IP blocking.
+CREATE TABLE ue_file_feedback (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  file_id BIGINT UNSIGNED NOT NULL,
+  feedback_text VARCHAR(500) NOT NULL,
+  submitter_ip VARBINARY(16) NULL,
+  submitted_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  PRIMARY KEY (id),
+  KEY idx_ue_file_feedback_file_time (file_id,submitted_at,id),
+  KEY idx_ue_file_feedback_time (submitted_at,id),
+  KEY idx_ue_file_feedback_ip_time (submitter_ip,submitted_at,id),
+  CONSTRAINT fk_ue_file_feedback_file FOREIGN KEY (file_id) REFERENCES ue_files(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE ue_transfer_blocked_ips (
+  ip_address VARBINARY(16) NOT NULL,
+  note VARCHAR(500) NOT NULL DEFAULT '',
+  created_by BIGINT UNSIGNED NULL,
+  created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+  PRIMARY KEY (ip_address),
+  KEY idx_ue_transfer_blocked_ips_created (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 SET FOREIGN_KEY_CHECKS = 1;
