@@ -162,33 +162,35 @@ final class CatalogUnverifiedPromotion
             $storedName = $md5 . '.' . $extension;
             $destination = $directory . '/' . $storedName;
             $sourcePath = (string)$source['path'];
-            $moved = false;
+            $sourceMoved = false;
+            $sourceDiscardedAgainstExisting = false;
+            $destinationCreated = false;
+            $deferSourceCleanup = false;
             if (is_file($destination)) {
                 $this->assertFileIdentity($destination, $fileSize, $md5, 'verified destination');
-                if (!@unlink($sourcePath) && is_file($sourcePath)) {
-                    throw new \RuntimeException(
-                        $this->filesystemFailureMessage(
-                            'could not discard queued physical duplicate after verified destination identity matched',
-                            $sourcePath,
-                            $destination,
-                            $fileSize
-                        )
-                    );
+                if (!empty($prepared['temporary'])) {
+                    // The queue source is a compressed wrapper while the verified
+                    // destination contains decoded package bytes. Keep the wrapper
+                    // intact until the database commit so rollback never substitutes
+                    // decoded bytes for the original wrapper.
+                    $deferSourceCleanup = true;
+                } else {
+                    if (!@unlink($sourcePath) && is_file($sourcePath)) {
+                        throw new \RuntimeException(
+                            $this->filesystemFailureMessage(
+                                'could not discard queued physical duplicate after verified destination identity matched',
+                                $sourcePath,
+                                $destination,
+                                $fileSize
+                            )
+                        );
+                    }
+                    $sourceDiscardedAgainstExisting = true;
                 }
             } elseif (!empty($prepared['temporary'])) {
                 $this->publishVerifiedCopy((string)$prepared['path'], $destination, $fileSize, $md5);
-                if (!@unlink($sourcePath) && is_file($sourcePath)) {
-                    @unlink($destination);
-                    throw new \RuntimeException(
-                        $this->filesystemFailureMessage(
-                            'stored decompressed package but could not remove compressed queue wrapper',
-                            $sourcePath,
-                            $destination,
-                            $fileSize
-                        )
-                    );
-                }
-                $moved = true;
+                $destinationCreated = true;
+                $deferSourceCleanup = true;
             } else {
                 $this->moveVerifiedFile(
                     $sourcePath,
@@ -197,7 +199,8 @@ final class CatalogUnverifiedPromotion
                     $md5,
                     'queued package into verified storage'
                 );
-                $moved = true;
+                $sourceMoved = true;
+                $destinationCreated = true;
             }
 
             $this->emit($emit, 'database', 46, 'Promoting the staged database record');
@@ -237,12 +240,16 @@ final class CatalogUnverifiedPromotion
                     throw new \RuntimeException('The staged database row changed before it could be promoted.');
                 }
                 $this->db->commit();
+
+                if ($deferSourceCleanup && is_file($sourcePath)) {
+                    $this->removeCommittedQueueSource($sourcePath, $destination, $fileSize);
+                }
             } catch (Throwable $error) {
                 if ($this->db->inTransaction()) {
                     $this->db->rollBack();
                 }
-                if ($moved && is_file($destination) && !is_file($sourcePath)) {
-                    try {
+                try {
+                    if ($sourceMoved && is_file($destination) && !is_file($sourcePath)) {
                         $this->moveVerifiedFile(
                             $destination,
                             $sourcePath,
@@ -250,15 +257,30 @@ final class CatalogUnverifiedPromotion
                             $md5,
                             'verified package back into the unverified queue after database rollback'
                         );
-                    } catch (Throwable $rollbackError) {
-                        throw new \RuntimeException(
-                            trim($error->getMessage())
-                                . ' Filesystem rollback also failed: '
-                                . trim($rollbackError->getMessage()),
-                            0,
-                            $error
-                        );
+                    } elseif ($destinationCreated && is_file($destination) && is_file($sourcePath)) {
+                        if (!@unlink($destination) && is_file($destination)) {
+                            throw new \RuntimeException(
+                                $this->filesystemFailureMessage(
+                                    'database rollback could not remove the newly published verified destination',
+                                    $sourcePath,
+                                    $destination,
+                                    $fileSize
+                                )
+                            );
+                        }
+                    } elseif ($sourceDiscardedAgainstExisting && !is_file($sourcePath) && is_file($destination)) {
+                        // Preserve the already-existing verified destination while
+                        // recreating the ordinary queued source for a safe retry.
+                        $this->publishVerifiedCopy($destination, $sourcePath, $fileSize, $md5);
                     }
+                } catch (Throwable $rollbackError) {
+                    throw new \RuntimeException(
+                        trim($error->getMessage())
+                            . ' Filesystem rollback also failed: '
+                            . trim($rollbackError->getMessage()),
+                        0,
+                        $error
+                    );
                 }
                 throw $error;
             }
@@ -297,6 +319,37 @@ final class CatalogUnverifiedPromotion
                 @unlink((string)$prepared['path']);
             }
         }
+    }
+
+    private function removeCommittedQueueSource(
+        string $source,
+        string $destination,
+        int $expectedSize
+    ): void {
+        for ($attempt = 1; $attempt <= 3; $attempt++) {
+            if (!is_file($source)) {
+                return;
+            }
+            if (function_exists('clear_last_error')) {
+                clear_last_error();
+            }
+            if (@unlink($source) || !is_file($source)) {
+                return;
+            }
+            if ($attempt < 3) {
+                usleep(50000 * $attempt);
+            }
+        }
+
+        error_log(
+            '[UnrealDB unverified promotion] '
+                . $this->filesystemFailureMessage(
+                    'verified database promotion committed but the original redirect wrapper could not be removed after 3 attempts',
+                    $source,
+                    $destination,
+                    $expectedSize
+                )
+        );
     }
 
     private function moveVerifiedFile(
