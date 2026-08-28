@@ -298,6 +298,25 @@ final class CatalogProfiledUploadBatchStore
         ];
     }
 
+    /**
+     * Remove a finalized/cancelled batch manifest after its database workflow has
+     * taken ownership of every staged file. Idempotent for crash recovery.
+     */
+    public function delete(string $batchId): void
+    {
+        $batchId = $this->batchId($batchId);
+        foreach ([
+            $this->metadataPath($batchId),
+            $this->manifestPath($batchId),
+            $this->lockPath($batchId),
+        ] as $path) {
+            if (is_file($path)) {
+                @unlink($path);
+            }
+        }
+        @rmdir($this->directory);
+    }
+
     /** @return array<string,mixed> */
     private function readMetadata(string $batchId): array
     {
