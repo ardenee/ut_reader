@@ -145,7 +145,9 @@ final class CatalogPublicUploadBatchPreflight
         }
 
         $expiredReleased = $this->releaseExpiredReservations();
-        $existingByIdentity = $this->catalogIdentityMatches(array_keys($md5s));
+        $catalogIdentities = $this->catalogIdentityMatches(array_keys($md5s));
+        $existingByIdentity = $catalogIdentities['confirmed'];
+        $unconfirmedByIdentity = $catalogIdentities['unconfirmed'];
         $pendingByIdentity = $this->pendingIdentityMatches(array_keys($identityKeys));
         $guidMatches = $this->guidMatches(array_keys($guids));
 
@@ -243,15 +245,24 @@ final class CatalogPublicUploadBatchPreflight
 
                 $guid = (string)$item['guid'];
                 $guidInfo = $guid !== '' && isset($guidMatches[$guid]) ? $guidMatches[$guid] : null;
+                $identity = (string)$item['identity_key'];
+                $unconfirmed = $identity !== '' && isset($unconfirmedByIdentity[$identity])
+                    ? $unconfirmedByIdentity[$identity]
+                    : null;
                 $results[$index] = [
                     'client_id' => $item['client_id'],
                     'action' => 'upload',
                     'upload_token' => $token,
                     'reservation_expires_seconds' => (int)$settings['reservation_seconds'],
                     'guid_match' => $guidInfo,
-                    'message' => is_array($guidInfo)
-                        ? 'Upload allowed. This package GUID already appears in the catalog, but the physical hashes differ; it will be retained for admin review.'
-                        : 'Upload allowed.',
+                    'catalog_identity_unconfirmed' => $unconfirmed,
+                    'message' => is_array($unconfirmed)
+                        ? 'Upload allowed as a repair candidate: catalog file #' . (int)$unconfirmed['file_id']
+                            . ' has the same stored identity, but its physical file could not be confirmed ('
+                            . (string)$unconfirmed['reason'] . ').'
+                        : (is_array($guidInfo)
+                            ? 'Upload allowed. This package GUID already appears in the catalog, but no physically confirmed exact byte match was found; it will be retained for admin review.'
+                            : 'Upload allowed.'),
                 ];
             }
         } finally {
@@ -288,13 +299,19 @@ final class CatalogPublicUploadBatchPreflight
         return max(0, $statement->rowCount());
     }
 
-    /** @return array<string,array{file_id:int}> */
+    /**
+     * @return array{
+     *   confirmed:array<string,array{file_id:int}>,
+     *   unconfirmed:array<string,array{file_id:int,reason:string}>
+     * }
+     */
     private function catalogIdentityMatches(array $md5s): array
     {
         if ($md5s === []) {
-            return [];
+            return ['confirmed' => [], 'unconfirmed' => []];
         }
         $matches = [];
+        $unconfirmed = [];
         $locator = new CatalogUploadDuplicateDetector($this->db, $this->config);
         foreach (array_chunk($md5s, self::MAX_FILES) as $chunk) {
             $placeholders = implode(',', array_fill(0, count($chunk), '?'));
@@ -311,19 +328,27 @@ final class CatalogPublicUploadBatchPreflight
                 if (preg_match('/^[a-f0-9]{32}$/', $md5) !== 1 || preg_match('/^[a-f0-9]{40}$/', $sha1) !== 1 || $size < 1) {
                     continue;
                 }
+                $key = hash('sha256', $md5 . "\0" . $sha1 . "\0" . $size);
                 $physicalPath = $locator->locatePhysicalPath($row);
                 if ($physicalPath === null) {
+                    $unconfirmed[$key] ??= [
+                        'file_id' => (int)$row['id'],
+                        'reason' => 'stored path is missing or cannot be resolved',
+                    ];
                     continue;
                 }
                 $physicalSize = filesize($physicalPath);
                 if ($physicalSize === false || (int)$physicalSize !== $size) {
+                    $unconfirmed[$key] ??= [
+                        'file_id' => (int)$row['id'],
+                        'reason' => 'physical size does not match the catalog identity',
+                    ];
                     continue;
                 }
-                $key = hash('sha256', $md5 . "\0" . $sha1 . "\0" . $size);
                 $matches[$key] ??= ['file_id' => (int)$row['id']];
             }
         }
-        return $matches;
+        return ['confirmed' => $matches, 'unconfirmed' => $unconfirmed];
     }
 
     /** @return array<string,true> */
