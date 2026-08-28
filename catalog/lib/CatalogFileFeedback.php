@@ -8,7 +8,7 @@
  */
 declare(strict_types=1);
 
-const CATALOG_FILE_FEEDBACK_MAX_LENGTH = 100;
+const CATALOG_FILE_FEEDBACK_MAX_LENGTH = 500;
 
 function catalog_file_feedback_return_path(): string
 {
