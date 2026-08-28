@@ -60,6 +60,9 @@ try {
     }
     ksort($queueOptions, SORT_NATURAL | SORT_FLAG_CASE);
 
+    $jobStorageRoot = rtrim((string)($config['storage_path'] ?? ''), DIRECTORY_SEPARATOR)
+        . DIRECTORY_SEPARATOR . 'jobs';
+
     catalog_head('Background Jobs');
     echo '<style>'
         . '.jobs-file-worker,.jobs-file-filters,.jobs-file-pagination,.jobs-file-maintenance,.jobs-file-bulk{display:flex;gap:9px;align-items:center;flex-wrap:wrap}'
@@ -223,8 +226,10 @@ try {
         . '<option value="1">1 day</option><option value="7">7 days</option><option value="30" selected>30 days</option>'
         . '<option value="90">90 days</option><option value="365">1 year</option>'
         . '</select></label>'
-        . '<button id="jobs-cleanup" type="button">Queue cleanup</button>'
-        . '<span class="muted">Issues are retained. Cleanup removes eligible workflow history plus unreferenced staged sources and automatically drains all matching batches.</span>'
+        . '<button id="jobs-cleanup" type="button">Queue history cleanup</button>'
+        . '<button id="jobs-storage-cleanup" type="button">Clean job storage</button>'
+        . '<span class="muted">Job storage: <span class="mono">' . catalog_h($jobStorageRoot) . '</span>. '
+        . 'Storage cleanup runs in the background and removes orphaned prepared, incoming, chunked-upload, batch, event, working and lock artifacts while retaining live/problem sources.</span>'
         . '</div></details>';
 
     echo '</div></div></section>';
