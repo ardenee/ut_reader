@@ -387,7 +387,7 @@ try {
     echo '</div>';
 
     echo '<section class="ui-section download-blocklist"><div class="ui-section__header"><div><h2>Blocked transfer IPs</h2>'
-        . '<p>Blocked addresses can still browse the website. Only downloads, generated-package transfers and public uploads are denied.</p></div></div>'
+        . '<p>Blocked addresses can still browse the website. Only download and upload transfers are denied.</p></div></div>'
         . '<div class="ui-section__body">';
     if (!$blocklistAvailable) {
         echo CatalogUi::alert('warning', 'Run the pending database migration to enable the transfer blocklist.', 'Blocked IP storage unavailable');
