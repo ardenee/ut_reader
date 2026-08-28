@@ -34,40 +34,63 @@ if (!is_dir($directory) && !@mkdir($directory, 0755, true) && !is_dir($directory
 }
 $temp = $target . '.download-' . bin2hex(random_bytes(6));
 $downloaded = false;
-if (function_exists('curl_init')) {
+$downloadErrors = [];
+
+// Prefer PHP's HTTPS stream first. On Windows this can use a correctly configured
+// OpenSSL CA source even when the cURL extension has no CA bundle configured.
+$context = stream_context_create([
+    'http' => [
+        'follow_location' => 1,
+        'timeout' => 180,
+        'user_agent' => 'UnrealDB browser archive decoder installer',
+    ],
+    'ssl' => [
+        'verify_peer' => true,
+        'verify_peer_name' => true,
+    ],
+]);
+$input = @fopen(SOURCE_URL, 'rb', false, $context);
+$output = @fopen($temp, 'wb');
+if (is_resource($input) && is_resource($output)) {
+    $copied = stream_copy_to_stream($input, $output);
+    $downloaded = is_int($copied) && $copied > 0;
+} else {
+    $downloadErrors[] = 'HTTPS stream download failed.';
+}
+if (is_resource($input)) fclose($input);
+if (is_resource($output)) fclose($output);
+
+if (!$downloaded && function_exists('curl_init')) {
+    @unlink($temp);
     $output = @fopen($temp, 'wb');
     if (is_resource($output)) {
         $curl = curl_init(SOURCE_URL);
         if ($curl !== false) {
             curl_setopt_array($curl, [
-                CURLOPT_FILE => $output, CURLOPT_FOLLOWLOCATION => true, CURLOPT_FAILONERROR => true,
-                CURLOPT_CONNECTTIMEOUT => 20, CURLOPT_TIMEOUT => 180,
+                CURLOPT_FILE => $output,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_FAILONERROR => true,
+                CURLOPT_CONNECTTIMEOUT => 20,
+                CURLOPT_TIMEOUT => 180,
                 CURLOPT_USERAGENT => 'UnrealDB browser archive decoder installer',
             ]);
             $downloaded = curl_exec($curl) === true;
-            if (!$downloaded) fwrite(STDERR, 'cURL download failed: ' . curl_error($curl) . "\n");
-            curl_close($curl);
+            if (!$downloaded) {
+                $downloadErrors[] = 'cURL download failed: ' . curl_error($curl);
+            }
+            // PHP 8.0+ releases CurlHandle automatically; curl_close() is deprecated in PHP 8.5.
+            unset($curl);
         }
         fclose($output);
     }
 }
-if (!$downloaded) {
-    @unlink($temp);
-    $context = stream_context_create(['http' => [
-        'follow_location' => 1, 'timeout' => 180,
-        'user_agent' => 'UnrealDB browser archive decoder installer',
-    ]]);
-    $input = @fopen(SOURCE_URL, 'rb', false, $context);
-    $output = @fopen($temp, 'wb');
-    if (is_resource($input) && is_resource($output)) {
-        $copied = stream_copy_to_stream($input, $output);
-        $downloaded = is_int($copied) && $copied > 0;
-    }
-    if (is_resource($input)) fclose($input);
-    if (is_resource($output)) fclose($output);
-}
 if (!$downloaded || !is_file($temp)) {
-    @unlink($temp); fwrite(STDERR, "Could not download the pinned 7-Zip WASM binary.\n"); exit(1);
+    @unlink($temp);
+    fwrite(STDERR, "Could not download the pinned 7-Zip WASM binary.\n");
+    foreach ($downloadErrors as $downloadError) {
+        fwrite(STDERR, $downloadError . "\n");
+    }
+    exit(1);
 }
 $size = (int)(filesize($temp) ?: 0);
 $blobSha = $gitBlobSha($temp);
