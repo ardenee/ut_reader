@@ -863,7 +863,7 @@
             const payload = await postJson(actionUrl, {
                 action: 'cleanup_storage',
                 queue: queue,
-                minimum_age_seconds: 60
+                minimum_age_seconds: 300
             });
             const data = payload && payload.data ? payload.data : {};
             const jobId = Number(data.job_id || 0);
