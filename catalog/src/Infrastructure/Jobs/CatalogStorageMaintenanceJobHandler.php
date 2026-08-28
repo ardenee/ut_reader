@@ -15,7 +15,6 @@ use UnrealDb\Catalog\Application\Jobs\JobExecutionContext;
 use UnrealDb\Catalog\Application\Jobs\JobHandler;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
-use UnrealDb\Catalog\Infrastructure\Import\CatalogChunkedUploadCleanup;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoWorkflowChildStateQuery;
 use UnrealDb\Catalog\Infrastructure\Storage\GeneratedPackageStore;
@@ -302,8 +301,10 @@ final class CatalogStorageMaintenanceJobHandler implements JobHandler
                 30 * 86400
             )
         );
+        $storageOnly = !empty($job->payload['storage_only']);
         $queue = new PdoJobQueue($this->db);
-        foreach (['generated', 'chunked_uploads', 'job_storage'] as $unit) {
+        $units = $storageOnly ? ['job_storage'] : ['generated', 'job_storage'];
+        foreach ($units as $unit) {
             $queue->enqueue(
                 $job->queue,
                 JobType::PRUNE_STALE_ARTIFACTS,
@@ -327,16 +328,22 @@ final class CatalogStorageMaintenanceJobHandler implements JobHandler
             throw new \LogicException('Unreachable after artifact prune defer.');
         }
         $results = $this->pruneSummary($job->id);
-        $context->checkpoint($this->progress('complete', 100, 'Stale artifact cleanup complete.', [
+        $jobStorage = is_array($results['job_storage'] ?? null) ? $results['job_storage'] : [];
+        $chunkedUploads = is_array($jobStorage['chunked_uploads'] ?? null)
+            ? $jobStorage['chunked_uploads']
+            : [];
+        $message = $storageOnly ? 'Job storage cleanup complete.' : 'Stale artifact cleanup complete.';
+        $context->checkpoint($this->progress('complete', 100, $message, [
             'generated' => $results['generated'],
-            'chunked_uploads' => $results['chunked_uploads'],
-            'job_storage' => $results['job_storage'],
+            'chunked_uploads' => $chunkedUploads,
+            'job_storage' => $jobStorage,
         ]));
         return [
-            'operation' => 'prune_stale_artifacts',
+            'operation' => $storageOnly ? 'prune_job_storage' : 'prune_stale_artifacts',
             'generated' => $results['generated'],
-            'chunked_uploads' => $results['chunked_uploads'],
-            'job_storage' => $results['job_storage'],
+            'chunked_uploads' => $chunkedUploads,
+            'job_storage' => $jobStorage,
+            'storage_only' => $storageOnly,
             'orphan_min_age_seconds' => $minimumAge,
             'children' => $state,
         ];
@@ -353,7 +360,6 @@ final class CatalogStorageMaintenanceJobHandler implements JobHandler
         ]);
         $result = match ($unit) {
             'generated' => (new GeneratedPackageStore((string)$this->config['storage_path']))->prune(),
-            'chunked_uploads' => (new CatalogChunkedUploadCleanup($this->config))->pruneIncomplete(),
             'job_storage' => (new CatalogJobStorageCleanup($this->db, $this->config))->prune($minimumAge),
             default => throw new \InvalidArgumentException('Unknown stale-artifact cleanup unit: ' . $unit),
         };
@@ -398,7 +404,7 @@ final class CatalogStorageMaintenanceJobHandler implements JobHandler
     /** @return array{generated:mixed,chunked_uploads:mixed,job_storage:mixed} */
     private function pruneSummary(int $parentJobId): array
     {
-        $result = ['generated' => [], 'chunked_uploads' => [], 'job_storage' => []];
+        $result = ['generated' => [], 'job_storage' => []];
         $statement = $this->db->prepare(
             'SELECT result_json FROM ue_background_jobs WHERE parent_job_id=? '
             . 'AND workflow_unit_key LIKE "prune:%" AND status="completed" ORDER BY id'
