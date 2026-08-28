@@ -2,9 +2,9 @@
 /**
  * Bounded deletion of background-job history and the staged sources owned by it.
  *
- * Job rows are removed first, then staged-source candidates from those deleted
- * rows are reclaimed only when no surviving restartable/recovery job still
- * references the same staged_path.
+ * Cleanup is destructive by design: once a job row is selected for deletion,
+ * its owned event/staged artifacts are removed directly. No global surviving-job
+ * reference scan is performed during cleanup.
  */
 declare(strict_types=1);
 
@@ -263,16 +263,12 @@ final class CatalogBackgroundJobCleanup
             return ['files' => 0, 'bytes' => 0];
         }
 
-        $protected = $this->protectedStagedPaths(array_keys($candidates));
         $store = new CatalogIncomingFileStore($this->config);
         $chunkCleanup = new CatalogChunkedUploadCleanup($this->config);
         $files = 0;
         $bytes = 0;
 
         foreach (array_keys($candidates) as $relativePath) {
-            if (isset($protected[$relativePath])) {
-                continue;
-            }
             if (str_starts_with($relativePath, 'local-pak:')
                 || str_starts_with($relativePath, 'local-catalog:')) {
                 continue;
@@ -306,48 +302,6 @@ final class CatalogBackgroundJobCleanup
         }
 
         return ['files' => $files, 'bytes' => $bytes];
-    }
-
-    /**
-     * A failed/dead-letter/cancelled job may be retried, and a completed job can
-     * explicitly retain its source for recovery. Never remove a staged source
-     * while any such surviving job still references it.
-     *
-     * @param list<string> $paths
-     * @return array<string,true>
-     */
-    private function protectedStagedPaths(array $paths): array
-    {
-        $paths = array_values(array_unique(array_filter(
-            array_map(static fn(string $path): string => trim($path), $paths),
-            static fn(string $path): bool => $path !== ''
-        )));
-        if ($paths === []) {
-            return [];
-        }
-
-        $protected = [];
-        foreach (array_chunk($paths, 250) as $chunk) {
-            $placeholders = implode(',', array_fill(0, count($chunk), '?'));
-            $safePayload = 'IF(JSON_VALID(payload_json),payload_json,"{}")';
-            $safeResult = 'IF(JSON_VALID(result_json),result_json,"{}")';
-            $statement = $this->db->prepare(
-                'SELECT DISTINCT JSON_UNQUOTE(JSON_EXTRACT(' . $safePayload . ',"$.staged_path")) staged_path '
-                . 'FROM ue_background_jobs '
-                . 'WHERE JSON_UNQUOTE(JSON_EXTRACT(' . $safePayload . ',"$.staged_path")) IN (' . $placeholders . ') '
-                . 'AND (status IN ("queued","running","failed","dead_letter","cancelled") '
-                . 'OR (status="completed" '
-                . 'AND JSON_UNQUOTE(JSON_EXTRACT(' . $safeResult . ',"$.source_retained")) IN ("true","1")))'
-            );
-            $statement->execute($chunk);
-            foreach ($statement->fetchAll(PDO::FETCH_COLUMN) ?: [] as $path) {
-                $value = trim((string)$path);
-                if ($value !== '') {
-                    $protected[$value] = true;
-                }
-            }
-        }
-        return $protected;
     }
 
     /** @return array<string,mixed> */
