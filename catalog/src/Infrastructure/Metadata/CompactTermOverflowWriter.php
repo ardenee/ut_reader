@@ -173,6 +173,11 @@ final class CompactTermOverflowWriter
         };
 
         $paths = (array)($snapshot['paths'] ?? []);
+        foreach ((array)($snapshot['names'] ?? []) as $row) {
+            if (is_array($row)) {
+                $add($row['name_text'] ?? '');
+            }
+        }
         foreach ((array)($snapshot['exports'] ?? []) as $row) {
             if (!is_array($row)) {
                 continue;
