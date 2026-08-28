@@ -511,16 +511,16 @@
                     const workerError = String(wake && wake.data && wake.data.worker_error || '');
                     if (workerError) {
                         addLog(
-                            'warning',
+                            'info',
                             'Background validation',
-                            'Uploads are queued. Worker pool warning: ' + workerError
+                            'Uploads are queued. Worker pool status: ' + workerError
                         );
                     }
                 } catch (wakeError) {
                     addLog(
-                        'warning',
+                        'info',
                         'Background validation',
-                        'Uploads are queued, but the worker wake request failed: '
+                        'Uploads are queued. Worker wake status: '
                             + ((wakeError && wakeError.message) || 'unknown error')
                     );
                 }
