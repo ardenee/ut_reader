@@ -86,7 +86,7 @@ final class PdoUnverifiedFilesPageQuery
 
         $items = \catalog_all(
             $this->db,
-            'SELECT f.id,f.package_name,f.original_name,f.stored_name,f.extension,f.md5,f.sha1,f.package_guid,'
+            'SELECT f.id,f.package_name,f.original_name,f.source_relative_path,f.stored_name,f.extension,f.md5,f.sha1,f.package_guid,'
             . 'f.file_size,f.detected_engine_key,f.detected_package_version,f.detected_licensee_version,'
             . 'f.name_count,f.import_count,f.export_count,f.scan_notes,f.unverified_queue_key,'
             . 'f.unverified_queue_game_id,f.unverified_queue_name,f.unverified_reason'
