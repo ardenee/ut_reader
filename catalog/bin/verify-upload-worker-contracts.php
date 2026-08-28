@@ -151,7 +151,7 @@ $record(
 
 $record(
     'unverified_promotion_storage_move_is_verified_and_recoverable',
-    str_contains($unverifiedPromotion, "$storedName = $extension !== '' ? $md5 . '.' . $extension : $md5;")
+    str_contains($unverifiedPromotion, '$storedName = $extension !== \'\' ? $md5 . \'.\' . $extension : $md5;')
         &&     str_contains($unverifiedPromotion, 'private function moveVerifiedFile(')
         && str_contains($unverifiedPromotion, 'if (@rename($source, $destination))')
         && str_contains($unverifiedPromotion, 'rename failed and verified-copy fallback could not copy')
