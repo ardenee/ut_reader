@@ -265,8 +265,10 @@ final class CatalogPublicUploadBatchPreflight
     {
         $statement = $this->db->prepare(
             'UPDATE ue_public_uploads SET status="expired",active_identity_key=NULL,'
-            . 'result_message="Reservation expired before upload completed",updated_at=UTC_TIMESTAMP(6) '
-            . 'WHERE status IN ("reserved","uploading") AND reservation_expires_at<=UTC_TIMESTAMP(6) LIMIT 1000'
+            . 'result_message="Public upload expired before background processing was secured",updated_at=UTC_TIMESTAMP(6) '
+            . 'WHERE ((status IN ("reserved","uploading")) '
+            . 'OR (status="uploaded" AND background_job_id IS NULL)) '
+            . 'AND reservation_expires_at<=UTC_TIMESTAMP(6) LIMIT 1000'
         );
         $statement->execute();
         return max(0, $statement->rowCount());
@@ -279,6 +281,7 @@ final class CatalogPublicUploadBatchPreflight
             return [];
         }
         $matches = [];
+        $locator = new CatalogUploadDuplicateDetector($this->db, $this->config);
         foreach (array_chunk($md5s, self::MAX_FILES) as $chunk) {
             $placeholders = implode(',', array_fill(0, count($chunk), '?'));
             $statement = $this->db->prepare(
@@ -294,8 +297,7 @@ final class CatalogPublicUploadBatchPreflight
                 if (preg_match('/^[a-f0-9]{32}$/', $md5) !== 1 || preg_match('/^[a-f0-9]{40}$/', $sha1) !== 1 || $size < 1) {
                     continue;
                 }
-                $physicalPath = (new CatalogUploadDuplicateDetector($this->db, $this->config))
-                    ->locatePhysicalPath($row);
+                $physicalPath = $locator->locatePhysicalPath($row);
                 if ($physicalPath === null) {
                     continue;
                 }
