@@ -157,6 +157,9 @@ $record(
         && str_contains($unverifiedPromotion, '$this->assertFileIdentity($part, $expectedSize, $expectedMd5')
         && str_contains($unverifiedPromotion, 'if (!@unlink($source) && is_file($source))')
         && str_contains($unverifiedPromotion, 'Filesystem rollback also failed:')
+        && str_contains($unverifiedPromotion, '$deferSourceCleanup = true;')
+        && str_contains($unverifiedPromotion, 'private function removeCommittedQueueSource(')
+        && str_contains($unverifiedPromotion, 'original redirect wrapper could not be removed after 3 attempts')
         && str_contains($unverifiedPromotion, 'destination_directory_writable=')
         && str_contains($unverifiedPromotion, 'prior_filesystem_error='),
     'Unverified-to-verified promotion must tolerate rename failures with a byte-identity-verified copy fallback, remove the original only after publication, recover the physical file on database rollback, and retain exact filesystem diagnostics.'
