@@ -174,6 +174,17 @@ $check(
 );
 
 $check(
+    'worker_pool_status_is_informational',
+    str_contains($client, "'info',\n                            'Background validation'")
+        && str_contains($client, 'Worker pool status: ')
+        && str_contains($client, 'Worker wake status: ')
+        && str_contains($page, '.public-upload-log-info{color:#cbd5e1}')
+        && !str_contains($client, "'warning',\n                            'Background validation'")
+        && !str_contains($client, "'failed',\n                            'Background validation'"),
+    'A detached-worker shortfall after durable enqueue is informational and must not be presented as an upload failure or warning.'
+);
+
+$check(
     'client_checks_and_batches_before_upload',
     str_contains($client, 'const BATCH_FILES = 100;')
         && str_contains($client, 'new Worker(workerUrl)')
