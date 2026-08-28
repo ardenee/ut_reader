@@ -329,13 +329,15 @@ final class CatalogBackgroundJobCleanup
         $protected = [];
         foreach (array_chunk($paths, 250) as $chunk) {
             $placeholders = implode(',', array_fill(0, count($chunk), '?'));
+            $safePayload = 'IF(JSON_VALID(payload_json),payload_json,"{}")';
+            $safeResult = 'IF(JSON_VALID(result_json),result_json,"{}")';
             $statement = $this->db->prepare(
-                'SELECT DISTINCT JSON_UNQUOTE(JSON_EXTRACT(payload_json,"$.staged_path")) staged_path '
-                . 'FROM ue_background_jobs WHERE JSON_VALID(payload_json)=1 '
-                . 'AND JSON_UNQUOTE(JSON_EXTRACT(payload_json,"$.staged_path")) IN (' . $placeholders . ') '
+                'SELECT DISTINCT JSON_UNQUOTE(JSON_EXTRACT(' . $safePayload . ',"$.staged_path")) staged_path '
+                . 'FROM ue_background_jobs '
+                . 'WHERE JSON_UNQUOTE(JSON_EXTRACT(' . $safePayload . ',"$.staged_path")) IN (' . $placeholders . ') '
                 . 'AND (status IN ("queued","running","failed","dead_letter","cancelled") '
-                . 'OR (status="completed" AND JSON_VALID(result_json)=1 '
-                . 'AND JSON_UNQUOTE(JSON_EXTRACT(result_json,"$.source_retained")) IN ("true","1")))'
+                . 'OR (status="completed" '
+                . 'AND JSON_UNQUOTE(JSON_EXTRACT(' . $safeResult . ',"$.source_retained")) IN ("true","1")))'
             );
             $statement->execute($chunk);
             foreach ($statement->fetchAll(PDO::FETCH_COLUMN) ?: [] as $path) {
