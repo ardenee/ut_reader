@@ -237,12 +237,22 @@
             const littleEndian = leMagic;
             const packed = view.getUint32(4, littleEndian);
             const version = packed & 0xffff;
-            // UE1/UE2 FPackageFileSummary stores FGuid directly after ImportOffset.
-            // UE3+ changed the summary layout, so do not guess there.
+            // Mirror CatalogLegacyPackageReader exactly: versions below 68 have
+            // HeritageCount/HeritageOffset before FGuid; version 68+ does not.
+            // UE3+ uses a different summary and is deliberately left to server parsing.
             if (version < 1 || version >= 200) return '';
+            const guidOffset = version < 68 ? 44 : 36;
+            if (file.size < guidOffset + 16) return '';
+            if (version < 68) {
+                const nameOffset = view.getInt32(16, littleEndian);
+                if (nameOffset < guidOffset + 16) return '';
+            }
+            const guidBytes = new Uint8Array(await file.slice(guidOffset, guidOffset + 16).arrayBuffer());
+            if (guidBytes.byteLength !== 16) return '';
+            const guidView = new DataView(guidBytes.buffer, guidBytes.byteOffset, guidBytes.byteLength);
             const parts = [];
-            for (let offset = 36; offset < 52; offset += 4) {
-                parts.push(view.getUint32(offset, littleEndian).toString(16).toUpperCase().padStart(8, '0'));
+            for (let offset = 0; offset < 16; offset += 4) {
+                parts.push(guidView.getUint32(offset, littleEndian).toString(16).toUpperCase().padStart(8, '0'));
             }
             return parts.join('-');
         } catch (error) {
