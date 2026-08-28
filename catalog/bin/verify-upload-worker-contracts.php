@@ -149,6 +149,19 @@ $record(
     'queued upload must reach unverified indexing, Application action orchestration, Infrastructure import adapters, promotion and durable dependency scheduling'
 );
 
+$record(
+    'unverified_promotion_storage_move_is_verified_and_recoverable',
+    str_contains($unverifiedPromotion, 'private function moveVerifiedFile(')
+        && str_contains($unverifiedPromotion, 'if (@rename($source, $destination))')
+        && str_contains($unverifiedPromotion, 'rename failed and verified-copy fallback could not copy')
+        && str_contains($unverifiedPromotion, '$this->assertFileIdentity($part, $expectedSize, $expectedMd5')
+        && str_contains($unverifiedPromotion, 'if (!@unlink($source) && is_file($source))')
+        && str_contains($unverifiedPromotion, 'Filesystem rollback also failed:')
+        && str_contains($unverifiedPromotion, 'destination_directory_writable=')
+        && str_contains($unverifiedPromotion, 'prior_filesystem_error='),
+    'Unverified-to-verified promotion must tolerate rename failures with a byte-identity-verified copy fallback, remove the original only after publication, recover the physical file on database rollback, and retain exact filesystem diagnostics.'
+);
+
 $batchEndpoint = $read('catalog/api/v1/upload-bucket-batch.php');
 $batchQueue = $read('catalog/src/Infrastructure/Import/CatalogBucketBatchQueue.php');
 $batchFinalizer = $read('catalog/src/Infrastructure/Import/CatalogBucketBatchFinalizer.php');
