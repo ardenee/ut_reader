@@ -1,50 +1,68 @@
 # Background Job history cleanup
 
-Background Jobs history can contain large numbers of completed, failed, dead-letter and cancelled rows. Cleanup is therefore background work itself; the browser must not delete thousands of rows and retained staged files synchronously.
+Background Jobs history can contain large numbers of completed workflow rows and retained staged sources. Cleanup is therefore background work itself; the browser only queues the operation.
 
-## Single-row delete
+## Retention cleanup
 
-Deleting one terminal job remains an immediate bounded administrator action.
+The Maintenance control on \`background-jobs.php\` removes **resolved completed/stopped history older than the selected cutoff**.
 
-## Bulk Delete and Clean old jobs
+Automatic retention deliberately keeps unresolved failed, dead-letter, rejected, unverified, partial and error roots for operator review.
 
-Bulk Delete and retention cleanup use `catalog.clean_background_job_history`.
+The HTTP request:
 
-The HTTP request only:
-
-1. resolves the same visible/filter scope used by the Background Jobs page;
-2. snapshots up to 10,000 currently eligible terminal job IDs;
-3. enqueues one durable cleanup job;
+1. calculates one fixed UTC cutoff;
+2. snapshots at most 10,000 eligible top-level roots;
+3. enqueues \`catalog.clean_background_job_history\`;
 4. wakes the worker and returns immediately.
 
-The worker processes at most 200 snapshot IDs per claim and persists `snapshot_offset`. It then defers itself so other queue work can run. A worker/server restart continues after the last processed snapshot slice rather than starting the cleanup from ID 1.
+The 10,000-root value is now a **per-snapshot bound, not a total cleanup limit**. When a retention snapshot finishes, the same cleanup job requests the next bounded snapshot using the original cutoff. It continues until no eligible roots remain. Jobs becoming newer than that fixed cutoff are never swept into the same maintenance operation.
 
-The snapshot is immutable. Jobs that become terminal after the request are not silently added to the running cleanup operation.
+## Parent/child workflow rows
 
-If more than 10,000 rows match, the cleanup result reports the snapshot limit and the administrator can run cleanup again after the first job completes.
+Large workflow trees are drained leaf-first in bounded batches so one root deletion cannot trigger a huge unobservable foreign-key cascade.
 
-## Parent/child rows
+Every hidden child row now goes through \`CatalogBackgroundJobCleanup\` before deletion. This means child event logs and owned \`staged_path\` sources are not skipped simply because the row was hidden from the operator view.
 
-Bulk mutation uses the same workflow-child visibility scope as the Background Jobs read model. Therefore **Select all matching** does not unexpectedly mutate routine successful child jobs that were hidden from the operator view.
+## Staged-source safety
 
-Deleting a terminal workflow parent may cascade its historical child rows through the `ue_background_jobs.parent_job_id` foreign key. This occurs in the background cleanup transaction, not in the browser request.
+For every deleted row, cleanup collects its owned \`staged_path\`.
 
-## Retained staged files
+Before deleting that source, the database is checked for surviving jobs that can still need it:
 
-Before deleting each terminal job row, `CatalogBackgroundJobCleanup` checks its payload for owned staged sources and removes those files where appropriate. Read-only catalog-local/local-PAK references are never treated as owned staged files.
+- queued;
+- running;
+- failed;
+- dead-letter;
+- cancelled/retryable;
+- completed jobs explicitly marked \`source_retained=true\`.
 
-Actual deleted/skipped/staged-file counts are reported by the cleanup job. The Background Jobs page reports the cleanup as **queued** instead of claiming the rows were already removed when the HTTP request returns.
+If any such job still references the staged source, the file is retained.
 
-## Empty cleanup
+\`local-pak:\` and \`local-catalog:\` references are read-only references and are never deleted by history cleanup.
 
-If no terminal rows match a retention cleanup, no no-op background job is created.
+Chunked uploads and normal incoming staged files both report the bytes actually reclaimed.
+
+## Reporting
+
+The cleanup job reports:
+
+- root jobs deleted;
+- hidden workflow rows deleted;
+- jobs skipped;
+- staged sources deleted;
+- staged bytes reclaimed;
+- snapshot batch number.
+
+The active Background Jobs page reports cleanup as queued work rather than claiming rows were removed in the browser request.
+
+Deleting MySQL rows does not normally reduce the physical InnoDB file size on disk; MySQL reuses that freed space internally. Filesystem free space should increase when owned staged/job files are actually removed.
 
 ## Verification
 
 Run:
 
-```bash
+\`\`\`bash
 php catalog/bin/verify-job-history-cleanup-contract.php
-```
+\`\`\`
 
-The contract verifies the bounded 200-ID worker batches, immutable 10,000-ID snapshot, worker registration, asynchronous API boundary, current Background Jobs scripts and the affected-dependency resource rekey guard.
+The contract verifies bounded resumable workflow deletion, automatic retention continuation, staged-source reference protection, reclaimed-byte reporting, active UI wiring, worker-code reload coverage and PHP syntax.
