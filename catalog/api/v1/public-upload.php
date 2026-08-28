@@ -140,6 +140,19 @@ try {
         ], 200);
     }
 
+    if ($action === 'status_batch') {
+        $tokens = json_decode((string)($_POST['upload_tokens'] ?? '[]'), true);
+        if (!is_array($tokens)) {
+            $tokens = [];
+        }
+        JsonResponse::send([
+            'ok' => true,
+            'data' => [
+                'uploads' => $store->statusesForContributor($tokens, $ip),
+            ],
+        ], 200);
+    }
+
     if ($action === 'wake') {
         $configuredQueue = trim((string)($application->config['queue']['name'] ?? 'catalog')) ?: 'catalog';
         $queueName = $configuredQueue . ':public-upload';
@@ -163,7 +176,7 @@ try {
         JsonResponse::send(['ok' => true, 'data' => ['status' => 'cancelled']], 200);
     }
 
-    JsonResponse::error('invalid_action', 'Public upload action must be chunk, complete, status, wake or cancel.', 400);
+    JsonResponse::error('invalid_action', 'Public upload action must be chunk, complete, status, status_batch, wake or cancel.', 400);
 } catch (\InvalidArgumentException $error) {
     JsonResponse::error('invalid_public_upload', $error->getMessage(), 400);
 } catch (\RuntimeException $error) {
