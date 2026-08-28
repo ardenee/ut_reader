@@ -193,7 +193,9 @@ final class CatalogPublicUploadTransferStore
                 return;
             }
             $statement = $this->db->prepare(
-                'UPDATE ue_public_uploads SET status="cancelled",result_message="Cancelled by contributor",updated_at=UTC_TIMESTAMP(6) WHERE id=?'
+                'UPDATE ue_public_uploads SET status="cancelled",active_identity_key=NULL,'
+                . 'quarantine_relative_path=NULL,received_bytes=0,'
+                . 'result_message="Cancelled by contributor",updated_at=UTC_TIMESTAMP(6) WHERE id=?'
             );
             $statement->execute([(int)$row['id']]);
             $this->db->commit();
