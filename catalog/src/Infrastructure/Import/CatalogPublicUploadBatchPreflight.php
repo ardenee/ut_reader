@@ -282,7 +282,8 @@ final class CatalogPublicUploadBatchPreflight
         foreach (array_chunk($md5s, self::MAX_FILES) as $chunk) {
             $placeholders = implode(',', array_fill(0, count($chunk), '?'));
             $statement = $this->db->prepare(
-                'SELECT id,file_size,LOWER(md5) md5,LOWER(sha1) sha1 FROM ue_files '
+                'SELECT id,game_id,relative_path,file_size,LOWER(md5) md5,LOWER(sha1) sha1,'
+                . 'scan_status,unverified_queue_game_id,unverified_queue_name FROM ue_files '
                 . 'WHERE md5 IN (' . $placeholders . ') AND scan_status IN ("verified","unverified")'
             );
             $statement->execute($chunk);
@@ -291,6 +292,15 @@ final class CatalogPublicUploadBatchPreflight
                 $sha1 = strtolower((string)($row['sha1'] ?? ''));
                 $size = max(0, (int)($row['file_size'] ?? 0));
                 if (preg_match('/^[a-f0-9]{32}$/', $md5) !== 1 || preg_match('/^[a-f0-9]{40}$/', $sha1) !== 1 || $size < 1) {
+                    continue;
+                }
+                $physicalPath = (new CatalogUploadDuplicateDetector($this->db, $this->config))
+                    ->locatePhysicalPath($row);
+                if ($physicalPath === null) {
+                    continue;
+                }
+                $physicalSize = filesize($physicalPath);
+                if ($physicalSize === false || (int)$physicalSize !== $size) {
                     continue;
                 }
                 $key = hash('sha256', $md5 . "\0" . $sha1 . "\0" . $size);
