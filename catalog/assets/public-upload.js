@@ -268,7 +268,7 @@
                 else resolve(result);
             }
             function stop(reason) {
-                finish(reason instanceof Error ? reason : abortError());
+                finish(reason instanceof Error ? reason : stoppedError());
             }
             activeArchiveStops.add(stop);
             worker.onmessage = function (event) {
@@ -1051,7 +1051,7 @@
             inspector = null;
         }
         Array.from(activeArchiveStops).forEach(function (stop) {
-            try { stop(abortError()); } catch (ignore) {}
+            try { stop(stoppedError()); } catch (ignore) {}
         });
         activeArchiveStops.clear();
         if (inspectorPending) {

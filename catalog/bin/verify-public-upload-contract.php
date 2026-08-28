@@ -304,9 +304,9 @@ $check(
         && str_contains($uploadApi, "(string)(\$_POST['content_encoding'] ?? 'identity')")
         && str_contains($transfer, "in_array(\$encoding, ['identity', 'gzip'], true)")
         && str_contains($transfer, 'private function appendTransportChunk(')
-        && str_contains($transfer, '\$decodedBytes = \$this->appendTransportChunk(')
-        && str_contains($transfer, '@ftruncate(\$output, \$expectedOffset)')
-        && str_contains($transfer, '\$received + \$decodedBytes')
+        && str_contains($transfer, '$decodedBytes = $this->appendTransportChunk(')
+        && str_contains($transfer, '@ftruncate($output, $expectedOffset)')
+        && str_contains($transfer, '$received + $decodedBytes')
         && str_contains($transfer, 'Decoded public upload chunk exceeds the allowed logical chunk size'),
     'Optional gzip must be a per-chunk transport envelope only: staging and reservation byte counts remain original package bytes.'
 );
