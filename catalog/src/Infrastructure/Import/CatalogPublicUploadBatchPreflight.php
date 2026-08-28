@@ -164,7 +164,10 @@ final class CatalogPublicUploadBatchPreflight
             }
         }
 
-        $lockName = 'unrealdb-public-upload-ip-' . substr(hash('sha256', $packedIp), 0, 40);
+        // MySQL user-level lock names are limited to 64 characters.
+        // Keep a short namespace plus enough SHA-256 material to remain
+        // deterministic and collision-resistant per source IP.
+        $lockName = 'udb-pubup-ip-' . substr(hash('sha256', $packedIp), 0, 40);
         $lock = $this->db->prepare('SELECT GET_LOCK(?,5)');
         $lock->execute([$lockName]);
         if ((int)$lock->fetchColumn() !== 1) {
