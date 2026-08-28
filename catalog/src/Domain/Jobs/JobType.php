@@ -50,6 +50,7 @@ final class JobType
     public const IMPORT_STAGED_ARCHIVE = 'catalog.import_staged_archive';
     public const PREPARE_BUCKET_REDIRECT = 'catalog.prepare_bucket_redirect';
     public const PROCESS_BUCKET_UPLOAD = 'catalog.process_bucket_upload';
+    public const PROCESS_PUBLIC_UPLOAD = 'catalog.process_public_upload';
     public const PROCESS_BUCKET_ARCHIVE = 'catalog.process_bucket_archive';
     public const PROCESS_BUCKET_STAGED_PACKAGE = 'catalog.process_bucket_staged_package';
     public const RECONCILE_UNVERIFIED_STORAGE = 'catalog.reconcile_unverified_storage';
@@ -96,6 +97,7 @@ final class JobType
             self::IMPORT_STAGED_ARCHIVE,
             self::PREPARE_BUCKET_REDIRECT,
             self::PROCESS_BUCKET_UPLOAD,
+            self::PROCESS_PUBLIC_UPLOAD,
             self::PROCESS_BUCKET_ARCHIVE,
             self::PROCESS_BUCKET_STAGED_PACKAGE,
             self::RECONCILE_UNVERIFIED_STORAGE,
