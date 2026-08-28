@@ -175,13 +175,43 @@ $check(
 
 $check(
     'worker_pool_status_is_informational',
-    str_contains($client, "'info',\n                            'Background validation'")
+    str_contains($client, "addLog(\n                            'info',\n                            'Background validation'")
         && str_contains($client, 'Worker pool status: ')
         && str_contains($client, 'Worker wake status: ')
         && str_contains($page, '.public-upload-log-info{color:#cbd5e1}')
-        && !str_contains($client, "'warning',\n                            'Background validation'")
-        && !str_contains($client, "'failed',\n                            'Background validation'"),
+        && !str_contains($client, "addLog(\n                            'warning',\n                            'Background validation'")
+        && !str_contains($client, "addLog(\n                            'failed',\n                            'Background validation'"),
     'A detached-worker shortfall after durable enqueue is informational and must not be presented as an upload failure or warning.'
+);
+
+$check(
+    'public_upload_reports_terminal_processing_result',
+    str_contains($transfer, 'public function statusesForContributor(array $uploadTokens, string $ipAddress): array')
+        && str_contains($uploadApi, "if (\$action === 'status_batch')")
+        && str_contains($client, 'async function waitForValidationResults(entries)')
+        && str_contains($client, "status === 'unverified'")
+        && str_contains($client, "status === 'duplicate'")
+        && str_contains($client, "status === 'failed'")
+        && str_contains($client, "'Ready for administrator review as unverified file #'")
+        && str_contains($client, "'post-upload duplicates'")
+        && str_contains($client, "'transferred'"),
+    'The public page must distinguish transfer completion from terminal background validation and expose the resulting unverified/duplicate/failed state.'
+);
+
+$check(
+    'failed_public_upload_source_is_retained',
+    str_contains($handler, 'Failed extraction/validation is the one case where the original')
+        && !str_contains(
+            substr(
+                $handler,
+                (int)strrpos($handler, '} catch (\\Throwable $error)'),
+                900
+            ),
+            '$store->removeQuarantine($token);'
+        )
+        && str_contains($handler, "'status' => 'failed'")
+        && str_contains($handler, "'active_identity_key' => null"),
+    'A failed public extraction/validation must retain its original quarantine source for diagnosis rather than deleting it.'
 );
 
 $check(
