@@ -79,7 +79,8 @@ $check(
     str_contains($cleanup, 'private function protectedStagedPaths(array $paths): array')
         && str_contains($cleanup, 'status IN ("queued","running","failed","dead_letter","cancelled")')
         && str_contains($cleanup, 'source_retained')
-        && str_contains($cleanup, 'JSON_UNQUOTE(JSON_EXTRACT(payload_json,"$.staged_path"))')
+        && str_contains($cleanup, '$safePayload = \'IF(JSON_VALID(payload_json),payload_json,"{}")\';')
+        && str_contains($cleanup, '$safeResult = \'IF(JSON_VALID(result_json),result_json,"{}")\';')
         && str_contains($cleanup, 'local-pak:')
         && str_contains($cleanup, 'local-catalog:'),
     'A staged source must survive while any restartable/recovery job still references it, and read-only sources are never owned.'
