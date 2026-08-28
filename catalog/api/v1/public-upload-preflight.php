@@ -10,10 +10,12 @@ use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogPublicUploadBatchPreflight;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogQueueWorkerStarter;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
+use UnrealDb\Catalog\Infrastructure\Security\CatalogPublicAccessGuard;
 use UnrealDb\Catalog\Presentation\Http\JsonResponse;
 
 try {
     $application = catalog_api_application();
+    (new CatalogPublicAccessGuard($application->config))->transferAllowedOrThrow($application->db, 'Public upload');
     catalog_api_require_csrf('public_upload');
     $payload = catalog_api_json_body();
     if (session_status() === PHP_SESSION_ACTIVE) {
