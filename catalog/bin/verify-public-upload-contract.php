@@ -112,6 +112,17 @@ $check(
 );
 
 $check(
+    'public_upload_csrf_session_is_persisted',
+    str_contains($page, 'catalog_start_session(true);')
+        && str_contains($page, "header('Cache-Control: no-store, private')")
+        && str_contains($page, "data-csrf=\"' . catalog_h(catalog_csrf('public_upload'))")
+        && str_contains($client, "'X-CSRF-Token': csrf")
+        && str_contains($preflightApi, "catalog_api_require_csrf('public_upload')")
+        && str_contains($uploadApi, "catalog_api_require_csrf('public_upload')"),
+    'Anonymous contribution GET must persist its PHP session before generating the CSRF token used by later POST requests.'
+);
+
+$check(
     'public_surface_is_restricted_and_anonymous',
     !str_contains($page, 'catalog_require_admin')
         && !str_contains($preflightApi, 'catalog_api_require_admin')
