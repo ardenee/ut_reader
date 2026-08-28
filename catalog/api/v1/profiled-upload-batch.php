@@ -16,6 +16,7 @@ use UnrealDb\Catalog\Infrastructure\Import\CatalogProfiledUploadBatchStore;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogQueueWorkerStarter;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 use UnrealDb\Catalog\Infrastructure\Settings\CatalogProgramSettingsStore;
+use UnrealDb\Catalog\Infrastructure\Security\CatalogPublicAccessGuard;
 use UnrealDb\Catalog\Presentation\Http\JsonResponse;
 
 function profiled_upload_batch_name(string $value): string
@@ -155,6 +156,10 @@ try {
     $config = catalog_config();
     $batchStore = new CatalogProfiledUploadBatchStore($config);
     $action = strtolower(trim((string)($_POST['action'] ?? '')));
+    if (!in_array($action, ['status', 'cancel'], true)) {
+        $transferDb = catalog_db($config);
+        (new CatalogPublicAccessGuard($config))->transferAllowedOrThrow($transferDb, 'Upload');
+    }
 
     if ($action === 'init') {
         $gameId = (int)($_POST['game_id'] ?? 0);
