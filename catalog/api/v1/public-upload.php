@@ -11,10 +11,12 @@ use UnrealDb\Catalog\Infrastructure\Import\CatalogBucketUploadTransferStoreFacto
 use UnrealDb\Catalog\Infrastructure\Import\CatalogPublicUploadTransferStore;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogQueueWorkerStarter;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
+use UnrealDb\Catalog\Infrastructure\Security\CatalogPublicAccessGuard;
 use UnrealDb\Catalog\Presentation\Http\JsonResponse;
 
 try {
     $application = catalog_api_application();
+    (new CatalogPublicAccessGuard($application->config))->transferAllowedOrThrow($application->db, 'Public upload');
     catalog_api_require_csrf('public_upload');
     if (session_status() === PHP_SESSION_ACTIVE) {
         session_write_close();
