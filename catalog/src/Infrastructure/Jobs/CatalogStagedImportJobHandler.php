@@ -202,7 +202,10 @@ final class CatalogStagedImportJobHandler implements JobHandler
             if ($workingTemporary && $completedWorkingPath !== '' && is_file($completedWorkingPath)) {
                 @unlink($completedWorkingPath);
             }
-            $store->remove($relativePath);
+            // The canonical verified/duplicate outcome now owns the useful
+            // bytes. The incoming source is transient staging and must not survive
+            // a successful terminal import.
+            $store->delete($relativePath);
 
             $status = (string)($result[0] ?? 'verified');
             $meta = is_array($result[4] ?? null) ? $result[4] : [];
@@ -240,7 +243,12 @@ final class CatalogStagedImportJobHandler implements JobHandler
                     $sourceRelativePath
                 );
                 $workingPath = '';
-                $store->remove($relativePath);
+                $sourceRetained = $staged === null;
+                if (!$sourceRetained) {
+                    // The unverified/problem record now owns the diagnostic bytes;
+                    // keeping the original incoming copy would only duplicate data.
+                    $store->delete($relativePath);
+                }
                 $shortError = $this->shortError($error);
                 $invalidPackageContent = JobFailureRetryPolicy::isInvalidPackageContentText(
                     JobType::IMPORT_STAGED_PACKAGE,
@@ -313,6 +321,7 @@ final class CatalogStagedImportJobHandler implements JobHandler
                     'system_error_recorded' => $systemErrorRecorded,
                     'validation_code' => $validation['code'],
                     'validation_arguments' => $validation['arguments'],
+                    'source_retained' => $sourceRetained,
                 ]);
                 return [
                     'operation' => 'import_staged_package',
@@ -326,6 +335,7 @@ final class CatalogStagedImportJobHandler implements JobHandler
                     'system_error_recorded' => $systemErrorRecorded,
                     'validation_code' => $validation['code'],
                     'validation_arguments' => $validation['arguments'],
+                    'source_retained' => $sourceRetained,
                 ];
             }
             throw $error;
