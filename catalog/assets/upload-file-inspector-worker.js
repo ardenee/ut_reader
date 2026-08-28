@@ -341,6 +341,210 @@ function validateHeader(extension, fileSize, head, tail) {
     return {kind: 'extension-only', description: 'No safe client-side magic rule is defined for this extension'};
 }
 
+function packageMagic(bytes) {
+    return bytes.length >= 4 && (
+        (bytes[0] === 0xc1 && bytes[1] === 0x83 && bytes[2] === 0x2a && bytes[3] === 0x9e)
+        || (bytes[0] === 0x9e && bytes[1] === 0x2a && bytes[2] === 0x83 && bytes[3] === 0xc1)
+    );
+}
+
+function legacyGuidFromDecodedHead(bytes) {
+    if (!packageMagic(bytes) || bytes.length < 52) return '';
+    const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    const littleEndian = view.getUint32(0, true) === 0x9e2a83c1;
+    const packed = view.getUint32(4, littleEndian);
+    const version = packed & 0xffff;
+    if (version < 1 || version >= 200) return '';
+    const guidOffset = version < 68 ? 44 : 36;
+    if (bytes.length < guidOffset + 16) return '';
+    if (version < 68) {
+        const nameOffset = view.getInt32(16, littleEndian);
+        if (nameOffset < guidOffset + 16) return '';
+    }
+    const parts = [];
+    for (let offset = guidOffset; offset < guidOffset + 16; offset += 4) {
+        parts.push(view.getUint32(offset, littleEndian).toString(16).toUpperCase().padStart(8, '0'));
+    }
+    return parts.join('-');
+}
+
+async function inflateZlibBytes(bytes, expectedBytes) {
+    if (typeof DecompressionStream !== 'function') {
+        throw new Error(
+            'This browser cannot decode Unreal zlib redirects for duplicate checking. '
+            + 'Use a current browser or contribute the uncompressed package.'
+        );
+    }
+    let output;
+    try {
+        const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate'));
+        output = new Uint8Array(await new Response(stream).arrayBuffer());
+    } catch (error) {
+        throw new Error('Could not decode the Unreal zlib redirect record in the browser.');
+    }
+    if (expectedBytes > 0 && output.length !== expectedBytes) {
+        throw new Error(
+            'Decoded Unreal redirect size mismatch: expected ' + expectedBytes + ' bytes, got ' + output.length + '.'
+        );
+    }
+    return output;
+}
+
+async function inspectUz2(id, file) {
+    const total = Math.max(0, Number(file.size || 0));
+    const md5 = new Md5();
+    const sha1 = new Sha1();
+    let offset = 0;
+    let outputBytes = 0;
+    let chunks = 0;
+    let firstDecoded = new Uint8Array(0);
+
+    while (offset < total) {
+        if (offset + 8 > total) {
+            throw new Error('Incomplete Epic UZ2 record header at byte ' + offset + '.');
+        }
+        const header = await readBytes(file, offset, offset + 8);
+        const compressed = readU32Le(header, 0);
+        const uncompressed = readU32Le(header, 4);
+        const recordOffset = offset;
+        offset += 8;
+
+        if (compressed < 1 || compressed > 33096 || uncompressed < 1 || uncompressed > 32768 || offset + compressed > total) {
+            throw new Error(
+                'Invalid Epic UZ2 record ' + (chunks + 1)
+                + ' (compressed=' + compressed
+                + ', uncompressed=' + uncompressed
+                + ', offset=' + recordOffset
+                + ', remaining=' + Math.max(0, total - offset) + ').'
+            );
+        }
+
+        const payload = await readBytes(file, offset, offset + compressed);
+        offset += compressed;
+        const decoded = await inflateZlibBytes(payload, uncompressed);
+        if (chunks === 0) {
+            firstDecoded = decoded.slice(0, Math.min(decoded.length, 64));
+            if (!packageMagic(firstDecoded)) {
+                throw new Error('Epic UZ2 decoded output does not begin with an Unreal package magic.');
+            }
+        }
+        md5.update(decoded);
+        sha1.update(decoded);
+        outputBytes += decoded.length;
+        chunks++;
+        self.postMessage({
+            type: 'progress',
+            id: id,
+            phase: 'redirect-hash',
+            loaded: offset,
+            total: total,
+            output: outputBytes,
+            chunks: chunks
+        });
+    }
+
+    if (chunks < 1 || offset !== total || outputBytes < 1) {
+        throw new Error(
+            'Incomplete Epic UZ2 redirect stream: records=' + chunks
+            + ', compressed=' + offset + '/' + total
+            + ', output=' + outputBytes + '.'
+        );
+    }
+
+    return {
+        md5: md5.digestHex(),
+        sha1: sha1.digestHex(),
+        identity_size: outputBytes,
+        guid: legacyGuidFromDecodedHead(firstDecoded),
+        extension: 'uz2',
+        redirect: true,
+        header: {
+            kind: 'redirect-uz2',
+            description: 'Epic UZ2 zlib records; decoded package identity calculated in browser'
+        }
+    };
+}
+
+async function inspectUz3(id, file) {
+    const total = Math.max(0, Number(file.size || 0));
+    if (total < 10) {
+        throw new Error('The .uz3 file is too small to contain an Epic redirect payload.');
+    }
+    const header = await readBytes(file, 0, 8);
+    const signature = readU32Le(header, 0);
+    const expected = readU32Le(header, 4);
+    if (signature !== 5678 || expected < 1) {
+        throw new Error(
+            'The .uz3 file does not contain a valid Epic redirect header: signature='
+            + signature + ', uncompressed=' + expected + '.'
+        );
+    }
+    if (typeof DecompressionStream !== 'function') {
+        throw new Error(
+            'This browser cannot decode Unreal zlib redirects for duplicate checking. '
+            + 'Use a current browser or contribute the uncompressed package.'
+        );
+    }
+
+    const md5 = new Md5();
+    const sha1 = new Sha1();
+    let outputBytes = 0;
+    let firstDecoded = new Uint8Array(0);
+    let reader;
+    try {
+        reader = file.slice(8).stream().pipeThrough(new DecompressionStream('deflate')).getReader();
+        while (true) {
+            const result = await reader.read();
+            if (result.done) break;
+            const decoded = result.value instanceof Uint8Array ? result.value : new Uint8Array(result.value || 0);
+            if (!decoded.length) continue;
+            if (firstDecoded.length < 64) {
+                const need = Math.min(64 - firstDecoded.length, decoded.length);
+                const joined = new Uint8Array(firstDecoded.length + need);
+                joined.set(firstDecoded, 0);
+                joined.set(decoded.subarray(0, need), firstDecoded.length);
+                firstDecoded = joined;
+            }
+            md5.update(decoded);
+            sha1.update(decoded);
+            outputBytes += decoded.length;
+            self.postMessage({
+                type: 'progress',
+                id: id,
+                phase: 'redirect-hash',
+                loaded: Math.min(expected, outputBytes),
+                total: expected,
+                output: outputBytes,
+                chunks: 1
+            });
+        }
+    } catch (error) {
+        throw new Error('Could not decode the Epic UZ3 zlib stream in the browser.');
+    }
+
+    if (outputBytes !== expected) {
+        throw new Error(
+            'Decoded Epic UZ3 size mismatch: expected ' + expected + ' bytes, got ' + outputBytes + '.'
+        );
+    }
+    if (!packageMagic(firstDecoded)) {
+        throw new Error('Epic UZ3 decoded output does not begin with an Unreal package magic.');
+    }
+
+    return {
+        md5: md5.digestHex(),
+        sha1: sha1.digestHex(),
+        identity_size: outputBytes,
+        guid: legacyGuidFromDecodedHead(firstDecoded),
+        extension: 'uz3',
+        redirect: true,
+        header: {
+            kind: 'redirect-uz3',
+            description: 'Epic UZ3 zlib stream; decoded package identity calculated in browser'
+        }
+    };
+}
+
 async function readBytes(file, start, end) {
     const buffer = await file.slice(start, end).arrayBuffer();
     return new Uint8Array(buffer);
@@ -361,8 +565,15 @@ async function inspectFile(id, file) {
     const header = validateHeader(extension, total, head, tail);
     self.postMessage({type: 'progress', id: id, phase: 'header', loaded: total, total: total, header: header});
 
-    if (extension === 'uz' || extension === 'uz2' || extension === 'uz3') {
-        return {md5: '', sha1: '', extension: extension, redirect: true, header: header};
+    if (extension === 'uz2') {
+        return inspectUz2(id, file);
+    }
+    if (extension === 'uz3') {
+        return inspectUz3(id, file);
+    }
+    if (extension === 'uz') {
+        // Legacy FCodec .uz decoding is handled by the compatibility wrapper.
+        return {md5: '', sha1: '', identity_size: 0, guid: '', extension: extension, redirect: true, header: header};
     }
 
     const md5 = new Md5();
@@ -382,6 +593,8 @@ async function inspectFile(id, file) {
     return {
         md5: md5.digestHex(),
         sha1: sha1.digestHex(),
+        identity_size: total,
+        guid: '',
         extension: extension,
         redirect: false,
         header: header
