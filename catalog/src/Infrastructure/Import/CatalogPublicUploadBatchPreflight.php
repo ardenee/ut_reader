@@ -23,7 +23,7 @@ final class CatalogPublicUploadBatchPreflight
 
     /**
      * @param list<array<string,mixed>> $manifest
-     * @return array{files:list<array<string,mixed>>,accepted:int,skipped:int,rejected:int}
+     * @return array{files:list<array<string,mixed>>,accepted:int,skipped:int,rejected:int,expired_released:int}
      */
     public function inspect(array $manifest, string $ipAddress, string $userAgent): array
     {
@@ -134,7 +134,7 @@ final class CatalogPublicUploadBatchPreflight
             }
         }
 
-        $this->releaseExpiredReservations();
+        $expiredReleased = $this->releaseExpiredReservations();
         $existingByIdentity = $this->catalogIdentityMatches(array_keys($md5s));
         $pendingByIdentity = $this->pendingIdentityMatches(array_keys($identityKeys));
         $guidMatches = $this->guidMatches(array_keys($guids));
@@ -257,16 +257,19 @@ final class CatalogPublicUploadBatchPreflight
             'accepted' => $accepted,
             'skipped' => count($files) - $accepted - $rejected,
             'rejected' => $rejected,
+            'expired_released' => $expiredReleased,
         ];
     }
 
-    private function releaseExpiredReservations(): void
+    private function releaseExpiredReservations(): int
     {
-        $this->db->exec(
+        $statement = $this->db->prepare(
             'UPDATE ue_public_uploads SET status="expired",active_identity_key=NULL,'
             . 'result_message="Reservation expired before upload completed",updated_at=UTC_TIMESTAMP(6) '
             . 'WHERE status IN ("reserved","uploading") AND reservation_expires_at<=UTC_TIMESTAMP(6) LIMIT 1000'
         );
+        $statement->execute();
+        return max(0, $statement->rowCount());
     }
 
     /** @return array<string,array{file_id:int}> */
