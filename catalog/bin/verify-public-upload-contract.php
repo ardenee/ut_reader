@@ -43,6 +43,7 @@ $uploadApi = $read('api/v1/public-upload.php');
 $page = $read('public-upload.php');
 $client = $read('assets/public-upload.js');
 $inspector = $read('assets/upload-file-inspector-worker.js');
+$legacyUzDecoder = $read('assets/legacy-uz-decoder.js');
 $compatibleInspector = $read('assets/upload-file-inspector-worker-compatible.js');
 $archiveWorker = $read('assets/public-upload-archive-worker.js');
 $archiveInstaller = $read('bin/install-browser-archive-decoder.php');
@@ -152,26 +153,36 @@ $check(
         && str_contains($preflight, '$policy->isArchive($name) || $policy->isPakContainer($name)')
         && str_contains($page, 'Selected ZIP, RAR and 7z archives are processed only in the browser')
         && str_contains($page, 'the original archive is never uploaded')
+        && str_contains($page, 'Public upload accepts normal Unreal package files plus .uz, .uz2 and .uz3 redirects')
         && str_contains($page, 'UMOD-family archives and PAK containers remain excluded'),
     'The public route must keep archive containers off the server while allowing browser-only ZIP/RAR/7z source inspection.'
 );
 
 $check(
     'redirect_identity_is_decoded_before_preflight',
-    str_contains($inspector, 'async function inspectUz2(id, file)')
+    str_contains($inspector, 'async function inspectUz(id, file, maxFileBytes)')
+        && str_contains($inspector, 'async function inspectUz2(id, file)')
         && str_contains($inspector, 'async function inspectUz3(id, file)')
+        && str_contains($inspector, 'UnrealDbLegacyUzDecoder.decode(encoded,limit)')
         && str_contains($inspector, "new DecompressionStream('deflate')")
-        && str_contains($inspector, 'identity_size: outputBytes')
-        && str_contains($inspector, 'md5: md5.digestHex()')
-        && str_contains($inspector, 'sha1: sha1.digestHex()')
+        && str_contains($legacyUzDecoder, 'function decodeHuffman(data,limit)')
+        && str_contains($legacyUzDecoder, 'function decodeMtf(data)')
+        && str_contains($legacyUzDecoder, 'function decodeBwt(data,limit)')
+        && str_contains($legacyUzDecoder, 'function decodeRle(data,limit)')
+        && str_contains($legacyUzDecoder, 'signature!==1234 && signature!==5678')
+        && str_contains($legacyUzDecoder, "'epic-uz-5678-huffman+rle+mtf+bwt+rle'")
+        && str_contains($legacyUzDecoder, "'epic-uz-1234-huffman+mtf+bwt+rle'")
+        && str_contains($inspector, 'identity_size:output.length')
+        && str_contains($inspector, 'md5:md5.digestHex()')
+        && str_contains($inspector, 'sha1:sha1.digestHex()')
         && str_contains($client, 'identity_size: identitySize')
         && str_contains($preflight, '$identitySize = (int)($item[\'identity_size\']')
         && str_contains($preflight, '$md5 . "\0" . $sha1 . "\0" . $identitySize')
         && str_contains($preflight, "if (\$md5 === '' || \$sha1 === '' || \$identitySize < 1)")
-        && str_contains($compatibleInspector, 'Legacy .uz FCodec redirects are not accepted by the public uploader yet')
-        && str_contains($client, "['uz2', 'uz3'].forEach")
-        && !str_contains($client, "['uz', 'uz2', 'uz3'].forEach"),
-    'UZ2/UZ3 must be decoded and hashed in the browser; the 100-file manifest must compare decompressed package identity, not compressed wrapper size.'
+        && !str_contains($compatibleInspector, 'Legacy .uz FCodec redirects are not accepted by the public uploader yet')
+        && str_contains($compatibleInspector, 'dispatchToInspector(data);')
+        && str_contains($client, "['uz', 'uz2', 'uz3'].forEach"),
+    'UZ/UZ2/UZ3 must be decoded and hashed in the browser; the 100-file manifest must compare decompressed package identity, not compressed wrapper size.'
 );
 
 $check(
@@ -255,6 +266,8 @@ $check(
         && !str_contains($archiveWorker, 'file.arrayBuffer()')
         && str_contains($archiveWorker, "['x', '-y', '-bd', '-bb0', '-spd', '-o/out'")
         && str_contains($archiveWorker, 'offset !== nextReadOffset')
+        && str_contains($archiveWorker, "if (extension === 'uz') return inspectUz(id, name, maxFileBytes)")
+        && str_contains($archiveWorker, 'UnrealDbLegacyUzDecoder.decode(encoded,limit)')
         && str_contains($archiveWorker, 'Archive member path contains an unsafe path segment.')
         && str_contains($archiveInstaller, 'EXPECTED_GIT_BLOB_SHA1')
         && str_contains($archiveInstaller, '337cfa5ac2e9ed01d9dfc5b9aeb8f2742e025502')

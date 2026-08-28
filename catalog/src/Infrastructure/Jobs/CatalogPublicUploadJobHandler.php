@@ -114,7 +114,7 @@ final class CatalogPublicUploadJobHandler implements JobHandler
             $clientMd5 = strtolower(trim((string)($row['client_md5'] ?? '')));
             $clientSha1 = strtolower(trim((string)($row['client_sha1'] ?? '')));
             // For normal packages these hashes describe the uploaded bytes. For
-            // UZ2/UZ3 public redirects they describe the browser-decoded package
+            // UZ/UZ2/UZ3 public redirects they describe the browser-decoded package
             // identity used by the 100-file duplicate preflight. Either way the
             // authoritative server result must match whenever the client supplied
             // an identity.
