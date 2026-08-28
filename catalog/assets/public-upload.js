@@ -19,11 +19,17 @@
     const preflightUrl = String(progressBox.dataset.preflightUrl || 'api/v1/public-upload-preflight.php');
     const uploadUrl = String(progressBox.dataset.uploadUrl || 'api/v1/public-upload.php');
     const workerUrl = String(progressBox.dataset.workerUrl || 'assets/upload-file-inspector-worker-compatible.js');
+    const archiveWorkerUrl = String(progressBox.dataset.archiveWorkerUrl || 'assets/public-upload-archive-worker.js');
+    const archiveEnabled = String(progressBox.dataset.archiveEnabled || '') === '1';
     const csrf = String(progressBox.dataset.csrf || '');
     const chunkBytes = Math.max(1024 * 1024, Number(progressBox.dataset.chunkBytes || 16 * 1024 * 1024));
     const maxFileBytes = Math.max(1, Number(progressBox.dataset.maxFileBytes || 0));
     const BATCH_FILES = 100;
     const MAX_LOG_LINES = 500;
+    const MAX_ARCHIVE_ENTRIES = 50000;
+    const ARCHIVE_EXTENSIONS = new Set(['zip', 'rar', '7z']);
+    const TRANSPORT_COMPRESSION_MIN_BYTES = 64 * 1024;
+    const TRANSPORT_COMPRESSION_RATIO = 0.90;
 
     let allowed = [];
     try {
@@ -44,6 +50,8 @@
     let inspector = null;
     let inspectorSequence = 0;
     let inspectorPending = null;
+    let archiveSequence = 0;
+    const activeArchiveStops = new Set();
     let processedFiles = 0;
     let pendingValidation = [];
     const counters = {
@@ -235,6 +243,154 @@
         });
     }
 
+
+    function archiveDisplayPath(sourcePath, memberPath) {
+        const source = String(sourcePath || '').replace(/\\/g, '/').replace(/^\/+/, '');
+        const member = String(memberPath || '').replace(/\\/g, '/').replace(/^\/+/, '');
+        return source + '!/' + member;
+    }
+
+    function oneShotArchiveList(file, label) {
+        ensureRunning();
+        if (!archiveEnabled) {
+            return Promise.reject(new Error('ZIP/RAR/7z browser processing is not installed on this server.'));
+        }
+        return new Promise(function (resolve, reject) {
+            const worker = new Worker(archiveWorkerUrl);
+            const id = String(++archiveSequence);
+            let settled = false;
+            function finish(error, result) {
+                if (settled) return;
+                settled = true;
+                activeArchiveStops.delete(stop);
+                worker.terminate();
+                if (error) reject(error);
+                else resolve(result);
+            }
+            function stop(reason) {
+                finish(reason instanceof Error ? reason : abortError());
+            }
+            activeArchiveStops.add(stop);
+            worker.onmessage = function (event) {
+                const data = event.data || {};
+                if (String(data.id || '') !== id) return;
+                if (data.type === 'progress') {
+                    setProgress(0, label + ' · ' + String(data.message || 'Reading archive…'), true);
+                    return;
+                }
+                if (data.type === 'result') {
+                    finish(null, data.result && Array.isArray(data.result.entries) ? data.result.entries : []);
+                } else {
+                    finish(new Error(String(data.message || 'Could not read archive directory.')));
+                }
+            };
+            worker.onerror = function () {
+                finish(new Error('Browser archive worker failed while reading ' + label + '.'));
+            };
+            worker.postMessage({type:'list', id:id, file:file, max_entries:MAX_ARCHIVE_ENTRIES});
+        });
+    }
+
+    function openArchiveMember(file, member, label, position, total) {
+        ensureRunning();
+        return new Promise(function (resolve, reject) {
+            const worker = new Worker(archiveWorkerUrl);
+            let sequence = 0;
+            let closed = false;
+            const pending = new Map();
+
+            function close(reason) {
+                if (closed) return;
+                closed = true;
+                activeArchiveStops.delete(close);
+                worker.terminate();
+                const error = reason instanceof Error ? reason : new Error('Archive member worker was closed.');
+                pending.forEach(function (entry) { entry.reject(error); });
+                pending.clear();
+            }
+            activeArchiveStops.add(close);
+
+            function request(type, payload) {
+                ensureRunning();
+                if (closed) return Promise.reject(new Error('Archive member worker is closed.'));
+                return new Promise(function (requestResolve, requestReject) {
+                    const id = String(++sequence);
+                    pending.set(id, {resolve:requestResolve, reject:requestReject});
+                    worker.postMessage(Object.assign({type:type, id:id}, payload || {}));
+                });
+            }
+
+            worker.onmessage = function (event) {
+                const data = event.data || {};
+                const id = String(data.id || '');
+                const entry = pending.get(id);
+                if (!entry) return;
+                if (data.type === 'progress') {
+                    const loaded = Math.max(0, Number(data.loaded || 0));
+                    const progressTotal = Math.max(0, Number(data.total || 0));
+                    const percent = progressTotal > 0
+                        ? Math.min(99, Math.floor((loaded * 100) / progressTotal))
+                        : 0;
+                    setProgress(
+                        percent,
+                        'Archive member ' + position + '/' + total + ' · ' + label
+                            + ' · ' + String(data.message || 'processing'),
+                        progressTotal <= 0
+                    );
+                    return;
+                }
+                pending.delete(id);
+                if (data.type === 'result') entry.resolve(data.result || {});
+                else entry.reject(new Error(String(data.message || 'Archive member processing failed.')));
+            };
+            worker.onerror = function () {
+                close(new Error('Browser archive worker failed while extracting ' + label + '.'));
+            };
+
+            request('extract', {
+                file:file,
+                member_path:member.path,
+                expected_size:member.size,
+                max_file_bytes:maxFileBytes
+            }).then(function (result) {
+                resolve({
+                    meta:result,
+                    read:async function (offset, length) {
+                        const response = await request('read', {offset:offset, length:length});
+                        const buffer = response.buffer;
+                        if (!(buffer instanceof ArrayBuffer) || Number(response.length || 0) !== length) {
+                            throw new Error('Archive member worker returned an incomplete upload chunk.');
+                        }
+                        return buffer;
+                    },
+                    close:close
+                });
+            }).catch(function (error) {
+                close(error);
+                reject(error);
+            });
+        });
+    }
+
+    async function encodeTransportChunk(rawBlob) {
+        if (!(rawBlob instanceof Blob)
+            || rawBlob.size < TRANSPORT_COMPRESSION_MIN_BYTES
+            || typeof CompressionStream !== 'function') {
+            return {blob:rawBlob, encoding:'identity'};
+        }
+        try {
+            const compressed = await new Response(
+                rawBlob.stream().pipeThrough(new CompressionStream('gzip'))
+            ).blob();
+            if (compressed.size > 0
+                && compressed.size <= Math.floor(rawBlob.size * TRANSPORT_COMPRESSION_RATIO)) {
+                return {blob:compressed, encoding:'gzip'};
+            }
+        } catch (ignore) {
+        }
+        return {blob:rawBlob, encoding:'identity'};
+    }
+
     async function legacyGuid(file, inspection) {
         if (!inspection || inspection.redirect || String(inspection.header && inspection.header.kind || '') !== 'package' || file.size < 52) {
             return '';
@@ -374,13 +530,14 @@
         }
     }
 
-    function uploadChunk(token, blob, chunkIndex, label, offset, total) {
+    function uploadChunk(token, blob, chunkIndex, label, offset, total, contentEncoding, logicalChunkBytes) {
         ensureRunning();
         return new Promise(function (resolve, reject) {
             const data = new FormData();
             data.append('action', 'chunk');
             data.append('upload_token', token);
             data.append('chunk_index', String(chunkIndex));
+            data.append('content_encoding', contentEncoding || 'identity');
             data.append('chunk', blob, 'chunk.bin');
 
             const xhr = new XMLHttpRequest();
@@ -390,10 +547,19 @@
             xhr.responseType = 'json';
             xhr.upload.onprogress = function (event) {
                 if (!event.lengthComputable) return;
-                const loaded = Math.min(total, offset + event.loaded);
+                const transportTotal = Math.max(1, Number(blob.size || 1));
+                const logicalBytes = Math.max(1, Number(logicalChunkBytes || blob.size || 1));
+                const logicalLoaded = Math.min(
+                    logicalBytes,
+                    Math.floor((Math.max(0, Number(event.loaded || 0)) * logicalBytes) / transportTotal)
+                );
+                const loaded = Math.min(total, offset + logicalLoaded);
                 setProgress(
                     Math.floor((loaded * 100) / Math.max(1, total)),
-                    'Uploading ' + label + ' · ' + formatBytes(loaded) + '/' + formatBytes(total),
+                    'Uploading ' + label + ' · ' + formatBytes(loaded) + '/' + formatBytes(total)
+                        + (contentEncoding === 'gzip'
+                            ? ' · gzip ' + formatBytes(event.loaded || 0) + '/' + formatBytes(blob.size)
+                            : ''),
                     false
                 );
             };
@@ -585,22 +751,55 @@
 
     async function uploadAccepted(item, ordinal, totalAccepted, batchNumber) {
         const file = item.entry.item.file;
+        const archiveSession = item.entry.item.archiveSession || null;
         const label = item.entry.item.relativePath || file.name;
         const token = item.token;
+        const totalBytes = Math.max(0, Number(file.size || 0));
         let offset = 0;
         let chunkIndex = 0;
+        let networkBytes = 0;
+        let gzipChunks = 0;
         try {
-            while (offset < file.size) {
+            while (offset < totalBytes) {
                 ensureRunning();
-                const end = Math.min(file.size, offset + chunkBytes);
-                await uploadChunk(token, file.slice(offset, end), chunkIndex, label, offset, file.size);
+                const end = Math.min(totalBytes, offset + chunkBytes);
+                const logicalChunkBytes = end - offset;
+                let rawBlob = null;
+                let encoded = null;
+                try {
+                    if (archiveSession) {
+                        const buffer = await archiveSession.read(offset, logicalChunkBytes);
+                        rawBlob = new Blob([buffer], {type:'application/octet-stream'});
+                    } else {
+                        rawBlob = file.slice(offset, end);
+                    }
+                    encoded = await encodeTransportChunk(rawBlob);
+                    await uploadChunk(
+                        token, encoded.blob, chunkIndex, label, offset, totalBytes,
+                        encoded.encoding, logicalChunkBytes
+                    );
+                    networkBytes += encoded.blob.size;
+                    if (encoded.encoding === 'gzip') gzipChunks++;
+                } finally {
+                    rawBlob = null;
+                    encoded = null;
+                }
                 offset = end;
                 chunkIndex++;
             }
-            setProgress(100, 'Batch ' + batchNumber + ' · finalising upload ' + ordinal + '/' + totalAccepted + ' · ' + label, true);
+            setProgress(100, 'Batch ' + batchNumber + ' · finalising upload ' + ordinal + '/'
+                + totalAccepted + ' · ' + label, true);
             await postAction('complete', token, false);
             counters.uploaded++;
-            addLog('uploaded', label, 'Transfer complete and queued for background validation.');
+            addLog(
+                'uploaded',
+                label,
+                'Transfer complete and queued for background validation.'
+                    + (gzipChunks > 0
+                        ? ' Sent ' + formatBytes(networkBytes) + ' for ' + formatBytes(totalBytes)
+                            + ' original bytes using ' + gzipChunks + ' gzip chunk(s).'
+                        : '')
+            );
             renderSummary();
             return true;
         } catch (error) {
@@ -610,6 +809,8 @@
             renderSummary();
             if (error && error.name === 'AbortError') throw error;
             return false;
+        } finally {
+            if (archiveSession) archiveSession.close();
         }
     }
 
@@ -668,6 +869,170 @@
         }
     }
 
+
+    async function processArchive(item, batchNumber) {
+        const file = item.file;
+        const archiveLabel = item.relativePath || file.name;
+        if (!archiveEnabled) {
+            counters.checked++;
+            counters.rejected++;
+            addLog('rejected', archiveLabel, 'ZIP/RAR/7z browser decoding is not installed on this server.');
+            renderSummary();
+            return;
+        }
+        if (!file || Number(file.size || 0) < 1) {
+            counters.checked++;
+            counters.rejected++;
+            addLog('rejected', archiveLabel, 'Archive is empty.');
+            renderSummary();
+            return;
+        }
+
+        setProgress(0, 'Opening archive ' + archiveLabel + '…', true);
+        let entries;
+        try {
+            entries = await oneShotArchiveList(file, archiveLabel);
+        } catch (error) {
+            if (error && error.name === 'AbortError') throw error;
+            counters.checked++;
+            counters.rejected++;
+            addLog('rejected', archiveLabel, error.message || 'Could not read archive.');
+            renderSummary();
+            return;
+        }
+
+        const candidates = [];
+        let ignored = 0;
+        entries.forEach(function (entry) {
+            const extension = extensionOf(entry.name || entry.path);
+            if (!allowedExtensions.has(extension)
+                || ARCHIVE_EXTENSIONS.has(extension)
+                || Number(entry.size || 0) < 1) {
+                ignored++;
+                return;
+            }
+            candidates.push(entry);
+        });
+        addLog(
+            'info',
+            archiveLabel,
+            entries.length + ' file entr' + (entries.length === 1 ? 'y' : 'ies')
+                + ' · ' + candidates.length + ' Unreal candidate(s)'
+                + (ignored ? ' · ' + ignored + ' non-upload member(s) ignored without extraction' : '')
+                + '. Original archive will not be uploaded.'
+        );
+
+        let transferred = 0;
+        for (let index = 0; index < candidates.length; index++) {
+            ensureRunning();
+            const member = candidates[index];
+            const display = archiveDisplayPath(archiveLabel, member.path);
+            if (member.encrypted) {
+                counters.checked++;
+                counters.rejected++;
+                addLog('rejected', display, 'Encrypted archive members are not accepted.');
+                renderSummary();
+                continue;
+            }
+            if (member.linked) {
+                counters.checked++;
+                counters.rejected++;
+                addLog('rejected', display, 'Linked archive members are not accepted.');
+                renderSummary();
+                continue;
+            }
+            if (Number(member.size || 0) > maxFileBytes) {
+                counters.checked++;
+                counters.rejected++;
+                addLog('rejected', display,
+                    'Extracted member size ' + formatBytes(member.size) + ' exceeds the public upload file limit.');
+                renderSummary();
+                continue;
+            }
+
+            let session = null;
+            let inspected = false;
+            try {
+                session = await openArchiveMember(file, member, display, index + 1, candidates.length);
+                const meta = session.meta || {};
+                const inspection = meta.inspection || {};
+                const size = Math.max(0, Number(meta.size || 0));
+                if (size !== Number(member.size || 0)) {
+                    throw new Error('Archive member size changed during processing.');
+                }
+                const clientId = batchNumber + '-archive-' + (++processedFiles);
+                const checked = [{
+                    clientId:clientId,
+                    item:{
+                        file:{name:String(meta.name || member.name || ''), size:size},
+                        relativePath:display,
+                        archiveSession:session
+                    },
+                    manifest:{
+                        client_id:clientId,
+                        name:String(meta.name || member.name || ''),
+                        relative_path:display,
+                        size:size,
+                        identity_size:Math.max(0, Number(inspection.identity_size || size)),
+                        md5:String(inspection.md5 || ''),
+                        sha1:String(inspection.sha1 || ''),
+                        guid:String(inspection.guid || '')
+                    }
+                }];
+
+                counters.checked++;
+                inspected = true;
+                addLog(
+                    'checked',
+                    display,
+                    'Extracted one member · header/magic passed'
+                        + (inspection.guid ? ' · GUID ' + inspection.guid : '')
+                        + ' · original archive retained only in the browser.'
+                );
+                renderSummary();
+
+                const accepted = await batchPreflight(checked, batchNumber);
+                if (!accepted.length) {
+                    session.close();
+                    session = null;
+                    continue;
+                }
+                const ok = await uploadAccepted(accepted[0], 1, 1, batchNumber);
+                session = null;
+                if (ok) {
+                    transferred++;
+                    pendingValidation.push({token:accepted[0].token, label:display});
+                }
+            } catch (error) {
+                if (error && error.name === 'AbortError') throw error;
+                if (!inspected) {
+                    counters.checked++;
+                    counters.rejected++;
+                    addLog('rejected', display, error.message || 'Archive member could not be processed.');
+                    renderSummary();
+                    continue;
+                }
+                throw error;
+            } finally {
+                if (session) session.close();
+                session = null;
+            }
+        }
+
+        if (transferred > 0) {
+            try {
+                const wake = await wakePublicQueue(batchNumber);
+                const workerError = String(wake && wake.data && wake.data.worker_error || '');
+                if (workerError) {
+                    addLog('info', 'Background validation', 'Uploads are queued. Worker pool status: ' + workerError);
+                }
+            } catch (wakeError) {
+                addLog('info', 'Background validation', 'Uploads are queued. Worker wake status: '
+                    + ((wakeError && wakeError.message) || 'unknown error'));
+            }
+        }
+    }
+
     function resetCounters() {
         Object.keys(counters).forEach(function (key) { counters[key] = 0; });
         processedFiles = 0;
@@ -685,6 +1050,10 @@
             inspector.terminate();
             inspector = null;
         }
+        Array.from(activeArchiveStops).forEach(function (stop) {
+            try { stop(abortError()); } catch (ignore) {}
+        });
+        activeArchiveStops.clear();
         if (inspectorPending) {
             inspectorPending.reject(stoppedError());
             inspectorPending = null;
@@ -718,6 +1087,15 @@
             let batchNumber = 1;
             for await (const item of selectedItems()) {
                 ensureRunning();
+                const extension = extensionOf(item.file && item.file.name);
+                if (ARCHIVE_EXTENSIONS.has(extension)) {
+                    if (batch.length) {
+                        await processBatch(batch, batchNumber++);
+                        batch = [];
+                    }
+                    await processArchive(item, batchNumber++);
+                    continue;
+                }
                 batch.push(item);
                 if (batch.length >= BATCH_FILES) {
                     await processBatch(batch, batchNumber++);
@@ -725,7 +1103,7 @@
                 }
             }
             if (batch.length) {
-                await processBatch(batch, batchNumber);
+                await processBatch(batch, batchNumber++);
             }
             if (pendingValidation.length > 0) {
                 await waitForValidationResults(pendingValidation);

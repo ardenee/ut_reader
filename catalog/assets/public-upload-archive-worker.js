@@ -6,8 +6,12 @@
 const HASH_CHUNK_BYTES = 4 * 1024 * 1024;
 const IO_CHUNK_BYTES = 1024 * 1024;
 const MAX_ARCHIVE_ENTRIES = 50000;
-const VENDOR_SCRIPT = new URL('vendor/7z-wasm/7zz.umd.js', self.location.href).href;
-const VENDOR_WASM = new URL('vendor/7z-wasm/7zz.wasm', self.location.href).href;
+const vendorScriptUrl = new URL('vendor/7z-wasm/7zz.umd.js', self.location.href);
+const vendorWasmUrl = new URL('vendor/7z-wasm/7zz.wasm', self.location.href);
+vendorScriptUrl.search = self.location.search;
+vendorWasmUrl.search = self.location.search;
+const VENDOR_SCRIPT = vendorScriptUrl.href;
+const VENDOR_WASM = vendorWasmUrl.href;
 let vendorLoaded = false;
 let sevenZip = null;
 let activeStream = null;
