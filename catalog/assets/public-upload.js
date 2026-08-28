@@ -526,6 +526,15 @@
             for (let pending = index; pending < accepted.length; pending++) {
                 await cancelReservation(accepted[pending].token);
             }
+            // Any files completed before the interruption already own durable
+            // background jobs. Wake that queue even though the rest of the batch
+            // is being abandoned.
+            if (index > 0) {
+                try {
+                    await wakePublicQueue(batchNumber);
+                } catch (ignore) {
+                }
+            }
             throw error;
         }
     }
