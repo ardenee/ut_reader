@@ -100,8 +100,10 @@ final class CatalogWorkerCodeVersion
             $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogArchiveWorkflowJobHandler.php',
             $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogArchiveSourceStore.php',
             $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogBackgroundJobHistoryCleanupJobHandler.php',
+            $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogBackgroundJobHistoryCleanupQueue.php',
             $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogBackgroundJobSubtreePruner.php',
             $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogBackgroundJobCleanup.php',
+            $this->catalogRoot . '/src/Infrastructure/Import/CatalogChunkedUploadCleanup.php',
         ];
         $parts = [];
         foreach ($paths as $path) {
