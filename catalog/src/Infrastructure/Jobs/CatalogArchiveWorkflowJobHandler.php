@@ -6,8 +6,9 @@
  * creation. CatalogNestedArchiveJobEnqueuer discovers embedded supported archive
  * containers and queues each as its own durable archive child workflow. This
  * coordinator owns the parent lifecycle and source ownership: ingress bytes are
- * first transferred into job-owned prepared storage, then the parent is deferred
- * in archive_wait_children until every direct child is terminal.
+ * first transferred into job-owned prepared storage. A clean extraction releases
+ * that parent source immediately after every selected member has its own durable
+ * child staging; only extraction/decoder failures retain the parent bytes.
  */
 declare(strict_types=1);
 
@@ -67,6 +68,8 @@ final class CatalogArchiveWorkflowJobHandler implements JobHandler
             $childState = $this->children->fetch($job->id);
         }
 
+        $this->releaseSourceIfDisposable($job, $archiveResult);
+
         if ($childState['total'] < 1) {
             return $this->finalResult($job, $archiveResult, $childState, $context);
         }
@@ -123,6 +126,7 @@ final class CatalogArchiveWorkflowJobHandler implements JobHandler
 
         if ($failed > 0) {
             $archiveResult['status'] = 'partial';
+            $archiveResult['source_retained'] = true;
         }
         return $archiveResult;
     }
@@ -228,6 +232,15 @@ final class CatalogArchiveWorkflowJobHandler implements JobHandler
                 ? $archiveResult['nested_archives']
                 : [],
         ];
+    }
+
+    /** @param array<string,mixed> $archiveResult */
+    private function releaseSourceIfDisposable(ClaimedJob $job, array $archiveResult): void
+    {
+        if (!empty($archiveResult['source_retained'])) {
+            return;
+        }
+        $this->sources->clear($job->id);
     }
 
     /**
