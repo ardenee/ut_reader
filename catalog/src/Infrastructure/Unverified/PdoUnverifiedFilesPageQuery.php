@@ -35,6 +35,7 @@ final class PdoUnverifiedFilesPageQuery
      *   game_match_states:array<int,array<string,mixed>>,
      *   match_cache_summary:array{ready:int,pending:int,failed:int,missing:int,total:int},
      *   summary:array<string,mixed>,
+     *   public_uploads:list<array<string,mixed>>,
      *   extension_options:list<string>,engine_options:list<string>
      * }
      */
@@ -181,6 +182,21 @@ final class PdoUnverifiedFilesPageQuery
         sort($extensionOptions);
         sort($engineOptions);
 
+        $publicUploads = [];
+        try {
+            $publicUploads = catalog_all(
+                $this->db,
+                'SELECT id,original_name,relative_path,status,background_job_id,unverified_file_id,'
+                . 'result_message,updated_at FROM ue_public_uploads '
+                . 'WHERE status IN ("uploaded","processing","failed") '
+                . 'ORDER BY id DESC LIMIT 20'
+            );
+        } catch (Throwable) {
+            // Rolling deployment before the public-upload migration: the main
+            // unverified queue remains readable.
+            $publicUploads = [];
+        }
+
         return [
             'games' => $games,
             'total' => $total,
@@ -192,6 +208,7 @@ final class PdoUnverifiedFilesPageQuery
             'game_match_states' => $gameMatchStates,
             'match_cache_summary' => $matchCacheSummary,
             'summary' => $summary,
+            'public_uploads' => $publicUploads,
             'extension_options' => $extensionOptions,
             'engine_options' => $engineOptions,
         ];
