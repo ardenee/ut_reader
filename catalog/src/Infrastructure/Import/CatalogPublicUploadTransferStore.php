@@ -205,7 +205,7 @@ final class CatalogPublicUploadTransferStore
     }
 
     /** @return array<string,mixed> */
-    public function resolveForJob(int $publicUploadId, string $uploadToken): array
+    public function ledgerForJob(int $publicUploadId, string $uploadToken): array
     {
         $token = $this->token($uploadToken);
         $statement = $this->db->prepare(
@@ -216,12 +216,18 @@ final class CatalogPublicUploadTransferStore
         if (!is_array($row)) {
             throw new RuntimeException('Public upload ledger row is missing.');
         }
+        return $row;
+    }
+
+    /** @return array<string,mixed> */
+    public function resolveForJob(int $publicUploadId, string $uploadToken): array
+    {
+        $row = $this->ledgerForJob($publicUploadId, $uploadToken);
         $relative = trim((string)($row['quarantine_relative_path'] ?? ''));
         if ($relative === '') {
             throw new RuntimeException('Public upload quarantine path is missing.');
         }
-        $path = $this->resolveRelative($relative);
-        $row['physical_path'] = $path;
+        $row['physical_path'] = $this->resolveRelative($relative);
         return $row;
     }
 
