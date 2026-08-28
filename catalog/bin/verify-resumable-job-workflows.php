@@ -245,10 +245,11 @@ $check(
 );
 $check(
     'artifact_cleanup_is_split_by_category',
-    str_contains($storageMaintenance, "['generated', 'chunked_uploads', 'job_storage']")
+    str_contains($storageMaintenance, "$storageOnly ? ['job_storage'] : ['generated', 'job_storage']")
         && str_contains($storageMaintenance, "'prune:' . \$unit")
-        && str_contains($storageMaintenance, 'pruneOne('),
-    'A failure in one stale-artifact category must not replay successful cleanup categories.'
+        && str_contains($storageMaintenance, 'pruneOne(')
+        && str_contains($storageMaintenance, "'chunked_uploads' => \$chunkedUploads"),
+    'Generated artifacts and complete job storage are independently restartable; chunked uploads are reclaimed inside the ownership-aware job-storage unit.'
 );
 
 // -------------------------------------------------------------------------
