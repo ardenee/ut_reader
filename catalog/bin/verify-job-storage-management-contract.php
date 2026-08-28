@@ -89,9 +89,10 @@ $check(
     'active_browser_uploads_are_protected',
     str_contains($source['cleanup'], 'collectActiveProfiledBatchReferences(')
         && str_contains($source['cleanup'], '$status === \'uploading\'')
-        && str_contains($source['cleanup'], 'uploadStaleSeconds()')
+        && str_contains($source['cleanup'], '$this->isLocked($lockPath)')
+        && str_contains($source['cleanup'], '$manualCleanup ? $minimumAgeSeconds : $this->uploadStaleSeconds()')
         && str_contains($source['cleanup'], "preg_match('/^chunk-upload:"),
-    'Cleanup must preserve a genuinely active browser upload even before its coordinator job exists.'
+    'Cleanup must preserve active/recent browser uploads; the explicit website cleanup may reclaim old unlocked abandoned uploads.'
 );
 
 $check(
@@ -118,6 +119,7 @@ $check(
         && str_contains($source['js'], "action: 'cleanup_storage'")
         && str_contains($source['action'], "if (\$action === 'cleanup_storage')")
         && str_contains($source['action'], "'prune_unit' => 'job_storage'")
+        && str_contains($source['action'], "'manual_cleanup' => true")
         && str_contains($source['action'], "'storage_only' => true"),
     'Background Jobs -> Maintenance must expose a background job-storage cleanup action.'
 );
@@ -126,8 +128,19 @@ $check(
     'storage_cleanup_runs_in_worker',
     str_contains($source['maintenance'], "\$storageOnly ? ['job_storage'] : ['generated', 'job_storage']")
         && str_contains($source['maintenance'], 'new CatalogJobStorageCleanup($this->db, $this->config)')
+        && str_contains($source['maintenance'], '$context->heartbeatIfDue($progress)')
         && str_contains($source['action'], 'CatalogQueueWorkerStarter'),
-    'Large filesystem cleanup must run as one worker job rather than inside the browser request.'
+    'Large filesystem cleanup must run as one worker job and stream progress through job heartbeats.'
+);
+
+$check(
+    'storage_cleanup_reports_real_progress',
+    str_contains($source['cleanup'], 'emitLoopProgress(')
+        && str_contains($source['cleanup'], "'category' => \$category")
+        && str_contains($source['cleanup'], "'reclaimed_bytes' => \$bytes")
+        && str_contains($source['cleanup'], 'countFiles($this->identityLockDirectory)')
+        && str_contains($source['cleanup'], 'number_format($done)'),
+    'Job storage cleanup must report category/file counts and reclaimed bytes instead of remaining at 1% until completion.'
 );
 
 foreach ([
