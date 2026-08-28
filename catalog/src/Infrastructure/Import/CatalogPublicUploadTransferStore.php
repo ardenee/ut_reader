@@ -39,23 +39,27 @@ final class CatalogPublicUploadTransferStore
         string $ipAddress,
         int $chunkIndex,
         string $temporaryPath,
-        int $uploadError
+        int $uploadError,
+        string $contentEncoding = 'identity'
     ): array {
         $token = $this->token($uploadToken);
         $ip = $this->packedIp($ipAddress);
         if ($uploadError !== UPLOAD_ERR_OK || !is_file($temporaryPath) || !is_readable($temporaryPath)) {
             throw new RuntimeException('The public upload chunk is unavailable.');
         }
-        $chunkBytes = filesize($temporaryPath);
-        if ($chunkBytes === false || (int)$chunkBytes < 1) {
+        $transportBytes = filesize($temporaryPath);
+        if ($transportBytes === false || (int)$transportBytes < 1) {
             throw new RuntimeException('The public upload chunk is empty.');
+        }
+        $encoding = strtolower(trim($contentEncoding));
+        if (!in_array($encoding, ['identity', 'gzip'], true)) {
+            throw new \InvalidArgumentException('Unsupported public upload content encoding: ' . $encoding . '.');
+        }
+        if ($encoding === 'gzip' && !function_exists('gzopen')) {
+            throw new RuntimeException('This server cannot decode gzip public-upload chunks.');
         }
 
         $settings = (new CatalogPublicUploadSettingsStore($this->db, $this->config))->settings();
-        $free = @disk_free_space($this->storageRoot);
-        if ($free !== false && (int)$free - (int)$chunkBytes < (int)$settings['min_free_bytes']) {
-            throw new RuntimeException('Public uploads are temporarily paused because the storage reserve has been reached.');
-        }
 
         $this->db->beginTransaction();
         try {
@@ -86,29 +90,52 @@ final class CatalogPublicUploadTransferStore
 
             $received = max(0, (int)($row['received_bytes'] ?? 0));
             $expected = max(0, (int)($row['file_size'] ?? 0));
-            if ($expected < 1 || $received + (int)$chunkBytes > $expected) {
+            $remaining = max(0, $expected - $received);
+            $maximumChunk = CatalogBucketUploadTransferStoreFactory::effectiveChunkBytes($this->config);
+            $maximumDecoded = min($remaining, $maximumChunk);
+            if ($expected < 1 || $maximumDecoded < 1) {
                 throw new RuntimeException(
                     'Public upload byte count exceeds the reservation: expected=' . $expected
-                    . ', received_before=' . $received . ', chunk=' . (int)$chunkBytes . '.'
+                    . ', received_before=' . $received . ', transport_chunk=' . (int)$transportBytes . '.'
                 );
+            }
+
+            $free = @disk_free_space($this->storageRoot);
+            if ($free !== false && (int)$free - $maximumDecoded < (int)$settings['min_free_bytes']) {
+                throw new RuntimeException('Public uploads are temporarily paused because the storage reserve has been reached.');
             }
 
             $path = $this->partPath($token);
             $this->ensureDirectory(dirname($path));
-            $this->appendVerified($temporaryPath, $path, $received, (int)$chunkBytes);
+            $decodedBytes = $this->appendTransportChunk(
+                $temporaryPath,
+                $path,
+                $received,
+                $maximumDecoded,
+                $encoding
+            );
+            if ($received + $decodedBytes > $expected) {
+                throw new RuntimeException(
+                    'Decoded public upload byte count exceeds the reservation: expected=' . $expected
+                    . ', received_before=' . $received . ', decoded_chunk=' . $decodedBytes . '.'
+                );
+            }
 
             $update = $this->db->prepare(
                 'UPDATE ue_public_uploads SET status="uploading",received_bytes=?,next_chunk_index=?,updated_at=UTC_TIMESTAMP(6) '
                 . 'WHERE id=?'
             );
-            $update->execute([$received + (int)$chunkBytes, $chunkIndex + 1, (int)$row['id']]);
+            $update->execute([$received + $decodedBytes, $chunkIndex + 1, (int)$row['id']]);
             $this->db->commit();
 
             return [
                 'id' => (int)$row['id'],
                 'upload_token' => $token,
-                'received_bytes' => $received + (int)$chunkBytes,
+                'received_bytes' => $received + $decodedBytes,
                 'file_size' => $expected,
+                'transport_bytes' => (int)$transportBytes,
+                'decoded_bytes' => $decodedBytes,
+                'content_encoding' => $encoding,
                 'next_chunk_index' => $chunkIndex + 1,
                 'status' => 'uploading',
             ];
@@ -368,53 +395,80 @@ final class CatalogPublicUploadTransferStore
         @rmdir(dirname($this->finalPath($token)));
     }
 
-    private function appendVerified(string $temporaryPath, string $destination, int $expectedOffset, int $expectedChunkBytes): void
-    {
-        $input = @fopen($temporaryPath, 'rb');
+    private function appendTransportChunk(
+        string $temporaryPath,
+        string $destination,
+        int $expectedOffset,
+        int $maximumDecodedBytes,
+        string $encoding
+    ): int {
         $output = @fopen($destination, 'c+b');
-        if (!is_resource($input) || !is_resource($output)) {
-            if (is_resource($input)) {
-                fclose($input);
-            }
-            if (is_resource($output)) {
-                fclose($output);
-            }
-            throw new RuntimeException('Could not open public upload staging streams.');
+        if (!is_resource($output)) {
+            throw new RuntimeException('Could not open public upload staging stream.');
         }
 
-        $written = 0;
+        $input = null;
+        $decoded = 0;
+        $locked = false;
         try {
             if (!flock($output, LOCK_EX)) {
                 throw new RuntimeException('Could not lock public upload staging.');
             }
+            $locked = true;
             $stat = fstat($output);
             $actualOffset = is_array($stat) ? (int)($stat['size'] ?? -1) : -1;
             if ($actualOffset !== $expectedOffset || fseek($output, $expectedOffset) !== 0) {
                 throw new RuntimeException(
-                    'Public upload staging offset mismatch: expected=' . $expectedOffset . ', actual=' . $actualOffset . '.'
+                    'Public upload staging offset mismatch: expected=' . $expectedOffset
+                    . ', actual=' . $actualOffset . '.'
                 );
             }
-            while (!feof($input)) {
-                $buffer = fread($input, 1024 * 1024);
+
+            $input = $encoding === 'gzip'
+                ? @gzopen($temporaryPath, 'rb')
+                : @fopen($temporaryPath, 'rb');
+            if (!is_resource($input)) {
+                throw new RuntimeException(
+                    $encoding === 'gzip'
+                        ? 'Could not open gzip public upload chunk.'
+                        : 'Could not open public upload chunk.'
+                );
+            }
+
+            while ($encoding === 'gzip' ? !gzeof($input) : !feof($input)) {
+                $buffer = $encoding === 'gzip'
+                    ? gzread($input, 1024 * 1024)
+                    : fread($input, 1024 * 1024);
                 if (!is_string($buffer)) {
-                    throw new RuntimeException('Could not read the public upload chunk.');
+                    throw new RuntimeException('Could not decode/read the public upload chunk.');
                 }
                 if ($buffer === '') {
-                    if (feof($input)) {
+                    $atEof = $encoding === 'gzip' ? gzeof($input) : feof($input);
+                    if ($atEof) {
                         break;
                     }
                     throw new RuntimeException('Public upload chunk read stopped before EOF.');
                 }
-                $offset = 0;
+
                 $length = strlen($buffer);
+                if ($decoded + $length > $maximumDecodedBytes) {
+                    throw new RuntimeException(
+                        'Decoded public upload chunk exceeds the allowed logical chunk size: maximum='
+                        . $maximumDecodedBytes . ', decoded_before=' . $decoded . ', next=' . $length . '.'
+                    );
+                }
+                $offset = 0;
                 while ($offset < $length) {
                     $count = fwrite($output, substr($buffer, $offset));
                     if ($count === false || $count < 1) {
-                        throw new RuntimeException('Could not write the public upload chunk.');
+                        throw new RuntimeException('Could not write the decoded public upload chunk.');
                     }
                     $offset += $count;
-                    $written += $count;
+                    $decoded += $count;
                 }
+            }
+            if ($decoded < 1) {
+                throw new RuntimeException('Decoded public upload chunk is empty.');
             }
             if (!fflush($output)) {
                 throw new RuntimeException('Could not flush public upload staging.');
@@ -422,16 +476,25 @@ final class CatalogPublicUploadTransferStore
             if (function_exists('fsync')) {
                 @fsync($output);
             }
+            return $decoded;
+        } catch (\Throwable $error) {
+            // A malformed/compression-bomb chunk must not leave the physical
+            // staging file ahead of the database ledger.
+            @ftruncate($output, $expectedOffset);
+            @fflush($output);
+            throw $error;
         } finally {
-            @flock($output, LOCK_UN);
-            fclose($input);
+            if (is_resource($input)) {
+                if ($encoding === 'gzip') {
+                    gzclose($input);
+                } else {
+                    fclose($input);
+                }
+            }
+            if ($locked) {
+                @flock($output, LOCK_UN);
+            }
             fclose($output);
-        }
-
-        if ($written !== $expectedChunkBytes) {
-            throw new RuntimeException(
-                'Public upload chunk byte mismatch: expected=' . $expectedChunkBytes . ', written=' . $written . '.'
-            );
         }
     }
 

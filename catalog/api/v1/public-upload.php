@@ -49,7 +49,8 @@ try {
             $ip,
             (int)($_POST['chunk_index'] ?? -1),
             $temporaryPath,
-            (int)($file['error'] ?? UPLOAD_ERR_NO_FILE)
+            (int)($file['error'] ?? UPLOAD_ERR_NO_FILE),
+            (string)($_POST['content_encoding'] ?? 'identity')
         );
         JsonResponse::send(['ok' => true, 'data' => $state], 200);
     }
