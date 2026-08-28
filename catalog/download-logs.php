@@ -12,6 +12,8 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
 
+use UnrealDb\Catalog\Infrastructure\Security\CatalogTransferBlocklist;
+
 function download_logs_choice(string $value, array $allowed, string $fallback): string
 {
     $value = strtolower(trim($value));
@@ -80,6 +82,81 @@ try {
         $tables[$table] = (int)$statement->fetchColumn() === 1;
     }
     $available = $tables['ue_download_audit'] && $tables['ue_generated_package_audit'];
+    $blocklistAvailable = false;
+    $blocklistTable = $db->query(
+        'SELECT COUNT(*) FROM information_schema.TABLES '
+        . 'WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME="ue_transfer_blocked_ips"'
+    );
+    $blocklistAvailable = (int)$blocklistTable->fetchColumn() === 1;
+    $blocklist = $blocklistAvailable ? new CatalogTransferBlocklist($db) : null;
+    $message = '';
+
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        catalog_check_csrf('download_logs_admin');
+        $action = strtolower(trim((string)($_POST['action'] ?? '')));
+        $logView = download_logs_choice((string)($_POST['log_view'] ?? 'downloads'), ['downloads', 'generations'], 'downloads');
+        $ids = is_array($_POST['ids'] ?? null) ? $_POST['ids'] : [];
+        $ids = array_values(array_unique(array_filter(
+            array_map('intval', $ids),
+            static fn(int $id): bool => $id > 0
+        )));
+        if (count($ids) > 1000) {
+            throw new RuntimeException('Select no more than 1,000 log records at once.');
+        }
+
+        if ($action === 'delete_selected') {
+            if (!$available || $ids === []) {
+                throw new RuntimeException('Select one or more log records to delete.');
+            }
+            $table = $logView === 'generations' ? 'ue_generated_package_audit' : 'ue_download_audit';
+            $placeholders = implode(',', array_fill(0, count($ids), '?'));
+            $statement = $db->prepare('DELETE FROM ' . $table . ' WHERE id IN (' . $placeholders . ')');
+            $statement->execute($ids);
+            $message = $statement->rowCount() . ' selected log record(s) permanently deleted.';
+        } elseif (in_array($action, ['block_selected_ips', 'unblock_selected_ips'], true)) {
+            if (!$blocklistAvailable || !$blocklist instanceof CatalogTransferBlocklist) {
+                throw new RuntimeException('Run the pending database migration before managing blocked IPs.');
+            }
+            if (!$available || $ids === []) {
+                throw new RuntimeException('Select one or more log records first.');
+            }
+            $table = $logView === 'generations' ? 'ue_generated_package_audit' : 'ue_download_audit';
+            $ipColumn = $logView === 'generations' ? 'request_ip' : 'ip_address';
+            $placeholders = implode(',', array_fill(0, count($ids), '?'));
+            $statement = $db->prepare(
+                'SELECT DISTINCT INET6_NTOA(' . $ipColumn . ') ip FROM ' . $table
+                . ' WHERE id IN (' . $placeholders . ') AND ' . $ipColumn . ' IS NOT NULL'
+            );
+            $statement->execute($ids);
+            $ips = array_values(array_filter(array_map('strval', $statement->fetchAll(PDO::FETCH_COLUMN) ?: [])));
+            foreach ($ips as $selectedIp) {
+                if ($action === 'block_selected_ips') {
+                    $blocklist->block($selectedIp, (int)($_SESSION['user']['id'] ?? 0), 'Blocked from Download Logs.');
+                } else {
+                    $blocklist->unblock($selectedIp);
+                }
+            }
+            $message = count($ips) . ' IP address(es) ' . ($action === 'block_selected_ips' ? 'blocked from transfers.' : 'removed from the transfer blocklist.');
+        } elseif ($action === 'block_ip') {
+            if (!$blocklistAvailable || !$blocklist instanceof CatalogTransferBlocklist) {
+                throw new RuntimeException('Run the pending database migration before managing blocked IPs.');
+            }
+            $blocklist->block(
+                (string)($_POST['ip_address'] ?? ''),
+                (int)($_SESSION['user']['id'] ?? 0),
+                (string)($_POST['note'] ?? '')
+            );
+            $message = 'IP address added to the transfer blocklist.';
+        } elseif ($action === 'unblock_ip') {
+            if (!$blocklistAvailable || !$blocklist instanceof CatalogTransferBlocklist) {
+                throw new RuntimeException('Run the pending database migration before managing blocked IPs.');
+            }
+            $removed = $blocklist->unblock((string)($_POST['ip_address'] ?? ''));
+            $message = $removed > 0 ? 'IP address removed from the transfer blocklist.' : 'IP address was not blocked.';
+        } else {
+            throw new RuntimeException('Choose a valid Download Logs action.');
+        }
+    }
     $countryAvailable = false;
     if ($available) {
         $statement = $db->prepare(
@@ -128,6 +205,11 @@ try {
     $rows = [];
     $total = 0;
     $pages = 1;
+    $blockedRows = $blocklist instanceof CatalogTransferBlocklist ? $blocklist->all() : [];
+    $blockedLookup = [];
+    foreach ($blockedRows as $blockedRow) {
+        $blockedLookup[strtolower((string)$blockedRow['ip'])] = true;
+    }
 
     if ($available) {
         $downloadSummary = catalog_one(
@@ -248,10 +330,14 @@ try {
     catalog_head('Download Logs');
     echo '<style>'
         . '.download-log-cards{grid-template-columns:repeat(5,minmax(130px,1fr));margin-bottom:14px}'
-        . '.download-log-tabs,.download-log-toolbar,.download-log-pages{display:flex;gap:9px;align-items:center;flex-wrap:wrap}'
-        . '.download-log-tabs,.download-log-toolbar{margin-bottom:12px}'
+        . '.download-log-tabs,.download-log-toolbar,.download-log-pages,.download-log-actions,.download-block-actions{display:flex;gap:9px;align-items:center;flex-wrap:wrap}'
+        . '.download-log-tabs,.download-log-toolbar,.download-log-actions{margin-bottom:12px}'
         . '.download-log-toolbar .search{min-width:280px;flex:1}'
-        . '.download-log-table{min-width:1260px}'
+        . '.download-log-table{min-width:1320px}'
+        . '.download-log-select{width:42px;text-align:center}'
+        . '.download-blocklist{margin:14px 0}'
+        . '.download-blocklist table{min-width:760px}'
+        . '.download-block-actions .grow{flex:1;min-width:260px}'
         . '.download-log-pill{display:inline-block;padding:3px 8px;border:1px solid var(--line);border-radius:999px;font-weight:700}'
         . '.download-log-pill-completed{color:#a7f3d0;border-color:rgba(50,213,131,.75)}'
         . '.download-log-pill-failed,.download-log-pill-interrupted,.download-log-pill-cancelled{color:#fecdd3;border-color:rgba(255,107,122,.75)}'
@@ -274,6 +360,10 @@ try {
         ]
     );
 
+    if ($message !== '') {
+        echo CatalogUi::alert('success', $message);
+    }
+
     if (!$available) {
         echo CatalogUi::alert(
             'warning',
@@ -295,6 +385,37 @@ try {
     catalog_stat_card('Bytes sent', catalog_bytes($summary['bytes']));
     catalog_stat_card('Package generations', $summary['generations']);
     echo '</div>';
+
+    echo '<section class="ui-section download-blocklist"><div class="ui-section__header"><div><h2>Blocked transfer IPs</h2>'
+        . '<p>Blocked addresses can still browse the website. Only downloads, generated-package transfers and public uploads are denied.</p></div></div>'
+        . '<div class="ui-section__body">';
+    if (!$blocklistAvailable) {
+        echo CatalogUi::alert('warning', 'Run the pending database migration to enable the transfer blocklist.', 'Blocked IP storage unavailable');
+    } else {
+        echo '<form method="post" class="download-block-actions">'
+            . '<input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('download_logs_admin')) . '">'
+            . '<input type="hidden" name="action" value="block_ip">'
+            . '<label>IP <input name="ip_address" required placeholder="IPv4 or IPv6"></label>'
+            . '<label class="grow">Note <input name="note" maxlength="500" placeholder="Optional reason"></label>'
+            . '<button type="submit">Block transfers</button></form>';
+        if ($blockedRows === []) {
+            echo '<p class="muted">No IP addresses are currently blocked from transfers.</p>';
+        } else {
+            echo '<div class="table-wrap"><table><thead><tr><th>IP</th><th>Note</th><th>Blocked</th><th>Action</th></tr></thead><tbody>';
+            foreach ($blockedRows as $blockedRow) {
+                echo '<tr><td class="mono">' . catalog_h((string)$blockedRow['ip']) . '</td>'
+                    . '<td>' . catalog_h((string)$blockedRow['note']) . '</td>'
+                    . '<td class="mono small">' . catalog_h((string)$blockedRow['created_at']) . '</td>'
+                    . '<td><form method="post" onsubmit="return confirm(\'Remove this IP from the transfer blocklist?\')">'
+                    . '<input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('download_logs_admin')) . '">'
+                    . '<input type="hidden" name="action" value="unblock_ip">'
+                    . '<input type="hidden" name="ip_address" value="' . catalog_h((string)$blockedRow['ip']) . '">'
+                    . '<button class="secondary" type="submit">Unblock</button></form></td></tr>';
+            }
+            echo '</tbody></table></div>';
+        }
+    }
+    echo '</div></section>';
 
     echo '<div class="download-log-tabs">'
         . '<a class="button' . ($view === 'downloads' ? ' primary' : '') . '" href="download-logs.php?' . catalog_h(download_logs_query(['view' => 'downloads', 'p' => 1, 'status' => 'all'])) . '">Downloads</a>'
@@ -337,9 +458,21 @@ try {
             'No matching log records',
             $available ? 'No download activity matches the selected filters.' : 'Apply migration 202607310007 to begin recording activity.'
         );
-    } elseif ($view === 'downloads') {
+    } else {
+        echo '<form method="post" class="download-log-bulk-form" onsubmit="if(this.elements.action.value===\'delete_selected\'){return confirm(\'Permanently delete the selected log records?\');}return true;">'
+            . '<input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('download_logs_admin')) . '">'
+            . '<input type="hidden" name="log_view" value="' . catalog_h($view) . '">'
+            . '<div class="download-log-actions">'
+            . '<label><input type="checkbox" onclick="document.querySelectorAll(\'.download-log-check\').forEach(c=>c.checked=this.checked)"> Select page</label>'
+            . '<select name="action" required><option value="">Choose action</option>'
+            . '<option value="delete_selected">Delete selected logs</option>'
+            . '<option value="block_selected_ips">Block selected IPs</option>'
+            . '<option value="unblock_selected_ips">Unblock selected IPs</option></select>'
+            . '<button type="submit">Apply to selected</button></div>';
+
+        if ($view === 'downloads') {
         echo '<div class="table-wrap"><table class="download-log-table"><thead><tr>'
-            . '<th>' . download_logs_sort_heading('Started', 'time', $sort, $direction) . '</th><th>Status</th><th>File / package</th><th>Game</th><th>IP</th>'
+            . '<th class="download-log-select"></th><th>' . download_logs_sort_heading('Started', 'time', $sort, $direction) . '</th><th>Status</th><th>File / package</th><th>Game</th><th>IP</th>'
             . '<th class="download-country">' . download_logs_sort_heading('Country', 'country', $sort, $direction, $countryAvailable) . '</th>'
             . '<th>Transferred</th><th>Job</th><th>User agent / error</th>'
             . '</tr></thead><tbody>';
@@ -349,7 +482,8 @@ try {
             $sent = (int)$row['bytes_sent'];
             $countryCode = strtoupper(trim((string)($row['country_code'] ?? '')));
             $countryName = trim((string)($row['country_name'] ?? ''));
-            echo '<tr><td class="mono small">' . catalog_h((string)$row['started_at']) . '</td>';
+            $ipText = trim((string)($row['ip_text'] ?? ''));
+            echo '<tr><td class="download-log-select"><input class="download-log-check" type="checkbox" name="ids[]" value="' . (int)$row['id'] . '"></td><td class="mono small">' . catalog_h((string)$row['started_at']) . '</td>';
             echo '<td><span class="download-log-pill download-log-pill-' . catalog_h($rowStatus) . '">' . catalog_h($rowStatus) . '</span></td>';
             echo '<td><strong>' . catalog_h((string)$row['download_name']) . '</strong>';
             if ((int)($row['file_id'] ?? 0) > 0) {
@@ -359,7 +493,9 @@ try {
                 echo '<br><span class="mono small muted">' . catalog_h((string)$row['package_format']) . '</span>';
             }
             echo '</td><td>' . catalog_h((string)($row['game_name'] ?? '')) . '</td>';
-            echo '<td class="mono">' . catalog_h((string)($row['ip_text'] ?? '')) . '</td>';
+            echo '<td class="mono">' . catalog_h($ipText)
+                . ($ipText !== '' && isset($blockedLookup[strtolower($ipText)]) ? '<br><span class="dep missing">blocked</span>' : '')
+                . '</td>';
             echo '<td class="download-country">';
             if ($countryCode !== '' && $countryName !== '') {
                 echo '<span class="download-country-flag" role="img" aria-label="' . catalog_h($countryName) . '" title="' . catalog_h($countryName) . '">'
@@ -377,9 +513,9 @@ try {
             echo '</td></tr>';
         }
         echo '</tbody></table></div>';
-    } else {
+        } else {
         echo '<div class="table-wrap"><table class="download-log-table"><thead><tr>'
-            . '<th>' . download_logs_sort_heading('Queued', 'time', $sort, $direction) . '</th><th>Status</th><th>Package</th><th>Version</th><th>Format</th><th>Game / file</th>'
+            . '<th class="download-log-select"></th><th>' . download_logs_sort_heading('Queued', 'time', $sort, $direction) . '</th><th>Status</th><th>Package</th><th>Version</th><th>Format</th><th>Game / file</th>'
             . '<th>IP</th><th class="download-country">' . download_logs_sort_heading('Country', 'country', $sort, $direction, $countryAvailable) . '</th>'
             . '<th>Artifact</th><th>Job</th><th>User agent / error</th>'
             . '</tr></thead><tbody>';
@@ -387,13 +523,16 @@ try {
             $rowStatus = strtolower((string)$row['status']);
             $countryCode = strtoupper(trim((string)($row['country_code'] ?? '')));
             $countryName = trim((string)($row['country_name'] ?? ''));
-            echo '<tr><td class="mono small">' . catalog_h((string)$row['queued_at']) . '</td>';
+            $ipText = trim((string)($row['ip_text'] ?? ''));
+            echo '<tr><td class="download-log-select"><input class="download-log-check" type="checkbox" name="ids[]" value="' . (int)$row['id'] . '"></td><td class="mono small">' . catalog_h((string)$row['queued_at']) . '</td>';
             echo '<td><span class="download-log-pill download-log-pill-' . catalog_h($rowStatus) . '">' . catalog_h($rowStatus) . '</span></td>';
             echo '<td><strong>' . catalog_h((string)$row['package_name']) . '</strong><br><span class="small muted">Dependencies: ' . (!empty($row['include_dependencies']) ? 'yes' : 'no') . '</span></td>';
             echo '<td class="mono">' . catalog_h((string)$row['package_version']) . '</td>';
             echo '<td class="mono">' . catalog_h((string)$row['package_format']) . '</td>';
             echo '<td>' . catalog_h((string)($row['game_name'] ?? '')) . '<br><a class="small" href="file-info.php?id=' . (int)$row['file_id'] . '">File #' . (int)$row['file_id'] . '</a></td>';
-            echo '<td class="mono">' . catalog_h((string)($row['ip_text'] ?? '')) . '</td>';
+            echo '<td class="mono">' . catalog_h($ipText)
+                . ($ipText !== '' && isset($blockedLookup[strtolower($ipText)]) ? '<br><span class="dep missing">blocked</span>' : '')
+                . '</td>';
             echo '<td class="download-country">';
             if ($countryCode !== '' && $countryName !== '') {
                 echo '<span class="download-country-flag" role="img" aria-label="' . catalog_h($countryName) . '" title="' . catalog_h($countryName) . '">'
@@ -414,6 +553,8 @@ try {
             echo '</td></tr>';
         }
         echo '</tbody></table></div>';
+        }
+        echo '</form>';
     }
 
     if ($available && $total > 0) {
