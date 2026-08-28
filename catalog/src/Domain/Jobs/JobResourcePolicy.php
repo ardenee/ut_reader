@@ -251,6 +251,11 @@ final class JobResourcePolicy
                 self::positiveKey('package:file:', $payload['file_id'] ?? null)
             ),
             JobType::PRUNE_UPLOAD_PROGRESS,
+            JobType::PRUNE_PUBLIC_UPLOADS => new JobResourceProfile(
+                self::HOUSEKEEPING,
+                self::defaultLimit(2),
+                'public-upload-prune'
+            ),
             JobType::PRUNE_STALE_ARTIFACTS => new JobResourceProfile(
                 self::HOUSEKEEPING,
                 self::defaultLimit(2),
