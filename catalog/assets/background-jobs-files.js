@@ -825,12 +825,26 @@
 
     if (cleanupButton) cleanupButton.addEventListener('click', async function () {
         const days = Math.max(1, parseInt(cleanupDays ? cleanupDays.value : '30', 10) || 30);
-        if (!window.confirm('Delete completed/stopped historical jobs older than ' + days + ' day(s)?')) return;
+        if (!window.confirm(
+            'Queue cleanup of completed/stopped history older than ' + days
+            + ' day(s)? Owned staged sources will also be removed when no retryable/recovery job still references them.'
+        )) return;
         cleanupButton.disabled = true;
         try {
             const payload = await postJson(actionUrl, {action: 'cleanup', queue: queue, retention_days: days});
             const data = payload && payload.data ? payload.data : {};
-            setNotice('Removed ' + String(data.deleted_jobs || 0) + ' historical job(s).', 7000);
+            const cleanupJobId = Number(data.cleanup_job_id || 0);
+            if (cleanupJobId > 0) {
+                let message = 'Queued cleanup job #' + String(cleanupJobId)
+                    + ' for ' + String(data.requested || data.scheduled || 0) + ' eligible root job(s).';
+                if (data.limited && data.auto_continue) {
+                    message += ' It will automatically continue beyond the first 10,000 roots using the same cutoff.';
+                }
+                message += ' The cleanup job reports deleted rows, staged files and reclaimed bytes as it runs.';
+                setNotice(message, 10000);
+            } else {
+                setNotice('No completed/stopped history is older than the selected cutoff.', 7000);
+            }
         } catch (error) {
             setNotice(error.message || 'Cleanup failed.', 9000);
         } finally {
