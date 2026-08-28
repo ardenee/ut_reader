@@ -154,7 +154,8 @@ try {
             $snapshot['requested'],
             $snapshot['limited'],
             $userId,
-            'Clean terminal jobs older than ' . $retentionDays . ' day(s)'
+            'Clean terminal jobs older than ' . $retentionDays . ' day(s)',
+            $snapshot['cutoff']
         );
         $worker = (new CatalogQueueWorkerStarter($application->db, $application->config))->start($queueName, true, $userId);
         JsonResponse::send([
@@ -166,6 +167,7 @@ try {
                 'scheduled' => $queued['scheduled'],
                 'requested' => $queued['requested'],
                 'limited' => $queued['limited'],
+                'auto_continue' => true,
                 'worker' => $worker['worker'],
                 'worker_error' => (string)$worker['worker_error'],
             ],
