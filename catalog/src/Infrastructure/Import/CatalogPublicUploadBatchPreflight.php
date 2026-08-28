@@ -93,7 +93,7 @@ final class CatalogPublicUploadBatchPreflight
                     $extension = strtolower((string)pathinfo($name, PATHINFO_EXTENSION));
                     if (in_array($extension, ['uz2', 'uz3'], true)
                         && ($md5 === '' || $sha1 === '' || $identitySize < 1)) {
-                        throw new InvalidArgumentException(
+                        throw new \InvalidArgumentException(
                             'This redirect must be decoded and hashed in the browser before upload so catalog duplicates can be skipped.'
                         );
                     }
@@ -104,8 +104,8 @@ final class CatalogPublicUploadBatchPreflight
                     $guid = '';
                 }
 
-                $identityKey = $md5 !== '' && $sha1 !== ''
-                    ? hash('sha256', $md5 . "\0" . $sha1 . "\0" . $size)
+                $identityKey = $md5 !== '' && $sha1 !== '' && $identitySize > 0
+                    ? hash('sha256', $md5 . "\0" . $sha1 . "\0" . $identitySize)
                     : '';
                 if ($identityKey !== '' && isset($identityKeys[$identityKey])) {
                     $results[$index] = [
@@ -211,6 +211,7 @@ final class CatalogPublicUploadBatchPreflight
                 $clientKey = hash(
                     'sha256',
                     (string)$item['relative_path'] . "\0" . (string)$item['size'] . "\0"
+                    . (string)$item['identity_size'] . "\0"
                     . (string)$item['md5'] . "\0" . (string)$item['sha1']
                 );
                 $reservations[$index] = $item + [
