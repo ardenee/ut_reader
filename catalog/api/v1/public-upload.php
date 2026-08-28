@@ -82,8 +82,6 @@ try {
         }
 
         if ($existingJobId > 0) {
-            $worker = (new CatalogQueueWorkerStarter($application->db, $application->config))
-                ->start($queueName, true, null);
             JsonResponse::send([
                 'ok' => true,
                 'data' => [
@@ -91,8 +89,6 @@ try {
                     'job_id' => $existingJobId,
                     'queue' => $queueName,
                     'status' => $rowStatus !== '' ? $rowStatus : 'queued',
-                    'worker' => $worker['worker'],
-                    'worker_error' => (string)$worker['worker_error'],
                     'message' => 'This contribution is already queued for background validation.',
                 ],
             ], 202);
@@ -125,9 +121,6 @@ try {
             $publicUploadId,
         ]);
 
-        $worker = (new CatalogQueueWorkerStarter($application->db, $application->config))
-            ->start($queueName, true, null);
-
         JsonResponse::send([
             'ok' => true,
             'data' => [
@@ -135,11 +128,27 @@ try {
                 'job_id' => $jobId,
                 'queue' => $queueName,
                 'status' => 'queued',
-                'worker' => $worker['worker'],
-                'worker_error' => (string)$worker['worker_error'],
-                'message' => 'Upload complete. Validation continues in the background.',
+                'message' => 'Upload complete. Validation is queued in the background.',
             ],
         ], 202);
+    }
+
+    if ($action === 'wake') {
+        $configuredQueue = trim((string)($application->config['queue']['name'] ?? 'catalog')) ?: 'catalog';
+        $queueName = $configuredQueue . ':public-upload';
+        $worker = (new CatalogQueueWorkerStarter($application->db, $application->config))
+            ->start($queueName, true, null);
+        JsonResponse::send([
+            'ok' => true,
+            'data' => [
+                'queue' => $queueName,
+                'worker' => $worker['worker'],
+                'worker_error' => (string)$worker['worker_error'],
+                'message' => (string)$worker['worker_error'] !== ''
+                    ? 'Uploads are queued, but the public-upload worker pool could not be fully started.'
+                    : 'Public-upload background validation workers are running.',
+            ],
+        ], 200);
     }
 
     if ($action === 'cancel') {
@@ -147,7 +156,7 @@ try {
         JsonResponse::send(['ok' => true, 'data' => ['status' => 'cancelled']], 200);
     }
 
-    JsonResponse::error('invalid_action', 'Public upload action must be chunk, complete or cancel.', 400);
+    JsonResponse::error('invalid_action', 'Public upload action must be chunk, complete, wake or cancel.', 400);
 } catch (\InvalidArgumentException $error) {
     JsonResponse::error('invalid_public_upload', $error->getMessage(), 400);
 } catch (\RuntimeException $error) {
