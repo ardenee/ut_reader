@@ -15,6 +15,7 @@ use UnrealDb\Catalog\Infrastructure\Import\CatalogChunkedUploadStore;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogIncomingFileStore;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogProfiledUploadQueue;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogQueueWorkerStarter;
+use UnrealDb\Catalog\Infrastructure\Security\CatalogPublicAccessGuard;
 
 function profiled_upload_error(Throwable $error): string
 {
@@ -49,6 +50,7 @@ function profiled_upload_relative_path(int $index, string $fallback): string
 function profiled_upload_enqueue(PDO $db, array $config): array
 {
     catalog_check_csrf('profiled_upload');
+    (new CatalogPublicAccessGuard($config))->transferAllowedOrThrow($db, 'Upload');
     $gameId = (int)($_POST['game_id'] ?? 0);
     $strict = (string)($_POST['strict_profile'] ?? '1') === '1';
     $deferWorkerStart = (string)($_POST['defer_worker_start'] ?? '0') === '1';
