@@ -42,6 +42,7 @@ $preflightApi = $read('api/v1/public-upload-preflight.php');
 $uploadApi = $read('api/v1/public-upload.php');
 $page = $read('public-upload.php');
 $client = $read('assets/public-upload.js');
+$inspector = $read('assets/upload-file-inspector-worker.js');
 $programSettings = $read('program-settings.php');
 $nav = $read('lib/CatalogSupportCore.php');
 $landing = $read('../index.php');
@@ -144,6 +145,31 @@ $check(
 );
 
 $check(
+    'redirect_identity_is_decoded_before_preflight',
+    str_contains($inspector, 'async function inspectUz2(id, file)')
+        && str_contains($inspector, 'async function inspectUz3(id, file)')
+        && str_contains($inspector, "new DecompressionStream('deflate')")
+        && str_contains($inspector, 'identity_size: outputBytes')
+        && str_contains($inspector, 'md5: md5.digestHex()')
+        && str_contains($inspector, 'sha1: sha1.digestHex()')
+        && str_contains($client, 'identity_size: identitySize')
+        && str_contains($preflight, '$identitySize = (int)($item[\'identity_size\']')
+        && str_contains($preflight, '$md5 . "\0" . $sha1 . "\0" . $identitySize')
+        && str_contains($preflight, "in_array(\$extension, ['uz2', 'uz3'], true)"),
+    'UZ2/UZ3 must be decoded and hashed in the browser; the 100-file manifest must compare decompressed package identity, not compressed wrapper size.'
+);
+
+$check(
+    'per_file_completion_does_not_reconcile_workers',
+    str_contains($uploadApi, "if (\$action === 'wake')")
+        && str_contains($client, 'async function wakePublicQueue(batchNumber)')
+        && str_contains($client, 'await wakePublicQueue(batchNumber)')
+        && str_contains($uploadApi, "'Upload complete. Validation is queued in the background.'")
+        && str_contains($uploadApi, 'CatalogQueueWorkerStarter'),
+    'Each file completion must return after durable job enqueue; worker-pool reconciliation is performed once at the batch wake boundary.'
+);
+
+$check(
     'client_checks_and_batches_before_upload',
     str_contains($client, 'const BATCH_FILES = 100;')
         && str_contains($client, 'new Worker(workerUrl)')
@@ -184,8 +210,9 @@ $check(
         && str_contains($uploadApi, 'if ($existingJobId > 0)')
         && str_contains($uploadApi, 'JobType::PROCESS_PUBLIC_UPLOAD')
         && str_contains($uploadApi, '\'public-upload:\' . $publicUploadId')
+        && str_contains($uploadApi, "if (\$action === 'wake')")
         && str_contains($uploadApi, 'CatalogQueueWorkerStarter'),
-    'Lost complete responses must reuse the same durable upload/job rather than creating duplicate processing.'
+    'Lost complete responses must reuse the same durable upload/job, while worker startup stays at the explicit batch wake boundary.'
 );
 
 $check(
@@ -194,6 +221,8 @@ $check(
         && str_contains($handler, 'scanner_file_has_unreal_package_magic')
         && str_contains($handler, "hash_init('md5')")
         && str_contains($handler, "hash_init('sha1')")
+        && str_contains($handler, "Public upload MD5 mismatch: client=")
+        && str_contains($handler, "Public upload SHA-1 mismatch: client=")
         && str_contains($handler, 'CatalogRedirectArchiveProcessor')
         && str_contains($handler, 'stageBucketUpload(')
         && str_contains($handler, 'Public contribution upload; awaiting administrator review.')
