@@ -121,7 +121,7 @@ final class CatalogBackgroundJobHistoryCleanupJobHandler implements JobHandler
             }
 
             $currentId = (int)end($stack);
-            if ($currentId < 1 || !$pruner->exists($currentId)) {
+            if ($currentId < 1) {
                 array_pop($stack);
                 if ($currentId === $rootId || $stack === []) {
                     $skipped++;
