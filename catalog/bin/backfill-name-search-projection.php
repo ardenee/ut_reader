@@ -15,13 +15,16 @@ require_once dirname(__DIR__) . '/bootstrap.php';
 use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataReader;
 use UnrealDb\Catalog\Infrastructure\Metadata\CompactSearchProjectionWriter;
 
-$limit = 250;
+$limit = 500;
 $afterId = 0;
+$all = false;
 foreach (array_slice($argv, 1) as $argument) {
     if (preg_match('/^--limit=([0-9]+)$/', (string)$argument, $match) === 1) {
         $limit = max(1, min(5000, (int)$match[1]));
     } elseif (preg_match('/^--after-id=([0-9]+)$/', (string)$argument, $match) === 1) {
         $afterId = max(0, (int)$match[1]);
+    } elseif ((string)$argument === '--all') {
+        $all = true;
     }
 }
 
@@ -41,60 +44,70 @@ try {
         throw new RuntimeException('Run php catalog/bin/migrate.php migrate before backfilling Names search.');
     }
 
-    $statement = $db->prepare(
-        'SELECT f.id,f.name_count FROM ue_files f '
-        . 'JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=2 '
-        . 'WHERE f.scan_status="verified" AND f.name_count>0 AND f.id>? '
-        . 'AND NOT EXISTS(SELECT 1 FROM ue_name_lookup n WHERE n.file_id=f.id LIMIT 1) '
-        . 'ORDER BY f.id ASC LIMIT ' . $limit
-    );
-    $statement->execute([$afterId]);
-    $files = $statement->fetchAll(PDO::FETCH_ASSOC) ?: [];
-
     $reader = new BlockedCompressedMetadataReader($db, $storageRoot);
     $writer = new CompactSearchProjectionWriter($db);
     $processed = 0;
     $nameRows = 0;
     $sqlBatches = 0;
-    $lastId = $afterId;
+    $cursor = $afterId;
     $errors = [];
 
-    foreach ($files as $file) {
-        $fileId = (int)($file['id'] ?? 0);
-        if ($fileId < 1) {
-            continue;
+    do {
+        $statement = $db->prepare(
+            'SELECT f.id,f.name_count FROM ue_files f '
+            . 'JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=2 '
+            . 'WHERE f.scan_status="verified" AND f.name_count>0 AND f.id>? '
+            . 'AND NOT EXISTS(SELECT 1 FROM ue_name_lookup n WHERE n.file_id=f.id LIMIT 1) '
+            . 'ORDER BY f.id ASC LIMIT ' . $limit
+        );
+        $statement->execute([$cursor]);
+        $files = $statement->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        if ($files === []) {
+            break;
         }
-        $lastId = $fileId;
-        try {
-            $expectedNames = max(0, (int)($file['name_count'] ?? 0));
-            $names = [];
-            for ($start = 0; $start < $expectedNames; $start += 5000) {
-                $page = $reader->page($fileId, 'names', $start, min(5000, $expectedNames - $start));
-                if ($page === []) {
+
+        foreach ($files as $file) {
+            $fileId = (int)($file['id'] ?? 0);
+            if ($fileId < 1) {
+                continue;
+            }
+            $cursor = $fileId;
+            try {
+                $expectedNames = max(0, (int)($file['name_count'] ?? 0));
+                $names = [];
+                for ($start = 0; $start < $expectedNames; $start += 5000) {
+                    $page = $reader->page($fileId, 'names', $start, min(5000, $expectedNames - $start));
+                    if ($page === []) {
+                        throw new RuntimeException(
+                            'Names metadata ended at row ' . $start . ' of ' . $expectedNames
+                            . ' for file #' . $fileId . '.'
+                        );
+                    }
+                    array_push($names, ...$page);
+                }
+                if (count($names) !== $expectedNames) {
                     throw new RuntimeException(
-                        'Names metadata ended at row ' . $start . ' of ' . $expectedNames . ' for file #' . $fileId . '.'
+                        'Names metadata count mismatch for file #' . $fileId
+                        . ': expected ' . $expectedNames . ', found ' . count($names) . '.'
                     );
                 }
-                array_push($names, ...$page);
-            }
-            if (count($names) !== $expectedNames) {
-                throw new RuntimeException(
-                    'Names metadata count mismatch for file #' . $fileId
-                    . ': expected ' . $expectedNames . ', found ' . count($names) . '.'
+                $nameRows += $writer->writeNames(
+                    ['file' => ['id' => $fileId], 'names' => $names],
+                    $sqlBatches
                 );
+                $processed++;
+            } catch (Throwable $error) {
+                $errors[] = [
+                    'file_id' => $fileId,
+                    'error' => trim($error->getMessage()) ?: get_class($error),
+                ];
             }
-            $nameRows += $writer->writeNames(
-                ['file' => ['id' => $fileId], 'names' => $names],
-                $sqlBatches
-            );
-            $processed++;
-        } catch (Throwable $error) {
-            $errors[] = [
-                'file_id' => $fileId,
-                'error' => trim($error->getMessage()) ?: get_class($error),
-            ];
         }
-    }
+
+        if ($errors !== [] || !$all || count($files) < $limit) {
+            break;
+        }
+    } while (true);
 
     $remaining = (int)$db->query(
         'SELECT COUNT(*) FROM ue_files f '
@@ -108,11 +121,13 @@ try {
         'processed_files' => $processed,
         'name_rows' => $nameRows,
         'sql_batches' => $sqlBatches,
-        'last_file_id' => $lastId,
+        'last_file_id' => $cursor,
         'remaining_files' => $remaining,
         'errors' => $errors,
         'next_command' => $remaining > 0
-            ? 'php catalog/bin/backfill-name-search-projection.php --after-id=' . $lastId . ' --limit=' . $limit
+            ? ($errors !== []
+                ? 'php catalog/bin/backfill-name-search-projection.php --all'
+                : 'php catalog/bin/backfill-name-search-projection.php --all --after-id=' . $cursor)
             : null,
     ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . PHP_EOL);
     exit($errors === [] ? 0 : 2);
