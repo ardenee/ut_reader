@@ -159,7 +159,7 @@ final class CatalogUnverifiedPromotion
             if (!is_dir($directory) && !@mkdir($directory, 0775, true) && !is_dir($directory)) {
                 throw new \RuntimeException('Could not create verified storage folder.');
             }
-            $storedName = $md5 . '.' . $extension;
+            $storedName = $extension !== '' ? $md5 . '.' . $extension : $md5;
             $destination = $directory . '/' . $storedName;
             $sourcePath = (string)$source['path'];
             $sourceMoved = false;
