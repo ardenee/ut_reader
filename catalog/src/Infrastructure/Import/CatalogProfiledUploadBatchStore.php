@@ -100,6 +100,24 @@ final class CatalogProfiledUploadBatchStore
         return $metadata;
     }
 
+    /**
+     * Refresh the activity timestamp for a browser batch while one of its files
+     * is still transferring. This gives explicit storage cleanup a reliable
+     * recent-activity signal without retaining abandoned batches for days.
+     */
+    public function touch(int $userId, string $batchId): void
+    {
+        $this->withLock($batchId, function () use ($userId, $batchId): void {
+            $metadata = $this->readMetadata($batchId);
+            $this->requireOwner($metadata, $userId);
+            if ((string)($metadata['status'] ?? '') !== 'uploading') {
+                return;
+            }
+            $metadata['updated_at'] = gmdate('Y-m-d H:i:s');
+            $this->writeMetadata($metadata);
+        });
+    }
+
     /** @return array<string,mixed> */
     public function info(string $batchId, ?int $userId = null): array
     {
