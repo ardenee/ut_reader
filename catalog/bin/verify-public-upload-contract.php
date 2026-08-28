@@ -258,6 +258,10 @@ $check(
         && str_contains($archiveWorker, 'Archive member path contains an unsafe path segment.')
         && str_contains($archiveInstaller, 'EXPECTED_GIT_BLOB_SHA1')
         && str_contains($archiveInstaller, '337cfa5ac2e9ed01d9dfc5b9aeb8f2742e025502')
+        && str_contains($archiveInstaller, "'verify_peer' => true")
+        && str_contains($archiveInstaller, "'verify_peer_name' => true")
+        && str_contains($archiveInstaller, 'unset($curl);')
+        && !str_contains($archiveInstaller, 'curl_close(')
         && str_contains($archiveVendorReadme, 'WORKERFS'),
     'ZIP/RAR/7z must remain browser-only sources, mount without whole-archive copies, expose one member sequentially, and free each member worker after use.'
 );
