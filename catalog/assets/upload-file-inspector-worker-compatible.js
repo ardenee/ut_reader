@@ -4,8 +4,9 @@
  * Compatibility wrapper around the established file inspector.
  *
  * Transport containers deliberately bypass package hashing:
- * - `.uz` accepts both historic FCodec signatures 1234 and 5678 while retaining
- *   the `.uz` identity. A 5678 `.uz` is NOT UT3 `.uz3`.
+ * - `.uz` accepts both historic FCodec signatures 1234 and 5678. The wrapper
+ *   performs a bounded signature sniff, then delegates FCodec decoding and
+ *   decoded package hashing to the established inspector. A 5678 `.uz` is NOT UT3 `.uz3`.
  * - `.zip`, `.7z`, `.rar`, `.umod`, `.ut2mod` and `.ut4mod` are unpack-only
  *   transport containers. Package identity is calculated later from each
  *   extracted Unreal member.
@@ -265,11 +266,8 @@ nativeAddEventListener.call(self, 'message', async function (event) {
                     + 'Expected 1234 or 5678; detected ' + signature + '.'
                 );
             }
-            throw new Error(
-                'Legacy .uz FCodec redirects are not accepted by the public uploader yet because '
-                + 'their decoded package identity cannot be calculated in the browser. '
-                + 'The public uploader will not send a file that cannot be checked for an existing catalog duplicate.'
-            );
+            dispatchToInspector(data);
+            return;
         }
 
         const header = archiveHeader(extension, bytes);

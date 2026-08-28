@@ -1,5 +1,9 @@
 'use strict';
 
+const legacyUzDecoderUrl = new URL('legacy-uz-decoder.js', self.location.href);
+legacyUzDecoderUrl.search = self.location.search;
+importScripts(legacyUzDecoderUrl.href);
+
 const HASH_CHUNK_BYTES = 4 * 1024 * 1024;
 const HEADER_READ_BYTES = 4096;
 const PAK_TAIL_READ_BYTES = 4096;
@@ -287,10 +291,13 @@ function packageExtension(extension) {
 function validateHeader(extension, fileSize, head, tail) {
     if (extension === 'uz') {
         const signature = readU32Le(head, 0);
-        if (signature !== 1234) {
-            throw new Error('The .uz file does not contain the expected Unreal 1234 redirect signature.');
+        if (signature !== 1234 && signature !== 5678) {
+            throw new Error(
+                'The .uz file does not contain a supported Unreal FCodec signature. '
+                + 'Expected 1234 or 5678; detected ' + signature + '.'
+            );
         }
-        return {kind: 'redirect-uz', description: 'Unreal redirect signature 1234'};
+        return {kind:'redirect-uz', description:'Unreal FCodec redirect signature ' + signature};
     }
 
     if (extension === 'uz3') {
@@ -550,7 +557,48 @@ async function readBytes(file, start, end) {
     return new Uint8Array(buffer);
 }
 
-async function inspectFile(id, file) {
+async function inspectUz(id, file, maxFileBytes) {
+    const total=Math.max(0,Number(file.size||0));
+    const limit=Math.max(1,Number(maxFileBytes||(512*1024*1024)));
+    self.postMessage({type:'progress',id:id,phase:'redirect-decode',loaded:0,total:total});
+
+    let encoded=await readBytes(file,0,total);
+    let decoded;
+    try {
+        decoded=self.UnrealDbLegacyUzDecoder.decode(encoded,limit);
+    } catch (error) {
+        throw new Error('Could not decode legacy .uz FCodec redirect: '
+            + (error && error.message ? error.message : 'unknown decoder error'));
+    } finally {
+        encoded=null;
+    }
+
+    const output=decoded.data;
+    const md5=new Md5(), sha1=new Sha1();
+    let done=0;
+    while(done<output.length){
+        const end=Math.min(output.length,done+HASH_CHUNK_BYTES);
+        const chunk=output.subarray(done,end);
+        md5.update(chunk); sha1.update(chunk); done=end;
+        self.postMessage({type:'progress',id:id,phase:'redirect-hash',loaded:done,total:output.length});
+    }
+    const firstDecoded=output.subarray(0,Math.min(output.length,64));
+    const result={
+        md5:md5.digestHex(),
+        sha1:sha1.digestHex(),
+        identity_size:output.length,
+        guid:legacyGuidFromDecodedHead(firstDecoded),
+        extension:'uz',
+        redirect:true,
+        embedded_filename:String(decoded.embedded_filename||''),
+        wrapper_signature:Number(decoded.wrapper_signature||0),
+        header:{kind:'redirect-uz',description:'Unreal FCodec signature '+decoded.wrapper_signature+'; decoded package identity calculated in browser'}
+    };
+    decoded.data=null;
+    return result;
+}
+
+async function inspectFile(id, file, maxFileBytes) {
     if (!file || typeof file.slice !== 'function') {
         throw new Error('The selected browser file cannot be read.');
     }
@@ -572,8 +620,7 @@ async function inspectFile(id, file) {
         return inspectUz3(id, file);
     }
     if (extension === 'uz') {
-        // Legacy FCodec .uz decoding is handled by the compatibility wrapper.
-        return {md5: '', sha1: '', identity_size: 0, guid: '', extension: extension, redirect: true, header: header};
+        return inspectUz(id, file, maxFileBytes);
     }
 
     const md5 = new Md5();
@@ -606,7 +653,7 @@ self.addEventListener('message', async function (event) {
     if (data.type !== 'inspect') return;
     const id = String(data.id || '');
     try {
-        const result = await inspectFile(id, data.file);
+        const result = await inspectFile(id, data.file, data.max_file_bytes);
         self.postMessage({type: 'result', id: id, result: result});
     } catch (error) {
         self.postMessage({type: 'error', id: id, message: error && error.message ? error.message : 'File inspection failed.'});
