@@ -2,10 +2,10 @@
 /**
  * Durable bulk cleanup for terminal background-job history.
  *
- * The HTTP layer snapshots the eligible terminal job IDs and enqueues this one
- * bounded worker job. Large workflow trees are drained leaf-first in bounded
- * batches before their operator-visible parent is removed, avoiding enormous
- * InnoDB ON DELETE CASCADE transactions with no heartbeat.
+ * Workflow descendants are drained leaf-first in bounded batches. Every deleted
+ * row still passes through staged-source cleanup, and retention cleanup keeps the
+ * original fixed cutoff while automatically loading subsequent 10,000-root
+ * snapshots until no eligible history remains.
  */
 declare(strict_types=1);
 
@@ -43,10 +43,28 @@ final class CatalogBackgroundJobHistoryCleanupJobHandler implements JobHandler
             throw new \InvalidArgumentException('Background-job history cleanup requires a valid target_queue.');
         }
 
-        $ids = $this->snapshotIds($job->payload['job_ids'] ?? []);
-        $requested = max(count($ids), (int)($job->payload['requested'] ?? count($ids)));
-        $limited = !empty($job->payload['limited']);
+        $retentionCutoff = trim((string)($job->payload['retention_cutoff'] ?? ''));
+        $autoContinue = $retentionCutoff !== '' && !empty($job->payload['retention_auto_continue']);
+        if ($retentionCutoff !== '' && !$this->validCutoff($retentionCutoff)) {
+            throw new \InvalidArgumentException('Background-job retention cutoff is invalid.');
+        }
+
         $resume = $context->resumeProgress();
+        $ids = $this->snapshotIds(
+            is_array($resume['snapshot_ids'] ?? null)
+                ? $resume['snapshot_ids']
+                : ($job->payload['job_ids'] ?? [])
+        );
+        $snapshotBatch = max(1, (int)($resume['snapshot_batch'] ?? 1));
+        $requested = max(
+            count($ids),
+            (int)($job->payload['requested'] ?? count($ids)),
+            (int)($resume['requested'] ?? 0)
+        );
+        $limited = array_key_exists('limited', $resume)
+            ? !empty($resume['limited'])
+            : !empty($job->payload['limited']);
+
         $offset = max(0, min(count($ids), (int)($resume['snapshot_offset'] ?? 0)));
         $deletedJobs = max(0, (int)($resume['deleted_jobs'] ?? 0));
         $deletedWorkflowUnits = max(0, (int)($resume['deleted_workflow_units'] ?? 0));
@@ -57,20 +75,36 @@ final class CatalogBackgroundJobHistoryCleanupJobHandler implements JobHandler
         $stack = $this->stackIds($resume['cleanup_stack'] ?? []);
 
         if ($ids === []) {
-            $message = 'Background-job history cleanup snapshot contains no terminal jobs.';
-            $context->checkpoint($this->progress(100, $message, [
-                'stage' => 'complete',
-                'snapshot_offset' => 0,
-                'snapshot_total' => 0,
-                'requested' => $requested,
-                'deleted_jobs' => 0,
-                'deleted_workflow_units' => 0,
-                'deleted_staged_files' => 0,
-                'deleted_staged_bytes' => 0,
-                'skipped' => 0,
-                'limited' => $limited,
-            ]));
-            return $this->result($targetQueue, $requested, 0, 0, 0, 0, 0, $limited);
+            $progress = $this->progress(100, 'Background-job history cleanup contains no eligible terminal jobs.', $this->state(
+                'complete',
+                0,
+                0,
+                $requested,
+                $deletedJobs,
+                $deletedWorkflowUnits,
+                $deletedStagedFiles,
+                $deletedStagedBytes,
+                $skipped,
+                false,
+                0,
+                [],
+                [],
+                $snapshotBatch,
+                $retentionCutoff
+            ));
+            $context->checkpoint($progress);
+            return $this->result(
+                $targetQueue,
+                $requested,
+                $deletedJobs,
+                $deletedWorkflowUnits,
+                $deletedStagedFiles,
+                $deletedStagedBytes,
+                $skipped,
+                false,
+                $snapshotBatch,
+                $retentionCutoff
+            );
         }
 
         $cleanup = new CatalogBackgroundJobCleanup($this->db, $this->config);
@@ -100,14 +134,18 @@ final class CatalogBackgroundJobHistoryCleanupJobHandler implements JobHandler
 
             $children = $pruner->childPage($currentId);
             if ($children['leaf_ids'] !== []) {
-                $batchDeleted = $pruner->deleteLeafRows($children['leaf_ids']);
+                $batch = $cleanup->deleteWorkflowJobs($children['leaf_ids']);
+                $batchDeleted = max(0, (int)($batch['deleted_jobs'] ?? 0));
                 $deletedWorkflowUnits += $batchDeleted;
+                $deletedStagedFiles += max(0, (int)($batch['deleted_staged_files'] ?? 0));
+                $deletedStagedBytes += max(0, (int)($batch['deleted_staged_bytes'] ?? 0));
                 $workflowRowsThisClaim += $batchDeleted;
+
                 $progress = $this->progress(
-                    $this->rootPercent($offset, count($ids), false),
-                    'Draining hidden workflow history under job #' . $rootId . ': '
-                        . number_format($deletedWorkflowUnits) . ' child execution row(s) removed; '
-                        . ($offset + 1) . '/' . count($ids) . ' parent job(s) in the snapshot.',
+                    $this->percent($deletedJobs + $skipped, $requested, false),
+                    'Draining workflow history under job #' . $rootId . ': '
+                        . number_format($deletedWorkflowUnits) . ' child row(s) removed; '
+                        . $deletedStagedFiles . ' staged source(s), ' . $this->formatBytes($deletedStagedBytes) . ' reclaimed.',
                     $this->state(
                         'cleanup_children',
                         $offset,
@@ -120,7 +158,10 @@ final class CatalogBackgroundJobHistoryCleanupJobHandler implements JobHandler
                         $skipped,
                         $limited,
                         $rootId,
-                        $stack
+                        $stack,
+                        $ids,
+                        $snapshotBatch,
+                        $retentionCutoff
                     )
                 );
                 $context->checkpoint($progress);
@@ -141,19 +182,21 @@ final class CatalogBackgroundJobHistoryCleanupJobHandler implements JobHandler
                 continue;
             }
 
-            // This node has no children. Hidden descendants are removed directly;
-            // only snapshot roots go through the normal cleanup object so retained
-            // staged sources and the root event log keep their established cleanup.
             if ($currentId !== $rootId) {
-                $batchDeleted = $pruner->deleteLeafRows([$currentId]);
+                $batch = $cleanup->deleteWorkflowJobs([$currentId]);
+                $batchDeleted = max(0, (int)($batch['deleted_jobs'] ?? 0));
                 $deletedWorkflowUnits += $batchDeleted;
+                $deletedStagedFiles += max(0, (int)($batch['deleted_staged_files'] ?? 0));
+                $deletedStagedBytes += max(0, (int)($batch['deleted_staged_bytes'] ?? 0));
                 $workflowRowsThisClaim += $batchDeleted;
                 array_pop($stack);
+
                 if ($workflowRowsThisClaim >= self::MAX_WORKFLOW_ROWS_PER_CLAIM) {
                     $progress = $this->progress(
-                        $this->rootPercent($offset, count($ids), false),
-                        'Draining hidden workflow history under job #' . $rootId . ': '
-                            . number_format($deletedWorkflowUnits) . ' child execution row(s) removed.',
+                        $this->percent($deletedJobs + $skipped, $requested, false),
+                        'Draining workflow history under job #' . $rootId . ': '
+                            . number_format($deletedWorkflowUnits) . ' child row(s) removed; '
+                            . $this->formatBytes($deletedStagedBytes) . ' staged bytes reclaimed.',
                         $this->state(
                             'cleanup_children',
                             $offset,
@@ -166,7 +209,10 @@ final class CatalogBackgroundJobHistoryCleanupJobHandler implements JobHandler
                             $skipped,
                             $limited,
                             $rootId,
-                            $stack
+                            $stack,
+                            $ids,
+                            $snapshotBatch,
+                            $retentionCutoff
                         )
                     );
                     $context->checkpoint($progress);
@@ -189,12 +235,13 @@ final class CatalogBackgroundJobHistoryCleanupJobHandler implements JobHandler
             $stack = [];
 
             $context->checkpoint($this->progress(
-                $this->rootPercent($offset, count($ids), true),
-                'Background-job history cleanup: ' . $offset . '/' . count($ids)
-                    . ' parent job(s) processed; ' . $deletedJobs . ' deleted, ' . $skipped . ' skipped; '
-                    . number_format($deletedWorkflowUnits) . ' hidden workflow row(s) drained.',
+                $this->percent($deletedJobs + $skipped, $requested, false),
+                'Background-job history cleanup: batch ' . $snapshotBatch . ', '
+                    . $offset . '/' . count($ids) . ' root job(s); '
+                    . $deletedJobs . ' roots and ' . number_format($deletedWorkflowUnits) . ' child row(s) deleted; '
+                    . $deletedStagedFiles . ' staged source(s), ' . $this->formatBytes($deletedStagedBytes) . ' reclaimed.',
                 $this->state(
-                    $offset >= count($ids) ? 'complete' : 'cleanup_batch',
+                    'cleanup_batch',
                     $offset,
                     count($ids),
                     $requested,
@@ -205,18 +252,22 @@ final class CatalogBackgroundJobHistoryCleanupJobHandler implements JobHandler
                     $skipped,
                     $limited,
                     0,
-                    []
+                    [],
+                    $ids,
+                    $snapshotBatch,
+                    $retentionCutoff
                 )
             ));
         }
 
         $progress = $this->progress(
-            $this->rootPercent($offset, count($ids), true),
-            'Background-job history cleanup: ' . $offset . '/' . count($ids)
-                . ' parent job(s) processed; ' . $deletedJobs . ' deleted, ' . $skipped . ' skipped; '
-                . number_format($deletedWorkflowUnits) . ' hidden workflow row(s) drained.',
+            $this->percent($deletedJobs + $skipped, $requested, false),
+            'Background-job history cleanup: batch ' . $snapshotBatch . ', '
+                . $offset . '/' . count($ids) . ' root job(s) processed; '
+                . $deletedJobs . ' roots and ' . number_format($deletedWorkflowUnits) . ' child row(s) deleted; '
+                . $this->formatBytes($deletedStagedBytes) . ' staged bytes reclaimed.',
             $this->state(
-                $offset >= count($ids) ? 'complete' : 'cleanup_batch',
+                'cleanup_batch',
                 $offset,
                 count($ids),
                 $requested,
@@ -227,7 +278,10 @@ final class CatalogBackgroundJobHistoryCleanupJobHandler implements JobHandler
                 $skipped,
                 $limited,
                 $activeRootId,
-                $stack
+                $stack,
+                $ids,
+                $snapshotBatch,
+                $retentionCutoff
             )
         );
 
@@ -235,16 +289,68 @@ final class CatalogBackgroundJobHistoryCleanupJobHandler implements JobHandler
             $context->defer(1, $progress);
         }
 
-        $progress['percent'] = 100;
-        $progress['done'] = 100;
-        $progress['total'] = 100;
-        $progress['stage'] = 'complete';
-        $progress['cleanup_root_id'] = 0;
-        $progress['cleanup_stack'] = [];
-        $progress['message'] = 'Background-job history cleanup complete: ' . $deletedJobs . ' job(s) deleted, '
-            . $skipped . ' skipped, ' . number_format($deletedWorkflowUnits) . ' hidden workflow row(s) drained, '
-            . $deletedStagedFiles . ' retained staged file(s) removed.'
-            . ($limited ? ' The 10,000-job snapshot limit was reached; run cleanup again for the remainder.' : '');
+        if ($autoContinue) {
+            $next = (new CatalogBackgroundJobHistoryCleanupQueue($this->db, $this->config))
+                ->snapshotBefore($targetQueue, $retentionCutoff);
+            if ($next['ids'] !== []) {
+                $processedRoots = $deletedJobs + $skipped;
+                $requested = max($requested, $processedRoots + (int)$next['requested']);
+                $snapshotBatch++;
+                $limited = !empty($next['limited']);
+                $progress = $this->progress(
+                    $this->percent($processedRoots, $requested, false),
+                    'Continuing background-job retention cleanup with batch ' . $snapshotBatch
+                        . ' (' . count($next['ids']) . ' root job(s)); '
+                        . $this->formatBytes($deletedStagedBytes) . ' reclaimed so far.',
+                    $this->state(
+                        'next_snapshot',
+                        0,
+                        count($next['ids']),
+                        $requested,
+                        $deletedJobs,
+                        $deletedWorkflowUnits,
+                        $deletedStagedFiles,
+                        $deletedStagedBytes,
+                        $skipped,
+                        $limited,
+                        0,
+                        [],
+                        $next['ids'],
+                        $snapshotBatch,
+                        $retentionCutoff
+                    )
+                );
+                $context->checkpoint($progress);
+                $context->defer(1, $progress);
+            }
+            $limited = false;
+        }
+
+        $progress = $this->progress(100, 'Background-job history cleanup complete: '
+            . $deletedJobs . ' root job(s) deleted, '
+            . number_format($deletedWorkflowUnits) . ' child workflow row(s) deleted, '
+            . $skipped . ' skipped, '
+            . $deletedStagedFiles . ' staged source(s) removed, '
+            . $this->formatBytes($deletedStagedBytes) . ' reclaimed.'
+            . (!$autoContinue && $limited ? ' The immutable 10,000-job snapshot limit was reached.' : ''),
+            $this->state(
+                'complete',
+                count($ids),
+                count($ids),
+                $requested,
+                $deletedJobs,
+                $deletedWorkflowUnits,
+                $deletedStagedFiles,
+                $deletedStagedBytes,
+                $skipped,
+                $limited,
+                0,
+                [],
+                [],
+                $snapshotBatch,
+                $retentionCutoff
+            )
+        );
         $context->checkpoint($progress);
 
         return $this->result(
@@ -255,7 +361,9 @@ final class CatalogBackgroundJobHistoryCleanupJobHandler implements JobHandler
             $deletedStagedFiles,
             $deletedStagedBytes,
             $skipped,
-            $limited
+            $limited,
+            $snapshotBatch,
+            $retentionCutoff
         );
     }
 
@@ -289,18 +397,39 @@ final class CatalogBackgroundJobHistoryCleanupJobHandler implements JobHandler
         return array_slice($ids, -self::MAX_STACK_DEPTH);
     }
 
-    private function rootPercent(int $offset, int $total, bool $completedBoundary): int
+    private function percent(int $processedRoots, int $requested, bool $complete): int
     {
-        if ($total < 1) {
+        if ($complete) {
             return 100;
         }
-        $numerator = $completedBoundary ? $offset : min($total, $offset + 1);
-        $percent = (int)floor(($numerator * 100) / $total);
-        return max($offset < $total ? 1 : 100, min(100, $percent));
+        if ($requested < 1) {
+            return 1;
+        }
+        return max(1, min(99, (int)floor((max(0, $processedRoots) * 100) / $requested)));
+    }
+
+    private function validCutoff(string $cutoff): bool
+    {
+        $date = \DateTimeImmutable::createFromFormat('!Y-m-d H:i:s', $cutoff, new \DateTimeZone('UTC'));
+        return $date instanceof \DateTimeImmutable && $date->format('Y-m-d H:i:s') === $cutoff;
+    }
+
+    private function formatBytes(int $bytes): string
+    {
+        $bytes = max(0, $bytes);
+        $units = ['B', 'KB', 'MB', 'GB', 'TB'];
+        $value = (float)$bytes;
+        $unit = 0;
+        while ($value >= 1024 && $unit < count($units) - 1) {
+            $value /= 1024;
+            $unit++;
+        }
+        return ($unit === 0 ? number_format($value, 0) : number_format($value, 2)) . ' ' . $units[$unit];
     }
 
     /**
      * @param list<int> $stack
+     * @param list<int> $snapshotIds
      * @return array<string,mixed>
      */
     private function state(
@@ -315,12 +444,17 @@ final class CatalogBackgroundJobHistoryCleanupJobHandler implements JobHandler
         int $skipped,
         bool $limited,
         int $rootId,
-        array $stack
+        array $stack,
+        array $snapshotIds,
+        int $snapshotBatch,
+        string $retentionCutoff
     ): array {
         return [
             'stage' => $stage,
             'snapshot_offset' => $offset,
             'snapshot_total' => $total,
+            'snapshot_ids' => $snapshotIds,
+            'snapshot_batch' => $snapshotBatch,
             'requested' => $requested,
             'deleted_jobs' => $deletedJobs,
             'deleted_workflow_units' => $deletedWorkflowUnits,
@@ -330,6 +464,7 @@ final class CatalogBackgroundJobHistoryCleanupJobHandler implements JobHandler
             'limited' => $limited,
             'cleanup_root_id' => $rootId,
             'cleanup_stack' => $stack,
+            'retention_cutoff' => $retentionCutoff,
         ];
     }
 
@@ -354,7 +489,9 @@ final class CatalogBackgroundJobHistoryCleanupJobHandler implements JobHandler
         int $deletedStagedFiles,
         int $deletedStagedBytes,
         int $skipped,
-        bool $limited
+        bool $limited,
+        int $snapshotBatch,
+        string $retentionCutoff
     ): array {
         return [
             'operation' => 'clean_background_job_history',
@@ -367,9 +504,12 @@ final class CatalogBackgroundJobHistoryCleanupJobHandler implements JobHandler
             'deleted_staged_bytes' => $deletedStagedBytes,
             'skipped' => $skipped,
             'limited' => $limited,
-            'message' => 'Removed ' . $deletedJobs . ' terminal background job(s), drained '
-                . number_format($deletedWorkflowUnits) . ' hidden workflow row(s), and removed '
-                . $deletedStagedFiles . ' retained staged file(s).',
+            'snapshot_batches' => $snapshotBatch,
+            'retention_cutoff' => $retentionCutoff,
+            'message' => 'Removed ' . $deletedJobs . ' root job(s) and '
+                . number_format($deletedWorkflowUnits) . ' child workflow row(s); removed '
+                . $deletedStagedFiles . ' staged source(s), reclaiming '
+                . $this->formatBytes($deletedStagedBytes) . '.',
         ];
     }
 }
