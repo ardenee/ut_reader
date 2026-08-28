@@ -98,8 +98,7 @@ $check(
 
 $check(
     'manual_cleanup_uses_recent_activity_not_multi_day_stale_window',
-    str_contains($source['action'], "minimum_age_seconds' ?? 300")
-        || str_contains($source['action'], "minimum_age_seconds'] ?? 300")
+    str_contains($source['action'], "\$payload['minimum_age_seconds'] ?? 300")
         && str_contains($source['action'], "'manual_cleanup' => true")
         && str_contains($source['cleanup'], '$manualCleanup ? $minimumAgeSeconds : $this->uploadStaleSeconds()')
         && str_contains($source['batch_store'], 'public function touch(int $userId, string $batchId): void')
