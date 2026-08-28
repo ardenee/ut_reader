@@ -112,17 +112,20 @@ final class CatalogPublicUploadJobHandler implements JobHandler
             $identity = $this->hashFile($workingPath, $context, $workingName);
             $clientMd5 = strtolower(trim((string)($row['client_md5'] ?? '')));
             $clientSha1 = strtolower(trim((string)($row['client_sha1'] ?? '')));
-            if ($workingPath === $sourcePath) {
-                if ($clientMd5 !== '' && !hash_equals($clientMd5, $identity['md5'])) {
-                    throw new RuntimeException(
-                        'Public upload MD5 mismatch: client=' . $clientMd5 . ', server=' . $identity['md5'] . '.'
-                    );
-                }
-                if ($clientSha1 !== '' && !hash_equals($clientSha1, $identity['sha1'])) {
-                    throw new RuntimeException(
-                        'Public upload SHA-1 mismatch: client=' . $clientSha1 . ', server=' . $identity['sha1'] . '.'
-                    );
-                }
+            // For normal packages these hashes describe the uploaded bytes. For
+            // UZ2/UZ3 public redirects they describe the browser-decoded package
+            // identity used by the 100-file duplicate preflight. Either way the
+            // authoritative server result must match whenever the client supplied
+            // an identity.
+            if ($clientMd5 !== '' && !hash_equals($clientMd5, $identity['md5'])) {
+                throw new RuntimeException(
+                    'Public upload MD5 mismatch: client=' . $clientMd5 . ', server=' . $identity['md5'] . '.'
+                );
+            }
+            if ($clientSha1 !== '' && !hash_equals($clientSha1, $identity['sha1'])) {
+                throw new RuntimeException(
+                    'Public upload SHA-1 mismatch: client=' . $clientSha1 . ', server=' . $identity['sha1'] . '.'
+                );
             }
 
             $this->updateLedger($publicUploadId, [
