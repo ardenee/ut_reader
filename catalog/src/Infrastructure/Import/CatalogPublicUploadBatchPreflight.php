@@ -90,9 +90,7 @@ final class CatalogPublicUploadBatchPreflight
                 if ($redirect) {
                     $md5 = preg_match('/^[a-f0-9]{32}$/', $md5) === 1 ? $md5 : '';
                     $sha1 = preg_match('/^[a-f0-9]{40}$/', $sha1) === 1 ? $sha1 : '';
-                    $extension = strtolower((string)pathinfo($name, PATHINFO_EXTENSION));
-                    if (in_array($extension, ['uz2', 'uz3'], true)
-                        && ($md5 === '' || $sha1 === '' || $identitySize < 1)) {
+                    if ($md5 === '' || $sha1 === '' || $identitySize < 1) {
                         throw new \InvalidArgumentException(
                             'This redirect must be decoded and hashed in the browser before upload so catalog duplicates can be skipped.'
                         );
