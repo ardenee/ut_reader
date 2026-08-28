@@ -171,6 +171,7 @@ try {
         ? $model['match_cache_summary']
         : ['ready' => 0, 'pending' => 0, 'failed' => 0, 'missing' => 0, 'total' => 0];
     $summary = $model['summary'];
+    $publicUploads = is_array($model['public_uploads'] ?? null) ? $model['public_uploads'] : [];
     $extensionOptions = $model['extension_options'];
     $engineOptions = $model['engine_options'];
 
@@ -207,6 +208,32 @@ CSS;
         . '<div class="stat"><h2>' . (int)($summary['bucket_count'] ?? 0) . '</h2><p>Upload Bucket files</p></div>'
         . '<div class="stat"><h2>' . catalog_h(catalog_bytes((int)($summary['indexed_bytes'] ?? 0))) . '</h2><p>Indexed queue storage</p></div>'
         . '</div>';
+
+    if ($publicUploads !== []) {
+        echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Public contribution status</h2>'
+            . '<p>Recent public uploads that have not yet become normal Unverified Files rows.</p></div></div>'
+            . '<div class="ui-section__body"><div class="table-wrap"><table><thead><tr>'
+            . '<th>Contribution</th><th>Status</th><th>Background job</th><th>Result</th><th>Updated</th>'
+            . '</tr></thead><tbody>';
+        foreach ($publicUploads as $publicUpload) {
+            $status = strtolower(trim((string)($publicUpload['status'] ?? '')));
+            $jobId = max(0, (int)($publicUpload['background_job_id'] ?? 0));
+            $name = trim((string)($publicUpload['relative_path'] ?? ''));
+            if ($name === '') {
+                $name = trim((string)($publicUpload['original_name'] ?? ''));
+            }
+            $badge = $status === 'failed' ? 'bad' : 'neutral';
+            echo '<tr><td><strong>' . catalog_h($name !== '' ? $name : 'Public upload #' . (int)$publicUpload['id']) . '</strong>'
+                . '<small class="muted">Public upload #' . (int)$publicUpload['id'] . '</small></td>'
+                . '<td><span class="uv-badge ' . $badge . '">' . catalog_h(strtoupper($status)) . '</span></td>'
+                . '<td>' . ($jobId > 0
+                    ? '<a href="background-jobs.php">Job #' . $jobId . '</a>'
+                    : '<span class="muted">Not queued yet</span>') . '</td>'
+                . '<td>' . catalog_h((string)($publicUpload['result_message'] ?? '')) . '</td>'
+                . '<td class="mono small">' . catalog_h((string)($publicUpload['updated_at'] ?? '')) . '</td></tr>';
+        }
+        echo '</tbody></table></div></div></section>';
+    }
 
     echo '<section class="ui-section"><div class="ui-section__body"><div class="uv-cache-panel"><div>'
         . '<h2>Dependency evidence cache</h2><p>Upload Bucket: '
