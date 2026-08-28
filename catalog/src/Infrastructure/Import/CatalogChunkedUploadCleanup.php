@@ -89,8 +89,9 @@ final class CatalogChunkedUploadCleanup
             }
             $manifest = $this->manifest($manifestPath);
             if ((string)($manifest['status'] ?? 'uploading') === 'complete') {
-                // Completed sources remain retryable until their terminal job is
-                // explicitly removed by the background-job cleanup workflow.
+                // This narrow helper only handles abandoned incomplete uploads.
+                // Completed/orphaned stores are reclaimed by CatalogJobStorageCleanup,
+                // which can check database ownership before deleting them.
                 continue;
             }
             $dataPath = $entry->getPathname() . DIRECTORY_SEPARATOR . 'payload.part';
