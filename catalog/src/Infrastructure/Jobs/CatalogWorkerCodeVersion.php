@@ -113,6 +113,7 @@ final class CatalogWorkerCodeVersion
             $this->catalogRoot . '/src/Infrastructure/Import/CatalogBucketIdentityProcessor.php',
             $this->catalogRoot . '/src/Infrastructure/Import/CatalogChunkedUploadCleanup.php',
             $this->catalogRoot . '/src/Infrastructure/Import/CatalogPublicUploadTransferStore.php',
+            $this->catalogRoot . '/src/Infrastructure/Import/CatalogUploadDuplicateDetector.php',
             $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogPublicUploadJobHandler.php',
             $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogPublicUploadMaintenanceJobHandler.php',
         ];
