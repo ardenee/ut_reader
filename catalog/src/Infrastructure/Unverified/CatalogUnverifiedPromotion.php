@@ -161,24 +161,42 @@ final class CatalogUnverifiedPromotion
             }
             $storedName = $md5 . '.' . $extension;
             $destination = $directory . '/' . $storedName;
+            $sourcePath = (string)$source['path'];
             $moved = false;
             if (is_file($destination)) {
-                if (!@unlink((string)$source['path'])) {
-                    throw new \RuntimeException('Could not discard queued physical duplicate.');
+                $this->assertFileIdentity($destination, $fileSize, $md5, 'verified destination');
+                if (!@unlink($sourcePath) && is_file($sourcePath)) {
+                    throw new \RuntimeException(
+                        $this->filesystemFailureMessage(
+                            'could not discard queued physical duplicate after verified destination identity matched',
+                            $sourcePath,
+                            $destination,
+                            $fileSize
+                        )
+                    );
                 }
             } elseif (!empty($prepared['temporary'])) {
-                if (!@copy((string)$prepared['path'], $destination)) {
-                    throw new \RuntimeException('Could not store decompressed package.');
-                }
-                if (!@unlink((string)$source['path'])) {
+                $this->publishVerifiedCopy((string)$prepared['path'], $destination, $fileSize, $md5);
+                if (!@unlink($sourcePath) && is_file($sourcePath)) {
                     @unlink($destination);
-                    throw new \RuntimeException('Could not remove compressed queue wrapper.');
+                    throw new \RuntimeException(
+                        $this->filesystemFailureMessage(
+                            'stored decompressed package but could not remove compressed queue wrapper',
+                            $sourcePath,
+                            $destination,
+                            $fileSize
+                        )
+                    );
                 }
                 $moved = true;
             } else {
-                if (!@rename((string)$source['path'], $destination)) {
-                    throw new \RuntimeException('Could not move queued package into verified storage.');
-                }
+                $this->moveVerifiedFile(
+                    $sourcePath,
+                    $destination,
+                    $fileSize,
+                    $md5,
+                    'queued package into verified storage'
+                );
                 $moved = true;
             }
 
@@ -223,8 +241,24 @@ final class CatalogUnverifiedPromotion
                 if ($this->db->inTransaction()) {
                     $this->db->rollBack();
                 }
-                if ($moved && is_file($destination) && !is_file((string)$source['path'])) {
-                    @rename($destination, (string)$source['path']);
+                if ($moved && is_file($destination) && !is_file($sourcePath)) {
+                    try {
+                        $this->moveVerifiedFile(
+                            $destination,
+                            $sourcePath,
+                            $fileSize,
+                            $md5,
+                            'verified package back into the unverified queue after database rollback'
+                        );
+                    } catch (Throwable $rollbackError) {
+                        throw new \RuntimeException(
+                            trim($error->getMessage())
+                                . ' Filesystem rollback also failed: '
+                                . trim($rollbackError->getMessage()),
+                            0,
+                            $error
+                        );
+                    }
                 }
                 throw $error;
             }
@@ -263,6 +297,214 @@ final class CatalogUnverifiedPromotion
                 @unlink((string)$prepared['path']);
             }
         }
+    }
+
+    private function moveVerifiedFile(
+        string $source,
+        string $destination,
+        int $expectedSize,
+        string $expectedMd5,
+        string $operation
+    ): void {
+        if (!is_file($source) || !is_readable($source)) {
+            throw new \RuntimeException(
+                $this->filesystemFailureMessage(
+                    'source is unavailable before moving ' . $operation,
+                    $source,
+                    $destination,
+                    $expectedSize
+                )
+            );
+        }
+
+        if (is_file($destination)) {
+            $this->assertFileIdentity($destination, $expectedSize, $expectedMd5, 'existing destination');
+            if (!@unlink($source) && is_file($source)) {
+                throw new \RuntimeException(
+                    $this->filesystemFailureMessage(
+                        'destination already contains the expected bytes but the source could not be removed while moving ' . $operation,
+                        $source,
+                        $destination,
+                        $expectedSize
+                    )
+                );
+            }
+            return;
+        }
+
+        if (function_exists('clear_last_error')) {
+            clear_last_error();
+        }
+        if (@rename($source, $destination)) {
+            return;
+        }
+        $renameError = $this->lastFilesystemError();
+
+        $part = $destination . '.part-' . bin2hex(random_bytes(6));
+        $published = false;
+        try {
+            if (!@copy($source, $part)) {
+                throw new \RuntimeException(
+                    $this->filesystemFailureMessage(
+                        'rename failed and verified-copy fallback could not copy ' . $operation,
+                        $source,
+                        $destination,
+                        $expectedSize,
+                        $renameError
+                    )
+                );
+            }
+            $this->assertFileIdentity($part, $expectedSize, $expectedMd5, 'verified-copy temporary file');
+            @chmod($part, 0640);
+
+            if (is_file($destination)) {
+                $this->assertFileIdentity($destination, $expectedSize, $expectedMd5, 'destination created during fallback');
+            } elseif (@rename($part, $destination)) {
+                $published = true;
+            } else {
+                $publishError = $this->lastFilesystemError();
+                if (!is_file($destination)) {
+                    throw new \RuntimeException(
+                        $this->filesystemFailureMessage(
+                            'verified-copy fallback could not publish ' . $operation,
+                            $source,
+                            $destination,
+                            $expectedSize,
+                            $renameError . '; publish_' . $publishError
+                        )
+                    );
+                }
+                $this->assertFileIdentity($destination, $expectedSize, $expectedMd5, 'destination created during publish race');
+            }
+
+            if (!@unlink($source) && is_file($source)) {
+                if ($published) {
+                    @unlink($destination);
+                }
+                throw new \RuntimeException(
+                    $this->filesystemFailureMessage(
+                        'verified-copy fallback stored the expected bytes but could not remove the original while moving ' . $operation,
+                        $source,
+                        $destination,
+                        $expectedSize,
+                        $renameError
+                    )
+                );
+            }
+        } finally {
+            @unlink($part);
+        }
+    }
+
+    private function publishVerifiedCopy(
+        string $source,
+        string $destination,
+        int $expectedSize,
+        string $expectedMd5
+    ): void {
+        if (!is_file($source) || !is_readable($source)) {
+            throw new \RuntimeException(
+                $this->filesystemFailureMessage(
+                    'decompressed source is unavailable',
+                    $source,
+                    $destination,
+                    $expectedSize
+                )
+            );
+        }
+        if (is_file($destination)) {
+            $this->assertFileIdentity($destination, $expectedSize, $expectedMd5, 'existing verified destination');
+            return;
+        }
+
+        $part = $destination . '.part-' . bin2hex(random_bytes(6));
+        try {
+            if (!@copy($source, $part)) {
+                throw new \RuntimeException(
+                    $this->filesystemFailureMessage(
+                        'could not copy decompressed package into verified storage',
+                        $source,
+                        $destination,
+                        $expectedSize
+                    )
+                );
+            }
+            $this->assertFileIdentity($part, $expectedSize, $expectedMd5, 'decompressed verified-copy temporary file');
+            @chmod($part, 0640);
+            if (!@rename($part, $destination)) {
+                if (!is_file($destination)) {
+                    throw new \RuntimeException(
+                        $this->filesystemFailureMessage(
+                            'could not publish decompressed package into verified storage',
+                            $source,
+                            $destination,
+                            $expectedSize
+                        )
+                    );
+                }
+                $this->assertFileIdentity($destination, $expectedSize, $expectedMd5, 'destination created during decompressed publish race');
+            }
+        } finally {
+            @unlink($part);
+        }
+    }
+
+    private function assertFileIdentity(
+        string $path,
+        int $expectedSize,
+        string $expectedMd5,
+        string $label
+    ): void {
+        clearstatcache(true, $path);
+        $size = is_file($path) ? filesize($path) : false;
+        $md5 = is_file($path) ? md5_file($path) : false;
+        if ($size === false
+            || (int)$size !== $expectedSize
+            || !is_string($md5)
+            || !hash_equals(strtolower($expectedMd5), strtolower($md5))) {
+            throw new \RuntimeException(
+                'Verified storage identity mismatch for ' . $label
+                    . ': path=' . $path
+                    . '; expected_bytes=' . $expectedSize
+                    . '; actual_bytes=' . ($size === false ? 'unavailable' : (string)(int)$size)
+                    . '; expected_md5=' . strtolower($expectedMd5)
+                    . '; actual_md5=' . (is_string($md5) ? strtolower($md5) : 'unavailable') . '.'
+            );
+        }
+    }
+
+    private function filesystemFailureMessage(
+        string $reason,
+        string $source,
+        string $destination,
+        int $expectedSize,
+        string $priorError = ''
+    ): string {
+        clearstatcache(true, $source);
+        clearstatcache(true, $destination);
+        $sourceSize = is_file($source) ? filesize($source) : false;
+        $destinationSize = is_file($destination) ? filesize($destination) : false;
+        $free = @disk_free_space(dirname($destination));
+        return 'Could not move queued package into verified storage: ' . $reason
+            . '; source=' . $source
+            . '; source_exists=' . (is_file($source) ? 'yes' : 'no')
+            . '; source_readable=' . (is_readable($source) ? 'yes' : 'no')
+            . '; source_bytes=' . ($sourceSize === false ? 'unavailable' : (string)(int)$sourceSize)
+            . '; destination=' . $destination
+            . '; destination_exists=' . (is_file($destination) ? 'yes' : 'no')
+            . '; destination_bytes=' . ($destinationSize === false ? 'unavailable' : (string)(int)$destinationSize)
+            . '; destination_directory_writable=' . (is_writable(dirname($destination)) ? 'yes' : 'no')
+            . '; expected_bytes=' . $expectedSize
+            . '; free_bytes=' . ($free === false ? 'unknown' : (string)(int)$free)
+            . ($priorError !== '' ? '; prior_filesystem_error=' . $priorError : '')
+            . '; ' . $this->lastFilesystemError();
+    }
+
+    private function lastFilesystemError(): string
+    {
+        $last = error_get_last();
+        $message = is_array($last) ? trim((string)($last['message'] ?? '')) : '';
+        return $message !== '' ? 'filesystem_error=' . $message : 'filesystem_error=unavailable';
     }
 
     /** @return array{md5:string,sha1:string,size:int,reused:bool} */
