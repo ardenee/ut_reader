@@ -75,15 +75,22 @@ $check(
 );
 
 $check(
-    'staged_cleanup_is_reference_safe',
-    str_contains($cleanup, 'private function protectedStagedPaths(array $paths): array')
-        && str_contains($cleanup, 'status IN ("queued","running","failed","dead_letter","cancelled")')
-        && str_contains($cleanup, 'source_retained')
-        && str_contains($cleanup, '$safePayload = \'IF(JSON_VALID(payload_json),payload_json,"{}")\';')
-        && str_contains($cleanup, '$safeResult = \'IF(JSON_VALID(result_json),result_json,"{}")\';')
+    'staged_cleanup_is_direct',
+    !str_contains($cleanup, 'protectedStagedPaths')
+        && !str_contains($cleanup, 'JSON_EXTRACT(')
         && str_contains($cleanup, 'local-pak:')
-        && str_contains($cleanup, 'local-catalog:'),
-    'A staged source must survive while any restartable/recovery job still references it, and read-only sources are never owned.'
+        && str_contains($cleanup, 'local-catalog:')
+        && str_contains($cleanup, '$store->delete($relativePath)')
+        && str_contains($cleanup, '$chunkCleanup->deleteWithStats($uploadId)'),
+    'Cleanup must directly remove owned staged sources without scanning surviving jobs for references.'
+);
+
+$check(
+    'workflow_child_detection_is_set_based',
+    !str_contains($pruner, 'EXISTS(')
+        && str_contains($pruner, 'SELECT DISTINCT parent_job_id FROM ue_background_jobs')
+        && str_contains($pruner, 'array_chunk($childIds, 1000)'),
+    'Workflow cleanup must classify child branches in bounded set-based queries, not one EXISTS probe per child row.'
 );
 
 $check(
