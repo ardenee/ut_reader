@@ -269,8 +269,25 @@ final class CatalogPublicAccessGuard
         }
     }
 
+    public function transferAllowedOrThrow(PDO $db, string $label): void
+    {
+        if ($this->exempt()) {
+            return;
+        }
+        $ip = $this->clientIp();
+        if ((new CatalogTransferBlocklist($db))->isBlocked($ip)) {
+            if (!headers_sent()) {
+                http_response_code(403);
+            }
+            throw new RuntimeException(
+                $label . ' is blocked for this IP address. Website browsing remains available.'
+            );
+        }
+    }
+
     public function downloadLimit(PDO $db): void
     {
+        $this->transferAllowedOrThrow($db, 'Download');
         $settings = $this->settingsStore()->settings($db);
         $this->limitOrThrow(
             $db,
@@ -283,6 +300,7 @@ final class CatalogPublicAccessGuard
 
     public function packageLimit(PDO $db): void
     {
+        $this->transferAllowedOrThrow($db, 'Package download');
         $settings = $this->settingsStore()->settings($db);
         $this->limitOrThrow(
             $db,
