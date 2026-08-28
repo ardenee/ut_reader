@@ -34,7 +34,7 @@
     const allowedExtensions = new Set(allowed.map(function (value) {
         return String(value || '').trim().toLowerCase().replace(/^\.+/, '');
     }).filter(Boolean));
-    ['uz', 'uz2', 'uz3'].forEach(function (extension) { allowedExtensions.add(extension); });
+    ['uz2', 'uz3'].forEach(function (extension) { allowedExtensions.add(extension); });
 
     let operationActive = false;
     let stopRequested = false;
