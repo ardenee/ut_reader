@@ -78,7 +78,7 @@ if (!$downloaded && function_exists('curl_init')) {
             if (!$downloaded) {
                 $downloadErrors[] = 'cURL download failed: ' . curl_error($curl);
             }
-            // PHP 8.0+ releases CurlHandle automatically; curl_close() is deprecated in PHP 8.5.
+            // PHP 8.0+ releases CurlHandle automatically; the explicit close call is deprecated in PHP 8.5.
             unset($curl);
         }
         fclose($output);
