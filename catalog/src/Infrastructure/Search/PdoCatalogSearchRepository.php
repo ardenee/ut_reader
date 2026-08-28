@@ -19,7 +19,7 @@ final class PdoCatalogSearchRepository implements CatalogSearchRepository
     private const MAX_MATCHES_PER_FILE = 12;
     private const MAX_ROWS = 5000;
 
-    /** @var array<int,bool> */
+    /** @var array<string,bool> */
     private static array $compactAvailability = [];
 
     public function __construct(private readonly PDO $db)
@@ -336,7 +336,10 @@ final class PdoCatalogSearchRepository implements CatalogSearchRepository
 
     private function compactAvailable(array $fields): bool
     {
-        $key = spl_object_id($this->db);
+        $key = spl_object_id($this->db) . ':' . implode(',', array_values(array_intersect(
+            ['names', 'imports', 'exports'],
+            $fields
+        )));
         if (array_key_exists($key, self::$compactAvailability)) {
             return self::$compactAvailability[$key];
         }
