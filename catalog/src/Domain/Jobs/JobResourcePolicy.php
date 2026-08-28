@@ -171,6 +171,11 @@ final class JobResourcePolicy
                 self::defaultLimit(1),
                 self::positiveKey('source-identity:game:', $payload['game_id'] ?? null)
             ),
+            JobType::PROCESS_PUBLIC_UPLOAD => new JobResourceProfile(
+                self::BUCKET_PROCESSING,
+                self::defaultLimit(8),
+                self::positiveKey('public-upload:', $payload['public_upload_id'] ?? null)
+            ),
             JobType::PREPARE_BUCKET_REDIRECT,
             JobType::PROCESS_BUCKET_UPLOAD,
             JobType::PROCESS_BUCKET_STAGED_PACKAGE,
