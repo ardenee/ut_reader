@@ -63,7 +63,7 @@ final class CatalogPublicUploadBatchPreflight
                 $name = $policy->cleanName((string)($item['name'] ?? ''), 'Public upload filename is missing.');
                 if ($policy->isArchive($name) || $policy->isPakContainer($name)) {
                     throw new \InvalidArgumentException(
-                        'Public contribution upload currently accepts Unreal packages and .uz/.uz2/.uz3 redirects only.'
+                        'Public contribution upload currently accepts Unreal packages and duplicate-safe .uz2/.uz3 redirects only.'
                     );
                 }
                 $policy->validateName($name, true);
