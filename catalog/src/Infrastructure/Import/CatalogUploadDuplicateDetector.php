@@ -200,7 +200,7 @@ final class CatalogUploadDuplicateDetector
             }
         }
 
-        $storedName = basename(str_replace(["\0", '/', '\\'], ['', DIRECTORY_SEPARATOR, DIRECTORY_SEPARATOR], trim((string)($row['stored_name'] ?? ''))));
+        $storedName = basename(str_replace(["\0", '\\'], ['', '/'], trim((string)($row['stored_name'] ?? ''))));
         if ($storedName === '' || $storedName === '.' || $storedName === '..') {
             $storedName = '';
         }
@@ -277,8 +277,8 @@ final class CatalogUploadDuplicateDetector
         if ($identity === null) {
             return false;
         }
-        return hash_equals(strtolower($md5), $identity['md5'])
-            && hash_equals(strtolower($sha1), $identity['sha1']);
+        return hash_equals(strtolower(trim($md5)), $identity['md5'])
+            && hash_equals(strtolower(trim($sha1)), $identity['sha1']);
     }
 
     private function isAbsolutePath(string $path): bool

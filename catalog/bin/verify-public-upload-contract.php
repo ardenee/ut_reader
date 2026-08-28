@@ -443,6 +443,8 @@ foreach ([
     'src/Infrastructure/Import/CatalogPublicUploadBatchPreflight.php',
     'src/Infrastructure/Import/CatalogPublicUploadTransferStore.php',
     'src/Infrastructure/Import/CatalogUploadDuplicateDetector.php',
+    'src/Infrastructure/Legacy/LegacyUnverifiedFileStager.php',
+    'src/Application/Unverified/Contract/UnverifiedFileStager.php',
     'src/Infrastructure/Jobs/CatalogPublicUploadJobHandler.php',
     'src/Infrastructure/Jobs/CatalogPublicUploadMaintenanceJobHandler.php',
     'src/Domain/Jobs/JobType.php',
