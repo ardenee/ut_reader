@@ -389,9 +389,10 @@
         });
     }
 
-    async function postAction(action, token) {
-        ensureRunning();
-        activeController = new AbortController();
+    async function postAction(action, token, allowWhenStopped) {
+        if (!allowWhenStopped) ensureRunning();
+        const controller = new AbortController();
+        if (!allowWhenStopped) activeController = controller;
         try {
             const data = new FormData();
             data.append('action', action);
@@ -401,7 +402,7 @@
                 credentials: 'same-origin',
                 headers: {'X-CSRF-Token': csrf},
                 body: data,
-                signal: activeController.signal
+                signal: controller.signal
             });
             const payload = await response.json().catch(function () { return {}; });
             if (!response.ok) {
@@ -409,7 +410,15 @@
             }
             return payload;
         } finally {
-            activeController = null;
+            if (activeController === controller) activeController = null;
+        }
+    }
+
+    async function cancelReservation(token) {
+        try {
+            await postAction('cancel', token, true);
+        } catch (ignore) {
+            // Expiry/pruning remains the final safety net if cancellation cannot reach the server.
         }
     }
 
@@ -428,18 +437,13 @@
                 chunkIndex++;
             }
             setProgress(100, 'Batch ' + batchNumber + ' · finalising upload ' + ordinal + '/' + totalAccepted + ' · ' + label, true);
-            await postAction('complete', token);
+            await postAction('complete', token, false);
             counters.uploaded++;
             addLog('uploaded', label, 'Upload complete and queued for background validation/admin review.');
         } catch (error) {
             counters.failed++;
             addLog('failed', label, error.message || 'Upload failed.');
-            if (!stopRequested) {
-                try {
-                    await postAction('cancel', token);
-                } catch (ignore) {
-                }
-            }
+            await cancelReservation(token);
             if (error && error.name === 'AbortError') throw error;
         }
         renderSummary();
@@ -449,9 +453,19 @@
         if (!items.length) return;
         const checked = await inspectBatch(items, batchNumber);
         const accepted = await batchPreflight(checked, batchNumber);
-        for (let index = 0; index < accepted.length; index++) {
-            ensureRunning();
-            await uploadAccepted(accepted[index], index + 1, accepted.length, batchNumber);
+        let index = 0;
+        try {
+            for (; index < accepted.length; index++) {
+                ensureRunning();
+                await uploadAccepted(accepted[index], index + 1, accepted.length, batchNumber);
+            }
+        } catch (error) {
+            // Preflight reserves the whole accepted batch. Release the active and
+            // not-yet-started reservations immediately when Stop/fatal aborts it.
+            for (let pending = index; pending < accepted.length; pending++) {
+                await cancelReservation(accepted[pending].token);
+            }
+            throw error;
         }
     }
 
