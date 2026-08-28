@@ -22,9 +22,9 @@ use RecursiveIteratorIterator;
  * Removes disposable and orphaned job-storage files without deleting sources
  * still owned by a background job that can be resumed/restarted.
  *
- * Most completed jobs are not recovery owners. A completed result may explicitly
- * declare source_retained=true, however, when an operator must be able to retry
- * durable bytes after a reader/parser fix. Those workspaces remain protected.
+ * Completed jobs are disposable by default. Only a completed result that
+ * explicitly declares source_retained=true remains a recovery owner; this applies
+ * to both per-job workspaces and incoming diagnostic staging.
  */
 final class CatalogJobStorageCleanup
 {
@@ -205,7 +205,8 @@ final class CatalogJobStorageCleanup
         $references = [];
         $statement = $this->db->query(
             'SELECT payload_json FROM ue_background_jobs '
-            . 'WHERE status IN ("queued","running","failed","dead_letter","cancelled") '
+            . 'WHERE (status IN ("queued","running","failed","dead_letter","cancelled") '
+            . 'OR (status="completed" AND result_json LIKE "%\\\"source_retained\\\":true%")) '
             . 'AND payload_json LIKE "%jobs/incoming/%"'
         );
         foreach ($statement->fetchAll(PDO::FETCH_COLUMN) as $json) {
