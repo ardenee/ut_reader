@@ -127,6 +127,9 @@ try {
     }
     $batchId = strtolower(trim((string)($_POST['batch_id'] ?? '')));
     $batchStore = new CatalogProfiledUploadBatchStore($config);
+    if ($batchId !== '' && in_array($action, ['init', 'chunk', 'complete'], true)) {
+        $batchStore->touch($userId, $batchId);
+    }
     $store = new CatalogChunkedUploadStore($config);
 
     if ($action === 'init') {
