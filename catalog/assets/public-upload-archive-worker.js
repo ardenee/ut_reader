@@ -1,5 +1,9 @@
 'use strict';
 
+const legacyUzDecoderUrl = new URL('legacy-uz-decoder.js', self.location.href);
+legacyUzDecoderUrl.search = self.location.search;
+importScripts(legacyUzDecoderUrl.href);
+
 /* Browser-only ZIP/RAR/7z source reader. The archive File is mounted with
  * WORKERFS and is never copied into the WASM heap or uploaded. Each extraction
  * worker holds one Unreal member only and is terminated after skip/upload. */
@@ -499,8 +503,48 @@ async function inspectUz3(id, name) {
         guid:legacyGuidFromHead(firstDecoded), extension:'uz3', redirect:true,
         header:{kind:'redirect-uz3', description:'Epic UZ3 decoded package identity'}};
 }
-async function inspectActiveMember(id, name) {
+async function inspectUz(id, name, maxFileBytes) {
+    const limit=Math.max(1,Number(maxFileBytes||(512*1024*1024)));
+    let encoded=readAt(0,activeSize);
+    emitProgress(id,'redirect-decode','Decoding FCodec identity for '+name+'.',0,activeSize);
+    let decoded;
+    try {
+        decoded=self.UnrealDbLegacyUzDecoder.decode(encoded,limit);
+    } catch (error) {
+        throw new Error('Could not decode legacy .uz FCodec archive member: '
+            + (error && error.message ? error.message : 'unknown decoder error'));
+    } finally {
+        encoded=null;
+    }
+
+    const output=decoded.data;
+    const md5=new Md5(), sha1=new Sha1();
+    let done=0;
+    while(done<output.length){
+        const end=Math.min(output.length,done+HASH_CHUNK_BYTES);
+        const chunk=output.subarray(done,end);
+        md5.update(chunk); sha1.update(chunk); done=end;
+        emitProgress(id,'redirect-hash','Hashing decoded FCodec identity for '+name+'.',done,output.length);
+    }
+    const firstDecoded=output.subarray(0,Math.min(output.length,64));
+    const result={
+        md5:md5.digestHex(),
+        sha1:sha1.digestHex(),
+        identity_size:output.length,
+        guid:legacyGuidFromHead(firstDecoded),
+        extension:'uz',
+        redirect:true,
+        embedded_filename:String(decoded.embedded_filename||''),
+        wrapper_signature:Number(decoded.wrapper_signature||0),
+        header:{kind:'redirect-uz',description:'Unreal FCodec signature '+decoded.wrapper_signature+'; decoded package identity calculated in browser'}
+    };
+    decoded.data=null;
+    return result;
+}
+
+async function inspectActiveMember(id, name, maxFileBytes) {
     const extension = extensionOf(name);
+    if (extension === 'uz') return inspectUz(id, name, maxFileBytes);
     if (extension === 'uz2') return inspectUz2(id, name);
     if (extension === 'uz3') return inspectUz3(id, name);
     return inspectDirectPackage(id, name);
@@ -553,7 +597,7 @@ async function extractMember(id, file, memberPath, expectedSize, maxFileBytes) {
     activeSize = size;
     activeStream = module.FS.open(outputPath, 'r');
     nextReadOffset = 0;
-    const inspection = await inspectActiveMember(id, name);
+    const inspection = await inspectActiveMember(id, name, maxFileBytes);
     emitProgress(id, 'extract', 'Archive member ready.', size, size);
     return {name:name, member_path:normalized, size:size, inspection:inspection};
 }

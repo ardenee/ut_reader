@@ -40,7 +40,7 @@
     const allowedExtensions = new Set(allowed.map(function (value) {
         return String(value || '').trim().toLowerCase().replace(/^\.+/, '');
     }).filter(Boolean));
-    ['uz2', 'uz3'].forEach(function (extension) { allowedExtensions.add(extension); });
+    ['uz', 'uz2', 'uz3'].forEach(function (extension) { allowedExtensions.add(extension); });
 
     let operationActive = false;
     let stopRequested = false;
@@ -239,7 +239,7 @@
                 position: position,
                 total: total
             };
-            inspector.postMessage({type: 'inspect', id: id, file: file});
+            inspector.postMessage({type: 'inspect', id: id, file: file, max_file_bytes: maxFileBytes});
         });
     }
 
