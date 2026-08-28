@@ -226,6 +226,26 @@ final class CatalogPublicUploadTransferStore
     }
 
     /** @return array<string,mixed> */
+    /** @return array<string,mixed> */
+    public function statusForContributor(string $uploadToken, string $ipAddress): array
+    {
+        $token = $this->token($uploadToken);
+        $ip = $this->packedIp($ipAddress);
+        $row = $this->ownedRow($token, $ip, false);
+
+        return [
+            'id' => (int)($row['id'] ?? 0),
+            'status' => strtolower(trim((string)($row['status'] ?? ''))),
+            'background_job_id' => max(0, (int)($row['background_job_id'] ?? 0)),
+            'unverified_file_id' => max(0, (int)($row['unverified_file_id'] ?? 0)),
+            'server_md5' => strtolower(trim((string)($row['server_md5'] ?? ''))),
+            'server_sha1' => strtolower(trim((string)($row['server_sha1'] ?? ''))),
+            'server_guid' => trim((string)($row['server_guid'] ?? '')),
+            'result_message' => trim((string)($row['result_message'] ?? '')),
+            'updated_at' => (string)($row['updated_at'] ?? ''),
+        ];
+    }
+
     public function resolveForJob(int $publicUploadId, string $uploadToken): array
     {
         $row = $this->ledgerForJob($publicUploadId, $uploadToken);
