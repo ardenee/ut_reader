@@ -265,22 +265,11 @@ nativeAddEventListener.call(self, 'message', async function (event) {
                     + 'Expected 1234 or 5678; detected ' + signature + '.'
                 );
             }
-            self.postMessage({
-                type: 'result',
-                id: String(data.id || ''),
-                result: {
-                    md5: '',
-                    sha1: '',
-                    extension: 'uz',
-                    redirect: true,
-                    archive: false,
-                    header: {
-                        kind: 'redirect-uz',
-                        description: 'Unreal .uz FCodec signature ' + signature
-                    }
-                }
-            });
-            return;
+            throw new Error(
+                'Legacy .uz FCodec redirects are not accepted by the public uploader yet because '
+                + 'their decoded package identity cannot be calculated in the browser. '
+                + 'The public uploader will not send a file that cannot be checked for an existing catalog duplicate.'
+            );
         }
 
         const header = archiveHeader(extension, bytes);
