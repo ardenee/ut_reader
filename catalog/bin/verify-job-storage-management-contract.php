@@ -117,6 +117,7 @@ $check(
         && str_contains($source['page'], 'Job storage:')
         && str_contains($source['js'], "action: 'cleanup_storage'")
         && str_contains($source['action'], "if (\$action === 'cleanup_storage')")
+        && str_contains($source['action'], "'prune_unit' => 'job_storage'")
         && str_contains($source['action'], "'storage_only' => true"),
     'Background Jobs -> Maintenance must expose a background job-storage cleanup action.'
 );
@@ -126,7 +127,7 @@ $check(
     str_contains($source['maintenance'], "\$storageOnly ? ['job_storage'] : ['generated', 'job_storage']")
         && str_contains($source['maintenance'], 'new CatalogJobStorageCleanup($this->db, $this->config)')
         && str_contains($source['action'], 'CatalogQueueWorkerStarter'),
-    'Large filesystem cleanup must run as a worker job rather than inside the browser request.'
+    'Large filesystem cleanup must run as one worker job rather than inside the browser request.'
 );
 
 foreach ([
