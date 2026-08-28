@@ -27,6 +27,7 @@ $files = [
     'search_repository' => $root . '/src/Infrastructure/Search/PdoCatalogSearchRepository.php',
     'search_writer' => $root . '/src/Infrastructure/Metadata/CompactSearchProjectionWriter.php',
     'lookup_writer' => $root . '/src/Infrastructure/Metadata/CompressedMetadataLookupWriter.php',
+    'overflow_writer' => $root . '/src/Infrastructure/Metadata/CompactTermOverflowWriter.php',
     'name_backfill' => $root . '/bin/backfill-name-search-projection.php',
     'feedback' => $root . '/lib/CatalogFileFeedback.php',
     'file_info' => $root . '/file-info.php',
@@ -118,6 +119,8 @@ $check(
         && str_contains($source['search_repository'], "'Name'")
         && str_contains($source['search_writer'], 'INSERT INTO ue_name_lookup')
         && str_contains($source['lookup_writer'], "yield (string)($row['name_text'] ?? '')")
+        && str_contains($source['overflow_writer'], "$add($row['name_text'] ?? '')")
+        && str_contains($source['name_backfill'], 'CompactTermOverflowWriter')
         && str_contains($source['name_backfill'], "'names'")
         && str_contains($source['name_backfill'], '--all'),
     'Names search must use a compact exact-term projection and provide an existing-catalog backfill.'
