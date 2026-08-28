@@ -43,6 +43,7 @@ $uploadApi = $read('api/v1/public-upload.php');
 $page = $read('public-upload.php');
 $client = $read('assets/public-upload.js');
 $inspector = $read('assets/upload-file-inspector-worker.js');
+$compatibleInspector = $read('assets/upload-file-inspector-worker-compatible.js');
 $programSettings = $read('program-settings.php');
 $nav = $read('lib/CatalogSupportCore.php');
 $landing = $read('../index.php');
@@ -155,7 +156,10 @@ $check(
         && str_contains($client, 'identity_size: identitySize')
         && str_contains($preflight, '$identitySize = (int)($item[\'identity_size\']')
         && str_contains($preflight, '$md5 . "\0" . $sha1 . "\0" . $identitySize')
-        && str_contains($preflight, "in_array(\$extension, ['uz2', 'uz3'], true)"),
+        && str_contains($preflight, "if (\$md5 === '' || \$sha1 === '' || \$identitySize < 1)")
+        && str_contains($compatibleInspector, 'Legacy .uz FCodec redirects are not accepted by the public uploader yet')
+        && str_contains($client, "['uz2', 'uz3'].forEach")
+        && !str_contains($client, "['uz', 'uz2', 'uz3'].forEach"),
     'UZ2/UZ3 must be decoded and hashed in the browser; the 100-file manifest must compare decompressed package identity, not compressed wrapper size.'
 );
 
