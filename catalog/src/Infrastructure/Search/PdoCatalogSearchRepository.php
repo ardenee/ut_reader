@@ -27,7 +27,7 @@ final class PdoCatalogSearchRepository implements CatalogSearchRepository
     }
 
     /** @return list<array<string,mixed>> */
-    public function findFiles(string $query, int $limit = 200, ?int $gameId = null): array
+    public function findFiles(string $query, int $limit = 200, ?int $gameId = null, array $filters = []): array
     {
         $query = trim($query);
         if ($query === '' || strlen($query) > self::MAX_QUERY_LENGTH) {
@@ -36,11 +36,13 @@ final class PdoCatalogSearchRepository implements CatalogSearchRepository
 
         $limit = max(1, min($limit, 500));
         $gameId = $gameId !== null && $gameId > 0 ? $gameId : null;
-        $base = $this->findCoreFiles($query, $limit, $gameId);
+        $filters = self::normalizeFilters($filters);
+        $base = $this->findCoreFiles($query, $limit, $gameId, $filters);
         if (
             mb_strlen($query, 'UTF-8') < self::MIN_BROAD_QUERY_LENGTH
             || count($base) >= $limit
-            || !$this->compactAvailable()
+            || !self::hasMetadataScope($filters['fields'])
+            || !$this->compactAvailable($filters['fields'])
         ) {
             return $base;
         }
@@ -65,8 +67,10 @@ final class PdoCatalogSearchRepository implements CatalogSearchRepository
         // still supports prefix/contains matching.
         $matches = [];
         $rowLimit = min(self::MAX_ROWS, max(100, $limit * 12));
-        $this->collectExactMetadataMatches($gameId, $query, $rowLimit, $matches);
-        $this->collectExactQualifiedExportMatches($gameId, $query, $rowLimit, $matches);
+        $this->collectExactMetadataMatches($gameId, $query, $rowLimit, $matches, $filters);
+        if (in_array('exports', $filters['fields'], true)) {
+            $this->collectExactQualifiedExportMatches($gameId, $query, $rowLimit, $matches, $filters['extensions']);
+        }
         if ($matches === []) {
             return $base;
         }
@@ -129,13 +133,12 @@ final class PdoCatalogSearchRepository implements CatalogSearchRepository
     }
 
     /** @return list<array<string,mixed>> */
-    private function findCoreFiles(string $query, int $limit, ?int $gameId): array
+    private function findCoreFiles(string $query, int $limit, ?int $gameId, array $filters): array
     {
         $candidateMatches = [];
-        $fileScopeSql = ' AND f.scan_status="verified"' . ($gameId === null ? '' : ' AND f.game_id=?');
-        $fileScopeArgs = $gameId === null ? [] : [$gameId];
+        [$fileScopeSql, $fileScopeArgs] = self::fileScope($gameId, $filters['extensions']);
 
-        foreach (self::identityQueries($query) as [$stage, $column, $value, $label]) {
+        foreach (self::identityQueries($query, $filters['fields']) as [$stage, $column, $value, $label]) {
             $this->collectStage(
                 $stage,
                 'SELECT f.id,f.' . $column . ' match_value FROM ue_files f '
@@ -152,6 +155,10 @@ final class PdoCatalogSearchRepository implements CatalogSearchRepository
         }
 
         if (mb_strlen($query, 'UTF-8') < self::MIN_BROAD_QUERY_LENGTH) {
+            return [];
+        }
+
+        if (!in_array('files', $filters['fields'], true)) {
             return [];
         }
 
@@ -174,8 +181,8 @@ final class PdoCatalogSearchRepository implements CatalogSearchRepository
             );
         }
 
-        $this->collectAlias($gameId, 'package_name', $prefix, 'Package alias', $limit, $candidateMatches);
-        $this->collectAlias($gameId, 'original_name', $prefix, 'Alias file', $limit, $candidateMatches);
+        $this->collectAlias($gameId, $filters['extensions'], 'package_name', $prefix, 'Package alias', $limit, $candidateMatches);
+        $this->collectAlias($gameId, $filters['extensions'], 'original_name', $prefix, 'Alias file', $limit, $candidateMatches);
 
         // Contains search is retained only on the comparatively small file/alias
         // identity tables. It is deliberately not used on compact metadata term
@@ -197,8 +204,8 @@ final class PdoCatalogSearchRepository implements CatalogSearchRepository
                     $candidateMatches
                 );
             }
-            $this->collectAlias($gameId, 'package_name', $contains, 'Package alias', $limit, $candidateMatches);
-            $this->collectAlias($gameId, 'original_name', $contains, 'Alias file', $limit, $candidateMatches);
+            $this->collectAlias($gameId, $filters['extensions'], 'package_name', $contains, 'Package alias', $limit, $candidateMatches);
+            $this->collectAlias($gameId, $filters['extensions'], 'original_name', $contains, 'Alias file', $limit, $candidateMatches);
         }
 
         return $this->hydrate($candidateMatches, $limit);
@@ -207,6 +214,7 @@ final class PdoCatalogSearchRepository implements CatalogSearchRepository
     /** @param array<int,list<array{field:string,value:string}>> $candidateMatches */
     private function collectAlias(
         ?int $gameId,
+        array $extensions,
         string $column,
         string $value,
         string $label,
@@ -225,6 +233,10 @@ final class PdoCatalogSearchRepository implements CatalogSearchRepository
         if ($gameId !== null) {
             $sql .= ' AND a.game_id=?';
             $args[] = $gameId;
+        }
+        if ($extensions !== []) {
+            $sql .= ' AND f.extension IN (' . implode(',', array_fill(0, count($extensions), '?')) . ')';
+            array_push($args, ...$extensions);
         }
         $sql .= ' ORDER BY a.' . $column . ',a.id';
         $this->collectStage('alias_' . $column, $sql, $args, $label, $limit, $candidateMatches);
@@ -268,19 +280,24 @@ final class PdoCatalogSearchRepository implements CatalogSearchRepository
     }
 
     /** @return list<array{string,string,string,string}> */
-    private static function identityQueries(string $query): array
+    private static function identityQueries(string $query, array $fields): array
     {
-        if (preg_match('/^[A-Fa-f0-9]{40}$/', $query) === 1) {
+        if (preg_match('/^[A-Fa-f0-9]{40}$/', $query) === 1 && in_array('sha1', $fields, true)) {
             return [['hash_sha1', 'sha1', strtolower($query), 'SHA1']];
         }
-        if (preg_match('/^[A-Fa-f0-9]{8}(?:-[A-Fa-f0-9]{8}){3}$/', $query) === 1) {
+        if (preg_match('/^[A-Fa-f0-9]{8}(?:-[A-Fa-f0-9]{8}){3}$/', $query) === 1
+            && in_array('guid', $fields, true)) {
             return [['guid_exact', 'package_guid', strtoupper($query), 'GUID']];
         }
         if (preg_match('/^[A-Fa-f0-9]{32}$/', $query) === 1) {
-            return [
-                ['hash_md5', 'md5', strtolower($query), 'MD5'],
-                ['guid_compact', 'package_guid', strtoupper(implode('-', str_split($query, 8))), 'GUID'],
-            ];
+            $queries = [];
+            if (in_array('md5', $fields, true)) {
+                $queries[] = ['hash_md5', 'md5', strtolower($query), 'MD5'];
+            }
+            if (in_array('guid', $fields, true)) {
+                $queries[] = ['guid_compact', 'package_guid', strtoupper(implode('-', str_split($query, 8))), 'GUID'];
+            }
+            return $queries;
         }
         return [];
     }
@@ -317,18 +334,25 @@ final class PdoCatalogSearchRepository implements CatalogSearchRepository
         }
     }
 
-    private function compactAvailable(): bool
+    private function compactAvailable(array $fields): bool
     {
         $key = spl_object_id($this->db);
         if (array_key_exists($key, self::$compactAvailability)) {
             return self::$compactAvailability[$key];
         }
         try {
-            foreach ([
-                ['ue_export_lookup', 'local_path_term_id'],
-                ['ue_dependency_links', 'import_object_term_id'],
-                ['ue_dependency_links', 'required_object_term_id'],
-            ] as [$table, $column]) {
+            $columns = [];
+            if (in_array('names', $fields, true)) {
+                $columns[] = ['ue_name_lookup', 'name_term_id'];
+            }
+            if (in_array('exports', $fields, true)) {
+                $columns[] = ['ue_export_lookup', 'local_path_term_id'];
+            }
+            if (in_array('imports', $fields, true)) {
+                $columns[] = ['ue_dependency_links', 'import_object_term_id'];
+                $columns[] = ['ue_dependency_links', 'required_object_term_id'];
+            }
+            foreach ($columns as [$table, $column]) {
                 $statement = $this->db->prepare(
                     'SELECT 1 FROM information_schema.COLUMNS '
                     . 'WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=? AND COLUMN_NAME=? LIMIT 1'
@@ -345,8 +369,13 @@ final class PdoCatalogSearchRepository implements CatalogSearchRepository
     }
 
     /** @param array<int,list<array{field:string,value:string}>> $matches */
-    private function collectExactMetadataMatches(?int $gameId, string $query, int $rowLimit, array &$matches): void
-    {
+    private function collectExactMetadataMatches(
+        ?int $gameId,
+        string $query,
+        int $rowLimit,
+        array &$matches,
+        array $filters
+    ): void {
         $term = $this->exactTerm($query);
         if ($term === null) {
             return;
@@ -354,61 +383,36 @@ final class PdoCatalogSearchRepository implements CatalogSearchRepository
         $termId = (int)$term['id'];
         $value = (string)$term['value'];
 
-        $this->collectTermReferenceMatches(
-            'ue_export_lookup',
-            'object_term_id',
-            'export_index',
-            'Export object',
-            $termId,
-            $value,
-            $gameId,
-            $rowLimit,
-            $matches
-        );
-        $this->collectTermReferenceMatches(
-            'ue_export_lookup',
-            'local_path_term_id',
-            'export_index',
-            'Export local path',
-            $termId,
-            $value,
-            $gameId,
-            $rowLimit,
-            $matches
-        );
-        $this->collectTermReferenceMatches(
-            'ue_dependency_links',
-            'import_object_term_id',
-            'import_index',
-            'Import object',
-            $termId,
-            $value,
-            $gameId,
-            $rowLimit,
-            $matches
-        );
-        $this->collectTermReferenceMatches(
-            'ue_dependency_links',
-            'required_object_term_id',
-            'import_index',
-            'Import path',
-            $termId,
-            $value,
-            $gameId,
-            $rowLimit,
-            $matches
-        );
-        $this->collectTermReferenceMatches(
-            'ue_dependency_links',
-            'required_package_term_id',
-            'import_index',
-            'Required package',
-            $termId,
-            $value,
-            $gameId,
-            $rowLimit,
-            $matches
-        );
+        if (in_array('names', $filters['fields'], true)) {
+            $this->collectTermReferenceMatches(
+                'ue_name_lookup', 'name_term_id', 'name_index', 'Name',
+                $termId, $value, $gameId, $rowLimit, $matches, $filters['extensions']
+            );
+        }
+        if (in_array('exports', $filters['fields'], true)) {
+            $this->collectTermReferenceMatches(
+                'ue_export_lookup', 'object_term_id', 'export_index', 'Export object',
+                $termId, $value, $gameId, $rowLimit, $matches, $filters['extensions']
+            );
+            $this->collectTermReferenceMatches(
+                'ue_export_lookup', 'local_path_term_id', 'export_index', 'Export local path',
+                $termId, $value, $gameId, $rowLimit, $matches, $filters['extensions']
+            );
+        }
+        if (in_array('imports', $filters['fields'], true)) {
+            $this->collectTermReferenceMatches(
+                'ue_dependency_links', 'import_object_term_id', 'import_index', 'Import object',
+                $termId, $value, $gameId, $rowLimit, $matches, $filters['extensions']
+            );
+            $this->collectTermReferenceMatches(
+                'ue_dependency_links', 'required_object_term_id', 'import_index', 'Import path',
+                $termId, $value, $gameId, $rowLimit, $matches, $filters['extensions']
+            );
+            $this->collectTermReferenceMatches(
+                'ue_dependency_links', 'required_package_term_id', 'import_index', 'Required package',
+                $termId, $value, $gameId, $rowLimit, $matches, $filters['extensions']
+            );
+        }
     }
 
     /**
@@ -423,7 +427,8 @@ final class PdoCatalogSearchRepository implements CatalogSearchRepository
         string $value,
         ?int $gameId,
         int $rowLimit,
-        array &$matches
+        array &$matches,
+        array $extensions = []
     ): void {
         $sql = 'SELECT l.file_id id FROM ' . $table . ' l '
             . 'JOIN ue_files f ON f.id=l.file_id AND f.scan_status="verified" '
@@ -432,6 +437,10 @@ final class PdoCatalogSearchRepository implements CatalogSearchRepository
         if ($gameId !== null) {
             $sql .= ' AND f.game_id=?';
             $args[] = $gameId;
+        }
+        if ($extensions !== []) {
+            $sql .= ' AND f.extension IN (' . implode(',', array_fill(0, count($extensions), '?')) . ')';
+            array_push($args, ...$extensions);
         }
         $sql .= ' ORDER BY l.file_id,l.' . $orderColumn . ' LIMIT ' . $rowLimit;
 
@@ -461,7 +470,8 @@ final class PdoCatalogSearchRepository implements CatalogSearchRepository
         ?int $gameId,
         string $query,
         int $rowLimit,
-        array &$matches
+        array &$matches,
+        array $extensions = []
     ): void {
         $separator = strpos($query, '.');
         if ($separator === false || $separator < 1 || $separator >= strlen($query) - 1) {
@@ -483,6 +493,10 @@ final class PdoCatalogSearchRepository implements CatalogSearchRepository
         if ($gameId !== null) {
             $sql .= ' AND f.game_id=?';
             $args[] = $gameId;
+        }
+        if ($extensions !== []) {
+            $sql .= ' AND f.extension IN (' . implode(',', array_fill(0, count($extensions), '?')) . ')';
+            array_push($args, ...$extensions);
         }
         $sql .= ' ORDER BY l.file_id,l.export_index LIMIT ' . $rowLimit;
 
@@ -507,6 +521,10 @@ final class PdoCatalogSearchRepository implements CatalogSearchRepository
             if ($gameId !== null) {
                 $aliasSql .= ' AND a.game_id=?';
                 $aliasArgs[] = $gameId;
+            }
+            if ($extensions !== []) {
+                $aliasSql .= ' AND f.extension IN (' . implode(',', array_fill(0, count($extensions), '?')) . ')';
+                array_push($aliasArgs, ...$extensions);
             }
             $aliasSql .= ' ORDER BY l.file_id,l.export_index LIMIT ' . $rowLimit;
             $aliasStatement = $this->db->prepare($aliasSql);
@@ -556,6 +574,50 @@ final class PdoCatalogSearchRepository implements CatalogSearchRepository
                 $error
             );
         }
+    }
+
+    /** @return array{fields:list<string>,extensions:list<string>} */
+    private static function normalizeFilters(array $filters): array
+    {
+        $allowedFields = ['files', 'names', 'imports', 'exports', 'guid', 'md5', 'sha1'];
+        $fields = is_array($filters['fields'] ?? null) ? $filters['fields'] : [];
+        $fields = array_values(array_unique(array_filter(
+            array_map(static fn($value): string => strtolower(trim((string)$value)), $fields),
+            static fn(string $value): bool => in_array($value, $allowedFields, true)
+        )));
+        if ($fields === []) {
+            $fields = $allowedFields;
+        }
+
+        $extensions = is_array($filters['extensions'] ?? null) ? $filters['extensions'] : [];
+        $extensions = array_values(array_unique(array_filter(
+            array_map(static fn($value): string => strtolower(trim((string)$value, ". \\t\\r\\n")), $extensions),
+            static fn(string $value): bool => $value !== '' && preg_match('/^[a-z0-9_]{1,16}$/', $value) === 1
+        )));
+        return ['fields' => $fields, 'extensions' => array_slice($extensions, 0, 32)];
+    }
+
+    /** @return array{0:string,1:list<mixed>} */
+    private static function fileScope(?int $gameId, array $extensions): array
+    {
+        $sql = ' AND f.scan_status="verified"';
+        $args = [];
+        if ($gameId !== null) {
+            $sql .= ' AND f.game_id=?';
+            $args[] = $gameId;
+        }
+        if ($extensions !== []) {
+            $sql .= ' AND f.extension IN (' . implode(',', array_fill(0, count($extensions), '?')) . ')';
+            array_push($args, ...$extensions);
+        }
+        return [$sql, $args];
+    }
+
+    private static function hasMetadataScope(array $fields): bool
+    {
+        return in_array('names', $fields, true)
+            || in_array('imports', $fields, true)
+            || in_array('exports', $fields, true);
     }
 
     /** @param array<int,list<array{field:string,value:string}>> $matches */
