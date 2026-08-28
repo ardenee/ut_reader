@@ -188,8 +188,19 @@ final class CatalogBucketIdentityProcessor
     /** @param resource $handle */
     private function unlockIdentity($handle): void
     {
+        $metadata = stream_get_meta_data($handle);
+        $path = is_array($metadata) ? (string)($metadata['uri'] ?? '') : '';
         flock($handle, LOCK_UN);
         fclose($handle);
+
+        // Identity locks are synchronization primitives, not persistent state.
+        // Once the critical section ends, remove the zero-byte lock file and
+        // opportunistically remove its hash-prefix directory.
+        if ($path !== '' && is_file($path)) {
+            @unlink($path);
+            @rmdir(dirname($path));
+            @rmdir(dirname(dirname($path)));
+        }
     }
 
     /** @param callable(array<string,mixed>):void|null $progress @param array<string,mixed> $meta */
