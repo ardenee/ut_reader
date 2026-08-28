@@ -35,6 +35,7 @@
     const applyWorkers = document.getElementById('jobs-apply-workers');
     const recoverButton = document.getElementById('jobs-recover');
     const cleanupButton = document.getElementById('jobs-cleanup');
+    const storageCleanupButton = document.getElementById('jobs-storage-cleanup');
     const cleanupDays = document.getElementById('jobs-cleanup-days');
     const selectVisible = document.getElementById('jobs-select-visible');
     const selectedCount = document.getElementById('jobs-selected-count');
@@ -827,7 +828,7 @@
         const days = Math.max(1, parseInt(cleanupDays ? cleanupDays.value : '30', 10) || 30);
         if (!window.confirm(
             'Queue cleanup of completed/stopped history older than ' + days
-            + ' day(s)? Owned staged sources will also be removed when no retryable/recovery job still references them.'
+            + ' day(s)? Owned staged sources for deleted jobs will also be removed.'
         )) return;
         cleanupButton.disabled = true;
         try {
@@ -849,6 +850,35 @@
             setNotice(error.message || 'Cleanup failed.', 9000);
         } finally {
             cleanupButton.disabled = false;
+            await refresh();
+        }
+    });
+
+    if (storageCleanupButton) storageCleanupButton.addEventListener('click', async function () {
+        if (!window.confirm(
+            'Queue cleanup of orphaned job-storage files? Live/retryable/problem sources and active browser uploads will be retained.'
+        )) return;
+        storageCleanupButton.disabled = true;
+        try {
+            const payload = await postJson(actionUrl, {
+                action: 'cleanup_storage',
+                queue: queue,
+                minimum_age_seconds: 60
+            });
+            const data = payload && payload.data ? payload.data : {};
+            const jobId = Number(data.job_id || 0);
+            let message = jobId > 0
+                ? 'Queued job storage cleanup #' + String(jobId) + '.'
+                : 'Job storage cleanup was queued.';
+            if (data.job_storage_root) {
+                message += ' Storage root: ' + String(data.job_storage_root) + '.';
+            }
+            message += ' Progress and reclaimed bytes will appear in Background Jobs.';
+            setNotice(message, 12000);
+        } catch (error) {
+            setNotice(error.message || 'Could not queue job storage cleanup.', 9000);
+        } finally {
+            storageCleanupButton.disabled = false;
             await refresh();
         }
     });
