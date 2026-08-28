@@ -37,6 +37,7 @@ final class CompactSearchProjectionWriter
     {
         $this->assertSchema();
         $file = (array)($snapshot['file'] ?? []);
+        $names = (array)($snapshot['names'] ?? []);
         $imports = (array)($snapshot['imports'] ?? []);
         $exports = (array)($snapshot['exports'] ?? []);
         $paths = (array)($snapshot['paths'] ?? []);
@@ -51,6 +52,8 @@ final class CompactSearchProjectionWriter
         // build a second unique-term map and issue duplicate SELECT batches.
         $termIds = $resolvedTermIds
             ?? $this->resolveTermIds($this->snapshotSearchTermValues($snapshot), $sqlBatches);
+
+        $this->writeNames($snapshot, $sqlBatches, $termIds);
 
         $this->assertProjectionCounts($fileId, count($imports), count($exports), $sqlBatches);
 
@@ -118,10 +121,83 @@ final class CompactSearchProjectionWriter
 
         $this->assertTermProjectionCounts(
             $fileId,
+            count($names),
             count($imports),
             count($exports),
             $sqlBatches
         );
+    }
+
+    /**
+     * Publish exact Name-table search references for one file.
+     *
+     * @param array<string,mixed> $snapshot
+     * @param array<string,int>|null $resolvedTermIds
+     */
+    public function writeNames(
+        array $snapshot,
+        int &$sqlBatches,
+        ?array $resolvedTermIds = null
+    ): int {
+        $this->assertSchema();
+        $fileId = (int)(($snapshot['file']['id'] ?? 0));
+        if ($fileId < 1) {
+            throw new RuntimeException('Compact Name search projection requires a positive file ID.');
+        }
+        $names = array_values((array)($snapshot['names'] ?? []));
+        $termIds = $resolvedTermIds
+            ?? $this->resolveTermIds($this->snapshotNameValues($snapshot), $sqlBatches);
+
+        $this->db->prepare('DELETE FROM ue_name_lookup WHERE file_id=?')->execute([$fileId]);
+        $sqlBatches++;
+
+        $batch = [];
+        foreach ($names as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $batch[] = [
+                (int)($row['name_index'] ?? 0),
+                $this->requiredTermId($termIds, (string)($row['name_text'] ?? '')),
+            ];
+            if (count($batch) >= self::UPDATE_BATCH_SIZE) {
+                $this->insertNameBatch($fileId, $batch);
+                $sqlBatches++;
+                $batch = [];
+            }
+        }
+        if ($batch !== []) {
+            $this->insertNameBatch($fileId, $batch);
+            $sqlBatches++;
+        }
+        return count($names);
+    }
+
+    /** @param array<string,mixed> $snapshot @return \Generator<int,string> */
+    private function snapshotNameValues(array $snapshot): \Generator
+    {
+        foreach ((array)($snapshot['names'] ?? []) as $row) {
+            if (is_array($row)) {
+                yield (string)($row['name_text'] ?? '');
+            }
+        }
+    }
+
+    /** @param list<array{0:int,1:int}> $rows */
+    private function insertNameBatch(int $fileId, array $rows): void
+    {
+        if ($rows === []) {
+            return;
+        }
+        $statement = $this->db->prepare(
+            'INSERT INTO ue_name_lookup(file_id,name_index,name_term_id) VALUES '
+            . implode(',', array_fill(0, count($rows), '(?,?,?)'))
+        );
+        $arguments = [];
+        foreach ($rows as [$nameIndex, $termId]) {
+            array_push($arguments, $fileId, $nameIndex, $termId);
+        }
+        $statement->execute($arguments);
     }
 
     private function assertSchema(): void
@@ -132,6 +208,7 @@ final class CompactSearchProjectionWriter
         }
 
         $columns = [
+            ['ue_name_lookup', 'name_term_id'],
             ['ue_export_lookup', 'local_path_term_id'],
             ['ue_dependency_links', 'import_object_term_id'],
         ];
@@ -180,22 +257,31 @@ final class CompactSearchProjectionWriter
 
     private function assertTermProjectionCounts(
         int $fileId,
+        int $expectedNames,
         int $expectedImports,
         int $expectedExports,
         int &$sqlBatches
     ): void {
         $statement = $this->db->prepare(
             'SELECT '
+            . '(SELECT COUNT(*) FROM ue_name_lookup WHERE file_id=?) name_term_rows,'
             . '(SELECT COUNT(*) FROM ue_dependency_links '
             . 'WHERE file_id=? AND import_object_term_id IS NOT NULL) import_term_rows,'
             . '(SELECT COUNT(*) FROM ue_export_lookup '
             . 'WHERE file_id=? AND local_path_term_id IS NOT NULL) export_term_rows'
         );
-        $statement->execute([$fileId, $fileId]);
+        $statement->execute([$fileId, $fileId, $fileId]);
         $sqlBatches++;
         $row = $statement->fetch(PDO::FETCH_ASSOC) ?: [];
+        $actualNames = (int)($row['name_term_rows'] ?? -1);
         $actualImports = (int)($row['import_term_rows'] ?? -1);
         $actualExports = (int)($row['export_term_rows'] ?? -1);
+        if ($actualNames !== $expectedNames) {
+            throw new RuntimeException(
+                'Compact Name search-term count mismatch for file #' . $fileId
+                . ': expected ' . $expectedNames . ', found ' . $actualNames . '.'
+            );
+        }
         if ($actualImports !== $expectedImports) {
             throw new RuntimeException(
                 'Compact Import search-term count mismatch for file #' . $fileId
@@ -252,6 +338,11 @@ final class CompactSearchProjectionWriter
     private function snapshotSearchTermValues(array $snapshot): \Generator
     {
         $paths = (array)($snapshot['paths'] ?? []);
+        foreach ((array)($snapshot['names'] ?? []) as $row) {
+            if (is_array($row)) {
+                yield (string)($row['name_text'] ?? '');
+            }
+        }
         foreach ((array)($snapshot['imports'] ?? []) as $row) {
             if (is_array($row)) {
                 yield (string)($row['object_name'] ?? '');
