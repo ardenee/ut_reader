@@ -55,6 +55,7 @@ final class JobType
     public const PROCESS_BUCKET_STAGED_PACKAGE = 'catalog.process_bucket_staged_package';
     public const RECONCILE_UNVERIFIED_STORAGE = 'catalog.reconcile_unverified_storage';
     public const PRUNE_STALE_ARTIFACTS = 'catalog.prune_stale_artifacts';
+    public const PRUNE_PUBLIC_UPLOADS = 'catalog.prune_public_uploads';
     public const PRUNE_UPLOAD_PROGRESS = 'catalog.prune_upload_progress';
 
     /** @return list<string> */
@@ -102,6 +103,7 @@ final class JobType
             self::PROCESS_BUCKET_STAGED_PACKAGE,
             self::RECONCILE_UNVERIFIED_STORAGE,
             self::PRUNE_STALE_ARTIFACTS,
+            self::PRUNE_PUBLIC_UPLOADS,
             self::PRUNE_UPLOAD_PROGRESS,
         ];
     }
