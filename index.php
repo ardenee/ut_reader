@@ -168,7 +168,7 @@ catalog_head('UnrealDB - Unreal File Catalog');
         </div>
       <?php endforeach; ?>
     </div>
-    <p class="muted small">File-storage figures are the summed sizes of verified catalog files, not free disk space. Database size is MySQL's currently allocated data + index size and may not shrink immediately when rows are deleted.</p>
+    <p class="muted small">File-storage figures are the summed sizes of verified catalog files. Database size is MySQL's currently allocated data + index size.</p>
   <?php else: ?>
     <p class="muted">Catalog storage totals are temporarily unavailable.</p>
   <?php endif; ?>
