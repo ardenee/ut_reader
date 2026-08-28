@@ -59,6 +59,41 @@ try {
 
         $configuredQueue = trim((string)($application->config['queue']['name'] ?? 'catalog')) ?: 'catalog';
         $queueName = $configuredQueue . ':public-upload';
+        $rowStatus = strtolower(trim((string)($row['status'] ?? '')));
+        $existingJobId = max(0, (int)($row['background_job_id'] ?? 0));
+        $existingFileId = max(0, (int)($row['unverified_file_id'] ?? 0));
+
+        if (in_array($rowStatus, ['unverified', 'duplicate'], true) && $existingFileId > 0) {
+            JsonResponse::send([
+                'ok' => true,
+                'data' => [
+                    'public_upload_id' => $publicUploadId,
+                    'job_id' => $existingJobId,
+                    'queue' => $queueName,
+                    'status' => $rowStatus,
+                    'file_id' => $existingFileId,
+                    'message' => 'This contribution was already processed as file #' . $existingFileId . '.',
+                ],
+            ], 200);
+        }
+
+        if ($existingJobId > 0) {
+            $worker = (new CatalogQueueWorkerStarter($application->db, $application->config))
+                ->start($queueName, true, null);
+            JsonResponse::send([
+                'ok' => true,
+                'data' => [
+                    'public_upload_id' => $publicUploadId,
+                    'job_id' => $existingJobId,
+                    'queue' => $queueName,
+                    'status' => $rowStatus !== '' ? $rowStatus : 'queued',
+                    'worker' => $worker['worker'],
+                    'worker_error' => (string)$worker['worker_error'],
+                    'message' => 'This contribution is already queued for background validation.',
+                ],
+            ], 202);
+        }
+
         $jobId = (new PdoJobQueue($application->db))->enqueue(
             $queueName,
             JobType::PROCESS_PUBLIC_UPLOAD,
