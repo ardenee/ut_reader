@@ -105,7 +105,7 @@ $check(
 
 $check(
     'guid_is_advisory_not_rejection',
-    str_contains($preflight, "'guid_match' => $guidInfo")
+    str_contains($preflight, '\'guid_match\' => $guidInfo')
         && str_contains($preflight, 'the physical hashes differ; it will be retained for admin review')
         && !str_contains($preflight, "reason' => 'guid_duplicate'"),
     'Matching GUID with different bytes must be flagged but still uploadable.'
@@ -159,11 +159,11 @@ $check(
 
 $check(
     'completion_and_worker_handoff_are_idempotent',
-    str_contains($transfer, "in_array($status, ['uploaded', 'processing', 'unverified', 'duplicate'], true)")
+    str_contains($transfer, 'in_array($status, [\'uploaded\', \'processing\', \'unverified\', \'duplicate\'], true)')
         && str_contains($uploadApi, '$existingJobId = max(0, (int)($row[\'background_job_id\'] ?? 0));')
         && str_contains($uploadApi, 'if ($existingJobId > 0)')
         && str_contains($uploadApi, 'JobType::PROCESS_PUBLIC_UPLOAD')
-        && str_contains($uploadApi, "'public-upload:' . $publicUploadId")
+        && str_contains($uploadApi, '\'public-upload:\' . $publicUploadId')
         && str_contains($uploadApi, 'CatalogQueueWorkerStarter'),
     'Lost complete responses must reuse the same durable upload/job rather than creating duplicate processing.'
 );
