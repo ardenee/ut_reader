@@ -54,7 +54,9 @@ try {
     JsonResponse::error('invalid_manifest', $error->getMessage(), 400);
 } catch (\RuntimeException $error) {
     $message = trim($error->getMessage()) ?: 'Public upload preflight is unavailable.';
-    $status = preg_match('/limit|paused|reserve|busy/i', $message) === 1 ? 429 : 409;
+    $status = str_contains(strtolower($message), 'blocked for this ip address')
+        ? 403
+        : (preg_match('/limit|paused|reserve|busy/i', $message) === 1 ? 429 : 409);
     JsonResponse::error('public_upload_unavailable', $message, $status);
 } catch (\Throwable $error) {
     error_log('[UnrealDB][' . catalog_request_id() . '] public upload preflight failed: '
