@@ -230,11 +230,11 @@ final class CatalogPublicUploadJobHandler implements JobHandler
             if ($decodedPath !== '' && is_file($decodedPath)) {
                 @unlink($decodedPath);
             }
-            $store->removeQuarantine($token);
+            // Failed extraction/validation is the one case where the original
+            // contribution should remain staged for diagnosis/retry.
             $this->updateLedger($publicUploadId, [
                 'status' => 'failed',
                 'active_identity_key' => null,
-                'quarantine_relative_path' => null,
                 'result_message' => substr(trim($error->getMessage()) ?: get_class($error), 0, 1000),
             ]);
             throw $error;
