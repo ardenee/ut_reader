@@ -124,8 +124,8 @@
             return link;
         }
 
-        var requiresTab = tab('requires', 'Requires', data.requires.length);
-        var requiredByTab = tab('required-by', 'Required By', data.required_by.length);
+        var requiresTab = tab('requires', 'Uses', data.requires.length);
+        var requiredByTab = tab('required-by', 'Used By', data.required_by.length);
         nav.appendChild(requiresTab);
         nav.appendChild(requiredByTab);
 
@@ -139,8 +139,8 @@
             return section;
         }
 
-        var requiresPanel = panel('requires', 'Requires', data.requires);
-        var requiredByPanel = panel('required-by', 'Required By', data.required_by);
+        var requiresPanel = panel('requires', 'Uses', data.requires);
+        var requiredByPanel = panel('required-by', 'Used By', data.required_by);
         exportsPanel.insertAdjacentElement('afterend', requiredByPanel);
         exportsPanel.insertAdjacentElement('afterend', requiresPanel);
         bindNewTables(root);
