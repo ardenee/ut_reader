@@ -221,10 +221,11 @@ $check(
 $check(
     'unverified_admin_exposes_pending_public_contributions',
     str_contains($unverifiedQuery, 'public_uploads')
-        && str_contains($unverifiedQuery, 'WHERE status IN ("uploaded","processing","failed")')
+        && str_contains($unverifiedQuery, 'WHERE status IN ("uploaded","processing","failed","duplicate")')
         && str_contains($unverifiedPage, 'Public contribution status')
         && str_contains($unverifiedPage, 'Recent public uploads that have not yet become normal Unverified Files rows.')
-        && str_contains($unverifiedPage, 'Source contribution:'),
+        && str_contains($unverifiedPage, 'Source contribution:')
+        && str_contains($unverifiedPage, 'file-info.php?id='),
     'Unverified Files must make pending/failed public contributions visible and show the original contribution path once staged.'
 );
 
