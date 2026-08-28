@@ -1,10 +1,6 @@
 <?php
 /**
- * UnrealDB PHP File Audit
- * Purpose: Renders the public UnrealDB landing page and links visitors into the catalog application.
- * Why: It provides the site-level entry point before users enter `/catalog/`.
- * Role: Public landing page only; catalog functionality is delegated to the main application.
- * Audit: Keep lightweight and avoid duplicating catalog-page logic here.
+ * Public UnrealDB landing page.
  */
 declare(strict_types=1);
 
@@ -12,9 +8,26 @@ require_once __DIR__ . '/catalog/lib/CatalogSupport.php';
 
 catalog_start_session();
 
-$requestHost = strtolower((string) ($_SERVER['HTTP_HOST'] ?? ''));
-$requestHost = preg_replace('/:\d+$/', '', $requestHost) ?? $requestHost;
-$isDirectIpAccess = filter_var($requestHost, FILTER_VALIDATE_IP) !== false;
+$gameStorage = [];
+$totalCatalogFiles = 0;
+$totalCatalogBytes = 0;
+try {
+    $config = catalog_config();
+    $db = catalog_db($config);
+    $gameStorage = catalog_all(
+        $db,
+        'SELECT g.id,g.name,COUNT(f.id) file_count,COALESCE(SUM(f.file_size),0) storage_bytes '
+        . 'FROM ue_games g LEFT JOIN ue_files f ON f.game_id=g.id AND f.scan_status="verified" '
+        . 'GROUP BY g.id,g.name ORDER BY g.name'
+    );
+    foreach ($gameStorage as $row) {
+        $totalCatalogFiles += max(0, (int)($row['file_count'] ?? 0));
+        $totalCatalogBytes += max(0, (int)($row['storage_bytes'] ?? 0));
+    }
+} catch (Throwable $error) {
+    error_log('[UnrealDB][' . catalog_request_id() . '] landing storage summary unavailable: ' . $error->getMessage());
+    $gameStorage = [];
+}
 
 catalog_head('UnrealDB - Unreal File Catalog');
 ?>
@@ -23,6 +36,7 @@ catalog_head('UnrealDB - Unreal File Catalog');
   <p class="muted">A catalog for Unreal Engine package files, built to gather Unreal and Unreal Tournament files, inspect imports and exports, and help complete libraries by finding missing dependencies.</p>
   <p class="hero-actions">
     <a class="button" href="catalog/index.php">Open Catalog</a>
+    <a class="button" href="catalog/public-upload.php">Contribute files</a>
     <?php if (catalog_support_is_admin()): ?>
       <a class="button" href="catalog/dashboard.php">Admin Dashboard</a>
       <a class="button" href="catalog/game-manager.php">Manage Games</a>
@@ -36,15 +50,9 @@ catalog_head('UnrealDB - Unreal File Catalog');
 </section>
 
 <section class="card">
-  <h2>Site migration and development notice</h2>
-  <?php if ($isDirectIpAccess): ?>
-    <p>You are viewing the new UnrealDB server directly. The DNS records for <strong>unrealdb.com</strong> were recently updated and may still be propagating through Internet providers and cached DNS resolvers.</p>
-    <p><a class="button" href="https://unrealdb.com/">Try unrealdb.com</a></p>
-  <?php else: ?>
-    <p>The UnrealDB website has moved to a new server. DNS records were recently updated, and some visitors may temporarily continue reaching the previous server while cached records expire.</p>
-    <p>If the domain has not updated for you yet, the new server can be opened directly at <a href="http://79.97.31.36/">http://79.97.31.36/</a>.</p>
-  <?php endif; ?>
-  <p class="muted">UnrealDB is currently under active development and has been made publicly available as an early preview. Some functions are incomplete, unavailable, or may change while development continues.</p>
+  <h2>Active development</h2>
+  <p>UnrealDB is currently under active development and has been made publicly available as an early preview.</p>
+  <p class="muted">Some functions are incomplete, unavailable, or may change as the catalog, preservation tooling, dependency analysis and public contribution workflow continue to develop.</p>
 </section>
 
 <section class="grid">
@@ -68,8 +76,39 @@ catalog_head('UnrealDB - Unreal File Catalog');
 
 <section class="card">
   <h2>Supported catalog goals</h2>
-  <p class="muted">UnrealDB is intended for Unreal file preservation, verification, dependency tracking, and library repair across Unreal Engine game packages.</p>
-  <p class="small mono">Main app path: /catalog/</p>
+  <p>UnrealDB is intended for Unreal file preservation, verification, dependency tracking, and library repair across Unreal Engine game packages.</p>
+  <p>You can help expand the project by contributing your own Unreal and Unreal Tournament package files. The public uploader checks files in your browser first and avoids transferring exact files that UnrealDB already holds.</p>
+  <p><a class="button" href="catalog/public-upload.php">Contribute Unreal files</a></p>
+</section>
+
+<section class="card">
+  <h2>Support the project</h2>
+  <p>UnrealDB is currently hosted locally and, because of resource limitations, the project does not yet have the storage redundancy that a preservation catalog should have.</p>
+  <p><strong>Hard-drive donations are especially welcome.</strong> The immediate infrastructure priority is increasing storage capacity and adding redundancy so the growing file collection is better protected against hardware failure.</p>
+  <p class="muted">Additional capacity directly supports preservation, duplicate-safe public contributions, game coverage and future replicated storage.</p>
+</section>
+
+<section class="card">
+  <h2>Catalog file storage used</h2>
+  <?php if ($gameStorage !== []): ?>
+    <div class="grid">
+      <div class="stat">
+        <h2><?= catalog_h(catalog_bytes($totalCatalogBytes)) ?></h2>
+        <p>Total verified file storage used</p>
+        <p class="muted small"><?= catalog_h(number_format($totalCatalogFiles)) ?> files</p>
+      </div>
+      <?php foreach ($gameStorage as $row): ?>
+        <div class="stat">
+          <h2><?= catalog_h(number_format((int)($row['file_count'] ?? 0))) ?></h2>
+          <p><?= catalog_h((string)($row['name'] ?? 'Game')) ?></p>
+          <p class="muted small"><?= catalog_h(catalog_bytes(max(0, (int)($row['storage_bytes'] ?? 0)))) ?> used</p>
+        </div>
+      <?php endforeach; ?>
+    </div>
+    <p class="muted small">Storage figures are the summed sizes of verified catalog files, not free disk space.</p>
+  <?php else: ?>
+    <p class="muted">Catalog storage totals are temporarily unavailable.</p>
+  <?php endif; ?>
 </section>
 <?php
 catalog_foot();
