@@ -317,10 +317,15 @@ CSS;
                 . '<small class="muted">' . catalog_h((string)($queueGame['slug'] ?? 'unknown')) . '/unverified</small><br>'
                 . ($exists ? '<span class="uv-badge good">Present</span>' : '<span class="uv-badge bad">Missing physical file</span>')
                 . '</td>';
+            $sourceRelativePath = trim((string)($item['source_relative_path'] ?? ''));
             echo '<td class="uv-file"><strong><a href="' . catalog_h($detailsUrl) . '">'
                 . catalog_h((string)$item['original_name']) . '</a></strong>'
                 . '<span>Package: <span class="mono">' . catalog_h((string)$item['package_name']) . '</span></span>'
-                . '<small>Queue name: ' . catalog_h($queueName) . '</small></td>';
+                . '<small>Queue name: ' . catalog_h($queueName) . '</small>'
+                . ($sourceRelativePath !== ''
+                    ? '<small>Source contribution: <span class="mono">' . catalog_h($sourceRelativePath) . '</span></small>'
+                    : '')
+                . '</td>';
             $guid = trim((string)($item['package_guid'] ?? ''));
             echo '<td><span class="mono small">GUID: '
                 . catalog_h($tablesReadable ? ($guid !== '' ? $guid : '—') : 'unavailable') . '</span><br>'
