@@ -12,7 +12,7 @@ if (PHP_SAPI !== 'cli') {
 
 require_once dirname(__DIR__) . '/bootstrap.php';
 
-use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataSnapshotLoader;
+use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataReader;
 use UnrealDb\Catalog\Infrastructure\Metadata\CompactSearchProjectionWriter;
 
 $limit = 250;
@@ -51,7 +51,7 @@ try {
     $statement->execute([$afterId]);
     $files = $statement->fetchAll(PDO::FETCH_ASSOC) ?: [];
 
-    $loader = new BlockedCompressedMetadataSnapshotLoader($db, $storageRoot);
+    $reader = new BlockedCompressedMetadataReader($db, $storageRoot);
     $writer = new CompactSearchProjectionWriter($db);
     $processed = 0;
     $nameRows = 0;
@@ -66,8 +66,27 @@ try {
         }
         $lastId = $fileId;
         try {
-            $snapshot = $loader->load($fileId);
-            $nameRows += $writer->writeNames($snapshot, $sqlBatches);
+            $expectedNames = max(0, (int)($file['name_count'] ?? 0));
+            $names = [];
+            for ($start = 0; $start < $expectedNames; $start += 5000) {
+                $page = $reader->page($fileId, 'names', $start, min(5000, $expectedNames - $start));
+                if ($page === []) {
+                    throw new RuntimeException(
+                        'Names metadata ended at row ' . $start . ' of ' . $expectedNames . ' for file #' . $fileId . '.'
+                    );
+                }
+                array_push($names, ...$page);
+            }
+            if (count($names) !== $expectedNames) {
+                throw new RuntimeException(
+                    'Names metadata count mismatch for file #' . $fileId
+                    . ': expected ' . $expectedNames . ', found ' . count($names) . '.'
+                );
+            }
+            $nameRows += $writer->writeNames(
+                ['file' => ['id' => $fileId], 'names' => $names],
+                $sqlBatches
+            );
             $processed++;
         } catch (Throwable $error) {
             $errors[] = [
