@@ -13,6 +13,7 @@ require_once __DIR__ . '/lib/CatalogPakArchive.php';
 use UnrealDb\Catalog\Infrastructure\Import\CatalogIncomingFileStore;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogProfiledUploadQueue;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogQueueWorkerStarter;
+use UnrealDb\Catalog\Infrastructure\Security\CatalogPublicAccessGuard;
 use UnrealDb\Catalog\Infrastructure\Storage\CatalogPakArchiveStore;
 
 function pak_import_public_error(Throwable $error): string
@@ -56,6 +57,9 @@ function pak_import_enqueue(PDO $db, array $config): array
     $gameId = (int)($_POST['game_id'] ?? 0);
     $strict = (string)($_POST['strict_profile'] ?? '1') === '1';
     $source = pak_import_source();
+    if (!empty($source['uploaded'])) {
+        (new CatalogPublicAccessGuard($config))->transferAllowedOrThrow($db, 'Upload');
+    }
     if (!catalog_pak_archive_is_supported_filename($source['name'])) {
         throw new RuntimeException('Selected file is not a .pak archive.');
     }
