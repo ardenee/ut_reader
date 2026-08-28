@@ -223,9 +223,13 @@ $check(
     str_contains($unverifiedQuery, 'public_uploads')
         && str_contains($unverifiedQuery, 'WHERE status IN ("uploaded","processing","failed","duplicate")')
         && str_contains($unverifiedPage, 'Public contribution status')
-        && str_contains($unverifiedPage, 'Recent public uploads that have not yet become normal Unverified Files rows.')
+        && str_contains($unverifiedPage, 'Recent public upload processing outcomes and items still waiting for background validation.')
         && str_contains($unverifiedPage, 'Source contribution:')
-        && str_contains($unverifiedPage, 'file-info.php?id='),
+        && str_contains($unverifiedPage, 'file-info.php?id=')
+        && str_contains($unverifiedPage, 'Delete selected entries')
+        && str_contains($unverifiedPage, "name=\"public_upload_ids[]\"")
+        && str_contains($unverifiedPage, 'uv-public-contribution')
+        && str_contains($transfer, 'public function deleteTerminalForAdmin(array $ids): array'),
     'Unverified Files must make pending/failed public contributions visible and show the original contribution path once staged.'
 );
 
@@ -284,6 +288,9 @@ $check(
         && str_contains($handler, "Public upload MD5 mismatch: client=")
         && str_contains($handler, "Public upload SHA-1 mismatch: client=")
         && str_contains($handler, 'CatalogRedirectArchiveProcessor')
+        && str_contains($handler, 'new CatalogUploadDuplicateDetector($this->db, $this->config)')
+        && str_contains($handler, "is_array(\$duplicateCheck['duplicate'] ?? null)")
+        && !str_contains($handler, 'private function exactExisting(')
         && str_contains($handler, 'stageBucketUpload(')
         && str_contains($handler, 'Public contribution upload; awaiting administrator review.')
         && str_contains($handler, 'JobType::REFRESH_UNVERIFIED_GAME_MATCHES'),
@@ -318,6 +325,7 @@ $check(
         && str_contains($factory, 'JobType::PRUNE_PUBLIC_UPLOADS')
         && str_contains($resource, "self::positiveKey('public-upload:'")
         && str_contains($workerVersion, 'CatalogPublicUploadTransferStore.php')
+        && str_contains($workerVersion, 'CatalogUploadDuplicateDetector.php')
         && str_contains($workerVersion, 'CatalogPublicUploadJobHandler.php')
         && str_contains($workerVersion, 'CatalogPublicUploadMaintenanceJobHandler.php'),
     'Public processing/pruning must be registered, resource-limited and part of worker code-version reloads.'
