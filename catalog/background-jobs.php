@@ -219,12 +219,12 @@ try {
     echo '<details class="jobs-file-maintenance-wrap"><summary>Maintenance</summary>'
         . '<div class="jobs-file-maintenance">'
         . '<button id="jobs-recover" type="button">Recover orphaned jobs</button>'
-        . '<label>Delete completed/stopped history older than <select id="jobs-cleanup-days">'
+        . '<label>Delete resolved completed/stopped history older than <select id="jobs-cleanup-days">'
         . '<option value="1">1 day</option><option value="7">7 days</option><option value="30" selected>30 days</option>'
         . '<option value="90">90 days</option><option value="365">1 year</option>'
         . '</select></label>'
         . '<button id="jobs-cleanup" type="button">Queue cleanup</button>'
-        . '<span class="muted">Issues and their child lineage are retained.</span>'
+        . '<span class="muted">Issues are retained. Cleanup removes eligible workflow history plus unreferenced staged sources and automatically drains all matching batches.</span>'
         . '</div></details>';
 
     echo '</div></div></section>';
