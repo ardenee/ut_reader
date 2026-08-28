@@ -16,13 +16,15 @@ use UnrealDb\Catalog\Presentation\Http\JsonResponse;
 
 try {
     $application = catalog_api_application();
-    (new CatalogPublicAccessGuard($application->config))->transferAllowedOrThrow($application->db, 'Public upload');
     catalog_api_require_csrf('public_upload');
     if (session_status() === PHP_SESSION_ACTIVE) {
         session_write_close();
     }
 
     $action = strtolower(trim((string)($_POST['action'] ?? '')));
+    if (in_array($action, ['chunk', 'complete'], true)) {
+        (new CatalogPublicAccessGuard($application->config))->transferAllowedOrThrow($application->db, 'Public upload');
+    }
     $token = strtolower(trim((string)($_POST['upload_token'] ?? '')));
     $ip = catalog_client_ip();
     $store = new CatalogPublicUploadTransferStore($application->db, $application->config);
@@ -150,7 +152,9 @@ try {
     JsonResponse::error('invalid_public_upload', $error->getMessage(), 400);
 } catch (\RuntimeException $error) {
     $message = trim($error->getMessage()) ?: 'Public upload transfer failed.';
-    $status = preg_match('/limit|paused|only one|expired/i', $message) === 1 ? 429 : 409;
+    $status = str_contains(strtolower($message), 'blocked for this ip address')
+        ? 403
+        : (preg_match('/limit|paused|only one|expired/i', $message) === 1 ? 429 : 409);
     JsonResponse::error('public_upload_transfer_failed', $message, $status);
 } catch (\Throwable $error) {
     error_log('[UnrealDB][' . catalog_request_id() . '] public upload transfer failed: '
