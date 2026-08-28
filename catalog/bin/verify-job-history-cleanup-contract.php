@@ -56,13 +56,15 @@ $check(
 
 $check(
     'cleanup_worker_is_resumable_and_child_bounded',
-    str_contains($handler, 'private const MAX_WORKFLOW_ROWS_PER_CLAIM = 100000;')
+    str_contains($handler, 'private const BATCH_SIZE = 10000;')
+        && str_contains($handler, 'private const MAX_WORKFLOW_ROWS_PER_CLAIM = 100000;')
         && str_contains($handler, 'cleanup_stack')
         && str_contains($handler, 'cleanup_root_id')
         && str_contains($handler, 'CatalogBackgroundJobSubtreePruner')
+        && str_contains($handler, '$context->heartbeatIfDue($progress)')
         && str_contains($handler, '$context->defer(1, $progress)')
         && str_contains($handler, 'deleted_workflow_units'),
-    'Large workflow trees must be drained leaf-first in bounded resumable batches.'
+    'Large workflow trees must be drained leaf-first in bounded resumable batches without per-root forced checkpoints.'
 );
 
 $check(
@@ -89,8 +91,9 @@ $check(
     'workflow_child_detection_is_set_based',
     !str_contains($pruner, 'EXISTS(')
         && str_contains($pruner, 'SELECT DISTINCT parent_job_id FROM ue_background_jobs')
-        && str_contains($pruner, 'array_chunk($childIds, 1000)'),
-    'Workflow cleanup must classify child branches in bounded set-based queries, not one EXISTS probe per child row.'
+        && str_contains($pruner, 'array_chunk($childIds, 1000)')
+        && !str_contains($handler, '$pruner->exists($currentId)'),
+    'Workflow cleanup must classify child branches in bounded set-based queries without per-child or redundant per-node existence probes.'
 );
 
 $check(
@@ -107,6 +110,8 @@ $check(
     'retention_snapshot_is_bounded_and_continuous',
     str_contains($queue, 'public const SNAPSHOT_LIMIT = 10000;')
         && str_contains($queue, 'public function snapshotBefore(string $queueName, string $cutoff): array')
+        && str_contains($queue, 'LIMIT \' . (self::SNAPSHOT_LIMIT + 1)')
+        && !str_contains($queue, 'SELECT COUNT(*) FROM ue_background_jobs WHERE')
         && str_contains($queue, '$payload[\'retention_auto_continue\'] = true;')
         && str_contains($handler, 'retention_auto_continue')
         && str_contains($handler, 'snapshotBefore($targetQueue, $retentionCutoff)')
