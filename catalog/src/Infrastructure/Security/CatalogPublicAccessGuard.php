@@ -271,9 +271,6 @@ final class CatalogPublicAccessGuard
 
     public function transferAllowedOrThrow(PDO $db, string $label): void
     {
-        if ($this->exempt()) {
-            return;
-        }
         $ip = $this->clientIp();
         if ((new CatalogTransferBlocklist($db))->isBlocked($ip)) {
             if (!headers_sent()) {
