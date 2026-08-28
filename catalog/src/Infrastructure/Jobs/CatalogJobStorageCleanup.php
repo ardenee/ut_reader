@@ -358,10 +358,12 @@ final class CatalogJobStorageCleanup
             $relative = strtolower($this->storageRelativePath($path));
             if ($relative !== '' && isset($references[$relative])) {
                 $result['referenced']++;
+                $this->emitLoopProgress($progress, 'incoming', $startPercent, $endPercent, $result, $total);
                 continue;
             }
             if ((int)$entry->getMTime() > $threshold) {
                 $result['recent']++;
+                $this->emitLoopProgress($progress, 'incoming', $startPercent, $endPercent, $result, $total);
                 continue;
             }
 
@@ -443,12 +445,14 @@ final class CatalogJobStorageCleanup
             $jobId = preg_match('/^job-([0-9]+)$/', $name, $match) === 1 ? (int)$match[1] : 0;
             if ($jobId > 0 && isset($ownerJobs[$jobId])) {
                 $result['retained']++;
+                $this->emitLoopProgress($progress, $category, $startPercent, $endPercent, $result, $total);
                 continue;
             }
 
             $stats = $this->treeStats($entry->getPathname());
             if ($stats['modified'] > $threshold) {
                 $result['recent']++;
+                $this->emitLoopProgress($progress, $category, $startPercent, $endPercent, $result, $total);
                 continue;
             }
             if ($this->deleteTree($entry->getPathname())) {
@@ -503,6 +507,7 @@ final class CatalogJobStorageCleanup
             $result['scanned']++;
             if (isset($references[$uploadId])) {
                 $result['referenced']++;
+                $this->emitLoopProgress($progress, 'chunked_uploads', $startPercent, $endPercent, $result, $total);
                 continue;
             }
 
@@ -639,6 +644,7 @@ final class CatalogJobStorageCleanup
                 if (is_resource($lock) && !@flock($lock, LOCK_EX | LOCK_NB)) {
                     fclose($lock);
                     $result['retained']++;
+                    $this->emitLoopProgress($progress, 'profiled_upload_batches', $startPercent, $endPercent, $result, $total);
                     continue;
                 }
             }
@@ -803,6 +809,7 @@ final class CatalogJobStorageCleanup
             $result['scanned']++;
             if ((int)$entry->getMTime() > $threshold) {
                 $result['recent']++;
+                $this->emitLoopProgress($progress, 'identity_locks', $startPercent, $endPercent, $result, $total);
                 continue;
             }
 
@@ -811,11 +818,13 @@ final class CatalogJobStorageCleanup
             $handle = @fopen($path, 'c+b');
             if (!is_resource($handle)) {
                 $result['failed']++;
+                $this->emitLoopProgress($progress, 'identity_locks', $startPercent, $endPercent, $result, $total);
                 continue;
             }
             if (!@flock($handle, LOCK_EX | LOCK_NB)) {
                 fclose($handle);
                 $result['active']++;
+                $this->emitLoopProgress($progress, 'identity_locks', $startPercent, $endPercent, $result, $total);
                 continue;
             }
             @flock($handle, LOCK_UN);
