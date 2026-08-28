@@ -6,8 +6,6 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/catalog/lib/CatalogSupport.php';
 
-use UnrealDb\Catalog\Infrastructure\Persistence\PdoGameCatalogStats;
-
 catalog_start_session();
 
 $gameStorage = [];
@@ -30,20 +28,22 @@ try {
         . 'FROM ue_games g LEFT JOIN ue_game_catalog_stats s ON s.game_id=g.id ORDER BY g.name'
     );
 
-    $cachedGlobal = (new PdoGameCatalogStats($db))->global();
-    if ($cachedGlobal !== []) {
-        foreach (array_keys($fileRecordStats) as $key) {
-            $fileRecordStats[$key] = max(0, (int)($cachedGlobal[$key] ?? 0));
+    foreach ($gameStorage as $row) {
+        $totalCatalogFiles += max(0, (int)($row['file_count'] ?? 0));
+        $totalCatalogBytes += max(0, (int)($row['storage_bytes'] ?? 0));
+    }
+
+    $statusRows = catalog_all(
+        $db,
+        'SELECT scan_status,COUNT(*) record_count FROM ue_files GROUP BY scan_status'
+    );
+    foreach ($statusRows as $row) {
+        $status = strtolower(trim((string)($row['scan_status'] ?? '')));
+        $count = max(0, (int)($row['record_count'] ?? 0));
+        if (array_key_exists($status . '_count', $fileRecordStats)) {
+            $fileRecordStats[$status . '_count'] = $count;
         }
-        $totalCatalogFiles = $fileRecordStats['verified_count'];
-        $totalCatalogBytes = max(0, (int)($cachedGlobal['verified_size'] ?? 0));
-    } else {
-        foreach ($gameStorage as $row) {
-            $totalCatalogFiles += max(0, (int)($row['file_count'] ?? 0));
-            $totalCatalogBytes += max(0, (int)($row['storage_bytes'] ?? 0));
-        }
-        $fileRecordStats['file_count'] = $totalCatalogFiles;
-        $fileRecordStats['verified_count'] = $totalCatalogFiles;
+        $fileRecordStats['file_count'] += $count;
     }
 
     $databaseName = trim((string)$db->query('SELECT DATABASE()')->fetchColumn());
