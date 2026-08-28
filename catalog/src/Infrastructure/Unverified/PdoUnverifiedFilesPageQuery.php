@@ -188,7 +188,7 @@ final class PdoUnverifiedFilesPageQuery
                 $this->db,
                 'SELECT id,original_name,relative_path,status,background_job_id,unverified_file_id,'
                 . 'result_message,updated_at FROM ue_public_uploads '
-                . 'WHERE status IN ("uploaded","processing","failed") '
+                . 'WHERE status IN ("uploaded","processing","failed","duplicate") '
                 . 'ORDER BY id DESC LIMIT 20'
             );
         } catch (Throwable) {
