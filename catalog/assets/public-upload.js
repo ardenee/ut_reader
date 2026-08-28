@@ -182,12 +182,18 @@
             if (data.type === 'progress') {
                 const total = Math.max(1, Number(data.total || 1));
                 const loaded = Math.max(0, Number(data.loaded || 0));
-                const percent = data.phase === 'hash' ? Math.min(99, Math.floor((loaded * 100) / total)) : 0;
+                const hashing = data.phase === 'hash' || data.phase === 'redirect-hash';
+                const percent = hashing ? Math.min(99, Math.floor((loaded * 100) / total)) : 0;
+                const detail = data.phase === 'redirect-hash'
+                    ? ' · decoding/hash identity ' + formatBytes(loaded) + '/' + formatBytes(total)
+                        + (Number(data.output || 0) > 0 ? ' · decoded ' + formatBytes(data.output) : '')
+                    : (data.phase === 'hash'
+                        ? ' · hashing ' + formatBytes(loaded) + '/' + formatBytes(total)
+                        : ' · validating header');
                 setProgress(
                     percent,
                     'Batch ' + inspectorPending.batch + ' · checking ' + inspectorPending.position + '/' + inspectorPending.total
-                        + ' · ' + inspectorPending.name
-                        + (data.phase === 'hash' ? ' · hashing ' + formatBytes(loaded) + '/' + formatBytes(total) : ' · validating header'),
+                        + ' · ' + inspectorPending.name + detail,
                     false
                 );
                 return;
@@ -284,7 +290,11 @@
 
             try {
                 const inspection = await inspectFile(item.file, name, batchNumber, index + 1, items.length);
-                const guid = await legacyGuid(item.file, inspection);
+                const guid = String(inspection.guid || '') || await legacyGuid(item.file, inspection);
+                const identitySize = Math.max(
+                    0,
+                    Number(inspection.identity_size || (inspection.redirect ? 0 : item.file.size))
+                );
                 const clientId = batchNumber + '-' + index + '-' + (++processedFiles);
                 checked.push({
                     clientId: clientId,
@@ -294,6 +304,7 @@
                         name: item.file.name,
                         relative_path: name,
                         size: item.file.size,
+                        identity_size: identitySize,
                         md5: String(inspection.md5 || ''),
                         sha1: String(inspection.sha1 || ''),
                         guid: guid
@@ -424,6 +435,31 @@
         }
     }
 
+    async function wakePublicQueue(batchNumber) {
+        const controller = new AbortController();
+        activeController = controller;
+        try {
+            setProgress(100, 'Batch ' + batchNumber + ' · starting background validation…', true);
+            const data = new FormData();
+            data.append('action', 'wake');
+            const response = await fetch(uploadUrl, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {'X-CSRF-Token': csrf},
+                body: data,
+                signal: controller.signal
+            });
+            const payload = await response.json().catch(function () { return {}; });
+            if (!response.ok) {
+                throw new Error(String(payload && payload.error && payload.error.message
+                    || payload.message || ('Worker wake HTTP ' + response.status)));
+            }
+            return payload;
+        } finally {
+            if (activeController === controller) activeController = null;
+        }
+    }
+
     async function cancelReservation(token) {
         try {
             await postAction('cancel', token, true);
@@ -468,6 +504,17 @@
             for (; index < accepted.length; index++) {
                 ensureRunning();
                 await uploadAccepted(accepted[index], index + 1, accepted.length, batchNumber);
+            }
+            if (accepted.length > 0) {
+                try {
+                    await wakePublicQueue(batchNumber);
+                } catch (wakeError) {
+                    addLog(
+                        'failed',
+                        'Background validation',
+                        (wakeError && wakeError.message) || 'Uploaded files are queued, but workers could not be started.'
+                    );
+                }
             }
         } catch (error) {
             // Preflight reserves the whole accepted batch. Release the active and
