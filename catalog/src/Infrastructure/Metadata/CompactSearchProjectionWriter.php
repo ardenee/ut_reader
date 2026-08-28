@@ -145,32 +145,46 @@ final class CompactSearchProjectionWriter
             throw new RuntimeException('Compact Name search projection requires a positive file ID.');
         }
         $names = array_values((array)($snapshot['names'] ?? []));
+        $ownsTransaction = !$this->db->inTransaction();
         $termIds = $resolvedTermIds
             ?? $this->resolveTermIds($this->snapshotNameValues($snapshot), $sqlBatches);
 
-        $this->db->prepare('DELETE FROM ue_name_lookup WHERE file_id=?')->execute([$fileId]);
-        $sqlBatches++;
+        if ($ownsTransaction) {
+            $this->db->beginTransaction();
+        }
+        try {
+            $this->db->prepare('DELETE FROM ue_name_lookup WHERE file_id=?')->execute([$fileId]);
+            $sqlBatches++;
 
-        $batch = [];
-        foreach ($names as $row) {
-            if (!is_array($row)) {
-                continue;
+            $batch = [];
+            foreach ($names as $row) {
+                if (!is_array($row)) {
+                    continue;
+                }
+                $batch[] = [
+                    (int)($row['name_index'] ?? 0),
+                    $this->requiredTermId($termIds, (string)($row['name_text'] ?? '')),
+                ];
+                if (count($batch) >= self::UPDATE_BATCH_SIZE) {
+                    $this->insertNameBatch($fileId, $batch);
+                    $sqlBatches++;
+                    $batch = [];
+                }
             }
-            $batch[] = [
-                (int)($row['name_index'] ?? 0),
-                $this->requiredTermId($termIds, (string)($row['name_text'] ?? '')),
-            ];
-            if (count($batch) >= self::UPDATE_BATCH_SIZE) {
+            if ($batch !== []) {
                 $this->insertNameBatch($fileId, $batch);
                 $sqlBatches++;
-                $batch = [];
             }
+            if ($ownsTransaction) {
+                $this->db->commit();
+            }
+            return count($names);
+        } catch (\Throwable $error) {
+            if ($ownsTransaction && $this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            throw $error;
         }
-        if ($batch !== []) {
-            $this->insertNameBatch($fileId, $batch);
-            $sqlBatches++;
-        }
-        return count($names);
     }
 
     /** @param array<string,mixed> $snapshot @return \Generator<int,string> */
