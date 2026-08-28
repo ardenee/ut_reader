@@ -218,6 +218,7 @@ CSS;
         foreach ($publicUploads as $publicUpload) {
             $status = strtolower(trim((string)($publicUpload['status'] ?? '')));
             $jobId = max(0, (int)($publicUpload['background_job_id'] ?? 0));
+            $resultFileId = max(0, (int)($publicUpload['unverified_file_id'] ?? 0));
             $name = trim((string)($publicUpload['relative_path'] ?? ''));
             if ($name === '') {
                 $name = trim((string)($publicUpload['original_name'] ?? ''));
@@ -229,7 +230,11 @@ CSS;
                 . '<td>' . ($jobId > 0
                     ? '<a href="background-jobs.php">Job #' . $jobId . '</a>'
                     : '<span class="muted">Not queued yet</span>') . '</td>'
-                . '<td>' . catalog_h((string)($publicUpload['result_message'] ?? '')) . '</td>'
+                . '<td>' . catalog_h((string)($publicUpload['result_message'] ?? ''))
+                . ($resultFileId > 0
+                    ? '<br><a href="file-info.php?id=' . $resultFileId . '">File #' . $resultFileId . '</a>'
+                    : '')
+                . '</td>'
                 . '<td class="mono small">' . catalog_h((string)($publicUpload['updated_at'] ?? '')) . '</td></tr>';
         }
         echo '</tbody></table></div></div></section>';
