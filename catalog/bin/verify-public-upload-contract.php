@@ -32,6 +32,7 @@ $settings = $read('src/Infrastructure/Settings/CatalogPublicUploadSettingsStore.
 $preflight = $read('src/Infrastructure/Import/CatalogPublicUploadBatchPreflight.php');
 $transfer = $read('src/Infrastructure/Import/CatalogPublicUploadTransferStore.php');
 $duplicateDetector = $read('src/Infrastructure/Import/CatalogUploadDuplicateDetector.php');
+$legacyStager = $read('src/Infrastructure/Legacy/LegacyUnverifiedFileStager.php');
 $handler = $read('src/Infrastructure/Jobs/CatalogPublicUploadJobHandler.php');
 $maintenance = $read('src/Infrastructure/Jobs/CatalogPublicUploadMaintenanceJobHandler.php');
 $jobType = $read('src/Domain/Jobs/JobType.php');
@@ -114,13 +115,17 @@ $check(
 $check(
     'preflight_skips_only_physically_present_exact_bytes',
     str_contains($duplicateDetector, 'public function locatePhysicalPath(array $row): ?string')
+        && str_contains($duplicateDetector, "g.slug game_slug")
+        && str_contains($duplicateDetector, 'f.stored_name')
+        && str_contains($duplicateDetector, "DIRECTORY_SEPARATOR . 'verified'")
+        && str_contains($duplicateDetector, 'public function confirmPhysicalIdentity(')
         && str_contains($preflight, '$locator->locatePhysicalPath($row)')
-        && str_contains($preflight, '$physicalSize = filesize($physicalPath)')
+        && str_contains($preflight, '$locator->confirmPhysicalIdentity($physicalPath, $size, $md5, $sha1)')
         && str_contains($preflight, '$md5 . "\\0" . $sha1 . "\\0" . $size')
         && str_contains($preflight, "'confirmed' => \$matches")
         && str_contains($preflight, "'unconfirmed' => \$unconfirmed")
         && str_contains($preflight, 'Upload allowed as a repair candidate: catalog file #'),
-    'Stale/unresolvable database identities must not suppress a useful contribution; preflight must explain when an exact DB identity cannot be physically confirmed.'
+    'Stale/unresolvable database identities must not suppress a useful contribution; preflight must physically verify size+MD5+SHA-1 using the canonical verified-storage path before skipping transfer.'
 );
 
 $check(
@@ -338,6 +343,18 @@ $check(
         && str_contains($uploadApi, "if (\$action === 'wake')")
         && str_contains($uploadApi, 'CatalogQueueWorkerStarter'),
     'Lost complete responses must reuse the same durable upload/job, while worker startup stays at the explicit batch wake boundary.'
+);
+
+$check(
+    'unverified_publish_rechecks_exact_duplicate_under_lock',
+    str_contains($legacyStager, 'new CatalogUploadDuplicateDetector($this->db, $this->config)')
+        && str_contains($legacyStager, '$sha1 = sha1_file($temporaryPath)')
+        && str_contains($legacyStager, 'Physically confirmed exact size/MD5/SHA-1 already exists as')
+        && !str_contains($legacyStager, 'private function findBucketDuplicate(')
+        && str_contains($handler, "if ((string)(\$staged['status'] ?? '') === 'duplicate')")
+        && str_contains($handler, "'status' => 'duplicate'")
+        && str_contains($handler, '$store->removeQuarantine($token);'),
+    'The final unverified publication boundary must repeat physical size+MD5+SHA-1 duplicate detection under the bucket lock and terminate duplicate results without creating or matching a new unverified row.'
 );
 
 $check(

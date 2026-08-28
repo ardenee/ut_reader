@@ -183,7 +183,40 @@ final class CatalogPublicUploadJobHandler implements JobHandler
             );
             $fileId = max(0, (int)($staged['file_id'] ?? 0));
             if ($fileId < 1) {
-                throw new RuntimeException('Public upload was staged without an unverified file ID.');
+                throw new RuntimeException('Public upload was staged without a file ID.');
+            }
+
+            if ((string)($staged['status'] ?? '') === 'duplicate') {
+                $store->removeQuarantine($token);
+                if ($decodedPath !== '' && is_file($decodedPath)) {
+                    @unlink($decodedPath);
+                }
+                $message = trim((string)($staged['message'] ?? ''));
+                if ($message === '') {
+                    $message = 'Physically confirmed identical bytes already exist as file #' . $fileId . '.';
+                }
+                $this->updateLedger($publicUploadId, [
+                    'status' => 'duplicate',
+                    'unverified_file_id' => $fileId,
+                    'server_guid' => '',
+                    'active_identity_key' => null,
+                    'quarantine_relative_path' => null,
+                    'result_message' => $message,
+                ]);
+                $context->checkpoint([
+                    'stage' => 'complete',
+                    'percent' => 100,
+                    'message' => $message,
+                    'file_id' => $fileId,
+                ]);
+                return [
+                    'status' => 'duplicate',
+                    'public_upload_id' => $publicUploadId,
+                    'file_id' => $fileId,
+                    'md5' => $identity['md5'],
+                    'sha1' => $identity['sha1'],
+                    'message' => $message,
+                ];
             }
 
             if ($workingPath !== $sourcePath) {
@@ -198,7 +231,7 @@ final class CatalogPublicUploadJobHandler implements JobHandler
             $serverGuid = trim((string)($file->fetchColumn() ?: ''));
 
             $this->updateLedger($publicUploadId, [
-                'status' => (string)($staged['status'] ?? '') === 'duplicate' ? 'duplicate' : 'unverified',
+                'status' => 'unverified',
                 'unverified_file_id' => $fileId,
                 'server_guid' => $serverGuid,
                 'active_identity_key' => null,
@@ -227,7 +260,7 @@ final class CatalogPublicUploadJobHandler implements JobHandler
             ]);
 
             return [
-                'status' => (string)($staged['status'] ?? '') === 'duplicate' ? 'duplicate' : 'unverified',
+                'status' => 'unverified',
                 'public_upload_id' => $publicUploadId,
                 'file_id' => $fileId,
                 'md5' => $identity['md5'],

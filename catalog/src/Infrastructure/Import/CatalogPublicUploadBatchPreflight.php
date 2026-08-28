@@ -316,9 +316,10 @@ final class CatalogPublicUploadBatchPreflight
         foreach (array_chunk($md5s, self::MAX_FILES) as $chunk) {
             $placeholders = implode(',', array_fill(0, count($chunk), '?'));
             $statement = $this->db->prepare(
-                'SELECT id,game_id,relative_path,file_size,LOWER(md5) md5,LOWER(sha1) sha1,'
-                . 'scan_status,unverified_queue_game_id,unverified_queue_name FROM ue_files '
-                . 'WHERE md5 IN (' . $placeholders . ') AND scan_status IN ("verified","unverified")'
+                'SELECT f.id,f.game_id,g.slug game_slug,f.stored_name,f.original_name,f.relative_path,f.file_size,'
+                . 'LOWER(f.md5) md5,LOWER(f.sha1) sha1,f.scan_status,f.unverified_queue_game_id,f.unverified_queue_name '
+                . 'FROM ue_files f LEFT JOIN ue_games g ON g.id=f.game_id '
+                . 'WHERE f.md5 IN (' . $placeholders . ') AND f.scan_status IN ("verified","unverified")'
             );
             $statement->execute($chunk);
             foreach ($statement->fetchAll(PDO::FETCH_ASSOC) ?: [] as $row) {
@@ -337,11 +338,10 @@ final class CatalogPublicUploadBatchPreflight
                     ];
                     continue;
                 }
-                $physicalSize = filesize($physicalPath);
-                if ($physicalSize === false || (int)$physicalSize !== $size) {
+                if (!$locator->confirmPhysicalIdentity($physicalPath, $size, $md5, $sha1)) {
                     $unconfirmed[$key] ??= [
                         'file_id' => (int)$row['id'],
-                        'reason' => 'physical size does not match the catalog identity',
+                        'reason' => 'physical bytes do not match the stored size/MD5/SHA-1 identity',
                     ];
                     continue;
                 }

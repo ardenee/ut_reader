@@ -13,6 +13,7 @@ use PDO;
 use RuntimeException;
 use Throwable;
 use UnrealDb\Catalog\Application\Unverified\Contract\UnverifiedFileStager;
+use UnrealDb\Catalog\Infrastructure\Import\CatalogUploadDuplicateDetector;
 use UnrealDb\Catalog\Infrastructure\Unverified\CatalogUnverifiedQueueStorage;
 use UnrealDb\Catalog\Infrastructure\Unverified\CatalogUnverifiedStagingIndex;
 
@@ -43,10 +44,13 @@ final class LegacyUnverifiedFileStager implements UnverifiedFileStager
 
         $size = (int)(filesize($temporaryPath) ?: 0);
         $md5 = md5_file($temporaryPath);
-        if ($size <= 0 || !is_string($md5) || $md5 === '') {
+        $sha1 = sha1_file($temporaryPath);
+        if ($size <= 0 || !is_string($md5) || $md5 === ''
+            || !is_string($sha1) || $sha1 === '') {
             throw new RuntimeException('Could not calculate the upload-bucket duplicate identity.');
         }
         $md5 = strtolower($md5);
+        $sha1 = strtolower($sha1);
         $lockName = 'unrealdb-bucket-md5-' . $md5;
         $lock = \catalog_one($this->db, 'SELECT GET_LOCK(?, 30) acquired', [$lockName]);
         if ((int)($lock['acquired'] ?? 0) !== 1) {
@@ -54,25 +58,36 @@ final class LegacyUnverifiedFileStager implements UnverifiedFileStager
         }
 
         try {
-            $duplicate = $this->findBucketDuplicate($size, $md5);
+            // Re-run the full exact-identity check inside the bucket MD5 lock.
+            // This closes the race between the public worker's earlier duplicate
+            // check and physical publication into the unverified queue.
+            $duplicateCheck = (new CatalogUploadDuplicateDetector($this->db, $this->config))->inspect(
+                $size,
+                $md5,
+                $sha1
+            );
+            $duplicate = is_array($duplicateCheck['duplicate'] ?? null)
+                ? $duplicateCheck['duplicate']
+                : null;
             if ($duplicate !== null) {
                 @unlink($temporaryPath);
                 $existingName = trim((string)($duplicate['original_name'] ?? ''));
                 if ($existingName === '') {
-                    $existingName = (string)($duplicate['unverified_queue_name'] ?? 'existing bucket file');
+                    $existingName = 'existing file #' . (int)$duplicate['file_id'];
                 }
                 return [
                     'status' => 'duplicate',
-                    'file_id' => (int)$duplicate['id'],
-                    'queue_name' => (string)$duplicate['unverified_queue_name'],
+                    'file_id' => (int)$duplicate['file_id'],
+                    'queue_name' => basename((string)($duplicate['physical_path'] ?? '')),
                     'original_name' => $existingName,
-                    'path' => (string)$duplicate['physical_path'],
-                    'size' => (int)$duplicate['file_size'],
-                    'message' => 'Duplicate size and MD5 already exist in the Upload Bucket as '
-                        . $existingName . ' (file #' . (int)$duplicate['id'] . ', MD5 ' . $md5
-                        . '). Uploaded copy discarded.',
+                    'path' => (string)($duplicate['physical_path'] ?? ''),
+                    'size' => $size,
+                    'message' => 'Physically confirmed exact size/MD5/SHA-1 already exists as '
+                        . $existingName . ' (file #' . (int)$duplicate['file_id']
+                        . '). Incoming copy discarded.',
                     'parse_error' => null,
                     'md5' => $md5,
+                    'sha1' => $sha1,
                 ];
             }
 
@@ -93,6 +108,7 @@ final class LegacyUnverifiedFileStager implements UnverifiedFileStager
                 (int)$stored['size']
             );
             $indexed['md5'] = $md5;
+            $indexed['sha1'] = $sha1;
             return $indexed;
         } finally {
             try {
@@ -141,41 +157,6 @@ final class LegacyUnverifiedFileStager implements UnverifiedFileStager
         );
     }
 
-    /** @return array<string,mixed>|null */
-    private function findBucketDuplicate(int $size, string $md5): ?array
-    {
-        $this->staging->ensureSchema();
-        $rows = \catalog_all(
-            $this->db,
-            'SELECT id,original_name,unverified_queue_name,file_size,md5 '
-            . 'FROM ue_files '
-            . 'WHERE scan_status="unverified" AND unverified_queue_game_id=0 '
-            . 'AND file_size=? AND LOWER(md5)=? ORDER BY id LIMIT 50',
-            [$size, $md5]
-        );
-        if ($rows === []) {
-            return null;
-        }
-
-        $bucketRoot = CatalogUnverifiedQueueStorage::uploadBucketDirectory($this->config, false);
-        foreach ($rows as $row) {
-            $queueName = basename((string)($row['unverified_queue_name'] ?? ''));
-            if ($queueName === '') {
-                continue;
-            }
-            $path = $bucketRoot . DIRECTORY_SEPARATOR . $queueName;
-            if (!is_file($path) || !CatalogUnverifiedQueueStorage::pathInside($path, $bucketRoot)) {
-                continue;
-            }
-            $physicalSize = filesize($path);
-            if ($physicalSize === false || (int)$physicalSize !== $size) {
-                continue;
-            }
-            $row['physical_path'] = $path;
-            return $row;
-        }
-        return null;
-    }
 
     /**
      * @return array{status:string,file_id:int,queue_name:string,original_name:string,path:string,size:int,message:string,parse_error:?string}|null

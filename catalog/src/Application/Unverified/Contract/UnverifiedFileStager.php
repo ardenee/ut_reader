@@ -15,11 +15,12 @@ namespace UnrealDb\Catalog\Application\Unverified\Contract;
 interface UnverifiedFileStager
 {
     /**
-     * Stores and indexes an Upload Bucket file. An identical size+MD5 file already
-     * present in the bucket returns status=duplicate and the existing file identity;
-     * the incoming temporary copy is discarded and no new row is created.
+     * Stores and indexes an Upload Bucket file. A physically confirmed exact
+     * size+MD5+SHA-1 match already present in verified/unverified storage returns
+     * status=duplicate and the existing file identity; the incoming temporary copy
+     * is discarded and no new row is created.
      *
-     * @return array{status:string,file_id:int,queue_name:string,original_name:string,path:string,size:int,message:string,parse_error:?string,md5?:string}
+     * @return array{status:string,file_id:int,queue_name:string,original_name:string,path:string,size:int,message:string,parse_error:?string,md5?:string,sha1?:string}
      */
     public function stageBucketUpload(
         string $temporaryPath,

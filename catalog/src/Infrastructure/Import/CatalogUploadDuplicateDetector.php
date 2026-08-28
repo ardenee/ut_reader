@@ -45,12 +45,12 @@ final class CatalogUploadDuplicateDetector
         \base_game_ensure($this->db);
         $rows = \catalog_all(
             $this->db,
-            'SELECT f.id,f.game_id,f.package_name,f.original_name,f.relative_path,f.file_size,f.md5,f.sha1,'
-                . 'f.package_guid,f.scan_status,f.unverified_queue_game_id,f.unverified_queue_name,'
+            'SELECT f.id,f.game_id,g.slug game_slug,f.package_name,f.original_name,f.stored_name,f.relative_path,'
+                . 'f.file_size,f.md5,f.sha1,f.package_guid,f.scan_status,f.unverified_queue_game_id,f.unverified_queue_name,'
                 . 'EXISTS(SELECT 1 FROM ue_base_game_files bg '
                 . 'WHERE bg.source_file_id=f.id '
                 . 'OR (bg.game_id=f.game_id AND bg.package_guid=f.package_guid AND f.package_guid IS NOT NULL AND f.package_guid<>"")) AS is_base_game '
-                . 'FROM ue_files f WHERE LOWER(f.md5)=? '
+                . 'FROM ue_files f LEFT JOIN ue_games g ON g.id=f.game_id WHERE LOWER(f.md5)=? '
                 . 'ORDER BY (f.scan_status="unverified" AND f.unverified_queue_game_id=0) DESC,f.id LIMIT 200',
             [$md5]
         );
@@ -190,28 +190,59 @@ final class CatalogUploadDuplicateDetector
         if ($storageRoot === false || !is_dir($storageRoot)) {
             return null;
         }
+
         $rawPath = trim((string)($row['relative_path'] ?? ''));
-        if ($rawPath === '' || str_contains($rawPath, "\0")) {
-            return null;
-        }
-        $relative = ltrim(str_replace('\\', '/', $rawPath), '/');
-        if ($relative === '' || str_contains($relative, '../')) {
-            return null;
+        $relative = '';
+        if ($rawPath !== '' && !str_contains($rawPath, "\0")) {
+            $relative = ltrim(str_replace('\\', '/', $rawPath), '/');
+            if (str_contains($relative, '../')) {
+                $relative = '';
+            }
         }
 
+        $storedName = basename(str_replace(["\0", '/', '\\'], ['', DIRECTORY_SEPARATOR, DIRECTORY_SEPARATOR], trim((string)($row['stored_name'] ?? ''))));
+        if ($storedName === '' || $storedName === '.' || $storedName === '..') {
+            $storedName = '';
+        }
+        if ($storedName === '') {
+            $rowMd5 = strtolower(trim((string)($row['md5'] ?? '')));
+            $extension = strtolower(trim((string)pathinfo((string)($row['original_name'] ?? ''), PATHINFO_EXTENSION)));
+            if (preg_match('/^[a-f0-9]{32}$/', $rowMd5) === 1) {
+                $storedName = $extension !== '' ? $rowMd5 . '.' . $extension : $rowMd5;
+            }
+        }
+
+        $gameSlug = trim(str_replace(["\0", '/', '\\'], '', (string)($row['game_slug'] ?? '')));
         $catalogRoot = realpath(dirname(__DIR__, 3));
         $candidates = [];
-        if ($this->isAbsolutePath($rawPath)) {
+
+        if ($rawPath !== '' && $this->isAbsolutePath($rawPath)) {
             $candidates[] = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $rawPath);
         }
-        if ($catalogRoot !== false) {
-            $candidates[] = $catalogRoot . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relative);
+        if ($relative !== '') {
+            if ($catalogRoot !== false) {
+                $candidates[] = $catalogRoot . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relative);
+            }
+            if (str_starts_with(strtolower($relative), 'storage/')) {
+                $candidates[] = $storageRoot . DIRECTORY_SEPARATOR
+                    . str_replace('/', DIRECTORY_SEPARATOR, substr($relative, strlen('storage/')));
+            }
+            $candidates[] = $storageRoot . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relative);
         }
-        if (str_starts_with(strtolower($relative), 'storage/')) {
-            $candidates[] = $storageRoot . DIRECTORY_SEPARATOR
-                . str_replace('/', DIRECTORY_SEPARATOR, substr($relative, strlen('storage/')));
+
+        // Canonical verified storage is content-addressed by stored_name beneath
+        // storage/games/<slug>/verified. Older rows may have a stale or missing
+        // relative_path while stored_name + game still identify the physical file.
+        if ($storedName !== '' && $gameSlug !== '') {
+            $candidates[] = $storageRoot . DIRECTORY_SEPARATOR . 'games'
+                . DIRECTORY_SEPARATOR . $gameSlug
+                . DIRECTORY_SEPARATOR . 'verified'
+                . DIRECTORY_SEPARATOR . $storedName;
         }
-        $candidates[] = $storageRoot . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relative);
+        // Retain the historical flat-storage fallback used by package downloads.
+        if ($storedName !== '') {
+            $candidates[] = $storageRoot . DIRECTORY_SEPARATOR . $storedName;
+        }
 
         $rootPrefix = rtrim(str_replace('\\', '/', $storageRoot), '/') . '/';
         foreach (array_unique($candidates) as $candidate) {
@@ -231,6 +262,23 @@ final class CatalogUploadDuplicateDetector
             }
         }
         return null;
+    }
+
+    public function confirmPhysicalIdentity(string $path, int $fileSize, string $md5, string $sha1): bool
+    {
+        if (!is_file($path) || is_link($path) || $fileSize < 1) {
+            return false;
+        }
+        $physicalSize = filesize($path);
+        if ($physicalSize === false || (int)$physicalSize !== $fileSize) {
+            return false;
+        }
+        $identity = $this->physicalIdentity($path);
+        if ($identity === null) {
+            return false;
+        }
+        return hash_equals(strtolower($md5), $identity['md5'])
+            && hash_equals(strtolower($sha1), $identity['sha1']);
     }
 
     private function isAbsolutePath(string $path): bool
