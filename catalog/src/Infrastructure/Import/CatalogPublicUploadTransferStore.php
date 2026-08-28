@@ -291,6 +291,64 @@ final class CatalogPublicUploadTransferStore
     }
 
 
+    /**
+     * Delete terminal public-upload ledger rows selected by an administrator.
+     * Failed rows may still own quarantined diagnostic bytes; deleting the row
+     * explicitly deletes those bytes as part of the same admin cleanup action.
+     *
+     * @param list<int> $ids
+     * @return array{requested:int,deleted:int,ignored:int}
+     */
+    public function deleteTerminalForAdmin(array $ids): array
+    {
+        $ids = array_values(array_unique(array_filter(
+            array_map('intval', $ids),
+            static fn(int $id): bool => $id > 0
+        )));
+        $ids = array_slice($ids, 0, 500);
+        if ($ids === []) {
+            return ['requested' => 0, 'deleted' => 0, 'ignored' => 0];
+        }
+
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        $statement = $this->db->prepare(
+            'SELECT id,upload_token,status FROM ue_public_uploads '
+            . 'WHERE id IN (' . $placeholders . ') '
+            . 'AND status IN ("duplicate","failed","cancelled","expired","rejected")'
+        );
+        $statement->execute($ids);
+        $rows = $statement->fetchAll(PDO::FETCH_ASSOC) ?: [];
+
+        $deletableIds = [];
+        foreach ($rows as $row) {
+            $id = max(0, (int)($row['id'] ?? 0));
+            $token = strtolower(trim((string)($row['upload_token'] ?? '')));
+            if ($id < 1 || preg_match('/^[a-f0-9]{64}$/', $token) !== 1) {
+                continue;
+            }
+            $this->removeQuarantine($token);
+            $deletableIds[] = $id;
+        }
+
+        if ($deletableIds !== []) {
+            $deletePlaceholders = implode(',', array_fill(0, count($deletableIds), '?'));
+            $delete = $this->db->prepare(
+                'DELETE FROM ue_public_uploads WHERE id IN (' . $deletePlaceholders . ') '
+                . 'AND status IN ("duplicate","failed","cancelled","expired","rejected")'
+            );
+            $delete->execute($deletableIds);
+            $deleted = max(0, $delete->rowCount());
+        } else {
+            $deleted = 0;
+        }
+
+        return [
+            'requested' => count($ids),
+            'deleted' => $deleted,
+            'ignored' => max(0, count($ids) - $deleted),
+        ];
+    }
+
     public function resolveForJob(int $publicUploadId, string $uploadToken): array
     {
         $row = $this->ledgerForJob($publicUploadId, $uploadToken);
