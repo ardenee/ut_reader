@@ -5,7 +5,8 @@
  * Browser chunk uploads and jobs/incoming files are transport staging, not the
  * recovery boundary for a multi-job archive workflow. Before extraction starts,
  * the parent job takes ownership of the immutable archive bytes in its prepared
- * workspace and all later attempts read that owned copy.
+ * workspace. That copy exists only until extraction has either handed every
+ * selected member to child staging or produced an unresolved extraction failure.
  */
 declare(strict_types=1);
 
@@ -65,6 +66,18 @@ final class CatalogArchiveSourceStore
             $job->parentJobId,
             $job->workflowUnitKey
         );
+    }
+
+    /**
+     * Remove the job-owned archive recovery workspace after a clean extraction
+     * handoff. Idempotent so crash recovery may call it again.
+     */
+    public function clear(int $jobId): void
+    {
+        if ($jobId < 1) {
+            return;
+        }
+        (new CatalogPreparedJobFileStore($this->config, $jobId, 'archive-source'))->clear();
     }
 
     /** @return array<string,mixed> */
