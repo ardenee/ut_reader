@@ -76,6 +76,31 @@ function file_info_dependency_table(array $dependencies): string
     return $html . '</tbody></table>';
 }
 
+
+/** @param list<array<string,mixed>> $rows */
+function file_info_related_files_table(array $rows, string $emptyMessage): string
+{
+    if ($rows === []) {
+        return '<p class="muted">' . catalog_h($emptyMessage) . '</p>';
+    }
+    $html = '<table data-sortable-table><thead><tr><th>Package</th><th>File</th><th>GUID / MD5</th><th>Size</th></tr></thead><tbody>';
+    foreach ($rows as $row) {
+        $fileId = (int)($row['id'] ?? 0);
+        if ($fileId < 1) {
+            continue;
+        }
+        $href = 'file-info.php?id=' . $fileId;
+        $identitySortValue = (string)($row['package_guid'] ?? '') . ' ' . (string)($row['md5'] ?? '');
+        $html .= '<tr><td class="mono"><a href="' . $href . '">' . catalog_h((string)($row['package_name'] ?? '')) . '</a></td>'
+            . '<td><a href="' . $href . '">' . catalog_h((string)($row['original_name'] ?? '')) . '</a></td>'
+            . '<td class="mono small used-by-identity" data-sort-value="' . catalog_h($identitySortValue) . '">'
+            . '<span>GUID: ' . catalog_h((string)($row['package_guid'] ?? '')) . '</span>'
+            . '<span>MD5: ' . catalog_h((string)($row['md5'] ?? '')) . '</span></td>'
+            . '<td data-sort-value="' . (int)($row['file_size'] ?? 0) . '">' . catalog_h(catalog_bytes((int)($row['file_size'] ?? 0))) . '</td></tr>';
+    }
+    return $html . '</tbody></table>';
+}
+
 try {
     $config = catalog_config();
     $db = catalog_db($config);
@@ -269,21 +294,35 @@ CSS;
     }
     echo '</div>';
 
-    $usedBy = catalog_dependency_used_by_rows($db, $id, 200);
-    echo '<div class="card"><h2>Used by</h2>';
-    if (!$usedBy) {
-        echo '<p class="muted">No resolved reverse links yet.</p>';
-    } else {
-        echo '<table data-sortable-table><thead><tr><th>Package</th><th>File</th><th>GUID / MD5</th><th>Size</th></tr></thead><tbody>';
-        foreach ($usedBy as $row) {
-            $sourceId = (int)$row['id'];
-            $fileInfoHref = 'file-info.php?id=' . $sourceId;
-            $identitySortValue = (string)$row['package_guid'] . ' ' . (string)$row['md5'];
-            echo '<tr><td class="mono"><a href="' . $fileInfoHref . '">' . catalog_h($row['package_name']) . '</a></td><td><a href="' . $fileInfoHref . '">' . catalog_h($row['original_name']) . '</a></td><td class="mono small used-by-identity" data-sort-value="' . catalog_h($identitySortValue) . '"><span>GUID: ' . catalog_h($row['package_guid']) . '</span><span>MD5: ' . catalog_h($row['md5']) . '</span></td><td data-sort-value="' . (int)$row['file_size'] . '">' . catalog_h(catalog_bytes((int)$row['file_size'])) . '</td></tr>';
+    $usesById = [];
+    foreach ($deps as $dep) {
+        $targetId = (int)($dep['resolved_id'] ?? 0);
+        if ($targetId < 1 || $targetId === $id || (string)($dep['status'] ?? '') === 'common') {
+            continue;
         }
-        echo '</tbody></table>';
+        $usesById[$targetId] = [
+            'id' => $targetId,
+            'package_name' => (string)($dep['resolved_package'] ?? ''),
+            'original_name' => (string)($dep['resolved_file'] ?? ''),
+            'package_guid' => (string)($dep['resolved_guid'] ?? ''),
+            'md5' => (string)($dep['resolved_md5'] ?? ''),
+            'file_size' => (int)($dep['resolved_size'] ?? 0),
+        ];
     }
-    echo '</div>';
+    $uses = array_values($usesById);
+    usort($uses, static fn(array $left, array $right): int =>
+        strnatcasecmp((string)$left['package_name'], (string)$right['package_name'])
+        ?: strnatcasecmp((string)$left['original_name'], (string)$right['original_name'])
+    );
+
+    echo '<div class="card"><h2>Uses (' . count($uses) . ')</h2>'
+        . file_info_related_files_table($uses, 'No resolved dependency files yet.')
+        . '</div>';
+
+    $usedBy = catalog_dependency_used_by_rows($db, $id, 200);
+    echo '<div class="card"><h2>Used by (' . count($usedBy) . ')</h2>'
+        . file_info_related_files_table($usedBy, 'No resolved reverse dependency links yet.')
+        . '</div>';
 
     echo <<<'HTML'
 <script>
