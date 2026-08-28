@@ -6,5 +6,5 @@ namespace UnrealDb\Catalog\Application\Search;
 interface CatalogSearchRepository
 {
     /** @return list<array<string,mixed>> */
-    public function findFiles(string $query, int $limit = 200, ?int $gameId = null): array;
+    public function findFiles(string $query, int $limit = 200, ?int $gameId = null, array $filters = []): array;
 }
