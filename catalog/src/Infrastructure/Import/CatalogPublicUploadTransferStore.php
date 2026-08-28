@@ -245,6 +245,51 @@ final class CatalogPublicUploadTransferStore
             'updated_at' => (string)($row['updated_at'] ?? ''),
         ];
     }
+    /**
+     * @param list<string> $uploadTokens
+     * @return list<array<string,mixed>>
+     */
+    public function statusesForContributor(array $uploadTokens, string $ipAddress): array
+    {
+        $tokens = [];
+        foreach ($uploadTokens as $uploadToken) {
+            $token = strtolower(trim((string)$uploadToken));
+            if (preg_match('/^[a-f0-9]{64}$/', $token) === 1) {
+                $tokens[$token] = true;
+            }
+        }
+        $tokens = array_slice(array_keys($tokens), 0, 100);
+        if ($tokens === []) {
+            return [];
+        }
+
+        $ip = $this->packedIp($ipAddress);
+        $placeholders = implode(',', array_fill(0, count($tokens), '?'));
+        $statement = $this->db->prepare(
+            'SELECT upload_token,id,status,background_job_id,unverified_file_id,server_md5,server_sha1,server_guid,'
+            . 'result_message,updated_at FROM ue_public_uploads '
+            . 'WHERE submitter_ip=? AND upload_token IN (' . $placeholders . ')'
+        );
+        $statement->execute(array_merge([$ip], $tokens));
+
+        $rows = [];
+        foreach ($statement->fetchAll(PDO::FETCH_ASSOC) ?: [] as $row) {
+            $rows[] = [
+                'upload_token' => strtolower(trim((string)($row['upload_token'] ?? ''))),
+                'id' => (int)($row['id'] ?? 0),
+                'status' => strtolower(trim((string)($row['status'] ?? ''))),
+                'background_job_id' => max(0, (int)($row['background_job_id'] ?? 0)),
+                'unverified_file_id' => max(0, (int)($row['unverified_file_id'] ?? 0)),
+                'server_md5' => strtolower(trim((string)($row['server_md5'] ?? ''))),
+                'server_sha1' => strtolower(trim((string)($row['server_sha1'] ?? ''))),
+                'server_guid' => trim((string)($row['server_guid'] ?? '')),
+                'result_message' => trim((string)($row['result_message'] ?? '')),
+                'updated_at' => (string)($row['updated_at'] ?? ''),
+            ];
+        }
+        return $rows;
+    }
+
 
     public function resolveForJob(int $publicUploadId, string $uploadToken): array
     {
