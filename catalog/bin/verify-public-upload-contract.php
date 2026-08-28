@@ -122,9 +122,10 @@ $check(
 $check(
     'guid_is_advisory_not_rejection',
     str_contains($preflight, '\'guid_match\' => $guidInfo')
-        && str_contains($preflight, 'the physical hashes differ; it will be retained for admin review')
+        && str_contains($preflight, 'This package GUID already appears in the catalog')
+        && str_contains($preflight, 'no physically confirmed exact byte match was found')
         && !str_contains($preflight, "reason' => 'guid_duplicate'"),
-    'Matching GUID with different bytes must be flagged but still uploadable.'
+    'Matching GUID without a physically confirmed exact byte match must be flagged but still uploadable.'
 );
 
 $check(
