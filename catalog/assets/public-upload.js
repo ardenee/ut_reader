@@ -454,6 +454,10 @@
                 throw new Error(String(payload && payload.error && payload.error.message
                     || payload.message || ('Worker wake HTTP ' + response.status)));
             }
+            const workerError = String(payload && payload.data && payload.data.worker_error || '');
+            if (workerError) {
+                throw new Error(workerError);
+            }
             return payload;
         } finally {
             if (activeController === controller) activeController = null;
