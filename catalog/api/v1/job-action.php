@@ -322,6 +322,7 @@ try {
             [
                 'prune_unit' => 'job_storage',
                 'orphan_min_age_seconds' => $minimumAge,
+                'manual_cleanup' => true,
             ],
             20,
             null,
