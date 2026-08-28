@@ -16,9 +16,8 @@ try {
     $db = catalog_db($config);
     $gameStorage = catalog_all(
         $db,
-        'SELECT g.id,g.name,COUNT(f.id) file_count,COALESCE(SUM(f.file_size),0) storage_bytes '
-        . 'FROM ue_games g LEFT JOIN ue_files f ON f.game_id=g.id AND f.scan_status="verified" '
-        . 'GROUP BY g.id,g.name ORDER BY g.name'
+        'SELECT g.id,g.name,COALESCE(s.verified_count,0) file_count,COALESCE(s.verified_size,0) storage_bytes '
+        . 'FROM ue_games g LEFT JOIN ue_game_catalog_stats s ON s.game_id=g.id ORDER BY g.name'
     );
     foreach ($gameStorage as $row) {
         $totalCatalogFiles += max(0, (int)($row['file_count'] ?? 0));
