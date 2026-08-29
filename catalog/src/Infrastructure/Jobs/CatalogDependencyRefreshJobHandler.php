@@ -13,6 +13,7 @@ use UnrealDb\Catalog\Application\Jobs\JobExecutionContext;
 use UnrealDb\Catalog\Application\Jobs\JobHandler;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
+use UnrealDb\Catalog\Infrastructure\Metadata\VerifiedCompactMetadataHealth;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoCatalogDependencyRebuilder;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyPackageSummary;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyReadSource;
@@ -97,6 +98,8 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
             && !empty($job->payload['workflow_parent_job_id'])
             && $deferGameStats
             && $deferSummaryPolicy;
+
+        $this->ensureCompactMetadataReady($job, $context, $fileId, (string)$file['original_name']);
 
         (new PdoCatalogDependencyRebuilder($this->db, $this->config))->rebuild(
             $fileId,
@@ -707,6 +710,115 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
             'Planned ' . $planned . ' durable dependency file unit(s); waiting for workers.',
             ['planned_units' => $planned]
         ));
+    }
+
+    private function ensureCompactMetadataReady(
+        ClaimedJob $job,
+        JobExecutionContext $context,
+        int $fileId,
+        string $originalName
+    ): void {
+        if (VerifiedCompactMetadataHealth::healthy($this->db, $this->config, $fileId)) {
+            return;
+        }
+
+        $repair = $this->metadataRepairChild($job->id);
+        $requestedBy = max(0, (int)($job->payload['requested_by'] ?? 0));
+        if ($repair === null) {
+            $repairJobId = (new PdoJobQueue($this->db))->enqueue(
+                $job->queue,
+                JobType::REPAIR_COMPACT_METADATA_FILE,
+                [
+                    'file_id' => $fileId,
+                    'requested_by' => $requestedBy > 0 ? $requestedBy : null,
+                    'recovery_for_dependency_job_id' => $job->id,
+                ],
+                10,
+                null,
+                null,
+                $requestedBy > 0 ? $requestedBy : null,
+                3,
+                $job->id,
+                'metadata-repair'
+            );
+            $context->defer(1, [
+                'stage' => 'metadata_repair_wait',
+                'done' => 0,
+                'total' => 4,
+                'percent' => 2,
+                'file_id' => $fileId,
+                'metadata_repair_job_id' => $repairJobId,
+                'message' => 'Compact metadata is missing or unreadable for '
+                    . ($originalName !== '' ? $originalName : ('file #' . $fileId))
+                    . '; queued repair job #' . $repairJobId . ' from the authoritative stored package.',
+            ]);
+        }
+
+        $repairId = (int)($repair['id'] ?? 0);
+        $status = strtolower(trim((string)($repair['status'] ?? 'queued')));
+        if (in_array($status, ['failed', 'dead_letter', 'cancelled'], true)) {
+            $error = trim((string)($repair['last_error'] ?? ''));
+            $context->defer(30, [
+                'stage' => 'metadata_repair_wait',
+                'done' => 0,
+                'total' => 4,
+                'percent' => 2,
+                'file_id' => $fileId,
+                'metadata_repair_job_id' => $repairId,
+                'metadata_repair_status' => $status,
+                'message' => 'Compact metadata repair job #' . $repairId . ' is ' . $status
+                    . ($error !== '' ? ': ' . mb_substr($error, 0, 500, 'UTF-8') : '.')
+                    . ' Restart that repair child; this dependency job will resume after it succeeds.',
+            ]);
+        }
+
+        if ($status !== 'completed') {
+            $progress = json_decode((string)($repair['progress_json'] ?? ''), true);
+            $repairPercent = is_array($progress)
+                ? max(0, min(100, (int)($progress['percent'] ?? 0)))
+                : 0;
+            $context->defer(2, [
+                'stage' => 'metadata_repair_wait',
+                'done' => 0,
+                'total' => 4,
+                'percent' => min(69, 2 + (int)floor($repairPercent * 0.6)),
+                'file_id' => $fileId,
+                'metadata_repair_job_id' => $repairId,
+                'metadata_repair_status' => $status,
+                'message' => 'Waiting for compact metadata repair job #' . $repairId
+                    . ' (' . $status . ', ' . $repairPercent . '%).',
+            ]);
+        }
+
+        if (!VerifiedCompactMetadataHealth::healthy($this->db, $this->config, $fileId)) {
+            throw new RuntimeException(
+                'Compact metadata repair job #' . $repairId
+                . ' completed, but format-2 metadata is still missing or unreadable for file #' . $fileId . '.'
+            );
+        }
+
+        $context->checkpoint([
+            'stage' => 'metadata_repair_complete',
+            'done' => 0,
+            'total' => 4,
+            'percent' => 5,
+            'file_id' => $fileId,
+            'metadata_repair_job_id' => $repairId,
+            'message' => 'Compact metadata repair job #' . $repairId
+                . ' completed; resuming dependency rebuild.',
+        ]);
+    }
+
+    /** @return array<string,mixed>|null */
+    private function metadataRepairChild(int $parentJobId): ?array
+    {
+        $statement = $this->db->prepare(
+            'SELECT id,status,last_error,progress_json,result_json FROM ue_background_jobs '
+            . 'WHERE parent_job_id=? AND workflow_unit_key="metadata-repair" LIMIT 1'
+        );
+        $statement->execute([$parentJobId]);
+        $row = $statement->fetch(PDO::FETCH_ASSOC);
+        return is_array($row) ? $row : null;
     }
 
     private function isPakDependencyWorkflow(ClaimedJob $job): bool
