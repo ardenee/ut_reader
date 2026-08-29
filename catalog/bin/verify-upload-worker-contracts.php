@@ -87,6 +87,8 @@ $record(
 );
 
 $coordinator = $read('catalog/assets/upload-bucket-v2-coordinator.js');
+$chunkEndpoint = $read('catalog/api/v1/upload-bucket-chunk.php');
+$duplicateDetector = $read('catalog/src/Infrastructure/Import/CatalogUploadDuplicateDetector.php');
 $record(
     'upload_v2_browser_pipeline',
     str_contains($coordinator, 'function inspectFile(')
@@ -100,6 +102,28 @@ $record(
         && str_contains($coordinator, 'start_worker: false')
         && str_contains($coordinator, 'start_worker: true'),
     'v2 must inspect/hash/preflight, stage chunks, finalize durable jobs in bounded batches, then start processing once'
+);
+
+$record(
+    'upload_v2_preflight_stays_fast_and_admin_only',
+    str_contains($coordinator, "mode: 'admin_fast'")
+        && str_contains($chunkEndpoint, '->inspectFastAdmin($fileSize, $identity[\'md5\'], $identity[\'sha1\'])')
+        && !str_contains(
+            substr(
+                $chunkEndpoint,
+                (int)strpos($chunkEndpoint, "if (\$action === 'preflight')"),
+                4200
+            ),
+            '->inspect($fileSize'
+        )
+        && str_contains($duplicateDetector, 'public function inspectFastAdmin(')
+        && str_contains($duplicateDetector, 'WHERE f.file_size=? AND LOWER(f.md5)=? AND LOWER(f.sha1)=?')
+        && str_contains($duplicateDetector, 'The fast trusted-admin preflight')
+        && str_contains($duplicateDetector, '$physicalSize = filesize($physicalPath)')
+        && str_contains($compatibleInspector, "String(data.mode || '') === 'admin_fast'")
+        && str_contains($compatibleInspector, "new Set(['uz', 'uz2', 'uz3'])")
+        && str_contains($compatibleInspector, 'const header = redirectHeader(extension, bytes, Number(file.size || 0));'),
+    'admin Upload Bucket v2 preflight must use indexed metadata plus cheap existence/size checks and bounded redirect-header validation; full physical re-hash/redirect decode belongs to authoritative processing or the public uploader'
 );
 
 $compatibleInspector = $read('catalog/assets/upload-file-inspector-worker-compatible.js');
