@@ -563,7 +563,7 @@
                 reject(new Error('Browser file-inspection worker could not decode the File message for ' + relativePath + '.'));
             };
             try {
-                worker.postMessage({type: 'inspect', id: requestId, file: file});
+                worker.postMessage({type: 'inspect', id: requestId, file: file, mode: 'admin_fast'});
             } catch (error) {
                 activeInspectorReject = null;
                 terminateInspector();
