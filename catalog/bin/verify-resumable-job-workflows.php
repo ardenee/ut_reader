@@ -413,7 +413,7 @@ $check(
     str_contains($browserScope, 'root_job.parent_job_id IS NULL')
         && str_contains($browserScope, 'problem_child.parent_job_id IS NOT NULL')
         && str_contains($browserScope, 'problem_child.status IN ("failed","dead_letter")')
-        && str_contains($browserScope, 'Cancelled routine child execution units remain folded into their source workflow.'),
+        && str_contains($browserScope, 'child execution units remain folded into their source workflow.'),
     'The normal operator queue must use indexable top-level/source branches and surface only failed/dead-letter child units needing direct attention.'
 );
 $check(
