@@ -89,6 +89,7 @@ $record(
 $coordinator = $read('catalog/assets/upload-bucket-v2-coordinator.js');
 $chunkEndpoint = $read('catalog/api/v1/upload-bucket-chunk.php');
 $duplicateDetector = $read('catalog/src/Infrastructure/Import/CatalogUploadDuplicateDetector.php');
+$compatibleInspector = $read('catalog/assets/upload-file-inspector-worker-compatible.js');
 $record(
     'upload_v2_browser_pipeline',
     str_contains($coordinator, 'function inspectFile(')
@@ -126,7 +127,6 @@ $record(
     'admin Upload Bucket v2 preflight must use indexed metadata plus cheap existence/size checks and bounded redirect-header validation; full physical re-hash/redirect decode belongs to authoritative processing or the public uploader'
 );
 
-$compatibleInspector = $read('catalog/assets/upload-file-inspector-worker-compatible.js');
 $archiveBranchPosition = strpos($compatibleInspector, 'const archive = TRANSPORT_ARCHIVE_EXTENSIONS.has(extension);');
 $delegatePosition = strpos($compatibleInspector, 'dispatchToInspector(data);', $archiveBranchPosition === false ? 0 : $archiveBranchPosition);
 $importPosition = strpos($compatibleInspector, "importScripts('upload-file-inspector-worker.js'");
