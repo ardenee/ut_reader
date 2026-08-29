@@ -118,7 +118,7 @@ $record(
         )
         && str_contains($duplicateDetector, 'public function inspectFastAdmin(')
         && str_contains($duplicateDetector, 'WHERE f.file_size=? AND LOWER(f.md5)=? AND LOWER(f.sha1)=?')
-        && str_contains($duplicateDetector, 'The fast trusted-admin preflight')
+        && str_contains($duplicateDetector, 'Fast trusted-admin preflight.')
         && str_contains($duplicateDetector, '$physicalSize = filesize($physicalPath)')
         && str_contains($compatibleInspector, "String(data.mode || '') === 'admin_fast'")
         && str_contains($compatibleInspector, "new Set(['uz', 'uz2', 'uz3'])")
