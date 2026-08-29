@@ -65,10 +65,10 @@ try {
     }
 
     echo '<section class="card"><h2>How contribution upload works</h2>'
-        . '<p>Your browser checks extensions and Unreal package/redirect signatures before transfer. It calculates package MD5 and SHA-1 off the main browser thread; .uz, .uz2 and .uz3 redirects are decoded in the browser first so the underlying Unreal package identity can be checked before any redirect bytes are uploaded. UE1/UE2 package GUIDs are also supplied when they can be read safely. Selected ZIP, RAR and 7z archives are processed only in the browser: Unreal members are extracted and checked one at a time, and the original archive is never uploaded.</p>'
+        . '<p>Your browser checks extensions and Unreal package/redirect signatures before transfer. It calculates package MD5 and SHA-1 off the main browser thread; .uz, .uz2 and .uz3 redirects are decoded in the browser first so the underlying Unreal package identity can be checked before any redirect bytes are uploaded. UE1/UE2 package GUIDs are also supplied when they can be read safely. Selected ZIP, RAR, 7z and UMOD-family archives are processed only in the browser: Unreal members are extracted and checked one at a time, and the original archive is never uploaded.</p>'
         . '<p>Up to <strong>100 checked files</strong> are sent to UnrealDB as one small identity manifest. The server performs batched indexed duplicate checks and returns only the files that still need uploading. For redirects the identity size is the decoded package size, not the compressed wrapper size. Matching package MD5 + SHA-1 + size is treated as an exact duplicate and skipped. A matching GUID with different hashes is <strong>not</strong> discarded; it is uploaded and flagged for review.</p>'
         . '<p>Accepted files are uploaded <strong>one at a time</strong> into a separate public quarantine. The upload request only transfers bytes. Authoritative hashing, redirect decompression, package parsing and unverified indexing happen afterward in background jobs.</p>'
-        . '<p class="muted">Public upload accepts normal Unreal package files plus .uz, .uz2 and .uz3 redirects. ZIP, RAR and 7z may be selected as local source archives; only eligible extracted Unreal members can cross the network. UMOD-family archives and PAK containers remain excluded from the anonymous upload surface.</p>'
+        . '<p class="muted">Public upload accepts normal Unreal package files plus .uz, .uz2 and .uz3 redirects. ZIP, RAR, 7z, UMOD, UT2MOD and UT4MOD may be selected as local source archives; only eligible extracted Unreal members can cross the network. PAK containers remain excluded from the anonymous upload surface.</p>'
         . '</section>';
 
     echo '<section class="card"><h2>Select files</h2>'
@@ -87,8 +87,8 @@ try {
         . '<p class="muted">Use this only if the Choose folder button is not supported by your browser.</p></details>'
         . '<p><strong>Accepted package extensions:</strong> '
         . catalog_h($allowedExtensions !== [] ? implode(', ', array_map(static fn(string $ext): string => '.' . $ext, $allowedExtensions)) : 'active game-profile package types')
-        . ', .uz, .uz2, .uz3; source archives: .zip, .rar, .7z.</p>'
-        . '<p><strong>Maximum extracted/uploaded file size:</strong> ' . catalog_h(catalog_bytes((int)$settings['max_file_bytes'])) . '. Source ZIP/RAR/7z archives may be larger because the archive itself is never uploaded.</p>'
+        . ', .uz, .uz2, .uz3; source archives: .zip, .rar, .7z, .umod, .ut2mod, .ut4mod.</p>'
+        . '<p><strong>Maximum extracted/uploaded file size:</strong> ' . catalog_h(catalog_bytes((int)$settings['max_file_bytes'])) . '. Source ZIP/RAR/7z/UMOD/UT2MOD/UT4MOD archives may be larger because the archive itself is never uploaded.</p>'
         . '<div class="public-upload-actions">'
         . '<button id="public-upload-start" type="submit">Check and contribute files</button>'
         . '<button id="public-upload-stop" class="secondary" type="button" hidden disabled>Stop</button>'
@@ -99,14 +99,17 @@ try {
     $workerDelegate = __DIR__ . '/assets/upload-file-inspector-worker.js';
     $legacyUzDecoderPath = __DIR__ . '/assets/legacy-uz-decoder.js';
     $archiveWorkerPath = __DIR__ . '/assets/public-upload-archive-worker.js';
+    $umodWorkerPath = __DIR__ . '/assets/public-upload-umod-worker.js';
     $archiveVendorJs = __DIR__ . '/assets/vendor/7z-wasm/7zz.umd.js';
     $archiveVendorWasm = __DIR__ . '/assets/vendor/7z-wasm/7zz.wasm';
     $archiveEnabled = is_file($archiveWorkerPath) && is_file($archiveVendorJs) && is_file($archiveVendorWasm);
+    $umodEnabled = is_file($umodWorkerPath);
     $workerVersion = max(
         is_file($workerPath) ? (int)(filemtime($workerPath) ?: 1) : 1,
         is_file($workerDelegate) ? (int)(filemtime($workerDelegate) ?: 1) : 1,
         is_file($legacyUzDecoderPath) ? (int)(filemtime($legacyUzDecoderPath) ?: 1) : 1,
         is_file($archiveWorkerPath) ? (int)(filemtime($archiveWorkerPath) ?: 1) : 1,
+        is_file($umodWorkerPath) ? (int)(filemtime($umodWorkerPath) ?: 1) : 1,
         is_file($archiveVendorJs) ? (int)(filemtime($archiveVendorJs) ?: 1) : 1,
         is_file($archiveVendorWasm) ? (int)(filemtime($archiveVendorWasm) ?: 1) : 1
     );
@@ -115,7 +118,9 @@ try {
         . ' data-upload-url="api/v1/public-upload.php"'
         . ' data-worker-url="assets/upload-file-inspector-worker-compatible.js?v=' . catalog_h((string)$workerVersion) . '"'
         . ' data-archive-worker-url="assets/public-upload-archive-worker.js?v=' . catalog_h((string)$workerVersion) . '"'
+        . ' data-umod-worker-url="assets/public-upload-umod-worker.js?v=' . catalog_h((string)$workerVersion) . '"'
         . ' data-archive-enabled="' . ($archiveEnabled ? '1' : '0') . '"'
+        . ' data-umod-enabled="' . ($umodEnabled ? '1' : '0') . '"'
         . ' data-csrf="' . catalog_h(catalog_csrf('public_upload')) . '"'
         . ' data-chunk-bytes="' . (int)$chunkBytes . '"'
         . ' data-max-file-bytes="' . (int)$settings['max_file_bytes'] . '">'
