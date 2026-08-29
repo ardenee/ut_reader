@@ -51,6 +51,19 @@ foreach ($recoveryFiles as $relative) {
         $destructive[] = $relative . ' missing';
         continue;
     }
+
+    if ($relative === 'src/Infrastructure/Persistence/PdoBackgroundJobBulkAction.php') {
+        // Bulk retry intentionally clears checkpoints only for retained archive
+        // roots/descendants that must replay their archive walk. Ordinary
+        // resumable jobs explicitly retain progress_json.
+        if (!str_contains($source, 'Ordinary resumable jobs retain progress_json as recovery state.')
+            || !str_contains($source, 'their retained source needs a fresh')
+            || !str_contains($source, 'restartArchiveProblemDescendants(')) {
+            $destructive[] = $relative . ' does not document/isolate archive-only progress reset';
+        }
+        continue;
+    }
+
     if (preg_match('/progress_json\s*=\s*NULL/i', $source) === 1) {
         $destructive[] = $relative . ' clears progress_json';
     }
@@ -141,14 +154,20 @@ $check(
 );
 
 $affected = $read('src/Infrastructure/Jobs/CatalogAffectedDependencyRefreshJobHandler.php');
+$affectedBatch = $read('src/Infrastructure/Jobs/CatalogAffectedDependencyBatchService.php');
 $check(
-    'affected_dependencies_are_per_file_units',
-    str_contains($affected, "'affected_file_id' => \$affectedFileId")
-        && str_contains($affected, "'affected:' . \$affectedFileId")
-        && str_contains($affected, 'handleFileUnit(')
+    'affected_dependencies_use_bounded_batches_with_file_recovery',
+    str_contains($affected, 'planBatchUnits(')
+        && str_contains($affected, 'CatalogAffectedDependencyBatchService::MAX_BATCH_SIZE')
+        && str_contains($affected, "'affected_file_ids' => \$ids")
+        && str_contains($affected, "'affected:batch:'")
         && str_contains($affected, 'aggregateFileUnits(')
-        && str_contains($affected, 'handleLegacyBatch('),
-    'New affected-dependency work must retry one affected file; old queued 50-file batches may only remain as cursor-preserving compatibility.'
+        && str_contains($affectedBatch, 'public const MAX_BATCH_SIZE = 250')
+        && str_contains($affectedBatch, 'rebuildForPackages(')
+        && str_contains($affectedBatch, 'JobType::REBUILD_FILE_DEPENDENCIES')
+        && str_contains($affectedBatch, "'affected-dependency-recovery:' . \$affectedFileId")
+        && str_contains($affectedBatch, 'queued an independent full-file recovery and continuing.'),
+    'Affected dependency work must stay bounded while a bad owner is detached into an independent full-file recovery instead of blocking the batch/root workflow.'
 );
 
 $projection = $read('src/Infrastructure/Jobs/CatalogProjectionReconciliationJobHandler.php');
@@ -195,9 +214,11 @@ $check(
     'backup_import_is_entry_workflow',
     str_contains($backupImport, 'IMPORT_GAME_BACKUP_ENTRY')
         && str_contains($backupImport, 'backup_import_wait_canonical')
+        && str_contains($backupImport, 'backup_import_plan_aliases')
         && str_contains($backupImport, 'backup_import_wait_aliases')
-        && str_contains($backupImport, "'dependencies'"),
-    'Backup restore must retain successful manifest entries, preserve canonical-before-alias ordering and nest the resumable dependency workflow.'
+        && str_contains($backupImport, "'defer_dependency_rebuild' => true")
+        && str_contains($backupImport, 'VerifiedFileCompactMetadataFinalizer::finalize('),
+    'Backup restore must retain successful manifest-entry children, preserve canonical-before-alias ordering, and verify authoritative compact metadata for each restored verified file.'
 );
 
 $backupExport = $read('src/Infrastructure/Jobs/GameBackupExportJobHandler.php');
@@ -239,7 +260,7 @@ $check(
         && str_contains($pak, 'pak_dependency_wait')
         && str_contains($pakWorkspace, "DIRECTORY_SEPARATOR . 'pak-import'")
         && str_contains($pakStore, 'ensureEntry(')
-        && str_contains($factory, 'JobType::IMPORT_STAGED_PAK_ENTRY => $pakImport'),
+        && str_contains($factory, 'JobType::IMPORT_STAGED_PAK_ENTRY => static fn() => new CatalogPakImportJobHandler'),
     'PAK extraction/index state must be durable, entry imports independently restartable, and the worker factory must execute those child units.'
 );
 
@@ -268,7 +289,7 @@ $check(
 );
 $check(
     'artifact_cleanup_is_split_by_category',
-    str_contains($storageMaintenance, "$storageOnly ? ['job_storage'] : ['generated', 'job_storage']")
+    str_contains($storageMaintenance, "\$storageOnly ? ['job_storage'] : ['generated', 'job_storage']")
         && str_contains($storageMaintenance, "'prune:' . \$unit")
         && str_contains($storageMaintenance, 'pruneOne(')
         && str_contains($storageMaintenance, "'chunked_uploads' => \$chunkedUploads"),
@@ -326,12 +347,14 @@ $check(
     'Upload Bucket processing must consume a completed durable source; an incomplete browser transfer is not resumable processing work.'
 );
 
+$bucketPage = $read('upload-bucket-v2.php');
 $check(
     'upload_ui_does_not_claim_browser_session_recovery',
     !str_contains($profiledUpload, 'use resumable chunks')
-        && !str_contains($read('upload-bucket-v2.php'), 'upload it in resumable chunks')
+        && !str_contains($bucketPage, 'upload it in resumable chunks')
         && str_contains($profiledUpload, 'Chunking does not make an interrupted browser upload session recoverable')
-        && str_contains($read('upload-bucket-v2.php'), 'An incomplete browser transfer is not a resumable background job'),
+        && str_contains($bucketPage, 'that upload is incomplete and must be started again')
+        && str_contains($bucketPage, 'Once complete staging succeeds, all processing after that point is background/recoverable'),
     'Only post-complete server-side processing may be described as resumable/recoverable.'
 );
 
@@ -387,9 +410,11 @@ $browserScope = $read('src/Infrastructure/Persistence/PdoBackgroundJobSearchScop
 $hydrator = $read('src/Infrastructure/Jobs/CatalogBackgroundJobResultHydrator.php');
 $check(
     'routine_workflow_children_are_hidden_by_default',
-    str_contains($browserScope, 'j.parent_job_id IS NULL')
-        && str_contains($browserScope, '"failed","dead_letter","cancelled"'),
-    'The normal operator queue must show parent workflows and child units needing attention, not thousands of successful units.'
+    str_contains($browserScope, 'root_job.parent_job_id IS NULL')
+        && str_contains($browserScope, 'problem_child.parent_job_id IS NOT NULL')
+        && str_contains($browserScope, 'problem_child.status IN ("failed","dead_letter")')
+        && str_contains($browserScope, 'Cancelled routine child execution units remain folded into their source workflow.'),
+    'The normal operator queue must use indexable top-level/source branches and surface only failed/dead-letter child units needing direct attention.'
 );
 $check(
     'failed_child_rows_preserve_real_unit_identity',
@@ -414,11 +439,12 @@ $check(
 );
 $check(
     'worker_factory_registers_every_new_child_type',
-    str_contains($factory, 'JobType::RECONCILE_CATALOG_PROJECTION_FILE => $projectionReconciliation')
-        && str_contains($factory, 'JobType::IMPORT_STAGED_PAK_ENTRY => $pakImport')
-        && str_contains($factory, 'JobType::HASH_UNVERIFIED_DUPLICATE => $duplicateCleanup')
-        && str_contains($factory, 'JobType::DELETE_UNVERIFIED_DUPLICATE => $duplicateCleanup'),
-    'Creating a durable child type without a worker registration would leave the workflow permanently queued.'
+    str_contains($factory, 'JobType::RECONCILE_CATALOG_PROJECTION_FILE => static fn() => new CatalogProjectionReconciliationJobHandler')
+        && str_contains($factory, 'JobType::IMPORT_STAGED_PAK_ENTRY => static fn() => new CatalogPakImportJobHandler')
+        && str_contains($factory, 'JobType::HASH_UNVERIFIED_DUPLICATE => static fn() => new UnverifiedDuplicateCleanupJobHandler')
+        && str_contains($factory, 'JobType::DELETE_UNVERIFIED_DUPLICATE => static fn() => new UnverifiedDuplicateCleanupJobHandler')
+        && str_contains($factory, 'JobType::IMPORT_GAME_BACKUP_ENTRY => static fn() => new GameBackupImportCleanupJobHandler'),
+    'Creating a durable child type without a lazy worker registration would leave the workflow permanently queued.'
 );
 
 if ($withDatabase) {
