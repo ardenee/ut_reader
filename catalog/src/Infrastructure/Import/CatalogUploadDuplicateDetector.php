@@ -24,6 +24,92 @@ final class CatalogUploadDuplicateDetector
     }
 
     /**
+     * Fast trusted-admin preflight.
+     *
+     * Uses the browser-supplied exact size/MD5/SHA-1 only as an indexed lookup
+     * key, then cheaply confirms that the referenced controlled-storage file
+     * still exists with the expected byte length. It deliberately does NOT
+     * re-read/re-hash the stored package. Authoritative worker processing still
+     * calls inspect(), which verifies the physical MD5/SHA-1 before discarding
+     * any uploaded bytes.
+     *
+     * @return array{
+     *   duplicate:?array<string,mixed>,
+     *   identity_matches:int,
+     *   missing_physical_matches:int,
+     *   missing_base_game_matches:int,
+     *   physical_identity_mismatches:int
+     * }
+     */
+    public function inspectFastAdmin(int $fileSize, string $md5, string $sha1): array
+    {
+        $md5 = strtolower(trim($md5));
+        $sha1 = strtolower(trim($sha1));
+        if ($fileSize < 1
+            || preg_match('/^[a-f0-9]{32}$/', $md5) !== 1
+            || preg_match('/^[a-f0-9]{40}$/', $sha1) !== 1) {
+            throw new \InvalidArgumentException('A valid size, MD5 and SHA-1 are required for duplicate inspection.');
+        }
+
+        $rows = \catalog_all(
+            $this->db,
+            'SELECT f.id,f.game_id,g.slug game_slug,f.package_name,f.original_name,f.stored_name,f.relative_path,'
+                . 'f.file_size,f.md5,f.sha1,f.scan_status,f.unverified_queue_game_id,f.unverified_queue_name '
+                . 'FROM ue_files f LEFT JOIN ue_games g ON g.id=f.game_id '
+                . 'WHERE f.file_size=? AND LOWER(f.md5)=? AND LOWER(f.sha1)=? '
+                . 'AND f.scan_status IN ("verified","unverified") '
+                . 'ORDER BY (f.scan_status="unverified" AND f.unverified_queue_game_id=0) DESC,f.id LIMIT 50',
+            [$fileSize, $md5, $sha1]
+        );
+
+        $missing = 0;
+        $sizeMismatches = 0;
+        foreach ($rows as $row) {
+            $physicalPath = $this->locatePhysicalPath($row);
+            if ($physicalPath === null) {
+                $missing++;
+                continue;
+            }
+            $physicalSize = filesize($physicalPath);
+            if ($physicalSize === false || (int)$physicalSize !== $fileSize) {
+                $sizeMismatches++;
+                continue;
+            }
+
+            return [
+                'duplicate' => [
+                    'file_id' => (int)$row['id'],
+                    'game_id' => (int)($row['game_id'] ?? 0),
+                    'package_name' => (string)($row['package_name'] ?? ''),
+                    'original_name' => (string)($row['original_name'] ?? ''),
+                    'scan_status' => (string)($row['scan_status'] ?? ''),
+                    'location_kind' => (string)($row['scan_status'] ?? '') === 'unverified'
+                        && (int)($row['unverified_queue_game_id'] ?? -1) === 0
+                        ? 'upload_bucket'
+                        : 'catalog_storage',
+                    'is_base_game' => false,
+                    'physical_path' => $physicalPath,
+                    'file_size' => $fileSize,
+                    'md5' => $md5,
+                    'sha1' => $sha1,
+                ],
+                'identity_matches' => count($rows),
+                'missing_physical_matches' => $missing,
+                'missing_base_game_matches' => 0,
+                'physical_identity_mismatches' => $sizeMismatches,
+            ];
+        }
+
+        return [
+            'duplicate' => null,
+            'identity_matches' => count($rows),
+            'missing_physical_matches' => $missing,
+            'missing_base_game_matches' => 0,
+            'physical_identity_mismatches' => $sizeMismatches,
+        ];
+    }
+
+    /**
      * @return array{
      *   duplicate:?array<string,mixed>,
      *   identity_matches:int,
