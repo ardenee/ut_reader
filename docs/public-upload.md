@@ -25,7 +25,7 @@ The browser:
 4. reads legacy UE1/UE2 package GUID only where the repository's package-summary layout is deterministic;
 5. sends at most 100 checked identities to \`api/v1/public-upload-preflight.php\`;
 6. receives \`upload\`, \`skip\` or \`reject\` per client ID;
-7. for selected ZIP/RAR/7z source archives, mounts the browser File through WORKERFS, lists members without uploading the archive, and extracts/checks one eligible Unreal member at a time;
+7. for selected ZIP/RAR/7z source archives, mounts the browser File through WORKERFS; for UMOD/UT2MOD/UT4MOD, parses the native Unreal Setup footer/directory in a worker; in both cases it lists members without uploading the archive and exposes/checks one eligible Unreal member at a time;
 8. transfers only accepted files, one file at a time, through ordered chunks; chunks may use gzip transport compression when it saves at least 10%, while reservation identity remains the original package bytes;
 9. terminates each archive-member worker immediately after skip/upload so its MEMFS/WASM heap can be reclaimed;
 10. supports Stop and immediately cancels the current/not-yet-started reservations from that accepted batch.
@@ -112,13 +112,16 @@ The anonymous surface accepts:
 - \`.uz\`;
 - \`.uz2\`;
 - \`.uz3\`;
-- ZIP, RAR and 7z as **local source archives only**.
+- ZIP, RAR and 7z as **local source archives only**;
+- `.umod`, `.ut2mod` and `.ut4mod` as **local Unreal Setup source archives only**.
 
-The ZIP/RAR/7z container itself is never reserved or uploaded. The browser lists
-the archive through a dedicated 7-Zip WASM worker using WORKERFS, ignores
-non-upload members without extraction, and extracts only one eligible Unreal
-member at a time. Each extracted member must pass the same header/hash preflight
-as a directly selected package before any bytes cross the network.
+The ZIP/RAR/7z/UMOD-family container itself is never reserved or uploaded. ZIP/RAR/7z are listed
+through the dedicated 7-Zip WASM worker using WORKERFS. UMOD/UT2MOD/UT4MOD are
+parsed natively in a dedicated browser worker using the Unreal Setup footer,
+CRC and compact-index directory table. The browser ignores non-upload members
+without extraction and exposes only one eligible Unreal member at a time. Each
+member must pass the same header/hash preflight as a directly selected package
+before any bytes cross the network.
 
 UMOD-family archives and PAK containers remain excluded from the anonymous
 surface. Legacy \`.uz\` FCodec redirects are decoded in the browser before
