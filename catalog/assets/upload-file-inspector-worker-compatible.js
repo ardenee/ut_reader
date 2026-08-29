@@ -30,6 +30,7 @@ const UMOD_FOOTER_BYTES = 20;
 const UMOD_MAGIC = 0x9fe3c5a3;
 const UMOD_EXTENSIONS = new Set(['umod', 'ut2mod', 'ut4mod']);
 const TRANSPORT_ARCHIVE_EXTENSIONS = new Set(['zip', '7z', 'rar', 'umod', 'ut2mod', 'ut4mod']);
+const REDIRECT_EXTENSIONS = new Set(['uz', 'uz2', 'uz3']);
 let inspectorLoaded = false;
 let inspectorLoadError = null;
 let activeRequestId = '';
@@ -123,6 +124,48 @@ function indexOfSequence(bytes, sequence) {
         return offset;
     }
     return -1;
+}
+
+function redirectHeader(extension, bytes, fileSize) {
+    if (extension === 'uz') {
+        const signature = littleU32(bytes, 0);
+        if (signature !== 1234 && signature !== 5678) {
+            throw new Error(
+                'The .uz file does not contain a supported Unreal redirect signature. '
+                + 'Expected 1234 or 5678; detected ' + signature + '.'
+            );
+        }
+        return {kind:'redirect-uz', description:'Unreal FCodec redirect signature ' + signature};
+    }
+
+    if (extension === 'uz3') {
+        const signature = littleU32(bytes, 0);
+        if (signature !== 5678) {
+            throw new Error('The .uz3 file does not contain the expected Unreal 5678 redirect signature.');
+        }
+        return {kind:'redirect-uz3', description:'Unreal redirect signature 5678'};
+    }
+
+    if (extension === 'uz2') {
+        if (fileSize < 10 || bytes.length < 10) {
+            throw new Error('The .uz2 file is too small to contain an Epic redirect record.');
+        }
+        const compressed = littleU32(bytes, 0);
+        const uncompressed = littleU32(bytes, 4);
+        if (compressed < 1 || compressed > 33096
+            || uncompressed < 1 || uncompressed > 32768
+            || 8 + compressed > fileSize) {
+            throw new Error('The .uz2 file does not contain a valid first Epic redirect record.');
+        }
+        const cmf = bytes[8];
+        const flg = bytes[9];
+        if ((cmf & 0x0f) !== 8 || (((cmf << 8) | flg) % 31) !== 0) {
+            throw new Error('The .uz2 first record does not begin with a valid zlib stream.');
+        }
+        return {kind:'redirect-uz2', description:'Epic UZ2 zlib record header'};
+    }
+
+    throw new Error('Unsupported redirect extension .' + extension + '.');
 }
 
 function archiveHeader(extension, bytes) {
@@ -225,6 +268,37 @@ nativeAddEventListener.call(self, 'message', async function (event) {
     const extension = name.includes('.') ? name.split('.').pop().toLowerCase() : '';
     const archive = TRANSPORT_ARCHIVE_EXTENSIONS.has(extension);
     const legacyUz = extension === 'uz';
+    const adminFast = String(data.mode || '') === 'admin_fast';
+    const redirect = REDIRECT_EXTENSIONS.has(extension);
+
+    if (adminFast && redirect) {
+        try {
+            const readBytes = Math.min(Math.max(16, Number(file.size || 0)), 64);
+            const bytes = new Uint8Array(await file.slice(0, readBytes).arrayBuffer());
+            const header = redirectHeader(extension, bytes, Number(file.size || 0));
+            self.postMessage({
+                type:'result',
+                id:String(data.id || ''),
+                result:{
+                    md5:'',
+                    sha1:'',
+                    identity_size:0,
+                    extension:extension,
+                    redirect:true,
+                    archive:false,
+                    header:header
+                }
+            });
+        } catch (error) {
+            self.postMessage({
+                type:'error',
+                id:String(data.id || ''),
+                message:error && error.message ? error.message : 'The redirect wrapper header could not be inspected.'
+            });
+        }
+        return;
+    }
+
     if (!archive && !legacyUz) {
         try {
             dispatchToInspector(data);
