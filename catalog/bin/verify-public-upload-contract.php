@@ -47,6 +47,7 @@ $inspector = $read('assets/upload-file-inspector-worker.js');
 $legacyUzDecoder = $read('assets/legacy-uz-decoder.js');
 $compatibleInspector = $read('assets/upload-file-inspector-worker-compatible.js');
 $archiveWorker = $read('assets/public-upload-archive-worker.js');
+$umodWorker = $read('assets/public-upload-umod-worker.js');
 $archiveInstaller = $read('bin/install-browser-archive-decoder.php');
 $archiveVendorReadme = $read('assets/vendor/7z-wasm/README.md');
 $programSettings = $read('program-settings.php');
@@ -157,11 +158,12 @@ $check(
         && str_contains($preflightApi, "catalog_api_require_csrf('public_upload')")
         && str_contains($uploadApi, "catalog_api_require_csrf('public_upload')")
         && str_contains($preflight, '$policy->isArchive($name) || $policy->isPakContainer($name)')
-        && str_contains($page, 'Selected ZIP, RAR and 7z archives are processed only in the browser')
+        && str_contains($page, 'Selected ZIP, RAR, 7z and UMOD-family archives are processed only in the browser')
         && str_contains($page, 'the original archive is never uploaded')
         && str_contains($page, 'Public upload accepts normal Unreal package files plus .uz, .uz2 and .uz3 redirects')
-        && str_contains($page, 'UMOD-family archives and PAK containers remain excluded'),
-    'The public route must keep archive containers off the server while allowing browser-only ZIP/RAR/7z source inspection.'
+        && str_contains($page, 'ZIP, RAR, 7z, UMOD, UT2MOD and UT4MOD may be selected as local source archives')
+        && str_contains($page, 'PAK containers remain excluded'),
+    'The public route must keep archive containers off the server while allowing browser-only ZIP/RAR/7z and UMOD-family source inspection.'
 );
 
 $check(
@@ -263,9 +265,14 @@ $check(
 
 $check(
     'browser_archive_sources_are_member_only_and_memory_bounded',
-    str_contains($client, "const ARCHIVE_EXTENSIONS = new Set(['zip', 'rar', '7z'])")
+    str_contains($client, "const ARCHIVE_EXTENSIONS = new Set(['zip', 'rar', '7z', 'umod', 'ut2mod', 'ut4mod'])")
+        && str_contains($client, "const UMOD_ARCHIVE_EXTENSIONS = new Set(['umod', 'ut2mod', 'ut4mod'])")
         && str_contains($client, 'await oneShotArchiveList(file, archiveLabel)')
         && str_contains($client, 'await openArchiveMember(')
+        && str_contains($client, 'return umodWorkerUrl')
+        && str_contains($client, 'return openUmodMember(file, member, label, position, total)')
+        && str_contains($client, 'const memberBlob = file.slice(offset, offset + size)')
+        && str_contains($client, 'memberBlob.slice(start, start + bytes).arrayBuffer()')
         && str_contains($client, 'Original archive will not be uploaded.')
         && str_contains($client, 'activeArchiveStops')
         && str_contains($archiveWorker, 'module.FS.mount(module.WORKERFS, {files:[file]},')
@@ -275,6 +282,15 @@ $check(
         && str_contains($archiveWorker, "if (extension === 'uz') return inspectUz(id, name, maxFileBytes)")
         && str_contains($archiveWorker, 'UnrealDbLegacyUzDecoder.decode(encoded,limit)')
         && str_contains($archiveWorker, 'Archive member path contains an unsafe path segment.')
+        && str_contains($umodWorker, 'const UMOD_MAGIC = 0x9fe3c5a3')
+        && str_contains($umodWorker, 'const MAX_DIRECTORY_BYTES = 32 * 1024 * 1024')
+        && str_contains($umodWorker, 'function readCompactIndex(bytes, cursor)')
+        && str_contains($umodWorker, 'function readUe1String(bytes, cursor)')
+        && str_contains($umodWorker, 'async function unrealMemCrcFile(')
+        && str_contains($umodWorker, 'UMOD-family archive CRC does not match its footer')
+        && str_contains($umodWorker, 'function safeMemberPath(value)')
+        && str_contains($umodWorker, 'file.slice(')
+        && !str_contains($umodWorker, 'file.arrayBuffer()')
         && str_contains($archiveInstaller, 'EXPECTED_GIT_BLOB_SHA1')
         && str_contains($archiveInstaller, '337cfa5ac2e9ed01d9dfc5b9aeb8f2742e025502')
         && str_contains($archiveInstaller, "'verify_peer' => true")
@@ -282,7 +298,7 @@ $check(
         && str_contains($archiveInstaller, 'unset($curl);')
         && !str_contains($archiveInstaller, 'curl_close(')
         && str_contains($archiveVendorReadme, 'WORKERFS'),
-    'ZIP/RAR/7z must remain browser-only sources, mount without whole-archive copies, expose one member sequentially, and free each member worker after use.'
+    'ZIP/RAR/7z and UMOD-family archives must remain browser-only sources, avoid whole-archive copies, expose one eligible Unreal member at a time, and free worker/member state after use.'
 );
 
 $check(
