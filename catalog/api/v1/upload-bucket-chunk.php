@@ -89,7 +89,7 @@ try {
 
         $identity = $filePolicy->browserIdentity($_POST);
         $inspection = (new CatalogUploadDuplicateDetector($application->db, $application->config))
-            ->inspect($fileSize, $identity['md5'], $identity['sha1']);
+            ->inspectFastAdmin($fileSize, $identity['md5'], $identity['sha1']);
         $duplicate = is_array($inspection['duplicate'] ?? null) ? $inspection['duplicate'] : null;
         if ($duplicate !== null) {
             JsonResponse::send([
