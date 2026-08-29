@@ -62,6 +62,13 @@ try {
 
 catalog_head('UnrealDB - Unreal File Catalog');
 ?>
+<section class="card" style="border:1px solid #b91c1c;background:rgba(127,29,29,.16)">
+  <h2>Storage outage</h2>
+  <p><strong>UnrealDB's primary storage drive has failed.</strong></p>
+  <p>The file collection is currently unavailable while the storage system is being recovered and rebuilt. Downloads, contributions and other features that require stored files may not work during this outage.</p>
+  <p class="muted">The database and catalog may remain available for browsing, but restoring file storage will take some time. Thank you for your patience while the service is brought back online.</p>
+</section>
+
 <section class="card hero">
   <h1>UnrealDB</h1>
   <p class="muted">A catalog for Unreal Engine package files, built to gather Unreal and Unreal Tournament files, inspect imports and exports, and help complete libraries by finding missing dependencies.</p>
