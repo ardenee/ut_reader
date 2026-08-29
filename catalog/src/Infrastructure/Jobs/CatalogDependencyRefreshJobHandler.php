@@ -13,6 +13,7 @@ use UnrealDb\Catalog\Application\Jobs\JobExecutionContext;
 use UnrealDb\Catalog\Application\Jobs\JobHandler;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
+use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer;
 use UnrealDb\Catalog\Infrastructure\Metadata\VerifiedCompactMetadataHealth;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoCatalogDependencyRebuilder;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyPackageSummary;
@@ -718,7 +719,7 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
         int $fileId,
         string $originalName
     ): void {
-        if (VerifiedCompactMetadataHealth::healthy($this->db, $this->config, $fileId)) {
+        if ($this->compactMetadataPhysicallyPresent($fileId)) {
             return;
         }
 
@@ -807,6 +808,38 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
             'message' => 'Compact metadata repair job #' . $repairId
                 . ' completed; resuming dependency rebuild.',
         ]);
+    }
+
+    private function compactMetadataPhysicallyPresent(int $fileId): bool
+    {
+        $storageRoot = trim((string)($this->config['storage_path'] ?? ''));
+        if ($storageRoot === '') {
+            throw new RuntimeException('Catalog storage_path is required for compact dependency rebuilding.');
+        }
+
+        $statement = $this->db->prepare(
+            'SELECT f.game_id,m.format_version,m.codec,m.compressed_size FROM ue_files f '
+            . 'LEFT JOIN ue_file_metadata m ON m.file_id=f.id WHERE f.id=? AND f.scan_status="verified" LIMIT 1'
+        );
+        $statement->execute([$fileId]);
+        $row = $statement->fetch(PDO::FETCH_ASSOC);
+        if (!is_array($row)
+            || (int)($row['format_version'] ?? 0) !== BlockedCompressedMetadataContainer::FORMAT_VERSION
+            || (int)($row['codec'] ?? 0) !== BlockedCompressedMetadataContainer::CODEC_BLOCK_GZIP) {
+            return false;
+        }
+
+        $path = BlockedCompressedMetadataContainer::path(
+            $storageRoot,
+            (int)$row['game_id'],
+            $fileId
+        );
+        clearstatcache(true, $path);
+        if (!is_file($path)) {
+            return false;
+        }
+        $size = @filesize($path);
+        return $size !== false && (int)$size === (int)($row['compressed_size'] ?? -1);
     }
 
     /** @return array<string,mixed>|null */
