@@ -20,14 +20,18 @@
     const uploadUrl = String(progressBox.dataset.uploadUrl || 'api/v1/public-upload.php');
     const workerUrl = String(progressBox.dataset.workerUrl || 'assets/upload-file-inspector-worker-compatible.js');
     const archiveWorkerUrl = String(progressBox.dataset.archiveWorkerUrl || 'assets/public-upload-archive-worker.js');
+    const umodWorkerUrl = String(progressBox.dataset.umodWorkerUrl || 'assets/public-upload-umod-worker.js');
     const archiveEnabled = String(progressBox.dataset.archiveEnabled || '') === '1';
+    const umodEnabled = String(progressBox.dataset.umodEnabled || '') === '1';
     const csrf = String(progressBox.dataset.csrf || '');
     const chunkBytes = Math.max(1024 * 1024, Number(progressBox.dataset.chunkBytes || 16 * 1024 * 1024));
     const maxFileBytes = Math.max(1, Number(progressBox.dataset.maxFileBytes || 0));
     const BATCH_FILES = 100;
     const MAX_LOG_LINES = 500;
     const MAX_ARCHIVE_ENTRIES = 50000;
-    const ARCHIVE_EXTENSIONS = new Set(['zip', 'rar', '7z']);
+    const SEVENZIP_ARCHIVE_EXTENSIONS = new Set(['zip', 'rar', '7z']);
+    const UMOD_ARCHIVE_EXTENSIONS = new Set(['umod', 'ut2mod', 'ut4mod']);
+    const ARCHIVE_EXTENSIONS = new Set(['zip', 'rar', '7z', 'umod', 'ut2mod', 'ut4mod']);
     const TRANSPORT_COMPRESSION_MIN_BYTES = 64 * 1024;
     const TRANSPORT_COMPRESSION_RATIO = 0.90;
 
@@ -250,13 +254,29 @@
         return source + '!/' + member;
     }
 
+    function archiveWorkerFor(file) {
+        const extension = extensionOf(file && file.name);
+        if (UMOD_ARCHIVE_EXTENSIONS.has(extension)) {
+            if (!umodEnabled) throw new Error('UMOD/UT2MOD/UT4MOD browser processing is not installed on this server.');
+            return umodWorkerUrl;
+        }
+        if (SEVENZIP_ARCHIVE_EXTENSIONS.has(extension)) {
+            if (!archiveEnabled) throw new Error('ZIP/RAR/7z browser processing is not installed on this server.');
+            return archiveWorkerUrl;
+        }
+        throw new Error('Unsupported source archive extension .' + (extension || '(none)') + '.');
+    }
+
     function oneShotArchiveList(file, label) {
         ensureRunning();
-        if (!archiveEnabled) {
-            return Promise.reject(new Error('ZIP/RAR/7z browser processing is not installed on this server.'));
+        let selectedWorkerUrl;
+        try {
+            selectedWorkerUrl = archiveWorkerFor(file);
+        } catch (error) {
+            return Promise.reject(error);
         }
         return new Promise(function (resolve, reject) {
-            const worker = new Worker(archiveWorkerUrl);
+            const worker = new Worker(selectedWorkerUrl);
             const id = String(++archiveSequence);
             let settled = false;
             function finish(error, result) {
@@ -291,8 +311,113 @@
         });
     }
 
+    function openUmodMember(file, member, label, position, total) {
+        ensureRunning();
+        return new Promise(function (resolve, reject) {
+            const offset = Math.max(0, Number(member.offset || 0));
+            const size = Math.max(0, Number(member.size || 0));
+            const tableOffset = Math.max(0, Number(member.table_offset || 0));
+            if (size < 1 || size > maxFileBytes
+                || offset + size > tableOffset
+                || offset + size > Number(file.size || 0)) {
+                reject(new Error('UMOD member bounds are invalid or exceed the public upload file limit.'));
+                return;
+            }
+
+            const memberBlob = file.slice(offset, offset + size);
+            if (memberBlob.size !== size) {
+                reject(new Error('UMOD member slice does not match its declared size.'));
+                return;
+            }
+
+            let memberFile;
+            try {
+                memberFile = new File(
+                    [memberBlob],
+                    String(member.name || 'umod-member'),
+                    {type:'application/octet-stream', lastModified:Number(file.lastModified || Date.now())}
+                );
+            } catch (error) {
+                reject(new Error('Browser could not expose the UMOD member for inspection.'));
+                return;
+            }
+
+            const worker = new Worker(workerUrl);
+            const id = String(++archiveSequence);
+            let closed = false;
+            let resolved = false;
+
+            function close(reason) {
+                if (closed) return;
+                closed = true;
+                activeArchiveStops.delete(close);
+                worker.terminate();
+                if (!resolved) reject(reason instanceof Error ? reason : stoppedError());
+            }
+            activeArchiveStops.add(close);
+
+            worker.onmessage = function (event) {
+                const data = event.data || {};
+                if (String(data.id || '') !== id) return;
+                if (data.type === 'progress') {
+                    const loaded = Math.max(0, Number(data.loaded || 0));
+                    const progressTotal = Math.max(0, Number(data.total || 0));
+                    const percent = progressTotal > 0
+                        ? Math.min(99, Math.floor((loaded * 100) / progressTotal))
+                        : 0;
+                    setProgress(
+                        percent,
+                        'Archive member ' + position + '/' + total + ' · ' + label
+                            + ' · ' + (data.phase === 'redirect-hash' ? 'decoding/hash identity' : 'validating/hash identity'),
+                        progressTotal <= 0
+                    );
+                    return;
+                }
+                if (data.type !== 'result') {
+                    close(new Error(String(data.message || 'UMOD member inspection failed.')));
+                    return;
+                }
+
+                const inspection = data.result || {};
+                worker.terminate();
+                resolved = true;
+                resolve({
+                    meta:{
+                        name:String(member.name || ''),
+                        member_path:String(member.path || ''),
+                        size:size,
+                        inspection:inspection
+                    },
+                    read:async function (readOffset, length) {
+                        ensureRunning();
+                        if (closed) throw stoppedError();
+                        const start = Math.max(0, Number(readOffset || 0));
+                        const bytes = Math.max(0, Number(length || 0));
+                        if (bytes < 1 || start + bytes > size) {
+                            throw new Error('UMOD member chunk order is outside the selected member.');
+                        }
+                        const buffer = await memberBlob.slice(start, start + bytes).arrayBuffer();
+                        if (closed) throw stoppedError();
+                        if (!(buffer instanceof ArrayBuffer) || buffer.byteLength !== bytes) {
+                            throw new Error('UMOD member read returned an incomplete upload chunk.');
+                        }
+                        return buffer;
+                    },
+                    close:close
+                });
+            };
+            worker.onerror = function () {
+                close(new Error('Browser package inspector failed while checking ' + label + '.'));
+            };
+            worker.postMessage({type:'inspect', id:id, file:memberFile, max_file_bytes:maxFileBytes});
+        });
+    }
+
     function openArchiveMember(file, member, label, position, total) {
         ensureRunning();
+        if (UMOD_ARCHIVE_EXTENSIONS.has(extensionOf(file && file.name))) {
+            return openUmodMember(file, member, label, position, total);
+        }
         return new Promise(function (resolve, reject) {
             const worker = new Worker(archiveWorkerUrl);
             let sequence = 0;
@@ -873,10 +998,12 @@
     async function processArchive(item, batchNumber) {
         const file = item.file;
         const archiveLabel = item.relativePath || file.name;
-        if (!archiveEnabled) {
+        try {
+            archiveWorkerFor(file);
+        } catch (error) {
             counters.checked++;
             counters.rejected++;
-            addLog('rejected', archiveLabel, 'ZIP/RAR/7z browser decoding is not installed on this server.');
+            addLog('rejected', archiveLabel, error.message || 'Browser source-archive processing is unavailable.');
             renderSummary();
             return;
         }
