@@ -117,6 +117,29 @@ $check(
     'Whole-game dependency work must retain successful per-file units and publish game stats once.'
 );
 
+$check(
+    'file_dependency_missing_metadata_is_repaired_without_full_preverify',
+    str_contains($dependencies, 'private function compactMetadataPhysicallyPresent(int $fileId): bool')
+        && str_contains($dependencies, 'BlockedCompressedMetadataContainer::path(')
+        && str_contains($dependencies, 'm.compressed_size')
+        && str_contains($dependencies, 'JobType::REPAIR_COMPACT_METADATA_FILE')
+        && str_contains($dependencies, "'metadata-repair'")
+        && str_contains($dependencies, "'stage' => 'metadata_repair_wait'")
+        && str_contains($dependencies, 'Restart that repair child; this dependency job will resume after it succeeds.')
+        && str_contains($dependencies, 'VerifiedCompactMetadataHealth::healthy($this->db, $this->config, $fileId)')
+        && strpos($dependencies, 'VerifiedCompactMetadataHealth::healthy($this->db, $this->config, $fileId)')
+            > strpos($dependencies, "if (\$status !== 'completed')")
+        && !str_contains(
+            substr(
+                $dependencies,
+                (int)strpos($dependencies, 'private function compactMetadataPhysicallyPresent'),
+                2400
+            ),
+            'BlockedCompressedMetadataReader'
+        ),
+    'Per-file dependency work must cheaply detect missing/size-mismatched compact metadata, defer to the existing repair child, and reserve full container verification for post-repair confirmation.'
+);
+
 $affected = $read('src/Infrastructure/Jobs/CatalogAffectedDependencyRefreshJobHandler.php');
 $check(
     'affected_dependencies_are_per_file_units',
