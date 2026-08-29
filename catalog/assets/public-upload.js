@@ -1032,7 +1032,8 @@
         let ignored = 0;
         entries.forEach(function (entry) {
             const extension = extensionOf(entry.name || entry.path);
-            if (!allowedExtensions.has(extension)
+            if (entry.safe === false
+                || !allowedExtensions.has(extension)
                 || ARCHIVE_EXTENSIONS.has(extension)
                 || Number(entry.size || 0) < 1) {
                 ignored++;
