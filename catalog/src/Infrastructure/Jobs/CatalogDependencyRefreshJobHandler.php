@@ -719,11 +719,11 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
         int $fileId,
         string $originalName
     ): void {
-        if ($this->compactMetadataPhysicallyPresent($fileId)) {
+        $repair = $this->metadataRepairChild($job->id);
+        if ($this->compactMetadataPhysicallyPresent($fileId) && $repair === null) {
             return;
         }
 
-        $repair = $this->metadataRepairChild($job->id);
         $requestedBy = max(0, (int)($job->payload['requested_by'] ?? 0));
         if ($repair === null) {
             $repairJobId = (new PdoJobQueue($this->db))->enqueue(
