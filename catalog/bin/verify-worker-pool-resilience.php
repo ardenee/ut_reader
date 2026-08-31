@@ -22,6 +22,7 @@ $record = static function (string $name, bool $ok, string $detail = '') use (&$c
 $files = [
     'bin/catalog-worker-detached.php',
     'src/Infrastructure/Jobs/CatalogWorkerPoolSelfHealer.php',
+    'src/Infrastructure/Jobs/CatalogWorkerProcessLauncher.php',
     'src/Application/Jobs/CatalogWorkerStatusPolicy.php',
     'src/Infrastructure/Persistence/PdoBackgroundJobOperationalQuery.php',
 ];
@@ -36,6 +37,7 @@ $record('php_syntax', $syntax === [], implode(' | ', $syntax));
 
 $worker = $read('bin/catalog-worker-detached.php');
 $healer = $read('src/Infrastructure/Jobs/CatalogWorkerPoolSelfHealer.php');
+$launcher = $read('src/Infrastructure/Jobs/CatalogWorkerProcessLauncher.php');
 $policy = $read('src/Application/Jobs/CatalogWorkerStatusPolicy.php');
 $operational = $read('src/Infrastructure/Persistence/PdoBackgroundJobOperationalQuery.php');
 $bridge = $read('assets/background-jobs-cursor-bridge.js');
@@ -44,6 +46,20 @@ $record(
     str_contains($worker, 'catalog_bootstrap(false)') && !str_contains($worker, '$application = catalog_bootstrap();'),
     'detached workers do not start browser sessions'
 );
+$record(
+    'worker_php_path_is_portable',
+    str_contains($launcher, '$configured = trim((string)($this->config[\'queue\'][\'worker_php_binary\'] ?? \'\'));')
+        && str_contains($launcher, 'foreach ([$configured, $environment] as $preferred)')
+        && str_contains($launcher, '$resolved = $this->resolveExecutable($preferred);')
+        && str_contains($launcher, 'php_ini_loaded_file()')
+        && str_contains($launcher, 'PHP_BINDIR')
+        && str_contains($launcher, 'PHP_BINARY')
+        && str_contains($launcher, '$this->pathDirectories()')
+        && !str_contains($launcher, 'for example D:/php8.5/php.exe.')
+        && str_contains($launcher, 'Leave queue.worker_php_binary empty for automatic detection'),
+    'A stale host-specific worker PHP override must fall back to the current PHP runtime/PATH instead of preventing detached workers from starting.'
+);
+
 $record(
     'survivor_self_heal',
     str_contains($worker, 'CatalogWorkerPoolSelfHealer')
