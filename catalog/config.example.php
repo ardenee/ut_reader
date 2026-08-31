@@ -59,8 +59,9 @@ return [
         // Streaming readers avoid package-sized copies, but large object tables
         // still need headroom. Existing higher or unlimited limits are preserved.
         'worker_memory_limit' => '512M',
-        // Usually auto-detected. Set an absolute CLI PHP path when the web PHP
-        // binary differs, for example '/usr/local/bin/php82'.
+        // Usually auto-detected from the current PHP runtime and PATH.
+        // An explicit path is only a preference: if it later disappears after a
+        // host/drive change, detached workers fall back to automatic detection.
         'worker_php_binary' => '',
     ],
     'game_backups' => [
