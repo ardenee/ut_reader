@@ -55,7 +55,7 @@ $record(
         && str_contains($launcher, 'PHP_BINDIR')
         && str_contains($launcher, 'PHP_BINARY')
         && str_contains($launcher, '$this->pathDirectories()')
-        && !str_contains($launcher, 'for example D:/php8.5/php.exe.')
+        && !str_contains($launcher, 'for example ')
         && str_contains($launcher, 'Leave queue.worker_php_binary empty for automatic detection'),
     'A stale host-specific worker PHP override must fall back to the current PHP runtime/PATH instead of preventing detached workers from starting.'
 );
