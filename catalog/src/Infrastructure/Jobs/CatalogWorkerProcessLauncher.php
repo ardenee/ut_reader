@@ -15,12 +15,18 @@ final class CatalogWorkerProcessLauncher
 
     public function phpBinary(): string
     {
-        $value = trim((string)($this->config['queue']['worker_php_binary'] ?? ''));
-        if ($value === '') {
-            $value = trim((string)(getenv('UNREALDB_WORKER_PHP_BINARY') ?: ''));
-        }
-        if ($value !== '') {
-            return $value;
+        $configured = trim((string)($this->config['queue']['worker_php_binary'] ?? ''));
+        $environment = trim((string)(getenv('UNREALDB_WORKER_PHP_BINARY') ?: ''));
+
+        // A configured path is a preference, not a permanent machine binding.
+        // If a drive/path disappears after a host/storage change, fall through to
+        // the current PHP runtime and PATH instead of preventing the worker pool
+        // from starting.
+        foreach ([$configured, $environment] as $preferred) {
+            $resolved = $this->resolveExecutable($preferred);
+            if ($resolved !== null) {
+                return $resolved;
+            }
         }
 
         $executable = PHP_OS_FAMILY === 'Windows' ? 'php.exe' : 'php';
@@ -37,11 +43,8 @@ final class CatalogWorkerProcessLauncher
         if (is_file(PHP_BINARY) && preg_match('/^php(?:\.exe)?$/i', basename(PHP_BINARY)) === 1) {
             $candidates[] = PHP_BINARY;
         }
-        foreach (explode(PATH_SEPARATOR, (string)(getenv('PATH') ?: '')) as $directory) {
-            $directory = trim($directory, " \t\n\r\0\x0B\"");
-            if ($directory !== '') {
-                $candidates[] = rtrim($directory, '/\\') . DIRECTORY_SEPARATOR . $executable;
-            }
+        foreach ($this->pathDirectories() as $directory) {
+            $candidates[] = rtrim($directory, '/\\') . DIRECTORY_SEPARATOR . $executable;
         }
 
         foreach (array_values(array_unique($candidates)) as $candidate) {
@@ -58,16 +61,55 @@ final class CatalogWorkerProcessLauncher
         $hasPath = str_contains($php, '/') || str_contains($php, '\\') || preg_match('/^[A-Za-z]:/', $php) === 1;
         if ($hasPath && !is_file($php)) {
             throw new \RuntimeException(
-                'Configured detached-worker PHP binary does not exist: ' . $php
-                . '. Update queue.worker_php_binary in catalog/config.php.'
+                'Resolved detached-worker PHP binary does not exist: ' . $php . '.'
             );
         }
         if (PHP_OS_FAMILY === 'Windows' && !$hasPath) {
             throw new \RuntimeException(
-                'Could not resolve the PHP CLI executable for detached workers. Set queue.worker_php_binary '
-                . 'in catalog/config.php, for example D:/php8.5/php.exe.'
+                'Could not resolve the PHP CLI executable for detached workers. Leave queue.worker_php_binary '
+                . 'empty for automatic detection, or set it to the current absolute PHP CLI path.'
             );
         }
+    }
+
+    private function resolveExecutable(string $value): ?string
+    {
+        if ($value === '') {
+            return null;
+        }
+
+        $hasPath = str_contains($value, '/') || str_contains($value, '\\')
+            || preg_match('/^[A-Za-z]:/', $value) === 1;
+        if ($hasPath) {
+            if (!is_file($value)) {
+                return null;
+            }
+            $resolved = realpath($value);
+            return is_string($resolved) && $resolved !== '' ? $resolved : $value;
+        }
+
+        foreach ($this->pathDirectories() as $directory) {
+            $candidate = rtrim($directory, '/\\') . DIRECTORY_SEPARATOR . $value;
+            if (!is_file($candidate)) {
+                continue;
+            }
+            $resolved = realpath($candidate);
+            return is_string($resolved) && $resolved !== '' ? $resolved : $candidate;
+        }
+        return null;
+    }
+
+    /** @return list<string> */
+    private function pathDirectories(): array
+    {
+        $directories = [];
+        foreach (explode(PATH_SEPARATOR, (string)(getenv('PATH') ?: '')) as $directory) {
+            $directory = trim($directory, " \t\n\r\0\x0B\"");
+            if ($directory !== '') {
+                $directories[] = $directory;
+            }
+        }
+        return array_values(array_unique($directories));
     }
 
     /** @param list<array{slot:int,arguments:list<string>,log:string}> $launchSpecs */
