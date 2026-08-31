@@ -192,13 +192,6 @@ try {
 
     catalog_head((string)($config['site_name'] ?? 'UnrealDB'));
     if ($page === 'home') {
-        echo '<div class="card" style="border:1px solid #b91c1c;background:rgba(127,29,29,.16)">'
-            . '<h2>Storage failure</h2>'
-            . '<p><strong>UnrealDB\'s primary storage drive has failed, and there is currently no backup or storage redundancy.</strong></p>'
-            . '<p>Approximately <strong>3 TB of Unreal and Unreal Tournament files</strong> have been lost. I am currently trying to source a replacement drive, but at this stage the chances of recovering the failed storage do not look promising.</p>'
-            . '<p>The database and catalog may remain available for browsing, but downloads, contributions and other features that require the stored files will be unavailable or incomplete for some time.</p>'
-            . '<p class="muted">Because of limited resources, the replacement storage will most likely have to be a single drive again rather than a redundant array. Rebuilding the collection will therefore take time, and help replacing the lost files will be greatly appreciated once uploads are available again.</p>'
-            . '</div>';
         $public = catalog_public_access_settings($db, $config);
         $games = catalog_all(
             $db,
