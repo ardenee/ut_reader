@@ -141,24 +141,13 @@ final class CatalogJobWorkerFactory
                     : get_class($sourceError);
             }
 
-            $message = $job->type . ' #' . $job->id . ' ' . $disposition . ': ' . $error->getMessage();
-            $archivePath = trim((string)($context['archive_full_path'] ?? ''));
-            $archiveRelative = trim((string)($context['archive_source_relative_path'] ?? ''));
-            $archiveName = trim((string)($context['archive_source_name'] ?? ''));
-            $archiveEntry = trim((string)($context['archive_entry_path'] ?? ''));
-            $jobPath = trim((string)($context['job_full_path'] ?? ''));
-
-            if ($archivePath !== '') {
-                $message .= ' Archive: ' . $archivePath;
-            } elseif ($archiveRelative !== '') {
-                $message .= ' Archive source: ' . $archiveRelative;
-            } elseif ($archiveName !== '') {
-                $message .= ' Archive source: ' . $archiveName;
-            } elseif ($jobPath !== '') {
-                $message .= ' Source: ' . $jobPath;
-            }
-            if ($archiveEntry !== '') {
-                $message .= ' Entry: ' . $archiveEntry;
+            // The table already has type/source columns and the structured
+            // context retains job, archive and path provenance. Keep the visible
+            // sentence to the actual cause; queue terms such as "dead_letter"
+            // and temporary storage paths are not useful error wording.
+            $message = trim($error->getMessage());
+            if ($message === '') {
+                $message = get_class($error) . ' did not provide an error message.';
             }
 
             CatalogSystemErrorRecorder::record([

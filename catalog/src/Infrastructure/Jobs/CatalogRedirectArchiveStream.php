@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace UnrealDb\Catalog\Infrastructure\Jobs;
 
+use UnrealDb\Catalog\Infrastructure\Redirect\CatalogRedirectArchiveValidationException;
+
 /**
  * Memory-bounded decoder for Epic's UE2 .uz2 redirect format. The legacy helper
  * decodes into one PHP string, which is unsuitable for very large texture and
@@ -40,8 +42,22 @@ final class CatalogRedirectArchiveStream
         }
 
         $compressedBytes = filesize($sourcePath);
-        if ($compressedBytes === false || $compressedBytes < 9) {
+        if ($compressedBytes === false) {
             throw new \RuntimeException('Could not read redirect compressed file: ' . basename($sourceName));
+        }
+        if ($compressedBytes < 9) {
+            $missingBytes = 9 - (int)$compressedBytes;
+            throw new CatalogRedirectArchiveValidationException(
+                'UZ2 file is incomplete/cut by ' . $missingBytes . ' bytes: ' . basename($sourceName)
+                . ' (actual_file_size=' . (int)$compressedBytes
+                . ', minimum_file_size=9).',
+                'uz2.incomplete_file',
+                [
+                    'missing_bytes' => $missingBytes,
+                    'actual_file_size' => (int)$compressedBytes,
+                    'minimum_file_size' => 9,
+                ]
+            );
         }
         $limit = \catalog_redirect_archive_output_limit($maxOutputBytes);
         $startedAt = microtime(true);
@@ -76,27 +92,103 @@ final class CatalogRedirectArchiveStream
             while ($readBytes < $compressedBytes) {
                 $recordNumber = $chunks + 1;
                 $recordOffset = $readBytes;
+                $availableHeaderBytes = $compressedBytes - $readBytes;
+                if ($availableHeaderBytes < 8) {
+                    $missingBytes = 8 - $availableHeaderBytes;
+                    throw new CatalogRedirectArchiveValidationException(
+                        'UZ2 file is incomplete/cut by ' . $missingBytes . ' bytes: ' . basename($sourceName)
+                        . ' (record=' . $recordNumber
+                        . ', record_offset=' . $recordOffset
+                        . ', required_header_bytes=8'
+                        . ', available_header_bytes=' . $availableHeaderBytes
+                        . ', actual_file_size=' . $compressedBytes . ').',
+                        'uz2.incomplete_record_header',
+                        [
+                            'record' => $recordNumber,
+                            'record_offset' => $recordOffset,
+                            'missing_bytes' => $missingBytes,
+                            'required_header_bytes' => 8,
+                            'available_header_bytes' => $availableHeaderBytes,
+                            'actual_file_size' => (int)$compressedBytes,
+                        ]
+                    );
+                }
                 $header = self::readExact($input, 8);
                 $readBytes += 8;
                 $sizes = unpack('Vcompressed/Vuncompressed', $header);
                 $compressed = (int)($sizes['compressed'] ?? 0);
                 $uncompressed = (int)($sizes['uncompressed'] ?? 0);
+                $availablePayloadBytes = $compressedBytes - $readBytes;
 
                 if (
                     $compressed <= 0
                     || $compressed > \CATALOG_EPIC_UZ2_MAX_COMPRESSED_BYTES
                     || $uncompressed <= 0
                     || $uncompressed > \CATALOG_EPIC_UZ2_BLOCK_BYTES
-                    || $compressed > $compressedBytes - $readBytes
-                    || $uncompressed > $limit - $writtenBytes
                 ) {
-                    throw new \RuntimeException(
-                        'Invalid Epic UZ2 record ' . $recordNumber
-                        . ' (compressed=' . $compressed
-                        . ', uncompressed=' . $uncompressed
-                        . ', offset=' . $recordOffset
-                        . ', remaining=' . max(0, $compressedBytes - $readBytes)
-                        . ') in ' . basename($sourceName) . '.'
+                    throw new CatalogRedirectArchiveValidationException(
+                        'Invalid UZ2 format: ' . basename($sourceName)
+                        . ' (record=' . $recordNumber
+                        . ', record_offset=' . $recordOffset
+                        . ', compressed_size=' . $compressed
+                        . ', uncompressed_size=' . $uncompressed
+                        . ', max_compressed_size=' . \CATALOG_EPIC_UZ2_MAX_COMPRESSED_BYTES
+                        . ', max_uncompressed_size=' . \CATALOG_EPIC_UZ2_BLOCK_BYTES . ').',
+                        'uz2.invalid_record_sizes',
+                        [
+                            'record' => $recordNumber,
+                            'record_offset' => $recordOffset,
+                            'compressed_size' => $compressed,
+                            'uncompressed_size' => $uncompressed,
+                            'max_compressed_size' => \CATALOG_EPIC_UZ2_MAX_COMPRESSED_BYTES,
+                            'max_uncompressed_size' => \CATALOG_EPIC_UZ2_BLOCK_BYTES,
+                        ]
+                    );
+                }
+                if ($compressed > $availablePayloadBytes) {
+                    $missingBytes = $compressed - $availablePayloadBytes;
+                    $requiredFileSize = $readBytes + $compressed;
+                    throw new CatalogRedirectArchiveValidationException(
+                        'UZ2 file is incomplete/cut by ' . $missingBytes . ' bytes: ' . basename($sourceName)
+                        . ' (record=' . $recordNumber
+                        . ', record_offset=' . $recordOffset
+                        . ', payload_offset=' . $readBytes
+                        . ', compressed_size=' . $compressed
+                        . ', uncompressed_size=' . $uncompressed
+                        . ', available_bytes=' . $availablePayloadBytes
+                        . ', actual_file_size=' . $compressedBytes
+                        . ', required_file_size=' . $requiredFileSize . ').',
+                        'uz2.incomplete_record_payload',
+                        [
+                            'record' => $recordNumber,
+                            'record_offset' => $recordOffset,
+                            'payload_offset' => $readBytes,
+                            'compressed_size' => $compressed,
+                            'uncompressed_size' => $uncompressed,
+                            'available_bytes' => $availablePayloadBytes,
+                            'missing_bytes' => $missingBytes,
+                            'actual_file_size' => (int)$compressedBytes,
+                            'required_file_size' => $requiredFileSize,
+                        ]
+                    );
+                }
+                if ($uncompressed > $limit - $writtenBytes) {
+                    $requiredOutputBytes = $writtenBytes + $uncompressed;
+                    throw new CatalogRedirectArchiveValidationException(
+                        'Cannot decompress UZ2 because output exceeds the configured limit: ' . basename($sourceName)
+                        . ' (record=' . $recordNumber
+                        . ', output_bytes=' . $writtenBytes
+                        . ', uncompressed_size=' . $uncompressed
+                        . ', required_output_size=' . $requiredOutputBytes
+                        . ', output_limit=' . $limit . ').',
+                        'uz2.output_limit_exceeded',
+                        [
+                            'record' => $recordNumber,
+                            'output_bytes' => $writtenBytes,
+                            'uncompressed_size' => $uncompressed,
+                            'required_output_size' => $requiredOutputBytes,
+                            'output_limit' => $limit,
+                        ]
                     );
                 }
 
@@ -109,14 +201,23 @@ final class CatalogRedirectArchiveStream
                     $uncompressed
                 );
                 if ($decoded === null) {
-                    throw new \RuntimeException(
-                        'Epic UZ2 zlib uncompress failed at record ' . $recordNumber
-                        . ' (compressed=' . $compressed
-                        . ', uncompressed=' . $uncompressed
-                        . ', offset=' . $recordOffset
-                        . ', payload=' . bin2hex(substr($payload, 0, 8))
-                        . ') in ' . basename($sourceName)
-                        . '; available decoders: ' . self::availableDecoders() . '.'
+                    $payloadHeadHex = bin2hex(substr($payload, 0, 8));
+                    throw new CatalogRedirectArchiveValidationException(
+                        'Cannot decompress UZ2 record ' . $recordNumber . ': ' . basename($sourceName)
+                        . ' (record_offset=' . $recordOffset
+                        . ', payload_offset=' . ($recordOffset + 8)
+                        . ', compressed_size=' . $compressed
+                        . ', uncompressed_size=' . $uncompressed
+                        . ', payload_head_hex=' . $payloadHeadHex . ').',
+                        'uz2.decompression_failed',
+                        [
+                            'record' => $recordNumber,
+                            'record_offset' => $recordOffset,
+                            'payload_offset' => $recordOffset + 8,
+                            'compressed_size' => $compressed,
+                            'uncompressed_size' => $uncompressed,
+                            'payload_head_hex' => $payloadHeadHex,
+                        ]
                     );
                 }
 
@@ -125,9 +226,24 @@ final class CatalogRedirectArchiveStream
                 if ($chunks === 0) {
                     $isUnrealPackage = \catalog_redirect_archive_has_package_tag(substr($block, 0, 4));
                     if ($requirePackageTag && !$isUnrealPackage) {
-                        throw new \RuntimeException(
-                            'Epic UZ2 record stream decoded, but its output does not begin with an Unreal package tag: '
-                            . basename($sourceName) . '.'
+                        $magicBytes = substr($block, 0, 4);
+                        $actualMagicHex = strtoupper(bin2hex($magicBytes));
+                        $actualMagicText = self::printableBytes($magicBytes);
+                        throw new CatalogRedirectArchiveValidationException(
+                            'Magic not found: ' . basename($sourceName)
+                            . ' (record=1'
+                            . ', redirect_format=UZ2'
+                            . ', actual_magic_hex=' . ($actualMagicHex !== '' ? $actualMagicHex : 'empty')
+                            . ', actual_magic_text=' . ($actualMagicText !== '' ? $actualMagicText : 'empty')
+                            . ', expected_magic_hex=C1832A9E|9E2A83C1).',
+                            'uz2.magic_not_found',
+                            [
+                                'record' => 1,
+                                'redirect_format' => 'UZ2',
+                                'actual_magic_hex' => $actualMagicHex !== '' ? $actualMagicHex : 'empty',
+                                'actual_magic_text' => $actualMagicText !== '' ? $actualMagicText : 'empty',
+                                'expected_magic_hex' => 'C1832A9E|9E2A83C1',
+                            ]
                         );
                     }
                 }
@@ -226,17 +342,6 @@ final class CatalogRedirectArchiveStream
         return null;
     }
 
-    private static function availableDecoders(): string
-    {
-        $available = [];
-        foreach (['gzuncompress', 'inflate_init', 'inflate_add'] as $function) {
-            if (function_exists($function)) {
-                $available[] = $function;
-            }
-        }
-        return $available === [] ? 'none' : implode(', ', $available);
-    }
-
     /** @param resource $stream */
     private static function readExact($stream, int $length): string
     {
@@ -252,6 +357,11 @@ final class CatalogRedirectArchiveStream
             throw new \RuntimeException('Unexpected end of redirect compressed file.');
         }
         return $data;
+    }
+
+    private static function printableBytes(string $bytes): string
+    {
+        return preg_replace('/[^\x20-\x7E]/', '.', $bytes) ?? '';
     }
 
     /** @param resource $stream */

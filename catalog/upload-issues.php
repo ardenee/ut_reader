@@ -373,7 +373,7 @@ try {
         . '<a class="button secondary" href="background-jobs.php?queue=' . rawurlencode($baseQueue) . '">Open Background Jobs</a>'
         . '</div><div class="ui-section__body">';
     if ($processing === []) {
-        echo CatalogUi::emptyState('No files need attention', 'No failed, dead-lettered, rejected, unverified or partial upload/import jobs match the current search.');
+        echo CatalogUi::emptyState('No files need attention', 'No failed, rejected, unverified or partial upload/import jobs match the current search.');
     } else {
         echo '<div class="table-wrap"><table><thead><tr><th>Job</th><th>Status</th><th>File / source</th><th>Reason</th><th>Action needed</th><th>Updated</th></tr></thead><tbody>';
         foreach ($processing as $job) {
@@ -382,6 +382,9 @@ try {
             $attention = upload_issue_attention_label($job, $reason);
             $displayStatus = trim((string)($job['display_status'] ?? ''));
             $statusLabel = $displayStatus !== '' ? $displayStatus : (string)$job['status'];
+            if (strtolower($statusLabel) === 'dead_letter') {
+                $statusLabel = 'failed';
+            }
             $jobSearchUrl = 'background-jobs.php?queue=' . rawurlencode((string)$job['queue_name']) . '&search=' . (int)$job['id'];
 
             echo '<tr>';

@@ -75,7 +75,7 @@
     if (tabs) {
         const labels = {
             '': 'All', queued: 'Waiting', running: 'In progress', completed: 'Completed',
-            failed: 'Failed', dead_letter: 'Needs retry', cancelled: 'Cancelled'
+            failed: 'Failed', dead_letter: 'Failed', cancelled: 'Cancelled'
         };
         tabs.querySelectorAll('button[data-status]').forEach((button) => {
             const key = String(button.dataset.status || '');

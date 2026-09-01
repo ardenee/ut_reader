@@ -51,6 +51,9 @@ final class StatusBadge
 
     private static function humanize(string $status): string
     {
+        if ($status === 'dead_letter') {
+            return 'Failed';
+        }
         return ucfirst(str_replace(['_', '-'], ' ', $status));
     }
 }

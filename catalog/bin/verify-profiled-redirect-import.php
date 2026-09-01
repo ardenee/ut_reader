@@ -182,7 +182,9 @@ try {
         }
         $record(
             'decoded_non_package_uz2_is_rejected_before_profile_detection',
-            str_contains($caught, 'does not begin with an Unreal package tag'),
+            str_contains($caught, 'Magic not found')
+                && str_contains($caught, 'actual_magic_hex=')
+                && str_contains($caught, 'expected_magic_hex='),
             'A valid UZ2 record stream containing non-package bytes must fail as non-package data, not fall through to .utx => UE1 classification.'
         );
     } finally {
@@ -203,10 +205,10 @@ try {
     );
     $record(
         'uz3_failure_identifies_header_or_zlib_stage',
-        str_contains($badTag, 'expected 5678')
-            && str_contains($badTag, 'got 1234')
-            && str_contains($badStream, 'zlib stream could not be decompressed')
-            && str_contains($badStream, 'declared=4096'),
+        str_contains($badTag, 'expected_tag=5678')
+            && str_contains($badTag, 'actual_tag=1234')
+            && str_contains($badStream, 'Cannot decompress UZ3')
+            && str_contains($badStream, 'uncompressed_size=4096'),
         'Strict UZ3 rejection must identify whether the wrapper tag or tagged whole-file zlib stream failed without trying another format.'
     );
 } catch (Throwable $error) {

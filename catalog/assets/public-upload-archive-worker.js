@@ -37,6 +37,22 @@ function hexByte(value) {
     return (value < 16 ? '0' : '') + value.toString(16);
 }
 
+function bytesHex(bytes, limit) {
+    const length = Math.min(bytes.length, Math.max(0, Number(limit || bytes.length)));
+    let value = '';
+    for (let index = 0; index < length; index++) value += hexByte(bytes[index]);
+    return value.toUpperCase();
+}
+
+function printableBytes(bytes, limit) {
+    const length = Math.min(bytes.length, Math.max(0, Number(limit || bytes.length)));
+    let value = '';
+    for (let index = 0; index < length; index++) {
+        value += bytes[index] >= 32 && bytes[index] <= 126 ? String.fromCharCode(bytes[index]) : '.';
+    }
+    return value;
+}
+
 function littleWordHex(value) {
     return hexByte(value & 0xff)
         + hexByte((value >>> 8) & 0xff)
@@ -415,7 +431,13 @@ async function inflateZlibBytes(bytes, expectedBytes) {
 }
 async function inspectDirectPackage(id, name) {
     const head = readAt(0, Math.min(activeSize, 4096));
-    if (!packageMagic(head)) throw new Error('Magic not found');
+    if (!packageMagic(head)) {
+        const magic = head.slice(0, Math.min(4, head.length));
+        throw new Error('Magic not found: ' + name
+            + ' (actual_magic_hex=' + (bytesHex(magic) || 'empty')
+            + ', actual_magic_text=' + (printableBytes(magic) || 'empty')
+            + ', expected_magic_hex=C1832A9E|9E2A83C1).');
+    }
     const md5 = new Md5(), sha1 = new Sha1();
     let done = 0;
     while (done < activeSize) {
@@ -432,22 +454,70 @@ async function inspectUz2(id, name) {
     const md5 = new Md5(), sha1 = new Sha1();
     let offset = 0, decodedBytes = 0, records = 0;
     let firstDecoded = new Uint8Array(0);
+    if (activeSize < 9) {
+        throw new Error('UZ2 file is incomplete/cut by ' + (9 - activeSize) + ' bytes: ' + name
+            + ' (actual_file_size=' + activeSize + ', minimum_file_size=9).');
+    }
     while (offset < activeSize) {
-        if (offset + 8 > activeSize) throw new Error('Incomplete Epic UZ2 record header at byte ' + offset + '.');
+        if (offset + 8 > activeSize) {
+            const availableHeaderBytes = Math.max(0, activeSize - offset);
+            throw new Error('UZ2 file is incomplete/cut by ' + (8 - availableHeaderBytes) + ' bytes: ' + name
+                + ' (record=' + (records + 1)
+                + ', record_offset=' + offset
+                + ', required_header_bytes=8'
+                + ', available_header_bytes=' + availableHeaderBytes
+                + ', actual_file_size=' + activeSize + ').');
+        }
         const header = readAt(offset, 8);
         const compressed = readU32Le(header, 0), uncompressed = readU32Le(header, 4);
         const recordOffset = offset;
         offset += 8;
-        if (compressed < 1 || compressed > 33096 || uncompressed < 1 || uncompressed > 32768
-            || offset + compressed > activeSize) {
-            throw new Error('Invalid Epic UZ2 record ' + (records + 1) + ' (compressed=' + compressed
-                + ', uncompressed=' + uncompressed + ', offset=' + recordOffset + ').');
+        if (compressed < 1 || compressed > 33096 || uncompressed < 1 || uncompressed > 32768) {
+            throw new Error('Invalid UZ2 format: ' + name
+                + ' (record=' + (records + 1)
+                + ', record_offset=' + recordOffset
+                + ', compressed_size=' + compressed
+                + ', uncompressed_size=' + uncompressed
+                + ', max_compressed_size=33096'
+                + ', max_uncompressed_size=32768).');
         }
-        const decoded = await inflateZlibBytes(readAt(offset, compressed), uncompressed);
+        const availableBytes = Math.max(0, activeSize - offset);
+        if (compressed > availableBytes) {
+            const missingBytes = compressed - availableBytes;
+            throw new Error('UZ2 file is incomplete/cut by ' + missingBytes + ' bytes: ' + name
+                + ' (record=' + (records + 1)
+                + ', record_offset=' + recordOffset
+                + ', payload_offset=' + offset
+                + ', compressed_size=' + compressed
+                + ', uncompressed_size=' + uncompressed
+                + ', available_bytes=' + availableBytes
+                + ', actual_file_size=' + activeSize
+                + ', required_file_size=' + (offset + compressed) + ').');
+        }
+        const payload = readAt(offset, compressed);
+        let decoded;
+        try {
+            decoded = await inflateZlibBytes(payload, uncompressed);
+        } catch (error) {
+            throw new Error('Cannot decompress UZ2 record ' + (records + 1) + ': ' + name
+                + ' (record_offset=' + recordOffset
+                + ', payload_offset=' + (recordOffset + 8)
+                + ', compressed_size=' + compressed
+                + ', uncompressed_size=' + uncompressed
+                + ', payload_head_hex=' + bytesHex(payload, 8) + ').');
+        }
         offset += compressed;
         if (records === 0) {
             firstDecoded = decoded.slice(0, Math.min(decoded.length, 64));
-            if (!packageMagic(firstDecoded)) throw new Error('Magic not found');
+            if (!packageMagic(firstDecoded)) {
+                const magic = firstDecoded.slice(0, Math.min(4, firstDecoded.length));
+                throw new Error('Magic not found: ' + name
+                    + ' (record=1'
+                    + ', redirect_format=UZ2'
+                    + ', actual_magic_hex=' + (bytesHex(magic) || 'empty')
+                    + ', actual_magic_text=' + (printableBytes(magic) || 'empty')
+                    + ', expected_magic_hex=C1832A9E|9E2A83C1).');
+            }
         }
         md5.update(decoded); sha1.update(decoded); decodedBytes += decoded.length; records++;
         emitProgress(id, 'redirect-hash', 'Decoding/hash identity for ' + name + '.', offset, activeSize);
@@ -457,10 +527,19 @@ async function inspectUz2(id, name) {
         header:{kind:'redirect-uz2', description:'Epic UZ2 decoded package identity'}};
 }
 async function inspectUz3(id, name) {
-    if (activeSize < 10) throw new Error('The .uz3 archive member is too small.');
+    if (activeSize < 9) {
+        throw new Error('UZ3 file is incomplete/cut by ' + (9 - activeSize) + ' bytes: ' + name
+            + ' (actual_file_size=' + activeSize + ', minimum_file_size=9).');
+    }
     const header = readAt(0, 8);
     const signature = readU32Le(header, 0), expected = readU32Le(header, 4);
-    if (signature !== 5678 || expected < 1) throw new Error('The .uz3 archive member has an invalid header.');
+    if (signature !== 5678) {
+        throw new Error('Invalid UZ3 format: ' + name
+            + ' (actual_tag=' + signature + ', expected_tag=5678, uncompressed_size=' + expected + ').');
+    }
+    if (expected < 1) {
+        throw new Error('Invalid UZ3 format: ' + name + ' (uncompressed_size=' + expected + ', minimum_size=1).');
+    }
     if (typeof DecompressionStream !== 'function' || typeof ReadableStream !== 'function') {
         throw new Error('This browser cannot decode .uz3 members inside archives.');
     }
@@ -495,10 +574,24 @@ async function inspectUz3(id, name) {
                 Math.min(expected, outputBytes), expected);
         }
     } catch (error) {
-        throw new Error('Could not decode the Epic UZ3 zlib stream inside the archive.');
+        const payloadHead = readAt(8, Math.min(8, Math.max(0, activeSize - 8)));
+        throw new Error('Cannot decompress UZ3: ' + name
+            + ' (tag=5678, uncompressed_size=' + expected
+            + ', compressed_payload_bytes=' + Math.max(0, activeSize - 8)
+            + ', payload_head_hex=' + bytesHex(payloadHead, 8) + ').');
     }
-    if (outputBytes !== expected) throw new Error('Decoded Epic UZ3 size mismatch.');
-    if (!packageMagic(firstDecoded)) throw new Error('Magic not found');
+    if (outputBytes !== expected) {
+        throw new Error('Invalid decompressed UZ3 size: ' + name
+            + ' (expected_size=' + expected + ', actual_size=' + outputBytes + ').');
+    }
+    if (!packageMagic(firstDecoded)) {
+        const magic = firstDecoded.slice(0, Math.min(4, firstDecoded.length));
+        throw new Error('Magic not found: ' + name
+            + ' (redirect_format=UZ3'
+            + ', actual_magic_hex=' + (bytesHex(magic) || 'empty')
+            + ', actual_magic_text=' + (printableBytes(magic) || 'empty')
+            + ', expected_magic_hex=C1832A9E|9E2A83C1).');
+    }
     return {md5:md5.digestHex(), sha1:sha1.digestHex(), identity_size:outputBytes,
         guid:legacyGuidFromHead(firstDecoded), extension:'uz3', redirect:true,
         header:{kind:'redirect-uz3', description:'Epic UZ3 decoded package identity'}};
@@ -511,8 +604,10 @@ async function inspectUz(id, name, maxFileBytes) {
     try {
         decoded=self.UnrealDbLegacyUzDecoder.decode(encoded,limit);
     } catch (error) {
-        throw new Error('Could not decode legacy .uz FCodec archive member: '
-            + (error && error.message ? error.message : 'unknown decoder error'));
+        throw new Error('Cannot decompress/unpack UZ redirect: ' + name
+            + ' (compressed_size=' + activeSize
+            + ', output_limit=' + limit
+            + ', decoder_error=' + (error && error.message ? error.message : 'unknown') + ').');
     } finally {
         encoded=null;
     }

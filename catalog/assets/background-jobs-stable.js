@@ -756,7 +756,7 @@
         try {
             const body = await postJson(actionUrl, {action: 'recover', queue: queue});
             const data = body && body.data ? body.data : {};
-            setNotice('Recovery complete: ' + String(data.requeued || 0) + ' requeued, ' + String(data.cancelled || 0) + ' cancelled, ' + String(data.dead_lettered || 0) + ' dead-lettered.', 8000);
+            setNotice('Recovery complete: ' + String(data.requeued || 0) + ' requeued, ' + String(data.cancelled || 0) + ' cancelled, ' + String(data.dead_lettered || 0) + ' marked as issues.', 8000);
         } catch (error) {
             setNotice(error.message || 'Recovery failed.', 10000);
         } finally {

@@ -87,7 +87,7 @@ try {
         $result = (new CatalogBackgroundJobCleanup($application->db, $application->config))
             ->deleteTerminalJob($jobId);
         if ((int)$result['deleted_jobs'] !== 1) {
-            JsonResponse::error('not_deletable', 'Only completed, failed, dead-letter or cancelled jobs can be deleted.', 409);
+            JsonResponse::error('not_deletable', 'Only completed, failed or cancelled jobs can be deleted.', 409);
         }
         JsonResponse::send(['data' => ['job_id' => $jobId] + $result]);
     }

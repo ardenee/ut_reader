@@ -33,7 +33,7 @@ $record(
     'status_badge_is_semantic',
     str_contains($status, 'ui-badge--danger')
         && str_contains($status, 'data-status="dead_letter"')
-        && str_contains($status, '>Dead letter<'),
+        && str_contains($status, '>Failed<'),
     'application statuses need one canonical tone and human-readable label mapping'
 );
 
