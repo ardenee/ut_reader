@@ -30,8 +30,11 @@ final class CatalogPackageHeaderInspector
             return ['ok' => false, 'error' => sprintf('Bad package tag 0x%08X', $tag), 'summary' => [], 'rows' => []];
         }
         $signed = self::i32($bytes, 4);
+        $legacyVersion = self::u32($bytes, 4) & 0xFFFF;
+        $knownLegacyVersion = ($legacyVersion >= 40 && $legacyVersion <= 199)
+            || ($legacyVersion >= 334 && $legacyVersion <= 867);
         $extension = strtolower((string)($file['extension'] ?? ''));
-        return $signed < 0 || in_array($extension, ['uasset', 'umap'], true)
+        return (!$knownLegacyVersion && $signed < 0) || in_array($extension, ['uasset', 'umap'], true)
             ? self::inspectUe4($bytes, $file)
             : self::inspectLegacy($bytes);
     }

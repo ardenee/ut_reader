@@ -28,6 +28,7 @@ $read = static function (string $relative) use ($root): string {
 $phpFiles = [
     'lib/GameProfiles.php',
     'lib/CompatibilityRules.php',
+    'src/Application/Catalog/CatalogPackageHeaderInspector.php',
     'profiled-upload.php',
     'api/v1/profiled-upload-chunk.php',
     'api/v1/profiled-upload-preflight.php',
@@ -70,6 +71,7 @@ $record('php_syntax', $syntaxFailures === [], implode(' | ', $syntaxFailures));
 
 try {
     require_once $root . '/lib/GameProfiles.php';
+    require_once $root . '/src/Application/Catalog/CatalogPackageHeaderInspector.php';
     $record(
         'header_version_selects_supported_legacy_engine',
         gp_engine_from_version(69) === 'UE1'
@@ -78,6 +80,55 @@ try {
             && gp_engine_from_version(8261) === null,
         'Legacy engine-family hints must come from serialized package versions only.'
     );
+
+    $temporary = tempnam(sys_get_temp_dir(), 'unrealdb-legacy-engine-');
+    if (!is_string($temporary)) {
+        throw new RuntimeException('Could not create the legacy engine-routing fixture.');
+    }
+    try {
+        $fixture = pack('Vvv', 0x9E2A83C1, 119, 37159) . str_repeat("\0", 56);
+        if (file_put_contents($temporary, $fixture) !== strlen($fixture)) {
+            throw new RuntimeException('Could not write the legacy engine-routing fixture.');
+        }
+        $summary = gp_read_legacy_summary($temporary);
+        $record(
+            'high_bit_legacy_licensee_does_not_select_ue4',
+            ($summary['ok'] ?? false) === true
+                && ($summary['format'] ?? '') === 'legacy_package'
+                && ($summary['version'] ?? null) === 119
+                && ($summary['licensee'] ?? null) === 37159
+                && ($summary['engine_hint'] ?? '') === 'UE2',
+            'UE2 version 119 plus licensee 37159 shares bytes with signed -1859714953 but must still select the UE2 reader.'
+        );
+        $inspection = \UnrealDb\Catalog\Application\Catalog\CatalogPackageHeaderInspector::inspect(
+            $temporary,
+            ['extension' => 'ut2']
+        );
+        $record(
+            'header_inspector_agrees_with_ue2_routing',
+            ($inspection['ok'] ?? false) === true
+                && ($inspection['summary']['Version'] ?? null) === 119
+                && ($inspection['summary']['Licensee Version'] ?? null) === 37159
+                && ($inspection['summary']['Build'] ?? '') === 'UE2',
+            'The file-examine header view must not repeat the negative-combined-value mistake after routing is fixed.'
+        );
+
+        $modernFixture = pack('VV', 0x9E2A83C1, 0xFFFFFFF9) . str_repeat("\0", 56);
+        if (file_put_contents($temporary, $modernFixture) !== strlen($modernFixture)) {
+            throw new RuntimeException('Could not write the modern engine-routing fixture.');
+        }
+        $modernSummary = gp_read_legacy_summary($temporary);
+        $record(
+            'negative_modern_marker_still_selects_ue4',
+            ($modernSummary['ok'] ?? false) === true
+                && ($modernSummary['format'] ?? '') === 'ue4_package'
+                && ($modernSummary['version'] ?? null) === -7
+                && ($modernSummary['engine_hint'] ?? '') === 'UE4',
+            'Giving known legacy versions precedence must not stop a genuine negative UE4 marker from selecting UE4.'
+        );
+    } finally {
+        @unlink($temporary);
+    }
 } catch (Throwable $error) {
     $record('header_only_runtime_helpers', false, get_class($error) . ': ' . $error->getMessage());
 }

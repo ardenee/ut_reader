@@ -177,11 +177,14 @@ function gp_read_legacy_summary(string $path): array
     $licensee = unpack('v', substr($bytes, 6, 2))[1];
     $version32 = (int)(unpack('V', substr($bytes, 4, 4))[1] ?? 0);
     $signedVersion32 = gp_int32_from_uint32($version32);
+    $legacyEngine = gp_engine_from_version($version);
 
     // UE4/UE5 package summaries start with the same package magic, but the next
-    // value is a signed 32-bit package file version. This proves the modern
-    // package family without consulting the filename.
-    if ($signedVersion32 < 0) {
+    // value is a signed 32-bit package file version. Legacy packages use two
+    // unsigned 16-bit values in the same four bytes. A legacy licensee version
+    // with its high bit set also makes the combined 32-bit value negative, so a
+    // known legacy package version must take precedence over the signed marker.
+    if ($legacyEngine === null && $signedVersion32 < 0) {
         return [
             'ok' => true,
             'magic' => sprintf('0x%08X', $magic),
@@ -198,7 +201,7 @@ function gp_read_legacy_summary(string $path): array
         'format' => 'legacy_package',
         'version' => $version,
         'licensee' => $licensee,
-        'engine_hint' => gp_engine_from_version($version),
+        'engine_hint' => $legacyEngine,
     ];
 }
 
