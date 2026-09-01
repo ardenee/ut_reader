@@ -44,6 +44,7 @@ $uploadApi = $read('api/v1/public-upload.php');
 $page = $read('public-upload.php');
 $client = $read('assets/public-upload.js');
 $inspector = $read('assets/upload-file-inspector-worker.js');
+$redirectReader = $read('assets/unreal-redirect-reader.js');
 $legacyUzDecoder = $read('assets/legacy-uz-decoder.js');
 $compatibleInspector = $read('assets/upload-file-inspector-worker-compatible.js');
 $archiveWorker = $read('assets/public-upload-archive-worker.js');
@@ -171,6 +172,10 @@ $check(
     str_contains($inspector, 'async function inspectUz(id, file, maxFileBytes)')
         && str_contains($inspector, 'async function inspectUz2(id, file)')
         && str_contains($inspector, 'async function inspectUz3(id, file)')
+        && str_contains($redirectReader, 'async function readUz2(options)')
+        && str_contains($inspector, 'UnrealDbRedirectReader.readUz2(')
+        && str_contains($archiveWorker, 'UnrealDbRedirectReader.readUz2(')
+        && str_contains($compatibleInspector, 'UnrealDbRedirectReader.validateUz2Header(')
         && str_contains($inspector, 'UnrealDbLegacyUzDecoder.decode(encoded,limit)')
         && str_contains($inspector, "new DecompressionStream('deflate')")
         && str_contains($legacyUzDecoder, 'function decodeHuffman(data,limit)')

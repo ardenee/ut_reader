@@ -1,8 +1,10 @@
 'use strict';
 
+const redirectReaderUrl = new URL('unreal-redirect-reader.js', self.location.href);
 const legacyUzDecoderUrl = new URL('legacy-uz-decoder.js', self.location.href);
+redirectReaderUrl.search = self.location.search;
 legacyUzDecoderUrl.search = self.location.search;
-importScripts(legacyUzDecoderUrl.href);
+importScripts(redirectReaderUrl.href, legacyUzDecoderUrl.href);
 
 const HASH_CHUNK_BYTES = 4 * 1024 * 1024;
 const HEADER_READ_BYTES = 4096;
@@ -376,137 +378,41 @@ function legacyGuidFromDecodedHead(bytes) {
     return parts.join('-');
 }
 
-async function inflateZlibBytes(bytes, expectedBytes) {
-    if (typeof DecompressionStream !== 'function') {
-        throw new Error(
-            'This browser cannot decode Unreal zlib redirects for duplicate checking. '
-            + 'Use a current browser or contribute the uncompressed package.'
-        );
-    }
-    let output;
-    try {
-        const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate'));
-        output = new Uint8Array(await new Response(stream).arrayBuffer());
-    } catch (error) {
-        throw new Error('Could not decode the Unreal zlib redirect record in the browser.');
-    }
-    if (expectedBytes > 0 && output.length !== expectedBytes) {
-        throw new Error(
-            'Decoded Unreal redirect size mismatch: expected ' + expectedBytes + ' bytes, got ' + output.length + '.'
-        );
-    }
-    return output;
-}
-
 async function inspectUz2(id, file) {
     const total = Math.max(0, Number(file.size || 0));
     const name = String(file.name || 'unknown.uz2');
     const md5 = new Md5();
     const sha1 = new Sha1();
-    let offset = 0;
-    let outputBytes = 0;
-    let chunks = 0;
-    let firstDecoded = new Uint8Array(0);
-
-    if (total < 9) {
-        throw new Error('UZ2 file is incomplete/cut by ' + (9 - total) + ' bytes: ' + name
-            + ' (actual_file_size=' + total + ', minimum_file_size=9).');
-    }
-
-    while (offset < total) {
-        if (offset + 8 > total) {
-            const availableHeaderBytes = Math.max(0, total - offset);
-            throw new Error('UZ2 file is incomplete/cut by ' + (8 - availableHeaderBytes) + ' bytes: ' + name
-                + ' (record=' + (chunks + 1)
-                + ', record_offset=' + offset
-                + ', required_header_bytes=8'
-                + ', available_header_bytes=' + availableHeaderBytes
-                + ', actual_file_size=' + total + ').');
-        }
-        const header = await readBytes(file, offset, offset + 8);
-        const compressed = readU32Le(header, 0);
-        const uncompressed = readU32Le(header, 4);
-        const recordOffset = offset;
-        offset += 8;
-
-        if (compressed < 1 || compressed > 33096 || uncompressed < 1 || uncompressed > 32768) {
-            throw new Error(
-                'Invalid UZ2 format: ' + name
-                + ' (record=' + (chunks + 1)
-                + ', record_offset=' + recordOffset
-                + ', compressed_size=' + compressed
-                + ', uncompressed_size=' + uncompressed
-                + ', max_compressed_size=33096'
-                + ', max_uncompressed_size=32768).'
-            );
-        }
-        const availableBytes = Math.max(0, total - offset);
-        if (compressed > availableBytes) {
-            const missingBytes = compressed - availableBytes;
-            throw new Error('UZ2 file is incomplete/cut by ' + missingBytes + ' bytes: ' + name
-                + ' (record=' + (chunks + 1)
-                + ', record_offset=' + recordOffset
-                + ', payload_offset=' + offset
-                + ', compressed_size=' + compressed
-                + ', uncompressed_size=' + uncompressed
-                + ', available_bytes=' + availableBytes
-                + ', actual_file_size=' + total
-                + ', required_file_size=' + (offset + compressed) + ').');
-        }
-
-        const payload = await readBytes(file, offset, offset + compressed);
-        offset += compressed;
-        let decoded;
-        try {
-            decoded = await inflateZlibBytes(payload, uncompressed);
-        } catch (error) {
-            throw new Error('Cannot decompress UZ2 record ' + (chunks + 1) + ': ' + name
-                + ' (record_offset=' + recordOffset
-                + ', payload_offset=' + (recordOffset + 8)
-                + ', compressed_size=' + compressed
-                + ', uncompressed_size=' + uncompressed
-                + ', payload_head_hex=' + bytesHex(payload, 8) + ').');
-        }
-        if (chunks === 0) {
-            firstDecoded = decoded.slice(0, Math.min(decoded.length, 64));
-            if (!packageMagic(firstDecoded)) {
-                const magic = firstDecoded.slice(0, Math.min(4, firstDecoded.length));
-                throw new Error('Magic not found: ' + name
-                    + ' (record=1'
-                    + ', redirect_format=UZ2'
-                    + ', actual_magic_hex=' + (bytesHex(magic) || 'empty')
-                    + ', actual_magic_text=' + (printableBytes(magic) || 'empty')
-                    + ', expected_magic_hex=C1832A9E|9E2A83C1).');
+    const decoded = await self.UnrealDbRedirectReader.readUz2({
+        source: {
+            size: total,
+            read: function (offset, length) {
+                return readBytes(file, offset, offset + length);
             }
+        },
+        name: name,
+        onDecoded: function (bytes) {
+            md5.update(bytes);
+            sha1.update(bytes);
+        },
+        onProgress: function (progress) {
+            self.postMessage({
+                type: 'progress',
+                id: id,
+                phase: 'redirect-hash',
+                loaded: progress.loaded,
+                total: progress.total,
+                output: progress.output,
+                chunks: progress.records
+            });
         }
-        md5.update(decoded);
-        sha1.update(decoded);
-        outputBytes += decoded.length;
-        chunks++;
-        self.postMessage({
-            type: 'progress',
-            id: id,
-            phase: 'redirect-hash',
-            loaded: offset,
-            total: total,
-            output: outputBytes,
-            chunks: chunks
-        });
-    }
-
-    if (chunks < 1 || offset !== total || outputBytes < 1) {
-        throw new Error(
-            'Incomplete Epic UZ2 redirect stream: records=' + chunks
-            + ', compressed=' + offset + '/' + total
-            + ', output=' + outputBytes + '.'
-        );
-    }
+    });
 
     return {
         md5: md5.digestHex(),
         sha1: sha1.digestHex(),
-        identity_size: outputBytes,
-        guid: legacyGuidFromDecodedHead(firstDecoded),
+        identity_size: decoded.identitySize,
+        guid: legacyGuidFromDecodedHead(decoded.firstDecoded),
         extension: 'uz2',
         redirect: true,
         header: {

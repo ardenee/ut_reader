@@ -1,5 +1,9 @@
 'use strict';
 
+const redirectReaderUrl = new URL('unreal-redirect-reader.js', self.location.href);
+redirectReaderUrl.search = self.location.search;
+importScripts(redirectReaderUrl.href);
+
 /*
  * Compatibility wrapper around the established file inspector.
  *
@@ -150,41 +154,7 @@ function redirectHeader(extension, bytes, fileSize, fileName) {
     }
 
     if (extension === 'uz2') {
-        if (fileSize < 9) {
-            throw new Error('UZ2 file is incomplete/cut by ' + (9 - fileSize) + ' bytes: ' + fileName
-                + ' (actual_file_size=' + fileSize + ', minimum_file_size=9).');
-        }
-        const compressed = littleU32(bytes, 0);
-        const uncompressed = littleU32(bytes, 4);
-        if (compressed < 1 || compressed > 33096
-            || uncompressed < 1 || uncompressed > 32768) {
-            throw new Error('Invalid UZ2 format: ' + fileName
-                + ' (record=1, record_offset=0, compressed_size=' + compressed
-                + ', uncompressed_size=' + uncompressed
-                + ', max_compressed_size=33096, max_uncompressed_size=32768).');
-        }
-        const availableBytes = fileSize - 8;
-        if (compressed > availableBytes) {
-            throw new Error('UZ2 file is incomplete/cut by ' + (compressed - availableBytes) + ' bytes: ' + fileName
-                + ' (record=1, record_offset=0, payload_offset=8'
-                + ', compressed_size=' + compressed
-                + ', uncompressed_size=' + uncompressed
-                + ', available_bytes=' + availableBytes
-                + ', actual_file_size=' + fileSize
-                + ', required_file_size=' + (8 + compressed) + ').');
-        }
-        const cmf = bytes[8];
-        const flg = bytes[9];
-        if ((cmf & 0x0f) !== 8 || (((cmf << 8) | flg) % 31) !== 0) {
-            const head = Array.from(bytes.slice(8, Math.min(16, bytes.length)))
-                .map(function (value) { return value.toString(16).padStart(2, '0'); }).join('');
-            throw new Error('Cannot decompress UZ2 record 1: ' + fileName
-                + ' (record_offset=0, payload_offset=8'
-                + ', compressed_size=' + compressed
-                + ', uncompressed_size=' + uncompressed
-                + ', payload_head_hex=' + head + ').');
-        }
-        return {kind:'redirect-uz2', description:'Epic UZ2 zlib record header'};
+        return self.UnrealDbRedirectReader.validateUz2Header(bytes, fileSize, fileName);
     }
 
     throw new Error('Unsupported redirect extension .' + extension + '.');

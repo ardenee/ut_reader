@@ -130,20 +130,27 @@ try {
     $inspector = (string)file_get_contents($root . '/assets/upload-file-inspector-worker.js');
     $compatibleInspector = (string)file_get_contents($root . '/assets/upload-file-inspector-worker-compatible.js');
     $archiveWorker = (string)file_get_contents($root . '/assets/public-upload-archive-worker.js');
+    $redirectReader = (string)file_get_contents($root . '/assets/unreal-redirect-reader.js');
     $record(
-        'browser_readers_use_the_same_operator_vocabulary',
-        str_contains($inspector, 'UZ2 file is incomplete/cut by ')
-            && str_contains($archiveWorker, 'UZ2 file is incomplete/cut by ')
-            && str_contains($compatibleInspector, 'UZ2 file is incomplete/cut by ')
+        'browser_paths_share_one_uz2_reader',
+        str_contains($redirectReader, 'async function readUz2(options)')
+            && str_contains($redirectReader, 'UZ2 file is incomplete/cut by ')
+            && str_contains($redirectReader, 'Cannot decompress UZ2 record ')
+            && str_contains($redirectReader, 'actual_magic_hex=')
+            && str_contains($inspector, 'UnrealDbRedirectReader.readUz2(')
+            && str_contains($archiveWorker, 'UnrealDbRedirectReader.readUz2(')
+            && str_contains($compatibleInspector, 'UnrealDbRedirectReader.validateUz2Header(')
+            && str_contains($inspector, "new URL('unreal-redirect-reader.js'")
+            && str_contains($archiveWorker, "new URL('unreal-redirect-reader.js'")
+            && str_contains($compatibleInspector, "new URL('unreal-redirect-reader.js'")
+            && !str_contains($inspector, 'UZ2 file is incomplete/cut by ')
+            && !str_contains($archiveWorker, 'UZ2 file is incomplete/cut by ')
+            && !str_contains($compatibleInspector, 'UZ2 file is incomplete/cut by ')
             && str_contains($inspector, 'full record validation follows')
             && !str_contains($inspector, 'does not contain a valid first Epic redirect record')
-            && str_contains($inspector, 'Cannot decompress UZ2 record ')
-            && str_contains($archiveWorker, 'Cannot decompress UZ2 record ')
-            && str_contains($inspector, 'actual_magic_hex=')
-            && str_contains($archiveWorker, 'actual_magic_hex=')
             && !str_contains($inspector, 'Invalid Epic UZ2 record')
             && !str_contains($archiveWorker, 'Invalid Epic UZ2 record'),
-        'Direct uploads and archive members must not disagree with server-side UZ2 diagnostics.'
+        'Direct uploads, archive members and fast header checks must use the same UZ2 parser and diagnostics.'
     );
 
     $fingerprint = (string)file_get_contents($root . '/src/Infrastructure/Jobs/CatalogWorkerCodeVersion.php');

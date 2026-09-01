@@ -1,8 +1,10 @@
 'use strict';
 
+const redirectReaderUrl = new URL('unreal-redirect-reader.js', self.location.href);
 const legacyUzDecoderUrl = new URL('legacy-uz-decoder.js', self.location.href);
+redirectReaderUrl.search = self.location.search;
 legacyUzDecoderUrl.search = self.location.search;
-importScripts(legacyUzDecoderUrl.href);
+importScripts(redirectReaderUrl.href, legacyUzDecoderUrl.href);
 
 /* Browser-only ZIP/RAR/7z source reader. The archive File is mounted with
  * WORKERFS and is never copied into the WASM heap or uploaded. Each extraction
@@ -414,21 +416,6 @@ function readAt(position, length) {
     if (read !== length) throw new Error('Archive member read stopped early.');
     return bytes;
 }
-async function inflateZlibBytes(bytes, expectedBytes) {
-    if (typeof DecompressionStream !== 'function') throw new Error('This browser cannot decode zlib redirects inside archives.');
-    let output;
-    try {
-        output = new Uint8Array(await new Response(
-            new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate'))
-        ).arrayBuffer());
-    } catch (error) {
-        throw new Error('Could not decode the zlib redirect record inside the archive.');
-    }
-    if (expectedBytes > 0 && output.length !== expectedBytes) {
-        throw new Error('Decoded redirect size mismatch: expected=' + expectedBytes + ', decoded=' + output.length + '.');
-    }
-    return output;
-}
 async function inspectDirectPackage(id, name) {
     const head = readAt(0, Math.min(activeSize, 4096));
     if (!packageMagic(head)) {
@@ -452,78 +439,20 @@ async function inspectDirectPackage(id, name) {
 }
 async function inspectUz2(id, name) {
     const md5 = new Md5(), sha1 = new Sha1();
-    let offset = 0, decodedBytes = 0, records = 0;
-    let firstDecoded = new Uint8Array(0);
-    if (activeSize < 9) {
-        throw new Error('UZ2 file is incomplete/cut by ' + (9 - activeSize) + ' bytes: ' + name
-            + ' (actual_file_size=' + activeSize + ', minimum_file_size=9).');
-    }
-    while (offset < activeSize) {
-        if (offset + 8 > activeSize) {
-            const availableHeaderBytes = Math.max(0, activeSize - offset);
-            throw new Error('UZ2 file is incomplete/cut by ' + (8 - availableHeaderBytes) + ' bytes: ' + name
-                + ' (record=' + (records + 1)
-                + ', record_offset=' + offset
-                + ', required_header_bytes=8'
-                + ', available_header_bytes=' + availableHeaderBytes
-                + ', actual_file_size=' + activeSize + ').');
+    const decoded = await self.UnrealDbRedirectReader.readUz2({
+        source: {size: activeSize, read: readAt},
+        name: name,
+        onDecoded: function (bytes) {
+            md5.update(bytes);
+            sha1.update(bytes);
+        },
+        onProgress: function (progress) {
+            emitProgress(id, 'redirect-hash', 'Decoding/hash identity for ' + name + '.',
+                progress.loaded, progress.total);
         }
-        const header = readAt(offset, 8);
-        const compressed = readU32Le(header, 0), uncompressed = readU32Le(header, 4);
-        const recordOffset = offset;
-        offset += 8;
-        if (compressed < 1 || compressed > 33096 || uncompressed < 1 || uncompressed > 32768) {
-            throw new Error('Invalid UZ2 format: ' + name
-                + ' (record=' + (records + 1)
-                + ', record_offset=' + recordOffset
-                + ', compressed_size=' + compressed
-                + ', uncompressed_size=' + uncompressed
-                + ', max_compressed_size=33096'
-                + ', max_uncompressed_size=32768).');
-        }
-        const availableBytes = Math.max(0, activeSize - offset);
-        if (compressed > availableBytes) {
-            const missingBytes = compressed - availableBytes;
-            throw new Error('UZ2 file is incomplete/cut by ' + missingBytes + ' bytes: ' + name
-                + ' (record=' + (records + 1)
-                + ', record_offset=' + recordOffset
-                + ', payload_offset=' + offset
-                + ', compressed_size=' + compressed
-                + ', uncompressed_size=' + uncompressed
-                + ', available_bytes=' + availableBytes
-                + ', actual_file_size=' + activeSize
-                + ', required_file_size=' + (offset + compressed) + ').');
-        }
-        const payload = readAt(offset, compressed);
-        let decoded;
-        try {
-            decoded = await inflateZlibBytes(payload, uncompressed);
-        } catch (error) {
-            throw new Error('Cannot decompress UZ2 record ' + (records + 1) + ': ' + name
-                + ' (record_offset=' + recordOffset
-                + ', payload_offset=' + (recordOffset + 8)
-                + ', compressed_size=' + compressed
-                + ', uncompressed_size=' + uncompressed
-                + ', payload_head_hex=' + bytesHex(payload, 8) + ').');
-        }
-        offset += compressed;
-        if (records === 0) {
-            firstDecoded = decoded.slice(0, Math.min(decoded.length, 64));
-            if (!packageMagic(firstDecoded)) {
-                const magic = firstDecoded.slice(0, Math.min(4, firstDecoded.length));
-                throw new Error('Magic not found: ' + name
-                    + ' (record=1'
-                    + ', redirect_format=UZ2'
-                    + ', actual_magic_hex=' + (bytesHex(magic) || 'empty')
-                    + ', actual_magic_text=' + (printableBytes(magic) || 'empty')
-                    + ', expected_magic_hex=C1832A9E|9E2A83C1).');
-            }
-        }
-        md5.update(decoded); sha1.update(decoded); decodedBytes += decoded.length; records++;
-        emitProgress(id, 'redirect-hash', 'Decoding/hash identity for ' + name + '.', offset, activeSize);
-    }
-    return {md5:md5.digestHex(), sha1:sha1.digestHex(), identity_size:decodedBytes,
-        guid:legacyGuidFromHead(firstDecoded), extension:'uz2', redirect:true,
+    });
+    return {md5:md5.digestHex(), sha1:sha1.digestHex(), identity_size:decoded.identitySize,
+        guid:legacyGuidFromHead(decoded.firstDecoded), extension:'uz2', redirect:true,
         header:{kind:'redirect-uz2', description:'Epic UZ2 decoded package identity'}};
 }
 async function inspectUz3(id, name) {
