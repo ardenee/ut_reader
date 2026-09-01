@@ -60,12 +60,14 @@ $record(
     'Hashing must continue to read one bounded file chunk at a time.'
 );
 $record(
-    'worker_url_versions_compatibility_and_delegate',
+    'worker_url_versions_compatibility_delegate_and_redirect_reader',
     str_contains($uploadPage, "\$delegatedInspectorPath = __DIR__ . '/assets/upload-file-inspector-worker.js';")
+        && str_contains($uploadPage, "\$redirectReaderPath = __DIR__ . '/assets/unreal-redirect-reader.js';")
         && str_contains($uploadPage, '$workerScriptVersion = max(')
         && str_contains($uploadPage, 'filemtime($workerScriptPath)')
-        && str_contains($uploadPage, 'filemtime($delegatedInspectorPath)'),
-    'Changing only the delegated hashing worker must change the compatibility-worker URL so Chrome cannot keep stale inspector code cached.'
+        && str_contains($uploadPage, 'filemtime($delegatedInspectorPath)')
+        && str_contains($uploadPage, 'filemtime($redirectReaderPath)'),
+    'Changing the delegated worker or shared redirect reader must change the compatibility-worker URL so Chrome cannot keep stale code cached.'
 );
 
 $node = getenv('NODE_BINARY') ?: 'node';

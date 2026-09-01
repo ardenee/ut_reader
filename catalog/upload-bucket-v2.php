@@ -80,12 +80,13 @@ try {
 
     $workerScriptPath = __DIR__ . '/assets/upload-file-inspector-worker-compatible.js';
     $delegatedInspectorPath = __DIR__ . '/assets/upload-file-inspector-worker.js';
-    // The compatibility worker lazy-loads the full package inspector using this
-    // same query string. Version by both files so changing only the delegated
-    // hash implementation cannot leave Chrome running a cached stale worker.
+    $redirectReaderPath = __DIR__ . '/assets/unreal-redirect-reader.js';
+    // Imported worker dependencies share this query string. Version every
+    // browser reader so Chrome cannot retain a stale parser or hash worker.
     $workerScriptVersion = max(
         is_file($workerScriptPath) ? (int)(filemtime($workerScriptPath) ?: 1) : 1,
-        is_file($delegatedInspectorPath) ? (int)(filemtime($delegatedInspectorPath) ?: 1) : 1
+        is_file($delegatedInspectorPath) ? (int)(filemtime($delegatedInspectorPath) ?: 1) : 1,
+        is_file($redirectReaderPath) ? (int)(filemtime($redirectReaderPath) ?: 1) : 1
     );
     $workerUrl = 'assets/upload-file-inspector-worker-compatible.js?v=' . rawurlencode((string)$workerScriptVersion);
 

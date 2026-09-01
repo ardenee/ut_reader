@@ -97,6 +97,7 @@ try {
 
     $workerPath = __DIR__ . '/assets/upload-file-inspector-worker-compatible.js';
     $workerDelegate = __DIR__ . '/assets/upload-file-inspector-worker.js';
+    $redirectReaderPath = __DIR__ . '/assets/unreal-redirect-reader.js';
     $legacyUzDecoderPath = __DIR__ . '/assets/legacy-uz-decoder.js';
     $archiveWorkerPath = __DIR__ . '/assets/public-upload-archive-worker.js';
     $umodWorkerPath = __DIR__ . '/assets/public-upload-umod-worker.js';
@@ -107,6 +108,7 @@ try {
     $workerVersion = max(
         is_file($workerPath) ? (int)(filemtime($workerPath) ?: 1) : 1,
         is_file($workerDelegate) ? (int)(filemtime($workerDelegate) ?: 1) : 1,
+        is_file($redirectReaderPath) ? (int)(filemtime($redirectReaderPath) ?: 1) : 1,
         is_file($legacyUzDecoderPath) ? (int)(filemtime($legacyUzDecoderPath) ?: 1) : 1,
         is_file($archiveWorkerPath) ? (int)(filemtime($archiveWorkerPath) ?: 1) : 1,
         is_file($umodWorkerPath) ? (int)(filemtime($umodWorkerPath) ?: 1) : 1,

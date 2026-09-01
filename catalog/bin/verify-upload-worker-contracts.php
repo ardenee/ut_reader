@@ -123,7 +123,8 @@ $record(
         && str_contains($duplicateDetector, '$physicalSize = filesize($physicalPath)')
         && str_contains($compatibleInspector, "String(data.mode || '') === 'admin_fast'")
         && str_contains($compatibleInspector, "new Set(['uz', 'uz2', 'uz3'])")
-        && str_contains($compatibleInspector, 'const header = redirectHeader(extension, bytes, Number(file.size || 0));'),
+        && str_contains($compatibleInspector, 'const header = redirectHeader(extension, bytes, Number(file.size || 0), name);')
+        && str_contains($compatibleInspector, 'UnrealDbRedirectReader.validateUz2Header(bytes, fileSize, fileName);'),
     'admin Upload Bucket v2 preflight must use indexed metadata plus cheap existence/size checks and bounded redirect-header validation; full physical re-hash/redirect decode belongs to authoritative processing or the public uploader'
 );
 
