@@ -260,7 +260,7 @@
         button.type = 'button';
         button.className = 'ui-button ui-button--primary ui-button--sm jobs-file-parent-retry';
         button.textContent = 'Retry';
-        button.title = 'Retry all failed, stopped or dead-letter dependency child jobs beneath this parent.';
+        button.title = 'Retry all failed or stopped dependency child jobs beneath this parent.';
         button.addEventListener('click', function () {
             retryDependencyParent(row, button);
         });

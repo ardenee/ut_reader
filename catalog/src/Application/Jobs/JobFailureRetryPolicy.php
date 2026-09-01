@@ -128,7 +128,8 @@ final class JobFailureRetryPolicy
             }
         }
 
-        return self::isInvalidPackageContentMessage($message);
+        return self::isInvalidRedirectContentMessage($message)
+            || self::isInvalidPackageContentMessage($message);
     }
 
     /**
@@ -151,6 +152,9 @@ final class JobFailureRetryPolicy
     private static function isInvalidPackageContentMessage(string $message): bool
     {
         if ($message === '') {
+            return false;
+        }
+        if (self::isInvalidRedirectContentMessage($message)) {
             return false;
         }
 
@@ -194,5 +198,32 @@ final class JobFailureRetryPolicy
         }
 
         return false;
+    }
+
+    private static function isInvalidRedirectContentMessage(string $message): bool
+    {
+        foreach ([
+            'uz2 file is incomplete/cut',
+            'invalid uz2 format',
+            'cannot decompress uz2 record',
+            'cannot decompress uz2 because output exceeds the configured limit',
+            'invalid epic uz2 record',
+            'epic uz2 zlib uncompress failed',
+            'epic uz2 record stream decoded',
+            'cannot decompress/unpack unreal redirect',
+            'could not completely decompress unreal redirect archive',
+            'cannot decompress/unpack uz redirect',
+            'cannot decompress uz3',
+            'uz3 file is incomplete/cut',
+            'invalid uz3 format',
+            'invalid decompressed redirect size',
+        ] as $marker) {
+            if (str_contains($message, $marker)) {
+                return true;
+            }
+        }
+
+        return str_contains($message, 'magic not found:')
+            && str_contains($message, 'redirect_format=');
     }
 }

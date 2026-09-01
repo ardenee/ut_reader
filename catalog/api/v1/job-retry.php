@@ -45,7 +45,7 @@ try {
     }
     $jobIds = array_values($jobIds);
     if ($jobIds === []) {
-        JsonResponse::error('invalid_jobs', 'Select at least one cancelled, failed or dead-letter job to restart.', 400);
+        JsonResponse::error('invalid_jobs', 'Select at least one stopped or failed job to restart.', 400);
     }
     if (count($jobIds) > 1000) {
         JsonResponse::error('too_many_jobs', 'Restart no more than 1,000 jobs at a time.', 400);

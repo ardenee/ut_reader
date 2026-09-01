@@ -51,12 +51,10 @@ final class CatalogSystemErrorNormalizer
         ) ?? $message;
         $fingerprintRoute = $route;
 
-        // Background-job diagnostics often append a temporary working path after
-        // the stable exception text. A retry can therefore produce the same job
-        // failure with a different upload-bucket timestamp/random filename and
-        // previously created a brand-new System Error row. Use the durable job id
-        // as the route identity and remove only trailing diagnostic path sections
-        // from the fingerprint; the full original message remains stored/displayed.
+        // Use the durable job id as the fingerprint route. The worker reporter
+        // now keeps provenance in structured context instead of appending queue
+        // state and temporary paths to the visible error sentence; the trailing
+        // cleanup remains for historical records created by older workers.
         if ($sourceKind === 'background-job') {
             $jobId = max(0, (int)($context['job_id'] ?? 0));
             if ($jobId > 0) {

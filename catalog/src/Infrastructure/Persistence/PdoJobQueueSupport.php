@@ -12,6 +12,7 @@ namespace UnrealDb\Catalog\Infrastructure\Persistence;
 use DateTimeImmutable;
 use DateTimeZone;
 use Throwable;
+use UnrealDb\Catalog\Infrastructure\Redirect\CatalogRedirectArchiveValidationException;
 
 final class PdoJobQueueSupport
 {
@@ -69,6 +70,9 @@ final class PdoJobQueueSupport
 
     public static function trimError(Throwable $exception): string
     {
+        if ($exception instanceof CatalogRedirectArchiveValidationException) {
+            return substr($exception->getMessage(), 0, 60000);
+        }
         return substr(get_class($exception) . ': ' . $exception->getMessage(), 0, 60000);
     }
 

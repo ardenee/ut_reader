@@ -231,39 +231,45 @@ function catalog_redirect_archive_decode_failure_message(
 ): string {
     $name = basename($sourceName);
     if ($sourceExtension !== 'uz3') {
-        return 'Could not completely decompress Unreal redirect archive: ' . $name;
+        return 'Cannot decompress/unpack Unreal redirect: ' . $name
+            . ' (format=' . strtoupper($sourceExtension)
+            . ', compressed_size=' . strlen($data)
+            . ', output_limit=' . $limit . ').';
     }
 
     $length = strlen($data);
     if ($length < 8) {
-        return 'Invalid Epic UZ3 wrapper: ' . $name
-            . ' is too small to contain the 5678 tag and uncompressed-size header.';
+        return 'UZ3 file is incomplete/cut by ' . (8 - $length) . ' header bytes: ' . $name
+            . ' (actual_file_size=' . $length . ', required_header_bytes=8).';
     }
 
     $tag = catalog_redirect_archive_read_u32($data, 0, 'le');
     if ($tag !== 5678) {
-        return 'Invalid Epic UZ3 wrapper tag in ' . $name
-            . ': expected 5678 (0x0000162E), got ' . $tag
-            . ' (' . sprintf('0x%08X', $tag) . ').';
+        return 'Invalid UZ3 format: ' . $name
+            . ' (actual_tag=' . $tag
+            . ', actual_tag_hex=' . sprintf('0x%08X', $tag)
+            . ', expected_tag=5678, expected_tag_hex=0x0000162E).';
     }
 
     $declared = catalog_redirect_archive_read_u32($data, 4, 'le');
     if ($declared <= 0) {
-        return 'Invalid Epic UZ3 uncompressed size in ' . $name . ': declared=' . $declared . '.';
+        return 'Invalid UZ3 format: ' . $name . ' (uncompressed_size=' . $declared . ', minimum_size=1).';
     }
     if ($declared > $limit) {
-        return 'Epic UZ3 uncompressed size exceeds the configured output limit in ' . $name
-            . ': declared=' . $declared . ', limit=' . $limit . '.';
+        return 'Cannot decompress UZ3 because output exceeds the configured limit: ' . $name
+            . ' (uncompressed_size=' . $declared . ', output_limit=' . $limit . ').';
     }
 
     $payload = substr($data, 8);
     if ($payload === '') {
-        return 'Invalid Epic UZ3 wrapper in ' . $name . ': zlib payload is missing; declared=' . $declared . '.';
+        return 'UZ3 file is incomplete/cut; compressed payload is missing: ' . $name
+            . ' (header_bytes=8, compressed_payload_bytes=0, uncompressed_size=' . $declared . ').';
     }
 
-    return 'Epic UZ3 zlib stream could not be decompressed in ' . $name
-        . ': tag=5678, declared=' . $declared
-        . ', compressed_payload_bytes=' . strlen($payload) . '.';
+    return 'Cannot decompress UZ3: ' . $name
+        . ' (tag=5678, uncompressed_size=' . $declared
+        . ', compressed_payload_bytes=' . strlen($payload)
+        . ', payload_head_hex=' . bin2hex(substr($payload, 0, 8)) . ').';
 }
 
 /**
@@ -303,15 +309,26 @@ function catalog_redirect_archive_decompress_payload_to_temp(
     $limit = catalog_redirect_archive_output_limit($maxOutputBytes);
     $decoded = catalog_redirect_archive_decode_payload($data, $sourceExtension, $limit);
     if (!is_array($decoded)) {
-        throw new RuntimeException(
-            catalog_redirect_archive_decode_failure_message($data, $sourceExtension, $limit, $sourceName)
+        throw new \UnrealDb\Catalog\Infrastructure\Redirect\CatalogRedirectArchiveValidationException(
+            catalog_redirect_archive_decode_failure_message($data, $sourceExtension, $limit, $sourceName),
+            $sourceExtension . '.decompression_failed',
+            [
+                'format' => strtoupper($sourceExtension),
+                'compressed_size' => strlen($data),
+                'output_limit' => $limit,
+            ]
         );
     }
 
     $output = (string)($decoded['data'] ?? '');
     $outputBytes = strlen($output);
     if ($outputBytes <= 0 || $outputBytes > $limit) {
-        throw new RuntimeException('Bad decompressed redirect file size: ' . catalog_bytes($outputBytes));
+        throw new \UnrealDb\Catalog\Infrastructure\Redirect\CatalogRedirectArchiveValidationException(
+            'Invalid decompressed redirect size: ' . basename($sourceName)
+            . ' (output_size=' . $outputBytes . ', output_limit=' . $limit . ').',
+            $sourceExtension . '.invalid_output_size',
+            ['output_size' => $outputBytes, 'output_limit' => $limit]
+        );
     }
 
     $outputName = catalog_redirect_archive_output_name($sourceName);

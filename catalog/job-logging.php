@@ -63,8 +63,8 @@ try {
         . '<h2>Logging policy</h2>'
         . '<p><strong>Job progress remains enabled regardless of these switches.</strong> '
         . 'The current progress snapshot stays on the durable job row for Background Jobs and workflow recovery.</p>'
-        . '<p class="muted">Terminal/dead-letter background-job failures are recorded in System Errors even when routine event logging is disabled. '
-        . 'The defaults are intentionally errors-first: routine progress, successful, duplicate, skipped, cancelled and worker lifecycle chatter are off.</p>'
+        . '<p class="muted">Unexpected terminal background-job failures are recorded in System Errors even when routine event logging is disabled. '
+        . 'Deterministic bad-file input remains under Upload Issues instead of being reported as an application fault. The defaults are intentionally errors-first: routine progress, successful, duplicate, skipped, cancelled and worker lifecycle chatter are off.</p>'
         . '</div>';
 
     echo '<form method="post">'

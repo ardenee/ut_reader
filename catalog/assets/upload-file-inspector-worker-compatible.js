@@ -126,41 +126,63 @@ function indexOfSequence(bytes, sequence) {
     return -1;
 }
 
-function redirectHeader(extension, bytes, fileSize) {
+function redirectHeader(extension, bytes, fileSize, fileName) {
     if (extension === 'uz') {
         const signature = littleU32(bytes, 0);
         if (signature !== 1234 && signature !== 5678) {
-            throw new Error(
-                'The .uz file does not contain a supported Unreal redirect signature. '
-                + 'Expected 1234 or 5678; detected ' + signature + '.'
-            );
+            throw new Error('Invalid UZ format: ' + fileName
+                + ' (actual_signature=' + signature + ', expected_signatures=1234|5678).');
         }
         return {kind:'redirect-uz', description:'Unreal FCodec redirect signature ' + signature};
     }
 
     if (extension === 'uz3') {
+        if (fileSize < 9) {
+            throw new Error('UZ3 file is incomplete/cut by ' + (9 - fileSize) + ' bytes: ' + fileName
+                + ' (actual_file_size=' + fileSize + ', minimum_file_size=9).');
+        }
         const signature = littleU32(bytes, 0);
         if (signature !== 5678) {
-            throw new Error('The .uz3 file does not contain the expected Unreal 5678 redirect signature.');
+            throw new Error('Invalid UZ3 format: ' + fileName
+                + ' (actual_tag=' + signature + ', expected_tag=5678).');
         }
         return {kind:'redirect-uz3', description:'Unreal redirect signature 5678'};
     }
 
     if (extension === 'uz2') {
-        if (fileSize < 10 || bytes.length < 10) {
-            throw new Error('The .uz2 file is too small to contain an Epic redirect record.');
+        if (fileSize < 9) {
+            throw new Error('UZ2 file is incomplete/cut by ' + (9 - fileSize) + ' bytes: ' + fileName
+                + ' (actual_file_size=' + fileSize + ', minimum_file_size=9).');
         }
         const compressed = littleU32(bytes, 0);
         const uncompressed = littleU32(bytes, 4);
         if (compressed < 1 || compressed > 33096
-            || uncompressed < 1 || uncompressed > 32768
-            || 8 + compressed > fileSize) {
-            throw new Error('The .uz2 file does not contain a valid first Epic redirect record.');
+            || uncompressed < 1 || uncompressed > 32768) {
+            throw new Error('Invalid UZ2 format: ' + fileName
+                + ' (record=1, record_offset=0, compressed_size=' + compressed
+                + ', uncompressed_size=' + uncompressed
+                + ', max_compressed_size=33096, max_uncompressed_size=32768).');
+        }
+        const availableBytes = fileSize - 8;
+        if (compressed > availableBytes) {
+            throw new Error('UZ2 file is incomplete/cut by ' + (compressed - availableBytes) + ' bytes: ' + fileName
+                + ' (record=1, record_offset=0, payload_offset=8'
+                + ', compressed_size=' + compressed
+                + ', uncompressed_size=' + uncompressed
+                + ', available_bytes=' + availableBytes
+                + ', actual_file_size=' + fileSize
+                + ', required_file_size=' + (8 + compressed) + ').');
         }
         const cmf = bytes[8];
         const flg = bytes[9];
         if ((cmf & 0x0f) !== 8 || (((cmf << 8) | flg) % 31) !== 0) {
-            throw new Error('The .uz2 first record does not begin with a valid zlib stream.');
+            const head = Array.from(bytes.slice(8, Math.min(16, bytes.length)))
+                .map(function (value) { return value.toString(16).padStart(2, '0'); }).join('');
+            throw new Error('Cannot decompress UZ2 record 1: ' + fileName
+                + ' (record_offset=0, payload_offset=8'
+                + ', compressed_size=' + compressed
+                + ', uncompressed_size=' + uncompressed
+                + ', payload_head_hex=' + head + ').');
         }
         return {kind:'redirect-uz2', description:'Epic UZ2 zlib record header'};
     }
@@ -275,7 +297,7 @@ nativeAddEventListener.call(self, 'message', async function (event) {
         try {
             const readBytes = Math.min(Math.max(16, Number(file.size || 0)), 64);
             const bytes = new Uint8Array(await file.slice(0, readBytes).arrayBuffer());
-            const header = redirectHeader(extension, bytes, Number(file.size || 0));
+            const header = redirectHeader(extension, bytes, Number(file.size || 0), name);
             self.postMessage({
                 type:'result',
                 id:String(data.id || ''),
@@ -335,10 +357,8 @@ nativeAddEventListener.call(self, 'message', async function (event) {
         if (legacyUz) {
             const signature = littleU32(bytes, 0);
             if (signature !== 1234 && signature !== 5678) {
-                throw new Error(
-                    'The .uz file does not contain a supported Unreal redirect signature. '
-                    + 'Expected 1234 or 5678; detected ' + signature + '.'
-                );
+                throw new Error('Invalid UZ format: ' + name
+                    + ' (actual_signature=' + signature + ', expected_signatures=1234|5678).');
             }
             dispatchToInspector(data);
             return;

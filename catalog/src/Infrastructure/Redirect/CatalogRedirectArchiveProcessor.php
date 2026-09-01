@@ -86,11 +86,26 @@ final class CatalogRedirectArchiveProcessor
             (string)($decoded['filename'] ?? '')
         );
         if ($requirePackageTag && empty($decoded['is_unreal_package'])) {
-            if (is_file((string)($decoded['path'] ?? ''))) {
-                @unlink((string)$decoded['path']);
+            $decodedPath = (string)($decoded['path'] ?? '');
+            $magicBytes = is_file($decodedPath) ? (string)@file_get_contents($decodedPath, false, null, 0, 4) : '';
+            if (is_file($decodedPath)) {
+                @unlink($decodedPath);
             }
-            throw new \RuntimeException(
-                'Redirect archive decoded, but its output is not an Unreal package: ' . basename($sourceName)
+            $actualMagicHex = strtoupper(bin2hex($magicBytes));
+            $actualMagicText = preg_replace('/[^\x20-\x7E]/', '.', $magicBytes) ?? '';
+            throw new CatalogRedirectArchiveValidationException(
+                'Magic not found: ' . basename($sourceName)
+                . ' (redirect_format=' . strtoupper($extension)
+                . ', actual_magic_hex=' . ($actualMagicHex !== '' ? $actualMagicHex : 'empty')
+                . ', actual_magic_text=' . ($actualMagicText !== '' ? $actualMagicText : 'empty')
+                . ', expected_magic_hex=C1832A9E|9E2A83C1).',
+                $extension . '.magic_not_found',
+                [
+                    'redirect_format' => strtoupper($extension),
+                    'actual_magic_hex' => $actualMagicHex !== '' ? $actualMagicHex : 'empty',
+                    'actual_magic_text' => $actualMagicText !== '' ? $actualMagicText : 'empty',
+                    'expected_magic_hex' => 'C1832A9E|9E2A83C1',
+                ]
             );
         }
         return $decoded;
