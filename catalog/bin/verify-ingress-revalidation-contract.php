@@ -31,7 +31,12 @@ $read = static function (string $relative) use ($root): string {
     $value = @file_get_contents(
         $root . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relative)
     );
-    return is_string($value) ? $value : '';
+    if (!is_string($value)) {
+        return '';
+    }
+    // Git may check files out as CRLF on Windows. Source contracts must test
+    // semantics, not platform-specific newline representation.
+    return str_replace(["\r\n", "\r"], "\n", $value);
 };
 
 $staged = $read('src/Infrastructure/Jobs/CatalogBucketStagedPackageJobHandler.php');
@@ -85,7 +90,8 @@ $record(
     str_contains($public, "['uploaded', 'processing', 'failed']")
         && str_contains($public, 'in_array($status, [\'processing\', \'failed\'], true)')
         && str_contains($public, 'recoverPublishedStage($publicUploadId, $row)')
-        && str_contains($public, 'original contribution should remain staged for diagnosis/retry')
+        && str_contains($public, "'status' => 'failed'")
+        && str_contains($public, "'active_identity_key' => null")
         && !str_contains(
             substr(
                 $public,
@@ -108,8 +114,9 @@ $record(
 
 $record(
     'explicit_public_retry_overrides_automatic_deterministic_block',
-    str_contains($bulk, '$jobType !== JobType::PROCESS_PUBLIC_UPLOAD && !$sourceRetained')
-        && str_contains($bulk, 'Public Upload keeps quarantine bytes'),
+    str_contains($bulk, 'JobFailureRetryPolicy::isDeterministicFailureText(')
+        && str_contains($bulk, '$jobType !== JobType::PROCESS_PUBLIC_UPLOAD && !$sourceRetained')
+        && str_contains($bulk, '$allowed[$id] = true;'),
     'An administrator must still be able to explicitly retry retained Public Upload bytes after code changes.'
 );
 
