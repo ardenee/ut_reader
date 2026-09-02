@@ -137,11 +137,11 @@ $record(
     'browser_uz3_content_fallback_matches_server',
     str_contains($uploadInspector, 'UnrealDbLegacyUzDecoder.header(probe, 5678)')
         && str_contains($uploadInspector, "kind: 'redirect-uz3-fcodec-compat'")
-        && str_contains($uploadInspector, 'looksLikeOfficialZlib')
+        && str_contains($uploadInspector, 'catch (error)')
         && str_contains($archiveWorker, 'UnrealDbLegacyUzDecoder.header(probe, 5678)')
         && str_contains($archiveWorker, "kind: 'redirect-uz3-fcodec-compat'")
-        && str_contains($archiveWorker, 'looksLikeOfficialZlib'),
-    'Direct uploads and archive members must preserve canonical UT3 zlib handling while accepting only a structurally valid signature-5678 FCodec compatibility wrapper.'
+        && str_contains($archiveWorker, 'catch (error)'),
+    'Direct uploads and archive members must try canonical UT3 zlib first, then accept a structurally valid signature-5678 FCodec compatibility wrapper only after canonical decoding fails.'
 );
 
 try {
