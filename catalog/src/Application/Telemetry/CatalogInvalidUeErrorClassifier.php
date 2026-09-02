@@ -232,6 +232,26 @@ final class CatalogInvalidUeErrorClassifier
             'unreal.magic_not_found' => 'Magic not found',
             'unreal.header_too_short' => 'Package header too short',
             'unreal.header_read_failed' => 'Could not read package header',
+            'unreal.zero_to_space_corruption' => isset(
+                $arguments['package_version'],
+                $arguments['licensee_version'],
+                $arguments['candidate_package_version'],
+                $arguments['candidate_licensee_version'],
+                $arguments['zero_bytes'],
+                $arguments['space_bytes'],
+                $arguments['physical_size']
+            )
+                ? 'Unreal package appears to have NUL bytes replaced with spaces throughout the payload'
+                    . ': package_version=' . $arguments['package_version']
+                    . ', licensee_version=' . $arguments['licensee_version']
+                    . ', candidate_package_version=' . $arguments['candidate_package_version']
+                    . ', candidate_licensee_version=' . $arguments['candidate_licensee_version']
+                    . (isset($arguments['candidate_engine_hint']) ? ', candidate_engine_hint=' . $arguments['candidate_engine_hint'] : '')
+                    . ', zero_bytes=' . $arguments['zero_bytes']
+                    . ', space_bytes=' . $arguments['space_bytes']
+                    . ', physical_size=' . $arguments['physical_size']
+                    . '.'
+                : $fallback,
             'ue3.compressed_chunk_out_of_bounds' => isset(
                 $arguments['chunk_index'],
                 $arguments['compressed_offset'],
