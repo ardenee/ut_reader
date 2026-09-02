@@ -10,7 +10,9 @@ importScripts(redirectReaderUrl.href);
  * Transport containers deliberately bypass package hashing:
  * - `.uz` accepts both historic FCodec signatures 1234 and 5678. The wrapper
  *   performs a bounded signature sniff, then delegates FCodec decoding and
- *   decoded package hashing to the established inspector. A 5678 `.uz` is NOT UT3 `.uz3`.
+ *   decoded package hashing to the established inspector. Canonical UT3 `.uz3`
+ *   is whole-file zlib, while the full inspector also accepts historic mirror
+ *   files that carry signature-5678 FCodec content under a `.uz3` suffix.
  * - `.zip`, `.7z`, `.rar`, `.umod`, `.ut2mod` and `.ut4mod` are unpack-only
  *   transport containers. Package identity is calculated later from each
  *   extracted Unreal member.
