@@ -232,7 +232,7 @@ final class CatalogArchiveWorkflowJobHandler implements JobHandler
             'failed' => max(0, (int)($archiveResult['failed_files'] ?? 0)),
             'unpacked_bytes' => max(0, (int)($archiveResult['unpacked_bytes'] ?? 0)),
             'errors' => is_array($archiveResult['errors'] ?? null) ? $archiveResult['errors'] : [],
-            'source_retained' => !empty($result['source_retained']),
+            'source_retained' => !empty($archiveResult['source_retained']),
             'sequential_archive' => !empty($archiveResult['sequential_archive']),
             'archive_format' => (string)($archiveResult['archive_format'] ?? ''),
             'nested_archives' => is_array($archiveResult['nested_archives'] ?? null)
@@ -324,7 +324,7 @@ final class CatalogArchiveWorkflowJobHandler implements JobHandler
             'skipped' => $totalSkipped,
             'failed' => $extractionFailed,
             'errors' => is_array($archiveResult['errors'] ?? null) ? $archiveResult['errors'] : [],
-            'source_retained' => !empty($archiveResult['source_retained']),
+            'source_retained' => !empty($result['source_retained']),
             'nested_archives' => is_array($archiveResult['nested_archives'] ?? null)
                 ? $archiveResult['nested_archives']
                 : [],
