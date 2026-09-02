@@ -124,7 +124,7 @@ function catalog_clean_unreal_filename(string $filename): string
     // so the existing duplicate-suffix cleanup removes it without turning the
     // extension into utx2.
     $filename = preg_replace(
-        '/^(.*?)(\.[A-Za-z0-9_]+)\s+\(([0-9]+)\)$/u',
+        '/^(.*?)(\.[A-Za-z0-9_]+)\s*\(([0-9]+)\)$/u',
         '$1 ($3)$2',
         $filename
     ) ?? $filename;
