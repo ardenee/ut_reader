@@ -235,14 +235,14 @@ final class CatalogRedirectArchiveStream
                             . ', redirect_format=UZ2'
                             . ', actual_magic_hex=' . ($actualMagicHex !== '' ? $actualMagicHex : 'empty')
                             . ', actual_magic_text=' . ($actualMagicText !== '' ? $actualMagicText : 'empty')
-                            . ', expected_magic_hex=C1832A9E|9E2A83C1).',
+                            . ', expected_magic_hex=C1832A9E|9E2A83C1|C2832A9E).',
                             'uz2.magic_not_found',
                             [
                                 'record' => 1,
                                 'redirect_format' => 'UZ2',
                                 'actual_magic_hex' => $actualMagicHex !== '' ? $actualMagicHex : 'empty',
                                 'actual_magic_text' => $actualMagicText !== '' ? $actualMagicText : 'empty',
-                                'expected_magic_hex' => 'C1832A9E|9E2A83C1',
+                                'expected_magic_hex' => 'C1832A9E|9E2A83C1|C2832A9E',
                             ]
                         );
                     }
