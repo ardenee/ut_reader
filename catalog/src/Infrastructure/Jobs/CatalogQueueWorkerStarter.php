@@ -1,9 +1,11 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Starts or reconciles a durable queue after feature code enqueues work.
- * Why: Upload, backup and maintenance controllers must not each implement detached-worker recovery/start policy.
- * Role: Infrastructure orchestration adapter around orphan recovery and the authoritative worker-pool reconciler.
+ * Purpose: Wakes a durable queue after feature code enqueues new work.
+ * Why: Automatic producers must be able to start missing worker processes without
+ *      recovering, reclassifying or rewriting unrelated historical jobs.
+ * Role: Side-effect-limited feature wake adapter. Explicit operator Start/Resume
+ *       continues to own queue recovery/reconciliation through CatalogWorkerPoolReconciler.
  */
 declare(strict_types=1);
 
@@ -26,48 +28,32 @@ final class CatalogQueueWorkerStarter
      */
     public function start(string $queueName, bool $shouldStart = true, ?int $userId = null): array
     {
-        $recovery = null;
+        // $userId is retained for API compatibility/provenance at call sites.
+        // Automatic feature wake must not mutate durable job rows.
+        if (!$shouldStart) {
+            return ['worker' => null, 'worker_error' => '', 'recovery' => null];
+        }
+
         try {
-            // Preserve the established enqueue-path behaviour: recover durable
-            // rows left by a vanished detached process before deciding whether a
-            // fresh pool is required.
-            $recovery = (new CatalogOrphanedJobRecovery($this->db, $this->config))
-                ->recoverInactiveQueue($queueName);
+            $launcher = new CatalogDetachedWorker($this->config);
+            $worker = $launcher->start($queueName, 10000);
 
-            if (!$shouldStart) {
-                return ['worker' => null, 'worker_error' => '', 'recovery' => $recovery];
-            }
-
-            $worker = (new CatalogWorkerPoolReconciler($this->db, $this->config))
-                ->run($queueName, 'drain', null, $userId);
-            if (empty($worker['pool_satisfied'])) {
-                $active = max(0, (int)($worker['worker']['active_count'] ?? 0));
-                $requested = max(1, (int)($worker['workers'] ?? 1));
+            if (($worker['reason'] ?? '') === 'stale_worker_running') {
                 return [
                     'worker' => $worker,
-                    'worker_error' => 'The jobs were queued, but only ' . $active . ' of '
-                        . $requested . ' configured detached workers became active.',
-                    'recovery' => $recovery,
+                    'worker_error' => 'Existing workers are running older code. They will finish their current job before exiting; use Background Jobs Start / resume to reconcile the pool if required.',
+                    'recovery' => null,
                 ];
             }
 
-            return ['worker' => $worker, 'worker_error' => '', 'recovery' => $recovery];
-        } catch (CatalogWorkerPoolStaleRestartFailed $error) {
-            return [
-                'worker' => null,
-                'worker_error' => trim($error->getMessage()) !== ''
-                    ? trim($error->getMessage())
-                    : 'The detached worker pool is running stale code and could not be restarted.',
-                'recovery' => $recovery,
-            ];
+            return ['worker' => $worker, 'worker_error' => '', 'recovery' => null];
         } catch (Throwable $error) {
             return [
                 'worker' => null,
                 'worker_error' => trim($error->getMessage()) !== ''
                     ? trim($error->getMessage())
                     : 'The detached worker pool could not be started.',
-                'recovery' => $recovery,
+                'recovery' => null,
             ];
         }
-    }
-}
+    }}
