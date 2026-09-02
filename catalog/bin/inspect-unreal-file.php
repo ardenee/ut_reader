@@ -101,6 +101,7 @@ function inspect_unreal_file(string $inputPath): array
 
         $summary = gp_read_legacy_summary($parsePath);
         $byteProfile = inspect_unreal_byte_profile($parsePath);
+        $corruption = \UnrealDb\Catalog\Infrastructure\Import\CatalogLegacyPackageCorruptionDetector::detectZeroToSpace($parsePath);
         $result = [
             'ok' => !empty($summary['ok']),
             'input_path' => $resolvedPath,
@@ -130,8 +131,9 @@ function inspect_unreal_file(string $inputPath): array
             'space_bytes' => $byteProfile['space_bytes'],
             'first_4096_zero_bytes' => $byteProfile['first_4096_zero_bytes'],
             'first_4096_space_bytes' => $byteProfile['first_4096_space_bytes'],
-            'whole_file_zero_to_space_pattern' => $byteProfile['zero_bytes'] === 0
-                && $byteProfile['space_bytes'] >= 16,
+            'whole_file_zero_to_space_pattern' => $corruption !== null,
+            'corruption_code' => $corruption !== null ? 'unreal.zero_to_space_corruption' : '',
+            'corruption_arguments' => $corruption ?? [],
         ];
 
         if (strlen($header) >= 16) {
@@ -206,6 +208,9 @@ function inspect_unreal_print_human(array $result): void
     echo 'Zero bytes (first 4096)      : ' . (string)($result['first_4096_zero_bytes'] ?? 0) . PHP_EOL;
     echo 'Space bytes (first 4096)     : ' . (string)($result['first_4096_space_bytes'] ?? 0) . PHP_EOL;
     echo 'Whole-file 00->20 pattern    : ' . (!empty($result['whole_file_zero_to_space_pattern']) ? 'YES' : 'NO') . PHP_EOL;
+    if (!empty($result['corruption_code'])) {
+        echo 'Corruption code              : ' . (string)$result['corruption_code'] . PHP_EOL;
+    }
 
     if (!empty($result['reason'])) {
         echo 'Reason                       : ' . (string)$result['reason'] . PHP_EOL;
