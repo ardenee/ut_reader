@@ -69,14 +69,21 @@ final class CatalogUnverifiedPackageIndexer
             );
         }
         if (!in_array($detectedEngine, ['UE1', 'UE2', 'UE3', 'UE4', 'UE5'], true)) {
+            $packageVersion = (int)($summary['version'] ?? 0);
+            $licenseeVersion = ($summary['licensee'] ?? null) !== null
+                ? (int)$summary['licensee']
+                : null;
+            $engineHint = strtoupper(trim((string)($summary['engine_hint'] ?? 'UNKNOWN'))) ?: 'UNKNOWN';
             throw new CatalogInvalidPackageException(
-                'Serialized Unreal package version is not mapped to a supported engine reader.',
+                'Serialized Unreal package version is not mapped to a supported engine reader'
+                    . ': package_version=' . $packageVersion
+                    . ', licensee_version=' . ($licenseeVersion === null ? 'null' : (string)$licenseeVersion)
+                    . ', engine_hint=' . $engineHint . '.',
                 'unreal.unsupported_reader',
                 [
-                    'package_version' => (int)($summary['version'] ?? 0),
-                    'licensee_version' => ($summary['licensee'] ?? null) !== null
-                        ? (int)$summary['licensee']
-                        : null,
+                    'package_version' => $packageVersion,
+                    'licensee_version' => $licenseeVersion,
+                    'engine_hint' => $engineHint,
                 ]
             );
         }
