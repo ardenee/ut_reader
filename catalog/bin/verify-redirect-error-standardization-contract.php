@@ -103,7 +103,7 @@ try {
             && str_contains($magicMessage, 'redirect_format=UZ2')
             && str_contains($magicMessage, 'actual_magic_hex=54455854')
             && str_contains($magicMessage, 'actual_magic_text=TEXT')
-            && str_contains($magicMessage, 'expected_magic_hex=C1832A9E|9E2A83C1'),
+            && str_contains($magicMessage, 'expected_magic_hex=C1832A9E|9E2A83C1|C2832A9E'),
         $magicMessage
     );
 
