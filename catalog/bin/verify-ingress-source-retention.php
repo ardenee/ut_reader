@@ -73,8 +73,9 @@ if ($publicCatchStart !== false) {
 }
 $record(
     'public_upload_failure_retains_quarantine_source',
-    str_contains($publicCatch, 'original contribution should remain staged for diagnosis/retry')
-        && str_contains($publicCatch, "'status' => 'failed'")
+    str_contains($publicCatch, "'status' => 'failed'")
+        && str_contains($publicCatch, "'active_identity_key' => null")
+        && !str_contains($publicCatch, "'quarantine_relative_path' => null")
         && !str_contains($publicCatch, 'removeQuarantine('),
     'Public Upload failures must retain the original quarantine source for diagnosis/retry.'
 );
