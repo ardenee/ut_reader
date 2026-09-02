@@ -140,7 +140,7 @@ function gp_read_legacy_summary(string $path): array
         'bytes_read' => $bytesRead,
         'header_hex' => $headerHex,
         'header_text' => $headerText,
-        'expected_magic_hex' => 'C1832A9E',
+        'expected_magic_hex' => \UnrealDb\Catalog\Domain\Package\CatalogUnrealPackageTag::expectedMagicHex(),
     ];
 
     if ($bytesRead < 4) {
@@ -155,7 +155,7 @@ function gp_read_legacy_summary(string $path): array
     $actualMagicBytes = strtoupper(bin2hex(substr($bytes, 0, 4)));
     $headerArguments['actual_magic_hex'] = $actualMagicBytes;
     $magic = unpack('V', substr($bytes, 0, 4))[1];
-    if ($magic !== 0x9E2A83C1) {
+    if (!\UnrealDb\Catalog\Domain\Package\CatalogUnrealPackageTag::isSupportedLittleEndianValue((int)$magic)) {
         return [
             'ok' => false,
             'reason' => 'Magic not found',
@@ -188,6 +188,7 @@ function gp_read_legacy_summary(string $path): array
         return [
             'ok' => true,
             'magic' => sprintf('0x%08X', $magic),
+            'package_tag_variant' => \UnrealDb\Catalog\Domain\Package\CatalogUnrealPackageTag::variant((int)$magic),
             'format' => 'ue4_package',
             'version' => $signedVersion32,
             'licensee' => null,
@@ -198,6 +199,7 @@ function gp_read_legacy_summary(string $path): array
     return [
         'ok' => true,
         'magic' => sprintf('0x%08X', $magic),
+        'package_tag_variant' => \UnrealDb\Catalog\Domain\Package\CatalogUnrealPackageTag::variant((int)$magic),
         'format' => 'legacy_package',
         'version' => $version,
         'licensee' => $licensee,
