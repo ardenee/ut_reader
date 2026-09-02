@@ -69,6 +69,15 @@ final class CatalogUnverifiedPackageIndexer
             );
         }
         if (!in_array($detectedEngine, ['UE1', 'UE2', 'UE3', 'UE4', 'UE5'], true)) {
+            $corruption = CatalogLegacyPackageCorruptionDetector::detectZeroToSpace($path);
+            if ($corruption !== null) {
+                throw new CatalogInvalidPackageException(
+                    'Unreal package appears to have NUL bytes replaced with spaces throughout the payload.',
+                    'unreal.zero_to_space_corruption',
+                    $corruption
+                );
+            }
+
             $packageVersion = (int)($summary['version'] ?? 0);
             $licenseeVersion = ($summary['licensee'] ?? null) !== null
                 ? (int)$summary['licensee']
