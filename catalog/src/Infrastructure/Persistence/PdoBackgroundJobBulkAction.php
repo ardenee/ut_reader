@@ -213,11 +213,19 @@ final class PdoBackgroundJobBulkAction
                 if ($id < 1) {
                     continue;
                 }
+                $jobType = (string)($row['job_type'] ?? '');
                 if (JobFailureRetryPolicy::isDeterministicFailureText(
-                    (string)($row['job_type'] ?? ''),
+                    $jobType,
                     self::persistedFailureText($row)
                 )) {
-                    continue;
+                    // Public Upload retains its quarantine bytes on failure.
+                    // Automatic retries should stop for immutable bad content,
+                    // but an explicit administrator Retry is also the supported
+                    // way to re-run those retained bytes after reader/decoder
+                    // code changes.
+                    if ($jobType !== JobType::PROCESS_PUBLIC_UPLOAD) {
+                        continue;
+                    }
                 }
                 $allowed[$id] = true;
             }
