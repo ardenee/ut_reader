@@ -32,13 +32,16 @@ $record(
 );
 
 $record(
-    'service_accepts_only_completed_top_level_archive_roots',
+    'service_accepts_only_completed_retained_top_level_archive_roots',
     str_contains($service, 'parent_job_id IS NULL')
         && str_contains($service, 'status="completed"')
         && str_contains($service, 'JobType::PROCESS_BUCKET_ARCHIVE')
         && str_contains($service, 'JobType::IMPORT_STAGED_ARCHIVE')
-        && str_contains($service, 'display_status NOT IN ("partial","failed","rejected","unverified","error")'),
-    'Successful completed archive roots must be separated from partial/problem archive retry policy.'
+        && str_contains($service, 'display_status NOT IN ("partial","failed","rejected","unverified","error")')
+        && str_contains($service, 'JSON_VALID(result_json)')
+        && str_contains($service, 'JSON_EXTRACT(result_json,"$.source_retained")')
+        && str_contains($service, '=true'),
+    'A completed archive may be replayed only when its durable result confirms that the original archive source is still retained.'
 );
 
 $record(
