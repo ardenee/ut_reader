@@ -76,7 +76,7 @@ $record(
     str_contains($maintenance, 'PdoArchiveProfileMismatchOutcomeRepair')
         && str_contains($maintenance, 'PdoArchiveParentLifecycleRepair')
         && str_contains($maintenance, 'synchronizeQueuedPolicies()')
-        && str_contains($maintenance, "array_key_exists('execute', $options)")
+        && str_contains($maintenance, 'array_key_exists(\'execute\', $options)')
         && str_contains($maintenance, "'changed' => false"),
     'Historical queue compatibility repair must require an explicit --execute command.'
 );
