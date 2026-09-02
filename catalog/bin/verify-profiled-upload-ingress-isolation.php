@@ -7,42 +7,47 @@ declare(strict_types=1);
 $root = dirname(__DIR__);
 $checks = [
     'browser uses isolated batch API' => [
-        'path' => $root . '/assets/profiled-upload-jobs.js',
+        'path' => $root . '/assets/profiled-upload-jobs-core.js',
         'needle' => "api/v1/profiled-upload-batch.php",
         'present' => true,
     ],
-    'browser no longer accumulates per-file queued job ids' => [
+    'folder picker wrapper loads upload core' => [
         'path' => $root . '/assets/profiled-upload-jobs.js',
+        'needle' => 'assets/profiled-upload-jobs-core.js',
+        'present' => true,
+    ],
+    'browser no longer accumulates per-file queued job ids' => [
+        'path' => $root . '/assets/profiled-upload-jobs-core.js',
         'needle' => 'queuedJobIds',
         'present' => false,
     ],
     'browser no longer releases thousands of held jobs after upload' => [
-        'path' => $root . '/assets/profiled-upload-jobs.js',
+        'path' => $root . '/assets/profiled-upload-jobs-core.js',
         'needle' => 'releaseBatch()',
         'present' => false,
     ],
     'browser performs no per-file server duplicate preflight' => [
-        'path' => $root . '/assets/profiled-upload-jobs.js',
+        'path' => $root . '/assets/profiled-upload-jobs-core.js',
         'needle' => 'serverDuplicatePreflight',
         'present' => false,
     ],
     'browser builds upload plan before staging begins' => [
-        'path' => $root . '/assets/profiled-upload-jobs.js',
+        'path' => $root . '/assets/profiled-upload-jobs-core.js',
         'needle' => 'const plan = await buildUploadPlan(',
         'present' => true,
     ],
     'browser has a separate continuous upload phase' => [
-        'path' => $root . '/assets/profiled-upload-jobs.js',
+        'path' => $root . '/assets/profiled-upload-jobs-core.js',
         'needle' => 'await uploadPlan(plan);',
         'present' => true,
     ],
     'browser caps live result DOM rows' => [
-        'path' => $root . '/assets/profiled-upload-jobs.js',
+        'path' => $root . '/assets/profiled-upload-jobs-core.js',
         'needle' => 'MAX_LOG_ROWS = 250',
         'present' => true,
     ],
     'browser reuses one hash worker across files' => [
-        'path' => $root . '/assets/profiled-upload-jobs.js',
+        'path' => $root . '/assets/profiled-upload-jobs-core.js',
         'needle' => 'if (!activeHashWorker)',
         'present' => true,
     ],
@@ -88,12 +93,12 @@ $checks = [
     ],
     'coordinator yields between manifest slices' => [
         'path' => $root . '/src/Infrastructure/Jobs/CatalogProfiledUploadBatchJobHandler.php',
-        'needle' => '$context->defer(1, $progress);',
+        'needle' => '$context->defer(1, $progress, false);',
         'present' => true,
     ],
     'worker factory routes upload batch coordinator' => [
         'path' => $root . '/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php',
-        'needle' => 'JobType::PROFILED_UPLOAD_BATCH => $profiledUploadBatch',
+        'needle' => 'JobType::PROFILED_UPLOAD_BATCH => static fn() => new CatalogProfiledUploadBatchJobHandler',
         'present' => true,
     ],
 ];

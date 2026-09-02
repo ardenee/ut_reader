@@ -30,13 +30,19 @@ $phpFiles = [
     'lib/CompatibilityRules.php',
     'src/Application/Catalog/CatalogPackageHeaderInspector.php',
     'profiled-upload.php',
+    'api/v1/profiled-upload-batch.php',
     'api/v1/profiled-upload-chunk.php',
     'api/v1/profiled-upload-preflight.php',
     'src/Infrastructure/Games/CatalogGameProfileAdminService.php',
     'src/Infrastructure/Import/CatalogIncomingFileStore.php',
     'src/Infrastructure/Import/CatalogProfiledUploadDuplicatePreflight.php',
     'src/Infrastructure/Import/CatalogProfiledUploadQueue.php',
+    'src/Infrastructure/Import/CatalogProfiledUploadBatchStore.php',
+    'src/Infrastructure/Import/CatalogPackageImporterAdapter.php',
+    'src/Infrastructure/Import/CatalogVerifiedPackageInspector.php',
     'src/Infrastructure/Import/PdoCatalogPackageImporter.php',
+    'src/Infrastructure/Jobs/CatalogProfiledUploadBatchJobHandler.php',
+    'src/Infrastructure/Jobs/CatalogJobWorkerFactory.php',
     'src/Infrastructure/Metadata/CatalogAssetMetadataService.php',
     'src/Infrastructure/Unverified/CatalogUnverifiedStagingIndex.php',
     'src/Infrastructure/Unverified/CatalogUnverifiedQueueStorage.php',
@@ -135,7 +141,8 @@ try {
 
 $profiles = $read('lib/GameProfiles.php');
 $compatibility = $read('lib/CompatibilityRules.php');
-$importer = $read('src/Infrastructure/Import/PdoCatalogPackageImporter.php');
+$importer = $read('src/Infrastructure/Import/CatalogPackageImporterAdapter.php');
+$verifiedInspector = $read('src/Infrastructure/Import/CatalogVerifiedPackageInspector.php');
 $profileAdmin = $read('src/Infrastructure/Games/CatalogGameProfileAdminService.php');
 $assetMetadata = $read('src/Infrastructure/Metadata/CatalogAssetMetadataService.php');
 $unverifiedIndex = $read('src/Infrastructure/Unverified/CatalogUnverifiedStagingIndex.php');
@@ -161,7 +168,10 @@ $record(
     !str_contains($importer, '$profileExtensions')
         && !str_contains($importer, 'Extension not allowed by assigned profile')
         && !str_contains($importer, "\$readerEngine = \$profileEngine")
-        && str_contains($importer, 'serialized header data'),
+        && str_contains($importer, '$this->inspector->inspect(')
+        && str_contains($verifiedInspector, 'gp_classify_file(')
+        && str_contains($verifiedInspector, 'serialized header data')
+        && !str_contains($verifiedInspector, "\$readerEngine = \$profileEngine"),
     'Primary import must neither reject by extension nor fall back to the selected profile reader.'
 );
 $record(
@@ -182,45 +192,51 @@ $record(
 
 $uploadPage = $read('profiled-upload.php');
 $uploadJs = $read('assets/profiled-upload-jobs.js');
+$uploadCore = $read('assets/profiled-upload-jobs-core.js');
 $hashWorker = $read('assets/profiled-upload-hash-worker.js');
-$chunkApi = $read('api/v1/profiled-upload-chunk.php');
+$batchApi = $read('api/v1/profiled-upload-batch.php');
+$batchStore = $read('src/Infrastructure/Import/CatalogProfiledUploadBatchStore.php');
+$batchHandler = $read('src/Infrastructure/Jobs/CatalogProfiledUploadBatchJobHandler.php');
 $incoming = $read('src/Infrastructure/Import/CatalogIncomingFileStore.php');
 $profiledQueue = $read('src/Infrastructure/Import/CatalogProfiledUploadQueue.php');
-$claimer = $read('src/Infrastructure/Persistence/PdoJobClaimer.php');
+$planPosition = strpos($uploadCore, 'const plan = await buildUploadPlan(');
+$uploadPosition = strpos($uploadCore, 'await uploadPlan(plan);');
+$finalizePosition = strpos($uploadCore, 'const finalized = await finalizeBatch();');
 $record(
     'browser_does_not_wait_for_import_jobs',
-    !str_contains($uploadJs, 'waitForJob(')
-        && !str_contains($uploadJs, 'readJob(')
-        && !str_contains($uploadJs, 'job-status.php')
-        && str_contains($uploadJs, "defer_worker_start', '1")
-        && str_contains($uploadJs, 'All selected files have finished duplicate preflight/upload staging'),
+    str_contains($uploadJs, 'assets/profiled-upload-jobs-core.js')
+        && !str_contains($uploadCore, 'waitForJob(')
+        && !str_contains($uploadCore, 'readJob(')
+        && !str_contains($uploadCore, 'job-status.php')
+        && str_contains($uploadCore, 'No background import jobs are created during preflight or upload.'),
     'Each file may be locally preflighted, but browser flow must never wait for its background import job before advancing.'
 );
 $record(
     'client_preflight_happens_before_network_upload',
-    str_contains($uploadJs, 'await duplicatePreflight(file, index, total)')
-        && str_contains($uploadJs, 'if (preflight.skip || cancelRequested) return;')
-        && str_contains($uploadJs, 'new Worker(hashWorkerUrl)')
+    $planPosition !== false
+        && $uploadPosition !== false
+        && $planPosition < $uploadPosition
+        && str_contains($uploadCore, 'activeHashWorker = new Worker(hashWorkerUrl)')
         && str_contains($hashWorker, 'file.slice(loaded, end).arrayBuffer()'),
     'Ordinary files should be checked locally before network transfer while hashing stays off the UI thread.'
 );
 $record(
-    'jobs_are_unclaimable_during_batch_staging',
-    str_contains($profiledQueue, 'BATCH_HOLD_SECONDS')
-        && str_contains($profiledQueue, '$holdForBatch ? $this->batchHoldUntil() : null')
-        && str_contains($claimer, "'available_at<=?'")
-        && str_contains($uploadPage, '$deferWorkerStart')
-        && str_contains($chunkApi, '$deferWorkerStart'),
-    'Held upload jobs must have a future available_at so even already-running workers cannot process them before batch release.'
+    'no_jobs_exist_during_batch_staging',
+    str_contains($batchApi, "'background_job_created' => false")
+        && str_contains($batchStore, "fopen(\$this->manifestPath(\$batchId), 'ab')")
+        && substr_count($batchApi, 'JobType::PROFILED_UPLOAD_BATCH') === 1
+        && str_contains($batchApi, "if (\$action === 'finalize')"),
+    'File ingress must only append durable manifest entries; finalization alone may create the coordinator job.'
 );
 $record(
-    'batch_is_released_once_after_upload_loop',
-    str_contains($profiledQueue, 'public function releaseHeldJobs(')
-        && str_contains($uploadPage, "'release_batch'")
-        && str_contains($uploadJs, 'async function releaseBatch()')
-        && substr_count($uploadJs, 'await releaseBatch();') === 1
-        && !str_contains($uploadJs, 'ensureWorker('),
-    'The browser must release the held job IDs once, after the upload loop exits; the release endpoint starts background processing.'
+    'batch_is_finalized_once_after_upload_loop',
+    $uploadPosition !== false
+        && $finalizePosition !== false
+        && $uploadPosition < $finalizePosition
+        && substr_count($uploadCore, 'await finalizeBatch();') === 1
+        && str_contains($batchApi, 'JobType::PROFILED_UPLOAD_BATCH')
+        && str_contains($batchHandler, 'PLAN_BATCH_SIZE = 100'),
+    'The browser must finalize once after all transfers; one coordinator then expands the manifest in bounded slices.'
 );
 $record(
     'normal_http_staging_skips_whole_file_sha256',
@@ -238,8 +254,8 @@ $record(
 );
 $record(
     'upload_ui_states_background_independence',
-    str_contains($uploadPage, 'Jobs remain unclaimable while the selected browser batch is uploading')
-        && str_contains($uploadJs, 'processing continues independently'),
+    str_contains($uploadPage, 'No background import jobs are created while the selected browser batch is uploading')
+        && str_contains($uploadCore, 'Background processing started only after upload completion'),
     'The UI must describe the durable staging/background-processing boundary accurately.'
 );
 
