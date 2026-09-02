@@ -77,6 +77,15 @@ $record(
 );
 
 $record(
+    'dynamic_bulk_buttons_clear_stale_aria_disabled_state',
+    str_contains($js, 'function setButtonDisabled(button, disabled)')
+        && str_contains($js, "button.removeAttribute('aria-disabled')")
+        && str_contains($js, 'setButtonDisabled(retryAllMatchingButton, matchingSources === 0)')
+        && str_contains($js, 'setButtonDisabled(retrySelectedButton, selectedSources === 0)'),
+    'Dynamically enabled bulk buttons must clear aria-disabled as well as the native disabled property so they are visibly and semantically enabled.'
+);
+
+$record(
     'bulk_api_accepts_file_matching_scope',
     str_contains($api, "['selected', 'matching', 'file_matching']")
         && str_contains($api, 'matchingRootIds(')
