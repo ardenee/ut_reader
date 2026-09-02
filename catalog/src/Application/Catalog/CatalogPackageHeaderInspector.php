@@ -26,7 +26,7 @@ final class CatalogPackageHeaderInspector
             return ['ok' => false, 'error' => 'Stored package file is too small to parse header.', 'summary' => [], 'rows' => []];
         }
         $tag = self::u32($bytes, 0);
-        if ($tag !== 0x9E2A83C1) {
+        if (!\UnrealDb\Catalog\Domain\Package\CatalogUnrealPackageTag::isSupportedLittleEndianValue($tag)) {
             return ['ok' => false, 'error' => sprintf('Bad package tag 0x%08X', $tag), 'summary' => [], 'rows' => []];
         }
         $signed = self::i32($bytes, 4);
