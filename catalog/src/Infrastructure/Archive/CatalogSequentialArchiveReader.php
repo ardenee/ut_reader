@@ -242,12 +242,6 @@ final class CatalogSequentialArchiveReader
                     'backend' => 'libarchive-sequential',
                     'format' => $format,
                 ];
-                $entries++;
-                if ($entries > $this->maxEntries()) {
-                    throw new \RuntimeException(
-                        'Archive contains too many entries; limit is ' . number_format($this->maxEntries()) . '.'
-                    );
-                }
 
                 // A zero size reported by libarchive is not enough evidence that a
                 // hidden payload can be decoded. In particular, 7-Zip can expose
@@ -854,11 +848,6 @@ final class CatalogSequentialArchiveReader
             throw new \RuntimeException('Could not allocate temporary sequential archive-member storage.');
         }
         return $path;
-    }
-
-    private function maxEntries(): int
-    {
-        return max(1, min(100000, (int)($this->config['archive']['max_entries'] ?? 10000)));
     }
 
     private function errorText(\Throwable $error): string
