@@ -78,8 +78,7 @@ final class CatalogArchiveMemberContentClassifier
         if (strlen($bytes) < 4) {
             return false;
         }
-        $tag = substr($bytes, 0, 4);
-        return $tag === "\xC1\x83\x2A\x9E" || $tag === "\x9E\x2A\x83\xC1";
+        return \UnrealDb\Catalog\Domain\Package\CatalogUnrealPackageTag::isSupportedBytes($bytes);
     }
 
     private function isAppleDoubleMetadata(string $prefix, string $entryPath, string $originalName): bool
