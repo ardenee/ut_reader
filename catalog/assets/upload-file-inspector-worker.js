@@ -343,7 +343,7 @@ function validateHeader(extension, fileSize, head, tail, fileName) {
             throw new Error('Magic not found: ' + String(fileName || 'unknown Unreal package')
                 + ' (actual_magic_hex=' + (bytesHex(magic) || 'empty')
                 + ', actual_magic_text=' + (printableBytes(magic) || 'empty')
-                + ', expected_magic_hex=C1832A9E|9E2A83C1).');
+                + ', expected_magic_hex=C1832A9E|9E2A83C1|C2832A9E).');
         }
         return {kind: 'package', description: 'Unreal package magic'};
     }
@@ -355,13 +355,15 @@ function packageMagic(bytes) {
     return bytes.length >= 4 && (
         (bytes[0] === 0xc1 && bytes[1] === 0x83 && bytes[2] === 0x2a && bytes[3] === 0x9e)
         || (bytes[0] === 0x9e && bytes[1] === 0x2a && bytes[2] === 0x83 && bytes[3] === 0xc1)
+        || (bytes[0] === 0xc2 && bytes[1] === 0x83 && bytes[2] === 0x2a && bytes[3] === 0x9e)
     );
 }
 
 function legacyGuidFromDecodedHead(bytes) {
     if (!packageMagic(bytes) || bytes.length < 52) return '';
     const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-    const littleEndian = view.getUint32(0, true) === 0x9e2a83c1;
+    const littleEndianTag = view.getUint32(0, true);
+    const littleEndian = littleEndianTag === 0x9e2a83c1 || littleEndianTag === 0x9e2a83c2;
     const packed = view.getUint32(4, littleEndian);
     const version = packed & 0xffff;
     if (version < 1 || version >= 200) return '';
@@ -496,7 +498,7 @@ async function inspectUz3(id, file) {
             + ' (redirect_format=UZ3'
             + ', actual_magic_hex=' + (bytesHex(magic) || 'empty')
             + ', actual_magic_text=' + (printableBytes(magic) || 'empty')
-            + ', expected_magic_hex=C1832A9E|9E2A83C1).');
+            + ', expected_magic_hex=C1832A9E|9E2A83C1|C2832A9E).');
     }
 
     return {
