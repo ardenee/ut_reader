@@ -69,7 +69,7 @@ $record(
 $record(
     'legacy_begin_batch_is_read_only',
     str_contains($chunkEndpoint, "'pause_supported' => false")
-        && str_contains($chunkEndpoint, "'processing' => $processingState->status(false)")
+        && str_contains($chunkEndpoint, '\'processing\' => $processingState->status(false)')
         && !str_contains($chunkEndpoint, '$processingState->status(true)')
         && !str_contains($processingState, 'requestStop('),
     'An old cached browser may still call begin_batch, but that compatibility action must never pause or stop live workers.'
