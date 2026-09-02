@@ -73,11 +73,6 @@ final class CatalogExternalArchiveReader
             if (!is_array($entries)) {
                 throw new \RuntimeException('PHP rar extension could not enumerate the RAR archive.');
             }
-            if (count($entries) > $this->maxEntries()) {
-                throw new \RuntimeException(
-                    'Archive contains too many entries; limit is ' . number_format($this->maxEntries()) . '.'
-                );
-            }
 
             $entryIndex = $this->indexEntriesBySafePath($entries);
             $fileCopyTargets = (new CatalogRar5FileCopyMap())->targets($archivePath);
@@ -560,11 +555,6 @@ final class CatalogExternalArchiveReader
             throw new \RuntimeException('Could not allocate temporary PHP RAR member storage.');
         }
         return $path;
-    }
-
-    private function maxEntries(): int
-    {
-        return max(1, min(100000, (int)($this->config['archive']['max_entries'] ?? 10000)));
     }
 
     private function errorText(\Throwable $error): string
