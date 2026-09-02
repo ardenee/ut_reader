@@ -244,7 +244,7 @@ abstract class CatalogLegacyPackageReaderBase
     {
         $reader = new CatalogLegacyBinaryStream($this->path);
         $tag = $reader->u32();
-        if ($tag !== 0x9e2a83c1) {
+        if (!\UnrealDb\Catalog\Domain\Package\CatalogUnrealPackageTag::isSupportedLittleEndianValue($tag)) {
             throw new RuntimeException(sprintf('Bad package tag 0x%08X.', $tag));
         }
         $packed = $reader->u32();
