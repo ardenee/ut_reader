@@ -17,6 +17,7 @@ use UnrealDb\Catalog\Infrastructure\Jobs\CatalogManualJobRecovery;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogQueueWorkerStarter;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoBackgroundJobBulkAction;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
+use UnrealDb\Catalog\Infrastructure\Unverified\CatalogUnverifiedMetadataRepairService;
 use UnrealDb\Catalog\Presentation\Http\JsonResponse;
 
 try {
@@ -74,6 +75,62 @@ try {
             JsonResponse::error('not_retryable', 'The job is not in a retryable terminal state.', 409);
         }
         JsonResponse::send(['data' => ['job_id' => $jobId, 'status' => 'queued']]);
+    }
+
+    if ($action === 'revalidate') {
+        $jobId = (int)($payload['job_id'] ?? 0);
+        if ($jobId < 1) {
+            JsonResponse::error('invalid_job', 'A positive job_id is required.', 400);
+        }
+
+        $sourceJob = catalog_one(
+            $application->db,
+            'SELECT id,status,display_status,result_json FROM ue_background_jobs '
+                . 'WHERE id=? AND queue_name=? LIMIT 1',
+            [$jobId, $queueName]
+        );
+        if (!$sourceJob) {
+            JsonResponse::error('not_found', 'The requested source job was not found in this queue.', 404);
+        }
+        if (strtolower((string)($sourceJob['status'] ?? '')) !== 'completed'
+            || strtolower((string)($sourceJob['display_status'] ?? '')) !== 'invalid_ue_package') {
+            JsonResponse::error(
+                'not_revalidatable',
+                'Only completed invalid Unreal package outcomes can be revalidated from retained storage.',
+                409
+            );
+        }
+
+        $result = json_decode((string)($sourceJob['result_json'] ?? ''), true);
+        $result = is_array($result) ? $result : [];
+        $fileId = max(0, (int)($result['file_id'] ?? 0));
+        if ($fileId < 1) {
+            JsonResponse::error(
+                'retained_source_unavailable',
+                'This historical invalid-package job has no retained Unverified file reference. It cannot be revalidated from server storage.',
+                409
+            );
+        }
+
+        $revalidation = (new CatalogUnverifiedMetadataRepairService(
+            $application->db,
+            $application->config
+        ))->queueFileRevalidation($fileId, $userId, $jobId);
+
+        $workerState = (new CatalogQueueWorkerStarter($application->db, $application->config))
+            ->start((string)$revalidation['queue'], true, $userId);
+
+        JsonResponse::send([
+            'data' => [
+                'source_job_id' => $jobId,
+                'file_id' => $fileId,
+                'revalidation_job_id' => (int)$revalidation['job_id'],
+                'queue' => (string)$revalidation['queue'],
+                'status' => 'queued',
+                'worker' => $workerState['worker'],
+                'worker_error' => (string)$workerState['worker_error'],
+            ],
+        ], 202);
     }
 
     // Deleting one terminal row is bounded and remains immediate. Potentially
@@ -388,7 +445,7 @@ try {
 
     JsonResponse::error(
         'invalid_action',
-        'Supported actions are cancel, retry, delete, delete_selected, delete_matching, cleanup, cleanup_storage, recover, enqueue_rebuild_game, enqueue_rebuild_file, enqueue_rebuild_affected, enqueue_source_identity_file, enqueue_source_identity_game, enqueue_reconcile_unverified, enqueue_prune_artifacts and enqueue_prune.',
+        'Supported actions are cancel, retry, revalidate, delete, delete_selected, delete_matching, cleanup, cleanup_storage, recover, enqueue_rebuild_game, enqueue_rebuild_file, enqueue_rebuild_affected, enqueue_source_identity_file, enqueue_source_identity_game, enqueue_reconcile_unverified, enqueue_prune_artifacts and enqueue_prune.',
         400
     );
 } catch (Throwable $exception) {
