@@ -177,6 +177,45 @@ final class CatalogSystemErrorRecorder
         }
     }
 
+    /**
+     * Resolve a former background-job error when a .pak-named source is
+     * positively classified as a non-Unreal resource. The extension is real;
+     * absence of the Unreal PAK footer means it is intentionally bypassed, not
+     * a damaged Unreal archive.
+     */
+    public static function resolveNonUnrealPakJob(int $jobId): void
+    {
+        if ($jobId < 1 || self::$busy) {
+            return;
+        }
+        self::$busy = true;
+        try {
+            $db = self::connection();
+            if (!$db instanceof PDO || !self::tableAvailable($db)) {
+                return;
+            }
+            try {
+                $now = gmdate('Y-m-d H:i:s');
+                $statement = $db->prepare(
+                    'UPDATE ue_system_errors SET status="resolved",resolved_at=?,resolved_by=NULL,'
+                    . 'resolution_note="Informational exclusion: .pak source has no Unreal PAK magic footer." '
+                    . 'WHERE status="open" AND source_kind="background-job" '
+                    . 'AND message LIKE "Unsupported PAK file: no Unreal PAK magic footer was found.%" '
+                    . 'AND JSON_VALID(context_json) '
+                    . 'AND CAST(JSON_UNQUOTE(JSON_EXTRACT(context_json,"$.job_id")) AS UNSIGNED)=?'
+                );
+                $statement->execute([$now, $jobId]);
+            } catch (Throwable $error) {
+                error_log(
+                    '[UnrealDB system error resolve] Could not resolve non-Unreal PAK job #'
+                    . $jobId . ': ' . $error->getMessage()
+                );
+            }
+        } finally {
+            self::$busy = false;
+        }
+    }
+
     public static function recordException(Throwable $error, string $sourceKind = 'php'): void
     {
         self::record([

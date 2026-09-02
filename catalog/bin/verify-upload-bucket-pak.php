@@ -40,6 +40,7 @@ $phpFiles = [
     'src/Infrastructure/Unverified/PdoUnverifiedFileDetailsQuery.php',
     'src/Infrastructure/Jobs/CatalogUnverifiedGameMatchRefreshJobHandler.php',
     'src/Infrastructure/Jobs/CatalogWorkerCodeVersion.php',
+    'src/Infrastructure/Telemetry/CatalogSystemErrorRecorder.php',
 ];
 $syntaxFailures = [];
 foreach ($phpFiles as $relative) {
@@ -78,6 +79,7 @@ $pageQuery = $read('src/Infrastructure/Unverified/PdoUnverifiedFilesPageQuery.ph
 $detailsQuery = $read('src/Infrastructure/Unverified/PdoUnverifiedFileDetailsQuery.php');
 $workerVersion = $read('src/Infrastructure/Jobs/CatalogWorkerCodeVersion.php');
 $strictIndexer = $read('src/Infrastructure/Import/CatalogUnverifiedPackageIndexer.php');
+$systemErrors = $read('src/Infrastructure/Telemetry/CatalogSystemErrorRecorder.php');
 
 $record(
     'pak_is_container_extension_not_package_extension',
@@ -175,6 +177,17 @@ $record(
         && str_contains($archive, 'PROCESS_BUCKET_STAGED_PACKAGE')
         && str_contains($archive, 'CatalogBucketPakJobHandler'),
     'A .pak discovered inside ZIP/7z/RAR must reach the same retained PAK workflow rather than the ordinary package parser.'
+);
+
+$record(
+    'non_unreal_pak_magic_miss_is_informational_exclusion',
+    str_contains($pakHandler, 'isNonUnrealPakResource')
+        && str_contains($pakHandler, "'status' => 'excluded'")
+        && str_contains($pakHandler, "'classification' => 'non_unreal_pak'")
+        && str_contains($pakHandler, 'resolveNonUnrealPakJob')
+        && str_contains($systemErrors, 'public static function resolveNonUnrealPakJob')
+        && str_contains($systemErrors, 'Informational exclusion: .pak source has no Unreal PAK magic footer.'),
+    '.pak-named resources without Unreal FPakInfo magic must be bypassed as informational exclusions; genuine Unreal PAK parse failures still use the normal error path.'
 );
 
 $record(

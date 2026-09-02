@@ -164,7 +164,8 @@ try {
             $status,
             $search,
             $jobIds,
-            $userId
+            $userId,
+            $action === 'restart' && $sourceSelection
         );
     } else {
         $result = [

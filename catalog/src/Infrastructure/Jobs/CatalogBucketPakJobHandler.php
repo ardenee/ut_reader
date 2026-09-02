@@ -23,6 +23,7 @@ use UnrealDb\Catalog\Infrastructure\Import\CatalogIncomingFileStore;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogUploadBucketFilePolicy;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoWorkflowChildStateQuery;
+use UnrealDb\Catalog\Infrastructure\Telemetry\CatalogSystemErrorRecorder;
 
 final class CatalogBucketPakJobHandler implements JobHandler
 {
@@ -109,7 +110,41 @@ final class CatalogBucketPakJobHandler implements JobHandler
             'message' => 'Reading PAK index and extracting contained files.',
         ]);
 
-        $extracted = \catalog_pak_archive_extract_to_temp($this->config, $sourcePath, $originalName);
+        try {
+            $extracted = \catalog_pak_archive_extract_to_temp($this->config, $sourcePath, $originalName);
+        } catch (\RuntimeException $error) {
+            if (!$this->isNonUnrealPakResource($error)) {
+                throw $error;
+            }
+
+            // .pak is also used by non-Unreal software/components (for example
+            // Chromium/CEF resources). The extension is legitimate, but without
+            // an Unreal FPakInfo magic footer this is an intentional exclusion,
+            // not a damaged Unreal archive and not an operator issue.
+            $this->cleanupParentSource($job);
+            CatalogSystemErrorRecorder::resolveNonUnrealPakJob($job->id);
+            $message = 'Excluded non-Unreal .pak resource ' . $originalName
+                . ': no Unreal PAK magic footer was found.';
+            $context->checkpoint([
+                'workflow_version' => self::WORKFLOW_VERSION,
+                'stage' => 'complete',
+                'done' => 100,
+                'total' => 100,
+                'percent' => 100,
+                'status' => 'excluded',
+                'message' => $message,
+                'classification' => 'non_unreal_pak',
+            ]);
+            return [
+                'operation' => 'process_bucket_pak',
+                'status' => 'excluded',
+                'file_id' => 0,
+                'original_name' => $originalName,
+                'source_relative_path' => $sourceRelativePath,
+                'classification' => 'non_unreal_pak',
+                'message' => $message,
+            ];
+        }
         $workDir = (string)$extracted['dir'];
         try {
             $files = array_values((array)$extracted['files']);
@@ -516,6 +551,14 @@ final class CatalogBucketPakJobHandler implements JobHandler
                 @unlink($working);
             }
         }
+    }
+
+    private function isNonUnrealPakResource(Throwable $error): bool
+    {
+        return str_starts_with(
+            trim($error->getMessage()),
+            'Unsupported PAK file: no Unreal PAK magic footer was found.'
+        );
     }
 
     private function parentSourcePath(ClaimedJob $job): string

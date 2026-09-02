@@ -38,7 +38,8 @@ final class PdoBackgroundJobBulkAction
         string $status,
         string $search,
         array $jobIds,
-        ?int $userId
+        ?int $userId,
+        bool $explicitRevalidation = false
     ): array {
         $this->setShortLockWait();
 
@@ -120,7 +121,7 @@ final class PdoBackgroundJobBulkAction
         $eligibleIds = $candidateIds;
         $retryBlocked = 0;
         if ($action === 'restart' && $eligibleIds !== []) {
-            $eligibleIds = $this->restartableJobIds($queueName, $eligibleIds);
+            $eligibleIds = $this->restartableJobIds($queueName, $eligibleIds, $explicitRevalidation);
             $retryBlocked = max(0, count($candidateIds) - count($eligibleIds));
         }
 
@@ -194,8 +195,11 @@ final class PdoBackgroundJobBulkAction
      * @param list<int> $jobIds
      * @return list<int>
      */
-    private function restartableJobIds(string $queueName, array $jobIds): array
-    {
+    private function restartableJobIds(
+        string $queueName,
+        array $jobIds,
+        bool $explicitRevalidation = false
+    ): array {
         if ($jobIds === []) {
             return [];
         }
@@ -214,15 +218,22 @@ final class PdoBackgroundJobBulkAction
                     continue;
                 }
                 $jobType = (string)($row['job_type'] ?? '');
-                if (JobFailureRetryPolicy::isDeterministicFailureText(
-                    $jobType,
-                    self::persistedFailureText($row)
-                )) {
-                    // Automatic retry remains blocked for immutable-source
-                    // failures. Explicit operator retry is different: Public
-                    // Upload keeps quarantine bytes, while completed invalid UE
-                    // jobs may explicitly advertise a retained prepared source
-                    // for current-code revalidation.
+                $failureText = self::persistedFailureText($row);
+                if (JobFailureRetryPolicy::isDeterministicFailureText($jobType, $failureText)) {
+                    // Automatic/background retry must not burn attempts on the
+                    // same immutable bytes. An administrator clicking Retry,
+                    // however, is explicitly asking current code to revalidate
+                    // those bytes after a reader/decoder/routing change. Allow
+                    // that replay unless the persisted failure proves the source
+                    // itself is no longer available.
+                    if ($explicitRevalidation && !self::isMissingSourceFailureText($failureText)) {
+                        $allowed[$id] = true;
+                        continue;
+                    }
+
+                    // Existing retained-source exceptions remain available to
+                    // compatibility callers that do not opt into explicit
+                    // revalidation semantics.
                     $result = json_decode((string)($row['result_json'] ?? ''), true);
                     $sourceRetained = is_array($result) && !empty($result['source_retained']);
                     if ($jobType !== JobType::PROCESS_PUBLIC_UPLOAD && !$sourceRetained) {
@@ -237,6 +248,28 @@ final class PdoBackgroundJobBulkAction
             $jobIds,
             static fn(int $id): bool => isset($allowed[$id])
         ));
+    }
+
+    private static function isMissingSourceFailureText(string $message): bool
+    {
+        $message = strtolower(trim($message));
+        if ($message === '') {
+            return false;
+        }
+        foreach ([
+            'chunked upload was not found',
+            'chunked upload manifest is missing',
+            'completed chunked pak data is unavailable',
+            'staged import file is unavailable',
+            'archive member staged source is unavailable and retained-parent reconstruction failed:',
+            'retained parent archive source is unavailable for member reconstruction',
+            'retained parent archive no longer contains the exact recorded member',
+        ] as $marker) {
+            if (str_contains($message, $marker)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /** @param list<int> $eligibleIds */

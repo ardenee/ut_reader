@@ -29,6 +29,7 @@ $phpFiles = [
     'background-jobs.php',
     'api/v1/job-bulk.php',
     'src/Infrastructure/Persistence/PdoBackgroundJobFileTreeQuery.php',
+    'src/Infrastructure/Persistence/PdoBackgroundJobBulkAction.php',
 ];
 $syntaxFailures = [];
 if (!function_exists('proc_open')) {
@@ -58,6 +59,7 @@ $page = $read('background-jobs.php');
 $js = $read('assets/background-jobs-files.js');
 $api = $read('api/v1/job-bulk.php');
 $query = $read('src/Infrastructure/Persistence/PdoBackgroundJobFileTreeQuery.php');
+$bulkAction = $read('src/Infrastructure/Persistence/PdoBackgroundJobBulkAction.php');
 
 $record(
     'background_jobs_exposes_retry_all_matching',
@@ -92,6 +94,15 @@ $record(
         && str_contains($api, "\$sourceSelection = in_array(\$scope, ['selected', 'file_matching'], true)")
         && str_contains($api, "\$result['selection_limited']"),
     'The bulk endpoint must resolve logical source roots server-side and then reuse selected-source retry semantics.'
+);
+
+$record(
+    'explicit_operator_retry_revalidates_old_deterministic_failures',
+    str_contains($api, "\$action === 'restart' && \$sourceSelection")
+        && str_contains($bulkAction, 'bool $explicitRevalidation = false')
+        && str_contains($bulkAction, '$explicitRevalidation && !self::isMissingSourceFailureText($failureText)')
+        && str_contains($bulkAction, 'private static function isMissingSourceFailureText'),
+    'Retry selected/all matching is an explicit current-code revalidation request: old decoder/parser failures may run again, while rows whose source is provably gone remain blocked.'
 );
 
 $record(
