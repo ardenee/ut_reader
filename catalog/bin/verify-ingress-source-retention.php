@@ -41,7 +41,7 @@ $record(
         && $preparedClearPos !== false
         && $chunkDeletePos > $finalizePos
         && $preparedClearPos > $finalizePos
-        && str_contains($bucket, "if ((string)($resume['stage'] ?? '') === 'bucket_staged'")
+        && str_contains($bucket, 'if ((string)($resume[\'stage\'] ?? \'\') === \'bucket_staged\'')
         && str_contains($bucket, 'return $this->finalizeStagedCheckpoint('),
     'Browser upload/prepared bytes must survive parser/storage exceptions and be deleted only after durable bucket staging succeeds.'
 );
