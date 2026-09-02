@@ -123,13 +123,14 @@ $record(
 );
 
 $record(
-    'php_rar_reader_preserves_archive_limits',
-    str_contains($rar, 'Archive contains too many entries')
+    'php_rar_reader_preserves_archive_safety_bounds_without_entry_cap',
+    !str_contains($rar, 'Archive contains too many entries')
+        && !str_contains($rar, 'maxEntries()')
         && str_contains($rar, 'Archive expansion exceeds the configured total unpacked-data limit')
         && str_contains($rar, 'RAR member exceeded its configured import limit')
         && str_contains($rar, 'RarEntry::extract() exceeded the configured archive-member limit')
         && str_contains($rar, 'safeMemberPath('),
-    'The PHP rar extension path must preserve entry-count, path, per-member and total expansion bounds, including native-extract fallback.'
+    'The PHP rar extension path must accept archives with any entry count while retaining path, per-member and total expansion bounds.'
 );
 
 $record(
