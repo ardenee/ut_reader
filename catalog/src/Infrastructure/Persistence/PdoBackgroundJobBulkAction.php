@@ -95,7 +95,7 @@ final class PdoBackgroundJobBulkAction
             . self::decoderBlockedArchiveSql('j') . ')';
         $actionCondition = match ($action) {
             'restart' => '(j.status IN ("cancelled","failed","dead_letter") '
-                . 'OR (j.status="completed" AND j.display_status IN ("failed","rejected","unverified")) '
+                . 'OR (j.status="completed" AND j.display_status IN ("failed","rejected","unverified","invalid_ue_package")) '
                 . 'OR ' . $retryableArchive . ')',
             'cancel' => 'j.status="queued"',
             // Queued/deferred rows are safe to purge only after they are first
@@ -218,12 +218,14 @@ final class PdoBackgroundJobBulkAction
                     $jobType,
                     self::persistedFailureText($row)
                 )) {
-                    // Public Upload retains its quarantine bytes on failure.
-                    // Automatic retries should stop for immutable bad content,
-                    // but an explicit administrator Retry is also the supported
-                    // way to re-run those retained bytes after reader/decoder
-                    // code changes.
-                    if ($jobType !== JobType::PROCESS_PUBLIC_UPLOAD) {
+                    // Automatic retry remains blocked for immutable-source
+                    // failures. Explicit operator retry is different: Public
+                    // Upload keeps quarantine bytes, while completed invalid UE
+                    // jobs may explicitly advertise a retained prepared source
+                    // for current-code revalidation.
+                    $result = json_decode((string)($row['result_json'] ?? ''), true);
+                    $sourceRetained = is_array($result) && !empty($result['source_retained']);
+                    if ($jobType !== JobType::PROCESS_PUBLIC_UPLOAD && !$sourceRetained) {
                         continue;
                     }
                 }
