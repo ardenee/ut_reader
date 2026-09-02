@@ -16,9 +16,15 @@ namespace UnrealDb\Catalog\Infrastructure\Readers;
 /**
  * Maps a detected engine generation to the reader used by catalog inventory.
  *
- * UE1 and UE2 use direct, memory-bounded streaming readers. UE3 uses the strict
- * Epic catalog parser. Only UE4 still relies on a configured external reader
- * path while its parser remains in the root UE4 reference tree.
+ * UE1 and UE2 use one canonical memory-bounded parser implementation:
+ * CatalogLegacyPackageReader.php. "Legacy" here means the UE1/UE2 serialized
+ * package family, not a deprecated/alternate reader. Every catalog path should
+ * resolve UE1/UE2 through this class resolver rather than instantiate another
+ * package parser directly.
+ *
+ * UE3 uses the strict Epic catalog parser. Only UE4 still relies on a
+ * configured external reader path while its parser remains in the root UE4
+ * reference tree.
  */
 final class CatalogReaderResolver
 {
