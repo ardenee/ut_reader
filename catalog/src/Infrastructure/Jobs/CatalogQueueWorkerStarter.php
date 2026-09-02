@@ -56,4 +56,5 @@ final class CatalogQueueWorkerStarter
                 'recovery' => null,
             ];
         }
-    }}
+    }
+}
