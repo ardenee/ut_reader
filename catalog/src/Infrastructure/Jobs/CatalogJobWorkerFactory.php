@@ -13,8 +13,6 @@ use PDO;
 use UnrealDb\Catalog\Application\Jobs\JobWorker;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
-use UnrealDb\Catalog\Infrastructure\Persistence\PdoArchiveParentLifecycleRepair;
-use UnrealDb\Catalog\Infrastructure\Persistence\PdoArchiveProfileMismatchOutcomeRepair;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoContention;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 use UnrealDb\Catalog\Infrastructure\Telemetry\CatalogSystemErrorRecorder;
@@ -32,58 +30,11 @@ final class CatalogJobWorkerFactory
     ): JobWorker {
         self::raiseWorkerMemoryLimit($config);
 
-        // Durable rows persist the resource policy that existed when they were
-        // queued. Repair queued rows on process startup so a code-level policy
-        // correction applies to already-waiting work after a normal worker
-        // restart; running rows retain their current ownership and finish
-        // untouched.
-        try {
-            (new CatalogJobResourceLimitStore($db, $queueName))->synchronizeQueuedPolicies();
-        } catch (\Throwable $error) {
-            error_log('[UnrealDB worker policy sync] ' . $error->getMessage());
-        }
-
-        // Historical profile mismatches and deterministic invalid-package
-        // outcomes were retained correctly but both were folded into generic
-        // archive failure state. Reclassify only content-proven outcomes, then
-        // re-run coordinator aggregation from existing child rows. No archive or
-        // package source bytes are re-read here.
-        try {
-            $profileMismatchRepair = (new PdoArchiveProfileMismatchOutcomeRepair($db))->repair($queueName);
-            if ($profileMismatchRepair['reclassified'] > 0 || $profileMismatchRepair['requeued'] > 0) {
-                error_log('[UnrealDB archive outcome repair] Reclassified '
-                    . (int)($profileMismatchRepair['profile_mismatch_reclassified'] ?? 0)
-                    . ' profile mismatch and '
-                    . (int)($profileMismatchRepair['invalid_ue_reclassified'] ?? 0)
-                    . ' invalid UE child outcome(s); requeued '
-                    . $profileMismatchRepair['requeued']
-                    . ' coordinator(s) for ledger-only aggregation.');
-            }
-        } catch (\Throwable $error) {
-            error_log('[UnrealDB archive outcome classification repair] ' . $error->getMessage());
-        }
-
-        // Historical invalid-UE System Error backfill is intentionally NOT run
-        // from worker startup. Starting a queue for new work must never create
-        // unrelated historical error rows. Operators can run the dedicated
-        // ledger-only CLI when historical backfill is explicitly desired:
-        //   php catalog/bin/backfill-invalid-ue-system-errors.php
+        // Worker construction is deliberately side-effect free with respect to
+        // durable job history. Starting a worker for a new Upload Bucket/Public
+        // Upload batch must not rewrite, reclassify, reopen or backfill unrelated
+        // historical jobs. Compatibility repairs are explicit maintenance tasks.
         //
-        // Older archive coordinators completed their parent row immediately after
-        // enqueueing children. Reopen only those completed parents that still have
-        // queued/running children so deploying the corrected lifecycle also repairs
-        // work that was already in flight. The operation is idempotent and bounded.
-        try {
-            $reopenedArchiveParents = (new PdoArchiveParentLifecycleRepair($db))
-                ->reopenCompletedParentsWithActiveChildren($queueName);
-            if ($reopenedArchiveParents > 0) {
-                error_log('[UnrealDB archive lifecycle] Reopened ' . $reopenedArchiveParents
-                    . ' completed archive parent(s) that still had active children.');
-            }
-        } catch (\Throwable $error) {
-            error_log('[UnrealDB archive lifecycle repair] ' . $error->getMessage());
-        }
-
         $trustedImportConfig = $config;
         $ingressLimit = max(1, (int)($config['max_upload_bytes'] ?? (256 * 1024 * 1024)));
         $defaultRedirectLimit = $ingressLimit > intdiv(PHP_INT_MAX, 8)
