@@ -46,6 +46,7 @@ $client = $read('assets/background-jobs-files.js');
 $statusPolicy = $read('src/Infrastructure/Jobs/CatalogJobDisplayStatus.php');
 $errorRecorder = $read('src/Infrastructure/Telemetry/CatalogSystemErrorRecorder.php');
 $archiveRerun = $read('src/Infrastructure/Persistence/PdoCompletedArchiveRerunSelection.php');
+$workerVersion = $read('src/Infrastructure/Jobs/CatalogWorkerCodeVersion.php');
 
 $record(
     'invalid_archive_member_retains_prepared_source',
@@ -183,6 +184,18 @@ $record(
     'Filters, file-tree projection and revalidated outcome labels must agree on operator status.'
 );
 
+$record(
+    'worker_fingerprint_tracks_revalidation_runtime',
+    str_contains($workerVersion, '/Jobs/CatalogUnverifiedMetadataRepairJobHandler.php')
+        && str_contains($workerVersion, '/Import/CatalogUnverifiedMetadataRepairProcessor.php')
+        && str_contains($workerVersion, '/Unverified/CatalogUnverifiedMetadataRepairService.php')
+        && str_contains($workerVersion, '/Unverified/CatalogUnverifiedStagingIndex.php')
+        && str_contains($workerVersion, '/Application/Jobs/JobFailureRetryPolicy.php')
+        && str_contains($workerVersion, '/Jobs/CatalogPublicUploadJobHandler.php')
+        && str_contains($workerVersion, '/Jobs/CatalogBucketStagedPackageJobHandler.php'),
+    'Long-running pools must notice parser/revalidation/public-upload runtime changes between jobs and roll to current code.'
+);
+
 $syntaxTargets = [
     'bin/verify-ingress-revalidation-contract.php',
     'src/Infrastructure/Jobs/CatalogBucketStagedPackageJobHandler.php',
@@ -196,6 +209,7 @@ $syntaxTargets = [
     'src/Infrastructure/Jobs/CatalogJobDisplayStatus.php',
     'src/Infrastructure/Telemetry/CatalogSystemErrorRecorder.php',
     'src/Infrastructure/Persistence/PdoCompletedArchiveRerunSelection.php',
+    'src/Infrastructure/Jobs/CatalogWorkerCodeVersion.php',
 ];
 
 $syntaxFailures = [];
