@@ -128,7 +128,9 @@ $record(
 $record(
     'profiled_upload_surfaces_rejection_reason',
     str_contains($staged, "\$retentionMessage . ': ' . \$shortError")
-        && str_contains($staged, "'status' => \$staged !== null ? 'unverified' : 'rejected'")
+        && str_contains($staged, "'status' => \$outcomeStatus")
+        && str_contains($staged, "\$outcomeStatus = \$profileMismatch")
+        && str_contains($staged, "CatalogImportOutcome::INVALID_UE_PACKAGE")
         && str_contains($staged, "'error' => \$shortError"),
     'The final 100% progress row must include the actual verification/decompression reason instead of only a generic discarded/unverified label.'
 );
