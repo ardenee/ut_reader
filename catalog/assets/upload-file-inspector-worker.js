@@ -424,20 +424,39 @@ async function inspectUz2(id, file) {
     };
 }
 
-async function inspectUz3(id, file) {
+async function inspectUz3(id, file, maxFileBytes) {
     const total = Math.max(0, Number(file.size || 0));
     const name = String(file.name || 'unknown.uz3');
     if (total < 9) {
         throw new Error('UZ3 file is incomplete/cut by ' + (9 - total) + ' bytes: ' + name
             + ' (actual_file_size=' + total + ', minimum_file_size=9).');
     }
-    const header = await readBytes(file, 0, 8);
-    const signature = readU32Le(header, 0);
-    const expected = readU32Le(header, 4);
+    const probe = await readBytes(file, 0, Math.min(total, HEADER_READ_BYTES));
+    const signature = readU32Le(probe, 0);
+    const expected = readU32Le(probe, 4);
     if (signature !== 5678) {
         throw new Error('Invalid UZ3 format: ' + name
             + ' (actual_tag=' + signature + ', expected_tag=5678, uncompressed_size=' + expected + ').');
     }
+
+    const cmf = probe.length > 9 ? probe[8] : -1;
+    const flg = probe.length > 9 ? probe[9] : -1;
+    const looksLikeOfficialZlib = cmf >= 0
+        && (cmf & 0x0f) === 8
+        && (((cmf << 8) | flg) % 31) === 0;
+    const legacyHeader = !looksLikeOfficialZlib
+        ? self.UnrealDbLegacyUzDecoder.header(probe, 5678)
+        : null;
+    if (legacyHeader) {
+        const result = await inspectUz(id, file, maxFileBytes);
+        result.extension = 'uz3';
+        result.header = {
+            kind: 'redirect-uz3-fcodec-compat',
+            description: 'Signature-5678 FCodec content carried with a .uz3 suffix; decoded package identity calculated in browser'
+        };
+        return result;
+    }
+
     if (expected < 1) {
         throw new Error('Invalid UZ3 format: ' + name + ' (uncompressed_size=' + expected + ', minimum_size=1).');
     }
@@ -582,7 +601,7 @@ async function inspectFile(id, file, maxFileBytes) {
         return inspectUz2(id, file);
     }
     if (extension === 'uz3') {
-        return inspectUz3(id, file);
+        return inspectUz3(id, file, maxFileBytes);
     }
     if (extension === 'uz') {
         return inspectUz(id, file, maxFileBytes);
