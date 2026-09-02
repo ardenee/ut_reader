@@ -18,11 +18,13 @@ use RuntimeException;
 use Throwable;
 
 /**
- * Memory-bounded random-access reader for UE1/UE2 package metadata.
+ * Canonical memory-bounded random-access parser for UE1/UE2 package metadata.
  *
- * The standalone legacy readers retain the whole package in a PHP string. That
- * is useful for their property browser but is unnecessary for catalog inventory
- * and can exhaust a 128 MiB CLI worker on large texture/static-mesh packages.
+ * "Legacy" describes the UE1/UE2 serialized package family. This is not a
+ * fallback or second-choice reader: CatalogReaderResolver routes all catalog
+ * UE1/UE2 parsing through this implementation. CatalogUE1PackageReader and
+ * CatalogUE2PackageReader are only thin engine-key wrappers over this shared
+ * parser core.
  */
 final class CatalogLegacyBinaryStream
 {
