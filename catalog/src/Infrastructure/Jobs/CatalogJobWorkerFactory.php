@@ -15,7 +15,6 @@ use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoArchiveParentLifecycleRepair;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoArchiveProfileMismatchOutcomeRepair;
-use UnrealDb\Catalog\Infrastructure\Persistence\PdoInvalidUeSystemErrorBackfill;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoContention;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 use UnrealDb\Catalog\Infrastructure\Telemetry\CatalogSystemErrorRecorder;
@@ -64,20 +63,12 @@ final class CatalogJobWorkerFactory
             error_log('[UnrealDB archive outcome classification repair] ' . $error->getMessage());
         }
 
-        // Invalid Unreal package content is a System Error/data-quality problem,
-        // not retryable archive work. Backfill historical completed child outcomes
-        // once from durable metadata; no archive/package bytes are reopened.
-        try {
-            $invalidUeBackfill = (new PdoInvalidUeSystemErrorBackfill($db))->run($queueName);
-            if ($invalidUeBackfill['recorded'] > 0 || $invalidUeBackfill['failed'] > 0) {
-                error_log('[UnrealDB invalid UE System Error backfill] Recorded '
-                    . $invalidUeBackfill['recorded'] . ' invalid UE file error(s); '
-                    . $invalidUeBackfill['failed'] . ' persistence failure(s).');
-            }
-        } catch (\Throwable $error) {
-            error_log('[UnrealDB invalid UE System Error backfill] ' . $error->getMessage());
-        }
-
+        // Historical invalid-UE System Error backfill is intentionally NOT run
+        // from worker startup. Starting a queue for new work must never create
+        // unrelated historical error rows. Operators can run the dedicated
+        // ledger-only CLI when historical backfill is explicitly desired:
+        //   php catalog/bin/backfill-invalid-ue-system-errors.php
+        //
         // Older archive coordinators completed their parent row immediately after
         // enqueueing children. Reopen only those completed parents that still have
         // queued/running children so deploying the corrected lifecycle also repairs
