@@ -195,7 +195,7 @@ async function readFooter(file) {
     return footer;
 }
 
-async function listArchive(id, file, maxEntries) {
+async function listArchive(id, file) {
     const footer = await readFooter(file);
     const tableEnd = footer.size - FOOTER_BYTES;
     const tableBytes = tableEnd - footer.table;
@@ -208,11 +208,8 @@ async function listArchive(id, file, maxEntries) {
     if (table.length !== tableBytes) throw new Error('Could not completely read the UMOD directory table.');
 
     const cursor = {offset:0};
-    const maximumEntries = Math.min(50000, Math.max(1, Number(maxEntries || 50000)));
     const count = readCompactIndex(table, cursor);
-    if (count < 0 || count > maximumEntries) {
-        throw new Error('UMOD contains an invalid number of entries; limit is ' + maximumEntries + '.');
-    }
+    if (count < 0) throw new Error('UMOD contains an invalid negative entry count.');
 
     const entries = [];
     const format = String(file.name || '').split('.').pop().toLowerCase();
@@ -285,7 +282,7 @@ self.addEventListener('message', async function (event) {
     const id = String(data.id || '');
     try {
         if (data.type !== 'list') throw new Error('Unknown UMOD worker request.');
-        const entries = await listArchive(id, data.file, data.max_entries);
+        const entries = await listArchive(id, data.file);
         self.postMessage({type:'result', id:id, result:{entries:entries}});
     } catch (error) {
         self.postMessage({
