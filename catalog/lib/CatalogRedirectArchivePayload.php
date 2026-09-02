@@ -206,6 +206,39 @@ function catalog_redirect_archive_epic_uz3_payload(string $data, int $limit): ?a
     ];
 }
 
+/**
+ * Decode content presented with a .uz3 transport suffix.
+ *
+ * The canonical UT3 format above is always attempted first. Some historic
+ * redirect mirrors contain files named .uz3 whose bytes are instead Epic's
+ * older signature-5678 FCodec wrapper (signature + serialized filename +
+ * Huffman/RLE/MTF/BWT/RLE payload). Those files are content-compatible with
+ * the engine FCodec implementation and must not be interpreted as a gigantic
+ * UT3 uncompressed-size field merely because the suffix says .uz3.
+ *
+ * @return array{data:string,decoder:string,chunks:int,expected_bytes:int,embedded_filename?:string,wrapper_signature?:int}|null
+ */
+function catalog_redirect_archive_compatible_uz3_payload(string $data, int $limit): ?array
+{
+    $official = catalog_redirect_archive_epic_uz3_payload($data, $limit);
+    if ($official !== null) {
+        return $official;
+    }
+
+    $legacyHeader = catalog_legacy_uz_header($data, 5678);
+    if ($legacyHeader === null) {
+        return null;
+    }
+
+    $legacy = catalog_redirect_archive_legacy_payload($data, $limit);
+    if ($legacy === null) {
+        return null;
+    }
+
+    $legacy['decoder'] = 'uz3-compat-' . (string)$legacy['decoder'];
+    return $legacy;
+}
+
 /** @return array{data:string,decoder:string,chunks:int,expected_bytes:int,embedded_filename?:string,wrapper_signature?:int}|null */
 function catalog_redirect_archive_decode_payload(string $data, string $sourceExtension, int $maxOutputBytes = 0): ?array
 {
@@ -218,7 +251,7 @@ function catalog_redirect_archive_decode_payload(string $data, string $sourceExt
     return match ($sourceExtension) {
         'uz' => catalog_redirect_archive_legacy_payload($data, $limit),
         'uz2' => catalog_redirect_archive_epic_uz2_payload($data, $limit),
-        'uz3' => catalog_redirect_archive_epic_uz3_payload($data, $limit),
+        'uz3' => catalog_redirect_archive_compatible_uz3_payload($data, $limit),
         default => null,
     };
 }
@@ -249,6 +282,15 @@ function catalog_redirect_archive_decode_failure_message(
             . ' (actual_tag=' . $tag
             . ', actual_tag_hex=' . sprintf('0x%08X', $tag)
             . ', expected_tag=5678, expected_tag_hex=0x0000162E).';
+    }
+
+    $legacyHeader = catalog_legacy_uz_header($data, 5678);
+    if ($legacyHeader !== null) {
+        return 'Cannot decompress UZ3 compatibility FCodec wrapper: ' . $name
+            . ' (signature=5678'
+            . ', embedded_filename=' . (string)$legacyHeader['filename']
+            . ', compressed_size=' . $length
+            . ', output_limit=' . $limit . ').';
     }
 
     $declared = catalog_redirect_archive_read_u32($data, 4, 'le');
