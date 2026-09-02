@@ -72,6 +72,15 @@ final class CatalogVerifiedPackageInspector implements VerifiedPackageInspectorP
             throw new CatalogInvalidPackageException($headerReason, $headerCode, $headerArguments);
         }
 
+        $corruption = CatalogLegacyPackageCorruptionDetector::detectZeroToSpace($temporaryPath);
+        if ($corruption !== null) {
+            throw new CatalogInvalidPackageException(
+                'Unreal package appears to have NUL bytes replaced with spaces throughout the payload.',
+                'unreal.zero_to_space_corruption',
+                $corruption
+            );
+        }
+
         if ($strictProfile && empty($classification['ok_for_selected_game'])) {
             $suggested = [];
             foreach ($classification['suggested_games'] as $suggestion) {
