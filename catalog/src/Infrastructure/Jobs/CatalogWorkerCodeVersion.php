@@ -25,6 +25,7 @@ final class CatalogWorkerCodeVersion
             $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogWorkerProcessLauncher.php',
             $this->catalogRoot . '/src/Domain/Jobs/ClaimedJob.php',
             $this->catalogRoot . '/src/Domain/Jobs/JobResourcePolicy.php',
+            $this->catalogRoot . '/src/Domain/Package/CatalogUnrealPackageTag.php',
             $this->catalogRoot . '/src/Application/Jobs/JobWorker.php',
             $this->catalogRoot . '/src/Application/Jobs/JobFailureRetryPolicy.php',
             $this->catalogRoot . '/src/Application/Telemetry/CatalogInvalidUeErrorClassifier.php',
