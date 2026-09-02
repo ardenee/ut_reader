@@ -198,14 +198,18 @@ $check(
     'UZ/UZ2/UZ3 must be decoded and hashed in the browser; the 100-file manifest must compare decompressed package identity, not compressed wrapper size.'
 );
 
+$queueStarter = $read('src/Infrastructure/Jobs/CatalogQueueWorkerStarter.php');
 $check(
     'per_file_completion_does_not_reconcile_workers',
     str_contains($uploadApi, "if (\$action === 'wake')")
         && str_contains($client, 'async function wakePublicQueue(batchNumber)')
         && str_contains($client, 'await wakePublicQueue(batchNumber)')
         && str_contains($uploadApi, "'Upload complete. Validation is queued in the background.'")
-        && str_contains($uploadApi, 'CatalogQueueWorkerStarter'),
-    'Each file completion must return after durable job enqueue; worker-pool reconciliation is performed once at the batch wake boundary.'
+        && str_contains($uploadApi, 'CatalogQueueWorkerStarter')
+        && str_contains($queueStarter, '$launcher->start($queueName, 10000)')
+        && !str_contains($queueStarter, 'CatalogOrphanedJobRecovery')
+        && !str_contains($queueStarter, 'CatalogWorkerPoolReconciler'),
+    'Each file completion must return after durable enqueue; the batch wake may start missing processes but must not recover/reconcile unrelated historical jobs.'
 );
 
 $check(
@@ -468,6 +472,7 @@ foreach ([
     'src/Infrastructure/Legacy/LegacyUnverifiedFileStager.php',
     'src/Application/Unverified/Contract/UnverifiedFileStager.php',
     'src/Infrastructure/Jobs/CatalogPublicUploadJobHandler.php',
+    'src/Infrastructure/Jobs/CatalogQueueWorkerStarter.php',
     'src/Infrastructure/Jobs/CatalogPublicUploadMaintenanceJobHandler.php',
     'src/Domain/Jobs/JobType.php',
     'src/Infrastructure/Jobs/CatalogJobWorkerFactory.php',
