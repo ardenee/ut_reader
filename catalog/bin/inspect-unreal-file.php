@@ -19,6 +19,7 @@ $root = realpath(dirname(__DIR__)) ?: dirname(__DIR__);
 require_once $root . '/bootstrap/autoload.php';
 require_once $root . '/lib/CatalogRedirectArchive.php';
 require_once $root . '/lib/GameProfiles.php';
+require_once $root . '/lib/Scanner/CatalogScannerSupport.php';
 
 
 /** @return array{bytes:int,zero_bytes:int,space_bytes:int,first_4096_zero_bytes:int,first_4096_space_bytes:int} */
@@ -68,8 +69,134 @@ function inspect_unreal_byte_profile(string $path): array
     ];
 }
 
+/**
+ * @return array{status:string,reader_engine:string,issues:list<string>,validation_issues:array<int,mixed>,header:array<string,mixed>,name_count:?int,import_count:?int,export_count:?int}
+ */
+function inspect_unreal_full_validate(string $path, array $summary, ?array $corruption): array
+{
+    if ($corruption !== null) {
+        return [
+            'status' => 'FAILED',
+            'reader_engine' => '',
+            'issues' => ['Unreal package appears to have NUL bytes replaced with spaces throughout the payload.'],
+            'validation_issues' => [[
+                'code' => 'unreal.zero_to_space_corruption',
+                'reason' => 'Unreal package appears to have NUL bytes replaced with spaces throughout the payload.',
+                'arguments' => $corruption,
+            ]],
+            'header' => [],
+            'name_count' => null,
+            'import_count' => null,
+            'export_count' => null,
+        ];
+    }
+
+    if (empty($summary['ok'])) {
+        return [
+            'status' => 'FAILED',
+            'reader_engine' => '',
+            'issues' => [trim((string)($summary['reason'] ?? 'Invalid Unreal package header'))],
+            'validation_issues' => [[
+                'code' => trim((string)($summary['error_code'] ?? 'unreal.invalid_package')),
+                'reason' => trim((string)($summary['reason'] ?? 'Invalid Unreal package header')),
+                'arguments' => is_array($summary['error_arguments'] ?? null) ? $summary['error_arguments'] : [],
+            ]],
+            'header' => [],
+            'name_count' => null,
+            'import_count' => null,
+            'export_count' => null,
+        ];
+    }
+
+    $engine = strtoupper(trim((string)($summary['engine_hint'] ?? 'UNKNOWN'))) ?: 'UNKNOWN';
+    if (!in_array($engine, ['UE1', 'UE2', 'UE3', 'UE4', 'UE5'], true)) {
+        return [
+            'status' => 'FAILED',
+            'reader_engine' => '',
+            'issues' => ['Serialized Unreal package version is not mapped to a supported engine reader.'],
+            'validation_issues' => [[
+                'code' => 'unreal.unsupported_reader',
+                'reason' => 'Serialized Unreal package version is not mapped to a supported engine reader.',
+                'arguments' => [
+                    'package_version' => $summary['version'] ?? null,
+                    'licensee_version' => $summary['licensee'] ?? null,
+                    'engine_hint' => $engine,
+                ],
+            ]],
+            'header' => [],
+            'name_count' => null,
+            'import_count' => null,
+            'export_count' => null,
+        ];
+    }
+
+    try {
+        $config = catalog_config();
+        $readerClass = scanner_load_reader_class($config, $engine);
+        $reader = new $readerClass($path);
+
+        $issues = method_exists($reader, 'validatePackage')
+            ? $reader->validatePackage()
+            : (method_exists($reader, 'getDebugErrors') ? $reader->getDebugErrors() : []);
+        [$fatal, $notes] = scanner_split_reader_issues(is_array($issues) ? $issues : []);
+        $validationIssues = method_exists($reader, 'getValidationIssues')
+            ? $reader->getValidationIssues()
+            : [];
+
+        if ($fatal !== []) {
+            return [
+                'status' => 'FAILED',
+                'reader_engine' => $engine,
+                'issues' => array_values(array_map('strval', $fatal)),
+                'validation_issues' => is_array($validationIssues) ? $validationIssues : [],
+                'header' => method_exists($reader, 'getHeader') && is_array($reader->getHeader()) ? $reader->getHeader() : [],
+                'name_count' => null,
+                'import_count' => null,
+                'export_count' => null,
+            ];
+        }
+
+        foreach (['getHeader', 'getNames', 'getImports', 'getExports'] as $method) {
+            if (!method_exists($reader, $method)) {
+                throw new RuntimeException('Reader is missing method: ' . $method);
+            }
+        }
+
+        $header = $reader->getHeader();
+        $names = $reader->getNames();
+        $imports = $reader->getImports();
+        $exports = $reader->getExports();
+
+        if (!is_array($header) || !is_array($names) || !is_array($imports) || !is_array($exports)) {
+            throw new RuntimeException('Reader returned invalid package metadata.');
+        }
+
+        return [
+            'status' => 'OK',
+            'reader_engine' => $engine,
+            'issues' => array_values(array_map('strval', $notes)),
+            'validation_issues' => is_array($validationIssues) ? $validationIssues : [],
+            'header' => $header,
+            'name_count' => count($names),
+            'import_count' => count($imports),
+            'export_count' => count($exports),
+        ];
+    } catch (Throwable $error) {
+        return [
+            'status' => 'FAILED',
+            'reader_engine' => $engine,
+            'issues' => [get_class($error) . ': ' . $error->getMessage()],
+            'validation_issues' => [],
+            'header' => [],
+            'name_count' => null,
+            'import_count' => null,
+            'export_count' => null,
+        ];
+    }
+}
+
 /** @return array<string,mixed> */
-function inspect_unreal_file(string $inputPath): array
+function inspect_unreal_file(string $inputPath, bool $full = false): array
 {
     $resolvedPath = realpath($inputPath);
     if ($resolvedPath === false || !is_file($resolvedPath) || !is_readable($resolvedPath)) {
@@ -135,6 +262,27 @@ function inspect_unreal_file(string $inputPath): array
             'corruption_code' => $corruption !== null ? 'unreal.zero_to_space_corruption' : '',
             'corruption_arguments' => $corruption ?? [],
         ];
+
+        if ($full) {
+            $fullValidation = inspect_unreal_full_validate($parsePath, $summary, $corruption);
+            $result['full_validation'] = $fullValidation['status'];
+            $result['reader_engine'] = $fullValidation['reader_engine'];
+            $result['reader_issues'] = $fullValidation['issues'];
+            $result['validation_issues'] = $fullValidation['validation_issues'];
+            $result['reader_header'] = $fullValidation['header'];
+            $result['name_count'] = $fullValidation['name_count'];
+            $result['import_count'] = $fullValidation['import_count'];
+            $result['export_count'] = $fullValidation['export_count'];
+
+            $firstValidation = is_array($fullValidation['validation_issues'][0] ?? null)
+                ? $fullValidation['validation_issues'][0]
+                : [];
+            $result['validation_code'] = trim((string)($firstValidation['code'] ?? ''));
+            $result['validation_reason'] = trim((string)($firstValidation['reason'] ?? ''));
+            $result['validation_arguments'] = is_array($firstValidation['arguments'] ?? null)
+                ? $firstValidation['arguments']
+                : [];
+        }
 
         if (strlen($header) >= 16) {
             $bytes = array_values(unpack('C*', substr($header, 0, 16)) ?: []);
@@ -203,6 +351,30 @@ function inspect_unreal_print_human(array $result): void
     echo 'Package version              : ' . var_export($result['package_version'] ?? null, true) . PHP_EOL;
     echo 'Licensee version             : ' . var_export($result['licensee_version'] ?? null, true) . PHP_EOL;
     echo 'Engine hint                  : ' . (string)($result['engine_hint'] ?? 'UNKNOWN') . PHP_EOL;
+    if (array_key_exists('full_validation', $result)) {
+        echo 'Full reader validation       : ' . (string)$result['full_validation'] . PHP_EOL;
+        echo 'Reader engine                : ' . (string)($result['reader_engine'] ?? '') . PHP_EOL;
+        if (($result['full_validation'] ?? '') === 'OK') {
+            echo 'Names                        : ' . (string)($result['name_count'] ?? 0) . PHP_EOL;
+            echo 'Imports                      : ' . (string)($result['import_count'] ?? 0) . PHP_EOL;
+            echo 'Exports                      : ' . (string)($result['export_count'] ?? 0) . PHP_EOL;
+        } else {
+            if (!empty($result['validation_code'])) {
+                echo 'Validation code              : ' . (string)$result['validation_code'] . PHP_EOL;
+            }
+            if (!empty($result['validation_reason'])) {
+                echo 'Validation reason            : ' . (string)$result['validation_reason'] . PHP_EOL;
+            }
+            if (!empty($result['validation_arguments'])) {
+                echo 'Validation values            : '
+                    . json_encode($result['validation_arguments'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                    . PHP_EOL;
+            }
+            foreach ((array)($result['reader_issues'] ?? []) as $issue) {
+                echo 'Reader issue                 : ' . trim((string)$issue) . PHP_EOL;
+            }
+        }
+    }
     echo 'Zero bytes (whole file)      : ' . (string)($result['zero_bytes'] ?? 0) . PHP_EOL;
     echo 'Space bytes (whole file)     : ' . (string)($result['space_bytes'] ?? 0) . PHP_EOL;
     echo 'Zero bytes (first 4096)      : ' . (string)($result['first_4096_zero_bytes'] ?? 0) . PHP_EOL;
@@ -240,10 +412,20 @@ function inspect_unreal_print_human(array $result): void
 
 $arguments = array_slice($argv, 1);
 $json = false;
+$full = false;
+$recursive = false;
 $paths = [];
 foreach ($arguments as $argument) {
     if ($argument === '--json') {
         $json = true;
+        continue;
+    }
+    if ($argument === '--full') {
+        $full = true;
+        continue;
+    }
+    if ($argument === '--recursive') {
+        $recursive = true;
         continue;
     }
     $paths[] = $argument;
@@ -252,17 +434,44 @@ foreach ($arguments as $argument) {
 if ($paths === []) {
     fwrite(
         STDERR,
-        "Usage: php catalog/bin/inspect-unreal-file.php [--json] <file> [file ...]\n"
+        "Usage: php catalog/bin/inspect-unreal-file.php [--json] [--full] [--recursive] <file-or-directory> [...]\n"
     );
     exit(2);
 }
 
+$expandedPaths = [];
+foreach ($paths as $path) {
+    if (is_dir($path)) {
+        if (!$recursive) {
+            fwrite(STDERR, 'Directory requires --recursive: ' . $path . PHP_EOL);
+            exit(2);
+        }
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($path, FilesystemIterator::SKIP_DOTS)
+        );
+        foreach ($iterator as $item) {
+            if (!$item->isFile()) {
+                continue;
+            }
+            $candidate = $item->getPathname();
+            if (preg_match('/\\.(?:uz|uz2|uz3)$/i', $candidate) === 1) {
+                $expandedPaths[] = $candidate;
+            }
+        }
+        continue;
+    }
+    $expandedPaths[] = $path;
+}
+$expandedPaths = array_values(array_unique($expandedPaths));
+natcasesort($expandedPaths);
+$expandedPaths = array_values($expandedPaths);
+
 $results = [];
 $failed = false;
-foreach ($paths as $path) {
-    $result = inspect_unreal_file($path);
+foreach ($expandedPaths as $path) {
+    $result = inspect_unreal_file($path, $full);
     $results[] = $result;
-    if (isset($result['error'])) {
+    if (isset($result['error']) || ($full && ($result['full_validation'] ?? '') !== 'OK')) {
         $failed = true;
     }
 }
@@ -275,6 +484,36 @@ if ($json) {
 } else {
     foreach ($results as $result) {
         inspect_unreal_print_human($result);
+    }
+
+    if ($recursive || count($results) > 1) {
+        $okCount = 0;
+        $failedCount = 0;
+        $codes = [];
+        foreach ($results as $result) {
+            $isOk = !isset($result['error'])
+                && (!$full || ($result['full_validation'] ?? '') === 'OK');
+            if ($isOk) {
+                $okCount++;
+                continue;
+            }
+            $failedCount++;
+            $code = trim((string)($result['validation_code'] ?? $result['corruption_code'] ?? $result['error_code'] ?? ''));
+            if ($code === '') {
+                $code = isset($result['error']) ? 'runtime_error' : 'unclassified_failure';
+            }
+            $codes[$code] = ($codes[$code] ?? 0) + 1;
+        }
+        arsort($codes);
+
+        echo PHP_EOL . str_repeat('=', 68) . PHP_EOL;
+        echo 'SUMMARY' . PHP_EOL;
+        echo 'Files tested                 : ' . count($results) . PHP_EOL;
+        echo 'Passed                       : ' . $okCount . PHP_EOL;
+        echo 'Failed                       : ' . $failedCount . PHP_EOL;
+        foreach ($codes as $code => $count) {
+            echo 'Failure ' . $code . ' : ' . $count . PHP_EOL;
+        }
     }
 }
 
