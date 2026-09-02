@@ -367,7 +367,7 @@ function catalog_pak_entry_data_offset(string $path, array $entry): int
 {
     $offset = (int)$entry['offset'];
     $head = catalog_pak_read_bytes($path, $offset, 4);
-    if ($head === "\xC1\x83\x2A\x9E" || $head === "\x9E\x2A\x83\xC1") {
+    if (\UnrealDb\Catalog\Domain\Package\CatalogUnrealPackageTag::isSupportedBytes($head)) {
         return $offset;
     }
 
