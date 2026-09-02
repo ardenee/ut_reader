@@ -12,7 +12,6 @@ require_once dirname(__DIR__, 2) . '/lib/CatalogRedirectArchive.php';
 require_once dirname(__DIR__, 2) . '/lib/GameProfiles.php';
 
 use UnrealDb\Catalog\Infrastructure\Import\CatalogBucketBatchFinalizer;
-use UnrealDb\Catalog\Infrastructure\Import\CatalogBucketProcessingActive;
 use UnrealDb\Catalog\Presentation\Http\JsonResponse;
 
 try {
@@ -52,7 +51,7 @@ try {
         $startWorker = $payload['start_worker'];
     }
 
-    $prepareQueue = true;
+    $prepareQueue = false;
     if (array_key_exists('prepare_queue', $payload)) {
         if (!is_bool($payload['prepare_queue'])) {
             JsonResponse::error('invalid_prepare_queue', 'prepare_queue must be a JSON boolean.', 400);
@@ -70,21 +69,12 @@ try {
     }
     $uploadIds = array_values($uploadIds);
 
-    try {
-        $finalized = (new CatalogBucketBatchFinalizer($application->db, $application->config))->finalize(
-            $uploadIds,
-            $userId,
-            $prepareQueue,
-            $startWorker
-        );
-    } catch (CatalogBucketProcessingActive $blocked) {
-        JsonResponse::error(
-            'bucket_processing_not_paused',
-            $blocked->getMessage(),
-            409,
-            ['active_queues' => $blocked->activeQueues]
-        );
-    }
+    $finalized = (new CatalogBucketBatchFinalizer($application->db, $application->config))->finalize(
+        $uploadIds,
+        $userId,
+        $prepareQueue,
+        $startWorker
+    );
 
     $messages = [];
     $jobIds = [];
