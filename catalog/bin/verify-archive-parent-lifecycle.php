@@ -31,6 +31,7 @@ $coordinator = $read('src/Infrastructure/Jobs/CatalogArchiveWorkflowJobHandler.p
 $factory = $read('src/Infrastructure/Jobs/CatalogJobWorkerFactory.php');
 $outcomes = $read('src/Infrastructure/Persistence/PdoArchiveChildOutcomeQuery.php');
 $repair = $read('src/Infrastructure/Persistence/PdoArchiveParentLifecycleRepair.php');
+$maintenance = $read('bin/repair-background-job-compatibility.php');
 $fingerprint = $read('src/Infrastructure/Jobs/CatalogWorkerCodeVersion.php');
 $leaseStore = $read('src/Infrastructure/Persistence/PdoJobLeaseStore.php');
 
@@ -80,26 +81,29 @@ $record(
 );
 
 $record(
-    'legacy_completed_parents_are_reopened',
-    str_contains($factory, 'PdoArchiveParentLifecycleRepair')
-        && str_contains($factory, 'reopenCompletedParentsWithActiveChildren($queueName)')
+    'legacy_completed_parent_repair_is_explicit',
+    !str_contains($factory, 'PdoArchiveParentLifecycleRepair')
+        && str_contains($maintenance, 'PdoArchiveParentLifecycleRepair')
+        && str_contains($maintenance, "array_key_exists('execute', $options)")
+        && str_contains($maintenance, 'reopenCompletedParentsWithActiveChildren($queue)')
         && str_contains($repair, 'p.status="completed"')
         && str_contains($repair, 'c.status IN ("queued","running")')
         && str_contains($repair, 'status="queued",attempts=GREATEST(attempts-1,0)')
         && str_contains($repair, 'result_json=NULL')
         && str_contains($repair, "'archive_result' => \$archiveResult"),
-    'Deploying the fix must reopen only legacy completed archive parents that still have active children and preserve their extraction result in coordinator progress.'
+    'Historical parent repair must remain explicit maintenance; ordinary worker construction must not reopen old rows.'
 );
 
 $record(
-    'worker_fingerprint_tracks_archive_lifecycle',
+    'worker_fingerprint_tracks_runtime_not_maintenance',
     str_contains($fingerprint, '/Persistence/PdoArchiveChildOutcomeQuery.php')
-        && str_contains($fingerprint, '/Persistence/PdoArchiveParentLifecycleRepair.php')
+        && !str_contains($fingerprint, '/Persistence/PdoArchiveParentLifecycleRepair.php')
         && str_contains($fingerprint, '/Jobs/CatalogArchiveWorkflowJobHandler.php'),
-    'Detached workers must be reconciled when any archive lifecycle component changes.'
+    'Detached workers must track archive runtime code, while maintenance-only repair changes must not make live workers stale.'
 );
 
 $syntaxTargets = [
+    'bin/repair-background-job-compatibility.php',
     'src/Infrastructure/Jobs/CatalogArchiveWorkflowJobHandler.php',
     'src/Infrastructure/Persistence/PdoArchiveChildOutcomeQuery.php',
     'src/Infrastructure/Persistence/PdoArchiveParentLifecycleRepair.php',
