@@ -142,6 +142,71 @@ final class PdoBackgroundJobFileTreeQuery
     }
 
     /**
+     * Selects the logical source roots matching the same filters as roots()
+     * without loading child counts or row payloads. This is used by file-centric
+     * bulk actions so "all matching" is not limited to the current 200-row page.
+     *
+     * @return array{ids:list<int>,total:int,limited:bool,limit:int}
+     */
+    public function matchingRootIds(
+        string $queue,
+        string $state,
+        string $search,
+        string $jobType,
+        int $limit = 10000
+    ): array {
+        $limit = max(1, min($limit, 10000));
+        $jobType = trim($jobType);
+        $logicalRootScope = $jobType === self::PROFILED_UPLOAD_BATCH_JOB_TYPE
+            ? 'j.parent_job_id IS NULL'
+            : $this->logicalRootExpression('j');
+
+        $where = ['j.queue_name=?'];
+        $params = [$queue];
+        if ($jobType !== '') {
+            $where[] = 'j.job_type=?';
+            $params[] = $jobType;
+        }
+        if ($search !== '') {
+            [$searchSql, $searchParams] = $this->rootSearchCondition($search);
+            $where[] = $searchSql;
+            array_push($params, ...$searchParams);
+        }
+        $where[] = $logicalRootScope;
+
+        $issue = $this->ownIssueExpression('j');
+        $active = 'j.status IN ("queued","running")';
+        $stateCondition = $this->stateCondition($state, $issue, $active, 'j');
+        if ($stateCondition !== '') {
+            $where[] = $stateCondition;
+        }
+        $whereSql = implode(' AND ', $where);
+
+        $count = $this->db->prepare(
+            'SELECT COUNT(*) FROM ue_background_jobs j WHERE ' . $whereSql
+        );
+        $count->execute($params);
+        $total = max(0, (int)$count->fetchColumn());
+
+        $statement = $this->db->prepare(
+            'SELECT j.id FROM ue_background_jobs j WHERE ' . $whereSql
+            . ' ORDER BY j.id ASC LIMIT ' . $limit
+        );
+        $statement->execute($params);
+        $ids = array_values(array_filter(
+            array_map('intval', $statement->fetchAll(PDO::FETCH_COLUMN) ?: []),
+            static fn(int $id): bool => $id > 0
+        ));
+
+        return [
+            'ids' => $ids,
+            'total' => $total,
+            'limited' => $total > count($ids),
+            'limit' => $limit,
+        ];
+    }
+
+    /**
      * @return array{rows:list<array<string,mixed>>,total:int,page:int,pages:int,per_page:int}
      */
     public function children(string $queue, int $parentJobId, int $page, int $perPage): array

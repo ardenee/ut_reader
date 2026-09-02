@@ -184,6 +184,12 @@ try {
             'disabled' => true,
             'attributes' => ['id' => 'jobs-retry-selected'],
         ])
+        . CatalogUi::button('Retry all matching', [
+            'variant' => 'secondary',
+            'size' => 'sm',
+            'disabled' => true,
+            'attributes' => ['id' => 'jobs-retry-all-matching'],
+        ])
         . CatalogUi::button('Stop selected', [
             'variant' => 'danger',
             'size' => 'sm',

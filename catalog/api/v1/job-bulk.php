@@ -9,10 +9,12 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/_bootstrap.php';
 
+use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogJobDisplayStatus;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogQueueWorkerStarter;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoAffectedDependencyRetrySelection;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoBackgroundJobBulkAction;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoBackgroundJobFileTreeQuery;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoCompletedArchiveRerunSelection;
 use UnrealDb\Catalog\Presentation\Http\JsonResponse;
 
@@ -31,13 +33,21 @@ try {
     $queueName = trim((string)($payload['queue'] ?? ($application->config['queue']['name'] ?? 'catalog')));
     $status = strtolower(trim((string)($payload['status'] ?? '')));
     $search = trim((string)($payload['search'] ?? ''));
+    $fileState = strtolower(trim((string)($payload['file_state'] ?? 'all')));
+    $jobType = trim((string)($payload['job_type'] ?? ''));
     $userId = isset($_SESSION['user']['id']) ? (int)$_SESSION['user']['id'] : null;
 
     if (!in_array($action, ['restart', 'cancel', 'delete'], true)) {
         JsonResponse::error('invalid_action', 'Choose restart, cancel or delete.', 400);
     }
-    if (!in_array($scope, ['selected', 'matching'], true)) {
-        JsonResponse::error('invalid_scope', 'Choose selected jobs or all matching jobs.', 400);
+    if (!in_array($scope, ['selected', 'matching', 'file_matching'], true)) {
+        JsonResponse::error('invalid_scope', 'Choose selected jobs, all matching jobs or all matching source jobs.', 400);
+    }
+    if ($scope === 'file_matching' && !in_array($fileState, ['all', 'working', 'issue', 'completed', 'stopped'], true)) {
+        JsonResponse::error('invalid_file_state', 'Unsupported file state filter.', 400);
+    }
+    if ($scope === 'file_matching' && $jobType !== '' && !in_array($jobType, JobType::all(), true)) {
+        JsonResponse::error('invalid_job_type', 'Unsupported job type filter.', 400);
     }
     if ($queueName === '' || strlen($queueName) > 80 || preg_match('/^[A-Za-z0-9._:-]+$/', $queueName) !== 1) {
         JsonResponse::error('invalid_queue', 'A valid queue name is required.', 400);
@@ -70,12 +80,28 @@ try {
         }
     }
 
+    $matchingSourceTotal = 0;
+    $matchingSourceLimited = false;
+    if ($scope === 'file_matching') {
+        $selection = (new PdoBackgroundJobFileTreeQuery($application->db))->matchingRootIds(
+            $queueName,
+            $fileState,
+            $search,
+            $jobType,
+            10000
+        );
+        $jobIds = $selection['ids'];
+        $matchingSourceTotal = max(0, (int)$selection['total']);
+        $matchingSourceLimited = !empty($selection['limited']);
+    }
+
     // Release the administrator session before bounded database work so one bulk
     // operation cannot serialize every other request from this browser.
     if (session_status() === PHP_SESSION_ACTIVE) {
         session_write_close();
     }
 
+    $sourceSelection = in_array($scope, ['selected', 'file_matching'], true);
     $selectedSourceJobs = count($jobIds);
     $affectedRecovery = [
         'handled_root_ids' => [],
@@ -92,7 +118,7 @@ try {
         'skipped' => 0,
     ];
 
-    if ($action === 'restart' && $scope === 'selected' && $jobIds !== []) {
+    if ($action === 'restart' && $sourceSelection && $jobIds !== []) {
         $now = gmdate('Y-m-d H:i:s');
 
         $affectedRecovery = (new PdoAffectedDependencyRetrySelection($application->db))
@@ -129,10 +155,11 @@ try {
         }
     }
 
-    if ($scope !== 'selected' || $jobIds !== []) {
+    if (!$sourceSelection || $jobIds !== []) {
+        $executionScope = $sourceSelection ? 'selected' : $scope;
         $result = (new PdoBackgroundJobBulkAction($application->db, $application->config))->execute(
             $action,
-            $scope,
+            $executionScope,
             $queueName,
             $status,
             $search,
@@ -190,6 +217,14 @@ try {
         $result['completed_archive_source_jobs'] = count($completedArchiveRerun['handled_root_ids']);
         $result['completed_archive_descendant_jobs'] = $archiveDescendants;
         $result['archive_rerun_expanded'] = true;
+    }
+
+    $result['scope'] = $scope;
+    if ($scope === 'file_matching') {
+        $result['matching_source_jobs'] = $matchingSourceTotal;
+        $result['selected_source_jobs'] = $selectedSourceJobs;
+        $result['selection_limited'] = $matchingSourceLimited;
+        $result['limited'] = !empty($result['limited']) || $matchingSourceLimited;
     }
 
     if (!empty($result['worker_start_required'])) {

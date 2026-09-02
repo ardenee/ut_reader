@@ -40,6 +40,7 @@
     const selectVisible = document.getElementById('jobs-select-visible');
     const selectedCount = document.getElementById('jobs-selected-count');
     const retrySelectedButton = document.getElementById('jobs-retry-selected');
+    const retryAllMatchingButton = document.getElementById('jobs-retry-all-matching');
     const stopSelectedButton = document.getElementById('jobs-stop-selected');
     const deleteSelectedButton = document.getElementById('jobs-delete-selected');
     let jobTypeSelect = null;
@@ -295,6 +296,16 @@
             retrySelectedButton.title = selectedSources > 0
                 ? 'Retry/recover the selected source job(s). The server will skip or block sources that cannot safely be retried.'
                 : 'Select one or more source rows.';
+        }
+        if (retryAllMatchingButton) {
+            const matchingSources = Math.max(0, Number(state.meta.total || 0));
+            retryAllMatchingButton.disabled = matchingSources === 0;
+            retryAllMatchingButton.textContent = matchingSources > 0
+                ? 'Retry all matching (' + matchingSources.toLocaleString() + ')'
+                : 'Retry all matching';
+            retryAllMatchingButton.title = matchingSources > 0
+                ? 'Retry/recover every source job matching the current queue, state, job-type and search filters.'
+                : 'No source jobs match the current filters.';
         }
         if (stopSelectedButton) {
             const stoppable = stoppableSelectedIds().length;
@@ -683,6 +694,51 @@
         }
     }
 
+    async function retryAllMatching() {
+        const matchingSources = Math.max(0, Number(state.meta.total || 0));
+        if (!matchingSources) {
+            setNotice('No source jobs match the current filters.', 5000);
+            return;
+        }
+        if (!window.confirm(
+            'Retry/recover all ' + matchingSources.toLocaleString()
+            + ' source job(s) matching the current filters? '
+            + 'Jobs that cannot safely be retried will be skipped or blocked.'
+        )) return;
+
+        if (retryAllMatchingButton) retryAllMatchingButton.disabled = true;
+        try {
+            const payload = await postJson(bulkUrl, {
+                action: 'restart',
+                scope: 'file_matching',
+                queue: queue,
+                file_state: state.filter,
+                job_type: state.jobType,
+                search: state.search,
+                status: '',
+                job_ids: []
+            });
+            const data = payload && payload.data ? payload.data : {};
+            const affected = Math.max(0, Number(data.affected || 0));
+            const blocked = Math.max(0, Number(data.retry_blocked || 0));
+            const skipped = Math.max(0, Number(data.skipped || 0));
+            const limited = Boolean(data.limited);
+            let text = 'Retry all matching: ' + affected + ' restarted'
+                + (blocked ? ', ' + blocked + ' blocked as non-retryable' : '')
+                + (skipped > blocked ? ', ' + (skipped - blocked) + ' skipped' : '') + '.';
+            if (limited) {
+                text += ' The 10,000-source safety limit was reached; run Retry all matching again for the remainder.';
+            }
+            setNotice(text, limited ? 12000 : 9000);
+            state.selected.clear();
+        } catch (error) {
+            setNotice(error.message || 'Could not retry all matching jobs.', 10000);
+        } finally {
+            await refresh();
+            updateSelectionControls();
+        }
+    }
+
     async function stopSelected() {
         const ids = stoppableSelectedIds();
         if (!ids.length) {
@@ -835,6 +891,7 @@
 
     if (selectVisible) selectVisible.addEventListener('change', function () { setVisibleSelection(selectVisible.checked); });
     if (retrySelectedButton) retrySelectedButton.addEventListener('click', retrySelected);
+    if (retryAllMatchingButton) retryAllMatchingButton.addEventListener('click', retryAllMatching);
     if (stopSelectedButton) stopSelectedButton.addEventListener('click', stopSelected);
     if (deleteSelectedButton) deleteSelectedButton.addEventListener('click', deleteSelected);
     if (firstButton) firstButton.addEventListener('click', function () { state.page = 1; clearSelectionAndChildren(); refresh(); });
