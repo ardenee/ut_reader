@@ -74,6 +74,7 @@ final class CatalogWorkerCodeVersion
             $this->catalogRoot . '/src/Infrastructure/Import/CatalogBucketPakContainerStore.php',
             $this->catalogRoot . '/src/Infrastructure/Import/CatalogImportOutcome.php',
             $this->catalogRoot . '/src/Infrastructure/Import/CatalogInvalidPackageException.php',
+            $this->catalogRoot . '/src/Infrastructure/Import/CatalogLegacyPackageCorruptionDetector.php',
             $this->catalogRoot . '/src/Infrastructure/Import/CatalogProfileMismatchException.php',
             $this->catalogRoot . '/src/Infrastructure/Import/CatalogUnverifiedPackageIndexer.php',
             $this->catalogRoot . '/src/Infrastructure/Import/CatalogVerifiedPackageInspector.php',
