@@ -468,38 +468,6 @@
         throw lastError || new Error(operation + ' failed.');
     }
 
-    async function processingState(action) {
-        const data = new FormData();
-        data.append('action', action);
-        return requestFormRetry(data, null, 'Upload batch', action === 'begin_batch' ? 'Worker pause request' : 'Worker status check', 120000, -1);
-    }
-
-    function workerDescription(processing) {
-        const workers = processing && Array.isArray(processing.workers) ? processing.workers : [];
-        const active = workers.find(function (worker) { return Boolean(worker.active); });
-        if (!active) return 'Upload Bucket worker';
-        const job = active.running_job || {};
-        const parts = [];
-        if (job.id) parts.push('job #' + Number(job.id));
-        if (job.file) parts.push(String(job.file));
-        if (Number(job.percent || 0) > 0) parts.push(Number(job.percent) + '%');
-        if (job.message) parts.push(String(job.message));
-        return parts.length ? parts.join(' · ') : String(active.queue || 'Upload Bucket worker');
-    }
-
-    async function waitUntilPaused(initialBody) {
-        let body = initialBody;
-        let processing = body && body.processing ? body.processing : {};
-        while (!processing.ready) {
-            if (stopRequested) throw stoppedError();
-            scheduleProgress(0, 'Waiting for ' + workerDescription(processing) + ' to finish its current file.', '', true);
-            await sleep(1000);
-            body = await processingState('batch_status');
-            processing = body.processing || {};
-        }
-        scheduleProgress(100, 'Previous Upload Bucket processing is paused.', '', false);
-    }
-
     function ensureInspectorWorker() {
         if (activeInspector) return activeInspector;
         activeInspector = new Worker(workerUrl);
@@ -718,21 +686,17 @@
     async function finalizeUploaded(uploaded, totals, totalFiles) {
         if (!uploaded.length) return;
 
-        scheduleProgress(0, 'All transfers are complete. Requesting a safe Upload Bucket processing pause...', '', true);
-        let initialProcessing;
-        try {
-            initialProcessing = await processingState('begin_batch');
-            await waitUntilPaused(initialProcessing);
-        } catch (error) {
-            throw new Error('Could not request a safe processing pause: ' + (error.message || 'unknown error'));
-        }
+        // Durable queue handoff is append-only. Do not pause or wait for an
+        // existing Upload Bucket worker: a second batch can be queued while an
+        // earlier long-running batch continues processing.
+        scheduleProgress(0, 'Finalizing uploaded files into the durable processing queue...', '', true);
 
         for (let offset = 0; offset < uploaded.length; offset += FINALIZE_BATCH_SIZE) {
             if (stopRequested) throw stoppedError();
             const slice = uploaded.slice(offset, offset + FINALIZE_BATCH_SIZE);
             const data = await postBatch({
                 upload_ids: slice.map(function (item) { return item.uploadId; }),
-                prepare_queue: !queuePrepared,
+                prepare_queue: false,
                 start_worker: false
             }, 'Post-upload queue finalisation', false);
             queuePrepared = true;
