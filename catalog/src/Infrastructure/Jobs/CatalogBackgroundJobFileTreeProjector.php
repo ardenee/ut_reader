@@ -63,6 +63,12 @@ final class CatalogBackgroundJobFileTreeProjector
             $row['child_count'] = $childCount;
             $row['has_children'] = $childCount > 0;
             $row['result_label'] = $this->resultLabel($displayStatus, $result);
+            $row['can_revalidate'] = $queueStatus === 'completed'
+                && $displayStatus === 'invalid_ue_package'
+                && max(0, (int)($result['file_id'] ?? 0)) > 0;
+            $row['revalidate_file_id'] = $row['can_revalidate']
+                ? max(0, (int)($result['file_id'] ?? 0))
+                : 0;
         }
         unset($row);
         return $rows;
