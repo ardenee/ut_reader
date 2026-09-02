@@ -163,11 +163,7 @@ final class CatalogArchiveExtractor
         }
 
         $entries = [];
-        $maxEntries = $this->maxEntries();
         try {
-            if ($zip->numFiles > $maxEntries) {
-                throw new \RuntimeException('Archive contains too many entries; limit is ' . number_format($maxEntries) . '.');
-            }
             for ($index = 0; $index < $zip->numFiles; $index++) {
                 $stat = $zip->statIndex($index, \ZipArchive::FL_UNCHANGED);
                 if (!is_array($stat)) {
@@ -254,11 +250,6 @@ final class CatalogArchiveExtractor
                 'backend' => 'libarchive',
                 'format' => $extension,
             ];
-            if (count($entries) > $this->maxEntries()) {
-                throw new \RuntimeException(
-                    'Archive contains too many entries; limit is ' . number_format($this->maxEntries()) . '.'
-                );
-            }
         }
 
         return $this->stableOrder($entries);
@@ -684,11 +675,6 @@ final class CatalogArchiveExtractor
             return $path !== 0 ? $path : ((int)$left['index'] <=> (int)$right['index']);
         });
         return array_values($entries);
-    }
-
-    private function maxEntries(): int
-    {
-        return max(1, min(100000, (int)($this->config['archive']['max_entries'] ?? 10000)));
     }
 
     private function requireArchive(string $archivePath, string $archiveName): void
