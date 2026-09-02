@@ -206,6 +206,101 @@ final class CatalogUnverifiedMetadataRepairService
         return array_values(array_unique($reasons));
     }
 
+    /**
+     * Queue a forced current-code reparse for one retained Unverified file.
+     * This is deliberately separate from retrying its old upload transport job:
+     * the browser/archive source may already have been consumed, while the
+     * durable Unverified file is the authoritative retained copy.
+     *
+     * @return array{queue:string,job_id:int,file_id:int,queue_game_id:int,queue_name:string}
+     */
+    public function queueFileRevalidation(int $fileId, ?int $createdBy = null): array
+    {
+        if ($fileId < 1) {
+            throw new \InvalidArgumentException('A positive retained Unverified file ID is required.');
+        }
+        $this->staging->ensureSchema();
+
+        $row = \catalog_one(
+            $this->db,
+            'SELECT id,original_name,file_size,unverified_queue_game_id,unverified_queue_name '
+            . 'FROM ue_files WHERE id=? AND scan_status="unverified" LIMIT 1',
+            [$fileId]
+        );
+        if (!$row) {
+            throw new \RuntimeException(
+                'The invalid-package job no longer has a retained Unverified file to revalidate.'
+            );
+        }
+
+        $queueGameId = max(0, (int)($row['unverified_queue_game_id'] ?? 0));
+        $queueName = basename(trim((string)($row['unverified_queue_name'] ?? '')));
+        if ($queueName === '' || $queueName !== trim((string)($row['unverified_queue_name'] ?? ''))) {
+            throw new \RuntimeException('The retained Unverified queue filename is invalid.');
+        }
+
+        if ($queueGameId === 0) {
+            $game = CatalogUnverifiedQueueStorage::bucketGame();
+        } else {
+            $game = \catalog_one(
+                $this->db,
+                'SELECT id,name,slug,profile_id FROM ue_games WHERE id=? LIMIT 1',
+                [$queueGameId]
+            );
+            if (!$game) {
+                throw new \RuntimeException('The retained Unverified source game no longer exists.');
+            }
+        }
+
+        $directory = CatalogUnverifiedQueueStorage::unverifiedDirectory($this->config, $game, false);
+        $path = $directory . DIRECTORY_SEPARATOR . $queueName;
+        if (!is_file($path)
+            || is_link($path)
+            || !CatalogUnverifiedQueueStorage::pathInside($path, $directory)) {
+            throw new \RuntimeException(
+                'The retained Unverified source file is no longer present on disk; it cannot be revalidated without another source copy.'
+            );
+        }
+        $size = (int)(filesize($path) ?: 0);
+        if ($size < 1) {
+            throw new \RuntimeException('The retained Unverified source file is empty.');
+        }
+
+        $jobQueueName = (new CatalogBucketBatchQueue($this->db, $this->config))->queueName();
+        $version = substr(hash_file(
+            'sha256',
+            dirname(__DIR__) . DIRECTORY_SEPARATOR . 'Readers' . DIRECTORY_SEPARATOR . 'CatalogLegacyPackageReader.php'
+        ) ?: hash('sha256', 'unverified-revalidate'), 0, 16);
+        $dedupeKey = 'unverified-revalidate:' . $fileId . ':' . $version;
+
+        $jobId = (new PdoJobQueue($this->db))->enqueue(
+            $jobQueueName,
+            JobType::REPAIR_UNVERIFIED_METADATA,
+            [
+                'queue_game_id' => $queueGameId,
+                'queue_name' => $queueName,
+                'original_name' => trim((string)($row['original_name'] ?? '')) ?: $queueName,
+                'expected_size' => $size,
+                'missing_reasons' => ['Explicit current-code revalidation requested from Background Jobs'],
+                'requested_by' => $createdBy,
+                'revalidation_file_id' => $fileId,
+            ],
+            6,
+            null,
+            $dedupeKey,
+            $createdBy,
+            3
+        );
+
+        return [
+            'queue' => $jobQueueName,
+            'job_id' => $jobId,
+            'file_id' => $fileId,
+            'queue_game_id' => $queueGameId,
+            'queue_name' => $queueName,
+        ];
+    }
+
     /** @return array{scope_count:int,candidate_count:int,job_ids:list<int>,queue:string} */
     public function queueRepairs(int $sourceGameId, ?int $createdBy = null): array
     {
