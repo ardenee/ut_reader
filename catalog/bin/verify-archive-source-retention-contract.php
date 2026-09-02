@@ -51,7 +51,7 @@ $record(
     str_contains($handler, 'source archive retained because extraction had unresolved failures')
         && str_contains($handler, "'source_retained' => true")
         && str_contains($handler, 'terminalArchiveCapabilityResult'),
-    'Only unresolved extraction/decoder failures should retain the archive recovery source.'
+    'At the extraction layer, unresolved decoder/member failures mark the archive source retained; the coordinator may additionally retain it for child outcomes.'
 );
 
 $record(
