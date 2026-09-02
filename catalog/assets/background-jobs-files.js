@@ -398,6 +398,14 @@
         row.appendChild(statusCell);
 
         const controlCell = create('td', 'jobs-file-control');
+        if (depth === 0 && file.can_revalidate) {
+            const revalidate = create('button', 'ui-icon-action ui-icon-action--secondary ui-icon-action--sm jobs-file-revalidate', '↻');
+            revalidate.type = 'button';
+            revalidate.setAttribute('aria-label', 'Revalidate with current code');
+            revalidate.title = 'Re-read the retained Unverified source with the current package reader. No re-upload is required.';
+            revalidate.addEventListener('click', function () { revalidateFile(file, revalidate); });
+            controlCell.appendChild(revalidate);
+        }
         if (depth === 0 && supportsSourceDownload(file)) {
             const download = create('a', 'ui-icon-action ui-icon-action--secondary ui-icon-action--sm jobs-file-source-download');
             download.href = sourceDownloadUrl + '?' + new URLSearchParams({job_id: String(file.id || 0)}).toString();
@@ -411,6 +419,34 @@
         row.appendChild(controlCell);
         applyRowBackground(row, depth, rootGroup);
         return row;
+    }
+
+    async function revalidateFile(file, button) {
+        const jobId = Number(file && file.id || 0);
+        if (!jobId) return;
+        if (button) button.disabled = true;
+        try {
+            const payload = await postJson(actionUrl, {
+                action: 'revalidate',
+                queue: queue,
+                job_id: jobId
+            });
+            const data = payload && payload.data ? payload.data : {};
+            const repairJobId = Math.max(0, Number(data.revalidation_job_id || 0));
+            const fileId = Math.max(0, Number(data.file_id || 0));
+            setNotice(
+                'Revalidation queued'
+                + (repairJobId ? ' as job #' + repairJobId : '')
+                + (fileId ? ' for retained file #' + fileId : '')
+                + '. The current package reader will re-read the server-side copy; no re-upload is required.',
+                10000
+            );
+        } catch (error) {
+            setNotice(error.message || 'Could not queue current-code revalidation.', 10000);
+        } finally {
+            if (button) button.disabled = false;
+            await refresh();
+        }
     }
 
     function renderLoadMore(parentId, depth, childState, rootGroup) {
