@@ -118,6 +118,8 @@ try {
 
 $nonBlocking = $read('src/Infrastructure/Jobs/CatalogNonBlockingImportJobHandler.php');
 $staged = $read('src/Infrastructure/Jobs/CatalogStagedImportJobHandler.php');
+$uploadInspector = $read('assets/upload-file-inspector-worker.js');
+$archiveWorker = $read('assets/public-upload-archive-worker.js');
 $record(
     'profiled_redirect_requires_unreal_package_output',
     preg_match('/decompressToTemp\([\s\S]*?\n\s*true\s*\n\s*\);/m', $nonBlocking) === 1,
@@ -129,6 +131,17 @@ $record(
         && str_contains($staged, "'status' => \$staged !== null ? 'unverified' : 'rejected'")
         && str_contains($staged, "'error' => \$shortError"),
     'The final 100% progress row must include the actual verification/decompression reason instead of only a generic discarded/unverified label.'
+);
+
+$record(
+    'browser_uz3_content_fallback_matches_server',
+    str_contains($uploadInspector, 'UnrealDbLegacyUzDecoder.header(probe, 5678)')
+        && str_contains($uploadInspector, "kind: 'redirect-uz3-fcodec-compat'")
+        && str_contains($uploadInspector, 'looksLikeOfficialZlib')
+        && str_contains($archiveWorker, 'UnrealDbLegacyUzDecoder.header(probe, 5678)')
+        && str_contains($archiveWorker, "kind: 'redirect-uz3-fcodec-compat'")
+        && str_contains($archiveWorker, 'looksLikeOfficialZlib'),
+    'Direct uploads and archive members must preserve canonical UT3 zlib handling while accepting only a structurally valid signature-5678 FCodec compatibility wrapper.'
 );
 
 try {
