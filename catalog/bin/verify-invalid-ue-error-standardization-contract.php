@@ -82,7 +82,7 @@ $record(
     str_contains($profiles, "'header_hex' => \$headerHex")
         && str_contains($profiles, "'header_text' => \$headerText")
         && str_contains($profiles, "'actual_magic_hex'")
-        && str_contains($profiles, "'expected_magic_hex' => 'C1832A9E'")
+        && str_contains($profiles, 'CatalogUnrealPackageTag::expectedMagicHex()')
         && str_contains($profiles, "'reason' => 'Magic not found'")
         && str_contains($indexer, "\$summary['error_arguments']")
         && str_contains($verifiedInspector, "'unreal.magic_not_found' => 'Magic not found'"),
