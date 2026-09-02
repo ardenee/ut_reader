@@ -456,17 +456,36 @@ async function inspectUz2(id, name) {
         guid:legacyGuidFromHead(decoded.firstDecoded), extension:'uz2', redirect:true,
         header:{kind:'redirect-uz2', description:'Epic UZ2 decoded package identity'}};
 }
-async function inspectUz3(id, name) {
+async function inspectUz3(id, name, maxFileBytes) {
     if (activeSize < 9) {
         throw new Error('UZ3 file is incomplete/cut by ' + (9 - activeSize) + ' bytes: ' + name
             + ' (actual_file_size=' + activeSize + ', minimum_file_size=9).');
     }
-    const header = readAt(0, 8);
-    const signature = readU32Le(header, 0), expected = readU32Le(header, 4);
+    const probe = readAt(0, Math.min(activeSize, 4096));
+    const signature = readU32Le(probe, 0), expected = readU32Le(probe, 4);
     if (signature !== 5678) {
         throw new Error('Invalid UZ3 format: ' + name
             + ' (actual_tag=' + signature + ', expected_tag=5678, uncompressed_size=' + expected + ').');
     }
+
+    const cmf = probe.length > 9 ? probe[8] : -1;
+    const flg = probe.length > 9 ? probe[9] : -1;
+    const looksLikeOfficialZlib = cmf >= 0
+        && (cmf & 0x0f) === 8
+        && (((cmf << 8) | flg) % 31) === 0;
+    const legacyHeader = !looksLikeOfficialZlib
+        ? self.UnrealDbLegacyUzDecoder.header(probe, 5678)
+        : null;
+    if (legacyHeader) {
+        const result = await inspectUz(id, name, maxFileBytes);
+        result.extension = 'uz3';
+        result.header = {
+            kind: 'redirect-uz3-fcodec-compat',
+            description: 'Signature-5678 FCodec content carried with a .uz3 suffix; decoded package identity calculated in browser'
+        };
+        return result;
+    }
+
     if (expected < 1) {
         throw new Error('Invalid UZ3 format: ' + name + ' (uncompressed_size=' + expected + ', minimum_size=1).');
     }
@@ -571,7 +590,7 @@ async function inspectActiveMember(id, name, maxFileBytes) {
     const extension = extensionOf(name);
     if (extension === 'uz') return inspectUz(id, name, maxFileBytes);
     if (extension === 'uz2') return inspectUz2(id, name);
-    if (extension === 'uz3') return inspectUz3(id, name);
+    if (extension === 'uz3') return inspectUz3(id, name, maxFileBytes);
     return inspectDirectPackage(id, name);
 }
 function closeActive() {
