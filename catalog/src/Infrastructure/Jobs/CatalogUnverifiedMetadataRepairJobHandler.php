@@ -308,7 +308,12 @@ final class CatalogUnverifiedMetadataRepairJobHandler implements JobHandler
         $statement->execute([$encoded, gmdate('Y-m-d H:i:s'), $sourceJobId]);
 
         if ($statement->rowCount() > 0) {
-            CatalogSystemErrorRecorder::resolveInvalidUeJob($sourceJobId, $revalidationJobId);
+            CatalogSystemErrorRecorder::resolveInvalidUeJob(
+                $sourceJobId,
+                $revalidationJobId,
+                (string)($row['md5'] ?? ''),
+                (string)($row['sha1'] ?? '')
+            );
         }
     }
 
