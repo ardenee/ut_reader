@@ -296,6 +296,7 @@ function packageMagic(bytes) {
     return bytes.length >= 4 && (
         (bytes[0] === 0xc1 && bytes[1] === 0x83 && bytes[2] === 0x2a && bytes[3] === 0x9e)
         || (bytes[0] === 0x9e && bytes[1] === 0x2a && bytes[2] === 0x83 && bytes[3] === 0xc1)
+        || (bytes[0] === 0xc2 && bytes[1] === 0x83 && bytes[2] === 0x2a && bytes[3] === 0x9e)
     );
 }
 function readU32Le(bytes, offset) {
@@ -306,7 +307,8 @@ function readU32Le(bytes, offset) {
 function legacyGuidFromHead(bytes) {
     if (!packageMagic(bytes) || bytes.length < 52) return '';
     const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-    const littleEndian = view.getUint32(0, true) === 0x9e2a83c1;
+    const littleEndianTag = view.getUint32(0, true);
+    const littleEndian = littleEndianTag === 0x9e2a83c1 || littleEndianTag === 0x9e2a83c2;
     const version = view.getUint32(4, littleEndian) & 0xffff;
     if (version < 1 || version >= 200) return '';
     const guidOffset = version < 68 ? 44 : 36;
@@ -422,7 +424,7 @@ async function inspectDirectPackage(id, name) {
         throw new Error('Magic not found: ' + name
             + ' (actual_magic_hex=' + (bytesHex(magic) || 'empty')
             + ', actual_magic_text=' + (printableBytes(magic) || 'empty')
-            + ', expected_magic_hex=C1832A9E|9E2A83C1).');
+            + ', expected_magic_hex=C1832A9E|9E2A83C1|C2832A9E).');
     }
     const md5 = new Md5(), sha1 = new Sha1();
     let done = 0;
@@ -518,7 +520,7 @@ async function inspectUz3(id, name) {
             + ' (redirect_format=UZ3'
             + ', actual_magic_hex=' + (bytesHex(magic) || 'empty')
             + ', actual_magic_text=' + (printableBytes(magic) || 'empty')
-            + ', expected_magic_hex=C1832A9E|9E2A83C1).');
+            + ', expected_magic_hex=C1832A9E|9E2A83C1|C2832A9E).');
     }
     return {md5:md5.digestHex(), sha1:sha1.digestHex(), identity_size:outputBytes,
         guid:legacyGuidFromHead(firstDecoded), extension:'uz3', redirect:true,
