@@ -418,11 +418,13 @@ function catalog_redirect_archive_encode_epic_uz3(string $packageData): array
 }
 
 /**
- * Strict extension-aware decompression entry point.
+ * Extension-aware decompression entry point.
  *
  * `.uz` uses an FCodec wrapper with signature 1234 or 5678 and an embedded
- * filename. `.uz3` uses a different layout: tag 5678, total uncompressed size,
- * then one zlib stream containing the complete file.
+ * filename. Canonical UT3 `.uz3` uses tag 5678, total uncompressed size, then
+ * one zlib stream containing the complete file. Historic mirrors also contain
+ * signature-5678 FCodec files mislabeled with a `.uz3` suffix, so decoding is
+ * content-aware while encoding remains canonical UT3 UZ3.
  *
  * @return array{data:string,decoder:string,chunks:int,expected_bytes:int,embedded_filename?:string,wrapper_signature?:int}|null
  */
@@ -437,7 +439,7 @@ function catalog_redirect_archive_decompress_data(
     return match ($extension) {
         'uz' => catalog_redirect_archive_legacy_payload($archiveData, $limit),
         'uz2' => catalog_redirect_archive_epic_uz2_payload($archiveData, $limit),
-        'uz3' => catalog_redirect_archive_epic_uz3_payload($archiveData, $limit),
+        'uz3' => catalog_redirect_archive_compatible_uz3_payload($archiveData, $limit),
         default => null,
     };
 }
