@@ -50,7 +50,7 @@ $record(
 $record(
     'recursive_mode_is_sequential_and_redirect_scoped',
     str_contains($source, 'RecursiveDirectoryIterator')
-        && str_contains($source, "preg_match('/\\\\.(?:uz|uz2|uz3)$/i'")
+        && str_contains($source, "preg_match('/\\.(?:uz|uz2|uz3)$/i'")
         && str_contains($source, 'foreach ($expandedPaths as $path)'),
     'Recursive mode must enumerate UZ/UZ2/UZ3 files and process them one at a time.'
 );
