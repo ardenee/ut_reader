@@ -84,7 +84,7 @@ $record(
     'legacy_completed_parent_repair_is_explicit',
     !str_contains($factory, 'PdoArchiveParentLifecycleRepair')
         && str_contains($maintenance, 'PdoArchiveParentLifecycleRepair')
-        && str_contains($maintenance, "array_key_exists('execute', $options)")
+        && str_contains($maintenance, 'array_key_exists(\'execute\', $options)')
         && str_contains($maintenance, 'reopenCompletedParentsWithActiveChildren($queue)')
         && str_contains($repair, 'p.status="completed"')
         && str_contains($repair, 'c.status IN ("queued","running")')
