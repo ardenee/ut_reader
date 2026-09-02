@@ -67,6 +67,27 @@ final class CatalogLegacyBinaryStream
         return $this->size - $this->position;
     }
 
+    public function peekHex(int $offset, int $length = 32): string
+    {
+        if ($offset < 0 || $offset >= $this->size || $length < 1) {
+            return '';
+        }
+
+        $saved = $this->position;
+        $available = min($length, $this->size - $offset);
+        if (fseek($this->handle, $offset, SEEK_SET) !== 0) {
+            return '';
+        }
+
+        $data = fread($this->handle, $available);
+        @fseek($this->handle, $saved, SEEK_SET);
+        if (!is_string($data)) {
+            return '';
+        }
+
+        return strtoupper(bin2hex($data));
+    }
+
     public function seek(int $position): void
     {
         if ($position < 0 || $position > $this->size) {
@@ -146,7 +167,12 @@ final class CatalogLegacyBinaryStream
 
     public function packageIndex(int $version): int
     {
-        return $version < 178 ? $this->compactIndex() : $this->i32();
+        // UE1/UE2 package references, FName indices, FString lengths and
+        // export serial size/offset fields are serialized with AR_INDEX
+        // (FCompactIndex). UT2004 does not switch these fields to int32 at
+        // package version 178; ordinary INT fields such as PackageIndex/outer
+        // remain explicitly read with i32() by their callers.
+        return $this->compactIndex();
     }
 
     public function cstring(int $maximum = 65536): string
@@ -324,8 +350,25 @@ abstract class CatalogLegacyPackageReaderBase
         $reader->seek((int)$this->header['nameOffset']);
         $count = (int)$this->header['nameCount'];
         for ($index = 0; $index < $count; $index++) {
-            $name = $version < 64 ? $reader->cstring() : $reader->fstring($version);
-            $flags = $reader->u32();
+            $entryOffset = $reader->tell();
+            try {
+                $name = $version < 64 ? $reader->cstring() : $reader->fstring($version);
+                $flags = $reader->u32();
+            } catch (Throwable $error) {
+                throw new RuntimeException(
+                    'Name table entry parse failed'
+                    . ': index=' . $index
+                    . ', entry_offset=' . $entryOffset
+                    . ', current_offset=' . $reader->tell()
+                    . ', table_offset=' . (int)$this->header['nameOffset']
+                    . ', table_count=' . $count
+                    . ', package_size=' . $reader->size()
+                    . ', entry_head_hex=' . $reader->peekHex($entryOffset, 32)
+                    . '. ' . $error->getMessage(),
+                    0,
+                    $error
+                );
+            }
             $this->names[] = [
                 'index' => $index,
                 'name' => $name,
@@ -342,10 +385,27 @@ abstract class CatalogLegacyPackageReaderBase
         $reader->seek((int)$this->header['importOffset']);
         $count = (int)$this->header['importCount'];
         for ($index = 0; $index < $count; $index++) {
-            $classPackage = $reader->packageIndex($version);
-            $className = $reader->packageIndex($version);
-            $outer = $reader->i32();
-            $objectName = $reader->packageIndex($version);
+            $entryOffset = $reader->tell();
+            try {
+                $classPackage = $reader->packageIndex($version);
+                $className = $reader->packageIndex($version);
+                $outer = $reader->i32();
+                $objectName = $reader->packageIndex($version);
+            } catch (Throwable $error) {
+                throw new RuntimeException(
+                    'Import table entry parse failed'
+                    . ': index=' . $index
+                    . ', entry_offset=' . $entryOffset
+                    . ', current_offset=' . $reader->tell()
+                    . ', table_offset=' . (int)$this->header['importOffset']
+                    . ', table_count=' . $count
+                    . ', package_size=' . $reader->size()
+                    . ', entry_head_hex=' . $reader->peekHex($entryOffset, 32)
+                    . '. ' . $error->getMessage(),
+                    0,
+                    $error
+                );
+            }
             $classPackageText = $this->nameByIndex($classPackage);
             $classNameText = $this->nameByIndex($className);
             $objectNameText = $this->nameByIndex($objectName);
@@ -373,13 +433,30 @@ abstract class CatalogLegacyPackageReaderBase
         $reader->seek((int)$this->header['exportOffset']);
         $count = (int)$this->header['exportCount'];
         for ($index = 0; $index < $count; $index++) {
-            $class = $reader->packageIndex($version);
-            $super = $reader->packageIndex($version);
-            $outer = $reader->i32();
-            $objectName = $reader->packageIndex($version);
-            $flags = $reader->u32();
-            $serialSize = $reader->packageIndex($version);
-            $serialOffset = $serialSize > 0 ? $reader->packageIndex($version) : 0;
+            $entryOffset = $reader->tell();
+            try {
+                $class = $reader->packageIndex($version);
+                $super = $reader->packageIndex($version);
+                $outer = $reader->i32();
+                $objectName = $reader->packageIndex($version);
+                $flags = $reader->u32();
+                $serialSize = $reader->packageIndex($version);
+                $serialOffset = $serialSize > 0 ? $reader->packageIndex($version) : 0;
+            } catch (Throwable $error) {
+                throw new RuntimeException(
+                    'Export table entry parse failed'
+                    . ': index=' . $index
+                    . ', entry_offset=' . $entryOffset
+                    . ', current_offset=' . $reader->tell()
+                    . ', table_offset=' . (int)$this->header['exportOffset']
+                    . ', table_count=' . $count
+                    . ', package_size=' . $reader->size()
+                    . ', entry_head_hex=' . $reader->peekHex($entryOffset, 32)
+                    . '. ' . $error->getMessage(),
+                    0,
+                    $error
+                );
+            }
             $this->exports[] = [
                 'index' => $index,
                 'classIndex' => $class,
