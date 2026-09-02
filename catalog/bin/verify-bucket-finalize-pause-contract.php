@@ -1,6 +1,11 @@
 #!/usr/bin/env php
 <?php
-/** Read-only contract verifier for Upload Bucket pause/finalisation worker-state parity. */
+/**
+ * Regression gate for append-only Upload Bucket finalization.
+ *
+ * Historical versions paused the whole bucket queue before a new batch could be
+ * finalized. Durable queueing no longer requires that global pause.
+ */
 declare(strict_types=1);
 
 if (PHP_SAPI !== 'cli') {
@@ -14,10 +19,12 @@ $read = static function (string $relative) use ($root): string {
     return is_string($value) ? $value : '';
 };
 
-$statePath = $root . '/src/Infrastructure/Import/CatalogBucketProcessingStateService.php';
+$coordinatorPath = $root . '/assets/upload-bucket-v2-coordinator.js';
 $finalizerPath = $root . '/src/Infrastructure/Import/CatalogBucketBatchFinalizer.php';
-$state = $read('src/Infrastructure/Import/CatalogBucketProcessingStateService.php');
+$endpointPath = $root . '/api/v1/upload-bucket-batch.php';
+$coordinator = $read('assets/upload-bucket-v2-coordinator.js');
 $finalizer = $read('src/Infrastructure/Import/CatalogBucketBatchFinalizer.php');
+$endpoint = $read('api/v1/upload-bucket-batch.php');
 
 $checks = [];
 $failures = [];
@@ -29,27 +36,37 @@ $record = static function (string $name, bool $ok, string $detail) use (&$checks
 };
 
 $record(
-    'pause_state_counts_launching_workers_as_busy',
-    str_contains($state, "(int)(\$status['launching_count'] ?? 0) > 0")
-        && str_contains($state, 'if ($requestPause && $busy)')
-        && str_contains($state, 'if ($busy)')
-        && str_contains($state, "'launching' => \$launching")
-        && str_contains($state, "'busy' => \$busy"),
-    'A launching detached worker is queue activity and must keep Upload Bucket finalisation in the waiting state.'
+    'browser_no_longer_pauses_existing_processing',
+    !str_contains($coordinator, "processingState('begin_batch')")
+        && !str_contains($coordinator, 'waitUntilPaused(')
+        && !str_contains($coordinator, 'Requesting a safe Upload Bucket processing pause')
+        && str_contains($coordinator, 'prepare_queue: false')
+        && str_contains($coordinator, 'a second batch can be queued while an'),
+    'Browser handoff must append durable jobs immediately instead of waiting for an existing long-running batch.'
 );
 
 $record(
-    'finalizer_uses_same_busy_definition',
-    str_contains($finalizer, "(int)(\$workerStatus['launching_count'] ?? 0) > 0")
-        && str_contains($finalizer, 'if ($prepareQueue && !$busy)')
-        && str_contains($finalizer, 'if ($busy)')
-        && str_contains($finalizer, 'throw new CatalogBucketProcessingActive($activeQueues)'),
-    'The final server-side gate must use the same active-or-launching definition as browser pause polling.'
+    'server_finalizer_is_append_only',
+    !str_contains($finalizer, 'CatalogBucketProcessingActive')
+        && !str_contains($finalizer, 'CatalogOrphanedJobRecovery')
+        && !str_contains($finalizer, 'migrateLegacyQueuedJobs()')
+        && !str_contains($finalizer, 'activeQueues')
+        && str_contains($finalizer, '$queue->enqueueCompletedUpload($uploadId, $userId)')
+        && str_contains($finalizer, 'CatalogQueueWorkerStarter'),
+    'Server finalization may enqueue the supplied uploads and wake workers only; it must not prepare/recover the whole queue.'
+);
+
+$record(
+    'batch_endpoint_has_no_pause_conflict',
+    !str_contains($endpoint, 'CatalogBucketProcessingActive')
+        && !str_contains($endpoint, 'bucket_processing_not_paused')
+        && str_contains($endpoint, '$prepareQueue = false;'),
+    'The Upload Bucket API must not reject a new batch merely because another batch is still processing.'
 );
 
 $syntaxFailures = [];
 if (function_exists('proc_open')) {
-    foreach ([$statePath, $finalizerPath] as $path) {
+    foreach ([$finalizerPath, $endpointPath] as $path) {
         $pipes = [];
         $process = @proc_open([PHP_BINARY, '-l', $path], [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
         if (!is_resource($process)) {
