@@ -299,7 +299,7 @@ final class CatalogBucketStagedPackageJobHandler implements JobHandler
 
         // If this job previously produced an invalid-Unreal System Error and an
         // explicit rerun now succeeds with current code, close that exact error.
-        CatalogSystemErrorRecorder::resolveInvalidUeJob($job->id, $job->id);
+        CatalogSystemErrorRecorder::resolveInvalidUeJob($job->id, $job->id, $md5, $sha1);
 
         $status = (string)($staged['status'] ?? 'indexed');
         $resultStatus = $status === 'duplicate' ? 'duplicate' : 'bucketed';
