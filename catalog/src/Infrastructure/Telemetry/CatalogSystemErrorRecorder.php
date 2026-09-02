@@ -119,11 +119,24 @@ final class CatalogSystemErrorRecorder
      * Resolve the exact invalid-Unreal System Error after an explicit retained
      * source revalidation has successfully read the package with current code.
      */
-    public static function resolveInvalidUeJob(int $sourceJobId, int $revalidationJobId): void
-    {
+    public static function resolveInvalidUeJob(
+        int $sourceJobId,
+        int $revalidationJobId,
+        string $md5 = '',
+        string $sha1 = ''
+    ): void {
         if ($sourceJobId < 1 || self::$busy) {
             return;
         }
+        $md5 = strtolower(trim($md5));
+        $sha1 = strtolower(trim($sha1));
+        if (preg_match('/^[a-f0-9]{32}$/', $md5) !== 1) {
+            $md5 = '';
+        }
+        if (preg_match('/^[a-f0-9]{40}$/', $sha1) !== 1) {
+            $sha1 = '';
+        }
+
         self::$busy = true;
         try {
             $db = self::connection();
@@ -138,10 +151,21 @@ final class CatalogSystemErrorRecorder
                 $statement = $db->prepare(
                     'UPDATE ue_system_errors SET status="resolved",resolved_at=?,resolved_by=NULL,resolution_note=? '
                     . 'WHERE status="open" AND source_kind="unreal-file-validation" '
-                    . 'AND JSON_VALID(context_json) '
-                    . 'AND CAST(JSON_UNQUOTE(JSON_EXTRACT(context_json,"$.job_id")) AS UNSIGNED)=?'
+                    . 'AND JSON_VALID(context_json) AND ('
+                    . 'CAST(JSON_UNQUOTE(JSON_EXTRACT(context_json,"$.job_id")) AS UNSIGNED)=? '
+                    . 'OR (?<>"" AND LOWER(COALESCE(JSON_UNQUOTE(JSON_EXTRACT(context_json,"$.md5")),""))=?) '
+                    . 'OR (?<>"" AND LOWER(COALESCE(JSON_UNQUOTE(JSON_EXTRACT(context_json,"$.sha1")),""))=?)'
+                    . ')'
                 );
-                $statement->execute([$now, $note, $sourceJobId]);
+                $statement->execute([
+                    $now,
+                    $note,
+                    $sourceJobId,
+                    $md5,
+                    $md5,
+                    $sha1,
+                    $sha1,
+                ]);
             } catch (Throwable $error) {
                 error_log(
                     '[UnrealDB system error resolve] Could not resolve invalid UE source job #'
