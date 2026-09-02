@@ -41,7 +41,7 @@ $record = static function (string $name, bool $ok, string $detail) use (&$checks
 $record(
     'extractor_marks_clean_archive_source_disposable',
     str_contains($handler, '$sourceRetained = $failed > 0;')
-        && str_contains($handler, "'source_retained' => $sourceRetained")
+        && str_contains($handler, '\'source_retained\' => $sourceRetained')
         && str_contains($handler, 'source archive released after successful extraction'),
     'Extraction may mark a clean archive disposable, but the coordinator owns the actual source lifetime until child outcomes are known.'
 );
@@ -88,7 +88,7 @@ $record(
     'clean_terminal_archive_releases_parent_source',
     str_contains($workflow, '$result = $this->finalResult($job, $archiveResult, $childState, $context);')
         && str_contains($workflow, '$this->releaseSourceIfDisposable($job, $result);')
-        && str_contains($workflow, "if (!empty($archiveResult['source_retained']))"),
+        && str_contains($workflow, 'if (!empty($archiveResult[\'source_retained\']))'),
     'After all child outcomes are known, only a clean disposable archive should release its parent-owned source.'
 );
 
