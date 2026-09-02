@@ -26,7 +26,7 @@ final class CatalogLegacyPackageCorruptionDetector
         if (!is_string($header) || strlen($header) < 36) {
             return null;
         }
-        if (substr($header, 0, 4) !== "\xC1\x83\x2A\x9E") {
+        if (!\UnrealDb\Catalog\Domain\Package\CatalogUnrealPackageTag::isSupportedBytes($header)) {
             return null;
         }
 
