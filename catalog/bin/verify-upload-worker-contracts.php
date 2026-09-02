@@ -206,8 +206,9 @@ $record(
         && !str_contains($batchFinalizer, 'CatalogOrphanedJobRecovery')
         && !str_contains($batchFinalizer, 'migrateLegacyQueuedJobs()')
         && str_contains($queueStarter, '$launcher->start($queueName, 10000)')
-        && !str_contains($queueStarter, 'CatalogOrphanedJobRecovery')
-        && !str_contains($queueStarter, 'CatalogWorkerPoolReconciler'),
+        && !str_contains($queueStarter, 'new CatalogOrphanedJobRecovery(')
+        && !str_contains($queueStarter, 'new CatalogWorkerPoolReconciler(')
+        && !str_contains($queueStarter, 'new PdoJobQueue('),
     'dedupe/enqueue must stay in the shared queue service and automatic upload wake must start processes without queue-wide recovery or historical mutation'
 );
 
