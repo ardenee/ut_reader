@@ -45,6 +45,7 @@
         return bytes.length >= 4 && (
             (bytes[0] === 0xc1 && bytes[1] === 0x83 && bytes[2] === 0x2a && bytes[3] === 0x9e)
             || (bytes[0] === 0x9e && bytes[1] === 0x2a && bytes[2] === 0x83 && bytes[3] === 0xc1)
+            || (bytes[0] === 0xc2 && bytes[1] === 0x83 && bytes[2] === 0x2a && bytes[3] === 0x9e)
         );
     }
 
@@ -198,7 +199,7 @@
                         + ' (record=1, redirect_format=UZ2'
                         + ', actual_magic_hex=' + (bytesHex(magic) || 'empty')
                         + ', actual_magic_text=' + (printableBytes(magic) || 'empty')
-                        + ', expected_magic_hex=C1832A9E|9E2A83C1).');
+                        + ', expected_magic_hex=C1832A9E|9E2A83C1|C2832A9E).');
                 }
             }
 
