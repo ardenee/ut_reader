@@ -149,14 +149,13 @@ $record(
 );
 
 $record(
-    'background_jobs_issue_filters_exclude_invalid_ue',
-    !str_contains($fileTreeQuery, '"invalid_ue_package"')
-        && !str_contains($fileTreeQuery, '"invalid_files"')
-        && !str_contains($fileTreeProjector, "'invalid_ue_package', 'partial'")
+    'background_jobs_surfaces_invalid_ue_as_operator_issue',
+    str_contains($fileTreeQuery, '"invalid_ue_package"')
+        && str_contains($fileTreeProjector, "'invalid_ue_package', 'partial'")
         && str_contains($fileTreeProjector, "'invalid_ue_package' => 'Invalid UE file · logged in System Errors'")
-        && !str_contains($display, "'failed', 'rejected', 'unverified', 'invalid_ue_package'")
-        && !str_contains($display, 'display_status IN ("failed","rejected","unverified","invalid_ue_package")'),
-    'Invalid UE content must not appear in Background Jobs Issue/failed filters or retry-job grouping.'
+        && str_contains($display, "'failed', 'rejected', 'unverified', 'invalid_ue_package'")
+        && str_contains($display, 'display_status IN ("failed","rejected","unverified","invalid_ue_package")'),
+    'Invalid UE content remains non-failing for healthy archive rollup, but it must be visible in Background Jobs Issues for diagnosis/revalidation.'
 );
 
 $record(
@@ -212,13 +211,14 @@ $record(
 );
 
 $record(
-    'worker_startup_runs_invalid_ue_system_error_backfill',
-    str_contains($factory, 'new PdoInvalidUeSystemErrorBackfill($db)')
-        && str_contains($factory, 'Invalid Unreal package content is a System Error/data-quality problem')
-        && str_contains($fingerprint, '/src/Infrastructure/Persistence/PdoInvalidUeSystemErrorBackfill.php')
+    'historical_invalid_ue_backfill_is_explicit_not_worker_startup',
+    !str_contains($factory, 'PdoInvalidUeSystemErrorBackfill')
+        && !str_contains($fingerprint, '/src/Infrastructure/Persistence/PdoInvalidUeSystemErrorBackfill.php')
+        && str_contains($cliBackfill, 'new PdoInvalidUeSystemErrorBackfill($db)')
+        && str_contains($cliBackfill, "'mode' => 'ledger_only'")
         && str_contains($fingerprint, '/src/Infrastructure/Telemetry/CatalogInvalidUeFileReporter.php')
         && str_contains($fingerprint, '/src/Infrastructure/Telemetry/CatalogSystemErrorRecorder.php'),
-    'A deployed worker must invalidate stale code and backfill historical invalid UE System Errors automatically.'
+    'Historical invalid-UE backfill must be a deliberate ledger-only maintenance action; normal worker startup may not mutate unrelated historical rows.'
 );
 
 $syntaxFailures = [];
