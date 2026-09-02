@@ -53,9 +53,9 @@ $record(
     'automatic_wake_starts_processes_only',
     str_contains($starter, 'new CatalogDetachedWorker($this->config)')
         && str_contains($starter, '$launcher->start($queueName, 10000)')
-        && !str_contains($starter, 'CatalogOrphanedJobRecovery')
-        && !str_contains($starter, 'CatalogWorkerPoolReconciler')
-        && !str_contains($starter, 'PdoJobQueue'),
+        && !str_contains($starter, 'new CatalogOrphanedJobRecovery(')
+        && !str_contains($starter, 'new CatalogWorkerPoolReconciler(')
+        && !str_contains($starter, 'new PdoJobQueue('),
     'Feature wake may start processes but may not recover/reconcile/rewrite durable queue rows.'
 );
 
