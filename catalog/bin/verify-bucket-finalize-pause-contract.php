@@ -25,6 +25,8 @@ $endpointPath = $root . '/api/v1/upload-bucket-batch.php';
 $coordinator = $read('assets/upload-bucket-v2-coordinator.js');
 $finalizer = $read('src/Infrastructure/Import/CatalogBucketBatchFinalizer.php');
 $endpoint = $read('api/v1/upload-bucket-batch.php');
+$chunkEndpoint = $read('api/v1/upload-bucket-chunk.php');
+$processingState = $read('src/Infrastructure/Import/CatalogBucketProcessingStateService.php');
 
 $checks = [];
 $failures = [];
@@ -64,9 +66,23 @@ $record(
     'The Upload Bucket API must not reject a new batch merely because another batch is still processing.'
 );
 
+$record(
+    'legacy_begin_batch_is_read_only',
+    str_contains($chunkEndpoint, "'pause_supported' => false")
+        && str_contains($chunkEndpoint, "'processing' => $processingState->status(false)")
+        && !str_contains($chunkEndpoint, '$processingState->status(true)')
+        && !str_contains($processingState, 'requestStop('),
+    'An old cached browser may still call begin_batch, but that compatibility action must never pause or stop live workers.'
+);
+
 $syntaxFailures = [];
 if (function_exists('proc_open')) {
-    foreach ([$finalizerPath, $endpointPath] as $path) {
+    foreach ([
+        $finalizerPath,
+        $endpointPath,
+        $root . '/api/v1/upload-bucket-chunk.php',
+        $root . '/src/Infrastructure/Import/CatalogBucketProcessingStateService.php',
+    ] as $path) {
         $pipes = [];
         $process = @proc_open([PHP_BINARY, '-l', $path], [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
         if (!is_resource($process)) {
