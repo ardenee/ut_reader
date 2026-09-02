@@ -84,6 +84,8 @@ final class PdoCompletedArchiveRerunSelection
                 . 'AND parent_job_id IS NULL AND id IN (' . $idSql . ') '
                 . 'AND status="completed" AND job_type IN (?,?) '
                 . 'AND display_status NOT IN ("partial","failed","rejected","unverified","error") '
+                . 'AND JSON_VALID(result_json) '
+                . 'AND COALESCE(JSON_EXTRACT(result_json,"$.source_retained"),false)=true '
                 . 'ORDER BY id'
             );
             $statement->execute(array_merge(
