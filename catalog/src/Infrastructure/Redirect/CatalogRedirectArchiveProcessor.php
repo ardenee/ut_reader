@@ -22,7 +22,10 @@ use UnrealDb\Catalog\Infrastructure\Jobs\CatalogRedirectArchiveStream;
  * HTTP upload handlers only stage data. This processor is called by CLI job
  * handlers and dispatches each wrapper to its engine-defined implementation:
  * UE1 .uz uses the signed FCodec chain, UE2 .uz2 uses independent 32 KiB zlib
- * records, and UE3 .uz3 uses one tagged whole-file zlib stream.
+ * records, and canonical UE3 .uz3 uses one tagged whole-file zlib stream.
+ * Historic mirrors sometimes mislabel signature-5678 FCodec wrappers as .uz3;
+ * the shared payload decoder accepts that content-compatible case without
+ * changing canonical UZ3 encoding.
  */
 final class CatalogRedirectArchiveProcessor
 {
