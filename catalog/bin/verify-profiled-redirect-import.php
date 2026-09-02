@@ -160,6 +160,46 @@ try {
         'UT3 UZ3 must be tag 5678 + total uncompressed size + one zlib compress() stream, with no embedded filename or FCodec stages.'
     );
 
+
+    // Historical mirrors contain files with a .uz3 suffix whose bytes are the
+    // older Epic signature-5678 FCodec wrapper. The suffix must not make the
+    // filename bytes get misread as a multi-gigabyte UT3 uncompressed size.
+    $legacyUz3Encoded = catalog_redirect_archive_encode_native_codec(
+        $uz3Package,
+        'Zo_Town_Tex.utx',
+        5678
+    );
+    $legacyUz3Archive = (string)($legacyUz3Encoded['data'] ?? '');
+    $legacyUz3Decoded = catalog_redirect_archive_decompress_data(
+        $legacyUz3Archive,
+        'uz3',
+        1024 * 1024
+    );
+    $record(
+        'uz3_suffix_accepts_signature_5678_fcodec_content',
+        is_array($legacyUz3Decoded)
+            && (string)($legacyUz3Decoded['data'] ?? '') === $uz3Package
+            && (string)($legacyUz3Decoded['embedded_filename'] ?? '') === 'Zo_Town_Tex.utx'
+            && str_starts_with((string)($legacyUz3Decoded['decoder'] ?? ''), 'uz3-compat-epic-uz-5678-')
+            && (int)($legacyUz3Decoded['wrapper_signature'] ?? 0) === 5678,
+        'A .uz3 transport suffix may contain the engine FCodec 5678 wrapper seen in historic redirect mirrors; decode by content without changing canonical UT3 UZ3 encoding.'
+    );
+
+    $brokenLegacyUz3 = substr($legacyUz3Archive, 0, max(0, strlen($legacyUz3Archive) - 7));
+    $brokenLegacyMessage = catalog_redirect_archive_decode_failure_message(
+        $brokenLegacyUz3,
+        'uz3',
+        1024 * 1024,
+        'Zo_Town_Tex.utx.uz3'
+    );
+    $record(
+        'broken_legacy_fcodec_uz3_is_reported_as_fcodec_not_huge_zlib',
+        str_contains($brokenLegacyMessage, 'UZ3 compatibility FCodec wrapper')
+            && str_contains($brokenLegacyMessage, 'embedded_filename=Zo_Town_Tex.utx')
+            && !str_contains($brokenLegacyMessage, 'uncompressed_size='),
+        'A damaged compatibility wrapper must not be diagnosed by interpreting its serialized filename bytes as the UT3 uncompressed-size field.'
+    );
+
     $payload = "NOT_AN_UNREAL_PACKAGE";
     $compressed = gzcompress($payload);
     if (!is_string($compressed)) {
