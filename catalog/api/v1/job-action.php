@@ -104,28 +104,73 @@ try {
         $result = json_decode((string)($sourceJob['result_json'] ?? ''), true);
         $result = is_array($result) ? $result : [];
         $fileId = max(0, (int)($result['file_id'] ?? 0));
-        if ($fileId < 1) {
+        $sourceRetained = !empty($result['source_retained']);
+
+        if ($fileId > 0) {
+            try {
+                $revalidation = (new CatalogUnverifiedMetadataRepairService(
+                    $application->db,
+                    $application->config
+                ))->queueFileRevalidation($fileId, $userId, $jobId);
+
+                $workerState = (new CatalogQueueWorkerStarter($application->db, $application->config))
+                    ->start((string)$revalidation['queue'], true, $userId);
+
+                JsonResponse::send([
+                    'data' => [
+                        'source_job_id' => $jobId,
+                        'file_id' => $fileId,
+                        'revalidation_job_id' => (int)$revalidation['job_id'],
+                        'queue' => (string)$revalidation['queue'],
+                        'mode' => 'unverified_file',
+                        'status' => 'queued',
+                        'worker' => $workerState['worker'],
+                        'worker_error' => (string)$workerState['worker_error'],
+                    ],
+                ], 202);
+            } catch (RuntimeException $error) {
+                if (!$sourceRetained) {
+                    JsonResponse::error('retained_source_unavailable', $error->getMessage(), 409);
+                }
+                // Fall through to exact retained-job replay below.
+            }
+        }
+
+        if (!$sourceRetained) {
             JsonResponse::error(
                 'retained_source_unavailable',
-                'This historical invalid-package job has no retained Unverified file reference. It cannot be revalidated from server storage.',
+                'This invalid-package job has neither a retained Unverified file nor retained job-owned source bytes.',
                 409
             );
         }
 
-        $revalidation = (new CatalogUnverifiedMetadataRepairService(
-            $application->db,
-            $application->config
-        ))->queueFileRevalidation($fileId, $userId, $jobId);
+        $restart = (new PdoBackgroundJobBulkAction($application->db, $application->config))->execute(
+            'restart',
+            'selected',
+            $queueName,
+            '',
+            '',
+            [$jobId],
+            $userId
+        );
+        if ((int)($restart['affected'] ?? 0) < 1) {
+            JsonResponse::error(
+                'not_revalidatable',
+                'The retained invalid-package job could not be restarted safely.',
+                409
+            );
+        }
 
         $workerState = (new CatalogQueueWorkerStarter($application->db, $application->config))
-            ->start((string)$revalidation['queue'], true, $userId);
+            ->start($queueName, true, $userId);
 
         JsonResponse::send([
             'data' => [
                 'source_job_id' => $jobId,
-                'file_id' => $fileId,
-                'revalidation_job_id' => (int)$revalidation['job_id'],
-                'queue' => (string)$revalidation['queue'],
+                'file_id' => 0,
+                'revalidation_job_id' => $jobId,
+                'queue' => $queueName,
+                'mode' => 'retained_job',
                 'status' => 'queued',
                 'worker' => $workerState['worker'],
                 'worker_error' => (string)$workerState['worker_error'],
