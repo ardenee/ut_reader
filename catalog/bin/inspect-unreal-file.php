@@ -20,6 +20,54 @@ require_once $root . '/bootstrap/autoload.php';
 require_once $root . '/lib/CatalogRedirectArchive.php';
 require_once $root . '/lib/GameProfiles.php';
 
+
+/** @return array{bytes:int,zero_bytes:int,space_bytes:int,first_4096_zero_bytes:int,first_4096_space_bytes:int} */
+function inspect_unreal_byte_profile(string $path): array
+{
+    $stream = @fopen($path, 'rb');
+    if (!is_resource($stream)) {
+        throw new RuntimeException('Could not open decoded package for byte-profile scan.');
+    }
+
+    $bytes = 0;
+    $zeroBytes = 0;
+    $spaceBytes = 0;
+    $firstZeroBytes = 0;
+    $firstSpaceBytes = 0;
+    $firstRemaining = 4096;
+
+    try {
+        while (!feof($stream)) {
+            $chunk = fread($stream, 1024 * 1024);
+            if (!is_string($chunk) || $chunk === '') {
+                break;
+            }
+
+            $length = strlen($chunk);
+            $bytes += $length;
+            $zeroBytes += substr_count($chunk, "\x00");
+            $spaceBytes += substr_count($chunk, "\x20");
+
+            if ($firstRemaining > 0) {
+                $prefix = substr($chunk, 0, $firstRemaining);
+                $firstZeroBytes += substr_count($prefix, "\x00");
+                $firstSpaceBytes += substr_count($prefix, "\x20");
+                $firstRemaining -= strlen($prefix);
+            }
+        }
+    } finally {
+        fclose($stream);
+    }
+
+    return [
+        'bytes' => $bytes,
+        'zero_bytes' => $zeroBytes,
+        'space_bytes' => $spaceBytes,
+        'first_4096_zero_bytes' => $firstZeroBytes,
+        'first_4096_space_bytes' => $firstSpaceBytes,
+    ];
+}
+
 /** @return array<string,mixed> */
 function inspect_unreal_file(string $inputPath): array
 {
@@ -52,6 +100,7 @@ function inspect_unreal_file(string $inputPath): array
         }
 
         $summary = gp_read_legacy_summary($parsePath);
+        $byteProfile = inspect_unreal_byte_profile($parsePath);
         $result = [
             'ok' => !empty($summary['ok']),
             'input_path' => $resolvedPath,
@@ -77,6 +126,12 @@ function inspect_unreal_file(string $inputPath): array
             'error_arguments' => is_array($summary['error_arguments'] ?? null)
                 ? $summary['error_arguments']
                 : [],
+            'zero_bytes' => $byteProfile['zero_bytes'],
+            'space_bytes' => $byteProfile['space_bytes'],
+            'first_4096_zero_bytes' => $byteProfile['first_4096_zero_bytes'],
+            'first_4096_space_bytes' => $byteProfile['first_4096_space_bytes'],
+            'whole_file_zero_to_space_pattern' => $byteProfile['zero_bytes'] === 0
+                && $byteProfile['space_bytes'] >= 16,
         ];
 
         if (strlen($header) >= 16) {
@@ -146,6 +201,11 @@ function inspect_unreal_print_human(array $result): void
     echo 'Package version              : ' . var_export($result['package_version'] ?? null, true) . PHP_EOL;
     echo 'Licensee version             : ' . var_export($result['licensee_version'] ?? null, true) . PHP_EOL;
     echo 'Engine hint                  : ' . (string)($result['engine_hint'] ?? 'UNKNOWN') . PHP_EOL;
+    echo 'Zero bytes (whole file)      : ' . (string)($result['zero_bytes'] ?? 0) . PHP_EOL;
+    echo 'Space bytes (whole file)     : ' . (string)($result['space_bytes'] ?? 0) . PHP_EOL;
+    echo 'Zero bytes (first 4096)      : ' . (string)($result['first_4096_zero_bytes'] ?? 0) . PHP_EOL;
+    echo 'Space bytes (first 4096)     : ' . (string)($result['first_4096_space_bytes'] ?? 0) . PHP_EOL;
+    echo 'Whole-file 00->20 pattern    : ' . (!empty($result['whole_file_zero_to_space_pattern']) ? 'YES' : 'NO') . PHP_EOL;
 
     if (!empty($result['reason'])) {
         echo 'Reason                       : ' . (string)$result['reason'] . PHP_EOL;
