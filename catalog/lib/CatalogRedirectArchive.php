@@ -41,8 +41,7 @@ function catalog_redirect_archive_output_name(string $filename): string
 
 function catalog_redirect_archive_has_package_tag(string $data): bool
 {
-    $tag = substr($data, 0, 4);
-    return $tag === "\xC1\x83\x2A\x9E" || $tag === "\x9E\x2A\x83\xC1";
+    return \UnrealDb\Catalog\Domain\Package\CatalogUnrealPackageTag::isSupportedBytes($data);
 }
 
 function catalog_redirect_archive_read_u32(string $data, int $offset, string $endian): int
