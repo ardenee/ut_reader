@@ -102,6 +102,7 @@ final class CatalogFailedUploadRetention
         if (!is_string($bytes) || strlen($bytes) !== 4) {
             return false;
         }
-        return (int)(unpack('V', $bytes)[1] ?? 0) === 0x9E2A83C1;
+        $tag = (int)(unpack('V', $bytes)[1] ?? 0);
+        return \UnrealDb\Catalog\Domain\Package\CatalogUnrealPackageTag::isSupportedLittleEndianValue($tag);
     }
 }
