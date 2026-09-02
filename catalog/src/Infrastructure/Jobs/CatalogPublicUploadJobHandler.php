@@ -48,7 +48,10 @@ final class CatalogPublicUploadJobHandler implements JobHandler
         if (in_array($status, ['unverified', 'duplicate'], true) && (int)($row['unverified_file_id'] ?? 0) > 0) {
             return $this->result($row, 'completed');
         }
-        if (!in_array($status, ['uploaded', 'processing'], true)) {
+        // A failed public upload deliberately retains its quarantine source.
+        // Explicit retry after a parser/runtime fix must therefore be able to
+        // re-enter authoritative validation from that same server-side copy.
+        if (!in_array($status, ['uploaded', 'processing', 'failed'], true)) {
             throw new RuntimeException('Public upload is not ready for background processing: status=' . $status . '.');
         }
 
@@ -56,7 +59,7 @@ final class CatalogPublicUploadJobHandler implements JobHandler
             $resolved = $store->resolveForJob($publicUploadId, $token);
             $row = $resolved;
         } catch (RuntimeException $resolveError) {
-            if ($status === 'processing') {
+            if (in_array($status, ['processing', 'failed'], true)) {
                 $recovered = $this->recoverPublishedStage($publicUploadId, $row);
                 if ($recovered !== null) {
                     return $recovered;
