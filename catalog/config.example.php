@@ -36,8 +36,6 @@ return [
         // Windows/Linux web servers without invoking 7z/unrar command-line tools.
         // ZIP prefers ext-zip (ZipArchive). RAR and 7z require ext-archive
         // (cataphract/libarchive); ext-archive also provides a ZIP fallback.
-        // Hard cap on listed regular-file entries per uploaded archive.
-        'max_entries' => 10000,
         // Total bytes that one archive-expansion job may unpack. Zero uses a
         // bounded default derived from max_container_upload_bytes.
         'max_unpacked_bytes' => 0,
