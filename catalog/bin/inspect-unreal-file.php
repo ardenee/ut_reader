@@ -267,6 +267,7 @@ function inspect_unreal_file(string $inputPath, bool $full = false): array
             'package_version' => array_key_exists('version', $summary) ? (int)$summary['version'] : null,
             'licensee_version' => array_key_exists('licensee', $summary) ? (int)$summary['licensee'] : null,
             'engine_hint' => strtoupper(trim((string)($summary['engine_hint'] ?? 'UNKNOWN'))) ?: 'UNKNOWN',
+            'package_tag_variant' => (string)($summary['package_tag_variant'] ?? ''),
             'reason' => (string)($summary['reason'] ?? ''),
             'error_code' => (string)($summary['error_code'] ?? ''),
             'error_arguments' => is_array($summary['error_arguments'] ?? null)
@@ -369,6 +370,9 @@ function inspect_unreal_print_human(array $result): void
     echo 'Package version              : ' . var_export($result['package_version'] ?? null, true) . PHP_EOL;
     echo 'Licensee version             : ' . var_export($result['licensee_version'] ?? null, true) . PHP_EOL;
     echo 'Engine hint                  : ' . (string)($result['engine_hint'] ?? 'UNKNOWN') . PHP_EOL;
+    if (!empty($result['package_tag_variant'])) {
+        echo 'Package tag variant          : ' . (string)$result['package_tag_variant'] . PHP_EOL;
+    }
     if (array_key_exists('full_validation', $result)) {
         echo 'Full reader validation       : ' . (string)$result['full_validation'] . PHP_EOL;
         echo 'Reader engine                : ' . (string)($result['reader_engine'] ?? '') . PHP_EOL;
