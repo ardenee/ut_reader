@@ -16,12 +16,14 @@ $root = realpath(dirname(__DIR__)) ?: dirname(__DIR__);
 require_once $root . '/bootstrap/autoload.php';
 
 $handlerPath = $root . '/src/Infrastructure/Jobs/CatalogArchiveImportJobHandler.php';
+$workflowPath = $root . '/src/Infrastructure/Jobs/CatalogArchiveWorkflowJobHandler.php';
 $policyPath = $root . '/src/Application/Jobs/JobFailureRetryPolicy.php';
 $cleanupPath = $root . '/src/Infrastructure/Import/CatalogChunkedUploadCleanup.php';
 $maintenancePath = $root . '/src/Infrastructure/Jobs/CatalogStorageMaintenanceJobHandler.php';
 $fingerprintPath = $root . '/src/Infrastructure/Jobs/CatalogWorkerCodeVersion.php';
 
 $handler = (string)@file_get_contents($handlerPath);
+$workflow = (string)@file_get_contents($workflowPath);
 $policy = (string)@file_get_contents($policyPath);
 $cleanup = (string)@file_get_contents($cleanupPath);
 $maintenance = (string)@file_get_contents($maintenancePath);
@@ -37,11 +39,11 @@ $record = static function (string $name, bool $ok, string $detail) use (&$checks
 };
 
 $record(
-    'archive_parent_releases_source_after_clean_expansion',
+    'extractor_marks_clean_archive_source_disposable',
     str_contains($handler, '$sourceRetained = $failed > 0;')
         && str_contains($handler, "'source_retained' => $sourceRetained")
         && str_contains($handler, 'source archive released after successful extraction'),
-    'Once extraction has handed every selected member to durable child staging, the parent archive must not be retained.'
+    'Extraction may mark a clean archive disposable, but the coordinator owns the actual source lifetime until child outcomes are known.'
 );
 
 $record(
@@ -50,6 +52,44 @@ $record(
         && str_contains($handler, "'source_retained' => true")
         && str_contains($handler, 'terminalArchiveCapabilityResult'),
     'Only unresolved extraction/decoder failures should retain the archive recovery source.'
+);
+
+$record(
+    'archive_parent_source_waits_for_child_outcomes',
+    !str_contains(
+        substr(
+            $workflow,
+            (int)(strpos($workflow, '$childState = $this->children->fetch($job->id);') ?: 0),
+            max(
+                0,
+                (int)(
+                    (strpos($workflow, "if (\$childState['total'] < 1)") ?: strlen($workflow))
+                    - (strpos($workflow, '$childState = $this->children->fetch($job->id);') ?: 0)
+                )
+            )
+        ),
+        '$this->releaseSourceIfDisposable($job, $archiveResult);'
+    )
+        && str_contains($workflow, 'Keep the parent archive source until every child has reached a')
+        && str_contains($workflow, '$waiting[\'source_retained\'] = true;'),
+    'The archive source must remain owned while child parser/import jobs are still queued or running.'
+);
+
+$record(
+    'child_problem_outcomes_retain_parent_archive',
+    str_contains($workflow, '$result[\'source_retained\'] = !empty($archiveResult[\'source_retained\'])')
+        && str_contains($workflow, '|| $childFailed > 0')
+        && str_contains($workflow, '|| $cancelled > 0')
+        && str_contains($workflow, '|| $invalidUe > 0'),
+    'A child failure/cancellation/invalid-UE classification must retain the parent archive for explicit recovery without re-upload.'
+);
+
+$record(
+    'clean_terminal_archive_releases_parent_source',
+    str_contains($workflow, '$result = $this->finalResult($job, $archiveResult, $childState, $context);')
+        && str_contains($workflow, '$this->releaseSourceIfDisposable($job, $result);')
+        && str_contains($workflow, "if (!empty($archiveResult['source_retained']))"),
+    'After all child outcomes are known, only a clean disposable archive should release its parent-owned source.'
 );
 
 $leaseUntil = new DateTimeImmutable('+2 minutes');
@@ -82,12 +122,13 @@ $record(
 $record(
     'worker_fingerprint_tracks_archive_retention_logic',
     str_contains($fingerprint, '/src/Application/Jobs/JobFailureRetryPolicy.php')
-        && str_contains($fingerprint, '/src/Infrastructure/Jobs/CatalogArchiveImportJobHandler.php'),
+        && str_contains($fingerprint, '/src/Infrastructure/Jobs/CatalogArchiveImportJobHandler.php')
+        && str_contains($fingerprint, '/src/Infrastructure/Jobs/CatalogArchiveWorkflowJobHandler.php'),
     'Changing archive source lifetime or missing-source retry policy must mark detached workers stale.'
 );
 
 $syntaxFailures = [];
-foreach ([$handlerPath, $policyPath, $cleanupPath, $maintenancePath, $fingerprintPath] as $path) {
+foreach ([$handlerPath, $workflowPath, $policyPath, $cleanupPath, $maintenancePath, $fingerprintPath] as $path) {
     $pipes = [];
     $process = @proc_open([PHP_BINARY, '-l', $path], [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
     if (!is_resource($process)) {
