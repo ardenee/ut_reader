@@ -33,6 +33,8 @@ $starter = $read('src/Infrastructure/Jobs/CatalogQueueWorkerStarter.php');
 $reconciler = $read('src/Infrastructure/Jobs/CatalogWorkerPoolReconciler.php');
 $bucketFinalizer = $read('src/Infrastructure/Import/CatalogBucketBatchFinalizer.php');
 $bucketQueue = $read('src/Infrastructure/Import/CatalogBucketBatchQueue.php');
+$bucketChunkApi = $read('api/v1/upload-bucket-chunk.php');
+$bucketState = $read('src/Infrastructure/Import/CatalogBucketProcessingStateService.php');
 $publicApi = $read('api/v1/public-upload.php');
 $publicHandler = $read('src/Infrastructure/Jobs/CatalogPublicUploadJobHandler.php');
 $maintenance = $read('bin/repair-background-job-compatibility.php');
@@ -85,6 +87,14 @@ $record(
 );
 
 $record(
+    'legacy_admin_begin_batch_cannot_pause_workers',
+    str_contains($bucketChunkApi, "'pause_supported' => false")
+        && !str_contains($bucketChunkApi, '$processingState->status(true)')
+        && !str_contains($bucketState, 'requestStop('),
+    'Even an old cached admin client must not be able to pause a long-running queue as part of upload handoff.'
+);
+
+$record(
     'public_upload_wake_uses_isolated_starter',
     str_contains($publicApi, "if ($action === 'wake')")
         && str_contains($publicApi, 'CatalogQueueWorkerStarter')
@@ -116,6 +126,8 @@ $syntaxTargets = [
     'src/Infrastructure/Jobs/CatalogJobWorkerFactory.php',
     'src/Infrastructure/Jobs/CatalogQueueWorkerStarter.php',
     'src/Infrastructure/Import/CatalogBucketBatchFinalizer.php',
+    'src/Infrastructure/Import/CatalogBucketProcessingStateService.php',
+    'api/v1/upload-bucket-chunk.php',
     'api/v1/public-upload.php',
     'src/Infrastructure/Jobs/CatalogPublicUploadJobHandler.php',
 ];
