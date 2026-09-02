@@ -57,6 +57,12 @@ final class JobFailureRetryPolicy
             return self::isDeterministicPackageMessage($message);
         }
 
+        if ($jobType === JobType::PROCESS_PUBLIC_UPLOAD) {
+            return self::isDeterministicPackageMessage($message)
+                || str_contains($message, 'public upload md5 mismatch:')
+                || str_contains($message, 'public upload sha-1 mismatch:');
+        }
+
         return false;
     }
 
