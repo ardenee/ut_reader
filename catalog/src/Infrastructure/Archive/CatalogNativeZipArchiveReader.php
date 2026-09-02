@@ -199,11 +199,6 @@ final class CatalogNativeZipArchiveReader
             if ($entryCount === 0xffff || $centralSize === 0xffffffff || $recordedCentralOffset === 0xffffffff) {
                 throw new \RuntimeException('Native legacy ZIP decoding does not support ZIP64 central directories.');
             }
-            if ($entryCount > $this->maxEntries()) {
-                throw new \RuntimeException(
-                    'Archive contains too many entries; limit is ' . number_format($this->maxEntries()) . '.'
-                );
-            }
 
             // Deriving the physical central-directory start from the EOCD makes
             // prepended SFX stubs safe: old ZIP writers sometimes stored offsets
@@ -937,10 +932,5 @@ final class CatalogNativeZipArchiveReader
             throw new \RuntimeException('Could not allocate native ZIP temporary storage.');
         }
         return $path;
-    }
-
-    private function maxEntries(): int
-    {
-        return max(1, min(100000, (int)($this->config['archive']['max_entries'] ?? 10000)));
     }
 }
