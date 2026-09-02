@@ -23,6 +23,7 @@ use UnrealDb\Catalog\Infrastructure\Import\CatalogImportPathPolicy;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogIncomingFileStore;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogUploadBucketFilePolicy;
 use UnrealDb\Catalog\Infrastructure\Redirect\CatalogRedirectArchiveProcessor;
+use UnrealDb\Catalog\Infrastructure\Telemetry\CatalogSystemErrorRecorder;
 use UnrealDb\Catalog\Infrastructure\Telemetry\CatalogInvalidUeFileReporter;
 
 final class CatalogBucketStagedPackageJobHandler implements JobHandler
@@ -169,12 +170,13 @@ final class CatalogBucketStagedPackageJobHandler implements JobHandler
             $workingPath = '';
         } catch (Throwable $error) {
             if ($this->isDeterministicNonPackage($error)) {
-                // The bytes are durable and unchanged between attempts. A package
-                // extension whose content has no Unreal magic/header cannot become
-                // a valid package on retry, so record it as an invalid UE file.
-                $message = $this->errorText($error) . ' ' . $this->firstBytesDiagnostic($preparedPath);
-                $incoming->delete($stagedPath);
-                $preparedStore->clear();
+                // Treat this as terminal for automatic retry, but retain the
+                // durable prepared bytes. A future reader/tag fix can turn what
+                // looked deterministic today into a valid package (for example a
+                // newly supported package-tag variant), so an explicit archive
+                // rerun must not require the source to be uploaded again.
+                $message = 'Invalid Unreal package; durable member source retained for explicit current-code revalidation. '
+                    . $this->errorText($error) . ' ' . $this->firstBytesDiagnostic($preparedPath);
                 $validation = CatalogInvalidUeErrorClassifier::classify(
                     $this->errorText($error),
                     $error instanceof CatalogInvalidPackageException ? $error->validationCode() : '',
@@ -203,6 +205,7 @@ final class CatalogBucketStagedPackageJobHandler implements JobHandler
                     'percent' => 100,
                     'status' => CatalogImportOutcome::INVALID_UE_PACKAGE,
                     'message' => $message,
+                    'source_retained' => true,
                     'system_error_recorded' => $systemErrorRecorded,
                     'validation_code' => $validation['code'],
                     'validation_arguments' => $validation['arguments'],
@@ -217,7 +220,7 @@ final class CatalogBucketStagedPackageJobHandler implements JobHandler
                     $decoder,
                     $md5,
                     $sha1,
-                    false,
+                    true,
                     $systemErrorRecorded,
                     $validation['code'],
                     $validation['arguments']
@@ -293,6 +296,11 @@ final class CatalogBucketStagedPackageJobHandler implements JobHandler
 
         $incoming->delete($stagedPath);
         $preparedStore->clear();
+
+        // If this job previously produced an invalid-Unreal System Error and an
+        // explicit rerun now succeeds with current code, close that exact error.
+        CatalogSystemErrorRecorder::resolveInvalidUeJob($job->id, $job->id);
+
         $status = (string)($staged['status'] ?? 'indexed');
         $resultStatus = $status === 'duplicate' ? 'duplicate' : 'bucketed';
         $message = (string)($staged['message'] ?? 'Archive member was added to the Upload Bucket.');
