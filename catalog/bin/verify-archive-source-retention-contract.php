@@ -118,8 +118,8 @@ $record(
     str_contains($maintenance, 'new CatalogJobStorageCleanup($this->db, $this->config)')
         && str_contains($maintenance, '->prune(')
         && str_contains($jobStorageCleanup, 'status="completed" AND result_json LIKE "%source_retained%"')
-        && str_contains($jobStorageCleanup, "return is_array($result) && !empty($result['source_retained']);")
-        && str_contains($jobStorageCleanup, "if (isset($references[$uploadId]))")
+        && str_contains($jobStorageCleanup, 'return is_array($result) && !empty($result[\'source_retained\']);')
+        && str_contains($jobStorageCleanup, 'if (isset($references[$uploadId]))')
         && str_contains($jobStorageCleanup, '$result[\'referenced\']++')
         && str_contains($cleanup, "=== 'complete'")
         && str_contains($cleanup, 'continue;'),
