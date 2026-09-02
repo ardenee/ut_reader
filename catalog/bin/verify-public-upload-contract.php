@@ -209,8 +209,9 @@ $check(
         && str_contains($uploadApi, "'Upload complete. Validation is queued in the background.'")
         && str_contains($uploadApi, 'CatalogQueueWorkerStarter')
         && str_contains($queueStarter, '$launcher->start($queueName, 10000)')
-        && !str_contains($queueStarter, 'CatalogOrphanedJobRecovery')
-        && !str_contains($queueStarter, 'CatalogWorkerPoolReconciler'),
+        && !str_contains($queueStarter, 'new CatalogOrphanedJobRecovery(')
+        && !str_contains($queueStarter, 'new CatalogWorkerPoolReconciler(')
+        && !str_contains($queueStarter, 'new PdoJobQueue('),
     'Each file completion must return after durable enqueue; the batch wake may start missing processes but must not recover/reconcile unrelated historical jobs.'
 );
 
