@@ -68,14 +68,19 @@ final class CatalogArchiveWorkflowJobHandler implements JobHandler
             $childState = $this->children->fetch($job->id);
         }
 
-        $this->releaseSourceIfDisposable($job, $archiveResult);
-
         if ($childState['total'] < 1) {
-            return $this->finalResult($job, $archiveResult, $childState, $context);
+            $result = $this->finalResult($job, $archiveResult, $childState, $context);
+            $this->releaseSourceIfDisposable($job, $result);
+            return $result;
         }
 
         if (($childState['queued'] + $childState['running']) > 0) {
+            // Keep the parent archive source until every child has reached a
+            // terminal outcome. A child can expose a parser/decoder problem only
+            // after extraction has already succeeded; releasing the archive here
+            // would make later explicit retry/revalidation depend on re-uploading.
             $waiting = $this->waitingProgress($archiveResult, $childState);
+            $waiting['source_retained'] = true;
             // The extraction delegate's final checkpoint describes the extraction
             // phase, not the logical parent job. Immediately replace it with the
             // authoritative waiting phase before releasing the worker so event and
@@ -84,7 +89,9 @@ final class CatalogArchiveWorkflowJobHandler implements JobHandler
             $context->defer(2, $waiting, true);
         }
 
-        return $this->finalResult($job, $archiveResult, $childState, $context);
+        $result = $this->finalResult($job, $archiveResult, $childState, $context);
+        $this->releaseSourceIfDisposable($job, $result);
+        return $result;
     }
 
     /**
@@ -225,7 +232,7 @@ final class CatalogArchiveWorkflowJobHandler implements JobHandler
             'failed' => max(0, (int)($archiveResult['failed_files'] ?? 0)),
             'unpacked_bytes' => max(0, (int)($archiveResult['unpacked_bytes'] ?? 0)),
             'errors' => is_array($archiveResult['errors'] ?? null) ? $archiveResult['errors'] : [],
-            'source_retained' => !empty($archiveResult['source_retained']),
+            'source_retained' => !empty($result['source_retained']),
             'sequential_archive' => !empty($archiveResult['sequential_archive']),
             'archive_format' => (string)($archiveResult['archive_format'] ?? ''),
             'nested_archives' => is_array($archiveResult['nested_archives'] ?? null)
@@ -287,6 +294,13 @@ final class CatalogArchiveWorkflowJobHandler implements JobHandler
         $result = $archiveResult;
         $result['status'] = $partial ? 'partial' : 'completed';
         $result['message'] = $message;
+        // Extraction success alone is not enough to discard the parent source.
+        // Keep it when a child needs operator attention so the complete archive
+        // tree remains reproducible after reader/decoder fixes without re-upload.
+        $result['source_retained'] = !empty($archiveResult['source_retained'])
+            || $childFailed > 0
+            || $cancelled > 0
+            || $invalidUe > 0;
         $result['archive_outcomes'] = [
             'archive_member_skipped' => $extractionSkipped,
             'child_skipped' => $childSkipped,
