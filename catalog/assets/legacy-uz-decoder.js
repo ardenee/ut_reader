@@ -264,6 +264,7 @@
         return data.length>=4 && (
             (data[0]===0xc1 && data[1]===0x83 && data[2]===0x2a && data[3]===0x9e)
             || (data[0]===0x9e && data[1]===0x2a && data[2]===0x83 && data[3]===0xc1)
+            || (data[0]===0xc2 && data[1]===0x83 && data[2]===0x2a && data[3]===0x9e)
         );
     }
 
