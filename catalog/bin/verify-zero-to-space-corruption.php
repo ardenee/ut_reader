@@ -42,6 +42,7 @@ foreach ([
     'src/Infrastructure/Import/CatalogVerifiedPackageInspector.php',
     'src/Application/Telemetry/CatalogInvalidUeErrorClassifier.php',
     'src/Infrastructure/Jobs/CatalogWorkerCodeVersion.php',
+    'bin/inspect-unreal-file.php',
     __FILE__,
 ] as $relative) {
     $path = $relative === __FILE__
@@ -123,6 +124,7 @@ try {
 $indexer = $read('src/Infrastructure/Import/CatalogUnverifiedPackageIndexer.php');
 $verified = $read('src/Infrastructure/Import/CatalogVerifiedPackageInspector.php');
 $fingerprint = $read('src/Infrastructure/Jobs/CatalogWorkerCodeVersion.php');
+$cli = $read('bin/inspect-unreal-file.php');
 
 $record(
     'unverified_detects_corruption_before_unsupported_reader',
@@ -138,6 +140,13 @@ $record(
         && ($profilePos = strpos($verified, 'if ($strictProfile && empty($classification')) !== false
         && $detectorPos < $profilePos,
     'Verified imports must classify source corruption before a game/profile mismatch can hide it.'
+);
+
+$record(
+    'cli_reuses_shared_corruption_detector',
+    str_contains($cli, 'CatalogLegacyPackageCorruptionDetector::detectZeroToSpace($parsePath)')
+        && str_contains($cli, "'unreal.zero_to_space_corruption'"),
+    'The one-file CLI diagnostic must use the same corruption signature as production import paths.'
 );
 
 $record(
