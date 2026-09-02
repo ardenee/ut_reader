@@ -79,11 +79,8 @@ final class CatalogUmodArchiveReader
 
             $cursor = 0;
             $count = CatalogUmodBinaryCodec::readCompactIndex($table, $cursor);
-            if ($count < 0 || $count > $this->maxEntries()) {
-                throw new \RuntimeException(
-                    'UMOD contains an invalid number of entries; limit is '
-                    . number_format($this->maxEntries()) . '.'
-                );
+            if ($count < 0) {
+                throw new \RuntimeException('UMOD contains an invalid negative entry count.');
             }
 
             $format = strtolower((string)pathinfo($archiveName, PATHINFO_EXTENSION));
@@ -313,11 +310,6 @@ final class CatalogUmodArchiveReader
             return $path !== 0 ? $path : ((int)$left['index'] <=> (int)$right['index']);
         });
         return array_values($entries);
-    }
-
-    private function maxEntries(): int
-    {
-        return max(1, min(100000, (int)($this->config['archive']['max_entries'] ?? 10000)));
     }
 
     private function maxDirectoryBytes(): int
