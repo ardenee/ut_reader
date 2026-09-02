@@ -46,6 +46,7 @@ $client = $read('assets/background-jobs-files.js');
 $statusPolicy = $read('src/Infrastructure/Jobs/CatalogJobDisplayStatus.php');
 $errorRecorder = $read('src/Infrastructure/Telemetry/CatalogSystemErrorRecorder.php');
 $archiveRerun = $read('src/Infrastructure/Persistence/PdoCompletedArchiveRerunSelection.php');
+$archiveWorkflow = $read('src/Infrastructure/Jobs/CatalogArchiveWorkflowJobHandler.php');
 $workerVersion = $read('src/Infrastructure/Jobs/CatalogWorkerCodeVersion.php');
 
 $record(
@@ -70,11 +71,13 @@ $record(
 );
 
 $record(
-    'completed_archive_rerun_replays_descendants',
+    'completed_archive_rerun_replays_only_source_backed_trees',
     str_contains($archiveRerun, '$descendantIds = $this->archiveDescendantIds($queueName, $roots);')
         && str_contains($archiveRerun, '$descendantsRequeued = $this->resetJobs($queueName, $descendantIds, $now);')
-        && str_contains($archiveRerun, 'status IN ("completed","failed","dead_letter","cancelled")'),
-    'Explicit archive rerun must reactivate retained child jobs after parser/classifier changes.'
+        && str_contains($archiveRerun, 'status IN ("completed","failed","dead_letter","cancelled")')
+        && str_contains($archiveRerun, 'JSON_EXTRACT(result_json,"$.source_retained")')
+        && str_contains($archiveRerun, '=true'),
+    'Explicit archive rerun may reactivate child jobs only when the completed parent still owns its archive source.'
 );
 
 $record(
@@ -185,6 +188,17 @@ $record(
 );
 
 $record(
+    'archive_parent_retains_source_for_child_revalidation',
+    str_contains($archiveWorkflow, 'Keep the parent archive source until every child has reached a')
+        && str_contains($archiveWorkflow, '$waiting[\'source_retained\'] = true;')
+        && str_contains($archiveWorkflow, '|| $childFailed > 0')
+        && str_contains($archiveWorkflow, '|| $cancelled > 0')
+        && str_contains($archiveWorkflow, '|| $invalidUe > 0')
+        && str_contains($archiveWorkflow, '$this->releaseSourceIfDisposable($job, $result);'),
+    'Archive source ownership must survive until child outcomes are known and stay retained for child problems/revalidation.'
+);
+
+$record(
     'worker_fingerprint_tracks_revalidation_runtime',
     str_contains($workerVersion, '/Jobs/CatalogUnverifiedMetadataRepairJobHandler.php')
         && str_contains($workerVersion, '/Import/CatalogUnverifiedMetadataRepairProcessor.php')
@@ -209,6 +223,7 @@ $syntaxTargets = [
     'src/Infrastructure/Jobs/CatalogJobDisplayStatus.php',
     'src/Infrastructure/Telemetry/CatalogSystemErrorRecorder.php',
     'src/Infrastructure/Persistence/PdoCompletedArchiveRerunSelection.php',
+    'src/Infrastructure/Jobs/CatalogArchiveWorkflowJobHandler.php',
     'src/Infrastructure/Jobs/CatalogWorkerCodeVersion.php',
 ];
 
