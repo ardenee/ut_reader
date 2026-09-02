@@ -523,7 +523,8 @@
         try {
             const bytes = new Uint8Array(await file.slice(0, 52).arrayBuffer());
             const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-            const leMagic = view.getUint32(0, true) === 0x9e2a83c1;
+            const leTag = view.getUint32(0, true);
+            const leMagic = leTag === 0x9e2a83c1 || leTag === 0x9e2a83c2;
             const beMagic = view.getUint32(0, false) === 0x9e2a83c1;
             if (!leMagic && !beMagic) return '';
             const littleEndian = leMagic;
