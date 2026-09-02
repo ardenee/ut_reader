@@ -19,6 +19,7 @@ $handlerPath = $root . '/src/Infrastructure/Jobs/CatalogArchiveImportJobHandler.
 $workflowPath = $root . '/src/Infrastructure/Jobs/CatalogArchiveWorkflowJobHandler.php';
 $policyPath = $root . '/src/Application/Jobs/JobFailureRetryPolicy.php';
 $cleanupPath = $root . '/src/Infrastructure/Import/CatalogChunkedUploadCleanup.php';
+$jobStorageCleanupPath = $root . '/src/Infrastructure/Jobs/CatalogJobStorageCleanup.php';
 $maintenancePath = $root . '/src/Infrastructure/Jobs/CatalogStorageMaintenanceJobHandler.php';
 $fingerprintPath = $root . '/src/Infrastructure/Jobs/CatalogWorkerCodeVersion.php';
 
@@ -26,6 +27,7 @@ $handler = (string)@file_get_contents($handlerPath);
 $workflow = (string)@file_get_contents($workflowPath);
 $policy = (string)@file_get_contents($policyPath);
 $cleanup = (string)@file_get_contents($cleanupPath);
+$jobStorageCleanup = (string)@file_get_contents($jobStorageCleanupPath);
 $maintenance = (string)@file_get_contents($maintenancePath);
 $fingerprint = (string)@file_get_contents($fingerprintPath);
 
@@ -112,11 +114,16 @@ $record(
 );
 
 $record(
-    'maintenance_prunes_only_incomplete_chunk_uploads',
-    str_contains($maintenance, 'CatalogChunkedUploadCleanup($this->config))->pruneIncomplete()')
+    'maintenance_preserves_owned_completed_chunk_uploads',
+    str_contains($maintenance, 'new CatalogJobStorageCleanup($this->db, $this->config)')
+        && str_contains($maintenance, '->prune(')
+        && str_contains($jobStorageCleanup, 'status="completed" AND result_json LIKE "%source_retained%"')
+        && str_contains($jobStorageCleanup, "return is_array($result) && !empty($result['source_retained']);")
+        && str_contains($jobStorageCleanup, "if (isset($references[$uploadId]))")
+        && str_contains($jobStorageCleanup, '$result[\'referenced\']++')
         && str_contains($cleanup, "=== 'complete'")
         && str_contains($cleanup, 'continue;'),
-    'Routine stale-artifact maintenance must leave completed chunk-upload sources alone; terminal job-history cleanup owns their eventual deletion.'
+    'Routine maintenance must protect completed chunk-upload sources owned by retryable/source-retained jobs; unowned terminal history may be reclaimed only by ownership-aware job-storage cleanup.'
 );
 
 $record(
@@ -128,7 +135,7 @@ $record(
 );
 
 $syntaxFailures = [];
-foreach ([$handlerPath, $workflowPath, $policyPath, $cleanupPath, $maintenancePath, $fingerprintPath] as $path) {
+foreach ([$handlerPath, $workflowPath, $policyPath, $cleanupPath, $jobStorageCleanupPath, $maintenancePath, $fingerprintPath] as $path) {
     $pipes = [];
     $process = @proc_open([PHP_BINARY, '-l', $path], [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
     if (!is_resource($process)) {
