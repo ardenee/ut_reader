@@ -373,7 +373,7 @@ async function callSevenZip(module, args, stderr) {
         throw new Error(cleanSevenZipError(error, stderr));
     }
 }
-function parseTechnicalList(lines, maximumEntries) {
+function parseTechnicalList(lines) {
     const entries = [];
     let record = {};
     function flush() {
@@ -391,7 +391,6 @@ function parseTechnicalList(lines, maximumEntries) {
                 encrypted:String(record.Encrypted || '').trim() === '+',
                 linked:linked, method:String(record.Method || ''), block:String(record.Block || '')
             });
-            if (entries.length > maximumEntries) throw new Error('Archive contains too many file entries.');
         }
         record = {};
     }
@@ -579,15 +578,14 @@ function closeActive() {
     }
     activeStream = null; activeSize = 0; nextReadOffset = 0;
 }
-async function listArchive(id, file, maxEntries) {
+async function listArchive(id, file) {
     const stdout = [], stderr = [];
     const module = await createSevenZip(file, stdout, stderr);
     sevenZip = module;
     const archivePath = '/input/' + file.name;
     emitProgress(id, 'list', 'Reading archive directory.', 0, Number(file.size || 0));
     await callSevenZip(module, ['l', '-slt', '-ba', '-bd', archivePath], stderr);
-    const entries = parseTechnicalList(stdout,
-        Math.min(MAX_ARCHIVE_ENTRIES, Math.max(1, Number(maxEntries || MAX_ARCHIVE_ENTRIES))));
+    const entries = parseTechnicalList(stdout);
     emitProgress(id, 'list', 'Archive directory read.', Number(file.size || 0), Number(file.size || 0));
     return entries;
 }
@@ -630,7 +628,7 @@ self.addEventListener('message', async function (event) {
     const id = String(data.id || '');
     try {
         if (data.type === 'list') {
-            self.postMessage({type:'result', id:id, result:{entries:await listArchive(id, data.file, data.max_entries)}});
+            self.postMessage({type:'result', id:id, result:{entries:await listArchive(id, data.file)}});
             return;
         }
         if (data.type === 'extract') {
