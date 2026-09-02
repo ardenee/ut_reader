@@ -48,13 +48,14 @@ try {
     $processingState = new CatalogBucketProcessingStateService($application->db, $application->config);
 
     if ($action === 'begin_batch') {
-        // Stale chunk-directory cleanup is maintenance work, not an interactive
-        // upload prerequisite. Keeping it out of this request makes Phase 1 a
-        // short worker-pause request instead of an unbounded filesystem scan.
+        // Legacy browser compatibility only. Older clients used begin_batch to
+        // request a global worker pause before finalizing uploads. Durable queue
+        // handoff is now append-only, so this action is deliberately read-only.
         JsonResponse::send([
             'ok' => true,
             'cleanup_deferred' => true,
-            'processing' => $processingState->status(true),
+            'pause_supported' => false,
+            'processing' => $processingState->status(false),
         ], 200);
     }
 
