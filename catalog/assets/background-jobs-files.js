@@ -78,6 +78,14 @@
         if (element && element.textContent !== String(text)) element.textContent = String(text);
     }
 
+    function setButtonDisabled(button, disabled) {
+        if (!button) return;
+        const value = Boolean(disabled);
+        button.disabled = value;
+        if (value) button.setAttribute('aria-disabled', 'true');
+        else button.removeAttribute('aria-disabled');
+    }
+
     function setNotice(text, milliseconds) {
         setText(notice, text);
         state.noticeUntil = Date.now() + (milliseconds || 5000);
@@ -292,14 +300,14 @@
         setText(selectedCount, state.selected.size === 1 ? '1 source selected' : state.selected.size + ' sources selected');
         if (retrySelectedButton) {
             const selectedSources = selectedSourceIds().length;
-            retrySelectedButton.disabled = selectedSources === 0;
+            setButtonDisabled(retrySelectedButton, selectedSources === 0);
             retrySelectedButton.title = selectedSources > 0
                 ? 'Retry/recover the selected source job(s). The server will skip or block sources that cannot safely be retried.'
                 : 'Select one or more source rows.';
         }
         if (retryAllMatchingButton) {
             const matchingSources = Math.max(0, Number(state.meta.total || 0));
-            retryAllMatchingButton.disabled = matchingSources === 0;
+            setButtonDisabled(retryAllMatchingButton, matchingSources === 0);
             retryAllMatchingButton.textContent = matchingSources > 0
                 ? 'Retry all matching (' + matchingSources.toLocaleString() + ')'
                 : 'Retry all matching';
@@ -309,13 +317,13 @@
         }
         if (stopSelectedButton) {
             const stoppable = stoppableSelectedIds().length;
-            stopSelectedButton.disabled = stoppable === 0;
+            setButtonDisabled(stopSelectedButton, stoppable === 0);
             stopSelectedButton.title = stoppable > 0
                 ? 'Stop/cancel ' + stoppable + ' selected working source job(s).'
                 : 'Select one or more Working source rows.';
         }
         if (deleteSelectedButton) {
-            deleteSelectedButton.disabled = state.selected.size === 0;
+            setButtonDisabled(deleteSelectedButton, state.selected.size === 0);
             deleteSelectedButton.title = state.selected.size > 0
                 ? 'Delete the selected source job(s) and their complete child job history. Running roots are skipped.'
                 : 'Select one or more source rows to delete.';
@@ -665,7 +673,7 @@
             setNotice('Select one or more source rows to retry or recover.', 5000);
             return;
         }
-        if (retrySelectedButton) retrySelectedButton.disabled = true;
+        setButtonDisabled(retrySelectedButton, true);
         try {
             const payload = await postJson(bulkUrl, {
                 action: 'restart',
@@ -706,7 +714,7 @@
             + 'Jobs that cannot safely be retried will be skipped or blocked.'
         )) return;
 
-        if (retryAllMatchingButton) retryAllMatchingButton.disabled = true;
+        setButtonDisabled(retryAllMatchingButton, true);
         try {
             const payload = await postJson(bulkUrl, {
                 action: 'restart',
@@ -745,7 +753,7 @@
             setNotice('No selected source rows are currently working.', 5000);
             return;
         }
-        if (stopSelectedButton) stopSelectedButton.disabled = true;
+        setButtonDisabled(stopSelectedButton, true);
         let stopped = 0;
         let failed = 0;
         try {
@@ -780,7 +788,7 @@
             + 'Running source jobs will be skipped.'
         )) return;
 
-        if (deleteSelectedButton) deleteSelectedButton.disabled = true;
+        setButtonDisabled(deleteSelectedButton, true);
         try {
             const payload = await postJson(bulkUrl, {
                 action: 'delete',
