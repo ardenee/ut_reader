@@ -15,6 +15,7 @@ use UnrealDb\Catalog\Application\Jobs\JobHandler;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogUnverifiedMetadataRepairProcessor;
+use UnrealDb\Catalog\Infrastructure\Telemetry\CatalogSystemErrorRecorder;
 use UnrealDb\Catalog\Infrastructure\Unverified\CatalogUnverifiedQueueStorage;
 use UnrealDb\Catalog\Infrastructure\Unverified\CatalogUnverifiedStagingIndex;
 
@@ -242,6 +243,11 @@ final class CatalogUnverifiedMetadataRepairJobHandler implements JobHandler
             'message' => $completionMessage,
         ]);
 
+        $sourceJobId = max(0, (int)($job->payload['revalidation_source_job_id'] ?? 0));
+        if ($sourceJobId > 0 && empty($result['parse_error'])) {
+            $this->resolveSuccessfulRevalidation($sourceJobId, $job->id, $fileId, $originalName);
+        }
+
         return [
             'status' => 'completed',
             'message' => $completionMessage,
@@ -262,6 +268,48 @@ final class CatalogUnverifiedMetadataRepairJobHandler implements JobHandler
             'parse_error' => $result['parse_error'] ?? null,
             'requested_missing_reasons' => array_values((array)($job->payload['missing_reasons'] ?? [])),
         ];
+    }
+
+    private function resolveSuccessfulRevalidation(
+        int $sourceJobId,
+        int $revalidationJobId,
+        int $fileId,
+        string $originalName
+    ): void {
+        $source = \catalog_one(
+            $this->db,
+            'SELECT result_json FROM ue_background_jobs '
+                . 'WHERE id=? AND status="completed" AND display_status="invalid_ue_package" LIMIT 1',
+            [$sourceJobId]
+        );
+        if (!$source) {
+            return;
+        }
+
+        $result = json_decode((string)($source['result_json'] ?? ''), true);
+        $result = is_array($result) ? $result : [];
+        $previousStatus = strtolower(trim((string)($result['status'] ?? 'invalid_ue_package')));
+        $result['previous_status'] = $previousStatus !== '' ? $previousStatus : 'invalid_ue_package';
+        $result['status'] = 'revalidated';
+        $result['revalidation_job_id'] = $revalidationJobId;
+        $result['revalidated_file_id'] = $fileId;
+        $result['revalidated_at'] = gmdate('Y-m-d H:i:s');
+        $result['message'] = 'Retained source revalidated successfully with the current package reader: '
+            . $originalName . '.';
+
+        $encoded = json_encode(
+            $result,
+            JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE
+        );
+        $statement = $this->db->prepare(
+            'UPDATE ue_background_jobs SET result_json=?,updated_at=? '
+                . 'WHERE id=? AND status="completed" AND display_status="invalid_ue_package"'
+        );
+        $statement->execute([$encoded, gmdate('Y-m-d H:i:s'), $sourceJobId]);
+
+        if ($statement->rowCount() > 0) {
+            CatalogSystemErrorRecorder::resolveInvalidUeJob($sourceJobId, $revalidationJobId);
+        }
     }
 
     /** @param array<string,mixed> $raw @return array<string,mixed> */
