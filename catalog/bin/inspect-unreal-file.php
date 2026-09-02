@@ -144,11 +144,23 @@ function inspect_unreal_full_validate(string $path, array $summary, ?array $corr
             : [];
 
         if ($fatal !== []) {
+            $validationIssues = is_array($validationIssues) ? $validationIssues : [];
+            if (!is_array($validationIssues[0] ?? null)) {
+                $classified = \UnrealDb\Catalog\Application\Telemetry\CatalogInvalidUeErrorClassifier::classify(
+                    (string)$fatal[0]
+                );
+                $validationIssues = [[
+                    'code' => $classified['code'],
+                    'reason' => $classified['reason'],
+                    'arguments' => $classified['arguments'],
+                ]];
+            }
+
             return [
                 'status' => 'FAILED',
                 'reader_engine' => $engine,
                 'issues' => array_values(array_map('strval', $fatal)),
-                'validation_issues' => is_array($validationIssues) ? $validationIssues : [],
+                'validation_issues' => $validationIssues,
                 'header' => method_exists($reader, 'getHeader') && is_array($reader->getHeader()) ? $reader->getHeader() : [],
                 'name_count' => null,
                 'import_count' => null,
@@ -182,11 +194,17 @@ function inspect_unreal_full_validate(string $path, array $summary, ?array $corr
             'export_count' => count($exports),
         ];
     } catch (Throwable $error) {
+        $message = get_class($error) . ': ' . $error->getMessage();
+        $classified = \UnrealDb\Catalog\Application\Telemetry\CatalogInvalidUeErrorClassifier::classify($message);
         return [
             'status' => 'FAILED',
             'reader_engine' => $engine,
-            'issues' => [get_class($error) . ': ' . $error->getMessage()],
-            'validation_issues' => [],
+            'issues' => [$message],
+            'validation_issues' => [[
+                'code' => $classified['code'],
+                'reason' => $classified['reason'],
+                'arguments' => $classified['arguments'],
+            ]],
             'header' => [],
             'name_count' => null,
             'import_count' => null,
