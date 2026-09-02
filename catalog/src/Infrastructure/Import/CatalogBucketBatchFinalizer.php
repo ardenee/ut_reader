@@ -1,9 +1,11 @@
 <?php
 /**
- * UnrealDB PHP File Audit
- * Purpose: Orchestrates Upload Bucket batch finalization, queue preparation, durable enqueueing and optional worker start.
- * Why: The HTTP endpoint should validate/serialize transport data rather than coordinate workers, orphan recovery and durable queue state.
- * Role: Infrastructure import orchestration; preserves existing Upload Bucket batch semantics.
+ * Upload Bucket durable batch finalization.
+ *
+ * Finalization is intentionally append-only with respect to queue history:
+ * it validates the supplied completed uploads, enqueues only those sources and
+ * optionally wakes worker processes. It does not migrate legacy queues, recover
+ * orphaned jobs, stop active workers or rewrite unrelated durable rows.
  */
 declare(strict_types=1);
 
@@ -11,8 +13,7 @@ namespace UnrealDb\Catalog\Infrastructure\Import;
 
 use PDO;
 use Throwable;
-use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorker;
-use UnrealDb\Catalog\Infrastructure\Jobs\CatalogOrphanedJobRecovery;
+use UnrealDb\Catalog\Infrastructure\Jobs\CatalogQueueWorkerStarter;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoBackgroundJobOperationalQuery;
 
 final class CatalogBucketBatchFinalizer
@@ -25,6 +26,10 @@ final class CatalogBucketBatchFinalizer
     }
 
     /**
+     * $prepareQueue is retained for transport/API compatibility with the browser
+     * coordinator. A durable queue no longer requires a destructive preparation
+     * phase before another batch can be appended.
+     *
      * @param list<string> $uploadIds
      * @return array{
      *   queue:string,
@@ -45,33 +50,7 @@ final class CatalogBucketBatchFinalizer
         bool $startWorker
     ): array {
         $queue = new CatalogBucketBatchQueue($this->db, $this->config);
-        $launcher = new CatalogDetachedWorker($this->config);
-        $orphanRecovery = [];
 
-        if ($prepareQueue || $startWorker) {
-            $activeQueues = [];
-            foreach ([$queue->queueName(), $queue->legacyQueueName()] as $queueName) {
-                $workerStatus = $launcher->status($queueName, false);
-                $busy = !empty($workerStatus['active']) || (int)($workerStatus['launching_count'] ?? 0) > 0;
-                if ($prepareQueue && !$busy) {
-                    $recovery = (new CatalogOrphanedJobRecovery($this->db, $this->config))
-                        ->recoverInactiveQueue($queueName);
-                    if (!empty($recovery['recovered'])) {
-                        $orphanRecovery[$queueName] = $recovery;
-                    }
-                    $workerStatus = $launcher->status($queueName, false);
-                    $busy = !empty($workerStatus['active']) || (int)($workerStatus['launching_count'] ?? 0) > 0;
-                }
-                if ($busy) {
-                    $activeQueues[] = $queueName;
-                }
-            }
-            if ($activeQueues !== []) {
-                throw new CatalogBucketProcessingActive($activeQueues);
-            }
-        }
-
-        $legacyMigrated = $prepareQueue ? $queue->migrateLegacyQueuedJobs() : 0;
         $results = [];
         foreach ($uploadIds as $uploadId) {
             try {
@@ -81,7 +60,8 @@ final class CatalogBucketBatchFinalizer
                     'error' => null,
                 ];
             } catch (Throwable $error) {
-                $message = trim($error->getMessage()) ?: get_class($error) . ' was thrown without an error message.';
+                $message = trim($error->getMessage())
+                    ?: get_class($error) . ' was thrown without an error message.';
                 $results[] = [
                     'upload_id' => $uploadId,
                     'result' => null,
@@ -95,34 +75,31 @@ final class CatalogBucketBatchFinalizer
 
         $pendingJobs = (new PdoBackgroundJobOperationalQuery($this->db, $this->config))
             ->queuedCount($queue->queueName());
+
         $worker = null;
         $workerError = '';
         if ($startWorker && $pendingJobs > 0) {
-            try {
-                (new CatalogOrphanedJobRecovery($this->db, $this->config))
-                    ->recoverInactiveQueue($queue->queueName());
-
-                // Automatic Upload Bucket starts must honor the durable pool
-                // preference chosen by the operator. Passing the configured
-                // default here used to overwrite a live/manual 1- or 2-worker
-                // choice back to four workers whenever a new batch was queued.
-                $worker = $launcher->start($queue->queueName(), 10000);
-            } catch (Throwable $error) {
-                $workerError = trim($error->getMessage()) ?: get_class($error) . ' was thrown without an error message.';
-                error_log('[UnrealDB bucket worker] ' . get_class($error) . ': ' . $workerError);
+            $start = (new CatalogQueueWorkerStarter($this->db, $this->config))
+                ->start($queue->queueName(), true, $userId);
+            $worker = is_array($start['worker'] ?? null) ? $start['worker'] : null;
+            $workerError = trim((string)($start['worker_error'] ?? ''));
+            if ($workerError !== '') {
+                error_log('[UnrealDB bucket worker] ' . $workerError);
             }
         }
 
         return [
             'queue' => $queue->queueName(),
             'results' => $results,
-            'legacy_migrated' => $legacyMigrated,
+            // Historical queue migration is explicit maintenance only.
+            'legacy_migrated' => 0,
             'pending_jobs' => $pendingJobs,
             'prepare_queue' => $prepareQueue,
             'start_worker' => $startWorker,
             'worker' => $worker,
             'worker_error' => $workerError,
-            'orphan_recovery' => $orphanRecovery,
+            // Automatic upload finalization never performs orphan recovery.
+            'orphan_recovery' => [],
         ];
     }
 }
