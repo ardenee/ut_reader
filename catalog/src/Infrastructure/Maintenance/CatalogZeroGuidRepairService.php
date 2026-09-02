@@ -155,7 +155,7 @@ final class CatalogZeroGuidRepairService
             return '';
         }
         $tag = (int)(unpack('V', substr($bytes, 0, 4))[1] ?? 0);
-        if ($tag !== 0x9E2A83C1) {
+        if (!\UnrealDb\Catalog\Domain\Package\CatalogUnrealPackageTag::isSupportedLittleEndianValue($tag)) {
             return '';
         }
         $parts = [
