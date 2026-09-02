@@ -96,7 +96,7 @@ $record(
 
 $record(
     'public_upload_wake_uses_isolated_starter',
-    str_contains($publicApi, "if ($action === 'wake')")
+    str_contains($publicApi, 'if ($action === \'wake\')')
         && str_contains($publicApi, 'CatalogQueueWorkerStarter')
         && !str_contains($publicApi, 'CatalogOrphanedJobRecovery')
         && !str_contains($publicApi, 'CatalogWorkerPoolReconciler'),
@@ -106,14 +106,14 @@ $record(
 $record(
     'public_upload_followup_is_file_scoped',
     str_contains($publicHandler, 'JobType::REFRESH_UNVERIFIED_GAME_MATCHES')
-        && str_contains($publicHandler, "['file_id' => $fileId, 'scope' => 'file']")
+        && str_contains($publicHandler, '[\'file_id\' => $fileId, \'scope\' => \'file\']')
         && !str_contains($publicHandler, "['scope' => 'bucket']"),
     'A public contribution may refresh evidence only for the file it just staged.'
 );
 
 $record(
     'historical_maintenance_is_explicit',
-    str_contains($maintenance, "array_key_exists('execute', $options)")
+    str_contains($maintenance, 'array_key_exists(\'execute\', $options)')
         && str_contains($maintenance, "'changed' => false")
         && str_contains($backfill, "'mode' => 'ledger_only'")
         && str_contains($backfill, "'workers_started' => false"),
