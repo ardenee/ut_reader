@@ -65,10 +65,12 @@ final class CatalogBackgroundJobFileTreeProjector
             $row['result_label'] = $this->resultLabel($displayStatus, $result);
             $row['can_revalidate'] = $queueStatus === 'completed'
                 && $displayStatus === 'invalid_ue_package'
-                && max(0, (int)($result['file_id'] ?? 0)) > 0;
-            $row['revalidate_file_id'] = $row['can_revalidate']
-                ? max(0, (int)($result['file_id'] ?? 0))
-                : 0;
+                && (
+                    max(0, (int)($result['file_id'] ?? 0)) > 0
+                    || !empty($result['source_retained'])
+                );
+            $row['revalidate_file_id'] = max(0, (int)($result['file_id'] ?? 0));
+            $row['revalidate_source_retained'] = !empty($result['source_retained']);
         }
         unset($row);
         return $rows;
