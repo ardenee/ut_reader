@@ -1,9 +1,9 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Reads and optionally pauses Upload Bucket worker queues for browser batch coordination.
- * Why: Worker process control and running-job SQL must not live in the chunk-upload HTTP endpoint.
- * Role: Infrastructure orchestration used by Upload Bucket v2 begin/status actions.
+ * Purpose: Reads Upload Bucket worker state for compatibility/status reporting.
+ * Why: Upload ingress must never stop or pause unrelated durable queue work.
+ * Role: Read-only infrastructure projection used by legacy begin/status actions.
  */
 declare(strict_types=1);
 
@@ -23,8 +23,14 @@ final class CatalogBucketProcessingStateService
     ) {
     }
 
-    /** @return array{ready:bool,workers:list<array<string,mixed>>} */
-    public function status(bool $requestPause): array
+    /**
+     * @return array{ready:bool,workers:list<array<string,mixed>>}
+     *
+     * $requestPause is retained only for source/API compatibility with older
+     * callers. It is intentionally ignored: upload/status requests may observe
+     * worker state but must never stop a queue.
+     */
+    public function status(bool $requestPause = false): array
     {
         $queues = new CatalogBucketBatchQueue($this->db, $this->config);
         $launcher = new CatalogDetachedWorker($this->config);
@@ -35,15 +41,6 @@ final class CatalogBucketProcessingStateService
         foreach ([$queues->queueName(), $queues->legacyQueueName()] as $queueName) {
             $status = $launcher->status($queueName, false);
             $busy = !empty($status['active']) || (int)($status['launching_count'] ?? 0) > 0;
-            if ($requestPause && $busy) {
-                // A worker slot that has published `launching` but has not yet
-                // acquired its runtime lock is still real queue activity. Mark
-                // the queue stopped now so that process exits as soon as it
-                // reaches its worker loop instead of racing batch finalisation.
-                $launcher->requestStop($queueName);
-                $status = $launcher->status($queueName, false);
-                $busy = !empty($status['active']) || (int)($status['launching_count'] ?? 0) > 0;
-            }
             $active = !empty($status['active']);
             $launching = (int)($status['launching_count'] ?? 0);
             if ($busy) {
