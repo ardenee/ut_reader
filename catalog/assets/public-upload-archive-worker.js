@@ -468,23 +468,7 @@ async function inspectUz3(id, name, maxFileBytes) {
             + ' (actual_tag=' + signature + ', expected_tag=5678, uncompressed_size=' + expected + ').');
     }
 
-    const cmf = probe.length > 9 ? probe[8] : -1;
-    const flg = probe.length > 9 ? probe[9] : -1;
-    const looksLikeOfficialZlib = cmf >= 0
-        && (cmf & 0x0f) === 8
-        && (((cmf << 8) | flg) % 31) === 0;
-    const legacyHeader = !looksLikeOfficialZlib
-        ? self.UnrealDbLegacyUzDecoder.header(probe, 5678)
-        : null;
-    if (legacyHeader) {
-        const result = await inspectUz(id, name, maxFileBytes);
-        result.extension = 'uz3';
-        result.header = {
-            kind: 'redirect-uz3-fcodec-compat',
-            description: 'Signature-5678 FCodec content carried with a .uz3 suffix; decoded package identity calculated in browser'
-        };
-        return result;
-    }
+    const legacyHeader = self.UnrealDbLegacyUzDecoder.header(probe, 5678);
 
     if (expected < 1) {
         throw new Error('Invalid UZ3 format: ' + name + ' (uncompressed_size=' + expected + ', minimum_size=1).');
@@ -523,6 +507,15 @@ async function inspectUz3(id, name, maxFileBytes) {
                 Math.min(expected, outputBytes), expected);
         }
     } catch (error) {
+        if (legacyHeader) {
+            const result = await inspectUz(id, name, maxFileBytes);
+            result.extension = 'uz3';
+            result.header = {
+                kind: 'redirect-uz3-fcodec-compat',
+                description: 'Signature-5678 FCodec content carried with a .uz3 suffix; decoded package identity calculated in browser'
+            };
+            return result;
+        }
         const payloadHead = readAt(8, Math.min(8, Math.max(0, activeSize - 8)));
         throw new Error('Cannot decompress UZ3: ' + name
             + ' (tag=5678, uncompressed_size=' + expected
