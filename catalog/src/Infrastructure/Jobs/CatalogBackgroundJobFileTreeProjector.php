@@ -346,6 +346,7 @@ final class CatalogBackgroundJobFileTreeProjector
             'imported', 'verified' => 'Imported',
             'unverified_profile_mismatch' => 'Unverified · profile mismatch',
             'invalid_ue_package' => 'Invalid UE file · logged in System Errors',
+            'revalidated' => 'Revalidated with current code',
             'invalid_files' => 'Contains invalid UE file',
             'decompressed' => 'Decompressed',
             default => '',
