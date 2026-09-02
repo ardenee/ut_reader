@@ -1,11 +1,8 @@
 #!/usr/bin/env php
 <?php
 /**
- * Regression gate: worker startup must not backfill historical invalid-UE
- * System Errors as a side effect of starting new queue work.
- *
- * Historical backfill remains available only through the explicit ledger-only
- * CLI command.
+ * Regression gate: worker construction must not mutate unrelated historical
+ * queue/error state as a side effect of starting new work.
  */
 declare(strict_types=1);
 
@@ -16,7 +13,8 @@ if (PHP_SAPI !== 'cli') {
 
 $root = realpath(dirname(__DIR__)) ?: dirname(__DIR__);
 $factoryPath = $root . '/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php';
-$cliPath = $root . '/bin/backfill-invalid-ue-system-errors.php';
+$backfillPath = $root . '/bin/backfill-invalid-ue-system-errors.php';
+$maintenancePath = $root . '/bin/repair-background-job-compatibility.php';
 
 $checks = [];
 $failures = [];
@@ -41,33 +39,53 @@ $lint = static function (string $path): array {
     return [$exit === 0, trim((string)$stderr . ' ' . (string)$stdout)];
 };
 
-[$factorySyntax, $factoryLint] = $lint($factoryPath);
-[$cliSyntax, $cliLint] = $lint($cliPath);
-$record('php_syntax', $factorySyntax && $cliSyntax, trim($factoryLint . ' | ' . $cliLint));
+$syntaxOk = true;
+$syntaxDetails = [];
+foreach ([$factoryPath, $backfillPath, $maintenancePath] as $path) {
+    [$ok, $detail] = $lint($path);
+    $syntaxOk = $syntaxOk && $ok;
+    if ($detail !== '') {
+        $syntaxDetails[] = $detail;
+    }
+}
+$record('php_syntax', $syntaxOk, implode(' | ', $syntaxDetails));
 
 $factory = (string)@file_get_contents($factoryPath);
-$cli = (string)@file_get_contents($cliPath);
+$backfill = (string)@file_get_contents($backfillPath);
+$maintenance = (string)@file_get_contents($maintenancePath);
 
 $record(
-    'worker_startup_does_not_run_invalid_ue_backfill',
+    'worker_factory_has_no_historical_mutation_hooks',
     !str_contains($factory, 'PdoInvalidUeSystemErrorBackfill')
-        && !str_contains($factory, 'invalidUeBackfill'),
-    'Starting workers for new queue work must not create System Errors from unrelated historical terminal jobs.'
+        && !str_contains($factory, 'PdoArchiveProfileMismatchOutcomeRepair')
+        && !str_contains($factory, 'PdoArchiveParentLifecycleRepair')
+        && !str_contains($factory, 'synchronizeQueuedPolicies()'),
+    'Constructing a worker must create handlers only; historical backfill/repair/policy migration belongs to explicit maintenance.'
 );
 
 $record(
-    'explicit_backfill_cli_remains_available',
-    str_contains($cli, 'PdoInvalidUeSystemErrorBackfill')
-        && str_contains($cli, "'mode' => 'ledger_only'")
-        && str_contains($cli, "'workers_started' => false"),
-    'Historical invalid-UE backfill must remain an explicit operator action.'
+    'explicit_invalid_ue_backfill_remains_available',
+    str_contains($backfill, 'PdoInvalidUeSystemErrorBackfill')
+        && str_contains($backfill, "'mode' => 'ledger_only'")
+        && str_contains($backfill, "'workers_started' => false"),
+    'Historical invalid-UE System Error backfill remains an explicit operator action.'
 );
 
 $record(
-    'worker_comment_documents_no_backfill_side_effect',
-    str_contains($factory, 'Historical invalid-UE System Error backfill is intentionally NOT run')
-        && str_contains($factory, 'backfill-invalid-ue-system-errors.php'),
-    'Future changes should preserve the separation between worker startup and historical telemetry maintenance.'
+    'explicit_job_compatibility_repair_remains_available',
+    str_contains($maintenance, 'PdoArchiveProfileMismatchOutcomeRepair')
+        && str_contains($maintenance, 'PdoArchiveParentLifecycleRepair')
+        && str_contains($maintenance, 'synchronizeQueuedPolicies()')
+        && str_contains($maintenance, "array_key_exists('execute', $options)")
+        && str_contains($maintenance, "'changed' => false"),
+    'Historical queue compatibility repair must require an explicit --execute command.'
+);
+
+$record(
+    'worker_factory_documents_side_effect_boundary',
+    str_contains($factory, 'Worker construction is deliberately side-effect free')
+        && str_contains($factory, 'Compatibility repairs are explicit maintenance tasks.'),
+    'The architectural boundary should stay visible beside worker construction.'
 );
 
 echo json_encode([
