@@ -214,7 +214,7 @@ final class CatalogUnverifiedMetadataRepairService
      *
      * @return array{queue:string,job_id:int,file_id:int,queue_game_id:int,queue_name:string}
      */
-    public function queueFileRevalidation(int $fileId, ?int $createdBy = null): array
+    public function queueFileRevalidation(int $fileId, ?int $createdBy = null, int $sourceJobId = 0): array
     {
         if ($fileId < 1) {
             throw new \InvalidArgumentException('A positive retained Unverified file ID is required.');
@@ -284,6 +284,7 @@ final class CatalogUnverifiedMetadataRepairService
                 'missing_reasons' => ['Explicit current-code revalidation requested from Background Jobs'],
                 'requested_by' => $createdBy,
                 'revalidation_file_id' => $fileId,
+                'revalidation_source_job_id' => max(0, $sourceJobId),
             ],
             6,
             null,
@@ -296,6 +297,7 @@ final class CatalogUnverifiedMetadataRepairService
             'queue' => $jobQueueName,
             'job_id' => $jobId,
             'file_id' => $fileId,
+            'source_job_id' => max(0, $sourceJobId),
             'queue_game_id' => $queueGameId,
             'queue_name' => $queueName,
         ];
