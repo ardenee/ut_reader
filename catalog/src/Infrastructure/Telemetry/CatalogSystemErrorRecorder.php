@@ -115,6 +115,44 @@ final class CatalogSystemErrorRecorder
         }
     }
 
+    /**
+     * Resolve the exact invalid-Unreal System Error after an explicit retained
+     * source revalidation has successfully read the package with current code.
+     */
+    public static function resolveInvalidUeJob(int $sourceJobId, int $revalidationJobId): void
+    {
+        if ($sourceJobId < 1 || self::$busy) {
+            return;
+        }
+        self::$busy = true;
+        try {
+            $db = self::connection();
+            if (!$db instanceof PDO || !self::tableAvailable($db)) {
+                return;
+            }
+            try {
+                $now = gmdate('Y-m-d H:i:s');
+                $note = 'Retained source revalidated successfully with current package reader'
+                    . ($revalidationJobId > 0 ? ' by job #' . $revalidationJobId : '')
+                    . '.';
+                $statement = $db->prepare(
+                    'UPDATE ue_system_errors SET status="resolved",resolved_at=?,resolved_by=NULL,resolution_note=? '
+                    . 'WHERE status="open" AND source_kind="unreal-file-validation" '
+                    . 'AND JSON_VALID(context_json) '
+                    . 'AND CAST(JSON_UNQUOTE(JSON_EXTRACT(context_json,"$.job_id")) AS UNSIGNED)=?'
+                );
+                $statement->execute([$now, $note, $sourceJobId]);
+            } catch (Throwable $error) {
+                error_log(
+                    '[UnrealDB system error resolve] Could not resolve invalid UE source job #'
+                    . $sourceJobId . ': ' . $error->getMessage()
+                );
+            }
+        } finally {
+            self::$busy = false;
+        }
+    }
+
     public static function recordException(Throwable $error, string $sourceKind = 'php'): void
     {
         self::record([
