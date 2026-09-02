@@ -34,6 +34,8 @@ $transfer = $read('src/Infrastructure/Import/CatalogPublicUploadTransferStore.ph
 $duplicateDetector = $read('src/Infrastructure/Import/CatalogUploadDuplicateDetector.php');
 $legacyStager = $read('src/Infrastructure/Legacy/LegacyUnverifiedFileStager.php');
 $handler = $read('src/Infrastructure/Jobs/CatalogPublicUploadJobHandler.php');
+$retryPolicy = $read('src/Application/Jobs/JobFailureRetryPolicy.php');
+$bulkRetry = $read('src/Infrastructure/Persistence/PdoBackgroundJobBulkAction.php');
 $maintenance = $read('src/Infrastructure/Jobs/CatalogPublicUploadMaintenanceJobHandler.php');
 $jobType = $read('src/Domain/Jobs/JobType.php');
 $factory = $read('src/Infrastructure/Jobs/CatalogJobWorkerFactory.php');
@@ -256,6 +258,16 @@ $check(
 );
 
 $check(
+    'failed_public_upload_is_replayable_from_retained_quarantine',
+    str_contains($handler, "['uploaded', 'processing', 'failed']")
+        && str_contains($handler, 'in_array($status, [\'processing\', \'failed\'], true)')
+        && str_contains($handler, 'recoverPublishedStage($publicUploadId, $row)')
+        && str_contains($retryPolicy, '$jobType === JobType::PROCESS_PUBLIC_UPLOAD')
+        && str_contains($bulkRetry, '$jobType !== JobType::PROCESS_PUBLIC_UPLOAD && !$sourceRetained'),
+    'Automatic retries may stop for immutable failures, but explicit administrator retry must be able to replay the retained Public Upload bytes after code changes.'
+);
+
+$check(
     'unverified_admin_exposes_pending_public_contributions',
     str_contains($unverifiedQuery, 'public_uploads')
         && str_contains($unverifiedQuery, 'WHERE status IN ("uploaded","processing","failed","duplicate")')
@@ -472,6 +484,8 @@ foreach ([
     'src/Infrastructure/Legacy/LegacyUnverifiedFileStager.php',
     'src/Application/Unverified/Contract/UnverifiedFileStager.php',
     'src/Infrastructure/Jobs/CatalogPublicUploadJobHandler.php',
+    'src/Application/Jobs/JobFailureRetryPolicy.php',
+    'src/Infrastructure/Persistence/PdoBackgroundJobBulkAction.php',
     'src/Infrastructure/Jobs/CatalogQueueWorkerStarter.php',
     'src/Infrastructure/Jobs/CatalogPublicUploadMaintenanceJobHandler.php',
     'src/Domain/Jobs/JobType.php',
