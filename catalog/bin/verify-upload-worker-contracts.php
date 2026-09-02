@@ -194,6 +194,7 @@ $record(
 $batchEndpoint = $read('catalog/api/v1/upload-bucket-batch.php');
 $batchQueue = $read('catalog/src/Infrastructure/Import/CatalogBucketBatchQueue.php');
 $batchFinalizer = $read('catalog/src/Infrastructure/Import/CatalogBucketBatchFinalizer.php');
+$queueStarter = $read('catalog/src/Infrastructure/Jobs/CatalogQueueWorkerStarter.php');
 $record(
     'upload_v2_server_pipeline_single_owner',
     str_contains($batchEndpoint, 'CatalogBucketBatchFinalizer')
@@ -201,9 +202,13 @@ $record(
         && str_contains($batchQueue, 'CatalogUploadDuplicateDetector')
         && str_contains($batchQueue, 'PdoJobQueue')
         && str_contains($batchQueue, 'JobType::PROCESS_BUCKET_UPLOAD')
-        && str_contains($batchFinalizer, '$launcher->start($queue->queueName(), 10000);')
-        && !str_contains($batchFinalizer, '$launcher->configuredWorkerCount()'),
-    'dedupe/enqueue must stay in the shared queue service and automatic worker starts must preserve the durable operator pool size'
+        && str_contains($batchFinalizer, 'CatalogQueueWorkerStarter')
+        && !str_contains($batchFinalizer, 'CatalogOrphanedJobRecovery')
+        && !str_contains($batchFinalizer, 'migrateLegacyQueuedJobs()')
+        && str_contains($queueStarter, '$launcher->start($queueName, 10000)')
+        && !str_contains($queueStarter, 'CatalogOrphanedJobRecovery')
+        && !str_contains($queueStarter, 'CatalogWorkerPoolReconciler'),
+    'dedupe/enqueue must stay in the shared queue service and automatic upload wake must start processes without queue-wide recovery or historical mutation'
 );
 
 $jobRun = $read('catalog/api/v1/job-run.php');
@@ -267,11 +272,12 @@ $record(
         && str_contains($affectedRefresh, '$launcher->start($queueName, 10000);')
         && !str_contains($affectedRefresh, '$desiredWorkers = $launcher->configuredWorkerCount()')
         && !str_contains($affectedRefresh, '$launcher->start($queueName, 10000, $desiredWorkers)')
-        && str_contains($batchFinalizer, '$launcher->start($queue->queueName(), 10000);')
-        && !str_contains($batchFinalizer, '$launcher->configuredWorkerCount()')
+        && str_contains($batchFinalizer, 'CatalogQueueWorkerStarter')
+        && str_contains($queueStarter, '$launcher->start($queueName, 10000)')
+        && !str_contains($queueStarter, 'configuredWorkerCount()')
         && str_contains($matchRefresh, '$launcher->start($queue->queueName(), 10000);')
         && !str_contains($matchRefresh, '$launcher->configuredWorkerCount()'),
-    'automatic dependency/upload/match producers must never expand an operator-selected 1- or 2-worker pool back to configured defaults'
+    'automatic dependency/upload/match producers must preserve the durable desired pool and must not force configured defaults'
 );
 
 $sequentialArchive = $read('catalog/src/Infrastructure/Archive/CatalogSequentialArchiveReader.php');
@@ -320,6 +326,7 @@ $criticalPhp = [
     'catalog/src/Infrastructure/Archive/CatalogSequentialArchiveReader.php',
     'catalog/src/Infrastructure/Archive/CatalogUmodArchiveReader.php',
     'catalog/src/Infrastructure/Import/CatalogBucketBatchFinalizer.php',
+    'catalog/src/Infrastructure/Jobs/CatalogQueueWorkerStarter.php',
     'catalog/src/Infrastructure/Import/CatalogBucketBatchQueue.php',
     'catalog/src/Infrastructure/Import/CatalogProfiledUploadQueue.php',
     'catalog/src/Infrastructure/Jobs/CatalogAffectedDependencyRefreshCoordinator.php',
