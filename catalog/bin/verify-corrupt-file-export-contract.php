@@ -90,11 +90,23 @@ $record(
 $record(
     'csv_contains_copyable_path_and_provenance',
     str_contains($export, "'copy_path'")
+        && str_contains($export, "'destination_relative_path'")
         && str_contains($export, "'source_relative_path'")
         && str_contains($export, "'reason'")
         && str_contains($export, "'classification'")
         && str_contains($export, 'text/csv'),
-    'CSV must lead with the resolved copy path and retain the original logical path plus corruption reason.'
+    'CSV must lead with the resolved copy path and include a collision-safe original destination path plus corruption reason.'
+);
+
+$record(
+    'open_invalid_ue_system_errors_are_merged',
+    str_contains($query, 'openInvalidUeSystemErrors')
+        && str_contains($query, 'source_kind="unreal-file-validation"')
+        && str_contains($query, '"$.disposition"')
+        && str_contains($query, '"invalid_ue_file"')
+        && str_contains($query, 'systemErrorReason')
+        && str_contains($query, 'projectSystemErrorOnly'),
+    'Corrupt-file export must include open invalid-UE System Errors even when the corresponding queue row no longer presents as an Issue.'
 );
 
 $record(

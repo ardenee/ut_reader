@@ -55,6 +55,7 @@ try {
     fputcsv($output, [
         'copy_path',
         'copy_path_exists',
+        'destination_relative_path',
         'source_relative_path',
         'file_name',
         'archive_container_path',
@@ -75,6 +76,7 @@ try {
         fputcsv($output, [
             (string)$row['copy_path'],
             !empty($row['copy_path_exists']) ? '1' : '0',
+            (string)$row['destination_relative_path'],
             (string)$row['source_relative_path'],
             (string)$row['file_name'],
             (string)$row['archive_container_path'],

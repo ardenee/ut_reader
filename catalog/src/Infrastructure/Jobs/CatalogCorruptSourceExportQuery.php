@@ -72,10 +72,53 @@ final class CatalogCorruptSourceExportQuery
         $statement->execute($params);
 
         $rows = [];
+        $seenJobIds = [];
         foreach ($statement->fetchAll(PDO::FETCH_ASSOC) ?: [] as $row) {
             $candidate = $this->project($row);
             if ($candidate === null) {
                 continue;
+            }
+            $jobId = max(0, (int)($candidate['job_id'] ?? 0));
+            if ($jobId > 0) {
+                $seenJobIds[$jobId] = true;
+            }
+            $rows[] = $candidate;
+        }
+
+        // Invalid UE content is also persisted independently in System Errors.
+        // Some successful/current-code queue transitions no longer look like an
+        // Issue row even though the corrupt retained source is still deliberately
+        // open for operator removal. Merge those records so this export reflects
+        // both operator surfaces instead of only ue_background_jobs.
+        foreach ($this->openInvalidUeSystemErrors() as $systemError) {
+            $context = $this->decode((string)($systemError['context_json'] ?? ''));
+            $jobId = max(0, (int)($context['job_id'] ?? 0));
+            if ($jobId > 0 && isset($seenJobIds[$jobId])) {
+                continue;
+            }
+
+            $jobRow = $jobId > 0 ? $this->jobRow($jobId) : null;
+            if (is_array($jobRow)) {
+                if (!$this->matchesJobFilters($jobRow, $queue, $jobType, $search, $systemError, $context)) {
+                    continue;
+                }
+                $candidate = $this->project(
+                    $jobRow,
+                    $this->systemErrorReason($systemError, $context),
+                    true
+                );
+            } else {
+                if ($queue !== '' || $jobType !== '' || ($search !== '' && !$this->matchesSystemErrorSearch($systemError, $context, $search))) {
+                    continue;
+                }
+                $candidate = $this->projectSystemErrorOnly($systemError, $context);
+            }
+
+            if ($candidate === null) {
+                continue;
+            }
+            if ($jobId > 0) {
+                $seenJobIds[$jobId] = true;
             }
             $rows[] = $candidate;
         }
@@ -95,8 +138,11 @@ final class CatalogCorruptSourceExportQuery
     }
 
     /** @param array<string,mixed> $row @return array<string,mixed>|null */
-    private function project(array $row): ?array
-    {
+    private function project(
+        array $row,
+        string $forcedReason = '',
+        bool $forceInvalidPackage = false
+    ): ?array {
         $jobId = max(0, (int)($row['id'] ?? 0));
         $jobType = trim((string)($row['job_type'] ?? ''));
         $payload = $this->decode((string)($row['payload_json'] ?? ''));
@@ -104,9 +150,12 @@ final class CatalogCorruptSourceExportQuery
         $result = $this->decode((string)($row['result_json'] ?? ''));
         $displayStatus = strtolower(trim((string)($row['display_status'] ?? '')));
         $resultStatus = strtolower(trim((string)($result['status'] ?? '')));
-        $reason = $this->failureText($row, $result, $progress);
+        $reason = trim($forcedReason) !== ''
+            ? trim($forcedReason)
+            : $this->failureText($row, $result, $progress);
 
-        $invalidPackage = $displayStatus === 'invalid_ue_package'
+        $invalidPackage = $forceInvalidPackage
+            || $displayStatus === 'invalid_ue_package'
             || $resultStatus === 'invalid_ue_package';
         if (!$invalidPackage && !JobFailureRetryPolicy::isCorruptContentText($jobType, $reason)) {
             return null;
@@ -169,9 +218,15 @@ final class CatalogCorruptSourceExportQuery
                     ? 'corrupt_redirect'
                     : 'corrupt_package'));
 
+        $destinationRelative = str_replace('\\', '/', trim($sourceRelative, " /\\"));
+        if ($destinationRelative === '') {
+            $destinationRelative = $fileName;
+        }
+
         return [
             'copy_path' => $copyPath,
             'copy_path_exists' => $copyPath !== '' && is_file($copyPath),
+            'destination_relative_path' => $destinationRelative,
             'source_relative_path' => str_replace('\\', '/', $sourceRelative),
             'file_name' => $fileName,
             'archive_container_path' => $archiveFullPath,
@@ -212,6 +267,125 @@ final class CatalogCorruptSourceExportQuery
             }
         }
         return 'Invalid/corrupt immutable source content.';
+    }
+
+    /** @return list<array<string,mixed>> */
+    private function openInvalidUeSystemErrors(): array
+    {
+        try {
+            $statement = $this->db->query(
+                'SELECT id,message,context_json FROM ue_system_errors '
+                . 'WHERE status="open" AND source_kind="unreal-file-validation" '
+                . 'AND JSON_VALID(context_json) '
+                . 'AND JSON_UNQUOTE(JSON_EXTRACT(context_json,"$.disposition"))="invalid_ue_file" '
+                . 'ORDER BY id ASC LIMIT ' . self::MAX_ROWS
+            );
+            return $statement ? ($statement->fetchAll(PDO::FETCH_ASSOC) ?: []) : [];
+        } catch (Throwable) {
+            // Older installs without System Error storage still retain the
+            // Background Jobs half of the export.
+            return [];
+        }
+    }
+
+    /** @return array<string,mixed>|null */
+    private function jobRow(int $jobId): ?array
+    {
+        $statement = $this->db->prepare(
+            'SELECT id,queue_name,job_type,parent_job_id,status,display_status,'
+            . 'payload_json,progress_json,result_json,last_error '
+            . 'FROM ue_background_jobs WHERE id=? LIMIT 1'
+        );
+        $statement->execute([$jobId]);
+        $row = $statement->fetch(PDO::FETCH_ASSOC);
+        return is_array($row) ? $row : null;
+    }
+
+    /** @param array<string,mixed> $systemError @param array<string,mixed> $context */
+    private function systemErrorReason(array $systemError, array $context): string
+    {
+        $message = trim((string)($systemError['message'] ?? ''));
+        $fileName = trim((string)($context['file_name'] ?? ''));
+        if ($fileName !== '' && str_starts_with($message, $fileName . ':')) {
+            $message = trim(substr($message, strlen($fileName) + 1));
+        }
+        return $message !== '' ? $message : 'Invalid/corrupt Unreal package content.';
+    }
+
+    /**
+     * @param array<string,mixed> $jobRow
+     * @param array<string,mixed> $systemError
+     * @param array<string,mixed> $context
+     */
+    private function matchesJobFilters(
+        array $jobRow,
+        string $queue,
+        string $jobType,
+        string $search,
+        array $systemError,
+        array $context
+    ): bool {
+        if ($queue !== '' && (string)($jobRow['queue_name'] ?? '') !== $queue) {
+            return false;
+        }
+        if ($jobType !== '' && (string)($jobRow['job_type'] ?? '') !== $jobType) {
+            return false;
+        }
+        return $search === '' || $this->matchesSystemErrorSearch($systemError, $context, $search)
+            || stripos((string)($jobRow['payload_json'] ?? ''), $search) !== false
+            || stripos((string)($jobRow['last_error'] ?? ''), $search) !== false;
+    }
+
+    /** @param array<string,mixed> $systemError @param array<string,mixed> $context */
+    private function matchesSystemErrorSearch(array $systemError, array $context, string $search): bool
+    {
+        $needle = strtolower(trim($search));
+        if ($needle === '') {
+            return true;
+        }
+        $haystack = strtolower(
+            (string)($systemError['message'] ?? '') . "\n"
+            . (string)($context['file_name'] ?? '') . "\n"
+            . (string)($context['source_relative_path'] ?? '') . "\n"
+            . (string)($context['archive_source_name'] ?? '') . "\n"
+            . (string)($context['archive_entry_path'] ?? '') . "\n"
+            . (string)($context['md5'] ?? '') . "\n"
+            . (string)($context['sha1'] ?? '')
+        );
+        return str_contains($haystack, $needle);
+    }
+
+    /** @param array<string,mixed> $systemError @param array<string,mixed> $context @return array<string,mixed> */
+    private function projectSystemErrorOnly(array $systemError, array $context): array
+    {
+        $fileName = trim((string)($context['file_name'] ?? ''));
+        $sourceRelative = trim(str_replace('\\', '/', (string)($context['source_relative_path'] ?? '')), '/');
+        if ($fileName === '' && $sourceRelative !== '') {
+            $fileName = basename($sourceRelative);
+        }
+        $archiveName = trim((string)($context['archive_source_name'] ?? ''));
+        $archiveEntry = trim(str_replace('\\', '/', (string)($context['archive_entry_path'] ?? '')), '/');
+        $destinationRelative = $sourceRelative !== '' ? $sourceRelative : $fileName;
+
+        return [
+            'copy_path' => '',
+            'copy_path_exists' => false,
+            'destination_relative_path' => $destinationRelative,
+            'source_relative_path' => $sourceRelative,
+            'file_name' => $fileName,
+            'archive_container_path' => '',
+            'archive_source_name' => $archiveName,
+            'archive_entry_path' => $archiveEntry,
+            'path_kind' => $archiveEntry !== '' ? 'archive_member_only' : 'relative_only',
+            'classification' => 'invalid_unreal_package',
+            'job_id' => max(0, (int)($context['job_id'] ?? 0)),
+            'queue' => '',
+            'job_type' => trim((string)($context['job_type'] ?? '')),
+            'queue_status' => '',
+            'display_status' => 'invalid_ue_package',
+            'reason' => $this->systemErrorReason($systemError, $context),
+            'source_resolution_error' => 'Background job is no longer retained; only System Error provenance remains.',
+        ];
     }
 
     /** @return array<string,mixed> */
