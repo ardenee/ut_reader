@@ -112,7 +112,7 @@ $record(
 $record(
     'archive_parent_counts_profile_mismatch_separately',
     str_contains($children, "'unverified' => 0")
-        && str_contains($children, '$displayStatus === \'unverified_profile_mismatch\'')
+        && str_contains($children, "in_array(\$displayStatus, ['unverified', 'unverified_profile_mismatch'], true)")
         && str_contains($children, '$state[\'unverified\'] += $count')
         && str_contains($workflow, "' unverified/review, '")
         && str_contains($workflow, '$partial = $totalFailed > 0 || $cancelled > 0;'),
@@ -121,12 +121,12 @@ $record(
 
 $record(
     'operator_projection_does_not_call_profile_mismatch_an_error',
-    str_contains($projector, '$resultStatus === \'unverified_profile_mismatch\'')
+    str_contains($projector, "in_array(\$resultStatus, ['unverified', 'unverified_profile_mismatch'], true)")
         && str_contains($projector, '$summary[\'unverified\']++')
         && str_contains($fileTree, "'unverified', 'unverified_profile_mismatch' => 'Stored in Unverified'")
         && str_contains($fileTree, "'unverified' => 'Unverified · review'")
         && str_contains($fileTree, "'unverified_profile_mismatch' => 'Unverified · profile mismatch'"),
-    'Background Jobs must describe this as an unverified/profile mismatch outcome, not Could not process.'
+    'Background Jobs must describe both review handoff and profile mismatch as Unverified outcomes, not Could not process.'
 );
 
 $record(

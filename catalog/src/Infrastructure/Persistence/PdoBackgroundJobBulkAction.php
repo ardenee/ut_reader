@@ -354,7 +354,7 @@ final class PdoBackgroundJobBulkAction
             . ') '
             . 'SELECT DISTINCT id,job_type,last_error,result_json,progress_json FROM archive_descendants WHERE '
             . '(status IN ("cancelled","failed","dead_letter") '
-            . 'OR (status="completed" AND display_status IN ("failed","rejected","unverified","partial","error")))'
+            . 'OR (status="completed" AND display_status IN ("failed","rejected","partial","error")))'
         );
         $statement->execute(array_merge([$queueName], $archiveIds, [$queueName]));
 
@@ -420,7 +420,7 @@ final class PdoBackgroundJobBulkAction
                 . 'dead_lettered_at=NULL,completed_at=NULL,updated_at=? '
                 . 'WHERE queue_name=? AND id IN (' . $idSql . ') AND '
                 . '(status IN ("cancelled","failed","dead_letter") '
-                . 'OR (status="completed" AND display_status IN ("failed","rejected","unverified","partial","error")))'
+                . 'OR (status="completed" AND display_status IN ("failed","rejected","partial","error")))'
             );
             $statement->execute(array_merge([$now, $now, $queueName], $chunk));
             $affected += $statement->rowCount();

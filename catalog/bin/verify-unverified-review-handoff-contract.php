@@ -80,7 +80,7 @@ $record(
 
 $record(
     'file_tree_does_not_count_unverified_as_issue',
-    str_contains($query, 'ISSUE_DISPLAY_STATUSES = '"failed","rejected","invalid_ue_package","partial","error"'')
+    str_contains($query, "ISSUE_DISPLAY_STATUSES = '\"failed\",\"rejected\",\"invalid_ue_package\",\"partial\",\"error\"'")
         && str_contains($fileTree, "ISSUE_DISPLAY_STATUSES = ['failed', 'rejected', 'invalid_ue_package', 'partial', 'error']")
         && str_contains($fileTree, "'unverified', 'unverified_profile_mismatch' => 'Stored in Unverified'")
         && str_contains($fileTree, "'unverified' => 'Unverified · review'"),
@@ -92,6 +92,13 @@ $record(
     !str_contains($bulk, 'display_status IN ("failed","rejected","unverified","invalid_ue_package")')
         && str_contains($bulk, 'display_status IN ("failed","rejected","invalid_ue_package")'),
     'Retry controls must not send already-staged Unverified files back through the job pipeline; review/import belongs on Unverified Files.'
+);
+
+$record(
+    'retained_archive_problem_retry_leaves_unverified_children_terminal',
+    !str_contains($bulk, 'display_status IN ("failed","rejected","unverified","partial","error")')
+        && str_contains($bulk, 'display_status IN ("failed","rejected","partial","error")'),
+    'Retrying a retained partial archive must not reactivate children already handed off to Unverified Files.'
 );
 
 $record(

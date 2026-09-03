@@ -108,9 +108,9 @@ final class CatalogBackgroundJobHistoryCleanupQueue
 
         /*
          * Automatic retention removes resolved history only. Unresolved failed,
-         * dead-letter, rejected, unverified, partial and error roots remain for
-         * deliberate operator action. Successful/cancelled roots are deleted with
-         * their entire historical subtree.
+         * dead-letter, rejected, partial and error roots remain for deliberate
+         * operator action. Successful/cancelled roots and completed Unverified
+         * review handoffs are deleted with their entire historical subtree.
          */
         $eligible = 'queue_name=? AND parent_job_id IS NULL AND ('
             . 'status="cancelled" OR '
