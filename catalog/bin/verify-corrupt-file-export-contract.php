@@ -102,7 +102,7 @@ $record(
     'open_corrupt_system_errors_are_merged',
     str_contains($query, 'openInvalidUeSystemErrors')
         && str_contains($query, 'source_kind IN ("unreal-file-validation","background-job")')
-        && str_contains($query, "$disposition === 'invalid_ue_file'")
+        && str_contains($query, "\$disposition === 'invalid_ue_file'")
         && str_contains($query, 'JobFailureRetryPolicy::isCorruptContentText($jobType, $reason)')
         && str_contains($query, 'systemErrorReason')
         && str_contains($query, 'projectSystemErrorOnly'),
