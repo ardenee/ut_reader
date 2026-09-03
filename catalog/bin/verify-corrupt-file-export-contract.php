@@ -74,7 +74,7 @@ $record(
     str_contains($resolver, 'CatalogChunkedUploadStore')
         && str_contains($resolver, 'applyCompletedChunkSource')
         && str_contains($resolver, "'job_full_path'")
-        && str_contains($resolver, "$context['job_source_storage'] = 'chunk-upload'"),
+        && str_contains($resolver, "\$context['job_source_storage'] = 'chunk-upload'"),
     'Direct browser uploads must expose the retained completed chunk path when it still exists.'
 );
 
