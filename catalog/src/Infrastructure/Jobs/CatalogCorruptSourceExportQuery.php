@@ -274,13 +274,31 @@ final class CatalogCorruptSourceExportQuery
     {
         try {
             $statement = $this->db->query(
-                'SELECT id,message,context_json FROM ue_system_errors '
-                . 'WHERE status="open" AND source_kind="unreal-file-validation" '
+                'SELECT id,source_kind,error_type,message,context_json FROM ue_system_errors '
+                . 'WHERE status="open" '
+                . 'AND source_kind IN ("unreal-file-validation","background-job") '
                 . 'AND JSON_VALID(context_json) '
-                . 'AND JSON_UNQUOTE(JSON_EXTRACT(context_json,"$.disposition"))="invalid_ue_file" '
                 . 'ORDER BY id ASC LIMIT ' . self::MAX_ROWS
             );
-            return $statement ? ($statement->fetchAll(PDO::FETCH_ASSOC) ?: []) : [];
+            $rows = $statement ? ($statement->fetchAll(PDO::FETCH_ASSOC) ?: []) : [];
+            $corrupt = [];
+            foreach ($rows as $row) {
+                $context = $this->decode((string)($row['context_json'] ?? ''));
+                $jobId = max(0, (int)($context['job_id'] ?? 0));
+                $jobType = trim((string)($context['job_type'] ?? ''));
+                if ($jobType === '' && $jobId > 0) {
+                    $job = $this->jobRow($jobId);
+                    $jobType = is_array($job) ? trim((string)($job['job_type'] ?? '')) : '';
+                }
+
+                $reason = $this->systemErrorReason($row, $context);
+                $disposition = strtolower(trim((string)($context['disposition'] ?? '')));
+                if ($disposition === 'invalid_ue_file'
+                    || ($jobType !== '' && JobFailureRetryPolicy::isCorruptContentText($jobType, $reason))) {
+                    $corrupt[] = $row;
+                }
+            }
+            return $corrupt;
         } catch (Throwable) {
             // Older installs without System Error storage still retain the
             // Background Jobs half of the export.
