@@ -99,14 +99,23 @@ $record(
 );
 
 $record(
-    'open_invalid_ue_system_errors_are_merged',
+    'open_corrupt_system_errors_are_merged',
     str_contains($query, 'openInvalidUeSystemErrors')
-        && str_contains($query, 'source_kind="unreal-file-validation"')
-        && str_contains($query, '"$.disposition"')
-        && str_contains($query, '"invalid_ue_file"')
+        && str_contains($query, 'source_kind IN ("unreal-file-validation","background-job")')
+        && str_contains($query, "$disposition === 'invalid_ue_file'")
+        && str_contains($query, 'JobFailureRetryPolicy::isCorruptContentText($jobType, $reason)')
         && str_contains($query, 'systemErrorReason')
         && str_contains($query, 'projectSystemErrorOnly'),
-    'Corrupt-file export must include open invalid-UE System Errors even when the corresponding queue row no longer presents as an Issue.'
+    'Corrupt-file export must merge both invalid-UE and background-job System Errors when the shared policy classifies the immutable content as corrupt.'
+);
+
+$record(
+    'zero_to_space_corruption_is_exportable_corrupt_content',
+    str_contains(
+        $policy,
+        "'unreal package appears to have nul bytes replaced with spaces throughout the payload'"
+    ),
+    'The known NUL-to-space corruption diagnosis must be part of the deterministic corrupt-content policy.'
 );
 
 $record(
