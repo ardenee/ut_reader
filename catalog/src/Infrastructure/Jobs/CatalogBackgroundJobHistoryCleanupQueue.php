@@ -115,7 +115,7 @@ final class CatalogBackgroundJobHistoryCleanupQueue
         $eligible = 'queue_name=? AND parent_job_id IS NULL AND ('
             . 'status="cancelled" OR '
             . '(status="completed" AND COALESCE(display_status,"completed") '
-            . 'NOT IN ("failed","rejected","unverified","partial","error"))'
+            . 'NOT IN ("failed","rejected","partial","error"))'
             . ') AND COALESCE(completed_at,updated_at,created_at)<?';
 
         // Cleanup does not need an exact total before deleting. Fetch one

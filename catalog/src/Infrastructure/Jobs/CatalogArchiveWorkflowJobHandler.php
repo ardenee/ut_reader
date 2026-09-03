@@ -279,7 +279,7 @@ final class CatalogArchiveWorkflowJobHandler implements JobHandler
             . number_format((int)$children['duplicate']) . ' duplicate, '
             . number_format($totalSkipped) . ' skipped, '
             . number_format($contentNested) . ' nested archive, '
-            . number_format($unverified) . ' unverified/profile mismatch, '
+            . number_format($unverified) . ' unverified/review, '
             . number_format($invalidUe) . ' invalid UE file' . ($invalidUe === 1 ? '' : 's') . ', '
             . number_format($totalFailed) . ' failed';
         if ($cancelled > 0) {

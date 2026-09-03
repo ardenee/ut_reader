@@ -112,7 +112,7 @@ final class CatalogArchiveJobOutcomeProjector
                     $summary['skipped']++;
                 } elseif ($resultStatus === 'nested_archive') {
                     $summary['nested_archive']++;
-                } elseif ($resultStatus === 'unverified_profile_mismatch') {
+                } elseif (in_array($resultStatus, ['unverified', 'unverified_profile_mismatch'], true)) {
                     $summary['unverified']++;
                 } elseif (in_array($resultStatus, ['invalid_ue_package', 'invalid_files', 'rejected'], true)) {
                     $summary['invalid_ue']++;
@@ -124,7 +124,7 @@ final class CatalogArchiveJobOutcomeProjector
                         $resultStatus === 'invalid_files' ? 'invalid_files' : 'invalid_ue_package',
                         $error !== '' ? $error : 'Extracted member is not a valid supported Unreal package.'
                     );
-                } elseif (in_array($resultStatus, ['failed', 'unverified', 'partial', 'error'], true)) {
+                } elseif (in_array($resultStatus, ['failed', 'partial', 'error'], true)) {
                     $summary['failed']++;
                     $error = trim((string)($result['message'] ?? $child['last_error'] ?? ''));
                     $this->appendFailure(
@@ -180,7 +180,7 @@ final class CatalogArchiveJobOutcomeProjector
                     . number_format((int)$summary['duplicate']) . ' duplicate, '
                     . number_format((int)$summary['skipped']) . ' skipped, '
                     . number_format((int)$summary['nested_archive']) . ' nested archive, '
-                    . number_format((int)$summary['unverified']) . ' unverified/profile mismatch, '
+                    . number_format((int)$summary['unverified']) . ' unverified/review, '
                     . number_format((int)$summary['invalid_ue']) . ' invalid UE file' . ((int)$summary['invalid_ue'] === 1 ? '' : 's') . ', '
                     . number_format($totalFailed) . ' failed, '
                     . number_format((int)$summary['waiting']) . ' waiting, '
@@ -191,7 +191,7 @@ final class CatalogArchiveJobOutcomeProjector
                     . number_format((int)$summary['duplicate']) . ' duplicate, '
                     . number_format((int)$summary['skipped']) . ' skipped, '
                     . number_format((int)$summary['nested_archive']) . ' nested archive, '
-                    . number_format((int)$summary['unverified']) . ' unverified/profile mismatch, '
+                    . number_format((int)$summary['unverified']) . ' unverified/review, '
                     . number_format((int)$summary['invalid_ue']) . ' invalid UE file' . ((int)$summary['invalid_ue'] === 1 ? '' : 's') . ', '
                     . number_format($totalFailed) . ' failed';
                 if ((int)$summary['cancelled'] > 0) {

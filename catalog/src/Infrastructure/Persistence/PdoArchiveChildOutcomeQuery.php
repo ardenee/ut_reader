@@ -92,18 +92,19 @@ final class PdoArchiveChildOutcomeQuery
                     $state['skipped'] += $count;
                 } elseif ($displayStatus === 'nested_archive') {
                     $state['nested_archive'] += $count;
-                } elseif ($displayStatus === 'unverified_profile_mismatch') {
-                    // The package was parsed successfully and retained in the
-                    // unverified queue because it belongs to another game/profile.
-                    // This is not an archive/read failure and replaying the same
-                    // bytes cannot improve the archive outcome.
+                } elseif (in_array($displayStatus, ['unverified', 'unverified_profile_mismatch'], true)) {
+                    // The member bytes were successfully handed off to Unverified
+                    // Files for administrator review. Profile mismatch is one
+                    // reason for that handoff, but neither outcome is an archive
+                    // extraction/read failure and replaying the same child job is
+                    // not the review workflow.
                     $state['unverified'] += $count;
                 } elseif (in_array($displayStatus, ['invalid_ue_package', 'invalid_files', 'rejected'], true)) {
                     // Container extraction completed. The resulting member bytes
                     // are not a valid supported Unreal package, so keep the file
                     // issue separate from archive extraction/retry state.
                     $state['invalid_ue'] += $count;
-                } elseif (in_array($displayStatus, ['failed', 'unverified', 'partial', 'error'], true)) {
+                } elseif (in_array($displayStatus, ['failed', 'partial', 'error'], true)) {
                     $state['failed'] += $count;
                 } else {
                     $state['successful'] += $count;

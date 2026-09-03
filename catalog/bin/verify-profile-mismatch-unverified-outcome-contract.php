@@ -104,7 +104,8 @@ $record(
     str_contains($staged, 'CatalogImportOutcome::INVALID_UE_PACKAGE')
         && str_contains($staged, 'CatalogInvalidUeFileReporter::record([')
         && str_contains($children, "['invalid_ue_package', 'invalid_files', 'rejected']")
-        && str_contains($children, "['failed', 'unverified', 'partial', 'error']"),
+        && str_contains($children, "['failed', 'partial', 'error']")
+        && str_contains($children, "['unverified', 'unverified_profile_mismatch']"),
     'Invalid UE content must remain actionable through System Errors while staying separate from archive extraction failures and retries.'
 );
 
@@ -113,7 +114,7 @@ $record(
     str_contains($children, "'unverified' => 0")
         && str_contains($children, '$displayStatus === \'unverified_profile_mismatch\'')
         && str_contains($children, '$state[\'unverified\'] += $count')
-        && str_contains($workflow, "' unverified/profile mismatch, '")
+        && str_contains($workflow, "' unverified/review, '")
         && str_contains($workflow, '$partial = $totalFailed > 0 || $cancelled > 0;'),
     'A valid wrong-profile child must not make an otherwise healthy archive partial/retryable.'
 );
@@ -122,7 +123,8 @@ $record(
     'operator_projection_does_not_call_profile_mismatch_an_error',
     str_contains($projector, '$resultStatus === \'unverified_profile_mismatch\'')
         && str_contains($projector, '$summary[\'unverified\']++')
-        && str_contains($fileTree, "'unverified_profile_mismatch' => 'Stored in Unverified'")
+        && str_contains($fileTree, "'unverified', 'unverified_profile_mismatch' => 'Stored in Unverified'")
+        && str_contains($fileTree, "'unverified' => 'Unverified · review'")
         && str_contains($fileTree, "'unverified_profile_mismatch' => 'Unverified · profile mismatch'"),
     'Background Jobs must describe this as an unverified/profile mismatch outcome, not Could not process.'
 );

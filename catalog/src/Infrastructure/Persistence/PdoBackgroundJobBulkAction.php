@@ -97,7 +97,7 @@ final class PdoBackgroundJobBulkAction
             . self::decoderBlockedArchiveSql('j') . ')';
         $actionCondition = match ($action) {
             'restart' => '(j.status IN ("cancelled","failed","dead_letter") '
-                . 'OR (j.status="completed" AND j.display_status IN ("failed","rejected","unverified","invalid_ue_package")) '
+                . 'OR (j.status="completed" AND j.display_status IN ("failed","rejected","invalid_ue_package")) '
                 . 'OR ' . $retryableArchive . ')',
             'cancel' => 'j.status="queued"',
             // Queued/deferred rows are safe to purge only after they are first
