@@ -66,6 +66,70 @@ final class JobFailureRetryPolicy
         return false;
     }
 
+    /**
+     * True when the persisted failure proves the source bytes themselves are no
+     * longer available. These jobs are non-retryable, but they are not corrupt
+     * file candidates and must not appear in the corrupt-source export.
+     */
+    public static function isMissingSourceFailureText(string $message): bool
+    {
+        $message = strtolower(trim($message));
+        if ($message === '') {
+            return false;
+        }
+        foreach ([
+            'chunked upload was not found',
+            'chunked upload manifest is missing',
+            'completed chunked pak data is unavailable',
+            'staged import file is unavailable',
+            'archive member staged source is unavailable and retained-parent reconstruction failed:',
+            'retained parent archive source is unavailable for member reconstruction',
+            'retained parent archive no longer contains the exact recorded member',
+        ] as $marker) {
+            if (str_contains($message, $marker)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Classifies deterministic failures caused by corrupt/invalid immutable
+     * content rather than infrastructure or missing-source state.
+     */
+    public static function isCorruptContentText(string $jobType, string $message): bool
+    {
+        $message = strtolower(trim($message));
+        if ($message === '' || self::isMissingSourceFailureText($message)) {
+            return false;
+        }
+
+        if (in_array($jobType, [
+            JobType::PROCESS_BUCKET_ARCHIVE,
+            JobType::IMPORT_STAGED_ARCHIVE,
+        ], true)) {
+            return self::isDeterministicArchiveMessage($message);
+        }
+
+        if (in_array($jobType, [
+            JobType::PROCESS_BUCKET_UPLOAD,
+            JobType::PROCESS_BUCKET_STAGED_PACKAGE,
+            JobType::IMPORT_STAGED_PACKAGE,
+        ], true)) {
+            return self::isInvalidRedirectContentMessage($message)
+                || self::isInvalidPackageContentMessage($message);
+        }
+
+        if ($jobType === JobType::PROCESS_PUBLIC_UPLOAD) {
+            return self::isInvalidRedirectContentMessage($message)
+                || self::isInvalidPackageContentMessage($message)
+                || str_contains($message, 'public upload md5 mismatch:')
+                || str_contains($message, 'public upload sha-1 mismatch:');
+        }
+
+        return false;
+    }
+
     private static function isDeterministicArchiveMessage(string $message): bool
     {
         // A missing durable source cannot become available by replaying the same

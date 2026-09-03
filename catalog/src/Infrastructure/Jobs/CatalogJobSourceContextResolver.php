@@ -15,6 +15,7 @@ use PDO;
 use Throwable;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
+use UnrealDb\Catalog\Infrastructure\Import\CatalogChunkedUploadStore;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogIncomingFileStore;
 
 final class CatalogJobSourceContextResolver
@@ -72,6 +73,13 @@ final class CatalogJobSourceContextResolver
             'job_type' => $jobType,
         ];
         $this->copyPayloadIdentity($context, 'job', $payload);
+        if (in_array($jobType, [
+            JobType::PROCESS_BUCKET_UPLOAD,
+            JobType::PROCESS_BUCKET_ARCHIVE,
+            JobType::PREPARE_BUCKET_REDIRECT,
+        ], true)) {
+            $this->applyCompletedChunkSource($context, $payload);
+        }
 
         $archiveSourceName = trim((string)($payload['archive_source_name'] ?? ''));
         $archiveEntryPath = trim((string)($payload['archive_entry_path'] ?? ''));
@@ -133,6 +141,33 @@ final class CatalogJobSourceContextResolver
         }
 
         return $this->withoutEmptyValues($context);
+    }
+
+    /** @param array<string,mixed> $context @param array<string,mixed> $payload */
+    private function applyCompletedChunkSource(array &$context, array $payload): void
+    {
+        if (isset($context['job_full_path']) && trim((string)$context['job_full_path']) !== '') {
+            return;
+        }
+        $uploadId = strtolower(trim((string)($payload['upload_id'] ?? '')));
+        if (preg_match('/^[a-f0-9]{64}$/', $uploadId) !== 1) {
+            return;
+        }
+        $userId = max(0, (int)($payload['user_id'] ?? 0));
+        try {
+            $resolved = (new CatalogChunkedUploadStore($this->config))
+                ->resolveCompletedFile($uploadId, $userId > 0 ? $userId : null);
+            $path = trim((string)($resolved['path'] ?? ''));
+            if ($path !== '') {
+                $context['job_full_path'] = $path;
+                $context['job_full_path_exists'] = is_file($path);
+                $context['job_source_storage'] = 'chunk-upload';
+            }
+        } catch (Throwable $error) {
+            $context['job_chunk_path_error'] = trim($error->getMessage()) !== ''
+                ? trim($error->getMessage())
+                : get_class($error);
+        }
     }
 
     /** @param array<string,mixed> $context */

@@ -140,6 +140,14 @@
         link.href = exportEndpoint + (params.toString() ? '?' + params.toString() : '');
         link.title = 'Download all System Error records matching the current filters as Markdown';
         toolbar.appendChild(link);
+
+        const corruptLink = document.createElement('a');
+        corruptLink.className = 'button secondary';
+        corruptLink.dataset.systemErrorCorruptExport = '1';
+        corruptLink.textContent = 'Export corrupt files';
+        corruptLink.href = 'corrupt-files-export.php';
+        corruptLink.title = 'Download current corrupt/non-retryable file sources with resolved full paths as CSV';
+        toolbar.appendChild(corruptLink);
     }
 
     function shouldIgnoreResourceError(source) {

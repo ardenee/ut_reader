@@ -226,7 +226,7 @@ final class PdoBackgroundJobBulkAction
                     // those bytes after a reader/decoder/routing change. Allow
                     // that replay unless the persisted failure proves the source
                     // itself is no longer available.
-                    if ($explicitRevalidation && !self::isMissingSourceFailureText($failureText)) {
+                    if ($explicitRevalidation && !JobFailureRetryPolicy::isMissingSourceFailureText($failureText)) {
                         $allowed[$id] = true;
                         continue;
                     }
@@ -248,28 +248,6 @@ final class PdoBackgroundJobBulkAction
             $jobIds,
             static fn(int $id): bool => isset($allowed[$id])
         ));
-    }
-
-    private static function isMissingSourceFailureText(string $message): bool
-    {
-        $message = strtolower(trim($message));
-        if ($message === '') {
-            return false;
-        }
-        foreach ([
-            'chunked upload was not found',
-            'chunked upload manifest is missing',
-            'completed chunked pak data is unavailable',
-            'staged import file is unavailable',
-            'archive member staged source is unavailable and retained-parent reconstruction failed:',
-            'retained parent archive source is unavailable for member reconstruction',
-            'retained parent archive no longer contains the exact recorded member',
-        ] as $marker) {
-            if (str_contains($message, $marker)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     /** @param list<int> $eligibleIds */

@@ -173,6 +173,7 @@ try {
         . '<option value="25">25</option><option value="50">50</option><option value="100" selected>100</option><option value="200">200</option>'
         . '</select></label>'
         . '<a id="jobs-file-export" class="button secondary" href="background-jobs-export.php?queue=' . rawurlencode($queueName) . '">Export</a>'
+        . '<a id="jobs-corrupt-export" class="button secondary" href="corrupt-files-export.php?queue=' . rawurlencode($queueName) . '">Export corrupt files</a>'
         . '</div>';
 
     echo '<div id="jobs-file-notice" class="muted jobs-file-notice">Loading files…</div>';
