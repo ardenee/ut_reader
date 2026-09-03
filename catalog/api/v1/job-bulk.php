@@ -165,7 +165,10 @@ try {
             $search,
             $jobIds,
             $userId,
-            $action === 'restart' && $sourceSelection
+            $action === 'restart' && $sourceSelection,
+            $action === 'delete' && $scope === 'file_matching'
+                ? 'Delete all matching source jobs'
+                : ''
         );
     } else {
         $result = [
