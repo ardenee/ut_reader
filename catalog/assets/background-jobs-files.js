@@ -44,6 +44,7 @@
     const retryAllMatchingButton = document.getElementById('jobs-retry-all-matching');
     const stopSelectedButton = document.getElementById('jobs-stop-selected');
     const deleteSelectedButton = document.getElementById('jobs-delete-selected');
+    const deleteAllMatchingButton = document.getElementById('jobs-delete-all-matching');
     let jobTypeSelect = null;
 
     if (!body || !tabs || !searchInput || !perPageSelect || !notice) return;
@@ -334,6 +335,16 @@
             deleteSelectedButton.title = state.selected.size > 0
                 ? 'Delete the selected source job(s) and their complete child job history. Running roots are skipped.'
                 : 'Select one or more source rows to delete.';
+        }
+        if (deleteAllMatchingButton) {
+            const matchingSources = Math.max(0, Number(state.meta.total || 0));
+            setButtonDisabled(deleteAllMatchingButton, matchingSources === 0);
+            deleteAllMatchingButton.textContent = matchingSources > 0
+                ? 'Delete all matching (' + matchingSources.toLocaleString() + ')'
+                : 'Delete all matching';
+            deleteAllMatchingButton.title = matchingSources > 0
+                ? 'Queue deletion of every non-running source job matching the current queue, state, job-type and search filters. Running roots are always skipped.'
+                : 'No source jobs match the current filters.';
         }
     }
 
@@ -824,6 +835,73 @@
         }
     }
 
+    async function deleteAllMatching() {
+        const matchingSources = Math.max(0, Number(state.meta.total || 0));
+        if (!matchingSources) {
+            setNotice('No source jobs match the current filters.', 5000);
+            return;
+        }
+
+        const stateLabel = state.filter === 'all'
+            ? 'All'
+            : state.filter.charAt(0).toUpperCase() + state.filter.slice(1);
+        const details = [
+            'Queue: ' + queue,
+            'State: ' + stateLabel,
+            'Job type: ' + (state.jobType || 'all'),
+            'Search: ' + (state.search || 'none')
+        ].join('\n');
+
+        if (!window.confirm(
+            'Delete all ' + matchingSources.toLocaleString()
+            + ' source job(s) matching the current filters?\n\n'
+            + details + '\n\n'
+            + 'Each selected root and its complete child job history will be removed. '
+            + 'Queued roots are cancelled before cleanup; running roots are always skipped. '
+            + 'Owned staged job-storage files are also removed.'
+        )) return;
+
+        setButtonDisabled(deleteAllMatchingButton, true);
+        try {
+            const payload = await postJson(bulkUrl, {
+                action: 'delete',
+                scope: 'file_matching',
+                queue: queue,
+                file_state: state.filter,
+                job_type: state.jobType,
+                search: state.search,
+                status: '',
+                job_ids: []
+            });
+            const data = payload && payload.data ? payload.data : {};
+            const scheduled = Math.max(0, Number(data.scheduled || 0));
+            const selected = Math.max(0, Number(data.selected_source_jobs || 0));
+            const total = Math.max(0, Number(data.matching_source_jobs || matchingSources));
+            const skipped = Math.max(0, Number(data.skipped || 0));
+            const cleanupJobId = Math.max(0, Number(data.cleanup_job_id || 0));
+            const limited = Boolean(data.selection_limited || data.limited);
+
+            let text = 'Delete all matching: ' + scheduled.toLocaleString()
+                + ' source tree(s) queued for cleanup'
+                + (cleanupJobId > 0 ? ' in cleanup job #' + cleanupJobId : '')
+                + (skipped ? ', ' + skipped.toLocaleString() + ' skipped' : '') + '.';
+            if (limited) {
+                text += ' ' + selected.toLocaleString() + ' of ' + total.toLocaleString()
+                    + ' matching roots were captured by the 10,000-root safety snapshot. '
+                    + 'After this cleanup finishes, run Delete all matching again for the remainder.';
+            }
+            setNotice(text, limited ? 15000 : 10000);
+            state.selected.clear();
+            state.expanded.clear();
+            state.children.clear();
+        } catch (error) {
+            setNotice(error.message || 'Could not delete all matching source jobs.', 10000);
+        } finally {
+            await refresh();
+            updateSelectionControls();
+        }
+    }
+
     async function startWorkers() {
         if (startButton) startButton.disabled = true;
         try {
@@ -909,6 +987,7 @@
     if (retryAllMatchingButton) retryAllMatchingButton.addEventListener('click', retryAllMatching);
     if (stopSelectedButton) stopSelectedButton.addEventListener('click', stopSelected);
     if (deleteSelectedButton) deleteSelectedButton.addEventListener('click', deleteSelected);
+    if (deleteAllMatchingButton) deleteAllMatchingButton.addEventListener('click', deleteAllMatching);
     if (firstButton) firstButton.addEventListener('click', function () { state.page = 1; clearSelectionAndChildren(); refresh(); });
     if (previousButton) previousButton.addEventListener('click', function () { state.page = Math.max(1, state.page - 1); clearSelectionAndChildren(); refresh(); });
     if (nextButton) nextButton.addEventListener('click', function () { state.page = Math.min(Number(state.meta.pages || 1), state.page + 1); clearSelectionAndChildren(); refresh(); });
