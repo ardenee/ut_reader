@@ -39,7 +39,8 @@ final class PdoBackgroundJobBulkAction
         string $search,
         array $jobIds,
         ?int $userId,
-        bool $explicitRevalidation = false
+        bool $explicitRevalidation = false,
+        string $operationLabel = ''
     ): array {
         $this->setShortLockWait();
 
@@ -155,7 +156,9 @@ final class PdoBackgroundJobBulkAction
                 $requested,
                 $limited,
                 $userId,
-                $scope === 'matching' ? 'Delete matching non-running jobs' : 'Delete selected non-running jobs'
+                trim($operationLabel) !== ''
+                    ? trim($operationLabel)
+                    : ($scope === 'matching' ? 'Delete matching non-running jobs' : 'Delete selected non-running jobs')
             );
             $cleanupJobId = (int)$queued['job_id'];
             $scheduled = (int)$queued['scheduled'];
