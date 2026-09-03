@@ -203,6 +203,12 @@ try {
             'disabled' => true,
             'attributes' => ['id' => 'jobs-delete-selected'],
         ])
+        . CatalogUi::button('Delete all matching', [
+            'variant' => 'danger',
+            'size' => 'sm',
+            'disabled' => true,
+            'attributes' => ['id' => 'jobs-delete-all-matching'],
+        ])
         . '</div>';
 
     $table = '<table class="jobs-file-table"><caption class="ui-sr-only">File processing jobs for queue ' . catalog_h($queueName) . '</caption>'
