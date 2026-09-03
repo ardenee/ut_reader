@@ -160,18 +160,17 @@ $record(
 );
 
 $record(
-    'worker_startup_runs_bounded_reconciliation',
-    str_contains($factory, 'new PdoArchiveProfileMismatchOutcomeRepair($db)')
-        && str_contains($factory, 'No archive or')
-        && str_contains($factory, 'package source bytes are re-read here.')
-        && str_contains($fingerprint, 'PdoArchiveProfileMismatchOutcomeRepair.php')
+    'worker_startup_is_side_effect_free_and_runtime_semantics_are_fingerprinted',
+    !str_contains($factory, 'new PdoArchiveProfileMismatchOutcomeRepair($db)')
+        && str_contains($factory, 'Worker construction is deliberately side-effect free')
+        && str_contains($factory, 'Compatibility repairs are explicit maintenance tasks.')
         && str_contains($fingerprint, 'CatalogStagedImportJobHandler.php')
         && str_contains($fingerprint, 'CatalogImportOutcome.php')
         && str_contains($fingerprint, 'CatalogProfileMismatchException.php')
         && str_contains($fingerprint, '/lib/GameProfiles.php')
         && str_contains($fingerprint, 'CatalogUnverifiedPromotion.php')
         && str_contains($fingerprint, 'CatalogUnverifiedBulkActionJobHandler.php'),
-    'Detached workers must pick up the new semantics and reconcile historical profile mismatches after deployment.'
+    'Starting detached workers must not rewrite historical jobs; runtime profile/unverified semantics must still participate in stale-worker fingerprinting.'
 );
 
 $phpFiles = [
