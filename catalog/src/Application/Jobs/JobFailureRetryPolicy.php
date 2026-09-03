@@ -261,6 +261,7 @@ final class JobFailureRetryPolicy
             'invalid legacy wide fstring length:',
             'legacy package string has no terminator within the safe limit',
             'the unreal package header is missing the required package guid',
+            'unreal package appears to have nul bytes replaced with spaces throughout the payload',
         ] as $structuralMarker) {
             if (str_contains($message, $structuralMarker)) {
                 return true;
