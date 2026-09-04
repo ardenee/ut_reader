@@ -65,8 +65,9 @@ $record(
 $record(
     'repair_refuses_uint32_exhausted_live_ids',
     str_contains($repair, '$uint32Max = 4294967295')
-        && str_contains($repair, 'a coordinated BIGINT schema migration is required'),
-    'Resetting AUTO_INCREMENT is valid only when MAX(id)+1 still fits the existing INT UNSIGNED schema.'
+        && str_contains($repair, 'migration 202609040001')
+        && str_contains($repair, 'BIGINT UNSIGNED'),
+    'Resetting AUTO_INCREMENT is valid only while MAX(id)+1 still fits INT UNSIGNED; a full live-ID exhaustion must direct the operator to the coordinated BIGINT migration.'
 );
 
 $record(
