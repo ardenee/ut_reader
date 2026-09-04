@@ -1,8 +1,8 @@
 #!/usr/bin/env php
 <?php
 /**
- * Purpose: Verifies that one durable Full Sync file unit retires an authoritative invalid package cleanly.
- * Role: Read-only regression gate for typed validation and per-file cleanup without failing/replaying sibling units.
+ * Purpose: Verifies that Full Sync preserves a present verified package when current parser validation fails.
+ * Role: Compatibility-named regression gate preventing reconciliation from deleting authoritative package bytes.
  */
 declare(strict_types=1);
 
@@ -30,7 +30,7 @@ $phpFiles = [
     'src/Infrastructure/Import/CatalogInvalidPackageException.php',
     'src/Infrastructure/Import/PdoCatalogPackageImporter.php',
     'src/Infrastructure/Jobs/CatalogFullSyncUnitJobHandler.php',
-    'src/Infrastructure/Maintenance/CatalogFileMaintenanceRemovalService.php',
+    'src/Infrastructure/Maintenance/CatalogFileMaintenanceActionService.php',
 ];
 $syntaxFailures = [];
 if (!function_exists('proc_open')) {
@@ -66,67 +66,43 @@ try {
             && gp_engine_from_version(868) === null
             && gp_engine_from_version(8261) === null
             && gp_engine_from_version(8320) === null,
-        'Only Epic UE3 package versions 334..867 may provide a UE3 engine hint; 8261/8320 must not self-classify as UE3.'
+        'Only Epic UE3 package versions 334..867 may provide a UE3 engine hint.'
     );
 } catch (Throwable $error) {
     $record('epic_ue3_detection_is_bounded', false, get_class($error) . ': ' . $error->getMessage());
 }
 
-$profiles = $read('lib/GameProfiles.php');
 $exception = $read('src/Infrastructure/Import/CatalogInvalidPackageException.php');
 $importer = $read('src/Infrastructure/Import/PdoCatalogPackageImporter.php');
 $unit = $read('src/Infrastructure/Jobs/CatalogFullSyncUnitJobHandler.php');
-$removal = $read('src/Infrastructure/Maintenance/CatalogFileMaintenanceRemovalService.php');
+$actions = $read('src/Infrastructure/Maintenance/CatalogFileMaintenanceActionService.php');
 
-$record(
-    'extension_engine_fallback_is_removed',
-    !str_contains($profiles, 'function gp_detect_from_extension')
-        && !str_contains($importer, 'gp_detect_from_extension'),
-    'There must be no filename/extension engine detector available to Full Sync or package import.'
-);
-$record(
-    'primary_importer_has_no_extension_profile_gate',
-    !str_contains($importer, 'Extension not allowed by assigned profile')
-        && !str_contains($importer, '$profileExtensions')
-        && str_contains($importer, 'No supported package reader can be selected from serialized header data.'),
-    'Primary package import must never accept/reject or choose a reader from the filename extension.'
-);
 $record(
     'invalid_package_has_explicit_exception_type',
     str_contains($exception, 'final class CatalogInvalidPackageException extends RuntimeException')
         && substr_count($importer, 'throw new CatalogInvalidPackageException(') >= 2,
-    'Authoritative package validation failures must remain distinguishable from infrastructure failures.'
-);
-
-$typedCatch = strpos($unit, 'catch (CatalogInvalidPackageException $error)');
-$record(
-    'full_sync_file_unit_handles_invalid_package',
-    $typedCatch !== false
-        && str_contains($unit, 'new CatalogFileMaintenanceRemovalService')
-        && str_contains($unit, '->remove($fileId, null, true)')
-        && str_contains($unit, "'status' => 'removed_invalid'")
-        && str_contains($unit, 'Removed invalid verified package'),
-    'Only the failing Full Sync file unit should retire a validated-invalid verified package.'
+    'Parser validation failures remain typed, but Full Sync must not translate that type into deletion.'
 );
 $record(
-    'invalid_retirement_does_not_fail_siblings',
-    str_contains($unit, "'status' => 'removed_invalid'")
-        && !str_contains($unit, 'throw $error;'),
-    'Successful invalid-package retirement is a completed child result, not a reason to replay/fail sibling units.'
+    'full_sync_validation_failure_preserves_verified_file',
+    str_contains($unit, "execute('sync_reimport'")
+        && !str_contains($unit, 'CatalogFileMaintenanceRemovalService')
+        && !str_contains($unit, "'status' => 'removed_invalid'")
+        && !str_contains($unit, 'Removed invalid verified package')
+        && str_contains($unit, 'not a destructive validity sweep'),
+    'A present verified package must remain intact when a Full Sync parser/reader validation fails.'
 );
 $record(
-    'cleanup_failure_still_throws',
-    $typedCatch !== false
-        && !str_contains(substr($unit, $typedCatch), 'catch (Throwable $removeError)'),
-    'If the maintenance removal itself fails, the exception must escape so that one child retries/dead-letters visibly.'
+    'full_sync_failure_remains_visible',
+    !str_contains($unit, 'catch (CatalogInvalidPackageException')
+        && str_contains($unit, "private function reimport("),
+    'Validation errors must escape the one-file child so the workflow reports the exact file as failed instead of silently completing.'
 );
 $record(
-    'invalid_removal_uses_complete_cleanup_contract',
-    str_contains($removal, '$support->deleteFileProjections($fileId)')
-        && str_contains($removal, 'DELETE FROM ue_files WHERE id=?')
-        && str_contains($removal, '@unlink($stagedPath)')
-        && str_contains($removal, '@unlink($metadataPath)'),
-    'Invalid retirement must remove projections, verified row, stored package and compact metadata without leaving debris.'
+    'physically_missing_storage_remains_distinct',
+    str_contains($actions, "'status' => 'removed_missing'")
+        && str_contains($actions, 'stored file is missing'),
+    'An actually missing stored package may still be reconciled as missing; parser validation alone may not remove it.'
 );
 
 $result = ['ok' => $failures === [], 'checks' => $checks, 'failures' => $failures];
