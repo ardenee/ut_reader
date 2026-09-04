@@ -59,8 +59,8 @@ require_text($worker, [
 
 $handler = $root . '/src/Infrastructure/Jobs/CatalogGameFileReassignmentJobHandler.php';
 require_text($handler, [
-    'self::PLAN_ID_WINDOW = 5000',
-    'self::CHILD_ID_SPAN = 100',
+    'private const PLAN_ID_WINDOW = 5000;',
+    'private const CHILD_ID_SPAN = 100;',
     'enqueueWorkflowUnits(',
     '$context->defer(',
     'failure_samples',
@@ -98,7 +98,7 @@ $selector = $root . '/src/Infrastructure/Games/PdoGameFileReassignmentSelectionQ
 require_text($selector, [
     'f.scan_status="verified"',
     'COUNT(*) c,COALESCE(MAX(f.id),0) max_id',
-    'LIMIT $limit',
+    "'ORDER BY f.id ASC LIMIT ' . \$limit",
     'Select no more than 1,000 visible files at once.',
 ], $failures);
 
