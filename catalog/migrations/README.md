@@ -14,7 +14,6 @@ The current migration sequence is:
 - `202608140001_verified_metadata_publication_state.php` — adds explicit compact-metadata publication state to `ue_files` (`metadata_status`, `metadata_error`, `metadata_updated_at`) so incomplete verified metadata publication can be detected and repaired rather than silently treated as healthy.
 - `202608170001_unverified_pak_members.php` — links retained neutral Upload Bucket PAK containers to their extracted package children and records ownership so assignment/deletion keeps the PAK and its contained packages together safely.
 - `202608190001_dependency_refresh_performance.php` — adds generated/indexed package identity keys and targeted dependency-link indexes used by high-volume affected-dependency discovery and cached game-stat publication.
-- `202609040001_compact_term_ids_bigint.php` — widens the compact term dictionary and every persisted term-reference column to BIGINT UNSIGNED after the historical dictionary writer exhausted the UINT32 ID space.
 
 A fresh/current deployment loads `catalog/install.sql` and then runs the migration runner so every post-baseline migration is applied.
 
@@ -131,22 +130,19 @@ run readiness/runtime verification
 See [`../../docs/database-migrations.md`](../../docs/database-migrations.md) and [`../../docs/production-deployment.md`](../../docs/production-deployment.md) for the wider deployment policy.
 
 
-### `202609040001`
 
-This is a large maintenance migration for installations whose `ue_terms` dictionary reached the `INT UNSIGNED` ceiling. It widens term-reference columns in `ue_name_lookup`, `ue_export_lookup` and `ue_dependency_links` before widening `ue_terms.id`.
 
-Before applying it:
+## Exhausted compact term IDs
 
-```text
-php catalog/bin/preflight-term-id-bigint-migration.php
-php catalog/bin/migrate.php migrate --dry-run
-```
+Historical compact publication used duplicate-heavy `INSERT IGNORE` priming for `ue_terms`. InnoDB could consume AUTO_INCREMENT values for ignored duplicates, so an installation may reach the `INT UNSIGNED` ceiling while containing only a small fraction of 4.29 billion real terms.
 
-Stop Background Jobs workers, take a database backup, and ensure the MySQL data/temp volumes have substantial free working space. The ALTER operations may rebuild very large tables.
-
-After migration:
+Current writers resolve existing terms first and insert only genuinely missing terms. For an installation that already exhausted the live ID range, do **not** widen all projection tables to BIGINT merely to preserve sparse IDs. Use the resumable offline compaction utility instead:
 
 ```text
-php catalog/bin/migrate.php verify
-php catalog/bin/verify-compact-term-bigint-contract.php --database
+php catalog/bin/compact-ue-term-ids.php status
+php catalog/bin/compact-ue-term-ids.php run --offline-confirmed
+php catalog/bin/compact-ue-term-ids.php verify
+php catalog/bin/compact-ue-term-ids.php cleanup --offline-confirmed
 ```
+
+The run phase creates a dense old→new mapping and a compacted dictionary, then rekeys `ue_name_lookup`, `ue_dependency_links` and `ue_export_lookup` in bounded `file_id` ranges. Each range update and its resume cursor commit in the same transaction. The final dictionary swap occurs only after every reference table has been rekeyed. Apache/public writes and Background Jobs workers must remain stopped for the complete run + verify sequence because reference IDs and the active dictionary intentionally differ during the rekey.

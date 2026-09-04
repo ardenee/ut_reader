@@ -68,7 +68,7 @@ $result = [
 
 if ($nextId > $uint32Max) {
     $result['ok'] = false;
-    $result['error'] = 'ue_terms has no UINT32 ID headroom left; migration 202609040001 must widen the term dictionary and all term-reference columns to BIGINT UNSIGNED.';
+    $result['error'] = 'ue_terms has no UINT32 ID headroom left. The live dictionary is sparse; keep workers/site offline and run php catalog/bin/compact-ue-term-ids.php status, then php catalog/bin/compact-ue-term-ids.php run --offline-confirmed.';
     echo json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . PHP_EOL;
     exit(3);
 }
