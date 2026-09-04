@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace UnrealDb\Catalog\Infrastructure\Unverified;
 
 use UnrealDb\Catalog\Infrastructure\Import\CatalogProfileMismatchException;
+use UnrealDb\Catalog\Infrastructure\Import\CatalogVerifiedPackageDependencyCoordinator;
 
 use PDO;
 use Throwable;
@@ -137,8 +138,22 @@ final class CatalogUnverifiedPromotion
                         $md5,
                         $fileSize
                     );
+
+                    // Promotion must use the same alias dependency publication
+                    // contract as the canonical package importer. Previously this
+                    // path returned immediately after adding the alias, leaving
+                    // existing missing dependencies stale until a whole-game sync.
+                    $this->emit($emit, 'dependency_queue', 72, 'Refreshing dependencies affected by the package alias');
+                    (new CatalogVerifiedPackageDependencyCoordinator($this->db, $this->config))->refreshAlias(
+                        (int)$duplicate['id'],
+                        $targetGameId,
+                        $packageName,
+                        false,
+                        null
+                    );
+
                     $status = 'alias';
-                    $message = 'Package alias added for existing file identity';
+                    $message = 'Package alias added for existing file identity; affected dependencies refreshed';
                 }
                 $this->queueMutations->discard($source);
                 $this->emit($emit, 'done', 100, $message);
