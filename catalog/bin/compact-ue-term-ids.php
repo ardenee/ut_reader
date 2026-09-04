@@ -299,28 +299,46 @@ $prepare = static function () use (
         );
     }
 
-    if (!$tableExists($db, $newTermsTable)) {
-        $db->exec('CREATE TABLE ' . $newTermsTable . ' LIKE ue_terms');
+    if ($tableExists($db, $newTermsTable)) {
+        $db->exec('DROP TABLE ' . $newTermsTable);
     }
+    $showCreate = $db->query('SHOW CREATE TABLE ue_terms')->fetch(PDO::FETCH_NUM);
+    $createSql = is_array($showCreate) ? (string)($showCreate[1] ?? '') : '';
+    $createSql = preg_replace(
+        '/^CREATE TABLE `ue_terms`/i',
+        'CREATE TABLE `' . $newTermsTable . '`',
+        $createSql,
+        1
+    );
+    $createSql = preg_replace('/\\sAUTO_INCREMENT=\\d+\\b/i', '', (string)$createSql);
+    if (!is_string($createSql) || $createSql === '') {
+        throw new RuntimeException('Could not derive a fresh compacted ue_terms table definition.');
+    }
+    $db->exec($createSql);
+    $db->exec(
+        'INSERT INTO ' . $newTermsTable
+        . '(id,value_hash,value_length,value_prefix,is_overflow) '
+        . 'SELECT m.new_id,t.value_hash,t.value_length,t.value_prefix,t.is_overflow '
+        . 'FROM ue_terms t JOIN ' . $mapTable . ' m ON m.old_id=t.id '
+        . 'ORDER BY m.new_id'
+    );
     $newCount = $tableCount($db, $newTermsTable);
-    if ($newCount !== $termCount) {
-        $db->exec('TRUNCATE TABLE ' . $newTermsTable);
-        $db->exec(
-            'INSERT INTO ' . $newTermsTable
-            . '(id,value_hash,value_length,value_prefix,is_overflow) '
-            . 'SELECT m.new_id,t.value_hash,t.value_length,t.value_prefix,t.is_overflow '
-            . 'FROM ue_terms t JOIN ' . $mapTable . ' m ON m.old_id=t.id '
-            . 'ORDER BY m.new_id'
-        );
-        $newCount = $tableCount($db, $newTermsTable);
-    }
     $newMaxId = max(0, (int)($db->query(
         'SELECT COALESCE(MAX(id),0) FROM ' . $newTermsTable
     )->fetchColumn() ?: 0));
-    if ($newCount !== $termCount || $newMaxId !== $termCount) {
+    $newAutoIncrement = max(0, (int)($db->query(
+        'SELECT AUTO_INCREMENT FROM information_schema.TABLES '
+        . 'WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME="' . $newTermsTable . '" LIMIT 1'
+    )->fetchColumn() ?: 0));
+    if ($newCount !== $termCount
+        || $newMaxId !== $termCount
+        || $newAutoIncrement !== ($termCount + 1)) {
         throw new RuntimeException(
             'Compacted dictionary staging is incomplete: terms=' . $termCount
-            . ', staged_rows=' . $newCount . ', staged_max_id=' . $newMaxId . '.'
+            . ', staged_rows=' . $newCount
+            . ', staged_max_id=' . $newMaxId
+            . ', staged_auto_increment=' . $newAutoIncrement
+            . ', expected_auto_increment=' . ($termCount + 1) . '.'
         );
     }
 
