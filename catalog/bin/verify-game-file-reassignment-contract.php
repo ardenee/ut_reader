@@ -98,7 +98,7 @@ $selector = $root . '/src/Infrastructure/Games/PdoGameFileReassignmentSelectionQ
 require_text($selector, [
     'f.scan_status="verified"',
     'COUNT(*) c,COALESCE(MAX(f.id),0) max_id',
-    "'ORDER BY f.id ASC LIMIT ' . \$limit",
+    "' ORDER BY f.id ASC LIMIT ' . \$limit",
     'Select no more than 1,000 visible files at once.',
 ], $failures);
 
