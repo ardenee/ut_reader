@@ -80,8 +80,9 @@ $record(
     'old_dictionary_is_retained_until_explicit_verify_cleanup',
     str_contains($tool, 'ue_terms_pre_compaction')
         && str_contains($tool, 'dictionary_values_match_old_via_map')
-        && str_contains($tool, "phase=\"verified\"")
-        && str_contains($tool, 'DROP TABLE ' . '$backupTermsTable'),
+        && str_contains($tool, 'SET phase="verified"')
+        && str_contains($tool, "\$db->exec('DROP TABLE ' . \$backupTermsTable);")
+        && str_contains($tool, "\$db->exec('DROP TABLE ' . \$mapTable);"),
     'The sparse dictionary and mapping must remain available until a separate verification succeeds.'
 );
 
