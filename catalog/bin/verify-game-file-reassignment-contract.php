@@ -77,17 +77,20 @@ require_text($demotion, [
 
 $move = $root . '/src/Infrastructure/Games/CatalogVerifiedFileReassignmentService.php';
 require_text($move, [
-    'targetVerifiedFile(',
     'PdoCatalogPackageImporter',
+    '->importUploadedFile(',
     'Destination import did not produce a verified package.',
     'retireSource(',
 ], $failures);
 $moveContent = @file_get_contents($move);
 if (is_string($moveContent)) {
-    $targetCheck = strpos($moveContent, '$targetFile = $this->targetVerifiedFile');
+    $targetImport = strpos($moveContent, '->importUploadedFile(');
     $retire = strpos($moveContent, '$retired = $this->retireSource');
-    if ($targetCheck === false || $retire === false || $targetCheck >= $retire) {
-        $failures[] = 'Destination verification must occur before source retirement.';
+    if ($targetImport === false || $retire === false || $targetImport >= $retire) {
+        $failures[] = 'Canonical destination verification must occur before source retirement.';
+    }
+    if (str_contains($moveContent, 'private function targetVerifiedFile')) {
+        $failures[] = 'Same-MD5 destination moves must not bypass the canonical importer.';
     }
 }
 
