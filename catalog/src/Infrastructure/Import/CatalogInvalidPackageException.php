@@ -2,9 +2,9 @@
 /**
  * UnrealDB PHP File Audit
  * Purpose: Marks package-content/profile validation failures that prove a catalogued package is not valid for import.
- * Why: Full Sync may safely remove a verified row only for authoritative package-validation failures, never for
- *      transient database, filesystem, worker, or infrastructure exceptions.
- * Role: Import-layer validation exception used by maintenance recovery policy.
+ * Why: Package-content validation failures must remain distinguishable from transient database, filesystem,
+ *      worker, or infrastructure exceptions without making reconciliation destructive.
+ * Role: Import-layer validation exception used by import, diagnostics and maintenance recovery policy.
  */
 declare(strict_types=1);
 
