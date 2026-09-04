@@ -319,9 +319,24 @@ final class CompressedMetadataLookupWriter
         }
 
         ksort($terms, SORT_STRING);
-        if (!$this->db->inTransaction()) {
+
+        // Resolve the shared dictionary before attempting any INSERT. The old
+        // INSERT IGNORE-first path submitted every term on every metadata rebuild,
+        // including terms that already existed. InnoDB still reserves AUTO_INCREMENT
+        // values for ignored duplicate rows, so large dependency refreshes could
+        // burn billions of ue_terms IDs without creating billions of terms.
+        $resolved = [];
+        $this->resolveTermSet($terms, $terms, $resolved, $sqlBatches);
+
+        if (!$this->db->inTransaction() && count($resolved) !== count($terms)) {
+            $missing = array_filter(
+                $terms,
+                static fn(array $term, string $key): bool => !isset($resolved[$key]),
+                ARRAY_FILTER_USE_BOTH
+            );
+
             $chunk = [];
-            foreach ($terms as $term) {
+            foreach ($missing as $term) {
                 $chunk[] = $term;
                 if (count($chunk) >= self::TERM_BATCH_SIZE) {
                     $this->insertTermBatch($chunk);
@@ -333,21 +348,11 @@ final class CompressedMetadataLookupWriter
                 $this->insertTermBatch($chunk);
                 $sqlBatches++;
             }
-        }
 
-        $resolved = [];
-        $chunk = [];
-        foreach ($terms as $term) {
-            $chunk[] = $term;
-            if (count($chunk) >= self::TERM_BATCH_SIZE) {
-                $this->resolveTermBatch($chunk, $terms, $resolved);
-                $sqlBatches++;
-                $chunk = [];
-            }
-        }
-        if ($chunk !== []) {
-            $this->resolveTermBatch($chunk, $terms, $resolved);
-            $sqlBatches++;
+            // Concurrent workers may race the same genuinely new term. INSERT
+            // IGNORE remains appropriate for that small race window; resolve the
+            // missing subset afterwards to obtain whichever stable IDs won.
+            $this->resolveTermSet($missing, $terms, $resolved, $sqlBatches);
         }
 
         if (count($resolved) !== count($terms)) {
@@ -357,6 +362,28 @@ final class CompressedMetadataLookupWriter
             );
         }
         return $resolved;
+    }
+
+    /**
+     * @param array<string,array{value:string,hash:string,length:int,prefix:string,overflow:int}> $subset
+     * @param array<string,array{value:string,hash:string,length:int,prefix:string,overflow:int}> $allTerms
+     * @param array<string,int> $resolved
+     */
+    private function resolveTermSet(array $subset, array $allTerms, array &$resolved, int &$sqlBatches): void
+    {
+        $chunk = [];
+        foreach ($subset as $term) {
+            $chunk[] = $term;
+            if (count($chunk) >= self::TERM_BATCH_SIZE) {
+                $this->resolveTermBatch($chunk, $allTerms, $resolved);
+                $sqlBatches++;
+                $chunk = [];
+            }
+        }
+        if ($chunk !== []) {
+            $this->resolveTermBatch($chunk, $allTerms, $resolved);
+            $sqlBatches++;
+        }
     }
 
     /** @param list<array{value:string,hash:string,length:int,prefix:string,overflow:int}> $chunk */
@@ -421,6 +448,19 @@ final class CompressedMetadataLookupWriter
                 $statement->execute($arguments);
                 return;
             } catch (Throwable $error) {
+                $mysqlCode = is_array($error instanceof \PDOException ? $error->errorInfo : null)
+                    ? (int)($error->errorInfo[1] ?? 0)
+                    : 0;
+                if ($mysqlCode === 1467
+                    || str_contains(strtolower($error->getMessage()), 'failed to read auto-increment value from storage engine')) {
+                    throw new RuntimeException(
+                        'ue_terms AUTO_INCREMENT cannot allocate another term ID. '
+                        . 'Deploy the compact-term dictionary fix, stop workers, then run '
+                        . 'php catalog/bin/repair-ue-terms-auto-increment.php --apply.',
+                        0,
+                        $error
+                    );
+                }
                 if (!PdoContention::retryable($error) || $attempt >= self::TERM_CONTENTION_ATTEMPTS) {
                     throw $error;
                 }

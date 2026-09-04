@@ -400,11 +400,20 @@ final class CompactSearchProjectionWriter
 
         ksort($terms, SORT_STRING);
 
-        // Retain compatibility for standalone callers. Snapshot publication is in
-        // a file-owned transaction and therefore performs read-only resolution.
-        if (!$this->db->inTransaction()) {
+        // Standalone search-projection repair must follow the same dictionary
+        // discipline as full metadata publication: existing terms are read first
+        // and only genuinely missing terms are submitted to AUTO_INCREMENT.
+        $resolved = [];
+        $this->resolveTermSet($terms, $terms, $resolved, $sqlBatches);
+
+        if (!$this->db->inTransaction() && count($resolved) !== count($terms)) {
+            $missing = array_filter(
+                $terms,
+                static fn(array $term, string $key): bool => !isset($resolved[$key]),
+                ARRAY_FILTER_USE_BOTH
+            );
             $chunk = [];
-            foreach ($terms as $term) {
+            foreach ($missing as $term) {
                 $chunk[] = $term;
                 if (count($chunk) >= self::TERM_BATCH_SIZE) {
                     $this->insertTermBatch($chunk);
@@ -416,22 +425,9 @@ final class CompactSearchProjectionWriter
                 $this->insertTermBatch($chunk);
                 $sqlBatches++;
             }
+            $this->resolveTermSet($missing, $terms, $resolved, $sqlBatches);
         }
 
-        $resolved = [];
-        $chunk = [];
-        foreach ($terms as $term) {
-            $chunk[] = $term;
-            if (count($chunk) >= self::TERM_BATCH_SIZE) {
-                $this->resolveTermBatch($chunk, $terms, $resolved);
-                $sqlBatches++;
-                $chunk = [];
-            }
-        }
-        if ($chunk !== []) {
-            $this->resolveTermBatch($chunk, $terms, $resolved);
-            $sqlBatches++;
-        }
         if (count($resolved) !== count($terms)) {
             throw new RuntimeException(
                 'Could not resolve all compact search terms: expected ' . count($terms)
@@ -439,6 +435,28 @@ final class CompactSearchProjectionWriter
             );
         }
         return $resolved;
+    }
+
+    /**
+     * @param array<string,array{value:string,hash:string,length:int,prefix:string,overflow:int}> $subset
+     * @param array<string,array{value:string,hash:string,length:int,prefix:string,overflow:int}> $allTerms
+     * @param array<string,int> $resolved
+     */
+    private function resolveTermSet(array $subset, array $allTerms, array &$resolved, int &$sqlBatches): void
+    {
+        $chunk = [];
+        foreach ($subset as $term) {
+            $chunk[] = $term;
+            if (count($chunk) >= self::TERM_BATCH_SIZE) {
+                $this->resolveTermBatch($chunk, $allTerms, $resolved);
+                $sqlBatches++;
+                $chunk = [];
+            }
+        }
+        if ($chunk !== []) {
+            $this->resolveTermBatch($chunk, $allTerms, $resolved);
+            $sqlBatches++;
+        }
     }
 
     /** @param list<array{value:string,hash:string,length:int,prefix:string,overflow:int}> $chunk */
