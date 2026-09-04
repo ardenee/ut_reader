@@ -263,22 +263,10 @@ final class CatalogFileMaintenanceActionService
 
         $storedPath = \catalog_file_maintenance_storage_path($this->config, $file);
         if ($storedPath === null || !is_file($storedPath)) {
-            $removed = \catalog_file_maintenance_remove(
-                $this->db,
-                $this->config,
-                $oldFileId,
-                $this->progress,
-                $operation === 'sync_reimport'
-            );
-            \catalog_package_aliases_ensure($this->db);
-            $this->db->prepare('DELETE FROM ue_file_package_aliases WHERE file_id=?')->execute([$oldFileId]);
-            return [
-                'status' => 'removed_missing',
-                'file_id' => null,
-                'game_id' => (int)$removed['game_id'],
-                'original_name' => (string)$removed['original_name'],
-                'message' => 'Stored package was missing; removed its catalog record, aliases, compact metadata, locations, and dependency references.',
-            ];
+            // Reimport/rebuild/Full Sync are reconciliation operations, not deletion
+            // commands. Preserve the relational identity and its diagnostic evidence
+            // so an operator can restore the package or explicitly remove it.
+            throw new RuntimeException($this->missingStorageMessage($file));
         }
 
         $result = \catalog_file_maintenance_reimport(
@@ -335,6 +323,26 @@ final class CatalogFileMaintenanceActionService
             'original_name' => (string)$result['original_name'],
             'message' => (string)$result['message'],
         ];
+    }
+
+    /** @param array<string,mixed> $file */
+    private function missingStorageMessage(array $file): string
+    {
+        $relativePath = ltrim(str_replace('\\', '/', (string)($file['relative_path'] ?? '')), '/');
+        $sourceRelativePath = trim((string)($file['source_relative_path'] ?? ''));
+        $catalogRoot = dirname(__DIR__, 3);
+        $expectedPath = $relativePath !== ''
+            ? $catalogRoot . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relativePath)
+            : '(relative_path is empty)';
+        $storageRoot = trim((string)($this->config['storage_path'] ?? ''));
+
+        return 'Stored package is missing for verified file #' . (int)($file['id'] ?? 0)
+            . ' (' . ((string)($file['original_name'] ?? '') !== '' ? (string)$file['original_name'] : 'unnamed package') . '). '
+            . 'relative_path=' . ($relativePath !== '' ? $relativePath : '(empty)')
+            . '; expected_path=' . $expectedPath
+            . '; storage_root=' . ($storageRoot !== '' ? $storageRoot : '(not configured)')
+            . '; source_relative_path=' . ($sourceRelativePath !== '' ? $sourceRelativePath : '(empty)')
+            . '. Catalog record preserved; restore the package or remove it explicitly.';
     }
 
     private function isDeadlock(Throwable $error): bool
