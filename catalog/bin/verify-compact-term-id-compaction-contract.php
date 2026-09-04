@@ -97,7 +97,7 @@ $record(
 
 $record(
     'live_verifier_requires_dense_next_auto_increment',
-    str_contains($tool, "'auto_increment_is_dense_next_id' => $auto === ($termCount + 1)"),
+    str_contains($tool, "'auto_increment_is_dense_next_id' => \$auto === (\$termCount + 1)"),
     'Verification must not accept a dense dictionary that still carries the historically exhausted allocator counter.'
 );
 
