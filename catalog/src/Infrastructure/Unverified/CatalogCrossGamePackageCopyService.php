@@ -21,6 +21,7 @@ final class CatalogCrossGamePackageCopyService
         private readonly array $config
     ) {
         require_once dirname(__DIR__, 3) . '/lib/CatalogSupport.php';
+        require_once dirname(__DIR__, 3) . '/lib/CatalogPackageAliases.php';
     }
 
     /** @return array<string,mixed> */
@@ -156,19 +157,38 @@ final class CatalogCrossGamePackageCopyService
         }
 
         $targetExistingFileId = 0;
+        $targetProvidesPackageIdentity = false;
         $md5 = strtolower(trim((string)($source['md5'] ?? '')));
         if ($md5 !== '') {
             $statement = $this->db->prepare(
-                'SELECT id FROM ue_files WHERE game_id=? AND scan_status="verified" AND md5=? LIMIT 1'
+                'SELECT id,package_name FROM ue_files WHERE game_id=? AND scan_status="verified" AND md5=? LIMIT 1'
             );
             $statement->execute([$targetGameId, $md5]);
-            $targetExistingFileId = (int)($statement->fetchColumn() ?: 0);
+            $targetExisting = $statement->fetch(PDO::FETCH_ASSOC);
+            if (is_array($targetExisting)) {
+                $targetExistingFileId = (int)($targetExisting['id'] ?? 0);
+                $sourcePackage = trim((string)($source['package_name'] ?? ''));
+                $targetProvidesPackageIdentity = strcasecmp(
+                    trim((string)($targetExisting['package_name'] ?? '')),
+                    $sourcePackage
+                ) === 0;
+                if (!$targetProvidesPackageIdentity && $sourcePackage !== '' && $targetExistingFileId > 0) {
+                    $targetProvidesPackageIdentity = \catalog_package_alias_row_exists(
+                        $this->db,
+                        $targetExistingFileId,
+                        $targetGameId,
+                        $sourcePackage
+                    );
+                }
+            }
         }
 
         return $source + [
             'target_game_id' => $targetGameId,
             'target_game_name' => (string)$target['name'],
-            'already_in_target' => $targetExistingFileId > 0,
+            // Same bytes under a different logical package name still require a
+            // canonical import pass so the target can publish that alias.
+            'already_in_target' => $targetProvidesPackageIdentity,
             'target_existing_file_id' => $targetExistingFileId ?: null,
         ];
     }
