@@ -49,6 +49,7 @@ $phpFiles = [
     'src/Infrastructure/Persistence/PdoJobLeaseStore.php',
     'src/Infrastructure/Persistence/PdoJobRecovery.php',
     'src/Infrastructure/Persistence/PdoJobEnqueuer.php',
+    'src/Infrastructure/Persistence/PdoWorkflowChildStateQuery.php',
 ];
 
 $syntaxFailures = [];
@@ -91,6 +92,7 @@ $claimer = $read('src/Infrastructure/Persistence/PdoJobClaimer.php');
 $leases = $read('src/Infrastructure/Persistence/PdoJobLeaseStore.php');
 $recovery = $read('src/Infrastructure/Persistence/PdoJobRecovery.php');
 $enqueuer = $read('src/Infrastructure/Persistence/PdoJobEnqueuer.php');
+$childStateQuery = $read('src/Infrastructure/Persistence/PdoWorkflowChildStateQuery.php');
 $migration = $read('migrations/202608120001_job_workflow_recovery_logging.php');
 $worker = $read('src/Application/Jobs/JobWorker.php');
 
@@ -119,10 +121,10 @@ $record(
     'full_sync_child_types_are_explicit',
     str_contains($jobType, "FULL_SYNC_FILE = 'catalog.full_sync_file'")
         && str_contains($jobType, "FULL_SYNC_DEPENDENCY_FILE = 'catalog.full_sync_dependency_file'")
-        && str_contains($factory, 'JobType::FULL_SYNC_FILE => $fullSyncUnit')
-        && str_contains($factory, 'JobType::FULL_SYNC_DEPENDENCY_FILE => $fullSyncUnit')
+        && str_contains($factory, 'JobType::FULL_SYNC_FILE => static fn() => new CatalogFullSyncUnitJobHandler')
+        && str_contains($factory, 'JobType::FULL_SYNC_DEPENDENCY_FILE => static fn() => new CatalogFullSyncUnitJobHandler')
         && str_contains($policy, 'self::FULL_SYNC_UNIT'),
-    'Reimport and dependency work must be independently claimable durable units.'
+    'Reimport and dependency work must be independently claimable durable units through the lazy worker factory.'
 );
 
 $record(
@@ -131,8 +133,8 @@ $record(
         && !str_contains($handler, 'CatalogFullSyncDependencyBatchService')
         && str_contains($handler, 'JobType::FULL_SYNC_FILE')
         && str_contains($handler, 'JobType::FULL_SYNC_DEPENDENCY_FILE')
-        && str_contains($handler, "'reimport:' . \$fileId")
-        && str_contains($handler, "'dependency:' . \$fileId")
+        && str_contains($handler, 'private function planUnits(')
+        && str_contains($handler, "\$prefix . ':' . \$fileId")
         && str_contains($handler, '$context->defer('),
     'The parent may plan/wait/finalize, but it must not parse thousands of files itself.'
 );
@@ -153,11 +155,12 @@ $record(
 $record(
     'successful_children_are_not_replayed',
     str_contains($handler, 'childState($job->id')
-        && str_contains($handler, 'status,COUNT(*) c')
-        && str_contains($handler, 'restart only those failed child jobs')
+        && str_contains($handler, 'PdoWorkflowChildStateQuery')
+        && str_contains($handler, 'Restart only those failed child jobs')
         && str_contains($handler, "'planned_units'")
-        && str_contains($handler, 'parent_job_id=? AND workflow_unit_key LIKE ?'),
-    'The parent must derive state from durable children and wait on errors instead of rebuilding successful units.'
+        && str_contains($childStateQuery, 'SELECT status,COUNT(*) c FROM ue_background_jobs WHERE parent_job_id=?')
+        && str_contains($childStateQuery, 'workflow_unit_key LIKE ?'),
+    'The parent must derive state through the shared durable child-state query and wait on errors instead of rebuilding successful units.'
 );
 
 $record(
