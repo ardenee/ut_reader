@@ -6,7 +6,9 @@
  * requires exact relative-object-path matches against exports in the same game,
  * excludes official/base-game/common-package noise, and only retains community
  * providers whose current package name is close to the missing package name and
- * which currently have no resolved dependants.
+ * which currently have no resolved dependants. Browser/download copy suffixes
+ * such as "Package(2)" and "Package (2)" are treated as a dedicated high-signal
+ * rename pattern when the stripped package identity is actually missing.
  */
 declare(strict_types=1);
 
@@ -166,13 +168,14 @@ final class CatalogMisnamedFileDetector
                     continue;
                 }
 
-                [, $similarityPoints] = self::nameSimilarity(
+                [$similarityLabel, $similarityPoints] = self::nameSimilarity(
                     (string)$provider['package_name'],
                     $suggestedPackage
                 );
                 if ($similarityPoints < self::MIN_NAME_SIMILARITY_POINTS) {
                     continue;
                 }
+                $collisionSuffixMatch = $similarityLabel === 'copy suffix (1-9)';
 
                 $key = $candidateFileId . ':' . $packageTermId;
                 if (!isset($groups[$key])) {
@@ -189,6 +192,7 @@ final class CatalogMisnamedFileDetector
                             (string)$provider['extension']
                         ),
                         'current_dependants' => 0,
+                        'collision_suffix_match' => $collisionSuffixMatch,
                         'matched_object_term_ids' => [],
                         'best_same_file_matches' => 0,
                         'matching_files' => 1,
@@ -200,6 +204,9 @@ final class CatalogMisnamedFileDetector
                         ]],
                     ];
                 }
+                if ($collisionSuffixMatch) {
+                    $groups[$key]['collision_suffix_match'] = true;
+                }
                 $groups[$key]['matched_object_term_ids'][(string)$objectTermId] = true;
             }
         }
@@ -208,7 +215,7 @@ final class CatalogMisnamedFileDetector
         foreach ($groups as $group) {
             $termIds = array_map('intval', array_keys((array)$group['matched_object_term_ids']));
             $matched = count($termIds);
-            if ($matched < 2) {
+            if ($matched < 2 && empty($group['collision_suffix_match'])) {
                 continue;
             }
             $group['matched_object_term_ids'] = $termIds;
@@ -238,13 +245,17 @@ final class CatalogMisnamedFileDetector
             (string)($candidate['suggested_package_name'] ?? '')
         );
 
+        $collisionSuffix = !empty($candidate['collision_suffix_match']);
         $score = min(65, $best * 15)
             + min(20, $matchingFiles * 5)
             + ($dependants === 0 ? 35 : ($dependants === 1 ? 8 : 0))
-            + $similarityPoints;
+            + $similarityPoints
+            + ($collisionSuffix ? 15 : 0);
 
         if ($best >= 3 && $dependants === 0 && $similarityPoints >= 20) {
             $confidence = 'very_high';
+        } elseif ($collisionSuffix && $best >= 1 && $dependants === 0) {
+            $confidence = 'high';
         } elseif ($best >= 2 && $dependants === 0 && $similarityPoints >= self::MIN_NAME_SIMILARITY_POINTS) {
             $confidence = 'high';
         } else {
@@ -447,6 +458,17 @@ final class CatalogMisnamedFileDetector
     {
         $currentLeaf = self::packageLeaf($currentPackage);
         $suggestedLeaf = self::packageLeaf($suggestedPackage);
+
+        // Common browser/download collision names append "(N)" to a duplicate
+        // filename. Treat only a single digit 1-9 at the very end of the package
+        // stem as this pattern; parentheses elsewhere remain ordinary package
+        // identity. Both "Name(2)" and "Name (2)" normalize to "Name".
+        $collisionBase = self::collisionSuffixBase($currentLeaf);
+        if ($collisionBase !== ''
+            && strcasecmp($collisionBase, trim($suggestedLeaf)) === 0) {
+            return ['copy suffix (1-9)', 40, 0];
+        }
+
         $currentNormalized = self::normalizedName($currentLeaf);
         $suggestedNormalized = self::normalizedName($suggestedLeaf);
         if ($currentNormalized !== '' && hash_equals($currentNormalized, $suggestedNormalized)) {
@@ -468,6 +490,16 @@ final class CatalogMisnamedFileDetector
             return ['similar', 10, $distance];
         }
         return ['different', 0, $distance];
+    }
+
+    private static function collisionSuffixBase(string $packageLeaf): string
+    {
+        $packageLeaf = trim($packageLeaf);
+        if ($packageLeaf === ''
+            || preg_match('/^(.*?)[\\t ]*\\(([1-9])\\)$/u', $packageLeaf, $match) !== 1) {
+            return '';
+        }
+        return trim((string)($match[1] ?? ''));
     }
 
     private static function packageLeaf(string $packageName): string

@@ -19,7 +19,7 @@ use UnrealDb\Catalog\Infrastructure\Maintenance\CatalogMisnamedFileDetector;
 
 final class CatalogMisnamedFileScanJobHandler implements JobHandler
 {
-    private const POLICY_VERSION = 'community-path-name-strict-v3';
+    private const POLICY_VERSION = 'community-path-name-copy-suffix-v4';
     private const OWNER_BATCH_SIZE = 8;
     private const MAX_PROGRESS_CANDIDATES = 1000;
     private const MAX_RESULT_CANDIDATES = 500;

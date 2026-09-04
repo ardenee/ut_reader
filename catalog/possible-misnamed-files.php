@@ -117,14 +117,18 @@ catalog_head('Possible Misnamed Files');
 
 echo '<div class="card hero"><h1>Possible Misnamed Files</h1>'
     . '<p class="muted">Find verified files whose exported object names repeatedly match unresolved imports that expect a different package name. '
-    . 'Candidates with several matches from the same importing file and zero current dependants are ranked highest. Nothing is renamed automatically.</p></div>';
+    . 'Candidates with several matches from the same importing file and zero current dependants are ranked highest. '
+    . 'A dedicated copy-suffix check also tests names ending in (1) through (9), with or without a preceding space, against the unsuffixed package name. '
+    . 'Nothing is renamed automatically.</p></div>';
 
 if ($flash !== '') {
     echo '<div class="card"><p><strong>' . catalog_h($flash) . '</strong></p></div>';
 }
 
 echo '<div class="card"><h2>Run diagnostic</h2>'
-    . '<p class="muted">The scan runs as a bounded background job. Common object names exported by more than 40 files are ignored so generic names do not create false matches or expensive fan-out. Only one scan runs at a time.</p>'
+    . '<p class="muted">The scan runs as a bounded background job. Common object names exported by more than 40 files are ignored so generic names do not create false matches or expensive fan-out. '
+    . 'For copy-style names such as MyTex(2).utx or MyTex (2).utx, the detector tests MyTex as the expected package identity when unresolved dependency/object-path evidence supports it. '
+    . 'Only one scan runs at a time.</p>'
     . '<form method="post">'
     . '<input type="hidden" name="action" value="start_scan">'
     . '<input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('possible_misnamed_files_scan')) . '">'
