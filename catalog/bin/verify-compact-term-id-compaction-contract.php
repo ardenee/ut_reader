@@ -87,6 +87,32 @@ $record(
 );
 
 $record(
+    'live_verifier_has_valid_export_reference_sql',
+    str_contains(
+        $tool,
+        "object_term_id,COALESCE(class_term_id,0),COALESCE(local_path_term_id,0))),0) "
+    ),
+    'The live verifier must close the outer COALESCE before FROM ue_export_lookup.'
+);
+
+$record(
+    'live_verifier_requires_dense_next_auto_increment',
+    str_contains($tool, "'auto_increment_is_dense_next_id' => $auto === ($termCount + 1)"),
+    'Verification must not accept a dense dictionary that still carries the historically exhausted allocator counter.'
+);
+
+$rebase = $read('bin/rebase-ue-terms-auto-increment.php');
+$record(
+    'allocator_rebase_is_offline_verified_and_retained',
+    str_contains($rebase, '--offline-confirmed')
+        && str_contains($rebase, 'SHOW CREATE TABLE ue_terms')
+        && str_contains($rebase, 'AUTO_INCREMENT=\\d+')
+        && str_contains($rebase, 'ue_terms_pre_auto_increment_rebase')
+        && str_contains($rebase, "'auto_increment_after'"),
+    'MySQL 8 persistent AUTO_INCREMENT state must be rebuilt from a fresh table definition and retained until cleanup.'
+);
+
+$record(
     'current_writers_no_longer_burn_duplicate_ids',
     str_contains($lookup, '$this->resolveTermSet($terms, $terms, $resolved, $sqlBatches);')
         && str_contains($lookup, '$missing = array_filter(')
@@ -98,6 +124,7 @@ $record(
 $syntaxFailures = [];
 foreach ([
     $root . '/bin/compact-ue-term-ids.php',
+    $root . '/bin/rebase-ue-terms-auto-increment.php',
     $root . '/bin/verify-compact-term-id-compaction-contract.php',
     $root . '/bin/repair-ue-terms-auto-increment.php',
 ] as $file) {
