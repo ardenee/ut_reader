@@ -167,8 +167,9 @@ $record(
         && str_contains($unit, "execute('sync_reimport'")
         && str_contains($unit, '->refresh($gameId, [$fileId])')
         && !str_contains($unit, 'foreach ($files')
-        && str_contains($unit, 'CatalogInvalidPackageException'),
-    'Each child must own only one file so only the failed file needs retry.'
+        && !str_contains($unit, 'CatalogFileMaintenanceRemovalService')
+        && !str_contains($unit, "'status' => 'removed_invalid'"),
+    'Each child must own only one file; validation failure is visible and must preserve the verified file.'
 );
 
 $record(
