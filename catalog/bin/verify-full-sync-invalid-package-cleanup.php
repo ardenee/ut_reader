@@ -102,10 +102,11 @@ $record(
     'Validation errors must escape the one-file child so the workflow reports the exact file as failed instead of silently completing.'
 );
 $record(
-    'physically_missing_storage_remains_distinct',
-    str_contains($actions, "'status' => 'removed_missing'")
-        && str_contains($actions, 'Stored package was missing'),
-    'An actually missing stored package may still be reconciled as missing; parser validation alone may not remove it.'
+    'missing_storage_preserves_verified_file',
+    !str_contains($actions, "'status' => 'removed_missing'")
+        && str_contains($actions, 'throw new RuntimeException($this->missingStorageMessage($file))')
+        && str_contains($actions, 'Catalog record preserved; restore the package or remove it explicitly.'),
+    'A missing stored package must remain visible as an operator-actionable failure; reconciliation may not delete its catalog identity.'
 );
 
 $result = ['ok' => $failures === [], 'checks' => $checks, 'failures' => $failures];
