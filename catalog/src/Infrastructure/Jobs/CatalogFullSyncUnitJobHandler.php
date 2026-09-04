@@ -12,9 +12,7 @@ use UnrealDb\Catalog\Application\Jobs\JobExecutionContext;
 use UnrealDb\Catalog\Application\Jobs\JobHandler;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
-use UnrealDb\Catalog\Infrastructure\Import\CatalogInvalidPackageException;
 use UnrealDb\Catalog\Infrastructure\Maintenance\CatalogFileMaintenanceActionService;
-use UnrealDb\Catalog\Infrastructure\Maintenance\CatalogFileMaintenanceRemovalService;
 use UnrealDb\Catalog\Infrastructure\Maintenance\CatalogFullSyncDependencyBatchService;
 
 final class CatalogFullSyncUnitJobHandler implements JobHandler
@@ -76,30 +74,17 @@ final class CatalogFullSyncUnitJobHandler implements JobHandler
             }
         );
 
-        try {
-            $result = $maintenance->execute('sync_reimport', [
-                'file_id' => $fileId,
-                'game_id' => $gameId,
-                'package_name' => (string)$file['package_name'],
-                'md5' => (string)$file['md5'],
-                'package_guid' => (string)($file['package_guid'] ?? ''),
-            ]);
-        } catch (CatalogInvalidPackageException $error) {
-            $removed = (new CatalogFileMaintenanceRemovalService($this->db, $this->config))
-                ->remove($fileId, null, true);
-            $message = 'Removed invalid verified package ' . $name . ': ' . $error->getMessage();
-            $warning = trim((string)($removed['warning'] ?? ''));
-            if ($warning !== '') {
-                $message .= ' Cleanup warning: ' . $warning;
-            }
-            return [
-                'operation' => 'full_sync_file',
-                'game_id' => $gameId,
-                'file_id' => $fileId,
-                'status' => 'removed_invalid',
-                'message' => $message,
-            ];
-        }
+        // Full Sync is a reconciliation operation, not a destructive validity sweep.
+        // A parser/reader regression or newly tightened validation must never delete
+        // an otherwise present verified package. Let the child fail visibly so the
+        // operator can inspect/retry it while preserving the file and stable row.
+        $result = $maintenance->execute('sync_reimport', [
+            'file_id' => $fileId,
+            'game_id' => $gameId,
+            'package_name' => (string)$file['package_name'],
+            'md5' => (string)$file['md5'],
+            'package_guid' => (string)($file['package_guid'] ?? ''),
+        ]);
 
         $status = (string)($result['status'] ?? 'reimported');
         $context->checkpoint([
