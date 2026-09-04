@@ -66,19 +66,19 @@ $checks = [
         'needle' => 'GROUP BY CONVERT(pkg.value_prefix USING utf8mb4) COLLATE utf8mb4_unicode_ci',
         'present' => true,
     ],
-    'cross-examine excludes source bytes already verified in target before candidate counts' => [
+    'cross-examine excludes same bytes only when target already provides the logical package identity' => [
         'path' => $root . '/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php',
-        'needle' => 'AND NOT EXISTS (',
+        'needle' => 'target_existing.package_name=f.package_name OR EXISTS (',
         'present' => true,
     ],
-    'cross-examine target exclusion compares verified target md5' => [
+    'cross-examine target identity check still requires verified target md5' => [
         'path' => $root . '/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php',
         'needle' => 'target_existing.md5=f.md5',
         'present' => true,
     ],
-    'single cross-examine revalidation rejects a source already installed in target' => [
+    'single cross-examine revalidation accepts same bytes when an alias still needs publication' => [
         'path' => $root . '/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php',
-        'needle' => 'if ($targetExisting) {',
+        'needle' => 'catalog_package_alias_row_exists(',
         'present' => true,
     ],
     'cross-examine requires current format2 source metadata' => [
@@ -159,6 +159,11 @@ $checks = [
     'cross-game copy uses read-only catalog-local source' => [
         'path' => $root . '/src/Infrastructure/Unverified/CatalogCrossGamePackageCopyService.php',
         'needle' => "'local-catalog:'",
+        'present' => true,
+    ],
+    'cross-game copy does not skip same bytes when the logical package alias is missing' => [
+        'path' => $root . '/src/Infrastructure/Unverified/CatalogCrossGamePackageCopyService.php',
+        'needle' => "'already_in_target' => $targetProvidesPackageIdentity",
         'present' => true,
     ],
     'cross-game copy does not pre-stage a full duplicate' => [
