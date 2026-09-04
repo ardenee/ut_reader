@@ -101,7 +101,7 @@ $record(
 $record(
     'physically_missing_storage_remains_distinct',
     str_contains($actions, "'status' => 'removed_missing'")
-        && str_contains($actions, 'stored file is missing'),
+        && str_contains($actions, 'Stored package was missing'),
     'An actually missing stored package may still be reconciled as missing; parser validation alone may not remove it.'
 );
 
