@@ -68,7 +68,7 @@ $result = [
 
 if ($nextId > $uint32Max) {
     $result['ok'] = false;
-    $result['error'] = 'ue_terms has no UINT32 ID headroom left; a coordinated BIGINT schema migration is required.';
+    $result['error'] = 'ue_terms has no UINT32 ID headroom left; migration 202609040001 must widen the term dictionary and all term-reference columns to BIGINT UNSIGNED.';
     echo json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . PHP_EOL;
     exit(3);
 }

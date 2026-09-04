@@ -14,6 +14,7 @@ The current migration sequence is:
 - `202608140001_verified_metadata_publication_state.php` — adds explicit compact-metadata publication state to `ue_files` (`metadata_status`, `metadata_error`, `metadata_updated_at`) so incomplete verified metadata publication can be detected and repaired rather than silently treated as healthy.
 - `202608170001_unverified_pak_members.php` — links retained neutral Upload Bucket PAK containers to their extracted package children and records ownership so assignment/deletion keeps the PAK and its contained packages together safely.
 - `202608190001_dependency_refresh_performance.php` — adds generated/indexed package identity keys and targeted dependency-link indexes used by high-volume affected-dependency discovery and cached game-stat publication.
+- `202609040001_compact_term_ids_bigint.php` — widens the compact term dictionary and every persisted term-reference column to BIGINT UNSIGNED after the historical dictionary writer exhausted the UINT32 ID space.
 
 A fresh/current deployment loads `catalog/install.sql` and then runs the migration runner so every post-baseline migration is applied.
 
@@ -128,3 +129,24 @@ run readiness/runtime verification
 ```
 
 See [`../../docs/database-migrations.md`](../../docs/database-migrations.md) and [`../../docs/production-deployment.md`](../../docs/production-deployment.md) for the wider deployment policy.
+
+
+### `202609040001`
+
+This is a large maintenance migration for installations whose `ue_terms` dictionary reached the `INT UNSIGNED` ceiling. It widens term-reference columns in `ue_name_lookup`, `ue_export_lookup` and `ue_dependency_links` before widening `ue_terms.id`.
+
+Before applying it:
+
+```text
+php catalog/bin/preflight-term-id-bigint-migration.php
+php catalog/bin/migrate.php migrate --dry-run
+```
+
+Stop Background Jobs workers, take a database backup, and ensure the MySQL data/temp volumes have substantial free working space. The ALTER operations may rebuild very large tables.
+
+After migration:
+
+```text
+php catalog/bin/migrate.php verify
+php catalog/bin/verify-compact-term-bigint-contract.php --database
+```
