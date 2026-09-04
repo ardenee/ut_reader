@@ -113,61 +113,62 @@ final class CatalogVerifiedFileReassignmentService
             $sourceRelativePath = $originalName;
         }
 
-        $this->emit($progress, 'target_check', 5, 'Checking ' . (string)$target['name'] . ' for existing package bytes');
-        $targetFile = $this->targetVerifiedFile($targetGameId, $md5);
-        $targetStatus = 'duplicate';
-        if ($targetFile === null) {
-            $workingPath = $this->workingFile($sourcePath, $originalName, $progress);
-            try {
-                $this->emit($progress, 'target_import', 15, 'Verifying package in ' . (string)$target['name']);
-                $result = (new PdoCatalogPackageImporter($this->db, $this->config))->importUploadedFile(
-                    $targetGameId,
-                    $workingPath,
-                    $originalName,
-                    $userId,
-                    true,
-                    function (array $state) use ($progress): void {
-                        if ($progress === null) {
-                            return;
-                        }
-                        $sourcePercent = max(0, min(100, (int)($state['percent'] ?? 0)));
-                        $state['percent'] = 15 + (int)floor($sourcePercent * 55 / 100);
-                        $state['stage'] = 'target_' . (trim((string)($state['stage'] ?? 'import')) ?: 'import');
-                        $progress($state);
-                    },
-                    false,
-                    ['source_relative_path' => $sourceRelativePath]
+        // Always pass destination moves through the canonical importer, even
+        // when the same MD5 already exists in the target. The importer owns
+        // profile verification, duplicate handling, alias publication and
+        // affected-dependency refresh; bypassing it here previously skipped those
+        // guarantees for same-byte destination files.
+        $this->emit($progress, 'target_check', 5, 'Preparing canonical destination verification for ' . (string)$target['name']);
+        $workingPath = $this->workingFile($sourcePath, $originalName, $progress);
+        try {
+            $this->emit($progress, 'target_import', 15, 'Verifying package in ' . (string)$target['name']);
+            $result = (new PdoCatalogPackageImporter($this->db, $this->config))->importUploadedFile(
+                $targetGameId,
+                $workingPath,
+                $originalName,
+                $userId,
+                true,
+                function (array $state) use ($progress): void {
+                    if ($progress === null) {
+                        return;
+                    }
+                    $sourcePercent = max(0, min(100, (int)($state['percent'] ?? 0)));
+                    $state['percent'] = 15 + (int)floor($sourcePercent * 55 / 100);
+                    $state['stage'] = 'target_' . (trim((string)($state['stage'] ?? 'import')) ?: 'import');
+                    $progress($state);
+                },
+                false,
+                ['source_relative_path' => $sourceRelativePath]
+            );
+            $targetStatus = strtolower(trim((string)($result[0] ?? '')));
+            if (!in_array($targetStatus, ['verified', 'duplicate', 'alias'], true)) {
+                throw new \RuntimeException(
+                    'Destination import did not produce a verified package. Source file was left in '
+                    . (string)$source['source_game_name'] . '.'
                 );
-                $targetStatus = strtolower(trim((string)($result[0] ?? '')));
-                if (!in_array($targetStatus, ['verified', 'duplicate', 'alias'], true)) {
-                    throw new \RuntimeException(
-                        'Destination import did not produce a verified package. Source file was left in '
-                        . (string)$source['source_game_name'] . '.'
-                    );
-                }
-                $targetFileId = max(0, (int)($result[1] ?? 0));
-                $targetFile = $targetFileId > 0
-                    ? \catalog_one(
-                        $this->db,
-                        'SELECT id,game_id,original_name,md5 FROM ue_files '
-                        . 'WHERE id=? AND game_id=? AND scan_status="verified"',
-                        [$targetFileId, $targetGameId]
-                    )
-                    : null;
-                if (!$targetFile) {
-                    throw new \RuntimeException(
-                        'Destination import completed without an active verified destination row. Source file was preserved.'
-                    );
-                }
-                if ($md5 !== '' && strtolower(trim((string)($targetFile['md5'] ?? ''))) !== $md5) {
-                    throw new \RuntimeException(
-                        'Destination package identity does not match the source bytes. Source file was preserved.'
-                    );
-                }
-            } finally {
-                if (is_file($workingPath)) {
-                    @unlink($workingPath);
-                }
+            }
+            $targetFileId = max(0, (int)($result[1] ?? 0));
+            $targetFile = $targetFileId > 0
+                ? \catalog_one(
+                    $this->db,
+                    'SELECT id,game_id,original_name,md5 FROM ue_files '
+                    . 'WHERE id=? AND game_id=? AND scan_status="verified"',
+                    [$targetFileId, $targetGameId]
+                )
+                : null;
+            if (!$targetFile) {
+                throw new \RuntimeException(
+                    'Destination import completed without an active verified destination row. Source file was preserved.'
+                );
+            }
+            if ($md5 !== '' && strtolower(trim((string)($targetFile['md5'] ?? ''))) !== $md5) {
+                throw new \RuntimeException(
+                    'Destination package identity does not match the source bytes. Source file was preserved.'
+                );
+            }
+        } finally {
+            if (is_file($workingPath)) {
+                @unlink($workingPath);
             }
         }
 
@@ -202,20 +203,6 @@ final class CatalogVerifiedFileReassignmentService
             'warnings' => $warnings,
             'message' => $message,
         ];
-    }
-
-    /** @return array<string,mixed>|null */
-    private function targetVerifiedFile(int $targetGameId, string $md5): ?array
-    {
-        if ($targetGameId < 1 || preg_match('/^[a-f0-9]{32}$/', $md5) !== 1) {
-            return null;
-        }
-        return \catalog_one(
-            $this->db,
-            'SELECT id,game_id,original_name,md5 FROM ue_files '
-            . 'WHERE game_id=? AND scan_status="verified" AND md5=? LIMIT 1',
-            [$targetGameId, $md5]
-        );
     }
 
     /** @param null|callable(array<string,mixed>):void $progress */
