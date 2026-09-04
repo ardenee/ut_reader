@@ -88,7 +88,7 @@ $record(
 );
 $record(
     'cross_game_copy_preserves_alias_repair',
-    str_contains($cross, "'already_in_target' => $targetProvidesPackageIdentity")
+    str_contains($cross, "'already_in_target' => \$targetProvidesPackageIdentity")
         && str_contains($crossQuery, 'target_existing.package_name=f.package_name OR EXISTS (')
         && str_contains($crossQuery, 'catalog_package_alias_row_exists('),
     'Same bytes in the target are only complete when the required logical package identity is also present.'
