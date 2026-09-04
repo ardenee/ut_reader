@@ -561,6 +561,7 @@ $verifyCompaction = static function (bool $markVerified = true) use (
     $checks = [
         'term_count_matches' => $currentCount === $termCount,
         'dense_max_id_matches_count' => $currentMax === $termCount,
+        'auto_increment_is_dense_next_id' => $auto === ($termCount + 1),
         'auto_increment_has_uint32_headroom' => $auto > $currentMax && $auto <= $uint32Max,
     ];
 
@@ -586,7 +587,7 @@ $verifyCompaction = static function (bool $markVerified = true) use (
             . 'COALESCE(import_object_term_id,0),COALESCE(resolution_source_term_id,0),'
             . 'COALESCE(resolution_confidence_term_id,0))),0) FROM ue_dependency_links',
         'ue_export_lookup' => 'SELECT COALESCE(MAX(GREATEST('
-            . 'object_term_id,COALESCE(class_term_id,0),COALESCE(local_path_term_id,0))),0 '
+            . 'object_term_id,COALESCE(class_term_id,0),COALESCE(local_path_term_id,0))),0) '
             . 'FROM ue_export_lookup',
     ];
     $referenceMax = [];
@@ -755,6 +756,9 @@ try {
             }
             if ($tableExists($db, $newTermsTable)) {
                 $db->exec('DROP TABLE ' . $newTermsTable);
+            }
+            if ($tableExists($db, 'ue_terms_pre_auto_increment_rebase')) {
+                $db->exec('DROP TABLE ue_terms_pre_auto_increment_rebase');
             }
             $db->exec(
                 'UPDATE ' . $stateTable . ' SET phase="cleaned",updated_at=NOW() WHERE id=1'
