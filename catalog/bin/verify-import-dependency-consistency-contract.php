@@ -36,6 +36,7 @@ $cross = $read('src/Infrastructure/Unverified/CatalogCrossGamePackageCopyService
 $crossQuery = $read('src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php');
 $fullSync = $read('src/Infrastructure/Jobs/CatalogFullSyncUnitJobHandler.php');
 $fullSyncParent = $read('src/Infrastructure/Jobs/CatalogFullSyncJobHandler.php');
+$maintenanceActions = $read('src/Infrastructure/Maintenance/CatalogFileMaintenanceActionService.php');
 
 $record(
     'staged_upload_uses_canonical_importer',
@@ -99,6 +100,13 @@ $record(
         && !str_contains($fullSync, 'CatalogFileMaintenanceRemovalService')
         && !str_contains($fullSync, "'status' => 'removed_invalid'"),
     'Full Sync must fail a bad revalidation unit visibly instead of deleting a present verified package.'
+);
+$record(
+    'full_sync_missing_storage_is_non_destructive',
+    str_contains($maintenanceActions, 'throw new RuntimeException($this->missingStorageMessage($file))')
+        && !str_contains($maintenanceActions, "'status' => 'removed_missing'")
+        && str_contains($maintenanceActions, 'Catalog record preserved; restore the package or remove it explicitly.'),
+    'Full Sync/reimport must preserve a verified row when its physical package cannot be resolved so the missing-path evidence remains recoverable.'
 );
 $record(
     'full_sync_owns_authoritative_dependency_phase',
