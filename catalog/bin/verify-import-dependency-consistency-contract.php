@@ -75,7 +75,7 @@ $record(
 $record(
     'verified_rename_is_rename_aware',
     str_contains($rename, "'rename_refresh' => true")
-        && str_contains($rename, "'old_package_name' => $oldPackageName")
+        && str_contains($rename, "'old_package_name' => \$oldPackageName")
         && str_contains($rename, 'JobType::REBUILD_FILE_DEPENDENCIES'),
     'Verified rename must refresh both the corrected provider identity and dependants of the old identity.'
 );
