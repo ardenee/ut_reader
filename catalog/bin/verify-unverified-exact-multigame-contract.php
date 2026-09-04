@@ -163,7 +163,7 @@ $checks = [
     ],
     'cross-game copy does not skip same bytes when the logical package alias is missing' => [
         'path' => $root . '/src/Infrastructure/Unverified/CatalogCrossGamePackageCopyService.php',
-        'needle' => "'already_in_target' => $targetProvidesPackageIdentity",
+        'needle' => "'already_in_target' => \$targetProvidesPackageIdentity",
         'present' => true,
     ],
     'cross-game copy does not pre-stage a full duplicate' => [
