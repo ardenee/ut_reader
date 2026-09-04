@@ -23,6 +23,7 @@ final class PdoGameDependencyCrossExamineQuery
         array $config
     ) {
         require_once dirname(__DIR__, 3) . '/lib/CatalogSupport.php';
+        require_once dirname(__DIR__, 3) . '/lib/CatalogPackageAliases.php';
     }
 
     /** @return list<array<string,mixed>> */
@@ -119,9 +120,10 @@ final class PdoGameDependencyCrossExamineQuery
         }
 
         $sourceIds = $sourceGameId > 0 ? [$sourceGameId] : array_keys($allowedSourceIds);
-        // A source whose exact bytes are already verified in the report target is
-        // not a repair candidate. Exclude it before diagnostics, exact matching,
-        // result limiting and all summary/coverage calculations.
+        // Same bytes are only "already present" when the target also exposes the
+        // required logical package identity (canonical or alias). If the bytes are
+        // present under another package name, keep the source as a repair candidate:
+        // the canonical importer can add the missing alias and refresh dependencies.
         $sources = $this->sourceFilesForMissingPackages(
             $targetGameId,
             $sourceIds,
@@ -220,11 +222,26 @@ final class PdoGameDependencyCrossExamineQuery
         if ($md5 !== '') {
             $targetExisting = \catalog_one(
                 $this->db,
-                'SELECT id FROM ue_files WHERE game_id=? AND scan_status="verified" AND md5=? LIMIT 1',
+                'SELECT id,package_name FROM ue_files WHERE game_id=? AND scan_status="verified" AND md5=? LIMIT 1',
                 [$targetGameId, $md5]
             );
             if ($targetExisting) {
-                return null;
+                $sourcePackage = trim((string)($source['package_name'] ?? ''));
+                $targetProvidesIdentity = strcasecmp(
+                    trim((string)($targetExisting['package_name'] ?? '')),
+                    $sourcePackage
+                ) === 0;
+                if (!$targetProvidesIdentity && $sourcePackage !== '') {
+                    $targetProvidesIdentity = \catalog_package_alias_row_exists(
+                        $this->db,
+                        (int)$targetExisting['id'],
+                        $targetGameId,
+                        $sourcePackage
+                    );
+                }
+                if ($targetProvidesIdentity) {
+                    return null;
+                }
             }
         }
 
@@ -367,7 +384,12 @@ final class PdoGameDependencyCrossExamineQuery
                 . 'AND NOT EXISTS ('
                 . 'SELECT 1 FROM ue_files target_existing '
                 . 'WHERE target_existing.game_id=? AND target_existing.scan_status="verified" '
-                . 'AND f.md5<>"" AND target_existing.md5=f.md5'
+                . 'AND f.md5<>"" AND target_existing.md5=f.md5 '
+                . 'AND (target_existing.package_name=f.package_name OR EXISTS ('
+                . 'SELECT 1 FROM ue_file_package_aliases target_alias '
+                . 'WHERE target_alias.file_id=target_existing.id AND target_alias.game_id=target_existing.game_id '
+                . 'AND target_alias.package_name=f.package_name'
+                . '))'
                 . ') '
                 . 'ORDER BY f.package_name,g.name,f.id',
                 array_merge($sourceGameIds, $packageChunk, [$targetGameId])
