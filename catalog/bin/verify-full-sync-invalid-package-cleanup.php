@@ -29,6 +29,7 @@ $phpFiles = [
     'lib/GameProfiles.php',
     'src/Infrastructure/Import/CatalogInvalidPackageException.php',
     'src/Infrastructure/Import/PdoCatalogPackageImporter.php',
+    'src/Infrastructure/Import/CatalogVerifiedPackageInspector.php',
     'src/Infrastructure/Jobs/CatalogFullSyncUnitJobHandler.php',
     'src/Infrastructure/Maintenance/CatalogFileMaintenanceActionService.php',
 ];
@@ -74,14 +75,16 @@ try {
 
 $exception = $read('src/Infrastructure/Import/CatalogInvalidPackageException.php');
 $importer = $read('src/Infrastructure/Import/PdoCatalogPackageImporter.php');
+$inspector = $read('src/Infrastructure/Import/CatalogVerifiedPackageInspector.php');
 $unit = $read('src/Infrastructure/Jobs/CatalogFullSyncUnitJobHandler.php');
 $actions = $read('src/Infrastructure/Maintenance/CatalogFileMaintenanceActionService.php');
 
 $record(
     'invalid_package_has_explicit_exception_type',
     str_contains($exception, 'final class CatalogInvalidPackageException extends RuntimeException')
-        && substr_count($importer, 'throw new CatalogInvalidPackageException(') >= 2,
-    'Parser validation failures remain typed, but Full Sync must not translate that type into deletion.'
+        && str_contains($importer, 'CatalogPackageImporterFactory::create')
+        && substr_count($inspector, 'throw new CatalogInvalidPackageException(') >= 3,
+    'Parser validation failures remain typed in the canonical inspector, but Full Sync must not translate that type into deletion.'
 );
 $record(
     'full_sync_validation_failure_preserves_verified_file',
