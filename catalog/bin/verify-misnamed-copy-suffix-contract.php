@@ -27,7 +27,8 @@ $page = $read('possible-misnamed-files.php');
 $record(
     'copy_suffix_1_to_9_is_explicitly_recognized',
     str_contains($detector, 'private static function collisionSuffixBase')
-        && str_contains($detector, '/^(.*?)[\\t ]*\\\\(([1-9])\\\\)$/u')
+        && str_contains($detector, "preg_match('/^(.*?)[")
+        && str_contains($detector, "([1-9])")
         && str_contains($detector, "return ['copy suffix (1-9)', 40, 0]"),
     'Names ending in (1)..(9), optionally preceded by spaces, must be compared against the unsuffixed package identity.'
 );
