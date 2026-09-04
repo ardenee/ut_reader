@@ -21,7 +21,7 @@ use UnrealDb\Catalog\Infrastructure\Persistence\PdoWorkflowChildStateQuery;
 
 final class GameBackupImportJobHandler implements JobHandler
 {
-    private const WORKFLOW_VERSION = 2;
+    private const WORKFLOW_VERSION = 3;
     private const MANIFEST_VERSION = 1;
     private const PLAN_BATCH_SIZE = 500;
 
@@ -100,10 +100,86 @@ final class GameBackupImportJobHandler implements JobHandler
             $state = $this->childState($job->id, 'alias:');
             $this->waitForChildren($context, $state, 'backup_import_wait_aliases', 48, 95, 'alias backup');
             $context->checkpoint($this->progress(
-                'backup_import_finalize',
-                97,
-                'All backup entries completed; finalizing restore summary.',
+                'backup_import_dependency_plan',
+                96,
+                'All backup entries completed; queueing the authoritative game dependency rebuild.',
                 ['alias_children' => $state]
+            ));
+            $stage = 'backup_import_dependency_plan';
+        }
+
+        if ($stage === 'backup_import_dependency_plan') {
+            $dependencyJobId = (new PdoJobQueue($this->db))->enqueue(
+                $job->queue,
+                JobType::REBUILD_GAME_DEPENDENCIES,
+                [
+                    'game_id' => $gameId,
+                    'offset' => 0,
+                    'requested_by' => $userId,
+                    'workflow_parent_job_id' => $job->id,
+                ],
+                20,
+                null,
+                null,
+                $userId,
+                3,
+                $job->id,
+                'dependencies'
+            );
+            $context->checkpoint($this->progress(
+                'backup_import_dependency_wait',
+                97,
+                'Dependency workflow #' . $dependencyJobId . ' queued after backup restore.',
+                ['dependency_job_id' => $dependencyJobId]
+            ));
+            $stage = 'backup_import_dependency_wait';
+        }
+
+        if ($stage === 'backup_import_dependency_wait') {
+            $dependency = $this->workflowChild($job->id, 'dependencies');
+            if ($dependency === null) {
+                $context->checkpoint($this->progress(
+                    'backup_import_dependency_plan',
+                    96,
+                    'Dependency workflow child was not found; replanning it.'
+                ));
+                $context->defer(1);
+            }
+
+            $dependencyStatus = strtolower(trim((string)($dependency['status'] ?? 'queued')));
+            if (in_array($dependencyStatus, ['failed', 'dead_letter', 'cancelled'], true)) {
+                $context->defer(30, $this->progress(
+                    'backup_import_dependency_wait',
+                    98,
+                    'Backup dependency workflow #' . (int)$dependency['id']
+                        . ' requires attention. Restart that dependency child; imported backup entries are retained.',
+                    [
+                        'dependency_job_id' => (int)$dependency['id'],
+                        'dependency_status' => $dependencyStatus,
+                    ]
+                ));
+            }
+            if ($dependencyStatus !== 'completed') {
+                $dependencyProgress = json_decode((string)($dependency['progress_json'] ?? ''), true);
+                $innerPercent = is_array($dependencyProgress)
+                    ? max(0, min(100, (int)($dependencyProgress['percent'] ?? 0)))
+                    : 0;
+                $context->defer(2, $this->progress(
+                    'backup_import_dependency_wait',
+                    97 + (int)floor(($innerPercent * 2) / 100),
+                    'Backup dependency workflow #' . (int)$dependency['id'] . ' is ' . $dependencyStatus . '.',
+                    [
+                        'dependency_job_id' => (int)$dependency['id'],
+                        'dependency_status' => $dependencyStatus,
+                    ]
+                ));
+            }
+
+            $context->checkpoint($this->progress(
+                'backup_import_finalize',
+                99,
+                'Backup dependency rebuild completed; finalizing restore summary.',
+                ['dependency_job_id' => (int)$dependency['id']]
             ));
             $stage = 'backup_import_finalize';
         }
@@ -115,9 +191,10 @@ final class GameBackupImportJobHandler implements JobHandler
         $aggregate = $this->aggregateEntryResults($job->id);
         $canonical = $this->childState($job->id, 'canonical:');
         $aliases = $this->childState($job->id, 'alias:');
+        $dependency = $this->workflowChild($job->id, 'dependencies');
         $message = 'Game backup restore complete for ' . (string)$game['name'] . ': '
             . $aggregate['imported'] . ' imported, ' . $aggregate['duplicates'] . ' duplicate, '
-            . $aggregate['aliases'] . ' alias result(s).';
+            . $aggregate['aliases'] . ' alias result(s); game dependencies rebuilt.';
         $context->checkpoint($this->progress('complete', 100, $message, [
             'canonical_children' => $canonical,
             'alias_children' => $aliases,
@@ -135,6 +212,8 @@ final class GameBackupImportJobHandler implements JobHandler
             'aliases' => $aggregate['aliases'],
             'canonical_children' => $canonical,
             'alias_children' => $aliases,
+            'dependency_job_id' => (int)($dependency['id'] ?? 0),
+            'dependency_status' => (string)($dependency['status'] ?? ''),
             'message' => $message,
         ];
     }
