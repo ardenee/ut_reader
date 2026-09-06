@@ -77,6 +77,69 @@ try {
         JsonResponse::send(['data' => ['job_id' => $jobId, 'status' => 'queued']]);
     }
 
+    if ($action === 'retry_children') {
+        $parentJobId = (int)($payload['job_id'] ?? 0);
+        if ($parentJobId < 1) {
+            JsonResponse::error('invalid_job', 'A positive parent job_id is required.', 400);
+        }
+
+        $parent = catalog_one(
+            $application->db,
+            'SELECT id FROM ue_background_jobs WHERE id=? AND queue_name=? LIMIT 1',
+            [$parentJobId, $queueName]
+        );
+        if (!$parent) {
+            JsonResponse::error('not_found', 'The requested parent job was not found in this queue.', 404);
+        }
+
+        $statement = $application->db->prepare(
+            'SELECT id FROM ue_background_jobs '
+            . 'WHERE queue_name=? AND parent_job_id=? '
+            . 'AND status IN ("cancelled","failed","dead_letter") '
+            . 'ORDER BY id ASC LIMIT 10000'
+        );
+        $statement->execute([$queueName, $parentJobId]);
+        $childIds = array_values(array_map('intval', $statement->fetchAll(PDO::FETCH_COLUMN) ?: []));
+        if ($childIds === []) {
+            JsonResponse::error('not_retryable', 'This parent has no failed/cancelled child jobs to retry.', 409);
+        }
+
+        $result = (new PdoBackgroundJobBulkAction($application->db, $application->config))->execute(
+            'restart',
+            'selected',
+            $queueName,
+            '',
+            '',
+            $childIds,
+            $userId,
+            true
+        );
+        $affected = max(0, (int)($result['affected'] ?? 0));
+        if ($affected < 1) {
+            JsonResponse::error(
+                'not_retryable',
+                'The failed/cancelled child jobs are not currently retryable.',
+                409
+            );
+        }
+
+        $workerState = (new CatalogQueueWorkerStarter($application->db, $application->config))
+            ->start($queueName, true, $userId);
+
+        JsonResponse::send([
+            'data' => [
+                'parent_job_id' => $parentJobId,
+                'requested' => count($childIds),
+                'requeued' => $affected,
+                'skipped' => max(0, (int)($result['skipped'] ?? 0)),
+                'retry_blocked' => max(0, (int)($result['retry_blocked'] ?? 0)),
+                'limited' => count($childIds) >= 10000,
+                'worker' => $workerState['worker'],
+                'worker_error' => (string)$workerState['worker_error'],
+            ],
+        ], 202);
+    }
+
     if ($action === 'revalidate') {
         $jobId = (int)($payload['job_id'] ?? 0);
         if ($jobId < 1) {
@@ -490,7 +553,7 @@ try {
 
     JsonResponse::error(
         'invalid_action',
-        'Supported actions are cancel, retry, revalidate, delete, delete_selected, delete_matching, cleanup, cleanup_storage, recover, enqueue_rebuild_game, enqueue_rebuild_file, enqueue_rebuild_affected, enqueue_source_identity_file, enqueue_source_identity_game, enqueue_reconcile_unverified, enqueue_prune_artifacts and enqueue_prune.',
+        'Supported actions are cancel, retry, retry_children, revalidate, delete, delete_selected, delete_matching, cleanup, cleanup_storage, recover, enqueue_rebuild_game, enqueue_rebuild_file, enqueue_rebuild_affected, enqueue_source_identity_file, enqueue_source_identity_game, enqueue_reconcile_unverified, enqueue_prune_artifacts and enqueue_prune.',
         400
     );
 } catch (Throwable $exception) {
