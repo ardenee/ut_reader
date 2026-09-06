@@ -93,6 +93,7 @@ $leases = $read('src/Infrastructure/Persistence/PdoJobLeaseStore.php');
 $recovery = $read('src/Infrastructure/Persistence/PdoJobRecovery.php');
 $enqueuer = $read('src/Infrastructure/Persistence/PdoJobEnqueuer.php');
 $childStateQuery = $read('src/Infrastructure/Persistence/PdoWorkflowChildStateQuery.php');
+$projector = $read('src/Infrastructure/Jobs/CatalogBackgroundJobFileTreeProjector.php');
 $migration = $read('migrations/202608120001_job_workflow_recovery_logging.php');
 $worker = $read('src/Application/Jobs/JobWorker.php');
 
@@ -173,15 +174,51 @@ $record(
 );
 
 $record(
-    'unit_handler_is_one_file_only',
+    'dependency_phase_uses_bounded_durable_batches',
+    str_contains($handler, 'private const DEPENDENCY_UNIT_BATCH_SIZE = 100')
+        && str_contains($handler, 'array_chunk($ids, self::DEPENDENCY_UNIT_BATCH_SIZE)')
+        && str_contains($handler, "'file_ids' => $batchIds")
+        && str_contains($handler, "'workflow_unit_key' => $prefix . ':batch:'")
+        && str_contains($handler, 'enqueueWorkflowUnits('),
+    'Full Sync dependency planning must persist bounded 100-file batches instead of another durable queue row for every file.'
+);
+
+$record(
+    'dependency_batch_failures_fall_back_to_file_jobs',
+    str_contains($unit, 'private function dependencyFileIds(')
+        && str_contains($unit, 'CatalogFullSyncDependencyBatchService::MAX_BATCH_SIZE')
+        && str_contains($unit, "'dependency:retry:' . (int)$failedId")
+        && str_contains($unit, "'retry_from_batch_job_id' => $job->id")
+        && str_contains($unit, 'completed_with_retries'),
+    'Batch execution may optimize successful files, but failed members must become exact one-file retry children so failure isolation is preserved.'
+);
+
+$record(
+    'dependency_batch_change_resumes_existing_workflow',
+    str_contains($handler, "'planned_units' => $planned")
+        && str_contains($handler, 'pre-batching workflow resumes from its existing checkpoint')
+        && str_contains($handler, 'private const WORKFLOW_VERSION = 2'),
+    'An in-progress pre-batching Full Sync must keep its cursor/checkpoint and switch only the remaining dependency files to batches.'
+);
+
+$record(
+    'full_sync_progress_uses_coordinator_phase_percent',
+    str_contains($projector, 'JobType::FULL_SYNC_GAME')
+        && str_contains($projector, 'bool $preferPersistedPercent = false')
+        && str_contains($projector, '!$preferPersistedPercent && $childCount > 0'),
+    'Background Jobs must show the Full Sync coordinator phase percent instead of reporting ~99% merely because the first-phase child rows dominate the total.'
+);
+
+$record(
+    'unit_handler_preserves_reimport_identity_and_bounded_dependencies',
     str_contains($unit, 'JobType::FULL_SYNC_FILE')
         && str_contains($unit, 'JobType::FULL_SYNC_DEPENDENCY_FILE')
         && str_contains($unit, "execute('sync_reimport'")
-        && str_contains($unit, '->refresh($gameId, [$fileId])')
-        && !str_contains($unit, 'foreach ($files')
+        && str_contains($unit, ')->refresh($gameId, $fileIds)')
+        && str_contains($unit, 'CatalogFullSyncDependencyBatchService::MAX_BATCH_SIZE')
         && !str_contains($unit, 'CatalogFileMaintenanceRemovalService')
         && !str_contains($unit, "'status' => 'removed_invalid'"),
-    'Each child must own only one file; validation failure is visible and must preserve the verified file.'
+    'Reimport remains one stable file per child; dependency execution may batch only within the bounded service and must never make Full Sync destructive.'
 );
 
 $record(
