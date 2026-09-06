@@ -23,6 +23,27 @@ $operatorSnapshot = $read('src/Infrastructure/Persistence/PdoBackgroundJobOperat
 $operationalQuery = $read('src/Infrastructure/Persistence/PdoBackgroundJobOperationalQuery.php');
 $workerEndpoint = $read('api/v1/job-worker-status.php');
 $systemOperations = $read('system-operations.php');
+$fileTreeQuery = $read('src/Infrastructure/Persistence/PdoBackgroundJobFileTreeQuery.php');
+
+$withoutComments = static function (string $source): string {
+    if ($source === '') {
+        return '';
+    }
+    $code = '';
+    foreach (token_get_all($source) as $token) {
+        if (is_array($token)) {
+            if ($token[0] === T_COMMENT || $token[0] === T_DOC_COMMENT) {
+                continue;
+            }
+            $code .= $token[1];
+            continue;
+        }
+        $code .= $token;
+    }
+    return $code;
+};
+$displayCountsCode = $withoutComments($displayCounts);
+
 $checks = [];
 $failures = [];
 $check = static function (string $name, bool $ok, string $detail) use (&$checks, &$failures): void {
@@ -49,25 +70,36 @@ $check(
 $check(
     'operator_job_scope_is_explicit',
     str_contains($searchScope, 'root_job.parent_job_id IS NULL')
+        && str_contains($searchScope, 'profiled_source.*')
+        && str_contains($searchScope, 'profiled_parent.id=profiled_source.parent_job_id')
         && str_contains($searchScope, 'problem_child.parent_job_id IS NOT NULL')
         && str_contains($searchScope, 'problem_child.status IN ("failed","dead_letter")')
-        && !str_contains($searchScope, 'problem_child.status IN ("failed","dead_letter","cancelled")')
-        && str_contains($page, 'routine child rows stay hidden unless they need attention'),
-    'Routine workflow children, including cancelled internal history, must stay folded into their parent; failed/dead-letter children remain directly actionable.'
+        && !str_contains($searchScope, 'problem_child.status IN ("failed","dead_letter","cancelled")'),
+    'Routine workflow children, including cancelled internal history, must stay folded into their source/root; promoted source jobs and failed/dead-letter children remain directly actionable.'
 );
 $check(
     'background_jobs_counts_use_bounded_operator_scope',
     str_contains($browser, 'PdoBackgroundJobSearchScope')
         && str_contains($browser, 'PdoBackgroundJobDisplayCountQuery')
         && str_contains($browser, '$this->countQuery->counts(')
-        && str_contains($displayCounts, 'GROUP BY j.status,j.display_status,j.job_type')
-        && !str_contains($displayCounts, 'GROUP BY operator_status')
-        && !str_contains($displayCounts, 'BackgroundJobDisplaySql::operatorStatus(')
-        && str_contains($displayCounts, 'running_child.parent_job_id=j.id')
-        && str_contains($displayCounts, '$counts[\'queued\'] -= $promoted')
-        && str_contains($displayCounts, '$counts[\'running\'] += $promoted'),
+        && str_contains($displayCountsCode, 'GROUP BY j.status,j.display_status,j.job_type')
+        && !str_contains($displayCountsCode, 'GROUP BY operator_status')
+        && !str_contains($displayCountsCode, 'BackgroundJobDisplaySql::operatorStatus(')
+        && str_contains($displayCountsCode, 'running_child.parent_job_id=j.id')
+        && str_contains($displayCountsCode, '$counts[\'queued\'] -= $promoted')
+        && str_contains($displayCountsCode, '$counts[\'running\'] += $promoted'),
     'Tabs and totals must use persisted status grouping plus one indexed queued-parent promotion count; never put a correlated child lookup inside GROUP BY.'
 );
+$check(
+    'file_tree_live_counts_are_root_scoped',
+    str_contains($fileTreeQuery, '$logicalCountWhere = array_merge($commonWhere, [$logicalRootScope]);')
+        && str_contains($fileTreeQuery, 'SUM(CASE WHEN NOT (')
+        && str_contains($fileTreeQuery, 'AS working_count')
+        && str_contains($fileTreeQuery, '$this->childActiveCountExpression(\'j\') . \' AS child_active_count\'')
+        && str_contains($fileTreeQuery, 'ORDER BY j.id DESC LIMIT '),
+    'The current file-centric Background Jobs page must count logical roots globally and only calculate child activity for the bounded visible page.'
+);
+
 $check(
     'retained_archive_view_has_direct_count_path',
     str_contains($browser, "if (\$status === 'partial_archive' && \$search === '')")
