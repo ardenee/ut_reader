@@ -37,7 +37,7 @@ $check(
 $check(
     'endpoint_passes_state_to_children',
     str_contains($endpoint, '$query->children($queue, $parentJobId, $state, $page, $perPage)')
-        && str_contains($endpoint, "'state' => $state"),
+        && str_contains($endpoint, '\'state\' => $state'),
     'The child API must retain and report the selected state instead of dropping it for parent_job_id reads.'
 );
 
@@ -53,7 +53,7 @@ $check(
 
 $check(
     'working_children_are_live_only',
-    str_contains($query, "'working' => 'NOT (' . $issue . ') AND ' . $active")
+    str_contains($query, '\'working\' => \'NOT (\' . $issue . \') AND \' . $active')
         && str_contains($query, '$active = \'j.status IN ("queued","running")\';'),
     'Working child expansion must contain queued/running child jobs rather than completed historical units.'
 );
