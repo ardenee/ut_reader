@@ -111,19 +111,44 @@ final class CatalogFullSyncUnitJobHandler implements JobHandler
     private function dependencies(ClaimedJob $job, JobExecutionContext $context): array
     {
         $gameId = $this->positive($job->payload, 'game_id');
-        $fileIds = $this->dependencyFileIds($job->payload);
-        $singleFileId = count($fileIds) === 1 ? (int)$fileIds[0] : 0;
+        $requestedFileIds = $this->dependencyFileIds($job->payload);
+        $singleFileId = count($requestedFileIds) === 1 ? (int)$requestedFileIds[0] : 0;
+        $fileIds = $this->verifiedDependencyFileIds($gameId, $requestedFileIds);
+        $skippedRemoved = count($requestedFileIds) - count($fileIds);
+
+        if ($singleFileId > 0 && $fileIds === []) {
+            return [
+                'operation' => 'full_sync_dependency_file',
+                'game_id' => $gameId,
+                'file_id' => $singleFileId,
+                'status' => 'already_removed',
+                'message' => 'The dependency owner is no longer verified; no dependency work remains.',
+            ];
+        }
+        if ($fileIds === []) {
+            return [
+                'operation' => 'full_sync_dependency_file',
+                'game_id' => $gameId,
+                'file_id' => 0,
+                'file_ids' => $requestedFileIds,
+                'status' => 'already_removed',
+                'message' => 'All dependency owners in this batch are no longer verified; no work remains.',
+            ];
+        }
+
+        $singleFile = $singleFileId > 0 ? $this->file($gameId, $singleFileId) : null;
         $unitLabel = $singleFileId > 0
-            ? ((string)($this->file($gameId, $singleFileId)['original_name'] ?? ('file #' . $singleFileId)))
+            ? (string)($singleFile['original_name'] ?? ('file #' . $singleFileId))
             : number_format(count($fileIds)) . ' files';
 
         $context->checkpoint([
             'stage' => 'full_sync_dependency_file',
             'done' => 0,
-            'total' => count($fileIds),
+            'total' => count($requestedFileIds),
             'percent' => 5,
             'file_id' => $singleFileId,
-            'message' => 'Refreshing dependencies for ' . $unitLabel . '.',
+            'message' => 'Refreshing dependencies for ' . $unitLabel
+                . ($skippedRemoved > 0 ? '; skipped removed=' . $skippedRemoved : '') . '.',
         ]);
 
         $result = (new CatalogFullSyncDependencyBatchService(
@@ -196,12 +221,13 @@ final class CatalogFullSyncUnitJobHandler implements JobHandler
         $completed = max(0, (int)($result['succeeded'] ?? 0));
         $context->checkpoint([
             'stage' => 'complete',
-            'done' => count($fileIds),
-            'total' => count($fileIds),
+            'done' => count($requestedFileIds),
+            'total' => count($requestedFileIds),
             'percent' => 100,
             'file_id' => $singleFileId,
             'message' => $failedIds === []
-                ? 'Dependency batch complete for ' . number_format(count($fileIds)) . ' file(s).'
+                ? 'Dependency batch complete for ' . number_format(count($fileIds)) . ' file(s)'
+                    . ($skippedRemoved > 0 ? '; skipped removed=' . number_format($skippedRemoved) : '') . '.'
                 : 'Dependency batch completed ' . number_format($completed) . ' file(s); '
                     . number_format(count($failedIds)) . ' failed file(s) were split into exact retry jobs.',
         ]);
@@ -210,15 +236,39 @@ final class CatalogFullSyncUnitJobHandler implements JobHandler
             'operation' => 'full_sync_dependency_file',
             'game_id' => $gameId,
             'file_id' => $singleFileId,
-            'file_ids' => $fileIds,
+            'file_ids' => $requestedFileIds,
             'status' => $failedIds === [] ? 'completed' : 'completed_with_retries',
             'succeeded' => $completed,
+            'skipped_removed' => $skippedRemoved,
             'retry_children' => count($failedIds),
             'metadata_repairs' => (int)($result['metadata_repairs'] ?? 0),
             'message' => $failedIds === []
                 ? 'Dependency batch complete.'
                 : count($failedIds) . ' failed dependency file(s) were isolated into per-file retry jobs.',
         ];
+    }
+
+    /** @param list<int> $fileIds @return list<int> */
+    private function verifiedDependencyFileIds(int $gameId, array $fileIds): array
+    {
+        if ($fileIds === []) {
+            return [];
+        }
+        $placeholders = implode(',', array_fill(0, count($fileIds), '?'));
+        $statement = $this->db->prepare(
+            'SELECT id FROM ue_files WHERE game_id=? AND scan_status="verified" AND id IN ('
+            . $placeholders . ')'
+        );
+        $statement->execute([$gameId, ...$fileIds]);
+        $verified = array_map('intval', $statement->fetchAll(PDO::FETCH_COLUMN) ?: []);
+        $set = array_fill_keys($verified, true);
+
+        // Preserve the planner's original order so progress/error reporting stays
+        // deterministic and batch retries remain easy to correlate.
+        return array_values(array_filter(
+            $fileIds,
+            static fn(int $fileId): bool => isset($set[$fileId])
+        ));
     }
 
     /** @param array<string,mixed> $payload @return list<int> */
