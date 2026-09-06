@@ -408,7 +408,14 @@
             identity.appendChild(create('span', 'muted jobs-file-child-count', 'Child of job #' + String(file.tree_parent_job_id)));
         }
         if (file.has_children) {
-            identity.appendChild(create('span', 'muted jobs-file-child-count', String(file.child_count || 0) + ' child item(s)'));
+            const childView = state.children.get(id);
+            const totalChildren = Math.max(0, Number(file.child_count || 0));
+            const matchingChildren = childView ? Math.max(0, Number(childView.total || 0)) : null;
+            const childLabel = state.expanded.has(id) && childView && state.filter !== 'all'
+                ? matchingChildren.toLocaleString() + ' ' + state.filter + ' child item(s) · '
+                    + totalChildren.toLocaleString() + ' total'
+                : totalChildren.toLocaleString() + ' child item(s)';
+            identity.appendChild(create('span', 'muted jobs-file-child-count', childLabel));
         }
         tree.appendChild(identity);
         fileCell.appendChild(tree);
@@ -518,6 +525,21 @@
             loading.appendChild(cell);
             applyRowBackground(loading, depth + 1, rootGroup);
             fragment.appendChild(loading);
+            return;
+        }
+
+        if (!childState.rows.length) {
+            const empty = document.createElement('tr');
+            empty.className = 'jobs-file-loading-row';
+            const label = state.filter === 'all'
+                ? 'No child files/jobs.'
+                : 'No ' + state.filter + ' child files/jobs under this item.';
+            const cell = create('td', 'muted', label);
+            cell.colSpan = 8;
+            cell.style.paddingLeft = 'calc(18px + (' + (depth + 1) + ' * 30px))';
+            empty.appendChild(cell);
+            applyRowBackground(empty, depth + 1, rootGroup);
+            fragment.appendChild(empty);
             return;
         }
 
