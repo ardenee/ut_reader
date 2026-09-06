@@ -125,11 +125,7 @@ final class JobResourcePolicy
                 self::defaultLimit(2),
                 self::positiveKey('import:file-id:', $payload['file_id'] ?? null)
             ),
-            JobType::FULL_SYNC_DEPENDENCY_FILE => new JobResourceProfile(
-                self::FULL_SYNC_UNIT,
-                self::defaultLimit(2),
-                self::positiveKey('dependency:file:', $payload['file_id'] ?? null)
-            ),
+            JobType::FULL_SYNC_DEPENDENCY_FILE => self::fullSyncDependencyProfile($payload),
             JobType::REBUILD_GAME_DEPENDENCIES => new JobResourceProfile(
                 self::DEPENDENCY_HEAVY,
                 self::defaultLimit(1),
@@ -268,6 +264,30 @@ final class JobResourcePolicy
                 self::defaultLimit(4)
             ),
         };
+    }
+
+    /** @param array<string,mixed> $payload */
+    private static function fullSyncDependencyProfile(array $payload): JobResourceProfile
+    {
+        $batchIds = $payload['file_ids'] ?? null;
+        if (is_array($batchIds) && $batchIds !== []) {
+            $parentId = max(0, (int)($payload['workflow_parent_job_id'] ?? 0));
+            $startId = max(0, (int)($payload['batch_start_file_id'] ?? 0));
+            $key = $parentId > 0 && $startId > 0
+                ? 'dependency:full-sync-batch:' . $parentId . ':' . $startId
+                : null;
+            return new JobResourceProfile(
+                self::AFFECTED_DEPENDENCY_BATCH,
+                self::defaultLimit(4),
+                $key
+            );
+        }
+
+        return new JobResourceProfile(
+            self::FULL_SYNC_UNIT,
+            self::defaultLimit(2),
+            self::positiveKey('dependency:file:', $payload['file_id'] ?? null)
+        );
     }
 
     /** @param array<string,mixed> $payload */
