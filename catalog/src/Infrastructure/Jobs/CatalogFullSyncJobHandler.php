@@ -27,6 +27,7 @@ final class CatalogFullSyncJobHandler implements JobHandler
 {
     private const WORKFLOW_VERSION = 2;
     private const PLAN_BATCH_SIZE = 500;
+    private const DEPENDENCY_PLAN_PAGE_SIZE = 5000;
     private const DEPENDENCY_UNIT_BATCH_SIZE = 100;
 
     /** @param array<string,mixed> $config */
@@ -244,9 +245,12 @@ final class CatalogFullSyncJobHandler implements JobHandler
             return;
         }
 
+        $planPageSize = $childType === JobType::FULL_SYNC_DEPENDENCY_FILE
+            ? self::DEPENDENCY_PLAN_PAGE_SIZE
+            : self::PLAN_BATCH_SIZE;
         $statement = $this->db->prepare(
             'SELECT id FROM ue_files WHERE game_id=? AND scan_status="verified" AND id>? AND id<=? '
-            . 'ORDER BY id LIMIT ' . self::PLAN_BATCH_SIZE
+            . 'ORDER BY id LIMIT ' . $planPageSize
         );
         $statement->execute([$gameId, $lastId, $snapshotMaxId]);
         $ids = array_values(array_map('intval', $statement->fetchAll(PDO::FETCH_COLUMN) ?: []));
