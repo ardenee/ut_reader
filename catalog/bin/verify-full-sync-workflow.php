@@ -39,6 +39,7 @@ $phpFiles = [
     'src/Domain/Jobs/JobResourcePolicy.php',
     'src/Infrastructure/Jobs/CatalogFullSyncJobHandler.php',
     'src/Infrastructure/Jobs/CatalogFullSyncUnitJobHandler.php',
+    'src/Infrastructure/Jobs/CatalogBackgroundJobFileTreeProjector.php',
     'src/Infrastructure/Jobs/CatalogJobWorkerFactory.php',
     'src/Infrastructure/Maintenance/CatalogFullSyncDependencyBatchService.php',
     'src/Infrastructure/Maintenance/CatalogFullSyncProjectionService.php',
@@ -171,6 +172,32 @@ $record(
         && str_contains($context, 'bool $retainWorkerAffinity = true')
         && str_contains($worker, '$this->releaseAffinity();'),
     'A Full Sync blocked by failed/dead-letter/cancelled children must release worker affinity so another runnable root cannot be starved.'
+);
+
+$record(
+    'full_sync_children_are_parallel_execution_roots',
+    str_contains($claimer, 'JobType::FULL_SYNC_GAME')
+        && str_contains($claimer, 'JobType::FULL_SYNC_FILE')
+        && str_contains($claimer, 'JobType::FULL_SYNC_DEPENDENCY_FILE')
+        && str_contains($claimer, 'Full Sync file/dependency children are independent execution roots too'),
+    'Independent Full Sync child rows must be claimable as their own execution roots so several workers can process one game workflow concurrently.'
+);
+
+$record(
+    'dependency_planner_feeds_workers_in_large_pages',
+    str_contains($handler, 'private const DEPENDENCY_PLAN_PAGE_SIZE = 5000')
+        && str_contains($handler, '? self::DEPENDENCY_PLAN_PAGE_SIZE')
+        && str_contains($handler, 'private const DEPENDENCY_UNIT_BATCH_SIZE = 100'),
+    'Dependency planning must queue enough bounded batches per coordinator pass to keep a multi-worker pool fed.'
+);
+
+$record(
+    'dependency_batches_use_parallel_resource_profile',
+    str_contains($policy, 'private static function fullSyncDependencyProfile(')
+        && str_contains($policy, 'self::AFFECTED_DEPENDENCY_BATCH')
+        && str_contains($policy, 'self::defaultLimit(4)')
+        && str_contains($policy, 'dependency:full-sync-batch:'),
+    'Full Sync dependency batches must use the dependency-batch resource profile so up to four workers can run independent batches by default.'
 );
 
 $record(
