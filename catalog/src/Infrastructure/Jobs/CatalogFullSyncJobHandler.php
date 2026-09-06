@@ -308,13 +308,17 @@ final class CatalogFullSyncJobHandler implements JobHandler
         $total = max(1, $state['total']);
         $percent = $startPercent + (int)floor((($endPercent - $startPercent) * $state['completed']) / $total);
         if ($state['dead_letter'] > 0 || $state['failed'] > 0 || $state['cancelled'] > 0) {
+            // Terminal child problems require operator action. Do not pin this
+            // worker to a root that cannot advance: with a small worker pool that
+            // would starve unrelated runnable workflows (for example another Full
+            // Sync whose failed children have just been repaired/requeued).
             $context->defer(30, $this->progress($stage, $percent,
                 ucfirst($label) . ' workflow is waiting on '
                 . ($state['dead_letter'] + $state['failed'] + $state['cancelled'])
                 . ' error/cancelled unit(s). Restart only those failed child jobs; '
                 . $state['completed'] . ' successful unit(s) are retained.',
                 [$label . '_children' => $state]
-            ));
+            ), false);
         }
         if (($state['queued'] + $state['running']) > 0) {
             $context->defer(2, $this->progress($stage, $percent,
