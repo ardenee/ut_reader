@@ -65,6 +65,20 @@ $add(
     str_contains($source, 'Refusing to overwrite a non-matching file already present at canonical path'),
     'Existing canonical bytes that disagree with catalog identity must be preserved for investigation.'
 );
+$add(
+    'redirect_sources_are_decoded_and_reverified',
+    str_contains($source, 'CatalogRedirectArchiveProcessor')
+        && str_contains($source, "'redirect_archive'")
+        && str_contains($source, 'recovery_materialize_source'),
+    'UZ/UZ2/UZ3 recovery must decode through the production redirect reader and verify the resulting raw bytes.'
+);
+$add(
+    'recorded_archive_members_are_exact',
+    str_contains($source, 'CatalogArchiveExtractor')
+        && str_contains($source, "'archive_member'")
+        && str_contains($source, "'entry_path'"),
+    'Recorded ZIP/7z/RAR/UMOD source members must be selected by exact member path and then reverified.'
+);
 
 $ok = !in_array(false, array_column($checks, 'ok'), true);
 echo json_encode(
