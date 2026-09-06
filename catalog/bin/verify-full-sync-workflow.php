@@ -177,8 +177,8 @@ $record(
     'dependency_phase_uses_bounded_durable_batches',
     str_contains($handler, 'private const DEPENDENCY_UNIT_BATCH_SIZE = 100')
         && str_contains($handler, 'array_chunk($ids, self::DEPENDENCY_UNIT_BATCH_SIZE)')
-        && str_contains($handler, "'file_ids' => $batchIds")
-        && str_contains($handler, "'workflow_unit_key' => $prefix . ':batch:'")
+        && str_contains($handler, '\'file_ids\' => $batchIds')
+        && str_contains($handler, '\'workflow_unit_key\' => $prefix . \':batch:\'')
         && str_contains($handler, 'enqueueWorkflowUnits('),
     'Full Sync dependency planning must persist bounded 100-file batches instead of another durable queue row for every file.'
 );
@@ -187,15 +187,15 @@ $record(
     'dependency_batch_failures_fall_back_to_file_jobs',
     str_contains($unit, 'private function dependencyFileIds(')
         && str_contains($unit, 'CatalogFullSyncDependencyBatchService::MAX_BATCH_SIZE')
-        && str_contains($unit, "'dependency:retry:' . (int)$failedId")
-        && str_contains($unit, "'retry_from_batch_job_id' => $job->id")
+        && str_contains($unit, '\'dependency:retry:\' . (int)$failedId')
+        && str_contains($unit, '\'retry_from_batch_job_id\' => $job->id')
         && str_contains($unit, 'completed_with_retries'),
     'Batch execution may optimize successful files, but failed members must become exact one-file retry children so failure isolation is preserved.'
 );
 
 $record(
     'dependency_batch_change_resumes_existing_workflow',
-    str_contains($handler, "'planned_units' => $planned")
+    str_contains($handler, '\'planned_units\' => $planned')
         && str_contains($handler, 'pre-batching workflow resumes from its existing checkpoint')
         && str_contains($handler, 'private const WORKFLOW_VERSION = 2'),
     'An in-progress pre-batching Full Sync must keep its cursor/checkpoint and switch only the remaining dependency files to batches.'
