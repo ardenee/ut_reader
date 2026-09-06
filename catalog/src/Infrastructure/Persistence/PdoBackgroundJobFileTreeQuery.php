@@ -207,16 +207,33 @@ final class PdoBackgroundJobFileTreeQuery
     }
 
     /**
+     * Child expansion follows the operator's selected state tab. Loading hundreds
+     * of completed children while the Working tab is active makes large workflows
+     * impossible to monitor and forces the operator to page through historical
+     * work before reaching the handful of live units.
+     *
      * @return array{rows:list<array<string,mixed>>,total:int,page:int,pages:int,per_page:int}
      */
-    public function children(string $queue, int $parentJobId, int $page, int $perPage): array
-    {
+    public function children(
+        string $queue,
+        int $parentJobId,
+        string $state,
+        int $page,
+        int $perPage
+    ): array {
         $perPage = max(25, min($perPage, 500));
         $visibleSql = $this->visibleChildrenIdSql();
         $visibleParams = [$queue, $parentJobId, $queue, $parentJobId];
 
+        $issue = $this->ownIssueExpression('j');
+        $active = 'j.status IN ("queued","running")';
+        $stateCondition = $this->stateCondition($state, $issue, $active, 'j');
+        $stateWhere = $stateCondition !== '' ? ' WHERE ' . $stateCondition : '';
+
         $count = $this->db->prepare(
-            'SELECT COUNT(*) FROM (' . $visibleSql . ') visible_children'
+            'SELECT COUNT(*) FROM (' . $visibleSql . ') visible_children '
+            . 'JOIN ue_background_jobs j ON j.id=visible_children.id'
+            . $stateWhere
         );
         $count->execute($visibleParams);
         $total = max(0, (int)$count->fetchColumn());
@@ -230,8 +247,9 @@ final class PdoBackgroundJobFileTreeQuery
             . $this->childIssueCountExpression('j') . ' AS child_issue_count,'
             . $this->childActiveCountExpression('j') . ' AS child_active_count '
             . 'FROM (' . $visibleSql . ') visible_children '
-            . 'JOIN ue_background_jobs j ON j.id=visible_children.id '
-            . 'ORDER BY j.id ASC LIMIT ' . $perPage . ' OFFSET ' . $offset
+            . 'JOIN ue_background_jobs j ON j.id=visible_children.id'
+            . $stateWhere
+            . ' ORDER BY j.id ASC LIMIT ' . $perPage . ' OFFSET ' . $offset
         );
         $statement->execute($visibleParams);
         $rows = $statement->fetchAll(PDO::FETCH_ASSOC) ?: [];
