@@ -93,10 +93,11 @@ $check(
 $check(
     'file_tree_live_counts_are_root_scoped',
     str_contains($fileTreeQuery, '$logicalCountWhere = array_merge($commonWhere, [$logicalRootScope]);')
-        && str_contains($fileTreeQuery, 'SUM(CASE WHEN NOT (')
+        && str_contains($fileTreeQuery, '$logicalCountSql = implode(\' AND \', $logicalCountWhere);')
+        && str_contains($fileTreeQuery, '\'FROM ue_background_jobs j WHERE \' . $logicalCountSql')
         && str_contains($fileTreeQuery, 'AS working_count')
-        && str_contains($fileTreeQuery, '$this->childActiveCountExpression(\'j\') . \' AS child_active_count\'')
-        && str_contains($fileTreeQuery, 'ORDER BY j.id DESC LIMIT '),
+        && str_contains($fileTreeQuery, '$this->childActiveCountExpression(\'j\')')
+        && str_contains($fileTreeQuery, 'ORDER BY j.id DESC LIMIT ' . '$perPage'),
     'The current file-centric Background Jobs page must count logical roots globally and only calculate child activity for the bounded visible page.'
 );
 
