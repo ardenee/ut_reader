@@ -27,6 +27,7 @@ final class CatalogFullSyncJobHandler implements JobHandler
 {
     private const WORKFLOW_VERSION = 2;
     private const PLAN_BATCH_SIZE = 500;
+    private const DEPENDENCY_UNIT_BATCH_SIZE = 100;
 
     /** @param array<string,mixed> $config */
     public function __construct(
@@ -251,37 +252,82 @@ final class CatalogFullSyncJobHandler implements JobHandler
         $ids = array_values(array_map('intval', $statement->fetchAll(PDO::FETCH_COLUMN) ?: []));
 
         $queue = new PdoJobQueue($this->db);
-        foreach ($ids as $fileId) {
-            $queue->enqueue(
+        $units = [];
+        if ($childType === JobType::FULL_SYNC_DEPENDENCY_FILE) {
+            // Dependency refresh is already implemented as a bounded batch service.
+            // Persist batches instead of one durable queue row per file: a 70k-file
+            // game now needs roughly 700 dependency jobs rather than another 70k.
+            // Failed members are split back into exact per-file retry children by
+            // CatalogFullSyncUnitJobHandler, preserving failure isolation.
+            foreach (array_chunk($ids, self::DEPENDENCY_UNIT_BATCH_SIZE) as $batchIds) {
+                $batchIds = array_values(array_map('intval', $batchIds));
+                if ($batchIds === []) {
+                    continue;
+                }
+                $firstId = (int)$batchIds[0];
+                $lastBatchId = (int)$batchIds[count($batchIds) - 1];
+                $units[] = [
+                    'payload' => [
+                        'game_id' => $gameId,
+                        'file_ids' => $batchIds,
+                        'batch_start_file_id' => $firstId,
+                        'batch_end_file_id' => $lastBatchId,
+                        'requested_by' => $requestedBy,
+                        'workflow_parent_job_id' => $job->id,
+                    ],
+                    'workflow_unit_key' => $prefix . ':batch:' . $firstId . ':' . $lastBatchId,
+                ];
+            }
+        } else {
+            foreach ($ids as $fileId) {
+                $units[] = [
+                    'payload' => [
+                        'game_id' => $gameId,
+                        'file_id' => $fileId,
+                        'requested_by' => $requestedBy,
+                        'workflow_parent_job_id' => $job->id,
+                    ],
+                    'workflow_unit_key' => $prefix . ':' . $fileId,
+                ];
+            }
+        }
+
+        if ($units !== []) {
+            $queue->enqueueWorkflowUnits(
                 $job->queue,
                 $childType,
-                [
-                    'game_id' => $gameId,
-                    'file_id' => $fileId,
-                    'requested_by' => $requestedBy,
-                    'workflow_parent_job_id' => $job->id,
-                ],
+                $units,
                 90,
-                null,
                 null,
                 $requestedBy,
                 3,
-                $job->id,
-                $prefix . ':' . $fileId
+                $job->id
             );
-            $lastId = $fileId;
-            $planned++;
+        }
+        if ($ids !== []) {
+            $lastId = (int)$ids[count($ids) - 1];
+            $planned += count($ids);
         }
 
         $hasMore = $lastId < $snapshotMaxId && $ids !== [];
         $approxPercent = $snapshotMaxId > 0
             ? $percentStart + (int)floor(($percentEnd - $percentStart) * ($lastId / $snapshotMaxId))
             : $percentEnd;
+        $planningLabel = $childType === JobType::FULL_SYNC_DEPENDENCY_FILE
+            ? 'Planned ' . $planned . ' dependency file(s) into bounded durable batches.'
+            : 'Planned ' . $planned . ' durable ' . $prefix . ' unit(s).';
         $progress = $this->progress($expectedStage, min($percentEnd, $approxPercent),
-            'Planned ' . $planned . ' durable ' . $prefix . ' unit(s).', [
+            $planningLabel, [
                 'snapshot_max_file_id' => $snapshotMaxId,
                 'plan_last_file_id' => $lastId,
+                // Keep the historical field as a file count so an in-progress
+                // pre-batching workflow resumes from its existing checkpoint.
                 'planned_units' => $planned,
+                'planned_files' => $planned,
+                'planned_jobs_last_page' => count($units),
+                'dependency_batch_size' => $childType === JobType::FULL_SYNC_DEPENDENCY_FILE
+                    ? self::DEPENDENCY_UNIT_BATCH_SIZE
+                    : 1,
             ]);
 
         if ($hasMore) {
@@ -291,8 +337,16 @@ final class CatalogFullSyncJobHandler implements JobHandler
         $context->checkpoint($this->progress(
             $prefix === 'reimport' ? 'full_sync_wait_reimport' : 'full_sync_wait_dependencies',
             $percentEnd,
-            'Planned ' . $planned . ' durable ' . $prefix . ' unit(s); waiting for workers.',
-            ['planned_units' => $planned]
+            $childType === JobType::FULL_SYNC_DEPENDENCY_FILE
+                ? 'Planned ' . $planned . ' dependency file(s) in bounded batches; waiting for workers.'
+                : 'Planned ' . $planned . ' durable ' . $prefix . ' unit(s); waiting for workers.',
+            [
+                'planned_units' => $planned,
+                'planned_files' => $planned,
+                'dependency_batch_size' => $childType === JobType::FULL_SYNC_DEPENDENCY_FILE
+                    ? self::DEPENDENCY_UNIT_BATCH_SIZE
+                    : 1,
+            ]
         ));
     }
 
