@@ -47,7 +47,7 @@ try {
 
     $query = new PdoBackgroundJobFileTreeQuery($application->db);
     if ($parentJobId > 0) {
-        $result = $query->children($queue, $parentJobId, $page, $perPage);
+        $result = $query->children($queue, $parentJobId, $state, $page, $perPage);
         $counts = null;
     } else {
         $result = $query->roots($queue, $state, $search, $jobType, $page, $perPage);
@@ -68,7 +68,7 @@ try {
         ],
         'meta' => [
             'queue' => $queue,
-            'state' => $parentJobId > 0 ? null : $state,
+            'state' => $state,
             'search' => $parentJobId > 0 ? null : ($search !== '' ? $search : null),
             'job_type' => $parentJobId > 0 ? null : ($jobType !== '' ? $jobType : null),
             'job_types' => $parentJobId > 0 ? null : $jobTypes,
