@@ -375,38 +375,17 @@ try {
 
     $checked = 0;
     $missing = [];
-    $canonicalMismatches = [];
     while (($file = $statement->fetch(PDO::FETCH_ASSOC)) !== false) {
         $checked++;
         $destination = recovery_destination_path($storageRoot, $file);
         $file['destination'] = $destination;
+        // Recovery discovery is intentionally existence-only for healthy rows.
+        // Hashing every verified package would turn a small recovery into a
+        // full multi-terabyte integrity pass. Exact size/MD5/SHA1 verification
+        // is performed only for missing-row recovery candidates and copied bytes.
         if (!is_file($destination)) {
             $missing[] = $file;
-            continue;
         }
-        $verified = recovery_verify_exact_file($destination, $file);
-        if (!$verified['ok']) {
-            $canonicalMismatches[] = [
-                'file_id' => (int)$file['id'],
-                'game_id' => (int)$file['game_id'],
-                'game' => (string)$file['game_name'],
-                'original_name' => (string)$file['original_name'],
-                'destination' => $destination,
-                'error' => $verified['error'],
-            ];
-        }
-    }
-
-    if ($canonicalMismatches !== []) {
-        echo json_encode([
-            'ok' => false,
-            'apply' => $apply,
-            'verified_rows_checked' => $checked,
-            'missing_physical_packages' => count($missing),
-            'canonical_mismatches' => $canonicalMismatches,
-            'error' => 'At least one canonical verified path exists with bytes that do not match the catalog identity. Recovery refuses to overwrite it.',
-        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . PHP_EOL;
-        exit(5);
     }
 
     if ($missing === []) {
