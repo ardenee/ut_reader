@@ -8,6 +8,8 @@ declare(strict_types=1);
 
 namespace UnrealDb\Catalog\Infrastructure\Jobs;
 
+use UnrealDb\Catalog\Domain\Jobs\JobType;
+
 final class CatalogBackgroundJobFileTreeProjector
 {
     private const ISSUE_DISPLAY_STATUSES = ['failed', 'rejected', 'invalid_ue_package', 'partial', 'error'];
@@ -28,7 +30,13 @@ final class CatalogBackgroundJobFileTreeProjector
             $state = $this->state($queueStatus, $displayStatus, $childIssues, $childActive);
             [$fileName, $filePath] = $this->fileIdentity($payload, $row);
             $size = $this->sizeBytes($payload, $result);
-            [$percent, $progressText] = $this->progress($state, $progress, $childCount, $childActive);
+            [$percent, $progressText] = $this->progress(
+                $state,
+                $progress,
+                $childCount,
+                $childActive,
+                (string)($row['job_type'] ?? '') === JobType::FULL_SYNC_GAME
+            );
             $activityDetail = $this->compact((string)($progress['message'] ?? $result['message'] ?? ''), 500);
             $issueReason = ($state === 'issue' || $childIssues > 0)
                 ? $this->issueReason($row, $progress, $result, $childIssues)
@@ -166,14 +174,20 @@ final class CatalogBackgroundJobFileTreeProjector
     }
 
     /** @param array<string,mixed> $progress @return array{0:int,1:string} */
-    private function progress(string $state, array $progress, int $childCount, int $childActive): array
-    {
+    private function progress(
+        string $state,
+        array $progress,
+        int $childCount,
+        int $childActive,
+        bool $preferPersistedPercent = false
+    ): array {
+
         $hasPercent = array_key_exists('percent', $progress) && is_numeric($progress['percent']);
         $percent = $hasPercent ? max(0, min(100, (int)$progress['percent'])) : -1;
         $done = max(0, (int)($progress['done'] ?? $progress['entry_cursor'] ?? 0));
         $total = max(0, (int)($progress['total'] ?? 0));
 
-        if ($childCount > 0 && $childActive > 0 && $state === 'working') {
+        if (!$preferPersistedPercent && $childCount > 0 && $childActive > 0 && $state === 'working') {
             $done = max(0, $childCount - $childActive);
             $total = $childCount;
             $percent = min(99, (int)floor(($done * 100) / max(1, $total)));
