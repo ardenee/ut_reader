@@ -25,6 +25,10 @@ if (PHP_SAPI !== 'cli') {
 
 $root = dirname(__DIR__);
 require_once $root . '/lib/CatalogSupport.php';
+require_once $root . '/lib/CatalogRedirectArchive.php';
+
+use UnrealDb\Catalog\Infrastructure\Archive\CatalogArchiveExtractor;
+use UnrealDb\Catalog\Infrastructure\Redirect\CatalogRedirectArchiveProcessor;
 
 $options = getopt('', [
     'apply',
@@ -196,11 +200,126 @@ function recovery_source_relatives(PDO $db, array $file): array
     return array_values($paths);
 }
 
-/** @param array<string,mixed> $file @param list<string> $sourceRelatives */
-function recovery_try_direct_candidates(array $file, array $sourceRelatives, array $searchRoots): ?array
+/** @return array{archive_relative:string,entry_path:string}|null */
+function recovery_archive_hint(string $relative): ?array
 {
+    $relative = recovery_normalize_relative($relative);
+    $marker = strpos($relative, '!/');
+    if ($marker === false) {
+        return null;
+    }
+    $archiveRelative = substr($relative, 0, $marker);
+    $entryPath = ltrim(substr($relative, $marker + 2), '/');
+    if ($archiveRelative === '' || $entryPath === ''
+        || !recovery_safe_relative($archiveRelative)
+        || !recovery_safe_relative($entryPath)
+        || !CatalogArchiveExtractor::isArchiveName(basename($archiveRelative))) {
+        return null;
+    }
+    return ['archive_relative' => $archiveRelative, 'entry_path' => $entryPath];
+}
+
+/** @param array<string,mixed> $file */
+function recovery_try_redirect_source(string $path, array $file, array $config): ?array
+{
+    if (!is_file($path) || !catalog_redirect_archive_is_supported_filename(basename($path))) {
+        return null;
+    }
+    $decodedPath = '';
+    try {
+        $decoded = (new CatalogRedirectArchiveProcessor($config))->decompressToTemp(
+            $path,
+            basename($path),
+            null,
+            false
+        );
+        $decodedPath = (string)($decoded['path'] ?? '');
+        if ($decodedPath === '' || !recovery_verify_exact_file($decodedPath, $file)['ok']) {
+            return null;
+        }
+        return [
+            'path' => realpath($path) ?: $path,
+            'kind' => 'redirect_archive',
+        ];
+    } catch (Throwable) {
+        return null;
+    } finally {
+        if ($decodedPath !== '' && is_file($decodedPath)) {
+            @unlink($decodedPath);
+        }
+    }
+}
+
+/** @param array<string,mixed> $file */
+function recovery_try_archive_member_source(
+    string $archivePath,
+    string $entryPath,
+    array $file,
+    array $config
+): ?array {
+    if (!is_file($archivePath) || !CatalogArchiveExtractor::isArchiveName(basename($archivePath))) {
+        return null;
+    }
+    $extractor = new CatalogArchiveExtractor($config);
+    $wanted = strtolower(recovery_normalize_relative($entryPath));
+    $temporary = '';
+    try {
+        foreach ($extractor->entries($archivePath, basename($archivePath)) as $entry) {
+            if (empty($entry['safe'])
+                || (int)($entry['size'] ?? 0) !== (int)$file['file_size']
+                || strtolower(recovery_normalize_relative((string)($entry['path'] ?? ''))) !== $wanted) {
+                continue;
+            }
+            $temporary = $extractor->extractToTemp(
+                $archivePath,
+                basename($archivePath),
+                $entry,
+                max(1, (int)$file['file_size'])
+            );
+            if (!recovery_verify_exact_file($temporary, $file)['ok']) {
+                return null;
+            }
+            return [
+                'path' => realpath($archivePath) ?: $archivePath,
+                'kind' => 'archive_member',
+                'entry_path' => (string)$entry['path'],
+            ];
+        }
+    } catch (Throwable) {
+        return null;
+    } finally {
+        if ($temporary !== '' && is_file($temporary)) {
+            @unlink($temporary);
+        }
+    }
+    return null;
+}
+
+/** @param array<string,mixed> $file @param list<string> $sourceRelatives */
+function recovery_try_direct_candidates(
+    array $file,
+    array $sourceRelatives,
+    array $searchRoots,
+    array $config
+): ?array {
     foreach ($searchRoots as $searchRoot) {
         foreach ($sourceRelatives as $relative) {
+            $archiveHint = recovery_archive_hint($relative);
+            if ($archiveHint !== null) {
+                $archivePath = rtrim($searchRoot, "\\/") . DIRECTORY_SEPARATOR
+                    . str_replace('/', DIRECTORY_SEPARATOR, $archiveHint['archive_relative']);
+                $archive = recovery_try_archive_member_source(
+                    $archivePath,
+                    $archiveHint['entry_path'],
+                    $file,
+                    $config
+                );
+                if ($archive !== null) {
+                    return $archive;
+                }
+                continue;
+            }
+
             $candidate = rtrim($searchRoot, "\\/") . DIRECTORY_SEPARATOR
                 . str_replace('/', DIRECTORY_SEPARATOR, $relative);
             $verified = recovery_verify_exact_file($candidate, $file);
@@ -210,17 +329,52 @@ function recovery_try_direct_candidates(array $file, array $sourceRelatives, arr
                     'kind' => 'recorded_source_path',
                 ];
             }
+
+            foreach (['uz', 'uz2', 'uz3'] as $redirectExtension) {
+                $redirect = recovery_try_redirect_source(
+                    $candidate . '.' . $redirectExtension,
+                    $file,
+                    $config
+                );
+                if ($redirect !== null) {
+                    return $redirect;
+                }
+            }
         }
     }
     return null;
 }
 
-/** @param array<int,array<string,mixed>> $missing @return array<int,array{path:string,kind:string}> */
-function recovery_recursive_find(array $missing, array $searchRoots): array
-{
+/**
+ * @param array<int,array<string,mixed>> $missing
+ * @param array<int,list<string>> $sourceRelatives
+ * @return array<int,array<string,mixed>>
+ */
+function recovery_recursive_find(
+    array $missing,
+    array $sourceRelatives,
+    array $searchRoots,
+    array $config
+): array {
     $wanted = [];
+    $redirectWanted = [];
+    $archiveWanted = [];
     foreach ($missing as $index => $file) {
         $wanted[recovery_candidate_key($file)][] = $index;
+        $baseName = strtolower((string)$file['original_name']);
+        foreach (['uz', 'uz2', 'uz3'] as $redirectExtension) {
+            $redirectWanted[$baseName . '.' . $redirectExtension][] = $index;
+        }
+        foreach ($sourceRelatives[$index] ?? [] as $relative) {
+            $hint = recovery_archive_hint($relative);
+            if ($hint === null) {
+                continue;
+            }
+            $archiveWanted[strtolower(basename($hint['archive_relative']))][] = [
+                'index' => $index,
+                'entry_path' => $hint['entry_path'],
+            ];
+        }
     }
     $found = [];
     $inspected = 0;
@@ -245,12 +399,13 @@ function recovery_recursive_find(array $missing, array $searchRoots): array
                 fwrite(STDERR, '[scan] inspected ' . number_format($inspected) . " files\n");
             }
 
-            $key = strtolower($entry->getFilename()) . "\0" . (string)$entry->getSize();
+            $path = $entry->getPathname();
+            $fileNameLower = strtolower($entry->getFilename());
+            $key = $fileNameLower . "\0" . (string)$entry->getSize();
             foreach ($wanted[$key] ?? [] as $index) {
                 if (isset($found[$index])) {
                     continue;
                 }
-                $path = $entry->getPathname();
                 $verified = recovery_verify_exact_file($path, $missing[$index]);
                 if (!$verified['ok']) {
                     continue;
@@ -265,6 +420,46 @@ function recovery_recursive_find(array $missing, array $searchRoots): array
                     . (string)$missing[$index]['original_name'] . ' -> ' . $path . "\n"
                 );
             }
+
+            foreach ($redirectWanted[$fileNameLower] ?? [] as $index) {
+                if (isset($found[$index])) {
+                    continue;
+                }
+                $redirect = recovery_try_redirect_source($path, $missing[$index], $config);
+                if ($redirect === null) {
+                    continue;
+                }
+                $found[$index] = $redirect;
+                fwrite(
+                    STDERR,
+                    '[redirect] exact #' . (int)$missing[$index]['id'] . ' '
+                    . (string)$missing[$index]['original_name'] . ' <- ' . $path . "\n"
+                );
+            }
+
+            foreach ($archiveWanted[$fileNameLower] ?? [] as $archiveHint) {
+                $index = (int)$archiveHint['index'];
+                if (isset($found[$index])) {
+                    continue;
+                }
+                $archive = recovery_try_archive_member_source(
+                    $path,
+                    (string)$archiveHint['entry_path'],
+                    $missing[$index],
+                    $config
+                );
+                if ($archive === null) {
+                    continue;
+                }
+                $found[$index] = $archive;
+                fwrite(
+                    STDERR,
+                    '[archive] exact #' . (int)$missing[$index]['id'] . ' '
+                    . (string)$missing[$index]['original_name'] . ' <- ' . $path
+                    . '!/' . (string)$archive['entry_path'] . "\n"
+                );
+            }
+
             if (count($found) >= count($missing)) {
                 break;
             }
@@ -278,6 +473,65 @@ function recovery_recursive_find(array $missing, array $searchRoots): array
         . ', files_inspected=' . number_format($inspected) . "\n"
     );
     return $found;
+}
+
+/**
+ * Materialize a preflighted source into exact raw package bytes for apply.
+ * @param array<string,mixed> $source
+ * @param array<string,mixed> $file
+ * @return array{path:string,temporary:bool}
+ */
+function recovery_materialize_source(array $source, array $file, array $config): array
+{
+    $kind = (string)($source['kind'] ?? '');
+    $path = (string)($source['path'] ?? '');
+    if (in_array($kind, ['recorded_source_path', 'recursive_search'], true)) {
+        return ['path' => $path, 'temporary' => false];
+    }
+
+    if ($kind === 'redirect_archive') {
+        $decoded = (new CatalogRedirectArchiveProcessor($config))->decompressToTemp(
+            $path,
+            basename($path),
+            null,
+            false
+        );
+        $temporary = (string)($decoded['path'] ?? '');
+        if ($temporary === '' || !recovery_verify_exact_file($temporary, $file)['ok']) {
+            if ($temporary !== '' && is_file($temporary)) {
+                @unlink($temporary);
+            }
+            throw new RuntimeException('Redirect recovery source no longer produces the exact catalog bytes.');
+        }
+        return ['path' => $temporary, 'temporary' => true];
+    }
+
+    if ($kind === 'archive_member') {
+        $entryPath = (string)($source['entry_path'] ?? '');
+        $extractor = new CatalogArchiveExtractor($config);
+        foreach ($extractor->entries($path, basename($path)) as $entry) {
+            if (empty($entry['safe'])
+                || strtolower(recovery_normalize_relative((string)($entry['path'] ?? '')))
+                    !== strtolower(recovery_normalize_relative($entryPath))
+                || (int)($entry['size'] ?? 0) !== (int)$file['file_size']) {
+                continue;
+            }
+            $temporary = $extractor->extractToTemp(
+                $path,
+                basename($path),
+                $entry,
+                max(1, (int)$file['file_size'])
+            );
+            if (!recovery_verify_exact_file($temporary, $file)['ok']) {
+                @unlink($temporary);
+                throw new RuntimeException('Archive member no longer matches the exact catalog bytes.');
+            }
+            return ['path' => $temporary, 'temporary' => true];
+        }
+        throw new RuntimeException('Recorded archive member could not be materialized again.');
+    }
+
+    throw new RuntimeException('Unsupported recovery source kind: ' . $kind);
 }
 
 /** @param array<string,mixed> $file */
@@ -410,33 +664,48 @@ try {
     }
 
     $sources = [];
+    $sourceRelatives = [];
     foreach ($missing as $index => $file) {
+        $sourceRelatives[$index] = recovery_source_relatives($db, $file);
         $direct = recovery_try_direct_candidates(
             $file,
-            recovery_source_relatives($db, $file),
-            $searchRoots
+            $sourceRelatives[$index],
+            $searchRoots,
+            $config
         );
         if ($direct !== null) {
             $sources[$index] = $direct;
             fwrite(
                 STDERR,
                 '[direct] exact #' . (int)$file['id'] . ' ' . (string)$file['original_name']
-                . ' -> ' . (string)$direct['path'] . "\n"
+                . ' -> ' . (string)$direct['path']
+                . ((string)($direct['kind'] ?? '') === 'archive_member'
+                    ? '!/' . (string)($direct['entry_path'] ?? '')
+                    : '')
+                . "\n"
             );
         }
     }
 
     $unresolvedForScan = [];
+    $unresolvedRelativesForScan = [];
     $unresolvedToOriginal = [];
     foreach ($missing as $index => $file) {
         if (isset($sources[$index])) {
             continue;
         }
-        $unresolvedToOriginal[count($unresolvedForScan)] = $index;
+        $scanIndex = count($unresolvedForScan);
+        $unresolvedToOriginal[$scanIndex] = $index;
         $unresolvedForScan[] = $file;
+        $unresolvedRelativesForScan[$scanIndex] = $sourceRelatives[$index] ?? [];
     }
     if ($unresolvedForScan !== []) {
-        $scanned = recovery_recursive_find($unresolvedForScan, $searchRoots);
+        $scanned = recovery_recursive_find(
+            $unresolvedForScan,
+            $unresolvedRelativesForScan,
+            $searchRoots,
+            $config
+        );
         foreach ($scanned as $scanIndex => $source) {
             $sources[$unresolvedToOriginal[$scanIndex]] = $source;
         }
@@ -458,6 +727,9 @@ try {
             'destination' => (string)$file['destination'],
             'source_kind' => is_array($source) ? (string)$source['kind'] : null,
             'source_path' => is_array($source) ? (string)$source['path'] : null,
+            'source_entry_path' => is_array($source) && isset($source['entry_path'])
+                ? (string)$source['entry_path']
+                : null,
             'status' => is_array($source) ? 'ready' : 'unresolved',
         ];
         $plan[] = $row;
@@ -514,7 +786,18 @@ try {
                 '[restore] #' . (int)$file['id'] . ' ' . (string)$file['original_name']
                 . ' -> ' . (string)$file['destination'] . "\n"
             );
-            recovery_atomic_restore((string)$source['path'], (string)$file['destination'], $file);
+            $materialized = recovery_materialize_source($source, $file, $config);
+            try {
+                recovery_atomic_restore(
+                    (string)$materialized['path'],
+                    (string)$file['destination'],
+                    $file
+                );
+            } finally {
+                if (!empty($materialized['temporary']) && is_file((string)$materialized['path'])) {
+                    @unlink((string)$materialized['path']);
+                }
+            }
             $restored++;
             $applyResults[] = [
                 'file_id' => (int)$file['id'],
@@ -524,6 +807,7 @@ try {
                 'status' => 'restored',
                 'source_kind' => (string)$source['kind'],
                 'source_path' => (string)$source['path'],
+                'source_entry_path' => isset($source['entry_path']) ? (string)$source['entry_path'] : null,
                 'destination' => (string)$file['destination'],
             ];
         }
