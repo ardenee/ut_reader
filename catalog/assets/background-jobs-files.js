@@ -598,6 +598,7 @@
         const existing = state.children.get(parentId);
         const params = new URLSearchParams({
             queue: queue,
+            state: state.filter,
             parent_job_id: String(parentId),
             page: String(page || (existing ? existing.page : 1)),
             per_page: '200'
