@@ -442,6 +442,25 @@
         row.appendChild(statusCell);
 
         const controlCell = create('td', 'jobs-file-control');
+        const childIssues = Math.max(0, Number(file.child_issue_count || 0));
+        if (depth === 0 && childIssues > 0) {
+            const retryChildren = create(
+                'button',
+                'ui-icon-action ui-icon-action--secondary ui-icon-action--sm jobs-file-retry-children',
+                '↻'
+            );
+            retryChildren.type = 'button';
+            retryChildren.setAttribute(
+                'aria-label',
+                'Retry ' + childIssues.toLocaleString() + ' failed/cancelled child jobs'
+            );
+            retryChildren.title = 'Retry ' + childIssues.toLocaleString()
+                + ' failed/cancelled child job(s) without replaying successful children.';
+            retryChildren.addEventListener('click', function () {
+                retryIssueChildren(file, retryChildren);
+            });
+            controlCell.appendChild(retryChildren);
+        }
         if (depth === 0 && file.can_revalidate) {
             const revalidate = create('button', 'ui-icon-action ui-icon-action--secondary ui-icon-action--sm jobs-file-revalidate', '↻');
             revalidate.type = 'button';
@@ -463,6 +482,33 @@
         row.appendChild(controlCell);
         applyRowBackground(row, depth, rootGroup);
         return row;
+    }
+
+    async function retryIssueChildren(file, button) {
+        const parentJobId = Number(file && file.id || 0);
+        if (!parentJobId) return;
+        if (button) button.disabled = true;
+        try {
+            const payload = await postJson(actionUrl, {
+                action: 'retry_children',
+                queue: queue,
+                job_id: parentJobId
+            });
+            const data = payload && payload.data ? payload.data : {};
+            const requeued = Math.max(0, Number(data.requeued || 0));
+            const requested = Math.max(0, Number(data.requested || 0));
+            setNotice(
+                'Requeued ' + requeued.toLocaleString()
+                + ' of ' + requested.toLocaleString()
+                + ' failed/cancelled child job(s) for parent #' + parentJobId + '.',
+                10000
+            );
+        } catch (error) {
+            setNotice(error.message || 'Could not retry failed child jobs.', 10000);
+        } finally {
+            if (button) button.disabled = false;
+            await refresh();
+        }
     }
 
     async function revalidateFile(file, button) {
