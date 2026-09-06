@@ -56,8 +56,12 @@ $check(
     !str_contains(
         substr(
             $endpoint,
-            (int)strpos($endpoint, "if ($action === 'retry_children')"),
-            max(0, (int)strpos($endpoint, "if ($action === 'revalidate')") - (int)strpos($endpoint, "if ($action === 'retry_children')"))
+            (int)strpos($endpoint, 'if ($action === \'retry_children\')'),
+            max(
+                0,
+                (int)strpos($endpoint, 'if ($action === \'revalidate\')')
+                    - (int)strpos($endpoint, 'if ($action === \'retry_children\')')
+            )
         ),
         'status="completed"'
     ),
@@ -67,7 +71,7 @@ $check(
 $check(
     'worker_is_started_after_requeue',
     str_contains($endpoint, 'CatalogQueueWorkerStarter')
-        && str_contains($endpoint, "'requeued' => $affected"),
+        && str_contains($endpoint, '\'requeued\' => $affected'),
     'A successful child retry must wake/start the worker pool and report the number requeued.'
 );
 
