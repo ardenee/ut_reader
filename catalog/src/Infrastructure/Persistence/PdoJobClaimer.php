@@ -84,8 +84,11 @@ final class PdoJobClaimer
         // New work is selected from execution roots. Ordinary workflows use a
         // persisted top-level row; direct source jobs created by a profiled upload
         // batch are also roots because the batch is only a planning coordinator.
-        // Each selected source gets its own persistent root lock so workers drain
-        // that file/archive and all of its descendants independently.
+        // Full Sync file/dependency children are independent execution roots too:
+        // one game coordinator may therefore feed several workers without putting
+        // the whole 70k-file game behind one root-affinity lock.
+        // Each selected source/unit gets its own persistent root lock so workers
+        // drain that file/archive/unit and its descendants independently.
         return $this->claimFromScope($queue, $workerId, $leaseSeconds, null, $guard, true);
     }
 
@@ -252,7 +255,12 @@ final class PdoJobClaimer
                     . 'EXISTS(SELECT 1 FROM ue_background_jobs execution_parent '
                     . 'WHERE execution_parent.id=j.parent_job_id '
                     . 'AND execution_parent.queue_name=j.queue_name '
-                    . 'AND execution_parent.job_type="' . JobType::PROFILED_UPLOAD_BATCH . '")'
+                    . 'AND ('
+                    . 'execution_parent.job_type="' . JobType::PROFILED_UPLOAD_BATCH . '" OR '
+                    . '(execution_parent.job_type="' . JobType::FULL_SYNC_GAME . '" '
+                    . 'AND j.job_type IN ("' . JobType::FULL_SYNC_FILE . '","'
+                    . JobType::FULL_SYNC_DEPENDENCY_FILE . '"))'
+                    . '))'
                     . ')';
             }
 
