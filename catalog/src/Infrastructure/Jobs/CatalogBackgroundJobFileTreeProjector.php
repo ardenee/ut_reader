@@ -120,8 +120,16 @@ final class CatalogBackgroundJobFileTreeProjector
             $name = trim((string)($payload['package_name'] ?? ''));
         }
         if ($name === '') {
-            $fileId = max(0, (int)($payload['file_id'] ?? $payload['affected_file_id'] ?? 0));
-            $name = $fileId > 0 ? 'File #' . $fileId : 'Job #' . max(0, (int)($row['id'] ?? 0));
+            $batchIds = is_array($payload['file_ids'] ?? null)
+                ? array_values(array_filter(array_map('intval', $payload['file_ids']), static fn(int $id): bool => $id > 0))
+                : [];
+            if ($batchIds !== []) {
+                $name = 'Dependency batch · ' . number_format(count($batchIds)) . ' files';
+                $path = 'Files #' . (int)$batchIds[0] . '–#' . (int)$batchIds[count($batchIds) - 1];
+            } else {
+                $fileId = max(0, (int)($payload['file_id'] ?? $payload['affected_file_id'] ?? 0));
+                $name = $fileId > 0 ? 'File #' . $fileId : 'Job #' . max(0, (int)($row['id'] ?? 0));
+            }
         }
         if ($path === '') {
             $path = $name;
