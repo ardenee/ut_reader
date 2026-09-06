@@ -164,6 +164,15 @@ $record(
 );
 
 $record(
+    'blocked_full_sync_releases_worker_affinity',
+    str_contains($handler, 'Terminal child problems require operator action')
+        && str_contains($handler, '), false);')
+        && str_contains($context, 'bool $retainWorkerAffinity = true')
+        && str_contains($worker, '$this->releaseAffinity();'),
+    'A Full Sync blocked by failed/dead-letter/cancelled children must release worker affinity so another runnable root cannot be starved.'
+);
+
+$record(
     'unit_handler_is_one_file_only',
     str_contains($unit, 'JobType::FULL_SYNC_FILE')
         && str_contains($unit, 'JobType::FULL_SYNC_DEPENDENCY_FILE')
