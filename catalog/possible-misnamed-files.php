@@ -112,6 +112,9 @@ $payload = $selected ? possible_misnamed_decode((string)($selected['payload_json
 $progress = $selected ? possible_misnamed_decode((string)($selected['progress_json'] ?? '')) : [];
 $result = $selected ? possible_misnamed_decode((string)($selected['result_json'] ?? '')) : [];
 $candidates = is_array($result['candidates'] ?? null) ? $result['candidates'] : [];
+$currentMisnamedPolicy = 'community-path-name-compact-evidence-v6';
+$resultPolicy = trim((string)($result['policy_version'] ?? ''));
+$resultIsCurrent = $resultPolicy !== '' && hash_equals($currentMisnamedPolicy, $resultPolicy);
 
 catalog_head('Possible Misnamed Files');
 
@@ -167,8 +170,11 @@ if ($selected !== null) {
             . '<script>setTimeout(function(){location.reload();},5000);</script>';
     } elseif ($status === 'completed') {
         $counts = is_array($result['confidence_counts'] ?? null) ? $result['confidence_counts'] : [];
-        echo '<p>' . catalog_h((string)($result['message'] ?? 'Scan complete.')) . '</p>'
-            . '<p class="muted small">Very high: ' . (int)($counts['very_high'] ?? 0)
+        echo '<p>' . catalog_h((string)($result['message'] ?? 'Scan complete.')) . '</p>';
+        if (!$resultIsCurrent) {
+            echo '<p><strong>This is an older scan result.</strong> Run a new scan to populate current file counts and matched object paths.</p>';
+        }
+        echo '<p class="muted small">Very high: ' . (int)($counts['very_high'] ?? 0)
             . ' · High: ' . (int)($counts['high'] ?? 0)
             . ' · Possible: ' . (int)($counts['possible'] ?? 0)
             . ' · Ambiguous/common object terms skipped: ' . (int)($result['ambiguous_terms_skipped'] ?? 0)
@@ -184,32 +190,34 @@ if ($selected !== null && (string)$selected['status'] === 'completed') {
     if ($candidates === []) {
         echo '<p class="muted">No likely filename/package-name mismatches were found in this scan.</p></div>';
     } else {
-        echo '<p class="muted small">Each row shows the current candidate file, the missing package identity the importing files expect, '
-            . 'and the exact local object paths which match between them. “N / I / E” means Names / Imports / Exports. '
-            . 'The candidate itself has zero currently resolved inbound dependants. Review the evidence before renaming.</p>'
-            . '<table><thead><tr><th>Confidence</th><th>Current file</th><th>Expected package identity</th><th>Evidence files</th><th>Why it matches</th><th></th></tr></thead><tbody>';
+        echo '<p class="muted small">Each row shows the current candidate file, the importing evidence files, and the exact object paths that match. '
+            . 'The three file counts are Names / Imports / Exports. The candidate itself has zero currently resolved inbound dependants. '
+            . 'Review the evidence before renaming.</p>'
+            . '<table><thead><tr><th>Confidence</th><th>Current file</th><th>Evidence files</th><th>Why it matches</th><th></th></tr></thead><tbody>';
         foreach ($candidates as $candidate) {
             if (!is_array($candidate)) {
                 continue;
             }
             $fileId = (int)($candidate['candidate_file_id'] ?? 0);
             $confidence = (string)($candidate['confidence'] ?? 'possible');
-            $expectedPackage = (string)($candidate['suggested_package_name'] ?? '');
             $evidenceHtml = '';
             $pathsHtml = '';
+            $evidenceNumber = 0;
             foreach (array_slice((array)($candidate['evidence'] ?? []), 0, 3) as $evidence) {
                 if (!is_array($evidence)) {
                     continue;
                 }
+                $evidenceNumber++;
                 $ownerId = (int)($evidence['file_id'] ?? 0);
                 $ownerName = (string)($evidence['original_name'] ?? ('File #' . $ownerId));
                 $matchedObjects = max(0, (int)($evidence['matched_objects'] ?? 0));
                 $ownerNames = max(0, (int)($evidence['name_count'] ?? 0));
                 $ownerImports = max(0, (int)($evidence['import_count'] ?? 0));
                 $ownerExports = max(0, (int)($evidence['export_count'] ?? 0));
-                $evidenceHtml .= '<div style="margin-bottom:.55rem"><a href="file-examine.php?id=' . $ownerId . '"><strong>'
-                    . catalog_h($ownerName) . '</strong></a>'
-                    . '<div class="small muted">N / I / E: ' . number_format($ownerNames) . ' / '
+
+                $evidenceHtml .= '<div style="margin-bottom:.55rem"><span class="muted small">' . $evidenceNumber . '.</span> '
+                    . '<a href="file-examine.php?id=' . $ownerId . '"><strong>' . catalog_h($ownerName) . '</strong></a>'
+                    . '<div class="small muted" title="Names / Imports / Exports">' . number_format($ownerNames) . ' / '
                     . number_format($ownerImports) . ' / ' . number_format($ownerExports) . '</div>'
                     . '<div class="small">' . $matchedObjects . ' exact path match' . ($matchedObjects === 1 ? '' : 'es') . '</div></div>';
 
@@ -217,14 +225,12 @@ if ($selected !== null && (string)$selected['status'] === 'completed') {
                     array_map('strval', (array)($evidence['matched_paths'] ?? [])),
                     static fn(string $path): bool => trim($path) !== ''
                 ));
-                $pathsHtml .= '<div style="margin-bottom:.65rem"><div class="small"><strong>'
-                    . catalog_h($ownerName) . '</strong></div>';
+                $pathsHtml .= '<div style="margin-bottom:.65rem"><div class="small muted">' . $evidenceNumber . '.</div>';
                 if ($matchedPaths === []) {
                     $pathsHtml .= '<div class="small muted">Matched path text unavailable in this scan result.</div>';
                 } else {
                     foreach ($matchedPaths as $path) {
-                        $fullPath = $expectedPackage !== '' ? $expectedPackage . '.' . ltrim($path, '.') : $path;
-                        $pathsHtml .= '<div class="mono small" style="overflow-wrap:anywhere">' . catalog_h($fullPath) . '</div>';
+                        $pathsHtml .= '<div class="mono small" style="overflow-wrap:anywhere">' . catalog_h($path) . '</div>';
                     }
                     if ($matchedObjects > count($matchedPaths)) {
                         $pathsHtml .= '<div class="small muted">+' . number_format($matchedObjects - count($matchedPaths))
@@ -254,11 +260,8 @@ if ($selected !== null && (string)$selected['status'] === 'completed') {
                 . '<td><a href="file-examine.php?id=' . $fileId . '"><strong>'
                 . catalog_h((string)($candidate['candidate_original_name'] ?? '')) . '</strong></a>'
                 . '<div class="small muted">' . catalog_h((string)($candidate['game_name'] ?? '')) . '</div>'
-                . '<div class="small muted">N / I / E: ' . number_format($candidateNames) . ' / '
+                . '<div class="small muted" title="Names / Imports / Exports">' . number_format($candidateNames) . ' / '
                 . number_format($candidateImports) . ' / ' . number_format($candidateExports) . '</div></td>'
-                . '<td><div class="small muted">Unresolved imports expect</div>'
-                . '<div class="mono"><strong>' . catalog_h($expectedPackage) . '</strong></div>'
-                . '<div class="small muted">Expected filename: ' . catalog_h((string)($candidate['suggested_filename'] ?? '')) . '</div></td>'
                 . '<td>' . ($evidenceHtml !== '' ? $evidenceHtml : '<span class="muted">No retained evidence detail</span>') . '</td>'
                 . '<td>' . ($pathsHtml !== '' ? $pathsHtml : '<span class="muted">No retained path detail</span>')
                 . '<div class="small muted" style="margin-top:.4rem">' . catalog_h(implode(' · ', $matchBits)) . '</div></td>'
