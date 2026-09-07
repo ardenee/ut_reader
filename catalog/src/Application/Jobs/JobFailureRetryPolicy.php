@@ -116,7 +116,6 @@ final class JobFailureRetryPolicy
             JobType::PROCESS_BUCKET_UPLOAD,
             JobType::PROCESS_BUCKET_STAGED_PACKAGE,
             JobType::IMPORT_STAGED_PACKAGE,
-            JobType::FULL_SYNC_FILE,
         ], true)) {
             return self::isInvalidRedirectContentMessage($message)
                 || self::isInvalidPackageContentMessage($message);
@@ -215,7 +214,6 @@ final class JobFailureRetryPolicy
             JobType::PROCESS_BUCKET_UPLOAD,
             JobType::PROCESS_BUCKET_STAGED_PACKAGE,
             JobType::IMPORT_STAGED_PACKAGE,
-            JobType::FULL_SYNC_FILE,
         ], true)) {
             return false;
         }
