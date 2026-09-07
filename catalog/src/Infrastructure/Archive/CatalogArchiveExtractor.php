@@ -304,7 +304,7 @@ final class CatalogArchiveExtractor
                 throw new \RuntimeException('RAR member size changed between listing and extraction.');
             }
             @unlink($temporary);
-            $ok = $native->extract(false, $temporary);
+            $ok = $native->extract(dirname($temporary), $temporary);
             if ($ok !== true) {
                 throw new \RuntimeException('RarEntry::extract() returned failure.');
             }
