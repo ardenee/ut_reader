@@ -110,20 +110,21 @@ $record(
 );
 
 $record(
-    'full_sync_invalid_packages_are_deterministic_corrupt_content',
-    substr_count($policy, 'JobType::FULL_SYNC_FILE') >= 3
+    'full_sync_reader_incompatibility_is_not_corruption',
+    substr_count($policy, 'JobType::FULL_SYNC_FILE') === 1
+        && str_contains($policy, 'public static function isCorruptContentText')
         && str_contains($policy, 'public static function isInvalidPackageContentText'),
-    'A Full Sync child that proves its existing verified bytes structurally invalid must not burn automatic retries and must be exportable as corrupt content; explicit administrator revalidation remains available after reader fixes.'
+    'Full Sync reader incompatibility may be deterministic for retry purposes, but it must not be labeled corrupt because protected/obfuscated or unsupported UE packages can intentionally violate the generic parser layout.'
 );
 
 $record(
-    'full_sync_corrupt_export_resolves_verified_storage',
+    'verified_storage_resolution_remains_available_for_real_corrupt_jobs',
     str_contains($query, "use UnrealDb\\Catalog\\Infrastructure\\Maintenance\\CatalogFileMaintenanceSupport;")
         && str_contains($query, "\$context['file_name']")
         && str_contains($query, "\$context['source_relative_path']")
         && str_contains($query, 'CatalogFileMaintenanceSupport::storagePath')
         && str_contains($query, "'verified_storage'"),
-    'Corrupt Full Sync children must export the actual verified file name/source provenance and canonical copy path.'
+    'When another job type really is classified as corrupt content, the export must still resolve retained verified-storage provenance when available.'
 );
 
 $record(
