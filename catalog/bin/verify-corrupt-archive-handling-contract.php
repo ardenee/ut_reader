@@ -173,9 +173,9 @@ $record(
     str_contains($archiveExtractor, 'if ($format === \'rar\' && class_exists(\\RarArchive::class))')
         && str_contains($archiveExtractor, 'private function rarEntries(')
         && str_contains($archiveExtractor, 'private function extractRarEntry(')
-        && str_contains($archiveExtractor, "'rar' => $this->extractRarEntry")
+        && str_contains($archiveExtractor, '\'rar\' => $this->extractRarEntry')
         && str_contains($archiveExtractor, 'RarArchive:')
-        && str_contains($archiveExtractor, "return $this->libarchiveEntries($archivePath, 'rar');"),
+        && str_contains($archiveExtractor, 'return $this->libarchiveEntries($archivePath, \'rar\');'),
     'Historic Unreal Archive RAR members that libarchive cannot decode should use native ext-rar first when installed, while retaining libarchive as the fallback.'
 );
 
