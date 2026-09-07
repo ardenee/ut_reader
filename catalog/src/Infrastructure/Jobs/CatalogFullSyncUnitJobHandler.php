@@ -92,6 +92,11 @@ final class CatalogFullSyncUnitJobHandler implements JobHandler
             ]);
             $status = (string)($result['status'] ?? 'reimported');
         } catch (CatalogInvalidPackageException $error) {
+            CatalogSystemErrorRecorder::resolveBackgroundJob(
+                $job->id,
+                'Full Sync retained this present package because the current reader cannot parse it; '
+                    . 'the previous failed-job classification is obsolete.'
+            );
             CatalogSystemErrorRecorder::record([
                 'source_kind' => 'unreal-file-validation',
                 'severity' => 'warning',
