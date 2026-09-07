@@ -202,7 +202,7 @@ final class CatalogCorruptSourceExportQuery
         $jobFullPath = $this->existingPath($context, 'job_full_path', 'job_full_path_exists');
         if ($jobFullPath === '' && max(0, (int)($context['file_id'] ?? 0)) > 0) {
             try {
-                $fileRow = catalog_one(
+                $fileRow = \catalog_one(
                     $this->db,
                     'SELECT * FROM ue_files WHERE id=? LIMIT 1',
                     [(int)$context['file_id']]
