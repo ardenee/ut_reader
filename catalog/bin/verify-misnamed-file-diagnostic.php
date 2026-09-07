@@ -184,7 +184,7 @@ $record(
         && str_contains($detector, "'name_count' => max(0, (int)(\$owner['name_count'] ?? 0))")
         && str_contains($page, 'N / I / E:')
         && str_contains($page, 'Matched path text unavailable in this scan result.')
-        && str_contains($page, '$expectedPackage . '.' . ltrim($path, '.')'),
+        && str_contains($page, "\$expectedPackage . '.' . ltrim(\$path, '.')"),
     'The completed scan must retain bounded exact matching paths plus Names/Imports/Exports counts for both candidate and evidence files, and the page must render them.'
 );
 
