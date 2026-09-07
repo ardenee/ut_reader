@@ -170,7 +170,7 @@ $record(
 );
 $record(
     'native_rar_decoder_is_preferred_when_available',
-    str_contains($archiveExtractor, "if ($format === 'rar' && class_exists(\\RarArchive::class))")
+    str_contains($archiveExtractor, 'if ($format === \'rar\' && class_exists(\\RarArchive::class))')
         && str_contains($archiveExtractor, 'private function rarEntries(')
         && str_contains($archiveExtractor, 'private function extractRarEntry(')
         && str_contains($archiveExtractor, "'rar' => $this->extractRarEntry")
@@ -217,7 +217,11 @@ $record(
 );
 $record(
     'completed_retained_sources_survive_storage_cleanup',
-    str_contains($storageCleanup, 'SELECT status,result_json FROM ue_background_jobs')
+    str_contains(
+        $storageCleanup,
+        'SELECT id,job_type,status,payload_json,result_json FROM ue_background_jobs '
+    )
+        && str_contains($storageCleanup, 'OR (status="completed" AND result_json LIKE "%source_retained%")')
         && str_contains($storageCleanup, 'isRecoveryOwner')
         && str_contains($storageCleanup, "\$result['source_retained']"),
     'A completed unverified job with source_retained=true must remain a storage owner instead of losing its prepared bytes to routine cleanup.'
