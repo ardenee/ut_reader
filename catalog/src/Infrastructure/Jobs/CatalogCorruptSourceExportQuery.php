@@ -11,6 +11,7 @@ use PDO;
 use Throwable;
 use UnrealDb\Catalog\Application\Jobs\JobFailureRetryPolicy;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
+use UnrealDb\Catalog\Infrastructure\Maintenance\CatalogFileMaintenanceSupport;
 
 final class CatalogCorruptSourceExportQuery
 {
@@ -21,7 +22,7 @@ final class CatalogCorruptSourceExportQuery
     /** @param array<string,mixed> $config */
     public function __construct(
         private readonly PDO $db,
-        array $config
+        private readonly array $config
     ) {
         $this->sources = new CatalogJobSourceContextResolver($db, $config);
     }
@@ -175,11 +176,14 @@ final class CatalogCorruptSourceExportQuery
         $fileName = $this->firstText([
             $payload['original_name'] ?? '',
             $result['original_name'] ?? '',
+            $context['file_name'] ?? '',
+            $context['original_name'] ?? '',
             $context['job_original_name'] ?? '',
         ]);
         $sourceRelative = $this->firstText([
             $payload['source_relative_path'] ?? '',
             $result['source_relative_path'] ?? '',
+            $context['source_relative_path'] ?? '',
             $context['job_source_relative_path'] ?? '',
         ]);
         if ($fileName === '' && $sourceRelative !== '') {
@@ -196,13 +200,29 @@ final class CatalogCorruptSourceExportQuery
         ]);
 
         $jobFullPath = $this->existingPath($context, 'job_full_path', 'job_full_path_exists');
+        if ($jobFullPath === '' && max(0, (int)($context['file_id'] ?? 0)) > 0) {
+            try {
+                $fileRow = catalog_one(
+                    $this->db,
+                    'SELECT * FROM ue_files WHERE id=? LIMIT 1',
+                    [(int)$context['file_id']]
+                );
+                if (is_array($fileRow)) {
+                    $jobFullPath = CatalogFileMaintenanceSupport::storagePath($this->config, $fileRow) ?? '';
+                }
+            } catch (Throwable) {
+                // Keep provenance-only export if canonical storage resolution fails.
+            }
+        }
         $archiveFullPath = $this->existingPath($context, 'archive_full_path', 'archive_full_path_exists');
         if ($archiveFullPath === '') {
             $archiveFullPath = $this->existingPath($context, 'parent_full_path', 'parent_full_path_exists');
         }
 
         $copyPath = $jobFullPath;
-        $pathKind = $copyPath !== '' ? 'retained_file' : 'relative_only';
+        $pathKind = $copyPath !== ''
+            ? (max(0, (int)($context['file_id'] ?? 0)) > 0 ? 'verified_storage' : 'retained_file')
+            : 'relative_only';
         if ($copyPath === '' && $archiveEntry === '' && $archiveFullPath !== '') {
             $copyPath = $archiveFullPath;
             $pathKind = 'retained_archive';
