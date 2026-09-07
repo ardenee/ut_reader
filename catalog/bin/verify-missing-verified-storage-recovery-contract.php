@@ -73,6 +73,22 @@ $add(
     'UZ/UZ2/UZ3 recovery must decode through the production redirect reader and verify the resulting raw bytes.'
 );
 $add(
+    'recursive_archive_scan_is_exact',
+    str_contains($source, 'recovery_try_generic_archive_candidates')
+        && str_contains($source, "'archive-scan'")
+        && str_contains($source, 'CatalogArchiveExtractor::isArchiveName'),
+    'Unresolved targets may be searched inside ZIP/7z/RAR/UMOD-family containers, but extracted members must still pass exact size/MD5/SHA1 verification.'
+);
+$add(
+    'pak_members_are_supported_and_reverified',
+    str_contains($source, 'CatalogPakArchive.php')
+        && str_contains($source, 'recovery_try_pak_member_source')
+        && str_contains($source, "'pak_member'")
+        && str_contains($source, 'catalog_pak_archive_extract_to_temp'),
+    'UE4/UE5 PAK containers must be searched for exact missing members and reverified before canonical restoration.'
+);
+
+$add(
     'recorded_archive_members_are_exact',
     str_contains($source, 'CatalogArchiveExtractor')
         && str_contains($source, "'archive_member'")
