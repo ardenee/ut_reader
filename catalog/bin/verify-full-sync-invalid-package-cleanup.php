@@ -96,10 +96,13 @@ $record(
     'A present verified package must remain intact when a Full Sync parser/reader validation fails.'
 );
 $record(
-    'full_sync_failure_remains_visible',
-    !str_contains($unit, 'catch (CatalogInvalidPackageException')
-        && str_contains($unit, "private function reimport("),
-    'Validation errors must escape the one-file child so the workflow reports the exact file as failed instead of silently completing.'
+    'full_sync_reader_incompatibility_is_retained_and_visible',
+    str_contains($unit, 'catch (CatalogInvalidPackageException $error)')
+        && str_contains($unit, "'status' => 'retained_reader_incompatible'")
+        && str_contains($unit, "'error_type' => 'FullSyncReaderIncompatiblePackage'")
+        && str_contains($unit, "'disposition' => 'retained_reader_incompatible'")
+        && str_contains($unit, 'existing verified identity and metadata'),
+    'A present package that the current reader cannot parse must retain its verified identity/metadata, remain visible as a System Error, and not block the whole Full Sync workflow.'
 );
 $record(
     'missing_storage_preserves_verified_file',
