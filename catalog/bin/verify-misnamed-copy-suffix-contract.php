@@ -45,7 +45,7 @@ $record(
     'one_exact_object_match_is_enough_for_copy_suffix',
     str_contains($detector, "if (\$matched < 2 && empty(\$group['collision_suffix_match']))")
         && str_contains($detector, '$collisionSuffix && $best >= 1 && $dependants === 0')
-        && str_contains($detector, "$confidence = 'high'"),
+        && str_contains($detector, '$confidence = \'high\''),
     'A copy-suffix candidate with exact missing-package/object-path evidence should not be discarded merely because only one object is imported.'
 );
 
