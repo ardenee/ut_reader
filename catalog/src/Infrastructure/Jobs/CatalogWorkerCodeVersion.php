@@ -43,6 +43,8 @@ final class CatalogWorkerCodeVersion
             $this->catalogRoot . '/src/Infrastructure/Persistence/PdoArchiveChildOutcomeQuery.php',
             $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogJobResourceLimitStore.php',
             $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php',
+            $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogMisnamedFileScanJobHandler.php',
+            $this->catalogRoot . '/src/Infrastructure/Maintenance/CatalogMisnamedFileDetector.php',
             $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogFullSyncJobHandler.php',
             $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogFullSyncUnitJobHandler.php',
             $this->catalogRoot . '/src/Infrastructure/Telemetry/CatalogInvalidUeFileReporter.php',
