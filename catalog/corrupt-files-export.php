@@ -70,7 +70,7 @@ try {
         'display_status',
         'reason',
         'source_resolution_error',
-    ]);
+    ], ',', '"', '');
 
     foreach ($result['rows'] as $row) {
         fputcsv($output, [
@@ -91,7 +91,7 @@ try {
             (string)$row['display_status'],
             (string)$row['reason'],
             (string)$row['source_resolution_error'],
-        ]);
+        ], ',', '"', '');
     }
     fclose($output);
     exit;
