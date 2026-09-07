@@ -54,6 +54,71 @@ function system_error_export_context(string $raw): array
     }
 }
 
+/** @param array<string,mixed> $row @param array<string,mixed> $context @return array<string,mixed> */
+function system_error_export_enrich_context(PDO $db, array $row, array $context): array
+{
+    $jobId = max(0, (int)($context['job_id'] ?? 0));
+    if ($jobId < 1 || (
+        trim((string)($context['file_name'] ?? '')) !== ''
+        && max(0, (int)($context['file_id'] ?? 0)) > 0
+    )) {
+        return $context;
+    }
+
+    try {
+        $statement = $db->prepare(
+            'SELECT id,job_type,payload_json FROM ue_background_jobs WHERE id=? LIMIT 1'
+        );
+        $statement->execute([$jobId]);
+        $job = $statement->fetch(PDO::FETCH_ASSOC);
+        if (!is_array($job)) {
+            return $context;
+        }
+        $payload = json_decode((string)($job['payload_json'] ?? ''), true);
+        $payload = is_array($payload) ? $payload : [];
+        $fileId = max(
+            0,
+            (int)($payload['file_id'] ?? 0),
+            (int)($payload['affected_file_id'] ?? 0)
+        );
+        if ($fileId < 1) {
+            return $context;
+        }
+
+        $fileStatement = $db->prepare(
+            'SELECT f.id,f.game_id,f.original_name,f.source_relative_path,f.relative_path,f.file_size,'
+            . 'f.md5,f.sha1,f.package_version,f.licensee_version,f.detected_engine_key,'
+            . 'f.detected_package_version,f.detected_licensee_version,g.name game_name '
+            . 'FROM ue_files f LEFT JOIN ue_games g ON g.id=f.game_id WHERE f.id=? LIMIT 1'
+        );
+        $fileStatement->execute([$fileId]);
+        $file = $fileStatement->fetch(PDO::FETCH_ASSOC);
+        if (!is_array($file)) {
+            $context['file_id'] = $fileId;
+            return $context;
+        }
+
+        $context['file_id'] = (int)$file['id'];
+        $context['game_id'] = (int)$file['game_id'];
+        $context['game_name'] = (string)($file['game_name'] ?? '');
+        $context['file_name'] = (string)$file['original_name'];
+        $context['original_name'] = (string)$file['original_name'];
+        $context['source_relative_path'] = (string)($file['source_relative_path'] ?? '');
+        $context['canonical_relative_path'] = (string)($file['relative_path'] ?? '');
+        $context['file_size'] = max(0, (int)($file['file_size'] ?? 0));
+        $context['md5'] = strtolower(trim((string)($file['md5'] ?? '')));
+        $context['sha1'] = strtolower(trim((string)($file['sha1'] ?? '')));
+        $context['package_version'] = (int)($file['package_version'] ?? 0);
+        $context['licensee_version'] = (int)($file['licensee_version'] ?? 0);
+        $context['detected_engine_key'] = (string)($file['detected_engine_key'] ?? '');
+        $context['detected_package_version'] = (int)($file['detected_package_version'] ?? 0);
+        $context['detected_licensee_version'] = (int)($file['detected_licensee_version'] ?? 0);
+    } catch (Throwable) {
+        // Export diagnostics are best-effort and must never hide the original error.
+    }
+    return $context;
+}
+
 /** @param array<string,mixed> $context */
 function system_error_export_location(array $context): string
 {
@@ -62,6 +127,7 @@ function system_error_export_location(array $context): string
         'job_source_relative_path',
         'archive_source_relative_path',
         'parent_source_relative_path',
+        'canonical_relative_path',
     ] as $key) {
         $value = trim((string)($context[$key] ?? ''));
         if ($value !== '') {
@@ -154,6 +220,23 @@ function system_error_export_values(array $row, array $context): array
         }
     }
 
+    foreach ([
+        'file_id',
+        'game_id',
+        'file_size',
+        'package_version',
+        'licensee_version',
+        'detected_package_version',
+        'detected_licensee_version',
+    ] as $key) {
+        if (isset($context[$key]) && is_scalar($context[$key]) && (string)$context[$key] !== '') {
+            $values[$key] = $context[$key];
+        }
+    }
+    if (isset($context['detected_engine_key']) && trim((string)$context['detected_engine_key']) !== '') {
+        $values['detected_engine'] = (string)$context['detected_engine_key'];
+    }
+
     if ($values === [] && (string)($row['error_type'] ?? '') === 'ArchivePartialFailure') {
         foreach (['archive_entries', 'queued_files', 'skipped_files', 'failed_files'] as $key) {
             if (isset($context[$key]) && is_scalar($context[$key])) {
@@ -177,6 +260,33 @@ function system_error_export_values(array $row, array $context): array
     }
     if (preg_match('/archive member "([^"]+)"/i', $message, $match) === 1) {
         $values['member'] = $match[1];
+    }
+    if (preg_match(
+        '/Invalid\s+(Names|Imports|Exports)\s+table\s+offset:\s*(-?\d+)\/(\d+)/i',
+        $message,
+        $match
+    ) === 1) {
+        $values['table'] = strtolower($match[1]);
+        $values['table_offset'] = (int)$match[2];
+        $values['package_size'] = (int)$match[3];
+    }
+    if (preg_match(
+        '/(?:Name|Import|Export) table entry parse failed:\s*index=(\d+),\s*entry_offset=(\d+),\s*'
+        . 'current_offset=(\d+),\s*table_offset=(\d+),\s*table_count=(\d+),\s*'
+        . 'package_size=(\d+),\s*entry_head_hex=([0-9A-F]*)/i',
+        $message,
+        $match
+    ) === 1) {
+        $values['entry_index'] = (int)$match[1];
+        $values['entry_offset'] = (int)$match[2];
+        $values['current_offset'] = (int)$match[3];
+        $values['table_offset'] = (int)$match[4];
+        $values['table_count'] = (int)$match[5];
+        $values['package_size'] = (int)$match[6];
+        $values['entry_head_hex'] = strtoupper($match[7]);
+    }
+    if (preg_match('/Invalid legacy wide FString length:\s*(-?\d+)/i', $message, $match) === 1) {
+        $values['fstring_length'] = (int)$match[1];
     }
 
     return $values;
@@ -286,6 +396,7 @@ try {
 
     foreach ($rows as $row) {
         $context = system_error_export_context((string)($row['context_json'] ?? ''));
+        $context = system_error_export_enrich_context($db, $row, $context);
         $title = system_error_export_title($row, $context);
         $reason = system_error_export_reason($row, $context);
         $values = system_error_export_values($row, $context);
