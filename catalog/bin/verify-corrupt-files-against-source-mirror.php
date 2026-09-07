@@ -129,6 +129,7 @@ function mirror_resolve_source(
                 $exact = null;
                 $nested = null;
                 $nestedParts = 0;
+                $basenameNested = [];
 
                 foreach ($entries as $entry) {
                     if (!is_array($entry) || empty($entry['safe'])) {
@@ -148,13 +149,21 @@ function mirror_resolve_source(
                         continue;
                     }
                     $entryParts = mirror_parts($entryPath);
-                    if (count($entryParts) >= count($remaining)) {
-                        continue;
+                    if (count($entryParts) < count($remaining)) {
+                        $prefix = strtolower(implode('/', array_slice($remaining, 0, count($entryParts))));
+                        if ($prefix === $entryLower && count($entryParts) > $nestedParts) {
+                            $nested = $entry;
+                            $nestedParts = count($entryParts);
+                        }
                     }
-                    $prefix = strtolower(implode('/', array_slice($remaining, 0, count($entryParts))));
-                    if ($prefix === $entryLower && count($entryParts) > $nestedParts) {
-                        $nested = $entry;
-                        $nestedParts = count($entryParts);
+
+                    // Historical source provenance can omit a harmless wrapper
+                    // directory inside an archive. If the next recorded component
+                    // is itself an archive, keep a unique basename fallback so
+                    // nested containers can still be compared without guessing.
+                    if (isset($remaining[0])
+                        && strcasecmp(basename($entryPath), (string)$remaining[0]) === 0) {
+                        $basenameNested[] = $entry;
                     }
                 }
 
@@ -175,6 +184,10 @@ function mirror_resolve_source(
                     ];
                 }
 
+                if (!is_array($nested) && count($basenameNested) === 1) {
+                    $nested = $basenameNested[0];
+                    $nestedParts = 1;
+                }
                 if (!is_array($nested)) {
                     throw new RuntimeException(
                         'Archive does not contain the recorded source path: '
@@ -366,6 +379,7 @@ try {
     echo json_encode([
         'ok' => true,
         'source_root' => $sourceRoot,
+        'archive_capabilities' => CatalogArchiveExtractor::runtimeCapabilities(),
         'checked' => count($results),
         'same_invalid_bytes_as_catalog' => $sameInvalid,
         'different_valid_source_bytes' => $differentValid,
