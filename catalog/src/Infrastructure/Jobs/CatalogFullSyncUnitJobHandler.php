@@ -12,7 +12,9 @@ use UnrealDb\Catalog\Application\Jobs\JobExecutionContext;
 use UnrealDb\Catalog\Application\Jobs\JobHandler;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
+use UnrealDb\Catalog\Infrastructure\Import\CatalogInvalidPackageException;
 use UnrealDb\Catalog\Infrastructure\Maintenance\CatalogFileMaintenanceActionService;
+use UnrealDb\Catalog\Infrastructure\Telemetry\CatalogSystemErrorRecorder;
 use UnrealDb\Catalog\Infrastructure\Maintenance\CatalogFullSyncDependencyBatchService;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 
@@ -76,18 +78,69 @@ final class CatalogFullSyncUnitJobHandler implements JobHandler
         );
 
         // Full Sync is a reconciliation operation, not a destructive validity sweep.
-        // A parser/reader regression or newly tightened validation must never delete
-        // an otherwise present verified package. Let the child fail visibly so the
-        // operator can inspect/retry it while preserving the file and stable row.
-        $result = $maintenance->execute('sync_reimport', [
-            'file_id' => $fileId,
-            'game_id' => $gameId,
-            'package_name' => (string)$file['package_name'],
-            'md5' => (string)$file['md5'],
-            'package_guid' => (string)($file['package_guid'] ?? ''),
-        ]);
+        // A package which remains byte-for-byte present may be intentionally protected,
+        // obfuscated, licensee-specific, or simply unsupported by the current reader.
+        // Preserve its existing verified identity/metadata and continue the workflow;
+        // the incompatibility remains visible as a System Error for operator review.
+        try {
+            $result = $maintenance->execute('sync_reimport', [
+                'file_id' => $fileId,
+                'game_id' => $gameId,
+                'package_name' => (string)$file['package_name'],
+                'md5' => (string)$file['md5'],
+                'package_guid' => (string)($file['package_guid'] ?? ''),
+            ]);
+            $status = (string)($result['status'] ?? 'reimported');
+        } catch (CatalogInvalidPackageException $error) {
+            CatalogSystemErrorRecorder::record([
+                'source_kind' => 'unreal-file-validation',
+                'severity' => 'warning',
+                'error_type' => 'FullSyncReaderIncompatiblePackage',
+                'message' => $name . ': ' . trim($error->getMessage()),
+                'source_file' => $error->getFile(),
+                'source_line' => $error->getLine(),
+                'context' => [
+                    'disposition' => 'retained_reader_incompatible',
+                    'job_id' => $job->id,
+                    'job_type' => $job->type,
+                    'game_id' => $gameId,
+                    'file_id' => $fileId,
+                    'file_name' => $name,
+                    'original_name' => $name,
+                    'source_relative_path' => (string)($file['source_relative_path'] ?? ''),
+                    'canonical_relative_path' => (string)($file['relative_path'] ?? ''),
+                    'file_size' => max(0, (int)($file['file_size'] ?? 0)),
+                    'md5' => strtolower((string)($file['md5'] ?? '')),
+                    'sha1' => strtolower((string)($file['sha1'] ?? '')),
+                    'package_version' => (int)($file['package_version'] ?? 0),
+                    'licensee_version' => (int)($file['licensee_version'] ?? 0),
+                    'validation_code' => $error->validationCode(),
+                    'validation_arguments' => $error->validationArguments(),
+                ],
+            ]);
 
-        $status = (string)($result['status'] ?? 'reimported');
+            $context->checkpoint([
+                'stage' => 'complete',
+                'done' => 1,
+                'total' => 1,
+                'percent' => 100,
+                'file_id' => $fileId,
+                'file_name' => $name,
+                'message' => 'Retained reader-incompatible package ' . $name
+                    . '; existing verified identity and metadata preserved.',
+            ]);
+
+            return [
+                'operation' => 'full_sync_file',
+                'game_id' => $gameId,
+                'file_id' => $fileId,
+                'status' => 'retained_reader_incompatible',
+                'validation_code' => $error->validationCode(),
+                'validation_arguments' => $error->validationArguments(),
+                'message' => 'Current reader could not reparse ' . $name
+                    . '; existing verified identity and metadata were preserved.',
+            ];
+        }
         $context->checkpoint([
             'stage' => 'complete',
             'done' => 1,
@@ -302,7 +355,8 @@ final class CatalogFullSyncUnitJobHandler implements JobHandler
     private function file(int $gameId, int $fileId): ?array
     {
         $statement = $this->db->prepare(
-            'SELECT id,game_id,package_name,original_name,md5,package_guid FROM ue_files '
+            'SELECT id,game_id,package_name,original_name,md5,sha1,package_guid,relative_path,'
+            . 'source_relative_path,file_size,package_version,licensee_version FROM ue_files '
             . 'WHERE id=? AND game_id=? AND scan_status="verified" LIMIT 1'
         );
         $statement->execute([$fileId, $gameId]);
