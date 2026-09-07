@@ -40,8 +40,12 @@ final class CatalogMisnamedFileDetector
     {
         $owner = $this->one(
             'SELECT f.id,f.game_id,f.package_name,f.original_name,'
-            . 'f.name_count,f.import_count,f.export_count,g.name game_name '
-            . 'FROM ue_files f JOIN ue_games g ON g.id=f.game_id '
+            . 'COALESCE(m.name_count,f.name_count,0) name_count,'
+            . 'COALESCE(m.import_count,f.import_count,0) import_count,'
+            . 'COALESCE(m.export_count,f.export_count,0) export_count,g.name game_name '
+            . 'FROM ue_files f '
+            . 'LEFT JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=2 '
+            . 'JOIN ue_games g ON g.id=f.game_id '
             . 'WHERE f.id=? AND f.scan_status="verified"',
             [$ownerFileId]
         );
@@ -61,7 +65,7 @@ final class CatalogMisnamedFileDetector
         // object path below the package root, so package-name damage can be
         // detected without reducing the comparison to a coincidental leaf name.
         $statement = $this->db->prepare(
-            'SELECT import_index,required_package_term_id,import_object_term_id,'
+            'SELECT import_index,required_package_term_id,required_object_term_id,import_object_term_id,'
             . 'HEX(required_path_hash) required_path_hash_hex '
             . 'FROM ue_dependency_links '
             . 'WHERE file_id=? AND status=0 AND resolved_file_id IS NULL '
@@ -79,19 +83,24 @@ final class CatalogMisnamedFileDetector
             return ['candidates' => [], 'imports_examined' => 0, 'truncated' => $truncated, 'ambiguous_terms' => 0];
         }
 
-        /** @var array<int,array<int,array<string,true>>> $requirementsByObject */
+        /** @var array<int,array<int,array<string,int>>> $requirementsByObject */
         $requirementsByObject = [];
         $requiredPackageTermIds = [];
+        $requiredObjectTermIds = [];
         $objectTermIds = [];
         foreach ($dependencies as $dependency) {
             $objectTermId = (int)($dependency['import_object_term_id'] ?? 0);
             $packageTermId = (int)($dependency['required_package_term_id'] ?? 0);
+            $requiredObjectTermId = (int)($dependency['required_object_term_id'] ?? 0);
             $pathHash = strtoupper(trim((string)($dependency['required_path_hash_hex'] ?? '')));
             if ($objectTermId < 1 || $packageTermId < 1 || $pathHash === '') {
                 continue;
             }
-            $requirementsByObject[$objectTermId][$packageTermId][$pathHash] = true;
+            $requirementsByObject[$objectTermId][$packageTermId][$pathHash] = $requiredObjectTermId;
             $requiredPackageTermIds[$packageTermId] = true;
+            if ($requiredObjectTermId > 0) {
+                $requiredObjectTermIds[$requiredObjectTermId] = true;
+            }
             $objectTermIds[$objectTermId] = true;
         }
         if ($objectTermIds === []) {
@@ -115,6 +124,7 @@ final class CatalogMisnamedFileDetector
         }
 
         $packageNames = $this->termValues(array_map('intval', array_keys($requiredPackageTermIds)));
+        $requiredObjectPaths = $this->termValues(array_map('intval', array_keys($requiredObjectTermIds)));
         $providers = $this->providersForTerms(
             $safeObjectTermIds,
             $gameId,
@@ -217,7 +227,11 @@ final class CatalogMisnamedFileDetector
                     $groups[$key]['collision_suffix_match'] = true;
                 }
                 $groups[$key]['matched_object_term_ids'][(string)$objectTermId] = true;
+                $requiredObjectTermId = (int)($requiredPathHashes[$providerPathHash] ?? 0);
                 $matchedPath = trim((string)($provider['local_path'] ?? ''));
+                if ($matchedPath === '' && $requiredObjectTermId > 0) {
+                    $matchedPath = trim((string)($requiredObjectPaths[$requiredObjectTermId] ?? ''));
+                }
                 if ($matchedPath !== ''
                     && count((array)$groups[$key]['evidence'][0]['matched_paths'])
                         < self::MAX_MATCHED_PATHS_PER_EVIDENCE) {
@@ -336,9 +350,12 @@ final class CatalogMisnamedFileDetector
                 'SELECT e.object_term_id,HEX(e.path_hash) path_hash_hex,'
                 . 'COALESCE(CONVERT(path_term.value_prefix USING utf8mb4),"") local_path,'
                 . 'c.id file_id,c.game_id,c.package_name,c.original_name,c.extension,'
-                . 'c.name_count,c.import_count,c.export_count,g.name game_name '
+                . 'COALESCE(m.name_count,c.name_count,0) name_count,'
+                . 'COALESCE(m.import_count,c.import_count,0) import_count,'
+                . 'COALESCE(m.export_count,c.export_count,0) export_count,g.name game_name '
                 . 'FROM ue_export_lookup e '
                 . 'JOIN ue_files c ON c.id=e.file_id AND c.scan_status="verified" '
+                . 'LEFT JOIN ue_file_metadata m ON m.file_id=c.id AND m.format_version=2 '
                 . 'JOIN ue_games g ON g.id=c.game_id '
                 . 'LEFT JOIN ue_terms path_term ON path_term.id=e.local_path_term_id '
                 . 'WHERE e.object_term_id IN (' . $placeholders . ') AND c.game_id=? AND c.id<>? '
