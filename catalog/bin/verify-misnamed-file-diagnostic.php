@@ -208,6 +208,14 @@ $record(
 );
 
 $record(
+    'current_file_shows_suggested_filename',
+    str_contains($page, "\$suggestedFilename = trim((string)(\$candidate['suggested_filename'] ?? ''))")
+        && str_contains($page, 'Suggested: ')
+        && str_contains($page, 'style="color:#fff"'),
+    'The current-file column must show the proposed filename in bold white text directly beneath the existing filename.'
+);
+
+$record(
     'admin_page_is_non_destructive_and_serial',
     str_contains($page, 'catalog_support_is_admin()')
         && str_contains($page, "catalog_check_csrf('possible_misnamed_files_scan')")
