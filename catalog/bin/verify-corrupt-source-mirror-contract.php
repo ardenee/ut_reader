@@ -40,6 +40,20 @@ $record(
 );
 
 $record(
+    'nested_archive_wrapper_directories_are_tolerated_safely',
+    str_contains($source, 'count($basenameNested) === 1')
+        && str_contains($source, 'strcasecmp(basename($entryPath), (string)$remaining[0]) === 0')
+        && str_contains($source, '$nestedParts = 1'),
+    'Historical provenance may omit a wrapper directory inside an archive; only a unique next-archive basename may be used as a safe fallback.'
+);
+
+$record(
+    'archive_runtime_capabilities_are_reported',
+    str_contains($source, "'archive_capabilities' => CatalogArchiveExtractor::runtimeCapabilities()"),
+    'The diagnostic must report whether native ZIP/RAR/libarchive decoders are actually available on the live PHP runtime.'
+);
+
+$record(
     'mirror_bytes_are_compared_exactly',
     str_contains($source, 'md5_file(')
         && str_contains($source, 'sha1_file(')
