@@ -116,8 +116,9 @@ $candidates = is_array($result['candidates'] ?? null) ? $result['candidates'] : 
 catalog_head('Possible Misnamed Files');
 
 echo '<div class="card hero"><h1>Possible Misnamed Files</h1>'
-    . '<p class="muted">Find verified files whose exported object names repeatedly match unresolved imports that expect a different package name. '
-    . 'Candidates with several matches from the same importing file and zero current dependants are ranked highest. '
+    . '<p class="muted">Find verified files whose exports exactly match object paths requested from a package name that is currently missing. '
+    . 'Only candidate provider files with <strong>zero currently resolved dependants</strong> are retained, which is a strong sign that their current package name may be wrong. '
+    . 'The table shows the current identity, the package identity the importing files expect, and the files that provide the matching evidence. '
     . 'A dedicated copy-suffix check also tests names ending in (1) through (9), with or without a preceding space, against the unsuffixed package name. '
     . 'Nothing is renamed automatically.</p></div>';
 
@@ -183,14 +184,18 @@ if ($selected !== null && (string)$selected['status'] === 'completed') {
     if ($candidates === []) {
         echo '<p class="muted">No likely filename/package-name mismatches were found in this scan.</p></div>';
     } else {
-        echo '<p class="muted small">Review the evidence before renaming. The candidate page will perform the actual admin-only rename and queue dependency reconciliation.</p>'
-            . '<table><thead><tr><th>Confidence</th><th>Candidate file</th><th>Suggested package</th><th>Evidence</th><th>Current dependants</th><th>Name similarity</th><th>Score</th><th></th></tr></thead><tbody>';
+        echo '<p class="muted small">Each row reads left-to-right as <strong>current file/package → expected missing package</strong>. '
+            . '“Evidence files” are packages with unresolved imports for the expected package whose object paths exactly match exports in the candidate. '
+            . 'The candidate itself has zero currently resolved inbound dependants. Review the evidence before renaming.</p>'
+            . '<table><thead><tr><th>Confidence</th><th>Current file / package</th><th>Expected package identity</th><th>Evidence files</th><th>Why it matches</th><th></th></tr></thead><tbody>';
         foreach ($candidates as $candidate) {
             if (!is_array($candidate)) {
                 continue;
             }
             $fileId = (int)($candidate['candidate_file_id'] ?? 0);
             $confidence = (string)($candidate['confidence'] ?? 'possible');
+            $expectedPackage = (string)($candidate['suggested_package_name'] ?? '');
+            $currentPackage = (string)($candidate['candidate_package_name'] ?? '');
             $evidenceHtml = '';
             foreach (array_slice((array)($candidate['evidence'] ?? []), 0, 3) as $evidence) {
                 if (!is_array($evidence)) {
@@ -198,22 +203,45 @@ if ($selected !== null && (string)$selected['status'] === 'completed') {
                 }
                 $ownerId = (int)($evidence['file_id'] ?? 0);
                 $ownerName = (string)($evidence['original_name'] ?? ('File #' . $ownerId));
-                $evidenceHtml .= '<div><a href="file-examine.php?id=' . $ownerId . '">' . catalog_h($ownerName) . '</a>: '
-                    . (int)($evidence['matched_objects'] ?? 0) . ' matching objects</div>';
+                $ownerPackage = trim((string)($evidence['package_name'] ?? ''));
+                $matchedObjects = max(0, (int)($evidence['matched_objects'] ?? 0));
+                $evidenceHtml .= '<div style="margin-bottom:.45rem"><a href="file-examine.php?id=' . $ownerId . '"><strong>'
+                    . catalog_h($ownerName) . '</strong></a>'
+                    . ($ownerPackage !== '' ? '<div class="mono small muted">package: ' . catalog_h($ownerPackage) . '</div>' : '')
+                    . '<div class="small">expects <span class="mono">' . catalog_h($expectedPackage) . '</span> · '
+                    . $matchedObjects . ' exact object-path match' . ($matchedObjects === 1 ? '' : 'es') . '</div></div>';
             }
+
+            $matchBits = [];
+            $bestMatches = max(0, (int)($candidate['best_same_file_matches'] ?? 0));
+            $matchingFiles = max(0, (int)($candidate['matching_files'] ?? 0));
+            if (!empty($candidate['collision_suffix_match'])) {
+                $matchBits[] = 'copy suffix (1–9)';
+            }
+            $similarity = trim((string)($candidate['name_similarity'] ?? ''));
+            if ($similarity !== '') {
+                $matchBits[] = $similarity;
+            }
+            $matchBits[] = $bestMatches . ' exact object-path match' . ($bestMatches === 1 ? '' : 'es') . ' in best evidence file';
+            $matchBits[] = $matchingFiles . ' importing evidence file' . ($matchingFiles === 1 ? '' : 's');
+            $matchBits[] = '0 resolved inbound dependants';
+
             echo '<tr>'
-                . '<td><strong>' . catalog_h(possible_misnamed_confidence_label($confidence)) . '</strong></td>'
-                . '<td><a href="file-examine.php?id=' . $fileId . '">' . catalog_h((string)($candidate['candidate_original_name'] ?? '')) . '</a>'
-                . '<div class="mono small muted">' . catalog_h((string)($candidate['candidate_package_name'] ?? '')) . '</div>'
+                . '<td><strong>' . catalog_h(possible_misnamed_confidence_label($confidence)) . '</strong>'
+                . '<div class="small muted">score ' . (int)($candidate['score'] ?? 0) . '</div></td>'
+                . '<td><a href="file-examine.php?id=' . $fileId . '"><strong>'
+                . catalog_h((string)($candidate['candidate_original_name'] ?? '')) . '</strong></a>'
+                . '<div class="small muted">Current package</div>'
+                . '<div class="mono">' . catalog_h($currentPackage) . '</div>'
                 . '<div class="small muted">' . catalog_h((string)($candidate['game_name'] ?? '')) . '</div></td>'
-                . '<td><div class="mono">' . catalog_h((string)($candidate['suggested_package_name'] ?? '')) . '</div>'
-                . '<div class="small muted">Suggested filename: ' . catalog_h((string)($candidate['suggested_filename'] ?? '')) . '</div></td>'
+                . '<td><div class="small muted">Unresolved imports expect</div>'
+                . '<div class="mono"><strong>' . catalog_h($expectedPackage) . '</strong></div>'
+                . '<div class="small muted">Expected filename: ' . catalog_h((string)($candidate['suggested_filename'] ?? '')) . '</div>'
+                . '<div class="small" style="margin-top:.35rem"><span class="mono">' . catalog_h($currentPackage)
+                . '</span> → <span class="mono"><strong>' . catalog_h($expectedPackage) . '</strong></span></div></td>'
                 . '<td>' . ($evidenceHtml !== '' ? $evidenceHtml : '<span class="muted">No retained evidence detail</span>')
-                . '<div class="small muted">Best same-file match: ' . (int)($candidate['best_same_file_matches'] ?? 0)
-                . ' · matching files: ' . (int)($candidate['matching_files'] ?? 0) . '</div></td>'
-                . '<td>' . (int)($candidate['current_dependants'] ?? 0) . '</td>'
-                . '<td>' . catalog_h((string)($candidate['name_similarity'] ?? '')) . '</td>'
-                . '<td>' . (int)($candidate['score'] ?? 0) . '</td>'
+                . '</td>'
+                . '<td><div class="small">' . catalog_h(implode(' · ', $matchBits)) . '</div></td>'
                 . '<td><a class="button primary" href="file-examine.php?id=' . $fileId . '&rename_suggestions=1">Review / rename</a></td>'
                 . '</tr>';
         }
