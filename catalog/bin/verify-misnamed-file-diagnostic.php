@@ -121,10 +121,10 @@ $record(
 
 $record(
     'scan_policy_discards_old_loose_progress',
-    str_contains($handler, "POLICY_VERSION = 'community-path-name-strict-v3'")
+    str_contains($handler, "POLICY_VERSION = 'community-path-name-copy-suffix-v4'")
         && str_contains($handler, '$resume[\'policy_version\']')
         && str_contains($handler, "'policy_version' => self::POLICY_VERSION"),
-    'A resumed job must discard candidates gathered before strict relative-path/name/orphan matching.'
+    'A resumed job must discard candidates gathered before the current strict relative-path/name/orphan/copy-suffix policy.'
 );
 
 $record(
@@ -164,11 +164,11 @@ $record(
 );
 
 $record(
-    'same_file_multiple_matches_are_required',
-    str_contains($detector, 'if ($matched < 2)')
+    'same_file_multiple_matches_are_required_except_copy_suffix',
+    str_contains($detector, "if (\$matched < 2 && empty(\$group['collision_suffix_match']))")
         && str_contains($detector, '$group[\'best_same_file_matches\'] = $matched;')
         && str_contains($detector, "'matching_files' => 1"),
-    'A candidate must have at least two distinct exact-path object matches from the same importing file.'
+    'Ordinary fuzzy-name candidates require at least two distinct exact-path object matches from one importing file; an explicit copy-suffix candidate may use one exact match.'
 );
 
 $record(
