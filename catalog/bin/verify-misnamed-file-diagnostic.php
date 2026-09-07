@@ -172,6 +172,17 @@ $record(
 );
 
 $record(
+    'operator_table_explains_current_expected_and_evidence_roles',
+    str_contains($page, 'current file/package → expected missing package')
+        && str_contains($page, 'Current file / package')
+        && str_contains($page, 'Expected package identity')
+        && str_contains($page, 'Evidence files')
+        && str_contains($page, '0 resolved inbound dependants')
+        && !str_contains($page, '<th>Current dependants</th>'),
+    'The results table must explain the candidate provider, expected missing identity and importing evidence without wasting a column on a value that is always zero.'
+);
+
+$record(
     'admin_page_is_non_destructive_and_serial',
     str_contains($page, 'catalog_support_is_admin()')
         && str_contains($page, "catalog_check_csrf('possible_misnamed_files_scan')")
