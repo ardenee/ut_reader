@@ -138,7 +138,7 @@ $record(
 
 $record(
     'csv_export_sets_explicit_escape_parameter',
-    substr_count($export, "], ',', '"', '');") >= 2,
+    substr_count($export, ", ',', '\"', '');") >= 2,
     'PHP 8.5 requires fputcsv() callers to provide the escape parameter explicitly; corrupt-file CSV export must not emit E_DEPRECATED System Errors.'
 );
 
