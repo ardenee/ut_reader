@@ -51,7 +51,7 @@ $record(
 
 $record(
     'scan_policy_version_invalidates_old_resume_state',
-    str_contains($handler, "community-path-name-evidence-paths-v5"),
+    str_contains($handler, "community-path-name-compact-evidence-v6"),
     'Resumed scans created under the old fuzzy-name policy must restart candidate accumulation under the new suffix rule.'
 );
 
