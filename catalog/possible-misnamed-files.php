@@ -253,12 +253,16 @@ if ($selected !== null && (string)$selected['status'] === 'completed') {
             $candidateNames = max(0, (int)($candidate['candidate_name_count'] ?? 0));
             $candidateImports = max(0, (int)($candidate['candidate_import_count'] ?? 0));
             $candidateExports = max(0, (int)($candidate['candidate_export_count'] ?? 0));
+            $suggestedFilename = trim((string)($candidate['suggested_filename'] ?? ''));
 
             echo '<tr>'
                 . '<td><strong>' . catalog_h(possible_misnamed_confidence_label($confidence)) . '</strong>'
                 . '<div class="small muted">score ' . (int)($candidate['score'] ?? 0) . '</div></td>'
                 . '<td><a href="file-examine.php?id=' . $fileId . '"><strong>'
                 . catalog_h((string)($candidate['candidate_original_name'] ?? '')) . '</strong></a>'
+                . ($suggestedFilename !== ''
+                    ? '<div class="small"><strong style="color:#fff">Suggested: ' . catalog_h($suggestedFilename) . '</strong></div>'
+                    : '')
                 . '<div class="small muted">' . catalog_h((string)($candidate['game_name'] ?? '')) . '</div>'
                 . '<div class="small muted" title="Names / Imports / Exports">' . number_format($candidateNames) . ' / '
                 . number_format($candidateImports) . ' / ' . number_format($candidateExports) . '</div></td>'
