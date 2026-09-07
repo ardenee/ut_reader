@@ -22,6 +22,7 @@ final class CatalogMisnamedFileDetector
     public const MAX_OBJECT_PROVIDER_FANOUT = 40;
     private const TERM_CHUNK_SIZE = 350;
     private const MIN_NAME_SIMILARITY_POINTS = 10;
+    private const MAX_MATCHED_PATHS_PER_EVIDENCE = 12;
 
     /** @var array<int,array{names:array<string,true>,file_ids:array<int,true>}> */
     private array $officialIdentityCache = [];
@@ -38,7 +39,8 @@ final class CatalogMisnamedFileDetector
     public function scanOwner(int $ownerFileId): array
     {
         $owner = $this->one(
-            'SELECT f.id,f.game_id,f.package_name,f.original_name,g.name game_name '
+            'SELECT f.id,f.game_id,f.package_name,f.original_name,'
+            . 'f.name_count,f.import_count,f.export_count,g.name game_name '
             . 'FROM ue_files f JOIN ue_games g ON g.id=f.game_id '
             . 'WHERE f.id=? AND f.scan_status="verified"',
             [$ownerFileId]
@@ -186,6 +188,9 @@ final class CatalogMisnamedFileDetector
                         'candidate_original_name' => (string)$provider['original_name'],
                         'candidate_package_name' => (string)$provider['package_name'],
                         'candidate_extension' => (string)$provider['extension'],
+                        'candidate_name_count' => max(0, (int)($provider['name_count'] ?? 0)),
+                        'candidate_import_count' => max(0, (int)($provider['import_count'] ?? 0)),
+                        'candidate_export_count' => max(0, (int)($provider['export_count'] ?? 0)),
                         'suggested_package_name' => $suggestedPackage,
                         'suggested_filename' => self::suggestedFilename(
                             $suggestedPackage,
@@ -200,7 +205,11 @@ final class CatalogMisnamedFileDetector
                             'file_id' => $ownerFileId,
                             'original_name' => (string)$owner['original_name'],
                             'package_name' => (string)$owner['package_name'],
+                            'name_count' => max(0, (int)($owner['name_count'] ?? 0)),
+                            'import_count' => max(0, (int)($owner['import_count'] ?? 0)),
+                            'export_count' => max(0, (int)($owner['export_count'] ?? 0)),
                             'matched_objects' => 0,
+                            'matched_paths' => [],
                         ]],
                     ];
                 }
@@ -208,6 +217,12 @@ final class CatalogMisnamedFileDetector
                     $groups[$key]['collision_suffix_match'] = true;
                 }
                 $groups[$key]['matched_object_term_ids'][(string)$objectTermId] = true;
+                $matchedPath = trim((string)($provider['local_path'] ?? ''));
+                if ($matchedPath !== ''
+                    && count((array)$groups[$key]['evidence'][0]['matched_paths'])
+                        < self::MAX_MATCHED_PATHS_PER_EVIDENCE) {
+                    $groups[$key]['evidence'][0]['matched_paths'][$matchedPath] = true;
+                }
             }
         }
 
@@ -222,6 +237,13 @@ final class CatalogMisnamedFileDetector
             $group['matching_objects'] = $matched;
             $group['best_same_file_matches'] = $matched;
             $group['evidence'][0]['matched_objects'] = $matched;
+            $paths = array_keys((array)($group['evidence'][0]['matched_paths'] ?? []));
+            sort($paths, SORT_NATURAL | SORT_FLAG_CASE);
+            $group['evidence'][0]['matched_paths'] = array_slice(
+                $paths,
+                0,
+                self::MAX_MATCHED_PATHS_PER_EVIDENCE
+            );
             $candidates[] = self::rankCandidate($group);
         }
 
@@ -312,10 +334,13 @@ final class CatalogMisnamedFileDetector
             $placeholders = implode(',', array_fill(0, count($chunk), '?'));
             $statement = $this->db->prepare(
                 'SELECT e.object_term_id,HEX(e.path_hash) path_hash_hex,'
-                . 'c.id file_id,c.game_id,c.package_name,c.original_name,c.extension,g.name game_name '
+                . 'COALESCE(CONVERT(path_term.value_prefix USING utf8mb4),"") local_path,'
+                . 'c.id file_id,c.game_id,c.package_name,c.original_name,c.extension,'
+                . 'c.name_count,c.import_count,c.export_count,g.name game_name '
                 . 'FROM ue_export_lookup e '
                 . 'JOIN ue_files c ON c.id=e.file_id AND c.scan_status="verified" '
                 . 'JOIN ue_games g ON g.id=c.game_id '
+                . 'LEFT JOIN ue_terms path_term ON path_term.id=e.local_path_term_id '
                 . 'WHERE e.object_term_id IN (' . $placeholders . ') AND c.game_id=? AND c.id<>? '
                 . 'AND e.path_hash IS NOT NULL '
                 . 'ORDER BY e.object_term_id,c.id'
