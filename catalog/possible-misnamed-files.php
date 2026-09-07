@@ -184,10 +184,10 @@ if ($selected !== null && (string)$selected['status'] === 'completed') {
     if ($candidates === []) {
         echo '<p class="muted">No likely filename/package-name mismatches were found in this scan.</p></div>';
     } else {
-        echo '<p class="muted small">Each row reads left-to-right as <strong>current file/package → expected missing package</strong>. '
-            . '“Evidence files” are packages with unresolved imports for the expected package whose object paths exactly match exports in the candidate. '
+        echo '<p class="muted small">Each row shows the current candidate file, the missing package identity the importing files expect, '
+            . 'and the exact local object paths which match between them. “N / I / E” means Names / Imports / Exports. '
             . 'The candidate itself has zero currently resolved inbound dependants. Review the evidence before renaming.</p>'
-            . '<table><thead><tr><th>Confidence</th><th>Current file / package</th><th>Expected package identity</th><th>Evidence files</th><th>Why it matches</th><th></th></tr></thead><tbody>';
+            . '<table><thead><tr><th>Confidence</th><th>Current file</th><th>Expected package identity</th><th>Evidence files</th><th>Why it matches</th><th></th></tr></thead><tbody>';
         foreach ($candidates as $candidate) {
             if (!is_array($candidate)) {
                 continue;
@@ -195,26 +195,46 @@ if ($selected !== null && (string)$selected['status'] === 'completed') {
             $fileId = (int)($candidate['candidate_file_id'] ?? 0);
             $confidence = (string)($candidate['confidence'] ?? 'possible');
             $expectedPackage = (string)($candidate['suggested_package_name'] ?? '');
-            $currentPackage = (string)($candidate['candidate_package_name'] ?? '');
             $evidenceHtml = '';
+            $pathsHtml = '';
             foreach (array_slice((array)($candidate['evidence'] ?? []), 0, 3) as $evidence) {
                 if (!is_array($evidence)) {
                     continue;
                 }
                 $ownerId = (int)($evidence['file_id'] ?? 0);
                 $ownerName = (string)($evidence['original_name'] ?? ('File #' . $ownerId));
-                $ownerPackage = trim((string)($evidence['package_name'] ?? ''));
                 $matchedObjects = max(0, (int)($evidence['matched_objects'] ?? 0));
-                $evidenceHtml .= '<div style="margin-bottom:.45rem"><a href="file-examine.php?id=' . $ownerId . '"><strong>'
+                $ownerNames = max(0, (int)($evidence['name_count'] ?? 0));
+                $ownerImports = max(0, (int)($evidence['import_count'] ?? 0));
+                $ownerExports = max(0, (int)($evidence['export_count'] ?? 0));
+                $evidenceHtml .= '<div style="margin-bottom:.55rem"><a href="file-examine.php?id=' . $ownerId . '"><strong>'
                     . catalog_h($ownerName) . '</strong></a>'
-                    . ($ownerPackage !== '' ? '<div class="mono small muted">package: ' . catalog_h($ownerPackage) . '</div>' : '')
-                    . '<div class="small">expects <span class="mono">' . catalog_h($expectedPackage) . '</span> · '
-                    . $matchedObjects . ' exact object-path match' . ($matchedObjects === 1 ? '' : 'es') . '</div></div>';
+                    . '<div class="small muted">N / I / E: ' . number_format($ownerNames) . ' / '
+                    . number_format($ownerImports) . ' / ' . number_format($ownerExports) . '</div>'
+                    . '<div class="small">' . $matchedObjects . ' exact path match' . ($matchedObjects === 1 ? '' : 'es') . '</div></div>';
+
+                $matchedPaths = array_values(array_filter(
+                    array_map('strval', (array)($evidence['matched_paths'] ?? [])),
+                    static fn(string $path): bool => trim($path) !== ''
+                ));
+                $pathsHtml .= '<div style="margin-bottom:.65rem"><div class="small"><strong>'
+                    . catalog_h($ownerName) . '</strong></div>';
+                if ($matchedPaths === []) {
+                    $pathsHtml .= '<div class="small muted">Matched path text unavailable in this scan result.</div>';
+                } else {
+                    foreach ($matchedPaths as $path) {
+                        $fullPath = $expectedPackage !== '' ? $expectedPackage . '.' . ltrim($path, '.') : $path;
+                        $pathsHtml .= '<div class="mono small" style="overflow-wrap:anywhere">' . catalog_h($fullPath) . '</div>';
+                    }
+                    if ($matchedObjects > count($matchedPaths)) {
+                        $pathsHtml .= '<div class="small muted">+' . number_format($matchedObjects - count($matchedPaths))
+                            . ' more matching path' . (($matchedObjects - count($matchedPaths)) === 1 ? '' : 's') . '</div>';
+                    }
+                }
+                $pathsHtml .= '</div>';
             }
 
             $matchBits = [];
-            $bestMatches = max(0, (int)($candidate['best_same_file_matches'] ?? 0));
-            $matchingFiles = max(0, (int)($candidate['matching_files'] ?? 0));
             if (!empty($candidate['collision_suffix_match'])) {
                 $matchBits[] = 'copy suffix (1–9)';
             }
@@ -222,26 +242,26 @@ if ($selected !== null && (string)$selected['status'] === 'completed') {
             if ($similarity !== '') {
                 $matchBits[] = $similarity;
             }
-            $matchBits[] = $bestMatches . ' exact object-path match' . ($bestMatches === 1 ? '' : 'es') . ' in best evidence file';
-            $matchBits[] = $matchingFiles . ' importing evidence file' . ($matchingFiles === 1 ? '' : 's');
             $matchBits[] = '0 resolved inbound dependants';
+
+            $candidateNames = max(0, (int)($candidate['candidate_name_count'] ?? 0));
+            $candidateImports = max(0, (int)($candidate['candidate_import_count'] ?? 0));
+            $candidateExports = max(0, (int)($candidate['candidate_export_count'] ?? 0));
 
             echo '<tr>'
                 . '<td><strong>' . catalog_h(possible_misnamed_confidence_label($confidence)) . '</strong>'
                 . '<div class="small muted">score ' . (int)($candidate['score'] ?? 0) . '</div></td>'
                 . '<td><a href="file-examine.php?id=' . $fileId . '"><strong>'
                 . catalog_h((string)($candidate['candidate_original_name'] ?? '')) . '</strong></a>'
-                . '<div class="small muted">Current package</div>'
-                . '<div class="mono">' . catalog_h($currentPackage) . '</div>'
-                . '<div class="small muted">' . catalog_h((string)($candidate['game_name'] ?? '')) . '</div></td>'
+                . '<div class="small muted">' . catalog_h((string)($candidate['game_name'] ?? '')) . '</div>'
+                . '<div class="small muted">N / I / E: ' . number_format($candidateNames) . ' / '
+                . number_format($candidateImports) . ' / ' . number_format($candidateExports) . '</div></td>'
                 . '<td><div class="small muted">Unresolved imports expect</div>'
                 . '<div class="mono"><strong>' . catalog_h($expectedPackage) . '</strong></div>'
-                . '<div class="small muted">Expected filename: ' . catalog_h((string)($candidate['suggested_filename'] ?? '')) . '</div>'
-                . '<div class="small" style="margin-top:.35rem"><span class="mono">' . catalog_h($currentPackage)
-                . '</span> → <span class="mono"><strong>' . catalog_h($expectedPackage) . '</strong></span></div></td>'
-                . '<td>' . ($evidenceHtml !== '' ? $evidenceHtml : '<span class="muted">No retained evidence detail</span>')
-                . '</td>'
-                . '<td><div class="small">' . catalog_h(implode(' · ', $matchBits)) . '</div></td>'
+                . '<div class="small muted">Expected filename: ' . catalog_h((string)($candidate['suggested_filename'] ?? '')) . '</div></td>'
+                . '<td>' . ($evidenceHtml !== '' ? $evidenceHtml : '<span class="muted">No retained evidence detail</span>') . '</td>'
+                . '<td>' . ($pathsHtml !== '' ? $pathsHtml : '<span class="muted">No retained path detail</span>')
+                . '<div class="small muted" style="margin-top:.4rem">' . catalog_h(implode(' · ', $matchBits)) . '</div></td>'
                 . '<td><a class="button primary" href="file-examine.php?id=' . $fileId . '&rename_suggestions=1">Review / rename</a></td>'
                 . '</tr>';
         }
