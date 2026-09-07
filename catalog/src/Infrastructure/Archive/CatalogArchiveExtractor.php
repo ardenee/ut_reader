@@ -106,6 +106,28 @@ final class CatalogArchiveExtractor
             }
         }
 
+        if ($format === 'rar' && class_exists(\RarArchive::class)) {
+            try {
+                return $this->rarEntries($archivePath);
+            } catch (\Throwable $rarError) {
+                if (!$this->libarchiveAvailable()) {
+                    throw $rarError;
+                }
+                try {
+                    return $this->libarchiveEntries($archivePath, 'rar');
+                } catch (\Throwable $libarchiveError) {
+                    throw new \RuntimeException(
+                        'Archive "' . $archiveName . '" could not be opened as RAR. '
+                        . 'RarArchive: ' . $this->errorText($rarError) . ' '
+                        . 'libarchive: ' . $this->errorText($libarchiveError) . ' '
+                        . $this->formatDiagnostic($archivePath),
+                        (int)$libarchiveError->getCode(),
+                        $libarchiveError
+                    );
+                }
+            }
+        }
+
         $this->requireLibarchive($format);
         return $this->libarchiveEntries($archivePath, $format);
     }
@@ -142,6 +164,7 @@ final class CatalogArchiveExtractor
 
         return match ((string)($entry['backend'] ?? '')) {
             'zip' => $this->extractZipEntry($archivePath, $entry, $maxBytes),
+            'rar' => $this->extractRarEntry($archivePath, $entry, $maxBytes),
             'libarchive' => $this->extractLibarchiveEntry($archivePath, $format, $entry, $maxBytes),
             'umod' => (new CatalogUmodArchiveReader($this->config))->extractToTemp(
                 $archivePath,
@@ -211,6 +234,94 @@ final class CatalogArchiveExtractor
         }
 
         return $this->stableOrder($entries);
+    }
+
+    /** @return list<array{index:int,path:string,size:int,encrypted:bool,safe:bool,reason:string,backend:string,format:string}> */
+    private function rarEntries(string $archivePath): array
+    {
+        if (!class_exists(\RarArchive::class)) {
+            throw new \RuntimeException('Native PHP RAR support is unavailable.');
+        }
+        $archive = \RarArchive::open($archivePath);
+        if (!$archive instanceof \RarArchive) {
+            throw new \RuntimeException('Could not open RAR archive with the native PHP RAR extension.');
+        }
+
+        $entries = [];
+        try {
+            $nativeEntries = $archive->getEntries();
+            if (!is_array($nativeEntries)) {
+                throw new \RuntimeException('Native PHP RAR extension could not enumerate archive members.');
+            }
+            foreach (array_values($nativeEntries) as $index => $entry) {
+                if (!$entry instanceof \RarEntry) {
+                    continue;
+                }
+                $rawPath = trim((string)$entry->getName());
+                if ($rawPath === '' || (method_exists($entry, 'isDirectory') && $entry->isDirectory())) {
+                    continue;
+                }
+                [$safePath, $reason] = $this->safeMemberPath($rawPath);
+                $encrypted = method_exists($entry, 'isEncrypted') ? (bool)$entry->isEncrypted() : false;
+                $entries[] = [
+                    'index' => (int)$index,
+                    'path' => $safePath !== '' ? $safePath : str_replace('\\', '/', $rawPath),
+                    'size' => max(0, (int)$entry->getUnpackedSize()),
+                    'encrypted' => $encrypted,
+                    'safe' => $safePath !== '',
+                    'reason' => $reason,
+                    'backend' => 'rar',
+                    'format' => 'rar',
+                ];
+            }
+        } finally {
+            $archive->close();
+        }
+
+        return $this->stableOrder($entries);
+    }
+
+    /** @param array{index:int,path:string,size:int} $entry */
+    private function extractRarEntry(string $archivePath, array $entry, int $maxBytes): string
+    {
+        if (!class_exists(\RarArchive::class)) {
+            throw new \RuntimeException('Native PHP RAR support is unavailable.');
+        }
+        $archive = \RarArchive::open($archivePath);
+        if (!$archive instanceof \RarArchive) {
+            throw new \RuntimeException('Could not reopen RAR archive with the native PHP RAR extension.');
+        }
+
+        $temporary = $this->temporaryPath();
+        try {
+            $nativeEntries = $archive->getEntries();
+            $native = is_array($nativeEntries) ? ($nativeEntries[(int)$entry['index']] ?? null) : null;
+            if (!$native instanceof \RarEntry
+                || !hash_equals((string)$entry['path'], str_replace('\\', '/', (string)$native->getName()))) {
+                throw new \RuntimeException('RAR member identity changed between listing and extraction.');
+            }
+            if ((int)$native->getUnpackedSize() !== (int)$entry['size']) {
+                throw new \RuntimeException('RAR member size changed between listing and extraction.');
+            }
+            @unlink($temporary);
+            $ok = $native->extract(false, $temporary);
+            if ($ok !== true) {
+                throw new \RuntimeException('RarEntry::extract() returned failure.');
+            }
+            $this->verifyExtractedFile($temporary, (int)$entry['size'], $maxBytes);
+            return $temporary;
+        } catch (\Throwable $error) {
+            @unlink($temporary);
+            throw new \RuntimeException(
+                'RAR archive member "' . (string)$entry['path'] . '" could not be extracted by native PHP RAR '
+                . '(' . get_class($error) . ', declared ' . number_format((int)$entry['size']) . ' bytes): '
+                . $this->errorText($error),
+                (int)$error->getCode(),
+                $error
+            );
+        } finally {
+            $archive->close();
+        }
     }
 
     /** @return list<array{index:int,path:string,size:int,encrypted:bool,safe:bool,reason:string,backend:string,format:string}> */
