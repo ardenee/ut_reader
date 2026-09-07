@@ -97,6 +97,7 @@ $childStateQuery = $read('src/Infrastructure/Persistence/PdoWorkflowChildStateQu
 $projector = $read('src/Infrastructure/Jobs/CatalogBackgroundJobFileTreeProjector.php');
 $migration = $read('migrations/202608120001_job_workflow_recovery_logging.php');
 $worker = $read('src/Application/Jobs/JobWorker.php');
+$fingerprint = $read('src/Infrastructure/Jobs/CatalogWorkerCodeVersion.php');
 
 $record(
     'full_sync_browser_only_enqueues',
@@ -127,6 +128,13 @@ $record(
         && str_contains($factory, 'JobType::FULL_SYNC_DEPENDENCY_FILE => static fn() => new CatalogFullSyncUnitJobHandler')
         && str_contains($policy, 'self::FULL_SYNC_UNIT'),
     'Reimport and dependency work must be independently claimable durable units through the lazy worker factory.'
+);
+
+$record(
+    'worker_fingerprint_tracks_full_sync_handlers',
+    str_contains($fingerprint, '/src/Infrastructure/Jobs/CatalogFullSyncJobHandler.php')
+        && str_contains($fingerprint, '/src/Infrastructure/Jobs/CatalogFullSyncUnitJobHandler.php'),
+    'Detached workers must be considered stale whenever either Full Sync coordinator or unit execution semantics change.'
 );
 
 $record(
