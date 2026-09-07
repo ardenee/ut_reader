@@ -26,6 +26,7 @@ if (PHP_SAPI !== 'cli') {
 $root = dirname(__DIR__);
 require_once $root . '/lib/CatalogSupport.php';
 require_once $root . '/lib/CatalogRedirectArchive.php';
+require_once $root . '/lib/CatalogPakArchive.php';
 
 use UnrealDb\Catalog\Infrastructure\Archive\CatalogArchiveExtractor;
 use UnrealDb\Catalog\Infrastructure\Redirect\CatalogRedirectArchiveProcessor;
@@ -345,6 +346,136 @@ function recovery_try_direct_candidates(
     return null;
 }
 
+/** @param array<string,mixed> $file */
+function recovery_try_pak_member_source(
+    string $pakPath,
+    array $file,
+    array $config,
+    ?string $entryPath = null
+): ?array {
+    if (!is_file($pakPath) || !catalog_pak_archive_is_supported_filename(basename($pakPath))) {
+        return null;
+    }
+
+    $extracted = null;
+    try {
+        $extracted = catalog_pak_archive_extract_to_temp($config, $pakPath, basename($pakPath));
+        $wantedPath = $entryPath !== null
+            ? strtolower(recovery_normalize_relative($entryPath))
+            : '';
+        $wantedName = strtolower((string)($file['original_name'] ?? ''));
+        $wantedSize = max(0, (int)($file['file_size'] ?? 0));
+
+        foreach ((array)($extracted['files'] ?? []) as $entry) {
+            if (!is_array($entry)) {
+                continue;
+            }
+            $relative = recovery_normalize_relative((string)($entry['relative'] ?? ''));
+            $path = (string)($entry['path'] ?? '');
+            if ($path === '' || !is_file($path)) {
+                continue;
+            }
+            if ($wantedPath !== '' && strtolower($relative) !== $wantedPath) {
+                continue;
+            }
+            if ($wantedPath === '') {
+                if (strtolower(basename($relative)) !== $wantedName
+                    || (int)($entry['bytes'] ?? 0) !== $wantedSize) {
+                    continue;
+                }
+            }
+            $verified = recovery_verify_exact_file($path, $file);
+            if (!$verified['ok']) {
+                continue;
+            }
+            return [
+                'path' => realpath($pakPath) ?: $pakPath,
+                'kind' => 'pak_member',
+                'entry_path' => $relative,
+            ];
+        }
+    } catch (Throwable) {
+        return null;
+    } finally {
+        if (is_array($extracted) && isset($extracted['dir'])) {
+            catalog_pak_archive_delete_tree((string)$extracted['dir']);
+        }
+    }
+    return null;
+}
+
+/**
+ * Try a generic ZIP/7z/RAR/UMOD-family container by member basename+size.
+ * Exact MD5+SHA1 validation remains authoritative.
+ * @param array<int,array<string,mixed>> $missing
+ * @return array<int,array<string,mixed>>
+ */
+function recovery_try_generic_archive_candidates(
+    string $archivePath,
+    array $missing,
+    array $alreadyFound,
+    array $config
+): array {
+    if (!is_file($archivePath) || !CatalogArchiveExtractor::isArchiveName(basename($archivePath))) {
+        return [];
+    }
+
+    $wanted = [];
+    foreach ($missing as $index => $file) {
+        if (isset($alreadyFound[$index])) {
+            continue;
+        }
+        $key = strtolower((string)$file['original_name']) . "\0" . (string)max(0, (int)$file['file_size']);
+        $wanted[$key][] = $index;
+    }
+    if ($wanted === []) {
+        return [];
+    }
+
+    $extractor = new CatalogArchiveExtractor($config);
+    $found = [];
+    try {
+        foreach ($extractor->entries($archivePath, basename($archivePath)) as $entry) {
+            if (empty($entry['safe'])) {
+                continue;
+            }
+            $key = strtolower(basename((string)($entry['path'] ?? '')))
+                . "\0" . (string)max(0, (int)($entry['size'] ?? 0));
+            foreach ($wanted[$key] ?? [] as $index) {
+                if (isset($alreadyFound[$index]) || isset($found[$index])) {
+                    continue;
+                }
+                $temporary = '';
+                try {
+                    $temporary = $extractor->extractToTemp(
+                        $archivePath,
+                        basename($archivePath),
+                        $entry,
+                        max(1, (int)$missing[$index]['file_size'])
+                    );
+                    if (!recovery_verify_exact_file($temporary, $missing[$index])['ok']) {
+                        continue;
+                    }
+                    $found[$index] = [
+                        'path' => realpath($archivePath) ?: $archivePath,
+                        'kind' => 'archive_member',
+                        'entry_path' => (string)$entry['path'],
+                    ];
+                } catch (Throwable) {
+                    // Continue scanning other candidate members/containers.
+                } finally {
+                    if ($temporary !== '' && is_file($temporary)) {
+                        @unlink($temporary);
+                    }
+                }
+            }
+        }
+    } catch (Throwable) {
+        return [];
+    }
+    return $found;
+}
+
 /**
  * @param array<int,array<string,mixed>> $missing
  * @param array<int,list<string>> $sourceRelatives
@@ -460,6 +591,40 @@ function recovery_recursive_find(
                 );
             }
 
+            // If direct/raw/redirect lookup did not resolve the target, inspect
+            // container indexes too. This is intentionally last because opening
+            // every archive/PAK is more expensive than filename+size matching.
+            if (count($found) < count($missing) && CatalogArchiveExtractor::isArchiveName($entry->getFilename())) {
+                foreach (recovery_try_generic_archive_candidates($path, $missing, $found, $config) as $index => $archive) {
+                    $found[$index] = $archive;
+                    fwrite(
+                        STDERR,
+                        '[archive-scan] exact #' . (int)$missing[$index]['id'] . ' '
+                        . (string)$missing[$index]['original_name'] . ' <- ' . $path
+                        . '!/' . (string)$archive['entry_path'] . "\n"
+                    );
+                }
+            }
+
+            if (count($found) < count($missing) && catalog_pak_archive_is_supported_filename($entry->getFilename())) {
+                foreach ($missing as $index => $file) {
+                    if (isset($found[$index])) {
+                        continue;
+                    }
+                    $pak = recovery_try_pak_member_source($path, $file, $config);
+                    if ($pak === null) {
+                        continue;
+                    }
+                    $found[$index] = $pak;
+                    fwrite(
+                        STDERR,
+                        '[pak] exact #' . (int)$file['id'] . ' '
+                        . (string)$file['original_name'] . ' <- ' . $path
+                        . '!/' . (string)$pak['entry_path'] . "\n"
+                    );
+                }
+            }
+
             if (count($found) >= count($missing)) {
                 break;
             }
@@ -504,6 +669,36 @@ function recovery_materialize_source(array $source, array $file, array $config):
             throw new RuntimeException('Redirect recovery source no longer produces the exact catalog bytes.');
         }
         return ['path' => $temporary, 'temporary' => true];
+    }
+
+    if ($kind === 'pak_member') {
+        $entryPath = strtolower(recovery_normalize_relative((string)($source['entry_path'] ?? '')));
+        $extracted = catalog_pak_archive_extract_to_temp($config, $path, basename($path));
+        try {
+            foreach ((array)($extracted['files'] ?? []) as $entry) {
+                if (!is_array($entry)) {
+                    continue;
+                }
+                $relative = strtolower(recovery_normalize_relative((string)($entry['relative'] ?? '')));
+                $candidate = (string)($entry['path'] ?? '');
+                if ($relative !== $entryPath || $candidate === '' || !is_file($candidate)) {
+                    continue;
+                }
+                if (!recovery_verify_exact_file($candidate, $file)['ok']) {
+                    continue;
+                }
+                $temporary = tempnam(sys_get_temp_dir(), 'ue_recover_pak_');
+                if ($temporary === false || !@copy($candidate, $temporary)) {
+                    throw new RuntimeException('Could not materialize exact PAK member for recovery.');
+                }
+                return ['path' => $temporary, 'temporary' => true];
+            }
+            throw new RuntimeException('Recorded PAK member could not be materialized again.');
+        } finally {
+            if (isset($extracted['dir'])) {
+                catalog_pak_archive_delete_tree((string)$extracted['dir']);
+            }
+        }
     }
 
     if ($kind === 'archive_member') {
