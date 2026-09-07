@@ -78,6 +78,7 @@ $countQueryPath = $root . '/src/Infrastructure/Persistence/PdoBackgroundJobDispl
 $browserQueryPath = $root . '/src/Infrastructure/Persistence/PdoBackgroundJobBrowserQuery.php';
 $bulkActionPath = $root . '/src/Infrastructure/Persistence/PdoBackgroundJobBulkAction.php';
 $sequentialReaderPath = $root . '/src/Infrastructure/Archive/CatalogSequentialArchiveReader.php';
+$archiveExtractorPath = $root . '/src/Infrastructure/Archive/CatalogArchiveExtractor.php';
 $stagedPackagePath = $root . '/src/Infrastructure/Jobs/CatalogBucketStagedPackageJobHandler.php';
 $storageCleanupPath = $root . '/src/Infrastructure/Jobs/CatalogJobStorageCleanup.php';
 $outcomeProjectorPath = $root . '/src/Infrastructure/Jobs/CatalogArchiveJobOutcomeProjector.php';
@@ -92,6 +93,7 @@ $countQuery = (string)@file_get_contents($countQueryPath);
 $browserQuery = (string)@file_get_contents($browserQueryPath);
 $bulkAction = (string)@file_get_contents($bulkActionPath);
 $sequentialReader = (string)@file_get_contents($sequentialReaderPath);
+$archiveExtractor = (string)@file_get_contents($archiveExtractorPath);
 $stagedPackage = (string)@file_get_contents($stagedPackagePath);
 $storageCleanup = (string)@file_get_contents($storageCleanupPath);
 $outcomeProjector = (string)@file_get_contents($outcomeProjectorPath);
@@ -166,6 +168,17 @@ $record(
         && !str_contains($archiveRecoveryJs, 'new MutationObserver(() => window.queueMicrotask(syncRecoveryRows)).observe(tableBody'),
     'Retained archive row decoration must be idempotent and must not mutate textContent from a MutationObserver watching the same table subtree.'
 );
+$record(
+    'native_rar_decoder_is_preferred_when_available',
+    str_contains($archiveExtractor, "if ($format === 'rar' && class_exists(\\RarArchive::class))")
+        && str_contains($archiveExtractor, 'private function rarEntries(')
+        && str_contains($archiveExtractor, 'private function extractRarEntry(')
+        && str_contains($archiveExtractor, "'rar' => $this->extractRarEntry")
+        && str_contains($archiveExtractor, 'RarArchive:')
+        && str_contains($archiveExtractor, "return $this->libarchiveEntries($archivePath, 'rar');"),
+    'Historic Unreal Archive RAR members that libarchive cannot decode should use native ext-rar first when installed, while retaining libarchive as the fallback.'
+);
+
 $record(
     'rar_zero_byte_non_extracted_records_do_not_open_member_stream',
     str_contains($sequentialReader, '$declaredSize !== null && (int)$declaredSize === 0 && !$extract')
@@ -252,6 +265,7 @@ foreach ([
     $browserQueryPath,
     $bulkActionPath,
     $sequentialReaderPath,
+    $archiveExtractorPath,
     $stagedPackagePath,
     $storageCleanupPath,
     $outcomeProjectorPath,
