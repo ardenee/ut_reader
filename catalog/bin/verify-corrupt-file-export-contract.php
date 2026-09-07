@@ -137,6 +137,12 @@ $record(
 );
 
 $record(
+    'csv_export_sets_explicit_escape_parameter',
+    substr_count($export, "], ',', '"', '');") >= 2,
+    'PHP 8.5 requires fputcsv() callers to provide the escape parameter explicitly; corrupt-file CSV export must not emit E_DEPRECATED System Errors.'
+);
+
+$record(
     'both_operator_pages_expose_corrupt_export',
     str_contains($page, 'jobs-corrupt-export')
         && str_contains($jobsJs, 'corrupt-files-export.php?')
