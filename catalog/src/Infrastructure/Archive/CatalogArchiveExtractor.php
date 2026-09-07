@@ -48,15 +48,19 @@ final class CatalogArchiveExtractor
         return in_array(strtolower((string)pathinfo($name, PATHINFO_EXTENSION)), self::ARCHIVE_EXTENSIONS, true);
     }
 
-    /** @return array{zip:bool,libarchive:bool,rar:bool,seven_zip:bool,umod_family:bool} */
+    /** @return array{zip:bool,native_zip:bool,libarchive:bool,rar:bool,native_rar:bool,seven_zip:bool,umod_family:bool} */
     public static function runtimeCapabilities(): array
     {
         $libarchive = class_exists(\libarchive\Archive::class)
             && method_exists(\libarchive\Archive::class, 'currentEntryStream');
+        $nativeZip = class_exists(\ZipArchive::class);
+        $nativeRar = class_exists(\RarArchive::class);
         return [
-            'zip' => class_exists(\ZipArchive::class) || $libarchive,
+            'zip' => $nativeZip || $libarchive,
+            'native_zip' => $nativeZip,
             'libarchive' => $libarchive,
-            'rar' => class_exists(\RarArchive::class) || $libarchive,
+            'rar' => $nativeRar || $libarchive,
+            'native_rar' => $nativeRar,
             'seven_zip' => $libarchive,
             'umod_family' => true,
         ];
