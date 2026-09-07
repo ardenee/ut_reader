@@ -29,6 +29,7 @@ $phpFiles = [
     'src/Domain/Jobs/JobType.php',
     'src/Domain/Jobs/JobResourcePolicy.php',
     'src/Infrastructure/Jobs/CatalogJobWorkerFactory.php',
+    'src/Infrastructure/Jobs/CatalogWorkerCodeVersion.php',
     'src/Infrastructure/Jobs/CatalogMisnamedFileScanJobHandler.php',
     'src/Infrastructure/Maintenance/CatalogMisnamedFileDetector.php',
     'lib/CatalogNavigation.php',
@@ -65,6 +66,7 @@ $jobType = $read('src/Domain/Jobs/JobType.php');
 $resourcePolicy = $read('src/Domain/Jobs/JobResourcePolicy.php');
 $executionContext = $read('src/Application/Jobs/JobExecutionContext.php');
 $factory = $read('src/Infrastructure/Jobs/CatalogJobWorkerFactory.php');
+$fingerprint = $read('src/Infrastructure/Jobs/CatalogWorkerCodeVersion.php');
 $handler = $read('src/Infrastructure/Jobs/CatalogMisnamedFileScanJobHandler.php');
 $detector = $read('src/Infrastructure/Maintenance/CatalogMisnamedFileDetector.php');
 $page = $read('possible-misnamed-files.php');
@@ -121,7 +123,7 @@ $record(
 
 $record(
     'scan_policy_discards_old_loose_progress',
-    str_contains($handler, "POLICY_VERSION = 'community-path-name-copy-suffix-v4'")
+    str_contains($handler, "POLICY_VERSION = 'community-path-name-evidence-paths-v5'")
         && str_contains($handler, '$resume[\'policy_version\']')
         && str_contains($handler, "'policy_version' => self::POLICY_VERSION"),
     'A resumed job must discard candidates gathered before the current strict relative-path/name/orphan/copy-suffix policy.'
@@ -172,13 +174,37 @@ $record(
 );
 
 $record(
+    'matched_paths_and_file_counts_are_retained',
+    str_contains($detector, 'MAX_MATCHED_PATHS_PER_EVIDENCE = 12')
+        && str_contains($detector, 'path_term.value_prefix')
+        && str_contains($detector, "'matched_paths' => []")
+        && str_contains($detector, "'candidate_name_count'")
+        && str_contains($detector, "'candidate_import_count'")
+        && str_contains($detector, "'candidate_export_count'")
+        && str_contains($detector, "'name_count' => max(0, (int)(\$owner['name_count'] ?? 0))")
+        && str_contains($page, 'N / I / E:')
+        && str_contains($page, 'Matched path text unavailable in this scan result.')
+        && str_contains($page, '$expectedPackage . '.' . ltrim($path, '.')'),
+    'The completed scan must retain bounded exact matching paths plus Names/Imports/Exports counts for both candidate and evidence files, and the page must render them.'
+);
+
+$record(
+    'worker_fingerprint_tracks_misnamed_scan_code',
+    str_contains($fingerprint, '/src/Infrastructure/Jobs/CatalogMisnamedFileScanJobHandler.php')
+        && str_contains($fingerprint, '/src/Infrastructure/Maintenance/CatalogMisnamedFileDetector.php'),
+    'Detached workers must restart when the misnamed scan result schema or detector logic changes.'
+);
+
+$record(
     'operator_table_explains_current_expected_and_evidence_roles',
-    str_contains($page, 'current file/package → expected missing package')
-        && str_contains($page, 'Current file / package')
+    str_contains($page, 'Current file')
         && str_contains($page, 'Expected package identity')
         && str_contains($page, 'Evidence files')
+        && str_contains($page, 'Why it matches')
+        && str_contains($page, 'N / I / E')
         && str_contains($page, '0 resolved inbound dependants')
-        && !str_contains($page, '<th>Current dependants</th>'),
+        && !str_contains($page, '<th>Current dependants</th>')
+        && !str_contains($page, '<div class="small muted">Current package</div>'),
     'The results table must explain the candidate provider, expected missing identity and importing evidence without wasting a column on a value that is always zero.'
 );
 
