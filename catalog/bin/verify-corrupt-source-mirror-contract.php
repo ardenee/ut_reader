@@ -50,7 +50,7 @@ $record(
 $record(
     'archive_runtime_capabilities_are_reported',
     str_contains($source, "'archive_capabilities' => CatalogArchiveExtractor::runtimeCapabilities()"),
-    'The diagnostic must report whether native ZIP/RAR/libarchive decoders are actually available on the live PHP runtime.'
+    'The diagnostic must report archive decoder capabilities from the live PHP runtime.'
 );
 
 $record(
