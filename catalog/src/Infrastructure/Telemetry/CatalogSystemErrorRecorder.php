@@ -82,6 +82,48 @@ final class CatalogSystemErrorRecorder
     }
 
     /**
+     * Resolve obsolete background-job failures for one durable job after current
+     * code has deliberately converted that same job into a non-failing retained
+     * outcome. This does not hide the package condition: callers may immediately
+     * record a more accurate warning under a dedicated source/error type.
+     */
+    public static function resolveBackgroundJob(int $jobId, string $note): void
+    {
+        if ($jobId < 1 || self::$busy) {
+            return;
+        }
+        $note = trim($note);
+        if ($note === '') {
+            $note = 'Background job completed successfully under current code.';
+        }
+
+        self::$busy = true;
+        try {
+            $db = self::connection();
+            if (!$db instanceof PDO || !self::tableAvailable($db)) {
+                return;
+            }
+            try {
+                $now = gmdate('Y-m-d H:i:s');
+                $statement = $db->prepare(
+                    'UPDATE ue_system_errors SET status="resolved",resolved_at=?,resolved_by=NULL,resolution_note=? '
+                    . 'WHERE status="open" AND source_kind="background-job" '
+                    . 'AND JSON_VALID(context_json) '
+                    . 'AND CAST(JSON_UNQUOTE(JSON_EXTRACT(context_json,"$.job_id")) AS UNSIGNED)=?'
+                );
+                $statement->execute([$now, $note, $jobId]);
+            } catch (Throwable $error) {
+                error_log(
+                    '[UnrealDB system error resolve] Could not resolve background job #'
+                    . $jobId . ': ' . $error->getMessage()
+                );
+            }
+        } finally {
+            self::$busy = false;
+        }
+    }
+
+    /**
      * Resolve only the operator error that represents an unreadable format-2
      * provider after a targeted repair has positively verified that provider.
      */
