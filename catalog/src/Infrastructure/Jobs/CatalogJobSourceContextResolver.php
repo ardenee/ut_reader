@@ -73,6 +73,7 @@ final class CatalogJobSourceContextResolver
             'job_type' => $jobType,
         ];
         $this->copyPayloadIdentity($context, 'job', $payload);
+        $this->applyVerifiedFileIdentity($context, $payload);
         if (in_array($jobType, [
             JobType::PROCESS_BUCKET_UPLOAD,
             JobType::PROCESS_BUCKET_ARCHIVE,
@@ -141,6 +142,56 @@ final class CatalogJobSourceContextResolver
         }
 
         return $this->withoutEmptyValues($context);
+    }
+
+    /** @param array<string,mixed> $context @param array<string,mixed> $payload */
+    private function applyVerifiedFileIdentity(array &$context, array $payload): void
+    {
+        $fileId = max(
+            0,
+            (int)($payload['file_id'] ?? 0),
+            (int)($payload['affected_file_id'] ?? 0)
+        );
+        if ($fileId < 1) {
+            return;
+        }
+
+        try {
+            $statement = $this->db->prepare(
+                'SELECT f.id,f.game_id,f.original_name,f.source_relative_path,f.relative_path,f.file_size,'
+                . 'f.md5,f.sha1,f.package_version,f.licensee_version,f.detected_engine_key,'
+                . 'f.detected_package_version,f.detected_licensee_version,g.name game_name '
+                . 'FROM ue_files f LEFT JOIN ue_games g ON g.id=f.game_id WHERE f.id=? LIMIT 1'
+            );
+            $statement->execute([$fileId]);
+            $file = $statement->fetch(PDO::FETCH_ASSOC);
+            if (!is_array($file)) {
+                $context['file_id'] = $fileId;
+                $context['file_lookup_error'] = 'Verified file row is no longer retained.';
+                return;
+            }
+
+            $context['file_id'] = (int)$file['id'];
+            $context['game_id'] = (int)$file['game_id'];
+            $context['game_name'] = (string)($file['game_name'] ?? '');
+            $context['file_name'] = (string)$file['original_name'];
+            $context['original_name'] = (string)$file['original_name'];
+            $context['source_relative_path'] = (string)($file['source_relative_path'] ?? '');
+            $context['canonical_relative_path'] = (string)($file['relative_path'] ?? '');
+            $context['file_size'] = max(0, (int)($file['file_size'] ?? 0));
+            $context['md5'] = strtolower(trim((string)($file['md5'] ?? '')));
+            $context['sha1'] = strtolower(trim((string)($file['sha1'] ?? '')));
+            $context['package_version'] = (int)($file['package_version'] ?? 0);
+            $context['licensee_version'] = (int)($file['licensee_version'] ?? 0);
+            $context['detected_engine_key'] = (string)($file['detected_engine_key'] ?? '');
+            $context['detected_package_version'] = (int)($file['detected_package_version'] ?? 0);
+            $context['detected_licensee_version'] = (int)($file['detected_licensee_version'] ?? 0);
+        } catch (Throwable $error) {
+            $context['file_id'] = $fileId;
+            $context['file_lookup_error'] = trim($error->getMessage()) !== ''
+                ? trim($error->getMessage())
+                : get_class($error);
+        }
     }
 
     /** @param array<string,mixed> $context @param array<string,mixed> $payload */
