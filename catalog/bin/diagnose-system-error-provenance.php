@@ -51,14 +51,73 @@ try {
             }
         }
 
+        $jobId = max(0, (int)($context['job_id'] ?? 0));
+        if ($jobId > 0 && max(0, (int)($context['file_id'] ?? 0)) < 1) {
+            try {
+                $jobStatement = $db->prepare(
+                    'SELECT job_type,payload_json FROM ue_background_jobs WHERE id=? LIMIT 1'
+                );
+                $jobStatement->execute([$jobId]);
+                $job = $jobStatement->fetch(PDO::FETCH_ASSOC);
+                if (is_array($job)) {
+                    $payload = json_decode((string)($job['payload_json'] ?? ''), true);
+                    $payload = is_array($payload) ? $payload : [];
+                    $fileId = max(
+                        0,
+                        (int)($payload['file_id'] ?? 0),
+                        (int)($payload['affected_file_id'] ?? 0)
+                    );
+                    if ($fileId > 0) {
+                        $fileStatement = $db->prepare(
+                            'SELECT f.id,f.game_id,f.original_name,f.source_relative_path,f.relative_path,f.file_size,'
+                            . 'f.md5,f.sha1,f.package_version,f.licensee_version,f.detected_engine_key,'
+                            . 'f.detected_package_version,f.detected_licensee_version,g.name game_name '
+                            . 'FROM ue_files f LEFT JOIN ue_games g ON g.id=f.game_id WHERE f.id=? LIMIT 1'
+                        );
+                        $fileStatement->execute([$fileId]);
+                        $file = $fileStatement->fetch(PDO::FETCH_ASSOC);
+                        if (is_array($file)) {
+                            $context['file_id'] = (int)$file['id'];
+                            $context['game_id'] = (int)$file['game_id'];
+                            $context['game_name'] = (string)($file['game_name'] ?? '');
+                            $context['file_name'] = (string)$file['original_name'];
+                            $context['original_name'] = (string)$file['original_name'];
+                            $context['source_relative_path'] = (string)($file['source_relative_path'] ?? '');
+                            $context['canonical_relative_path'] = (string)($file['relative_path'] ?? '');
+                            $context['file_size'] = max(0, (int)($file['file_size'] ?? 0));
+                            $context['md5'] = (string)($file['md5'] ?? '');
+                            $context['sha1'] = (string)($file['sha1'] ?? '');
+                            $context['package_version'] = (int)($file['package_version'] ?? 0);
+                            $context['licensee_version'] = (int)($file['licensee_version'] ?? 0);
+                            $context['detected_engine_key'] = (string)($file['detected_engine_key'] ?? '');
+                            $context['detected_package_version'] = (int)($file['detected_package_version'] ?? 0);
+                            $context['detected_licensee_version'] = (int)($file['detected_licensee_version'] ?? 0);
+                        }
+                    }
+                }
+            } catch (Throwable) {
+                // Diagnostic enrichment is best-effort.
+            }
+        }
+
         $out[] = [
             'id' => (int)$row['id'],
             'status' => (string)$row['status'],
             'severity' => (string)$row['severity'],
             'source_kind' => (string)$row['source_kind'],
             'error_type' => (string)$row['error_type'],
+            'file_id' => (int)($context['file_id'] ?? 0),
+            'game_id' => (int)($context['game_id'] ?? 0),
+            'game_name' => (string)($context['game_name'] ?? ''),
             'file_name' => (string)($context['file_name'] ?? $context['original_name'] ?? $context['job_original_name'] ?? ''),
             'source_relative_path' => (string)($context['source_relative_path'] ?? $context['job_source_relative_path'] ?? ''),
+            'canonical_relative_path' => (string)($context['canonical_relative_path'] ?? ''),
+            'file_size' => (int)($context['file_size'] ?? 0),
+            'package_version' => (int)($context['package_version'] ?? 0),
+            'licensee_version' => (int)($context['licensee_version'] ?? 0),
+            'detected_engine_key' => (string)($context['detected_engine_key'] ?? ''),
+            'detected_package_version' => (int)($context['detected_package_version'] ?? 0),
+            'detected_licensee_version' => (int)($context['detected_licensee_version'] ?? 0),
             'job_id' => (int)($context['job_id'] ?? 0),
             'parent_job_id' => (int)($context['parent_job_id'] ?? 0),
             'job_type' => (string)($context['job_type'] ?? ''),
