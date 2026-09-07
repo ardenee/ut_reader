@@ -110,6 +110,23 @@ $record(
 );
 
 $record(
+    'full_sync_invalid_packages_are_deterministic_corrupt_content',
+    substr_count($policy, 'JobType::FULL_SYNC_FILE') >= 3
+        && str_contains($policy, 'public static function isInvalidPackageContentText'),
+    'A Full Sync child that proves its existing verified bytes structurally invalid must not burn automatic retries and must be exportable as corrupt content; explicit administrator revalidation remains available after reader fixes.'
+);
+
+$record(
+    'full_sync_corrupt_export_resolves_verified_storage',
+    str_contains($query, "use UnrealDb\\Catalog\\Infrastructure\\Maintenance\\CatalogFileMaintenanceSupport;")
+        && str_contains($query, "\$context['file_name']")
+        && str_contains($query, "\$context['source_relative_path']")
+        && str_contains($query, 'CatalogFileMaintenanceSupport::storagePath')
+        && str_contains($query, "'verified_storage'"),
+    'Corrupt Full Sync children must export the actual verified file name/source provenance and canonical copy path.'
+);
+
+$record(
     'zero_to_space_corruption_is_exportable_corrupt_content',
     str_contains(
         $policy,
