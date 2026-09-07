@@ -101,6 +101,7 @@ $record(
         && str_contains($unit, "'status' => 'retained_reader_incompatible'")
         && str_contains($unit, "'error_type' => 'FullSyncReaderIncompatiblePackage'")
         && str_contains($unit, "'disposition' => 'retained_reader_incompatible'")
+        && str_contains($unit, 'CatalogSystemErrorRecorder::resolveBackgroundJob(')
         && str_contains($unit, 'existing verified identity and metadata'),
     'A present package that the current reader cannot parse must retain its verified identity/metadata, remain visible as a System Error, and not block the whole Full Sync workflow.'
 );
