@@ -123,7 +123,7 @@ $record(
 
 $record(
     'scan_policy_discards_old_loose_progress',
-    str_contains($handler, "POLICY_VERSION = 'community-path-name-evidence-paths-v5'")
+    str_contains($handler, "POLICY_VERSION = 'community-path-name-compact-evidence-v6'")
         && str_contains($handler, '$resume[\'policy_version\']')
         && str_contains($handler, "'policy_version' => self::POLICY_VERSION"),
     'A resumed job must discard candidates gathered before the current strict relative-path/name/orphan/copy-suffix policy.'
@@ -176,16 +176,15 @@ $record(
 $record(
     'matched_paths_and_file_counts_are_retained',
     str_contains($detector, 'MAX_MATCHED_PATHS_PER_EVIDENCE = 12')
-        && str_contains($detector, 'path_term.value_prefix')
+        && str_contains($detector, 'COALESCE(m.name_count,f.name_count,0)')
+        && str_contains($detector, 'COALESCE(m.import_count,f.import_count,0)')
+        && str_contains($detector, 'COALESCE(m.export_count,f.export_count,0)')
+        && str_contains($detector, 'required_object_term_id')
+        && str_contains($detector, '$requiredObjectPaths')
         && str_contains($detector, "'matched_paths' => []")
-        && str_contains($detector, "'candidate_name_count'")
-        && str_contains($detector, "'candidate_import_count'")
-        && str_contains($detector, "'candidate_export_count'")
-        && str_contains($detector, "'name_count' => max(0, (int)(\$owner['name_count'] ?? 0))")
-        && str_contains($page, 'N / I / E:')
-        && str_contains($page, 'Matched path text unavailable in this scan result.')
-        && str_contains($page, "\$expectedPackage . '.' . ltrim(\$path, '.')"),
-    'The completed scan must retain bounded exact matching paths plus Names/Imports/Exports counts for both candidate and evidence files, and the page must render them.'
+        && str_contains($page, 'title="Names / Imports / Exports"')
+        && str_contains($page, 'Matched path text unavailable in this scan result.'),
+    'The completed scan must retain bounded exact matching paths and use authoritative compact Names/Imports/Exports counts, with dependency-path fallback when export local-path text is unavailable.'
 );
 
 $record(
@@ -196,16 +195,16 @@ $record(
 );
 
 $record(
-    'operator_table_explains_current_expected_and_evidence_roles',
-    str_contains($page, 'Current file')
-        && str_contains($page, 'Expected package identity')
-        && str_contains($page, 'Evidence files')
-        && str_contains($page, 'Why it matches')
-        && str_contains($page, 'N / I / E')
-        && str_contains($page, '0 resolved inbound dependants')
-        && !str_contains($page, '<th>Current dependants</th>')
-        && !str_contains($page, '<div class="small muted">Current package</div>'),
-    'The results table must explain the candidate provider, expected missing identity and importing evidence without wasting a column on a value that is always zero.'
+    'operator_table_is_compact_and_path_focused',
+    str_contains($page, '<th>Current file</th>')
+        && str_contains($page, '<th>Evidence files</th>')
+        && str_contains($page, '<th>Why it matches</th>')
+        && !str_contains($page, '<th>Expected package identity</th>')
+        && !str_contains($page, 'N / I / E:')
+        && str_contains($page, 'title="Names / Imports / Exports"')
+        && str_contains($page, '$evidenceNumber')
+        && str_contains($page, '0 resolved inbound dependants'),
+    'The results table must omit the redundant identity column, show bare Names/Imports/Exports counts, and align evidence files to their exact matching paths by number.'
 );
 
 $record(
