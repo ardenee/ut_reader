@@ -504,7 +504,7 @@ INSERT INTO ue_federation_settings(setting_name, setting_value) VALUES
 ('require_https_for_remote_sites', '1'), ('api_nonce_ttl_seconds', '300'), ('transfer_token_ttl_seconds', '600'),
 ('log_retention_days', '90'), ('join_requests_enabled', '1'), ('join_claim_token_ttl_seconds', '86400'),
 ('main_parent_url', 'https://utreader/catalog'), ('main_parent_join_request_id', ''), ('main_parent_join_request_token', ''),
-('main_parent_join_status', 'none'), ('public_download_mode', 'local_direct'), ('external_mirror_auto_queue', '1'),
+('main_parent_join_status', 'none'), ('public_download_mode', 'external_mirror'), ('external_mirror_auto_queue', '1'),
 ('external_mirror_expiry_days', '7'), ('external_mirror_require_admin_approval', '0'), ('external_mirror_max_file_size_mb', '1024');
 
 INSERT INTO ue_external_download_providers(provider_key, provider_name, provider_class, is_active, config_json, max_file_size_mb, expiry_days, priority, notes)
