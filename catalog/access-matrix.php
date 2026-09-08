@@ -42,6 +42,19 @@ function access_matrix_time(mixed $value): string
     return $value === '' ? '' : substr($value, 0, 19);
 }
 
+function access_matrix_time_html(mixed $value): string
+{
+    $value = access_matrix_time($value);
+    if ($value === '') {
+        return '';
+    }
+
+    $first = substr($value, 0, 16);
+    $seconds = substr($value, 16, 3);
+    return catalog_h($first)
+        . ($seconds !== '' ? '<br><span class="access-matrix-seconds">' . catalog_h($seconds) . '</span>' : '');
+}
+
 function access_matrix_logged_link(mixed $path, ?string $label = null, string $class = ''): string
 {
     $path = trim((string)$path);
@@ -417,7 +430,11 @@ try {
         . '.access-matrix-table .am-route{width:auto;min-width:240px;overflow-wrap:anywhere}'
         . '.access-matrix-table .am-agent{width:28ch;min-width:28ch;max-width:28ch}'
         . '.access-matrix-agent-text{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
-        . '.access-matrix-ip-actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:5px}'
+        . '.access-matrix-ip-line{display:flex;align-items:center;justify-content:space-between;gap:8px}'
+        . '.access-matrix-ip-value{display:inline-flex;align-items:center;gap:2px}'
+        . '.access-matrix-ip-actions{display:inline-flex;gap:5px;align-items:center;margin-left:auto}'
+        . '.access-matrix-ip-actions .ui-button{min-width:30px;padding:2px 7px;line-height:1.2}'
+        . '.access-matrix-seconds{display:inline-block;color:var(--muted);padding-left:1ch}'
         . '.access-country-flag{font-size:1.2rem;line-height:1;vertical-align:-1px;cursor:help}'
         . '.access-matrix-actions,.access-block-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}'
         . '.access-block-actions .grow{flex:1;min-width:240px}'
@@ -678,7 +695,7 @@ try {
                     . '" data-world-map-country-name="' . catalog_h($countryName !== '' ? $countryName : $countryCode) . '"'
                 : '';
             echo '<tr' . $mapAttributes . '><td class="am-check"><input class="access-matrix-check" type="checkbox" name="ids[]" value="' . (int)$row['id'] . '"></td>'
-                . '<td class="mono small am-time">' . catalog_h(access_matrix_time($row['occurred_at'])) . '</td>'
+                . '<td class="mono small am-time">' . access_matrix_time_html($row['occurred_at']) . '</td>'
                 . '<td class="am-type"><span class="dep">' . catalog_h((string)$row['event_type']) . '</span></td>'
                 . '<td class="am-page"><strong class="mono small">' . access_matrix_logged_link((string)$row['request_path'], (string)$row['page_key']) . '</strong>'
                 . '<br><span class="mono small muted">' . access_matrix_logged_link((string)$row['request_path']) . '</span>';
@@ -714,20 +731,24 @@ try {
                 ? '<span class="access-country-flag" role="img" aria-label="' . catalog_h($countryName !== '' ? $countryName : $countryCode)
                     . '" title="' . catalog_h($countryCode) . '">' . catalog_h($countryFlag) . '</span> '
                 : '';
-            echo '</td><td class="mono am-ip">' . $countryFlagHtml . catalog_h($ipText)
-                . ($isBlockedIp ? '<br><span class="dep missing">site blocked</span>' : '')
-                . ((string)($row['username'] ?? '') !== '' ? '<br><span class="small">' . catalog_h((string)$row['username']) . '</span>' : '')
-                . $sessionLink;
+            echo '</td><td class="mono am-ip"><div class="access-matrix-ip-line"><span class="access-matrix-ip-value">'
+                . $countryFlagHtml . catalog_h($ipText) . '</span>';
             if ($ipText !== '') {
-                echo '<div class="access-matrix-ip-actions">';
+                echo '<span class="access-matrix-ip-actions">';
                 if (!$isBlockedIp) {
                     echo '<button class="ui-button ui-button--danger ui-button--sm" type="submit" name="block_event_id" value="' . (int)$row['id']
-                        . '" formnovalidate onclick="return confirm(\'Block ' . catalog_h($ipText) . ' from the entire site?\')">Blacklist IP</button>';
+                        . '" formnovalidate title="Blacklist IP" aria-label="Blacklist ' . catalog_h($ipText)
+                        . '" onclick="return confirm(\'Block ' . catalog_h($ipText) . ' from the entire site?\')">XX</button>';
                 } else {
-                    echo '<a class="ui-button ui-button--secondary ui-button--sm" href="site-blacklist.php?q=' . rawurlencode($ipText) . '">View blacklist</a>';
+                    echo '<a class="ui-button ui-button--secondary ui-button--sm" href="site-blacklist.php?q=' . rawurlencode($ipText)
+                        . '" title="View blacklist" aria-label="View blacklist for ' . catalog_h($ipText) . '">View</a>';
                 }
-                echo '</div>';
+                echo '</span>';
             }
+            echo '</div>'
+                . ($isBlockedIp ? '<span class="dep missing">site blocked</span>' : '')
+                . ((string)($row['username'] ?? '') !== '' ? '<br><span class="small">' . catalog_h((string)$row['username']) . '</span>' : '')
+                . $sessionLink;
             $userAgent = (string)$row['user_agent'];
             echo '</td><td class="mono small am-route">From: ' . access_matrix_logged_link((string)($row['referrer_path'] ?? ''))
                 . '<br>To: ' . access_matrix_logged_link((string)($row['target_path'] ?? '')) . '</td>'
