@@ -40,6 +40,18 @@ $record(
 );
 
 $record(
+    'download_logs_table_is_compact_and_primary_content_gets_space',
+    str_contains($logs, '.download-log-table{min-width:1080px;table-layout:auto}')
+        && str_contains($logs, '.download-log-time,.download-log-status,.download-log-ip,.download-log-country,.download-log-transfer,.download-log-job')
+        && str_contains($logs, 'width:1%;white-space:nowrap')
+        && str_contains($logs, '.download-log-file{width:auto;min-width:260px')
+        && str_contains($logs, '.download-log-agent{width:30ch;min-width:30ch;max-width:30ch}')
+        && str_contains($logs, 'download-log-agent-text')
+        && str_contains($logs, 'text-overflow:ellipsis'),
+    'Download Logs metadata columns must stay compact while File/package gets remaining width and long user agents are truncated instead of making rows enormous.'
+);
+
+$record(
     'download_logs_accept_partial_ip',
     str_contains($logs, 'INET6_NTOA(')
         && str_contains($logs, 'LIKE ? ESCAPE')
