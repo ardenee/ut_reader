@@ -1,9 +1,10 @@
 <?php
 /**
- * UnrealDB PHP File Audit
- * Purpose: Handles generated package job creation, polling and cancellation.
- * Why: The HTTP contract remains here while durable-job authorization, package policy and worker lifecycle are shared services.
- * Role: Presentation/action endpoint for generated package jobs; archive writers are never loaded by this endpoint.
+ * Generated-package job creation, lookup, polling and cancellation.
+ *
+ * Interactive package builds use a dedicated durable queue so catalogue imports
+ * and dependency scans cannot starve them. Equivalent active/completed builds are
+ * reused instead of being generated more than once.
  */
 declare(strict_types=1);
 
@@ -19,9 +20,12 @@ require_once __DIR__ . '/lib/DownloadActivity.php';
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Downloads\CatalogGeneratedPackageDescriptor;
 use UnrealDb\Catalog\Infrastructure\Downloads\CatalogPackageExportSettingsService;
+use UnrealDb\Catalog\Infrastructure\Downloads\PdoCatalogPackageExportPlanner;
+use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorker;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogGeneratedPackageJobAccess;
-use UnrealDb\Catalog\Infrastructure\Jobs\CatalogQueueWorkerStarter;
+use UnrealDb\Catalog\Infrastructure\Jobs\CatalogGeneratedPackageQueue;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
+use UnrealDb\Catalog\Infrastructure\Storage\GeneratedPackageStore;
 
 function generated_package_reply(array $payload, int $status = 200): never
 {
@@ -41,20 +45,128 @@ function generated_package_authorized_job(CatalogGeneratedPackageJobAccess $acce
     if ($jobId < 1) {
         return null;
     }
-    $token = (string)($_SESSION['generated_package_jobs'][(string)$jobId] ?? '');
-    if ($token === '') {
+    $grant = (string)($_SESSION['generated_package_jobs'][(string)$jobId] ?? '');
+    if ($grant === '') {
         return null;
     }
-    return $access->findAuthorized($jobId, $token);
+    return $access->findAuthorized($jobId, $grant);
+}
+
+/** @param array<string,mixed> $job */
+function generated_package_grant_job(array $job, string $buildKey, ?string $token = null): void
+{
+    if (!isset($_SESSION['generated_package_jobs']) || !is_array($_SESSION['generated_package_jobs'])) {
+        $_SESSION['generated_package_jobs'] = [];
+    }
+
+    $jobId = max(0, (int)($job['id'] ?? 0));
+    if ($jobId < 1) {
+        return;
+    }
+
+    $_SESSION['generated_package_jobs'][(string)$jobId] = $token !== null && $token !== ''
+        ? $token
+        : 'build:' . strtolower($buildKey);
+
+    if (count($_SESSION['generated_package_jobs']) > 30) {
+        $_SESSION['generated_package_jobs'] = array_slice($_SESSION['generated_package_jobs'], -30, null, true);
+    }
+}
+
+/**
+ * @param array<string,mixed> $settings
+ * @param array<string,mixed> $game
+ * @param array<string,mixed> $file
+ * @return array<string,mixed>
+ */
+function generated_package_request(
+    CatalogPackageExportSettingsService $packageSettings,
+    array $settings,
+    array $game,
+    array $file,
+    array $input
+): array {
+    $format = strtolower(trim((string)(
+        $input['format'] ?? $packageSettings->defaultFormat($game, $settings)
+    )));
+    if (!in_array($format, $packageSettings->availableFormats($game, $settings), true)) {
+        generated_package_reply(['ok' => false, 'error' => 'The selected package format is not available for this game.'], 400);
+    }
+
+    $name = substr(trim((string)($input['name'] ?? '')), 0, 160);
+    if ($name === '') {
+        $name = catalog_clean_unreal_package_stem((string)$file['package_name']);
+    }
+    $version = CatalogGeneratedPackageDescriptor::generatedVersion($input['version'] ?? '1.0');
+    $author = substr(trim((string)($input['author'] ?? $settings['default_author'])), 0, 160);
+    $includeDependencies = (string)($input['dependencies'] ?? '1') !== '0';
+    $allowIncompleteRequested = (string)($input['allow_incomplete'] ?? '0') === '1';
+    $allowIncomplete = !empty($settings['allow_incomplete']) && $allowIncompleteRequested;
+
+    $identity = [
+        'file_id' => (int)$file['id'],
+        'format' => $format,
+        'include_dependencies' => $includeDependencies,
+        'allow_incomplete' => $allowIncomplete,
+        'name' => $name,
+        'version' => $version,
+        'author' => $author,
+    ];
+    $buildKey = hash(
+        'sha256',
+        json_encode($identity, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR)
+    );
+
+    return $identity + ['build_key' => $buildKey];
+}
+
+/** @param array<string,mixed> $job */
+function generated_package_completed_artifact_valid(array $job, array $config): bool
+{
+    if ((string)($job['status'] ?? '') !== 'completed') {
+        return false;
+    }
+    $result = json_decode((string)($job['result_json'] ?? ''), true);
+    if (!is_array($result)) {
+        return false;
+    }
+    $expires = strtotime((string)($result['expires_at'] ?? ''));
+    if ($expires === false || $expires <= time()) {
+        return false;
+    }
+    $store = new GeneratedPackageStore((string)($config['storage_path'] ?? ''));
+    $path = $store->resolve((string)($result['artifact_name'] ?? ''));
+    if ($path === null) {
+        return false;
+    }
+    $size = filesize($path);
+    return $size !== false && (int)$size === (int)($result['artifact_size'] ?? -1);
+}
+
+/** @return array<string,mixed>|null */
+function generated_package_reusable(
+    CatalogGeneratedPackageJobAccess $access,
+    string $queueName,
+    string $buildKey,
+    array $config
+): ?array {
+    foreach ($access->reusableCandidates($queueName, $buildKey) as $job) {
+        $status = (string)($job['status'] ?? '');
+        if (in_array($status, ['queued', 'running'], true)) {
+            return $job;
+        }
+        if ($status === 'completed' && generated_package_completed_artifact_valid($job, $config)) {
+            return $job;
+        }
+    }
+    return null;
 }
 
 /** @return array{worker:array<string,mixed>|null,worker_error:string} */
 function generated_package_start_worker(
-    PDO $db,
     array $config,
     string $queueName,
-    int $jobId,
-    ?int $userId
+    int $jobId
 ): array {
     if (!isset($_SESSION['generated_package_worker_attempts']) || !is_array($_SESSION['generated_package_worker_attempts'])) {
         $_SESSION['generated_package_worker_attempts'] = [];
@@ -67,14 +179,22 @@ function generated_package_start_worker(
     }
     $_SESSION['generated_package_worker_attempts'][(string)$jobId] = $now;
 
-    $state = (new CatalogQueueWorkerStarter($db, $config))->start($queueName, true, $userId);
-    if ((string)$state['worker_error'] !== '') {
-        error_log('[UnrealDB package worker launch] job #' . $jobId . ': ' . (string)$state['worker_error']);
+    try {
+        $launcher = new CatalogDetachedWorker($config);
+        $state = $launcher->start(
+            $queueName,
+            10000,
+            CatalogGeneratedPackageQueue::workerCount($config)
+        );
+        return [
+            'worker' => is_array($state['worker'] ?? null) ? $state['worker'] : null,
+            'worker_error' => '',
+        ];
+    } catch (Throwable $error) {
+        $message = trim($error->getMessage()) !== '' ? trim($error->getMessage()) : get_class($error);
+        error_log('[UnrealDB package worker launch] job #' . $jobId . ': ' . $message);
+        return ['worker' => null, 'worker_error' => $message];
     }
-    return [
-        'worker' => is_array($state['worker'] ?? null) ? $state['worker'] : null,
-        'worker_error' => (string)($state['worker_error'] ?? ''),
-    ];
 }
 
 try {
@@ -83,7 +203,7 @@ try {
     $db = catalog_db($config);
     $queue = new PdoJobQueue($db);
     $access = new CatalogGeneratedPackageJobAccess($db);
-    $queueName = trim((string)($config['queue']['name'] ?? 'catalog')) ?: 'catalog';
+    $queueName = CatalogGeneratedPackageQueue::name($config);
     $userId = isset($_SESSION['user']['id']) ? (int)$_SESSION['user']['id'] : null;
 
     if ($_SERVER['REQUEST_METHOD'] === 'GET') {
@@ -92,16 +212,18 @@ try {
         if (!$job) {
             generated_package_reply(['ok' => false, 'error' => 'The package generation job is unavailable in this browser session.'], 404);
         }
+
         $workerState = ['worker' => null, 'worker_error' => ''];
-        if (in_array((string)$job['status'], ['queued', 'retry'], true)) {
-            $workerState = generated_package_start_worker($db, $config, $queueName, $jobId, $userId);
+        if ((string)$job['status'] === 'queued') {
+            $workerState = generated_package_start_worker($config, (string)$job['queue_name'], $jobId);
         }
+
         foreach (['progress_json' => 'progress', 'result_json' => 'result'] as $source => $target) {
             $decoded = !empty($job[$source]) ? json_decode((string)$job[$source], true) : null;
             $job[$target] = is_array($decoded) ? $decoded : null;
             unset($job[$source]);
         }
-        unset($job['payload_json'], $job['payload'], $job['queue_name']);
+        unset($job['payload_json'], $job['payload']);
         if (is_array($job['result'] ?? null) && !empty($job['result']['expires_at'])) {
             $expires = strtotime((string)$job['result']['expires_at']);
             $job['result']['expired'] = $expires !== false && $expires <= time();
@@ -126,7 +248,7 @@ try {
         generated_package_reply(['ok' => true, 'job_id' => $jobId, 'status' => $status]);
     }
 
-    if ($action !== 'enqueue') {
+    if (!in_array($action, ['enqueue', 'lookup'], true)) {
         generated_package_reply(['ok' => false, 'error' => 'Unsupported package generation action.'], 400);
     }
 
@@ -144,68 +266,131 @@ try {
     if (!$game || !$settings['enabled']) {
         generated_package_reply(['ok' => false, 'error' => 'Generated packages are unavailable for this file.'], 409);
     }
-    $mode = external_public_download_mode($db);
-    if ($mode === 'disabled' || $mode === 'external_mirror') {
-        generated_package_reply(['ok' => false, 'error' => 'Generated packages are unavailable in the current public download mode.'], 409);
+    if (external_public_download_mode($db) === 'disabled') {
+        generated_package_reply(['ok' => false, 'error' => 'Generated packages are disabled.'], 409);
     }
 
-    $format = strtolower(trim((string)(
-        $_POST['format'] ?? $packageSettings->defaultFormat($game, $settings)
-    )));
-    if (!in_array($format, $packageSettings->availableFormats($game, $settings), true)) {
-        generated_package_reply(['ok' => false, 'error' => 'The selected package format is not available for this game.'], 400);
+    $request = generated_package_request($packageSettings, $settings, $game, $file, $_POST);
+    $buildKey = (string)$request['build_key'];
+    $reusable = generated_package_reusable($access, $queueName, $buildKey, $config);
+    if ($reusable !== null) {
+        generated_package_grant_job($reusable, $buildKey);
+        $status = (string)$reusable['status'];
+        $jobId = (int)$reusable['id'];
+        if ($status === 'queued') {
+            $workerState = generated_package_start_worker($config, (string)$reusable['queue_name'], $jobId);
+        } else {
+            $workerState = ['worker' => null, 'worker_error' => ''];
+        }
+        generated_package_reply([
+            'ok' => true,
+            'job_id' => $jobId,
+            'status' => $status,
+            'type' => JobType::GENERATE_MOD_PACKAGE,
+            'reused' => true,
+            'ready' => $status === 'completed',
+            'download_url' => $status === 'completed'
+                ? 'generated-package-download.php?job_id=' . $jobId
+                : null,
+        ] + $workerState, $status === 'completed' ? 200 : 202);
     }
 
-    $name = substr(trim((string)($_POST['name'] ?? '')), 0, 160);
-    if ($name === '') {
-        $name = catalog_clean_unreal_package_stem((string)$file['package_name']);
+    if ($action === 'lookup') {
+        generated_package_reply([
+            'ok' => true,
+            'status' => 'none',
+            'reused' => false,
+            'ready' => false,
+        ]);
     }
-    $version = CatalogGeneratedPackageDescriptor::generatedVersion($_POST['version'] ?? '1.0');
-    $author = substr(trim((string)($_POST['author'] ?? $settings['default_author'])), 0, 160);
-    $includeDependencies = (string)($_POST['dependencies'] ?? '1') !== '0';
-    $allowIncomplete = (string)($_POST['allow_incomplete'] ?? '0') === '1';
+
+    // Preflight before queueing so known dependency gaps are a user-visible
+    // package choice, not a background worker/System Error.
+    $plan = (new PdoCatalogPackageExportPlanner($db, $config))->plan(
+        (int)$file['id'],
+        (string)$request['format'],
+        (bool)$request['include_dependencies'],
+        $settings
+    );
+    $missingCount = count((array)$plan['missing']);
+    if ($missingCount > 0 && empty($request['allow_incomplete'])) {
+        generated_package_reply([
+            'ok' => false,
+            'error' => 'This package has ' . $missingCount
+                . ' genuinely missing dependency object'
+                . ($missingCount === 1 ? '' : 's')
+                . '. Enable incomplete package generation or resolve the missing dependencies before building.',
+            'missing_dependencies' => $missingCount,
+            'package_only_dependencies' => count((array)$plan['package_only']),
+        ], 409);
+    }
+
     $token = generated_package_token();
     $payload = [
-        'file_id' => $fileId,
-        'format' => $format,
-        'include_dependencies' => $includeDependencies,
-        'allow_incomplete' => $allowIncomplete,
-        'options' => ['name' => $name, 'version' => $version, 'author' => $author],
+        'file_id' => (int)$file['id'],
+        'format' => (string)$request['format'],
+        'include_dependencies' => (bool)$request['include_dependencies'],
+        'allow_incomplete' => (bool)$request['allow_incomplete'],
+        'options' => [
+            'name' => (string)$request['name'],
+            'version' => (string)$request['version'],
+            'author' => (string)$request['author'],
+        ],
+        'build_key' => $buildKey,
         'access_token_hash' => hash('sha256', $token),
     ];
-    // Count only a valid package build that is about to be queued. Invalid or
-    // unavailable requests do not consume the visitor's hourly allowance.
+
+    // Count only a genuinely new build. Reusing an active/completed package above
+    // does not consume another public package-build allowance.
     catalog_public_package_limit($db);
-    $jobId = $queue->enqueue($queueName, JobType::GENERATE_MOD_PACKAGE, $payload, 30, null, null, $userId, 2);
+    $dedupeKey = 'generated-package:' . $buildKey;
+    $jobId = $queue->enqueue(
+        $queueName,
+        JobType::GENERATE_MOD_PACKAGE,
+        $payload,
+        0,
+        null,
+        $dedupeKey,
+        $userId,
+        2
+    );
+
+    $job = $access->find($jobId);
+    if ($job === null) {
+        generated_package_reply(['ok' => false, 'error' => 'The queued package job could not be reloaded.'], 503);
+    }
+    $storedBuildKey = strtolower(trim((string)($job['payload']['build_key'] ?? '')));
+    if ($storedBuildKey === '' || !hash_equals($buildKey, $storedBuildKey)) {
+        generated_package_reply(['ok' => false, 'error' => 'The package job deduplication identity did not match the request.'], 503);
+    }
+    generated_package_grant_job(
+        $job,
+        $buildKey,
+        $access->isAuthorized($job, $token) ? $token : null
+    );
 
     catalog_download_audit_generation_queued($db, [
         'job_id' => $jobId,
-        'file_id' => $fileId,
+        'file_id' => (int)$file['id'],
         'game_id' => (int)$file['game_id'],
         'user_id' => $userId,
         'ip_address' => catalog_public_access_client_ip(),
         'user_agent' => catalog_download_audit_user_agent(),
-        'package_format' => $format,
-        'package_name' => $name,
-        'package_version' => $version,
-        'include_dependencies' => $includeDependencies,
-        'allow_incomplete' => $allowIncomplete,
+        'package_format' => (string)$request['format'],
+        'package_name' => (string)$request['name'],
+        'package_version' => (string)$request['version'],
+        'include_dependencies' => (bool)$request['include_dependencies'],
+        'allow_incomplete' => (bool)$request['allow_incomplete'],
     ]);
 
-    if (!isset($_SESSION['generated_package_jobs']) || !is_array($_SESSION['generated_package_jobs'])) {
-        $_SESSION['generated_package_jobs'] = [];
-    }
-    $_SESSION['generated_package_jobs'][(string)$jobId] = $token;
-    if (count($_SESSION['generated_package_jobs']) > 20) {
-        $_SESSION['generated_package_jobs'] = array_slice($_SESSION['generated_package_jobs'], -20, null, true);
-    }
-
-    $workerState = generated_package_start_worker($db, $config, $queueName, $jobId, $userId);
+    $workerState = generated_package_start_worker($config, $queueName, $jobId);
     generated_package_reply([
         'ok' => true,
         'job_id' => $jobId,
         'status' => 'queued',
         'type' => JobType::GENERATE_MOD_PACKAGE,
+        'reused' => false,
+        'ready' => false,
     ] + $workerState, 202);
 } catch (Throwable $error) {
     error_log('[UnrealDB package jobs] ' . get_class($error) . ': ' . $error->getMessage());
@@ -213,6 +398,8 @@ try {
     if ($status < 400) {
         $status = 503;
     }
-    $message = $status === 429 ? $error->getMessage() : 'Package generation is temporarily unavailable.';
+    $message = in_array($status, [409, 429], true)
+        ? $error->getMessage()
+        : 'Package generation is temporarily unavailable.';
     generated_package_reply(['ok' => false, 'error' => $message], $status);
 }
