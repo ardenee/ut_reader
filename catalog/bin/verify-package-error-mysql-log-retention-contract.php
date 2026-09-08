@@ -25,16 +25,16 @@ $checks = [
         && str_contains($endpoint, "'error_type' => 'package_preflight_rejected'")
         && str_contains($endpoint, '], 409);'),
     'unexpected package endpoint failure records System Error' =>
-        str_contains($endpoint, "catalog_system_error_record([")
+        str_contains($endpoint, 'catalog_system_error_record([')
         && str_contains($endpoint, "'source_kind' => 'generated-package'")
-        && str_contains($endpoint, "'request_id' => $reference")
+        && str_contains($endpoint, "'request_id' => \$reference")
         && str_contains($endpoint, "'file_id' => max(0, (int)(\$_POST['file_id'] ?? 0))"),
     'unexpected package endpoint response carries request reference' =>
-        str_contains($endpoint, "'Package generation is temporarily unavailable. Reference: ' . $reference")
-        && str_contains($endpoint, "'request_id' => $reference"),
+        str_contains($endpoint, "'Package generation is temporarily unavailable. Reference: ' . \$reference")
+        && str_contains($endpoint, "'request_id' => \$reference"),
     'package page failures also record System Errors' =>
         str_contains($page, "'source_kind' => 'generated-package-page'")
-        && str_contains($page, "'request_id' => $reference")
+        && str_contains($page, "'request_id' => \$reference")
         && str_contains($page, "'file_id' => max(0, (int)(\$_GET['id'] ?? 0))"),
     'generated-package diagnostic is read-only planner preflight' =>
         str_contains($diagnostic, 'PdoCatalogPackageExportPlanner')
@@ -42,9 +42,9 @@ $checks = [
         && !str_contains($diagnostic, '->enqueue('),
     'MySQL cleanup is dry-run by default' =>
         str_contains($cleanup, '$apply = isset($options[\'apply\']);')
-        && str_contains($cleanup, "'mode' => $apply ? 'apply' : 'dry_run'"),
+        && str_contains($cleanup, "'mode' => \$apply ? 'apply' : 'dry_run'"),
     'MySQL cleanup purges through server SQL only on apply' =>
-        str_contains($cleanup, "if ($apply && strtoupper((string)$variables['log_bin']) === 'ON')")
+        str_contains($cleanup, "if (\$apply && strtoupper((string)\$variables['log_bin']) === 'ON')")
         && str_contains($cleanup, "'PURGE BINARY LOGS BEFORE '")
         && !str_contains($cleanup, 'unlink('),
     'MySQL cleanup persists bounded expiry' =>
