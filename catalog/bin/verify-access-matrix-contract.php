@@ -130,13 +130,13 @@ $record(
         && str_contains($admin, '.access-matrix-agent-text')
         && str_contains($admin, 'text-overflow:ellipsis')
         && str_contains($admin, 'name="block_event_id"')
-        && str_contains($admin, '>Blacklist IP</button>')
+        && str_contains($admin, '>XX</button>')
         && str_contains($admin, "access_matrix_logged_link((string)\$row['request_path'], (string)\$row['page_key'])")
         && str_contains($admin, "access_matrix_logged_link((string)(\$row['referrer_path'] ?? ''))")
         && str_contains($admin, "access_matrix_logged_link((string)(\$row['target_path'] ?? ''))")
         && str_contains($admin, "Section: ' . access_matrix_logged_link(")
         && str_contains($admin, "Action: ' . access_matrix_logged_link("),
-    'Raw events must use second-precision time, compact columns, clickable logged paths and a one-row full-site blacklist action.'
+    'Raw events must use compact local date/time, clickable logged paths and a one-row full-site blacklist action.'
 );
 
 $record(
@@ -147,6 +147,14 @@ $record(
         && str_contains($admin, "access_matrix_logged_link((string)\$row['request_path'])")
         && str_contains($admin, 'destination_path'),
     'Site Activity Logs must report exact request URLs including useful query parameters instead of only grouping by generic PHP page name.'
+);
+
+$record(
+    'activity_map_uses_detailed_local_geoip',
+    str_contains($admin, 'CatalogGeoIpLocationResolver')
+        && str_contains($admin, 'catalog_world_map_attributes(')
+        && str_contains($admin, 'Approximate city/region locations from the local GeoIP database'),
+    'Access Matrix map rows must expose local city/region coordinates with country fallback.'
 );
 
 $record(
@@ -200,6 +208,8 @@ $record(
 $syntaxFailures = [];
 foreach ([
     'migrations/202609080002_access_matrix_site_blocklist.php',
+    'migrations/202609080003_geoip_city_location.php',
+    'src/Infrastructure/Downloads/CatalogGeoIpLocationResolver.php',
     'src/Infrastructure/Telemetry/CatalogAccessEventRecorder.php',
     'src/Infrastructure/Security/CatalogSiteBlocklist.php',
     'src/Infrastructure/Security/CatalogPublicAccessGuard.php',
