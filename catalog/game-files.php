@@ -201,17 +201,29 @@ html { scroll-behavior: smooth; }
 .game-files-pagination__end { justify-self: end; }
 .game-files-pagination__current { justify-self: center; white-space: nowrap; }
 
-#game-files-table { width: 100% !important; min-width: 1180px !important; table-layout: fixed !important; }
-#game-files-table.game-files-table--no-compression { min-width: 1080px !important; }
+#game-files-table { width: 100% !important; min-width: 1040px !important; table-layout: auto !important; }
+#game-files-table.game-files-table--no-compression { min-width: 940px !important; }
 #game-files-table th, #game-files-table td { vertical-align: top; }
-#game-files-table .game-files-package { width: 28%; min-width: 220px; white-space: normal; overflow-wrap: anywhere; word-break: break-word; }
-#game-files-table .game-files-file { width: 24%; min-width: 190px; white-space: normal; overflow-wrap: anywhere; word-break: break-word; }
-#game-files-table .identity-cell { width: 32ch; min-width: 32ch; max-width: 32ch; white-space: normal; overflow-wrap: anywhere; }
-#game-files-table .game-files-version { width: 8ch; white-space: nowrap; }
-#game-files-table .game-files-size { width: 9ch; white-space: nowrap; }
-#game-files-table .game-files-compression { width: 13ch; }
-#game-files-table .game-files-dependencies { width: 15ch; }
-#game-files-table .game-files-actions { width: 11ch; }
+#game-files-table .game-files-package,
+#game-files-table .game-files-file {
+    width: 50%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+#game-files-table .identity-cell,
+#game-files-table .game-files-version,
+#game-files-table .game-files-size,
+#game-files-table .game-files-compression,
+#game-files-table .game-files-dependencies,
+#game-files-table .game-files-actions {
+    width: 1%;
+}
+#game-files-table .identity-cell { white-space: nowrap; }
+#game-files-table .game-files-version,
+#game-files-table .game-files-size,
+#game-files-table .game-files-compression,
+#game-files-table .game-files-actions { white-space: nowrap; }
 .game-files-file-link, .game-files-package-link { font-weight: 650; overflow-wrap: anywhere; word-break: break-word; }
 .game-files-dependencies { min-width: 130px; white-space: normal; }
 .game-files-dependency-list { display: flex; flex-direction: column; align-items: flex-start; row-gap: 1px; }
