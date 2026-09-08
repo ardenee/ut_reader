@@ -1,5 +1,7 @@
 # UnrealDB database schema and migrations
 
+For a clean host/database setup before this migration sequence, see the [installation guide](installation.md).
+
 ## Consolidated baseline
 
 `catalog/install.sql` is the canonical **squashed baseline** for a new empty MySQL 8+ or compatible MariaDB database. The current consolidated baseline contains schema and seed-data changes through version `202608090002`.
@@ -26,35 +28,11 @@ This is intentional: active post-baseline migrations remain immutable upgrade bo
 
 ## Current incremental migrations
 
-The current code requires these migrations newer than baseline `202608090002`:
+The current post-baseline migration set is listed authoritatively in [`../catalog/migrations/README.md`](../catalog/migrations/README.md). A fresh installation must apply every migration after baseline `202608090002`, through the latest migration file present in `catalog/migrations/`.
 
-### `202608110001_unverified_game_match_cache.php`
+Important current boundaries include durable parent/child workflow recovery, compact-metadata publication state, dependency refresh indexes, download/public-upload audit storage, transfer/full-site IP blocklists, Access Matrix telemetry and detailed local GeoIP city/region fields.
 
-Creates `ue_unverified_game_match_cache`, the cached exact dependency/object-path game-match projection used by background refresh and the Unverified page.
-
-### `202609080002_access_matrix_site_blocklist.php`
-
-Adds first-party site observability and full-site access blocking:
-
-- `ue_access_events` for page renders, browser page views, section visibility and coarse user interactions;
-- `ue_site_blocked_ips` for administrator-managed full-site IP blocks;
-- `ue_site_block_feedback` for removal requests submitted from the blacklist landing page.
-
-Active full-site blocks are mirrored into small filesystem markers under the configured storage security directory so anonymous requests can be rejected before public response-cache/MySQL work. Logged-in administrators are exempt so an operator can recover an accidentally blocked address.
-
-### `202608120001_job_workflow_recovery_logging.php`
-
-Extends `ue_background_jobs` with:
-
-- `parent_job_id`
-- `workflow_unit_key`
-- parent/status index
-- unique `(parent_job_id, workflow_unit_key)` identity
-- self foreign key with `ON DELETE CASCADE`
-
-It also creates `ue_job_logging_settings` with errors-first defaults.
-
-These columns are required by the current resumable parent/child workflow architecture. Apply this migration before starting workers running the current code.
+Do not select migrations manually by feature. Run the migration runner so ordering, checksums and pending state are enforced.
 
 ## Deployment sequence
 
