@@ -32,9 +32,19 @@ final class CatalogDownloadSettingsService
     /** @return array{public:array<string,mixed>,mirror:array<string,string>} */
     public function current(): array
     {
+        $mirror = \fed_all_settings($this->db);
+        $mode = strtolower(trim((string)($mirror['public_download_mode'] ?? 'protected_local')));
+        if (in_array($mode, ['external_mirror', 'local_direct', 'external_mirror_preferred'], true)) {
+            $mode = 'protected_local';
+        }
+        if (!in_array($mode, ['protected_local', 'external_mirror_only', 'disabled'], true)) {
+            $mode = 'protected_local';
+        }
+        $mirror['public_download_mode'] = $mode;
+
         return [
             'public' => $this->publicAccess->settings($this->db),
-            'mirror' => \fed_all_settings($this->db),
+            'mirror' => $mirror,
         ];
     }
 
@@ -59,9 +69,9 @@ final class CatalogDownloadSettingsService
         $values['public_block_crawlers'] = isset($input['public_block_crawlers']) ? '1' : '0';
         $publicValues = CatalogPublicAccessSettingsStore::normalize($values);
 
-        $mode = strtolower(trim((string)($input['public_download_mode'] ?? 'external_mirror')));
-        if (!in_array($mode, ['external_mirror', 'disabled'], true)) {
-            throw new RuntimeException('Public individual-file downloads must use external providers or be disabled.');
+        $mode = strtolower(trim((string)($input['public_download_mode'] ?? 'protected_local')));
+        if (!in_array($mode, ['protected_local', 'external_mirror_only', 'disabled'], true)) {
+            throw new RuntimeException('Select protected local streaming, external mirror only, or disabled.');
         }
 
         $mirrorValues = [
