@@ -565,8 +565,21 @@ try {
                 . '<td class="am-type"><span class="dep">' . catalog_h((string)$row['event_type']) . '</span></td>'
                 . '<td class="am-page"><strong class="mono small">' . access_matrix_logged_link((string)$row['request_path'], (string)$row['page_key']) . '</strong>'
                 . '<br><span class="mono small muted">' . access_matrix_logged_link((string)$row['request_path']) . '</span>';
-            if ((string)($row['section_key'] ?? '') !== '') echo '<br><span>Section: ' . catalog_h((string)$row['section_key']) . '</span>';
-            if ((string)($row['action_key'] ?? '') !== '') echo '<br><span>Action: ' . catalog_h((string)$row['action_key']) . '</span>';
+            if ((string)($row['section_key'] ?? '') !== '') {
+                echo '<br><span>Section: ' . access_matrix_logged_link(
+                    (string)$row['request_path'],
+                    (string)$row['section_key']
+                ) . '</span>';
+            }
+            if ((string)($row['action_key'] ?? '') !== '') {
+                $actionTarget = trim((string)($row['target_path'] ?? '')) !== ''
+                    ? (string)$row['target_path']
+                    : (string)$row['request_path'];
+                echo '<br><span>Action: ' . access_matrix_logged_link(
+                    $actionTarget,
+                    (string)$row['action_key']
+                ) . '</span>';
+            }
             $sessionHex = trim((string)($row['session_hex'] ?? ''));
             $sessionLink = $sessionHex !== ''
                 ? '<br><a class="small mono" href="access-matrix.php?' . catalog_h(access_matrix_query([
