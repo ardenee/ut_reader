@@ -184,10 +184,13 @@ final class CatalogPublicAccessGuard
      */
     public function guardCrawlerRequest(): void
     {
-        if ($this->exempt() || !$this->guardableMethod()) {
+        if ($this->exempt()) {
             return;
         }
 
+        // A full-site administrator block applies to every HTTP method. It must
+        // run before the GET/HEAD-only crawler/burst checks so a blocked client
+        // cannot bypass the site block by posting directly to an action endpoint.
         $script = basename(str_replace('\\', '/', (string)($_SERVER['SCRIPT_NAME'] ?? '')));
         if ($script !== 'blacklisted.php'
             && CatalogSiteBlocklist::isBlockedCached($this->resolvedConfig(), $this->clientIp())) {
@@ -203,6 +206,10 @@ final class CatalogPublicAccessGuard
                 header('X-Robots-Tag: noindex, nofollow, noarchive');
             }
             exit;
+        }
+
+        if (!$this->guardableMethod()) {
+            return;
         }
 
         $settings = $this->settingsStore()->settings();
