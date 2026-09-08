@@ -65,7 +65,7 @@ try {
     catalog_page_header(
         'Generate package for ' . catalog_clean_unreal_filename((string)$file['original_name']),
         (string)$game['name'] . ' · ' . ($formatLabels[$format] ?? $format),
-        ['Download options' => 'download-info.php?id=' . $id, 'File information' => 'file-info.php?id=' . $id]
+        ['Download options' => $backUrl, 'File information' => 'file-info.php?id=' . $id]
     );
 
     echo <<<'CSS'
