@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
 
+use UnrealDb\Catalog\Infrastructure\Downloads\CatalogGeoIpLocationResolver;
 use UnrealDb\Catalog\Infrastructure\Security\CatalogSiteBlocklist;
 use UnrealDb\Catalog\Infrastructure\Security\CatalogTransferBlocklist;
 
@@ -465,6 +466,11 @@ try {
         }
         $statement->execute($args);
         $rows = $statement->fetchAll(PDO::FETCH_ASSOC);
+
+        $geoIpResolver = new CatalogGeoIpLocationResolver($db);
+        foreach ($rows as $index => $row) {
+            $rows[$index]['map_location'] = $geoIpResolver->resolve((string)($row['ip_text'] ?? ''));
+        }
     }
 
     catalog_head('Download Logs');
@@ -501,7 +507,7 @@ try {
 
     catalog_page_header(
         'Download Logs',
-        'Administrator reporting records for generated package requests and actual individual/generated-package transfers. IP addresses and their GeoIP country snapshot are stored with each audit entry; this page does not perform GeoIP lookups while rendering logs.',
+        'Administrator reporting records for generated package requests and actual individual/generated-package transfers. Visible IP rows are enriched from the local GeoIP database for approximate city/region map placement.',
         [
             'Download Administration' => 'download-admin.php',
             'Package Settings' => 'download-package-settings.php',
@@ -640,7 +646,7 @@ try {
             . '<button type="submit">Apply to selected</button></div>';
 
         if ($view === 'downloads') {
-        echo '<div class="table-wrap"><table class="download-log-table"><thead><tr>'
+        echo '<div class="table-wrap" data-world-map-source="download-logs" data-world-map-title="Download locations" data-world-map-storage-key="unrealdb.downloadLogs.worldMapOpen" data-world-map-note="Approximate city/region locations from the local GeoIP database, with country fallback when detailed coordinates are unavailable." data-world-map-entry-singular="visible download" data-world-map-entry-plural="visible downloads"><table class="download-log-table"><thead><tr>'
             . '<th class="download-log-select"></th>'
             . '<th class="download-log-time">' . download_logs_sort_heading('Started', 'time', $sort, $direction) . '</th>'
             . '<th class="download-log-status">Status</th>'
@@ -656,10 +662,12 @@ try {
             $rowStatus = strtolower((string)$row['status']);
             $requested = isset($row['bytes_requested']) ? (int)$row['bytes_requested'] : 0;
             $sent = (int)$row['bytes_sent'];
-            $countryCode = strtoupper(trim((string)($row['country_code'] ?? '')));
-            $countryName = trim((string)($row['country_name'] ?? ''));
             $ipText = trim((string)($row['ip_text'] ?? ''));
-            echo '<tr><td class="download-log-select"><input class="download-log-check" type="checkbox" name="ids[]" value="' . (int)$row['id'] . '"></td><td class="mono small download-log-time">' . catalog_h(download_logs_time($row['started_at'])) . '</td>';
+            $mapLocation = is_array($row['map_location'] ?? null) ? $row['map_location'] : [];
+            $countryCode = strtoupper(trim((string)($mapLocation['country_code'] ?? $row['country_code'] ?? '')));
+            $countryName = trim((string)($mapLocation['country_name'] ?? $row['country_name'] ?? ''));
+            $mapAttributes = catalog_world_map_attributes($ipText, $mapLocation);
+            echo '<tr' . $mapAttributes . '><td class="download-log-select"><input class="download-log-check" type="checkbox" name="ids[]" value="' . (int)$row['id'] . '"></td><td class="mono small download-log-time">' . catalog_h(download_logs_time($row['started_at'])) . '</td>';
             echo '<td class="download-log-status"><span class="download-log-pill download-log-pill-' . catalog_h($rowStatus) . '">' . catalog_h($rowStatus) . '</span></td>';
             echo '<td class="download-log-file"><strong>' . catalog_h((string)$row['download_name']) . '</strong>';
             if ((int)($row['file_id'] ?? 0) > 0) {
@@ -704,7 +712,7 @@ try {
         }
         echo '</tbody></table></div>';
         } else {
-        echo '<div class="table-wrap"><table class="download-log-table"><thead><tr>'
+        echo '<div class="table-wrap" data-world-map-source="download-logs-generations" data-world-map-title="Package generation locations" data-world-map-storage-key="unrealdb.downloadLogs.generationWorldMapOpen" data-world-map-note="Approximate city/region locations from the local GeoIP database, with country fallback when detailed coordinates are unavailable." data-world-map-entry-singular="visible package generation" data-world-map-entry-plural="visible package generations"><table class="download-log-table"><thead><tr>'
             . '<th class="download-log-select"></th>'
             . '<th class="download-log-time">' . download_logs_sort_heading('Queued', 'time', $sort, $direction) . '</th>'
             . '<th class="download-log-status">Status</th>'
@@ -720,10 +728,12 @@ try {
             . '</tr></thead><tbody>';
         foreach ($rows as $row) {
             $rowStatus = strtolower((string)$row['status']);
-            $countryCode = strtoupper(trim((string)($row['country_code'] ?? '')));
-            $countryName = trim((string)($row['country_name'] ?? ''));
             $ipText = trim((string)($row['ip_text'] ?? ''));
-            echo '<tr><td class="download-log-select"><input class="download-log-check" type="checkbox" name="ids[]" value="' . (int)$row['id'] . '"></td><td class="mono small download-log-time">' . catalog_h(download_logs_time($row['queued_at'])) . '</td>';
+            $mapLocation = is_array($row['map_location'] ?? null) ? $row['map_location'] : [];
+            $countryCode = strtoupper(trim((string)($mapLocation['country_code'] ?? $row['country_code'] ?? '')));
+            $countryName = trim((string)($mapLocation['country_name'] ?? $row['country_name'] ?? ''));
+            $mapAttributes = catalog_world_map_attributes($ipText, $mapLocation);
+            echo '<tr' . $mapAttributes . '><td class="download-log-select"><input class="download-log-check" type="checkbox" name="ids[]" value="' . (int)$row['id'] . '"></td><td class="mono small download-log-time">' . catalog_h(download_logs_time($row['queued_at'])) . '</td>';
             echo '<td class="download-log-status"><span class="download-log-pill download-log-pill-' . catalog_h($rowStatus) . '">' . catalog_h($rowStatus) . '</span></td>';
             echo '<td class="download-log-file"><strong>' . catalog_h((string)$row['package_name']) . '</strong><br><span class="small muted">Dependencies: ' . (!empty($row['include_dependencies']) ? 'yes' : 'no') . '</span></td>';
             echo '<td class="mono download-log-version">' . catalog_h((string)$row['package_version']) . '</td>';
