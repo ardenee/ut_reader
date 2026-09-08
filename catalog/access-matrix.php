@@ -504,9 +504,21 @@ try {
                 . '<br><span class="mono small muted">' . catalog_h((string)$row['request_path']) . '</span>';
             if ((string)($row['section_key'] ?? '') !== '') echo '<br><span>Section: ' . catalog_h((string)$row['section_key']) . '</span>';
             if ((string)($row['action_key'] ?? '') !== '') echo '<br><span>Action: ' . catalog_h((string)$row['action_key']) . '</span>';
+            $sessionHex = trim((string)($row['session_hex'] ?? ''));
+            $sessionLink = $sessionHex !== ''
+                ? '<br><a class="small mono" href="access-matrix.php?' . catalog_h(access_matrix_query([
+                    'session' => substr($sessionHex, 0, 16),
+                    'ip' => null,
+                    'page_q' => null,
+                    'q' => null,
+                    'event' => 'all',
+                    'p' => 1,
+                ])) . '">session ' . catalog_h(substr($sessionHex, 0, 12)) . '…</a>'
+                : '';
             echo '</td><td class="mono">' . catalog_h($ipText)
                 . (isset($blockedLookup[strtolower($ipText)]) ? '<br><span class="dep missing">site blocked</span>' : '')
                 . ((string)($row['username'] ?? '') !== '' ? '<br><span class="small">' . catalog_h((string)$row['username']) . '</span>' : '')
+                . $sessionLink
                 . '</td><td class="mono small">From: ' . catalog_h((string)($row['referrer_path'] ?? ''))
                 . '<br>To: ' . catalog_h((string)($row['target_path'] ?? '')) . '</td>'
                 . '<td class="access-matrix-agent small">' . catalog_h((string)$row['user_agent']) . '</td></tr>';
