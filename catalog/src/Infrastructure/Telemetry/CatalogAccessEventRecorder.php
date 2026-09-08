@@ -69,6 +69,12 @@ final class CatalogAccessEventRecorder
             $ipText = function_exists('catalog_public_access_client_ip')
                 ? trim((string)\catalog_public_access_client_ip())
                 : trim((string)($_SERVER['REMOTE_ADDR'] ?? ''));
+            $isAdmin = session_status() === PHP_SESSION_ACTIVE
+                && (($_SESSION['user']['role'] ?? '') === 'admin');
+            if ((new CatalogAccessLoggingSettings($this->db))->shouldIgnore($ipText, $isAdmin)) {
+                return;
+            }
+
             $packedIp = @inet_pton($ipText);
             $sessionHash = null;
             if (session_status() === PHP_SESSION_ACTIVE) {
