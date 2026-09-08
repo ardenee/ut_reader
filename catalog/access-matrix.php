@@ -39,7 +39,20 @@ function access_matrix_query(array $overrides = []): string
 function access_matrix_time(mixed $value): string
 {
     $value = trim((string)$value);
-    return $value === '' ? '' : substr($value, 0, 19);
+    if ($value === '') {
+        return '';
+    }
+
+    try {
+        $utc = new DateTimeZone('UTC');
+        $local = new DateTimeZone('Europe/Dublin');
+        $parsed = DateTimeImmutable::createFromFormat('Y-m-d H:i:s', substr($value, 0, 19), $utc);
+        return $parsed instanceof DateTimeImmutable
+            ? $parsed->setTimezone($local)->format('Y-m-d H:i:s')
+            : substr($value, 0, 19);
+    } catch (Throwable) {
+        return substr($value, 0, 19);
+    }
 }
 
 function access_matrix_time_html(mixed $value): string
@@ -49,10 +62,8 @@ function access_matrix_time_html(mixed $value): string
         return '';
     }
 
-    $first = substr($value, 0, 16);
-    $seconds = substr($value, 16, 3);
-    return catalog_h($first)
-        . ($seconds !== '' ? '<br><span class="access-matrix-seconds">' . catalog_h($seconds) . '</span>' : '');
+    return '<span class="access-matrix-date">' . catalog_h(substr($value, 0, 10)) . '</span>'
+        . '<br><span class="access-matrix-clock">' . catalog_h(substr($value, 11, 8)) . '</span>';
 }
 
 function access_matrix_logged_link(mixed $path, ?string $label = null, string $class = ''): string
@@ -434,7 +445,8 @@ try {
         . '.access-matrix-ip-value{display:inline-flex;align-items:center;gap:2px}'
         . '.access-matrix-ip-actions{display:inline-flex;gap:5px;align-items:center;margin-left:auto}'
         . '.access-matrix-ip-actions .ui-button{min-width:30px;padding:2px 7px;line-height:1.2}'
-        . '.access-matrix-seconds{display:inline-block;color:var(--muted);padding-left:1ch}'
+        . '.access-matrix-date{display:inline-block}'
+        . '.access-matrix-clock{display:inline-block;color:var(--muted)}'
         . '.access-country-flag{font-size:1.2rem;line-height:1;vertical-align:-1px;cursor:help}'
         . '.access-matrix-actions,.access-block-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}'
         . '.access-block-actions .grow{flex:1;min-width:240px}'
