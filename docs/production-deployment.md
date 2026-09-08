@@ -1,5 +1,7 @@
 # UnrealDB production deployment
 
+For a clean installation, system prerequisites and first-run configuration, start with the [installation guide](installation.md).
+
 ## Deployment position
 
 UnrealDB production is a **single-host Windows deployment**. The supported production stack is Apache + PHP + MySQL on one Windows server, with local package storage and durable background jobs stored in MySQL.
