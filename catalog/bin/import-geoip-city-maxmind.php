@@ -370,7 +370,6 @@ try {
         }
     }
     fwrite(STDERR, 'GeoIP City import failed: ' . $error->getMessage() . "\n");
-    exitCode:
     $release = $db->prepare('SELECT RELEASE_LOCK(?)');
     $release->execute(['unrealdb_geoip_city_import']);
     exit(1);
