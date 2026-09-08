@@ -46,23 +46,27 @@ $record(
 );
 
 $record(
-    'server_and_browser_page_tracking_are_separate',
+    'browser_confirmation_collapses_dynamic_page_render',
     str_contains($recorder, "'event_type' => 'server_page'")
         && str_contains($recorder, "['page_view', 'section', 'interaction']")
+        && str_contains($recorder, 'promoteRecentServerPage(')
+        && str_contains($recorder, 'UPDATE ue_access_events SET event_type="page_view"')
         && str_contains($client, "send({event_type: 'page_view'});")
         && str_contains($support, 'CatalogAccessEventRecorder')
         && str_contains($support, 'recordPageView();'),
-    'PHP renders must record server_page while browser page_view events cover cached pages without double-counting the main page-view metric.'
+    'A dynamic PHP render must be promoted to the browser-confirmed page_view instead of creating two primary page-load rows; cached pages still insert browser page_view rows.'
 );
 
 $record(
-    'interaction_tracking_avoids_form_values',
+    'interaction_tracking_avoids_duplicate_navigation_and_form_values',
     str_contains($client, 'closest(\'a[href],button,input[type="submit"],input[type="button"]\')')
         && str_contains($client, "event_type: 'section'")
         && str_contains($client, "event_type: 'interaction'")
+        && str_contains($client, "if (element.matches('a[href]') && sameSitePath(element.getAttribute('href'))) {")
+        && str_contains($client, 'if (event.persisted) trackPageView();')
         && !str_contains($client, 'FormData(')
         && !str_contains($client, '.value) body.set'),
-    'Client telemetry must record only coarse page/section/action metadata, never form-field contents.'
+    'Client telemetry must avoid a second interaction row for normal same-site navigation, count BFCache restores as page loads, and never record form-field contents.'
 );
 
 $record(
@@ -158,6 +162,19 @@ $record(
 );
 
 $record(
+    'activity_log_defaults_to_page_loads_without_hiding_analytics',
+    str_contains($admin, "(string)(\$_GET['event'] ?? 'page_view')")
+        && str_contains($admin, "'page_view' => 'Page loads'")
+        && str_contains($admin, "'all' => 'All telemetry'")
+        && str_contains($admin, "\$rawWhereSql")
+        && str_contains($admin, "'SELECT COUNT(*) c FROM ue_access_events a' . \$rawWhereSql")
+        && str_contains($admin, "<h2>Activity log</h2>")
+        && str_contains($admin, "catalog_stat_card('Page loads'")
+        && str_contains($admin, "catalog_stat_card('Sessions'"),
+    'The normal Access Matrix view must show one page-load row per visit while section/interaction/server diagnostics remain available separately.'
+);
+
+$record(
     'raw_activity_is_compact_linked_and_actionable',
     str_contains($admin, 'function access_matrix_time(')
         && str_contains($admin, "substr(\$value, 0, 19)")
@@ -237,8 +254,10 @@ $record(
 
 $record(
     'global_html_injects_matrix_client',
-    str_contains($transform, "'catalog-access-matrix.js'"),
-    'Cross-cutting page response transform must inject access telemetry on catalog HTML pages.'
+    str_contains($transform, "'catalog-access-matrix.js'")
+        && str_contains($transform, "'catalog/assets/'")
+        && str_contains($transform, "\$assetPrefix = \$federation"),
+    'Cross-cutting response transform must inject telemetry with a valid asset path on root, catalog and federation HTML pages.'
 );
 
 $syntaxFailures = [];
