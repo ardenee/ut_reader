@@ -367,8 +367,15 @@ try {
         . '.download-log-tabs,.download-log-toolbar,.download-log-pages,.download-log-actions,.download-block-actions{display:flex;gap:9px;align-items:center;flex-wrap:wrap}'
         . '.download-log-tabs,.download-log-toolbar,.download-log-actions{margin-bottom:12px}'
         . '.download-log-toolbar .search{min-width:280px;flex:1}'
-        . '.download-log-table{min-width:1320px}'
-        . '.download-log-select{width:42px;text-align:center}'
+        . '.download-log-table{min-width:1080px;table-layout:auto}'
+        . '.download-log-select{width:36px;text-align:center;white-space:nowrap}'
+        . '.download-log-time,.download-log-status,.download-log-ip,.download-log-country,.download-log-transfer,.download-log-job,.download-log-version,.download-log-format{width:1%;white-space:nowrap}'
+        . '.download-log-file{width:auto;min-width:260px;overflow-wrap:anywhere}'
+        . '.download-log-game{width:1%;min-width:120px;white-space:normal}'
+        . '.download-log-agent{width:30ch;min-width:30ch;max-width:30ch}'
+        . '.download-log-agent-text{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
+        . '.download-log-error{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;overflow-wrap:anywhere;margin-top:4px}'
+        . '.download-log-artifact{min-width:180px;overflow-wrap:anywhere}'
         . '.download-blocklist{margin:14px 0}'
         . '.download-blocklist table{min-width:760px}'
         . '.download-block-actions .grow{flex:1;min-width:260px}'
@@ -377,7 +384,7 @@ try {
         . '.download-log-pill-failed,.download-log-pill-interrupted,.download-log-pill-cancelled{color:#fecdd3;border-color:rgba(255,107,122,.75)}'
         . '.download-log-pill-started,.download-log-pill-running,.download-log-pill-queued{color:#bfdbfe;border-color:rgba(96,165,250,.75)}'
         . '.download-log-pages{justify-content:space-between;margin-top:12px}'
-        . '.download-log-agent,.download-log-error{max-width:360px;overflow-wrap:anywhere}'
+
         . '.download-country{text-align:center;white-space:nowrap}'
         . '.download-country-flag{font-size:1.35rem;line-height:1;cursor:help}'
         . '.download-country-empty{color:var(--muted)}'
@@ -508,9 +515,16 @@ try {
 
         if ($view === 'downloads') {
         echo '<div class="table-wrap"><table class="download-log-table"><thead><tr>'
-            . '<th class="download-log-select"></th><th>' . download_logs_sort_heading('Started', 'time', $sort, $direction) . '</th><th>Status</th><th>File / package</th><th>Game</th><th>IP</th>'
-            . '<th class="download-country">' . download_logs_sort_heading('Country', 'country', $sort, $direction, $countryAvailable) . '</th>'
-            . '<th>Transferred</th><th>Job</th><th>User agent / error</th>'
+            . '<th class="download-log-select"></th>'
+            . '<th class="download-log-time">' . download_logs_sort_heading('Started', 'time', $sort, $direction) . '</th>'
+            . '<th class="download-log-status">Status</th>'
+            . '<th class="download-log-file">File / package</th>'
+            . '<th class="download-log-game">Game</th>'
+            . '<th class="download-log-ip">IP</th>'
+            . '<th class="download-log-country">' . download_logs_sort_heading('Country', 'country', $sort, $direction, $countryAvailable) . '</th>'
+            . '<th class="download-log-transfer">Transferred</th>'
+            . '<th class="download-log-job">Job</th>'
+            . '<th class="download-log-agent">User agent / error</th>'
             . '</tr></thead><tbody>';
         foreach ($rows as $row) {
             $rowStatus = strtolower((string)$row['status']);
@@ -519,17 +533,17 @@ try {
             $countryCode = strtoupper(trim((string)($row['country_code'] ?? '')));
             $countryName = trim((string)($row['country_name'] ?? ''));
             $ipText = trim((string)($row['ip_text'] ?? ''));
-            echo '<tr><td class="download-log-select"><input class="download-log-check" type="checkbox" name="ids[]" value="' . (int)$row['id'] . '"></td><td class="mono small">' . catalog_h((string)$row['started_at']) . '</td>';
-            echo '<td><span class="download-log-pill download-log-pill-' . catalog_h($rowStatus) . '">' . catalog_h($rowStatus) . '</span></td>';
-            echo '<td><strong>' . catalog_h((string)$row['download_name']) . '</strong>';
+            echo '<tr><td class="download-log-select"><input class="download-log-check" type="checkbox" name="ids[]" value="' . (int)$row['id'] . '"></td><td class="mono small download-log-time">' . catalog_h((string)$row['started_at']) . '</td>';
+            echo '<td class="download-log-status"><span class="download-log-pill download-log-pill-' . catalog_h($rowStatus) . '">' . catalog_h($rowStatus) . '</span></td>';
+            echo '<td class="download-log-file"><strong>' . catalog_h((string)$row['download_name']) . '</strong>';
             if ((int)($row['file_id'] ?? 0) > 0) {
                 echo '<br><a class="small" href="file-info.php?id=' . (int)$row['file_id'] . '">File #' . (int)$row['file_id'] . '</a>';
             }
             if ((string)($row['package_format'] ?? '') !== '') {
                 echo '<br><span class="mono small muted">' . catalog_h((string)$row['package_format']) . '</span>';
             }
-            echo '</td><td>' . catalog_h((string)($row['game_name'] ?? '')) . '</td>';
-            echo '<td class="mono">' . catalog_h($ipText)
+            echo '</td><td class="download-log-game">' . catalog_h((string)($row['game_name'] ?? '')) . '</td>';
+            echo '<td class="mono download-log-ip">' . catalog_h($ipText)
                 . ($ipText !== '' && isset($blockedLookup[strtolower($ipText)]) ? '<br><span class="dep missing">blocked</span>' : '')
                 . '</td>';
             echo '<td class="download-country">';
@@ -540,9 +554,10 @@ try {
                 echo '<span class="download-country-empty" title="Country not recorded">—</span>';
             }
             echo '</td>';
-            echo '<td>' . catalog_h(catalog_bytes($sent)) . ' / ' . catalog_h(catalog_bytes($requested)) . '</td>';
-            echo '<td>' . ((int)($row['job_id'] ?? 0) > 0 ? '<a href="background-jobs.php?q=' . (int)$row['job_id'] . '">#' . (int)$row['job_id'] . '</a>' : '—') . '</td>';
-            echo '<td class="download-log-agent"><span class="small">' . catalog_h((string)$row['user_agent']) . '</span>';
+            echo '<td class="download-log-transfer">' . catalog_h(catalog_bytes($sent)) . ' / ' . catalog_h(catalog_bytes($requested)) . '</td>';
+            echo '<td class="download-log-job">' . ((int)($row['job_id'] ?? 0) > 0 ? '<a href="background-jobs.php?q=' . (int)$row['job_id'] . '">#' . (int)$row['job_id'] . '</a>' : '—') . '</td>';
+            $userAgent = (string)$row['user_agent'];
+            echo '<td class="download-log-agent"><span class="small download-log-agent-text" title="' . catalog_h($userAgent) . '">' . catalog_h($userAgent) . '</span>';
             if ((string)($row['error_message'] ?? '') !== '') {
                 echo '<br><span class="download-log-error dep missing">' . catalog_h((string)$row['error_message']) . '</span>';
             }
@@ -551,22 +566,31 @@ try {
         echo '</tbody></table></div>';
         } else {
         echo '<div class="table-wrap"><table class="download-log-table"><thead><tr>'
-            . '<th class="download-log-select"></th><th>' . download_logs_sort_heading('Queued', 'time', $sort, $direction) . '</th><th>Status</th><th>Package</th><th>Version</th><th>Format</th><th>Game / file</th>'
-            . '<th>IP</th><th class="download-country">' . download_logs_sort_heading('Country', 'country', $sort, $direction, $countryAvailable) . '</th>'
-            . '<th>Artifact</th><th>Job</th><th>User agent / error</th>'
+            . '<th class="download-log-select"></th>'
+            . '<th class="download-log-time">' . download_logs_sort_heading('Queued', 'time', $sort, $direction) . '</th>'
+            . '<th class="download-log-status">Status</th>'
+            . '<th class="download-log-file">Package</th>'
+            . '<th class="download-log-version">Version</th>'
+            . '<th class="download-log-format">Format</th>'
+            . '<th class="download-log-game">Game / file</th>'
+            . '<th class="download-log-ip">IP</th>'
+            . '<th class="download-log-country">' . download_logs_sort_heading('Country', 'country', $sort, $direction, $countryAvailable) . '</th>'
+            . '<th class="download-log-artifact">Artifact</th>'
+            . '<th class="download-log-job">Job</th>'
+            . '<th class="download-log-agent">User agent / error</th>'
             . '</tr></thead><tbody>';
         foreach ($rows as $row) {
             $rowStatus = strtolower((string)$row['status']);
             $countryCode = strtoupper(trim((string)($row['country_code'] ?? '')));
             $countryName = trim((string)($row['country_name'] ?? ''));
             $ipText = trim((string)($row['ip_text'] ?? ''));
-            echo '<tr><td class="download-log-select"><input class="download-log-check" type="checkbox" name="ids[]" value="' . (int)$row['id'] . '"></td><td class="mono small">' . catalog_h((string)$row['queued_at']) . '</td>';
-            echo '<td><span class="download-log-pill download-log-pill-' . catalog_h($rowStatus) . '">' . catalog_h($rowStatus) . '</span></td>';
-            echo '<td><strong>' . catalog_h((string)$row['package_name']) . '</strong><br><span class="small muted">Dependencies: ' . (!empty($row['include_dependencies']) ? 'yes' : 'no') . '</span></td>';
-            echo '<td class="mono">' . catalog_h((string)$row['package_version']) . '</td>';
-            echo '<td class="mono">' . catalog_h((string)$row['package_format']) . '</td>';
-            echo '<td>' . catalog_h((string)($row['game_name'] ?? '')) . '<br><a class="small" href="file-info.php?id=' . (int)$row['file_id'] . '">File #' . (int)$row['file_id'] . '</a></td>';
-            echo '<td class="mono">' . catalog_h($ipText)
+            echo '<tr><td class="download-log-select"><input class="download-log-check" type="checkbox" name="ids[]" value="' . (int)$row['id'] . '"></td><td class="mono small download-log-time">' . catalog_h((string)$row['queued_at']) . '</td>';
+            echo '<td class="download-log-status"><span class="download-log-pill download-log-pill-' . catalog_h($rowStatus) . '">' . catalog_h($rowStatus) . '</span></td>';
+            echo '<td class="download-log-file"><strong>' . catalog_h((string)$row['package_name']) . '</strong><br><span class="small muted">Dependencies: ' . (!empty($row['include_dependencies']) ? 'yes' : 'no') . '</span></td>';
+            echo '<td class="mono download-log-version">' . catalog_h((string)$row['package_version']) . '</td>';
+            echo '<td class="mono download-log-format">' . catalog_h((string)$row['package_format']) . '</td>';
+            echo '<td class="download-log-game">' . catalog_h((string)($row['game_name'] ?? '')) . '<br><a class="small" href="file-info.php?id=' . (int)$row['file_id'] . '">File #' . (int)$row['file_id'] . '</a></td>';
+            echo '<td class="mono download-log-ip">' . catalog_h($ipText)
                 . ($ipText !== '' && isset($blockedLookup[strtolower($ipText)]) ? '<br><span class="dep missing">blocked</span>' : '')
                 . '</td>';
             echo '<td class="download-country">';
@@ -577,12 +601,13 @@ try {
                 echo '<span class="download-country-empty" title="Country not recorded">—</span>';
             }
             echo '</td>';
-            echo '<td>' . catalog_h((string)($row['artifact_name'] ?? ''));
+            echo '<td class="download-log-artifact">' . catalog_h((string)($row['artifact_name'] ?? ''));
             if (isset($row['artifact_size'])) {
                 echo '<br><span class="small muted">' . catalog_h(catalog_bytes((int)$row['artifact_size'])) . '</span>';
             }
-            echo '</td><td><a href="background-jobs.php?q=' . (int)$row['job_id'] . '">#' . (int)$row['job_id'] . '</a></td>';
-            echo '<td class="download-log-agent"><span class="small">' . catalog_h((string)$row['user_agent']) . '</span>';
+            echo '</td><td class="download-log-job"><a href="background-jobs.php?q=' . (int)$row['job_id'] . '">#' . (int)$row['job_id'] . '</a></td>';
+            $userAgent = (string)$row['user_agent'];
+            echo '<td class="download-log-agent"><span class="small download-log-agent-text" title="' . catalog_h($userAgent) . '">' . catalog_h($userAgent) . '</span>';
             if ((string)($row['error_message'] ?? '') !== '') {
                 echo '<br><span class="download-log-error dep missing">' . catalog_h((string)$row['error_message']) . '</span>';
             }
