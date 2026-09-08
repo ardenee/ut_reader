@@ -39,7 +39,7 @@ $checks = [
         && str_contains($recorder, '->shouldIgnore($ipText, $isAdmin)')
         && strpos($recorder, '->shouldIgnore($ipText, $isAdmin)') < strpos($recorder, 'INSERT INTO ue_access_events'),
     'settings page is in administrator navigation' =>
-        str_contains($navigation, "'Logging Settings' => $root . 'logging-settings.php'"),
+        str_contains($navigation, "'Logging Settings' => \$root . 'logging-settings.php'"),
     'access matrix links directly to logging settings' =>
         str_contains($accessMatrix, "'Logging Settings' => 'logging-settings.php'"),
 ];
