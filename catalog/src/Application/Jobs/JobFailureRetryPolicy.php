@@ -64,6 +64,10 @@ final class JobFailureRetryPolicy
                 || str_contains($message, 'public upload sha-1 mismatch:');
         }
 
+        if ($jobType === JobType::GENERATE_MOD_PACKAGE) {
+            return self::isDeterministicGeneratedPackageMessage($message);
+        }
+
         return false;
     }
 
@@ -269,6 +273,25 @@ final class JobFailureRetryPolicy
             }
         }
 
+        return false;
+    }
+
+    private static function isDeterministicGeneratedPackageMessage(string $message): bool
+    {
+        foreach ([
+            'dependency object is genuinely missing',
+            'dependency objects are genuinely missing',
+            'dependencies are missing or only matched at package level',
+            'package exceeds the configured file limit',
+            'package exceeds the configured size limit',
+            'umod-family archives are limited to a 2000 mb payload',
+            'the selected package export format is disabled',
+            'the selected game has no active game profile',
+        ] as $marker) {
+            if (str_contains($message, $marker)) {
+                return true;
+            }
+        }
         return false;
     }
 
