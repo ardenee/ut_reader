@@ -439,6 +439,20 @@ function catalog_require_admin_page(string $title = 'Admin required'): bool
 function catalog_head(string $title): void
 {
     catalog_support_is_admin();
+
+    static $accessMatrixPageLogged = false;
+    if (!$accessMatrixPageLogged
+        && class_exists('UnrealDb\\Catalog\\Infrastructure\\Telemetry\\CatalogAccessEventRecorder')) {
+        try {
+            $accessMatrixPageLogged = true;
+            (new \UnrealDb\Catalog\Infrastructure\Telemetry\CatalogAccessEventRecorder(
+                catalog_db(catalog_config())
+            ))->recordPageView();
+        } catch (Throwable $error) {
+            error_log('[UnrealDB access matrix] page-view logging failed: ' . $error->getMessage());
+        }
+    }
+
     $root = catalog_support_root_prefix();
     $uiScriptPath = __DIR__ . '/../assets/catalog-ui.js';
     $uiScriptVersion = is_file($uiScriptPath) ? (string)filemtime($uiScriptPath) : '1';
