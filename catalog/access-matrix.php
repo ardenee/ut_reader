@@ -517,7 +517,7 @@ try {
 
     catalog_page_header(
         'Site Activity Logs',
-        'Page-load activity by default, with detailed server-render, section and interaction telemetry available when needed.',
+        'Page activity by default: browser-confirmed loads plus server-only requests, with detailed section and interaction telemetry available when needed.',
         ['Logging Settings' => 'logging-settings.php', 'Download Logs' => 'download-logs.php', 'Site Blacklist' => 'site-blacklist.php', 'Public Access' => 'public-access-settings.php']
     );
 
@@ -533,9 +533,9 @@ try {
     }
 
     echo '<div class="grid access-matrix-stats">';
-    catalog_stat_card('Page loads', $summary['page_views']);
-    catalog_stat_card('Unique IPs', $summary['unique_ips']);
-    catalog_stat_card('Sessions', $summary['sessions']);
+    catalog_stat_card('Page activity', $summary['page_activity'], 'Browser-confirmed + server-only page requests');
+    catalog_stat_card('Unique IPs', $summary['unique_ips'], 'IPs with page activity');
+    catalog_stat_card('Sessions', $summary['sessions'], 'Sessions with page activity');
     catalog_stat_card('Sections viewed', $summary['sections']);
     catalog_stat_card('Interactions', $summary['interactions']);
     echo '</div>';
@@ -546,7 +546,7 @@ try {
         echo '<option value="' . $value . '"' . ($days === $value ? ' selected' : '') . '>' . catalog_h($label) . '</option>';
     }
     echo '</select></label><label>Activity log <select name="event">';
-    foreach (['page_view' => 'Page loads', 'all' => 'All telemetry', 'server_page' => 'Server renders (diagnostic)', 'section' => 'Sections', 'interaction' => 'Interactions'] as $value => $label) {
+    foreach (['page_activity' => 'Page activity', 'page_view' => 'Browser-confirmed page loads', 'server_page' => 'Server-only page requests', 'all' => 'All telemetry', 'section' => 'Sections', 'interaction' => 'Interactions'] as $value => $label) {
         echo '<option value="' . $value . '"' . ($eventType === $value ? ' selected' : '') . '>' . catalog_h($label) . '</option>';
     }
     echo '</select></label>'
@@ -746,7 +746,9 @@ try {
     }
     echo '</div></section>';
 
-    $rawLabel = $eventType === 'page_view' ? 'page load(s)' : 'telemetry event(s)';
+    $rawLabel = $eventType === 'page_activity'
+        ? 'page request/load(s)'
+        : ($eventType === 'page_view' ? 'browser-confirmed page load(s)' : 'telemetry event(s)');
     echo '<section class="ui-section" id="raw-events"><div class="ui-section__header"><div><h2>Activity log</h2><p>'
         . number_format($total) . ' matching ' . $rawLabel . '.</p></div></div><div class="ui-section__body">';
     if (!$eventsAvailable || $rows === []) {
