@@ -105,6 +105,7 @@ function generated_package_request(
 
     $identity = [
         'file_id' => (int)$file['id'],
+        'root_sha1' => strtolower(trim((string)($file['sha1'] ?? ''))),
         'format' => $format,
         'include_dependencies' => $includeDependencies,
         'allow_incomplete' => $allowIncomplete,
@@ -300,7 +301,7 @@ try {
 
     $fileId = max(0, (int)($_POST['file_id'] ?? 0));
     $file = $fileId > 0
-        ? catalog_one($db, 'SELECT id,game_id,package_name FROM ue_files WHERE id=? AND scan_status="verified"', [$fileId])
+        ? catalog_one($db, 'SELECT id,game_id,package_name,sha1 FROM ue_files WHERE id=? AND scan_status="verified"', [$fileId])
         : null;
     if (!$file) {
         generated_package_reply(['ok' => false, 'error' => 'A valid verified file is required.'], 400);
