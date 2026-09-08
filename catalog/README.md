@@ -210,26 +210,39 @@ Backup/restore tooling is maintained under [`../deploy/backup`](../deploy/backup
 
 ## Detailed GeoIP city/region maps
 
-Administrator IP maps can use an optional local MaxMind GeoLite2/GeoIP2 City CSV dataset for approximate city/region placement. The browser never sends visitor IP addresses to MaxMind or another geolocation service; all resolution happens against the local `ue_geoip_country_ranges` table.
+Administrator IP maps can use a local city/region dataset for approximate placement. The browser never sends visitor IP addresses to a geolocation API; all lookups use the local `ue_geoip_country_ranges` table.
 
-1. Apply migrations:
+First apply migrations:
 
-   ```powershell
-   php catalog/bin/migrate.php migrate
-   ```
+```powershell
+php catalog/bin/migrate.php migrate
+```
 
-2. Download and extract the MaxMind **GeoLite2 City CSV** bundle. The extracted directory must contain:
-   - `GeoLite2-City-Blocks-IPv4.csv`
-   - `GeoLite2-City-Blocks-IPv6.csv`
-   - `GeoLite2-City-Locations-en.csv`
+### DB-IP City Lite
 
-3. Import it:
+For the existing DB-IP workflow, use the monthly **IP to City Lite CSV** file (`dbip-city-lite-YYYY-MM.csv.gz`) directly:
 
-   ```powershell
-   php catalog/bin/import-geoip-city-maxmind.php "C:\path\to\GeoLite2-City-CSV_YYYYMMDD"
-   ```
+```powershell
+php catalog/bin/import-geoip-city-dbip.php "C:\path\to\dbip-city-lite-YYYY-MM.csv.gz"
+```
 
-The importer builds a staging table and atomically swaps it into service only after the full dataset is valid. Existing country-only imports remain supported; when city coordinates are unavailable, maps fall back to a country position.
+The DB-IP City Lite format supplies IP start/end, country, state/province, city, latitude and longitude.
 
-GeoIP coordinates are approximate. Map tooltips include city/region when available and the dataset accuracy radius when supplied.
+### MaxMind GeoLite2 / GeoIP2 City
+
+Alternatively, extract the MaxMind City CSV bundle containing:
+
+- `GeoLite2-City-Blocks-IPv4.csv` / `GeoIP2-City-Blocks-IPv4.csv`
+- `GeoLite2-City-Blocks-IPv6.csv` / `GeoIP2-City-Blocks-IPv6.csv`
+- `GeoLite2-City-Locations-en.csv` / `GeoIP2-City-Locations-en.csv`
+
+Then run:
+
+```powershell
+php catalog/bin/import-geoip-city-maxmind.php "C:\path\to\GeoLite2-City-CSV_YYYYMMDD"
+```
+
+Both importers build a staging table and atomically swap it into service only after the full dataset has loaded. Existing country-only datasets remain supported; when detailed coordinates are unavailable, maps fall back to the country's main map component.
+
+GeoIP coordinates are approximate. Tooltips include city/region when available and an accuracy radius when the selected dataset supplies one.
 
