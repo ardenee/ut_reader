@@ -157,7 +157,7 @@ try {
 
     $eventType = access_matrix_choice(
         (string)($_GET['event'] ?? 'all'),
-        ['all', 'page_view', 'section', 'interaction'],
+        ['all', 'page_view', 'server_page', 'section', 'interaction'],
         'all'
     );
     $days = access_matrix_choice((string)($_GET['days'] ?? '7'), ['1', '7', '30', '90', 'all'], '7');
@@ -197,7 +197,7 @@ try {
     }
     $whereSql = $where !== [] ? ' WHERE ' . implode(' AND ', $where) : '';
 
-    $summary = ['events' => 0, 'page_views' => 0, 'interactions' => 0, 'unique_ips' => 0];
+    $summary = ['events' => 0, 'page_views' => 0, 'server_pages' => 0, 'interactions' => 0, 'unique_ips' => 0];
     $rows = [];
     $total = 0;
     $pages = 1;
@@ -211,6 +211,7 @@ try {
         $summaryRow = catalog_one(
             $db,
             'SELECT COUNT(*) events,SUM(a.event_type="page_view") page_views,'
+            . 'SUM(a.event_type="server_page") server_pages,'
             . 'SUM(a.event_type="interaction") interactions,COUNT(DISTINCT a.ip_address) unique_ips '
             . 'FROM ue_access_events a' . $whereSql,
             $args
@@ -218,6 +219,7 @@ try {
         $summary = [
             'events' => (int)($summaryRow['events'] ?? 0),
             'page_views' => (int)($summaryRow['page_views'] ?? 0),
+            'server_pages' => (int)($summaryRow['server_pages'] ?? 0),
             'interactions' => (int)($summaryRow['interactions'] ?? 0),
             'unique_ips' => (int)($summaryRow['unique_ips'] ?? 0),
         ];
@@ -275,6 +277,7 @@ try {
             $db,
             'SELECT INET6_NTOA(a.ip_address) ip,COUNT(*) events,'
             . 'SUM(a.event_type="page_view") page_views,'
+            . 'SUM(a.event_type="server_page") server_pages,'
             . 'SUM(a.event_type="interaction") interactions,'
             . 'MIN(a.occurred_at) first_seen,MAX(a.occurred_at) last_seen '
             . 'FROM ue_access_events a'
@@ -299,7 +302,7 @@ try {
 
     catalog_head('Access Matrix');
     echo '<style>'
-        . '.access-matrix-stats{grid-template-columns:repeat(4,minmax(140px,1fr));margin-bottom:14px}'
+        . '.access-matrix-stats{grid-template-columns:repeat(5,minmax(140px,1fr));margin-bottom:14px}'
         . '.access-matrix-filter{display:flex;gap:9px;align-items:end;flex-wrap:wrap;margin-bottom:14px}'
         . '.access-matrix-filter .grow{flex:1;min-width:220px}'
         . '.access-matrix-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}'
@@ -331,7 +334,8 @@ try {
 
     echo '<div class="grid access-matrix-stats">';
     catalog_stat_card('Events', $summary['events']);
-    catalog_stat_card('Page views', $summary['page_views']);
+    catalog_stat_card('Browser page views', $summary['page_views']);
+    catalog_stat_card('Server renders', $summary['server_pages']);
     catalog_stat_card('Interactions', $summary['interactions']);
     catalog_stat_card('Unique IPs', $summary['unique_ips']);
     echo '</div>';
@@ -342,7 +346,7 @@ try {
         echo '<option value="' . $value . '"' . ($days === $value ? ' selected' : '') . '>' . catalog_h($label) . '</option>';
     }
     echo '</select></label><label>Event <select name="event">';
-    foreach (['all' => 'All', 'page_view' => 'Page views', 'section' => 'Sections', 'interaction' => 'Interactions'] as $value => $label) {
+    foreach (['all' => 'All', 'page_view' => 'Browser page views', 'server_page' => 'Server renders', 'section' => 'Sections', 'interaction' => 'Interactions'] as $value => $label) {
         echo '<option value="' . $value . '"' . ($eventType === $value ? ' selected' : '') . '>' . catalog_h($label) . '</option>';
     }
     echo '</select></label>'
@@ -404,12 +408,12 @@ try {
     echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Most active IPs</h2><p>Useful for spotting crawler-like navigation before blocking an address.</p></div></div><div class="ui-section__body">';
     if ($topIps === []) echo '<p class="muted">No IP activity.</p>';
     else {
-        echo '<table><thead><tr><th>IP</th><th>Events</th><th>Pages</th><th>Clicks</th><th>First</th><th>Last</th><th></th></tr></thead><tbody>';
+        echo '<table><thead><tr><th>IP</th><th>Events</th><th>Browser pages</th><th>Server renders</th><th>Clicks</th><th>First</th><th>Last</th><th></th></tr></thead><tbody>';
         foreach ($topIps as $row) {
             $ipText = (string)$row['ip'];
             echo '<tr><td class="mono">' . catalog_h($ipText)
                 . (isset($blockedLookup[strtolower($ipText)]) ? ' <span class="dep missing">blocked</span>' : '') . '</td>'
-                . '<td>' . (int)$row['events'] . '</td><td>' . (int)$row['page_views'] . '</td><td>' . (int)$row['interactions'] . '</td>'
+                . '<td>' . (int)$row['events'] . '</td><td>' . (int)$row['page_views'] . '</td><td>' . (int)$row['server_pages'] . '</td><td>' . (int)$row['interactions'] . '</td>'
                 . '<td class="mono small">' . catalog_h((string)$row['first_seen']) . '</td><td class="mono small">' . catalog_h((string)$row['last_seen']) . '</td>'
                 . '<td><a class="button secondary" href="access-matrix.php?' . catalog_h(access_matrix_query(['ip' => $ipText, 'p' => 1])) . '">View activity</a></td></tr>';
         }
