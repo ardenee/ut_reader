@@ -17,8 +17,8 @@ require_once __DIR__ . '/BaseGameProtection.php';
 
 function external_public_download_mode(PDO $db): string
 {
-    $mode = (string)fed_setting($db, 'public_download_mode', 'local_direct');
-    return in_array($mode, ['local_direct','external_mirror','external_mirror_preferred','disabled'], true) ? $mode : 'local_direct';
+    $mode = (string)fed_setting($db, 'public_download_mode', 'external_mirror');
+    return in_array($mode, ['external_mirror','disabled'], true) ? $mode : 'external_mirror';
 }
 
 function external_active_link_for_file(PDO $db, int $fileId): ?array
