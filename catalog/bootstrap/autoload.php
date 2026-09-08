@@ -32,9 +32,23 @@ declare(strict_types=1);
         $relativePath = str_replace('\\', DIRECTORY_SEPARATOR, $relativeClass) . '.php';
         $path = $baseDirectory . $relativePath;
 
-        if (is_file($path)) {
-            require_once $path;
+        if (!is_file($path)) {
+            return;
         }
+
+        // Windows deployments can briefly deny reads while git/antivirus is
+        // replacing or scanning a PHP file. Treat that as a transient sharing
+        // violation instead of immediately taking the request down.
+        for ($attempt = 0; $attempt < 3; $attempt++) {
+            if (@include_once $path) {
+                return;
+            }
+            clearstatcache(true, $path);
+            usleep(25000);
+        }
+
+        // Preserve the normal fatal signal when the file remains unreadable.
+        require_once $path;
     });
 })();
 
