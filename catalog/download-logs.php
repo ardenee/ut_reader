@@ -398,7 +398,8 @@ try {
             'Download Administration' => 'download-admin.php',
             'Package Settings' => 'download-package-settings.php',
             'Download Settings' => 'downloads-settings.php',
-            'Access Matrix' => 'access-matrix.php',
+            'Site Activity Logs' => 'access-matrix.php',
+            'Site Blacklist' => 'site-blacklist.php',
         ]
     );
 
