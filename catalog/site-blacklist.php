@@ -8,6 +8,12 @@ require_once __DIR__ . '/lib/CatalogSupport.php';
 
 use UnrealDb\Catalog\Infrastructure\Security\CatalogSiteBlocklist;
 
+function site_blacklist_time(mixed $value): string
+{
+    $value = trim((string)$value);
+    return $value === '' ? '' : substr($value, 0, 19);
+}
+
 try {
     $config = catalog_config();
     $db = catalog_db($config);
@@ -177,7 +183,7 @@ try {
         foreach ($blockedRows as $row) {
             echo '<tr><td class="mono site-blacklist-ip">' . catalog_h((string)$row['ip']) . '</td>'
                 . '<td>' . catalog_h((string)$row['note']) . '</td>'
-                . '<td class="mono small site-blacklist-time">' . catalog_h((string)$row['created_at']) . '</td>'
+                . '<td class="mono small site-blacklist-time">' . catalog_h(site_blacklist_time($row['created_at'])) . '</td>'
                 . '<td class="site-blacklist-actions"><form method="post" onsubmit="return confirm(\'Restore site access for this IP?\')">'
                 . '<input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('site_blacklist_admin')) . '">'
                 . '<input type="hidden" name="action" value="unblock">'
@@ -195,7 +201,7 @@ try {
     } else {
         echo '<div class="table-wrap"><table class="site-blacklist-table"><thead><tr><th>Time</th><th>IP</th><th>Email</th><th>Request</th><th>Status</th><th>Action</th></tr></thead><tbody>';
         foreach ($feedbackRows as $row) {
-            echo '<tr><td class="mono small site-blacklist-time">' . catalog_h((string)$row['created_at']) . '</td>'
+            echo '<tr><td class="mono small site-blacklist-time">' . catalog_h(site_blacklist_time($row['created_at'])) . '</td>'
                 . '<td class="mono site-blacklist-ip">' . catalog_h((string)$row['ip']) . '</td>'
                 . '<td>' . catalog_h((string)($row['email'] ?? '')) . '</td>'
                 . '<td class="site-blacklist-message">' . nl2br(catalog_h((string)$row['message'])) . '</td>'
