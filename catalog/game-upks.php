@@ -154,7 +154,10 @@ try {
             echo '<td class="nowrap" title="Names / Imports / Exports"><span class="mono">' . catalog_h($database) . '</span>'
                 . '<br><span class="small muted">' . catalog_h(catalog_bytes((int)$upk['serialized_export_bytes'])) . ' serialized payload</span></td>';
             echo '<td class="nowrap">' . catalog_h(catalog_bytes((int)$upk['file_size'])) . '</td>';
-            echo '<td class="nowrap"><a class="button" href="download.php?id=' . $id . '">Download UPK</a>';
+            $downloadHref = $isAdmin
+                ? 'download.php?id=' . $id
+                : 'download-info.php?id=' . $id;
+            echo '<td class="nowrap"><a class="button" href="' . catalog_h($downloadHref) . '">Download UPK</a>';
             if ($isAdmin) {
                 $confirm = 'Delete ' . (string)$upk['original_name'] . ' from storage and the catalog? Its indexed names, imports, exports and dependencies will also be deleted.';
                 echo '<form method="post" action="file-maintenance.php" style="display:inline" onsubmit="return confirm(\'' . catalog_h($confirm) . '\')">'
