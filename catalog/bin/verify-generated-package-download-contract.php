@@ -57,6 +57,9 @@ $record = static function (string $name, bool $ok, string $detail) use (&$checks
 $record(
     'public_individual_files_require_download_info_grant',
     str_contains($source['download_info'], 'catalog_public_download_grant_issue((int)$file[\'id\'])')
+        && str_contains($source['download_info'], '<form method="post" action="download.php"')
+        && str_contains($source['download_info'], 'name="grant"')
+        && str_contains($source['download'], "\$method !== 'POST'")
         && str_contains($source['download'], 'catalog_public_download_came_from_info($id)')
         && str_contains($source['download'], 'catalog_public_download_grant_consume($id, $grant)')
         && str_contains($source['download'], 'public_download_redirect_to_info($id);')
@@ -65,7 +68,7 @@ $record(
         && str_contains($source['download_grant'], 'unset($_SESSION[self::SESSION_KEY][$key]);')
         && str_contains($source['download_grant'], "strtolower(basename(\$path)) !== 'download-info.php'")
         && str_contains($source['public_access'], 'function catalog_public_download_grant_issue(int $fileId): string'),
-    'Public download.php requests must carry a short-lived one-time browser-session grant issued by download-info.php and must originate from that same-site file page.'
+    'Public download.php requests must be POSTed from download-info.php with a short-lived one-time browser-session grant; public direct GET/bookmark/download-manager URLs are not valid transfer entry points.'
 );
 
 $record(
