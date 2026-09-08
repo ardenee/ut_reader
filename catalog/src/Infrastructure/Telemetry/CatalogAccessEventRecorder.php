@@ -87,6 +87,17 @@ final class CatalogAccessEventRecorder
                 ? (int)$_SESSION['user']['id']
                 : null;
 
+            // A normal dynamic page first records server_page from PHP, then the
+            // browser confirms that the rendered HTML was actually displayed.
+            // Promote that recent render instead of inserting a second page row.
+            // Cached pages have no matching server render and therefore insert a
+            // fresh page_view below. This gives one primary page-load row while
+            // retaining server_page only for no-JS/bot/aborted-render diagnostics.
+            if ((string)($event['event_type'] ?? '') === 'page_view'
+                && $this->promoteRecentServerPage($event, $packedIp, $sessionHash)) {
+                return;
+            }
+
             $statement = $this->db->prepare(
                 'INSERT INTO ue_access_events('
                 . 'event_type,page_key,request_path,section_key,action_key,target_path,referrer_path,'
@@ -118,6 +129,50 @@ final class CatalogAccessEventRecorder
         } catch (\Throwable $error) {
             error_log('[UnrealDB access matrix] ' . $error->getMessage());
         }
+    }
+
+    /** @param array<string,mixed> $event */
+    private function promoteRecentServerPage(array $event, string|false $packedIp, ?string $sessionHash): bool
+    {
+        $where = [
+            'event_type="server_page"',
+            'page_key=?',
+            'request_path=?',
+            'occurred_at>=DATE_SUB(CURRENT_TIMESTAMP(6),INTERVAL 15 SECOND)',
+        ];
+        $args = [
+            self::text($event['page_key'] ?? 'unknown', 190),
+            self::text($event['request_path'] ?? '', 500),
+        ];
+
+        if ($sessionHash !== null) {
+            $where[] = 'session_hash=?';
+            $args[] = $sessionHash;
+        } elseif (is_string($packedIp)) {
+            $where[] = 'ip_address=?';
+            $args[] = $packedIp;
+            $where[] = 'user_agent=?';
+            $args[] = self::text($_SERVER['HTTP_USER_AGENT'] ?? '', 500);
+        } else {
+            return false;
+        }
+
+        $statement = $this->db->prepare(
+            'SELECT id FROM ue_access_events WHERE ' . implode(' AND ', $where)
+            . ' ORDER BY occurred_at DESC,id DESC LIMIT 1'
+        );
+        $statement->execute($args);
+        $id = (int)($statement->fetchColumn() ?: 0);
+        if ($id < 1) {
+            return false;
+        }
+
+        $update = $this->db->prepare(
+            'UPDATE ue_access_events SET event_type="page_view" '
+            . 'WHERE id=? AND event_type="server_page"'
+        );
+        $update->execute([$id]);
+        return $update->rowCount() === 1;
     }
 
     private static function safeRequestPath(string $value): string
