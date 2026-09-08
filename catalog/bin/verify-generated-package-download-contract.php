@@ -26,6 +26,7 @@ $files = [
     'package_jobs_js' => 'assets/generated-package-jobs.js',
     'package_access' => 'src/Infrastructure/Jobs/CatalogGeneratedPackageJobAccess.php',
     'package_queue' => 'src/Infrastructure/Jobs/CatalogGeneratedPackageQueue.php',
+    'worker_factory' => 'src/Infrastructure/Jobs/CatalogJobWorkerFactory.php',
     'package_handler' => 'src/Infrastructure/Jobs/GeneratedPackageJobHandler.php',
     'retry_policy' => 'src/Application/Jobs/JobFailureRetryPolicy.php',
     'fingerprint' => 'src/Infrastructure/Jobs/CatalogWorkerCodeVersion.php',
@@ -55,8 +56,8 @@ $record(
         && str_contains($source['download'], 'public_download_send_local($config, $db, $file);')
         && str_contains($source['download'], 'external_public_download_decision(')
         && str_contains($source['download'], 'header(\'Location: \' . $externalUrl, true, 302);')
-        && str_contains($source['external'], 'bool $allowLocalDirect = false')
-        && str_contains($source['external'], 'if ($allowLocalDirect && in_array($mode')
+        && str_contains($source['external'], "fed_setting(\$db, 'public_download_mode', 'external_mirror')")
+        && str_contains($source['external'], "in_array(\$mode, ['external_mirror','disabled'], true)")
         && str_contains($source['settings'], "['external_mirror', 'disabled']")
         && str_contains($source['migration'], 'setting_value IN ("local_direct","external_mirror_preferred")'),
     'Public users must use an external provider link; only authenticated administrators may stream the verified local file.'
@@ -84,6 +85,7 @@ $record(
         && str_contains($source['package_job'], '$dedupeKey = \'generated-package:\' . $buildKey;')
         && preg_match('/JobType::GENERATE_MOD_PACKAGE,\s*\$payload,\s*0,/s', $source['package_job']) === 1
         && str_contains($source['package_queue'], "'package_name'")
+        && str_contains($source['worker_factory'], 'JobType::GENERATE_MOD_PACKAGE => static fn() => new GeneratedPackageJobHandler($db, $config)')
         && str_contains($source['config'], "'package_name' => 'catalog-packages'")
         && str_contains($source['config'], "'package_worker_processes' => 1"),
     'Interactive package generation must run at priority 0 on a separate package queue with its own detached worker.'
@@ -176,6 +178,7 @@ foreach ([
     'pak-download.php',
     'src/Infrastructure/Jobs/CatalogGeneratedPackageJobAccess.php',
     'src/Infrastructure/Jobs/CatalogGeneratedPackageQueue.php',
+    'src/Infrastructure/Jobs/CatalogJobWorkerFactory.php',
     'src/Infrastructure/Jobs/GeneratedPackageJobHandler.php',
     'src/Application/Jobs/JobFailureRetryPolicy.php',
     'src/Infrastructure/Downloads/CatalogDownloadSettingsService.php',
