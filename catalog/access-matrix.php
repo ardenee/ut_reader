@@ -367,7 +367,7 @@ try {
             'SELECT a.page_key,MIN(a.request_path) sample_path,COUNT(*) hits,COUNT(DISTINCT a.ip_address) unique_ips '
             . 'FROM ue_access_events a'
             . ($whereSql === '' ? ' WHERE ' : $whereSql . ' AND ')
-            . 'a.event_type="page_view" GROUP BY a.page_key ORDER BY hits DESC,a.page_key LIMIT 20',
+            . 'a.event_type="page_view" GROUP BY a.page_key ORDER BY hits DESC,a.page_key LIMIT 10',
             $args
         );
         $topLinks = catalog_all(
@@ -376,7 +376,7 @@ try {
             . 'FROM ue_access_events a'
             . ($whereSql === '' ? ' WHERE ' : $whereSql . ' AND ')
             . 'a.event_type="page_view" AND a.request_path<>"" '
-            . 'GROUP BY a.request_path ORDER BY hits DESC,a.request_path LIMIT 30',
+            . 'GROUP BY a.request_path ORDER BY hits DESC,a.request_path LIMIT 10',
             $args
         );
         $topSections = catalog_all(
@@ -385,7 +385,7 @@ try {
             . 'FROM ue_access_events a'
             . ($whereSql === '' ? ' WHERE ' : $whereSql . ' AND ')
             . 'a.event_type="section" AND a.section_key IS NOT NULL '
-            . 'GROUP BY a.page_key,a.section_key ORDER BY hits DESC,a.page_key LIMIT 20',
+            . 'GROUP BY a.page_key,a.section_key ORDER BY hits DESC,a.page_key LIMIT 10',
             $args
         );
         $topActions = catalog_all(
@@ -394,7 +394,7 @@ try {
             . 'FROM ue_access_events a'
             . ($whereSql === '' ? ' WHERE ' : $whereSql . ' AND ')
             . 'a.event_type="interaction" AND a.action_key IS NOT NULL '
-            . 'GROUP BY a.page_key,a.action_key,a.target_path ORDER BY hits DESC,a.page_key LIMIT 20',
+            . 'GROUP BY a.page_key,a.action_key,a.target_path ORDER BY hits DESC,a.page_key LIMIT 10',
             $args
         );
         $transitions = catalog_all(
@@ -403,7 +403,7 @@ try {
             . 'FROM ue_access_events a'
             . ($whereSql === '' ? ' WHERE ' : $whereSql . ' AND ')
             . 'a.event_type="page_view" AND a.referrer_path IS NOT NULL AND a.referrer_path<>"" '
-            . 'GROUP BY a.referrer_path,a.request_path ORDER BY hits DESC LIMIT 30',
+            . 'GROUP BY a.referrer_path,a.request_path ORDER BY hits DESC LIMIT 10',
             $args
         );
         $topIps = catalog_all(
@@ -461,6 +461,13 @@ try {
         . '.access-matrix-grid th,.access-matrix-grid td{vertical-align:top}'
         . '.access-matrix-grid td:first-child,.access-matrix-grid th:first-child{min-width:0;overflow-wrap:anywhere;word-break:break-word}'
         . '.access-matrix-grid td:first-child .mono,.access-matrix-grid th:first-child .mono,.access-matrix-grid td:first-child a{white-space:normal;overflow-wrap:anywhere;word-break:break-word}'
+        . '.access-matrix-sections-table th:nth-child(1),.access-matrix-sections-table td:nth-child(1){width:24%;min-width:130px;white-space:nowrap;overflow-wrap:normal;word-break:normal}'
+        . '.access-matrix-sections-table td:nth-child(1) a{white-space:nowrap;overflow-wrap:normal;word-break:normal}'
+        . '.access-matrix-sections-table th:nth-child(3),.access-matrix-sections-table td:nth-child(3),.access-matrix-sections-table th:nth-child(4),.access-matrix-sections-table td:nth-child(4){width:1%;white-space:nowrap}'
+        . '.access-matrix-interactions-table th:nth-child(1),.access-matrix-interactions-table td:nth-child(1){width:20%;min-width:130px;white-space:nowrap;overflow-wrap:normal;word-break:normal}'
+        . '.access-matrix-interactions-table td:nth-child(1) a{white-space:nowrap;overflow-wrap:normal;word-break:normal}'
+        . '.access-matrix-interactions-table th:nth-child(2),.access-matrix-interactions-table td:nth-child(2){width:28%}'
+        . '.access-matrix-interactions-table th:nth-child(4),.access-matrix-interactions-table td:nth-child(4),.access-matrix-interactions-table th:nth-child(5),.access-matrix-interactions-table td:nth-child(5){width:1%;white-space:nowrap}'
         . '.access-matrix-table{min-width:1040px;table-layout:auto}'
         . '.access-matrix-table .am-check,.access-matrix-table .am-time,.access-matrix-table .am-type,.access-matrix-table .am-ip{width:1%;white-space:nowrap}'
         . '.access-matrix-table .am-page{width:auto;min-width:300px;overflow-wrap:anywhere}'
@@ -584,7 +591,7 @@ try {
     echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Busiest sections</h2></div></div><div class="ui-section__body">';
     if ($topSections === []) echo '<p class="muted">No section-view data.</p>';
     else {
-        echo '<table><thead><tr><th>Page</th><th>Section</th><th>Hits</th><th>IPs</th></tr></thead><tbody>';
+        echo '<table class="access-matrix-sections-table"><thead><tr><th>Page</th><th>Section</th><th>Hits</th><th>IPs</th></tr></thead><tbody>';
         foreach ($topSections as $row) {
             $sectionFilters = [
                 'event' => 'section',
@@ -603,7 +610,7 @@ try {
     echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Top interactions</h2></div></div><div class="ui-section__body">';
     if ($topActions === []) echo '<p class="muted">No interaction data.</p>';
     else {
-        echo '<table><thead><tr><th>Page</th><th>Action</th><th>Target</th><th>Hits</th><th>IPs</th></tr></thead><tbody>';
+        echo '<table class="access-matrix-interactions-table"><thead><tr><th>Page</th><th>Action</th><th>Target</th><th>Hits</th><th>IPs</th></tr></thead><tbody>';
         foreach ($topActions as $row) {
             $actionFilters = [
                 'event' => 'interaction',
