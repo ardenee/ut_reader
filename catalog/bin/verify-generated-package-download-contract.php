@@ -17,7 +17,9 @@ $read = static function (string $relative) use ($root): string {
 $files = [
     'game_files' => 'game-files.php',
     'game_upks' => 'game-upks.php',
+    'upk_info' => 'upk-info.php',
     'index' => 'index.php',
+    'public_cache' => 'src/Infrastructure/Cache/CatalogPublicResponseCacheService.php',
     'download' => 'download.php',
     'public_access' => 'lib/CatalogPublicAccess.php',
     'download_grant' => 'src/Infrastructure/Security/CatalogPublicDownloadGrant.php',
@@ -72,10 +74,20 @@ $record(
         && str_contains($source['game_files'], ": 'download-info.php?id=' . \$fileId")
         && str_contains($source['game_upks'], "? 'download.php?id=' . \$id")
         && str_contains($source['game_upks'], ": 'download-info.php?id=' . \$id")
+        && str_contains($source['upk_info'], "? 'download.php?id=' . \$fileId")
+        && str_contains($source['upk_info'], ": 'download-info.php?id=' . \$fileId")
         && str_contains($source['index'], "catalog_support_is_admin() ? 'download.php?id=' : 'download-info.php?id='")
         && str_contains($source['download_info'], "? 'download.php?id=' . (int)\$dep['id']")
         && str_contains($source['download_info'], ": 'download-info.php?id=' . (int)\$dep['id']"),
     'Public file lists, UPK lists, legacy download aliases and dependency actions must open each file\'s download-info.php page first; administrators may retain direct download.php links.'
+);
+
+$record(
+    'download_info_is_never_anonymous_response_cached',
+    !str_contains($source['public_cache'], "'download-info.php' =>")
+        && str_contains($source['public_cache'], 'if (!isset($defaults[$script]))')
+        && str_contains($source['public_cache'], 'return 0;'),
+    'download-info.php contains session-specific one-time grants and must remain outside the anonymous response-cache route allowlist.'
 );
 
 $record(
@@ -195,7 +207,9 @@ $syntaxFailures = [];
 $syntaxFiles = [
     'game-files.php',
     'game-upks.php',
+    'upk-info.php',
     'index.php',
+    'src/Infrastructure/Cache/CatalogPublicResponseCacheService.php',
     'download.php',
     'lib/CatalogPublicAccess.php',
     'src/Infrastructure/Security/CatalogPublicDownloadGrant.php',
