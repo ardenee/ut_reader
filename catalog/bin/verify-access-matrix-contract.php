@@ -56,7 +56,7 @@ $record(
 
 $record(
     'interaction_tracking_avoids_form_values',
-    str_contains($client, "closest('a[href],button,input[type="submit"],input[type="button"]')")
+    str_contains($client, 'closest(\'a[href],button,input[type="submit"],input[type="button"]\')')
         && str_contains($client, "event_type: 'section'")
         && str_contains($client, "event_type: 'interaction'")
         && !str_contains($client, 'FormData(')
@@ -88,7 +88,7 @@ $record(
         && str_contains($guard, '$script !== \'blacklisted.php\'')
         && str_contains($guard, "header('Location: ' . \$location)")
         && str_contains($guard, 'http_response_code(302)')
-        && strpos($guard, 'CatalogSiteBlocklist::isBlockedCached') < strpos($guard, 'if (!\$this->guardableMethod())'),
+        && strpos($guard, 'CatalogSiteBlocklist::isBlockedCached') < strpos($guard, 'if (!$this->guardableMethod())'),
     'Anonymous blocked IPs must be redirected to blacklisted.php before normal browsing; administrator sessions remain exempt.'
 );
 
