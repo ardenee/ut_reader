@@ -447,7 +447,7 @@ try {
         . '.access-matrix-ip-actions .ui-button{min-width:30px;padding:2px 7px;line-height:1.2}'
         . '.access-matrix-date{display:inline-block}'
         . '.access-matrix-clock{display:inline-block;color:var(--muted)}'
-        . '.access-country-flag{font-size:1.2rem;line-height:1;vertical-align:-1px;cursor:help}'
+        . '.access-country-flag{display:inline-block;width:20px;height:15px;object-fit:cover;border-radius:2px;vertical-align:-2px;cursor:help}'
         . '.access-matrix-actions,.access-block-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}'
         . '.access-block-actions .grow{flex:1;min-width:240px}'
 
@@ -738,10 +738,9 @@ try {
                 ])) . '">session ' . catalog_h(substr($sessionHex, 0, 12)) . '…</a>'
                 : '';
             $isBlockedIp = $ipText !== '' && isset($blockedLookup[strtolower($ipText)]);
-            $countryFlag = catalog_country_flag($countryCode);
-            $countryFlagHtml = $countryFlag !== ''
-                ? '<span class="access-country-flag" role="img" aria-label="' . catalog_h($countryName !== '' ? $countryName : $countryCode)
-                    . '" title="' . catalog_h($countryCode) . '">' . catalog_h($countryFlag) . '</span> '
+            $countryFlagHtml = preg_match('/^[A-Z]{2}$/', $countryCode) === 1
+                ? '<img class="access-country-flag" src="country-flag.php?code=' . rawurlencode(strtolower($countryCode))
+                    . '" alt="" title="' . catalog_h($countryCode) . '" loading="lazy" width="20" height="15"> '
                 : '';
             echo '</td><td class="mono am-ip"><div class="access-matrix-ip-line"><span class="access-matrix-ip-value">'
                 . $countryFlagHtml . catalog_h($ipText) . '</span>';
