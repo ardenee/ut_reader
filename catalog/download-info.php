@@ -60,6 +60,14 @@ try {
         throw new RuntimeException('File not found');
     }
 
+    $isAdmin = catalog_support_is_admin();
+    $individualDownloadHref = $isAdmin
+        ? 'download.php?id=' . (int)$file['id']
+        : 'download.php?' . http_build_query([
+            'id' => (int)$file['id'],
+            'grant' => catalog_public_download_grant_issue((int)$file['id']),
+        ]);
+
     $packageSettings = new CatalogPackageExportSettingsService($db);
     $game = $packageSettings->game((int)$file['game_id']);
     if (!$game) {
@@ -100,11 +108,11 @@ try {
     );
 
     echo '<div class="card"><h2>Individual file</h2><p><strong>' . catalog_h($file['package_name']) . '</strong><br>' . catalog_h(catalog_clean_unreal_filename((string)$file['original_name'])) . '</p>';
-    echo '<p class="muted">Public individual-file downloads use the protected download controller by default, so the physical catalogue-storage path is never exposed. External-mirror-only mode remains available as an administrator choice. Base-game protection is always enforced.</p>';
+    echo '<p class="muted">Public downloads must start from this download-options page. The Download button receives a short-lived one-time browser-session grant; copied or crawled <span class="mono">download.php?id=…</span> links are redirected back here. The physical catalogue-storage path is never exposed.</p>';
     echo '<div class="ui-inline-actions">' . CatalogUi::iconButton([
         'label' => 'Download ' . catalog_clean_unreal_filename((string)$file['original_name']),
         'icon' => '⇩',
-        'href' => 'download.php?id=' . (int)$file['id'],
+        'href' => $individualDownloadHref,
         'size' => 'sm',
         'variant' => 'primary',
     ]);
@@ -197,7 +205,9 @@ try {
             echo '<tr><td class="mono"><a href="file-info.php?id=' . (int)$dep['id'] . '">' . catalog_h($dep['package_name']) . '</a></td><td><a href="file-examine.php?id=' . (int)$dep['id'] . '">' . catalog_h(catalog_clean_unreal_filename((string)$dep['original_name'])) . '</a></td><td>' . CatalogUi::identity((string)$dep['package_guid'], (string)$dep['md5'], (string)$dep['sha1']) . '</td><td>' . catalog_h(catalog_bytes((int)$dep['file_size'])) . '</td><td><span class="dep ' . catalog_h((string)$dep['status']) . '">' . catalog_h((string)$dep['status']) . '</span></td><td>' . render_public_download_status($db, (int)$dep['id']) . '</td><td>' . render_availability($db, (int)$dep['id']) . '</td><td>' . CatalogUi::iconButton([
                 'label' => 'Download ' . catalog_clean_unreal_filename((string)$dep['original_name']),
                 'icon' => '⇩',
-                'href' => 'download.php?id=' . (int)$dep['id'],
+                'href' => $isAdmin
+                    ? 'download.php?id=' . (int)$dep['id']
+                    : 'download-info.php?id=' . (int)$dep['id'],
                 'size' => 'sm',
             ]) . '</td></tr>';
         }
