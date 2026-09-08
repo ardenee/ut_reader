@@ -30,24 +30,34 @@ $record(
 );
 
 $record(
-    'package_and_file_columns_get_width_priority',
-    str_contains($page, '.game-files-package,')
-        && str_contains($page, '#game-files-table .game-files-file {')
-        && str_contains($page, 'width: 50%;')
+    'file_and_package_share_one_primary_column',
+    str_contains($page, 'File / Package')
+        && str_contains($page, 'class="game-files-primary"')
+        && str_contains($page, 'class="game-files-primary-file"')
+        && str_contains($page, 'class="game-files-primary-package mono small"')
+        && str_contains($page, 'href="file-examine.php?id=')
+        && str_contains($page, 'href="file-info.php?id=')
+        && str_contains($page, 'file-type-pill'),
+    'The main table column must show the filename first, package underneath, then the type badge, while retaining both detail links.'
+);
+
+$record(
+    'primary_column_gets_remaining_width',
+    str_contains($page, '#game-files-table .game-files-primary {')
+        && str_contains($page, 'width: auto;')
         && str_contains($page, 'overflow-wrap: anywhere;')
         && str_contains($page, 'word-break: break-word;')
-        && str_contains($page, 'class="game-files-file"'),
-    'Package and File must share the remaining table width and wrap long Unreal paths instead of being squeezed by metadata columns.'
+        && str_contains($page, 'table-layout: auto !important;'),
+    'The merged File/Package column must consume the remaining table width and wrap only when necessary.'
 );
 
 $record(
     'metadata_columns_are_content_sized',
-    str_contains($page, 'table-layout: auto !important;')
-        && str_contains($page, '#game-files-table .identity-cell,')
+    str_contains($page, '#game-files-table .identity-cell,')
         && str_contains($page, '#game-files-table .game-files-actions {')
         && str_contains($page, 'width: 1%;')
         && str_contains($page, '.identity-cell { white-space: nowrap;'),
-    'Identity, Version, Size, Compression, Dependencies and Actions must stay only as wide as their contents need so Package/File receive the available space.'
+    'Identity, Version, Size, Compression, Dependencies and Actions must stay only as wide as their contents require.'
 );
 
 $pipes = [];
