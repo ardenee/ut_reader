@@ -78,8 +78,8 @@ try {
     $config = catalog_config();
     $db = catalog_db($config);
     $jobId = max(0, (int)($_GET['job_id'] ?? 0));
-    $token = (string)($_SESSION['generated_package_jobs'][(string)$jobId] ?? '');
-    if ($jobId < 1 || $token === '') {
+    $grant = (string)($_SESSION['generated_package_jobs'][(string)$jobId] ?? '');
+    if ($jobId < 1 || $grant === '') {
         throw new RuntimeException('This generated package is not available in the current browser session.');
     }
 
@@ -88,7 +88,7 @@ try {
     if (!$job || (string)$job['status'] !== 'completed') {
         throw new RuntimeException('The generated package is not ready.');
     }
-    if (!$access->isAuthorized($job, $token)) {
+    if (!$access->isAuthorizedGrant($job, $grant)) {
         throw new RuntimeException('This generated package is not authorized for the current browser session.');
     }
     $payload = is_array($job['payload'] ?? null) ? $job['payload'] : [];
