@@ -494,7 +494,7 @@ try {
         . '.download-log-pages{justify-content:space-between;margin-top:12px}'
 
         . '.download-country{text-align:center;white-space:nowrap}'
-        . '.download-country-flag{font-size:1.35rem;line-height:1;cursor:help}'
+        . '.download-country-flag{display:inline-block;width:20px;height:15px;object-fit:cover;border-radius:2px;vertical-align:-2px;cursor:help}'
         . '.download-country-empty{color:var(--muted)}'
         . '@media(max-width:1000px){.download-log-cards{grid-template-columns:1fr 1fr}}'
         . '</style>';
@@ -687,8 +687,8 @@ try {
             echo '</td>';
             echo '<td class="download-country">';
             if ($countryCode !== '' && $countryName !== '') {
-                echo '<span class="download-country-flag" role="img" aria-label="' . catalog_h($countryName) . '" title="' . catalog_h($countryName) . '">'
-                    . catalog_h(download_logs_country_flag($countryCode)) . '</span>';
+                echo '<img class="download-country-flag" src="country-flag.php?code=' . rawurlencode(strtolower($countryCode))
+                    . '" alt="" title="' . catalog_h($countryCode) . '" loading="lazy" width="20" height="15">';
             } else {
                 echo '<span class="download-country-empty" title="Country not recorded">—</span>';
             }
@@ -747,8 +747,8 @@ try {
             echo '</td>';
             echo '<td class="download-country">';
             if ($countryCode !== '' && $countryName !== '') {
-                echo '<span class="download-country-flag" role="img" aria-label="' . catalog_h($countryName) . '" title="' . catalog_h($countryName) . '">'
-                    . catalog_h(download_logs_country_flag($countryCode)) . '</span>';
+                echo '<img class="download-country-flag" src="country-flag.php?code=' . rawurlencode(strtolower($countryCode))
+                    . '" alt="" title="' . catalog_h($countryCode) . '" loading="lazy" width="20" height="15">';
             } else {
                 echo '<span class="download-country-empty" title="Country not recorded">—</span>';
             }
