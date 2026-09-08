@@ -187,6 +187,24 @@ final class CatalogPublicAccessGuard
         if ($this->exempt() || !$this->guardableMethod()) {
             return;
         }
+
+        $script = basename(str_replace('\\\\', '/', (string)($_SERVER['SCRIPT_NAME'] ?? '')));
+        if ($script !== 'blacklisted.php'
+            && CatalogSiteBlocklist::isBlockedCached($this->resolvedConfig(), $this->clientIp())) {
+            $requestPath = str_replace('\\\\', '/', (string)($_SERVER['SCRIPT_NAME'] ?? '/catalog/index.php'));
+            $catalogPos = stripos($requestPath, '/catalog/');
+            $location = $catalogPos === false
+                ? 'blacklisted.php'
+                : substr($requestPath, 0, $catalogPos + strlen('/catalog/')) . 'blacklisted.php';
+            if (!headers_sent()) {
+                http_response_code(302);
+                header('Location: ' . $location);
+                header('Cache-Control: no-store, max-age=0');
+                header('X-Robots-Tag: noindex, nofollow, noarchive');
+            }
+            exit;
+        }
+
         $settings = $this->settingsStore()->settings();
         $userAgent = trim((string)($_SERVER['HTTP_USER_AGENT'] ?? ''));
         if ($settings['public_block_crawlers'] && $this->knownCrawler($userAgent)) {
