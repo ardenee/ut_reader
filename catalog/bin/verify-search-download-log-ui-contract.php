@@ -52,6 +52,15 @@ $record(
 );
 
 $record(
+    'download_logs_use_second_precision_timestamps',
+    str_contains($logs, 'function download_logs_time(')
+        && str_contains($logs, 'substr($value, 0, 19)')
+        && str_contains($logs, "download_logs_time(\$row['started_at'])")
+        && str_contains($logs, "download_logs_time(\$row['queued_at'])"),
+    'Download Logs timestamps must stop at seconds; stored microseconds are not useful in the operator table.'
+);
+
+$record(
     'download_logs_accept_partial_ip',
     str_contains($logs, 'INET6_NTOA(')
         && str_contains($logs, 'LIKE ? ESCAPE')
