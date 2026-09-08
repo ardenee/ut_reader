@@ -119,8 +119,9 @@ try {
             $previewError = $previewException->getMessage();
         }
 
-        echo '<form id="generated-package-options-form" method="get" action="download-package.php" data-lookup-endpoint="generated-package-job.php">';
-        echo '<input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('package-generation')) . '">';
+        echo '<form id="generated-package-options-form" method="get" action="download-package.php" '
+            . 'data-lookup-endpoint="generated-package-job.php" '
+            . 'data-csrf="' . catalog_h(catalog_csrf('package-generation')) . '">';
         echo '<input type="hidden" name="id" value="' . (int)$file['id'] . '">';
         echo '<input type="hidden" name="file_id" value="' . (int)$file['id'] . '">';
         echo '<table><tr><th>Format</th><td><select name="format">';
