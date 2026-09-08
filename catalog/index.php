@@ -261,7 +261,7 @@ try {
             . '@media(max-width:900px){.catalog-search-filter .ui-filter-bar__fields{grid-template-columns:1fr 1fr}.catalog-search-filter .catalog-search-query{grid-column:1/-1}}'
             . '@media(max-width:640px){.catalog-search-filter .ui-filter-bar__fields{grid-template-columns:1fr}}'
             . '</style>';
-        echo catalog_page_header(
+        catalog_page_header(
             'Search',
             'Search verified Unreal packages, files, compact package tables and exact identities.'
         );
