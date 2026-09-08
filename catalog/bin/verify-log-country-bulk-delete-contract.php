@@ -34,10 +34,10 @@ $checks = [
         && str_contains($blacklist, '$feedbackCountryFlagHtml . catalog_h((string)$row[\'ip\'])'),
     'Download Logs listing and delete use one filter builder' =>
         substr_count($downloads, 'download_logs_filter_clause(') >= 3
-        && str_contains($downloads, "'where_sql' => $where !== [] ? ' WHERE ' . implode(' AND ', $where) : ''"),
+        && str_contains($downloads, '\'where_sql\' => $where !== [] ? \' WHERE \' . implode(\' AND \', $where) : \'\''),
     'Delete all matching is not page-size limited' =>
-        str_contains($downloads, "$action === 'delete_all_matching'")
-        && str_contains($downloads, "'DELETE a FROM ' . $table . ' a' . $filter['where_sql']")
+        str_contains($downloads, '$action === \'delete_all_matching\'')
+        && str_contains($downloads, '\'DELETE a FROM \' . $table . \' a\' . $filter[\'where_sql\']')
         && str_contains($downloads, 'Delete all \' . number_format($total) . \' matching')
         && str_contains($downloads, 'matching record(s) across all pages.')
         && !preg_match('/delete_all_matching.{0,300}(?:LIMIT|1000|500)/s', $downloads),
