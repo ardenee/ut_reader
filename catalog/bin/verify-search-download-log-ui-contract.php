@@ -61,6 +61,18 @@ $record(
 );
 
 $record(
+    'download_logs_rows_can_blacklist_site_ip',
+    str_contains($logs, "$blockLogId = max(0, (int)(\$_POST['block_log_id'] ?? 0));")
+        && str_contains($logs, "$action = 'block_log_site_ip';")
+        && str_contains($logs, "Blocked from Download Logs record #")
+        && str_contains($logs, 'name="block_log_id"')
+        && str_contains($logs, '>Blacklist IP</button>')
+        && str_contains($logs, '>View blacklist</a>')
+        && str_contains($logs, '$siteBlockedLookup'),
+    'Every Download Logs row with an IP must provide a one-click full-site blacklist action and clearly show already site-blocked addresses.'
+);
+
+$record(
     'download_logs_accept_partial_ip',
     str_contains($logs, 'INET6_NTOA(')
         && str_contains($logs, 'LIKE ? ESCAPE')
