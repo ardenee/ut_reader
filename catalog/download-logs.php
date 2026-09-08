@@ -664,8 +664,12 @@ try {
             $sent = (int)$row['bytes_sent'];
             $ipText = trim((string)($row['ip_text'] ?? ''));
             $mapLocation = is_array($row['map_location'] ?? null) ? $row['map_location'] : [];
-            $countryCode = strtoupper(trim((string)($mapLocation['country_code'] ?? $row['country_code'] ?? '')));
-            $countryName = trim((string)($mapLocation['country_name'] ?? $row['country_name'] ?? ''));
+            if (trim((string)($mapLocation['country_code'] ?? '')) === '') {
+                $mapLocation['country_code'] = (string)($row['country_code'] ?? '');
+                $mapLocation['country_name'] = (string)($row['country_name'] ?? '');
+            }
+            $countryCode = strtoupper(trim((string)($mapLocation['country_code'] ?? '')));
+            $countryName = trim((string)($mapLocation['country_name'] ?? ''));
             $mapAttributes = catalog_world_map_attributes($ipText, $mapLocation);
             echo '<tr' . $mapAttributes . '><td class="download-log-select"><input class="download-log-check" type="checkbox" name="ids[]" value="' . (int)$row['id'] . '"></td><td class="mono small download-log-time">' . catalog_h(download_logs_time($row['started_at'])) . '</td>';
             echo '<td class="download-log-status"><span class="download-log-pill download-log-pill-' . catalog_h($rowStatus) . '">' . catalog_h($rowStatus) . '</span></td>';
@@ -730,8 +734,12 @@ try {
             $rowStatus = strtolower((string)$row['status']);
             $ipText = trim((string)($row['ip_text'] ?? ''));
             $mapLocation = is_array($row['map_location'] ?? null) ? $row['map_location'] : [];
-            $countryCode = strtoupper(trim((string)($mapLocation['country_code'] ?? $row['country_code'] ?? '')));
-            $countryName = trim((string)($mapLocation['country_name'] ?? $row['country_name'] ?? ''));
+            if (trim((string)($mapLocation['country_code'] ?? '')) === '') {
+                $mapLocation['country_code'] = (string)($row['country_code'] ?? '');
+                $mapLocation['country_name'] = (string)($row['country_name'] ?? '');
+            }
+            $countryCode = strtoupper(trim((string)($mapLocation['country_code'] ?? '')));
+            $countryName = trim((string)($mapLocation['country_name'] ?? ''));
             $mapAttributes = catalog_world_map_attributes($ipText, $mapLocation);
             echo '<tr' . $mapAttributes . '><td class="download-log-select"><input class="download-log-check" type="checkbox" name="ids[]" value="' . (int)$row['id'] . '"></td><td class="mono small download-log-time">' . catalog_h(download_logs_time($row['queued_at'])) . '</td>';
             echo '<td class="download-log-status"><span class="download-log-pill download-log-pill-' . catalog_h($rowStatus) . '">' . catalog_h($rowStatus) . '</span></td>';
