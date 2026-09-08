@@ -412,6 +412,7 @@ try {
         . '.access-matrix-table .am-agent{width:28ch;min-width:28ch;max-width:28ch}'
         . '.access-matrix-agent-text{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
         . '.access-matrix-ip-actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:5px}'
+        . '.access-country-flag{font-size:1.2rem;line-height:1;vertical-align:-1px;cursor:help}'
         . '.access-matrix-actions,.access-block-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}'
         . '.access-block-actions .grow{flex:1;min-width:240px}'
 
@@ -702,7 +703,12 @@ try {
                 ])) . '">session ' . catalog_h(substr($sessionHex, 0, 12)) . '…</a>'
                 : '';
             $isBlockedIp = $ipText !== '' && isset($blockedLookup[strtolower($ipText)]);
-            echo '</td><td class="mono am-ip">' . catalog_h($ipText)
+            $countryFlag = catalog_country_flag($countryCode);
+            $countryFlagHtml = $countryFlag !== ''
+                ? '<span class="access-country-flag" role="img" aria-label="' . catalog_h($countryName !== '' ? $countryName : $countryCode)
+                    . '" title="' . catalog_h($countryName !== '' ? $countryName : $countryCode) . '">' . catalog_h($countryFlag) . '</span> '
+                : '';
+            echo '</td><td class="mono am-ip">' . $countryFlagHtml . catalog_h($ipText)
                 . ($isBlockedIp ? '<br><span class="dep missing">site blocked</span>' : '')
                 . ((string)($row['username'] ?? '') !== '' ? '<br><span class="small">' . catalog_h((string)$row['username']) . '</span>' : '')
                 . $sessionLink;
