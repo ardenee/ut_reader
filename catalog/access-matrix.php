@@ -328,7 +328,7 @@ try {
     }
     $rawWhereSql = $rawWhere !== [] ? ' WHERE ' . implode(' AND ', $rawWhere) : '';
 
-    $summary = ['page_views' => 0, 'sections' => 0, 'interactions' => 0, 'unique_ips' => 0, 'sessions' => 0];
+    $summary = ['page_activity' => 0, 'page_views' => 0, 'server_pages' => 0, 'sections' => 0, 'interactions' => 0, 'unique_ips' => 0, 'sessions' => 0];
     $rows = [];
     $total = 0;
     $pages = 1;
@@ -343,15 +343,20 @@ try {
     if ($eventsAvailable) {
         $summaryRow = catalog_one(
             $db,
-            'SELECT SUM(a.event_type="page_view") page_views,'
+            'SELECT SUM(a.event_type IN ("page_view","server_page")) page_activity,'
+            . 'SUM(a.event_type="page_view") page_views,'
+            . 'SUM(a.event_type="server_page") server_pages,'
             . 'SUM(a.event_type="section") sections,'
             . 'SUM(a.event_type="interaction") interactions,'
-            . 'COUNT(DISTINCT a.ip_address) unique_ips,COUNT(DISTINCT a.session_hash) sessions '
+            . 'COUNT(DISTINCT CASE WHEN a.event_type IN ("page_view","server_page") THEN a.ip_address END) unique_ips,'
+            . 'COUNT(DISTINCT CASE WHEN a.event_type IN ("page_view","server_page") THEN a.session_hash END) sessions '
             . 'FROM ue_access_events a' . $whereSql,
             $args
         ) ?: [];
         $summary = [
+            'page_activity' => (int)($summaryRow['page_activity'] ?? 0),
             'page_views' => (int)($summaryRow['page_views'] ?? 0),
+            'server_pages' => (int)($summaryRow['server_pages'] ?? 0),
             'sections' => (int)($summaryRow['sections'] ?? 0),
             'interactions' => (int)($summaryRow['interactions'] ?? 0),
             'unique_ips' => (int)($summaryRow['unique_ips'] ?? 0),
