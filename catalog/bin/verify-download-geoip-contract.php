@@ -17,8 +17,16 @@ $checks = [
         'idx_ue_download_audit_country',
     ],
     'resolver uses local range table' => [
-        $root . '/src/Infrastructure/Downloads/CatalogGeoIpCountryResolver.php',
+        $root . '/src/Infrastructure/Downloads/CatalogGeoIpLocationResolver.php',
         'FROM ue_geoip_country_ranges',
+    ],
+    'city migration adds coordinate and accuracy fields' => [
+        $root . '/migrations/202609080003_geoip_city_location.php',
+        'accuracy_radius_km',
+    ],
+    'city importer stages and atomically swaps the local dataset' => [
+        $root . '/bin/import-geoip-city-maxmind.php',
+        'RENAME TABLE ',
     ],
     'audit persists country snapshots' => [
         $root . '/src/Infrastructure/Downloads/CatalogDownloadAuditService.php',
@@ -68,9 +76,13 @@ $checks = [
         $root . '/assets/catalog-ui.js',
         "fetch(root + 'world-map.php'",
     ],
-    'download map labels country-level approximation' => [
+    'download map reads detailed latitude and longitude' => [
         $root . '/assets/catalog-ui.js',
-        'country-level approximation',
+        'data-world-map-latitude',
+    ],
+    'download map projects detailed coordinates' => [
+        $root . '/assets/catalog-ui.js',
+        'function projectCoordinate(',
     ],
     'world map endpoint caches in catalog storage' => [
         $root . '/world-map.php',
@@ -130,13 +142,15 @@ foreach ($checks as $label => [$path, $needle]) {
     }
 }
 
-$resolverPath = $root . '/src/Infrastructure/Downloads/CatalogGeoIpCountryResolver.php';
+$resolverPath = $root . '/src/Infrastructure/Downloads/CatalogGeoIpLocationResolver.php';
 $resolver = is_file($resolverPath) ? file_get_contents($resolverPath) : false;
 if (!is_string($resolver)
     || preg_match('/https?:\/\//i', $resolver) === 1
     || str_contains($resolver, 'curl_')
-    || str_contains($resolver, 'file_get_contents(')) {
-    $failed[] = 'GeoIP resolution must remain local-only and fail open';
+    || str_contains($resolver, 'file_get_contents(')
+    || !str_contains($resolver, 'subdivision_name')
+    || !str_contains($resolver, 'accuracy_radius_km')) {
+    $failed[] = 'GeoIP resolution must remain local-only, fail open, and expose detailed location data';
 }
 
 $importerPath = $root . '/bin/import-geoip-country-csv.php';
@@ -172,6 +186,12 @@ if (!is_string($ui)
     || str_contains($ui, 'cdn.jsdelivr.net')
     || str_contains($ui, 'raw.githubusercontent.com')) {
     $failed[] = 'Browser flag and map rendering must remain same-origin';
+}
+if (!is_string($ui)
+    || !str_contains($ui, '578.370221')
+    || !str_contains($ui, 'function largestCountryComponentCenter(')
+    || str_contains($ui, 'Math.cos(angle) * spread')) {
+    $failed[] = 'World map must use city coordinates with non-ocean country fallback rather than artificial radial spreading';
 }
 
 $flagEndpointPath = $root . '/country-flag.php';
