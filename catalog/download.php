@@ -39,8 +39,13 @@ function public_download_original_name(array $file): string
 function public_download_redirect_to_info(int $fileId): never
 {
     if (!headers_sent()) {
+        $method = strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? 'GET'));
         header('Cache-Control: private, no-store, max-age=0');
-        header('Location: download-info.php?id=' . max(0, $fileId), true, 302);
+        header(
+            'Location: download-info.php?id=' . max(0, $fileId),
+            true,
+            $method === 'POST' ? 303 : 302
+        );
     }
     exit;
 }
@@ -109,7 +114,7 @@ try {
     $config = catalog_config();
     $db = catalog_db($config);
     base_game_ensure($db);
-    $id = (int)($_GET['id'] ?? 0);
+    $id = (int)($_POST['id'] ?? $_GET['id'] ?? 0);
     $file = catalog_one($db, 'SELECT * FROM ue_files WHERE id=? AND scan_status="verified"', [$id]);
     if (!$file) {
         throw new RuntimeException('File not found.');
@@ -127,12 +132,15 @@ try {
         public_download_send_local($config, $db, $file, false);
     }
 
-    // Anonymous/public transfers are intentionally two-step. A raw
-    // download.php?id=... URL is never a public entry point. The browser must
-    // first render download-info.php for this file, then follow its short-lived
-    // one-time session grant from that same-site page.
-    $grant = trim((string)($_GET['grant'] ?? ''));
-    if (!catalog_public_download_came_from_info($id)
+    // Anonymous/public transfers are intentionally two-step. Public users
+    // never receive a reusable download.php?id=... link: the final action is a
+    // POST from download-info.php carrying a short-lived one-time session grant.
+    // Direct GET/bookmark/crawler/download-manager requests are sent back to the
+    // options page for another deliberate click.
+    $method = strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? 'GET'));
+    $grant = trim((string)($_POST['grant'] ?? ''));
+    if ($method !== 'POST'
+        || !catalog_public_download_came_from_info($id)
         || !catalog_public_download_grant_consume($id, $grant)) {
         public_download_redirect_to_info($id);
     }
