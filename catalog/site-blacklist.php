@@ -145,7 +145,7 @@ try {
         . '.site-blacklist-toolbar .grow,.site-blacklist-add .grow{flex:1;min-width:260px}'
         . '.site-blacklist-table td,.site-blacklist-table th{vertical-align:top}'
         . '.site-blacklist-ip{width:1%;white-space:nowrap}'
-        . '.site-blacklist-country-flag{font-size:1.2rem;line-height:1;vertical-align:-1px;cursor:help}'
+        . '.site-blacklist-country-flag{display:inline-block;width:20px;height:15px;object-fit:cover;border-radius:2px;vertical-align:-2px;cursor:help}'
         . '.site-blacklist-time{width:1%;white-space:nowrap}'
         . '.site-blacklist-actions{width:1%;white-space:nowrap}'
         . '.site-blacklist-message{max-width:520px;overflow-wrap:anywhere}'
@@ -204,10 +204,9 @@ try {
                 ? ' data-world-map-ip="' . catalog_h($ipText) . '" data-world-map-country-code="' . catalog_h($countryCode)
                     . '" data-world-map-country-name="' . catalog_h($countryName !== '' ? $countryName : $countryCode) . '"'
                 : '';
-            $countryFlag = catalog_country_flag($countryCode);
-            $countryFlagHtml = $countryFlag !== ''
-                ? '<span class="site-blacklist-country-flag" role="img" aria-label="' . catalog_h($countryName !== '' ? $countryName : $countryCode)
-                    . '" title="' . catalog_h($countryCode) . '">' . catalog_h($countryFlag) . '</span> '
+            $countryFlagHtml = preg_match('/^[A-Z]{2}$/', $countryCode) === 1
+                ? '<img class="site-blacklist-country-flag" src="country-flag.php?code=' . rawurlencode(strtolower($countryCode))
+                    . '" alt="" title="' . catalog_h($countryCode) . '" loading="lazy" width="20" height="15"> '
                 : '';
             echo '<tr' . $mapAttributes . '><td class="mono site-blacklist-ip">' . $countryFlagHtml . catalog_h((string)$row['ip']) . '</td>'
                 . '<td>' . catalog_h((string)$row['note']) . '</td>'
@@ -231,10 +230,9 @@ try {
         foreach ($feedbackRows as $row) {
             $feedbackCountryCode = strtoupper(trim((string)($row['map_country_code'] ?? '')));
             $feedbackCountryName = trim((string)($row['map_country_name'] ?? ''));
-            $feedbackCountryFlag = catalog_country_flag($feedbackCountryCode);
-            $feedbackCountryFlagHtml = $feedbackCountryFlag !== ''
-                ? '<span class="site-blacklist-country-flag" role="img" aria-label="' . catalog_h($feedbackCountryName !== '' ? $feedbackCountryName : $feedbackCountryCode)
-                    . '" title="' . catalog_h($feedbackCountryCode) . '">' . catalog_h($feedbackCountryFlag) . '</span> '
+            $feedbackCountryFlagHtml = preg_match('/^[A-Z]{2}$/', $feedbackCountryCode) === 1
+                ? '<img class="site-blacklist-country-flag" src="country-flag.php?code=' . rawurlencode(strtolower($feedbackCountryCode))
+                    . '" alt="" title="' . catalog_h($feedbackCountryCode) . '" loading="lazy" width="20" height="15"> '
                 : '';
             echo '<tr><td class="mono small site-blacklist-time">' . catalog_h(site_blacklist_time($row['created_at'])) . '</td>'
                 . '<td class="mono site-blacklist-ip">' . $feedbackCountryFlagHtml . catalog_h((string)$row['ip']) . '</td>'
