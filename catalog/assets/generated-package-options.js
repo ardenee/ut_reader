@@ -23,6 +23,17 @@
         button.textContent = label;
     }
 
+    function progressUrl(jobId) {
+        var url = new URL(form.action, window.location.href);
+        var data = new FormData(form);
+        data.forEach(function (value, key) {
+            if (key === 'file_id') return;
+            url.searchParams.set(key, String(value));
+        });
+        url.searchParams.set('job_id', String(jobId));
+        return url.pathname + '?' + url.searchParams.toString();
+    }
+
     async function lookup() {
         var serial = ++lookupSerial;
         readyDownloadUrl = '';
@@ -53,8 +64,7 @@
                 setButton('ready', 'Download generated package');
                 setStatus(
                     'This package has already been generated and is ready. '
-                    + '<a href="download-package.php?job_id=' + encodeURIComponent(String(jobId))
-                    + '&id=' + encodeURIComponent(String(form.elements.id.value || '0')) + '">View build</a>.',
+                    + '<a href="' + progressUrl(jobId) + '">View build</a>.',
                     true
                 );
                 return;
@@ -64,8 +74,7 @@
                 setButton('disabled', jobStatus === 'running' ? 'Package is being generated…' : 'Package build already queued');
                 setStatus(
                     'This exact package is already ' + (jobStatus === 'running' ? 'being generated' : 'queued')
-                    + '. <a href="download-package.php?job_id=' + encodeURIComponent(String(jobId))
-                    + '&id=' + encodeURIComponent(String(form.elements.id.value || '0')) + '">View progress</a>.',
+                    + '. <a href="' + progressUrl(jobId) + '">View progress</a>.',
                     true
                 );
                 return;
