@@ -18,6 +18,7 @@ $migration = $read('migrations/202609080003_geoip_city_location.php');
 $resolver = $read('src/Infrastructure/Downloads/CatalogGeoIpLocationResolver.php');
 $compat = $read('src/Infrastructure/Downloads/CatalogGeoIpCountryResolver.php');
 $importer = $read('bin/import-geoip-city-maxmind.php');
+$dbIpImporter = $read('bin/import-geoip-city-dbip.php');
 $core = $read('lib/CatalogSupportCore.php');
 $ui = $read('assets/catalog-ui.js');
 $access = $read('access-matrix.php');
@@ -54,6 +55,16 @@ $checks = [
         str_contains($importer, 'ue_geoip_country_ranges_import')
         && str_contains($importer, 'RENAME TABLE ')
         && str_contains($importer, 'ue_geoip_country_ranges_previous'),
+    'DB-IP City Lite importer accepts city coordinates' =>
+        str_contains($dbIpImporter, 'dbip-city-lite-YYYY-MM.csv')
+        && str_contains($dbIpImporter, '$row[4]')
+        && str_contains($dbIpImporter, '$row[5]')
+        && str_contains($dbIpImporter, '$row[6]')
+        && str_contains($dbIpImporter, '$row[7]'),
+    'DB-IP importer stages before atomic swap' =>
+        str_contains($dbIpImporter, 'ue_geoip_country_ranges_import')
+        && str_contains($dbIpImporter, 'RENAME TABLE ')
+        && str_contains($dbIpImporter, 'ue_geoip_country_ranges_previous'),
     'shared map attributes expose coordinate detail' =>
         str_contains($core, 'function catalog_world_map_attributes(')
         && str_contains($core, 'data-world-map-latitude')
@@ -107,6 +118,7 @@ foreach ([
     'src/Infrastructure/Downloads/CatalogGeoIpLocationResolver.php',
     'src/Infrastructure/Downloads/CatalogGeoIpCountryResolver.php',
     'bin/import-geoip-city-maxmind.php',
+    'bin/import-geoip-city-dbip.php',
     'lib/CatalogSupportCore.php',
     'access-matrix.php',
     'site-blacklist.php',
