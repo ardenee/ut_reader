@@ -10,15 +10,16 @@
     var message = document.getElementById('package-job-message');
     var statusBox = document.getElementById('package-job-status');
     var summary = document.getElementById('package-job-summary');
+    var filesBox = document.getElementById('package-job-files');
     var bar = document.getElementById('package-job-bar');
     var cancel = document.getElementById('package-job-cancel');
     var download = document.getElementById('package-job-download');
+    var back = document.getElementById('package-job-back');
     var jobId = Number(form.dataset.resumeJobId || 0);
     var pollTimer = null;
-    var downloadReadyTimer = null;
     var workerWarning = '';
+    var currentState = 'queued';
     var terminal = ['completed', 'cancelled', 'failed', 'dead_letter'];
-    var downloadReadyDelayMs = 5000;
 
     function fmt(value) {
         return Number(value || 0).toLocaleString();
@@ -33,6 +34,12 @@
             index++;
         }
         return (index ? value.toFixed(2) : String(value)) + ' ' + units[index];
+    }
+
+    function esc(value) {
+        var node = document.createElement('span');
+        node.textContent = String(value == null ? '' : value);
+        return node.innerHTML;
     }
 
     async function parse(response) {
@@ -91,6 +98,7 @@
         download.setAttribute('aria-disabled', 'true');
         download.style.pointerEvents = 'none';
         download.style.opacity = '0.55';
+        download.textContent = 'Download generated package';
     }
 
     function enableDownload(job, result) {
@@ -102,36 +110,35 @@
         download.textContent = 'Download generated package';
         title.textContent = 'Generated package ready';
         message.textContent = 'The generated package is ready to download.';
-        download.focus();
     }
 
-    function startDownloadReadyDelay(job, result) {
-        window.clearTimeout(downloadReadyTimer);
-        var readyAt = Date.now() + downloadReadyDelayMs;
-        download.hidden = false;
-        disableDownload();
-
-        function updateCountdown() {
-            var remainingMs = readyAt - Date.now();
-            if (remainingMs <= 0) {
-                enableDownload(job, result);
-                return;
-            }
-
-            var seconds = Math.max(1, Math.ceil(remainingMs / 1000));
-            title.textContent = 'Finalizing generated package';
-            message.textContent = 'Package generation completed. Waiting ' + seconds
-                + ' second' + (seconds === 1 ? '' : 's')
-                + ' before enabling the download.';
-            download.textContent = 'Download available in ' + seconds + 's';
-            downloadReadyTimer = window.setTimeout(updateCountdown, 250);
+    function renderFiles(progress) {
+        if (!filesBox) return;
+        var files = Array.isArray(progress.files) ? progress.files : [];
+        var omitted = Number(progress.files_omitted || 0);
+        if (!files.length) {
+            filesBox.innerHTML = '';
+            return;
         }
 
-        updateCountdown();
+        var html = '<h3>Files in generated package (' + fmt(progress.file_count || files.length) + ')</h3>'
+            + '<table><thead><tr><th>File</th><th>Install path</th><th>Size</th></tr></thead><tbody>';
+        files.forEach(function (file) {
+            html += '<tr><td>' + esc(file.original_name || file.package_name || ('File #' + file.file_id)) + '</td>'
+                + '<td class="mono small">' + esc(file.install_path || '') + '</td>'
+                + '<td>' + esc(fmtBytes(file.file_size || 0)) + '</td></tr>';
+        });
+        html += '</tbody></table>';
+        if (omitted > 0) {
+            html += '<p class="muted small">+' + fmt(omitted) + ' additional package file'
+                + (omitted === 1 ? '' : 's') + ' not shown.</p>';
+        }
+        filesBox.innerHTML = html;
     }
 
     function render(job) {
         var state = String(job.status || 'queued');
+        currentState = state;
         var progress = job.progress && typeof job.progress === 'object' ? job.progress : {};
         var result = job.result && typeof job.result === 'object' ? job.result : {};
         var percent = setPercent(state === 'completed' ? 100 : progress.percent);
@@ -139,17 +146,20 @@
         title.textContent = state === 'completed' ? 'Generated package ready' : 'Generating package';
         message.textContent = state === 'queued'
             ? (workerWarning !== ''
-                ? 'Queued, but the detached package worker could not be started automatically: ' + workerWarning
-                : 'Queued and waiting for an available package-build slot.')
+                ? 'Queued, but the dedicated package worker could not be started automatically: ' + workerWarning
+                : 'Queued for the dedicated package worker.')
             : String(progress.message || 'The background worker is processing the package.');
         statusBox.textContent = 'Status: ' + state.replace('_', ' ') + ' · Job #' + job.id
             + (progress.file_count !== undefined ? ' · Files ' + fmt(progress.file_count) : '')
             + (progress.total_bytes !== undefined ? ' · Source payload ' + fmtBytes(progress.total_bytes) : '')
             + ' · ' + Math.round(percent) + '%';
 
+        renderFiles(progress);
+
         if (state === 'completed') {
             stopPolling();
             if (result.expired) {
+                disableDownload();
                 message.textContent = 'The generated package expired. Return to the download options and build it again.';
                 summary.textContent = '';
                 return state;
@@ -162,9 +172,11 @@
                 + ' · Missing=' + fmt(result.missing_dependencies)
                 + ' · Package-only=' + fmt(result.package_only_dependencies)
                 + '\nExpires=' + String(result.expires_at || '');
-            startDownloadReadyDelay(job, result);
+            enableDownload(job, result);
             return state;
         }
+
+        disableDownload();
         if (state === 'cancelled') {
             stopPolling();
             message.textContent = 'Package generation was cancelled. Temporary output was not published.';
@@ -196,7 +208,8 @@
 
     function enqueue() {
         cancel.disabled = true;
-        message.textContent = 'Queueing package generation…';
+        disableDownload();
+        message.textContent = 'Checking for an existing generated package or queued build…';
         post({ action: 'enqueue' }).then(function (payload) {
             jobId = Number(payload.job_id || 0);
             if (jobId < 1) throw new Error('The server did not return a valid package-job ID.');
@@ -206,6 +219,7 @@
             poll();
         }).catch(function (error) {
             stopPolling();
+            disableDownload();
             title.textContent = 'Package generation unavailable';
             message.textContent = error.message || 'The package could not be queued.';
             statusBox.textContent = '';
@@ -230,6 +244,22 @@
         }
     });
 
+    if (back) {
+        back.addEventListener('click', function (event) {
+            if (terminal.indexOf(currentState) !== -1) return;
+            event.preventDefault();
+            var proceed = window.confirm(
+                'This package is still being generated and should be ready soon. '
+                + 'The build will continue if you return to Download options, and the Generate button there '
+                + 'will remain disabled while this same package is queued or running. Return to Download options?'
+            );
+            if (proceed) {
+                window.location.href = back.href;
+            }
+        });
+    }
+
+    disableDownload();
     if (jobId > 0) {
         setJobUrl();
         poll();
