@@ -33,8 +33,12 @@ function render_availability(PDO $db, int $fileId): string
 
 function render_public_download_status(PDO $db, int $fileId): string
 {
-    if (external_public_download_mode($db) === 'disabled') {
+    $mode = external_public_download_mode($db);
+    if ($mode === 'disabled') {
         return '<span class="dep missing">disabled</span>';
+    }
+    if ($mode === 'protected_local') {
+        return '<span class="dep resolved">protected local stream</span>';
     }
     $link = external_active_link_for_file($db, $fileId);
     if ($link) {
@@ -96,7 +100,7 @@ try {
     );
 
     echo '<div class="card"><h2>Individual file</h2><p><strong>' . catalog_h($file['package_name']) . '</strong><br>' . catalog_h(catalog_clean_unreal_filename((string)$file['original_name'])) . '</p>';
-    echo '<p class="muted">Individual catalogue files use external download links for public users. Logged-in administrators may download the stored file directly. Base-game protection is always enforced.</p>';
+    echo '<p class="muted">Public individual-file downloads use the protected download controller by default, so the physical catalogue-storage path is never exposed. External-mirror-only mode remains available as an administrator choice. Base-game protection is always enforced.</p>';
     echo '<div class="ui-inline-actions">' . CatalogUi::iconButton([
         'label' => 'Download ' . catalog_clean_unreal_filename((string)$file['original_name']),
         'icon' => '⇩',
@@ -104,7 +108,7 @@ try {
         'size' => 'sm',
         'variant' => 'primary',
     ]);
-    if ($settings['enabled'] && $settings['dependency_zip_enabled'] && external_public_download_mode($db) !== 'external_mirror') {
+    if ($settings['enabled'] && $settings['dependency_zip_enabled'] && external_public_download_mode($db) !== 'external_mirror_only') {
         echo CatalogUi::button('Queue dependency ZIP', ['href' => 'download-package.php?id=' . (int)$file['id'] . '&format=dependency_zip&dependencies=1']);
     }
     echo '</div></div>';
