@@ -243,12 +243,16 @@ try {
             $args[] = $gameId;
         }
         if ($ip !== '') {
+            $ipColumn = $view === 'downloads' ? 'a.ip_address' : 'a.request_ip';
             $packed = @inet_pton($ip);
-            if (!is_string($packed)) {
-                throw new RuntimeException('Enter a valid IPv4 or IPv6 address.');
+            if (is_string($packed)) {
+                $where[] = $ipColumn . '=?';
+                $args[] = $packed;
+            } else {
+                $ipLike = '%' . str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $ip) . '%';
+                $where[] = 'INET6_NTOA(' . $ipColumn . ') LIKE ? ESCAPE "\\\\"';
+                $args[] = $ipLike;
             }
-            $where[] = ($view === 'downloads' ? 'a.ip_address' : 'a.request_ip') . '=?';
-            $args[] = $packed;
         }
 
         if ($view === 'downloads') {
@@ -445,7 +449,7 @@ try {
         echo '<option value="' . (int)$game['id'] . '"' . ($gameId === (int)$game['id'] ? ' selected' : '') . '>' . catalog_h((string)$game['name']) . '</option>';
     }
     echo '</select></label>'
-        . '<label>IP <input name="ip" value="' . catalog_h($ip) . '" placeholder="Exact IPv4 or IPv6"></label>'
+        . '<label>IP <input name="ip" value="' . catalog_h($ip) . '" placeholder="Full or partial IP"></label>'
         . '<label class="search">Search <input type="search" name="q" value="' . catalog_h($search) . '" placeholder="File, package, country, format, error or user agent"></label>'
         . '<label>Rows <select name="per_page">';
     foreach ([50, 100, 250, 500] as $value) {
