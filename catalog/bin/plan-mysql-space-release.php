@@ -114,6 +114,12 @@ try {
         'log_bin',
         'log_bin_basename',
         'binlog_expire_logs_seconds',
+        'binlog_format',
+        'general_log',
+        'general_log_file',
+        'slow_query_log',
+        'slow_query_log_file',
+        'log_output',
     ] as $name) {
         $variables[$name] = mysql_space_variable($db, $name);
     }
@@ -175,6 +181,11 @@ try {
         'data_drive' => $dataDrive,
         'schema_directory' => $schemaDirectory,
         'binary_logs' => $binaryLogs,
+        'mysql_log_cleanup' => [
+            'dry_run_command' => 'php catalog/bin/cleanup-mysql-logs.php --keep-days=7',
+            'apply_command' => 'php catalog/bin/cleanup-mysql-logs.php --keep-days=7 --apply',
+            'note' => 'The cleanup command purges expired binary logs through MySQL and persists bounded expiry when permitted.',
+        ],
         'largest_schema_files' => $schemaFiles,
         'largest_datadir_files' => $topLevelFiles,
         'largest_tables' => array_slice($tables, 0, 30),
