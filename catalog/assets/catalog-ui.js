@@ -626,7 +626,12 @@
 
     var loaded = false;
     var loading = false;
-    var root = catalogRootPath();
+    var root = (function () {
+        var path = window.location.pathname || '/';
+        var marker = '/catalog/';
+        var index = path.indexOf(marker);
+        return index >= 0 ? path.slice(0, index + marker.length) : '/catalog/';
+    })();
 
     function renderMap(svgText) {
         var parsed = new DOMParser().parseFromString(svgText, 'image/svg+xml');
