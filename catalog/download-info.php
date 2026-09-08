@@ -33,11 +33,7 @@ function render_availability(PDO $db, int $fileId): string
 
 function render_public_download_status(PDO $db, int $fileId): string
 {
-    $mode = external_public_download_mode($db);
-    if ($mode === 'local_direct') {
-        return '<span class="dep resolved">direct local</span>';
-    }
-    if ($mode === 'disabled') {
+    if (external_public_download_mode($db) === 'disabled') {
         return '<span class="dep missing">disabled</span>';
     }
     $link = external_active_link_for_file($db, $fileId);
@@ -45,9 +41,9 @@ function render_public_download_status(PDO $db, int $fileId): string
         return '<span class="dep resolved">external ready</span><br><span class="small">' . catalog_h($link['provider_name']) . '</span>';
     }
     if (external_queue_exists($db, $fileId)) {
-        return '<span class="dep package_only">mirror queued</span>';
+        return '<span class="dep package_only">external queued</span>';
     }
-    return $mode === 'external_mirror_preferred' ? '<span class="dep package_only">external preferred</span>' : '<span class="dep missing">external missing</span>';
+    return '<span class="dep missing">external missing</span>';
 }
 
 try {
