@@ -85,9 +85,10 @@ $record(
 $record(
     'public_guard_redirects_blocked_ips',
     str_contains($guard, 'CatalogSiteBlocklist::isBlockedCached')
-        && str_contains($guard, "$script !== 'blacklisted.php'")
-        && str_contains($guard, "header('Location: ' . $location)")
-        && str_contains($guard, "http_response_code(302)"),
+        && str_contains($guard, '$script !== \'blacklisted.php\'')
+        && str_contains($guard, "header('Location: ' . \$location)")
+        && str_contains($guard, 'http_response_code(302)')
+        && strpos($guard, 'CatalogSiteBlocklist::isBlockedCached') < strpos($guard, 'if (!\$this->guardableMethod())'),
     'Anonymous blocked IPs must be redirected to blacklisted.php before normal browsing; administrator sessions remain exempt.'
 );
 
@@ -125,7 +126,7 @@ $record(
 
 $record(
     'access_matrix_is_in_admin_navigation',
-    str_contains($navigation, "'Access Matrix' => $root . 'access-matrix.php'"),
+    str_contains($navigation, "'Access Matrix' => \$root . 'access-matrix.php'"),
     'Access Matrix must be reachable from administrator navigation.'
 );
 
