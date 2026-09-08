@@ -69,6 +69,15 @@ try {
     if (!in_array($defaultFormat, $formats, true)) {
         $defaultFormat = $formats[0] ?? '';
     }
+    $requestedFormat = strtolower(trim((string)($_GET['format'] ?? '')));
+    if ($requestedFormat !== '' && in_array($requestedFormat, $formats, true)) {
+        $defaultFormat = $requestedFormat;
+    }
+    $formName = substr(trim((string)($_GET['name'] ?? catalog_clean_unreal_package_stem((string)$file['package_name']))), 0, 160);
+    $formVersion = substr(trim((string)($_GET['version'] ?? '1.0')), 0, 80);
+    $formAuthor = substr(trim((string)($_GET['author'] ?? $settings['default_author'])), 0, 160);
+    $formDependencies = !isset($_GET['dependencies']) || (string)$_GET['dependencies'] !== '0';
+    $formAllowIncomplete = $settings['allow_incomplete'] && (string)($_GET['allow_incomplete'] ?? '0') === '1';
 
     $dependencySource = PdoDependencyReadSource::sql($db);
     $depCount = (int)(catalog_one(
@@ -129,12 +138,16 @@ try {
             echo '<option value="' . catalog_h($format) . '"' . ($format === $defaultFormat ? ' selected' : '') . '>' . catalog_h($labels[$format] ?? $format) . '</option>';
         }
         echo '</select></td></tr>';
-        echo '<tr><th>Package name</th><td><input name="name" value="' . catalog_h(catalog_clean_unreal_package_stem((string)$file['package_name'])) . '" style="min-width:360px"></td></tr>';
-        echo '<tr><th>Version</th><td><input name="version" value="1.0" style="width:120px"></td></tr>';
-        echo '<tr><th>Author</th><td><input name="author" value="' . catalog_h($settings['default_author']) . '" style="min-width:360px"></td></tr>';
-        echo '<tr><th>Dependencies</th><td><input type="hidden" name="dependencies" value="0"><label><input type="checkbox" name="dependencies" value="1" checked> Include resolved dependencies' . ($settings['include_transitive'] ? ' transitively' : '') . '</label></td></tr>';
+        echo '<tr><th>Package name</th><td><input name="name" value="' . catalog_h($formName) . '" style="min-width:360px"></td></tr>';
+        echo '<tr><th>Version</th><td><input name="version" value="' . catalog_h($formVersion) . '" style="width:120px"></td></tr>';
+        echo '<tr><th>Author</th><td><input name="author" value="' . catalog_h($formAuthor) . '" style="min-width:360px"></td></tr>';
+        echo '<tr><th>Dependencies</th><td><input type="hidden" name="dependencies" value="0"><label><input type="checkbox" name="dependencies" value="1"'
+            . ($formDependencies ? ' checked' : '') . '> Include resolved dependencies'
+            . ($settings['include_transitive'] ? ' transitively' : '') . '</label></td></tr>';
         if ($settings['allow_incomplete']) {
-            echo '<tr><th>Incomplete package</th><td><label><input type="checkbox" name="allow_incomplete" value="1"> Continue when dependencies are missing or package-only</label></td></tr>';
+            echo '<tr><th>Incomplete package</th><td><label><input type="checkbox" name="allow_incomplete" value="1"'
+                . ($formAllowIncomplete ? ' checked' : '')
+                . '> Continue when genuinely missing dependencies cannot be included</label></td></tr>';
         }
         echo '</table><p><button id="package-generate-button" class="primary">Queue package build</button></p>'
             . '<div id="package-existing-build-status" class="muted small"></div></form>';
