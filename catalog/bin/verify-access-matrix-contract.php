@@ -150,6 +150,23 @@ $record(
 );
 
 $record(
+    'activity_card_metrics_drill_down_to_hits_and_ips',
+    str_contains($admin, "'show_ips' => 1")
+        && str_contains($admin, 'id="matching-ips"')
+        && str_contains($admin, 'IP addresses contributing to the selected card total.')
+        && str_contains($admin, 'id="raw-events"')
+        && str_contains($admin, "'page_exact'")
+        && str_contains($admin, "'path_exact'")
+        && str_contains($admin, "'section_exact'")
+        && str_contains($admin, "'action_exact'")
+        && str_contains($admin, "'referrer_exact'")
+        && str_contains($admin, "'destination_exact'")
+        && str_contains($admin, 'access-matrix-metric-link')
+        && str_contains($admin, '<th>Hits</th><th>IPs</th>'),
+    'Hits on every activity summary card must open the matching raw events, while IP totals open the exact contributing IP list.'
+);
+
+$record(
     'download_logs_can_promote_abusive_ips_to_site_block',
     str_contains($downloadLogs, 'block_selected_site_ips')
         && str_contains($downloadLogs, 'Block selected IPs from entire site')
