@@ -36,6 +36,15 @@ function public_download_original_name(array $file): string
         : catalog_clean_unreal_filename((string)($file['package_name'] ?? 'package'));
 }
 
+function public_download_redirect_to_info(int $fileId): never
+{
+    if (!headers_sent()) {
+        header('Cache-Control: private, no-store, max-age=0');
+        header('Location: download-info.php?id=' . max(0, $fileId), true, 302);
+    }
+    exit;
+}
+
 function public_download_send_local(array $config, PDO $db, array $file, bool $publicTransfer = false): void
 {
     $path = public_download_storage_path($config, $file);
@@ -116,6 +125,16 @@ try {
     $isAdmin = catalog_support_is_admin();
     if ($isAdmin) {
         public_download_send_local($config, $db, $file, false);
+    }
+
+    // Anonymous/public transfers are intentionally two-step. A raw
+    // download.php?id=... URL is never a public entry point. The browser must
+    // first render download-info.php for this file, then follow its short-lived
+    // one-time session grant from that same-site page.
+    $grant = trim((string)($_GET['grant'] ?? ''));
+    if (!catalog_public_download_came_from_info($id)
+        || !catalog_public_download_grant_consume($id, $grant)) {
+        public_download_redirect_to_info($id);
     }
 
     $decision = external_public_download_decision(
