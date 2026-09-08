@@ -359,12 +359,27 @@ try {
 
     // Preflight before queueing so known dependency gaps are a user-visible
     // package choice, not a background worker/System Error.
-    $plan = (new PdoCatalogPackageExportPlanner($db, $config))->plan(
-        (int)$file['id'],
-        (string)$request['format'],
-        (bool)$request['include_dependencies'],
-        $settings
-    );
+    try {
+        $plan = (new PdoCatalogPackageExportPlanner($db, $config))->plan(
+            (int)$file['id'],
+            (string)$request['format'],
+            (bool)$request['include_dependencies'],
+            $settings
+        );
+    } catch (RuntimeException $error) {
+        // Planner policy/validation failures are expected user-facing package
+        // conditions. Do not disguise them as a transient server outage. PDO
+        // and other RuntimeException subclasses still bubble to the system-error
+        // path below.
+        if (get_class($error) === RuntimeException::class) {
+            generated_package_reply([
+                'ok' => false,
+                'error' => $error->getMessage(),
+                'error_type' => 'package_preflight_rejected',
+            ], 409);
+        }
+        throw $error;
+    }
     $missingCount = count((array)$plan['missing']);
     if ($missingCount > 0 && empty($request['allow_incomplete'])) {
         generated_package_reply([
@@ -446,13 +461,38 @@ try {
         'ready' => false,
     ] + $workerState, 202);
 } catch (Throwable $error) {
-    error_log('[UnrealDB package jobs] ' . get_class($error) . ': ' . $error->getMessage());
+    $reference = catalog_request_id();
+    catalog_system_error_record([
+        'source_kind' => 'generated-package',
+        'severity' => 'critical',
+        'error_type' => get_class($error),
+        'message' => $error->getMessage(),
+        'route' => (string)($_SERVER['SCRIPT_NAME'] ?? 'generated-package-job.php'),
+        'http_status' => 503,
+        'source_file' => $error->getFile(),
+        'source_line' => $error->getLine(),
+        'trace_text' => $error->getTraceAsString(),
+        'request_id' => $reference,
+        'context' => [
+            'action' => (string)($_POST['action'] ?? ''),
+            'file_id' => max(0, (int)($_POST['file_id'] ?? 0)),
+            'format' => substr(trim((string)($_POST['format'] ?? '')), 0, 32),
+            'dependencies' => (string)($_POST['dependencies'] ?? ''),
+            'allow_incomplete' => (string)($_POST['allow_incomplete'] ?? ''),
+        ],
+    ]);
+    error_log('[UnrealDB package jobs][' . $reference . '] ' . get_class($error) . ': ' . $error->getMessage());
+
     $status = http_response_code();
     if ($status < 400) {
         $status = 503;
     }
     $message = in_array($status, [409, 429], true)
         ? $error->getMessage()
-        : 'Package generation is temporarily unavailable.';
-    generated_package_reply(['ok' => false, 'error' => $message], $status);
+        : 'Package generation is temporarily unavailable. Reference: ' . $reference;
+    generated_package_reply([
+        'ok' => false,
+        'error' => $message,
+        'request_id' => $reference,
+    ], $status);
 }
