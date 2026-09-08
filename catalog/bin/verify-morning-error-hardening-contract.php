@@ -29,12 +29,12 @@ $checks = [
     'invalid manual Download Logs IP stays non-fatal' =>
         str_contains($downloadLogs, '$manualIp = trim(')
         && str_contains($downloadLogs, 'if (@inet_pton($manualIp) === false)')
-        && str_contains($downloadLogs, "$message = 'Enter a valid IPv4 or IPv6 address.';"),
+        && str_contains($downloadLogs, '$message = \'Enter a valid IPv4 or IPv6 address.\';'),
     'invalid IP from a log row stays non-fatal' =>
-        str_contains($downloadLogs, "if ($logIp === '' || @inet_pton($logIp) === false)")
-        && str_contains($downloadLogs, "$message = 'The selected log record does not contain a valid IP address.';"),
+        str_contains($downloadLogs, 'if ($logIp === \'\' || @inet_pton($logIp) === false)')
+        && str_contains($downloadLogs, '$message = \'The selected log record does not contain a valid IP address.\';'),
     'package-only dependency matches do not block generation' =>
-        str_contains($packageHandler, "if ($plan['missing'] && !$allowIncomplete)")
+        str_contains($packageHandler, 'if ($plan[\'missing\'] && !$allowIncomplete)')
         && str_contains($packageHandler, 'genuinely missing. Package-only matches are included and do not block generation.')
         && !str_contains($packageHandler, 'dependencies are missing or only matched at package level'),
 ];
