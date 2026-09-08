@@ -91,7 +91,7 @@ $record(
 
 $record(
     'equivalent_package_builds_are_reused',
-    str_contains($source['package_job'], "'build_key' => $buildKey")
+    str_contains($source['package_job'], "'build_key' => \$buildKey")
         && str_contains($source['package_job'], 'generated_package_reusable(')
         && str_contains($source['package_job'], "in_array(\$action, ['enqueue', 'lookup'], true)")
         && str_contains($source['package_access'], 'public function reusableCandidates(')
@@ -138,8 +138,8 @@ $record(
 $record(
     'package_progress_lists_planned_files',
     str_contains($source['package_handler'], 'private function progressFiles(')
-        && str_contains($source['package_handler'], "'files' => $progressFiles")
-        && str_contains($source['package_handler'], "'files_omitted' => $filesOmitted")
+        && str_contains($source['package_handler'], "'files' => \$progressFiles")
+        && str_contains($source['package_handler'], "'files_omitted' => \$filesOmitted")
         && str_contains($source['package_jobs_js'], 'Files in generated package')
         && str_contains($source['package_jobs_js'], 'file.install_path'),
     'Once dependency planning completes, progress must expose and render the files being added to the generated artifact.'
