@@ -149,6 +149,7 @@ try {
         'Full-site IP blocks. Blocked public visitors are redirected to the blacklist page and may submit a removal request.',
         [
             'Site Activity Logs' => 'access-matrix.php',
+            'Logging Settings' => 'logging-settings.php',
             'Download Logs' => 'download-logs.php',
             'Public Access' => 'public-access-settings.php',
         ]
