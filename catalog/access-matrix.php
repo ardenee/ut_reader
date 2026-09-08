@@ -200,6 +200,14 @@ try {
     $days = access_matrix_choice((string)($_GET['days'] ?? '7'), ['1', '7', '30', '90', 'all'], '7');
     $ip = access_matrix_text((string)($_GET['ip'] ?? ''), 80);
     $pageSearch = access_matrix_text((string)($_GET['page_q'] ?? ''), 190);
+    $pageExact = access_matrix_text((string)($_GET['page_exact'] ?? ''), 190);
+    $pathExact = access_matrix_text((string)($_GET['path_exact'] ?? ''), 500);
+    $sectionExact = access_matrix_text((string)($_GET['section_exact'] ?? ''), 190);
+    $actionExact = access_matrix_text((string)($_GET['action_exact'] ?? ''), 190);
+    $targetExact = access_matrix_text((string)($_GET['target_exact'] ?? ''), 500);
+    $referrerExact = access_matrix_text((string)($_GET['referrer_exact'] ?? ''), 500);
+    $destinationExact = access_matrix_text((string)($_GET['destination_exact'] ?? ''), 500);
+    $showIps = (string)($_GET['show_ips'] ?? '0') === '1';
     $session = strtolower(preg_replace('/[^a-f0-9]/i', '', (string)($_GET['session'] ?? '')) ?? '');
     $session = substr($session, 0, 64);
     $search = access_matrix_text((string)($_GET['q'] ?? ''), 200);
@@ -228,6 +236,23 @@ try {
         $where[] = '(a.page_key LIKE ? ESCAPE "\\\\" OR a.request_path LIKE ? ESCAPE "\\\\")';
         array_push($args, $like, $like);
     }
+    foreach ([
+        ['a.page_key', $pageExact],
+        ['a.request_path', $pathExact],
+        ['a.section_key', $sectionExact],
+        ['a.action_key', $actionExact],
+        ['a.target_path', $targetExact],
+        ['a.referrer_path', $referrerExact],
+    ] as [$column, $value]) {
+        if ($value !== '') {
+            $where[] = $column . '=?';
+            $args[] = $value;
+        }
+    }
+    if ($destinationExact !== '') {
+        $where[] = 'a.request_path=?';
+        $args[] = $destinationExact;
+    }
     if ($session !== '') {
         $where[] = 'LOWER(HEX(a.session_hash)) LIKE ?';
         $args[] = $session . '%';
@@ -250,6 +275,7 @@ try {
     $topActions = [];
     $transitions = [];
     $topIps = [];
+    $matchingIps = [];
 
     if ($eventsAvailable) {
         $summaryRow = catalog_one(
@@ -338,6 +364,17 @@ try {
             . 'a.ip_address IS NOT NULL GROUP BY a.ip_address ORDER BY events DESC LIMIT 30',
             $args
         );
+        if ($showIps) {
+            $matchingIps = catalog_all(
+                $db,
+                'SELECT INET6_NTOA(a.ip_address) ip,COUNT(*) hits,COUNT(DISTINCT a.session_hash) sessions,'
+                . 'MIN(a.occurred_at) first_seen,MAX(a.occurred_at) last_seen '
+                . 'FROM ue_access_events a'
+                . ($whereSql === '' ? ' WHERE ' : $whereSql . ' AND ')
+                . 'a.ip_address IS NOT NULL GROUP BY a.ip_address ORDER BY hits DESC,a.ip_address LIMIT 500',
+                $args
+            );
+        }
     }
 
     $blockedRows = $siteBlocklist instanceof CatalogSiteBlocklist ? $siteBlocklist->all() : [];
@@ -370,6 +407,8 @@ try {
         . '.access-matrix-actions,.access-block-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}'
         . '.access-block-actions .grow{flex:1;min-width:240px}'
 
+        . '.access-matrix-metric-link{font-weight:700;text-decoration:none}'
+        . '.access-matrix-metric-link:hover{text-decoration:underline}'
         . '.access-matrix-pages{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-top:12px}'
         . '@media(max-width:1000px){.access-matrix-grid{grid-template-columns:1fr}.access-matrix-stats{grid-template-columns:1fr 1fr}}'
         . '</style>';
@@ -425,7 +464,10 @@ try {
     else {
         echo '<table><thead><tr><th>Page</th><th>Hits</th><th>IPs</th></tr></thead><tbody>';
         foreach ($topPages as $row) {
-            echo '<tr><td class="mono">' . access_matrix_logged_link((string)($row['sample_path'] ?? ''), (string)$row['page_key']) . '</td><td>' . (int)$row['hits'] . '</td><td>' . (int)$row['unique_ips'] . '</td></tr>';
+            $pageFilters = ['event' => 'page_view', 'page_exact' => (string)$row['page_key'], 'p' => 1];
+            echo '<tr><td class="mono">' . access_matrix_logged_link((string)($row['sample_path'] ?? ''), (string)$row['page_key']) . '</td>'
+                . '<td><a class="access-matrix-metric-link" href="access-matrix.php?' . catalog_h(access_matrix_query($pageFilters + ['show_ips' => null])) . '#raw-events">' . (int)$row['hits'] . '</a></td>'
+                . '<td><a class="access-matrix-metric-link" href="access-matrix.php?' . catalog_h(access_matrix_query($pageFilters + ['show_ips' => 1])) . '#matching-ips">' . (int)$row['unique_ips'] . '</a></td></tr>';
         }
         echo '</tbody></table>';
     }
@@ -436,7 +478,10 @@ try {
     else {
         echo '<table><thead><tr><th>Link</th><th>Hits</th><th>IPs</th></tr></thead><tbody>';
         foreach ($topLinks as $row) {
-            echo '<tr><td class="mono small">' . access_matrix_logged_link((string)$row['request_path']) . '</td><td>' . (int)$row['hits'] . '</td><td>' . (int)$row['unique_ips'] . '</td></tr>';
+            $linkFilters = ['event' => 'page_view', 'path_exact' => (string)$row['request_path'], 'p' => 1];
+            echo '<tr><td class="mono small">' . access_matrix_logged_link((string)$row['request_path']) . '</td>'
+                . '<td><a class="access-matrix-metric-link" href="access-matrix.php?' . catalog_h(access_matrix_query($linkFilters + ['show_ips' => null])) . '#raw-events">' . (int)$row['hits'] . '</a></td>'
+                . '<td><a class="access-matrix-metric-link" href="access-matrix.php?' . catalog_h(access_matrix_query($linkFilters + ['show_ips' => 1])) . '#matching-ips">' . (int)$row['unique_ips'] . '</a></td></tr>';
         }
         echo '</tbody></table>';
     }
@@ -447,7 +492,15 @@ try {
     else {
         echo '<table><thead><tr><th>From</th><th>To</th><th>Hits</th><th>IPs</th></tr></thead><tbody>';
         foreach ($transitions as $row) {
-            echo '<tr><td class="mono small">' . access_matrix_logged_link((string)$row['source_path']) . '</td><td class="mono small">' . access_matrix_logged_link((string)$row['destination_path']) . '</td><td>' . (int)$row['hits'] . '</td><td>' . (int)$row['unique_ips'] . '</td></tr>';
+            $transitionFilters = [
+                'event' => 'page_view',
+                'referrer_exact' => (string)$row['source_path'],
+                'destination_exact' => (string)$row['destination_path'],
+                'p' => 1,
+            ];
+            echo '<tr><td class="mono small">' . access_matrix_logged_link((string)$row['source_path']) . '</td><td class="mono small">' . access_matrix_logged_link((string)$row['destination_path']) . '</td>'
+                . '<td><a class="access-matrix-metric-link" href="access-matrix.php?' . catalog_h(access_matrix_query($transitionFilters + ['show_ips' => null])) . '#raw-events">' . (int)$row['hits'] . '</a></td>'
+                . '<td><a class="access-matrix-metric-link" href="access-matrix.php?' . catalog_h(access_matrix_query($transitionFilters + ['show_ips' => 1])) . '#matching-ips">' . (int)$row['unique_ips'] . '</a></td></tr>';
         }
         echo '</tbody></table>';
     }
@@ -458,7 +511,15 @@ try {
     else {
         echo '<table><thead><tr><th>Page</th><th>Section</th><th>Hits</th><th>IPs</th></tr></thead><tbody>';
         foreach ($topSections as $row) {
-            echo '<tr><td class="mono small">' . access_matrix_logged_link((string)($row['sample_path'] ?? ''), (string)$row['page_key']) . '</td><td>' . catalog_h((string)$row['section_key']) . '</td><td>' . (int)$row['hits'] . '</td><td>' . (int)$row['unique_ips'] . '</td></tr>';
+            $sectionFilters = [
+                'event' => 'section',
+                'page_exact' => (string)$row['page_key'],
+                'section_exact' => (string)$row['section_key'],
+                'p' => 1,
+            ];
+            echo '<tr><td class="mono small">' . access_matrix_logged_link((string)($row['sample_path'] ?? ''), (string)$row['page_key']) . '</td><td>' . catalog_h((string)$row['section_key']) . '</td>'
+                . '<td><a class="access-matrix-metric-link" href="access-matrix.php?' . catalog_h(access_matrix_query($sectionFilters + ['show_ips' => null])) . '#raw-events">' . (int)$row['hits'] . '</a></td>'
+                . '<td><a class="access-matrix-metric-link" href="access-matrix.php?' . catalog_h(access_matrix_query($sectionFilters + ['show_ips' => 1])) . '#matching-ips">' . (int)$row['unique_ips'] . '</a></td></tr>';
         }
         echo '</tbody></table>';
     }
@@ -467,14 +528,44 @@ try {
     echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Top interactions</h2></div></div><div class="ui-section__body">';
     if ($topActions === []) echo '<p class="muted">No interaction data.</p>';
     else {
-        echo '<table><thead><tr><th>Page</th><th>Action</th><th>Target</th><th>Hits</th></tr></thead><tbody>';
+        echo '<table><thead><tr><th>Page</th><th>Action</th><th>Target</th><th>Hits</th><th>IPs</th></tr></thead><tbody>';
         foreach ($topActions as $row) {
-            echo '<tr><td class="mono small">' . access_matrix_logged_link((string)($row['sample_path'] ?? ''), (string)$row['page_key']) . '</td><td>' . catalog_h((string)$row['action_key']) . '</td><td class="mono small">' . access_matrix_logged_link((string)($row['target_path'] ?? '')) . '</td><td>' . (int)$row['hits'] . '</td></tr>';
+            $actionFilters = [
+                'event' => 'interaction',
+                'page_exact' => (string)$row['page_key'],
+                'action_exact' => (string)$row['action_key'],
+                'target_exact' => (string)($row['target_path'] ?? ''),
+                'p' => 1,
+            ];
+            echo '<tr><td class="mono small">' . access_matrix_logged_link((string)($row['sample_path'] ?? ''), (string)$row['page_key']) . '</td><td>' . catalog_h((string)$row['action_key']) . '</td><td class="mono small">' . access_matrix_logged_link((string)($row['target_path'] ?? '')) . '</td>'
+                . '<td><a class="access-matrix-metric-link" href="access-matrix.php?' . catalog_h(access_matrix_query($actionFilters + ['show_ips' => null])) . '#raw-events">' . (int)$row['hits'] . '</a></td>'
+                . '<td><a class="access-matrix-metric-link" href="access-matrix.php?' . catalog_h(access_matrix_query($actionFilters + ['show_ips' => 1])) . '#matching-ips">' . (int)$row['unique_ips'] . '</a></td></tr>';
         }
         echo '</tbody></table>';
     }
     echo '</div></section>';
     echo '</div>';
+
+    if ($showIps) {
+        echo '<section class="ui-section" id="matching-ips"><div class="ui-section__header"><div><h2>Matching IPs</h2>'
+            . '<p>IP addresses contributing to the selected card total.</p></div></div><div class="ui-section__body">';
+        if ($matchingIps === []) {
+            echo '<p class="muted">No matching IP addresses.</p>';
+        } else {
+            echo '<table><thead><tr><th>IP</th><th>Hits</th><th>Sessions</th><th>First</th><th>Last</th><th></th></tr></thead><tbody>';
+            foreach ($matchingIps as $matchIp) {
+                $matchIpText = (string)$matchIp['ip'];
+                echo '<tr><td class="mono"><a href="access-matrix.php?' . catalog_h(access_matrix_query(['ip' => $matchIpText, 'show_ips' => null, 'p' => 1])) . '#raw-events">' . catalog_h($matchIpText) . '</a></td>'
+                    . '<td><a class="access-matrix-metric-link" href="access-matrix.php?' . catalog_h(access_matrix_query(['ip' => $matchIpText, 'show_ips' => null, 'p' => 1])) . '#raw-events">' . (int)$matchIp['hits'] . '</a></td>'
+                    . '<td>' . (int)$matchIp['sessions'] . '</td>'
+                    . '<td class="mono small">' . catalog_h(access_matrix_time($matchIp['first_seen'])) . '</td>'
+                    . '<td class="mono small">' . catalog_h(access_matrix_time($matchIp['last_seen'])) . '</td>'
+                    . '<td><a class="button secondary" href="access-matrix.php?' . catalog_h(access_matrix_query(['ip' => $matchIpText, 'show_ips' => null, 'p' => 1])) . '#raw-events">View activity</a></td></tr>';
+            }
+            echo '</tbody></table>';
+        }
+        echo '</div></section>';
+    }
 
     echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Most active IPs</h2><p>Useful for spotting crawler-like navigation before blocking an address.</p></div></div><div class="ui-section__body">';
     if ($topIps === []) echo '<p class="muted">No IP activity.</p>';
@@ -482,9 +573,14 @@ try {
         echo '<table><thead><tr><th>IP</th><th>Sessions</th><th>Events</th><th>Browser pages</th><th>Server renders</th><th>Clicks</th><th>First</th><th>Last</th><th></th></tr></thead><tbody>';
         foreach ($topIps as $row) {
             $ipText = (string)$row['ip'];
-            echo '<tr><td class="mono">' . catalog_h($ipText)
+            $ipBase = ['ip' => $ipText, 'p' => 1, 'show_ips' => null];
+            echo '<tr><td class="mono"><a href="access-matrix.php?' . catalog_h(access_matrix_query($ipBase + ['event' => 'all'])) . '#raw-events">' . catalog_h($ipText) . '</a>'
                 . (isset($blockedLookup[strtolower($ipText)]) ? ' <span class="dep missing">blocked</span>' : '') . '</td>'
-                . '<td>' . (int)$row['sessions'] . '</td><td>' . (int)$row['events'] . '</td><td>' . (int)$row['page_views'] . '</td><td>' . (int)$row['server_pages'] . '</td><td>' . (int)$row['interactions'] . '</td>'
+                . '<td><a class="access-matrix-metric-link" href="access-matrix.php?' . catalog_h(access_matrix_query($ipBase + ['event' => 'all'])) . '#raw-events">' . (int)$row['sessions'] . '</a></td>'
+                . '<td><a class="access-matrix-metric-link" href="access-matrix.php?' . catalog_h(access_matrix_query($ipBase + ['event' => 'all'])) . '#raw-events">' . (int)$row['events'] . '</a></td>'
+                . '<td><a class="access-matrix-metric-link" href="access-matrix.php?' . catalog_h(access_matrix_query($ipBase + ['event' => 'page_view'])) . '#raw-events">' . (int)$row['page_views'] . '</a></td>'
+                . '<td><a class="access-matrix-metric-link" href="access-matrix.php?' . catalog_h(access_matrix_query($ipBase + ['event' => 'server_page'])) . '#raw-events">' . (int)$row['server_pages'] . '</a></td>'
+                . '<td><a class="access-matrix-metric-link" href="access-matrix.php?' . catalog_h(access_matrix_query($ipBase + ['event' => 'interaction'])) . '#raw-events">' . (int)$row['interactions'] . '</a></td>'
                 . '<td class="mono small">' . catalog_h(access_matrix_time($row['first_seen'])) . '</td><td class="mono small">' . catalog_h(access_matrix_time($row['last_seen'])) . '</td>'
                 . '<td><a class="button secondary" href="access-matrix.php?' . catalog_h(access_matrix_query(['ip' => $ipText, 'p' => 1])) . '">View activity</a></td></tr>';
         }
@@ -548,7 +644,7 @@ try {
     }
     echo '</div></section>';
 
-    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Raw events</h2><p>' . number_format($total) . ' matching event(s).</p></div></div><div class="ui-section__body">';
+    echo '<section class="ui-section" id="raw-events"><div class="ui-section__header"><div><h2>Raw events</h2><p>' . number_format($total) . ' matching event(s).</p></div></div><div class="ui-section__body">';
     if (!$eventsAvailable || $rows === []) {
         echo '<p class="muted">No matching access events.</p>';
     } else {
