@@ -648,13 +648,20 @@
     credit.rel = 'noopener noreferrer';
     credit.textContent = 'VectorAtlas';
     footer.appendChild(credit);
-    footer.appendChild(document.createTextNode(' / Natural Earth. GeoIP location data: '));
-    var geoCredit = document.createElement('a');
-    geoCredit.href = 'https://www.maxmind.com/';
-    geoCredit.target = '_blank';
-    geoCredit.rel = 'noopener noreferrer';
-    geoCredit.textContent = 'MaxMind';
-    footer.appendChild(geoCredit);
+    footer.appendChild(document.createTextNode(' / Natural Earth. GeoIP data sources supported: '));
+    var dbIpCredit = document.createElement('a');
+    dbIpCredit.href = 'https://db-ip.com/';
+    dbIpCredit.target = '_blank';
+    dbIpCredit.rel = 'noopener noreferrer';
+    dbIpCredit.textContent = 'DB-IP';
+    footer.appendChild(dbIpCredit);
+    footer.appendChild(document.createTextNode(' / '));
+    var maxMindCredit = document.createElement('a');
+    maxMindCredit.href = 'https://www.maxmind.com/';
+    maxMindCredit.target = '_blank';
+    maxMindCredit.rel = 'noopener noreferrer';
+    maxMindCredit.textContent = 'MaxMind';
+    footer.appendChild(maxMindCredit);
     footer.appendChild(document.createTextNode('. IP locations are approximate.'));
     content.appendChild(footer);
 
