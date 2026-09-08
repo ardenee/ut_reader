@@ -15,17 +15,20 @@ $read = static function (string $relative) use ($root): string {
 };
 
 $core = $read('lib/CatalogSupportCore.php');
+$flagEndpoint = $read('country-flag.php');
 $access = $read('access-matrix.php');
 $blacklist = $read('site-blacklist.php');
 $downloads = $read('download-logs.php');
 
 $checks = [
-    'shared country flag helper exists' =>
-        str_contains($core, 'function catalog_country_flag(string $countryCode): string')
-        && str_contains($core, 'html_entity_decode(')
-        && str_contains($core, '127397 + ord($countryCode[0])'),
-    'raw Access Matrix events show country flag beside IP' =>
-        str_contains($access, '$countryFlag = catalog_country_flag($countryCode);')
+    'country flags are served as same-origin SVG images' =>
+        str_contains($flagEndpoint, 'Content-Type: image/svg+xml')
+        && str_contains($flagEndpoint, 'storage/cache/country-flags')
+        && str_contains($flagEndpoint, 'lipis/flag-icons@')
+        && str_contains($flagEndpoint, 'flags/4x3/'),
+    'raw Access Matrix events show SVG flag beside IP' =>
+        str_contains($access, 'src="country-flag.php?code=')
+        && str_contains($access, 'class="access-country-flag"')
         && str_contains($access, '$countryFlagHtml . catalog_h($ipText)'),
     'raw Access Matrix blacklist control stays compact and right aligned' =>
         str_contains($access, '.access-matrix-ip-line{display:flex;align-items:center;justify-content:space-between;')
@@ -36,12 +39,16 @@ $checks = [
         && str_contains($access, '<span class="access-matrix-date">')
         && str_contains($access, '<br><span class="access-matrix-clock">')
         && str_contains($access, "access_matrix_time_html(\$row['occurred_at'])"),
-    'site blacklist rows show country flag beside IP' =>
-        str_contains($blacklist, '$countryFlag = catalog_country_flag($countryCode);')
+    'site blacklist rows show SVG flag beside IP' =>
+        str_contains($blacklist, 'src="country-flag.php?code=')
+        && str_contains($blacklist, 'class="site-blacklist-country-flag"')
         && str_contains($blacklist, '$countryFlagHtml . catalog_h((string)$row[\'ip\'])'),
-    'site blacklist removal requests also show country flag' =>
-        str_contains($blacklist, '$feedbackCountryFlag = catalog_country_flag($feedbackCountryCode);')
+    'site blacklist removal requests also show SVG flag' =>
+        substr_count($blacklist, 'src="country-flag.php?code=') >= 2
         && str_contains($blacklist, '$feedbackCountryFlagHtml . catalog_h((string)$row[\'ip\'])'),
+    'Download Logs uses SVG flags instead of platform emoji' =>
+        substr_count($downloads, 'src="country-flag.php?code=') >= 2
+        && str_contains($downloads, 'class="download-country-flag"'),
     'Download Logs listing and delete use one filter builder' =>
         substr_count($downloads, 'download_logs_filter_clause(') >= 3
         && str_contains($downloads, '\'where_sql\' => $where !== [] ? \' WHERE \' . implode(\' AND \', $where) : \'\''),
@@ -63,6 +70,7 @@ foreach ($checks as $label => $ok) {
 $syntaxFailures = [];
 foreach ([
     'lib/CatalogSupportCore.php',
+    'country-flag.php',
     'access-matrix.php',
     'site-blacklist.php',
     'download-logs.php',
