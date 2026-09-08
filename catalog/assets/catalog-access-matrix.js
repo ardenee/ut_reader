@@ -110,6 +110,13 @@
             : null;
         if (!element) return;
 
+        // Normal same-site link navigation is already represented by the
+        // destination page_view + referrer pair. Recording the click as another
+        // raw activity row only duplicates the same navigation.
+        if (element.matches('a[href]') && sameSitePath(element.getAttribute('href'))) {
+            return;
+        }
+
         var target = '';
         if (element.matches('a[href]')) {
             target = sameSitePath(element.getAttribute('href'));
@@ -132,4 +139,10 @@
         trackPageView();
         trackSections();
     }
+
+    // Back/forward-cache restores do not fire DOMContentLoaded again. Count the
+    // restored page as a new navigation without double-counting ordinary loads.
+    window.addEventListener('pageshow', function (event) {
+        if (event.persisted) trackPageView();
+    });
 })();
