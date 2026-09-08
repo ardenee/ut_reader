@@ -76,6 +76,17 @@ function catalog_bytes(int $bytes): string
     return ($i ? number_format($value, 2) : (string)$bytes) . ' ' . $units[$i];
 }
 
+function catalog_country_flag(string $countryCode): string
+{
+    $countryCode = strtoupper(trim($countryCode));
+    if (preg_match('/^[A-Z]{2}$/', $countryCode) !== 1 || !function_exists('mb_chr')) {
+        return '';
+    }
+
+    return mb_chr(127397 + ord($countryCode[0]), 'UTF-8')
+        . mb_chr(127397 + ord($countryCode[1]), 'UTF-8');
+}
+
 function catalog_clean_unreal_package_stem(string $stem): string
 {
     $stem = trim(str_replace(["\0", '/', '\\'], ['', '.', '.'], $stem));
