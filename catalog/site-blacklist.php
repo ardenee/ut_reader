@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
 
+use UnrealDb\Catalog\Infrastructure\Downloads\CatalogGeoIpCountryResolver;
 use UnrealDb\Catalog\Infrastructure\Security\CatalogSiteBlocklist;
 
 function site_blacklist_time(mixed $value): string
@@ -103,6 +104,13 @@ try {
         ));
     }
 
+    $geoIpResolver = new CatalogGeoIpCountryResolver($db);
+    foreach ($blockedRows as $index => $row) {
+        $country = $geoIpResolver->resolve((string)($row['ip'] ?? ''));
+        $blockedRows[$index]['map_country_code'] = $country['country_code'];
+        $blockedRows[$index]['map_country_name'] = $country['country_name'];
+    }
+
     $feedbackWhere = [];
     $feedbackArgs = [];
     if ($status !== 'all') {
@@ -179,9 +187,16 @@ try {
     if ($blockedRows === []) {
         echo '<p class="muted">No matching site-blocked IP addresses.</p>';
     } else {
-        echo '<div class="table-wrap"><table class="site-blacklist-table"><thead><tr><th>IP</th><th>Reason</th><th>Blocked</th><th>Action</th></tr></thead><tbody>';
+        echo '<div class="table-wrap" data-world-map-source="site-blacklist" data-world-map-title="Blacklisted IP locations" data-world-map-storage-key="unrealdb.siteBlacklist.worldMapOpen" data-world-map-note="Country-level approximation from the local GeoIP country database." data-world-map-entry-singular="blocked IP" data-world-map-entry-plural="blocked IPs"><table class="site-blacklist-table"><thead><tr><th>IP</th><th>Reason</th><th>Blocked</th><th>Action</th></tr></thead><tbody>';
         foreach ($blockedRows as $row) {
-            echo '<tr><td class="mono site-blacklist-ip">' . catalog_h((string)$row['ip']) . '</td>'
+            $ipText = trim((string)($row['ip'] ?? ''));
+            $countryCode = strtoupper(trim((string)($row['map_country_code'] ?? '')));
+            $countryName = trim((string)($row['map_country_name'] ?? ''));
+            $mapAttributes = $ipText !== '' && preg_match('/^[A-Z]{2}$/', $countryCode) === 1
+                ? ' data-world-map-ip="' . catalog_h($ipText) . '" data-world-map-country-code="' . catalog_h($countryCode)
+                    . '" data-world-map-country-name="' . catalog_h($countryName !== '' ? $countryName : $countryCode) . '"'
+                : '';
+            echo '<tr' . $mapAttributes . '><td class="mono site-blacklist-ip">' . catalog_h((string)$row['ip']) . '</td>'
                 . '<td>' . catalog_h((string)$row['note']) . '</td>'
                 . '<td class="mono small site-blacklist-time">' . catalog_h(site_blacklist_time($row['created_at'])) . '</td>'
                 . '<td class="site-blacklist-actions"><form method="post" onsubmit="return confirm(\'Restore site access for this IP?\')">'
