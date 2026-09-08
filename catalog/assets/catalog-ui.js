@@ -474,8 +474,11 @@
     if (!source && !legacyDownloadMap) return;
 
     function codeFromCountryCell(cell) {
-        var image = cell.querySelector('img.download-country-flag-image');
-        if (image && /^[A-Za-z]{2}$/.test(image.alt || '')) return image.alt.toUpperCase();
+        var image = cell.querySelector('img.download-country-flag, img.download-country-flag-image');
+        if (image) {
+            var imageCode = (image.getAttribute('title') || image.getAttribute('alt') || '').trim().toUpperCase();
+            if (/^[A-Z]{2}$/.test(imageCode)) return imageCode;
+        }
         var marker = cell.querySelector('.download-country-flag');
         var text = marker ? (marker.textContent || '').trim() : '';
         if (/^[A-Za-z]{2}$/.test(text)) return text.toUpperCase();
@@ -489,37 +492,79 @@
     }
 
     function countryNameFromCell(cell, code) {
-        var image = cell.querySelector('img.download-country-flag-image');
-        if (image && image.title) return image.title;
+        var image = cell.querySelector('img.download-country-flag, img.download-country-flag-image');
+        if (image && image.getAttribute('aria-label')) return image.getAttribute('aria-label');
         var marker = cell.querySelector('.download-country-flag');
-        return marker && (marker.title || marker.getAttribute('aria-label'))
-            ? (marker.title || marker.getAttribute('aria-label'))
+        return marker && marker.getAttribute('aria-label')
+            ? marker.getAttribute('aria-label')
             : code;
+    }
+
+    function coordinate(value, minimum, maximum) {
+        var text = (value || '').trim();
+        if (text === '') return null;
+        var number = Number(text);
+        return Number.isFinite(number) && number >= minimum && number <= maximum ? number : null;
+    }
+
+    function textValue(value) {
+        return (value || '').replace(/\s+/g, ' ').trim();
     }
 
     var pointsByKey = Object.create(null);
 
-    function addPoint(ip, code, country, count) {
-        ip = (ip || '').trim();
-        code = (code || '').trim().toUpperCase();
-        country = (country || '').trim() || code;
+    function addPoint(ip, code, country, count, latitude, longitude, region, city, postal, accuracyKm) {
+        ip = textValue(ip);
+        code = textValue(code).toUpperCase();
+        country = textValue(country) || code;
         count = Number.isFinite(count) && count > 0 ? count : 1;
+        latitude = coordinate(latitude, -90, 90);
+        longitude = coordinate(longitude, -180, 180);
+        if (latitude === null || longitude === null) {
+            latitude = null;
+            longitude = null;
+        }
+        accuracyKm = /^\d+$/.test(String(accuracyKm || '').trim())
+            ? Math.max(0, parseInt(accuracyKm, 10))
+            : null;
         if (!ip || !/^[A-Z]{2}$/.test(code)) return;
+
         var key = code + '|' + ip;
         if (!pointsByKey[key]) {
-            pointsByKey[key] = { ip: ip, code: code, country: country, count: 0 };
+            pointsByKey[key] = {
+                ip: ip,
+                code: code,
+                country: country,
+                region: textValue(region),
+                city: textValue(city),
+                postal: textValue(postal),
+                latitude: latitude,
+                longitude: longitude,
+                accuracyKm: accuracyKm,
+                count: 0
+            };
         }
         pointsByKey[key].count += count;
     }
 
+    function addPointFromAttributes(row, fallbackIp, fallbackCode, fallbackCountry) {
+        addPoint(
+            row.getAttribute('data-world-map-ip') || fallbackIp || '',
+            row.getAttribute('data-world-map-country-code') || fallbackCode || '',
+            row.getAttribute('data-world-map-country-name') || fallbackCountry || '',
+            parseInt(row.getAttribute('data-world-map-count') || '1', 10),
+            row.getAttribute('data-world-map-latitude') || '',
+            row.getAttribute('data-world-map-longitude') || '',
+            row.getAttribute('data-world-map-region') || '',
+            row.getAttribute('data-world-map-city') || '',
+            row.getAttribute('data-world-map-postal') || '',
+            row.getAttribute('data-world-map-accuracy-km') || ''
+        );
+    }
+
     if (source) {
         source.querySelectorAll('[data-world-map-ip]').forEach(function (row) {
-            addPoint(
-                row.getAttribute('data-world-map-ip') || '',
-                row.getAttribute('data-world-map-country-code') || '',
-                row.getAttribute('data-world-map-country-name') || '',
-                parseInt(row.getAttribute('data-world-map-count') || '1', 10)
-            );
+            addPointFromAttributes(row, '', '', '');
         });
     } else {
         var headers = Array.from(downloadTable.tHead.rows[0].cells).map(function (cell) {
@@ -534,11 +579,11 @@
             var countryCell = row.cells[countryIndex];
             if (!ipCell || !countryCell) return;
             var code = codeFromCountryCell(countryCell);
-            addPoint(
+            addPointFromAttributes(
+                row,
                 (ipCell.textContent || '').trim(),
                 code,
-                countryNameFromCell(countryCell, code),
-                1
+                countryNameFromCell(countryCell, code)
             );
         });
     }
@@ -548,8 +593,8 @@
         ? (source.getAttribute('data-world-map-title') || 'World activity map')
         : 'World activity map';
     var noteBase = source
-        ? (source.getAttribute('data-world-map-note') || 'Country-level approximation from the local GeoIP country database.')
-        : 'Country-level approximation from the stored GeoIP country snapshot.';
+        ? (source.getAttribute('data-world-map-note') || 'Approximate city/region locations from local GeoIP data, with country fallback.')
+        : 'Approximate city/region locations from local GeoIP data, with country fallback.';
     var entrySingular = source
         ? (source.getAttribute('data-world-map-entry-singular') || 'visible log entry')
         : 'visible log entry';
@@ -571,8 +616,14 @@
         details.open = true;
     }
 
+    var detailedCount = points.filter(function (point) {
+        return point.latitude !== null && point.longitude !== null;
+    }).length;
+
     var summary = document.createElement('summary');
-    summary.textContent = titleText + ' · ' + points.length + ' unique IP' + (points.length === 1 ? '' : 's') + ' on this page';
+    summary.textContent = titleText + ' · ' + points.length + ' unique IP' + (points.length === 1 ? '' : 's')
+        + (detailedCount > 0 ? ' · ' + detailedCount + ' coordinate-resolved' : '')
+        + ' on this page';
     details.appendChild(summary);
 
     var content = document.createElement('div');
@@ -585,7 +636,7 @@
 
     var stage = document.createElement('div');
     stage.className = 'download-world-map-stage';
-    stage.textContent = points.length ? 'Loading world map…' : 'No country-resolved IP addresses are visible on this page.';
+    stage.textContent = points.length ? 'Loading world map…' : 'No GeoIP-resolved IP addresses are visible on this page.';
     content.appendChild(stage);
 
     var footer = document.createElement('div');
@@ -597,7 +648,7 @@
     credit.rel = 'noopener noreferrer';
     credit.textContent = 'VectorAtlas';
     footer.appendChild(credit);
-    footer.appendChild(document.createTextNode(' / Natural Earth.'));
+    footer.appendChild(document.createTextNode(' / Natural Earth. IP locations are approximate.'));
     content.appendChild(footer);
 
     details.appendChild(content);
@@ -619,6 +670,7 @@
         '.download-world-map-stage svg path{fill:rgba(148,163,184,.22);stroke:rgba(148,163,184,.48);stroke-width:.9;vector-effect:non-scaling-stroke}',
         '.download-world-map-stage svg path.download-world-map-country-active{fill:rgba(96,165,250,.28);stroke:rgba(147,197,253,.78)}',
         '.download-world-map-stage .download-world-map-dot{fill:var(--amber);stroke:#fff;stroke-width:2.2;vector-effect:non-scaling-stroke;cursor:help}',
+        '.download-world-map-stage .download-world-map-dot.is-country-fallback{fill:rgba(246,196,83,.62);stroke-dasharray:3 2}',
         '.download-world-map-stage .download-world-map-dot:focus{outline:none;stroke-width:4}',
         '@media(max-width:700px){.download-world-map-stage{min-height:160px}.download-world-map-content{padding:9px}}'
     ].join('\n');
@@ -633,6 +685,77 @@
         return index >= 0 ? path.slice(0, index + marker.length) : '/catalog/';
     })();
 
+    function parseViewBox(value) {
+        var parts = (value || '').trim().split(/\s+/).map(Number);
+        return parts.length === 4 && parts.every(Number.isFinite) && parts[2] > 0 && parts[3] > 0
+            ? { x: parts[0], y: parts[1], width: parts[2], height: parts[3] }
+            : { x: 0, y: 0, width: 2000, height: 1001 };
+    }
+
+    function projectCoordinate(latitude, longitude, viewBox) {
+        if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return null;
+
+        // VectorAtlas is generated with d3.geoEquirectangular().fitSize([2000,1001]).
+        // For the pinned map revision this yields 1000/180 SVG units per degree,
+        // x=1000 at Greenwich and y=578.370221 at the equator.
+        var xScale = viewBox.width / 360;
+        var yScale = xScale;
+        var equatorY = viewBox.y + (578.370221 / 1001) * viewBox.height;
+        return {
+            x: viewBox.x + viewBox.width / 2 + longitude * xScale,
+            y: equatorY - latitude * yScale
+        };
+    }
+
+    function largestCountryComponentCenter(countryPath, svg, namespace) {
+        var d = countryPath.getAttribute('d') || '';
+        var components = d.match(/M[^M]+/g) || [d];
+        var best = null;
+
+        components.forEach(function (component) {
+            if (!component) return;
+            var probe = document.createElementNS(namespace, 'path');
+            probe.setAttribute('d', component);
+            probe.setAttribute('visibility', 'hidden');
+            svg.appendChild(probe);
+            try {
+                var box = probe.getBBox();
+                var area = box && Number.isFinite(box.width) && Number.isFinite(box.height)
+                    ? Math.max(0, box.width) * Math.max(0, box.height)
+                    : 0;
+                if (area > 0 && (!best || area > best.area)) {
+                    best = {
+                        area: area,
+                        x: box.x + box.width / 2,
+                        y: box.y + box.height / 2
+                    };
+                }
+            } catch (error) {
+            }
+            probe.remove();
+        });
+
+        if (best) return best;
+        try {
+            var fallback = countryPath.getBBox();
+            return {
+                x: fallback.x + fallback.width / 2,
+                y: fallback.y + fallback.height / 2
+            };
+        } catch (error) {
+            return null;
+        }
+    }
+
+    function locationLabel(point) {
+        var parts = [];
+        [point.city, point.region, point.country].forEach(function (value) {
+            value = textValue(value);
+            if (value && parts.indexOf(value) === -1) parts.push(value);
+        });
+        return parts.join(', ') || point.code;
+    }
+
     function renderMap(svgText) {
         var parsed = new DOMParser().parseFromString(svgText, 'image/svg+xml');
         var sourceSvg = parsed.documentElement;
@@ -645,7 +768,7 @@
         svg.setAttribute('viewBox', sourceSvg.getAttribute('viewBox') || '0 0 2000 1001');
         svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
         svg.setAttribute('role', 'img');
-        svg.setAttribute('aria-label', 'Approximate country locations of IP addresses in the currently displayed activity rows');
+        svg.setAttribute('aria-label', 'Approximate GeoIP locations of IP addresses in the currently displayed activity rows');
 
         sourceSvg.querySelectorAll('path[id][d]').forEach(function (sourcePath) {
             var id = (sourcePath.getAttribute('id') || '').trim().toLowerCase();
@@ -661,52 +784,89 @@
         stage.appendChild(svg);
 
         window.requestAnimationFrame(function () {
-            var byCountry = Object.create(null);
+            var viewBox = parseViewBox(svg.getAttribute('viewBox'));
+            var clusters = Object.create(null);
+            var countryCenters = Object.create(null);
+            var mappedIps = 0;
+            var coordinateIps = 0;
+            var fallbackIps = 0;
+
             points.forEach(function (point) {
-                (byCountry[point.code] || (byCountry[point.code] = [])).push(point);
+                var countryPath = svg.querySelector('#' + point.code.toLowerCase());
+                if (countryPath) countryPath.classList.add('download-world-map-country-active');
+
+                var hasCoordinates = point.latitude !== null && point.longitude !== null;
+                var position = hasCoordinates
+                    ? projectCoordinate(point.latitude, point.longitude, viewBox)
+                    : null;
+
+                if (!position && countryPath) {
+                    if (!countryCenters[point.code]) {
+                        countryCenters[point.code] = largestCountryComponentCenter(countryPath, svg, namespace);
+                    }
+                    position = countryCenters[point.code];
+                }
+                if (!position || !Number.isFinite(position.x) || !Number.isFinite(position.y)) return;
+
+                var key = hasCoordinates
+                    ? 'geo|' + point.latitude.toFixed(4) + '|' + point.longitude.toFixed(4)
+                    : 'country|' + point.code;
+                if (!clusters[key]) {
+                    clusters[key] = {
+                        x: position.x,
+                        y: position.y,
+                        detailed: hasCoordinates,
+                        points: []
+                    };
+                }
+                clusters[key].points.push(point);
+                mappedIps++;
+                if (hasCoordinates) coordinateIps++;
+                else fallbackIps++;
             });
 
-            var mapped = 0;
-            Object.keys(byCountry).forEach(function (code) {
-                var countryPath = svg.querySelector('#' + code.toLowerCase());
-                if (!countryPath) return;
-                countryPath.classList.add('download-world-map-country-active');
-                var box;
-                try {
-                    box = countryPath.getBBox();
-                } catch (error) {
-                    return;
-                }
-                if (!box || !Number.isFinite(box.x) || !Number.isFinite(box.y)) return;
+            Object.keys(clusters).forEach(function (key) {
+                var cluster = clusters[key];
+                var circle = document.createElementNS(namespace, 'circle');
+                circle.classList.add('download-world-map-dot');
+                if (!cluster.detailed) circle.classList.add('is-country-fallback');
+                circle.setAttribute('cx', String(cluster.x));
+                circle.setAttribute('cy', String(cluster.y));
+                circle.setAttribute('r', String(Math.min(12, 7 + Math.log2(Math.max(1, cluster.points.length)) * 1.5)));
+                circle.setAttribute('tabindex', '0');
+                circle.setAttribute('role', 'img');
 
-                var group = byCountry[code];
-                var centerX = box.x + box.width / 2;
-                var centerY = box.y + box.height / 2;
-                group.forEach(function (point, index) {
-                    var count = group.length;
-                    var angle = count > 1 ? ((Math.PI * 2 * index) / count) - (Math.PI / 2) : 0;
-                    var spread = count > 1 ? Math.min(28, 8 + count * 1.4) : 0;
-                    var circle = document.createElementNS(namespace, 'circle');
-                    circle.classList.add('download-world-map-dot');
-                    circle.setAttribute('cx', String(centerX + Math.cos(angle) * spread));
-                    circle.setAttribute('cy', String(centerY + Math.sin(angle) * spread));
-                    circle.setAttribute('r', '8');
-                    circle.setAttribute('tabindex', '0');
-                    circle.setAttribute('role', 'img');
-                    var entryLabel = point.count === 1 ? entrySingular : entryPlural;
-                    var tooltip = point.ip + ' · ' + point.country + ' · ' + point.count + ' ' + entryLabel + ' · country-level approximation';
-                    circle.setAttribute('aria-label', tooltip);
-                    var dotTitle = document.createElementNS(namespace, 'title');
-                    dotTitle.textContent = tooltip;
-                    circle.appendChild(dotTitle);
-                    svg.appendChild(circle);
-                    mapped++;
-                });
+                var firstPoint = cluster.points[0];
+                var totalEntries = cluster.points.reduce(function (sum, point) { return sum + point.count; }, 0);
+                var entryLabel = totalEntries === 1 ? entrySingular : entryPlural;
+                var ipLabel = cluster.points.length === 1
+                    ? firstPoint.ip
+                    : cluster.points.length + ' IPs';
+                var tooltip = ipLabel + ' · ' + locationLabel(firstPoint)
+                    + ' · ' + totalEntries + ' ' + entryLabel;
+                if (cluster.detailed) {
+                    if (firstPoint.accuracyKm !== null) {
+                        tooltip += ' · approximate accuracy ±' + firstPoint.accuracyKm + ' km';
+                    } else {
+                        tooltip += ' · approximate GeoIP location';
+                    }
+                } else {
+                    tooltip += ' · country fallback';
+                }
+
+                circle.setAttribute('aria-label', tooltip);
+                var dotTitle = document.createElementNS(namespace, 'title');
+                dotTitle.textContent = tooltip;
+                circle.appendChild(dotTitle);
+                svg.appendChild(circle);
             });
 
             note.textContent = noteBase + ' '
-                + mapped + ' of ' + points.length + ' unique IP' + (points.length === 1 ? '' : 's')
-                + ' on the current page mapped.';
+                + mappedIps + ' of ' + points.length + ' unique IP' + (points.length === 1 ? '' : 's')
+                + ' on the current page mapped'
+                + (coordinateIps > 0 ? '; ' + coordinateIps + ' use approximate coordinates' : '')
+                + (fallbackIps > 0 ? '; ' + fallbackIps + ' use country fallback' : '')
+                + '.';
         });
     }
 
