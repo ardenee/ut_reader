@@ -110,8 +110,30 @@ CSS;
     echo '<script src="assets/generated-package-jobs.js"></script>';
     catalog_foot();
 } catch (Throwable $error) {
+    $reference = catalog_request_id();
+    catalog_system_error_record([
+        'source_kind' => 'generated-package-page',
+        'severity' => 'critical',
+        'error_type' => get_class($error),
+        'message' => $error->getMessage(),
+        'route' => (string)($_SERVER['SCRIPT_NAME'] ?? 'download-package.php'),
+        'http_status' => 500,
+        'source_file' => $error->getFile(),
+        'source_line' => $error->getLine(),
+        'trace_text' => $error->getTraceAsString(),
+        'request_id' => $reference,
+        'context' => [
+            'file_id' => max(0, (int)($_GET['id'] ?? 0)),
+            'format' => substr(trim((string)($_GET['format'] ?? '')), 0, 32),
+            'dependencies' => (string)($_GET['dependencies'] ?? ''),
+        ],
+    ]);
     catalog_head('Package generation error');
-    echo CatalogUi::alert('danger', $error->getMessage(), 'Package generation unavailable');
+    echo CatalogUi::alert(
+        'danger',
+        $error->getMessage() . ' Reference: ' . $reference,
+        'Package generation unavailable'
+    );
     echo '<p><a class="button" href="javascript:history.back()">Back</a></p>';
     catalog_foot();
 }
