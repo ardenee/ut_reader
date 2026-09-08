@@ -67,6 +67,7 @@ function catalog_admin_navigation_groups(string $root): array
             'Live Contention' => $root . 'live-contention.php',
             'System Errors' => $root . 'system-errors.php',
             'Basic Page Audit' => $root . 'basic-performance-audit.php',
+            'Access Matrix' => $root . 'access-matrix.php',
             'Exact Count Telemetry' => $root . 'query-telemetry.php',
             'Performance Readiness' => $root . 'performance-readiness.php',
             'Workload Tracing' => $root . 'workload-tracing.php',
