@@ -138,7 +138,10 @@ try {
     if ($page === 'file') redirect_to('file-info.php?id=' . (int)($_GET['id'] ?? 0));
     if ($page === 'examine') redirect_to('file-examine.php?id=' . (int)($_GET['id'] ?? 0));
     if ($page === 'upload') redirect_to('profiled-upload.php');
-    if ($page === 'download') redirect_to('download.php?id=' . (int)($_GET['id'] ?? 0));
+    if ($page === 'download') {
+        $downloadId = (int)($_GET['id'] ?? 0);
+        redirect_to((catalog_support_is_admin() ? 'download.php?id=' : 'download-info.php?id=') . $downloadId);
+    }
     if ($page === 'feedback') redirect_to('feedback.php');
     if ($page === 'admin') redirect_to(catalog_support_is_admin() ? 'dashboard.php' : 'index.php?page=login');
 
