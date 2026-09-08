@@ -20,6 +20,8 @@ final class CatalogPageResponseTransform
         $script = basename((string)($_SERVER['SCRIPT_NAME'] ?? ''));
         $requestPath = str_replace('\\', '/', (string)($_SERVER['SCRIPT_NAME'] ?? ''));
         $federation = str_contains($requestPath, '/catalog/federation/');
+        $catalogRoute = str_contains($requestPath, '/catalog/');
+        $assetPrefix = $federation ? '../assets/' : ($catalogRoute ? 'assets/' : 'catalog/assets/');
         $headAssets = [];
         $cspNonce = function_exists('catalog_security_csp_nonce')
             ? \catalog_security_csp_nonce()
@@ -32,7 +34,7 @@ final class CatalogPageResponseTransform
             'catalog-access-matrix.js',
         ] as $asset) {
             $path = dirname(__DIR__, 3) . '/assets/' . $asset;
-            $source = ($federation ? '../assets/' : 'assets/') . $asset;
+            $source = $assetPrefix . $asset;
             $headAssets[$source] = is_file($path) ? (string)filemtime($path) : '1';
         }
 
