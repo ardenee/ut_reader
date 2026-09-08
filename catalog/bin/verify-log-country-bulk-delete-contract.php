@@ -22,7 +22,8 @@ $downloads = $read('download-logs.php');
 $checks = [
     'shared country flag helper exists' =>
         str_contains($core, 'function catalog_country_flag(string $countryCode): string')
-        && str_contains($core, 'mb_chr(127397 + ord($countryCode[0])'),
+        && str_contains($core, 'html_entity_decode(')
+        && str_contains($core, '127397 + ord($countryCode[0])'),
     'raw Access Matrix events show country flag beside IP' =>
         str_contains($access, '$countryFlag = catalog_country_flag($countryCode);')
         && str_contains($access, '$countryFlagHtml . catalog_h($ipText)'),
@@ -30,9 +31,10 @@ $checks = [
         str_contains($access, '.access-matrix-ip-line{display:flex;align-items:center;justify-content:space-between;')
         && str_contains($access, 'title="Blacklist IP"')
         && str_contains($access, '>XX</button>'),
-    'raw Access Matrix time puts seconds on second line' =>
-        str_contains($access, 'function access_matrix_time_html(mixed $value): string')
-        && str_contains($access, '<br><span class="access-matrix-seconds">')
+    'raw Access Matrix shows local date above local time' =>
+        str_contains($access, "new DateTimeZone('Europe/Dublin')")
+        && str_contains($access, '<span class="access-matrix-date">')
+        && str_contains($access, '<br><span class="access-matrix-clock">')
         && str_contains($access, "access_matrix_time_html(\$row['occurred_at'])"),
     'site blacklist rows show country flag beside IP' =>
         str_contains($blacklist, '$countryFlag = catalog_country_flag($countryCode);')
