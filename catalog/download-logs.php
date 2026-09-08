@@ -107,6 +107,10 @@ try {
         catalog_check_csrf('download_logs_admin');
         $action = strtolower(trim((string)($_POST['action'] ?? '')));
         $logView = download_logs_choice((string)($_POST['log_view'] ?? 'downloads'), ['downloads', 'generations'], 'downloads');
+        $blockLogId = max(0, (int)($_POST['block_log_id'] ?? 0));
+        if ($blockLogId > 0) {
+            $action = 'block_log_site_ip';
+        }
         $ids = is_array($_POST['ids'] ?? null) ? $_POST['ids'] : [];
         $ids = array_values(array_unique(array_filter(
             array_map('intval', $ids),
@@ -116,7 +120,31 @@ try {
             throw new RuntimeException('Select no more than 1,000 log records at once.');
         }
 
-        if ($action === 'delete_selected') {
+        if ($action === 'block_log_site_ip') {
+            if (!$siteBlocklist instanceof CatalogSiteBlocklist) {
+                throw new RuntimeException('Run the pending Access Matrix migration before blocking full site access.');
+            }
+            if (!$available || $blockLogId < 1) {
+                throw new RuntimeException('The selected download log record is unavailable.');
+            }
+            $table = $logView === 'generations' ? 'ue_generated_package_audit' : 'ue_download_audit';
+            $ipColumn = $logView === 'generations' ? 'request_ip' : 'ip_address';
+            $statement = $db->prepare(
+                'SELECT INET6_NTOA(' . $ipColumn . ') ip FROM ' . $table
+                . ' WHERE id=? AND ' . $ipColumn . ' IS NOT NULL LIMIT 1'
+            );
+            $statement->execute([$blockLogId]);
+            $logIp = trim((string)$statement->fetchColumn());
+            if ($logIp === '') {
+                throw new RuntimeException('The selected log record has no IP address to block.');
+            }
+            $siteBlocklist->block(
+                $logIp,
+                (int)($_SESSION['user']['id'] ?? 0),
+                'Blocked from Download Logs record #' . $blockLogId . '.'
+            );
+            $message = $logIp . ' blocked from the entire site.';
+        } elseif ($action === 'delete_selected') {
             if (!$available || $ids === []) {
                 throw new RuntimeException('Select one or more log records to delete.');
             }
@@ -245,6 +273,11 @@ try {
     $blockedLookup = [];
     foreach ($blockedRows as $blockedRow) {
         $blockedLookup[strtolower((string)$blockedRow['ip'])] = true;
+    }
+    $siteBlockedRows = $siteBlocklist instanceof CatalogSiteBlocklist ? $siteBlocklist->all() : [];
+    $siteBlockedLookup = [];
+    foreach ($siteBlockedRows as $siteBlockedRow) {
+        $siteBlockedLookup[strtolower((string)$siteBlockedRow['ip'])] = true;
     }
 
     if ($available) {
@@ -380,6 +413,7 @@ try {
         . '.download-log-game{width:1%;min-width:120px;white-space:normal}'
         . '.download-log-agent{width:30ch;min-width:30ch;max-width:30ch}'
         . '.download-log-agent-text{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
+        . '.download-log-ip-actions{display:flex;gap:5px;align-items:center;flex-wrap:wrap;margin-top:5px}'
         . '.download-log-error{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;overflow-wrap:anywhere;margin-top:4px}'
         . '.download-log-artifact{min-width:180px;overflow-wrap:anywhere}'
         . '.download-blocklist{margin:14px 0}'
@@ -550,9 +584,22 @@ try {
                 echo '<br><span class="mono small muted">' . catalog_h((string)$row['package_format']) . '</span>';
             }
             echo '</td><td class="download-log-game">' . catalog_h((string)($row['game_name'] ?? '')) . '</td>';
+            $transferBlocked = $ipText !== '' && isset($blockedLookup[strtolower($ipText)]);
+            $siteBlocked = $ipText !== '' && isset($siteBlockedLookup[strtolower($ipText)]);
             echo '<td class="mono download-log-ip">' . catalog_h($ipText)
-                . ($ipText !== '' && isset($blockedLookup[strtolower($ipText)]) ? '<br><span class="dep missing">blocked</span>' : '')
-                . '</td>';
+                . ($transferBlocked ? '<br><span class="dep package_only">transfer blocked</span>' : '')
+                . ($siteBlocked ? '<br><span class="dep missing">site blocked</span>' : '');
+            if ($ipText !== '') {
+                echo '<div class="download-log-ip-actions">';
+                if (!$siteBlocked && $siteBlocklist instanceof CatalogSiteBlocklist) {
+                    echo '<button class="ui-button ui-button--danger ui-button--sm" type="submit" name="block_log_id" value="' . (int)$row['id']
+                        . '" formnovalidate onclick="return confirm(\'Block ' . catalog_h($ipText) . ' from the entire site?\')">Blacklist IP</button>';
+                } elseif ($siteBlocked) {
+                    echo '<a class="ui-button ui-button--secondary ui-button--sm" href="site-blacklist.php?q=' . rawurlencode($ipText) . '">View blacklist</a>';
+                }
+                echo '</div>';
+            }
+            echo '</td>';
             echo '<td class="download-country">';
             if ($countryCode !== '' && $countryName !== '') {
                 echo '<span class="download-country-flag" role="img" aria-label="' . catalog_h($countryName) . '" title="' . catalog_h($countryName) . '">'
@@ -597,9 +644,22 @@ try {
             echo '<td class="mono download-log-version">' . catalog_h((string)$row['package_version']) . '</td>';
             echo '<td class="mono download-log-format">' . catalog_h((string)$row['package_format']) . '</td>';
             echo '<td class="download-log-game">' . catalog_h((string)($row['game_name'] ?? '')) . '<br><a class="small" href="file-info.php?id=' . (int)$row['file_id'] . '">File #' . (int)$row['file_id'] . '</a></td>';
+            $transferBlocked = $ipText !== '' && isset($blockedLookup[strtolower($ipText)]);
+            $siteBlocked = $ipText !== '' && isset($siteBlockedLookup[strtolower($ipText)]);
             echo '<td class="mono download-log-ip">' . catalog_h($ipText)
-                . ($ipText !== '' && isset($blockedLookup[strtolower($ipText)]) ? '<br><span class="dep missing">blocked</span>' : '')
-                . '</td>';
+                . ($transferBlocked ? '<br><span class="dep package_only">transfer blocked</span>' : '')
+                . ($siteBlocked ? '<br><span class="dep missing">site blocked</span>' : '');
+            if ($ipText !== '') {
+                echo '<div class="download-log-ip-actions">';
+                if (!$siteBlocked && $siteBlocklist instanceof CatalogSiteBlocklist) {
+                    echo '<button class="ui-button ui-button--danger ui-button--sm" type="submit" name="block_log_id" value="' . (int)$row['id']
+                        . '" formnovalidate onclick="return confirm(\'Block ' . catalog_h($ipText) . ' from the entire site?\')">Blacklist IP</button>';
+                } elseif ($siteBlocked) {
+                    echo '<a class="ui-button ui-button--secondary ui-button--sm" href="site-blacklist.php?q=' . rawurlencode($ipText) . '">View blacklist</a>';
+                }
+                echo '</div>';
+            }
+            echo '</td>';
             echo '<td class="download-country">';
             if ($countryCode !== '' && $countryName !== '') {
                 echo '<span class="download-country-flag" role="img" aria-label="' . catalog_h($countryName) . '" title="' . catalog_h($countryName) . '">'
