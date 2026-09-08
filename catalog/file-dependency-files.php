@@ -81,15 +81,27 @@ function fd_package_candidates(PDO $db, int $gameId, array $packageNames): array
 }
 
 /** @return array<string,mixed>|null */
-function fd_select_candidate(array $candidateMap, string $packageName, int $sourceFileId): ?array
-{
+function fd_select_candidate(
+    array $candidateMap,
+    string $packageName,
+    int $excludeFileId = 0,
+    int $preferredFileId = 0
+): ?array {
     $candidates = $candidateMap[fd_key($packageName)] ?? [];
+    if ($preferredFileId > 0) {
+        foreach ($candidates as $candidate) {
+            $candidateId = (int)$candidate['id'];
+            if ($candidateId === $preferredFileId && $candidateId !== $excludeFileId) {
+                return $candidate;
+            }
+        }
+    }
     foreach ($candidates as $candidate) {
-        if ((int)$candidate['id'] === $sourceFileId) {
+        if ((int)$candidate['id'] !== $excludeFileId) {
             return $candidate;
         }
     }
-    return $candidates[0] ?? null;
+    return null;
 }
 
 /** @return array<string,mixed> */
@@ -160,7 +172,11 @@ try {
                 'md5' => (string)$dependency['resolved_md5'],
             ];
         } elseif ($status !== 'common') {
-            $candidate = fd_select_candidate($candidateMap, (string)$dependency['required_package'], $fileId);
+            $candidate = fd_select_candidate(
+                $candidateMap,
+                (string)$dependency['required_package'],
+                $fileId
+            );
             if ($candidate !== null) {
                 $resolved = fd_file_payload($candidate);
                 $source = (string)$candidate['match_source'];
@@ -199,6 +215,16 @@ try {
     }
 
     $requiredBy = [];
+    // Seed the reverse view from authoritative resolved_file_id links first.
+    // Alias/package-name recovery below may add additional legacy/package-only
+    // relationships, but must never hide already-resolved inbound dependants.
+    foreach (catalog_dependency_used_by_rows($db, $fileId, 5000) as $directUsedBy) {
+        $directId = (int)($directUsedBy['id'] ?? 0);
+        if ($directId > 0 && $directId !== $fileId) {
+            $requiredBy[$directId] = fd_file_payload($directUsedBy);
+        }
+    }
+
     $reverseRows = catalog_reverse_dependency_rows(
         $db,
         $config,
@@ -218,11 +244,19 @@ try {
     foreach ($reverseRows as $row) {
         $targetId = (int)($row['resolved_file_id'] ?? 0);
         if ($targetId === 0 && (string)($row['status'] ?? '') !== 'common') {
-            $candidate = fd_select_candidate($reverseCandidates, (string)$row['required_package'], (int)$row['source_file_id']);
+            $candidate = fd_select_candidate(
+                $reverseCandidates,
+                (string)$row['required_package'],
+                (int)$row['source_file_id'],
+                $fileId
+            );
             $targetId = $candidate !== null ? (int)$candidate['id'] : 0;
         }
         if ($targetId === $fileId) {
-            $requiredBy[(int)$row['id']] = fd_file_payload($row);
+            $sourceId = (int)($row['source_file_id'] ?? $row['id'] ?? 0);
+            if ($sourceId > 0 && $sourceId !== $fileId) {
+                $requiredBy[$sourceId] = fd_file_payload($row);
+            }
         }
     }
 
