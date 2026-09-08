@@ -24,6 +24,7 @@ try {
         exit;
     }
 
+    catalog_start_session();
     $config = catalog_config();
     $db = catalog_db($config);
 
