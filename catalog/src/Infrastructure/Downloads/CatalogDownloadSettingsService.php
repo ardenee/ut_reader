@@ -59,9 +59,9 @@ final class CatalogDownloadSettingsService
         $values['public_block_crawlers'] = isset($input['public_block_crawlers']) ? '1' : '0';
         $publicValues = CatalogPublicAccessSettingsStore::normalize($values);
 
-        $mode = strtolower(trim((string)($input['public_download_mode'] ?? 'local_direct')));
-        if (!in_array($mode, ['local_direct', 'external_mirror', 'external_mirror_preferred', 'disabled'], true)) {
-            throw new RuntimeException('Invalid public download mode.');
+        $mode = strtolower(trim((string)($input['public_download_mode'] ?? 'external_mirror')));
+        if (!in_array($mode, ['external_mirror', 'disabled'], true)) {
+            throw new RuntimeException('Public individual-file downloads must use external providers or be disabled.');
         }
 
         $mirrorValues = [
