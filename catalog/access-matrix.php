@@ -29,7 +29,7 @@ function access_matrix_query(array $overrides = []): string
 {
     $query = array_merge($_GET, $overrides);
     foreach ($query as $key => $value) {
-        if ($value === '' || $value === null || $value === 'all') {
+        if ($value === '' || $value === null) {
             unset($query[$key]);
         }
     }
