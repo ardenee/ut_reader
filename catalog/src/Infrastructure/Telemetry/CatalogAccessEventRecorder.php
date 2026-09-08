@@ -27,7 +27,7 @@ final class CatalogAccessEventRecorder
         }
 
         $this->insert([
-            'event_type' => 'page_view',
+            'event_type' => 'server_page',
             'page_key' => $pageKey,
             'request_path' => self::safeRequestPath((string)($_SERVER['REQUEST_URI'] ?? $script)),
             'section_key' => null,
@@ -41,7 +41,7 @@ final class CatalogAccessEventRecorder
     public function recordClientEvent(array $event): void
     {
         $type = strtolower(trim((string)($event['event_type'] ?? '')));
-        if (!in_array($type, ['section', 'interaction'], true)) {
+        if (!in_array($type, ['page_view', 'section', 'interaction'], true)) {
             return;
         }
 
