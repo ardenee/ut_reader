@@ -36,7 +36,7 @@ function public_download_original_name(array $file): string
         : catalog_clean_unreal_filename((string)($file['package_name'] ?? 'package'));
 }
 
-function public_download_send_local(array $config, PDO $db, array $file): void
+function public_download_send_local(array $config, PDO $db, array $file, bool $publicTransfer = false): void
 {
     $path = public_download_storage_path($config, $file);
     $downloadName = public_download_original_name($file);
@@ -45,9 +45,10 @@ function public_download_send_local(array $config, PDO $db, array $file): void
     if ($size === false) {
         throw new RuntimeException('Stored file size is unavailable.');
     }
-    // This local-storage path is reachable only by an authenticated administrator.
-    // Public transfer-speed policy applies to generated artifacts, not admin diagnostics.
-    $speedBytes = 0;
+    // The browser receives only this controller URL and a Content-Disposition
+    // filename. The resolved storage path is used server-side only and is never
+    // placed in HTML, redirects or response headers.
+    $speedBytes = $publicTransfer ? catalog_public_download_speed_bytes($db) : 0;
     $auditId = catalog_download_audit_start($db, [
         'download_type' => 'individual_file',
         'file_id' => (int)$file['id'],
@@ -114,7 +115,7 @@ try {
 
     $isAdmin = catalog_support_is_admin();
     if ($isAdmin) {
-        public_download_send_local($config, $db, $file);
+        public_download_send_local($config, $db, $file, false);
     }
 
     $decision = external_public_download_decision(
@@ -124,6 +125,11 @@ try {
         catalog_public_access_client_ip(),
         false
     );
+    if (($decision['type'] ?? '') === 'local_stream') {
+        catalog_public_download_limit($db);
+        public_download_send_local($config, $db, $file, true);
+    }
+
     if (($decision['type'] ?? '') === 'external_link') {
         catalog_public_download_limit($db);
         $externalUrl = trim((string)($decision['link']['external_url'] ?? ''));
@@ -138,8 +144,8 @@ try {
     $access = catalog_public_access_settings($db, $config);
     catalog_head('Download');
     echo '<div class="card"><h1>Download</h1><p><strong>' . catalog_h($file['package_name']) . '</strong><br>' . catalog_h(public_download_original_name($file)) . '</p><p class="muted">Public download mode: <span class="mono">' . catalog_h(external_public_download_mode($db)) . '</span></p></div>';
-    echo '<div class="card"><h2>Public download restrictions</h2><p>This IP address may open up to <strong>' . (int)$access['public_download_max_files'] . '</strong> external file links per ' . catalog_h(catalog_public_access_window_label((int)$access['public_download_window_seconds'])) . '.</p>'
-        . '<p class="muted">Public users never receive catalogue-storage files directly. Logged-in administrators may use the same download action for a direct local transfer.</p></div>';
+    echo '<div class="card"><h2>Public download restrictions</h2><p>This IP address may download up to <strong>' . (int)$access['public_download_max_files'] . '</strong> individual files per ' . catalog_h(catalog_public_access_window_label((int)$access['public_download_window_seconds'])) . '.</p>'
+        . '<p class="muted">Protected local downloads are streamed through this controller. The catalogue storage path and physical file URL are never exposed to the browser.</p></div>';
 
     if (($decision['type'] ?? '') === 'pending') {
         echo '<div class="card"><h2>External download is being prepared</h2><p>' . catalog_h($decision['message'] ?? 'External download link is not ready yet.') . '</p>';
