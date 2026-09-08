@@ -112,9 +112,23 @@ function public_download_send_local(array $config, PDO $db, array $file, bool $p
 
 try {
     $config = catalog_config();
+    $id = (int)($_POST['id'] ?? $_GET['id'] ?? 0);
+    $isAdmin = catalog_support_is_admin();
+
+    // Reject public direct URLs before opening the catalogue database or touching
+    // storage. Only administrators may use GET download.php?id=... directly.
+    if (!$isAdmin) {
+        $method = strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? 'GET'));
+        $grant = trim((string)($_POST['grant'] ?? ''));
+        if ($method !== 'POST'
+            || !catalog_public_download_came_from_info($id)
+            || !catalog_public_download_grant_consume($id, $grant)) {
+            public_download_redirect_to_info($id);
+        }
+    }
+
     $db = catalog_db($config);
     base_game_ensure($db);
-    $id = (int)($_POST['id'] ?? $_GET['id'] ?? 0);
     $file = catalog_one($db, 'SELECT * FROM ue_files WHERE id=? AND scan_status="verified"', [$id]);
     if (!$file) {
         throw new RuntimeException('File not found.');
@@ -127,22 +141,8 @@ try {
         exit;
     }
 
-    $isAdmin = catalog_support_is_admin();
     if ($isAdmin) {
         public_download_send_local($config, $db, $file, false);
-    }
-
-    // Anonymous/public transfers are intentionally two-step. Public users
-    // never receive a reusable download.php?id=... link: the final action is a
-    // POST from download-info.php carrying a short-lived one-time session grant.
-    // Direct GET/bookmark/crawler/download-manager requests are sent back to the
-    // options page for another deliberate click.
-    $method = strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? 'GET'));
-    $grant = trim((string)($_POST['grant'] ?? ''));
-    if ($method !== 'POST'
-        || !catalog_public_download_came_from_info($id)
-        || !catalog_public_download_grant_consume($id, $grant)) {
-        public_download_redirect_to_info($id);
     }
 
     $decision = external_public_download_decision(
