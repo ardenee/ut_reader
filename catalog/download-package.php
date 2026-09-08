@@ -22,9 +22,6 @@ try {
     if ($mode === 'disabled') {
         throw new RuntimeException('Public downloads are disabled.');
     }
-    if ($mode === 'external_mirror') {
-        throw new RuntimeException('Generated packages are unavailable in external-mirror-only mode.');
-    }
     if (!$settings['enabled']) {
         throw new RuntimeException('Package exports are disabled.');
     }
@@ -68,6 +65,8 @@ try {
 .package-job-progress { height:16px; overflow:hidden; border:1px solid var(--line2); border-radius:999px; background:rgba(255,255,255,.05); }
 .package-job-progress > span { display:block; width:0; height:100%; border-radius:inherit; background:linear-gradient(90deg,#76a9ff,#9dc2ff); transition:width .2s linear; }
 .package-job-summary { margin-top:12px; white-space:pre-wrap; color:var(--muted); }
+.package-job-files { margin-top:16px; max-height:360px; overflow:auto; }
+.package-job-files table { margin:0; }
 .package-job-actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:16px; }
 </style>
 CSS;
@@ -78,10 +77,11 @@ CSS;
     echo '<div class="package-job-progress"><span id="package-job-bar"></span></div>';
     echo '<div id="package-job-status" class="package-job-summary">Waiting to queue…</div>';
     echo '<div id="package-job-summary" class="package-job-summary"></div>';
+    echo '<div id="package-job-files" class="package-job-files"></div>';
     echo '<div class="package-job-actions">'
         . '<button type="button" id="package-job-cancel" class="secondary">Cancel</button>'
-        . '<a id="package-job-download" class="button primary" hidden>Download generated package</a>'
-        . '<a class="button secondary" href="download-info.php?id=' . $id . '">Back to download options</a>'
+        . '<a id="package-job-download" class="button primary" aria-disabled="true" style="pointer-events:none;opacity:.55">Download generated package</a>'
+        . '<a id="package-job-back" class="button secondary" href="download-info.php?id=' . $id . '">Back to download options</a>'
         . '</div>';
     echo '</div>';
 
