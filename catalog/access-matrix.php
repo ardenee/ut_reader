@@ -247,9 +247,9 @@ try {
     }
 
     $eventType = access_matrix_choice(
-        (string)($_GET['event'] ?? 'all'),
+        (string)($_GET['event'] ?? 'page_view'),
         ['all', 'page_view', 'server_page', 'section', 'interaction'],
-        'all'
+        'page_view'
     );
     $days = access_matrix_choice((string)($_GET['days'] ?? '7'), ['1', '7', '30', '90', 'all'], '7');
     $ip = access_matrix_text((string)($_GET['ip'] ?? ''), 80);
@@ -275,10 +275,6 @@ try {
     $args = [];
     if ($days !== 'all') {
         $where[] = 'a.occurred_at>=DATE_SUB(CURRENT_TIMESTAMP(6),INTERVAL ' . (int)$days . ' DAY)';
-    }
-    if ($eventType !== 'all') {
-        $where[] = 'a.event_type=?';
-        $args[] = $eventType;
     }
     if ($ip !== '') {
         $like = '%' . str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $ip) . '%';
@@ -319,7 +315,18 @@ try {
     }
     $whereSql = $where !== [] ? ' WHERE ' . implode(' AND ', $where) : '';
 
-    $summary = ['events' => 0, 'page_views' => 0, 'server_pages' => 0, 'interactions' => 0, 'unique_ips' => 0];
+    // The event selector controls the raw activity log only. Busiest pages,
+    // sections, interactions and navigation cards must not disappear merely
+    // because the operator is looking at page loads in the raw list.
+    $rawWhere = $where;
+    $rawArgs = $args;
+    if ($eventType !== 'all') {
+        $rawWhere[] = 'a.event_type=?';
+        $rawArgs[] = $eventType;
+    }
+    $rawWhereSql = $rawWhere !== [] ? ' WHERE ' . implode(' AND ', $rawWhere) : '';
+
+    $summary = ['page_views' => 0, 'sections' => 0, 'interactions' => 0, 'unique_ips' => 0, 'sessions' => 0];
     $rows = [];
     $total = 0;
     $pages = 1;
@@ -334,21 +341,27 @@ try {
     if ($eventsAvailable) {
         $summaryRow = catalog_one(
             $db,
-            'SELECT COUNT(*) events,SUM(a.event_type="page_view") page_views,'
-            . 'SUM(a.event_type="server_page") server_pages,'
-            . 'SUM(a.event_type="interaction") interactions,COUNT(DISTINCT a.ip_address) unique_ips '
+            'SELECT SUM(a.event_type="page_view") page_views,'
+            . 'SUM(a.event_type="section") sections,'
+            . 'SUM(a.event_type="interaction") interactions,'
+            . 'COUNT(DISTINCT a.ip_address) unique_ips,COUNT(DISTINCT a.session_hash) sessions '
             . 'FROM ue_access_events a' . $whereSql,
             $args
         ) ?: [];
         $summary = [
-            'events' => (int)($summaryRow['events'] ?? 0),
             'page_views' => (int)($summaryRow['page_views'] ?? 0),
-            'server_pages' => (int)($summaryRow['server_pages'] ?? 0),
+            'sections' => (int)($summaryRow['sections'] ?? 0),
             'interactions' => (int)($summaryRow['interactions'] ?? 0),
             'unique_ips' => (int)($summaryRow['unique_ips'] ?? 0),
+            'sessions' => (int)($summaryRow['sessions'] ?? 0),
         ];
 
-        $total = $summary['events'];
+        $totalRow = catalog_one(
+            $db,
+            'SELECT COUNT(*) c FROM ue_access_events a' . $rawWhereSql,
+            $rawArgs
+        ) ?: [];
+        $total = (int)($totalRow['c'] ?? 0);
         $pages = max(1, (int)ceil($total / $perPage));
         $page = min($page, $pages);
         $offset = ($page - 1) * $perPage;
@@ -356,10 +369,10 @@ try {
         $statement = $db->prepare(
             'SELECT a.*,INET6_NTOA(a.ip_address) ip_text,LOWER(HEX(a.session_hash)) session_hex,u.username '
             . 'FROM ue_access_events a LEFT JOIN ue_users u ON u.id=a.user_id'
-            . $whereSql
+            . $rawWhereSql
             . ' ORDER BY a.occurred_at DESC,a.id DESC LIMIT ' . $perPage . ' OFFSET ' . $offset
         );
-        $statement->execute($args);
+        $statement->execute($rawArgs);
         $rows = $statement->fetchAll(PDO::FETCH_ASSOC) ?: [];
 
         $topPages = catalog_all(
@@ -424,9 +437,9 @@ try {
                 'SELECT INET6_NTOA(a.ip_address) ip,COUNT(*) hits,COUNT(DISTINCT a.session_hash) sessions,'
                 . 'MIN(a.occurred_at) first_seen,MAX(a.occurred_at) last_seen '
                 . 'FROM ue_access_events a'
-                . ($whereSql === '' ? ' WHERE ' : $whereSql . ' AND ')
+                . ($rawWhereSql === '' ? ' WHERE ' : $rawWhereSql . ' AND ')
                 . 'a.ip_address IS NOT NULL GROUP BY a.ip_address ORDER BY hits DESC,a.ip_address LIMIT 500',
-                $args
+                $rawArgs
             );
         }
     }
@@ -497,7 +510,7 @@ try {
 
     catalog_page_header(
         'Site Activity Logs',
-        'Whole-site page, section and interaction telemetry for understanding busy parts of the site, visitor navigation and crawler-like activity.',
+        'Page-load activity by default, with detailed server-render, section and interaction telemetry available when needed.',
         ['Logging Settings' => 'logging-settings.php', 'Download Logs' => 'download-logs.php', 'Site Blacklist' => 'site-blacklist.php', 'Public Access' => 'public-access-settings.php']
     );
 
@@ -513,11 +526,11 @@ try {
     }
 
     echo '<div class="grid access-matrix-stats">';
-    catalog_stat_card('Events', $summary['events']);
-    catalog_stat_card('Browser page views', $summary['page_views']);
-    catalog_stat_card('Server renders', $summary['server_pages']);
-    catalog_stat_card('Interactions', $summary['interactions']);
+    catalog_stat_card('Page loads', $summary['page_views']);
     catalog_stat_card('Unique IPs', $summary['unique_ips']);
+    catalog_stat_card('Sessions', $summary['sessions']);
+    catalog_stat_card('Sections viewed', $summary['sections']);
+    catalog_stat_card('Interactions', $summary['interactions']);
     echo '</div>';
 
     echo '<form class="access-matrix-filter" method="get">'
@@ -525,8 +538,8 @@ try {
     foreach (['1' => '24 hours', '7' => '7 days', '30' => '30 days', '90' => '90 days', 'all' => 'All'] as $value => $label) {
         echo '<option value="' . $value . '"' . ($days === $value ? ' selected' : '') . '>' . catalog_h($label) . '</option>';
     }
-    echo '</select></label><label>Event <select name="event">';
-    foreach (['all' => 'All', 'page_view' => 'Browser page views', 'server_page' => 'Server renders', 'section' => 'Sections', 'interaction' => 'Interactions'] as $value => $label) {
+    echo '</select></label><label>Activity log <select name="event">';
+    foreach (['page_view' => 'Page loads', 'all' => 'All telemetry', 'server_page' => 'Server renders (diagnostic)', 'section' => 'Sections', 'interaction' => 'Interactions'] as $value => $label) {
         echo '<option value="' . $value . '"' . ($eventType === $value ? ' selected' : '') . '>' . catalog_h($label) . '</option>';
     }
     echo '</select></label>'
@@ -726,7 +739,9 @@ try {
     }
     echo '</div></section>';
 
-    echo '<section class="ui-section" id="raw-events"><div class="ui-section__header"><div><h2>Raw events</h2><p>' . number_format($total) . ' matching event(s).</p></div></div><div class="ui-section__body">';
+    $rawLabel = $eventType === 'page_view' ? 'page load(s)' : 'telemetry event(s)';
+    echo '<section class="ui-section" id="raw-events"><div class="ui-section__header"><div><h2>Activity log</h2><p>'
+        . number_format($total) . ' matching ' . $rawLabel . '.</p></div></div><div class="ui-section__body">';
     if (!$eventsAvailable || $rows === []) {
         echo '<p class="muted">No matching access events.</p>';
     } else {
