@@ -387,7 +387,7 @@ try {
             'SELECT a.page_key,MIN(a.request_path) sample_path,COUNT(*) hits,COUNT(DISTINCT a.ip_address) unique_ips '
             . 'FROM ue_access_events a'
             . ($whereSql === '' ? ' WHERE ' : $whereSql . ' AND ')
-            . 'a.event_type="page_view" GROUP BY a.page_key ORDER BY hits DESC,a.page_key LIMIT 10',
+            . 'a.event_type IN ("page_view","server_page") GROUP BY a.page_key ORDER BY hits DESC,a.page_key LIMIT 10',
             $args
         );
         $topLinks = catalog_all(
@@ -395,7 +395,7 @@ try {
             'SELECT a.request_path,COUNT(*) hits,COUNT(DISTINCT a.ip_address) unique_ips '
             . 'FROM ue_access_events a'
             . ($whereSql === '' ? ' WHERE ' : $whereSql . ' AND ')
-            . 'a.event_type="page_view" AND a.request_path<>"" '
+            . 'a.event_type IN ("page_view","server_page") AND a.request_path<>"" '
             . 'GROUP BY a.request_path ORDER BY hits DESC,a.request_path LIMIT 10',
             $args
         );
@@ -422,7 +422,7 @@ try {
             'SELECT a.referrer_path source_path,a.request_path destination_path,COUNT(*) hits,COUNT(DISTINCT a.ip_address) unique_ips '
             . 'FROM ue_access_events a'
             . ($whereSql === '' ? ' WHERE ' : $whereSql . ' AND ')
-            . 'a.event_type="page_view" AND a.referrer_path IS NOT NULL AND a.referrer_path<>"" '
+            . 'a.event_type IN ("page_view","server_page") AND a.referrer_path IS NOT NULL AND a.referrer_path<>"" '
             . 'GROUP BY a.referrer_path,a.request_path ORDER BY hits DESC LIMIT 10',
             $args
         );
@@ -561,12 +561,12 @@ try {
     echo '</select></label><button type="submit">Apply</button></form>';
 
     echo '<div class="access-matrix-grid">';
-    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Busiest pages</h2></div></div><div class="ui-section__body">';
-    if ($topPages === []) echo '<p class="muted">No page-view data.</p>';
+    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Busiest pages</h2><p>Browser-confirmed and server-only page requests.</p></div></div><div class="ui-section__body">';
+    if ($topPages === []) echo '<p class="muted">No page activity.</p>';
     else {
         echo '<table><thead><tr><th>Page</th><th>Hits</th><th>IPs</th></tr></thead><tbody>';
         foreach ($topPages as $row) {
-            $pageFilters = ['event' => 'page_view', 'page_exact' => (string)$row['page_key'], 'p' => 1];
+            $pageFilters = ['event' => 'page_activity', 'page_exact' => (string)$row['page_key'], 'p' => 1];
             echo '<tr><td class="mono">' . access_matrix_logged_link((string)($row['sample_path'] ?? ''), (string)$row['page_key']) . '</td>'
                 . '<td><a class="access-matrix-metric-link" href="access-matrix.php?' . catalog_h(access_matrix_query($pageFilters + ['show_ips' => null])) . '#raw-events">' . (int)$row['hits'] . '</a></td>'
                 . '<td><a class="access-matrix-metric-link" href="access-matrix.php?' . catalog_h(access_matrix_query($pageFilters + ['show_ips' => 1])) . '#matching-ips">' . (int)$row['unique_ips'] . '</a></td></tr>';
@@ -575,12 +575,12 @@ try {
     }
     echo '</div></section>';
 
-    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Busiest links</h2><p>Exact logged URLs, including useful query parameters such as file IDs.</p></div></div><div class="ui-section__body">';
-    if ($topLinks === []) echo '<p class="muted">No browser link data.</p>';
+    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Busiest links</h2><p>Exact requested URLs from browser-confirmed and server-only page activity.</p></div></div><div class="ui-section__body">';
+    if ($topLinks === []) echo '<p class="muted">No page-link activity.</p>';
     else {
         echo '<table><thead><tr><th>Link</th><th>Hits</th><th>IPs</th></tr></thead><tbody>';
         foreach ($topLinks as $row) {
-            $linkFilters = ['event' => 'page_view', 'path_exact' => (string)$row['request_path'], 'p' => 1];
+            $linkFilters = ['event' => 'page_activity', 'path_exact' => (string)$row['request_path'], 'p' => 1];
             echo '<tr><td class="mono small">' . access_matrix_logged_link((string)$row['request_path']) . '</td>'
                 . '<td><a class="access-matrix-metric-link" href="access-matrix.php?' . catalog_h(access_matrix_query($linkFilters + ['show_ips' => null])) . '#raw-events">' . (int)$row['hits'] . '</a></td>'
                 . '<td><a class="access-matrix-metric-link" href="access-matrix.php?' . catalog_h(access_matrix_query($linkFilters + ['show_ips' => 1])) . '#matching-ips">' . (int)$row['unique_ips'] . '</a></td></tr>';
@@ -589,13 +589,13 @@ try {
     }
     echo '</div></section>';
 
-    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Navigation matrix</h2><p>Referring page → destination page.</p></div></div><div class="ui-section__body">';
+    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Navigation matrix</h2><p>Same-site HTTP referrer → destination across page activity.</p></div></div><div class="ui-section__body">';
     if ($transitions === []) echo '<p class="muted">No same-site navigation transitions recorded.</p>';
     else {
         echo '<table><thead><tr><th>From</th><th>To</th><th>Hits</th><th>IPs</th></tr></thead><tbody>';
         foreach ($transitions as $row) {
             $transitionFilters = [
-                'event' => 'page_view',
+                'event' => 'page_activity',
                 'referrer_exact' => (string)$row['source_path'],
                 'destination_exact' => (string)$row['destination_path'],
                 'p' => 1,
@@ -608,7 +608,7 @@ try {
     }
     echo '</div></section>';
 
-    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Busiest sections</h2></div></div><div class="ui-section__body">';
+    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Busiest sections</h2><p>Browser JavaScript only; server-only/crawler requests cannot report visible sections.</p></div></div><div class="ui-section__body">';
     if ($topSections === []) echo '<p class="muted">No section-view data.</p>';
     else {
         echo '<table class="access-matrix-sections-table"><thead><tr><th>Page</th><th>Section</th><th>Hits</th><th>IPs</th></tr></thead><tbody>';
@@ -627,7 +627,7 @@ try {
     }
     echo '</div></section>';
 
-    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Top interactions</h2></div></div><div class="ui-section__body">';
+    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Top interactions</h2><p>Browser JavaScript actions only; ordinary same-site navigation is intentionally not duplicated here.</p></div></div><div class="ui-section__body">';
     if ($topActions === []) echo '<p class="muted">No interaction data.</p>';
     else {
         echo '<table class="access-matrix-interactions-table"><thead><tr><th>Page</th><th>Action</th><th>Target</th><th>Hits</th><th>IPs</th></tr></thead><tbody>';
