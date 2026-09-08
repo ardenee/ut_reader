@@ -454,6 +454,11 @@ try {
         . '.access-matrix-metric-link{font-weight:700;text-decoration:none}'
         . '.access-matrix-metric-link:hover{text-decoration:underline}'
         . '.access-matrix-pages{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-top:12px}'
+        . '.access-matrix-collapsible>summary{list-style:none;cursor:pointer}'
+        . '.access-matrix-collapsible>summary::-webkit-details-marker{display:none}'
+        . '.access-matrix-collapsible>summary .ui-section__header{margin:0}'
+        . '.access-matrix-collapsible>summary .ui-section__header::after{content:"Expand";margin-left:auto;color:var(--muted);font-size:.9rem}'
+        . '.access-matrix-collapsible[open]>summary .ui-section__header::after{content:"Collapse"}'
         . '@media(max-width:1000px){.access-matrix-grid{grid-template-columns:1fr}.access-matrix-stats{grid-template-columns:1fr 1fr}}'
         . '</style>';
 
@@ -611,7 +616,7 @@ try {
         echo '</div></section>';
     }
 
-    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Most active IPs</h2><p>Useful for spotting crawler-like navigation before blocking an address.</p></div></div><div class="ui-section__body">';
+    echo '<details class="ui-section access-matrix-collapsible"><summary><div class="ui-section__header"><div><h2>Most active IPs</h2><p>Useful for spotting crawler-like navigation before blocking an address.</p></div></div></summary><div class="ui-section__body">';
     if ($topIps === []) echo '<p class="muted">No IP activity.</p>';
     else {
         echo '<table><thead><tr><th>IP</th><th>Sessions</th><th>Events</th><th>Browser pages</th><th>Server renders</th><th>Clicks</th><th>First</th><th>Last</th><th></th></tr></thead><tbody>';
@@ -630,9 +635,9 @@ try {
         }
         echo '</tbody></table>';
     }
-    echo '</div></section>';
+    echo '</div></details>';
 
-    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Site blocklist</h2><p>These addresses are redirected to the removal-request page and cannot browse the public site. Logged-in administrators are exempt.</p></div></div><div class="ui-section__body">';
+    echo '<details class="ui-section access-matrix-collapsible"><summary><div class="ui-section__header"><div><h2>Site blocklist</h2><p>These addresses are redirected to the removal-request page and cannot browse the public site. Logged-in administrators are exempt.</p></div></div></summary><div class="ui-section__body">';
     if (!$siteBlocklist instanceof CatalogSiteBlocklist) {
         echo '<p class="muted">Site blocklist unavailable until migration.</p>';
     } else {
@@ -657,7 +662,7 @@ try {
             echo '</tbody></table>';
         }
     }
-    echo '</div></section>';
+    echo '</div></details>';
 
     echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Block removal requests</h2></div></div><div class="ui-section__body">';
     if ($feedbackRows === []) {
