@@ -32,31 +32,161 @@ The catalogue is intended to answer questions such as:
 
 It also provides workflows for uploads, archive unpacking, unverified-file review, duplicate/alias handling, dependency repair, Full Sync, source-identity repair, PAK/UPK management, Game Backups, federation and generated download packages.
 
-## Install
+## Install and first-run setup
 
-1. Create a MySQL-compatible database.
-2. Import `catalog/install.sql` into the new empty database.
-3. Copy `catalog/config.example.php` to `catalog/config.php`.
-4. Configure database credentials, storage paths and required application settings.
-5. Run `php catalog/bin/migrate.php migrate` from a trusted shell.
-6. Run `php catalog/bin/migrate.php verify`.
-7. Ensure `catalog/storage/` and its required subdirectories are writable by the PHP/web-server and worker identities.
-8. Create the initial administrator with `php catalog/bin/create-admin.php --username=admin`.
-9. Start/reconcile the background worker pool.
-10. Open `catalog/index.php` and sign in.
+The supported production foundation is a **single Windows host** with:
 
-For ZIP uploads, PHP `ZipArchive` is used when available. 7z and RAR unpacking requires a 7-Zip-compatible command-line binary (`7zz`, `7z` or `7za`) available to the worker process, or configured through `UNREALDB_7ZIP_BINARY` / `archive.seven_zip_binary`.
+- Apache 2.4;
+- PHP 8.5 for both Apache and CLI workers;
+- MySQL 8.4;
+- local durable package/catalogue storage;
+- independent PHP background workers.
 
-For an existing database, **do not re-import `install.sql`**. Back up the database and package storage, then use the migration runner:
+There is no Composer, Node.js/npm, Docker, Redis, message broker, or separate frontend Foundation/Bootstrap installation/build step.
 
-```text
+### PHP modules
+
+Enable at least:
+
+- `pdo_mysql` — required database access;
+- `mbstring` — UTF-8 handling;
+- `curl` — federation/trusted remote transfers;
+- `openssl` — federation secret encryption/TLS support;
+- `sodium` — Ed25519 federation signing;
+- `zip` — native ZIP support;
+- `zlib` — redirect/archive compression;
+- `fileinfo` — content/MIME inspection where available.
+
+For archive ingestion:
+
+- ZIP prefers `ZipArchive` / `ext-zip`;
+- 7z/general libarchive decoding uses PHP `ext-archive` (cataphract/libarchive);
+- RAR compatibility/solid-RAR fallback can use PECL `rar` / `RarArchive`.
+
+The current archive stack is PHP-extension-only; UnrealDB does not execute command-line 7-Zip or UnRAR tools.
+
+Check the CLI runtime with:
+
+```powershell
+php -v
+php -m
+php -m | Select-String -Pattern 'PDO|pdo_mysql|mbstring|curl|openssl|sodium|zip|zlib|fileinfo|archive|rar'
+```
+
+The worker CLI must load the same required extensions as the Apache PHP runtime.
+
+### Apache
+
+Enable PHP plus `mod_rewrite`, `mod_headers`, and `mod_ssl` for production HTTPS/federation. Apache must honor the repository `.htaccess` files, normally with:
+
+```apache
+<Directory "C:/path/to/ut_reader">
+    Options FollowSymLinks
+    AllowOverride All
+    Require all granted
+</Directory>
+```
+
+The repository root should normally be the DocumentRoot. The root `.htaccess` protects development reader directories, while `catalog/.htaccess` blocks direct access to configuration, source/runtime directories, storage and SQL/log-style files.
+
+### MySQL
+
+Create an empty database and a dedicated database-scoped account. If the same account runs migrations, it needs DDL rights on that database. Do not grant the application user global privileges such as `SUPER` or `BINLOG_ADMIN`.
+
+Example:
+
+```sql
+CREATE DATABASE unrealdb CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER 'unrealdb'@'localhost' IDENTIFIED BY 'replace-with-a-strong-password';
+GRANT ALL PRIVILEGES ON unrealdb.* TO 'unrealdb'@'localhost';
+FLUSH PRIVILEGES;
+```
+
+### Application configuration
+
+From the repository root:
+
+```powershell
+Copy-Item .\catalog\config.example.php .\catalog\config.php
+```
+
+Edit `catalog/config.php` and configure at minimum:
+
+- database host/port/name/user/password;
+- `site_name`;
+- `storage_path`;
+- upload/container limits appropriate to the host;
+- queue worker settings.
+
+Keep machine-specific paths in configuration/environment variables rather than hard-coding drive letters into application source.
+
+The Apache/PHP identity and CLI worker identity must both be able to read/write/create/delete within the configured storage tree.
+
+### Fresh database
+
+For a new empty database only, load `catalog/install.sql`, then apply every post-baseline migration:
+
+```powershell
+mysql -u root -p -D unrealdb -e "source catalog/install.sql"
+
 php catalog/bin/migrate.php status
 php catalog/bin/migrate.php migrate --dry-run
 php catalog/bin/migrate.php migrate
 php catalog/bin/migrate.php verify
 ```
 
-See [`migrations/README.md`](migrations/README.md) and [`../docs/database-migrations.md`](../docs/database-migrations.md).
+Do **not** import `install.sql` over an existing UnrealDB database.
+
+### First administrator
+
+```powershell
+php catalog/bin/create-admin.php --username=admin
+```
+
+The bootstrap command prompts for a password of at least 12 characters and refuses to create another bootstrap administrator once one exists.
+
+### Readiness and workers
+
+Run:
+
+```powershell
+php catalog/bin/verify-system-readiness-contract.php
+php catalog/bin/verify-system-readiness-contract.php --run
+php catalog/bin/verify-security-hardening.php
+php catalog/bin/verify-queue-runtime-invariants.php
+```
+
+One-job worker smoke test:
+
+```powershell
+php catalog/bin/catalog-worker.php --max-jobs=1
+```
+
+Use **Background Jobs** to start/reconcile the detached pool. In production, supervise workers independently from Apache/browser sessions so they start at boot and recover from unexpected process exits.
+
+### First-run UI setup
+
+After signing in:
+
+1. Create/verify games in **Game Manager**.
+2. Configure the relevant game/parser profiles.
+3. Review public upload, download and generated-package settings.
+4. Configure worker count/resource-class limits.
+5. Run readiness/System Operations checks.
+6. Test a small known-good import before starting a large ingestion.
+
+The complete installation guide, including PHP/Apache/MySQL prerequisites, storage planning, GeoIP and federation, is **[../docs/installation.md](../docs/installation.md)**.
+
+For an existing database, back up the database/package storage and use only the migration runner:
+
+```powershell
+php catalog/bin/migrate.php status
+php catalog/bin/migrate.php migrate --dry-run
+php catalog/bin/migrate.php migrate
+php catalog/bin/migrate.php verify
+```
+
+See [`migrations/README.md`](migrations/README.md), [`../docs/database-migrations.md`](../docs/database-migrations.md), and [`../docs/production-deployment.md`](../docs/production-deployment.md).
 
 ## Durable background jobs
 
