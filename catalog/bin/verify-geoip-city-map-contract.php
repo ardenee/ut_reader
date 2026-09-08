@@ -48,8 +48,8 @@ $checks = [
         && str_contains($importer, 'City-Blocks-IPv6'),
     'MaxMind importer converts CIDR to binary ranges' =>
         str_contains($importer, 'function geoip_city_cidr_bounds(')
-        && str_contains($importer, "pack('C*', ...$start)")
-        && str_contains($importer, "pack('C*', ...$end)"),
+        && str_contains($importer, 'pack(\'C*\', ...$start)')
+        && str_contains($importer, 'pack(\'C*\', ...$end)'),
     'MaxMind importer stages before atomic swap' =>
         str_contains($importer, 'ue_geoip_country_ranges_import')
         && str_contains($importer, 'RENAME TABLE ')
