@@ -52,7 +52,7 @@ $record(
     'public_individual_files_stream_through_protected_controller',
     str_contains($source['download'], 'bool $publicTransfer = false')
         && str_contains($source['download'], '$speedBytes = $publicTransfer ? catalog_public_download_speed_bytes($db) : 0;')
-        && str_contains($source['download'], "if (($decision['type'] ?? '') === 'local_stream')")
+        && str_contains($source['download'], "if ((\$decision['type'] ?? '') === 'local_stream')")
         && str_contains($source['download'], 'catalog_public_download_limit($db);')
         && str_contains($source['download'], 'public_download_send_local($config, $db, $file, true);')
         && str_contains($source['download'], "header('Content-Disposition: attachment;")
@@ -60,7 +60,7 @@ $record(
         && str_contains($source['external'], "return 'protected_local';")
         && str_contains($source['external'], "return ['type' => 'local_stream'];")
         && str_contains($source['settings'], "['protected_local', 'external_mirror_only', 'disabled']")
-        && !str_contains($source['download'], "header('Location: ' . $path")
+        && !str_contains($source['download'], "header('Location: ' . \$path")
         && !str_contains($source['download'], "header('Location: file://"),
     'Anonymous users may receive verified files only through the rate-limited download controller; the physical storage path must remain server-side.'
 );
