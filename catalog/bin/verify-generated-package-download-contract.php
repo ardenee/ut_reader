@@ -167,7 +167,7 @@ $record(
 );
 
 $syntaxFailures = [];
-foreach ([
+$syntaxFiles = [
     'game-files.php',
     'download.php',
     'lib/ExternalMirrors.php',
@@ -183,8 +183,8 @@ foreach ([
     'src/Application/Jobs/JobFailureRetryPolicy.php',
     'src/Infrastructure/Downloads/CatalogDownloadSettingsService.php',
     'migrations/202609080001_public_downloads_external_only.php',
-    __FILE__,
-] as $relative) {
+];
+foreach ($syntaxFiles as $relative) {
     $path = $root . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relative);
     $pipes = [];
     $process = @proc_open([PHP_BINARY, '-l', $path], [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
@@ -199,6 +199,21 @@ foreach ([
     $exit = proc_close($process);
     if ($exit !== 0) {
         $syntaxFailures[] = $relative . ': ' . trim((string)$stderr . ' ' . (string)$stdout);
+    }
+}
+
+$pipes = [];
+$process = @proc_open([PHP_BINARY, '-l', __FILE__], [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
+if (!is_resource($process)) {
+    $syntaxFailures[] = basename(__FILE__) . ': could not lint';
+} else {
+    $stdout = stream_get_contents($pipes[1]);
+    $stderr = stream_get_contents($pipes[2]);
+    fclose($pipes[1]);
+    fclose($pipes[2]);
+    $exit = proc_close($process);
+    if ($exit !== 0) {
+        $syntaxFailures[] = basename(__FILE__) . ': ' . trim((string)$stderr . ' ' . (string)$stdout);
     }
 }
 $record('php_syntax', $syntaxFailures === [], implode(' | ', $syntaxFailures));
