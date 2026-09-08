@@ -323,9 +323,9 @@ try {
         . '</style>';
 
     catalog_page_header(
-        'Access Matrix',
-        'First-party page, section and interaction telemetry for understanding busy parts of the site, visitor navigation and crawler-like activity.',
-        ['Download Logs' => 'download-logs.php', 'Public Access' => 'public-access-settings.php']
+        'Site Activity Logs',
+        'Whole-site page, section and interaction telemetry for understanding busy parts of the site, visitor navigation and crawler-like activity.',
+        ['Download Logs' => 'download-logs.php', 'Site Blacklist' => 'site-blacklist.php', 'Public Access' => 'public-access-settings.php']
     );
 
     if ($message !== '') {
