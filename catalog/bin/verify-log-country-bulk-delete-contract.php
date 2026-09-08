@@ -26,6 +26,14 @@ $checks = [
     'raw Access Matrix events show country flag beside IP' =>
         str_contains($access, '$countryFlag = catalog_country_flag($countryCode);')
         && str_contains($access, '$countryFlagHtml . catalog_h($ipText)'),
+    'raw Access Matrix blacklist control stays compact and right aligned' =>
+        str_contains($access, '.access-matrix-ip-line{display:flex;align-items:center;justify-content:space-between;')
+        && str_contains($access, 'title="Blacklist IP"')
+        && str_contains($access, '>XX</button>'),
+    'raw Access Matrix time puts seconds on second line' =>
+        str_contains($access, 'function access_matrix_time_html(mixed $value): string')
+        && str_contains($access, '<br><span class="access-matrix-seconds">')
+        && str_contains($access, "access_matrix_time_html(\$row['occurred_at'])"),
     'site blacklist rows show country flag beside IP' =>
         str_contains($blacklist, '$countryFlag = catalog_country_flag($countryCode);')
         && str_contains($blacklist, '$countryFlagHtml . catalog_h((string)$row[\'ip\'])'),
