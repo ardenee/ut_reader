@@ -109,8 +109,8 @@
         var root = document.getElementById('package-tables');
         if (!root) return;
         var nav = root.querySelector('.examine-tabs');
-        var exportsPanel = root.querySelector('[data-panel="exports"]');
-        if (!nav || !exportsPanel || nav.querySelector('[data-file-dependency-tab]')) return;
+        var nativePanel = root.querySelector('[data-file-examine-native-panel]');
+        if (!nav || !nativePanel || nav.querySelector('[data-file-dependency-tab]')) return;
 
         function tab(name, label, count) {
             var link = document.createElement('a');
@@ -141,17 +141,17 @@
 
         var requiresPanel = panel('requires', 'Uses', data.requires);
         var requiredByPanel = panel('required-by', 'Used By', data.required_by);
-        exportsPanel.insertAdjacentElement('afterend', requiredByPanel);
-        exportsPanel.insertAdjacentElement('afterend', requiresPanel);
+        nativePanel.insertAdjacentElement('afterend', requiredByPanel);
+        nativePanel.insertAdjacentElement('afterend', requiresPanel);
         bindNewTables(root);
 
         function show(name, updateUrl) {
-            root.querySelectorAll('[data-panel], [data-file-dependency-panel]').forEach(function (section) {
-                var sectionName = section.dataset.panel || section.dataset.fileDependencyPanel;
-                section.hidden = sectionName !== name;
+            nativePanel.hidden = true;
+            root.querySelectorAll('[data-file-dependency-panel]').forEach(function (section) {
+                section.hidden = section.dataset.fileDependencyPanel !== name;
             });
-            root.querySelectorAll('[data-tab], [data-file-dependency-tab]').forEach(function (link) {
-                var linkName = link.dataset.tab || link.dataset.fileDependencyTab;
+            nav.querySelectorAll('.examine-tab').forEach(function (link) {
+                var linkName = link.dataset.fileDependencyTab || '';
                 link.classList.toggle('is-active', linkName === name);
             });
             if (updateUrl) {
@@ -171,6 +171,7 @@
             });
         });
         function hideDependencyPanels() {
+            nativePanel.hidden = false;
             requiresPanel.hidden = true;
             requiredByPanel.hidden = true;
             requiresTab.classList.remove('is-active');
