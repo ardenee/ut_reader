@@ -32,6 +32,16 @@ The current code requires these migrations newer than baseline `202608090002`:
 
 Creates `ue_unverified_game_match_cache`, the cached exact dependency/object-path game-match projection used by background refresh and the Unverified page.
 
+### `202609080002_access_matrix_site_blocklist.php`
+
+Adds first-party site observability and full-site access blocking:
+
+- `ue_access_events` for page renders, browser page views, section visibility and coarse user interactions;
+- `ue_site_blocked_ips` for administrator-managed full-site IP blocks;
+- `ue_site_block_feedback` for removal requests submitted from the blacklist landing page.
+
+Active full-site blocks are mirrored into small filesystem markers under the configured storage security directory so anonymous requests can be rejected before public response-cache/MySQL work. Logged-in administrators are exempt so an operator can recover an accidentally blocked address.
+
 ### `202608120001_job_workflow_recovery_logging.php`
 
 Extends `ue_background_jobs` with:
