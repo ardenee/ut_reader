@@ -418,51 +418,19 @@ try {
             'generations' => (int)($generationSummary['generations'] ?? 0),
         ];
 
-        $where = [];
-        $args = [];
-        if ($status !== 'all') {
-            $where[] = 'a.status=?';
-            $args[] = $status;
-        }
-        if ($gameId > 0) {
-            $where[] = 'a.game_id=?';
-            $args[] = $gameId;
-        }
-        if ($ip !== '') {
-            $ipColumn = $view === 'downloads' ? 'a.ip_address' : 'a.request_ip';
-            $packed = @inet_pton($ip);
-            if (is_string($packed)) {
-                $where[] = $ipColumn . '=?';
-                $args[] = $packed;
-            } else {
-                $ipLike = '%' . str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $ip) . '%';
-                $where[] = 'INET6_NTOA(' . $ipColumn . ') LIKE ? ESCAPE "\\\\"';
-                $args[] = $ipLike;
-            }
-        }
+        $filter = download_logs_filter_clause(
+            $view,
+            $status,
+            $type,
+            $gameId,
+            $ip,
+            $search,
+            $countryAvailable
+        );
+        $whereSql = $filter['where_sql'];
+        $args = $filter['args'];
 
         if ($view === 'downloads') {
-            if ($type !== 'all') {
-                $where[] = 'a.download_type=?';
-                $args[] = $type;
-            }
-            if ($search !== '') {
-                $like = '%' . str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $search) . '%';
-                $searchColumns = [
-                    'a.download_name LIKE ?',
-                    'a.package_format LIKE ?',
-                    'a.user_agent LIKE ?',
-                    'a.error_message LIKE ?',
-                ];
-                array_push($args, $like, $like, $like, $like);
-                if ($countryAvailable) {
-                    $searchColumns[] = 'a.country_name LIKE ?';
-                    $searchColumns[] = 'a.country_code LIKE ?';
-                    array_push($args, $like, $like);
-                }
-                $where[] = '(' . implode(' OR ', $searchColumns) . ')';
-            }
-            $whereSql = $where ? ' WHERE ' . implode(' AND ', $where) : '';
             $total = catalog_count($db, 'SELECT COUNT(*) c FROM ue_download_audit a' . $whereSql, $args);
             $pages = max(1, (int)ceil($total / $perPage));
             $page = min($page, $pages);
@@ -479,24 +447,6 @@ try {
                 . $orderSql . ' LIMIT ' . $perPage . ' OFFSET ' . $offset
             );
         } else {
-            if ($search !== '') {
-                $like = '%' . str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $search) . '%';
-                $searchColumns = [
-                    'a.package_name LIKE ?',
-                    'a.package_format LIKE ?',
-                    'a.user_agent LIKE ?',
-                    'a.error_message LIKE ?',
-                    'a.artifact_name LIKE ?',
-                ];
-                array_push($args, $like, $like, $like, $like, $like);
-                if ($countryAvailable) {
-                    $searchColumns[] = 'a.country_name LIKE ?';
-                    $searchColumns[] = 'a.country_code LIKE ?';
-                    array_push($args, $like, $like);
-                }
-                $where[] = '(' . implode(' OR ', $searchColumns) . ')';
-            }
-            $whereSql = $where ? ' WHERE ' . implode(' AND ', $where) : '';
             $total = catalog_count($db, 'SELECT COUNT(*) c FROM ue_generated_package_audit a' . $whereSql, $args);
             $pages = max(1, (int)ceil($total / $perPage));
             $page = min($page, $pages);
