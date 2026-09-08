@@ -68,6 +68,10 @@
         return heading ? clean(heading.textContent, 190) : '';
     }
 
+    function trackPageView() {
+        send({event_type: 'page_view'});
+    }
+
     function trackSections() {
         if (typeof IntersectionObserver === 'undefined') return;
         var seen = new Set();
@@ -120,8 +124,12 @@
     }, true);
 
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', trackSections, {once: true});
+        document.addEventListener('DOMContentLoaded', function () {
+            trackPageView();
+            trackSections();
+        }, {once: true});
     } else {
+        trackPageView();
         trackSections();
     }
 })();
