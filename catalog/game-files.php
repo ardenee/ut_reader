@@ -157,7 +157,10 @@ function game_files_actions(int $fileId, string $originalName, string $csrf, boo
 {
     $confirm = 'Remove ' . $originalName . ' from storage and the catalog? This cannot be undone. Dependency links for the game will then be rebuilt.';
     $html = '<div class="game-files-actions-list">';
-    $html .= '<a class="game-files-download-link" href="download.php?id=' . $fileId . '" title="Download file" aria-label="Download ' . catalog_h($originalName) . '">⇩</a>';
+    $downloadHref = $isAdmin
+        ? 'download.php?id=' . $fileId
+        : 'download-info.php?id=' . $fileId;
+    $html .= '<a class="game-files-download-link" href="' . catalog_h($downloadHref) . '" title="Download options" aria-label="Download options for ' . catalog_h($originalName) . '">⇩</a>';
 
     if ($isAdmin) {
         $html .= '<form method="post" action="file-maintenance.php" title="Rebuild dependency links for this game">';
