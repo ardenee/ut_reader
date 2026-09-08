@@ -254,6 +254,24 @@
         });
     }
 
+    function showDependencyLoadError(error) {
+        var message = error && error.message ? error.message : 'Could not load file dependency relationships.';
+        var root = document.getElementById('package-tables');
+        if (root && !root.querySelector('.file-dependency-load-error')) {
+            var notice = document.createElement('div');
+            notice.className = 'file-dependency-load-error';
+            notice.innerHTML = '<p class="dep missing"><strong>Uses / Used By unavailable:</strong> ' + h(message) + '</p>';
+            root.insertBefore(notice, root.firstChild);
+        }
+        var card = document.getElementById('dependencies');
+        if (card && !card.querySelector('.file-dependency-load-error')) {
+            card.insertAdjacentHTML(
+                'beforeend',
+                '<p class="file-dependency-load-error dep missing"><strong>Dependency relationships unavailable:</strong> ' + h(message) + '</p>'
+            );
+        }
+    }
+
     function installPakSources(data) {
         if (!data || !Array.isArray(data.paks) || !data.paks.length || document.querySelector('.file-pak-source-card')) return;
         var rows = data.paks.map(function (pak) {
@@ -298,6 +316,7 @@
         installFileInfoDependencies(data);
     }).catch(function (error) {
         console.error('[UnrealDB file dependencies]', error);
+        showDependencyLoadError(error);
     });
 
     fetch('file-pak-sources.php?id=' + encodeURIComponent(fileId), {
