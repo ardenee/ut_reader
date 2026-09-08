@@ -63,6 +63,7 @@ $record(
         && str_contains($source['download'], 'catalog_public_download_came_from_info($id)')
         && str_contains($source['download'], 'catalog_public_download_grant_consume($id, $grant)')
         && str_contains($source['download'], 'public_download_redirect_to_info($id);')
+        && strpos($source['download'], 'public_download_redirect_to_info($id);') < strpos($source['download'], '$db = catalog_db($config);')
         && str_contains($source['download_grant'], 'private const TTL_SECONDS = 300;')
         && str_contains($source['download_grant'], 'public function consume(int $fileId, string $token): bool')
         && str_contains($source['download_grant'], 'unset($_SESSION[self::SESSION_KEY][$key]);')
@@ -89,7 +90,8 @@ $record(
     'download_info_is_never_anonymous_response_cached',
     !str_contains($source['public_cache'], "'download-info.php' =>")
         && str_contains($source['public_cache'], 'if (!isset($defaults[$script]))')
-        && str_contains($source['public_cache'], 'return 0;'),
+        && str_contains($source['public_cache'], 'return 0;')
+        && str_contains($source['download_info'], "header('Cache-Control: private, no-store, max-age=0');"),
     'download-info.php contains session-specific one-time grants and must remain outside the anonymous response-cache route allowlist.'
 );
 
