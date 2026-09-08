@@ -1,9 +1,9 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Streams stored original PAK archives when public download policy permits.
- * Why: Original PAK downloads must use the same central per-IP limit and speed control as all other local downloads.
- * Role: Web download endpoint; storage lookup and policy enforcement remain delegated to shared services.
+ * Purpose: Streams stored original PAK archives to authenticated administrators.
+ * Why: Original PAKs are local catalogue-storage artifacts and must never be exposed as public direct downloads.
+ * Role: Administrator-only web download endpoint; public users use external file links or generated packages.
  */
 declare(strict_types=1);
 
