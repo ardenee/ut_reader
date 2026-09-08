@@ -52,6 +52,9 @@ function render_public_download_status(PDO $db, int $fileId): string
 
 try {
     catalog_start_session();
+    if (!headers_sent()) {
+        header('Cache-Control: private, no-store, max-age=0');
+    }
     $config = catalog_config();
     $db = catalog_db($config);
     $id = (int)($_GET['id'] ?? 0);
