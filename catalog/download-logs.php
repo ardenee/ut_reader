@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
 
+use UnrealDb\Catalog\Infrastructure\Security\CatalogSiteBlocklist;
 use UnrealDb\Catalog\Infrastructure\Security\CatalogTransferBlocklist;
 
 function download_logs_choice(string $value, array $allowed, string $fallback): string
@@ -89,6 +90,11 @@ try {
     );
     $blocklistAvailable = (int)$blocklistTable->fetchColumn() === 1;
     $blocklist = $blocklistAvailable ? new CatalogTransferBlocklist($db) : null;
+    $siteBlockAvailable = (int)$db->query(
+        'SELECT COUNT(*) FROM information_schema.TABLES '
+        . 'WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME="ue_site_blocked_ips"'
+    )->fetchColumn() === 1;
+    $siteBlocklist = $siteBlockAvailable ? new CatalogSiteBlocklist($db, $config) : null;
     $message = '';
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -113,6 +119,30 @@ try {
             $statement = $db->prepare('DELETE FROM ' . $table . ' WHERE id IN (' . $placeholders . ')');
             $statement->execute($ids);
             $message = $statement->rowCount() . ' selected log record(s) permanently deleted.';
+        } elseif ($action === 'block_selected_site_ips') {
+            if (!$siteBlocklist instanceof CatalogSiteBlocklist) {
+                throw new RuntimeException('Run the pending Access Matrix migration before blocking full site access.');
+            }
+            if (!$available || $ids === []) {
+                throw new RuntimeException('Select one or more log records first.');
+            }
+            $table = $logView === 'generations' ? 'ue_generated_package_audit' : 'ue_download_audit';
+            $ipColumn = $logView === 'generations' ? 'request_ip' : 'ip_address';
+            $placeholders = implode(',', array_fill(0, count($ids), '?'));
+            $statement = $db->prepare(
+                'SELECT DISTINCT INET6_NTOA(' . $ipColumn . ') ip FROM ' . $table
+                . ' WHERE id IN (' . $placeholders . ') AND ' . $ipColumn . ' IS NOT NULL'
+            );
+            $statement->execute($ids);
+            $ips = array_values(array_filter(array_map('strval', $statement->fetchAll(PDO::FETCH_COLUMN) ?: [])));
+            foreach ($ips as $selectedIp) {
+                $siteBlocklist->block(
+                    $selectedIp,
+                    (int)($_SESSION['user']['id'] ?? 0),
+                    'Blocked from Download Logs activity.'
+                );
+            }
+            $message = count($ips) . ' IP address(es) blocked from the entire site.';
         } elseif (in_array($action, ['block_selected_ips', 'unblock_selected_ips'], true)) {
             if (!$blocklistAvailable || !$blocklist instanceof CatalogTransferBlocklist) {
                 throw new RuntimeException('Run the pending database migration before managing blocked IPs.');
@@ -361,6 +391,7 @@ try {
             'Download Administration' => 'download-admin.php',
             'Package Settings' => 'download-package-settings.php',
             'Download Settings' => 'downloads-settings.php',
+            'Access Matrix' => 'access-matrix.php',
         ]
     );
 
@@ -470,8 +501,9 @@ try {
             . '<label><input type="checkbox" onclick="document.querySelectorAll(\'.download-log-check\').forEach(c=>c.checked=this.checked)"> Select page</label>'
             . '<select name="action" required><option value="">Choose action</option>'
             . '<option value="delete_selected">Delete selected logs</option>'
-            . '<option value="block_selected_ips">Block selected IPs</option>'
-            . '<option value="unblock_selected_ips">Unblock selected IPs</option></select>'
+            . '<option value="block_selected_ips">Block selected IPs from transfers</option>'
+            . '<option value="block_selected_site_ips">Block selected IPs from entire site</option>'
+            . '<option value="unblock_selected_ips">Unblock selected transfer IPs</option></select>'
             . '<button type="submit">Apply to selected</button></div>';
 
         if ($view === 'downloads') {
