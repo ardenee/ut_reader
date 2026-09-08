@@ -139,6 +139,7 @@ try {
         . '.site-blacklist-toolbar .grow,.site-blacklist-add .grow{flex:1;min-width:260px}'
         . '.site-blacklist-table td,.site-blacklist-table th{vertical-align:top}'
         . '.site-blacklist-ip{width:1%;white-space:nowrap}'
+        . '.site-blacklist-country-flag{font-size:1.2rem;line-height:1;vertical-align:-1px;cursor:help}'
         . '.site-blacklist-time{width:1%;white-space:nowrap}'
         . '.site-blacklist-actions{width:1%;white-space:nowrap}'
         . '.site-blacklist-message{max-width:520px;overflow-wrap:anywhere}'
@@ -197,7 +198,12 @@ try {
                 ? ' data-world-map-ip="' . catalog_h($ipText) . '" data-world-map-country-code="' . catalog_h($countryCode)
                     . '" data-world-map-country-name="' . catalog_h($countryName !== '' ? $countryName : $countryCode) . '"'
                 : '';
-            echo '<tr' . $mapAttributes . '><td class="mono site-blacklist-ip">' . catalog_h((string)$row['ip']) . '</td>'
+            $countryFlag = catalog_country_flag($countryCode);
+            $countryFlagHtml = $countryFlag !== ''
+                ? '<span class="site-blacklist-country-flag" role="img" aria-label="' . catalog_h($countryName !== '' ? $countryName : $countryCode)
+                    . '" title="' . catalog_h($countryName !== '' ? $countryName : $countryCode) . '">' . catalog_h($countryFlag) . '</span> '
+                : '';
+            echo '<tr' . $mapAttributes . '><td class="mono site-blacklist-ip">' . $countryFlagHtml . catalog_h((string)$row['ip']) . '</td>'
                 . '<td>' . catalog_h((string)$row['note']) . '</td>'
                 . '<td class="mono small site-blacklist-time">' . catalog_h(site_blacklist_time($row['created_at'])) . '</td>'
                 . '<td class="site-blacklist-actions"><form method="post" onsubmit="return confirm(\'Restore site access for this IP?\')">'
