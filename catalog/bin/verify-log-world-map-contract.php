@@ -84,4 +84,4 @@ if ($failed !== []) {
     exit(1);
 }
 
-echo 'Log world map contract passed (' . (count($checks) + 1) . " checks).\n";
+echo 'Log world map contract passed (' . (count($checks) + 2) . " checks).\n";
