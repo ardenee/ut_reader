@@ -33,7 +33,6 @@ $files = [
     'settings' => 'src/Infrastructure/Downloads/CatalogDownloadSettingsService.php',
     'pak_download' => 'pak-download.php',
     'config' => 'config.example.php',
-    'migration' => 'migrations/202609080001_public_downloads_external_only.php',
 ];
 $source = [];
 foreach ($files as $key => $relative) {
@@ -50,17 +49,20 @@ $record = static function (string $name, bool $ok, string $detail) use (&$checks
 };
 
 $record(
-    'public_individual_files_never_stream_local_storage',
-    str_contains($source['download'], '$isAdmin = catalog_support_is_admin();')
-        && str_contains($source['download'], 'if ($isAdmin) {')
-        && str_contains($source['download'], 'public_download_send_local($config, $db, $file);')
-        && str_contains($source['download'], 'external_public_download_decision(')
-        && str_contains($source['download'], 'header(\'Location: \' . $externalUrl, true, 302);')
-        && str_contains($source['external'], "fed_setting(\$db, 'public_download_mode', 'external_mirror')")
-        && str_contains($source['external'], "in_array(\$mode, ['external_mirror','disabled'], true)")
-        && str_contains($source['settings'], "['external_mirror', 'disabled']")
-        && str_contains($source['migration'], 'setting_value IN ("local_direct","external_mirror_preferred")'),
-    'Public users must use an external provider link; only authenticated administrators may stream the verified local file.'
+    'public_individual_files_stream_through_protected_controller',
+    str_contains($source['download'], 'bool $publicTransfer = false')
+        && str_contains($source['download'], '$speedBytes = $publicTransfer ? catalog_public_download_speed_bytes($db) : 0;')
+        && str_contains($source['download'], "if (($decision['type'] ?? '') === 'local_stream')")
+        && str_contains($source['download'], 'catalog_public_download_limit($db);')
+        && str_contains($source['download'], 'public_download_send_local($config, $db, $file, true);')
+        && str_contains($source['download'], "header('Content-Disposition: attachment;")
+        && str_contains($source['download'], "header('Cache-Control: private, no-store, no-transform');")
+        && str_contains($source['external'], "return 'protected_local';")
+        && str_contains($source['external'], "return ['type' => 'local_stream'];")
+        && str_contains($source['settings'], "['protected_local', 'external_mirror_only', 'disabled']")
+        && !str_contains($source['download'], "header('Location: ' . $path")
+        && !str_contains($source['download'], "header('Location: file://"),
+    'Anonymous users may receive verified files only through the rate-limited download controller; the physical storage path must remain server-side.'
 );
 
 $record(
@@ -182,7 +184,6 @@ $syntaxFiles = [
     'src/Infrastructure/Jobs/GeneratedPackageJobHandler.php',
     'src/Application/Jobs/JobFailureRetryPolicy.php',
     'src/Infrastructure/Downloads/CatalogDownloadSettingsService.php',
-    'migrations/202609080001_public_downloads_external_only.php',
 ];
 foreach ($syntaxFiles as $relative) {
     $path = $root . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relative);
