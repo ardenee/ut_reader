@@ -22,6 +22,10 @@ $checks = [
         $root . '/assets/catalog-ui.js',
         "fetch(root + 'world-map.php'",
     ],
+    'shared UI resolves catalog root inside map scope' => [
+        $root . '/assets/catalog-ui.js',
+        "var marker = '/catalog/';",
+    ],
     'shared UI keeps existing download-map compatibility' => [
         $root . '/assets/catalog-ui.js',
         "table.download-log-table",
@@ -62,6 +66,12 @@ foreach ($checks as $label => [$path, $needle]) {
 
 $resolverPath = $root . '/src/Infrastructure/Downloads/CatalogGeoIpCountryResolver.php';
 $resolver = is_file($resolverPath) ? file_get_contents($resolverPath) : false;
+$uiPath = $root . '/assets/catalog-ui.js';
+$ui = is_file($uiPath) ? file_get_contents($uiPath) : false;
+if (!is_string($ui) || str_contains($ui, 'var root = catalogRootPath();')) {
+    $failed[] = 'shared map must not call a helper outside its JavaScript scope';
+}
+
 if (!is_string($resolver)
     || str_contains($resolver, 'curl_')
     || str_contains($resolver, 'file_get_contents(')
