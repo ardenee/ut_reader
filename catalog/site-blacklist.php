@@ -207,7 +207,7 @@ try {
             $countryFlag = catalog_country_flag($countryCode);
             $countryFlagHtml = $countryFlag !== ''
                 ? '<span class="site-blacklist-country-flag" role="img" aria-label="' . catalog_h($countryName !== '' ? $countryName : $countryCode)
-                    . '" title="' . catalog_h($countryName !== '' ? $countryName : $countryCode) . '">' . catalog_h($countryFlag) . '</span> '
+                    . '" title="' . catalog_h($countryCode) . '">' . catalog_h($countryFlag) . '</span> '
                 : '';
             echo '<tr' . $mapAttributes . '><td class="mono site-blacklist-ip">' . $countryFlagHtml . catalog_h((string)$row['ip']) . '</td>'
                 . '<td>' . catalog_h((string)$row['note']) . '</td>'
@@ -234,7 +234,7 @@ try {
             $feedbackCountryFlag = catalog_country_flag($feedbackCountryCode);
             $feedbackCountryFlagHtml = $feedbackCountryFlag !== ''
                 ? '<span class="site-blacklist-country-flag" role="img" aria-label="' . catalog_h($feedbackCountryName !== '' ? $feedbackCountryName : $feedbackCountryCode)
-                    . '" title="' . catalog_h($feedbackCountryName !== '' ? $feedbackCountryName : $feedbackCountryCode) . '">' . catalog_h($feedbackCountryFlag) . '</span> '
+                    . '" title="' . catalog_h($feedbackCountryCode) . '">' . catalog_h($feedbackCountryFlag) . '</span> '
                 : '';
             echo '<tr><td class="mono small site-blacklist-time">' . catalog_h(site_blacklist_time($row['created_at'])) . '</td>'
                 . '<td class="mono site-blacklist-ip">' . $feedbackCountryFlagHtml . catalog_h((string)$row['ip']) . '</td>'
