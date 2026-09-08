@@ -133,6 +133,15 @@ $record(
 );
 
 $record(
+    'summary_cards_are_width_constrained',
+    str_contains($admin, 'grid-template-columns:repeat(2,minmax(0,1fr))')
+        && str_contains($admin, '.access-matrix-grid .ui-section{margin:0;min-width:0;max-width:100%;overflow:hidden}')
+        && str_contains($admin, '.access-matrix-grid .ui-section__body{min-width:0;max-width:100%;overflow-x:auto}')
+        && str_contains($admin, '.access-matrix-grid table{width:100%;max-width:100%;table-layout:fixed}'),
+    'Two-column activity summary cards must not let long URLs or table min-content widths push the right card outside the page.'
+);
+
+$record(
     'raw_activity_is_compact_linked_and_actionable',
     str_contains($admin, 'function access_matrix_time(')
         && str_contains($admin, "substr(\$value, 0, 19)")
