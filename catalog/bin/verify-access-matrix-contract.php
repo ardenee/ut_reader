@@ -69,6 +69,7 @@ $record(
     str_contains($endpoint, 'HTTP_SEC_FETCH_SITE')
         && str_contains($endpoint, "'same-origin', 'same-site'")
         && str_contains($endpoint, "'access-matrix-event'")
+        && str_contains($endpoint, 'catalog_start_session();')
         && str_contains($endpoint, 'recordClientEvent($_POST)'),
     'Interaction telemetry endpoint must accept same-site POST events only and cap write amplification.'
 );
@@ -88,7 +89,8 @@ $record(
         && str_contains($guard, '$script !== \'blacklisted.php\'')
         && str_contains($guard, "header('Location: ' . \$location)")
         && str_contains($guard, 'http_response_code(302)')
-        && strpos($guard, 'CatalogSiteBlocklist::isBlockedCached') < strpos($guard, 'if (!$this->guardableMethod())'),
+        && strpos($guard, 'CatalogSiteBlocklist::isBlockedCached') < strpos($guard, 'if (!$this->guardableMethod())')
+        && str_contains($guard, 'A full-site administrator block applies to every HTTP method.'),
     'Anonymous blocked IPs must be redirected to blacklisted.php before normal browsing; administrator sessions remain exempt.'
 );
 
@@ -112,7 +114,9 @@ $record(
         && str_contains($admin, 'block_selected_ips')
         && str_contains($admin, 'delete_selected')
         && str_contains($admin, 'feedback_unblock')
-        && str_contains($admin, 'Full or partial IP'),
+        && str_contains($admin, 'Full or partial IP')
+        && str_contains($admin, 'Session hash prefix')
+        && str_contains($admin, 'session_hex'),
     'Administrator page must expose traffic hot spots, navigation movement, raw events, deletion, partial-IP filtering and full-site blocking.'
 );
 
