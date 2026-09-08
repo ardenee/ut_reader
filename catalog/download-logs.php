@@ -72,6 +72,87 @@ function download_logs_sort_heading(
         . '">' . catalog_h($label . $indicator) . '</a>';
 }
 
+/**
+ * @return array{where_sql:string,args:list<mixed>}
+ */
+function download_logs_filter_clause(
+    string $view,
+    string $status,
+    string $type,
+    int $gameId,
+    string $ip,
+    string $search,
+    bool $countryAvailable
+): array {
+    $where = [];
+    $args = [];
+
+    if ($status !== 'all') {
+        $where[] = 'a.status=?';
+        $args[] = $status;
+    }
+    if ($gameId > 0) {
+        $where[] = 'a.game_id=?';
+        $args[] = $gameId;
+    }
+    if ($ip !== '') {
+        $ipColumn = $view === 'downloads' ? 'a.ip_address' : 'a.request_ip';
+        $packed = @inet_pton($ip);
+        if (is_string($packed)) {
+            $where[] = $ipColumn . '=?';
+            $args[] = $packed;
+        } else {
+            $ipLike = '%' . str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $ip) . '%';
+            $where[] = 'INET6_NTOA(' . $ipColumn . ') LIKE ? ESCAPE "\\\\"';
+            $args[] = $ipLike;
+        }
+    }
+
+    if ($view === 'downloads') {
+        if ($type !== 'all') {
+            $where[] = 'a.download_type=?';
+            $args[] = $type;
+        }
+        if ($search !== '') {
+            $like = '%' . str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $search) . '%';
+            $searchColumns = [
+                'a.download_name LIKE ?',
+                'a.package_format LIKE ?',
+                'a.user_agent LIKE ?',
+                'a.error_message LIKE ?',
+            ];
+            array_push($args, $like, $like, $like, $like);
+            if ($countryAvailable) {
+                $searchColumns[] = 'a.country_name LIKE ?';
+                $searchColumns[] = 'a.country_code LIKE ?';
+                array_push($args, $like, $like);
+            }
+            $where[] = '(' . implode(' OR ', $searchColumns) . ')';
+        }
+    } elseif ($search !== '') {
+        $like = '%' . str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $search) . '%';
+        $searchColumns = [
+            'a.package_name LIKE ?',
+            'a.package_format LIKE ?',
+            'a.user_agent LIKE ?',
+            'a.error_message LIKE ?',
+            'a.artifact_name LIKE ?',
+        ];
+        array_push($args, $like, $like, $like, $like, $like);
+        if ($countryAvailable) {
+            $searchColumns[] = 'a.country_name LIKE ?';
+            $searchColumns[] = 'a.country_code LIKE ?';
+            array_push($args, $like, $like);
+        }
+        $where[] = '(' . implode(' OR ', $searchColumns) . ')';
+    }
+
+    return [
+        'where_sql' => $where !== [] ? ' WHERE ' . implode(' AND ', $where) : '',
+        'args' => $args,
+    ];
+}
+
 try {
     $config = catalog_config();
     $db = catalog_db($config);
@@ -102,6 +183,18 @@ try {
     )->fetchColumn() === 1;
     $siteBlocklist = $siteBlockAvailable ? new CatalogSiteBlocklist($db, $config) : null;
     $message = '';
+
+    $countryAvailable = false;
+    if ($available) {
+        $statement = $db->prepare(
+            'SELECT COUNT(*) FROM information_schema.COLUMNS '
+            . 'WHERE TABLE_SCHEMA=DATABASE() '
+            . 'AND TABLE_NAME IN ("ue_download_audit","ue_generated_package_audit") '
+            . 'AND COLUMN_NAME IN ("country_code","country_name")'
+        );
+        $statement->execute();
+        $countryAvailable = (int)$statement->fetchColumn() === 4;
+    }
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         catalog_check_csrf('download_logs_admin');
@@ -154,6 +247,36 @@ try {
             $statement = $db->prepare('DELETE FROM ' . $table . ' WHERE id IN (' . $placeholders . ')');
             $statement->execute($ids);
             $message = $statement->rowCount() . ' selected log record(s) permanently deleted.';
+        } elseif ($action === 'delete_all_matching') {
+            if (!$available) {
+                throw new RuntimeException('Download audit storage is unavailable.');
+            }
+            $filterStatus = download_logs_choice(
+                (string)($_POST['filter_status'] ?? 'all'),
+                ['all', 'started', 'completed', 'interrupted', 'failed', 'queued', 'running', 'cancelled'],
+                'all'
+            );
+            $filterType = download_logs_choice(
+                (string)($_POST['filter_type'] ?? 'all'),
+                ['all', 'individual_file', 'generated_package'],
+                'all'
+            );
+            $filterGameId = max(0, (int)($_POST['filter_game_id'] ?? 0));
+            $filterIp = trim((string)($_POST['filter_ip'] ?? ''));
+            $filterSearch = download_logs_search((string)($_POST['filter_q'] ?? ''));
+            $filter = download_logs_filter_clause(
+                $logView,
+                $filterStatus,
+                $filterType,
+                $filterGameId,
+                $filterIp,
+                $filterSearch,
+                $countryAvailable
+            );
+            $table = $logView === 'generations' ? 'ue_generated_package_audit' : 'ue_download_audit';
+            $statement = $db->prepare('DELETE a FROM ' . $table . ' a' . $filter['where_sql']);
+            $statement->execute($filter['args']);
+            $message = $statement->rowCount() . ' matching log record(s) permanently deleted.';
         } elseif ($action === 'block_selected_site_ips') {
             if (!$siteBlocklist instanceof CatalogSiteBlocklist) {
                 throw new RuntimeException('Run the pending Access Matrix migration before blocking full site access.');
@@ -227,18 +350,6 @@ try {
             throw new RuntimeException('Choose a valid Download Logs action.');
         }
     }
-    $countryAvailable = false;
-    if ($available) {
-        $statement = $db->prepare(
-            'SELECT COUNT(*) FROM information_schema.COLUMNS '
-            . 'WHERE TABLE_SCHEMA=DATABASE() '
-            . 'AND TABLE_NAME IN ("ue_download_audit","ue_generated_package_audit") '
-            . 'AND COLUMN_NAME IN ("country_code","country_name")'
-        );
-        $statement->execute();
-        $countryAvailable = (int)$statement->fetchColumn() === 4;
-    }
-
     $view = download_logs_choice((string)($_GET['view'] ?? 'downloads'), ['downloads', 'generations'], 'downloads');
     $status = download_logs_choice(
         (string)($_GET['status'] ?? 'all'),
