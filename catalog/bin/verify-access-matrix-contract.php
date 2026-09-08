@@ -122,6 +122,32 @@ $record(
 );
 
 $record(
+    'raw_activity_is_compact_linked_and_actionable',
+    str_contains($admin, 'function access_matrix_time(')
+        && str_contains($admin, "substr(\$value, 0, 19)")
+        && str_contains($admin, 'function access_matrix_logged_link(')
+        && str_contains($admin, '.access-matrix-table{min-width:1040px;table-layout:auto}')
+        && str_contains($admin, '.access-matrix-agent-text')
+        && str_contains($admin, 'text-overflow:ellipsis')
+        && str_contains($admin, 'name="block_event_id"')
+        && str_contains($admin, '>Blacklist IP</button>')
+        && str_contains($admin, "access_matrix_logged_link((string)\$row['request_path'], (string)\$row['page_key'])")
+        && str_contains($admin, "access_matrix_logged_link((string)(\$row['referrer_path'] ?? ''))")
+        && str_contains($admin, "access_matrix_logged_link((string)(\$row['target_path'] ?? ''))"),
+    'Raw events must use second-precision time, compact columns, clickable logged paths and a one-row full-site blacklist action.'
+);
+
+$record(
+    'exact_logged_links_have_their_own_card',
+    str_contains($admin, '<h2>Busiest links</h2>')
+        && str_contains($admin, 'Exact logged URLs, including useful query parameters such as file IDs.')
+        && str_contains($admin, 'GROUP BY a.request_path')
+        && str_contains($admin, "access_matrix_logged_link((string)\$row['request_path'])")
+        && str_contains($admin, 'destination_path'),
+    'Site Activity Logs must report exact request URLs including useful query parameters instead of only grouping by generic PHP page name.'
+);
+
+$record(
     'download_logs_can_promote_abusive_ips_to_site_block',
     str_contains($downloadLogs, 'block_selected_site_ips')
         && str_contains($downloadLogs, 'Block selected IPs from entire site')
