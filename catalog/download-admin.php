@@ -8,6 +8,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
+require_once __DIR__ . '/lib/ExternalMirrors.php';
 
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoDownloadAdminSummaryQuery;
 
@@ -25,6 +26,7 @@ try {
 
     $summary = (new PdoDownloadAdminSummaryQuery($db, $config))->summary();
     $settings = $summary['settings'];
+    $settings['public_download_mode'] = external_public_download_mode($db);
     $publicSettings = $summary['public'];
     $packageSettings = $summary['package'];
     $activeLinks = $summary['active_links'];
@@ -76,10 +78,9 @@ try {
     echo '</table><p class="muted">All generated packages use the dependency graph, exclude protected base-game files, and validate their output before download.</p></div>';
 
     echo '<div class="card"><h2>Public download modes</h2><table>';
-    echo '<tr><th>local_direct</th><td>Users download directly from this site. Generated packages are available.</td></tr>';
-    echo '<tr><th>external_mirror</th><td>Users only receive active external provider links. Generated packages are unavailable because they require the local payload.</td></tr>';
-    echo '<tr><th>external_mirror_preferred</th><td>Use external links for individual files when available; generated packages still use local catalog files.</td></tr>';
-    echo '<tr><th>disabled</th><td>Public downloads and generated packages are disabled. Admin and federation transfers still work.</td></tr>';
+    echo '<tr><th>protected_local</th><td>Verified files are streamed through the protected download controller. The physical storage path is never exposed. Generated packages are available.</td></tr>';
+    echo '<tr><th>external_mirror_only</th><td>Individual files use active external provider links only. Generated packages remain available through the protected generated-package endpoint.</td></tr>';
+    echo '<tr><th>disabled</th><td>Public individual-file downloads and generated packages are disabled. Admin and federation transfers still work.</td></tr>';
     echo '</table></div>';
 
     echo '<div class="card"><h2>Download tools</h2><div class="grid">';
