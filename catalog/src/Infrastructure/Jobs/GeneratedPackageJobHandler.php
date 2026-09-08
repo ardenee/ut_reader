@@ -58,9 +58,6 @@ final class GeneratedPackageJobHandler implements JobHandler
             if ($mode === 'disabled') {
                 throw new \RuntimeException('Public downloads are disabled.');
             }
-            if ($mode === 'external_mirror') {
-                throw new \RuntimeException('Generated packages require local catalogue payload access and are unavailable in external-mirror-only mode.');
-            }
 
             $settings = (new CatalogPackageExportSettingsService($this->db))->settings();
             if (!$settings['enabled']) {
@@ -95,13 +92,17 @@ final class GeneratedPackageJobHandler implements JobHandler
             }
 
             $allowIncomplete = (bool)$settings['allow_incomplete'] && $allowIncompleteRequested;
-            if (($plan['missing'] || $plan['package_only']) && !$allowIncomplete) {
-                $problems = count($plan['missing']) + count($plan['package_only']);
+            if ($plan['missing'] && !$allowIncomplete) {
+                $problems = count($plan['missing']);
                 throw new \RuntimeException(
                     'Package generation stopped because ' . $problems
-                    . ' dependencies are missing or only matched at package level.'
+                    . ' dependency object' . ($problems === 1 ? ' is' : 's are')
+                    . ' genuinely missing. Package-only matches are included and do not block generation.'
                 );
             }
+
+            $progressFiles = $this->progressFiles($plan);
+            $filesOmitted = max(0, (int)$plan['file_count'] - count($progressFiles));
 
             $options = CatalogGeneratedPackageDescriptor::defaultOptions($plan, $settings, $optionInput);
             $options['version'] = CatalogGeneratedPackageDescriptor::generatedVersion(
@@ -124,6 +125,10 @@ final class GeneratedPackageJobHandler implements JobHandler
                     'file_count' => (int)$plan['file_count'],
                     'total_bytes' => (int)$plan['total_bytes'],
                     'format' => $format,
+                    'files' => $progressFiles,
+                    'files_omitted' => $filesOmitted,
+                    'missing_dependencies' => count($plan['missing']),
+                    'package_only_dependencies' => count($plan['package_only']),
                 ]);
 
                 $validation = \modpkg_build_generated_package($temporaryPath, $plan, $options, $settings);
@@ -141,6 +146,10 @@ final class GeneratedPackageJobHandler implements JobHandler
                     'file_count' => (int)$plan['file_count'],
                     'total_bytes' => (int)$plan['total_bytes'],
                     'format' => $format,
+                    'files' => $progressFiles,
+                    'files_omitted' => $filesOmitted,
+                    'missing_dependencies' => count($plan['missing']),
+                    'package_only_dependencies' => count($plan['package_only']),
                 ]);
 
                 $artifact = $store->publish($temporaryPath, $job->id, $extension);
@@ -154,6 +163,12 @@ final class GeneratedPackageJobHandler implements JobHandler
                         'message' => 'Generated package is ready to download.',
                         'file_count' => (int)$plan['file_count'],
                         'artifact_size' => (int)$artifact['size'],
+                        'total_bytes' => (int)$plan['total_bytes'],
+                        'format' => $format,
+                        'files' => $progressFiles,
+                        'files_omitted' => $filesOmitted,
+                        'missing_dependencies' => count($plan['missing']),
+                        'package_only_dependencies' => count($plan['package_only']),
                     ]);
                 } catch (Throwable $error) {
                     $store->delete($publishedPath);
@@ -205,6 +220,25 @@ final class GeneratedPackageJobHandler implements JobHandler
             ]);
             throw $error;
         }
+    }
+
+    /** @param array<string,mixed> $plan @return list<array<string,mixed>> */
+    private function progressFiles(array $plan): array
+    {
+        $files = [];
+        foreach (array_slice((array)($plan['files'] ?? []), 0, 500) as $file) {
+            if (!is_array($file)) {
+                continue;
+            }
+            $files[] = [
+                'file_id' => max(0, (int)($file['id'] ?? 0)),
+                'package_name' => (string)($file['package_name'] ?? ''),
+                'original_name' => (string)($file['original_name'] ?? ''),
+                'install_path' => (string)($file['install_path'] ?? ''),
+                'file_size' => max(0, (int)($file['file_size'] ?? 0)),
+            ];
+        }
+        return $files;
     }
 
     /** @param array<string,mixed> $payload */
