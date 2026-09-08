@@ -28,6 +28,11 @@ function pak_download_name(string $name): string
 }
 
 try {
+    if (!catalog_support_is_admin()) {
+        http_response_code(403);
+        throw new RuntimeException('Administrator access is required for direct PAK downloads.');
+    }
+
     $config = catalog_config();
     $db = catalog_db($config);
     base_game_ensure($db);
@@ -61,14 +66,6 @@ try {
         exit;
     }
 
-    $mode = external_public_download_mode($db);
-    if (!in_array($mode, ['local_direct', 'external_mirror_preferred'], true)) {
-        catalog_head('PAK download unavailable');
-        echo '<div class="card"><h1>PAK download unavailable</h1><p>Original PAK archives are stored locally and cannot be served while public download mode is <span class="mono">' . catalog_h($mode) . '</span>.</p><p><a class="button" href="pak-info.php?id=' . $pakId . '">Back to PAK information</a></p></div>';
-        catalog_foot();
-        exit;
-    }
-
     $store = new CatalogPakArchiveStore($config);
     $path = $store->resolve($pak);
     $size = filesize($path);
@@ -76,10 +73,9 @@ try {
         throw new RuntimeException('Stored PAK size does not match the catalog record.');
     }
 
-    // Use the same persisted per-IP action limit and transfer-rate ceiling as
-    // download.php and generated-package-download.php.
-    catalog_public_download_limit($db);
-    $speedBytes = catalog_public_download_speed_bytes($db);
+    // Direct original-PAK streaming is administrator-only. Public users must use
+    // external individual-file links or explicitly generated package artifacts.
+    $speedBytes = 0;
 
     $name = pak_download_name((string)$pak['original_name']);
     $fallback = preg_replace('/[^A-Za-z0-9._ -]+/', '_', $name) ?? 'archive.pak';
