@@ -4,7 +4,7 @@ UnrealDB is a catalogue, dependency-analysis and preservation system for Unreal 
 
 It is designed to identify packages accurately, preserve physical and logical package identity, inspect Unreal package metadata, track dependencies, find missing requirements, reduce duplicate storage, repair catalogue state, and distribute verified files through controlled downloads and generated packages.
 
-> **Project status — August 2026:** UnrealDB is under active development and is already being used as a working catalogue/admin system. The current engineering focus is reliability, parser edge cases, queue/operator clarity, performance, and production hardening.
+> **Project status — September 2026:** UnrealDB is under active development and is already being used as a working catalogue/admin system. The current engineering focus is reliability, parser edge cases, queue/operator clarity, performance, and production hardening.
 
 ## Runtime model
 
@@ -25,6 +25,36 @@ PHP
 ```
 
 The application is a modular PHP monolith. Web requests submit durable work; background workers execute long-running package, dependency and maintenance operations independently of the browser.
+
+## Installation and system prerequisites
+
+The supported production foundation is **Windows + Apache 2.4 + PHP 8.5 + MySQL 8.4** on one host, with local durable package storage and independent PHP CLI workers.
+
+A normal installation should enable PHP `pdo_mysql`, `mbstring`, `curl`, `openssl`, `sodium`, `zip`, `zlib` and `fileinfo`. 7z/libarchive ingestion uses PHP `ext-archive`; RAR compatibility can additionally use PECL `rar`. The current archive implementation is PHP-extension based and does not require command-line 7-Zip/UnRAR.
+
+Apache must allow the repository `.htaccess` rules and enable at least `mod_rewrite` and `mod_headers`; production HTTPS/federation also requires `mod_ssl`.
+
+There is no Composer, Node.js/npm, Docker, Redis, message-broker or frontend Foundation/Bootstrap build step.
+
+Fresh-install outline:
+
+```powershell
+git clone https://github.com/ardenee/ut_reader.git
+cd ut_reader
+Copy-Item .\catalog\config.example.php .\catalog\config.php
+
+# Create/import a new MySQL database, then:
+php catalog/bin/migrate.php status
+php catalog/bin/migrate.php migrate --dry-run
+php catalog/bin/migrate.php migrate
+php catalog/bin/migrate.php verify
+php catalog/bin/create-admin.php --username=admin
+php catalog/bin/verify-system-readiness-contract.php --run
+```
+
+Use a database-scoped MySQL application account; do not grant it global privileges such as `SUPER` or `BINLOG_ADMIN`. Keep deployment-specific storage/PHP paths in `catalog/config.php` or environment configuration rather than hard-coding them in source.
+
+The complete clean-install, Apache/PHP/MySQL, storage, worker, GeoIP and optional federation instructions are in **[docs/installation.md](docs/installation.md)**.
 
 ## Project status by area
 
@@ -125,7 +155,7 @@ The archive is listed first and supported Unreal members are expanded one at a t
 - nested archives are not recursively expanded;
 - password-protected/encrypted archive members are not imported.
 
-ZIP uses PHP `ZipArchive` when available and can fall back to the configured 7-Zip command-line tool. 7z/RAR extraction requires a 7-Zip-compatible command-line binary available as `7zz`, `7z` or `7za`, or configured with `UNREALDB_7ZIP_BINARY` / `archive.seven_zip_binary`.
+ZIP prefers PHP `ZipArchive`. 7z and general libarchive-backed decoding use PHP `ext-archive` (cataphract/libarchive), with PECL `rar` available for RAR compatibility/solid-RAR fallback. UnrealDB does not launch command-line archive tools.
 
 Archive limits are configured under `archive` in `catalog/config.php`; see `catalog/config.example.php`. The archive source is removed after successful expansion, or retained when one or more members fail so the operation can be inspected/retried.
 
@@ -316,6 +346,7 @@ The main active areas are:
 
 Technical material is under [`docs`](docs/). Useful starting points:
 
+- [`docs/installation.md`](docs/installation.md)
 - [`docs/architecture.md`](docs/architecture.md)
 - [`docs/catalog-architecture.md`](docs/catalog-architecture.md)
 - [`docs/background-jobs.md`](docs/background-jobs.md)
