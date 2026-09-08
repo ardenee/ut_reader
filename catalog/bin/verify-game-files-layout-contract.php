@@ -30,22 +30,24 @@ $record(
 );
 
 $record(
-    'package_and_file_columns_wrap',
-    str_contains($page, '.game-files-package { width: 28%;')
-        && str_contains($page, '.game-files-file { width: 24%;')
+    'package_and_file_columns_get_width_priority',
+    str_contains($page, '.game-files-package,')
+        && str_contains($page, '#game-files-table .game-files-file {')
+        && str_contains($page, 'width: 50%;')
         && str_contains($page, 'overflow-wrap: anywhere;')
         && str_contains($page, 'word-break: break-word;')
         && str_contains($page, 'class="game-files-file"'),
-    'Long Unreal package paths and filenames must wrap within dedicated Package/File columns instead of overlapping adjacent cells.'
+    'Package and File must share the remaining table width and wrap long Unreal paths instead of being squeezed by metadata columns.'
 );
 
 $record(
-    'table_uses_stable_column_layout',
-    str_contains($page, 'table-layout: fixed !important;')
-        && str_contains($page, '.identity-cell { width: 32ch;')
-        && str_contains($page, '.game-files-dependencies { width: 15ch;')
-        && str_contains($page, '.game-files-actions { width: 11ch;'),
-    'The file table must reserve bounded space for identity/dependency/actions while allowing package/file text to wrap.'
+    'metadata_columns_are_content_sized',
+    str_contains($page, 'table-layout: auto !important;')
+        && str_contains($page, '#game-files-table .identity-cell,')
+        && str_contains($page, '#game-files-table .game-files-actions {')
+        && str_contains($page, 'width: 1%;')
+        && str_contains($page, '.identity-cell { white-space: nowrap;'),
+    'Identity, Version, Size, Compression, Dependencies and Actions must stay only as wide as their contents need so Package/File receive the available space.'
 );
 
 $pipes = [];
