@@ -35,6 +35,23 @@ function access_matrix_query(array $overrides = []): string
     return http_build_query($query);
 }
 
+function access_matrix_time(mixed $value): string
+{
+    $value = trim((string)$value);
+    return $value === '' ? '' : substr($value, 0, 19);
+}
+
+function access_matrix_logged_link(mixed $path, ?string $label = null, string $class = ''): string
+{
+    $path = trim((string)$path);
+    $label = $label === null ? $path : trim($label);
+    if ($path === '' || !str_starts_with($path, '/')) {
+        return $label !== '' ? catalog_h($label) : '—';
+    }
+    $classAttribute = trim($class) !== '' ? ' class="' . catalog_h(trim($class)) . '"' : '';
+    return '<a' . $classAttribute . ' href="' . catalog_h($path) . '">' . catalog_h($label !== '' ? $label : $path) . '</a>';
+}
+
 try {
     $config = catalog_config();
     $db = catalog_db($config);
@@ -62,6 +79,10 @@ try {
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         catalog_check_csrf('access_matrix_admin');
         $action = strtolower(trim((string)($_POST['action'] ?? '')));
+        $blockEventId = max(0, (int)($_POST['block_event_id'] ?? 0));
+        if ($blockEventId > 0) {
+            $action = 'block_event_ip';
+        }
         $userId = max(0, (int)($_SESSION['user']['id'] ?? 0));
 
         if ($action === 'delete_selected') {
@@ -85,6 +106,21 @@ try {
             );
             $statement->execute();
             $message = $statement->rowCount() . ' access event(s) older than ' . $days . ' days deleted.';
+        } elseif ($action === 'block_event_ip') {
+            if (!$siteBlocklist instanceof CatalogSiteBlocklist || !$eventsAvailable) {
+                throw new RuntimeException('Run the pending access-matrix migration first.');
+            }
+            $event = catalog_one(
+                $db,
+                'SELECT INET6_NTOA(ip_address) ip FROM ue_access_events WHERE id=? AND ip_address IS NOT NULL',
+                [$blockEventId]
+            );
+            $eventIp = trim((string)($event['ip'] ?? ''));
+            if ($eventIp === '') {
+                throw new RuntimeException('The selected access event has no IP address to block.');
+            }
+            $siteBlocklist->block($eventIp, $userId, 'Blocked from Site Activity Logs event #' . $blockEventId . '.');
+            $message = $eventIp . ' blocked from the entire site.';
         } elseif ($action === 'block_selected_ips') {
             if (!$siteBlocklist instanceof CatalogSiteBlocklist || !$eventsAvailable) {
                 throw new RuntimeException('Run the pending access-matrix migration first.');
@@ -209,6 +245,7 @@ try {
     $total = 0;
     $pages = 1;
     $topPages = [];
+    $topLinks = [];
     $topSections = [];
     $topActions = [];
     $transitions = [];
@@ -247,15 +284,24 @@ try {
 
         $topPages = catalog_all(
             $db,
-            'SELECT a.page_key,COUNT(*) hits,COUNT(DISTINCT a.ip_address) unique_ips '
+            'SELECT a.page_key,MIN(a.request_path) sample_path,COUNT(*) hits,COUNT(DISTINCT a.ip_address) unique_ips '
             . 'FROM ue_access_events a'
             . ($whereSql === '' ? ' WHERE ' : $whereSql . ' AND ')
             . 'a.event_type="page_view" GROUP BY a.page_key ORDER BY hits DESC,a.page_key LIMIT 20',
             $args
         );
+        $topLinks = catalog_all(
+            $db,
+            'SELECT a.request_path,COUNT(*) hits,COUNT(DISTINCT a.ip_address) unique_ips '
+            . 'FROM ue_access_events a'
+            . ($whereSql === '' ? ' WHERE ' : $whereSql . ' AND ')
+            . 'a.event_type="page_view" AND a.request_path<>"" '
+            . 'GROUP BY a.request_path ORDER BY hits DESC,a.request_path LIMIT 30',
+            $args
+        );
         $topSections = catalog_all(
             $db,
-            'SELECT a.page_key,a.section_key,COUNT(*) hits,COUNT(DISTINCT a.ip_address) unique_ips '
+            'SELECT a.page_key,a.section_key,MIN(a.request_path) sample_path,COUNT(*) hits,COUNT(DISTINCT a.ip_address) unique_ips '
             . 'FROM ue_access_events a'
             . ($whereSql === '' ? ' WHERE ' : $whereSql . ' AND ')
             . 'a.event_type="section" AND a.section_key IS NOT NULL '
@@ -264,7 +310,7 @@ try {
         );
         $topActions = catalog_all(
             $db,
-            'SELECT a.page_key,a.action_key,a.target_path,COUNT(*) hits,COUNT(DISTINCT a.ip_address) unique_ips '
+            'SELECT a.page_key,a.action_key,a.target_path,MIN(a.request_path) sample_path,COUNT(*) hits,COUNT(DISTINCT a.ip_address) unique_ips '
             . 'FROM ue_access_events a'
             . ($whereSql === '' ? ' WHERE ' : $whereSql . ' AND ')
             . 'a.event_type="interaction" AND a.action_key IS NOT NULL '
@@ -273,11 +319,11 @@ try {
         );
         $transitions = catalog_all(
             $db,
-            'SELECT a.referrer_path source_path,a.page_key destination,COUNT(*) hits,COUNT(DISTINCT a.ip_address) unique_ips '
+            'SELECT a.referrer_path source_path,a.request_path destination_path,COUNT(*) hits,COUNT(DISTINCT a.ip_address) unique_ips '
             . 'FROM ue_access_events a'
             . ($whereSql === '' ? ' WHERE ' : $whereSql . ' AND ')
             . 'a.event_type="page_view" AND a.referrer_path IS NOT NULL AND a.referrer_path<>"" '
-            . 'GROUP BY a.referrer_path,a.page_key ORDER BY hits DESC LIMIT 30',
+            . 'GROUP BY a.referrer_path,a.request_path ORDER BY hits DESC LIMIT 30',
             $args
         );
         $topIps = catalog_all(
@@ -314,10 +360,16 @@ try {
         . '.access-matrix-filter .grow{flex:1;min-width:220px}'
         . '.access-matrix-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}'
         . '.access-matrix-grid .ui-section{margin:0}'
-        . '.access-matrix-table{min-width:1180px}'
+        . '.access-matrix-table{min-width:1040px;table-layout:auto}'
+        . '.access-matrix-table .am-check,.access-matrix-table .am-time,.access-matrix-table .am-type,.access-matrix-table .am-ip{width:1%;white-space:nowrap}'
+        . '.access-matrix-table .am-page{width:auto;min-width:300px;overflow-wrap:anywhere}'
+        . '.access-matrix-table .am-route{width:auto;min-width:240px;overflow-wrap:anywhere}'
+        . '.access-matrix-table .am-agent{width:28ch;min-width:28ch;max-width:28ch}'
+        . '.access-matrix-agent-text{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
+        . '.access-matrix-ip-actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:5px}'
         . '.access-matrix-actions,.access-block-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}'
         . '.access-block-actions .grow{flex:1;min-width:240px}'
-        . '.access-matrix-agent{max-width:320px;overflow-wrap:anywhere}'
+
         . '.access-matrix-pages{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-top:12px}'
         . '@media(max-width:1000px){.access-matrix-grid{grid-template-columns:1fr}.access-matrix-stats{grid-template-columns:1fr 1fr}}'
         . '</style>';
@@ -373,7 +425,18 @@ try {
     else {
         echo '<table><thead><tr><th>Page</th><th>Hits</th><th>IPs</th></tr></thead><tbody>';
         foreach ($topPages as $row) {
-            echo '<tr><td class="mono">' . catalog_h((string)$row['page_key']) . '</td><td>' . (int)$row['hits'] . '</td><td>' . (int)$row['unique_ips'] . '</td></tr>';
+            echo '<tr><td class="mono">' . access_matrix_logged_link((string)($row['sample_path'] ?? ''), (string)$row['page_key']) . '</td><td>' . (int)$row['hits'] . '</td><td>' . (int)$row['unique_ips'] . '</td></tr>';
+        }
+        echo '</tbody></table>';
+    }
+    echo '</div></section>';
+
+    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Busiest links</h2><p>Exact logged URLs, including useful query parameters such as file IDs.</p></div></div><div class="ui-section__body">';
+    if ($topLinks === []) echo '<p class="muted">No browser link data.</p>';
+    else {
+        echo '<table><thead><tr><th>Link</th><th>Hits</th><th>IPs</th></tr></thead><tbody>';
+        foreach ($topLinks as $row) {
+            echo '<tr><td class="mono small">' . access_matrix_logged_link((string)$row['request_path']) . '</td><td>' . (int)$row['hits'] . '</td><td>' . (int)$row['unique_ips'] . '</td></tr>';
         }
         echo '</tbody></table>';
     }
@@ -384,7 +447,7 @@ try {
     else {
         echo '<table><thead><tr><th>From</th><th>To</th><th>Hits</th><th>IPs</th></tr></thead><tbody>';
         foreach ($transitions as $row) {
-            echo '<tr><td class="mono small">' . catalog_h((string)$row['source_path']) . '</td><td class="mono small">' . catalog_h((string)$row['destination']) . '</td><td>' . (int)$row['hits'] . '</td><td>' . (int)$row['unique_ips'] . '</td></tr>';
+            echo '<tr><td class="mono small">' . access_matrix_logged_link((string)$row['source_path']) . '</td><td class="mono small">' . access_matrix_logged_link((string)$row['destination_path']) . '</td><td>' . (int)$row['hits'] . '</td><td>' . (int)$row['unique_ips'] . '</td></tr>';
         }
         echo '</tbody></table>';
     }
@@ -395,7 +458,7 @@ try {
     else {
         echo '<table><thead><tr><th>Page</th><th>Section</th><th>Hits</th><th>IPs</th></tr></thead><tbody>';
         foreach ($topSections as $row) {
-            echo '<tr><td class="mono small">' . catalog_h((string)$row['page_key']) . '</td><td>' . catalog_h((string)$row['section_key']) . '</td><td>' . (int)$row['hits'] . '</td><td>' . (int)$row['unique_ips'] . '</td></tr>';
+            echo '<tr><td class="mono small">' . access_matrix_logged_link((string)($row['sample_path'] ?? ''), (string)$row['page_key']) . '</td><td>' . catalog_h((string)$row['section_key']) . '</td><td>' . (int)$row['hits'] . '</td><td>' . (int)$row['unique_ips'] . '</td></tr>';
         }
         echo '</tbody></table>';
     }
@@ -406,7 +469,7 @@ try {
     else {
         echo '<table><thead><tr><th>Page</th><th>Action</th><th>Target</th><th>Hits</th></tr></thead><tbody>';
         foreach ($topActions as $row) {
-            echo '<tr><td class="mono small">' . catalog_h((string)$row['page_key']) . '</td><td>' . catalog_h((string)$row['action_key']) . '</td><td class="mono small">' . catalog_h((string)($row['target_path'] ?? '')) . '</td><td>' . (int)$row['hits'] . '</td></tr>';
+            echo '<tr><td class="mono small">' . access_matrix_logged_link((string)($row['sample_path'] ?? ''), (string)$row['page_key']) . '</td><td>' . catalog_h((string)$row['action_key']) . '</td><td class="mono small">' . access_matrix_logged_link((string)($row['target_path'] ?? '')) . '</td><td>' . (int)$row['hits'] . '</td></tr>';
         }
         echo '</tbody></table>';
     }
@@ -422,7 +485,7 @@ try {
             echo '<tr><td class="mono">' . catalog_h($ipText)
                 . (isset($blockedLookup[strtolower($ipText)]) ? ' <span class="dep missing">blocked</span>' : '') . '</td>'
                 . '<td>' . (int)$row['sessions'] . '</td><td>' . (int)$row['events'] . '</td><td>' . (int)$row['page_views'] . '</td><td>' . (int)$row['server_pages'] . '</td><td>' . (int)$row['interactions'] . '</td>'
-                . '<td class="mono small">' . catalog_h((string)$row['first_seen']) . '</td><td class="mono small">' . catalog_h((string)$row['last_seen']) . '</td>'
+                . '<td class="mono small">' . catalog_h(access_matrix_time($row['first_seen'])) . '</td><td class="mono small">' . catalog_h(access_matrix_time($row['last_seen'])) . '</td>'
                 . '<td><a class="button secondary" href="access-matrix.php?' . catalog_h(access_matrix_query(['ip' => $ipText, 'p' => 1])) . '">View activity</a></td></tr>';
         }
         echo '</tbody></table>';
@@ -445,7 +508,7 @@ try {
             echo '<table><thead><tr><th>IP</th><th>Reason</th><th>Blocked</th><th></th></tr></thead><tbody>';
             foreach ($blockedRows as $blockedRow) {
                 echo '<tr><td class="mono">' . catalog_h((string)$blockedRow['ip']) . '</td><td>' . catalog_h((string)$blockedRow['note']) . '</td>'
-                    . '<td class="mono small">' . catalog_h((string)$blockedRow['created_at']) . '</td><td>'
+                    . '<td class="mono small">' . catalog_h(access_matrix_time($blockedRow['created_at'])) . '</td><td>'
                     . '<form method="post" onsubmit="return confirm(\'Restore site access for this IP?\')">'
                     . '<input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('access_matrix_admin')) . '">'
                     . '<input type="hidden" name="action" value="unblock_ip"><input type="hidden" name="ip_address" value="' . catalog_h((string)$blockedRow['ip']) . '">'
@@ -462,7 +525,7 @@ try {
     } else {
         echo '<table><thead><tr><th>Time</th><th>IP</th><th>Email</th><th>Request</th><th>Status</th><th>Action</th></tr></thead><tbody>';
         foreach ($feedbackRows as $feedback) {
-            echo '<tr><td class="mono small">' . catalog_h((string)$feedback['created_at']) . '</td>'
+            echo '<tr><td class="mono small">' . catalog_h(access_matrix_time($feedback['created_at'])) . '</td>'
                 . '<td class="mono">' . catalog_h((string)$feedback['ip']) . '</td>'
                 . '<td>' . catalog_h((string)($feedback['email'] ?? '')) . '</td>'
                 . '<td style="max-width:420px;overflow-wrap:anywhere">' . nl2br(catalog_h((string)$feedback['message'])) . '</td>'
@@ -494,14 +557,14 @@ try {
             . '<div class="access-matrix-actions"><label><input type="checkbox" onclick="document.querySelectorAll(\'.access-matrix-check\').forEach(c=>c.checked=this.checked)"> Select page</label>'
             . '<select name="action" required><option value="">Choose action</option><option value="delete_selected">Delete selected</option><option value="block_selected_ips">Block selected IPs from site</option></select>'
             . '<button type="submit">Apply</button></div>'
-            . '<div class="table-wrap"><table class="access-matrix-table"><thead><tr><th></th><th>Time</th><th>Type</th><th>Page / section / action</th><th>IP / user</th><th>Referrer / target</th><th>User agent</th></tr></thead><tbody>';
+            . '<div class="table-wrap"><table class="access-matrix-table"><thead><tr><th class="am-check"></th><th class="am-time">Time</th><th class="am-type">Type</th><th class="am-page">Page / section / action</th><th class="am-ip">IP / user</th><th class="am-route">Referrer / target</th><th class="am-agent">User agent</th></tr></thead><tbody>';
         foreach ($rows as $row) {
             $ipText = trim((string)($row['ip_text'] ?? ''));
-            echo '<tr><td><input class="access-matrix-check" type="checkbox" name="ids[]" value="' . (int)$row['id'] . '"></td>'
-                . '<td class="mono small">' . catalog_h((string)$row['occurred_at']) . '</td>'
-                . '<td><span class="dep">' . catalog_h((string)$row['event_type']) . '</span></td>'
-                . '<td><strong class="mono small">' . catalog_h((string)$row['page_key']) . '</strong>'
-                . '<br><span class="mono small muted">' . catalog_h((string)$row['request_path']) . '</span>';
+            echo '<tr><td class="am-check"><input class="access-matrix-check" type="checkbox" name="ids[]" value="' . (int)$row['id'] . '"></td>'
+                . '<td class="mono small am-time">' . catalog_h(access_matrix_time($row['occurred_at'])) . '</td>'
+                . '<td class="am-type"><span class="dep">' . catalog_h((string)$row['event_type']) . '</span></td>'
+                . '<td class="am-page"><strong class="mono small">' . access_matrix_logged_link((string)$row['request_path'], (string)$row['page_key']) . '</strong>'
+                . '<br><span class="mono small muted">' . access_matrix_logged_link((string)$row['request_path']) . '</span>';
             if ((string)($row['section_key'] ?? '') !== '') echo '<br><span>Section: ' . catalog_h((string)$row['section_key']) . '</span>';
             if ((string)($row['action_key'] ?? '') !== '') echo '<br><span>Action: ' . catalog_h((string)$row['action_key']) . '</span>';
             $sessionHex = trim((string)($row['session_hex'] ?? ''));
@@ -515,13 +578,25 @@ try {
                     'p' => 1,
                 ])) . '">session ' . catalog_h(substr($sessionHex, 0, 12)) . '…</a>'
                 : '';
-            echo '</td><td class="mono">' . catalog_h($ipText)
-                . (isset($blockedLookup[strtolower($ipText)]) ? '<br><span class="dep missing">site blocked</span>' : '')
+            $isBlockedIp = $ipText !== '' && isset($blockedLookup[strtolower($ipText)]);
+            echo '</td><td class="mono am-ip">' . catalog_h($ipText)
+                . ($isBlockedIp ? '<br><span class="dep missing">site blocked</span>' : '')
                 . ((string)($row['username'] ?? '') !== '' ? '<br><span class="small">' . catalog_h((string)$row['username']) . '</span>' : '')
-                . $sessionLink
-                . '</td><td class="mono small">From: ' . catalog_h((string)($row['referrer_path'] ?? ''))
-                . '<br>To: ' . catalog_h((string)($row['target_path'] ?? '')) . '</td>'
-                . '<td class="access-matrix-agent small">' . catalog_h((string)$row['user_agent']) . '</td></tr>';
+                . $sessionLink;
+            if ($ipText !== '') {
+                echo '<div class="access-matrix-ip-actions">';
+                if (!$isBlockedIp) {
+                    echo '<button class="ui-button ui-button--danger ui-button--sm" type="submit" name="block_event_id" value="' . (int)$row['id']
+                        . '" formnovalidate onclick="return confirm(\'Block ' . catalog_h($ipText) . ' from the entire site?\')">Blacklist IP</button>';
+                } else {
+                    echo '<a class="ui-button ui-button--secondary ui-button--sm" href="site-blacklist.php?q=' . rawurlencode($ipText) . '">View blacklist</a>';
+                }
+                echo '</div>';
+            }
+            $userAgent = (string)$row['user_agent'];
+            echo '</td><td class="mono small am-route">From: ' . access_matrix_logged_link((string)($row['referrer_path'] ?? ''))
+                . '<br>To: ' . access_matrix_logged_link((string)($row['target_path'] ?? '')) . '</td>'
+                . '<td class="am-agent small"><span class="access-matrix-agent-text" title="' . catalog_h($userAgent) . '">' . catalog_h($userAgent) . '</span></td></tr>';
         }
         echo '</tbody></table></div></form>';
 
