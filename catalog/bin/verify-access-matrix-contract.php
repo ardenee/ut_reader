@@ -196,13 +196,23 @@ $record(
 );
 
 $record(
-    'exact_logged_links_have_their_own_card',
-    str_contains($admin, '<h2>Busiest links</h2>')
-        && str_contains($admin, 'Exact logged URLs, including useful query parameters such as file IDs.')
+    'page_activity_populates_page_link_and_navigation_cards',
+    str_contains($admin, '<h2>Busiest pages</h2>')
+        && str_contains($admin, '<h2>Busiest links</h2>')
+        && str_contains($admin, '<h2>Navigation matrix</h2>')
+        && substr_count($admin, 'a.event_type IN ("page_view","server_page")') >= 4
+        && str_contains($admin, "'event' => 'page_activity'")
         && str_contains($admin, 'GROUP BY a.request_path')
         && str_contains($admin, "access_matrix_logged_link((string)\$row['request_path'])")
         && str_contains($admin, 'destination_path'),
-    'Site Activity Logs must report exact request URLs including useful query parameters instead of only grouping by generic PHP page name.'
+    'Busiest pages, exact links and navigation must use the same confirmed-or-server-only page activity scope as the headline/activity log.'
+);
+
+$record(
+    'browser_only_cards_are_labelled',
+    str_contains($admin, 'Browser JavaScript only; server-only/crawler requests cannot report visible sections.')
+        && str_contains($admin, 'Browser JavaScript actions only; ordinary same-site navigation is intentionally not duplicated here.'),
+    'Section and interaction cards must explain why crawler/server-only traffic cannot populate them.'
 );
 
 $record(
