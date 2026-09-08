@@ -247,9 +247,9 @@ try {
     }
 
     $eventType = access_matrix_choice(
-        (string)($_GET['event'] ?? 'page_view'),
-        ['all', 'page_view', 'server_page', 'section', 'interaction'],
-        'page_view'
+        (string)($_GET['event'] ?? 'page_activity'),
+        ['all', 'page_activity', 'page_view', 'server_page', 'section', 'interaction'],
+        'page_activity'
     );
     $days = access_matrix_choice((string)($_GET['days'] ?? '7'), ['1', '7', '30', '90', 'all'], '7');
     $ip = access_matrix_text((string)($_GET['ip'] ?? ''), 80);
@@ -320,7 +320,9 @@ try {
     // because the operator is looking at page loads in the raw list.
     $rawWhere = $where;
     $rawArgs = $args;
-    if ($eventType !== 'all') {
+    if ($eventType === 'page_activity') {
+        $rawWhere[] = 'a.event_type IN ("page_view","server_page")';
+    } elseif ($eventType !== 'all') {
         $rawWhere[] = 'a.event_type=?';
         $rawArgs[] = $eventType;
     }
