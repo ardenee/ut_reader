@@ -201,16 +201,18 @@ html { scroll-behavior: smooth; }
 .game-files-pagination__end { justify-self: end; }
 .game-files-pagination__current { justify-self: center; white-space: nowrap; }
 
-#game-files-table { width: 100% !important; min-width: 1180px !important; table-layout: auto !important; }
-#game-files-table.game-files-table--no-compression { min-width: 1060px !important; }
-#game-files-table th:nth-child(1), #game-files-table td:nth-child(1),
-#game-files-table th:nth-child(2), #game-files-table td:nth-child(2),
-#game-files-table th:nth-child(3), #game-files-table td:nth-child(3),
-#game-files-table th:nth-child(4), #game-files-table td:nth-child(4),
-#game-files-table th:nth-child(5), #game-files-table td:nth-child(5) { white-space: nowrap; }
-#game-files-table .game-files-package, #game-files-table .game-files-version, #game-files-table .game-files-size, #game-files-table .game-files-actions { width: 1%; }
-#game-files-table th:nth-child(3), #game-files-table td:nth-child(3), #game-files-table .identity-cell { width: 38ch; min-width: 38ch; max-width: 38ch; }
-.game-files-file-link, .game-files-package-link { font-weight: 650; }
+#game-files-table { width: 100% !important; min-width: 1180px !important; table-layout: fixed !important; }
+#game-files-table.game-files-table--no-compression { min-width: 1080px !important; }
+#game-files-table th, #game-files-table td { vertical-align: top; }
+#game-files-table .game-files-package { width: 28%; min-width: 220px; white-space: normal; overflow-wrap: anywhere; word-break: break-word; }
+#game-files-table .game-files-file { width: 24%; min-width: 190px; white-space: normal; overflow-wrap: anywhere; word-break: break-word; }
+#game-files-table .identity-cell { width: 32ch; min-width: 32ch; max-width: 32ch; white-space: normal; overflow-wrap: anywhere; }
+#game-files-table .game-files-version { width: 8ch; white-space: nowrap; }
+#game-files-table .game-files-size { width: 9ch; white-space: nowrap; }
+#game-files-table .game-files-compression { width: 13ch; }
+#game-files-table .game-files-dependencies { width: 15ch; }
+#game-files-table .game-files-actions { width: 11ch; }
+.game-files-file-link, .game-files-package-link { font-weight: 650; overflow-wrap: anywhere; word-break: break-word; }
 .game-files-dependencies { min-width: 130px; white-space: normal; }
 .game-files-dependency-list { display: flex; flex-direction: column; align-items: flex-start; row-gap: 1px; }
 .game-files-dependency-list .ui-badge { white-space: nowrap; }
@@ -274,7 +276,9 @@ try {
         throw new RuntimeException('Game not found');
     }
     $engineMajor = game_files_engine_major((string)($game['profile_engine'] ?? ''));
-    $showCompression = $engineMajor >= 3;
+    // UE4/UE5 package rows do not need the legacy internal-compression column.
+    // Keep it only for UE3, where compressed package chunks remain useful file-level metadata.
+    $showCompression = $engineMajor === 3;
     $separateUpkContainers = $engineMajor === 3;
 
     $configuredLimit = (int)(fed_setting($db, 'game_file_display_limit', '100') ?: 100);
@@ -468,12 +472,12 @@ try {
 
             echo '<tr>';
             echo '<td class="mono game-files-package"><a class="game-files-package-link" href="file-info.php?id=' . $id . '" title="View package details">' . catalog_h($packageName) . '</a></td>';
-            echo '<td><a class="game-files-file-link" href="file-examine.php?id=' . $id . '" title="Examine file">' . catalog_h($originalName) . '</a><br><span class="dep file-type-pill ' . catalog_h($fileTypeClass) . '">' . catalog_h($fileType) . '</span></td>';
+            echo '<td class="game-files-file"><a class="game-files-file-link" href="file-examine.php?id=' . $id . '" title="Examine file">' . catalog_h($originalName) . '</a><br><span class="dep file-type-pill ' . catalog_h($fileTypeClass) . '">' . catalog_h($fileType) . '</span></td>';
             echo '<td class="identity-cell"><span class="mono small guid-value">' . catalog_h($file['package_guid']) . '</span><br><span class="mono small identity-md5">MD5 ' . catalog_h($file['md5']) . '</span></td>';
             echo '<td class="mono game-files-version">' . catalog_h($versionText) . '</td>';
             echo '<td class="game-files-size">' . catalog_h(catalog_bytes((int)$file['file_size'])) . '</td>';
             if ($showCompression) {
-                echo '<td>' . $compression . '</td>';
+                echo '<td class="game-files-compression">' . $compression . '</td>';
             }
             echo '<td class="game-files-dependencies">' . $deps . '</td>';
             echo '<td class="game-files-actions">' . game_files_actions($id, $originalName, $maintenanceCsrf, $isAdmin) . '</td>';
