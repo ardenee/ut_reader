@@ -133,6 +133,12 @@ try {
         )
         : [];
 
+    foreach ($feedbackRows as $index => $row) {
+        $country = $geoIpResolver->resolve((string)($row['ip'] ?? ''));
+        $feedbackRows[$index]['map_country_code'] = $country['country_code'];
+        $feedbackRows[$index]['map_country_name'] = $country['country_name'];
+    }
+
     catalog_head('Site Blacklist');
     echo '<style>'
         . '.site-blacklist-toolbar,.site-blacklist-add{display:flex;gap:9px;align-items:end;flex-wrap:wrap;margin-bottom:14px}'
@@ -223,8 +229,15 @@ try {
     } else {
         echo '<div class="table-wrap"><table class="site-blacklist-table"><thead><tr><th>Time</th><th>IP</th><th>Email</th><th>Request</th><th>Status</th><th>Action</th></tr></thead><tbody>';
         foreach ($feedbackRows as $row) {
+            $feedbackCountryCode = strtoupper(trim((string)($row['map_country_code'] ?? '')));
+            $feedbackCountryName = trim((string)($row['map_country_name'] ?? ''));
+            $feedbackCountryFlag = catalog_country_flag($feedbackCountryCode);
+            $feedbackCountryFlagHtml = $feedbackCountryFlag !== ''
+                ? '<span class="site-blacklist-country-flag" role="img" aria-label="' . catalog_h($feedbackCountryName !== '' ? $feedbackCountryName : $feedbackCountryCode)
+                    . '" title="' . catalog_h($feedbackCountryName !== '' ? $feedbackCountryName : $feedbackCountryCode) . '">' . catalog_h($feedbackCountryFlag) . '</span> '
+                : '';
             echo '<tr><td class="mono small site-blacklist-time">' . catalog_h(site_blacklist_time($row['created_at'])) . '</td>'
-                . '<td class="mono site-blacklist-ip">' . catalog_h((string)$row['ip']) . '</td>'
+                . '<td class="mono site-blacklist-ip">' . $feedbackCountryFlagHtml . catalog_h((string)$row['ip']) . '</td>'
                 . '<td>' . catalog_h((string)($row['email'] ?? '')) . '</td>'
                 . '<td class="site-blacklist-message">' . nl2br(catalog_h((string)$row['message'])) . '</td>'
                 . '<td>' . catalog_h((string)$row['status']) . '</td><td class="site-blacklist-actions">';
