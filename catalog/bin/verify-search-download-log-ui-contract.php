@@ -21,7 +21,8 @@ $record = static function (string $name, bool $ok, string $detail) use (&$checks
 
 $record(
     'search_uses_standard_page_and_filter_components',
-    str_contains($index, "catalog_page_header(\n            'Search'")
+    str_contains($index, 'catalog_page_header(')
+        && preg_match('/catalog_page_header\\s*\\(\\s*[\'"]Search[\'"]\\s*,/m', $index) === 1
         && str_contains($index, 'class="ui-filter-bar catalog-search-filter"')
         && str_contains($index, 'class="ui-field catalog-search-query"')
         && str_contains($index, 'class="ui-input"')
