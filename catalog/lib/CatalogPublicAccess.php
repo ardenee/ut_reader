@@ -10,6 +10,7 @@ declare(strict_types=1);
 use UnrealDb\Catalog\Infrastructure\Security\CatalogPublicAccessGuard;
 use UnrealDb\Catalog\Infrastructure\Security\CatalogPublicAccessSettingsStore;
 use UnrealDb\Catalog\Infrastructure\Security\CatalogPublicFileStreamer;
+use UnrealDb\Catalog\Infrastructure\Security\CatalogPublicDownloadGrant;
 
 /** @return array<string,mixed> */
 function catalog_public_access_settings(?PDO $db = null, ?array $config = null): array
@@ -56,6 +57,23 @@ function catalog_public_feedback_limit(PDO $db): void
 function catalog_public_download_speed_bytes(PDO $db): int
 {
     return (new CatalogPublicAccessGuard(catalog_config()))->downloadSpeedBytes($db);
+}
+
+function catalog_public_download_grant_issue(int $fileId): string
+{
+    catalog_start_session();
+    return (new CatalogPublicDownloadGrant())->issue($fileId);
+}
+
+function catalog_public_download_grant_consume(int $fileId, string $token): bool
+{
+    catalog_start_session();
+    return (new CatalogPublicDownloadGrant())->consume($fileId, $token);
+}
+
+function catalog_public_download_came_from_info(int $fileId): bool
+{
+    return (new CatalogPublicDownloadGrant())->cameFromDownloadInfo($fileId);
 }
 
 function catalog_public_stream_file(string $path, int $bytesPerSecond = 0): never
