@@ -16,7 +16,11 @@ $read = static function (string $relative) use ($root): string {
 
 $files = [
     'game_files' => 'game-files.php',
+    'game_upks' => 'game-upks.php',
+    'index' => 'index.php',
     'download' => 'download.php',
+    'public_access' => 'lib/CatalogPublicAccess.php',
+    'download_grant' => 'src/Infrastructure/Security/CatalogPublicDownloadGrant.php',
     'external' => 'lib/ExternalMirrors.php',
     'download_info' => 'download-info.php',
     'download_package' => 'download-package.php',
@@ -49,7 +53,33 @@ $record = static function (string $name, bool $ok, string $detail) use (&$checks
 };
 
 $record(
-    'public_individual_files_stream_through_protected_controller',
+    'public_individual_files_require_download_info_grant',
+    str_contains($source['download_info'], 'catalog_public_download_grant_issue((int)$file[\'id\'])')
+        && str_contains($source['download'], 'catalog_public_download_came_from_info($id)')
+        && str_contains($source['download'], 'catalog_public_download_grant_consume($id, $grant)')
+        && str_contains($source['download'], 'public_download_redirect_to_info($id);')
+        && str_contains($source['download_grant'], 'private const TTL_SECONDS = 300;')
+        && str_contains($source['download_grant'], 'public function consume(int $fileId, string $token): bool')
+        && str_contains($source['download_grant'], 'unset($_SESSION[self::SESSION_KEY][$key]);')
+        && str_contains($source['download_grant'], "strtolower(basename(\$path)) !== 'download-info.php'")
+        && str_contains($source['public_access'], 'function catalog_public_download_grant_issue(int $fileId): string'),
+    'Public download.php requests must carry a short-lived one-time browser-session grant issued by download-info.php and must originate from that same-site file page.'
+);
+
+$record(
+    'public_catalog_links_enter_through_download_info',
+    str_contains($source['game_files'], "? 'download.php?id=' . \$fileId")
+        && str_contains($source['game_files'], ": 'download-info.php?id=' . \$fileId")
+        && str_contains($source['game_upks'], "? 'download.php?id=' . \$id")
+        && str_contains($source['game_upks'], ": 'download-info.php?id=' . \$id")
+        && str_contains($source['index'], "catalog_support_is_admin() ? 'download.php?id=' : 'download-info.php?id='")
+        && str_contains($source['download_info'], "? 'download.php?id=' . (int)\$dep['id']")
+        && str_contains($source['download_info'], ": 'download-info.php?id=' . (int)\$dep['id']"),
+    'Public file lists, UPK lists, legacy download aliases and dependency actions must open each file\'s download-info.php page first; administrators may retain direct download.php links.'
+);
+
+$record(
+    'protected_controller_never_exposes_storage_path',
     str_contains($source['download'], 'bool $publicTransfer = false')
         && str_contains($source['download'], '$speedBytes = $publicTransfer ? catalog_public_download_speed_bytes($db) : 0;')
         && str_contains($source['download'], "if ((\$decision['type'] ?? '') === 'local_stream')")
@@ -62,14 +92,7 @@ $record(
         && str_contains($source['settings'], "['protected_local', 'external_mirror_only', 'disabled']")
         && !str_contains($source['download'], "header('Location: ' . \$path")
         && !str_contains($source['download'], "header('Location: file://"),
-    'Anonymous users may receive verified files only through the rate-limited download controller; the physical storage path must remain server-side.'
-);
-
-$record(
-    'game_file_download_action_uses_download_controller',
-    str_contains($source['game_files'], 'href="download.php?id=')
-        && !str_contains($source['game_files'], 'class="game-files-download-link" href="download-info.php?id='),
-    'The game-file down-arrow must perform an individual-file download decision instead of opening package options.'
+    'After authorization the controller may stream the file, but the physical storage path must remain server-side.'
 );
 
 $record(
@@ -171,7 +194,11 @@ $record(
 $syntaxFailures = [];
 $syntaxFiles = [
     'game-files.php',
+    'game-upks.php',
+    'index.php',
     'download.php',
+    'lib/CatalogPublicAccess.php',
+    'src/Infrastructure/Security/CatalogPublicDownloadGrant.php',
     'lib/ExternalMirrors.php',
     'download-info.php',
     'download-package.php',
