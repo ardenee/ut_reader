@@ -110,29 +110,36 @@ try {
         exit;
     }
 
-    $decision = external_public_download_decision($db, $id, $_SESSION['user']['id'] ?? null, catalog_public_access_client_ip());
-    if (in_array((string)($decision['type'] ?? ''), ['local_direct', 'external_link'], true)) {
-        catalog_public_download_limit($db);
-    }
-    if (($decision['type'] ?? '') === 'local_direct') {
+    $isAdmin = catalog_support_is_admin();
+    if ($isAdmin) {
         public_download_send_local($config, $db, $file);
+    }
+
+    $decision = external_public_download_decision(
+        $db,
+        $id,
+        $_SESSION['user']['id'] ?? null,
+        catalog_public_access_client_ip(),
+        false
+    );
+    if (($decision['type'] ?? '') === 'external_link') {
+        catalog_public_download_limit($db);
+        $externalUrl = trim((string)($decision['link']['external_url'] ?? ''));
+        if ($externalUrl === '' || preg_match('/^https?:\/\//i', $externalUrl) !== 1) {
+            throw new RuntimeException('The configured external download link is invalid.');
+        }
+        header('Cache-Control: private, no-store');
+        header('Location: ' . $externalUrl, true, 302);
+        exit;
     }
 
     $access = catalog_public_access_settings($db, $config);
     catalog_head('Download');
     echo '<div class="card"><h1>Download</h1><p><strong>' . catalog_h($file['package_name']) . '</strong><br>' . catalog_h(public_download_original_name($file)) . '</p><p class="muted">Public download mode: <span class="mono">' . catalog_h(external_public_download_mode($db)) . '</span></p></div>';
-    echo '<div class="card"><h2>Public download restrictions</h2><p>This IP address may download up to <strong>' . (int)$access['public_download_max_files'] . '</strong> individual files per ' . catalog_h(catalog_public_access_window_label((int)$access['public_download_window_seconds'])) . '.</p><p class="muted">Rapid link opening or automated crawling can trigger a temporary ' . (int)$access['public_burst_block_seconds'] . '-second block.';
-    if ((int)$access['public_download_speed_kbps'] > 0) {
-        echo ' Local transfers are limited to ' . (int)$access['public_download_speed_kbps'] . ' KB/s.';
-    }
-    echo '</p></div>';
+    echo '<div class="card"><h2>Public download restrictions</h2><p>This IP address may open up to <strong>' . (int)$access['public_download_max_files'] . '</strong> external file links per ' . catalog_h(catalog_public_access_window_label((int)$access['public_download_window_seconds'])) . '.</p>'
+        . '<p class="muted">Public users never receive catalogue-storage files directly. Logged-in administrators may use the same download action for a direct local transfer.</p></div>';
 
-    if (($decision['type'] ?? '') === 'external_link') {
-        $link = $decision['link'];
-        echo '<div class="card"><h2>External mirror link ready</h2><p class="muted">This file is being served through the configured external/shared provider cache.</p><table>';
-        echo '<tr><th>Provider</th><td>' . catalog_h($link['provider_name'] ?? '') . '</td></tr><tr><th>Expires</th><td>' . catalog_h($link['expires_at'] ?? '') . '</td></tr>';
-        echo '</table><p><a class="button" href="' . catalog_h($link['external_url']) . '" target="_blank" rel="noopener noreferrer">Open external download</a></p></div>';
-    } elseif (($decision['type'] ?? '') === 'pending') {
+    if (($decision['type'] ?? '') === 'pending') {
         echo '<div class="card"><h2>External download is being prepared</h2><p>' . catalog_h($decision['message'] ?? 'External download link is not ready yet.') . '</p>';
         if (!empty($decision['job_id'])) {
             echo '<p class="muted">Mirror queue job ID: <span class="mono">' . (int)$decision['job_id'] . '</span></p>';
