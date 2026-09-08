@@ -80,9 +80,10 @@ try {
         } elseif ($action === 'delete_older') {
             $days = max(1, min(3650, (int)($_POST['days'] ?? 30)));
             $statement = $db->prepare(
-                'DELETE FROM ue_access_events WHERE occurred_at<DATE_SUB(CURRENT_TIMESTAMP(6),INTERVAL ? DAY)'
+                'DELETE FROM ue_access_events WHERE occurred_at<DATE_SUB(CURRENT_TIMESTAMP(6),INTERVAL '
+                . $days . ' DAY)'
             );
-            $statement->execute([$days]);
+            $statement->execute();
             $message = $statement->rowCount() . ' access event(s) older than ' . $days . ' days deleted.';
         } elseif ($action === 'block_selected_ips') {
             if (!$siteBlocklist instanceof CatalogSiteBlocklist || !$eventsAvailable) {
@@ -163,6 +164,8 @@ try {
     $days = access_matrix_choice((string)($_GET['days'] ?? '7'), ['1', '7', '30', '90', 'all'], '7');
     $ip = access_matrix_text((string)($_GET['ip'] ?? ''), 80);
     $pageSearch = access_matrix_text((string)($_GET['page_q'] ?? ''), 190);
+    $session = strtolower(preg_replace('/[^a-f0-9]/i', '', (string)($_GET['session'] ?? '')) ?? '');
+    $session = substr($session, 0, 64);
     $search = access_matrix_text((string)($_GET['q'] ?? ''), 200);
     $perPage = (int)($_GET['per_page'] ?? 100);
     if (!in_array($perPage, [50, 100, 250, 500], true)) {
@@ -188,6 +191,10 @@ try {
         $like = '%' . str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $pageSearch) . '%';
         $where[] = '(a.page_key LIKE ? ESCAPE "\\\\" OR a.request_path LIKE ? ESCAPE "\\\\")';
         array_push($args, $like, $like);
+    }
+    if ($session !== '') {
+        $where[] = 'LOWER(HEX(a.session_hash)) LIKE ?';
+        $args[] = $session . '%';
     }
     if ($search !== '') {
         $like = '%' . str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $search) . '%';
@@ -230,7 +237,7 @@ try {
         $offset = ($page - 1) * $perPage;
 
         $statement = $db->prepare(
-            'SELECT a.*,INET6_NTOA(a.ip_address) ip_text,u.username '
+            'SELECT a.*,INET6_NTOA(a.ip_address) ip_text,LOWER(HEX(a.session_hash)) session_hex,u.username '
             . 'FROM ue_access_events a LEFT JOIN ue_users u ON u.id=a.user_id'
             . $whereSql
             . ' ORDER BY a.occurred_at DESC,a.id DESC LIMIT ' . $perPage . ' OFFSET ' . $offset
@@ -275,7 +282,7 @@ try {
         );
         $topIps = catalog_all(
             $db,
-            'SELECT INET6_NTOA(a.ip_address) ip,COUNT(*) events,'
+            'SELECT INET6_NTOA(a.ip_address) ip,COUNT(*) events,COUNT(DISTINCT a.session_hash) sessions,'
             . 'SUM(a.event_type="page_view") page_views,'
             . 'SUM(a.event_type="server_page") server_pages,'
             . 'SUM(a.event_type="interaction") interactions,'
@@ -352,6 +359,7 @@ try {
     echo '</select></label>'
         . '<label>IP <input name="ip" value="' . catalog_h($ip) . '" placeholder="Full or partial IP"></label>'
         . '<label class="grow">Page <input name="page_q" value="' . catalog_h($pageSearch) . '" placeholder="Page or path"></label>'
+        . '<label>Session <input class="mono" name="session" value="' . catalog_h($session) . '" placeholder="Session hash prefix"></label>'
         . '<label class="grow">Section / action <input name="q" value="' . catalog_h($search) . '" placeholder="Section, button, target or user agent"></label>'
         . '<label>Rows <select name="per_page">';
     foreach ([50,100,250,500] as $value) {
@@ -408,12 +416,12 @@ try {
     echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Most active IPs</h2><p>Useful for spotting crawler-like navigation before blocking an address.</p></div></div><div class="ui-section__body">';
     if ($topIps === []) echo '<p class="muted">No IP activity.</p>';
     else {
-        echo '<table><thead><tr><th>IP</th><th>Events</th><th>Browser pages</th><th>Server renders</th><th>Clicks</th><th>First</th><th>Last</th><th></th></tr></thead><tbody>';
+        echo '<table><thead><tr><th>IP</th><th>Sessions</th><th>Events</th><th>Browser pages</th><th>Server renders</th><th>Clicks</th><th>First</th><th>Last</th><th></th></tr></thead><tbody>';
         foreach ($topIps as $row) {
             $ipText = (string)$row['ip'];
             echo '<tr><td class="mono">' . catalog_h($ipText)
                 . (isset($blockedLookup[strtolower($ipText)]) ? ' <span class="dep missing">blocked</span>' : '') . '</td>'
-                . '<td>' . (int)$row['events'] . '</td><td>' . (int)$row['page_views'] . '</td><td>' . (int)$row['server_pages'] . '</td><td>' . (int)$row['interactions'] . '</td>'
+                . '<td>' . (int)$row['sessions'] . '</td><td>' . (int)$row['events'] . '</td><td>' . (int)$row['page_views'] . '</td><td>' . (int)$row['server_pages'] . '</td><td>' . (int)$row['interactions'] . '</td>'
                 . '<td class="mono small">' . catalog_h((string)$row['first_seen']) . '</td><td class="mono small">' . catalog_h((string)$row['last_seen']) . '</td>'
                 . '<td><a class="button secondary" href="access-matrix.php?' . catalog_h(access_matrix_query(['ip' => $ipText, 'p' => 1])) . '">View activity</a></td></tr>';
         }
