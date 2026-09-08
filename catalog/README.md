@@ -207,3 +207,29 @@ See:
 - [`../docs/catalog-architecture.md`](../docs/catalog-architecture.md)
 
 Backup/restore tooling is maintained under [`../deploy/backup`](../deploy/backup).
+
+## Detailed GeoIP city/region maps
+
+Administrator IP maps can use an optional local MaxMind GeoLite2/GeoIP2 City CSV dataset for approximate city/region placement. The browser never sends visitor IP addresses to MaxMind or another geolocation service; all resolution happens against the local `ue_geoip_country_ranges` table.
+
+1. Apply migrations:
+
+   ```powershell
+   php catalog/bin/migrate.php migrate
+   ```
+
+2. Download and extract the MaxMind **GeoLite2 City CSV** bundle. The extracted directory must contain:
+   - `GeoLite2-City-Blocks-IPv4.csv`
+   - `GeoLite2-City-Blocks-IPv6.csv`
+   - `GeoLite2-City-Locations-en.csv`
+
+3. Import it:
+
+   ```powershell
+   php catalog/bin/import-geoip-city-maxmind.php "C:\path\to\GeoLite2-City-CSV_YYYYMMDD"
+   ```
+
+The importer builds a staging table and atomically swaps it into service only after the full dataset is valid. Existing country-only imports remain supported; when city coordinates are unavailable, maps fall back to a country position.
+
+GeoIP coordinates are approximate. Map tooltips include city/region when available and the dataset accuracy radius when supplied.
+
