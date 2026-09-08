@@ -10,6 +10,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
 
+use UnrealDb\Catalog\Infrastructure\Downloads\CatalogGeoIpCountryResolver;
 use UnrealDb\Catalog\Infrastructure\Security\CatalogSiteBlocklist;
 
 function access_matrix_choice(string $value, array $allowed, string $fallback): string
@@ -377,6 +378,13 @@ try {
         }
     }
 
+    $geoIpResolver = new CatalogGeoIpCountryResolver($db);
+    foreach ($rows as $index => $row) {
+        $country = $geoIpResolver->resolve((string)($row['ip_text'] ?? ''));
+        $rows[$index]['map_country_code'] = $country['country_code'];
+        $rows[$index]['map_country_name'] = $country['country_name'];
+    }
+
     $blockedRows = $siteBlocklist instanceof CatalogSiteBlocklist ? $siteBlocklist->all() : [];
     $blockedLookup = [];
     foreach ($blockedRows as $blockedRow) {
@@ -653,10 +661,16 @@ try {
             . '<div class="access-matrix-actions"><label><input type="checkbox" onclick="document.querySelectorAll(\'.access-matrix-check\').forEach(c=>c.checked=this.checked)"> Select page</label>'
             . '<select name="action" required><option value="">Choose action</option><option value="delete_selected">Delete selected</option><option value="block_selected_ips">Block selected IPs from site</option></select>'
             . '<button type="submit">Apply</button></div>'
-            . '<div class="table-wrap"><table class="access-matrix-table"><thead><tr><th class="am-check"></th><th class="am-time">Time</th><th class="am-type">Type</th><th class="am-page">Page / section / action</th><th class="am-ip">IP / user</th><th class="am-route">Referrer / target</th><th class="am-agent">User agent</th></tr></thead><tbody>';
+            . '<div class="table-wrap" data-world-map-source="access-matrix-raw-events" data-world-map-title="Raw event locations" data-world-map-storage-key="unrealdb.accessMatrix.rawEvents.worldMapOpen" data-world-map-note="Country-level approximation from the local GeoIP country database." data-world-map-entry-singular="visible raw event" data-world-map-entry-plural="visible raw events"><table class="access-matrix-table"><thead><tr><th class="am-check"></th><th class="am-time">Time</th><th class="am-type">Type</th><th class="am-page">Page / section / action</th><th class="am-ip">IP / user</th><th class="am-route">Referrer / target</th><th class="am-agent">User agent</th></tr></thead><tbody>';
         foreach ($rows as $row) {
             $ipText = trim((string)($row['ip_text'] ?? ''));
-            echo '<tr><td class="am-check"><input class="access-matrix-check" type="checkbox" name="ids[]" value="' . (int)$row['id'] . '"></td>'
+            $countryCode = strtoupper(trim((string)($row['map_country_code'] ?? '')));
+            $countryName = trim((string)($row['map_country_name'] ?? ''));
+            $mapAttributes = $ipText !== '' && preg_match('/^[A-Z]{2}$/', $countryCode) === 1
+                ? ' data-world-map-ip="' . catalog_h($ipText) . '" data-world-map-country-code="' . catalog_h($countryCode)
+                    . '" data-world-map-country-name="' . catalog_h($countryName !== '' ? $countryName : $countryCode) . '"'
+                : '';
+            echo '<tr' . $mapAttributes . '><td class="am-check"><input class="access-matrix-check" type="checkbox" name="ids[]" value="' . (int)$row['id'] . '"></td>'
                 . '<td class="mono small am-time">' . catalog_h(access_matrix_time($row['occurred_at'])) . '</td>'
                 . '<td class="am-type"><span class="dep">' . catalog_h((string)$row['event_type']) . '</span></td>'
                 . '<td class="am-page"><strong class="mono small">' . access_matrix_logged_link((string)$row['request_path'], (string)$row['page_key']) . '</strong>'
