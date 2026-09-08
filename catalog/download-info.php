@@ -61,12 +61,9 @@ try {
     }
 
     $isAdmin = catalog_support_is_admin();
-    $individualDownloadHref = $isAdmin
-        ? 'download.php?id=' . (int)$file['id']
-        : 'download.php?' . http_build_query([
-            'id' => (int)$file['id'],
-            'grant' => catalog_public_download_grant_issue((int)$file['id']),
-        ]);
+    $publicDownloadGrant = $isAdmin
+        ? ''
+        : catalog_public_download_grant_issue((int)$file['id']);
 
     $packageSettings = new CatalogPackageExportSettingsService($db);
     $game = $packageSettings->game((int)$file['game_id']);
@@ -108,14 +105,24 @@ try {
     );
 
     echo '<div class="card"><h2>Individual file</h2><p><strong>' . catalog_h($file['package_name']) . '</strong><br>' . catalog_h(catalog_clean_unreal_filename((string)$file['original_name'])) . '</p>';
-    echo '<p class="muted">Public downloads must start from this download-options page. The Download button receives a short-lived one-time browser-session grant; copied or crawled <span class="mono">download.php?id=…</span> links are redirected back here. The physical catalogue-storage path is never exposed.</p>';
-    echo '<div class="ui-inline-actions">' . CatalogUi::iconButton([
-        'label' => 'Download ' . catalog_clean_unreal_filename((string)$file['original_name']),
-        'icon' => '⇩',
-        'href' => $individualDownloadHref,
-        'size' => 'sm',
-        'variant' => 'primary',
-    ]);
+    echo '<p class="muted">Public downloads must start from this download-options page. Public visitors are given a one-time POST action rather than a reusable <span class="mono">download.php?id=…</span> link; copied, bookmarked or crawled direct URLs are redirected back here. The physical catalogue-storage path is never exposed.</p>';
+    echo '<div class="ui-inline-actions">';
+    if ($isAdmin) {
+        echo CatalogUi::iconButton([
+            'label' => 'Download ' . catalog_clean_unreal_filename((string)$file['original_name']),
+            'icon' => '⇩',
+            'href' => 'download.php?id=' . (int)$file['id'],
+            'size' => 'sm',
+            'variant' => 'primary',
+        ]);
+    } else {
+        echo '<form method="post" action="download.php" class="ui-inline-form">'
+            . '<input type="hidden" name="id" value="' . (int)$file['id'] . '">'
+            . '<input type="hidden" name="grant" value="' . catalog_h($publicDownloadGrant) . '">'
+            . '<button type="submit" class="primary">⇩ Download '
+            . catalog_h(catalog_clean_unreal_filename((string)$file['original_name']))
+            . '</button></form>';
+    }
     if ($settings['enabled'] && $settings['dependency_zip_enabled'] && external_public_download_mode($db) !== 'external_mirror_only') {
         echo CatalogUi::button('Queue dependency ZIP', ['href' => 'download-package.php?id=' . (int)$file['id'] . '&format=dependency_zip&dependencies=1']);
     }
