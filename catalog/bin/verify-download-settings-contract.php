@@ -129,18 +129,21 @@ $requireAbsent('mirror_service', "'save_settings'", 'Mirror admin service');
 
 foreach ([
     "require_once __DIR__ . '/lib/CatalogPublicAccess.php';",
-    'catalog_public_download_limit($db);',
-    'catalog_public_download_speed_bytes($db);',
+    'catalog_support_is_admin()',
+    "Administrator access is required for direct PAK downloads.",
+    '$speedBytes = 0;',
     'catalog_public_stream_file($path, $speedBytes);',
 ] as $needle) {
-    $requireContains('pak_download', $needle, 'Original PAK download');
+    $requireContains('pak_download', $needle, 'Admin-only original PAK download');
 }
 foreach ([
     'CatalogPublicRateLimit.php',
     'catalog_public_download_rate_limit(',
+    'catalog_public_download_limit($db);',
+    'catalog_public_download_speed_bytes($db);',
     'readfile($path)',
 ] as $needle) {
-    $requireAbsent('pak_download', $needle, 'Original PAK download');
+    $requireAbsent('pak_download', $needle, 'Admin-only original PAK download');
 }
 foreach ([
     'function catalog_public_download_rate_limit',
@@ -170,4 +173,4 @@ if ($failures !== []) {
     exit(1);
 }
 
-echo "PASS: download settings are centralized and original PAK downloads use the main public limiter/throttle.\n";
+echo "PASS: download settings are centralized; public individual files are external-only and original PAK downloads are admin-only.\n";
