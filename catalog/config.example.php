@@ -52,6 +52,10 @@ return [
         // MySQL-backed durable jobs. Web uploads automatically launch a detached
         // CLI worker which drains the available queue and exits.
         'name' => 'catalog',
+        // Interactive generated-download packages use a separate durable queue so
+        // import/dependency workers cannot starve a user-requested package build.
+        'package_name' => 'catalog-packages',
+        'package_worker_processes' => 1,
         'lease_seconds' => 120,
         // Detached inventory workers raise lower PHP CLI limits to this value.
         // Streaming readers avoid package-sized copies, but large object tables
