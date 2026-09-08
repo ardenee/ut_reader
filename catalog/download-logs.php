@@ -38,6 +38,12 @@ function download_logs_query(array $overrides = []): string
     return http_build_query($query);
 }
 
+function download_logs_time(mixed $value): string
+{
+    $value = trim((string)$value);
+    return $value === '' ? '' : substr($value, 0, 19);
+}
+
 function download_logs_country_flag(string $countryCode): string
 {
     $countryCode = strtoupper(trim($countryCode));
@@ -448,7 +454,7 @@ try {
             foreach ($blockedRows as $blockedRow) {
                 echo '<tr><td class="mono">' . catalog_h((string)$blockedRow['ip']) . '</td>'
                     . '<td>' . catalog_h((string)$blockedRow['note']) . '</td>'
-                    . '<td class="mono small">' . catalog_h((string)$blockedRow['created_at']) . '</td>'
+                    . '<td class="mono small">' . catalog_h(download_logs_time($blockedRow['created_at'])) . '</td>'
                     . '<td><form method="post" onsubmit="return confirm(\'Remove this IP from the transfer blocklist?\')">'
                     . '<input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('download_logs_admin')) . '">'
                     . '<input type="hidden" name="action" value="unblock_ip">'
@@ -534,7 +540,7 @@ try {
             $countryCode = strtoupper(trim((string)($row['country_code'] ?? '')));
             $countryName = trim((string)($row['country_name'] ?? ''));
             $ipText = trim((string)($row['ip_text'] ?? ''));
-            echo '<tr><td class="download-log-select"><input class="download-log-check" type="checkbox" name="ids[]" value="' . (int)$row['id'] . '"></td><td class="mono small download-log-time">' . catalog_h((string)$row['started_at']) . '</td>';
+            echo '<tr><td class="download-log-select"><input class="download-log-check" type="checkbox" name="ids[]" value="' . (int)$row['id'] . '"></td><td class="mono small download-log-time">' . catalog_h(download_logs_time($row['started_at'])) . '</td>';
             echo '<td class="download-log-status"><span class="download-log-pill download-log-pill-' . catalog_h($rowStatus) . '">' . catalog_h($rowStatus) . '</span></td>';
             echo '<td class="download-log-file"><strong>' . catalog_h((string)$row['download_name']) . '</strong>';
             if ((int)($row['file_id'] ?? 0) > 0) {
@@ -585,7 +591,7 @@ try {
             $countryCode = strtoupper(trim((string)($row['country_code'] ?? '')));
             $countryName = trim((string)($row['country_name'] ?? ''));
             $ipText = trim((string)($row['ip_text'] ?? ''));
-            echo '<tr><td class="download-log-select"><input class="download-log-check" type="checkbox" name="ids[]" value="' . (int)$row['id'] . '"></td><td class="mono small download-log-time">' . catalog_h((string)$row['queued_at']) . '</td>';
+            echo '<tr><td class="download-log-select"><input class="download-log-check" type="checkbox" name="ids[]" value="' . (int)$row['id'] . '"></td><td class="mono small download-log-time">' . catalog_h(download_logs_time($row['queued_at'])) . '</td>';
             echo '<td class="download-log-status"><span class="download-log-pill download-log-pill-' . catalog_h($rowStatus) . '">' . catalog_h($rowStatus) . '</span></td>';
             echo '<td class="download-log-file"><strong>' . catalog_h((string)$row['package_name']) . '</strong><br><span class="small muted">Dependencies: ' . (!empty($row['include_dependencies']) ? 'yes' : 'no') . '</span></td>';
             echo '<td class="mono download-log-version">' . catalog_h((string)$row['package_version']) . '</td>';
