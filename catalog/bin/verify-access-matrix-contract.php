@@ -24,6 +24,7 @@ $client = $read('assets/catalog-access-matrix.js');
 $endpoint = $read('access-event.php');
 $admin = $read('access-matrix.php');
 $blockedPage = $read('blacklisted.php');
+$siteBlacklist = $read('site-blacklist.php');
 $downloadLogs = $read('download-logs.php');
 $navigation = $read('lib/CatalogNavigation.php');
 
@@ -129,9 +130,20 @@ $record(
 );
 
 $record(
-    'access_matrix_is_in_admin_navigation',
-    str_contains($navigation, "'Access Matrix' => \$root . 'access-matrix.php'"),
-    'Access Matrix must be reachable from administrator navigation.'
+    'site_activity_and_blacklist_are_in_admin_navigation',
+    str_contains($navigation, "'Site Activity Logs' => \$root . 'access-matrix.php'")
+        && str_contains($navigation, "'Site Blacklist' => \$root . 'site-blacklist.php'"),
+    'Whole-site activity logs and blacklist administration must both be obvious in administrator navigation.'
+);
+
+$record(
+    'dedicated_site_blacklist_admin_exists',
+    str_contains($siteBlacklist, "catalog_require_admin_page('Site Blacklist')")
+        && str_contains($siteBlacklist, 'CatalogSiteBlocklist')
+        && str_contains($siteBlacklist, 'Removal requests')
+        && str_contains($siteBlacklist, 'Approve + unblock')
+        && str_contains($siteBlacklist, 'Full or partial IP'),
+    'Administrators need a dedicated blacklist page for blocking/unblocking addresses and reviewing removal requests.'
 );
 
 $record(
@@ -151,6 +163,7 @@ foreach ([
     'access-event.php',
     'access-matrix.php',
     'blacklisted.php',
+    'site-blacklist.php',
     'download-logs.php',
 ] as $relative) {
     $path = $root . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relative);
