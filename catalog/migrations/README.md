@@ -1,19 +1,29 @@
 # Database migrations
 
+For a complete fresh-install sequence, PHP/Apache/MySQL prerequisites and first-run setup, see the [installation guide](../../docs/installation.md).
+
 `catalog/install.sql` is the consolidated base schema for a new UnrealDB installation. Schema changes newer than that baseline are delivered as ordered, immutable migration files in this directory.
 
 The current base schema represents baseline `202608090002`.
 
 ## Current post-baseline migrations
 
-The current migration sequence is:
+The active migration sequence after baseline `202608090002` is:
 
-- `202608110001_unverified_game_match_cache.php` — adds the cached per-unverified-file exact game/dependency match projection used by background refresh and fast Unverified page reads.
-- `202608120001_job_workflow_recovery_logging.php` — adds durable parent/child workflow identity (`parent_job_id`, `workflow_unit_key`) and job-event logging settings used by resumable/recoverable background workflows.
-- `202608130001_program_upload_settings.php` — adds `ue_program_settings`, currently used for administrator-configurable program/upload ingress limits.
-- `202608140001_verified_metadata_publication_state.php` — adds explicit compact-metadata publication state to `ue_files` (`metadata_status`, `metadata_error`, `metadata_updated_at`) so incomplete verified metadata publication can be detected and repaired rather than silently treated as healthy.
-- `202608170001_unverified_pak_members.php` — links retained neutral Upload Bucket PAK containers to their extracted package children and records ownership so assignment/deletion keeps the PAK and its contained packages together safely.
-- `202608190001_dependency_refresh_performance.php` — adds generated/indexed package identity keys and targeted dependency-link indexes used by high-volume affected-dependency discovery and cached game-stat publication.
+- `202608110001_unverified_game_match_cache.php` — cache exact unverified package game-match evidence.
+- `202608120001_job_workflow_recovery_logging.php` — resumable parent/child workflow identity and configurable job-event logging.
+- `202608130001_program_upload_settings.php` — administrator-configurable upload/program limits.
+- `202608140001_verified_metadata_publication_state.php` — explicit verified compact-metadata publication state/failures.
+- `202608170001_unverified_pak_members.php` — retained Upload Bucket PAK membership/ownership.
+- `202608190001_dependency_refresh_performance.php` — indexed dependency package identities and targeted refresh indexes.
+- `202608260001_download_geoip_country.php` — local GeoIP country ranges and download-audit country snapshots.
+- `202608260002_file_feedback.php` — anonymous per-file feedback with IP/time metadata.
+- `202608280001_public_uploads.php` — public contribution quarantine ledger and identity indexes.
+- `202608280002_public_upload_active_identity.php` — active public-upload identity reservation uniqueness.
+- `202608280003_transfer_blocklist_feedback_search.php` — transfer-only IP blocklist, wider feedback and compact Names lookup.
+- `202609080001_public_downloads_external_only.php` — public individual-file downloads use external providers only.
+- `202609080002_access_matrix_site_blocklist.php` — site activity events, full-site IP blocklist and unblock feedback.
+- `202609080003_geoip_city_location.php` — local GeoIP city/region/coordinates/accuracy fields.
 
 A fresh/current deployment loads `catalog/install.sql` and then runs the migration runner so every post-baseline migration is applied.
 
