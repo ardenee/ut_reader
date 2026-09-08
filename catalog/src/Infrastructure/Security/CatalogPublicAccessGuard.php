@@ -188,10 +188,10 @@ final class CatalogPublicAccessGuard
             return;
         }
 
-        $script = basename(str_replace('\\\\', '/', (string)($_SERVER['SCRIPT_NAME'] ?? '')));
+        $script = basename(str_replace('\\', '/', (string)($_SERVER['SCRIPT_NAME'] ?? '')));
         if ($script !== 'blacklisted.php'
             && CatalogSiteBlocklist::isBlockedCached($this->resolvedConfig(), $this->clientIp())) {
-            $requestPath = str_replace('\\\\', '/', (string)($_SERVER['SCRIPT_NAME'] ?? '/catalog/index.php'));
+            $requestPath = str_replace('\\', '/', (string)($_SERVER['SCRIPT_NAME'] ?? '/catalog/index.php'));
             $catalogPos = stripos($requestPath, '/catalog/');
             $location = $catalogPos === false
                 ? 'blacklisted.php'
