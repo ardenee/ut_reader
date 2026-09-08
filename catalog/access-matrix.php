@@ -712,7 +712,7 @@ try {
             $countryFlag = catalog_country_flag($countryCode);
             $countryFlagHtml = $countryFlag !== ''
                 ? '<span class="access-country-flag" role="img" aria-label="' . catalog_h($countryName !== '' ? $countryName : $countryCode)
-                    . '" title="' . catalog_h($countryName !== '' ? $countryName : $countryCode) . '">' . catalog_h($countryFlag) . '</span> '
+                    . '" title="' . catalog_h($countryCode) . '">' . catalog_h($countryFlag) . '</span> '
                 : '';
             echo '</td><td class="mono am-ip">' . $countryFlagHtml . catalog_h($ipText)
                 . ($isBlockedIp ? '<br><span class="dep missing">site blocked</span>' : '')
