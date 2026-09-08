@@ -114,11 +114,22 @@ $record(
         && str_contains($admin, 'Most active IPs')
         && str_contains($admin, 'block_selected_ips')
         && str_contains($admin, 'delete_selected')
+        && str_contains($admin, 'block_and_delete_selected')
+        && str_contains($admin, 'Block selected IPs + delete selected events')
         && str_contains($admin, 'feedback_unblock')
         && str_contains($admin, 'Full or partial IP')
         && str_contains($admin, 'Session hash prefix')
         && str_contains($admin, 'session_hex'),
     'Administrator page must expose traffic hot spots, navigation movement, raw events, deletion, partial-IP filtering and full-site blocking.'
+);
+
+$record(
+    'bulk_block_and_delete_blocks_before_deleting',
+    str_contains($admin, "in_array(\$action, ['block_selected_ips', 'block_and_delete_selected'], true)")
+        && str_contains($admin, "if (\$action === 'block_and_delete_selected')")
+        && str_contains($admin, 'Block first. If any blacklist operation fails')
+        && str_contains($admin, "DELETE FROM ue_access_events WHERE id IN ("),
+    'Combined bulk action must block selected IPs first and only then delete the selected telemetry rows.'
 );
 
 $record(
