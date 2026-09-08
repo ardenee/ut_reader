@@ -133,6 +133,9 @@ try {
     $offset = ($page - 1) * $limit;
     $exports = array_slice($filteredExports, $offset, $limit);
     $isAdmin = catalog_support_is_admin();
+    $downloadHref = $isAdmin
+        ? 'download.php?id=' . $fileId
+        : 'download-info.php?id=' . $fileId;
 
     catalog_head((string)$upk['original_name']);
     echo CatalogUi::pageHeader(
@@ -142,7 +145,7 @@ try {
             'UPK packages' => 'game-upks.php?id=' . (int)$upk['game_id'],
             'Other files' => 'game-files.php?id=' . (int)$upk['game_id'],
             'Examine full package' => 'file-examine.php?id=' . $fileId,
-            'Download original UPK' => 'download.php?id=' . $fileId,
+            'Download original UPK' => $downloadHref,
         ]
     );
 
@@ -169,7 +172,7 @@ try {
         . ' <span class="mono small">flags 0x' . strtoupper(str_pad(dechex((int)$upk['compression_flags']), 8, '0', STR_PAD_LEFT)) . '</span></td></tr>';
     echo '<tr><th>Serialized export range</th><td class="mono">' . number_format((int)($payload['first_offset'] ?? 0)) . ' - ' . number_format((int)($payload['last_end'] ?? 0)) . '</td></tr>';
     echo '<tr><th>Imported</th><td>' . catalog_h((string)$upk['uploaded_at']) . ($upk['uploaded_by_name'] ? ' by ' . catalog_h((string)$upk['uploaded_by_name']) : '') . '</td></tr>';
-    echo '</table><p><a class="button primary" href="download.php?id=' . $fileId . '">Download original UPK</a> '
+    echo '</table><p><a class="button primary" href="' . catalog_h($downloadHref) . '">Download original UPK</a> '
         . '<a class="button" href="file-examine.php?id=' . $fileId . '">Names / Imports / Exports</a></p>';
     if ($isAdmin) {
         $confirm = 'Delete this UPK from storage and the catalog? Its names, imports, exports and dependencies will also be deleted.';
