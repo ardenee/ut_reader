@@ -1,10 +1,12 @@
 <?php
 /**
- * Local-only GeoIP country resolver for audit ingestion.
+ * Local-only GeoIP country resolver for audit ingestion and administrator
+ * reporting enrichment.
  *
- * Country information is resolved once when a download/generation audit row is
- * created and persisted on that row. No network lookup is performed here and
- * Download Logs never resolves IPs while rendering historical data.
+ * Download/generation audits persist the resolved country snapshot on their
+ * audit rows. Administrator views whose source tables store only an IP address
+ * may resolve the currently displayed IPs from the same local range table.
+ * No network lookup is performed by this service.
  */
 declare(strict_types=1);
 
