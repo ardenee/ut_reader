@@ -79,12 +79,18 @@ function catalog_bytes(int $bytes): string
 function catalog_country_flag(string $countryCode): string
 {
     $countryCode = strtoupper(trim($countryCode));
-    if (preg_match('/^[A-Z]{2}$/', $countryCode) !== 1 || !function_exists('mb_chr')) {
+    if (preg_match('/^[A-Z]{2}$/', $countryCode) !== 1) {
         return '';
     }
 
-    return mb_chr(127397 + ord($countryCode[0]), 'UTF-8')
-        . mb_chr(127397 + ord($countryCode[1]), 'UTF-8');
+    $first = 127397 + ord($countryCode[0]);
+    $second = 127397 + ord($countryCode[1]);
+
+    return html_entity_decode(
+        '&#' . $first . ';&#' . $second . ';',
+        ENT_NOQUOTES | ENT_HTML5,
+        'UTF-8'
+    );
 }
 
 function catalog_clean_unreal_package_stem(string $stem): string
