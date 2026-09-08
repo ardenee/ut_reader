@@ -100,13 +100,19 @@ try {
             $statement->execute($ids);
             $message = $statement->rowCount() . ' access event(s) deleted.';
         } elseif ($action === 'delete_older') {
-            $days = max(1, min(3650, (int)($_POST['days'] ?? 30)));
-            $statement = $db->prepare(
-                'DELETE FROM ue_access_events WHERE occurred_at<DATE_SUB(CURRENT_TIMESTAMP(6),INTERVAL '
-                . $days . ' DAY)'
-            );
-            $statement->execute();
-            $message = $statement->rowCount() . ' access event(s) older than ' . $days . ' days deleted.';
+            $days = max(0, min(3650, (int)($_POST['days'] ?? 30)));
+            if ($days === 0) {
+                $statement = $db->prepare('DELETE FROM ue_access_events');
+                $statement->execute();
+                $message = $statement->rowCount() . ' access event(s) deleted. Access telemetry is now empty.';
+            } else {
+                $statement = $db->prepare(
+                    'DELETE FROM ue_access_events WHERE occurred_at<DATE_SUB(CURRENT_TIMESTAMP(6),INTERVAL '
+                    . $days . ' DAY)'
+                );
+                $statement->execute();
+                $message = $statement->rowCount() . ' access event(s) older than ' . $days . ' days deleted.';
+            }
         } elseif ($action === 'block_event_ip') {
             if (!$siteBlocklist instanceof CatalogSiteBlocklist || !$eventsAvailable) {
                 throw new RuntimeException('Run the pending access-matrix migration first.');
@@ -733,11 +739,12 @@ try {
         $next = $page < $pages ? '<a class="button secondary" href="access-matrix.php?' . catalog_h(access_matrix_query(['p' => $page + 1])) . '">Next</a>' : '';
         echo '<div class="access-matrix-pages"><span>' . $previous . '</span><span class="muted">Page ' . $page . ' of ' . $pages . '</span><span>' . $next . '</span></div>';
     }
-    echo '<form method="post" style="margin-top:14px" onsubmit="return confirm(\'Delete old access telemetry?\')">'
+    echo '<form method="post" style="margin-top:14px" onsubmit="var d=parseInt(this.elements.days.value||\'30\',10);return confirm(d===0?\'Delete ALL access telemetry? This cannot be undone.\':\'Delete access telemetry older than \'+d+\' day(s)?\');">'
         . '<input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('access_matrix_admin')) . '">'
         . '<input type="hidden" name="action" value="delete_older">'
-        . '<label>Delete events older than <input type="number" name="days" value="30" min="1" max="3650" style="width:90px"> days</label> '
-        . '<button class="secondary" type="submit">Delete old events</button></form>';
+        . '<label>Delete events older than <input type="number" name="days" value="30" min="0" max="3650" style="width:90px"> days</label> '
+        . '<span class="small muted">Use 0 to delete all access telemetry.</span> '
+        . '<button class="secondary" type="submit">Delete events</button></form>';
     echo '</div></section>';
 
     catalog_foot();
