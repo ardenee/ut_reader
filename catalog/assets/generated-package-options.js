@@ -31,6 +31,7 @@
 
         var data = new FormData(form);
         data.set('action', 'lookup');
+        data.set('csrf', form.dataset.csrf || '');
 
         try {
             var response = await fetch(endpoint, {
