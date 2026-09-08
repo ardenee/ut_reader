@@ -17,6 +17,7 @@ $read = static function (string $relative) use ($root): string {
 $endpoint = $read('file-dependency-files.php');
 $display = $read('assets/file-dependency-display.js');
 $support = $read('lib/CatalogSupportCore.php');
+$examine = $read('file-examine-paged-core.php');
 
 $checks = [];
 $failures = [];
@@ -52,6 +53,25 @@ $record(
 );
 
 $record(
+    'paged_file_examine_hosts_uses_and_used_by',
+    str_contains($examine, 'data-file-examine-native-panel')
+        && str_contains($display, "root.querySelector('[data-file-examine-native-panel]')")
+        && str_contains($display, "tab('requires', 'Uses'")
+        && str_contains($display, "tab('required-by', 'Used By'")
+        && str_contains($display, 'nativePanel.hidden = true;')
+        && str_contains($display, 'nativePanel.hidden = false;')
+        && !str_contains($display, "root.querySelector('[data-panel=\"exports\"]')"),
+    'The current paged file examiner must host Uses / Used By tabs without depending on the retired all-panels examiner DOM.'
+);
+
+$record(
+    'file_examine_links_to_package_details',
+    str_contains($examine, '>Package details</a>')
+        && str_contains($examine, "'Package' => '<a href=\"file-info.php?id=' . \$fileId"),
+    'file-examine.php must provide an explicit link back to the package-details page, matching file-info.php navigation in the opposite direction.'
+);
+
+$record(
     'dependency_failures_are_visible',
     str_contains($display, 'showDependencyLoadError(error)')
         && str_contains($display, 'Uses / Used By unavailable:')
@@ -67,7 +87,7 @@ $record(
 );
 
 $syntaxFailures = [];
-foreach (['file-dependency-files.php'] as $relative) {
+foreach (['file-dependency-files.php','file-examine-paged-core.php'] as $relative) {
     $path = $root . DIRECTORY_SEPARATOR . $relative;
     $pipes = [];
     $process = @proc_open([PHP_BINARY, '-l', $path], [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
