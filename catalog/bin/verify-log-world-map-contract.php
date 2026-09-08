@@ -18,6 +18,14 @@ $checks = [
         $root . '/assets/catalog-ui.js',
         "row.getAttribute('data-world-map-country-code')",
     ],
+    'shared UI reads detailed coordinates' => [
+        $root . '/assets/catalog-ui.js',
+        "row.getAttribute('data-world-map-latitude')",
+    ],
+    'shared UI reads city and region detail' => [
+        $root . '/assets/catalog-ui.js',
+        "row.getAttribute('data-world-map-city')",
+    ],
     'shared UI keeps same-origin world map endpoint' => [
         $root . '/assets/catalog-ui.js',
         "fetch(root + 'world-map.php'",
@@ -32,7 +40,7 @@ $checks = [
     ],
     'access matrix uses local GeoIP resolver' => [
         $root . '/access-matrix.php',
-        'CatalogGeoIpCountryResolver',
+        'CatalogGeoIpLocationResolver',
     ],
     'access matrix raw events expose map source' => [
         $root . '/access-matrix.php',
@@ -44,7 +52,7 @@ $checks = [
     ],
     'site blacklist uses local GeoIP resolver' => [
         $root . '/site-blacklist.php',
-        'CatalogGeoIpCountryResolver',
+        'CatalogGeoIpLocationResolver',
     ],
     'site blacklist exposes map source' => [
         $root . '/site-blacklist.php',
@@ -52,7 +60,7 @@ $checks = [
     ],
     'site blacklist rows expose country map points' => [
         $root . '/site-blacklist.php',
-        'data-world-map-country-name="',
+        'catalog_world_map_attributes(',
     ],
 ];
 
@@ -64,7 +72,7 @@ foreach ($checks as $label => [$path, $needle]) {
     }
 }
 
-$resolverPath = $root . '/src/Infrastructure/Downloads/CatalogGeoIpCountryResolver.php';
+$resolverPath = $root . '/src/Infrastructure/Downloads/CatalogGeoIpLocationResolver.php';
 $resolver = is_file($resolverPath) ? file_get_contents($resolverPath) : false;
 $uiPath = $root . '/assets/catalog-ui.js';
 $ui = is_file($uiPath) ? file_get_contents($uiPath) : false;
@@ -75,8 +83,16 @@ if (!is_string($ui) || str_contains($ui, 'var root = catalogRootPath();')) {
 if (!is_string($resolver)
     || str_contains($resolver, 'curl_')
     || str_contains($resolver, 'file_get_contents(')
-    || !str_contains($resolver, 'ue_geoip_country_ranges')) {
-    $failed[] = 'administrator map enrichment must remain local-only';
+    || !str_contains($resolver, 'ue_geoip_country_ranges')
+    || !str_contains($resolver, 'accuracy_radius_km')) {
+    $failed[] = 'administrator map enrichment must remain local-only and support detailed location data';
+}
+if (!is_string($ui)
+    || !str_contains($ui, 'function projectCoordinate(')
+    || !str_contains($ui, '578.370221')
+    || !str_contains($ui, 'function largestCountryComponentCenter(')
+    || str_contains($ui, 'Math.cos(angle) * spread')) {
+    $failed[] = 'map must use GeoIP coordinates and a sane country fallback instead of artificial country-circle spreading';
 }
 
 if ($failed !== []) {
