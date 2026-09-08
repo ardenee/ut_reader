@@ -48,7 +48,7 @@ $checks = [
     ],
     'access matrix raw rows expose IP map points' => [
         $root . '/access-matrix.php',
-        'data-world-map-ip="',
+        'catalog_world_map_attributes(',
     ],
     'site blacklist uses local GeoIP resolver' => [
         $root . '/site-blacklist.php',
