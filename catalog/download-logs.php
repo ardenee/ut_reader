@@ -472,6 +472,7 @@ try {
         . '.download-log-cards{grid-template-columns:repeat(5,minmax(130px,1fr));margin-bottom:14px}'
         . '.download-log-tabs,.download-log-toolbar,.download-log-pages,.download-log-actions,.download-block-actions{display:flex;gap:9px;align-items:center;flex-wrap:wrap}'
         . '.download-log-tabs,.download-log-toolbar,.download-log-actions{margin-bottom:12px}'
+        . '.download-log-delete-all{display:flex;gap:9px;align-items:center;justify-content:flex-end;flex-wrap:wrap;margin:-2px 0 12px}'
         . '.download-log-toolbar .search{min-width:280px;flex:1}'
         . '.download-log-table{min-width:1080px;table-layout:auto}'
         . '.download-log-select{width:36px;text-align:center;white-space:nowrap}'
@@ -602,6 +603,23 @@ try {
         echo '<option value="' . $value . '"' . ($perPage === $value ? ' selected' : '') . '>' . $value . '</option>';
     }
     echo '</select></label><button type="submit">Apply</button></form>';
+
+    if ($available && $total > 0) {
+        $matchingLabel = $view === 'generations' ? 'package-generation log' : 'download log';
+        echo '<form method="post" class="download-log-delete-all" onsubmit="return confirm(\'Permanently delete ALL '
+            . number_format($total) . ' matching ' . catalog_h($matchingLabel) . ' record(s)? This is not limited to the current page and cannot be undone.\')">'
+            . '<input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('download_logs_admin')) . '">'
+            . '<input type="hidden" name="action" value="delete_all_matching">'
+            . '<input type="hidden" name="log_view" value="' . catalog_h($view) . '">'
+            . '<input type="hidden" name="filter_status" value="' . catalog_h($status) . '">'
+            . '<input type="hidden" name="filter_type" value="' . catalog_h($type) . '">'
+            . '<input type="hidden" name="filter_game_id" value="' . (int)$gameId . '">'
+            . '<input type="hidden" name="filter_ip" value="' . catalog_h($ip) . '">'
+            . '<input type="hidden" name="filter_q" value="' . catalog_h($search) . '">'
+            . '<span class="muted small">' . number_format($total) . ' matching record(s) across all pages.</span> '
+            . '<button class="danger" type="submit">Delete all ' . number_format($total) . ' matching</button>'
+            . '</form>';
+    }
 
     if (!$available || !$rows) {
         echo CatalogUi::emptyState(
