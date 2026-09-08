@@ -145,6 +145,19 @@ $record(
 );
 
 $record(
+    'summary_cards_are_top_ten_with_stable_page_columns',
+    str_contains($admin, 'GROUP BY a.page_key ORDER BY hits DESC,a.page_key LIMIT 10')
+        && str_contains($admin, 'GROUP BY a.request_path ORDER BY hits DESC,a.request_path LIMIT 10')
+        && str_contains($admin, 'GROUP BY a.referrer_path,a.request_path ORDER BY hits DESC LIMIT 10')
+        && str_contains($admin, 'GROUP BY a.page_key,a.section_key ORDER BY hits DESC,a.page_key LIMIT 10')
+        && str_contains($admin, 'GROUP BY a.page_key,a.action_key,a.target_path ORDER BY hits DESC,a.page_key LIMIT 10')
+        && str_contains($admin, 'access-matrix-sections-table')
+        && str_contains($admin, 'access-matrix-interactions-table')
+        && str_contains($admin, 'min-width:130px;white-space:nowrap'),
+    'All five two-column summary cards must show at most ten rows, and Page columns in Sections/Interactions must remain readable instead of collapsing vertically.'
+);
+
+$record(
     'raw_activity_is_compact_linked_and_actionable',
     str_contains($admin, 'function access_matrix_time(')
         && str_contains($admin, "substr(\$value, 0, 19)")
