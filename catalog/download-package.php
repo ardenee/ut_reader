@@ -51,6 +51,15 @@ try {
     $version = substr(trim((string)($_GET['version'] ?? '1.0')), 0, 80);
     $author = substr(trim((string)($_GET['author'] ?? $settings['default_author'])), 0, 160);
     $resumeJobId = max(0, (int)($_GET['job_id'] ?? 0));
+    $backUrl = 'download-info.php?' . http_build_query([
+        'id' => $id,
+        'format' => $format,
+        'dependencies' => $includeDependencies ? 1 : 0,
+        'allow_incomplete' => $allowIncomplete ? 1 : 0,
+        'name' => $name,
+        'version' => $version,
+        'author' => $author,
+    ]);
 
     catalog_head('Generate package');
     catalog_page_header(
@@ -81,7 +90,7 @@ CSS;
     echo '<div class="package-job-actions">'
         . '<button type="button" id="package-job-cancel" class="secondary">Cancel</button>'
         . '<a id="package-job-download" class="button primary" aria-disabled="true" style="pointer-events:none;opacity:.55">Download generated package</a>'
-        . '<a id="package-job-back" class="button secondary" href="download-info.php?id=' . $id . '">Back to download options</a>'
+        . '<a id="package-job-back" class="button secondary" href="' . catalog_h($backUrl) . '">Back to download options</a>'
         . '</div>';
     echo '</div>';
 
