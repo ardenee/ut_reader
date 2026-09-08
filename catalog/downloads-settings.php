@@ -51,24 +51,25 @@ try {
 
     echo '<form method="post"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('download_settings')) . '">';
 
-    echo '<div class="card"><h2>Public download mode</h2><table>';
+    echo '<div class="card"><h2>Public individual-file downloads</h2><table>';
     echo '<tr><th>Mode</th><td><select name="public_download_mode">';
+    $publicMode = (string)($mirror['public_download_mode'] ?? 'external_mirror');
+    $publicMode = $publicMode === 'disabled' ? 'disabled' : 'external_mirror';
     foreach ([
-        'local_direct' => 'Use own site / direct download',
-        'external_mirror' => 'External mirror only',
-        'external_mirror_preferred' => 'Prefer external mirror, fallback to own site',
-        'disabled' => 'Disable public downloads',
+        'external_mirror' => 'External provider links only',
+        'disabled' => 'Disable public individual-file downloads',
     ] as $key => $label) {
-        $selected = (($mirror['public_download_mode'] ?? 'local_direct') === $key) ? ' selected' : '';
+        $selected = $publicMode === $key ? ' selected' : '';
         echo '<option value="' . catalog_h($key) . '"' . $selected . '>' . catalog_h($label) . '</option>';
     }
     echo '</select></td></tr>';
-    echo '</table><p class="muted small">Federation parent/child transfers are controlled separately and are not limited by this public download mode.</p></div>';
+    echo '</table><p class="muted small">Public users never receive files directly from catalogue storage. '
+        . 'Logged-in administrators may download stored files directly. Generated package downloads and federation transfers are controlled separately.</p></div>';
 
     echo '<div class="card"><h2>Download limits and speed</h2><table>';
     echo '<tr><th>Individual file downloads</th><td><input type="number" min="1" max="10000" name="public_download_max_files" value="' . (int)$public['public_download_max_files'] . '"> per <input type="number" min="60" max="604800" name="public_download_window_seconds" value="' . (int)$public['public_download_window_seconds'] . '"> seconds, per IP</td></tr>';
     echo '<tr><th>Generated package builds</th><td><input type="number" min="1" max="10000" name="public_package_max_builds" value="' . (int)$public['public_package_max_builds'] . '"> per <input type="number" min="60" max="604800" name="public_package_window_seconds" value="' . (int)$public['public_package_window_seconds'] . '"> seconds, per IP</td></tr>';
-    echo '<tr><th>Local download speed</th><td><input type="number" min="0" max="1048576" name="public_download_speed_kbps" value="' . (int)$public['public_download_speed_kbps'] . '"> KB/s per transfer <span class="muted small">0 means unlimited. Applies to individual files, generated packages and original PAK downloads. External mirror speed cannot be controlled here.</span></td></tr>';
+    echo '<tr><th>Generated package speed</th><td><input type="number" min="0" max="1048576" name="public_download_speed_kbps" value="' . (int)$public['public_download_speed_kbps'] . '"> KB/s per transfer <span class="muted small">0 means unlimited. Applies to generated package artifacts; public individual-file downloads are external and administrator direct downloads are not throttled here.</span></td></tr>';
     echo '</table></div>';
 
     echo '<div class="card"><h2>Automated access and rapid-link protection</h2><table>';
