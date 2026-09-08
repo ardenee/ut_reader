@@ -34,6 +34,12 @@ $checks = [
         str_contains($access, '.access-matrix-ip-line{display:flex;align-items:center;justify-content:space-between;')
         && str_contains($access, 'title="Blacklist IP"')
         && str_contains($access, '>XX</button>'),
+    'Most active IPs is collapsed by default' =>
+        str_contains($access, '<details class="ui-section access-matrix-collapsible"><summary><div class="ui-section__header"><div><h2>Most active IPs</h2>')
+        && !str_contains($access, '<details open class="ui-section access-matrix-collapsible"><summary><div class="ui-section__header"><div><h2>Most active IPs</h2>'),
+    'Site blocklist is collapsed by default' =>
+        str_contains($access, '<details class="ui-section access-matrix-collapsible"><summary><div class="ui-section__header"><div><h2>Site blocklist</h2>')
+        && !str_contains($access, '<details open class="ui-section access-matrix-collapsible"><summary><div class="ui-section__header"><div><h2>Site blocklist</h2>'),
     'raw Access Matrix shows local date above local time' =>
         str_contains($access, "new DateTimeZone('Europe/Dublin')")
         && str_contains($access, '<span class="access-matrix-date">')
