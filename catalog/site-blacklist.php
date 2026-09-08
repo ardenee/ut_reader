@@ -6,7 +6,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
 
-use UnrealDb\Catalog\Infrastructure\Downloads\CatalogGeoIpCountryResolver;
+use UnrealDb\Catalog\Infrastructure\Downloads\CatalogGeoIpLocationResolver;
 use UnrealDb\Catalog\Infrastructure\Security\CatalogSiteBlocklist;
 
 function site_blacklist_time(mixed $value): string
@@ -104,11 +104,9 @@ try {
         ));
     }
 
-    $geoIpResolver = new CatalogGeoIpCountryResolver($db);
+    $geoIpResolver = new CatalogGeoIpLocationResolver($db);
     foreach ($blockedRows as $index => $row) {
-        $country = $geoIpResolver->resolve((string)($row['ip'] ?? ''));
-        $blockedRows[$index]['map_country_code'] = $country['country_code'];
-        $blockedRows[$index]['map_country_name'] = $country['country_name'];
+        $blockedRows[$index]['map_location'] = $geoIpResolver->resolve((string)($row['ip'] ?? ''));
     }
 
     $feedbackWhere = [];
@@ -134,9 +132,7 @@ try {
         : [];
 
     foreach ($feedbackRows as $index => $row) {
-        $country = $geoIpResolver->resolve((string)($row['ip'] ?? ''));
-        $feedbackRows[$index]['map_country_code'] = $country['country_code'];
-        $feedbackRows[$index]['map_country_name'] = $country['country_name'];
+        $feedbackRows[$index]['map_location'] = $geoIpResolver->resolve((string)($row['ip'] ?? ''));
     }
 
     catalog_head('Site Blacklist');
@@ -195,15 +191,13 @@ try {
     if ($blockedRows === []) {
         echo '<p class="muted">No matching site-blocked IP addresses.</p>';
     } else {
-        echo '<div class="table-wrap" data-world-map-source="site-blacklist" data-world-map-title="Blacklisted IP locations" data-world-map-storage-key="unrealdb.siteBlacklist.worldMapOpen" data-world-map-note="Country-level approximation from the local GeoIP country database." data-world-map-entry-singular="blocked IP" data-world-map-entry-plural="blocked IPs"><table class="site-blacklist-table"><thead><tr><th>IP</th><th>Reason</th><th>Blocked</th><th>Action</th></tr></thead><tbody>';
+        echo '<div class="table-wrap" data-world-map-source="site-blacklist" data-world-map-title="Blacklisted IP locations" data-world-map-storage-key="unrealdb.siteBlacklist.worldMapOpen" data-world-map-note="Approximate city/region locations from the local GeoIP database, with country fallback when detailed coordinates are unavailable." data-world-map-entry-singular="blocked IP" data-world-map-entry-plural="blocked IPs"><table class="site-blacklist-table"><thead><tr><th>IP</th><th>Reason</th><th>Blocked</th><th>Action</th></tr></thead><tbody>';
         foreach ($blockedRows as $row) {
             $ipText = trim((string)($row['ip'] ?? ''));
-            $countryCode = strtoupper(trim((string)($row['map_country_code'] ?? '')));
-            $countryName = trim((string)($row['map_country_name'] ?? ''));
-            $mapAttributes = $ipText !== '' && preg_match('/^[A-Z]{2}$/', $countryCode) === 1
-                ? ' data-world-map-ip="' . catalog_h($ipText) . '" data-world-map-country-code="' . catalog_h($countryCode)
-                    . '" data-world-map-country-name="' . catalog_h($countryName !== '' ? $countryName : $countryCode) . '"'
-                : '';
+            $mapLocation = is_array($row['map_location'] ?? null) ? $row['map_location'] : [];
+            $countryCode = strtoupper(trim((string)($mapLocation['country_code'] ?? '')));
+            $countryName = trim((string)($mapLocation['country_name'] ?? ''));
+            $mapAttributes = catalog_world_map_attributes($ipText, $mapLocation);
             $countryFlagHtml = preg_match('/^[A-Z]{2}$/', $countryCode) === 1
                 ? '<img class="site-blacklist-country-flag" src="country-flag.php?code=' . rawurlencode(strtolower($countryCode))
                     . '" alt="" title="' . catalog_h($countryCode) . '" loading="lazy" width="20" height="15"> '
@@ -228,8 +222,9 @@ try {
     } else {
         echo '<div class="table-wrap"><table class="site-blacklist-table"><thead><tr><th>Time</th><th>IP</th><th>Email</th><th>Request</th><th>Status</th><th>Action</th></tr></thead><tbody>';
         foreach ($feedbackRows as $row) {
-            $feedbackCountryCode = strtoupper(trim((string)($row['map_country_code'] ?? '')));
-            $feedbackCountryName = trim((string)($row['map_country_name'] ?? ''));
+            $feedbackLocation = is_array($row['map_location'] ?? null) ? $row['map_location'] : [];
+            $feedbackCountryCode = strtoupper(trim((string)($feedbackLocation['country_code'] ?? '')));
+            $feedbackCountryName = trim((string)($feedbackLocation['country_name'] ?? ''));
             $feedbackCountryFlagHtml = preg_match('/^[A-Z]{2}$/', $feedbackCountryCode) === 1
                 ? '<img class="site-blacklist-country-flag" src="country-flag.php?code=' . rawurlencode(strtolower($feedbackCountryCode))
                     . '" alt="" title="' . catalog_h($feedbackCountryCode) . '" loading="lazy" width="20" height="15"> '
