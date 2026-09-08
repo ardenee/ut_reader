@@ -63,8 +63,13 @@ function external_queue_mirror_job(PDO $db, int $fileId, ?int $providerId = null
     return (int)$db->lastInsertId();
 }
 
-function external_public_download_decision(PDO $db, int $fileId, ?int $userId = null, ?string $ip = null): array
-{
+function external_public_download_decision(
+    PDO $db,
+    int $fileId,
+    ?int $userId = null,
+    ?string $ip = null,
+    bool $allowLocalDirect = false
+): array {
     $file = external_file_for_download($db, $fileId);
     if ($file && base_game_file_is_protected($db, $file)) {
         return ['type' => 'disabled', 'message' => base_game_block_message($file)];
@@ -74,27 +79,34 @@ function external_public_download_decision(PDO $db, int $fileId, ?int $userId = 
     if ($mode === 'disabled') {
         return ['type' => 'disabled', 'message' => 'Public downloads are disabled.'];
     }
-    if ($mode === 'local_direct') {
-        return ['type' => 'local_direct'];
-    }
 
     $link = external_active_link_for_file($db, $fileId);
     if ($link) {
-        $db->prepare('UPDATE ue_external_download_links SET requested_count=requested_count+1, last_requested_at=NOW() WHERE id=?')->execute([(int)$link['id']]);
+        $db->prepare(
+            'UPDATE ue_external_download_links SET requested_count=requested_count+1,last_requested_at=NOW() WHERE id=?'
+        )->execute([(int)$link['id']]);
         return ['type' => 'external_link', 'link' => $link];
     }
 
-    if ($mode === 'external_mirror_preferred') {
-        external_queue_mirror_job($db, $fileId, null, $userId, $ip);
-        return ['type' => 'local_direct', 'queued_mirror' => true];
+    // Local verified storage is never exposed to anonymous/public users. This
+    // compatibility flag exists only for an authenticated administrator route.
+    if ($allowLocalDirect && in_array($mode, ['local_direct', 'external_mirror_preferred'], true)) {
+        return ['type' => 'local_direct'];
     }
 
     if ((string)fed_setting($db, 'external_mirror_auto_queue', '1') === '1') {
         $jobId = external_queue_mirror_job($db, $fileId, null, $userId, $ip);
-        return ['type' => 'pending', 'job_id' => $jobId, 'message' => 'External download link is being prepared.'];
+        return [
+            'type' => 'pending',
+            'job_id' => $jobId,
+            'message' => 'An external download link is being prepared.',
+        ];
     }
 
-    return ['type' => 'pending', 'message' => 'External download link is not ready yet.'];
+    return [
+        'type' => 'pending',
+        'message' => 'No external download link is currently available for this file.',
+    ];
 }
 
 function external_expire_old_links(PDO $db): int
