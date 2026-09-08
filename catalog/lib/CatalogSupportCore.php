@@ -93,6 +93,57 @@ function catalog_country_flag(string $countryCode): string
     );
 }
 
+function catalog_world_map_attributes(string $ip, array $location, int $count = 1): string
+{
+    $ip = trim($ip);
+    $code = strtoupper(trim((string)($location['country_code'] ?? '')));
+    if ($ip === '' || preg_match('/^[A-Z]{2}$/', $code) !== 1) {
+        return '';
+    }
+
+    $country = trim((string)($location['country_name'] ?? ''));
+    $attributes = [
+        'data-world-map-ip' => $ip,
+        'data-world-map-country-code' => $code,
+        'data-world-map-country-name' => $country !== '' ? $country : $code,
+        'data-world-map-count' => (string)max(1, $count),
+    ];
+
+    $latitude = $location['latitude'] ?? null;
+    $longitude = $location['longitude'] ?? null;
+    if (is_numeric($latitude) && is_numeric($longitude)) {
+        $lat = (float)$latitude;
+        $lon = (float)$longitude;
+        if (is_finite($lat) && is_finite($lon) && $lat >= -90.0 && $lat <= 90.0 && $lon >= -180.0 && $lon <= 180.0) {
+            $attributes['data-world-map-latitude'] = number_format($lat, 6, '.', '');
+            $attributes['data-world-map-longitude'] = number_format($lon, 6, '.', '');
+        }
+    }
+
+    foreach ([
+        'subdivision_name' => 'data-world-map-region',
+        'city_name' => 'data-world-map-city',
+        'postal_code' => 'data-world-map-postal',
+    ] as $key => $attribute) {
+        $value = trim((string)($location[$key] ?? ''));
+        if ($value !== '') {
+            $attributes[$attribute] = $value;
+        }
+    }
+
+    if (isset($location['accuracy_radius_km'])
+        && $location['accuracy_radius_km'] !== null
+        && is_numeric($location['accuracy_radius_km'])) {
+        $attributes['data-world-map-accuracy-km'] = (string)max(0, (int)$location['accuracy_radius_km']);
+    }
+
+    $html = '';
+    foreach ($attributes as $name => $value) {
+        $html .= ' ' . $name . '="' . catalog_h($value) . '"';
+    }
+    return $html;
+}
+
 function catalog_clean_unreal_package_stem(string $stem): string
 {
     $stem = trim(str_replace(["\0", '/', '\\'], ['', '.', '.'], $stem));
