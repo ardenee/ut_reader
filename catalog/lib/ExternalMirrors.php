@@ -17,8 +17,19 @@ require_once __DIR__ . '/BaseGameProtection.php';
 
 function external_public_download_mode(PDO $db): string
 {
-    $mode = (string)fed_setting($db, 'public_download_mode', 'external_mirror');
-    return in_array($mode, ['external_mirror','disabled'], true) ? $mode : 'external_mirror';
+    $mode = strtolower(trim((string)fed_setting($db, 'public_download_mode', 'protected_local')));
+
+    // Compatibility with the short-lived external-only migration: deployments
+    // that were forced to "external_mirror" resume protected local streaming
+    // without requiring a settings migration. Administrators can explicitly
+    // select external_mirror_only from Download Settings when desired.
+    if (in_array($mode, ['external_mirror', 'local_direct', 'external_mirror_preferred'], true)) {
+        return 'protected_local';
+    }
+
+    return in_array($mode, ['protected_local', 'external_mirror_only', 'disabled'], true)
+        ? $mode
+        : 'protected_local';
 }
 
 function external_active_link_for_file(PDO $db, int $fileId): ?array
@@ -80,6 +91,10 @@ function external_public_download_decision(
         return ['type' => 'disabled', 'message' => 'Public downloads are disabled.'];
     }
 
+    if ($mode === 'protected_local') {
+        return ['type' => 'local_stream'];
+    }
+
     $link = external_active_link_for_file($db, $fileId);
     if ($link) {
         $db->prepare(
@@ -88,11 +103,10 @@ function external_public_download_decision(
         return ['type' => 'external_link', 'link' => $link];
     }
 
-    // Local verified storage is never exposed to anonymous/public users. This
-    // compatibility flag exists only for an authenticated administrator route.
-    if ($allowLocalDirect && in_array($mode, ['local_direct', 'external_mirror_preferred'], true)) {
-        return ['type' => 'local_direct'];
-    }
+    // The compatibility flag remains in the signature for older callers. Local
+    // public delivery is represented by local_stream above and is always served
+    // through download.php; no physical storage path is returned to the browser.
+    unset($allowLocalDirect);
 
     if ((string)fed_setting($db, 'external_mirror_auto_queue', '1') === '1') {
         $jobId = external_queue_mirror_job($db, $fileId, null, $userId, $ip);
