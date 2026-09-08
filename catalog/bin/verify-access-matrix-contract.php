@@ -162,16 +162,19 @@ $record(
 );
 
 $record(
-    'activity_log_defaults_to_page_loads_without_hiding_analytics',
-    str_contains($admin, "(string)(\$_GET['event'] ?? 'page_view')")
-        && str_contains($admin, "'page_view' => 'Page loads'")
-        && str_contains($admin, "'all' => 'All telemetry'")
+    'activity_log_defaults_to_page_activity_without_hiding_requests',
+    str_contains($admin, "(string)(\$_GET['event'] ?? 'page_activity')")
+        && str_contains($admin, "'page_activity' => 'Page activity'")
+        && str_contains($admin, "'page_view' => 'Browser-confirmed page loads'")
+        && str_contains($admin, "'server_page' => 'Server-only page requests'")
+        && str_contains($admin, "a.event_type IN (\"page_view\",\"server_page\")")
+        && str_contains($admin, "COUNT(DISTINCT CASE WHEN a.event_type IN (\"page_view\",\"server_page\") THEN a.ip_address END) unique_ips")
         && str_contains($admin, "\$rawWhereSql")
         && str_contains($admin, "'SELECT COUNT(*) c FROM ue_access_events a' . \$rawWhereSql")
         && str_contains($admin, "<h2>Activity log</h2>")
-        && str_contains($admin, "catalog_stat_card('Page loads'")
+        && str_contains($admin, "catalog_stat_card('Page activity'")
         && str_contains($admin, "catalog_stat_card('Sessions'"),
-    'The normal Access Matrix view must show one page-load row per visit while section/interaction/server diagnostics remain available separately.'
+    'The default Access Matrix activity log and headline IP/session totals must cover both browser-confirmed loads and server-only page requests, while detailed telemetry remains separately selectable.'
 );
 
 $record(
