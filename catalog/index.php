@@ -249,22 +249,42 @@ try {
             $fileType = '';
         }
 
-        echo '<div class="card hero"><h1>Search</h1><form class="catalog-search-form">'
+        echo '<style>'
+            . '.catalog-search-filter{margin-bottom:16px}'
+            . '.catalog-search-filter .ui-filter-bar__fields{grid-template-columns:minmax(300px,1.8fr) minmax(180px,.8fr) minmax(180px,.8fr)}'
+            . '.catalog-search-scopes{grid-column:1/-1;margin:0;padding:12px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.02)}'
+            . '.catalog-search-scopes legend{padding:0 6px;font-size:13px;font-weight:700;color:var(--text)}'
+            . '.catalog-search-scope-list{display:flex;gap:8px 16px;align-items:center;flex-wrap:wrap}'
+            . '.catalog-search-scope{display:inline-flex;gap:7px;align-items:center;margin:0;white-space:nowrap;font-size:13px}'
+            . '.catalog-search-scope input[type=checkbox]{width:16px;height:16px;min-height:0;margin:0;padding:0;accent-color:var(--blue)}'
+            . '.catalog-search-help{margin:0;color:var(--muted);font-size:12px;line-height:1.45}'
+            . '@media(max-width:900px){.catalog-search-filter .ui-filter-bar__fields{grid-template-columns:1fr 1fr}.catalog-search-filter .catalog-search-query{grid-column:1/-1}}'
+            . '@media(max-width:640px){.catalog-search-filter .ui-filter-bar__fields{grid-template-columns:1fr}}'
+            . '</style>';
+        echo catalog_page_header(
+            'Search',
+            'Search verified Unreal packages, files, compact package tables and exact identities.'
+        );
+        echo '<section class="ui-section"><div class="ui-section__body">'
+            . '<form class="ui-filter-bar catalog-search-filter" method="get" data-ui-loading-form>'
             . '<input type="hidden" name="page" value="search">'
-            . '<label>Search <input name="q" value="' . catalog_h($query)
+            . '<div class="ui-filter-bar__fields">'
+            . '<label class="ui-field catalog-search-query"><span class="ui-field__label">Search</span>'
+            . '<input class="ui-input" name="q" value="' . catalog_h($query)
             . '" placeholder="GUID, MD5, SHA1, package, object, file name"></label>'
-            . '<label>Game <select name="game_id"' . (!$adminSearch ? ' required' : '') . '>';
+            . '<label class="ui-field"><span class="ui-field__label">Game</span><select class="ui-select" name="game_id"' . (!$adminSearch ? ' required' : '') . '>';
         echo $adminSearch ? '<option value="">All games</option>' : '<option value="">Choose game</option>';
         foreach ($games as $game) {
             echo '<option value="' . (int)$game['id'] . '"' . ((int)$game['id'] === $gameId ? ' selected' : '') . '>'
                 . catalog_h($game['name']) . '</option>';
         }
-        echo '</select></label><label>File type <select name="file_type">';
+        echo '</select></label><label class="ui-field"><span class="ui-field__label">File type</span><select class="ui-select" name="file_type">';
         foreach ($fileTypes as $value => [$label]) {
             echo '<option value="' . catalog_h($value) . '"' . ($fileType === $value ? ' selected' : '') . '>'
                 . catalog_h($label) . '</option>';
         }
-        echo '</select></label><fieldset class="catalog-search-scopes"><legend>Search in <span class="muted small">(leave all blank for global)</span></legend>';
+        echo '</select></label><fieldset class="catalog-search-scopes"><legend>Search in <span class="muted small">(leave blank for global)</span></legend>'
+            . '<div class="catalog-search-scope-list">';
         foreach ([
             'files' => 'File / package',
             'names' => 'Names',
@@ -274,14 +294,18 @@ try {
             'md5' => 'MD5',
             'sha1' => 'SHA1',
         ] as $value => $label) {
-            echo '<label><input type="checkbox" name="scope[]" value="' . $value . '"'
-                . (in_array($value, $selectedScopes, true) ? ' checked' : '') . '> ' . catalog_h($label) . '</label>';
+            echo '<label class="catalog-search-scope"><input type="checkbox" name="scope[]" value="' . $value . '"'
+                . (in_array($value, $selectedScopes, true) ? ' checked' : '') . '><span>' . catalog_h($label) . '</span></label>';
         }
-        echo '</fieldset><button>Search</button></form>'
-            . '<p class="muted small">Public searches must be limited to one game. Logged-in administrators may search all games. '
-            . 'Leave Search in blank for the normal global search, or select only the indexed areas needed. '
-            . 'Names, Imports and Exports use exact compact-term indexes; file/package names retain broad matching. '
-            . 'GUID, MD5 and SHA1 use exact identity indexes.</p></div>';
+        echo '</div></fieldset></div>'
+            . '<div class="ui-filter-bar__actions">'
+            . '<button class="ui-button ui-button--primary" type="submit">Search</button>'
+            . '<span data-ui-loading-indicator>' . CatalogUi::loadingState('Searching…', true) . '</span>'
+            . '</div></form>'
+            . '<p class="catalog-search-help">Public searches must be limited to one game. Logged-in administrators may search all games. '
+            . 'Names, Imports and Exports use compact indexes; file/package names retain broad matching. '
+            . 'GUID, MD5 and SHA1 use exact identity indexes.</p>'
+            . '</div></section>';
 
         // Authentication has already been resolved and the search page header is
         // rendered. Never hold PHP's per-session lock while MySQL performs a
