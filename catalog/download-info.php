@@ -51,6 +51,7 @@ function render_public_download_status(PDO $db, int $fileId): string
 }
 
 try {
+    catalog_start_session();
     $config = catalog_config();
     $db = catalog_db($config);
     $id = (int)($_GET['id'] ?? 0);
@@ -90,7 +91,7 @@ try {
     );
 
     echo '<div class="card"><h2>Individual file</h2><p><strong>' . catalog_h($file['package_name']) . '</strong><br>' . catalog_h(catalog_clean_unreal_filename((string)$file['original_name'])) . '</p>';
-    echo '<p class="muted">Public download mode: <span class="mono">' . catalog_h(external_public_download_mode($db)) . '</span>. Base-game protection and the configured download mode are enforced by the download controller.</p>';
+    echo '<p class="muted">Individual catalogue files use external download links for public users. Logged-in administrators may download the stored file directly. Base-game protection is always enforced.</p>';
     echo '<div class="ui-inline-actions">' . CatalogUi::iconButton([
         'label' => 'Download ' . catalog_clean_unreal_filename((string)$file['original_name']),
         'icon' => '⇩',
@@ -108,8 +109,6 @@ try {
         echo '<p class="muted">Generated package downloads are disabled by the administrator.</p>';
     } elseif (!$formats) {
         echo '<p class="muted">No generated package format is enabled for this game.</p>';
-    } elseif (external_public_download_mode($db) === 'external_mirror') {
-        echo '<p class="muted">Generated packages are unavailable while public downloads use external-mirror-only mode.</p>';
     } else {
         $preview = null;
         $previewError = null;
@@ -124,8 +123,10 @@ try {
             $previewError = $previewException->getMessage();
         }
 
-        echo '<form method="get" action="download-package.php">';
+        echo '<form id="generated-package-options-form" method="get" action="download-package.php" data-lookup-endpoint="generated-package-job.php">';
+        echo '<input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('package-generation')) . '">';
         echo '<input type="hidden" name="id" value="' . (int)$file['id'] . '">';
+        echo '<input type="hidden" name="file_id" value="' . (int)$file['id'] . '">';
         echo '<table><tr><th>Format</th><td><select name="format">';
         foreach ($formats as $format) {
             echo '<option value="' . catalog_h($format) . '"' . ($format === $defaultFormat ? ' selected' : '') . '>' . catalog_h($labels[$format] ?? $format) . '</option>';
@@ -138,15 +139,18 @@ try {
         if ($settings['allow_incomplete']) {
             echo '<tr><th>Incomplete package</th><td><label><input type="checkbox" name="allow_incomplete" value="1"> Continue when dependencies are missing or package-only</label></td></tr>';
         }
-        echo '</table><p><button class="primary">Queue package build</button></p></form>';
-        echo '<p class="muted small">The package is built and validated by the background worker. The progress page can be closed and reopened; completed artifacts are available to the initiating browser session for a limited time.</p>';
+        echo '</table><p><button id="package-generate-button" class="primary">Queue package build</button></p>'
+            . '<div id="package-existing-build-status" class="muted small"></div></form>';
+        echo '<p class="muted small">Equivalent queued/running builds are reused rather than queued twice. '
+            . 'A completed artifact is reused until it expires. Package generation uses its own dedicated worker queue.</p>';
 
         if ($preview !== null) {
             echo '<div class="grid">';
-            catalog_stat_card('Files', (int)$preview['file_count'], 'Selected file plus dependency closure');
+            catalog_stat_card('Files', (int)$preview['file_count'], 'Selected file plus available dependency closure');
             catalog_stat_card('Payload', catalog_bytes((int)$preview['total_bytes']));
             catalog_stat_card('Base-game excluded', count($preview['blocked']), 'Indexed dependencies that will not be redistributed');
-            catalog_stat_card('Unresolved/package-only', count($preview['missing']) + count($preview['package_only']), 'Generation stops unless incomplete export is explicitly allowed');
+            catalog_stat_card('Missing', count($preview['missing']), 'Only genuinely missing dependency objects block a complete build');
+            catalog_stat_card('Package-level matches', count($preview['package_only']), 'The matched provider package is included; these no longer block generation');
             echo '</div>';
             $inferred = array_filter($preview['files'], static fn(array $row): bool => !empty($row['install_path_inferred']));
             if ($inferred) {
@@ -206,6 +210,7 @@ try {
     }
     echo '</div>';
 
+    echo '<script src="assets/generated-package-options.js"></script>';
     catalog_foot();
 } catch (Throwable $e) {
     catalog_head('Error');
