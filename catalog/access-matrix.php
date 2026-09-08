@@ -152,7 +152,7 @@ try {
             }
             $siteBlocklist->block($eventIp, $userId, 'Blocked from Site Activity Logs event #' . $blockEventId . '.');
             $message = $eventIp . ' blocked from the entire site.';
-        } elseif ($action === 'block_selected_ips') {
+        } elseif (in_array($action, ['block_selected_ips', 'block_and_delete_selected'], true)) {
             if (!$siteBlocklist instanceof CatalogSiteBlocklist || !$eventsAvailable) {
                 throw new RuntimeException('Run the pending access-matrix migration first.');
             }
@@ -161,6 +161,9 @@ try {
             if ($ids === []) {
                 throw new RuntimeException('Select one or more access events first.');
             }
+            if (count($ids) > 1000) {
+                throw new RuntimeException('Select no more than 1,000 events at once.');
+            }
             $placeholders = implode(',', array_fill(0, count($ids), '?'));
             $statement = $db->prepare(
                 'SELECT DISTINCT INET6_NTOA(ip_address) ip FROM ue_access_events '
@@ -168,10 +171,30 @@ try {
             );
             $statement->execute($ids);
             $ips = array_values(array_filter(array_map('strval', $statement->fetchAll(PDO::FETCH_COLUMN) ?: [])));
-            foreach ($ips as $selectedIp) {
-                $siteBlocklist->block($selectedIp, $userId, 'Blocked from Access Matrix activity.');
+            if ($ips === []) {
+                throw new RuntimeException('The selected access events have no IP addresses to block.');
             }
-            $message = count($ips) . ' IP address(es) blocked from the site.';
+            foreach ($ips as $selectedIp) {
+                $siteBlocklist->block(
+                    $selectedIp,
+                    $userId,
+                    $action === 'block_and_delete_selected'
+                        ? 'Blocked from Access Matrix activity before selected events were deleted.'
+                        : 'Blocked from Access Matrix activity.'
+                );
+            }
+
+            if ($action === 'block_and_delete_selected') {
+                // Block first. If any blacklist operation fails, retain the
+                // selected telemetry rather than deleting evidence of an IP that
+                // was not successfully blocked.
+                $delete = $db->prepare('DELETE FROM ue_access_events WHERE id IN (' . $placeholders . ')');
+                $delete->execute($ids);
+                $message = count($ips) . ' IP address(es) blocked from the site and '
+                    . $delete->rowCount() . ' selected access event(s) deleted.';
+            } else {
+                $message = count($ips) . ' IP address(es) blocked from the site.';
+            }
         } elseif ($action === 'block_ip') {
             if (!$siteBlocklist instanceof CatalogSiteBlocklist) {
                 throw new RuntimeException('Run the pending access-matrix migration first.');
@@ -695,10 +718,10 @@ try {
     if (!$eventsAvailable || $rows === []) {
         echo '<p class="muted">No matching access events.</p>';
     } else {
-        echo '<form method="post" onsubmit="if(this.elements.action.value===\'delete_selected\'){return confirm(\'Permanently delete selected access events?\');}return true;">'
+        echo '<form method="post" onsubmit="var a=this.elements.action.value;if(a===\'delete_selected\'){return confirm(\'Permanently delete selected access events?\');}if(a===\'block_and_delete_selected\'){return confirm(\'Block the selected IPs from the entire site AND permanently delete the selected access events?\');}return true;">'
             . '<input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('access_matrix_admin')) . '">'
             . '<div class="access-matrix-actions"><label><input type="checkbox" onclick="document.querySelectorAll(\'.access-matrix-check\').forEach(c=>c.checked=this.checked)"> Select page</label>'
-            . '<select name="action" required><option value="">Choose action</option><option value="delete_selected">Delete selected</option><option value="block_selected_ips">Block selected IPs from site</option></select>'
+            . '<select name="action" required><option value="">Choose action</option><option value="delete_selected">Delete selected</option><option value="block_selected_ips">Block selected IPs from site</option><option value="block_and_delete_selected">Block selected IPs + delete selected events</option></select>'
             . '<button type="submit">Apply</button></div>'
             . '<div class="table-wrap" data-world-map-source="access-matrix-raw-events" data-world-map-title="Raw event locations" data-world-map-storage-key="unrealdb.accessMatrix.rawEvents.worldMapOpen" data-world-map-note="Approximate city/region locations from the local GeoIP database, with country fallback when detailed coordinates are unavailable." data-world-map-entry-singular="visible raw event" data-world-map-entry-plural="visible raw events"><table class="access-matrix-table"><thead><tr><th class="am-check"></th><th class="am-time">Time</th><th class="am-type">Type</th><th class="am-page">Page / section / action</th><th class="am-ip">IP / user</th><th class="am-route">Referrer / target</th><th class="am-agent">User agent</th></tr></thead><tbody>';
         foreach ($rows as $row) {
