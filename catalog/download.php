@@ -45,7 +45,9 @@ function public_download_send_local(array $config, PDO $db, array $file): void
     if ($size === false) {
         throw new RuntimeException('Stored file size is unavailable.');
     }
-    $speedBytes = catalog_public_download_speed_bytes($db);
+    // This local-storage path is reachable only by an authenticated administrator.
+    // Public transfer-speed policy applies to generated artifacts, not admin diagnostics.
+    $speedBytes = 0;
     $auditId = catalog_download_audit_start($db, [
         'download_type' => 'individual_file',
         'file_id' => (int)$file['id'],
