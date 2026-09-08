@@ -133,7 +133,9 @@ $record(
         && str_contains($admin, '>Blacklist IP</button>')
         && str_contains($admin, "access_matrix_logged_link((string)\$row['request_path'], (string)\$row['page_key'])")
         && str_contains($admin, "access_matrix_logged_link((string)(\$row['referrer_path'] ?? ''))")
-        && str_contains($admin, "access_matrix_logged_link((string)(\$row['target_path'] ?? ''))"),
+        && str_contains($admin, "access_matrix_logged_link((string)(\$row['target_path'] ?? ''))")
+        && str_contains($admin, "Section: ' . access_matrix_logged_link(")
+        && str_contains($admin, "Action: ' . access_matrix_logged_link("),
     'Raw events must use second-precision time, compact columns, clickable logged paths and a one-row full-site blacklist action.'
 );
 
