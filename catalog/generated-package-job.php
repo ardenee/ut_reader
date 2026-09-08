@@ -146,20 +146,65 @@ function generated_package_completed_artifact_valid(array $job, array $config): 
 /** @return array<string,mixed>|null */
 function generated_package_reusable(
     CatalogGeneratedPackageJobAccess $access,
-    string $queueName,
+    array $queueNames,
     string $buildKey,
     array $config
 ): ?array {
-    foreach ($access->reusableCandidates($queueName, $buildKey) as $job) {
-        $status = (string)($job['status'] ?? '');
-        if (in_array($status, ['queued', 'running'], true)) {
+    $candidates = [];
+    foreach (array_values(array_unique(array_filter(array_map('strval', $queueNames)))) as $queueName) {
+        foreach ($access->reusableCandidates($queueName, $buildKey) as $job) {
+            $candidates[(int)$job['id']] = $job;
+        }
+    }
+    if ($candidates === []) {
+        return null;
+    }
+    krsort($candidates, SORT_NUMERIC);
+
+    // Prefer an active build over an older completed artifact, then fall back to
+    // the newest still-valid completed package.
+    foreach ($candidates as $job) {
+        if (in_array((string)($job['status'] ?? ''), ['queued', 'running'], true)) {
             return $job;
         }
-        if ($status === 'completed' && generated_package_completed_artifact_valid($job, $config)) {
+    }
+    foreach ($candidates as $job) {
+        if ((string)($job['status'] ?? '') === 'completed'
+            && generated_package_completed_artifact_valid($job, $config)) {
             return $job;
         }
     }
     return null;
+}
+
+/** @param array<string,mixed> $job @return array<string,mixed> */
+function generated_package_rehome_queued_job(
+    PDO $db,
+    array $job,
+    string $dedicatedQueue
+): array {
+    if ((string)($job['status'] ?? '') !== 'queued'
+        || (string)($job['queue_name'] ?? '') === $dedicatedQueue) {
+        return $job;
+    }
+
+    try {
+        $statement = $db->prepare(
+            'UPDATE ue_background_jobs SET queue_name=?,priority=0,updated_at=UTC_TIMESTAMP() '
+            . 'WHERE id=? AND job_type=? AND status="queued"'
+        );
+        $statement->execute([$dedicatedQueue, (int)$job['id'], JobType::GENERATE_MOD_PACKAGE]);
+        if ($statement->rowCount() === 1) {
+            $job['queue_name'] = $dedicatedQueue;
+            $job['priority'] = 0;
+        }
+    } catch (Throwable $error) {
+        error_log(
+            '[UnrealDB package queue] Could not move legacy queued package job #'
+            . (int)$job['id'] . ' to ' . $dedicatedQueue . ': ' . $error->getMessage()
+        );
+    }
+    return $job;
 }
 
 /** @return array{worker:array<string,mixed>|null,worker_error:string} */
@@ -204,6 +249,7 @@ try {
     $queue = new PdoJobQueue($db);
     $access = new CatalogGeneratedPackageJobAccess($db);
     $queueName = CatalogGeneratedPackageQueue::name($config);
+    $legacyQueueName = trim((string)($config['queue']['name'] ?? 'catalog')) ?: 'catalog';
     $userId = isset($_SESSION['user']['id']) ? (int)$_SESSION['user']['id'] : null;
 
     if ($_SERVER['REQUEST_METHOD'] === 'GET') {
@@ -272,8 +318,14 @@ try {
 
     $request = generated_package_request($packageSettings, $settings, $game, $file, $_POST);
     $buildKey = (string)$request['build_key'];
-    $reusable = generated_package_reusable($access, $queueName, $buildKey, $config);
+    $reusable = generated_package_reusable(
+        $access,
+        [$queueName, $legacyQueueName],
+        $buildKey,
+        $config
+    );
     if ($reusable !== null) {
+        $reusable = generated_package_rehome_queued_job($db, $reusable, $queueName);
         generated_package_grant_job($reusable, $buildKey);
         $status = (string)$reusable['status'];
         $jobId = (int)$reusable['id'];
