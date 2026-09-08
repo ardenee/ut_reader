@@ -135,15 +135,16 @@ try {
             );
             $statement->execute([$blockLogId]);
             $logIp = trim((string)$statement->fetchColumn());
-            if ($logIp === '') {
-                throw new RuntimeException('The selected log record has no IP address to block.');
-            }
-            $siteBlocklist->block(
+            if ($logIp === '' || @inet_pton($logIp) === false) {
+                $message = 'The selected log record does not contain a valid IP address.';
+            } else {
+                $siteBlocklist->block(
                 $logIp,
                 (int)($_SESSION['user']['id'] ?? 0),
                 'Blocked from Download Logs record #' . $blockLogId . '.'
-            );
-            $message = $logIp . ' blocked from the entire site.';
+                );
+                $message = $logIp . ' blocked from the entire site.';
+            }
         } elseif ($action === 'delete_selected') {
             if (!$available || $ids === []) {
                 throw new RuntimeException('Select one or more log records to delete.');
@@ -205,12 +206,17 @@ try {
             if (!$blocklistAvailable || !$blocklist instanceof CatalogTransferBlocklist) {
                 throw new RuntimeException('Run the pending database migration before managing blocked IPs.');
             }
-            $blocklist->block(
-                (string)($_POST['ip_address'] ?? ''),
-                (int)($_SESSION['user']['id'] ?? 0),
-                (string)($_POST['note'] ?? '')
-            );
-            $message = 'IP address added to the transfer blocklist.';
+            $manualIp = trim((string)($_POST['ip_address'] ?? ''));
+            if (@inet_pton($manualIp) === false) {
+                $message = 'Enter a valid IPv4 or IPv6 address.';
+            } else {
+                $blocklist->block(
+                    $manualIp,
+                    (int)($_SESSION['user']['id'] ?? 0),
+                    (string)($_POST['note'] ?? '')
+                );
+                $message = 'IP address added to the transfer blocklist.';
+            }
         } elseif ($action === 'unblock_ip') {
             if (!$blocklistAvailable || !$blocklist instanceof CatalogTransferBlocklist) {
                 throw new RuntimeException('Run the pending database migration before managing blocked IPs.');
