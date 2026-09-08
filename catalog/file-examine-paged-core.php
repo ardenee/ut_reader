@@ -227,17 +227,20 @@ try {
     catalog_head('Examine ' . (string)$file['package_name']);
     echo '<style>.examine-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px;border-bottom:1px solid var(--line);padding-bottom:10px}.examine-tab{display:inline-flex;gap:6px;min-height:34px;padding:6px 10px;border:1px solid var(--line2);border-radius:9px;color:var(--text);background:rgba(255,255,255,.035);font-weight:650;text-decoration:none}.examine-tab.is-active{color:#07111f;background:linear-gradient(180deg,#9dc2ff,#76a9ff);border-color:#a9c9ff}.examine-table-region{overflow-x:auto;border:1px solid var(--line);border-radius:12px}.examine-imports-table{min-width:1420px}.examine-exports-table{min-width:1320px}.is-reference-target td{background:rgba(246,196,83,.18)!important;box-shadow:inset 4px 0 0 #f6c453}.path{white-space:normal}.table-tools{display:flex;align-items:end;gap:10px;flex-wrap:wrap;margin:10px 0}.to-top{position:fixed;right:20px;bottom:20px;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:rgba(16,24,39,.94);border:1px solid var(--line2);font-size:22px}</style>';
 
-    echo '<div class="card hero" id="top"><h1>Examine ' . catalog_h($file['package_name']) . '</h1><p class="muted">Bounded database-backed Names, Imports and Exports pages. Cross-references open the page containing the selected row.</p><p><a class="button" href="' . catalog_h($back) . '">Back to files</a> <a class="button" href="file-info.php?id=' . $fileId . '">Details</a> <a class="button" href="download-info.php?id=' . $fileId . '">Download options</a></p></div>';
+    echo '<div class="card hero" id="top"><h1>Examine ' . catalog_h($file['package_name']) . '</h1><p class="muted">Bounded database-backed Names, Imports and Exports pages. Cross-references open the page containing the selected row.</p><p><a class="button" href="' . catalog_h($back) . '">Back to files</a> <a class="button" href="file-info.php?id=' . $fileId . '">Package details</a> <a class="button" href="download-info.php?id=' . $fileId . '">Download options</a></p></div>';
 
     echo '<div class="card"><h2>Package header</h2><div class="two-col"><table>';
     foreach ([
         'Game' => $file['game_name'],
         'File' => $file['original_name'],
+        'Package' => '<a href="file-info.php?id=' . $fileId . '">' . catalog_h((string)$file['package_name']) . '</a>',
         'GUID' => $file['package_guid'] ?: '—',
         'Version' => $file['package_version'] ?? '—',
         'Licensee Version' => $file['licensee_version'] ?? '—',
     ] as $label => $value) {
-        echo '<tr><th>' . catalog_h($label) . '</th><td class="mono path">' . catalog_h((string)$value) . '</td></tr>';
+        echo '<tr><th>' . catalog_h($label) . '</th><td class="mono path">'
+            . ($label === 'Package' ? (string)$value : catalog_h((string)$value))
+            . '</td></tr>';
     }
     echo '</table><table>';
     foreach ([
@@ -271,7 +274,7 @@ try {
     foreach (['names' => 'Names','imports' => 'Imports','exports' => 'Exports'] as $key => $label) {
         echo '<a class="examine-tab' . ($table === $key ? ' is-active' : '') . '" href="' . catalog_h(examine_tab_href($fileId, $key, $pageSize)) . '">' . $label . ' <span>' . $counts[$key] . '</span></a>';
     }
-    echo '</nav>';
+    echo '</nav><section data-file-examine-native-panel>';
 
     echo '<div class="table-tools"><form method="get"><input type="hidden" name="id" value="' . $fileId . '"><input type="hidden" name="tab" value="' . catalog_h($table) . '"><label>Rows per page<br><select name="page_size" onchange="this.form.submit()">';
     foreach ([100,250,500,1000] as $option) {
@@ -310,7 +313,7 @@ try {
         echo '</tbody></table></div>';
     }
 
-    echo examine_pagination($fileId, $table, $page) . '</div><a class="to-top" href="#top">↑</a>';
+    echo examine_pagination($fileId, $table, $page) . '</section></div><a class="to-top" href="#top">↑</a>';
     if ($target !== '') {
         echo '<script>window.addEventListener("DOMContentLoaded",function(){var row=document.getElementById(' . json_encode($target, JSON_THROW_ON_ERROR) . ');if(row){row.scrollIntoView({block:"center"});}});</script>';
     }
