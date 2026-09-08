@@ -119,9 +119,18 @@ final class CatalogSiteBlocklist
             if ($ip === '') {
                 continue;
             }
+            $note = (string)($row['note'] ?? '');
+            try {
+                $packed = @inet_pton($ip);
+                if (is_string($packed)) {
+                    $this->writeMarker($packed, $ip, $note);
+                }
+            } catch (\Throwable $error) {
+                error_log('[UnrealDB site blocklist] Could not refresh cached marker for ' . $ip . ': ' . $error->getMessage());
+            }
             $rows[] = [
                 'ip' => $ip,
-                'note' => (string)($row['note'] ?? ''),
+                'note' => $note,
                 'created_by' => (int)($row['created_by'] ?? 0),
                 'created_at' => (string)($row['created_at'] ?? ''),
                 'updated_at' => (string)($row['updated_at'] ?? ''),
