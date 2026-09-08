@@ -468,8 +468,10 @@
     'use strict';
 
     var statCards = document.querySelector('.download-log-cards');
-    var table = document.querySelector('table.download-log-table');
-    if (!statCards || !table || !table.tHead || !table.tBodies.length) return;
+    var downloadTable = document.querySelector('table.download-log-table');
+    var source = document.querySelector('[data-world-map-source]');
+    var legacyDownloadMap = !source && statCards && downloadTable && downloadTable.tHead && downloadTable.tBodies.length;
+    if (!source && !legacyDownloadMap) return;
 
     function codeFromCountryCell(cell) {
         var image = cell.querySelector('img.download-country-flag-image');
@@ -495,35 +497,74 @@
             : code;
     }
 
-    var headers = Array.from(table.tHead.rows[0].cells).map(function (cell) {
-        return (cell.textContent || '').replace(/[▲▼]/g, '').trim().toLowerCase();
-    });
-    var ipIndex = headers.indexOf('ip');
-    var countryIndex = headers.indexOf('country');
-    if (ipIndex < 0 || countryIndex < 0) return;
-
     var pointsByKey = Object.create(null);
-    Array.from(table.tBodies[0].rows).forEach(function (row) {
-        var ipCell = row.cells[ipIndex];
-        var countryCell = row.cells[countryIndex];
-        if (!ipCell || !countryCell) return;
-        var ip = (ipCell.textContent || '').trim();
-        var code = codeFromCountryCell(countryCell);
+
+    function addPoint(ip, code, country, count) {
+        ip = (ip || '').trim();
+        code = (code || '').trim().toUpperCase();
+        country = (country || '').trim() || code;
+        count = Number.isFinite(count) && count > 0 ? count : 1;
         if (!ip || !/^[A-Z]{2}$/.test(code)) return;
-        var name = countryNameFromCell(countryCell, code);
         var key = code + '|' + ip;
         if (!pointsByKey[key]) {
-            pointsByKey[key] = { ip: ip, code: code, country: name, count: 0 };
+            pointsByKey[key] = { ip: ip, code: code, country: country, count: 0 };
         }
-        pointsByKey[key].count++;
-    });
+        pointsByKey[key].count += count;
+    }
+
+    if (source) {
+        source.querySelectorAll('[data-world-map-ip]').forEach(function (row) {
+            addPoint(
+                row.getAttribute('data-world-map-ip') || '',
+                row.getAttribute('data-world-map-country-code') || '',
+                row.getAttribute('data-world-map-country-name') || '',
+                parseInt(row.getAttribute('data-world-map-count') || '1', 10)
+            );
+        });
+    } else {
+        var headers = Array.from(downloadTable.tHead.rows[0].cells).map(function (cell) {
+            return (cell.textContent || '').replace(/[▲▼]/g, '').trim().toLowerCase();
+        });
+        var ipIndex = headers.indexOf('ip');
+        var countryIndex = headers.indexOf('country');
+        if (ipIndex < 0 || countryIndex < 0) return;
+
+        Array.from(downloadTable.tBodies[0].rows).forEach(function (row) {
+            var ipCell = row.cells[ipIndex];
+            var countryCell = row.cells[countryIndex];
+            if (!ipCell || !countryCell) return;
+            var code = codeFromCountryCell(countryCell);
+            addPoint(
+                (ipCell.textContent || '').trim(),
+                code,
+                countryNameFromCell(countryCell, code),
+                1
+            );
+        });
+    }
+
     var points = Object.keys(pointsByKey).map(function (key) { return pointsByKey[key]; });
+    var titleText = source
+        ? (source.getAttribute('data-world-map-title') || 'World activity map')
+        : 'World activity map';
+    var noteBase = source
+        ? (source.getAttribute('data-world-map-note') || 'Country-level approximation from the local GeoIP country database.')
+        : 'Country-level approximation from the stored GeoIP country snapshot.';
+    var entrySingular = source
+        ? (source.getAttribute('data-world-map-entry-singular') || 'visible log entry')
+        : 'visible log entry';
+    var entryPlural = source
+        ? (source.getAttribute('data-world-map-entry-plural') || 'visible log entries')
+        : 'visible log entries';
 
     var details = document.createElement('details');
     details.className = 'download-world-map';
     details.setAttribute('data-download-world-map', '');
+    details.setAttribute('data-world-activity-map', '');
 
-    var storageKey = 'unrealdb.downloadLogs.worldMapOpen';
+    var storageKey = source
+        ? (source.getAttribute('data-world-map-storage-key') || ('unrealdb.' + (source.getAttribute('data-world-map-source') || 'activity') + '.worldMapOpen'))
+        : 'unrealdb.downloadLogs.worldMapOpen';
     try {
         details.open = window.localStorage.getItem(storageKey) !== '0';
     } catch (error) {
@@ -531,7 +572,7 @@
     }
 
     var summary = document.createElement('summary');
-    summary.textContent = 'World activity map · ' + points.length + ' unique IP' + (points.length === 1 ? '' : 's') + ' on this page';
+    summary.textContent = titleText + ' · ' + points.length + ' unique IP' + (points.length === 1 ? '' : 's') + ' on this page';
     details.appendChild(summary);
 
     var content = document.createElement('div');
@@ -539,7 +580,7 @@
 
     var note = document.createElement('div');
     note.className = 'download-world-map-note';
-    note.textContent = 'Country-level approximation from the stored GeoIP country snapshot. Only the currently displayed log rows are plotted.';
+    note.textContent = noteBase + ' Only the currently displayed rows are plotted.';
     content.appendChild(note);
 
     var stage = document.createElement('div');
@@ -560,7 +601,9 @@
     content.appendChild(footer);
 
     details.appendChild(content);
-    statCards.parentNode.insertBefore(details, statCards);
+    var mountBefore = source || statCards;
+    if (!mountBefore || !mountBefore.parentNode) return;
+    mountBefore.parentNode.insertBefore(details, mountBefore);
 
     var style = document.createElement('style');
     style.textContent = [
@@ -583,12 +626,7 @@
 
     var loaded = false;
     var loading = false;
-    var root = (function () {
-        var path = window.location.pathname || '/';
-        var marker = '/catalog/';
-        var index = path.indexOf(marker);
-        return index >= 0 ? path.slice(0, index + marker.length) : '/catalog/';
-    })();
+    var root = catalogRootPath();
 
     function renderMap(svgText) {
         var parsed = new DOMParser().parseFromString(svgText, 'image/svg+xml');
@@ -602,7 +640,7 @@
         svg.setAttribute('viewBox', sourceSvg.getAttribute('viewBox') || '0 0 2000 1001');
         svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
         svg.setAttribute('role', 'img');
-        svg.setAttribute('aria-label', 'Approximate country locations of IP addresses in the currently displayed download logs');
+        svg.setAttribute('aria-label', 'Approximate country locations of IP addresses in the currently displayed activity rows');
 
         sourceSvg.querySelectorAll('path[id][d]').forEach(function (sourcePath) {
             var id = (sourcePath.getAttribute('id') || '').trim().toLowerCase();
@@ -650,17 +688,18 @@
                     circle.setAttribute('r', '8');
                     circle.setAttribute('tabindex', '0');
                     circle.setAttribute('role', 'img');
-                    var tooltip = point.ip + ' · ' + point.country + ' · ' + point.count + ' visible log entr' + (point.count === 1 ? 'y' : 'ies') + ' · country-level approximation';
+                    var entryLabel = point.count === 1 ? entrySingular : entryPlural;
+                    var tooltip = point.ip + ' · ' + point.country + ' · ' + point.count + ' ' + entryLabel + ' · country-level approximation';
                     circle.setAttribute('aria-label', tooltip);
-                    var title = document.createElementNS(namespace, 'title');
-                    title.textContent = tooltip;
-                    circle.appendChild(title);
+                    var dotTitle = document.createElementNS(namespace, 'title');
+                    dotTitle.textContent = tooltip;
+                    circle.appendChild(dotTitle);
                     svg.appendChild(circle);
                     mapped++;
                 });
             });
 
-            note.textContent = 'Country-level approximation from the stored GeoIP country snapshot. '
+            note.textContent = noteBase + ' '
                 + mapped + ' of ' + points.length + ' unique IP' + (points.length === 1 ? '' : 's')
                 + ' on the current page mapped.';
         });
