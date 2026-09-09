@@ -170,6 +170,15 @@ $check(
 );
 
 $check(
+    'redirect_worker_lazy_delegate_has_no_global_const_collision',
+    str_contains($compatibleInspector, 'const compatibleRedirectReaderUrl =')
+        && !preg_match('/^const\\s+redirectReaderUrl\\s*=/m', $compatibleInspector)
+        && str_contains($compatibleInspector, "importScripts('upload-file-inspector-worker.js' + (self.location.search || ''))")
+        && preg_match('/^const\\s+redirectReaderUrl\\s*=/m', $inspector) === 1,
+    'UZ/UZ2/UZ3 delegation must not fail when the compatibility wrapper imports the full inspector into the same classic WorkerGlobalScope.'
+);
+
+$check(
     'redirect_identity_is_decoded_before_preflight',
     str_contains($inspector, 'async function inspectUz(id, file, maxFileBytes)')
         && str_contains($inspector, 'async function inspectUz2(id, file)')
