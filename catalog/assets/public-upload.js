@@ -33,6 +33,7 @@
     const BATCH_FILES = 100;
     const MAX_LOG_LINES = 500;
     const MAX_DIAGNOSTIC_LINES = 10000;
+    const MAX_DIAGNOSTIC_PROBLEM_LINES = 5000;
     const MAX_FEEDBACK_LOG_BYTES = 500 * 1024;
     const MAX_ARCHIVE_ENTRIES = 50000;
     const SEVENZIP_ARCHIVE_EXTENSIONS = new Set(['zip', 'rar', '7z']);
@@ -65,7 +66,10 @@
     let processedFiles = 0;
     let pendingValidation = [];
     let diagnosticLines = [];
+    let diagnosticProblemLines = [];
     let diagnosticDropped = 0;
+    let diagnosticProblemDropped = 0;
+    let diagnosticSequence = 0;
     const counters = {
         checked: 0,
         accepted: 0,
@@ -113,10 +117,21 @@
         while (log.childNodes.length > MAX_LOG_LINES) {
             log.removeChild(log.firstChild);
         }
-        diagnosticLines.push({
+        const diagnosticEntry = {
+            seq: ++diagnosticSequence,
             at: new Date().toISOString(),
+            status: String(status || 'info').toLowerCase(),
             line: line
-        });
+        };
+        diagnosticLines.push(diagnosticEntry);
+        if (['rejected', 'failed', 'stopped'].includes(diagnosticEntry.status)) {
+            diagnosticProblemLines.push(diagnosticEntry);
+            if (diagnosticProblemLines.length > MAX_DIAGNOSTIC_PROBLEM_LINES) {
+                const removeProblems = Math.min(500, diagnosticProblemLines.length);
+                diagnosticProblemLines.splice(0, removeProblems);
+                diagnosticProblemDropped += removeProblems;
+            }
+        }
         if (diagnosticLines.length > MAX_DIAGNOSTIC_LINES) {
             const remove = Math.min(1000, diagnosticLines.length);
             diagnosticLines.splice(0, remove);
@@ -143,31 +158,71 @@
             'Chunk bytes: ' + chunkBytes,
             'Summary: ' + String(summary.textContent || ''),
             'Progress: ' + String(progressLabel.textContent || ''),
-            'Earlier diagnostic lines omitted: ' + diagnosticDropped,
-            '',
-            'Log:'
+            'Earlier routine diagnostic lines omitted: ' + diagnosticDropped,
+            'Earlier problem/rejection lines omitted: ' + diagnosticProblemDropped,
+            'Retained problem/rejection lines: ' + diagnosticProblemLines.length,
+            ''
         ];
-        let entries = diagnosticLines.map(function (entry) {
+
+        const formatEntry = function (entry) {
             return '[' + entry.at + '] ' + entry.line;
-        });
-        let text = header.concat(entries).join('\n') + '\n';
+        };
+        const problemEntries = diagnosticProblemLines.map(formatEntry);
+        const problemSeq = new Set(diagnosticProblemLines.map(function (entry) { return entry.seq; }));
+        let recentEntries = diagnosticLines
+            .filter(function (entry) { return !problemSeq.has(entry.seq); })
+            .map(formatEntry);
+
+        const build = function (problems, recent) {
+            const sections = header.slice();
+            sections.push('Problem/rejection log:');
+            if (problems.length) sections.push.apply(sections, problems);
+            else sections.push('(none retained)');
+            sections.push('', 'Recent non-problem activity:');
+            if (recent.length) sections.push.apply(sections, recent);
+            else sections.push('(none retained)');
+            return sections.join('\n') + '\n';
+        };
+
+        let problems = problemEntries.slice();
+        let text = build(problems, recentEntries);
         const limit = Math.max(0, Number(maxBytes || 0));
         if (limit > 0 && new Blob([text], {type: 'text/plain;charset=utf-8'}).size > limit) {
             let low = 0;
-            let high = Math.max(0, entries.length - 1);
-            let keepFrom = high;
+            let high = recentEntries.length;
+            let keepRecentFrom = recentEntries.length;
             while (low <= high) {
                 const middle = Math.floor((low + high) / 2);
-                const candidate = header.concat(['', 'Attachment truncated to recent log entries.']).concat(entries.slice(middle)).join('\n') + '\n';
+                const candidate = build(problems, recentEntries.slice(middle));
                 if (new Blob([candidate], {type: 'text/plain;charset=utf-8'}).size <= limit) {
-                    keepFrom = middle;
+                    keepRecentFrom = middle;
                     high = middle - 1;
                 } else {
                     low = middle + 1;
                 }
             }
-            text = header.concat(['', 'Attachment truncated to recent log entries.']).concat(entries.slice(keepFrom)).join('\n') + '\n';
+            recentEntries = recentEntries.slice(keepRecentFrom);
+            text = build(problems, recentEntries);
         }
+
+        if (limit > 0 && new Blob([text], {type: 'text/plain;charset=utf-8'}).size > limit) {
+            let low = 0;
+            let high = problems.length;
+            let keepProblemsFrom = problems.length;
+            while (low <= high) {
+                const middle = Math.floor((low + high) / 2);
+                const candidate = build(problems.slice(middle), recentEntries);
+                if (new Blob([candidate], {type: 'text/plain;charset=utf-8'}).size <= limit) {
+                    keepProblemsFrom = middle;
+                    high = middle - 1;
+                } else {
+                    low = middle + 1;
+                }
+            }
+            problems = problems.slice(keepProblemsFrom);
+            text = build(problems, recentEntries);
+        }
+
         return text;
     }
 
@@ -1271,7 +1326,10 @@
         processedFiles = 0;
         pendingValidation = [];
         diagnosticLines = [];
+        diagnosticProblemLines = [];
         diagnosticDropped = 0;
+        diagnosticProblemDropped = 0;
+        diagnosticSequence = 0;
         log.textContent = '';
         exportLogButton.disabled = true;
         submitLogButton.disabled = true;
