@@ -103,7 +103,7 @@ function duplicates_page_styles(): string
 {
     return <<<'CSS'
 <style>
-.duplicates-controls{display:flex;align-items:end;flex-wrap:wrap;gap:10px;margin:0 0 12px}.duplicates-controls label{display:grid;gap:5px}.duplicates-controls .wide-search{width:min(520px,90vw)}.duplicates-pagination{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:12px 0;flex-wrap:wrap}.duplicates-submit-bar{display:flex;justify-content:flex-end;align-items:center;gap:10px;margin:12px 0}.duplicates-group-card{overflow:hidden}.duplicates-table{min-width:1380px}.duplicates-table th,.duplicates-table td{vertical-align:top}.duplicates-select-col{width:62px;text-align:center;white-space:nowrap}.duplicates-id,.duplicates-size,.duplicates-download{width:1%;white-space:nowrap}.duplicates-download{text-align:center}.duplicates-file-link,.duplicates-package-link{font-weight:650}.duplicates-md5,.duplicates-database,.duplicates-uploaded{white-space:nowrap;overflow-wrap:normal}.duplicates-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:0 0 16px}.duplicates-help{border-left:4px solid var(--amber);padding-left:12px}.duplicates-download-link{display:inline-grid;place-items:center;width:34px;height:34px;border:1px solid var(--line2);border-radius:9px;color:var(--blue);background:rgba(118,169,255,.08);font-size:20px;font-weight:800;line-height:1}.duplicates-download-link:hover{background:rgba(118,169,255,.18);text-decoration:none}@media(max-width:760px){.duplicates-summary{grid-template-columns:1fr}}
+.duplicates-controls{display:flex;align-items:end;flex-wrap:wrap;gap:10px;margin:0 0 12px}.duplicates-controls label{display:grid;gap:5px}.duplicates-controls .wide-search{width:min(520px,90vw)}.duplicates-pagination{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:12px 0;flex-wrap:wrap}.duplicates-submit-bar{display:flex;justify-content:flex-end;align-items:center;gap:10px;margin:12px 0}.duplicates-group-card{overflow:hidden}.duplicates-table{min-width:1510px}.duplicates-table th,.duplicates-table td{vertical-align:top}.duplicates-select-col{width:62px;text-align:center;white-space:nowrap}.duplicates-id,.duplicates-size,.duplicates-download{width:1%;white-space:nowrap}.duplicates-download{text-align:center}.duplicates-file-link,.duplicates-package-link{font-weight:650}.duplicates-md5,.duplicates-database,.duplicates-uploaded{white-space:nowrap;overflow-wrap:normal}.duplicates-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:0 0 16px}.duplicates-help{border-left:4px solid var(--amber);padding-left:12px}.duplicates-download-link{display:inline-grid;place-items:center;width:34px;height:34px;border:1px solid var(--line2);border-radius:9px;color:var(--blue);background:rgba(118,169,255,.08);font-size:20px;font-weight:800;line-height:1}.duplicates-download-link:hover{background:rgba(118,169,255,.18);text-decoration:none}@media(max-width:760px){.duplicates-summary{grid-template-columns:1fr}}
 </style>
 CSS;
 }
@@ -228,7 +228,7 @@ try {
         echo '<div class="ui-table-region"><table class="duplicates-table"><thead><tr>';
         echo '<th class="duplicates-select-col" title="The file row to keep active">Keep</th>';
         echo '<th class="duplicates-select-col" title="Rows selected here are retired into the kept row">Retire</th>';
-        echo '<th>ID</th><th>Package</th><th>File</th><th>MD5</th><th>Size</th><th>File type</th><th>Chunks</th><th title="Names / Imports / Exports">Database</th><th>Sources</th><th>Uploaded</th><th>Download</th>';
+        echo '<th>ID</th><th>Package</th><th>File</th><th>Package ver</th><th>Licensee ver</th><th>MD5</th><th>Size</th><th>File type</th><th>Chunks</th><th title="Names / Imports / Exports">Database</th><th>Sources</th><th>Uploaded</th><th>Download</th>';
         echo '</tr></thead><tbody>';
 
         foreach ($files as $file) {
@@ -249,6 +249,8 @@ try {
             echo '<td class="mono duplicates-id">' . $id . '</td>';
             echo '<td class="mono"><a class="duplicates-package-link" href="file-info.php?id=' . $id . '">' . catalog_h($file['package_name']) . '</a></td>';
             echo '<td><a class="duplicates-file-link" href="file-examine.php?id=' . $id . '">' . catalog_h($originalName) . '</a></td>';
+            echo '<td class="mono small">' . catalog_h((string)($file['package_version'] ?? '—')) . '</td>';
+            echo '<td class="mono small">' . catalog_h((string)($file['licensee_version'] ?? '—')) . '</td>';
             echo '<td class="mono small duplicates-md5">' . catalog_h($file['md5']) . '</td>';
             echo '<td class="duplicates-size">' . catalog_h(catalog_bytes((int)$file['file_size'])) . '</td>';
             echo '<td><span class="dep file-type-pill ' . catalog_h($fileTypeClass) . '">' . catalog_h($fileType) . '</span></td>';
