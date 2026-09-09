@@ -182,7 +182,7 @@ $check(
     'redirect_identity_is_decoded_before_preflight',
     str_contains($inspector, 'async function inspectUz(id, file, maxFileBytes)')
         && str_contains($inspector, 'async function inspectUz2(id, file)')
-        && str_contains($inspector, 'async function inspectUz3(id, file)')
+        && str_contains($inspector, 'async function inspectUz3(id, file, maxFileBytes)')
         && str_contains($redirectReader, 'async function readUz2(options)')
         && str_contains($inspector, 'UnrealDbRedirectReader.readUz2(')
         && str_contains($archiveWorker, 'UnrealDbRedirectReader.readUz2(')
