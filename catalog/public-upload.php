@@ -46,6 +46,7 @@ try {
         . '.public-upload-log-rejected,.public-upload-log-failed{color:#fecdd3}'
         . '.public-upload-log-info{color:#cbd5e1}'
         . '.public-upload-log-skipped{color:#bfdbfe}'
+        . '.public-upload-log-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}'
         . '</style>';
 
     catalog_page_header(
@@ -124,6 +125,8 @@ try {
         . ' data-archive-enabled="' . ($archiveEnabled ? '1' : '0') . '"'
         . ' data-umod-enabled="' . ($umodEnabled ? '1' : '0') . '"'
         . ' data-csrf="' . catalog_h(catalog_csrf('public_upload')) . '"'
+        . ' data-feedback-url="feedback.php"'
+        . ' data-feedback-csrf="' . catalog_h(catalog_csrf('public_feedback')) . '"'
         . ' data-chunk-bytes="' . (int)$chunkBytes . '"'
         . ' data-max-file-bytes="' . (int)$settings['max_file_bytes'] . '">'
         . '<h2>Contribution progress</h2>'
@@ -131,6 +134,10 @@ try {
         . '<progress id="public-upload-progress-bar" value="0" max="100"></progress>'
         . '<p id="public-upload-summary" class="muted">0 checked · 0 accepted · 0 already held/pending · 0 rejected · 0 uploaded · 0 failed</p>'
         . '<div id="public-upload-log" class="public-upload-log" role="log" aria-label="Public upload results"></div>'
+        . '<div class="public-upload-log-actions">'
+        . '<button id="public-upload-export-log" type="button" class="secondary" disabled>Export troubleshooting log</button>'
+        . '<button id="public-upload-submit-log" type="button" class="secondary" disabled>Submit error log</button>'
+        . '</div>'
         . '</section>';
 
     echo '<section class="card"><h2>After upload</h2>'
