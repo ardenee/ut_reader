@@ -145,6 +145,14 @@ $record(
     'ZIP/7z/RAR/UMOD-family preflight must remain standalone; UMOD uses a bounded footer check and the full package inspector is lazy-loaded only for delegated file types'
 );
 
+$record(
+    'compatible_worker_avoids_delegate_global_redeclaration',
+    str_contains($compatibleInspector, 'const compatibleRedirectReaderUrl =')
+        && !preg_match('/^const\\s+redirectReaderUrl\\s*=/m', $compatibleInspector),
+    'The compatibility wrapper and delegated classic worker share one global lexical scope; wrapper bootstrap names must not redeclare the delegate\'s top-level const bindings.'
+);
+
+
 $bucketHandler = $read('catalog/src/Infrastructure/Jobs/CatalogBucketUploadJobHandler.php');
 $identityProcessor = $read('catalog/src/Infrastructure/Import/CatalogBucketIdentityProcessor.php');
 $unverifiedImportAction = $read('catalog/unverified-files-action.php');
