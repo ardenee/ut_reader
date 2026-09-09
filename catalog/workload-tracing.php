@@ -77,7 +77,7 @@ try {
     echo '</div>';
 
     echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Current configuration against the 64 GB Windows target</h2>'
-        . '<p>These targets leave RAM for Apache/PHP, Windows and filesystem caching while giving MySQL enough room for the expected catalogue size.</p></div></div><div class="ui-section__body">';
+        . '<p>These are advisory production targets for the 64 GB Windows host. They leave RAM for Apache/PHP, Windows and filesystem caching while giving MySQL enough room for the expected catalogue size.</p></div></div><div class="ui-section__body">';
     echo '<table><thead><tr><th>Setting</th><th>Current</th><th>Target</th><th>Assessment</th></tr></thead><tbody>';
     $checks = [
         ['innodb_buffer_pool_size', catalog_bytes((int)($variables['innodb_buffer_pool_size'] ?? 0)), catalog_bytes($targetBuffer), abs((int)($variables['innodb_buffer_pool_size'] ?? 0) - $targetBuffer) <= 2 * 1024 * 1024 * 1024],
@@ -93,11 +93,18 @@ try {
         echo '<tr><td class="mono">' . catalog_h($name) . '</td><td>' . catalog_h($current) . '</td><td>' . catalog_h($target) . '</td><td><span class="pill ' . ($good ? 'green' : 'amber') . '">' . ($good ? 'ready' : 'change') . '</span></td></tr>';
     }
     echo '<tr><td class="mono">Apache ThreadsPerChild</td><td>Read from httpd.conf</td><td>' . $targetApacheThreads . '</td><td><span class="pill amber">manual check</span></td></tr>';
-    $opcacheMemory = isset($opcacheDirectives['opcache.memory_consumption'])
-        ? catalog_bytes((int)$opcacheDirectives['opcache.memory_consumption'])
-        : 'unavailable';
-    echo '<tr><td class="mono">opcache.memory_consumption</td><td>' . catalog_h($opcacheMemory) . '</td><td>' . $targetOpcacheMemory . ' MiB</td><td><span class="pill amber">verify php.ini</span></td></tr>';
-    echo '<tr><td class="mono">opcache.max_accelerated_files</td><td>' . catalog_h((string)($opcacheDirectives['opcache.max_accelerated_files'] ?? 'unavailable')) . '</td><td>' . $targetOpcacheFiles . '</td><td><span class="pill amber">verify php.ini</span></td></tr>';
+    $opcacheEnabled = is_array($opcache) && !empty($opcache['opcache_enabled']);
+    $opcacheMemoryBytes = isset($opcacheDirectives['opcache.memory_consumption'])
+        ? max(0, (int)$opcacheDirectives['opcache.memory_consumption'])
+        : 0;
+    $opcacheFiles = isset($opcacheDirectives['opcache.max_accelerated_files'])
+        ? max(0, (int)$opcacheDirectives['opcache.max_accelerated_files'])
+        : 0;
+    $opcacheMemoryReady = $opcacheEnabled && $opcacheMemoryBytes >= ($targetOpcacheMemory * 1024 * 1024);
+    $opcacheFilesReady = $opcacheEnabled && $opcacheFiles >= $targetOpcacheFiles;
+    $opcacheMemory = $opcacheMemoryBytes > 0 ? catalog_bytes($opcacheMemoryBytes) : '0 B / disabled';
+    echo '<tr><td class="mono">opcache.memory_consumption</td><td>' . catalog_h($opcacheMemory) . '</td><td>' . $targetOpcacheMemory . ' MiB</td><td><span class="pill ' . ($opcacheMemoryReady ? 'green' : 'amber') . '">' . ($opcacheMemoryReady ? 'ready' : 'change') . '</span></td></tr>';
+    echo '<tr><td class="mono">opcache.max_accelerated_files</td><td>' . catalog_h($opcacheFiles > 0 ? (string)$opcacheFiles : 'unavailable') . '</td><td>≥ ' . $targetOpcacheFiles . '</td><td><span class="pill ' . ($opcacheFilesReady ? 'green' : 'amber') . '">' . ($opcacheFilesReady ? 'ready' : 'change') . '</span></td></tr>';
     echo '</tbody></table></div></section>';
 
     echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Application routes by sampled CPU</h2>'
