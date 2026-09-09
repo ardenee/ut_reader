@@ -11,6 +11,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
+require_once __DIR__ . '/lib/CatalogDependencySchema.php';
 require_once __DIR__ . '/lib/CatalogAssetMetadata.php';
 
 function asset_metadata_int_post(string $key, int $default = 0): int
