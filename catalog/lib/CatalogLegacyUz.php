@@ -195,15 +195,13 @@ function catalog_legacy_uz_decode_huffman(string $data, int $limit): string
         $output[$position] = chr(-$node - 1);
     }
 
-    $remaining = $reader->length - $reader->position;
-    if ($remaining >= 8) {
-        throw new RuntimeException('Unreal redirect Huffman stream contains trailing data.');
-    }
-    while ($reader->position < $reader->length) {
-        if ($reader->readBit() !== 0) {
-            throw new RuntimeException('Unreal redirect Huffman padding is invalid.');
-        }
-    }
+    /*
+     * Epic FCodecHuffman::Decode reads the declared Total symbols and then
+     * returns. It does not require the input bit reader to be exhausted and
+     * does not validate leftover byte/padding bits. Historic redirect mirrors
+     * contain otherwise valid 5678 wrappers with unused trailing data, so
+     * treating that remainder as corruption rejects files the engine accepts.
+     */
     return $output;
 }
 
