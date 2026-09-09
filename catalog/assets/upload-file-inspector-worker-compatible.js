@@ -1,8 +1,11 @@
 'use strict';
 
-const redirectReaderUrl = new URL('unreal-redirect-reader.js', self.location.href);
-redirectReaderUrl.search = self.location.search;
-importScripts(redirectReaderUrl.href);
+// This wrapper lazy-imports upload-file-inspector-worker.js into the same classic
+// worker global scope. Keep wrapper bootstrap identifiers distinct from the
+// delegated worker's top-level lexical declarations to avoid SyntaxError on importScripts().
+const compatibleRedirectReaderUrl = new URL('unreal-redirect-reader.js', self.location.href);
+compatibleRedirectReaderUrl.search = self.location.search;
+importScripts(compatibleRedirectReaderUrl.href);
 
 /*
  * Compatibility wrapper around the established file inspector.
