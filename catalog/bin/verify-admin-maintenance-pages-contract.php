@@ -36,6 +36,10 @@ $checks = [
     'workload tracing assesses opcache thresholds instead of always warning' =>
         str_contains($workload, '$opcacheMemoryReady')
         && str_contains($workload, '$opcacheFilesReady')
+        && str_contains($workload, "ini_get('opcache.memory_consumption')")
+        && str_contains($workload, "ini_get('opcache.max_accelerated_files')")
+        && str_contains($workload, '$opcacheRawUsed >= 0')
+        && str_contains($workload, '$opcacheMemoryBytes - $opcacheFree - $opcacheWasted')
         && str_contains($workload, "'ready' : 'change'")
         && str_contains($workload, 'These are advisory production targets'),
 ];
