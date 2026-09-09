@@ -36,8 +36,44 @@ try {
         exit;
     }
 
+    $diagnosticSessionKey = 'catalog_feedback_diagnostic_attachment';
+    $preparedDiagnostic = $_SESSION[$diagnosticSessionKey] ?? null;
+    if (is_array($preparedDiagnostic)
+        && (int)($preparedDiagnostic['created_at'] ?? 0) > 0
+        && time() - (int)$preparedDiagnostic['created_at'] > 1800) {
+        unset($_SESSION[$diagnosticSessionKey]);
+        $preparedDiagnostic = null;
+    }
+
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         catalog_check_csrf('public_feedback');
+
+        if (!empty($_POST['prepare_diagnostic_log'])) {
+            $diagnosticLog = str_replace("\0", '', (string)($_POST['diagnostic_log'] ?? ''));
+            $diagnosticBytes = strlen($diagnosticLog);
+            if ($diagnosticBytes < 1) {
+                throw new InvalidArgumentException('The public upload diagnostic log is empty.');
+            }
+            if ($diagnosticBytes > 512 * 1024) {
+                throw new InvalidArgumentException('The public upload diagnostic log cannot exceed 512 KiB.');
+            }
+
+            $_SESSION[$diagnosticSessionKey] = [
+                'filename' => 'unrealdb-public-upload-' . gmdate('Ymd-His') . '.log.txt',
+                'content' => $diagnosticLog,
+                'created_at' => time(),
+                'category' => 'bug',
+                'page_url' => substr(trim((string)($_POST['page_url'] ?? '')), 0, 1000),
+                'message' => 'Public upload error report. The browser troubleshooting log is attached.',
+            ];
+            header(
+                'Location: feedback.php?return_to=' . rawurlencode($returnTo) . '&diagnostic=1',
+                true,
+                303
+            );
+            exit;
+        }
+
         catalog_public_feedback_limit($db);
 
         // A hidden field catches simple form bots without confirming that their
@@ -74,6 +110,13 @@ try {
         }
 
         $reference = catalog_request_id();
+        $includeDiagnostic = !empty($_POST['include_diagnostic_log'])
+            && is_array($preparedDiagnostic)
+            && is_string($preparedDiagnostic['content'] ?? null)
+            && (string)$preparedDiagnostic['content'] !== '';
+        $diagnosticFilename = $includeDiagnostic
+            ? (string)($preparedDiagnostic['filename'] ?? 'unrealdb-public-upload.log.txt')
+            : '';
         $mailBody = implode("\n", [
             'UnrealDB public feedback',
             '',
@@ -83,6 +126,7 @@ try {
             'Related page: ' . ($pageUrl !== '' ? $pageUrl : 'Not supplied'),
             'Request reference: ' . $reference,
             'Submitted from IP: ' . catalog_public_access_client_ip(),
+            'Diagnostic attachment: ' . ($diagnosticFilename !== '' ? $diagnosticFilename : 'None'),
             '',
             'Message:',
             $message,
@@ -96,12 +140,28 @@ try {
                 'reply_to_email' => $email,
                 'reply_to_name' => $name,
                 'headers' => ['X-UnrealDB-Feedback-Reference' => $reference],
+                'attachments' => $includeDiagnostic ? [[
+                    'filename' => $diagnosticFilename,
+                    'content' => (string)$preparedDiagnostic['content'],
+                    'content_type' => 'text/plain',
+                ]] : [],
             ]
         );
+        unset($_SESSION[$diagnosticSessionKey]);
         $_SESSION['catalog_global_flash'] = 'Thank you. Your feedback has been sent to the UnrealDB team.';
         header('Location: ' . $returnTo, true, 303);
         exit;
     }
+
+    $preparedCategory = is_array($preparedDiagnostic)
+        ? strtolower(trim((string)($preparedDiagnostic['category'] ?? 'bug')))
+        : strtolower(trim((string)($_GET['category'] ?? 'general')));
+    $preparedPageUrl = is_array($preparedDiagnostic)
+        ? (string)($preparedDiagnostic['page_url'] ?? '')
+        : substr(trim((string)($_GET['page_url'] ?? '')), 0, 1000);
+    $preparedMessage = is_array($preparedDiagnostic)
+        ? (string)($preparedDiagnostic['message'] ?? '')
+        : '';
 
     catalog_head('Feedback');
     echo '<div class="card hero"><h1>Send feedback</h1><p class="muted">UnrealDB is under active development. Report a broken function, incorrect file information, missing dependency or suggestion for the public service.</p></div>';
@@ -117,11 +177,17 @@ try {
         'feature' => 'Feature suggestion',
         'general' => 'General feedback',
     ] as $value => $label) {
-        echo '<option value="' . catalog_h($value) . '">' . catalog_h($label) . '</option>';
+        echo '<option value="' . catalog_h($value) . '"' . ($preparedCategory === $value ? ' selected' : '') . '>' . catalog_h($label) . '</option>';
     }
     echo '</select></label></p>';
-    echo '<p><label>Related page URL (optional)<br><input type="url" name="page_url" maxlength="1000" placeholder="https://unrealdb.com/catalog/..." style="width:100%;max-width:720px"></label></p>';
-    echo '<p><label>Feedback<br><textarea name="message" required minlength="20" maxlength="10000" rows="10" style="width:100%;max-width:720px"></textarea></label></p>';
+    echo '<p><label>Related page URL (optional)<br><input type="url" name="page_url" maxlength="1000" value="' . catalog_h($preparedPageUrl) . '" placeholder="https://unrealdb.com/catalog/..." style="width:100%;max-width:720px"></label></p>';
+    if (is_array($preparedDiagnostic) && is_string($preparedDiagnostic['content'] ?? null)) {
+        echo '<div class="msg"><strong>Diagnostic log attached:</strong> <span class="mono">'
+            . catalog_h((string)($preparedDiagnostic['filename'] ?? 'unrealdb-public-upload.log.txt'))
+            . '</span> (' . catalog_h(catalog_bytes(strlen((string)$preparedDiagnostic['content']))) . '). '
+            . '<label><input type="checkbox" name="include_diagnostic_log" value="1" checked> Include this log with the feedback email</label></div>';
+    }
+    echo '<p><label>Feedback<br><textarea name="message" required minlength="20" maxlength="10000" rows="10" style="width:100%;max-width:720px">' . catalog_h($preparedMessage) . '</textarea></label></p>';
     echo '<p class="muted small">Submissions are limited to ' . (int)$settings['feedback_max_requests'] . ' per ' . catalog_h(catalog_public_access_window_label((int)$settings['feedback_window_seconds'])) . ' for each IP address. Do not include passwords, private keys or other secrets.</p>';
     echo '<p><button class="primary" type="submit">Send feedback</button> <a class="button" href="' . catalog_h($returnTo) . '">Cancel</a></p></form>';
     catalog_foot();
