@@ -13,8 +13,10 @@
     const progressLabel = document.getElementById('public-upload-progress-label');
     const summary = document.getElementById('public-upload-summary');
     const log = document.getElementById('public-upload-log');
+    const exportLogButton = document.getElementById('public-upload-export-log');
+    const submitLogButton = document.getElementById('public-upload-submit-log');
     if (!form || !fileInput || !startButton || !stopButton || !progressBox || !progressBar || !progressLabel || !summary || !log
-        || !window.fetch || !window.Worker || !window.XMLHttpRequest) return;
+        || !exportLogButton || !submitLogButton || !window.fetch || !window.Worker || !window.XMLHttpRequest) return;
 
     const preflightUrl = String(progressBox.dataset.preflightUrl || 'api/v1/public-upload-preflight.php');
     const uploadUrl = String(progressBox.dataset.uploadUrl || 'api/v1/public-upload.php');
@@ -24,10 +26,14 @@
     const archiveEnabled = String(progressBox.dataset.archiveEnabled || '') === '1';
     const umodEnabled = String(progressBox.dataset.umodEnabled || '') === '1';
     const csrf = String(progressBox.dataset.csrf || '');
+    const feedbackUrl = String(progressBox.dataset.feedbackUrl || 'feedback.php');
+    const feedbackCsrf = String(progressBox.dataset.feedbackCsrf || '');
     const chunkBytes = Math.max(1024 * 1024, Number(progressBox.dataset.chunkBytes || 16 * 1024 * 1024));
     const maxFileBytes = Math.max(1, Number(progressBox.dataset.maxFileBytes || 0));
     const BATCH_FILES = 100;
     const MAX_LOG_LINES = 500;
+    const MAX_DIAGNOSTIC_LINES = 10000;
+    const MAX_FEEDBACK_LOG_CHARS = 450000;
     const MAX_ARCHIVE_ENTRIES = 50000;
     const SEVENZIP_ARCHIVE_EXTENSIONS = new Set(['zip', 'rar', '7z']);
     const UMOD_ARCHIVE_EXTENSIONS = new Set(['umod', 'ut2mod', 'ut4mod']);
@@ -58,6 +64,8 @@
     const activeArchiveStops = new Set();
     let processedFiles = 0;
     let pendingValidation = [];
+    let diagnosticLines = [];
+    let diagnosticDropped = 0;
     const counters = {
         checked: 0,
         accepted: 0,
@@ -97,15 +105,100 @@
     }
 
     function addLog(status, name, message) {
+        const line = String(status || 'INFO').toUpperCase() + ' : ' + String(name || '') + (message ? ' : ' + String(message) : '');
         const row = document.createElement('div');
         row.className = 'public-upload-log-line public-upload-log-' + String(status || 'info').replace(/[^a-z0-9_-]/gi, '');
-        row.textContent = String(status || 'INFO').toUpperCase() + ' : ' + String(name || '') + (message ? ' : ' + String(message) : '');
+        row.textContent = line;
         log.appendChild(row);
         while (log.childNodes.length > MAX_LOG_LINES) {
             log.removeChild(log.firstChild);
         }
+        diagnosticLines.push({
+            at: new Date().toISOString(),
+            line: line
+        });
+        while (diagnosticLines.length > MAX_DIAGNOSTIC_LINES) {
+            diagnosticLines.shift();
+            diagnosticDropped++;
+        }
+        exportLogButton.disabled = false;
+        submitLogButton.disabled = false;
         log.scrollTop = log.scrollHeight;
     }
+
+    function diagnosticLogText(maxChars) {
+        const header = [
+            '# UnrealDB Public Upload Diagnostic Log',
+            '',
+            'Generated: ' + new Date().toISOString(),
+            'Page: ' + String(window.location.href || ''),
+            'Browser: ' + String(window.navigator && navigator.userAgent || 'unknown'),
+            'Inspector worker: ' + workerUrl,
+            'Archive worker: ' + archiveWorkerUrl,
+            'UMOD worker: ' + umodWorkerUrl,
+            'Archive decoder enabled: ' + (archiveEnabled ? 'yes' : 'no'),
+            'UMOD decoder enabled: ' + (umodEnabled ? 'yes' : 'no'),
+            'Maximum file bytes: ' + maxFileBytes,
+            'Chunk bytes: ' + chunkBytes,
+            'Summary: ' + String(summary.textContent || ''),
+            'Progress: ' + String(progressLabel.textContent || ''),
+            'Earlier diagnostic lines omitted: ' + diagnosticDropped,
+            '',
+            'Log:'
+        ];
+        let entries = diagnosticLines.map(function (entry) {
+            return '[' + entry.at + '] ' + entry.line;
+        });
+        let text = header.concat(entries).join('\n') + '\n';
+        const limit = Math.max(0, Number(maxChars || 0));
+        if (limit > 0 && text.length > limit) {
+            while (entries.length > 1 && header.concat(['', 'Attachment truncated to recent log entries.']).concat(entries).join('\n').length > limit) {
+                entries.shift();
+            }
+            text = header.concat(['', 'Attachment truncated to recent log entries.']).concat(entries).join('\n') + '\n';
+        }
+        return text;
+    }
+
+    function diagnosticFilename() {
+        return 'unrealdb-public-upload-' + new Date().toISOString().replace(/[:.]/g, '-').replace('T', '_') + '.log.txt';
+    }
+
+    function hiddenField(target, name, value) {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = name;
+        input.value = String(value || '');
+        target.appendChild(input);
+    }
+
+    exportLogButton.addEventListener('click', function () {
+        if (!diagnosticLines.length) return;
+        const blob = new Blob([diagnosticLogText(0)], {type: 'text/plain;charset=utf-8'});
+        const url = URL.createObjectURL(blob);
+        const anchor = document.createElement('a');
+        anchor.href = url;
+        anchor.download = diagnosticFilename();
+        document.body.appendChild(anchor);
+        anchor.click();
+        anchor.remove();
+        setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+    });
+
+    submitLogButton.addEventListener('click', function () {
+        if (!diagnosticLines.length || !feedbackCsrf) return;
+        const feedbackForm = document.createElement('form');
+        feedbackForm.method = 'post';
+        feedbackForm.action = feedbackUrl;
+        feedbackForm.style.display = 'none';
+        hiddenField(feedbackForm, 'csrf', feedbackCsrf);
+        hiddenField(feedbackForm, 'prepare_diagnostic_log', '1');
+        hiddenField(feedbackForm, 'diagnostic_log', diagnosticLogText(MAX_FEEDBACK_LOG_CHARS));
+        hiddenField(feedbackForm, 'return_to', 'public-upload.php');
+        hiddenField(feedbackForm, 'page_url', String(window.location.href || ''));
+        document.body.appendChild(feedbackForm);
+        feedbackForm.submit();
+    });
 
     function renderSummary() {
         summary.textContent = [
@@ -1166,7 +1259,11 @@
         Object.keys(counters).forEach(function (key) { counters[key] = 0; });
         processedFiles = 0;
         pendingValidation = [];
+        diagnosticLines = [];
+        diagnosticDropped = 0;
         log.textContent = '';
+        exportLogButton.disabled = true;
+        submitLogButton.disabled = true;
         renderSummary();
     }
 
