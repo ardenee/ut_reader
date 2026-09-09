@@ -26,6 +26,7 @@ $read = static function (string $relative) use ($root): string {
 };
 
 $phpFiles = [
+    'lib/CatalogLegacyUz.php',
     'lib/CatalogRedirectArchivePayload.php',
     'lib/CatalogRedirectCodec.php',
     'src/Infrastructure/Jobs/CatalogBackgroundJobResultHydrator.php',
@@ -120,6 +121,8 @@ $nonBlocking = $read('src/Infrastructure/Jobs/CatalogNonBlockingImportJobHandler
 $staged = $read('src/Infrastructure/Jobs/CatalogStagedImportJobHandler.php');
 $uploadInspector = $read('assets/upload-file-inspector-worker.js');
 $archiveWorker = $read('assets/public-upload-archive-worker.js');
+$legacyUzPhp = $read('lib/CatalogLegacyUz.php');
+$legacyUzBrowser = $read('assets/legacy-uz-decoder.js');
 $record(
     'profiled_redirect_requires_unreal_package_output',
     preg_match('/decompressToTemp\([\s\S]*?\n\s*true\s*\n\s*\);/m', $nonBlocking) === 1,
@@ -133,6 +136,17 @@ $record(
         && str_contains($staged, "CatalogImportOutcome::INVALID_UE_PACKAGE")
         && str_contains($staged, "'error' => \$shortError"),
     'The final 100% progress row must include the actual verification/decompression reason instead of only a generic discarded/unverified label.'
+);
+
+$record(
+    'fcodec_huffman_stops_at_declared_total_like_epic',
+    str_contains($legacyUzPhp, 'Epic FCodecHuffman::Decode reads the declared Total symbols')
+        && !str_contains($legacyUzPhp, 'Huffman stream contains trailing data')
+        && !str_contains($legacyUzPhp, 'Huffman padding is invalid')
+        && str_contains($legacyUzBrowser, 'Epic FCodecHuffman::Decode stops after the declared Total symbols')
+        && !str_contains($legacyUzBrowser, 'Huffman stream contains trailing data')
+        && !str_contains($legacyUzBrowser, 'Huffman padding is invalid'),
+    'Epic FCodec does not require the source bitstream to be exhausted after the declared Huffman output count; historic redirect trailers/padding must not become false corruption errors.'
 );
 
 $record(
@@ -198,6 +212,19 @@ try {
             && str_starts_with((string)($legacyUz3Decoded['decoder'] ?? ''), 'uz3-compat-epic-uz-5678-')
             && (int)($legacyUz3Decoded['wrapper_signature'] ?? 0) === 5678,
         'A .uz3 transport suffix may contain the engine FCodec 5678 wrapper seen in historic redirect mirrors; decode by content without changing canonical UT3 UZ3 encoding.'
+    );
+
+    $legacyUz3TrailerDecoded = catalog_redirect_archive_decompress_data(
+        $legacyUz3Archive . "\xA5\x5A\xFF",
+        'uz3',
+        1024 * 1024
+    );
+    $record(
+        'fcodec_5678_unused_trailer_matches_epic_decode_boundary',
+        is_array($legacyUz3TrailerDecoded)
+            && (string)($legacyUz3TrailerDecoded['data'] ?? '') === $uz3Package
+            && (string)($legacyUz3TrailerDecoded['embedded_filename'] ?? '') === 'Zo_Town_Tex.utx',
+        'FCodecHuffman::Decode is governed by its serialized Total symbol count; unused trailing compressed bytes are ignored by Epic and must not invalidate an otherwise decodable 5678 wrapper.'
     );
 
     $brokenLegacyUz3 = substr($legacyUz3Archive, 0, max(0, strlen($legacyUz3Archive) - 7));
