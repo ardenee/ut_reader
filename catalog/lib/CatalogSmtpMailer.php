@@ -24,7 +24,12 @@ function catalog_smtp_address(string $email, string $label): string
 }
 
 /**
- * @param array{reply_to_email?:string,reply_to_name?:string,headers?:array<string,string>} $options
+ * @param array{
+ *   reply_to_email?:string,
+ *   reply_to_name?:string,
+ *   headers?:array<string,string>,
+ *   attachments?:list<array{filename:string,content:string,content_type?:string}>
+ * } $options
  */
 function catalog_smtp_send(PDO $db, string $recipient, string $subject, string $body, array $options = []): void
 {
