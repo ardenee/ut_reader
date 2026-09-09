@@ -471,7 +471,7 @@ $check(
         && str_contains($client, "hiddenField(feedbackForm, 'diagnostic_log', diagnosticLogText(MAX_FEEDBACK_LOG_CHARS))")
         && str_contains($feedback, "prepare_diagnostic_log")
         && str_contains($feedback, "catalog_feedback_diagnostic_attachment")
-        && str_contains($feedback, "'attachments' => $includeDiagnostic ? [[")
+        && str_contains($feedback, "'attachments' => \$includeDiagnostic ? [[")
         && str_contains($feedback, "'content_type' => 'text/plain'")
         && str_contains($smtpMailer, 'attachments?:list<array{filename:string,content:string,content_type?:string}>')
         && str_contains($smtpTransport, 'multipart/mixed')
