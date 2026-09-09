@@ -68,7 +68,7 @@ final class CatalogLegacyPackageNormalizationService
         $sql = 'SELECT f.id,f.game_id,g.name game_name,f.package_name,f.original_name,f.package_guid,f.md5,f.file_size,f.scan_status,'
             . 'f.detected_engine_key,p.engine_key profile_engine FROM ue_files f '
             . 'JOIN ue_games g ON g.id=f.game_id LEFT JOIN ue_game_profiles p ON p.id=g.profile_id '
-            . 'WHERE f.scan_status<>"failed" '
+            . 'WHERE f.scan_status="verified" '
             . 'AND UPPER(COALESCE(f.detected_engine_key,"")) NOT IN ("UE4","UE5") '
             . 'AND UPPER(COALESCE(p.engine_key,"")) NOT IN ("UE4","UE5")';
         $args = [];
@@ -182,13 +182,18 @@ final class CatalogLegacyPackageNormalizationService
     {
         $file = \catalog_one(
             $this->db,
-            'SELECT f.id,f.game_id,f.package_name,f.original_name,f.detected_engine_key,p.engine_key profile_engine '
+            'SELECT f.id,f.game_id,f.package_name,f.original_name,f.scan_status,f.detected_engine_key,p.engine_key profile_engine '
             . 'FROM ue_files f JOIN ue_games g ON g.id=f.game_id '
             . 'LEFT JOIN ue_game_profiles p ON p.id=g.profile_id WHERE f.id=?',
             [$fileId]
         );
         if (!$file) {
             throw new RuntimeException('File ID ' . $fileId . ' no longer exists.');
+        }
+        if ((string)($file['scan_status'] ?? '') !== 'verified') {
+            throw new RuntimeException(
+                'File #' . $fileId . ' is not verified and cannot be package-normalized.'
+            );
         }
         $this->assertLegacyEngine($file);
 
