@@ -19,6 +19,7 @@ $normalizer = $read('src/Infrastructure/Maintenance/CatalogLegacyPackageNormaliz
 $duplicates = $read('duplicates.php');
 $duplicateQuery = $read('src/Infrastructure/Persistence/PdoDuplicateGroupListQuery.php');
 $workload = $read('workload-tracing.php');
+$workloadService = $read('src/Infrastructure/Diagnostics/CatalogWorkloadTracingService.php');
 
 $checks = [
     'asset metadata loads dependency schema facade' =>
@@ -42,6 +43,11 @@ $checks = [
         && str_contains($workload, '$opcacheMemoryBytes - $opcacheFree - $opcacheWasted')
         && str_contains($workload, "'ready' : 'change'")
         && str_contains($workload, 'These are advisory production targets'),
+    'workload tracing handles missing Performance Schema SELECT permission' =>
+        str_contains($workloadService, 'instanceof PDOException')
+        && str_contains($workloadService, "=== 1142")
+        && str_contains($workloadService, 'Grant SELECT on performance_schema.events_statements_summary_by_digest')
+        && !str_contains($workloadService, 'return [[], $error->getMessage()]'),
 ];
 
 $failed = [];
@@ -58,6 +64,7 @@ foreach ([
     'duplicates.php',
     'src/Infrastructure/Persistence/PdoDuplicateGroupListQuery.php',
     'workload-tracing.php',
+    'src/Infrastructure/Diagnostics/CatalogWorkloadTracingService.php',
     __FILE__,
 ] as $relative) {
     $file = $relative === __FILE__
