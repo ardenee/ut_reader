@@ -33,7 +33,12 @@ final class CatalogSmtpTransport
     }
 
     /**
-     * @param array{reply_to_email?:string,reply_to_name?:string,headers?:array<string,string>} $options
+     * @param array{
+     *   reply_to_email?:string,
+     *   reply_to_name?:string,
+     *   headers?:array<string,string>,
+     *   attachments?:list<array{filename:string,content:string,content_type?:string}>
+     * } $options
      */
     public function send(string $recipient, string $subject, string $body, array $options = []): void
     {
@@ -121,6 +126,8 @@ final class CatalogSmtpTransport
 
             $fromName = self::encodedHeader((string)$settings['from_name']);
             $messageId = '<' . bin2hex(random_bytes(16)) . '@' . $hostname . '>';
+            $attachments = self::validatedAttachments((array)($options['attachments'] ?? []));
+            $boundary = $attachments !== [] ? '=_UnrealDB_' . bin2hex(random_bytes(18)) : '';
             $headers = [
                 'Date: ' . date(DATE_RFC2822),
                 'Message-ID: ' . $messageId,
@@ -128,8 +135,10 @@ final class CatalogSmtpTransport
                 'To: <' . $recipient . '>',
                 'Subject: ' . self::encodedHeader($subject),
                 'MIME-Version: 1.0',
-                'Content-Type: text/plain; charset=UTF-8',
-                'Content-Transfer-Encoding: 8bit',
+                $attachments !== []
+                    ? 'Content-Type: multipart/mixed; boundary="' . $boundary . '"'
+                    : 'Content-Type: text/plain; charset=UTF-8',
+                ...($attachments === [] ? ['Content-Transfer-Encoding: 8bit'] : []),
                 'X-Mailer: UnrealDB',
             ];
             if ($replyToEmail !== '') {
@@ -145,8 +154,28 @@ final class CatalogSmtpTransport
                 }
             }
 
-            $body = str_replace(["\r\n", "\r"], "\n", $body);
-            $body = str_replace("\n", "\r\n", $body);
+            $body = self::normalizeCrlf($body);
+            if ($attachments !== []) {
+                $parts = [
+                    '--' . $boundary,
+                    'Content-Type: text/plain; charset=UTF-8',
+                    'Content-Transfer-Encoding: 8bit',
+                    '',
+                    $body,
+                ];
+                foreach ($attachments as $attachment) {
+                    $parts[] = '--' . $boundary;
+                    $parts[] = 'Content-Type: ' . $attachment['content_type']
+                        . '; name="' . $attachment['filename'] . '"';
+                    $parts[] = 'Content-Transfer-Encoding: base64';
+                    $parts[] = 'Content-Disposition: attachment; filename="' . $attachment['filename'] . '"';
+                    $parts[] = '';
+                    $parts[] = rtrim(chunk_split(base64_encode($attachment['content']), 76, "\r\n"), "\r\n");
+                }
+                $parts[] = '--' . $boundary . '--';
+                $parts[] = '';
+                $body = implode("\r\n", $parts);
+            }
             $body = preg_replace('/(^|\r\n)\./', '$1..', $body) ?? $body;
             $payload = implode("\r\n", $headers) . "\r\n\r\n" . $body . "\r\n.\r\n";
             $offset = 0;
@@ -167,6 +196,58 @@ final class CatalogSmtpTransport
         } finally {
             fclose($stream);
         }
+    }
+
+    /**
+     * @param array<int,mixed> $attachments
+     * @return list<array{filename:string,content:string,content_type:string}>
+     */
+    private static function validatedAttachments(array $attachments): array
+    {
+        if (count($attachments) > 5) {
+            throw new InvalidArgumentException('No more than five email attachments may be sent at once.');
+        }
+
+        $validated = [];
+        $totalBytes = 0;
+        foreach ($attachments as $attachment) {
+            if (!is_array($attachment)) {
+                throw new InvalidArgumentException('Email attachment metadata is invalid.');
+            }
+            $content = (string)($attachment['content'] ?? '');
+            $bytes = strlen($content);
+            if ($bytes < 1 || $bytes > 1024 * 1024) {
+                throw new InvalidArgumentException('Each email attachment must be between 1 byte and 1 MiB.');
+            }
+            $totalBytes += $bytes;
+            if ($totalBytes > 2 * 1024 * 1024) {
+                throw new InvalidArgumentException('Email attachments may not exceed 2 MiB in total.');
+            }
+
+            $filename = preg_replace('/[^A-Za-z0-9._-]+/', '-', basename((string)($attachment['filename'] ?? 'attachment.txt'))) ?? '';
+            $filename = trim(substr($filename, 0, 120), '.-');
+            if ($filename === '') {
+                $filename = 'attachment.txt';
+            }
+
+            $contentType = strtolower(trim((string)($attachment['content_type'] ?? 'text/plain')));
+            if (preg_match('/^[a-z0-9][a-z0-9.+-]*\/[a-z0-9][a-z0-9.+-]*$/', $contentType) !== 1) {
+                $contentType = 'application/octet-stream';
+            }
+
+            $validated[] = [
+                'filename' => $filename,
+                'content' => $content,
+                'content_type' => $contentType,
+            ];
+        }
+        return $validated;
+    }
+
+    private static function normalizeCrlf(string $value): string
+    {
+        $value = str_replace(["\r\n", "\r"], "\n", $value);
+        return str_replace("\n", "\r\n", $value);
     }
 
     private static function headerValue(string $value, int $maximum = 500): string
