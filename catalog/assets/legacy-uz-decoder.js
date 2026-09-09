@@ -132,11 +132,12 @@
             while (node>=0) node=reader.readBit()!==0 ? right[node] : left[node];
             output[position]=-node-1;
         }
-        const remaining=reader.length-reader.position;
-        if (remaining>=8) throw new Error('Unreal redirect Huffman stream contains trailing data.');
-        while (reader.position<reader.length) {
-            if (reader.readBit()!==0) throw new Error('Unreal redirect Huffman padding is invalid.');
-        }
+        /*
+         * Epic FCodecHuffman::Decode stops after the declared Total symbols.
+         * It intentionally does not require the bit reader to consume the
+         * remainder, so historic 5678 redirects with unused trailer/padding
+         * must not be rejected in the browser.
+         */
         return output;
     }
 
