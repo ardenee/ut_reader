@@ -94,13 +94,12 @@ try {
     }
     echo '<tr><td class="mono">Apache ThreadsPerChild</td><td>Read from httpd.conf</td><td>' . $targetApacheThreads . '</td><td><span class="pill amber">manual check</span></td></tr>';
     $opcacheEnabled = is_array($opcache) && !empty($opcache['opcache_enabled']);
-    $opcacheMemoryBytes = isset($opcacheDirectives['opcache.memory_consumption'])
-        ? max(0, (int)$opcacheDirectives['opcache.memory_consumption'])
-        : 0;
-    $opcacheFiles = isset($opcacheDirectives['opcache.max_accelerated_files'])
-        ? max(0, (int)$opcacheDirectives['opcache.max_accelerated_files'])
-        : 0;
-    $opcacheMemoryReady = $opcacheEnabled && $opcacheMemoryBytes >= ($targetOpcacheMemory * 1024 * 1024);
+    // PHP exposes opcache.memory_consumption through ini_get() in MiB. Some Windows
+    // PHP 8.5 builds report an unusable/zero value in opcache_get_configuration().
+    $opcacheMemoryMiB = max(0, (int)ini_get('opcache.memory_consumption'));
+    $opcacheMemoryBytes = $opcacheMemoryMiB * 1024 * 1024;
+    $opcacheFiles = max(0, (int)ini_get('opcache.max_accelerated_files'));
+    $opcacheMemoryReady = $opcacheEnabled && $opcacheMemoryMiB >= $targetOpcacheMemory;
     $opcacheFilesReady = $opcacheEnabled && $opcacheFiles >= $targetOpcacheFiles;
     $opcacheMemory = $opcacheMemoryBytes > 0 ? catalog_bytes($opcacheMemoryBytes) : '0 B / disabled';
     echo '<tr><td class="mono">opcache.memory_consumption</td><td>' . catalog_h($opcacheMemory) . '</td><td>' . $targetOpcacheMemory . ' MiB</td><td><span class="pill ' . ($opcacheMemoryReady ? 'green' : 'amber') . '">' . ($opcacheMemoryReady ? 'ready' : 'change') . '</span></td></tr>';
@@ -148,6 +147,12 @@ try {
     echo '</div></section>';
 
     echo '<section class="ui-section"><div class="ui-section__header"><div><h2>PHP and web runtime</h2></div></div><div class="ui-section__body"><table><tbody>';
+    $opcacheRawUsed = is_array($opcache) ? (int)($opcache['memory_usage']['used_memory'] ?? 0) : 0;
+    $opcacheFree = is_array($opcache) ? max(0, (int)($opcache['memory_usage']['free_memory'] ?? 0)) : 0;
+    $opcacheWasted = is_array($opcache) ? max(0, (int)($opcache['memory_usage']['wasted_memory'] ?? 0)) : 0;
+    $opcacheUsed = $opcacheRawUsed >= 0
+        ? $opcacheRawUsed
+        : max(0, $opcacheMemoryBytes - $opcacheFree - $opcacheWasted);
     foreach ([
         'PHP version' => PHP_VERSION,
         'PHP SAPI' => PHP_SAPI,
@@ -156,11 +161,12 @@ try {
         'Zend OPcache extension loaded' => extension_loaded('Zend OPcache') ? 'yes' : 'no',
         'opcache.enable' => (string)ini_get('opcache.enable'),
         'opcache.enable_cli' => (string)ini_get('opcache.enable_cli'),
-        'opcache.memory_consumption directive' => (string)ini_get('opcache.memory_consumption'),
+        'opcache.memory_consumption directive' => (string)ini_get('opcache.memory_consumption') . ' MiB',
         'opcache.max_accelerated_files directive' => (string)ini_get('opcache.max_accelerated_files'),
-        'OPcache enabled for this SAPI' => is_array($opcache) && !empty($opcache['opcache_enabled']) ? 'yes' : 'no',
-        'OPcache used memory' => is_array($opcache) ? catalog_bytes((int)($opcache['memory_usage']['used_memory'] ?? 0)) : 'unavailable',
-        'OPcache free memory' => is_array($opcache) ? catalog_bytes((int)($opcache['memory_usage']['free_memory'] ?? 0)) : 'unavailable',
+        'OPcache enabled for this SAPI' => $opcacheEnabled ? 'yes' : 'no',
+        'OPcache used memory' => is_array($opcache) ? catalog_bytes($opcacheUsed) : 'unavailable',
+        'OPcache free memory' => is_array($opcache) ? catalog_bytes($opcacheFree) : 'unavailable',
+        'OPcache wasted memory' => is_array($opcache) ? catalog_bytes($opcacheWasted) : 'unavailable',
         'Server software' => (string)($_SERVER['SERVER_SOFTWARE'] ?? 'unknown'),
         'Current process peak memory' => catalog_bytes(memory_get_peak_usage(true)),
     ] as $label => $value) {
