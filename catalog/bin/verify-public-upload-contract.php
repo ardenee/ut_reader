@@ -58,6 +58,9 @@ $unverifiedPage = $read('unverified-files.php');
 $unverifiedQuery = $read('src/Infrastructure/Unverified/PdoUnverifiedFilesPageQuery.php');
 $nav = $read('lib/CatalogSupportCore.php');
 $landing = $read('../index.php');
+$feedback = $read('feedback.php');
+$smtpMailer = $read('lib/CatalogSmtpMailer.php');
+$smtpTransport = $read('src/Infrastructure/Email/CatalogSmtpTransport.php');
 $install = $read('install.sql');
 
 $check(
@@ -458,6 +461,26 @@ $check(
 );
 
 $check(
+    'public_upload_diagnostic_log_can_be_exported_and_submitted',
+    str_contains($page, 'public-upload-export-log')
+        && str_contains($page, 'public-upload-submit-log')
+        && str_contains($page, "catalog_csrf('public_feedback')")
+        && str_contains($client, 'function diagnosticLogText(maxChars)')
+        && str_contains($client, "new Blob([diagnosticLogText(0)]")
+        && str_contains($client, "hiddenField(feedbackForm, 'prepare_diagnostic_log', '1')")
+        && str_contains($client, "hiddenField(feedbackForm, 'diagnostic_log', diagnosticLogText(MAX_FEEDBACK_LOG_CHARS))")
+        && str_contains($feedback, "prepare_diagnostic_log")
+        && str_contains($feedback, "catalog_feedback_diagnostic_attachment")
+        && str_contains($feedback, "'attachments' => $includeDiagnostic ? [[")
+        && str_contains($feedback, "'content_type' => 'text/plain'")
+        && str_contains($smtpMailer, 'attachments?:list<array{filename:string,content:string,content_type?:string}>')
+        && str_contains($smtpTransport, 'multipart/mixed')
+        && str_contains($smtpTransport, 'Content-Disposition: attachment; filename=')
+        && str_contains($smtpTransport, 'Each email attachment must be between 1 byte and 1 MiB.'),
+    'Public Upload must retain an exportable troubleshooting log and hand a bounded text attachment to the existing public Feedback SMTP path for user-reviewed submission.'
+);
+
+$check(
     'landing_and_navigation_match_public_contribution_request',
     str_contains($nav, "catalog_nav_link('Contribute!',")
         && str_contains($landing, 'catalog/public-upload.php')
@@ -505,6 +528,9 @@ foreach ([
     'api/v1/public-upload-preflight.php',
     'api/v1/public-upload.php',
     'public-upload.php',
+    'feedback.php',
+    'lib/CatalogSmtpMailer.php',
+    'src/Infrastructure/Email/CatalogSmtpTransport.php',
     'unverified-files.php',
     'src/Infrastructure/Unverified/PdoUnverifiedFilesPageQuery.php',
     'program-settings.php',
