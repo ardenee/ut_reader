@@ -153,15 +153,20 @@
         let text = header.concat(entries).join('\n') + '\n';
         const limit = Math.max(0, Number(maxBytes || 0));
         if (limit > 0 && new Blob([text], {type: 'text/plain;charset=utf-8'}).size > limit) {
-            let candidate = text;
-            while (entries.length > 1) {
-                entries.shift();
-                candidate = header.concat(['', 'Attachment truncated to recent log entries.']).concat(entries).join('\n') + '\n';
+            let low = 0;
+            let high = Math.max(0, entries.length - 1);
+            let keepFrom = high;
+            while (low <= high) {
+                const middle = Math.floor((low + high) / 2);
+                const candidate = header.concat(['', 'Attachment truncated to recent log entries.']).concat(entries.slice(middle)).join('\n') + '\n';
                 if (new Blob([candidate], {type: 'text/plain;charset=utf-8'}).size <= limit) {
-                    break;
+                    keepFrom = middle;
+                    high = middle - 1;
+                } else {
+                    low = middle + 1;
                 }
             }
-            text = candidate;
+            text = header.concat(['', 'Attachment truncated to recent log entries.']).concat(entries.slice(keepFrom)).join('\n') + '\n';
         }
         return text;
     }
