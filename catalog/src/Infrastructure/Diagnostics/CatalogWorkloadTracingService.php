@@ -11,6 +11,7 @@ namespace UnrealDb\Catalog\Infrastructure\Diagnostics;
 
 use FilesystemIterator;
 use PDO;
+use PDOException;
 use SplFileInfo;
 use Throwable;
 
@@ -191,7 +192,11 @@ final class CatalogWorkloadTracingService
             );
             return [$rows, ''];
         } catch (Throwable $error) {
-            return [[], $error->getMessage()];
+            if ($error instanceof PDOException && (int)($error->errorInfo[1] ?? 0) === 1142) {
+                return [[
+                ], 'The catalogue database user does not have read-only access to MySQL Performance Schema statement digests. Grant SELECT on performance_schema.events_statements_summary_by_digest to enable this optional diagnostic.'];
+            }
+            return [[], 'MySQL Performance Schema statement digests could not be read.'];
         }
     }
 
