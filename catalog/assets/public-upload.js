@@ -33,7 +33,7 @@
     const BATCH_FILES = 100;
     const MAX_LOG_LINES = 500;
     const MAX_DIAGNOSTIC_LINES = 10000;
-    const MAX_FEEDBACK_LOG_CHARS = 450000;
+    const MAX_FEEDBACK_LOG_BYTES = 500 * 1024;
     const MAX_ARCHIVE_ENTRIES = 50000;
     const SEVENZIP_ARCHIVE_EXTENSIONS = new Set(['zip', 'rar', '7z']);
     const UMOD_ARCHIVE_EXTENSIONS = new Set(['umod', 'ut2mod', 'ut4mod']);
@@ -117,16 +117,17 @@
             at: new Date().toISOString(),
             line: line
         });
-        while (diagnosticLines.length > MAX_DIAGNOSTIC_LINES) {
-            diagnosticLines.shift();
-            diagnosticDropped++;
+        if (diagnosticLines.length > MAX_DIAGNOSTIC_LINES) {
+            const remove = Math.min(1000, diagnosticLines.length);
+            diagnosticLines.splice(0, remove);
+            diagnosticDropped += remove;
         }
         exportLogButton.disabled = false;
         submitLogButton.disabled = false;
         log.scrollTop = log.scrollHeight;
     }
 
-    function diagnosticLogText(maxChars) {
+    function diagnosticLogText(maxBytes) {
         const header = [
             '# UnrealDB Public Upload Diagnostic Log',
             '',
@@ -150,12 +151,17 @@
             return '[' + entry.at + '] ' + entry.line;
         });
         let text = header.concat(entries).join('\n') + '\n';
-        const limit = Math.max(0, Number(maxChars || 0));
-        if (limit > 0 && text.length > limit) {
-            while (entries.length > 1 && header.concat(['', 'Attachment truncated to recent log entries.']).concat(entries).join('\n').length > limit) {
+        const limit = Math.max(0, Number(maxBytes || 0));
+        if (limit > 0 && new Blob([text], {type: 'text/plain;charset=utf-8'}).size > limit) {
+            let candidate = text;
+            while (entries.length > 1) {
                 entries.shift();
+                candidate = header.concat(['', 'Attachment truncated to recent log entries.']).concat(entries).join('\n') + '\n';
+                if (new Blob([candidate], {type: 'text/plain;charset=utf-8'}).size <= limit) {
+                    break;
+                }
             }
-            text = header.concat(['', 'Attachment truncated to recent log entries.']).concat(entries).join('\n') + '\n';
+            text = candidate;
         }
         return text;
     }
@@ -193,7 +199,7 @@
         feedbackForm.style.display = 'none';
         hiddenField(feedbackForm, 'csrf', feedbackCsrf);
         hiddenField(feedbackForm, 'prepare_diagnostic_log', '1');
-        hiddenField(feedbackForm, 'diagnostic_log', diagnosticLogText(MAX_FEEDBACK_LOG_CHARS));
+        hiddenField(feedbackForm, 'diagnostic_log', diagnosticLogText(MAX_FEEDBACK_LOG_BYTES));
         hiddenField(feedbackForm, 'return_to', 'public-upload.php');
         hiddenField(feedbackForm, 'page_url', String(window.location.href || ''));
         document.body.appendChild(feedbackForm);
