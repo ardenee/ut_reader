@@ -18,8 +18,8 @@ $endpoint = is_string($endpoint) ? $endpoint : '';
 $checks = [
     'country flag endpoint exists' => $endpoint !== '',
     'valid flags remain cached locally' =>
-        str_contains($endpoint, "storage/cache/country-flags")
-        && str_contains($endpoint, "@file_put_contents($temporary, $svg, LOCK_EX)"),
+        str_contains($endpoint, 'storage/cache/country-flags')
+        && str_contains($endpoint, '@file_put_contents($temporary, $svg, LOCK_EX)'),
     'flag delivery has independent upstream fallback' =>
         str_contains($endpoint, 'cdn.jsdelivr.net/gh/lipis/flag-icons@7.5.0')
         && str_contains($endpoint, 'unpkg.com/flag-icons@7.5.0'),
@@ -35,8 +35,8 @@ $checks = [
         && $fallbackPos < $cacheWritePos
         && str_contains(substr($endpoint, $fallbackPos, $cacheWritePos - $fallbackPos), 'country_flag_send('),
     'request method and country-code validation remain enforced' =>
-        str_contains($endpoint, "preg_match('/^[a-z]{2}$/', $code)")
-        && str_contains($endpoint, "in_array($method, ['GET', 'HEAD'], true)"),
+        str_contains($endpoint, "preg_match('/^[a-z]{2}$/', \$code)")
+        && str_contains($endpoint, "in_array(\$method, ['GET', 'HEAD'], true)"),
 ];
 
 $failures = [];
