@@ -3,7 +3,7 @@
  * UnrealDB PHP File Audit
  * Purpose: Renders and processes Game Backups.
  * Why: Backup UI concerns stay in this page while durable-job reads and worker lifecycle are delegated.
- * Role: Web UI entry point for game backup export/import management.
+ * Role: Web UI entry point for game backup export/import management and lightweight file identity recovery manifests.
  */
 declare(strict_types=1);
 
@@ -13,6 +13,7 @@ use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogQueueWorkerStarter;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoBackgroundJobLookupQuery;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
+use UnrealDb\Catalog\Infrastructure\Storage\FileIdentityBackupStore;
 use UnrealDb\Catalog\Infrastructure\Storage\GameBackupStore;
 
 catalog_start_session();
@@ -56,6 +57,7 @@ try {
     }
 
     $store = new GameBackupStore($config);
+    $identityStore = new FileIdentityBackupStore($config);
     $queueName = trim((string)($config['queue']['name'] ?? 'catalog')) ?: 'catalog';
     $queue = new PdoJobQueue($db);
     $jobLookup = new PdoBackgroundJobLookupQuery($db);
@@ -127,6 +129,14 @@ try {
             }
             $store->delete($backupKey);
             $_SESSION['game_backup_flash'] = 'Deleted game backup: ' . $backupKey;
+        } elseif ($action === 'identity_export') {
+            $backup = $identityStore->create($db);
+            $_SESSION['game_backup_flash'] = 'Created file identity recovery backup: ' . (string)$backup['filename']
+                . ' (' . number_format((int)$backup['entries']) . ' catalog file rows).';
+        } elseif ($action === 'identity_delete') {
+            $filename = trim((string)($_POST['filename'] ?? ''));
+            $identityStore->delete($filename);
+            $_SESSION['game_backup_flash'] = 'Deleted file identity recovery backup: ' . $filename;
         } else {
             throw new RuntimeException('Unsupported game-backup action.');
         }
@@ -143,13 +153,14 @@ try {
         . 'FROM ue_games g LEFT JOIN ue_game_profiles p ON p.id=g.profile_id ORDER BY g.name'
     );
     $backups = $store->listBackups();
+    $identityBackups = $identityStore->listBackups();
     $recentJobs = $jobLookup->recentByTypes($backupJobTypes, 20);
     $hasActiveBackupJobs = $jobLookup->hasActiveByTypes($backupJobTypes);
 
     catalog_head('Game Backups');
     catalog_page_header(
         'Game Backups',
-        'Create independent file-copy backups with original names, recorded paths and legacy game-folder placement, then restore them through a queued import.',
+        'Create independent file-copy backups with original names, recorded paths and legacy game-folder placement, or create a small filename/location recovery manifest for the hash-named catalog storage.',
         ['Background Jobs' => 'background-jobs.php', 'Game Admin' => 'game-manager.php', 'Local Source Scan' => 'source-scan.php']
     );
 
@@ -160,6 +171,31 @@ try {
     if ($hasActiveBackupJobs) {
         echo '<div class="alert info" id="game-backup-auto-refresh">A backup export or import is active. This page refreshes automatically every 5 seconds.</div>';
     }
+
+    echo '<div class="card"><h2>File identity recovery backup</h2>';
+    echo '<p class="muted">This is not a database dump and it does not copy package files. It records the original filename and the exact hash-named storage location for every catalog file row, plus game, size, MD5 and SHA-1 so surviving files can be identified and safely fed back through the normal importer after a database loss.</p>';
+    echo '<p class="muted">Each CSV includes both the current catalog relative path and a storage-root-relative path. The absolute physical path is included for convenience, while the storage-relative path remains usable if the drive or junction location changes.</p>';
+    echo '<form method="post"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('game_backups')) . '"><input type="hidden" name="action" value="identity_export"><button class="primary" type="submit">Create filename/location backup</button></form>';
+    echo '<p class="small muted">Recovery-manifest root: <span class="mono">' . catalog_h($identityStore->root()) . '</span></p>';
+
+    if ($identityBackups !== []) {
+        echo '<table><tr><th>Backup</th><th>Rows</th><th>Size</th><th>Created</th><th>SHA-256</th><th>Actions</th></tr>';
+        foreach ($identityBackups as $backup) {
+            $filename = (string)$backup['filename'];
+            echo '<tr><td><span class="mono small">' . catalog_h($filename) . '</span></td>';
+            echo '<td>' . ((int)$backup['entries'] > 0 ? number_format((int)$backup['entries']) : '—') . '</td>';
+            echo '<td class="nowrap">' . catalog_h(catalog_bytes((int)$backup['bytes'])) . '</td>';
+            echo '<td class="nowrap">' . catalog_h((string)$backup['created_at']) . '</td>';
+            echo '<td><span class="mono small">' . catalog_h((string)$backup['sha256']) . '</span></td><td class="nowrap">';
+            echo '<a class="button" href="file-identity-backup-download.php?file=' . rawurlencode($filename) . '">Download CSV</a> ';
+            echo '<form method="post" style="display:inline" onsubmit="return confirm(\'Delete this filename/location recovery manifest?\')"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('game_backups')) . '"><input type="hidden" name="action" value="identity_delete"><input type="hidden" name="filename" value="' . catalog_h($filename) . '"><button class="danger" type="submit">Delete</button></form>';
+            echo '</td></tr>';
+        }
+        echo '</table>';
+    } else {
+        echo '<p class="small muted">No file identity recovery backups have been created yet.</p>';
+    }
+    echo '</div>';
 
     echo '<div class="card"><h2>Create game backup</h2>';
     echo '<p class="muted">Exports use normal file copies only. Recorded source folders are preserved; flat UE1/UE2 packages are placed into their standard Maps, System, Textures, Sounds, Music, StaticMeshes, Animations or Prefabs folders. Same-name variations remain beside each other as Name.ext, Name (2).ext, Name (3).ext and so on. No _Conflicts directory is created.</p>';
