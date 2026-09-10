@@ -3,8 +3,9 @@
  * Serve country flags as same-origin cached SVG images.
  *
  * The browser never contacts the upstream flag host directly. A valid flag is
- * fetched once from the pinned flag-icons release, cached under catalog/storage,
- * and served locally on subsequent requests.
+ * fetched once from a pinned flag-icons release, cached under catalog/storage,
+ * and served locally on subsequent requests. Transient upstream failures return
+ * a short-lived same-origin placeholder instead of a broken image response.
  */
 declare(strict_types=1);
 
@@ -24,14 +25,22 @@ if (!in_array($method, ['GET', 'HEAD'], true)) {
 $cacheDir = __DIR__ . '/storage/cache/country-flags';
 $cacheFile = $cacheDir . DIRECTORY_SEPARATOR . $code . '.svg';
 
-function country_flag_send(string $svg, string $etag, string $method): never
-{
+function country_flag_send(
+    string $svg,
+    string $etag,
+    string $method,
+    string $cacheControl = 'public, max-age=604800, stale-while-revalidate=86400',
+    bool $fallback = false
+): never {
     header('Content-Type: image/svg+xml; charset=utf-8');
-    header('Cache-Control: public, max-age=604800, stale-while-revalidate=86400');
+    header('Cache-Control: ' . $cacheControl);
     header('ETag: "' . $etag . '"');
     header('X-Content-Type-Options: nosniff');
     header('Cross-Origin-Resource-Policy: same-origin');
     header("Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'; sandbox");
+    if ($fallback) {
+        header('X-UnrealDB-Flag-Fallback: 1');
+    }
 
     $ifNoneMatch = trim((string)($_SERVER['HTTP_IF_NONE_MATCH'] ?? ''));
     if ($ifNoneMatch !== '' && hash_equals('"' . $etag . '"', $ifNoneMatch)) {
@@ -60,23 +69,27 @@ function country_flag_fetch(string $url): ?string
 {
     if (function_exists('curl_init')) {
         $curl = curl_init($url);
-        if ($curl !== false) {
-            curl_setopt_array($curl, [
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_FOLLOWLOCATION => true,
-                CURLOPT_MAXREDIRS => 2,
-                CURLOPT_CONNECTTIMEOUT => 2,
-                CURLOPT_TIMEOUT => 4,
-                CURLOPT_USERAGENT => 'UnrealDB country flag cache/1.0',
-                CURLOPT_HTTPHEADER => ['Accept: image/svg+xml,image/*;q=0.8'],
-            ]);
-            $body = curl_exec($curl);
-            $status = (int)curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
-            curl_close($curl);
-            if ($status === 200 && is_string($body) && country_flag_valid_svg($body)) {
-                return $body;
-            }
+        if ($curl === false) {
+            return null;
         }
+
+        curl_setopt_array($curl, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_MAXREDIRS => 2,
+            CURLOPT_CONNECTTIMEOUT => 2,
+            CURLOPT_TIMEOUT => 4,
+            CURLOPT_USERAGENT => 'UnrealDB country flag cache/1.1',
+            CURLOPT_HTTPHEADER => ['Accept: image/svg+xml,image/*;q=0.8'],
+        ]);
+        $body = curl_exec($curl);
+        $status = (int)curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
+        curl_close($curl);
+
+        if ($status === 200 && is_string($body) && country_flag_valid_svg($body)) {
+            return $body;
+        }
+        return null;
     }
 
     if ((bool)ini_get('allow_url_fopen')) {
@@ -86,7 +99,7 @@ function country_flag_fetch(string $url): ?string
                 'timeout' => 4,
                 'follow_location' => 1,
                 'max_redirects' => 2,
-                'header' => "User-Agent: UnrealDB country flag cache/1.0\r\nAccept: image/svg+xml,image/*;q=0.8\r\n",
+                'header' => "User-Agent: UnrealDB country flag cache/1.1\r\nAccept: image/svg+xml,image/*;q=0.8\r\n",
                 'ignore_errors' => true,
             ],
         ]);
@@ -99,6 +112,16 @@ function country_flag_fetch(string $url): ?string
     return null;
 }
 
+function country_flag_fallback_svg(string $code): string
+{
+    $label = strtoupper($code);
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4 3" role="img" aria-label="'
+        . $label
+        . '"><rect width="4" height="3" rx=".15" fill="#e5e7eb"/><text x="2" y="1.9" text-anchor="middle" font-family="Arial,sans-serif" font-size="1" fill="#374151">'
+        . $label
+        . '</text></svg>';
+}
+
 if (is_file($cacheFile)) {
     $cached = @file_get_contents($cacheFile);
     if (is_string($cached) && country_flag_valid_svg($cached)) {
@@ -107,12 +130,33 @@ if (is_file($cacheFile)) {
     @unlink($cacheFile);
 }
 
-$upstream = 'https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.5.0/flags/4x3/' . rawurlencode($code) . '.svg';
-$svg = country_flag_fetch($upstream);
+$encodedCode = rawurlencode($code);
+$upstreams = [
+    'https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.5.0/flags/4x3/' . $encodedCode . '.svg',
+    'https://unpkg.com/flag-icons@7.5.0/flags/4x3/' . $encodedCode . '.svg',
+];
+
+$svg = null;
+foreach ($upstreams as $upstream) {
+    $candidate = country_flag_fetch($upstream);
+    if (is_string($candidate)) {
+        $svg = $candidate;
+        break;
+    }
+}
+
 if (!is_string($svg)) {
-    header('Cache-Control: public, max-age=300');
-    http_response_code(404);
-    exit;
+    // Do not cache this placeholder on disk. The short browser cache allows the
+    // next request to retry the real flag after a transient CDN/network failure.
+    $fallback = country_flag_fallback_svg($code);
+    http_response_code(200);
+    country_flag_send(
+        $fallback,
+        hash('sha256', $fallback),
+        $method,
+        'public, max-age=300',
+        true
+    );
 }
 
 if (!is_dir($cacheDir)) {
