@@ -54,6 +54,7 @@ final class FileIdentityBackupStore
         $filename = $base . '.csv';
         $path = $this->root . DIRECTORY_SEPARATOR . $filename;
         $temporary = $path . '.tmp-' . bin2hex(random_bytes(5));
+        $maxFileId = (int)$db->query('SELECT COALESCE(MAX(id),0) FROM ue_files')->fetchColumn();
 
         $handle = @fopen($temporary, 'xb');
         if (!is_resource($handle)) {
@@ -90,9 +91,9 @@ final class FileIdentityBackupStore
                     'SELECT f.id,f.game_id,g.slug AS game_slug,g.name AS game_name,'
                     . 'f.original_name,f.stored_name,f.relative_path,f.file_size,f.md5,f.sha1,f.scan_status '
                     . 'FROM ue_files f INNER JOIN ue_games g ON g.id=f.game_id '
-                    . 'WHERE f.id>? ORDER BY f.id ASC LIMIT ' . self::PAGE_SIZE
+                    . 'WHERE f.id>? AND f.id<=? ORDER BY f.id ASC LIMIT ' . self::PAGE_SIZE
                 );
-                $statement->execute([$lastId]);
+                $statement->execute([$lastId, $maxFileId]);
                 $rowsThisPage = 0;
 
                 while ($row = $statement->fetch(PDO::FETCH_ASSOC)) {
@@ -145,6 +146,7 @@ final class FileIdentityBackupStore
             'format' => self::FORMAT,
             'created_at' => $createdAt,
             'entries' => $entries,
+            'max_file_id' => $maxFileId,
             'bytes' => $bytes,
             'sha256' => $sha256,
             'storage_root' => $this->storageRoot,
