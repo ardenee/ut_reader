@@ -42,16 +42,17 @@ $checks = [
         && !str_contains($store, 'ue_exports')
         && !str_contains($store, 'ue_imports'),
     'export is paged rather than loading the whole file table into memory' =>
-        str_contains($store, 'WHERE f.id>? ORDER BY f.id ASC LIMIT ')
+        str_contains($store, 'WHERE f.id>? AND f.id<=? ORDER BY f.id ASC LIMIT ')
         && str_contains($store, 'private const PAGE_SIZE = 5000;')
-        && str_contains($store, '$statement->fetch(PDO::FETCH_ASSOC)'),
+        && str_contains($store, '$statement->fetch(PDO::FETCH_ASSOC)')
+        && str_contains($store, 'SELECT COALESCE(MAX(id),0) FROM ue_files'),
     'recovery backups default to catalog storage and are independently checksummed' =>
         str_contains($store, "'file-identity-backups'")
-        && str_contains($store, "hash_file('sha256', $path)")
+        && str_contains($store, "hash_file('sha256', \$path)")
         && str_contains($store, "'unrealdb-file-identity-v1'"),
     'download remains admin-only and streams instead of buffering the CSV' =>
         str_contains($download, "catalog_require_admin_page('File Identity Backup')")
-        && str_contains($download, "fopen($path, 'rb')")
+        && str_contains($download, "fopen(\$path, 'rb')")
         && str_contains($download, 'fpassthru($handle)'),
     'page describes recovery manifest as non-database non-package-copy backup' =>
         str_contains($page, 'This is not a database dump and it does not copy package files.')
