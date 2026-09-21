@@ -82,8 +82,11 @@ function catalog_source_public_host(string $value): ?string
         return null;
     }
 
-    $normalized = str_replace('\\\\', '/', $value);
-    if (preg_match('/^[A-Za-z]:\\//', $normalized) === 1) {
+    $normalized = str_replace('\\', '/', $value);
+    if (strlen($normalized) >= 3
+        && ctype_alpha($normalized[0])
+        && $normalized[1] === ':'
+        && $normalized[2] === '/') {
         return null;
     }
 
@@ -93,10 +96,7 @@ function catalog_source_public_host(string $value): ?string
     } elseif (str_starts_with($normalized, '//')) {
         $host = (string)(parse_url('http:' . $normalized, PHP_URL_HOST) ?? '');
     } else {
-        $first = preg_split('#[/\\s]#', $normalized, 2)[0] ?? '';
-        if ($first !== '') {
-            $host = (string)(parse_url('http://' . $first, PHP_URL_HOST) ?? '');
-        }
+        $host = (string)(parse_url('http://' . $normalized, PHP_URL_HOST) ?? '');
     }
 
     $host = strtolower(trim($host, "[] .\t\n\r\0\x0B"));
