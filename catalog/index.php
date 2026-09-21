@@ -71,106 +71,6 @@ function catalog_login_rate_limiter(array $config): FileLoginRateLimiter
     );
 }
 
-/**
- * Return a public hostname/IP suitable for source acknowledgement.
- * Local filesystem paths, localhost and private/reserved IPs are intentionally excluded.
- */
-function catalog_source_public_host(string $value): ?string
-{
-    $value = trim($value);
-    if ($value === '') {
-        return null;
-    }
-
-    $normalized = str_replace('\\', '/', $value);
-    if (strlen($normalized) >= 3
-        && ctype_alpha($normalized[0])
-        && $normalized[1] === ':'
-        && $normalized[2] === '/') {
-        return null;
-    }
-
-    $host = '';
-    if (preg_match('#^[a-z][a-z0-9+.-]*://#i', $normalized) === 1) {
-        $host = (string)(parse_url($normalized, PHP_URL_HOST) ?? '');
-    } elseif (str_starts_with($normalized, '//')) {
-        $host = (string)(parse_url('http:' . $normalized, PHP_URL_HOST) ?? '');
-    } else {
-        $host = (string)(parse_url('http://' . $normalized, PHP_URL_HOST) ?? '');
-    }
-
-    $host = strtolower(trim($host, "[] .\t\n\r\0\x0B"));
-    if ($host === '' || $host === 'localhost') {
-        return null;
-    }
-
-    if (filter_var($host, FILTER_VALIDATE_IP) !== false) {
-        return filter_var(
-            $host,
-            FILTER_VALIDATE_IP,
-            FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE
-        ) !== false ? $host : null;
-    }
-
-    if (!str_contains($host, '.')
-        || str_ends_with($host, '.local')
-        || filter_var($host, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME) === false) {
-        return null;
-    }
-
-    return $host;
-}
-
-/** @return list<string> */
-function catalog_collection_source_sites(PDO $db): array
-{
-    $rows = catalog_all(
-        $db,
-        'SELECT s.name,s.base_path FROM ue_sources s '
-        . 'WHERE EXISTS (SELECT 1 FROM ue_file_locations l WHERE l.source_id=s.id LIMIT 1) '
-        . 'ORDER BY s.name'
-    );
-
-    $sites = [];
-
-    // Curated acknowledgements cover sources used outside the configured ue_sources
-    // records (for example one-off archive imports and manually collected mirrors).
-    $curatedSources = [
-        '72.249.10.61',
-        '195.140.210.79',
-        'deaod.de',
-        'gamefront.com',
-        'mapraider.com',
-        'medor.no-ip.org',
-        'moddb.com',
-        'pwc-networks.com',
-        'soldenver.site.nfoservers.com',
-        'ut2.weba.ru',
-        'ut99maps.net',
-        'ut-files.com',
-        'utcustomcontent.com',
-    ];
-    foreach ($curatedSources as $candidate) {
-        $host = catalog_source_public_host($candidate);
-        if ($host !== null) {
-            $sites[$host] = $host;
-        }
-    }
-
-    foreach ($rows as $row) {
-        foreach ([(string)($row['base_path'] ?? ''), (string)($row['name'] ?? '')] as $candidate) {
-            $host = catalog_source_public_host($candidate);
-            if ($host !== null) {
-                $sites[$host] = $host;
-            }
-        }
-    }
-
-    $sites = array_values($sites);
-    natcasesort($sites);
-    return array_values($sites);
-}
-
 function catalog_render_search_results(array $rows, string $query, bool $truncated = false): void
 {
     echo '<div class="card"><h2>Results</h2>';
@@ -308,20 +208,7 @@ try {
         }
         echo '</div>';
         if ($public['site_development_mode']) {
-            $sourceSites = catalog_collection_source_sites($db);
-            echo '<div class="card"><h2>' . catalog_h($public['site_development_title']) . '</h2>'
-                . '<p>' . nl2br(catalog_h($public['site_development_message'])) . '</p>'
-                . '<p class="muted">The catalog has been made available during development so users can explore verified file information and see the features that will become available as work continues.</p>';
-            if ($sourceSites !== []) {
-                echo '<h3>Collection source acknowledgements</h3>'
-                    . '<p class="muted small">UnrealDB includes files made available by the following source sites and servers. Thank you to the people and communities who maintain and share these resources. Only public hostnames and public IP addresses are shown; local filesystem paths and private network addresses are not exposed.</p>'
-                    . '<div>';
-                foreach ($sourceSites as $sourceSite) {
-                    echo '<span class="pill mono" style="display:inline-block;margin:0 8px 8px 0">' . catalog_h($sourceSite) . '</span>';
-                }
-                echo '</div>';
-            }
-            echo '</div>';
+            echo '<div class="card"><h2>' . catalog_h($public['site_development_title']) . '</h2><p>' . nl2br(catalog_h($public['site_development_message'])) . '</p><p class="muted">The catalog has been made available during development so users can explore verified file information and see the features that will become available as work continues.</p></div>';
         }
         echo '<div class="card"><h2>Public access restrictions</h2><div class="grid">';
         catalog_stat_card('Individual downloads per IP', (int)$public['public_download_max_files'], 'Per ' . catalog_public_access_window_label((int)$public['public_download_window_seconds']));
