@@ -132,6 +132,31 @@ function catalog_collection_source_sites(PDO $db): array
     );
 
     $sites = [];
+
+    // Curated acknowledgements cover sources used outside the configured ue_sources
+    // records (for example one-off archive imports and manually collected mirrors).
+    $curatedSources = [
+        '72.249.10.61',
+        '195.140.210.79',
+        'deaod.de',
+        'gamefront.com',
+        'mapraider.com',
+        'medor.no-ip.org',
+        'moddb.com',
+        'pwc-networks.com',
+        'soldenver.site.nfoservers.com',
+        'ut2.weba.ru',
+        'ut99maps.net',
+        'ut-files.com',
+        'utcustomcontent.com',
+    ];
+    foreach ($curatedSources as $candidate) {
+        $host = catalog_source_public_host($candidate);
+        if ($host !== null) {
+            $sites[$host] = $host;
+        }
+    }
+
     foreach ($rows as $row) {
         foreach ([(string)($row['base_path'] ?? ''), (string)($row['name'] ?? '')] as $candidate) {
             $host = catalog_source_public_host($candidate);
