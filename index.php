@@ -8,10 +8,57 @@ require_once __DIR__ . '/catalog/lib/CatalogSupport.php';
 
 catalog_start_session();
 
+function landing_public_source_host(string $value): ?string
+{
+    $value = trim($value);
+    if ($value === '') {
+        return null;
+    }
+
+    $normalized = str_replace('\\', '/', $value);
+    if (strlen($normalized) >= 3
+        && ctype_alpha($normalized[0])
+        && $normalized[1] === ':'
+        && $normalized[2] === '/') {
+        return null;
+    }
+
+    $host = '';
+    if (preg_match('#^[a-z][a-z0-9+.-]*://#i', $normalized) === 1) {
+        $host = (string)(parse_url($normalized, PHP_URL_HOST) ?? '');
+    } elseif (str_starts_with($normalized, '//')) {
+        $host = (string)(parse_url('http:' . $normalized, PHP_URL_HOST) ?? '');
+    } else {
+        $host = (string)(parse_url('http://' . $normalized, PHP_URL_HOST) ?? '');
+    }
+
+    $host = strtolower(trim($host, "[] .\t\n\r\0\x0B"));
+    if ($host === '' || $host === 'localhost') {
+        return null;
+    }
+
+    if (filter_var($host, FILTER_VALIDATE_IP) !== false) {
+        return filter_var(
+            $host,
+            FILTER_VALIDATE_IP,
+            FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE
+        ) !== false ? $host : null;
+    }
+
+    if (!str_contains($host, '.')
+        || str_ends_with($host, '.local')
+        || filter_var($host, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME) === false) {
+        return null;
+    }
+
+    return $host;
+}
+
 $gameStorage = [];
 $totalCatalogFiles = 0;
 $totalCatalogBytes = 0;
 $databaseBytes = 0;
+$collectionSources = [];
 $fileRecordStats = [
     'file_count' => 0,
     'verified_count' => 0,
@@ -22,6 +69,43 @@ $fileRecordStats = [
 try {
     $config = catalog_config();
     $db = catalog_db($config);
+
+    $sourceSites = [
+        '72.249.10.61',
+        '195.140.210.79',
+        'deaod.de',
+        'gamefront.com',
+        'mapraider.com',
+        'medor.no-ip.org',
+        'moddb.com',
+        'pwc-networks.com',
+        'soldenver.site.nfoservers.com',
+        'ut2.weba.ru',
+        'ut99maps.net',
+        'ut-files.com',
+        'utcustomcontent.com',
+    ];
+
+    $sourceRows = catalog_all(
+        $db,
+        'SELECT DISTINCT s.name,s.base_path FROM ue_sources s '
+        . 'WHERE EXISTS (SELECT 1 FROM ue_file_locations l WHERE l.source_id=s.id LIMIT 1)'
+    );
+    foreach ($sourceRows as $sourceRow) {
+        $sourceSites[] = (string)($sourceRow['base_path'] ?? '');
+        $sourceSites[] = (string)($sourceRow['name'] ?? '');
+    }
+
+    foreach ($sourceSites as $sourceSite) {
+        $host = landing_public_source_host($sourceSite);
+        if ($host !== null) {
+            $collectionSources[$host] = $host;
+        }
+    }
+    $collectionSources = array_values($collectionSources);
+    natcasesort($collectionSources);
+    $collectionSources = array_values($collectionSources);
+
     $gameStorage = catalog_all(
         $db,
         'SELECT g.id,g.name,COALESCE(s.verified_count,0) file_count,COALESCE(s.verified_size,0) storage_bytes '
@@ -84,6 +168,15 @@ catalog_head('UnrealDB - Unreal File Catalog');
   <h2>Active development</h2>
   <p>UnrealDB is currently under active development and has been made publicly available as an early preview.</p>
   <p class="muted">Some functions are incomplete, unavailable, or may change as the catalog, preservation tooling, dependency analysis and public contribution workflow continue to develop.</p>
+  <?php if ($collectionSources !== []): ?>
+    <h3>Collection source acknowledgements</h3>
+    <p class="muted small">UnrealDB has used files made available by the following sites and servers. Thank you to the people and communities who have helped preserve and share this content.</p>
+    <p>
+      <?php foreach ($collectionSources as $sourceSite): ?>
+        <span class="pill mono" style="display:inline-block;margin:0 8px 8px 0"><?= catalog_h($sourceSite) ?></span>
+      <?php endforeach; ?>
+    </p>
+  <?php endif; ?>
 </section>
 
 <section class="grid">
