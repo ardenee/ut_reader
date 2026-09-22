@@ -98,8 +98,20 @@ while (($file = $files->fetch(PDO::FETCH_ASSOC)) !== false) {
                 . ', dependencies=' . $dependencyCount . '/' . $importCount
             );
         }
-        $manifestJson = json_encode($manifest, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
-        $uncompressedSize = strlen($manifestJson);
+        $stream = fopen($path, 'rb');
+        if (!is_resource($stream)) {
+            throw new RuntimeException('could not reopen v3 container header');
+        }
+        try {
+            $headerBytes = fread($stream, 20);
+        } finally {
+            fclose($stream);
+        }
+        if (!is_string($headerBytes) || strlen($headerBytes) !== 20) {
+            throw new RuntimeException('could not read complete v3 container header');
+        }
+        $header = unpack('a8magic/vversion/vcodec/Vmanifest_length/Vreserved', $headerBytes);
+        $uncompressedSize = (int)($header['manifest_length'] ?? 0);
         foreach ((array)($manifest['sections'] ?? []) as $blocks) {
             foreach ((array)$blocks as $block) {
                 $uncompressedSize += (int)($block['uncompressed_length'] ?? 0);
