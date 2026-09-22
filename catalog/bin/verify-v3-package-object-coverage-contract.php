@@ -15,6 +15,7 @@ if (PHP_SAPI !== 'cli') {
 }
 
 $root = dirname(__DIR__);
+require_once $root . '/bootstrap/autoload.php';
 require_once $root . '/lib/CatalogSupport.php';
 
 use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer;
@@ -126,6 +127,31 @@ $check(
         && is_string($caseResolverSource)
         && str_contains($caseResolverSource, 'public static function matchProviderPaths'),
     'Byte-sensitive path hashes retain a bounded provider-scoped case-insensitive fallback.'
+);
+
+
+$fooCoverage = [
+    ['file_id' => 101, 'status' => 'partially_satisfies', 'matched_paths' => ['Wall01', 'Wall02'], 'missing_paths' => ['Wall03', 'Sky01', 'Floor01']],
+    ['file_id' => 102, 'status' => 'partially_satisfies', 'matched_paths' => ['Wall03', 'Sky01'], 'missing_paths' => ['Wall01', 'Wall02', 'Floor01']],
+    ['file_id' => 103, 'status' => 'fully_satisfies', 'matched_paths' => ['Wall01', 'Wall02', 'Wall03', 'Sky01', 'Floor01'], 'missing_paths' => []],
+];
+$selectedFoo = \UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageObjectCoverageResolver::selectCompleteCoverage(
+    $fooCoverage,
+    101
+);
+$check(
+    'partial_foo_versions_cannot_be_combined',
+    is_array($selectedFoo) && (int)$selectedFoo['file_id'] === 103,
+    'A preferred partial Foo cannot combine with another partial Foo; the one complete superset must be selected.'
+);
+$noSuperset = \UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageObjectCoverageResolver::selectCompleteCoverage(
+    array_slice($fooCoverage, 0, 2),
+    101
+);
+$check(
+    'no_single_superset_means_no_provider',
+    $noSuperset === null,
+    'Two partial providers must not be treated as one satisfiable package dependency.'
 );
 
 $ok = !in_array(false, array_column($checks, 'ok'), true);
