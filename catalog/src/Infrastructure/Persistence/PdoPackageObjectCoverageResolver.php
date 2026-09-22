@@ -166,6 +166,10 @@ final class PdoPackageObjectCoverageResolver
             }
         }
 
+        $providerOrder = [];
+        foreach (array_keys($providers) as $position => $providerFileId) {
+            $providerOrder[(int)$providerFileId] = $position;
+        }
         $result = [];
         foreach ($providers as $fileId => $provider) {
             $matchedPaths = [];
@@ -196,7 +200,7 @@ final class PdoPackageObjectCoverageResolver
                 'matched_exports' => $matchedExports[$fileId],
             ];
         }
-        usort($result, static function (array $a, array $b) use ($preferredFileId): int {
+        usort($result, static function (array $a, array $b) use ($preferredFileId, $providerOrder): int {
             $rank = ['fully_satisfies' => 0, 'partially_satisfies' => 1, 'does_not_satisfy' => 2];
             $status = ($rank[$a['status']] ?? 9) <=> ($rank[$b['status']] ?? 9);
             if ($status !== 0) {
@@ -208,7 +212,8 @@ final class PdoPackageObjectCoverageResolver
                     return $preferred;
                 }
             }
-            return 0;
+            return ($providerOrder[(int)$a['file_id']] ?? PHP_INT_MAX)
+                <=> ($providerOrder[(int)$b['file_id']] ?? PHP_INT_MAX);
         });
         return $result;
     }
