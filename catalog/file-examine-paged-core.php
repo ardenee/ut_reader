@@ -237,6 +237,8 @@ try {
         'GUID' => $file['package_guid'] ?: '—',
         'Version' => $file['package_version'] ?? '—',
         'Licensee Version' => $file['licensee_version'] ?? '—',
+        'MD5' => $file['md5'] ?: '—',
+        'SHA1' => $file['sha1'] ?: '—',
     ] as $label => $value) {
         echo '<tr><th>' . catalog_h($label) . '</th><td class="mono path">'
             . ($label === 'Package' ? (string)$value : catalog_h((string)$value))
