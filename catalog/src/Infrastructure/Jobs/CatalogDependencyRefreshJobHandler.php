@@ -794,7 +794,7 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
         if (!VerifiedCompactMetadataHealth::healthy($this->db, $this->config, $fileId)) {
             throw new RuntimeException(
                 'Compact metadata repair job #' . $repairId
-                . ' completed, but format-2 metadata is still missing or unreadable for file #' . $fileId . '.'
+                . ' completed, but format-3 metadata is still missing or unreadable for file #' . $fileId . '.'
             );
         }
 
