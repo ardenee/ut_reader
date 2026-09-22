@@ -1,7 +1,7 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Resolves rare case-only Export path misses from current format-2 metadata containers.
+ * Purpose: Resolves rare case-only Export path misses from current format-3 metadata containers.
  * Why: Historical MySQL text comparisons were case-insensitive while ue_export_lookup.path_hash is byte-sensitive.
  *      Exact hash matching remains the fast path; this bounded fallback preserves the historical lookup semantics
  *      entirely from current compact metadata.
@@ -106,7 +106,7 @@ final class PdoCompactCaseInsensitiveExportResolver
             for ($start = 0; ; $start += self::PAGE_SIZE) {
                 try {
                     // Long-lived workers may have seen this stable path before a
-                    // concurrent/earlier format-2 replacement. Never let PHP's stat
+                    // concurrent/earlier format-3 replacement. Never let PHP's stat
                     // cache manufacture a provider size mismatch.
                     clearstatcache();
                     $page = $reader->page($fileId, 'exports', $start, self::PAGE_SIZE);
@@ -164,7 +164,7 @@ final class PdoCompactCaseInsensitiveExportResolver
             'severity' => 'error',
             'error_type' => 'UnreadableCompactMetadataProvider',
             'message' => 'Verified provider file #' . $fileId
-                . ' has unreadable format-2 metadata and was skipped during dependency resolution: '
+                . ' has unreadable format-3 metadata and was skipped during dependency resolution: '
                 . trim($error->getMessage()),
             'source_file' => $error->getFile(),
             'source_line' => $error->getLine(),
@@ -185,7 +185,7 @@ final class PdoCompactCaseInsensitiveExportResolver
     ): array {
         $statement = $db->prepare(
             'SELECT f.id FROM ue_files f '
-            . 'JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=2 '
+            . 'JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=3 '
             . 'WHERE f.game_id=? AND f.scan_status="verified" AND f.package_name=? '
             . 'ORDER BY (f.id=?) DESC,f.uploaded_at DESC,f.id DESC'
         );
@@ -203,7 +203,7 @@ final class PdoCompactCaseInsensitiveExportResolver
         $statement = $db->prepare(
             'SELECT a.file_id FROM ue_file_package_aliases a '
             . 'JOIN ue_files f ON f.id=a.file_id AND f.game_id=a.game_id '
-            . 'JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=2 '
+            . 'JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=3 '
             . 'WHERE a.game_id=? AND f.scan_status="verified" AND a.package_name=? '
             . 'ORDER BY (f.id=?) DESC,f.uploaded_at DESC,a.id ASC'
         );
