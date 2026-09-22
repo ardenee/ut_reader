@@ -99,6 +99,19 @@ final class PdoPackageTablePageQuery
         ];
     }
 
+    /** @return array<int,array<string,mixed>> */
+    public static function dependencyPage(PDO $db, int $fileId, int $start, int $limit): array
+    {
+        $rows = self::reader($db, $fileId)->page($fileId, 'dependencies', max(0, $start), max(1, min(5000, $limit)));
+        $byIndex = [];
+        foreach ($rows as $row) {
+            if (is_array($row)) {
+                $byIndex[(int)($row['import_index'] ?? -1)] = $row;
+            }
+        }
+        return $byIndex;
+    }
+
     /** @param list<string> $values @return array<string,int> */
     public static function nameLookup(PDO $db, int $fileId, array $values): array
     {
