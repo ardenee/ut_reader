@@ -1,7 +1,7 @@
 <?php
 /**
  * Purpose: Verifies the current compact dependency/projection schema during normal application execution.
- * Why: Runtime schema validation must follow the authoritative format-2 metadata model and must not require retired SQL metadata tables.
+ * Why: Runtime schema validation must follow the authoritative format-3 metadata model and must not require retired SQL metadata tables.
  * Role: Infrastructure schema guard used by dependency and asset-metadata entry points.
  */
 declare(strict_types=1);
