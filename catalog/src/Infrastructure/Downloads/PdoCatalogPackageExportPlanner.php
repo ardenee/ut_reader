@@ -174,9 +174,15 @@ final class PdoCatalogPackageExportPlanner
         foreach ($files as $fileId => $file) {
             $pathKey = strtolower((string)$file['install_path']);
             if (isset($installPaths[$pathKey]) && $installPaths[$pathKey] !== $fileId) {
+                $existingId = (int)$installPaths[$pathKey];
+                $existing = $files[$existingId] ?? [];
                 throw new RuntimeException(
                     'Two catalog files map to the same package path: ' . $file['install_path']
-                    . '. Correct their source locations before exporting.'
+                    . '. Existing file #' . $existingId
+                    . ' [' . $this->collisionIdentity($existing) . ']'
+                    . '; conflicting file #' . $fileId
+                    . ' [' . $this->collisionIdentity($file) . '].'
+                    . ' Do not choose one automatically; inspect dependency resolution/source placement.'
                 );
             }
             $installPaths[$pathKey] = $fileId;
@@ -205,6 +211,22 @@ final class PdoCatalogPackageExportPlanner
             'include_dependencies' => $includeDependencies,
             'transitive_dependencies' => $includeDependencies && $transitive,
         ];
+    }
+
+    /** @param array<string,mixed> $file */
+    private function collisionIdentity(array $file): string
+    {
+        $parts = [
+            'name=' . (string)($file['original_name'] ?? $file['package_name'] ?? ''),
+            'GUID=' . (string)($file['package_guid'] ?? ''),
+            'MD5=' . (string)($file['md5'] ?? ''),
+            'SHA1=' . (string)($file['sha1'] ?? ''),
+        ];
+        $source = trim((string)($file['source_relative_path'] ?? ''));
+        if ($source !== '') {
+            $parts[] = 'source=' . $source;
+        }
+        return implode(', ', $parts);
     }
 
     /** @return array<string,mixed>|null */
