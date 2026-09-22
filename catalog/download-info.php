@@ -127,7 +127,7 @@ try {
             . '</button></form>';
     }
     if ($settings['enabled'] && $settings['dependency_zip_enabled'] && external_public_download_mode($db) !== 'external_mirror_only') {
-        echo CatalogUi::button('Queue dependency ZIP', ['href' => 'download-package.php?id=' . (int)$file['id'] . '&format=dependency_zip&dependencies=1']);
+        echo CatalogUi::button('Queue dependency ZIP', ['href' => '#generated-package-options-form']);
     }
     echo '</div></div>';
 
@@ -140,11 +140,13 @@ try {
         $preview = null;
         $previewError = null;
         try {
+            $previewSettings = $settings;
+            $previewSettings['report_dependency_conflicts'] = true;
             $preview = (new PdoCatalogPackageExportPlanner($db, $config))->plan(
                 $id,
                 $defaultFormat,
                 true,
-                $settings
+                $previewSettings
             );
         } catch (Throwable $previewException) {
             $previewError = $previewException->getMessage();
@@ -155,6 +157,25 @@ try {
             . 'data-csrf="' . catalog_h(catalog_csrf('package-generation')) . '">';
         echo '<input type="hidden" name="id" value="' . (int)$file['id'] . '">';
         echo '<input type="hidden" name="file_id" value="' . (int)$file['id'] . '">';
+        if ($preview !== null && !empty($preview['conflicts'])) {
+            echo '<div class="ui-alert ui-alert-warning" style="margin:12px 0"><strong>Dependency selection required</strong><br>'
+                . 'More than one version is available for one or more dependency packages. Choose exactly one version for each package before generating the archive.</div>';
+            foreach ((array)$preview['conflicts'] as $conflict) {
+                $packageName = (string)($conflict['package_name'] ?? 'dependency');
+                echo '<fieldset style="margin:12px 0;padding:12px;border:1px solid var(--line2);border-radius:10px"><legend><strong>'
+                    . catalog_h($packageName) . '</strong> <span class="muted">' . catalog_h((string)($conflict['install_path'] ?? '')) . '</span></legend>';
+                foreach ((array)($conflict['candidates'] ?? []) as $candidate) {
+                    $candidateId = (int)($candidate['file_id'] ?? 0);
+                    echo '<label style="display:block;padding:8px 0"><input type="radio" required name="dependency_choice['
+                        . catalog_h(strtolower($packageName)) . ']" value="' . $candidateId . '"> '
+                        . '<strong>' . catalog_h((string)($candidate['original_name'] ?? $packageName)) . '</strong> '
+                        . '<span class="muted">File #' . $candidateId . ' · ' . catalog_h(catalog_bytes((int)($candidate['file_size'] ?? 0))) . '</span><br>'
+                        . '<span class="mono small">GUID ' . catalog_h((string)($candidate['package_guid'] ?? ''))
+                        . ' · MD5 ' . catalog_h((string)($candidate['md5'] ?? '')) . '</span></label>';
+                }
+                echo '</fieldset>';
+            }
+        }
         echo '<table><tr><th>Format</th><td><select name="format">';
         foreach ($formats as $format) {
             echo '<option value="' . catalog_h($format) . '"' . ($format === $defaultFormat ? ' selected' : '') . '>' . catalog_h($labels[$format] ?? $format) . '</option>';
@@ -189,7 +210,7 @@ try {
                 echo '<p class="muted small">' . count($inferred) . ' destination path(s) were inferred from the engine/file type because no usable game-relative source path was recorded.</p>';
             }
         } elseif ($previewError !== null) {
-            echo '<p class="dep missing">Preview unavailable: ' . catalog_h($previewError) . '</p>';
+            echo CatalogUi::alert('warning', 'The dependency preview could not be completed. Review the package options or dependency data before queueing.', 'Dependency preview unavailable');
         }
     }
     echo '</div>';
