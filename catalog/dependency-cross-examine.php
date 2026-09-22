@@ -105,7 +105,7 @@ CSS;
         . number_format((int)($diagnostics['missing_dependency_rows'] ?? 0)) . ' actual missing dependency row(s) across '
         . number_format((int)($diagnostics['missing_packages'] ?? 0)) . ' package(s); '
         . number_format((int)($diagnostics['source_package_files'] ?? 0)) . ' verified source package file(s) had matching package names; '
-        . number_format((int)($diagnostics['format2_source_files'] ?? 0)) . ' have current format-2 metadata/export projections; '
+        . number_format((int)($diagnostics['format3_source_files'] ?? 0)) . ' have current format-3 metadata/export projections; '
         . number_format((int)($diagnostics['exact_provider_files'] ?? 0)) . ' file(s) matched at least one missing object path.</p>';
 
     $exactTotal = 0;
@@ -123,7 +123,7 @@ CSS;
     if ($rows === []) {
         echo CatalogUi::emptyState(
             'No exact sibling-game providers found',
-            'The scan starts from the target game\'s actual missing dependency rows and uses the current compact export projection. The scan-input counts above show whether matching source package names and format-2 export data exist.'
+            'The scan starts from the target game\'s actual missing dependency rows and uses the current compact export projection. The scan-input counts above show whether matching source package names and format-3 export data exist.'
         );
         catalog_foot();
         exit;
