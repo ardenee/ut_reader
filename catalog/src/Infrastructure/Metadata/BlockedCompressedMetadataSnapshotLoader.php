@@ -68,7 +68,7 @@ final class BlockedCompressedMetadataSnapshotLoader
             'exports' => $exports,
             'dependencies' => $dependencies,
             'paths' => $paths,
-            'source_format' => 'blocked-metadata-v2',
+            'source_format' => 'blocked-metadata-v' . (int)$file['format_version'],
         ];
     }
 
@@ -95,7 +95,7 @@ final class BlockedCompressedMetadataSnapshotLoader
             'file' => $this->snapshotFile($fileId, $file),
             'imports' => $imports,
             'dependencies' => $dependencies,
-            'source_format' => 'blocked-metadata-v2-dependencies',
+            'source_format' => 'blocked-metadata-v' . (int)$file['format_version'] . '-dependencies',
         ];
     }
 
@@ -120,8 +120,8 @@ final class BlockedCompressedMetadataSnapshotLoader
         if ((string)$file['scan_status'] !== 'verified') {
             throw new RuntimeException('File #' . $fileId . ' is not verified.');
         }
-        if ((int)$file['format_version'] !== BlockedCompressedMetadataContainer::FORMAT_VERSION) {
-            throw new RuntimeException('File #' . $fileId . ' is not using blocked metadata format version 2.');
+        if (!in_array((int)$file['format_version'], [2, BlockedCompressedMetadataContainer::FORMAT_VERSION], true)) {
+            throw new RuntimeException('File #' . $fileId . ' uses an unsupported blocked metadata format version.');
         }
         if ((int)$file['codec'] !== BlockedCompressedMetadataContainer::CODEC_BLOCK_GZIP) {
             throw new RuntimeException('File #' . $fileId . ' uses an unsupported compact metadata codec.');
