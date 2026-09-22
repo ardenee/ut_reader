@@ -55,20 +55,17 @@ function file_examine_render_opaque_controls(string $html, int &$replacementCoun
 }
 
 /** @param array{ok:bool,error:string,summary:array<string,mixed>,rows:list<array<string,mixed>>}|null $inspection */
-function file_examine_header_html(?array $inspection, int $fileId): string
+function file_examine_header_html(?array $inspection): string
 {
-    $html = '<div class="card"><h2>Raw package header</h2>';
     if ($inspection === null) {
-        return $html
-            . '<p class="muted">Not read during normal page loading. Verify the raw header only when you need to compare the stored file on disk with the catalogue metadata.</p>'
-            . '<p><a class="button secondary" href="file-examine.php?id=' . $fileId . '&verify_raw_header=1#raw-package-header">Verify raw header</a></p></div>';
+        return '';
     }
+    $html = '<div class="card"><h2>Raw package header</h2>';
     if (!$inspection['ok']) {
-        return $html . '<p class="muted">' . catalog_h($inspection['error']) . '</p>'
-            . '<p><a class="button secondary" href="file-examine.php?id=' . $fileId . '&verify_raw_header=1#raw-package-header">Verify again</a></p></div>';
+        return $html . '<p class="muted">' . catalog_h($inspection['error']) . '</p></div>';
     }
 
-    $html .= '<div id="raw-package-header"></div><div class="two-col"><table>';
+    $html .= '<div class="two-col"><table>';
     $summary = $inspection['summary'];
     $left = ['GUID','Version','Licensee Version','Signature','Name Offset','Import Offset','Export Offset','Total Header Size'];
     $right = ['Flags','Build','Heritage','Counts','Catalog Counts','Generations','Folder Name'];
@@ -203,16 +200,12 @@ try {
         exit;
     }
     if ($row) {
-        // Raw package inspection is deliberately opt-in. Normal examiner requests
-        // remain database-only and never touch the stored Unreal payload.
-        if ((string)($_GET['verify_raw_header'] ?? '') === '1') {
-            $storageRoot = realpath(rtrim((string)($config['storage_path'] ?? ''), DIRECTORY_SEPARATOR));
-            $storedPath = realpath(__DIR__ . '/' . (string)($row['relative_path'] ?? ''));
-            if ($storageRoot && $storedPath && !str_starts_with($storedPath, $storageRoot)) {
-                $storedPath = null;
-            }
-            $headerInspection = CatalogPackageHeaderInspector::inspect($storedPath ?: null, $row);
+        $storageRoot = realpath(rtrim((string)$config['storage_path'], DIRECTORY_SEPARATOR));
+        $storedPath = realpath(__DIR__ . '/' . (string)$row['relative_path']);
+        if ($storageRoot && $storedPath && !str_starts_with($storedPath, $storageRoot)) {
+            $storedPath = null;
         }
+        $headerInspection = CatalogPackageHeaderInspector::inspect($storedPath ?: null, $row);
 
         if ($isAdmin && (string)$row['scan_status'] === 'verified') {
             $flash = is_array($_SESSION['file_examine_rename_flash'][$id] ?? null)
@@ -260,7 +253,7 @@ if ($renameCardHtml !== '') {
     $html = str_replace($marker, $renameCardHtml . $marker, $html);
 }
 
-$headerHtml = file_examine_header_html($headerInspection, $id);
+$headerHtml = file_examine_header_html($headerInspection);
 if ($headerHtml !== '') {
     $html = str_replace('<div class="card" id="package-tables">', $headerHtml . '<div class="card" id="package-tables">', $html);
 }
