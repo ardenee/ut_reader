@@ -86,7 +86,12 @@ final class CatalogCompactDependencyReadService
         $start = 0;
         $pageSize = 1000;
         do {
-            $page = $reader->page($fileId, 'dependencies', $start, $pageSize);
+            try {
+                $page = $reader->page($fileId, 'dependencies', $start, $pageSize);
+            } catch (\Throwable $error) {
+                VerifiedCompactMetadataHealth::queueRepair($this->db, $this->config, $fileId, null, $error);
+                throw $error;
+            }
             foreach ($page as $row) {
                 $blockedByImport[(int)$row['import_index']] = $row;
             }
@@ -266,10 +271,21 @@ final class CatalogCompactDependencyReadService
         }
         $detailsByFile = [];
         foreach ($indexesByFile as $sourceFileId => $indexes) {
-            $detailsByFile[$sourceFileId] = $reader->dependenciesForImportIndexes(
-                $sourceFileId,
-                array_values(array_unique($indexes))
-            );
+            try {
+                $detailsByFile[$sourceFileId] = $reader->dependenciesForImportIndexes(
+                    $sourceFileId,
+                    array_values(array_unique($indexes))
+                );
+            } catch (\Throwable $error) {
+                VerifiedCompactMetadataHealth::queueRepair(
+                    $this->db,
+                    $this->config,
+                    $sourceFileId,
+                    null,
+                    $error
+                );
+                throw $error;
+            }
         }
 
         $rows = [];
