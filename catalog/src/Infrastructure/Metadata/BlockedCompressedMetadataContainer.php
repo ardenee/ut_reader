@@ -21,11 +21,11 @@ use Throwable;
 /** Builds the version-2 random-access, block-compressed metadata container. */
 final class BlockedCompressedMetadataContainer
 {
-    public const FORMAT_VERSION = 2;
+    public const FORMAT_VERSION = 3;
     public const CODEC_BLOCK_GZIP = 2;
     public const DEFAULT_BLOCK_SIZE = 500;
 
-    private const MAGIC = "UEDBM2\0\0";
+    private const MAGIC = "UEDBM3\0\0";
     private const HEADER_LENGTH = 20;
     private const COPY_BUFFER_BYTES = 1024 * 1024;
 
@@ -470,6 +470,10 @@ final class BlockedCompressedMetadataContainer
                         (int)$row['name_index'],
                         $intern((string)$row['name_text']),
                         $row['flags'] !== null ? (string)$row['flags'] : null,
+                        (int)($row['imports_count'] ?? 0),
+                        (int)($row['exports_count'] ?? 0),
+                        $row['first_import_index'] !== null ? (int)$row['first_import_index'] : null,
+                        $row['first_export_index'] !== null ? (int)$row['first_export_index'] : null,
                     ];
                     break;
 
@@ -486,6 +490,9 @@ final class BlockedCompressedMetadataContainer
                         $intern((string)($path['root'] ?? $row['root_package'] ?? '')),
                         $intern((string)($path['relative'] ?? $row['relative_object_path'] ?? '')),
                         (int)$row['is_common'],
+                        $row['class_package_name_index'] !== null ? (int)$row['class_package_name_index'] : null,
+                        $row['class_name_index'] !== null ? (int)$row['class_name_index'] : null,
+                        $row['object_name_index'] !== null ? (int)$row['object_name_index'] : null,
                     ];
                     break;
 
@@ -502,6 +509,10 @@ final class BlockedCompressedMetadataContainer
                         $row['object_flags'] !== null ? (string)$row['object_flags'] : null,
                         $row['serial_size'] !== null ? (string)$row['serial_size'] : null,
                         $row['serial_offset'] !== null ? (string)$row['serial_offset'] : null,
+                        (int)($row['class_index'] ?? 0),
+                        (int)($row['super_index'] ?? 0),
+                        (int)($row['template_index'] ?? 0),
+                        $row['object_name_index'] !== null ? (int)$row['object_name_index'] : null,
                     ];
                     break;
 
