@@ -29,7 +29,8 @@ final class PdoPackageObjectCoverageResolver
      *   missing_count:int,
      *   status:string,
      *   matched_paths:list<string>,
-     *   missing_paths:list<string>
+     *   missing_paths:list<string>,
+     *   matched_exports:array<string,int>
      * }>
      */
     public static function evaluate(
@@ -51,9 +52,11 @@ final class PdoPackageObjectCoverageResolver
         }
 
         $matched = [];
+        $matchedExports = [];
         $reader = self::metadataReader($db);
         foreach (array_keys($providers) as $fileId) {
             $matched[$fileId] = [];
+            $matchedExports[$fileId] = [];
         }
 
         if ($requirements !== []) {
@@ -97,6 +100,7 @@ final class PdoPackageObjectCoverageResolver
                         continue;
                     }
                     $matched[$fileId][$entry['key']] = true;
+                    $matchedExports[$fileId][$entry['key']] = (int)$row['export_index'];
                 }
             }
         }
@@ -128,6 +132,7 @@ final class PdoPackageObjectCoverageResolver
                 'status' => $status,
                 'matched_paths' => $matchedPaths,
                 'missing_paths' => $missingPaths,
+                'matched_exports' => $matchedExports[$fileId],
             ];
         }
         usort($result, static function (array $a, array $b) use ($preferredFileId): int {
