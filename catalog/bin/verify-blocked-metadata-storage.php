@@ -1,7 +1,7 @@
 #!/usr/bin/env php
 <?php
 /**
- * Purpose: Read-only verification of format-2 blocked metadata registration against on-disk .uedb2 containers.
+ * Purpose: Read-only verification of format-3 blocked metadata registration against on-disk .uedb3 containers.
  * Role: Post-maintenance integrity audit; never repairs, rewrites or deletes catalog metadata.
  */
 declare(strict_types=1);
