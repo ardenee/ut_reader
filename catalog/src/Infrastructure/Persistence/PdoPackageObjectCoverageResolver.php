@@ -4,7 +4,6 @@ declare(strict_types=1);
 namespace UnrealDb\Catalog\Infrastructure\Persistence;
 
 use PDO;
-use RuntimeException;
 
 /**
  * Evaluates every current-format provider of a package against a complete set
@@ -54,6 +53,7 @@ final class PdoPackageObjectCoverageResolver
         $matched = [];
         $matchedExports = [];
         $reader = self::metadataReader($db);
+        $config = self::catalogConfig();
         foreach (array_keys($providers) as $fileId) {
             $matched[$fileId] = [];
             $matchedExports[$fileId] = [];
@@ -91,12 +91,24 @@ final class PdoPackageObjectCoverageResolver
                     }
                     // path_hash is only an index accelerator. Confirm the actual
                     // v3 Export path so a hash collision can never satisfy an Import.
-                    if (!self::exportPathMatches(
-                        $reader,
-                        $fileId,
-                        (int)$row['export_index'],
-                        (string)$entry['key']
-                    )) {
+                    try {
+                        $pathMatches = self::exportPathMatches(
+                            $reader,
+                            $fileId,
+                            (int)$row['export_index'],
+                            (string)$entry['key']
+                        );
+                    } catch (\Throwable $error) {
+                        \UnrealDb\Catalog\Infrastructure\Metadata\VerifiedCompactMetadataHealth::queueRepair(
+                            $db,
+                            $config,
+                            $fileId,
+                            null,
+                            $error
+                        );
+                        continue;
+                    }
+                    if (!$pathMatches) {
                         continue;
                     }
                     $matched[$fileId][$entry['key']] = true;
@@ -257,11 +269,18 @@ final class PdoPackageObjectCoverageResolver
         return $providers;
     }
 
+    /** @return array<string,mixed> */
+    private static function catalogConfig(): array
+    {
+        $root = dirname(__DIR__, 3);
+        return require $root . '/config.php';
+    }
+
     private static function metadataReader(PDO $db): \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataReader
     {
         $root = dirname(__DIR__, 3);
         require_once $root . '/src/Infrastructure/Metadata/BlockedCompressedMetadataReader.php';
-        $config = require $root . '/config.php';
+        $config = self::catalogConfig();
         $storageRoot = (string)($config['storage_path'] ?? ($root . '/storage'));
         return new \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataReader($db, $storageRoot);
     }
