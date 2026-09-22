@@ -1,7 +1,7 @@
 #!/usr/bin/env php
 <?php
 /**
- * Purpose: Verifies verified-file runtime metadata is format-2 only while dedicated unverified compressed staging remains isolated.
+ * Purpose: Verifies verified-file runtime metadata is format-3 only while dedicated unverified compressed staging remains isolated.
  * Role: Read-only architecture and optional live database gate after physical legacy-table retirement.
  */
 declare(strict_types=1);
@@ -140,16 +140,16 @@ $record(
         && !str_contains($persistence, 'PdoCatalogDependencyRebuilder')
         && !str_contains($persistence, '->rebuild(')
         && str_contains($pdoImporter, 'CatalogPackageImporterFactory::create('),
-    'new verified imports must publish format-2 metadata directly from the inspected parser snapshot through the port-driven adapter'
+    'new verified imports must publish format-3 metadata directly from the inspected parser snapshot through the port-driven adapter'
 );
 $finalizerLegacyReferences = $retiredReferences($finalizerExecutable);
 $record(
     'verified_runtime_finalizer_no_legacy_conversion',
     !str_contains($finalizer, 'BlockedCompressedFileMetadataConverter')
-        && str_contains($finalizer, 'has no current format-2 metadata.')
+        && str_contains($finalizer, 'has no current format-3 metadata.')
         && $finalizerLegacyReferences === [],
     $finalizerLegacyReferences === []
-        ? 'runtime verification fails closed when format-2 is missing and contains no retired-table conversion path'
+        ? 'runtime verification fails closed when format-3 is missing and contains no retired-table conversion path'
         : 'found retired metadata references: ' . implode(', ', $finalizerLegacyReferences)
 );
 
@@ -189,7 +189,7 @@ $record(
         && str_contains($converter, 'Historical SQL metadata conversion has been retired')
         && $converterLegacyReferences === [],
     $converterLegacyReferences === []
-        ? 'projection rebuilds and verification use current format-2 containers only'
+        ? 'projection rebuilds and verification use current format-3 containers only'
         : 'found retired metadata references: ' . implode(', ', $converterLegacyReferences)
 );
 
@@ -253,17 +253,17 @@ if ($withDatabase) {
             'SELECT COUNT(*) FROM ue_files f '
             . 'LEFT JOIN ue_file_metadata m ON m.file_id=f.id '
             . 'WHERE f.scan_status="verified" '
-            . 'AND (m.file_id IS NULL OR m.format_version<>2)'
+            . 'AND (m.file_id IS NULL OR m.format_version<>3)'
         )->fetchColumn();
         $record(
             'verified_files_current_format_coverage',
             $missing === 0,
-            'verified_without_format2=' . $missing
+            'verified_without_format3=' . $missing
         );
 
         $mismatchedCounts = (int)$db->query(
             'SELECT COUNT(*) FROM ue_files f '
-            . 'JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=2 '
+            . 'JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=3 '
             . 'WHERE f.scan_status="verified" AND ('
             . 'm.name_count<>f.name_count OR m.import_count<>f.import_count OR m.export_count<>f.export_count)'
         )->fetchColumn();
@@ -303,7 +303,7 @@ if ($withDatabase) {
 
         $missingLocalPathTerms = (int)$db->query(
             'SELECT COUNT(*) FROM ue_export_lookup l '
-            . 'JOIN ue_file_metadata m ON m.file_id=l.file_id AND m.format_version=2 '
+            . 'JOIN ue_file_metadata m ON m.file_id=l.file_id AND m.format_version=3 '
             . 'WHERE l.local_path_term_id IS NULL'
         )->fetchColumn();
         $checks[] = [
