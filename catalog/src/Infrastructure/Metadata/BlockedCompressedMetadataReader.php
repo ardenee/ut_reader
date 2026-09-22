@@ -179,7 +179,8 @@ final class BlockedCompressedMetadataReader
         $verified = BlockedCompressedMetadataContainer::verifyFile(
             (string)$context['path'],
             $fileId,
-            (string)$context['row']['payload_sha256']
+            (string)$context['row']['payload_sha256'],
+            (int)$context['row']['format_version']
         );
         return [
             'verified' => true,
@@ -191,7 +192,7 @@ final class BlockedCompressedMetadataReader
             'import_count' => (int)$context['row']['import_count'],
             'export_count' => (int)$context['row']['export_count'],
             'block_count' => (int)$verified['block_count'],
-            'format_version' => BlockedCompressedMetadataContainer::FORMAT_VERSION,
+            'format_version' => (int)$context['row']['format_version'],
         ];
     }
 
