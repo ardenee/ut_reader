@@ -302,7 +302,90 @@
         }
     }
 
+    function examinerHref(target) {
+        var pageSize = parseInt(params.get('page_size') || '250', 10) || 250;
+        var match = /^(name|import|export)-(\\d+)$/.exec(target || '');
+        if (!match) return '#';
+        var table = match[1] === 'name' ? 'names' : (match[1] + 's');
+        var index = parseInt(match[2], 10) || 0;
+        var page = Math.floor(index / pageSize) + 1;
+        return 'file-examine.php?id=' + encodeURIComponent(fileId)
+            + '&tab=' + encodeURIComponent(table)
+            + '&page=' + encodeURIComponent(page)
+            + '&page_size=' + encodeURIComponent(pageSize)
+            + '&target=' + encodeURIComponent(target)
+            + '#' + encodeURIComponent(target);
+    }
+
+    function installExaminerEnrichment(data) {
+        Object.keys(data.name_usage || {}).forEach(function (index) {
+            var cell = document.querySelector('[data-examine-name-usage="' + CSS.escape(index) + '"]');
+            if (!cell) return;
+            var usage = data.name_usage[index] || {};
+            var parts = [];
+            if (Number(usage.imports_count || 0) > 0 && usage.imports_target) {
+                parts.push('<a class="xref" href="' + h(examinerHref(usage.imports_target)) + '">Imports: ' + Number(usage.imports_count) + '</a>');
+            }
+            if (Number(usage.exports_count || 0) > 0 && usage.exports_target) {
+                parts.push('<a class="xref" href="' + h(examinerHref(usage.exports_target)) + '">Exports: ' + Number(usage.exports_count) + '</a>');
+            }
+            cell.innerHTML = parts.length ? parts.join(' <span class="muted">·</span> ') : '<span class="muted">none</span>';
+        });
+
+        Object.keys(data.name_links || {}).forEach(function (rowIndex) {
+            var links = data.name_links[rowIndex] || {};
+            Object.keys(links).forEach(function (column) {
+                var selector = '[data-examine-name-link="' + CSS.escape(column) + '"][data-examine-row="' + CSS.escape(rowIndex) + '"]';
+                var cell = document.querySelector(selector);
+                if (!cell) return;
+                var value = (cell.textContent || '').trim();
+                var target = 'name-' + Number(links[column]);
+                cell.innerHTML = '<a class="xref mono path" href="' + h(examinerHref(target)) + '" title="Open name table entry">' + h(value) + '</a>';
+            });
+        });
+
+        document.querySelectorAll('[data-examine-dependency]').forEach(function (cell) {
+            var index = cell.dataset.examineDependency;
+            var dependency = (data.dependencies || {})[index];
+            if (!dependency) {
+                cell.innerHTML = '<span class="muted">not built</span>';
+                return;
+            }
+            var status = String(dependency.status || 'unknown');
+            var title = String(dependency.required_object_path || '').trim();
+            cell.innerHTML = '<span class="dep ' + h(status) + '"' + (title ? ' title="' + h(title) + '"' : '') + '>' + h(status) + '</span>';
+        });
+    }
+
+    function loadExaminerEnrichment() {
+        var root = document.getElementById('package-tables');
+        if (!root) return;
+        var table = params.get('tab') || 'names';
+        if (table !== 'names' && table !== 'imports' && table !== 'exports') return;
+        var page = parseInt(params.get('page') || '1', 10) || 1;
+        var pageSize = parseInt(params.get('page_size') || '250', 10) || 250;
+        fetch('file-examine-enrichment.php?id=' + encodeURIComponent(fileId)
+            + '&table=' + encodeURIComponent(table)
+            + '&page=' + encodeURIComponent(page)
+            + '&page_size=' + encodeURIComponent(pageSize), {
+            credentials: 'same-origin',
+            cache: 'no-store',
+            headers: {'Accept': 'application/json'}
+        }).then(function (response) {
+            return response.json().then(function (payload) {
+                if (!response.ok || !payload.ok) throw new Error(payload.error || 'Could not enrich package table.');
+                return payload;
+            });
+        }).then(installExaminerEnrichment).catch(function (error) {
+            console.error('[UnrealDB file examine enrichment]', error);
+            root.querySelectorAll('[data-examine-name-usage],[data-examine-dependency]').forEach(function (cell) {
+                cell.innerHTML = '<span class="muted">unavailable</span>';
+            });
+        });
+    }
+
     addStyle();
+    loadExaminerEnrichment();
     fetch('file-dependency-files.php?id=' + encodeURIComponent(fileId), {
         credentials: 'same-origin',
         cache: 'no-store',
