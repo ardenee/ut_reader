@@ -200,13 +200,6 @@ try {
         exit;
     }
     if ($row) {
-        $storageRoot = realpath(rtrim((string)$config['storage_path'], DIRECTORY_SEPARATOR));
-        $storedPath = realpath(__DIR__ . '/' . (string)$row['relative_path']);
-        if ($storageRoot && $storedPath && !str_starts_with($storedPath, $storageRoot)) {
-            $storedPath = null;
-        }
-        $headerInspection = CatalogPackageHeaderInspector::inspect($storedPath ?: null, $row);
-
         if ($isAdmin && (string)$row['scan_status'] === 'verified') {
             $flash = is_array($_SESSION['file_examine_rename_flash'][$id] ?? null)
                 ? $_SESSION['file_examine_rename_flash'][$id]
@@ -253,9 +246,8 @@ if ($renameCardHtml !== '') {
     $html = str_replace($marker, $renameCardHtml . $marker, $html);
 }
 
-$headerHtml = file_examine_header_html($headerInspection);
-if ($headerHtml !== '') {
-    $html = str_replace('<div class="card" id="package-tables">', $headerHtml . '<div class="card" id="package-tables">', $html);
-}
+$headerPlaceholder = '<div class="card" id="raw-package-header"><h2>Raw package header</h2>'
+    . '<p class="muted" data-file-examine-header-status>Reading stored package header…</p></div>';
+$html = str_replace('<div class="card" id="package-tables">', $headerPlaceholder . '<div class="card" id="package-tables">', $html);
 
 echo $html;
