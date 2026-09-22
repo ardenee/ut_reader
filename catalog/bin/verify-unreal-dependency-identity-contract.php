@@ -13,7 +13,7 @@ $builder = $read('catalog/src/Infrastructure/Metadata/CatalogParsedPackageMetada
 $coverage = $read('catalog/src/Infrastructure/Persistence/PdoPackageObjectCoverageResolver.php');
 $checks=[];
 $check=static function(string $n,bool $ok,string $d)use(&$checks){$checks[]=['check'=>$n,'ok'=>$ok,'detail'=>$d];};
-foreach (['legacy_ue1_ue2'=>$legacy,'ue3'=>$ue3,'ue4_ue5_family'=>$ue4] as $name=>$source) {
+foreach (['legacy_ue1_ue2'=>$legacy,'ue3'=>$ue3,'ue4_family'=>$ue4] as $name=>$source) {
     $check(
         $name . '_exposes_unreal_import_identity',
         $source !== ''
