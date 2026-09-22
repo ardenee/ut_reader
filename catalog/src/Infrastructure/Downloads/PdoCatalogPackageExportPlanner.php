@@ -146,7 +146,7 @@ final class PdoCatalogPackageExportPlanner
                 $requiredPackageKey = strtolower(trim((string)$dependency['required_package']));
                 $overrideId = max(0, (int)($overrides[$requiredPackageKey] ?? 0));
                 if ($overrideId > 0 && $resolvedId > 0) {
-                    $override = \\catalog_one($this->db, 'SELECT id,package_name FROM ue_files WHERE id=? AND game_id=? AND scan_status<>"failed"', [$overrideId, (int)$root['game_id']]);
+                    $override = \catalog_one($this->db, 'SELECT id,package_name FROM ue_files WHERE id=? AND game_id=? AND scan_status<>"failed"', [$overrideId, (int)$root['game_id']]);
                     if (!$override || strcasecmp((string)$override['package_name'], (string)$dependency['required_package']) !== 0) {
                         throw new RuntimeException('Selected dependency override #' . $overrideId . ' is not a valid ' . (string)$dependency['required_package'] . ' package for this game.');
                     }
