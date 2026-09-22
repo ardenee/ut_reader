@@ -93,6 +93,16 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
             ];
         }
 
+        $nameUsage = [];
+        foreach ($nameRows as $nameRow) {
+            $nameUsage[(int)$nameRow['name_index']] = [
+                'imports_count' => 0,
+                'exports_count' => 0,
+                'first_import_index' => null,
+                'first_export_index' => null,
+            ];
+        }
+
         $common = array_map(
             'strtolower',
             array_values((array)($this->config['common_packages'] ?? []))
@@ -106,13 +116,25 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
             $parts = $fullPath !== '' ? explode('.', $fullPath) : [];
             $rootPackage = (string)($parts[0] ?? '');
             $relativeObjectPath = count($parts) > 1 ? implode('.', array_slice($parts, 1)) : '';
+            $classPackageNameIndex = $this->fnameIndex($row['classPackage'] ?? ($row['ClassPackage'] ?? null));
+            $classNameIndex = $this->fnameIndex($row['className'] ?? ($row['ClassName'] ?? null));
+            $objectNameIndex = $this->fnameIndex($row['objectName'] ?? ($row['ObjectName'] ?? null));
+            foreach (array_unique([$classPackageNameIndex, $classNameIndex, $objectNameIndex]) as $nameIndex) {
+                if ($nameIndex !== null && isset($nameUsage[$nameIndex])) {
+                    $nameUsage[$nameIndex]['imports_count']++;
+                    $nameUsage[$nameIndex]['first_import_index'] ??= (int)$index;
+                }
+            }
             $importRows[] = [
                 'id' => $this->virtualId($fileId, (int)$index),
                 'file_id' => $fileId,
                 'import_index' => (int)$index,
                 'class_package' => (string)($row['classPackageText'] ?? ($row['ClassPackage']['text'] ?? '')),
+                'class_package_name_index' => $classPackageNameIndex,
                 'class_name' => (string)($row['classNameText'] ?? ($row['ClassName']['text'] ?? '')),
+                'class_name_index' => $classNameIndex,
                 'object_name' => (string)($row['objectNameText'] ?? ($row['ObjectName']['text'] ?? '')),
+                'object_name_index' => $objectNameIndex,
                 'outer_index' => (int)($row['outerIndex'] ?? $row['OuterIndex'] ?? $row['outer'] ?? 0),
                 'full_path' => $fullPath,
                 'root_package' => $rootPackage,
@@ -136,12 +158,21 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
                 ? \scanner_ref_path($classReference, $imports, $exports, $cache)
                 : '';
             $fullPath = \scanner_join_path_parts([$packageName, $localPath]);
+            $objectNameIndex = $this->fnameIndex($row['objectName'] ?? ($row['ObjectName'] ?? ($row['nameIndex'] ?? null)));
+            if ($objectNameIndex !== null && isset($nameUsage[$objectNameIndex])) {
+                $nameUsage[$objectNameIndex]['exports_count']++;
+                $nameUsage[$objectNameIndex]['first_export_index'] ??= (int)$index;
+            }
             $exportRows[] = [
                 'id' => $this->virtualId($fileId, (int)$index),
                 'file_id' => $fileId,
                 'export_index' => (int)$index,
                 'class_name' => $className,
+                'class_index' => $classReference,
+                'super_index' => (int)($row['superIndex'] ?? $row['super'] ?? 0),
+                'template_index' => (int)($row['templateIndex'] ?? $row['archetype'] ?? $row['archetypeIndexRef'] ?? 0),
                 'object_name' => (string)($row['objectNameText'] ?? ''),
+                'object_name_index' => $objectNameIndex,
                 'outer_index' => (int)($row['outerIndex'] ?? $row['packageIndex'] ?? $row['outer'] ?? 0),
                 'local_path' => $localPath,
                 'full_path' => $fullPath,
@@ -154,6 +185,15 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
                 'full' => $fullPath,
             ];
         }
+
+        foreach ($nameRows as &$nameRow) {
+            $usage = $nameUsage[(int)$nameRow['name_index']];
+            $nameRow['imports_count'] = $usage['imports_count'];
+            $nameRow['exports_count'] = $usage['exports_count'];
+            $nameRow['first_import_index'] = $usage['first_import_index'];
+            $nameRow['first_export_index'] = $usage['first_export_index'];
+        }
+        unset($nameRow);
 
         return [
             'file' => [
@@ -329,6 +369,17 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
         }
 
         return hash('sha256', serialize($canonical));
+    }
+
+    private function fnameIndex(mixed $value): ?int
+    {
+        if (is_array($value)) {
+            $value = $value['index'] ?? null;
+        }
+        if ($value === null || $value === '') {
+            return null;
+        }
+        return (int)$value;
     }
 
     private static function nullableScalarString(mixed $value): ?string
