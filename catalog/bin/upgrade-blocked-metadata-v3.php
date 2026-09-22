@@ -166,7 +166,7 @@ echo json_encode([
     'last_completed_id' => $lastCompletedId,
     'remaining_all_games' => $remainingAll,
     'resume_command' => $remainingAll > 0
-        ? 'php catalog/bin/upgrade-blocked-metadata-v3.php --apply --after-id=' . $lastCompletedId . ' --limit=' . $limit
+        ? 'php catalog/bin/upgrade-blocked-metadata-v3.php --apply --after-id=' . ($failed > 0 ? $afterId : $lastCompletedId) . ' --limit=' . $limit
         : null,
     'errors' => $errors,
 ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . PHP_EOL;
