@@ -337,6 +337,10 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
                 (int)($row['name_index'] ?? 0),
                 (string)($row['name_text'] ?? ''),
                 self::nullableScalarString($row['flags'] ?? null),
+                (int)($row['imports_count'] ?? 0),
+                (int)($row['exports_count'] ?? 0),
+                self::nullableScalarString($row['first_import_index'] ?? null),
+                self::nullableScalarString($row['first_export_index'] ?? null),
             ];
         }
         foreach ((array)($snapshot['imports'] ?? []) as $row) {
@@ -351,6 +355,9 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
                 (string)($row['root_package'] ?? ''),
                 (string)($row['relative_object_path'] ?? ''),
                 (int)($row['is_common'] ?? 0),
+                self::nullableScalarString($row['class_package_name_index'] ?? null),
+                self::nullableScalarString($row['class_name_index'] ?? null),
+                self::nullableScalarString($row['object_name_index'] ?? null),
             ];
         }
         foreach ((array)($snapshot['exports'] ?? []) as $row) {
@@ -365,6 +372,10 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
                 self::nullableScalarString($row['object_flags'] ?? null),
                 self::nullableScalarString($row['serial_size'] ?? null),
                 self::nullableScalarString($row['serial_offset'] ?? null),
+                (int)($row['class_index'] ?? 0),
+                (int)($row['super_index'] ?? 0),
+                (int)($row['template_index'] ?? 0),
+                self::nullableScalarString($row['object_name_index'] ?? null),
             ];
         }
 
