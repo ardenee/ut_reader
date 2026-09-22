@@ -229,19 +229,43 @@ final class PdoPackageObjectCoverageResolver
         int $preferredFileId = 0,
         array $requiredClassesByPath = []
     ): ?array {
-        foreach (self::evaluate(
-            $db,
-            $gameId,
-            $packageName,
-            $requiredObjectPaths,
-            $preferredFileId,
-            $requiredClassesByPath
-        ) as $coverage) {
-            if (($coverage['status'] ?? '') === 'fully_satisfies') {
-                return $coverage;
+        return self::selectCompleteCoverage(
+            self::evaluate(
+                $db,
+                $gameId,
+                $packageName,
+                $requiredObjectPaths,
+                $preferredFileId,
+                $requiredClassesByPath
+            ),
+            $preferredFileId
+        );
+    }
+
+    /**
+     * Pure selection boundary used by contracts and callers: partial providers
+     * can never be combined or promoted into a complete provider.
+     *
+     * @param list<array<string,mixed>> $coverage
+     * @return array<string,mixed>|null
+     */
+    public static function selectCompleteCoverage(array $coverage, int $preferredFileId = 0): ?array
+    {
+        $complete = array_values(array_filter(
+            $coverage,
+            static fn(array $row): bool => (string)($row['status'] ?? '') === 'fully_satisfies'
+        ));
+        if ($complete === []) {
+            return null;
+        }
+        if ($preferredFileId > 0) {
+            foreach ($complete as $row) {
+                if ((int)($row['file_id'] ?? 0) === $preferredFileId) {
+                    return $row;
+                }
             }
         }
-        return null;
+        return $complete[0];
     }
 
     /**
