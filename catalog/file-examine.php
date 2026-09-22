@@ -13,6 +13,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/lib/CatalogSupport.php';
 require_once __DIR__ . '/lib/CatalogFileFeedback.php';
 
+use UnrealDb\Catalog\Application\Catalog\CatalogPackageHeaderInspector;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogQueueWorkerStarter;
 use UnrealDb\Catalog\Infrastructure\Maintenance\CatalogVerifiedFileRenameService;
 
@@ -54,17 +55,20 @@ function file_examine_render_opaque_controls(string $html, int &$replacementCoun
 }
 
 /** @param array{ok:bool,error:string,summary:array<string,mixed>,rows:list<array<string,mixed>>}|null $inspection */
-function file_examine_header_html(?array $inspection): string
+function file_examine_header_html(?array $inspection, int $fileId): string
 {
-    if ($inspection === null) {
-        return '';
-    }
     $html = '<div class="card"><h2>Raw package header</h2>';
+    if ($inspection === null) {
+        return $html
+            . '<p class="muted">Not read during normal page loading. Verify the raw header only when you need to compare the stored file on disk with the catalogue metadata.</p>'
+            . '<p><a class="button secondary" href="file-examine.php?id=' . $fileId . '&verify_raw_header=1#raw-package-header">Verify raw header</a></p></div>';
+    }
     if (!$inspection['ok']) {
-        return $html . '<p class="muted">' . catalog_h($inspection['error']) . '</p></div>';
+        return $html . '<p class="muted">' . catalog_h($inspection['error']) . '</p>'
+            . '<p><a class="button secondary" href="file-examine.php?id=' . $fileId . '&verify_raw_header=1#raw-package-header">Verify again</a></p></div>';
     }
 
-    $html .= '<div class="two-col"><table>';
+    $html .= '<div id="raw-package-header"></div><div class="two-col"><table>';
     $summary = $inspection['summary'];
     $left = ['GUID','Version','Licensee Version','Signature','Name Offset','Import Offset','Export Offset','Total Header Size'];
     $right = ['Flags','Build','Heritage','Counts','Catalog Counts','Generations','Folder Name'];
@@ -199,22 +203,16 @@ try {
         exit;
     }
     if ($row) {
-        // Viewer pages must not reopen the original Unreal payload. Package tables
-        // come from the compact metadata projection and summary fields come from ue_files.
-        $headerInspection = [
-            'ok' => true,
-            'error' => '',
-            'summary' => [
-                'GUID' => (string)($row['package_guid'] ?? ''),
-                'Version' => (string)($row['package_version'] ?? ''),
-                'Licensee Version' => (string)($row['licensee_version'] ?? ''),
-                'Engine' => (string)($row['engine'] ?? ''),
-                'Counts' => 'N ' . (int)($row['name_count'] ?? 0)
-                    . ' / I ' . (int)($row['import_count'] ?? 0)
-                    . ' / E ' . (int)($row['export_count'] ?? 0),
-            ],
-            'rows' => [],
-        ];
+        // Raw package inspection is deliberately opt-in. Normal examiner requests
+        // remain database-only and never touch the stored Unreal payload.
+        if ((string)($_GET['verify_raw_header'] ?? '') === '1') {
+            $storageRoot = realpath(rtrim((string)($config['storage_path'] ?? ''), DIRECTORY_SEPARATOR));
+            $storedPath = realpath(__DIR__ . '/' . (string)($row['relative_path'] ?? ''));
+            if ($storageRoot && $storedPath && !str_starts_with($storedPath, $storageRoot)) {
+                $storedPath = null;
+            }
+            $headerInspection = CatalogPackageHeaderInspector::inspect($storedPath ?: null, $row);
+        }
 
         if ($isAdmin && (string)$row['scan_status'] === 'verified') {
             $flash = is_array($_SESSION['file_examine_rename_flash'][$id] ?? null)
@@ -262,7 +260,7 @@ if ($renameCardHtml !== '') {
     $html = str_replace($marker, $renameCardHtml . $marker, $html);
 }
 
-$headerHtml = file_examine_header_html($headerInspection);
+$headerHtml = file_examine_header_html($headerInspection, $id);
 if ($headerHtml !== '') {
     $html = str_replace('<div class="card" id="package-tables">', $headerHtml . '<div class="card" id="package-tables">', $html);
 }
