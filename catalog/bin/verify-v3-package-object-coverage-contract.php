@@ -26,6 +26,9 @@ $source = file_get_contents(
 $resolverSource = file_get_contents(
     $root . '/src/Infrastructure/Persistence/PdoDependencyResolver.php'
 );
+$caseResolverSource = file_get_contents(
+    $root . '/src/Infrastructure/Persistence/PdoCompactCaseInsensitiveExportResolver.php'
+);
 $checks = [];
 $check = static function (string $name, bool $ok, string $detail) use (&$checks): void {
     $checks[] = ['check' => $name, 'ok' => $ok, 'detail' => $detail];
@@ -104,6 +107,25 @@ $check(
         && strpos($source, "\$preferredFileId > 0") !== false
         && strpos($source, "\$status !== 0") < strpos($source, "\$preferredFileId > 0"),
     'Provider preference is only a tie-breaker after complete/partial coverage status.'
+);
+
+
+$check(
+    'coverage_checks_class_when_available',
+    is_string($source)
+        && str_contains($source, 'requiredClassesByPath')
+        && str_contains($source, 'exportMatchesRequirement')
+        && str_contains($source, "'class_package'")
+        && str_contains($source, "'class_name'"),
+    'A path match must also honor Import class identity when both Import and Export expose it.'
+);
+$check(
+    'case_only_path_fallback_is_provider_scoped',
+    is_string($source)
+        && str_contains($source, 'PdoCompactCaseInsensitiveExportResolver::matchProviderPaths')
+        && is_string($caseResolverSource)
+        && str_contains($caseResolverSource, 'public static function matchProviderPaths'),
+    'Byte-sensitive path hashes retain a bounded provider-scoped case-insensitive fallback.'
 );
 
 $ok = !in_array(false, array_column($checks, 'ok'), true);
