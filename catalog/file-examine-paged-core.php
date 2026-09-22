@@ -195,7 +195,17 @@ try {
         }
     }
 
+    $fetchStarted = microtime(true);
     $page = PdoPackageTablePageQuery::fetchPage($db, $file, $table, $requestedPage, $pageSize);
+    $fetchElapsedMs = (int)round((microtime(true) - $fetchStarted) * 1000);
+    error_log(
+        '[UnrealDB file examiner page] file_id=' . $fileId
+        . ' table=' . $table
+        . ' page=' . $requestedPage
+        . ' page_size=' . $pageSize
+        . ' rows=' . count($page['rows'])
+        . ' elapsed_ms=' . $fetchElapsedMs
+    );
     $rows = $page['rows'];
     // Keep the initial examiner request bounded to the requested metadata page.
     // Cross-reference/usage/dependency enrichment is loaded after first paint by
