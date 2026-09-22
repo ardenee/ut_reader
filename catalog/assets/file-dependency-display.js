@@ -357,6 +357,53 @@
         });
     }
 
+    function installRawHeader(payload) {
+        var card = document.getElementById('raw-package-header');
+        if (!card) return;
+        var inspection = payload && payload.inspection;
+        if (!inspection || !inspection.ok) {
+            card.innerHTML = '<h2>Raw package header</h2><p class="muted">' + h(inspection ? inspection.error : 'Header inspection unavailable.') + '</p>';
+            return;
+        }
+        var summary = inspection.summary || {};
+        var left = ['GUID','Version','Licensee Version','Signature','Name Offset','Import Offset','Export Offset','Total Header Size'];
+        var right = ['Flags','Build','Heritage','Counts','Catalog Counts','Generations','Folder Name'];
+        function table(labels) {
+            return '<table>' + labels.filter(function (label) {
+                return Object.prototype.hasOwnProperty.call(summary, label);
+            }).map(function (label) {
+                return '<tr><th>' + h(label) + '</th><td class="mono path">' + h(summary[label]) + '</td></tr>';
+            }).join('') + '</table>';
+        }
+        var rows = Array.isArray(inspection.rows) ? inspection.rows.slice(0, 500) : [];
+        var details = '';
+        if (rows.length) {
+            details = '<details><summary>Raw fields (' + Number(inspection.rows.length) + ')</summary><div class="examine-table-region"><table><thead><tr><th>Offset</th><th>Size</th><th>Field</th><th>Type</th><th>Value</th><th>Raw hex</th><th>Note</th></tr></thead><tbody>'
+                + rows.map(function (row) {
+                    return '<tr><td class="mono">' + Number(row.offset || 0) + '</td><td class="mono">' + Number(row.size || 0) + '</td><td class="mono">' + h(row.field) + '</td><td class="mono">' + h(row.type) + '</td><td class="mono path">' + h(row.value) + '</td><td class="mono path">' + h(row.hex) + '</td><td>' + h(row.note) + '</td></tr>';
+                }).join('') + '</tbody></table></div></details>';
+        }
+        card.innerHTML = '<h2>Raw package header</h2><div class="two-col">' + table(left) + table(right) + '</div>' + details;
+    }
+
+    function loadRawHeader() {
+        if (!document.getElementById('raw-package-header')) return;
+        fetch('file-examine-header.php?id=' + encodeURIComponent(fileId), {
+            credentials: 'same-origin',
+            cache: 'no-store',
+            headers: {'Accept': 'application/json'}
+        }).then(function (response) {
+            return response.json().then(function (payload) {
+                if (!response.ok || !payload.ok) throw new Error(payload.error || 'Could not inspect stored package header.');
+                return payload;
+            });
+        }).then(installRawHeader).catch(function (error) {
+            console.error('[UnrealDB raw package header]', error);
+            var status = document.querySelector('[data-file-examine-header-status]');
+            if (status) status.textContent = 'Raw package header unavailable: ' + (error.message || 'unknown error');
+        });
+    }
+
     function loadExaminerEnrichment() {
         var root = document.getElementById('package-tables');
         if (!root) return;
@@ -385,6 +432,7 @@
     }
 
     addStyle();
+    loadRawHeader();
     loadExaminerEnrichment();
     fetch('file-dependency-files.php?id=' + encodeURIComponent(fileId), {
         credentials: 'same-origin',
