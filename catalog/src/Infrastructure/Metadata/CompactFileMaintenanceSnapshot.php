@@ -21,7 +21,7 @@ use Throwable;
  * Captures and restores a verified file without reading legacy metadata tables.
  *
  * The relational file/location/alias rows are retained exactly. Names, Imports,
- * Exports and dependencies are loaded from the format-2 container and restored
+ * Exports and dependencies are loaded from the format-3 container and restored
  * through the compact snapshot writer.
  */
 final class CompactFileMaintenanceSnapshot
@@ -61,7 +61,7 @@ final class CompactFileMaintenanceSnapshot
             [$fileId]
         );
         if ($registration === null || (int)$registration['format_version'] !== BlockedCompressedMetadataContainer::FORMAT_VERSION) {
-            throw new RuntimeException('File #' . $fileId . ' has no valid format-2 registration.');
+            throw new RuntimeException('File #' . $fileId . ' has no valid format-3 registration.');
         }
 
         return [
