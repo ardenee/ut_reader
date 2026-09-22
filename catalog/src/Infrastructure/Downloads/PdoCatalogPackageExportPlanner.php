@@ -70,6 +70,7 @@ final class PdoCatalogPackageExportPlanner
         $missing = [];
         $packageOnly = [];
         $common = [];
+        $provenance = [];
         $totalBytes = 0;
         $transitive = !empty($settings['include_transitive']);
         $dependencySource = PdoDependencyReadSource::sql($this->db);
@@ -145,6 +146,7 @@ final class PdoCatalogPackageExportPlanner
                     . (string)$dependency['required_object_path']
                 );
                 $detail = [
+                    'dependency_id' => (int)$dependency['id'],
                     'from_file_id' => $fileId,
                     'from_package' => (string)$file['package_name'],
                     'required_package' => (string)$dependency['required_package'],
@@ -164,6 +166,9 @@ final class PdoCatalogPackageExportPlanner
                 if ($status === 'package_only') {
                     $packageOnly[$key] = $detail;
                 }
+                if ($resolvedId > 0) {
+                    $provenance[$resolvedId][] = $detail;
+                }
                 if (!isset($visited[$resolvedId]) && ($transitive || $fileId === $rootFileId)) {
                     $queue[] = $resolvedId;
                 }
@@ -180,8 +185,10 @@ final class PdoCatalogPackageExportPlanner
                     'Two catalog files map to the same package path: ' . $file['install_path']
                     . '. Existing file #' . $existingId
                     . ' [' . $this->collisionIdentity($existing) . ']'
+                    . ' via ' . $this->collisionProvenance($provenance[$existingId] ?? [])
                     . '; conflicting file #' . $fileId
-                    . ' [' . $this->collisionIdentity($file) . '].'
+                    . ' [' . $this->collisionIdentity($file) . ']'
+                    . ' via ' . $this->collisionProvenance($provenance[$fileId] ?? []) . '.'
                     . ' Do not choose one automatically; inspect dependency resolution/source placement.'
                 );
             }
@@ -211,6 +218,26 @@ final class PdoCatalogPackageExportPlanner
             'include_dependencies' => $includeDependencies,
             'transitive_dependencies' => $includeDependencies && $transitive,
         ];
+    }
+
+    /** @param array<int,array<string,mixed>> $rows */
+    private function collisionProvenance(array $rows): string
+    {
+        if (!$rows) {
+            return 'no recorded dependency edge (root/direct selection)';
+        }
+        $parts = [];
+        foreach ($rows as $row) {
+            $parts[] = 'dependency #' . (int)($row['dependency_id'] ?? 0)
+                . ' from file #' . (int)($row['from_file_id'] ?? 0)
+                . ' (' . (string)($row['from_package'] ?? '') . ')'
+                . ' requires ' . (string)($row['required_package'] ?? '')
+                . ((string)($row['required_object_path'] ?? '') !== ''
+                    ? '.' . (string)$row['required_object_path']
+                    : '')
+                . ' status=' . (string)($row['status'] ?? '');
+        }
+        return implode(' | ', array_values(array_unique($parts)));
     }
 
     /** @param array<string,mixed> $file */
