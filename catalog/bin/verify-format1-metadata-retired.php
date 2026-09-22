@@ -160,27 +160,27 @@ if ($withDatabase) {
         $application = catalog_bootstrap(false);
         $db = $application->db;
 
-        $nonFormat2 = (int)$db->query(
-            'SELECT COUNT(*) FROM ue_file_metadata WHERE format_version<>2'
+        $nonFormat3 = (int)$db->query(
+            'SELECT COUNT(*) FROM ue_file_metadata WHERE format_version<>3'
         )->fetchColumn();
         $record(
-            'database_has_only_format2_metadata',
-            $nonFormat2 === 0,
-            'non_format2_rows=' . $nonFormat2
+            'database_has_only_format3_metadata',
+            $nonFormat3 === 0,
+            'non_format3_rows=' . $nonFormat3
         );
 
-        $verifiedWithoutFormat2 = (int)$db->query(
+        $verifiedWithoutFormat3 = (int)$db->query(
             'SELECT COUNT(*) FROM ue_files f '
             . 'LEFT JOIN ue_file_metadata m ON m.file_id=f.id '
-            . 'WHERE f.scan_status="verified" AND (m.file_id IS NULL OR m.format_version<>2)'
+            . 'WHERE f.scan_status="verified" AND (m.file_id IS NULL OR m.format_version<>3)'
         )->fetchColumn();
         $record(
-            'verified_files_have_format2_metadata',
-            $verifiedWithoutFormat2 === 0,
-            'verified_without_format2=' . $verifiedWithoutFormat2
+            'verified_files_have_format3_metadata',
+            $verifiedWithoutFormat3 === 0,
+            'verified_without_format3=' . $verifiedWithoutFormat3
         );
     } catch (Throwable $error) {
-        $record('database_format2_check', false, get_class($error) . ': ' . $error->getMessage());
+        $record('database_format3_check', false, get_class($error) . ': ' . $error->getMessage());
     }
 }
 
