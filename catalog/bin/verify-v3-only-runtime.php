@@ -42,7 +42,8 @@ foreach ($iterator as $file) {
     }
     $real = realpath($file->getPathname()) ?: $file->getPathname();
     $relative = str_replace('\\', '/', substr($real, strlen($root) + 1));
-    if (in_array($relative, $excludedFiles, true)) {
+    if (in_array($relative, $excludedFiles, true)
+        || preg_match('#^bin/verify-[^/]+\\.php$#i', $relative) === 1) {
         continue;
     }
     $excluded = false;
