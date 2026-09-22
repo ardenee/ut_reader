@@ -2,7 +2,7 @@
 /**
  * UnrealDB PHP File Audit
  * Purpose: Persists a newly verified package or refreshes an existing verified package row atomically.
- * Why: Parsed Names/Imports/Exports are published directly to format-2 metadata, while maintenance rescans must preserve
+ * Why: Parsed Names/Imports/Exports are published directly to format-3 metadata, while maintenance rescans must preserve
  *      stable ue_files identities so unrelated foreign-key relationships are not destroyed.
  * Role: Infrastructure persistence collaborator for verified package import and in-place maintenance refresh.
  */
