@@ -1,6 +1,6 @@
 <?php
 /**
- * Repairs one verified file's format-2 metadata from its authoritative stored
+ * Repairs one verified file's format-3 metadata from its authoritative stored
  * package and then runs the normal durable affected-dependency workflow.
  *
  * The repair is intentionally one-file bounded. If the compact container is
@@ -91,7 +91,7 @@ final class CatalogCompactMetadataRepairJobHandler implements JobHandler
             $context->heartbeatIfDue($this->progress(
                 'compact_repair_reimport',
                 20,
-                'Rebuilding format-2 metadata for ' . (string)$file['original_name'] . '.',
+                'Rebuilding format-3 metadata for ' . (string)$file['original_name'] . '.',
                 ['file_id' => $fileId]
             ));
             $maintenance = new CatalogFileMaintenanceActionService(
@@ -127,7 +127,7 @@ final class CatalogCompactMetadataRepairJobHandler implements JobHandler
             $context->checkpoint($this->progress(
                 'compact_repair_dependency_plan',
                 55,
-                'Format-2 metadata repaired for ' . (string)$file['original_name']
+                'Format-3 metadata repaired for ' . (string)$file['original_name']
                     . '; planning affected dependency refresh.',
                 ['file_id' => $fileId, 'repaired' => true]
             ));
