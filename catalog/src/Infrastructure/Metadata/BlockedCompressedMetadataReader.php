@@ -233,7 +233,7 @@ final class BlockedCompressedMetadataReader
             throw new RuntimeException('File #' . $fileId . ' has no compressed metadata row.');
         }
         if ((int)$row['format_version'] !== BlockedCompressedMetadataContainer::FORMAT_VERSION) {
-            throw new RuntimeException('File #' . $fileId . ' is not using blocked metadata format version 2.');
+            throw new RuntimeException('File #' . $fileId . ' is not using blocked metadata format version ' . BlockedCompressedMetadataContainer::FORMAT_VERSION . '.');
         }
         if ((int)$row['codec'] !== BlockedCompressedMetadataContainer::CODEC_BLOCK_GZIP) {
             throw new RuntimeException('File #' . $fileId . ' uses an unsupported blocked metadata codec.');
@@ -351,6 +351,10 @@ final class BlockedCompressedMetadataReader
                 'name_index' => (int)($row[0] ?? 0),
                 'name_text' => $this->stringAt($strings, $row[1] ?? null),
                 'flags' => $row[2] ?? null,
+                'imports_count' => (int)($row[3] ?? 0),
+                'exports_count' => (int)($row[4] ?? 0),
+                'first_import_index' => isset($row[5]) ? (int)$row[5] : null,
+                'first_export_index' => isset($row[6]) ? (int)$row[6] : null,
             ],
             'imports' => [
                 'id' => (int)($row[0] ?? 0) + 1,
@@ -363,6 +367,9 @@ final class BlockedCompressedMetadataReader
                 'root_package' => $this->stringAt($strings, $row[6] ?? null),
                 'relative_object_path' => $this->stringAt($strings, $row[7] ?? null),
                 'is_common' => (int)($row[8] ?? 0),
+                'class_package_name_index' => isset($row[9]) ? (int)$row[9] : null,
+                'class_name_index' => isset($row[10]) ? (int)$row[10] : null,
+                'object_name_index' => isset($row[11]) ? (int)$row[11] : null,
             ],
             'exports' => [
                 'id' => (int)($row[0] ?? 0) + 1,
@@ -375,6 +382,10 @@ final class BlockedCompressedMetadataReader
                 'object_flags' => $row[6] ?? null,
                 'serial_size' => $row[7] ?? null,
                 'serial_offset' => $row[8] ?? null,
+                'class_index' => (int)($row[9] ?? 0),
+                'super_index' => (int)($row[10] ?? 0),
+                'template_index' => (int)($row[11] ?? 0),
+                'object_name_index' => isset($row[12]) ? (int)$row[12] : null,
             ],
             'dependencies' => [
                 'file_id' => 0,
