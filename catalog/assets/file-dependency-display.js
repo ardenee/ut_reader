@@ -434,7 +434,11 @@
     addStyle();
     loadRawHeader();
     loadExaminerEnrichment();
-    fetch('file-dependency-files.php?id=' + encodeURIComponent(fileId), {
+    var examineRoot = document.getElementById('package-tables');
+    var dependencyEndpoint = examineRoot
+        ? 'file-examine-dependencies.php?id=' + encodeURIComponent(fileId)
+        : 'file-dependency-files.php?id=' + encodeURIComponent(fileId);
+    fetch(dependencyEndpoint, {
         credentials: 'same-origin',
         cache: 'no-store',
         headers: {'Accept': 'application/json'}
@@ -444,8 +448,11 @@
             return payload;
         });
     }).then(function (data) {
-        installExamineTabs(data);
-        installFileInfoDependencies(data);
+        if (examineRoot) {
+            installExamineTabs(data);
+        } else {
+            installFileInfoDependencies(data);
+        }
     }).catch(function (error) {
         console.error('[UnrealDB file dependencies]', error);
         showDependencyLoadError(error);
