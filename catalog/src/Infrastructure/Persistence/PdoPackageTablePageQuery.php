@@ -1,7 +1,7 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Provides bounded Names/Imports/Exports paging and lookups from authoritative format-2 metadata.
+ * Purpose: Provides bounded Names/Imports/Exports paging and lookups from authoritative format-3 metadata.
  * Why: Verified package examination must never fall back to retired SQL metadata tables.
  * Role: Infrastructure compact metadata query used by file-examine pages.
  */
@@ -153,7 +153,7 @@ final class PdoPackageTablePageQuery
             throw new RuntimeException('A positive verified file ID is required for compact metadata reads.');
         }
         $format = self::metadataFormat($db, $fileId);
-        if (!in_array($format, [2, \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer::FORMAT_VERSION], true)) {
+        if ($format !== \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer::FORMAT_VERSION) {
             throw new RuntimeException(
                 'Verified file #' . $fileId . ' is missing supported compact metadata; runtime legacy reads are disabled.'
             );
