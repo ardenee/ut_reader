@@ -37,7 +37,8 @@ final class PdoPackageObjectCoverageResolver
         int $gameId,
         string $packageName,
         array $requiredObjectPaths,
-        int $preferredFileId = 0
+        int $preferredFileId = 0,
+        array $requiredClassesByPath = []
     ): array {
         $packageName = trim($packageName);
         if ($gameId < 1 || $packageName === '') {
@@ -45,6 +46,7 @@ final class PdoPackageObjectCoverageResolver
         }
 
         $requirements = self::requirements($packageName, $requiredObjectPaths);
+        $requiredClasses = self::requiredClasses($packageName, $requiredClassesByPath);
         $providers = self::providers($db, $gameId, $packageName, $preferredFileId);
         if ($providers === []) {
             return [];
@@ -92,11 +94,12 @@ final class PdoPackageObjectCoverageResolver
                     // path_hash is only an index accelerator. Confirm the actual
                     // v3 Export path so a hash collision can never satisfy an Import.
                     try {
-                        $pathMatches = self::exportPathMatches(
+                        $pathMatches = self::exportMatchesRequirement(
                             $reader,
                             $fileId,
                             (int)$row['export_index'],
-                            (string)$entry['key']
+                            (string)$entry['key'],
+                            $requiredClasses[(string)$entry['key']] ?? null
                         );
                     } catch (\Throwable $error) {
                         \UnrealDb\Catalog\Infrastructure\Metadata\VerifiedCompactMetadataHealth::queueRepair(
@@ -177,9 +180,17 @@ final class PdoPackageObjectCoverageResolver
         int $gameId,
         string $packageName,
         array $requiredObjectPaths,
-        int $preferredFileId = 0
+        int $preferredFileId = 0,
+        array $requiredClassesByPath = []
     ): ?array {
-        foreach (self::evaluate($db, $gameId, $packageName, $requiredObjectPaths, $preferredFileId) as $coverage) {
+        foreach (self::evaluate(
+            $db,
+            $gameId,
+            $packageName,
+            $requiredObjectPaths,
+            $preferredFileId,
+            $requiredClassesByPath
+        ) as $coverage) {
             if (($coverage['status'] ?? '') === 'fully_satisfies') {
                 return $coverage;
             }
@@ -211,6 +222,31 @@ final class PdoPackageObjectCoverageResolver
             }
         }
         return $requirements;
+    }
+
+    /**
+     * @param array<string,mixed> $classesByPath
+     * @return array<string,array{class_package:string,class_name:string}>
+     */
+    private static function requiredClasses(string $packageName, array $classesByPath): array
+    {
+        $result = [];
+        foreach ($classesByPath as $path => $class) {
+            $requirements = self::requirements($packageName, [(string)$path]);
+            $key = array_key_first($requirements);
+            if ($key === null || !is_array($class)) {
+                continue;
+            }
+            $className = trim((string)($class['class_name'] ?? ''));
+            if ($className === '') {
+                continue;
+            }
+            $result[(string)$key] = [
+                'class_package' => trim((string)($class['class_package'] ?? '')),
+                'class_name' => $className,
+            ];
+        }
+        return $result;
     }
 
     /** @return array<int,array{source:string}> */
@@ -285,18 +321,34 @@ final class PdoPackageObjectCoverageResolver
         return new \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataReader($db, $storageRoot);
     }
 
-    private static function exportPathMatches(
+    /** @param array{class_package:string,class_name:string}|null $requiredClass */
+    private static function exportMatchesRequirement(
         \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataReader $reader,
         int $fileId,
         int $exportIndex,
-        string $requiredKey
+        string $requiredKey,
+        ?array $requiredClass
     ): bool {
         $rows = $reader->page($fileId, 'exports', $exportIndex, 1);
         foreach ($rows as $row) {
-            if ((int)($row['export_index'] ?? -1) === $exportIndex
-                && self::key((string)($row['local_path'] ?? '')) === $requiredKey) {
+            if ((int)($row['export_index'] ?? -1) !== $exportIndex
+                || self::key((string)($row['local_path'] ?? '')) !== $requiredKey) {
+                continue;
+            }
+            if ($requiredClass === null) {
                 return true;
             }
+            $actual = self::key((string)($row['class_name'] ?? ''));
+            $name = self::key($requiredClass['class_name']);
+            $package = self::key($requiredClass['class_package']);
+            if ($actual === '' || $name === '') {
+                return true;
+            }
+            $qualified = $package !== '' ? $package . '.' . $name : $name;
+            if (str_contains($actual, '.')) {
+                return $actual === $qualified || $actual === $name;
+            }
+            return $actual === $name;
         }
         return false;
     }
