@@ -140,9 +140,9 @@ final class PdoPackageTablePageQuery
             throw new RuntimeException('A positive verified file ID is required for compact metadata reads.');
         }
         $format = self::metadataFormat($db, $fileId);
-        if ($format !== 2) {
+        if (!in_array($format, [2, \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer::FORMAT_VERSION], true)) {
             throw new RuntimeException(
-                'Verified file #' . $fileId . ' is missing current format-2 metadata; runtime legacy reads are disabled.'
+                'Verified file #' . $fileId . ' is missing supported compact metadata; runtime legacy reads are disabled.'
             );
         }
         $storageRoot = self::storageRoot();
