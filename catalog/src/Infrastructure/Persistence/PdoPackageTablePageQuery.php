@@ -86,7 +86,10 @@ final class PdoPackageTablePageQuery
         $pages = max(1, (int)ceil($total / $pageSize));
         $page = max(1, min($page, $pages));
         $start = ($page - 1) * $pageSize;
-        $rows = self::reader($db, (int)$file['id'])->page((int)$file['id'], $table, $start, $pageSize);
+        $fileId = (int)$file['id'];
+        $rows = self::withRecovery($db, $fileId, static fn(BlockedCompressedMetadataReader $reader): array =>
+            $reader->page($fileId, $table, $start, $pageSize)
+        );
 
         return [
             'rows' => $rows,
@@ -102,7 +105,9 @@ final class PdoPackageTablePageQuery
     /** @return array<int,array<string,mixed>> */
     public static function dependencyPage(PDO $db, int $fileId, int $start, int $limit): array
     {
-        $rows = self::reader($db, $fileId)->page($fileId, 'dependencies', max(0, $start), max(1, min(5000, $limit)));
+        $rows = self::withRecovery($db, $fileId, static fn(BlockedCompressedMetadataReader $reader): array =>
+            $reader->page($fileId, 'dependencies', max(0, $start), max(1, min(5000, $limit)))
+        );
         $byIndex = [];
         foreach ($rows as $row) {
             if (is_array($row)) {
@@ -116,7 +121,11 @@ final class PdoPackageTablePageQuery
     public static function nameLookup(PDO $db, int $fileId, array $values): array
     {
         $values = self::uniqueValues($values);
-        return $values === [] ? [] : self::reader($db, $fileId)->findNameIndexes($fileId, $values);
+        return $values === [] ? [] : self::withRecovery(
+            $db,
+            $fileId,
+            static fn(BlockedCompressedMetadataReader $reader): array => $reader->findNameIndexes($fileId, $values)
+        );
     }
 
     /**
@@ -126,7 +135,11 @@ final class PdoPackageTablePageQuery
     public static function nameUsage(PDO $db, int $fileId, array $names): array
     {
         $names = self::uniqueValues($names);
-        return self::reader($db, $fileId)->nameUsage($fileId, $names);
+        return self::withRecovery(
+            $db,
+            $fileId,
+            static fn(BlockedCompressedMetadataReader $reader): array => $reader->nameUsage($fileId, $names)
+        );
     }
 
     /** @param list<array<string,mixed>> $imports @return array<int,array<string,mixed>> */
@@ -136,7 +149,12 @@ final class PdoPackageTablePageQuery
             static fn(array $row): int => (int)($row['import_index'] ?? -1),
             $imports
         ));
-        $byIndex = self::reader($db, $fileId)->dependenciesForImportIndexes($fileId, $indexes);
+        $byIndex = self::withRecovery(
+            $db,
+            $fileId,
+            static fn(BlockedCompressedMetadataReader $reader): array =>
+                $reader->dependenciesForImportIndexes($fileId, $indexes)
+        );
         $map = [];
         foreach ($imports as $row) {
             $index = (int)($row['import_index'] ?? -1);
@@ -145,6 +163,25 @@ final class PdoPackageTablePageQuery
             }
         }
         return $map;
+    }
+
+    private static function withRecovery(PDO $db, int $fileId, callable $operation): mixed
+    {
+        try {
+            return $operation(self::reader($db, $fileId));
+        } catch (\Throwable $error) {
+            $config = function_exists('catalog_config') ? \catalog_config() : [];
+            if (is_array($config)) {
+                \UnrealDb\Catalog\Infrastructure\Metadata\VerifiedCompactMetadataHealth::queueRepair(
+                    $db,
+                    $config,
+                    $fileId,
+                    null,
+                    $error
+                );
+            }
+            throw $error;
+        }
     }
 
     private static function reader(PDO $db, int $fileId): BlockedCompressedMetadataReader
