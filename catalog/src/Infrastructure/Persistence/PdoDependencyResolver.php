@@ -58,6 +58,10 @@ final class PdoDependencyResolver
             $packageKey = self::normalizeLookup($lookup['package_name']);
             $packageRequirements[$packageKey]['package_name'] ??= $lookup['package_name'];
             $packageRequirements[$packageKey]['paths'][] = $lookup['local_path'];
+            $packageRequirements[$packageKey]['classes'][$lookup['local_path']] = [
+                'class_package' => (string)($lookup['class_package'] ?? ''),
+                'class_name' => (string)($lookup['class_name'] ?? ''),
+            ];
         }
         $completeProviders = [];
         foreach ($packageRequirements as $packageKey => $requirement) {
@@ -66,7 +70,8 @@ final class PdoDependencyResolver
                 $gameId,
                 (string)$requirement['package_name'],
                 array_values(array_unique((array)$requirement['paths'])),
-                $fileId
+                $fileId,
+                (array)($requirement['classes'] ?? [])
             );
             if ($provider !== null) {
                 $completeProviders[$packageKey] = $provider;
