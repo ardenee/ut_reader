@@ -118,7 +118,10 @@ final class PdoPackageTablePageQuery
         }
 
         $statement = $db->prepare(
-            'SELECT n.name_index,n.name_term_id FROM ue_name_lookup n '
+            // FORCE INDEX(PRIMARY): this lookup is intentionally file-bounded. On the
+            // very large ue_name_lookup table MySQL can otherwise choose the
+            // term-first secondary index and walk enormous cross-file ranges.
+            'SELECT n.name_index,n.name_term_id FROM ue_name_lookup n FORCE INDEX (PRIMARY) '
             . 'WHERE n.file_id=? AND n.name_term_id IN ('
             . implode(',', array_fill(0, count($termIds), '?'))
             . ') ORDER BY n.name_index'
