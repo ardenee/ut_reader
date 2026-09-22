@@ -267,13 +267,12 @@ try {
     echo examine_pagination($fileId, $table, $page);
 
     if ($table === 'names') {
-        echo '<h2>Names</h2><div class="examine-table-region"><table><thead><tr><th>Index</th><th>Name</th><th>Used by</th><th>Flags / hashes</th></tr></thead><tbody>';
+        echo '<h2>Names</h2><div class="examine-table-region"><table><thead><tr><th>Index</th><th>Name</th><th>Flags / hashes</th></tr></thead><tbody>';
         foreach ($rows as $row) {
             $index = (int)$row['name_index'];
             $rowId = 'name-' . $index;
             $text = (string)$row['name_text'];
-            $nameUsage = $usage[mb_strtolower(trim($text), 'UTF-8')] ?? [];
-            echo '<tr id="' . $rowId . '"' . ($target === $rowId ? ' class="is-reference-target"' : '') . '><td class="mono">' . $index . '</td><td class="mono path">' . catalog_h($text) . '</td><td data-examine-name-usage="' . $index . '"><span class="muted">loading…</span></td><td class="mono">' . examine_name_flags($row['flags'] ?? null) . '</td></tr>';
+            echo '<tr id="' . $rowId . '"' . ($target === $rowId ? ' class="is-reference-target"' : '') . '><td class="mono">' . $index . '</td><td class="mono path">' . catalog_h($text) . '</td><td class="mono">' . examine_name_flags($row['flags'] ?? null) . '</td></tr>';
         }
         echo '</tbody></table></div>';
     } elseif ($table === 'imports') {
@@ -281,7 +280,7 @@ try {
         foreach ($rows as $row) {
             $index = (int)$row['import_index'];
             $rowId = 'import-' . $index;
-            echo '<tr id="' . $rowId . '"' . ($target === $rowId ? ' class="is-reference-target"' : '') . '><td class="mono">' . $index . '</td><td class="mono">' . (-(int)($index + 1)) . '</td><td data-examine-name-link="class_package" data-examine-row="' . $index . '">' . examine_link_name((string)$row['class_package'], [], $fileId, $pageSize) . '</td><td data-examine-name-link="class_name" data-examine-row="' . $index . '">' . examine_link_name((string)$row['class_name'], [], $fileId, $pageSize) . '</td><td data-examine-name-link="object_name" data-examine-row="' . $index . '">' . examine_link_name((string)$row['object_name'], [], $fileId, $pageSize) . '</td><td>' . examine_reference((int)$row['outer_index'], $fileId, $pageSize) . '</td><td class="mono path">' . catalog_h((string)$row['full_path']) . '</td><td class="mono path">' . catalog_h((string)$row['root_package']) . '</td><td data-examine-dependency="' . $index . '"><span class="muted">loading…</span></td></tr>';
+            echo '<tr id="' . $rowId . '"' . ($target === $rowId ? ' class="is-reference-target"' : '') . '><td class="mono">' . $index . '</td><td class="mono">' . (-(int)($index + 1)) . '</td><td data-examine-name-link="class_package" data-examine-row="' . $index . '">' . examine_link_name((string)$row['class_package'], [], $fileId, $pageSize) . '</td><td data-examine-name-link="class_name" data-examine-row="' . $index . '">' . examine_link_name((string)$row['class_name'], [], $fileId, $pageSize) . '</td><td data-examine-name-link="object_name" data-examine-row="' . $index . '">' . examine_link_name((string)$row['object_name'], [], $fileId, $pageSize) . '</td><td>' . examine_reference((int)$row['outer_index'], $fileId, $pageSize) . '</td><td class="mono path">' . catalog_h((string)$row['full_path']) . '</td><td class="mono path">' . catalog_h((string)$row['root_package']) . '</td><td>' . examine_dependency(null) . '</td></tr>';
         }
         echo '</tbody></table></div>';
     } else {
