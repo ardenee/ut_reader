@@ -69,6 +69,7 @@ final class PdoCompactCaseInsensitiveExportResolver
             $pendingPaths = (array)$group['paths'];
 
             self::matchProviderFiles(
+                $db,
                 $reader,
                 self::primaryProviderFileIds($db, $gameId, $preferredFileId, $packageName),
                 $pendingPaths,
@@ -78,6 +79,7 @@ final class PdoCompactCaseInsensitiveExportResolver
             );
             if ($pendingPaths !== []) {
                 self::matchProviderFiles(
+                    $db,
                     $reader,
                     self::aliasProviderFileIds($db, $gameId, $preferredFileId, $packageName),
                     $pendingPaths,
@@ -122,7 +124,7 @@ final class PdoCompactCaseInsensitiveExportResolver
                 clearstatcache();
                 $page = $reader->page($fileId, 'exports', $start, self::PAGE_SIZE);
             } catch (Throwable $error) {
-                self::reportUnreadableProvider($fileId, $error);
+                self::reportUnreadableProvider($db, $fileId, $error);
                 break;
             }
             foreach ($page as $export) {
@@ -146,6 +148,7 @@ final class PdoCompactCaseInsensitiveExportResolver
      * @param array<string,array{file_id:int,export_index:int,source:string}> $matches
      */
     private static function matchProviderFiles(
+        PDO $db,
         BlockedCompressedMetadataReader $reader,
         array $fileIds,
         array &$pendingPaths,
@@ -171,7 +174,7 @@ final class PdoCompactCaseInsensitiveExportResolver
                     // final publication itself fails, that failure is reported by the
                     // importer/repair workflow instead.
                     if ($fileId !== $preferredFileId) {
-                        self::reportUnreadableProvider($fileId, $error);
+                        self::reportUnreadableProvider($db, $fileId, $error);
                     }
                     break;
                 }
@@ -203,7 +206,7 @@ final class PdoCompactCaseInsensitiveExportResolver
         }
     }
 
-    private static function reportUnreadableProvider(int $fileId, Throwable $error): void
+    private static function reportUnreadableProvider(PDO $db, int $fileId, Throwable $error): void
     {
         if ($fileId < 1 || isset(self::$reportedUnreadableProviders[$fileId])) {
             return;
@@ -213,7 +216,7 @@ final class PdoCompactCaseInsensitiveExportResolver
         $config = function_exists('catalog_config') ? \catalog_config() : [];
         if (is_array($config)) {
             \UnrealDb\Catalog\Infrastructure\Metadata\VerifiedCompactMetadataHealth::queueRepair(
-                \catalog_db($config),
+                $db,
                 $config,
                 $fileId,
                 null,
