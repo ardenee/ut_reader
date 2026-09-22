@@ -227,7 +227,7 @@ final class PdoDependencyResolver
 
     /**
      * Current object resolution uses the compact projection's package identity +
-     * MD5 local-path key. Older format-2 projections already have path_hash even
+     * MD5 local-path key. Format-3 projections carry path_hash even
      * when local_path_term_id has not yet been backfilled, so this stays compact-only
      * without forcing a blocking projection rebuild before deployment. Rare case-only
      * misses use the current blocked metadata container rather than any retired row source.
@@ -275,7 +275,7 @@ final class PdoDependencyResolver
                 'SELECT f.package_name,l.file_id,l.export_index,l.path_hash'
                 . ' FROM ue_export_lookup l'
                 . ' JOIN ue_files f ON f.id=l.file_id'
-                . ' JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=2'
+                . ' JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=3'
                 . ' WHERE f.game_id=? AND f.scan_status="verified" AND (' . implode(' OR ', $pairSql) . ')'
                 . ' ORDER BY f.package_name,(f.id=?) DESC,f.uploaded_at DESC,l.export_index ASC',
                 $args
@@ -327,7 +327,7 @@ final class PdoDependencyResolver
                 'SELECT a.package_name,l.file_id,l.export_index,l.path_hash'
                 . ' FROM ue_file_package_aliases a'
                 . ' JOIN ue_files f ON f.id=a.file_id AND f.game_id=a.game_id'
-                . ' JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=2'
+                . ' JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=3'
                 . ' JOIN ue_export_lookup l ON l.file_id=f.id'
                 . ' WHERE a.game_id=? AND f.scan_status="verified" AND (' . implode(' OR ', $pairSql) . ')'
                 . ' ORDER BY a.package_name,(f.id=?) DESC,f.uploaded_at DESC,l.export_index ASC,a.id ASC',
