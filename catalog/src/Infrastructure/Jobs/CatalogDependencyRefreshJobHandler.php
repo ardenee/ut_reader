@@ -720,27 +720,17 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
         string $originalName
     ): void {
         $repair = $this->metadataRepairChild($job->id);
-        if ($this->compactMetadataPhysicallyPresent($fileId) && $repair === null) {
+        if ($repair === null && VerifiedCompactMetadataHealth::healthy($this->db, $this->config, $fileId)) {
             return;
         }
 
         $requestedBy = max(0, (int)($job->payload['requested_by'] ?? 0));
         if ($repair === null) {
-            $repairJobId = (new PdoJobQueue($this->db))->enqueue(
-                $job->queue,
-                JobType::REPAIR_COMPACT_METADATA_FILE,
-                [
-                    'file_id' => $fileId,
-                    'requested_by' => $requestedBy > 0 ? $requestedBy : null,
-                    'recovery_for_dependency_job_id' => $job->id,
-                ],
-                10,
-                null,
-                null,
-                $requestedBy > 0 ? $requestedBy : null,
-                3,
-                $job->id,
-                'metadata-repair'
+            $repairJobId = VerifiedCompactMetadataHealth::queueRepair(
+                $this->db,
+                $this->config,
+                $fileId,
+                $requestedBy > 0 ? $requestedBy : null
             );
             $context->defer(1, [
                 'stage' => 'metadata_repair_wait',
@@ -759,18 +749,11 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
         $status = strtolower(trim((string)($repair['status'] ?? 'queued')));
         if (in_array($status, ['failed', 'dead_letter', 'cancelled'], true)) {
             $error = trim((string)($repair['last_error'] ?? ''));
-            $context->defer(30, [
-                'stage' => 'metadata_repair_wait',
-                'done' => 0,
-                'total' => 4,
-                'percent' => 2,
-                'file_id' => $fileId,
-                'metadata_repair_job_id' => $repairId,
-                'metadata_repair_status' => $status,
-                'message' => 'Compact metadata repair job #' . $repairId . ' is ' . $status
-                    . ($error !== '' ? ': ' . mb_substr($error, 0, 500, 'UTF-8') : '.')
-                    . ' Restart that repair child; this dependency job will resume after it succeeds.',
-            ]);
+            throw new RuntimeException(
+                'Compact metadata repair job #' . $repairId . ' is ' . $status
+                . ' for file #' . $fileId
+                . ($error !== '' ? ': ' . mb_substr($error, 0, 500, 'UTF-8') : '.')
+            );
         }
 
         if ($status !== 'completed') {
@@ -808,38 +791,6 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
             'message' => 'Compact metadata repair job #' . $repairId
                 . ' completed; resuming dependency rebuild.',
         ]);
-    }
-
-    private function compactMetadataPhysicallyPresent(int $fileId): bool
-    {
-        $storageRoot = trim((string)($this->config['storage_path'] ?? ''));
-        if ($storageRoot === '') {
-            throw new RuntimeException('Catalog storage_path is required for compact dependency rebuilding.');
-        }
-
-        $statement = $this->db->prepare(
-            'SELECT f.game_id,m.format_version,m.codec,m.compressed_size FROM ue_files f '
-            . 'LEFT JOIN ue_file_metadata m ON m.file_id=f.id WHERE f.id=? AND f.scan_status="verified" LIMIT 1'
-        );
-        $statement->execute([$fileId]);
-        $row = $statement->fetch(PDO::FETCH_ASSOC);
-        if (!is_array($row)
-            || (int)($row['format_version'] ?? 0) !== BlockedCompressedMetadataContainer::FORMAT_VERSION
-            || (int)($row['codec'] ?? 0) !== BlockedCompressedMetadataContainer::CODEC_BLOCK_GZIP) {
-            return false;
-        }
-
-        $path = BlockedCompressedMetadataContainer::path(
-            $storageRoot,
-            (int)$row['game_id'],
-            $fileId
-        );
-        clearstatcache(true, $path);
-        if (!is_file($path)) {
-            return false;
-        }
-        $size = @filesize($path);
-        return $size !== false && (int)$size === (int)($row['compressed_size'] ?? -1);
     }
 
     /** @return array<string,mixed>|null */
