@@ -74,6 +74,8 @@ final class PdoCatalogPackageExportPlanner
         $totalBytes = 0;
         $transitive = !empty($settings['include_transitive']);
         $dependencySource = PdoDependencyReadSource::sql($this->db);
+        $overrides = is_array($settings['dependency_file_overrides'] ?? null) ? $settings['dependency_file_overrides'] : [];
+        $reportConflicts = !empty($settings['report_dependency_conflicts']);
 
         while ($queue) {
             $fileId = (int)array_shift($queue);
@@ -141,6 +143,15 @@ final class PdoCatalogPackageExportPlanner
                 $resolvedId = $dependency['resolved_file_id'] !== null
                     ? (int)$dependency['resolved_file_id']
                     : 0;
+                $requiredPackageKey = strtolower(trim((string)$dependency['required_package']));
+                $overrideId = max(0, (int)($overrides[$requiredPackageKey] ?? 0));
+                if ($overrideId > 0 && $resolvedId > 0) {
+                    $override = \\catalog_one($this->db, 'SELECT id,package_name FROM ue_files WHERE id=? AND game_id=? AND scan_status<>"failed"', [$overrideId, (int)$root['game_id']]);
+                    if (!$override || strcasecmp((string)$override['package_name'], (string)$dependency['required_package']) !== 0) {
+                        throw new RuntimeException('Selected dependency override #' . $overrideId . ' is not a valid ' . (string)$dependency['required_package'] . ' package for this game.');
+                    }
+                    $resolvedId = $overrideId;
+                }
                 $key = strtolower(
                     (string)$dependency['required_package'] . '|'
                     . (string)$dependency['required_object_path']
@@ -176,21 +187,27 @@ final class PdoCatalogPackageExportPlanner
         }
 
         $installPaths = [];
+        $conflicts = [];
         foreach ($files as $fileId => $file) {
             $pathKey = strtolower((string)$file['install_path']);
             if (isset($installPaths[$pathKey]) && $installPaths[$pathKey] !== $fileId) {
                 $existingId = (int)$installPaths[$pathKey];
                 $existing = $files[$existingId] ?? [];
-                throw new RuntimeException(
-                    'Two catalog files map to the same package path: ' . $file['install_path']
-                    . '. Existing file #' . $existingId
-                    . ' [' . $this->collisionIdentity($existing) . ']'
-                    . ' via ' . $this->collisionProvenance($provenance[$existingId] ?? [])
-                    . '; conflicting file #' . $fileId
-                    . ' [' . $this->collisionIdentity($file) . ']'
-                    . ' via ' . $this->collisionProvenance($provenance[$fileId] ?? []) . '.'
-                    . ' Do not choose one automatically; inspect dependency resolution/source placement.'
-                );
+                $conflictKey = strtolower((string)($file['package_name'] ?? ''));
+                $conflicts[$conflictKey] = [
+                    'package_name' => (string)($file['package_name'] ?? ''),
+                    'install_path' => (string)$file['install_path'],
+                    'candidates' => [
+                        $this->conflictCandidate($existing, $provenance[$existingId] ?? []),
+                        $this->conflictCandidate($file, $provenance[$fileId] ?? []),
+                    ],
+                ];
+                if (!$reportConflicts) {
+                    throw new RuntimeException(
+                        'Dependency selection required for ' . (string)($file['package_name'] ?? $file['install_path'])
+                        . ': multiple catalog files map to ' . $file['install_path'] . '.'
+                    );
+                }
             }
             $installPaths[$pathKey] = $fileId;
         }
@@ -215,8 +232,24 @@ final class PdoCatalogPackageExportPlanner
             'missing' => array_values($missing),
             'package_only' => array_values($packageOnly),
             'common' => array_values($common),
+            'conflicts' => array_values($conflicts),
             'include_dependencies' => $includeDependencies,
             'transitive_dependencies' => $includeDependencies && $transitive,
+        ];
+    }
+
+    /** @param array<string,mixed> $file @param array<int,array<string,mixed>> $provenance */
+    private function conflictCandidate(array $file, array $provenance): array
+    {
+        return [
+            'file_id' => (int)($file['id'] ?? 0),
+            'package_name' => (string)($file['package_name'] ?? ''),
+            'original_name' => (string)($file['original_name'] ?? ''),
+            'package_guid' => (string)($file['package_guid'] ?? ''),
+            'md5' => (string)($file['md5'] ?? ''),
+            'sha1' => (string)($file['sha1'] ?? ''),
+            'file_size' => (int)($file['file_size'] ?? 0),
+            'provenance' => $provenance,
         ];
     }
 
