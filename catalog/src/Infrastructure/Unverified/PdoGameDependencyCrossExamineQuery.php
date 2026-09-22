@@ -70,7 +70,7 @@ final class PdoGameDependencyCrossExamineQuery
             'missing_dependency_rows' => 0,
             'missing_packages' => 0,
             'source_package_files' => 0,
-            'format2_source_files' => 0,
+            'format3_source_files' => 0,
             'exact_provider_files' => 0,
         ];
         if ($allowedSourceIds === []) {
@@ -86,7 +86,7 @@ final class PdoGameDependencyCrossExamineQuery
             . 'COUNT(DISTINCT l.file_id,l.import_index) missing_count,'
             . 'COUNT(DISTINCT l.file_id) owner_count '
             . 'FROM ue_dependency_links l '
-            . 'JOIN ue_file_metadata m ON m.file_id=l.file_id AND m.format_version=2 '
+            . 'JOIN ue_file_metadata m ON m.file_id=l.file_id AND m.format_version=3 '
             . 'JOIN ue_files owner ON owner.id=l.file_id AND owner.scan_status="verified" '
             . 'JOIN ue_terms pkg ON pkg.id=l.required_package_term_id '
             . 'WHERE owner.game_id=? AND l.status=0 '
@@ -138,7 +138,7 @@ final class PdoGameDependencyCrossExamineQuery
         foreach ($sources as $source) {
             $sourceById[(int)$source['id']] = $source;
             if ((int)($source['metadata_format_version'] ?? 0) === 2) {
-                $diagnostics['format2_source_files']++;
+                $diagnostics['format3_source_files']++;
             }
         }
 
@@ -256,7 +256,7 @@ final class PdoGameDependencyCrossExamineQuery
             'SELECT COUNT(DISTINCT l.file_id,l.import_index) missing_count,'
             . 'COUNT(DISTINCT l.file_id) owner_count '
             . 'FROM ue_dependency_links l '
-            . 'JOIN ue_file_metadata m ON m.file_id=l.file_id AND m.format_version=2 '
+            . 'JOIN ue_file_metadata m ON m.file_id=l.file_id AND m.format_version=3 '
             . 'JOIN ue_files owner ON owner.id=l.file_id AND owner.scan_status="verified" '
             . 'JOIN ue_terms pkg ON pkg.id=l.required_package_term_id '
             . 'WHERE owner.game_id=? AND l.status=0 '
@@ -318,13 +318,13 @@ final class PdoGameDependencyCrossExamineQuery
                 . 'COUNT(DISTINCT l.file_id,l.import_index) exact_object_matches,'
                 . 'COUNT(DISTINCT l.file_id) exact_owner_count '
                 . 'FROM ue_dependency_links l '
-                . 'JOIN ue_file_metadata owner_meta ON owner_meta.file_id=l.file_id AND owner_meta.format_version=2 '
+                . 'JOIN ue_file_metadata owner_meta ON owner_meta.file_id=l.file_id AND owner_meta.format_version=3 '
                 . 'JOIN ue_files owner ON owner.id=l.file_id AND owner.scan_status="verified" '
                 . 'JOIN ue_terms pkg ON pkg.id=l.required_package_term_id '
                 . 'JOIN ue_files source ON source.id IN (' . $placeholders . ') '
                 . 'AND source.scan_status="verified" '
                 . 'AND source.package_name=CONVERT(pkg.value_prefix USING utf8mb4) COLLATE utf8mb4_unicode_ci '
-                . 'JOIN ue_file_metadata source_meta ON source_meta.file_id=source.id AND source_meta.format_version=2 '
+                . 'JOIN ue_file_metadata source_meta ON source_meta.file_id=source.id AND source_meta.format_version=3 '
                 . 'JOIN ue_export_lookup exports ON exports.file_id=source.id AND exports.path_hash=l.required_path_hash '
                 . 'WHERE owner.game_id=? AND l.status=0 '
                 . 'GROUP BY source.id',
