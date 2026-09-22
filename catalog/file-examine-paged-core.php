@@ -109,6 +109,43 @@ function examine_link_name(string $value, array $nameLookup, int $fileId, int $p
     return '<span class="mono path">' . catalog_h($value) . '</span>';
 }
 
+function examine_name_index_link(string $value, ?int $nameIndex, int $fileId, int $pageSize): string
+{
+    $value = trim($value);
+    if ($value === '') {
+        return '<span class="muted">none</span>';
+    }
+    if ($nameIndex !== null && $nameIndex >= 0) {
+        return '<a class="xref mono path" href="' . catalog_h(examine_href($fileId, 'name-' . $nameIndex, $pageSize))
+            . '" title="Open exact Name table entry">' . catalog_h($value) . '</a>';
+    }
+    return '<span class="mono path">' . catalog_h($value) . '</span>';
+}
+
+function examine_object_label(string $value, int $reference, int $fileId, int $pageSize): string
+{
+    $value = trim($value);
+    if ($value === '') {
+        return examine_reference($reference, $fileId, $pageSize);
+    }
+    if ($reference !== 0) {
+        $target = $reference < 0 ? 'import-' . ((-$reference) - 1) : 'export-' . ($reference - 1);
+        return '<a class="xref mono path" href="' . catalog_h(examine_href($fileId, $target, $pageSize))
+            . '" title="Open referenced Import/Export row">' . catalog_h($value) . '</a>';
+    }
+    return '<span class="mono path">' . catalog_h($value) . '</span>';
+}
+
+function examine_stored_usage(array $row, int $fileId, int $pageSize): string
+{
+    return examine_usage([
+        'imports_count' => (int)($row['imports_count'] ?? 0),
+        'imports_target' => isset($row['first_import_index']) ? 'import-' . (int)$row['first_import_index'] : '',
+        'exports_count' => (int)($row['exports_count'] ?? 0),
+        'exports_target' => isset($row['first_export_index']) ? 'export-' . (int)$row['first_export_index'] : '',
+    ], $fileId, $pageSize);
+}
+
 function examine_name_flags(mixed $value): string
 {
     if ($value === null || $value === '') {
@@ -207,6 +244,7 @@ try {
         . ' elapsed_ms=' . $fetchElapsedMs
     );
     $rows = $page['rows'];
+    $metadataVersion = (int)(catalog_one($db, 'SELECT format_version FROM ue_file_metadata WHERE file_id=?', [$fileId])['format_version'] ?? 0);
     // Keep the initial examiner request bounded to the requested metadata page.
     // Cross-reference/usage/dependency enrichment is loaded after first paint by
     // file-examine-enrichment.php so a large package cannot block the page shell.
@@ -277,12 +315,14 @@ try {
     echo examine_pagination($fileId, $table, $page);
 
     if ($table === 'names') {
-        echo '<h2>Names</h2><div class="examine-table-region"><table><thead><tr><th>Index</th><th>Name</th><th>Flags / hashes</th></tr></thead><tbody>';
+        echo '<h2>Names</h2><div class="examine-table-region"><table><thead><tr><th>Index</th><th>Name</th>' . ($metadataVersion >= 3 ? '<th>Used by</th>' : '') . '<th>Flags / hashes</th></tr></thead><tbody>';
         foreach ($rows as $row) {
             $index = (int)$row['name_index'];
             $rowId = 'name-' . $index;
             $text = (string)$row['name_text'];
-            echo '<tr id="' . $rowId . '"' . ($target === $rowId ? ' class="is-reference-target"' : '') . '><td class="mono">' . $index . '</td><td class="mono path">' . catalog_h($text) . '</td><td class="mono">' . examine_name_flags($row['flags'] ?? null) . '</td></tr>';
+            echo '<tr id="' . $rowId . '"' . ($target === $rowId ? ' class="is-reference-target"' : '') . '><td class="mono">' . $index . '</td><td class="mono path">' . catalog_h($text) . '</td>'
+                . ($metadataVersion >= 3 ? '<td>' . examine_stored_usage($row, $fileId, $pageSize) . '</td>' : '')
+                . '<td class="mono">' . examine_name_flags($row['flags'] ?? null) . '</td></tr>';
         }
         echo '</tbody></table></div>';
     } elseif ($table === 'imports') {
@@ -290,7 +330,12 @@ try {
         foreach ($rows as $row) {
             $index = (int)$row['import_index'];
             $rowId = 'import-' . $index;
-            echo '<tr id="' . $rowId . '"' . ($target === $rowId ? ' class="is-reference-target"' : '') . '><td class="mono">' . $index . '</td><td class="mono">' . (-(int)($index + 1)) . '</td><td data-examine-name-link="class_package" data-examine-row="' . $index . '">' . examine_link_name((string)$row['class_package'], [], $fileId, $pageSize) . '</td><td data-examine-name-link="class_name" data-examine-row="' . $index . '">' . examine_link_name((string)$row['class_name'], [], $fileId, $pageSize) . '</td><td data-examine-name-link="object_name" data-examine-row="' . $index . '">' . examine_link_name((string)$row['object_name'], [], $fileId, $pageSize) . '</td><td>' . examine_reference((int)$row['outer_index'], $fileId, $pageSize) . '</td><td class="mono path">' . catalog_h((string)$row['full_path']) . '</td><td class="mono path">' . catalog_h((string)$row['root_package']) . '</td><td>' . examine_dependency(null) . '</td></tr>';
+            echo '<tr id="' . $rowId . '"' . ($target === $rowId ? ' class="is-reference-target"' : '') . '><td class="mono">' . $index . '</td>'
+                . '<td class="mono"><a class="xref mono" href="' . catalog_h(examine_href($fileId, $rowId, $pageSize)) . '">' . (-(int)($index + 1)) . '</a></td>'
+                . '<td>' . examine_name_index_link((string)$row['class_package'], isset($row['class_package_name_index']) ? (int)$row['class_package_name_index'] : null, $fileId, $pageSize) . '</td>'
+                . '<td>' . examine_name_index_link((string)$row['class_name'], isset($row['class_name_index']) ? (int)$row['class_name_index'] : null, $fileId, $pageSize) . '</td>'
+                . '<td>' . examine_name_index_link((string)$row['object_name'], isset($row['object_name_index']) ? (int)$row['object_name_index'] : null, $fileId, $pageSize) . '</td>'
+                . '<td>' . examine_reference((int)$row['outer_index'], $fileId, $pageSize) . '</td><td class="mono path">' . catalog_h((string)$row['full_path']) . '</td><td class="mono path">' . catalog_h((string)$row['root_package']) . '</td><td>' . examine_dependency(null) . '</td></tr>';
         }
         echo '</tbody></table></div>';
     } else {
@@ -298,7 +343,11 @@ try {
         foreach ($rows as $row) {
             $index = (int)$row['export_index'];
             $rowId = 'export-' . $index;
-            echo '<tr id="' . $rowId . '"' . ($target === $rowId ? ' class="is-reference-target"' : '') . '><td class="mono">' . $index . '</td><td class="mono">' . ($index + 1) . '</td><td data-examine-name-link="class_name" data-examine-row="' . $index . '">' . examine_link_name((string)$row['class_name'], [], $fileId, $pageSize) . '</td><td data-examine-name-link="object_name" data-examine-row="' . $index . '">' . examine_link_name((string)$row['object_name'], [], $fileId, $pageSize) . '</td><td>' . examine_reference((int)$row['outer_index'], $fileId, $pageSize) . '</td><td class="mono path">' . catalog_h((string)$row['local_path']) . '</td><td class="mono path">' . catalog_h((string)$row['full_path']) . '</td><td class="mono">' . catalog_h((string)($row['object_flags'] ?? '')) . '</td><td class="mono">' . catalog_h((string)($row['serial_size'] ?? '')) . '</td><td class="mono">' . catalog_h((string)($row['serial_offset'] ?? '')) . '</td></tr>';
+            echo '<tr id="' . $rowId . '"' . ($target === $rowId ? ' class="is-reference-target"' : '') . '><td class="mono">' . $index . '</td>'
+                . '<td class="mono"><a class="xref mono" href="' . catalog_h(examine_href($fileId, $rowId, $pageSize)) . '">' . ($index + 1) . '</a></td>'
+                . '<td>' . examine_object_label((string)$row['class_name'], (int)($row['class_index'] ?? 0), $fileId, $pageSize) . '</td>'
+                . '<td>' . examine_name_index_link((string)$row['object_name'], isset($row['object_name_index']) ? (int)$row['object_name_index'] : null, $fileId, $pageSize) . '</td>'
+                . '<td>' . examine_reference((int)$row['outer_index'], $fileId, $pageSize) . '</td><td class="mono path">' . catalog_h((string)$row['local_path']) . '</td><td class="mono path">' . catalog_h((string)$row['full_path']) . '</td><td class="mono">' . catalog_h((string)($row['object_flags'] ?? '')) . '</td><td class="mono">' . catalog_h((string)($row['serial_size'] ?? '')) . '</td><td class="mono">' . catalog_h((string)($row['serial_offset'] ?? '')) . '</td></tr>';
         }
         echo '</tbody></table></div>';
     }
