@@ -90,6 +90,57 @@ final class PdoCompactCaseInsensitiveExportResolver
     }
 
     /**
+     * Bounded rare-path fallback for one known provider.
+     *
+     * @param list<string> $localPaths
+     * @return array<string,int> normalized path => export index
+     */
+    public static function matchProviderPaths(
+        PDO $db,
+        int $fileId,
+        array $localPaths
+    ): array {
+        $pending = [];
+        foreach ($localPaths as $path) {
+            $path = trim((string)$path);
+            if ($path !== '') {
+                $pending[self::key($path)] = true;
+            }
+        }
+        if ($fileId < 1 || $pending === []) {
+            return [];
+        }
+        $config = function_exists('catalog_config') ? \catalog_config() : [];
+        $storageRoot = is_array($config) ? trim((string)($config['storage_path'] ?? '')) : '';
+        if ($storageRoot === '') {
+            throw new RuntimeException('Catalog storage_path is required for case-insensitive Export resolution.');
+        }
+        $reader = new BlockedCompressedMetadataReader($db, $storageRoot);
+        $matches = [];
+        for ($start = 0; $pending !== []; $start += self::PAGE_SIZE) {
+            try {
+                clearstatcache();
+                $page = $reader->page($fileId, 'exports', $start, self::PAGE_SIZE);
+            } catch (Throwable $error) {
+                self::reportUnreadableProvider($fileId, $error);
+                break;
+            }
+            foreach ($page as $export) {
+                $key = self::key((string)($export['local_path'] ?? ''));
+                if (!isset($pending[$key])) {
+                    continue;
+                }
+                $matches[$key] = (int)$export['export_index'];
+                unset($pending[$key]);
+            }
+            if (count($page) < self::PAGE_SIZE) {
+                break;
+            }
+        }
+        return $matches;
+    }
+
+    /**
      * @param list<int> $fileIds
      * @param array<string,list<string>> $pendingPaths
      * @param array<string,array{file_id:int,export_index:int,source:string}> $matches
@@ -158,6 +209,17 @@ final class PdoCompactCaseInsensitiveExportResolver
             return;
         }
         self::$reportedUnreadableProviders[$fileId] = true;
+
+        $config = function_exists('catalog_config') ? \catalog_config() : [];
+        if (is_array($config)) {
+            \UnrealDb\Catalog\Infrastructure\Metadata\VerifiedCompactMetadataHealth::queueRepair(
+                \catalog_db($config),
+                $config,
+                $fileId,
+                null,
+                $error
+            );
+        }
 
         CatalogSystemErrorRecorder::record([
             'source_kind' => 'compact-metadata-provider',
