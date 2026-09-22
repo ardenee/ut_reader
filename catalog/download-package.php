@@ -51,6 +51,7 @@ try {
     $version = substr(trim((string)($_GET['version'] ?? '1.0')), 0, 80);
     $author = substr(trim((string)($_GET['author'] ?? $settings['default_author'])), 0, 160);
     $resumeJobId = max(0, (int)($_GET['job_id'] ?? 0));
+    $dependencyChoices = is_array($_GET['dependency_choice'] ?? null) ? $_GET['dependency_choice'] : [];
     $backUrl = 'download-info.php?' . http_build_query([
         'id' => $id,
         'format' => $format,
@@ -59,6 +60,7 @@ try {
         'name' => $name,
         'version' => $version,
         'author' => $author,
+        'dependency_choice' => $dependencyChoices,
     ]);
 
     catalog_head('Generate package');
@@ -106,6 +108,13 @@ CSS;
     echo '<input type="hidden" name="name" value="' . catalog_h($name) . '">';
     echo '<input type="hidden" name="version" value="' . catalog_h($version) . '">';
     echo '<input type="hidden" name="author" value="' . catalog_h($author) . '">';
+    foreach ($dependencyChoices as $packageName => $choiceId) {
+        $safePackage = strtolower(trim((string)$packageName));
+        $safeId = max(0, (int)$choiceId);
+        if ($safePackage !== '' && $safeId > 0) {
+            echo '<input type="hidden" name="dependency_choice[' . catalog_h($safePackage) . ']" value="' . $safeId . '">';
+        }
+    }
     echo '</form>';
     echo '<script src="assets/generated-package-jobs.js"></script>';
     catalog_foot();
