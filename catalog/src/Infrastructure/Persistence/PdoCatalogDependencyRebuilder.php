@@ -1,7 +1,7 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Rebuilds dependency resolution for verified files from authoritative format-2 metadata.
+ * Purpose: Rebuilds dependency resolution for verified files from authoritative format-3 metadata.
  * Why: Dependency maintenance must not fall back to retired SQL Import/Dependency projections, and unrelated files
  *      must not serialize behind the global catalog identity-write lock.
  * Role: Primary compact dependency rebuild implementation used by durable jobs and scanner compatibility delegates.
@@ -114,7 +114,7 @@ final class PdoCatalogDependencyRebuilder
         int $startPercent = 56,
         int $endPercent = 99
     ): void {
-        // Include every verified file. rebuild() owns the format-2 invariant and
+        // Include every verified file. rebuild() owns the format-3 invariant and
         // will surface an integrity gap instead of silently skipping that file.
         $statement = $this->db->prepare(
             'SELECT id,package_name FROM ue_files '
@@ -248,7 +248,7 @@ final class PdoCatalogDependencyRebuilder
             throw new RuntimeException('Dependency rebuilding is only supported for verified catalog files.');
         }
         $formatVersion = (int)($metadata['format_version'] ?? 0);
-        if (!in_array($formatVersion, [2, \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer::FORMAT_VERSION], true)) {
+        if ($formatVersion !== \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer::FORMAT_VERSION) {
             throw new RuntimeException(
                 'Verified file #' . $fileId . ' has no supported compact metadata.'
             );
