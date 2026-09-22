@@ -17,6 +17,7 @@ $source = file_get_contents(
 $coverage = file_get_contents(
     $root . '/src/Infrastructure/Persistence/PdoPackageObjectCoverageResolver.php'
 );
+$cli = file_get_contents($root . '/bin/analyze-v3-package-superset.php');
 
 $checks = [];
 $check = static function (string $name, bool $ok, string $detail) use (&$checks): void {
@@ -82,6 +83,33 @@ $check(
     is_string($source)
         && !preg_match('/serial_size|file_size|size_bytes/i', $source),
     'Catalog-wide superset status is object coverage, not a largest-file heuristic.'
+);
+
+
+$check(
+    'cli_requires_explicit_game_and_package',
+    is_string($cli)
+        && str_contains($cli, "'game-id:'")
+        && str_contains($cli, "'package:'")
+        && str_contains($cli, '$gameId < 1')
+        && str_contains($cli, "\$packageName === ''"),
+    'The diagnostic entry point must require an explicit game and package instead of scanning the catalog.'
+);
+$check(
+    'cli_output_is_bounded',
+    is_string($cli)
+        && str_contains($cli, "'max-paths::'")
+        && str_contains($cli, "'max-providers::'")
+        && str_contains($cli, 'array_slice($allPaths')
+        && str_contains($cli, 'array_slice($allProviders'),
+    'Diagnostic JSON must cap emitted object paths and provider rows.'
+);
+$check(
+    'cli_is_read_only',
+    is_string($cli)
+        && !preg_match('/\b(INSERT|UPDATE|DELETE|REPLACE)\b/i', $cli)
+        && !str_contains($cli, '->enqueue('),
+    'The package-superset CLI must not mutate metadata, projections, or the job queue.'
 );
 
 $ok = !in_array(false, array_column($checks, 'ok'), true);
