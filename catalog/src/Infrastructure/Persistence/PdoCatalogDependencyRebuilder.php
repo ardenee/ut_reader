@@ -15,6 +15,7 @@ use RuntimeException;
 use Throwable;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogAffectedDependencyRefreshCoordinator;
 use UnrealDb\Catalog\Infrastructure\Metadata\CompactDependencyRebuilder;
+use UnrealDb\Catalog\Infrastructure\Metadata\VerifiedCompactMetadataHealth;
 
 final class PdoCatalogDependencyRebuilder
 {
@@ -50,7 +51,12 @@ final class PdoCatalogDependencyRebuilder
             }
 
             self::emitPercent($progress, 'dependencies', $startPercent, $prefix . ': loading compact metadata');
-            $result = (new CompactDependencyRebuilder($this->db, $storageRoot))->rebuild($fileId);
+            try {
+                $result = (new CompactDependencyRebuilder($this->db, $storageRoot))->rebuild($fileId);
+            } catch (Throwable $error) {
+                VerifiedCompactMetadataHealth::queueRepair($this->db, $this->config, $fileId, null, $error);
+                throw $error;
+            }
 
             $summaryRows = null;
             if ($refreshSummary) {
@@ -95,8 +101,13 @@ final class PdoCatalogDependencyRebuilder
                 ];
             }
 
-            $result = (new CompactDependencyRebuilder($this->db, $storageRoot))
-                ->rebuildForPackages($fileId, $packageNames);
+            try {
+                $result = (new CompactDependencyRebuilder($this->db, $storageRoot))
+                    ->rebuildForPackages($fileId, $packageNames);
+            } catch (Throwable $error) {
+                VerifiedCompactMetadataHealth::queueRepair($this->db, $this->config, $fileId, null, $error);
+                throw $error;
+            }
             if ($refreshSummary) {
                 $summary = (new PdoDependencyPackageSummary($this->db))->rebuildFile($fileId);
                 if (empty($summary['available'])) {
