@@ -34,9 +34,23 @@
         return url.pathname + '?' + url.searchParams.toString();
     }
 
+    function unresolvedDependencyChoice() {
+        var required = form.querySelectorAll('input[type="radio"][name^="dependency_choice["][required]');
+        var names = {};
+        for (var i = 0; i < required.length; i++) names[required[i].name] = true;
+        return Object.keys(names).some(function (name) {
+            return !form.querySelector('input[type="radio"][name="' + CSS.escape(name) + '"]:checked');
+        });
+    }
+
     async function lookup() {
         var serial = ++lookupSerial;
         readyDownloadUrl = '';
+        if (unresolvedDependencyChoice()) {
+            setButton('disabled', 'Select dependency version(s)');
+            setStatus('Select one version for each dependency conflict before generating the package.');
+            return;
+        }
         setButton('disabled', 'Checking existing package…');
         setStatus('Checking whether this exact package is already queued or available…');
 
