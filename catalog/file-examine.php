@@ -13,7 +13,6 @@ declare(strict_types=1);
 require_once __DIR__ . '/lib/CatalogSupport.php';
 require_once __DIR__ . '/lib/CatalogFileFeedback.php';
 
-use UnrealDb\Catalog\Application\Catalog\CatalogPackageHeaderInspector;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogQueueWorkerStarter;
 use UnrealDb\Catalog\Infrastructure\Maintenance\CatalogVerifiedFileRenameService;
 
@@ -200,12 +199,22 @@ try {
         exit;
     }
     if ($row) {
-        $storageRoot = realpath(rtrim((string)$config['storage_path'], DIRECTORY_SEPARATOR));
-        $storedPath = realpath(__DIR__ . '/' . (string)$row['relative_path']);
-        if ($storageRoot && $storedPath && !str_starts_with($storedPath, $storageRoot)) {
-            $storedPath = null;
-        }
-        $headerInspection = CatalogPackageHeaderInspector::inspect($storedPath ?: null, $row);
+        // Viewer pages must not reopen the original Unreal payload. Package tables
+        // come from the compact metadata projection and summary fields come from ue_files.
+        $headerInspection = [
+            'ok' => true,
+            'error' => '',
+            'summary' => [
+                'GUID' => (string)($row['package_guid'] ?? ''),
+                'Version' => (string)($row['package_version'] ?? ''),
+                'Licensee Version' => (string)($row['licensee_version'] ?? ''),
+                'Engine' => (string)($row['engine'] ?? ''),
+                'Counts' => 'N ' . (int)($row['name_count'] ?? 0)
+                    . ' / I ' . (int)($row['import_count'] ?? 0)
+                    . ' / E ' . (int)($row['export_count'] ?? 0),
+            ],
+            'rows' => [],
+        ];
 
         if ($isAdmin && (string)$row['scan_status'] === 'verified') {
             $flash = is_array($_SESSION['file_examine_rename_flash'][$id] ?? null)
