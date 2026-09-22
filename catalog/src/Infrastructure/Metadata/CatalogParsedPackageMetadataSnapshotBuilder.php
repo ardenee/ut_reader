@@ -1,7 +1,7 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Builds the authoritative format-2 metadata snapshot directly from parser output.
+ * Purpose: Builds the authoritative format-3 metadata snapshot directly from parser output.
  * Why: Newly verified packages already have Names/Imports/Exports in memory and must not write those rows only to read
  *      them back through the retired SQL metadata tables before publishing compact metadata.
  * Role: Infrastructure metadata builder shared by verified import and compact publication.
@@ -59,7 +59,7 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
      * Normalize only the package-owned parser output.
      *
      * Full Sync can compare these sections with its already validated compact
-     * snapshot before doing dependency resolution or rewriting the .uedb2 file.
+     * snapshot before doing dependency resolution or rewriting the .uedb3 file.
      * Dependencies are deliberately excluded because their resolution can change
      * independently and Full Sync owns a separate bounded dependency phase.
      *
