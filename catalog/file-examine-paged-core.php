@@ -250,7 +250,9 @@ try {
     // file-examine-enrichment.php so a large package cannot block the page shell.
     $nameLookup = [];
     $usage = [];
-    $dependencies = [];
+    $dependencies = $table === 'imports' && $metadataVersion >= 3
+        ? PdoPackageTablePageQuery::dependencyPage($db, $fileId, max(0, (int)$page['start'] - 1), $pageSize)
+        : [];
 
     $back = examine_back((int)$file['game_id']);
     catalog_head('Examine ' . (string)$file['package_name']);
@@ -335,7 +337,7 @@ try {
                 . '<td>' . examine_name_index_link((string)$row['class_package'], isset($row['class_package_name_index']) ? (int)$row['class_package_name_index'] : null, $fileId, $pageSize) . '</td>'
                 . '<td>' . examine_name_index_link((string)$row['class_name'], isset($row['class_name_index']) ? (int)$row['class_name_index'] : null, $fileId, $pageSize) . '</td>'
                 . '<td>' . examine_name_index_link((string)$row['object_name'], isset($row['object_name_index']) ? (int)$row['object_name_index'] : null, $fileId, $pageSize) . '</td>'
-                . '<td>' . examine_reference((int)$row['outer_index'], $fileId, $pageSize) . '</td><td class="mono path">' . catalog_h((string)$row['full_path']) . '</td><td class="mono path">' . catalog_h((string)$row['root_package']) . '</td><td>' . examine_dependency(null) . '</td></tr>';
+                . '<td>' . examine_reference((int)$row['outer_index'], $fileId, $pageSize) . '</td><td class="mono path">' . catalog_h((string)$row['full_path']) . '</td><td class="mono path">' . catalog_h((string)$row['root_package']) . '</td><td>' . examine_dependency($dependencies[$index] ?? null) . '</td></tr>';
         }
         echo '</tbody></table></div>';
     } else {
