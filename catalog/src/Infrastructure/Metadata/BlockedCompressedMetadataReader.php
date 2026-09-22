@@ -232,8 +232,9 @@ final class BlockedCompressedMetadataReader
         if (!is_array($row)) {
             throw new RuntimeException('File #' . $fileId . ' has no compressed metadata row.');
         }
-        if ((int)$row['format_version'] !== BlockedCompressedMetadataContainer::FORMAT_VERSION) {
-            throw new RuntimeException('File #' . $fileId . ' is not using blocked metadata format version ' . BlockedCompressedMetadataContainer::FORMAT_VERSION . '.');
+        $formatVersion = (int)$row['format_version'];
+        if (!in_array($formatVersion, [2, BlockedCompressedMetadataContainer::FORMAT_VERSION], true)) {
+            throw new RuntimeException('File #' . $fileId . ' uses unsupported blocked metadata format version ' . $formatVersion . '.');
         }
         if ((int)$row['codec'] !== BlockedCompressedMetadataContainer::CODEC_BLOCK_GZIP) {
             throw new RuntimeException('File #' . $fileId . ' uses an unsupported blocked metadata codec.');
@@ -266,8 +267,10 @@ final class BlockedCompressedMetadataReader
         try {
             $headerBytes = $this->readExactly($handle, 20);
             $header = unpack('a8magic/vversion/vcodec/Vmanifest_length/Vreserved', $headerBytes);
-            if (!is_array($header) || (string)$header['magic'] !== "UEDBM2\0\0") {
-                throw new RuntimeException('Blocked metadata container magic is invalid.');
+            $headerVersion = is_array($header) ? (int)($header['version'] ?? 0) : 0;
+            $expectedMagic = $headerVersion === 2 ? "UEDBM2\0\0" : "UEDBM3\0\0";
+            if (!is_array($header) || (string)$header['magic'] !== $expectedMagic || $headerVersion !== $formatVersion) {
+                throw new RuntimeException('Blocked metadata container magic/version does not match its registration.');
             }
             $manifestLength = (int)$header['manifest_length'];
             if ($manifestLength < 2 || $manifestLength > 16 * 1024 * 1024) {
