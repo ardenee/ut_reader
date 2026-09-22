@@ -43,7 +43,7 @@ final class PdoPackageSupersetAnalyzer
         $rows = \catalog_all(
             $db,
             'SELECT d.file_id,d.required_object_path'
-            . ' FROM ue_dependencies d'
+            . ' FROM ue_dependency_links d'
             . ' JOIN ue_files f ON f.id=d.file_id'
             . ' JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=3'
             . ' WHERE f.game_id=? AND f.scan_status="verified"'
