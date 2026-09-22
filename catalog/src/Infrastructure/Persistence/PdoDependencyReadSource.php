@@ -1,6 +1,6 @@
 <?php
 /**
- * PDO-backed authoritative dependency read source for current format-2 metadata.
+ * PDO-backed authoritative dependency read source for current format-3 metadata.
  */
 declare(strict_types=1);
 
@@ -83,7 +83,7 @@ final class PdoDependencyReadSource
             . '(CONVERT(object_term.value_prefix USING utf8mb4) COLLATE ' . $collation . ') import_full_path,'
             . '(CAST("compact" AS CHAR CHARACTER SET utf8mb4) COLLATE ' . $collation . ') metadata_source '
             . 'FROM ue_dependency_links l '
-            . 'JOIN ue_file_metadata m ON m.file_id=l.file_id AND m.format_version=2 '
+            . 'JOIN ue_file_metadata m ON m.file_id=l.file_id AND m.format_version=3 '
             . 'JOIN ue_terms package_term ON package_term.id=l.required_package_term_id '
             . 'JOIN ue_terms object_term ON object_term.id=l.required_object_term_id '
             . 'LEFT JOIN ue_terms class_package_term ON class_package_term.id=l.import_class_package_term_id '
