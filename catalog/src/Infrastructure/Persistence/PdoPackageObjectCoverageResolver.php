@@ -50,6 +50,7 @@ final class PdoPackageObjectCoverageResolver
         }
 
         $matched = [];
+        $reader = self::metadataReader($db);
         foreach (array_keys($providers) as $fileId) {
             $matched[$fileId] = [];
         }
@@ -87,7 +88,7 @@ final class PdoPackageObjectCoverageResolver
                     // path_hash is only an index accelerator. Confirm the actual
                     // v3 Export path so a hash collision can never satisfy an Import.
                     if (!self::exportPathMatches(
-                        $db,
+                        $reader,
                         $fileId,
                         (int)$row['export_index'],
                         (string)$entry['key']
@@ -213,20 +214,22 @@ final class PdoPackageObjectCoverageResolver
         return $providers;
     }
 
-    private static function exportPathMatches(PDO $db, int $fileId, int $exportIndex, string $requiredKey): bool
+    private static function metadataReader(PDO $db): \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataReader
     {
-        static $readers = [];
-        if (!isset($readers[$fileId])) {
-            $root = dirname(__DIR__, 3);
-            require_once $root . '/src/Infrastructure/Metadata/BlockedCompressedMetadataReader.php';
-            $config = require $root . '/config.php';
-            $storageRoot = (string)($config['storage_path'] ?? ($root . '/storage'));
-            $readers[$fileId] = new \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataReader(
-                $db,
-                $storageRoot
-            );
-        }
-        $rows = $readers[$fileId]->exportRows($fileId, [$exportIndex]);
+        $root = dirname(__DIR__, 3);
+        require_once $root . '/src/Infrastructure/Metadata/BlockedCompressedMetadataReader.php';
+        $config = require $root . '/config.php';
+        $storageRoot = (string)($config['storage_path'] ?? ($root . '/storage'));
+        return new \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataReader($db, $storageRoot);
+    }
+
+    private static function exportPathMatches(
+        \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataReader $reader,
+        int $fileId,
+        int $exportIndex,
+        string $requiredKey
+    ): bool {
+        $rows = $reader->page($fileId, 'exports', $exportIndex, 1);
         foreach ($rows as $row) {
             if ((int)($row['export_index'] ?? -1) === $exportIndex
                 && self::key((string)($row['local_path'] ?? '')) === $requiredKey) {
