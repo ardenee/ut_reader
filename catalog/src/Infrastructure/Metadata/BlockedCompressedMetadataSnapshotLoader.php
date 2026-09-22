@@ -17,7 +17,7 @@ namespace UnrealDb\Catalog\Infrastructure\Metadata;
 use PDO;
 use RuntimeException;
 
-/** Loads complete or dependency-only snapshots from a format-2 blocked container. */
+/** Loads complete or dependency-only snapshots from a format-3 blocked container. */
 final class BlockedCompressedMetadataSnapshotLoader
 {
     private const PAGE_SIZE = 5000;
@@ -120,7 +120,7 @@ final class BlockedCompressedMetadataSnapshotLoader
         if ((string)$file['scan_status'] !== 'verified') {
             throw new RuntimeException('File #' . $fileId . ' is not verified.');
         }
-        if (!in_array((int)$file['format_version'], [2, BlockedCompressedMetadataContainer::FORMAT_VERSION], true)) {
+        if ((int)$file['format_version'] !== BlockedCompressedMetadataContainer::FORMAT_VERSION) {
             throw new RuntimeException('File #' . $fileId . ' uses an unsupported blocked metadata format version.');
         }
         if ((int)$file['codec'] !== BlockedCompressedMetadataContainer::CODEC_BLOCK_GZIP) {
