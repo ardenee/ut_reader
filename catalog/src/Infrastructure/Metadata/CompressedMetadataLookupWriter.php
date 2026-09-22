@@ -98,9 +98,32 @@ final class CompressedMetadataLookupWriter
         $termIds = $resolvedTermIds
             ?? $this->resolveTermIds($this->snapshotTermValues($snapshot), $sqlBatches);
 
+        $this->db->prepare('DELETE FROM ue_name_lookup WHERE file_id=?')->execute([$fileId]);
         $this->db->prepare('DELETE FROM ue_export_lookup WHERE file_id=?')->execute([$fileId]);
         $this->db->prepare('DELETE FROM ue_dependency_links WHERE file_id=?')->execute([$fileId]);
-        $sqlBatches += 2;
+        $sqlBatches += 3;
+
+        $nameColumns = ['file_id', 'name_index', 'name_term_id'];
+        $nameRows = [];
+        foreach ((array)$snapshot['names'] as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $nameRows[] = [
+                $fileId,
+                (int)$row['name_index'],
+                $this->requiredTermId($termIds, (string)($row['name_text'] ?? '')),
+            ];
+            if (count($nameRows) >= self::WRITE_BATCH_SIZE) {
+                $this->insertBatch('ue_name_lookup', $nameColumns, $nameRows);
+                $sqlBatches++;
+                $nameRows = [];
+            }
+        }
+        if ($nameRows !== []) {
+            $this->insertBatch('ue_name_lookup', $nameColumns, $nameRows);
+            $sqlBatches++;
+        }
 
         $exportColumns = [
             'file_id', 'export_index', 'object_term_id', 'class_term_id', 'path_hash', 'local_path_term_id',
