@@ -18,7 +18,7 @@ use JsonException;
 use RuntimeException;
 use Throwable;
 
-/** Builds the version-2 random-access, block-compressed metadata container. */
+/** Builds the version-3 random-access, block-compressed metadata container. */
 final class BlockedCompressedMetadataContainer
 {
     public const FORMAT_VERSION = 3;
@@ -227,10 +227,9 @@ final class BlockedCompressedMetadataContainer
             $headerBytes = self::readExactly($stream, self::HEADER_LENGTH);
             hash_update($hash, $headerBytes);
             $header = unpack('a8magic/vversion/vcodec/Vmanifest_length/Vreserved', $headerBytes);
-            $supportedMagic = $expectedFormatVersion === 2 ? "UEDBM2\0\0" : self::MAGIC;
-            if (!in_array($expectedFormatVersion, [2, self::FORMAT_VERSION], true)
+            if ($expectedFormatVersion !== self::FORMAT_VERSION
                 || !is_array($header)
-                || (string)$header['magic'] !== $supportedMagic) {
+                || (string)$header['magic'] !== self::MAGIC) {
                 throw new RuntimeException('Blocked metadata container magic is invalid for format version ' . $expectedFormatVersion . '.');
             }
             if ((int)$header['version'] !== $expectedFormatVersion || (int)$header['codec'] !== self::CODEC_BLOCK_GZIP) {
@@ -306,7 +305,7 @@ final class BlockedCompressedMetadataContainer
         return $root . DIRECTORY_SEPARATOR . 'metadata'
             . DIRECTORY_SEPARATOR . $gameId
             . DIRECTORY_SEPARATOR . $shard
-            . DIRECTORY_SEPARATOR . $fileId . '.uedb2';
+            . DIRECTORY_SEPARATOR . $fileId . '.uedb3';
     }
 
     /**
