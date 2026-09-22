@@ -30,6 +30,8 @@ $jobType = $read('src/Domain/Jobs/JobType.php');
 $factory = $read('src/Infrastructure/Jobs/CatalogJobWorkerFactory.php');
 $policy = $read('src/Domain/Jobs/JobResourcePolicy.php');
 $cli = $read('bin/verify-compact-metadata-files.php');
+$health = $read('src/Infrastructure/Metadata/VerifiedCompactMetadataHealth.php');
+$dependencyHandler = $read('src/Infrastructure/Jobs/CatalogDependencyRefreshJobHandler.php');
 
 $check(
     'provider_corruption_is_isolated',
@@ -104,6 +106,28 @@ $check(
         && str_contains($cli, "'storage_root_source'")
         && str_contains($cli, "'configured_storage_root'"),
     'A source checkout and deployed runtime can have different storage trees, so diagnostics must expose and allow overriding the storage root.'
+);
+
+
+$check(
+    'repair_is_globally_deduplicated_by_file',
+    str_contains($health, "'compact-metadata-repair:' . \$fileId")
+        && str_contains($health, 'JobType::REPAIR_COMPACT_METADATA_FILE')
+        && str_contains($dependencyHandler, "'compact-metadata-repair:' . \$fileId"),
+    'Every runtime detector and dependency waiter must converge on one active v3 repair identity per file.'
+);
+$check(
+    'terminal_repair_does_not_defer_forever',
+    str_contains($dependencyHandler, "['failed', 'dead_letter', 'cancelled']")
+        && str_contains($dependencyHandler, 'throw new RuntimeException')
+        && !str_contains($dependencyHandler, 'Restart that repair child'),
+    'Terminal repair failures must fail the dependent job instead of entering a permanent defer loop.'
+);
+$check(
+    'completed_old_repair_does_not_mask_new_corruption',
+    str_contains($dependencyHandler, "\$repair === null || \$status === 'completed'")
+        && str_contains($dependencyHandler, 'VerifiedCompactMetadataHealth::healthy'),
+    'A later corruption event must be able to enqueue a fresh repair after an older repair completed.'
 );
 
 $result = ['ok' => $failures === [], 'checks' => $checks, 'failures' => $failures];
