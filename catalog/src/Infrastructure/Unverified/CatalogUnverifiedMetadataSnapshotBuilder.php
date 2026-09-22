@@ -1,6 +1,6 @@
 <?php
 /**
- * Purpose: Normalizes parsed package tables for unverified staging and later resolves them into a current format-2 snapshot.
+ * Purpose: Normalizes parsed package tables for unverified staging and later resolves them into a current format-3 snapshot.
  * Why: Pre-game-selection metadata must be reusable without row-per-table legacy storage or reparsing the physical file.
  * Role: Pure metadata transformation boundary shared by unverified indexing, details, matching and promotion.
  */
