@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace UnrealDb\Catalog\Infrastructure\Persistence;
 
 use PDO;
+use RuntimeException;
 
 /**
  * Evaluates every current-format provider of a package against a complete set
@@ -62,7 +63,7 @@ final class PdoPackageObjectCoverageResolver
                     $hashes[$hex] = ['hash' => $hash, 'key' => $key];
                 }
                 $providerIds = array_keys($providers);
-                $sql = 'SELECT l.file_id,l.path_hash FROM ue_export_lookup l'
+                $sql = 'SELECT l.file_id,l.export_index,l.path_hash FROM ue_export_lookup l'
                     . ' JOIN ue_files f ON f.id=l.file_id'
                     . ' JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=3'
                     . ' WHERE f.game_id=? AND f.scan_status="verified"'
@@ -80,9 +81,20 @@ final class PdoPackageObjectCoverageResolver
                 foreach ($rows as $row) {
                     $fileId = (int)$row['file_id'];
                     $entry = $hashes[bin2hex((string)$row['path_hash'])] ?? null;
-                    if (is_array($entry) && isset($providers[$fileId])) {
-                        $matched[$fileId][$entry['key']] = true;
+                    if (!is_array($entry) || !isset($providers[$fileId])) {
+                        continue;
                     }
+                    // path_hash is only an index accelerator. Confirm the actual
+                    // v3 Export path so a hash collision can never satisfy an Import.
+                    if (!self::exportPathMatches(
+                        $db,
+                        $fileId,
+                        (int)$row['export_index'],
+                        (string)$entry['key']
+                    )) {
+                        continue;
+                    }
+                    $matched[$fileId][$entry['key']] = true;
                 }
             }
         }
@@ -199,6 +211,29 @@ final class PdoPackageObjectCoverageResolver
         }
 
         return $providers;
+    }
+
+    private static function exportPathMatches(PDO $db, int $fileId, int $exportIndex, string $requiredKey): bool
+    {
+        static $readers = [];
+        if (!isset($readers[$fileId])) {
+            $root = dirname(__DIR__, 3);
+            require_once $root . '/src/Infrastructure/Metadata/BlockedCompressedMetadataReader.php';
+            $config = require $root . '/config.php';
+            $storageRoot = (string)($config['storage_path'] ?? ($root . '/storage'));
+            $readers[$fileId] = new \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataReader(
+                $db,
+                $storageRoot
+            );
+        }
+        $rows = $readers[$fileId]->exportRows($fileId, [$exportIndex]);
+        foreach ($rows as $row) {
+            if ((int)($row['export_index'] ?? -1) === $exportIndex
+                && self::key((string)($row['local_path'] ?? '')) === $requiredKey) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static function key(string $value): string
