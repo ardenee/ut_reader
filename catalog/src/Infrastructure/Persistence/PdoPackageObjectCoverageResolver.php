@@ -57,7 +57,9 @@ final class PdoPackageObjectCoverageResolver
             foreach (array_chunk($requirements, self::MAX_PATHS_PER_QUERY, true) as $chunk) {
                 $hashes = [];
                 foreach ($chunk as $key => $path) {
-                    $hashes[md5($path, true)] = $key;
+                    $hash = md5($path, true);
+                    $hex = bin2hex($hash);
+                    $hashes[$hex] = ['hash' => $hash, 'key' => $key];
                 }
                 $providerIds = array_keys($providers);
                 $sql = 'SELECT l.file_id,l.path_hash FROM ue_export_lookup l'
@@ -69,13 +71,17 @@ final class PdoPackageObjectCoverageResolver
                 $rows = \catalog_all(
                     $db,
                     $sql,
-                    array_merge([$gameId], $providerIds, array_keys($hashes))
+                    array_merge(
+                        [$gameId],
+                        $providerIds,
+                        array_map(static fn(array $entry): string => $entry['hash'], array_values($hashes))
+                    )
                 );
                 foreach ($rows as $row) {
                     $fileId = (int)$row['file_id'];
-                    $key = $hashes[(string)$row['path_hash']] ?? null;
-                    if ($key !== null && isset($providers[$fileId])) {
-                        $matched[$fileId][$key] = true;
+                    $entry = $hashes[bin2hex((string)$row['path_hash'])] ?? null;
+                    if (is_array($entry) && isset($providers[$fileId])) {
+                        $matched[$fileId][$entry['key']] = true;
                     }
                 }
             }
