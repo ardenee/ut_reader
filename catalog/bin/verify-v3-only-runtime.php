@@ -15,7 +15,8 @@ $root = realpath(dirname(__DIR__)) ?: dirname(__DIR__);
 $patterns = [
     '/\\.uedb2/i' => '.uedb2',
     '/UEDBM2/' => 'UEDBM2',
-    '/format[_ -]?version\\s*=\\s*2/i' => 'format_version=2',
+    '/format[_ -]?version\\s*(?:=|<>|!=)\\s*2/i' => 'format_version comparison with 2',
+    '/format[_ -]?version\\s+IN\\s*\\([^)]*\\b2\\b/i' => 'format_version IN includes 2',
     '/format-2/i' => 'format-2',
     '/version-2/i' => 'version-2',
     '/\\[\\s*2\\s*,\\s*BlockedCompressedMetadataContainer::FORMAT_VERSION/' => '[2, current-format]',
