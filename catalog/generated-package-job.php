@@ -102,6 +102,15 @@ function generated_package_request(
     $includeDependencies = (string)($input['dependencies'] ?? '1') !== '0';
     $allowIncompleteRequested = (string)($input['allow_incomplete'] ?? '0') === '1';
     $allowIncomplete = !empty($settings['allow_incomplete']) && $allowIncompleteRequested;
+    $dependencyChoices = [];
+    foreach ((array)($input['dependency_choice'] ?? []) as $packageName => $choiceId) {
+        $key = strtolower(trim((string)$packageName));
+        $id = max(0, (int)$choiceId);
+        if ($key !== '' && $id > 0) {
+            $dependencyChoices[$key] = $id;
+        }
+    }
+    ksort($dependencyChoices);
 
     $identity = [
         'file_id' => (int)$file['id'],
@@ -112,6 +121,7 @@ function generated_package_request(
         'name' => $name,
         'version' => $version,
         'author' => $author,
+        'dependency_choices' => $dependencyChoices,
     ];
     $buildKey = hash(
         'sha256',
@@ -360,11 +370,13 @@ try {
     // Preflight before queueing so known dependency gaps are a user-visible
     // package choice, not a background worker/System Error.
     try {
+        $planSettings = $settings;
+        $planSettings['dependency_file_overrides'] = (array)($request['dependency_choices'] ?? []);
         $plan = (new PdoCatalogPackageExportPlanner($db, $config))->plan(
             (int)$file['id'],
             (string)$request['format'],
             (bool)$request['include_dependencies'],
-            $settings
+            $planSettings
         );
     } catch (RuntimeException $error) {
         // Planner policy/validation failures are expected user-facing package
@@ -405,6 +417,7 @@ try {
             'author' => (string)$request['author'],
         ],
         'build_key' => $buildKey,
+        'dependency_choices' => (array)($request['dependency_choices'] ?? []),
         'access_token_hash' => hash('sha256', $token),
     ];
 
