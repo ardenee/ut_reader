@@ -42,26 +42,42 @@ final class PdoPackageSupersetAnalyzer
         $consumers = [];
         $rows = \catalog_all(
             $db,
-            'SELECT d.file_id,d.required_object_path'
-            . ' FROM ue_dependency_links d'
-            . ' JOIN ue_files f ON f.id=d.file_id'
+            'SELECT f.id file_id,l.import_index'
+            . ' FROM ue_dependency_links l'
+            . ' JOIN ue_files f ON f.id=l.file_id'
             . ' JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=3'
-            . ' WHERE f.game_id=? AND f.scan_status="verified"'
-            . ' AND d.required_package=? AND d.required_object_path<>""'
-            . ' ORDER BY d.file_id,d.import_index',
+            . ' JOIN ue_terms p ON p.id=l.required_package_term_id'
+            . ' WHERE f.game_id=? AND f.scan_status="verified" AND p.term_text=?'
+            . ' ORDER BY f.id,l.import_index',
             [$gameId, $packageName]
         );
-        foreach ($rows as $row) {
-            $fullPath = trim((string)($row['required_object_path'] ?? ''));
-            $relativePath = self::relativePath($packageName, $fullPath);
-            if ($relativePath === '') {
-                continue;
+        if ($rows !== []) {
+            $reader = self::metadataReader($db);
+            $byFile = [];
+            foreach ($rows as $row) {
+                $byFile[(int)$row['file_id']][] = (int)$row['import_index'];
             }
-            $key = self::key($relativePath);
-            $requirements[$key] ??= $relativePath;
-            $consumers[(int)$row['file_id']] = true;
+            foreach ($byFile as $consumerFileId => $importIndexes) {
+                foreach ($importIndexes as $importIndex) {
+                    $importRows = $reader->page($consumerFileId, 'imports', $importIndex, 1);
+                    $import = $importRows[0] ?? null;
+                    if (!is_array($import)) {
+                        continue;
+                    }
+                    $fullPath = trim((string)($import['full_path'] ?? ''));
+                    $relativePath = trim((string)($import['relative_object_path'] ?? ''));
+                    if ($relativePath === '') {
+                        $relativePath = self::relativePath($packageName, $fullPath);
+                    }
+                    if ($relativePath === '') {
+                        continue;
+                    }
+                    $key = self::key($relativePath);
+                    $requirements[$key] ??= $relativePath;
+                    $consumers[$consumerFileId] = true;
+                }
+            }
         }
-
         $paths = array_values($requirements);
         $providers = $paths === []
             ? []
@@ -75,6 +91,15 @@ final class PdoPackageSupersetAnalyzer
             'required_object_paths' => $paths,
             'providers' => $providers,
         ];
+    }
+
+    private static function metadataReader(PDO $db): \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataReader
+    {
+        $root = dirname(__DIR__, 3);
+        require_once $root . '/src/Infrastructure/Metadata/BlockedCompressedMetadataReader.php';
+        $config = require $root . '/config.php';
+        $storageRoot = (string)($config['storage_path'] ?? ($root . '/storage'));
+        return new \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataReader($db, $storageRoot);
     }
 
     private static function relativePath(string $packageName, string $fullPath): string
