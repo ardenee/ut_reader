@@ -2,7 +2,7 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Rebuilds current metadata projections from authoritative format-2 containers.
+ * Purpose: Rebuilds current metadata projections from authoritative format-3 containers.
  * Why: Projection maintenance for converted files must not reread retired Names/Imports/Exports/Dependencies tables.
  * Role: CLI/maintenance entry point for bounded current-metadata projection rebuilding.
  */
@@ -73,14 +73,14 @@ try {
     $statement = $db->prepare(
         'SELECT f.id,f.game_id,f.original_name,f.name_count,f.import_count,f.export_count '
         . 'FROM ue_file_metadata m JOIN ue_files f ON f.id=m.file_id '
-        . 'WHERE m.format_version=2 AND f.scan_status="verified" AND f.id>? '
+        . 'WHERE m.format_version=3 AND f.scan_status="verified" AND f.id>? '
         . 'ORDER BY f.id LIMIT ' . (int)$arguments['limit']
     );
     $statement->execute([$arguments['start_after']]);
     $files = $statement->fetchAll(PDO::FETCH_ASSOC) ?: [];
 
     if ($files === []) {
-        fwrite(STDOUT, "No matching version-2 metadata files require projection rebuilding.\n");
+        fwrite(STDOUT, "No matching version-3 metadata files require projection rebuilding.\n");
         exit(0);
     }
 
