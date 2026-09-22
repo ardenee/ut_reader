@@ -20,14 +20,17 @@ use UnrealDb\Catalog\Infrastructure\Maintenance\CatalogFileMaintenanceSupport;
 use UnrealDb\Catalog\MigrationV3\MetadataContainerV3;
 use UnrealDb\Catalog\MigrationV3\SnapshotBuilderV3;
 
-$o=getopt('',['apply','limit:','after-id:','game-id:','file-ids:','stop-on-error','rebuild']);
-$apply=array_key_exists('apply',$o); $limit=max(1,min(5000,(int)($o['limit']??250)));
+$o=getopt('',['apply','all','limit:','after-id:','game-id:','file-ids:','stop-on-error','rebuild','workers:','worker:']);
+$apply=array_key_exists('apply',$o); $all=array_key_exists('all',$o); $limit=max(1,min(5000,(int)($o['limit']??250)));
 $after=max(0,(int)($o['after-id']??0)); $game=max(0,(int)($o['game-id']??0));
+$workers=max(1,min(4,(int)($o['workers']??1))); $worker=(int)($o['worker']??0);
+if($worker<0||$worker>=$workers)throw new RuntimeException('--worker must be between 0 and --workers-1.');
 $stop=array_key_exists('stop-on-error',$o); $rebuild=array_key_exists('rebuild',$o);
 $config=catalog_config(); $db=catalog_db($config); $storageRoot=trim((string)($config['storage_path']??''));
 if($storageRoot==='') throw new RuntimeException('catalog storage_path is not configured.');
 
 $where=['f.scan_status="verified"','m.format_version=2','f.id>?']; $args=[$after];
+if($workers>1){$where[]='MOD(f.id,?)=?';$args[]=$workers;$args[]=$worker;}
 if($game>0){$where[]='f.game_id=?';$args[]=$game;}
 $raw=trim((string)($o['file-ids']??''));
 if($raw!==''){
@@ -36,20 +39,30 @@ if($raw!==''){
  $where[]='f.id IN ('.implode(',',array_fill(0,count($ids),'?')).')'; array_push($args,...array_values($ids));
 }
 $sql='SELECT f.*,m.format_version FROM ue_files f JOIN ue_file_metadata m ON m.file_id=f.id WHERE '.implode(' AND ',$where).' ORDER BY f.id LIMIT '.$limit;
-$s=$db->prepare($sql);$s->execute($args);$rows=$s->fetchAll(PDO::FETCH_ASSOC)?:[];
+$select=function(int $cursor)use($db,$sql,$args,$after):array{
+ $pageArgs=$args;$pageArgs[0]=$cursor;$s=$db->prepare($sql);$s->execute($pageArgs);
+ return $s->fetchAll(PDO::FETCH_ASSOC)?:[];
+};
+$rows=$select($after);
 if(!$apply){
- echo json_encode(['ok'=>true,'dry_run'=>true,'selected'=>count($rows),'after_id'=>$after,'limit'=>$limit,
- 'first_file_id'=>$rows?(int)$rows[0]['id']:0,'last_file_id'=>$rows?(int)$rows[array_key_last($rows)]['id']:0,
- 'writes'=>'*.uedb3 only','database_writes'=>false],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES).PHP_EOL;exit(0);
+ echo json_encode(['ok'=>true,'dry_run'=>true,'selected'=>count($rows),'after_id'=>$after,'limit'=>$limit,'all'=>$all,
+ 'workers'=>$workers,'worker'=>$worker,'first_file_id'=>$rows?(int)$rows[0]['id']:0,
+ 'last_file_id'=>$rows?(int)$rows[array_key_last($rows)]['id']:0,'writes'=>'*.uedb3 only','database_writes'=>false],
+ JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES).PHP_EOL;exit(0);
 }
 
 $inspector=new CatalogVerifiedPackageInspector($db,$config);
 $builder=new SnapshotBuilderV3($db,$config);
 $support=new CatalogFileMaintenanceSupport($db,$config);
-$done=0;$skipped=0;$failed=0;$lastAttempted=$after;$safeCursor=$after;$cursorFrozen=false;$errors=[];$started=microtime(true);
-foreach($rows as $n=>$file){
+$done=0;$skipped=0;$failed=0;$selected=0;$lastAttempted=$after;$safeCursor=$after;$cursorFrozen=false;$errors=[];$started=microtime(true);
+$page=0;
+do{
+ $page++;$rows=$page===1?$rows:$select($lastAttempted);
+ if($rows===[])break;
+ $pageCount=count($rows);$selected+=$pageCount;
+ foreach($rows as $n=>$file){
  $id=(int)$file['id'];$lastAttempted=$id;$target=MetadataContainerV3::path($storageRoot,(int)$file['game_id'],$id);
- fwrite(STDOUT,'['.($n+1).'/'.count($rows)."] #{$id} ".(string)$file['original_name'].' ... ');
+ fwrite(STDOUT,'[W'.($worker+1).'/'.$workers.' P'.$page.' '.($n+1).'/'.$pageCount."] #{$id} ".(string)$file['original_name'].' ... ');
  try{
   if(!$rebuild && is_file($target)){
    MetadataContainerV3::verifyFile($target,$id,null,3);
@@ -79,10 +92,13 @@ foreach($rows as $n=>$file){
   $failed++;$cursorFrozen=true;$errors[]=['file_id'=>$id,'error'=>$e->getMessage()];fwrite(STDOUT,'FAILED: '.$e->getMessage()."\n");
   if($stop)break;
  }
-}
+ }
+ if(!$all||$stop&&$failed>0||$pageCount<$limit)break;
+}while(true);
 $elapsed=max(.001,microtime(true)-$started);
-echo json_encode(['ok'=>$failed===0,'selected'=>count($rows),'staged'=>$done,'skipped_valid'=>$skipped,'failed'=>$failed,
- 'last_processed_id'=>$lastAttempted,'elapsed_seconds'=>round($elapsed,2),'files_per_second'=>round(($done+$skipped)/$elapsed,3),
+echo json_encode(['ok'=>$failed===0,'selected'=>$selected,'staged'=>$done,'skipped_valid'=>$skipped,'failed'=>$failed,
+ 'workers'=>$workers,'worker'=>$worker,'pages'=>$page,'last_processed_id'=>$lastAttempted,
+ 'elapsed_seconds'=>round($elapsed,2),'files_per_second'=>round(($done+$skipped)/$elapsed,3),
  'resume_after_id'=>$safeCursor,'errors'=>$errors],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE).PHP_EOL;
 exit($failed===0?0:3);
 
