@@ -75,7 +75,7 @@ final class VerifiedFileCompactMetadataFinalizer
             $formatVersion = (int)($statement->fetchColumn() ?: 0);
             if ($formatVersion !== BlockedCompressedMetadataContainer::FORMAT_VERSION) {
                 throw new RuntimeException(
-                    'Verified file #' . $fileId . ' has no current format-2 metadata.'
+                    'Verified file #' . $fileId . ' has no current format-' . BlockedCompressedMetadataContainer::FORMAT_VERSION . ' metadata.'
                 );
             }
             $conversion = (new BlockedCompressedMetadataReader($db, $storageRoot))->verify($fileId);
@@ -192,7 +192,7 @@ final class VerifiedFileCompactMetadataFinalizer
                 empty($conversion['verified'])
                 || (int)($conversion['format_version'] ?? 0) !== BlockedCompressedMetadataContainer::FORMAT_VERSION
             ) {
-                throw new RuntimeException('Compact metadata reconciliation did not return format version 2.');
+                throw new RuntimeException('Compact metadata reconciliation did not return format version ' . BlockedCompressedMetadataContainer::FORMAT_VERSION . '.');
             }
         } catch (Throwable $error) {
             VerifiedMetadataPublicationState::failed($db, $fileId, $error->getMessage());
@@ -277,14 +277,14 @@ final class VerifiedFileCompactMetadataFinalizer
     ): array {
         $fileId = self::fileId($result);
         $message = trim((string)($result[2] ?? ''));
-        $suffix = 'compact metadata=v2';
+        $suffix = 'compact metadata=v' . BlockedCompressedMetadataContainer::FORMAT_VERSION;
         if (array_key_exists('block_count', $conversion)) {
             $suffix .= ', blocks=' . (int)$conversion['block_count'];
         }
         if (!empty($conversion['reused_unchanged'])) {
             $suffix .= ', reused=unchanged';
         }
-        if ($message === '' || !str_contains($message, 'compact metadata=v2')) {
+        if ($message === '' || !str_contains($message, $suffix)) {
             $result[2] = $message !== '' ? $message . '; ' . $suffix : $suffix;
         }
 
