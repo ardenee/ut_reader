@@ -1,7 +1,7 @@
 <?php
 /**
  * Purpose: Performs read-only UE1/UE2/UE3 package projection audits against a fresh parse.
- * Why: Reader validation should compare fresh parser output with the authoritative format-2 metadata snapshot, not retired SQL tables.
+ * Why: Reader validation should compare fresh parser output with the authoritative format-3 metadata snapshot, not retired SQL tables.
  * Role: Infrastructure maintenance service preserving the Legacy Data Audit feature after physical legacy-table retirement.
  */
 declare(strict_types=1);
@@ -60,7 +60,7 @@ final class CatalogLegacyDataAuditService
 
     /**
      * Read-only verification of one UE1/UE2/UE3 package. It reparses the stored
-     * bytes and compares the fresh reader output with the authoritative format-2 snapshot.
+     * bytes and compares the fresh reader output with the authoritative format-3 snapshot.
      *
      * @param null|callable(array<string,mixed>):void $progress
      * @return array<string,mixed>
@@ -153,7 +153,7 @@ final class CatalogLegacyDataAuditService
                     'metadata_count_mismatch',
                     'metadata.' . $key,
                     null,
-                    ucfirst($key) . ' count in format-2 metadata differs from a fresh parse.',
+                    ucfirst($key) . ' count in format-3 metadata differs from a fresh parse.',
                     $freshCount,
                     $storedCount
                 ));
@@ -192,7 +192,7 @@ final class CatalogLegacyDataAuditService
             ));
         }
 
-        \scanner_emit_percent($progress, 'audit', 24, 'Comparing Names with format-2 metadata');
+        \scanner_emit_percent($progress, 'audit', 24, 'Comparing Names with format-3 metadata');
         foreach ($names as $index => $name) {
             $stored = $storedNames[$index] ?? null;
             if (!$stored) {
