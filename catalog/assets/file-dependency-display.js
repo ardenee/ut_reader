@@ -432,12 +432,16 @@
     }
 
     addStyle();
+    var examineRoot = document.getElementById('package-tables');
+    if (examineRoot) {
+        // Keep the examiner interactive after first paint. Expensive physical-header
+        // and dependency relationship work must not start automatically here.
+        // Those features are reattached lazily once their bounded endpoints are in place.
+        return;
+    }
     loadRawHeader();
     loadExaminerEnrichment();
-    var examineRoot = document.getElementById('package-tables');
-    var dependencyEndpoint = examineRoot
-        ? 'file-examine-dependencies.php?id=' + encodeURIComponent(fileId)
-        : 'file-dependency-files.php?id=' + encodeURIComponent(fileId);
+    var dependencyEndpoint = 'file-dependency-files.php?id=' + encodeURIComponent(fileId);
     fetch(dependencyEndpoint, {
         credentials: 'same-origin',
         cache: 'no-store',
