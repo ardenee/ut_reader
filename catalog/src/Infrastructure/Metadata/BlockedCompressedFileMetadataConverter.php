@@ -49,7 +49,19 @@ final class BlockedCompressedFileMetadataConverter
     public function rebuildProjections(int $fileId): array
     {
         $existing = $this->requireCurrentMetadata($fileId);
-        $snapshot = (new BlockedCompressedMetadataSnapshotLoader($this->db, $this->storageRoot))->load($fileId);
+        try {
+            $snapshot = (new BlockedCompressedMetadataSnapshotLoader($this->db, $this->storageRoot))->load($fileId);
+        } catch (Throwable $error) {
+            $config = function_exists('catalog_config') ? \catalog_config() : ['storage_path' => $this->storageRoot];
+            VerifiedCompactMetadataHealth::queueRepair(
+                $this->db,
+                is_array($config) ? $config : ['storage_path' => $this->storageRoot],
+                $fileId,
+                null,
+                $error
+            );
+            throw $error;
+        }
         $file = (array)$snapshot['file'];
         $path = BlockedCompressedMetadataContainer::path(
             $this->storageRoot,
