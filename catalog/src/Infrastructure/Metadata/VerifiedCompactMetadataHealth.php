@@ -33,11 +33,10 @@ final class VerifiedCompactMetadataHealth
 
         try {
             $result = (new BlockedCompressedMetadataReader($db, $storageRoot))->verify($fileId);
-            if (empty($result['verified'])
-                || (int)($result['format_version'] ?? 0) !== BlockedCompressedMetadataContainer::FORMAT_VERSION) {
+            $formatVersion = (int)($result['format_version'] ?? 0);
+            if (empty($result['verified']) || !in_array($formatVersion, [2, BlockedCompressedMetadataContainer::FORMAT_VERSION], true)) {
                 throw new RuntimeException(
-                    'File #' . $fileId . ' did not verify as compact metadata format version '
-                    . BlockedCompressedMetadataContainer::FORMAT_VERSION . '.'
+                    'File #' . $fileId . ' did not verify as a supported compact metadata format.'
                 );
             }
             VerifiedMetadataPublicationState::ready($db, $fileId);
