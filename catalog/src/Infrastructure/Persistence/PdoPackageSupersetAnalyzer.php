@@ -61,7 +61,18 @@ final class PdoPackageSupersetAnalyzer
             foreach ($byFile as $consumerFileId => $importIndexes) {
                 sort($importIndexes, SORT_NUMERIC);
                 foreach (self::contiguousRanges(array_values(array_unique($importIndexes))) as [$start, $length]) {
-                    $importRows = $reader->page($consumerFileId, 'imports', $start, $length);
+                    try {
+                        $importRows = $reader->page($consumerFileId, 'imports', $start, $length);
+                    } catch (\Throwable $error) {
+                        \UnrealDb\Catalog\Infrastructure\Metadata\VerifiedCompactMetadataHealth::queueRepair(
+                            $db,
+                            self::catalogConfig(),
+                            $consumerFileId,
+                            null,
+                            $error
+                        );
+                        continue;
+                    }
                     foreach ($importRows as $import) {
                     if (!is_array($import)) {
                         continue;
@@ -117,11 +128,18 @@ final class PdoPackageSupersetAnalyzer
         return $ranges;
     }
 
+    /** @return array<string,mixed> */
+    private static function catalogConfig(): array
+    {
+        $root = dirname(__DIR__, 3);
+        return require $root . '/config.php';
+    }
+
     private static function metadataReader(PDO $db): \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataReader
     {
         $root = dirname(__DIR__, 3);
         require_once $root . '/src/Infrastructure/Metadata/BlockedCompressedMetadataReader.php';
-        $config = require $root . '/config.php';
+        $config = self::catalogConfig();
         $storageRoot = (string)($config['storage_path'] ?? ($root . '/storage'));
         return new \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataReader($db, $storageRoot);
     }
