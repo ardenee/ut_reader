@@ -22,11 +22,14 @@ php catalog/bin/verify-v3-migration-ready.php
 
 It must return `"ok": true`.
 
-## 3. Stop the catalog workers/import activity
+## 3. Stop the catalog workers/import activity and public web runtime
+
+Stop detached workers/import activity and take Apache/public catalog requests
+offline for the short cutover window. PHP CLI can remain available.
 
 The cutover command refuses to run while a background job has status `running`.
-Do not restart workers until the runtime code and database registration have both
-been switched to v3.
+Do not restart Apache or workers until the runtime code and database registration
+have both been switched to v3.
 
 ## 4. Verify the complete staged population
 
@@ -69,7 +72,7 @@ php catalog/bin/verify-v3-migration-ready.php
 
 Do not remove `.uedb2` until these are clean.
 
-## 8. Restart workers and run Full Sync for every game
+## 8. Restart Apache/workers and run Full Sync for every game
 
 Use the existing Full Sync workflow for each game. This republishes projections
 and dependencies through the v3-only resolver, including package-wide
