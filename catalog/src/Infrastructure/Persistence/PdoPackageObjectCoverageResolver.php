@@ -120,6 +120,52 @@ final class PdoPackageObjectCoverageResolver
             }
         }
 
+        // Preserve historical case-insensitive Unreal object matching only for
+        // requirements missed by the byte-sensitive path_hash fast path.
+        foreach ($providers as $fileId => $_provider) {
+            $missingForProvider = [];
+            foreach ($requirements as $key => $path) {
+                if (!isset($matched[$fileId][$key])) {
+                    $missingForProvider[$key] = $path;
+                }
+            }
+            if ($missingForProvider === []) {
+                continue;
+            }
+            $fallback = PdoCompactCaseInsensitiveExportResolver::matchProviderPaths(
+                $db,
+                (int)$fileId,
+                array_values($missingForProvider)
+            );
+            foreach ($fallback as $key => $exportIndex) {
+                if (!isset($missingForProvider[$key])) {
+                    continue;
+                }
+                try {
+                    if (!self::exportMatchesRequirement(
+                        $reader,
+                        (int)$fileId,
+                        (int)$exportIndex,
+                        (string)$key,
+                        $requiredClasses[(string)$key] ?? null
+                    )) {
+                        continue;
+                    }
+                } catch (\Throwable $error) {
+                    \UnrealDb\Catalog\Infrastructure\Metadata\VerifiedCompactMetadataHealth::queueRepair(
+                        $db,
+                        $config,
+                        (int)$fileId,
+                        null,
+                        $error
+                    );
+                    continue;
+                }
+                $matched[$fileId][$key] = true;
+                $matchedExports[$fileId][$key] = (int)$exportIndex;
+            }
+        }
+
         $result = [];
         foreach ($providers as $fileId => $provider) {
             $matchedPaths = [];
