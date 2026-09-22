@@ -47,7 +47,8 @@ final class PdoPackageSupersetAnalyzer
             . ' JOIN ue_files f ON f.id=l.file_id'
             . ' JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=3'
             . ' JOIN ue_terms p ON p.id=l.required_package_term_id'
-            . ' WHERE f.game_id=? AND f.scan_status="verified" AND p.term_text=?'
+            . ' WHERE f.game_id=? AND f.scan_status="verified"'
+            . ' AND LOWER(p.term_text)=LOWER(?)'
             . ' ORDER BY f.id,l.import_index',
             [$gameId, $packageName]
         );
@@ -58,9 +59,10 @@ final class PdoPackageSupersetAnalyzer
                 $byFile[(int)$row['file_id']][] = (int)$row['import_index'];
             }
             foreach ($byFile as $consumerFileId => $importIndexes) {
-                foreach ($importIndexes as $importIndex) {
-                    $importRows = $reader->page($consumerFileId, 'imports', $importIndex, 1);
-                    $import = $importRows[0] ?? null;
+                sort($importIndexes, SORT_NUMERIC);
+                foreach (self::contiguousRanges(array_values(array_unique($importIndexes))) as [$start, $length]) {
+                    $importRows = $reader->page($consumerFileId, 'imports', $start, $length);
+                    foreach ($importRows as $import) {
                     if (!is_array($import)) {
                         continue;
                     }
@@ -75,6 +77,7 @@ final class PdoPackageSupersetAnalyzer
                     $key = self::key($relativePath);
                     $requirements[$key] ??= $relativePath;
                     $consumers[$consumerFileId] = true;
+                    }
                 }
             }
         }
@@ -91,6 +94,27 @@ final class PdoPackageSupersetAnalyzer
             'required_object_paths' => $paths,
             'providers' => $providers,
         ];
+    }
+
+    /** @param list<int> $indexes @return list<array{0:int,1:int}> */
+    private static function contiguousRanges(array $indexes): array
+    {
+        if ($indexes === []) {
+            return [];
+        }
+        $ranges = [];
+        $start = $indexes[0];
+        $previous = $start;
+        foreach (array_slice($indexes, 1) as $index) {
+            if ($index === $previous + 1) {
+                $previous = $index;
+                continue;
+            }
+            $ranges[] = [$start, $previous - $start + 1];
+            $start = $previous = $index;
+        }
+        $ranges[] = [$start, $previous - $start + 1];
+        return $ranges;
     }
 
     private static function metadataReader(PDO $db): \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataReader
