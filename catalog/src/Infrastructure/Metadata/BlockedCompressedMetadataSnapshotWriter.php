@@ -19,7 +19,7 @@ use RuntimeException;
 use Throwable;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoContention;
 
-/** Publishes a complete format-2 snapshot and its MySQL projections atomically. */
+/** Publishes a complete format-3 snapshot and its MySQL projections atomically. */
 final class BlockedCompressedMetadataSnapshotWriter
 {
     private const CONTENTION_ATTEMPTS = 5;
