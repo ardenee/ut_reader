@@ -39,6 +39,7 @@ final class PdoPackageSupersetAnalyzer
         }
 
         $requirements = [];
+        $requiredClasses = [];
         $consumers = [];
         $rows = \catalog_all(
             $db,
@@ -87,6 +88,13 @@ final class PdoPackageSupersetAnalyzer
                     }
                     $key = self::key($relativePath);
                     $requirements[$key] ??= $relativePath;
+                    $className = trim((string)($import['class_name'] ?? ''));
+                    if ($className !== '') {
+                        $requiredClasses[$relativePath] ??= [
+                            'class_package' => trim((string)($import['class_package'] ?? '')),
+                            'class_name' => $className,
+                        ];
+                    }
                     $consumers[$consumerFileId] = true;
                     }
                 }
@@ -95,7 +103,14 @@ final class PdoPackageSupersetAnalyzer
         $paths = array_values($requirements);
         $providers = $paths === []
             ? []
-            : PdoPackageObjectCoverageResolver::evaluate($db, $gameId, $packageName, $paths);
+            : PdoPackageObjectCoverageResolver::evaluate(
+                $db,
+                $gameId,
+                $packageName,
+                $paths,
+                0,
+                $requiredClasses
+            );
 
         return [
             'game_id' => $gameId,
