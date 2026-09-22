@@ -36,7 +36,8 @@ final class PdoPackageObjectCoverageResolver
         PDO $db,
         int $gameId,
         string $packageName,
-        array $requiredObjectPaths
+        array $requiredObjectPaths,
+        int $preferredFileId = 0
     ): array {
         $packageName = trim($packageName);
         if ($gameId < 1 || $packageName === '') {
@@ -44,7 +45,7 @@ final class PdoPackageObjectCoverageResolver
         }
 
         $requirements = self::requirements($packageName, $requiredObjectPaths);
-        $providers = self::providers($db, $gameId, $packageName);
+        $providers = self::providers($db, $gameId, $packageName, $preferredFileId);
         if ($providers === []) {
             return [];
         }
@@ -129,7 +130,44 @@ final class PdoPackageObjectCoverageResolver
                 'missing_paths' => $missingPaths,
             ];
         }
+        usort($result, static function (array $a, array $b) use ($preferredFileId): int {
+            $rank = ['fully_satisfies' => 0, 'partially_satisfies' => 1, 'does_not_satisfy' => 2];
+            $status = ($rank[$a['status']] ?? 9) <=> ($rank[$b['status']] ?? 9);
+            if ($status !== 0) {
+                return $status;
+            }
+            if ($preferredFileId > 0) {
+                $preferred = ((int)$b['file_id'] === $preferredFileId) <=> ((int)$a['file_id'] === $preferredFileId);
+                if ($preferred !== 0) {
+                    return $preferred;
+                }
+            }
+            return 0;
+        });
         return $result;
+    }
+
+    /**
+     * Choose one provider only when that provider satisfies the entire object set.
+     * The preferred file is a tie-breaker among complete providers, never a reason
+     * to choose a partial provider.
+     *
+     * @param list<string> $requiredObjectPaths
+     * @return array<string,mixed>|null
+     */
+    public static function chooseCompleteProvider(
+        PDO $db,
+        int $gameId,
+        string $packageName,
+        array $requiredObjectPaths,
+        int $preferredFileId = 0
+    ): ?array {
+        foreach (self::evaluate($db, $gameId, $packageName, $requiredObjectPaths, $preferredFileId) as $coverage) {
+            if (($coverage['status'] ?? '') === 'fully_satisfies') {
+                return $coverage;
+            }
+        }
+        return null;
     }
 
     /**
@@ -159,7 +197,7 @@ final class PdoPackageObjectCoverageResolver
     }
 
     /** @return array<int,array{source:string}> */
-    private static function providers(PDO $db, int $gameId, string $packageName): array
+    private static function providers(PDO $db, int $gameId, string $packageName, int $preferredFileId): array
     {
         $providers = [];
         try {
