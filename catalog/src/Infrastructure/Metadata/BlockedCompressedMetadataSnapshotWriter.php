@@ -48,6 +48,7 @@ final class BlockedCompressedMetadataSnapshotWriter
         }
 
         $this->assertSnapshotCounts($snapshot);
+        $this->assertFormat3References($snapshot);
         $path = BlockedCompressedMetadataContainer::path($this->storageRoot, $gameId, $fileId);
         $directory = dirname($path);
         if (!is_dir($directory) && !mkdir($directory, 0775, true) && !is_dir($directory)) {
@@ -199,6 +200,37 @@ final class BlockedCompressedMetadataSnapshotWriter
             'container_rewritten' => true,
             'dependency_count' => count((array)($snapshot['dependencies'] ?? [])),
         ];
+    }
+
+    /** @param array<string,mixed> $snapshot */
+    private function assertFormat3References(array $snapshot): void
+    {
+        foreach ((array)($snapshot['names'] ?? []) as $row) {
+            if (!is_array($row)
+                || !array_key_exists('imports_count', $row)
+                || !array_key_exists('exports_count', $row)
+                || !array_key_exists('first_import_index', $row)
+                || !array_key_exists('first_export_index', $row)) {
+                throw new RuntimeException('Format-3 publication requires persisted Name usage metadata; reparse the source package first.');
+            }
+        }
+        foreach ((array)($snapshot['imports'] ?? []) as $row) {
+            if (!is_array($row)
+                || !array_key_exists('class_package_name_index', $row)
+                || !array_key_exists('class_name_index', $row)
+                || !array_key_exists('object_name_index', $row)) {
+                throw new RuntimeException('Format-3 publication requires serialized Import FName indexes; reparse the source package first.');
+            }
+        }
+        foreach ((array)($snapshot['exports'] ?? []) as $row) {
+            if (!is_array($row)
+                || !array_key_exists('class_index', $row)
+                || !array_key_exists('super_index', $row)
+                || !array_key_exists('template_index', $row)
+                || !array_key_exists('object_name_index', $row)) {
+                throw new RuntimeException('Format-3 publication requires serialized Export reference indexes; reparse the source package first.');
+            }
+        }
     }
 
     /** @param array<string,mixed> $snapshot */
