@@ -103,48 +103,7 @@ final class PdoPackageTablePageQuery
     public static function nameLookup(PDO $db, int $fileId, array $values): array
     {
         $values = self::uniqueValues($values);
-        if ($values === []) {
-            return [];
-        }
-
-        // The detailed table rows remain authoritative in format-2 metadata, but
-        // cross-reference resolution must not scan/decompress the complete Names
-        // section on every Imports/Exports page. ue_name_lookup is the indexed
-        // projection specifically suited to resolving a term back to this file's
-        // Name index.
-        $termIds = self::resolveTermIds($db, $values);
-        if ($termIds === []) {
-            return [];
-        }
-
-        $statement = $db->prepare(
-            // FORCE INDEX(PRIMARY): this lookup is intentionally file-bounded. On the
-            // very large ue_name_lookup table MySQL can otherwise choose the
-            // term-first secondary index and walk enormous cross-file ranges.
-            'SELECT n.name_index,n.name_term_id FROM ue_name_lookup n FORCE INDEX (PRIMARY) '
-            . 'WHERE n.file_id=? AND n.name_term_id IN ('
-            . implode(',', array_fill(0, count($termIds), '?'))
-            . ') ORDER BY n.name_index'
-        );
-        $statement->execute(array_merge([$fileId], array_values($termIds)));
-
-        $byTerm = [];
-        while (($row = $statement->fetch(PDO::FETCH_ASSOC)) !== false) {
-            $termId = (int)$row['name_term_id'];
-            if (!isset($byTerm[$termId])) {
-                $byTerm[$termId] = (int)$row['name_index'];
-            }
-        }
-
-        $lookup = [];
-        foreach ($values as $value) {
-            $key = self::valueKey($value);
-            $termId = $termIds[$key] ?? null;
-            if ($termId !== null && isset($byTerm[$termId])) {
-                $lookup[mb_strtolower($value, 'UTF-8')] = $byTerm[$termId];
-            }
-        }
-        return $lookup;
+        return $values === [] ? [] : self::reader($db, $fileId)->findNameIndexes($fileId, $values);
     }
 
     /**
@@ -220,48 +179,6 @@ final class PdoPackageTablePageQuery
             return '';
         }
         return is_array($config) ? trim((string)($config['storage_path'] ?? '')) : '';
-    }
-
-    /** @param list<string> $values @return array<string,int> */
-    private static function resolveTermIds(PDO $db, array $values): array
-    {
-        $resolved = [];
-        foreach (array_chunk($values, 250) as $chunk) {
-            $predicates = [];
-            $arguments = [];
-            foreach ($chunk as $value) {
-                $predicates[] = '(value_hash=? AND value_length=?)';
-                $arguments[] = md5($value, true);
-                $arguments[] = strlen($value);
-            }
-            $statement = $db->prepare(
-                'SELECT id,value_hash,value_length,value_prefix,is_overflow FROM ue_terms WHERE '
-                . implode(' OR ', $predicates)
-            );
-            $statement->execute($arguments);
-            while (($row = $statement->fetch(PDO::FETCH_ASSOC)) !== false) {
-                $key = bin2hex((string)$row['value_hash']) . ':' . (int)$row['value_length'];
-                foreach ($chunk as $value) {
-                    if (self::valueKey($value) !== $key) {
-                        continue;
-                    }
-                    $prefix = (string)$row['value_prefix'];
-                    $matches = (int)$row['is_overflow'] === 1
-                        ? str_starts_with($value, $prefix)
-                        : hash_equals($value, $prefix);
-                    if ($matches) {
-                        $resolved[$key] = (int)$row['id'];
-                    }
-                    break;
-                }
-            }
-        }
-        return $resolved;
-    }
-
-    private static function valueKey(string $value): string
-    {
-        return md5($value) . ':' . strlen($value);
     }
 
     /** @param list<string> $values @return list<string> */
