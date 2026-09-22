@@ -209,7 +209,8 @@ final class BlockedCompressedMetadataContainer
     public static function verifyFile(
         string $path,
         int $expectedFileId,
-        ?string $expectedPayloadSha256 = null
+        ?string $expectedPayloadSha256 = null,
+        int $expectedFormatVersion = self::FORMAT_VERSION
     ): array {
         clearstatcache(true, $path);
         $size = @filesize($path);
@@ -226,10 +227,13 @@ final class BlockedCompressedMetadataContainer
             $headerBytes = self::readExactly($stream, self::HEADER_LENGTH);
             hash_update($hash, $headerBytes);
             $header = unpack('a8magic/vversion/vcodec/Vmanifest_length/Vreserved', $headerBytes);
-            if (!is_array($header) || (string)$header['magic'] !== self::MAGIC) {
-                throw new RuntimeException('Blocked metadata container magic is invalid.');
+            $supportedMagic = $expectedFormatVersion === 2 ? "UEDBM2\0\0" : self::MAGIC;
+            if (!in_array($expectedFormatVersion, [2, self::FORMAT_VERSION], true)
+                || !is_array($header)
+                || (string)$header['magic'] !== $supportedMagic) {
+                throw new RuntimeException('Blocked metadata container magic is invalid for format version ' . $expectedFormatVersion . '.');
             }
-            if ((int)$header['version'] !== self::FORMAT_VERSION || (int)$header['codec'] !== self::CODEC_BLOCK_GZIP) {
+            if ((int)$header['version'] !== $expectedFormatVersion || (int)$header['codec'] !== self::CODEC_BLOCK_GZIP) {
                 throw new RuntimeException('Blocked metadata container version or codec is unsupported.');
             }
 
