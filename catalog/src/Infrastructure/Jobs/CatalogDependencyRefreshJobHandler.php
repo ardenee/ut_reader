@@ -719,13 +719,17 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
         int $fileId,
         string $originalName
     ): void {
-        $repair = $this->metadataRepairChild($job->id);
-        if ($repair === null && VerifiedCompactMetadataHealth::healthy($this->db, $this->config, $fileId)) {
+        if (VerifiedCompactMetadataHealth::healthy($this->db, $this->config, $fileId)) {
             return;
         }
 
+        $repair = $this->metadataRepairJob($fileId);
         $requestedBy = max(0, (int)($job->payload['requested_by'] ?? 0));
-        if ($repair === null) {
+        $status = strtolower(trim((string)($repair['status'] ?? '')));
+
+        // A completed historical repair does not protect against later disk
+        // corruption. Health is authoritative; queue a new deduplicated repair.
+        if ($repair === null || $status === 'completed') {
             $repairJobId = VerifiedCompactMetadataHealth::queueRepair(
                 $this->db,
                 $this->config,
@@ -739,14 +743,13 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
                 'percent' => 2,
                 'file_id' => $fileId,
                 'metadata_repair_job_id' => $repairJobId,
-                'message' => 'Compact metadata is missing or unreadable for '
+                'message' => 'Format-3 metadata is missing or unreadable for '
                     . ($originalName !== '' ? $originalName : ('file #' . $fileId))
-                    . '; queued repair job #' . $repairJobId . ' from the authoritative stored package.',
+                    . '; queued globally deduplicated v3 repair job #' . $repairJobId . '.',
             ]);
         }
 
         $repairId = (int)($repair['id'] ?? 0);
-        $status = strtolower(trim((string)($repair['status'] ?? 'queued')));
         if (in_array($status, ['failed', 'dead_letter', 'cancelled'], true)) {
             $error = trim((string)($repair['last_error'] ?? ''));
             throw new RuntimeException(
@@ -774,33 +777,25 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
             ]);
         }
 
-        if (!VerifiedCompactMetadataHealth::healthy($this->db, $this->config, $fileId)) {
-            throw new RuntimeException(
-                'Compact metadata repair job #' . $repairId
-                . ' completed, but format-3 metadata is still missing or unreadable for file #' . $fileId . '.'
-            );
-        }
-
-        $context->checkpoint([
-            'stage' => 'metadata_repair_complete',
-            'done' => 0,
-            'total' => 4,
-            'percent' => 5,
-            'file_id' => $fileId,
-            'metadata_repair_job_id' => $repairId,
-            'message' => 'Compact metadata repair job #' . $repairId
-                . ' completed; resuming dependency rebuild.',
-        ]);
+        // Reaching this branch means a completed repair was observed before the
+        // health check above; do not loop forever if its output is already bad.
+        throw new RuntimeException(
+            'Compact metadata repair job #' . $repairId
+            . ' completed, but format-3 metadata is still missing or unreadable for file #' . $fileId . '.'
+        );
     }
 
     /** @return array<string,mixed>|null */
-    private function metadataRepairChild(int $parentJobId): ?array
+    private function metadataRepairJob(int $fileId): ?array
     {
         $statement = $this->db->prepare(
             'SELECT id,status,last_error,progress_json,result_json FROM ue_background_jobs '
-            . 'WHERE parent_job_id=? AND workflow_unit_key="metadata-repair" LIMIT 1'
+            . 'WHERE job_type=? AND dedupe_key=? ORDER BY id DESC LIMIT 1'
         );
-        $statement->execute([$parentJobId]);
+        $statement->execute([
+            JobType::REPAIR_COMPACT_METADATA_FILE,
+            'compact-metadata-repair:' . $fileId,
+        ]);
         $row = $statement->fetch(PDO::FETCH_ASSOC);
         return is_array($row) ? $row : null;
     }
