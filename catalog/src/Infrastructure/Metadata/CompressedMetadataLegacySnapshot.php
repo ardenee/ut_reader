@@ -22,7 +22,7 @@ final class CompressedMetadataLegacySnapshot
     {
         throw new RuntimeException(
             'Historical SQL metadata snapshot conversion has been retired. '
-            . 'Only authoritative format-2 metadata is supported.'
+            . 'Only authoritative format-3 metadata is supported.'
         );
     }
 
