@@ -49,6 +49,7 @@ final class GeneratedPackageJobHandler implements JobHandler
         $format = strtolower(trim((string)($job->payload['format'] ?? '')));
         $includeDependencies = !empty($job->payload['include_dependencies']);
         $allowIncompleteRequested = !empty($job->payload['allow_incomplete']);
+        $dependencyChoices = is_array($job->payload['dependency_choices'] ?? null) ? $job->payload['dependency_choices'] : [];
         $optionInput = is_array($job->payload['options'] ?? null) ? $job->payload['options'] : [];
 
         \catalog_download_audit_generation_status($this->db, $job->id, 'running');
@@ -71,11 +72,13 @@ final class GeneratedPackageJobHandler implements JobHandler
                 'percent' => 5,
                 'message' => 'Resolving the package and dependency closure.',
             ]);
+            $planSettings = $settings;
+            $planSettings['dependency_file_overrides'] = $dependencyChoices;
             $plan = (new PdoCatalogPackageExportPlanner($this->db, $this->config))->plan(
                 $fileId,
                 $format,
                 $includeDependencies,
-                $settings
+                $planSettings
             );
 
             $umodFamily = in_array(
