@@ -247,9 +247,10 @@ final class PdoCatalogDependencyRebuilder
         if ((string)($metadata['scan_status'] ?? '') !== 'verified') {
             throw new RuntimeException('Dependency rebuilding is only supported for verified catalog files.');
         }
-        if ((int)($metadata['format_version'] ?? 0) !== 2) {
+        $formatVersion = (int)($metadata['format_version'] ?? 0);
+        if (!in_array($formatVersion, [2, \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer::FORMAT_VERSION], true)) {
             throw new RuntimeException(
-                'Verified file #' . $fileId . ' has no current format-2 metadata; runtime legacy dependency rebuild is disabled.'
+                'Verified file #' . $fileId . ' has no supported compact metadata.'
             );
         }
 
