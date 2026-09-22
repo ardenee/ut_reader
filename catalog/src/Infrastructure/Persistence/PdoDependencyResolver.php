@@ -54,6 +54,25 @@ final class PdoDependencyResolver
 
         $packageMatches = self::loadPackageMatches($db, $gameId, $fileId, array_values($packageNames));
         $exportMatches = self::loadExportMatches($db, $gameId, $fileId, array_values($objectLookups));
+        $packageRequirements = [];
+        foreach ($objectLookups as $lookup) {
+            $packageKey = self::normalizeLookup($lookup['package_name']);
+            $packageRequirements[$packageKey]['package_name'] ??= $lookup['package_name'];
+            $packageRequirements[$packageKey]['paths'][] = $lookup['local_path'];
+        }
+        $completeProviders = [];
+        foreach ($packageRequirements as $packageKey => $requirement) {
+            $provider = PdoPackageObjectCoverageResolver::chooseCompleteProvider(
+                $db,
+                $gameId,
+                (string)$requirement['package_name'],
+                array_values(array_unique((array)$requirement['paths'])),
+                $fileId
+            );
+            if ($provider !== null) {
+                $completeProviders[$packageKey] = (int)$provider['file_id'];
+            }
+        }
         $resolved = [];
         foreach ($imports as $import) {
             $importId = (int)($import['id'] ?? 0);
@@ -88,7 +107,18 @@ final class PdoDependencyResolver
                     ];
                 }
             } else {
-                $exportMatch = $exportMatches[self::normalizeLookup($fullPath)] ?? null;
+                $packageKey = self::normalizeLookup($rootPackage);
+                $completeProviderId = $completeProviders[$packageKey] ?? null;
+                $exportMatch = $completeProviderId !== null
+                    ? self::loadExportMatchForProvider(
+                        $db,
+                        $gameId,
+                        $completeProviderId,
+                        $rootPackage,
+                        (string)($import['relative_object_path'] ?? ''),
+                        $fullPath
+                    )
+                    : null;
                 if ($exportMatch !== null) {
                     $result = [
                         'status' => 'resolved',
@@ -103,6 +133,42 @@ final class PdoDependencyResolver
             $resolved[$importId] = $result;
         }
         return $resolved;
+    }
+
+    /** @return array{file_id:int,export_index:int,source:string}|null */
+    private static function loadExportMatchForProvider(
+        PDO $db,
+        int $gameId,
+        int $providerFileId,
+        string $packageName,
+        string $localPath,
+        string $fullPath
+    ): ?array {
+        if ($providerFileId < 1 || trim($localPath) === '') {
+            return null;
+        }
+        $rows = \catalog_all(
+            $db,
+            'SELECT l.file_id,l.export_index FROM ue_export_lookup l'
+            . ' JOIN ue_files f ON f.id=l.file_id'
+            . ' JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=3'
+            . ' WHERE f.game_id=? AND f.scan_status="verified" AND l.file_id=? AND l.path_hash=?'
+            . ' ORDER BY l.export_index ASC',
+            [$gameId, $providerFileId, md5($localPath, true)]
+        );
+        if ($rows === []) {
+            return null;
+        }
+        // Coverage already proved that this provider owns the exact path. Resolve
+        // the Import to the corresponding Export index within that same provider.
+        foreach ($rows as $row) {
+            return [
+                'file_id' => (int)$row['file_id'],
+                'export_index' => (int)$row['export_index'],
+                'source' => 'complete_package_object',
+            ];
+        }
+        return null;
     }
 
     /** @return array{status:string,resolved_file_id:?int,resolved_export_id:?int,resolved_export_index:?int,source:string,confidence:string} */
