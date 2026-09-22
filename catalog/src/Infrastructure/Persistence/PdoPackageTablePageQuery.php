@@ -145,15 +145,91 @@ final class PdoPackageTablePageQuery
     /** @param list<string> $names @return array<string,array{imports_count:int,imports_target:string,exports_count:int,exports_target:string}> */
     public static function nameUsage(PDO $db, int $fileId, array $names): array
     {
-        $usage=[]; foreach(self::uniqueValues($names) as $name) $usage[mb_strtolower($name,'UTF-8')]=['imports_count'=>0,'imports_target'=>'','exports_count'=>0,'exports_target'=>''];
-        if($usage===[]) return [];
-        foreach($names as $name){
-            $key=mb_strtolower(trim($name),'UTF-8'); if(!isset($usage[$key])) continue;
-            $hash=md5(trim($name),true); $len=strlen(trim($name));
-            $st=$db->prepare('SELECT d.import_index FROM ue_dependency_links d LEFT JOIN ue_terms a ON a.id=d.import_object_term_id LEFT JOIN ue_terms b ON b.id=d.import_class_name_term_id LEFT JOIN ue_terms c ON c.id=d.import_class_package_term_id WHERE d.file_id=? AND ((a.value_hash=? AND a.value_length=?) OR (b.value_hash=? AND b.value_length=?) OR (c.value_hash=? AND c.value_length=?)) ORDER BY d.import_index LIMIT 1001');
-            $st->execute([$fileId,$hash,$len,$hash,$len,$hash,$len]); $ir=$st->fetchAll(PDO::FETCH_COLUMN) ?: []; $usage[$key]['imports_count']=count($ir); if($ir) $usage[$key]['imports_target']='import-'.(int)$ir[0];
-            $st=$db->prepare('SELECT e.export_index FROM ue_export_lookup e LEFT JOIN ue_terms a ON a.id=e.object_term_id LEFT JOIN ue_terms b ON b.id=e.class_term_id WHERE e.file_id=? AND ((a.value_hash=? AND a.value_length=?) OR (b.value_hash=? AND b.value_length=?)) ORDER BY e.export_index LIMIT 1001');
-            $st->execute([$fileId,$hash,$len,$hash,$len]); $er=$st->fetchAll(PDO::FETCH_COLUMN) ?: []; $usage[$key]['exports_count']=count($er); if($er) $usage[$key]['exports_target']='export-'.(int)$er[0];
+        $values = self::uniqueValues($names);
+        $usage = [];
+        foreach ($values as $name) {
+            $usage[mb_strtolower($name, 'UTF-8')] = [
+                'imports_count' => 0, 'imports_target' => '',
+                'exports_count' => 0, 'exports_target' => '',
+            ];
+        }
+        if ($usage === []) {
+            return [];
+        }
+
+        // Resolve the visible names to dictionary IDs once. The previous implementation
+        // executed two lookup queries per visible name (500 queries on the default
+        // 250-row page), which could keep the PHP request and database connection busy
+        // long enough to make the examiner appear to lock up.
+        $termToKey = [];
+        foreach (array_chunk($values, 200) as $chunk) {
+            $predicates = [];
+            $arguments = [];
+            foreach ($chunk as $value) {
+                $predicates[] = '(value_hash=? AND value_length=?)';
+                $arguments[] = md5($value, true);
+                $arguments[] = strlen($value);
+            }
+            $statement = $db->prepare(
+                'SELECT id,value_hash,value_length FROM ue_terms WHERE ' . implode(' OR ', $predicates)
+            );
+            $statement->execute($arguments);
+            foreach ($statement->fetchAll(PDO::FETCH_ASSOC) ?: [] as $row) {
+                $hashKey = bin2hex((string)$row['value_hash']) . ':' . (int)$row['value_length'];
+                foreach ($chunk as $value) {
+                    if ($hashKey === md5($value) . ':' . strlen($value)) {
+                        $termToKey[(int)$row['id']] = mb_strtolower($value, 'UTF-8');
+                        break;
+                    }
+                }
+            }
+        }
+        if ($termToKey === []) {
+            return $usage;
+        }
+
+        $termIds = array_keys($termToKey);
+        foreach (array_chunk($termIds, 300) as $chunk) {
+            $placeholders = implode(',', array_fill(0, count($chunk), '?'));
+
+            $arguments = array_merge([$fileId], $chunk, $chunk, $chunk);
+            $statement = $db->prepare(
+                'SELECT import_index,import_object_term_id,import_class_name_term_id,import_class_package_term_id '
+                . 'FROM ue_dependency_links WHERE file_id=? AND ('
+                . 'import_object_term_id IN (' . $placeholders . ') OR '
+                . 'import_class_name_term_id IN (' . $placeholders . ') OR '
+                . 'import_class_package_term_id IN (' . $placeholders . ')) ORDER BY import_index'
+            );
+            $statement->execute($arguments);
+            foreach ($statement->fetchAll(PDO::FETCH_ASSOC) ?: [] as $row) {
+                foreach (['import_object_term_id','import_class_name_term_id','import_class_package_term_id'] as $column) {
+                    $termId = (int)($row[$column] ?? 0);
+                    $key = $termToKey[$termId] ?? null;
+                    if ($key === null) continue;
+                    $usage[$key]['imports_count']++;
+                    if ($usage[$key]['imports_target'] === '') {
+                        $usage[$key]['imports_target'] = 'import-' . (int)$row['import_index'];
+                    }
+                }
+            }
+
+            $arguments = array_merge([$fileId], $chunk, $chunk);
+            $statement = $db->prepare(
+                'SELECT export_index,object_term_id,class_term_id FROM ue_export_lookup WHERE file_id=? AND ('
+                . 'object_term_id IN (' . $placeholders . ') OR class_term_id IN (' . $placeholders . ')) ORDER BY export_index'
+            );
+            $statement->execute($arguments);
+            foreach ($statement->fetchAll(PDO::FETCH_ASSOC) ?: [] as $row) {
+                foreach (['object_term_id','class_term_id'] as $column) {
+                    $termId = (int)($row[$column] ?? 0);
+                    $key = $termToKey[$termId] ?? null;
+                    if ($key === null) continue;
+                    $usage[$key]['exports_count']++;
+                    if ($usage[$key]['exports_target'] === '') {
+                        $usage[$key]['exports_target'] = 'export-' . (int)$row['export_index'];
+                    }
+                }
+            }
         }
         return $usage;
     }
