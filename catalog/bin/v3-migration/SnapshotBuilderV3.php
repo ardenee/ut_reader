@@ -21,7 +21,7 @@ final class SnapshotBuilderV3
         private readonly PDO $db,
         private readonly array $config
     ) {
-        $root = dirname(__DIR__, 3);
+        $root = dirname(__DIR__, 2);
         require_once $root . '/lib/CatalogSupport.php';
         require_once $root . '/lib/Scanner/CatalogScannerPath.php';
         require_once $root . '/lib/Scanner/CatalogScannerSupport.php';
