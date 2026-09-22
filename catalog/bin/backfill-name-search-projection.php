@@ -56,7 +56,7 @@ try {
     do {
         $statement = $db->prepare(
             'SELECT f.id,f.name_count FROM ue_files f '
-            . 'JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=2 '
+            . 'JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=3 '
             . 'WHERE f.scan_status="verified" AND f.name_count>0 AND f.id>? '
             . 'AND NOT EXISTS(SELECT 1 FROM ue_name_lookup n WHERE n.file_id=f.id LIMIT 1) '
             . 'ORDER BY f.id ASC LIMIT ' . $limit
@@ -111,7 +111,7 @@ try {
 
     $remaining = (int)$db->query(
         'SELECT COUNT(*) FROM ue_files f '
-        . 'JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=2 '
+        . 'JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=3 '
         . 'WHERE f.scan_status="verified" AND f.name_count>0 '
         . 'AND NOT EXISTS(SELECT 1 FROM ue_name_lookup n WHERE n.file_id=f.id LIMIT 1)'
     )->fetchColumn();
