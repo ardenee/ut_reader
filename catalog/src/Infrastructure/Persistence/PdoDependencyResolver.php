@@ -47,6 +47,8 @@ final class PdoDependencyResolver
                         'lookup_value' => $fullPath,
                         'package_name' => $rootPackage,
                         'local_path' => $relativeObjectPath,
+                        'class_package' => trim((string)($import['class_package'] ?? '')),
+                        'class_name' => trim((string)($import['class_name'] ?? '')),
                     ];
                 }
             }
