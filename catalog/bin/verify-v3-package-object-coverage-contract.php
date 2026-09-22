@@ -43,7 +43,7 @@ $check(
 $check(
     'full_relative_path_is_required',
     is_string($source) && str_contains($source, "local_path")
-        && str_contains($source, 'exportPathMatches'),
+        && str_contains($source, 'exportMatchesRequirement'),
     'A path-hash hit must be confirmed against the exact v3 Export local_path.'
 );
 $check(
@@ -97,7 +97,7 @@ $check(
     'coverage_returns_verified_export_indexes',
     is_string($source)
         && str_contains($source, "'matched_exports'")
-        && str_contains($source, 'exportPathMatches'),
+        && str_contains($source, 'exportMatchesRequirement'),
     'The chosen provider must return Export indexes from paths verified against its v3 metadata.'
 );
 $check(
