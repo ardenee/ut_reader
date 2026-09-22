@@ -23,6 +23,9 @@ use UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageObjectCoverageResolver
 $source = file_get_contents(
     $root . '/src/Infrastructure/Persistence/PdoPackageObjectCoverageResolver.php'
 );
+$resolverSource = file_get_contents(
+    $root . '/src/Infrastructure/Persistence/PdoDependencyResolver.php'
+);
 $checks = [];
 $check = static function (string $name, bool $ok, string $detail) use (&$checks): void {
     $checks[] = ['check' => $name, 'ok' => $ok, 'detail' => $detail];
@@ -63,6 +66,44 @@ $check(
     'nested_outer_paths_remain_distinct',
     is_string($source) && !str_contains($source, 'basename('),
     'GroupA.Wall01 and GroupB.Wall01 must remain distinct relative object paths.'
+);
+
+
+$check(
+    'dependency_resolver_groups_package_requirements',
+    is_string($resolverSource)
+        && str_contains($resolverSource, '$packageRequirements')
+        && str_contains($resolverSource, 'chooseCompleteProvider'),
+    'Object Imports from one root package must be evaluated as one requirement set.'
+);
+$check(
+    'dependency_resolver_uses_one_complete_provider',
+    is_string($resolverSource)
+        && str_contains($resolverSource, '$completeProviders[$packageKey]')
+        && str_contains($resolverSource, "'complete_package_object'"),
+    'All object Imports for a package must resolve through the same complete provider.'
+);
+$check(
+    'dependency_resolver_has_no_independent_object_fallback',
+    is_string($resolverSource)
+        && !str_contains($resolverSource, 'loadExportMatches(')
+        && !str_contains($resolverSource, 'PdoCompactCaseInsensitiveExportResolver::fill'),
+    'When no single provider covers the complete requirement set, object Imports must remain missing rather than being split across partial providers.'
+);
+$check(
+    'coverage_returns_verified_export_indexes',
+    is_string($source)
+        && str_contains($source, "'matched_exports'")
+        && str_contains($source, 'exportPathMatches'),
+    'The chosen provider must return Export indexes from paths verified against its v3 metadata.'
+);
+$check(
+    'preferred_provider_cannot_beat_complete_provider',
+    is_string($source)
+        && strpos($source, "\$status !== 0") !== false
+        && strpos($source, "\$preferredFileId > 0") !== false
+        && strpos($source, "\$status !== 0") < strpos($source, "\$preferredFileId > 0"),
+    'Provider preference is only a tie-breaker after complete/partial coverage status.'
 );
 
 $ok = !in_array(false, array_column($checks, 'ok'), true);
