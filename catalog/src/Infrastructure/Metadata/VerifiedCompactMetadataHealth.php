@@ -8,7 +8,7 @@ use RuntimeException;
 use Throwable;
 
 /**
- * Verifies the authoritative format-2 container and keeps ue_files publication
+ * Verifies the authoritative format-3 container and keeps ue_files publication
  * state aligned with physical reality.
  *
  * A ue_file_metadata registration alone is not proof that the container still
@@ -34,7 +34,7 @@ final class VerifiedCompactMetadataHealth
         try {
             $result = (new BlockedCompressedMetadataReader($db, $storageRoot))->verify($fileId);
             $formatVersion = (int)($result['format_version'] ?? 0);
-            if (empty($result['verified']) || !in_array($formatVersion, [2, BlockedCompressedMetadataContainer::FORMAT_VERSION], true)) {
+            if (empty($result['verified']) || $formatVersion !== BlockedCompressedMetadataContainer::FORMAT_VERSION) {
                 throw new RuntimeException(
                     'File #' . $fileId . ' did not verify as a supported compact metadata format.'
                 );
