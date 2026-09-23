@@ -338,6 +338,8 @@ final class PdoPackageObjectCoverageResolver
                 . ' AND a.id=p.source_id AND a.file_id=p.file_id AND a.game_id=p.game_id'
                 . ' AND a.package_name=p.package_name'
                 . ' WHERE p.game_id=? AND p.package_name=? AND f.scan_status="verified"'
+                . ' AND NOT EXISTS (SELECT 1 FROM ue_invalid_file_identities bad'
+                . ' WHERE bad.file_size=f.file_size AND bad.md5=LOWER(f.md5) AND bad.sha1=LOWER(f.sha1))'
                 . ' AND ((p.source_kind="primary" AND f.package_name=p.package_name)'
                 . ' OR (p.source_kind="alias" AND a.id IS NOT NULL))'
                 . ' ORDER BY (p.source_kind="primary") DESC,p.provider_created_at DESC,p.source_id ASC',
@@ -366,6 +368,8 @@ final class PdoPackageObjectCoverageResolver
                 'SELECT f.id file_id FROM ue_files f'
                 . ' JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=3'
                 . ' WHERE f.game_id=? AND f.scan_status="verified" AND f.package_name=?'
+                . ' AND NOT EXISTS (SELECT 1 FROM ue_invalid_file_identities bad'
+                . ' WHERE bad.file_size=f.file_size AND bad.md5=LOWER(f.md5) AND bad.sha1=LOWER(f.sha1))'
                 . ' ORDER BY f.uploaded_at DESC',
                 [$gameId, $packageName]
             );
