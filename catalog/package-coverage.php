@@ -41,7 +41,7 @@ try {
         }
         $coverage = catalog_all(
             $db,
-            'SELECT c.game_id,g.name game_name,p.engine_key profile_engine,c.package_name,c.consumer_count,c.required_object_count,c.updated_at,'
+            'SELECT c.game_id,g.name game_name,gp.engine_key profile_engine,c.package_name,c.consumer_count,c.required_object_count,c.updated_at,'
             . 'COUNT(p.file_id) provider_count,'
             . 'SUM(p.fully_satisfies=1) complete_provider_count,'
             . 'MAX(p.matched_count) best_matched_count '
