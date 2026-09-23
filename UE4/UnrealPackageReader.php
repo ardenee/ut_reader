@@ -139,21 +139,25 @@ final class UnrealPackageReader4
     private const PACKAGE_FILE_TAG_SWAPPED = 0xC1832A9E;
 
     // Version gates matching the UT4-era UE4 package summary layout used by this reader.
-    private const VER_SERIALIZE_TEXT_IN_PACKAGES = 464;
-    private const VER_ADD_STRING_ASSET_REFERENCES_MAP = 385;
-    private const VER_ADDED_SEARCHABLE_NAMES = 515;
-    private const VER_ENGINE_VERSION_OBJECT = 335;
-    private const VER_PACKAGE_SUMMARY_HAS_COMPATIBLE_ENGINE_VERSION = 449;
+    private const VER_SERIALIZE_TEXT_IN_PACKAGES = 459;
+    private const VER_ADD_STRING_ASSET_REFERENCES_MAP = 384;
+    private const VER_ADDED_SEARCHABLE_NAMES = 510;
+    private const VER_ENGINE_VERSION_OBJECT = 336;
+    private const VER_PACKAGE_SUMMARY_HAS_COMPATIBLE_ENGINE_VERSION = 444;
     private const VER_WORLD_LEVEL_INFO = 224;
     private const VER_ADDED_CHUNKID_TO_ASSETDATA_AND_UPACKAGE = 278;
-    private const VER_CHANGED_CHUNKID_TO_BE_AN_ARRAY_OF_CHUNKIDS = 325;
-    private const VER_PRELOAD_DEPENDENCIES_IN_COOKED_EXPORTS = 512;
-    private const VER_TEMPLATE_INDEX_IN_COOKED_EXPORTS = 513;
-    private const VER_LOAD_FOR_EDITOR_GAME = 366;
-    private const VER_COOKED_ASSETS_IN_EDITOR_SUPPORT = 490;
-    private const VER_64BIT_EXPORTMAP_SERIALSIZES = 516;
-    private const VER_NAME_HASHES_SERIALIZED = 509;
-    private const DEFAULT_ASSUMED_UNVERSIONED_UE4_VERSION = 518;
+    private const VER_CHANGED_CHUNKID_TO_BE_AN_ARRAY_OF_CHUNKIDS = 326;
+    private const VER_PRELOAD_DEPENDENCIES_IN_COOKED_EXPORTS = 507;
+    private const VER_TEMPLATE_INDEX_IN_COOKED_EXPORTS = 508;
+    private const VER_LOAD_FOR_EDITOR_GAME = 365;
+    private const VER_COOKED_ASSETS_IN_EDITOR_SUPPORT = 485;
+    private const VER_64BIT_EXPORTMAP_SERIALSIZES = 511;
+    private const VER_NAME_HASHES_SERIALIZED = 504;
+    private const VER_ADDED_PACKAGE_SUMMARY_LOCALIZATION_ID = 516;
+    private const VER_ADDED_PACKAGE_OWNER = 518;
+    private const VER_NON_OUTER_PACKAGE_IMPORT = 520;
+    private const VER_OLDEST_LOADABLE_PACKAGE = 214;
+    private const DEFAULT_ASSUMED_UNVERSIONED_UE4_VERSION = 522;
 
     public function __construct(string $path, array $options = [])
     {
@@ -261,7 +265,7 @@ final class UnrealPackageReader4
             throw new RuntimeException('This looks like an older UE package, not a modern UE4 package. LegacyFileVersion=' . $legacy);
         }
         if ($legacy < -7) {
-            $this->issues[] = 'Package legacy version is newer than this UE4 parser profile understands: ' . $legacy;
+            throw new RuntimeException('UE5-era package summary is not supported by the UE4 reader. LegacyFileVersion=' . $legacy);
         }
         if ($legacy !== -4) {
             $this->header['legacyUE3Version'] = $r->i32();
@@ -281,12 +285,19 @@ final class UnrealPackageReader4
             $this->header['version'] = $ue4Version;
             $this->issues[] = 'Package is unversioned; using assumed UE4 parser version ' . $ue4Version . ' from parser profile ' . (string)$this->header['parserProfileKey'] . ' for table parsing.';
         }
+        if ($ue4Version < self::VER_OLDEST_LOADABLE_PACKAGE || $ue4Version > self::DEFAULT_ASSUMED_UNVERSIONED_UE4_VERSION) {
+            throw new RuntimeException('Unsupported UE4 package version ' . $ue4Version . '; supported range=' . self::VER_OLDEST_LOADABLE_PACKAGE . '..' . self::DEFAULT_ASSUMED_UNVERSIONED_UE4_VERSION);
+        }
 
         $this->header['totalHeaderSize'] = $r->i32();
         $this->header['folderName'] = $r->fstring();
         $this->header['packageFlags'] = $r->u32();
         $this->header['nameCount'] = $r->i32();
         $this->header['nameOffset'] = $r->i32();
+        $filterEditorOnly = (((int)$this->header['packageFlags']) & 0x80000000) !== 0;
+        if (!$filterEditorOnly && $ue4Version >= self::VER_ADDED_PACKAGE_SUMMARY_LOCALIZATION_ID) {
+            $this->header['localizationId'] = $r->fstring();
+        }
         if ($ue4Version >= self::VER_SERIALIZE_TEXT_IN_PACKAGES) {
             $this->header['gatherableTextDataCount'] = $r->i32();
             $this->header['gatherableTextDataOffset'] = $r->i32();
@@ -305,6 +316,12 @@ final class UnrealPackageReader4
         }
         $this->header['thumbnailTableOffset'] = $r->i32();
         $this->header['guid'] = $r->guid();
+        if (!$filterEditorOnly && $ue4Version >= self::VER_ADDED_PACKAGE_OWNER) {
+            $this->header['persistentGuid'] = $r->guid();
+            if ($ue4Version < self::VER_NON_OUTER_PACKAGE_IMPORT) {
+                $this->header['ownerPersistentGuid'] = $r->guid();
+            }
+        }
 
         $genCount = $r->i32();
         if ($genCount < 0 || $genCount > 1024) {
@@ -490,6 +507,7 @@ final class UnrealPackageReader4
             $className = $this->readFName($r);
             $outerIndex = $r->i32();
             $objectName = $this->readFName($r);
+            $packageName = $version >= self::VER_NON_OUTER_PACKAGE_IMPORT ? $this->readFName($r) : ['index' => 0, 'number' => 0];
             $this->imports[] = [
                 'index' => $i,
                 'ref' => -($i + 1),
