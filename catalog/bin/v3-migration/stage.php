@@ -20,12 +20,12 @@ use UnrealDb\Catalog\Infrastructure\Maintenance\CatalogFileMaintenanceSupport;
 use UnrealDb\Catalog\MigrationV3\MetadataContainerV3;
 use UnrealDb\Catalog\MigrationV3\SnapshotBuilderV3;
 
-$o=getopt('',['apply','all','limit:','after-id:','game-id:','file-ids:','stop-on-error','rebuild','workers:','worker:']);
+$o=getopt('',['apply','all','limit:','after-id:','game-id:','file-ids:','stop-on-error','rebuild','missing-v3','workers:','worker:']);
 $apply=array_key_exists('apply',$o); $all=array_key_exists('all',$o); $limit=max(1,min(5000,(int)($o['limit']??250)));
 $after=max(0,(int)($o['after-id']??0)); $game=max(0,(int)($o['game-id']??0));
 $workers=max(1,min(4,(int)($o['workers']??1))); $worker=(int)($o['worker']??0);
 if($worker<0||$worker>=$workers)throw new RuntimeException('--worker must be between 0 and --workers-1.');
-$stop=array_key_exists('stop-on-error',$o); $rebuild=array_key_exists('rebuild',$o);
+$stop=array_key_exists('stop-on-error',$o); $rebuild=array_key_exists('rebuild',$o); $missingV3=array_key_exists('missing-v3',$o);
 $config=catalog_config(); $db=catalog_db($config); $storageRoot=trim((string)($config['storage_path']??''));
 if($storageRoot==='') throw new RuntimeException('catalog storage_path is not configured.');
 
@@ -39,14 +39,19 @@ if($raw!==''){
  $where[]='f.id IN ('.implode(',',array_fill(0,count($ids),'?')).')'; array_push($args,...array_values($ids));
 }
 $sql='SELECT f.*,m.format_version FROM ue_files f JOIN ue_file_metadata m ON m.file_id=f.id WHERE '.implode(' AND ',$where).' ORDER BY f.id LIMIT '.$limit;
-$select=function(int $cursor)use($db,$sql,$args,$after):array{
+$select=function(int $cursor)use($db,$sql,$args,$after,$missingV3,$storageRoot):array{
  $pageArgs=$args;$pageArgs[0]=$cursor;$s=$db->prepare($sql);$s->execute($pageArgs);
- return $s->fetchAll(PDO::FETCH_ASSOC)?:[];
+ $found=$s->fetchAll(PDO::FETCH_ASSOC)?:[];
+ if(!$missingV3)return $found;
+ return array_values(array_filter($found,static function(array $file)use($storageRoot):bool{
+  $target=MetadataContainerV3::path($storageRoot,(int)$file['game_id'],(int)$file['id']);
+  return !is_file($target)||(int)@filesize($target)<20;
+ }));
 };
 $rows=$select($after);
 if(!$apply){
  echo json_encode(['ok'=>true,'dry_run'=>true,'selected'=>count($rows),'after_id'=>$after,'limit'=>$limit,'all'=>$all,
- 'workers'=>$workers,'worker'=>$worker,'first_file_id'=>$rows?(int)$rows[0]['id']:0,
+ 'workers'=>$workers,'worker'=>$worker,'missing_v3'=>$missingV3,'first_file_id'=>$rows?(int)$rows[0]['id']:0,
  'last_file_id'=>$rows?(int)$rows[array_key_last($rows)]['id']:0,'writes'=>'*.uedb3 only','database_writes'=>false],
  JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES).PHP_EOL;exit(0);
 }
