@@ -971,6 +971,10 @@
                             (fileId > 0 ? 'Server validation matched existing file #' + String(fileId) + '.' : 'Server validation found an existing file.')
                                 + (message ? ' · ' + message : '')
                         );
+                        if (duplicateRedirect && fileId > 0) {
+                            window.location.assign('file-info.php?id=' + encodeURIComponent(String(fileId)));
+                            return;
+                        }
                     } else if (status === 'failed') {
                         counters.failed++;
                         addLog(
