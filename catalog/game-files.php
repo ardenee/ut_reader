@@ -161,6 +161,8 @@ function game_files_actions(int $fileId, string $originalName, string $csrf, boo
         ? 'download.php?id=' . $fileId
         : 'download-info.php?id=' . $fileId;
     $html .= '<a class="game-files-download-link" href="' . catalog_h($downloadHref) . '" title="Download options" aria-label="Download options for ' . catalog_h($originalName) . '">⇩</a>';
+    $html .= '<a class="game-files-download-link" href="package-coverage.php?file_id=' . $fileId
+        . '" title="Send to Package Coverage" aria-label="Send ' . catalog_h($originalName) . ' to Package Coverage">→</a>';
 
     if ($isAdmin) {
         $html .= '<form method="post" action="file-maintenance.php" title="Rebuild dependency links for this game">';
