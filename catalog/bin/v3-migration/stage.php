@@ -98,7 +98,8 @@ do{
   if($stop)break;
  }
  }
- if(!$all||$stop&&$failed>0||$pageCount<$limit)break;
+ if(!$all||$stop&&$failed>0)break;
+ if(!$missingV3&&$pageCount<$limit)break;
 }while(true);
 $elapsed=max(.001,microtime(true)-$started);
 echo json_encode(['ok'=>$failed===0,'selected'=>$selected,'staged'=>$done,'skipped_valid'=>$skipped,'failed'=>$failed,
