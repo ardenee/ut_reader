@@ -170,6 +170,7 @@ final class UnrealPackageReader4
     private const VER_NON_OUTER_PACKAGE_IMPORT = 520;
     private const VER_OLDEST_LOADABLE_PACKAGE = 214;
     private const DEFAULT_ASSUMED_UNVERSIONED_UE4_VERSION = 522;
+    private const NAME_SIZE = 1024;
 
     public function __construct(string $path, array $options = [])
     {
@@ -375,7 +376,7 @@ final class UnrealPackageReader4
         $this->header['uexpPath'] = $this->guessUexpPath();
         $this->header['hasUexp'] = $this->header['uexpPath'] !== '' && is_file($this->header['uexpPath']);
 
-        $this->validateTableBounds();
+        $this->validateSummaryBounds();
         $this->readNames();
         $this->readImports();
         $this->readExports();
@@ -457,17 +458,43 @@ final class UnrealPackageReader4
         $r = $this->rootReader(); $r->seek($offset); return $r;
     }
 
-    private function validateTableBounds(): void
+    private function validateSummaryBounds(): void
     {
-        foreach ([['name', 'nameCount', 'nameOffset'], ['import', 'importCount', 'importOffset'], ['export', 'exportCount', 'exportOffset']] as $table) {
-            [$label, $countKey, $offsetKey] = $table;
+        $headerSize = (int)($this->header['totalHeaderSize'] ?? 0);
+        if ($headerSize <= 0 || $headerSize > $this->fileSize) {
+            throw new RuntimeException("Bad UE4 total header size $headerSize; fileSize={$this->fileSize}");
+        }
+
+        foreach ([['name', 'nameCount', 'nameOffset', 4], ['import', 'importCount', 'importOffset', 28], ['export', 'exportCount', 'exportOffset', 68]] as $table) {
+            [$label, $countKey, $offsetKey, $minimumEntrySize] = $table;
             $count = (int)($this->header[$countKey] ?? 0);
             $offset = (int)($this->header[$offsetKey] ?? 0);
             if ($count < 0) {
-                $this->issues[] = "Bad $label count: $count";
+                throw new RuntimeException("Bad $label count: $count");
             }
-            if ($count > 0 && ($offset <= 0 || $offset >= $this->fileSize)) {
-                $this->issues[] = "Bad $label offset: $offset";
+            if ($count > 0) {
+                if ($offset <= 0 || $offset >= $headerSize || $offset >= $this->fileSize) {
+                    throw new RuntimeException("Bad $label offset: $offset; totalHeaderSize=$headerSize fileSize={$this->fileSize}");
+                }
+                if ($count > intdiv($headerSize - $offset, $minimumEntrySize)) {
+                    throw new RuntimeException("Bad $label count: $count cannot fit before totalHeaderSize=$headerSize from offset=$offset");
+                }
+            }
+        }
+
+        foreach ([
+            ['soft package references', 'stringAssetReferencesCount', 'stringAssetReferencesOffset', 4],
+            ['preload dependencies', 'preloadDependencyCount', 'preloadDependencyOffset', 4],
+        ] as $table) {
+            [$label, $countKey, $offsetKey, $minimumEntrySize] = $table;
+            $count = (int)($this->header[$countKey] ?? 0);
+            $offset = (int)($this->header[$offsetKey] ?? 0);
+            if ($count < 0) {
+                if ($label === 'preload dependencies' && $count === -1) continue;
+                throw new RuntimeException("Bad $label count: $count");
+            }
+            if ($count > 0 && ($offset <= 0 || $offset >= $headerSize || $count > intdiv($headerSize - $offset, $minimumEntrySize))) {
+                throw new RuntimeException("Bad $label table: count=$count offset=$offset totalHeaderSize=$headerSize");
             }
         }
     }
@@ -481,17 +508,49 @@ final class UnrealPackageReader4
         }
         $r = $this->tableReader($offset);
         $version = (int)$this->header['version'];
+        $filterEditorOnly = (((int)$this->header['packageFlags']) & 0x80000000) !== 0;
         for ($i = 0; $i < $count; $i++) {
             $entryOffset = $r->tell();
-            $name = $r->fstring();
+            $name = $this->readSerializedNameEntry($r);
             $nonCaseHash = null;
             $caseHash = null;
-            if ($version >= self::VER_NAME_HASHES_SERIALIZED && $r->remaining() >= 4) {
+            if ($version >= self::VER_NAME_HASHES_SERIALIZED) {
                 $nonCaseHash = $r->u16();
                 $caseHash = $r->u16();
             }
             $this->names[] = ['index' => $i, 'name' => $name, 'offset' => $entryOffset, 'nonCaseHash' => $nonCaseHash, 'caseHash' => $caseHash];
         }
+    }
+
+    private function readSerializedNameEntry(UE4BinaryReader $r): string
+    {
+        $length = $r->i32();
+        if ($length === 0 || $length < -self::NAME_SIZE || $length > self::NAME_SIZE) {
+            throw new RuntimeException('Bad UE4 name entry length ' . $length . ' at ' . ($r->tell() - 4) . '; NAME_SIZE=' . self::NAME_SIZE);
+        }
+
+        if ($length > 0) {
+            if ($length > $r->remaining()) {
+                throw new OutOfBoundsException("UE4 name entry overrun length=$length pos={$r->tell()} remaining={$r->remaining()}");
+            }
+            $raw = $r->bytes($length);
+            if (substr($raw, -1) === "\0") $raw = substr($raw, 0, -1);
+            return UE4BinaryReader::toUtf8($raw);
+        }
+
+        if ($length === -2147483648) {
+            throw new RuntimeException('Bad UE4 wide name entry length INT32_MIN');
+        }
+        $chars = -$length;
+        $bytes = $chars * 2;
+        if ($bytes > $r->remaining()) {
+            throw new OutOfBoundsException("UE4 wide name entry overrun chars=$chars pos={$r->tell()} remaining={$r->remaining()}");
+        }
+        $raw = $r->bytes($bytes);
+        if (substr($raw, -2) === "\0\0") $raw = substr($raw, 0, -2);
+        $out = @mb_convert_encoding($raw, 'UTF-8', $r->isByteSwapping() ? 'UTF-16BE' : 'UTF-16LE');
+        if ($out === false) throw new RuntimeException('Failed to decode UE4 wide name entry.');
+        return $out;
     }
 
     private function readFName(UE4BinaryReader $r): array
