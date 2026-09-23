@@ -84,7 +84,17 @@ try {
                 . 'ON DUPLICATE KEY UPDATE source_file_id=VALUES(source_file_id),reason=VALUES(reason)'
         );
         $statement->execute([$size, $md5, $sha1, $fileId, $reason]);
+        $storedPath = CatalogFileMaintenanceSupport::storagePath($config, $file);
+        $metadataPath = CatalogFileMaintenanceSupport::metadataPath($config, (int)$file['game_id'], $fileId);
         $support->deleteFileProjections($fileId);
+        if ($storedPath !== null && is_file($storedPath) && !@unlink($storedPath)) {
+            throw new RuntimeException('Could not remove invalid package #' . $fileId . ' from verified storage.');
+        }
+        if (is_file($metadataPath) && !@unlink($metadataPath)) {
+            throw new RuntimeException('Could not remove compact metadata for invalid package #' . $fileId . '.');
+        }
+        $db->prepare('UPDATE ue_files SET scan_status="failed",scan_notes=? WHERE id=?')
+            ->execute(['invalid_ue_file: ' . $reason, $fileId]);
         $marked++;
     }
 
