@@ -38,7 +38,8 @@ if ($workers > 1 && $worker === null) {
         stream_set_blocking($pp[1],false); stream_set_blocking($pp[2],false);
         $procs[$i]=$p;$pipes[$i]=$pp;
     }
-    $stdout=array_fill(0,$workers,'');$done=[];
+    $stdout=array_fill(0,$workers,'');$done=[];$lastHeartbeat=microtime(true);
+    fwrite(STDERR, "Started {$workers} validation workers. Waiting for progress...\n");
     while(count($done)<$workers){
         foreach($procs as $i=>$p){
             if(isset($done[$i])) continue;
@@ -50,6 +51,11 @@ if ($workers > 1 && $worker === null) {
                 $e=(string)stream_get_contents($pipes[$i][2]); if($e!=='') fwrite(STDERR,"[W{$i}] ".$e);
                 fclose($pipes[$i][1]);fclose($pipes[$i][2]);$done[$i]=proc_close($p);
             }
+        }
+        if(count($done)<$workers && microtime(true)-$lastHeartbeat>=5.0){
+            $running=$workers-count($done);$elapsed=(int)(microtime(true)-$started);
+            fwrite(STDERR,"Parallel validation running: {$running}/{$workers} workers active | elapsed ".gmdate('H:i:s',$elapsed)."\n");
+            $lastHeartbeat=microtime(true);
         }
         if(count($done)<$workers) usleep(100000);
     }
@@ -198,6 +204,7 @@ while (($file = $files->fetch(PDO::FETCH_ASSOC)) !== false) {
             number_format($processed), number_format($verifiedCount), $percent,
             number_format($checked), number_format(count($errors)), $rate, gmdate('H:i:s', $eta)
         ));
+        fflush(STDERR);
     }
 }
 
