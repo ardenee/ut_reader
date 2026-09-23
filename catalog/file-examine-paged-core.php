@@ -53,9 +53,13 @@ function examine_href(int $fileId, string $target, int $pageSize): string
 
 function examine_tab_href(int $fileId, string $table, int $pageSize): string
 {
+    $table = strtolower(trim($table));
+    if (!in_array($table, ['names','imports','exports','uses','used-by'], true)) {
+        $table = 'names';
+    }
     return 'file-examine.php?' . http_build_query([
         'id' => $fileId,
-        'tab' => PdoPackageTablePageQuery::normalizeTable($table),
+        'tab' => $table,
         'page_size' => $pageSize,
     ]) . '#package-tables';
 }
@@ -206,7 +210,10 @@ try {
     $db = catalog_db($config);
     $fileId = examine_int('id');
     $target = examine_target((string)($_GET['target'] ?? ''));
-    $table = PdoPackageTablePageQuery::normalizeTable((string)($_GET['tab'] ?? ($target !== '' ? examine_target_table($target) : 'names')));
+    $requestedTab = strtolower(trim((string)($_GET['tab'] ?? ($target !== '' ? examine_target_table($target) : 'names'))));
+    $table = in_array($requestedTab, ['uses','used-by'], true)
+        ? $requestedTab
+        : PdoPackageTablePageQuery::normalizeTable($requestedTab);
     $pageSize = PdoPackageTablePageQuery::normalizePageSize(examine_int('page_size', PdoPackageTablePageQuery::DEFAULT_PAGE_SIZE));
     $requestedPage = max(1, examine_int('page', 1));
 
@@ -233,7 +240,11 @@ try {
     }
 
     $fetchStarted = microtime(true);
-    $page = PdoPackageTablePageQuery::fetchPage($db, $file, $table, $requestedPage, $pageSize);
+    if ($table === 'uses' || $table === 'used-by') {
+        $page = ['rows'=>[],'page'=>1,'pages'=>1,'total'=>0,'page_size'=>$pageSize,'start'=>0,'end'=>0];
+    } else {
+        $page = PdoPackageTablePageQuery::fetchPage($db, $file, $table, $requestedPage, $pageSize);
+    }
     $fetchElapsedMs = (int)round((microtime(true) - $fetchStarted) * 1000);
     error_log(
         '[UnrealDB file examiner page] file_id=' . $fileId
@@ -244,6 +255,20 @@ try {
         . ' elapsed_ms=' . $fetchElapsedMs
     );
     $rows = $page['rows'];
+    $relationshipRows = [];
+    if ($table === 'uses') {
+        $relationshipRows = catalog_all($db,
+            'SELECT l.resolved_file_id file_id,f.original_name,f.package_name,COUNT(*) reference_count '
+            . 'FROM ue_dependency_links l JOIN ue_files f ON f.id=l.resolved_file_id '
+            . 'WHERE l.file_id=? AND l.resolved_file_id IS NOT NULL AND f.scan_status="verified" '
+            . 'GROUP BY l.resolved_file_id,f.original_name,f.package_name ORDER BY f.package_name,f.original_name', [$fileId]);
+    } elseif ($table === 'used-by') {
+        $relationshipRows = catalog_all($db,
+            'SELECT l.file_id,f.original_name,f.package_name,COUNT(*) reference_count '
+            . 'FROM ue_dependency_links l JOIN ue_files f ON f.id=l.file_id '
+            . 'WHERE l.resolved_file_id=? AND f.scan_status="verified" '
+            . 'GROUP BY l.file_id,f.original_name,f.package_name ORDER BY f.package_name,f.original_name', [$fileId]);
+    }
     $metadataVersion = (int)(catalog_one($db, 'SELECT format_version FROM ue_file_metadata WHERE file_id=?', [$fileId])['format_version'] ?? 0);
     // Keep the initial examiner request bounded to the requested metadata page.
     // Cross-reference/usage/dependency enrichment is loaded after first paint by
@@ -302,10 +327,29 @@ try {
         'exports' => (int)$file['export_count'],
     ];
     echo '<div class="card" id="package-tables"><nav class="examine-tabs">';
-    foreach (['names' => 'Names','imports' => 'Imports','exports' => 'Exports'] as $key => $label) {
-        echo '<a class="examine-tab' . ($table === $key ? ' is-active' : '') . '" href="' . catalog_h(examine_tab_href($fileId, $key, $pageSize)) . '">' . $label . ' <span>' . $counts[$key] . '</span></a>';
+    foreach (['names' => 'Names','imports' => 'Imports','exports' => 'Exports','uses' => 'Uses','used-by' => 'Used By'] as $key => $label) {
+        $tabCount = array_key_exists($key, $counts) ? $counts[$key] : ($table === $key ? count($relationshipRows) : '');
+        echo '<a class="examine-tab' . ($table === $key ? ' is-active' : '') . '" href="' . catalog_h(examine_tab_href($fileId, $key, $pageSize)) . '">' . $label . ($tabCount !== '' ? ' <span>' . $tabCount . '</span>' : '') . '</a>';
     }
     echo '</nav><section data-file-examine-native-panel>';
+
+    if ($table === 'uses' || $table === 'used-by') {
+        $heading = $table === 'uses' ? 'Uses' : 'Used By';
+        echo '<h2>' . $heading . '</h2><p class="muted">Package relationships from the current dependency projection.</p>';
+        if ($relationshipRows === []) {
+            echo '<p class="muted">No resolved package relationships found.</p></section></div><a class="to-top" href="#top">↑</a>';
+            catalog_foot();
+            return;
+        }
+        echo '<div class="examine-table-region"><table><thead><tr><th>File</th><th>Package</th><th>References</th><th></th></tr></thead><tbody>';
+        foreach ($relationshipRows as $relation) {
+            $relatedId=(int)$relation['file_id'];
+            echo '<tr><td class="mono path">' . catalog_h((string)$relation['original_name']) . '</td><td class="mono path">' . catalog_h((string)$relation['package_name']) . '</td><td>' . (int)$relation['reference_count'] . '</td><td><a class="button" href="file-examine.php?id=' . $relatedId . '">Examine</a></td></tr>';
+        }
+        echo '</tbody></table></div></section></div><a class="to-top" href="#top">↑</a>';
+        catalog_foot();
+        return;
+    }
 
     echo '<div class="table-tools"><form method="get"><input type="hidden" name="id" value="' . $fileId . '"><input type="hidden" name="tab" value="' . catalog_h($table) . '"><label>Rows per page<br><select name="page_size" onchange="this.form.submit()">';
     foreach ([100,250,500,1000] as $option) {
