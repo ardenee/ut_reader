@@ -16,6 +16,8 @@ require_once __DIR__ . '/lib/ExternalMirrors.php';
 use UnrealDb\Catalog\Infrastructure\Downloads\CatalogPackageExportSettingsService;
 use UnrealDb\Catalog\Infrastructure\Downloads\PdoCatalogPackageExportPlanner;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyReadSource;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageObjectCoverageResolver;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageSupersetAnalyzer;
 
 function render_availability(PDO $db, int $fileId): string
 {
@@ -225,6 +227,39 @@ try {
             }
         }
     }
+    $conflictCoverage = [];
+    $catalogSupersetCoverage = [];
+    foreach ($dependencyConflicts as $conflict) {
+        $packageName = trim((string)($conflict['package_name'] ?? ''));
+        if ($packageName === '') {
+            continue;
+        }
+        $requiredPaths = [];
+        foreach ((array)($conflict['candidates'] ?? []) as $candidate) {
+            foreach ((array)($candidate['provenance'] ?? []) as $edge) {
+                $requiredPath = trim((string)($edge['required_object_path'] ?? ''));
+                if ($requiredPath !== '') {
+                    $requiredPaths[strtolower($requiredPath)] = $requiredPath;
+                }
+            }
+        }
+        if ($requiredPaths !== []) {
+            foreach (PdoPackageObjectCoverageResolver::evaluate(
+                $db,
+                (int)$file['game_id'],
+                $packageName,
+                array_values($requiredPaths)
+            ) as $coverage) {
+                $conflictCoverage[(int)$coverage['file_id']] = $coverage;
+            }
+        }
+        $superset = PdoPackageSupersetAnalyzer::analyze($db, (int)$file['game_id'], $packageName);
+        foreach ((array)($superset['providers'] ?? []) as $coverage) {
+            $coverage['consumer_count'] = (int)($superset['consumer_count'] ?? 0);
+            $coverage['catalog_required_count'] = (int)($superset['required_object_count'] ?? 0);
+            $catalogSupersetCoverage[(int)$coverage['file_id']] = $coverage;
+        }
+    }
     if ($dependencyConflicts) {
         echo '<form method="get" action="download-package.php" id="dependency-zip-selection-form">';
         echo '<input type="hidden" name="id" value="' . (int)$file['id'] . '"><input type="hidden" name="format" value="dependency_zip"><input type="hidden" name="dependencies" value="1">';
@@ -240,7 +275,11 @@ try {
         if ($dependencyConflicts) {
             echo '<th>Select</th>';
         }
-        echo '<th>Package</th><th>File</th><th>Identity</th><th>Size</th><th>Install path</th><th>Public download</th><th>Availability</th><th>Actions</th></tr>';
+        echo '<th>Package</th><th>File</th><th>Identity</th><th>Size</th>';
+        if ($dependencyConflicts) {
+            echo '<th>Object coverage</th>';
+        }
+        echo '<th>Install path</th><th>Public download</th><th>Availability</th><th>Actions</th></tr>';
         foreach ($plannedDependencies as $dep) {
             $depId = (int)$dep['id'];
             echo '<tr>';
@@ -258,8 +297,44 @@ try {
             echo '<td class="mono"><a href="file-info.php?id=' . $depId . '">' . catalog_h((string)$dep['package_name']) . '</a></td>'
                 . '<td><a href="file-examine.php?id=' . $depId . '">' . catalog_h(catalog_clean_unreal_filename((string)$dep['original_name'])) . '</a></td>'
                 . '<td>' . CatalogUi::identity((string)$dep['package_guid'], (string)$dep['md5'], (string)$dep['sha1']) . '</td>'
-                . '<td>' . catalog_h(catalog_bytes((int)$dep['file_size'])) . '</td>'
-                . '<td class="mono small">' . catalog_h((string)($dep['install_path'] ?? '')) . '</td>'
+                . '<td>' . catalog_h(catalog_bytes((int)$dep['file_size'])) . '</td>';
+            if ($dependencyConflicts) {
+                $currentCoverage = $conflictCoverage[$depId] ?? null;
+                $catalogCoverage = $catalogSupersetCoverage[$depId] ?? null;
+                echo '<td class="small">';
+                if (is_array($currentCoverage)) {
+                    $matched = (int)($currentCoverage['matched_count'] ?? 0);
+                    $required = (int)($currentCoverage['required_count'] ?? 0);
+                    $missingCount = (int)($currentCoverage['missing_count'] ?? 0);
+                    $complete = (string)($currentCoverage['status'] ?? '') === 'fully_satisfies';
+                    echo '<strong>This package: ' . $matched . ' / ' . $required . '</strong> '
+                        . '<span class="dep ' . ($complete ? 'resolved' : 'missing') . '">' . ($complete ? 'complete' : 'missing ' . $missingCount) . '</span>';
+                    if (!$complete && !empty($currentCoverage['missing_paths'])) {
+                        echo '<details><summary>Missing objects</summary><div class="mono small">'
+                            . implode('<br>', array_map('catalog_h', (array)$currentCoverage['missing_paths'])) . '</div></details>';
+                    }
+                } else {
+                    echo '<span class="muted">This package: no object requirements</span>';
+                }
+                echo '<br>';
+                if (is_array($catalogCoverage)) {
+                    $matched = (int)($catalogCoverage['matched_count'] ?? 0);
+                    $required = (int)($catalogCoverage['catalog_required_count'] ?? $catalogCoverage['required_count'] ?? 0);
+                    $missingCount = (int)($catalogCoverage['missing_count'] ?? 0);
+                    $complete = (string)($catalogCoverage['status'] ?? '') === 'fully_satisfies';
+                    echo '<strong>Known catalogue: ' . $matched . ' / ' . $required . '</strong> '
+                        . '<span class="dep ' . ($complete ? 'resolved' : 'missing') . '">' . ($complete ? 'complete' : 'missing ' . $missingCount) . '</span>'
+                        . '<br><span class="muted">' . (int)($catalogCoverage['consumer_count'] ?? 0) . ' consumer file(s)</span>';
+                    if (!$complete && !empty($catalogCoverage['missing_paths'])) {
+                        echo '<details><summary>Catalogue gaps</summary><div class="mono small">'
+                            . implode('<br>', array_map('catalog_h', (array)$catalogCoverage['missing_paths'])) . '</div></details>';
+                    }
+                } else {
+                    echo '<span class="muted">Known catalogue: no object requirements</span>';
+                }
+                echo '</td>';
+            }
+            echo '<td class="mono small">' . catalog_h((string)($dep['install_path'] ?? '')) . '</td>'
                 . '<td>' . render_public_download_status($db, $depId) . '</td>'
                 . '<td>' . render_availability($db, $depId) . '</td><td>'
                 . CatalogUi::iconButton(['label' => 'Download ' . catalog_clean_unreal_filename((string)$dep['original_name']), 'icon' => '⇩', 'href' => $isAdmin ? 'download.php?id=' . $depId : 'download-info.php?id=' . $depId, 'size' => 'sm'])
