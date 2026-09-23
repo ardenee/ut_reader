@@ -89,7 +89,6 @@ try {
         . '<p><strong>Accepted package extensions:</strong> '
         . catalog_h($allowedExtensions !== [] ? implode(', ', array_map(static fn(string $ext): string => '.' . $ext, $allowedExtensions)) : 'active game-profile package types')
         . ', .uz, .uz2, .uz3; source archives: .zip, .rar, .7z, .umod, .ut2mod, .ut4mod.</p>'
-        . '<p><strong>Maximum extracted/uploaded file size:</strong> ' . catalog_h(catalog_bytes((int)$settings['max_file_bytes'])) . '. Source ZIP/RAR/7z/UMOD/UT2MOD/UT4MOD archives may be larger because the archive itself is never uploaded.</p>'
         . '<div class="public-upload-actions">'
         . '<button id="public-upload-start" type="submit">Check and contribute files</button>'
         . '<button id="public-upload-stop" class="secondary" type="button" hidden disabled>Stop</button>'
