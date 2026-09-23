@@ -17,7 +17,7 @@ use UnrealDb\Catalog\Infrastructure\Downloads\CatalogPackageExportSettingsServic
 use UnrealDb\Catalog\Infrastructure\Downloads\PdoCatalogPackageExportPlanner;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyReadSource;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageObjectCoverageResolver;
-use UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageSupersetAnalyzer;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageCoverageCache;
 
 function render_availability(PDO $db, int $fileId): string
 {
@@ -253,7 +253,7 @@ try {
                 $conflictCoverage[(int)$coverage['file_id']] = $coverage;
             }
         }
-        $superset = PdoPackageSupersetAnalyzer::analyze($db, (int)$file['game_id'], $packageName);
+        $superset = (new PdoPackageCoverageCache($db))->read((int)$file['game_id'], $packageName);
         foreach ((array)($superset['providers'] ?? []) as $coverage) {
             $coverage['consumer_count'] = (int)($superset['consumer_count'] ?? 0);
             $coverage['catalog_required_count'] = (int)($superset['required_object_count'] ?? 0);
@@ -330,7 +330,7 @@ try {
                             . implode('<br>', array_map('catalog_h', (array)$catalogCoverage['missing_paths'])) . '</div></details>';
                     }
                 } else {
-                    echo '<span class="muted">Known catalogue: no object requirements</span>';
+                    echo '<span class="muted">Known catalogue: coverage not cached yet</span>';
                 }
                 echo '</td>';
             }
