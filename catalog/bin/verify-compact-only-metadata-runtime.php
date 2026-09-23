@@ -146,7 +146,7 @@ $finalizerLegacyReferences = $retiredReferences($finalizerExecutable);
 $record(
     'verified_runtime_finalizer_no_legacy_conversion',
     !str_contains($finalizer, 'BlockedCompressedFileMetadataConverter')
-        && str_contains($finalizer, 'has no current format-3 metadata.')
+        && str_contains($finalizer, "' has no current format-' . BlockedCompressedMetadataContainer::FORMAT_VERSION . ' metadata.'")
         && $finalizerLegacyReferences === [],
     $finalizerLegacyReferences === []
         ? 'runtime verification fails closed when format-3 is missing and contains no retired-table conversion path'
@@ -172,8 +172,8 @@ $resolver = $read('src/Infrastructure/Persistence/PdoDependencyResolver.php');
 $resolverLegacyReferences = $retiredReferences($withoutComments($resolver));
 $record(
     'compact_object_resolution_boundary',
-    str_contains($resolver, 'ue_export_lookup')
-        && str_contains($resolver, 'l.path_hash=?')
+    str_contains($resolver, 'PdoPackageObjectCoverageResolver::chooseCompleteProvider')
+        && str_contains($resolver, "'complete_package_object'")
         && $resolverLegacyReferences === [],
     $resolverLegacyReferences === []
         ? 'object dependency resolution uses current export projections only'
