@@ -119,21 +119,21 @@ final class UnrealPackageReader4
     private const PACKAGE_FILE_TAG_SWAPPED = 0xC1832A9E;
 
     // Version gates matching the UT4-era UE4 package summary layout used by this reader.
-    private const VER_SERIALIZE_TEXT_IN_PACKAGES = 459;
-    private const VER_ADD_STRING_ASSET_REFERENCES_MAP = 384;
-    private const VER_ADDED_SEARCHABLE_NAMES = 510;
-    private const VER_ENGINE_VERSION_OBJECT = 336;
-    private const VER_PACKAGE_SUMMARY_HAS_COMPATIBLE_ENGINE_VERSION = 444;
-    private const VER_WORLD_LEVEL_INFO = 225;
+    private const VER_SERIALIZE_TEXT_IN_PACKAGES = 464;
+    private const VER_ADD_STRING_ASSET_REFERENCES_MAP = 385;
+    private const VER_ADDED_SEARCHABLE_NAMES = 515;
+    private const VER_ENGINE_VERSION_OBJECT = 335;
+    private const VER_PACKAGE_SUMMARY_HAS_COMPATIBLE_ENGINE_VERSION = 449;
+    private const VER_WORLD_LEVEL_INFO = 224;
     private const VER_ADDED_CHUNKID_TO_ASSETDATA_AND_UPACKAGE = 278;
-    private const VER_CHANGED_CHUNKID_TO_BE_AN_ARRAY_OF_CHUNKIDS = 429;
-    private const VER_PRELOAD_DEPENDENCIES_IN_COOKED_EXPORTS = 507;
-    private const VER_TEMPLATE_INDEX_IN_COOKED_EXPORTS = 508;
-    private const VER_LOAD_FOR_EDITOR_GAME = 423;
-    private const VER_COOKED_ASSETS_IN_EDITOR_SUPPORT = 482;
-    private const VER_64BIT_EXPORTMAP_SERIALSIZES = 511;
-    private const VER_NAME_HASHES_SERIALIZED = 504;
-    private const DEFAULT_ASSUMED_UNVERSIONED_UE4_VERSION = 511;
+    private const VER_CHANGED_CHUNKID_TO_BE_AN_ARRAY_OF_CHUNKIDS = 325;
+    private const VER_PRELOAD_DEPENDENCIES_IN_COOKED_EXPORTS = 512;
+    private const VER_TEMPLATE_INDEX_IN_COOKED_EXPORTS = 513;
+    private const VER_LOAD_FOR_EDITOR_GAME = 366;
+    private const VER_COOKED_ASSETS_IN_EDITOR_SUPPORT = 490;
+    private const VER_64BIT_EXPORTMAP_SERIALSIZES = 516;
+    private const VER_NAME_HASHES_SERIALIZED = 509;
+    private const DEFAULT_ASSUMED_UNVERSIONED_UE4_VERSION = 518;
 
     public function __construct(string $path, array $options = [])
     {
