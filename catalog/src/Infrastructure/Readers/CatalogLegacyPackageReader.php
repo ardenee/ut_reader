@@ -177,17 +177,17 @@ final class CatalogLegacyBinaryStream
         return $this->compactIndex();
     }
 
-    public function cstring(int $maximum = 65536): string
+    public function cstring(): string
     {
         $value = '';
-        for ($index = 0; $index < $maximum && $this->remaining() > 0; $index++) {
+        while ($this->remaining() > 0) {
             $character = $this->bytes(1);
             if ($character === "\0") {
                 return self::toUtf8($value);
             }
             $value .= $character;
         }
-        throw new RuntimeException('Legacy package string has no terminator within the safe limit.');
+        throw new RuntimeException('Legacy package string reaches end of file without a terminator.');
     }
 
     public function fstring(int $version): string
@@ -201,7 +201,7 @@ final class CatalogLegacyBinaryStream
             return '';
         }
         if ($length > 0) {
-            if ($length > 65536 || $length > $this->remaining()) {
+            if ($length > $this->remaining()) {
                 throw new OutOfBoundsException('Invalid legacy FString byte length: ' . $length);
             }
             $raw = $this->bytes($length);
@@ -214,7 +214,7 @@ final class CatalogLegacyBinaryStream
 
         $characters = -$length;
         $bytes = $characters * 2;
-        if ($characters > 32768 || $bytes > $this->remaining()) {
+        if ($characters > intdiv(PHP_INT_MAX, 2) || $bytes > $this->remaining()) {
             throw new OutOfBoundsException('Invalid legacy wide FString length: ' . $length);
         }
         $raw = $this->bytes($bytes);
@@ -339,8 +339,11 @@ abstract class CatalogLegacyPackageReaderBase
         } else {
             $this->readGuid($reader);
             $generationCount = $reader->i32();
-            if ($generationCount < 0 || $generationCount > 100000) {
-                throw new RuntimeException('Invalid legacy package generation count: ' . $generationCount);
+            if ($generationCount < 0 || $generationCount > intdiv($reader->remaining(), 8)) {
+                throw new RuntimeException(
+                    'Invalid legacy package generation count: ' . $generationCount
+                    . ' remaining=' . $reader->remaining()
+                );
             }
             $this->header['genCount'] = $generationCount;
             for ($index = 0; $index < $generationCount; $index++) {
@@ -508,7 +511,7 @@ abstract class CatalogLegacyPackageReaderBase
 
     private function validateTable(string $label, int $count, int $offset, int $fileSize): void
     {
-        if ($count < 0 || $count > 2000000) {
+        if ($count < 0) {
             throw new RuntimeException('Invalid ' . $label . ' table count: ' . $count);
         }
         if ($offset < 0 || $offset > $fileSize || ($count > 0 && $offset === $fileSize)) {
