@@ -135,7 +135,7 @@ final class CatalogNonBlockingImportJobHandler implements JobHandler
     /**
      * Compact publication can fail after ue_files and canonical package storage
      * have already committed. Retrying then detects that stable row as a duplicate.
-     * A format-2 registration is not sufficient evidence of health: verify the
+     * A format-3 registration is not sufficient evidence of health: verify the
      * physical container and repair the stable file in place when it is missing,
      * corrupt or incompletely published.
      *
@@ -172,7 +172,7 @@ final class CatalogNonBlockingImportJobHandler implements JobHandler
             'status' => 'repairing',
             'file_id' => $fileId,
             'message' => 'Retry found verified file #' . $fileId
-                . ' without healthy format-2 metadata; repairing the interrupted import in place.',
+                . ' without healthy format-3 metadata; repairing the interrupted import in place.',
         ]);
 
         $repair = (new CatalogFileMaintenanceReimportService($this->db, $this->config))->reimport(
@@ -196,7 +196,7 @@ final class CatalogNonBlockingImportJobHandler implements JobHandler
         VerifiedCompactMetadataHealth::verify($this->db, $this->config, $fileId);
 
         $message = 'Recovered interrupted verified import for file #' . $fileId
-            . '; format-2 compact metadata was rebuilt and verified in place.';
+            . '; format-3 compact metadata was rebuilt and verified in place.';
         $context->checkpoint([
             'stage' => 'complete',
             'done' => 100,
