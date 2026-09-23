@@ -305,7 +305,7 @@ final class CatalogUnverifiedPromotion
             }
 
             // The ue_files promotion is committed before current metadata publication
-            // so the format-2 writer can resolve this file against its selected game.
+            // so the format-3 writer can resolve this file against its selected game.
             // The compressed staging row remains until publication verifies, which
             // gives CatalogUnverifiedDependencyRecovery a durable retry source.
             $this->emit($emit, 'compact_metadata', 58, 'Publishing current compact metadata');
@@ -324,7 +324,7 @@ final class CatalogUnverifiedPromotion
                 'file_id' => (int)$row['id'],
                 'original_name' => (string)$row['original_name'],
                 'target_game' => (string)$target['name'],
-                'message' => 'Promoted existing unverified database row to verified; compressed staging metadata was published as format-2.',
+                'message' => 'Promoted existing unverified database row to verified; compressed staging metadata was published as format-3.',
                 'dependency_jobs' => $dependencyJobs,
                 'metadata_format_version' => (int)($compact['format_version'] ?? 0),
                 'identity_reused' => !empty($identity['reused']),
