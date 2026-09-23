@@ -279,7 +279,7 @@ try {
         if ($dependencyConflicts) {
             echo '<th>Object coverage</th>';
         }
-        echo '<th>Install path</th><th>Public download</th><th>Availability</th><th>Actions</th></tr>';
+        echo '<th>Actions</th></tr>';
         foreach ($plannedDependencies as $dep) {
             $depId = (int)$dep['id'];
             echo '<tr>';
@@ -297,7 +297,7 @@ try {
             echo '<td class="mono"><a href="file-info.php?id=' . $depId . '">' . catalog_h((string)$dep['package_name']) . '</a></td>'
                 . '<td><a href="file-examine.php?id=' . $depId . '">' . catalog_h(catalog_clean_unreal_filename((string)$dep['original_name'])) . '</a></td>'
                 . '<td>' . CatalogUi::identity((string)$dep['package_guid'], (string)$dep['md5'], (string)$dep['sha1']) . '</td>'
-                . '<td>' . catalog_h(catalog_bytes((int)$dep['file_size'])) . '</td>';
+                . '<td style="white-space:nowrap">' . catalog_h(catalog_bytes((int)$dep['file_size'])) . '</td>';
             if ($dependencyConflicts) {
                 $currentCoverage = $conflictCoverage[$depId] ?? null;
                 $catalogCoverage = $catalogSupersetCoverage[$depId] ?? null;
@@ -334,9 +334,7 @@ try {
                 }
                 echo '</td>';
             }
-            echo '<td class="mono small">' . catalog_h((string)($dep['install_path'] ?? '')) . '</td>'
-                . '<td>' . render_public_download_status($db, $depId) . '</td>'
-                . '<td>' . render_availability($db, $depId) . '</td><td>'
+            echo '<td>'
                 . CatalogUi::iconButton(['label' => 'Download ' . catalog_clean_unreal_filename((string)$dep['original_name']), 'icon' => '⇩', 'href' => $isAdmin ? 'download.php?id=' . $depId : 'download-info.php?id=' . $depId, 'size' => 'sm'])
                 . '</td></tr>';
         }
