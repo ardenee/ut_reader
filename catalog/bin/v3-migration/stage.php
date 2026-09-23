@@ -41,13 +41,19 @@ if($raw!==''){
 }
 $sql='SELECT f.*,m.format_version FROM ue_files f LEFT JOIN ue_file_metadata m ON m.file_id=f.id WHERE '.implode(' AND ',$where).' ORDER BY f.id LIMIT '.$limit;
 $select=function(int $cursor)use($db,$sql,$args,$after,$missingV3,$storageRoot):array{
- $pageArgs=$args;$pageArgs[0]=$cursor;$s=$db->prepare($sql);$s->execute($pageArgs);
- $found=$s->fetchAll(PDO::FETCH_ASSOC)?:[];
- if(!$missingV3)return $found;
- return array_values(array_filter($found,static function(array $file)use($storageRoot):bool{
-  $target=MetadataContainerV3::path($storageRoot,(int)$file['game_id'],(int)$file['id']);
-  return !is_file($target)||(int)@filesize($target)<20;
- }));
+ $scanCursor=$cursor;
+ do{
+  $pageArgs=$args;$pageArgs[0]=$scanCursor;$s=$db->prepare($sql);$s->execute($pageArgs);
+  $found=$s->fetchAll(PDO::FETCH_ASSOC)?:[];
+  if(!$missingV3||$found===[])return $found;
+  $missing=array_values(array_filter($found,static function(array $file)use($storageRoot):bool{
+   $target=MetadataContainerV3::path($storageRoot,(int)$file['game_id'],(int)$file['id']);
+   return !is_file($target)||(int)@filesize($target)<20;
+  }));
+  if($missing!==[])return $missing;
+  $scanCursor=(int)$found[array_key_last($found)]['id'];
+ }while(count($found)===$limit);
+ return [];
 };
 $rows=$select($after);
 if(!$apply&&$missingV3&&$all){
