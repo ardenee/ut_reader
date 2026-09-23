@@ -72,6 +72,30 @@ $check(
     'Collection counts are validated against remaining serialized bytes and minimum element widths.'
 );
 
+$check(
+    'name_entries_use_ue_name_size_contract',
+    is_string($source)
+        && str_contains($source, 'private const NAME_SIZE = 1024;')
+        && str_contains($source, 'readSerializedNameEntry')
+        && str_contains($source, '$length < -self::NAME_SIZE || $length > self::NAME_SIZE'),
+    'FNameEntrySerialized is constrained by UE4 NAME_SIZE, independently of general FString serialization.'
+);
+$check(
+    'summary_tables_are_bounded_by_total_header',
+    is_string($source)
+        && str_contains($source, 'validateSummaryBounds')
+        && str_contains($source, '$offset >= $headerSize')
+        && str_contains($source, '$headerSize - $offset'),
+    'Header-resident name/import/export/reference tables must fit inside TotalHeaderSize before parsing.'
+);
+$check(
+    'name_hash_bytes_are_mandatory_at_version_gate',
+    is_string($source)
+        && str_contains($source, 'if ($version >= self::VER_NAME_HASHES_SERIALIZED)')
+        && !str_contains($source, 'self::VER_NAME_HASHES_SERIALIZED && $r->remaining() >= 4'),
+    'At VER_UE4_NAME_HASHES_SERIALIZED+, the two serialized uint16 hash fields are part of every name-map entry and truncation must fail rather than silently desynchronize.'
+);
+
 $ok = !in_array(false, array_column($checks, 'ok'), true);
 echo json_encode(['ok' => $ok, 'checks' => $checks], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . PHP_EOL;
 exit($ok ? 0 : 1);
