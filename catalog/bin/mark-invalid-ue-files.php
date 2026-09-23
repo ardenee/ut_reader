@@ -74,11 +74,21 @@ try {
             continue;
         }
 
-        $affected = array_merge($affected, $support->affectedIds(
-            (int)$file['game_id'],
-            $fileId,
-            (string)$file['package_name']
-        ));
+        // Invalid-file retirement must not depend on compact metadata belonging
+        // to otherwise-good consumers. Record direct resolved consumers only;
+        // a normal/full dependency rebuild can reconcile broader package-name
+        // matches after the v3 cutover.
+        $consumerRows = catalog_all(
+            $db,
+            'SELECT DISTINCT file_id FROM ue_dependency_links WHERE resolved_file_id=? AND file_id<>?',
+            [$fileId, $fileId]
+        );
+        foreach ($consumerRows as $consumerRow) {
+            $consumerId = (int)($consumerRow['file_id'] ?? 0);
+            if ($consumerId > 0) {
+                $affected[] = $consumerId;
+            }
+        }
         $statement = $db->prepare(
             'INSERT INTO ue_invalid_file_identities (file_size,md5,sha1,source_file_id,reason) VALUES (?,?,?,?,?) '
                 . 'ON DUPLICATE KEY UPDATE source_file_id=VALUES(source_file_id),reason=VALUES(reason)'
@@ -99,16 +109,17 @@ try {
     }
 
     $affected = array_values(array_unique(array_filter(array_map('intval', $affected), static fn(int $id): bool => $id > 0)));
-    if ($apply && $affected !== []) {
-        $support->refreshIds($affected, null, 0, 100, 'Refreshing dependencies after invalid UE exclusion');
-    }
+    // Do not synchronously rebuild consumer metadata here. During a v2->v3
+    // migration those otherwise-good verified consumers may not yet have active
+    // supported metadata. Provider resolution already excludes invalid identities;
+    // Full Sync / normal dependency refresh will rebuild consumers after cutover.
 
     fwrite(STDOUT, json_encode([
         'ok' => $missing === [],
         'dry_run' => !$apply,
         'selected' => count($rows),
         'marked' => $marked,
-        'affected_dependencies_refreshed' => count($affected),
+        'affected_dependencies_pending_refresh' => count($affected),
         'missing_file_ids' => $missing,
         'files' => $rows,
     ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . PHP_EOL);
