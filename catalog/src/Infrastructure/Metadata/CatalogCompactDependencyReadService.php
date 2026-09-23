@@ -104,7 +104,7 @@ final class CatalogCompactDependencyReadService
             . ' source_term.value_prefix resolution_source_label,'
             . ' confidence_term.value_prefix resolution_confidence_label,'
             . ' rf.id resolved_id,rf.package_name resolved_package,rf.original_name resolved_file,'
-            . ' rf.package_guid resolved_guid,rf.md5 resolved_md5,rf.file_size resolved_size'
+            . ' rf.package_guid resolved_guid,rf.md5 resolved_md5,rf.sha1 resolved_sha1,rf.file_size resolved_size'
             . ' FROM ue_dependency_links l'
             . ' JOIN ue_terms package_term ON package_term.id=l.required_package_term_id'
             . ' LEFT JOIN ue_terms source_term ON source_term.id=l.resolution_source_term_id'
@@ -159,6 +159,7 @@ final class CatalogCompactDependencyReadService
                 'resolved_file' => (string)($link['resolved_file'] ?? ''),
                 'resolved_guid' => (string)($link['resolved_guid'] ?? ''),
                 'resolved_md5' => (string)($link['resolved_md5'] ?? ''),
+                'resolved_sha1' => (string)($link['resolved_sha1'] ?? ''),
                 'resolved_size' => $link['resolved_size'] !== null ? (int)$link['resolved_size'] : 0,
                 '_metadata_source' => 'compact',
             ];
@@ -196,7 +197,7 @@ final class CatalogCompactDependencyReadService
         }
         $limit = max(1, min(5000, $limit));
         $statement = $this->db->prepare(
-            'SELECT DISTINCT src.id,src.package_name,src.original_name,src.package_guid,src.md5,src.file_size'
+            'SELECT DISTINCT src.id,src.package_name,src.original_name,src.package_guid,src.md5,src.sha1,src.file_size'
             . ' FROM ue_dependency_links l'
             . ' JOIN ue_file_metadata m ON m.file_id=l.file_id AND m.format_version=3'
             . ' JOIN ue_files src ON src.id=l.file_id AND src.scan_status="verified"'
@@ -251,7 +252,7 @@ final class CatalogCompactDependencyReadService
         $statement = $this->db->prepare(
             'SELECT l.file_id source_file_id,l.import_index,l.resolved_file_id,l.status,'
             . ' package_term.value_prefix required_package_prefix,'
-            . ' src.id,src.package_name,src.original_name,src.package_guid,src.md5,src.file_size'
+            . ' src.id,src.package_name,src.original_name,src.package_guid,src.md5,src.sha1,src.file_size'
             . ' FROM ue_dependency_links l'
             . ' JOIN ue_file_metadata m ON m.file_id=l.file_id AND m.format_version=3'
             . ' JOIN ue_files src ON src.id=l.file_id AND src.game_id=? AND src.scan_status="verified"'
