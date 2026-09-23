@@ -16,6 +16,7 @@ final class UE4BinaryReader
     private int $len;
     private int $pos = 0;
     private bool $ownsHandle = false;
+    private bool $byteSwapping = false;
 
     /** @param resource $source */
     public function __construct($source, ?int $length = null, bool $ownsHandle = false)
@@ -42,10 +43,12 @@ final class UE4BinaryReader
     public function seek(int $pos): void { if ($pos < 0 || $pos > $this->len) throw new OutOfBoundsException("seek overrun pos=$pos len={$this->len}"); $this->pos = $pos; }
     public function remaining(): int { return $this->len - $this->pos; }
     public function size(): int { return $this->len; }
+    public function setByteSwapping(bool $enabled): void { $this->byteSwapping = $enabled; }
+    public function isByteSwapping(): bool { return $this->byteSwapping; }
 
     public function bytes(int $count): string
     {
-        if ($count < 0 || $this->pos + $count > $this->len) {
+        if ($count < 0 || $count > $this->len - $this->pos) {
             throw new OutOfBoundsException("read overrun need=$count pos={$this->pos} len={$this->len}");
         }
         if ($count === 0) return '';
@@ -56,21 +59,26 @@ final class UE4BinaryReader
     }
 
     public function u8(): int { return ord($this->bytes(1)); }
-    public function u16(): int { return unpack('v', $this->bytes(2))[1]; }
-    public function u32(): int { return (int)unpack('V', $this->bytes(4))[1]; }
+    public function u16(): int { return unpack($this->byteSwapping ? 'n' : 'v', $this->bytes(2))[1]; }
+    public function u32(): int { return (int)unpack($this->byteSwapping ? 'N' : 'V', $this->bytes(4))[1]; }
     public function i32(): int { $v = $this->u32(); return ($v & 0x80000000) ? $v - 0x100000000 : $v; }
 
     public function u64(): int
     {
-        $p = unpack('Vlo/Vhi', $this->bytes(8));
-        return (int)($p['lo'] + ($p['hi'] * 4294967296));
+        $raw = $this->bytes(8);
+        $p = $this->byteSwapping ? unpack('Nhi/Nlo', $raw) : unpack('Vlo/Vhi', $raw);
+        if (($p['hi'] & 0x80000000) !== 0) {
+            throw new OverflowException('uint64 value exceeds PHP_INT_MAX.');
+        }
+        return ($p['hi'] << 32) | $p['lo'];
     }
 
     public function i64(): int
     {
-        $p = unpack('Vlo/Vhi', $this->bytes(8));
-        $v = $p['lo'] + ($p['hi'] * 4294967296);
-        return ($p['hi'] & 0x80000000) ? (int)($v - 18446744073709551616.0) : (int)$v;
+        $raw = $this->bytes(8);
+        $p = $this->byteSwapping ? unpack('Nhi/Nlo', $raw) : unpack('Vlo/Vhi', $raw);
+        $signedHi = ($p['hi'] & 0x80000000) !== 0 ? $p['hi'] - 0x100000000 : $p['hi'];
+        return ($signedHi << 32) | $p['lo'];
     }
 
     public function fstring(): string
@@ -80,7 +88,7 @@ final class UE4BinaryReader
             return '';
         }
         if ($length > 0) {
-            if ($length > 1048576 || $length > $this->remaining()) {
+            if ($length > $this->remaining()) {
                 throw new OutOfBoundsException("bad FString length=$length pos={$this->pos}");
             }
             $raw = $this->bytes($length);
@@ -90,16 +98,22 @@ final class UE4BinaryReader
             return self::toUtf8($raw);
         }
 
+        if ($length === -2147483648) {
+            throw new OutOfBoundsException("bad wide FString length=$length pos={$this->pos}");
+        }
         $chars = -$length;
+        if ($chars > intdiv(PHP_INT_MAX, 2)) {
+            throw new OutOfBoundsException("bad wide FString length=$length pos={$this->pos}");
+        }
         $bytes = $chars * 2;
-        if ($chars > 524288 || $bytes > $this->remaining()) {
+        if ($bytes > $this->remaining()) {
             throw new OutOfBoundsException("bad wide FString length=$length pos={$this->pos}");
         }
         $raw = $this->bytes($bytes);
         if (substr($raw, -2) === "\0\0") {
             $raw = substr($raw, 0, -2);
         }
-        $out = @mb_convert_encoding($raw, 'UTF-8', 'UTF-16LE');
+        $out = @mb_convert_encoding($raw, 'UTF-8', $this->byteSwapping ? 'UTF-16BE' : 'UTF-16LE');
         return $out === false ? '' : $out;
     }
 
@@ -153,11 +167,13 @@ final class UnrealPackageReader4
     private const VER_COOKED_ASSETS_IN_EDITOR_SUPPORT = 485;
     private const VER_64BIT_EXPORTMAP_SERIALSIZES = 511;
     private const VER_NAME_HASHES_SERIALIZED = 504;
+    private const VER_ADDED_SOFT_OBJECT_PATH = 514;
     private const VER_ADDED_PACKAGE_SUMMARY_LOCALIZATION_ID = 516;
     private const VER_ADDED_PACKAGE_OWNER = 518;
     private const VER_NON_OUTER_PACKAGE_IMPORT = 520;
     private const VER_OLDEST_LOADABLE_PACKAGE = 214;
     private const DEFAULT_ASSUMED_UNVERSIONED_UE4_VERSION = 522;
+    private const NAME_SIZE = 1024;
 
     public function __construct(string $path, array $options = [])
     {
@@ -247,12 +263,17 @@ final class UnrealPackageReader4
     private function parse(): void
     {
         $r = $this->rootReader();
+        if ($this->fileSize < 32) {
+            throw new RuntimeException('UE4 package is smaller than the 32-byte minimum package summary size. fileSize=' . $this->fileSize);
+        }
         $tag = $r->u32();
         if ($tag !== self::PACKAGE_FILE_TAG && $tag !== self::PACKAGE_FILE_TAG_SWAPPED) {
             throw new RuntimeException(sprintf('Bad UE4 package tag 0x%08X', $tag));
         }
         if ($tag === self::PACKAGE_FILE_TAG_SWAPPED) {
-            throw new RuntimeException('Big-endian swapped UE4 packages are not supported yet.');
+            // UE4 toggles archive byte swapping after detecting the swapped package tag.
+            $r->setByteSwapping(true);
+            $tag = self::PACKAGE_FILE_TAG;
         }
 
         $legacy = $r->i32();
@@ -265,7 +286,7 @@ final class UnrealPackageReader4
             throw new RuntimeException('This looks like an older UE package, not a modern UE4 package. LegacyFileVersion=' . $legacy);
         }
         if ($legacy < -7) {
-            throw new RuntimeException('UE5-era package summary is not supported by the UE4 reader. LegacyFileVersion=' . $legacy);
+            throw new RuntimeException('Package summary format is newer than UE4.27.2 and is not supported by this reader. LegacyFileVersion=' . $legacy);
         }
         if ($legacy !== -4) {
             $this->header['legacyUE3Version'] = $r->i32();
@@ -324,9 +345,7 @@ final class UnrealPackageReader4
         }
 
         $genCount = $r->i32();
-        if ($genCount < 0 || $genCount > 1024) {
-            throw new RuntimeException('Bad UE4 generation count ' . $genCount . ' at ' . ($r->tell() - 4));
-        }
+        $this->assertArrayCountFits($r, $genCount, 8, 'UE4 generation');
         for ($i = 0; $i < $genCount; $i++) {
             $this->header['generations'][] = ['exportCount' => $r->i32(), 'nameCount' => $r->i32()];
         }
@@ -363,7 +382,7 @@ final class UnrealPackageReader4
         $this->header['uexpPath'] = $this->guessUexpPath();
         $this->header['hasUexp'] = $this->header['uexpPath'] !== '' && is_file($this->header['uexpPath']);
 
-        $this->validateTableBounds();
+        $this->validateSummaryBounds();
         $this->readNames();
         $this->readImports();
         $this->readExports();
@@ -374,9 +393,8 @@ final class UnrealPackageReader4
     private function readCustomVersions(UE4BinaryReader $r, int $legacy): array
     {
         $count = $r->i32();
-        if ($count < 0 || $count > 4096) {
-            throw new RuntimeException('Bad custom version count ' . $count . ' at ' . ($r->tell() - 4));
-        }
+        $minimumEntrySize = $legacy === -2 ? 8 : ($legacy >= -5 ? 24 : 20);
+        $this->assertArrayCountFits($r, $count, $minimumEntrySize, 'custom version');
         $out = [];
         for ($i = 0; $i < $count; $i++) {
             if ($legacy === -2) {
@@ -398,9 +416,7 @@ final class UnrealPackageReader4
     private function readCompressedChunks(UE4BinaryReader $r): array
     {
         $count = $r->i32();
-        if ($count < 0 || $count > 65536) {
-            throw new RuntimeException('Bad compressed chunk count ' . $count . ' at ' . ($r->tell() - 4));
-        }
+        $this->assertArrayCountFits($r, $count, 16, 'compressed chunk');
         $out = [];
         for ($i = 0; $i < $count; $i++) {
             $out[] = ['uncompressedOffset' => $r->i32(), 'uncompressedSize' => $r->i32(), 'compressedOffset' => $r->i32(), 'compressedSize' => $r->i32()];
@@ -411,9 +427,8 @@ final class UnrealPackageReader4
     private function readStringArray(UE4BinaryReader $r): array
     {
         $count = $r->i32();
-        if ($count < 0 || $count > 65536) {
-            throw new RuntimeException('Bad string array count ' . $count . ' at ' . ($r->tell() - 4));
-        }
+        // Every serialized FString has at least its int32 length prefix.
+        $this->assertArrayCountFits($r, $count, 4, 'string array');
         $out = [];
         for ($i = 0; $i < $count; $i++) {
             $out[] = $r->fstring();
@@ -424,14 +439,19 @@ final class UnrealPackageReader4
     private function readIntArray(UE4BinaryReader $r): array
     {
         $count = $r->i32();
-        if ($count < 0 || $count > 1048576) {
-            throw new RuntimeException('Bad int array count ' . $count . ' at ' . ($r->tell() - 4));
-        }
+        $this->assertArrayCountFits($r, $count, 4, 'int array');
         $out = [];
         for ($i = 0; $i < $count; $i++) {
             $out[] = $r->i32();
         }
         return $out;
+    }
+
+    private function assertArrayCountFits(UE4BinaryReader $r, int $count, int $minimumElementSize, string $label): void
+    {
+        if ($count < 0 || $minimumElementSize <= 0 || $count > intdiv($r->remaining(), $minimumElementSize)) {
+            throw new RuntimeException('Bad ' . $label . ' count ' . $count . ' at ' . ($r->tell() - 4) . '; remaining=' . $r->remaining() . ' minElementSize=' . $minimumElementSize);
+        }
     }
 
     private function rootReader(): UE4BinaryReader
@@ -444,17 +464,54 @@ final class UnrealPackageReader4
         $r = $this->rootReader(); $r->seek($offset); return $r;
     }
 
-    private function validateTableBounds(): void
+    private function validateSummaryBounds(): void
     {
-        foreach ([['name', 'nameCount', 'nameOffset'], ['import', 'importCount', 'importOffset'], ['export', 'exportCount', 'exportOffset']] as $table) {
-            [$label, $countKey, $offsetKey] = $table;
+        $headerSize = (int)($this->header['totalHeaderSize'] ?? 0);
+        if ($headerSize <= 0 || $headerSize > $this->fileSize) {
+            throw new RuntimeException("Bad UE4 total header size $headerSize; fileSize={$this->fileSize}");
+        }
+
+        $version = (int)($this->header['version'] ?? 0);
+        $filterEditorOnly = (((int)($this->header['packageFlags'] ?? 0)) & 0x80000000) !== 0;
+        $nameMinimum = $version >= self::VER_NAME_HASHES_SERIALIZED ? 8 : 4;
+        $importMinimum = 28 + (($version >= self::VER_NON_OUTER_PACKAGE_IMPORT && !$filterEditorOnly) ? 8 : 0);
+        $exportMinimum = 64;
+        if ($version >= self::VER_LOAD_FOR_EDITOR_GAME) $exportMinimum += 4;
+        if ($version >= self::VER_COOKED_ASSETS_IN_EDITOR_SUPPORT) $exportMinimum += 4;
+        if ($version >= self::VER_PRELOAD_DEPENDENCIES_IN_COOKED_EXPORTS) $exportMinimum += 20;
+        if ($version >= self::VER_TEMPLATE_INDEX_IN_COOKED_EXPORTS) $exportMinimum += 4;
+        if ($version >= self::VER_64BIT_EXPORTMAP_SERIALSIZES) $exportMinimum += 8;
+
+        foreach ([['name', 'nameCount', 'nameOffset', $nameMinimum], ['import', 'importCount', 'importOffset', $importMinimum], ['export', 'exportCount', 'exportOffset', $exportMinimum]] as $table) {
+            [$label, $countKey, $offsetKey, $minimumEntrySize] = $table;
             $count = (int)($this->header[$countKey] ?? 0);
             $offset = (int)($this->header[$offsetKey] ?? 0);
             if ($count < 0) {
-                $this->issues[] = "Bad $label count: $count";
+                throw new RuntimeException("Bad $label count: $count");
             }
-            if ($count > 0 && ($offset <= 0 || $offset >= $this->fileSize)) {
-                $this->issues[] = "Bad $label offset: $offset";
+            if ($count > 0) {
+                if ($offset <= 0 || $offset >= $headerSize || $offset >= $this->fileSize) {
+                    throw new RuntimeException("Bad $label offset: $offset; totalHeaderSize=$headerSize fileSize={$this->fileSize}");
+                }
+                if ($count > intdiv($headerSize - $offset, $minimumEntrySize)) {
+                    throw new RuntimeException("Bad $label count: $count cannot fit before totalHeaderSize=$headerSize from offset=$offset");
+                }
+            }
+        }
+
+        foreach ([
+            ['soft package references', 'stringAssetReferencesCount', 'stringAssetReferencesOffset', $version >= self::VER_ADDED_SOFT_OBJECT_PATH ? 12 : 4],
+            ['preload dependencies', 'preloadDependencyCount', 'preloadDependencyOffset', 4],
+        ] as $table) {
+            [$label, $countKey, $offsetKey, $minimumEntrySize] = $table;
+            $count = (int)($this->header[$countKey] ?? 0);
+            $offset = (int)($this->header[$offsetKey] ?? 0);
+            if ($count < 0) {
+                if ($label === 'preload dependencies' && $count === -1) continue;
+                throw new RuntimeException("Bad $label count: $count");
+            }
+            if ($count > 0 && ($offset <= 0 || $offset >= $headerSize || $count > intdiv($headerSize - $offset, $minimumEntrySize))) {
+                throw new RuntimeException("Bad $label table: count=$count offset=$offset totalHeaderSize=$headerSize");
             }
         }
     }
@@ -470,15 +527,46 @@ final class UnrealPackageReader4
         $version = (int)$this->header['version'];
         for ($i = 0; $i < $count; $i++) {
             $entryOffset = $r->tell();
-            $name = $r->fstring();
+            $name = $this->readSerializedNameEntry($r);
             $nonCaseHash = null;
             $caseHash = null;
-            if ($version >= self::VER_NAME_HASHES_SERIALIZED && $r->remaining() >= 4) {
+            if ($version >= self::VER_NAME_HASHES_SERIALIZED) {
                 $nonCaseHash = $r->u16();
                 $caseHash = $r->u16();
             }
             $this->names[] = ['index' => $i, 'name' => $name, 'offset' => $entryOffset, 'nonCaseHash' => $nonCaseHash, 'caseHash' => $caseHash];
         }
+    }
+
+    private function readSerializedNameEntry(UE4BinaryReader $r): string
+    {
+        $length = $r->i32();
+        if ($length === 0 || $length < -self::NAME_SIZE || $length > self::NAME_SIZE) {
+            throw new RuntimeException('Bad UE4 name entry length ' . $length . ' at ' . ($r->tell() - 4) . '; NAME_SIZE=' . self::NAME_SIZE);
+        }
+
+        if ($length > 0) {
+            if ($length > $r->remaining()) {
+                throw new OutOfBoundsException("UE4 name entry overrun length=$length pos={$r->tell()} remaining={$r->remaining()}");
+            }
+            $raw = $r->bytes($length);
+            if (substr($raw, -1) === "\0") $raw = substr($raw, 0, -1);
+            return UE4BinaryReader::toUtf8($raw);
+        }
+
+        if ($length === -2147483648) {
+            throw new RuntimeException('Bad UE4 wide name entry length INT32_MIN');
+        }
+        $chars = -$length;
+        $bytes = $chars * 2;
+        if ($bytes > $r->remaining()) {
+            throw new OutOfBoundsException("UE4 wide name entry overrun chars=$chars pos={$r->tell()} remaining={$r->remaining()}");
+        }
+        $raw = $r->bytes($bytes);
+        if (substr($raw, -2) === "\0\0") $raw = substr($raw, 0, -2);
+        $out = @mb_convert_encoding($raw, 'UTF-8', $r->isByteSwapping() ? 'UTF-16BE' : 'UTF-16LE');
+        if ($out === false) throw new RuntimeException('Failed to decode UE4 wide name entry.');
+        return $out;
     }
 
     private function readFName(UE4BinaryReader $r): array
@@ -501,13 +589,17 @@ final class UnrealPackageReader4
             return;
         }
         $r = $this->tableReader($offset);
+        $version = (int)$this->header['version'];
+        $filterEditorOnly = (((int)$this->header['packageFlags']) & 0x80000000) !== 0;
         for ($i = 0; $i < $count; $i++) {
             $start = $r->tell();
             $classPackage = $this->readFName($r);
             $className = $this->readFName($r);
             $outerIndex = $r->i32();
             $objectName = $this->readFName($r);
-            $packageName = $version >= self::VER_NON_OUTER_PACKAGE_IMPORT ? $this->readFName($r) : ['index' => 0, 'number' => 0];
+            $packageName = $version >= self::VER_NON_OUTER_PACKAGE_IMPORT && !$filterEditorOnly
+                ? $this->readFName($r)
+                : ['index' => 0, 'number' => 0, 'text' => ''];
             $this->imports[] = [
                 'index' => $i,
                 'ref' => -($i + 1),
@@ -524,6 +616,9 @@ final class UnrealPackageReader4
                 'objectName' => $objectName,
                 'ObjectName' => $objectName,
                 'objectNameText' => $this->fnameText($objectName),
+                'packageName' => $packageName,
+                'PackageName' => $packageName,
+                'packageNameText' => $this->fnameText($packageName),
             ];
         }
     }
@@ -620,8 +715,16 @@ final class UnrealPackageReader4
             $r = $this->tableReader($offset);
             for ($i = 0; $i < $count; $i++) {
                 $entryOffset = $r->tell();
-                $path = trim($r->fstring());
-                if ($path !== '' && strlen($path) <= 1000) {
+                if ((int)$this->header['version'] >= self::VER_ADDED_SOFT_OBJECT_PATH) {
+                    // FSoftObjectPath serializes AssetPathName (FName) followed by SubPathString (FString).
+                    $assetPathName = $this->readFName($r);
+                    $subPath = trim($r->fstring());
+                    $assetPath = $this->fnameText($assetPathName);
+                    $path = $assetPath . ($subPath !== '' ? ':' . $subPath : '');
+                } else {
+                    $path = trim($r->fstring());
+                }
+                if ($path !== '') {
                     $this->stringAssetReferences[] = ['index' => $i, 'offset' => $entryOffset, 'path' => $path, 'source' => 'summary_string_asset_reference'];
                 }
             }
