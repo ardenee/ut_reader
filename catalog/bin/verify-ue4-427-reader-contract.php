@@ -46,6 +46,17 @@ try {
 $check('wide_fstring_int32_min_is_rejected_safely', $threw, 'INT32_MIN cannot be safely negated into a UTF-16 character count.');
 fclose($stream);
 
+$stream = fopen('php://temp', 'w+b');
+fwrite($stream, pack('V2', 0xFFFFFFFF, 0xFFFFFFFF) . pack('V2', 0x00000000, 0x80000000));
+rewind($stream);
+$reader = new UE4BinaryReader($stream, 16);
+$check(
+    'signed_int64_extremes_are_exact',
+    $reader->i64() === -1 && $reader->i64() === PHP_INT_MIN,
+    'Signed int64 decoding must not use floating-point arithmetic or lose precision at INT64_MIN.'
+);
+fclose($stream);
+
 $source = file_get_contents(dirname(__DIR__, 2) . '/UE4/UnrealPackageReader.php');
 $check(
     'import_package_name_obeys_filter_editor_only',
@@ -94,6 +105,30 @@ $check(
         && str_contains($source, 'if ($version >= self::VER_NAME_HASHES_SERIALIZED)')
         && !str_contains($source, 'self::VER_NAME_HASHES_SERIALIZED && $r->remaining() >= 4'),
     'At VER_UE4_NAME_HASHES_SERIALIZED+, the two serialized uint16 hash fields are part of every name-map entry and truncation must fail rather than silently desynchronize.'
+);
+
+$check(
+    'binary_reads_use_overflow_safe_remaining_check',
+    is_string($source)
+        && str_contains($source, '$count > $this->len - $this->pos')
+        && !str_contains($source, '$this->pos + $count > $this->len'),
+    'Binary read bounds are checked without adding attacker-controlled lengths to the current offset.'
+);
+$check(
+    'package_summary_enforces_ue4_minimum_size',
+    is_string($source)
+        && str_contains($source, '$this->fileSize < 32'),
+    'UE4.27.2 FPackageFileSummary rejects packages smaller than 32 bytes before summary parsing.'
+);
+$check(
+    'table_minimum_sizes_follow_version_gates',
+    is_string($source)
+        && str_contains($source, '$nameMinimum = $version >= self::VER_NAME_HASHES_SERIALIZED ? 8 : 4;')
+        && str_contains($source, '$importMinimum = 28 +')
+        && str_contains($source, '$exportMinimum = 64;')
+        && str_contains($source, 'VER_64BIT_EXPORTMAP_SERIALSIZES) $exportMinimum += 8;')
+        && str_contains($source, 'VER_ADDED_SOFT_OBJECT_PATH ? 12 : 4'),
+    'Minimum serialized table widths follow the UE4 version gates instead of imposing one fixed export size on every loadable UE4 version.'
 );
 
 $ok = !in_array(false, array_column($checks, 'ok'), true);
