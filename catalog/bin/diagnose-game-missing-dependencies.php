@@ -70,7 +70,7 @@ $metadataTotals = $one(
     'SELECT COUNT(*) metadata_files,COALESCE(SUM(m.import_count),0) import_count,'
     . 'COALESCE(SUM(m.export_count),0) export_count '
     . 'FROM ue_file_metadata m JOIN ue_files f ON f.id=m.file_id '
-    . 'WHERE f.game_id=? AND f.scan_status="verified" AND m.format_version=2',
+    . 'WHERE f.game_id=? AND f.scan_status="verified" AND m.format_version=3',
     [$gameId]
 );
 $linkTotals = $one(
@@ -97,7 +97,7 @@ $dependencyProjectionMismatchFiles = $scalar(
     $db,
     'SELECT COUNT(*) FROM ('
     . 'SELECT f.id,m.import_count,COUNT(l.file_id) actual_count '
-    . 'FROM ue_files f JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=2 '
+    . 'FROM ue_files f JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=3 '
     . 'LEFT JOIN ue_dependency_links l ON l.file_id=f.id '
     . 'WHERE f.game_id=? AND f.scan_status="verified" '
     . 'GROUP BY f.id,m.import_count HAVING m.import_count<>COUNT(l.file_id)'
@@ -108,7 +108,7 @@ $exportProjectionMismatchFiles = $scalar(
     $db,
     'SELECT COUNT(*) FROM ('
     . 'SELECT f.id,m.export_count,COUNT(l.file_id) actual_count '
-    . 'FROM ue_files f JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=2 '
+    . 'FROM ue_files f JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=3 '
     . 'LEFT JOIN ue_export_lookup l ON l.file_id=f.id '
     . 'WHERE f.game_id=? AND f.scan_status="verified" '
     . 'GROUP BY f.id,m.export_count HAVING m.export_count<>COUNT(l.file_id)'
