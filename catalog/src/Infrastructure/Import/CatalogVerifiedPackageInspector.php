@@ -51,8 +51,15 @@ final class CatalogVerifiedPackageInspector implements VerifiedPackageInspectorP
         $extension = \catalog_clean_unreal_extension((string)pathinfo($originalName, PATHINFO_EXTENSION));
 
         $size = filesize($temporaryPath) ?: 0;
-        if ($size <= 0 || $size > (int)$this->config['max_upload_bytes']) {
+        if ($size <= 0) {
             throw new RuntimeException('Bad file size: ' . \catalog_bytes((int)$size));
+        }
+        $maximumPackageBytes = max(1, (int)($this->config['max_upload_bytes'] ?? 0));
+        if ($size > $maximumPackageBytes) {
+            throw new RuntimeException(
+                'Package exceeds configured ingress ceiling: size=' . \catalog_bytes((int)$size)
+                . ', maximum=' . \catalog_bytes($maximumPackageBytes) . '.'
+            );
         }
 
         \scanner_emit_percent($progress, 'scan', 2, 'Reading package header');
