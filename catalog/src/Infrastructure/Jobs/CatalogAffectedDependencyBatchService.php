@@ -26,6 +26,9 @@ final class CatalogAffectedDependencyBatchService
 {
     public const MAX_BATCH_SIZE = 250;
     private const FILE_CONTENTION_ATTEMPTS = 4;
+    // Persist batch cursors often enough for the parent/UI to show useful file
+    // progress without restoring one queue UPDATE per affected file.
+    private const PROGRESS_CHECKPOINT_FILES = 10;
 
     /** @param array<string,mixed> $config */
     public function __construct(
@@ -153,9 +156,14 @@ final class CatalogAffectedDependencyBatchService
             );
 
             // A failure boundary is checkpointed immediately so the recovery and
-            // cursor remain in sync. Successful files use the normal heartbeat
-            // cadence, avoiding one queue UPDATE for every file.
-            if ($failure instanceof Throwable) {
+            // cursor remain in sync. Successful files persist every small block
+            // as well as on the normal heartbeat cadence. This keeps the parent
+            // file counter and expanded child progress moving during fast batches
+            // without restoring one queue UPDATE per affected file.
+            if ($failure instanceof Throwable
+                || ($done % self::PROGRESS_CHECKPOINT_FILES) === 0
+                || $done === $total
+            ) {
                 $context->checkpoint($progress);
             } else {
                 $context->heartbeatIfDue($progress);
