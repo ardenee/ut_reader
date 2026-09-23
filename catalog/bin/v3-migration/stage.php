@@ -39,7 +39,7 @@ if($raw!==''){
  if(!$ids)throw new RuntimeException('No positive --file-ids were supplied.');
  $where[]='f.id IN ('.implode(',',array_fill(0,count($ids),'?')).')'; array_push($args,...array_values($ids));
 }
-$sql='SELECT f.*,m.format_version FROM ue_files f JOIN ue_file_metadata m ON m.file_id=f.id WHERE '.implode(' AND ',$where).' ORDER BY f.id LIMIT '.$limit;
+$sql='SELECT f.*,m.format_version FROM ue_files f LEFT JOIN ue_file_metadata m ON m.file_id=f.id WHERE '.implode(' AND ',$where).' ORDER BY f.id LIMIT '.$limit;
 $select=function(int $cursor)use($db,$sql,$args,$after,$missingV3,$storageRoot):array{
  $pageArgs=$args;$pageArgs[0]=$cursor;$s=$db->prepare($sql);$s->execute($pageArgs);
  $found=$s->fetchAll(PDO::FETCH_ASSOC)?:[];
@@ -50,6 +50,18 @@ $select=function(int $cursor)use($db,$sql,$args,$after,$missingV3,$storageRoot):
  }));
 };
 $rows=$select($after);
+if(!$apply&&$missingV3&&$all){
+ $count=0;$first=0;$last=0;$cursor=$after;
+ while(true){
+  $batch=$select($cursor);
+  if($batch===[])break;
+  foreach($batch as $file){$id=(int)$file['id'];if($first===0)$first=$id;$last=$id;$count++;}
+  $cursor=$last;
+ }
+ echo json_encode(['ok'=>true,'dry_run'=>true,'selected'=>$count,'after_id'=>$after,'limit'=>$limit,'all'=>true,
+  'workers'=>$workers,'worker'=>$worker,'missing_v3'=>true,'first_file_id'=>$first,'last_file_id'=>$last,
+  'writes'=>'*.uedb3 only','database_writes'=>false],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES).PHP_EOL;exit(0);
+}
 if(!$apply){
  echo json_encode(['ok'=>true,'dry_run'=>true,'selected'=>count($rows),'after_id'=>$after,'limit'=>$limit,'all'=>$all,
  'workers'=>$workers,'worker'=>$worker,'missing_v3'=>$missingV3,'first_file_id'=>$rows?(int)$rows[0]['id']:0,
