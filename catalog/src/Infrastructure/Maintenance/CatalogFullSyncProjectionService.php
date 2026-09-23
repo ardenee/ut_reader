@@ -16,6 +16,7 @@ use Throwable;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyPackageSummary;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoGameCatalogStats;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageProviderRepository;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageCoverageCache;
 
 final class CatalogFullSyncProjectionService
 {
@@ -73,7 +74,16 @@ final class CatalogFullSyncProjectionService
                 throw new RuntimeException('Dependency package summary projection is unavailable.');
             }
 
-            $this->emit('game_stats', 80, 'Rebuilding cached game dependency counters.');
+            $this->emit('package_coverage', 75, 'Rebuilding cached catalog-wide package object coverage.');
+            $coverage = (new PdoPackageCoverageCache($this->db))->rebuildGame(
+                $gameId,
+                function (int $done, int $total, string $package): void {
+                    $percent = $total > 0 ? 75 + (int)floor(($done / $total) * 15) : 90;
+                    $this->emit('package_coverage', $percent, 'Caching object coverage ' . $done . '/' . $total . ': ' . $package);
+                }
+            );
+
+            $this->emit('game_stats', 90, 'Rebuilding cached game dependency counters.');
             $stats = $this->rebuildStats($gameId);
 
             $this->emit(
@@ -89,6 +99,7 @@ final class CatalogFullSyncProjectionService
                 'providers' => $providers,
                 'summary_files' => (int)($summaries['files'] ?? 0),
                 'summary_rows' => (int)($summaries['summary_rows'] ?? 0),
+                'coverage_packages' => (int)($coverage['packages'] ?? 0),
                 'stats' => $stats,
                 'message' => 'Package providers, dependency summaries and game counters finalized.',
             ];
