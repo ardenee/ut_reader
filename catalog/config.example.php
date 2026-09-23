@@ -20,9 +20,9 @@ return [
     ],
     'site_name' => 'Unreal File Catalog',
     'storage_path' => __DIR__ . '/storage',
-    // Ordinary package upload limit. PAK and ZIP/7z/RAR containers have a
-    // separate larger limit and are transferred by the browser in chunks.
-    'max_upload_bytes' => 256 * 1024 * 1024,
+    // Unreal package ingress ceiling. Large packages are transferred in chunks;
+    // readers must remain memory-bounded rather than assuming package-sized RAM.
+    'max_upload_bytes' => 2 * 1024 * 1024 * 1024,
     'max_container_upload_bytes' => 64 * 1024 * 1024 * 1024,
     'chunk_upload' => [
         // Each HTTP request carries only one chunk, avoiding web/PHP limits on
