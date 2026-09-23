@@ -18,11 +18,52 @@ require_once __DIR__ . '/MetadataContainerV3.php';
 
 use UnrealDb\Catalog\MigrationV3\MetadataContainerV3;
 
-$options = getopt('', ['apply', 'confirm-v3-only', 'max-errors::', 'progress-every::']);
+$options = getopt('', ['apply', 'confirm-v3-only', 'max-errors::', 'progress-every::', 'workers::', 'worker::']);
 $apply = array_key_exists('apply', $options);
 $confirmed = array_key_exists('confirm-v3-only', $options);
 $maxErrors = max(1, min(1000, (int)($options['max-errors'] ?? 100)));
 $progressEvery = max(100, (int)($options['progress-every'] ?? 1000));
+$workers = max(1, min(16, (int)($options['workers'] ?? 1)));
+$worker = isset($options['worker']) ? (int)$options['worker'] : null;
+if ($worker !== null && ($worker < 0 || $worker >= $workers)) { fwrite(STDERR, "Invalid --worker for --workers.\n"); exit(2); }
+if ($apply && $workers > 1) { fwrite(STDERR, "Parallel mode is validation-only. Run apply without --workers after validation passes.\n"); exit(2); }
+
+// Parent orchestration: launch N disjoint validation workers and aggregate their JSON results.
+if ($workers > 1 && $worker === null) {
+    $procs=[];$pipes=[];$started=microtime(true);
+    for($i=0;$i<$workers;$i++){
+        $cmd=[PHP_BINARY,__FILE__,'--workers='.$workers,'--worker='.$i,'--max-errors='.$maxErrors,'--progress-every='.$progressEvery];
+        $p=proc_open($cmd,[1=>['pipe','w'],2=>['pipe','w']],$pp);
+        if(!is_resource($p)){ fwrite(STDERR,"Could not start worker {$i}.\n"); exit(6); }
+        stream_set_blocking($pp[1],false); stream_set_blocking($pp[2],false);
+        $procs[$i]=$p;$pipes[$i]=$pp;
+    }
+    $stdout=array_fill(0,$workers,'');$done=[];
+    while(count($done)<$workers){
+        foreach($procs as $i=>$p){
+            if(isset($done[$i])) continue;
+            $e=stream_get_contents($pipes[$i][2]); if($e!=='') fwrite(STDERR,"[W{$i}] ".$e);
+            $o=stream_get_contents($pipes[$i][1]); if($o!=='') $stdout[$i].=$o;
+            $s=proc_get_status($p);
+            if(!$s['running']){
+                $stdout[$i].=(string)stream_get_contents($pipes[$i][1]);
+                $e=(string)stream_get_contents($pipes[$i][2]); if($e!=='') fwrite(STDERR,"[W{$i}] ".$e);
+                fclose($pipes[$i][1]);fclose($pipes[$i][2]);$done[$i]=proc_close($p);
+            }
+        }
+        if(count($done)<$workers) usleep(100000);
+    }
+    $totalChecked=0;$totalValid=0;$allErrors=[];$ok=true;
+    foreach($stdout as $i=>$json){
+        $r=json_decode(trim($json),true);
+        if(!is_array($r)){ $ok=false;$allErrors[]=['worker'=>$i,'error'=>'Worker returned invalid JSON'];continue; }
+        $ok=$ok&&($r['ok']??false);$totalChecked+=(int)($r['worker_files']??0);$totalValid+=(int)($r['v3_verified']??0);
+        foreach((array)($r['errors']??[]) as $er){ if(count($allErrors)<$maxErrors)$allErrors[]=$er; }
+    }
+    $result=['ok'=>$ok&&$allErrors===[]&&$totalChecked===$totalValid,'dry_run'=>true,'workers'=>$workers,'verified_files'=>$totalChecked,'v3_verified'=>$totalValid,'errors'=>$allErrors,'elapsed_seconds'=>round(microtime(true)-$started,3)];
+    if($result['ok']) $result['next_command']='php catalog/bin/v3-migration/cutover.php --apply --confirm-v3-only';
+    echo json_encode($result,JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES).PHP_EOL; exit($result['ok']?0:4);
+}
 
 if ($apply && !$confirmed) {
     fwrite(STDERR, "--apply requires --confirm-v3-only.\n");
@@ -61,8 +102,9 @@ $insert = $db->prepare(
     . '(file_id,compressed_size,uncompressed_size,payload_sha256,name_count,import_count,export_count) '
     . 'VALUES (?,?,?,?,?,?,?)'
 );
+$whereWorker = $worker !== null ? ' AND MOD(f.id,' . $workers . ')=' . $worker : '';
 $verifiedCount = (int)$db->query(
-    'SELECT COUNT(*) FROM ue_files WHERE scan_status="verified"'
+    'SELECT COUNT(*) FROM ue_files f WHERE f.scan_status="verified"' . $whereWorker
 )->fetchColumn();
 $startedAt = microtime(true);
 $processed = 0;
@@ -71,7 +113,7 @@ $files = $db->query(
     'SELECT f.id,f.game_id,f.original_name,f.name_count,f.import_count,f.export_count,'
     . 'COALESCE(m.format_version,0) format_version '
     . 'FROM ue_files f LEFT JOIN ue_file_metadata m ON m.file_id=f.id '
-    . 'WHERE f.scan_status="verified" ORDER BY f.id'
+    . 'WHERE f.scan_status="verified"' . $whereWorker . ' ORDER BY f.id'
 );
 
 $checked = 0;
@@ -166,6 +208,9 @@ $result = [
     'ok' => $complete,
     'dry_run' => !$apply,
     'verified_files' => $verifiedCount,
+    'worker_files' => $verifiedCount,
+    'worker' => $worker,
+    'workers' => $workers,
     'v3_verified' => $checked,
     'v3_staged_rows' => $stagedCount,
     'running_jobs' => $runningJobs,
