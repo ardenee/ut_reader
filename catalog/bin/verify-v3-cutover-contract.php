@@ -23,7 +23,7 @@ $check(
 );
 $check(
     'cutover_verifies_every_verified_file',
-    str_contains($cutover, 'WHERE f.scan_status="verified" ORDER BY f.id')
+    str_contains($cutover, 'WHERE f.scan_status="verified"\' . $whereWorker . \' ORDER BY f.id')
         && str_contains($cutover, 'MetadataContainerV3::verifyFile')
         && str_contains($cutover, '$checked === $verifiedCount'),
     'Cutover must verify complete v3 population before any registration switch.'
