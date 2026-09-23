@@ -145,6 +145,7 @@ final class CatalogPublicUploadBatchPreflight
         }
 
         $expiredReleased = $this->releaseExpiredReservations();
+        $invalidByIdentity = $this->invalidIdentityMatches(array_keys($md5s));
         $catalogIdentities = $this->catalogIdentityMatches(array_keys($md5s));
         $existingByIdentity = $catalogIdentities['confirmed'];
         $unconfirmedByIdentity = $catalogIdentities['unconfirmed'];
@@ -153,6 +154,19 @@ final class CatalogPublicUploadBatchPreflight
 
         foreach ($normalized as $index => $item) {
             $identity = (string)$item['identity_key'];
+            if ($identity !== '' && isset($invalidByIdentity[$identity])) {
+                $match = $invalidByIdentity[$identity];
+                $results[$index] = [
+                    'client_id' => $item['client_id'],
+                    'action' => 'reject',
+                    'reason' => 'known_invalid_ue_file',
+                    'message' => 'Identical bytes are recorded by UnrealDB as an invalid Unreal package'
+                        . ((int)($match['source_file_id'] ?? 0) > 0 ? ' (file #' . (int)$match['source_file_id'] . ')' : '')
+                        . ' and will not be accepted again.',
+                ];
+                unset($normalized[$index]);
+                continue;
+            }
             if ($identity !== '' && isset($existingByIdentity[$identity])) {
                 $match = $existingByIdentity[$identity];
                 $results[$index] = [
@@ -399,6 +413,35 @@ final class CatalogPublicUploadBatchPreflight
                         'file_id' => max(0, (int)($row['file_id'] ?? 0)),
                     ];
                 }
+            }
+        }
+        return $matches;
+    }
+
+    /** @return array<string,array{source_file_id:int}> */
+    private function invalidIdentityMatches(array $md5s): array
+    {
+        if ($md5s === []) {
+            return [];
+        }
+        $matches = [];
+        foreach (array_chunk($md5s, self::MAX_FILES) as $chunk) {
+            $placeholders = implode(',', array_fill(0, count($chunk), '?'));
+            $statement = $this->db->prepare(
+                'SELECT source_file_id,file_size,LOWER(md5) md5,LOWER(sha1) sha1 '
+                . 'FROM ue_invalid_file_identities WHERE md5 IN (' . $placeholders . ')'
+            );
+            $statement->execute($chunk);
+            foreach ($statement->fetchAll(PDO::FETCH_ASSOC) ?: [] as $row) {
+                $md5 = strtolower(trim((string)($row['md5'] ?? '')));
+                $sha1 = strtolower(trim((string)($row['sha1'] ?? '')));
+                $size = max(0, (int)($row['file_size'] ?? 0));
+                if (preg_match('/^[a-f0-9]{32}$/', $md5) !== 1
+                    || preg_match('/^[a-f0-9]{40}$/', $sha1) !== 1 || $size < 1) {
+                    continue;
+                }
+                $key = hash('sha256', $md5 . "\0" . $sha1 . "\0" . $size);
+                $matches[$key] ??= ['source_file_id' => max(0, (int)($row['source_file_id'] ?? 0))];
             }
         }
         return $matches;
