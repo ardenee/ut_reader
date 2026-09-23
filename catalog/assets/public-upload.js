@@ -30,6 +30,8 @@
     const feedbackCsrf = String(progressBox.dataset.feedbackCsrf || '');
     const chunkBytes = Math.max(1024 * 1024, Number(progressBox.dataset.chunkBytes || 16 * 1024 * 1024));
     const maxFileBytes = Math.max(1, Number(progressBox.dataset.maxFileBytes || 0));
+    const duplicateRedirect = String(progressBox.dataset.duplicateRedirect || '') === '1';
+    const singleFileMode = String(progressBox.dataset.singleFile || '') === '1';
     const BATCH_FILES = 100;
     const MAX_LOG_LINES = 500;
     const MAX_DIAGNOSTIC_LINES = 10000;
@@ -803,6 +805,10 @@
                 } else if (action === 'skip') {
                     counters.skipped++;
                     addLog('skipped', name, row.message || 'Already held or pending.');
+                    if (duplicateRedirect && String(row.reason || '') === 'already_catalogued' && Number(row.file_id || 0) > 0) {
+                        window.location.assign('file-info.php?id=' + encodeURIComponent(String(Number(row.file_id))));
+                        return;
+                    }
                 } else {
                     counters.rejected++;
                     addLog('rejected', name, row.message || 'Server rejected this file.');
@@ -1359,6 +1365,11 @@
     stopButton.addEventListener('click', stopOperation);
 
     form.addEventListener('submit', async function (event) {
+        if (singleFileMode && fileInput.files && fileInput.files.length > 1) {
+            event.preventDefault();
+            addLog('rejected', 'Selection', 'Select one file at a time.');
+            return;
+        }
         event.preventDefault();
         if (operationActive) return;
 
