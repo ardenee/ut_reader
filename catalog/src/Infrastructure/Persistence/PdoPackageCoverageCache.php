@@ -48,7 +48,16 @@ final class PdoPackageCoverageCache
     /** @param null|callable(int,int,string):void $progress */
     public function rebuildGame(int $gameId, mixed $progress=null): array
     {
-        $rows=\catalog_all($this->db,'SELECT package_name,COUNT(*) providers FROM ue_files WHERE game_id=? AND scan_status="verified" AND package_name<>"" GROUP BY package_name HAVING COUNT(*)>1 ORDER BY package_name',[$gameId]);
+        // Drive coverage from the authoritative provider projection rather than
+        // ue_files.package_name alone. This includes alias-provided packages and
+        // only analyzes logical packages that genuinely have competing files.
+        $rows=\catalog_all(
+            $this->db,
+            'SELECT package_name,COUNT(DISTINCT file_id) providers'
+            . ' FROM ue_package_providers WHERE game_id=? AND package_name<>""'
+            . ' GROUP BY package_name HAVING COUNT(DISTINCT file_id)>1 ORDER BY package_name',
+            [$gameId]
+        );
         $done=0;$total=count($rows);
         foreach($rows as $row){
             $this->rebuildPackage($gameId,(string)$row['package_name']);$done++;
