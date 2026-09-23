@@ -16,6 +16,7 @@ use UnrealDb\Catalog\Infrastructure\Import\CatalogIncomingFileStore;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogProfiledUploadQueue;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogQueueWorkerStarter;
 use UnrealDb\Catalog\Infrastructure\Security\CatalogPublicAccessGuard;
+use UnrealDb\Catalog\Infrastructure\Settings\CatalogProgramSettingsStore;
 
 function profiled_upload_error(Throwable $error): string
 {
@@ -203,6 +204,7 @@ function profiled_upload_release_batch(PDO $db, array $config): array
 try {
     $config = catalog_config();
     $db = catalog_db($config);
+    $config = (new CatalogProgramSettingsStore($db, $config))->applyUploadLimits($config);
     catalog_start_session();
 
     if (!catalog_support_is_admin()) {
