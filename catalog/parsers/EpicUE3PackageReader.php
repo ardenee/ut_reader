@@ -129,7 +129,7 @@ final class CatalogUE3PackageReader
 {
     private const TAG=0x9E2A83C1, TAG_SWAPPED=0xC1832A9E;
     private const VER_ADDITIONAL_COOK_PACKAGE_SUMMARY=516, VER_REMOVED_COMPONENT_MAP=543,
-        VER_ASSET_THUMBNAILS_IN_PACKAGES=584, VER_ADDED_CROSSLEVEL_REFERENCES=623, MAX_EPIC_UE3_VERSION=867;
+        VER_ASSET_THUMBNAILS_IN_PACKAGES=584, VER_ADDED_CROSSLEVEL_REFERENCES=623, VER_TEXTURE_PREALLOCATION=767, MAX_EPIC_UE3_VERSION=867;
     private const COMPRESS_ZLIB=1, COMPRESS_LZO=2, COMPRESS_LZX=4, COMPRESS_TYPE_MASK=0x0F;
 
     private string $physical='', $logical=''; private bool $swap=false;
@@ -224,6 +224,30 @@ final class CatalogUE3PackageReader
         if ($ver>=self::VER_ADDITIONAL_COOK_PACKAGE_SUMMARY) {
             $ac=$r->i32('AdditionalPackagesToCook.Count'); $this->arrayFits($r,$ac,4,'AdditionalPackagesToCook.Count');
             $h['additionalPackagesToCook']=[]; for ($i=0;$i<$ac;$i++) $h['additionalPackagesToCook'][]=$r->fstring("AdditionalPackagesToCook[$i]");
+        }
+        if ($ver>=self::VER_TEXTURE_PREALLOCATION) {
+            // Epic FPackageFileSummary serializes FTextureAllocations here.
+            // FTextureAllocations serializes TextureTypes; each FTextureType is
+            // SizeX, SizeY, NumMips, Format, TexCreateFlags, ExportIndices.
+            $tc=$r->i32('TextureAllocations.TextureTypes.Count');
+            $this->arrayFits($r,$tc,24,'TextureAllocations.TextureTypes.Count');
+            $h['textureAllocations']=[];
+            for ($i=0;$i<$tc;$i++) {
+                $type=[
+                    'sizeX'=>$r->i32("TextureAllocations.TextureTypes[$i].SizeX"),
+                    'sizeY'=>$r->i32("TextureAllocations.TextureTypes[$i].SizeY"),
+                    'numMips'=>$r->i32("TextureAllocations.TextureTypes[$i].NumMips"),
+                    'format'=>$r->u32("TextureAllocations.TextureTypes[$i].Format"),
+                    'texCreateFlags'=>$r->u32("TextureAllocations.TextureTypes[$i].TexCreateFlags"),
+                    'exportIndices'=>[],
+                ];
+                $ec=$r->i32("TextureAllocations.TextureTypes[$i].ExportIndices.Count");
+                $this->arrayFits($r,$ec,4,"TextureAllocations.TextureTypes[$i].ExportIndices.Count");
+                for ($j=0;$j<$ec;$j++) {
+                    $type['exportIndices'][]=$r->i32("TextureAllocations.TextureTypes[$i].ExportIndices[$j]");
+                }
+                $h['textureAllocations'][]=$type;
+            }
         }
         $this->header=$h;
         if ($cc) {
@@ -343,7 +367,7 @@ final class CatalogUE3PackageReader
             return false;
         }
         $physicalSize=(int)$physicalSize;
-        $logicalSize=$physicalSize;
+        $logicalSize=0;
         foreach ($chunks as $index => $c) {
             $uOff=(int)$c['uOff'];
             $uLen=(int)$c['uLen'];
@@ -401,7 +425,18 @@ final class CatalogUE3PackageReader
                     );
                     return false;
                 }
-                if ($uOff>$cursor) $logical.=str_repeat("\0",$uOff-$cursor);
+                if ($uOff>$cursor) {
+                    // SetCompressionMap exposes a logical archive; it does not
+                    // manufacture bytes for holes between mapped ranges. Treat
+                    // a hole as an invalid/incomplete compression map instead
+                    // of silently turning it into zero-filled package data.
+                    $this->recordValidationIssue(
+                        'ue3.compression_map_gap',
+                        'UE3 compression map contains an unmapped logical range.',
+                        ['chunk_index'=>(int)$i,'gap_start'=>$cursor,'gap_end'=>$uOff,'gap_size'=>$uOff-$cursor]
+                    );
+                    return false;
+                }
                 $payload=$this->readFileRange(
                     $handle,
                     (int)$c['cOff'],
@@ -420,7 +455,14 @@ final class CatalogUE3PackageReader
                 $cursor=$uOff+$uLen;
                 unset($payload,$decoded);
             }
-            if ($cursor<$logicalSize) $logical.=str_repeat("\0",$logicalSize-$cursor);
+            if ($cursor!==$logicalSize) {
+                $this->recordValidationIssue(
+                    'ue3.compression_map_size_mismatch',
+                    'UE3 logical compression map ended at an unexpected offset.',
+                    ['mapped_end'=>$cursor,'logical_size'=>$logicalSize]
+                );
+                return false;
+            }
             $this->logical=$logical;
         } finally {
             fclose($handle);
