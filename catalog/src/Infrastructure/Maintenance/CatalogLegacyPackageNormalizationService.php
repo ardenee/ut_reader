@@ -271,7 +271,7 @@ final class CatalogLegacyPackageNormalizationService
         $formatVersion = (int)($format['format_version'] ?? 0);
         if ($formatVersion < 2) {
             throw new RuntimeException(
-                'File #' . $fileId . ' has no current format-2 metadata; package normalization cannot use retired export rows.'
+                'File #' . $fileId . ' has no current format-3 metadata; package normalization cannot use retired export rows.'
             );
         }
 
