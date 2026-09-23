@@ -258,16 +258,16 @@ try {
     $relationshipRows = [];
     if ($table === 'uses') {
         $relationshipRows = catalog_all($db,
-            'SELECT l.resolved_file_id file_id,f.original_name,f.package_name,COUNT(*) reference_count '
+            'SELECT l.resolved_file_id file_id,f.original_name,f.package_name,f.file_size,f.package_guid,f.md5,f.sha1,COUNT(*) reference_count '
             . 'FROM ue_dependency_links l JOIN ue_files f ON f.id=l.resolved_file_id '
             . 'WHERE l.file_id=? AND l.resolved_file_id IS NOT NULL AND f.scan_status="verified" '
-            . 'GROUP BY l.resolved_file_id,f.original_name,f.package_name ORDER BY f.package_name,f.original_name', [$fileId]);
+            . 'GROUP BY l.resolved_file_id,f.original_name,f.package_name,f.file_size,f.package_guid,f.md5,f.sha1 ORDER BY f.package_name,f.original_name', [$fileId]);
     } elseif ($table === 'used-by') {
         $relationshipRows = catalog_all($db,
-            'SELECT l.file_id,f.original_name,f.package_name,COUNT(*) reference_count '
+            'SELECT l.file_id,f.original_name,f.package_name,f.file_size,f.package_guid,f.md5,f.sha1,COUNT(*) reference_count '
             . 'FROM ue_dependency_links l JOIN ue_files f ON f.id=l.file_id '
             . 'WHERE l.resolved_file_id=? AND f.scan_status="verified" '
-            . 'GROUP BY l.file_id,f.original_name,f.package_name ORDER BY f.package_name,f.original_name', [$fileId]);
+            . 'GROUP BY l.file_id,f.original_name,f.package_name,f.file_size,f.package_guid,f.md5,f.sha1 ORDER BY f.package_name,f.original_name', [$fileId]);
     }
     $metadataVersion = (int)(catalog_one($db, 'SELECT format_version FROM ue_file_metadata WHERE file_id=?', [$fileId])['format_version'] ?? 0);
     // Keep the initial examiner request bounded to the requested metadata page.
@@ -341,10 +341,16 @@ try {
             catalog_foot();
             return;
         }
-        echo '<div class="examine-table-region"><table><thead><tr><th>File</th><th>Package</th><th>References</th><th></th></tr></thead><tbody>';
+        echo '<div class="examine-table-region"><table><thead><tr><th>File</th><th>Package</th><th>Size</th><th>GUID</th><th>MD5</th><th>SHA1</th><th>References</th></tr></thead><tbody>';
         foreach ($relationshipRows as $relation) {
             $relatedId=(int)$relation['file_id'];
-            echo '<tr><td class="mono path">' . catalog_h((string)$relation['original_name']) . '</td><td class="mono path">' . catalog_h((string)$relation['package_name']) . '</td><td>' . (int)$relation['reference_count'] . '</td><td><a class="button" href="file-examine.php?id=' . $relatedId . '">Examine</a></td></tr>';
+            echo '<tr><td class="mono path"><a href="file-examine.php?id=' . $relatedId . '">' . catalog_h((string)$relation['original_name']) . '</a></td>'
+                . '<td class="mono path"><a href="file-info.php?id=' . $relatedId . '">' . catalog_h((string)$relation['package_name']) . '</a></td>'
+                . '<td class="mono">' . catalog_h(catalog_bytes((int)$relation['file_size'])) . '</td>'
+                . '<td class="mono path">' . catalog_h(trim((string)$relation['package_guid']) ?: '—') . '</td>'
+                . '<td class="mono path">' . catalog_h(trim((string)$relation['md5']) ?: '—') . '</td>'
+                . '<td class="mono path">' . catalog_h(trim((string)$relation['sha1']) ?: '—') . '</td>'
+                . '<td>' . (int)$relation['reference_count'] . '</td></tr>';
         }
         echo '</tbody></table></div></section></div><a class="to-top" href="#top">↑</a>';
         catalog_foot();
