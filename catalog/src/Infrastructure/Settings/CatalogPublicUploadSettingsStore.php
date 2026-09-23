@@ -28,7 +28,7 @@ final class CatalogPublicUploadSettingsStore
      */
     public function settings(): array
     {
-        $normalFallback = max(16 * 1024 * 1024, (int)($this->config['max_upload_bytes'] ?? (512 * 1024 * 1024)));
+        $normalFallback = max(16 * 1024 * 1024, (int)($this->config['max_upload_bytes'] ?? (2 * 1024 * 1024 * 1024)));
         $defaults = [
             'enabled' => true,
             'max_file_bytes' => $normalFallback,
