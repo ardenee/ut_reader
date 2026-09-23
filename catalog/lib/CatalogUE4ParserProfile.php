@@ -39,9 +39,9 @@ function catalog_ue4_parser_profile(array $config, array $game = [], array $prof
     $base = [
         'profile_key' => 'standard-ue4',
         'label' => 'Standard UE4 package parser',
-        'source_reference' => 'UE4/UT4 package summary layout',
-        'assumed_unversioned_parser_version' => 518,
-        'notes' => 'Base UE4 parser profile. Game profiles should override only known differences.',
+        'source_reference' => 'UE4 final-release package summary layout',
+        'assumed_unversioned_parser_version' => 522,
+        'notes' => 'Base final-UE4 parser profile. Game profiles should override only known differences.',
     ];
 
     if (isset($ue4['parser_profile']) && is_array($ue4['parser_profile'])) {
@@ -77,7 +77,7 @@ function catalog_ue4_parser_profile(array $config, array $game = [], array $prof
 
     $base['assumed_unversioned_parser_version'] = max(0, (int)($base['assumed_unversioned_parser_version'] ?? 0));
     if ($base['assumed_unversioned_parser_version'] <= 0) {
-        $base['assumed_unversioned_parser_version'] = 518;
+        $base['assumed_unversioned_parser_version'] = 522;
     }
 
     return $base;
