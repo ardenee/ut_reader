@@ -26,7 +26,11 @@ try {
     $gameId = max(0, (int)($_GET['game_id'] ?? 0));
     $query = trim((string)($_GET['package'] ?? ''));
     $query = substr($query, 0, 255);
-    $games = catalog_all($db, 'SELECT id,name,engine_key FROM ue_games ORDER BY name');
+    $games = catalog_all(
+        $db,
+        'SELECT g.id,g.name,p.engine_key profile_engine FROM ue_games g '
+        . 'LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 ORDER BY g.name'
+    );
     $coverage = [];
     if ($query !== '') {
         $where = 'c.package_name LIKE ?';
@@ -37,15 +41,16 @@ try {
         }
         $coverage = catalog_all(
             $db,
-            'SELECT c.game_id,g.name game_name,g.engine_key,c.package_name,c.consumer_count,c.required_object_count,c.updated_at,'
+            'SELECT c.game_id,g.name game_name,p.engine_key profile_engine,c.package_name,c.consumer_count,c.required_object_count,c.updated_at,'
             . 'COUNT(p.file_id) provider_count,'
             . 'SUM(p.fully_satisfies=1) complete_provider_count,'
             . 'MAX(p.matched_count) best_matched_count '
             . 'FROM ue_package_coverage_cache c '
             . 'JOIN ue_games g ON g.id=c.game_id '
+            . 'LEFT JOIN ue_game_profiles gp ON gp.id=g.profile_id AND gp.is_active=1 '
             . 'LEFT JOIN ue_package_provider_coverage_cache p ON p.game_id=c.game_id AND p.package_name=c.package_name '
             . 'WHERE ' . $where . ' '
-            . 'GROUP BY c.game_id,g.name,g.engine_key,c.package_name,c.consumer_count,c.required_object_count,c.updated_at '
+            . 'GROUP BY c.game_id,g.name,gp.engine_key,c.package_name,c.consumer_count,c.required_object_count,c.updated_at '
             . 'ORDER BY (c.package_name=?) DESC,c.package_name,g.name LIMIT 100',
             [...$args, $query]
         );
@@ -58,8 +63,10 @@ try {
     if ($detailGameId > 0 && $detailPackage !== '') {
         $detail = catalog_one(
             $db,
-            'SELECT c.*,g.name game_name,g.engine_key FROM ue_package_coverage_cache c '
-            . 'JOIN ue_games g ON g.id=c.game_id WHERE c.game_id=? AND c.package_name=?',
+            'SELECT c.*,g.name game_name,p.engine_key profile_engine FROM ue_package_coverage_cache c '
+            . 'JOIN ue_games g ON g.id=c.game_id '
+            . 'LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 '
+            . 'WHERE c.game_id=? AND c.package_name=?',
             [$detailGameId, $detailPackage]
         );
         if ($detail) {
