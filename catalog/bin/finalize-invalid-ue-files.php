@@ -8,16 +8,25 @@ require_once dirname(__DIR__) . '/lib/CatalogFileMaintenanceCompactCore.php';
 use UnrealDb\Catalog\Infrastructure\Maintenance\CatalogFileMaintenanceSupport;
 
 try {
-    $options = getopt('', ['apply']);
+    $options = getopt('', ['apply', 'file-ids:']);
     $apply = array_key_exists('apply', $options);
     $config = catalog_config();
     $db = catalog_db($config);
     $support = new CatalogFileMaintenanceSupport($db, $config);
+    $requestedIds = [];
+    foreach (preg_split('/[\\s,]+/', trim((string)($options['file-ids'] ?? ''))) ?: [] as $value) {
+        $id = (int)$value;
+        if ($id > 0) { $requestedIds[$id] = true; }
+    }
+    $whereIds = $requestedIds !== []
+        ? ' AND f.id IN (' . implode(',', array_fill(0, count($requestedIds), '?')) . ')'
+        : '';
     $rows = catalog_all(
         $db,
         'SELECT DISTINCT f.* FROM ue_files f JOIN ue_invalid_file_identities bad '
         . 'ON bad.file_size=f.file_size AND bad.md5=LOWER(f.md5) AND bad.sha1=LOWER(f.sha1) '
-        . 'ORDER BY f.id'
+        . $whereIds . ' ORDER BY f.id',
+        array_keys($requestedIds)
     );
     $finalized = 0; $files = [];
     foreach ($rows as $file) {
