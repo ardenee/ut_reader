@@ -303,10 +303,33 @@ abstract class CatalogLegacyPackageReaderBase
         if ($version < 68) {
             $this->header['heritageCount'] = $reader->i32();
             $this->header['heritageOffset'] = $reader->i32();
-            $spaceBeforeNames = (int)$this->header['nameOffset'] - $reader->tell();
-            if ($this->engineKey === 'UE1' && $spaceBeforeNames >= 16) {
-                $this->readGuid($reader);
+
+            // Epic UE1/UE2 FPackageFileSummary loading: legacy packages keep
+            // their GUID history in the heritage table, not inline in the
+            // summary. Save the summary position, seek to HeritageOffset,
+            // deserialize HeritageCount GUIDs into Sum.Guid (leaving the last
+            // GUID as the package GUID), then restore the saved position.
+            $saved = $reader->tell();
+            $heritageCount = (int)$this->header['heritageCount'];
+            $heritageOffset = (int)$this->header['heritageOffset'];
+            if ($heritageCount < 0) {
+                throw new RuntimeException('Invalid legacy package heritage count: ' . $heritageCount);
             }
+            if ($heritageCount > 0) {
+                if ($heritageOffset < 0 || $heritageOffset > $reader->size()
+                    || $heritageCount > intdiv($reader->size() - $heritageOffset, 16)) {
+                    throw new RuntimeException(
+                        'Invalid legacy package heritage table: count=' . $heritageCount
+                        . ' offset=' . $heritageOffset . ' size=' . $reader->size()
+                    );
+                }
+                $reader->seek($heritageOffset);
+                for ($index = 0; $index < $heritageCount; $index++) {
+                    $this->readGuid($reader);
+                }
+                $reader->seek($saved);
+            }
+
             $this->header['generations'] = [[
                 'e' => (int)$this->header['exportCount'],
                 'n' => (int)$this->header['nameCount'],
