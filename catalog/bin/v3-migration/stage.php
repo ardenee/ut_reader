@@ -57,12 +57,15 @@ $select=function(int $cursor)use($db,$sql,$args,$after,$missingV3,$storageRoot,$
 };
 $rows=$select($after);
 if(!$apply&&$missingV3&&$all){
- $count=0;$first=0;$last=0;$cursor=$after;
+ $count=0;$first=0;$last=0;$cursor=$after;$scanStarted=microtime(true);$lastProgress=0.0;
+ fwrite(STDERR,"Scanning verified catalogue for missing v3 metadata...\n");
  while(true){
   $batch=$select($cursor);
   if($batch===[])break;
   foreach($batch as $file){$id=(int)$file['id'];if($first===0)$first=$id;$last=$id;$count++;}
   $cursor=$last;
+  $now=microtime(true);
+  if($now-$lastProgress>=2.0){fwrite(STDERR,'Scan reached file ID '.number_format($cursor).' | missing found '.number_format($count).' | elapsed '.gmdate('H:i:s',(int)($now-$scanStarted))."\n");fflush(STDERR);$lastProgress=$now;}
  }
  echo json_encode(['ok'=>true,'dry_run'=>true,'selected'=>$count,'after_id'=>$after,'limit'=>$limit,'all'=>true,
   'workers'=>$workers,'worker'=>$worker,'missing_v3'=>true,'first_file_id'=>$first,'last_file_id'=>$last,
