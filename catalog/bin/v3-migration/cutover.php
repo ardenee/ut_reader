@@ -33,9 +33,9 @@ if ($workers > 1 && $worker === null) {
     $procs=[];$pipes=[];$started=microtime(true);
     for($i=0;$i<$workers;$i++){
         $cmd=[PHP_BINARY,__FILE__,'--workers='.$workers,'--worker='.$i,'--max-errors='.$maxErrors,'--progress-every='.$progressEvery];
-        $p=proc_open($cmd,[1=>['pipe','w'],2=>['pipe','w']],$pp);
+        $p=proc_open($cmd,[1=>['pipe','w'],2=>['file','php://stderr','a']],$pp);
         if(!is_resource($p)){ fwrite(STDERR,"Could not start worker {$i}.\n"); exit(6); }
-        stream_set_blocking($pp[1],false); stream_set_blocking($pp[2],false);
+        stream_set_blocking($pp[1],false);
         $procs[$i]=$p;$pipes[$i]=$pp;
     }
     $stdout=array_fill(0,$workers,'');$done=[];$lastHeartbeat=microtime(true);
@@ -43,13 +43,11 @@ if ($workers > 1 && $worker === null) {
     while(count($done)<$workers){
         foreach($procs as $i=>$p){
             if(isset($done[$i])) continue;
-            $e=stream_get_contents($pipes[$i][2]); if($e!=='') fwrite(STDERR,"[W{$i}] ".$e);
             $o=stream_get_contents($pipes[$i][1]); if($o!=='') $stdout[$i].=$o;
             $s=proc_get_status($p);
             if(!$s['running']){
                 $stdout[$i].=(string)stream_get_contents($pipes[$i][1]);
-                $e=(string)stream_get_contents($pipes[$i][2]); if($e!=='') fwrite(STDERR,"[W{$i}] ".$e);
-                fclose($pipes[$i][1]);fclose($pipes[$i][2]);$done[$i]=proc_close($p);
+                fclose($pipes[$i][1]);$done[$i]=proc_close($p);
             }
         }
         if(count($done)<$workers && microtime(true)-$lastHeartbeat>=5.0){
