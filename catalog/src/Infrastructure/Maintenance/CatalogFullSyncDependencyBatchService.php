@@ -231,7 +231,7 @@ final class CatalogFullSyncDependencyBatchService
             'blocked metadata manifest',
             'blocked metadata section',
             'no compressed metadata row',
-            'not using blocked metadata format version 2',
+            'unsupported blocked metadata format version',
             'unsupported blocked metadata codec',
         ] as $needle) {
             if (str_contains($message, $needle)) {
