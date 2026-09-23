@@ -183,7 +183,9 @@ final class PdoDependencyResolver
                     . ' ON p.source_kind="alias" AND a.id=p.source_id'
                     . ' AND a.file_id=p.file_id AND a.game_id=p.game_id'
                     . ' AND a.package_name=p.package_name'
-                    . ' WHERE p.game_id=? AND f.scan_status="verified"'
+                    . ' WHERE p.game_id=? AND f.scan_status="verified"
+                    . ' AND NOT EXISTS (SELECT 1 FROM ue_invalid_file_identities bad'
+                    . ' WHERE bad.file_size=f.file_size AND bad.md5=LOWER(f.md5) AND bad.sha1=LOWER(f.sha1))''
                     . ' AND p.package_name IN (' . $placeholders . ')'
                     . ' AND ((p.source_kind="primary" AND f.package_name=p.package_name)'
                     . ' OR (p.source_kind="alias" AND a.id IS NOT NULL))'
@@ -204,7 +206,9 @@ final class PdoDependencyResolver
                     $db,
                     'SELECT f.package_name lookup_value,f.id file_id,"primary" source_kind'
                     . ' FROM ue_files f'
-                    . ' WHERE f.game_id=? AND f.scan_status="verified"'
+                    . ' WHERE f.game_id=? AND f.scan_status="verified"
+                    . ' AND NOT EXISTS (SELECT 1 FROM ue_invalid_file_identities bad'
+                    . ' WHERE bad.file_size=f.file_size AND bad.md5=LOWER(f.md5) AND bad.sha1=LOWER(f.sha1))''
                     . ' AND f.package_name IN (' . self::placeholders(count($missing)) . ')'
                     . ' ORDER BY f.package_name,(f.id=?) DESC,f.uploaded_at DESC',
                     array_merge([$gameId], $missing, [$fileId])
@@ -221,7 +225,9 @@ final class PdoDependencyResolver
                     'SELECT a.package_name lookup_value,a.file_id,"alias" source_kind'
                     . ' FROM ue_file_package_aliases a'
                     . ' JOIN ue_files f ON f.id=a.file_id AND f.game_id=a.game_id'
-                    . ' WHERE a.game_id=? AND f.scan_status="verified"'
+                    . ' WHERE a.game_id=? AND f.scan_status="verified"
+                    . ' AND NOT EXISTS (SELECT 1 FROM ue_invalid_file_identities bad'
+                    . ' WHERE bad.file_size=f.file_size AND bad.md5=LOWER(f.md5) AND bad.sha1=LOWER(f.sha1))''
                     . ' AND a.package_name IN (' . self::placeholders(count($missing)) . ')'
                     . ' ORDER BY a.package_name,(f.id=?) DESC,f.uploaded_at DESC,a.id ASC',
                     array_merge([$gameId], $missing, [$fileId])
