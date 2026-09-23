@@ -19,13 +19,20 @@ return [
 
         $old = (string)(256 * 1024 * 1024);
         $new = (string)(2 * 1024 * 1024 * 1024);
-        $statement = $db->prepare(
+        $insert = $db->prepare(
+            'INSERT IGNORE INTO ue_program_settings (setting_key,setting_value,updated_by) VALUES (?,?,NULL)'
+        );
+        $update = $db->prepare(
             'UPDATE ue_program_settings SET setting_value=? '
             . 'WHERE setting_key=? AND setting_value=?'
         );
 
         foreach (['normal_upload_limit_bytes', 'public_upload_max_file_bytes'] as $key) {
-            $statement->execute([$new, $key, $old]);
+            // New/missing settings adopt the new supported package ceiling.
+            // Existing administrator values other than the historical 256 MiB
+            // default remain untouched.
+            $insert->execute([$key, $new]);
+            $update->execute([$new, $key, $old]);
         }
     },
 ];
