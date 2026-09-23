@@ -213,25 +213,22 @@ try {
         }
     }
     echo '<div class="card" id="resolved-dependency-files"><h2>Resolved dependency files (' . count($plannedDependencies) . ')</h2>';
-    if ($dependencyPlan !== null && !empty($dependencyPlan['conflicts'])) {
+    $dependencyConflicts = $dependencyPlan !== null ? (array)($dependencyPlan['conflicts'] ?? []) : [];
+    $dependencyChoiceByFileId = [];
+    foreach ($dependencyConflicts as $conflict) {
+        $packageName = (string)($conflict['package_name'] ?? 'dependency');
+        $choiceKey = strtolower($packageName);
+        foreach ((array)($conflict['candidates'] ?? []) as $candidate) {
+            $candidateId = (int)($candidate['file_id'] ?? 0);
+            if ($candidateId > 0) {
+                $dependencyChoiceByFileId[$candidateId] = $choiceKey;
+            }
+        }
+    }
+    if ($dependencyConflicts) {
         echo '<form method="get" action="download-package.php" id="dependency-zip-selection-form">';
         echo '<input type="hidden" name="id" value="' . (int)$file['id'] . '"><input type="hidden" name="format" value="dependency_zip"><input type="hidden" name="dependencies" value="1">';
-        echo CatalogUi::alert('warning', 'More than one physical package can occupy the same dependency path. Select one version for each conflict before generating the dependency ZIP or mod package.', 'Dependency selection required');
-        foreach ((array)$dependencyPlan['conflicts'] as $conflict) {
-            $packageName = (string)($conflict['package_name'] ?? 'dependency');
-            echo '<div style="margin:14px 0"><strong>' . catalog_h($packageName) . '</strong> <span class="muted">' . catalog_h((string)($conflict['install_path'] ?? '')) . '</span>';
-            foreach ((array)($conflict['candidates'] ?? []) as $candidate) {
-                $candidateId = (int)($candidate['file_id'] ?? 0);
-                echo '<label style="display:block;margin:8px 0;padding:8px 10px;border:1px solid var(--line2);border-radius:8px"><input type="radio" required name="dependency_choice['
-                    . catalog_h(strtolower($packageName)) . ']" value="' . $candidateId . '"> '
-                    . '<strong>' . catalog_h((string)($candidate['original_name'] ?? $packageName)) . '</strong>'
-                    . ' <span class="muted">File #' . $candidateId . ' · ' . catalog_h(catalog_bytes((int)($candidate['file_size'] ?? 0))) . '</span><br>'
-                    . '<span class="mono small">GUID ' . catalog_h((string)($candidate['package_guid'] ?? ''))
-                    . ' · MD5 ' . catalog_h((string)($candidate['md5'] ?? '')) . '</span></label>';
-            }
-            echo '</div>';
-        }
-        echo '<p><button type="submit" class="primary">Queue dependency ZIP</button></p></form>';
+        echo CatalogUi::alert('warning', 'More than one physical package can occupy the same dependency path. Select one version for each conflict in the table below before generating the dependency ZIP or mod package.', 'Dependency selection required');
     }
     if ($dependencyPlanError !== null) {
         echo CatalogUi::alert('warning', 'The complete transitive dependency plan could not be displayed.', 'Dependency preview unavailable');
@@ -239,19 +236,39 @@ try {
         echo '<p class="muted">No resolved dependency files are available for this package yet.</p>';
     } else {
         echo '<p class="muted small">This is the transitive dependency closure used for generated packages. The root file is not repeated here.</p>';
-        echo '<table><tr><th>Package</th><th>File</th><th>Identity</th><th>Size</th><th>Install path</th><th>Public download</th><th>Availability</th><th>Actions</th></tr>';
+        echo '<table><tr>';
+        if ($dependencyConflicts) {
+            echo '<th>Select</th>';
+        }
+        echo '<th>Package</th><th>File</th><th>Identity</th><th>Size</th><th>Install path</th><th>Public download</th><th>Availability</th><th>Actions</th></tr>';
         foreach ($plannedDependencies as $dep) {
-            echo '<tr><td class="mono"><a href="file-info.php?id=' . (int)$dep['id'] . '">' . catalog_h((string)$dep['package_name']) . '</a></td>'
-                . '<td><a href="file-examine.php?id=' . (int)$dep['id'] . '">' . catalog_h(catalog_clean_unreal_filename((string)$dep['original_name'])) . '</a></td>'
+            $depId = (int)$dep['id'];
+            echo '<tr>';
+            if ($dependencyConflicts) {
+                $choiceKey = $dependencyChoiceByFileId[$depId] ?? '';
+                echo '<td>';
+                if ($choiceKey !== '') {
+                    echo '<input type="radio" required name="dependency_choice[' . catalog_h($choiceKey) . ']" value="' . $depId
+                        . '" aria-label="Select ' . catalog_h(catalog_clean_unreal_filename((string)$dep['original_name'])) . '">';
+                } else {
+                    echo '<span class="muted">—</span>';
+                }
+                echo '</td>';
+            }
+            echo '<td class="mono"><a href="file-info.php?id=' . $depId . '">' . catalog_h((string)$dep['package_name']) . '</a></td>'
+                . '<td><a href="file-examine.php?id=' . $depId . '">' . catalog_h(catalog_clean_unreal_filename((string)$dep['original_name'])) . '</a></td>'
                 . '<td>' . CatalogUi::identity((string)$dep['package_guid'], (string)$dep['md5'], (string)$dep['sha1']) . '</td>'
                 . '<td>' . catalog_h(catalog_bytes((int)$dep['file_size'])) . '</td>'
                 . '<td class="mono small">' . catalog_h((string)($dep['install_path'] ?? '')) . '</td>'
-                . '<td>' . render_public_download_status($db, (int)$dep['id']) . '</td>'
-                . '<td>' . render_availability($db, (int)$dep['id']) . '</td><td>'
-                . CatalogUi::iconButton(['label' => 'Download ' . catalog_clean_unreal_filename((string)$dep['original_name']), 'icon' => '⇩', 'href' => $isAdmin ? 'download.php?id=' . (int)$dep['id'] : 'download-info.php?id=' . (int)$dep['id'], 'size' => 'sm'])
+                . '<td>' . render_public_download_status($db, $depId) . '</td>'
+                . '<td>' . render_availability($db, $depId) . '</td><td>'
+                . CatalogUi::iconButton(['label' => 'Download ' . catalog_clean_unreal_filename((string)$dep['original_name']), 'icon' => '⇩', 'href' => $isAdmin ? 'download.php?id=' . $depId : 'download-info.php?id=' . $depId, 'size' => 'sm'])
                 . '</td></tr>';
         }
         echo '</table>';
+    }
+    if ($dependencyConflicts) {
+        echo '<p><button type="submit" class="primary">Queue dependency ZIP</button></p></form>';
     }
     echo '</div>';
 
