@@ -24,6 +24,31 @@ try {
     }
 
     $gameId = max(0, (int)($_GET['game_id'] ?? 0));
+    $fileId = max(0, (int)($_GET['file_id'] ?? 0));
+    if ($fileId > 0) {
+        $sentFile = catalog_one(
+            $db,
+            'SELECT id,game_id,package_name,original_name FROM ue_files WHERE id=? AND scan_status="verified"',
+            [$fileId]
+        );
+        if (!$sentFile) {
+            throw new RuntimeException('The selected verified file was not found.');
+        }
+        $gameId = (int)$sentFile['game_id'];
+        $sentPackage = trim((string)$sentFile['package_name']);
+        if ($sentPackage === '') {
+            $sentPackage = pathinfo((string)$sentFile['original_name'], PATHINFO_FILENAME);
+        }
+        header('Location: package-coverage.php?' . http_build_query([
+            'game_id' => $gameId,
+            'package' => $sentPackage,
+            'coverage_game_id' => $gameId,
+            'coverage_package' => $sentPackage,
+            'selected_file_id' => $fileId,
+        ]), true, 302);
+        exit;
+    }
+    $selectedFileId = max(0, (int)($_GET['selected_file_id'] ?? 0));
     $query = trim((string)($_GET['package'] ?? ''));
     $query = substr($query, 0, 255);
     $games = catalog_all(
@@ -150,7 +175,8 @@ try {
                 $missing = json_decode((string)($provider['missing_paths_json'] ?? '[]'), true);
                 $missing = is_array($missing) ? array_values(array_filter(array_map('strval', $missing))) : [];
                 $complete = (int)$provider['fully_satisfies'] === 1;
-                echo '<tr><td><a href="file-examine.php?id=' . (int)$provider['file_id'] . '">' . catalog_h(catalog_clean_unreal_filename((string)$provider['original_name'])) . '</a>'
+                $selected = $selectedFileId > 0 && (int)$provider['file_id'] === $selectedFileId;
+                echo '<tr' . ($selected ? ' class="is-reference-target"' : '') . '><td>' . ($selected ? '<strong>Selected file</strong><br>' : '') . '<a href="file-examine.php?id=' . (int)$provider['file_id'] . '">' . catalog_h(catalog_clean_unreal_filename((string)$provider['original_name'])) . '</a>'
                     . '<br><a class="small" href="file-info.php?id=' . (int)$provider['file_id'] . '">File information</a></td>'
                     . '<td>' . CatalogUi::identity((string)$provider['package_guid'], (string)$provider['md5'], (string)$provider['sha1']) . '</td>'
                     . '<td style="white-space:nowrap">' . catalog_h(catalog_bytes((int)$provider['file_size'])) . '</td>'
