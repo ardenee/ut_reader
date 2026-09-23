@@ -92,7 +92,7 @@ final class CatalogFileMaintenanceSupport
      * Capture only the relational state needed to reparse a verified file.
      *
      * This deliberately does not read compact metadata. A maintenance reimport is
-     * also the recovery path for a missing/truncated/corrupt .uedb2 container, so
+     * also the recovery path for a missing/truncated/corrupt .uedb3 container, so
      * requiring that derived file to decode successfully would make it impossible
      * to repair from the authoritative stored package.
      *
