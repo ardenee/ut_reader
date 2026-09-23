@@ -41,7 +41,7 @@ final class CatalogFileMaintenanceReimportService
         $support = new CatalogFileMaintenanceSupport($this->db, $this->config);
 
         // Capture the authoritative relational identity first. This path deliberately
-        // does not read .uedb2 so a damaged derived metadata file cannot prevent the
+        // does not read .uedb3 so a damaged derived metadata file cannot prevent the
         // maintenance operation whose purpose is to rebuild it from the stored package.
         $reimportState = $support->reimportState($fileId);
         $file = (array)$reimportState['file'];
