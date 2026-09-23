@@ -57,21 +57,21 @@ try {
     if ($arguments['file_id'] > 0) {
         $statement = $db->prepare(
             'SELECT f.id,f.game_id,f.package_name,f.original_name,f.import_count,f.export_count '
-            . 'FROM ue_files f JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=2 '
+            . 'FROM ue_files f JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=3 '
             . 'WHERE f.id=? AND f.scan_status="verified"'
         );
         $statement->execute([$arguments['file_id']]);
     } else {
         $statement = $db->query(
             'SELECT f.id,f.game_id,f.package_name,f.original_name,f.import_count,f.export_count '
-            . 'FROM ue_files f JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=2 '
+            . 'FROM ue_files f JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=3 '
             . 'WHERE f.scan_status="verified" AND f.import_count BETWEEN 1 AND 100 '
             . 'ORDER BY f.import_count,f.export_count,f.id LIMIT 1'
         );
     }
     $file = $statement->fetch(PDO::FETCH_ASSOC);
     if (!is_array($file)) {
-        throw new RuntimeException('No matching verified format-2 file was found.');
+        throw new RuntimeException('No matching verified format-3 file was found.');
     }
 
     $selection = [
