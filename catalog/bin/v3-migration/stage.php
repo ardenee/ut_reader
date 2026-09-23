@@ -40,7 +40,7 @@ if($raw!==''){
  $where[]='f.id IN ('.implode(',',array_fill(0,count($ids),'?')).')'; array_push($args,...array_values($ids));
 }
 $sql='SELECT f.*,m.format_version FROM ue_files f LEFT JOIN ue_file_metadata m ON m.file_id=f.id WHERE '.implode(' AND ',$where).' ORDER BY f.id LIMIT '.$limit;
-$select=function(int $cursor)use($db,$sql,$args,$after,$missingV3,$storageRoot):array{
+$select=function(int $cursor)use($db,$sql,$args,$after,$missingV3,$storageRoot,$limit):array{
  $scanCursor=$cursor;
  do{
   $pageArgs=$args;$pageArgs[0]=$scanCursor;$s=$db->prepare($sql);$s->execute($pageArgs);
