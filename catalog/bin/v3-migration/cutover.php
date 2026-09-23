@@ -18,10 +18,11 @@ require_once __DIR__ . '/MetadataContainerV3.php';
 
 use UnrealDb\Catalog\MigrationV3\MetadataContainerV3;
 
-$options = getopt('', ['apply', 'confirm-v3-only', 'max-errors::']);
+$options = getopt('', ['apply', 'confirm-v3-only', 'max-errors::', 'progress-every::']);
 $apply = array_key_exists('apply', $options);
 $confirmed = array_key_exists('confirm-v3-only', $options);
 $maxErrors = max(1, min(1000, (int)($options['max-errors'] ?? 100)));
+$progressEvery = max(100, (int)($options['progress-every'] ?? 1000));
 
 if ($apply && !$confirmed) {
     fwrite(STDERR, "--apply requires --confirm-v3-only.\n");
@@ -60,6 +61,12 @@ $insert = $db->prepare(
     . '(file_id,compressed_size,uncompressed_size,payload_sha256,name_count,import_count,export_count) '
     . 'VALUES (?,?,?,?,?,?,?)'
 );
+$verifiedCount = (int)$db->query(
+    'SELECT COUNT(*) FROM ue_files WHERE scan_status="verified"'
+)->fetchColumn();
+$startedAt = microtime(true);
+$processed = 0;
+
 $files = $db->query(
     'SELECT f.id,f.game_id,f.original_name,f.name_count,f.import_count,f.export_count,'
     . 'COALESCE(m.format_version,0) format_version '
@@ -137,11 +144,21 @@ while (($file = $files->fetch(PDO::FETCH_ASSOC)) !== false) {
             ];
         }
     }
+    $processed++;
+    if (($processed % $progressEvery) === 0 || $processed === $verifiedCount) {
+        $elapsed = max(0.001, microtime(true) - $startedAt);
+        $rate = $processed / $elapsed;
+        $remaining = max(0, $verifiedCount - $processed);
+        $eta = $rate > 0 ? (int)ceil($remaining / $rate) : 0;
+        $percent = $verifiedCount > 0 ? ($processed * 100.0 / $verifiedCount) : 100.0;
+        fwrite(STDERR, sprintf(
+            "Checked %s / %s (%.1f%%) | valid %s | errors %s | %.1f files/s | ETA %s\n",
+            number_format($processed), number_format($verifiedCount), $percent,
+            number_format($checked), number_format(count($errors)), $rate, gmdate('H:i:s', $eta)
+        ));
+    }
 }
 
-$verifiedCount = (int)$db->query(
-    'SELECT COUNT(*) FROM ue_files WHERE scan_status="verified"'
-)->fetchColumn();
 $stagedCount = (int)$db->query('SELECT COUNT(*) FROM tmp_v3_cutover')->fetchColumn();
 $complete = $errors === [] && $checked === $verifiedCount && $stagedCount === $verifiedCount;
 
