@@ -49,7 +49,13 @@ final class CatalogFileMaintenanceActionService
         $fileId = $this->fileId($input);
 
         if ($operation === 'sync_reimport') {
-            $result = $this->withWriteLock(
+            // Full Sync owns one durable unit per stable file ID. Serialize only
+            // competing writes to that same file; unrelated packages may be parsed
+            // and published concurrently. The persistence layer locks the target
+            // ue_files row and compact publication has its own transaction/contention
+            // retry, so the catalog-wide maintenance lock is unnecessary here.
+            $result = $this->withFileWriteLock(
+                $fileId,
                 fn(): array => $this->reimportWithIdentityRefresh($fileId, $operation, $input)
             );
             return [
@@ -378,6 +384,44 @@ final class CatalogFileMaintenanceActionService
             }
         }
         throw new RuntimeException('Maintenance retry limit reached.');
+    }
+
+    private function withFileWriteLock(int $fileId, callable $operation): mixed
+    {
+        $lockName = 'unrealdb_catalog_file_write_v1_' . $fileId;
+        if ($this->progress !== null) {
+            ($this->progress)([
+                'stage' => 'waiting_for_catalog_file_lock',
+                'done' => 0,
+                'total' => 100,
+                'percent' => 0,
+                'message' => 'Waiting for another write to this catalog file to finish.',
+            ]);
+        }
+
+        $lock = \catalog_one(
+            $this->db,
+            'SELECT GET_LOCK(?, ?) acquired',
+            [$lockName, self::LOCK_WAIT_SECONDS]
+        );
+        if ((int)($lock['acquired'] ?? 0) !== 1) {
+            throw new RuntimeException(
+                'Another maintenance task is still writing catalog file #' . $fileId . '. Please retry shortly.'
+            );
+        }
+
+        try {
+            return $this->retryDeadlock($operation);
+        } finally {
+            try {
+                $this->db->prepare('SELECT RELEASE_LOCK(?)')->execute([$lockName]);
+            } catch (Throwable $releaseError) {
+                error_log(
+                    '[UnrealDB][' . \catalog_request_id()
+                    . '] could not release catalog file lock #' . $fileId . ': ' . $releaseError->getMessage()
+                );
+            }
+        }
     }
 
     private function withWriteLock(callable $operation): mixed
