@@ -301,7 +301,7 @@ final class CatalogFullSyncJobHandler implements JobHandler
                 $job->queue,
                 $childType,
                 $units,
-                90,
+                30,
                 null,
                 $requestedBy,
                 3,
