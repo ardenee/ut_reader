@@ -36,7 +36,7 @@ $dependencyHandler = $read('src/Infrastructure/Jobs/CatalogDependencyRefreshJobH
 $check(
     'provider_corruption_is_isolated',
     str_contains($resolver, 'catch (Throwable $error)')
-        && str_contains($resolver, 'reportUnreadableProvider($fileId, $error)')
+        && str_contains($resolver, 'reportUnreadableProvider($db, $fileId, $error)')
         && str_contains($resolver, 'CatalogSystemErrorRecorder::record')
         && str_contains($resolver, 'clearstatcache();'),
     'Unreadable provider metadata must not abort every consumer; it must be skipped and reported once.'
@@ -44,7 +44,7 @@ $check(
 $check(
     'self_provider_repair_is_not_operator_error',
     str_contains($resolver, 'if ($fileId !== $preferredFileId)')
-        && str_contains($resolver, 'self::reportUnreadableProvider($fileId, $error)')
+        && str_contains($resolver, 'self::reportUnreadableProvider($db, $fileId, $error)')
         && str_contains($resolver, 'previous container may legitimately')
         && str_contains($resolver, '$preferredFileId'),
     'The file currently being finalized/repaired may have no previous container; that transient self-provider miss must not create an open System Error.'
