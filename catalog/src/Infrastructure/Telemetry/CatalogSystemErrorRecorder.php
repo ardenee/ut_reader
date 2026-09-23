@@ -124,7 +124,7 @@ final class CatalogSystemErrorRecorder
     }
 
     /**
-     * Resolve only the operator error that represents an unreadable format-2
+     * Resolve only the operator error that represents an unreadable format-3
      * provider after a targeted repair has positively verified that provider.
      */
     public static function resolveCompactMetadataProvider(int $fileId): void
