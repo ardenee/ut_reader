@@ -29,7 +29,8 @@ $stop=array_key_exists('stop-on-error',$o); $rebuild=array_key_exists('rebuild',
 $config=catalog_config(); $db=catalog_db($config); $storageRoot=trim((string)($config['storage_path']??''));
 if($storageRoot==='') throw new RuntimeException('catalog storage_path is not configured.');
 
-$where=['f.scan_status="verified"','m.format_version=2','f.id>?']; $args=[$after];
+$where=['f.scan_status="verified"','f.id>?'];
+if(!$missingV3)$where[]='m.format_version=2'; $args=[$after];
 if($workers>1){$where[]='MOD(f.id,?)=?';$args[]=$workers;$args[]=$worker;}
 if($game>0){$where[]='f.game_id=?';$args[]=$game;}
 $raw=trim((string)($o['file-ids']??''));
