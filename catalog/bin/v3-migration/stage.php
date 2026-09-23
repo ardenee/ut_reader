@@ -120,6 +120,11 @@ function validateV3Snapshot(array $snapshot,int $fileId): void
  };
  $checkObjectRef=static function(mixed $value,string $field,int $row)use($importCount,$exportCount,$fileId):void{
   $ref=(int)$value;
+  // Some legacy readers expose a serialized signed 32-bit PackageIndex through
+  // PHP as its unsigned uint32 representation (for example 4294967292 == -4).
+  // Normalize only PackageIndex fields here; FName indexes remain strictly
+  // non-negative and are validated separately above.
+  if($ref>=0x80000000&&$ref<=0xFFFFFFFF)$ref-=0x100000000;
   if($ref<0&&(-$ref-1)>=$importCount)throw new RuntimeException("v3 semantic validation failed for file {$fileId}: {$field}={$ref} at row {$row}, import_count={$importCount}.");
   if($ref>0&&($ref-1)>=$exportCount)throw new RuntimeException("v3 semantic validation failed for file {$fileId}: {$field}={$ref} at row {$row}, export_count={$exportCount}.");
  };
