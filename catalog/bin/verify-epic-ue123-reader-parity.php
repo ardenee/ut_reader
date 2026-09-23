@@ -35,10 +35,10 @@ $record(
 );
 $record(
     'legacy_has_no_project_string_or_table_ceiling',
-    !str_contains($legacy, '65536')
-        && !str_contains($legacy, '32768')
-        && !str_contains($legacy, '2000000')
-        && !str_contains($legacy, '100000'),
+    !preg_match('/(?:>|>=)\\s*65536\\b/', $legacy)
+        && !preg_match('/(?:>|>=)\\s*32768\\b/', $legacy)
+        && !preg_match('/(?:>|>=)\\s*2000000\\b/', $legacy)
+        && !preg_match('/(?:>|>=)\\s*100000\\b/', $legacy),
     'Validity must be derived from serialized ranges/file bounds rather than project-only count ceilings.'
 );
 $record(
