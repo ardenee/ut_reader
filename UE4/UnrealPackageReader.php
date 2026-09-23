@@ -508,7 +508,6 @@ final class UnrealPackageReader4
         }
         $r = $this->tableReader($offset);
         $version = (int)$this->header['version'];
-        $filterEditorOnly = (((int)$this->header['packageFlags']) & 0x80000000) !== 0;
         for ($i = 0; $i < $count; $i++) {
             $entryOffset = $r->tell();
             $name = $this->readSerializedNameEntry($r);
