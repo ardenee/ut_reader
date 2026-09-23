@@ -46,7 +46,7 @@ final class CatalogProgramSettingsStore
     public function uploadLimits(): array
     {
         $normalFallback = $this->bounded(
-            (int)($this->config['max_upload_bytes'] ?? (256 * 1024 * 1024))
+            (int)($this->config['max_upload_bytes'] ?? (2 * 1024 * 1024 * 1024))
         );
         $containerFallback = $this->bounded(
             (int)($this->config['max_container_upload_bytes'] ?? (64 * 1024 * 1024 * 1024))
