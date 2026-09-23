@@ -36,7 +36,7 @@ final class CompressedMetadataLookupWriter
     /**
      * Compatibility entry point for callers that already hold container bytes.
      * Production publication uses writeVersionedMetadata() so it never needs a
-     * full .uedb2 PHP string merely to register size and SHA-256.
+     * full .uedb3 PHP string merely to register size and SHA-256.
      *
      * @param array<string,mixed> $snapshot
      * @param array<string,int>|null $resolvedTermIds
