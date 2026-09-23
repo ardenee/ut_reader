@@ -49,9 +49,10 @@ final class PdoPackageSupersetAnalyzer
             . ' JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=3'
             . ' JOIN ue_terms p ON p.id=l.required_package_term_id'
             . ' WHERE f.game_id=? AND f.scan_status="verified"'
-            . ' AND p.term_hash=?'
+            . ' AND p.value_hash=? AND p.value_length=?'
+            . ' AND p.value_prefix=? AND p.is_overflow=0'
             . ' ORDER BY f.id,l.import_index',
-            [$gameId, \UnrealDb\Catalog\Infrastructure\Metadata\MetadataTermKey::hash($packageName)]
+            [$gameId, md5($packageName, true), strlen($packageName), $packageName]
         );
         if ($rows !== []) {
             $reader = self::metadataReader($db);
