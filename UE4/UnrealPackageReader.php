@@ -48,7 +48,7 @@ final class UE4BinaryReader
 
     public function bytes(int $count): string
     {
-        if ($count < 0 || $this->pos + $count > $this->len) {
+        if ($count < 0 || $count > $this->len - $this->pos) {
             throw new OutOfBoundsException("read overrun need=$count pos={$this->pos} len={$this->len}");
         }
         if ($count === 0) return '';
@@ -67,15 +67,18 @@ final class UE4BinaryReader
     {
         $raw = $this->bytes(8);
         $p = $this->byteSwapping ? unpack('Nhi/Nlo', $raw) : unpack('Vlo/Vhi', $raw);
-        return (int)($p['lo'] + ($p['hi'] * 4294967296));
+        if (($p['hi'] & 0x80000000) !== 0) {
+            throw new OverflowException('uint64 value exceeds PHP_INT_MAX.');
+        }
+        return ($p['hi'] << 32) | $p['lo'];
     }
 
     public function i64(): int
     {
         $raw = $this->bytes(8);
         $p = $this->byteSwapping ? unpack('Nhi/Nlo', $raw) : unpack('Vlo/Vhi', $raw);
-        $v = $p['lo'] + ($p['hi'] * 4294967296);
-        return ($p['hi'] & 0x80000000) ? (int)($v - 18446744073709551616.0) : (int)$v;
+        $signedHi = ($p['hi'] & 0x80000000) !== 0 ? $p['hi'] - 0x100000000 : $p['hi'];
+        return ($signedHi << 32) | $p['lo'];
     }
 
     public function fstring(): string
@@ -260,6 +263,9 @@ final class UnrealPackageReader4
     private function parse(): void
     {
         $r = $this->rootReader();
+        if ($this->fileSize < 32) {
+            throw new RuntimeException('UE4 package is smaller than the 32-byte minimum package summary size. fileSize=' . $this->fileSize);
+        }
         $tag = $r->u32();
         if ($tag !== self::PACKAGE_FILE_TAG && $tag !== self::PACKAGE_FILE_TAG_SWAPPED) {
             throw new RuntimeException(sprintf('Bad UE4 package tag 0x%08X', $tag));
@@ -280,7 +286,7 @@ final class UnrealPackageReader4
             throw new RuntimeException('This looks like an older UE package, not a modern UE4 package. LegacyFileVersion=' . $legacy);
         }
         if ($legacy < -7) {
-            throw new RuntimeException('UE5-era package summary is not supported by the UE4 reader. LegacyFileVersion=' . $legacy);
+            throw new RuntimeException('Package summary format is newer than UE4.27.2 and is not supported by this reader. LegacyFileVersion=' . $legacy);
         }
         if ($legacy !== -4) {
             $this->header['legacyUE3Version'] = $r->i32();
@@ -465,7 +471,18 @@ final class UnrealPackageReader4
             throw new RuntimeException("Bad UE4 total header size $headerSize; fileSize={$this->fileSize}");
         }
 
-        foreach ([['name', 'nameCount', 'nameOffset', 4], ['import', 'importCount', 'importOffset', 28], ['export', 'exportCount', 'exportOffset', 68]] as $table) {
+        $version = (int)($this->header['version'] ?? 0);
+        $filterEditorOnly = (((int)($this->header['packageFlags'] ?? 0)) & 0x80000000) !== 0;
+        $nameMinimum = $version >= self::VER_NAME_HASHES_SERIALIZED ? 8 : 4;
+        $importMinimum = 28 + (($version >= self::VER_NON_OUTER_PACKAGE_IMPORT && !$filterEditorOnly) ? 8 : 0);
+        $exportMinimum = 64;
+        if ($version >= self::VER_LOAD_FOR_EDITOR_GAME) $exportMinimum += 4;
+        if ($version >= self::VER_COOKED_ASSETS_IN_EDITOR_SUPPORT) $exportMinimum += 4;
+        if ($version >= self::VER_PRELOAD_DEPENDENCIES_IN_COOKED_EXPORTS) $exportMinimum += 20;
+        if ($version >= self::VER_TEMPLATE_INDEX_IN_COOKED_EXPORTS) $exportMinimum += 4;
+        if ($version >= self::VER_64BIT_EXPORTMAP_SERIALSIZES) $exportMinimum += 8;
+
+        foreach ([['name', 'nameCount', 'nameOffset', $nameMinimum], ['import', 'importCount', 'importOffset', $importMinimum], ['export', 'exportCount', 'exportOffset', $exportMinimum]] as $table) {
             [$label, $countKey, $offsetKey, $minimumEntrySize] = $table;
             $count = (int)($this->header[$countKey] ?? 0);
             $offset = (int)($this->header[$offsetKey] ?? 0);
@@ -483,7 +500,7 @@ final class UnrealPackageReader4
         }
 
         foreach ([
-            ['soft package references', 'stringAssetReferencesCount', 'stringAssetReferencesOffset', 4],
+            ['soft package references', 'stringAssetReferencesCount', 'stringAssetReferencesOffset', $version >= self::VER_ADDED_SOFT_OBJECT_PATH ? 12 : 4],
             ['preload dependencies', 'preloadDependencyCount', 'preloadDependencyOffset', 4],
         ] as $table) {
             [$label, $countKey, $offsetKey, $minimumEntrySize] = $table;
