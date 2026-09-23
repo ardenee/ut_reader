@@ -83,19 +83,20 @@ function file_info_related_files_table(array $rows, string $emptyMessage): strin
     if ($rows === []) {
         return '<p class="muted">' . catalog_h($emptyMessage) . '</p>';
     }
-    $html = '<table data-sortable-table><thead><tr><th>Package</th><th>File</th><th>GUID / MD5</th><th>Size</th></tr></thead><tbody>';
+    $html = '<table data-sortable-table><thead><tr><th>Package</th><th>File</th><th>Identity</th><th>Size</th></tr></thead><tbody>';
     foreach ($rows as $row) {
         $fileId = (int)($row['id'] ?? 0);
         if ($fileId < 1) {
             continue;
         }
         $href = 'file-info.php?id=' . $fileId;
-        $identitySortValue = (string)($row['package_guid'] ?? '') . ' ' . (string)($row['md5'] ?? '');
+        $identitySortValue = (string)($row['package_guid'] ?? '') . ' ' . (string)($row['md5'] ?? '') . ' ' . (string)($row['sha1'] ?? '');
         $html .= '<tr><td class="mono"><a href="' . $href . '">' . catalog_h((string)($row['package_name'] ?? '')) . '</a></td>'
             . '<td><a href="' . $href . '">' . catalog_h((string)($row['original_name'] ?? '')) . '</a></td>'
             . '<td class="mono small used-by-identity" data-sort-value="' . catalog_h($identitySortValue) . '">'
             . '<span>GUID: ' . catalog_h((string)($row['package_guid'] ?? '')) . '</span>'
-            . '<span>MD5: ' . catalog_h((string)($row['md5'] ?? '')) . '</span></td>'
+            . '<span>MD5: ' . catalog_h((string)($row['md5'] ?? '')) . '</span>'
+            . '<span>SHA1: ' . catalog_h((string)($row['sha1'] ?? '')) . '</span></td>'
             . '<td data-sort-value="' . (int)($row['file_size'] ?? 0) . '">' . catalog_h(catalog_bytes((int)($row['file_size'] ?? 0))) . '</td></tr>';
     }
     return $html . '</tbody></table>';
@@ -306,6 +307,7 @@ CSS;
             'original_name' => (string)($dep['resolved_file'] ?? ''),
             'package_guid' => (string)($dep['resolved_guid'] ?? ''),
             'md5' => (string)($dep['resolved_md5'] ?? ''),
+            'sha1' => (string)($dep['resolved_sha1'] ?? ''),
             'file_size' => (int)($dep['resolved_size'] ?? 0),
         ];
     }
