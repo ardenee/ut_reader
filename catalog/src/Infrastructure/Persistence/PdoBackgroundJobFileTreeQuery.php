@@ -127,7 +127,11 @@ final class PdoBackgroundJobFileTreeQuery
             . $this->childIssueCountExpression('j') . ' AS child_issue_count,'
             . $this->childActiveCountExpression('j') . ' AS child_active_count '
             . 'FROM ue_background_jobs j WHERE ' . $whereSql
-            . ' ORDER BY j.id DESC LIMIT ' . $perPage . ' OFFSET ' . $offset
+            . ' ORDER BY '
+            . 'CASE j.status WHEN "running" THEN 0 WHEN "queued" THEN 1 ELSE 2 END ASC,'
+            . 'j.priority ASC,'
+            . 'CASE WHEN j.status IN ("running","queued") THEN j.id ELSE -j.id END ASC '
+            . 'LIMIT ' . $perPage . ' OFFSET ' . $offset
         );
         $statement->execute($params);
 
@@ -249,7 +253,9 @@ final class PdoBackgroundJobFileTreeQuery
             . 'FROM (' . $visibleSql . ') visible_children '
             . 'JOIN ue_background_jobs j ON j.id=visible_children.id'
             . $stateWhere
-            . ' ORDER BY j.id ASC LIMIT ' . $perPage . ' OFFSET ' . $offset
+            . ' ORDER BY '
+            . 'CASE j.status WHEN "running" THEN 0 WHEN "queued" THEN 1 ELSE 2 END ASC,'
+            . 'j.priority ASC,j.id ASC LIMIT ' . $perPage . ' OFFSET ' . $offset
         );
         $statement->execute($visibleParams);
         $rows = $statement->fetchAll(PDO::FETCH_ASSOC) ?: [];
@@ -479,6 +485,7 @@ final class PdoBackgroundJobFileTreeQuery
     private function columns(string $alias): string
     {
         return $alias . '.id,' . $alias . '.parent_job_id,' . $alias . '.workflow_unit_key,'
+            . $alias . '.priority,'
             . $alias . '.queue_name,' . $alias . '.job_type,' . $alias . '.resource_class,'
             . $alias . '.concurrency_key,' . $alias . '.status,' . $alias . '.display_status,'
             . $alias . '.attempts,' . $alias . '.max_attempts,' . $alias . '.worker_id,'
