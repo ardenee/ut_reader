@@ -11,18 +11,35 @@ declare(strict_types=1);
 
 final class UE4BinaryReader
 {
-    private string $buf;
+    /** @var resource */
+    private $handle;
     private int $len;
     private int $pos = 0;
+    private bool $ownsHandle = false;
 
-    public function __construct(string $buf)
+    /** @param resource $source */
+    public function __construct($source, ?int $length = null, bool $ownsHandle = false)
     {
-        $this->buf = $buf;
-        $this->len = strlen($buf);
+        if (!is_resource($source)) throw new InvalidArgumentException('UE4BinaryReader requires an open seekable stream.');
+        $meta = stream_get_meta_data($source);
+        if (empty($meta['seekable'])) throw new InvalidArgumentException('UE4BinaryReader requires a seekable stream.');
+        $this->handle = $source; $this->ownsHandle = $ownsHandle;
+        $stat = $length === null ? fstat($source) : null;
+        $this->len = $length ?? (is_array($stat) ? (int)($stat['size'] ?? -1) : -1);
+        if ($this->len < 0) throw new RuntimeException('Could not determine UE4 package stream size.');
     }
+    public static function open(string $path): self
+    {
+        $handle = @fopen($path, 'rb');
+        if (!is_resource($handle)) throw new RuntimeException("Failed to open UE4 package: $path");
+        $stat = fstat($handle); $length = is_array($stat) ? (int)($stat['size'] ?? -1) : -1;
+        if ($length < 0) { fclose($handle); throw new RuntimeException("Failed to determine UE4 package size: $path"); }
+        return new self($handle, $length, true);
+    }
+    public function __destruct() { if ($this->ownsHandle && is_resource($this->handle)) fclose($this->handle); }
 
     public function tell(): int { return $this->pos; }
-    public function seek(int $pos): void { $this->pos = max(0, min($pos, $this->len)); }
+    public function seek(int $pos): void { if ($pos < 0 || $pos > $this->len) throw new OutOfBoundsException("seek overrun pos=$pos len={$this->len}"); $this->pos = $pos; }
     public function remaining(): int { return $this->len - $this->pos; }
     public function size(): int { return $this->len; }
 
@@ -31,9 +48,11 @@ final class UE4BinaryReader
         if ($count < 0 || $this->pos + $count > $this->len) {
             throw new OutOfBoundsException("read overrun need=$count pos={$this->pos} len={$this->len}");
         }
-        $out = substr($this->buf, $this->pos, $count);
-        $this->pos += $count;
-        return $out;
+        if ($count === 0) return '';
+        if (fseek($this->handle, $this->pos, SEEK_SET) !== 0) throw new RuntimeException("seek failed pos={$this->pos}");
+        $out = ''; $remaining = $count;
+        while ($remaining > 0) { $chunk = fread($this->handle, min($remaining, 1024 * 1024)); if ($chunk === false || $chunk === '') throw new RuntimeException("short read need=$count got=" . strlen($out) . " pos={$this->pos}"); $out .= $chunk; $remaining -= strlen($chunk); }
+        $this->pos += $count; return $out;
     }
 
     public function u8(): int { return ord($this->bytes(1)); }
@@ -103,7 +122,8 @@ final class UE4BinaryReader
 final class UnrealPackageReader4
 {
     private string $path;
-    private string $bytes = '';
+    private ?UE4BinaryReader $reader = null;
+    private int $fileSize = 0;
     private array $header = [];
     private array $names = [];
     private array $imports = [];
@@ -143,11 +163,8 @@ final class UnrealPackageReader4
         $this->parserProfile = is_array($profile) ? $profile : [];
 
         try {
-            $data = file_get_contents($path);
-            if ($data === false) {
-                throw new RuntimeException("Failed to read UE4 package: $path");
-            }
-            $this->bytes = $data;
+            $this->reader = UE4BinaryReader::open($path);
+            $this->fileSize = $this->reader->size();
             $this->parse();
         } catch (Throwable $e) {
             $this->issues[] = get_class($e) . ': ' . $e->getMessage() . ' File: ' . $e->getFile() . ':' . $e->getLine();
@@ -225,7 +242,7 @@ final class UnrealPackageReader4
 
     private function parse(): void
     {
-        $r = new UE4BinaryReader($this->bytes);
+        $r = $this->rootReader();
         $tag = $r->u32();
         if ($tag !== self::PACKAGE_FILE_TAG && $tag !== self::PACKAGE_FILE_TAG_SWAPPED) {
             throw new RuntimeException(sprintf('Bad UE4 package tag 0x%08X', $tag));
@@ -400,11 +417,14 @@ final class UnrealPackageReader4
         return $out;
     }
 
+    private function rootReader(): UE4BinaryReader
+    {
+        if (!$this->reader instanceof UE4BinaryReader) throw new RuntimeException('UE4 package stream is not open.');
+        $this->reader->seek(0); return $this->reader;
+    }
     private function tableReader(int $offset): UE4BinaryReader
     {
-        $r = new UE4BinaryReader($this->bytes);
-        $r->seek($offset);
-        return $r;
+        $r = $this->rootReader(); $r->seek($offset); return $r;
     }
 
     private function validateTableBounds(): void
@@ -416,7 +436,7 @@ final class UnrealPackageReader4
             if ($count < 0) {
                 $this->issues[] = "Bad $label count: $count";
             }
-            if ($count > 0 && ($offset <= 0 || $offset >= strlen($this->bytes))) {
+            if ($count > 0 && ($offset <= 0 || $offset >= $this->fileSize)) {
                 $this->issues[] = "Bad $label offset: $offset";
             }
         }
@@ -426,7 +446,7 @@ final class UnrealPackageReader4
     {
         $count = (int)$this->header['nameCount'];
         $offset = (int)$this->header['nameOffset'];
-        if ($count <= 0 || $offset <= 0 || $offset >= strlen($this->bytes)) {
+        if ($count <= 0 || $offset <= 0 || $offset >= $this->fileSize) {
             return;
         }
         $r = $this->tableReader($offset);
@@ -460,7 +480,7 @@ final class UnrealPackageReader4
     {
         $count = (int)$this->header['importCount'];
         $offset = (int)$this->header['importOffset'];
-        if ($count <= 0 || $offset <= 0 || $offset >= strlen($this->bytes)) {
+        if ($count <= 0 || $offset <= 0 || $offset >= $this->fileSize) {
             return;
         }
         $r = $this->tableReader($offset);
@@ -494,7 +514,7 @@ final class UnrealPackageReader4
     {
         $count = (int)$this->header['exportCount'];
         $offset = (int)$this->header['exportOffset'];
-        if ($count <= 0 || $offset <= 0 || $offset >= strlen($this->bytes)) {
+        if ($count <= 0 || $offset <= 0 || $offset >= $this->fileSize) {
             return;
         }
         $r = $this->tableReader($offset);
@@ -574,7 +594,7 @@ final class UnrealPackageReader4
     {
         $count = (int)($this->header['stringAssetReferencesCount'] ?? 0);
         $offset = (int)($this->header['stringAssetReferencesOffset'] ?? 0);
-        if ($count <= 0 || $offset <= 0 || $offset >= strlen($this->bytes)) {
+        if ($count <= 0 || $offset <= 0 || $offset >= $this->fileSize) {
             return;
         }
 
@@ -596,7 +616,7 @@ final class UnrealPackageReader4
     {
         $count = (int)($this->header['preloadDependencyCount'] ?? 0);
         $offset = (int)($this->header['preloadDependencyOffset'] ?? 0);
-        if ($count <= 0 || $offset <= 0 || $offset >= strlen($this->bytes)) {
+        if ($count <= 0 || $offset <= 0 || $offset >= $this->fileSize) {
             return;
         }
 
@@ -699,7 +719,11 @@ final class UnrealPackageReader4
         if ($size <= 0) {
             return '';
         }
-        return strtoupper(trim(chunk_split(bin2hex(substr($this->bytes, $offset, $size)), 2, ' ')));
+        if (!$this->reader instanceof UE4BinaryReader || $offset < 0 || $size > $this->reader->size() - $offset) return '';
+        $saved = $this->reader->tell();
+        try { $this->reader->seek($offset); $raw = $this->reader->bytes($size); }
+        finally { $this->reader->seek($saved); }
+        return strtoupper(trim(chunk_split(bin2hex($raw), 2, ' ')));
     }
 
     private function addRawHeaderField(string $name, int $offset, int $size, string $type, $value, string $note = ''): void
