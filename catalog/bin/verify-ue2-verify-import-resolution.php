@@ -159,13 +159,13 @@ $check(
     'runtime_uses_indexed_projection',
     str_contains($source, 'ue_legacy_export_identity_lookup')
         && !str_contains($source, 'BlockedCompressedMetadataReader'),
-    'Normal UE1/UE2 dependency resolution must use the SQL identity projection rather than reopen provider .uedb3 files.'
+    'Normal UE1/UE2 dependency resolution must use the SQL identity projection rather than reopen provider metadata files.'
 );
 $check(
     'publication_projects_exact_identity',
     str_contains($writer, 'ue_legacy_export_identity_lookup')
         && str_contains($writer, 'legacyExportClassIdentity')
-        && str_contains($writer, 'legacyIdentityHash'),
+        && str_contains($writer, 'CatalogUnrealIdentityHash::verifyImportBinary'),
     'Metadata publication must derive the indexed identity from serialized Export/Class/PackageIndex data.'
 );
 
