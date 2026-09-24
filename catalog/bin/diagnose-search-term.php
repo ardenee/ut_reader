@@ -59,6 +59,26 @@ foreach ($columns as [$table,$column]) {
     $out['compact_columns'][$table.'.'.$column] = (bool)$s->fetchColumn();
 }
 
+
+// Diagnostic text scans are deliberately bounded to the dictionary itself and
+// never join the large projections. They reveal whether the caller's spelling,
+// case, or package-path form differs from the compact term actually stored.
+$needle = '%' . str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $query) . '%';
+$s = $db->prepare(
+    'SELECT id,value_length,is_overflow,HEX(value_hash) value_hash,CONVERT(value_prefix USING utf8mb4) value_text '
+    . 'FROM ue_terms WHERE CONVERT(value_prefix USING utf8mb4) LIKE ? ESCAPE "\\\\" LIMIT 50'
+);
+$s->execute([$needle]);
+$out['dictionary_contains'] = $s->fetchAll(PDO::FETCH_ASSOC) ?: [];
+
+$leaf = preg_replace('/^.*[.]/', '', $query) ?: $query;
+$s = $db->prepare(
+    'SELECT id,value_length,is_overflow,HEX(value_hash) value_hash,CONVERT(value_prefix USING utf8mb4) value_text '
+    . 'FROM ue_terms WHERE CONVERT(value_prefix USING utf8mb4) LIKE ? ESCAPE "\\\\" LIMIT 50'
+);
+$s->execute(['%' . str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $leaf) . '%']);
+$out['dictionary_leaf_contains'] = $s->fetchAll(PDO::FETCH_ASSOC) ?: [];
+
 foreach ([
     'global' => [],
     'exports' => ['fields'=>['exports']],
