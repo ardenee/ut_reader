@@ -79,6 +79,10 @@ try {
     // execution-row totals remain available from operational diagnostics only.
     $worker['queue_counts'] = $operatorCounts;
     $worker['queue_counts_scope'] = 'operator_jobs';
+    // Header decoration must describe actual execution, not folded operator roots.
+    // runningWork() is already the exact bounded list of currently leased rows.
+    $worker['busy_worker_count'] = count($working);
+    $worker['running_execution_count'] = count($working);
     $worker['durable_queue_presence'] = $presence;
     $worker['restart_recommended'] = $status['restart_recommended'];
     $worker['monitoring'] = $monitoring;
