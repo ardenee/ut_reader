@@ -105,7 +105,7 @@ function file_examine_header_html(?array $inspection): string
 function file_examine_admin_rename_html(array $file, ?array $flash, array $suggestions, bool $suggestionsRequested): string
 {
     $fileId = (int)$file['id'];
-    $html = '<div class="card"><h2>Correct filename / package identity</h2>';
+    $html = '<div class="card"><details class="admin-collapsible"><summary><strong>Correct filename / package identity</strong></summary><div style="margin-top:12px">';
     if (is_array($flash)) {
         $ok = !empty($flash['ok']);
         $html .= '<p class="' . ($ok ? '' : 'muted') . '"><strong>'
@@ -143,7 +143,7 @@ function file_examine_admin_rename_html(array $file, ?array $flash, array $sugge
         }
         $html .= '</tbody></table>';
     }
-    return $html . '</div>';
+    return $html . '</div></details></div>';
 }
 
 $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
@@ -246,8 +246,27 @@ if ($renameCardHtml !== '') {
     $html = str_replace($marker, $renameCardHtml . $marker, $html);
 }
 
-$headerPlaceholder = '<div class="card" id="raw-package-header"><h2>Raw package header</h2>'
-    . '<p class="muted" data-file-examine-header-status>Reading stored package header…</p></div>';
-$html = str_replace('<div class="card" id="package-tables">', $headerPlaceholder . '<div class="card" id="package-tables">', $html);
+$headerHtml = '';
+if (is_array($row ?? null) && (string)($row['scan_status'] ?? '') === 'verified') {
+    try {
+        $storageRoot = realpath(rtrim((string)$config['storage_path'], DIRECTORY_SEPARATOR));
+        $relativePath = ltrim(str_replace(['/', '\\\\'], DIRECTORY_SEPARATOR, (string)($row['relative_path'] ?? '')), DIRECTORY_SEPARATOR);
+        $storedPath = $storageRoot !== false && $relativePath !== ''
+            ? realpath($storageRoot . DIRECTORY_SEPARATOR . $relativePath)
+            : false;
+        if ($storageRoot !== false && $storedPath !== false
+            && ($storedPath === $storageRoot || str_starts_with($storedPath, $storageRoot . DIRECTORY_SEPARATOR))) {
+            $headerInspection = CatalogPackageHeaderInspector::inspect($storedPath, $row);
+        } else {
+            $headerInspection = CatalogPackageHeaderInspector::inspect(null, $row);
+        }
+    } catch (Throwable $error) {
+        $headerInspection = ['ok' => false, 'error' => $error->getMessage(), 'summary' => [], 'rows' => []];
+    }
+    $headerHtml = file_examine_header_html($headerInspection);
+}
+if ($headerHtml !== '') {
+    $html = str_replace('<div class="card" id="package-tables">', $headerHtml . '<div class="card" id="package-tables">', $html);
+}
 
 echo $html;
