@@ -27,9 +27,6 @@ $source = file_get_contents(
 $resolverSource = file_get_contents(
     $root . '/src/Infrastructure/Persistence/PdoDependencyResolver.php'
 );
-$caseResolverSource = file_get_contents(
-    $root . '/src/Infrastructure/Persistence/PdoCompactCaseInsensitiveExportResolver.php'
-);
 $checks = [];
 $check = static function (string $name, bool $ok, string $detail) use (&$checks): void {
     $checks[] = ['check' => $name, 'ok' => $ok, 'detail' => $detail];
@@ -43,9 +40,11 @@ $check(
 );
 $check(
     'full_relative_path_is_required',
-    is_string($source) && str_contains($source, "local_path")
-        && str_contains($source, 'exportMatchesRequirement'),
-    'A path-hash hit must be confirmed against the exact v3 Export local_path.'
+    is_string($source)
+        && str_contains($source, 'path_hash_ci')
+        && str_contains($source, 'local_path')
+        && str_contains($source, 'ue_terms'),
+    'A normalized path-hash hit must still be confirmed against the exact projected Export local_path.'
 );
 $check(
     'coverage_states_are_explicit',
@@ -98,8 +97,8 @@ $check(
     'coverage_returns_verified_export_indexes',
     is_string($source)
         && str_contains($source, "'matched_exports'")
-        && str_contains($source, 'exportMatchesRequirement'),
-    'The chosen provider must return Export indexes from paths verified against its v3 metadata.'
+        && str_contains($source, 'path_hash_ci'),
+    'The chosen provider must return Export indexes from normalized paths verified against the projected exact path term.'
 );
 $check(
     'preferred_provider_cannot_beat_complete_provider',
@@ -115,18 +114,17 @@ $check(
     'coverage_checks_class_when_available',
     is_string($source)
         && str_contains($source, 'requiredClassesByPath')
-        && str_contains($source, 'exportMatchesRequirement')
-        && str_contains($source, "'class_package'")
-        && str_contains($source, "'class_name'"),
+        && str_contains($source, 'class_name')
+        && str_contains($source, 'class_package'),
     'A path match must also honor Import class identity when both Import and Export expose it.'
 );
 $check(
-    'case_only_path_fallback_is_provider_scoped',
+    'case_insensitive_path_matching_is_indexed',
     is_string($source)
-        && str_contains($source, 'PdoCompactCaseInsensitiveExportResolver::matchProviderPaths')
-        && is_string($caseResolverSource)
-        && str_contains($caseResolverSource, 'public static function matchProviderPaths'),
-    'Byte-sensitive path hashes retain a bounded provider-scoped case-insensitive fallback.'
+        && str_contains($source, 'path_hash_ci')
+        && !str_contains($source, 'PdoCompactCaseInsensitiveExportResolver')
+        && !str_contains($source, 'BlockedCompressedMetadataReader'),
+    'Case-insensitive object-path matching must use the indexed normalized projection without reopening .uedb3 files.'
 );
 
 
