@@ -37,7 +37,7 @@ final class CompressedMetadataLookupWriter
 
     /**
      * Rebuild only the UE1/UE2 VerifyImport projection from an existing compact snapshot.
-     * The .uedb3 container and all other projections remain unchanged.
+     * The current metadata container and all other projections remain unchanged.
      *
      * @param array<string,mixed> $snapshot
      * @return array{file_id:int,rows:int,sql_batches:int}
@@ -92,7 +92,7 @@ final class CompressedMetadataLookupWriter
     /**
      * Compatibility entry point for callers that already hold container bytes.
      * Production publication uses writeVersionedMetadata() so it never needs a
-     * full .uedb3 PHP string merely to register size and SHA-256.
+     * full metadata-container PHP string merely to register size and SHA-256.
      *
      * @param array<string,mixed> $snapshot
      * @param array<string,int>|null $resolvedTermIds
