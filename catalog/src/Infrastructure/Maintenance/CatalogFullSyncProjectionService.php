@@ -32,6 +32,65 @@ final class CatalogFullSyncProjectionService
     ) {
     }
 
+    /**
+     * Remove dependency/provider projections owned by one game before a Full
+     * Sync source pass. Stable ue_files identities, source paths, locations and
+     * upload provenance are deliberately untouched.
+     *
+     * Each source package will republish its parser-owned format-3 metadata with
+     * unresolved dependency rows. Dependency matching starts only after every
+     * selected-game package has been reparsed.
+     *
+     * @return array<string,int>
+     */
+    public function resetDerivedState(int $gameId): array
+    {
+        return $this->withWriteLock(function () use ($gameId): array {
+            $this->requireGame($gameId);
+            $fileIds = $this->verifiedFileIds($gameId);
+            $this->emit('reset', 5, 'Clearing selected-game dependency and provider projections.');
+
+            $counts = [
+                'dependency_links' => 0,
+                'dependency_summaries' => 0,
+                'provider_rows' => 0,
+                'coverage_provider_rows' => 0,
+                'coverage_rows' => 0,
+            ];
+
+            $delete = $this->db->prepare(
+                'DELETE l FROM ue_dependency_links l JOIN ue_files f ON f.id=l.file_id WHERE f.game_id=?'
+            );
+            $delete->execute([$gameId]);
+            $counts['dependency_links'] = max(0, $delete->rowCount());
+
+            $delete = $this->db->prepare(
+                'DELETE s FROM ue_dependency_package_summaries s JOIN ue_files f ON f.id=s.file_id WHERE f.game_id=?'
+            );
+            $delete->execute([$gameId]);
+            $counts['dependency_summaries'] = max(0, $delete->rowCount());
+
+            $delete = $this->db->prepare('DELETE FROM ue_package_provider_coverage_cache WHERE game_id=?');
+            $delete->execute([$gameId]);
+            $counts['coverage_provider_rows'] = max(0, $delete->rowCount());
+
+            $delete = $this->db->prepare('DELETE FROM ue_package_coverage_cache WHERE game_id=?');
+            $delete->execute([$gameId]);
+            $counts['coverage_rows'] = max(0, $delete->rowCount());
+
+            $delete = $this->db->prepare('DELETE FROM ue_package_providers WHERE game_id=?');
+            $delete->execute([$gameId]);
+            $counts['provider_rows'] = max(0, $delete->rowCount());
+
+            $this->emit(
+                'reset',
+                100,
+                'Selected-game derived dependency state cleared for ' . count($fileIds) . ' verified package(s).'
+            );
+            return $counts + ['verified_files' => count($fileIds)];
+        });
+    }
+
     /** @return array<string,mixed> */
     public function prepareDependencies(int $gameId): array
     {
@@ -61,12 +120,14 @@ final class CatalogFullSyncProjectionService
             $this->requireGame($gameId);
             $fileIds = $this->verifiedFileIds($gameId);
 
-            $this->emit('providers', 5, 'Rechecking package-provider projection after dependency resolution.');
-            $providers = (new PdoPackageProviderRepository($this->db))->reconcileGame($gameId);
+            // Provider projection was built once after the complete source pass.
+            // Dependency matching cannot change package/provider identity, so a
+            // second game-wide reconciliation here is redundant.
+            $providers = ['primary' => 0, 'aliases' => 0, 'total' => 0, 'reused' => true];
 
             $this->emit(
                 'dependency_summaries',
-                15,
+                5,
                 'Verifying package dependency summaries for ' . count($fileIds) . ' package(s).'
             );
             $summaries = (new PdoDependencyPackageSummary($this->db))->rebuildFiles($fileIds);
@@ -74,11 +135,11 @@ final class CatalogFullSyncProjectionService
                 throw new RuntimeException('Dependency package summary projection is unavailable.');
             }
 
-            $this->emit('package_coverage', 75, 'Rebuilding cached catalog-wide package object coverage.');
+            $this->emit('package_coverage', 70, 'Rebuilding cached catalog-wide package object coverage.');
             $coverage = (new PdoPackageCoverageCache($this->db))->rebuildGame(
                 $gameId,
                 function (int $done, int $total, string $package): void {
-                    $percent = $total > 0 ? 75 + (int)floor(($done / $total) * 15) : 90;
+                    $percent = $total > 0 ? 70 + (int)floor(($done / $total) * 20) : 90;
                     $this->emit('package_coverage', $percent, 'Caching object coverage ' . $done . '/' . $total . ': ' . $package);
                 }
             );
