@@ -44,7 +44,7 @@ try {
     catalog_head('Dependency Cross-Examine');
     echo <<<'CSS'
 <style>
-.cross-controls{display:grid;grid-template-columns:minmax(220px,1.2fr) minmax(220px,1.2fr) 120px auto;gap:10px;align-items:end}.cross-controls label{display:flex;flex-direction:column;gap:4px}.cross-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:12px 0}.cross-table{min-width:1280px}.cross-table td{vertical-align:top}.cross-coverage strong{display:block;margin-top:4px}.cross-coverage small{display:block;margin-top:4px}.cross-good{display:inline-flex;padding:3px 7px;border-radius:999px;font-size:11px;font-weight:700;color:#b8f3cb;background:rgba(67,190,110,.15)}.cross-warn{display:inline-flex;padding:3px 7px;border-radius:999px;font-size:11px;font-weight:700;color:#f5d98b;background:rgba(246,196,83,.13)}.cross-note{padding:10px 12px;border:1px solid var(--line2);border-radius:8px;background:rgba(255,255,255,.025);color:var(--muted);margin:0 0 12px}.cross-batch{display:flex;gap:10px;align-items:end;flex-wrap:wrap;padding:10px 12px;border:1px solid var(--line2);border-radius:8px;background:rgba(255,255,255,.025);margin:0 0 10px}.cross-batch label{display:flex;flex-direction:column;gap:4px;min-width:260px}.cross-batch-note{flex:1 1 340px;color:var(--muted);font-size:12px}.cross-select{width:42px;text-align:center}.cross-select input{width:18px;height:18px}.cross-file-name{display:inline-block;margin-top:2px}.cross-file-size{display:inline-block;margin-top:2px}.cross-game-engine{display:inline-block;margin-top:2px}.cross-target-files{display:inline-block;margin-top:3px}.cross-progress-overlay{position:fixed;inset:0;z-index:10000;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(0,0,0,.68)}.cross-progress-overlay.is-open{display:flex}.cross-progress-dialog{width:min(720px,96vw);max-height:90vh;overflow:auto;border:1px solid var(--line2);border-radius:12px;background:var(--panel,#101827);box-shadow:0 24px 80px rgba(0,0,0,.5);padding:18px}.cross-progress-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}.cross-progress-head h2{margin:0}.cross-progress-close{white-space:nowrap}.cross-progress-track{height:14px;border-radius:999px;overflow:hidden;background:rgba(255,255,255,.08);margin:16px 0 8px}.cross-progress-bar{height:100%;width:0%;background:linear-gradient(90deg,#3f69b8,#6695eb);transition:width .25s ease}.cross-progress-line{display:flex;justify-content:space-between;gap:14px;color:var(--muted);font-size:13px}.cross-progress-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:14px 0}.cross-progress-stat{padding:9px;border:1px solid var(--line2);border-radius:8px;background:rgba(255,255,255,.025)}.cross-progress-stat strong{display:block;font-size:18px}.cross-progress-current,.cross-progress-message,.cross-progress-error{margin-top:10px;padding:10px 12px;border-radius:8px;background:rgba(255,255,255,.025)}.cross-progress-error{display:none;border:1px solid rgba(220,80,80,.4);color:#ffb6b6}.cross-progress-error.is-visible{display:block}.cross-progress-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}@media(max-width:900px){.cross-controls{grid-template-columns:1fr 1fr}.cross-summary{grid-template-columns:1fr}.cross-batch{align-items:stretch}.cross-progress-stats{grid-template-columns:1fr 1fr}}
+.cross-controls{display:grid;grid-template-columns:minmax(220px,1.2fr) minmax(220px,1.2fr) 120px auto;gap:10px;align-items:end}.cross-controls label{display:flex;flex-direction:column;gap:4px}.cross-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:12px 0}.cross-table{min-width:980px}.cross-package-row td{padding-top:18px;border-top:2px solid var(--line2)}.cross-package-title{font-size:16px}.cross-details summary{cursor:pointer;color:var(--muted);font-size:12px}.cross-details-body{margin-top:7px;font-size:12px;color:var(--muted);line-height:1.5}.cross-result{min-width:280px}.cross-table td{vertical-align:top}.cross-coverage strong{display:block;margin-top:4px}.cross-coverage small{display:block;margin-top:4px}.cross-good{display:inline-flex;padding:3px 7px;border-radius:999px;font-size:11px;font-weight:700;color:#b8f3cb;background:rgba(67,190,110,.15)}.cross-warn{display:inline-flex;padding:3px 7px;border-radius:999px;font-size:11px;font-weight:700;color:#f5d98b;background:rgba(246,196,83,.13)}.cross-note{padding:10px 12px;border:1px solid var(--line2);border-radius:8px;background:rgba(255,255,255,.025);color:var(--muted);margin:0 0 12px}.cross-batch{display:flex;gap:10px;align-items:end;flex-wrap:wrap;padding:10px 12px;border:1px solid var(--line2);border-radius:8px;background:rgba(255,255,255,.025);margin:0 0 10px}.cross-batch label{display:flex;flex-direction:column;gap:4px;min-width:260px}.cross-batch-note{flex:1 1 340px;color:var(--muted);font-size:12px}.cross-select{width:42px;text-align:center}.cross-select input{width:18px;height:18px}.cross-file-name{display:inline-block;margin-top:2px}.cross-file-size{display:inline-block;margin-top:2px}.cross-game-engine{display:inline-block;margin-top:2px}.cross-target-files{display:inline-block;margin-top:3px}.cross-progress-overlay{position:fixed;inset:0;z-index:10000;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(0,0,0,.68)}.cross-progress-overlay.is-open{display:flex}.cross-progress-dialog{width:min(720px,96vw);max-height:90vh;overflow:auto;border:1px solid var(--line2);border-radius:12px;background:var(--panel,#101827);box-shadow:0 24px 80px rgba(0,0,0,.5);padding:18px}.cross-progress-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}.cross-progress-head h2{margin:0}.cross-progress-close{white-space:nowrap}.cross-progress-track{height:14px;border-radius:999px;overflow:hidden;background:rgba(255,255,255,.08);margin:16px 0 8px}.cross-progress-bar{height:100%;width:0%;background:linear-gradient(90deg,#3f69b8,#6695eb);transition:width .25s ease}.cross-progress-line{display:flex;justify-content:space-between;gap:14px;color:var(--muted);font-size:13px}.cross-progress-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:14px 0}.cross-progress-stat{padding:9px;border:1px solid var(--line2);border-radius:8px;background:rgba(255,255,255,.025)}.cross-progress-stat strong{display:block;font-size:18px}.cross-progress-current,.cross-progress-message,.cross-progress-error{margin-top:10px;padding:10px 12px;border-radius:8px;background:rgba(255,255,255,.025)}.cross-progress-error{display:none;border:1px solid rgba(220,80,80,.4);color:#ffb6b6}.cross-progress-error.is-visible{display:block}.cross-progress-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}@media(max-width:900px){.cross-controls{grid-template-columns:1fr 1fr}.cross-summary{grid-template-columns:1fr}.cross-batch{align-items:stretch}.cross-progress-stats{grid-template-columns:1fr 1fr}}
 </style>
 CSS;
 
@@ -108,22 +108,38 @@ CSS;
         . number_format((int)($diagnostics['format3_source_files'] ?? 0)) . ' have current format-3 metadata/export projections; '
         . number_format((int)($diagnostics['exact_provider_files'] ?? 0)) . ' file(s) matched at least one missing object path.</p>';
 
-    $exactTotal = 0;
-    $ownerTotal = 0;
+    $packageKeys = [];
+    $fullCandidates = 0;
+    $partialCandidates = 0;
     foreach ($rows as $row) {
-        $exactTotal += (int)($row['exact_object_matches'] ?? 0);
-        $ownerTotal += (int)($row['exact_owner_count'] ?? 0);
+        $packageKeys[strtolower(trim((string)($row['package_name'] ?? '')))] = true;
+        if ((int)($row['complete_consumer_count'] ?? 0) > 0) {
+            $fullCandidates++;
+        } else {
+            $partialCandidates++;
+        }
     }
+    usort($rows, static function (array $a, array $b): int {
+        $aFull = (int)($a['complete_consumer_count'] ?? 0) > 0;
+        $bFull = (int)($b['complete_consumer_count'] ?? 0) > 0;
+        $package = strcasecmp((string)($a['package_name'] ?? ''), (string)($b['package_name'] ?? ''));
+        if ($package !== 0) return $package;
+        if ($aFull !== $bFull) return $aFull ? -1 : 1;
+        $aMatched = array_sum(array_map(static fn(array $x): int => (int)($x['matched_count'] ?? 0), (array)($a['consumer_coverage'] ?? [])));
+        $bMatched = array_sum(array_map(static fn(array $x): int => (int)($x['matched_count'] ?? 0), (array)($b['consumer_coverage'] ?? [])));
+        return $bMatched <=> $aMatched ?: strcasecmp((string)($a['source_game_name'] ?? ''), (string)($b['source_game_name'] ?? ''));
+    });
     echo '<div class="cross-summary">'
-        . '<div class="stat"><h2>' . count($rows) . '</h2><p>Exact provider candidates</p></div>'
-        . '<div class="stat"><h2>' . number_format($exactTotal) . '</h2><p>Exact missing-reference matches across candidates</p></div>'
-        . '<div class="stat"><h2>' . number_format($ownerTotal) . '</h2><p>Referencing-file matches across candidates</p></div>'
+        . '<div class="stat"><h2>' . number_format(count($packageKeys)) . '</h2><p>Missing packages with candidates</p></div>'
+        . '<div class="stat"><h2>' . number_format(count($rows)) . '</h2><p>Candidate package versions</p></div>'
+        . '<div class="stat"><h2>' . number_format($fullCandidates) . '</h2><p>Full-match candidates</p></div>'
+        . '<div class="stat"><h2>' . number_format($partialCandidates) . '</h2><p>Partial / no-match candidates</p></div>'
         . '</div>';
 
     if ($rows === []) {
         echo CatalogUi::emptyState(
-            'No exact sibling-game providers found',
-            'The scan starts from the target game\'s actual missing dependency rows and uses the current compact export projection. The scan-input counts above show whether matching source package names and format-3 export data exist.'
+            'No compatible package candidates found',
+            'No verified compatible package versions were available for the target game\'s missing dependency packages.'
         );
         catalog_foot();
         exit;
@@ -155,71 +171,69 @@ CSS;
         . '</div>';
 
     echo '<div class="table-wrap"><table class="cross-table"><thead><tr>'
-        . '<th class="cross-select"><input type="checkbox" id="cross-select-all" aria-label="Select all rows"></th>'
-        . '<th>Source game</th><th>Package / file</th><th>Identity</th><th>Detected</th>'
-        . '<th>Target need</th><th>Complete package coverage</th><th>Exact missing coverage</th></tr></thead><tbody>';
+        . '<th class="cross-select"><input type="checkbox" id="cross-select-all" aria-label="Select all full matches"></th>'
+        . '<th>Package / source</th><th>Candidate file</th><th>Result</th></tr></thead><tbody>';
+    $lastPackageKey = null;
     foreach ($rows as $row) {
         $sourceFileId = (int)$row['id'];
-        $exact = (int)$row['exact_object_matches'];
         $missing = (int)$row['target_missing_count'];
         $owners = (int)$row['target_owner_count'];
-        $exactOwners = (int)$row['exact_owner_count'];
-        $coverage = number_format((float)$row['coverage_percent'], 1) . '%';
-        $alreadyInTarget = !empty($row['already_in_target']);
-        echo '<tr>';
-        echo '<td class="cross-select"><input type="checkbox" name="source_file_ids[]" value="' . $sourceFileId
-            . '"' . ((int)($row['complete_consumer_count'] ?? 0) < 1 ? ' disabled' : '')
-            . ' aria-label="Select ' . catalog_h((string)$row['original_name']) . '"></td>';
-        echo '<td><strong>' . catalog_h((string)$row['source_game_name']) . '</strong><br><span class="muted cross-game-engine">'
-            . catalog_h((string)$row['source_engine']) . '</span></td>';
-        echo '<td><strong><a href="file-info.php?id=' . $sourceFileId . '">'
-            . catalog_h((string)$row['package_name']) . '</a></strong><br><span class="cross-file-name">'
-            . catalog_h((string)$row['original_name']) . '</span><br><small class="muted cross-file-size">'
-            . catalog_h(catalog_bytes((int)$row['file_size'])) . '</small></td>';
-        echo '<td><span class="mono small">GUID: ' . catalog_h((string)($row['package_guid'] ?? '')) . '</span><br>'
-            . '<span class="mono small">MD5: ' . catalog_h((string)$row['md5']) . '</span><br>'
-            . '<span class="mono small">SHA: ' . catalog_h((string)($row['sha1'] ?? '')) . '</span></td>';
-        echo '<td class="mono">' . catalog_h((string)$row['detected_engine_key'])
-            . ' v' . (int)$row['detected_package_version']
-            . '<br><span class="muted">lic ' . (int)$row['detected_licensee_version'] . '</span></td>';
-        echo '<td><strong>' . number_format($missing) . ' missing dependency reference'
-            . ($missing === 1 ? '' : 's') . '</strong><br><span class="cross-target-files">'
-            . number_format($owners) . ' referencing file' . ($owners === 1 ? '' : 's') . '</span></td>';
         $completeConsumers = (int)($row['complete_consumer_count'] ?? 0);
         $partialConsumers = (int)($row['partial_consumer_count'] ?? 0);
         $consumerCoverage = is_array($row['consumer_coverage'] ?? null) ? $row['consumer_coverage'] : [];
-        echo '<td class="cross-coverage">';
-        if ($completeConsumers > 0) {
-            echo '<span class="cross-good">Fully satisfies</span><strong>' . number_format($completeConsumers)
-                . ' consumer' . ($completeConsumers === 1 ? '' : 's') . '</strong>';
-        } else {
-            echo '<span class="cross-warn">Partial only</span><strong>No consumer has complete package coverage</strong>';
-        }
-        if ($partialConsumers > 0) {
-            echo '<small>' . number_format($partialConsumers) . ' affected consumer'
-                . ($partialConsumers === 1 ? '' : 's') . ' remain partial.</small>';
-        }
+        $packageKey = strtolower(trim((string)$row['package_name']));
+        $newPackage = $packageKey !== $lastPackageKey;
+        $lastPackageKey = $packageKey;
+        $requiredTotal = 0; $matchedTotal = 0; $missingPaths = [];
         foreach ($consumerCoverage as $consumer) {
-            echo '<small>File #' . (int)($consumer['file_id'] ?? 0) . ': '
-                . number_format((int)($consumer['matched_count'] ?? 0)) . ' / '
-                . number_format((int)($consumer['required_count'] ?? 0)) . ' required objects';
-            $missingPaths = array_values(array_filter(array_map('strval', (array)($consumer['missing_paths'] ?? []))));
-            if ($missingPaths !== []) {
-                echo ' · missing ' . catalog_h(implode(', ', array_slice($missingPaths, 0, 5)));
-                if (count($missingPaths) > 5) echo ' +' . number_format(count($missingPaths) - 5);
+            $requiredTotal += (int)($consumer['required_count'] ?? 0);
+            $matchedTotal += (int)($consumer['matched_count'] ?? 0);
+            foreach ((array)($consumer['missing_paths'] ?? []) as $path) {
+                $path = trim((string)$path);
+                if ($path !== '') $missingPaths[strtolower($path)] = $path;
             }
+        }
+        echo '<tr' . ($newPackage ? ' class="cross-package-row"' : '') . '>';
+        echo '<td class="cross-select"><input type="checkbox" name="source_file_ids[]" value="' . $sourceFileId
+            . '"' . ($completeConsumers < 1 ? ' disabled' : '')
+            . ' aria-label="Select ' . catalog_h((string)$row['original_name']) . '"></td>';
+        echo '<td>';
+        if ($newPackage) echo '<strong class="cross-package-title">' . catalog_h((string)$row['package_name']) . '</strong><br>';
+        echo '<span>' . catalog_h((string)$row['source_game_name']) . '</span> <span class="muted">· '
+            . catalog_h((string)$row['source_engine']) . '</span><br><small class="muted">'
+            . number_format($missing) . ' missing reference' . ($missing === 1 ? '' : 's') . ' · '
+            . number_format($owners) . ' consumer' . ($owners === 1 ? '' : 's') . '</small></td>';
+        echo '<td><strong><a href="file-info.php?id=' . $sourceFileId . '">' . catalog_h((string)$row['original_name']) . '</a></strong>'
+            . '<br><small class="muted">' . catalog_h(catalog_bytes((int)$row['file_size'])) . ' · '
+            . catalog_h((string)$row['detected_engine_key']) . ' v' . (int)$row['detected_package_version'] . '</small>';
+        echo '<details class="cross-details"><summary>Technical details</summary><div class="cross-details-body">'
+            . 'GUID ' . catalog_h((string)($row['package_guid'] ?? '')) . '<br>MD5 ' . catalog_h((string)$row['md5'])
+            . '<br>SHA1 ' . catalog_h((string)($row['sha1'] ?? '')) . '<br>Licensee '
+            . (int)$row['detected_licensee_version'] . '<br>Old exact-projection diagnostic: '
+            . number_format((int)($row['exact_object_matches'] ?? 0)) . ' / ' . number_format($missing)
+            . ' missing references</div></details></td>';
+        echo '<td class="cross-result">';
+        if ($completeConsumers > 0) {
+            echo '<span class="cross-good">FULL MATCH</span><strong>' . number_format($completeConsumers) . ' / '
+                . number_format($completeConsumers + $partialConsumers) . ' consumers fully satisfied</strong>';
+        } else {
+            echo '<span class="cross-warn">PARTIAL</span><strong>No consumer fully satisfied</strong>';
+        }
+        echo '<small>' . number_format($matchedTotal) . ' / ' . number_format($requiredTotal) . ' required objects matched</small>';
+        if ($missingPaths !== []) {
+            $paths = array_values($missingPaths);
+            echo '<small>Missing: ' . catalog_h(implode(', ', array_slice($paths, 0, 5)));
+            if (count($paths) > 5) echo ' +' . number_format(count($paths) - 5);
             echo '</small>';
         }
-        echo '</td>';
-        echo '<td class="cross-coverage"><span class="cross-good">Exact object paths</span><strong>'
-            . number_format($exact) . ' / ' . number_format($missing) . ' missing references (' . catalog_h($coverage) . ')</strong><small>'
-            . number_format($exactOwners) . ' / ' . number_format($owners) . ' referencing file'
-            . ($owners === 1 ? '' : 's') . ' receive at least one exact object match.</small>';
-        if ($alreadyInTarget) {
-            $existingId = (int)($row['target_existing_file_id'] ?? 0);
-            echo '<small><span class="cross-warn">Already in report target</span> Identical MD5 is already verified as '
-                . ($existingId > 0 ? '<a href="file-info.php?id=' . $existingId . '">file #' . $existingId . '</a>' : 'a target file')
-                . '.</small>';
+        if (count($consumerCoverage) > 1) {
+            echo '<details class="cross-details"><summary>Per-consumer coverage</summary><div class="cross-details-body">';
+            foreach ($consumerCoverage as $consumer) {
+                echo 'File #' . (int)($consumer['file_id'] ?? 0) . ': '
+                    . number_format((int)($consumer['matched_count'] ?? 0)) . ' / '
+                    . number_format((int)($consumer['required_count'] ?? 0)) . ' objects<br>';
+            }
+            echo '</div></details>';
         }
         echo '</td></tr>';
     }
