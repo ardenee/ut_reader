@@ -51,8 +51,8 @@ $sql = 'SELECT l.file_id,l.import_index,'
     . 'JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=3 '
     . 'JOIN ue_terms pt ON pt.id=l.required_package_term_id '
     . 'JOIN ue_terms ot ON ot.id=l.required_object_term_id '
-    . 'LEFT JOIN ue_terms cp ON cp.id=l.class_package_term_id '
-    . 'LEFT JOIN ue_terms cn ON cn.id=l.class_name_term_id '
+    . 'LEFT JOIN ue_terms cp ON cp.id=l.import_class_package_term_id '
+    . 'LEFT JOIN ue_terms cn ON cn.id=l.import_class_name_term_id '
     . 'WHERE f.game_id=? AND f.scan_status="verified" AND l.status=0 '
     . 'ORDER BY l.file_id,l.import_index';
 try {
@@ -103,6 +103,7 @@ $counts = [
     'no_package_provider' => 0,
     'provider_missing_object' => 0,
     'provider_has_required_set' => 0,
+    'provider_class_mismatch' => 0,
     'package_only_missing_row' => 0,
 ];
 $details = [];
@@ -132,6 +133,16 @@ foreach ($groups as $group) {
         (int)$group['file_id'],
         $classes
     );
+    // Keep a path-only comparison in the audit so a class mismatch cannot be
+    // mistaken for a resolver/publication failure.
+    $pathOnlyCoverage = $classes === [] ? $coverage : PdoPackageObjectCoverageResolver::evaluate(
+        $db,
+        $gameId,
+        (string)$group['required_package'],
+        $paths,
+        (int)$group['file_id'],
+        []
+    );
 
     if ($paths === []) {
         $classification = 'package_only_missing_row';
@@ -142,7 +153,15 @@ foreach ($groups as $group) {
             $coverage,
             static fn(array $p): bool => (string)($p['status'] ?? '') === 'fully_satisfies'
         ));
-        $classification = $complete !== [] ? 'provider_has_required_set' : 'provider_missing_object';
+        if ($complete !== []) {
+            $classification = 'provider_has_required_set';
+        } else {
+            $pathOnlyComplete = array_values(array_filter(
+                $pathOnlyCoverage,
+                static fn(array $p): bool => (string)($p['status'] ?? '') === 'fully_satisfies'
+            ));
+            $classification = $pathOnlyComplete !== [] ? 'provider_class_mismatch' : 'provider_missing_object';
+        }
     }
     $counts[$classification]++;
 
@@ -187,6 +206,7 @@ $result = [
     'details' => $details,
     'interpretation' => [
         'provider_has_required_set' => 'Suspicious: current game-local v3 provider coverage satisfies the missing requirement set; inspect resolver/publication state.',
+        'provider_class_mismatch' => 'A provider has every required path, but the current Import class constraint rejects at least one matched Export.',
         'provider_missing_object' => 'Package provider exists, but no single current provider satisfies the required object set.',
         'no_package_provider' => 'No current game-local v3 provider is available for the required package.',
         'package_only_missing_row' => 'Missing dependency row has no object path; inspect package-only resolution/provider projection.',
