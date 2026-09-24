@@ -64,7 +64,7 @@ final class CatalogCrossGameDependencyClosurePlanner
             throw new \RuntimeException('The selected source package is outside the dependency-compatible engine family for this target.');
         }
         if ((int)($root['format_version'] ?? 0) !== 3) {
-            throw new \RuntimeException('The selected source package has no current format-3 dependency metadata.');
+            throw new \RuntimeException('The selected source package has no current-format dependency metadata.');
         }
 
         $sourceGameId = (int)$root['game_id'];
@@ -89,7 +89,7 @@ final class CatalogCrossGameDependencyClosurePlanner
                 . 'provider.game_id provider_game_id,provider_meta.file_id provider_metadata_file_id '
                 . 'FROM ' . $dependencySource . ' d '
                 . 'LEFT JOIN ue_files provider ON provider.id=d.resolved_file_id AND provider.scan_status="verified" '
-                . 'LEFT JOIN ue_file_metadata provider_meta ON provider_meta.file_id=provider.id AND provider_meta.format_version=3 '
+                . 'LEFT JOIN ue_file_metadata provider_meta ON provider_meta.file_id=provider.id AND provider_meta.format_version=' . \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer::FORMAT_VERSION . ' '
                 . 'WHERE d.file_id IN (' . $placeholders . ') '
                 . 'ORDER BY d.file_id,d.required_package,d.required_object_path,d.id',
                 $chunk
