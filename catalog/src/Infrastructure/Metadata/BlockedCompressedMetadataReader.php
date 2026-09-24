@@ -347,12 +347,7 @@ final class BlockedCompressedMetadataReader
         $rows = [];
         foreach ((array)($payload['rows'] ?? []) as $row) {
             if (is_array($row)) {
-                $rows[] = $this->decodeRow(
-                    $section,
-                    $row,
-                    $strings,
-                    2
-                );
+                $rows[] = $this->decodeRow($section, $row, $strings);
             }
         }
         if (count($rows) !== (int)$block['row_count']) {
@@ -366,7 +361,7 @@ final class BlockedCompressedMetadataReader
      * Current-format decoder only. Future v5+ row changes belong in a new
      * format implementation/migrator, not backward-compatibility branches here.
      */
-    private function decodeRow(string $section, array $row, array $strings, int $rowSchemaVersion): array
+    private function decodeRow(string $section, array $row, array $strings): array
     {
         return match ($section) {
             'names' => [
