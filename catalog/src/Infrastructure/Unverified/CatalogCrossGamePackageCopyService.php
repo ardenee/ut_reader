@@ -34,14 +34,6 @@ final class CatalogCrossGamePackageCopyService
                 'This source file no longer exports an object required by a missing dependency in the target game.'
             );
         }
-        if (!empty($candidate['already_in_target'])) {
-            throw new \RuntimeException(
-                'The same package bytes are already verified in the target game as file #'
-                . (int)($candidate['target_existing_file_id'] ?? 0)
-                . '. Rebuild the target dependencies instead of copying the file again.'
-            );
-        }
-
         // Resolve the source game's dependency graph before queueing the selected
         // root. This mirrors generated-package traversal: resolved/package_only
         // links are followed transitively, while common and unresolved links are
@@ -139,7 +131,7 @@ final class CatalogCrossGamePackageCopyService
         if (!$source || (int)$source['game_id'] === $targetGameId) {
             return null;
         }
-        if ((int)($source['metadata_format_version'] ?? 0) !== 2) {
+        if ((int)($source['metadata_format_version'] ?? 0) !== 3) {
             return null;
         }
 
@@ -151,8 +143,10 @@ final class CatalogCrossGamePackageCopyService
             . 'WHERE g.id=? LIMIT 1',
             [$targetGameId]
         );
-        if (!$target
-            || strcasecmp(trim((string)$source['source_engine']), trim((string)$target['engine_key'])) !== 0) {
+        if (!$target || !$this->compatibleEngine(
+            (string)$target['engine_key'],
+            (string)$source['source_engine']
+        )) {
             return null;
         }
 
@@ -280,6 +274,32 @@ final class CatalogCrossGamePackageCopyService
             'job_id' => $jobId,
             'deduplicated' => $existingJobId > 0 && $existingJobId === $jobId,
         ];
+    }
+
+    private function compatibleEngine(string $targetEngine, string $sourceEngine): bool
+    {
+        $target = $this->engineGeneration($targetEngine);
+        $source = $this->engineGeneration($sourceEngine);
+        return match ($target) {
+            1 => $source === 1,
+            2 => $source === 1 || $source === 2,
+            3 => $source === 3,
+            4 => $source === 4,
+            5 => $source === 4 || $source === 5,
+            default => false,
+        };
+    }
+
+    private function engineGeneration(string $engineKey): int
+    {
+        $key = strtoupper(trim($engineKey));
+        if (preg_match('/^UE([1-5])(?:\\D|$)/', $key, $matches) === 1) {
+            return (int)$matches[1];
+        }
+        if (preg_match('/UNREAL(?:ENGINE)?[^0-9]*([1-5])/', $key, $matches) === 1) {
+            return (int)$matches[1];
+        }
+        return 0;
     }
 
     private function physicalPath(string $rawPath): string
