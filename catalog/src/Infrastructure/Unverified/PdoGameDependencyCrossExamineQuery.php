@@ -11,6 +11,7 @@ namespace UnrealDb\Catalog\Infrastructure\Unverified;
 
 use PDO;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyReadSource;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageObjectCoverageResolver;
 
 final class PdoGameDependencyCrossExamineQuery
 {
@@ -162,6 +163,12 @@ final class PdoGameDependencyCrossExamineQuery
             }
             $exactOwners = min($ownerCount, max(0, (int)($exactEvidence['exact_owner_count'] ?? 0)));
 
+            $completeCoverage = $this->completeConsumerCoverage(
+                $targetGameId,
+                (int)$sourceFileId,
+                (string)$source['package_name']
+            );
+
             $rows[] = $source + [
                 'target_game_id' => $targetGameId,
                 'target_game_name' => (string)$target['name'],
@@ -170,6 +177,9 @@ final class PdoGameDependencyCrossExamineQuery
                 'exact_object_matches' => $exact,
                 'exact_owner_count' => $exactOwners,
                 'coverage_percent' => round(($exact / $missingCount) * 100, 1),
+                'complete_consumer_count' => $completeCoverage['complete_consumer_count'],
+                'partial_consumer_count' => $completeCoverage['partial_consumer_count'],
+                'consumer_coverage' => $completeCoverage['consumers'],
             ];
         }
 
@@ -286,6 +296,114 @@ final class PdoGameDependencyCrossExamineQuery
             'exact_owner_count' => $exactOwners,
             'coverage_percent' => round(($exactMatches / $missingCount) * 100, 1),
         ];
+    }
+
+    /**
+     * Evaluate each affected consumer against the candidate as one physical package.
+     * Requirements include every import from that consumer to the package, not only
+     * rows currently marked missing. This prevents partial package versions from
+     * being presented as complete replacements.
+     *
+     * @return array{complete_consumer_count:int,partial_consumer_count:int,consumers:list<array<string,mixed>>}
+     */
+    private function completeConsumerCoverage(int $targetGameId, int $sourceFileId, string $packageName): array
+    {
+        $affected = \catalog_all(
+            $this->db,
+            'SELECT DISTINCT l.file_id FROM ue_dependency_links l '
+            . 'JOIN ue_files f ON f.id=l.file_id AND f.game_id=? AND f.scan_status="verified" '
+            . 'JOIN ue_terms pkg ON pkg.id=l.required_package_term_id '
+            . 'WHERE l.status=0 AND CONVERT(pkg.value_prefix USING utf8mb4) COLLATE utf8mb4_unicode_ci=?',
+            [$targetGameId, $packageName]
+        );
+        $consumers = [];
+        $complete = 0;
+        $partial = 0;
+        foreach ($affected as $affectedRow) {
+            $consumerId = (int)($affectedRow['file_id'] ?? 0);
+            if ($consumerId < 1) {
+                continue;
+            }
+            $imports = \catalog_all(
+                $this->db,
+                'SELECT CONVERT(obj.value_prefix USING utf8mb4) object_path,'
+                . 'CONVERT(cp.value_prefix USING utf8mb4) class_package,'
+                . 'CONVERT(cn.value_prefix USING utf8mb4) class_name '
+                . 'FROM ue_dependency_links l '
+                . 'JOIN ue_terms pkg ON pkg.id=l.required_package_term_id '
+                . 'JOIN ue_terms obj ON obj.id=l.required_object_term_id '
+                . 'LEFT JOIN ue_terms cp ON cp.id=l.import_class_package_term_id '
+                . 'LEFT JOIN ue_terms cn ON cn.id=l.import_class_name_term_id '
+                . 'WHERE l.file_id=? AND CONVERT(pkg.value_prefix USING utf8mb4) COLLATE utf8mb4_unicode_ci=? '
+                . 'ORDER BY l.import_index',
+                [$consumerId, $packageName]
+            );
+            $paths = [];
+            $classes = [];
+            foreach ($imports as $import) {
+                $path = trim((string)($import['object_path'] ?? ''));
+                // A package-only Import names the package itself and is not an
+                // Export requirement. Only concrete object paths participate.
+                if ($path === '' || strcasecmp($path, $packageName) === 0) {
+                    continue;
+                }
+                $paths[$this->key($path)] = $path;
+                $className = trim((string)($import['class_name'] ?? ''));
+                if ($className !== '') {
+                    $classes[$path] = [
+                        'class_package' => trim((string)($import['class_package'] ?? '')),
+                        'class_name' => $className,
+                    ];
+                }
+            }
+            if ($paths === []) {
+                continue;
+            }
+            $coverage = PdoPackageObjectCoverageResolver::evaluate(
+                $this->db,
+                (int)($this->sourceGameIdForFile($sourceFileId)),
+                $packageName,
+                array_values($paths),
+                $sourceFileId,
+                $classes
+            );
+            $candidate = null;
+            foreach ($coverage as $coverageRow) {
+                if ((int)($coverageRow['file_id'] ?? 0) === $sourceFileId) {
+                    $candidate = $coverageRow;
+                    break;
+                }
+            }
+            if (!is_array($candidate)) {
+                continue;
+            }
+            $isComplete = (string)($candidate['status'] ?? '') === 'fully_satisfies';
+            if ($isComplete) {
+                $complete++;
+            } else {
+                $partial++;
+            }
+            $consumers[] = [
+                'file_id' => $consumerId,
+                'required_count' => (int)($candidate['required_count'] ?? 0),
+                'matched_count' => (int)($candidate['matched_count'] ?? 0),
+                'missing_count' => (int)($candidate['missing_count'] ?? 0),
+                'status' => (string)($candidate['status'] ?? ''),
+                'missing_paths' => (array)($candidate['missing_paths'] ?? []),
+            ];
+        }
+        return [
+            'complete_consumer_count' => $complete,
+            'partial_consumer_count' => $partial,
+            'consumers' => $consumers,
+        ];
+    }
+
+    private function sourceGameIdForFile(int $fileId): int
+    {
+        $stmt = $this->db->prepare('SELECT game_id FROM ue_files WHERE id=? LIMIT 1');
+        $stmt->execute([$fileId]);
+        return (int)$stmt->fetchColumn();
     }
 
     /**
