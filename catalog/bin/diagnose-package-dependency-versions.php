@@ -49,9 +49,9 @@ $providerDetail=[];
 foreach($providers as $provider){
     $exports=catalog_all($db,
         'SELECT e.export_index,CONVERT(o.value_prefix USING utf8mb4) object_name,CONVERT(lp.value_prefix USING utf8mb4) local_path,'
-        . 'CONVERT(cp.value_prefix USING utf8mb4) class_package,CONVERT(cn.value_prefix USING utf8mb4) class_name,HEX(e.path_hash) path_hash '
+        . 'CONVERT(cls.value_prefix USING utf8mb4) class_name,HEX(e.path_hash) path_hash '
         . 'FROM ue_export_lookup e LEFT JOIN ue_terms o ON o.id=e.object_term_id LEFT JOIN ue_terms lp ON lp.id=e.local_path_term_id '
-        . 'LEFT JOIN ue_terms cp ON cp.id=e.class_package_term_id LEFT JOIN ue_terms cn ON cn.id=e.class_name_term_id '
+        . 'LEFT JOIN ue_terms cls ON cls.id=e.class_term_id '
         . 'WHERE e.file_id=? ORDER BY e.export_index', [(int)$provider['id']]);
     $matching=[]; $byHash=[];
     foreach($exports as $e){$h=strtoupper((string)($e['path_hash']??'')); if($h!=='')$byHash[$h][]=$e; if(isset($requiredHashes[$h]))$matching[]=$e;}
