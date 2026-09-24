@@ -140,7 +140,7 @@ $record(
         && !str_contains($persistence, 'PdoCatalogDependencyRebuilder')
         && !str_contains($persistence, '->rebuild(')
         && str_contains($pdoImporter, 'CatalogPackageImporterFactory::create('),
-    'new verified imports must publish format-3 metadata directly from the inspected parser snapshot through the port-driven adapter'
+    'new verified imports must publish current-format metadata directly from the inspected parser snapshot through the port-driven adapter'
 );
 $finalizerLegacyReferences = $retiredReferences($finalizerExecutable);
 $record(
@@ -149,7 +149,7 @@ $record(
         && str_contains($finalizer, "' has no current format-' . BlockedCompressedMetadataContainer::FORMAT_VERSION . ' metadata.'")
         && $finalizerLegacyReferences === [],
     $finalizerLegacyReferences === []
-        ? 'runtime verification fails closed when format-3 is missing and contains no retired-table conversion path'
+        ? 'runtime verification fails closed when current format is missing and contains no retired-table conversion path'
         : 'found retired metadata references: ' . implode(', ', $finalizerLegacyReferences)
 );
 
@@ -189,7 +189,7 @@ $record(
         && str_contains($converter, 'Historical SQL metadata conversion has been retired')
         && $converterLegacyReferences === [],
     $converterLegacyReferences === []
-        ? 'projection rebuilds and verification use current format-3 containers only'
+        ? 'projection rebuilds and verification use current-format containers only'
         : 'found retired metadata references: ' . implode(', ', $converterLegacyReferences)
 );
 
@@ -253,17 +253,17 @@ if ($withDatabase) {
             'SELECT COUNT(*) FROM ue_files f '
             . 'LEFT JOIN ue_file_metadata m ON m.file_id=f.id '
             . 'WHERE f.scan_status="verified" '
-            . 'AND (m.file_id IS NULL OR m.format_version<>3)'
+            . 'AND (m.file_id IS NULL OR m.format_version<>'.\UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer::FORMAT_VERSION)'
         )->fetchColumn();
         $record(
             'verified_files_current_format_coverage',
             $missing === 0,
-            'verified_without_format3=' . $missing
+            'verified_without_current_format=' . $missing
         );
 
         $mismatchedCounts = (int)$db->query(
             'SELECT COUNT(*) FROM ue_files f '
-            . 'JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=3 '
+            . 'JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version='.\UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer::FORMAT_VERSION '
             . 'WHERE f.scan_status="verified" AND ('
             . 'm.name_count<>f.name_count OR m.import_count<>f.import_count OR m.export_count<>f.export_count)'
         )->fetchColumn();
@@ -303,7 +303,7 @@ if ($withDatabase) {
 
         $missingLocalPathTerms = (int)$db->query(
             'SELECT COUNT(*) FROM ue_export_lookup l '
-            . 'JOIN ue_file_metadata m ON m.file_id=l.file_id AND m.format_version=3 '
+            . 'JOIN ue_file_metadata m ON m.file_id=l.file_id AND m.format_version='.\UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer::FORMAT_VERSION '
             . 'WHERE l.local_path_term_id IS NULL'
         )->fetchColumn();
         $checks[] = [
