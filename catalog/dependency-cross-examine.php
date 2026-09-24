@@ -246,17 +246,6 @@ CSS;
             if (count($paths) > 5) $objectSummary .= ' +' . number_format(count($paths) - 5);
         }
         echo '<small class="cross-object-line">' . catalog_h($objectSummary) . '</small>';
-        $matchedPaths = [];
-        foreach ($consumerCoverage as $consumer) {
-            foreach ((array)($consumer['matched_paths'] ?? []) as $path) {
-                $path = trim((string)$path);
-                if ($path !== '') $matchedPaths[strtolower($path)] = $path;
-            }
-        }
-        if ($matchedPaths !== []) {
-            echo '<small class="cross-object-line"><strong>Matching:</strong> '
-                . catalog_h(implode(', ', array_values($matchedPaths))) . '</small>';
-        }
         if ($consumerCoverage !== []) {
             echo '<details class="cross-details"><summary>Per-consumer coverage</summary><div class="cross-details-body">';
             foreach ($consumerCoverage as $consumer) {
