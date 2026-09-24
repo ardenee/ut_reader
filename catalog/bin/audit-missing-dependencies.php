@@ -18,13 +18,19 @@ require_once $root . '/lib/CatalogSupport.php';
 
 use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataSnapshotLoader;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyResolver;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoGameMissingDependencyQuery;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageObjectCoverageResolver;
 
-$options = getopt('', ['game-id:', 'max-details::']);
+$options = getopt('', ['game-id:', 'max-details::', 'scope::']);
 $gameId = (int)($options['game-id'] ?? 0);
 $maxDetails = max(1, min(10000, (int)($options['max-details'] ?? 1000)));
+$scope = strtolower(trim((string)($options['scope'] ?? 'all')));
+if (!in_array($scope, ['all', 'base-game'], true)) {
+    fwrite(STDERR, "Invalid --scope. Use all or base-game.\n");
+    exit(2);
+}
 if ($gameId < 1) {
-    fwrite(STDERR, "Usage: php catalog/bin/audit-missing-dependencies.php --game-id=ID [--max-details=1000]\n");
+    fwrite(STDERR, "Usage: php catalog/bin/audit-missing-dependencies.php --game-id=ID [--scope=all|base-game] [--max-details=1000]\n");
     exit(2);
 }
 
@@ -36,6 +42,23 @@ $game = $gameStmt->fetch(PDO::FETCH_ASSOC);
 if (!is_array($game)) {
     fwrite(STDERR, "Game not found: {$gameId}\n");
     exit(3);
+}
+
+$packageScope = null;
+if ($scope === 'base-game') {
+    $packageScope = (new PdoGameMissingDependencyQuery($db))->officialBaseGamePackageNames($gameId);
+}
+$packageScopeKeys = null;
+if (is_array($packageScope)) {
+    $packageScopeKeys = [];
+    foreach ($packageScope as $packageName) {
+        $key = function_exists('mb_strtolower')
+            ? mb_strtolower(trim((string)$packageName), 'UTF-8')
+            : strtolower(trim((string)$packageName));
+        if ($key !== '') {
+            $packageScopeKeys[$key] = true;
+        }
+    }
 }
 
 $verifiedStmt = $db->prepare('SELECT COUNT(*) FROM ue_files WHERE game_id=? AND scan_status="verified"');
@@ -63,6 +86,18 @@ $sql = 'SELECT l.file_id,l.import_index,'
 $stmt = $db->prepare($sql);
 $stmt->execute([$gameId]);
 $requirementRows = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+if (is_array($packageScopeKeys)) {
+    $requirementRows = array_values(array_filter(
+        $requirementRows,
+        static function (array $row) use ($packageScopeKeys): bool {
+            $package = trim((string)($row['required_package'] ?? ''));
+            $key = function_exists('mb_strtolower')
+                ? mb_strtolower($package, 'UTF-8')
+                : strtolower($package);
+            return isset($packageScopeKeys[$key]);
+        }
+    ));
+}
 $missingRows = array_values(array_filter(
     $requirementRows,
     static fn(array $row): bool => (int)($row['dependency_status'] ?? -1) === 0
@@ -268,6 +303,8 @@ $result = [
     'read_only' => true,
     'game_id' => $gameId,
     'game_name' => (string)$game['name'],
+    'scope' => $scope,
+    'scope_package_count' => is_array($packageScope) ? count($packageScope) : null,
     'verified_files' => $verifiedFiles,
     'missing_dependency_rows' => count($missingRows),
     'missing_package_groups' => count($groups),
