@@ -156,7 +156,9 @@ if ($workers > 1 && $workerIndex < 0) {
                 fclose($child[$pipeName]);
             }
 
-            $code = proc_close($child['process']);
+            $observedExitCode = (int)($status['exitcode'] ?? -1);
+            $closedExitCode = proc_close($child['process']);
+            $code = $observedExitCode >= 0 ? $observedExitCode : $closedExitCode;
             $child['closed'] = true;
             if ($code !== 0) {
                 $exitCode = 2;
