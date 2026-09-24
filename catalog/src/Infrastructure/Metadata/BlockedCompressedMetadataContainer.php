@@ -180,6 +180,7 @@ final class BlockedCompressedMetadataContainer
         if (!is_array($manifest) || (int)($manifest['file']['id'] ?? 0) !== $expectedFileId) {
             throw new RuntimeException('Blocked metadata manifest identity mismatch.');
         }
+        self::assertCurrentManifestContract($manifest);
 
         $payloadStart = self::HEADER_LENGTH + $manifestLength;
         $verifiedBlocks = 0;
@@ -255,6 +256,7 @@ final class BlockedCompressedMetadataContainer
             if (!is_array($manifest) || (int)($manifest['file']['id'] ?? 0) !== $expectedFileId) {
                 throw new RuntimeException('Blocked metadata manifest identity mismatch.');
             }
+            self::assertCurrentManifestContract($manifest);
 
             $expectedOffset = 0;
             $verifiedBlocks = 0;
@@ -411,6 +413,27 @@ final class BlockedCompressedMetadataContainer
             'uncompressed_size' => $uncompressedSize,
             'block_count' => $blockCount,
         ];
+    }
+
+    /**
+     * Format-4 manifest contract. Future v5+ changes must introduce a new
+     * container format rather than weakening this validator.
+     *
+     * @param array<string,mixed> $manifest
+     */
+    private static function assertCurrentManifestContract(array $manifest): void
+    {
+        if ((int)($manifest['format_version'] ?? 0) !== self::FORMAT_VERSION) {
+            throw new RuntimeException('Blocked metadata manifest format version is invalid.');
+        }
+        if ((string)($manifest['identity_hash_algorithm'] ?? '')
+            !== CatalogUnrealIdentityHash::VERIFY_IMPORT_ALGORITHM) {
+            throw new RuntimeException('Blocked metadata manifest VerifyImport identity hash contract is invalid.');
+        }
+        if ((string)($manifest['path_hash_algorithm'] ?? '')
+            !== CatalogUnrealIdentityHash::OBJECT_PATH_ALGORITHM) {
+            throw new RuntimeException('Blocked metadata manifest object-path hash contract is invalid.');
+        }
     }
 
     /** @param array<string,mixed> $manifest */
