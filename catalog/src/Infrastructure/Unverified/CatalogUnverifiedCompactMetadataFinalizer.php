@@ -1,6 +1,6 @@
 <?php
 /**
- * Purpose: Publishes a promoted unverified staging snapshot as authoritative format-3 metadata.
+ * Purpose: Publishes a promoted unverified staging snapshot as authoritative current-format metadata.
  * Why: Promotion must reuse already parsed staging data without depending on legacy SQL metadata tables or reparsing the package.
  * Role: Recovery-safe bridge from temporary unverified staging to current verified metadata.
  */
@@ -66,7 +66,7 @@ final class CatalogUnverifiedCompactMetadataFinalizer
                     $verified['already_compact'] = true;
                     return $verified;
                 } catch (Throwable $existingError) {
-                    // A format-3 registration can outlive a missing/corrupt file.
+                    // A current-format registration can outlive a missing/corrupt file.
                     // If compressed staging still exists, it is the authoritative
                     // recovery source and we can republish without reparsing bytes.
                     if (!$this->store->has($fileId)) {
