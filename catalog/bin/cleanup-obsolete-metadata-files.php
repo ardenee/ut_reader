@@ -17,7 +17,7 @@ if (PHP_SAPI !== 'cli') {
 $root = realpath(dirname(__DIR__)) ?: dirname(__DIR__);
 require_once $root . '/lib/CatalogSupport.php';
 
-$options = getopt('', ['apply', 'extensions::', 'max::']);
+$options = getopt('', ['apply', 'extensions::', 'max::', 'storage-root::']);
 $apply = array_key_exists('apply', $options);
 $extensionsRaw = trim((string)($options['extensions'] ?? 'uedb2,uedb3'));
 $max = isset($options['max']) ? max(1, (int)$options['max']) : PHP_INT_MAX;
@@ -35,9 +35,11 @@ if ($extensions === []) {
 
 $config = catalog_config();
 $db = catalog_db($config);
-$storageRoot = rtrim((string)($config['storage_path'] ?? ''), "\\/");
+$configuredStorageRoot = trim((string)($config['storage_path'] ?? ''));
+$storageRoot = trim((string)($options['storage-root'] ?? $configuredStorageRoot));
+$storageRoot = rtrim($storageRoot, "\\/");
 if ($storageRoot === '') {
-    throw new RuntimeException('catalog.storage_path is required.');
+    throw new RuntimeException('Metadata storage root is required via catalog.storage_path or --storage-root.');
 }
 
 if (isset($extensions['uedb3'])) {
@@ -105,6 +107,8 @@ foreach ($iterator as $fileInfo) {
 echo json_encode([
     'ok' => $failed === 0,
     'apply' => $apply,
+    'storage_root' => $storageRoot,
+    'metadata_root' => $metadataRoot,
     'extensions' => array_keys($extensions),
     'matched' => $matched,
     'deleted' => $deleted,
