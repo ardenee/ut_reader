@@ -25,7 +25,7 @@ use UnrealDb\Catalog\Infrastructure\Persistence\PdoWorkflowChildStateQuery;
 
 final class CatalogFullSyncJobHandler implements JobHandler
 {
-    private const WORKFLOW_VERSION = 2;
+    private const WORKFLOW_VERSION = 3;
     private const PLAN_BATCH_SIZE = 500;
     private const DEPENDENCY_PLAN_PAGE_SIZE = 5000;
     private const DEPENDENCY_UNIT_BATCH_SIZE = 100;
@@ -66,9 +66,31 @@ final class CatalogFullSyncJobHandler implements JobHandler
                 $stage = 'full_sync_plan_dependencies';
                 $resume = [];
             } else {
-                $stage = 'full_sync_plan_reimport';
+                $stage = 'full_sync_reset';
                 $resume = [];
             }
+        }
+
+        if ($stage === 'full_sync_reset') {
+            $resetProgress = static function (array $inner) use ($context): void {
+                $innerPercent = max(0, min(100, (int)($inner['percent'] ?? 0)));
+                $context->heartbeatIfDue([
+                    'workflow_version' => self::WORKFLOW_VERSION,
+                    'stage' => 'full_sync_reset',
+                    'done' => $innerPercent,
+                    'total' => 100,
+                    'percent' => (int)floor(($innerPercent * 2) / 100),
+                    'message' => (string)($inner['message'] ?? 'Clearing selected-game derived dependency state.'),
+                ]);
+            };
+            (new CatalogFullSyncProjectionService($this->db, $resetProgress))->resetDerivedState($gameId);
+            $context->checkpoint($this->progress(
+                'full_sync_plan_reimport',
+                2,
+                'Selected-game dependency state cleared; planning one source parse per verified package.'
+            ));
+            $resume = [];
+            $stage = 'full_sync_plan_reimport';
         }
 
         if ($stage === 'full_sync_plan_reimport') {
@@ -79,7 +101,7 @@ final class CatalogFullSyncJobHandler implements JobHandler
                 $requestedBy,
                 JobType::FULL_SYNC_FILE,
                 'reimport',
-                0,
+                2,
                 5,
                 $resume
             );
@@ -398,7 +420,7 @@ final class CatalogFullSyncJobHandler implements JobHandler
     private function resumeStage(array $resume): string
     {
         $stage = trim((string)($resume['stage'] ?? ''));
-        return $stage !== '' && $stage !== 'worker_start' ? $stage : 'full_sync_plan_reimport';
+        return $stage !== '' && $stage !== 'worker_start' ? $stage : 'full_sync_reset';
     }
 
     /** @param list<mixed> $arguments @return array<string,mixed>|null */
