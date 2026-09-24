@@ -38,12 +38,14 @@ $check(
         && str_contains($builder, "'class_name'")
         && str_contains($builder, "'class_package_name_index'")
         && str_contains($builder, "'class_name_index'"),
-    'v3 Import rows retain both class FNames and their direct Name indexes.'
+    'Current-format Import rows retain both class FNames and their direct Name indexes.'
 );
 $check(
     'provider_coverage_checks_path_and_class',
-    str_contains($coverage, 'exportMatchesRequirement')
-        && str_contains($coverage, 'requiredClassesByPath'),
+    str_contains($coverage, 'requiredClassesByPath')
+        && str_contains($coverage, 'path_hash_ci')
+        && str_contains($coverage, 'class_name')
+        && str_contains($coverage, 'class_package'),
     'Compatibility requires the normalized object path and, when available, Unreal class identity.'
 );
 $ok=!in_array(false,array_column($checks,'ok'),true);
