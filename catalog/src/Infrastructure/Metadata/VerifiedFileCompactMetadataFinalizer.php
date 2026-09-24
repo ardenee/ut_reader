@@ -1,7 +1,7 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Ensures every verified package uses the authoritative format-3 metadata container.
+ * Purpose: Ensures every verified package uses the authoritative current metadata container.
  * Why: Parsed package metadata is published directly from reader output and no retired SQL metadata staging is written.
  * Role: Infrastructure verified-import compact metadata finalizer.
  */
@@ -26,7 +26,7 @@ final class VerifiedFileCompactMetadataFinalizer
      *
      * Full Sync captures this before the parser runs. It allows finalizeParsed()
      * to compare package-owned metadata without re-reading or rewriting an
-     * unchanged .uedb3. A corrupt/missing compact file deliberately has no
+     * unchanged .uedb4. A corrupt/missing compact file deliberately has no
      * baseline, which forces publication from parser output.
      *
      * @param array<string,mixed> $snapshot
@@ -217,7 +217,7 @@ final class VerifiedFileCompactMetadataFinalizer
 
     /**
      * The snapshot writer owns the complete SQL transaction and restores the
-     * previous .uedb3 file on failure, so retry the whole publication rather than
+     * previous .uedb4 file on failure, so retry the whole publication rather than
      * retrying individual projection statements inside a rolled-back transaction.
      *
      * @param array<string,mixed> $snapshot
