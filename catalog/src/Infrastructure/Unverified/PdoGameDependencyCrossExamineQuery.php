@@ -147,7 +147,7 @@ final class PdoGameDependencyCrossExamineQuery
         $sourceById = [];
         foreach ($sources as $source) {
             $sourceById[(int)$source['id']] = $source;
-            if ((int)($source['metadata_format_version'] ?? 0) === 3) {
+            if ((int)($source['metadata_format_version'] ?? 0) === \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer::FORMAT_VERSION) {
                 $diagnostics['format3_source_files']++;
             }
         }
