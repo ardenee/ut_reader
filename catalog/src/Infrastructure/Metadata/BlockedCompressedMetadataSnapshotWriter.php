@@ -222,8 +222,21 @@ final class BlockedCompressedMetadataSnapshotWriter
             if (!is_array($row)
                 || !array_key_exists('class_package_name_index', $row)
                 || !array_key_exists('class_name_index', $row)
-                || !array_key_exists('object_name_index', $row)) {
-                throw new RuntimeException('Current-format publication requires serialized Import FName indexes; reparse the source package first.');
+                || !array_key_exists('object_name_index', $row)
+                || !array_key_exists('verify_identity_hash', $row)
+                || !array_key_exists('path_hash_ci', $row)) {
+                throw new RuntimeException(
+                    'Current-format publication requires serialized Import FName indexes '
+                    . 'plus v4 identity/path hash fields; rebuild through the current parser or v3->v4 migrator.'
+                );
+            }
+            $identityHash = (string)($row['verify_identity_hash'] ?? '');
+            $pathHash = (string)($row['path_hash_ci'] ?? '');
+            if ($identityHash !== '' && preg_match('/^[0-9a-f]{32}$/i', $identityHash) !== 1) {
+                throw new RuntimeException('Current-format Import VerifyImport identity hash is invalid.');
+            }
+            if ($pathHash !== '' && preg_match('/^[0-9a-f]{32}$/i', $pathHash) !== 1) {
+                throw new RuntimeException('Current-format Import path hash is invalid.');
             }
         }
         foreach ((array)($snapshot['exports'] ?? []) as $row) {
@@ -231,8 +244,23 @@ final class BlockedCompressedMetadataSnapshotWriter
                 || !array_key_exists('class_index', $row)
                 || !array_key_exists('super_index', $row)
                 || !array_key_exists('template_index', $row)
-                || !array_key_exists('object_name_index', $row)) {
-                throw new RuntimeException('Current-format publication requires serialized Export reference indexes; reparse the source package first.');
+                || !array_key_exists('object_name_index', $row)
+                || !array_key_exists('verify_class_package', $row)
+                || !array_key_exists('verify_class_name', $row)
+                || !array_key_exists('verify_identity_hash', $row)
+                || !array_key_exists('path_hash_ci', $row)) {
+                throw new RuntimeException(
+                    'Current-format publication requires serialized Export reference indexes '
+                    . 'plus v4 class identity/path hash fields; rebuild through the current parser or v3->v4 migrator.'
+                );
+            }
+            $identityHash = (string)($row['verify_identity_hash'] ?? '');
+            $pathHash = (string)($row['path_hash_ci'] ?? '');
+            if ($identityHash !== '' && preg_match('/^[0-9a-f]{32}$/i', $identityHash) !== 1) {
+                throw new RuntimeException('Current-format Export VerifyImport identity hash is invalid.');
+            }
+            if ($pathHash !== '' && preg_match('/^[0-9a-f]{32}$/i', $pathHash) !== 1) {
+                throw new RuntimeException('Current-format Export path hash is invalid.');
             }
         }
     }
