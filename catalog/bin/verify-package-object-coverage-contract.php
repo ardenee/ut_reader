@@ -121,6 +121,7 @@ $check(
 $check(
     'case_insensitive_path_matching_is_indexed',
     is_string($source)
+        && str_contains($source, 'ue_export_path_lookup')
         && str_contains($source, 'path_hash_ci')
         && !str_contains($source, 'PdoCompactCaseInsensitiveExportResolver')
         && !str_contains($source, 'BlockedCompressedMetadataReader'),
