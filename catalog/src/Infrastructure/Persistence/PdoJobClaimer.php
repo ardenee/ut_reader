@@ -135,20 +135,6 @@ final class PdoJobClaimer
                 $rootLockAcquiredForCandidate = true;
             }
 
-            if ($this->fullSyncParentAtCapacity($queue, $candidate)) {
-                $this->rollbackClaimTransaction();
-                if ($rootLockAcquiredForCandidate) {
-                    $this->releaseRootAffinity();
-                }
-                $parentId = (int)($candidate['parent_job_id'] ?? 0);
-                if ($parentId > 0) {
-                    $blockedFullSyncParentIds[$parentId] = true;
-                } else {
-                    $blockedJobIds[(int)$candidate['id']] = true;
-                }
-                continue;
-            }
-
             $resourceClass = trim((string)($candidate['resource_class'] ?? 'default')) ?: 'default';
             $persistedLimit = max(1, (int)($candidate['resource_limit'] ?? 1));
             $concurrencyKey = trim((string)($candidate['concurrency_key'] ?? ''));
@@ -184,6 +170,20 @@ final class PdoJobClaimer
 
             $leaseSucceeded = false;
             try {
+                if ($this->fullSyncParentAtCapacity($queue, $candidate)) {
+                    $this->rollbackClaimTransaction();
+                    if ($rootLockAcquiredForCandidate) {
+                        $this->releaseRootAffinity();
+                    }
+                    $parentId = (int)($candidate['parent_job_id'] ?? 0);
+                    if ($parentId > 0) {
+                        $blockedFullSyncParentIds[$parentId] = true;
+                    } else {
+                        $blockedJobIds[(int)$candidate['id']] = true;
+                    }
+                    continue;
+                }
+
                 $decision = $guard->decision(
                     $queue,
                     $resourceClass,
