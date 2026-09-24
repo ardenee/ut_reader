@@ -18,14 +18,19 @@ use JsonException;
 use RuntimeException;
 use Throwable;
 
-/** Builds the version-3 random-access, block-compressed metadata container. */
+/**
+ * Builds the current random-access blocked metadata container.
+ * Format upgrade rule: a future v5+ change must use a new FORMAT_VERSION, magic,
+ * extension and dedicated offline migration reader; production runtime never
+ * reads prior formats.
+ */
 final class BlockedCompressedMetadataContainer
 {
-    public const FORMAT_VERSION = 3;
+    public const FORMAT_VERSION = 4;
     public const CODEC_BLOCK_GZIP = 2;
     public const DEFAULT_BLOCK_SIZE = 500;
 
-    private const MAGIC = "UEDBM3\0\0";
+    private const MAGIC = "UEDBM4\0\0";
     private const HEADER_LENGTH = 20;
     private const COPY_BUFFER_BYTES = 1024 * 1024;
 
@@ -305,7 +310,7 @@ final class BlockedCompressedMetadataContainer
         return $root . DIRECTORY_SEPARATOR . 'metadata'
             . DIRECTORY_SEPARATOR . $gameId
             . DIRECTORY_SEPARATOR . $shard
-            . DIRECTORY_SEPARATOR . $fileId . '.uedb3';
+            . DIRECTORY_SEPARATOR . $fileId . '.uedb4';
     }
 
     /**
@@ -330,7 +335,6 @@ final class BlockedCompressedMetadataContainer
             'format_version' => self::FORMAT_VERSION,
             'codec' => 'gzip-blocks',
             'block_size' => $blockSize,
-            'row_schema_version' => 2,
             'identity_hash_algorithm' => CatalogUnrealIdentityHash::VERIFY_IMPORT_ALGORITHM,
             'path_hash_algorithm' => CatalogUnrealIdentityHash::OBJECT_PATH_ALGORITHM,
             'file' => [
