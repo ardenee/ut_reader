@@ -137,7 +137,7 @@ final class PdoGameDependencyCrossExamineQuery
         $sourceById = [];
         foreach ($sources as $source) {
             $sourceById[(int)$source['id']] = $source;
-            if ((int)($source['metadata_format_version'] ?? 0) === 2) {
+            if ((int)($source['metadata_format_version'] ?? 0) === 3) {
                 $diagnostics['format3_source_files']++;
             }
         }
@@ -214,7 +214,7 @@ final class PdoGameDependencyCrossExamineQuery
         if (strcasecmp((string)$source['source_engine'], (string)$target['engine_key']) !== 0) {
             return null;
         }
-        if ((int)($source['metadata_format_version'] ?? 0) !== 2) {
+        if ((int)($source['metadata_format_version'] ?? 0) !== 3) {
             return null;
         }
 
@@ -326,7 +326,15 @@ final class PdoGameDependencyCrossExamineQuery
                 . 'AND source.package_name=CONVERT(pkg.value_prefix USING utf8mb4) COLLATE utf8mb4_unicode_ci '
                 . 'JOIN ue_file_metadata source_meta ON source_meta.file_id=source.id AND source_meta.format_version=3 '
                 . 'JOIN ue_export_lookup exports ON exports.file_id=source.id AND exports.path_hash=l.required_path_hash '
+                . 'JOIN ue_terms export_path ON export_path.id=exports.path_term_id '
+                . 'JOIN ue_terms required_path ON required_path.id=l.required_object_term_id '
+                . 'LEFT JOIN ue_terms required_class ON required_class.id=l.import_class_name_term_id '
                 . 'WHERE owner.game_id=? AND l.status=0 '
+                . 'AND LOWER(CONVERT(export_path.value_prefix USING utf8mb4))=LOWER(CONVERT(required_path.value_prefix USING utf8mb4)) '
+                . 'AND (l.import_class_name_term_id IS NULL OR NOT EXISTS ('
+                . 'SELECT 1 FROM ue_terms actual_class WHERE actual_class.id=exports.class_term_id '
+                . 'AND LOWER(CONVERT(actual_class.value_prefix USING utf8mb4))<>LOWER(CONVERT(required_class.value_prefix USING utf8mb4))'
+                . ')) '
                 . 'GROUP BY source.id',
                 array_merge($chunk, [$targetGameId])
             );
