@@ -161,40 +161,12 @@ final class CatalogFullSyncDependencyBatchService
         int $total,
         string $name
     ): bool {
-        $fileId = (int)$file['id'];
-        try {
-            $this->runDependencyRebuild($rebuilder, $fileId, $position, $total, $name);
-            return false;
-        } catch (Throwable $error) {
-            if (!$this->isCompactMetadataIntegrityFailure($error)) {
-                throw $error;
-            }
-
-            $this->emit(
-                max(0, $position - 1),
-                $total,
-                'Compact metadata is unreadable for ' . $position . '/' . $total . ': ' . $name
-                    . '; reparsing the authoritative stored package before retrying dependencies.'
-            );
-
-            $maintenance = new CatalogFileMaintenanceActionService(
-                $this->db,
-                $this->config,
-                null,
-                null
-            );
-            $maintenance->execute('sync_reimport', [
-                'file_id' => $fileId,
-                'game_id' => (int)$file['game_id'],
-                'package_name' => (string)$file['package_name'],
-                'md5' => (string)$file['md5'],
-                'package_guid' => (string)($file['package_guid'] ?? ''),
-            ]);
-
-            clearstatcache();
-            $this->runDependencyRebuild($rebuilder, $fileId, $position, $total, $name);
-            return true;
-        }
+        // Full Sync already reparsed and republished every selected-game source
+        // in pass 1. Pass 2 is dependency matching only; reopening/reparsing a
+        // source package here would violate the one-source-parse contract and
+        // hide a broken pass-1 publication.
+        $this->runDependencyRebuild($rebuilder, (int)$file['id'], $position, $total, $name);
+        return false;
     }
 
     private function runDependencyRebuild(
@@ -220,25 +192,6 @@ final class CatalogFullSyncDependencyBatchService
             $total,
             $name
         );
-    }
-
-    private function isCompactMetadataIntegrityFailure(Throwable $error): bool
-    {
-        $message = strtolower($error->getMessage());
-        foreach ([
-            'blocked metadata file size mismatch',
-            'blocked metadata container',
-            'blocked metadata manifest',
-            'blocked metadata section',
-            'no compressed metadata row',
-            'unsupported blocked metadata format version',
-            'unsupported blocked metadata codec',
-        ] as $needle) {
-            if (str_contains($message, $needle)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     /** @param list<int> $fileIds @return array<int,array<string,mixed>> */
