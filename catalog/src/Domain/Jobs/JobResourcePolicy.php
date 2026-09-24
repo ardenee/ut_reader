@@ -39,8 +39,8 @@ final class JobResourcePolicy
             ],
             self::FULL_SYNC_UNIT => [
                 'label' => 'Full Sync file units',
-                'default' => 2,
-                'description' => 'Independent per-file Full Sync reimport, compact-metadata repair and dependency units. Completed units remain durable and are never replayed after a workflow restart.',
+                'default' => 4,
+                'description' => 'Independent per-file Full Sync reimport and compact-metadata repair units. Full Sync workflows are separately capped at two active child workers per parent so multiple game syncs can share the pool.',
             ],
             self::AFFECTED_DEPENDENCY_BATCH => [
                 'label' => 'Dependency file units and affected batches',
@@ -122,7 +122,7 @@ final class JobResourcePolicy
             JobType::FULL_SYNC_FILE,
             JobType::REPAIR_COMPACT_METADATA_FILE => new JobResourceProfile(
                 self::FULL_SYNC_UNIT,
-                self::defaultLimit(2),
+                self::defaultLimit(4),
                 self::positiveKey('import:file-id:', $payload['file_id'] ?? null)
             ),
             JobType::FULL_SYNC_DEPENDENCY_FILE => self::fullSyncDependencyProfile($payload),
@@ -285,7 +285,7 @@ final class JobResourcePolicy
 
         return new JobResourceProfile(
             self::FULL_SYNC_UNIT,
-            self::defaultLimit(2),
+            self::defaultLimit(4),
             self::positiveKey('dependency:file:', $payload['file_id'] ?? null)
         );
     }
