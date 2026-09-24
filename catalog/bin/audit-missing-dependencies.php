@@ -55,28 +55,9 @@ $sql = 'SELECT l.file_id,l.import_index,'
     . 'LEFT JOIN ue_terms cn ON cn.id=l.import_class_name_term_id '
     . 'WHERE f.game_id=? AND f.scan_status="verified" AND l.status=0 '
     . 'ORDER BY l.file_id,l.import_index';
-try {
-    $stmt = $db->prepare($sql);
-    $stmt->execute([$gameId]);
-    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
-} catch (PDOException $error) {
-    // Older dependency-link schemas may not project class term IDs. Coverage is
-    // still useful without class diagnostics.
-    $sql = 'SELECT l.file_id,l.import_index,'
-        . 'CONVERT(pt.value_prefix USING utf8mb4) required_package,'
-        . 'CONVERT(ot.value_prefix USING utf8mb4) required_object_path,'
-        . '"" class_package,"" class_name,f.original_name,f.package_name '
-        . 'FROM ue_dependency_links l '
-        . 'JOIN ue_files f ON f.id=l.file_id '
-        . 'JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=3 '
-        . 'JOIN ue_terms pt ON pt.id=l.required_package_term_id '
-        . 'JOIN ue_terms ot ON ot.id=l.required_object_term_id '
-        . 'WHERE f.game_id=? AND f.scan_status="verified" AND l.status=0 '
-        . 'ORDER BY l.file_id,l.import_index';
-    $stmt = $db->prepare($sql);
-    $stmt->execute([$gameId]);
-    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
-}
+$stmt = $db->prepare($sql);
+$stmt->execute([$gameId]);
+$rows = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
 
 $groups = [];
 foreach ($rows as $row) {
