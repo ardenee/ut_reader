@@ -309,45 +309,79 @@ final class PdoGameDependencyCrossExamineQuery
             return [];
         }
 
-        $matches = [];
+        require_once dirname(__DIR__) . '/Metadata/BlockedCompressedMetadataReader.php';
+        $config = require dirname(__DIR__, 3) . '/config.php';
+        $reader = new \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataReader(
+            $this->db,
+            (string)($config['storage_path'] ?? (dirname(__DIR__, 3) . '/storage'))
+        );
+
+        $matchedRows = [];
+        $matchedOwners = [];
         foreach (array_chunk($sourceFileIds, self::SOURCE_ID_CHUNK) as $chunk) {
             $placeholders = implode(',', array_fill(0, count($chunk), '?'));
             $rows = \catalog_all(
                 $this->db,
-                'SELECT source.id source_file_id,'
-                . 'COUNT(DISTINCT l.file_id,l.import_index) exact_object_matches,'
-                . 'COUNT(DISTINCT l.file_id) exact_owner_count '
+                'SELECT source.id source_file_id,l.file_id owner_file_id,l.import_index,exports.export_index,'
+                . 'CONVERT(required_path.value_prefix USING utf8mb4) required_path,'
+                . 'CONVERT(required_class_package.value_prefix USING utf8mb4) required_class_package,'
+                . 'CONVERT(required_class_name.value_prefix USING utf8mb4) required_class_name '
                 . 'FROM ue_dependency_links l '
                 . 'JOIN ue_file_metadata owner_meta ON owner_meta.file_id=l.file_id AND owner_meta.format_version=3 '
                 . 'JOIN ue_files owner ON owner.id=l.file_id AND owner.scan_status="verified" '
                 . 'JOIN ue_terms pkg ON pkg.id=l.required_package_term_id '
+                . 'JOIN ue_terms required_path ON required_path.id=l.required_object_term_id '
+                . 'LEFT JOIN ue_terms required_class_package ON required_class_package.id=l.import_class_package_term_id '
+                . 'LEFT JOIN ue_terms required_class_name ON required_class_name.id=l.import_class_name_term_id '
                 . 'JOIN ue_files source ON source.id IN (' . $placeholders . ') '
                 . 'AND source.scan_status="verified" '
                 . 'AND source.package_name=CONVERT(pkg.value_prefix USING utf8mb4) COLLATE utf8mb4_unicode_ci '
                 . 'JOIN ue_file_metadata source_meta ON source_meta.file_id=source.id AND source_meta.format_version=3 '
                 . 'JOIN ue_export_lookup exports ON exports.file_id=source.id AND exports.path_hash=l.required_path_hash '
-                . 'JOIN ue_terms export_path ON export_path.id=exports.path_term_id '
-                . 'JOIN ue_terms required_path ON required_path.id=l.required_object_term_id '
-                . 'LEFT JOIN ue_terms required_class ON required_class.id=l.import_class_name_term_id '
-                . 'WHERE owner.game_id=? AND l.status=0 '
-                . 'AND LOWER(CONVERT(export_path.value_prefix USING utf8mb4))=LOWER(CONVERT(required_path.value_prefix USING utf8mb4)) '
-                . 'AND (l.import_class_name_term_id IS NULL OR NOT EXISTS ('
-                . 'SELECT 1 FROM ue_terms actual_class WHERE actual_class.id=exports.class_term_id '
-                . 'AND LOWER(CONVERT(actual_class.value_prefix USING utf8mb4))<>LOWER(CONVERT(required_class.value_prefix USING utf8mb4))'
-                . ')) '
-                . 'GROUP BY source.id',
+                . 'WHERE owner.game_id=? AND l.status=0',
                 array_merge($chunk, [$targetGameId])
             );
             foreach ($rows as $row) {
-                $fileId = (int)($row['source_file_id'] ?? 0);
-                if ($fileId < 1) {
+                $sourceFileId = (int)($row['source_file_id'] ?? 0);
+                $ownerFileId = (int)($row['owner_file_id'] ?? 0);
+                $importIndex = (int)($row['import_index'] ?? -1);
+                $exportIndex = (int)($row['export_index'] ?? -1);
+                $requiredPath = trim((string)($row['required_path'] ?? ''));
+                if ($sourceFileId < 1 || $ownerFileId < 1 || $importIndex < 0 || $exportIndex < 0 || $requiredPath === '') {
                     continue;
                 }
-                $matches[$fileId] = [
-                    'exact_object_matches' => max(0, (int)($row['exact_object_matches'] ?? 0)),
-                    'exact_owner_count' => max(0, (int)($row['exact_owner_count'] ?? 0)),
-                ];
+
+                $exportRows = $reader->page($sourceFileId, 'exports', $exportIndex, 1);
+                $export = $exportRows[0] ?? null;
+                if (!is_array($export)
+                    || (int)($export['export_index'] ?? -1) !== $exportIndex
+                    || $this->key((string)($export['local_path'] ?? '')) !== $this->key($requiredPath)) {
+                    continue;
+                }
+
+                $requiredClassName = trim((string)($row['required_class_name'] ?? ''));
+                if ($requiredClassName !== '') {
+                    $actualClass = $this->key((string)($export['class_name'] ?? ''));
+                    $className = $this->key($requiredClassName);
+                    $classPackage = $this->key((string)($row['required_class_package'] ?? ''));
+                    $qualified = $classPackage !== '' ? $classPackage . '.' . $className : $className;
+                    if ($actualClass !== '' && $actualClass !== $className && $actualClass !== $qualified) {
+                        continue;
+                    }
+                }
+
+                $dependencyKey = $ownerFileId . ':' . $importIndex;
+                $matchedRows[$sourceFileId][$dependencyKey] = true;
+                $matchedOwners[$sourceFileId][$ownerFileId] = true;
             }
+        }
+
+        $matches = [];
+        foreach ($matchedRows as $sourceFileId => $dependencies) {
+            $matches[(int)$sourceFileId] = [
+                'exact_object_matches' => count($dependencies),
+                'exact_owner_count' => count($matchedOwners[$sourceFileId] ?? []),
+            ];
         }
         return $matches;
     }
