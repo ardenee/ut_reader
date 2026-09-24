@@ -151,14 +151,14 @@ CSS;
     }
     echo '</select></label>'
         . '<button type="submit" id="cross-queue-selected">Queue selected</button>'
-        . '<div class="cross-batch-note">The current rows are evidence for <strong>' . catalog_h((string)($target['name'] ?? 'the report target'))
+        . '<div class="cross-batch-note">Only candidates that fully satisfy at least one consumer\'s complete package requirement set can be selected. The current rows are evidence for <strong>' . catalog_h((string)($target['name'] ?? 'the report target'))
         . '</strong>. Clicking Queue selected now creates one lightweight parent job immediately. Revalidation and child import queue creation happen in the background.</div>'
         . '</div>';
 
     echo '<div class="table-wrap"><table class="cross-table"><thead><tr>'
         . '<th class="cross-select"><input type="checkbox" id="cross-select-all" aria-label="Select all rows"></th>'
         . '<th>Source game</th><th>Package / file</th><th>Identity</th><th>Detected</th>'
-        . '<th>Target need</th><th>Exact coverage</th></tr></thead><tbody>';
+        . '<th>Target need</th><th>Complete package coverage</th><th>Exact missing coverage</th></tr></thead><tbody>';
     foreach ($rows as $row) {
         $sourceFileId = (int)$row['id'];
         $exact = (int)$row['exact_object_matches'];
@@ -169,7 +169,8 @@ CSS;
         $alreadyInTarget = !empty($row['already_in_target']);
         echo '<tr>';
         echo '<td class="cross-select"><input type="checkbox" name="source_file_ids[]" value="' . $sourceFileId
-            . '" aria-label="Select ' . catalog_h((string)$row['original_name']) . '"></td>';
+            . '"' . ((int)($row['complete_consumer_count'] ?? 0) < 1 ? ' disabled' : '')
+            . ' aria-label="Select ' . catalog_h((string)$row['original_name']) . '"></td>';
         echo '<td><strong>' . catalog_h((string)$row['source_game_name']) . '</strong><br><span class="muted cross-game-engine">'
             . catalog_h((string)$row['source_engine']) . '</span></td>';
         echo '<td><strong><a href="file-info.php?id=' . $sourceFileId . '">'
@@ -185,6 +186,32 @@ CSS;
         echo '<td><strong>' . number_format($missing) . ' missing dependency reference'
             . ($missing === 1 ? '' : 's') . '</strong><br><span class="cross-target-files">'
             . number_format($owners) . ' referencing file' . ($owners === 1 ? '' : 's') . '</span></td>';
+        $completeConsumers = (int)($row['complete_consumer_count'] ?? 0);
+        $partialConsumers = (int)($row['partial_consumer_count'] ?? 0);
+        $consumerCoverage = is_array($row['consumer_coverage'] ?? null) ? $row['consumer_coverage'] : [];
+        echo '<td class="cross-coverage">';
+        if ($completeConsumers > 0) {
+            echo '<span class="cross-good">Fully satisfies</span><strong>' . number_format($completeConsumers)
+                . ' consumer' . ($completeConsumers === 1 ? '' : 's') . '</strong>';
+        } else {
+            echo '<span class="cross-warn">Partial only</span><strong>No consumer has complete package coverage</strong>';
+        }
+        if ($partialConsumers > 0) {
+            echo '<small>' . number_format($partialConsumers) . ' affected consumer'
+                . ($partialConsumers === 1 ? '' : 's') . ' remain partial.</small>';
+        }
+        foreach ($consumerCoverage as $consumer) {
+            echo '<small>File #' . (int)($consumer['file_id'] ?? 0) . ': '
+                . number_format((int)($consumer['matched_count'] ?? 0)) . ' / '
+                . number_format((int)($consumer['required_count'] ?? 0)) . ' required objects';
+            $missingPaths = array_values(array_filter(array_map('strval', (array)($consumer['missing_paths'] ?? []))));
+            if ($missingPaths !== []) {
+                echo ' · missing ' . catalog_h(implode(', ', array_slice($missingPaths, 0, 5)));
+                if (count($missingPaths) > 5) echo ' +' . number_format(count($missingPaths) - 5);
+            }
+            echo '</small>';
+        }
+        echo '</td>';
         echo '<td class="cross-coverage"><span class="cross-good">Exact object paths</span><strong>'
             . number_format($exact) . ' / ' . number_format($missing) . ' missing references (' . catalog_h($coverage) . ')</strong><small>'
             . number_format($exactOwners) . ' / ' . number_format($owners) . ' referencing file'
