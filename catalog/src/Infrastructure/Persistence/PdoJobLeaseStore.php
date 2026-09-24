@@ -270,6 +270,7 @@ final class PdoJobLeaseStore
                     . 'cancel_requested_by=?,cancel_reason=?,completed_at=?,updated_at=? WHERE id=? AND status="queued"'
                 );
                 $statement->execute([$now, $requestedBy, $reason, $now, $now, $jobId]);
+                $this->cancelWorkflowChildren($jobId, $requestedBy, $reason, $now);
                 $this->db->commit();
                 return 'cancelled';
             }
@@ -281,6 +282,7 @@ final class PdoJobLeaseStore
                     . 'WHERE id=? AND status="running"'
                 );
                 $statement->execute([$now, $requestedBy, $reason, $now, $jobId]);
+                $this->cancelWorkflowChildren($jobId, $requestedBy, $reason, $now);
                 $this->db->commit();
                 return 'cancel_requested';
             }
@@ -293,6 +295,35 @@ final class PdoJobLeaseStore
             }
             throw $exception;
         }
+    }
+
+    private function cancelWorkflowChildren(
+        int $parentJobId,
+        ?int $requestedBy,
+        string $reason,
+        string $now
+    ): void {
+        // A durable workflow parent owns its queued/running units. Cancelling the
+        // root must not leave those units runnable behind it; otherwise an old
+        // Full Sync can continue mutating catalogue projections after a new one
+        // starts.
+        $queued = $this->db->prepare(
+            'UPDATE ue_background_jobs SET status="cancelled",dedupe_key=NULL,'
+            . 'cancel_requested_at=COALESCE(cancel_requested_at,?),'
+            . 'cancel_requested_by=COALESCE(cancel_requested_by,?),'
+            . 'cancel_reason=CASE WHEN cancel_reason IS NULL OR cancel_reason="" THEN ? ELSE cancel_reason END,'
+            . 'completed_at=?,updated_at=? '
+            . 'WHERE parent_job_id=? AND status="queued"'
+        );
+        $queued->execute([$now, $requestedBy, $reason, $now, $now, $parentJobId]);
+
+        $running = $this->db->prepare(
+            'UPDATE ue_background_jobs SET cancel_requested_at=COALESCE(cancel_requested_at,?),'
+            . 'cancel_requested_by=COALESCE(cancel_requested_by,?),'
+            . 'cancel_reason=CASE WHEN cancel_reason IS NULL OR cancel_reason="" THEN ? ELSE cancel_reason END,'
+            . 'updated_at=? WHERE parent_job_id=? AND status="running"'
+        );
+        $running->execute([$now, $requestedBy, $reason, $now, $parentJobId]);
     }
 
     public function cancelClaimed(ClaimedJob $job, string $reason = ''): void
