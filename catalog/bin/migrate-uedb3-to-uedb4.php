@@ -46,11 +46,15 @@ $limit = isset($options['limit']) ? max(1, min(1000000, (int)$options['limit']))
 $config = catalog_config();
 $db = catalog_db($config);
 $configuredStorageRoot = trim((string)($config['storage_path'] ?? ''));
-$storageRoot = trim((string)($options['storage-root'] ?? $configuredStorageRoot));
-$storageRoot = rtrim($storageRoot, "\\/");
-if ($storageRoot === '') {
+$storageRootInput = trim((string)($options['storage-root'] ?? $configuredStorageRoot));
+$storageRootInput = rtrim($storageRootInput, "\\/");
+if ($storageRootInput === '') {
     throw new RuntimeException('Metadata storage root is required via catalog.storage_path or --storage-root.');
 }
+$storageRoot = strcasecmp(basename(str_replace('\\', '/', $storageRootInput)), 'metadata') === 0
+    ? dirname($storageRootInput)
+    : $storageRootInput;
+$metadataRoot = $storageRoot . DIRECTORY_SEPARATOR . 'metadata';
 
 $sql = 'SELECT f.id,f.game_id,f.package_name,UPPER(TRIM(COALESCE(p.engine_key,""))) engine_key'
     . ' FROM ue_files f'
@@ -162,6 +166,7 @@ echo json_encode([
     'ok' => $failed === 0,
     'apply' => $apply,
     'storage_root' => $storageRoot,
+    'metadata_root' => $metadataRoot,
     'keep_v3' => $keepV3,
     'selected' => count($files),
     'converted' => $converted,
