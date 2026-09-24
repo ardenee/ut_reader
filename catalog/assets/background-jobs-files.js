@@ -716,11 +716,12 @@
         const authority = String(worker.authoritative_status || (worker.active ? 'running' : 'stopped'));
         const counts = worker.queue_counts || {};
         const activeWorkers = Math.max(0, Number(worker.active_count || 0));
+        const busyWorkers = Math.max(0, Number(worker.busy_worker_count || 0));
         const desiredWorkers = Math.max(1, Number(worker.desired_count || (workerCount ? workerCount.value : 1)));
-        const runningJobs = Math.max(0, Number(counts.running || 0));
+        const runningJobs = Math.max(0, Number(worker.running_execution_count != null ? worker.running_execution_count : counts.running || 0));
         const queuedJobs = Math.max(0, Number(counts.queued || 0));
         const text = authority === 'running' || authority === 'degraded'
-            ? 'Pool ' + activeWorkers + '/' + desiredWorkers + ' · ' + runningJobs + ' running · ' + queuedJobs + ' queued'
+            ? 'Pool ' + busyWorkers + '/' + desiredWorkers + ' · ' + runningJobs + ' running · ' + queuedJobs + ' queued'
             : authority === 'orphaned'
                 ? 'Worker stopped · ' + runningJobs + ' orphaned job(s)'
                 : 'Worker stopped · ' + queuedJobs + ' queued';
