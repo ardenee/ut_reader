@@ -60,7 +60,7 @@ try {
     // exposes "N failed" and hides the child member name/job/error even though
     // that diagnostic data is already durable in ue_background_jobs.
     $rows = (new CatalogArchiveJobOutcomeProjector($application->db))->project($rows);
-    $rows = (new CatalogBackgroundJobFileTreeProjector())->project($rows);
+    $rows = (new CatalogBackgroundJobFileTreeProjector($application->db))->project($rows);
 
     JsonResponse::send([
         'data' => [
