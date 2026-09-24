@@ -241,6 +241,7 @@ if ($selected !== null && (string)$selected['status'] === 'completed') {
             }
 
             $requiredPathRows = '';
+            $expectedPackage = trim((string)($candidate['suggested_package_name'] ?? ''));
             $matchedPathLookup = [];
             foreach ((array)($candidate['evidence'] ?? []) as $evidenceRow) {
                 foreach ((array)($evidenceRow['matched_paths'] ?? []) as $matchedPath) {
@@ -252,7 +253,11 @@ if ($selected !== null && (string)$selected['status'] === 'completed') {
                 if ($requiredPath === '') {
                     continue;
                 }
-                $matchedHere = isset($matchedPathLookup[strtolower($requiredPath)]);
+                $rootlessRequiredPath = $requiredPath;
+                if ($expectedPackage !== '' && strncasecmp($requiredPath, $expectedPackage . '.', strlen($expectedPackage) + 1) === 0) {
+                    $rootlessRequiredPath = substr($requiredPath, strlen($expectedPackage) + 1);
+                }
+                $matchedHere = isset($matchedPathLookup[strtolower($rootlessRequiredPath)]);
                 $requiredPathRows .= '<div class="mono small" style="overflow-wrap:anywhere;margin-bottom:.2rem">'
                     . ($matchedHere ? '&#10003; ' : '&#10007; ')
                     . catalog_h($requiredPath) . '</div>';
