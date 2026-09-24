@@ -42,6 +42,10 @@ if ($storageRoot === '') {
     throw new RuntimeException('Metadata storage root is required via catalog.storage_path or --storage-root.');
 }
 
+$metadataRoot = strcasecmp(basename(str_replace('\\', '/', $storageRoot)), 'metadata') === 0
+    ? $storageRoot
+    : $storageRoot . DIRECTORY_SEPARATOR . 'metadata';
+
 if (isset($extensions['uedb3'])) {
     $remainingV3 = (int)$db->query(
         'SELECT COUNT(*) FROM ue_file_metadata WHERE format_version=3'
@@ -54,7 +58,6 @@ if (isset($extensions['uedb3'])) {
     }
 }
 
-$metadataRoot = $storageRoot . DIRECTORY_SEPARATOR . 'metadata';
 if (!is_dir($metadataRoot)) {
     throw new RuntimeException('Metadata directory does not exist: ' . $metadataRoot);
 }
