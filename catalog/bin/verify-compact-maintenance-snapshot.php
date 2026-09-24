@@ -48,14 +48,14 @@ try {
     if ($fileId < 1) {
         $statement = $db->query(
             'SELECT f.id FROM ue_files f '
-            . 'JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=3 '
+            . 'JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=' . \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer::FORMAT_VERSION . ' '
             . 'WHERE f.scan_status="verified" '
             . 'ORDER BY (f.name_count+f.import_count+f.export_count),f.id LIMIT 1'
         );
         $fileId = (int)($statement->fetchColumn() ?: 0);
     }
     if ($fileId < 1) {
-        throw new RuntimeException('No format-3 verified file was found.');
+        throw new RuntimeException('No current-format verified file was found.');
     }
 
     $service = new CompactFileMaintenanceSnapshot(
