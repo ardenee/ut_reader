@@ -112,15 +112,15 @@ $payload = $selected ? possible_misnamed_decode((string)($selected['payload_json
 $progress = $selected ? possible_misnamed_decode((string)($selected['progress_json'] ?? '')) : [];
 $result = $selected ? possible_misnamed_decode((string)($selected['result_json'] ?? '')) : [];
 $candidates = is_array($result['candidates'] ?? null) ? $result['candidates'] : [];
-$currentMisnamedPolicy = 'community-path-name-compact-evidence-v6';
+$currentMisnamedPolicy = 'rootless-v3-content-evidence-v7';
 $resultPolicy = trim((string)($result['policy_version'] ?? ''));
 $resultIsCurrent = $resultPolicy !== '' && hash_equals($currentMisnamedPolicy, $resultPolicy);
 
 catalog_head('Possible Misnamed Files');
 
 echo '<div class="card hero"><h1>Possible Misnamed Files</h1>'
-    . '<p class="muted">Find verified files whose exports exactly match object paths requested from a package name that is currently missing. '
-    . 'Only candidate provider files with <strong>zero currently resolved dependants</strong> are retained, which is a strong sign that their current package name may be wrong. '
+    . '<p class="muted">Find verified files whose current v3 exports exactly match object paths below the package root requested from a package name that is currently missing. '
+    . 'Only current format-3 provider metadata is considered. Candidate provider files with <strong>zero currently resolved dependants</strong> are retained, which is a strong sign that their current package identity may be wrong. '
     . 'The table shows the current identity, the package identity the importing files expect, and the files that provide the matching evidence. '
     . 'A dedicated copy-suffix check also tests names ending in (1) through (9), with or without a preceding space, against the unsuffixed package name. '
     . 'Nothing is renamed automatically.</p></div>';
@@ -130,7 +130,7 @@ if ($flash !== '') {
 }
 
 echo '<div class="card"><h2>Run diagnostic</h2>'
-    . '<p class="muted">The scan runs as a bounded background job. Common object names exported by more than 40 files are ignored so generic names do not create false matches or expensive fan-out. '
+    . '<p class="muted">The scan runs as a bounded background job. Object paths are compared below the package root, so a changed filename/package root does not hide otherwise exact content. Common object names exported by more than 40 files are ignored so generic names do not create false matches or expensive fan-out. '
     . 'For copy-style names such as MyTex(2).utx or MyTex (2).utx, the detector tests MyTex as the expected package identity when unresolved dependency/object-path evidence supports it. '
     . 'Only one scan runs at a time.</p>'
     . '<form method="post">'
@@ -192,7 +192,7 @@ if ($selected !== null && (string)$selected['status'] === 'completed') {
     } else {
         echo '<p class="muted small">Each row shows the current candidate file, the importing evidence files, and the exact object paths that match. '
             . 'The three file counts are Names / Imports / Exports. The candidate itself has zero currently resolved inbound dependants. '
-            . 'Review the evidence before renaming.</p>'
+            . 'Name similarity affects confidence only; it is not required for exact rootless-path evidence. Review the evidence before renaming.</p>'
             . '<table><thead><tr><th>Confidence</th><th>Current file</th><th>Evidence files</th><th>Why it matches</th><th></th></tr></thead><tbody>';
         foreach ($candidates as $candidate) {
             if (!is_array($candidate)) {
