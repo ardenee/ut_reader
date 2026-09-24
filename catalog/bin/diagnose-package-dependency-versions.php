@@ -40,7 +40,7 @@ $providers = catalog_all($db,
     'SELECT f.id,f.game_id,g.name game_name,p.engine_key,f.original_name,f.package_name,f.package_version,f.licensee_version,'
     . 'f.package_guid,f.md5,f.sha1,m.format_version,m.export_count '
     . 'FROM ue_files f JOIN ue_games g ON g.id=f.game_id JOIN ue_game_profiles p ON p.id=g.profile_id '
-    . 'JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=3 '
+    . 'JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=' . \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer::FORMAT_VERSION . ' '
     . 'WHERE f.scan_status="verified" AND f.package_name COLLATE utf8mb4_unicode_ci=? '
     . 'ORDER BY p.engine_key,g.name,f.id', [$packageName]);
 
