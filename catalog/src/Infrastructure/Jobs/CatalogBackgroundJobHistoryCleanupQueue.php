@@ -75,7 +75,7 @@ final class CatalogBackgroundJobHistoryCleanupQueue
             $queueName,
             JobType::CLEAN_BACKGROUND_JOB_HISTORY,
             $payload,
-            50,
+            1,
             null,
             null,
             $userId,
