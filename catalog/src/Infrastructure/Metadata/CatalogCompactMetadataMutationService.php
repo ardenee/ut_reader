@@ -37,7 +37,7 @@ final class CatalogCompactMetadataMutationService
         $registration->execute([$fileId]);
         $formatVersion = (int)($registration->fetchColumn() ?: 0);
 
-        if ($formatVersion < BlockedCompressedMetadataContainer::FORMAT_VERSION) {
+        if ($formatVersion !== BlockedCompressedMetadataContainer::FORMAT_VERSION) {
             $status = $this->db->prepare('SELECT scan_status FROM ue_files WHERE id=?');
             $status->execute([$fileId]);
             $scanStatus = strtolower(trim((string)($status->fetchColumn() ?: '')));
