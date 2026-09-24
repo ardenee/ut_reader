@@ -10,7 +10,7 @@ use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 
 /**
- * Verifies the authoritative format-3 container and keeps ue_files publication
+ * Verifies the authoritative current-format container and keeps ue_files publication
  * state aligned with physical reality.
  *
  * A ue_file_metadata registration alone is not proof that the container still
@@ -50,7 +50,7 @@ final class VerifiedCompactMetadataHealth
     }
 
     /**
-     * Verify v3 metadata and, on failure, queue one globally deduplicated repair.
+     * Verify current metadata and, on failure, queue one globally deduplicated repair.
      *
      * @param array<string,mixed> $config
      */
@@ -91,7 +91,7 @@ final class VerifiedCompactMetadataHealth
                 'file_id' => $fileId,
                 'game_id' => (int)$file['game_id'],
                 'requested_by' => $requestedBy,
-                'source_relative_path' => 'Format-3 metadata recovery · ' . (string)$file['original_name'],
+                'source_relative_path' => 'Current metadata recovery · ' . (string)$file['original_name'],
                 'detected_error' => $cause !== null ? self::errorText($cause) : '',
             ],
             15,
