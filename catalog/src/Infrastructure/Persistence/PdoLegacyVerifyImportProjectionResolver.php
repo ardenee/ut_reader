@@ -67,6 +67,115 @@ final class PdoLegacyVerifyImportProjectionResolver
     }
 
     /**
+     * In-memory equivalent used while a package is being published and its projection
+     * is not yet visible in ue_legacy_export_identity_lookup.
+     *
+     * @param list<array<string,mixed>> $consumerImports
+     * @param list<array<string,mixed>> $providerImports
+     * @param list<array<string,mixed>> $providerExports
+     * @return array{standard:array<int,int>,unreal2:array<int,int>,unreal2_only:array<int,int>}
+     */
+    public static function resolveInMemoryVariants(
+        array $consumerImports,
+        array $providerImports,
+        array $providerExports,
+        string $providerPackageName
+    ): array {
+        $imports = [];
+        foreach ($consumerImports as $fallback => $row) {
+            if (is_array($row)) {
+                $imports[isset($row['import_index']) ? (int)$row['import_index'] : (int)$fallback] = $row;
+            }
+        }
+
+        $providerImportsByIndex = [];
+        foreach ($providerImports as $fallback => $row) {
+            if (is_array($row)) {
+                $providerImportsByIndex[isset($row['import_index']) ? (int)$row['import_index'] : (int)$fallback] = $row;
+            }
+        }
+        $providerExportsByIndex = [];
+        foreach ($providerExports as $fallback => $row) {
+            if (is_array($row)) {
+                $providerExportsByIndex[isset($row['export_index']) ? (int)$row['export_index'] : (int)$fallback] = $row;
+            }
+        }
+
+        $candidates = [];
+        foreach ($providerExportsByIndex as $exportIndex => $export) {
+            [$classPackage, $className] = self::exportClassIdentity(
+                $export,
+                $providerImportsByIndex,
+                $providerExportsByIndex,
+                $providerPackageName
+            );
+            $objectName = trim((string)($export['object_name'] ?? ''));
+            if ($objectName === '' || $classPackage === '' || $className === '') {
+                continue;
+            }
+            $key = bin2hex(self::identityHash($objectName, $className, $classPackage));
+            $candidates[$key][] = [
+                'export_index' => (int)$exportIndex,
+                'outer_index' => (int)($export['outer_index'] ?? 0),
+                'object_flags' => (int)($export['object_flags'] ?? 0),
+            ];
+        }
+        foreach ($candidates as &$rows) {
+            usort($rows, static fn(array $a, array $b): int => $b['export_index'] <=> $a['export_index']);
+        }
+        unset($rows);
+
+        $standard = self::resolveVariant($imports, $candidates, true);
+        $unreal2 = self::resolveVariant($imports, $candidates, false);
+        $unreal2Only = [];
+        foreach ($unreal2 as $importIndex => $exportIndex) {
+            if (!isset($standard[$importIndex])) {
+                $unreal2Only[(int)$importIndex] = (int)$exportIndex;
+            }
+        }
+        return ['standard' => $standard, 'unreal2' => $unreal2, 'unreal2_only' => $unreal2Only];
+    }
+
+    /**
+     * @param array<string,mixed> $export
+     * @param array<int,array<string,mixed>> $providerImports
+     * @param array<int,array<string,mixed>> $providerExports
+     * @return array{0:string,1:string}
+     */
+    private static function exportClassIdentity(
+        array $export,
+        array $providerImports,
+        array $providerExports,
+        string $providerPackageName
+    ): array {
+        $classIndex = (int)($export['class_index'] ?? 0);
+        if ($classIndex < 0) {
+            $classImport = $providerImports[-$classIndex - 1] ?? null;
+            if (!is_array($classImport)) {
+                return ['', ''];
+            }
+            $className = trim((string)($classImport['object_name'] ?? ''));
+            $classOuter = (int)($classImport['outer_index'] ?? 0);
+            if ($classOuter >= 0) {
+                return ['', $className];
+            }
+            $classPackageImport = $providerImports[-$classOuter - 1] ?? null;
+            return [
+                is_array($classPackageImport) ? trim((string)($classPackageImport['object_name'] ?? '')) : '',
+                $className,
+            ];
+        }
+        if ($classIndex > 0) {
+            $classExport = $providerExports[$classIndex - 1] ?? null;
+            return [
+                trim($providerPackageName),
+                is_array($classExport) ? trim((string)($classExport['object_name'] ?? '')) : '',
+            ];
+        }
+        return ['Core', 'Class'];
+    }
+
+    /**
      * @param array<int,array<string,mixed>> $imports
      * @param array<string,list<array{export_index:int,outer_index:int,object_flags:int}>> $candidates
      * @return array<int,int>
