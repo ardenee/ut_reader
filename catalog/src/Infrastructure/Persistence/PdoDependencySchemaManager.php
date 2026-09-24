@@ -53,6 +53,7 @@ final class PdoDependencySchemaManager
             'ue_file_metadata',
             'ue_terms',
             'ue_export_lookup',
+            'ue_legacy_export_identity_lookup',
             'ue_dependency_links',
             'ue_package_providers',
             'ue_asset_registry_assets',
