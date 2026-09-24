@@ -24,6 +24,7 @@ final class PdoJobClaimer
     private ?string $ownedRootLockName = null;
     private ?PDOStatement $acquireRootLockStatement = null;
     private ?PDOStatement $releaseRootLockStatement = null;
+    private ?PDOStatement $runningFullSyncParentStatement = null;
 
     public function __construct(private readonly PDO $db, ?PdoJobRecovery $legacyRecovery = null)
     {
@@ -106,6 +107,8 @@ final class PdoJobClaimer
         $blockedConcurrencyKeys = [];
         /** @var array<int,true> $blockedJobIds */
         $blockedJobIds = [];
+        /** @var array<int,true> $blockedFullSyncParentIds */
+        $blockedFullSyncParentIds = [];
 
         while (true) {
             $candidate = $this->lockNextCandidate(
@@ -114,6 +117,7 @@ final class PdoJobClaimer
                 array_keys($blockedResourceClasses),
                 array_keys($blockedConcurrencyKeys),
                 array_keys($blockedJobIds),
+                array_keys($blockedFullSyncParentIds),
                 $claimNewRoot
             );
             if ($candidate === null) {
@@ -129,6 +133,20 @@ final class PdoJobClaimer
                     continue;
                 }
                 $rootLockAcquiredForCandidate = true;
+            }
+
+            if ($this->fullSyncParentAtCapacity($queue, $candidate)) {
+                $this->rollbackClaimTransaction();
+                if ($rootLockAcquiredForCandidate) {
+                    $this->releaseRootAffinity();
+                }
+                $parentId = (int)($candidate['parent_job_id'] ?? 0);
+                if ($parentId > 0) {
+                    $blockedFullSyncParentIds[$parentId] = true;
+                } else {
+                    $blockedJobIds[(int)$candidate['id']] = true;
+                }
+                continue;
             }
 
             $resourceClass = trim((string)($candidate['resource_class'] ?? 'default')) ?: 'default';
@@ -212,6 +230,7 @@ final class PdoJobClaimer
      * @param list<string> $blockedResourceClasses
      * @param list<string> $blockedConcurrencyKeys
      * @param list<int> $blockedJobIds
+     * @param list<int> $blockedFullSyncParentIds
      * @return array<string,mixed>|null
      */
     private function lockNextCandidate(
@@ -220,6 +239,7 @@ final class PdoJobClaimer
         array $blockedResourceClasses,
         array $blockedConcurrencyKeys,
         array $blockedJobIds,
+        array $blockedFullSyncParentIds,
         bool $rootOnly
     ): ?array {
         $this->db->beginTransaction();
@@ -271,6 +291,14 @@ final class PdoJobClaimer
                 }
             }
 
+            if ($blockedFullSyncParentIds !== []) {
+                $where[] = '(j.parent_job_id IS NULL OR j.parent_job_id NOT IN ('
+                    . implode(',', array_fill(0, count($blockedFullSyncParentIds), '?')) . '))';
+                foreach ($blockedFullSyncParentIds as $parentId) {
+                    $params[] = $parentId;
+                }
+            }
+
             if ($blockedResourceClasses !== []) {
                 $where[] = 'j.resource_class NOT IN ('
                     . implode(',', array_fill(0, count($blockedResourceClasses), '?')) . ')';
@@ -309,6 +337,35 @@ final class PdoJobClaimer
             $this->rollbackClaimTransaction();
             throw $exception;
         }
+    }
+
+    /** @param array<string,mixed> $candidate */
+    private function fullSyncParentAtCapacity(string $queue, array $candidate): bool
+    {
+        $jobType = (string)($candidate['job_type'] ?? '');
+        if ($jobType !== JobType::FULL_SYNC_FILE && $jobType !== JobType::FULL_SYNC_DEPENDENCY_FILE) {
+            return false;
+        }
+
+        $parentId = (int)($candidate['parent_job_id'] ?? 0);
+        if ($parentId < 1) {
+            return false;
+        }
+
+        // Full Sync units are deliberately independent execution roots, but one
+        // game workflow may occupy at most two workers. The resource admission
+        // lock serializes same-phase decisions, so two workers cannot both see
+        // the second slot as free. Other Full Sync parents remain eligible.
+        $statement = $this->runningFullSyncParentStatement ??= $this->db->prepare(
+            'SELECT COUNT(*) FROM ue_background_jobs '
+            . 'WHERE queue_name=? AND parent_job_id=? AND status="running" '
+            . 'AND job_type IN ("' . JobType::FULL_SYNC_FILE . '","'
+            . JobType::FULL_SYNC_DEPENDENCY_FILE . '")'
+        );
+        $statement->execute([$queue, $parentId]);
+        $running = (int)$statement->fetchColumn();
+        $statement->closeCursor();
+        return $running >= 2;
     }
 
     private function workflowOpen(string $queue, int $rootJobId): bool
