@@ -247,18 +247,32 @@ final class PdoGameDependencyCrossExamineQuery
         }
 
         PdoDependencyReadSource::sql($this->db);
-        $stats = \catalog_one(
+        // Keep single-candidate admission identical to fetch(): collect the
+        // target's missing package groups first and compare normalized package keys.
+        // Do not make queue admission depend on a separate SQL string-comparison
+        // path that can disagree with the page that selected this candidate.
+        $stats = [];
+        $packageStatsRows = \catalog_all(
             $this->db,
-            'SELECT COUNT(DISTINCT l.file_id,l.import_index) missing_count,'
+            'SELECT CONVERT(pkg.value_prefix USING utf8mb4) required_package,'
+            . 'COUNT(DISTINCT l.file_id,l.import_index) missing_count,'
             . 'COUNT(DISTINCT l.file_id) owner_count '
             . 'FROM ue_dependency_links l '
             . 'JOIN ue_file_metadata m ON m.file_id=l.file_id AND m.format_version=3 '
             . 'JOIN ue_files owner ON owner.id=l.file_id AND owner.scan_status="verified" '
             . 'JOIN ue_terms pkg ON pkg.id=l.required_package_term_id '
             . 'WHERE owner.game_id=? AND l.status=0 '
-            . 'AND CONVERT(pkg.value_prefix USING utf8mb4) COLLATE utf8mb4_unicode_ci=?',
-            [$targetGameId, $package]
-        ) ?: [];
+            . 'GROUP BY l.required_package_term_id,CONVERT(pkg.value_prefix USING utf8mb4)',
+            [$targetGameId]
+        );
+        $packageKey = $this->key($package);
+        foreach ($packageStatsRows as $statsRow) {
+            if ($this->key((string)($statsRow['required_package'] ?? '')) !== $packageKey) {
+                continue;
+            }
+            $stats['missing_count'] = (int)($stats['missing_count'] ?? 0) + (int)($statsRow['missing_count'] ?? 0);
+            $stats['owner_count'] = max((int)($stats['owner_count'] ?? 0), (int)($statsRow['owner_count'] ?? 0));
+        }
         $missingCount = max(0, (int)($stats['missing_count'] ?? 0));
         if ($missingCount < 1) {
             return null;
