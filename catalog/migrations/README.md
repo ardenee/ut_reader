@@ -24,6 +24,8 @@ The active migration sequence after baseline `202608090002` is:
 - `202609080001_public_downloads_external_only.php` — public individual-file downloads use external providers only.
 - `202609080002_access_matrix_site_blocklist.php` — site activity events, full-site IP blocklist and unblock feedback.
 - `202609080003_geoip_city_location.php` — local GeoIP city/region/coordinates/accuracy fields.
+- `202609240001_legacy_verify_import_identity.php` — indexed UE1/UE2 `VerifyImport` export identity projection.
+- `202609240002_engine_identity_hashes.php` — normalized engine identity and object-path hashes used by metadata format 4 projections.
 
 A fresh/current deployment loads `catalog/install.sql` and then runs the migration runner so every post-baseline migration is applied.
 
@@ -156,3 +158,22 @@ php catalog/bin/compact-ue-term-ids.php cleanup --offline-confirmed
 ```
 
 The run phase creates a dense old→new mapping and a compacted dictionary, then rekeys `ue_name_lookup`, `ue_dependency_links` and `ue_export_lookup` in bounded `file_id` ranges. Each range update and its resume cursor commit in the same transaction. The final dictionary swap occurs only after every reference table has been rekeyed. Apache/public writes and Background Jobs workers must remain stopped for the complete run + verify sequence because reference IDs and the active dictionary intentionally differ during the rekey.
+
+
+## Metadata format 4 cutover
+
+Production metadata is now format 4 (`.uedb4`) only. The runtime reader/writer does not support `.uedb2` or `.uedb3`.
+
+The v3 -> v4 bridge is deliberately isolated under `catalog/bin/v4-migration/` and is used only by:
+
+```text
+php catalog/bin/migrate-uedb3-to-uedb4.php
+```
+
+After all verified metadata registrations are format 4, obsolete files are removed with:
+
+```text
+php catalog/bin/cleanup-obsolete-metadata-files.php --apply
+```
+
+For a future v5+, do not add compatibility branches to production metadata classes. Add an offline prior-format reader/loader under the matching migration directory, publish the new extension/magic/version atomically, then remove the previous-format files after database coverage verifies cleanly.
