@@ -7,6 +7,9 @@ declare(strict_types=1);
 namespace UnrealDb\Catalog\Infrastructure\Persistence;
 
 use PDO;
+use UnrealDb\Catalog\Infrastructure\Metadata\CatalogUnrealIdentityHash;
+
+require_once dirname(__DIR__) . '/Metadata/CatalogUnrealIdentityHash.php';
 
 final class PdoLegacyVerifyImportProjectionResolver
 {
@@ -118,6 +121,9 @@ final class PdoLegacyVerifyImportProjectionResolver
                 'export_index' => (int)$exportIndex,
                 'outer_index' => (int)($export['outer_index'] ?? 0),
                 'object_flags' => (int)($export['object_flags'] ?? 0),
+                'object_name' => $objectName,
+                'class_name' => $className,
+                'class_package' => $classPackage,
             ];
         }
         foreach ($candidates as &$rows) {
@@ -177,7 +183,7 @@ final class PdoLegacyVerifyImportProjectionResolver
 
     /**
      * @param array<int,array<string,mixed>> $imports
-     * @param array<string,list<array{export_index:int,outer_index:int,object_flags:int}>> $candidates
+     * @param array<string,list<array{export_index:int,outer_index:int,object_flags:int,object_name:string,class_name:string,class_package:string}>> $candidates
      * @return array<int,int>
      */
     private static function resolveVariant(array $imports, array $candidates, bool $requirePublic): array
@@ -264,6 +270,9 @@ final class PdoLegacyVerifyImportProjectionResolver
         $matched = self::findCandidate(
             $candidates,
             self::identityHash($objectName, $className, $classPackage),
+            $objectName,
+            $className,
+            $classPackage,
             $parentSourceIndex,
             $requirePublic
         );
@@ -275,6 +284,9 @@ final class PdoLegacyVerifyImportProjectionResolver
             $matched = self::findCandidate(
                 $candidates,
                 self::identityHash($objectName, 'LodMesh', $classPackage),
+                $objectName,
+                'LodMesh',
+                $classPackage,
                 $parentSourceIndex,
                 $requirePublic
             );
@@ -290,10 +302,22 @@ final class PdoLegacyVerifyImportProjectionResolver
     private static function findCandidate(
         array $candidates,
         string $identityHash,
+        string $objectName,
+        string $className,
+        string $classPackage,
         ?int $parentSourceIndex,
         bool $requirePublic
     ): ?int {
         foreach ($candidates[bin2hex($identityHash)] ?? [] as $candidate) {
+            if (CatalogUnrealIdentityHash::nameKey((string)$candidate['object_name'])
+                    !== CatalogUnrealIdentityHash::nameKey($objectName)
+                || CatalogUnrealIdentityHash::nameKey((string)$candidate['class_name'])
+                    !== CatalogUnrealIdentityHash::nameKey($className)
+                || CatalogUnrealIdentityHash::nameKey((string)$candidate['class_package'])
+                    !== CatalogUnrealIdentityHash::nameKey($classPackage)) {
+                continue;
+            }
+
             $sourceOuter = (int)$candidate['outer_index'];
             if ($parentSourceIndex === null) {
                 if ($sourceOuter !== 0) {
@@ -324,10 +348,14 @@ final class PdoLegacyVerifyImportProjectionResolver
             }
             $placeholders = implode(',', array_fill(0, count($chunk), 'UNHEX(?)'));
             $statement = $db->prepare(
-                'SELECT export_index,identity_hash,outer_index,object_flags'
-                . ' FROM ue_legacy_export_identity_lookup'
-                . ' WHERE file_id=? AND identity_hash IN (' . $placeholders . ')'
-                . ' ORDER BY export_index DESC'
+                'SELECT l.export_index,l.identity_hash,l.outer_index,l.object_flags,'
+                . 'ot.value_prefix object_name,ct.value_prefix class_name,pt.value_prefix class_package'
+                . ' FROM ue_legacy_export_identity_lookup l'
+                . ' JOIN ue_terms ot ON ot.id=l.object_term_id'
+                . ' JOIN ue_terms ct ON ct.id=l.class_name_term_id'
+                . ' JOIN ue_terms pt ON pt.id=l.class_package_term_id'
+                . ' WHERE l.file_id=? AND l.identity_hash IN (' . $placeholders . ')'
+                . ' ORDER BY l.export_index DESC'
             );
             $statement->execute(array_merge([$providerFileId], $chunk));
             while (($row = $statement->fetch(PDO::FETCH_ASSOC)) !== false) {
@@ -336,6 +364,9 @@ final class PdoLegacyVerifyImportProjectionResolver
                     'export_index' => (int)$row['export_index'],
                     'outer_index' => (int)$row['outer_index'],
                     'object_flags' => (int)$row['object_flags'],
+                    'object_name' => (string)$row['object_name'],
+                    'class_name' => (string)$row['class_name'],
+                    'class_package' => (string)$row['class_package'],
                 ];
             }
         }
@@ -344,17 +375,11 @@ final class PdoLegacyVerifyImportProjectionResolver
 
     public static function identityHash(string $objectName, string $className, string $classPackage): string
     {
-        return md5(
-            self::key($objectName) . "\0"
-            . self::key($className) . "\0"
-            . self::key($classPackage),
-            true
-        );
+        return CatalogUnrealIdentityHash::verifyImportBinary($objectName, $className, $classPackage);
     }
 
     private static function key(string $value): string
     {
-        $value = trim($value);
-        return function_exists('mb_strtolower') ? mb_strtolower($value, 'UTF-8') : strtolower($value);
+        return CatalogUnrealIdentityHash::nameKey($value);
     }
 }
