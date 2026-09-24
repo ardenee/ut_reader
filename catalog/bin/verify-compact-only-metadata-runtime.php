@@ -253,7 +253,8 @@ if ($withDatabase) {
             'SELECT COUNT(*) FROM ue_files f '
             . 'LEFT JOIN ue_file_metadata m ON m.file_id=f.id '
             . 'WHERE f.scan_status="verified" '
-            . 'AND (m.file_id IS NULL OR m.format_version<>'.\UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer::FORMAT_VERSION)'
+            . 'AND (m.file_id IS NULL OR m.format_version<>'
+            . \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer::FORMAT_VERSION . ')'
         )->fetchColumn();
         $record(
             'verified_files_current_format_coverage',
@@ -263,7 +264,8 @@ if ($withDatabase) {
 
         $mismatchedCounts = (int)$db->query(
             'SELECT COUNT(*) FROM ue_files f '
-            . 'JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version='.\UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer::FORMAT_VERSION '
+            . 'JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version='
+            . \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer::FORMAT_VERSION . ' '
             . 'WHERE f.scan_status="verified" AND ('
             . 'm.name_count<>f.name_count OR m.import_count<>f.import_count OR m.export_count<>f.export_count)'
         )->fetchColumn();
@@ -303,7 +305,8 @@ if ($withDatabase) {
 
         $missingLocalPathTerms = (int)$db->query(
             'SELECT COUNT(*) FROM ue_export_lookup l '
-            . 'JOIN ue_file_metadata m ON m.file_id=l.file_id AND m.format_version='.\UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer::FORMAT_VERSION '
+            . 'JOIN ue_file_metadata m ON m.file_id=l.file_id AND m.format_version='
+            . \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer::FORMAT_VERSION . ' '
             . 'WHERE l.local_path_term_id IS NULL'
         )->fetchColumn();
         $checks[] = [
