@@ -85,7 +85,8 @@ final class CatalogVerifiedPackagePublisher implements VerifiedPackagePublisherP
      */
     public function publishMetadata(
         array $result,
-        CatalogVerifiedPackageInspection $inspection
+        CatalogVerifiedPackageInspection $inspection,
+        bool $resolveDependencies = true
     ): array {
         return VerifiedFileCompactMetadataFinalizer::finalizeParsed(
             $this->db,
@@ -94,7 +95,8 @@ final class CatalogVerifiedPackagePublisher implements VerifiedPackagePublisherP
             $inspection->names,
             $inspection->imports,
             $inspection->exports,
-            null
+            null,
+            $resolveDependencies
         );
     }
 }
