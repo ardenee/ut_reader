@@ -4,6 +4,9 @@ declare(strict_types=1);
 namespace UnrealDb\Catalog\Infrastructure\Persistence;
 
 use PDO;
+use UnrealDb\Catalog\Infrastructure\Metadata\CatalogUnrealIdentityHash;
+
+require_once dirname(__DIR__) . '/Metadata/CatalogUnrealIdentityHash.php';
 
 /**
  * Evaluates every current-format provider of a package against a complete set
@@ -54,8 +57,6 @@ final class PdoPackageObjectCoverageResolver
 
         $matched = [];
         $matchedExports = [];
-        $reader = self::metadataReader($db);
-        $config = self::catalogConfig();
         foreach (array_keys($providers) as $fileId) {
             $matched[$fileId] = [];
             $matchedExports[$fileId] = [];
@@ -65,17 +66,22 @@ final class PdoPackageObjectCoverageResolver
             foreach (array_chunk($requirements, self::MAX_PATHS_PER_QUERY, true) as $chunk) {
                 $hashes = [];
                 foreach ($chunk as $key => $path) {
-                    $hash = md5($path, true);
-                    $hex = bin2hex($hash);
-                    $hashes[$hex] = ['hash' => $hash, 'key' => $key];
+                    $hash = CatalogUnrealIdentityHash::objectPathBinary($path);
+                    $hashes[bin2hex($hash)] = ['hash' => $hash, 'key' => $key];
                 }
+
                 $providerIds = array_keys($providers);
-                $sql = 'SELECT l.file_id,l.export_index,l.path_hash FROM ue_export_lookup l'
+                $sql = 'SELECT l.file_id,l.export_index,l.path_hash_ci,'
+                    . 'pt.value_prefix local_path,ct.value_prefix class_name'
+                    . ' FROM ue_export_lookup l'
                     . ' JOIN ue_files f ON f.id=l.file_id'
                     . ' JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=3'
+                    . ' JOIN ue_terms pt ON pt.id=l.local_path_term_id'
+                    . ' LEFT JOIN ue_terms ct ON ct.id=l.class_term_id'
                     . ' WHERE f.game_id=? AND f.scan_status="verified"'
                     . ' AND l.file_id IN (' . self::placeholders(count($providerIds)) . ')'
-                    . ' AND l.path_hash IN (' . self::placeholders(count($hashes)) . ')';
+                    . ' AND l.path_hash_ci IN (' . self::placeholders(count($hashes)) . ')'
+                    . ' ORDER BY l.export_index DESC';
                 $rows = \catalog_all(
                     $db,
                     $sql,
@@ -85,84 +91,41 @@ final class PdoPackageObjectCoverageResolver
                         array_map(static fn(array $entry): string => $entry['hash'], array_values($hashes))
                     )
                 );
+
                 foreach ($rows as $row) {
                     $fileId = (int)$row['file_id'];
-                    $entry = $hashes[bin2hex((string)$row['path_hash'])] ?? null;
+                    $entry = $hashes[bin2hex((string)$row['path_hash_ci'])] ?? null;
                     if (!is_array($entry) || !isset($providers[$fileId])) {
                         continue;
                     }
-                    // path_hash is only an index accelerator. Confirm the actual
-                    // v3 Export path so a hash collision can never satisfy an Import.
-                    try {
-                        $pathMatches = self::exportMatchesRequirement(
-                            $reader,
-                            $fileId,
-                            (int)$row['export_index'],
-                            (string)$entry['key'],
-                            $requiredClasses[(string)$entry['key']] ?? null
-                        );
-                    } catch (\Throwable $error) {
-                        \UnrealDb\Catalog\Infrastructure\Metadata\VerifiedCompactMetadataHealth::queueRepair(
-                            $db,
-                            $config,
-                            $fileId,
-                            null,
-                            $error
-                        );
-                        continue;
-                    }
-                    if (!$pathMatches) {
-                        continue;
-                    }
-                    $matched[$fileId][$entry['key']] = true;
-                    $matchedExports[$fileId][$entry['key']] = (int)$row['export_index'];
-                }
-            }
-        }
 
-        // Preserve historical case-insensitive Unreal object matching only for
-        // requirements missed by the byte-sensitive path_hash fast path.
-        foreach ($providers as $fileId => $_provider) {
-            $missingForProvider = [];
-            foreach ($requirements as $key => $path) {
-                if (!isset($matched[$fileId][$key])) {
-                    $missingForProvider[$key] = $path;
-                }
-            }
-            if ($missingForProvider === []) {
-                continue;
-            }
-            $fallback = PdoCompactCaseInsensitiveExportResolver::matchProviderPaths(
-                $db,
-                (int)$fileId,
-                array_values($missingForProvider)
-            );
-            foreach ($fallback as $key => $exportIndex) {
-                if (!isset($missingForProvider[$key])) {
-                    continue;
-                }
-                try {
-                    if (!self::exportMatchesRequirement(
-                        $reader,
-                        (int)$fileId,
-                        (int)$exportIndex,
-                        (string)$key,
-                        $requiredClasses[(string)$key] ?? null
-                    )) {
+                    $requiredKey = (string)$entry['key'];
+                    if (self::key((string)$row['local_path']) !== $requiredKey) {
                         continue;
                     }
-                } catch (\Throwable $error) {
-                    \UnrealDb\Catalog\Infrastructure\Metadata\VerifiedCompactMetadataHealth::queueRepair(
-                        $db,
-                        $config,
-                        (int)$fileId,
-                        null,
-                        $error
-                    );
-                    continue;
+
+                    $requiredClass = $requiredClasses[$requiredKey] ?? null;
+                    if (is_array($requiredClass)) {
+                        $actual = self::key((string)($row['class_name'] ?? ''));
+                        $name = self::key((string)($requiredClass['class_name'] ?? ''));
+                        $package = self::key((string)($requiredClass['class_package'] ?? ''));
+                        if ($actual !== '' && $name !== '') {
+                            $qualified = $package !== '' ? $package . '.' . $name : $name;
+                            if (str_contains($actual, '.')) {
+                                if ($actual !== $qualified && $actual !== $name) {
+                                    continue;
+                                }
+                            } elseif ($actual !== $name) {
+                                continue;
+                            }
+                        }
+                    }
+
+                    if (!isset($matched[$fileId][$requiredKey])) {
+                        $matched[$fileId][$requiredKey] = true;
+                        $matchedExports[$fileId][$requiredKey] = (int)$row['export_index'];
+                    }
                 }
-                $matched[$fileId][$key] = true;
-                $matchedExports[$fileId][$key] = (int)$exportIndex;
             }
         }
 
@@ -382,54 +345,6 @@ final class PdoPackageObjectCoverageResolver
         }
 
         return $providers;
-    }
-
-    /** @return array<string,mixed> */
-    private static function catalogConfig(): array
-    {
-        $root = dirname(__DIR__, 3);
-        return require $root . '/config.php';
-    }
-
-    private static function metadataReader(PDO $db): \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataReader
-    {
-        $root = dirname(__DIR__, 3);
-        require_once $root . '/src/Infrastructure/Metadata/BlockedCompressedMetadataReader.php';
-        $config = self::catalogConfig();
-        $storageRoot = (string)($config['storage_path'] ?? ($root . '/storage'));
-        return new \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataReader($db, $storageRoot);
-    }
-
-    /** @param array{class_package:string,class_name:string}|null $requiredClass */
-    private static function exportMatchesRequirement(
-        \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataReader $reader,
-        int $fileId,
-        int $exportIndex,
-        string $requiredKey,
-        ?array $requiredClass
-    ): bool {
-        $rows = $reader->page($fileId, 'exports', $exportIndex, 1);
-        foreach ($rows as $row) {
-            if ((int)($row['export_index'] ?? -1) !== $exportIndex
-                || self::key((string)($row['local_path'] ?? '')) !== $requiredKey) {
-                continue;
-            }
-            if ($requiredClass === null) {
-                return true;
-            }
-            $actual = self::key((string)($row['class_name'] ?? ''));
-            $name = self::key($requiredClass['class_name']);
-            $package = self::key($requiredClass['class_package']);
-            if ($actual === '' || $name === '') {
-                return true;
-            }
-            $qualified = $package !== '' ? $package . '.' . $name : $name;
-            if (str_contains($actual, '.')) {
-                return $actual === $qualified || $actual === $name;
-            }
-            return $actual === $name;
-        }
-        return false;
     }
 
     private static function key(string $value): string
