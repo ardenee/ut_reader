@@ -215,92 +215,28 @@ final class PdoGameDependencyCrossExamineQuery
             return null;
         }
 
+        // Queue-time revalidation must use the exact same candidate construction
+        // path as the report. The previous implementation duplicated the report's
+        // source/engine/package/coverage gates and could reject a row that the
+        // report had just classified as FULL MATCH.
         $source = \catalog_one(
             $this->db,
-            'SELECT f.id,f.game_id,f.package_name,f.original_name,f.relative_path,f.extension,f.file_size,'
-            . 'f.md5,f.sha1,f.package_guid,f.detected_engine_key,f.detected_package_version,f.detected_licensee_version,'
-            . 'g.name source_game_name,COALESCE(p.engine_key,"") source_engine,m.format_version metadata_format_version '
-            . 'FROM ue_files f JOIN ue_games g ON g.id=f.game_id '
-            . 'LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 '
-            . 'LEFT JOIN ue_file_metadata m ON m.file_id=f.id '
-            . 'WHERE f.id=? AND f.scan_status="verified" LIMIT 1',
+            'SELECT game_id FROM ue_files WHERE id=? AND scan_status="verified" LIMIT 1',
             [$sourceFileId]
         );
-        if (!$source || (int)$source['game_id'] === $targetGameId) {
+        $sourceGameId = (int)($source['game_id'] ?? 0);
+        if ($sourceGameId < 1 || $sourceGameId === $targetGameId) {
             return null;
         }
 
-        $target = $this->targetGame($targetGameId);
-        if (!$this->isCompatibleSourceEngine(
-            $this->engineGeneration((string)$target['engine_key']),
-            $this->engineGeneration((string)$source['source_engine'])
-        )) {
-            return null;
-        }
-        if ((int)($source['metadata_format_version'] ?? 0) !== 3) {
-            return null;
-        }
-
-        $package = trim((string)$source['package_name']);
-        if ($package === '') {
-            return null;
-        }
-
-        PdoDependencyReadSource::sql($this->db);
-        // Keep single-candidate admission identical to fetch(): collect the
-        // target's missing package groups first and compare normalized package keys.
-        // Do not make queue admission depend on a separate SQL string-comparison
-        // path that can disagree with the page that selected this candidate.
-        $stats = [];
-        $packageStatsRows = \catalog_all(
-            $this->db,
-            'SELECT CONVERT(pkg.value_prefix USING utf8mb4) required_package,'
-            . 'COUNT(DISTINCT l.file_id,l.import_index) missing_count,'
-            . 'COUNT(DISTINCT l.file_id) owner_count '
-            . 'FROM ue_dependency_links l '
-            . 'JOIN ue_file_metadata m ON m.file_id=l.file_id AND m.format_version=3 '
-            . 'JOIN ue_files owner ON owner.id=l.file_id AND owner.scan_status="verified" '
-            . 'JOIN ue_terms pkg ON pkg.id=l.required_package_term_id '
-            . 'WHERE owner.game_id=? AND l.status=0 '
-            . 'GROUP BY l.required_package_term_id,CONVERT(pkg.value_prefix USING utf8mb4)',
-            [$targetGameId]
-        );
-        $packageKey = $this->key($package);
-        foreach ($packageStatsRows as $statsRow) {
-            if ($this->key((string)($statsRow['required_package'] ?? '')) !== $packageKey) {
+        $result = $this->fetch($targetGameId, $sourceGameId, 500);
+        foreach ((array)($result['rows'] ?? []) as $row) {
+            if ((int)($row['id'] ?? 0) !== $sourceFileId) {
                 continue;
             }
-            $stats['missing_count'] = (int)($stats['missing_count'] ?? 0) + (int)($statsRow['missing_count'] ?? 0);
-            $stats['owner_count'] = max((int)($stats['owner_count'] ?? 0), (int)($statsRow['owner_count'] ?? 0));
+            return (int)($row['complete_consumer_count'] ?? 0) > 0 ? $row : null;
         }
-        $missingCount = max(0, (int)($stats['missing_count'] ?? 0));
-        if ($missingCount < 1) {
-            return null;
-        }
-
-        $coverage = $this->completeConsumerCoverage($targetGameId, $sourceFileId, $package);
-        if ((int)($coverage['complete_consumer_count'] ?? 0) < 1) {
-            return null;
-        }
-
-        // Old exact-projection evidence remains diagnostic only.
-        $exact = $this->exactProjectionMatches($targetGameId, [$sourceFileId])[$sourceFileId] ?? [];
-        $ownerCount = max(0, (int)($stats['owner_count'] ?? 0));
-        $exactMatches = min($missingCount, max(0, (int)($exact['exact_object_matches'] ?? 0)));
-        $exactOwners = min($ownerCount, max(0, (int)($exact['exact_owner_count'] ?? 0)));
-
-        return $source + [
-            'target_game_id' => $targetGameId,
-            'target_game_name' => (string)$target['name'],
-            'target_missing_count' => $missingCount,
-            'target_owner_count' => $ownerCount,
-            'exact_object_matches' => $exactMatches,
-            'exact_owner_count' => $exactOwners,
-            'coverage_percent' => round(($exactMatches / $missingCount) * 100, 1),
-            'complete_consumer_count' => (int)$coverage['complete_consumer_count'],
-            'partial_consumer_count' => (int)$coverage['partial_consumer_count'],
-            'consumer_coverage' => $coverage['consumers'],
-        ];
+        return null;
     }
 
     /**
