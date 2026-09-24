@@ -374,12 +374,20 @@ final class PdoGameDependencyCrossExamineQuery
             } else {
                 $partial++;
             }
+            $consumerFile = \catalog_one(
+                $this->db,
+                'SELECT original_name,package_name FROM ue_files WHERE id=? LIMIT 1',
+                [$consumerId]
+            ) ?: [];
             $consumers[] = [
                 'file_id' => $consumerId,
+                'file_name' => trim((string)($consumerFile['original_name'] ?? '')) ?: ('File #' . $consumerId),
+                'package_name' => trim((string)($consumerFile['package_name'] ?? '')),
                 'required_count' => (int)($candidate['required_count'] ?? 0),
                 'matched_count' => (int)($candidate['matched_count'] ?? 0),
                 'missing_count' => (int)($candidate['missing_count'] ?? 0),
                 'status' => (string)($candidate['status'] ?? ''),
+                'matched_paths' => (array)($candidate['matched_paths'] ?? []),
                 'missing_paths' => (array)($candidate['missing_paths'] ?? []),
             ];
         }
