@@ -511,6 +511,14 @@ final class MetadataReaderV3
                     $blocks++;
                 }
             }
+            $expectedSize = 20 + $manifestLength + $offset;
+            if ($expectedSize !== (int)$size) {
+                throw new RuntimeException(
+                    'V3 metadata container has unexpected trailing or missing bytes: expected='
+                    . $expectedSize . ', actual=' . (int)$size . '.'
+                );
+            }
+
             $payloadSha256 = hash_final($hash, true);
             if ($expectedPayloadSha256 !== null && !hash_equals($expectedPayloadSha256, $payloadSha256)) {
                 throw new RuntimeException('V3 metadata SHA-256 mismatch.');
