@@ -304,6 +304,13 @@ final class BlockedCompressedMetadataReader
         if (!is_array($manifest) || (int)($manifest['file']['id'] ?? 0) !== $fileId) {
             throw new RuntimeException('Blocked metadata manifest identity mismatch.');
         }
+        if ((int)($manifest['format_version'] ?? 0) !== BlockedCompressedMetadataContainer::FORMAT_VERSION
+            || (string)($manifest['identity_hash_algorithm'] ?? '')
+                !== CatalogUnrealIdentityHash::VERIFY_IMPORT_ALGORITHM
+            || (string)($manifest['path_hash_algorithm'] ?? '')
+                !== CatalogUnrealIdentityHash::OBJECT_PATH_ALGORITHM) {
+            throw new RuntimeException('Blocked metadata manifest does not satisfy the current format-4 contract.');
+        }
         $context = [
             'row' => $row,
             'path' => $path,
