@@ -121,10 +121,11 @@ final class PdoGameDependencyCrossExamineQuery
         }
 
         $sourceIds = $sourceGameId > 0 ? [$sourceGameId] : array_keys($allowedSourceIds);
-        // Same bytes are only "already present" when the target also exposes the
-        // required logical package identity (canonical or alias). If the bytes are
-        // present under another package name, keep the source as a repair candidate:
-        // the canonical importer can add the missing alias and refresh dependencies.
+        // Do not exclude a sibling-game package merely because identical bytes are
+        // already assigned to the target. Cross-examine is an evidence/fit analysis:
+        // complete v3 package coverage decides whether this physical package is a
+        // better provider for the affected consumers. Import/assignment handling is
+        // a separate action after the candidate has been identified.
         $sources = $this->sourceFilesForMissingPackages(
             $targetGameId,
             $sourceIds,
@@ -541,18 +542,8 @@ final class PdoGameDependencyCrossExamineQuery
                 . 'LEFT JOIN ue_file_metadata m ON m.file_id=f.id '
                 . 'WHERE f.scan_status="verified" AND f.game_id IN (' . $gamePlaceholders . ') '
                 . 'AND f.package_name IN (' . $packagePlaceholders . ') '
-                . 'AND NOT EXISTS ('
-                . 'SELECT 1 FROM ue_files target_existing '
-                . 'WHERE target_existing.game_id=? AND target_existing.scan_status="verified" '
-                . 'AND f.md5<>"" AND target_existing.md5=f.md5 '
-                . 'AND (target_existing.package_name=f.package_name OR EXISTS ('
-                . 'SELECT 1 FROM ue_file_package_aliases target_alias '
-                . 'WHERE target_alias.file_id=target_existing.id AND target_alias.game_id=target_existing.game_id '
-                . 'AND target_alias.package_name=f.package_name'
-                . '))'
-                . ') '
                 . 'ORDER BY f.package_name,g.name,f.id',
-                array_merge($sourceGameIds, $packageChunk, [$targetGameId])
+                array_merge($sourceGameIds, $packageChunk)
             );
             foreach ($chunkRows as $row) {
                 $fileId = (int)($row['id'] ?? 0);
