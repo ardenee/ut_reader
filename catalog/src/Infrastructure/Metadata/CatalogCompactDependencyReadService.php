@@ -1,7 +1,7 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Reads dependency views exclusively from current format-3 metadata and compact projections.
+ * Purpose: Reads dependency views exclusively from current metadata format and compact projections.
  * Why: Verified dependency pages must have one authoritative representation and must not merge or fall back to retired row-per-object metadata storage.
  * Role: Infrastructure current-metadata dependency read service.
  */
@@ -199,7 +199,7 @@ final class CatalogCompactDependencyReadService
         $statement = $this->db->prepare(
             'SELECT DISTINCT src.id,src.package_name,src.original_name,src.package_guid,src.md5,src.sha1,src.file_size'
             . ' FROM ue_dependency_links l'
-            . ' JOIN ue_file_metadata m ON m.file_id=l.file_id AND m.format_version=3'
+            . ' JOIN ue_file_metadata m ON m.file_id=l.file_id AND m.format_version=' . BlockedCompressedMetadataContainer::FORMAT_VERSION . ''
             . ' JOIN ue_files src ON src.id=l.file_id AND src.scan_status="verified"'
             . ' WHERE l.resolved_file_id=?'
             . ' ORDER BY src.package_name,src.original_name LIMIT ' . $limit
@@ -254,7 +254,7 @@ final class CatalogCompactDependencyReadService
             . ' package_term.value_prefix required_package_prefix,'
             . ' src.id,src.package_name,src.original_name,src.package_guid,src.md5,src.sha1,src.file_size'
             . ' FROM ue_dependency_links l'
-            . ' JOIN ue_file_metadata m ON m.file_id=l.file_id AND m.format_version=3'
+            . ' JOIN ue_file_metadata m ON m.file_id=l.file_id AND m.format_version=' . BlockedCompressedMetadataContainer::FORMAT_VERSION . ''
             . ' JOIN ue_files src ON src.id=l.file_id AND src.game_id=? AND src.scan_status="verified"'
             . ' JOIN ue_terms package_term ON package_term.id=l.required_package_term_id'
             . ' WHERE src.id<>? AND (' . $condition . ')'
@@ -324,7 +324,7 @@ final class CatalogCompactDependencyReadService
     {
         if ($this->metadataVersion($fileId) !== BlockedCompressedMetadataContainer::FORMAT_VERSION) {
             throw new RuntimeException(
-                'Verified file #' . $fileId . ' is missing current format-3 dependency metadata; runtime legacy reads are disabled.'
+                'Verified file #' . $fileId . ' is missing current format-' . BlockedCompressedMetadataContainer::FORMAT_VERSION . ' dependency metadata; runtime legacy reads are disabled.'
             );
         }
     }
