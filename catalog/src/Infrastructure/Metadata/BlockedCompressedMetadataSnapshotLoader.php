@@ -17,7 +17,11 @@ namespace UnrealDb\Catalog\Infrastructure\Metadata;
 use PDO;
 use RuntimeException;
 
-/** Loads complete or dependency-only snapshots from a format-3 blocked container. */
+/**
+ * Loads current-format metadata only.
+ * Future v5+ support belongs in an offline migration loader; do not add
+ * prior-format compatibility to this production class.
+ */
 final class BlockedCompressedMetadataSnapshotLoader
 {
     private const PAGE_SIZE = 5000;
