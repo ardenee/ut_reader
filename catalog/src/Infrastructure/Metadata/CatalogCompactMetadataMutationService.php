@@ -3,7 +3,7 @@
  * UnrealDB PHP File Audit
  * Purpose: Rewrites package identity and Export paths in current metadata.
  * Why: Compact snapshot mutation/publication is a metadata persistence concern; unverified staging rebases paths at read time.
- * Role: Infrastructure metadata mutation service for format-3 containers and compressed unverified staging.
+ * Role: Infrastructure metadata mutation service for current-format containers and compressed unverified staging.
  */
 declare(strict_types=1);
 
