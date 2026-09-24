@@ -152,13 +152,17 @@ final class PdoGameDependencyCrossExamineQuery
             }
         }
 
+        // Exact missing-object projection matches are diagnostic evidence only.
+        // Every compatible same-package source candidate must reach complete package
+        // coverage; otherwise the old path-hash prefilter can hide the best-fitting
+        // package version before authoritative v3 coverage evaluates it.
         $exactByFile = $this->exactProjectionMatches($targetGameId, array_keys($sourceById));
         $rows = [];
-        foreach ($exactByFile as $sourceFileId => $exactEvidence) {
-            $source = $sourceById[$sourceFileId] ?? null;
-            if (!is_array($source)) {
-                continue;
-            }
+        foreach ($sourceById as $sourceFileId => $source) {
+            $exactEvidence = $exactByFile[$sourceFileId] ?? [
+                'exact_object_matches' => 0,
+                'exact_owner_count' => 0,
+            ];
             $packageKey = $this->key((string)$source['package_name']);
             $stats = $packageStats[$packageKey] ?? null;
             if (!is_array($stats)) {
@@ -167,9 +171,6 @@ final class PdoGameDependencyCrossExamineQuery
             $missingCount = max(1, (int)($stats['missing_count'] ?? 0));
             $ownerCount = max(0, (int)($stats['owner_count'] ?? 0));
             $exact = min($missingCount, max(0, (int)($exactEvidence['exact_object_matches'] ?? 0)));
-            if ($exact < 1) {
-                continue;
-            }
             $exactOwners = min($ownerCount, max(0, (int)($exactEvidence['exact_owner_count'] ?? 0)));
 
             $completeCoverage = $this->completeConsumerCoverage(
