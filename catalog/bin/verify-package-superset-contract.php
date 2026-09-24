@@ -34,8 +34,8 @@ $check(
 $check(
     'consumer_set_is_v3_only',
     is_string($source)
-        && str_contains($source, 'm.format_version=3')
-        && !str_contains($source, 'format_version=2'),
+        && str_contains($source, 'BlockedCompressedMetadataContainer::FORMAT_VERSION')
+        && !str_contains($source, 'format_version=3'),
     'Only verified v3 consumer metadata participates in superset analysis.'
 );
 $check(
