@@ -112,7 +112,7 @@ $payload = $selected ? possible_misnamed_decode((string)($selected['payload_json
 $progress = $selected ? possible_misnamed_decode((string)($selected['progress_json'] ?? '')) : [];
 $result = $selected ? possible_misnamed_decode((string)($selected['result_json'] ?? '')) : [];
 $candidates = is_array($result['candidates'] ?? null) ? $result['candidates'] : [];
-$currentMisnamedPolicy = 'rootless-v3-coverage-v8';
+$currentMisnamedPolicy = 'rootless-v3-full-path-coverage-v9';
 $resultPolicy = trim((string)($result['policy_version'] ?? ''));
 $resultIsCurrent = $resultPolicy !== '' && hash_equals($currentMisnamedPolicy, $resultPolicy);
 
@@ -190,10 +190,10 @@ if ($selected !== null && (string)$selected['status'] === 'completed') {
     if ($candidates === []) {
         echo '<p class="muted">No likely filename/package-name mismatches were found in this scan.</p></div>';
     } else {
-        echo '<p class="muted small">Each row shows the current candidate file, the importing evidence files, and the exact object paths that match. '
+        echo '<p class="muted small">Each row shows the candidate file, the importing evidence file, and the complete rootless object paths that evidence file expects from the missing package. A check means the candidate exports that exact path; a cross means it does not. '
             . 'The three file counts are Names / Imports / Exports. The candidate itself has zero currently resolved inbound dependants. '
             . 'Name similarity affects confidence only; it is not required for exact rootless-path evidence. Only a FULL ROOTLESS MATCH means this one physical file contains the complete required object set after ignoring the package root. PARTIAL rows are evidence only and should not be renamed from this result alone.</p>'
-            . '<table><thead><tr><th>Coverage</th><th>Current file</th><th>Evidence files</th><th>Why it matches</th><th></th></tr></thead><tbody>';
+            . '<table><thead><tr><th>Coverage</th><th>Current file</th><th>Evidence file</th><th>Required object paths</th></tr></thead><tbody>';
         foreach ($candidates as $candidate) {
             if (!is_array($candidate)) {
                 continue;
@@ -240,6 +240,27 @@ if ($selected !== null && (string)$selected['status'] === 'completed') {
                 $pathsHtml .= '</div>';
             }
 
+            $requiredPathRows = '';
+            $matchedPathLookup = [];
+            foreach ((array)($candidate['evidence'] ?? []) as $evidenceRow) {
+                foreach ((array)($evidenceRow['matched_paths'] ?? []) as $matchedPath) {
+                    $matchedPathLookup[strtolower(trim((string)$matchedPath))] = true;
+                }
+            }
+            foreach ((array)($candidate['required_paths'] ?? []) as $requiredPath) {
+                $requiredPath = trim((string)$requiredPath);
+                if ($requiredPath === '') {
+                    continue;
+                }
+                $matchedHere = isset($matchedPathLookup[strtolower($requiredPath)]);
+                $requiredPathRows .= '<div class="mono small" style="overflow-wrap:anywhere;margin-bottom:.2rem">'
+                    . ($matchedHere ? '&#10003; ' : '&#10007; ')
+                    . catalog_h($requiredPath) . '</div>';
+            }
+            if ($requiredPathRows === '') {
+                $requiredPathRows = '<span class="muted small">Required path text unavailable.</span>';
+            }
+
             $matchBits = [];
             if (!empty($candidate['collision_suffix_match'])) {
                 $matchBits[] = 'copy suffix (1–9)';
@@ -273,9 +294,8 @@ if ($selected !== null && (string)$selected['status'] === 'completed') {
                 . '<div class="small muted" title="Names / Imports / Exports">' . number_format($candidateNames) . ' / '
                 . number_format($candidateImports) . ' / ' . number_format($candidateExports) . '</div></td>'
                 . '<td>' . ($evidenceHtml !== '' ? $evidenceHtml : '<span class="muted">No retained evidence detail</span>') . '</td>'
-                . '<td>' . ($pathsHtml !== '' ? $pathsHtml : '<span class="muted">No retained path detail</span>')
+                . '<td>' . $requiredPathRows
                 . '<div class="small muted" style="margin-top:.4rem">' . catalog_h(implode(' · ', $matchBits)) . '</div></td>'
-                . '<td><a class="button primary" href="file-examine.php?id=' . $fileId . '&rename_suggestions=1">Review evidence</a></td>'
                 . '</tr>';
         }
         echo '</tbody></table></div>';
