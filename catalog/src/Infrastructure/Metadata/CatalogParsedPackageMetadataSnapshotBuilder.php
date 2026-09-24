@@ -25,6 +25,7 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
         require_once $root . '/lib/CatalogSupport.php';
         require_once $root . '/lib/Scanner/CatalogScannerPath.php';
         require_once $root . '/lib/Scanner/CatalogScannerSupport.php';
+        require_once __DIR__ . '/CatalogUnrealIdentityHash.php';
     }
 
     /**
@@ -139,6 +140,12 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
                 'full_path' => $fullPath,
                 'root_package' => $rootPackage,
                 'relative_object_path' => $relativeObjectPath,
+                'verify_identity_hash' => ($classPackageText !== '' && $classNameText !== '' && $objectNameText !== '')
+                    ? CatalogUnrealIdentityHash::verifyImportHex($objectNameText, $classNameText, $classPackageText)
+                    : '',
+                'path_hash_ci' => $relativeObjectPath !== ''
+                    ? CatalogUnrealIdentityHash::objectPathHex($relativeObjectPath)
+                    : '',
                 'is_common' => in_array(strtolower($rootPackage), $common, true) ? 1 : 0,
             ];
             $importPaths[(int)$index] = [
@@ -157,6 +164,12 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
             $className = $classReference !== 0
                 ? \scanner_ref_path($classReference, $imports, $exports, $cache)
                 : '';
+            [$verifyClassPackage, $verifyClassName] = $this->legacyExportClassIdentity(
+                $classReference,
+                $packageName,
+                $imports,
+                $exports
+            );
             $fullPath = \scanner_join_path_parts([$packageName, $localPath]);
             $objectNameIndex = $this->fnameIndex($row['objectName'] ?? ($row['ObjectName'] ?? ($row['nameIndex'] ?? null)));
             if ($objectNameIndex !== null && isset($nameUsage[$objectNameIndex])) {
@@ -168,6 +181,18 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
                 'file_id' => $fileId,
                 'export_index' => (int)$index,
                 'class_name' => $className,
+                'verify_class_package' => $verifyClassPackage,
+                'verify_class_name' => $verifyClassName,
+                'verify_identity_hash' => ($verifyClassPackage !== '' && $verifyClassName !== '' && (string)($row['objectNameText'] ?? '') !== '')
+                    ? CatalogUnrealIdentityHash::verifyImportHex(
+                        (string)($row['objectNameText'] ?? ''),
+                        $verifyClassName,
+                        $verifyClassPackage
+                    )
+                    : '',
+                'path_hash_ci' => $localPath !== ''
+                    ? CatalogUnrealIdentityHash::objectPathHex($localPath)
+                    : '',
                 'class_index' => $classReference,
                 'super_index' => (int)($row['superIndex'] ?? $row['super'] ?? 0),
                 'template_index' => (int)($row['templateIndex'] ?? $row['archetype'] ?? $row['archetypeIndexRef'] ?? 0),
@@ -436,11 +461,17 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
                 (int)($row['import_index'] ?? 0),
                 trim((string)($row['class_package'] ?? '')),
                 trim((string)($row['class_name'] ?? '')),
+                trim((string)($row['verify_class_package'] ?? '')),
+                trim((string)($row['verify_class_name'] ?? '')),
+                (string)($row['verify_identity_hash'] ?? ''),
+                (string)($row['path_hash_ci'] ?? ''),
                 (string)($row['object_name'] ?? ''),
                 (int)($row['outer_index'] ?? 0),
                 (string)($row['full_path'] ?? ''),
                 (string)($row['root_package'] ?? ''),
                 (string)($row['relative_object_path'] ?? ''),
+                (string)($row['verify_identity_hash'] ?? ''),
+                (string)($row['path_hash_ci'] ?? ''),
                 (int)($row['is_common'] ?? 0),
                 self::nullableScalarString($row['class_package_name_index'] ?? null),
                 self::nullableScalarString($row['class_name_index'] ?? null),
@@ -467,6 +498,45 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
         }
 
         return hash('sha256', serialize($canonical));
+    }
+
+    /**
+     * @param array<int,mixed> $imports
+     * @param array<int,mixed> $exports
+     * @return array{0:string,1:string}
+     */
+    private function legacyExportClassIdentity(
+        int $classReference,
+        string $packageName,
+        array $imports,
+        array $exports
+    ): array {
+        if ($classReference < 0) {
+            $classImport = $imports[-$classReference - 1] ?? null;
+            if (!is_array($classImport)) {
+                return ['', ''];
+            }
+            $className = trim((string)($classImport['objectNameText'] ?? ($classImport['ObjectName']['text'] ?? '')));
+            $outerIndex = (int)($classImport['outerIndex'] ?? $classImport['OuterIndex'] ?? $classImport['outer'] ?? 0);
+            if ($outerIndex >= 0) {
+                return ['', $className];
+            }
+            $classPackageImport = $imports[-$outerIndex - 1] ?? null;
+            return [
+                is_array($classPackageImport)
+                    ? trim((string)($classPackageImport['objectNameText'] ?? ($classPackageImport['ObjectName']['text'] ?? '')))
+                    : '',
+                $className,
+            ];
+        }
+        if ($classReference > 0) {
+            $classExport = $exports[$classReference - 1] ?? null;
+            return [
+                trim($packageName),
+                is_array($classExport) ? trim((string)($classExport['objectNameText'] ?? '')) : '',
+            ];
+        }
+        return ['Core', 'Class'];
     }
 
     private function fnameIndex(mixed $value): ?int
