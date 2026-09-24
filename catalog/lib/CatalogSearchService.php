@@ -18,7 +18,7 @@ class_alias(ApplicationSearchUnavailableException::class, 'CatalogSearchUnavaila
 final class CatalogSearchService
 {
     /** @return list<array<string,mixed>> */
-    public static function findFiles(PDO $db, string $query, int $limit = 200, ?int $gameId = null): array
+    public static function findFiles(PDO $db, string $query, int $limit = 200, ?int $gameId = null, array $filters = []): array
     {
         $query = trim($query);
         $limit = max(1, min($limit, 500));
@@ -29,6 +29,6 @@ final class CatalogSearchService
         // every game; the old fan-out multiplied SQL work by the game count and
         // made administrator searches disproportionately expensive.
         return (new ApplicationCatalogSearchService(new PdoCatalogSearchRepository($db)))
-            ->findFiles($query, $limit, $gameId);
+            ->findFiles($query, $limit, $gameId, $filters);
     }
 }
