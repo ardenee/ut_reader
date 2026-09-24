@@ -6,6 +6,10 @@ declare(strict_types=1);
 
 namespace UnrealDb\Catalog\Infrastructure\Metadata;
 
+/**
+ * Current-format identity enrichment. Future v5+ changes should produce their
+ * own format-specific enrichment contract during the offline format migration.
+ */
 final class CatalogCompactIdentityEnricher
 {
     /**
@@ -81,7 +85,7 @@ final class CatalogCompactIdentityEnricher
         $snapshot['imports'] = $imports;
         $snapshot['exports'] = $exports;
         $snapshot['identity_schema'] = [
-            'row_schema_version' => 2,
+            'format_version' => BlockedCompressedMetadataContainer::FORMAT_VERSION,
             'verify_import_hash_algorithm' => CatalogUnrealIdentityHash::VERIFY_IMPORT_ALGORITHM,
             'object_path_hash_algorithm' => CatalogUnrealIdentityHash::OBJECT_PATH_ALGORITHM,
             'engine_key' => $engineKey,
