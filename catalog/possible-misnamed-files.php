@@ -112,7 +112,7 @@ $payload = $selected ? possible_misnamed_decode((string)($selected['payload_json
 $progress = $selected ? possible_misnamed_decode((string)($selected['progress_json'] ?? '')) : [];
 $result = $selected ? possible_misnamed_decode((string)($selected['result_json'] ?? '')) : [];
 $candidates = is_array($result['candidates'] ?? null) ? $result['candidates'] : [];
-$currentMisnamedPolicy = 'rootless-v3-content-evidence-v7';
+$currentMisnamedPolicy = 'rootless-v3-coverage-v8';
 $resultPolicy = trim((string)($result['policy_version'] ?? ''));
 $resultIsCurrent = $resultPolicy !== '' && hash_equals($currentMisnamedPolicy, $resultPolicy);
 
@@ -192,8 +192,8 @@ if ($selected !== null && (string)$selected['status'] === 'completed') {
     } else {
         echo '<p class="muted small">Each row shows the current candidate file, the importing evidence files, and the exact object paths that match. '
             . 'The three file counts are Names / Imports / Exports. The candidate itself has zero currently resolved inbound dependants. '
-            . 'Name similarity affects confidence only; it is not required for exact rootless-path evidence. Review the evidence before renaming.</p>'
-            . '<table><thead><tr><th>Confidence</th><th>Current file</th><th>Evidence files</th><th>Why it matches</th><th></th></tr></thead><tbody>';
+            . 'Name similarity affects confidence only; it is not required for exact rootless-path evidence. Only a FULL ROOTLESS MATCH means this one physical file contains the complete required object set after ignoring the package root. PARTIAL rows are evidence only and should not be renamed from this result alone.</p>'
+            . '<table><thead><tr><th>Coverage</th><th>Current file</th><th>Evidence files</th><th>Why it matches</th><th></th></tr></thead><tbody>';
         foreach ($candidates as $candidate) {
             if (!is_array($candidate)) {
                 continue;
@@ -255,13 +255,19 @@ if ($selected !== null && (string)$selected['status'] === 'completed') {
             $candidateExports = max(0, (int)($candidate['candidate_export_count'] ?? 0));
             $suggestedFilename = trim((string)($candidate['suggested_filename'] ?? ''));
 
+            $matchedObjects = max(0, (int)($candidate['matching_objects'] ?? 0));
+            $requiredObjects = max(0, (int)($candidate['required_objects'] ?? 0));
+            $coverageStatus = (string)($candidate['coverage_status'] ?? 'partial');
+            $coverageLabel = $coverageStatus === 'full' ? 'FULL ROOTLESS MATCH' : 'PARTIAL';
             echo '<tr>'
-                . '<td><strong>' . catalog_h(possible_misnamed_confidence_label($confidence)) . '</strong>'
-                . '<div class="small muted">score ' . (int)($candidate['score'] ?? 0) . '</div></td>'
+                . '<td><strong>' . catalog_h($coverageLabel) . '</strong>'
+                . '<div class="small">' . number_format($matchedObjects) . ' / ' . number_format($requiredObjects) . ' required objects</div>'
+                . '<div class="small muted">' . catalog_h(possible_misnamed_confidence_label($confidence))
+                . ' evidence · score ' . (int)($candidate['score'] ?? 0) . '</div></td>'
                 . '<td><a href="file-examine.php?id=' . $fileId . '"><strong>'
                 . catalog_h((string)($candidate['candidate_original_name'] ?? '')) . '</strong></a>'
                 . ($suggestedFilename !== ''
-                    ? '<div class="small"><strong style="color:#fff">Suggested: ' . catalog_h($suggestedFilename) . '</strong></div>'
+                    ? '<div class="small"><strong style="color:#fff">Expected identity: ' . catalog_h($suggestedFilename) . '</strong></div>'
                     : '')
                 . '<div class="small muted">' . catalog_h((string)($candidate['game_name'] ?? '')) . '</div>'
                 . '<div class="small muted" title="Names / Imports / Exports">' . number_format($candidateNames) . ' / '
@@ -269,7 +275,7 @@ if ($selected !== null && (string)$selected['status'] === 'completed') {
                 . '<td>' . ($evidenceHtml !== '' ? $evidenceHtml : '<span class="muted">No retained evidence detail</span>') . '</td>'
                 . '<td>' . ($pathsHtml !== '' ? $pathsHtml : '<span class="muted">No retained path detail</span>')
                 . '<div class="small muted" style="margin-top:.4rem">' . catalog_h(implode(' · ', $matchBits)) . '</div></td>'
-                . '<td><a class="button primary" href="file-examine.php?id=' . $fileId . '&rename_suggestions=1">Review / rename</a></td>'
+                . '<td><a class="button primary" href="file-examine.php?id=' . $fileId . '&rename_suggestions=1">Review evidence</a></td>'
                 . '</tr>';
         }
         echo '</tbody></table></div>';
