@@ -19,7 +19,11 @@ use RuntimeException;
 use Throwable;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoContention;
 
-/** Publishes a complete format-3 snapshot and its MySQL projections atomically. */
+/**
+ * Publishes the current metadata format and its MySQL projections atomically.
+ * Future v5+ changes must advance the container format/magic/extension and use
+ * an offline prior-format migrator rather than compatibility branches here.
+ */
 final class BlockedCompressedMetadataSnapshotWriter
 {
     private const CONTENTION_ATTEMPTS = 5;
@@ -48,7 +52,7 @@ final class BlockedCompressedMetadataSnapshotWriter
         }
 
         $this->assertSnapshotCounts($snapshot);
-        $this->assertFormat3References($snapshot);
+        $this->assertCurrentFormatReferences($snapshot);
         $path = BlockedCompressedMetadataContainer::path($this->storageRoot, $gameId, $fileId);
         $directory = dirname($path);
         if (!is_dir($directory) && !mkdir($directory, 0775, true) && !is_dir($directory)) {
@@ -203,7 +207,7 @@ final class BlockedCompressedMetadataSnapshotWriter
     }
 
     /** @param array<string,mixed> $snapshot */
-    private function assertFormat3References(array $snapshot): void
+    private function assertCurrentFormatReferences(array $snapshot): void
     {
         foreach ((array)($snapshot['names'] ?? []) as $row) {
             if (!is_array($row)
@@ -211,7 +215,7 @@ final class BlockedCompressedMetadataSnapshotWriter
                 || !array_key_exists('exports_count', $row)
                 || !array_key_exists('first_import_index', $row)
                 || !array_key_exists('first_export_index', $row)) {
-                throw new RuntimeException('Format-3 publication requires persisted Name usage metadata; reparse the source package first.');
+                throw new RuntimeException('Current-format publication requires persisted Name usage metadata; reparse the source package first.');
             }
         }
         foreach ((array)($snapshot['imports'] ?? []) as $row) {
@@ -219,7 +223,7 @@ final class BlockedCompressedMetadataSnapshotWriter
                 || !array_key_exists('class_package_name_index', $row)
                 || !array_key_exists('class_name_index', $row)
                 || !array_key_exists('object_name_index', $row)) {
-                throw new RuntimeException('Format-3 publication requires serialized Import FName indexes; reparse the source package first.');
+                throw new RuntimeException('Current-format publication requires serialized Import FName indexes; reparse the source package first.');
             }
         }
         foreach ((array)($snapshot['exports'] ?? []) as $row) {
@@ -228,7 +232,7 @@ final class BlockedCompressedMetadataSnapshotWriter
                 || !array_key_exists('super_index', $row)
                 || !array_key_exists('template_index', $row)
                 || !array_key_exists('object_name_index', $row)) {
-                throw new RuntimeException('Format-3 publication requires serialized Export reference indexes; reparse the source package first.');
+                throw new RuntimeException('Current-format publication requires serialized Export reference indexes; reparse the source package first.');
             }
         }
     }
