@@ -125,6 +125,18 @@ final class CatalogMisnamedFileDetector
 
         $packageNames = $this->termValues(array_map('intval', array_keys($requiredPackageTermIds)));
         $requiredObjectPaths = $this->termValues(array_map('intval', array_keys($requiredObjectTermIds)));
+
+        // Build the complete unique rootless requirement set for each expected
+        // package. This is the denominator used to distinguish FULL from PARTIAL
+        // rename evidence; matched paths alone are not enough to recommend a rename.
+        $requiredPathsByPackage = [];
+        foreach ($requirementsByObject as $packageRequirements) {
+            foreach ($packageRequirements as $packageTermId => $pathHashes) {
+                foreach ($pathHashes as $pathHash => $requiredObjectTermId) {
+                    $requiredPathsByPackage[(int)$packageTermId][(string)$pathHash] = (int)$requiredObjectTermId;
+                }
+            }
+        }
         $providers = $this->providersForTerms(
             $safeObjectTermIds,
             $gameId,
@@ -207,6 +219,7 @@ final class CatalogMisnamedFileDetector
                             (string)$provider['extension']
                         ),
                         'current_dependants' => 0,
+                        'required_objects' => count((array)($requiredPathsByPackage[$packageTermId] ?? [])),
                         'collision_suffix_match' => $collisionSuffixMatch,
                         'matched_object_term_ids' => [],
                         'best_same_file_matches' => 0,
@@ -246,6 +259,11 @@ final class CatalogMisnamedFileDetector
             $matched = count($termIds);
             $group['matched_object_term_ids'] = $termIds;
             $group['matching_objects'] = $matched;
+            $requiredTotal = max(0, (int)($group['required_objects'] ?? 0));
+            $group['coverage_status'] = $requiredTotal > 0 && $matched >= $requiredTotal ? 'full' : 'partial';
+            $group['coverage_percent'] = $requiredTotal > 0
+                ? min(100, (int)floor(($matched * 100) / $requiredTotal))
+                : 0;
             $group['best_same_file_matches'] = $matched;
             $group['evidence'][0]['matched_objects'] = $matched;
             $paths = array_keys((array)($group['evidence'][0]['matched_paths'] ?? []));
