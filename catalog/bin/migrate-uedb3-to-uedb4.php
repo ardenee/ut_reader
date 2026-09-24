@@ -111,19 +111,21 @@ if ($workers > 1 && $workerIndex < 0) {
 
         $descriptorSpec = [
             0 => ['file', 'php://stdin', 'r'],
-            1 => ['pipe', 'w'],
-            2 => ['pipe', 'w'],
+            1 => ['file', 'php://stdout', 'w'],
+            2 => ['file', 'php://stderr', 'w'],
         ];
         $process = proc_open($command, $descriptorSpec, $pipes);
         if (!is_resource($process)) {
             throw new RuntimeException('Could not launch migration worker ' . $index . '.');
         }
-        stream_set_blocking($pipes[1], false);
-        stream_set_blocking($pipes[2], false);
+        $status = proc_get_status($process);
+        fwrite(
+            STDERR,
+            'Launched worker ' . ($index + 1) . '/' . $workers
+            . ' | pid=' . (int)($status['pid'] ?? 0) . PHP_EOL
+        );
         $children[$index] = [
             'process' => $process,
-            'stdout' => $pipes[1],
-            'stderr' => $pipes[2],
             'closed' => false,
         ];
     }
@@ -135,25 +137,10 @@ if ($workers > 1 && $workerIndex < 0) {
                 continue;
             }
 
-            foreach (['stdout' => STDOUT, 'stderr' => STDERR] as $pipeName => $destination) {
-                $data = stream_get_contents($child[$pipeName]);
-                if (is_string($data) && $data !== '') {
-                    fwrite($destination, $data);
-                }
-            }
-
             $status = proc_get_status($child['process']);
             if ((bool)($status['running'] ?? false)) {
                 $running++;
                 continue;
-            }
-
-            foreach (['stdout' => STDOUT, 'stderr' => STDERR] as $pipeName => $destination) {
-                $data = stream_get_contents($child[$pipeName]);
-                if (is_string($data) && $data !== '') {
-                    fwrite($destination, $data);
-                }
-                fclose($child[$pipeName]);
             }
 
             $observedExitCode = (int)($status['exitcode'] ?? -1);
@@ -197,6 +184,16 @@ $metadataRoot = $storageRoot . DIRECTORY_SEPARATOR . 'metadata';
 $loader = new SnapshotLoaderV3($db, $storageRoot);
 $writer = new BlockedCompressedMetadataSnapshotWriter($db, $storageRoot);
 
+fwrite(
+    STDERR,
+    '[worker ' . ($workerIndex + 1) . '/' . $workerCount . '] started'
+    . ' | pid=' . getmypid()
+    . ' | after_id=' . $afterId
+    . ' | limit=' . $limit
+    . ' | continuous=' . ($continuous ? 'yes' : 'no')
+    . PHP_EOL
+);
+
 $totalSelected = 0;
 $totalConverted = 0;
 $totalFailed = 0;
@@ -231,9 +228,19 @@ do {
     }
     $sql .= ' ORDER BY f.id LIMIT ' . $limit;
 
+    fwrite(
+        STDERR,
+        '[worker ' . ($workerIndex + 1) . '/' . $workerCount . '] selecting batch=' . $batchNumber
+        . ' after_id=' . $currentAfterId . PHP_EOL
+    );
     $statement = $db->prepare($sql);
     $statement->execute($args);
     $files = $statement->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    fwrite(
+        STDERR,
+        '[worker ' . ($workerIndex + 1) . '/' . $workerCount . '] selected=' . count($files)
+        . ' batch=' . $batchNumber . PHP_EOL
+    );
 
     if ($files === []) {
         if ($continuous) {
@@ -324,6 +331,17 @@ do {
                     'error' => get_class($error) . ': ' . $error->getMessage(),
                 ];
             }
+        }
+
+        if (($position + 1) <= 10) {
+            fwrite(
+                STDERR,
+                '[worker ' . ($workerIndex + 1) . '/' . $workerCount . '] '
+                . 'file=' . $fileId
+                . ' completed=' . ($position + 1) . '/' . count($files)
+                . ' | total_converted=' . $totalConverted
+                . ' | total_failed=' . $totalFailed . PHP_EOL
+            );
         }
 
         if ((($position + 1) % 25) === 0) {
