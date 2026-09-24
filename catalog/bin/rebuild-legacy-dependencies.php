@@ -39,7 +39,7 @@ $db = catalog_db($config);
 
 $sql = 'SELECT f.id,f.game_id,f.package_name'
     . ' FROM ue_files f'
-    . ' JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=3'
+    . ' JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=' . \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer::FORMAT_VERSION . ''
     . ' JOIN ue_games g ON g.id=f.game_id'
     . ' JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1'
     . ' WHERE f.scan_status="verified"'
