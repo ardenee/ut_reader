@@ -75,7 +75,7 @@ final class PdoPackageObjectCoverageResolver
                     . 'pt.value_prefix local_path,ct.value_prefix class_name'
                     . ' FROM ue_export_lookup l'
                     . ' JOIN ue_files f ON f.id=l.file_id'
-                    . ' JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=3'
+                    . ' JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=' . \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer::FORMAT_VERSION . ''
                     . ' JOIN ue_terms pt ON pt.id=l.local_path_term_id'
                     . ' LEFT JOIN ue_terms ct ON ct.id=l.class_term_id'
                     . ' WHERE f.game_id=? AND f.scan_status="verified"'
@@ -296,7 +296,7 @@ final class PdoPackageObjectCoverageResolver
                 $db,
                 'SELECT p.file_id,p.source_kind FROM ue_package_providers p'
                 . ' JOIN ue_files f ON f.id=p.file_id AND f.game_id=p.game_id'
-                . ' JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=3'
+                . ' JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=' . \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer::FORMAT_VERSION . ''
                 . ' LEFT JOIN ue_file_package_aliases a ON p.source_kind="alias"'
                 . ' AND a.id=p.source_id AND a.file_id=p.file_id AND a.game_id=p.game_id'
                 . ' AND a.package_name=p.package_name'
@@ -329,7 +329,7 @@ final class PdoPackageObjectCoverageResolver
             $rows = \catalog_all(
                 $db,
                 'SELECT f.id file_id FROM ue_files f'
-                . ' JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=3'
+                . ' JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=' . \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer::FORMAT_VERSION . ''
                 . ' WHERE f.game_id=? AND f.scan_status="verified" AND f.package_name=?'
                 . ' AND NOT EXISTS (SELECT 1 FROM ue_invalid_file_identities bad'
                 . ' WHERE bad.file_size=f.file_size AND bad.md5=LOWER(f.md5) AND bad.sha1=LOWER(f.sha1))'
