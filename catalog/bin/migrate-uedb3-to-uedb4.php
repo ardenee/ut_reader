@@ -112,19 +112,26 @@ foreach ($files as $position => $file) {
             throw new RuntimeException('Format-4 publication did not complete for file #' . $fileId . '.');
         }
 
+        $v3Deleted = false;
+        $cleanupPending = false;
         if (!$keepV3) {
             clearstatcache(true, $v3Path);
-            if (is_file($v3Path) && !unlink($v3Path)) {
-                throw new RuntimeException('Format-4 published but old .uedb3 could not be deleted: ' . $v3Path);
+            if (!is_file($v3Path)) {
+                $v3Deleted = true;
+            } elseif (@unlink($v3Path)) {
+                $v3Deleted = true;
+            } else {
+                $cleanupPending = true;
             }
         }
 
         $converted++;
         $results[] = [
             'file_id' => $fileId,
-            'status' => 'converted',
+            'status' => $cleanupPending ? 'converted_cleanup_pending' : 'converted',
             'engine' => $engineKey,
-            'v3_deleted' => !$keepV3,
+            'v3_deleted' => $v3Deleted,
+            'cleanup_pending' => $cleanupPending,
             'compressed_size' => (int)($write['compressed_size'] ?? 0),
             'sql_batches' => (int)($write['sql_batches'] ?? 0),
         ];
