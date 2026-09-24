@@ -32,14 +32,14 @@ $check(
     'Catalog-wide analysis should use the compact dependency projection to locate relevant consumer Imports.'
 );
 $check(
-    'consumer_set_is_v3_only',
+    'consumer_set_is_current_format_only',
     is_string($source)
         && str_contains($source, 'BlockedCompressedMetadataContainer::FORMAT_VERSION')
         && !str_contains($source, 'format_version=3'),
-    'Only verified v3 consumer metadata participates in superset analysis.'
+    'Only verified current-format consumer metadata participates in superset analysis.'
 );
 $check(
-    'requirements_come_from_v3_imports',
+    'requirements_come_from_current_imports',
     is_string($source)
         && str_contains($source, "'imports'")
         && str_contains($source, "'relative_object_path'"),
@@ -50,7 +50,7 @@ $check(
     is_string($source)
         && str_contains($source, 'contiguousRanges')
         && str_contains($source, "->page("),
-    'Relevant Import indexes are grouped into bounded contiguous v3 block reads instead of whole-file scans.'
+    'Relevant Import indexes are grouped into bounded contiguous current-format block reads instead of whole-file scans.'
 );
 $check(
     'union_deduplicates_full_relative_paths',
