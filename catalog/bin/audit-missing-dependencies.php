@@ -45,7 +45,7 @@ $sql = 'SELECT l.file_id,l.import_index,'
     . 'CONVERT(ot.value_prefix USING utf8mb4) required_object_path,'
     . 'CONVERT(cp.value_prefix USING utf8mb4) class_package,'
     . 'CONVERT(cn.value_prefix USING utf8mb4) class_name,'
-    . 'f.original_name,f.package_name '
+    . 'l.status dependency_status,f.original_name,f.package_name '
     . 'FROM ue_dependency_links l '
     . 'JOIN ue_files f ON f.id=l.file_id '
     . 'JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=3 '
@@ -53,14 +53,21 @@ $sql = 'SELECT l.file_id,l.import_index,'
     . 'JOIN ue_terms ot ON ot.id=l.required_object_term_id '
     . 'LEFT JOIN ue_terms cp ON cp.id=l.import_class_package_term_id '
     . 'LEFT JOIN ue_terms cn ON cn.id=l.import_class_name_term_id '
-    . 'WHERE f.game_id=? AND f.scan_status="verified" AND l.status=0 '
-    . 'ORDER BY l.file_id,l.import_index';
+    . 'WHERE f.game_id=? AND f.scan_status="verified" '
+    . 'AND EXISTS (SELECT 1 FROM ue_dependency_links missing '
+    . 'WHERE missing.file_id=l.file_id AND missing.required_package_term_id=l.required_package_term_id '
+    . 'AND missing.status=0) '
+    . 'ORDER BY l.file_id,l.required_package_term_id,l.import_index';
 $stmt = $db->prepare($sql);
 $stmt->execute([$gameId]);
-$rows = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+$requirementRows = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+$missingRows = array_values(array_filter(
+    $requirementRows,
+    static fn(array $row): bool => (int)($row['dependency_status'] ?? -1) === 0
+));
 
 $groups = [];
-foreach ($rows as $row) {
+foreach ($requirementRows as $row) {
     $fileId = (int)$row['file_id'];
     $package = trim((string)$row['required_package']);
     $object = trim((string)$row['required_object_path']);
@@ -73,6 +80,7 @@ foreach ($rows as $row) {
     $groups[$key]['consumer_package'] = (string)$row['package_name'];
     $groups[$key]['required_package'] = $package;
     $groups[$key]['imports'][] = [
+        'status' => (int)($row['dependency_status'] ?? -1),
         'import_index' => (int)$row['import_index'],
         'object_path' => $object,
         'class_package' => trim((string)$row['class_package']),
@@ -153,7 +161,8 @@ foreach ($groups as $group) {
             'consumer_file' => (string)$group['original_name'],
             'consumer_package' => (string)$group['consumer_package'],
             'required_package' => (string)$group['required_package'],
-            'missing_import_rows' => count($group['imports']),
+            'missing_import_rows' => count(array_filter($group['imports'], static fn(array $i): bool => (int)$i['status'] === 0)),
+            'package_requirement_rows' => count($group['imports']),
             'required_object_paths' => $paths,
             'imports' => $group['imports'],
             'providers' => array_map(
@@ -180,13 +189,13 @@ $result = [
     'game_id' => $gameId,
     'game_name' => (string)$game['name'],
     'verified_files' => $verifiedFiles,
-    'missing_dependency_rows' => count($rows),
+    'missing_dependency_rows' => count($missingRows),
     'missing_package_groups' => count($groups),
     'classifications' => $counts,
     'details_truncated' => count($groups) > $maxDetails,
     'details' => $details,
     'interpretation' => [
-        'provider_has_required_set' => 'Suspicious: current game-local v3 provider coverage satisfies the missing requirement set; inspect resolver/publication state.',
+        'provider_has_required_set' => 'Suspicious: one current game-local v3 provider satisfies the complete package requirement set for this consumer; inspect resolver/publication state.',
         'provider_class_mismatch' => 'A provider has every required path, but the current Import class constraint rejects at least one matched Export.',
         'provider_missing_object' => 'Package provider exists, but no single current provider satisfies the required object set.',
         'no_package_provider' => 'No current game-local v3 provider is available for the required package.',
