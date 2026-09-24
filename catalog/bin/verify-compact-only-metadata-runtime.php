@@ -1,7 +1,7 @@
 #!/usr/bin/env php
 <?php
 /**
- * Purpose: Verifies verified-file runtime metadata is format-3 only while dedicated unverified compressed staging remains isolated.
+ * Purpose: Verifies verified-file runtime metadata uses only the current production format while dedicated unverified compressed staging remains isolated.
  * Role: Read-only architecture and optional live database gate after physical legacy-table retirement.
  */
 declare(strict_types=1);
