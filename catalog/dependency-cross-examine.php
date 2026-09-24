@@ -44,7 +44,7 @@ try {
     catalog_head('Dependency Cross-Examine');
     echo <<<'CSS'
 <style>
-.cross-controls{display:grid;grid-template-columns:minmax(220px,1.2fr) minmax(220px,1.2fr) 120px auto;gap:10px;align-items:end}.cross-controls label{display:flex;flex-direction:column;gap:4px}.cross-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:12px 0}.cross-table{min-width:980px}.cross-package-row td{padding-top:18px;border-top:2px solid var(--line2)}.cross-package-title{font-size:16px}.cross-details summary{cursor:pointer;color:var(--muted);font-size:12px}.cross-details-body{margin-top:7px;font-size:12px;color:var(--muted);line-height:1.5}.cross-result{min-width:280px}.cross-table td{vertical-align:top}.cross-coverage strong{display:block;margin-top:4px}.cross-coverage small{display:block;margin-top:4px}.cross-good{display:inline-flex;padding:3px 7px;border-radius:999px;font-size:11px;font-weight:700;color:#b8f3cb;background:rgba(67,190,110,.15)}.cross-warn{display:inline-flex;padding:3px 7px;border-radius:999px;font-size:11px;font-weight:700;color:#f5d98b;background:rgba(246,196,83,.13)}.cross-note{padding:10px 12px;border:1px solid var(--line2);border-radius:8px;background:rgba(255,255,255,.025);color:var(--muted);margin:0 0 12px}.cross-batch{display:flex;gap:10px;align-items:end;flex-wrap:wrap;padding:10px 12px;border:1px solid var(--line2);border-radius:8px;background:rgba(255,255,255,.025);margin:0 0 10px}.cross-batch label{display:flex;flex-direction:column;gap:4px;min-width:260px}.cross-batch-note{flex:1 1 340px;color:var(--muted);font-size:12px}.cross-select{width:42px;text-align:center}.cross-select input{width:18px;height:18px}.cross-file-name{display:inline-block;margin-top:2px}.cross-file-size{display:inline-block;margin-top:2px}.cross-game-engine{display:inline-block;margin-top:2px}.cross-target-files{display:inline-block;margin-top:3px}.cross-progress-overlay{position:fixed;inset:0;z-index:10000;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(0,0,0,.68)}.cross-progress-overlay.is-open{display:flex}.cross-progress-dialog{width:min(720px,96vw);max-height:90vh;overflow:auto;border:1px solid var(--line2);border-radius:12px;background:var(--panel,#101827);box-shadow:0 24px 80px rgba(0,0,0,.5);padding:18px}.cross-progress-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}.cross-progress-head h2{margin:0}.cross-progress-close{white-space:nowrap}.cross-progress-track{height:14px;border-radius:999px;overflow:hidden;background:rgba(255,255,255,.08);margin:16px 0 8px}.cross-progress-bar{height:100%;width:0%;background:linear-gradient(90deg,#3f69b8,#6695eb);transition:width .25s ease}.cross-progress-line{display:flex;justify-content:space-between;gap:14px;color:var(--muted);font-size:13px}.cross-progress-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:14px 0}.cross-progress-stat{padding:9px;border:1px solid var(--line2);border-radius:8px;background:rgba(255,255,255,.025)}.cross-progress-stat strong{display:block;font-size:18px}.cross-progress-current,.cross-progress-message,.cross-progress-error{margin-top:10px;padding:10px 12px;border-radius:8px;background:rgba(255,255,255,.025)}.cross-progress-error{display:none;border:1px solid rgba(220,80,80,.4);color:#ffb6b6}.cross-progress-error.is-visible{display:block}.cross-progress-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}@media(max-width:900px){.cross-controls{grid-template-columns:1fr 1fr}.cross-summary{grid-template-columns:1fr}.cross-batch{align-items:stretch}.cross-progress-stats{grid-template-columns:1fr 1fr}}
+.cross-controls{display:grid;grid-template-columns:minmax(220px,1.2fr) minmax(220px,1.2fr) 120px auto;gap:10px;align-items:end}.cross-controls label{display:flex;flex-direction:column;gap:4px}.cross-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:12px 0}.cross-table{min-width:980px}.cross-package-row td{padding-top:18px;border-top:2px solid var(--line2)}.cross-package-title{font-size:16px}.cross-details summary{cursor:pointer;color:var(--muted);font-size:12px}.cross-details-body{margin-top:7px;font-size:12px;color:var(--muted);line-height:1.5}.cross-result{min-width:300px}.cross-result-line{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:5px}.cross-result-line strong{display:inline}.cross-object-line{display:block;margin-top:4px}.cross-table td{vertical-align:top}.cross-coverage strong{display:block;margin-top:4px}.cross-coverage small{display:block;margin-top:4px}.cross-good{display:inline-flex;padding:3px 7px;border-radius:999px;font-size:11px;font-weight:700;color:#b8f3cb;background:rgba(67,190,110,.15)}.cross-warn{display:inline-flex;padding:3px 7px;border-radius:999px;font-size:11px;font-weight:700;color:#f5d98b;background:rgba(246,196,83,.13)}.cross-note{padding:10px 12px;border:1px solid var(--line2);border-radius:8px;background:rgba(255,255,255,.025);color:var(--muted);margin:0 0 12px}.cross-batch{display:flex;gap:10px;align-items:end;flex-wrap:wrap;padding:10px 12px;border:1px solid var(--line2);border-radius:8px;background:rgba(255,255,255,.025);margin:0 0 10px}.cross-batch label{display:flex;flex-direction:column;gap:4px;min-width:260px}.cross-batch-note{flex:1 1 340px;color:var(--muted);font-size:12px}.cross-select{width:42px;text-align:center}.cross-select input{width:18px;height:18px}.cross-file-name{display:inline-block;margin-top:2px}.cross-file-size{display:inline-block;margin-top:2px}.cross-game-engine{display:inline-block;margin-top:2px}.cross-target-files{display:inline-block;margin-top:3px}.cross-progress-overlay{position:fixed;inset:0;z-index:10000;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(0,0,0,.68)}.cross-progress-overlay.is-open{display:flex}.cross-progress-dialog{width:min(720px,96vw);max-height:90vh;overflow:auto;border:1px solid var(--line2);border-radius:12px;background:var(--panel,#101827);box-shadow:0 24px 80px rgba(0,0,0,.5);padding:18px}.cross-progress-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}.cross-progress-head h2{margin:0}.cross-progress-close{white-space:nowrap}.cross-progress-track{height:14px;border-radius:999px;overflow:hidden;background:rgba(255,255,255,.08);margin:16px 0 8px}.cross-progress-bar{height:100%;width:0%;background:linear-gradient(90deg,#3f69b8,#6695eb);transition:width .25s ease}.cross-progress-line{display:flex;justify-content:space-between;gap:14px;color:var(--muted);font-size:13px}.cross-progress-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:14px 0}.cross-progress-stat{padding:9px;border:1px solid var(--line2);border-radius:8px;background:rgba(255,255,255,.025)}.cross-progress-stat strong{display:block;font-size:18px}.cross-progress-current,.cross-progress-message,.cross-progress-error{margin-top:10px;padding:10px 12px;border-radius:8px;background:rgba(255,255,255,.025)}.cross-progress-error{display:none;border:1px solid rgba(220,80,80,.4);color:#ffb6b6}.cross-progress-error.is-visible{display:block}.cross-progress-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}@media(max-width:900px){.cross-controls{grid-template-columns:1fr 1fr}.cross-summary{grid-template-columns:1fr}.cross-batch{align-items:stretch}.cross-progress-stats{grid-template-columns:1fr 1fr}}
 </style>
 CSS;
 
@@ -206,32 +206,74 @@ CSS;
         echo '<td><strong><a href="file-info.php?id=' . $sourceFileId . '">' . catalog_h((string)$row['original_name']) . '</a></strong>'
             . '<br><small class="muted">' . catalog_h(catalog_bytes((int)$row['file_size'])) . ' · '
             . catalog_h((string)$row['detected_engine_key']) . ' v' . (int)$row['detected_package_version'] . '</small>';
+        $allMatchedPaths = [];
+        $allMissingPaths = [];
+        foreach ($consumerCoverage as $consumer) {
+            foreach ((array)($consumer['matched_paths'] ?? []) as $path) {
+                $path = trim((string)$path);
+                if ($path !== '') $allMatchedPaths[strtolower($path)] = $path;
+            }
+            foreach ((array)($consumer['missing_paths'] ?? []) as $path) {
+                $path = trim((string)$path);
+                if ($path !== '') $allMissingPaths[strtolower($path)] = $path;
+            }
+        }
         echo '<details class="cross-details"><summary>Technical details</summary><div class="cross-details-body">'
             . 'GUID ' . catalog_h((string)($row['package_guid'] ?? '')) . '<br>MD5 ' . catalog_h((string)$row['md5'])
             . '<br>SHA1 ' . catalog_h((string)($row['sha1'] ?? '')) . '<br>Licensee '
-            . (int)$row['detected_licensee_version'] . '<br>Old exact-projection diagnostic: '
+            . (int)$row['detected_licensee_version'];
+        if ($allMatchedPaths !== []) {
+            echo '<br><strong>Matching objects:</strong> ' . catalog_h(implode(', ', array_values($allMatchedPaths)));
+        }
+        if ($allMissingPaths !== []) {
+            echo '<br><strong>Missing objects:</strong> ' . catalog_h(implode(', ', array_values($allMissingPaths)));
+        }
+        echo '<br>Old exact-projection diagnostic: '
             . number_format((int)($row['exact_object_matches'] ?? 0)) . ' / ' . number_format($missing)
             . ' missing references</div></details></td>';
         echo '<td class="cross-result">';
         if ($completeConsumers > 0) {
-            echo '<span class="cross-good">FULL MATCH</span><strong>' . number_format($completeConsumers) . ' / '
-                . number_format($completeConsumers + $partialConsumers) . ' consumers fully satisfied</strong>';
+            echo '<div class="cross-result-line"><span class="cross-good">FULL MATCH</span><strong>'
+                . number_format($completeConsumers) . ' / '
+                . number_format($completeConsumers + $partialConsumers) . ' consumers fully satisfied</strong></div>';
         } else {
-            echo '<span class="cross-warn">PARTIAL</span><strong>No consumer fully satisfied</strong>';
+            echo '<div class="cross-result-line"><span class="cross-warn">PARTIAL</span><strong>No consumer fully satisfied</strong></div>';
         }
-        echo '<small>' . number_format($matchedTotal) . ' / ' . number_format($requiredTotal) . ' required objects matched</small>';
+        $objectSummary = number_format($matchedTotal) . ' / ' . number_format($requiredTotal) . ' required objects matched';
         if ($missingPaths !== []) {
             $paths = array_values($missingPaths);
-            echo '<small>Missing: ' . catalog_h(implode(', ', array_slice($paths, 0, 5)));
-            if (count($paths) > 5) echo ' +' . number_format(count($paths) - 5);
-            echo '</small>';
+            $objectSummary .= '. Missing: ' . implode(', ', array_slice($paths, 0, 5));
+            if (count($paths) > 5) $objectSummary .= ' +' . number_format(count($paths) - 5);
         }
-        if (count($consumerCoverage) > 1) {
+        echo '<small class="cross-object-line">' . catalog_h($objectSummary) . '</small>';
+        $matchedPaths = [];
+        foreach ($consumerCoverage as $consumer) {
+            foreach ((array)($consumer['matched_paths'] ?? []) as $path) {
+                $path = trim((string)$path);
+                if ($path !== '') $matchedPaths[strtolower($path)] = $path;
+            }
+        }
+        if ($matchedPaths !== []) {
+            echo '<small class="cross-object-line"><strong>Matching:</strong> '
+                . catalog_h(implode(', ', array_values($matchedPaths))) . '</small>';
+        }
+        if ($consumerCoverage !== []) {
             echo '<details class="cross-details"><summary>Per-consumer coverage</summary><div class="cross-details-body">';
             foreach ($consumerCoverage as $consumer) {
-                echo 'File #' . (int)($consumer['file_id'] ?? 0) . ': '
+                $consumerId = (int)($consumer['file_id'] ?? 0);
+                $consumerName = trim((string)($consumer['file_name'] ?? '')) ?: ('File #' . $consumerId);
+                echo '<a href="file-examine.php?id=' . $consumerId . '">' . catalog_h($consumerName) . '</a>: '
                     . number_format((int)($consumer['matched_count'] ?? 0)) . ' / '
-                    . number_format((int)($consumer['required_count'] ?? 0)) . ' objects<br>';
+                    . number_format((int)($consumer['required_count'] ?? 0)) . ' objects';
+                $consumerMatched = array_values(array_filter(array_map('strval', (array)($consumer['matched_paths'] ?? []))));
+                $consumerMissing = array_values(array_filter(array_map('strval', (array)($consumer['missing_paths'] ?? []))));
+                if ($consumerMatched !== []) {
+                    echo '<br>&nbsp;&nbsp;Matching: ' . catalog_h(implode(', ', $consumerMatched));
+                }
+                if ($consumerMissing !== []) {
+                    echo '<br>&nbsp;&nbsp;Missing: ' . catalog_h(implode(', ', $consumerMissing));
+                }
+                echo '<br>';
             }
             echo '</div></details>';
         }
