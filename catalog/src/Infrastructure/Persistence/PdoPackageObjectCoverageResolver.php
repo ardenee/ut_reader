@@ -73,7 +73,7 @@ final class PdoPackageObjectCoverageResolver
                 $providerIds = array_keys($providers);
                 $sql = 'SELECT l.file_id,l.export_index,l.path_hash_ci,'
                     . 'pt.value_prefix local_path,ct.value_prefix class_name'
-                    . ' FROM ue_export_lookup l'
+                    . ' FROM ue_export_path_lookup l'
                     . ' JOIN ue_files f ON f.id=l.file_id'
                     . ' JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=' . \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer::FORMAT_VERSION . ''
                     . ' JOIN ue_terms pt ON pt.id=l.local_path_term_id'
