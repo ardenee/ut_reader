@@ -1,7 +1,7 @@
 <?php
 /**
- * Purpose: Verifies format-3 metadata containers and rebuilds their current MySQL projections.
- * Why: Historical SQL-to-compact conversion is complete; maintenance must now operate only from authoritative format-3 containers.
+ * Purpose: Verifies current metadata containers and rebuilds their current MySQL projections.
+ * Why: Historical SQL-to-compact conversion is complete; maintenance must now operate only from authoritative current-format containers.
  * Role: Current compact metadata verification/projection-maintenance infrastructure. The historical class name is retained for caller compatibility.
  */
 declare(strict_types=1);
@@ -70,7 +70,7 @@ final class BlockedCompressedFileMetadataConverter
         );
 
         // Verify the authoritative physical container block-by-block. Projection
-        // maintenance no longer allocates another complete .uedb3 PHP string just
+        // maintenance no longer allocates another complete .uedb4 PHP string just
         // to recover size/SHA values that are already registered in MySQL.
         $verified = BlockedCompressedMetadataContainer::verifyFile(
             $path,
