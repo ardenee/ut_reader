@@ -43,6 +43,7 @@ final class BlockedCompressedMetadataSnapshotLoader
             $fileId,
             $this->loadSection($reader, $fileId, 'dependencies', (int)$file['import_count'])
         );
+        $identitySchema = $reader->schemaInfo($fileId);
 
         $paths = ['imports' => [], 'exports' => []];
         foreach ($imports as $row) {
@@ -68,6 +69,7 @@ final class BlockedCompressedMetadataSnapshotLoader
             'exports' => $exports,
             'dependencies' => $dependencies,
             'paths' => $paths,
+            'identity_schema' => $identitySchema,
             'source_format' => 'blocked-metadata-v' . (int)$file['format_version'],
         ];
     }
