@@ -41,8 +41,8 @@ final class BlockedCompressedFileMetadataConverter
     }
 
     /**
-     * Rebuild only compact MySQL projections for an existing version-3 container.
-     * The source snapshot is loaded from the current container.
+     * Rebuild only MySQL projections for an existing current-format container.
+     * The source snapshot is loaded from the current container; prior formats are migration-only.
      *
      * @return array<string,mixed>
      */
