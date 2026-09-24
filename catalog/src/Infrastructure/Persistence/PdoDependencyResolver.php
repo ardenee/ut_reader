@@ -60,7 +60,7 @@ final class PdoDependencyResolver
         if ($legacyVerifyImport) {
             require_once __DIR__ . '/PdoLegacyVerifyImportMatcher.php';
             foreach ($packageMatches as $packageKey => $packageMatch) {
-                $verifyImportMatches[$packageKey] = PdoLegacyVerifyImportMatcher::resolveProvider(
+                $verifyImportMatches[$packageKey] = PdoLegacyVerifyImportMatcher::resolveProviderVariants(
                     $db,
                     (int)$packageMatch['file_id'],
                     $imports
@@ -136,7 +136,13 @@ final class PdoDependencyResolver
                 if ($legacyVerifyImport) {
                     $packageMatch = $packageMatches[$packageKey] ?? null;
                     $importIndex = (int)($import['import_index'] ?? -1);
-                    $exportIndex = $verifyImportMatches[$packageKey][$importIndex] ?? null;
+                    $variants = $verifyImportMatches[$packageKey] ?? [];
+                    $exportIndex = is_array($variants)
+                        ? (($variants['standard'][$importIndex] ?? null))
+                        : null;
+                    $unreal2OnlyIndex = is_array($variants)
+                        ? (($variants['unreal2_only'][$importIndex] ?? null))
+                        : null;
                     if ($packageMatch !== null && $exportIndex !== null) {
                         $result = [
                             'status' => 'resolved',
@@ -145,6 +151,20 @@ final class PdoDependencyResolver
                             'resolved_export_index' => (int)$exportIndex,
                             'source' => 'ue_verify_import',
                             'confidence' => 'exact',
+                        ];
+                    } elseif ($packageMatch !== null && $unreal2OnlyIndex !== null) {
+                        // The supplied Unreal II source accepts this exact identity/outer
+                        // match because FailedImportPrivate is compiled out. UE2.5/UT2004
+                        // reject the same private Export. Preserve that distinction as a
+                        // queryable subset instead of guessing which UE2 title produced
+                        // the consumer package.
+                        $result = [
+                            'status' => 'missing',
+                            'resolved_file_id' => null,
+                            'resolved_export_id' => null,
+                            'resolved_export_index' => null,
+                            'source' => 'ue_verify_import_unreal2_private_candidate',
+                            'confidence' => 'unreal2_candidate',
                         ];
                     }
                 } else {
