@@ -17,6 +17,7 @@ use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataReader;
 final class PdoLegacyVerifyImportMatcher
 {
     private const PAGE_SIZE = 5000;
+    private const RF_PUBLIC = 0x00000004;
 
     /**
      * Resolve normalized consumer Imports against one already-selected package provider.
@@ -58,7 +59,66 @@ final class PdoLegacyVerifyImportMatcher
             return [];
         }
 
-        return self::match($consumerImports, $providerImports, $providerExports, $providerPackageName);
+        return self::match($consumerImports, $providerImports, $providerExports, $providerPackageName, true);
+    }
+
+    /**
+     * Evaluate both reviewed UE2 behaviours from the same serialized package data.
+     *
+     * "standard" follows UE2.5/UT2004 and requires RF_Public.
+     * "unreal2" follows the supplied Unreal II revision where FailedImportPrivate
+     * is compiled out and therefore accepts the same identity/outer match even
+     * when RF_Public is absent.
+     *
+     * @param list<array<string,mixed>> $consumerImports
+     * @return array{standard:array<int,int>,unreal2:array<int,int>,unreal2_only:array<int,int>}
+     */
+    public static function resolveProviderVariants(PDO $db, int $providerFileId, array $consumerImports): array
+    {
+        if ($providerFileId < 1 || $consumerImports === []) {
+            return ['standard' => [], 'unreal2' => [], 'unreal2_only' => []];
+        }
+
+        $config = function_exists('catalog_config') ? \catalog_config() : [];
+        $storageRoot = is_array($config) ? trim((string)($config['storage_path'] ?? '')) : '';
+        if ($storageRoot === '') {
+            throw new RuntimeException('Catalog storage_path is required for VerifyImport provider matching.');
+        }
+
+        $reader = new BlockedCompressedMetadataReader($db, $storageRoot);
+        $providerImports = self::loadSection($reader, $providerFileId, 'imports');
+        $providerExports = self::loadSection($reader, $providerFileId, 'exports');
+        $row = \catalog_one($db, 'SELECT package_name FROM ue_files WHERE id=? LIMIT 1', [$providerFileId]);
+        $providerPackageName = trim((string)($row['package_name'] ?? ''));
+        if ($providerPackageName === '') {
+            return ['standard' => [], 'unreal2' => [], 'unreal2_only' => []];
+        }
+
+        return self::matchVariants($consumerImports, $providerImports, $providerExports, $providerPackageName);
+    }
+
+    /**
+     * @param list<array<string,mixed>> $consumerImports
+     * @param list<array<string,mixed>> $providerImports
+     * @param list<array<string,mixed>> $providerExports
+     * @return array{standard:array<int,int>,unreal2:array<int,int>,unreal2_only:array<int,int>}
+     */
+    public static function matchVariants(
+        array $consumerImports,
+        array $providerImports,
+        array $providerExports,
+        string $providerPackageName,
+        bool $requirePublic = true
+    ): array {
+        $standard = self::match($consumerImports, $providerImports, $providerExports, $providerPackageName, true);
+        $unreal2 = self::match($consumerImports, $providerImports, $providerExports, $providerPackageName, false);
+        $unreal2Only = [];
+        foreach ($unreal2 as $importIndex => $exportIndex) {
+            if (!isset($standard[$importIndex])) {
+                $unreal2Only[(int)$importIndex] = (int)$exportIndex;
+            }
+        }
+        return ['standard' => $standard, 'unreal2' => $unreal2, 'unreal2_only' => $unreal2Only];
     }
 
     /**
@@ -70,9 +130,9 @@ final class PdoLegacyVerifyImportMatcher
      * - Source.PackageIndex == Parent.SourceIndex + 1, with Source.PackageIndex == 0 fallback
      * - Mesh -> LodMesh retry
      *
-     * Deliberately does not enforce RF_Public because the reviewed source revisions disagree:
-     * UE2.5/UT2004 reject a private Export, while the supplied Unreal II revision compiles that
-     * throw out. That build-specific policy must not be guessed from package data.
+     * The $requirePublic switch preserves the reviewed source difference:
+     * UE2.5/UT2004 reject a private Export, while the supplied Unreal II revision
+     * compiles FailedImportPrivate out and accepts the same match.
      *
      * @param list<array<string,mixed>> $consumerImports
      * @param list<array<string,mixed>> $providerImports
@@ -103,7 +163,8 @@ final class PdoLegacyVerifyImportMatcher
                 $providerExportsByIndex,
                 $providerPackageName,
                 $resolved,
-                $visiting
+                $visiting,
+                $requirePublic
             );
         }
 
@@ -130,7 +191,8 @@ final class PdoLegacyVerifyImportMatcher
         array $providerExports,
         string $providerPackageName,
         array &$resolved,
-        array &$visiting
+        array &$visiting,
+        bool $requirePublic
     ): ?int {
         if (array_key_exists($importIndex, $resolved)) {
             return $resolved[$importIndex];
@@ -172,7 +234,8 @@ final class PdoLegacyVerifyImportMatcher
             $providerExports,
             $providerPackageName,
             $resolved,
-            $visiting
+            $visiting,
+            $requirePublic
         );
 
         $matched = self::findExport(
@@ -182,7 +245,8 @@ final class PdoLegacyVerifyImportMatcher
             $parentSourceIndex,
             $providerImports,
             $providerExports,
-            $providerPackageName
+            $providerPackageName,
+            $requirePublic
         );
 
         if ($matched === null && self::key($className) === 'mesh') {
@@ -193,7 +257,8 @@ final class PdoLegacyVerifyImportMatcher
                 $parentSourceIndex,
                 $providerImports,
                 $providerExports,
-                $providerPackageName
+                $providerPackageName,
+                $requirePublic
             );
         }
 
@@ -212,7 +277,8 @@ final class PdoLegacyVerifyImportMatcher
         ?int $parentSourceIndex,
         array $providerImports,
         array $providerExports,
-        string $providerPackageName
+        string $providerPackageName,
+        bool $requirePublic
     ): ?int {
         foreach ($providerExports as $exportIndex => $export) {
             if (self::key((string)($export['object_name'] ?? '')) !== self::key($objectName)) {
@@ -236,6 +302,10 @@ final class PdoLegacyVerifyImportMatcher
                     continue;
                 }
             } elseif ($sourceOuter !== 0 && $sourceOuter !== $parentSourceIndex + 1) {
+                continue;
+            }
+
+            if ($requirePublic && (((int)($export['object_flags'] ?? 0) & self::RF_PUBLIC) === 0)) {
                 continue;
             }
 
