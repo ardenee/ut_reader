@@ -51,20 +51,26 @@ final class PdoGameDependencyCrossExamineQuery
         $limit = max(10, min(500, $limit));
         $target = $this->targetGame($targetGameId);
         $engine = strtoupper(trim((string)$target['engine_key']));
+        $targetEngineGeneration = $this->engineGeneration($engine);
 
         $sourceGames = \catalog_all(
             $this->db,
             'SELECT g.id,g.name,g.slug,p.engine_key,p.profile_name '
             . 'FROM ue_games g JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 '
-            . 'WHERE UPPER(p.engine_key)=? AND g.id<>? ORDER BY g.name',
-            [$engine, $targetGameId]
+            . 'WHERE g.id<>? ORDER BY p.engine_key,g.name',
+            [$targetGameId]
         );
+        $sourceGames = array_values(array_filter(
+            $sourceGames,
+            fn(array $game): bool => ($generation = $this->engineGeneration((string)($game['engine_key'] ?? ''))) > 0
+                && $generation <= $targetEngineGeneration
+        ));
         $allowedSourceIds = [];
         foreach ($sourceGames as $game) {
             $allowedSourceIds[(int)$game['id']] = true;
         }
         if ($sourceGameId > 0 && !isset($allowedSourceIds[$sourceGameId])) {
-            throw new \RuntimeException('The selected source game is not a sibling ' . $engine . ' game.');
+            throw new \RuntimeException('The selected source game must use the target engine generation or an earlier Unreal Engine generation.');
         }
 
         $diagnostics = [
@@ -590,6 +596,18 @@ final class PdoGameDependencyCrossExamineQuery
             'rows' => $rows,
             'diagnostics' => $diagnostics,
         ];
+    }
+
+    private function engineGeneration(string $engineKey): int
+    {
+        $key = strtoupper(trim($engineKey));
+        if (preg_match('/^UE([1-5])(?:\\D|$)/', $key, $matches) === 1) {
+            return (int)$matches[1];
+        }
+        if (preg_match('/UNREAL(?:ENGINE)?[^0-9]*([1-5])/', $key, $matches) === 1) {
+            return (int)$matches[1];
+        }
+        return 0;
     }
 
     private function key(string $value): string
