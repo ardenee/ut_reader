@@ -231,38 +231,14 @@ final class PdoGameDependencyCrossExamineQuery
         }
 
         $target = $this->targetGame($targetGameId);
-        if (strcasecmp((string)$source['source_engine'], (string)$target['engine_key']) !== 0) {
+        if (!$this->isCompatibleSourceEngine(
+            $this->engineGeneration((string)$target['engine_key']),
+            $this->engineGeneration((string)$source['source_engine'])
+        )) {
             return null;
         }
         if ((int)($source['metadata_format_version'] ?? 0) !== 3) {
             return null;
-        }
-
-        $md5 = strtolower(trim((string)($source['md5'] ?? '')));
-        if ($md5 !== '') {
-            $targetExisting = \catalog_one(
-                $this->db,
-                'SELECT id,package_name FROM ue_files WHERE game_id=? AND scan_status="verified" AND md5=? LIMIT 1',
-                [$targetGameId, $md5]
-            );
-            if ($targetExisting) {
-                $sourcePackage = trim((string)($source['package_name'] ?? ''));
-                $targetProvidesIdentity = strcasecmp(
-                    trim((string)($targetExisting['package_name'] ?? '')),
-                    $sourcePackage
-                ) === 0;
-                if (!$targetProvidesIdentity && $sourcePackage !== '') {
-                    $targetProvidesIdentity = \catalog_package_alias_row_exists(
-                        $this->db,
-                        (int)$targetExisting['id'],
-                        $targetGameId,
-                        $sourcePackage
-                    );
-                }
-                if ($targetProvidesIdentity) {
-                    return null;
-                }
-            }
         }
 
         $package = trim((string)$source['package_name']);
@@ -288,13 +264,15 @@ final class PdoGameDependencyCrossExamineQuery
             return null;
         }
 
-        $exact = $this->exactProjectionMatches($targetGameId, [$sourceFileId])[$sourceFileId] ?? null;
-        if (!is_array($exact) || (int)($exact['exact_object_matches'] ?? 0) < 1) {
+        $coverage = $this->completeConsumerCoverage($targetGameId, $sourceFileId, $package);
+        if ((int)($coverage['complete_consumer_count'] ?? 0) < 1) {
             return null;
         }
 
+        // Old exact-projection evidence remains diagnostic only.
+        $exact = $this->exactProjectionMatches($targetGameId, [$sourceFileId])[$sourceFileId] ?? [];
         $ownerCount = max(0, (int)($stats['owner_count'] ?? 0));
-        $exactMatches = min($missingCount, max(0, (int)$exact['exact_object_matches']));
+        $exactMatches = min($missingCount, max(0, (int)($exact['exact_object_matches'] ?? 0)));
         $exactOwners = min($ownerCount, max(0, (int)($exact['exact_owner_count'] ?? 0)));
 
         return $source + [
@@ -305,6 +283,9 @@ final class PdoGameDependencyCrossExamineQuery
             'exact_object_matches' => $exactMatches,
             'exact_owner_count' => $exactOwners,
             'coverage_percent' => round(($exactMatches / $missingCount) * 100, 1),
+            'complete_consumer_count' => (int)$coverage['complete_consumer_count'],
+            'partial_consumer_count' => (int)$coverage['partial_consumer_count'],
+            'consumer_coverage' => $coverage['consumers'],
         ];
     }
 
