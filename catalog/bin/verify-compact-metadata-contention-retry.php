@@ -1,7 +1,7 @@
 #!/usr/bin/env php
 <?php
 /**
- * Static contract for retrying atomic format-3 metadata publication after MySQL contention.
+ * Static contract for retrying atomic current-format metadata publication after MySQL contention.
  */
 declare(strict_types=1);
 
