@@ -65,7 +65,7 @@ final class PdoPackageObjectCoverageResolver
             foreach (array_chunk($requirements, self::MAX_PATHS_PER_QUERY, true) as $chunk) {
                 $hashes = [];
                 foreach ($chunk as $key => $path) {
-                    $hash = md5($packageName . '.' . $path, true);
+                    $hash = md5($path, true);
                     $hex = bin2hex($hash);
                     $hashes[$hex] = ['hash' => $hash, 'key' => $key];
                 }
