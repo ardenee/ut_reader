@@ -19,6 +19,7 @@ interface VerifiedPackagePublisherPort
     /** @param array<int|string,mixed> $result @return array<int|string,mixed> */
     public function publishMetadata(
         array $result,
-        CatalogVerifiedPackageInspection $inspection
+        CatalogVerifiedPackageInspection $inspection,
+        bool $resolveDependencies = true
     ): array;
 }
