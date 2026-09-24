@@ -8,10 +8,16 @@ declare(strict_types=1);
 
 namespace UnrealDb\Catalog\Infrastructure\Jobs;
 
+use PDO;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoWorkflowChildStateQuery;
 
 final class CatalogBackgroundJobFileTreeProjector
 {
+    public function __construct(private readonly ?PDO $db = null)
+    {
+    }
+
     private const ISSUE_DISPLAY_STATUSES = ['failed', 'rejected', 'invalid_ue_package', 'partial', 'error'];
 
     /** @param list<array<string,mixed>> $rows @return list<array<string,mixed>> */
@@ -20,6 +26,9 @@ final class CatalogBackgroundJobFileTreeProjector
         foreach ($rows as &$row) {
             $payload = is_array($row['payload'] ?? null) ? $row['payload'] : [];
             $progress = is_array($row['progress'] ?? null) ? $row['progress'] : [];
+            if ((string)($row['job_type'] ?? '') === JobType::FULL_SYNC_GAME) {
+                $progress = $this->refreshFullSyncProgress($row, $progress);
+            }
             $result = is_array($row['result'] ?? null) ? $row['result'] : [];
             $queueStatus = strtolower(trim((string)($row['status'] ?? '')));
             $displayStatus = strtolower(trim((string)($row['display_status'] ?? $queueStatus)));
@@ -82,6 +91,28 @@ final class CatalogBackgroundJobFileTreeProjector
         }
         unset($row);
         return $rows;
+    }
+
+    /** @param array<string,mixed> $row @param array<string,mixed> $progress @return array<string,mixed> */
+    private function refreshFullSyncProgress(array $row, array $progress): array
+    {
+        if (!$this->db instanceof PDO || !in_array((string)($row['status'] ?? ''), ['queued', 'running'], true)) {
+            return $progress;
+        }
+        $stage = (string)($progress['stage'] ?? '');
+        $prefix = str_contains($stage, 'depend') ? 'dependency:' : (str_contains($stage, 'reimport') ? 'reimport:' : '');
+        if ($prefix === '') {
+            return $progress;
+        }
+        $state = (new PdoWorkflowChildStateQuery($this->db))->fetch((int)($row['id'] ?? 0), $prefix);
+        if ($state['total'] < 1) {
+            return $progress;
+        }
+        $label = $prefix === 'dependency:' ? 'Dependency' : 'Package reimport';
+        $progress['message'] = $label . ' units: ' . $state['completed'] . '/' . $state['total']
+            . ' completed, ' . $state['running'] . ' running, ' . $state['queued'] . ' queued.';
+        $progress[$prefix === 'dependency:' ? 'dependency_children' : 'reimport_children'] = $state;
+        return $progress;
     }
 
     private function state(string $queueStatus, string $displayStatus, int $childIssues, int $childActive): string
