@@ -10,7 +10,7 @@ use PDO;
  * package and evaluates every verified v3 provider against that union.
  *
  * This is reporting/analysis state. It does not change the administrator's
- * primary provider selection and is not persisted into individual .uedb3 files.
+ * primary provider selection and is not persisted into individual .uedb4 files.
  */
 final class PdoPackageSupersetAnalyzer
 {
@@ -46,7 +46,7 @@ final class PdoPackageSupersetAnalyzer
             'SELECT f.id file_id,l.import_index'
             . ' FROM ue_dependency_links l'
             . ' JOIN ue_files f ON f.id=l.file_id'
-            . ' JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=3'
+            . ' JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=' . \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer::FORMAT_VERSION . ''
             . ' JOIN ue_terms p ON p.id=l.required_package_term_id'
             . ' WHERE f.game_id=? AND f.scan_status="verified"'
             . ' AND p.value_hash=? AND p.value_length=?'
