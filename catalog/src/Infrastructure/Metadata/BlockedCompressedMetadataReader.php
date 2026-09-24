@@ -292,6 +292,12 @@ final class BlockedCompressedMetadataReader
         if (!is_array($manifest) || (int)($manifest['file']['id'] ?? 0) !== $fileId) {
             throw new RuntimeException('Blocked metadata manifest identity mismatch.');
         }
+        $rowSchemaVersion = (int)($manifest['row_schema_version'] ?? 1);
+        if ($rowSchemaVersion < 1 || $rowSchemaVersion > 2) {
+            throw new RuntimeException(
+                'Blocked metadata row schema version is unsupported: ' . $rowSchemaVersion . '.'
+            );
+        }
 
         $context = [
             'row' => $row,
@@ -336,7 +342,12 @@ final class BlockedCompressedMetadataReader
         $rows = [];
         foreach ((array)($payload['rows'] ?? []) as $row) {
             if (is_array($row)) {
-                $rows[] = $this->decodeRow($section, $row, $strings);
+                $rows[] = $this->decodeRow(
+                    $section,
+                    $row,
+                    $strings,
+                    (int)($context['manifest']['row_schema_version'] ?? 1)
+                );
             }
         }
         if (count($rows) !== (int)$block['row_count']) {
@@ -346,7 +357,7 @@ final class BlockedCompressedMetadataReader
     }
 
     /** @param list<mixed> $row @param array<int,mixed> $strings @return array<string,mixed> */
-    private function decodeRow(string $section, array $row, array $strings): array
+    private function decodeRow(string $section, array $row, array $strings, int $rowSchemaVersion): array
     {
         return match ($section) {
             'names' => [
@@ -373,6 +384,12 @@ final class BlockedCompressedMetadataReader
                 'class_package_name_index' => isset($row[9]) ? (int)$row[9] : null,
                 'class_name_index' => isset($row[10]) ? (int)$row[10] : null,
                 'object_name_index' => isset($row[11]) ? (int)$row[11] : null,
+                'verify_identity_hash' => $rowSchemaVersion >= 2
+                    ? $this->stringAt($strings, $row[12] ?? null)
+                    : '',
+                'path_hash_ci' => $rowSchemaVersion >= 2
+                    ? $this->stringAt($strings, $row[13] ?? null)
+                    : '',
             ],
             'exports' => [
                 'id' => (int)($row[0] ?? 0) + 1,
@@ -389,6 +406,18 @@ final class BlockedCompressedMetadataReader
                 'super_index' => (int)($row[10] ?? 0),
                 'template_index' => (int)($row[11] ?? 0),
                 'object_name_index' => isset($row[12]) ? (int)$row[12] : null,
+                'verify_class_package' => $rowSchemaVersion >= 2
+                    ? $this->stringAt($strings, $row[13] ?? null)
+                    : '',
+                'verify_class_name' => $rowSchemaVersion >= 2
+                    ? $this->stringAt($strings, $row[14] ?? null)
+                    : '',
+                'verify_identity_hash' => $rowSchemaVersion >= 2
+                    ? $this->stringAt($strings, $row[15] ?? null)
+                    : '',
+                'path_hash_ci' => $rowSchemaVersion >= 2
+                    ? $this->stringAt($strings, $row[16] ?? null)
+                    : '',
             ],
             'dependencies' => [
                 'file_id' => 0,
