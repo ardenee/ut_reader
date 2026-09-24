@@ -44,7 +44,7 @@ final class CatalogMisnamedFileDetector
             . 'COALESCE(m.import_count,f.import_count,0) import_count,'
             . 'COALESCE(m.export_count,f.export_count,0) export_count,g.name game_name '
             . 'FROM ue_files f '
-            . 'LEFT JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=3 '
+            . 'JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=3 '
             . 'JOIN ue_games g ON g.id=f.game_id '
             . 'WHERE f.id=? AND f.scan_status="verified"',
             [$ownerFileId]
@@ -184,9 +184,9 @@ final class CatalogMisnamedFileDetector
                     (string)$provider['package_name'],
                     $suggestedPackage
                 );
-                if ($similarityPoints < self::MIN_NAME_SIMILARITY_POINTS) {
-                    continue;
-                }
+                // Exact rootless object-path evidence is authoritative. Historical
+                // renames can be completely unrelated to the expected package name,
+                // so name similarity is retained only as a confidence/ranking signal.
                 $collisionSuffixMatch = $similarityLabel === 'copy suffix (1-9)';
 
                 $key = $candidateFileId . ':' . $packageTermId;
@@ -244,9 +244,6 @@ final class CatalogMisnamedFileDetector
         foreach ($groups as $group) {
             $termIds = array_map('intval', array_keys((array)$group['matched_object_term_ids']));
             $matched = count($termIds);
-            if ($matched < 2 && empty($group['collision_suffix_match'])) {
-                continue;
-            }
             $group['matched_object_term_ids'] = $termIds;
             $group['matching_objects'] = $matched;
             $group['best_same_file_matches'] = $matched;
@@ -355,7 +352,7 @@ final class CatalogMisnamedFileDetector
                 . 'COALESCE(m.export_count,c.export_count,0) export_count,g.name game_name '
                 . 'FROM ue_export_lookup e '
                 . 'JOIN ue_files c ON c.id=e.file_id AND c.scan_status="verified" '
-                . 'LEFT JOIN ue_file_metadata m ON m.file_id=c.id AND m.format_version=3 '
+                . 'JOIN ue_file_metadata m ON m.file_id=c.id AND m.format_version=3 '
                 . 'JOIN ue_games g ON g.id=c.game_id '
                 . 'LEFT JOIN ue_terms path_term ON path_term.id=e.local_path_term_id '
                 . 'WHERE e.object_term_id IN (' . $placeholders . ') AND c.game_id=? AND c.id<>? '
