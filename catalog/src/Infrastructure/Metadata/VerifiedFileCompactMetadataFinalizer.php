@@ -100,9 +100,10 @@ final class VerifiedFileCompactMetadataFinalizer
      * existing compact container could not be validated before reimport.
      *
      * New imports have no maintenance baseline and therefore always publish.
-     * Full Sync reparses still detect parser/data changes, but unchanged valid
-     * packages avoid dependency resolution, gzip encoding, projection writes,
-     * filesystem replacement and a second full verification pass.
+     * Normal maintenance reparses may reuse an unchanged validated container.
+     * Full Sync passes resolveDependencies=false: they always republish current
+     * parser-owned metadata with unresolved dependencies so dependency matching
+     * occurs exactly once, after the selected game's provider set is complete.
      *
      * @param array<int|string,mixed> $result
      * @param array<int,mixed> $names
