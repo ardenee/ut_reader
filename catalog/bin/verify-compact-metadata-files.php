@@ -1,7 +1,7 @@
 #!/usr/bin/env php
 <?php
 /**
- * Verify selected verified-file format-3 containers and optionally queue one
+ * Verify selected verified-file current-format containers and optionally queue one
  * durable repair workflow for each unreadable container.
  *
  * The storage root is always emitted in the result. When source and deployed
