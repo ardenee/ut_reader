@@ -62,15 +62,17 @@ final class PdoGameDependencyCrossExamineQuery
         );
         $sourceGames = array_values(array_filter(
             $sourceGames,
-            fn(array $game): bool => ($generation = $this->engineGeneration((string)($game['engine_key'] ?? ''))) > 0
-                && $generation <= $targetEngineGeneration
+            fn(array $game): bool => $this->isCompatibleSourceEngine(
+                $targetEngineGeneration,
+                $this->engineGeneration((string)($game['engine_key'] ?? ''))
+            )
         ));
         $allowedSourceIds = [];
         foreach ($sourceGames as $game) {
             $allowedSourceIds[(int)$game['id']] = true;
         }
         if ($sourceGameId > 0 && !isset($allowedSourceIds[$sourceGameId])) {
-            throw new \RuntimeException('The selected source game must use the target engine generation or an earlier Unreal Engine generation.');
+            throw new \RuntimeException('The selected source game is outside the dependency-compatible engine family for this target.');
         }
 
         $diagnostics = [
@@ -596,6 +598,22 @@ final class PdoGameDependencyCrossExamineQuery
             'rows' => $rows,
             'diagnostics' => $diagnostics,
         ];
+    }
+
+    private function isCompatibleSourceEngine(int $targetGeneration, int $sourceGeneration): bool
+    {
+        if ($targetGeneration < 1 || $sourceGeneration < 1) {
+            return false;
+        }
+
+        return match ($targetGeneration) {
+            1 => $sourceGeneration === 1,
+            2 => $sourceGeneration === 1 || $sourceGeneration === 2,
+            3 => $sourceGeneration === 3,
+            4 => $sourceGeneration === 4,
+            5 => $sourceGeneration === 4 || $sourceGeneration === 5,
+            default => false,
+        };
     }
 
     private function engineGeneration(string $engineKey): int
