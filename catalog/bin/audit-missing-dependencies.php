@@ -179,6 +179,28 @@ foreach ($groups as $group) {
                 return $key === $packageKey;
             }
         ));
+        $resolverPaths = [];
+        $resolverClasses = [];
+        foreach ($packageImports as $packageImport) {
+            $relativePath = trim((string)($packageImport['relative_object_path'] ?? ''));
+            $fullPath = trim((string)($packageImport['full_path'] ?? ''));
+            if ($relativePath === '' || $fullPath === '') {
+                continue;
+            }
+            $resolverPaths[] = $relativePath;
+            $resolverClasses[$relativePath] = [
+                'class_package' => trim((string)($packageImport['class_package'] ?? '')),
+                'class_name' => trim((string)($packageImport['class_name'] ?? '')),
+            ];
+        }
+        $resolverCoverage = PdoPackageObjectCoverageResolver::evaluate(
+            $db,
+            $gameId,
+            (string)$group['required_package'],
+            array_values(array_unique($resolverPaths)),
+            (int)$group['file_id'],
+            $resolverClasses
+        );
         $replayed = PdoDependencyResolver::resolve(
             $db,
             $gameId,
@@ -187,6 +209,8 @@ foreach ($groups as $group) {
         );
         $resolverReplay = [
             'imports_replayed' => count($packageImports),
+            'resolver_required_paths' => array_values(array_unique($resolverPaths)),
+            'resolver_coverage' => $resolverCoverage,
             'results' => array_map(
                 static function (array $import) use ($replayed): array {
                     $importId = (int)($import['id'] ?? 0);
