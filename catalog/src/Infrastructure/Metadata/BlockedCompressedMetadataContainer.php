@@ -198,7 +198,7 @@ final class BlockedCompressedMetadataContainer
                     throw new RuntimeException('Blocked metadata block bounds are invalid.');
                 }
                 $compressed = substr($bytes, $payloadStart + $offset, $length);
-                self::verifyCompressedBlock($compressed, $block);
+                self::verifyCompressedBlock($compressed, $block, (string)$section);
                 $verifiedBlocks++;
             }
         }
@@ -580,7 +580,7 @@ final class BlockedCompressedMetadataContainer
     }
 
     /** @param array<string,mixed> $block */
-    private static function verifyCompressedBlock(string $compressed, array $block): void
+    private static function verifyCompressedBlock(string $compressed, array $block, string $section): void
     {
         if (!hash_equals((string)($block['sha256'] ?? ''), hash('sha256', $compressed))) {
             throw new RuntimeException('Blocked metadata block checksum mismatch.');
@@ -596,6 +596,23 @@ final class BlockedCompressedMetadataContainer
         }
         if (!is_array($decoded) || count((array)($decoded['rows'] ?? [])) !== (int)($block['row_count'] ?? -1)) {
             throw new RuntimeException('Blocked metadata block row count mismatch.');
+        }
+
+        $expectedWidth = match ($section) {
+            'names' => 7,
+            'imports' => 14,
+            'exports' => 17,
+            'dependencies' => 8,
+            default => throw new RuntimeException('Blocked metadata section is unsupported in format 4: ' . $section),
+        };
+        foreach ((array)$decoded['rows'] as $row) {
+            if (!is_array($row) || count($row) !== $expectedWidth) {
+                throw new RuntimeException(
+                    'Blocked metadata format-4 ' . $section
+                    . ' row width mismatch: expected=' . $expectedWidth
+                    . ', actual=' . (is_array($row) ? count($row) : -1) . '.'
+                );
+            }
         }
     }
 
