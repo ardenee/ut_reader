@@ -132,8 +132,18 @@ final class CatalogMisnamedFileDetector
         $requiredPathsByPackage = [];
         foreach ($requirementsByObject as $packageRequirements) {
             foreach ($packageRequirements as $packageTermId => $pathHashes) {
+                $packageName = trim((string)($packageNames[(int)$packageTermId] ?? ''));
                 foreach ($pathHashes as $pathHash => $requiredObjectTermId) {
-                    $requiredPathsByPackage[(int)$packageTermId][(string)$pathHash] = (int)$requiredObjectTermId;
+                    $fullPath = trim((string)($requiredObjectPaths[(int)$requiredObjectTermId] ?? ''));
+                    $rootlessPath = $fullPath;
+                    if ($packageName !== '' && strncasecmp($fullPath, $packageName . '.', strlen($packageName) + 1) === 0) {
+                        $rootlessPath = substr($fullPath, strlen($packageName) + 1);
+                    }
+                    $requiredPathsByPackage[(int)$packageTermId][(string)$pathHash] = [
+                        'term_id' => (int)$requiredObjectTermId,
+                        'full_path' => $fullPath,
+                        'rootless_path' => $rootlessPath,
+                    ];
                 }
             }
         }
@@ -221,7 +231,7 @@ final class CatalogMisnamedFileDetector
                         'current_dependants' => 0,
                         'required_objects' => count((array)($requiredPathsByPackage[$packageTermId] ?? [])),
                         'required_paths' => array_values(array_filter(array_map(
-                            static fn(int $termId): string => trim((string)($requiredObjectPaths[$termId] ?? '')),
+                            static fn(array $path): string => trim((string)($path['full_path'] ?? $path['rootless_path'] ?? '')),
                             array_values((array)($requiredPathsByPackage[$packageTermId] ?? []))
                         ), static fn(string $path): bool => $path !== '')),
                         'collision_suffix_match' => $collisionSuffixMatch,
