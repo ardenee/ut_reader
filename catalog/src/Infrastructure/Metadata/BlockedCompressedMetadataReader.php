@@ -172,13 +172,13 @@ final class BlockedCompressedMetadataReader
         return $found;
     }
 
-    /** @return array{row_schema_version:int,identity_hash_algorithm:string,path_hash_algorithm:string} */
+    /** @return array{format_version:int,identity_hash_algorithm:string,path_hash_algorithm:string} */
     public function schemaInfo(int $fileId): array
     {
         $context = $this->manifest($fileId);
         $manifest = (array)($context['manifest'] ?? []);
         return [
-            'row_schema_version' => (int)($manifest['row_schema_version'] ?? 1),
+            'format_version' => BlockedCompressedMetadataContainer::FORMAT_VERSION,
             'identity_hash_algorithm' => (string)($manifest['identity_hash_algorithm'] ?? ''),
             'path_hash_algorithm' => (string)($manifest['path_hash_algorithm'] ?? ''),
         ];
@@ -281,7 +281,7 @@ final class BlockedCompressedMetadataReader
             $headerBytes = $this->readExactly($handle, 20);
             $header = unpack('a8magic/vversion/vcodec/Vmanifest_length/Vreserved', $headerBytes);
             $headerVersion = is_array($header) ? (int)($header['version'] ?? 0) : 0;
-            if (!is_array($header) || (string)$header['magic'] !== "UEDBM3\0\0" || $headerVersion !== $formatVersion) {
+            if (!is_array($header) || (string)$header['magic'] !== "UEDBM4\0\0" || $headerVersion !== $formatVersion) {
                 throw new RuntimeException('Blocked metadata container magic/version does not match its registration.');
             }
             $manifestLength = (int)$header['manifest_length'];
@@ -304,13 +304,6 @@ final class BlockedCompressedMetadataReader
         if (!is_array($manifest) || (int)($manifest['file']['id'] ?? 0) !== $fileId) {
             throw new RuntimeException('Blocked metadata manifest identity mismatch.');
         }
-        $rowSchemaVersion = (int)($manifest['row_schema_version'] ?? 1);
-        if ($rowSchemaVersion < 1 || $rowSchemaVersion > 2) {
-            throw new RuntimeException(
-                'Blocked metadata row schema version is unsupported: ' . $rowSchemaVersion . '.'
-            );
-        }
-
         $context = [
             'row' => $row,
             'path' => $path,
@@ -358,7 +351,7 @@ final class BlockedCompressedMetadataReader
                     $section,
                     $row,
                     $strings,
-                    (int)($context['manifest']['row_schema_version'] ?? 1)
+                    2
                 );
             }
         }
@@ -369,6 +362,10 @@ final class BlockedCompressedMetadataReader
     }
 
     /** @param list<mixed> $row @param array<int,mixed> $strings @return array<string,mixed> */
+    /**
+     * Current-format decoder only. Future v5+ row changes belong in a new
+     * format implementation/migrator, not backward-compatibility branches here.
+     */
     private function decodeRow(string $section, array $row, array $strings, int $rowSchemaVersion): array
     {
         return match ($section) {
@@ -396,12 +393,8 @@ final class BlockedCompressedMetadataReader
                 'class_package_name_index' => isset($row[9]) ? (int)$row[9] : null,
                 'class_name_index' => isset($row[10]) ? (int)$row[10] : null,
                 'object_name_index' => isset($row[11]) ? (int)$row[11] : null,
-                'verify_identity_hash' => $rowSchemaVersion >= 2
-                    ? $this->stringAt($strings, $row[12] ?? null)
-                    : '',
-                'path_hash_ci' => $rowSchemaVersion >= 2
-                    ? $this->stringAt($strings, $row[13] ?? null)
-                    : '',
+                'verify_identity_hash' => $this->stringAt($strings, $row[12] ?? null),
+                'path_hash_ci' => $this->stringAt($strings, $row[13] ?? null),
             ],
             'exports' => [
                 'id' => (int)($row[0] ?? 0) + 1,
@@ -418,18 +411,10 @@ final class BlockedCompressedMetadataReader
                 'super_index' => (int)($row[10] ?? 0),
                 'template_index' => (int)($row[11] ?? 0),
                 'object_name_index' => isset($row[12]) ? (int)$row[12] : null,
-                'verify_class_package' => $rowSchemaVersion >= 2
-                    ? $this->stringAt($strings, $row[13] ?? null)
-                    : '',
-                'verify_class_name' => $rowSchemaVersion >= 2
-                    ? $this->stringAt($strings, $row[14] ?? null)
-                    : '',
-                'verify_identity_hash' => $rowSchemaVersion >= 2
-                    ? $this->stringAt($strings, $row[15] ?? null)
-                    : '',
-                'path_hash_ci' => $rowSchemaVersion >= 2
-                    ? $this->stringAt($strings, $row[16] ?? null)
-                    : '',
+                'verify_class_package' => $this->stringAt($strings, $row[13] ?? null),
+                'verify_class_name' => $this->stringAt($strings, $row[14] ?? null),
+                'verify_identity_hash' => $this->stringAt($strings, $row[15] ?? null),
+                'path_hash_ci' => $this->stringAt($strings, $row[16] ?? null),
             ],
             'dependencies' => [
                 'file_id' => 0,
