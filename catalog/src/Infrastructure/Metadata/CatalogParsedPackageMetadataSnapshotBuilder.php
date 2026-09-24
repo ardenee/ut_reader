@@ -281,14 +281,37 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
             throw new RuntimeException('Parsed compact dependency resolution requires valid file and game identities.');
         }
 
+        $engineRow = \catalog_one(
+            $this->db,
+            'SELECT p.engine_key FROM ue_games g'
+            . ' LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1'
+            . ' WHERE g.id=? LIMIT 1',
+            [$gameId]
+        );
+        $legacyVerifyImport = in_array(
+            strtoupper(trim((string)($engineRow['engine_key'] ?? ''))),
+            ['UE1', 'UE2'],
+            true
+        );
+
         $localExports = [];
-        foreach ($exportRows as $export) {
-            if (!is_array($export)) {
-                continue;
-            }
-            $lookupKey = $this->lookupKey((string)($export['full_path'] ?? ''));
-            if ($lookupKey !== '' && !isset($localExports[$lookupKey])) {
-                $localExports[$lookupKey] = (int)($export['export_index'] ?? 0);
+        $localVerifyImportMatches = [];
+        if ($legacyVerifyImport) {
+            require_once dirname(__DIR__) . '/Persistence/PdoLegacyVerifyImportMatcher.php';
+            $localVerifyImportMatches = \UnrealDb\Catalog\Infrastructure\Persistence\PdoLegacyVerifyImportMatcher::match(
+                $importRows,
+                $exportRows,
+                $packageName
+            );
+        } else {
+            foreach ($exportRows as $export) {
+                if (!is_array($export)) {
+                    continue;
+                }
+                $lookupKey = $this->lookupKey((string)($export['full_path'] ?? ''));
+                if ($lookupKey !== '' && !isset($localExports[$lookupKey])) {
+                    $localExports[$lookupKey] = (int)($export['export_index'] ?? 0);
+                }
             }
         }
 
@@ -307,17 +330,23 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
                 'confidence' => 'missing',
             ];
 
-            // The legacy resolver preferred the newly imported file itself when
-            // an Import matched one of its own Exports. The current export lookup
-            // is not published until after this snapshot is built, so preserve
-            // that ordering explicitly from the in-memory parsed Export table.
-            $localExportIndex = $localExports[$this->lookupKey((string)$import['full_path'])] ?? null;
+            // A package being published is not yet visible through ue_export_lookup.
+            // For UE1/UE2, match its in-memory tables with the same serialized-data
+            // VerifyImport rules used for existing providers. Later engines retain
+            // their existing local lookup until their source-specific comparison is done.
+            $localExportIndex = null;
+            if ($legacyVerifyImport
+                && $this->lookupKey((string)($import['root_package'] ?? '')) === $this->lookupKey($packageName)) {
+                $localExportIndex = $localVerifyImportMatches[(int)($import['import_index'] ?? -1)] ?? null;
+            } elseif (!$legacyVerifyImport) {
+                $localExportIndex = $localExports[$this->lookupKey((string)$import['full_path'])] ?? null;
+            }
             if ($localExportIndex !== null && (int)$import['is_common'] !== 1) {
                 $resolution = [
                     'status' => 'resolved',
                     'resolved_file_id' => $fileId,
-                    'resolved_export_index' => $localExportIndex,
-                    'source' => 'exact_object',
+                    'resolved_export_index' => (int)$localExportIndex,
+                    'source' => $legacyVerifyImport ? 'ue_verify_import_local' : 'exact_object',
                     'confidence' => 'exact',
                 ];
             }
