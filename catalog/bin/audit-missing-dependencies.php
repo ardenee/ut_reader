@@ -298,6 +298,56 @@ foreach ($groups as $group) {
     }
 }
 
+// Provider-side v3 export evidence for every currently missing object.
+$providerEvidence = [];
+$reader = new \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataReader(
+    $db,
+    (string)($config['storage_path'] ?? ($root . '/storage'))
+);
+foreach ($details as $detail) {
+    foreach ((array)($detail['providers'] ?? []) as $provider) {
+        $providerId = (int)($provider['file_id'] ?? 0);
+        if ($providerId < 1 || isset($providerEvidence[$providerId])) {
+            continue;
+        }
+        $missingNames = [];
+        foreach ((array)($provider['missing_paths'] ?? []) as $path) {
+            $leaf = trim((string)basename(str_replace('.', '/', (string)$path)));
+            if ($leaf !== '') {
+                $missingNames[strtolower($leaf)] = $leaf;
+            }
+        }
+        $exports = [];
+        $nearby = [];
+        $offset = 0;
+        do {
+            $page = $reader->page($providerId, 'exports', $offset, 5000);
+            foreach ($page as $export) {
+                $local = (string)($export['local_path'] ?? '');
+                $object = (string)($export['object_name'] ?? '');
+                $exports[] = [
+                    'export_index' => (int)($export['export_index'] ?? -1),
+                    'class_name' => (string)($export['class_name'] ?? ''),
+                    'object_name' => $object,
+                    'local_path' => $local,
+                    'full_path' => (string)($export['full_path'] ?? ''),
+                ];
+                foreach ($missingNames as $key => $leaf) {
+                    if (stripos($object, $leaf) !== false || stripos($local, $leaf) !== false
+                        || stripos($leaf, $object) !== false) {
+                        $nearby[$key][] = end($exports);
+                    }
+                }
+            }
+            $offset += count($page);
+        } while (count($page) === 5000);
+        $providerEvidence[$providerId] = [
+            'export_count' => count($exports),
+            'missing_leaf_matches' => $nearby,
+        ];
+    }
+}
+
 $result = [
     'ok' => true,
     'read_only' => true,
@@ -311,6 +361,7 @@ $result = [
     'classifications' => $counts,
     'details_truncated' => count($groups) > $maxDetails,
     'details' => $details,
+    'provider_export_evidence' => $providerEvidence,
     'interpretation' => [
         'provider_has_required_set' => 'Suspicious: one current game-local v3 provider satisfies the complete package requirement set for this consumer; inspect resolver/publication state.',
         'provider_class_mismatch' => 'A provider has every required path, but the current Import class constraint rejects at least one matched Export.',
