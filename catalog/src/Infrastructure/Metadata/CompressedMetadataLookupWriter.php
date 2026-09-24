@@ -14,6 +14,8 @@ use RuntimeException;
 use Throwable;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoContention;
 
+require_once __DIR__ . '/CatalogUnrealIdentityHash.php';
+
 final class CompressedMetadataLookupWriter
 {
     private const TERM_BATCH_SIZE = 350;
@@ -69,7 +71,7 @@ final class CompressedMetadataLookupWriter
                 $this->insertBatch(
                     'ue_legacy_export_identity_lookup',
                     [
-                        'file_id', 'export_index', 'identity_hash', 'object_term_id',
+                        'file_id', 'export_index', 'identity_hash', 'path_hash_ci', 'object_term_id',
                         'class_package_term_id', 'class_name_term_id', 'outer_index', 'object_flags',
                     ],
                     $chunk
@@ -158,7 +160,8 @@ final class CompressedMetadataLookupWriter
         $sqlBatches += 3;
 
         $exportColumns = [
-            'file_id', 'export_index', 'object_term_id', 'class_term_id', 'path_hash', 'local_path_term_id',
+            'file_id', 'export_index', 'object_term_id', 'class_term_id',
+            'path_hash', 'path_hash_ci', 'local_path_term_id',
         ];
         $exportRows = [];
         foreach ($exports as $row) {
@@ -175,6 +178,7 @@ final class CompressedMetadataLookupWriter
                 $this->requiredTermId($termIds, $object),
                 $class !== '' ? $this->requiredTermId($termIds, $class) : null,
                 md5($localPath, true),
+                CatalogUnrealIdentityHash::objectPathBinary($localPath),
                 $this->requiredTermId($termIds, $localPath),
             ];
             if (count($exportRows) >= self::WRITE_BATCH_SIZE) {
@@ -208,6 +212,7 @@ final class CompressedMetadataLookupWriter
 
         $dependencyColumns = [
             'file_id', 'import_index', 'required_package_term_id', 'required_path_hash',
+            'verify_identity_hash', 'required_path_hash_ci',
             'required_object_term_id', 'import_class_package_term_id', 'import_class_name_term_id',
             'import_object_term_id', 'resolved_file_id', 'resolved_export_index', 'status', 'resolution_source',
             'resolution_confidence', 'resolution_source_term_id', 'resolution_confidence_term_id',
@@ -239,6 +244,12 @@ final class CompressedMetadataLookupWriter
                 $index,
                 $this->requiredTermId($termIds, (string)$row['required_package']),
                 md5((string)$paths['imports'][$index]['relative'], true),
+                (($import['verify_identity_hash'] ?? '') !== '')
+                    ? hex2bin((string)$import['verify_identity_hash'])
+                    : null,
+                (($import['path_hash_ci'] ?? '') !== '')
+                    ? hex2bin((string)$import['path_hash_ci'])
+                    : CatalogUnrealIdentityHash::objectPathBinary((string)$paths['imports'][$index]['relative']),
                 $this->requiredTermId($termIds, $requiredObject),
                 $classPackage !== '' ? $this->requiredTermId($termIds, $classPackage) : null,
                 $className !== '' ? $this->requiredTermId($termIds, $className) : null,
@@ -589,7 +600,12 @@ final class CompressedMetadataLookupWriter
             $rows[] = [
                 $fileId,
                 (int)$index,
-                self::legacyIdentityHash($objectName, $className, $classPackage),
+                (($row['verify_identity_hash'] ?? '') !== '')
+                    ? hex2bin((string)$row['verify_identity_hash'])
+                    : CatalogUnrealIdentityHash::verifyImportBinary($objectName, $className, $classPackage),
+                (($row['path_hash_ci'] ?? '') !== '')
+                    ? hex2bin((string)$row['path_hash_ci'])
+                    : CatalogUnrealIdentityHash::objectPathBinary((string)($row['local_path'] ?? '')),
                 $this->requiredTermId($termIds, $objectName),
                 $this->requiredTermId($termIds, $classPackage),
                 $this->requiredTermId($termIds, $className),
@@ -654,22 +670,6 @@ final class CompressedMetadataLookupWriter
             ];
         }
         return ['Core', 'Class'];
-    }
-
-    private static function legacyIdentityHash(string $objectName, string $className, string $classPackage): string
-    {
-        return md5(
-            self::legacyIdentityKey($objectName) . "\0"
-            . self::legacyIdentityKey($className) . "\0"
-            . self::legacyIdentityKey($classPackage),
-            true
-        );
-    }
-
-    private static function legacyIdentityKey(string $value): string
-    {
-        $value = trim($value);
-        return function_exists('mb_strtolower') ? mb_strtolower($value, 'UTF-8') : strtolower($value);
     }
 
     /** @param array<string,int> $termIds */
