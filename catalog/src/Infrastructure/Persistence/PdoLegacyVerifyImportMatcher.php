@@ -107,8 +107,7 @@ final class PdoLegacyVerifyImportMatcher
         array $consumerImports,
         array $providerImports,
         array $providerExports,
-        string $providerPackageName,
-        bool $requirePublic = true
+        string $providerPackageName
     ): array {
         $standard = self::match($consumerImports, $providerImports, $providerExports, $providerPackageName, true);
         $unreal2 = self::match($consumerImports, $providerImports, $providerExports, $providerPackageName, false);
@@ -143,7 +142,8 @@ final class PdoLegacyVerifyImportMatcher
         array $consumerImports,
         array $providerImports,
         array $providerExports,
-        string $providerPackageName
+        string $providerPackageName,
+        bool $requirePublic = true
     ): array {
         $consumerByIndex = self::indexRows($consumerImports, 'import_index');
         $providerImportsByIndex = self::indexRows($providerImports, 'import_index');
