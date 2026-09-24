@@ -16,6 +16,8 @@ if (PHP_SAPI !== 'cli') {
 $root = dirname(__DIR__);
 require_once $root . '/lib/CatalogSupport.php';
 
+use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataSnapshotLoader;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyResolver;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageObjectCoverageResolver;
 
 $options = getopt('', ['game-id:', 'max-details::']);
@@ -96,6 +98,10 @@ $counts = [
     'package_only_missing_row' => 0,
 ];
 $details = [];
+$snapshotLoader = new BlockedCompressedMetadataSnapshotLoader(
+    $db,
+    (string)($config['storage_path'] ?? ($root . '/storage'))
+);
 foreach ($groups as $group) {
     $paths = [];
     $classes = [];
@@ -154,6 +160,55 @@ foreach ($groups as $group) {
     }
     $counts[$classification]++;
 
+    $resolverReplay = null;
+    if ($classification === 'provider_has_required_set') {
+        $snapshot = $snapshotLoader->loadDependencySnapshot((int)$group['file_id']);
+        $packageKey = function_exists('mb_strtolower')
+            ? mb_strtolower(trim((string)$group['required_package']), 'UTF-8')
+            : strtolower(trim((string)$group['required_package']));
+        $packageImports = array_values(array_filter(
+            (array)$snapshot['imports'],
+            static function (mixed $import) use ($packageKey): bool {
+                if (!is_array($import)) {
+                    return false;
+                }
+                $rootPackage = trim((string)($import['root_package'] ?? ''));
+                $key = function_exists('mb_strtolower')
+                    ? mb_strtolower($rootPackage, 'UTF-8')
+                    : strtolower($rootPackage);
+                return $key === $packageKey;
+            }
+        ));
+        $replayed = PdoDependencyResolver::resolve(
+            $db,
+            $gameId,
+            (int)$group['file_id'],
+            $packageImports
+        );
+        $resolverReplay = [
+            'imports_replayed' => count($packageImports),
+            'results' => array_map(
+                static function (array $import) use ($replayed): array {
+                    $importId = (int)($import['id'] ?? 0);
+                    $resolution = $replayed[$importId] ?? [];
+                    return [
+                        'import_index' => (int)($import['import_index'] ?? -1),
+                        'root_package' => (string)($import['root_package'] ?? ''),
+                        'relative_object_path' => (string)($import['relative_object_path'] ?? ''),
+                        'full_path' => (string)($import['full_path'] ?? ''),
+                        'class_package' => (string)($import['class_package'] ?? ''),
+                        'class_name' => (string)($import['class_name'] ?? ''),
+                        'status' => (string)($resolution['status'] ?? 'no_result'),
+                        'resolved_file_id' => $resolution['resolved_file_id'] ?? null,
+                        'resolved_export_index' => $resolution['resolved_export_index'] ?? null,
+                        'source' => (string)($resolution['source'] ?? ''),
+                    ];
+                },
+                $packageImports
+            ),
+        ];
+    }
+
     if (count($details) < $maxDetails) {
         $details[] = [
             'classification' => $classification,
@@ -165,6 +220,7 @@ foreach ($groups as $group) {
             'package_requirement_rows' => count($group['imports']),
             'required_object_paths' => $paths,
             'imports' => $group['imports'],
+            'resolver_replay' => $resolverReplay,
             'providers' => array_map(
                 static fn(array $p): array => [
                     'file_id' => (int)($p['file_id'] ?? 0),
