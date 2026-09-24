@@ -379,42 +379,45 @@ final class PdoCatalogSearchRepository implements CatalogSearchRepository
         array &$matches,
         array $filters
     ): void {
-        $term = $this->exactTerm($query);
-        if ($term === null) {
+        $terms = $this->exactTerms($query);
+        if ($terms === []) {
             return;
         }
-        $termId = (int)$term['id'];
-        $value = (string)$term['value'];
 
-        if (in_array('names', $filters['fields'], true)) {
-            $this->collectTermReferenceMatches(
-                'ue_name_lookup', 'name_term_id', 'name_index', 'Name',
-                $termId, $value, $gameId, $rowLimit, $matches, $filters['extensions']
-            );
-        }
-        if (in_array('exports', $filters['fields'], true)) {
-            $this->collectTermReferenceMatches(
-                'ue_export_lookup', 'object_term_id', 'export_index', 'Export object',
-                $termId, $value, $gameId, $rowLimit, $matches, $filters['extensions']
-            );
-            $this->collectTermReferenceMatches(
-                'ue_export_lookup', 'local_path_term_id', 'export_index', 'Export local path',
-                $termId, $value, $gameId, $rowLimit, $matches, $filters['extensions']
-            );
-        }
-        if (in_array('imports', $filters['fields'], true)) {
-            $this->collectTermReferenceMatches(
-                'ue_dependency_links', 'import_object_term_id', 'import_index', 'Import object',
-                $termId, $value, $gameId, $rowLimit, $matches, $filters['extensions']
-            );
-            $this->collectTermReferenceMatches(
-                'ue_dependency_links', 'required_object_term_id', 'import_index', 'Import path',
-                $termId, $value, $gameId, $rowLimit, $matches, $filters['extensions']
-            );
-            $this->collectTermReferenceMatches(
-                'ue_dependency_links', 'required_package_term_id', 'import_index', 'Required package',
-                $termId, $value, $gameId, $rowLimit, $matches, $filters['extensions']
-            );
+        foreach ($terms as $term) {
+            $termId = (int)$term['id'];
+            $value = (string)$term['value'];
+            if (in_array('names', $filters['fields'], true)) {
+                $this->collectTermReferenceMatches(
+                    'ue_name_lookup', 'name_term_id', 'name_index', 'Name',
+                    $termId, $value, $gameId, $rowLimit, $matches, $filters['extensions']
+                );
+            }
+            if (in_array('exports', $filters['fields'], true)) {
+                $this->collectTermReferenceMatches(
+                    'ue_export_lookup', 'object_term_id', 'export_index', 'Export object',
+                    $termId, $value, $gameId, $rowLimit, $matches, $filters['extensions']
+                );
+                $this->collectTermReferenceMatches(
+                    'ue_export_lookup', 'local_path_term_id', 'export_index', 'Export local path',
+                    $termId, $value, $gameId, $rowLimit, $matches, $filters['extensions']
+                );
+            }
+            if (in_array('imports', $filters['fields'], true)) {
+                $this->collectTermReferenceMatches(
+                    'ue_dependency_links', 'import_object_term_id', 'import_index', 'Import object',
+                    $termId, $value, $gameId, $rowLimit, $matches, $filters['extensions']
+                );
+                $this->collectTermReferenceMatches(
+                    'ue_dependency_links', 'required_object_term_id', 'import_index', 'Import path',
+                    $termId, $value, $gameId, $rowLimit, $matches, $filters['extensions']
+                );
+                $this->collectTermReferenceMatches(
+                    'ue_dependency_links', 'required_package_term_id', 'import_index', 'Required package',
+                    $termId, $value, $gameId, $rowLimit, $matches, $filters['extensions']
+                );
+            }
+    
         }
     }
 
@@ -482,17 +485,18 @@ final class PdoCatalogSearchRepository implements CatalogSearchRepository
         }
         $packageName = substr($query, 0, $separator);
         $localPath = substr($query, $separator + 1);
-        $term = $this->exactTerm($localPath);
-        if ($term === null) {
+        $terms = $this->exactTerms($localPath);
+        if ($terms === []) {
             return;
         }
-        $termId = (int)$term['id'];
+        $termIds = array_map(static fn(array $term): int => (int)$term['id'], $terms);
+        $termPlaceholders = implode(',', array_fill(0, count($termIds), '?'));
 
         $sql = 'SELECT l.file_id id,f.package_name match_package '
             . 'FROM ue_export_lookup l '
             . 'JOIN ue_files f ON f.id=l.file_id AND f.scan_status="verified" '
-            . 'WHERE l.local_path_term_id=? AND f.package_name=?';
-        $args = [$termId, $packageName];
+            . 'WHERE l.local_path_term_id IN (' . $termPlaceholders . ') AND f.package_name=?';
+        $args = array_merge($termIds, [$packageName]);
         if ($gameId !== null) {
             $sql .= ' AND f.game_id=?';
             $args[] = $gameId;
@@ -519,8 +523,8 @@ final class PdoCatalogSearchRepository implements CatalogSearchRepository
                 . 'FROM ue_export_lookup l '
                 . 'JOIN ue_file_package_aliases a ON a.file_id=l.file_id '
                 . 'JOIN ue_files f ON f.id=l.file_id AND f.game_id=a.game_id AND f.scan_status="verified" '
-                . 'WHERE l.local_path_term_id=? AND a.package_name=?';
-            $aliasArgs = [$termId, $packageName];
+                . 'WHERE l.local_path_term_id IN (' . $termPlaceholders . ') AND a.package_name=?';
+            $aliasArgs = array_merge($termIds, [$packageName]);
             if ($gameId !== null) {
                 $aliasSql .= ' AND a.game_id=?';
                 $aliasArgs[] = $gameId;
@@ -549,27 +553,26 @@ final class PdoCatalogSearchRepository implements CatalogSearchRepository
         }
     }
 
-    /** @return array{id:int,value:string}|null */
-    private function exactTerm(string $value): ?array
+    /** @return list<array{id:int,value:string}> */
+    private function exactTerms(string $value): array
     {
         $length = strlen($value);
         if ($value === '' || $length > 65535) {
-            return null;
+            return [];
         }
         try {
             $statement = $this->db->prepare(
-                'SELECT id,value_prefix FROM ue_terms WHERE value_hash=? AND value_length=? LIMIT 1'
+                'SELECT id,value_prefix FROM ue_terms WHERE value_hash=? AND value_length=? ORDER BY id'
             );
             $statement->execute([md5($value, true), $length]);
-            $row = $statement->fetch(PDO::FETCH_ASSOC);
-            if (!is_array($row)) {
-                return null;
+            $matches = [];
+            while (($row = $statement->fetch(PDO::FETCH_ASSOC)) !== false) {
+                $stored = (string)$row['value_prefix'];
+                if (hash_equals($stored, $value)) {
+                    $matches[] = ['id' => (int)$row['id'], 'value' => $stored];
+                }
             }
-            $stored = (string)$row['value_prefix'];
-            if (!hash_equals($stored, $value)) {
-                return null;
-            }
-            return ['id' => (int)$row['id'], 'value' => $stored];
+            return $matches;
         } catch (PDOException $error) {
             throw new CatalogSearchUnavailableException(
                 'Compact term lookup failed: ' . $error->getMessage(),
