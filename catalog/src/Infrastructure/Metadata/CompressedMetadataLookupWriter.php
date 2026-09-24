@@ -34,6 +34,60 @@ final class CompressedMetadataLookupWriter
     }
 
     /**
+     * Rebuild only the UE1/UE2 VerifyImport projection from an existing compact snapshot.
+     * The .uedb3 container and all other projections remain unchanged.
+     *
+     * @param array<string,mixed> $snapshot
+     * @return array{file_id:int,rows:int,sql_batches:int}
+     */
+    public function rebuildLegacyVerifyImportProjection(array $snapshot): array
+    {
+        if ($this->db->inTransaction()) {
+            throw new RuntimeException('VerifyImport projection rebuilding requires ownership of the database transaction.');
+        }
+        $file = (array)($snapshot['file'] ?? []);
+        $fileId = (int)($file['id'] ?? 0);
+        $gameId = (int)($file['game_id'] ?? 0);
+        if ($fileId < 1 || $gameId < 1) {
+            throw new RuntimeException('VerifyImport projection rebuild requires valid file and game identities.');
+        }
+
+        $sqlBatches = 0;
+        $termIds = $this->primeSnapshotTerms($snapshot, $sqlBatches);
+        $rows = $this->isLegacyVerifyImportGame($gameId)
+            ? $this->legacyProjectionRows($snapshot, $termIds)
+            : [];
+
+        $this->db->beginTransaction();
+        try {
+            $this->db->prepare('DELETE FROM ue_legacy_export_identity_lookup WHERE file_id=?')->execute([$fileId]);
+            $sqlBatches++;
+            foreach (array_chunk($rows, self::WRITE_BATCH_SIZE) as $chunk) {
+                if ($chunk === []) {
+                    continue;
+                }
+                $this->insertBatch(
+                    'ue_legacy_export_identity_lookup',
+                    [
+                        'file_id', 'export_index', 'identity_hash', 'object_term_id',
+                        'class_package_term_id', 'class_name_term_id', 'outer_index', 'object_flags',
+                    ],
+                    $chunk
+                );
+                $sqlBatches++;
+            }
+            $this->db->commit();
+        } catch (Throwable $error) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            throw $error;
+        }
+
+        return ['file_id' => $fileId, 'rows' => count($rows), 'sql_batches' => $sqlBatches];
+    }
+
+    /**
      * Compatibility entry point for callers that already hold container bytes.
      * Production publication uses writeVersionedMetadata() so it never needs a
      * full .uedb3 PHP string merely to register size and SHA-256.
@@ -135,52 +189,19 @@ final class CompressedMetadataLookupWriter
         }
 
         if ($this->isLegacyVerifyImportGame((int)($file['game_id'] ?? 0))) {
-            $legacyColumns = [
-                'file_id', 'export_index', 'identity_hash', 'object_term_id',
-                'class_package_term_id', 'class_name_term_id', 'outer_index', 'object_flags',
-            ];
-            $legacyRows = [];
-            $importsByIndexForClass = [];
-            foreach ($imports as $importRow) {
-                if (is_array($importRow)) {
-                    $importsByIndexForClass[(int)$importRow['import_index']] = $importRow;
-                }
-            }
-            $exportsByIndexForClass = [];
-            foreach ($exports as $exportRow) {
-                if (is_array($exportRow)) {
-                    $exportsByIndexForClass[(int)$exportRow['export_index']] = $exportRow;
-                }
-            }
-            foreach ($exportsByIndexForClass as $index => $row) {
-                [$classPackage, $className] = $this->legacyExportClassIdentity(
-                    $row,
-                    $importsByIndexForClass,
-                    $exportsByIndexForClass,
-                    (string)($file['package_name'] ?? '')
-                );
-                $objectName = trim((string)($row['object_name'] ?? ''));
-                if ($objectName === '' || $classPackage === '' || $className === '') {
+            $legacyRows = $this->legacyProjectionRows($snapshot, $termIds);
+            foreach (array_chunk($legacyRows, self::WRITE_BATCH_SIZE) as $chunk) {
+                if ($chunk === []) {
                     continue;
                 }
-                $legacyRows[] = [
-                    $fileId,
-                    (int)$index,
-                    self::legacyIdentityHash($objectName, $className, $classPackage),
-                    $this->requiredTermId($termIds, $objectName),
-                    $this->requiredTermId($termIds, $classPackage),
-                    $this->requiredTermId($termIds, $className),
-                    (int)($row['outer_index'] ?? 0),
-                    (int)($row['object_flags'] ?? 0),
-                ];
-                if (count($legacyRows) >= self::WRITE_BATCH_SIZE) {
-                    $this->insertBatch('ue_legacy_export_identity_lookup', $legacyColumns, $legacyRows);
-                    $sqlBatches++;
-                    $legacyRows = [];
-                }
-            }
-            if ($legacyRows !== []) {
-                $this->insertBatch('ue_legacy_export_identity_lookup', $legacyColumns, $legacyRows);
+                $this->insertBatch(
+                    'ue_legacy_export_identity_lookup',
+                    [
+                        'file_id', 'export_index', 'identity_hash', 'object_term_id',
+                        'class_package_term_id', 'class_name_term_id', 'outer_index', 'object_flags',
+                    ],
+                    $chunk
+                );
                 $sqlBatches++;
             }
         }
@@ -526,6 +547,57 @@ final class CompressedMetadataLookupWriter
                 usleep(PdoContention::backoffMicros($attempt, 10000));
             }
         }
+    }
+
+    /**
+     * @param array<string,mixed> $snapshot
+     * @param array<string,int> $termIds
+     * @return list<list<mixed>>
+     */
+    private function legacyProjectionRows(array $snapshot, array $termIds): array
+    {
+        $file = (array)($snapshot['file'] ?? []);
+        $fileId = (int)($file['id'] ?? 0);
+        $imports = (array)($snapshot['imports'] ?? []);
+        $exports = (array)($snapshot['exports'] ?? []);
+
+        $importsByIndex = [];
+        foreach ($imports as $fallback => $row) {
+            if (is_array($row)) {
+                $importsByIndex[isset($row['import_index']) ? (int)$row['import_index'] : (int)$fallback] = $row;
+            }
+        }
+        $exportsByIndex = [];
+        foreach ($exports as $fallback => $row) {
+            if (is_array($row)) {
+                $exportsByIndex[isset($row['export_index']) ? (int)$row['export_index'] : (int)$fallback] = $row;
+            }
+        }
+
+        $rows = [];
+        foreach ($exportsByIndex as $index => $row) {
+            [$classPackage, $className] = $this->legacyExportClassIdentity(
+                $row,
+                $importsByIndex,
+                $exportsByIndex,
+                (string)($file['package_name'] ?? '')
+            );
+            $objectName = trim((string)($row['object_name'] ?? ''));
+            if ($objectName === '' || $classPackage === '' || $className === '') {
+                continue;
+            }
+            $rows[] = [
+                $fileId,
+                (int)$index,
+                self::legacyIdentityHash($objectName, $className, $classPackage),
+                $this->requiredTermId($termIds, $objectName),
+                $this->requiredTermId($termIds, $classPackage),
+                $this->requiredTermId($termIds, $className),
+                (int)($row['outer_index'] ?? 0),
+                (int)($row['object_flags'] ?? 0),
+            ];
+        }
+        return $rows;
     }
 
     private function isLegacyVerifyImportGame(int $gameId): bool
