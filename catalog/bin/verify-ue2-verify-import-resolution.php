@@ -21,6 +21,7 @@ $providerImports = [
     ['import_index' => 1, 'object_name' => 'Texture', 'outer_index' => -1],
     ['import_index' => 2, 'object_name' => 'LodMesh', 'outer_index' => -1],
     ['import_index' => 3, 'object_name' => 'OtherClass', 'outer_index' => -1],
+    ['import_index' => 4, 'object_name' => 'Mesh', 'outer_index' => -1],
 ];
 
 $consumer = [
@@ -139,7 +140,7 @@ $check(
 
 $meshPrivateExact = [
     ['export_index' => 0, 'class_index' => -3, 'object_name' => 'LegacyModel', 'outer_index' => 0, 'object_flags' => 4],
-    ['export_index' => 1, 'class_index' => -2, 'object_name' => 'LegacyModel', 'outer_index' => 0, 'object_flags' => 0],
+    ['export_index' => 1, 'class_index' => -5, 'object_name' => 'LegacyModel', 'outer_index' => 0, 'object_flags' => 0],
 ];
 $variants = PdoLegacyVerifyImportProjectionResolver::resolveInMemoryVariants(
     $meshConsumer,
