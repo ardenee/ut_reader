@@ -721,7 +721,7 @@
         const runningJobs = Math.max(0, Number(worker.running_execution_count != null ? worker.running_execution_count : counts.running || 0));
         const queuedJobs = Math.max(0, Number(counts.queued || 0));
         const text = authority === 'running' || authority === 'degraded'
-            ? 'Pool ' + busyWorkers + '/' + desiredWorkers + ' · ' + runningJobs + ' running · ' + queuedJobs + ' queued'
+            ? 'Pool ' + Math.max(0, desiredWorkers - busyWorkers) + '/' + desiredWorkers + ' · ' + runningJobs + ' running · ' + queuedJobs + ' queued'
             : authority === 'orphaned'
                 ? 'Worker stopped · ' + runningJobs + ' orphaned job(s)'
                 : 'Worker stopped · ' + queuedJobs + ' queued';
