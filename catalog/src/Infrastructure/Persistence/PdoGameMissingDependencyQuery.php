@@ -69,33 +69,13 @@ final class PdoGameMissingDependencyQuery
         if ($gameId < 1 || $packageNames === []) {
             return ['missing_objects' => 0, 'missing_packages' => 0, 'files_with_missing' => 0];
         }
-
-        if ((new PdoDependencyPackageSummary($this->db))->available()) {
-            [$where, $args] = $this->summaryWhere('s', $gameId, $packageNames);
-            $statement = $this->db->prepare(
-                'SELECT COALESCE(SUM(s.missing_count),0) missing_objects,'
-                . 'COUNT(DISTINCT s.required_package) missing_packages,'
-                . 'COUNT(DISTINCT s.file_id) files_with_missing '
-                . 'FROM ue_dependency_package_summaries s WHERE ' . $where
-            );
-            $statement->execute($args);
-            $row = $statement->fetch(PDO::FETCH_ASSOC) ?: [];
-            return [
-                'missing_objects' => max(0, (int)($row['missing_objects'] ?? 0)),
-                'missing_packages' => max(0, (int)($row['missing_packages'] ?? 0)),
-                'files_with_missing' => max(0, (int)($row['files_with_missing'] ?? 0)),
-            ];
-        }
-
-        $termIds = $packageNames === null ? null : $this->termIds($packageNames);
-        if ($termIds === []) {
-            return ['missing_objects' => 0, 'missing_packages' => 0, 'files_with_missing' => 0];
-        }
-        [$where, $args] = $this->linkWhere($gameId, $termIds);
+        $this->requireSummaryProjection();
+        [$where, $args] = $this->summaryWhere('s', $gameId, $packageNames);
         $statement = $this->db->prepare(
-            'SELECT COUNT(*) missing_objects,COUNT(DISTINCT l.required_package_term_id) missing_packages,'
-            . 'COUNT(DISTINCT l.file_id) files_with_missing '
-            . 'FROM ue_dependency_links l JOIN ue_files f ON f.id=l.file_id WHERE ' . $where
+            'SELECT COALESCE(SUM(s.missing_count),0) missing_objects,'
+            . 'COUNT(DISTINCT s.required_package) missing_packages,'
+            . 'COUNT(DISTINCT s.file_id) files_with_missing '
+            . 'FROM ue_dependency_package_summaries s WHERE ' . $where
         );
         $statement->execute($args);
         $row = $statement->fetch(PDO::FETCH_ASSOC) ?: [];
@@ -114,38 +94,15 @@ final class PdoGameMissingDependencyQuery
         if ($gameId < 1 || $packageNames === []) {
             return [];
         }
-
-        if ((new PdoDependencyPackageSummary($this->db))->available()) {
-            [$where, $args] = $this->summaryWhere('s', $gameId, $packageNames);
-            $statement = $this->db->prepare(
-                'SELECT f.id file_id,f.package_name,f.original_name,g.name game_name,'
-                . 'SUM(s.missing_count) missing_object_rows,COUNT(*) missing_package_count,'
-                . 'GROUP_CONCAT(s.required_package ORDER BY s.required_package SEPARATOR ", ") missing_package_names '
-                . 'FROM ue_dependency_package_summaries s '
-                . 'JOIN ue_files f ON f.id=s.file_id JOIN ue_games g ON g.id=s.game_id '
-                . 'WHERE ' . $where . ' '
-                . 'GROUP BY f.id,f.package_name,f.original_name,g.name '
-                . 'ORDER BY missing_object_rows DESC,missing_package_count DESC,f.id '
-                . 'LIMIT ' . $limit . ' OFFSET ' . $offset
-            );
-            $statement->execute($args);
-            return $statement->fetchAll(PDO::FETCH_ASSOC) ?: [];
-        }
-
-        $termIds = $packageNames === null ? null : $this->termIds($packageNames);
-        if ($termIds === []) {
-            return [];
-        }
-        [$where, $args] = $this->linkWhere($gameId, $termIds);
+        $this->requireSummaryProjection();
+        [$where, $args] = $this->summaryWhere('s', $gameId, $packageNames);
         $statement = $this->db->prepare(
             'SELECT f.id file_id,f.package_name,f.original_name,g.name game_name,'
-            . 'COUNT(*) missing_object_rows,COUNT(DISTINCT l.required_package_term_id) missing_package_count,'
-            . 'GROUP_CONCAT(DISTINCT CONVERT(t.value_prefix USING utf8mb4) ORDER BY t.value_prefix SEPARATOR ", ") missing_package_names '
-            . 'FROM ue_dependency_links l '
-            . 'JOIN ue_files f ON f.id=l.file_id JOIN ue_games g ON g.id=f.game_id '
-            . 'JOIN ue_terms t ON t.id=l.required_package_term_id '
-            . 'WHERE ' . $where . ' '
-            . 'GROUP BY f.id,f.package_name,f.original_name,g.name '
+            . 'SUM(s.missing_count) missing_object_rows,COUNT(*) missing_package_count,'
+            . 'GROUP_CONCAT(s.required_package ORDER BY s.required_package SEPARATOR ", ") missing_package_names '
+            . 'FROM ue_dependency_package_summaries s '
+            . 'JOIN ue_files f ON f.id=s.file_id JOIN ue_games g ON g.id=s.game_id '
+            . 'WHERE ' . $where . ' GROUP BY f.id,f.package_name,f.original_name,g.name '
             . 'ORDER BY missing_object_rows DESC,missing_package_count DESC,f.id '
             . 'LIMIT ' . $limit . ' OFFSET ' . $offset
         );
@@ -161,33 +118,13 @@ final class PdoGameMissingDependencyQuery
         if ($gameId < 1 || $packageNames === []) {
             return [];
         }
-
-        if ((new PdoDependencyPackageSummary($this->db))->available()) {
-            [$where, $args] = $this->summaryWhere('s', $gameId, $packageNames);
-            $statement = $this->db->prepare(
-                'SELECT s.required_package,SUM(s.missing_count) missing_object_rows,COUNT(*) requiring_file_count '
-                . 'FROM ue_dependency_package_summaries s WHERE ' . $where . ' '
-                . 'GROUP BY s.required_package '
-                . 'ORDER BY missing_object_rows DESC,requiring_file_count DESC,s.required_package '
-                . 'LIMIT ' . $limit . ' OFFSET ' . $offset
-            );
-            $statement->execute($args);
-            return $statement->fetchAll(PDO::FETCH_ASSOC) ?: [];
-        }
-
-        $termIds = $packageNames === null ? null : $this->termIds($packageNames);
-        if ($termIds === []) {
-            return [];
-        }
-        [$where, $args] = $this->linkWhere($gameId, $termIds);
+        $this->requireSummaryProjection();
+        [$where, $args] = $this->summaryWhere('s', $gameId, $packageNames);
         $statement = $this->db->prepare(
-            'SELECT CONVERT(t.value_prefix USING utf8mb4) required_package,'
-            . 'COUNT(*) missing_object_rows,COUNT(DISTINCT l.file_id) requiring_file_count '
-            . 'FROM ue_dependency_links l JOIN ue_files f ON f.id=l.file_id '
-            . 'JOIN ue_terms t ON t.id=l.required_package_term_id '
-            . 'WHERE ' . $where . ' '
-            . 'GROUP BY l.required_package_term_id,t.value_prefix '
-            . 'ORDER BY missing_object_rows DESC,requiring_file_count DESC,l.required_package_term_id '
+            'SELECT s.required_package,SUM(s.missing_count) missing_object_rows,COUNT(*) requiring_file_count '
+            . 'FROM ue_dependency_package_summaries s WHERE ' . $where . ' '
+            . 'GROUP BY s.required_package '
+            . 'ORDER BY missing_object_rows DESC,requiring_file_count DESC,s.required_package '
             . 'LIMIT ' . $limit . ' OFFSET ' . $offset
         );
         $statement->execute($args);
@@ -201,26 +138,12 @@ final class PdoGameMissingDependencyQuery
         if ($gameId < 1 || $packageName === '' || !$this->scopeContains($packageName, $packageNames)) {
             return 0;
         }
-
-        if ((new PdoDependencyPackageSummary($this->db))->available()) {
-            $statement = $this->db->prepare(
-                'SELECT COALESCE(SUM(missing_count),0) FROM ue_dependency_package_summaries '
-                . 'WHERE game_id=? AND missing_count>0 AND required_package=?'
-            );
-            $statement->execute([$gameId, $packageName]);
-            return max(0, (int)($statement->fetchColumn() ?: 0));
-        }
-
-        $termId = $this->termId($packageName);
-        if ($termId < 1) {
-            return 0;
-        }
+        $this->requireSummaryProjection();
         $statement = $this->db->prepare(
-            'SELECT COUNT(*) FROM ue_dependency_links l JOIN ue_files f ON f.id=l.file_id '
-            . 'WHERE f.game_id=? AND f.scan_status="verified" AND l.status=0 '
-            . 'AND l.required_package_term_id=?'
+            'SELECT COALESCE(SUM(missing_count),0) FROM ue_dependency_package_summaries '
+            . 'WHERE game_id=? AND missing_count>0 AND required_package=?'
         );
-        $statement->execute([$gameId, $termId]);
+        $statement->execute([$gameId, $packageName]);
         return max(0, (int)($statement->fetchColumn() ?: 0));
     }
 
@@ -262,6 +185,15 @@ final class PdoGameMissingDependencyQuery
         );
         $statement->execute([$packageName, $gameId, $termId]);
         return $statement->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+
+    private function requireSummaryProjection(): void
+    {
+        if (!(new PdoDependencyPackageSummary($this->db))->available()) {
+            throw new \RuntimeException(
+                'Current v3 dependency package summary projection is unavailable; rebuild it before viewing missing dependencies.'
+            );
+        }
     }
 
     /** @param list<string>|null $packageNames @return array{0:string,1:list<mixed>} */
