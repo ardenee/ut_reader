@@ -60,10 +60,10 @@ final class CatalogCrossGameDependencyClosurePlanner
         if ((int)$root['game_id'] === $targetGameId) {
             throw new \RuntimeException('Cross-game dependency planning requires a sibling source game.');
         }
-        if (strcasecmp(trim((string)$root['source_engine']), trim((string)$target['engine_key'])) !== 0) {
-            throw new \RuntimeException('Cross-game dependency closure is limited to the same engine profile family.');
+        if (!$this->compatibleEngine((string)$target['engine_key'], (string)$root['source_engine'])) {
+            throw new \RuntimeException('The selected source package is outside the dependency-compatible engine family for this target.');
         }
-        if ((int)($root['format_version'] ?? 0) !== 2) {
+        if ((int)($root['format_version'] ?? 0) !== 3) {
             throw new \RuntimeException('The selected source package has no current format-3 dependency metadata.');
         }
 
@@ -153,4 +153,30 @@ final class CatalogCrossGameDependencyClosurePlanner
             'package_only_count' => count($packageOnlyKeys),
         ];
     }
+    private function compatibleEngine(string $targetEngine, string $sourceEngine): bool
+    {
+        $target = $this->engineGeneration($targetEngine);
+        $source = $this->engineGeneration($sourceEngine);
+        return match ($target) {
+            1 => $source === 1,
+            2 => $source === 1 || $source === 2,
+            3 => $source === 3,
+            4 => $source === 4,
+            5 => $source === 4 || $source === 5,
+            default => false,
+        };
+    }
+
+    private function engineGeneration(string $engineKey): int
+    {
+        $key = strtoupper(trim($engineKey));
+        if (preg_match('/^UE([1-5])(?:\\D|$)/', $key, $matches) === 1) {
+            return (int)$matches[1];
+        }
+        if (preg_match('/UNREAL(?:ENGINE)?[^0-9]*([1-5])/', $key, $matches) === 1) {
+            return (int)$matches[1];
+        }
+        return 0;
+    }
+
 }
