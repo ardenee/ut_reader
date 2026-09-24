@@ -219,6 +219,52 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
     }
 
     /**
+     * Complete a parsed snapshot without provider matching.
+     *
+     * Full Sync uses this during its source pass so every package publishes
+     * current parser-owned metadata before any dependency is resolved. The
+     * second pass then resolves these rows against the complete selected-game
+     * provider set without reopening the Unreal package.
+     *
+     * @param array<string,mixed> $snapshot
+     * @return array<string,mixed>
+     */
+    public function withUnresolvedDependencies(array $snapshot): array
+    {
+        $file = (array)($snapshot['file'] ?? []);
+        $fileId = (int)($file['id'] ?? 0);
+        $gameId = (int)($file['game_id'] ?? 0);
+        if ($fileId < 1 || $gameId < 1) {
+            throw new RuntimeException('Parsed compact dependency staging requires valid file and game identities.');
+        }
+
+        $dependencies = [];
+        foreach (array_values((array)($snapshot['imports'] ?? [])) as $import) {
+            if (!is_array($import)) {
+                throw new RuntimeException('Parsed compact Import snapshot contains a non-row value.');
+            }
+            $dependencies[] = [
+                'file_id' => $fileId,
+                'import_index' => (int)($import['import_index'] ?? -1),
+                'required_package' => (string)($import['root_package'] ?? ''),
+                'required_object_path' => (string)($import['full_path'] ?? ''),
+                'resolved_file_id' => null,
+                'resolved_export_index' => null,
+                'status' => (int)($import['is_common'] ?? 0) === 1 ? 'common' : 'missing',
+                'resolution_source' => (int)($import['is_common'] ?? 0) === 1 ? 'common_script' : 'none',
+                'resolution_confidence' => (int)($import['is_common'] ?? 0) === 1 ? 'common' : 'missing',
+            ];
+        }
+        if (count($dependencies) !== count((array)($snapshot['imports'] ?? []))) {
+            throw new RuntimeException('Parsed compact dependency staging did not produce one row per Import.');
+        }
+
+        $snapshot['dependencies'] = $dependencies;
+        $snapshot['source_format'] = 'parsed-package-current-dependencies-deferred';
+        return $snapshot;
+    }
+
+    /**
      * Resolve dependencies for an already normalized parsed snapshot.
      *
      * @param array<string,mixed> $snapshot
