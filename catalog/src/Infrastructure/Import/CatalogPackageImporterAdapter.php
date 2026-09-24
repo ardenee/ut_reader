@@ -172,7 +172,7 @@ final class CatalogPackageImporterAdapter implements CatalogPackageImporter
                 'maintenance_replace_file_id' => $maintenanceReplaceFileId,
             ],
         ];
-        $result = $this->publisher->publishMetadata($result, $inspection);
+        $result = $this->publisher->publishMetadata($result, $inspection, !$deferDependencyRebuild);
 
         $refreshWarning = $this->dependencies->refreshCanonical(
             $fileId,
