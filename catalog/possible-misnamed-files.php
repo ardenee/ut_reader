@@ -117,6 +117,7 @@ $resultPolicy = trim((string)($result['policy_version'] ?? ''));
 $resultIsCurrent = $resultPolicy !== '' && hash_equals($currentMisnamedPolicy, $resultPolicy);
 
 catalog_head('Possible Misnamed Files');
+echo '<style>.cross-good{display:inline-flex;padding:3px 7px;border-radius:999px;font-size:11px;font-weight:700;color:#b8f3cb;background:rgba(67,190,110,.15)}.cross-warn{display:inline-flex;padding:3px 7px;border-radius:999px;font-size:11px;font-weight:700;color:#f5d98b;background:rgba(246,196,83,.13)}</style>';
 
 echo '<div class="card hero"><h1>Possible Misnamed Files</h1>'
     . '<p class="muted">Find verified files whose current v3 exports exactly match object paths below the package root requested from a package name that is currently missing. '
@@ -286,7 +287,7 @@ if ($selected !== null && (string)$selected['status'] === 'completed') {
             $coverageStatus = (string)($candidate['coverage_status'] ?? 'partial');
             $coverageLabel = $coverageStatus === 'full' ? 'FULL ROOTLESS MATCH' : 'PARTIAL';
             echo '<tr>'
-                . '<td><strong>' . catalog_h($coverageLabel) . '</strong>'
+                . '<td><span class="' . ($coverageStatus === 'full' ? 'cross-good' : 'cross-warn') . '">' . catalog_h($coverageLabel) . '</span>'
                 . '<div class="small">' . number_format($matchedObjects) . ' / ' . number_format($requiredObjects) . ' required objects</div>'
                 . '<div class="small muted">' . catalog_h(possible_misnamed_confidence_label($confidence))
                 . ' evidence · score ' . (int)($candidate['score'] ?? 0) . '</div></td>'
