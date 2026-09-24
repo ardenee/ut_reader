@@ -33,6 +33,7 @@ $options = getopt('', [
     'after-id::',
     'limit::',
     'keep-v3',
+    'storage-root::',
 ]);
 
 $apply = array_key_exists('apply', $options);
@@ -44,9 +45,11 @@ $limit = isset($options['limit']) ? max(1, min(1000000, (int)$options['limit']))
 
 $config = catalog_config();
 $db = catalog_db($config);
-$storageRoot = trim((string)($config['storage_path'] ?? ''));
+$configuredStorageRoot = trim((string)($config['storage_path'] ?? ''));
+$storageRoot = trim((string)($options['storage-root'] ?? $configuredStorageRoot));
+$storageRoot = rtrim($storageRoot, "\\/");
 if ($storageRoot === '') {
-    throw new RuntimeException('catalog.storage_path is required.');
+    throw new RuntimeException('Metadata storage root is required via catalog.storage_path or --storage-root.');
 }
 
 $sql = 'SELECT f.id,f.game_id,f.package_name,UPPER(TRIM(COALESCE(p.engine_key,""))) engine_key'
@@ -158,6 +161,7 @@ foreach ($files as $position => $file) {
 echo json_encode([
     'ok' => $failed === 0,
     'apply' => $apply,
+    'storage_root' => $storageRoot,
     'keep_v3' => $keepV3,
     'selected' => count($files),
     'converted' => $converted,
