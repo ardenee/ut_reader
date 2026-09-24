@@ -220,6 +220,10 @@ final class CatalogMisnamedFileDetector
                         ),
                         'current_dependants' => 0,
                         'required_objects' => count((array)($requiredPathsByPackage[$packageTermId] ?? [])),
+                        'required_paths' => array_values(array_filter(array_map(
+                            static fn(int $termId): string => trim((string)($requiredObjectPaths[$termId] ?? '')),
+                            array_values((array)($requiredPathsByPackage[$packageTermId] ?? []))
+                        ), static fn(string $path): bool => $path !== '')),
                         'collision_suffix_match' => $collisionSuffixMatch,
                         'matched_object_term_ids' => [],
                         'best_same_file_matches' => 0,
@@ -260,6 +264,19 @@ final class CatalogMisnamedFileDetector
             $group['matched_object_term_ids'] = $termIds;
             $group['matching_objects'] = $matched;
             $requiredTotal = max(0, (int)($group['required_objects'] ?? 0));
+            $requiredPaths = array_values(array_unique(array_map('strval', (array)($group['required_paths'] ?? []))));
+            sort($requiredPaths, SORT_NATURAL | SORT_FLAG_CASE);
+            $group['required_paths'] = $requiredPaths;
+            $matchedPathSet = [];
+            foreach ((array)($group['evidence'] ?? []) as $evidenceRow) {
+                foreach ((array)($evidenceRow['matched_paths'] ?? []) as $path => $value) {
+                    $matchedPathSet[is_string($path) ? $path : (string)$value] = true;
+                }
+            }
+            $group['missing_paths'] = array_values(array_filter(
+                $requiredPaths,
+                static fn(string $path): bool => !isset($matchedPathSet[$path])
+            ));
             $group['coverage_status'] = $requiredTotal > 0 && $matched >= $requiredTotal ? 'full' : 'partial';
             $group['coverage_percent'] = $requiredTotal > 0
                 ? min(100, (int)floor(($matched * 100) / $requiredTotal))
