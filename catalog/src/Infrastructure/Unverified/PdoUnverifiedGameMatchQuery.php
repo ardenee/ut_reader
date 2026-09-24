@@ -282,7 +282,7 @@ final class PdoUnverifiedGameMatchQuery
                 . 'CONVERT(object_term.value_prefix USING utf8mb4) COLLATE utf8mb4_unicode_ci required_object_path,'
                 . 'owner.game_id,g.name game_name '
                 . 'FROM ue_dependency_links l '
-                . 'JOIN ue_file_metadata m ON m.file_id=l.file_id AND m.format_version=3 '
+                . 'JOIN ue_file_metadata m ON m.file_id=l.file_id AND m.format_version=' . \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer::FORMAT_VERSION . ' '
                 . 'JOIN ue_terms object_term ON object_term.id=l.required_object_term_id '
                 . 'JOIN ue_files owner ON owner.id=l.file_id AND owner.scan_status="verified" '
                 . 'JOIN ue_games g ON g.id=owner.game_id '
