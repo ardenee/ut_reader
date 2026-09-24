@@ -155,15 +155,21 @@ final class CompressedMetadataLookupWriter
             ?? $this->resolveTermIds($this->snapshotTermValues($snapshot), $sqlBatches);
 
         $this->db->prepare('DELETE FROM ue_export_lookup WHERE file_id=?')->execute([$fileId]);
+        $this->db->prepare('DELETE FROM ue_export_path_lookup WHERE file_id=?')->execute([$fileId]);
         $this->db->prepare('DELETE FROM ue_legacy_export_identity_lookup WHERE file_id=?')->execute([$fileId]);
         $this->db->prepare('DELETE FROM ue_dependency_links WHERE file_id=?')->execute([$fileId]);
-        $sqlBatches += 3;
+        $this->db->prepare('DELETE FROM ue_dependency_identity_lookup WHERE file_id=?')->execute([$fileId]);
+        $sqlBatches += 5;
 
         $exportColumns = [
             'file_id', 'export_index', 'object_term_id', 'class_term_id',
-            'path_hash', 'path_hash_ci', 'local_path_term_id',
+            'path_hash', 'local_path_term_id',
+        ];
+        $exportPathColumns = [
+            'file_id', 'export_index', 'path_hash_ci', 'local_path_term_id', 'class_term_id',
         ];
         $exportRows = [];
+        $exportPathRows = [];
         foreach ($exports as $row) {
             if (!is_array($row)) {
                 continue;
@@ -172,24 +178,35 @@ final class CompressedMetadataLookupWriter
             $object = (string)$row['object_name'];
             $class = trim((string)($row['class_name'] ?? ''));
             $localPath = (string)($paths['exports'][$index]['local'] ?? '');
+            $classTermId = $class !== '' ? $this->requiredTermId($termIds, $class) : null;
+            $localPathTermId = $this->requiredTermId($termIds, $localPath);
             $exportRows[] = [
                 $fileId,
                 $index,
                 $this->requiredTermId($termIds, $object),
-                $class !== '' ? $this->requiredTermId($termIds, $class) : null,
+                $classTermId,
                 md5($localPath, true),
+                $localPathTermId,
+            ];
+            $exportPathRows[] = [
+                $fileId,
+                $index,
                 CatalogUnrealIdentityHash::objectPathBinary($localPath),
-                $this->requiredTermId($termIds, $localPath),
+                $localPathTermId,
+                $classTermId,
             ];
             if (count($exportRows) >= self::WRITE_BATCH_SIZE) {
                 $this->insertBatch('ue_export_lookup', $exportColumns, $exportRows);
-                $sqlBatches++;
+                $this->insertBatch('ue_export_path_lookup', $exportPathColumns, $exportPathRows);
+                $sqlBatches += 2;
                 $exportRows = [];
+                $exportPathRows = [];
             }
         }
         if ($exportRows !== []) {
             $this->insertBatch('ue_export_lookup', $exportColumns, $exportRows);
-            $sqlBatches++;
+            $this->insertBatch('ue_export_path_lookup', $exportPathColumns, $exportPathRows);
+            $sqlBatches += 2;
         }
 
         if ($this->isLegacyVerifyImportGame((int)($file['game_id'] ?? 0))) {
@@ -201,7 +218,7 @@ final class CompressedMetadataLookupWriter
                 $this->insertBatch(
                     'ue_legacy_export_identity_lookup',
                     [
-                        'file_id', 'export_index', 'identity_hash', 'object_term_id',
+                        'file_id', 'export_index', 'identity_hash', 'path_hash_ci', 'object_term_id',
                         'class_package_term_id', 'class_name_term_id', 'outer_index', 'object_flags',
                     ],
                     $chunk
@@ -212,12 +229,16 @@ final class CompressedMetadataLookupWriter
 
         $dependencyColumns = [
             'file_id', 'import_index', 'required_package_term_id', 'required_path_hash',
-            'verify_identity_hash', 'required_path_hash_ci',
             'required_object_term_id', 'import_class_package_term_id', 'import_class_name_term_id',
             'import_object_term_id', 'resolved_file_id', 'resolved_export_index', 'status', 'resolution_source',
             'resolution_confidence', 'resolution_source_term_id', 'resolution_confidence_term_id',
         ];
+        $dependencyIdentityColumns = [
+            'file_id', 'import_index', 'required_package_term_id',
+            'verify_identity_hash', 'required_path_hash_ci',
+        ];
         $dependencyRows = [];
+        $dependencyIdentityRows = [];
         foreach ($dependencies as $row) {
             if (!is_array($row)) {
                 continue;
@@ -239,17 +260,20 @@ final class CompressedMetadataLookupWriter
             $requiredObject = (string)$row['required_object_path'];
             $classPackage = trim((string)($import['class_package'] ?? ''));
             $className = trim((string)($import['class_name'] ?? ''));
+            $requiredPackageTermId = $this->requiredTermId($termIds, (string)$row['required_package']);
+            $relativePath = (string)$paths['imports'][$index]['relative'];
+            $verifyIdentityHash = (($import['verify_identity_hash'] ?? '') !== '')
+                ? hex2bin((string)$import['verify_identity_hash'])
+                : null;
+            $requiredPathHashCi = (($import['path_hash_ci'] ?? '') !== '')
+                ? hex2bin((string)$import['path_hash_ci'])
+                : CatalogUnrealIdentityHash::objectPathBinary($relativePath);
+
             $dependencyRows[] = [
                 $fileId,
                 $index,
-                $this->requiredTermId($termIds, (string)$row['required_package']),
-                md5((string)$paths['imports'][$index]['relative'], true),
-                (($import['verify_identity_hash'] ?? '') !== '')
-                    ? hex2bin((string)$import['verify_identity_hash'])
-                    : null,
-                (($import['path_hash_ci'] ?? '') !== '')
-                    ? hex2bin((string)$import['path_hash_ci'])
-                    : CatalogUnrealIdentityHash::objectPathBinary((string)$paths['imports'][$index]['relative']),
+                $requiredPackageTermId,
+                md5($relativePath, true),
                 $this->requiredTermId($termIds, $requiredObject),
                 $classPackage !== '' ? $this->requiredTermId($termIds, $classPackage) : null,
                 $className !== '' ? $this->requiredTermId($termIds, $className) : null,
@@ -264,15 +288,33 @@ final class CompressedMetadataLookupWriter
                 $this->requiredTermId($termIds, $source),
                 $this->requiredTermId($termIds, $confidence),
             ];
+            $dependencyIdentityRows[] = [
+                $fileId,
+                $index,
+                $requiredPackageTermId,
+                $verifyIdentityHash,
+                $requiredPathHashCi,
+            ];
             if (count($dependencyRows) >= self::WRITE_BATCH_SIZE) {
                 $this->insertBatch('ue_dependency_links', $dependencyColumns, $dependencyRows);
-                $sqlBatches++;
+                $this->insertBatch(
+                    'ue_dependency_identity_lookup',
+                    $dependencyIdentityColumns,
+                    $dependencyIdentityRows
+                );
+                $sqlBatches += 2;
                 $dependencyRows = [];
+                $dependencyIdentityRows = [];
             }
         }
         if ($dependencyRows !== []) {
             $this->insertBatch('ue_dependency_links', $dependencyColumns, $dependencyRows);
-            $sqlBatches++;
+            $this->insertBatch(
+                'ue_dependency_identity_lookup',
+                $dependencyIdentityColumns,
+                $dependencyIdentityRows
+            );
+            $sqlBatches += 2;
         }
 
         $timestamp = gmdate('Y-m-d H:i:s');
