@@ -117,7 +117,8 @@ final class VerifiedFileCompactMetadataFinalizer
         array $names,
         array $imports,
         array $exports,
-        ?callable $progress = null
+        ?callable $progress = null,
+        bool $resolveDependencies = true
     ): array {
         if ((string)($result[0] ?? '') !== 'verified') {
             return $result;
@@ -155,7 +156,8 @@ final class VerifiedFileCompactMetadataFinalizer
                 ? $baseline['metadata']
                 : null;
 
-            if (is_array($baselineMetadata)
+            if ($resolveDependencies
+                && is_array($baselineMetadata)
                 && CatalogParsedPackageMetadataSnapshotBuilder::parsedContentFingerprint($parsed)
                     === CatalogParsedPackageMetadataSnapshotBuilder::parsedContentFingerprint($baselineMetadata)) {
                 $registration = is_array($baseline['registration'] ?? null)
@@ -175,7 +177,9 @@ final class VerifiedFileCompactMetadataFinalizer
                     'republished_from_parser' => false,
                 ];
             } else {
-                $snapshot = $builder->withDependencies($parsed);
+                $snapshot = $resolveDependencies
+                    ? $builder->withDependencies($parsed)
+                    : $builder->withUnresolvedDependencies($parsed);
                 $conversion = self::publishWithContentionRetry(
                     $db,
                     $storageRoot,
@@ -186,6 +190,7 @@ final class VerifiedFileCompactMetadataFinalizer
                 $conversion['already_compact'] = false;
                 $conversion['reused_unchanged'] = false;
                 $conversion['republished_from_parser'] = true;
+                $conversion['dependencies_deferred'] = !$resolveDependencies;
             }
 
             if (
@@ -295,6 +300,7 @@ final class VerifiedFileCompactMetadataFinalizer
         $details['metadata_already_compact'] = !empty($conversion['already_compact']);
         $details['metadata_reused_unchanged'] = !empty($conversion['reused_unchanged']);
         $details['metadata_republished_from_parser'] = !empty($conversion['republished_from_parser']);
+        $details['metadata_dependencies_deferred'] = !empty($conversion['dependencies_deferred']);
         $result[4] = $details;
 
         self::emit($progress, 100, 'Verified compact metadata for file #' . $fileId);
