@@ -55,6 +55,19 @@ final class PdoDependencyResolver
         }
 
         $packageMatches = self::loadPackageMatches($db, $gameId, $fileId, array_values($packageNames));
+        $legacyVerifyImport = in_array(self::engineKey($db, $gameId), ['UE1', 'UE2'], true);
+        $verifyImportMatches = [];
+        if ($legacyVerifyImport) {
+            require_once __DIR__ . '/PdoLegacyVerifyImportProjectionResolver.php';
+            foreach ($packageMatches as $packageKey => $packageMatch) {
+                $verifyImportMatches[$packageKey] = PdoLegacyVerifyImportProjectionResolver::resolveProviderVariants(
+                    $db,
+                    (int)$packageMatch['file_id'],
+                    $imports
+                );
+            }
+        }
+
         $packageRequirements = [];
         foreach ($objectLookups as $lookup) {
             $packageKey = self::normalizeLookup($lookup['package_name']);
@@ -70,17 +83,19 @@ final class PdoDependencyResolver
             ];
         }
         $completeProviders = [];
-        foreach ($packageRequirements as $packageKey => $requirement) {
-            $provider = PdoPackageObjectCoverageResolver::chooseCompleteProvider(
-                $db,
-                $gameId,
-                (string)$requirement['package_name'],
-                array_values(array_unique((array)$requirement['paths'])),
-                $fileId,
-                (array)($requirement['classes'] ?? [])
-            );
-            if ($provider !== null) {
-                $completeProviders[$packageKey] = $provider;
+        if (!$legacyVerifyImport) {
+            foreach ($packageRequirements as $packageKey => $requirement) {
+                $provider = PdoPackageObjectCoverageResolver::chooseCompleteProvider(
+                    $db,
+                    $gameId,
+                    (string)$requirement['package_name'],
+                    array_values(array_unique((array)$requirement['paths'])),
+                    $fileId,
+                    (array)($requirement['classes'] ?? [])
+                );
+                if ($provider !== null) {
+                    $completeProviders[$packageKey] = $provider;
+                }
             }
         }
         $resolved = [];
@@ -118,27 +133,58 @@ final class PdoDependencyResolver
                 }
             } else {
                 $packageKey = self::normalizeLookup($rootPackage);
-                $completeProvider = $completeProviders[$packageKey] ?? null;
-                $relativeKey = self::normalizeLookup((string)($import['relative_object_path'] ?? ''));
-                $exportIndex = is_array($completeProvider)
-                    ? (($completeProvider['matched_exports'][$relativeKey] ?? null))
-                    : null;
-                $exportMatch = $exportIndex !== null
-                    ? [
-                        'file_id' => (int)$completeProvider['file_id'],
-                        'export_index' => (int)$exportIndex,
-                        'source' => 'complete_package_object',
-                    ]
-                    : null;
-                if ($exportMatch !== null) {
-                    $result = [
-                        'status' => 'resolved',
-                        'resolved_file_id' => $exportMatch['file_id'],
-                        'resolved_export_id' => null,
-                        'resolved_export_index' => $exportMatch['export_index'],
-                        'source' => $exportMatch['source'],
-                        'confidence' => 'exact',
-                    ];
+                if ($legacyVerifyImport) {
+                    $packageMatch = $packageMatches[$packageKey] ?? null;
+                    $importIndex = (int)($import['import_index'] ?? -1);
+                    $variants = $verifyImportMatches[$packageKey] ?? [];
+                    $exportIndex = is_array($variants)
+                        ? ($variants['standard'][$importIndex] ?? null)
+                        : null;
+                    $unreal2OnlyIndex = is_array($variants)
+                        ? ($variants['unreal2_only'][$importIndex] ?? null)
+                        : null;
+                    if ($packageMatch !== null && $exportIndex !== null) {
+                        $result = [
+                            'status' => 'resolved',
+                            'resolved_file_id' => (int)$packageMatch['file_id'],
+                            'resolved_export_id' => null,
+                            'resolved_export_index' => (int)$exportIndex,
+                            'source' => 'ue_verify_import',
+                            'confidence' => 'exact',
+                        ];
+                    } elseif ($packageMatch !== null && $unreal2OnlyIndex !== null) {
+                        $result = [
+                            'status' => 'missing',
+                            'resolved_file_id' => null,
+                            'resolved_export_id' => null,
+                            'resolved_export_index' => null,
+                            'source' => 'ue_verify_import_unreal2_private_candidate',
+                            'confidence' => 'unreal2_candidate',
+                        ];
+                    }
+                } else {
+                    $completeProvider = $completeProviders[$packageKey] ?? null;
+                    $relativeKey = self::normalizeLookup((string)($import['relative_object_path'] ?? ''));
+                    $exportIndex = is_array($completeProvider)
+                        ? (($completeProvider['matched_exports'][$relativeKey] ?? null))
+                        : null;
+                    $exportMatch = $exportIndex !== null
+                        ? [
+                            'file_id' => (int)$completeProvider['file_id'],
+                            'export_index' => (int)$exportIndex,
+                            'source' => 'complete_package_object',
+                        ]
+                        : null;
+                    if ($exportMatch !== null) {
+                        $result = [
+                            'status' => 'resolved',
+                            'resolved_file_id' => $exportMatch['file_id'],
+                            'resolved_export_id' => null,
+                            'resolved_export_index' => $exportMatch['export_index'],
+                            'source' => $exportMatch['source'],
+                            'confidence' => 'exact',
+                        ];
+                    }
                 }
             }
             $resolved[$importId] = $result;
@@ -166,6 +212,18 @@ final class PdoDependencyResolver
             return true;
         }
         return str_starts_with(strtolower(trim((string)($import['root_package'] ?? ''))), '/script/');
+    }
+
+    private static function engineKey(PDO $db, int $gameId): string
+    {
+        $row = \catalog_one(
+            $db,
+            'SELECT p.engine_key FROM ue_games g'
+            . ' LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1'
+            . ' WHERE g.id=? LIMIT 1',
+            [$gameId]
+        );
+        return strtoupper(trim((string)($row['engine_key'] ?? '')));
     }
 
     /** @param list<string> $packageNames @return array<string,array{file_id:int,source:string}> */
