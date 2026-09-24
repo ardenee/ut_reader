@@ -172,6 +172,18 @@ final class BlockedCompressedMetadataReader
         return $found;
     }
 
+    /** @return array{row_schema_version:int,identity_hash_algorithm:string,path_hash_algorithm:string} */
+    public function schemaInfo(int $fileId): array
+    {
+        $context = $this->manifest($fileId);
+        $manifest = (array)($context['manifest'] ?? []);
+        return [
+            'row_schema_version' => (int)($manifest['row_schema_version'] ?? 1),
+            'identity_hash_algorithm' => (string)($manifest['identity_hash_algorithm'] ?? ''),
+            'path_hash_algorithm' => (string)($manifest['path_hash_algorithm'] ?? ''),
+        ];
+    }
+
     /** @return array<string,mixed> */
     public function verify(int $fileId): array
     {
