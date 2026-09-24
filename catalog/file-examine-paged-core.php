@@ -255,6 +255,17 @@ try {
         . ' elapsed_ms=' . $fetchElapsedMs
     );
     $rows = $page['rows'];
+    // Relationship counts belong to the tab chrome, so compute the two
+    // distinct-package counts on every examiner request rather than only after
+    // the relationship tab has been selected.
+    $relationshipCounts = catalog_one(
+        $db,
+        'SELECT '
+        . '(SELECT COUNT(DISTINCT resolved_file_id) FROM ue_dependency_links WHERE file_id=? AND resolved_file_id IS NOT NULL) uses_count,'
+        . '(SELECT COUNT(DISTINCT file_id) FROM ue_dependency_links WHERE resolved_file_id=?) used_by_count',
+        [$fileId, $fileId]
+    ) ?: ['uses_count' => 0, 'used_by_count' => 0];
+
     $relationshipRows = [];
     if ($table === 'uses') {
         $relationshipRows = catalog_all($db,
@@ -325,10 +336,12 @@ try {
         'names' => (int)$file['name_count'],
         'imports' => (int)$file['import_count'],
         'exports' => (int)$file['export_count'],
+        'uses' => (int)($relationshipCounts['uses_count'] ?? 0),
+        'used-by' => (int)($relationshipCounts['used_by_count'] ?? 0),
     ];
     echo '<div class="card" id="package-tables"><nav class="examine-tabs">';
     foreach (['names' => 'Names','imports' => 'Imports','exports' => 'Exports','uses' => 'Uses','used-by' => 'Used By'] as $key => $label) {
-        $tabCount = array_key_exists($key, $counts) ? $counts[$key] : ($table === $key ? count($relationshipRows) : '');
+        $tabCount = $counts[$key] ?? '';
         echo '<a class="examine-tab' . ($table === $key ? ' is-active' : '') . '" href="' . catalog_h(examine_tab_href($fileId, $key, $pageSize)) . '">' . $label . ($tabCount !== '' ? ' <span>' . $tabCount . '</span>' : '') . '</a>';
     }
     echo '</nav><section data-file-examine-native-panel>';
