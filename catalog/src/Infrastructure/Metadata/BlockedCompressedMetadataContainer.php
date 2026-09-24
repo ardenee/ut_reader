@@ -275,7 +275,7 @@ final class BlockedCompressedMetadataContainer
                     }
                     $compressed = self::readExactly($stream, $length);
                     hash_update($hash, $compressed);
-                    self::verifyCompressedBlock($compressed, $block);
+                    self::verifyCompressedBlock($compressed, $block, (string)$section);
                     $expectedOffset += $length;
                     $verifiedBlocks++;
                 }
