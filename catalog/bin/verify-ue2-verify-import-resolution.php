@@ -193,12 +193,27 @@ $check(
         && str_contains($matcherSource, 'not reproducible from package data alone'),
     'Runtime native/transient objects are not silently replaced with a package-data guess.'
 );
+$privateExports = $providerExports;
+$privateExports[0]['object_flags'] = 0;
+$variants = PdoLegacyVerifyImportMatcher::matchVariants(
+    $baseConsumer,
+    $providerImports,
+    $privateExports,
+    'TestPkg'
+);
+$check(
+    'private_export_revision_difference',
+    !isset($variants['standard'][1])
+        && ($variants['unreal2'][1] ?? null) === 0
+        && ($variants['unreal2_only'][1] ?? null) === 0,
+    'UE2.5/UT2004 reject the private Export while the supplied Unreal II revision accepts the same exact VerifyImport match.'
+);
 $check(
     'private_export_revision_difference_is_explicit',
-    str_contains($matcherSource, 'does not enforce RF_Public')
-        && str_contains($matcherSource, 'UE2.5/UT2004 reject a private Export')
-        && str_contains($matcherSource, 'Unreal II revision compiles that'),
-    'The reviewed Unreal II and UE2.5/UT2004 sources disagree on the private-Export failure path, so the matcher must not hide that distinction.'
+    str_contains($matcherSource, 'standard')
+        && str_contains($matcherSource, 'unreal2_only')
+        && str_contains($matcherSource, 'RF_PUBLIC'),
+    'The matcher must retain both reviewed private-Export behaviours so Unreal II-only candidates remain queryable.'
 );
 
 $ok = !in_array(false, array_column($checks, 'ok'), true);
