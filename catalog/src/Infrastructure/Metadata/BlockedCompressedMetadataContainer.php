@@ -330,6 +330,9 @@ final class BlockedCompressedMetadataContainer
             'format_version' => self::FORMAT_VERSION,
             'codec' => 'gzip-blocks',
             'block_size' => $blockSize,
+            'row_schema_version' => 2,
+            'identity_hash_algorithm' => CatalogUnrealIdentityHash::VERIFY_IMPORT_ALGORITHM,
+            'path_hash_algorithm' => CatalogUnrealIdentityHash::OBJECT_PATH_ALGORITHM,
             'file' => [
                 'id' => $fileId,
                 'game_id' => (int)($file['game_id'] ?? 0),
@@ -496,6 +499,8 @@ final class BlockedCompressedMetadataContainer
                         $row['class_package_name_index'] !== null ? (int)$row['class_package_name_index'] : null,
                         $row['class_name_index'] !== null ? (int)$row['class_name_index'] : null,
                         $row['object_name_index'] !== null ? (int)$row['object_name_index'] : null,
+                        $intern((string)($row['verify_identity_hash'] ?? '')),
+                        $intern((string)($row['path_hash_ci'] ?? '')),
                     ];
                     break;
 
@@ -516,6 +521,10 @@ final class BlockedCompressedMetadataContainer
                         (int)($row['super_index'] ?? 0),
                         (int)($row['template_index'] ?? 0),
                         $row['object_name_index'] !== null ? (int)$row['object_name_index'] : null,
+                        $intern(trim((string)($row['verify_class_package'] ?? ''))),
+                        $intern(trim((string)($row['verify_class_name'] ?? ''))),
+                        $intern((string)($row['verify_identity_hash'] ?? '')),
+                        $intern((string)($row['path_hash_ci'] ?? '')),
                     ];
                     break;
 
