@@ -99,8 +99,9 @@ final class CompressedMetadataLookupWriter
             ?? $this->resolveTermIds($this->snapshotTermValues($snapshot), $sqlBatches);
 
         $this->db->prepare('DELETE FROM ue_export_lookup WHERE file_id=?')->execute([$fileId]);
+        $this->db->prepare('DELETE FROM ue_legacy_export_identity_lookup WHERE file_id=?')->execute([$fileId]);
         $this->db->prepare('DELETE FROM ue_dependency_links WHERE file_id=?')->execute([$fileId]);
-        $sqlBatches += 2;
+        $sqlBatches += 3;
 
         $exportColumns = [
             'file_id', 'export_index', 'object_term_id', 'class_term_id', 'path_hash', 'local_path_term_id',
@@ -133,10 +134,61 @@ final class CompressedMetadataLookupWriter
             $sqlBatches++;
         }
 
+        if ($this->isLegacyVerifyImportGame((int)($file['game_id'] ?? 0))) {
+            $legacyColumns = [
+                'file_id', 'export_index', 'identity_hash', 'object_term_id',
+                'class_package_term_id', 'class_name_term_id', 'outer_index', 'object_flags',
+            ];
+            $legacyRows = [];
+            $importsByIndexForClass = [];
+            foreach ($imports as $importRow) {
+                if (is_array($importRow)) {
+                    $importsByIndexForClass[(int)$importRow['import_index']] = $importRow;
+                }
+            }
+            $exportsByIndexForClass = [];
+            foreach ($exports as $exportRow) {
+                if (is_array($exportRow)) {
+                    $exportsByIndexForClass[(int)$exportRow['export_index']] = $exportRow;
+                }
+            }
+            foreach ($exportsByIndexForClass as $index => $row) {
+                [$classPackage, $className] = $this->legacyExportClassIdentity(
+                    $row,
+                    $importsByIndexForClass,
+                    $exportsByIndexForClass,
+                    (string)($file['package_name'] ?? '')
+                );
+                $objectName = trim((string)($row['object_name'] ?? ''));
+                if ($objectName === '' || $classPackage === '' || $className === '') {
+                    continue;
+                }
+                $legacyRows[] = [
+                    $fileId,
+                    (int)$index,
+                    self::legacyIdentityHash($objectName, $className, $classPackage),
+                    $this->requiredTermId($termIds, $objectName),
+                    $this->requiredTermId($termIds, $classPackage),
+                    $this->requiredTermId($termIds, $className),
+                    (int)($row['outer_index'] ?? 0),
+                    (int)($row['object_flags'] ?? 0),
+                ];
+                if (count($legacyRows) >= self::WRITE_BATCH_SIZE) {
+                    $this->insertBatch('ue_legacy_export_identity_lookup', $legacyColumns, $legacyRows);
+                    $sqlBatches++;
+                    $legacyRows = [];
+                }
+            }
+            if ($legacyRows !== []) {
+                $this->insertBatch('ue_legacy_export_identity_lookup', $legacyColumns, $legacyRows);
+                $sqlBatches++;
+            }
+        }
+
         $dependencyColumns = [
             'file_id', 'import_index', 'required_package_term_id', 'required_path_hash',
             'required_object_term_id', 'import_class_package_term_id', 'import_class_name_term_id',
-            'resolved_file_id', 'resolved_export_index', 'status', 'resolution_source',
+            'import_object_term_id', 'resolved_file_id', 'resolved_export_index', 'status', 'resolution_source',
             'resolution_confidence', 'resolution_source_term_id', 'resolution_confidence_term_id',
         ];
         $dependencyRows = [];
@@ -169,6 +221,9 @@ final class CompressedMetadataLookupWriter
                 $this->requiredTermId($termIds, $requiredObject),
                 $classPackage !== '' ? $this->requiredTermId($termIds, $classPackage) : null,
                 $className !== '' ? $this->requiredTermId($termIds, $className) : null,
+                trim((string)($import['object_name'] ?? '')) !== ''
+                    ? $this->requiredTermId($termIds, trim((string)$import['object_name']))
+                    : null,
                 $row['resolved_file_id'] !== null ? (int)$row['resolved_file_id'] : null,
                 $row['resolved_export_index'] !== null ? (int)$row['resolved_export_index'] : null,
                 $status,
@@ -245,6 +300,10 @@ final class CompressedMetadataLookupWriter
     private function snapshotTermValues(array $snapshot): \Generator
     {
         $paths = (array)($snapshot['paths'] ?? []);
+        $file = (array)($snapshot['file'] ?? []);
+        if (trim((string)($file['package_name'] ?? '')) !== '') {
+            yield trim((string)$file['package_name']);
+        }
 
         foreach ((array)($snapshot['names'] ?? []) as $row) {
             if (is_array($row)) {
@@ -467,6 +526,78 @@ final class CompressedMetadataLookupWriter
                 usleep(PdoContention::backoffMicros($attempt, 10000));
             }
         }
+    }
+
+    private function isLegacyVerifyImportGame(int $gameId): bool
+    {
+        if ($gameId < 1) {
+            return false;
+        }
+        $statement = $this->db->prepare(
+            'SELECT UPPER(TRIM(COALESCE(p.engine_key,""))) engine_key'
+            . ' FROM ue_games g'
+            . ' LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1'
+            . ' WHERE g.id=? LIMIT 1'
+        );
+        $statement->execute([$gameId]);
+        return in_array((string)$statement->fetchColumn(), ['UE1', 'UE2'], true);
+    }
+
+    /**
+     * Mirrors UE1/UE2 ULinkerLoad::GetExportClassName/GetExportClassPackage.
+     *
+     * @param array<string,mixed> $export
+     * @param array<int,array<string,mixed>> $imports
+     * @param array<int,array<string,mixed>> $exports
+     * @return array{0:string,1:string}
+     */
+    private function legacyExportClassIdentity(
+        array $export,
+        array $imports,
+        array $exports,
+        string $packageName
+    ): array {
+        $classIndex = (int)($export['class_index'] ?? 0);
+        if ($classIndex < 0) {
+            $classImport = $imports[-$classIndex - 1] ?? null;
+            if (!is_array($classImport)) {
+                return ['', ''];
+            }
+            $className = trim((string)($classImport['object_name'] ?? ''));
+            $outerIndex = (int)($classImport['outer_index'] ?? 0);
+            if ($outerIndex >= 0) {
+                return ['', $className];
+            }
+            $classPackageImport = $imports[-$outerIndex - 1] ?? null;
+            return [
+                is_array($classPackageImport) ? trim((string)($classPackageImport['object_name'] ?? '')) : '',
+                $className,
+            ];
+        }
+        if ($classIndex > 0) {
+            $classExport = $exports[$classIndex - 1] ?? null;
+            return [
+                trim($packageName),
+                is_array($classExport) ? trim((string)($classExport['object_name'] ?? '')) : '',
+            ];
+        }
+        return ['Core', 'Class'];
+    }
+
+    private static function legacyIdentityHash(string $objectName, string $className, string $classPackage): string
+    {
+        return md5(
+            self::legacyIdentityKey($objectName) . "\0"
+            . self::legacyIdentityKey($className) . "\0"
+            . self::legacyIdentityKey($classPackage),
+            true
+        );
+    }
+
+    private static function legacyIdentityKey(string $value): string
+    {
+        $value = trim($value);
+        return function_exists('mb_strtolower') ? mb_strtolower($value, 'UTF-8') : strtolower($value);
     }
 
     /** @param array<string,int> $termIds */
