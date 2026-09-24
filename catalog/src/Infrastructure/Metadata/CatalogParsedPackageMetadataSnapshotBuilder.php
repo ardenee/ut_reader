@@ -281,14 +281,38 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
             throw new RuntimeException('Parsed compact dependency resolution requires valid file and game identities.');
         }
 
+        $engineRow = \catalog_one(
+            $this->db,
+            'SELECT p.engine_key FROM ue_games g'
+            . ' LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1'
+            . ' WHERE g.id=? LIMIT 1',
+            [$gameId]
+        );
+        $legacyVerifyImport = in_array(
+            strtoupper(trim((string)($engineRow['engine_key'] ?? ''))),
+            ['UE1', 'UE2'],
+            true
+        );
+
         $localExports = [];
-        foreach ($exportRows as $export) {
-            if (!is_array($export)) {
-                continue;
-            }
-            $lookupKey = $this->lookupKey((string)($export['full_path'] ?? ''));
-            if ($lookupKey !== '' && !isset($localExports[$lookupKey])) {
-                $localExports[$lookupKey] = (int)($export['export_index'] ?? 0);
+        $localVerifyImportMatches = ['standard' => [], 'unreal2' => [], 'unreal2_only' => []];
+        if ($legacyVerifyImport) {
+            require_once dirname(__DIR__) . '/Persistence/PdoLegacyVerifyImportProjectionResolver.php';
+            $localVerifyImportMatches = \UnrealDb\Catalog\Infrastructure\Persistence\PdoLegacyVerifyImportProjectionResolver::resolveInMemoryVariants(
+                $importRows,
+                $importRows,
+                $exportRows,
+                $packageName
+            );
+        } else {
+            foreach ($exportRows as $export) {
+                if (!is_array($export)) {
+                    continue;
+                }
+                $lookupKey = $this->lookupKey((string)($export['full_path'] ?? ''));
+                if ($lookupKey !== '' && !isset($localExports[$lookupKey])) {
+                    $localExports[$lookupKey] = (int)($export['export_index'] ?? 0);
+                }
             }
         }
 
@@ -307,18 +331,35 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
                 'confidence' => 'missing',
             ];
 
-            // The legacy resolver preferred the newly imported file itself when
-            // an Import matched one of its own Exports. The current export lookup
-            // is not published until after this snapshot is built, so preserve
-            // that ordering explicitly from the in-memory parsed Export table.
-            $localExportIndex = $localExports[$this->lookupKey((string)$import['full_path'])] ?? null;
+            // The file being published does not have lookup projections yet.
+            // UE1/UE2 therefore use the same in-memory VerifyImport semantics;
+            // later engines retain the existing local path behavior until their
+            // source-specific resolver is aligned independently.
+            $localExportIndex = null;
+            $localUnreal2OnlyIndex = null;
+            if ($legacyVerifyImport
+                && $this->lookupKey((string)($import['root_package'] ?? '')) === $this->lookupKey($packageName)) {
+                $importIndex = (int)($import['import_index'] ?? -1);
+                $localExportIndex = $localVerifyImportMatches['standard'][$importIndex] ?? null;
+                $localUnreal2OnlyIndex = $localVerifyImportMatches['unreal2_only'][$importIndex] ?? null;
+            } elseif (!$legacyVerifyImport) {
+                $localExportIndex = $localExports[$this->lookupKey((string)$import['full_path'])] ?? null;
+            }
             if ($localExportIndex !== null && (int)$import['is_common'] !== 1) {
                 $resolution = [
                     'status' => 'resolved',
                     'resolved_file_id' => $fileId,
-                    'resolved_export_index' => $localExportIndex,
-                    'source' => 'exact_object',
+                    'resolved_export_index' => (int)$localExportIndex,
+                    'source' => $legacyVerifyImport ? 'ue_verify_import_local' : 'exact_object',
                     'confidence' => 'exact',
+                ];
+            } elseif ($localUnreal2OnlyIndex !== null && (int)$import['is_common'] !== 1) {
+                $resolution = [
+                    'status' => 'missing',
+                    'resolved_file_id' => null,
+                    'resolved_export_index' => null,
+                    'source' => 'ue_verify_import_unreal2_private_candidate',
+                    'confidence' => 'unreal2_candidate',
                 ];
             }
 
