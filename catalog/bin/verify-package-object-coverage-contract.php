@@ -33,7 +33,7 @@ $check = static function (string $name, bool $ok, string $detail) use (&$checks)
 };
 
 $check(
-    'v3_only_provider_filter',
+    'current_format_only_provider_filter',
     is_string($source) && str_contains($source, 'BlockedCompressedMetadataContainer::FORMAT_VERSION')
         && !str_contains($source, 'm.format_version=3'),
     'Coverage candidates must come only from verified current metadata providers.'
