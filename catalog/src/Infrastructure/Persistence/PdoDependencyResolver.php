@@ -59,8 +59,12 @@ final class PdoDependencyResolver
         foreach ($objectLookups as $lookup) {
             $packageKey = self::normalizeLookup($lookup['package_name']);
             $packageRequirements[$packageKey]['package_name'] ??= $lookup['package_name'];
-            $packageRequirements[$packageKey]['paths'][] = $lookup['local_path'];
-            $packageRequirements[$packageKey]['classes'][$lookup['local_path']] = [
+            // Coverage accepts full or package-relative paths. Pass the full
+            // Import path here so a legitimate relative path whose first segment
+            // repeats the package name (Foo.Foo.Bar) is stripped exactly once.
+            $requirementPath = (string)$lookup['lookup_value'];
+            $packageRequirements[$packageKey]['paths'][] = $requirementPath;
+            $packageRequirements[$packageKey]['classes'][$requirementPath] = [
                 'class_package' => (string)($lookup['class_package'] ?? ''),
                 'class_name' => (string)($lookup['class_name'] ?? ''),
             ];
