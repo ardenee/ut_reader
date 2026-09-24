@@ -63,7 +63,7 @@ final class CatalogCrossGameDependencyClosurePlanner
         if (!$this->compatibleEngine((string)$target['engine_key'], (string)$root['source_engine'])) {
             throw new \RuntimeException('The selected source package is outside the dependency-compatible engine family for this target.');
         }
-        if ((int)($root['format_version'] ?? 0) !== 3) {
+        if ((int)($root['format_version'] ?? 0) !== \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer::FORMAT_VERSION) {
             throw new \RuntimeException('The selected source package has no current-format dependency metadata.');
         }
 
