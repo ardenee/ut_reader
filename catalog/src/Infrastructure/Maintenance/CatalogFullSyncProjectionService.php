@@ -135,7 +135,7 @@ final class CatalogFullSyncProjectionService
                 throw new RuntimeException('Dependency package summary projection is unavailable.');
             }
 
-            $this->emit('package_coverage', 70, 'Rebuilding cached catalog-wide package object coverage.');
+            $this->emit('package_coverage', 70, 'Rebuilding cached selected-game package object coverage.');
             $coverage = (new PdoPackageCoverageCache($this->db))->rebuildGame(
                 $gameId,
                 function (int $done, int $total, string $package): void {
