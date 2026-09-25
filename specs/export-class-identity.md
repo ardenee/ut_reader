@@ -39,3 +39,16 @@ Export class identity is obtained from ClassIndex resolution plus the referenced
 ## Cross-generation conformance result
 
 This semantic rule must be applied through the exact engine/revision reader selected by the package summary. The generation-specific package specs remain the final authority where serialized layouts differ.
+
+## Later-generation source verification
+
+| Revision | Source-confirmed change |
+|---|---|
+| Unreal II | Negative ClassIndex derives class from an import; positive from a local export; zero means `Class`/`Core`. Missing nonzero export classes can cause export creation to be skipped. |
+| UE2.5 | Retains class-index derivation but has its own missing-class/export-construction behavior. |
+| UT2003 | A null resolved LoadClass is replaced with `UClass::StaticClass()`, unlike the reviewed UE2.5 nonzero-class guard. |
+| UT2004 | Uses its own reviewed CreateExport/class behavior and must not inherit UT2003/UE2.5 construction policy blindly. |
+| UE3 | ClassIndex remains package-index based; export records also add ArchetypeIndex and forced-export/cooked semantics. |
+| UE4 4.27.2 | Modern export class identity remains ClassIndex/FPackageIndex based, alongside SuperIndex, TemplateIndex and outer relationships. |
+
+Class identity and the runtime policy for what happens when the class cannot be created are separate concerns.
