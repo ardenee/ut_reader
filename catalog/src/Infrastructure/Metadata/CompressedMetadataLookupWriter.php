@@ -414,6 +414,29 @@ final class CompressedMetadataLookupWriter
     {
         $paths = (array)($snapshot['paths'] ?? []);
         $file = (array)($snapshot['file'] ?? []);
+        $imports = array_values((array)($snapshot['imports'] ?? []));
+        $exports = array_values((array)($snapshot['exports'] ?? []));
+        $importsByIndex = [];
+        foreach ($imports as $identityImport) {
+            if (is_array($identityImport)) {
+                $importsByIndex[(int)($identityImport['import_index'] ?? 0)] = $identityImport;
+            }
+        }
+        $exportsByIndex = [];
+        foreach ($exports as $identityExport) {
+            if (is_array($identityExport)) {
+                $exportsByIndex[(int)($identityExport['export_index'] ?? 0)] = $identityExport;
+            }
+        }
+        $engineRow = \catalog_one(
+            $this->db,
+            'SELECT p.engine_key FROM ue_games g'
+            . ' LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1'
+            . ' WHERE g.id=? LIMIT 1',
+            [(int)($file['game_id'] ?? 0)]
+        );
+        $engineKey = strtoupper(trim((string)($engineRow['engine_key'] ?? '')));
+        $packageName = trim((string)($file['package_name'] ?? ''));
         if (trim((string)($file['package_name'] ?? '')) !== '') {
             yield trim((string)$file['package_name']);
         }
@@ -452,6 +475,20 @@ final class CompressedMetadataLookupWriter
             }
             if ($verifyClassName !== '') {
                 yield $verifyClassName;
+            }
+            if ($engineKey === 'UE3') {
+                [$ue3ClassPackage, $ue3ClassName] = CatalogCompactIdentityEnricher::ue3ExportClassIdentity(
+                    $row,
+                    $importsByIndex,
+                    $exportsByIndex,
+                    $packageName
+                );
+                if ($ue3ClassPackage !== '') {
+                    yield $ue3ClassPackage;
+                }
+                if ($ue3ClassName !== '') {
+                    yield $ue3ClassName;
+                }
             }
         }
 
