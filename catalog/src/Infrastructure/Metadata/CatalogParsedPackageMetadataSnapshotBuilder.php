@@ -355,9 +355,9 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
             ];
 
             // The file being published does not have lookup projections yet.
-            // UE1/UE2 therefore use the same in-memory VerifyImport semantics;
-            // later engines retain the existing local path behavior until their
-            // source-specific resolver is aligned independently.
+            // UE1/UE2 and UE3 use their source-specific in-memory VerifyImport
+            // semantics; later engines retain the generic local path behavior
+            // until their own source audit is completed.
             $localExportIndex = null;
             $localUnreal2OnlyIndex = null;
             if ($legacyVerifyImport
@@ -365,7 +365,8 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
                 $importIndex = (int)($import['import_index'] ?? -1);
                 $localExportIndex = $localVerifyImportMatches['standard'][$importIndex] ?? null;
                 $localUnreal2OnlyIndex = $localVerifyImportMatches['unreal2_only'][$importIndex] ?? null;
-            } elseif ($ue3VerifyImport) {
+            } elseif ($ue3VerifyImport
+                && $this->lookupKey((string)($import['root_package'] ?? '')) === $this->lookupKey($packageName)) {
                 $localExportIndex = $localUe3VerifyImportMatches[(int)($import['import_index'] ?? -1)] ?? null;
             } elseif (!$legacyVerifyImport) {
                 $localExportIndex = $localExports[$this->lookupKey((string)$import['full_path'])] ?? null;
