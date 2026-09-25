@@ -182,6 +182,14 @@ final class CompressedMetadataLookupWriter
             }
         }
         $packageName = trim((string)($file['package_name'] ?? ''));
+        $engineRow = \catalog_one(
+            $this->db,
+            'SELECT p.engine_key FROM ue_games g'
+            . ' LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1'
+            . ' WHERE g.id=? LIMIT 1',
+            [(int)($file['game_id'] ?? 0)]
+        );
+        $engineKey = strtoupper(trim((string)($engineRow['engine_key'] ?? '')));
         $exportRows = [];
         $exportPathRows = [];
         foreach ($exports as $row) {
@@ -202,12 +210,19 @@ final class CompressedMetadataLookupWriter
                 md5($localPath, true),
                 $localPathTermId,
             ];
-            [$verifyClassPackage, $verifyClassName] = CatalogCompactIdentityEnricher::legacyExportClassIdentity(
-                $row,
-                $importsByIdentityIndex,
-                $exportsByIdentityIndex,
-                $packageName
-            );
+            [$verifyClassPackage, $verifyClassName] = $engineKey === 'UE3'
+                ? CatalogCompactIdentityEnricher::ue3ExportClassIdentity(
+                    $row,
+                    $importsByIdentityIndex,
+                    $exportsByIdentityIndex,
+                    $packageName
+                )
+                : CatalogCompactIdentityEnricher::legacyExportClassIdentity(
+                    $row,
+                    $importsByIdentityIndex,
+                    $exportsByIdentityIndex,
+                    $packageName
+                );
             $exportPathRows[] = [
                 $fileId,
                 $index,
