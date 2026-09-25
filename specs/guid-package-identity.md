@@ -39,3 +39,16 @@ When an engine revision uses GUID/generation information during package compatib
 ## Cross-generation conformance result
 
 This semantic rule must be applied through the exact engine/revision reader selected by the package summary. The generation-specific package specs remain the final authority where serialized layouts differ.
+
+## Later-generation source verification
+
+| Revision | Source-confirmed identity behavior |
+|---|---|
+| Unreal II | Summary GUID/generation lineage is retained; its linker additionally computes `QuickMD5` over structural byte ranges. QuickMD5 is neither the GUID nor a whole-file hash. |
+| UE2.5 | Retains GUID/generation identity and QuickMD5-era structural identity behavior. |
+| UT2003 | Retains GUID/generation summary identity and computes QuickMD5 from two raw structural ranges. |
+| UT2004 | Retains GUID/generation identity, but its reviewed QuickMD5 algorithm hashes explicit structural fields/names rather than the UT2003 raw-range algorithm. |
+| UE3 | Retains summary GUID/generation concepts and adds export-side `PackageGuid`/package metadata and additional GUID-table information. |
+| UE4 4.27.2 | Retains package GUID/generation-related summary metadata while custom versions, engine versions and other modern metadata provide additional compatibility identity. |
+
+UnrealDB must keep engine GUID, generation data, QuickMD5 and catalog MD5/SHA as separate identity domains.
