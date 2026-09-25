@@ -45,3 +45,16 @@ This is also why INI-based `ClassRemap` must not be implemented as a generic Unr
 ## UnrealDB conformance
 
 Apply this operation only after the exact package reader has validated indices and tables. Preserve enough structured evidence to explain why a dependency resolved or failed; do not reduce resolution to a filename/name-only boolean.
+
+## Later-generation runtime boundary verification
+
+| Revision | Runtime-only/non-package state confirmed relevant |
+|---|---|
+| Unreal II | Filesystem package search, already-loaded linkers, native/transient objects, class availability, SafeReplace and forgiving load mode. Disabled ClassRemap/PackageRemap must not be treated as behavior. |
+| UE2.5 | Same broad runtime object/class and forgiving/SafeReplace dependencies; no active generic remap in reviewed linker. |
+| UT2003 | Adds runtime package-remap retry in StaticLoadObject; this is not serialized import identity. |
+| UT2004 | Runtime search/object/class state remains relevant; no active resolver remap should be invented. |
+| UE3 | Game/editor/UCC/cooker state, LOAD flags, loaded native/transient objects, compiling state, script patcher, multilanguage/seek-free remapping and redirectors affect resolution. |
+| UE4 4.27.2 | CoreRedirects, instancing context, mount/package systems, script packages, native/in-memory objects, external packages, package privacy and runtime redirect targets can affect resolution. |
+
+UnrealDB should report these as unavailable runtime resolution paths unless the necessary external state is explicitly supplied.
