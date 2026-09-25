@@ -56,17 +56,6 @@ final class PdoDependencyResolver
 
         $packageMatches = self::loadPackageMatches($db, $gameId, $fileId, array_values($packageNames));
         $legacyVerifyImport = in_array(self::engineKey($db, $gameId), ['UE1', 'UE2'], true);
-        $verifyImportMatches = [];
-        if ($legacyVerifyImport) {
-            require_once __DIR__ . '/PdoLegacyVerifyImportProjectionResolver.php';
-            foreach ($packageMatches as $packageKey => $packageMatch) {
-                $verifyImportMatches[$packageKey] = PdoLegacyVerifyImportProjectionResolver::resolveProviderVariants(
-                    $db,
-                    (int)$packageMatch['file_id'],
-                    $imports
-                );
-            }
-        }
 
         $packageRequirements = [];
         foreach ($objectLookups as $lookup) {
@@ -82,6 +71,46 @@ final class PdoDependencyResolver
                 'class_name' => (string)($lookup['class_name'] ?? ''),
             ];
         }
+        $verifyImportMatches = [];
+        if ($legacyVerifyImport) {
+            require_once __DIR__ . '/PdoLegacyVerifyImportProjectionResolver.php';
+            $legacyCandidates = self::loadPackageCandidates($db, $gameId, $fileId, array_values($packageNames));
+            foreach ($packageRequirements as $packageKey => $requirement) {
+                $requiredImportIndexes = [];
+                foreach ($imports as $fallback => $candidateImport) {
+                    if (!is_array($candidateImport)
+                        || self::normalizeLookup((string)($candidateImport['root_package'] ?? '')) !== $packageKey
+                        || trim((string)($candidateImport['relative_object_path'] ?? '')) === '') {
+                        continue;
+                    }
+                    $requiredImportIndexes[] = isset($candidateImport['import_index'])
+                        ? (int)$candidateImport['import_index']
+                        : (int)$fallback;
+                }
+
+                foreach ($legacyCandidates[$packageKey] ?? [] as $candidate) {
+                    $variants = PdoLegacyVerifyImportProjectionResolver::resolveProviderVariants(
+                        $db,
+                        (int)$candidate['file_id'],
+                        $imports
+                    );
+                    $matches = (array)($variants['standard'] ?? []);
+                    $complete = true;
+                    foreach ($requiredImportIndexes as $requiredImportIndex) {
+                        if (!array_key_exists($requiredImportIndex, $matches)) {
+                            $complete = false;
+                            break;
+                        }
+                    }
+                    if ($complete) {
+                        $packageMatches[$packageKey] = $candidate;
+                        $verifyImportMatches[$packageKey] = $variants;
+                        break;
+                    }
+                }
+            }
+        }
+
         $completeProviders = [];
         if (!$legacyVerifyImport) {
             foreach ($packageRequirements as $packageKey => $requirement) {
@@ -302,6 +331,104 @@ final class PdoDependencyResolver
             }
         }
         return $matches;
+    }
+
+    /**
+     * Return every verified physical provider for each requested logical package.
+     * Ordering is catalog policy only; callers must apply VerifyImport semantics
+     * before selecting a provider.
+     *
+     * @param list<string> $packageNames
+     * @return array<string,list<array{file_id:int,source:string}>>
+     */
+    private static function loadPackageCandidates(PDO $db, int $gameId, int $fileId, array $packageNames): array
+    {
+        $candidates = [];
+        foreach (array_chunk($packageNames, self::MAX_VALUES_PER_QUERY) as $chunk) {
+            if ($chunk === []) {
+                continue;
+            }
+            $placeholders = self::placeholders(count($chunk));
+            try {
+                $rows = \catalog_all(
+                    $db,
+                    'SELECT p.package_name lookup_value,p.file_id,p.source_kind'
+                    . ' FROM ue_package_providers p'
+                    . ' JOIN ue_files f ON f.id=p.file_id AND f.game_id=p.game_id'
+                    . ' LEFT JOIN ue_file_package_aliases a'
+                    . ' ON p.source_kind="alias" AND a.id=p.source_id'
+                    . ' AND a.file_id=p.file_id AND a.game_id=p.game_id'
+                    . ' AND a.package_name=p.package_name'
+                    . ' WHERE p.game_id=? AND f.scan_status="verified"'
+                    . ' AND NOT EXISTS (SELECT 1 FROM ue_invalid_file_identities bad'
+                    . ' WHERE bad.file_size=f.file_size AND bad.md5=LOWER(f.md5) AND bad.sha1=LOWER(f.sha1))'
+                    . ' AND p.package_name IN (' . $placeholders . ')'
+                    . ' AND ((p.source_kind="primary" AND f.package_name=p.package_name)'
+                    . ' OR (p.source_kind="alias" AND a.id IS NOT NULL))'
+                    . ' ORDER BY p.package_name,(p.source_kind="primary") DESC,'
+                    . ' (p.file_id=?) DESC,p.provider_created_at DESC,p.source_id ASC',
+                    array_merge([$gameId], $chunk, [$fileId])
+                );
+            } catch (PDOException) {
+                $rows = [];
+            }
+            foreach ($rows as $row) {
+                self::collectPackageCandidate($row, $candidates);
+            }
+
+            $rows = \catalog_all(
+                $db,
+                'SELECT f.package_name lookup_value,f.id file_id,"primary" source_kind'
+                    . ' FROM ue_files f'
+                    . ' WHERE f.game_id=? AND f.scan_status="verified"'
+                    . ' AND NOT EXISTS (SELECT 1 FROM ue_invalid_file_identities bad'
+                    . ' WHERE bad.file_size=f.file_size AND bad.md5=LOWER(f.md5) AND bad.sha1=LOWER(f.sha1))'
+                    . ' AND f.package_name IN (' . $placeholders . ')'
+                    . ' ORDER BY f.package_name,(f.id=?) DESC,f.uploaded_at DESC',
+                array_merge([$gameId], $chunk, [$fileId])
+            );
+            foreach ($rows as $row) {
+                self::collectPackageCandidate($row, $candidates);
+            }
+
+            $rows = \catalog_all(
+                $db,
+                'SELECT a.package_name lookup_value,a.file_id,"alias" source_kind'
+                    . ' FROM ue_file_package_aliases a'
+                    . ' JOIN ue_files f ON f.id=a.file_id AND f.game_id=a.game_id'
+                    . ' WHERE a.game_id=? AND f.scan_status="verified"'
+                    . ' AND NOT EXISTS (SELECT 1 FROM ue_invalid_file_identities bad'
+                    . ' WHERE bad.file_size=f.file_size AND bad.md5=LOWER(f.md5) AND bad.sha1=LOWER(f.sha1))'
+                    . ' AND a.package_name IN (' . $placeholders . ')'
+                    . ' ORDER BY a.package_name,(f.id=?) DESC,f.uploaded_at DESC,a.id ASC',
+                array_merge([$gameId], $chunk, [$fileId])
+            );
+            foreach ($rows as $row) {
+                self::collectPackageCandidate($row, $candidates);
+            }
+        }
+        return $candidates;
+    }
+
+    /** @param array<string,mixed> $row @param array<string,list<array{file_id:int,source:string}>> $candidates */
+    private static function collectPackageCandidate(array $row, array &$candidates): void
+    {
+        $key = self::normalizeLookup((string)($row['lookup_value'] ?? ''));
+        $fileId = (int)($row['file_id'] ?? 0);
+        if ($key === '' || $fileId < 1) {
+            return;
+        }
+        foreach ($candidates[$key] ?? [] as $candidate) {
+            if ((int)$candidate['file_id'] === $fileId) {
+                return;
+            }
+        }
+        $candidates[$key][] = [
+            'file_id' => $fileId,
+            'source' => (string)($row['source_kind'] ?? '') === 'alias'
+                ? 'exact_package_alias'
+                : 'exact_package',
+        ];
     }
 
     /** @param array<string,mixed> $row @param array<string,array{file_id:int,source:string}> $matches */
