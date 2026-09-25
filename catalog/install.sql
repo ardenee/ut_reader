@@ -1666,6 +1666,9 @@ CREATE TABLE ue_export_path_lookup (
   path_hash_ci BINARY(16) NOT NULL,
   local_path_term_id INT UNSIGNED NOT NULL,
   class_term_id INT UNSIGNED NULL,
+  class_package_term_id INT UNSIGNED NULL,
+  class_name_term_id INT UNSIGNED NULL,
+  object_flags BIGINT UNSIGNED NULL,
   PRIMARY KEY (file_id,export_index),
   KEY idx_export_path_ci (path_hash_ci,file_id,export_index),
   KEY idx_export_path_file_hash (file_id,path_hash_ci,export_index)
