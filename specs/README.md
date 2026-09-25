@@ -57,7 +57,7 @@ Its purpose is to let an engineer implement, review, or repair UnrealDB's parser
 - [x] UZ — `uz-compression-decompression.md`
 - [x] UZ2 — `uz2-compression-decompression.md`
 - [x] UZ3 — `uz3-ue3-compression-decompression.md`
-- [ ] UMOD
+- [x] UMOD — `umod-format.md`
 - [ ] UT2MOD
 - [ ] UT4MOD
 - [ ] UPK format
