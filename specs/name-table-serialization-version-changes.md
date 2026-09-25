@@ -45,3 +45,16 @@ Preserve base text, number, flags/hashes where serialized, and original table in
 ## Cross-generation conformance result
 
 This semantic rule must be applied through the exact engine/revision reader selected by the package summary. The generation-specific package specs remain the final authority where serialized layouts differ.
+
+## Later-generation source verification
+
+| Revision | Source-confirmed change |
+|---|---|
+| Unreal II | Before package version 64, name entries use zero-terminated ANSI text plus flags; >=64 uses `FString` plus flags. Runtime context filtering can map a serialized name to `NAME_None`, but UnrealDB must retain the serialized entry. |
+| UE2.5 | Retains the versioned UE2 name model and explicitly limits copied >=64 name text with `Left(NAME_SIZE-1)`. |
+| UT2003 | >=64 serializer copies the complete resulting FString with `appStrcpy`; unlike the reviewed UE2.5 path, that serializer has no explicit `Left(NAME_SIZE-1)` truncation. |
+| UT2004 | >=64 name loading again explicitly uses `Left(NAME_SIZE-1)`. |
+| UE3 | Persistent `FName` references contain a name-table index **and instance number**. The name system is no longer correctly represented as only a UE2 compact name index. |
+| UE4 4.27.2 | Retains index+number FName semantics and introduces versioned name-entry metadata/hashes in the modern package reader. |
+
+These differences must be preserved even when the visible base name text is identical.
