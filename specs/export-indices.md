@@ -43,3 +43,16 @@ Resolve only after checking positivity and `index - 1 < ExportCount`. Preserve c
 ## Cross-generation conformance result
 
 This semantic rule must be applied through the exact engine/revision reader selected by the package summary. The generation-specific package specs remain the final authority where serialized layouts differ.
+
+## Later-generation source verification
+
+| Revision | Source-confirmed representation |
+|---|---|
+| Unreal II | Export `ClassIndex`, `SuperIndex`, `SerialSize` and conditional `SerialOffset` are compact, but export `PackageIndex` is fixed INT. |
+| UE2.5 | Retains that UE2 distinction. |
+| UT2003 | Retains compact class/super/serial fields and fixed export parent `PackageIndex`. |
+| UT2004 | Retains the UE2-era export index model for its revision. |
+| UE3 | Object/package indices are fixed 32-bit; export records add `ArchetypeIndex`, export flags and other metadata. |
+| UE4 4.27.2 | `FPackageIndex` is fixed int32 and export records include modern class/super/template/outer relationships plus versioned 32/64-bit serial ranges. |
+
+The positive one-based export semantic survives, while the disk representation and surrounding export record evolve.
