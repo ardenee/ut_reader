@@ -90,6 +90,146 @@ final class CompressedMetadataLookupWriter
     }
 
     /**
+     * Backfill only the UE3 VerifyImport export identity columns from an
+     * existing v4 metadata snapshot. This deliberately leaves metadata files,
+     * search projections and dependency resolution untouched.
+     *
+     * @param list<array<string,mixed>> $imports
+     * @param list<array<string,mixed>> $exports
+     * @return array{file_id:int,rows:int,sql_batches:int}
+     */
+    public function backfillUe3ExportIdentityProjection(
+        int $fileId,
+        string $packageName,
+        array $imports,
+        array $exports
+    ): array {
+        if ($this->db->inTransaction()) {
+            throw new RuntimeException('UE3 export identity backfill requires ownership of the database transaction.');
+        }
+        if ($fileId < 1 || trim($packageName) === '') {
+            throw new RuntimeException('UE3 export identity backfill requires a valid file ID and package name.');
+        }
+
+        $importsByIndex = [];
+        foreach ($imports as $fallback => $row) {
+            if (is_array($row)) {
+                $importsByIndex[isset($row['import_index']) ? (int)$row['import_index'] : (int)$fallback] = $row;
+            }
+        }
+        $exportsByIndex = [];
+        foreach ($exports as $fallback => $row) {
+            if (is_array($row)) {
+                $exportsByIndex[isset($row['export_index']) ? (int)$row['export_index'] : (int)$fallback] = $row;
+            }
+        }
+
+        $identities = [];
+        $termValues = [];
+        foreach ($exportsByIndex as $exportIndex => $row) {
+            if (!array_key_exists('outer_index', $row) || !array_key_exists('object_flags', $row)
+                || $row['object_flags'] === null) {
+                throw new RuntimeException(
+                    'UE3 export #' . $exportIndex . ' is missing serialized OuterIndex/ObjectFlags metadata.'
+                );
+            }
+            [$classPackage, $className] = CatalogCompactIdentityEnricher::ue3ExportClassIdentity(
+                $row,
+                $importsByIndex,
+                $exportsByIndex,
+                $packageName
+            );
+            if ($classPackage !== '') {
+                $termValues[] = $classPackage;
+            }
+            if ($className !== '') {
+                $termValues[] = $className;
+            }
+            $identities[$exportIndex] = [
+                'class_package' => $classPackage,
+                'class_name' => $className,
+                'object_flags' => (int)$row['object_flags'],
+                'outer_index' => (int)$row['outer_index'],
+            ];
+        }
+
+        $sqlBatches = 0;
+        $termIds = $this->resolveTermIds($termValues, $sqlBatches);
+        $rows = 0;
+
+        $this->db->beginTransaction();
+        try {
+            foreach (array_chunk($identities, self::WRITE_BATCH_SIZE, true) as $chunk) {
+                if ($chunk === []) {
+                    continue;
+                }
+                $casesPackage = [];
+                $casesName = [];
+                $casesFlags = [];
+                $casesOuter = [];
+                $indexes = [];
+                $arguments = [];
+                foreach ($chunk as $exportIndex => $identity) {
+                    $casesPackage[] = 'WHEN ? THEN ?';
+                    array_push(
+                        $arguments,
+                        (int)$exportIndex,
+                        $identity['class_package'] !== ''
+                            ? $this->requiredTermId($termIds, (string)$identity['class_package'])
+                            : null
+                    );
+                }
+                foreach ($chunk as $exportIndex => $identity) {
+                    $casesName[] = 'WHEN ? THEN ?';
+                    array_push(
+                        $arguments,
+                        (int)$exportIndex,
+                        $identity['class_name'] !== ''
+                            ? $this->requiredTermId($termIds, (string)$identity['class_name'])
+                            : null
+                    );
+                }
+                foreach ($chunk as $exportIndex => $identity) {
+                    $casesFlags[] = 'WHEN ? THEN ?';
+                    array_push($arguments, (int)$exportIndex, (int)$identity['object_flags']);
+                }
+                foreach ($chunk as $exportIndex => $identity) {
+                    $casesOuter[] = 'WHEN ? THEN ?';
+                    array_push($arguments, (int)$exportIndex, (int)$identity['outer_index']);
+                }
+                foreach (array_keys($chunk) as $exportIndex) {
+                    $indexes[] = '?';
+                    $arguments[] = (int)$exportIndex;
+                }
+
+                $statement = $this->db->prepare(
+                    'UPDATE ue_export_path_lookup SET '
+                    . 'class_package_term_id=CASE export_index ' . implode(' ', $casesPackage) . ' ELSE class_package_term_id END,'
+                    . 'class_name_term_id=CASE export_index ' . implode(' ', $casesName) . ' ELSE class_name_term_id END,'
+                    . 'object_flags=CASE export_index ' . implode(' ', $casesFlags) . ' ELSE object_flags END,'
+                    . 'outer_index=CASE export_index ' . implode(' ', $casesOuter) . ' ELSE outer_index END'
+                    . ' WHERE file_id=? AND export_index IN (' . implode(',', $indexes) . ')'
+                );
+                // file_id appears before the IN-list placeholders in SQL, while
+                // the CASE arguments precede it.
+                $caseArgumentCount = count($arguments) - count($indexes);
+                array_splice($arguments, $caseArgumentCount, 0, [$fileId]);
+                $statement->execute($arguments);
+                $rows += $statement->rowCount();
+                $sqlBatches++;
+            }
+            $this->db->commit();
+        } catch (Throwable $error) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            throw $error;
+        }
+
+        return ['file_id' => $fileId, 'rows' => $rows, 'sql_batches' => $sqlBatches];
+    }
+
+    /**
      * Compatibility entry point for callers that already hold container bytes.
      * Production publication uses writeVersionedMetadata() so it never needs a
      * full metadata-container PHP string merely to register size and SHA-256.
