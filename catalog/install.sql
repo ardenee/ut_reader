@@ -1,6 +1,6 @@
 -- consolidated schema assembly boundary 1
 -- UnrealDB consolidated catalog schema
--- Consolidated migration baseline: 202608090002
+-- Consolidated migration baseline: 202609240002
 -- Canonical baseline for a new, empty MySQL 8+ or MariaDB database.
 -- Do not import this over a populated catalog. Test a dedicated upgrade path first.
 
@@ -1381,5 +1381,307 @@ CREATE TABLE ue_transfer_blocked_ips (
   PRIMARY KEY (ip_address),
   KEY idx_ue_transfer_blocked_ips_created (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =====================================================================
+-- Consolidated current baseline: 202608110001 through 202609240002
+-- A fresh install already contains these schema/data changes. Migration
+-- files at or below this boundary are archived history for existing sites.
+-- =====================================================================
+
+-- 202608110001: cached exact unverified package game-match evidence.
+CREATE TABLE ue_unverified_game_match_cache (
+  file_id BIGINT UNSIGNED NOT NULL,
+  cache_version INT UNSIGNED NOT NULL DEFAULT 1,
+  status VARCHAR(16) NOT NULL DEFAULT 'pending',
+  matches_json LONGTEXT NULL,
+  match_count INT UNSIGNED NOT NULL DEFAULT 0,
+  exact_compatible_game_count INT UNSIGNED NOT NULL DEFAULT 0,
+  last_error VARCHAR(1000) NULL,
+  calculated_at DATETIME NULL,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (file_id),
+  KEY idx_ue_unverified_game_match_cache_status (status, updated_at),
+  KEY idx_ue_unverified_game_match_cache_calculated (calculated_at),
+  CONSTRAINT fk_ue_unverified_game_match_cache_file
+    FOREIGN KEY (file_id) REFERENCES ue_files(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 202608120001: resumable parent/child background-job workflow identity.
+ALTER TABLE ue_background_jobs
+  ADD COLUMN parent_job_id BIGINT UNSIGNED NULL AFTER id,
+  ADD COLUMN workflow_unit_key VARCHAR(191) NULL AFTER parent_job_id,
+  ADD KEY idx_ue_background_jobs_parent_status (parent_job_id,status,id),
+  ADD UNIQUE KEY uq_ue_background_jobs_parent_unit (parent_job_id,workflow_unit_key),
+  ADD CONSTRAINT fk_ue_background_jobs_parent
+    FOREIGN KEY (parent_job_id) REFERENCES ue_background_jobs(id) ON DELETE CASCADE;
+
+CREATE TABLE ue_job_logging_settings (
+  setting_key VARCHAR(64) NOT NULL,
+  enabled TINYINT(1) NOT NULL DEFAULT 0,
+  updated_by BIGINT UNSIGNED NULL,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (setting_key)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT INTO ue_job_logging_settings(setting_key,enabled) VALUES
+('worker_diagnostics',0),
+('event_progress',0),
+('event_success',0),
+('event_duplicate',0),
+('event_skipped',0),
+('event_cancelled',0),
+('event_errors',1);
+
+-- 202608140001: explicit verified compact-metadata publication state.
+ALTER TABLE ue_files
+  ADD COLUMN metadata_status VARCHAR(16) NOT NULL DEFAULT 'pending' AFTER scan_status,
+  ADD COLUMN metadata_error TEXT NULL AFTER metadata_status,
+  ADD COLUMN metadata_updated_at DATETIME NULL AFTER metadata_error;
+
+-- 202608170001: Upload Bucket PAK parent/member ownership.
+CREATE TABLE ue_unverified_pak_members (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  parent_file_id BIGINT UNSIGNED NOT NULL,
+  entry_index INT UNSIGNED NOT NULL,
+  entry_path VARCHAR(1000) NOT NULL,
+  entry_name VARCHAR(255) NOT NULL,
+  extension VARCHAR(32) NOT NULL DEFAULT '',
+  child_file_id BIGINT UNSIGNED NULL,
+  owns_child_file TINYINT(1) NOT NULL DEFAULT 0,
+  status VARCHAR(24) NOT NULL DEFAULT 'pending',
+  message VARCHAR(1000) NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_ue_unverified_pak_member (parent_file_id,entry_index),
+  KEY idx_ue_unverified_pak_parent_status (parent_file_id,status),
+  KEY idx_ue_unverified_pak_child (child_file_id),
+  CONSTRAINT fk_ue_unverified_pak_parent
+    FOREIGN KEY (parent_file_id) REFERENCES ue_files(id) ON DELETE CASCADE,
+  CONSTRAINT fk_ue_unverified_pak_child
+    FOREIGN KEY (child_file_id) REFERENCES ue_files(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 202608190001: indexed normalized dependency package identities.
+ALTER TABLE ue_files
+  ADD COLUMN dependency_package_key VARCHAR(255)
+    GENERATED ALWAYS AS (LOWER(TRIM(COALESCE(package_name,'')))) STORED,
+  ADD COLUMN dependency_original_stem_key VARCHAR(255)
+    GENERATED ALWAYS AS (
+      LOWER(TRIM(
+        CASE
+          WHEN LOCATE('.',COALESCE(original_name,''))>0
+            THEN LEFT(
+              original_name,
+              CHAR_LENGTH(original_name)-CHAR_LENGTH(SUBSTRING_INDEX(original_name,'.',-1))-1
+            )
+          ELSE COALESCE(original_name,'')
+        END
+      ))
+    ) STORED,
+  ADD KEY idx_ue_files_game_dependency_package_key (game_id,dependency_package_key,id),
+  ADD KEY idx_ue_files_game_dependency_stem_key (game_id,dependency_original_stem_key,id);
+
+ALTER TABLE ue_base_game_files
+  ADD COLUMN dependency_package_key VARCHAR(255)
+    GENERATED ALWAYS AS (LOWER(TRIM(COALESCE(package_name,'')))) STORED,
+  ADD COLUMN dependency_original_stem_key VARCHAR(255)
+    GENERATED ALWAYS AS (
+      LOWER(TRIM(
+        CASE
+          WHEN LOCATE('.',COALESCE(original_name,''))>0
+            THEN LEFT(
+              original_name,
+              CHAR_LENGTH(original_name)-CHAR_LENGTH(SUBSTRING_INDEX(original_name,'.',-1))-1
+            )
+          ELSE COALESCE(original_name,'')
+        END
+      ))
+    ) STORED,
+  ADD KEY idx_ue_base_game_dependency_package_key (game_id,dependency_package_key,id),
+  ADD KEY idx_ue_base_game_dependency_stem_key (game_id,dependency_original_stem_key,id);
+
+ALTER TABLE ue_dependency_links
+  ADD KEY idx_ue_dependency_required_file (required_package_term_id,file_id),
+  ADD KEY idx_ue_dependency_resolved_file (resolved_file_id,file_id);
+
+ALTER TABLE ue_dependency_package_summaries
+  ADD KEY idx_ue_dep_summary_game_missing_package
+    (game_id,missing_count,required_package(191),file_id);
+
+-- 202608260001 + 202609080003: local GeoIP with country and optional city detail.
+CREATE TABLE ue_geoip_country_ranges (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  ip_version TINYINT UNSIGNED NOT NULL,
+  range_start VARBINARY(16) NOT NULL,
+  range_end VARBINARY(16) NOT NULL,
+  country_code CHAR(2) NOT NULL,
+  country_name VARCHAR(120) NOT NULL,
+  subdivision_code VARCHAR(32) NULL,
+  subdivision_name VARCHAR(120) NULL,
+  city_name VARCHAR(120) NULL,
+  postal_code VARCHAR(32) NULL,
+  latitude DECIMAL(9,6) NULL,
+  longitude DECIMAL(9,6) NULL,
+  accuracy_radius_km INT UNSIGNED NULL,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_geoip_country_start (ip_version,range_start),
+  KEY idx_geoip_country_lookup (ip_version,range_start)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+ALTER TABLE ue_download_audit
+  ADD COLUMN country_code CHAR(2) NULL,
+  ADD COLUMN country_name VARCHAR(120) NULL,
+  ADD KEY idx_ue_download_audit_country (country_name,started_at,id);
+
+ALTER TABLE ue_generated_package_audit
+  ADD COLUMN country_code CHAR(2) NULL,
+  ADD COLUMN country_name VARCHAR(120) NULL,
+  ADD KEY idx_ue_generated_package_audit_country (country_name,queued_at,id);
+
+-- 202609080001: current public download mode.
+UPDATE ue_federation_settings
+SET setting_value='external_mirror'
+WHERE setting_name='public_download_mode'
+  AND setting_value IN ('local_direct','external_mirror_preferred');
+
+-- 202609080002: access matrix and full-site blocklist.
+CREATE TABLE ue_access_events (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  event_type VARCHAR(32) NOT NULL,
+  page_key VARCHAR(190) NOT NULL,
+  request_path VARCHAR(500) NOT NULL,
+  section_key VARCHAR(190) NULL,
+  action_key VARCHAR(190) NULL,
+  target_path VARCHAR(500) NULL,
+  referrer_path VARCHAR(500) NULL,
+  request_method VARCHAR(12) NOT NULL,
+  request_id VARCHAR(64) NULL,
+  ip_address VARBINARY(16) NULL,
+  user_id BIGINT UNSIGNED NULL,
+  session_hash BINARY(32) NULL,
+  user_agent VARCHAR(500) NOT NULL DEFAULT '',
+  occurred_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  PRIMARY KEY (id),
+  KEY idx_ue_access_events_time (occurred_at,id),
+  KEY idx_ue_access_events_page (page_key,occurred_at,id),
+  KEY idx_ue_access_events_type (event_type,occurred_at,id),
+  KEY idx_ue_access_events_ip (ip_address,occurred_at,id),
+  KEY idx_ue_access_events_user (user_id,occurred_at,id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE ue_site_blocked_ips (
+  ip_address VARBINARY(16) NOT NULL,
+  note VARCHAR(500) NOT NULL DEFAULT '',
+  created_by BIGINT UNSIGNED NULL,
+  created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+  PRIMARY KEY (ip_address),
+  KEY idx_ue_site_blocked_ips_updated (updated_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE ue_site_block_feedback (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  ip_address VARBINARY(16) NOT NULL,
+  email VARCHAR(254) NULL,
+  message VARCHAR(4000) NOT NULL,
+  status VARCHAR(24) NOT NULL DEFAULT 'open',
+  resolution_note VARCHAR(500) NULL,
+  created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  resolved_at DATETIME(6) NULL,
+  PRIMARY KEY (id),
+  KEY idx_ue_site_block_feedback_status (status,created_at,id),
+  KEY idx_ue_site_block_feedback_ip (ip_address,created_at,id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 202609230001: current supported package upload defaults (2 GiB).
+INSERT INTO ue_program_settings(setting_key,setting_value,updated_by) VALUES
+('normal_upload_limit_bytes','2147483648',NULL),
+('public_upload_max_file_bytes','2147483648',NULL);
+
+-- 202609230002: durable identities for explicitly invalid UE package bytes.
+CREATE TABLE ue_invalid_file_identities (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  file_size BIGINT UNSIGNED NOT NULL,
+  md5 CHAR(32) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  sha1 CHAR(40) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  source_file_id BIGINT UNSIGNED NULL,
+  reason VARCHAR(500) NOT NULL DEFAULT '',
+  created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_invalid_file_identity (md5,sha1,file_size),
+  KEY idx_invalid_source_file (source_file_id),
+  CONSTRAINT fk_invalid_source_file
+    FOREIGN KEY (source_file_id) REFERENCES ue_files(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 202609230003: cached package/object coverage.
+CREATE TABLE ue_package_coverage_cache (
+  game_id INT UNSIGNED NOT NULL,
+  package_name VARCHAR(255) NOT NULL,
+  consumer_count INT UNSIGNED NOT NULL DEFAULT 0,
+  required_object_count INT UNSIGNED NOT NULL DEFAULT 0,
+  updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  PRIMARY KEY (game_id,package_name),
+  CONSTRAINT fk_package_coverage_game
+    FOREIGN KEY (game_id) REFERENCES ue_games(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE ue_package_provider_coverage_cache (
+  game_id INT UNSIGNED NOT NULL,
+  package_name VARCHAR(255) NOT NULL,
+  file_id BIGINT UNSIGNED NOT NULL,
+  matched_count INT UNSIGNED NOT NULL DEFAULT 0,
+  missing_count INT UNSIGNED NOT NULL DEFAULT 0,
+  fully_satisfies TINYINT(1) NOT NULL DEFAULT 0,
+  missing_paths_json MEDIUMTEXT NULL,
+  updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  PRIMARY KEY (game_id,package_name,file_id),
+  KEY idx_provider_coverage_file (file_id),
+  CONSTRAINT fk_provider_coverage_game
+    FOREIGN KEY (game_id) REFERENCES ue_games(id) ON DELETE CASCADE,
+  CONSTRAINT fk_provider_coverage_file
+    FOREIGN KEY (file_id) REFERENCES ue_files(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 202609240001 + 202609240002: UE1/UE2 VerifyImport and v4 identity projections.
+CREATE TABLE ue_legacy_export_identity_lookup (
+  file_id BIGINT UNSIGNED NOT NULL,
+  export_index INT UNSIGNED NOT NULL,
+  identity_hash BINARY(16) NOT NULL,
+  path_hash_ci BINARY(16) NULL,
+  object_term_id INT UNSIGNED NOT NULL,
+  class_package_term_id INT UNSIGNED NOT NULL,
+  class_name_term_id INT UNSIGNED NOT NULL,
+  outer_index INT NOT NULL,
+  object_flags BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  PRIMARY KEY (file_id,export_index),
+  KEY idx_legacy_verify_identity (file_id,identity_hash,export_index),
+  KEY idx_legacy_verify_path (file_id,path_hash_ci,export_index)
+) ENGINE=InnoDB;
+
+CREATE TABLE ue_export_path_lookup (
+  file_id BIGINT UNSIGNED NOT NULL,
+  export_index INT UNSIGNED NOT NULL,
+  path_hash_ci BINARY(16) NOT NULL,
+  local_path_term_id INT UNSIGNED NOT NULL,
+  class_term_id INT UNSIGNED NULL,
+  PRIMARY KEY (file_id,export_index),
+  KEY idx_export_path_ci (path_hash_ci,file_id,export_index),
+  KEY idx_export_path_file_hash (file_id,path_hash_ci,export_index)
+) ENGINE=InnoDB;
+
+CREATE TABLE ue_dependency_identity_lookup (
+  file_id BIGINT UNSIGNED NOT NULL,
+  import_index INT UNSIGNED NOT NULL,
+  required_package_term_id INT UNSIGNED NOT NULL,
+  verify_identity_hash BINARY(16) NULL,
+  required_path_hash_ci BINARY(16) NOT NULL,
+  PRIMARY KEY (file_id,import_index),
+  KEY idx_dependency_verify_identity
+    (required_package_term_id,verify_identity_hash,file_id,import_index),
+  KEY idx_dependency_path_ci
+    (required_package_term_id,required_path_hash_ci,file_id,import_index)
+) ENGINE=InnoDB;
 
 SET FOREIGN_KEY_CHECKS = 1;
