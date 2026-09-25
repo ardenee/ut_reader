@@ -1,307 +1,403 @@
-# UT4MOD / Unreal Tournament 4 custom-content format
+# UT4MOD / Unreal Tournament 2004 Module Format
 
 ## 1. Scope
 
-This specification records what the supplied official Unreal Tournament (UE4-era) source actually implements for user-created UT4 content.
+This specification covers the official `.ut4mod` module format used by **Unreal Tournament 2004**.
 
-Primary game source:
+The name UT4MOD in this source means a **UT2004 module**. It is not an Unreal Tournament 4 / UE4 format.
 
-- repository: `ardenee/UnrealTournament`
-- branch: `clean-master`
-- `UnrealTournament/Plugins/PackageContent/Source/Private/PackageContent.cpp`
-- `UnrealTournament/Build/Scripts/UnrealTournamentProto.Automation.cs`
+Primary authority:
 
-Underlying engine source used by that game tree:
+- repository: `ardenee/UT2004src`
+- `System/setuput2004full.ini`
+- `System/setuput2004demo.ini`
+- `Core/Inc/FFileManagerArc.h`
+- `Editor/Src/UMasterCommandlet.cpp`
+- `Setup/Inc/Setup.h`
+- `Setup/Src/USetupDefinition.cpp`
 
-- UE4 PakFile runtime
-- UnrealPak
-- AutomationTool staging/pak pipeline
+Cross-version comparison:
 
-Later engine comparison:
+- `ardenee/Unreal_Tournament_2003_v2107`
+- `ardenee/UE2.5`
 
-- repository: `ardenee/UnrealEngine4`
-- 4.27.2-release lineage
-- PakFile/UnrealPak implementation is relevant to the physical PAK format, but does not establish a UT4MOD wrapper.
+Earlier sources are used to establish inheritance and differences. UT2004 is authoritative for UT4MOD.
 
-## 2. Source-backed result
+## 2. Official extension identity
 
-The supplied UT4 source does **not** define a physical `.ut4mod` container, UT4MOD magic, UT4MOD header, UT4MOD directory, or UT4MOD reader.
-
-Official UT custom-content publishing produces a normal UE4 `.pak` file.
-
-Therefore UnrealDB must not invent a UT4MOD binary format or treat `.ut4mod` as a source-proven wrapper around PAK data.
-
-If files named `.ut4mod` exist in third-party collections, their physical interpretation remains unresolved by the supplied official source until an authoritative producer/consumer implementation is available.
-
-## 3. Official UT4 publishing path
-
-The UT editor's `PackageContent` plugin exposes publishing for:
-
-- levels;
-- weapons;
-- cosmetic hats;
-- characters;
-- taunts;
-- mutators;
-- crosshairs.
-
-All these paths ultimately call:
+`System/setuput2004full.ini` explicitly registers:
 
 ```text
-PackageDLC(DLCName, ...)
+HKEY_CLASSES_ROOT\.ut4mod\ = UT2004.Module
 ```
 
-which launches AutomationTool using:
+and defines the class and action:
 
 ```text
-makeUTDLC
--DLCName=<name>
--platform=<Win64|Linux|Mac>
--version=<network version>
+UT2004.Module = UT2004 Module
+UT2004.Module\Shell = open
+UT2004.Module\Shell\open = &Install this UT2004 module
+UT2004.Module\Shell\open\command = %DestPath%\System\Setup.exe install "%1"
 ```
 
-Thus the official custom-content path is DLC cooking/staging, not a UMOD-style module writer.
+This directly proves that `.ut4mod` is the UT2004 module extension.
 
-## 4. MakeUTDLC
+The demo setup also defines `UT2004.Module` and the same Setup install command, although the inspected demo file does not itself contain the extension-association line.
 
-`UnrealTournamentProto.Automation.cs` implements `MakeUTDLC`.
+## 3. Relationship to UMOD and UT2MOD
 
-Its project parameters enable both cooking and PAK generation:
+UT4MOD does not introduce a new physical archive structure in the supplied UT2004 implementation.
+
+The shell association routes `.ut4mod` to the common Setup `install` path. `USetupDefinition::Init` handles `install` through the packed-module archive path. Its historical comment still calls this a packed `.umod` file because the underlying engine archive mechanism retained that name.
+
+Keep these layers separate:
+
+1. external identity: `.ut4mod` / `UT2004.Module`;
+2. physical container: Unreal module archive version 1;
+3. installer content/semantics: UT2004 Manifest/Setup data.
+
+## 4. Physical layout
+
+Logical layout:
 
 ```text
-Cook = true
-Pak  = true
-BasedOnReleaseVersion = <release asset registry>
-StageDirectory = UnrealTournament/Saved/StagedBuilds/<DLCName>
+[member payloads and alignment padding]
+[serialized TArray<FArchiveItem> directory]
+[20-byte FArchiveHeader trailer]
+EOF
 ```
 
-The command cooks content from:
+The archive trailer is at EOF.
+
+## 5. Archive constants
+
+`Core/Inc/FFileManagerArc.h` defines:
 
 ```text
-UnrealTournament/Plugins/<DLCName>/Content
+ARCHIVE_MAGIC       = 0x9fe3c5a3
+ARCHIVE_HEADER_SIZE = 5*4 = 20
+ARCHIVE_VERSION     = 1
 ```
 
-using the DLC name and the selected target platform.
+The magic alone is not sufficient identification because the numeric value is used elsewhere in Unreal formats.
 
-## 5. Version metadata
+## 6. FArchiveHeader
 
-During cooking, MakeUTDLC writes:
+The final 20 bytes serialize exactly:
 
 ```text
-UnrealTournament/<DLCName>-version.txt
+INT Magic
+INT TableOffset
+INT FileSize
+INT Ver
+INT CRC
 ```
 
-into the cooked output.
+Meanings:
 
-The contents are the `VersionString` passed to the command, which the editor supplies from:
+- `Magic`: `0x9fe3c5a3`;
+- `TableOffset`: absolute directory position;
+- `FileSize`: total physical archive size including the trailer;
+- `Ver`: 1;
+- `CRC`: rolling `appMemCrc` of every byte before the trailer.
 
-```cpp
-FNetworkVersion::GetLocalNetworkVersion()
-```
+## 7. FArchiveItem
 
-The command's fallback when no `-version` argument is supplied is `NOVERSION`.
-
-This version text file is content inside the staged DLC/PAK; it is not a PAK header field and not a UT4MOD wrapper header.
-
-## 6. Asset registry metadata
-
-The DLC cook produces an `AssetRegistry.bin`.
-
-MakeUTDLC renames it to:
+Each directory entry serializes:
 
 ```text
-<DLCName>-AssetRegistry.bin
+FString Filename
+DWORD Offset
+DWORD Size
+DWORD Flags
 ```
 
-before staging.
+`Offset` is absolute. `Size` bounds the member reader. The archive reader enforces reads within the member's stored size.
 
-Again this is a file carried in the staged PAK content, not a separate outer format.
+## 8. Directory serialization
 
-## 7. Staging and final PAK
+The directory is `TArray<FArchiveItem>` at `Header.TableOffset`.
 
-MakeUTDLC stages the cooked DLC as UFS content and invokes the normal UE4 staging/PAK pipeline.
+Its array count uses the engine's persistent compact-index serialization used by this source line; it is not an invented fixed-width count.
 
-After PAK creation it removes any pre-existing:
+## 9. Archive flags
+
+UT2004 declares:
 
 ```text
-<DLCName>-<CookPlatform>.pak
+ARCHIVEF_Bootstrap  = 0x00000001
+ARCHIVEF_Compressed = 0x00000004
 ```
 
-and renames the generated:
+No additional UT4MOD-specific archive flag is defined in the inspected header.
+
+The presence of `ARCHIVEF_Compressed` does not mean `FFileManagerArc` transparently decompresses member bytes. The common member reader exposes the stored bounded range.
+
+## 10. Writer alignment
+
+`UMasterCommandlet::LocalCopyFile` aligns ordinary archive members. The normal module path calls it with alignment 16.
+
+The writer emits zero padding until the output position is 16-byte aligned, then records the member's absolute offset.
+
+That padding is part of the pre-trailer byte stream and therefore part of the archive CRC.
+
+This is an official writer behavior, not by itself a parser requirement for every structurally readable archive.
+
+## 11. Builder finalization
+
+The Master commandlet:
+
+1. sets `TableOffset` to the current output position;
+2. serializes the item array;
+3. stores the writer's running `ArchiveCRC`;
+4. sets `FileSize = current size + 20`;
+5. serializes the 20-byte header last.
+
+Thus CRC coverage includes payloads, alignment padding and directory bytes, and excludes only the trailer.
+
+## 12. Reader validation
+
+The common reader:
+
+1. obtains physical size;
+2. opens the file;
+3. seeks to `TotalSize()-20`;
+4. deserializes the header;
+5. requires no archive error;
+6. requires the expected magic;
+7. requires version 1;
+8. requires stored `FileSize` to equal physical size;
+9. if verification is enabled and the filename is not `.exe`, computes CRC over `[0, EOF-20)`;
+10. requires the CRC to match;
+11. seeks to `TableOffset`;
+12. deserializes the item array.
+
+Safety checks needed to prevent integer overflow, invalid seeks or out-of-bounds reads may be added by UnrealDB, but must not be presented as source-defined format restrictions when they are not.
+
+## 13. CRC
+
+The reader updates `appMemCrc` in 16 KiB chunks.
+
+The exact CRC region is:
 
 ```text
-UnrealTournament-<CookPlatform>.pak
+[0, file_size - 20)
 ```
 
-to:
+`UMasterCommandlet` and `UUpdateUModCommandlet` independently confirm the same pre-trailer CRC construction.
+
+## 14. SFX exception
+
+The reader skips its CRC pass for a filename ending in `.exe`, with the source comment that the self-extractor has already checked it.
+
+That exception does not apply to ordinary `.ut4mod` validation.
+
+## 15. Path lookup and overlay
+
+Archive path matching canonicalizes backslash to slash and uppercases characters for comparison.
+
+If a requested file is not found in the archive, the archive file manager can fall through to the underlying file manager. This is runtime overlay behavior, not evidence of another member in the archive.
+
+## 16. Manifest and Setup
+
+Setup retains:
 
 ```text
-<DLCName>-<CookPlatform>.pak
+MANIFEST_FILE = "Manifest"
+MANIFEST_EXT  = ".ini"
+SETUP_INI     = "Manifest.ini"
 ```
 
-The editor then expects that exact platform PAK beneath:
+After mounting a packed module, Setup reloads configuration through the archive-backed file manager.
+
+`Manifest.ini` is installer content. It is not the physical archive directory.
+
+## 17. UT2004 file-record semantics
+
+UT2004 `FFileInfo` includes:
 
 ```text
-Saved/StagedBuilds/<DLCName>/<Platform>/UnrealTournament/Content/Paks/
+Dest
+Src
+Ref
+Lang
+Size
+RefSize
+MasterRecurse
+Flags
+CDNum
+Compressed
+CompSize
+Optional
 ```
 
-For example on Windows:
+and parses both:
 
 ```text
-<DLCName>-WindowsNoEditor.pak
+COMPRESSED=
+OPTIONAL=
 ```
 
-## 8. Installed local custom-content location
+These are Setup/Manifest fields, not `FArchiveItem` fields.
 
-After a successful publish, the editor copies the resulting PAK to the user's UT custom-content area.
+`Optional` affects missing-source handling during installation.
 
-Windows:
+## 18. Installer operations
+
+UT2004 Setup retains operations including:
 
 ```text
-<UserDir>/<GameName>/Saved/Paks/MyContent/<DLCName>-WindowsNoEditor.pak
+File
+Copy
+Group
+Folder
+Backup
+Delete
+Ini
+SaveIni
+AddIni
+Requires
 ```
 
-Linux:
+They are installation instructions layered on top of the archive container.
+
+## 19. Compressed manifest files
+
+A file record may specify `Compressed=True`.
+
+Setup then locates the compressed source representation and uses the file-copy decompression path.
+
+This is distinct from `FArchiveItem.Flags` and must not be conflated with archive-reader decompression.
+
+## 20. Delta/reference patch payload
+
+The Master commandlet retains delta generation. A generated delta begins:
 
 ```text
-<UserDir>/<GameName>/Saved/Paks/MyContent/<DLCName>-LinuxNoEditor.pak
+INT Magic = 0x92f92912
+INT OldSize
+INT OldCRC
+INT NewSize
+INT NewCRC
 ```
 
-Mac:
+followed by compact-index-coded literal/copy operations.
 
-```text
-<UserDir>/<GameName>/Saved/Paks/MyContent/<DLCName>-MacNoEditor.pak
-```
+When placed in the archive it is still represented by an ordinary `FArchiveItem`. Delta coding is therefore an installer payload semantic, not an alternate UT4MOD container.
 
-This is explicit source evidence that the locally consumed custom-content artifact is a `.pak`.
+## 21. UUpdateUModCommandlet confirmation
 
-## 9. Sharing/upload
+Despite the historical UMOD name, the UT2004 updater independently reads and rebuilds the same common archive:
 
-After packaging, the editor asks whether the user wants to share the content.
+- header at EOF-20;
+- directory at `TableOffset`;
+- members by stored offset/size;
+- item flags retained;
+- rebuilt directory before trailer;
+- CRC over the complete rebuilt pre-trailer data;
+- `FileSize = pre-trailer size + 20`;
+- trailer last.
 
-If accepted, it launches the Epic Games Launcher with:
+This provides a second UT2004 implementation confirming the physical layout.
 
-```text
--assetuploadcategory=ut
--assetuploadpath="<PakPath>"
-```
+## 22. Cross-version verification
 
-The uploaded path is the generated PAK itself.
+UT2003, the supplied UE2.5/Warfare tree and UT2004 were compared.
 
-There is no intervening UT4MOD builder in this official path.
+| Behavior | UT2003 | UE2.5/Warfare | UT2004 / UT4MOD |
+|---|---|---|---|
+| magic | `0x9fe3c5a3` | same | same |
+| version | 1 | same | same |
+| trailer | 20 bytes | same | same |
+| header | five INTs | same | same |
+| item | FString + 3 DWORDs | same | same |
+| directory | TArray at TableOffset | same | same |
+| ordinary writer alignment | 16 | same | same |
+| CRC | all pre-trailer bytes | same | same |
+| Bootstrap flag | `0x1` | same | same |
+| Compressed flag | `0x4` | same | same |
+| Setup packed-module path | yes | yes | yes |
+| Optional file semantic | absent in inspected UT2003 FFileInfo | yes | yes |
+| game module extension | `.ut2mod` | supplied setup registers `.umod` | **`.ut4mod`** |
 
-## 10. Comparison with UMOD/UT2MOD
+The significant UT2004 distinction is therefore the official external UT2004 module identity and its Setup semantics. No new physical module container version appears.
 
-This is a major generational change.
+## 23. Identification rules
 
-UE1/UE2 module systems use the version-1 Unreal module archive documented in the UMOD/UT2MOD specifications.
+UnrealDB must not identify a valid UT4MOD solely from the extension or magic.
 
-UT4's supplied UE4-era game source instead uses:
+For structural validation:
 
-```text
-plugin/DLC content
-    -> cook
-    -> stage
-    -> UE4 PAK
-    -> Saved/Paks/MyContent
-    -> optional Launcher upload
-```
+1. require enough bytes for the 20-byte trailer;
+2. read trailer at EOF-20;
+3. require magic `0x9fe3c5a3`;
+4. require version 1;
+5. require stored `FileSize` == physical size;
+6. safely validate `TableOffset`;
+7. deserialize the directory using the correct engine serialization;
+8. safely validate member offset/size ranges;
+9. for full verification, require CRC of the complete pre-trailer region to match.
 
-The old `FFileManagerArc` UMOD container must not be projected onto UT4.
+After structural validation, the `.ut4mod` extension supplies the official UT2004 external module classification.
 
-## 11. UE4 4.27.2 cross-check
+It must never be interpreted as Unreal Tournament 4 / UE4.
 
-The later supplied `ardenee/UnrealEngine4` 4.27.2 lineage contains the UE4 PakFile runtime and UnrealPak tooling, confirming that PAK remains an engine archive facility.
-
-However, generic UE4 does not by itself prove UT game-specific custom-content naming, metadata, or publishing semantics. Those rules above come from the UT game source.
-
-Likewise, the later UE4 tree does not establish a `.ut4mod` wrapper. The physical PAK structure, version evolution, compression, index layout, signing and encryption belong in the separate PAK specifications still pending in this library.
-
-## 12. Identification implications
-
-For source-backed classification, UnrealDB should recognize official UT4 published custom content as PAK when the file is structurally a UE4 PAK.
-
-Useful UT context can additionally be inferred from source-proven content such as:
-
-- platform-style DLC PAK filename;
-- `<DLCName>-version.txt`;
-- `<DLCName>-AssetRegistry.bin`;
-- appropriate cooked UnrealTournament paths.
-
-These are contextual indicators, not a replacement for structural PAK validation.
-
-A filename ending in `.ut4mod` must **not** cause UnrealDB to apply an invented parser.
-
-## 13. What remains unresolved
-
-The supplied official source does not prove:
-
-- a `.ut4mod` extension registration;
-- a UT4MOD magic value;
-- a UT4MOD outer header;
-- a UT4MOD directory structure;
-- a UT4MOD installer;
-- a UT4MOD-to-PAK wrapper transformation;
-- a source-defined rule that renaming a PAK to `.ut4mod` makes it an official UT4MOD;
-- third-party `.ut4mod` conventions.
-
-Those points remain unresolved rather than being reconstructed from community conventions.
-
-## 14. Relationship to pending PAK specifications
-
-This document establishes **which container official UT4 custom-content publishing produces**.
-
-It intentionally does not duplicate the physical PAK specification.
-
-The following remain separate work items:
-
-- PAK format;
-- PAK compression handling;
-- PAK encryption/signing handling.
-
-Those must be derived from the applicable UE4 PakFile and UnrealPak source, including version branches, rather than summarized from the UT publishing code.
-
-## 15. UnrealDB conformance requirements
+## 24. UnrealDB conformance requirements
 
 UnrealDB should:
 
-- not implement a fabricated UT4MOD header or magic;
-- not reuse the UE1/UE2 UMOD reader for UT4;
-- treat official UT4 published content as UE4 PAK data;
-- preserve UT4/game context separately from physical container classification;
-- use structural PAK validation rather than extension-only identification;
-- recognize source-proven UT DLC metadata only as contextual evidence;
-- leave unknown `.ut4mod` files unresolved unless their bytes independently match another source-proven format;
-- defer compression/encryption/index details to the source-backed PAK implementation.
+- classify `.ut4mod` as Unreal Tournament 2004 Module;
+- use the proven version-1 Unreal module archive parser;
+- read the trailer from EOF;
+- preserve exact header and item serialization order;
+- use the correct FString/TArray/compact-index serialization;
+- treat item offsets as absolute;
+- enforce bounded member reads;
+- verify stored total size;
+- verify CRC over exactly the pre-trailer bytes;
+- keep archive flags separate from Manifest `Compressed=True`;
+- keep delta payload interpretation separate from the outer container;
+- keep UT2004 Setup semantics separate from the common physical archive;
+- not invent UT4MOD-specific header fields, versions, flags, compression layers, limits or UE4 semantics.
 
-## 16. Source-reference matrix
+## 25. Source-reference matrix
 
 | Rule | Source | Behavior proved |
 |---|---|---|
-| UT editor publishing feature | `UnrealTournament/Plugins/PackageContent/Source/Private/PackageContent.cpp` | Share/package UI and supported content types |
-| publishing enters DLC pipeline | same, `FPackageContent::PackageDLC` | invokes `makeUTDLC` |
-| target/version parameters | same | platform plus `FNetworkVersion::GetLocalNetworkVersion()` |
-| final artifact expected as PAK | same, `FPackageContentCompleteTask` | builds `.../Content/Paks/<DLC>-<platform>.pak` path |
-| local install/copy location | same | copies PAK into `Saved/Paks/MyContent` |
-| sharing uploads PAK | same | Launcher `assetuploadpath` receives PAK path |
-| DLC command implementation | `UnrealTournament/Build/Scripts/UnrealTournamentProto.Automation.cs`, `MakeUTDLC` | official UT DLC cook/stage/pak flow |
-| cook source | same, `MakeUTDLC.Cook` | `Plugins/<DLCName>/Content` |
-| version file | same | writes `<DLCName>-version.txt` |
-| asset registry | same | renames to `<DLCName>-AssetRegistry.bin` |
-| PAK creation enabled | same, `GetParams` | `Pak=true` |
-| final PAK rename | same, `Cook` | `UnrealTournament-<platform>.pak` -> `<DLCName>-<platform>.pak` |
-| later engine PAK implementation | `ardenee/UnrealEngine4` PakFile/UnrealPak sources | PAK remains engine archive mechanism; details deferred to PAK specs |
+| UT4MOD extension | `System/setuput2004full.ini` | `.ut4mod=UT2004.Module` |
+| module class/action | full/demo setup INIs | UT2004 Module and `Setup.exe install "%1"` |
+| archive constants | `Core/Inc/FFileManagerArc.h` | magic, 20-byte header, version 1 |
+| header layout | same | five serialized INTs |
+| item layout | same | FString, Offset, Size, Flags |
+| trailer position | same | EOF minus 20 |
+| size/version/magic validation | same | reader validation |
+| CRC range | same | bytes before trailer |
+| directory | same | seek TableOffset and deserialize TArray |
+| member bounds | same | offset/size bounded reader |
+| path matching | same | archive canonicalization |
+| flags | same | Bootstrap 0x1, Compressed 0x4 |
+| packed install route | `Setup/Src/USetupDefinition.cpp` | `install` mounts packed module |
+| manifest constants | `Setup/Inc/Setup.h` | Manifest.ini |
+| UT2004 FFileInfo | same | file record fields |
+| Optional | same + USetupDefinition.cpp | parser and install behavior |
+| Setup compression | same + USetupDefinition.cpp | compressed-source copy/decompress |
+| writer alignment | `Editor/Src/UMasterCommandlet.cpp` | LocalCopyFile alignment 16 |
+| finalization | same | directory, CRC, size, trailer |
+| delta format | same | DeltaCode |
+| updater | same | independent rebuild of same archive |
+| earlier persistence | corresponding UT2003 and UE2.5 Core/Editor/Setup source | unchanged physical archive contract |
 
-## 17. Result
+## 26. Result
 
-For the supplied official Unreal Tournament UE4 source, there is **no source-backed UT4MOD binary container**.
-
-The official custom-content artifact is:
+The official UT2004 source proves:
 
 ```text
-UE4 PAK
+.ut4mod
+    -> UT2004.Module
+    -> Setup.exe install
+    -> common Unreal module archive version 1
 ```
 
-with UT-specific cooked DLC metadata and naming.
+UT4MOD is therefore **Unreal Tournament 2004's module extension**, not an Unreal Tournament 4/UE4 format.
 
-Accordingly, `UT4MOD` should not be implemented in UnrealDB as an independent binary format unless an authoritative source implementing such a container becomes available. If the term is retained as an ingest/category label for files encountered in the wild, it must remain distinct from the physical-format claim.
+Its physical container remains the same source-proven Unreal module archive family used by the earlier installer line; UT2004 does not introduce a replacement binary header or directory format.
