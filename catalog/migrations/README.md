@@ -8,7 +8,9 @@ The current base schema represents baseline `202609240002`.
 
 ## Current post-baseline migrations
 
-There are currently no active post-baseline migrations. Versions through `202609240002` have been consolidated into `catalog/install.sql` and retired from this directory.
+- `202609250001_ue3_export_identity_projection.php` adds the exact class-package, class-name, object-flags and outer-index fields required to reproduce UE3 `VerifyImportInner()` matching from the existing v4 export-path projection.
+
+Versions through `202609240002` remain consolidated into `catalog/install.sql` and retired from this directory.
 
 A fresh/current deployment loads `catalog/install.sql`; the migration runner is then used only for schema changes newer than `202609240002`.
 
