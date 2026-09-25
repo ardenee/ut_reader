@@ -176,7 +176,15 @@ final class BlockedCompressedFileMetadataConverter
 
     private function assertSchema(): void
     {
-        $tables = ['ue_file_metadata', 'ue_terms', 'ue_export_lookup', 'ue_dependency_links'];
+        $tables = [
+            'ue_file_metadata',
+            'ue_terms',
+            'ue_export_lookup',
+            'ue_export_path_lookup',
+            'ue_dependency_links',
+            'ue_dependency_identity_lookup',
+            'ue_legacy_export_identity_lookup',
+        ];
         $statement = $this->db->prepare(
             'SELECT TABLE_NAME FROM information_schema.TABLES '
             . 'WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME IN ('
