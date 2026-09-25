@@ -121,7 +121,8 @@ final class PdoDependencyResolver
                     (string)$requirement['package_name'],
                     array_values(array_unique((array)$requirement['paths'])),
                     $fileId,
-                    (array)($requirement['classes'] ?? [])
+                    (array)($requirement['classes'] ?? []),
+                    self::engineKey($db, $gameId)
                 );
                 if ($provider !== null) {
                     $completeProviders[$packageKey] = $provider;
