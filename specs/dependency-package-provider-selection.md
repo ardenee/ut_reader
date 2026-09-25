@@ -37,3 +37,16 @@ Engine loaders can search configured paths, mounted packages, already-loaded pac
 ## UnrealDB conformance
 
 Apply this operation only after the exact package reader has validated indices and tables. Preserve enough structured evidence to explain why a dependency resolved or failed; do not reduce resolution to a filename/name-only boolean.
+
+## Later-generation verification changes
+
+| Revision | Provider-selection change |
+|---|---|
+| Unreal II | Root package import still selects provider by package name; `VerifyImport` passes no compatible GUID. Filesystem `appFindPackageFile` policy is runtime state. |
+| UE2.5 | Same basic top-level package-import provider model. |
+| UT2003 | Same model, with runtime package-remap behavior existing outside import verification. |
+| UT2004 | Same serialized root-provider model; no active fuzzy/remap provider selection in the reviewed resolver. |
+| UE3 | Provider selection is affected by cooked/seek-free and remapped-package behavior; import fixups can alter runtime resolution. |
+| UE4 4.27.2 | Imports may carry/use explicit provider package information and external-package semantics; mounts, script packages, CoreRedirects and instancing can alter runtime selection. |
+
+Catalog selection should preserve the serialized provider first, then annotate any reproducible revision-specific transformation.
