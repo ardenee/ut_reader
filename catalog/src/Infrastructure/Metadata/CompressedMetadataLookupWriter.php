@@ -167,7 +167,21 @@ final class CompressedMetadataLookupWriter
         ];
         $exportPathColumns = [
             'file_id', 'export_index', 'path_hash_ci', 'local_path_term_id', 'class_term_id',
+            'class_package_term_id', 'class_name_term_id', 'object_flags',
         ];
+        $importsByIdentityIndex = [];
+        foreach ($imports as $identityImport) {
+            if (is_array($identityImport)) {
+                $importsByIdentityIndex[(int)($identityImport['import_index'] ?? 0)] = $identityImport;
+            }
+        }
+        $exportsByIdentityIndex = [];
+        foreach ($exports as $identityExport) {
+            if (is_array($identityExport)) {
+                $exportsByIdentityIndex[(int)($identityExport['export_index'] ?? 0)] = $identityExport;
+            }
+        }
+        $packageName = trim((string)($file['package_name'] ?? ''));
         $exportRows = [];
         $exportPathRows = [];
         foreach ($exports as $row) {
@@ -188,12 +202,21 @@ final class CompressedMetadataLookupWriter
                 md5($localPath, true),
                 $localPathTermId,
             ];
+            [$verifyClassPackage, $verifyClassName] = CatalogCompactIdentityEnricher::legacyExportClassIdentity(
+                $row,
+                $importsByIdentityIndex,
+                $exportsByIdentityIndex,
+                $packageName
+            );
             $exportPathRows[] = [
                 $fileId,
                 $index,
                 CatalogUnrealIdentityHash::objectPathBinary($localPath),
                 $localPathTermId,
                 $classTermId,
+                $verifyClassPackage !== '' ? $this->requiredTermId($termIds, $verifyClassPackage) : null,
+                $verifyClassName !== '' ? $this->requiredTermId($termIds, $verifyClassName) : null,
+                isset($row['object_flags']) ? (int)$row['object_flags'] : null,
             ];
             if (count($exportRows) >= self::WRITE_BATCH_SIZE) {
                 $this->insertBatch('ue_export_lookup', $exportColumns, $exportRows);
