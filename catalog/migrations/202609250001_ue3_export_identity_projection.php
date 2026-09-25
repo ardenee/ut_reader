@@ -22,5 +22,10 @@ return [
             'object_flags',
             'ALTER TABLE ue_export_path_lookup ADD COLUMN object_flags BIGINT UNSIGNED NULL AFTER class_name_term_id'
         );
+        $schema->ensureColumn(
+            'ue_export_path_lookup',
+            'outer_index',
+            'ALTER TABLE ue_export_path_lookup ADD COLUMN outer_index INT NULL AFTER object_flags'
+        );
     },
 ];
