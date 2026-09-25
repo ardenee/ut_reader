@@ -50,3 +50,16 @@ Never scan until the next export to invent a size when SerialSize is present. Ne
 ## Cross-generation conformance result
 
 This semantic rule must be applied through the exact engine/revision reader selected by the package summary. The generation-specific package specs remain the final authority where serialized layouts differ.
+
+## Later-generation source verification
+
+| Revision | Source-confirmed boundary behavior |
+|---|---|
+| Unreal II | `SerialSize`/`SerialOffset` are compact; offset is serialized only for nonzero size. `Preload` warns when consumed bytes differ. |
+| UE2.5 | Same structural span model, but reviewed `Preload` makes consumed-size mismatch fatal. |
+| UT2003 | Same UE2-era compact span representation; mismatch is fatal. |
+| UT2004 | Retains its UE2-era export span model and revision-specific loader policy. |
+| UE3 | Export spans use the UE3 export record and can address a logical package view backed by compressed chunks. |
+| UE4 4.27.2 | SerialSize/SerialOffset are legacy 32-bit before `VER_UE4_64BIT_EXPORTMAP_SERIALSIZES` and 64-bit afterward. |
+
+The span itself is serialized format data; the engine reaction to serializer under/over-consumption is revision-specific.
