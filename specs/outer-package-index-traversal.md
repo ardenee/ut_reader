@@ -43,3 +43,16 @@ For imports, the outer chain is also part of determining the referenced top-leve
 ## Cross-generation conformance result
 
 This semantic rule must be applied through the exact engine/revision reader selected by the package summary. The generation-specific package specs remain the final authority where serialized layouts differ.
+
+## Later-generation source verification
+
+| Revision | Source-confirmed traversal change |
+|---|---|
+| Unreal II | Import full paths follow negative parent imports to zero; export full paths follow positive export parents to zero. |
+| UE2.5 | Retains the corresponding UE2 parent-chain model. |
+| UT2003 | Retains negative import-parent and positive export-parent traversal. |
+| UT2004 | Retains that UE2-era path structure. |
+| UE3 | Cooked/seek-free packages can mix import and export indices in outer graphs; path traversal must therefore resolve the signed package index at every hop rather than assuming import-only outers. |
+| UE4 4.27.2 | `FPackageIndex` traversal remains signed and explicit package-name/external-package behavior can supplement the outer chain. |
+
+A UE1/UE2 assumption that every import outer is another import is not safe for later cooked package models.
