@@ -43,3 +43,16 @@ Never select a table layout from extension alone. Dispatch from tag, version/lic
 ## Cross-generation conformance result
 
 This semantic rule must be applied through the exact engine/revision reader selected by the package summary. The generation-specific package specs remain the final authority where serialized layouts differ.
+
+## Later-generation source verification
+
+| Revision | Source-confirmed version/summary change |
+|---|---|
+| Unreal II | Package version 126; raw `FileVersion` splits low-16 Epic/high-16 licensee. >=68 uses GUID+generations; older packages use heritage count/offset. |
+| UE2.5 | Reviewed source also uses package version 126 and the Epic/licensee split, but remains its own reader revision. |
+| UT2003 | Package version 120, licensee 0x1C. Summary serializer guards on valid magic before consuming the remainder. |
+| UT2004 | Package version 128, licensee 0x1D; do not substitute UT2003 constants/layout gates. |
+| UE3 | Summary expands substantially: TotalHeaderSize, FolderName, DependsOffset, GUID-table metadata, thumbnail offset, engine/cooked versions, compression map, package source and additional cooked metadata. |
+| UE4 4.27.2 | Uses the negative legacy-version discriminator (current writer -7), UE4/licensee versions and custom versions, plus modern summary fields. Unversioned packages are an explicit state. |
+
+The shared tag does not make the summaries interchangeable.
