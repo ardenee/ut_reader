@@ -44,3 +44,18 @@ Do not implement speculative basename matching, extension substitution, case-fol
 ## UnrealDB conformance
 
 Apply this operation only after the exact package reader has validated indices and tables. Preserve enough structured evidence to explain why a dependency resolved or failed; do not reduce resolution to a filename/name-only boolean.
+
+## Later-generation fallback inventory
+
+The UT99 baseline fallbacks remain documented above, but later source changes the inventory:
+
+| Revision | Source-backed fallback/compatibility notes |
+|---|---|
+| Unreal II | **Removes** active UnrealI/UnrealShare compatibility. Retains `Mesh -> LodMesh`, provider-root outer acceptance, runtime native/transient binding, broad SafeReplace and forgiving broken-link handling. ClassRemap/PackageRemap code present in this source is disabled. |
+| UE2.5 | Retains Mesh->LodMesh, provider-root outer acceptance, runtime binding, broad SafeReplace and forgiving mode. No active generic ClassRemap/PackageRemap or UnrealI/UnrealShare compatibility. |
+| UT2003 | Same core import fallbacks; additionally a runtime `GObjPackageRemap` retry exists in StaticLoadObject **outside VerifyImport**. |
+| UT2004 | Same core import fallbacks; reviewed ClassRemap/PackageRemap are not active in VerifyImport and UnrealI/UnrealShare compatibility is absent. |
+| UE3 | Adds source-defined import fixups/remapping, UObjectRedirector fallback and cooked/seek-free/runtime conditions. |
+| UE4 4.27.2 | Adds CoreRedirects, instancing/package remapping, script/native/in-memory handling and external-package cases. No arbitrary fuzzy fallback is source-backed. |
+
+Fallbacks are therefore a revision matrix, not an accumulating list inherited from UT99.
