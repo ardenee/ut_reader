@@ -41,8 +41,10 @@ final class PdoPackageObjectCoverageResolver
         string $packageName,
         array $requiredObjectPaths,
         int $preferredFileId = 0,
-        array $requiredClassesByPath = []
+        array $requiredClassesByPath = [],
+        string $engineKey = ''
     ): array {
+        $engineKey = strtoupper(trim($engineKey));
         $packageName = trim($packageName);
         if ($gameId < 1 || $packageName === '') {
             return [];
@@ -71,13 +73,16 @@ final class PdoPackageObjectCoverageResolver
                 }
 
                 $providerIds = array_keys($providers);
-                $sql = 'SELECT l.file_id,l.export_index,l.path_hash_ci,'
-                    . 'pt.value_prefix local_path,ct.value_prefix class_name'
+                $sql = 'SELECT l.file_id,l.export_index,l.path_hash_ci,l.object_flags,'
+                    . 'pt.value_prefix local_path,ct.value_prefix class_name,'
+                    . 'cpt.value_prefix exact_class_package,cnt.value_prefix exact_class_name'
                     . ' FROM ue_export_path_lookup l'
                     . ' JOIN ue_files f ON f.id=l.file_id'
                     . ' JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=' . \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer::FORMAT_VERSION . ''
                     . ' JOIN ue_terms pt ON pt.id=l.local_path_term_id'
                     . ' LEFT JOIN ue_terms ct ON ct.id=l.class_term_id'
+                    . ' LEFT JOIN ue_terms cpt ON cpt.id=l.class_package_term_id'
+                    . ' LEFT JOIN ue_terms cnt ON cnt.id=l.class_name_term_id'
                     . ' WHERE f.game_id=? AND f.scan_status="verified"'
                     . ' AND l.file_id IN (' . self::placeholders(count($providerIds)) . ')'
                     . ' AND l.path_hash_ci IN (' . self::placeholders(count($hashes)) . ')'
@@ -105,7 +110,28 @@ final class PdoPackageObjectCoverageResolver
                     }
 
                     $requiredClass = $requiredClasses[$requiredKey] ?? null;
-                    if (is_array($requiredClass)) {
+                    if ($engineKey === 'UE3') {
+                        // UE3 VerifyImportInner compares ObjectName, ClassName and
+                        // ClassPackage exactly, qualifies the resolved Outer, and
+                        // rejects an ordinary external match without RF_Public.
+                        // Exact path identity above represents the complete outer
+                        // chain, so only the remaining class/visibility gates are
+                        // evaluated here.
+                        if (!is_array($requiredClass)) {
+                            continue;
+                        }
+                        $requiredName = self::key((string)($requiredClass['class_name'] ?? ''));
+                        $requiredPackage = self::key((string)($requiredClass['class_package'] ?? ''));
+                        $actualName = self::key((string)($row['exact_class_name'] ?? ''));
+                        $actualPackage = self::key((string)($row['exact_class_package'] ?? ''));
+                        if ($requiredName === '' || $requiredPackage === ''
+                            || $actualName !== $requiredName || $actualPackage !== $requiredPackage) {
+                            continue;
+                        }
+                        if ((((int)($row['object_flags'] ?? 0)) & 0x00000004) === 0) {
+                            continue;
+                        }
+                    } elseif (is_array($requiredClass)) {
                         $actual = self::key((string)($row['class_name'] ?? ''));
                         $name = self::key((string)($requiredClass['class_name'] ?? ''));
                         $package = self::key((string)($requiredClass['class_package'] ?? ''));
@@ -203,7 +229,8 @@ final class PdoPackageObjectCoverageResolver
         string $packageName,
         array $requiredObjectPaths,
         int $preferredFileId = 0,
-        array $requiredClassesByPath = []
+        array $requiredClassesByPath = [],
+        string $engineKey = ''
     ): ?array {
         return self::selectCompleteCoverage(
             self::evaluate(
@@ -212,7 +239,8 @@ final class PdoPackageObjectCoverageResolver
                 $packageName,
                 $requiredObjectPaths,
                 $preferredFileId,
-                $requiredClassesByPath
+                $requiredClassesByPath,
+                $engineKey
             ),
             $preferredFileId
         );
