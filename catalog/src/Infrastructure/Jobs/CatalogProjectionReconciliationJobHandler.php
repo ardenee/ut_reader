@@ -22,6 +22,7 @@ use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyPackageSummary;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyReadSource;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoGameCatalogStats;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageCoverageCache;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageProviderRepository;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoWorkflowChildStateQuery;
 
@@ -161,11 +162,29 @@ final class CatalogProjectionReconciliationJobHandler implements JobHandler
             $summaryFilesRefreshed = (int)($bulkSummary['files'] ?? 0);
         }
 
+        $coverage = new PdoPackageCoverageCache($this->db);
+        $coverageRefreshed = 0;
+        $coveragePruned = 0;
+        foreach ($gameIds as $gameId) {
+            foreach ($packageNames as $packageName) {
+                $coverageResult = $coverage->reconcilePackage($gameId, $packageName);
+                if (!empty($coverageResult['cached'])) {
+                    $coverageRefreshed++;
+                } else {
+                    $coveragePruned++;
+                }
+            }
+        }
+
         $context->checkpoint($this->progress(
             'projection_finalize',
             94,
             'Refreshing cached game counters.',
-            ['game_ids' => $gameIds]
+            [
+                'game_ids' => $gameIds,
+                'coverage_refreshed' => $coverageRefreshed,
+                'coverage_pruned' => $coveragePruned,
+            ]
         ));
         $stats = new PdoGameCatalogStats($this->db);
         $statsRefreshed = 0;
@@ -203,6 +222,8 @@ final class CatalogProjectionReconciliationJobHandler implements JobHandler
             'targeted_imports_processed' => $aggregate['targeted_imports'],
             'summary_files_refreshed' => $summaryFilesRefreshed,
             'stats_refreshed' => $statsRefreshed,
+            'coverage_refreshed' => $coverageRefreshed,
+            'coverage_pruned' => $coveragePruned,
             'failure_count' => 0,
             'failures' => [],
             'failures_truncated' => false,
