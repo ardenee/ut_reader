@@ -109,7 +109,15 @@ final class PdoPackageObjectCoverageResolver
                         $actual = self::key((string)($row['class_name'] ?? ''));
                         $name = self::key((string)($requiredClass['class_name'] ?? ''));
                         $package = self::key((string)($requiredClass['class_package'] ?? ''));
-                        if ($actual !== '' && $name !== '') {
+                        if ($name !== '') {
+                            // A required serialized class identity cannot be
+                            // satisfied by an export whose class projection is
+                            // absent. VerifyImport compares class identity; a
+                            // missing projection must remain unresolved rather
+                            // than being treated as a wildcard.
+                            if ($actual === '') {
+                                continue;
+                            }
                             $qualified = $package !== '' ? $package . '.' . $name : $name;
                             if (str_contains($actual, '.')) {
                                 if ($actual !== $qualified && $actual !== $name) {
