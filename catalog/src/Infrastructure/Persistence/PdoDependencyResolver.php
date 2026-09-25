@@ -55,8 +55,10 @@ final class PdoDependencyResolver
         }
 
         $packageMatches = self::loadPackageMatches($db, $gameId, $fileId, array_values($packageNames));
+        $engineKey = self::engineKey($db, $gameId);
         $legacyPolicy = self::legacyVerifyImportPolicy($db, $gameId);
         $legacyVerifyImport = $legacyPolicy !== null;
+        $ue3VerifyImport = $engineKey === 'UE3';
 
         $packageRequirements = [];
         foreach ($objectLookups as $lookup) {
@@ -112,8 +114,47 @@ final class PdoDependencyResolver
             }
         }
 
+        $ue3VerifyImportMatches = [];
+        if ($ue3VerifyImport) {
+            require_once __DIR__ . '/PdoUe3VerifyImportProjectionResolver.php';
+            $ue3Candidates = self::loadPackageCandidates($db, $gameId, $fileId, array_values($packageNames));
+            foreach ($packageRequirements as $packageKey => $requirement) {
+                $requiredImportIndexes = [];
+                foreach ($imports as $fallback => $candidateImport) {
+                    if (!is_array($candidateImport)
+                        || self::normalizeLookup((string)($candidateImport['root_package'] ?? '')) !== $packageKey
+                        || trim((string)($candidateImport['relative_object_path'] ?? '')) === '') {
+                        continue;
+                    }
+                    $requiredImportIndexes[] = isset($candidateImport['import_index'])
+                        ? (int)$candidateImport['import_index']
+                        : (int)$fallback;
+                }
+
+                foreach ($ue3Candidates[$packageKey] ?? [] as $candidate) {
+                    $matches = PdoUe3VerifyImportProjectionResolver::resolveProvider(
+                        $db,
+                        (int)$candidate['file_id'],
+                        $imports
+                    );
+                    $complete = true;
+                    foreach ($requiredImportIndexes as $requiredImportIndex) {
+                        if (!array_key_exists($requiredImportIndex, $matches)) {
+                            $complete = false;
+                            break;
+                        }
+                    }
+                    if ($complete) {
+                        $packageMatches[$packageKey] = $candidate;
+                        $ue3VerifyImportMatches[$packageKey] = $matches;
+                        break;
+                    }
+                }
+            }
+        }
+
         $completeProviders = [];
-        if (!$legacyVerifyImport) {
+        if (!$legacyVerifyImport && !$ue3VerifyImport) {
             foreach ($packageRequirements as $packageKey => $requirement) {
                 $provider = PdoPackageObjectCoverageResolver::chooseCompleteProvider(
                     $db,
@@ -122,7 +163,7 @@ final class PdoDependencyResolver
                     array_values(array_unique((array)$requirement['paths'])),
                     $fileId,
                     (array)($requirement['classes'] ?? []),
-                    self::engineKey($db, $gameId)
+                    $engineKey
                 );
                 if ($provider !== null) {
                     $completeProviders[$packageKey] = $provider;
@@ -180,6 +221,20 @@ final class PdoDependencyResolver
                             'source' => $legacyPolicy === 'unreal2'
                                 ? 'ue_verify_import_unreal2'
                                 : 'ue_verify_import',
+                            'confidence' => 'exact',
+                        ];
+                    }
+                } elseif ($ue3VerifyImport) {
+                    $packageMatch = $packageMatches[$packageKey] ?? null;
+                    $importIndex = (int)($import['import_index'] ?? -1);
+                    $exportIndex = $ue3VerifyImportMatches[$packageKey][$importIndex] ?? null;
+                    if ($packageMatch !== null && $exportIndex !== null) {
+                        $result = [
+                            'status' => 'resolved',
+                            'resolved_file_id' => (int)$packageMatch['file_id'],
+                            'resolved_export_id' => null,
+                            'resolved_export_index' => (int)$exportIndex,
+                            'source' => 'ue3_verify_import',
                             'confidence' => 'exact',
                         ];
                     }
