@@ -28,41 +28,150 @@ final class PdoPackageCoverageCache
     public function rebuildPackage(int $gameId, string $packageName): array
     {
         $result = PdoPackageSupersetAnalyzer::analyze($this->db, $gameId, $packageName);
+        $this->persistResult($gameId, $packageName, $result);
+        return $result;
+    }
+
+    /**
+     * Reconcile one cached logical package after providers or consumers change.
+     *
+     * Package Coverage is intentionally a multi-provider report. If the current
+     * v4 resolver sees fewer than two eligible providers, or no required object
+     * set remains, remove the old cache entry instead of preserving stale state.
+     *
+     * @return array<string,mixed>
+     */
+    public function reconcilePackage(int $gameId, string $packageName): array
+    {
+        $packageName = trim($packageName);
+        if ($gameId < 1 || $packageName === '') {
+            return [
+                'game_id' => $gameId,
+                'package_name' => $packageName,
+                'consumer_count' => 0,
+                'required_object_count' => 0,
+                'providers' => [],
+                'cached' => false,
+            ];
+        }
+
+        $result = PdoPackageSupersetAnalyzer::analyze($this->db, $gameId, $packageName);
+        $providers = array_values((array)($result['providers'] ?? []));
+        $requiredCount = max(0, (int)($result['required_object_count'] ?? 0));
+
+        if (count($providers) < 2 || $requiredCount < 1) {
+            $this->deletePackage($gameId, $packageName);
+            $result['cached'] = false;
+            return $result;
+        }
+
+        $this->persistResult($gameId, $packageName, $result);
+        $result['cached'] = true;
+        return $result;
+    }
+
+    private function deletePackage(int $gameId, string $packageName): void
+    {
         $this->db->beginTransaction();
         try {
-            $this->db->prepare('DELETE FROM ue_package_provider_coverage_cache WHERE game_id=? AND package_name=?')->execute([$gameId,$packageName]);
-            $this->db->prepare('INSERT INTO ue_package_coverage_cache(game_id,package_name,consumer_count,required_object_count,updated_at) VALUES(?,?,?,?,NOW(6)) ON DUPLICATE KEY UPDATE consumer_count=VALUES(consumer_count),required_object_count=VALUES(required_object_count),updated_at=VALUES(updated_at)')
-                ->execute([$gameId,$packageName,(int)$result['consumer_count'],(int)$result['required_object_count']]);
-            $ins=$this->db->prepare('INSERT INTO ue_package_provider_coverage_cache(game_id,package_name,file_id,matched_count,missing_count,fully_satisfies,missing_paths_json,updated_at) VALUES(?,?,?,?,?,?,?,NOW(6))');
-            foreach ((array)$result['providers'] as $p) {
-                $ins->execute([$gameId,$packageName,(int)$p['file_id'],(int)$p['matched_count'],(int)$p['missing_count'],(string)$p['status']==='fully_satisfies'?1:0,json_encode(array_values((array)($p['missing_paths']??[])),JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE)]);
+            $this->db->prepare(
+                'DELETE FROM ue_package_provider_coverage_cache WHERE game_id=? AND package_name=?'
+            )->execute([$gameId, $packageName]);
+            $this->db->prepare(
+                'DELETE FROM ue_package_coverage_cache WHERE game_id=? AND package_name=?'
+            )->execute([$gameId, $packageName]);
+            $this->db->commit();
+        } catch (\Throwable $e) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            throw $e;
+        }
+    }
+
+    /** @param array<string,mixed> $result */
+    private function persistResult(int $gameId, string $packageName, array $result): void
+    {
+        $this->db->beginTransaction();
+        try {
+            $this->db->prepare(
+                'DELETE FROM ue_package_provider_coverage_cache WHERE game_id=? AND package_name=?'
+            )->execute([$gameId, $packageName]);
+            $this->db->prepare(
+                'INSERT INTO ue_package_coverage_cache('
+                . 'game_id,package_name,consumer_count,required_object_count,updated_at'
+                . ') VALUES(?,?,?,?,NOW(6)) '
+                . 'ON DUPLICATE KEY UPDATE consumer_count=VALUES(consumer_count),'
+                . 'required_object_count=VALUES(required_object_count),updated_at=VALUES(updated_at)'
+            )->execute([
+                $gameId,
+                $packageName,
+                (int)($result['consumer_count'] ?? 0),
+                (int)($result['required_object_count'] ?? 0),
+            ]);
+            $insert = $this->db->prepare(
+                'INSERT INTO ue_package_provider_coverage_cache('
+                . 'game_id,package_name,file_id,matched_count,missing_count,'
+                . 'fully_satisfies,missing_paths_json,updated_at'
+                . ') VALUES(?,?,?,?,?,?,?,NOW(6))'
+            );
+            foreach ((array)($result['providers'] ?? []) as $provider) {
+                $insert->execute([
+                    $gameId,
+                    $packageName,
+                    (int)$provider['file_id'],
+                    (int)$provider['matched_count'],
+                    (int)$provider['missing_count'],
+                    (string)$provider['status'] === 'fully_satisfies' ? 1 : 0,
+                    json_encode(
+                        array_values((array)($provider['missing_paths'] ?? [])),
+                        JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
+                    ),
+                ]);
             }
             $this->db->commit();
         } catch (\Throwable $e) {
-            if ($this->db->inTransaction()) $this->db->rollBack();
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
             throw $e;
         }
-        return $result;
     }
 
     /** @param null|callable(int,int,string):void $progress */
     public function rebuildGame(int $gameId, mixed $progress=null): array
     {
-        // Drive coverage from the authoritative provider projection rather than
-        // ue_files.package_name alone. This includes alias-provided packages and
-        // only analyzes logical packages that genuinely have competing files.
-        $rows=\catalog_all(
+        // Revisit both the current multi-provider set and anything already
+        // cached. Including old cache names is what prunes packages that ceased
+        // to have multiple eligible providers after deletion/demotion.
+        $rows = \catalog_all(
             $this->db,
-            'SELECT package_name,COUNT(DISTINCT file_id) providers'
-            . ' FROM ue_package_providers WHERE game_id=? AND package_name<>""'
-            . ' GROUP BY package_name HAVING COUNT(DISTINCT file_id)>1 ORDER BY package_name',
-            [$gameId]
+            'SELECT package_name FROM ('
+            . 'SELECT package_name FROM ue_package_providers '
+            . 'WHERE game_id=? AND package_name<>"" '
+            . 'GROUP BY package_name HAVING COUNT(DISTINCT file_id)>1 '
+            . 'UNION '
+            . 'SELECT package_name FROM ue_package_coverage_cache WHERE game_id=?'
+            . ') packages ORDER BY package_name',
+            [$gameId, $gameId]
         );
-        $done=0;$total=count($rows);
-        foreach($rows as $row){
-            $this->rebuildPackage($gameId,(string)$row['package_name']);$done++;
-            if($progress!==null) $progress($done,$total,(string)$row['package_name']);
+        $done = 0;
+        $cached = 0;
+        $pruned = 0;
+        $total = count($rows);
+        foreach ($rows as $row) {
+            $packageName = (string)$row['package_name'];
+            $result = $this->reconcilePackage($gameId, $packageName);
+            $done++;
+            if (!empty($result['cached'])) {
+                $cached++;
+            } else {
+                $pruned++;
+            }
+            if ($progress !== null) {
+                $progress($done, $total, $packageName);
+            }
         }
-        return ['packages'=>$done];
+        return ['packages' => $done, 'cached' => $cached, 'pruned' => $pruned];
     }
 }
