@@ -167,7 +167,7 @@ final class CompressedMetadataLookupWriter
         ];
         $exportPathColumns = [
             'file_id', 'export_index', 'path_hash_ci', 'local_path_term_id', 'class_term_id',
-            'class_package_term_id', 'class_name_term_id', 'object_flags',
+            'class_package_term_id', 'class_name_term_id', 'object_flags', 'outer_index',
         ];
         $importsByIdentityIndex = [];
         foreach ($imports as $identityImport) {
@@ -232,6 +232,7 @@ final class CompressedMetadataLookupWriter
                 $verifyClassPackage !== '' ? $this->requiredTermId($termIds, $verifyClassPackage) : null,
                 $verifyClassName !== '' ? $this->requiredTermId($termIds, $verifyClassName) : null,
                 isset($row['object_flags']) ? (int)$row['object_flags'] : null,
+                isset($row['outer_index']) ? (int)$row['outer_index'] : null,
             ];
             if (count($exportRows) >= self::WRITE_BATCH_SIZE) {
                 $this->insertBatch('ue_export_lookup', $exportColumns, $exportRows);
