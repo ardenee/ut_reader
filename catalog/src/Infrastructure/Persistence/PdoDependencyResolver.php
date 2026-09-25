@@ -208,10 +208,12 @@ final class PdoDependencyResolver
     /** @param array<string,mixed> $import */
     private static function isCommonImport(array $import): bool
     {
-        if ((int)($import['is_common'] ?? 0) === 1) {
-            return true;
-        }
-        return str_starts_with(strtolower(trim((string)($import['root_package'] ?? ''))), '/script/');
+        // Common-ness must be explicit catalog evidence. UE4 treats /Script/ as
+        // a script-package namespace, not as proof that the package exists:
+        // VerifyImportInner reports a missing script package when it cannot find
+        // the requested runtime package. Do not let the namespace itself bypass
+        // provider/import verification.
+        return (int)($import['is_common'] ?? 0) === 1;
     }
 
     private static function engineKey(PDO $db, int $gameId): string
