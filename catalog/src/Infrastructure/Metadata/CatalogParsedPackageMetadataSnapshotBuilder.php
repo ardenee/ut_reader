@@ -309,6 +309,7 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
 
         $localExports = [];
         $localVerifyImportMatches = ['standard' => [], 'unreal2' => [], 'unreal2_only' => []];
+        $localUe3VerifyImportMatches = [];
         if ($legacyVerifyImport) {
             require_once dirname(__DIR__) . '/Persistence/PdoLegacyVerifyImportProjectionResolver.php';
             $localVerifyImportMatches = \UnrealDb\Catalog\Infrastructure\Persistence\PdoLegacyVerifyImportProjectionResolver::resolveInMemoryVariants(
@@ -317,41 +318,22 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
                 $exportRows,
                 $packageName
             );
+        } elseif ($ue3VerifyImport) {
+            require_once dirname(__DIR__) . '/Persistence/PdoUe3VerifyImportProjectionResolver.php';
+            $localUe3VerifyImportMatches =
+                \UnrealDb\Catalog\Infrastructure\Persistence\PdoUe3VerifyImportProjectionResolver::resolveInMemory(
+                    $importRows,
+                    $importRows,
+                    $exportRows,
+                    $packageName
+                );
         } else {
-            $importsByIndex = [];
-            foreach ($importRows as $identityImport) {
-                if (is_array($identityImport)) {
-                    $importsByIndex[(int)($identityImport['import_index'] ?? 0)] = $identityImport;
-                }
-            }
-            $exportsByIndex = [];
-            foreach ($exportRows as $identityExport) {
-                if (is_array($identityExport)) {
-                    $exportsByIndex[(int)($identityExport['export_index'] ?? 0)] = $identityExport;
-                }
-            }
             foreach ($exportRows as $export) {
                 if (!is_array($export)) {
                     continue;
                 }
                 $lookupKey = $this->lookupKey((string)($export['full_path'] ?? ''));
-                if ($lookupKey === '') {
-                    continue;
-                }
-                if ($ue3VerifyImport) {
-                    [$classPackage, $className] = CatalogCompactIdentityEnricher::ue3ExportClassIdentity(
-                        $export,
-                        $importsByIndex,
-                        $exportsByIndex,
-                        $packageName
-                    );
-                    $localExports[$lookupKey][] = [
-                        'export_index' => (int)($export['export_index'] ?? 0),
-                        'class_package' => $classPackage,
-                        'class_name' => $className,
-                        'object_flags' => (int)($export['object_flags'] ?? 0),
-                    ];
-                } elseif (!isset($localExports[$lookupKey])) {
+                if ($lookupKey !== '' && !isset($localExports[$lookupKey])) {
                     $localExports[$lookupKey] = (int)($export['export_index'] ?? 0);
                 }
             }
@@ -384,21 +366,7 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
                 $localExportIndex = $localVerifyImportMatches['standard'][$importIndex] ?? null;
                 $localUnreal2OnlyIndex = $localVerifyImportMatches['unreal2_only'][$importIndex] ?? null;
             } elseif ($ue3VerifyImport) {
-                $candidates = $localExports[$this->lookupKey((string)$import['full_path'])] ?? [];
-                foreach (is_array($candidates) ? $candidates : [] as $candidate) {
-                    if (!is_array($candidate)) {
-                        continue;
-                    }
-                    if ($this->lookupKey((string)($candidate['class_package'] ?? ''))
-                            !== $this->lookupKey((string)($import['class_package'] ?? ''))
-                        || $this->lookupKey((string)($candidate['class_name'] ?? ''))
-                            !== $this->lookupKey((string)($import['class_name'] ?? ''))
-                        || ((((int)($candidate['object_flags'] ?? 0)) & 0x00000004) === 0)) {
-                        continue;
-                    }
-                    $localExportIndex = (int)$candidate['export_index'];
-                    break;
-                }
+                $localExportIndex = $localUe3VerifyImportMatches[(int)($import['import_index'] ?? -1)] ?? null;
             } elseif (!$legacyVerifyImport) {
                 $localExportIndex = $localExports[$this->lookupKey((string)$import['full_path'])] ?? null;
             }
