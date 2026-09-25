@@ -43,6 +43,7 @@ Its purpose is to let an engineer implement, review, or repair UnrealDB's parser
 - [x] UE2.5 package format and reading — `ue2.5-unreal-warfare-package-format.md`
 - [x] UE2.5 dependency and import resolution — `ue2.5-unreal-warfare-dependency-resolution.md`
 - [x] UT2003 package/version differences — `ut2003-v2107-package-format.md`
+- [x] UT2003 dependency and import resolution — `ut2003-v2107-dependency-resolution.md`
 - [ ] UT2004 package/version differences
 - [ ] UE3 package format and reading
 - [ ] UE3 dependency resolution
