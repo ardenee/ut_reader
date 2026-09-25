@@ -390,7 +390,12 @@ final class CompressedMetadataLookupWriter
                 continue;
             }
             $index = (int)($row['export_index'] ?? -1);
-            yield (string)($row['object_name'] ?? '');
+            $objectName = (string)($row['object_name'] ?? '');
+            yield $objectName;
+            $trimmedObjectName = trim($objectName);
+            if ($trimmedObjectName !== $objectName) {
+                yield $trimmedObjectName;
+            }
             yield (string)($index >= 0 ? ($paths['exports'][$index]['local'] ?? '') : '');
             $className = trim((string)($row['class_name'] ?? ''));
             if ($className !== '') {
@@ -415,7 +420,12 @@ final class CompressedMetadataLookupWriter
             if (!is_array($row)) {
                 continue;
             }
-            yield (string)($row['object_name'] ?? '');
+            $objectName = (string)($row['object_name'] ?? '');
+            yield $objectName;
+            $trimmedObjectName = trim($objectName);
+            if ($trimmedObjectName !== $objectName) {
+                yield $trimmedObjectName;
+            }
             $classPackage = trim((string)($row['class_package'] ?? ''));
             $className = trim((string)($row['class_name'] ?? ''));
             if ($classPackage !== '') {
@@ -642,12 +652,16 @@ final class CompressedMetadataLookupWriter
 
         $rows = [];
         foreach ($exportsByIndex as $index => $row) {
-            [$classPackage, $className] = $this->legacyExportClassIdentity(
-                $row,
-                $importsByIndex,
-                $exportsByIndex,
-                (string)($file['package_name'] ?? '')
-            );
+            $classPackage = trim((string)($row['verify_class_package'] ?? ''));
+            $className = trim((string)($row['verify_class_name'] ?? ''));
+            if ($classPackage === '' || $className === '') {
+                [$classPackage, $className] = $this->legacyExportClassIdentity(
+                    $row,
+                    $importsByIndex,
+                    $exportsByIndex,
+                    (string)($file['package_name'] ?? '')
+                );
+            }
             $objectName = trim((string)($row['object_name'] ?? ''));
             if ($objectName === '' || $classPackage === '' || $className === '') {
                 continue;
