@@ -124,7 +124,7 @@ final class CompressedMetadataLookupWriter
             }
         }
 
-        $identities = [];
+        $projectionRows = [];
         $termValues = [];
         foreach ($exportsByIndex as $exportIndex => $row) {
             if (!array_key_exists('outer_index', $row) || !array_key_exists('object_flags', $row)
@@ -133,19 +133,33 @@ final class CompressedMetadataLookupWriter
                     'UE3 export #' . $exportIndex . ' is missing serialized OuterIndex/ObjectFlags metadata.'
                 );
             }
+
+            $localPath = trim((string)($row['local_path'] ?? ''));
+            if ($localPath === '') {
+                throw new RuntimeException('UE3 export #' . $exportIndex . ' is missing its serialized local path.');
+            }
+            $class = trim((string)($row['class_name'] ?? ''));
             [$classPackage, $className] = CatalogCompactIdentityEnricher::ue3ExportClassIdentity(
                 $row,
                 $importsByIndex,
                 $exportsByIndex,
                 $packageName
             );
+
+            $termValues[] = $localPath;
+            if ($class !== '') {
+                $termValues[] = $class;
+            }
             if ($classPackage !== '') {
                 $termValues[] = $classPackage;
             }
             if ($className !== '') {
                 $termValues[] = $className;
             }
-            $identities[$exportIndex] = [
+
+            $projectionRows[$exportIndex] = [
+                'local_path' => $localPath,
+                'class' => $class,
                 'class_package' => $classPackage,
                 'class_name' => $className,
                 'object_flags' => (int)$row['object_flags'],
@@ -159,63 +173,51 @@ final class CompressedMetadataLookupWriter
 
         $this->db->beginTransaction();
         try {
-            foreach (array_chunk($identities, self::WRITE_BATCH_SIZE, true) as $chunk) {
+            foreach (array_chunk($projectionRows, self::WRITE_BATCH_SIZE, true) as $chunk) {
                 if ($chunk === []) {
                     continue;
                 }
-                $casesPackage = [];
-                $casesName = [];
-                $casesFlags = [];
-                $casesOuter = [];
-                $indexes = [];
+
+                $values = [];
                 $arguments = [];
-                foreach ($chunk as $exportIndex => $identity) {
-                    $casesPackage[] = 'WHEN ? THEN ?';
+                foreach ($chunk as $exportIndex => $projection) {
+                    $values[] = '(?,?,?,?,?,?,?,?,?)';
                     array_push(
                         $arguments,
+                        $fileId,
                         (int)$exportIndex,
-                        $identity['class_package'] !== ''
-                            ? $this->requiredTermId($termIds, (string)$identity['class_package'])
-                            : null
+                        CatalogUnrealIdentityHash::objectPathBinary((string)$projection['local_path']),
+                        $this->requiredTermId($termIds, (string)$projection['local_path']),
+                        $projection['class'] !== ''
+                            ? $this->requiredTermId($termIds, (string)$projection['class'])
+                            : null,
+                        $projection['class_package'] !== ''
+                            ? $this->requiredTermId($termIds, (string)$projection['class_package'])
+                            : null,
+                        $projection['class_name'] !== ''
+                            ? $this->requiredTermId($termIds, (string)$projection['class_name'])
+                            : null,
+                        (int)$projection['object_flags'],
+                        (int)$projection['outer_index']
                     );
-                }
-                foreach ($chunk as $exportIndex => $identity) {
-                    $casesName[] = 'WHEN ? THEN ?';
-                    array_push(
-                        $arguments,
-                        (int)$exportIndex,
-                        $identity['class_name'] !== ''
-                            ? $this->requiredTermId($termIds, (string)$identity['class_name'])
-                            : null
-                    );
-                }
-                foreach ($chunk as $exportIndex => $identity) {
-                    $casesFlags[] = 'WHEN ? THEN ?';
-                    array_push($arguments, (int)$exportIndex, (int)$identity['object_flags']);
-                }
-                foreach ($chunk as $exportIndex => $identity) {
-                    $casesOuter[] = 'WHEN ? THEN ?';
-                    array_push($arguments, (int)$exportIndex, (int)$identity['outer_index']);
-                }
-                foreach (array_keys($chunk) as $exportIndex) {
-                    $indexes[] = '?';
-                    $arguments[] = (int)$exportIndex;
                 }
 
                 $statement = $this->db->prepare(
-                    'UPDATE ue_export_path_lookup SET '
-                    . 'class_package_term_id=CASE export_index ' . implode(' ', $casesPackage) . ' ELSE class_package_term_id END,'
-                    . 'class_name_term_id=CASE export_index ' . implode(' ', $casesName) . ' ELSE class_name_term_id END,'
-                    . 'object_flags=CASE export_index ' . implode(' ', $casesFlags) . ' ELSE object_flags END,'
-                    . 'outer_index=CASE export_index ' . implode(' ', $casesOuter) . ' ELSE outer_index END'
-                    . ' WHERE file_id=? AND export_index IN (' . implode(',', $indexes) . ')'
+                    'INSERT INTO ue_export_path_lookup('
+                    . 'file_id,export_index,path_hash_ci,local_path_term_id,class_term_id,'
+                    . 'class_package_term_id,class_name_term_id,object_flags,outer_index'
+                    . ') VALUES ' . implode(',', $values)
+                    . ' AS new ON DUPLICATE KEY UPDATE '
+                    . 'path_hash_ci=new.path_hash_ci,'
+                    . 'local_path_term_id=new.local_path_term_id,'
+                    . 'class_term_id=new.class_term_id,'
+                    . 'class_package_term_id=new.class_package_term_id,'
+                    . 'class_name_term_id=new.class_name_term_id,'
+                    . 'object_flags=new.object_flags,'
+                    . 'outer_index=new.outer_index'
                 );
-                // file_id appears before the IN-list placeholders in SQL, while
-                // the CASE arguments precede it.
-                $caseArgumentCount = count($arguments) - count($indexes);
-                array_splice($arguments, $caseArgumentCount, 0, [$fileId]);
                 $statement->execute($arguments);
-                $rows += $statement->rowCount();
+                $rows += count($chunk);
                 $sqlBatches++;
             }
             $this->db->commit();
