@@ -69,32 +69,32 @@ Its purpose is to let an engineer implement, review, or repair UnrealDB's parser
 
 ### Shared serialization and package semantics
 
-- [ ] Primitive persistent serialization and byte order — `primitive-persistent-serialization-byte-order.md`
-- [ ] Compact index encoding — `compact-index-encoding.md`
-- [ ] Name-table serialization and version changes — `name-table-serialization-version-changes.md`
-- [ ] Package summary/version encoding — `package-summary-version-encoding.md`
-- [ ] GUID/package identity — `guid-package-identity.md`
-- [ ] Import indices — `import-indices.md`
-- [ ] Export indices — `export-indices.md`
-- [ ] Outer/package-index traversal — `outer-package-index-traversal.md`
-- [ ] Import class identity — `import-class-identity.md`
-- [ ] Export class identity — `export-class-identity.md`
-- [ ] Serialized object payload boundaries — `serialized-object-payload-boundaries.md`
-- [ ] Package flags/object flags relevant to loading — `package-object-flags-loading.md`
-- [ ] Compression dispatch — `compression-dispatch.md`
-- [ ] Encryption dispatch — `encryption-dispatch.md`
+- [x] Primitive persistent serialization and byte order — `primitive-persistent-serialization-byte-order.md`
+- [x] Compact index encoding — `compact-index-encoding.md`
+- [x] Name-table serialization and version changes — `name-table-serialization-version-changes.md`
+- [x] Package summary/version encoding — `package-summary-version-encoding.md`
+- [x] GUID/package identity — `guid-package-identity.md`
+- [x] Import indices — `import-indices.md`
+- [x] Export indices — `export-indices.md`
+- [x] Outer/package-index traversal — `outer-package-index-traversal.md`
+- [x] Import class identity — `import-class-identity.md`
+- [x] Export class identity — `export-class-identity.md`
+- [x] Serialized object payload boundaries — `serialized-object-payload-boundaries.md`
+- [x] Package flags/object flags relevant to loading — `package-object-flags-loading.md`
+- [x] Compression dispatch — `compression-dispatch.md`
+- [x] Encryption dispatch — `encryption-dispatch.md`
 
 ### Dependency operations
 
-- [ ] Exact import verification rules by engine revision — `dependency-exact-import-verification.md`
-- [ ] Package-provider selection — `dependency-package-provider-selection.md`
-- [ ] Object-path construction — `dependency-object-path-construction.md`
-- [ ] Required package identification — `dependency-required-package-identification.md`
-- [ ] Required object identification — `dependency-required-object-identification.md`
-- [ ] Class/package matching — `dependency-class-package-matching.md`
-- [ ] Outer matching — `dependency-outer-matching.md`
-- [ ] Engine-specific fallbacks that are actually present in source — `dependency-engine-specific-fallbacks.md`
-- [ ] Runtime-only fallbacks that UnrealDB cannot reproduce from package data — `dependency-runtime-only-fallbacks.md`
+- [x] Exact import verification rules by engine revision — `dependency-exact-import-verification.md`
+- [x] Package-provider selection — `dependency-package-provider-selection.md`
+- [x] Object-path construction — `dependency-object-path-construction.md`
+- [x] Required package identification — `dependency-required-package-identification.md`
+- [x] Required object identification — `dependency-required-object-identification.md`
+- [x] Class/package matching — `dependency-class-package-matching.md`
+- [x] Outer matching — `dependency-outer-matching.md`
+- [x] Engine-specific fallbacks that are actually present in source — `dependency-engine-specific-fallbacks.md`
+- [x] Runtime-only fallbacks that UnrealDB cannot reproduce from package data — `dependency-runtime-only-fallbacks.md`
 
 ## UE1 / UT99 source status
 
