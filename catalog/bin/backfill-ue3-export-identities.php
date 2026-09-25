@@ -171,7 +171,7 @@ $countSql =
     . ' JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1'
     . ' LEFT JOIN ue_export_path_lookup l ON l.file_id=f.id'
     . ' WHERE f.scan_status="verified"'
-    . ' AND UPPER(TRIM(p.engine_key))="UE3"'
+    . ' AND UPPER(TRIM(p.engine_key))="UE3"';
 $countArgs = [];
 if ($workerCount > 1) {
     $countSql .= ' AND MOD(f.id,?)=?';
