@@ -13,14 +13,24 @@ Primary source of truth:
 - `Setup/Src/USetupDefinition.cpp`
 - `Editor/Src/UMasterCommandlet.cpp`
 
-Later verification:
+Engine-line verification:
+
+- Repository: `ardenee/UE2.5`
+- Tree: `Unreal Engine [v2.5]_ Unreal Warfare [09-29-2007]`
+- `Core/Inc/FFileManagerArc.h`
+- `Editor/Src/UMasterCommandlet.cpp`
+- `Setup/Inc/Setup.h`
+- `Setup/Src/USetupDefinition.cpp`
+- `System/SetupUnrealEngine2.ini`
+
+Later game verification:
 
 - Repository: `ardenee/UT2004src`
 - Branch: `main`
 - corresponding Core/Setup/Editor implementations
 - `System/SetupUT2003_Full.ini` and `System/SetupUT2003_Demo.ini`, which explicitly register `.ut2mod` as `UT2003.Module`.
 
-The important source-backed result is that UT2003 does **not** define a second binary archive structure named UT2MOD. Its registered `.ut2mod` files are installed through the same packed module reader that the Setup source calls a packed `.umod` file. Therefore the extension/product association differs, but the binary container contract is the common version-1 Unreal module archive documented below.
+The important source-backed result, now independently checked through UT2003, the supplied UE2.5/Warfare tree, and UT2004, is that UT2003 does **not** define a second binary archive structure named UT2MOD. Its registered `.ut2mod` files are installed through the same packed module reader that the Setup source calls a packed `.umod` file. Therefore the extension/product association differs, but the binary container contract is the common version-1 Unreal module archive documented below.
 
 This conclusion is based on the official installation path and archive implementation, not on extension similarity.
 
@@ -352,7 +362,145 @@ Its implementation independently confirms the physical contract by:
 
 This is useful independent confirmation that the common module layout is intentional and not merely an installer-reader assumption.
 
-## 20. Later UT2004 cross-check
+
+## 20. UE2.5 / Unreal Warfare cross-check
+
+The supplied UE2.5 tree was independently checked rather than inferred from UT2003.
+
+`Core/Inc/FFileManagerArc.h` preserves the same physical archive contract byte-for-byte at the structural level:
+
+- `ARCHIVE_MAGIC = 0x9fe3c5a3`;
+- `ARCHIVE_HEADER_SIZE = 5*4`;
+- `ARCHIVE_VERSION = 1`;
+- `FArchiveHeader = INT Magic, TableOffset, FileSize, Ver, CRC`;
+- header serialization order remains exactly those five fields;
+- `FArchiveItem = FString _Filename_ + DWORD Offset + DWORD Size + DWORD Flags`;
+- item serialization order is unchanged;
+- the trailer is read at `TotalSize()-20`;
+- stored size, magic and version are validated;
+- optional CRC verification covers bytes `0..HeaderPos-1`;
+- the directory is still deserialized from `Header.TableOffset`;
+- member reads remain bounded by the stored offset and size.
+
+The UE2.5 declaration retains both:
+
+```text
+ARCHIVEF_Bootstrap  = 0x00000001
+ARCHIVEF_Compressed = 0x00000004
+```
+
+Thus there is no UE2.5 change to the on-disk trailer, directory-entry layout, version, or these declared flag bits.
+
+### UE2.5 builder verification
+
+`Editor/Src/UMasterCommandlet.cpp` independently confirms the writer side:
+
+- archive writes maintain a rolling `ArchiveCRC`;
+- ordinary archived files still go through `LocalCopyFile(..., Align=16)`;
+- each directory item records the absolute position returned by the archive writer;
+- `TableOffset` is captured before serializing the item array;
+- the directory is serialized before the trailer;
+- `GArc.CRC` is the writer CRC after the directory;
+- `GArc.FileSize = current size + ARCHIVE_HEADER_SIZE`;
+- the same 20-byte header is appended last.
+
+The UE2.5 `UUpdateUModCommandlet` also reads the trailer from EOF-20, seeks to `TableOffset`, uses the stored item offsets/sizes, rebuilds the item array, calculates `appMemCrc` over the rebuilt pre-trailer data, and appends the same header. This is a second UE2.5 writer/editor confirmation of the format.
+
+### UE2.5 installer verification
+
+`Setup/Src/USetupDefinition.cpp` still routes the `install` disposition through the packed-module path and describes it as installing a packed `.umod` file. The common archive file manager is therefore still the installer container reader.
+
+The supplied `System/SetupUnrealEngine2.ini` registers `.umod` as `Unreal.Module` and routes it to:
+
+```text
+%DestPath%\System\Setup.exe install "%1"
+```
+
+Importantly, this UE2.5/Warfare setup file does **not** prove that `.ut2mod` is its registered extension. It proves that the same module container and Setup installation machinery persisted in the engine line. The `.ut2mod` association remains specifically proven by the UT2003 setup data.
+
+### UE2.5 manifest/install additions
+
+The UE2.5 `FFileInfo` includes:
+
+```text
+Dest, Src, Ref, Lang
+Size, RefSize
+MasterRecurse
+Flags
+CDNum
+Compressed
+CompSize
+Optional
+```
+
+and parses both:
+
+```text
+COMPRESSED=
+OPTIONAL=
+```
+
+The `Optional` file property is therefore a later Setup/manifest semantic visible in the UE2.5 tree. It is **not** an additional `FArchiveItem` field and does not alter the physical module archive.
+
+The UE2.5 install path also retains compressed-source copying and the same delta-patch stream machinery. These remain member/install semantics above the archive container.
+
+## 21. UT2004 cross-check
+
+The UT2004 tree was independently compared with both UT2003 and UE2.5.
+
+The UT2004 `Core/Inc/FFileManagerArc.h` retains the same:
+
+- magic `0x9fe3c5a3`;
+- 20-byte trailer;
+- version 1;
+- five-field header and serialization order;
+- four-field archive item and serialization order;
+- EOF trailer lookup;
+- total-size check;
+- pre-trailer rolling CRC;
+- `TableOffset` directory;
+- bounded member reader;
+- `ARCHIVEF_Bootstrap=0x1` and `ARCHIVEF_Compressed=0x4`.
+
+`Editor/Src/UMasterCommandlet.cpp` likewise retains 16-byte ordinary-member alignment, the same directory finalization order and the same CRC/file-size calculation. `UUpdateUModCommandlet` retains the same update/rebuild contract.
+
+UT2004's `FFileInfo` includes and parses `Optional`, matching the later UE2.5 setup structure. This is a manifest-level addition relative to the inspected UT2003 Setup header; it does not change the archive entry.
+
+Most importantly for UT2MOD identity, the UT2004 source tree contains the retained UT2003 setup manifests `SetupUT2003_Full.ini` and `SetupUT2003_Demo.ini`. They explicitly register:
+
+```text
+.ut2mod = UT2003.Module
+UT2003.Module open command = Setup.exe install "%1"
+```
+
+This independently confirms the UT2003 extension-to-common-installer routing.
+
+## 22. Cross-version result
+
+The comparison now covers all three relevant supplied stages:
+
+| Behavior | UT2003 v2107 | UE2.5 / Warfare tree | UT2004 |
+|---|---|---|---|
+| archive magic | `0x9fe3c5a3` | same | same |
+| trailer size | 20 | same | same |
+| archive version | 1 | same | same |
+| header fields/order | 5 INTs | same | same |
+| item fields/order | FString + 3 DWORDs | same | same |
+| directory | TArray at TableOffset | same | same |
+| member alignment by Master commandlet | 16 | same | same |
+| CRC range | all pre-trailer bytes | same | same |
+| Bootstrap flag | `0x1` | same | same |
+| Compressed flag | `0x4` | same | same |
+| Setup install uses common archive manager | yes | yes | yes |
+| `.ut2mod` registration proven in supplied tree | UT2003 identity; registration corroborated by retained UT2003 setup data | no: supplied setup registers `.umod` | yes, retained UT2003 setup manifests |
+| `FFileInfo.Optional` parsed | not present in inspected UT2003 header | yes | yes |
+
+The significant later difference found is therefore in **Setup manifest semantics**, not in the binary archive container.
+
+This distinction matters: UnrealDB may safely share the physical module parser across these proven revisions, while it must not flatten their installer/manifest semantics into one revision-independent schema.
+
+
+## 23. Previous UT2004 summary
 
 The supplied UT2004 source retains:
 
@@ -371,7 +519,7 @@ UT2004's source also retains UT2003 setup manifests which explicitly register `.
 
 No separate UT2MOD binary parser was found in these official supplied paths. The source evidence instead connects the UT2MOD association to the common module reader.
 
-## 21. Structural validation for UnrealDB
+## 24. Structural validation for UnrealDB
 
 A safe source-compatible parser should:
 
@@ -390,7 +538,7 @@ A safe source-compatible parser should:
 
 Do not introduce undocumented fixed limits for item count, member size, filename length or archive size as format rules. Resource-protection limits, if used operationally, must remain implementation safeguards rather than claimed engine-format restrictions.
 
-## 22. Identification rules
+## 25. Identification rules
 
 Extension alone is insufficient for structural validation.
 
@@ -408,7 +556,7 @@ followed by successful directory parsing and, when requested, CRC verification.
 
 The magic cannot by itself distinguish this archive from an Unreal package because the same numeric value is used by Unreal package files. Location and structure are essential: the module magic is in the EOF trailer.
 
-## 23. UnrealDB conformance requirements
+## 26. UnrealDB conformance requirements
 
 UnrealDB should:
 
@@ -425,7 +573,7 @@ UnrealDB should:
 - not assume that a file named `.umod` belongs to UT99 or a file named `.ut2mod` has a different physical container solely from extension;
 - use game/profile context and manifest semantics where a game-level distinction is required.
 
-## 24. Source-reference matrix
+## 27. Source-reference matrix
 
 | Rule | Source | Proof |
 |---|---|---|
@@ -445,9 +593,17 @@ UnrealDB should:
 | Manifest fields | `Unreal_Tournament_2003_v2107/Setup/Inc/Setup.h` | `FFileInfo` |
 | compressed install handling | `Unreal_Tournament_2003_v2107/Setup/Src/USetupDefinition.cpp` | `LocateSourceFile`, `FILECOPY_Decompress` |
 | delta stream | `Unreal_Tournament_2003_v2107/Editor/Src/UMasterCommandlet.cpp` | `DeltaCode`, `Decompress` |
-| later persistence | corresponding `UT2004src` Core/Setup/Editor files | same common archive/build/update contracts |
+| UE2.5 physical archive persistence | `UE2.5/.../Core/Inc/FFileManagerArc.h` | same magic/version/header/item/directory/CRC contract |
+| UE2.5 writer/updater persistence | `UE2.5/.../Editor/Src/UMasterCommandlet.cpp` | same 16-byte alignment, finalization, CRC and update layout |
+| UE2.5 installer persistence | `UE2.5/.../Setup/Src/USetupDefinition.cpp` | `install` still mounts common packed module archive |
+| UE2.5 extension evidence | `UE2.5/.../System/SetupUnrealEngine2.ini` | registers `.umod`, not evidence for a `.ut2mod` association |
+| UE2.5 later manifest Optional | `UE2.5/.../Setup/Inc/Setup.h` | `FFileInfo.Optional`, `OPTIONAL=` parser |
+| UT2004 physical persistence | `UT2004src/Core/Inc/FFileManagerArc.h` | same common archive contract |
+| UT2004 builder/updater persistence | `UT2004src/Editor/Src/UMasterCommandlet.cpp` | same archive build/update contract |
+| UT2004 later manifest Optional | `UT2004src/Setup/Inc/Setup.h` | `OPTIONAL=` remains present |
+| UT2003 association corroboration | `UT2004src/System/SetupUT2003_Full.ini`; `SetupUT2003_Demo.ini` | retained `.ut2mod=UT2003.Module` and Setup install command |
 
-## 25. Result
+## 28. Result
 
 For the supplied official UT2003 source, **UT2MOD is not a second binary archive format**. It is the UT2003 module file association routed to the engine's common packed module/UMOD archive reader.
 
