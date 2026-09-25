@@ -31,3 +31,16 @@ Native/runtime-resolved imports can still mention packages but may not correspon
 ## UnrealDB conformance
 
 Apply this operation only after the exact package reader has validated indices and tables. Preserve enough structured evidence to explain why a dependency resolved or failed; do not reduce resolution to a filename/name-only boolean.
+
+## Later-generation verification changes
+
+| Revision | Required-package evidence |
+|---|---|
+| Unreal II | Root `Core.Package` import reached through the import parent chain is the serialized provider evidence. |
+| UE2.5 | Retains that model. |
+| UT2003 | Retains it; runtime package remap outside VerifyImport does not rewrite the raw dependency record. |
+| UT2004 | Retains it without active resolver PackageRemap. |
+| UE3 | Imports plus cooked/remapped outer structures and serialized dependency metadata must be considered; runtime fixups remain separately recorded. |
+| UE4 4.27.2 | Explicit package-name/external-package information can identify a provider in addition to classic outer-chain package imports. |
+
+Do not force the UE1/UE2 root-import-only rule onto UE4 packages that serialize additional provider information.
