@@ -69,20 +69,20 @@ Its purpose is to let an engineer implement, review, or repair UnrealDB's parser
 
 ### Shared serialization and package semantics
 
-- [ ] Primitive persistent serialization and byte order
-- [ ] Compact index encoding
-- [ ] Name-table serialization and version changes
-- [ ] Package summary/version encoding
-- [ ] GUID/package identity
-- [ ] Import indices
-- [ ] Export indices
-- [ ] Outer/package-index traversal
-- [ ] Import class identity
-- [ ] Export class identity
-- [ ] Serialized object payload boundaries
-- [ ] Package flags/object flags relevant to loading
-- [ ] Compression dispatch
-- [ ] Encryption dispatch
+- [x] Primitive persistent serialization and byte order — `primitive-persistent-serialization-byte-order.md`
+- [x] Compact index encoding — `compact-index-encoding.md`
+- [x] Name-table serialization and version changes — `name-table-serialization-version-changes.md`
+- [x] Package summary/version encoding — `package-summary-version-encoding.md`
+- [x] GUID/package identity — `guid-package-identity.md`
+- [x] Import indices — `import-indices.md`
+- [x] Export indices — `export-indices.md`
+- [x] Outer/package-index traversal — `outer-package-index-traversal.md`
+- [x] Import class identity — `import-class-identity.md`
+- [x] Export class identity — `export-class-identity.md`
+- [x] Serialized object payload boundaries — `serialized-object-payload-boundaries.md`
+- [x] Package flags/object flags relevant to loading — `package-object-flags-loading.md`
+- [x] Compression dispatch — `compression-dispatch.md`
+- [x] Encryption dispatch — `encryption-dispatch.md`
 
 ### Dependency operations
 
