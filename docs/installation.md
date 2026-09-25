@@ -164,18 +164,18 @@ Use the installed `mysql.exe` path if it is not in `PATH`.
 
 Do **not** import `catalog/install.sql` over an existing UnrealDB database.
 
-## Apply migrations
+## Verify migration state
+
+The current `catalog/install.sql` is consolidated through baseline `202609240002`, so a fresh install should have no pending migrations.
 
 Run:
 
 ```powershell
 php catalog/bin/migrate.php status
-php catalog/bin/migrate.php migrate --dry-run
-php catalog/bin/migrate.php migrate
 php catalog/bin/migrate.php verify
 ```
 
-A fresh install is not current until migration verification succeeds.
+If a future release contains migration files newer than the consolidated baseline, apply them with `php catalog/bin/migrate.php migrate` before verification.
 
 ## Create the first administrator
 
