@@ -339,7 +339,7 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
                     continue;
                 }
                 if ($ue3VerifyImport) {
-                    [$classPackage, $className] = CatalogCompactIdentityEnricher::legacyExportClassIdentity(
+                    [$classPackage, $className] = CatalogCompactIdentityEnricher::ue3ExportClassIdentity(
                         $export,
                         $importsByIndex,
                         $exportsByIndex,
