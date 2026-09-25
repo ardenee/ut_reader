@@ -33,3 +33,16 @@ Store both the component chain and rendered path so matching does not depend on 
 ## UnrealDB conformance
 
 Apply this operation only after the exact package reader has validated indices and tables. Preserve enough structured evidence to explain why a dependency resolved or failed; do not reduce resolution to a filename/name-only boolean.
+
+## Later-generation verification changes
+
+| Revision | Path behavior |
+|---|---|
+| Unreal II | Import paths follow negative parent imports; export paths follow positive export parents. |
+| UE2.5 | Retains UE2 parent-chain path behavior. |
+| UT2003 | Retains the same signed parent traversal. |
+| UT2004 | Retains the same core UE2 path model. |
+| UE3 | Cooked/seek-free outer graphs can mix import and export package indices; path rendering can distinguish subobject boundaries. |
+| UE4 4.27.2 | Signed `FPackageIndex` traversal remains, with explicit package-name/external-package metadata and modern `BuildPathName` behavior. |
+
+Later cooked formats therefore require per-hop package-index resolution rather than an import-only parent walk.
