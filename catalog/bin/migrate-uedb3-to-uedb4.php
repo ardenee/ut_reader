@@ -200,6 +200,7 @@ $totalFailed = 0;
 $currentAfterId = $afterId;
 $lastId = $afterId;
 $results = [];
+$failureResults = [];
 $batchNumber = 0;
 
 do {
@@ -324,11 +325,24 @@ do {
         } catch (Throwable $error) {
             $batchFailed++;
             $totalFailed++;
+            $failure = [
+                'file_id' => $fileId,
+                'engine' => $engineKey,
+                'error' => get_class($error) . ': ' . $error->getMessage(),
+            ];
+            $failureResults[] = $failure;
+            fwrite(
+                STDERR,
+                '[worker ' . ($workerIndex + 1) . '/' . $workerCount . '] FAILED'
+                . ' file=' . $fileId
+                . ' engine=' . $engineKey
+                . ' | ' . $failure['error'] . PHP_EOL
+            );
             if (count($results) < 100) {
                 $results[] = [
                     'file_id' => $fileId,
                     'status' => 'failed',
-                    'error' => get_class($error) . ': ' . $error->getMessage(),
+                    'error' => $failure['error'],
                 ];
             }
         }
@@ -364,10 +378,11 @@ do {
     if ($batchFailed > 0) {
         fwrite(
             STDERR,
-            '[worker ' . ($workerIndex + 1) . '/' . $workerCount . '] stopping after batch '
-            . $batchNumber . ' because ' . $batchFailed . ' conversion(s) failed.' . PHP_EOL
+            '[worker ' . ($workerIndex + 1) . '/' . $workerCount . '] batch=' . $batchNumber
+            . ' completed with ' . $batchFailed . ' failure(s); continuing past them.'
+            . ' Failed rows remain registered as format 3 and can be retried by rerunning this command.'
+            . PHP_EOL
         );
-        break;
     }
 
     if (!$continuous || count($files) < $limit) {
@@ -392,6 +407,7 @@ echo json_encode([
     'limit' => $limit,
     'game_id' => $gameId > 0 ? $gameId : null,
     'engine' => $engine !== '' ? $engine : null,
+    'failure_results' => $failureResults,
     'results' => $results,
 ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . PHP_EOL;
 
