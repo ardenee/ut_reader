@@ -45,3 +45,18 @@ UnrealDB must carry a byte-order state from the package tag, use exact field wid
 ## Cross-generation conformance result
 
 This semantic rule must be applied through the exact engine/revision reader selected by the package summary. The generation-specific package specs remain the final authority where serialized layouts differ.
+
+## Later-generation source verification
+
+The UT99 baseline remains valid only where later source retains it. Direct review of the supplied later readers establishes these changes/continuities:
+
+| Revision | Source-confirmed note |
+|---|---|
+| Unreal II | Persistent fixed-width primitives still use byte-order-aware archive serialization. The raw package version is split into low-16 Epic and high-16 licensee versions; `FString` length is a signed **compact index**. |
+| UE2.5 | Retains the UE2 primitive/archive model and separate licensee version state. Its `FString` path adds an `ArMaxSerializeSize` safety check; that check is runtime protection, not a disk-format maximum. |
+| UT2003 | Retains UE2 primitive/compact behavior, but its reviewed `FString` serializer lacks the UE2.5 `ArMaxSerializeSize` rejection. |
+| UT2004 | Retains UE2 primitive/compact behavior and restores the reviewed `ArMaxSerializeSize` safety logic. |
+| UE3 | Accepts normal and byte-swapped package tags; `FString` length becomes fixed 32-bit rather than compact; serialized `FName` and object/package indices also move away from the UE2 compact-reference representation. |
+| UE4 4.27.2 | Retains archive byte-order machinery and fixed-width modern serialization, with version/custom-version controlled structures. Do not reintroduce UE1/UE2 compact primitive assumptions. |
+
+Therefore byte order is shared infrastructure, while the encoding of higher-level primitive-backed values such as string lengths and references changes by generation.
