@@ -35,3 +35,16 @@ Case/name semantics must follow `FName` behavior for the applicable engine; do n
 ## UnrealDB conformance
 
 Apply this operation only after the exact package reader has validated indices and tables. Preserve enough structured evidence to explain why a dependency resolved or failed; do not reduce resolution to a filename/name-only boolean.
+
+## Later-generation verification changes
+
+| Revision | Class/package matching |
+|---|---|
+| Unreal II | Exact class package/name matching; UT99 UnrealI/UnrealShare compatibility is gone. Mesh->LodMesh is an explicit class-name fallback. |
+| UE2.5 | Same reviewed exact matching and Mesh fallback; no generic remap. |
+| UT2003 | Same VerifyImport behavior; broader subclass matching belongs to FindExportIndex, not VerifyImport. |
+| UT2004 | Same separation; no active ClassRemap/PackageRemap in the reviewed resolver. |
+| UE3 | Import fixups/redirectors can transform runtime resolution, but raw ClassPackage/ClassName remain the serialized identity. |
+| UE4 4.27.2 | CoreRedirects and instancing can alter runtime names/packages/classes; package privacy and explicit provider data also participate. These are transformations, not permission for fuzzy matching. |
+
+Store both raw and resolved identity whenever a later-engine transformation is reproducible.
