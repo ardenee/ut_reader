@@ -196,14 +196,29 @@ final class CatalogFileMaintenanceSupport
         $this->restoreExistingFileRow($file);
     }
 
-    /** Remove current lookup rows that are not protected by ue_files foreign-key cascades. */
+    /**
+     * Remove every current per-file compact projection.
+     *
+     * Some callers (notably verified -> unverified demotion) deliberately keep
+     * the ue_files row, so foreign-key cascades cannot be relied on here. Keep
+     * this list aligned with the projection writers for metadata format 4.
+     */
     public function deleteFileProjections(int $fileId): void
     {
         if ($fileId < 1) {
             return;
         }
-        $this->db->prepare('DELETE FROM ue_dependency_links WHERE file_id=?')->execute([$fileId]);
-        $this->db->prepare('DELETE FROM ue_export_lookup WHERE file_id=?')->execute([$fileId]);
+
+        foreach ([
+            'ue_dependency_identity_lookup',
+            'ue_dependency_links',
+            'ue_legacy_export_identity_lookup',
+            'ue_export_path_lookup',
+            'ue_export_lookup',
+            'ue_name_lookup',
+        ] as $table) {
+            $this->db->prepare('DELETE FROM ' . $table . ' WHERE file_id=?')->execute([$fileId]);
+        }
     }
 
     /** @param array<string,mixed> $snapshot */
