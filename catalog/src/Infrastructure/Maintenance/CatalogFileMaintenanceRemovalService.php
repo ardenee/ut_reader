@@ -22,6 +22,7 @@ final class CatalogFileMaintenanceRemovalService
         private readonly array $config
     ) {
         require_once dirname(__DIR__, 3) . '/lib/CatalogFileMaintenanceCompactCore.php';
+        require_once dirname(__DIR__, 3) . '/lib/CatalogPackageAliases.php';
     }
 
     /**
@@ -39,7 +40,23 @@ final class CatalogFileMaintenanceRemovalService
         }
 
         $gameId = (int)$file['game_id'];
-        $packageName = (string)$file['package_name'];
+        $packageName = trim((string)$file['package_name']);
+        \catalog_package_aliases_ensure($this->db);
+        $packageNames = [$packageName];
+        foreach (\catalog_all(
+            $this->db,
+            'SELECT package_name FROM ue_file_package_aliases WHERE file_id=? ORDER BY id',
+            [$fileId]
+        ) as $alias) {
+            $aliasName = trim((string)($alias['package_name'] ?? ''));
+            if ($aliasName !== '') {
+                $packageNames[] = $aliasName;
+            }
+        }
+        $packageNames = array_values(array_unique(array_filter(
+            $packageNames,
+            static fn(string $name): bool => $name !== ''
+        )));
         $metadataPath = \catalog_file_maintenance_metadata_path($this->config, $gameId, $fileId);
         $storedPath = \catalog_file_maintenance_storage_path($this->config, $file);
         $stagedPath = null;
@@ -54,13 +71,20 @@ final class CatalogFileMaintenanceRemovalService
         }
 
         try {
-            $affectedFileIds = \catalog_file_maintenance_affected_ids(
-                $this->db,
-                $gameId,
-                $fileId,
-                $packageName,
-                $deferDependencyRefresh
-            );
+            $affectedFileIds = [];
+            foreach ($packageNames as $logicalPackageName) {
+                $affectedFileIds = array_merge(
+                    $affectedFileIds,
+                    \catalog_file_maintenance_affected_ids(
+                        $this->db,
+                        $gameId,
+                        $fileId,
+                        $logicalPackageName,
+                        $deferDependencyRefresh
+                    )
+                );
+            }
+            $affectedFileIds = array_values(array_unique(array_map('intval', $affectedFileIds)));
             \catalog_file_maintenance_emit(
                 $progress,
                 'delete',
@@ -68,6 +92,7 @@ final class CatalogFileMaintenanceRemovalService
                 'Removing catalog records and compact projections'
             );
             $support->deleteFileProjections($fileId);
+            $this->db->prepare('DELETE FROM ue_file_package_aliases WHERE file_id=?')->execute([$fileId]);
             $this->db->prepare('DELETE FROM ue_files WHERE id=?')->execute([$fileId]);
             if ($deferDependencyRefresh) {
                 \catalog_file_maintenance_emit(
@@ -100,7 +125,7 @@ final class CatalogFileMaintenanceRemovalService
                 $this->db,
                 $fileId,
                 [$gameId],
-                [$packageName],
+                $packageNames,
                 $this->config
             );
         }
