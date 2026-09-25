@@ -41,3 +41,16 @@ The field's serialization operator decides compact versus fixed width. UnrealDB 
 ## Cross-generation conformance result
 
 This semantic rule must be applied through the exact engine/revision reader selected by the package summary. The generation-specific package specs remain the final authority where serialized layouts differ.
+
+## Later-generation source verification
+
+| Revision | Source-confirmed use/change |
+|---|---|
+| Unreal II | Compact index algorithm is retained. Export `ClassIndex`, `SuperIndex`, `SerialSize` and conditional `SerialOffset` are compact, while import/export `PackageIndex` is fixed-width INT. `FString` count is compact. |
+| UE2.5 | Retains the same important compact-vs-fixed distinction as the reviewed UE2 lineage. |
+| UT2003 | Retains the 1-5 byte signed compact algorithm; `PackageIndex` remains fixed INT while export class/super/serial fields and name/object references use the source-defined compact paths. |
+| UT2004 | Retains UE2-era compact-index serialization for the corresponding fields. |
+| UE3 | Package/object indices are fixed 32-bit and `FString` count is fixed 32-bit. The UE1/UE2 compact encoding must not be used for these UE3 structures. |
+| UE4 4.27.2 | `FPackageIndex` is backed by fixed int32; modern package structures do not use the UE1/UE2 compact-index scheme for package references. |
+
+The transition to fixed package indices is therefore a real generation change, not merely an implementation detail.
