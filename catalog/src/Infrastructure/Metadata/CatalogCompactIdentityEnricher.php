@@ -139,6 +139,64 @@ final class CatalogCompactIdentityEnricher
     }
 
     /**
+     * UE3 ULinkerLoad::GetExportClassPackage/GetExportClassName identity.
+     * Cooked UE3 can represent a class import whose OuterIndex is an export,
+     * which differs from the legacy UE1/UE2 projection rule.
+     *
+     * @param array<string,mixed> $export
+     * @param array<int,array<string,mixed>> $imports
+     * @param array<int,array<string,mixed>> $exports
+     * @return array{0:string,1:string}
+     */
+    public static function ue3ExportClassIdentity(
+        array $export,
+        array $imports,
+        array $exports,
+        string $packageName
+    ): array {
+        $classIndex = (int)($export['class_index'] ?? 0);
+        if ($classIndex < 0) {
+            $classImport = $imports[-$classIndex - 1] ?? null;
+            if (!is_array($classImport)) {
+                return ['', ''];
+            }
+            $className = trim((string)($classImport['object_name'] ?? ''));
+            $classOuter = (int)($classImport['outer_index'] ?? 0);
+            if ($classOuter < 0) {
+                $classPackageImport = $imports[-$classOuter - 1] ?? null;
+                return [
+                    is_array($classPackageImport)
+                        ? trim((string)($classPackageImport['object_name'] ?? ''))
+                        : '',
+                    $className,
+                ];
+            }
+            if ($classOuter > 0) {
+                $classPackageExport = $exports[$classOuter - 1] ?? null;
+                return [
+                    is_array($classPackageExport)
+                        ? trim((string)($classPackageExport['object_name'] ?? ''))
+                        : '',
+                    $className,
+                ];
+            }
+            return ['', $className];
+        }
+
+        if ($classIndex > 0) {
+            $classExport = $exports[$classIndex - 1] ?? null;
+            return [
+                trim($packageName),
+                is_array($classExport)
+                    ? trim((string)($classExport['object_name'] ?? ''))
+                    : '',
+            ];
+        }
+
+        return ['Core', 'Class'];
+    }
+
+    /**
      * @param list<array<string,mixed>> $rows
      * @return array<int,array<string,mixed>>
      */
