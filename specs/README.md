@@ -49,7 +49,7 @@ Its purpose is to let an engineer implement, review, or repair UnrealDB's parser
 - [x] UE3 package format and reading — `ue3-udkultimate-package-format.md`
 - [x] UE3 dependency resolution — `ue3-udkultimate-dependency-resolution.md`
 - [x] UE4 package format and reading — `ue4-4.27.2-package-format.md`
-- [ ] UE4 dependency resolution
+- [x] UE4 dependency resolution — `ue4-4.27.2-dependency-resolution.md`
 - [ ] UE5 package format and reading — blocked until source is available
 
 ### Redirect/archive/mod formats
