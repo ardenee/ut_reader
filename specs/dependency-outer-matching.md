@@ -33,3 +33,16 @@ A matching leaf/class under a different group/outer is a distinct object and mus
 ## UnrealDB conformance
 
 Apply this operation only after the exact package reader has validated indices and tables. Preserve enough structured evidence to explain why a dependency resolved or failed; do not reduce resolution to a filename/name-only boolean.
+
+## Later-generation verification changes
+
+| Revision | Outer rule |
+|---|---|
+| Unreal II | Candidate normally matches verified parent SourceIndex+1, but a provider-root export (`PackageIndex==0`) is explicitly accepted when parent matching does not line up. |
+| UE2.5 | Retains this root-export acceptance. |
+| UT2003 | Retains it. |
+| UT2004 | Retains it. |
+| UE3 | Cooked seek-free outer graphs can mix imports and exports; verification must resolve the actual signed package index. |
+| UE4 4.27.2 | Modern FPackageIndex outer matching includes dynamic/external-package and instancing cases; exact raw and transformed outers should be kept separate. |
+
+The UT99 parent rule therefore cannot simply be copied unchanged into UE3/UE4 cooked resolution.
