@@ -55,7 +55,8 @@ final class PdoDependencyResolver
         }
 
         $packageMatches = self::loadPackageMatches($db, $gameId, $fileId, array_values($packageNames));
-        $legacyVerifyImport = in_array(self::engineKey($db, $gameId), ['UE1', 'UE2'], true);
+        $legacyPolicy = self::legacyVerifyImportPolicy($db, $gameId);
+        $legacyVerifyImport = $legacyPolicy !== null;
 
         $packageRequirements = [];
         foreach ($objectLookups as $lookup) {
@@ -94,7 +95,7 @@ final class PdoDependencyResolver
                         (int)$candidate['file_id'],
                         $imports
                     );
-                    $matches = (array)($variants['standard'] ?? []);
+                    $matches = (array)($variants[$legacyPolicy] ?? []);
                     $complete = true;
                     foreach ($requiredImportIndexes as $requiredImportIndex) {
                         if (!array_key_exists($requiredImportIndex, $matches)) {
@@ -166,11 +167,8 @@ final class PdoDependencyResolver
                     $packageMatch = $packageMatches[$packageKey] ?? null;
                     $importIndex = (int)($import['import_index'] ?? -1);
                     $variants = $verifyImportMatches[$packageKey] ?? [];
-                    $exportIndex = is_array($variants)
-                        ? ($variants['standard'][$importIndex] ?? null)
-                        : null;
-                    $unreal2OnlyIndex = is_array($variants)
-                        ? ($variants['unreal2_only'][$importIndex] ?? null)
+                    $exportIndex = is_array($variants) && $legacyPolicy !== null
+                        ? ($variants[$legacyPolicy][$importIndex] ?? null)
                         : null;
                     if ($packageMatch !== null && $exportIndex !== null) {
                         $result = [
@@ -178,17 +176,10 @@ final class PdoDependencyResolver
                             'resolved_file_id' => (int)$packageMatch['file_id'],
                             'resolved_export_id' => null,
                             'resolved_export_index' => (int)$exportIndex,
-                            'source' => 'ue_verify_import',
+                            'source' => $legacyPolicy === 'unreal2'
+                                ? 'ue_verify_import_unreal2'
+                                : 'ue_verify_import',
                             'confidence' => 'exact',
-                        ];
-                    } elseif ($packageMatch !== null && $unreal2OnlyIndex !== null) {
-                        $result = [
-                            'status' => 'missing',
-                            'resolved_file_id' => null,
-                            'resolved_export_id' => null,
-                            'resolved_export_index' => null,
-                            'source' => 'ue_verify_import_unreal2_private_candidate',
-                            'confidence' => 'unreal2_candidate',
                         ];
                     }
                 } else {
@@ -243,6 +234,41 @@ final class PdoDependencyResolver
         // the requested runtime package. Do not let the namespace itself bypass
         // provider/import verification.
         return (int)($import['is_common'] ?? 0) === 1;
+    }
+
+    /**
+     * Select only source-confirmed static VerifyImport policy.
+     * Unreal II deliberately accepts matching private exports; other UE1/UE2
+     * source lines audited here require RF_Public. The game/profile identity is
+     * used only to distinguish that source fork, never to infer dependency data.
+     */
+    private static function legacyVerifyImportPolicy(PDO $db, int $gameId): ?string
+    {
+        $row = \catalog_one(
+            $db,
+            'SELECT p.engine_key,p.profile_name,p.notes,g.name game_name,g.slug game_slug'
+                . ' FROM ue_games g'
+                . ' LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1'
+                . ' WHERE g.id=? LIMIT 1',
+            [$gameId]
+        );
+        $engine = strtoupper(trim((string)($row['engine_key'] ?? '')));
+        if (!in_array($engine, ['UE1', 'UE2'], true)) {
+            return null;
+        }
+
+        if ($engine === 'UE2') {
+            $identity = strtolower(implode(' ', [
+                (string)($row['profile_name'] ?? ''),
+                (string)($row['notes'] ?? ''),
+                (string)($row['game_name'] ?? ''),
+                (string)($row['game_slug'] ?? ''),
+            ]));
+            if (preg_match('/\\bunreal[ _-]*ii\\b|\\bunreal[ _-]*2\\b/', $identity) === 1) {
+                return 'unreal2';
+            }
+        }
+        return 'standard';
     }
 
     private static function engineKey(PDO $db, int $gameId): string
