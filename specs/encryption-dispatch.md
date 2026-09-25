@@ -51,3 +51,16 @@ Missing key is not corruption. Never derive a key from GUID/name/hash, never tri
 ## Cross-generation conformance result
 
 This semantic rule must be applied through the exact engine/revision reader selected by the package summary. The generation-specific package specs remain the final authority where serialized layouts differ.
+
+## Later-generation source verification
+
+| Revision | Source-confirmed dispatch |
+|---|---|
+| Unreal II | No generic package encryption descriptor/decrypt stage in the reviewed linker. |
+| UE2.5 | No generic package encryption layer established by the reviewed reader. |
+| UT2003 | No generic package encryption descriptor in the reviewed package path. |
+| UT2004 | No generic UObject-package encryption dispatch in the reviewed package path. |
+| UE3 | Generic UPK still has no universal encrypted-package flag/key/IV/decrypt stage; exact game/platform source is required for wrappers. |
+| UE4 4.27.2 | PAK explicitly supports independent index/payload encryption, key GUID selection, AES-block alignment and an optional custom runtime encryption delegate. |
+
+PAK encryption must not be projected backward onto UPK or UE2 packages.
