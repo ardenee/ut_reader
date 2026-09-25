@@ -47,3 +47,16 @@ Reject contradictory/unsupported serialized codec identifiers. Platform defaults
 ## Cross-generation conformance result
 
 This semantic rule must be applied through the exact engine/revision reader selected by the package summary. The generation-specific package specs remain the final authority where serialized layouts differ.
+
+## Later-generation source verification
+
+| Revision | Source-confirmed dispatch |
+|---|---|
+| Unreal II | Generic package reader directly seeks summary/tables/payloads and has no UE3-style package compression descriptor. UZ2 is separate. |
+| UE2.5 | No generic UE3-style compressed-package map in the reviewed package reader. |
+| UT2003 | Ordinary file reads/direct seeks; no generic package compression descriptor in the reviewed summary. |
+| UT2004 | Same distinction for the UObject package path; UZ2/UT4MOD are separate formats. |
+| UE3 | Introduces summary `CompressionFlags` + compressed chunks for `PKG_StoreCompressed`; fully-compressed storage is a distinct outer transformation. |
+| UE4 4.27.2 | PAK compression is per-entry/per-block with serialized method names and must not be treated as UE3 compressed-package framing. |
+
+This is the source-confirmed generation boundary for the reviewed generic package compression mechanisms.
