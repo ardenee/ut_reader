@@ -47,3 +47,16 @@ Keep raw package index and resolved map/index separately. Never convert all refe
 ## Cross-generation conformance result
 
 This semantic rule must be applied through the exact engine/revision reader selected by the package summary. The generation-specific package specs remain the final authority where serialized layouts differ.
+
+## Later-generation source verification
+
+| Revision | Source-confirmed representation |
+|---|---|
+| Unreal II | Serialized import `PackageIndex` is fixed-width INT even though other UE2 values remain compact. Runtime object references still use signed positive-export/negative-import semantics. |
+| UE2.5 | Retains fixed import `PackageIndex` and signed object-reference semantics. |
+| UT2003 | Same critical distinction: import `PackageIndex` fixed INT; signed object references resolve positive exports, negative imports, zero null. |
+| UT2004 | Retains the UE2-era signed reference model and fixed import parent index representation. |
+| UE3 | `PACKAGE_INDEX` is fixed INT; cooked seek-free outer graphs can involve both import and export indices. |
+| UE4 4.27.2 | `FPackageIndex` formalizes fixed int32 import/export/null mapping and later import metadata can include explicit package-name information. |
+
+Do not infer the binary encoding of an import parent from the encoding used by unrelated object-reference fields.
