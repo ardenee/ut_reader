@@ -160,21 +160,26 @@ $reader = new BlockedCompressedMetadataReader($db, $storageRoot);
 $writer = new CompressedMetadataLookupWriter($db);
 
 $countSql =
-    'SELECT COUNT(DISTINCT f.id) files,COUNT(*) missing_rows'
+    'SELECT COUNT(*) files,COALESCE(SUM(q.incomplete_rows),0) incomplete_rows,'
+    . 'COALESCE(SUM(GREATEST(q.export_count-q.projected_rows,0)),0) missing_rows'
+    . ' FROM (SELECT f.id,m.export_count,COUNT(l.export_index) projected_rows,'
+    . 'SUM(CASE WHEN l.export_index IS NOT NULL AND (l.object_flags IS NULL OR l.outer_index IS NULL)'
+    . ' THEN 1 ELSE 0 END) incomplete_rows'
     . ' FROM ue_files f'
     . ' JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=4'
     . ' JOIN ue_games g ON g.id=f.game_id'
     . ' JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1'
-    . ' JOIN ue_export_path_lookup l ON l.file_id=f.id'
+    . ' LEFT JOIN ue_export_path_lookup l ON l.file_id=f.id'
     . ' WHERE f.scan_status="verified"'
     . ' AND UPPER(TRIM(p.engine_key))="UE3"'
-    . ' AND (l.object_flags IS NULL OR l.outer_index IS NULL)';
 $countArgs = [];
 if ($workerCount > 1) {
     $countSql .= ' AND MOD(f.id,?)=?';
     $countArgs[] = $workerCount;
     $countArgs[] = $workerIndex;
 }
+$countSql .= ' GROUP BY f.id,m.export_count'
+    . ' HAVING projected_rows<>m.export_count OR incomplete_rows>0) q';
 $countStatement = $db->prepare($countSql);
 $countStatement->execute($countArgs);
 $counts = $countStatement->fetch(PDO::FETCH_ASSOC) ?: [];
@@ -186,7 +191,8 @@ if (!$apply) {
         'dry_run' => true,
         'engine' => 'UE3',
         'candidate_files' => (int)($counts['files'] ?? 0),
-        'rows_requiring_backfill' => (int)($counts['missing_rows'] ?? 0),
+        'rows_requiring_backfill' => (int)($counts['incomplete_rows'] ?? 0),
+        'missing_projection_rows' => (int)($counts['missing_rows'] ?? 0),
         'after_id' => $afterId,
         'worker_index' => $workerIndex,
         'worker_count' => $workerCount,
@@ -201,7 +207,8 @@ fwrite(
     '[worker ' . ($workerIndex + 1) . '/' . $workerCount . '] UE3 identity backfill started'
     . ' | pid=' . getmypid()
     . ' | candidate_files=' . (int)($counts['files'] ?? 0)
-    . ' | missing_rows=' . (int)($counts['missing_rows'] ?? 0)
+    . ' | incomplete_rows=' . (int)($counts['incomplete_rows'] ?? 0)
+    . ' | missing_projection_rows=' . (int)($counts['missing_rows'] ?? 0)
     . ' | after_id=' . $afterId
     . ' | limit=' . $limit
     . PHP_EOL
@@ -225,8 +232,9 @@ do {
         . ' JOIN ue_games g ON g.id=f.game_id'
         . ' JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1'
         . ' WHERE f.scan_status="verified" AND UPPER(TRIM(p.engine_key))="UE3" AND f.id>?'
-        . ' AND EXISTS (SELECT 1 FROM ue_export_path_lookup l'
-        . ' WHERE l.file_id=f.id AND (l.object_flags IS NULL OR l.outer_index IS NULL))';
+        . ' AND (EXISTS (SELECT 1 FROM ue_export_path_lookup l'
+        . ' WHERE l.file_id=f.id AND (l.object_flags IS NULL OR l.outer_index IS NULL))'
+        . ' OR (SELECT COUNT(*) FROM ue_export_path_lookup l2 WHERE l2.file_id=f.id)<>m.export_count)';
     $args = [$currentAfterId];
     if ($workerCount > 1) {
         $sql .= ' AND MOD(f.id,?)=?';
@@ -286,13 +294,19 @@ do {
             }
 
             $check = $db->prepare(
-                'SELECT COUNT(*) FROM ue_export_path_lookup'
-                . ' WHERE file_id=? AND (object_flags IS NULL OR outer_index IS NULL)'
+                'SELECT COUNT(*) projected_rows,'
+                . 'SUM(CASE WHEN object_flags IS NULL OR outer_index IS NULL THEN 1 ELSE 0 END) incomplete_rows'
+                . ' FROM ue_export_path_lookup WHERE file_id=?'
             );
             $check->execute([$fileId]);
-            $remaining = (int)$check->fetchColumn();
-            if ($remaining !== 0) {
-                throw new RuntimeException('Backfill verification left ' . $remaining . ' incomplete export rows.');
+            $verifiedProjection = $check->fetch(PDO::FETCH_ASSOC) ?: [];
+            $projectedRows = (int)($verifiedProjection['projected_rows'] ?? 0);
+            $remaining = (int)($verifiedProjection['incomplete_rows'] ?? 0);
+            if ($projectedRows !== $exportCount || $remaining !== 0) {
+                throw new RuntimeException(
+                    'Backfill verification mismatch: projected=' . $projectedRows . '/' . $exportCount
+                    . ', incomplete=' . $remaining . '.'
+                );
             }
 
             $totalBackfilled++;
