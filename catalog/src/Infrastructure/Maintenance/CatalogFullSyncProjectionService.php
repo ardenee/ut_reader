@@ -37,7 +37,7 @@ final class CatalogFullSyncProjectionService
      * Sync source pass. Stable ue_files identities, source paths, locations and
      * upload provenance are deliberately untouched.
      *
-     * Each source package will republish its parser-owned format-3 metadata with
+     * Each source package will republish its parser-owned format-4 metadata with
      * unresolved dependency rows. Dependency matching starts only after every
      * selected-game package has been reparsed.
      *
@@ -52,6 +52,7 @@ final class CatalogFullSyncProjectionService
 
             $counts = [
                 'dependency_links' => 0,
+                'dependency_identity_rows' => 0,
                 'dependency_summaries' => 0,
                 'provider_rows' => 0,
                 'coverage_provider_rows' => 0,
@@ -63,6 +64,13 @@ final class CatalogFullSyncProjectionService
             );
             $delete->execute([$gameId]);
             $counts['dependency_links'] = max(0, $delete->rowCount());
+
+            $delete = $this->db->prepare(
+                'DELETE i FROM ue_dependency_identity_lookup i '
+                . 'JOIN ue_files f ON f.id=i.file_id WHERE f.game_id=?'
+            );
+            $delete->execute([$gameId]);
+            $counts['dependency_identity_rows'] = max(0, $delete->rowCount());
 
             $delete = $this->db->prepare(
                 'DELETE s FROM ue_dependency_package_summaries s JOIN ue_files f ON f.id=s.file_id WHERE f.game_id=?'
