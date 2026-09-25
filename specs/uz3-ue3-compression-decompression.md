@@ -398,18 +398,16 @@ It must not be used to retroactively claim that every UE1 `.uz` writer had the i
 
 Shared code is evidence of shared codec algorithms, not automatically evidence of identical outer container behavior in every revision.
 
-## 27. Relationship to .uz3
+## 27. UT3 commandlet `.uz3` versus UE3 FCodec transport
 
-The project requirement is to support files encountered with the `.uz3` extension.
+Retail UT3 interoperability testing now resolves the filename/container question for the commandlet path:
 
-The supplied native UE3 source proves the compressed stream described in this document but repeatedly names the extension `.uz2`.
+- actual UT3 commandlet `.uz3` = `[DWORD 5678][DWORD uncompressed size][single zlib stream]`;
+- UE3 FCodec `5678` transport = `[INT 5678][FString original filename][FCodec payload]`.
 
-Therefore UnrealDB should currently model these as two facts:
+They are separate formats despite the shared numeric tag.
 
-- `ue3_legacy_codec_redirect`: source-proven stream semantics;
-- `.uz3`: observed/expected UT3 filename convention whose authoritative native extension definition remains unresolved.
-
-If corpus testing proves real `.uz3` files use this exact 5678 container, that is valuable compatibility evidence, but it should be labeled corpus-proven until native UT3 source proves the writer/name.
+The UE3 source's `.uz2` naming in the network-download path applies to that transport path and does not redefine the UT3 commandlet `.uz3` wrapper.
 
 ## 28. Structural validation
 
@@ -526,10 +524,10 @@ No reviewed later UE3 snapshot supplied evidence of a change to a native `.uz3` 
 
 This negative finding is important: UnrealDB should not manufacture a chronological “UZ2 became UZ3” format transition that the supplied source does not show.
 
-## 36. Unresolved item
+## 36. Resolved UT3 `.uz3` boundary
 
-The exact authoritative UT3 native writer/source defining the commonly encountered `.uz3` filename convention is not present in the supplied UT3 community repository and was not found in the reviewed UE3 native snapshots.
+The UT3 `.uz3` commandlet wrapper is no longer unresolved. Retail UT3 v3809 generation and reverse-decompression testing confirms the 8-byte header plus whole-file zlib stream described at the start of this document.
 
-Accordingly the suffix mapping remains unresolved.
+What remains separate is the UE3 FCodec network transport path, which also uses signature 5678 but serializes an original filename and uses the RLE/BWT/MTF/RLE/Huffman chain.
 
-The byte-level UE3 decoder behavior itself is not unresolved: the supplied native source explicitly provides it.
+UnrealDB must identify these by their complete framing/context rather than by the 5678 value alone.
