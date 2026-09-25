@@ -86,15 +86,15 @@ Its purpose is to let an engineer implement, review, or repair UnrealDB's parser
 
 ### Dependency operations
 
-- [ ] Exact import verification rules by engine revision
-- [ ] Package-provider selection
-- [ ] Object-path construction
-- [ ] Required package identification
-- [ ] Required object identification
-- [ ] Class/package matching
-- [ ] Outer matching
-- [ ] Engine-specific fallbacks that are actually present in source
-- [ ] Runtime-only fallbacks that UnrealDB cannot reproduce from package data
+- [x] Exact import verification rules by engine revision — `dependency-exact-import-verification.md`
+- [x] Package-provider selection — `dependency-package-provider-selection.md`
+- [x] Object-path construction — `dependency-object-path-construction.md`
+- [x] Required package identification — `dependency-required-package-identification.md`
+- [x] Required object identification — `dependency-required-object-identification.md`
+- [x] Class/package matching — `dependency-class-package-matching.md`
+- [x] Outer matching — `dependency-outer-matching.md`
+- [x] Engine-specific fallbacks that are actually present in source — `dependency-engine-specific-fallbacks.md`
+- [x] Runtime-only fallbacks that UnrealDB cannot reproduce from package data — `dependency-runtime-only-fallbacks.md`
 
 ## UE1 / UT99 source status
 
