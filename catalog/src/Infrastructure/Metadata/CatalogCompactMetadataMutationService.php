@@ -55,7 +55,13 @@ final class CatalogCompactMetadataMutationService
             throw new RuntimeException('Catalog storage_path is required for compact metadata rewriting.');
         }
 
-        $fileStatement = $this->db->prepare('SELECT * FROM ue_files WHERE id=?');
+        $fileStatement = $this->db->prepare(
+            'SELECT f.*,UPPER(TRIM(COALESCE(p.engine_key,""))) engine_key '
+            . 'FROM ue_files f '
+            . 'LEFT JOIN ue_games g ON g.id=f.game_id '
+            . 'LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 '
+            . 'WHERE f.id=?'
+        );
         $fileStatement->execute([$fileId]);
         $currentFile = $fileStatement->fetch(PDO::FETCH_ASSOC);
         if (!is_array($currentFile)) {
@@ -84,6 +90,23 @@ final class CatalogCompactMetadataMutationService
         $snapshot['exports'] = $exports;
         $paths['exports'] = $exportPaths;
         $snapshot['paths'] = $paths;
+
+        // Package identity participates directly in UE1/UE2 VerifyImport class
+        // identity when an Export's ClassIndex points to a local class Export.
+        // Recompute all current-format identity/path fields after rebasing the
+        // package name so verify_class_package/verify_identity_hash cannot retain
+        // the old package identity.
+        $engineKey = strtoupper(trim((string)($currentFile['engine_key'] ?? '')));
+        if ($engineKey === '') {
+            $engineKey = strtoupper(trim((string)($snapshot['identity_schema']['engine_key'] ?? '')));
+        }
+        if ($engineKey === '') {
+            throw new RuntimeException(
+                'File #' . $fileId . ' has no engine identity for current metadata republishing.'
+            );
+        }
+        $snapshot = CatalogCompactIdentityEnricher::enrich($snapshot, $engineKey);
+
         (new BlockedCompressedMetadataSnapshotWriter($this->db, $storageRoot))->write($snapshot);
         return $changed;
     }
