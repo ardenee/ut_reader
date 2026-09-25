@@ -36,7 +36,7 @@ Its purpose is to let an engineer implement, review, or repair UnrealDB's parser
 
 ### Unreal package formats and readers
 
-- [ ] **UE1 / UT99 package format and reading** — in progress
+- [x] **UE1 / UT99 package format and reading** — `ue1-ut99-retail-v1400-package-format.md`
 - [ ] UE1 / UT99 dependency and import resolution
 - [ ] Unreal II / UE2 package format and reading
 - [ ] Unreal II / UE2 dependency and import resolution
