@@ -21,7 +21,8 @@ Its purpose is to let an engineer implement, review, or repair UnrealDB's parser
 
 | Area | Repository | Source role |
 |---|---|---|
-| UE1 / UT99 | `ardenee/UT99src` | Primary UE1/UT99 source of truth |
+| UE1 / UT99 retail v1.400 | `ardenee/UT99src` | Primary UT99 retail source of truth; use the `main` branch retail tree, including `Unreal Tournament [v1.400] [1999-11-30] (Retail)` |
+| UE1 / UT99 later code | `ardenee/UT99src-ext` | Supplemental newer UT99 source; may omit base files, so use only for explicitly newer behavior and never to overwrite retail rules without documenting the revision difference |
 | Unreal II / UE2 | `ardenee/unreal2src` | Unreal II / UE2 source of truth |
 | UE2.5 | `ardenee/UE2.5` | UE2.5 source of truth |
 | UT2003 | `ardenee/Unreal_Tournament_2003_v2107` | UT2003 source of truth |
@@ -97,24 +98,23 @@ Its purpose is to let an engineer implement, review, or repair UnrealDB's parser
 
 Repository: `ardenee/UT99src`
 
-The GitHub connector currently exposes the flattened header subset including:
-
-- `Core/Inc/UnLinker.h`
-- `Core/Inc/UnObjVer.h`
-- `Core/Inc/UnArc.h`
-- `Core/Inc/UnName.h`
-
-The user's local source tree also contains the retail implementation subtree:
+The authoritative UT99 retail implementation is available on the `main` branch under:
 
 `Unreal Tournament [v1.400] [1999-11-30] (Retail)/Core/Src/`
 
-including at least:
+Verified relevant files include:
 
-- `UnObj.cpp` — contains the `FCompactIndex` serializer
+- `UnObj.cpp`
 - `UnName.cpp`
-- `UnLinker.cpp`
+- `UnLinker.h`
+- `UnGUID.cpp`
+- `UnProp.cpp`
 
-Those implementation files are not yet visible through the GitHub connector as of this specification update. The UE1 package spec remains **in progress** until those authoritative implementation files are available from the repository. No substitute implementation is to be treated as authoritative in their place.
+The corresponding retail headers are under:
+
+`Unreal Tournament [v1.400] [1999-11-30] (Retail)/Core/Inc/`
+
+including `UnObjVer.h`, which defines the retail package tag/version contract. The retail v1.400 tree is the primary source for the first UE1/UT99 specification. `ardenee/UT99src-ext` is supplemental newer code and must be documented as a revision-specific difference rather than merged silently into the retail format.
 
 ## Document structure
 
