@@ -2,44 +2,61 @@
 
 ## 1. Scope
 
-This specification documents the compressed redirect stream that the supplied UE3 source actually accepts in its network-download path, and records the important naming discrepancy discovered during cross-version verification.
+This specification distinguishes two different UE3-era compressed transport formats that both use the numeric value **5678**:
 
-Authoritative source reviewed:
+1. **UT3 commandlet `.uz3`** — confirmed by retail UT3 interoperability testing:
+   - little-endian DWORD `5678`;
+   - little-endian DWORD total uncompressed size;
+   - one zlib stream containing the complete original file;
+   - no serialized original filename.
+2. **UE3 FCodec `5678` network transport path** — source-proven in `UnDownload.cpp`:
+   - serialized INT `5678`;
+   - serialized `FString OrigFilename`;
+   - `RLE -> BWT -> MTF -> RLE -> Huffman` FCodec data.
 
-- `ardenee/UE3src`
-  - January 2008 UE3 snapshot
-  - March 2008 UE3 snapshot
-  - May 2009 UE3 snapshot
-  - UDKUltimate 2017 snapshot
-- `ardenee/UT3src-comunity`
-  - checked for UT3-specific implementation evidence; this repository is predominantly community/UnrealScript content and does not supply the native compressor/decompressor implementation needed to override the UE3 source.
+These are different containers and must not be conflated merely because both begin with 5678.
 
-The source-proven UE3 compressed stream is the legacy codec container with integer signature **5678**, an Unreal `FString` original filename, and the fixed codec chain:
+Authoritative evidence:
+
+- `ardenee/UE3src` source for the FCodec transport path.
+- Retail UT3 v3809 `IpDrv.CompressCommandlet` / `Decompress` interoperability results recorded in `ardenee/UE3src/README.md` for the actual `.uz3` commandlet wrapper.
+
+### Confirmed UT3 `.uz3` layout
+
+```text
+Offset  Size  Field
+0x00    4     little-endian DWORD tag = 5678
+0x04    4     little-endian DWORD total uncompressed size
+0x08    ...   one zlib stream to EOF
+```
+
+Decoder requirements:
+
+1. require at least 8 bytes;
+2. require tag 5678;
+3. read declared total uncompressed size;
+4. zlib-decompress all remaining bytes as one stream;
+5. require decoded size to match exactly;
+6. reject trailing/non-zlib data.
+
+The output filename is inferred by removing `.uz3`; there is no serialized filename field in this wrapper.
+
+### Confirmed interoperability evidence
+
+Retail UT3 v3809 generated a `.uz3` for `WarrenTemp.upk` with:
+- original size 398643 bytes;
+- header `2E 16 00 00 33 15 06 00`;
+- zlib payload that reproduced the original byte-for-byte.
+
+The reverse test also succeeded: UT3 `Decompress` accepted an UnrealDB-generated wrapper and reproduced the original MD5 exactly.
+
+## 2. UE3 FCodec 5678 transport path
+
+The supplied UE3 source also contains a separate network transport decoder using signature 5678, serialized `FString OrigFilename`, and the FCodec chain:
 
 `RLE -> BWT -> MTF -> RLE -> Huffman`
 
-Compression uses that order. Decompression reverses it automatically through `FCodecFull`.
-
-## 2. Critical discovery: supplied UE3 source says .uz2, not .uz3
-
-All reviewed supplied UE3 snapshots define:
-
-`COMPRESSED_EXTENSION TEXT(".uz2")`
-
-This includes the January 2008, March 2008, May 2009 and later UDKUltimate source snapshots reviewed.
-
-The HTTP downloader appends that `COMPRESSED_EXTENSION` when compressed redirect downloading is enabled.
-
-Therefore the supplied native UE3 source does **not** prove that `.uz3` is the engine's compressed redirect filename extension.
-
-UnrealDB has encountered/uses the conventional UT3 `.uz3` label, but that filename convention must not be attributed to these source revisions without additional authoritative UT3 native source proving it.
-
-This document therefore distinguishes:
-
-- **source-proven UE3 compressed stream format** — fully described below;
-- **`.uz3` external filename convention** — unresolved from the supplied native source.
-
-Do not invent a separate byte format merely because a file ends in `.uz3`.
+This path is **not** the UT3 commandlet `.uz3` wrapper. The detailed FCodec sections below document this separate transport format and remain useful for source compatibility.
 
 ## 3. Cross-version result
 
