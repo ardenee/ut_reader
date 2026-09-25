@@ -131,8 +131,7 @@ final class CatalogVerifiedFileDemotionService
         $this->emit($progress, 'cleanup_verified', 60, 'Removing old verified projections');
         try {
             $this->db->beginTransaction();
-            $this->db->prepare('DELETE FROM ue_dependency_links WHERE file_id=?')->execute([$fileId]);
-            $this->db->prepare('DELETE FROM ue_export_lookup WHERE file_id=?')->execute([$fileId]);
+            $support->deleteFileProjections($fileId);
             $this->db->prepare('DELETE FROM ue_dependency_package_summaries WHERE file_id=?')->execute([$fileId]);
             if (function_exists('catalog_package_aliases_ensure')) {
                 \catalog_package_aliases_ensure($this->db);
