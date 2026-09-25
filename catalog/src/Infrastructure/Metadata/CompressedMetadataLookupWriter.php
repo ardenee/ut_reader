@@ -396,6 +396,19 @@ final class CompressedMetadataLookupWriter
             if ($className !== '') {
                 yield $className;
             }
+            // UE1/UE2 VerifyImport uses GetExportClassPackage/GetExportClassName,
+            // not the generic export class label above. v4 enrichment persists
+            // those exact derived identities (including the ClassIndex==0
+            // Core.Class case), so prime every value that the legacy projection
+            // can subsequently require inside its publication transaction.
+            $verifyClassPackage = trim((string)($row['verify_class_package'] ?? ''));
+            $verifyClassName = trim((string)($row['verify_class_name'] ?? ''));
+            if ($verifyClassPackage !== '') {
+                yield $verifyClassPackage;
+            }
+            if ($verifyClassName !== '') {
+                yield $verifyClassName;
+            }
         }
 
         foreach ((array)($snapshot['imports'] ?? []) as $row) {
@@ -719,7 +732,10 @@ final class CompressedMetadataLookupWriter
     {
         $key = $this->termKey($value);
         if (!isset($termIds[$key])) {
-            throw new RuntimeException('Compact lookup term was not resolved before projection publication.');
+            throw new RuntimeException(
+                'Compact lookup term was not resolved before projection publication: '
+                . json_encode($value, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+            );
         }
         return (int)$termIds[$key];
     }
