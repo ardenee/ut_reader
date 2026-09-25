@@ -4,30 +4,13 @@ For a complete fresh-install sequence, PHP/Apache/MySQL prerequisites and first-
 
 `catalog/install.sql` is the consolidated base schema for a new UnrealDB installation. Schema changes newer than that baseline are delivered as ordered, immutable migration files in this directory.
 
-The current base schema represents baseline `202608090002`.
+The current base schema represents baseline `202609240002`.
 
 ## Current post-baseline migrations
 
-The active migration sequence after baseline `202608090002` is:
+There are currently no active post-baseline migrations. Versions through `202609240002` have been consolidated into `catalog/install.sql` and retired from this directory.
 
-- `202608110001_unverified_game_match_cache.php` — cache exact unverified package game-match evidence.
-- `202608120001_job_workflow_recovery_logging.php` — resumable parent/child workflow identity and configurable job-event logging.
-- `202608130001_program_upload_settings.php` — administrator-configurable upload/program limits.
-- `202608140001_verified_metadata_publication_state.php` — explicit verified compact-metadata publication state/failures.
-- `202608170001_unverified_pak_members.php` — retained Upload Bucket PAK membership/ownership.
-- `202608190001_dependency_refresh_performance.php` — indexed dependency package identities and targeted refresh indexes.
-- `202608260001_download_geoip_country.php` — local GeoIP country ranges and download-audit country snapshots.
-- `202608260002_file_feedback.php` — anonymous per-file feedback with IP/time metadata.
-- `202608280001_public_uploads.php` — public contribution quarantine ledger and identity indexes.
-- `202608280002_public_upload_active_identity.php` — active public-upload identity reservation uniqueness.
-- `202608280003_transfer_blocklist_feedback_search.php` — transfer-only IP blocklist, wider feedback and compact Names lookup.
-- `202609080001_public_downloads_external_only.php` — public individual-file downloads use external providers only.
-- `202609080002_access_matrix_site_blocklist.php` — site activity events, full-site IP blocklist and unblock feedback.
-- `202609080003_geoip_city_location.php` — local GeoIP city/region/coordinates/accuracy fields.
-- `202609240001_legacy_verify_import_identity.php` — indexed UE1/UE2 `VerifyImport` export identity projection.
-- `202609240002_engine_identity_hashes.php` — normalized engine identity and object-path hashes used by metadata format 4 projections.
-
-A fresh/current deployment loads `catalog/install.sql` and then runs the migration runner so every post-baseline migration is applied.
+A fresh/current deployment loads `catalog/install.sql`; the migration runner is then used only for schema changes newer than `202609240002`.
 
 ## Normal commands
 
@@ -55,41 +38,11 @@ Verify migration history/checksums/schema state:
 php catalog/bin/migrate.php verify
 ```
 
-For the current codebase, production should be migrated through the latest file in this directory before the application and workers use the corresponding functionality.
+For the current codebase, an existing installation should already be migrated through baseline `202609240002`; future migration files newer than that baseline must be applied before matching application/worker code is started.
 
-## Important current prerequisites
+## Consolidated current prerequisites
 
-### `202608120001`
-
-This migration must be present before workers create resumable parent/child workflows. The recovery architecture relies on the parent/unit uniqueness constraint to make coordinator replay idempotent.
-
-The workflow/schema prerequisites can be checked read-only with:
-
-```text
-php catalog/bin/verify-resumable-job-workflows.php --database
-```
-
-### `202608130001`
-
-This migration provides the general program-settings table used by current upload ingress configuration. Without it, administrator-configurable upload/program limits cannot be persisted through the current settings model.
-
-### `202608140001`
-
-This migration makes verified compact-metadata state explicit. Existing verified files with a registered format-2 metadata container are marked ready; verified files without a current registration remain pending so maintenance can identify/repair them.
-
-Current deployments should not assume that `scan_status = verified` by itself means compact metadata publication is complete; `metadata_status` is the explicit publication-state boundary introduced by this migration.
-
-### `202608170001`
-
-This migration is required before a `.pak` can be processed through the neutral Upload Bucket. The original PAK is retained as a container row while each supported extracted package is indexed independently; `ue_unverified_pak_members` records which child belongs to the PAK and whether the PAK owns that child.
-
-The ownership flag is the deletion/assignment safety boundary: an extracted child that was already present as a duplicate is linked but is never deleted merely because the PAK parent is removed.
-
-### `202608190001`
-
-This migration removes the remaining expression-heavy package identity comparisons from cached game-stat rebuilds by materializing normalized package/stem keys as STORED generated columns with supporting indexes. It also adds direct `(required_package_term_id,file_id)` and `(resolved_file_id,file_id)` indexes for affected-dependency discovery.
-
-Apply this migration before restarting workers with the matching dependency-refresh code. `PdoGameCatalogStats` retains the previous expression-based query only as an upgrade-compatibility fallback while the migration is still pending.
+The schema requirements formerly introduced by migrations `202608110001` through `202609240002` are now part of the fresh-install baseline, including resumable job workflow identity, metadata publication state, dependency refresh indexes, GeoIP/access telemetry, public upload controls, invalid-file identities, package coverage caches, and metadata-format-4 identity projections.
 
 ## Applied migrations are byte-immutable
 
