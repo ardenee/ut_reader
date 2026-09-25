@@ -117,8 +117,6 @@ final class CatalogFileMaintenanceActionService
             $result = $this->withWriteLock(
                 fn(): array => \catalog_file_maintenance_remove($this->db, $this->config, $fileId, $this->progress)
             );
-            \catalog_package_aliases_ensure($this->db);
-            $this->db->prepare('DELETE FROM ue_file_package_aliases WHERE file_id=?')->execute([$fileId]);
             return [
                 'ok' => true,
                 'message' => 'Removed ' . $result['original_name'] . ' from storage and the catalog.' . $result['warning'],
