@@ -46,7 +46,7 @@ Its purpose is to let an engineer implement, review, or repair UnrealDB's parser
 - [x] UT2003 dependency and import resolution — `ut2003-v2107-dependency-resolution.md`
 - [x] UT2004 package/version differences — `ut2004-package-format.md`
 - [x] UT2004 dependency and import resolution — `ut2004-dependency-resolution.md`
-- [ ] UE3 package format and reading
+- [x] UE3 package format and reading — `ue3-udkultimate-package-format.md`
 - [ ] UE3 dependency resolution
 - [ ] UE4 package format and reading
 - [ ] UE4 dependency resolution
