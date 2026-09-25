@@ -30,6 +30,7 @@ use UnrealDb\Catalog\MigrationV4\SnapshotLoaderV3;
 use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer;
 use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataSnapshotWriter;
 use UnrealDb\Catalog\Infrastructure\Metadata\CatalogCompactIdentityEnricher;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoContention;
 
 $options = getopt('', [
     'apply',
@@ -291,7 +292,28 @@ do {
             $snapshot = $loader->load($fileId);
             $snapshot = CatalogCompactIdentityEnricher::enrich($snapshot, $engineKey);
 
-            $write = $writer->write($snapshot);
+            $write = null;
+            for ($contentionAttempt = 1; ; $contentionAttempt++) {
+                try {
+                    $write = $writer->write($snapshot);
+                    break;
+                } catch (Throwable $writeError) {
+                    if (!PdoContention::retryable($writeError) || $contentionAttempt >= 8) {
+                        throw $writeError;
+                    }
+                    $delayMicros = PdoContention::backoffMicros($contentionAttempt, 100000);
+                    fwrite(
+                        STDERR,
+                        '[worker ' . ($workerIndex + 1) . '/' . $workerCount . '] RETRY'
+                        . ' file=' . $fileId
+                        . ' contention_attempt=' . $contentionAttempt
+                        . ' delay_ms=' . (int)ceil($delayMicros / 1000)
+                        . ' | ' . get_class($writeError) . ': ' . $writeError->getMessage()
+                        . PHP_EOL
+                    );
+                    usleep($delayMicros);
+                }
+            }
             if ((int)($write['format_version'] ?? 0) !== 4 || !is_file($v4Path)) {
                 throw new RuntimeException('Format-4 publication did not complete for file #' . $fileId . '.');
             }
