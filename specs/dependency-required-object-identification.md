@@ -38,3 +38,16 @@ Keep package-level requirements and object-level requirements separate so a pres
 ## UnrealDB conformance
 
 Apply this operation only after the exact package reader has validated indices and tables. Preserve enough structured evidence to explain why a dependency resolved or failed; do not reduce resolution to a filename/name-only boolean.
+
+## Later-generation verification changes
+
+| Revision | Required-object identity |
+|---|---|
+| Unreal II | Exact provider export match uses ObjectName + ClassName + ClassPackage plus parent/outer qualification; Mesh->LodMesh is the explicit compatibility retry. |
+| UE2.5 | Same core exact identity and explicit Mesh fallback. |
+| UT2003 | Same core identity; FindExportIndex subclass matching is separate from VerifyImport. |
+| UT2004 | Same distinction between VerifyImport identity and broader FindExportIndex behavior. |
+| UE3 | Adds mixed outer graphs, redirector/runtime paths and serialized DependsMap relationships. |
+| UE4 4.27.2 | Adds explicit package/external-package cases, privacy, redirects/instancing and preload/dependency tables; raw import identity must remain distinguishable from resolved identity. |
+
+A leaf-name match alone is never sufficient in any reviewed generation.
