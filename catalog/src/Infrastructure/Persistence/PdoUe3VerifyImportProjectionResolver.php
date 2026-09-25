@@ -59,6 +59,79 @@ final class PdoUe3VerifyImportProjectionResolver
     }
 
     /**
+     * In-memory equivalent used while the provider package is being published.
+     *
+     * @param list<array<string,mixed>> $consumerImports
+     * @param list<array<string,mixed>> $providerImports
+     * @param list<array<string,mixed>> $providerExports
+     * @return array<int,int>
+     */
+    public static function resolveInMemory(
+        array $consumerImports,
+        array $providerImports,
+        array $providerExports,
+        string $providerPackageName
+    ): array {
+        $imports = [];
+        foreach ($consumerImports as $fallback => $row) {
+            if (is_array($row)) {
+                $imports[isset($row['import_index']) ? (int)$row['import_index'] : (int)$fallback] = $row;
+            }
+        }
+        $providerImportsByIndex = [];
+        foreach ($providerImports as $fallback => $row) {
+            if (is_array($row)) {
+                $providerImportsByIndex[isset($row['import_index']) ? (int)$row['import_index'] : (int)$fallback] = $row;
+            }
+        }
+        $providerExportsByIndex = [];
+        foreach ($providerExports as $fallback => $row) {
+            if (is_array($row)) {
+                $providerExportsByIndex[isset($row['export_index']) ? (int)$row['export_index'] : (int)$fallback] = $row;
+            }
+        }
+
+        $candidates = [];
+        foreach ($providerExportsByIndex as $exportIndex => $export) {
+            $relative = self::key((string)($export['local_path'] ?? ''));
+            if ($relative === '') {
+                continue;
+            }
+            [$classPackage, $className] =
+                \UnrealDb\Catalog\Infrastructure\Metadata\CatalogCompactIdentityEnricher::ue3ExportClassIdentity(
+                    $export,
+                    $providerImportsByIndex,
+                    $providerExportsByIndex,
+                    $providerPackageName
+                );
+            $candidates[$relative][] = [
+                'export_index' => (int)$exportIndex,
+                'outer_index' => (int)($export['outer_index'] ?? 0),
+                'object_flags' => (int)($export['object_flags'] ?? 0),
+                'class_package' => $classPackage,
+                'class_name' => $className,
+            ];
+        }
+        foreach ($candidates as &$rows) {
+            usort($rows, static fn(array $a, array $b): int => $b['export_index'] <=> $a['export_index']);
+        }
+        unset($rows);
+
+        $resolved = [];
+        $visiting = [];
+        foreach (array_keys($imports) as $importIndex) {
+            self::resolveImport((int)$importIndex, $imports, $candidates, $resolved, $visiting);
+        }
+        $matches = [];
+        foreach ($resolved as $importIndex => $exportIndex) {
+            if ($exportIndex !== null && $exportIndex !== self::PRIVATE_FAILURE) {
+                $matches[(int)$importIndex] = (int)$exportIndex;
+            }
+        }
+        return $matches;
+    }
+
+    /**
      * @param array<int,array<string,mixed>> $imports
      * @param array<string,list<array<string,mixed>>> $candidates
      * @param array<int,int|null> $resolved
