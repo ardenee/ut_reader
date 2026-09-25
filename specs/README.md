@@ -64,7 +64,7 @@ Its purpose is to let an engineer implement, review, or repair UnrealDB's parser
 - [x] UPK compression handling — `upk-compression-handling.md`
 - [x] UPK encryption handling, where applicable — `upk-encryption-handling.md`
 - [x] PAK format — `pak-format.md`
-- [ ] PAK compression handling
+- [x] PAK compression handling — `pak-compression-handling.md`
 - [ ] PAK encryption handling
 
 ### Shared serialization and package semantics
