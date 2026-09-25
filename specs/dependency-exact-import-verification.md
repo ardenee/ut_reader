@@ -53,3 +53,16 @@ Return structured outcomes: resolved exact, resolved source-backed static fallba
 ## UnrealDB conformance
 
 Apply this operation only after the exact package reader has validated indices and tables. Preserve enough structured evidence to explain why a dependency resolved or failed; do not reduce resolution to a filename/name-only boolean.
+
+## Later-generation verification changes
+
+| Revision | Source-confirmed change from the UT99 baseline |
+|---|---|
+| Unreal II | Removes active UnrealI/UnrealShare hash/provider/class-package compatibility. Retains exact object/class/provider matching, root-export outer acceptance, `Mesh -> LodMesh`, RF_Public, runtime native/transient binding, broad SafeReplace and forgiving mode. ClassRemap/PackageRemap remnants are disabled. |
+| UE2.5 | Closely follows the reviewed Unreal II resolver; no active generic ClassRemap/PackageRemap or UnrealI/UnrealShare compatibility. |
+| UT2003 | Retains exact match/root outer fallback/Mesh->LodMesh/runtime binding/SafeReplace; a package-remap retry exists in `StaticLoadObject`, not in `VerifyImport`. |
+| UT2004 | Retains the same core resolver inventory; reviewed ClassRemap/PackageRemap paths are not active in import verification. |
+| UE3 | Verification gains cooked/remapped-package conditions, import fixups, redirector handling and more runtime gates. Direct serialized matching remains separable from those runtime paths. |
+| UE4 4.27.2 | Verification includes CoreRedirects, instancing/remapping, package privacy, script/native/in-memory handling, explicit package-name/external-package cases and modern outer rules. |
+
+UnrealDB must choose the verification contract by exact revision, not accumulate every historical fallback into one resolver.
