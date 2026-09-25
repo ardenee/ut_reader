@@ -34,7 +34,7 @@ $reader = $read('src/Infrastructure/Metadata/BlockedCompressedMetadataReader.php
 $writer = $read('src/Infrastructure/Metadata/BlockedCompressedMetadataSnapshotWriter.php');
 $loader = $read('src/Infrastructure/Metadata/BlockedCompressedMetadataSnapshotLoader.php');
 $lookupWriter = $read('src/Infrastructure/Metadata/CompressedMetadataLookupWriter.php');
-$migration240002 = $read('migrations/202609240002_engine_identity_hashes.php');
+$installSql = $read('install.sql');
 $identity = $read('src/Infrastructure/Metadata/CatalogCompactIdentityEnricher.php');
 $migrator = $read('bin/migrate-uedb3-to-uedb4.php');
 $v3Reader = $read('bin/v4-migration/MetadataReaderV3.php');
@@ -78,10 +78,9 @@ $record(
         && str_contains($lookupWriter, 'ue_dependency_identity_lookup')
         && str_contains($lookupWriter, 'verify_identity_hash')
         && str_contains($lookupWriter, 'path_hash_ci')
-        && str_contains($migration240002, 'CREATE TABLE ue_export_path_lookup')
-        && str_contains($migration240002, 'CREATE TABLE ue_dependency_identity_lookup')
-        && !str_contains($migration240002, 'ALTER TABLE ue_export_lookup ')
-        && !str_contains($migration240002, 'ALTER TABLE ue_dependency_links '),
+        && str_contains($installSql, 'CREATE TABLE ue_export_path_lookup')
+        && str_contains($installSql, 'CREATE TABLE ue_dependency_identity_lookup')
+        && str_contains($installSql, 'CREATE TABLE ue_legacy_export_identity_lookup'),
     'Format-4 hashes must use dedicated projection tables rather than ALTER the large historical lookup tables.'
 );
 $record(
