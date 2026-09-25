@@ -291,6 +291,7 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
         $gameId = (int)($file['game_id'] ?? 0);
         $importRows = array_values((array)($snapshot['imports'] ?? []));
         $exportRows = array_values((array)($snapshot['exports'] ?? []));
+        $packageName = trim((string)($file['package_name'] ?? ''));
         if ($fileId < 1 || $gameId < 1) {
             throw new RuntimeException('Parsed compact dependency resolution requires valid file and game identities.');
         }
@@ -302,11 +303,9 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
             . ' WHERE g.id=? LIMIT 1',
             [$gameId]
         );
-        $legacyVerifyImport = in_array(
-            strtoupper(trim((string)($engineRow['engine_key'] ?? ''))),
-            ['UE1', 'UE2'],
-            true
-        );
+        $engineKey = strtoupper(trim((string)($engineRow['engine_key'] ?? '')));
+        $legacyVerifyImport = in_array($engineKey, ['UE1', 'UE2'], true);
+        $ue3VerifyImport = $engineKey === 'UE3';
 
         $localExports = [];
         $localVerifyImportMatches = ['standard' => [], 'unreal2' => [], 'unreal2_only' => []];
@@ -319,12 +318,40 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
                 $packageName
             );
         } else {
+            $importsByIndex = [];
+            foreach ($importRows as $identityImport) {
+                if (is_array($identityImport)) {
+                    $importsByIndex[(int)($identityImport['import_index'] ?? 0)] = $identityImport;
+                }
+            }
+            $exportsByIndex = [];
+            foreach ($exportRows as $identityExport) {
+                if (is_array($identityExport)) {
+                    $exportsByIndex[(int)($identityExport['export_index'] ?? 0)] = $identityExport;
+                }
+            }
             foreach ($exportRows as $export) {
                 if (!is_array($export)) {
                     continue;
                 }
                 $lookupKey = $this->lookupKey((string)($export['full_path'] ?? ''));
-                if ($lookupKey !== '' && !isset($localExports[$lookupKey])) {
+                if ($lookupKey === '') {
+                    continue;
+                }
+                if ($ue3VerifyImport) {
+                    [$classPackage, $className] = CatalogCompactIdentityEnricher::legacyExportClassIdentity(
+                        $export,
+                        $importsByIndex,
+                        $exportsByIndex,
+                        $packageName
+                    );
+                    $localExports[$lookupKey][] = [
+                        'export_index' => (int)($export['export_index'] ?? 0),
+                        'class_package' => $classPackage,
+                        'class_name' => $className,
+                        'object_flags' => (int)($export['object_flags'] ?? 0),
+                    ];
+                } elseif (!isset($localExports[$lookupKey])) {
                     $localExports[$lookupKey] = (int)($export['export_index'] ?? 0);
                 }
             }
@@ -356,6 +383,22 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
                 $importIndex = (int)($import['import_index'] ?? -1);
                 $localExportIndex = $localVerifyImportMatches['standard'][$importIndex] ?? null;
                 $localUnreal2OnlyIndex = $localVerifyImportMatches['unreal2_only'][$importIndex] ?? null;
+            } elseif ($ue3VerifyImport) {
+                $candidates = $localExports[$this->lookupKey((string)$import['full_path'])] ?? [];
+                foreach (is_array($candidates) ? $candidates : [] as $candidate) {
+                    if (!is_array($candidate)) {
+                        continue;
+                    }
+                    if ($this->lookupKey((string)($candidate['class_package'] ?? ''))
+                            !== $this->lookupKey((string)($import['class_package'] ?? ''))
+                        || $this->lookupKey((string)($candidate['class_name'] ?? ''))
+                            !== $this->lookupKey((string)($import['class_name'] ?? ''))
+                        || ((((int)($candidate['object_flags'] ?? 0)) & 0x00000004) === 0)) {
+                        continue;
+                    }
+                    $localExportIndex = (int)$candidate['export_index'];
+                    break;
+                }
             } elseif (!$legacyVerifyImport) {
                 $localExportIndex = $localExports[$this->lookupKey((string)$import['full_path'])] ?? null;
             }
@@ -364,7 +407,9 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
                     'status' => 'resolved',
                     'resolved_file_id' => $fileId,
                     'resolved_export_index' => (int)$localExportIndex,
-                    'source' => $legacyVerifyImport ? 'ue_verify_import_local' : 'exact_object',
+                    'source' => $legacyVerifyImport
+                        ? 'ue_verify_import_local'
+                        : ($ue3VerifyImport ? 'ue3_verify_import_local' : 'exact_object'),
                     'confidence' => 'exact',
                 ];
             } elseif ($localUnreal2OnlyIndex !== null && (int)$import['is_common'] !== 1) {
