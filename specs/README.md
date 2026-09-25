@@ -61,8 +61,8 @@ Its purpose is to let an engineer implement, review, or repair UnrealDB's parser
 - [x] UT2MOD — `ut2mod-format.md`
 - [x] UT4MOD — `ut4mod-format.md`
 - [x] UPK format — `upk-format.md`
-- [ ] UPK compression handling
-- [ ] UPK encryption handling, where applicable
+- [x] UPK compression handling — `upk-compression-handling.md`
+- [x] UPK encryption handling, where applicable — `upk-encryption-handling.md`
 - [ ] PAK format
 - [ ] PAK compression handling
 - [ ] PAK encryption handling
