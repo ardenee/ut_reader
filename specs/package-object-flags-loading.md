@@ -43,3 +43,16 @@ Store raw flag values plus decoded names for the exact revision. Unknown bits ar
 ## Cross-generation conformance result
 
 This semantic rule must be applied through the exact engine/revision reader selected by the package summary. The generation-specific package specs remain the final authority where serialized layouts differ.
+
+## Later-generation source verification
+
+| Revision | Source-confirmed evolution |
+|---|---|
+| Unreal II | Retains UE-era package/object flags and context filtering with revision-specific load consequences. |
+| UE2.5 | Retains the UE2 flag model but its loader behavior must remain target-specific. |
+| UT2003 | `RF_Public` is material to import resolution; serialized object/load flags participate in CreateExport. |
+| UT2004 | Retains these concepts with its own revision-specific definitions and loading paths. |
+| UE3 | Adds package storage flags including `PKG_StoreCompressed` and `PKG_StoreFullyCompressed`; export records add explicit ExportFlags. |
+| UE4 4.27.2 | Package/object flags evolve further; persistent export flags use source-defined load masks, while package privacy/cooked/editor flags affect loading. |
+
+Decode numeric bits from the exact revision only.
