@@ -9,6 +9,9 @@ declare(strict_types=1);
 
 namespace UnrealDb\Catalog\Infrastructure\Cache;
 
+use FilesystemIterator;
+use SplFileInfo;
+
 final class CatalogPublicResponseCacheHardener
 {
     private const DEFAULT_MAX_ENTRIES = 500000;
@@ -52,11 +55,23 @@ final class CatalogPublicResponseCacheHardener
         return self::keysAllowed($keys, $allowed[$script]);
     }
 
+    /** Record whether this request is creating a new cache object. */
+    public static function markExistingState(): void
+    {
+        $state = $GLOBALS['catalog_public_cache_state'] ?? null;
+        if (!is_array($state)) {
+            return;
+        }
+        $path = (string)($state['path'] ?? '');
+        $state['cache_existed_before'] = $path !== '' && is_file($path);
+        $GLOBALS['catalog_public_cache_state'] = $state;
+    }
+
     /**
      * Called after the normal cache shutdown publisher. Removes the now-unused
-     * per-key lock file and enforces an inexpensive persistent entry counter.
-     * The counter is conservative: when at the ceiling, a newly generated cache
-     * object is discarded rather than allowing unbounded growth.
+     * per-key lock file and enforces a persistent high-water counter. The count
+     * is initialized from disk once and is fully reconciled only at the ceiling,
+     * so ordinary requests never enumerate the cache directory.
      */
     public static function finish(array $config): void
     {
@@ -74,7 +89,6 @@ final class CatalogPublicResponseCacheHardener
             // On Windows this fails safely if another process still has the file open.
             @unlink($lockPath);
         }
-
         if (!is_file($path)) {
             return;
         }
@@ -95,35 +109,35 @@ final class CatalogPublicResponseCacheHardener
                 return;
             }
             rewind($handle);
-            $count = max(0, (int)trim((string)stream_get_contents($handle)));
+            $raw = trim((string)stream_get_contents($handle));
+            $count = $raw === '' ? self::countEntries($directory) : max(0, (int)$raw);
             $wasNew = !isset($state['cache_existed_before']) || !$state['cache_existed_before'];
-            if ($wasNew) {
-                if ($count >= $maximum) {
-                    @unlink($path);
-                    return;
-                }
-                ++$count;
-                rewind($handle);
-                @ftruncate($handle, 0);
-                @fwrite($handle, (string)$count);
-                @fflush($handle);
+            if (!$wasNew) {
+                self::writeCount($handle, $count);
+                return;
             }
+
+            if ($count >= $maximum) {
+                // Normal expiry can make the cheap counter conservative. Pay for
+                // a full directory reconciliation only when the ceiling is hit.
+                $count = self::countEntries($directory);
+            }
+            if ($count >= $maximum) {
+                @unlink($path);
+                self::writeCount($handle, $count - 1); // count included the just-published file
+                return;
+            }
+
+            // If countEntries() initialized/reconciled the count it already saw
+            // the just-published file; otherwise increment the persistent count.
+            if ($raw !== '' && $count < $maximum) {
+                ++$count;
+            }
+            self::writeCount($handle, $count);
         } finally {
             @flock($handle, LOCK_UN);
             @fclose($handle);
         }
-    }
-
-    /** Record whether this request is creating a new cache object. */
-    public static function markExistingState(): void
-    {
-        $state = $GLOBALS['catalog_public_cache_state'] ?? null;
-        if (!is_array($state)) {
-            return;
-        }
-        $path = (string)($state['path'] ?? '');
-        $state['cache_existed_before'] = $path !== '' && is_file($path);
-        $GLOBALS['catalog_public_cache_state'] = $state;
     }
 
     /** @param list<string> $keys @param list<string> $allowed */
@@ -139,5 +153,30 @@ final class CatalogPublicResponseCacheHardener
             }
         }
         return true;
+    }
+
+    private static function countEntries(string $directory): int
+    {
+        if (!is_dir($directory)) {
+            return 0;
+        }
+        $count = 0;
+        foreach (new FilesystemIterator($directory, FilesystemIterator::SKIP_DOTS) as $entry) {
+            if ($entry instanceof SplFileInfo
+                && $entry->isFile()
+                && str_ends_with($entry->getFilename(), '.htmlcache')) {
+                ++$count;
+            }
+        }
+        return $count;
+    }
+
+    /** @param resource $handle */
+    private static function writeCount($handle, int $count): void
+    {
+        rewind($handle);
+        @ftruncate($handle, 0);
+        @fwrite($handle, (string)max(0, $count));
+        @fflush($handle);
     }
 }
