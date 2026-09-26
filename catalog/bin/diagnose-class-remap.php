@@ -101,21 +101,10 @@ foreach ($fileIds as $fileId) {
         $providerResults = [];
         foreach ($providers as $provider) {
             $providerId = (int)$provider['file_id'];
-            $without = PdoLegacyVerifyImportProjectionResolver::resolveProviderVariants(
-                $db,
-                $providerId,
-                $packageImports,
-                []
-            );
-            $with = PdoLegacyVerifyImportProjectionResolver::resolveProviderVariants(
-                $db,
-                $providerId,
-                $packageImports,
-                $remaps
-            );
-            $policy = 'unreal2';
-            $withoutMatches = (array)($without[$policy] ?? []);
-            $withMatches = (array)($with[$policy] ?? []);
+            $without = PdoLegacyVerifyImportProjectionResolver::resolveProviderVariants($db, $providerId, $packageImports, []);
+            $with = PdoLegacyVerifyImportProjectionResolver::resolveProviderVariants($db, $providerId, $packageImports, $remaps);
+            $withoutMatches = (array)($without['unreal2'] ?? []);
+            $withMatches = (array)($with['unreal2'] ?? []);
             $targetResults = [];
             foreach ($targetImports as $target) {
                 $index = (int)($target['import_index'] ?? -1);
@@ -149,7 +138,7 @@ foreach ($fileIds as $fileId) {
 
         $details[] = [
             'consumer_file_id' => $fileId,
-            'consumer_package' => (string)(($snapshot['file']['package_name'] ?? '')),
+            'consumer_package' => (string)($snapshot['file']['package_name'] ?? ''),
             'required_package' => $packageName,
             'package_import_count' => count($packageImports),
             'configured_remap_import_count' => count($targetImports),
