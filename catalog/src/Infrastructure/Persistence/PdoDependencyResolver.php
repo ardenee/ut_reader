@@ -17,542 +17,87 @@ final class PdoDependencyResolver
     private const MAX_VALUES_PER_QUERY = 500;
     private const MAX_OBJECT_PAIRS_PER_QUERY = 250;
 
-    /**
-     * @param list<array<string,mixed>> $imports
-     * @return array<int,array{status:string,resolved_file_id:?int,resolved_export_id:?int,resolved_export_index:?int,source:string,confidence:string}>
-     */
+    /** @param list<array<string,mixed>> $imports */
     public static function resolve(PDO $db, int $gameId, int $fileId, array $imports): array
     {
-        $packageNames = [];
-        $objectLookups = [];
-        foreach ($imports as $import) {
-            if (self::isCommonImport($import)) {
-                continue;
-            }
+        $packageNames=[];$objectLookups=[];
+        foreach($imports as $import){
+            if(self::isCommonImport($import))continue;
+            $rootPackage=trim((string)($import['root_package']??''));
+            if($rootPackage!==''){$key=self::normalizeLookup($rootPackage);if($key!==''&&!isset($packageNames[$key]))$packageNames[$key]=$rootPackage;}
+            $relativeObjectPath=trim((string)($import['relative_object_path']??''));$fullPath=trim((string)($import['full_path']??''));
+            if($rootPackage!==''&&$relativeObjectPath!==''&&$fullPath!==''){$key=self::normalizeLookup($fullPath);if($key!==''&&!isset($objectLookups[$key]))$objectLookups[$key]=['lookup_value'=>$fullPath,'package_name'=>$rootPackage,'local_path'=>$relativeObjectPath,'class_package'=>trim((string)($import['class_package']??'')),'class_name'=>trim((string)($import['class_name']??''))];}
+        }
 
-            $rootPackage = trim((string)($import['root_package'] ?? ''));
-            if ($rootPackage !== '') {
-                $key = self::normalizeLookup($rootPackage);
-                if ($key !== '' && !isset($packageNames[$key])) {
-                    $packageNames[$key] = $rootPackage;
-                }
-            }
+        // Select one physical package provider first. VerifyImport then evaluates each
+        // Import independently against that same linker/provider. A failure for one
+        // object must not discard successful matches for its sibling imports.
+        $packageMatches=self::loadPackageMatches($db,$gameId,$fileId,array_values($packageNames));
+        $engineKey=self::engineKey($db,$gameId);$legacyPolicy=self::legacyVerifyImportPolicy($db,$gameId);$legacyVerifyImport=$legacyPolicy!==null;$ue3VerifyImport=$engineKey==='UE3';$classRemaps=[];
+        if($legacyVerifyImport)$classRemaps=(new PdoClassRemapRepository($db))->mappingsForGame($gameId);
 
-            $relativeObjectPath = trim((string)($import['relative_object_path'] ?? ''));
-            $fullPath = trim((string)($import['full_path'] ?? ''));
-            if ($rootPackage !== '' && $relativeObjectPath !== '' && $fullPath !== '') {
-                $key = self::normalizeLookup($fullPath);
-                if ($key !== '' && !isset($objectLookups[$key])) {
-                    $objectLookups[$key] = [
-                        'lookup_value' => $fullPath,
-                        'package_name' => $rootPackage,
-                        'local_path' => $relativeObjectPath,
-                        'class_package' => trim((string)($import['class_package'] ?? '')),
-                        'class_name' => trim((string)($import['class_name'] ?? '')),
-                    ];
-                }
+        $packageRequirements=[];
+        foreach($objectLookups as $lookup){$packageKey=self::normalizeLookup($lookup['package_name']);$packageRequirements[$packageKey]['package_name']??=$lookup['package_name'];$requirementPath=(string)$lookup['lookup_value'];$packageRequirements[$packageKey]['paths'][]=$requirementPath;$packageRequirements[$packageKey]['classes'][$requirementPath]=['class_package'=>(string)($lookup['class_package']??''),'class_name'=>(string)($lookup['class_name']??'')];}
+
+        $verifyImportMatches=[];
+        if($legacyVerifyImport){
+            require_once __DIR__.'/PdoLegacyVerifyImportProjectionResolver.php';
+            foreach($packageRequirements as $packageKey=>$requirement){
+                $candidate=$packageMatches[$packageKey]??null;if(!is_array($candidate))continue;
+                $verifyImportMatches[$packageKey]=PdoLegacyVerifyImportProjectionResolver::resolveProviderVariants($db,(int)$candidate['file_id'],$imports,$classRemaps);
             }
         }
 
-        $packageMatches = self::loadPackageMatches($db, $gameId, $fileId, array_values($packageNames));
-        $engineKey = self::engineKey($db, $gameId);
-        $legacyPolicy = self::legacyVerifyImportPolicy($db, $gameId);
-        $legacyVerifyImport = $legacyPolicy !== null;
-        $ue3VerifyImport = $engineKey === 'UE3';
-        $classRemaps = [];
-        if ($legacyVerifyImport) {
-            $classRemaps = (new PdoClassRemapRepository($db))->mappingsForGame($gameId);
-        }
-
-        $packageRequirements = [];
-        foreach ($objectLookups as $lookup) {
-            $packageKey = self::normalizeLookup($lookup['package_name']);
-            $packageRequirements[$packageKey]['package_name'] ??= $lookup['package_name'];
-            // Coverage accepts full or package-relative paths. Pass the full
-            // Import path here so a legitimate relative path whose first segment
-            // repeats the package name (Foo.Foo.Bar) is stripped exactly once.
-            $requirementPath = (string)$lookup['lookup_value'];
-            $packageRequirements[$packageKey]['paths'][] = $requirementPath;
-            $packageRequirements[$packageKey]['classes'][$requirementPath] = [
-                'class_package' => (string)($lookup['class_package'] ?? ''),
-                'class_name' => (string)($lookup['class_name'] ?? ''),
-            ];
-        }
-        $verifyImportMatches = [];
-        if ($legacyVerifyImport) {
-            require_once __DIR__ . '/PdoLegacyVerifyImportProjectionResolver.php';
-            $legacyCandidates = self::loadPackageCandidates($db, $gameId, $fileId, array_values($packageNames));
-            foreach ($packageRequirements as $packageKey => $requirement) {
-                $requiredImportIndexes = [];
-                foreach ($imports as $fallback => $candidateImport) {
-                    if (!is_array($candidateImport)
-                        || self::normalizeLookup((string)($candidateImport['root_package'] ?? '')) !== $packageKey
-                        || trim((string)($candidateImport['relative_object_path'] ?? '')) === '') {
-                        continue;
-                    }
-                    $requiredImportIndexes[] = isset($candidateImport['import_index'])
-                        ? (int)$candidateImport['import_index']
-                        : (int)$fallback;
-                }
-
-                foreach ($legacyCandidates[$packageKey] ?? [] as $candidate) {
-                    $variants = PdoLegacyVerifyImportProjectionResolver::resolveProviderVariants(
-                        $db,
-                        (int)$candidate['file_id'],
-                        $imports,
-                        $classRemaps
-                    );
-                    $matches = (array)($variants[$legacyPolicy] ?? []);
-                    $complete = true;
-                    foreach ($requiredImportIndexes as $requiredImportIndex) {
-                        if (!array_key_exists($requiredImportIndex, $matches)) {
-                            $complete = false;
-                            break;
-                        }
-                    }
-                    if ($complete) {
-                        $packageMatches[$packageKey] = $candidate;
-                        $verifyImportMatches[$packageKey] = $variants;
-                        break;
-                    }
-                }
+        $ue3VerifyImportMatches=[];
+        if($ue3VerifyImport){
+            require_once __DIR__.'/PdoUe3VerifyImportProjectionResolver.php';
+            foreach($packageRequirements as $packageKey=>$requirement){
+                $candidate=$packageMatches[$packageKey]??null;if(!is_array($candidate))continue;
+                $ue3VerifyImportMatches[$packageKey]=PdoUe3VerifyImportProjectionResolver::resolveProvider($db,(int)$candidate['file_id'],$imports);
             }
         }
 
-        $ue3VerifyImportMatches = [];
-        if ($ue3VerifyImport) {
-            require_once __DIR__ . '/PdoUe3VerifyImportProjectionResolver.php';
-            $ue3Candidates = self::loadPackageCandidates($db, $gameId, $fileId, array_values($packageNames));
-            foreach ($packageRequirements as $packageKey => $requirement) {
-                $requiredImportIndexes = [];
-                foreach ($imports as $fallback => $candidateImport) {
-                    if (!is_array($candidateImport)
-                        || self::normalizeLookup((string)($candidateImport['root_package'] ?? '')) !== $packageKey
-                        || trim((string)($candidateImport['relative_object_path'] ?? '')) === '') {
-                        continue;
-                    }
-                    $requiredImportIndexes[] = isset($candidateImport['import_index'])
-                        ? (int)$candidateImport['import_index']
-                        : (int)$fallback;
-                }
+        $completeProviders=[];
+        if(!$legacyVerifyImport&&!$ue3VerifyImport){foreach($packageRequirements as $packageKey=>$requirement){$provider=PdoPackageObjectCoverageResolver::chooseCompleteProvider($db,$gameId,(string)$requirement['package_name'],array_values(array_unique((array)$requirement['paths'])),$fileId,(array)($requirement['classes']??[]),$engineKey);if($provider!==null)$completeProviders[$packageKey]=$provider;}}
 
-                foreach ($ue3Candidates[$packageKey] ?? [] as $candidate) {
-                    $matches = PdoUe3VerifyImportProjectionResolver::resolveProvider(
-                        $db,
-                        (int)$candidate['file_id'],
-                        $imports
-                    );
-                    $complete = true;
-                    foreach ($requiredImportIndexes as $requiredImportIndex) {
-                        if (!array_key_exists($requiredImportIndex, $matches)) {
-                            $complete = false;
-                            break;
-                        }
-                    }
-                    if ($complete) {
-                        $packageMatches[$packageKey] = $candidate;
-                        $ue3VerifyImportMatches[$packageKey] = $matches;
-                        break;
-                    }
-                }
+        $resolved=[];
+        foreach($imports as $import){
+            $importId=(int)($import['id']??0);if($importId<1)continue;$rootPackage=(string)($import['root_package']??'');$isObjectImport=(string)($import['relative_object_path']??'')!=='';$result=self::missing();
+            if(self::isCommonImport($import)){$result=['status'=>'common','resolved_file_id'=>null,'resolved_export_id'=>null,'resolved_export_index'=>null,'source'=>'common_script','confidence'=>'common'];}
+            elseif(!$isObjectImport){$packageMatch=$packageMatches[self::normalizeLookup($rootPackage)]??null;if($packageMatch!==null)$result=['status'=>'package_only','resolved_file_id'=>$packageMatch['file_id'],'resolved_export_id'=>null,'resolved_export_index'=>null,'source'=>$packageMatch['source'],'confidence'=>'exact'];}
+            else{
+                $packageKey=self::normalizeLookup($rootPackage);
+                if($legacyVerifyImport){$packageMatch=$packageMatches[$packageKey]??null;$importIndex=(int)($import['import_index']??-1);$variants=$verifyImportMatches[$packageKey]??[];$exportIndex=is_array($variants)&&$legacyPolicy!==null?($variants[$legacyPolicy][$importIndex]??null):null;if($packageMatch!==null&&$exportIndex!==null)$result=['status'=>'resolved','resolved_file_id'=>(int)$packageMatch['file_id'],'resolved_export_id'=>null,'resolved_export_index'=>(int)$exportIndex,'source'=>$legacyPolicy==='unreal2'?'ue_verify_import_unreal2':'ue_verify_import','confidence'=>'exact'];}
+                elseif($ue3VerifyImport){$packageMatch=$packageMatches[$packageKey]??null;$importIndex=(int)($import['import_index']??-1);$exportIndex=$ue3VerifyImportMatches[$packageKey][$importIndex]??null;if($packageMatch!==null&&$exportIndex!==null)$result=['status'=>'resolved','resolved_file_id'=>(int)$packageMatch['file_id'],'resolved_export_id'=>null,'resolved_export_index'=>(int)$exportIndex,'source'=>'ue3_verify_import','confidence'=>'exact'];}
+                else{$completeProvider=$completeProviders[$packageKey]??null;$relativeKey=self::normalizeLookup((string)($import['relative_object_path']??''));$exportIndex=is_array($completeProvider)?($completeProvider['matched_exports'][$relativeKey]??null):null;$exportMatch=$exportIndex!==null?['file_id'=>(int)$completeProvider['file_id'],'export_index'=>(int)$exportIndex,'source'=>'complete_package_object']:null;if($exportMatch!==null)$result=['status'=>'resolved','resolved_file_id'=>$exportMatch['file_id'],'resolved_export_id'=>null,'resolved_export_index'=>$exportMatch['export_index'],'source'=>$exportMatch['source'],'confidence'=>'exact'];}
             }
-        }
-
-        $completeProviders = [];
-        if (!$legacyVerifyImport && !$ue3VerifyImport) {
-            foreach ($packageRequirements as $packageKey => $requirement) {
-                $provider = PdoPackageObjectCoverageResolver::chooseCompleteProvider(
-                    $db,
-                    $gameId,
-                    (string)$requirement['package_name'],
-                    array_values(array_unique((array)$requirement['paths'])),
-                    $fileId,
-                    (array)($requirement['classes'] ?? []),
-                    $engineKey
-                );
-                if ($provider !== null) {
-                    $completeProviders[$packageKey] = $provider;
-                }
-            }
-        }
-        $resolved = [];
-        foreach ($imports as $import) {
-            $importId = (int)($import['id'] ?? 0);
-            if ($importId < 1) {
-                continue;
-            }
-
-            $rootPackage = (string)($import['root_package'] ?? '');
-            $isObjectImport = (string)($import['relative_object_path'] ?? '') !== '';
-            $result = self::missing();
-
-            if (self::isCommonImport($import)) {
-                $result = [
-                    'status' => 'common',
-                    'resolved_file_id' => null,
-                    'resolved_export_id' => null,
-                    'resolved_export_index' => null,
-                    'source' => 'common_script',
-                    'confidence' => 'common',
-                ];
-            } elseif (!$isObjectImport) {
-                $packageMatch = $packageMatches[self::normalizeLookup($rootPackage)] ?? null;
-                if ($packageMatch !== null) {
-                    $result = [
-                        'status' => 'package_only',
-                        'resolved_file_id' => $packageMatch['file_id'],
-                        'resolved_export_id' => null,
-                        'resolved_export_index' => null,
-                        'source' => $packageMatch['source'],
-                        'confidence' => 'exact',
-                    ];
-                }
-            } else {
-                $packageKey = self::normalizeLookup($rootPackage);
-                if ($legacyVerifyImport) {
-                    $packageMatch = $packageMatches[$packageKey] ?? null;
-                    $importIndex = (int)($import['import_index'] ?? -1);
-                    $variants = $verifyImportMatches[$packageKey] ?? [];
-                    $exportIndex = is_array($variants) && $legacyPolicy !== null
-                        ? ($variants[$legacyPolicy][$importIndex] ?? null)
-                        : null;
-                    if ($packageMatch !== null && $exportIndex !== null) {
-                        $result = [
-                            'status' => 'resolved',
-                            'resolved_file_id' => (int)$packageMatch['file_id'],
-                            'resolved_export_id' => null,
-                            'resolved_export_index' => (int)$exportIndex,
-                            'source' => $legacyPolicy === 'unreal2'
-                                ? 'ue_verify_import_unreal2'
-                                : 'ue_verify_import',
-                            'confidence' => 'exact',
-                        ];
-                    }
-                } elseif ($ue3VerifyImport) {
-                    $packageMatch = $packageMatches[$packageKey] ?? null;
-                    $importIndex = (int)($import['import_index'] ?? -1);
-                    $exportIndex = $ue3VerifyImportMatches[$packageKey][$importIndex] ?? null;
-                    if ($packageMatch !== null && $exportIndex !== null) {
-                        $result = [
-                            'status' => 'resolved',
-                            'resolved_file_id' => (int)$packageMatch['file_id'],
-                            'resolved_export_id' => null,
-                            'resolved_export_index' => (int)$exportIndex,
-                            'source' => 'ue3_verify_import',
-                            'confidence' => 'exact',
-                        ];
-                    }
-                } else {
-                    $completeProvider = $completeProviders[$packageKey] ?? null;
-                    $relativeKey = self::normalizeLookup((string)($import['relative_object_path'] ?? ''));
-                    $exportIndex = is_array($completeProvider)
-                        ? (($completeProvider['matched_exports'][$relativeKey] ?? null))
-                        : null;
-                    $exportMatch = $exportIndex !== null
-                        ? [
-                            'file_id' => (int)$completeProvider['file_id'],
-                            'export_index' => (int)$exportIndex,
-                            'source' => 'complete_package_object',
-                        ]
-                        : null;
-                    if ($exportMatch !== null) {
-                        $result = [
-                            'status' => 'resolved',
-                            'resolved_file_id' => $exportMatch['file_id'],
-                            'resolved_export_id' => null,
-                            'resolved_export_index' => $exportMatch['export_index'],
-                            'source' => $exportMatch['source'],
-                            'confidence' => 'exact',
-                        ];
-                    }
-                }
-            }
-            $resolved[$importId] = $result;
+            $resolved[$importId]=$result;
         }
         return $resolved;
     }
 
-    /** @return array{status:string,resolved_file_id:?int,resolved_export_id:?int,resolved_export_index:?int,source:string,confidence:string} */
-    private static function missing(): array
+    private static function missing():array{return['status'=>'missing','resolved_file_id'=>null,'resolved_export_id'=>null,'resolved_export_index'=>null,'source'=>'none','confidence'=>'missing'];}
+    private static function isCommonImport(array $import):bool{return(int)($import['is_common']??0)===1;}
+
+    private static function legacyVerifyImportPolicy(PDO $db,int $gameId):?string
     {
-        return [
-            'status' => 'missing',
-            'resolved_file_id' => null,
-            'resolved_export_id' => null,
-            'resolved_export_index' => null,
-            'source' => 'none',
-            'confidence' => 'missing',
-        ];
+        $row=\catalog_one($db,'SELECT p.engine_key,p.profile_name,p.notes,g.name game_name,g.slug game_slug FROM ue_games g LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 WHERE g.id=? LIMIT 1',[$gameId]);$engine=strtoupper(trim((string)($row['engine_key']??'')));if(!in_array($engine,['UE1','UE2'],true))return null;
+        if($engine==='UE2'){$identity=strtolower(implode(' ',[(string)($row['profile_name']??''),(string)($row['notes']??''),(string)($row['game_name']??''),(string)($row['game_slug']??'')]));if(preg_match('/\bunreal[ _-]*ii\b|\bunreal[ _-]*2\b/',$identity)===1)return'unreal2';}
+        return'standard';
+    }
+    private static function engineKey(PDO $db,int $gameId):string{$row=\catalog_one($db,'SELECT p.engine_key FROM ue_games g LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 WHERE g.id=? LIMIT 1',[$gameId]);return strtoupper(trim((string)($row['engine_key']??'')));}
+
+    private static function loadPackageMatches(PDO $db,int $gameId,int $fileId,array $packageNames):array
+    {
+        $matches=[];foreach(array_chunk($packageNames,self::MAX_VALUES_PER_QUERY)as$chunk){if($chunk===[])continue;$placeholders=self::placeholders(count($chunk));
+            try{$rows=\catalog_all($db,'SELECT p.package_name lookup_value,p.file_id,p.source_kind FROM ue_package_providers p JOIN ue_files f ON f.id=p.file_id AND f.game_id=p.game_id LEFT JOIN ue_file_package_aliases a ON p.source_kind="alias" AND a.id=p.source_id AND a.file_id=p.file_id AND a.game_id=p.game_id AND a.package_name=p.package_name WHERE p.game_id=? AND f.scan_status="verified" AND NOT EXISTS (SELECT 1 FROM ue_invalid_file_identities bad WHERE bad.file_size=f.file_size AND bad.md5=LOWER(f.md5) AND bad.sha1=LOWER(f.sha1)) AND p.package_name IN ('.$placeholders.') AND ((p.source_kind="primary" AND f.package_name=p.package_name) OR (p.source_kind="alias" AND a.id IS NOT NULL)) ORDER BY p.package_name,(p.source_kind="primary") DESC,(p.file_id=?) DESC,p.provider_created_at DESC,p.source_id ASC',array_merge([$gameId],$chunk,[$fileId]));}catch(PDOException){$rows=[];}foreach($rows as$row)self::collectPackageMatch($row,$matches);
+            $missing=self::missingLookupValues($chunk,$matches);if($missing!==[]){$rows=\catalog_all($db,'SELECT f.package_name lookup_value,f.id file_id,"primary" source_kind FROM ue_files f WHERE f.game_id=? AND f.scan_status="verified" AND NOT EXISTS (SELECT 1 FROM ue_invalid_file_identities bad WHERE bad.file_size=f.file_size AND bad.md5=LOWER(f.md5) AND bad.sha1=LOWER(f.sha1)) AND f.package_name IN ('.self::placeholders(count($missing)).') ORDER BY f.package_name,(f.id=?) DESC,f.uploaded_at DESC',array_merge([$gameId],$missing,[$fileId]));foreach($rows as$row)self::collectPackageMatch($row,$matches);}
+            $missing=self::missingLookupValues($missing,$matches);if($missing!==[]){$rows=\catalog_all($db,'SELECT a.package_name lookup_value,a.file_id,"alias" source_kind FROM ue_file_package_aliases a JOIN ue_files f ON f.id=a.file_id AND f.game_id=a.game_id WHERE a.game_id=? AND f.scan_status="verified" AND NOT EXISTS (SELECT 1 FROM ue_invalid_file_identities bad WHERE bad.file_size=f.file_size AND bad.md5=LOWER(f.md5) AND bad.sha1=LOWER(f.sha1)) AND a.package_name IN ('.self::placeholders(count($missing)).') ORDER BY a.package_name,(f.id=?) DESC,f.uploaded_at DESC,a.id ASC',array_merge([$gameId],$missing,[$fileId]));foreach($rows as$row)self::collectPackageMatch($row,$matches);}
+        }return$matches;
     }
 
-    /** @param array<string,mixed> $import */
-    private static function isCommonImport(array $import): bool
-    {
-        // Common-ness must be explicit catalog evidence. UE4 treats /Script/ as
-        // a script-package namespace, not as proof that the package exists:
-        // VerifyImportInner reports a missing script package when it cannot find
-        // the requested runtime package. Do not let the namespace itself bypass
-        // provider/import verification.
-        return (int)($import['is_common'] ?? 0) === 1;
-    }
-
-    /**
-     * Select only source-confirmed static VerifyImport policy.
-     * Unreal II deliberately accepts matching private exports; other UE1/UE2
-     * source lines audited here require RF_Public. The game/profile identity is
-     * used only to distinguish that source fork, never to infer dependency data.
-     */
-    private static function legacyVerifyImportPolicy(PDO $db, int $gameId): ?string
-    {
-        $row = \catalog_one(
-            $db,
-            'SELECT p.engine_key,p.profile_name,p.notes,g.name game_name,g.slug game_slug'
-                . ' FROM ue_games g'
-                . ' LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1'
-                . ' WHERE g.id=? LIMIT 1',
-            [$gameId]
-        );
-        $engine = strtoupper(trim((string)($row['engine_key'] ?? '')));
-        if (!in_array($engine, ['UE1', 'UE2'], true)) {
-            return null;
-        }
-
-        if ($engine === 'UE2') {
-            $identity = strtolower(implode(' ', [
-                (string)($row['profile_name'] ?? ''),
-                (string)($row['notes'] ?? ''),
-                (string)($row['game_name'] ?? ''),
-                (string)($row['game_slug'] ?? ''),
-            ]));
-            if (preg_match('/\bunreal[ _-]*ii\b|\bunreal[ _-]*2\b/', $identity) === 1) {
-                return 'unreal2';
-            }
-        }
-        return 'standard';
-    }
-
-    private static function engineKey(PDO $db, int $gameId): string
-    {
-        $row = \catalog_one(
-            $db,
-            'SELECT p.engine_key FROM ue_games g'
-            . ' LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1'
-            . ' WHERE g.id=? LIMIT 1',
-            [$gameId]
-        );
-        return strtoupper(trim((string)($row['engine_key'] ?? '')));
-    }
-
-    /** @param list<string> $packageNames @return array<string,array{file_id:int,source:string}> */
-    private static function loadPackageMatches(PDO $db, int $gameId, int $fileId, array $packageNames): array
-    {
-        $matches = [];
-        foreach (array_chunk($packageNames, self::MAX_VALUES_PER_QUERY) as $chunk) {
-            if ($chunk === []) {
-                continue;
-            }
-            $placeholders = self::placeholders(count($chunk));
-            try {
-                $rows = \catalog_all(
-                    $db,
-                    'SELECT p.package_name lookup_value,p.file_id,p.source_kind'
-                    . ' FROM ue_package_providers p'
-                    . ' JOIN ue_files f ON f.id=p.file_id AND f.game_id=p.game_id'
-                    . ' LEFT JOIN ue_file_package_aliases a'
-                    . ' ON p.source_kind="alias" AND a.id=p.source_id'
-                    . ' AND a.file_id=p.file_id AND a.game_id=p.game_id'
-                    . ' AND a.package_name=p.package_name'
-                    . ' WHERE p.game_id=? AND f.scan_status="verified"'
-                    . ' AND NOT EXISTS (SELECT 1 FROM ue_invalid_file_identities bad'
-                    . ' WHERE bad.file_size=f.file_size AND bad.md5=LOWER(f.md5) AND bad.sha1=LOWER(f.sha1))'
-                    . ' AND p.package_name IN (' . $placeholders . ')'
-                    . ' AND ((p.source_kind="primary" AND f.package_name=p.package_name)'
-                    . ' OR (p.source_kind="alias" AND a.id IS NOT NULL))'
-                    . ' ORDER BY p.package_name,(p.source_kind="primary") DESC,'
-                    . ' (p.file_id=?) DESC,p.provider_created_at DESC,p.source_id ASC',
-                    array_merge([$gameId], $chunk, [$fileId])
-                );
-            } catch (PDOException) {
-                $rows = [];
-            }
-            foreach ($rows as $row) {
-                self::collectPackageMatch($row, $matches);
-            }
-
-            $missing = self::missingLookupValues($chunk, $matches);
-            if ($missing !== []) {
-                $rows = \catalog_all(
-                    $db,
-                    'SELECT f.package_name lookup_value,f.id file_id,"primary" source_kind'
-                    . ' FROM ue_files f'
-                    . ' WHERE f.game_id=? AND f.scan_status="verified"'
-                    . ' AND NOT EXISTS (SELECT 1 FROM ue_invalid_file_identities bad'
-                    . ' WHERE bad.file_size=f.file_size AND bad.md5=LOWER(f.md5) AND bad.sha1=LOWER(f.sha1))'
-                    . ' AND f.package_name IN (' . self::placeholders(count($missing)) . ')'
-                    . ' ORDER BY f.package_name,(f.id=?) DESC,f.uploaded_at DESC',
-                    array_merge([$gameId], $missing, [$fileId])
-                );
-                foreach ($rows as $row) {
-                    self::collectPackageMatch($row, $matches);
-                }
-            }
-
-            $missing = self::missingLookupValues($missing, $matches);
-            if ($missing !== []) {
-                $rows = \catalog_all(
-                    $db,
-                    'SELECT a.package_name lookup_value,a.file_id,"alias" source_kind'
-                    . ' FROM ue_file_package_aliases a'
-                    . ' JOIN ue_files f ON f.id=a.file_id AND f.game_id=a.game_id'
-                    . ' WHERE a.game_id=? AND f.scan_status="verified"'
-                    . ' AND NOT EXISTS (SELECT 1 FROM ue_invalid_file_identities bad'
-                    . ' WHERE bad.file_size=f.file_size AND bad.md5=LOWER(f.md5) AND bad.sha1=LOWER(f.sha1))'
-                    . ' AND a.package_name IN (' . self::placeholders(count($missing)) . ')'
-                    . ' ORDER BY a.package_name,(f.id=?) DESC,f.uploaded_at DESC,a.id ASC',
-                    array_merge([$gameId], $missing, [$fileId])
-                );
-                foreach ($rows as $row) {
-                    self::collectPackageMatch($row, $matches);
-                }
-            }
-        }
-        return $matches;
-    }
-
-    /**
-     * Return every verified physical provider for each requested logical package.
-     * Ordering is catalog policy only; callers must apply VerifyImport semantics
-     * before selecting a provider.
-     *
-     * @param list<string> $packageNames
-     * @return array<string,list<array{file_id:int,source:string}>>
-     */
-    private static function loadPackageCandidates(PDO $db, int $gameId, int $fileId, array $packageNames): array
-    {
-        $candidates = [];
-        foreach (array_chunk($packageNames, self::MAX_VALUES_PER_QUERY) as $chunk) {
-            if ($chunk === []) {
-                continue;
-            }
-            $placeholders = self::placeholders(count($chunk));
-            try {
-                $rows = \catalog_all(
-                    $db,
-                    'SELECT p.package_name lookup_value,p.file_id,p.source_kind'
-                    . ' FROM ue_package_providers p'
-                    . ' JOIN ue_files f ON f.id=p.file_id AND f.game_id=p.game_id'
-                    . ' LEFT JOIN ue_file_package_aliases a'
-                    . ' ON p.source_kind="alias" AND a.id=p.source_id'
-                    . ' AND a.file_id=p.file_id AND a.game_id=p.game_id'
-                    . ' AND a.package_name=p.package_name'
-                    . ' WHERE p.game_id=? AND f.scan_status="verified"'
-                    . ' AND NOT EXISTS (SELECT 1 FROM ue_invalid_file_identities bad'
-                    . ' WHERE bad.file_size=f.file_size AND bad.md5=LOWER(f.md5) AND bad.sha1=LOWER(f.sha1))'
-                    . ' AND p.package_name IN (' . $placeholders . ')'
-                    . ' AND ((p.source_kind="primary" AND f.package_name=p.package_name)'
-                    . ' OR (p.source_kind="alias" AND a.id IS NOT NULL))'
-                    . ' ORDER BY p.package_name,(p.source_kind="primary") DESC,'
-                    . ' (p.file_id=?) DESC,p.provider_created_at DESC,p.source_id ASC',
-                    array_merge([$gameId], $chunk, [$fileId])
-                );
-            } catch (PDOException) {
-                $rows = [];
-            }
-            foreach ($rows as $row) {
-                self::collectPackageCandidate($row, $candidates);
-            }
-
-            $rows = \catalog_all(
-                $db,
-                'SELECT f.package_name lookup_value,f.id file_id,"primary" source_kind'
-                    . ' FROM ue_files f'
-                    . ' WHERE f.game_id=? AND f.scan_status="verified"'
-                    . ' AND NOT EXISTS (SELECT 1 FROM ue_invalid_file_identities bad'
-                    . ' WHERE bad.file_size=f.file_size AND bad.md5=LOWER(f.md5) AND bad.sha1=LOWER(f.sha1))'
-                    . ' AND f.package_name IN (' . $placeholders . ')'
-                    . ' ORDER BY f.package_name,(f.id=?) DESC,f.uploaded_at DESC',
-                array_merge([$gameId], $chunk, [$fileId])
-            );
-            foreach ($rows as $row) {
-                self::collectPackageCandidate($row, $candidates);
-            }
-
-            $rows = \catalog_all(
-                $db,
-                'SELECT a.package_name lookup_value,a.file_id,"alias" source_kind'
-                    . ' FROM ue_file_package_aliases a'
-                    . ' JOIN ue_files f ON f.id=a.file_id AND f.game_id=a.game_id'
-                    . ' WHERE a.game_id=? AND f.scan_status="verified"'
-                    . ' AND NOT EXISTS (SELECT 1 FROM ue_invalid_file_identities bad'
-                    . ' WHERE bad.file_size=f.file_size AND bad.md5=LOWER(f.md5) AND bad.sha1=LOWER(f.sha1))'
-                    . ' AND a.package_name IN (' . $placeholders . ')'
-                    . ' ORDER BY a.package_name,(f.id=?) DESC,f.uploaded_at DESC,a.id ASC',
-                array_merge([$gameId], $chunk, [$fileId])
-            );
-            foreach ($rows as $row) {
-                self::collectPackageCandidate($row, $candidates);
-            }
-        }
-        return $candidates;
-    }
-
-    /** @param array<string,mixed> $row @param array<string,list<array{file_id:int,source:string}>> $candidates */
-    private static function collectPackageCandidate(array $row, array &$candidates): void
-    {
-        $key = self::normalizeLookup((string)($row['lookup_value'] ?? ''));
-        $fileId = (int)($row['file_id'] ?? 0);
-        if ($key === '' || $fileId < 1) {
-            return;
-        }
-        foreach ($candidates[$key] ?? [] as $candidate) {
-            if ((int)$candidate['file_id'] === $fileId) {
-                return;
-            }
-        }
-        $candidates[$key][] = [
-            'file_id' => $fileId,
-            'source' => (string)($row['source_kind'] ?? '') === 'alias'
-                ? 'exact_package_alias'
-                : 'exact_package',
-        ];
-    }
-
-    /** @param array<string,mixed> $row @param array<string,array{file_id:int,source:string}> $matches */
-    private static function collectPackageMatch(array $row, array &$matches): void
-    {
-        $key = self::normalizeLookup((string)($row['lookup_value'] ?? ''));
-        if ($key === '' || isset($matches[$key])) {
-            return;
-        }
-        $matches[$key] = [
-            'file_id' => (int)$row['file_id'],
-            'source' => (string)($row['source_kind'] ?? '') === 'alias'
-                ? 'exact_package_alias'
-                : 'exact_package',
-        ];
-    }
-
-    /** @param list<string|int> $values @param array<string,mixed> $matches @return list<string> */
-    private static function missingLookupValues(array $values, array $matches): array
-    {
-        $missing = [];
-        foreach ($values as $value) {
-            $value = (string)$value;
-            if (!isset($matches[self::normalizeLookup($value)])) {
-                $missing[] = $value;
-            }
-        }
-        return $missing;
-    }
-
-    private static function normalizeLookup(string|int $value): string
-    {
-        $value = (string)$value;
-        return function_exists('mb_strtolower') ? mb_strtolower($value, 'UTF-8') : strtolower($value);
-    }
-
-    private static function placeholders(int $count): string
-    {
-        return implode(',', array_fill(0, max(1, $count), '?'));
-    }
+    private static function collectPackageMatch(array $row,array&$matches):void{$key=self::normalizeLookup((string)($row['lookup_value']??''));if($key===''||isset($matches[$key]))return;$matches[$key]=['file_id'=>(int)$row['file_id'],'source'=>(string)($row['source_kind']??'')==='alias'?'exact_package_alias':'exact_package'];}
+    private static function missingLookupValues(array $values,array $matches):array{$missing=[];foreach($values as$value){$value=(string)$value;if(!isset($matches[self::normalizeLookup($value)]))$missing[]=$value;}return$missing;}
+    private static function normalizeLookup(string|int $value):string{$value=(string)$value;return function_exists('mb_strtolower')?mb_strtolower($value,'UTF-8'):strtolower($value);}
+    private static function placeholders(int $count):string{return implode(',',array_fill(0,max(1,$count),'?'));}
 }
