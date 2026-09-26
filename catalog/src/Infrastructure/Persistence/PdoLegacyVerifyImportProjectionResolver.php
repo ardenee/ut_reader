@@ -73,12 +73,16 @@ final class PdoLegacyVerifyImportProjectionResolver
             $key = bin2hex(self::identityHash($objectName, $className, $classPackage));
             $candidates[$key][] = [
                 'export_index' => (int)$exportIndex,
+                'outer_index' => (int)($export['outer_index'] ?? $export['package_index'] ?? 0),
                 'object_flags' => (int)($export['object_flags'] ?? 0),
                 'object_name' => $objectName,
                 'class_name' => $className,
                 'class_package' => $classPackage,
             ];
         }
+        // UT99 builds ExportHash by walking ExportMap from low to high and
+        // prepending each export to its bucket. Traversal is therefore descending
+        // export index for candidates in the same identity bucket.
         foreach ($candidates as &$rows) {
             usort($rows, static fn(array $a, array $b): int => $b['export_index'] <=> $a['export_index']);
         }
@@ -117,16 +121,45 @@ final class PdoLegacyVerifyImportProjectionResolver
     private static function resolveVariant(array $imports, array $candidates, bool $requirePublic, array $classRemaps): array
     {
         $matches = [];
-        foreach ($imports as $index => $import) {
-            $matched = self::resolveImport($import, $candidates, $requirePublic, $classRemaps);
-            if ($matched !== null && $matched !== self::PRIVATE_FAILURE) {
-                $matches[(int)$index] = $matched;
-            }
+        $resolving = [];
+        foreach (array_keys($imports) as $index) {
+            self::resolveImportIndex((int)$index, $imports, $candidates, $requirePublic, $classRemaps, $matches, $resolving);
         }
         return $matches;
     }
 
-    private static function resolveImport(array $import, array $candidates, bool $requirePublic, array $classRemaps): ?int
+    private static function resolveImportIndex(int $index, array $imports, array $candidates, bool $requirePublic, array $classRemaps, array &$matches, array &$resolving): ?int
+    {
+        if (array_key_exists($index, $matches)) {
+            return (int)$matches[$index];
+        }
+        if (isset($resolving[$index]) || !isset($imports[$index])) {
+            return null;
+        }
+        $resolving[$index] = true;
+        $import = $imports[$index];
+
+        $expectedOuterIndex = null;
+        $outerIndex = (int)($import['outer_index'] ?? $import['package_index'] ?? 0);
+        if ($outerIndex < 0) {
+            $parentImportIndex = -$outerIndex - 1;
+            $parentSourceIndex = self::resolveImportIndex($parentImportIndex, $imports, $candidates, $requirePublic, $classRemaps, $matches, $resolving);
+            // Epic accepts provider-root exports (PackageIndex==0) both when the
+            // parent import has no SourceIndex and as the fallback for a resolved
+            // parent. findCandidate() preserves that provider-root acceptance.
+            $expectedOuterIndex = $parentSourceIndex === null ? 0 : $parentSourceIndex + 1;
+        }
+
+        $matched = self::resolveImport($import, $candidates, $requirePublic, $classRemaps, $expectedOuterIndex);
+        unset($resolving[$index]);
+        if ($matched !== null && $matched !== self::PRIVATE_FAILURE) {
+            $matches[$index] = $matched;
+            return $matched;
+        }
+        return null;
+    }
+
+    private static function resolveImport(array $import, array $candidates, bool $requirePublic, array $classRemaps, ?int $expectedOuterIndex): ?int
     {
         $objectName = trim((string)($import['object_name'] ?? ''));
         $className = trim((string)($import['class_name'] ?? ''));
@@ -134,21 +167,21 @@ final class PdoLegacyVerifyImportProjectionResolver
         if ($objectName === '' || $className === '' || $classPackage === '') return null;
 
         $candidateClass = $className;
-        $matched = self::findCandidate($candidates, self::identityHash($objectName, $candidateClass, $classPackage), $objectName, $candidateClass, $classPackage, $requirePublic);
+        $matched = self::findCandidate($candidates, self::identityHash($objectName, $candidateClass, $classPackage), $objectName, $candidateClass, $classPackage, $requirePublic, $expectedOuterIndex);
         if ($matched === null && self::key($candidateClass) === 'mesh') {
             $candidateClass = 'LodMesh';
-            $matched = self::findCandidate($candidates, self::identityHash($objectName, $candidateClass, $classPackage), $objectName, $candidateClass, $classPackage, $requirePublic);
+            $matched = self::findCandidate($candidates, self::identityHash($objectName, $candidateClass, $classPackage), $objectName, $candidateClass, $classPackage, $requirePublic, $expectedOuterIndex);
         }
         if ($matched === null) {
             $mappedObject = trim((string)($classRemaps[self::key($objectName)] ?? ''));
             if ($mappedObject !== '' && self::key($mappedObject) !== self::key($objectName)) {
-                $matched = self::findCandidate($candidates, self::identityHash($mappedObject, $candidateClass, $classPackage), $mappedObject, $candidateClass, $classPackage, $requirePublic);
+                $matched = self::findCandidate($candidates, self::identityHash($mappedObject, $candidateClass, $classPackage), $mappedObject, $candidateClass, $classPackage, $requirePublic, $expectedOuterIndex);
             }
         }
         return $matched;
     }
 
-    private static function findCandidate(array $candidates, string $identityHash, string $objectName, string $className, string $classPackage, bool $requirePublic): ?int
+    private static function findCandidate(array $candidates, string $identityHash, string $objectName, string $className, string $classPackage, bool $requirePublic, ?int $expectedOuterIndex): ?int
     {
         foreach ($candidates[bin2hex($identityHash)] ?? [] as $candidate) {
             if (CatalogUnrealIdentityHash::nameKey((string)$candidate['object_name']) !== CatalogUnrealIdentityHash::nameKey($objectName)
@@ -156,6 +189,15 @@ final class PdoLegacyVerifyImportProjectionResolver
                 || CatalogUnrealIdentityHash::nameKey((string)$candidate['class_package']) !== CatalogUnrealIdentityHash::nameKey($classPackage)) {
                 continue;
             }
+            if ($expectedOuterIndex !== null) {
+                $candidateOuterIndex = (int)($candidate['outer_index'] ?? 0);
+                if ($candidateOuterIndex !== $expectedOuterIndex && $candidateOuterIndex !== 0) {
+                    continue;
+                }
+            }
+            // Epic performs the outer check before RF_Public. Once the first
+            // identity+outer candidate in ExportHash traversal is private, normal
+            // VerifyImport fails rather than searching for a later public duplicate.
             if ($requirePublic && (((int)$candidate['object_flags'] & self::RF_PUBLIC) === 0)) {
                 return self::PRIVATE_FAILURE;
             }
