@@ -15,6 +15,7 @@ require_once $root . '/bootstrap/autoload.php';
 require_once $root . '/lib/CatalogSupport.php';
 
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoCatalogDependencyRebuilder;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoGameCatalogStats;
 
 $options = getopt('', [
     'apply',
@@ -61,6 +62,7 @@ $changedFiles = 0;
 $failed = 0;
 $lastId = $afterId;
 $results = [];
+$affectedGameIds = [];
 
 foreach ($files as $position => $file) {
     $fileId = (int)$file['id'];
@@ -94,6 +96,7 @@ foreach ($files as $position => $file) {
             true
         );
 
+        $affectedGameIds[(int)$file['game_id']] = true;
         $changedFiles++;
         $results[] = [
             'file_id' => $fileId,
@@ -122,18 +125,42 @@ foreach ($files as $position => $file) {
     }
 }
 
+$statsRebuilt = 0;
+$statsFailed = 0;
+if ($apply && $affectedGameIds !== []) {
+    $stats = new PdoGameCatalogStats($db);
+    foreach (array_keys($affectedGameIds) as $affectedGameId) {
+        try {
+            if ($stats->rebuildGame((int)$affectedGameId, 15) !== null) {
+                $statsRebuilt++;
+            } else {
+                $statsFailed++;
+            }
+        } catch (Throwable $error) {
+            $statsFailed++;
+            $results[] = [
+                'game_id' => (int)$affectedGameId,
+                'status' => 'stats_failed',
+                'error' => get_class($error) . ': ' . $error->getMessage(),
+            ];
+        }
+    }
+}
+
 echo json_encode([
-    'ok' => $failed === 0,
+    'ok' => $failed === 0 && $statsFailed === 0,
     'apply' => $apply,
     'engine' => $engine,
     'game_id' => $gameId,
     'selected' => count($files),
     'rebuilt' => $changedFiles,
     'failed' => $failed,
+    'game_stats_rebuilt' => $statsRebuilt,
+    'game_stats_failed' => $statsFailed,
     'after_id' => $afterId,
     'last_id' => $lastId,
     'limit' => $limit,
     'results' => array_slice($results, 0, 100),
 ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . PHP_EOL;
 
-exit($failed === 0 ? 0 : 2);
+exit($failed === 0 && $statsFailed === 0 ? 0 : 2);
