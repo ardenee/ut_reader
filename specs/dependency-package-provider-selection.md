@@ -22,6 +22,24 @@ When multiple catalog files can provide the same logical package, UnrealDB must 
 
 A provider that merely contains an object with the same leaf name is insufficient.
 
+## UnrealDB catalog-level superset selection
+
+A running Unreal installation will normally encounter one physical package for a logical package name according to its configured package search path. UnrealDB intentionally retains multiple historical, trimmed, duplicated, or poorly named physical package files, so it needs one additional catalog-level selection stage that does not exist as such in the engine loader.
+
+That additional stage must not weaken or replace engine verification. The required order is:
+
+1. derive requirements only from the consumer's serialized ImportMap;
+2. evaluate each physical candidate independently using the selected target game's source-backed import-verification semantics;
+3. record only imports that the candidate genuinely satisfies under those semantics;
+4. compare the resulting verified coverage sets;
+5. prefer a single candidate whose verified coverage contains the complete required set when one exists.
+
+The coverage identity is therefore whatever the applicable engine revision accepts during import verification, not a path-string approximation. For UE1/UE2 this includes the source-defined object/class/package/outer/public rules and only documented revision-specific fallbacks. For UE3 it includes the corresponding `VerifyImportInner` identity and visibility checks. Later generations use their applicable source-backed resolver rules.
+
+A package is a useful common/superset provider when its **verified coverage set** is a superset of the union of known required imports. It does not need to contain the most total exports, have the largest file size, or be the newest file. Several incomplete physical providers must never be combined to pretend that one package satisfies the complete requirement set.
+
+Cross-game provider discovery follows the same rule: the source game only tells UnrealDB where another physical candidate can be found. Whether that candidate satisfies an import is decided by the **target game's** dependency semantics. `dependency-cross-examine.php` must therefore use the same target-game verification path as normal dependency rebuilding before presenting a candidate as a full match or allowing it to be queued.
+
 ## Runtime loading
 
 Engine loaders can search configured paths, mounted packages, already-loaded packages and runtime package systems. UnrealDB does not possess that complete search environment. Catalog provider policy must remain explicit and separate from claims about what a running game would choose.
