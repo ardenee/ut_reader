@@ -59,6 +59,10 @@ final class PdoDependencyResolver
         $legacyPolicy = self::legacyVerifyImportPolicy($db, $gameId);
         $legacyVerifyImport = $legacyPolicy !== null;
         $ue3VerifyImport = $engineKey === 'UE3';
+        $classRemaps = [];
+        if ($legacyVerifyImport) {
+            $classRemaps = (new PdoClassRemapRepository($db))->mappingsForGame($gameId);
+        }
 
         $packageRequirements = [];
         foreach ($objectLookups as $lookup) {
@@ -95,7 +99,8 @@ final class PdoDependencyResolver
                     $variants = PdoLegacyVerifyImportProjectionResolver::resolveProviderVariants(
                         $db,
                         (int)$candidate['file_id'],
-                        $imports
+                        $imports,
+                        $classRemaps
                     );
                     $matches = (array)($variants[$legacyPolicy] ?? []);
                     $complete = true;
@@ -178,7 +183,6 @@ final class PdoDependencyResolver
             }
 
             $rootPackage = (string)($import['root_package'] ?? '');
-            $fullPath = (string)($import['full_path'] ?? '');
             $isObjectImport = (string)($import['relative_object_path'] ?? '') !== '';
             $result = self::missing();
 
@@ -320,7 +324,7 @@ final class PdoDependencyResolver
                 (string)($row['game_name'] ?? ''),
                 (string)($row['game_slug'] ?? ''),
             ]));
-            if (preg_match('/\\bunreal[ _-]*ii\\b|\\bunreal[ _-]*2\\b/', $identity) === 1) {
+            if (preg_match('/\bunreal[ _-]*ii\b|\bunreal[ _-]*2\b/', $identity) === 1) {
                 return 'unreal2';
             }
         }
