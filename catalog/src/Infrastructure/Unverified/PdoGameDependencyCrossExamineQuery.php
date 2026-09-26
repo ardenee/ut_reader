@@ -1,8 +1,8 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Finds verified packages in sibling games that satisfy actual missing dependency objects in a target game.
- * Why: Cross-game repair must use the same current compact dependency/export projections as normal dependency resolution.
+ * Purpose: Finds verified packages in sibling games that satisfy actual missing dependencies in a target game.
+ * Why: Cross-game repair must evaluate each candidate with the target game's authoritative dependency semantics.
  * Role: Read model for the cross-game dependency examination admin workflow.
  */
 declare(strict_types=1);
@@ -10,13 +10,25 @@ declare(strict_types=1);
 namespace UnrealDb\Catalog\Infrastructure\Unverified;
 
 use PDO;
+use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer;
+use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataSnapshotLoader;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoClassRemapRepository;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyReadSource;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoLegacyVerifyImportProjectionResolver;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageObjectCoverageResolver;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoUe3VerifyImportProjectionResolver;
 
 final class PdoGameDependencyCrossExamineQuery
 {
     private const SOURCE_PACKAGE_CHUNK = 250;
-    private const SOURCE_ID_CHUNK = 250;
+
+    private readonly string $storageRoot;
+
+    /** @var array<int,list<array<string,mixed>>> */
+    private array $consumerImportCache = [];
+
+    /** @var array<int,int> */
+    private array $sourceGameCache = [];
 
     /** @param array<string,mixed> $config */
     public function __construct(
@@ -25,6 +37,11 @@ final class PdoGameDependencyCrossExamineQuery
     ) {
         require_once dirname(__DIR__, 3) . '/lib/CatalogSupport.php';
         require_once dirname(__DIR__, 3) . '/lib/CatalogPackageAliases.php';
+
+        $this->storageRoot = trim((string)($config['storage_path'] ?? ''));
+        if ($this->storageRoot === '') {
+            throw new \RuntimeException('Catalog storage_path is required for dependency cross-examination.');
+        }
     }
 
     /** @return list<array<string,mixed>> */
@@ -50,8 +67,8 @@ final class PdoGameDependencyCrossExamineQuery
     {
         $limit = max(10, min(500, $limit));
         $target = $this->targetGame($targetGameId);
-        $engine = strtoupper(trim((string)$target['engine_key']));
-        $targetEngineGeneration = $this->engineGeneration($engine);
+        $targetEngine = strtoupper(trim((string)$target['engine_key']));
+        $targetEngineGeneration = $this->engineGeneration($targetEngine);
 
         $sourceGames = \catalog_all(
             $this->db,
@@ -67,6 +84,7 @@ final class PdoGameDependencyCrossExamineQuery
                 $this->engineGeneration((string)($game['engine_key'] ?? ''))
             )
         ));
+
         $allowedSourceIds = [];
         foreach ($sourceGames as $game) {
             $allowedSourceIds[(int)$game['id']] = true;
@@ -95,7 +113,7 @@ final class PdoGameDependencyCrossExamineQuery
             . 'COUNT(DISTINCT l.file_id,l.import_index) missing_count,'
             . 'COUNT(DISTINCT l.file_id) owner_count '
             . 'FROM ue_dependency_links l '
-            . 'JOIN ue_file_metadata m ON m.file_id=l.file_id AND m.format_version=' . \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer::FORMAT_VERSION . ' '
+            . 'JOIN ue_file_metadata m ON m.file_id=l.file_id AND m.format_version=' . BlockedCompressedMetadataContainer::FORMAT_VERSION . ' '
             . 'JOIN ue_files owner ON owner.id=l.file_id AND owner.scan_status="verified" '
             . 'JOIN ue_terms pkg ON pkg.id=l.required_package_term_id '
             . 'WHERE owner.game_id=? AND l.status=0 '
@@ -129,11 +147,6 @@ final class PdoGameDependencyCrossExamineQuery
         }
 
         $sourceIds = $sourceGameId > 0 ? [$sourceGameId] : array_keys($allowedSourceIds);
-        // Do not exclude a sibling-game package merely because identical bytes are
-        // already assigned to the target. Cross-examine is an evidence/fit analysis:
-        // complete v3 package coverage decides whether this physical package is a
-        // better provider for the affected consumers. Import/assignment handling is
-        // a separate action after the candidate has been identified.
         $sources = $this->sourceFilesForMissingPackages(
             $targetGameId,
             $sourceIds,
@@ -144,60 +157,72 @@ final class PdoGameDependencyCrossExamineQuery
             return $this->result($target, $sourceGames, [], $diagnostics);
         }
 
-        $sourceById = [];
+        $rows = [];
         foreach ($sources as $source) {
-            $sourceById[(int)$source['id']] = $source;
-            if ((int)($source['metadata_format_version'] ?? 0) === \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer::FORMAT_VERSION) {
+            $sourceFileId = (int)($source['id'] ?? 0);
+            if ($sourceFileId < 1) {
+                continue;
+            }
+            $isCurrentMetadata = (int)($source['metadata_format_version'] ?? 0) === BlockedCompressedMetadataContainer::FORMAT_VERSION;
+            if ($isCurrentMetadata) {
                 $diagnostics['format3_source_files']++;
             }
-        }
 
-        // Exact missing-object projection matches are diagnostic evidence only.
-        // Every compatible same-package source candidate must reach complete package
-        // coverage; otherwise the old path-hash prefilter can hide the best-fitting
-        // package version before authoritative v3 coverage evaluates it.
-        $exactByFile = $this->exactProjectionMatches($targetGameId, array_keys($sourceById));
-        $rows = [];
-        foreach ($sourceById as $sourceFileId => $source) {
-            $exactEvidence = $exactByFile[$sourceFileId] ?? [
-                'exact_object_matches' => 0,
-                'exact_owner_count' => 0,
-            ];
-            $packageKey = $this->key((string)$source['package_name']);
+            $packageName = trim((string)($source['package_name'] ?? ''));
+            $packageKey = $this->key($packageName);
             $stats = $packageStats[$packageKey] ?? null;
             if (!is_array($stats)) {
                 continue;
             }
+
+            $coverage = $isCurrentMetadata
+                ? $this->completeConsumerCoverage($target, $sourceFileId, $packageName)
+                : [
+                    'complete_consumer_count' => 0,
+                    'partial_consumer_count' => 0,
+                    'consumers' => [],
+                ];
+
+            $requiredTotal = 0;
+            $matchedTotal = 0;
+            $matchedOwners = 0;
+            foreach ((array)$coverage['consumers'] as $consumer) {
+                $requiredTotal += max(0, (int)($consumer['required_count'] ?? 0));
+                $matched = max(0, (int)($consumer['matched_count'] ?? 0));
+                $matchedTotal += $matched;
+                if ($matched > 0) {
+                    $matchedOwners++;
+                }
+            }
+            if ($matchedTotal > 0) {
+                $diagnostics['exact_provider_files']++;
+            }
+
             $missingCount = max(1, (int)($stats['missing_count'] ?? 0));
             $ownerCount = max(0, (int)($stats['owner_count'] ?? 0));
-            $exact = min($missingCount, max(0, (int)($exactEvidence['exact_object_matches'] ?? 0)));
-            $exactOwners = min($ownerCount, max(0, (int)($exactEvidence['exact_owner_count'] ?? 0)));
-
-            $completeCoverage = $this->completeConsumerCoverage(
-                $targetGameId,
-                (int)$sourceFileId,
-                (string)$source['package_name']
-            );
-
             $rows[] = $source + [
                 'target_game_id' => $targetGameId,
                 'target_game_name' => (string)$target['name'],
                 'target_missing_count' => $missingCount,
                 'target_owner_count' => $ownerCount,
-                'exact_object_matches' => $exact,
-                'exact_owner_count' => $exactOwners,
-                'coverage_percent' => round(($exact / $missingCount) * 100, 1),
-                'complete_consumer_count' => $completeCoverage['complete_consumer_count'],
-                'partial_consumer_count' => $completeCoverage['partial_consumer_count'],
-                'consumer_coverage' => $completeCoverage['consumers'],
+                // Kept for the presentation model. These are now authoritative
+                // target-game VerifyImport matches, not path-hash prefilter hits.
+                'exact_object_matches' => $matchedTotal,
+                'exact_owner_count' => $matchedOwners,
+                'coverage_percent' => $requiredTotal > 0 ? round(($matchedTotal / $requiredTotal) * 100, 1) : 0.0,
+                'complete_consumer_count' => (int)$coverage['complete_consumer_count'],
+                'partial_consumer_count' => (int)$coverage['partial_consumer_count'],
+                'consumer_coverage' => (array)$coverage['consumers'],
+                'verification_engine' => $targetEngine,
+                'verification_policy' => $this->verificationPolicyLabel($target),
             ];
         }
 
-        $diagnostics['exact_provider_files'] = count($rows);
         usort($rows, static function (array $left, array $right): int {
-            return ($right['exact_object_matches'] <=> $left['exact_object_matches'])
-                ?: ($right['coverage_percent'] <=> $left['coverage_percent'])
-                ?: ($right['exact_owner_count'] <=> $left['exact_owner_count'])
+            return ((int)($right['complete_consumer_count'] ?? 0) <=> (int)($left['complete_consumer_count'] ?? 0))
+                ?: ((int)($right['exact_object_matches'] ?? 0) <=> (int)($left['exact_object_matches'] ?? 0))
+                ?: ((float)($right['coverage_percent'] ?? 0) <=> (float)($left['coverage_percent'] ?? 0))
+                ?: ((int)($right['exact_owner_count'] ?? 0) <=> (int)($left['exact_owner_count'] ?? 0))
                 ?: strcasecmp((string)$left['package_name'], (string)$right['package_name'])
                 ?: strcasecmp((string)$left['source_game_name'], (string)$right['source_game_name']);
         });
@@ -215,10 +240,8 @@ final class PdoGameDependencyCrossExamineQuery
             return null;
         }
 
-        // Queue-time revalidation must use the exact same candidate construction
-        // path as the report. The previous implementation duplicated the report's
-        // source/engine/package/coverage gates and could reject a row that the
-        // report had just classified as FULL MATCH.
+        // Queue-time revalidation deliberately comes back through fetch(), so the
+        // report and the import action cannot disagree about engine semantics.
         $source = \catalog_one(
             $this->db,
             'SELECT game_id FROM ue_files WHERE id=? AND scan_status="verified" LIMIT 1',
@@ -240,15 +263,25 @@ final class PdoGameDependencyCrossExamineQuery
     }
 
     /**
-     * Evaluate each affected consumer against the candidate as one physical package.
-     * Requirements include every import from that consumer to the package, not only
-     * rows currently marked missing. This prevents partial package versions from
-     * being presented as complete replacements.
+     * Evaluate every affected consumer against one physical candidate package.
      *
+     * Consumer Imports are loaded from authoritative compact metadata. UE1/UE2
+     * and UE3 are delegated to the same VerifyImport resolvers used by the normal
+     * dependency rebuild. Other generations use the same complete-package object
+     * coverage resolver used by PdoDependencyResolver, with the target engine key.
+     *
+     * @param array<string,mixed> $target
      * @return array{complete_consumer_count:int,partial_consumer_count:int,consumers:list<array<string,mixed>>}
      */
-    private function completeConsumerCoverage(int $targetGameId, int $sourceFileId, string $packageName): array
+    private function completeConsumerCoverage(array $target, int $sourceFileId, string $packageName): array
     {
+        $targetGameId = (int)($target['id'] ?? 0);
+        $targetEngine = strtoupper(trim((string)($target['engine_key'] ?? ''));
+        $legacyPolicy = $this->legacyVerifyImportPolicy($target);
+        $classRemaps = $legacyPolicy === 'unreal2'
+            ? (new PdoClassRemapRepository($this->db))->mappingsForGame($targetGameId)
+            : [];
+
         $affected = \catalog_all(
             $this->db,
             'SELECT DISTINCT l.file_id FROM ue_dependency_links l '
@@ -257,6 +290,7 @@ final class PdoGameDependencyCrossExamineQuery
             . 'WHERE l.status=0 AND CONVERT(pkg.value_prefix USING utf8mb4) COLLATE utf8mb4_unicode_ci=?',
             [$targetGameId, $packageName]
         );
+
         $consumers = [];
         $complete = 0;
         $partial = 0;
@@ -265,65 +299,93 @@ final class PdoGameDependencyCrossExamineQuery
             if ($consumerId < 1) {
                 continue;
             }
-            $imports = \catalog_all(
-                $this->db,
-                'SELECT CONVERT(obj.value_prefix USING utf8mb4) object_path,'
-                . 'CONVERT(cp.value_prefix USING utf8mb4) class_package,'
-                . 'CONVERT(cn.value_prefix USING utf8mb4) class_name '
-                . 'FROM ue_dependency_links l '
-                . 'JOIN ue_terms pkg ON pkg.id=l.required_package_term_id '
-                . 'JOIN ue_terms obj ON obj.id=l.required_object_term_id '
-                . 'LEFT JOIN ue_terms cp ON cp.id=l.import_class_package_term_id '
-                . 'LEFT JOIN ue_terms cn ON cn.id=l.import_class_name_term_id '
-                . 'WHERE l.file_id=? AND CONVERT(pkg.value_prefix USING utf8mb4) COLLATE utf8mb4_unicode_ci=? '
-                . 'ORDER BY l.import_index',
-                [$consumerId, $packageName]
-            );
-            $paths = [];
-            $classes = [];
-            foreach ($imports as $import) {
-                $path = trim((string)($import['object_path'] ?? ''));
-                // A package-only Import names the package itself and is not an
-                // Export requirement. Only concrete object paths participate.
-                if ($path === '' || strcasecmp($path, $packageName) === 0) {
-                    continue;
-                }
-                $paths[$this->key($path)] = $path;
-                $className = trim((string)($import['class_name'] ?? ''));
-                if ($className !== '') {
-                    $classes[$path] = [
-                        'class_package' => trim((string)($import['class_package'] ?? '')),
-                        'class_name' => $className,
-                    ];
-                }
-            }
-            if ($paths === []) {
+
+            $allImports = $this->consumerImports($consumerId);
+            $requirements = $this->packageObjectRequirements($allImports, $packageName);
+            if ($requirements === []) {
                 continue;
             }
-            $coverage = PdoPackageObjectCoverageResolver::evaluate(
-                $this->db,
-                (int)($this->sourceGameIdForFile($sourceFileId)),
-                $packageName,
-                array_values($paths),
-                $sourceFileId,
-                $classes
-            );
-            $candidate = null;
-            foreach ($coverage as $coverageRow) {
-                if ((int)($coverageRow['file_id'] ?? 0) === $sourceFileId) {
-                    $candidate = $coverageRow;
-                    break;
+
+            $requiredCount = count($requirements);
+            $matchedIndexes = [];
+            $matchedPaths = [];
+            $missingPaths = [];
+
+            if ($legacyPolicy !== null) {
+                require_once dirname(__DIR__) . '/Persistence/PdoLegacyVerifyImportProjectionResolver.php';
+                $variants = PdoLegacyVerifyImportProjectionResolver::resolveProviderVariants(
+                    $this->db,
+                    $sourceFileId,
+                    $allImports,
+                    $classRemaps
+                );
+                $matches = (array)($variants[$legacyPolicy] ?? []);
+                foreach ($requirements as $importIndex => $requirement) {
+                    if (array_key_exists($importIndex, $matches)) {
+                        $matchedIndexes[$importIndex] = (int)$matches[$importIndex];
+                        $matchedPaths[] = (string)$requirement['path'];
+                    } else {
+                        $missingPaths[] = (string)$requirement['path'];
+                    }
+                }
+            } elseif ($targetEngine === 'UE3') {
+                require_once dirname(__DIR__) . '/Persistence/PdoUe3VerifyImportProjectionResolver.php';
+                $matches = PdoUe3VerifyImportProjectionResolver::resolveProvider(
+                    $this->db,
+                    $sourceFileId,
+                    $allImports
+                );
+                foreach ($requirements as $importIndex => $requirement) {
+                    if (array_key_exists($importIndex, $matches)) {
+                        $matchedIndexes[$importIndex] = (int)$matches[$importIndex];
+                        $matchedPaths[] = (string)$requirement['path'];
+                    } else {
+                        $missingPaths[] = (string)$requirement['path'];
+                    }
+                }
+            } else {
+                [$paths, $classes] = $this->genericCoverageInputs($requirements);
+                $coverage = PdoPackageObjectCoverageResolver::evaluate(
+                    $this->db,
+                    $this->sourceGameIdForFile($sourceFileId),
+                    $packageName,
+                    $paths,
+                    $sourceFileId,
+                    $classes,
+                    $targetEngine
+                );
+                $candidate = null;
+                foreach ($coverage as $coverageRow) {
+                    if ((int)($coverageRow['file_id'] ?? 0) === $sourceFileId) {
+                        $candidate = $coverageRow;
+                        break;
+                    }
+                }
+                $matchedKeys = [];
+                foreach ((array)($candidate['matched_paths'] ?? []) as $matchedPath) {
+                    $matchedKeys[$this->key((string)$matchedPath)] = true;
+                }
+                foreach ($requirements as $importIndex => $requirement) {
+                    $path = (string)$requirement['path'];
+                    $relative = (string)$requirement['relative_path'];
+                    if (isset($matchedKeys[$this->key($path)]) || isset($matchedKeys[$this->key($relative)])) {
+                        $matchedIndexes[$importIndex] = (int)(($candidate['matched_exports'][$this->key($relative)] ?? -1));
+                        $matchedPaths[] = $path;
+                    } else {
+                        $missingPaths[] = $path;
+                    }
                 }
             }
-            if (!is_array($candidate)) {
-                continue;
-            }
-            $isComplete = (string)($candidate['status'] ?? '') === 'fully_satisfies';
+
+            $matchedCount = count($matchedIndexes);
+            $missingCount = max(0, $requiredCount - $matchedCount);
+            $isComplete = $missingCount === 0;
             if ($isComplete) {
                 $complete++;
             } else {
                 $partial++;
             }
+
             $consumerFile = \catalog_one(
                 $this->db,
                 'SELECT original_name,package_name FROM ue_files WHERE id=? LIMIT 1',
@@ -333,14 +395,17 @@ final class PdoGameDependencyCrossExamineQuery
                 'file_id' => $consumerId,
                 'file_name' => trim((string)($consumerFile['original_name'] ?? '')) ?: ('File #' . $consumerId),
                 'package_name' => trim((string)($consumerFile['package_name'] ?? '')),
-                'required_count' => (int)($candidate['required_count'] ?? 0),
-                'matched_count' => (int)($candidate['matched_count'] ?? 0),
-                'missing_count' => (int)($candidate['missing_count'] ?? 0),
-                'status' => (string)($candidate['status'] ?? ''),
-                'matched_paths' => (array)($candidate['matched_paths'] ?? []),
-                'missing_paths' => (array)($candidate['missing_paths'] ?? []),
+                'required_count' => $requiredCount,
+                'matched_count' => $matchedCount,
+                'missing_count' => $missingCount,
+                'status' => $isComplete
+                    ? 'fully_satisfies'
+                    : ($matchedCount > 0 ? 'partially_satisfies' : 'does_not_satisfy'),
+                'matched_paths' => $matchedPaths,
+                'missing_paths' => $missingPaths,
             ];
         }
+
         return [
             'complete_consumer_count' => $complete,
             'partial_consumer_count' => $partial,
@@ -348,109 +413,89 @@ final class PdoGameDependencyCrossExamineQuery
         ];
     }
 
-    private function sourceGameIdForFile(int $fileId): int
+    /** @return list<array<string,mixed>> */
+    private function consumerImports(int $consumerFileId): array
     {
-        $stmt = $this->db->prepare('SELECT game_id FROM ue_files WHERE id=? LIMIT 1');
-        $stmt->execute([$fileId]);
-        return (int)$stmt->fetchColumn();
+        if (isset($this->consumerImportCache[$consumerFileId])) {
+            return $this->consumerImportCache[$consumerFileId];
+        }
+        $snapshot = (new BlockedCompressedMetadataSnapshotLoader($this->db, $this->storageRoot))
+            ->loadDependencySnapshot($consumerFileId);
+        $imports = [];
+        foreach ((array)($snapshot['imports'] ?? []) as $row) {
+            if (is_array($row)) {
+                $imports[] = $row;
+            }
+        }
+        return $this->consumerImportCache[$consumerFileId] = $imports;
     }
 
     /**
-     * Match the target's current missing dependency path hashes against the same
-     * ue_export_lookup.path_hash projection used by normal dependency resolution.
-     * Package identity is compared separately so an export from an unrelated
-     * package cannot satisfy a same-path dependency. Each missing dependency row
-     * is counted once even if a source package contains duplicate exports with the
-     * same local path hash.
-     *
-     * @param list<int> $sourceFileIds
-     * @return array<int,array{exact_object_matches:int,exact_owner_count:int}>
+     * @param list<array<string,mixed>> $imports
+     * @return array<int,array{path:string,relative_path:string,class_package:string,class_name:string}>
      */
-    private function exactProjectionMatches(int $targetGameId, array $sourceFileIds): array
+    private function packageObjectRequirements(array $imports, string $packageName): array
     {
-        $sourceFileIds = array_values(array_unique(array_filter(
-            array_map('intval', $sourceFileIds),
-            static fn(int $id): bool => $id > 0
-        )));
-        if ($sourceFileIds === []) {
-            return [];
-        }
-
-        require_once dirname(__DIR__) . '/Metadata/BlockedCompressedMetadataReader.php';
-        $config = require dirname(__DIR__, 3) . '/config.php';
-        $reader = new \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataReader(
-            $this->db,
-            (string)($config['storage_path'] ?? (dirname(__DIR__, 3) . '/storage'))
-        );
-
-        $matchedRows = [];
-        $matchedOwners = [];
-        foreach (array_chunk($sourceFileIds, self::SOURCE_ID_CHUNK) as $chunk) {
-            $placeholders = implode(',', array_fill(0, count($chunk), '?'));
-            $rows = \catalog_all(
-                $this->db,
-                'SELECT source.id source_file_id,l.file_id owner_file_id,l.import_index,exports.export_index,'
-                . 'CONVERT(required_path.value_prefix USING utf8mb4) required_path,'
-                . 'CONVERT(required_class_package.value_prefix USING utf8mb4) required_class_package,'
-                . 'CONVERT(required_class_name.value_prefix USING utf8mb4) required_class_name '
-                . 'FROM ue_dependency_links l '
-                . 'JOIN ue_file_metadata owner_meta ON owner_meta.file_id=l.file_id AND owner_meta.format_version=' . \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer::FORMAT_VERSION . ' '
-                . 'JOIN ue_files owner ON owner.id=l.file_id AND owner.scan_status="verified" '
-                . 'JOIN ue_terms pkg ON pkg.id=l.required_package_term_id '
-                . 'JOIN ue_terms required_path ON required_path.id=l.required_object_term_id '
-                . 'LEFT JOIN ue_terms required_class_package ON required_class_package.id=l.import_class_package_term_id '
-                . 'LEFT JOIN ue_terms required_class_name ON required_class_name.id=l.import_class_name_term_id '
-                . 'JOIN ue_files source ON source.id IN (' . $placeholders . ') '
-                . 'AND source.scan_status="verified" '
-                . 'AND source.package_name=CONVERT(pkg.value_prefix USING utf8mb4) COLLATE utf8mb4_unicode_ci '
-                . 'JOIN ue_file_metadata source_meta ON source_meta.file_id=source.id AND source_meta.format_version=' . \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer::FORMAT_VERSION . ' '
-                . 'JOIN ue_export_lookup exports ON exports.file_id=source.id AND exports.path_hash=l.required_path_hash '
-                . 'WHERE owner.game_id=? AND l.status=0',
-                array_merge($chunk, [$targetGameId])
-            );
-            foreach ($rows as $row) {
-                $sourceFileId = (int)($row['source_file_id'] ?? 0);
-                $ownerFileId = (int)($row['owner_file_id'] ?? 0);
-                $importIndex = (int)($row['import_index'] ?? -1);
-                $exportIndex = (int)($row['export_index'] ?? -1);
-                $requiredPath = trim((string)($row['required_path'] ?? ''));
-                if ($sourceFileId < 1 || $ownerFileId < 1 || $importIndex < 0 || $exportIndex < 0 || $requiredPath === '') {
-                    continue;
-                }
-
-                $exportRows = $reader->page($sourceFileId, 'exports', $exportIndex, 1);
-                $export = $exportRows[0] ?? null;
-                if (!is_array($export)
-                    || (int)($export['export_index'] ?? -1) !== $exportIndex
-                    || $this->key((string)($export['local_path'] ?? '')) !== $this->key($requiredPath)) {
-                    continue;
-                }
-
-                $requiredClassName = trim((string)($row['required_class_name'] ?? ''));
-                if ($requiredClassName !== '') {
-                    $actualClass = $this->key((string)($export['class_name'] ?? ''));
-                    $className = $this->key($requiredClassName);
-                    $classPackage = $this->key((string)($row['required_class_package'] ?? ''));
-                    $qualified = $classPackage !== '' ? $classPackage . '.' . $className : $className;
-                    if ($actualClass !== '' && $actualClass !== $className && $actualClass !== $qualified) {
-                        continue;
-                    }
-                }
-
-                $dependencyKey = $ownerFileId . ':' . $importIndex;
-                $matchedRows[$sourceFileId][$dependencyKey] = true;
-                $matchedOwners[$sourceFileId][$ownerFileId] = true;
+        $packageKey = $this->key($packageName);
+        $requirements = [];
+        foreach ($imports as $fallback => $import) {
+            if ($this->key((string)($import['root_package'] ?? '')) !== $packageKey) {
+                continue;
             }
-        }
-
-        $matches = [];
-        foreach ($matchedRows as $sourceFileId => $dependencies) {
-            $matches[(int)$sourceFileId] = [
-                'exact_object_matches' => count($dependencies),
-                'exact_owner_count' => count($matchedOwners[$sourceFileId] ?? []),
+            $relative = trim((string)($import['relative_object_path'] ?? ''));
+            if ($relative === '') {
+                // Package-only Imports prove that the package linker is required,
+                // but they do not require an Export object.
+                continue;
+            }
+            $importIndex = isset($import['import_index']) ? (int)$import['import_index'] : (int)$fallback;
+            $fullPath = trim((string)($import['full_path'] ?? ''));
+            if ($fullPath === '') {
+                $fullPath = $packageName . '.' . $relative;
+            }
+            $requirements[$importIndex] = [
+                'path' => $fullPath,
+                'relative_path' => $relative,
+                'class_package' => trim((string)($import['class_package'] ?? '')),
+                'class_name' => trim((string)($import['class_name'] ?? '')),
             ];
         }
-        return $matches;
+        ksort($requirements);
+        return $requirements;
+    }
+
+    /**
+     * @param array<int,array{path:string,relative_path:string,class_package:string,class_name:string}> $requirements
+     * @return array{0:list<string>,1:array<string,array{class_package:string,class_name:string}>}
+     */
+    private function genericCoverageInputs(array $requirements): array
+    {
+        $paths = [];
+        $classes = [];
+        foreach ($requirements as $requirement) {
+            $path = (string)$requirement['path'];
+            $key = $this->key($path);
+            if (!isset($paths[$key])) {
+                $paths[$key] = $path;
+            }
+            if ((string)$requirement['class_name'] !== '') {
+                $classes[$path] = [
+                    'class_package' => (string)$requirement['class_package'],
+                    'class_name' => (string)$requirement['class_name'],
+                ];
+            }
+        }
+        return [array_values($paths), $classes];
+    }
+
+    private function sourceGameIdForFile(int $fileId): int
+    {
+        if (isset($this->sourceGameCache[$fileId])) {
+            return $this->sourceGameCache[$fileId];
+        }
+        $stmt = $this->db->prepare('SELECT game_id FROM ue_files WHERE id=? LIMIT 1');
+        $stmt->execute([$fileId]);
+        return $this->sourceGameCache[$fileId] = (int)$stmt->fetchColumn();
     }
 
     /**
@@ -490,6 +535,8 @@ final class PdoGameDependencyCrossExamineQuery
                 . 'LEFT JOIN ue_file_metadata m ON m.file_id=f.id '
                 . 'WHERE f.scan_status="verified" AND f.game_id IN (' . $gamePlaceholders . ') '
                 . 'AND f.package_name IN (' . $packagePlaceholders . ') '
+                . 'AND NOT EXISTS (SELECT 1 FROM ue_invalid_file_identities bad '
+                . 'WHERE bad.file_size=f.file_size AND bad.md5=LOWER(f.md5) AND bad.sha1=LOWER(f.sha1)) '
                 . 'ORDER BY f.package_name,g.name,f.id',
                 array_merge($sourceGameIds, $packageChunk)
             );
@@ -513,7 +560,7 @@ final class PdoGameDependencyCrossExamineQuery
         }
         $row = \catalog_one(
             $this->db,
-            'SELECT g.id,g.name,g.slug,g.profile_id,p.profile_name,p.engine_key '
+            'SELECT g.id,g.name,g.slug,g.profile_id,p.profile_name,p.engine_key,p.notes '
             . 'FROM ue_games g JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 WHERE g.id=?',
             [$gameId]
         );
@@ -521,6 +568,45 @@ final class PdoGameDependencyCrossExamineQuery
             throw new \RuntimeException('Target game or active profile was not found.');
         }
         return $row;
+    }
+
+    /**
+     * Mirrors the target-game policy selection in PdoDependencyResolver. The
+     * actual matching is delegated to the same resolver class, so this method only
+     * chooses which source-backed UE1/UE2 variant applies to the selected game.
+     */
+    private function legacyVerifyImportPolicy(array $target): ?string
+    {
+        $engine = strtoupper(trim((string)($target['engine_key'] ?? '')));
+        if (!in_array($engine, ['UE1', 'UE2'], true)) {
+            return null;
+        }
+        if ($engine === 'UE2') {
+            $identity = strtolower(implode(' ', [
+                (string)($target['profile_name'] ?? ''),
+                (string)($target['notes'] ?? ''),
+                (string)($target['name'] ?? ''),
+                (string)($target['slug'] ?? ''),
+            ]));
+            if (preg_match('/\bunreal[ _-]*ii\b|\bunreal[ _-]*2\b/', $identity) === 1) {
+                return 'unreal2';
+            }
+        }
+        return 'standard';
+    }
+
+    private function verificationPolicyLabel(array $target): string
+    {
+        $legacy = $this->legacyVerifyImportPolicy($target);
+        if ($legacy === 'unreal2') {
+            return 'unreal2_verify_import';
+        }
+        if ($legacy === 'standard') {
+            return 'legacy_verify_import';
+        }
+        return strtoupper(trim((string)($target['engine_key'] ?? ''))) === 'UE3'
+            ? 'ue3_verify_import'
+            : 'complete_package_object';
     }
 
     /**
@@ -559,7 +645,7 @@ final class PdoGameDependencyCrossExamineQuery
     private function engineGeneration(string $engineKey): int
     {
         $key = strtoupper(trim($engineKey));
-        if (preg_match('/^UE([1-5])(?:\\D|$)/', $key, $matches) === 1) {
+        if (preg_match('/^UE([1-5])(?:\D|$)/', $key, $matches) === 1) {
             return (int)$matches[1];
         }
         if (preg_match('/UNREAL(?:ENGINE)?[^0-9]*([1-5])/', $key, $matches) === 1) {
