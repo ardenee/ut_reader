@@ -1,0 +1,143 @@
+<?php
+/**
+ * UnrealDB PHP File Audit
+ * Purpose: Bounds the public HTML response cache against scraper-driven key explosions.
+ * Why: Arbitrary GET parameters previously created distinct cache identities and each identity left a lock file.
+ * Role: Safety policy around CatalogPublicResponseCacheService without changing rendered page semantics.
+ */
+declare(strict_types=1);
+
+namespace UnrealDb\Catalog\Infrastructure\Cache;
+
+final class CatalogPublicResponseCacheHardener
+{
+    private const DEFAULT_MAX_ENTRIES = 500000;
+
+    /**
+     * Only requests whose query keys are known to affect the cacheable route may
+     * enter the response cache. Unknown keys bypass caching; they are never
+     * stripped from $_GET, so application behaviour is unchanged.
+     */
+    public static function requestCacheable(): bool
+    {
+        $script = strtolower(basename((string)($_SERVER['SCRIPT_NAME'] ?? '')));
+        $keys = array_map(static fn($v): string => strtolower((string)$v), array_keys($_GET));
+
+        if ($script === 'index.php') {
+            $page = strtolower(trim((string)($_GET['page'] ?? '')));
+            if ($page === '' || $page === 'home') {
+                return self::keysAllowed($keys, ['page']);
+            }
+            // Search is already deliberately bounded to a fixed slot count by
+            // CatalogPublicResponseCacheService, so its legitimate filters may
+            // remain variable without growing the filesystem namespace.
+            return $page === 'search';
+        }
+
+        $allowed = [
+            'games.php' => [],
+            'library.php' => ['q', 'game', 'game_id', 'type', 'sort', 'order', 'page'],
+            'game-page.php' => ['id'],
+            'game-files.php' => ['id', 'q', 'type', 'sort', 'order', 'page'],
+            'file-info.php' => ['id', 'dep_status'],
+            'file-examine.php' => ['id'],
+            'game-paks.php' => ['id', 'page'],
+            'game-upks.php' => ['id', 'page'],
+            'pak-info.php' => ['id'],
+            'upk-info.php' => ['id'],
+        ];
+        if (!array_key_exists($script, $allowed)) {
+            return true; // The cache service itself decides whether the route is cacheable.
+        }
+        return self::keysAllowed($keys, $allowed[$script]);
+    }
+
+    /**
+     * Called after the normal cache shutdown publisher. Removes the now-unused
+     * per-key lock file and enforces an inexpensive persistent entry counter.
+     * The counter is conservative: when at the ceiling, a newly generated cache
+     * object is discarded rather than allowing unbounded growth.
+     */
+    public static function finish(array $config): void
+    {
+        $state = $GLOBALS['catalog_public_cache_state'] ?? null;
+        if (!is_array($state)) {
+            return;
+        }
+        $path = (string)($state['path'] ?? '');
+        if ($path === '') {
+            return;
+        }
+
+        $lockPath = preg_replace('/\.htmlcache$/', '.lock', $path);
+        if (is_string($lockPath) && $lockPath !== $path) {
+            // On Windows this fails safely if another process still has the file open.
+            @unlink($lockPath);
+        }
+
+        if (!is_file($path)) {
+            return;
+        }
+
+        $cache = is_array($config['cache'] ?? null) ? $config['cache'] : [];
+        $maximum = max(1000, min(
+            (int)($cache['public_response_max_entries'] ?? self::DEFAULT_MAX_ENTRIES),
+            1000000
+        ));
+        $directory = CatalogPublicResponseCacheService::directory($config);
+        $counterPath = rtrim($directory, '/\\') . DIRECTORY_SEPARATOR . '.entry-count';
+        $handle = @fopen($counterPath, 'c+b');
+        if (!is_resource($handle)) {
+            return;
+        }
+        try {
+            if (!@flock($handle, LOCK_EX)) {
+                return;
+            }
+            rewind($handle);
+            $count = max(0, (int)trim((string)stream_get_contents($handle)));
+            $wasNew = !isset($state['cache_existed_before']) || !$state['cache_existed_before'];
+            if ($wasNew) {
+                if ($count >= $maximum) {
+                    @unlink($path);
+                    return;
+                }
+                ++$count;
+                rewind($handle);
+                @ftruncate($handle, 0);
+                @fwrite($handle, (string)$count);
+                @fflush($handle);
+            }
+        } finally {
+            @flock($handle, LOCK_UN);
+            @fclose($handle);
+        }
+    }
+
+    /** Record whether this request is creating a new cache object. */
+    public static function markExistingState(): void
+    {
+        $state = $GLOBALS['catalog_public_cache_state'] ?? null;
+        if (!is_array($state)) {
+            return;
+        }
+        $path = (string)($state['path'] ?? '');
+        $state['cache_existed_before'] = $path !== '' && is_file($path);
+        $GLOBALS['catalog_public_cache_state'] = $state;
+    }
+
+    /** @param list<string> $keys @param list<string> $allowed */
+    private static function keysAllowed(array $keys, array $allowed): bool
+    {
+        $allowed = array_fill_keys($allowed, true);
+        foreach ($keys as $key) {
+            if (str_starts_with($key, 'utm_')) {
+                continue;
+            }
+            if (!isset($allowed[$key])) {
+                return false;
+            }
+        }
+        return true;
+    }
+}
