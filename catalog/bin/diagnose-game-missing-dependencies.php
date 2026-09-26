@@ -27,6 +27,8 @@ if ($gameArg === '') {
 require_once $root . '/bootstrap.php';
 
 use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer;
+use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataSnapshotLoader;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoLegacyVerifyImportProjectionResolver;
 
 $application = catalog_bootstrap();
 $db = $application->db;
@@ -211,6 +213,85 @@ $sampleResolverMismatch = $all(
     [$gameId]
 );
 
+
+// Source-faithful UE1/UE2 VerifyImport detail for sampled missing rows.
+// This reads authoritative v4 imports and compares each verified physical provider
+// with the same resolver used by dependency rebuilding. It deliberately does not
+// infer success from path hashes alone.
+$verifyImportAudit = [];
+$engineRow = $one(
+    $db,
+    'SELECT p.engine_key FROM ue_games g LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 WHERE g.id=?',
+    [$gameId]
+);
+$engineKey = strtoupper(trim((string)($engineRow['engine_key'] ?? '')));
+if (in_array($engineKey, ['UE1', 'UE2'], true)) {
+    $storageRoot = trim((string)($application->config['storage_path'] ?? ''));
+    if ($storageRoot !== '') {
+        $loader = new BlockedCompressedMetadataSnapshotLoader($db, $storageRoot);
+        $auditRows = array_slice(array_merge($sampleProviderNoObject, $sampleResolverMismatch), 0, $samples);
+        $snapshotCache = [];
+        $providerStatement = $db->prepare(
+            'SELECT DISTINCT p.file_id,f.original_name,f.package_name FROM ue_package_providers p '
+            . 'JOIN ue_files f ON f.id=p.file_id AND f.game_id=p.game_id '
+            . 'WHERE p.game_id=? AND f.scan_status="verified" AND p.package_name=? AND p.file_id<>? ORDER BY p.file_id'
+        );
+        foreach ($auditRows as $sample) {
+            $ownerFileId = (int)$sample['owner_file_id'];
+            try {
+                $snapshotCache[$ownerFileId] ??= $loader->loadDependencySnapshot($ownerFileId);
+                $imports = (array)($snapshotCache[$ownerFileId]['imports'] ?? []);
+                $importIndex = (int)$sample['import_index'];
+                $consumer = null;
+                foreach ($imports as $candidateImport) {
+                    if (is_array($candidateImport) && (int)($candidateImport['import_index'] ?? -1) === $importIndex) {
+                        $consumer = $candidateImport;
+                        break;
+                    }
+                }
+                if (!is_array($consumer)) {
+                    continue;
+                }
+                $providerStatement->execute([$gameId, (string)$sample['required_package'], $ownerFileId]);
+                $providers = [];
+                while (($provider = $providerStatement->fetch(PDO::FETCH_ASSOC)) !== false) {
+                    $variants = PdoLegacyVerifyImportProjectionResolver::resolveProviderVariants(
+                        $db,
+                        (int)$provider['file_id'],
+                        $imports
+                    );
+                    $providers[] = [
+                        'file_id' => (int)$provider['file_id'],
+                        'file' => (string)$provider['original_name'],
+                        'unreal2_match_export_index' => $variants['unreal2'][$importIndex] ?? null,
+                        'standard_match_export_index' => $variants['standard'][$importIndex] ?? null,
+                        'unreal2_only' => isset($variants['unreal2_only'][$importIndex]),
+                    ];
+                }
+                $verifyImportAudit[] = [
+                    'owner_file_id' => $ownerFileId,
+                    'owner_file' => (string)$sample['owner_file'],
+                    'import_index' => $importIndex,
+                    'required_package' => (string)$sample['required_package'],
+                    'full_path' => (string)($consumer['full_path'] ?? ''),
+                    'object_name' => (string)($consumer['object_name'] ?? ''),
+                    'class_package' => (string)($consumer['class_package'] ?? ''),
+                    'class_name' => (string)($consumer['class_name'] ?? ''),
+                    'outer_index' => (int)($consumer['outer_index'] ?? 0),
+                    'providers' => $providers,
+                ];
+            } catch (Throwable $error) {
+                $verifyImportAudit[] = [
+                    'owner_file_id' => $ownerFileId,
+                    'import_index' => (int)$sample['import_index'],
+                    'required_package' => (string)$sample['required_package'],
+                    'error' => $error->getMessage(),
+                ];
+            }
+        }
+    }
+}
+
 $interpretation = [];
 if ($dependencyProjectionMismatchFiles > 0 || $exportProjectionMismatchFiles > 0) {
     $interpretation[] = 'Projection integrity is not clean: one or more compact lookup row counts do not match authoritative metadata counts.';
@@ -269,6 +350,7 @@ $result = [
         'provider_exists_but_no_exact_path_hash' => $sampleProviderNoObject,
         'provider_has_exact_path_hash_verifyimport_still_rejected' => $sampleResolverMismatch,
     ],
+    'verify_import_audit' => $verifyImportAudit,
     'interpretation' => $interpretation,
 ];
 
