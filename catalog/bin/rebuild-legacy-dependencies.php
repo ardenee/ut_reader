@@ -82,13 +82,16 @@ foreach ($files as $position => $file) {
         $before->execute([$fileId]);
         $beforeCount = (int)$before->fetchColumn();
 
+        // game-missing.php reads ue_dependency_package_summaries for its totals
+        // and aggregate lists. Keep that projection synchronized with the
+        // authoritative links changed by this maintenance rebuild.
         $rebuilder->rebuild(
             $fileId,
             null,
             0,
             100,
             'Rebuilding indexed VerifyImport dependencies',
-            false
+            true
         );
 
         $changedFiles++;
