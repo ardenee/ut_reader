@@ -25,6 +25,9 @@ if ($gameArg === '') {
 }
 
 require_once $root . '/bootstrap.php';
+
+use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer;
+
 $application = catalog_bootstrap();
 $db = $application->db;
 
@@ -70,7 +73,7 @@ $metadataTotals = $one(
     'SELECT COUNT(*) metadata_files,COALESCE(SUM(m.import_count),0) import_count,'
     . 'COALESCE(SUM(m.export_count),0) export_count '
     . 'FROM ue_file_metadata m JOIN ue_files f ON f.id=m.file_id '
-    . 'WHERE f.game_id=? AND f.scan_status="verified" AND m.format_version=3',
+    . 'WHERE f.game_id=? AND f.scan_status="verified" AND m.format_version=' . BlockedCompressedMetadataContainer::FORMAT_VERSION',
     [$gameId]
 );
 $linkTotals = $one(
@@ -79,7 +82,8 @@ $linkTotals = $one(
     . 'COALESCE(SUM(l.status=0),0) missing_count,'
     . 'COALESCE(SUM(l.status=1),0) resolved_count,'
     . 'COALESCE(SUM(l.status=2),0) package_only_count,'
-    . 'COALESCE(SUM(l.status=3),0) common_count '
+    . 'COALESCE(SUM(l.status=3),0) common_count,'
+    . 'COUNT(DISTINCT CASE WHEN l.status=0 THEN f.id END) files_with_missing_count '
     . 'FROM ue_dependency_links l JOIN ue_files f ON f.id=l.file_id '
     . 'WHERE f.game_id=? AND f.scan_status="verified"',
     [$gameId]
@@ -97,7 +101,7 @@ $dependencyProjectionMismatchFiles = $scalar(
     $db,
     'SELECT COUNT(*) FROM ('
     . 'SELECT f.id,m.import_count,COUNT(l.file_id) actual_count '
-    . 'FROM ue_files f JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=3 '
+    . 'FROM ue_files f JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=' . BlockedCompressedMetadataContainer::FORMAT_VERSION '
     . 'LEFT JOIN ue_dependency_links l ON l.file_id=f.id '
     . 'WHERE f.game_id=? AND f.scan_status="verified" '
     . 'GROUP BY f.id,m.import_count HAVING m.import_count<>COUNT(l.file_id)'
@@ -108,7 +112,7 @@ $exportProjectionMismatchFiles = $scalar(
     $db,
     'SELECT COUNT(*) FROM ('
     . 'SELECT f.id,m.export_count,COUNT(l.file_id) actual_count '
-    . 'FROM ue_files f JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=3 '
+    . 'FROM ue_files f JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=' . BlockedCompressedMetadataContainer::FORMAT_VERSION '
     . 'LEFT JOIN ue_export_lookup l ON l.file_id=f.id '
     . 'WHERE f.game_id=? AND f.scan_status="verified" '
     . 'GROUP BY f.id,m.export_count HAVING m.export_count<>COUNT(l.file_id)'
@@ -212,10 +216,10 @@ if ($dependencyProjectionMismatchFiles > 0 || $exportProjectionMismatchFiles > 0
     $interpretation[] = 'Projection integrity is not clean: one or more compact lookup row counts do not match authoritative metadata counts.';
 }
 if ($missingWithExactExport > 0) {
-    $interpretation[] = 'Definite resolver inconsistency: some dependencies are marked missing even though a current package provider has an export with the exact required path hash.';
+    $interpretation[] = 'Some missing imports have a provider with the exact required path hash. This is only a path-level signal: UE1/UE2 VerifyImport also checks serialized object/class identity, outer resolution, provider completeness, and engine-specific visibility rules. Inspect those checks before treating these rows as resolver inconsistencies.';
 }
 if ($missingWithProviderNoExactExport > 0) {
-    $interpretation[] = 'These are not missing package files: a verified provider exists, but the requested object path did not match an exact current export hash. Inspect parser/path/version compatibility before calling them genuine missing dependencies.';
+    $interpretation[] = 'A verified provider exists for some rows but no provider has the exact required path hash. These are provider-present/object-path-missing cases and should be inspected separately from VerifyImport rejections.';
 }
 if ($missingWithoutProvider > 0) {
     $interpretation[] = 'These dependency rows have no current verified provider for the required package name and are the strongest candidates for genuinely absent package files.';
@@ -234,7 +238,8 @@ $result = [
     ],
     'totals' => [
         'verified_files' => $verifiedFiles,
-        'format2_metadata_files' => (int)($metadataTotals['metadata_files'] ?? 0),
+        'current_metadata_format' => BlockedCompressedMetadataContainer::FORMAT_VERSION,
+        'current_metadata_files' => (int)($metadataTotals['metadata_files'] ?? 0),
         'metadata_import_count' => (int)($metadataTotals['import_count'] ?? 0),
         'metadata_export_count' => (int)($metadataTotals['export_count'] ?? 0),
         'dependency_rows' => (int)($linkTotals['dependency_rows'] ?? 0),
@@ -242,6 +247,7 @@ $result = [
         'resolved_dependencies' => (int)($linkTotals['resolved_count'] ?? 0),
         'package_only_dependencies' => (int)($linkTotals['package_only_count'] ?? 0),
         'common_dependencies' => (int)($linkTotals['common_count'] ?? 0),
+        'files_with_missing_dependencies' => (int)($linkTotals['files_with_missing_count'] ?? 0),
         'summary_dependency_count' => (int)($summaryTotals['dependency_count'] ?? 0),
         'summary_missing_count' => (int)($summaryTotals['missing_count'] ?? 0),
         'package_names_with_missing_objects' => (int)($summaryTotals['package_names_with_missing'] ?? 0),
@@ -253,15 +259,15 @@ $result = [
     'missing_classification' => [
         'missing_with_no_verified_package_provider' => $missingWithoutProvider,
         'missing_with_verified_package_provider' => $missingWithProvider,
-        'missing_with_provider_and_exact_export_hash' => $missingWithExactExport,
-        'missing_with_provider_but_no_exact_export_hash' => $missingWithProviderNoExactExport,
+        'missing_with_provider_and_exact_path_hash' => $missingWithExactExport,
+        'missing_with_provider_but_no_exact_path_hash' => $missingWithProviderNoExactExport,
         'missing_with_overflowed_package_term' => $overflowPackageTerms,
     ],
     'top_missing_package_names' => $topPackages,
     'samples' => [
         'no_verified_package_provider' => $sampleNoProvider,
-        'provider_exists_object_not_exact_hash' => $sampleProviderNoObject,
-        'resolver_inconsistency_exact_export_exists' => $sampleResolverMismatch,
+        'provider_exists_but_no_exact_path_hash' => $sampleProviderNoObject,
+        'provider_has_exact_path_hash_verifyimport_still_rejected' => $sampleResolverMismatch,
     ],
     'interpretation' => $interpretation,
 ];
