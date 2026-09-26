@@ -1,241 +1,32 @@
 <?php
-/**
- * UnrealDB PHP File Audit
- * Purpose: Renders and/or processes the catalog page for Missing Dependencies —.
- * Why: It exists as a distinct user or administrator entry point for this catalog workflow.
- * Role: Web UI entry point; reusable application logic should be supplied by shared `lib`/`src` services rather than
- *       copied into peer pages.
- * Audit: Active page unless navigation/tests show otherwise; review large page-local helper blocks for extraction
- *        when similar logic appears elsewhere.
- */
+/** Admin view of unresolved dependencies for one game. */
 declare(strict_types=1);
-
-require_once __DIR__ . '/lib/CatalogSupport.php';
-require_once __DIR__ . '/lib/BaseGameProtection.php';
-
+require_once __DIR__.'/lib/CatalogSupport.php';
+require_once __DIR__.'/lib/BaseGameProtection.php';
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoGameMissingDependencyQuery;
-
 catalog_start_session();
-
-function game_missing_int(string $key, int $default = 0): int
-{
-    $value = filter_input(INPUT_GET, $key, FILTER_VALIDATE_INT);
-    return $value === false || $value === null ? $default : max(0, (int)$value);
-}
-
-function game_missing_type(): string
-{
-    $type = strtolower(trim((string)($_GET['dependency_type'] ?? 'all')));
-    return $type === 'base_game' ? 'base_game' : 'all';
-}
-
-/** @param array<string,mixed> $params */
-function game_missing_url(int $gameId, string $type, array $params = []): string
-{
-    $query = array_merge([
-        'game_id' => $gameId,
-        'dependency_type' => $type,
-    ], $params);
-    $query = array_filter($query, static fn(mixed $value): bool => $value !== null && $value !== '' && $value !== 0);
-    return 'game-missing.php' . ($query === [] ? '' : '?' . http_build_query($query));
-}
-
-function game_missing_pagination(
-    int $gameId,
-    string $type,
-    string $pageKey,
-    int $page,
-    int $pages,
-    array $preserve = []
-): string {
-    if ($pages <= 1) {
-        return '';
-    }
-    $html = '<div class="missing-pagination"><span class="muted">Page ' . $page . ' of ' . $pages . '</span>';
-    if ($page > 1) {
-        $html .= '<a class="button secondary" href="' . catalog_h(game_missing_url($gameId, $type, $preserve + [$pageKey => 1])) . '">First</a>';
-        $html .= '<a class="button secondary" href="' . catalog_h(game_missing_url($gameId, $type, $preserve + [$pageKey => $page - 1])) . '">Previous</a>';
-    }
-    if ($page < $pages) {
-        $html .= '<a class="button secondary" href="' . catalog_h(game_missing_url($gameId, $type, $preserve + [$pageKey => $page + 1])) . '">Next</a>';
-        $html .= '<a class="button secondary" href="' . catalog_h(game_missing_url($gameId, $type, $preserve + [$pageKey => $pages])) . '">Last</a>';
-    }
-    return $html . '</div>';
-}
-
-function game_missing_import_class(string $classPackage, string $className): string
-{
-    return implode('.', array_values(array_filter([$classPackage, $className], static fn(string $part): bool => trim($part) !== '')));
-}
-
-try {
-    $config = catalog_config();
-    $db = catalog_db($config);
-    if (!catalog_require_admin_page('Game Missing Dependencies')) {
-        exit;
-    }
-    base_game_ensure($db);
-
-    $games = catalog_all($db, 'SELECT id,name,slug FROM ue_games ORDER BY name');
-    $gameId = game_missing_int('game_id');
-    $game = $gameId > 0 ? catalog_one($db, 'SELECT id,name,slug FROM ue_games WHERE id=?', [$gameId]) : null;
-    if (!$game) {
-        throw new RuntimeException('Choose a valid game from the Games page.');
-    }
-
-    $type = game_missing_type();
-    $baseGameOnly = $type === 'base_game';
-    $selectedPackage = substr(trim((string)($_GET['package'] ?? '')), 0, 255);
-    $perPage = 200;
-
-    // Authentication is complete and this page performs no session writes from
-    // here until rendering. Release the PHP session lock before any catalogue
-    // aggregation so a slow dependency request cannot block other admin pages.
-    if (session_status() === PHP_SESSION_ACTIVE) {
-        session_write_close();
-    }
-
-    $missingQuery = new PdoGameMissingDependencyQuery($db);
-    $packageScope = $baseGameOnly
-        ? $missingQuery->officialBaseGamePackageNames($gameId)
-        : null;
-
-    $totals = $missingQuery->totals($gameId, $packageScope);
-    $missingObjects = (int)$totals['missing_objects'];
-    $missingPackages = (int)$totals['missing_packages'];
-    $filesWithMissing = (int)$totals['files_with_missing'];
-
-    $filePages = max(1, (int)ceil($filesWithMissing / $perPage));
-    $filePage = max(1, min($filePages, game_missing_int('file_page', 1)));
-    $fileOffset = ($filePage - 1) * $perPage;
-    $fileRows = $missingQuery->fileRows($gameId, $packageScope, $perPage, $fileOffset);
-
-    $packagePages = max(1, (int)ceil($missingPackages / $perPage));
-    $packagePage = max(1, min($packagePages, game_missing_int('package_page', 1)));
-    $packageOffset = ($packagePage - 1) * $perPage;
-    $packageRows = $missingQuery->packageRows($gameId, $packageScope, $perPage, $packageOffset);
-
-    $detailRows = [];
-    $detailTotal = 0;
-    $detailPage = 1;
-    $detailPages = 1;
-    if ($selectedPackage !== '') {
-        $detailTotal = $missingQuery->detailTotal($gameId, $selectedPackage, $packageScope);
-        $detailPages = max(1, (int)ceil($detailTotal / $perPage));
-        $detailPage = max(1, min($detailPages, game_missing_int('detail_page', 1)));
-        $detailOffset = ($detailPage - 1) * $perPage;
-        $detailRows = $missingQuery->detailRows(
-            $gameId,
-            $selectedPackage,
-            $packageScope,
-            $perPage,
-            $detailOffset
-        );
-    }
-
-    $typeLabel = $baseGameOnly ? 'Official base-game dependencies only' : 'All missing dependencies';
-
-    catalog_head('Missing Dependencies — ' . (string)$game['name']);
-    echo <<<'CSS'
+function game_missing_int(string $key,int $default=0):int{$v=filter_input(INPUT_GET,$key,FILTER_VALIDATE_INT);return$v===false||$v===null?$default:max(0,(int)$v);}
+function game_missing_type():string{$v=strtolower(trim((string)($_GET['dependency_type']??'all')));return$v==='base_game'?'base_game':'all';}
+function game_missing_url(int $gameId,string $type,array $params=[]):string{$q=array_merge(['game_id'=>$gameId,'dependency_type'=>$type],$params);$q=array_filter($q,static fn(mixed $v):bool=>$v!==null&&$v!==''&&$v!==0);return'game-missing.php?'.http_build_query($q);}
+function game_missing_import_class(string $package,string $name):string{return implode('.',array_values(array_filter([$package,$name],static fn(string $v):bool=>trim($v)!=='')));}
+try{
+$config=catalog_config();$db=catalog_db($config);if(!catalog_require_admin_page('Game Missing Dependencies'))exit;base_game_ensure($db);
+$games=catalog_all($db,'SELECT id,name,slug FROM ue_games ORDER BY name');$gameId=game_missing_int('game_id');$game=$gameId>0?catalog_one($db,'SELECT id,name,slug FROM ue_games WHERE id=?',[$gameId]):null;if(!$game)throw new RuntimeException('Choose a valid game from the Games page.');
+$type=game_missing_type();$baseGameOnly=$type==='base_game';$selectedPackage=substr(trim((string)($_GET['package']??'')),0,255);if(session_status()===PHP_SESSION_ACTIVE)session_write_close();
+$q=new PdoGameMissingDependencyQuery($db);$scope=$baseGameOnly?$q->officialBaseGamePackageNames($gameId):null;$totals=$q->totals($gameId,$scope);$missingObjects=(int)$totals['missing_objects'];$missingPackages=(int)$totals['missing_packages'];$filesWithMissing=(int)$totals['files_with_missing'];
+$rows=$selectedPackage!==''?$q->detailRows($gameId,$selectedPackage,$scope,500,0):$q->missingRows($gameId,$scope,500,0);$packageRows=$q->packageRows($gameId,$scope,500,0);
+$typeLabel=$baseGameOnly?'Official base-game dependencies only':'All missing dependencies';
+catalog_head('Missing Dependencies — '.(string)$game['name']);
+echo <<<'CSS'
 <style>
-.game-missing-filter { display:flex;align-items:end;gap:10px;flex-wrap:wrap; }
-.game-missing-filter label { display:grid;gap:5px; }
-.game-missing-path { min-width:300px;max-width:600px;overflow-wrap:anywhere; }
-.game-missing-file { min-width:240px; }
-.game-missing-package-list { min-width:260px;max-width:500px;overflow-wrap:anywhere; }
-.missing-pagination { display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px; }
+.game-missing-filter{display:flex;align-items:end;gap:10px;flex-wrap:wrap}.game-missing-filter label{display:grid;gap:5px}.missing-summary{display:grid;grid-template-columns:repeat(3,minmax(180px,1fr));gap:12px;margin:16px 0}.missing-flow{display:grid;grid-template-columns:minmax(190px,1fr) minmax(180px,1fr) minmax(300px,2fr);gap:0;align-items:stretch}.missing-flow>div{padding:12px 14px;border-bottom:1px solid var(--border,#2b3950)}.missing-flow__head{font-weight:700;background:rgba(255,255,255,.035)}.missing-file strong,.missing-package{display:block}.missing-object{overflow-wrap:anywhere}.missing-class{display:block;margin-top:4px}.missing-package-summary{display:flex;gap:8px;flex-wrap:wrap}.missing-package-pill{display:inline-flex;gap:7px;align-items:center;padding:7px 10px;border:1px solid var(--border,#2b3950);border-radius:8px}.missing-package-pill strong{font-size:1.05em}@media(max-width:800px){.missing-summary{grid-template-columns:1fr}.missing-flow{grid-template-columns:1fr}.missing-flow__head{display:none}.missing-flow>div{border-bottom:0;padding-bottom:4px}.missing-flow>div:nth-child(3n){border-bottom:1px solid var(--border,#2b3950);padding-bottom:12px}}
 </style>
 CSS;
-    echo CatalogUi::pageHeader(
-        'Missing Dependencies — ' . (string)$game['name'],
-        $typeLabel . '. Every count and table on this page is scoped to the selected game and dependency type.',
-        ['Games' => 'games.php', 'Global Missing Files' => 'missing.php', 'Game Files' => 'game-files.php?id=' . $gameId]
-    );
-
-    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Filter</h2><p>Switch game or dependency type without returning to Games.</p></div></div><div class="ui-section__body">';
-    echo '<form class="game-missing-filter" method="get"><label>Game<select name="game_id">';
-    foreach ($games as $candidate) {
-        echo '<option value="' . (int)$candidate['id'] . '"' . ((int)$candidate['id'] === $gameId ? ' selected' : '') . '>' . catalog_h((string)$candidate['name']) . '</option>';
-    }
-    echo '</select></label><label>Dependency type<select name="dependency_type">'
-        . '<option value="all"' . (!$baseGameOnly ? ' selected' : '') . '>All missing dependencies</option>'
-        . '<option value="base_game"' . ($baseGameOnly ? ' selected' : '') . '>Official base-game dependencies only</option>'
-        . '</select></label><button type="submit">Apply filters</button></form></div></section>';
-
-    echo '<div class="grid">';
-    catalog_stat_card('Missing dependency objects', $missingObjects, '', $missingObjects > 0 ? 'attention' : 'good');
-    catalog_stat_card('Missing packages', $missingPackages, '', $missingPackages > 0 ? 'attention' : 'good');
-    catalog_stat_card('Files with missing dependencies', $filesWithMissing, '', $filesWithMissing > 0 ? 'attention' : 'good');
-    echo '</div>';
-
-    if ($selectedPackage !== '') {
-        echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Missing objects for package: <span class="mono">' . catalog_h($selectedPackage) . '</span></h2>'
-            . '<p>' . number_format($detailTotal) . ' matching object row' . ($detailTotal === 1 ? '' : 's') . ' for ' . catalog_h((string)$game['name']) . '.</p></div>'
-            . '<a class="button secondary" href="' . catalog_h(game_missing_url($gameId, $type)) . '">Clear package detail</a></div><div class="ui-section__body">';
-        if ($detailRows === []) {
-            echo CatalogUi::emptyState('No matching object rows', 'This package no longer has missing dependency objects in the selected scope.');
-        } else {
-            echo '<div class="table-wrap"><table><thead><tr><th>Requiring File</th><th>Required Object Path</th><th>Import Class</th><th>Import Path</th></tr></thead><tbody>';
-            foreach ($detailRows as $row) {
-                $importClass = game_missing_import_class((string)$row['class_package'], (string)$row['class_name']);
-                echo '<tr><td class="game-missing-file"><strong class="mono"><a href="file-info.php?id=' . (int)$row['file_id'] . '">' . catalog_h((string)$row['owner_package_name']) . '</a></strong>'
-                    . '<br><a class="muted small" href="file-examine.php?id=' . (int)$row['file_id'] . '">' . catalog_h((string)$row['owner_original_name']) . '</a></td>';
-                echo '<td class="mono game-missing-path">' . catalog_h((string)$row['required_object_path']) . '</td>';
-                echo '<td class="mono">' . ($importClass !== '' ? catalog_h($importClass) : '<span class="muted">—</span>') . '</td>';
-                echo '<td class="mono game-missing-path">' . (trim((string)$row['import_full_path']) !== '' ? catalog_h((string)$row['import_full_path']) : '<span class="muted">—</span>') . '</td></tr>';
-            }
-            echo '</tbody></table></div>';
-            echo game_missing_pagination($gameId, $type, 'detail_page', $detailPage, $detailPages, ['package' => $selectedPackage]);
-        }
-        echo '</div></section>';
-    }
-
-    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Files with missing dependencies</h2><p>' . number_format($filesWithMissing) . ' file' . ($filesWithMissing === 1 ? '' : 's') . ' in the selected scope.</p></div></div><div class="ui-section__body">';
-    if ($fileRows === []) {
-        echo CatalogUi::emptyState('No files with missing dependencies', 'Nothing currently matches the selected game and dependency type.');
-    } else {
-        echo '<div class="table-wrap"><table><thead><tr><th>Requiring File</th><th>Missing Packages</th><th>Missing Object Rows</th><th>Package Names</th></tr></thead><tbody>';
-        foreach ($fileRows as $row) {
-            $names = array_values(array_filter(array_map('trim', explode(', ', (string)($row['missing_package_names'] ?? ''))), static fn(string $name): bool => $name !== ''));
-            echo '<tr><td class="game-missing-file"><strong class="mono"><a href="file-info.php?id=' . (int)$row['file_id'] . '">' . catalog_h((string)$row['package_name']) . '</a></strong>'
-                . '<br><a class="muted small" href="file-examine.php?id=' . (int)$row['file_id'] . '">' . catalog_h((string)$row['original_name']) . '</a></td>';
-            echo '<td>' . (int)$row['missing_package_count'] . '</td><td>' . (int)$row['missing_object_rows'] . '</td><td class="mono game-missing-package-list">';
-            if ($names === []) {
-                echo '<span class="muted">—</span>';
-            } else {
-                foreach ($names as $index => $name) {
-                    echo ($index > 0 ? '<br>' : '') . '<a href="' . catalog_h(game_missing_url($gameId, $type, ['package' => $name])) . '">' . catalog_h($name) . '</a>';
-                }
-            }
-            echo '</td></tr>';
-        }
-        echo '</tbody></table></div>';
-        echo game_missing_pagination($gameId, $type, 'file_page', $filePage, $filePages, $selectedPackage !== '' ? ['package' => $selectedPackage] : []);
-    }
-    echo '</div></section>';
-
-    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Missing packages</h2><p>' . number_format($missingPackages) . ' package' . ($missingPackages === 1 ? '' : 's') . ' in the selected scope.</p></div></div><div class="ui-section__body">';
-    if ($packageRows === []) {
-        echo CatalogUi::emptyState('No missing packages', 'Nothing currently matches the selected game and dependency type.');
-    } else {
-        echo '<div class="table-wrap"><table><thead><tr><th>Package</th><th>Missing Object Rows</th><th>Requiring Files</th></tr></thead><tbody>';
-        foreach ($packageRows as $row) {
-            $package = (string)$row['required_package'];
-            $url = game_missing_url($gameId, $type, ['package' => $package]);
-            echo '<tr><td class="mono"><a href="' . catalog_h($url) . '">' . catalog_h($package) . '</a></td>'
-                . '<td><a href="' . catalog_h($url) . '">' . (int)$row['missing_object_rows'] . '</a></td>'
-                . '<td><a href="' . catalog_h($url) . '">' . (int)$row['requiring_file_count'] . '</a></td></tr>';
-        }
-        echo '</tbody></table></div>';
-        echo game_missing_pagination($gameId, $type, 'package_page', $packagePage, $packagePages, $selectedPackage !== '' ? ['package' => $selectedPackage] : []);
-    }
-    echo '</div></section>';
-
-    catalog_foot();
-} catch (Throwable $error) {
-    if (!headers_sent()) {
-        catalog_head('Game missing dependencies error');
-    }
-    echo CatalogUi::alert('danger', $error->getMessage(), 'The filtered missing-dependency page could not be loaded.');
-    catalog_foot();
-}
+echo CatalogUi::pageHeader('Missing Dependencies — '.(string)$game['name'],$typeLabel.'. Each unresolved object is shown with the file that requires it and the package/object path it expects.',['Games'=>'games.php','Global Missing Files'=>'missing.php','Game Files'=>'game-files.php?id='.$gameId]);
+echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Filter</h2></div></div><div class="ui-section__body"><form class="game-missing-filter" method="get"><label>Game<select name="game_id">';foreach($games as $candidate)echo '<option value="'.(int)$candidate['id'].'"'.((int)$candidate['id']===$gameId?' selected':'').'>'.catalog_h((string)$candidate['name']).'</option>';echo '</select></label><label>Dependency type<select name="dependency_type"><option value="all"'.(!$baseGameOnly?' selected':'').'>All missing dependencies</option><option value="base_game"'.($baseGameOnly?' selected':'').'>Official base-game dependencies only</option></select></label><button type="submit">Apply filters</button></form></div></section>';
+echo '<div class="missing-summary">';catalog_stat_card('Missing objects',$missingObjects,'Individual object paths that could not be resolved',$missingObjects?'attention':'good');catalog_stat_card('Required packages',$missingPackages,'Packages containing those missing objects',$missingPackages?'attention':'good');catalog_stat_card('Affected files',$filesWithMissing,'Files that require one or more missing objects',$filesWithMissing?'attention':'good');echo '</div>';
+if($packageRows!==[]){echo '<section class="ui-section"><div class="ui-section__header"><div><h2>At a glance</h2><p>Missing objects grouped by required package.</p></div></div><div class="ui-section__body"><div class="missing-package-summary">';foreach($packageRows as $p){$name=(string)$p['required_package'];echo '<a class="missing-package-pill" href="'.catalog_h(game_missing_url($gameId,$type,['package'=>$name])).'"><span class="mono">'.catalog_h($name).'</span><strong>'.(int)$p['missing_object_rows'].'</strong><span class="muted small">object'.((int)$p['missing_object_rows']===1?'':'s').' / '.(int)$p['requiring_file_count'].' file'.((int)$p['requiring_file_count']===1?'':'s').'</span></a>';}echo '</div></div></section>';}
+$title=$selectedPackage!==''?'Missing objects in '.$selectedPackage:'Missing object paths';echo '<section class="ui-section"><div class="ui-section__header"><div><h2>'.catalog_h($title).'</h2><p>Read each row as: <strong>this file</strong> requires <strong>this package</strong> → <strong>this object path</strong>.</p></div>';if($selectedPackage!=='')echo '<a class="button secondary" href="'.catalog_h(game_missing_url($gameId,$type)).'">Show all missing objects</a>';echo '</div><div class="ui-section__body">';
+if($rows===[]){echo CatalogUi::emptyState('No missing dependency objects','Nothing currently matches the selected game and dependency type.');}else{echo '<div class="missing-flow"><div class="missing-flow__head">Requiring file</div><div class="missing-flow__head">Required package</div><div class="missing-flow__head">Missing object path</div>';foreach($rows as $r){$pkg=(string)($r['required_package']??$selectedPackage);$class=game_missing_import_class((string)($r['class_package']??''),(string)($r['class_name']??''));echo '<div class="missing-file"><strong class="mono"><a href="file-info.php?id='.(int)$r['file_id'].'">'.catalog_h((string)$r['owner_package_name']).'</a></strong><a class="muted small" href="file-examine.php?id='.(int)$r['file_id'].'">'.catalog_h((string)$r['owner_original_name']).'</a></div><div><a class="mono missing-package" href="'.catalog_h(game_missing_url($gameId,$type,['package'=>$pkg])).'">'.catalog_h($pkg).'</a></div><div class="mono missing-object">'.catalog_h((string)$r['required_object_path']).($class!==''?'<span class="muted small missing-class">Import class: '.catalog_h($class).'</span>':'').'</div>';}echo '</div>';}
+echo '</div></section>';catalog_foot();
+}catch(Throwable $error){if(!headers_sent())catalog_head('Game missing dependencies error');echo CatalogUi::alert('danger',$error->getMessage(),'The filtered missing-dependency page could not be loaded.');catalog_foot();}
