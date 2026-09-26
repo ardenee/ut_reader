@@ -38,6 +38,7 @@ function catalog_admin_navigation_groups(string $root): array
         ],
         'Catalog' => [
             'Missing Dependencies' => $root . 'missing.php',
+            'ClassRemap' => $root . 'class-remap.php',
             'Possible Misnamed Files' => $root . 'possible-misnamed-files.php',
             'Cross-Game Dependencies' => $root . 'dependency-cross-examine.php',
             'Duplicate Files' => $root . 'duplicates.php',
