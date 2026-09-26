@@ -16,11 +16,6 @@ final class CatalogPublicResponseCacheHardener
 {
     private const DEFAULT_MAX_ENTRIES = 500000;
 
-    /**
-     * Only requests whose query keys are known to affect the cacheable route may
-     * enter the response cache. Unknown keys bypass caching; they are never
-     * stripped from $_GET, so application behaviour is unchanged.
-     */
     public static function requestCacheable(): bool
     {
         $script = strtolower(basename((string)($_SERVER['SCRIPT_NAME'] ?? '')));
@@ -32,8 +27,7 @@ final class CatalogPublicResponseCacheHardener
                 return self::keysAllowed($keys, ['page']);
             }
             // Search is already deliberately bounded to a fixed slot count by
-            // CatalogPublicResponseCacheService, so its legitimate filters may
-            // remain variable without growing the filesystem namespace.
+            // CatalogPublicResponseCacheService.
             return $page === 'search';
         }
 
@@ -50,12 +44,11 @@ final class CatalogPublicResponseCacheHardener
             'upk-info.php' => ['id'],
         ];
         if (!array_key_exists($script, $allowed)) {
-            return true; // The cache service itself decides whether the route is cacheable.
+            return true;
         }
         return self::keysAllowed($keys, $allowed[$script]);
     }
 
-    /** Record whether this request is creating a new cache object. */
     public static function markExistingState(): void
     {
         $state = $GLOBALS['catalog_public_cache_state'] ?? null;
@@ -67,12 +60,6 @@ final class CatalogPublicResponseCacheHardener
         $GLOBALS['catalog_public_cache_state'] = $state;
     }
 
-    /**
-     * Called after the normal cache shutdown publisher. Removes the now-unused
-     * per-key lock file and enforces a persistent high-water counter. The count
-     * is initialized from disk once and is fully reconciled only at the ceiling,
-     * so ordinary requests never enumerate the cache directory.
-     */
     public static function finish(array $config): void
     {
         $state = $GLOBALS['catalog_public_cache_state'] ?? null;
@@ -110,7 +97,8 @@ final class CatalogPublicResponseCacheHardener
             }
             rewind($handle);
             $raw = trim((string)stream_get_contents($handle));
-            $count = $raw === '' ? self::countEntries($directory) : max(0, (int)$raw);
+            $reconciled = $raw === '';
+            $count = $reconciled ? self::countEntries($directory) : max(0, (int)$raw);
             $wasNew = !isset($state['cache_existed_before']) || !$state['cache_existed_before'];
             if (!$wasNew) {
                 self::writeCount($handle, $count);
@@ -119,18 +107,18 @@ final class CatalogPublicResponseCacheHardener
 
             if ($count >= $maximum) {
                 // Normal expiry can make the cheap counter conservative. Pay for
-                // a full directory reconciliation only when the ceiling is hit.
+                // a full reconciliation only when the ceiling is reached.
                 $count = self::countEntries($directory);
+                $reconciled = true;
             }
             if ($count >= $maximum) {
                 @unlink($path);
-                self::writeCount($handle, $count - 1); // count included the just-published file
+                self::writeCount($handle, $count - 1); // scan included the just-published file
                 return;
             }
 
-            // If countEntries() initialized/reconciled the count it already saw
-            // the just-published file; otherwise increment the persistent count.
-            if ($raw !== '' && $count < $maximum) {
+            // A scan already includes the just-published file; the cheap counter does not.
+            if (!$reconciled) {
                 ++$count;
             }
             self::writeCount($handle, $count);
