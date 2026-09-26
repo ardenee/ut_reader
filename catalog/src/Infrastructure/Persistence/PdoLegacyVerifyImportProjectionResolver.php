@@ -19,10 +19,15 @@ final class PdoLegacyVerifyImportProjectionResolver
 
     /**
      * @param list<array<string,mixed>> $consumerImports
+     * @param array<string,string> $classRemaps case-insensitive source-name key => replacement object name
      * @return array{standard:array<int,int>,unreal2:array<int,int>,unreal2_only:array<int,int>}
      */
-    public static function resolveProviderVariants(PDO $db, int $providerFileId, array $consumerImports): array
-    {
+    public static function resolveProviderVariants(
+        PDO $db,
+        int $providerFileId,
+        array $consumerImports,
+        array $classRemaps = []
+    ): array {
         if ($providerFileId < 1 || $consumerImports === []) {
             return ['standard' => [], 'unreal2' => [], 'unreal2_only' => []];
         }
@@ -46,14 +51,21 @@ final class PdoLegacyVerifyImportProjectionResolver
             if (self::key($className) === 'mesh') {
                 $hashes[bin2hex(self::identityHash($objectName, 'LodMesh', $classPackage))] = true;
             }
+            $replacement = self::classRemapTarget($objectName, $classRemaps);
+            if ($replacement !== null) {
+                $hashes[bin2hex(self::identityHash($replacement, $className, $classPackage))] = true;
+                if (self::key($className) === 'mesh') {
+                    $hashes[bin2hex(self::identityHash($replacement, 'LodMesh', $classPackage))] = true;
+                }
+            }
         }
         if ($hashes === []) {
             return ['standard' => [], 'unreal2' => [], 'unreal2_only' => []];
         }
 
         $candidates = self::loadCandidates($db, $providerFileId, array_keys($hashes));
-        $standard = self::resolveVariant($imports, $candidates, true);
-        $unreal2 = self::resolveVariant($imports, $candidates, false);
+        $standard = self::resolveVariant($imports, $candidates, true, $classRemaps);
+        $unreal2 = self::resolveVariant($imports, $candidates, false, $classRemaps);
 
         $unreal2Only = [];
         foreach ($unreal2 as $importIndex => $exportIndex) {
@@ -76,13 +88,15 @@ final class PdoLegacyVerifyImportProjectionResolver
      * @param list<array<string,mixed>> $consumerImports
      * @param list<array<string,mixed>> $providerImports
      * @param list<array<string,mixed>> $providerExports
+     * @param array<string,string> $classRemaps
      * @return array{standard:array<int,int>,unreal2:array<int,int>,unreal2_only:array<int,int>}
      */
     public static function resolveInMemoryVariants(
         array $consumerImports,
         array $providerImports,
         array $providerExports,
-        string $providerPackageName
+        string $providerPackageName,
+        array $classRemaps = []
     ): array {
         $imports = [];
         foreach ($consumerImports as $fallback => $row) {
@@ -131,8 +145,8 @@ final class PdoLegacyVerifyImportProjectionResolver
         }
         unset($rows);
 
-        $standard = self::resolveVariant($imports, $candidates, true);
-        $unreal2 = self::resolveVariant($imports, $candidates, false);
+        $standard = self::resolveVariant($imports, $candidates, true, $classRemaps);
+        $unreal2 = self::resolveVariant($imports, $candidates, false, $classRemaps);
         $unreal2Only = [];
         foreach ($unreal2 as $importIndex => $exportIndex) {
             if (!isset($standard[$importIndex])) {
@@ -184,10 +198,15 @@ final class PdoLegacyVerifyImportProjectionResolver
     /**
      * @param array<int,array<string,mixed>> $imports
      * @param array<string,list<array{export_index:int,outer_index:int,object_flags:int,object_name:string,class_name:string,class_package:string}>> $candidates
+     * @param array<string,string> $classRemaps
      * @return array<int,int>
      */
-    private static function resolveVariant(array $imports, array $candidates, bool $requirePublic): array
-    {
+    private static function resolveVariant(
+        array $imports,
+        array $candidates,
+        bool $requirePublic,
+        array $classRemaps
+    ): array {
         $resolved = [];
         $visiting = [];
         foreach (array_keys($imports) as $importIndex) {
@@ -196,6 +215,7 @@ final class PdoLegacyVerifyImportProjectionResolver
                 $imports,
                 $candidates,
                 $requirePublic,
+                $classRemaps,
                 $resolved,
                 $visiting
             );
@@ -213,6 +233,7 @@ final class PdoLegacyVerifyImportProjectionResolver
     /**
      * @param array<int,array<string,mixed>> $imports
      * @param array<string,list<array{export_index:int,outer_index:int,object_flags:int}>> $candidates
+     * @param array<string,string> $classRemaps
      * @param array<int,int|null> $resolved
      * @param array<int,true> $visiting
      */
@@ -221,6 +242,7 @@ final class PdoLegacyVerifyImportProjectionResolver
         array $imports,
         array $candidates,
         bool $requirePublic,
+        array $classRemaps,
         array &$resolved,
         array &$visiting
     ): ?int {
@@ -259,6 +281,7 @@ final class PdoLegacyVerifyImportProjectionResolver
             $imports,
             $candidates,
             $requirePublic,
+            $classRemaps,
             $resolved,
             $visiting
         );
@@ -290,6 +313,35 @@ final class PdoLegacyVerifyImportProjectionResolver
                 $parentSourceIndex,
                 $requirePublic
             );
+        }
+
+        // Administrator-configured ClassRemap follows the same retry shape as
+        // Unreal's compatibility path: preserve ClassName/ClassPackage/outer and
+        // retry only ObjectName after the serialized import name failed.
+        if ($matched === null) {
+            $replacement = self::classRemapTarget($objectName, $classRemaps);
+            if ($replacement !== null) {
+                $matched = self::findCandidate(
+                    $candidates,
+                    self::identityHash($replacement, $className, $classPackage),
+                    $replacement,
+                    $className,
+                    $classPackage,
+                    $parentSourceIndex,
+                    $requirePublic
+                );
+                if ($matched === null && self::key($className) === 'mesh') {
+                    $matched = self::findCandidate(
+                        $candidates,
+                        self::identityHash($replacement, 'LodMesh', $classPackage),
+                        $replacement,
+                        'LodMesh',
+                        $classPackage,
+                        $parentSourceIndex,
+                        $requirePublic
+                    );
+                }
+            }
         }
 
         unset($visiting[$importIndex]);
@@ -333,6 +385,16 @@ final class PdoLegacyVerifyImportProjectionResolver
             return (int)$candidate['export_index'];
         }
         return null;
+    }
+
+    /** @param array<string,string> $classRemaps */
+    private static function classRemapTarget(string $objectName, array $classRemaps): ?string
+    {
+        $replacement = trim((string)($classRemaps[self::key($objectName)] ?? ''));
+        if ($replacement === '' || self::key($replacement) === self::key($objectName)) {
+            return null;
+        }
+        return $replacement;
     }
 
     /**
