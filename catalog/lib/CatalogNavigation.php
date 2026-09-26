@@ -44,6 +44,7 @@ function catalog_admin_navigation_groups(string $root): array
             'Unverified Files' => $root . 'unverified-files.php',
             'Import Existing Unverified DB' => $root . 'unverified-database-import.php',
             'Base Game Protection' => $root . 'base-game-files.php',
+            'ClassRemap' => $root . 'class-remap.php',
             'PAK Archives' => $root . 'paks.php',
             'UPK Packages' => $root . 'upks.php',
             'Legacy Data Audit' => $root . 'legacy-data-audit.php',
