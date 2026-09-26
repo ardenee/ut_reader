@@ -8,7 +8,6 @@ require_once $root . '/bootstrap/autoload.php';
 require_once $root . '/lib/CatalogSupport.php';
 use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataSnapshotLoader;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoClassRemapRepository;
-use UnrealDb\Catalog\Infrastructure\Persistence\PdoLegacyVerifyImportProjectionResolver;
 $options = getopt('', ['game-id:', 'max-files::']);
 $gameId = (int)($options['game-id'] ?? 0);
 $maxFiles = max(1, min(10000, (int)($options['max-files'] ?? 1000)));
@@ -25,19 +24,24 @@ $details = [];
 foreach ($fileIds as $fileId) {
     $snapshot = $loader->loadDependencySnapshot($fileId);
     $imports = array_values((array)($snapshot['imports'] ?? []));
-    $missingRows = catalog_all($db, 'SELECT import_id FROM ue_dependency_links WHERE file_id=? AND status=0 ORDER BY import_id', [$fileId]);
-    $missingIds = [];
-    foreach ($missingRows as $r) $missingIds[(int)$r['import_id']] = true;
+    $dependencies = array_values((array)($snapshot['dependencies'] ?? []));
+    $missingIndexes = [];
+    foreach ($dependencies as $dependency) {
+        if (!is_array($dependency)) continue;
+        if ((string)($dependency['status'] ?? '') === 'missing') {
+            $missingIndexes[(int)($dependency['import_index'] ?? -1)] = true;
+        }
+    }
     $unresolved = [];
     foreach ($imports as $fallback => $import) {
         if (!is_array($import)) continue;
-        $importId = (int)($import['id'] ?? 0);
-        if ($importId < 1 || !isset($missingIds[$importId])) continue;
+        $importIndex = isset($import['import_index']) ? (int)$import['import_index'] : (int)$fallback;
+        if (!isset($missingIndexes[$importIndex])) continue;
         $className = trim((string)($import['class_name'] ?? ''));
         $objectName = trim((string)($import['object_name'] ?? ''));
         $unresolved[] = [
-            'import_id' => $importId,
-            'import_index' => isset($import['import_index']) ? (int)$import['import_index'] : (int)$fallback,
+            'import_id' => (int)($import['id'] ?? 0),
+            'import_index' => $importIndex,
             'root_package' => (string)($import['root_package'] ?? ''),
             'relative_object_path' => (string)($import['relative_object_path'] ?? ''),
             'full_path' => (string)($import['full_path'] ?? ''),
