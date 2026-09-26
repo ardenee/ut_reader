@@ -27,14 +27,16 @@ final class PdoLegacyVerifyImportProjectionResolver
             $index=isset($row['import_index'])?(int)$row['import_index']:(int)$fallback; $imports[$index]=$row;
             $objectName=trim((string)($row['object_name']??'')); $className=trim((string)($row['class_name']??'')); $classPackage=trim((string)($row['class_package']??''));
             if ($objectName===''||$className===''||$classPackage==='') continue;
-            foreach (self::classNames($className,$classRemaps) as $candidateClass) {
-                $hashes[bin2hex(self::identityHash($objectName,$candidateClass,$classPackage))]=true;
-                if (self::key($candidateClass)==='mesh') $hashes[bin2hex(self::identityHash($objectName,'LodMesh',$classPackage))]=true;
+            foreach (self::objectNames($objectName,$classRemaps) as $candidateObject) {
+                $hashes[bin2hex(self::identityHash($candidateObject,$className,$classPackage))]=true;
+                if (self::key($className)==='mesh') $hashes[bin2hex(self::identityHash($candidateObject,'LodMesh',$classPackage))]=true;
             }
         }
         if ($hashes===[]) return ['standard'=>[],'unreal2'=>[],'unreal2_only'=>[]];
         $candidates=self::loadCandidates($db,$providerFileId,array_keys($hashes));
-        $standard=self::resolveVariant($imports,$candidates,true,$classRemaps); $unreal2=self::resolveVariant($imports,$candidates,false,$classRemaps);
+        // ClassRemap is an Unreal II-only compatibility mechanism. Standard UE1/UE2.5 matching must not see it.
+        $standard=self::resolveVariant($imports,$candidates,true,[]);
+        $unreal2=self::resolveVariant($imports,$candidates,false,$classRemaps);
         $unreal2Only=[]; foreach($unreal2 as $i=>$e) if(!isset($standard[$i])) $unreal2Only[(int)$i]=(int)$e;
         return ['standard'=>$standard,'unreal2'=>$unreal2,'unreal2_only'=>$unreal2Only];
     }
@@ -52,7 +54,8 @@ final class PdoLegacyVerifyImportProjectionResolver
             $candidates[$k][]=['export_index'=>(int)$exportIndex,'outer_index'=>(int)($export['outer_index']??0),'object_flags'=>(int)($export['object_flags']??0),'object_name'=>$objectName,'class_name'=>$className,'class_package'=>$classPackage];
         }
         foreach($candidates as &$rows) usort($rows,static fn(array $a,array $b):int=>$b['export_index']<=>$a['export_index']); unset($rows);
-        $standard=self::resolveVariant($imports,$candidates,true,$classRemaps); $unreal2=self::resolveVariant($imports,$candidates,false,$classRemaps); $only=[];
+        $standard=self::resolveVariant($imports,$candidates,true,[]);
+        $unreal2=self::resolveVariant($imports,$candidates,false,$classRemaps); $only=[];
         foreach($unreal2 as $i=>$e) if(!isset($standard[$i])) $only[(int)$i]=(int)$e;
         return ['standard'=>$standard,'unreal2'=>$unreal2,'unreal2_only'=>$only];
     }
@@ -81,23 +84,30 @@ final class PdoLegacyVerifyImportProjectionResolver
         $visiting[$importIndex]=true;$parent=-$outerIndex-1;$parentSource=self::resolveImport($parent,$imports,$candidates,$requirePublic,$classRemaps,$resolved,$visiting);
         if($parentSource===self::PRIVATE_FAILURE){unset($visiting[$importIndex]);return $resolved[$importIndex]=self::PRIVATE_FAILURE;}
         $matched=null;
-        // A configured ClassRemap makes the mapped class an additional valid class identity.
-        // ObjectName, ClassPackage and outer identity remain unchanged.
-        foreach(self::classNames($className,$classRemaps) as $candidateClass){
+
+        // Unreal II UnLinker.cpp VerifyImport() first retries Mesh as LodMesh. Its disabled
+        // [ClassRemap] block then looks up Import.ObjectName and, when mapped, assigns the
+        // replacement to Import.ObjectName before jumping back to the normal Rehack lookup.
+        // We model the configured equivalent without mutating the serialized snapshot.
+        $candidateClass=$className;
+        $matched=self::findCandidate($candidates,self::identityHash($objectName,$candidateClass,$classPackage),$objectName,$candidateClass,$classPackage,$parentSource,$requirePublic);
+        if($matched===null && self::key($candidateClass)==='mesh'){
+            $candidateClass='LodMesh';
             $matched=self::findCandidate($candidates,self::identityHash($objectName,$candidateClass,$classPackage),$objectName,$candidateClass,$classPackage,$parentSource,$requirePublic);
-            if($matched!==null)break;
-            if(self::key($candidateClass)==='mesh'){
-                $matched=self::findCandidate($candidates,self::identityHash($objectName,'LodMesh',$classPackage),$objectName,'LodMesh',$classPackage,$parentSource,$requirePublic);
-                if($matched!==null)break;
+        }
+        if($matched===null){
+            $mappedObject=trim((string)($classRemaps[self::key($objectName)]??''));
+            if($mappedObject!=='' && self::key($mappedObject)!==self::key($objectName)){
+                $matched=self::findCandidate($candidates,self::identityHash($mappedObject,$candidateClass,$classPackage),$mappedObject,$candidateClass,$classPackage,$parentSource,$requirePublic);
             }
         }
         unset($visiting[$importIndex]);return $resolved[$importIndex]=$matched;
     }
 
-    private static function classNames(string $className,array $classRemaps): array
+    private static function objectNames(string $objectName,array $classRemaps): array
     {
-        $names=[$className];$mapped=trim((string)($classRemaps[self::key($className)]??''));
-        if($mapped!==''&&self::key($mapped)!==self::key($className))$names[]=$mapped;
+        $names=[$objectName];$mapped=trim((string)($classRemaps[self::key($objectName)]??''));
+        if($mapped!==''&&self::key($mapped)!==self::key($objectName))$names[]=$mapped;
         return $names;
     }
 
