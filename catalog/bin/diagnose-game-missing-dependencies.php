@@ -112,7 +112,7 @@ $exportProjectionMismatchFiles = $scalar(
     $db,
     'SELECT COUNT(*) FROM ('
     . 'SELECT f.id,m.export_count,COUNT(l.file_id) actual_count '
-    . 'FROM ue_files f JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=' . BlockedCompressedMetadataContainer::FORMAT_VERSION '
+    . 'FROM ue_files f JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=' . BlockedCompressedMetadataContainer::FORMAT_VERSION . ' '
     . 'LEFT JOIN ue_export_lookup l ON l.file_id=f.id '
     . 'WHERE f.game_id=? AND f.scan_status="verified" '
     . 'GROUP BY f.id,m.export_count HAVING m.export_count<>COUNT(l.file_id)'
