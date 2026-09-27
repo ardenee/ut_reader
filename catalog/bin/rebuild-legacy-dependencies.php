@@ -1,9 +1,12 @@
 #!/usr/bin/env php
 <?php
 /**
- * Re-resolves dependency sections for verified UE1/UE2/UE3/UE4/UE5 catalog files
- * using the production compact dependency rebuilder and the resolver appropriate
- * to each file's engine/profile.
+ * Canonical dependency rebuild command.
+ *
+ * Re-resolves dependency sections for verified UE1/UE2/UE3/UE4/UE5 catalog
+ * files through the single production dependency-rebuild path. Engine-specific
+ * behaviour branches below that shared path only where the engine contract
+ * requires it.
  *
  * Historical filename retained for compatibility with existing admin commands.
  */
@@ -18,6 +21,7 @@ $root = realpath(dirname(__DIR__)) ?: dirname(__DIR__);
 require_once $root . '/bootstrap/autoload.php';
 require_once $root . '/lib/CatalogSupport.php';
 
+use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoCatalogDependencyRebuilder;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoGameCatalogStats;
 
@@ -26,14 +30,29 @@ $options = getopt('', [
     'game-id::',
     'engine::',
     'after-id::',
+    'start-id::',
     'limit::',
+    'batch-size::',
+    'progress-every::',
+    'missing-only',
+    'all',
 ]);
 
 $apply = array_key_exists('apply', $options);
 $gameId = isset($options['game-id']) ? max(0, (int)$options['game-id']) : 0;
 $engine = strtoupper(trim((string)($options['engine'] ?? '')));
-$afterId = isset($options['after-id']) ? max(0, (int)$options['after-id']) : 0;
-$limit = isset($options['limit']) ? max(1, min(1000000, (int)$options['limit'])) : 1000;
+$afterId = isset($options['after-id'])
+    ? max(0, (int)$options['after-id'])
+    : max(0, (int)($options['start-id'] ?? 0));
+$limit = isset($options['limit']) ? max(0, (int)$options['limit']) : 1000;
+$batchSize = max(25, min(1000, (int)($options['batch-size'] ?? 250)));
+$progressEvery = max(1, (int)($options['progress-every'] ?? 100));
+$missingOnly = array_key_exists('missing-only', $options);
+$explicitAll = array_key_exists('all', $options);
+
+if ($missingOnly && $explicitAll) {
+    throw new InvalidArgumentException('Choose either --missing-only or --all, not both.');
+}
 
 $allowedEngines = ['UE1', 'UE2', 'UE3', 'UE4', 'UE5'];
 if ($engine !== '' && !in_array($engine, $allowedEngines, true)) {
@@ -45,102 +64,135 @@ if ($gameId < 1 && $engine === '') {
 
 $config = catalog_config();
 $db = catalog_db($config);
-
-$sql = 'SELECT f.id,f.game_id,f.package_name,UPPER(TRIM(p.engine_key)) engine_key'
-    . ' FROM ue_files f'
-    . ' JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=' . \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer::FORMAT_VERSION
-    . ' JOIN ue_games g ON g.id=f.game_id'
-    . ' JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1'
-    . ' WHERE f.scan_status="verified"'
-    . ' AND f.id>?';
-$args = [$afterId];
-if ($engine !== '') {
-    $sql .= ' AND UPPER(TRIM(p.engine_key))=?';
-    $args[] = $engine;
-}
-if ($gameId > 0) {
-    $sql .= ' AND f.game_id=?';
-    $args[] = $gameId;
-}
-$sql .= ' ORDER BY f.id LIMIT ' . $limit;
-
-$statement = $db->prepare($sql);
-$statement->execute($args);
-$files = $statement->fetchAll(PDO::FETCH_ASSOC) ?: [];
-
 $rebuilder = new PdoCatalogDependencyRebuilder($db, $config);
-$changedFiles = 0;
+
+$cursor = $afterId;
+$processed = 0;
+$rebuilt = 0;
 $failed = 0;
-$lastId = $afterId;
-$results = [];
+$failures = [];
+$sampleResults = [];
 $affectedGameIds = [];
 $engineCounts = [];
+$started = microtime(true);
 
-foreach ($files as $position => $file) {
-    $fileId = (int)$file['id'];
-    $fileEngine = strtoupper(trim((string)($file['engine_key'] ?? '')));
-    $lastId = max($lastId, $fileId);
-    $engineCounts[$fileEngine] = ($engineCounts[$fileEngine] ?? 0) + 1;
+fwrite(STDERR, sprintf(
+    "Dependency rebuild | apply=%s | game=%s | engine=%s | after_id=%d | scope=%s | limit=%s\n",
+    $apply ? 'yes' : 'no',
+    $gameId > 0 ? (string)$gameId : 'any',
+    $engine !== '' ? $engine : 'any',
+    $afterId,
+    $missingOnly ? 'files-with-current-missing-rows' : 'all-current-files',
+    $limit > 0 ? (string)$limit : 'unlimited'
+));
 
-    if (!$apply) {
-        $results[] = [
-            'file_id' => $fileId,
-            'game_id' => (int)$file['game_id'],
-            'engine' => $fileEngine,
-            'package_name' => (string)$file['package_name'],
-            'status' => 'would_rebuild',
-        ];
-        continue;
+while (true) {
+    $remaining = $limit > 0 ? $limit - $processed : $batchSize;
+    if ($limit > 0 && $remaining <= 0) {
+        break;
+    }
+    $take = min($batchSize, $limit > 0 ? $remaining : $batchSize);
+
+    $sql = 'SELECT f.id,f.game_id,f.package_name,UPPER(TRIM(p.engine_key)) engine_key'
+        . ' FROM ue_files f'
+        . ' JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=?'
+        . ' JOIN ue_games g ON g.id=f.game_id'
+        . ' JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1'
+        . ' WHERE f.scan_status="verified" AND f.id>?';
+    $args = [BlockedCompressedMetadataContainer::FORMAT_VERSION, $cursor];
+
+    if ($engine !== '') {
+        $sql .= ' AND UPPER(TRIM(p.engine_key))=?';
+        $args[] = $engine;
+    }
+    if ($gameId > 0) {
+        $sql .= ' AND f.game_id=?';
+        $args[] = $gameId;
+    }
+    if ($missingOnly) {
+        $sql .= ' AND EXISTS (SELECT 1 FROM ue_dependency_links l WHERE l.file_id=f.id AND l.status=0)';
+    }
+    $sql .= ' ORDER BY f.id LIMIT ' . (int)$take;
+
+    $statement = $db->prepare($sql);
+    $statement->execute($args);
+    $files = $statement->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    if ($files === []) {
+        break;
     }
 
-    try {
-        $before = $db->prepare('SELECT COUNT(*) FROM ue_dependency_links WHERE file_id=?');
-        $before->execute([$fileId]);
-        $beforeCount = (int)$before->fetchColumn();
+    foreach ($files as $file) {
+        $fileId = (int)$file['id'];
+        $fileGameId = (int)$file['game_id'];
+        $fileEngine = strtoupper(trim((string)($file['engine_key'] ?? '')));
+        $cursor = max($cursor, $fileId);
+        $engineCounts[$fileEngine] = ($engineCounts[$fileEngine] ?? 0) + 1;
 
-        // PdoCatalogDependencyRebuilder is the production engine-agnostic entry
-        // point. CompactDependencyRebuilder selects the correct dependency
-        // resolver from the file/game metadata; do not route UE3/UE4 through the
-        // legacy UE1/UE2 VerifyImport resolver here.
-        $rebuilder->rebuild(
-            $fileId,
-            null,
-            0,
-            100,
-            'Rebuilding indexed dependencies',
-            true
-        );
+        if (!$apply) {
+            if (count($sampleResults) < 100) {
+                $sampleResults[] = [
+                    'file_id' => $fileId,
+                    'game_id' => $fileGameId,
+                    'engine' => $fileEngine,
+                    'package_name' => (string)$file['package_name'],
+                    'status' => 'would_rebuild',
+                ];
+            }
+            $processed++;
+            continue;
+        }
 
-        $affectedGameIds[(int)$file['game_id']] = true;
-        $changedFiles++;
-        $results[] = [
-            'file_id' => $fileId,
-            'game_id' => (int)$file['game_id'],
-            'engine' => $fileEngine,
-            'package_name' => (string)$file['package_name'],
-            'status' => 'rebuilt',
-            'dependency_rows' => $beforeCount,
-        ];
-    } catch (Throwable $error) {
-        $failed++;
-        $results[] = [
-            'file_id' => $fileId,
-            'game_id' => (int)$file['game_id'],
-            'engine' => $fileEngine,
-            'package_name' => (string)$file['package_name'],
-            'status' => 'failed',
-            'error' => get_class($error) . ': ' . $error->getMessage(),
-        ];
-    }
+        try {
+            // This is the single production parent path. CompactDependencyRebuilder
+            // and PdoDependencyResolver select UE1/UE2/UE3/UE4/UE5 semantics only
+            // where their source contracts differ.
+            $rebuilder->rebuild(
+                $fileId,
+                null,
+                0,
+                100,
+                'Rebuilding indexed dependencies',
+                true
+            );
+            $rebuilt++;
+            $affectedGameIds[$fileGameId] = true;
+            if (count($sampleResults) < 100) {
+                $sampleResults[] = [
+                    'file_id' => $fileId,
+                    'game_id' => $fileGameId,
+                    'engine' => $fileEngine,
+                    'package_name' => (string)$file['package_name'],
+                    'status' => 'rebuilt',
+                ];
+            }
+        } catch (Throwable $error) {
+            $failed++;
+            if (count($failures) < 50) {
+                $failures[] = [
+                    'file_id' => $fileId,
+                    'game_id' => $fileGameId,
+                    'engine' => $fileEngine,
+                    'error' => get_class($error) . ': ' . $error->getMessage(),
+                ];
+            }
+        }
 
-    if ((($position + 1) % 25) === 0) {
-        fwrite(
-            STDERR,
-            'Processed ' . ($position + 1) . '/' . count($files)
-            . ' | rebuilt=' . $changedFiles
-            . ' | failed=' . $failed
-            . ' | last_id=' . $lastId . PHP_EOL
-        );
+        $processed++;
+        if (($processed % $progressEvery) === 0) {
+            $elapsed = max(0.001, microtime(true) - $started);
+            fwrite(STDERR, sprintf(
+                "processed=%d rebuilt=%d failed=%d last_id=%d rate=%.1f files/s\n",
+                $processed,
+                $rebuilt,
+                $failed,
+                $cursor,
+                $processed / $elapsed
+            ));
+        }
+
+        if ($limit > 0 && $processed >= $limit) {
+            break 2;
+        }
     }
 }
 
@@ -157,31 +209,37 @@ if ($apply && $affectedGameIds !== []) {
             }
         } catch (Throwable $error) {
             $statsFailed++;
-            $results[] = [
-                'game_id' => (int)$affectedGameId,
-                'status' => 'stats_failed',
-                'error' => get_class($error) . ': ' . $error->getMessage(),
-            ];
+            if (count($failures) < 50) {
+                $failures[] = [
+                    'game_id' => (int)$affectedGameId,
+                    'error' => get_class($error) . ': ' . $error->getMessage(),
+                ];
+            }
         }
     }
 }
 
 ksort($engineCounts);
+$elapsed = microtime(true) - $started;
 echo json_encode([
     'ok' => $failed === 0 && $statsFailed === 0,
     'apply' => $apply,
     'engine' => $engine !== '' ? $engine : null,
     'game_id' => $gameId > 0 ? $gameId : null,
-    'selected' => count($files),
+    'scope' => $missingOnly ? 'files_with_current_missing_rows' : 'all_current_files',
+    'processed' => $processed,
     'selected_by_engine' => $engineCounts,
-    'rebuilt' => $changedFiles,
+    'rebuilt' => $rebuilt,
     'failed' => $failed,
     'game_stats_rebuilt' => $statsRebuilt,
     'game_stats_failed' => $statsFailed,
     'after_id' => $afterId,
-    'last_id' => $lastId,
+    'last_id' => $cursor,
     'limit' => $limit,
-    'results' => array_slice($results, 0, 100),
-], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . PHP_EOL;
+    'batch_size' => $batchSize,
+    'elapsed_seconds' => round($elapsed, 3),
+    'failures' => $failures,
+    'sample_results' => $sampleResults,
+], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . PHP_EOL;
 
 exit($failed === 0 && $statsFailed === 0 ? 0 : 2);
