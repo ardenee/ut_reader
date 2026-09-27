@@ -47,6 +47,20 @@ $check(
     'UE3 must resolve the parent first and require the child export OuterIndex to reference that exact export.'
 );
 
+$invalidRoot = $consumer;
+$invalidRoot[0]['class_package'] = 'Engine';
+$matches = PdoUe3VerifyImportProjectionResolver::resolveInMemory(
+    $invalidRoot,
+    $providerImports,
+    $providerExports,
+    'Foo'
+);
+$check(
+    'root_package_import_requires_core_package',
+    !isset($matches[1]) && !isset($matches[2]),
+    'UE3 VerifyImportInner only establishes a provider linker from a top-level Core.Package import.'
+);
+
 $wrongOuter = $providerExports;
 $wrongOuter[1]['outer_index'] = 0;
 $matches = PdoUe3VerifyImportProjectionResolver::resolveInMemory(

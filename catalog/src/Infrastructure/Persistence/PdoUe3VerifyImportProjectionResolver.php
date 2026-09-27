@@ -16,7 +16,7 @@ final class PdoUe3VerifyImportProjectionResolver
 {
     private const RF_PUBLIC = 0x00000004;
     private const HASH_BATCH_SIZE = 300;
-    private const PRIVATE_FAILURE = -2147483648;
+    private const FAILURE_SENTINEL = -2147483648;
 
     /**
      * @param list<array<string,mixed>> $consumerImports
@@ -51,7 +51,7 @@ final class PdoUe3VerifyImportProjectionResolver
 
         $matches = [];
         foreach ($resolved as $importIndex => $exportIndex) {
-            if ($exportIndex !== null && $exportIndex !== self::PRIVATE_FAILURE) {
+            if ($exportIndex !== null && $exportIndex !== self::FAILURE_SENTINEL) {
                 $matches[(int)$importIndex] = (int)$exportIndex;
             }
         }
@@ -124,7 +124,7 @@ final class PdoUe3VerifyImportProjectionResolver
         }
         $matches = [];
         foreach ($resolved as $importIndex => $exportIndex) {
-            if ($exportIndex !== null && $exportIndex !== self::PRIVATE_FAILURE) {
+            if ($exportIndex !== null && $exportIndex !== self::FAILURE_SENTINEL) {
                 $matches[(int)$importIndex] = (int)$exportIndex;
             }
         }
@@ -165,7 +165,14 @@ final class PdoUe3VerifyImportProjectionResolver
 
         $outerIndex = (int)($import['outer_index'] ?? 0);
         if ($outerIndex === 0) {
-            // Core.Package imports establish SourceLinker but never SourceIndex.
+            // UE3 VerifyImportInner requires top-level package imports to be
+            // exactly Core.Package. A malformed root must not establish the
+            // SourceLinker anchor used to qualify descendant imports.
+            if (self::key($className) !== self::key('Package')
+                || self::key($classPackage) !== self::key('Core')) {
+                return $resolved[$importIndex] = self::FAILURE_SENTINEL;
+            }
+            // Valid package imports establish SourceLinker but never SourceIndex.
             return $resolved[$importIndex] = null;
         }
         if ($outerIndex > 0) {
@@ -184,9 +191,9 @@ final class PdoUe3VerifyImportProjectionResolver
             $resolved,
             $visiting
         );
-        if ($parentSourceIndex === self::PRIVATE_FAILURE) {
+        if ($parentSourceIndex === self::FAILURE_SENTINEL) {
             unset($visiting[$importIndex]);
-            return $resolved[$importIndex] = self::PRIVATE_FAILURE;
+            return $resolved[$importIndex] = self::FAILURE_SENTINEL;
         }
 
         $relative = self::key((string)($import['relative_object_path'] ?? ''));
@@ -207,7 +214,7 @@ final class PdoUe3VerifyImportProjectionResolver
 
             if ((((int)($candidate['object_flags'] ?? 0)) & self::RF_PUBLIC) === 0) {
                 unset($visiting[$importIndex]);
-                return $resolved[$importIndex] = self::PRIVATE_FAILURE;
+                return $resolved[$importIndex] = self::FAILURE_SENTINEL;
             }
 
             unset($visiting[$importIndex]);
