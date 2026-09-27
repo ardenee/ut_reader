@@ -14,9 +14,11 @@ $root = dirname(__DIR__);
 require_once $root . '/bootstrap/autoload.php';
 $canonicalRebuild = (string)file_get_contents($root . '/bin/rebuild-legacy-dependencies.php');
 $sharedResolver = (string)file_get_contents($root . '/src/Infrastructure/Persistence/PdoDependencyResolver.php');
+$ue3Resolver = (string)file_get_contents($root . '/src/Infrastructure/Persistence/PdoUe3VerifyImportProjectionResolver.php');
 require_once $root . '/src/Infrastructure/Persistence/PdoUe3VerifyImportProjectionResolver.php';
 
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoUe3VerifyImportProjectionResolver;
+use UnrealDb\Catalog\Infrastructure\Metadata\CatalogCompactIdentityEnricher;
 
 $checks = [];
 $check = static function (string $name, bool $ok, string $detail) use (&$checks): void {
@@ -47,6 +49,99 @@ $check(
     'exact_identity_and_outer_resolve',
     ($matches[1] ?? null) === 0 && ($matches[2] ?? null) === 1,
     'UE3 must resolve the parent first and require the child export OuterIndex to reference that exact export.'
+);
+
+$pathMismatch = $consumer;
+$pathMismatch[1]['relative_object_path'] = 'Derived.Path.Is.Not.Identity';
+$pathMismatch[2]['relative_object_path'] = 'Also.Not.Identity';
+$matches = PdoUe3VerifyImportProjectionResolver::resolveInMemory(
+    $pathMismatch,
+    $providerImports,
+    $providerExports,
+    'Foo'
+);
+$check(
+    'derived_path_is_not_verify_import_identity',
+    ($matches[1] ?? null) === 0 && ($matches[2] ?? null) === 1,
+    'UE3 VerifyImport matches serialized ObjectName/ClassName/ClassPackage then OuterIndex; a derived catalog path must not prefilter valid exports.'
+);
+
+$bucketExports = $providerExports;
+$bucketExports[] = ['export_index' => 2, 'class_index' => -2, 'object_name' => 'Wall', 'outer_index' => 0, 'object_flags' => 4, 'local_path' => 'Wrong.Wall'];
+$matches = PdoUe3VerifyImportProjectionResolver::resolveInMemory(
+    $consumer,
+    $providerImports,
+    $bucketExports,
+    'Foo'
+);
+$check(
+    'identity_bucket_continues_after_outer_mismatch',
+    ($matches[2] ?? null) === 1,
+    'UE3 must continue through exports in the same ObjectName/ClassName/ClassPackage bucket when a candidate fails the OuterIndex qualification.'
+);
+
+$redirectConsumer = [
+    ['import_index' => 0, 'class_package' => 'Core', 'class_name' => 'Package', 'object_name' => 'Foo', 'outer_index' => 0],
+    ['import_index' => 1, 'class_package' => 'Engine', 'class_name' => 'SoundCueLocalized', 'object_name' => 'Cue', 'outer_index' => -1],
+];
+$redirectProviderImports = [
+    ['import_index' => 0, 'class_package' => 'Core', 'class_name' => 'Package', 'object_name' => 'Engine', 'outer_index' => 0],
+    ['import_index' => 1, 'class_package' => 'Core', 'class_name' => 'Class', 'object_name' => 'SoundCueLocalized', 'outer_index' => -1],
+];
+$redirectProviderExports = [
+    ['export_index' => 0, 'class_index' => -2, 'object_name' => 'Cue', 'outer_index' => 0, 'object_flags' => 4],
+];
+$matches = PdoUe3VerifyImportProjectionResolver::resolveInMemory(
+    $redirectConsumer,
+    $redirectProviderImports,
+    $redirectProviderExports,
+    'Foo'
+);
+$check(
+    'ue3_fixup_import_map_precedes_identity_hash',
+    ($matches[1] ?? null) === 0,
+    'UE3 FixupImportMap remaps SoundCueLocalized identities before HashNames/export matching on both consumer and provider linkers.'
+);
+
+$sequenceFixup = CatalogCompactIdentityEnricher::ue3FixupImportMap([
+    0 => ['import_index' => 0, 'class_package' => 'Core', 'class_name' => 'Package', 'object_name' => 'SequenceObjects', 'outer_index' => 0],
+    1 => ['import_index' => 1, 'class_package' => 'SequenceObjects', 'class_name' => 'SequenceAction', 'object_name' => 'Action', 'outer_index' => -1],
+]);
+$check(
+    'ue3_sequenceobjects_fixup_precedes_matching',
+    ($sequenceFixup[0]['object_name'] ?? '') === 'Engine'
+        && ($sequenceFixup[1]['class_package'] ?? '') === 'Engine',
+    'UE3 FixupImportMap moves old SequenceObjects package/class references to Engine before VerifyImport identity matching.'
+);
+
+$sequencePath = CatalogCompactIdentityEnricher::ue3EffectiveImportPath($sequenceFixup, 1);
+$check(
+    'ue3_dependency_identity_uses_post_fixup_outer_chain',
+    $sequencePath['root'] === 'Engine'
+        && $sequencePath['full'] === 'Engine.Action'
+        && $sequencePath['relative'] === 'Action',
+    'Persisted UE3 dependency package/path identity must be rebuilt from the post-FixupImportMap outer chain.'
+);
+
+$prefabImports = CatalogCompactIdentityEnricher::ue3FixupImportMap([
+    0 => ['import_index' => 0, 'class_package' => 'Core', 'class_name' => 'Package', 'object_name' => 'Engine', 'outer_index' => 0],
+    1 => ['import_index' => 1, 'class_package' => 'Core', 'class_name' => 'Class', 'object_name' => 'Sequence', 'outer_index' => -1],
+    2 => ['import_index' => 2, 'class_package' => 'Core', 'class_name' => 'Class', 'object_name' => 'Prefab', 'outer_index' => -1],
+]);
+$prefabExports = [
+    0 => ['export_index' => 0, 'class_index' => -2, 'object_name' => 'Prefabs', 'outer_index' => 0, 'object_flags' => 4],
+];
+$oldPrefabClass = CatalogCompactIdentityEnricher::ue3ExportClassIdentity(
+    $prefabExports[0], $prefabImports, $prefabExports, 'MapPkg', 535
+);
+$newPrefabClass = CatalogCompactIdentityEnricher::ue3ExportClassIdentity(
+    $prefabExports[0], $prefabImports, $prefabExports, 'MapPkg', 536
+);
+$check(
+    'pre536_prefab_sequence_class_remap_matches_epic',
+    $oldPrefabClass === ['Engine', 'PrefabSequenceContainer']
+        && $newPrefabClass === ['Engine', 'Sequence'],
+    'UE3 RemapClasses changes old pre-536 Prefabs Sequence exports before export hashing, while version 536+ keeps the serialized Sequence class.'
 );
 
 $invalidRoot = $consumer;
@@ -117,6 +212,50 @@ $check(
     'cooked_import_export_outer_not_invented',
     !isset($matches[2]),
     'The audited UE3 source returns on an import whose cooked OuterIndex is an export; the catalog must not invent a fallback.'
+);
+
+$missingParentConsumer = $consumer;
+$missingParentConsumer[1]['object_name'] = 'MissingGroup';
+$missingParentConsumer[1]['relative_object_path'] = 'MissingGroup';
+$missingParentConsumer[2]['relative_object_path'] = 'MissingGroup.Wall';
+$rootChild = [
+    ['export_index' => 1, 'class_index' => -2, 'object_name' => 'Wall', 'outer_index' => 0, 'object_flags' => 4, 'local_path' => 'MissingGroup.Wall'],
+];
+$matches = PdoUe3VerifyImportProjectionResolver::resolveInMemory(
+    $missingParentConsumer,
+    $providerImports,
+    $rootChild,
+    'Foo'
+);
+$check(
+    'failed_non_root_parent_is_not_package_root',
+    !isset($matches[2]),
+    'Only a verified Core.Package root may have SourceIndex INDEX_NONE; an unresolved non-root parent must propagate failure.'
+);
+
+$check(
+    'ue3_db_lookup_uses_serialized_object_identity_not_path_hash',
+    str_contains($ue3Resolver, 'FROM ue_export_lookup e')
+        && str_contains($ue3Resolver, 'ot.value_prefix object_name')
+        && !str_contains($ue3Resolver, 'l.path_hash_ci IN ('),
+    'The persisted UE3 matcher must seed candidates from serialized ObjectName; derived catalog path hashes are not VerifyImport identity.'
+);
+
+$check(
+    'ue3_parent_resolution_uses_serialized_outer_chain',
+    str_contains($sharedResolver, 'self::ue3RootPackageName($importsByIndex')
+        && str_contains($sharedResolver, '$isObjectImport = $ue3VerifyImport')
+        && str_contains($sharedResolver, '? (int)($import[\'outer_index\'] ?? 0) !== 0'),
+    'UE3 package grouping and object-import classification must come from serialized OuterIndex/Core.Package roots, not generated path strings.'
+);
+
+$check(
+    'ue3_provider_selection_keeps_partial_results_on_one_linker',
+    str_contains($sharedResolver, '$bestCandidate = null;')
+        && str_contains($sharedResolver, '$bestMatchCount = -1;')
+        && str_contains($sharedResolver, 'if ($matchCount > $bestMatchCount)')
+        && str_contains($sharedResolver, '$ue3VerifyImportMatches[$packageKey] = $bestMatches;'),
+    'UE3 must select one physical provider/linker, then retain that linker successful per-Import VerifyImport results even when sibling Imports fail.'
 );
 
 $check(

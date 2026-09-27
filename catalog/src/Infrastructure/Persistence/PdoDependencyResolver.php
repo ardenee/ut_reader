@@ -25,13 +25,31 @@ final class PdoDependencyResolver
         $ue3VerifyImport = $engineKey === 'UE3';
         $ue4VerifyImport = $engineKey === 'UE4';
 
+        $importsByIndex = [];
+        foreach ($imports as $fallback => $import) {
+            if (is_array($import)) {
+                $index = isset($import['import_index']) ? (int)$import['import_index'] : (int)$fallback;
+                $importsByIndex[$index] = $import;
+            }
+        }
+        $ue3RootPackages = [];
+        if ($ue3VerifyImport) {
+            $importsByIndex = \UnrealDb\Catalog\Infrastructure\Metadata\CatalogCompactIdentityEnricher::ue3FixupImportMap($importsByIndex);
+            foreach (array_keys($importsByIndex) as $importIndex) {
+                $ue3RootPackages[(int)$importIndex] = self::ue3RootPackageName($importsByIndex, (int)$importIndex);
+            }
+        }
+
         $packageNames = [];
         $objectLookups = [];
-        foreach ($imports as $import) {
+        foreach ($imports as $fallback => $import) {
             if (!is_array($import) || self::isCommonImport($import, $engineKey)) {
                 continue;
             }
-            $rootPackage = trim((string)($import['root_package'] ?? ''));
+            $importIndex = isset($import['import_index']) ? (int)$import['import_index'] : (int)$fallback;
+            $rootPackage = $ue3VerifyImport
+                ? trim((string)($ue3RootPackages[$importIndex] ?? ''))
+                : trim((string)($import['root_package'] ?? ''));
             if ($rootPackage !== '') {
                 $key = self::normalizeLookup($rootPackage);
                 if ($key !== '' && !isset($packageNames[$key])) {
@@ -40,7 +58,7 @@ final class PdoDependencyResolver
             }
             $relativeObjectPath = trim((string)($import['relative_object_path'] ?? ''));
             $fullPath = trim((string)($import['full_path'] ?? ''));
-            if ($rootPackage !== '' && $relativeObjectPath !== '' && $fullPath !== '') {
+            if (!$ue3VerifyImport && $rootPackage !== '' && $relativeObjectPath !== '' && $fullPath !== '') {
                 $key = self::normalizeLookup($fullPath);
                 if ($key !== '' && !isset($objectLookups[$key])) {
                     $objectLookups[$key] = [
@@ -60,15 +78,30 @@ final class PdoDependencyResolver
             : [];
 
         $packageRequirements = [];
-        foreach ($objectLookups as $lookup) {
-            $packageKey = self::normalizeLookup((string)$lookup['package_name']);
-            $packageRequirements[$packageKey]['package_name'] ??= $lookup['package_name'];
-            $requirementPath = (string)$lookup['lookup_value'];
-            $packageRequirements[$packageKey]['paths'][] = $requirementPath;
-            $packageRequirements[$packageKey]['classes'][$requirementPath] = [
-                'class_package' => (string)($lookup['class_package'] ?? ''),
-                'class_name' => (string)($lookup['class_name'] ?? ''),
-            ];
+        if ($ue3VerifyImport) {
+            foreach ($imports as $fallback => $import) {
+                if (!is_array($import) || self::isCommonImport($import, $engineKey)
+                    || (int)($import['outer_index'] ?? 0) === 0) {
+                    continue;
+                }
+                $importIndex = isset($import['import_index']) ? (int)$import['import_index'] : (int)$fallback;
+                $rootPackage = trim((string)($ue3RootPackages[$importIndex] ?? ''));
+                $packageKey = self::normalizeLookup($rootPackage);
+                if ($packageKey !== '') {
+                    $packageRequirements[$packageKey]['package_name'] ??= $rootPackage;
+                }
+            }
+        } else {
+            foreach ($objectLookups as $lookup) {
+                $packageKey = self::normalizeLookup((string)$lookup['package_name']);
+                $packageRequirements[$packageKey]['package_name'] ??= $lookup['package_name'];
+                $requirementPath = (string)$lookup['lookup_value'];
+                $packageRequirements[$packageKey]['paths'][] = $requirementPath;
+                $packageRequirements[$packageKey]['classes'][$requirementPath] = [
+                    'class_package' => (string)($lookup['class_package'] ?? ''),
+                    'class_name' => (string)($lookup['class_name'] ?? ''),
+                ];
+            }
         }
 
         $verifyImportMatches = [];
@@ -115,18 +148,48 @@ final class PdoDependencyResolver
             require_once __DIR__ . '/PdoUe3VerifyImportProjectionResolver.php';
             $ue3Candidates = self::loadPackageCandidates($db, $gameId, $fileId, array_values($packageNames));
             foreach ($packageRequirements as $packageKey => $requirement) {
-                $requiredImportIndexes = self::requiredImportIndexes($imports, $packageKey, $engineKey);
+                $requiredImportIndexes = self::requiredImportIndexes(
+                    $imports,
+                    $packageKey,
+                    $engineKey,
+                    $ue3RootPackages
+                );
+                $bestCandidate = null;
+                $bestMatches = [];
+                $bestMatchCount = -1;
+
+                // UE3 loads one SourceLinker for the package, then VerifyImport()
+                // resolves each Import independently against that linker. Do not
+                // discard successful sibling Imports just because one Import in
+                // the same package fails. UnrealDB can know several physical
+                // variants, so prefer a complete provider when one exists;
+                // otherwise retain the single candidate satisfying the greatest
+                // number of Imports. Candidate order breaks ties. Never combine
+                // matches from multiple physical providers.
                 foreach ($ue3Candidates[$packageKey] ?? [] as $candidate) {
                     $matches = PdoUe3VerifyImportProjectionResolver::resolveProvider(
                         $db,
                         (int)$candidate['file_id'],
                         $imports
                     );
-                    if (self::isCompleteMatch($requiredImportIndexes, $matches)) {
-                        $packageMatches[$packageKey] = $candidate;
-                        $ue3VerifyImportMatches[$packageKey] = $matches;
+                    $matchCount = 0;
+                    foreach ($requiredImportIndexes as $requiredImportIndex) {
+                        if (array_key_exists($requiredImportIndex, $matches)) {
+                            $matchCount++;
+                        }
+                    }
+                    if ($matchCount > $bestMatchCount) {
+                        $bestCandidate = $candidate;
+                        $bestMatches = $matches;
+                        $bestMatchCount = $matchCount;
+                    }
+                    if ($matchCount === count($requiredImportIndexes)) {
                         break;
                     }
+                }
+                if ($bestCandidate !== null) {
+                    $packageMatches[$packageKey] = $bestCandidate;
+                    $ue3VerifyImportMatches[$packageKey] = $bestMatches;
                 }
             }
         }
@@ -174,7 +237,7 @@ final class PdoDependencyResolver
         }
 
         $resolved = [];
-        foreach ($imports as $import) {
+        foreach ($imports as $fallback => $import) {
             if (!is_array($import)) {
                 continue;
             }
@@ -182,8 +245,13 @@ final class PdoDependencyResolver
             if ($importId < 1) {
                 continue;
             }
-            $rootPackage = (string)($import['root_package'] ?? '');
-            $isObjectImport = (string)($import['relative_object_path'] ?? '') !== '';
+            $importIndex = isset($import['import_index']) ? (int)$import['import_index'] : (int)$fallback;
+            $rootPackage = $ue3VerifyImport
+                ? (string)($ue3RootPackages[$importIndex] ?? '')
+                : (string)($import['root_package'] ?? '');
+            $isObjectImport = $ue3VerifyImport
+                ? (int)($import['outer_index'] ?? 0) !== 0
+                : (string)($import['relative_object_path'] ?? '') !== '';
             $result = self::missing();
 
             if (self::isCommonImport($import, $engineKey)) {
@@ -209,7 +277,6 @@ final class PdoDependencyResolver
                 }
             } else {
                 $packageKey = self::normalizeLookup($rootPackage);
-                $importIndex = (int)($import['import_index'] ?? -1);
                 $packageMatch = $packageMatches[$packageKey] ?? null;
 
                 if ($legacyVerifyImport) {
@@ -275,19 +342,29 @@ final class PdoDependencyResolver
         return $resolved;
     }
 
-    /** @param list<array<string,mixed>> $imports @return list<int> */
-    private static function requiredImportIndexes(array $imports, string $packageKey, string $engineKey): array
-    {
+    /** @param list<array<string,mixed>> $imports @param array<int,string> $ue3RootPackages @return list<int> */
+    private static function requiredImportIndexes(
+        array $imports,
+        string $packageKey,
+        string $engineKey,
+        array $ue3RootPackages = []
+    ): array {
         $indexes = [];
         foreach ($imports as $fallback => $import) {
             if (!is_array($import) || self::isCommonImport($import, $engineKey)) {
                 continue;
             }
-            if (self::normalizeLookup((string)($import['root_package'] ?? '')) !== $packageKey
-                || trim((string)($import['relative_object_path'] ?? '')) === '') {
+            $importIndex = isset($import['import_index']) ? (int)$import['import_index'] : (int)$fallback;
+            $rootPackage = $engineKey === 'UE3'
+                ? (string)($ue3RootPackages[$importIndex] ?? '')
+                : (string)($import['root_package'] ?? '');
+            $isObjectImport = $engineKey === 'UE3'
+                ? (int)($import['outer_index'] ?? 0) !== 0
+                : trim((string)($import['relative_object_path'] ?? '')) !== '';
+            if (self::normalizeLookup($rootPackage) !== $packageKey || !$isObjectImport) {
                 continue;
             }
-            $indexes[] = isset($import['import_index']) ? (int)$import['import_index'] : (int)$fallback;
+            $indexes[] = $importIndex;
         }
         return $indexes;
     }
@@ -316,6 +393,36 @@ final class PdoDependencyResolver
             'source' => 'none',
             'confidence' => 'missing',
         ];
+    }
+
+    /** @param array<int,array<string,mixed>> $importsByIndex */
+    private static function ue3RootPackageName(array $importsByIndex, int $importIndex): string
+    {
+        $seen = [];
+        while (true) {
+            if (isset($seen[$importIndex])) {
+                return '';
+            }
+            $seen[$importIndex] = true;
+            $import = $importsByIndex[$importIndex] ?? null;
+            if (!is_array($import)) {
+                return '';
+            }
+            $outerIndex = (int)($import['outer_index'] ?? 0);
+            if ($outerIndex === 0) {
+                if (strcasecmp(trim((string)($import['class_name'] ?? '')), 'Package') !== 0
+                    || strcasecmp(trim((string)($import['class_package'] ?? '')), 'Core') !== 0) {
+                    return '';
+                }
+                return trim((string)($import['object_name'] ?? ''));
+            }
+            if ($outerIndex > 0) {
+                // VerifyImportInner deliberately does not establish a provider
+                // SourceLinker through a cooked import->export outer.
+                return '';
+            }
+            $importIndex = -$outerIndex - 1;
+        }
     }
 
     private static function isCommonImport(array $import, string $engineKey): bool

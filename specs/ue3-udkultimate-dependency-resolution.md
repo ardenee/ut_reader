@@ -61,13 +61,33 @@ The effective order is provider package, outer objects, then nested object. This
 
 For cooked packages, source explicitly recognizes that an import outer can be an export. In the examined branch VerifyImportInner returns rather than applying the ordinary algorithm and contains an Epic TODO about possibly locating the original package linker. UnrealDB must not invent the missing behavior.
 
+## Pre-hash import and class fixups
+
+UE3 does not hash the raw serialized ImportMap immediately. After serializing imports and exports, ULinkerLoad runs FixupImportMap(), then RemapClasses(), and only later CreateExportHash(). VerifyImport therefore sees the post-fixup identities.
+
+FixupImportMap contains fixed engine compatibility rules that are independent of game INI ClassRemap configuration. In the audited source it remaps Engine.SoundCueLocalized class identity to SoundCue, remaps references whose ClassName is SoundCueLocalized and ClassPackage is Engine to SoundCue, changes the old SequenceObjects package import to Engine, and changes ClassPackage SequenceObjects to Engine. UnrealDB must apply these UE3-only fixed rules before building VerifyImport identity buckets on both consumer and provider sides.
+
+RemapClasses also has a version-gated compatibility fix for packages older than VER_FIXED_PREFAB_SEQUENCES (536). When the package contains the affected prefab imports, Sequence exports used for Prefabs are reclassified to Engine.PrefabSequenceContainer or Engine.PrefabSequence before export hashing. UnrealDB's UE3 export identity projection must use that effective class identity for pre-536 packages.
+
+These source-defined fixes are not permission to consume UnrealDB's configurable class-remap table for UE3. Runtime/config remaps that require external INI state remain outside deterministic package-byte resolution unless separately proven and supplied.
+
 ## Exact provider-export match
 
 Once SourceLinker exists, UE3 hashes candidates from ObjectName, ClassName, and ClassPackage and walks that source linker's export hash chain.
 
 A candidate initially matches only when all three are equal: export ObjectName equals import ObjectName, export class name equals import ClassName, and export class package equals import ClassPackage.
 
+HashNames is a bucket selector, not a relaxation of identity. If an export in that bucket fails the exact tuple or resolved outer qualification, UE3 continues to the next export in the same hash chain. A tuple match with the wrong outer is therefore not a successful import. Once an otherwise matching candidate reaches the private-export failure path, ordinary runtime loading does not continue past it as though it were merely an outer mismatch.
+
 ClassPackage identifies the package containing the object's class. It is not necessarily the package containing the imported object.
+
+The derived full or relative object path is not part of this candidate lookup. It is useful catalog/display identity, but UnrealDB must not use a path hash as a prerequisite for UE3 VerifyImport matching; doing so can reject an export before Epic's serialized ObjectName/ClassName/ClassPackage and OuterIndex checks run.
+
+## Per-import resolution on one source linker
+
+ULinkerLoad::Verify iterates every ImportMap entry and calls VerifyImport independently. Once a top-level package import establishes SourceLinker, each descendant import independently succeeds or fails by receiving its own SourceIndex. One failed object import does not erase successful sibling imports from the same SourceLinker.
+
+UnrealDB can contain several physical files for one logical package name, unlike one concrete loader search result. It must still choose one physical provider/linker at a time and must never combine exports from different files. Prefer a provider that satisfies the complete import set when one exists; otherwise retain the single provider with the greatest number of source-valid per-import matches so successful imports are not converted to missing merely because a sibling import failed.
 
 ## Outer qualification
 

@@ -32,9 +32,11 @@ $options = getopt('', [
     'worker-index::',
     'worker-count::',
     'storage-root::',
+    'force-all',
 ]);
 
 $apply = array_key_exists('apply', $options);
+$forceAll = array_key_exists('force-all', $options);
 $continuous = array_key_exists('continuous', $options);
 $afterId = isset($options['after-id']) ? max(0, (int)$options['after-id']) : 0;
 $limit = isset($options['limit']) ? max(1, min(10000, (int)$options['limit'])) : 100;
@@ -71,6 +73,9 @@ if ($workers > 1 && $workerIndex < 0) {
         }
         if ($continuous) {
             $command[] = '--continuous';
+        }
+        if ($forceAll) {
+            $command[] = '--force-all';
         }
         if (isset($options['storage-root'])) {
             $command[] = '--storage-root=' . (string)$options['storage-root'];
@@ -178,8 +183,11 @@ if ($workerCount > 1) {
     $countArgs[] = $workerCount;
     $countArgs[] = $workerIndex;
 }
-$countSql .= ' GROUP BY f.id,m.export_count'
-    . ' HAVING projected_rows<>m.export_count OR incomplete_rows>0) q';
+$countSql .= ' GROUP BY f.id,m.export_count';
+if (!$forceAll) {
+    $countSql .= ' HAVING projected_rows<>m.export_count OR incomplete_rows>0';
+}
+$countSql .= ') q';
 $countStatement = $db->prepare($countSql);
 $countStatement->execute($countArgs);
 $counts = $countStatement->fetch(PDO::FETCH_ASSOC) ?: [];
@@ -197,6 +205,7 @@ if (!$apply) {
         'worker_index' => $workerIndex,
         'worker_count' => $workerCount,
         'storage_root' => $storageRoot,
+        'force_all' => $forceAll,
         'note' => 'No rows were changed.',
     ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . PHP_EOL;
     exit(0);
@@ -211,6 +220,7 @@ fwrite(
     . ' | missing_projection_rows=' . (int)($counts['missing_rows'] ?? 0)
     . ' | after_id=' . $afterId
     . ' | limit=' . $limit
+    . ' | force_all=' . ($forceAll ? 'yes' : 'no')
     . PHP_EOL
 );
 
@@ -226,15 +236,17 @@ $batchNumber = 0;
 do {
     $batchNumber++;
     $sql =
-        'SELECT f.id,f.package_name,m.import_count,m.export_count'
+        'SELECT f.id,f.package_name,f.package_version,m.import_count,m.export_count'
         . ' FROM ue_files f'
         . ' JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=4'
         . ' JOIN ue_games g ON g.id=f.game_id'
         . ' JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1'
-        . ' WHERE f.scan_status="verified" AND UPPER(TRIM(p.engine_key))="UE3" AND f.id>?'
-        . ' AND (EXISTS (SELECT 1 FROM ue_export_path_lookup l'
-        . ' WHERE l.file_id=f.id AND (l.object_flags IS NULL OR l.outer_index IS NULL))'
-        . ' OR (SELECT COUNT(*) FROM ue_export_path_lookup l2 WHERE l2.file_id=f.id)<>m.export_count)';
+        . ' WHERE f.scan_status="verified" AND UPPER(TRIM(p.engine_key))="UE3" AND f.id>?';
+    if (!$forceAll) {
+        $sql .= ' AND (EXISTS (SELECT 1 FROM ue_export_path_lookup l'
+            . ' WHERE l.file_id=f.id AND (l.object_flags IS NULL OR l.outer_index IS NULL))'
+            . ' OR (SELECT COUNT(*) FROM ue_export_path_lookup l2 WHERE l2.file_id=f.id)<>m.export_count)';
+    }
     $args = [$currentAfterId];
     if ($workerCount > 1) {
         $sql .= ' AND MOD(f.id,?)=?';
@@ -282,7 +294,8 @@ do {
                         $fileId,
                         (string)$file['package_name'],
                         $imports,
-                        $exports
+                        $exports,
+                        isset($file['package_version']) ? (int)$file['package_version'] : null
                     );
                     break;
                 } catch (Throwable $error) {

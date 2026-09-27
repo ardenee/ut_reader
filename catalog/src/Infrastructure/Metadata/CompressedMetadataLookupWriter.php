@@ -102,7 +102,8 @@ final class CompressedMetadataLookupWriter
         int $fileId,
         string $packageName,
         array $imports,
-        array $exports
+        array $exports,
+        ?int $packageVersion = null
     ): array {
         if ($this->db->inTransaction()) {
             throw new RuntimeException('UE3 export identity backfill requires ownership of the database transaction.');
@@ -117,6 +118,8 @@ final class CompressedMetadataLookupWriter
                 $importsByIndex[isset($row['import_index']) ? (int)$row['import_index'] : (int)$fallback] = $row;
             }
         }
+        $importsByIndex = CatalogCompactIdentityEnricher::ue3FixupImportMap($importsByIndex);
+
         $exportsByIndex = [];
         foreach ($exports as $fallback => $row) {
             if (is_array($row)) {
@@ -143,7 +146,8 @@ final class CompressedMetadataLookupWriter
                 $row,
                 $importsByIndex,
                 $exportsByIndex,
-                $packageName
+                $packageName,
+                $packageVersion
             );
 
             $termValues[] = $localPath;
@@ -326,12 +330,18 @@ final class CompressedMetadataLookupWriter
         $packageName = trim((string)($file['package_name'] ?? ''));
         $engineRow = \catalog_one(
             $this->db,
-            'SELECT p.engine_key FROM ue_games g'
+            'SELECT p.engine_key,f.package_version FROM ue_files f'
+            . ' JOIN ue_games g ON g.id=f.game_id'
             . ' LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1'
-            . ' WHERE g.id=? LIMIT 1',
-            [(int)($file['game_id'] ?? 0)]
+            . ' WHERE f.id=? LIMIT 1',
+            [$fileId]
         );
         $engineKey = strtoupper(trim((string)($engineRow['engine_key'] ?? '')));
+        $packageVersion = isset($engineRow['package_version']) ? (int)$engineRow['package_version'] : null;
+        if ($engineKey === 'UE3') {
+            $importsByIdentityIndex = CatalogCompactIdentityEnricher::ue3FixupImportMap($importsByIdentityIndex);
+            $importsByIndex = CatalogCompactIdentityEnricher::ue3FixupImportMap($importsByIndex);
+        }
         $exportRows = [];
         $exportPathRows = [];
         foreach ($exports as $row) {
@@ -357,7 +367,8 @@ final class CompressedMetadataLookupWriter
                     $row,
                     $importsByIdentityIndex,
                     $exportsByIdentityIndex,
-                    $packageName
+                    $packageName,
+                    $packageVersion
                 )
                 : CatalogCompactIdentityEnricher::legacyExportClassIdentity(
                     $row,
@@ -572,12 +583,17 @@ final class CompressedMetadataLookupWriter
         }
         $engineRow = \catalog_one(
             $this->db,
-            'SELECT p.engine_key FROM ue_games g'
+            'SELECT p.engine_key,f.package_version FROM ue_files f'
+            . ' JOIN ue_games g ON g.id=f.game_id'
             . ' LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1'
-            . ' WHERE g.id=? LIMIT 1',
-            [(int)($file['game_id'] ?? 0)]
+            . ' WHERE f.id=? LIMIT 1',
+            [(int)($file['id'] ?? 0)]
         );
         $engineKey = strtoupper(trim((string)($engineRow['engine_key'] ?? '')));
+        $packageVersion = isset($engineRow['package_version']) ? (int)$engineRow['package_version'] : null;
+        if ($engineKey === 'UE3') {
+            $importsByIndex = CatalogCompactIdentityEnricher::ue3FixupImportMap($importsByIndex);
+        }
         $packageName = trim((string)($file['package_name'] ?? ''));
         if (trim((string)($file['package_name'] ?? '')) !== '') {
             yield trim((string)$file['package_name']);
@@ -623,7 +639,8 @@ final class CompressedMetadataLookupWriter
                     $row,
                     $importsByIndex,
                     $exportsByIndex,
-                    $packageName
+                    $packageName,
+                    $packageVersion
                 );
                 if ($ue3ClassPackage !== '') {
                     yield $ue3ClassPackage;
@@ -634,7 +651,8 @@ final class CompressedMetadataLookupWriter
             }
         }
 
-        foreach ((array)($snapshot['imports'] ?? []) as $row) {
+        $termImports = $engineKey === 'UE3' ? array_values($importsByIndex) : (array)($snapshot['imports'] ?? []);
+        foreach ($termImports as $row) {
             if (!is_array($row)) {
                 continue;
             }

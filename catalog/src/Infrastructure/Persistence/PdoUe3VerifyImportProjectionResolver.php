@@ -29,20 +29,27 @@ final class PdoUe3VerifyImportProjectionResolver
         }
 
         $imports = [];
-        $paths = [];
+        $objectNames = [];
         foreach ($consumerImports as $fallback => $row) {
             if (!is_array($row)) {
                 continue;
             }
             $index = isset($row['import_index']) ? (int)$row['import_index'] : (int)$fallback;
             $imports[$index] = $row;
-            $relative = trim((string)($row['relative_object_path'] ?? ''));
-            if ($relative !== '') {
-                $paths[self::key($relative)] = $relative;
-            }
         }
 
-        $candidates = self::loadCandidates($db, $providerFileId, $paths);
+        $imports = \UnrealDb\Catalog\Infrastructure\Metadata\CatalogCompactIdentityEnricher::ue3FixupImportMap($imports);
+        $objectNames = [];
+        foreach ($imports as $row) {
+            if (!is_array($row) || (int)($row['outer_index'] ?? 0) === 0) {
+                continue;
+            }
+            $objectName = trim((string)($row['object_name'] ?? ''));
+            if ($objectName !== '') {
+                $objectNames[self::key($objectName)] = $objectName;
+            }
+        }
+        $candidates = self::loadCandidates($db, $providerFileId, $objectNames);
         $resolved = [];
         $visiting = [];
         foreach (array_keys($imports) as $importIndex) {
@@ -70,7 +77,8 @@ final class PdoUe3VerifyImportProjectionResolver
         array $consumerImports,
         array $providerImports,
         array $providerExports,
-        string $providerPackageName
+        string $providerPackageName,
+        ?int $providerPackageVersion = null
     ): array {
         $imports = [];
         foreach ($consumerImports as $fallback => $row) {
@@ -84,6 +92,9 @@ final class PdoUe3VerifyImportProjectionResolver
                 $providerImportsByIndex[isset($row['import_index']) ? (int)$row['import_index'] : (int)$fallback] = $row;
             }
         }
+        $imports = \UnrealDb\Catalog\Infrastructure\Metadata\CatalogCompactIdentityEnricher::ue3FixupImportMap($imports);
+        $providerImportsByIndex = \UnrealDb\Catalog\Infrastructure\Metadata\CatalogCompactIdentityEnricher::ue3FixupImportMap($providerImportsByIndex);
+
         $providerExportsByIndex = [];
         foreach ($providerExports as $fallback => $row) {
             if (is_array($row)) {
@@ -93,8 +104,8 @@ final class PdoUe3VerifyImportProjectionResolver
 
         $candidates = [];
         foreach ($providerExportsByIndex as $exportIndex => $export) {
-            $relative = self::key((string)($export['local_path'] ?? ''));
-            if ($relative === '') {
+            $objectKey = self::key((string)($export['object_name'] ?? ''));
+            if ($objectKey === '') {
                 continue;
             }
             [$classPackage, $className] =
@@ -102,10 +113,13 @@ final class PdoUe3VerifyImportProjectionResolver
                     $export,
                     $providerImportsByIndex,
                     $providerExportsByIndex,
-                    $providerPackageName
+                    $providerPackageName,
+                    $providerPackageVersion
                 );
-            $candidates[$relative][] = [
+            $identityKey = self::identityKey((string)($export['object_name'] ?? ''), $className, $classPackage);
+            $candidates[$identityKey][] = [
                 'export_index' => (int)$exportIndex,
+                'object_name' => (string)($export['object_name'] ?? ''),
                 'outer_index' => (int)($export['outer_index'] ?? 0),
                 'object_flags' => (int)($export['object_flags'] ?? 0),
                 'class_package' => $classPackage,
@@ -148,19 +162,19 @@ final class PdoUe3VerifyImportProjectionResolver
             return $resolved[$importIndex];
         }
         if (isset($visiting[$importIndex])) {
-            return $resolved[$importIndex] = null;
+            return $resolved[$importIndex] = self::FAILURE_SENTINEL;
         }
 
         $import = $imports[$importIndex] ?? null;
         if (!is_array($import)) {
-            return $resolved[$importIndex] = null;
+            return $resolved[$importIndex] = self::FAILURE_SENTINEL;
         }
 
         $objectName = trim((string)($import['object_name'] ?? ''));
         $className = trim((string)($import['class_name'] ?? ''));
         $classPackage = trim((string)($import['class_package'] ?? ''));
         if ($objectName === '' || $className === '' || $classPackage === '') {
-            return $resolved[$importIndex] = null;
+            return $resolved[$importIndex] = self::FAILURE_SENTINEL;
         }
 
         $outerIndex = (int)($import['outer_index'] ?? 0);
@@ -179,7 +193,7 @@ final class PdoUe3VerifyImportProjectionResolver
             // UE3 cooked packages can contain import->export outers. The audited
             // source explicitly returns here with a TODO instead of inventing a
             // provider-linker resolution path, so the catalog does the same.
-            return $resolved[$importIndex] = null;
+            return $resolved[$importIndex] = self::FAILURE_SENTINEL;
         }
 
         $visiting[$importIndex] = true;
@@ -196,10 +210,13 @@ final class PdoUe3VerifyImportProjectionResolver
             return $resolved[$importIndex] = self::FAILURE_SENTINEL;
         }
 
-        $relative = self::key((string)($import['relative_object_path'] ?? ''));
-        foreach ($candidates[$relative] ?? [] as $candidate) {
-            if (self::key((string)($candidate['class_name'] ?? '')) !== self::key($className)
-                || self::key((string)($candidate['class_package'] ?? '')) !== self::key($classPackage)) {
+        $identityKey = self::identityKey($objectName, $className, $classPackage);
+        foreach ($candidates[$identityKey] ?? [] as $candidate) {
+            if (self::identityKey(
+                (string)($candidate['object_name'] ?? ''),
+                (string)($candidate['class_name'] ?? ''),
+                (string)($candidate['class_package'] ?? '')
+            ) !== $identityKey) {
                 continue;
             }
 
@@ -222,47 +239,56 @@ final class PdoUe3VerifyImportProjectionResolver
         }
 
         unset($visiting[$importIndex]);
-        return $resolved[$importIndex] = null;
+        // Only a valid top-level Core.Package import may carry SourceLinker with
+        // SourceIndex == INDEX_NONE. Any unresolved non-root import must remain
+        // a failure so descendants cannot be mistaken for root-level exports.
+        return $resolved[$importIndex] = self::FAILURE_SENTINEL;
     }
 
     /**
-     * @param array<string,string> $paths normalized path => original path
+     * Load UE3 candidates by serialized ObjectName, mirroring the first key of
+     * VerifyImportInner. Derived full/local paths are deliberately not part of
+     * provider-export identity; exact class identity and resolved OuterIndex are
+     * qualified later by resolveImport().
+     *
+     * @param array<string,string> $objectNames normalized name => original name
      * @return array<string,list<array<string,mixed>>>
      */
-    private static function loadCandidates(PDO $db, int $providerFileId, array $paths): array
+    private static function loadCandidates(PDO $db, int $providerFileId, array $objectNames): array
     {
-        if ($paths === []) {
+        if ($objectNames === []) {
             return [];
         }
 
-        $hashes = [];
-        foreach ($paths as $key => $path) {
-            $hashes[bin2hex(CatalogUnrealIdentityHash::objectPathBinary($path))] = $key;
-        }
-
         $result = [];
-        foreach (array_chunk($hashes, self::HASH_BATCH_SIZE, true) as $chunk) {
-            $placeholders = implode(',', array_fill(0, count($chunk), 'UNHEX(?)'));
+        foreach (array_chunk(array_values($objectNames), self::HASH_BATCH_SIZE) as $chunk) {
+            $placeholders = implode(',', array_fill(0, count($chunk), '?'));
             $statement = $db->prepare(
-                'SELECT l.export_index,l.path_hash_ci,l.outer_index,l.object_flags,'
-                . 'pt.value_prefix local_path,cpt.value_prefix class_package,cnt.value_prefix class_name'
-                . ' FROM ue_export_path_lookup l'
-                . ' JOIN ue_terms pt ON pt.id=l.local_path_term_id'
+                'SELECT e.export_index,ot.value_prefix object_name,l.outer_index,l.object_flags,'
+                . 'cpt.value_prefix class_package,cnt.value_prefix class_name'
+                . ' FROM ue_export_lookup e'
+                . ' JOIN ue_export_path_lookup l ON l.file_id=e.file_id AND l.export_index=e.export_index'
+                . ' JOIN ue_terms ot ON ot.id=e.object_term_id'
                 . ' LEFT JOIN ue_terms cpt ON cpt.id=l.class_package_term_id'
                 . ' LEFT JOIN ue_terms cnt ON cnt.id=l.class_name_term_id'
-                . ' WHERE l.file_id=? AND l.path_hash_ci IN (' . $placeholders . ')'
-                . ' ORDER BY l.export_index DESC'
+                . ' WHERE e.file_id=? AND CONVERT(ot.value_prefix USING utf8mb4)'
+                . ' COLLATE utf8mb4_unicode_ci IN (' . $placeholders . ')'
+                . ' ORDER BY e.export_index DESC'
             );
-            $statement->execute(array_merge([$providerFileId], array_keys($chunk)));
+            $statement->execute(array_merge([$providerFileId], $chunk));
             while (($row = $statement->fetch(PDO::FETCH_ASSOC)) !== false) {
-                $hash = bin2hex((string)$row['path_hash_ci']);
-                $expectedKey = $chunk[$hash] ?? null;
-                if (!is_string($expectedKey)
-                    || self::key((string)$row['local_path']) !== $expectedKey) {
+                $objectKey = self::key((string)($row['object_name'] ?? ''));
+                if ($objectKey === '' || !isset($objectNames[$objectKey])) {
                     continue;
                 }
-                $result[$expectedKey][] = [
+                $identityKey = self::identityKey(
+                    (string)($row['object_name'] ?? ''),
+                    (string)($row['class_name'] ?? ''),
+                    (string)($row['class_package'] ?? '')
+                );
+                $result[$identityKey][] = [
                     'export_index' => (int)$row['export_index'],
+                    'object_name' => (string)($row['object_name'] ?? ''),
                     'outer_index' => (int)($row['outer_index'] ?? 0),
                     'object_flags' => (int)($row['object_flags'] ?? 0),
                     'class_package' => (string)($row['class_package'] ?? ''),
@@ -271,6 +297,11 @@ final class PdoUe3VerifyImportProjectionResolver
             }
         }
         return $result;
+    }
+
+    private static function identityKey(string $objectName, string $className, string $classPackage): string
+    {
+        return CatalogUnrealIdentityHash::verifyImportHex($objectName, $className, $classPackage);
     }
 
     private static function key(string $value): string

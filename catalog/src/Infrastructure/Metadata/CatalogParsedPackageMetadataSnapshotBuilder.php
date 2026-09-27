@@ -257,6 +257,7 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
             if (!is_array($import)) {
                 throw new RuntimeException('Parsed compact Import snapshot contains a non-row value.');
             }
+            $identity = $effectiveIdentity($import);
             $dependencies[] = [
                 'file_id' => $fileId,
                 'import_index' => (int)($import['import_index'] ?? -1),
@@ -298,14 +299,42 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
 
         $engineRow = \catalog_one(
             $this->db,
-            'SELECT p.engine_key FROM ue_games g'
+            'SELECT p.engine_key,f.package_version FROM ue_files f'
+            . ' JOIN ue_games g ON g.id=f.game_id'
             . ' LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1'
-            . ' WHERE g.id=? LIMIT 1',
-            [$gameId]
+            . ' WHERE f.id=? LIMIT 1',
+            [$fileId]
         );
         $engineKey = strtoupper(trim((string)($engineRow['engine_key'] ?? '')));
+        $packageVersion = isset($engineRow['package_version']) ? (int)$engineRow['package_version'] : null;
         $legacyVerifyImport = in_array($engineKey, ['UE1', 'UE2'], true);
         $ue3VerifyImport = $engineKey === 'UE3';
+        $ue3ImportsByIndex = [];
+        if ($ue3VerifyImport) {
+            foreach ($importRows as $fallback => $import) {
+                if (is_array($import)) {
+                    $index = isset($import['import_index']) ? (int)$import['import_index'] : (int)$fallback;
+                    $ue3ImportsByIndex[$index] = $import;
+                }
+            }
+            $ue3ImportsByIndex = CatalogCompactIdentityEnricher::ue3FixupImportMap($ue3ImportsByIndex);
+        }
+        $effectiveIdentity = static function (array $import) use ($ue3VerifyImport, $ue3ImportsByIndex): array {
+            if (!$ue3VerifyImport) {
+                return [
+                    'root' => (string)($import['root_package'] ?? ''),
+                    'full' => (string)($import['full_path'] ?? ''),
+                ];
+            }
+            $path = CatalogCompactIdentityEnricher::ue3EffectiveImportPath(
+                $ue3ImportsByIndex,
+                (int)($import['import_index'] ?? -1)
+            );
+            return [
+                'root' => $path['root'] !== '' ? $path['root'] : (string)($import['root_package'] ?? ''),
+                'full' => $path['full'] !== '' ? $path['full'] : (string)($import['full_path'] ?? ''),
+            ];
+        };
 
         $localExports = [];
         $localVerifyImportMatches = ['standard' => [], 'unreal2' => [], 'unreal2_only' => []];
@@ -325,7 +354,8 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
                     $importRows,
                     $importRows,
                     $exportRows,
-                    $packageName
+                    $packageName,
+                    $packageVersion
                 );
         } else {
             foreach ($exportRows as $export) {
@@ -366,7 +396,7 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
                 $localExportIndex = $localVerifyImportMatches['standard'][$importIndex] ?? null;
                 $localUnreal2OnlyIndex = $localVerifyImportMatches['unreal2_only'][$importIndex] ?? null;
             } elseif ($ue3VerifyImport
-                && $this->lookupKey((string)($import['root_package'] ?? '')) === $this->lookupKey($packageName)) {
+                && $this->lookupKey((string)$effectiveIdentity($import)['root']) === $this->lookupKey($packageName)) {
                 $localExportIndex = $localUe3VerifyImportMatches[(int)($import['import_index'] ?? -1)] ?? null;
             } elseif (!$legacyVerifyImport) {
                 $localExportIndex = $localExports[$this->lookupKey((string)$import['full_path'])] ?? null;
@@ -394,8 +424,8 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
             $dependencies[] = [
                 'file_id' => $fileId,
                 'import_index' => (int)$import['import_index'],
-                'required_package' => (string)$import['root_package'],
-                'required_object_path' => (string)$import['full_path'],
+                'required_package' => (string)$identity['root'],
+                'required_object_path' => (string)$identity['full'],
                 'resolved_file_id' => $resolution['resolved_file_id'] !== null
                     ? (int)$resolution['resolved_file_id']
                     : null,

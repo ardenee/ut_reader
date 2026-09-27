@@ -59,6 +59,38 @@ final class CompactDependencyRebuilder
         $dependencySnapshot = $loader->loadDependencySnapshot($fileId);
         $file = (array)$dependencySnapshot['file'];
         $imports = array_values((array)$dependencySnapshot['imports']);
+        $engineRow = \catalog_one(
+            $this->db,
+            'SELECT p.engine_key FROM ue_games g'
+            . ' LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1'
+            . ' WHERE g.id=? LIMIT 1',
+            [(int)($file['game_id'] ?? 0)]
+        );
+        $engineKey = strtoupper(trim((string)($engineRow['engine_key'] ?? '')));
+        $ue3ImportsByIndex = [];
+        if ($engineKey === 'UE3') {
+            foreach ($imports as $fallback => $import) {
+                if (is_array($import)) {
+                    $index = isset($import['import_index']) ? (int)$import['import_index'] : (int)$fallback;
+                    $ue3ImportsByIndex[$index] = $import;
+                }
+            }
+            $ue3ImportsByIndex = CatalogCompactIdentityEnricher::ue3FixupImportMap($ue3ImportsByIndex);
+        }
+        $effectiveIdentity = static function (array $import) use ($engineKey, $ue3ImportsByIndex): array {
+            if ($engineKey !== 'UE3') {
+                return [
+                    'root' => (string)($import['root_package'] ?? ''),
+                    'full' => (string)($import['full_path'] ?? ''),
+                ];
+            }
+            $index = (int)($import['import_index'] ?? -1);
+            $path = CatalogCompactIdentityEnricher::ue3EffectiveImportPath($ue3ImportsByIndex, $index);
+            return [
+                'root' => $path['root'] !== '' ? $path['root'] : (string)($import['root_package'] ?? ''),
+                'full' => $path['full'] !== '' ? $path['full'] : (string)($import['full_path'] ?? ''),
+            ];
+        };
         $previous = [];
         foreach ((array)$dependencySnapshot['dependencies'] as $row) {
             if (is_array($row)) {
@@ -82,7 +114,8 @@ final class CompactDependencyRebuilder
                 $importsToResolve[] = $import;
                 continue;
             }
-            $rootPackage = mb_strtolower(trim((string)($import['root_package'] ?? '')), 'UTF-8');
+            $identity = $effectiveIdentity($import);
+            $rootPackage = mb_strtolower(trim((string)$identity['root']), 'UTF-8');
             if ($rootPackage !== '' && isset($packageKeys[$rootPackage])) {
                 $importsToResolve[] = $import;
             }
@@ -109,8 +142,9 @@ final class CompactDependencyRebuilder
                 throw new RuntimeException('Compact Import snapshot contains an invalid identity.');
             }
 
+            $identity = $effectiveIdentity($import);
             $targeted = $packageKeys === null
-                || isset($packageKeys[mb_strtolower(trim((string)($import['root_package'] ?? '')), 'UTF-8')]);
+                || isset($packageKeys[mb_strtolower(trim((string)$identity['root']), 'UTF-8')]);
             if (!$targeted) {
                 $existing = $previous[$importIndex] ?? null;
                 if (!is_array($existing)) {
@@ -130,8 +164,8 @@ final class CompactDependencyRebuilder
             $row = [
                 'file_id' => $fileId,
                 'import_index' => $importIndex,
-                'required_package' => (string)$import['root_package'],
-                'required_object_path' => (string)$import['full_path'],
+                'required_package' => (string)$identity['root'],
+                'required_object_path' => (string)$identity['full'],
                 'resolved_file_id' => $resolution['resolved_file_id'] !== null
                     ? (int)$resolution['resolved_file_id']
                     : null,

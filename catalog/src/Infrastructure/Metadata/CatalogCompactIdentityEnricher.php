@@ -161,8 +161,16 @@ final class CatalogCompactIdentityEnricher
         array $export,
         array $imports,
         array $exports,
-        string $packageName
+        string $packageName,
+        ?int $packageVersion = null
     ): array {
+        if ($packageVersion !== null && $packageVersion < 536) {
+            $remapped = self::ue3PrefabExportClassIdentity($export, $imports, $exports);
+            if ($remapped !== null) {
+                return $remapped;
+            }
+        }
+
         $classIndex = (int)($export['class_index'] ?? 0);
         if ($classIndex < 0) {
             $classImport = $imports[-$classIndex - 1] ?? null;
@@ -203,6 +211,145 @@ final class CatalogCompactIdentityEnricher
         }
 
         return ['Core', 'Class'];
+    }
+
+    /**
+     * Deterministic class-identity effect of UE3 ULinkerLoad::RemapClasses for
+     * pre-VER_FIXED_PREFAB_SEQUENCES packages. Returns null when unchanged.
+     *
+     * @param array<string,mixed> $export
+     * @param array<int,array<string,mixed>> $imports
+     * @param array<int,array<string,mixed>> $exports
+     * @return array{0:string,1:string}|null
+     */
+    private static function ue3PrefabExportClassIdentity(array $export, array $imports, array $exports): ?array
+    {
+        $requiresFixup = false;
+        $sequenceClassIndex = 0;
+        $prefabClassIndex = 0;
+        foreach ($imports as $importIndex => $import) {
+            if (!is_array($import) || strcasecmp(trim((string)($import['class_name'] ?? '')), 'Class') !== 0) {
+                continue;
+            }
+            $name = trim((string)($import['object_name'] ?? ''));
+            if (strcasecmp($name, 'Prefab') === 0 || strcasecmp($name, 'PrefabInstance') === 0) {
+                $requiresFixup = true;
+            }
+            if (strcasecmp($name, 'Sequence') === 0) {
+                $sequenceClassIndex = -((int)$importIndex) - 1;
+            } elseif (strcasecmp($name, 'Prefab') === 0) {
+                $prefabClassIndex = -((int)$importIndex) - 1;
+            }
+        }
+        if (!$requiresFixup || $sequenceClassIndex === 0
+            || (int)($export['class_index'] ?? 0) !== $sequenceClassIndex) {
+            return null;
+        }
+
+        if (strcasecmp(trim((string)($export['object_name'] ?? '')), 'Prefabs') === 0) {
+            return ['Engine', 'PrefabSequenceContainer'];
+        }
+        $outerIndex = (int)($export['outer_index'] ?? 0);
+        if ($outerIndex > 0) {
+            $outer = $exports[$outerIndex - 1] ?? null;
+            if (is_array($outer)
+                && (strcasecmp(trim((string)($outer['object_name'] ?? '')), 'Prefabs') === 0
+                    || (int)($outer['class_index'] ?? 0) === $prefabClassIndex)) {
+                return ['Engine', 'PrefabSequence'];
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Rebuild the deterministic import path from the post-FixupImportMap outer
+     * chain. Cooked import->export outers deliberately return empty identity.
+     *
+     * @param array<int,array<string,mixed>> $imports
+     * @return array{root:string,full:string,relative:string}
+     */
+    public static function ue3EffectiveImportPath(array $imports, int $importIndex): array
+    {
+        $imports = self::ue3FixupImportMap($imports);
+        $parts = [];
+        $seen = [];
+        while (true) {
+            if (isset($seen[$importIndex])) {
+                return ['root' => '', 'full' => '', 'relative' => ''];
+            }
+            $seen[$importIndex] = true;
+            $row = $imports[$importIndex] ?? null;
+            if (!is_array($row)) {
+                return ['root' => '', 'full' => '', 'relative' => ''];
+            }
+            $name = trim((string)($row['object_name'] ?? ''));
+            if ($name === '') {
+                return ['root' => '', 'full' => '', 'relative' => ''];
+            }
+            array_unshift($parts, $name);
+            $outerIndex = (int)($row['outer_index'] ?? 0);
+            if ($outerIndex === 0) {
+                if (strcasecmp(trim((string)($row['class_name'] ?? '')), 'Package') !== 0
+                    || strcasecmp(trim((string)($row['class_package'] ?? '')), 'Core') !== 0) {
+                    return ['root' => '', 'full' => '', 'relative' => ''];
+                }
+                break;
+            }
+            if ($outerIndex > 0) {
+                return ['root' => '', 'full' => '', 'relative' => ''];
+            }
+            $importIndex = -$outerIndex - 1;
+        }
+        $root = (string)($parts[0] ?? '');
+        return [
+            'root' => $root,
+            'full' => implode('.', $parts),
+            'relative' => count($parts) > 1 ? implode('.', array_slice($parts, 1)) : '',
+        ];
+    }
+
+    /**
+     * UE3 ULinkerLoad::FixupImportMap compatibility remaps. These are fixed
+     * engine rules, not configurable game ClassRemap entries.
+     *
+     * @param array<int,array<string,mixed>> $imports
+     * @return array<int,array<string,mixed>>
+     */
+    public static function ue3FixupImportMap(array $imports): array
+    {
+        foreach ($imports as $index => $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $objectName = trim((string)($row['object_name'] ?? ''));
+            $className = trim((string)($row['class_name'] ?? ''));
+            $classPackage = trim((string)($row['class_package'] ?? ''));
+            $outerIndex = (int)($row['outer_index'] ?? 0);
+
+            if (strcasecmp($objectName, 'SoundCueLocalized') === 0
+                && strcasecmp($className, 'Class') === 0) {
+                if ($outerIndex < 0) {
+                    $outer = $imports[-$outerIndex - 1] ?? null;
+                    if (is_array($outer)
+                        && strcasecmp(trim((string)($outer['object_name'] ?? '')), 'Engine') === 0) {
+                        $row['object_name'] = 'SoundCue';
+                    }
+                }
+            } elseif (strcasecmp($className, 'SoundCueLocalized') === 0
+                && strcasecmp($classPackage, 'Engine') === 0) {
+                $row['class_name'] = 'SoundCue';
+            }
+
+            if (strcasecmp(trim((string)($row['object_name'] ?? '')), 'SequenceObjects') === 0
+                && strcasecmp(trim((string)($row['class_name'] ?? '')), 'Package') === 0) {
+                $row['object_name'] = 'Engine';
+            }
+            if (strcasecmp(trim((string)($row['class_package'] ?? '')), 'SequenceObjects') === 0) {
+                $row['class_package'] = 'Engine';
+            }
+            $imports[$index] = $row;
+        }
+        return $imports;
     }
 
     private static function isUe4ScriptPackage(string $packageName): bool
