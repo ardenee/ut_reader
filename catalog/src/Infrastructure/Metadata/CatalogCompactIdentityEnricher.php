@@ -28,6 +28,15 @@ final class CatalogCompactIdentityEnricher
             if (!is_array($row)) {
                 continue;
             }
+
+            // UE4 native/script modules are serialized as long package names such
+            // as /Script/Engine and /Script/CoreUObject. They are runtime script
+            // packages, not physical .uasset providers. Keep this source-backed
+            // UE4 rule separate from the historical short-name common list.
+            if ($engineKey === 'UE4' && self::isUe4ScriptPackage((string)($row['root_package'] ?? ''))) {
+                $row['is_common'] = 1;
+            }
+
             $relative = (string)($row['relative_object_path'] ?? '');
             $row['path_hash_ci'] = $relative !== ''
                 ? CatalogUnrealIdentityHash::objectPathHex($relative)
@@ -194,6 +203,11 @@ final class CatalogCompactIdentityEnricher
         }
 
         return ['Core', 'Class'];
+    }
+
+    private static function isUe4ScriptPackage(string $packageName): bool
+    {
+        return strncasecmp(trim($packageName), '/Script/', 8) === 0;
     }
 
     /**
