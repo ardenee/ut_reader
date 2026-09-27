@@ -36,11 +36,29 @@ UE3 `ULinkerLoad::Verify` verifies imports when runtime conditions allow. `Verif
 
 ## UE4 4.27.2
 
-UE4 `FLinkerLoad::VerifyImport` explicitly wraps inner verification and may consult `UObjectRedirector`/active redirect mechanisms. Those redirects can depend on runtime configuration and loaded objects. The serialized direct-match contract remains package/object path + class identity + outer relationship; nonserialized redirects belong in the runtime-only category.
+UE4 `FLinkerLoad::VerifyImport` wraps `VerifyImportInner()` and may later consult `UObjectRedirector`, CoreRedirects, instancing state and already-loaded native/transient objects. Those runtime/configuration paths are not deterministic catalog evidence and must not be guessed by static resolution.
+
+For the deterministic file-backed path, `VerifyImportInner()` establishes these rules:
+
+1. a top-level package Import establishes the source package/linker rather than resolving to a provider Export;
+2. for versions that serialize `FObjectImport::PackageName`, that field can identify the provider package independently of the Import's `OuterIndex` chain;
+3. candidate Exports are compared by `ObjectName`, `ClassName` and `ClassPackage`;
+4. UE4 first determines whether a full `ClassPackage` match exists for that object/class identity; only when no full-package candidate exists may the short package name participate in the package-name-transition fallback;
+5. outer identity is then verified: a resource whose parent is the top-level source package must be a linker-root Export, while a resolved parent Export in the same source linker must equal the candidate Export's `OuterIndex` through `FPackageIndex::FromExport(parent SourceIndex)`;
+6. an ordinary external match must be `RF_Public`; editor-only private-import exceptions depend on runtime/editor graph state and are not a general catalog fallback;
+7. only after direct verification fails do redirector/runtime recovery paths become relevant.
+
+`/Script/*` packages such as `/Script/Engine` and `/Script/CoreUObject` are script/native module packages. UnrealDB classifies those UE4 dependencies as `common_script`; it must not search for a physical `.uasset` package provider with that long package name.
+
+### v4 metadata boundary
+
+Current `.uedb4` metadata preserves the serialized Import/Export graph required for the reviewed pre-520 UT4 packages, but it does not preserve serialized `FObjectImport::PackageName` introduced by `VER_UE4_NON_OUTER_PACKAGE_IMPORT` (520). Therefore v4 resolution must not invent package ownership for modern import/export mixed outer graphs. Full >=520 support requires the next metadata format to retain that serialized field and distinguish effective provider package identity from the raw outer graph.
 
 ## UnrealDB contract
 
 Return structured outcomes: resolved exact, resolved source-backed static fallback, missing provider, missing object, class mismatch, outer mismatch, non-public/inaccessible where applicable, runtime-only fallback unavailable, and malformed reference. Never silently turn a weaker name-only match into success.
+
+For UE4, per-provider verification is performed before UnrealDB's catalog-level multi-provider selection. If several physical files represent one logical package, a single physical candidate must independently satisfy the consumer's complete required Import set. Partial coverage from multiple files is never combined.
 
 ## Source-reference matrix
 
@@ -48,7 +66,7 @@ Return structured outcomes: resolved exact, resolved source-backed static fallba
 |---|---|
 | UE1 retail import/export identity and verification | UT99 retail `Core/Src/UnLinker.h`: `FObjectImport`, `FObjectExport`, `GetImportFullName`, `GetExportFullName`, `ULinkerLoad::VerifyImport`, `FindExportIndex` |
 | UE3 package-index/resource and verification model | UE3 `Core/Inc/UnLinker.h`, `Core/Src/UnLinker.cpp`: `FObjectResource`, `FObjectImport`, `FObjectExport`, `VerifyImport`, `VerifyImportInner`, path/class helpers |
-| UE4 package-index/import/export model | UE4 `CoreUObject/Public/UObject/ObjectResource.h`, `LinkerLoad.h`, `Private/UObject/LinkerLoad.cpp`: `FPackageIndex`, `FObjectImport`, `FObjectExport`, `VerifyImport`, `FindExportIndex`, `BuildPathName` |
+| UE4 package-index/import/export model | UE4 `CoreUObject/Public/UObject/ObjectResource.h`, `LinkerLoad.h`, `Private/UObject/LinkerLoad.cpp`: `FPackageIndex`, `FObjectImport`, `FObjectExport`, `VerifyImport`, `VerifyImportInner`, `FindExportIndex`, `BuildPathName` |
 
 ## UnrealDB conformance
 
@@ -63,6 +81,6 @@ Apply this operation only after the exact package reader has validated indices a
 | UT2003 | Retains exact match/root outer fallback/Mesh->LodMesh/runtime binding/SafeReplace; a package-remap retry exists in `StaticLoadObject`, not in `VerifyImport`. |
 | UT2004 | Retains the same core resolver inventory; reviewed ClassRemap/PackageRemap paths are not active in import verification. |
 | UE3 | Verification gains cooked/remapped-package conditions, import fixups, redirector handling and more runtime gates. Direct serialized matching remains separable from those runtime paths. |
-| UE4 4.27.2 | Verification includes CoreRedirects, instancing/remapping, package privacy, script/native/in-memory handling, explicit package-name/external-package cases and modern outer rules. |
+| UE4 4.27.2 | Verification includes full-before-short class-package matching, modern outer relationships, `RF_Public`, CoreRedirects, instancing/remapping, package privacy, script/native/in-memory handling and explicit `FObjectImport::PackageName` cases. |
 
 UnrealDB must choose the verification contract by exact revision, not accumulate every historical fallback into one resolver.
