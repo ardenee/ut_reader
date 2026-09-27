@@ -12,6 +12,8 @@ if (PHP_SAPI !== 'cli') {
 
 $root = dirname(__DIR__);
 require_once $root . '/bootstrap/autoload.php';
+$canonicalRebuild = (string)file_get_contents($root . '/bin/rebuild-legacy-dependencies.php');
+$sharedResolver = (string)file_get_contents($root . '/src/Infrastructure/Persistence/PdoDependencyResolver.php');
 require_once $root . '/src/Infrastructure/Persistence/PdoUe3VerifyImportProjectionResolver.php';
 
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoUe3VerifyImportProjectionResolver;
@@ -115,6 +117,15 @@ $check(
     'cooked_import_export_outer_not_invented',
     !isset($matches[2]),
     'The audited UE3 source returns on an import whose cooked OuterIndex is an export; the catalog must not invent a fallback.'
+);
+
+$check(
+    'canonical_rebuild_keeps_ue3_on_shared_source_policy',
+    str_contains($canonicalRebuild, 'PdoCatalogDependencyRebuilder')
+        && str_contains($canonicalRebuild, 'PdoUe3VerifyImportProjectionResolver')
+        && str_contains($sharedResolver, '$ue3VerifyImport = $engineKey === \'UE3\';')
+        && str_contains($sharedResolver, "PdoUe3VerifyImportProjectionResolver::resolveProvider("),
+    'rebuild-legacy-dependencies.php must remain the canonical rebuild command and UE3 must dispatch through its VerifyImport projection resolver.'
 );
 
 $ok = !in_array(false, array_column($checks, 'ok'), true);

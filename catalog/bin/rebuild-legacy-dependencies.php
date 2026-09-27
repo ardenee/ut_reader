@@ -24,6 +24,7 @@ require_once $root . '/lib/CatalogSupport.php';
 use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoCatalogDependencyRebuilder;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoGameCatalogStats;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoUe3VerifyImportProjectionResolver;
 
 $options = getopt('', [
     'apply',
@@ -143,6 +144,14 @@ while (true) {
         }
 
         try {
+            // Keep UE3 on this canonical rebuild entry point. The shared resolver
+            // must dispatch UE3 files to the source-backed VerifyImport matcher;
+            // fail early if that matcher is unavailable rather than falling
+            // through to generic object coverage.
+            if ($fileEngine === 'UE3' && !class_exists(PdoUe3VerifyImportProjectionResolver::class)) {
+                throw new RuntimeException('UE3 dependency rebuild requires PdoUe3VerifyImportProjectionResolver.');
+            }
+
             // This is the single production parent path. CompactDependencyRebuilder
             // and PdoDependencyResolver select UE1/UE2/UE3/UE4/UE5 semantics only
             // where their source contracts differ.
