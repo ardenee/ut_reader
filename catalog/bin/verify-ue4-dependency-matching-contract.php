@@ -83,7 +83,7 @@ $check(!isset($matches[1]), 'v4_does_not_guess_ue4_export_outer_package_context'
 
 $result = [
     'ok' => $failures === [],
-    'checks' => 6,
+    'checks' => 7,
     'failures' => $failures,
     'contract' => [
         'consumer_imports_only_create_requirements',
