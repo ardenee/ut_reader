@@ -328,6 +328,7 @@ final class CatalogUE3PackageReader
         for ($i=0,$n=(int)$this->header['exportCount'];$i<$n;$i++) {
             $class=$r->i32("ExportMap[$i].ClassIndex"); $super=$r->i32("ExportMap[$i].SuperIndex"); $outer=$r->i32("ExportMap[$i].OuterIndex");
             $on=$this->fname($r,"ExportMap[$i].ObjectName"); $arch=$r->i32("ExportMap[$i].ArchetypeIndex"); $flags=$r->qword("ExportMap[$i].ObjectFlags");
+            $objectFlags=($flags['high'] << 32) | $flags['low'];
             $size=$r->i32("ExportMap[$i].SerialSize"); $off=$r->i32("ExportMap[$i].SerialOffset");
             if ($size<0 || $off<0) throw new RuntimeException("Invalid Epic UE3 export serial range export=$i size=$size offset=$off");
             $components=$ver<self::VER_REMOVED_COMPONENT_MAP?$this->componentMap($r,$i):[]; $exportFlags=$r->u32("ExportMap[$i].ExportFlags");
@@ -337,7 +338,7 @@ final class CatalogUE3PackageReader
             $this->exports[]=['index'=>$i,'classIndex'=>$class,'class'=>$class,'classIndexRef'=>$class,'superIndex'=>$super,'super'=>$super,
                 'superIndexRef'=>$super,'packageIndex'=>$outer,'outerIndex'=>$outer,'outer'=>$outer,'outerIndexRef'=>$outer,'objectName'=>$on['index'],
                 'nameIndex'=>$on['index'],'nameNumber'=>$on['number'],'objectNameText'=>$text,'archetype'=>$arch,'archetypeIndexRef'=>$arch,
-                'objectFlags'=>$flags['low'],'objectFlagsHigh'=>$flags['high'],'serialSize'=>$size,'serialOffset'=>$off,'components'=>$components,
+                'objectFlags'=>$objectFlags,'objectFlagsLow'=>$flags['low'],'objectFlagsHigh'=>$flags['high'],'serialSize'=>$size,'serialOffset'=>$off,'components'=>$components,
                 'componentMap'=>$components,'exportFlags'=>$exportFlags,'netObjectCount'=>$net,'guid'=>$guid['text'],'packageFlags'=>$packageFlags,'u3unk6C'=>$packageFlags];
         }
     }
@@ -352,7 +353,7 @@ final class CatalogUE3PackageReader
     /** @param array{index:int,number:int} $fname */
     private function name(array $fname): string
     {
-        $base=(string)($this->names[$fname['index']]['name']??''); return $fname['number']!==0 && $base!==''?$base.'_'.$fname['number']:$base;
+        $base=(string)($this->names[$fname['index']]['name']??''); return $fname['number']!==0 && $base!==''?$base.'_'.($fname['number']-1):$base;
     }
     private function inflatePackage(): bool
     {

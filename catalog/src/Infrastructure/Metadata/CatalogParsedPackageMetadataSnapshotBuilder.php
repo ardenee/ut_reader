@@ -257,7 +257,6 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
             if (!is_array($import)) {
                 throw new RuntimeException('Parsed compact Import snapshot contains a non-row value.');
             }
-            $identity = $effectiveIdentity($import);
             $dependencies[] = [
                 'file_id' => $fileId,
                 'import_index' => (int)($import['import_index'] ?? -1),
@@ -299,7 +298,7 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
 
         $engineRow = \catalog_one(
             $this->db,
-            'SELECT p.engine_key,f.package_version FROM ue_files f'
+            'SELECT p.engine_key,f.package_version,g.slug game_slug FROM ue_files f'
             . ' JOIN ue_games g ON g.id=f.game_id'
             . ' LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1'
             . ' WHERE f.id=? LIMIT 1',
@@ -309,6 +308,8 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
         $packageVersion = isset($engineRow['package_version']) ? (int)$engineRow['package_version'] : null;
         $legacyVerifyImport = in_array($engineKey, ['UE1', 'UE2'], true);
         $ue3VerifyImport = $engineKey === 'UE3';
+        $ut3SourcePolicy = $ue3VerifyImport
+            && strtolower(trim((string)($engineRow['game_slug'] ?? ''))) === 'ut3';
         $ue3ImportsByIndex = [];
         if ($ue3VerifyImport) {
             foreach ($importRows as $fallback => $import) {
@@ -355,7 +356,8 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
                     $importRows,
                     $exportRows,
                     $packageName,
-                    $packageVersion
+                    $packageVersion,
+                    $ut3SourcePolicy
                 );
         } else {
             foreach ($exportRows as $export) {
@@ -421,6 +423,7 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
                 ];
             }
 
+            $identity = $effectiveIdentity($import);
             $dependencies[] = [
                 'file_id' => $fileId,
                 'import_index' => (int)$import['import_index'],

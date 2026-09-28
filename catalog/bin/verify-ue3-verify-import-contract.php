@@ -18,8 +18,10 @@ $ue3Resolver = (string)file_get_contents($root . '/src/Infrastructure/Persistenc
 require_once $root . '/src/Infrastructure/Persistence/PdoUe3VerifyImportProjectionResolver.php';
 
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoUe3VerifyImportProjectionResolver;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyResolver;
 use UnrealDb\Catalog\Infrastructure\Metadata\CatalogCompactIdentityEnricher;
 
+$rfPublic = 0x0000000400000000;
 $checks = [];
 $check = static function (string $name, bool $ok, string $detail) use (&$checks): void {
     $checks[] = ['check' => $name, 'ok' => $ok, 'detail' => $detail];
@@ -35,8 +37,8 @@ $providerImports = [
     ['import_index' => 1, 'class_package' => 'Core', 'class_name' => 'Class', 'object_name' => 'Texture', 'outer_index' => -1],
 ];
 $providerExports = [
-    ['export_index' => 0, 'class_index' => -2, 'object_name' => 'Group', 'outer_index' => 0, 'object_flags' => 4, 'local_path' => 'Group'],
-    ['export_index' => 1, 'class_index' => -2, 'object_name' => 'Wall', 'outer_index' => 1, 'object_flags' => 4, 'local_path' => 'Group.Wall'],
+    ['export_index' => 0, 'class_index' => -2, 'object_name' => 'Group', 'outer_index' => 0, 'object_flags' => $rfPublic, 'local_path' => 'Group'],
+    ['export_index' => 1, 'class_index' => -2, 'object_name' => 'Wall', 'outer_index' => 1, 'object_flags' => $rfPublic, 'local_path' => 'Group.Wall'],
 ];
 
 $matches = PdoUe3VerifyImportProjectionResolver::resolveInMemory(
@@ -67,7 +69,7 @@ $check(
 );
 
 $bucketExports = $providerExports;
-$bucketExports[] = ['export_index' => 2, 'class_index' => -2, 'object_name' => 'Wall', 'outer_index' => 0, 'object_flags' => 4, 'local_path' => 'Wrong.Wall'];
+$bucketExports[] = ['export_index' => 2, 'class_index' => -2, 'object_name' => 'Wall', 'outer_index' => 0, 'object_flags' => $rfPublic, 'local_path' => 'Wrong.Wall'];
 $matches = PdoUe3VerifyImportProjectionResolver::resolveInMemory(
     $consumer,
     $providerImports,
@@ -89,7 +91,7 @@ $redirectProviderImports = [
     ['import_index' => 1, 'class_package' => 'Core', 'class_name' => 'Class', 'object_name' => 'SoundCueLocalized', 'outer_index' => -1],
 ];
 $redirectProviderExports = [
-    ['export_index' => 0, 'class_index' => -2, 'object_name' => 'Cue', 'outer_index' => 0, 'object_flags' => 4],
+    ['export_index' => 0, 'class_index' => -2, 'object_name' => 'Cue', 'outer_index' => 0, 'object_flags' => $rfPublic],
 ];
 $matches = PdoUe3VerifyImportProjectionResolver::resolveInMemory(
     $redirectConsumer,
@@ -129,7 +131,7 @@ $prefabImports = CatalogCompactIdentityEnricher::ue3FixupImportMap([
     2 => ['import_index' => 2, 'class_package' => 'Core', 'class_name' => 'Class', 'object_name' => 'Prefab', 'outer_index' => -1],
 ]);
 $prefabExports = [
-    0 => ['export_index' => 0, 'class_index' => -2, 'object_name' => 'Prefabs', 'outer_index' => 0, 'object_flags' => 4],
+    0 => ['export_index' => 0, 'class_index' => -2, 'object_name' => 'Prefabs', 'outer_index' => 0, 'object_flags' => $rfPublic],
 ];
 $oldPrefabClass = CatalogCompactIdentityEnricher::ue3ExportClassIdentity(
     $prefabExports[0], $prefabImports, $prefabExports, 'MapPkg', 535
@@ -137,11 +139,45 @@ $oldPrefabClass = CatalogCompactIdentityEnricher::ue3ExportClassIdentity(
 $newPrefabClass = CatalogCompactIdentityEnricher::ue3ExportClassIdentity(
     $prefabExports[0], $prefabImports, $prefabExports, 'MapPkg', 536
 );
+$ut3PrefabClass = CatalogCompactIdentityEnricher::ue3ExportClassIdentity(
+    $prefabExports[0], $prefabImports, $prefabExports, 'MapPkg', 512, true
+);
 $check(
     'pre536_prefab_sequence_class_remap_matches_epic',
     $oldPrefabClass === ['Engine', 'PrefabSequenceContainer']
         && $newPrefabClass === ['Engine', 'Sequence'],
     'UE3 RemapClasses changes old pre-536 Prefabs Sequence exports before export hashing, while version 536+ keeps the serialized Sequence class.'
+);
+$check(
+    'ut3_512_does_not_borrow_later_remapclasses',
+    $ut3PrefabClass === ['Engine', 'Sequence'],
+    'UT3 package version 512 uses the January 2008 linker, which has FixupImportMap but no RemapClasses pass.'
+);
+$laterRuntime512 = CatalogCompactIdentityEnricher::ue3ExportClassIdentity(
+    $prefabExports[0], $prefabImports, $prefabExports, 'MapPkg', 512, false
+);
+$check(
+    'package_version_alone_does_not_select_ut3_policy',
+    $laterRuntime512 === ['Engine', 'PrefabSequenceContainer'],
+    'The owning game/source policy, not package version alone, selects the January 2008 UT3 linker behavior.'
+);
+
+
+$laterClassOuterImports = [
+    0 => ['import_index' => 0, 'class_package' => 'Core', 'class_name' => 'Package', 'object_name' => 'Engine', 'outer_index' => 0],
+    1 => ['import_index' => 1, 'class_package' => 'Core', 'class_name' => 'Class', 'object_name' => 'Texture', 'outer_index' => 1],
+];
+$laterClassOuterExports = [
+    0 => ['export_index' => 0, 'class_index' => 0, 'object_name' => 'SomeClassOuter', 'outer_index' => 0, 'object_flags' => $rfPublic],
+    1 => ['export_index' => 1, 'class_index' => -2, 'object_name' => 'Wall', 'outer_index' => 0, 'object_flags' => $rfPublic],
+];
+$ut3ClassIdentity = CatalogCompactIdentityEnricher::ue3ExportClassIdentity(
+    $laterClassOuterExports[1], $laterClassOuterImports, $laterClassOuterExports, 'Foo', 512, true
+);
+$check(
+    'ut3_512_class_import_outer_must_be_import',
+    $ut3ClassIdentity === ['', 'Texture'],
+    'January 2008 GetExportClassPackage requires the class import OuterIndex to be an import; the later export-outer rule must not leak into UT3.'
 );
 
 $invalidRoot = $consumer;
@@ -186,6 +222,17 @@ $check(
     'Ordinary UE3 external matching requires RF_Public.'
 );
 
+$wrongLowPublic = $providerExports;
+$wrongLowPublic[1]['object_flags'] = 0x00000004;
+$matches = PdoUe3VerifyImportProjectionResolver::resolveInMemory(
+    $consumer, $providerImports, $wrongLowPublic, 'Foo'
+);
+$check(
+    'ue3_rf_public_uses_64bit_source_flag',
+    !isset($matches[2]),
+    'UE3 RF_Public is 0x0000000400000000; the UE1-style low bit 0x4 must not pass visibility.'
+);
+
 $wrongClassPackage = $consumer;
 $wrongClassPackage[2]['class_package'] = 'OtherEngine';
 $matches = PdoUe3VerifyImportProjectionResolver::resolveInMemory(
@@ -219,7 +266,7 @@ $missingParentConsumer[1]['object_name'] = 'MissingGroup';
 $missingParentConsumer[1]['relative_object_path'] = 'MissingGroup';
 $missingParentConsumer[2]['relative_object_path'] = 'MissingGroup.Wall';
 $rootChild = [
-    ['export_index' => 1, 'class_index' => -2, 'object_name' => 'Wall', 'outer_index' => 0, 'object_flags' => 4, 'local_path' => 'MissingGroup.Wall'],
+    ['export_index' => 1, 'class_index' => -2, 'object_name' => 'Wall', 'outer_index' => 0, 'object_flags' => $rfPublic, 'local_path' => 'MissingGroup.Wall'],
 ];
 $matches = PdoUe3VerifyImportProjectionResolver::resolveInMemory(
     $missingParentConsumer,
@@ -256,6 +303,49 @@ $check(
         && str_contains($sharedResolver, 'if ($matchCount > $bestMatchCount)')
         && str_contains($sharedResolver, '$ue3VerifyImportMatches[$packageKey] = $bestMatches;'),
     'UE3 must select one physical provider/linker, then retain that linker successful per-Import VerifyImport results even when sibling Imports fail.'
+);
+
+$normalizeLookup = new ReflectionMethod(PdoDependencyResolver::class, 'normalizeLookup');
+$numericPackageKey = $normalizeLookup->invoke(null, '123');
+$check(
+    'numeric_package_names_remain_string_lookup_keys',
+    is_string($numericPackageKey) && $numericPackageKey === 'k:123',
+    'PHP must not coerce numeric-looking package names into integer array keys before requiredImportIndexes receives them.'
+);
+
+$compactRebuilder = (string)file_get_contents($root . '/src/Infrastructure/Metadata/CompactDependencyRebuilder.php');
+$backfill = (string)file_get_contents($root . '/bin/backfill-ue3-export-identities.php');
+$reader = (string)file_get_contents($root . '/parsers/EpicUE3PackageReader.php');
+$diagnostics = (string)file_get_contents($root . '/lib/CatalogDependencyDiagnostics.php');
+$check(
+    'targeted_verifyimport_uses_complete_import_map',
+    str_contains($compactRebuilder, 'in_array($engineKey, [\'UE1\', \'UE2\', \'UE3\', \'UE4\'], true)')
+        && str_contains($compactRebuilder, '? $imports')
+        && str_contains($compactRebuilder, ': $importsToResolve'),
+    'Targeted dependency refreshes may persist only selected rows, but source VerifyImport recursion must receive the complete consumer ImportMap.'
+);
+$check(
+    'ue3_projection_requires_complete_class_identity',
+    str_contains($backfill, 'class_package_term_id IS NULL')
+        && str_contains($backfill, 'class_name_term_id IS NULL'),
+    'UE3 exact matching cannot treat a projection as complete when class package/name identity is absent.'
+);
+$check(
+    'ue3_fname_internal_number_uses_epic_external_number',
+    str_contains($reader, '($fname[\'number\']-1)'),
+    'UE3 FName internal number 1 must render as external suffix _0 per NAME_INTERNAL_TO_EXTERNAL.'
+);
+$check(
+    'ue3_parser_preserves_full_64bit_object_flags',
+    str_contains($reader, '($flags[\'high\'] << 32) | $flags[\'low\']'),
+    'FObjectExport::ObjectFlags is a serialized QWORD; the parser must retain both 32-bit halves.'
+);
+$check(
+    'ue3_diagnostics_use_ue3_projection_and_64bit_public_flag',
+    str_contains($diagnostics, '$engine===\'UE3\'')
+        && str_contains($diagnostics, 'ue_export_path_lookup')
+        && str_contains($diagnostics, '0x0000000400000000'),
+    'Admin dependency diagnostics must inspect the UE3 projection and the same 64-bit RF_Public flag as the resolver.'
 );
 
 $check(

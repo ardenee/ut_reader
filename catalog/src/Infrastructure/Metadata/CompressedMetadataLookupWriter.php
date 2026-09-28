@@ -119,6 +119,12 @@ final class CompressedMetadataLookupWriter
             }
         }
         $importsByIndex = CatalogCompactIdentityEnricher::ue3FixupImportMap($importsByIndex);
+        $gameRow = \catalog_one(
+            $this->db,
+            'SELECT g.slug FROM ue_files f JOIN ue_games g ON g.id=f.game_id WHERE f.id=? LIMIT 1',
+            [$fileId]
+        );
+        $ut3SourcePolicy = strtolower(trim((string)($gameRow['slug'] ?? ''))) === 'ut3';
 
         $exportsByIndex = [];
         foreach ($exports as $fallback => $row) {
@@ -147,7 +153,8 @@ final class CompressedMetadataLookupWriter
                 $importsByIndex,
                 $exportsByIndex,
                 $packageName,
-                $packageVersion
+                $packageVersion,
+                $ut3SourcePolicy
             );
 
             $termValues[] = $localPath;
@@ -330,7 +337,7 @@ final class CompressedMetadataLookupWriter
         $packageName = trim((string)($file['package_name'] ?? ''));
         $engineRow = \catalog_one(
             $this->db,
-            'SELECT p.engine_key,f.package_version FROM ue_files f'
+            'SELECT p.engine_key,f.package_version,g.slug game_slug FROM ue_files f'
             . ' JOIN ue_games g ON g.id=f.game_id'
             . ' LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1'
             . ' WHERE f.id=? LIMIT 1',
@@ -338,6 +345,8 @@ final class CompressedMetadataLookupWriter
         );
         $engineKey = strtoupper(trim((string)($engineRow['engine_key'] ?? '')));
         $packageVersion = isset($engineRow['package_version']) ? (int)$engineRow['package_version'] : null;
+        $ut3SourcePolicy = $engineKey === 'UE3'
+            && strtolower(trim((string)($engineRow['game_slug'] ?? ''))) === 'ut3';
         if ($engineKey === 'UE3') {
             $importsByIdentityIndex = CatalogCompactIdentityEnricher::ue3FixupImportMap($importsByIdentityIndex);
             $importsByIndex = CatalogCompactIdentityEnricher::ue3FixupImportMap($importsByIndex);
@@ -368,7 +377,8 @@ final class CompressedMetadataLookupWriter
                 $importsByIdentityIndex,
                 $exportsByIdentityIndex,
                 $packageName,
-                $packageVersion
+                $packageVersion,
+                $ut3SourcePolicy
             );
             $exportPathRows[] = [
                 $fileId,
@@ -568,11 +578,12 @@ final class CompressedMetadataLookupWriter
         array $imports,
         array $exports,
         string $packageName,
-        ?int $packageVersion
+        ?int $packageVersion,
+        bool $ut3SourcePolicy = false
     ): array {
         return $engineKey === 'UE3'
             ? CatalogCompactIdentityEnricher::ue3ExportClassIdentity(
-                $export, $imports, $exports, $packageName, $packageVersion
+                $export, $imports, $exports, $packageName, $packageVersion, $ut3SourcePolicy
             )
             : CatalogCompactIdentityEnricher::legacyExportClassIdentity(
                 $export, $imports, $exports, $packageName
@@ -600,7 +611,7 @@ final class CompressedMetadataLookupWriter
         }
         $engineRow = \catalog_one(
             $this->db,
-            'SELECT p.engine_key,f.package_version FROM ue_files f'
+            'SELECT p.engine_key,f.package_version,g.slug game_slug FROM ue_files f'
             . ' JOIN ue_games g ON g.id=f.game_id'
             . ' LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1'
             . ' WHERE f.id=? LIMIT 1',
@@ -608,6 +619,8 @@ final class CompressedMetadataLookupWriter
         );
         $engineKey = strtoupper(trim((string)($engineRow['engine_key'] ?? '')));
         $packageVersion = isset($engineRow['package_version']) ? (int)$engineRow['package_version'] : null;
+        $ut3SourcePolicy = $engineKey === 'UE3'
+            && strtolower(trim((string)($engineRow['game_slug'] ?? ''))) === 'ut3';
         if ($engineKey === 'UE3') {
             $importsByIndex = CatalogCompactIdentityEnricher::ue3FixupImportMap($importsByIndex);
         }
@@ -657,7 +670,8 @@ final class CompressedMetadataLookupWriter
                 $importsByIndex,
                 $exportsByIndex,
                 $packageName,
-                $packageVersion
+                $packageVersion,
+                $ut3SourcePolicy
             );
             if ($effectiveClassPackage !== '') {
                 yield $effectiveClassPackage;

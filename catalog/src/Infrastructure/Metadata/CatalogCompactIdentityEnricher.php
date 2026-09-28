@@ -162,9 +162,13 @@ final class CatalogCompactIdentityEnricher
         array $imports,
         array $exports,
         string $packageName,
-        ?int $packageVersion = null
+        ?int $packageVersion = null,
+        bool $ut3SourcePolicy = false
     ): array {
-        if ($packageVersion !== null && $packageVersion < 536) {
+        // UT3 package version 512 predates ULinkerLoad::RemapClasses(). The
+        // January 2008 source identifies 512 as VER_FULL_VERSION_OF_UT3_BUMP.
+        // Do not leak the later UDK prefab remap into UT3 package matching.
+        if (!$ut3SourcePolicy && $packageVersion !== null && $packageVersion < 536) {
             $remapped = self::ue3PrefabExportClassIdentity($export, $imports, $exports);
             if ($remapped !== null) {
                 return $remapped;
@@ -189,6 +193,12 @@ final class CatalogCompactIdentityEnricher
                 ];
             }
             if ($classOuter > 0) {
+                if ($ut3SourcePolicy) {
+                    // January 2008 GetExportClassPackage() requires the class
+                    // import OuterIndex to be another import. Positive export
+                    // outers were added by a later UE3 linker revision.
+                    return ['', $className];
+                }
                 $classPackageExport = $exports[$classOuter - 1] ?? null;
                 return [
                     is_array($classPackageExport)
@@ -212,6 +222,7 @@ final class CatalogCompactIdentityEnricher
 
         return ['Core', 'Class'];
     }
+
 
     /**
      * Deterministic class-identity effect of UE3 ULinkerLoad::RemapClasses for

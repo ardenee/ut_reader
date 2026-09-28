@@ -121,13 +121,16 @@ final class CompactDependencyRebuilder
             }
         }
 
+        $resolutionImports = in_array($engineKey, ['UE1', 'UE2', 'UE3', 'UE4'], true)
+            ? $imports
+            : $importsToResolve;
         $resolutions = $importsToResolve === []
             ? []
             : PdoDependencyResolver::resolve(
                 $this->db,
                 (int)$file['game_id'],
                 $fileId,
-                $importsToResolve
+                $resolutionImports
             );
 
         $dependencies = [];

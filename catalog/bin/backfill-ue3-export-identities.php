@@ -168,7 +168,7 @@ $countSql =
     'SELECT COUNT(*) files,COALESCE(SUM(q.incomplete_rows),0) incomplete_rows,'
     . 'COALESCE(SUM(GREATEST(q.export_count-q.projected_rows,0)),0) missing_rows'
     . ' FROM (SELECT f.id,m.export_count,COUNT(l.export_index) projected_rows,'
-    . 'SUM(CASE WHEN l.export_index IS NOT NULL AND (l.object_flags IS NULL OR l.outer_index IS NULL)'
+    . 'SUM(CASE WHEN l.export_index IS NOT NULL AND (l.object_flags IS NULL OR l.outer_index IS NULL OR l.class_package_term_id IS NULL OR l.class_name_term_id IS NULL)'
     . ' THEN 1 ELSE 0 END) incomplete_rows'
     . ' FROM ue_files f'
     . ' JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=4'
@@ -244,7 +244,7 @@ do {
         . ' WHERE f.scan_status="verified" AND UPPER(TRIM(p.engine_key))="UE3" AND f.id>?';
     if (!$forceAll) {
         $sql .= ' AND (EXISTS (SELECT 1 FROM ue_export_path_lookup l'
-            . ' WHERE l.file_id=f.id AND (l.object_flags IS NULL OR l.outer_index IS NULL))'
+            . ' WHERE l.file_id=f.id AND (l.object_flags IS NULL OR l.outer_index IS NULL OR l.class_package_term_id IS NULL OR l.class_name_term_id IS NULL))'
             . ' OR (SELECT COUNT(*) FROM ue_export_path_lookup l2 WHERE l2.file_id=f.id)<>m.export_count)';
     }
     $args = [$currentAfterId];
@@ -308,7 +308,7 @@ do {
 
             $check = $db->prepare(
                 'SELECT COUNT(*) projected_rows,'
-                . 'SUM(CASE WHEN object_flags IS NULL OR outer_index IS NULL THEN 1 ELSE 0 END) incomplete_rows'
+                . 'SUM(CASE WHEN object_flags IS NULL OR outer_index IS NULL OR class_package_term_id IS NULL OR class_name_term_id IS NULL THEN 1 ELSE 0 END) incomplete_rows'
                 . ' FROM ue_export_path_lookup WHERE file_id=?'
             );
             $check->execute([$fileId]);

@@ -40,6 +40,20 @@ final class PdoDependencyResolver
             }
         }
 
+        if ($ue3VerifyImport) {
+            foreach ($imports as $fallback => &$import) {
+                if (!is_array($import) || (int)($import['is_common'] ?? 0) === 1) {
+                    continue;
+                }
+                $importIndex = isset($import['import_index']) ? (int)$import['import_index'] : (int)$fallback;
+                if (strcasecmp(trim((string)($import['root_package'] ?? '')), 'SequenceObjects') === 0
+                    && strcasecmp(trim((string)($ue3RootPackages[$importIndex] ?? '')), 'Engine') === 0) {
+                    $import['is_common'] = 1;
+                }
+            }
+            unset($import);
+        }
+
         $packageNames = [];
         $objectLookups = [];
         foreach ($imports as $fallback => $import) {
@@ -651,8 +665,15 @@ final class PdoDependencyResolver
 
     private static function normalizeLookup(string|int $value): string
     {
-        $value = (string)$value;
-        return function_exists('mb_strtolower') ? mb_strtolower($value, 'UTF-8') : strtolower($value);
+        $value = trim((string)$value);
+        if ($value === '') {
+            return '';
+        }
+        $normalized = function_exists('mb_strtolower') ? mb_strtolower($value, 'UTF-8') : strtolower($value);
+        // PHP coerces numeric-looking string array keys (for example package
+        // name "123") to integers. Prefix all internal lookup keys so the
+        // resolver's typed string policy cannot be bypassed by package names.
+        return 'k:' . $normalized;
     }
 
     private static function placeholders(int $count): string

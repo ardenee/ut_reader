@@ -14,7 +14,7 @@ require_once dirname(__DIR__) . '/Metadata/CatalogUnrealIdentityHash.php';
 
 final class PdoUe3VerifyImportProjectionResolver
 {
-    private const RF_PUBLIC = 0x00000004;
+    private const RF_PUBLIC = 0x0000000400000000;
     private const HASH_BATCH_SIZE = 300;
     private const FAILURE_SENTINEL = -2147483648;
 
@@ -78,7 +78,8 @@ final class PdoUe3VerifyImportProjectionResolver
         array $providerImports,
         array $providerExports,
         string $providerPackageName,
-        ?int $providerPackageVersion = null
+        ?int $providerPackageVersion = null,
+        bool $ut3SourcePolicy = false
     ): array {
         $imports = [];
         foreach ($consumerImports as $fallback => $row) {
@@ -114,7 +115,8 @@ final class PdoUe3VerifyImportProjectionResolver
                     $providerImportsByIndex,
                     $providerExportsByIndex,
                     $providerPackageName,
-                    $providerPackageVersion
+                    $providerPackageVersion,
+                    $ut3SourcePolicy
                 );
             $identityKey = self::identityKey((string)($export['object_name'] ?? ''), $className, $classPackage);
             $candidates[$identityKey][] = [

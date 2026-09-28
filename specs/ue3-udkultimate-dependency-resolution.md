@@ -11,6 +11,8 @@ This specification documents dependency and import resolution in the latest UE3 
 
 This document is paired with ue3-udkultimate-package-format.md. Earlier UE3 trees are revision evidence only and must not silently replace this implementation. No UE1, UE2, UE2.5, UT2003, UT2004, UT3, or UE4 behavior is assumed here.
 
+UT3 package version 512 is documented separately in `ut3-v512-dependency-resolution.md`; its January 2008 linker differs from this later UDKUltimate implementation.
+
 ## Authoritative references
 
 | Area | Source / symbol |
