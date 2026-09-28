@@ -107,6 +107,262 @@ final class BlockedCompressedMetadataSnapshotWriter
     }
 
     /**
+     * Full Sync source-pass fast path for audited UT3/UE3 packages whose parsed
+     * structure is unchanged. The container is replaced atomically, but SQL work
+     * is limited to the UE3 export identity columns plus the deliberately
+     * unresolved dependency projection used by pass 2.
+     *
+     * @param array<string,mixed> $snapshot
+     * @return array<string,mixed>
+     */
+    public function writeUe3FullSyncSourceRefresh(
+        array $snapshot,
+        ?int $packageVersion = null
+    ): array {
+        return $this->writeSelective($snapshot, 'ue3-full-sync-source', $packageVersion);
+    }
+
+    /**
+     * Dependency-only publication. Names, exports and search projections are
+     * package-owned and unchanged, so dependency maintenance must not delete and
+     * rebuild them merely because the dependency section changed.
+     *
+     * @param array<string,mixed> $snapshot
+     * @return array<string,mixed>
+     */
+    public function writeDependencyRefresh(array $snapshot): array
+    {
+        return $this->writeSelective($snapshot, 'dependency-only', null);
+    }
+
+    /**
+     * @param array<string,mixed> $snapshot
+     * @return array<string,mixed>
+     */
+    private function writeSelective(
+        array $snapshot,
+        string $mode,
+        ?int $packageVersion
+    ): array {
+        if ($this->db->inTransaction()) {
+            throw new RuntimeException('Selective compact metadata publication requires ownership of the database transaction.');
+        }
+        if (!in_array($mode, ['ue3-full-sync-source', 'dependency-only'], true)) {
+            throw new RuntimeException('Unknown selective compact metadata publication mode.');
+        }
+
+        $file = (array)($snapshot['file'] ?? []);
+        $fileId = (int)($file['id'] ?? 0);
+        $gameId = (int)($file['game_id'] ?? 0);
+        if ($fileId < 1 || $gameId < 1) {
+            throw new RuntimeException('Selective compact metadata snapshot has no valid file or game identity.');
+        }
+        $this->assertSnapshotCounts($snapshot);
+        $this->assertCurrentFormatReferences($snapshot);
+
+        $path = BlockedCompressedMetadataContainer::path($this->storageRoot, $gameId, $fileId);
+        $directory = dirname($path);
+        if (!is_dir($directory) && !mkdir($directory, 0775, true) && !is_dir($directory)) {
+            throw new RuntimeException('Could not create compact metadata directory: ' . $directory);
+        }
+        $temporaryPath = $path . '.tmp.' . bin2hex(random_bytes(8));
+
+        $lookupWriter = new CompressedMetadataLookupWriter($this->db);
+        $sqlBatches = 0;
+        $ue3Prepared = null;
+        if ($mode === 'ue3-full-sync-source') {
+            $ue3Prepared = $lookupWriter->prepareUe3ExportIdentityRefresh(
+                $fileId,
+                (string)($file['package_name'] ?? ''),
+                array_values((array)($snapshot['imports'] ?? [])),
+                array_values((array)($snapshot['exports'] ?? [])),
+                $packageVersion
+            );
+            $sqlBatches += (int)($ue3Prepared['sql_batches'] ?? 0);
+        }
+        $dependencyPrepared = $lookupWriter->prepareDependencyProjection($snapshot);
+        $sqlBatches += (int)($dependencyPrepared['sql_batches'] ?? 0);
+
+        // Long values outside the dependency/UE3 delta should already exist in
+        // the shared dictionary because the structural projection is being
+        // retained. This verifies/publishes complete overflow values without
+        // rebuilding any file-owned lookup tables.
+        (new CompactTermOverflowWriter($this->db))->write($snapshot, $sqlBatches);
+
+        $built = null;
+        try {
+            for ($attempt = 1; ; $attempt++) {
+                clearstatcache(true, $temporaryPath);
+                if (!is_array($built) || !is_file($temporaryPath)) {
+                    $built = BlockedCompressedMetadataContainer::buildToFile($snapshot, $temporaryPath);
+                }
+                try {
+                    return $this->publishSelectiveAttempt(
+                        $snapshot,
+                        $built,
+                        $temporaryPath,
+                        $path,
+                        $fileId,
+                        $mode,
+                        $sqlBatches,
+                        $lookupWriter,
+                        $ue3Prepared,
+                        $dependencyPrepared
+                    );
+                } catch (Throwable $error) {
+                    if (!PdoContention::retryable($error) || $attempt >= self::CONTENTION_ATTEMPTS) {
+                        throw $error;
+                    }
+                    usleep(PdoContention::backoffMicros($attempt, 25000));
+                }
+            }
+        } finally {
+            @unlink($temporaryPath);
+        }
+    }
+
+    /**
+     * @param array<string,mixed> $snapshot
+     * @param array<string,mixed> $built
+     * @param array<string,mixed>|null $ue3Prepared
+     * @param array<string,mixed> $dependencyPrepared
+     * @return array<string,mixed>
+     */
+    private function publishSelectiveAttempt(
+        array $snapshot,
+        array $built,
+        string $temporaryPath,
+        string $path,
+        int $fileId,
+        string $mode,
+        int $preparedSqlBatches,
+        CompressedMetadataLookupWriter $lookupWriter,
+        ?array $ue3Prepared,
+        array $dependencyPrepared
+    ): array {
+        $backupPath = $path . '.bak.' . bin2hex(random_bytes(8));
+        $compressedSize = (int)($built['compressed_size'] ?? 0);
+        $payloadSha256 = (string)($built['payload_sha256'] ?? '');
+        $uncompressedSize = (int)($built['uncompressed_size'] ?? 0);
+        $blockCount = (int)($built['block_count'] ?? 0);
+        if ($compressedSize < 1 || strlen($payloadSha256) !== 32 || $uncompressedSize < 1) {
+            throw new RuntimeException('Selective compact metadata build returned incomplete publication metadata.');
+        }
+
+        clearstatcache(true, $path);
+        $hadExistingFile = is_file($path);
+        $published = false;
+        $backedUp = false;
+        $sqlBatches = $preparedSqlBatches;
+
+        $this->db->beginTransaction();
+        try {
+            if ($mode === 'ue3-full-sync-source') {
+                if (!is_array($ue3Prepared)) {
+                    throw new RuntimeException('UE3 selective publication is missing its prepared export identity rows.');
+                }
+                $lookupWriter->writePreparedUe3ExportIdentityRefresh($fileId, $ue3Prepared, $sqlBatches);
+            }
+            $lookupWriter->writePreparedDependencyProjection(
+                $fileId,
+                $dependencyPrepared,
+                $sqlBatches
+            );
+            $this->registerMetadata(
+                $snapshot,
+                $compressedSize,
+                $payloadSha256,
+                $uncompressedSize,
+                $sqlBatches
+            );
+
+            if ($hadExistingFile) {
+                if (!rename($path, $backupPath)) {
+                    throw new RuntimeException('Could not stage the existing compact metadata file for selective replacement.');
+                }
+                $backedUp = true;
+            }
+            if (!rename($temporaryPath, $path)) {
+                throw new RuntimeException('Could not publish selective replacement compact metadata file.');
+            }
+            $published = true;
+            clearstatcache(true, $path);
+            $this->db->commit();
+        } catch (Throwable $error) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            if ($published && is_file($path)) {
+                @unlink($path);
+            }
+            if ($backedUp && is_file($backupPath)) {
+                @rename($backupPath, $path);
+            }
+            clearstatcache(true, $path);
+            throw $error;
+        }
+        if ($backedUp && is_file($backupPath)) {
+            @unlink($backupPath);
+        }
+
+        return [
+            'verified' => true,
+            'file_id' => $fileId,
+            'metadata_path' => $path,
+            'compressed_size' => $compressedSize,
+            'uncompressed_size' => $uncompressedSize,
+            'name_count' => count((array)($snapshot['names'] ?? [])),
+            'import_count' => count((array)($snapshot['imports'] ?? [])),
+            'export_count' => count((array)($snapshot['exports'] ?? [])),
+            'block_count' => $blockCount,
+            'format_version' => BlockedCompressedMetadataContainer::FORMAT_VERSION,
+            'sql_batches' => $sqlBatches,
+            'container_rewritten' => true,
+            'dependency_count' => count((array)($snapshot['dependencies'] ?? [])),
+            'projection_mode' => $mode,
+        ];
+    }
+
+    /** @param array<string,mixed> $snapshot */
+    private function registerMetadata(
+        array $snapshot,
+        int $compressedSize,
+        string $payloadSha256,
+        int $uncompressedSize,
+        int &$sqlBatches
+    ): void {
+        $file = (array)($snapshot['file'] ?? []);
+        $fileId = (int)($file['id'] ?? 0);
+        $timestamp = gmdate('Y-m-d H:i:s');
+        $statement = $this->db->prepare(
+            'INSERT INTO ue_file_metadata('
+            . 'file_id,format_version,codec,compressed_size,uncompressed_size,payload_sha256,'
+            . 'name_count,import_count,export_count,created_at,updated_at'
+            . ') VALUES(?,?,?,?,?,?,?,?,?,?,?) '
+            . 'ON DUPLICATE KEY UPDATE '
+            . 'format_version=VALUES(format_version),codec=VALUES(codec),'
+            . 'compressed_size=VALUES(compressed_size),uncompressed_size=VALUES(uncompressed_size),'
+            . 'payload_sha256=VALUES(payload_sha256),name_count=VALUES(name_count),'
+            . 'import_count=VALUES(import_count),export_count=VALUES(export_count),'
+            . 'updated_at=VALUES(updated_at)'
+        );
+        $statement->execute([
+            $fileId,
+            BlockedCompressedMetadataContainer::FORMAT_VERSION,
+            BlockedCompressedMetadataContainer::CODEC_BLOCK_GZIP,
+            $compressedSize,
+            $uncompressedSize,
+            $payloadSha256,
+            count((array)($snapshot['names'] ?? [])),
+            count((array)($snapshot['imports'] ?? [])),
+            count((array)($snapshot['exports'] ?? [])),
+            $timestamp,
+            $timestamp,
+        ]);
+        $sqlBatches++;
+    }
+
+    /**
      * @param array<string,mixed> $snapshot
      * @param array<string,mixed> $built
      * @param array<string,int> $resolvedTermIds

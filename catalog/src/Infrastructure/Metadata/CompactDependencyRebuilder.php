@@ -215,7 +215,7 @@ final class CompactDependencyRebuilder
         // change.
         $snapshot = $loader->load($fileId);
         $snapshot['dependencies'] = $dependencies;
-        $written = (new BlockedCompressedMetadataSnapshotWriter($this->db, $this->storageRoot))->write($snapshot);
+        $written = (new BlockedCompressedMetadataSnapshotWriter($this->db, $this->storageRoot))->writeDependencyRefresh($snapshot);
         return array_merge($written, $baseResult);
     }
 

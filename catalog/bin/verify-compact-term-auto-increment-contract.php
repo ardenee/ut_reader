@@ -44,6 +44,14 @@ $record(
 );
 
 $record(
+    'lookup_dictionary_uses_indexed_tuple_batches',
+    str_contains($lookup, 'private const TERM_BATCH_SIZE = 2000;')
+        && str_contains($lookup, 'WHERE (value_hash,value_length) IN (')
+        && !str_contains($lookup, 'implode(\' OR \', $predicates)'),
+    'Term lookup must use the unique (value_hash,value_length) index in bounded 2,000-term tuple batches instead of hundreds of OR predicates.'
+);
+
+$record(
     'auto_increment_exhaustion_has_actionable_error',
     str_contains($lookup, '$mysqlCode === 1467')
         && str_contains($lookup, 'ue_terms AUTO_INCREMENT cannot allocate another term ID')

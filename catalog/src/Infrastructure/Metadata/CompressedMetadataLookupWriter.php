@@ -18,7 +18,7 @@ require_once __DIR__ . '/CatalogUnrealIdentityHash.php';
 
 final class CompressedMetadataLookupWriter
 {
-    private const TERM_BATCH_SIZE = 350;
+    private const TERM_BATCH_SIZE = 2000;
     private const WRITE_BATCH_SIZE = 500;
     private const TERM_CONTENTION_ATTEMPTS = 8;
 
@@ -243,6 +243,252 @@ final class CompressedMetadataLookupWriter
     }
 
     /**
+     * Prepare the four UE3 export-identity columns that can change after a
+     * source-byte reparse without changing search/export structure.
+     *
+     * Term IDs are resolved before the caller-owned publication transaction so
+     * the final container + projection swap can remain atomic.
+     *
+     * @param list<array<string,mixed>> $imports
+     * @param list<array<string,mixed>> $exports
+     * @return array{rows:list<array{export_index:int,class_package_term_id:?int,class_name_term_id:?int,object_flags:string,outer_index:int}>,sql_batches:int}
+     */
+    public function prepareUe3ExportIdentityRefresh(
+        int $fileId,
+        string $packageName,
+        array $imports,
+        array $exports,
+        ?int $packageVersion = null
+    ): array {
+        if ($this->db->inTransaction()) {
+            throw new RuntimeException('UE3 export identity preparation must run outside the publication transaction.');
+        }
+        if ($fileId < 1 || trim($packageName) === '') {
+            throw new RuntimeException('UE3 export identity preparation requires a valid file ID and package name.');
+        }
+
+        $expected = count($exports);
+        $statement = $this->db->prepare(
+            'SELECT COUNT(*) row_count,MIN(export_index) min_index,MAX(export_index) max_index '
+            . 'FROM ue_export_path_lookup WHERE file_id=?'
+        );
+        $statement->execute([$fileId]);
+        $coverage = $statement->fetch(PDO::FETCH_ASSOC) ?: [];
+        if ((int)($coverage['row_count'] ?? -1) !== $expected
+            || ($expected > 0 && (int)($coverage['min_index'] ?? -1) !== 0)
+            || ($expected > 0 && (int)($coverage['max_index'] ?? -1) !== $expected - 1)) {
+            throw new RuntimeException(
+                'UE3 narrow identity refresh requires a complete existing export-path projection for file #'
+                . $fileId . '.'
+            );
+        }
+
+        $importsByIndex = [];
+        foreach ($imports as $fallback => $row) {
+            if (is_array($row)) {
+                $importsByIndex[isset($row['import_index']) ? (int)$row['import_index'] : (int)$fallback] = $row;
+            }
+        }
+        $importsByIndex = CatalogCompactIdentityEnricher::ue3FixupImportMap($importsByIndex);
+
+        $exportsByIndex = [];
+        foreach ($exports as $fallback => $row) {
+            if (is_array($row)) {
+                $exportsByIndex[isset($row['export_index']) ? (int)$row['export_index'] : (int)$fallback] = $row;
+            }
+        }
+
+        $gameRow = \catalog_one(
+            $this->db,
+            'SELECT g.slug FROM ue_files f JOIN ue_games g ON g.id=f.game_id WHERE f.id=? LIMIT 1',
+            [$fileId]
+        );
+        $ut3SourcePolicy = strtolower(trim((string)($gameRow['slug'] ?? ''))) === 'ut3';
+        if (!$ut3SourcePolicy) {
+            throw new RuntimeException('UE3 narrow identity refresh is currently restricted to the audited UT3 source policy.');
+        }
+
+        $derived = [];
+        $termValues = [];
+        foreach ($exportsByIndex as $exportIndex => $row) {
+            if (!array_key_exists('outer_index', $row)
+                || !array_key_exists('object_flags', $row)
+                || $row['object_flags'] === null) {
+                throw new RuntimeException(
+                    'UE3 export #' . $exportIndex . ' is missing serialized OuterIndex/ObjectFlags metadata.'
+                );
+            }
+            [$classPackage, $className] = CatalogCompactIdentityEnricher::ue3ExportClassIdentity(
+                $row,
+                $importsByIndex,
+                $exportsByIndex,
+                $packageName,
+                $packageVersion,
+                true
+            );
+            if ($classPackage !== '') {
+                $termValues[] = $classPackage;
+            }
+            if ($className !== '') {
+                $termValues[] = $className;
+            }
+            $derived[] = [
+                'export_index' => (int)$exportIndex,
+                'class_package' => $classPackage,
+                'class_name' => $className,
+                // Preserve the serialized unsigned value as decimal text. PDO/MySQL
+                // can bind this losslessly even when a future flag exceeds PHP_INT_MAX.
+                'object_flags' => (string)$row['object_flags'],
+                'outer_index' => (int)$row['outer_index'],
+            ];
+        }
+
+        $sqlBatches = 1; // projection coverage query above
+        $termIds = $this->resolveTermIds($termValues, $sqlBatches);
+        $rows = [];
+        foreach ($derived as $row) {
+            $rows[] = [
+                'export_index' => (int)$row['export_index'],
+                'class_package_term_id' => $row['class_package'] !== ''
+                    ? $this->requiredTermId($termIds, (string)$row['class_package'])
+                    : null,
+                'class_name_term_id' => $row['class_name'] !== ''
+                    ? $this->requiredTermId($termIds, (string)$row['class_name'])
+                    : null,
+                'object_flags' => (string)$row['object_flags'],
+                'outer_index' => (int)$row['outer_index'],
+            ];
+        }
+        return ['rows' => $rows, 'sql_batches' => $sqlBatches];
+    }
+
+    /**
+     * @param array{rows:list<array{export_index:int,class_package_term_id:?int,class_name_term_id:?int,object_flags:string,outer_index:int}>,sql_batches?:int} $prepared
+     */
+    public function writePreparedUe3ExportIdentityRefresh(
+        int $fileId,
+        array $prepared,
+        int &$sqlBatches
+    ): void {
+        if (!$this->db->inTransaction()) {
+            throw new RuntimeException('Prepared UE3 export identity refresh requires an active publication transaction.');
+        }
+        foreach (array_chunk((array)($prepared['rows'] ?? []), self::WRITE_BATCH_SIZE) as $chunk) {
+            if ($chunk === []) {
+                continue;
+            }
+            $classPackageCases = [];
+            $classNameCases = [];
+            $flagCases = [];
+            $outerCases = [];
+            $arguments = [];
+            foreach ($chunk as $row) {
+                $index = (int)$row['export_index'];
+                $classPackageCases[] = 'WHEN ? THEN ?';
+                array_push($arguments, $index, $row['class_package_term_id']);
+            }
+            foreach ($chunk as $row) {
+                $index = (int)$row['export_index'];
+                $classNameCases[] = 'WHEN ? THEN ?';
+                array_push($arguments, $index, $row['class_name_term_id']);
+            }
+            foreach ($chunk as $row) {
+                $index = (int)$row['export_index'];
+                $flagCases[] = 'WHEN ? THEN ?';
+                array_push($arguments, $index, (string)$row['object_flags']);
+            }
+            foreach ($chunk as $row) {
+                $index = (int)$row['export_index'];
+                $outerCases[] = 'WHEN ? THEN ?';
+                array_push($arguments, $index, (int)$row['outer_index']);
+            }
+            $indexes = array_map(static fn(array $row): int => (int)$row['export_index'], $chunk);
+            $arguments[] = $fileId;
+            array_push($arguments, ...$indexes);
+            $statement = $this->db->prepare(
+                'UPDATE ue_export_path_lookup SET '
+                . 'class_package_term_id=CASE export_index ' . implode(' ', $classPackageCases) . ' END,'
+                . 'class_name_term_id=CASE export_index ' . implode(' ', $classNameCases) . ' END,'
+                . 'object_flags=CASE export_index ' . implode(' ', $flagCases) . ' END,'
+                . 'outer_index=CASE export_index ' . implode(' ', $outerCases) . ' END '
+                . 'WHERE file_id=? AND export_index IN ('
+                . implode(',', array_fill(0, count($indexes), '?')) . ')'
+            );
+            $statement->execute($arguments);
+            $sqlBatches++;
+        }
+    }
+
+    /**
+     * Prepare only the dependency SQL projection for a snapshot. This is used by
+     * dependency-only container publication so unchanged export/search tables are
+     * never deleted and rebuilt.
+     *
+     * @param array<string,mixed> $snapshot
+     * @return array{dependency_rows:list<list<mixed>>,identity_rows:list<list<mixed>>,sql_batches:int}
+     */
+    public function prepareDependencyProjection(array $snapshot): array
+    {
+        if ($this->db->inTransaction()) {
+            throw new RuntimeException('Dependency projection preparation must run outside the publication transaction.');
+        }
+        $sqlBatches = 0;
+        $termIds = $this->resolveTermIds($this->dependencyTermValues($snapshot), $sqlBatches);
+        [$dependencyRows, $identityRows] = $this->dependencyProjectionRows($snapshot, $termIds);
+        return [
+            'dependency_rows' => $dependencyRows,
+            'identity_rows' => $identityRows,
+            'sql_batches' => $sqlBatches,
+        ];
+    }
+
+    /**
+     * @param array{dependency_rows:list<list<mixed>>,identity_rows:list<list<mixed>>,sql_batches?:int} $prepared
+     */
+    public function writePreparedDependencyProjection(
+        int $fileId,
+        array $prepared,
+        int &$sqlBatches,
+        bool $deleteExisting = true
+    ): void {
+        if (!$this->db->inTransaction()) {
+            throw new RuntimeException('Prepared dependency projection publication requires an active transaction.');
+        }
+        $dependencyColumns = [
+            'file_id', 'import_index', 'required_package_term_id', 'required_path_hash',
+            'required_object_term_id', 'import_class_package_term_id', 'import_class_name_term_id',
+            'import_object_term_id', 'resolved_file_id', 'resolved_export_index', 'status', 'resolution_source',
+            'resolution_confidence', 'resolution_source_term_id', 'resolution_confidence_term_id',
+        ];
+        $identityColumns = [
+            'file_id', 'import_index', 'required_package_term_id',
+            'verify_identity_hash', 'required_path_hash_ci',
+        ];
+
+        if ($deleteExisting) {
+            $this->db->prepare('DELETE FROM ue_dependency_links WHERE file_id=?')->execute([$fileId]);
+            $this->db->prepare('DELETE FROM ue_dependency_identity_lookup WHERE file_id=?')->execute([$fileId]);
+            $sqlBatches += 2;
+        }
+
+        $dependencyRows = array_values((array)($prepared['dependency_rows'] ?? []));
+        $identityRows = array_values((array)($prepared['identity_rows'] ?? []));
+        if (count($dependencyRows) !== count($identityRows)) {
+            throw new RuntimeException('Prepared dependency projection row counts do not match.');
+        }
+        for ($offset = 0; $offset < count($dependencyRows); $offset += self::WRITE_BATCH_SIZE) {
+            $dependencyChunk = array_slice($dependencyRows, $offset, self::WRITE_BATCH_SIZE);
+            $identityChunk = array_slice($identityRows, $offset, self::WRITE_BATCH_SIZE);
+            if ($dependencyChunk === []) {
+                continue;
+            }
+            $this->insertBatch('ue_dependency_links', $dependencyColumns, $dependencyChunk);
+            $this->insertBatch('ue_dependency_identity_lookup', $identityColumns, $identityChunk);
+            $sqlBatches += 2;
+        }
+    }
+
+    /**
      * Compatibility entry point for callers that already hold container bytes.
      * Production publication uses writeVersionedMetadata() so it never needs a
      * full metadata-container PHP string merely to register size and SHA-256.
@@ -295,15 +541,6 @@ final class CompressedMetadataLookupWriter
         $dependencies = (array)$snapshot['dependencies'];
         $paths = (array)$snapshot['paths'];
         $fileId = (int)$file['id'];
-        $resolutionLabels = $this->dependencyResolutionLabels($dependencies);
-
-        $importsByIndex = [];
-        foreach ($imports as $row) {
-            if (is_array($row)) {
-                $importsByIndex[(int)$row['import_index']] = $row;
-            }
-        }
-
         $termIds = $resolvedTermIds
             ?? $this->resolveTermIds($this->snapshotTermValues($snapshot), $sqlBatches);
 
@@ -349,7 +586,6 @@ final class CompressedMetadataLookupWriter
             && strtolower(trim((string)($engineRow['game_slug'] ?? ''))) === 'ut3';
         if ($engineKey === 'UE3') {
             $importsByIdentityIndex = CatalogCompactIdentityEnricher::ue3FixupImportMap($importsByIdentityIndex);
-            $importsByIndex = CatalogCompactIdentityEnricher::ue3FixupImportMap($importsByIndex);
         }
         $exportRows = [];
         $exportPathRows = [];
@@ -423,95 +659,16 @@ final class CompressedMetadataLookupWriter
             }
         }
 
-        $dependencyColumns = [
-            'file_id', 'import_index', 'required_package_term_id', 'required_path_hash',
-            'required_object_term_id', 'import_class_package_term_id', 'import_class_name_term_id',
-            'import_object_term_id', 'resolved_file_id', 'resolved_export_index', 'status', 'resolution_source',
-            'resolution_confidence', 'resolution_source_term_id', 'resolution_confidence_term_id',
-        ];
-        $dependencyIdentityColumns = [
-            'file_id', 'import_index', 'required_package_term_id',
-            'verify_identity_hash', 'required_path_hash_ci',
-        ];
-        $dependencyRows = [];
-        $dependencyIdentityRows = [];
-        foreach ($dependencies as $row) {
-            if (!is_array($row)) {
-                continue;
-            }
-            $index = (int)$row['import_index'];
-            $labels = $resolutionLabels[$index] ?? null;
-            $import = $importsByIndex[$index] ?? null;
-            if (!is_array($labels)) {
-                throw new RuntimeException('Missing dependency resolution labels for import index ' . $index . '.');
-            }
-            if (!is_array($import)) {
-                throw new RuntimeException('Missing import metadata for dependency import index ' . $index . '.');
-            }
-            [$status, $sourceCode, $confidenceCode] = CompressedMetadataLegacySnapshot::dependencyCodes(
-                strtolower(trim((string)$row['status']))
-            );
-            $source = (string)$labels['source'];
-            $confidence = (string)$labels['confidence'];
-            $requiredObject = (string)$row['required_object_path'];
-            $classPackage = trim((string)($import['class_package'] ?? ''));
-            $className = trim((string)($import['class_name'] ?? ''));
-            $requiredPackageTermId = $this->requiredTermId($termIds, (string)$row['required_package']);
-            $relativePath = (string)$paths['imports'][$index]['relative'];
-            $verifyIdentityHash = (($import['verify_identity_hash'] ?? '') !== '')
-                ? hex2bin((string)$import['verify_identity_hash'])
-                : null;
-            $requiredPathHashCi = (($import['path_hash_ci'] ?? '') !== '')
-                ? hex2bin((string)$import['path_hash_ci'])
-                : CatalogUnrealIdentityHash::objectPathBinary($relativePath);
-
-            $dependencyRows[] = [
-                $fileId,
-                $index,
-                $requiredPackageTermId,
-                md5($relativePath, true),
-                $this->requiredTermId($termIds, $requiredObject),
-                $classPackage !== '' ? $this->requiredTermId($termIds, $classPackage) : null,
-                $className !== '' ? $this->requiredTermId($termIds, $className) : null,
-                trim((string)($import['object_name'] ?? '')) !== ''
-                    ? $this->requiredTermId($termIds, trim((string)$import['object_name']))
-                    : null,
-                $row['resolved_file_id'] !== null ? (int)$row['resolved_file_id'] : null,
-                $row['resolved_export_index'] !== null ? (int)$row['resolved_export_index'] : null,
-                $status,
-                $sourceCode,
-                $confidenceCode,
-                $this->requiredTermId($termIds, $source),
-                $this->requiredTermId($termIds, $confidence),
-            ];
-            $dependencyIdentityRows[] = [
-                $fileId,
-                $index,
-                $requiredPackageTermId,
-                $verifyIdentityHash,
-                $requiredPathHashCi,
-            ];
-            if (count($dependencyRows) >= self::WRITE_BATCH_SIZE) {
-                $this->insertBatch('ue_dependency_links', $dependencyColumns, $dependencyRows);
-                $this->insertBatch(
-                    'ue_dependency_identity_lookup',
-                    $dependencyIdentityColumns,
-                    $dependencyIdentityRows
-                );
-                $sqlBatches += 2;
-                $dependencyRows = [];
-                $dependencyIdentityRows = [];
-            }
-        }
-        if ($dependencyRows !== []) {
-            $this->insertBatch('ue_dependency_links', $dependencyColumns, $dependencyRows);
-            $this->insertBatch(
-                'ue_dependency_identity_lookup',
-                $dependencyIdentityColumns,
-                $dependencyIdentityRows
-            );
-            $sqlBatches += 2;
-        }
+        [$dependencyRows, $dependencyIdentityRows] = $this->dependencyProjectionRows($snapshot, $termIds);
+        $this->writePreparedDependencyProjection(
+            $fileId,
+            [
+                'dependency_rows' => $dependencyRows,
+                'identity_rows' => $dependencyIdentityRows,
+            ],
+            $sqlBatches,
+            false
+        );
 
         $timestamp = gmdate('Y-m-d H:i:s');
         $statement = $this->db->prepare(
@@ -540,6 +697,119 @@ final class CompressedMetadataLookupWriter
             $timestamp,
         ]);
         $sqlBatches++;
+    }
+
+    /** @param array<string,mixed> $snapshot @return \Generator<int,string> */
+    private function dependencyTermValues(array $snapshot): \Generator
+    {
+        foreach ((array)($snapshot['imports'] ?? []) as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            foreach (['class_package', 'class_name', 'object_name'] as $field) {
+                $value = trim((string)($row[$field] ?? ''));
+                if ($value !== '') {
+                    yield $value;
+                }
+            }
+        }
+        foreach ((array)($snapshot['dependencies'] ?? []) as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            yield (string)($row['required_package'] ?? '');
+            yield (string)($row['required_object_path'] ?? '');
+            yield (string)($row['resolution_source'] ?? '');
+            yield (string)($row['resolution_confidence'] ?? '');
+        }
+    }
+
+    /**
+     * @param array<string,mixed> $snapshot
+     * @param array<string,int> $termIds
+     * @return array{0:list<list<mixed>>,1:list<list<mixed>>}
+     */
+    private function dependencyProjectionRows(array $snapshot, array $termIds): array
+    {
+        $file = (array)($snapshot['file'] ?? []);
+        $fileId = (int)($file['id'] ?? 0);
+        $imports = (array)($snapshot['imports'] ?? []);
+        $dependencies = (array)($snapshot['dependencies'] ?? []);
+        $paths = (array)($snapshot['paths'] ?? []);
+        if ($fileId < 1) {
+            throw new RuntimeException('Dependency projection requires a positive file ID.');
+        }
+
+        $importsByIndex = [];
+        foreach ($imports as $row) {
+            if (is_array($row)) {
+                $importsByIndex[(int)$row['import_index']] = $row;
+            }
+        }
+        $resolutionLabels = $this->dependencyResolutionLabels($dependencies);
+        $dependencyRows = [];
+        $identityRows = [];
+        foreach ($dependencies as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $index = (int)$row['import_index'];
+            $labels = $resolutionLabels[$index] ?? null;
+            $import = $importsByIndex[$index] ?? null;
+            if (!is_array($labels)) {
+                throw new RuntimeException('Missing dependency resolution labels for import index ' . $index . '.');
+            }
+            if (!is_array($import)) {
+                throw new RuntimeException('Missing import metadata for dependency import index ' . $index . '.');
+            }
+            [$status, $sourceCode, $confidenceCode] = CompressedMetadataLegacySnapshot::dependencyCodes(
+                strtolower(trim((string)$row['status']))
+            );
+            $source = (string)$labels['source'];
+            $confidence = (string)$labels['confidence'];
+            $requiredObject = (string)$row['required_object_path'];
+            $classPackage = trim((string)($import['class_package'] ?? ''));
+            $className = trim((string)($import['class_name'] ?? ''));
+            $requiredPackageTermId = $this->requiredTermId($termIds, (string)$row['required_package']);
+            $relativePath = (string)($paths['imports'][$index]['relative'] ?? '');
+            $verifyIdentityHash = (($import['verify_identity_hash'] ?? '') !== '')
+                ? hex2bin((string)$import['verify_identity_hash'])
+                : null;
+            $requiredPathHashCi = (($import['path_hash_ci'] ?? '') !== '')
+                ? hex2bin((string)$import['path_hash_ci'])
+                : CatalogUnrealIdentityHash::objectPathBinary($relativePath);
+
+            $dependencyRows[] = [
+                $fileId,
+                $index,
+                $requiredPackageTermId,
+                md5($relativePath, true),
+                $this->requiredTermId($termIds, $requiredObject),
+                $classPackage !== '' ? $this->requiredTermId($termIds, $classPackage) : null,
+                $className !== '' ? $this->requiredTermId($termIds, $className) : null,
+                trim((string)($import['object_name'] ?? '')) !== ''
+                    ? $this->requiredTermId($termIds, trim((string)$import['object_name']))
+                    : null,
+                $row['resolved_file_id'] !== null ? (int)$row['resolved_file_id'] : null,
+                $row['resolved_export_index'] !== null ? (int)$row['resolved_export_index'] : null,
+                $status,
+                $sourceCode,
+                $confidenceCode,
+                $this->requiredTermId($termIds, $source),
+                $this->requiredTermId($termIds, $confidence),
+            ];
+            $identityRows[] = [
+                $fileId,
+                $index,
+                $requiredPackageTermId,
+                $verifyIdentityHash,
+                $requiredPathHashCi,
+            ];
+        }
+        if (count($dependencyRows) !== count($dependencies)) {
+            throw new RuntimeException('Dependency projection did not produce one row per dependency.');
+        }
+        return [$dependencyRows, $identityRows];
     }
 
     /** @param array<int,mixed> $dependencies @return array<int,array{source:string,confidence:string}> */
@@ -831,16 +1101,16 @@ final class CompressedMetadataLookupWriter
      */
     private function resolveTermBatch(array $chunk, array $terms, array &$resolved): void
     {
-        $predicates = [];
+        $tuples = [];
         $arguments = [];
         foreach ($chunk as $term) {
-            $predicates[] = '(value_hash=? AND value_length=?)';
+            $tuples[] = '(?,?)';
             $arguments[] = $term['hash'];
             $arguments[] = $term['length'];
         }
         $statement = $this->db->prepare(
-            'SELECT id,value_hash,value_length,value_prefix,is_overflow FROM ue_terms WHERE '
-            . implode(' OR ', $predicates)
+            'SELECT id,value_hash,value_length,value_prefix,is_overflow FROM ue_terms '
+            . 'WHERE (value_hash,value_length) IN (' . implode(',', $tuples) . ')'
         );
         $statement->execute($arguments);
         while (($row = $statement->fetch(PDO::FETCH_ASSOC)) !== false) {

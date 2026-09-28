@@ -536,6 +536,81 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
         return hash('sha256', serialize($canonical));
     }
 
+    /**
+     * Fingerprint of parser/search structure used only by the UE3 Full Sync
+     * identity-refresh fast path. ObjectFlags and derived hash/VerifyImport
+     * fields are excluded because they are exactly what that repair replaces.
+     *
+     * @param array<string,mixed> $snapshot
+     */
+    public static function parsedStructureFingerprint(array $snapshot): string
+    {
+        $file = (array)($snapshot['file'] ?? []);
+        $canonical = [
+            'file' => [
+                (int)($file['id'] ?? 0),
+                (int)($file['game_id'] ?? 0),
+                (string)($file['package_name'] ?? ''),
+                (string)($file['original_name'] ?? ''),
+                (int)($file['name_count'] ?? count((array)($snapshot['names'] ?? []))),
+                (int)($file['import_count'] ?? count((array)($snapshot['imports'] ?? []))),
+                (int)($file['export_count'] ?? count((array)($snapshot['exports'] ?? []))),
+                (string)($file['scan_status'] ?? 'verified'),
+            ],
+            'names' => [],
+            'imports' => [],
+            'exports' => [],
+        ];
+
+        foreach ((array)($snapshot['names'] ?? []) as $row) {
+            $row = is_array($row) ? $row : [];
+            $canonical['names'][] = [
+                (int)($row['name_index'] ?? 0),
+                (string)($row['name_text'] ?? ''),
+                self::nullableScalarString($row['flags'] ?? null),
+                (int)($row['imports_count'] ?? 0),
+                (int)($row['exports_count'] ?? 0),
+                self::nullableScalarString($row['first_import_index'] ?? null),
+                self::nullableScalarString($row['first_export_index'] ?? null),
+            ];
+        }
+        foreach ((array)($snapshot['imports'] ?? []) as $row) {
+            $row = is_array($row) ? $row : [];
+            $canonical['imports'][] = [
+                (int)($row['import_index'] ?? 0),
+                trim((string)($row['class_package'] ?? '')),
+                trim((string)($row['class_name'] ?? '')),
+                (string)($row['object_name'] ?? ''),
+                (int)($row['outer_index'] ?? 0),
+                (string)($row['full_path'] ?? ''),
+                (string)($row['root_package'] ?? ''),
+                (string)($row['relative_object_path'] ?? ''),
+                (int)($row['is_common'] ?? 0),
+                self::nullableScalarString($row['class_package_name_index'] ?? null),
+                self::nullableScalarString($row['class_name_index'] ?? null),
+                self::nullableScalarString($row['object_name_index'] ?? null),
+            ];
+        }
+        foreach ((array)($snapshot['exports'] ?? []) as $row) {
+            $row = is_array($row) ? $row : [];
+            $canonical['exports'][] = [
+                (int)($row['export_index'] ?? 0),
+                trim((string)($row['class_name'] ?? '')),
+                (string)($row['object_name'] ?? ''),
+                (int)($row['outer_index'] ?? 0),
+                (string)($row['local_path'] ?? ''),
+                (string)($row['full_path'] ?? ''),
+                self::nullableScalarString($row['serial_size'] ?? null),
+                self::nullableScalarString($row['serial_offset'] ?? null),
+                (int)($row['class_index'] ?? 0),
+                (int)($row['super_index'] ?? 0),
+                (int)($row['template_index'] ?? 0),
+                self::nullableScalarString($row['object_name_index'] ?? null),
+            ];
+        }
+        return hash('sha256', serialize($canonical));
+    }
+
     private function fnameIndex(mixed $value): ?int
     {
         if (is_array($value)) {

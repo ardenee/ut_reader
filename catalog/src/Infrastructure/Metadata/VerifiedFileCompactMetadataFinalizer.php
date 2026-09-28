@@ -101,9 +101,9 @@ final class VerifiedFileCompactMetadataFinalizer
      *
      * New imports have no maintenance baseline and therefore always publish.
      * Normal maintenance reparses may reuse an unchanged validated container.
-     * Full Sync passes resolveDependencies=false: they always republish current
-     * parser-owned metadata with unresolved dependencies so dependency matching
-     * occurs exactly once, after the selected game's provider set is complete.
+     * Full Sync passes resolveDependencies=false. UT3/UE3 may use a narrow
+     * source-refresh publisher when parser/search structure is unchanged; all
+     * other cases retain the complete unresolved-dependency publication path.
      *
      * @param array<int|string,mixed> $result
      * @param array<int,mixed> $names
@@ -132,7 +132,11 @@ final class VerifiedFileCompactMetadataFinalizer
 
         try {
             $statement = $db->prepare(
-                'SELECT id,game_id,package_name,original_name,scan_status FROM ue_files WHERE id=?'
+                'SELECT f.id,f.game_id,f.package_name,f.original_name,f.scan_status,f.package_version,'
+                . 'UPPER(TRIM(COALESCE(p.engine_key,""))) engine_key,LOWER(TRIM(g.slug)) game_slug '
+                . 'FROM ue_files f JOIN ue_games g ON g.id=f.game_id '
+                . 'LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 '
+                . 'WHERE f.id=?'
             );
             $statement->execute([$fileId]);
             $file = $statement->fetch(PDO::FETCH_ASSOC);
@@ -157,10 +161,24 @@ final class VerifiedFileCompactMetadataFinalizer
                 ? $baseline['metadata']
                 : null;
 
-            if ($resolveDependencies
-                && is_array($baselineMetadata)
+            $sameContent = is_array($baselineMetadata)
                 && CatalogParsedPackageMetadataSnapshotBuilder::parsedContentFingerprint($parsed)
-                    === CatalogParsedPackageMetadataSnapshotBuilder::parsedContentFingerprint($baselineMetadata)) {
+                    === CatalogParsedPackageMetadataSnapshotBuilder::parsedContentFingerprint($baselineMetadata);
+            $sameStructure = is_array($baselineMetadata)
+                && CatalogParsedPackageMetadataSnapshotBuilder::parsedStructureFingerprint($parsed)
+                    === CatalogParsedPackageMetadataSnapshotBuilder::parsedStructureFingerprint($baselineMetadata);
+            $narrowUe3FullSync = !$resolveDependencies
+                && $sameStructure
+                && (string)($file['engine_key'] ?? '') === 'UE3'
+                && (string)($file['game_slug'] ?? '') === 'ut3'
+                && self::ue3NarrowProjectionAvailable(
+                    $db,
+                    $fileId,
+                    count((array)$parsed['names']),
+                    count((array)$parsed['exports'])
+                );
+
+            if ($resolveDependencies && $sameContent) {
                 $registration = is_array($baseline['registration'] ?? null)
                     ? $baseline['registration']
                     : [];
@@ -181,17 +199,27 @@ final class VerifiedFileCompactMetadataFinalizer
                 $snapshot = $resolveDependencies
                     ? $builder->withDependencies($parsed)
                     : $builder->withUnresolvedDependencies($parsed);
-                $conversion = self::publishWithContentionRetry(
-                    $db,
-                    $storageRoot,
-                    $snapshot,
-                    $fileId,
-                    $progress
-                );
+                if ($narrowUe3FullSync) {
+                    self::emit($progress, 99, 'Publishing narrow UT3 identity refresh for file #' . $fileId);
+                    $conversion = (new BlockedCompressedMetadataSnapshotWriter($db, $storageRoot))
+                        ->writeUe3FullSyncSourceRefresh(
+                            $snapshot,
+                            isset($file['package_version']) ? (int)$file['package_version'] : null
+                        );
+                } else {
+                    $conversion = self::publishWithContentionRetry(
+                        $db,
+                        $storageRoot,
+                        $snapshot,
+                        $fileId,
+                        $progress
+                    );
+                }
                 $conversion['already_compact'] = false;
                 $conversion['reused_unchanged'] = false;
                 $conversion['republished_from_parser'] = true;
                 $conversion['dependencies_deferred'] = !$resolveDependencies;
+                $conversion['narrow_ue3_full_sync'] = $narrowUe3FullSync;
             }
 
             if (
@@ -213,6 +241,48 @@ final class VerifiedFileCompactMetadataFinalizer
 
         VerifiedMetadataPublicationState::ready($db, $fileId);
         return self::complete($result, $conversion, $progress);
+    }
+
+    private static function ue3NarrowProjectionAvailable(
+        PDO $db,
+        int $fileId,
+        int $expectedNames,
+        int $expectedExports
+    ): bool {
+        if ($fileId < 1 || $expectedNames < 0 || $expectedExports < 0) {
+            return false;
+        }
+        $statement = $db->prepare(
+            'SELECT '
+            . '(SELECT COUNT(*) FROM ue_export_path_lookup WHERE file_id=?) path_rows,'
+            . '(SELECT MIN(export_index) FROM ue_export_path_lookup WHERE file_id=?) min_path_index,'
+            . '(SELECT MAX(export_index) FROM ue_export_path_lookup WHERE file_id=?) max_path_index,'
+            . '(SELECT COUNT(*) FROM ue_export_path_lookup '
+            . ' WHERE file_id=? AND path_hash_ci IS NOT NULL AND local_path_term_id IS NOT NULL) path_term_rows,'
+            . '(SELECT COUNT(*) FROM ue_export_lookup WHERE file_id=?) export_rows,'
+            . '(SELECT COUNT(*) FROM ue_export_lookup '
+            . ' WHERE file_id=? AND object_term_id IS NOT NULL AND local_path_term_id IS NOT NULL) export_term_rows,'
+            . '(SELECT COUNT(*) FROM ue_name_lookup WHERE file_id=?) name_rows,'
+            . '(SELECT COUNT(*) FROM ue_name_lookup WHERE file_id=? AND name_term_id IS NOT NULL) name_term_rows'
+        );
+        $statement->execute([
+            $fileId, $fileId, $fileId, $fileId,
+            $fileId, $fileId, $fileId, $fileId,
+        ]);
+        $row = $statement->fetch(PDO::FETCH_ASSOC) ?: [];
+        if ((int)($row['path_rows'] ?? -1) !== $expectedExports
+            || (int)($row['path_term_rows'] ?? -1) !== $expectedExports
+            || (int)($row['export_rows'] ?? -1) !== $expectedExports
+            || (int)($row['export_term_rows'] ?? -1) !== $expectedExports
+            || (int)($row['name_rows'] ?? -1) !== $expectedNames
+            || (int)($row['name_term_rows'] ?? -1) !== $expectedNames) {
+            return false;
+        }
+        if ($expectedExports === 0) {
+            return true;
+        }
+        return (int)($row['min_path_index'] ?? -1) === 0
+            && (int)($row['max_path_index'] ?? -1) === $expectedExports - 1;
     }
 
     /**
