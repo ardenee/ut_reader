@@ -138,9 +138,12 @@ final class CatalogVerifiedPackageInspector implements VerifiedPackageInspectorP
         \scanner_emit_percent($progress, 'scan', 7, 'Opening ' . $readerEngine . ' reader');
         $readerClass = \scanner_load_reader_class($this->config, $readerEngine);
         $ue4ReaderOptions = [];
-        if (in_array($readerEngine, ['UE4', 'UE5'], true)) {
+        if ($readerEngine === 'UE4') {
             $ue4ReaderOptions = \catalog_ue4_reader_options($this->config, $game, $profile);
             \catalog_ue4_set_next_reader_options($ue4ReaderOptions);
+        } elseif ($readerEngine === 'UE5') {
+            $ue4ReaderOptions = \catalog_ue5_reader_options($this->config, $game, $profile);
+            \catalog_ue5_set_next_reader_options($ue4ReaderOptions);
         }
         $package = new $readerClass($temporaryPath);
 

@@ -14,6 +14,7 @@ require_once __DIR__ . '/GameProfiles.php';
 require_once __DIR__ . '/CatalogDependencySchema.php';
 require_once __DIR__ . '/CatalogPackageAliases.php';
 require_once __DIR__ . '/CatalogUE4ParserProfile.php';
+require_once __DIR__ . '/CatalogUE5ParserProfile.php';
 
 require_once __DIR__ . '/Scanner/CatalogScannerPath.php';
 require_once __DIR__ . '/Scanner/CatalogScannerSupport.php';

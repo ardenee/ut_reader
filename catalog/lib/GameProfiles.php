@@ -123,7 +123,7 @@ function gp_read_legacy_summary(string $path): array
     if (!$fh) {
         return ['ok' => false, 'reason' => 'Could not open file', 'error_code' => 'unreal.header_read_failed'];
     }
-    $bytes = fread($fh, 16);
+    $bytes = fread($fh, 24);
     fclose($fh);
     if ($bytes === false) {
         return ['ok' => false, 'reason' => 'Could not read package header', 'error_code' => 'unreal.header_read_failed'];
@@ -185,12 +185,31 @@ function gp_read_legacy_summary(string $path): array
     // with its high bit set also makes the combined 32-bit value negative, so a
     // known legacy package version must take precedence over the signed marker.
     if ($legacyEngine === null && $signedVersion32 < 0) {
+        $legacyFileVersion = $signedVersion32;
+        if ($legacyFileVersion <= -8 && $legacyFileVersion >= -9 && $bytesRead >= 24) {
+            $ue4Version = gp_int32_from_uint32((int)(unpack('V', substr($bytes, 12, 4))[1] ?? 0));
+            $ue5Version = gp_int32_from_uint32((int)(unpack('V', substr($bytes, 16, 4))[1] ?? 0));
+            $modernLicensee = gp_int32_from_uint32((int)(unpack('V', substr($bytes, 20, 4))[1] ?? 0));
+            return [
+                'ok' => true,
+                'magic' => sprintf('0x%08X', $magic),
+                'package_tag_variant' => \UnrealDb\Catalog\Domain\Package\CatalogUnrealPackageTag::variant((int)$magic),
+                'format' => 'ue5_package',
+                'version' => $ue5Version,
+                'ue4_version' => $ue4Version,
+                'ue5_version' => $ue5Version,
+                'legacy_file_version' => $legacyFileVersion,
+                'licensee' => $modernLicensee,
+                'engine_hint' => 'UE5',
+            ];
+        }
         return [
             'ok' => true,
             'magic' => sprintf('0x%08X', $magic),
             'package_tag_variant' => \UnrealDb\Catalog\Domain\Package\CatalogUnrealPackageTag::variant((int)$magic),
             'format' => 'ue4_package',
             'version' => $signedVersion32,
+            'legacy_file_version' => $legacyFileVersion,
             'licensee' => null,
             'engine_hint' => 'UE4',
         ];
@@ -223,7 +242,7 @@ function gp_classify_file(PDO $db, int $selectedGameId, string $path, string $or
     }
     $selectedEngine = strtoupper((string)($profile['engine_key'] ?? ''));
     $notes = [];
-    $signedPackageVersion = ($summary['format'] ?? '') === 'ue4_package';
+    $signedPackageVersion = in_array(($summary['format'] ?? ''), ['ue4_package', 'ue5_package'], true);
     $headerOk = !empty($summary['ok']);
     $headerErrorCode = trim((string)($summary['error_code'] ?? ''));
     $headerErrorArguments = is_array($summary['error_arguments'] ?? null)
@@ -252,6 +271,11 @@ function gp_classify_file(PDO $db, int $selectedGameId, string $path, string $or
 
     if (!$summary['ok']) {
         $notes[] = (string)$summary['reason'];
+    } elseif (($summary['format'] ?? '') === 'ue5_package') {
+        $notes[] = 'UE5 package header legacy=' . (int)($summary['legacy_file_version'] ?? 0)
+            . ' UE4=' . (int)($summary['ue4_version'] ?? 0)
+            . ' UE5=' . (int)($summary['ue5_version'] ?? 0)
+            . ' licensee=' . (int)($summary['licensee'] ?? 0) . '.';
     } elseif ($signedPackageVersion) {
         $notes[] = 'Unreal package header signed version=' . $version . '.';
     } else {
@@ -281,13 +305,10 @@ function gp_classify_file(PDO $db, int $selectedGameId, string $path, string $or
         $notes[] = 'Package version is above the active game profile range.';
     }
 
-    // Modern package summaries are identified from the signed serialized version.
-    // The current UE5 reader is the same serialized package reader implementation
-    // as UE4, so a UE5 target may accept that proven modern package family; reader
-    // selection itself remains the header-selected UE4 implementation.
-    $modernFamilyMatch = $detectedEngine === 'UE4' && in_array($selectedEngine, ['UE4', 'UE5'], true);
+    // Modern package families are source-selected from the serialized summary.
+    // UE5 must not fall back to the UE4 reader merely because both use the package tag.
     $engineOk = $detectedEngine !== 'UNKNOWN'
-        && ($selectedEngine === '' || $detectedEngine === $selectedEngine || $modernFamilyMatch || $compatible);
+        && ($selectedEngine === '' || $detectedEngine === $selectedEngine || $compatible);
     if (!$engineOk) {
         $notes[] = 'Header-detected engine ' . $detectedEngine
             . ' does not match active game profile engine ' . ($selectedEngine !== '' ? $selectedEngine : 'UNKNOWN') . '.';
@@ -307,8 +328,7 @@ function gp_classify_file(PDO $db, int $selectedGameId, string $path, string $or
     if (!$engineOk && $detectedEngine !== 'UNKNOWN') {
         foreach (gp_all_profiles($db) as $candidate) {
             $candidateEngine = strtoupper((string)$candidate['engine_key']);
-            $candidateModernMatch = $detectedEngine === 'UE4' && in_array($candidateEngine, ['UE4', 'UE5'], true);
-            if ($candidateEngine !== $detectedEngine && !$candidateModernMatch) {
+            if ($candidateEngine !== $detectedEngine) {
                 continue;
             }
             foreach (catalog_all($db, 'SELECT id, name FROM ue_games WHERE profile_id=? ORDER BY name', [(int)$candidate['id']]) as $game) {

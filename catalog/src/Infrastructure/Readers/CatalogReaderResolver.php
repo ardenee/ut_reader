@@ -22,9 +22,9 @@ namespace UnrealDb\Catalog\Infrastructure\Readers;
  * resolve UE1/UE2 through this class resolver rather than instantiate another
  * package parser directly.
  *
- * UE3 uses the strict Epic catalog parser. Only UE4 still relies on a
- * configured external reader path while its parser remains in the root UE4
- * reference tree.
+ * UE3 uses the strict Epic catalog parser. UE4 and UE5 use their dedicated
+ * configured engine readers; UE5 must never alias the UE4 reader because its
+ * package-summary/import/export version gates differ.
  */
 final class CatalogReaderResolver
 {
@@ -71,6 +71,17 @@ final class CatalogReaderResolver
             return 'CatalogUE3PackageReader';
         }
 
+        if ($engineKey === 'UE5') {
+            $canonical = realpath(__DIR__ . '/../../../../UE5/UnrealPackageReader.php');
+            if ($canonical === false || !is_file($canonical)) {
+                throw new \RuntimeException($notFoundMessagePrefix . ' UE5: UE5/UnrealPackageReader.php');
+            }
+            require_once $canonical;
+            if (!class_exists('UnrealPackageReader5', false)) {
+                throw new \RuntimeException($missingClassMessagePrefix . 'UE5, but UnrealPackageReader5 was not defined.');
+            }
+            return 'UnrealPackageReader5';
+        }
         $readerConfig = $config['engine_readers'][$engineKey] ?? [];
         $relativePath = (string)($readerConfig['reader'] ?? '');
         $readerPath = realpath(__DIR__ . '/../../../' . $relativePath);
@@ -84,9 +95,9 @@ final class CatalogReaderResolver
         if (!empty($readerConfig['class'])) {
             $candidates[] = (string)$readerConfig['class'];
         }
-        $candidates[] = in_array($engineKey, $versionedReaderEngines, true)
-            ? 'UnrealPackageReader4'
-            : 'UnrealPackageReader';
+        $candidates[] = $engineKey === 'UE5'
+            ? 'UnrealPackageReader5'
+            : (in_array($engineKey, $versionedReaderEngines, true) ? 'UnrealPackageReader4' : 'UnrealPackageReader');
         $candidates[] = 'UnrealPackageReader';
         $candidates[] = 'UnrealPackageReader4';
 

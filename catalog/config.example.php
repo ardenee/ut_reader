@@ -142,6 +142,7 @@ return [
     // parser directly. UE4 remains the only generation backed by a configured
     // external reader path until its root parser is migrated.
     'engine_readers' => [
-        'UE4' => ['reader' => '../UE4/UnrealPackageReader.php', 'label' => 'UE4'],
+        'UE4' => ['reader' => '../UE4/UnrealPackageReader.php', 'class' => 'UnrealPackageReader4', 'label' => 'UE4'],
+        'UE5' => ['reader' => '../UE5/UnrealPackageReader.php', 'class' => 'UnrealPackageReader5', 'label' => 'UE5 5.8.3 classic'],
     ],
 ];

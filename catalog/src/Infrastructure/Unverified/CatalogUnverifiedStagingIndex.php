@@ -175,11 +175,13 @@ final class CatalogUnverifiedStagingIndex
             try {
                 $game = \catalog_one($this->db, 'SELECT * FROM ue_games WHERE id=?', [$queueGameId]) ?: [];
                 $profile = \gp_profile_for_game($this->db, $queueGameId) ?: [];
-                \catalog_ue4_set_next_reader_options(
-                    \catalog_ue4_reader_options($this->config, $game, $profile)
-                );
+                if ($engine === 'UE5') {
+                    \catalog_ue5_set_next_reader_options(\catalog_ue5_reader_options($this->config, $game, $profile));
+                } else {
+                    \catalog_ue4_set_next_reader_options(\catalog_ue4_reader_options($this->config, $game, $profile));
+                }
             } catch (Throwable $error) {
-                error_log('[UnrealDB unverified index] UE4 profile options: ' . $error->getMessage());
+                error_log('[UnrealDB unverified index] ' . $engine . ' profile options: ' . $error->getMessage());
             }
         }
 

@@ -28,6 +28,7 @@ final class CatalogAssetMetadataService
         require_once $root . '/lib/CatalogDependencySchema.php';
         require_once $root . '/lib/GameProfiles.php';
         require_once $root . '/lib/CatalogUE4ParserProfile.php';
+        require_once $root . '/lib/CatalogUE5ParserProfile.php';
     }
 
     /**
@@ -309,9 +310,11 @@ final class CatalogAssetMetadataService
             [(int)$file['game_id']]
         ) ?: [];
         $profile = \gp_required_profile_for_game($this->db, (int)$file['game_id']);
-        \catalog_ue4_set_next_reader_options(
-            \catalog_ue4_reader_options($this->config, $game, $profile)
-        );
+        if ($engine === 'UE5') {
+            \catalog_ue5_set_next_reader_options(\catalog_ue5_reader_options($this->config, $game, $profile));
+        } else {
+            \catalog_ue4_set_next_reader_options(\catalog_ue4_reader_options($this->config, $game, $profile));
+        }
 
         $reader = new $readerClass($path);
         if (method_exists($reader, 'validatePackage')) {
@@ -320,10 +323,8 @@ final class CatalogAssetMetadataService
                 foreach ($issues as $issue) {
                     $text = trim((string)$issue);
                     if ($text !== ''
-                        && !str_starts_with(
-                            $text,
-                            'Package is unversioned; using assumed UE4 parser version '
-                        )) {
+                        && !str_starts_with($text, 'Package is unversioned; using assumed UE4 parser version ')
+                        && !str_starts_with($text, 'Package is unversioned; using assumed UE5 parser versions ')) {
                         error_log(
                             '[UnrealDB asset metadata reader] file_id=' . (int)$file['id']
                             . ' issue=' . $text

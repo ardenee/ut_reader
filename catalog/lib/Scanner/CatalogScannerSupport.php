@@ -113,7 +113,8 @@ function scanner_split_reader_issues(array $issues): array
             );
             continue;
         }
-        if (str_starts_with($text, 'Package is unversioned; using assumed UE4 parser version ')) {
+        if (str_starts_with($text, 'Package is unversioned; using assumed UE4 parser version ')
+            || str_starts_with($text, 'Package is unversioned; using assumed UE5 parser versions ')) {
             $notes[] = $text;
             continue;
         }
