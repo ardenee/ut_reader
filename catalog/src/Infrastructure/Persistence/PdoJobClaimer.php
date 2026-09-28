@@ -25,6 +25,7 @@ final class PdoJobClaimer
     private ?PDOStatement $acquireRootLockStatement = null;
     private ?PDOStatement $releaseRootLockStatement = null;
     private ?PDOStatement $runningFullSyncParentStatement = null;
+    private ?PDOStatement $competingFullSyncParentStatement = null;
 
     public function __construct(private readonly PDO $db, ?PdoJobRecovery $legacyRecovery = null)
     {
@@ -352,10 +353,23 @@ final class PdoJobClaimer
             return false;
         }
 
-        // Full Sync units are deliberately independent execution roots, but one
-        // game workflow may occupy at most two workers. The resource admission
-        // lock serializes same-phase decisions, so two workers cannot both see
-        // the second slot as free. Other Full Sync parents remain eligible.
+        // A lone Full Sync may use its complete configured resource allowance.
+        // When another game Full Sync has queued/running child work, cap this
+        // parent at two active units so both workflows retain worker capacity.
+        // The resource admission lock serializes these decisions with the
+        // resource-class admission check below.
+        $configuredLimit = max(1, (int)($candidate['resource_limit'] ?? 1));
+        $competing = $this->competingFullSyncParentStatement ??= $this->db->prepare(
+            'SELECT 1 FROM ue_background_jobs parent '
+            . 'WHERE parent.queue_name=? AND parent.id<>? '
+            . 'AND parent.job_type="' . JobType::FULL_SYNC_GAME . '" '
+            . 'AND parent.status IN ("queued","running") LIMIT 1'
+        );
+        $competing->execute([$queue, $parentId]);
+        $hasCompetingParent = $competing->fetchColumn() !== false;
+        $competing->closeCursor();
+        $parentLimit = $hasCompetingParent ? min(2, $configuredLimit) : $configuredLimit;
+
         $statement = $this->runningFullSyncParentStatement ??= $this->db->prepare(
             'SELECT COUNT(*) FROM ue_background_jobs '
             . 'WHERE queue_name=? AND parent_job_id=? AND status="running" '
@@ -365,7 +379,7 @@ final class PdoJobClaimer
         $statement->execute([$queue, $parentId]);
         $running = (int)$statement->fetchColumn();
         $statement->closeCursor();
-        return $running >= 2;
+        return $running >= $parentLimit;
     }
 
     private function workflowOpen(string $queue, int $rootJobId): bool

@@ -40,7 +40,7 @@ final class JobResourcePolicy
             self::FULL_SYNC_UNIT => [
                 'label' => 'Full Sync file units',
                 'default' => 4,
-                'description' => 'Independent per-file Full Sync reimport and compact-metadata repair units. Full Sync workflows are separately capped at two active child workers per parent so multiple game syncs can share the pool.',
+                'description' => 'Independent per-file Full Sync reimport and compact-metadata repair units. A lone Full Sync may use all configured slots; competing game syncs are capped at two child workers per parent so they share the pool.',
             ],
             self::AFFECTED_DEPENDENCY_BATCH => [
                 'label' => 'Dependency file units and affected batches',
