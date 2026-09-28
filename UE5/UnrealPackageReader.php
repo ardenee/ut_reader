@@ -219,12 +219,17 @@ final class UnrealPackageReader5
     {
         return [
             'signature' => 0,
+            'serializedSignature' => 0,
+            'byteSwapping' => false,
             'legacyFileVersion' => 0,
             'legacyUE3Version' => 0,
             'version' => 0,
             'ue4Version' => 0,
             'ue5Version' => 0,
             'licenseeVersion' => 0,
+            'serializedUE4Version' => 0,
+            'serializedUE5Version' => 0,
+            'serializedLicenseeVersion' => 0,
             'unversioned' => false,
             'customVersions' => [],
             'totalHeaderSize' => 0,
@@ -311,6 +316,7 @@ final class UnrealPackageReader5
             throw new RuntimeException('UE5 package is smaller than the minimum modern package summary size. fileSize=' . $this->fileSize);
         }
         $tag = $r->u32();
+        $serializedTag = $tag;
         if ($tag !== self::PACKAGE_FILE_TAG && $tag !== self::PACKAGE_FILE_TAG_SWAPPED) {
             throw new RuntimeException(sprintf('Bad UE5 package tag 0x%08X', $tag));
         }
@@ -322,6 +328,8 @@ final class UnrealPackageReader5
         $this->header = $this->blankHeader();
         $this->attachParserProfileToHeader();
         $this->header['signature'] = $tag;
+        $this->header['serializedSignature'] = $serializedTag;
+        $this->header['byteSwapping'] = $r->isByteSwapping();
         $this->header['legacyFileVersion'] = $legacy;
         if ($legacy > -8) {
             throw new RuntimeException('This modern package predates the UE5 summary version field. LegacyFileVersion=' . $legacy);
@@ -335,6 +343,9 @@ final class UnrealPackageReader5
         $ue4Version = $r->i32();
         $ue5Version = $r->i32();
         $licensee = $r->i32();
+        $this->header['serializedUE4Version'] = $ue4Version;
+        $this->header['serializedUE5Version'] = $ue5Version;
+        $this->header['serializedLicenseeVersion'] = $licensee;
         $this->header['ue4Version'] = $ue4Version;
         $this->header['ue5Version'] = $ue5Version;
         $this->header['version'] = $ue5Version;
@@ -614,7 +625,7 @@ final class UnrealPackageReader5
             return;
         }
         $r = $this->tableReader($offset);
-        $version = (int)$this->header['version'];
+        $version = (int)$this->header['ue4Version'];
         for ($i = 0; $i < $count; $i++) {
             $entryOffset = $r->tell();
             $name = $this->readSerializedNameEntry($r);
@@ -704,10 +715,12 @@ final class UnrealPackageReader5
                 'outerName' => $this->displayNameFromRef($outerIndex),
                 'objectName' => $objectName, 'ObjectName' => $objectName,
                 'objectNameText' => $this->fnameText($objectName),
+                'serializedPackageNamePresent' => $ue4 >= self::VER_NON_OUTER_PACKAGE_IMPORT,
                 'serializedPackageName' => $serializedPackageName,
                 'serializedPackageNameText' => $this->fnameText($serializedPackageName),
                 'packageName' => $packageName, 'PackageName' => $packageName,
                 'packageNameText' => $this->fnameText($packageName),
+                'bImportOptionalPresent' => $ue5 >= self::UE5_OPTIONAL_RESOURCES,
                 'bImportOptional' => $importOptional,
                 'importOptional' => $importOptional,
             ];
@@ -770,19 +783,29 @@ final class UnrealPackageReader5
                 'index' => $i, 'ref' => $i + 1, 'offset' => $start,
                 'classIndex' => $classIndex, 'className' => $this->displayNameFromRef($classIndex),
                 'superIndex' => $superIndex, 'superName' => $this->displayNameFromRef($superIndex),
+                'templateIndexPresent' => $ue4 >= self::VER_TEMPLATE_INDEX_IN_COOKED_EXPORTS,
                 'templateIndex' => $templateIndex, 'templateName' => $this->displayNameFromRef($templateIndex),
                 'outerIndex' => $outerIndex, 'outerName' => $this->displayNameFromRef($outerIndex),
                 'objectName' => $objectName, 'ObjectName' => $objectName,
                 'objectNameText' => $this->fnameText($objectName),
-                'objectFlags' => $objectFlags, 'serialSize' => $serialSize, 'serialOffset' => $serialOffset,
+                'objectFlags' => $objectFlags,
+                'serialSizeWidthBits' => $ue4 >= self::VER_64BIT_EXPORTMAP_SERIALSIZES ? 64 : 32,
+                'serialSize' => $serialSize, 'serialOffset' => $serialOffset,
                 'forcedExport' => $forcedExport,
                 'notForClient' => $notForClient, 'notForServer' => $notForServer,
-                'notForEditorGame' => $notForEditorGame, 'isAsset' => $isAsset,
+                'packageGuidPresent' => $ue5 < self::UE5_REMOVE_OBJECT_EXPORT_PACKAGE_GUID,
+                'bIsInheritedInstancePresent' => $ue5 >= self::UE5_TRACK_OBJECT_EXPORT_IS_INHERITED,
+                'notForEditorGamePresent' => $ue4 >= self::VER_LOAD_FOR_EDITOR_GAME,
+                'notForEditorGame' => $notForEditorGame,
+                'isAssetPresent' => $ue4 >= self::VER_COOKED_ASSETS_IN_EDITOR_SUPPORT, 'isAsset' => $isAsset,
                 'isInheritedInstance' => $isInheritedInstance,
+                'bGeneratePublicHashPresent' => $ue5 >= self::UE5_OPTIONAL_RESOURCES,
                 'generatePublicHash' => $generatePublicHash,
                 'bGeneratePublicHash' => $generatePublicHash,
                 'packageGuid' => $packageGuid, 'packageFlags' => $packageFlags,
+                'preloadPresent' => $ue4 >= self::VER_PRELOAD_DEPENDENCIES_IN_COOKED_EXPORTS,
                 'preload' => $preload,
+                'scriptSerializationOffsetsPresent' => !$unversionedProperties && $ue5 >= self::UE5_SCRIPT_SERIALIZATION_OFFSET,
                 'scriptSerializationStartOffset' => $scriptStart,
                 'scriptSerializationEndOffset' => $scriptEnd,
             ];
@@ -801,15 +824,13 @@ final class UnrealPackageReader5
                 // FLinkerTables::SoftPackageReferenceList is TArray<FName> in UE5.
                 $name = $this->readFName($r);
                 $path = trim($this->fnameText($name));
-                if ($path !== '') {
-                    $this->stringAssetReferences[] = [
-                        'index' => $i,
-                        'offset' => $entryOffset,
-                        'path' => $path,
-                        'name' => $name,
-                        'source' => 'soft_package_reference',
-                    ];
-                }
+                $this->stringAssetReferences[] = [
+                    'index' => $i,
+                    'offset' => $entryOffset,
+                    'path' => $path,
+                    'name' => $name,
+                    'source' => 'soft_package_reference',
+                ];
             }
         } catch (Throwable $e) {
             $this->issues[] = 'Could not parse UE5 soft package reference list: ' . $e->getMessage();

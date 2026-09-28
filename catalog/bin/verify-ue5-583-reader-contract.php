@@ -66,6 +66,33 @@ $buildSummary = static function (
     return $out;
 };
 
+$buildPreHashFixture = static function () use ($u16, $u32, $i32, $i64, $fstring, $engineVersion): string {
+    $name = 'PreHashName';
+    $nameBytes = $i32(strlen($name) + 1) . $name . "\0";
+    $build = static function (int $headerSize, int $nameOffset) use ($u32, $i32, $i64, $fstring, $engineVersion): string {
+        $out = $u32(0x9E2A83C1) . $i32(-9) . $i32(864) . $i32(503) . $i32(1018) . $i32(0);
+        $out .= str_repeat("\0", 20) . $i32($headerSize) . $i32(0);
+        $out .= $fstring('/Game/PreHash') . $u32(0x80000000);
+        $out .= $i32(1) . $i32($nameOffset);
+        $out .= $i32(0) . $i32(0); // SoftObjectPaths
+        $out .= $i32(0) . $i32(0); // Gatherable text
+        $out .= $i32(0) . $i32(0) . $i32(0) . $i32(0); // Export/import tables
+        $out .= $i32(0) . $i32(0) . $i32(0) . $i32(0); // Verse cells
+        $out .= $i32(0) . $i32(0); // MetaDataOffset + DependsOffset
+        $out .= $i32(0) . $i32(0); // SoftPackageReferences
+        $out .= $i32(0); // ThumbnailTableOffset; no SearchableNames at UE4 503
+        $out .= $i32(0) . $i32(0); // ImportTypeHierarchies
+        $out .= $i32(0); // GenerationCount
+        $out .= $engineVersion() . $engineVersion();
+        $out .= $u32(0) . $i32(0) . $u32(0) . $i32(0); // Compression + source/additional packages
+        $out .= $i32(0) . $i64(0) . $i32(0) . $i32(0); // AssetRegistry, bulk, world tile, chunks
+        $out .= $i32(1) . $i64(-1) . $i32(-1); // NamesReferenced; no preload fields at UE4 503
+        return $out;
+    };
+    $summary0 = $build(0, 0);
+    $summary = $build(strlen($summary0) + strlen($nameBytes), strlen($summary0));
+    return $summary . $nameBytes;
+};
 $summary0 = $buildSummary(0, 0, 0, 0, 0);
 $nameOffset = strlen($summary0);
 $importOffset = $nameOffset + strlen($nameBytes);
@@ -76,7 +103,9 @@ $summary = $buildSummary($totalHeaderSize, $nameOffset, $importOffset, $exportOf
 if (strlen($summary) !== strlen($summary0)) throw new RuntimeException('Synthetic summary size changed.');
 $fixture = $summary . $nameBytes . $importBytes . $exportBytes . $softReferenceBytes;
 $path = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'unrealdb-ue5-583-reader-contract.uasset';
+$preHashPath = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'unrealdb-ue5-pre-name-hash-contract.uasset';
 file_put_contents($path, $fixture);
+file_put_contents($preHashPath, $buildPreHashFixture());
 
 $checks = [];
 $check = static function (string $name, bool $ok, string $detail) use (&$checks): void {
@@ -110,12 +139,21 @@ try {
         && (int)($export['scriptSerializationEndOffset'] ?? 0) === 22, 'Versioned UE5 exports must retain script offsets.');
     $check('soft_package_reference_is_fname', (string)($soft[0]['path'] ?? '') === '/Game/SoftPkg', 'SoftPackageReferenceList is TArray<FName>.');
 
+    $preHashReader = new UnrealPackageReader5($preHashPath);
+    $preHashNames = $preHashReader->getNames();
+    $check('name_hash_gate_uses_ue4_component', $preHashReader->validatePackage() === []
+        && (string)($preHashNames[0]['name'] ?? '') === 'PreHashName'
+        && ($preHashNames[0]['nonCaseHash'] ?? null) === null
+        && ($preHashNames[0]['caseHash'] ?? null) === null,
+        'VER_UE4_NAME_HASHES_SERIALIZED must be gated by the UE4 version component, not the UE5 version.');
+
     $resolved = \UnrealDb\Catalog\Infrastructure\Readers\CatalogReaderResolver::resolve(
         [], 'UE5', 'Reader not found', 'Reader class missing ', ['UE4', 'UE5']
     );
     $check('canonical_resolver_selects_ue5_reader', $resolved === 'UnrealPackageReader5', 'UE5 must not alias UnrealPackageReader4.');
 } finally {
     @unlink($path);
+    @unlink($preHashPath);
 }
 
 $failed = array_values(array_filter($checks, static fn(array $row): bool => !$row['ok']));

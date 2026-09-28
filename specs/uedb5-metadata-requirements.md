@@ -343,14 +343,29 @@ The format-5 container/staging foundation is implemented without changing the pr
 - `catalog/bin/verify-uedb5-container-foundation.php` verifies round-trip block reading, fixed-width unsigned-64 hex preservation, corruption rejection, and the isolation boundary from UEDB4;
 - production `BlockedCompressedMetadataContainer` / `BlockedCompressedMetadataReader` remain format 4 only and continue to use `.uedb4` until the migration/cutover is ready.
 
-This is the transport foundation only. It does **not** yet satisfy the source-specific UEDB5 persistence requirements below: UE3/UE4 reparsed fields, UE5 classic import/export schemas, dependency resolution, SQL publication, and Zen/IoStore metadata remain separate implementation sections.
+The container foundation is intentionally source-shape agnostic. UE3/UE4 reparsed fields, dependency resolution, SQL publication/cutover, and Zen/IoStore metadata remain separate implementation sections.
+
+## Current UE5 classic UEDB5 persistence
+
+Classic UE5 5.8.3 source-shaped persistence is implemented for offline/staging UEDB5 files without changing the production UEDB4 runtime:
+
+- `Uedb5Ue5ClassicSnapshotBuilder` emits `package_family=classic-linkerload` and an explicit UE5 5.8.3 source-policy identifier;
+- the summary block preserves the serialized package tag/byte order, serialized UE4/UE5/licensee versions, separate effective parser versions for unversioned packages, parser-profile identity, custom versions, package flags, `SavedHash`, engine-version records and other retained package identity;
+- import rows preserve raw FName index/number/text for `ClassPackage`, `ClassName`, `ObjectName` and serialized `PackageName`, the signed raw `OuterIndex`, the post-load effective `PackageName`, and `bImportOptional`;
+- export rows preserve raw `ClassIndex`, `SuperIndex`, `TemplateIndex`, `OuterIndex`, raw FName identity, serial size/offset, package flags, filter/inheritance/asset/public-hash bits, preload dependency ranges and script serialization offsets;
+- version-gated import/export members carry explicit presence state; when a source version did not serialize a member, UEDB5 records it as absent/null rather than fabricating a serialized zero/false value;
+- UE5 classic `ObjectFlags` are stored canonically as 16 hex digits while explicitly recording `object_flags_serialized_width_bits=32` and RF_Load-mask semantics, so the common representation cannot be mistaken for UE3 QWORD serialization;
+- soft package references remain a separate section and retain every serialized FName row, including a serialized None entry if one exists;
+- `catalog/bin/verify-uedb5-ue5-classic-persistence.php` verifies full `.uedb5` round-trip preservation, including the filtered-editor-only serialized/effective `PackageName` distinction and serialized-zero versus assumed version identity for unversioned packages.
+
+This section is persistence only. It does not publish UEDB5 SQL registrations, switch production readers, implement UE5 `VerifyImportInner`, or add Zen/IoStore support.
 
 ## UE5 implementation checklist for UEDB5
 
-Before full UE5 support can be marked complete, the UEDB5 update must include all of the following. The classic reader is implemented; UEDB5 persistence, dependency resolution, and Zen/IoStore support remain:
+Before full UE5 support can be marked complete, the UEDB5 update must include all of the following. The classic reader and classic staging persistence are implemented; dependency resolution, production cutover, and Zen/IoStore support remain:
 
 1. [implemented in `b95dfe2c`] a dedicated UE5 reader using `FPackageFileVersion` and the UE5 summary/import/export gates, not `UnrealPackageReader4`;
-2. classic UE5 metadata blocks retaining `PackageName`, `bImportOptional`, complete raw package-index graphs and public-hash semantics;
+2. [implemented by `Uedb5Ue5ClassicSnapshotBuilder`] classic UE5 metadata blocks retaining `PackageName`, `bImportOptional`, complete raw package-index graphs and public-hash semantics;
 3. a UE5 classic dependency resolver implementing the audited `VerifyImportInner` rules without borrowing UE3 exact-tuple policy;
 4. IoStore `.utoc`/`.ucas` ingestion that preserves package-store provenance and package redirects/optional segments;
 5. Zen metadata blocks for PackageId/public-export-hash identity, typed `FPackageObjectIndex` values, export/dependency bundles, script imports and cell maps, using lossless unsigned-64 storage rather than PHP signed integers;
