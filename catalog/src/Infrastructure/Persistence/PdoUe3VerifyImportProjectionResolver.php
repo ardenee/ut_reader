@@ -22,14 +22,17 @@ final class PdoUe3VerifyImportProjectionResolver
      * @param list<array<string,mixed>> $consumerImports
      * @return array<int,int>
      */
-    public static function resolveProvider(PDO $db, int $providerFileId, array $consumerImports): array
-    {
+    public static function resolveProvider(
+        PDO $db,
+        int $providerFileId,
+        array $consumerImports,
+        ?array $targetImportIndexes = null
+    ): array {
         if ($providerFileId < 1 || $consumerImports === []) {
             return [];
         }
 
         $imports = [];
-        $objectNames = [];
         foreach ($consumerImports as $fallback => $row) {
             if (!is_array($row)) {
                 continue;
@@ -37,32 +40,41 @@ final class PdoUe3VerifyImportProjectionResolver
             $index = isset($row['import_index']) ? (int)$row['import_index'] : (int)$fallback;
             $imports[$index] = $row;
         }
-
         $imports = \UnrealDb\Catalog\Infrastructure\Metadata\CatalogCompactIdentityEnricher::ue3FixupImportMap($imports);
-        $objectNames = [];
-        foreach ($imports as $row) {
-            if (!is_array($row) || (int)($row['outer_index'] ?? 0) === 0) {
-                continue;
-            }
-            $objectName = trim((string)($row['object_name'] ?? ''));
-            if ($objectName !== '') {
-                $objectNames[self::key($objectName)] = $objectName;
-            }
-        }
-        $candidates = self::loadCandidates($db, $providerFileId, $objectNames);
-        $resolved = [];
-        $visiting = [];
-        foreach (array_keys($imports) as $importIndex) {
-            self::resolveImport((int)$importIndex, $imports, $candidates, $resolved, $visiting);
+
+        $targets = $targetImportIndexes === null
+            ? array_map('intval', array_keys($imports))
+            : array_values(array_unique(array_map('intval', $targetImportIndexes)));
+        if ($targets === []) {
+            return [];
         }
 
-        $matches = [];
-        foreach ($resolved as $importIndex => $exportIndex) {
-            if ($exportIndex !== null && $exportIndex !== self::FAILURE_SENTINEL) {
-                $matches[(int)$importIndex] = (int)$exportIndex;
+        $needed = self::importClosure($imports, $targets);
+        $objectNames = self::objectNamesForImports($imports, $needed);
+        $candidates = self::loadCandidates($db, $providerFileId, $objectNames);
+        $matches = self::resolveTargetImports($imports, $candidates, $targets);
+
+        $unresolved = [];
+        foreach ($targets as $importIndex) {
+            $import = $imports[$importIndex] ?? null;
+            if (is_array($import) && (int)($import['outer_index'] ?? 0) !== 0 && !isset($matches[$importIndex])) {
+                $unresolved[] = $importIndex;
             }
         }
-        return $matches;
+        if ($unresolved === []) {
+            return $matches;
+        }
+
+        // FName comparison is case-insensitive. The compact term dictionary keeps
+        // display casing, so only unresolved names pay for the slower collation
+        // fallback that discovers differently-cased provider terms.
+        $fallbackNeeded = self::importClosure($imports, $unresolved);
+        $fallbackNames = self::objectNamesForImports($imports, $fallbackNeeded);
+        $fallback = self::loadCaseInsensitiveCandidates($db, $providerFileId, $fallbackNames);
+        if ($fallback === []) {
+            return $matches;
+        }
+        return self::resolveTargetImports($imports, self::mergeCandidates($candidates, $fallback), $targets);
     }
 
     /**
@@ -249,9 +261,8 @@ final class PdoUe3VerifyImportProjectionResolver
 
     /**
      * Load UE3 candidates by serialized ObjectName, mirroring the first key of
-     * VerifyImportInner. Derived full/local paths are deliberately not part of
-     * provider-export identity; exact class identity and resolved OuterIndex are
-     * qualified later by resolveImport().
+     * VerifyImportInner. The fast path resolves exact ue_terms IDs through the
+     * dictionary hash index, then probes ue_export_lookup by object_term_id.
      *
      * @param array<string,string> $objectNames normalized name => original name
      * @return array<string,list<array<string,mixed>>>
@@ -261,7 +272,90 @@ final class PdoUe3VerifyImportProjectionResolver
         if ($objectNames === []) {
             return [];
         }
+        return self::loadCandidatesForTerms(
+            $db,
+            $providerFileId,
+            $objectNames,
+            self::loadExactObjectNameTerms($db, $objectNames)
+        );
+    }
 
+    /** @param array<string,string> $objectNames @return array<int,string> */
+    private static function loadExactObjectNameTerms(PDO $db, array $objectNames): array
+    {
+        $result = [];
+        foreach (array_chunk(array_values($objectNames), self::HASH_BATCH_SIZE) as $chunk) {
+            $predicates = [];
+            $arguments = [];
+            $expected = [];
+            foreach ($chunk as $name) {
+                $hash = md5($name, true);
+                $length = strlen($name);
+                $predicates[] = '(value_hash=? AND value_length=?)';
+                $arguments[] = $hash;
+                $arguments[] = $length;
+                $expected[bin2hex($hash) . ':' . $length] = $name;
+            }
+            $statement = $db->prepare(
+                'SELECT id,value_hash,value_length FROM ue_terms WHERE ' . implode(' OR ', $predicates)
+            );
+            $statement->execute($arguments);
+            while (($row = $statement->fetch(PDO::FETCH_ASSOC)) !== false) {
+                $key = bin2hex((string)$row['value_hash']) . ':' . (int)$row['value_length'];
+                if (isset($expected[$key])) {
+                    $result[(int)$row['id']] = $expected[$key];
+                }
+            }
+        }
+        return $result;
+    }
+
+    /**
+     * @param array<string,string> $objectNames
+     * @param array<int,string> $termNames
+     * @return array<string,list<array<string,mixed>>>
+     */
+    private static function loadCandidatesForTerms(
+        PDO $db,
+        int $providerFileId,
+        array $objectNames,
+        array $termNames
+    ): array {
+        if ($termNames === []) {
+            return [];
+        }
+        $result = [];
+        foreach (array_chunk($termNames, self::HASH_BATCH_SIZE, true) as $chunk) {
+            $termIds = array_map('intval', array_keys($chunk));
+            $placeholders = implode(',', array_fill(0, count($termIds), '?'));
+            $statement = $db->prepare(
+                'SELECT e.export_index,e.object_term_id,l.outer_index,l.object_flags,'
+                . 'cpt.value_prefix class_package,cnt.value_prefix class_name'
+                . ' FROM ue_export_lookup e'
+                . ' JOIN ue_export_path_lookup l ON l.file_id=e.file_id AND l.export_index=e.export_index'
+                . ' LEFT JOIN ue_terms cpt ON cpt.id=l.class_package_term_id'
+                . ' LEFT JOIN ue_terms cnt ON cnt.id=l.class_name_term_id'
+                . ' WHERE e.file_id=? AND e.object_term_id IN (' . $placeholders . ')'
+                . ' ORDER BY e.export_index DESC'
+            );
+            $statement->execute(array_merge([$providerFileId], $termIds));
+            while (($row = $statement->fetch(PDO::FETCH_ASSOC)) !== false) {
+                $objectName = (string)($chunk[(int)$row['object_term_id']] ?? '');
+                if ($objectName === '' || !isset($objectNames[self::key($objectName)])) {
+                    continue;
+                }
+                self::appendCandidate($result, $row, $objectName);
+            }
+        }
+        return $result;
+    }
+
+    /** @param array<string,string> $objectNames @return array<string,list<array<string,mixed>>> */
+    private static function loadCaseInsensitiveCandidates(PDO $db, int $providerFileId, array $objectNames): array
+    {
+        if ($objectNames === []) {
+            return [];
+        }
         $result = [];
         foreach (array_chunk(array_values($objectNames), self::HASH_BATCH_SIZE) as $chunk) {
             $placeholders = implode(',', array_fill(0, count($chunk), '?'));
@@ -279,26 +373,109 @@ final class PdoUe3VerifyImportProjectionResolver
             );
             $statement->execute(array_merge([$providerFileId], $chunk));
             while (($row = $statement->fetch(PDO::FETCH_ASSOC)) !== false) {
-                $objectKey = self::key((string)($row['object_name'] ?? ''));
-                if ($objectKey === '' || !isset($objectNames[$objectKey])) {
+                $objectName = (string)($row['object_name'] ?? '');
+                if ($objectName === '' || !isset($objectNames[self::key($objectName)])) {
                     continue;
                 }
-                $identityKey = self::identityKey(
-                    (string)($row['object_name'] ?? ''),
-                    (string)($row['class_name'] ?? ''),
-                    (string)($row['class_package'] ?? '')
-                );
-                $result[$identityKey][] = [
-                    'export_index' => (int)$row['export_index'],
-                    'object_name' => (string)($row['object_name'] ?? ''),
-                    'outer_index' => (int)($row['outer_index'] ?? 0),
-                    'object_flags' => (int)($row['object_flags'] ?? 0),
-                    'class_package' => (string)($row['class_package'] ?? ''),
-                    'class_name' => (string)($row['class_name'] ?? ''),
-                ];
+                self::appendCandidate($result, $row, $objectName);
             }
         }
         return $result;
+    }
+
+    /** @param array<string,list<array<string,mixed>>> $result @param array<string,mixed> $row */
+    private static function appendCandidate(array &$result, array $row, string $objectName): void
+    {
+        $className = (string)($row['class_name'] ?? '');
+        $classPackage = (string)($row['class_package'] ?? '');
+        $identityKey = self::identityKey($objectName, $className, $classPackage);
+        $result[$identityKey][] = [
+            'export_index' => (int)$row['export_index'],
+            'object_name' => $objectName,
+            'outer_index' => (int)($row['outer_index'] ?? 0),
+            'object_flags' => (int)($row['object_flags'] ?? 0),
+            'class_package' => $classPackage,
+            'class_name' => $className,
+        ];
+    }
+
+    /** @param array<int,array<string,mixed>> $imports @param list<int> $targets @return list<int> */
+    private static function importClosure(array $imports, array $targets): array
+    {
+        $needed = [];
+        foreach ($targets as $target) {
+            $index = (int)$target;
+            $seen = [];
+            while (isset($imports[$index]) && !isset($seen[$index])) {
+                $seen[$index] = true;
+                $needed[$index] = true;
+                $outer = (int)($imports[$index]['outer_index'] ?? 0);
+                if ($outer >= 0) {
+                    break;
+                }
+                $index = -$outer - 1;
+            }
+        }
+        return array_map('intval', array_keys($needed));
+    }
+
+    /** @param array<int,array<string,mixed>> $imports @param list<int> $indexes @return array<string,string> */
+    private static function objectNamesForImports(array $imports, array $indexes): array
+    {
+        $names = [];
+        foreach ($indexes as $index) {
+            $row = $imports[(int)$index] ?? null;
+            if (!is_array($row) || (int)($row['outer_index'] ?? 0) === 0) {
+                continue;
+            }
+            $name = trim((string)($row['object_name'] ?? ''));
+            if ($name !== '') {
+                $names[self::key($name)] = $name;
+            }
+        }
+        return $names;
+    }
+
+    /**
+     * @param array<int,array<string,mixed>> $imports
+     * @param array<string,list<array<string,mixed>>> $candidates
+     * @param list<int> $targets
+     * @return array<int,int>
+     */
+    private static function resolveTargetImports(array $imports, array $candidates, array $targets): array
+    {
+        $resolved = [];
+        $visiting = [];
+        foreach ($targets as $importIndex) {
+            self::resolveImport((int)$importIndex, $imports, $candidates, $resolved, $visiting);
+        }
+        $matches = [];
+        foreach ($targets as $importIndex) {
+            $exportIndex = $resolved[(int)$importIndex] ?? self::FAILURE_SENTINEL;
+            if ($exportIndex !== null && $exportIndex !== self::FAILURE_SENTINEL) {
+                $matches[(int)$importIndex] = (int)$exportIndex;
+            }
+        }
+        return $matches;
+    }
+
+    /**
+     * @param array<string,list<array<string,mixed>>> $first
+     * @param array<string,list<array<string,mixed>>> $second
+     * @return array<string,list<array<string,mixed>>>
+     */
+    private static function mergeCandidates(array $first, array $second): array
+    {
+        foreach ($second as $key => $rows) {
+            $byExport = [];
+            foreach (array_merge($first[$key] ?? [], $rows) as $row) {
+                $byExport[(int)($row['export_index'] ?? -1)] = $row;
+            }
+            $merged = array_values($byExport);
+            usort($merged, static fn(array $a, array $b): int => (int)$b['export_index'] <=> (int)$a['export_index']);
+            $first[$key] = $merged;
+        }
+        return $first;
     }
 
     private static function identityKey(string $objectName, string $className, string $classPackage): string

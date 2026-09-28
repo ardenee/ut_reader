@@ -184,7 +184,8 @@ final class PdoDependencyResolver
                     $matches = PdoUe3VerifyImportProjectionResolver::resolveProvider(
                         $db,
                         (int)$candidate['file_id'],
-                        $imports
+                        $imports,
+                        $requiredImportIndexes
                     );
                     $matchCount = 0;
                     foreach ($requiredImportIndexes as $requiredImportIndex) {

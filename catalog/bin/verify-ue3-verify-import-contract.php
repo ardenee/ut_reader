@@ -282,10 +282,10 @@ $check(
 
 $check(
     'ue3_db_lookup_uses_serialized_object_identity_not_path_hash',
-    str_contains($ue3Resolver, 'FROM ue_export_lookup e')
-        && str_contains($ue3Resolver, 'ot.value_prefix object_name')
+    str_contains($ue3Resolver, '(value_hash=? AND value_length=?)')
+        && str_contains($ue3Resolver, 'e.object_term_id IN (')
         && !str_contains($ue3Resolver, 'l.path_hash_ci IN ('),
-    'The persisted UE3 matcher must seed candidates from serialized ObjectName; derived catalog path hashes are not VerifyImport identity.'
+    'The persisted UE3 matcher must seed candidates from serialized ObjectName, resolve provider-local FName spellings, then use indexed object_term_id lookup; derived catalog path hashes are not VerifyImport identity.'
 );
 
 $check(
@@ -294,6 +294,15 @@ $check(
         && str_contains($sharedResolver, '$isObjectImport = $ue3VerifyImport')
         && str_contains($sharedResolver, '? (int)($import[\'outer_index\'] ?? 0) !== 0'),
     'UE3 package grouping and object-import classification must come from serialized OuterIndex/Core.Package roots, not generated path strings.'
+);
+
+$check(
+    'ue3_provider_lookup_is_scoped_and_indexed',
+    preg_match('/PdoUe3VerifyImportProjectionResolver::resolveProvider\([^;]+\$requiredImportIndexes/s', $sharedResolver) === 1
+        && str_contains($ue3Resolver, 'loadExactObjectNameTerms')
+        && str_contains($ue3Resolver, 'loadCaseInsensitiveCandidates')
+        && str_contains($ue3Resolver, 'only unresolved names pay for the slower collation'),
+    'UE3 provider SQL must seed only the required package import closure, use indexed exact term IDs normally, and retain case-insensitive FName fallback only for unresolved names.'
 );
 
 $check(
