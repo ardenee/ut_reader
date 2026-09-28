@@ -57,6 +57,22 @@ final class CompactSearchProjectionWriter
 
         $this->assertProjectionCounts($fileId, count($imports), count($exports), $sqlBatches);
 
+        // The normal compact publisher passes the complete resolved term map and
+        // already inserts import_object_term_id/local_path_term_id directly into
+        // ue_dependency_links and ue_export_lookup. Rewriting those same values
+        // here would lock/update every Import/Export a second time. Standalone
+        // compatibility callers still use the repair updates below.
+        if ($resolvedTermIds !== null) {
+            $this->assertTermProjectionCounts(
+                $fileId,
+                count($names),
+                count($imports),
+                count($exports),
+                $sqlBatches
+            );
+            return;
+        }
+
         $importBatch = [];
         foreach ($imports as $row) {
             if (!is_array($row)) {

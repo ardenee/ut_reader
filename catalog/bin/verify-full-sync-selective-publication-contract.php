@@ -237,6 +237,18 @@ $record(
         && str_contains($workerVersionSource, '/src/Infrastructure/Metadata/CompactDependencyRebuilder.php'),
     'Detached workers must recycle when any selective-publication runtime component changes.'
 );
+$searchProjectionSource = (string)file_get_contents($root . '/src/Infrastructure/Metadata/CompactSearchProjectionWriter.php');
+$hotResolvedPos = strpos($searchProjectionSource, 'if ($resolvedTermIds !== null)');
+$legacyImportUpdatePos = strpos($searchProjectionSource, '$importBatch = [];');
+$record(
+    'full_publication_skips_duplicate_term_updates',
+    $hotResolvedPos !== false
+        && $legacyImportUpdatePos !== false
+        && $hotResolvedPos < $legacyImportUpdatePos
+        && str_contains(substr($searchProjectionSource, $hotResolvedPos, $legacyImportUpdatePos - $hotResolvedPos), 'return;'),
+    'Normal compact publication already inserts Import/Export term IDs and must not UPDATE every row a second time.'
+);
+
 $rebuilderSource = (string)file_get_contents($root . '/src/Infrastructure/Metadata/CompactDependencyRebuilder.php');
 $finalizerSource = (string)file_get_contents($root . '/src/Infrastructure/Metadata/VerifiedFileCompactMetadataFinalizer.php');
 $record(
@@ -259,6 +271,7 @@ foreach ([
     'src/Infrastructure/Metadata/BlockedCompressedMetadataSnapshotWriter.php',
     'src/Infrastructure/Metadata/VerifiedFileCompactMetadataFinalizer.php',
     'src/Infrastructure/Metadata/CompactDependencyRebuilder.php',
+    'src/Infrastructure/Metadata/CompactSearchProjectionWriter.php',
 ] as $relative) {
     $path = $root . '/' . $relative;
     $pipes = [];
