@@ -700,9 +700,11 @@ final class UnrealPackageReader5
             $serializedPackageName = $ue4 >= self::VER_NON_OUTER_PACKAGE_IMPORT
                 ? $this->readFName($r)
                 : ['index' => 0, 'number' => 0, 'text' => ''];
-            $packageName = $serializedPackageName;
-            if ($filterEditorOnly && $this->sameFName($packageName, $objectName)) {
-                $packageName = ['index' => 0, 'number' => 0, 'text' => ''];
+            $packageName = $this->isNoneFName($serializedPackageName)
+                ? $this->semanticNoneFName()
+                : $serializedPackageName;
+            if ($filterEditorOnly && $this->sameFName($serializedPackageName, $objectName)) {
+                $packageName = $this->semanticNoneFName();
             }
             $importOptional = $ue5 >= self::UE5_OPTIONAL_RESOURCES ? ($r->i32() !== 0) : false;
             $this->imports[] = [
@@ -731,6 +733,17 @@ final class UnrealPackageReader5
     {
         return (int)($a['index'] ?? -1) === (int)($b['index'] ?? -2)
             && (int)($a['number'] ?? -1) === (int)($b['number'] ?? -2);
+    }
+    private function isNoneFName(array $name): bool
+    {
+        $text = trim((string)($name['text'] ?? ''));
+        return $text === '' || ((int)($name['number'] ?? 0) === 0 && strcasecmp($text, 'None') === 0);
+    }
+
+    /** @return array{index:int,number:int,text:string} */
+    private function semanticNoneFName(): array
+    {
+        return ['index' => 0, 'number' => 0, 'text' => ''];
     }
 
     private function readExports(): void

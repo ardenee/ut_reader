@@ -52,7 +52,8 @@ Its purpose is to let an engineer implement, review, or repair UnrealDB's parser
 - [x] UE4 package format and reading — `ue4-4.27.2-package-format.md`
 - [x] UE4 dependency resolution — `ue4-4.27.2-dependency-resolution.md`
 - [x] UE5 5.8.3 classic package format and reading — `ue5-5.8.3-classic-package-format.md` (classic LinkerLoad path implemented; Zen/IoStore still pending)
-- [x] UEDB5 metadata requirements from UE3/UE4/UE5 source audit — `uedb5-metadata-requirements.md` (format-5 container/staging foundation and UE5 5.8.3 classic staging persistence implemented; UE3/UE4 reparsing, dependency resolution, production cutover, and Zen/IoStore remain pending)
+- [x] UE5 5.8.3 classic dependency resolution — `ue5-5.8.3-classic-dependency-resolution.md` (UEDB5 staging/source-parity `VerifyImportInner` resolver implemented; production cutover and Zen/IoStore remain pending)
+- [x] UEDB5 metadata requirements from UE3/UE4/UE5 source audit — `uedb5-metadata-requirements.md` (format-5 foundation, UE5 classic persistence and UE5 classic `VerifyImportInner` staging resolver implemented; UE3/UE4 reparsing, production cutover, broader dependency classifications, and Zen/IoStore remain pending)
 
 ### Redirect/archive/mod formats
 

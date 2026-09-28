@@ -264,7 +264,7 @@ final class Uedb5Ue5ClassicSnapshotBuilder
     private static function effectiveFname(array $name): array
     {
         $text = (string)($name['text'] ?? '');
-        $isNone = $text === '';
+        $isNone = $text === '' || ((int)($name['number'] ?? 0) === 0 && strcasecmp($text, 'None') === 0);
         return [
             'name_index' => $isNone ? null : (int)($name['index'] ?? 0),
             'number' => $isNone ? null : (int)($name['number'] ?? 0),

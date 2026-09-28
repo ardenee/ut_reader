@@ -93,6 +93,41 @@ $buildPreHashFixture = static function () use ($u16, $u32, $i32, $i64, $fstring,
     $summary = $build(strlen($summary0) + strlen($nameBytes), strlen($summary0));
     return $summary . $nameBytes;
 };
+$buildNonePackageNameFixture = static function () use ($u32, $i32, $i64, $fstring, $fname, $nameEntry, $engineVersion): string {
+    $names = ['None', 'CoreUObject', 'Class', 'MyObject'];
+    $nameBytes = '';
+    foreach ($names as $name) $nameBytes .= $nameEntry($name);
+    $importBytes = $fname(1) . $fname(2) . $i32(0) . $fname(3) . $fname(0) . $i32(0);
+    $build = static function (int $headerSize, int $nameOffset, int $importOffset) use ($u32, $i32, $i64, $fstring, $engineVersion): string {
+        $out = $u32(0x9E2A83C1) . $i32(-9) . $i32(864) . $i32(522) . $i32(1018) . $i32(0);
+        $out .= str_repeat("\0", 20) . $i32($headerSize) . $i32(0);
+        $out .= $fstring('/Game/NonePackageName') . $u32(0);
+        $out .= $i32(4) . $i32($nameOffset);
+        $out .= $i32(0) . $i32(0); // SoftObjectPaths
+        $out .= $fstring(''); // LocalizationId
+        $out .= $i32(0) . $i32(0); // Gatherable text
+        $out .= $i32(0) . $i32(0) . $i32(1) . $i32($importOffset); // Export/import tables
+        $out .= $i32(0) . $i32(0) . $i32(0) . $i32(0); // Verse cells
+        $out .= $i32(0) . $i32(0); // MetaDataOffset + DependsOffset
+        $out .= $i32(0) . $i32(0); // SoftPackageReferences
+        $out .= $i32(0) . $i32(0); // SearchableNames + ThumbnailTable
+        $out .= $i32(0) . $i32(0); // ImportTypeHierarchies
+        $out .= str_repeat("\0", 16); // PersistentGuid
+        $out .= $i32(0); // GenerationCount
+        $out .= $engineVersion() . $engineVersion();
+        $out .= $u32(0) . $i32(0) . $u32(0) . $i32(0); // Compression + source/additional packages
+        $out .= $i32(0) . $i64(0) . $i32(0) . $i32(0); // AssetRegistry, bulk, world tile, chunks
+        $out .= $i32(0) . $i32(0); // Preload deps
+        $out .= $i32(4) . $i64(-1) . $i32(-1); // NamesReferenced, PayloadToc, DataResource
+        return $out;
+    };
+    $summary0 = $build(0, 0, 0);
+    $nameOffset = strlen($summary0);
+    $importOffset = $nameOffset + strlen($nameBytes);
+    $summary = $build($importOffset + strlen($importBytes), $nameOffset, $importOffset);
+    if (strlen($summary) !== strlen($summary0)) throw new RuntimeException('None PackageName summary size changed.');
+    return $summary . $nameBytes . $importBytes;
+};
 $summary0 = $buildSummary(0, 0, 0, 0, 0);
 $nameOffset = strlen($summary0);
 $importOffset = $nameOffset + strlen($nameBytes);
@@ -104,8 +139,10 @@ if (strlen($summary) !== strlen($summary0)) throw new RuntimeException('Syntheti
 $fixture = $summary . $nameBytes . $importBytes . $exportBytes . $softReferenceBytes;
 $path = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'unrealdb-ue5-583-reader-contract.uasset';
 $preHashPath = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'unrealdb-ue5-pre-name-hash-contract.uasset';
+$nonePackageNamePath = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'unrealdb-ue5-none-package-name-contract.uasset';
 file_put_contents($path, $fixture);
 file_put_contents($preHashPath, $buildPreHashFixture());
+file_put_contents($nonePackageNamePath, $buildNonePackageNameFixture());
 
 $checks = [];
 $check = static function (string $name, bool $ok, string $detail) use (&$checks): void {
@@ -147,6 +184,13 @@ try {
         && ($preHashNames[0]['caseHash'] ?? null) === null,
         'VER_UE4_NAME_HASHES_SERIALIZED must be gated by the UE4 version component, not the UE5 version.');
 
+    $nonePackageNameReader = new UnrealPackageReader5($nonePackageNamePath);
+    $nonePackageNameImport = $nonePackageNameReader->getImports()[0] ?? [];
+    $check('serialized_none_package_name_is_effective_none', $nonePackageNameReader->validatePackage() === []
+        && (string)($nonePackageNameImport['serializedPackageNameText'] ?? '') === 'None'
+        && (string)($nonePackageNameImport['packageNameText'] ?? 'x') === '',
+        'Serialized NAME_None must remain raw evidence while effective PackageName behaves like FName::IsNone().');
+
     $resolved = \UnrealDb\Catalog\Infrastructure\Readers\CatalogReaderResolver::resolve(
         [], 'UE5', 'Reader not found', 'Reader class missing ', ['UE4', 'UE5']
     );
@@ -154,6 +198,7 @@ try {
 } finally {
     @unlink($path);
     @unlink($preHashPath);
+    @unlink($nonePackageNamePath);
 }
 
 $failed = array_values(array_filter($checks, static fn(array $row): bool => !$row['ok']));

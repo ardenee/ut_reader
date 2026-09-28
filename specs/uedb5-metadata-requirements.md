@@ -140,7 +140,7 @@ UE5 classic `FObjectExport` serializes the RF_Load object-flag mask through a 32
 
 ### Classic UE5 dependency-resolution consequences
 
-A future UE5 resolver must operate on the retained raw graph rather than converting the package to the UE3 matching model.
+The implemented classic UE5 UEDB5 resolver operates on the retained raw graph rather than converting the package to the UE3 matching model.
 
 UE5 5.8.3 `VerifyImportInner()` requires UEDB5 to preserve enough information for these source behaviors:
 
@@ -343,7 +343,7 @@ The format-5 container/staging foundation is implemented without changing the pr
 - `catalog/bin/verify-uedb5-container-foundation.php` verifies round-trip block reading, fixed-width unsigned-64 hex preservation, corruption rejection, and the isolation boundary from UEDB4;
 - production `BlockedCompressedMetadataContainer` / `BlockedCompressedMetadataReader` remain format 4 only and continue to use `.uedb4` until the migration/cutover is ready.
 
-The container foundation is intentionally source-shape agnostic. UE3/UE4 reparsed fields, dependency resolution, SQL publication/cutover, and Zen/IoStore metadata remain separate implementation sections.
+The container foundation is intentionally source-shape agnostic. UE3/UE4 reparsed fields, remaining dependency projections/classifications, SQL publication/cutover, and Zen/IoStore metadata remain separate implementation sections.
 
 ## Current UE5 classic UEDB5 persistence
 
@@ -358,15 +358,31 @@ Classic UE5 5.8.3 source-shaped persistence is implemented for offline/staging U
 - soft package references remain a separate section and retain every serialized FName row, including a serialized None entry if one exists;
 - `catalog/bin/verify-uedb5-ue5-classic-persistence.php` verifies full `.uedb5` round-trip preservation, including the filtered-editor-only serialized/effective `PackageName` distinction and serialized-zero versus assumed version identity for unversioned packages.
 
-This section is persistence only. It does not publish UEDB5 SQL registrations, switch production readers, implement UE5 `VerifyImportInner`, or add Zen/IoStore support.
+The persistence layer itself does not publish UEDB5 SQL registrations or switch production readers. Classic UE5 `VerifyImportInner` source-parity resolution is implemented separately below; Zen/IoStore and production cutover remain pending.
+
+## Current UE5 classic dependency resolution
+
+The deterministic file-backed portion of UE5 5.8.3 `FLinkerLoad::VerifyImportInner()` is implemented for source-shaped UEDB5 staging metadata:
+
+- `Uedb5Ue5ClassicVerifyImportResolver` consumes the Section 4 classic import/export schemas and requires one selected physical provider linker per package; it never combines exports from multiple same-name files into a synthetic provider;
+- effective `PackageName` after source load-time fixups selects a provider linker independently of the outer chain; otherwise child imports inherit the outer import's resolved linker, while an import with an export outer requires explicit package identity;
+- provider export traversal follows Epic's `ExportHash` ordering, including higher-index-first traversal for duplicate object names;
+- same-linker and cross-linker outer checks reproduce the source graph rules; cross-linker outer class/package mismatch is retained as deferred create-time verification rather than rejecting the provider;
+- requested class-package/name mismatch on the matched export likewise remains a resolved candidate with deferred class verification, matching `ImportsToVerifyOnCreate`;
+- UE5 `RF_Public` is tested as `0x00000001`; the three source graph exceptions `ImportIsInAnyExport`, `AnyExportIsInImport`, and `AnyExportShareOuterWithImport` can permit an otherwise-private export;
+- `bImportOptional` preserves `optional_missing` separately from hard `missing`; script/native, redirector destination, instancing, editor safe-replace, dynamic-import injection, and other live UObject paths remain `runtime_only` or unmaterialized rather than fabricated;
+- `catalog/bin/verify-uedb5-ue5-classic-dependency-resolution.php` verifies these rules, including that `RF_HasDynamicImports` does not cause synthetic serialized import rows.
+
+This resolver is deliberately not wired into production `PdoDependencyResolver` / `CompactDependencyRebuilder`; those still consume UEDB4 metadata and must remain unchanged until the UEDB5 migration/publication cutover.
+
 
 ## UE5 implementation checklist for UEDB5
 
-Before full UE5 support can be marked complete, the UEDB5 update must include all of the following. The classic reader and classic staging persistence are implemented; dependency resolution, production cutover, and Zen/IoStore support remain:
+Before full UE5 support can be marked complete, the UEDB5 update must include all of the following. The classic reader, classic staging persistence, and deterministic classic `VerifyImportInner` staging resolver are implemented; production publication/cutover, complete dependency projections/classification, and Zen/IoStore support remain:
 
 1. [implemented in `b95dfe2c`] a dedicated UE5 reader using `FPackageFileVersion` and the UE5 summary/import/export gates, not `UnrealPackageReader4`;
 2. [implemented by `Uedb5Ue5ClassicSnapshotBuilder`] classic UE5 metadata blocks retaining `PackageName`, `bImportOptional`, complete raw package-index graphs and public-hash semantics;
-3. a UE5 classic dependency resolver implementing the audited `VerifyImportInner` rules without borrowing UE3 exact-tuple policy;
+3. [implemented by `Uedb5Ue5ClassicVerifyImportResolver`] a UE5 classic dependency resolver implementing the audited deterministic file-backed `VerifyImportInner` rules without borrowing UE3 exact-tuple policy; runtime-only branches remain explicitly unresolved;
 4. IoStore `.utoc`/`.ucas` ingestion that preserves package-store provenance and package redirects/optional segments;
 5. Zen metadata blocks for PackageId/public-export-hash identity, typed `FPackageObjectIndex` values, export/dependency bundles, script imports and cell maps, using lossless unsigned-64 storage rather than PHP signed integers;
 6. separate dependency classifications for hard, optional, soft, build/cook, script, cell/Verse, load-order and runtime-derived references;
@@ -421,6 +437,7 @@ UEDB5 verification must compare source-derived raw fields, not merely counts and
 | Package summary/version gates | `Engine/Source/Runtime/CoreUObject/Public/UObject/PackageFileSummary.h` and `Engine/Source/Runtime/CoreUObject/Private/UObject/PackageFileSummary.cpp`, `FPackageFileSummary` serializer |
 | `FObjectImport` fields, `PackageName` fixup, `bImportOptional` | `Engine/Source/Runtime/CoreUObject/Private/UObject/ObjectResource.cpp`, `operator<<(FStructuredArchive::FSlot, FObjectImport&)` |
 | `FObjectExport` version gates and flags | `Engine/Source/Runtime/CoreUObject/Private/UObject/ObjectResource.cpp`, `operator<<(FStructuredArchive::FSlot, FObjectExport&)` |
+| UE5 classic RF_Public / RF_Load object-flag values | Engine/Source/Runtime/CoreUObject/Public/UObject/ObjectMacros.h, EObjectFlags, RF_Load |
 | Classic import/provider resolution, export-outers, deferred class verification and private-export exceptions | `Engine/Source/Runtime/CoreUObject/Private/UObject/LinkerLoad.cpp`, `FLinkerLoad::VerifyImportInner` |
 | Private-import containment tests | `Engine/Source/Runtime/CoreUObject/Private/UObject/Linker.cpp`, `ResourceIsIn`, `ImportIsInAnyExport`, `AnyExportIsInImport`, `AnyExportShareOuterWithImport` |
 | Runtime-created dynamic imports | `Engine/Source/Runtime/CoreUObject/Private/UObject/LinkerLoad.cpp`, `FLinkerLoad::AddDynamicImports` |
@@ -437,4 +454,4 @@ UEDB5 verification must compare source-derived raw fields, not merely counts and
 | Cell/Verse resources | `Engine/Source/Runtime/CoreUObject/Public/UObject/ObjectResource.h`, `FCellResource`, `FCellImport`, `FCellExport` |
 | Import type hierarchy reading | `Engine/Source/Runtime/AssetRegistry/Private/PackageReader.cpp`, `FPackageReader::ReadImportTypeHierarchies` |
 
-This matrix is intentionally limited to behaviors audited for UEDB5. The dedicated UE5 classic package-format specification now covers the implemented LinkerLoad reader. The dependency-resolution and Zen/IoStore specifications must expand it to cover the complete serialized summary order, version gates, name maps, payloads, compression/container handling and all loader branches before UE5 support is marked complete.
+This matrix is intentionally limited to behaviors audited for UEDB5. The dedicated UE5 classic package-format and dependency-resolution specifications cover the implemented LinkerLoad reader and deterministic file-backed `VerifyImportInner` resolver. Zen/IoStore specifications must still expand the matrix to cover cooked package-store identity, container ingestion, payloads, dependency bundles, and remaining loader branches before UE5 support is marked complete.
