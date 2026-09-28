@@ -30,7 +30,7 @@ Its purpose is to let an engineer implement, review, or repair UnrealDB's parser
 | UE3 | `ardenee/UE3src` | Primary UE3 source of truth |
 | UT3 | `ardenee/UT3src-comunity` | UT3 game-specific supplemental source |
 | UE4 | `ardenee/UnrealEngine4` | UE4 source of truth; 4.27.2-release lineage |
-| UE5 | local checkout of `ardenee/UnrealEngine4`, `release` @ `396c9f059903aed5fec78ecd3d437a40c6415368` | UE5 5.8.3 source of truth for the current audit; `Engine/Build/Build.version` reports 5.8.3 |
+| UE5 | `L:\Source\Engine\UE5\UE 5.8.3` | UE5 5.8.3 source of truth; `release` @ `396c9f059903aed5fec78ecd3d437a40c6415368` |
 
 ## Required specification coverage
 
@@ -51,7 +51,7 @@ Its purpose is to let an engineer implement, review, or repair UnrealDB's parser
 - [x] UT3 package-version-512 dependency resolution — `ut3-v512-dependency-resolution.md`
 - [x] UE4 package format and reading — `ue4-4.27.2-package-format.md`
 - [x] UE4 dependency resolution — `ue4-4.27.2-dependency-resolution.md`
-- [ ] UE5 package format and reading — source is now available; dedicated UE5 5.8.3 package-format spec still pending
+- [x] UE5 5.8.3 classic package format and reading — `ue5-5.8.3-classic-package-format.md` (classic LinkerLoad path implemented; Zen/IoStore still pending)
 - [x] UEDB5 metadata requirements from UE3/UE4/UE5 source audit — `uedb5-metadata-requirements.md`
 
 ### Redirect/archive/mod formats

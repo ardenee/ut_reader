@@ -336,9 +336,9 @@ A missing optional or soft dependency must not inflate the same counter used for
 
 ## UE5 implementation checklist for UEDB5
 
-Before UE5 can be marked supported, the UEDB5 update must include all of the following:
+Before full UE5 support can be marked complete, the UEDB5 update must include all of the following. The classic reader is implemented; UEDB5 persistence, dependency resolution, and Zen/IoStore support remain:
 
-1. a dedicated UE5 reader using `FPackageFileVersion` and the UE5 summary/import/export gates, not `UnrealPackageReader4`;
+1. [implemented in `b95dfe2c`] a dedicated UE5 reader using `FPackageFileVersion` and the UE5 summary/import/export gates, not `UnrealPackageReader4`;
 2. classic UE5 metadata blocks retaining `PackageName`, `bImportOptional`, complete raw package-index graphs and public-hash semantics;
 3. a UE5 classic dependency resolver implementing the audited `VerifyImportInner` rules without borrowing UE3 exact-tuple policy;
 4. IoStore `.utoc`/`.ucas` ingestion that preserves package-store provenance and package redirects/optional segments;
@@ -411,4 +411,4 @@ UEDB5 verification must compare source-derived raw fields, not merely counts and
 | Cell/Verse resources | `Engine/Source/Runtime/CoreUObject/Public/UObject/ObjectResource.h`, `FCellResource`, `FCellImport`, `FCellExport` |
 | Import type hierarchy reading | `Engine/Source/Runtime/AssetRegistry/Private/PackageReader.cpp`, `FPackageReader::ReadImportTypeHierarchies` |
 
-This matrix is intentionally limited to behaviors audited for UEDB5. The dedicated UE5 package-format and dependency-resolution specifications must expand it to cover the complete serialized summary order, version gates, name maps, payloads, compression/container handling and all loader branches before UE5 support is marked complete.
+This matrix is intentionally limited to behaviors audited for UEDB5. The dedicated UE5 classic package-format specification now covers the implemented LinkerLoad reader. The dependency-resolution and Zen/IoStore specifications must expand it to cover the complete serialized summary order, version gates, name maps, payloads, compression/container handling and all loader branches before UE5 support is marked complete.
