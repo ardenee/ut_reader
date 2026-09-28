@@ -334,6 +334,17 @@ UEDB5 must allow UnrealDB dependency rows to distinguish at least:
 
 A missing optional or soft dependency must not inflate the same counter used for a missing required hard dependency unless the source semantics explicitly require that classification.
 
+## Current UEDB5 container foundation
+
+The format-5 container/staging foundation is implemented without changing the production UEDB4 runtime:
+
+- `Uedb5MetadataContainer` defines format version `5`, magic `UEDBM5` followed by two NUL bytes, the `.uedb5` extension, gzip-block framing, per-block SHA-256 verification, explicit `package_family` / `source_policy`, and optional per-section schema identifiers;
+- `Uedb5MetadataStagingReader` reads only an explicitly supplied staged `.uedb5` file and has no database-registration path;
+- `catalog/bin/verify-uedb5-container-foundation.php` verifies round-trip block reading, fixed-width unsigned-64 hex preservation, corruption rejection, and the isolation boundary from UEDB4;
+- production `BlockedCompressedMetadataContainer` / `BlockedCompressedMetadataReader` remain format 4 only and continue to use `.uedb4` until the migration/cutover is ready.
+
+This is the transport foundation only. It does **not** yet satisfy the source-specific UEDB5 persistence requirements below: UE3/UE4 reparsed fields, UE5 classic import/export schemas, dependency resolution, SQL publication, and Zen/IoStore metadata remain separate implementation sections.
+
 ## UE5 implementation checklist for UEDB5
 
 Before full UE5 support can be marked complete, the UEDB5 update must include all of the following. The classic reader is implemented; UEDB5 persistence, dependency resolution, and Zen/IoStore support remain:

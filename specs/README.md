@@ -52,7 +52,7 @@ Its purpose is to let an engineer implement, review, or repair UnrealDB's parser
 - [x] UE4 package format and reading — `ue4-4.27.2-package-format.md`
 - [x] UE4 dependency resolution — `ue4-4.27.2-dependency-resolution.md`
 - [x] UE5 5.8.3 classic package format and reading — `ue5-5.8.3-classic-package-format.md` (classic LinkerLoad path implemented; Zen/IoStore still pending)
-- [x] UEDB5 metadata requirements from UE3/UE4/UE5 source audit — `uedb5-metadata-requirements.md`
+- [x] UEDB5 metadata requirements from UE3/UE4/UE5 source audit — `uedb5-metadata-requirements.md` (format-5 container/staging foundation implemented; source-specific v5 persistence, dependency resolution, and Zen/IoStore remain pending)
 
 ### Redirect/archive/mod formats
 
