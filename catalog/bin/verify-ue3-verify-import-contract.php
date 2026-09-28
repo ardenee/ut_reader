@@ -15,6 +15,7 @@ require_once $root . '/bootstrap/autoload.php';
 $canonicalRebuild = (string)file_get_contents($root . '/bin/rebuild-legacy-dependencies.php');
 $sharedResolver = (string)file_get_contents($root . '/src/Infrastructure/Persistence/PdoDependencyResolver.php');
 $ue3Resolver = (string)file_get_contents($root . '/src/Infrastructure/Persistence/PdoUe3VerifyImportProjectionResolver.php');
+$workerFingerprint = (string)file_get_contents($root . '/src/Infrastructure/Jobs/CatalogWorkerCodeVersion.php');
 require_once $root . '/src/Infrastructure/Persistence/PdoUe3VerifyImportProjectionResolver.php';
 
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoUe3VerifyImportProjectionResolver;
@@ -303,6 +304,14 @@ $check(
         && str_contains($ue3Resolver, 'loadCaseInsensitiveCandidates')
         && str_contains($ue3Resolver, 'only unresolved names pay for the slower collation'),
     'UE3 provider SQL must seed only the required package import closure, use indexed exact term IDs normally, and retain case-insensitive FName fallback only for unresolved names.'
+);
+
+$check(
+    'worker_fingerprint_tracks_ue3_dependency_runtime',
+    str_contains($workerFingerprint, '/src/Infrastructure/Persistence/PdoDependencyResolver.php')
+        && str_contains($workerFingerprint, '/src/Infrastructure/Persistence/PdoUe3VerifyImportProjectionResolver.php')
+        && str_contains($workerFingerprint, '/src/Infrastructure/Metadata/CompactDependencyRebuilder.php'),
+    'Long-lived detached workers must be marked stale when shared or UE3 dependency-resolution code changes.'
 );
 
 $check(
