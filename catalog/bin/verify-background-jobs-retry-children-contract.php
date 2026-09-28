@@ -17,6 +17,7 @@ $read = static function (string $relative) use ($root): string {
 $endpoint = $read('api/v1/job-action.php');
 $ui = $read('assets/background-jobs-files.js');
 $bulk = $read('src/Infrastructure/Persistence/PdoBackgroundJobBulkAction.php');
+$cli = $read('bin/job-control.php');
 
 $checks = [];
 $failures = [];
@@ -66,6 +67,17 @@ $check(
         'status="completed"'
     ),
     'The targeted child retry path must never select successful completed siblings.'
+);
+
+$check(
+    'compact_repair_children_have_bounded_bulk_retry',
+    str_contains($cli, "retry-compact-repair-children")
+        && str_contains($cli, "JobType::REPAIR_COMPACT_METADATA_FILE")
+        && str_contains($cli, "JobType::REBUILD_AFFECTED_DEPENDENCIES")
+        && str_contains($cli, "error-contains")
+        && str_contains($cli, "new PdoBackgroundJobBulkAction")
+        && str_contains($cli, 'min((int)($options[\'limit\'] ?? 10000), 10000)'),
+    'CLI recovery must bulk-retry only terminal affected-dependency children under active compact-repair parents, with optional error filtering and bounded selection.'
 );
 
 $check(

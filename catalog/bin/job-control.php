@@ -17,6 +17,7 @@ if (PHP_SAPI !== 'cli') {
 require_once dirname(__DIR__) . '/bootstrap.php';
 
 use UnrealDb\Catalog\Domain\Jobs\JobType;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoBackgroundJobBulkAction;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 
 /** @return array<string,string> */
@@ -52,6 +53,7 @@ function job_control_usage(): never
     fwrite(STDERR, "  php catalog/bin/job-control.php cancel --id=123 [--reason=message]\n");
     fwrite(STDERR, "  php catalog/bin/job-control.php retry --id=123\n");
     fwrite(STDERR, "  php catalog/bin/job-control.php recover [--queue=catalog]\n");
+    fwrite(STDERR, "  php catalog/bin/job-control.php retry-compact-repair-children [--queue=catalog] [--limit=10000] [--error-contains=text]\n");
     fwrite(STDERR, "  php catalog/bin/job-control.php enqueue-rebuild-game --game-id=1 [--offset=0]\n");
     fwrite(STDERR, "  php catalog/bin/job-control.php enqueue-rebuild-file --file-id=123\n");
     fwrite(STDERR, "  php catalog/bin/job-control.php enqueue-rebuild-affected --file-id=123\n");
@@ -120,6 +122,34 @@ try {
         $result = $queue->recoverExpiredLeases($queueName);
         fwrite(STDOUT, json_encode(['queue' => $queueName] + $result, JSON_UNESCAPED_SLASHES) . PHP_EOL);
         exit(0);
+    }
+
+    if ($command === 'retry-compact-repair-children') {
+        $limit = max(1, min((int)($options['limit'] ?? 10000), 10000));
+        $errorContains = trim((string)($options['error-contains'] ?? ''));
+        $sql = 'SELECT c.id FROM ue_background_jobs c '
+            . 'JOIN ue_background_jobs p ON p.id=c.parent_job_id AND p.queue_name=c.queue_name '
+            . 'WHERE c.queue_name=? AND c.job_type=? '
+            . 'AND c.status IN ("dead_letter","failed","cancelled") '
+            . 'AND p.job_type=? AND p.status IN ("queued","running")';
+        $params = [$queueName, JobType::REBUILD_AFFECTED_DEPENDENCIES, JobType::REPAIR_COMPACT_METADATA_FILE];
+        if ($errorContains !== '') {
+            $sql .= ' AND c.last_error LIKE ?';
+            $params[] = '%' . $errorContains . '%';
+        }
+        $sql .= ' ORDER BY c.id ASC LIMIT ' . $limit;
+        $statement = $application->db->prepare($sql);
+        $statement->execute($params);
+        $jobIds = array_values(array_map('intval', $statement->fetchAll(PDO::FETCH_COLUMN) ?: []));
+        if ($jobIds === []) {
+            fwrite(STDOUT, json_encode(['queue' => $queueName, 'requested' => 0, 'affected' => 0]) . PHP_EOL);
+            exit(0);
+        }
+        $result = (new PdoBackgroundJobBulkAction($application->db, $application->config))->execute(
+            'restart', 'selected', $queueName, '', '', $jobIds, null, true
+        );
+        fwrite(STDOUT, json_encode($result, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . PHP_EOL);
+        exit(((int)($result['affected'] ?? 0)) > 0 ? 0 : 1);
     }
 
     if ($command === 'enqueue-rebuild-game') {
