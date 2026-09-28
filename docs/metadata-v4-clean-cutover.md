@@ -27,12 +27,15 @@ For a future v5:
 
 1. increment the current format constant;
 2. use a new magic and `.uedb5` extension;
-3. add a version-specific offline prior-format reader under `catalog/bin/v5-migration/`;
-4. convert each old container to the new format atomically;
-5. publish the new DB projections/registration;
-6. verify the new file;
-7. delete the prior-format file;
-8. remove retired migration tooling after the cutover is complete.
+3. add version-specific offline migration tooling under `catalog/bin/v5-migration/`;
+4. reparse the authoritative Unreal/package bytes whenever UEDB4 did not retain a UEDB5-required serialized field; use container-only conversion only for source policies explicitly audited as lossless;
+5. write and verify each UEDB5 container before publishing it;
+6. publish the new DB projections/registration;
+7. rebuild source-specific dependency data from UEDB5;
+8. delete the prior-format file only after source-field verification succeeds;
+9. remove retired migration tooling after the cutover is complete.
+
+The detailed v5 field and migration requirements are defined in `specs/uedb5-metadata-requirements.md`. A migration must never infer discarded serialized fields from paths, hashes, neighboring records, or old projections.
 
 ## v3 -> v4 migration
 

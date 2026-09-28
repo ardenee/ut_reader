@@ -1,0 +1,414 @@
+# UEDB5 metadata requirements
+
+## Scope
+
+UEDB5 is the next UnrealDB compact metadata format. Its purpose is not merely to add fields to UEDB4; it establishes a lossless source-identity boundary for dependency and package semantics that UEDB4 cannot represent for all supported engine generations.
+
+Authoritative local source roots used for this specification:
+
+- UE2 / UE2.5: `L:\Source\Engine\UE2`
+- UE3: `L:\Source\Engine\UE3`
+- UE4: `L:\Source\Engine\UE4`
+- UE5: `L:\Source\Engine\UE5`
+- UDK: `L:\Source\Engine\UDK`
+- game-specific source: `L:\Source\Games\...`
+
+The UE5 audit in this document is based on `L:\Source\Engine\UE5\UE 5.8.3`, Git branch `release`, commit `396c9f059903aed5fec78ecd3d437a40c6415368`. `Engine/Build/Build.version` reports Major=5, Minor=8, Patch=3 and BranchName=`UE5`.
+
+## Core invariant
+
+Any serialized field that can change Epic's package loading, import/provider selection, object visibility, outer traversal, dependency classification, or cooked-package identity must be retained losslessly in UEDB5.
+
+Derived paths, hashes, normalized names and SQL projections are accelerators. They must never replace the serialized source identity from which they were derived.
+
+UEDB5 must explicitly distinguish the package representation being stored, including at least:
+
+- classic LinkerLoad package tables (`FObjectImport` / `FObjectExport`);
+- UE5 Zen / IoStore package headers and object references.
+
+## Common package/version identity
+
+UEDB5 must retain enough version information to choose the source-correct serializer before interpreting any version-gated field:
+
+- engine/source policy or equivalent audited reader policy;
+- package serialization family (classic vs Zen/IoStore);
+- complete `FPackageFileVersion`, including both the UE4 and UE5 version components used by current UE5 packages;
+- licensee version;
+- complete custom-version container where serialized;
+- whether the package is unversioned and, if so, the externally selected parser/source policy rather than a fabricated serialized version;
+- package flags and byte-order/tag information needed by the reader.
+
+The format must not use one generic `UE3`, `UE4`, or `UE5` rule when the audited game/source revision differs. UT3 version 512 is an existing example of why the source policy must be explicit.
+
+## UE3 requirement: complete ObjectFlags QWORD
+
+UE3 `FObjectExport::ObjectFlags` is serialized as a QWORD. For UT3 package version 512, the January-2008 source defines:
+
+`RF_Public = 0x0000000400000000`
+
+UEDB4 metadata produced by the former reader kept only the low 32 bits and therefore discarded `RF_Public`.
+
+UEDB5 must store the complete serialized value canonically as:
+
+`object_flags: uint64`
+
+A temporary decoder may expose high/low halves, but those halves must not become competing canonical fields. Dependency projections must be derived from the full value.
+
+This information cannot be recovered from a truncated UEDB4 container. Affected UE3 files require reparsing of the original Unreal package bytes.
+
+## UE4 requirement: serialized import PackageName
+
+For package versions at and after `VER_UE4_NON_OUTER_PACKAGE_IMPORT` (520), `FObjectImport` serializes `PackageName` in addition to:
+
+- `ClassPackage`
+- `ClassName`
+- `OuterIndex`
+- `ObjectName`
+
+Provider package identity can therefore no longer be reconstructed solely from the outer chain. UEDB5 must preserve the serialized `PackageName` FName, including its raw Name index/number where available and its source-correct effective value after load-time fixups.
+
+For `PKG_FilterEditorOnly`, Epic still serializes the PackageName slot. When saving a None package name it can serialize `ObjectName` as a placeholder and reset it to None after loading. A reader must consume that serialized field and then reproduce the load-time reset rule; it must not skip the field from the record.
+
+UEDB4's fixed import row does not retain PackageName, so affected UE4 packages require reparsing from the original package bytes for a lossless UEDB5 cutover.
+
+## UE5 package-summary parsing requirements
+
+A source-correct UE5 reader must consume the complete version-gated `FPackageFileSummary` layout before any table offsets are trusted. Parsing a field does not automatically mean UEDB5 must persist that field; persistence is required only when it contributes to identity, loading/dependency semantics, verification, or a deliberately supported inspection feature.
+
+Important UE5 5.8.3 summary gates include:
+
+- `FPackageFileVersion` carries separate UE4 and UE5 version components;
+- `SavedHash` (`FIoHash`) is serialized at `PACKAGE_SAVED_HASH`, with `TotalHeaderSize` moving alongside that layout change;
+- the summary still serializes the `PackageName` slot (formerly `FolderName`; currently deprecated/unused by the engine);
+- soft-object-path count/offset at `ADD_SOFTOBJECTPATH_LIST`;
+- cell export/import count and offsets at `VERSE_CELLS`;
+- `MetaDataOffset` at `METADATA_SERIALIZATION_OFFSET`;
+- ImportTypeHierarchies count/offset at `IMPORT_TYPE_HIERARCHIES`;
+- `NamesReferencedFromExportDataCount` at `NAMES_REFERENCED_FROM_EXPORT_DATA`;
+- `PayloadTocOffset` at `PAYLOAD_TOC`;
+- `DataResourceOffset` at `DATA_RESOURCES`.
+
+The reader must also consume older inherited UE4 summary fields in their source-defined order. UEDB5 must not preserve obsolete offsets merely for completeness when the parsed data they point to is already stored in a source-shaped metadata block.
+
+## UE5 classic LinkerLoad packages
+
+UE5 classic packages continue to use `FObjectImport` and `FObjectExport`, but their dependency semantics are no longer equivalent to UE3-style exact tuple matching.
+
+### Imports
+
+UEDB5 must retain the raw serialized import graph and fields:
+
+- import index;
+- `ClassPackage` FName;
+- `ClassName` FName;
+- signed `OuterIndex` / `FPackageIndex`;
+- `ObjectName` FName;
+- explicit `PackageName` FName when version-gated into the archive;
+- `bImportOptional` when `EUnrealEngineObjectUE5Version::OPTIONAL_RESOURCES` is active;
+- raw FName index/number identity for every serialized FName above.
+
+`PackageName` is semantically significant even when `OuterIndex` is non-null. UE5 may also legally have an import whose outer is an export when explicit package identity is present.
+
+`bImportOptional` must not be dropped. It marks imports from optional packages/resources and is used when generating the appropriate optional package/chunk identity. UnrealDB must be able to classify an absent optional import separately from a required missing dependency.
+
+### Exports
+
+At minimum UEDB5 must retain:
+
+- export index;
+- raw `ClassIndex`;
+- raw `SuperIndex`;
+- raw `TemplateIndex`;
+- raw `OuterIndex`;
+- `ObjectName` FName and its raw index/number;
+- complete serialized `ObjectFlags` value for that source format;
+- `PackageFlags`;
+- `bForcedExport`;
+- `bNotForClient`;
+- `bNotForServer`;
+- `bNotAlwaysLoadedForEditorGame` when serialized;
+- `bIsAsset` when serialized;
+- `bIsInheritedInstance` when serialized;
+- `bGeneratePublicHash` when serialized;
+- serial size/offset;
+- preload/dependency range fields;
+- script serialization start/end offsets when serialized.
+
+The reader must honor `REMOVE_OBJECT_EXPORT_PACKAGE_GUID`: the legacy per-export `PackageGuid` is present only before that UE5 version. It must also begin reading `bIsInheritedInstance` at `TRACK_OBJECT_EXPORT_IS_INHERITED`. Misapplying either gate shifts the remaining export record.
+
+UE5 classic `FObjectExport` serializes the RF_Load object-flag mask through a 32-bit value. UEDB5 may use a common uint64 storage type across engines, but it must record the source width/semantics and must not assume UE5 serialized the same 64-bit QWORD layout as UE3.
+
+### Classic UE5 dependency-resolution consequences
+
+A future UE5 resolver must operate on the retained raw graph rather than converting the package to the UE3 matching model.
+
+UE5 5.8.3 `VerifyImportInner()` requires UEDB5 to preserve enough information for these source behaviors:
+
+- explicit `PackageName` can select the provider linker independently of the outer chain;
+- imports and exports can cross-reference each other as outers;
+- candidate `ObjectName` can be accepted before exact class identity is known; class/package mismatch can be deferred to create-time verification rather than immediately rejecting the provider;
+- when source linkers differ, the candidate export's outer can itself be an import whose object/class identity must be examined;
+- a private provider export can be legal when the import/export containment graph satisfies Epic's `ImportIsInAnyExport`, `AnyExportIsInImport`, or `AnyExportShareOuterWithImport` rules;
+- runtime-only/native/transient lookup and editor-only safe-replace behavior must not be fabricated when the required runtime state is unavailable.
+
+The first three graph tests above depend on complete import/export `OuterIndex` relationships. Private-export handling must therefore never be reduced to a simple `RF_Public` bit check for UE5.
+
+`bGeneratePublicHash` is dependency-relevant for cooked/Zen identity. Epic's PackageStore optimizer considers an export public when `RF_Public`, `RF_GeneratePublicHash`, or the serialized `bGeneratePublicHash` requests public hashing.
+
+## UE5 Zen / IoStore package identity
+
+Zen/IoStore does not use classic `FPackageIndex` import identity as its authoritative cross-package representation. UEDB5 must store this as a distinct package family rather than flattening it into classic imports.
+
+### Package identity and imports
+
+Retain losslessly:
+
+- the package's raw `FPackageId`;
+- ordered `ImportedPackageIds` from the package store entry;
+- ordered `ImportedPublicExportHashes` from the Zen package header;
+- each raw 64-bit `FPackageObjectIndex::TypeAndId`;
+- the decoded `FPackageObjectIndex` type: Export, ScriptImport, PackageImport, or Null;
+- for PackageImport: decoded imported-package index and imported-public-export-hash index;
+- for ScriptImport: the raw 62-bit/hash identity used by the package object index;
+- `ImportedPackageNames` where the Zen version supplies them.
+
+For a package import, Epic's provider key is effectively:
+
+`ImportedPackageIds[ImportedPackageIndex] + ImportedPublicExportHashes[ImportedPublicExportHashIndex]`
+
+Imported package names are useful descriptive identity but must not replace this PackageId + public-export-hash key.
+
+### Unsigned 64-bit Zen identity
+
+Zen identity values must not be routed through PHP signed integers. `FPackageId` is an unrestricted `uint64`, `PublicExportHash` is `uint64`, and `FPackageObjectIndex::TypeAndId` uses the top two bits as its type tag. A valid PackageImport therefore has bit 63 set and can exceed `PHP_INT_MAX`.
+
+Canonical UEDB5 storage for these values must be fixed-width 8-byte binary (or an exactly equivalent lossless 16-hex-digit representation at API/debug boundaries):
+
+- `FPackageId`;
+- `ImportedPublicExportHashes`;
+- `FExportMapEntry::PublicExportHash`;
+- raw `FPackageObjectIndex::TypeAndId`;
+- any other UE5 source `uint64` identity/hash used for matching.
+
+The reader may expose decoded high/low `uint32` components for arithmetic, but must never cast the canonical value through a signed PHP `int`. SQL projections, if required, should use a lossless 8-byte/binary representation rather than a signed `BIGINT` path.
+### Zen container/package-store provenance
+
+For file-backed IoStore, the ordered imported package IDs are supplied by container package-store metadata, not solely by the extracted package header. `FIoContainerHeader` contains the package ID list and serialized `FFilePackageStoreEntry` data; each store entry owns its ordered `ImportedPackages` array.
+
+The container header also carries source-backed package-resolution state that must not be lost:
+
+- `ContainerId`;
+- package IDs and the package-specific store entry;
+- optional-segment package IDs and optional-segment store entries;
+- localized-package mappings;
+- package redirects (`SourcePackageId`, `TargetPackageId`, source package name);
+- soft-package-reference tables.
+
+UEDB5 must therefore retain, or durably reference, the exact container/package-store context used for a Zen package. A standalone extracted package must not be declared fully verified if its `FPackageObjectIndex` PackageImport references cannot be paired with the authoritative ordered `ImportedPackageIds` for that package.
+
+To avoid metadata duplication, UnrealDB should not copy an entire `.utoc` container header into every UEDB5 file. Store the shared container metadata once and persist a stable provenance/key plus the package-specific ordered store-entry data required to resolve that package's references. Any denormalized accelerator must be verifiable against that source context.
+
+Full cooked UE5 support therefore requires IoStore container ingestion for the `.utoc` table-of-contents plus its `.ucas` data container(s); PAK-only or standalone-package ingestion is not sufficient for authoritative Zen dependency identity.
+
+### Zen exports
+
+For every `FExportMapEntry`, retain:
+
+- local export index;
+- cooked serial offset and size;
+- mapped `ObjectName` identity;
+- raw `OuterIndex` `FPackageObjectIndex`;
+- raw `ClassIndex` `FPackageObjectIndex`;
+- raw `SuperIndex` `FPackageObjectIndex`;
+- raw `TemplateIndex` `FPackageObjectIndex`;
+- 64-bit `PublicExportHash`;
+- `ObjectFlags`;
+- export filter flags.
+
+The 64-bit `PublicExportHash` is authoritative cross-package object identity for public Zen exports and must not be recomputed as a substitute when the serialized/optimized value is available.
+
+### Zen load/dependency graph
+
+Retain the structures that describe create/serialize ordering rather than reducing them to an unordered package list:
+
+- `FExportBundleEntry` local export index and command type (Create / Serialize);
+- dependency bundle headers and their per-command dependency counts;
+- dependency bundle entries and their raw local import/export `FPackageIndex` identity;
+- Zen package versioning information (`EZenPackageVersion`, package file version, licensee version, custom versions).
+
+These structures are needed to reproduce the cooked package's dependency/load graph and to distinguish object identity dependencies from load-order dependencies.
+
+### Package store and optional resources
+
+Retain relevant `FPackageStoreEntryResource` identity separately from ordinary object imports:
+
+- package-store flags;
+- package name;
+- package ID;
+- imported package IDs;
+- optional-segment imported package IDs;
+- soft package references;
+- whether an optional segment is present / auto-optional semantics where available from the source representation.
+
+Hard imported packages, optional imported packages, and soft package references must remain distinguishable in UnrealDB. They must not all become identical `missing dependency` rows.
+
+### Cell / Verse resources
+
+Current UE5 package summaries and Zen headers have separate cell import/export maps. UEDB5 must preserve them when present.
+
+For classic cell resources retain at least:
+
+- `FCellImport` Verse path and raw `PackageIndex`;
+- `FCellExport` Verse path;
+- C++ class info identity;
+- serial offset, layout size and total serial size;
+- dependency-range fields.
+
+For Zen cell maps retain raw `FPackageObjectIndex` cell imports and each cell export's serialized identity including its public-export hash and class information.
+
+Cell identities must not be silently inserted into the ordinary UObject import/export arrays because their serialization and hash identity are distinct.
+
+## UE5 auxiliary source blocks and compactness
+
+Some UE5 structures are valuable for verification, inspection, payload ownership, or future dependency work but should not automatically become row-per-entry SQL projections. Keep them as compressed/source-shaped UEDB5 blocks unless a measured query requires an index.
+
+Retain when present and relevant to supported features:
+
+- package `SavedHash` / `FIoHash`;
+- decoded soft-object/package references rather than merely their summary offsets;
+- cell import/export data;
+- ImportTypeHierarchies when needed for dynamic-import evidence or inspection;
+- complete `FObjectDataResource` records;
+- bulk-data / payload ownership information needed to associate payloads with exports;
+- package-store flags and package/container provenance;
+- Zen imported package names and versioning data;
+- script object entries used by ScriptImport hash resolution.
+
+Summary offsets such as `MetaDataOffset`, `PayloadTocOffset`, and `DataResourceOffset` must be parsed correctly, but do not need to be persisted after the pointed-to data has been normalized into a verified UEDB5 block. Likewise, count/offset pairs should not be duplicated into SQL merely because the source summary contains them.
+
+The default rule is: **preserve source semantics in the `.uedb5` file, project only fields needed for indexed catalog operations into MySQL.**
+## UE5 soft and asset-registry dependency metadata
+
+UE5 soft-object-path serialization is versioned independently of ordinary imports. At `FSOFTOBJECTPATH_REMOVE_ASSET_PATH_FNAMES`, `FSoftObjectPath` changes away from the older single `FName` asset-path representation; subpath serialization is also custom-version gated. The reader must apply the source version/custom-version rules rather than assuming the UE4 representation.
+
+When soft references are projected into UEDB5, preserve their package/asset/subpath identity without converting them into hard `FObjectImport` rows.
+
+The asset-registry package dependency section separately serializes:
+
+- one `ImportUsedInGame` bit for each import;
+- one `SoftPackageUsedInGame` bit for each soft package reference;
+- at `ASSETREGISTRY_PACKAGEBUILDDEPENDENCIES`, `ExtraPackageDependencies` as package name plus dependency flags.
+
+Current UE5 saving uses the extra dependency list for package build dependencies with `Build | PropagateManage`. UEDB5 should retain these classifications when the section is present, but build/cook dependencies must remain distinct from runtime linker imports and from soft references.
+
+## UE5 dynamic-import boundary
+
+UE5 dynamic imports are not ordinary serialized `FObjectImport` records. `FLinkerLoad::AddDynamicImports` creates them during loading for exports carrying `RF_HasDynamicImports`.
+
+The runtime derives them from state that is only partly present in package bytes:
+
+- the export's serialized `RF_HasDynamicImports` flag;
+- the export class reference/path;
+- saved `ImportTypeHierarchies` when the current class is not directly available;
+- core redirect state;
+- the loaded native class implementation of `InjectDynamicImportsFor()`;
+- optional instancing context.
+
+UEDB5 must therefore retain `RF_HasDynamicImports`, the complete class reference graph, and serialized ImportTypeHierarchies. It must not serialize fabricated dynamic-import rows as though they came from the package.
+
+If UnrealDB does not execute the exact source/runtime class injection logic, these references must be classified as runtime-derived / non-deterministically reconstructible from package bytes. They must not be reported as ordinary hard serialized imports merely because UE5 would add them at runtime.
+
+## Dependency classification requirements
+
+UEDB5 must allow UnrealDB dependency rows to distinguish at least:
+
+- hard required object/package import;
+- optional import / optional segment dependency;
+- soft package reference;
+- asset-registry build/cook package dependency;
+- script import;
+- Zen package-import/public-export-hash reference;
+- cell/Verse import;
+- load-order dependency bundle edge;
+- runtime-only or otherwise non-deterministically-resolvable reference when Epic requires state not present in package metadata.
+
+A missing optional or soft dependency must not inflate the same counter used for a missing required hard dependency unless the source semantics explicitly require that classification.
+
+## UE5 implementation checklist for UEDB5
+
+Before UE5 can be marked supported, the UEDB5 update must include all of the following:
+
+1. a dedicated UE5 reader using `FPackageFileVersion` and the UE5 summary/import/export gates, not `UnrealPackageReader4`;
+2. classic UE5 metadata blocks retaining `PackageName`, `bImportOptional`, complete raw package-index graphs and public-hash semantics;
+3. a UE5 classic dependency resolver implementing the audited `VerifyImportInner` rules without borrowing UE3 exact-tuple policy;
+4. IoStore `.utoc`/`.ucas` ingestion that preserves package-store provenance and package redirects/optional segments;
+5. Zen metadata blocks for PackageId/public-export-hash identity, typed `FPackageObjectIndex` values, export/dependency bundles, script imports and cell maps, using lossless unsigned-64 storage rather than PHP signed integers;
+6. separate dependency classifications for hard, optional, soft, build/cook, script, cell/Verse, load-order and runtime-derived references;
+7. compact SQL projections only for fields that need indexed catalog lookup; auxiliary UE5 source blocks remain in compressed `.uedb5` metadata by default;
+8. migration/verification that reparses original bytes whenever UEDB4 did not retain a required serialized field.
+
+## UEDB4 to UEDB5 migration rules
+
+A migration must never synthesize serialized identity that UEDB4 discarded.
+
+Known mandatory source-byte reparses include:
+
+- UE3 files whose complete 64-bit ObjectFlags were not retained in UEDB4;
+- UE4/UE5 classic packages for which serialized `FObjectImport::PackageName` is required but absent from UEDB4;
+- UE5 packages requiring `bImportOptional` or other UE5-only import/export fields not present in UEDB4;
+- all Zen/IoStore package metadata, because UEDB4 has no representation for its PackageId/hash/object-index identity model.
+
+A container-only conversion is permitted only for an engine/source policy that has been audited and proven to have every UEDB5-required source field already present losslessly in UEDB4. Absence of a field must fail conversion; it must not trigger inference from paths, names, hashes, or neighboring records.
+
+The safest default migration is therefore:
+
+`authoritative Unreal package/container bytes -> source-specific reader -> UEDB5 -> projections -> dependency rebuild`
+
+not:
+
+`UEDB4 -> guessed UEDB5`
+
+If the authoritative source bytes required for a mandatory reparse are unavailable, the file must not be registered as fully verified UEDB5 metadata.
+
+## Cutover requirement
+
+UEDB5 should use a clean production cutover consistent with the existing metadata policy:
+
+1. introduce a new format constant, magic and `.uedb5` extension;
+2. implement source-specific UEDB5 readers/writers without adding UEDB4 compatibility branches to the production v5 reader;
+3. reparse or audited-convert files into UEDB5;
+4. verify the UEDB5 container against the authoritative package source fields;
+5. publish v5 SQL projections;
+6. rebuild source-specific dependency data from UEDB5;
+7. switch runtime registration to format 5 only;
+8. delete retired UEDB4 containers only after verification;
+9. remove temporary migration tooling after cutover.
+
+UEDB5 verification must compare source-derived raw fields, not merely counts and derived hashes.
+
+
+## UE5 source-reference matrix
+
+| Requirement | UE5 5.8.3 proving source |
+|---|---|
+| UE5 global package version model | `Engine/Source/Runtime/Core/Public/UObject/ObjectVersion.h`, `EUnrealEngineObjectUE5Version`, `FPackageFileVersion` comments |
+| Package summary/version gates | `Engine/Source/Runtime/CoreUObject/Public/UObject/PackageFileSummary.h` and `Engine/Source/Runtime/CoreUObject/Private/UObject/PackageFileSummary.cpp`, `FPackageFileSummary` serializer |
+| `FObjectImport` fields, `PackageName` fixup, `bImportOptional` | `Engine/Source/Runtime/CoreUObject/Private/UObject/ObjectResource.cpp`, `operator<<(FStructuredArchive::FSlot, FObjectImport&)` |
+| `FObjectExport` version gates and flags | `Engine/Source/Runtime/CoreUObject/Private/UObject/ObjectResource.cpp`, `operator<<(FStructuredArchive::FSlot, FObjectExport&)` |
+| Classic import/provider resolution, export-outers, deferred class verification and private-export exceptions | `Engine/Source/Runtime/CoreUObject/Private/UObject/LinkerLoad.cpp`, `FLinkerLoad::VerifyImportInner` |
+| Private-import containment tests | `Engine/Source/Runtime/CoreUObject/Private/UObject/Linker.cpp`, `ResourceIsIn`, `ImportIsInAnyExport`, `AnyExportIsInImport`, `AnyExportShareOuterWithImport` |
+| Runtime-created dynamic imports | `Engine/Source/Runtime/CoreUObject/Private/UObject/LinkerLoad.cpp`, `FLinkerLoad::AddDynamicImports` |
+| Soft-object-path versioned serialization | `Engine/Source/Runtime/CoreUObject/Private/UObject/SoftObjectPath.cpp`, `FSoftObjectPath::SerializePathWithoutFixup` |
+| Asset-registry import/soft/build dependency metadata | `Engine/Source/Runtime/AssetRegistry/Private/PackageReader.cpp`, `ReadPackageDataDependencies`; `Engine/Source/Runtime/CoreUObject/Private/UObject/SavePackage/SavePackageUtilities.cpp`, `WritePackageData` |
+| Zen object index and package-import reference encoding | `Engine/Source/Runtime/CoreUObject/Public/Serialization/AsyncLoading2.h`, `FPackageImportReference`, `FPackageObjectIndex`, `FPublicExportKey` |
+| Package ID raw `uint64` identity | `Engine/Source/Runtime/Core/Public/IO/PackageId.h`, `FPackageId` |
+| Zen summary, exports, dependency bundles and cell maps | `Engine/Source/Runtime/CoreUObject/Public/Serialization/AsyncLoading2.h`, `FZenPackageSummary`, `FExportMapEntry`, `FDependencyBundleHeader`, `FDependencyBundleEntry`, `FZenPackageCellOffsets` |
+| Zen header table slicing and imported package names | `Engine/Source/Runtime/CoreUObject/Private/Serialization/ZenPackageHeader.cpp`, `FZenPackageHeader::MakeView` |
+| Package-store IDs, optional segments and soft references | `Engine/Source/Runtime/CoreUObject/Public/Serialization/PackageStore.h`, `FPackageStoreEntry`, `FPackageStoreEntryResource` |
+| IoStore container-owned package store, redirects and optional segments | `Engine/Source/Runtime/Core/Public/IO/IoContainerHeader.h`, `FFilePackageStoreEntry`, `FIoContainerHeader` |
+| IoStore file containers (`.utoc` / `.ucas`) | `Engine/Source/Runtime/Core/Internal/IO/IoStore.h`, `IIoStoreTocReader::ReadFromDisk`; `Engine/Source/Runtime/Core/Public/IO/IoDispatcher.h`, `FIoContainerSettings` |
+| Public-export hash generation and `bGeneratePublicHash` | `Engine/Source/Developer/IoStoreUtilities/Private/PackageStoreOptimizer.cpp`, `FPackageStoreOptimizer::ProcessExports` |
+| Cell/Verse resources | `Engine/Source/Runtime/CoreUObject/Public/UObject/ObjectResource.h`, `FCellResource`, `FCellImport`, `FCellExport` |
+| Import type hierarchy reading | `Engine/Source/Runtime/AssetRegistry/Private/PackageReader.cpp`, `FPackageReader::ReadImportTypeHierarchies` |
+
+This matrix is intentionally limited to behaviors audited for UEDB5. The dedicated UE5 package-format and dependency-resolution specifications must expand it to cover the complete serialized summary order, version gates, name maps, payloads, compression/container handling and all loader branches before UE5 support is marked complete.
