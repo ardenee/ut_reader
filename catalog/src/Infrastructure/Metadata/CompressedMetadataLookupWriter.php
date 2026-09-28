@@ -362,20 +362,14 @@ final class CompressedMetadataLookupWriter
                 md5($localPath, true),
                 $localPathTermId,
             ];
-            [$verifyClassPackage, $verifyClassName] = $engineKey === 'UE3'
-                ? CatalogCompactIdentityEnricher::ue3ExportClassIdentity(
-                    $row,
-                    $importsByIdentityIndex,
-                    $exportsByIdentityIndex,
-                    $packageName,
-                    $packageVersion
-                )
-                : CatalogCompactIdentityEnricher::legacyExportClassIdentity(
-                    $row,
-                    $importsByIdentityIndex,
-                    $exportsByIdentityIndex,
-                    $packageName
-                );
+            [$verifyClassPackage, $verifyClassName] = self::exportVerifyClassIdentity(
+                $engineKey,
+                $row,
+                $importsByIdentityIndex,
+                $exportsByIdentityIndex,
+                $packageName,
+                $packageVersion
+            );
             $exportPathRows[] = [
                 $fileId,
                 $index,
@@ -562,6 +556,29 @@ final class CompressedMetadataLookupWriter
         return $labels;
     }
 
+    /**
+     * @param array<string,mixed> $export
+     * @param array<int,array<string,mixed>> $imports
+     * @param array<int,array<string,mixed>> $exports
+     * @return array{0:string,1:string}
+     */
+    private static function exportVerifyClassIdentity(
+        string $engineKey,
+        array $export,
+        array $imports,
+        array $exports,
+        string $packageName,
+        ?int $packageVersion
+    ): array {
+        return $engineKey === 'UE3'
+            ? CatalogCompactIdentityEnricher::ue3ExportClassIdentity(
+                $export, $imports, $exports, $packageName, $packageVersion
+            )
+            : CatalogCompactIdentityEnricher::legacyExportClassIdentity(
+                $export, $imports, $exports, $packageName
+            );
+    }
+
     /** @param array<string,mixed> $snapshot @return \Generator<int,string> */
     private function snapshotTermValues(array $snapshot): \Generator
     {
@@ -634,20 +651,19 @@ final class CompressedMetadataLookupWriter
             if ($verifyClassName !== '') {
                 yield $verifyClassName;
             }
-            if ($engineKey === 'UE3') {
-                [$ue3ClassPackage, $ue3ClassName] = CatalogCompactIdentityEnricher::ue3ExportClassIdentity(
-                    $row,
-                    $importsByIndex,
-                    $exportsByIndex,
-                    $packageName,
-                    $packageVersion
-                );
-                if ($ue3ClassPackage !== '') {
-                    yield $ue3ClassPackage;
-                }
-                if ($ue3ClassName !== '') {
-                    yield $ue3ClassName;
-                }
+            [$effectiveClassPackage, $effectiveClassName] = self::exportVerifyClassIdentity(
+                $engineKey,
+                $row,
+                $importsByIndex,
+                $exportsByIndex,
+                $packageName,
+                $packageVersion
+            );
+            if ($effectiveClassPackage !== '') {
+                yield $effectiveClassPackage;
+            }
+            if ($effectiveClassName !== '') {
+                yield $effectiveClassName;
             }
         }
 

@@ -152,6 +152,14 @@ $record(
     'repeated source strings must not first be duplicated into a flat values array'
 );
 $record(
+    'compact_term_priming_matches_export_identity_publication',
+    str_contains($lookup, 'private static function exportVerifyClassIdentity(')
+        && substr_count($lookup, 'self::exportVerifyClassIdentity(') >= 2
+        && str_contains($lookup, 'yield $effectiveClassPackage;')
+        && str_contains($lookup, 'yield $effectiveClassName;'),
+    'term priming and export projection publication must derive the same effective class identity, including Core.Class'
+);
+$record(
     'projection_rows_are_bounded',
     str_contains($lookup, 'count($exportRows) >= self::WRITE_BATCH_SIZE')
         && str_contains($lookup, 'count($dependencyRows) >= self::WRITE_BATCH_SIZE')
