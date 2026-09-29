@@ -37,17 +37,30 @@ if (!$game || strtoupper(trim((string)($game['engine_key'] ?? ''))) !== 'UE4') {
     throw new RuntimeException('Selected game is not an active UE4 game.');
 }
 
-$groups = catalog_all(
+$missingRows = catalog_all(
     $db,
-    'SELECT DISTINCT l.file_id,CONVERT(pkg.value_prefix USING utf8mb4) required_package '
+    'SELECT l.file_id,l.import_index,CONVERT(pkg.value_prefix USING utf8mb4) required_package '
     . 'FROM ue_dependency_links l JOIN ue_files f ON f.id=l.file_id '
     . 'JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=? '
     . 'JOIN ue_terms pkg ON pkg.id=l.required_package_term_id '
     . 'WHERE f.game_id=? AND f.scan_status="verified" AND l.status=0 '
     . 'AND CONVERT(pkg.value_prefix USING utf8mb4) NOT LIKE "/Script/%" '
-    . 'ORDER BY l.file_id,required_package',
+    . 'ORDER BY l.file_id,required_package,l.import_index',
     [BlockedCompressedMetadataContainer::FORMAT_VERSION, $gameId]
 );
+$groupsByKey = [];
+foreach ($missingRows as $row) {
+    $fileId = (int)($row['file_id'] ?? 0);
+    $packageName = trim((string)($row['required_package'] ?? ''));
+    $importIndex = (int)($row['import_index'] ?? -1);
+    if ($fileId < 1 || $packageName === '' || $importIndex < 0) continue;
+    $key = $fileId . "\0" . $packageName;
+    if (!isset($groupsByKey[$key])) {
+        $groupsByKey[$key] = ['file_id'=>$fileId,'required_package'=>$packageName,'missing_import_indexes'=>[]];
+    }
+    $groupsByKey[$key]['missing_import_indexes'][$importIndex] = true;
+}
+$groups = array_values($groupsByKey);
 
 $counts = [
     'no_package_provider' => 0,
@@ -65,7 +78,9 @@ $processed = 0;
 foreach ($groups as $group) {
     $fileId = (int)($group['file_id'] ?? 0);
     $packageName = trim((string)($group['required_package'] ?? ''));
-    if ($fileId < 1 || $packageName === '') continue;
+    $missingImportIndexes = array_map('intval', array_keys((array)($group['missing_import_indexes'] ?? [])));
+    $missingImportSet = array_fill_keys($missingImportIndexes, true);
+    if ($fileId < 1 || $packageName === '' || $missingImportSet === []) continue;
 
     if (!isset($snapshotCache[$fileId])) {
         $snapshotCache = [$fileId => $loader->loadDependencySnapshot($fileId, true)];
@@ -82,6 +97,11 @@ foreach ($groups as $group) {
         if ((int)($import['outer_index'] ?? 0) > 0) $needsV5Context = true;
     }
     if ($required === []) continue;
+    $missingRequiredIndexes = array_values(array_filter(
+        $required,
+        static fn(int $index): bool => isset($missingImportSet[$index])
+    ));
+    $missingRequiredSet = array_fill_keys($missingRequiredIndexes, true);
 
     $providerRows = catalog_all(
         $db,
@@ -113,13 +133,17 @@ foreach ($groups as $group) {
         $matches = (array)($diagnostic['matches'] ?? []);
         $rejections = (array)($diagnostic['rejections'] ?? []);
         $matched = 0;
+        $missingMatched = 0;
         $reasonCounts = [];
         $failedImports = [];
         foreach ($required as $index) {
-            if (array_key_exists($index, $matches)) {
+            $isMatch = array_key_exists($index, $matches);
+            if ($isMatch) {
                 $matched++;
+                if (isset($missingRequiredSet[$index])) $missingMatched++;
                 continue;
             }
+            if (!isset($missingRequiredSet[$index])) continue;
             $detail = (array)($rejections[$index] ?? ['import_index'=>$index,'reason'=>'unclassified']);
             $reason = (string)($detail['reason'] ?? 'unclassified');
             $reasonCounts[$reason] = ($reasonCounts[$reason] ?? 0) + 1;
@@ -132,6 +156,8 @@ foreach ($groups as $group) {
             'file_id' => $providerId,
             'matched' => $matched,
             'required' => count($required),
+            'missing_matched' => $missingMatched,
+            'missing_required' => count($missingRequiredSet),
             'rejection_reason_counts' => $reasonCounts,
             'rejections' => $failedImports,
         ];
@@ -169,6 +195,8 @@ foreach ($groups as $group) {
             'package_version' => (int)($owner['package_version'] ?? 0),
             'required_package' => $packageName,
             'required_import_indexes' => $required,
+            'missing_import_indexes' => $missingImportIndexes,
+            'missing_object_import_indexes' => $missingRequiredIndexes,
             'providers' => $providerResults,
         ];
     }
@@ -222,7 +250,7 @@ echo json_encode([
         'failed_import_provider_pairs_by_reason' => $rejectionReasonPairs,
         'groups_containing_reason' => $rejectionReasonGroups,
         'examples_per_reason' => $rejectionReasonExamples,
-        'counting_note' => 'Pair counts count each failed required Import against each physical provider; group counts count each residual package group at most once per reason.',
+        'counting_note' => 'Reason counts/examples include only object Imports whose persisted ue_dependency_links.status is missing (0). Pair counts count each such failed Import against each physical provider; group counts count each residual package group at most once per reason.',
     ],
     'examples_per_classification' => $examples,
     'interpretation' => [

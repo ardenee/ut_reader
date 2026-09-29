@@ -289,6 +289,15 @@ $check(
     'ue4_single_provider_keeps_successful_siblings'
 );
 
+$auditSource = file_get_contents($root . '/bin/audit-ue4-missing-verifyimport.php') ?: '';
+$check(
+    str_contains($auditSource, "'SELECT l.file_id,l.import_index,CONVERT(pkg.value_prefix USING utf8mb4) required_package '")
+        && str_contains($auditSource, '$missingRequiredSet')
+        && str_contains($auditSource, 'if (!isset($missingRequiredSet[$index])) continue;')
+        && str_contains($auditSource, 'Reason counts/examples include only object Imports whose persisted ue_dependency_links.status is missing (0).'),
+    'ue4_rejection_reason_audit_only_counts_persisted_missing_object_imports'
+);
+
 $dependencyResolverSource = file_get_contents($root . '/src/Infrastructure/Persistence/PdoDependencyResolver.php') ?: '';
 $check(
     str_contains($dependencyResolverSource, "'source' => 'ue4_object_redirector_target_unavailable'")
@@ -301,7 +310,7 @@ $check(
 
 $result = [
     'ok' => $failures === [],
-    'checks' => 26,
+    'checks' => 27,
     'failures' => $failures,
     'contract' => [
         'consumer_imports_only_create_requirements',
@@ -315,6 +324,7 @@ $result = [
         'one_physical_provider_is_used_without_invalidating_successful_siblings',
         'v4_does_not_guess_package_name_for_modern_export_outer_imports',
         'read_only_diagnostics_explain_object_class_outer_and_private_rejections',
+        'rejection_reason_audit_only_counts_persisted_missing_object_imports',
     ],
 ];
 echo json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . PHP_EOL;
