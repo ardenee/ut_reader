@@ -4,6 +4,7 @@ if (PHP_SAPI !== 'cli') { fwrite(STDERR, "CLI only.\n"); exit(1); }
 $root = realpath(dirname(__DIR__)) ?: dirname(__DIR__);
 require_once $root . '/bootstrap/autoload.php';
 require_once $root . '/lib/CatalogSupport.php';
+require_once $root . '/lib/CatalogDependencyDiagnostics.php';
 
 use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataSnapshotLoader;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoUe4VerifyImportProjectionResolver;
