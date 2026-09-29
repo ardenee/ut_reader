@@ -17,7 +17,7 @@ use UnrealDb\Catalog\Infrastructure\Metadata\CatalogUnrealIdentityHash;
 
 final class PdoUe4VerifyImportProjectionResolver
 {
-    private const RF_PUBLIC = 0x00000004;
+    private const RF_PUBLIC = 0x00000001;
     private const TOP_LEVEL_PACKAGE = -2147483647;
     private const PRIVATE_FAILURE = -2147483648;
 

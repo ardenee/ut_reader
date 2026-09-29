@@ -34,7 +34,7 @@ $consumer = [
     ['import_index'=>1,'class_package'=>'/Script/CoreUObject','class_name'=>'Class','object_name'=>'Material','outer_index'=>-1,'root_package'=>'/Game/TestPkg','relative_object_path'=>'Material'],
 ];
 $publicRootExport = [[
-    'export_index'=>0,'class_index'=>0,'object_name'=>'Material','outer_index'=>0,'object_flags'=>4,'local_path'=>'Material','class_name'=>'',
+    'export_index'=>0,'class_index'=>0,'object_name'=>'Material','outer_index'=>0,'object_flags'=>1,'local_path'=>'Material','class_name'=>'',
 ]];
 $matches = PdoUe4VerifyImportProjectionResolver::resolveInMemory($consumer, [], $publicRootExport, '/Game/TestPkg');
 $check(($matches[1] ?? null) === 0, 'ue4_exact_public_root_match');
@@ -58,7 +58,7 @@ $shortConsumer = [
     ['import_index'=>1,'class_package'=>'/Script/CoreUObject','class_name'=>'SomeClass','object_name'=>'Thing','outer_index'=>-1,'root_package'=>'/Game/TestPkg','relative_object_path'=>'Thing'],
 ];
 $shortProvider = [[
-    'export_index'=>0,'class_index'=>-2,'object_name'=>'Thing','outer_index'=>0,'object_flags'=>4,'local_path'=>'Thing','class_name'=>'/Other/CoreUObject.SomeClass',
+    'export_index'=>0,'class_index'=>-2,'object_name'=>'Thing','outer_index'=>0,'object_flags'=>1,'local_path'=>'Thing','class_name'=>'/Other/CoreUObject.SomeClass',
 ]];
 $matches = PdoUe4VerifyImportProjectionResolver::resolveInMemory($shortConsumer, $providerImports, $shortProvider, '/Game/TestPkg');
 $check(($matches[1] ?? null) === 0, 'ue4_short_class_package_fallback_when_no_full_match');
@@ -70,8 +70,8 @@ $providerImportsWithExact = [
     ['import_index'=>3,'object_name'=>'SomeClass','outer_index'=>-3],
 ];
 $fullSuppressesShort = [
-    ['export_index'=>0,'class_index'=>-2,'object_name'=>'Thing','outer_index'=>0,'object_flags'=>4,'local_path'=>'Thing','class_name'=>'/Other/CoreUObject.SomeClass'],
-    ['export_index'=>1,'class_index'=>-4,'object_name'=>'Thing','outer_index'=>1,'object_flags'=>4,'local_path'=>'Outer.Thing','class_name'=>'/Script/CoreUObject.SomeClass'],
+    ['export_index'=>0,'class_index'=>-2,'object_name'=>'Thing','outer_index'=>0,'object_flags'=>1,'local_path'=>'Thing','class_name'=>'/Other/CoreUObject.SomeClass'],
+    ['export_index'=>1,'class_index'=>-4,'object_name'=>'Thing','outer_index'=>1,'object_flags'=>1,'local_path'=>'Outer.Thing','class_name'=>'/Script/CoreUObject.SomeClass'],
 ];
 $matches = PdoUe4VerifyImportProjectionResolver::resolveInMemory($shortConsumer, $providerImportsWithExact, $fullSuppressesShort, '/Game/TestPkg');
 $check(!isset($matches[1]), 'ue4_full_class_package_candidate_suppresses_short_fallback_before_outer');
