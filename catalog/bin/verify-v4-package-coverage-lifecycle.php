@@ -39,9 +39,16 @@ $record(
 
 $record(
     'game_rebuild_revisits_existing_cache',
-    str_contains($cache, 'SELECT package_name FROM ue_package_coverage_cache WHERE game_id=?')
+    str_contains($cache, 'FROM ue_package_coverage_cache WHERE game_id=?')
         && str_contains($cache, '$this->reconcilePackage($gameId, $packageName)'),
     'game rebuild must revisit stale historical cached package names'
+);
+
+$record(
+    'game_rebuild_normalizes_union_collation',
+    str_contains($cache, "private const TEXT_COLLATION = 'utf8mb4_unicode_ci'")
+        && substr_count($cache, 'CONVERT(package_name USING utf8mb4) COLLATE ') >= 2,
+    'provider and cached package-name UNION branches must use one explicit collation'
 );
 
 $record(

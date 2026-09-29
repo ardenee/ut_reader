@@ -7,6 +7,8 @@ use PDO;
 
 final class PdoPackageCoverageCache
 {
+    private const TEXT_COLLATION = 'utf8mb4_unicode_ci';
+
     public function __construct(private readonly PDO $db) {}
 
     /** @return array<string,mixed>|null */
@@ -144,14 +146,17 @@ final class PdoPackageCoverageCache
         // Revisit both the current multi-provider set and anything already
         // cached. Including old cache names is what prunes packages that ceased
         // to have multiple eligible providers after deletion/demotion.
+        $collation = self::TEXT_COLLATION;
         $rows = \catalog_all(
             $this->db,
             'SELECT package_name FROM ('
-            . 'SELECT package_name FROM ue_package_providers '
+            . 'SELECT CONVERT(package_name USING utf8mb4) COLLATE ' . $collation . ' package_name '
+            . 'FROM ue_package_providers '
             . 'WHERE game_id=? AND package_name<>"" '
             . 'GROUP BY package_name HAVING COUNT(DISTINCT file_id)>1 '
             . 'UNION '
-            . 'SELECT package_name FROM ue_package_coverage_cache WHERE game_id=?'
+            . 'SELECT CONVERT(package_name USING utf8mb4) COLLATE ' . $collation . ' package_name '
+            . 'FROM ue_package_coverage_cache WHERE game_id=?'
             . ') packages ORDER BY package_name',
             [$gameId, $gameId]
         );

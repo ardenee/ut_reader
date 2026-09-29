@@ -1625,7 +1625,7 @@ CREATE TABLE ue_package_coverage_cache (
   PRIMARY KEY (game_id,package_name),
   CONSTRAINT fk_package_coverage_game
     FOREIGN KEY (game_id) REFERENCES ue_games(id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE ue_package_provider_coverage_cache (
   game_id INT UNSIGNED NOT NULL,
@@ -1642,7 +1642,7 @@ CREATE TABLE ue_package_provider_coverage_cache (
     FOREIGN KEY (game_id) REFERENCES ue_games(id) ON DELETE CASCADE,
   CONSTRAINT fk_provider_coverage_file
     FOREIGN KEY (file_id) REFERENCES ue_files(id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 202609240001 + 202609240002: UE1/UE2 VerifyImport and v4 identity projections.
 CREATE TABLE ue_legacy_export_identity_lookup (
