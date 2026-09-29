@@ -39,6 +39,7 @@ final class Uedb5IoStoreTocReader
     /** @var list<array<string,mixed>> */
     private array $chunkMetas = [];
     private string $directoryIndex = '';
+    private string $tocSha256 = '';
 
     public function __construct(
         private readonly string $utocPath,
@@ -53,10 +54,21 @@ final class Uedb5IoStoreTocReader
         if (!is_string($bytes)) {
             throw new RuntimeException('Could not read IoStore TOC: ' . $utocPath);
         }
+        $this->tocSha256 = hash('sha256', $bytes);
         $this->parse($bytes);
     }
 
     private Uedb5IoStoreCodec $codec;
+
+    public function tocSha256(): string
+    {
+        return $this->tocSha256;
+    }
+
+    public function utocFilename(): string
+    {
+        return basename($this->utocPath);
+    }
 
     /** @return array<string,mixed> */
     public function header(): array

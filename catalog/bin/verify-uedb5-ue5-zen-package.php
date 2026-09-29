@@ -6,6 +6,11 @@ $root = realpath(dirname(__DIR__)) ?: dirname(__DIR__);
 require_once $root . '/bootstrap/autoload.php';
 
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5ZenPackageReader;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5IoStoreTocReader;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5IoStoreContainerHeaderReader;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5Ue5ZenIoStoreSnapshotBuilder;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5MetadataContainer;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5MetadataStagingReader;
 
 $failures = [];
 $checks = [];
@@ -217,6 +222,121 @@ $check(
     'zen_imported_package_names_parsed'
 );
 $check($parsed['exports_data_bytes'] === 4, 'zen_header_boundary_preserves_exports_payload');
+
+$u40be = static function (int $value): string {
+    $bytes = '';
+    for ($shift = 32; $shift >= 0; $shift -= 8) { $bytes .= chr(($value >> $shift) & 0xff); }
+    return $bytes;
+};
+$u40le = static function (int $value): string {
+    $bytes = '';
+    for ($shift = 0; $shift <= 32; $shift += 8) { $bytes .= chr(($value >> $shift) & 0xff); }
+    return $bytes;
+};
+$u24le = static fn(int $value): string =>
+    chr($value & 0xff) . chr(($value >> 8) & 0xff) . chr(($value >> 16) & 0xff);
+$arrayU64 = static function (array $ids) use ($u64le): string {
+    $out = pack('V', count($ids));
+    foreach ($ids as $id) { $out .= $u64le((string)$id); }
+    return $out;
+};
+$arrayBytes = static fn(string $bytes): string => pack('V', strlen($bytes)) . $bytes;
+$containerId = '1111222233334444';
+$storeEntries = pack('V2', 1, 16) . pack('V2', 0, 0) . $u64le($providerId);
+$containerHeader = pack('V2', Uedb5IoStoreContainerHeaderReader::SIGNATURE, 5)
+    . $u64le($containerId)
+    . $arrayU64([$packageId])
+    . $arrayBytes($storeEntries)
+    . pack('V', 0)
+    . $arrayBytes('')
+    . pack('V', 0)
+    . pack('V', 0)
+    . pack('V', 0)
+    . pack('V4', 0, 0, 0, 0);
+$chunkId = static function (string $id, int $type) use ($u64le): string {
+    return $u64le($id) . pack('n', 0) . "\0" . chr($type);
+};
+$logical = $containerHeader . $packageBytes;
+$blockSize = 65536;
+$chunks = [
+    ['id' => $chunkId($containerId, Uedb5IoStoreTocReader::CHUNK_TYPE_CONTAINER_HEADER), 'offset' => 0, 'length' => strlen($containerHeader)],
+    ['id' => $chunkId($packageId, Uedb5IoStoreTocReader::CHUNK_TYPE_EXPORT_BUNDLE_DATA), 'offset' => strlen($containerHeader), 'length' => strlen($packageBytes)],
+];
+$tocHeader = Uedb5IoStoreTocReader::TOC_MAGIC
+    . chr(8) . "\0" . pack('v', 0)
+    . pack('V', Uedb5IoStoreTocReader::TOC_HEADER_SIZE)
+    . pack('V', count($chunks))
+    . pack('V', 1)
+    . pack('V', 12)
+    . pack('V', 0)
+    . pack('V', 32)
+    . pack('V', $blockSize)
+    . pack('V', 0)
+    . pack('V', 1)
+    . $u64le($containerId)
+    . str_repeat("\0", 16)
+    . chr(0) . "\0" . pack('v', 0)
+    . pack('V', 0)
+    . $u64le('FFFFFFFFFFFFFFFF')
+    . pack('V2', 0, 0)
+    . str_repeat("\0", 40);
+if (strlen($tocHeader) !== Uedb5IoStoreTocReader::TOC_HEADER_SIZE) {
+    throw new RuntimeException('Zen snapshot fixture TOC header size mismatch.');
+}
+$utoc = $tocHeader;
+foreach ($chunks as $chunk) { $utoc .= $chunk['id']; }
+foreach ($chunks as $chunk) { $utoc .= $u40be($chunk['offset']) . $u40be($chunk['length']); }
+$utoc .= $u40le(0)
+    . $u24le(strlen($logical))
+    . $u24le(strlen($logical))
+    . chr(0);
+foreach ($chunks as $_) { $utoc .= str_repeat("\0", 20) . chr(0) . str_repeat("\0", 3); }
+
+$temp = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'unrealdb_zen_snapshot_' . bin2hex(random_bytes(6));
+if (!mkdir($temp, 0775, true) && !is_dir($temp)) {
+    throw new RuntimeException('Could not create Zen snapshot verification directory.');
+}
+$base = $temp . DIRECTORY_SEPARATOR . 'fixture';
+file_put_contents($base . '.utoc', $utoc);
+file_put_contents($base . '.ucas', $logical);
+$uedb5Path = $temp . DIRECTORY_SEPARATOR . '7.uedb5';
+try {
+    $toc = new Uedb5IoStoreTocReader($base . '.utoc');
+    $snapshot = Uedb5Ue5ZenIoStoreSnapshotBuilder::build($toc, $packageId, [
+        'id' => 7,
+        'game_id' => 7,
+        'package_name' => '',
+        'original_name' => 'fixture.utoc',
+    ]);
+    $check($snapshot['package_family'] === 'zen-iostore', 'zen_snapshot_package_family');
+    $check($snapshot['file']['package_name'] === '/Game/TestPackage', 'zen_snapshot_package_name');
+    $check($snapshot['sections']['container_provenance'][0]['utoc_sha256'] === hash('sha256', $utoc), 'zen_snapshot_utoc_provenance_hash');
+    $check($snapshot['sections']['package_store'][0]['imported_package_ids'] === [$providerId], 'zen_snapshot_store_entry_preserved');
+    $check($snapshot['sections']['imports'][0]['dependency_class'] === 'hard', 'zen_snapshot_hard_import_classified');
+    $check($snapshot['sections']['cell_imports'][0]['dependency_class'] === 'script', 'zen_snapshot_script_cell_import_classified');
+    $check($snapshot['sections']['dependency_bundle_entries'][0]['dependency_class'] === 'load_order', 'zen_snapshot_load_order_classified');
+
+    Uedb5MetadataContainer::buildToFile($snapshot, $uedb5Path, 2);
+    $staged = new Uedb5MetadataStagingReader($uedb5Path, 7);
+    $check($staged->manifest()['package_family'] === 'zen-iostore', 'zen_snapshot_uedb5_manifest_family');
+    $check($staged->count('imports') === 1, 'zen_snapshot_uedb5_import_count');
+    $roundTripImports = $staged->page('imports', 0, 10);
+    $check(
+        $roundTripImports[0]['provider_package_id'] === $providerId
+        && $roundTripImports[0]['provider_public_export_hash'] === $importedHash,
+        'zen_snapshot_uedb5_package_import_round_trip'
+    );
+    $roundTripProvenance = $staged->page('container_provenance', 0, 1);
+    $check(
+        $roundTripProvenance[0]['utoc_sha256'] === hash('sha256', $utoc),
+        'zen_snapshot_uedb5_provenance_round_trip'
+    );
+} finally {
+    @unlink($uedb5Path);
+    @unlink($base . '.utoc');
+    @unlink($base . '.ucas');
+    @rmdir($temp);
+}
 
 $badStoreRejected = false;
 try {
