@@ -22,6 +22,14 @@ $loader = new BlockedCompressedMetadataSnapshotLoader($db, $storageRoot);
 $consumer = $loader->load($fileId);
 $consumerImports = (array)($consumer['imports'] ?? []);
 $consumerExports = (array)($consumer['exports'] ?? []);
+$consumerDependencies = (array)($consumer['dependencies'] ?? []);
+$compactDependency = null;
+foreach ($consumerDependencies as $dependencyRow) {
+    if (is_array($dependencyRow) && (int)($dependencyRow['import_index'] ?? -1) === $importIndex) {
+        $compactDependency = $dependencyRow;
+        break;
+    }
+}
 $import = null;
 foreach ($consumerImports as $fallback => $row) {
     if (!is_array($row)) continue;
@@ -188,6 +196,7 @@ echo json_encode([
     'read_only' => true,
     'file' => $file,
     'dependency' => $dep,
+    'compact_dependency' => $compactDependency,
     'serialized_import' => [
         'import_index' => $importIndex,
         'class_package' => (string)($import['class_package'] ?? ''),
