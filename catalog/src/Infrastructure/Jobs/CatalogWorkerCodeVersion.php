@@ -91,6 +91,7 @@ final class CatalogWorkerCodeVersion
             $this->catalogRoot . '/src/Infrastructure/Import/CatalogVerifiedPackageInspector.php',
             $this->catalogRoot . '/src/Infrastructure/Metadata/CompressedMetadataLookupWriter.php',
             $this->catalogRoot . '/src/Infrastructure/Metadata/BlockedCompressedMetadataSnapshotWriter.php',
+            $this->catalogRoot . '/src/Infrastructure/Metadata/BlockedCompressedMetadataReader.php',
             $this->catalogRoot . '/src/Infrastructure/Metadata/CatalogParsedPackageMetadataSnapshotBuilder.php',
             $this->catalogRoot . '/src/Infrastructure/Metadata/VerifiedFileCompactMetadataFinalizer.php',
             $this->catalogRoot . '/src/Infrastructure/Metadata/CompactSearchProjectionWriter.php',

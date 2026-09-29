@@ -108,9 +108,9 @@ final class BlockedCompressedMetadataSnapshotWriter
 
     /**
      * Full Sync source-pass fast path for audited UT3/UE3 packages whose parsed
-     * structure is unchanged. The container is replaced atomically, but SQL work
-     * is limited to the UE3 export identity columns plus the deliberately
-     * unresolved dependency projection used by pass 2.
+     * structure is unchanged. The container is replaced atomically and registered,
+     * while all per-object SQL projections are retained. Pass 2 owns dependency
+     * SQL publication; UT3 VerifyImport reads source identity from UEDB4.
      *
      * @param array<string,mixed> $snapshot
      * @return array<string,mixed>
@@ -169,25 +169,15 @@ final class BlockedCompressedMetadataSnapshotWriter
 
         $lookupWriter = new CompressedMetadataLookupWriter($this->db);
         $sqlBatches = 0;
-        $ue3Prepared = null;
-        if ($mode === 'ue3-full-sync-source') {
-            $ue3Prepared = $lookupWriter->prepareUe3ExportIdentityRefresh(
-                $fileId,
-                (string)($file['package_name'] ?? ''),
-                array_values((array)($snapshot['imports'] ?? [])),
-                array_values((array)($snapshot['exports'] ?? [])),
-                $packageVersion
-            );
-            $sqlBatches += (int)($ue3Prepared['sql_batches'] ?? 0);
-        }
-        $dependencyPrepared = $lookupWriter->prepareDependencyProjection($snapshot);
-        $sqlBatches += (int)($dependencyPrepared['sql_batches'] ?? 0);
+        $dependencyPrepared = null;
+        if ($mode === 'dependency-only') {
+            $dependencyPrepared = $lookupWriter->prepareDependencyProjection($snapshot);
+            $sqlBatches += (int)($dependencyPrepared['sql_batches'] ?? 0);
 
-        // Long values outside the dependency/UE3 delta should already exist in
-        // the shared dictionary because the structural projection is being
-        // retained. This verifies/publishes complete overflow values without
-        // rebuilding any file-owned lookup tables.
-        (new CompactTermOverflowWriter($this->db))->write($snapshot, $sqlBatches);
+            // Dependency terms may be new after provider resolution. Phase-1 UT3
+            // source refresh retains all structural SQL and needs no term writes.
+            (new CompactTermOverflowWriter($this->db))->write($snapshot, $sqlBatches);
+        }
 
         $built = null;
         try {
@@ -206,7 +196,6 @@ final class BlockedCompressedMetadataSnapshotWriter
                         $mode,
                         $sqlBatches,
                         $lookupWriter,
-                        $ue3Prepared,
                         $dependencyPrepared
                     );
                 } catch (Throwable $error) {
@@ -224,8 +213,7 @@ final class BlockedCompressedMetadataSnapshotWriter
     /**
      * @param array<string,mixed> $snapshot
      * @param array<string,mixed> $built
-     * @param array<string,mixed>|null $ue3Prepared
-     * @param array<string,mixed> $dependencyPrepared
+     * @param array<string,mixed>|null $dependencyPrepared
      * @return array<string,mixed>
      */
     private function publishSelectiveAttempt(
@@ -237,8 +225,7 @@ final class BlockedCompressedMetadataSnapshotWriter
         string $mode,
         int $preparedSqlBatches,
         CompressedMetadataLookupWriter $lookupWriter,
-        ?array $ue3Prepared,
-        array $dependencyPrepared
+        ?array $dependencyPrepared
     ): array {
         $backupPath = $path . '.bak.' . bin2hex(random_bytes(8));
         $compressedSize = (int)($built['compressed_size'] ?? 0);
@@ -257,17 +244,16 @@ final class BlockedCompressedMetadataSnapshotWriter
 
         $this->db->beginTransaction();
         try {
-            if ($mode === 'ue3-full-sync-source') {
-                if (!is_array($ue3Prepared)) {
-                    throw new RuntimeException('UE3 selective publication is missing its prepared export identity rows.');
+            if ($mode === 'dependency-only') {
+                if (!is_array($dependencyPrepared)) {
+                    throw new RuntimeException('Dependency-only publication is missing its prepared projection rows.');
                 }
-                $lookupWriter->writePreparedUe3ExportIdentityRefresh($fileId, $ue3Prepared, $sqlBatches);
+                $lookupWriter->writePreparedDependencyProjection(
+                    $fileId,
+                    $dependencyPrepared,
+                    $sqlBatches
+                );
             }
-            $lookupWriter->writePreparedDependencyProjection(
-                $fileId,
-                $dependencyPrepared,
-                $sqlBatches
-            );
             $this->registerMetadata(
                 $snapshot,
                 $compressedSize,

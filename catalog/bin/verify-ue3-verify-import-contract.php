@@ -301,8 +301,11 @@ $check(
     'ue3_provider_lookup_is_scoped_and_indexed',
     preg_match('/PdoUe3VerifyImportProjectionResolver::resolveProvider\([^;]+\$requiredImportIndexes/s', $sharedResolver) === 1
         && str_contains($ue3Resolver, 'loadExactObjectNameTerms')
+        && str_contains($ue3Resolver, 'loadSourceCandidates')
+        && str_contains($ue3Resolver, 'rowsByIndexes')
         && str_contains($ue3Resolver, 'loadCaseInsensitiveCandidates')
-        && str_contains($ue3Resolver, 'only unresolved names pay for the slower collation'),
+        && str_contains($ue3Resolver, 'only unresolved names pay for the slower collation')
+        && str_contains($sharedResolver, '$storageRoot'),
     'UE3 provider SQL must seed only the required package import closure, use indexed exact term IDs normally, and retain case-insensitive FName fallback only for unresolved names.'
 );
 
@@ -310,6 +313,7 @@ $check(
     'worker_fingerprint_tracks_ue3_dependency_runtime',
     str_contains($workerFingerprint, '/src/Infrastructure/Persistence/PdoDependencyResolver.php')
         && str_contains($workerFingerprint, '/src/Infrastructure/Persistence/PdoUe3VerifyImportProjectionResolver.php')
+        && str_contains($workerFingerprint, '/src/Infrastructure/Metadata/BlockedCompressedMetadataReader.php')
         && str_contains($workerFingerprint, '/src/Infrastructure/Metadata/CompactDependencyRebuilder.php'),
     'Long-lived detached workers must be marked stale when shared or UE3 dependency-resolution code changes.'
 );

@@ -228,10 +228,18 @@ if (!extension_loaded('pdo_sqlite')) {
 }
 
 $workerVersionSource = (string)file_get_contents($root . '/src/Infrastructure/Jobs/CatalogWorkerCodeVersion.php');
+$snapshotWriterSource = (string)file_get_contents($root . '/src/Infrastructure/Metadata/BlockedCompressedMetadataSnapshotWriter.php');
+$record(
+    'ut3_source_pass_skips_per_export_sql',
+    str_contains($snapshotWriterSource, "if (\$mode === 'dependency-only')")
+        && !str_contains($snapshotWriterSource, 'writePreparedUe3ExportIdentityRefresh($fileId'),
+    'Unchanged-structure UT3 Full Sync phase 1 must rewrite/register UEDB4 without touching per-export SQL rows.'
+);
 $record(
     'worker_fingerprint_tracks_selective_publication_runtime',
     str_contains($workerVersionSource, '/src/Infrastructure/Metadata/CompressedMetadataLookupWriter.php')
         && str_contains($workerVersionSource, '/src/Infrastructure/Metadata/BlockedCompressedMetadataSnapshotWriter.php')
+        && str_contains($workerVersionSource, '/src/Infrastructure/Metadata/BlockedCompressedMetadataReader.php')
         && str_contains($workerVersionSource, '/src/Infrastructure/Metadata/CatalogParsedPackageMetadataSnapshotBuilder.php')
         && str_contains($workerVersionSource, '/src/Infrastructure/Metadata/VerifiedFileCompactMetadataFinalizer.php')
         && str_contains($workerVersionSource, '/src/Infrastructure/Metadata/CompactDependencyRebuilder.php'),

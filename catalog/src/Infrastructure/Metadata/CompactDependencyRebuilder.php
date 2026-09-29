@@ -130,7 +130,8 @@ final class CompactDependencyRebuilder
                 $this->db,
                 (int)$file['game_id'],
                 $fileId,
-                $resolutionImports
+                $resolutionImports,
+                $this->storageRoot
             );
 
         $dependencies = [];

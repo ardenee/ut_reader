@@ -371,7 +371,13 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
             }
         }
 
-        $resolutions = PdoDependencyResolver::resolve($this->db, $gameId, $fileId, $importRows);
+        $resolutions = PdoDependencyResolver::resolve(
+            $this->db,
+            $gameId,
+            $fileId,
+            $importRows,
+            trim((string)($this->config['storage_path'] ?? '')) ?: null
+        );
         $dependencies = [];
         foreach ($importRows as $import) {
             if (!is_array($import)) {

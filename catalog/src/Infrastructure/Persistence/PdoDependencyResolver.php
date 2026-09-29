@@ -17,8 +17,13 @@ final class PdoDependencyResolver
     private const MAX_VALUES_PER_QUERY = 500;
 
     /** @param list<array<string,mixed>> $imports */
-    public static function resolve(PDO $db, int $gameId, int $fileId, array $imports): array
-    {
+    public static function resolve(
+        PDO $db,
+        int $gameId,
+        int $fileId,
+        array $imports,
+        ?string $storageRoot = null
+    ): array {
         $engineKey = self::engineKey($db, $gameId);
         $legacyPolicy = self::legacyVerifyImportPolicy($db, $gameId);
         $legacyVerifyImport = $legacyPolicy !== null;
@@ -185,7 +190,8 @@ final class PdoDependencyResolver
                         $db,
                         (int)$candidate['file_id'],
                         $imports,
-                        $requiredImportIndexes
+                        $requiredImportIndexes,
+                        $storageRoot
                     );
                     $matchCount = 0;
                     foreach ($requiredImportIndexes as $requiredImportIndex) {

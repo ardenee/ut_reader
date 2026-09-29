@@ -69,6 +69,73 @@ final class BlockedCompressedMetadataReader
         return $rows;
     }
 
+    /**
+     * Read sparse section rows by serialized row index while decompressing each
+     * touched block at most once. This keeps file-backed VerifyImport candidate
+     * validation proportional to the candidate set rather than package size.
+     *
+     * @param list<int> $indexes
+     * @return array<int,array<string,mixed>> keyed by serialized row index
+     */
+    public function rowsByIndexes(int $fileId, string $section, array $indexes): array
+    {
+        $section = $this->section($section);
+        $wanted = [];
+        foreach ($indexes as $index) {
+            $index = (int)$index;
+            if ($index >= 0) {
+                $wanted[$index] = true;
+            }
+        }
+        if ($wanted === []) {
+            return [];
+        }
+
+        $indexField = match ($section) {
+            'names' => 'name_index',
+            'imports', 'dependencies' => 'import_index',
+            'exports' => 'export_index',
+        };
+        $context = $this->manifest($fileId);
+        $rows = [];
+        $handle = fopen((string)$context['path'], 'rb');
+        if ($handle === false) {
+            throw new RuntimeException('Could not open blocked metadata container.');
+        }
+        try {
+            foreach ((array)($context['manifest']['sections'][$section] ?? []) as $block) {
+                if (!is_array($block)) {
+                    continue;
+                }
+                $blockStart = (int)($block['row_start'] ?? -1);
+                $blockEnd = $blockStart + (int)($block['row_count'] ?? 0);
+                $touches = false;
+                foreach ($wanted as $index => $_) {
+                    if ($index >= $blockStart && $index < $blockEnd) {
+                        $touches = true;
+                        break;
+                    }
+                }
+                if (!$touches) {
+                    continue;
+                }
+                foreach ($this->readBlock($handle, $context, $section, $block) as $row) {
+                    $index = (int)($row[$indexField] ?? -1);
+                    if (isset($wanted[$index])) {
+                        $rows[$index] = $row;
+                        unset($wanted[$index]);
+                    }
+                }
+                if ($wanted === []) {
+                    break;
+                }
+            }
+        } finally {
+            fclose($handle);
+        }
+        return $rows;
+    }
+
     /** @param list<string> $values @return array<string,int> */
     public function findNameIndexes(int $fileId, array $values): array
     {
