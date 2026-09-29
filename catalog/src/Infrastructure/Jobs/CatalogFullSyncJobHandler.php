@@ -111,7 +111,9 @@ final class CatalogFullSyncJobHandler implements JobHandler
 
         if ($stage === 'full_sync_wait_reimport') {
             $state = $this->childState($job->id, 'reimport:');
-            if (!$this->childrenReady($context, $state, 'full_sync_wait_reimport', 5, 65, 'package reimport')) {
+            if (!$this->childrenReady(
+                $context, $state, 'full_sync_wait_reimport', 5, 65, 'package reimport', $job->id, 'reimport:'
+            )) {
                 throw new \LogicException('Unreachable after Full Sync reimport defer.');
             }
             $context->checkpoint($this->progress(
@@ -162,7 +164,9 @@ final class CatalogFullSyncJobHandler implements JobHandler
 
         if ($stage === 'full_sync_wait_dependencies') {
             $state = $this->childState($job->id, 'dependency:');
-            if (!$this->childrenReady($context, $state, 'full_sync_wait_dependencies', 76, 97, 'dependency')) {
+            if (!$this->childrenReady(
+                $context, $state, 'full_sync_wait_dependencies', 76, 97, 'dependency', $job->id, 'dependency:'
+            )) {
                 throw new \LogicException('Unreachable after Full Sync dependency defer.');
             }
             $context->checkpoint($this->progress(
@@ -383,9 +387,24 @@ final class CatalogFullSyncJobHandler implements JobHandler
         string $stage,
         int $startPercent,
         int $endPercent,
-        string $label
+        string $label,
+        int $parentJobId,
+        string $unitPrefix
     ): bool {
         $total = max(1, $state['total']);
+        if ($state['cancelled'] > 0 && $state['failed'] === 0 && $state['dead_letter'] === 0) {
+            $resumed = $this->resumeStoppedChildren($parentJobId, $unitPrefix);
+            if ($resumed > 0) {
+                $fresh = $this->childState($parentJobId, $unitPrefix);
+                $context->defer(1, $this->progress(
+                    $stage,
+                    $startPercent + (int)floor((($endPercent - $startPercent) * $fresh['completed']) / max(1, $fresh['total'])),
+                    'Resumed ' . $resumed . ' ' . $label . ' unit(s) cancelled by the earlier Full Sync stop; '
+                        . $fresh['completed'] . ' successful unit(s) are retained.',
+                    [$label . '_children' => $fresh]
+                ));
+            }
+        }
         $percent = $startPercent + (int)floor((($endPercent - $startPercent) * $state['completed']) / $total);
         if ($state['dead_letter'] > 0 || $state['failed'] > 0 || $state['cancelled'] > 0) {
             // Terminal child problems require operator action. Do not pin this
@@ -408,6 +427,24 @@ final class CatalogFullSyncJobHandler implements JobHandler
             ));
         }
         return $state['total'] === 0 || $state['completed'] === $state['total'];
+    }
+
+    private function resumeStoppedChildren(int $parentJobId, string $unitPrefix): int
+    {
+        $statement = $this->db->prepare(
+            'SELECT id FROM ue_background_jobs WHERE parent_job_id=? AND status="cancelled" '
+            . 'AND workflow_unit_key LIKE ? AND cancel_reason="Stopped from Background Jobs." '
+            . 'ORDER BY id ASC LIMIT 10000'
+        );
+        $statement->execute([$parentJobId, $unitPrefix . '%']);
+        $queue = new PdoJobQueue($this->db);
+        $resumed = 0;
+        foreach ($statement->fetchAll(PDO::FETCH_COLUMN) ?: [] as $childId) {
+            if ($queue->retryDeadLetter((int)$childId)) {
+                $resumed++;
+            }
+        }
+        return $resumed;
     }
 
     /** @return array{total:int,queued:int,running:int,completed:int,failed:int,dead_letter:int,cancelled:int} */
