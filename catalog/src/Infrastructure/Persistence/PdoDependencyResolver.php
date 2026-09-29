@@ -235,6 +235,7 @@ final class PdoDependencyResolver
         }
 
         $ue4VerifyImportMatches = [];
+        $ue4VerifyImportRedirectors = [];
         if ($ue4VerifyImport) {
             require_once __DIR__ . '/PdoUe4VerifyImportProjectionResolver.php';
             $ue4Candidates = self::loadPackageCandidates($db, $gameId, $fileId, array_values($packageNames));
@@ -248,28 +249,39 @@ final class PdoDependencyResolver
                 );
                 $bestCandidate = null;
                 $bestMatches = [];
+                $bestRedirectors = [];
                 $bestMatchCount = -1;
+                $bestRedirectorCount = -1;
                 foreach ($ue4Candidates[$packageKey] ?? [] as $candidate) {
-                    $matches = PdoUe4VerifyImportProjectionResolver::resolveProvider(
+                    $outcome = PdoUe4VerifyImportProjectionResolver::resolveProviderOutcome(
                         $db,
                         (int)$candidate['file_id'],
                         $imports,
                         $consumerExports,
                         $consumerGraphImports
                     );
+                    $matches = (array)($outcome['matches'] ?? []);
+                    $redirectors = (array)($outcome['redirectors'] ?? []);
                     $matchCount = 0;
+                    $redirectorCount = 0;
                     foreach ($requiredImportIndexes as $requiredImportIndex) {
                         if (array_key_exists($requiredImportIndex, $matches)) {
                             $matchCount++;
+                        } elseif (array_key_exists($requiredImportIndex, $redirectors)) {
+                            $redirectorCount++;
                         }
                     }
                     // VerifyImport is per Import. Catalogue duplicates must still
-                    // resolve through one physical provider, but a failed sibling
-                    // Import does not invalidate successful siblings in that linker.
-                    if ($matchCount > $bestMatchCount) {
+                    // resolve through one physical provider. Exact Import matches
+                    // outrank redirector-only evidence; redirectors break exact-count
+                    // ties because that physical package reaches UE4's second pass.
+                    if ($matchCount > $bestMatchCount
+                        || ($matchCount === $bestMatchCount && $redirectorCount > $bestRedirectorCount)) {
                         $bestCandidate = $candidate;
                         $bestMatches = $matches;
+                        $bestRedirectors = $redirectors;
                         $bestMatchCount = $matchCount;
+                        $bestRedirectorCount = $redirectorCount;
                     }
                     if ($requiredImportIndexes !== [] && $matchCount === count($requiredImportIndexes)) {
                         break;
@@ -278,6 +290,7 @@ final class PdoDependencyResolver
                 if ($bestCandidate !== null) {
                     $packageMatches[$packageKey] = $bestCandidate;
                     $ue4VerifyImportMatches[$packageKey] = $bestMatches;
+                    $ue4VerifyImportRedirectors[$packageKey] = $bestRedirectors;
                 }
             }
         }
@@ -390,6 +403,7 @@ final class PdoDependencyResolver
                     }
                 } elseif ($ue4VerifyImport) {
                     $exportIndex = $ue4VerifyImportMatches[$packageKey][$importIndex] ?? null;
+                    $redirectorIndex = $ue4VerifyImportRedirectors[$packageKey][$importIndex] ?? null;
                     if ($packageMatch !== null && $exportIndex !== null) {
                         $result = [
                             'status' => 'resolved',
@@ -398,6 +412,15 @@ final class PdoDependencyResolver
                             'resolved_export_index' => (int)$exportIndex,
                             'source' => 'ue4_verify_import',
                             'confidence' => 'exact',
+                        ];
+                    } elseif ($packageMatch !== null && $redirectorIndex !== null) {
+                        $result = [
+                            'status' => 'unresolved',
+                            'resolved_file_id' => null,
+                            'resolved_export_id' => null,
+                            'resolved_export_index' => null,
+                            'source' => 'ue4_object_redirector_target_unavailable',
+                            'confidence' => 'payload_unresolved',
                         ];
                     }
                 } else {

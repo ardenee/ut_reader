@@ -128,6 +128,66 @@ $matches = PdoUe4VerifyImportProjectionResolver::resolveInMemory(
 );
 $check(($matches[1] ?? null) === 1, 'ue4_imported_class_package_can_use_immediate_export_outer_object_name');
 
+$redirectConsumer = [
+    ['import_index'=>0,'class_package'=>'/Script/CoreUObject','class_name'=>'Package','object_name'=>'/Game/Redirected','outer_index'=>0,'root_package'=>'/Game/Redirected','relative_object_path'=>''],
+    ['import_index'=>1,'class_package'=>'/Script/Engine','class_name'=>'Blueprint','object_name'=>'RedirectedAsset','outer_index'=>-1,'root_package'=>'/Game/Redirected','relative_object_path'=>'RedirectedAsset'],
+];
+$redirectProviderImports = [
+    ['import_index'=>0,'object_name'=>'/Script/CoreUObject','outer_index'=>0],
+    ['import_index'=>1,'object_name'=>'ObjectRedirector','outer_index'=>-1],
+];
+$redirectProviderExports = [[
+    'export_index'=>0,'class_index'=>-2,'object_name'=>'RedirectedAsset','outer_index'=>0,'object_flags'=>1,
+]];
+$redirectOutcome = PdoUe4VerifyImportProjectionResolver::resolveInMemoryOutcome(
+    $redirectConsumer,
+    $redirectProviderImports,
+    $redirectProviderExports,
+    '/Game/Redirected'
+);
+$check(!isset($redirectOutcome['matches'][1]), 'ue4_redirector_is_not_exact_original_import_match');
+$check(($redirectOutcome['redirectors'][1] ?? null) === 0, 'ue4_verifyimport_second_pass_detects_object_redirector');
+$check(
+    !isset(PdoUe4VerifyImportProjectionResolver::resolveInMemory(
+        $redirectConsumer,
+        $redirectProviderImports,
+        $redirectProviderExports,
+        '/Game/Redirected'
+    )[1]),
+    'ue4_legacy_match_api_never_returns_redirector_as_original_target'
+);
+$privateRedirectProvider = $redirectProviderExports;
+$privateRedirectProvider[0]['object_flags'] = 0;
+$privateRedirectOutcome = PdoUe4VerifyImportProjectionResolver::resolveInMemoryOutcome(
+    $redirectConsumer,
+    $redirectProviderImports,
+    $privateRedirectProvider,
+    '/Game/Redirected'
+);
+$check(!isset($privateRedirectOutcome['redirectors'][1]), 'ue4_private_redirector_without_graph_exception_is_not_accepted');
+
+$namedRedirectorConsumer = $redirectConsumer;
+$namedRedirectorConsumer[1]['object_name'] = 'ObjectRedirector';
+$namedRedirectorOutcome = PdoUe4VerifyImportProjectionResolver::resolveInMemoryOutcome(
+    $namedRedirectorConsumer,
+    $redirectProviderImports,
+    [[
+        'export_index'=>0,'class_index'=>-2,'object_name'=>'ObjectRedirector','outer_index'=>0,'object_flags'=>1,
+    ]],
+    '/Game/Redirected'
+);
+$check(!isset($namedRedirectorOutcome['redirectors'][1]), 'ue4_wrapper_does_not_retry_when_import_object_name_is_objectredirector');
+
+$incompleteRedirectConsumer = $redirectConsumer;
+$incompleteRedirectConsumer[1]['class_name'] = '';
+$incompleteRedirectOutcome = PdoUe4VerifyImportProjectionResolver::resolveInMemoryOutcome(
+    $incompleteRedirectConsumer,
+    $redirectProviderImports,
+    $redirectProviderExports,
+    '/Game/Redirected'
+);
+$check(!isset($incompleteRedirectOutcome['redirectors'][1]), 'ue4_wrapper_does_not_retry_after_irrelevant_incomplete_import_identity');
+
 $providerImportsWithExact = [
     ['import_index'=>0,'object_name'=>'/Other/CoreUObject','outer_index'=>0],
     ['import_index'=>1,'object_name'=>'SomeClass','outer_index'=>-1],
@@ -160,9 +220,17 @@ $check(
     'ue4_single_provider_keeps_successful_siblings'
 );
 
+$dependencyResolverSource = file_get_contents($root . '/src/Infrastructure/Persistence/PdoDependencyResolver.php') ?: '';
+$check(
+    str_contains($dependencyResolverSource, "'source' => 'ue4_object_redirector_target_unavailable'")
+        && str_contains($dependencyResolverSource, "'confidence' => 'payload_unresolved'")
+        && str_contains($dependencyResolverSource, '$ue4VerifyImportRedirectors'),
+    'ue4_redirector_outcome_persists_as_unresolved_without_fabricated_target'
+);
+
 $result = [
     'ok' => $failures === [],
-    'checks' => 13,
+    'checks' => 20,
     'failures' => $failures,
     'contract' => [
         'consumer_imports_only_create_requirements',
@@ -170,6 +238,7 @@ $result = [
         'private_exports_follow_ue4_editor_consumer_graph_exceptions',
         'targeted_resolution_keeps_full_consumer_graph_for_private_exceptions',
         'imported_class_package_uses_immediate_outer_resource_object_name',
+        'object_redirector_second_pass_is_detected_but_not_returned_as_original_target',
         'short_class_package_fallback_only_without_any_full_package_match',
         'one_physical_provider_is_used_without_invalidating_successful_siblings',
         'v4_does_not_guess_package_name_for_modern_export_outer_imports',

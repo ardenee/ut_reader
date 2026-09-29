@@ -54,7 +54,9 @@ $providers = catalog_dependency_provider_candidates($db, 7, $fileId, $package);
 $outProviders = [];
 foreach ($providers as $provider) {
     $providerId = (int)($provider['file_id'] ?? 0);
-    $matches = PdoUe4VerifyImportProjectionResolver::resolveProvider($db, $providerId, $consumerImports, $consumerExports);
+    $outcome = PdoUe4VerifyImportProjectionResolver::resolveProviderOutcome($db, $providerId, $consumerImports, $consumerExports);
+    $matches = (array)($outcome['matches'] ?? []);
+    $redirectors = (array)($outcome['redirectors'] ?? []);
     $candidates = catalog_dependency_export_candidates($db, $dep, $providerId);
     $best = null;
     $bestScore = -1;
@@ -88,6 +90,10 @@ foreach ($providers as $provider) {
             ? (int)$matches[$importIndex]
             : null,
         'resolver_total_matches' => count($matches),
+        'resolver_redirector_for_import' => array_key_exists($importIndex, $redirectors)
+            ? (int)$redirectors[$importIndex]
+            : null,
+        'resolver_total_redirectors' => count($redirectors),
         'best_candidate' => $best,
     ];
 }

@@ -28,10 +28,31 @@ final class PdoUe4VerifyImportProjectionResolver
         array $consumerImports,
         array $consumerExports = [],
         array $consumerGraphImports = []
-    ): array
-    {
+    ): array {
+        return self::resolveProviderOutcome(
+            $db,
+            $providerFileId,
+            $consumerImports,
+            $consumerExports,
+            $consumerGraphImports
+        )['matches'];
+    }
+
+    /**
+     * @param list<array<string,mixed>> $consumerImports
+     * @param list<array<string,mixed>> $consumerExports
+     * @param list<array<string,mixed>> $consumerGraphImports
+     * @return array{matches:array<int,int>,redirectors:array<int,int>}
+     */
+    public static function resolveProviderOutcome(
+        PDO $db,
+        int $providerFileId,
+        array $consumerImports,
+        array $consumerExports = [],
+        array $consumerGraphImports = []
+    ): array {
         if ($providerFileId < 1 || $consumerImports === []) {
-            return [];
+            return ['matches' => [], 'redirectors' => []];
         }
         if (!function_exists('catalog_config')) {
             throw new RuntimeException('Catalog configuration is required for authoritative UE4 VerifyImport resolution.');
@@ -44,7 +65,7 @@ final class PdoUe4VerifyImportProjectionResolver
 
         $snapshot = (new BlockedCompressedMetadataSnapshotLoader($db, $storageRoot))->load($providerFileId);
         $file = (array)($snapshot['file'] ?? []);
-        return self::resolveInMemory(
+        return self::resolveInMemoryOutcome(
             $consumerImports,
             (array)($snapshot['imports'] ?? []),
             (array)($snapshot['exports'] ?? []),
@@ -61,6 +82,37 @@ final class PdoUe4VerifyImportProjectionResolver
      * @return array<int,int>
      */
     public static function resolveInMemory(
+        array $consumerImports,
+        array $providerImports,
+        array $providerExports,
+        string $providerPackageName,
+        array $consumerExports = [],
+        array $consumerGraphImports = []
+    ): array {
+        return self::resolveInMemoryOutcome(
+            $consumerImports,
+            $providerImports,
+            $providerExports,
+            $providerPackageName,
+            $consumerExports,
+            $consumerGraphImports
+        )['matches'];
+    }
+
+    /**
+     * Deterministic table-level part of VerifyImport + VerifyImportInner.
+     * A matching ObjectRedirector is reported separately because UE4 must
+     * preload its UObject payload and validate DestinationObject before the
+     * original Import can be considered resolved.
+     *
+     * @param list<array<string,mixed>> $consumerImports
+     * @param list<array<string,mixed>> $providerImports
+     * @param list<array<string,mixed>> $providerExports
+     * @param list<array<string,mixed>> $consumerExports
+     * @param list<array<string,mixed>> $consumerGraphImports
+     * @return array{matches:array<int,int>,redirectors:array<int,int>}
+     */
+    public static function resolveInMemoryOutcome(
         array $consumerImports,
         array $providerImports,
         array $providerExports,
@@ -127,7 +179,44 @@ final class PdoUe4VerifyImportProjectionResolver
                 $matches[(int)$importIndex] = $exportIndex;
             }
         }
-        return $matches;
+
+        $redirectors = [];
+        foreach ($imports as $importIndex => $import) {
+            $importIndex = (int)$importIndex;
+            if (isset($matches[$importIndex])) {
+                continue;
+            }
+            $objectName = trim((string)($import['object_name'] ?? ''));
+            $className = trim((string)($import['class_name'] ?? ''));
+            $classPackage = trim((string)($import['class_package'] ?? ''));
+            if ($objectName === '' || $className === '' || $classPackage === ''
+                || self::key($objectName) === self::key('ObjectRedirector')) {
+                continue;
+            }
+            $outerIndex = (int)($import['outer_index'] ?? 0);
+            if ($outerIndex >= 0) {
+                continue;
+            }
+            $parentIndex = -$outerIndex - 1;
+            $parentSource = $resolved[$parentIndex] ?? null;
+            if (!is_int($parentSource) || $parentSource === self::PRIVATE_FAILURE) {
+                continue;
+            }
+            $expectedOuter = $parentSource === self::TOP_LEVEL_PACKAGE ? 0 : $parentSource + 1;
+            $redirector = self::findCandidate(
+                $candidates,
+                $objectName,
+                'ObjectRedirector',
+                '/Script/CoreUObject',
+                $expectedOuter,
+                self::privateImportAllowed($importIndex, $graphImports, $consumerExportsByIndex)
+            );
+            if (is_int($redirector) && $redirector >= 0) {
+                $redirectors[$importIndex] = $redirector;
+            }
+        }
+
+        return ['matches' => $matches, 'redirectors' => $redirectors];
     }
 
     /**
