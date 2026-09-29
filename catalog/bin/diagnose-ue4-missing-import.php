@@ -21,6 +21,7 @@ $storageRoot = trim((string)($config['storage_path'] ?? ''));
 $loader = new BlockedCompressedMetadataSnapshotLoader($db, $storageRoot);
 $consumer = $loader->load($fileId);
 $consumerImports = (array)($consumer['imports'] ?? []);
+$consumerExports = (array)($consumer['exports'] ?? []);
 $import = null;
 foreach ($consumerImports as $fallback => $row) {
     if (!is_array($row)) continue;
@@ -53,7 +54,7 @@ $providers = catalog_dependency_provider_candidates($db, 7, $fileId, $package);
 $outProviders = [];
 foreach ($providers as $provider) {
     $providerId = (int)($provider['file_id'] ?? 0);
-    $matches = PdoUe4VerifyImportProjectionResolver::resolveProvider($db, $providerId, $consumerImports);
+    $matches = PdoUe4VerifyImportProjectionResolver::resolveProvider($db, $providerId, $consumerImports, $consumerExports);
     $candidates = catalog_dependency_export_candidates($db, $dep, $providerId);
     $best = null;
     $bestScore = -1;
@@ -111,6 +112,11 @@ echo json_encode([
         'relative_object_path' => (string)($import['relative_object_path'] ?? ''),
         'full_path' => (string)($import['full_path'] ?? ''),
     ],
+    'private_import_allowed_by_consumer_graph' => PdoUe4VerifyImportProjectionResolver::privateImportAllowedInMemory(
+        $importIndex,
+        $consumerImports,
+        $consumerExports
+    ),
     'provider_count' => count($outProviders),
     'providers' => $outProviders,
 ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . PHP_EOL;

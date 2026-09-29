@@ -376,7 +376,8 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
             $gameId,
             $fileId,
             $importRows,
-            trim((string)($this->config['storage_path'] ?? '')) ?: null
+            trim((string)($this->config['storage_path'] ?? '')) ?: null,
+            $exportRows
         );
         $dependencies = [];
         foreach ($importRows as $import) {

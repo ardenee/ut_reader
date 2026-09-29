@@ -182,7 +182,7 @@ final class CatalogUnverifiedMetadataSnapshotBuilder
             }
         }
 
-        $resolutions = PdoDependencyResolver::resolve($this->db, $gameId, $fileId, $imports);
+        $resolutions = PdoDependencyResolver::resolve($this->db, $gameId, $fileId, $imports, null, $exports);
         $dependencies = [];
         foreach ($imports as $import) {
             $importId = (int)$import['id'];

@@ -49,6 +49,32 @@ $private[0]['object_flags'] = 0;
 $matches = PdoUe4VerifyImportProjectionResolver::resolveInMemory($consumer, [], $private, '/Game/TestPkg');
 $check(!isset($matches[1]), 'ue4_private_export_rejected');
 
+$consumerExportGraph = [[
+    'export_index'=>0,'class_index'=>0,'object_name'=>'ConsumerChild','outer_index'=>-2,'object_flags'=>1,
+]];
+$check(
+    PdoUe4VerifyImportProjectionResolver::privateImportAllowedInMemory(1, $consumer, $consumerExportGraph),
+    'ue4_private_import_allowed_when_consumer_export_shares_outermost'
+);
+$matches = PdoUe4VerifyImportProjectionResolver::resolveInMemory(
+    $consumer, [], $private, '/Game/TestPkg', $consumerExportGraph
+);
+$check(($matches[1] ?? null) === 0, 'ue4_private_export_resolves_when_source_graph_exception_applies');
+
+$targetedConsumer = [$consumer[0], $consumer[1]];
+$fullGraphImports = $consumer;
+$fullGraphImports[] = [
+    'import_index'=>2,'class_package'=>'/Script/CoreUObject','class_name'=>'Object','object_name'=>'GraphSibling',
+    'outer_index'=>-1,'root_package'=>'/Game/TestPkg','relative_object_path'=>'GraphSibling',
+];
+$fullGraphExports = [[
+    'export_index'=>0,'class_index'=>0,'object_name'=>'GraphChild','outer_index'=>-3,'object_flags'=>1,
+]];
+$matches = PdoUe4VerifyImportProjectionResolver::resolveInMemory(
+    $targetedConsumer, [], $private, '/Game/TestPkg', $fullGraphExports, $fullGraphImports
+);
+$check(($matches[1] ?? null) === 0, 'ue4_targeted_resolution_uses_full_consumer_graph_for_private_exception');
+
 $providerImports = [
     ['import_index'=>0,'object_name'=>'/Other/CoreUObject','outer_index'=>0],
     ['import_index'=>1,'object_name'=>'SomeClass','outer_index'=>-1],
@@ -90,17 +116,20 @@ $ue4Block = ($ue4Start !== false && $ue4End !== false)
 $check(
     str_contains($ue4Block, '$bestMatchCount = -1;')
         && str_contains($ue4Block, '$bestMatches = $matches;')
-        && !str_contains($ue4Block, 'isCompleteMatch('),
+        && !str_contains($ue4Block, 'isCompleteMatch(')
+        && str_contains($ue4Block, '$consumerExports'),
     'ue4_single_provider_keeps_successful_siblings'
 );
 
 $result = [
     'ok' => $failures === [],
-    'checks' => 8,
+    'checks' => 11,
     'failures' => $failures,
     'contract' => [
         'consumer_imports_only_create_requirements',
         'object_class_class_package_outer_and_public_must_match',
+        'private_exports_follow_ue4_editor_consumer_graph_exceptions',
+        'targeted_resolution_keeps_full_consumer_graph_for_private_exceptions',
         'short_class_package_fallback_only_without_any_full_package_match',
         'one_physical_provider_is_used_without_invalidating_successful_siblings',
         'v4_does_not_guess_package_name_for_modern_export_outer_imports',

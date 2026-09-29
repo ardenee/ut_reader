@@ -65,9 +65,10 @@ foreach ($groups as $group) {
     if ($fileId < 1 || $packageName === '') continue;
 
     if (!isset($snapshotCache[$fileId])) {
-        $snapshotCache = [$fileId => $loader->loadDependencySnapshot($fileId)];
+        $snapshotCache = [$fileId => $loader->loadDependencySnapshot($fileId, true)];
     }
     $imports = array_values((array)($snapshotCache[$fileId]['imports'] ?? []));
+    $exports = array_values((array)($snapshotCache[$fileId]['exports'] ?? []));
     $required = [];
     $needsV5Context = false;
     foreach ($imports as $fallback => $import) {
@@ -103,7 +104,7 @@ foreach ($groups as $group) {
     $providerResults = [];
     $hasComplete = false;
     foreach ($providerIds as $providerId) {
-        $matches = PdoUe4VerifyImportProjectionResolver::resolveProvider($db, $providerId, $imports);
+        $matches = PdoUe4VerifyImportProjectionResolver::resolveProvider($db, $providerId, $imports, $exports);
         $matched = 0;
         foreach ($required as $index) {
             if (array_key_exists($index, $matches)) $matched++;

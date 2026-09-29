@@ -55,18 +55,20 @@ final class CompactDependencyRebuilder
      */
     private function rebuildInternal(int $fileId, ?array $packageKeys): array
     {
-        $loader = new BlockedCompressedMetadataSnapshotLoader($this->db, $this->storageRoot);
-        $dependencySnapshot = $loader->loadDependencySnapshot($fileId);
-        $file = (array)$dependencySnapshot['file'];
-        $imports = array_values((array)$dependencySnapshot['imports']);
         $engineRow = \catalog_one(
             $this->db,
-            'SELECT p.engine_key FROM ue_games g'
+            'SELECT p.engine_key FROM ue_files f'
+            . ' JOIN ue_games g ON g.id=f.game_id'
             . ' LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1'
-            . ' WHERE g.id=? LIMIT 1',
-            [(int)($file['game_id'] ?? 0)]
+            . ' WHERE f.id=? LIMIT 1',
+            [$fileId]
         );
         $engineKey = strtoupper(trim((string)($engineRow['engine_key'] ?? '')));
+        $loader = new BlockedCompressedMetadataSnapshotLoader($this->db, $this->storageRoot);
+        $dependencySnapshot = $loader->loadDependencySnapshot($fileId, $engineKey === 'UE4');
+        $file = (array)$dependencySnapshot['file'];
+        $imports = array_values((array)$dependencySnapshot['imports']);
+        $consumerExports = array_values((array)($dependencySnapshot['exports'] ?? []));
         $ue3ImportsByIndex = [];
         if ($engineKey === 'UE3') {
             foreach ($imports as $fallback => $import) {
@@ -133,7 +135,9 @@ final class CompactDependencyRebuilder
                 (int)$file['game_id'],
                 $fileId,
                 $resolutionImports,
-                $this->storageRoot
+                $this->storageRoot,
+                $consumerExports,
+                $imports
             );
 
         $dependencies = [];

@@ -22,7 +22,13 @@ final class PdoUe4VerifyImportProjectionResolver
     private const PRIVATE_FAILURE = -2147483648;
 
     /** @param list<array<string,mixed>> $consumerImports @return array<int,int> */
-    public static function resolveProvider(PDO $db, int $providerFileId, array $consumerImports): array
+    public static function resolveProvider(
+        PDO $db,
+        int $providerFileId,
+        array $consumerImports,
+        array $consumerExports = [],
+        array $consumerGraphImports = []
+    ): array
     {
         if ($providerFileId < 1 || $consumerImports === []) {
             return [];
@@ -42,7 +48,9 @@ final class PdoUe4VerifyImportProjectionResolver
             $consumerImports,
             (array)($snapshot['imports'] ?? []),
             (array)($snapshot['exports'] ?? []),
-            (string)($file['package_name'] ?? '')
+            (string)($file['package_name'] ?? ''),
+            $consumerExports,
+            $consumerGraphImports
         );
     }
 
@@ -56,11 +64,18 @@ final class PdoUe4VerifyImportProjectionResolver
         array $consumerImports,
         array $providerImports,
         array $providerExports,
-        string $providerPackageName
+        string $providerPackageName,
+        array $consumerExports = [],
+        array $consumerGraphImports = []
     ): array {
         $imports = self::indexRows($consumerImports, 'import_index');
+        $graphImports = self::indexRows(
+            $consumerGraphImports !== [] ? $consumerGraphImports : $consumerImports,
+            'import_index'
+        );
         $providerImportsByIndex = self::indexRows($providerImports, 'import_index');
         $providerExportsByIndex = self::indexRows($providerExports, 'export_index');
+        $consumerExportsByIndex = self::indexRows($consumerExports, 'export_index');
 
         $candidates = [];
         foreach ($providerExportsByIndex as $exportIndex => $export) {
@@ -95,7 +110,15 @@ final class PdoUe4VerifyImportProjectionResolver
         $resolved = [];
         $visiting = [];
         foreach (array_keys($imports) as $importIndex) {
-            self::resolveImportIndex((int)$importIndex, $imports, $candidates, $resolved, $visiting);
+            self::resolveImportIndex(
+                (int)$importIndex,
+                $imports,
+                $consumerExportsByIndex,
+                $graphImports,
+                $candidates,
+                $resolved,
+                $visiting
+            );
         }
 
         $matches = [];
@@ -105,6 +128,26 @@ final class PdoUe4VerifyImportProjectionResolver
             }
         }
         return $matches;
+    }
+
+    /**
+     * UE4 editor-only private-import exception used by VerifyImportInner.
+     * The predicates mirror FLinker::ImportIsInAnyExport, AnyExportIsInImport,
+     * and AnyExportShareOuterWithImport over serialized FPackageIndex graphs.
+     *
+     * @param list<array<string,mixed>> $consumerImports
+     * @param list<array<string,mixed>> $consumerExports
+     */
+    public static function privateImportAllowedInMemory(
+        int $importIndex,
+        array $consumerImports,
+        array $consumerExports
+    ): bool {
+        return self::privateImportAllowed(
+            $importIndex,
+            self::indexRows($consumerImports, 'import_index'),
+            self::indexRows($consumerExports, 'export_index')
+        );
     }
 
     /**
@@ -172,6 +215,137 @@ final class PdoUe4VerifyImportProjectionResolver
         }
     }
 
+    /** @param array<int,array<string,mixed>> $imports @param array<int,array<string,mixed>> $exports */
+    private static function privateImportAllowed(int $importIndex, array $imports, array $exports): bool
+    {
+        return self::importIsInAnyExport($importIndex, $imports, $exports)
+            || self::anyExportIsInImport($importIndex, $imports, $exports)
+            || self::anyExportShareOuterWithImport($importIndex, $imports, $exports);
+    }
+
+    /** Mirrors FLinker::ImportIsInAnyExport. */
+    private static function importIsInAnyExport(int $importIndex, array $imports, array $exports): bool
+    {
+        if (!isset($imports[$importIndex])) {
+            return false;
+        }
+        $linkerIndex = (int)($imports[$importIndex]['outer_index'] ?? 0);
+        $seen = [];
+        while ($linkerIndex !== 0) {
+            if (isset($seen[$linkerIndex])) {
+                return false;
+            }
+            $seen[$linkerIndex] = true;
+            $outer = self::resourceOuterIndex($linkerIndex, $imports, $exports);
+            if ($outer === null) {
+                return false;
+            }
+            $linkerIndex = $outer;
+            if ($linkerIndex > 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Mirrors FLinker::AnyExportIsInImport. */
+    private static function anyExportIsInImport(int $importIndex, array $imports, array $exports): bool
+    {
+        $outerIndex = -$importIndex - 1;
+        foreach (array_keys($exports) as $exportIndex) {
+            if (self::resourceIsIn((int)$exportIndex + 1, $outerIndex, $imports, $exports)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Mirrors FLinker::AnyExportShareOuterWithImport. */
+    private static function anyExportShareOuterWithImport(int $importIndex, array $imports, array $exports): bool
+    {
+        $importResource = -$importIndex - 1;
+        $importOutermost = self::resourceGetOutermost($importResource, $imports, $exports);
+        if ($importOutermost === null) {
+            return false;
+        }
+        foreach ($exports as $exportIndex => $export) {
+            if ((int)($export['outer_index'] ?? 0) >= 0) {
+                continue;
+            }
+            $exportOutermost = self::resourceGetOutermost((int)$exportIndex + 1, $imports, $exports);
+            if ($exportOutermost !== null && $exportOutermost === $importOutermost) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Mirrors FLinker::ResourceGetOutermost. */
+    private static function resourceGetOutermost(int $linkerIndex, array $imports, array $exports): ?int
+    {
+        if ($linkerIndex === 0) {
+            return 0;
+        }
+        $seen = [];
+        while (true) {
+            if (isset($seen[$linkerIndex])) {
+                return null;
+            }
+            $seen[$linkerIndex] = true;
+            $outer = self::resourceOuterIndex($linkerIndex, $imports, $exports);
+            if ($outer === null) {
+                return null;
+            }
+            if ($outer === 0) {
+                return $linkerIndex;
+            }
+            $linkerIndex = $outer;
+        }
+    }
+
+    /** Mirrors FLinker::ResourceIsIn, including its first-outer step. */
+    private static function resourceIsIn(
+        int $linkerIndex,
+        int $outerIndex,
+        array $imports,
+        array $exports
+    ): bool {
+        $current = self::resourceOuterIndex($linkerIndex, $imports, $exports);
+        if ($current === null) {
+            return false;
+        }
+        $seen = [];
+        while ($current !== 0) {
+            if (isset($seen[$current])) {
+                return false;
+            }
+            $seen[$current] = true;
+            $next = self::resourceOuterIndex($current, $imports, $exports);
+            if ($next === null) {
+                return false;
+            }
+            $current = $next;
+            if ($current === $outerIndex) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** FPackageIndex resource lookup: negative=Import, positive=Export, zero=null. */
+    private static function resourceOuterIndex(int $linkerIndex, array $imports, array $exports): ?int
+    {
+        if ($linkerIndex === 0) {
+            return 0;
+        }
+        if ($linkerIndex < 0) {
+            $index = -$linkerIndex - 1;
+            return isset($imports[$index]) ? (int)($imports[$index]['outer_index'] ?? 0) : null;
+        }
+        $index = $linkerIndex - 1;
+        return isset($exports[$index]) ? (int)($exports[$index]['outer_index'] ?? 0) : null;
+    }
+
     /**
      * @param array<int,array<string,mixed>> $imports
      * @param array<string,list<array<string,mixed>>> $candidates
@@ -181,6 +355,8 @@ final class PdoUe4VerifyImportProjectionResolver
     private static function resolveImportIndex(
         int $index,
         array $imports,
+        array $consumerExports,
+        array $consumerGraphImports,
         array $candidates,
         array &$resolved,
         array &$visiting
@@ -218,7 +394,15 @@ final class PdoUe4VerifyImportProjectionResolver
         }
 
         $parentIndex = -$outerIndex - 1;
-        $parentSource = self::resolveImportIndex($parentIndex, $imports, $candidates, $resolved, $visiting);
+        $parentSource = self::resolveImportIndex(
+            $parentIndex,
+            $imports,
+            $consumerExports,
+            $consumerGraphImports,
+            $candidates,
+            $resolved,
+            $visiting
+        );
         if ($parentSource === null || $parentSource === self::PRIVATE_FAILURE) {
             unset($visiting[$index]);
             return $resolved[$index] = $parentSource === self::PRIVATE_FAILURE ? self::PRIVATE_FAILURE : null;
@@ -230,7 +414,8 @@ final class PdoUe4VerifyImportProjectionResolver
             $objectName,
             $className,
             $classPackage,
-            $expectedOuter
+            $expectedOuter,
+            self::privateImportAllowed($index, $consumerGraphImports, $consumerExports)
         );
         unset($visiting[$index]);
         return $resolved[$index] = $matched;
@@ -242,7 +427,8 @@ final class PdoUe4VerifyImportProjectionResolver
         string $objectName,
         string $className,
         string $classPackage,
-        int $expectedOuter
+        int $expectedOuter,
+        bool $privateImportAllowed
     ): ?int {
         $rows = $candidates[self::candidateKey($objectName, $className)] ?? [];
         if ($rows === []) {
@@ -274,7 +460,7 @@ final class PdoUe4VerifyImportProjectionResolver
             if ((int)$candidate['outer_index'] !== $expectedOuter) {
                 continue;
             }
-            if ((((int)$candidate['object_flags']) & self::RF_PUBLIC) === 0) {
+            if ((((int)$candidate['object_flags']) & self::RF_PUBLIC) === 0 && !$privateImportAllowed) {
                 return self::PRIVATE_FAILURE;
             }
             return (int)$candidate['export_index'];

@@ -87,11 +87,14 @@ final class BlockedCompressedMetadataSnapshotLoader
      *
      * @return array<string,mixed>
      */
-    public function loadDependencySnapshot(int $fileId): array
+    public function loadDependencySnapshot(int $fileId, bool $includeExports = false): array
     {
         $file = $this->loadFileRow($fileId);
         $reader = new BlockedCompressedMetadataReader($this->db, $this->storageRoot);
         $imports = $this->loadSection($reader, $fileId, 'imports', (int)$file['import_count']);
+        $exports = $includeExports
+            ? $this->loadSection($reader, $fileId, 'exports', (int)$file['export_count'])
+            : [];
         $dependencies = $this->decorateDependencies(
             $fileId,
             $this->loadSection($reader, $fileId, 'dependencies', (int)$file['import_count'])
@@ -100,6 +103,7 @@ final class BlockedCompressedMetadataSnapshotLoader
         return [
             'file' => $this->snapshotFile($fileId, $file),
             'imports' => $imports,
+            'exports' => $exports,
             'dependencies' => $dependencies,
             'source_format' => 'blocked-metadata-v' . (int)$file['format_version'] . '-dependencies',
         ];

@@ -23,7 +23,9 @@ final class PdoDependencyResolver
         int $gameId,
         int $fileId,
         array $imports,
-        ?string $storageRoot = null
+        ?string $storageRoot = null,
+        array $consumerExports = [],
+        array $consumerGraphImports = []
     ): array {
         $engineKey = self::engineKey($db, $gameId);
         $legacyPolicy = self::legacyVerifyImportPolicy($db, $gameId);
@@ -251,7 +253,9 @@ final class PdoDependencyResolver
                     $matches = PdoUe4VerifyImportProjectionResolver::resolveProvider(
                         $db,
                         (int)$candidate['file_id'],
-                        $imports
+                        $imports,
+                        $consumerExports,
+                        $consumerGraphImports
                     );
                     $matchCount = 0;
                     foreach ($requiredImportIndexes as $requiredImportIndex) {

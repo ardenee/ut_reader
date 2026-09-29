@@ -35,6 +35,14 @@ $check('ue4_targeted_path_uses_ancestor_closure', str_contains(
     $source,
     "\$engineKey === 'UE4' && \$packageKeys !== null"
 ));
+$check('ue4_targeted_path_loads_consumer_exports', str_contains(
+    $source,
+    "loadDependencySnapshot(\$fileId, \$engineKey === 'UE4')"
+));
+$check('ue4_targeted_path_passes_full_consumer_import_graph', str_contains(
+    $source,
+    "\$consumerExports,\n                \$imports"
+));
 
 $result = ['ok'=>$failures===[],'checks'=>$checks,'failures'=>$failures];
 echo json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . PHP_EOL;
