@@ -4,6 +4,10 @@
 
 UEDB5 is the next UnrealDB compact metadata format. Its purpose is not merely to add fields to UEDB4; it establishes a lossless source-identity boundary for dependency and package semantics that UEDB4 cannot represent for all supported engine generations.
 
+The normative container and logical-schema contract is `uedb5-format.md`. This document records the source audit, engine-specific requirements, implementation status, and migration rationale that feed that contract.
+
+If wording here conflicts with `uedb5-format.md` about physical framing or canonical UEDB5 schema semantics, `uedb5-format.md` controls. The authoritative engine/game source and the corresponding per-engine specification continue to control engine behavior.
+
 Authoritative local source roots used for this specification:
 
 - UE2 / UE2.5: `L:\Source\Engine\UE2`
@@ -370,7 +374,7 @@ The deterministic file-backed portion of UE5 5.8.3 `FLinkerLoad::VerifyImportInn
 - same-linker and cross-linker outer checks reproduce the source graph rules; cross-linker outer class/package mismatch is retained as deferred create-time verification rather than rejecting the provider;
 - requested class-package/name mismatch on the matched export likewise remains a resolved candidate with deferred class verification, matching `ImportsToVerifyOnCreate`;
 - UE5 `RF_Public` is tested as `0x00000001`; the three source graph exceptions `ImportIsInAnyExport`, `AnyExportIsInImport`, and `AnyExportShareOuterWithImport` can permit an otherwise-private export;
-- `bImportOptional` preserves `optional_missing` separately from hard `missing`; script/native, redirector destination, instancing, editor safe-replace, dynamic-import injection, and other live UObject paths remain `runtime_only` or unmaterialized rather than fabricated;
+- The current staging resolver labels an absent optional import `optional_missing` and unavailable live-runtime branches `runtime_only`. These are staging diagnostics only; the canonical UEDB5 dependency-results writer must normalize them to `missing` plus optional classification and `unresolved` plus runtime-derived classification, while retaining detailed reason/provenance.
 - `catalog/bin/verify-uedb5-ue5-classic-dependency-resolution.php` verifies these rules, including that `RF_HasDynamicImports` does not cause synthetic serialized import rows.
 
 This resolver is deliberately not wired into production `PdoDependencyResolver` / `CompactDependencyRebuilder`; those still consume UEDB4 metadata and must remain unchanged until the UEDB5 migration/publication cutover.
