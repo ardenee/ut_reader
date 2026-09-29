@@ -108,6 +108,30 @@ foreach ($providers as $provider) {
     $outcome = PdoUe4VerifyImportProjectionResolver::resolveProviderOutcome($db, $providerId, $consumerImports, $consumerExports);
     $matches = (array)($outcome['matches'] ?? []);
     $redirectors = (array)($outcome['redirectors'] ?? []);
+    $redirectorAncestry = (array)($outcome['redirector_ancestry'] ?? []);
+    $chainResolution = [];
+    $ancestorRedirectors = [];
+    foreach ($outerChain as $chainRow) {
+        if (($chainRow['kind'] ?? '') !== 'import') continue;
+        $chainIndex = (int)($chainRow['index'] ?? -1);
+        if ($chainIndex < 0) continue;
+        $directMatch = array_key_exists($chainIndex, $matches) ? (int)$matches[$chainIndex] : null;
+        $redirectMatch = array_key_exists($chainIndex, $redirectors) ? (int)$redirectors[$chainIndex] : null;
+        if ($chainIndex !== $importIndex && $redirectMatch !== null) $ancestorRedirectors[] = $chainIndex;
+        $chainResolution[] = [
+            'import_index' => $chainIndex,
+            'object_name' => (string)($chainRow['object_name'] ?? ''),
+            'direct_export_index' => $directMatch,
+            'redirector_export_index' => $redirectMatch,
+        ];
+    }
+    $sourceClassification = array_key_exists($importIndex, $matches)
+        ? 'direct_export_match'
+        : (array_key_exists($importIndex, $redirectors)
+            ? 'target_redirector_payload_unresolved'
+            : (array_key_exists($importIndex, $redirectorAncestry)
+                ? 'ancestor_redirector_payload_unresolved'
+                : 'no_table_match_or_redirector'));
     $candidates = catalog_dependency_export_candidates($db, $dep, $providerId);
     $best = null;
     $bestScore = -1;
@@ -145,6 +169,11 @@ foreach ($providers as $provider) {
             ? (int)$redirectors[$importIndex]
             : null,
         'resolver_total_redirectors' => count($redirectors),
+        'resolver_redirector_import_indexes' => array_map('intval', array_keys($redirectors)),
+        'resolver_redirector_ancestor_for_import' => array_key_exists($importIndex, $redirectorAncestry) ? (int)$redirectorAncestry[$importIndex] : null,
+        'source_classification' => $sourceClassification,
+        'ancestor_redirector_import_indexes' => $ancestorRedirectors,
+        'serialized_outer_chain_resolution' => $chainResolution,
         'best_candidate' => $best,
     ];
 }

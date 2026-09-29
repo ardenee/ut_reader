@@ -147,6 +147,23 @@ $redirectOutcome = PdoUe4VerifyImportProjectionResolver::resolveInMemoryOutcome(
 );
 $check(!isset($redirectOutcome['matches'][1]), 'ue4_redirector_is_not_exact_original_import_match');
 $check(($redirectOutcome['redirectors'][1] ?? null) === 0, 'ue4_verifyimport_second_pass_detects_object_redirector');
+
+$redirectDescendantConsumer = $redirectConsumer;
+$redirectDescendantConsumer[] = [
+    'import_index'=>2,'class_package'=>'/Script/Engine','class_name'=>'SceneComponent','object_name'=>'Sprite',
+    'outer_index'=>-2,'root_package'=>'/Game/Redirected','relative_object_path'=>'RedirectedAsset.Sprite',
+];
+$redirectDescendantOutcome = PdoUe4VerifyImportProjectionResolver::resolveInMemoryOutcome(
+    $redirectDescendantConsumer,
+    $redirectProviderImports,
+    $redirectProviderExports,
+    '/Game/Redirected'
+);
+$check(
+    ($redirectDescendantOutcome['redirector_ancestry'][2] ?? null) === 1
+        && !isset($redirectDescendantOutcome['redirector_ancestry'][1]),
+    'ue4_redirector_outer_makes_descendant_payload_unresolved'
+);
 $check(
     !isset(PdoUe4VerifyImportProjectionResolver::resolveInMemory(
         $redirectConsumer,
@@ -224,13 +241,15 @@ $dependencyResolverSource = file_get_contents($root . '/src/Infrastructure/Persi
 $check(
     str_contains($dependencyResolverSource, "'source' => 'ue4_object_redirector_target_unavailable'")
         && str_contains($dependencyResolverSource, "'confidence' => 'payload_unresolved'")
-        && str_contains($dependencyResolverSource, '$ue4VerifyImportRedirectors'),
+        && str_contains($dependencyResolverSource, '$ue4VerifyImportRedirectors')
+        && str_contains($dependencyResolverSource, '$ue4VerifyImportRedirectorAncestry')
+        && str_contains($dependencyResolverSource, "'source' => 'ue4_object_redirector_ancestor_target_unavailable'"),
     'ue4_redirector_outcome_persists_as_unresolved_without_fabricated_target'
 );
 
 $result = [
     'ok' => $failures === [],
-    'checks' => 20,
+    'checks' => 21,
     'failures' => $failures,
     'contract' => [
         'consumer_imports_only_create_requirements',
@@ -239,6 +258,7 @@ $result = [
         'targeted_resolution_keeps_full_consumer_graph_for_private_exceptions',
         'imported_class_package_uses_immediate_outer_resource_object_name',
         'object_redirector_second_pass_is_detected_but_not_returned_as_original_target',
+        'redirector_outer_descendants_are_payload_unresolved',
         'short_class_package_fallback_only_without_any_full_package_match',
         'one_physical_provider_is_used_without_invalidating_successful_siblings',
         'v4_does_not_guess_package_name_for_modern_export_outer_imports',

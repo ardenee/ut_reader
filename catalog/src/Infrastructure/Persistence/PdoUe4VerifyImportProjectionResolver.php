@@ -42,7 +42,7 @@ final class PdoUe4VerifyImportProjectionResolver
      * @param list<array<string,mixed>> $consumerImports
      * @param list<array<string,mixed>> $consumerExports
      * @param list<array<string,mixed>> $consumerGraphImports
-     * @return array{matches:array<int,int>,redirectors:array<int,int>}
+     * @return array{matches:array<int,int>,redirectors:array<int,int>,redirector_ancestry:array<int,int>}
      */
     public static function resolveProviderOutcome(
         PDO $db,
@@ -52,7 +52,7 @@ final class PdoUe4VerifyImportProjectionResolver
         array $consumerGraphImports = []
     ): array {
         if ($providerFileId < 1 || $consumerImports === []) {
-            return ['matches' => [], 'redirectors' => []];
+            return ['matches' => [], 'redirectors' => [], 'redirector_ancestry' => []];
         }
         if (!function_exists('catalog_config')) {
             throw new RuntimeException('Catalog configuration is required for authoritative UE4 VerifyImport resolution.');
@@ -104,13 +104,15 @@ final class PdoUe4VerifyImportProjectionResolver
      * A matching ObjectRedirector is reported separately because UE4 must
      * preload its UObject payload and validate DestinationObject before the
      * original Import can be considered resolved.
+     * Descendants of a redirector-resolved outer are reported in redirector_ancestry because
+     * Epic rewrites the outer SourceLinker/SourceIndex from DestinationObject before continuing.
      *
      * @param list<array<string,mixed>> $consumerImports
      * @param list<array<string,mixed>> $providerImports
      * @param list<array<string,mixed>> $providerExports
      * @param list<array<string,mixed>> $consumerExports
      * @param list<array<string,mixed>> $consumerGraphImports
-     * @return array{matches:array<int,int>,redirectors:array<int,int>}
+     * @return array{matches:array<int,int>,redirectors:array<int,int>,redirector_ancestry:array<int,int>}
      */
     public static function resolveInMemoryOutcome(
         array $consumerImports,
@@ -216,7 +218,28 @@ final class PdoUe4VerifyImportProjectionResolver
             }
         }
 
-        return ['matches' => $matches, 'redirectors' => $redirectors];
+        $redirectorAncestry = [];
+        if ($redirectors !== []) {
+            foreach (array_keys($imports) as $importIndex) {
+                $importIndex = (int)$importIndex;
+                if (isset($matches[$importIndex]) || isset($redirectors[$importIndex])) continue;
+                $current = $importIndex;
+                $seen = [];
+                while (isset($imports[$current]) && !isset($seen[$current])) {
+                    $seen[$current] = true;
+                    $outerIndex = (int)($imports[$current]['outer_index'] ?? 0);
+                    if ($outerIndex >= 0) break;
+                    $parentIndex = -$outerIndex - 1;
+                    if (isset($redirectors[$parentIndex])) {
+                        $redirectorAncestry[$importIndex] = $parentIndex;
+                        break;
+                    }
+                    $current = $parentIndex;
+                }
+            }
+        }
+
+        return ['matches' => $matches, 'redirectors' => $redirectors, 'redirector_ancestry' => $redirectorAncestry];
     }
 
     /**
