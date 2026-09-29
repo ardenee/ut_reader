@@ -114,13 +114,17 @@ final class PdoGameCatalogStats
         $files = $fileStatement->fetch(PDO::FETCH_ASSOC) ?: [];
 
         $dependencyStatement = $this->db->prepare(
-            'SELECT COALESCE(SUM(dependency_count),0) dependency_count,'
-            . 'COALESCE(SUM(missing_count),0) missing_dependency_count,'
-            . 'COALESCE(SUM(resolved_count),0) resolved_dependency_count,'
-            . 'COALESCE(SUM(package_only_count),0) package_only_dependency_count,'
-            . 'COALESCE(SUM(common_count),0) common_dependency_count,'
-            . 'COUNT(DISTINCT CASE WHEN missing_count>0 THEN required_package END) missing_package_count '
-            . 'FROM ue_dependency_package_summaries WHERE game_id=?'
+            'SELECT COALESCE(SUM(s.dependency_count),0) dependency_count,'
+            . 'COALESCE(SUM(s.missing_count),0) missing_dependency_count,'
+            . 'COALESCE(SUM(s.resolved_count),0) resolved_dependency_count,'
+            . 'COALESCE(SUM(s.package_only_count),0) package_only_dependency_count,'
+            . 'COALESCE(SUM(s.common_count),0) common_dependency_count,'
+            . 'COUNT(DISTINCT CASE WHEN s.missing_count>0 THEN s.required_package END) missing_package_count '
+            . 'FROM ue_dependency_package_summaries s '
+            . 'JOIN ue_files f ON f.id=s.file_id AND f.game_id=s.game_id AND f.scan_status="verified" '
+            . 'JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version='
+            . \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer::FORMAT_VERSION . ' '
+            . 'WHERE s.game_id=?'
         );
         $dependencyStatement->execute([$gameId]);
         $dependencies = $dependencyStatement->fetch(PDO::FETCH_ASSOC) ?: [];
@@ -175,6 +179,9 @@ final class PdoGameCatalogStats
             $statement = $this->db->prepare(
                 'SELECT COALESCE(SUM(s.missing_count),0) '
                 . 'FROM ue_dependency_package_summaries s '
+                . 'JOIN ue_files f ON f.id=s.file_id AND f.game_id=s.game_id AND f.scan_status="verified" '
+                . 'JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version='
+                . \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer::FORMAT_VERSION . ' '
                 . 'JOIN ('
                 . 'SELECT game_id,dependency_package_key package_key '
                 . 'FROM ue_base_game_files WHERE dependency_package_key<>"" '
@@ -200,6 +207,9 @@ final class PdoGameCatalogStats
         $statement = $this->db->prepare(
             'SELECT COALESCE(SUM(s.missing_count),0) '
             . 'FROM ue_dependency_package_summaries s '
+            . 'JOIN ue_files f ON f.id=s.file_id AND f.game_id=s.game_id AND f.scan_status="verified" '
+            . 'JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version='
+            . \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer::FORMAT_VERSION . ' '
             . 'WHERE s.game_id=? AND s.missing_count>0 AND EXISTS ('
             . 'SELECT 1 FROM ue_base_game_files bg '
             . 'LEFT JOIN ue_files src ON src.id=bg.source_file_id '
