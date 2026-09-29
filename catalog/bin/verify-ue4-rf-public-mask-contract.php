@@ -20,6 +20,8 @@ $resolver=file_get_contents($root.'/src/Infrastructure/Persistence/PdoUe4VerifyI
 $diag=file_get_contents($root.'/lib/CatalogDependencyDiagnostics.php')?:'';
 $check('resolver_uses_epic_ue4_rf_public_mask',str_contains($resolver,'RF_PUBLIC = 0x00000001'));
 $check('diagnostic_uses_ue4_rf_public_mask',str_contains($diag,"('UE4'?0x00000001")||str_contains($diag,"'UE4'?0x00000001"));
+$workerVersion=file_get_contents($root.'/src/Infrastructure/Jobs/CatalogWorkerCodeVersion.php')?:'';
+$check('worker_fingerprint_tracks_ue4_resolver',str_contains($workerVersion,'PdoUe4VerifyImportProjectionResolver.php'));
 $result=['ok'=>$failures===[],'checks'=>$checks,'failures'=>$failures];
 echo json_encode($result,JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES).PHP_EOL;
 exit($result['ok']?0:1);
