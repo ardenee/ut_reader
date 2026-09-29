@@ -53,6 +53,7 @@ Its purpose is to let an engineer implement, review, or repair UnrealDB's parser
 - [x] UE4 dependency resolution — `ue4-4.27.2-dependency-resolution.md`
 - [x] UE5 5.8.3 classic package format and reading — `ue5-5.8.3-classic-package-format.md` (classic LinkerLoad path implemented; Zen/IoStore still pending)
 - [x] UE5 5.8.3 classic dependency resolution — `ue5-5.8.3-classic-dependency-resolution.md` (UEDB5 staging/source-parity `VerifyImportInner` resolver implemented; production cutover and Zen/IoStore remain pending)
+- [x] UE5 5.8.3 Zen / IoStore format — `ue5-5.8.3-zen-iostore-format.md` (source-audited `.utoc`/`.ucas`, package-store and Zen-header contract; isolated reader/persistence implementation pending)
 - [x] UEDB5 normative format contract — `uedb5-format.md` (physical container, cross-engine source-shaped schema, dependency outcomes/provenance, Zen/IoStore representation, validation, and schema-evolution rules frozen; implementation remains staged)
 - [x] UEDB5 source-audit requirements — `uedb5-metadata-requirements.md` (format-5 foundation, UE5 classic persistence and UE5 classic `VerifyImportInner` staging resolver implemented; UE1-UE4 V5 builders, production cutover, broader dependency publication, and Zen/IoStore implementation remain pending)
 
