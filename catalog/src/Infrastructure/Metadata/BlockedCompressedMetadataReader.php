@@ -545,6 +545,7 @@ final class BlockedCompressedMetadataReader
             1 => 'resolved',
             2 => 'package_only',
             3 => 'common',
+            4 => 'unresolved',
             default => 'missing',
         };
     }
@@ -555,6 +556,7 @@ final class BlockedCompressedMetadataReader
             1 => 'exact_object',
             2 => 'exact_package',
             3 => 'common_script',
+            4 => 'ue3_cooked_export_outer',
             default => 'none',
         };
     }

@@ -72,6 +72,8 @@ An otherwise matching provider export must have `RF_Public` for normal external 
 
 For cooked packages whose import outer is an export, this source returns with an Epic TODO rather than inventing the ordinary provider-linker path. UnrealDB must preserve that unresolved behavior.
 
+Catalog classification rule: this source return is **unresolved**, not proof that the required package/object is missing. UnrealDB records these imports (and descendants whose import-outer ancestry reaches one) as source-unresolved and excludes them from missing-dependency counts.
+
 ## VerifyImport wrapper and redirectors
 
 `VerifyImport()` first calls `VerifyImportInner()`. If the package linker exists but the requested non-root object is absent, it can retry as `Core.ObjectRedirector` and then load/preload the redirector to obtain `DestinationObject`.

@@ -38,10 +38,15 @@ final class PdoDependencyResolver
             }
         }
         $ue3RootPackages = [];
+        $ue3SourceUnresolved = [];
         if ($ue3VerifyImport) {
             $importsByIndex = \UnrealDb\Catalog\Infrastructure\Metadata\CatalogCompactIdentityEnricher::ue3FixupImportMap($importsByIndex);
             foreach (array_keys($importsByIndex) as $importIndex) {
-                $ue3RootPackages[(int)$importIndex] = self::ue3RootPackageName($importsByIndex, (int)$importIndex);
+                $index = (int)$importIndex;
+                $ue3RootPackages[$index] = self::ue3RootPackageName($importsByIndex, $index);
+                if (self::ue3HasCookedExportOuter($importsByIndex, $index)) {
+                    $ue3SourceUnresolved[$index] = true;
+                }
             }
         }
 
@@ -284,6 +289,15 @@ final class PdoDependencyResolver
                     'source' => 'common_script',
                     'confidence' => 'common',
                 ];
+            } elseif ($ue3VerifyImport && isset($ue3SourceUnresolved[$importIndex])) {
+                $result = [
+                    'status' => 'unresolved',
+                    'resolved_file_id' => null,
+                    'resolved_export_id' => null,
+                    'resolved_export_index' => null,
+                    'source' => 'ue3_cooked_export_outer',
+                    'confidence' => 'source_unresolved',
+                ];
             } elseif (!$isObjectImport) {
                 $packageMatch = $packageMatches[self::normalizeLookup($rootPackage)] ?? null;
                 if ($packageMatch !== null) {
@@ -414,6 +428,30 @@ final class PdoDependencyResolver
             'source' => 'none',
             'confidence' => 'missing',
         ];
+    }
+
+    /** @param array<int,array<string,mixed>> $importsByIndex */
+    private static function ue3HasCookedExportOuter(array $importsByIndex, int $importIndex): bool
+    {
+        $seen = [];
+        while (true) {
+            if (isset($seen[$importIndex])) {
+                return false;
+            }
+            $seen[$importIndex] = true;
+            $import = $importsByIndex[$importIndex] ?? null;
+            if (!is_array($import)) {
+                return false;
+            }
+            $outerIndex = (int)($import['outer_index'] ?? 0);
+            if ($outerIndex > 0) {
+                return true;
+            }
+            if ($outerIndex === 0) {
+                return false;
+            }
+            $importIndex = -$outerIndex - 1;
+        }
     }
 
     /** @param array<int,array<string,mixed>> $importsByIndex */

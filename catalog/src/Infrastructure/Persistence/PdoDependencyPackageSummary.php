@@ -132,6 +132,7 @@ final class PdoDependencyPackageSummary
                     . 'SUM(l.status=3) common_count,'
                     . 'CASE '
                     . 'WHEN SUM(l.status=0)>0 THEN "missing" '
+                    . 'WHEN SUM(l.status=4)=COUNT(*) THEN "unresolved" '
                     . 'WHEN SUM(l.status=3)=COUNT(*) THEN "common" '
                     . 'WHEN SUM(l.status=1)=COUNT(*) THEN "resolved" '
                     . 'WHEN SUM(l.status IN (1,2))=COUNT(*) THEN "package_only" '
