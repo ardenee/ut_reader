@@ -81,15 +81,28 @@ $exportOuterConsumer[1]['outer_index'] = 1;
 $matches = PdoUe4VerifyImportProjectionResolver::resolveInMemory($exportOuterConsumer, [], $publicRootExport, '/Game/TestPkg');
 $check(!isset($matches[1]), 'v4_does_not_guess_ue4_export_outer_package_context');
 
+$resolverSource = file_get_contents($root . '/src/Infrastructure/Persistence/PdoDependencyResolver.php') ?: '';
+$ue4Start = strpos($resolverSource, '$ue4VerifyImportMatches = []');
+$ue4End = $ue4Start !== false ? strpos($resolverSource, '$completeProviders = []', $ue4Start) : false;
+$ue4Block = ($ue4Start !== false && $ue4End !== false)
+    ? substr($resolverSource, $ue4Start, $ue4End - $ue4Start)
+    : '';
+$check(
+    str_contains($ue4Block, '$bestMatchCount = -1;')
+        && str_contains($ue4Block, '$bestMatches = $matches;')
+        && !str_contains($ue4Block, 'isCompleteMatch('),
+    'ue4_single_provider_keeps_successful_siblings'
+);
+
 $result = [
     'ok' => $failures === [],
-    'checks' => 7,
+    'checks' => 8,
     'failures' => $failures,
     'contract' => [
         'consumer_imports_only_create_requirements',
         'object_class_class_package_outer_and_public_must_match',
         'short_class_package_fallback_only_without_any_full_package_match',
-        'one_physical_provider_must_satisfy_complete_requirement_set',
+        'one_physical_provider_is_used_without_invalidating_successful_siblings',
         'v4_does_not_guess_package_name_for_modern_export_outer_imports',
     ],
 ];

@@ -244,20 +244,36 @@ final class PdoDependencyResolver
                     [],
                     $ue4MetadataUnresolved
                 );
+                $bestCandidate = null;
+                $bestMatches = [];
+                $bestMatchCount = -1;
                 foreach ($ue4Candidates[$packageKey] ?? [] as $candidate) {
                     $matches = PdoUe4VerifyImportProjectionResolver::resolveProvider(
                         $db,
                         (int)$candidate['file_id'],
                         $imports
                     );
-                    // Epic verifies against one loaded linker. UnrealDB may know
-                    // several physical packages, but one physical candidate must
-                    // independently satisfy the complete consumer Import set.
-                    if (self::isCompleteMatch($requiredImportIndexes, $matches)) {
-                        $packageMatches[$packageKey] = $candidate;
-                        $ue4VerifyImportMatches[$packageKey] = $matches;
+                    $matchCount = 0;
+                    foreach ($requiredImportIndexes as $requiredImportIndex) {
+                        if (array_key_exists($requiredImportIndex, $matches)) {
+                            $matchCount++;
+                        }
+                    }
+                    // VerifyImport is per Import. Catalogue duplicates must still
+                    // resolve through one physical provider, but a failed sibling
+                    // Import does not invalidate successful siblings in that linker.
+                    if ($matchCount > $bestMatchCount) {
+                        $bestCandidate = $candidate;
+                        $bestMatches = $matches;
+                        $bestMatchCount = $matchCount;
+                    }
+                    if ($requiredImportIndexes !== [] && $matchCount === count($requiredImportIndexes)) {
                         break;
                     }
+                }
+                if ($bestCandidate !== null) {
+                    $packageMatches[$packageKey] = $bestCandidate;
+                    $ue4VerifyImportMatches[$packageKey] = $bestMatches;
                 }
             }
         }
@@ -438,20 +454,6 @@ final class PdoDependencyResolver
             $indexes[] = $importIndex;
         }
         return $indexes;
-    }
-
-    /** @param list<int> $requiredImportIndexes @param array<int,int> $matches */
-    private static function isCompleteMatch(array $requiredImportIndexes, array $matches): bool
-    {
-        if ($requiredImportIndexes === []) {
-            return false;
-        }
-        foreach ($requiredImportIndexes as $index) {
-            if (!array_key_exists($index, $matches)) {
-                return false;
-            }
-        }
-        return true;
     }
 
     private static function missing(): array

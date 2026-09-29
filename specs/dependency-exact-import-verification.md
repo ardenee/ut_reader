@@ -52,13 +52,13 @@ For the deterministic file-backed path, `VerifyImportInner()` establishes these 
 
 ### v4 metadata boundary
 
-Current `.uedb4` metadata preserves the serialized Import/Export graph required for the reviewed pre-520 UT4 packages, but it does not preserve serialized `FObjectImport::PackageName` introduced by `VER_UE4_NON_OUTER_PACKAGE_IMPORT` (520). Therefore v4 resolution must not invent package ownership for modern import/export mixed outer graphs. Under UEDB4, 520+ Imports whose outer ancestry reaches an Export are classified as metadata-unresolved rather than missing, and they are excluded from physical-provider completeness tests so unavailable `PackageName` metadata cannot make otherwise deterministic sibling Imports fail. Full >=520 support requires the next metadata format to retain that serialized field and distinguish effective provider package identity from the raw outer graph.
+Current `.uedb4` metadata preserves the serialized Import/Export graph required for the reviewed pre-520 UT4 packages, but it does not preserve serialized `FObjectImport::PackageName` introduced by `VER_UE4_NON_OUTER_PACKAGE_IMPORT` (520). Therefore v4 resolution must not invent package ownership for modern import/export mixed outer graphs. Under UEDB4, 520+ Imports whose outer ancestry reaches an Export are classified as metadata-unresolved rather than missing, and they are excluded from provider scoring so unavailable `PackageName` metadata cannot make otherwise deterministic sibling Imports fail. Full >=520 support requires the next metadata format to retain that serialized field and distinguish effective provider package identity from the raw outer graph.
 
 ## UnrealDB contract
 
 Return structured outcomes: resolved exact, resolved source-backed static fallback, missing provider, missing object, class mismatch, outer mismatch, non-public/inaccessible where applicable, runtime-only fallback unavailable, and malformed reference. Never silently turn a weaker name-only match into success.
 
-For UE4, per-provider verification is performed before UnrealDB's catalog-level multi-provider selection. If several physical files represent one logical package, a single physical candidate must independently satisfy the consumer's complete required Import set. Partial coverage from multiple files is never combined.
+For UE4, `VerifyImport` is evaluated per Import. If several physical files represent one logical package, UnrealDB must still retain one physical provider candidate for that logical package and must never combine coverage from several provider files. However, one failed sibling Import does not invalidate exact matches for other sibling Imports in the selected provider. Catalogue duplicate selection may prefer the single candidate satisfying the greatest number of required Imports, with deterministic provider order as the tie-break; that ranking is UnrealDB policy, not an engine-format rule.
 
 ## Source-reference matrix
 
