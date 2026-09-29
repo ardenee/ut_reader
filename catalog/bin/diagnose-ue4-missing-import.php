@@ -29,6 +29,57 @@ foreach ($consumerImports as $fallback => $row) {
     if ($idx === $importIndex) { $import = $row; break; }
 }
 if (!is_array($import)) throw new RuntimeException('Import not found in UEDB4.');
+
+$importsByIndex = [];
+foreach ($consumerImports as $fallback => $row) {
+    if (!is_array($row)) continue;
+    $idx = isset($row['import_index']) ? (int)$row['import_index'] : (int)$fallback;
+    $importsByIndex[$idx] = $row;
+}
+$exportsByIndex = [];
+foreach ($consumerExports as $fallback => $row) {
+    if (!is_array($row)) continue;
+    $idx = isset($row['export_index']) ? (int)$row['export_index'] : (int)$fallback;
+    $exportsByIndex[$idx] = $row;
+}
+$outerChain = [];
+$currentKind = 'import';
+$currentIndex = $importIndex;
+$seenResources = [];
+while (true) {
+    $resourceKey = $currentKind . ':' . $currentIndex;
+    if (isset($seenResources[$resourceKey])) {
+        $outerChain[] = ['kind'=>'cycle','resource'=>$resourceKey];
+        break;
+    }
+    $seenResources[$resourceKey] = true;
+    $row = $currentKind === 'import'
+        ? ($importsByIndex[$currentIndex] ?? null)
+        : ($exportsByIndex[$currentIndex] ?? null);
+    if (!is_array($row)) {
+        $outerChain[] = ['kind'=>'missing_resource','resource'=>$resourceKey];
+        break;
+    }
+    $outerChain[] = [
+        'kind' => $currentKind,
+        'index' => $currentIndex,
+        'object_name' => (string)($row['object_name'] ?? ''),
+        'class_package' => (string)($row['class_package'] ?? ''),
+        'class_name' => (string)($row['class_name'] ?? ''),
+        'outer_index' => (int)($row['outer_index'] ?? 0),
+        'relative_object_path' => (string)($row['relative_object_path'] ?? ($row['local_path'] ?? '')),
+        'full_path' => (string)($row['full_path'] ?? ''),
+    ];
+    $outerIndex = (int)($row['outer_index'] ?? 0);
+    if ($outerIndex === 0) break;
+    if ($outerIndex < 0) {
+        $currentKind = 'import';
+        $currentIndex = -$outerIndex - 1;
+    } else {
+        $currentKind = 'export';
+        $currentIndex = $outerIndex - 1;
+    }
+}
 $dep = catalog_one($db,
     'SELECT l.status,l.resolved_file_id,l.resolved_export_index,'
     . 'CONVERT(pkg.value_prefix USING utf8mb4) required_package,'
@@ -118,6 +169,7 @@ echo json_encode([
         'relative_object_path' => (string)($import['relative_object_path'] ?? ''),
         'full_path' => (string)($import['full_path'] ?? ''),
     ],
+    'serialized_outer_chain' => $outerChain,
     'private_import_allowed_by_consumer_graph' => PdoUe4VerifyImportProjectionResolver::privateImportAllowedInMemory(
         $importIndex,
         $consumerImports,
