@@ -121,9 +121,11 @@ final class CompactDependencyRebuilder
             }
         }
 
-        $resolutionImports = in_array($engineKey, ['UE1', 'UE2', 'UE3', 'UE4'], true)
-            ? $imports
-            : $importsToResolve;
+        $resolutionImports = $engineKey === 'UE4' && $packageKeys !== null
+            ? self::ue4TargetedResolutionImports($imports, $importsToResolve)
+            : (in_array($engineKey, ['UE1', 'UE2', 'UE3', 'UE4'], true)
+                ? $imports
+                : $importsToResolve);
         $resolutions = $importsToResolve === []
             ? []
             : PdoDependencyResolver::resolve(
@@ -218,6 +220,68 @@ final class CompactDependencyRebuilder
         $snapshot['dependencies'] = $dependencies;
         $written = (new BlockedCompressedMetadataSnapshotWriter($this->db, $this->storageRoot))->writeDependencyRefresh($snapshot);
         return array_merge($written, $baseResult);
+    }
+
+    /**
+     * UE4 VerifyImport only needs targeted Imports plus their Import-outer ancestry.
+     * Unrelated package roots are independent linkers and must not make a targeted
+     * package refresh pay for a whole-file provider resolution pass.
+     *
+     * @param list<array<string,mixed>> $imports
+     * @param list<array<string,mixed>> $targets
+     * @return list<array<string,mixed>>
+     */
+    private static function ue4TargetedResolutionImports(array $imports, array $targets): array
+    {
+        $byIndex = [];
+        foreach ($imports as $fallback => $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $index = isset($row['import_index']) ? (int)$row['import_index'] : (int)$fallback;
+            $byIndex[$index] = $row;
+        }
+
+        $wanted = [];
+        $frontier = [];
+        foreach ($targets as $fallback => $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $index = isset($row['import_index']) ? (int)$row['import_index'] : (int)$fallback;
+            $frontier[$index] = true;
+        }
+        while ($frontier !== []) {
+            $index = (int)array_key_first($frontier);
+            unset($frontier[$index]);
+            if (isset($wanted[$index])) {
+                continue;
+            }
+            $wanted[$index] = true;
+            $row = $byIndex[$index] ?? null;
+            if (!is_array($row)) {
+                continue;
+            }
+            $outer = (int)($row['outer_index'] ?? 0);
+            if ($outer < 0) {
+                $parent = -$outer - 1;
+                if (!isset($wanted[$parent])) {
+                    $frontier[$parent] = true;
+                }
+            }
+        }
+
+        $result = [];
+        foreach ($imports as $fallback => $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $index = isset($row['import_index']) ? (int)$row['import_index'] : (int)$fallback;
+            if (isset($wanted[$index])) {
+                $result[] = $row;
+            }
+        }
+        return $result;
     }
 
     /** @param array<string,mixed>|null $before @param array<string,mixed> $after */
