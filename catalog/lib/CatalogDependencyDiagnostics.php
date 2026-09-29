@@ -27,7 +27,7 @@ function catalog_dependency_export_candidates(PDO $db,array $dependency,?int $pr
     $objectName=trim((string)($dependency['import_object_name']??''));
     if($providerId<1||$objectName==='')return[];
     $engine=catalog_dependency_provider_engine($db,$providerId);
-    if($engine==='UE3'){
+    if($engine==='UE3'||$engine==='UE4'){
         $s=$db->prepare('SELECT e.export_index,l.outer_index,l.object_flags,ot.value_prefix object_name,cnt.value_prefix class_name,cpt.value_prefix class_package FROM ue_export_lookup e JOIN ue_export_path_lookup l ON l.file_id=e.file_id AND l.export_index=e.export_index JOIN ue_terms ot ON ot.id=e.object_term_id LEFT JOIN ue_terms cnt ON cnt.id=l.class_name_term_id LEFT JOIN ue_terms cpt ON cpt.id=l.class_package_term_id WHERE e.file_id=? AND LOWER(CONVERT(ot.value_prefix USING utf8mb4))=LOWER(?) ORDER BY e.export_index DESC LIMIT 20');
     }else{
         $s=$db->prepare('SELECT l.export_index,l.outer_index,l.object_flags,ot.value_prefix object_name,ct.value_prefix class_name,pt.value_prefix class_package FROM ue_legacy_export_identity_lookup l JOIN ue_terms ot ON ot.id=l.object_term_id JOIN ue_terms ct ON ct.id=l.class_name_term_id JOIN ue_terms pt ON pt.id=l.class_package_term_id WHERE l.file_id=? AND LOWER(ot.value_prefix)=LOWER(?) ORDER BY l.export_index DESC LIMIT 20');
@@ -44,7 +44,7 @@ function catalog_dependency_export_outer_path(PDO $db,int $providerFileId,int $o
     $parts=[];$seen=[];$current=$outerIndex;$guard=0;
     while($current>0&&$guard++<64){
         $exportIndex=$current-1;if(isset($seen[$exportIndex]))break;$seen[$exportIndex]=true;
-        if($engine==='UE3')$s=$db->prepare('SELECT l.outer_index,ot.value_prefix object_name FROM ue_export_lookup e JOIN ue_export_path_lookup l ON l.file_id=e.file_id AND l.export_index=e.export_index JOIN ue_terms ot ON ot.id=e.object_term_id WHERE e.file_id=? AND e.export_index=? LIMIT 1');
+        if($engine==='UE3'||$engine==='UE4')$s=$db->prepare('SELECT l.outer_index,ot.value_prefix object_name FROM ue_export_lookup e JOIN ue_export_path_lookup l ON l.file_id=e.file_id AND l.export_index=e.export_index JOIN ue_terms ot ON ot.id=e.object_term_id WHERE e.file_id=? AND e.export_index=? LIMIT 1');
         else $s=$db->prepare('SELECT l.outer_index,ot.value_prefix object_name FROM ue_legacy_export_identity_lookup l JOIN ue_terms ot ON ot.id=l.object_term_id WHERE l.file_id=? AND l.export_index=? LIMIT 1');
         $s->execute([$providerFileId,$exportIndex]);$row=$s->fetch(PDO::FETCH_ASSOC);
         if(!is_array($row)){$parts[]='[export #'.$exportIndex.']';break;}
