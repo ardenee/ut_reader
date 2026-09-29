@@ -13,6 +13,9 @@ $cache = (string)@file_get_contents(
 $reconcile = (string)@file_get_contents(
     $root . '/src/Infrastructure/Jobs/CatalogProjectionReconciliationJobHandler.php'
 );
+$workerVersion = (string)@file_get_contents(
+    $root . '/src/Infrastructure/Jobs/CatalogWorkerCodeVersion.php'
+);
 
 $checks = [];
 $failures = [];
@@ -49,6 +52,12 @@ $record(
     str_contains($cache, "private const TEXT_COLLATION = 'utf8mb4_unicode_ci'")
         && substr_count($cache, 'CONVERT(package_name USING utf8mb4) COLLATE ') >= 2,
     'provider and cached package-name UNION branches must use one explicit collation'
+);
+
+$record(
+    'worker_fingerprint_tracks_coverage_runtime',
+    str_contains($workerVersion, '/src/Infrastructure/Persistence/PdoPackageCoverageCache.php'),
+    'detached workers must recycle when Full Sync package-coverage finalization changes'
 );
 
 $record(

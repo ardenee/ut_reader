@@ -68,6 +68,7 @@ final class CatalogWorkerCodeVersion
             $this->catalogRoot . '/src/Infrastructure/Persistence/PdoUe3VerifyImportProjectionResolver.php',
             $this->catalogRoot . '/src/Infrastructure/Metadata/CompactDependencyRebuilder.php',
             $this->catalogRoot . '/src/Infrastructure/Persistence/PdoDependencyPackageSummary.php',
+            $this->catalogRoot . '/src/Infrastructure/Persistence/PdoPackageCoverageCache.php',
             $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogBucketUploadJobHandler.php',
             $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogBucketRedirectJobHandler.php',
             $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogUnsupportedRedirectExclusionJobHandler.php',
