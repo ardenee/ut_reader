@@ -15,6 +15,7 @@ use PDOException;
 final class PdoDependencyResolver
 {
     private const MAX_VALUES_PER_QUERY = 500;
+    private const UE4_NON_OUTER_PACKAGE_IMPORT_VERSION = 520;
 
     /** @param list<array<string,mixed>> $imports */
     public static function resolve(
@@ -44,8 +45,19 @@ final class PdoDependencyResolver
             foreach (array_keys($importsByIndex) as $importIndex) {
                 $index = (int)$importIndex;
                 $ue3RootPackages[$index] = self::ue3RootPackageName($importsByIndex, $index);
-                if (self::ue3HasCookedExportOuter($importsByIndex, $index)) {
+                if (self::hasExportOuterInImportAncestry($importsByIndex, $index)) {
                     $ue3SourceUnresolved[$index] = true;
+                }
+            }
+        }
+
+        $ue4MetadataUnresolved = [];
+        if ($ue4VerifyImport
+            && self::filePackageVersion($db, $fileId) >= self::UE4_NON_OUTER_PACKAGE_IMPORT_VERSION) {
+            foreach (array_keys($importsByIndex) as $importIndex) {
+                $index = (int)$importIndex;
+                if (self::hasExportOuterInImportAncestry($importsByIndex, $index)) {
+                    $ue4MetadataUnresolved[$index] = true;
                 }
             }
         }
@@ -225,7 +237,13 @@ final class PdoDependencyResolver
             require_once __DIR__ . '/PdoUe4VerifyImportProjectionResolver.php';
             $ue4Candidates = self::loadPackageCandidates($db, $gameId, $fileId, array_values($packageNames));
             foreach ($packageRequirements as $packageKey => $requirement) {
-                $requiredImportIndexes = self::requiredImportIndexes($imports, $packageKey, $engineKey);
+                $requiredImportIndexes = self::requiredImportIndexes(
+                    $imports,
+                    $packageKey,
+                    $engineKey,
+                    [],
+                    $ue4MetadataUnresolved
+                );
                 foreach ($ue4Candidates[$packageKey] ?? [] as $candidate) {
                     $matches = PdoUe4VerifyImportProjectionResolver::resolveProvider(
                         $db,
@@ -297,6 +315,15 @@ final class PdoDependencyResolver
                     'resolved_export_index' => null,
                     'source' => 'ue3_cooked_export_outer',
                     'confidence' => 'source_unresolved',
+                ];
+            } elseif ($ue4VerifyImport && isset($ue4MetadataUnresolved[$importIndex])) {
+                $result = [
+                    'status' => 'unresolved',
+                    'resolved_file_id' => null,
+                    'resolved_export_id' => null,
+                    'resolved_export_index' => null,
+                    'source' => 'ue4_v4_missing_package_name',
+                    'confidence' => 'metadata_unresolved',
                 ];
             } elseif (!$isObjectImport) {
                 $packageMatch = $packageMatches[self::normalizeLookup($rootPackage)] ?? null;
@@ -377,12 +404,18 @@ final class PdoDependencyResolver
         return $resolved;
     }
 
-    /** @param list<array<string,mixed>> $imports @param array<int,string> $ue3RootPackages @return list<int> */
+    /**
+     * @param list<array<string,mixed>> $imports
+     * @param array<int,string> $ue3RootPackages
+     * @param array<int,bool> $excludedImportIndexes
+     * @return list<int>
+     */
     private static function requiredImportIndexes(
         array $imports,
         string $packageKey,
         string $engineKey,
-        array $ue3RootPackages = []
+        array $ue3RootPackages = [],
+        array $excludedImportIndexes = []
     ): array {
         $indexes = [];
         foreach ($imports as $fallback => $import) {
@@ -390,6 +423,9 @@ final class PdoDependencyResolver
                 continue;
             }
             $importIndex = isset($import['import_index']) ? (int)$import['import_index'] : (int)$fallback;
+            if (isset($excludedImportIndexes[$importIndex])) {
+                continue;
+            }
             $rootPackage = $engineKey === 'UE3'
                 ? (string)($ue3RootPackages[$importIndex] ?? '')
                 : (string)($import['root_package'] ?? '');
@@ -431,7 +467,7 @@ final class PdoDependencyResolver
     }
 
     /** @param array<int,array<string,mixed>> $importsByIndex */
-    private static function ue3HasCookedExportOuter(array $importsByIndex, int $importIndex): bool
+    private static function hasExportOuterInImportAncestry(array $importsByIndex, int $importIndex): bool
     {
         $seen = [];
         while (true) {
@@ -518,6 +554,16 @@ final class PdoDependencyResolver
             }
         }
         return 'standard';
+    }
+
+    private static function filePackageVersion(PDO $db, int $fileId): int
+    {
+        if ($fileId < 1) {
+            return 0;
+        }
+        $statement = $db->prepare('SELECT package_version FROM ue_files WHERE id=? LIMIT 1');
+        $statement->execute([$fileId]);
+        return (int)($statement->fetchColumn() ?: 0);
     }
 
     private static function engineKey(PDO $db, int $gameId): string

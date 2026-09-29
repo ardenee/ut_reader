@@ -52,7 +52,7 @@ For the deterministic file-backed path, `VerifyImportInner()` establishes these 
 
 ### v4 metadata boundary
 
-Current `.uedb4` metadata preserves the serialized Import/Export graph required for the reviewed pre-520 UT4 packages, but it does not preserve serialized `FObjectImport::PackageName` introduced by `VER_UE4_NON_OUTER_PACKAGE_IMPORT` (520). Therefore v4 resolution must not invent package ownership for modern import/export mixed outer graphs. Full >=520 support requires the next metadata format to retain that serialized field and distinguish effective provider package identity from the raw outer graph.
+Current `.uedb4` metadata preserves the serialized Import/Export graph required for the reviewed pre-520 UT4 packages, but it does not preserve serialized `FObjectImport::PackageName` introduced by `VER_UE4_NON_OUTER_PACKAGE_IMPORT` (520). Therefore v4 resolution must not invent package ownership for modern import/export mixed outer graphs. Under UEDB4, 520+ Imports whose outer ancestry reaches an Export are classified as metadata-unresolved rather than missing, and they are excluded from physical-provider completeness tests so unavailable `PackageName` metadata cannot make otherwise deterministic sibling Imports fail. Full >=520 support requires the next metadata format to retain that serialized field and distinguish effective provider package identity from the raw outer graph.
 
 ## UnrealDB contract
 
