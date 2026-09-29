@@ -22,7 +22,23 @@ $check('detects_old_wrong_native_bit', str_contains($source, '(ep.object_flags &
 $check(
     'authoritative_rebuilder_owns_writes',
     str_contains($source, 'PdoCatalogDependencyRebuilder')
-        && str_contains($source, '$rebuilder->rebuild(')
+        && str_contains($source, '$rebuilder->rebuildForPackages(')
+);
+$check(
+    'package_names_are_batched_per_selected_file',
+    str_contains($source, '$packagesByFile')
+        && str_contains($source, 'required_package')
+);
+$check(
+    'package_summaries_are_bulk_refreshed',
+    str_contains($source, 'PdoDependencyPackageSummary')
+        && str_contains($source, '$summaryWriter->rebuildFiles(')
+);
+$compactSource = file_get_contents($root . '/src/Infrastructure/Metadata/CompactDependencyRebuilder.php') ?: '';
+$check(
+    'ue4_targeted_rebuild_uses_import_ancestor_closure',
+    str_contains($compactSource, 'ue4TargetedResolutionImports')
+        && str_contains($compactSource, "\$engineKey === 'UE4' && \$packageKeys !== null")
 );
 $check(
     'schema_aware_identity_prefilter',
