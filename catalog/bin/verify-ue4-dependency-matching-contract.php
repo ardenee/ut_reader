@@ -89,6 +89,45 @@ $shortProvider = [[
 $matches = PdoUe4VerifyImportProjectionResolver::resolveInMemory($shortConsumer, $providerImports, $shortProvider, '/Game/TestPkg');
 $check(($matches[1] ?? null) === 0, 'ue4_short_class_package_fallback_when_no_full_match');
 
+$immediateOuterConsumer = [
+    ['import_index'=>0,'class_package'=>'/Script/CoreUObject','class_name'=>'Package','object_name'=>'/Game/TestPkg','outer_index'=>0,'root_package'=>'/Game/TestPkg','relative_object_path'=>''],
+    ['import_index'=>1,'class_package'=>'ClassPackageNode','class_name'=>'SomeClass','object_name'=>'Thing','outer_index'=>-1,'root_package'=>'/Game/TestPkg','relative_object_path'=>'Thing'],
+];
+$immediateOuterProviderImports = [
+    ['import_index'=>0,'object_name'=>'/Different/Root','outer_index'=>0],
+    ['import_index'=>1,'object_name'=>'ClassPackageNode','outer_index'=>-1],
+    ['import_index'=>2,'object_name'=>'SomeClass','outer_index'=>-2],
+];
+$immediateOuterProviderExports = [[
+    'export_index'=>0,'class_index'=>-3,'object_name'=>'Thing','outer_index'=>0,'object_flags'=>1,
+]];
+$matches = PdoUe4VerifyImportProjectionResolver::resolveInMemory(
+    $immediateOuterConsumer,
+    $immediateOuterProviderImports,
+    $immediateOuterProviderExports,
+    '/Game/TestPkg'
+);
+$check(($matches[1] ?? null) === 0, 'ue4_imported_class_package_uses_immediate_outer_object_name');
+
+$exportOuterClassConsumer = [
+    ['import_index'=>0,'class_package'=>'/Script/CoreUObject','class_name'=>'Package','object_name'=>'/Game/TestPkg','outer_index'=>0,'root_package'=>'/Game/TestPkg','relative_object_path'=>''],
+    ['import_index'=>1,'class_package'=>'ClassPackageExport','class_name'=>'SomeClass','object_name'=>'Thing','outer_index'=>-1,'root_package'=>'/Game/TestPkg','relative_object_path'=>'Thing'],
+];
+$exportOuterClassProviderImports = [
+    ['import_index'=>0,'object_name'=>'SomeClass','outer_index'=>1],
+];
+$exportOuterClassProviderExports = [
+    ['export_index'=>0,'class_index'=>0,'object_name'=>'ClassPackageExport','outer_index'=>0,'object_flags'=>1],
+    ['export_index'=>1,'class_index'=>-1,'object_name'=>'Thing','outer_index'=>0,'object_flags'=>1],
+];
+$matches = PdoUe4VerifyImportProjectionResolver::resolveInMemory(
+    $exportOuterClassConsumer,
+    $exportOuterClassProviderImports,
+    $exportOuterClassProviderExports,
+    '/Game/TestPkg'
+);
+$check(($matches[1] ?? null) === 1, 'ue4_imported_class_package_can_use_immediate_export_outer_object_name');
+
 $providerImportsWithExact = [
     ['import_index'=>0,'object_name'=>'/Other/CoreUObject','outer_index'=>0],
     ['import_index'=>1,'object_name'=>'SomeClass','outer_index'=>-1],
@@ -123,13 +162,14 @@ $check(
 
 $result = [
     'ok' => $failures === [],
-    'checks' => 11,
+    'checks' => 13,
     'failures' => $failures,
     'contract' => [
         'consumer_imports_only_create_requirements',
         'object_class_class_package_outer_and_public_must_match',
         'private_exports_follow_ue4_editor_consumer_graph_exceptions',
         'targeted_resolution_keeps_full_consumer_graph_for_private_exceptions',
+        'imported_class_package_uses_immediate_outer_resource_object_name',
         'short_class_package_fallback_only_without_any_full_package_match',
         'one_physical_provider_is_used_without_invalidating_successful_siblings',
         'v4_does_not_guess_package_name_for_modern_export_outer_imports',

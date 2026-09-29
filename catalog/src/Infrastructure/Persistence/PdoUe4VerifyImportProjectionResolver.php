@@ -176,8 +176,19 @@ final class PdoUe4VerifyImportProjectionResolver
                 return ['', ''];
             }
             $className = trim((string)($classImport['object_name'] ?? ''));
-            $package = self::rootPackageForImport($classImport, $providerImports, $providerExports, $providerPackageName);
-            return [$package, $className];
+            $classOuter = (int)($classImport['outer_index'] ?? 0);
+            if ($classOuter === 0) {
+                return ['', $className];
+            }
+            $classPackageResource = $classOuter < 0
+                ? ($providerImports[-$classOuter - 1] ?? null)
+                : ($providerExports[$classOuter - 1] ?? null);
+            return [
+                is_array($classPackageResource)
+                    ? trim((string)($classPackageResource['object_name'] ?? ''))
+                    : '',
+                $className,
+            ];
         }
 
         $classExport = $providerExports[$classIndex - 1] ?? null;
@@ -187,33 +198,6 @@ final class PdoUe4VerifyImportProjectionResolver
         return [trim($providerPackageName), trim((string)($classExport['object_name'] ?? ''))];
     }
 
-    /** @param array<int,array<string,mixed>> $imports @param array<int,array<string,mixed>> $exports */
-    private static function rootPackageForImport(array $import, array $imports, array $exports, string $providerPackageName): string
-    {
-        $seen = [];
-        $current = $import;
-        while (true) {
-            $outer = (int)($current['outer_index'] ?? 0);
-            if ($outer === 0) {
-                $name = trim((string)($current['object_name'] ?? ''));
-                return $name !== '' ? $name : trim($providerPackageName);
-            }
-            if ($outer < 0) {
-                $index = -$outer - 1;
-                if (isset($seen['i' . $index]) || !isset($imports[$index])) {
-                    return '';
-                }
-                $seen['i' . $index] = true;
-                $current = $imports[$index];
-                continue;
-            }
-
-            // Pre-v5 metadata cannot preserve UE4 >=520 FObjectImport::PackageName.
-            // An import whose package is independent from an export outer must stay
-            // unresolved until the v5 contract provides that serialized field.
-            return '';
-        }
-    }
 
     /** @param array<int,array<string,mixed>> $imports @param array<int,array<string,mixed>> $exports */
     private static function privateImportAllowed(int $importIndex, array $imports, array $exports): bool
