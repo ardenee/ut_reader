@@ -4,7 +4,7 @@ UnrealDB is a catalogue, dependency-analysis and preservation system for Unreal 
 
 It is designed to identify packages accurately, preserve physical and logical package identity, inspect Unreal package metadata, track dependencies, find missing requirements, reduce duplicate storage, repair catalogue state, and distribute verified files through controlled downloads and generated packages.
 
-> **Project status — September 2026:** UnrealDB is under active development and is already being used as a working catalogue/admin system. The current engineering focus is reliability, parser edge cases, queue/operator clarity, performance, and production hardening.
+> **Project status — 29 September 2026:** UnrealDB is an active working catalogue/admin system. Production currently uses the UEDB4 compact-metadata runtime. Source-backed package/dependency specifications now cover the supported UE1-UE5 classic families, the isolated UEDB5 staging foundation and UE5 5.8.3 classic reader/persistence/VerifyImport resolver are implemented, and the main remaining format work is UEDB5 production migration/cutover plus UE5 Zen/IoStore (`.utoc`/`.ucas`).
 
 ## Runtime model
 
@@ -62,18 +62,32 @@ The complete clean-install, Apache/PHP/MySQL, storage, worker, GeoIP and optiona
 | --- | --- | --- |
 | Public catalogue/search | Active | Browse games/files, exact identity search, broader catalogue search, dependency information and controlled downloads. |
 | Administration | Active | Game/profile management, uploads, unverified files, jobs, backups, federation, maintenance and diagnostics. |
-| Durable background jobs | Active | Long work is split into recoverable jobs/child workflows with persisted progress and explicit operator control. |
-| UE1 packages | Strong support | Names, Imports, Exports, package identity and dependencies are well covered. |
-| UE2 / UE2.5 packages | Strong support | Includes UT2003/UT2004-era package handling and UZ2 redirect support. |
-| UE3 packages | Active validation | Core package/UPK support exists; less common package/compression variants are still being validated against source/reference material. |
-| UE4 packages | Active | Package/PAK handling, source-identity repair and dependency workflows exist; engine/version-specific edge cases remain under investigation. |
-| UE5 packages | Partial | Supported where the package/container layout is understood; IoStore `.utoc`/`.ucas` is not fully supported. |
-| `.uz` redirects | Active | Historical 1234 and 5678 FCodec variants are supported. |
-| `.uz2` redirects | Active | Chunked zlib handling exists; malformed/non-standard archives fail without blocking unrelated jobs. |
-| `.uz3` redirects | Active | UT3 tag + uncompressed-size + whole-file zlib encoding/decoding is implemented and validated against real `UT3.exe Compress` output. |
+| Durable background jobs | Active | Long work is split into resumable parent/child workflows with persisted progress, bounded concurrency and explicit operator control. |
+| Production metadata | UEDB4 active | Verified package metadata is stored in blocked-compressed `.uedb4` containers with compact SQL search/dependency projections. |
+| UEDB5 | Staging / migration work | Format-5 container isolation, UE5 5.8.3 classic persistence and its source-parity staging resolver are implemented; production cutover has not happened. |
+| UE1 / UT99 | Strong support | Source-backed reader/dependency rules cover retail UT99 package serialization, compact indices, provider selection and object-level dependency matching. |
+| Unreal II / UE2 | Strong support | Source-specific UE2 behavior is retained, including Unreal II differences such as its private-export VerifyImport handling. |
+| UE2.5 / UT2003 / UT2004 | Strong support | Source-backed package/dependency behavior, UZ2 and game-specific revision rules are documented and implemented where applicable. |
+| UE3 / UT3 | Active / source-aligned | UT3 v512 dependency matching follows its audited VerifyImport rules, including exact outer/class identity and the 64-bit UE3 `RF_Public` flag. Historical lossy metadata requires source-byte repair/reparse. |
+| UE4 4.27.2 | Active / source-aligned | Classic package parsing/dependency behavior is audited against 4.27.2 source. UEDB5 migration must preserve serialized import `PackageName` rather than reconstructing it from paths. |
+| UE5 5.8.3 classic | Staging implemented | Dedicated reader, source-shaped UEDB5 persistence and deterministic file-backed `VerifyImportInner` staging resolution are implemented but not wired into production runtime. |
+| UE5 Zen / IoStore | Pending | Authoritative `.utoc`/`.ucas`, PackageId/public-export-hash and `FPackageObjectIndex` support remain the largest UE5 format gap. |
+| `.uz` / `.uz2` / `.uz3` | Active | Historical UE1/UE2 redirects and UT3 whole-file zlib redirects are supported with source-backed format rules. |
 | ZIP / 7z / RAR uploads | Active | Unpack-only ingestion extracts supported Unreal files and hands each file to the normal durable package/redirect/PAK workflow. |
 | Federation | Active | Parent/child inventory, dependency requests and controlled transfer workflows are supported. |
 | Game Backups | Active | Durable export/restore workflows plus separate production database/storage backup tooling. |
+
+## Source authority and format policy
+
+UnrealDB treats the relevant Epic/game source revision as the authority for package serialization and dependency behavior. The source-backed specification library is under [`specs`](specs/) with its coverage index in [`specs/README.md`](specs/README.md).
+
+Important rules are:
+
+- engine/game revisions are documented separately when their behavior differs;
+- serialized source identity is authoritative; normalized paths, hashes and SQL projections are accelerators;
+- one physical provider package must satisfy source-defined package/import rules - UnrealDB does not combine exports from several same-name files into a synthetic provider;
+- runtime/config-only behavior that cannot be reconstructed from package/container bytes is marked as unavailable/runtime-only rather than guessed;
+- migration never fabricates serialized fields that an older metadata format discarded; authoritative package bytes are reparsed when required.
 
 ## Core architecture
 
@@ -99,16 +113,17 @@ See [`docs/background-jobs.md`](docs/background-jobs.md).
 
 ### Compact metadata
 
-Verified package metadata uses the current format-2 compact metadata architecture.
+Production verified metadata currently uses **UEDB4**.
 
 - `ue_files` is the stable physical/catalogue identity row.
 - `ue_file_metadata` registers the authoritative compact metadata container.
-- Names, Imports and Exports are stored in blocked compressed `.uedb2` metadata.
-- SQL lookup/projection tables provide indexed dependency/search access without restoring the old row-per-object schema.
-- legacy `ue_names`, `ue_imports`, `ue_exports` and `ue_dependencies` are no longer the verified runtime metadata model.
-- verified files track explicit compact-metadata publication state so incomplete publication can be identified and repaired.
+- package metadata is stored in blocked-compressed `.uedb4` containers;
+- SQL lookup/projection tables provide indexed package, object, search and dependency access without restoring the old row-per-object metadata schema;
+- legacy `ue_names`, `ue_imports`, `ue_exports` and `ue_dependencies` are no longer the verified runtime metadata model;
+- source-shaped fields that affect Epic load/VerifyImport behavior are retained in compact metadata whenever the format can represent them, while SQL is treated as an accelerator rather than the authority;
+- compact publication is atomic and retryable database contention cannot leave a partially published package.
 
-Compact publication is atomic. Retryable database lock/deadlock failures retry the publication operation rather than leaving a partially published package.
+**UEDB5** is the next metadata format and is deliberately isolated from production UEDB4. The format-5 container/staging reader, UE5 5.8.3 classic persistence and classic `VerifyImportInner` staging resolver are implemented, but the production runtime still reads UEDB4 only. UEDB5 cutover requires source-byte reparse wherever UEDB4 did not retain required serialized identity, including historical UE3 64-bit `ObjectFlags` and UE4/UE5 import `PackageName` cases.
 
 ## Upload and import flow
 
@@ -186,28 +201,34 @@ UnrealDB tracks package/object requirements and providers and supports:
 
 Full Sync is a resumable multi-phase workflow:
 
-1. reimport/repair verified files;
+1. reparse/reimport or repair verified files when source-owned metadata needs refresh;
 2. rebuild provider/projection state;
-3. rebuild dependency files;
+3. rebuild dependencies in bounded durable batches;
 4. publish final dependency summaries and game statistics.
 
-Work already completed is retained. A restart resumes incomplete phases/children instead of returning to file 1.
+Completed child work is retained, so restart resumes incomplete phases/children instead of returning to file 1. Children cancelled by stopping the parent can be resumed without replaying successful units. Source-specific maintenance paths avoid rewriting unrelated SQL projections; for example, the UT3 source pass can rewrite/register corrected UEDB4 metadata without updating every export row individually.
 
 ## Package/container support
 
-### UE1 / UE2 / UE3 packages
+### Classic Unreal packages: UE1 through UE5
 
-Classic Unreal packages expose package header information, names, imports, exports, hashes/GUIDs and dependency relationships where supported by the engine/version parser.
+Classic package readers preserve the engine/source-specific package summary, Names, Imports, Exports, package-index outer graph and dependency-relevant identity required by the audited revision. The project intentionally does not flatten all engine generations into one generic package rule.
 
-UE3 `.upk` files remain packages; their internal exports can be examined without pretending that each export is an independent package file.
+UE3 `.upk` files remain packages; their internal exports can be examined without pretending that each export is an independent package file. UT3 package-version-512 dependency matching uses the January-2008 source policy, including its 64-bit `RF_Public` value and source-specific outer/class rules.
 
-### UE4 / UE5 PAK files
+UE4 4.27.2 classic packages and UE5 5.8.3 classic packages have separate audited readers/policies. UE5 classic support is currently staged through UEDB5 rather than published into the production metadata runtime.
+
+### PAK files
 
 Supported unencrypted PAK files are retained as original archives and indexed/extracted when their version and compression layout are supported.
 
 PAK import uses a durable parent workspace and independently restartable entry jobs. An unsupported or damaged entry is recorded as an entry outcome rather than preventing unrelated entries from being processed.
 
 Encrypted PAK content and unsupported compression/container variants are not silently accepted.
+
+### UE5 Zen / IoStore
+
+Authoritative cooked UE5 Zen/IoStore support is not complete. Full support requires `.utoc`/`.ucas` ingestion plus package-store provenance, `FPackageId`, imported package IDs, public-export hashes, typed `FPackageObjectIndex` identity, export/dependency bundles, optional segments, redirects and other source-defined container context. These values require lossless unsigned-64 handling and are being designed for UEDB5 rather than forced into the classic package model.
 
 ### Unreal redirect archives
 
@@ -335,17 +356,23 @@ php catalog/bin/verify-solo-maintainer-hardening.php --run
 
 The main active areas are:
 
-- validating UE3 package/compression edge cases against source and known-good fixtures;
-- continuing UE4/UE5 package/dependency compatibility work;
-- diagnosing malformed/non-standard redirect archives without weakening strict parsing;
-- further reducing expensive catalogue/maintenance paths where measured performance still warrants it;
-- improving operator monitoring and worker/service supervision;
+- completing the UEDB4 -> UEDB5 migration/publication path and clean production cutover;
+- reparsing authoritative package bytes where older UEDB4 metadata discarded dependency-relevant serialized identity instead of guessing the missing values;
+- implementing UE5 Zen/IoStore `.utoc`/`.ucas` package-store ingestion and its PackageId/public-export-hash/object-index dependency model;
+- completing UEDB5 dependency classifications for hard, optional, soft, build/cook, script, cell/Verse, load-order and runtime-derived references;
+- continuing source-backed validation of unusual compression/encryption/container cases without weakening strict parsing;
+- reducing measured database/publication hotspots while keeping detailed source semantics in compact files rather than expanding MySQL back toward row-per-object metadata;
+- improving worker-pool supervision so code-version recycling and recovery do not require operator intervention;
 - expanding real-world fixture coverage without committing copyrighted game assets.
+
+Some Epic behaviors depend on live engine/configuration state rather than serialized package/container bytes. UnrealDB records those boundaries explicitly instead of fabricating results; examples include configuration-driven remaps and selected UE5 runtime-created/dynamic import paths.
 
 ## Documentation
 
-Technical material is under [`docs`](docs/). Useful starting points:
+Technical material is under [`docs`](docs/), while source-backed Unreal format/dependency specifications are under [`specs`](specs/). Useful starting points:
 
+- [`specs/README.md`](specs/README.md) - official-source format/dependency coverage and source-of-truth policy
+- [`specs/uedb5-metadata-requirements.md`](specs/uedb5-metadata-requirements.md) - current UEDB5/UE5 migration requirements and implementation status
 - [`docs/installation.md`](docs/installation.md)
 - [`docs/architecture.md`](docs/architecture.md)
 - [`docs/catalog-architecture.md`](docs/catalog-architecture.md)
@@ -359,10 +386,11 @@ Technical material is under [`docs`](docs/). Useful starting points:
 
 UnrealDB favors:
 
-- exact identity over filename assumptions;
+- official engine/game source behavior over invented compatibility rules;
+- exact serialized identity over filename/path assumptions;
 - durable/recoverable work over long synchronous requests;
 - explicit failure over silent corruption;
 - operator-visible state over hidden worker behavior;
 - measured optimization over speculative complexity;
-- backwards-compatible migrations and incremental refactoring;
+- audited migrations and clean format cutovers instead of silent compatibility guesses;
 - preserving working functionality while improving architecture and maintainability.
