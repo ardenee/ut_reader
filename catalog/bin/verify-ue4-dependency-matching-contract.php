@@ -43,11 +43,63 @@ $wrongOuter = $publicRootExport;
 $wrongOuter[0]['outer_index'] = 1;
 $matches = PdoUe4VerifyImportProjectionResolver::resolveInMemory($consumer, [], $wrongOuter, '/Game/TestPkg');
 $check(!isset($matches[1]), 'ue4_wrong_outer_rejected');
+$wrongOuterDiagnostic = PdoUe4VerifyImportProjectionResolver::diagnoseInMemoryOutcome(
+    $consumer, [], $wrongOuter, '/Game/TestPkg'
+);
+$check(
+    ($wrongOuterDiagnostic['rejections'][1]['reason'] ?? null) === 'outer_mismatch',
+    'ue4_diagnostic_names_wrong_outer_rejection'
+);
 
 $private = $publicRootExport;
 $private[0]['object_flags'] = 0;
 $matches = PdoUe4VerifyImportProjectionResolver::resolveInMemory($consumer, [], $private, '/Game/TestPkg');
 $check(!isset($matches[1]), 'ue4_private_export_rejected');
+$privateDiagnostic = PdoUe4VerifyImportProjectionResolver::diagnoseInMemoryOutcome(
+    $consumer, [], $private, '/Game/TestPkg'
+);
+$check(
+    ($privateDiagnostic['rejections'][1]['reason'] ?? null) === 'private_export_rejected',
+    'ue4_diagnostic_names_private_export_rejection'
+);
+$missingObjectDiagnostic = PdoUe4VerifyImportProjectionResolver::diagnoseInMemoryOutcome(
+    $consumer, [], [[
+        'export_index'=>0,'class_index'=>0,'object_name'=>'DifferentObject','outer_index'=>0,'object_flags'=>1,
+    ]], '/Game/TestPkg'
+);
+$check(
+    ($missingObjectDiagnostic['rejections'][1]['reason'] ?? null) === 'object_name_not_found',
+    'ue4_diagnostic_names_missing_object_rejection'
+);
+$wrongClassConsumer = $consumer;
+$wrongClassConsumer[1]['class_name'] = 'Material';
+$wrongClassDiagnostic = PdoUe4VerifyImportProjectionResolver::diagnoseInMemoryOutcome(
+    $wrongClassConsumer, [], [[
+        'export_index'=>0,'class_index'=>0,'object_name'=>'Material','outer_index'=>0,'object_flags'=>1,
+    ]], '/Game/TestPkg'
+);
+$check(
+    ($wrongClassDiagnostic['rejections'][1]['reason'] ?? null) === 'class_name_mismatch',
+    'ue4_diagnostic_names_class_mismatch_rejection'
+);
+$classPackageConsumer = [
+    ['import_index'=>0,'class_package'=>'/Script/CoreUObject','class_name'=>'Package','object_name'=>'/Game/TestPkg','outer_index'=>0,'root_package'=>'/Game/TestPkg','relative_object_path'=>''],
+    ['import_index'=>1,'class_package'=>'/Script/Expected','class_name'=>'SomeClass','object_name'=>'Thing','outer_index'=>-1,'root_package'=>'/Game/TestPkg','relative_object_path'=>'Thing'],
+];
+$classPackageProviderImports = [
+    ['import_index'=>0,'object_name'=>'/Script/Other','outer_index'=>0],
+    ['import_index'=>1,'object_name'=>'SomeClass','outer_index'=>-1],
+];
+$classPackageDiagnostic = PdoUe4VerifyImportProjectionResolver::diagnoseInMemoryOutcome(
+    $classPackageConsumer,
+    $classPackageProviderImports,
+    [['export_index'=>0,'class_index'=>-2,'object_name'=>'Thing','outer_index'=>0,'object_flags'=>1]],
+    '/Game/TestPkg'
+);
+$check(
+    ($classPackageDiagnostic['rejections'][1]['reason'] ?? null) === 'class_package_mismatch',
+    'ue4_diagnostic_names_class_package_rejection'
+);
 
 $consumerExportGraph = [[
     'export_index'=>0,'class_index'=>0,'object_name'=>'ConsumerChild','outer_index'=>-2,'object_flags'=>1,
@@ -249,7 +301,7 @@ $check(
 
 $result = [
     'ok' => $failures === [],
-    'checks' => 21,
+    'checks' => 26,
     'failures' => $failures,
     'contract' => [
         'consumer_imports_only_create_requirements',
@@ -262,6 +314,7 @@ $result = [
         'short_class_package_fallback_only_without_any_full_package_match',
         'one_physical_provider_is_used_without_invalidating_successful_siblings',
         'v4_does_not_guess_package_name_for_modern_export_outer_imports',
+        'read_only_diagnostics_explain_object_class_outer_and_private_rejections',
     ],
 ];
 echo json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . PHP_EOL;

@@ -56,6 +56,8 @@ $counts = [
     'suspicious_complete_provider_still_missing' => 0,
 ];
 $examples = [];
+$rejectionReasonPairs = [];
+$rejectionReasonGroups = [];
 $snapshotCache = [];
 $processed = 0;
 
@@ -103,16 +105,34 @@ foreach ($groups as $group) {
 
     $providerResults = [];
     $hasComplete = false;
+    $groupReasons = [];
+    $groupPairReasonCounts = [];
     foreach ($providerIds as $providerId) {
-        $matches = PdoUe4VerifyImportProjectionResolver::resolveProvider($db, $providerId, $imports, $exports);
+        $diagnostic = PdoUe4VerifyImportProjectionResolver::diagnoseProviderOutcome($db, $providerId, $imports, $exports);
+        $matches = (array)($diagnostic['matches'] ?? []);
+        $rejections = (array)($diagnostic['rejections'] ?? []);
         $matched = 0;
+        $reasonCounts = [];
+        $failedImports = [];
         foreach ($required as $index) {
-            if (array_key_exists($index, $matches)) $matched++;
+            if (array_key_exists($index, $matches)) {
+                $matched++;
+                continue;
+            }
+            $detail = (array)($rejections[$index] ?? ['import_index'=>$index,'reason'=>'unclassified']);
+            $reason = (string)($detail['reason'] ?? 'unclassified');
+            $reasonCounts[$reason] = ($reasonCounts[$reason] ?? 0) + 1;
+            $groupPairReasonCounts[$reason] = ($groupPairReasonCounts[$reason] ?? 0) + 1;
+            $groupReasons[$reason] = true;
+            $failedImports[] = $detail;
         }
+        ksort($reasonCounts);
         $providerResults[] = [
             'file_id' => $providerId,
             'matched' => $matched,
             'required' => count($required),
+            'rejection_reason_counts' => $reasonCounts,
+            'rejections' => $failedImports,
         ];
         if ($matched === count($required)) {
             $hasComplete = true;
@@ -130,6 +150,14 @@ foreach ($groups as $group) {
         $classification = 'provider_rejected_by_ue4_verifyimport';
     }
     $counts[$classification]++;
+    if ($classification === 'provider_rejected_by_ue4_verifyimport') {
+        foreach ($groupPairReasonCounts as $reason => $count) {
+            $rejectionReasonPairs[$reason] = ($rejectionReasonPairs[$reason] ?? 0) + $count;
+        }
+        foreach (array_keys($groupReasons) as $reason) {
+            $rejectionReasonGroups[$reason] = ($rejectionReasonGroups[$reason] ?? 0) + 1;
+        }
+    }
 
     if ($exampleLimit > 0 && count($examples[$classification] ?? []) < $exampleLimit) {
         $owner = catalog_one($db, 'SELECT original_name,package_version FROM ue_files WHERE id=? LIMIT 1', [$fileId]) ?: [];
@@ -150,6 +178,8 @@ foreach ($groups as $group) {
 }
 
 arsort($counts);
+arsort($rejectionReasonPairs);
+arsort($rejectionReasonGroups);
 echo json_encode([
     'ok' => true,
     'read_only' => true,
@@ -157,12 +187,28 @@ echo json_encode([
     'metadata_format_version' => BlockedCompressedMetadataContainer::FORMAT_VERSION,
     'residual_non_script_groups' => count($groups),
     'classifications' => $counts,
+    'provider_rejection_reason_audit' => [
+        'failed_import_provider_pairs_by_reason' => $rejectionReasonPairs,
+        'groups_containing_reason' => $rejectionReasonGroups,
+        'counting_note' => 'Pair counts count each failed required Import against each physical provider; group counts count each residual package group at most once per reason.',
+    ],
     'examples_per_classification' => $examples,
     'interpretation' => [
         'suspicious_complete_provider_still_missing' => 'Investigate first: production UE4 VerifyImport semantics found one complete physical provider although the persisted group is still missing.',
         'provider_rejected_by_ue4_verifyimport' => 'A physical package exists, but no one provider satisfies the complete object/class/class-package/outer/public Import set.',
         'no_package_provider' => 'No verified game-local physical provider exists for the serialized package identity.',
         'v4_package_context_unavailable' => 'The consumer graph needs modern UE4 package context that v4 does not preserve; v5 must retain FObjectImport::PackageName before resolving it.',
+    ],
+    'rejection_reason_meanings' => [
+        'object_name_not_found' => 'No provider export has the serialized Import.ObjectName.',
+        'class_name_mismatch' => 'The object name exists, but not with the serialized Import.ClassName.',
+        'class_package_mismatch' => 'ObjectName/ClassName candidates exist, but fail UE4 full-ClassPackage then short-ClassPackage selection.',
+        'outer_mismatch' => 'Object/class/class-package candidates exist, but none has the SourceIndex-derived serialized outer required by VerifyImportInner.',
+        'private_export_rejected' => 'The matching export lacks RF_Public and none of the exact UE4 editor consumer-graph exceptions applies.',
+        'outer_import_unresolved' => 'The serialized Import outer did not resolve first, so VerifyImportInner cannot validate the child candidate.',
+        'object_redirector_target_unavailable' => 'UE4 found the ObjectRedirector retry target, but DestinationObject requires export payload state.',
+        'object_redirector_ancestor_target_unavailable' => 'An outer Import resolves through ObjectRedirector; UE4 needs DestinationObject before descendant resolution can continue.',
+        'v4_package_context_unavailable' => 'A positive export outer requires FObjectImport::PackageName context that UEDB4 did not retain.',
     ],
     'invariant' => 'Consumer Imports create requirements; one physical provider must independently satisfy the complete set.',
 ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . PHP_EOL;

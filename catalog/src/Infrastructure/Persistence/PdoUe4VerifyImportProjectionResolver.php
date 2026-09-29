@@ -564,6 +564,208 @@ final class PdoUe4VerifyImportProjectionResolver
         return null;
     }
 
+    /**
+     * Read-only explanation of deterministic table-level VerifyImport failures.
+     * This does not participate in dependency resolution; it explains the same
+     * serialized object/class/class-package/outer/public checks used above.
+     *
+     * @param list<array<string,mixed>> $consumerImports
+     * @param list<array<string,mixed>> $consumerExports
+     * @param list<array<string,mixed>> $consumerGraphImports
+     * @return array{matches:array<int,int>,redirectors:array<int,int>,redirector_ancestry:array<int,int>,rejections:array<int,array<string,mixed>>}
+     */
+    public static function diagnoseProviderOutcome(
+        PDO $db,
+        int $providerFileId,
+        array $consumerImports,
+        array $consumerExports = [],
+        array $consumerGraphImports = []
+    ): array {
+        if ($providerFileId < 1 || $consumerImports === []) {
+            return ['matches'=>[], 'redirectors'=>[], 'redirector_ancestry'=>[], 'rejections'=>[]];
+        }
+        if (!function_exists('catalog_config')) {
+            throw new RuntimeException('Catalog configuration is required for authoritative UE4 VerifyImport diagnosis.');
+        }
+        $config = \catalog_config();
+        $storageRoot = trim((string)($config['storage_path'] ?? ''));
+        if ($storageRoot === '') {
+            throw new RuntimeException('Catalog storage_path is required for authoritative UE4 VerifyImport diagnosis.');
+        }
+        $snapshot = (new BlockedCompressedMetadataSnapshotLoader($db, $storageRoot))->load($providerFileId);
+        $file = (array)($snapshot['file'] ?? []);
+        return self::diagnoseInMemoryOutcome(
+            $consumerImports,
+            (array)($snapshot['imports'] ?? []),
+            (array)($snapshot['exports'] ?? []),
+            (string)($file['package_name'] ?? ''),
+            $consumerExports,
+            $consumerGraphImports
+        );
+    }
+
+    /**
+     * @param list<array<string,mixed>> $consumerImports
+     * @param list<array<string,mixed>> $providerImports
+     * @param list<array<string,mixed>> $providerExports
+     * @param list<array<string,mixed>> $consumerExports
+     * @param list<array<string,mixed>> $consumerGraphImports
+     * @return array{matches:array<int,int>,redirectors:array<int,int>,redirector_ancestry:array<int,int>,rejections:array<int,array<string,mixed>>}
+     */
+    public static function diagnoseInMemoryOutcome(
+        array $consumerImports,
+        array $providerImports,
+        array $providerExports,
+        string $providerPackageName,
+        array $consumerExports = [],
+        array $consumerGraphImports = []
+    ): array {
+        $outcome = self::resolveInMemoryOutcome(
+            $consumerImports, $providerImports, $providerExports, $providerPackageName,
+            $consumerExports, $consumerGraphImports
+        );
+        $imports = self::indexRows($consumerImports, 'import_index');
+        $graphImports = self::indexRows(
+            $consumerGraphImports !== [] ? $consumerGraphImports : $consumerImports,
+            'import_index'
+        );
+        $providerImportsByIndex = self::indexRows($providerImports, 'import_index');
+        $providerExportsByIndex = self::indexRows($providerExports, 'export_index');
+        $consumerExportsByIndex = self::indexRows($consumerExports, 'export_index');
+
+        $providerRows = [];
+        foreach ($providerExportsByIndex as $exportIndex => $export) {
+            $objectName = trim((string)($export['object_name'] ?? ''));
+            if ($objectName === '') continue;
+            [$classPackage, $className] = self::exportClassIdentity(
+                $export, $providerImportsByIndex, $providerExportsByIndex, $providerPackageName
+            );
+            $providerRows[] = [
+                'export_index'=>(int)$exportIndex,
+                'outer_index'=>(int)($export['outer_index'] ?? 0),
+                'object_flags'=>(int)($export['object_flags'] ?? 0),
+                'object_name'=>$objectName,
+                'class_package'=>$classPackage,
+                'class_name'=>$className,
+            ];
+        }
+        usort($providerRows, static fn(array $a, array $b): int => $b['export_index'] <=> $a['export_index']);
+
+        $rejections = [];
+        foreach ($imports as $importIndex => $import) {
+            $importIndex = (int)$importIndex;
+            if (isset($outcome['matches'][$importIndex])) continue;
+            $base = ['import_index'=>$importIndex];
+            if (isset($outcome['redirectors'][$importIndex])) {
+                $rejections[$importIndex] = $base + ['reason'=>'object_redirector_target_unavailable'];
+                continue;
+            }
+            if (isset($outcome['redirector_ancestry'][$importIndex])) {
+                $rejections[$importIndex] = $base + [
+                    'reason'=>'object_redirector_ancestor_target_unavailable',
+                    'blocked_by_import_index'=>(int)$outcome['redirector_ancestry'][$importIndex],
+                ];
+                continue;
+            }
+            $objectName = trim((string)($import['object_name'] ?? ''));
+            $className = trim((string)($import['class_name'] ?? ''));
+            $classPackage = trim((string)($import['class_package'] ?? ''));
+            if ($objectName === '' || $className === '' || $classPackage === '') {
+                $rejections[$importIndex] = $base + ['reason'=>'incomplete_import_identity'];
+                continue;
+            }
+            $outerIndex = (int)($import['outer_index'] ?? 0);
+            if ($outerIndex > 0) {
+                $rejections[$importIndex] = $base + ['reason'=>'v4_package_context_unavailable'];
+                continue;
+            }
+            if ($outerIndex === 0) {
+                if (self::key($className) === 'package') continue;
+                $rejections[$importIndex] = $base + ['reason'=>'null_outer_non_package_import'];
+                continue;
+            }
+            $parentIndex = -$outerIndex - 1;
+            $parent = $imports[$parentIndex] ?? null;
+            if (!is_array($parent)) {
+                $rejections[$importIndex] = $base + ['reason'=>'outer_import_missing_from_consumer_graph','blocked_by_import_index'=>$parentIndex];
+                continue;
+            }
+            $parentOuter = (int)($parent['outer_index'] ?? 0);
+            $parentClass = self::key((string)($parent['class_name'] ?? ''));
+            if ($parentOuter === 0 && $parentClass === 'package') {
+                $expectedOuter = 0;
+            } elseif (isset($outcome['matches'][$parentIndex])) {
+                $expectedOuter = (int)$outcome['matches'][$parentIndex] + 1;
+            } else {
+                $rejections[$importIndex] = $base + ['reason'=>'outer_import_unresolved','blocked_by_import_index'=>$parentIndex];
+                continue;
+            }
+
+            $objectRows = array_values(array_filter($providerRows, static fn(array $row): bool =>
+                self::key((string)$row['object_name']) === self::key($objectName)
+            ));
+            if ($objectRows === []) {
+                $rejections[$importIndex] = $base + ['reason'=>'object_name_not_found'];
+                continue;
+            }
+            $classRows = array_values(array_filter($objectRows, static fn(array $row): bool =>
+                self::key((string)$row['class_name']) === self::key($className)
+            ));
+            if ($classRows === []) {
+                $rejections[$importIndex] = $base + ['reason'=>'class_name_mismatch'];
+                continue;
+            }
+            $hasFullPackageMatch = false;
+            foreach ($classRows as $row) {
+                if (self::key((string)$row['class_package']) === self::key($classPackage)) {
+                    $hasFullPackageMatch = true;
+                    break;
+                }
+            }
+            $expectedPackageKey = $hasFullPackageMatch
+                ? self::key($classPackage)
+                : self::key(self::shortPackageName($classPackage));
+            $packageRows = array_values(array_filter($classRows, static function(array $row) use ($hasFullPackageMatch, $expectedPackageKey): bool {
+                $candidatePackage = $hasFullPackageMatch
+                    ? (string)$row['class_package']
+                    : self::shortPackageName((string)$row['class_package']);
+                return self::key($candidatePackage) === $expectedPackageKey;
+            }));
+            if ($packageRows === []) {
+                $rejections[$importIndex] = $base + ['reason'=>'class_package_mismatch','class_package_mode'=>$hasFullPackageMatch ? 'full' : 'short_fallback'];
+                continue;
+            }
+            $outerRows = array_values(array_filter($packageRows, static fn(array $row): bool =>
+                (int)$row['outer_index'] === $expectedOuter
+            ));
+            if ($outerRows === []) {
+                $candidateOuters = array_values(array_unique(array_map(static fn(array $row): int => (int)$row['outer_index'], $packageRows)));
+                sort($candidateOuters);
+                $rejections[$importIndex] = $base + [
+                    'reason'=>'outer_mismatch',
+                    'expected_outer_index'=>$expectedOuter,
+                    'candidate_outer_indexes'=>$candidateOuters,
+                ];
+                continue;
+            }
+            $privateAllowed = self::privateImportAllowed($importIndex, $graphImports, $consumerExportsByIndex);
+            $candidate = $outerRows[0];
+            if ((((int)$candidate['object_flags']) & self::RF_PUBLIC) === 0 && !$privateAllowed) {
+                $rejections[$importIndex] = $base + [
+                    'reason'=>'private_export_rejected',
+                    'candidate_export_index'=>(int)$candidate['export_index'],
+                ];
+                continue;
+            }
+            $rejections[$importIndex] = $base + [
+                'reason'=>'unexpected_unmatched_candidate',
+                'candidate_export_index'=>(int)$candidate['export_index'],
+            ];
+        }
+        $outcome['rejections'] = $rejections;
+        return $outcome;
+    }
+
     private static function candidateKey(string $objectName, string $className): string
     {
         return self::key($objectName) . "\0" . self::key($className);
