@@ -58,6 +58,7 @@ $counts = [
 $examples = [];
 $rejectionReasonPairs = [];
 $rejectionReasonGroups = [];
+$rejectionReasonExamples = [];
 $snapshotCache = [];
 $processed = 0;
 
@@ -159,6 +160,7 @@ foreach ($groups as $group) {
         }
     }
 
+    $owner = null;
     if ($exampleLimit > 0 && count($examples[$classification] ?? []) < $exampleLimit) {
         $owner = catalog_one($db, 'SELECT original_name,package_version FROM ue_files WHERE id=? LIMIT 1', [$fileId]) ?: [];
         $examples[$classification][] = [
@@ -169,6 +171,35 @@ foreach ($groups as $group) {
             'required_import_indexes' => $required,
             'providers' => $providerResults,
         ];
+    }
+    if ($classification === 'provider_rejected_by_ue4_verifyimport' && $exampleLimit > 0) {
+        foreach (array_keys($groupReasons) as $reason) {
+            if (count($rejectionReasonExamples[$reason] ?? []) >= $exampleLimit) continue;
+            if ($owner === null) {
+                $owner = catalog_one($db, 'SELECT original_name,package_version FROM ue_files WHERE id=? LIMIT 1', [$fileId]) ?: [];
+            }
+            $reasonProviders = [];
+            foreach ($providerResults as $providerResult) {
+                $reasonRejections = array_values(array_filter(
+                    (array)($providerResult['rejections'] ?? []),
+                    static fn(array $detail): bool => (string)($detail['reason'] ?? '') === $reason
+                ));
+                if ($reasonRejections === []) continue;
+                $reasonProviders[] = [
+                    'file_id' => (int)($providerResult['file_id'] ?? 0),
+                    'matched' => (int)($providerResult['matched'] ?? 0),
+                    'required' => (int)($providerResult['required'] ?? 0),
+                    'rejections' => $reasonRejections,
+                ];
+            }
+            $rejectionReasonExamples[$reason][] = [
+                'consumer_file_id' => $fileId,
+                'consumer_file' => (string)($owner['original_name'] ?? ''),
+                'package_version' => (int)($owner['package_version'] ?? 0),
+                'required_package' => $packageName,
+                'providers' => $reasonProviders,
+            ];
+        }
     }
 
     $processed++;
@@ -190,6 +221,7 @@ echo json_encode([
     'provider_rejection_reason_audit' => [
         'failed_import_provider_pairs_by_reason' => $rejectionReasonPairs,
         'groups_containing_reason' => $rejectionReasonGroups,
+        'examples_per_reason' => $rejectionReasonExamples,
         'counting_note' => 'Pair counts count each failed required Import against each physical provider; group counts count each residual package group at most once per reason.',
     ],
     'examples_per_classification' => $examples,
