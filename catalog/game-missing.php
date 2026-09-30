@@ -36,27 +36,81 @@ function gm_object_diagnostic(PDO $db,int $gameId,array $row):array{
     return['reason'=>'Stored missing row matches current candidate','highlight_from'=>$leaf,'providers'=>$providers,'best'=>$best];
 }
 
+function gm_evidence_verdict_label(string $verdict):string
+{
+    return match($verdict){
+        'proven_missing'=>'Proven missing',
+        'needs_investigation'=>'Needs investigation',
+        'not_proven_missing'=>'Not proven missing',
+        'not_missing'=>'Not currently missing',
+        default=>'Evidence unavailable',
+    };
+}
+function gm_ue4_evidence_html(array $e):string
+{
+    $verdict=(string)($e['verdict']??'');$reason=(string)($e['reason']??'');$target=(array)($e['serialized_import']??[]);$providers=(array)($e['providers']??[]);
+    $out='<div class="gm-evidence gm-evidence--'.catalog_h($verdict).'">';
+    $out.='<div class="gm-evidence__headline"><strong>'.catalog_h(gm_evidence_verdict_label($verdict)).'</strong><span>'.catalog_h((string)($e['reason_label']??$reason)).'</span></div>';
+    $out.='<p>'.catalog_h((string)($e['explanation']??'')).'</p>';
+    $compact=(array)($e['compact_dependency']??[]);$compactStatus=(string)($compact['status']??'(not recorded)');$compactSource=(string)($compact['resolution_source']??'');$compactConfidence=(string)($compact['resolution_confidence']??'');$sqlStatus=$e['sql_status']??null;$sqlLabel=$sqlStatus===0?'missing (0)':($sqlStatus===null?'not recorded':(string)$sqlStatus);
+    $compactDetail=implode(' · ',array_values(array_filter([$compactStatus,$compactSource,$compactConfidence],static fn(string $v):bool=>$v!=='')));
+    $out.='<div class="gm-evidence-grid"><div><b>Persistence</b><br>SQL '.catalog_h($sqlLabel).' · UEDB4 '.catalog_h($compactDetail).'</div>';
+    $class=implode('.',array_values(array_filter([(string)($target['class_package']??''),(string)($target['class_name']??'')],static fn(string $v):bool=>$v!=='')));
+    $out.='<div><b>Serialized Import #'.(int)($e['import_index']??-1).'</b><br>'.catalog_h((string)($target['object_name']??'')).' · '.catalog_h($class).' · OuterIndex '.(int)($target['outer_index']??0).'</div></div>';
+    $chain=[];foreach((array)($e['serialized_outer_chain']??[]) as $node){if(!is_array($node))continue;$chain[]=ucfirst((string)($node['kind']??'resource')).' #'.(int)($node['index']??-1).' '.(string)($node['object_name']??'').' [outer '.(int)($node['outer_index']??0).']';}
+    if($chain!==[])$out.='<div class="gm-evidence-chain"><b>Serialized outer chain:</b> '.catalog_h(implode(' → ',$chain)).'</div>';
+    if($providers===[]){$out.='<div class="gm-note"><strong>No provider rows exist.</strong> The required package identity is absent from the verified game-local provider set.</div>';$out.='</div>';return$out;}
+    $out.='<p class="muted">'.catalog_h((string)($e['provider_policy']??'')).'</p>';
+    $out.='<table class="gm-table gm-evidence-table"><thead><tr><th>Provider</th><th>Source</th><th class="num">Exact matches</th><th class="num">Redirectors</th><th>This Import</th><th>Catalogue choice</th></tr></thead><tbody>';
+    $selectedProvider=null;foreach($providers as $provider){if(!is_array($provider))continue;$selected=!empty($provider['selected']);if($selected)$selectedProvider=$provider;
+        $label=(string)($provider['original_name']??'');if($label==='')$label=(string)($provider['package_name']??'');
+        $targetReason=(string)($provider['target_reason']??'unclassified');
+        $out.='<tr'.($selected?' class="gm-provider-selected"':'').'><td><a href="file-info.php?id='.(int)($provider['file_id']??0).'"><strong>'.catalog_h($label).'</strong></a><br><span class="muted">#'.(int)($provider['file_id']??0).'</span></td>';
+        $out.='<td>'.catalog_h((string)($provider['source_kind']??'')).'</td><td class="num">'.(int)($provider['matched']??0).' / '.(int)($provider['required']??0).'</td><td class="num">'.(int)($provider['redirector_count']??0).'</td>';
+        $out.='<td>'.catalog_h(catalog_dependency_evidence_reason_label($targetReason)).'</td><td>'.($selected?'<strong>Selected</strong>':'—').'</td></tr>';
+    }$out.='</tbody></table>';
+    if(empty($e['any_complete_provider']))$out.='<div class="gm-note"><strong>No single physical provider satisfies the complete serialized Import set.</strong> Provider matches are not combined across different files.</div>';
+    else $out.='<div class="gm-note"><strong>A complete physical provider exists.</strong> A persisted missing row is suspicious and should be rebuilt or investigated.</div>';
+    if(is_array($selectedProvider)){$near=(array)($selectedProvider['nearby_candidates']??[]);if($near===[]){$out.='<div class="gm-note"><strong>No same-name export candidate exists in the selected provider.</strong></div>';}
+        else{$out.='<details class="gm-candidates"><summary>Same-name export candidates in selected provider ('.count($near).')</summary><table class="gm-table"><thead><tr><th>Export</th><th>Object</th><th>Class</th><th>Outer</th><th>Flags</th><th>Differences</th></tr></thead><tbody>';
+            foreach($near as $candidate){if(!is_array($candidate))continue;$cmp=(array)($candidate['comparison']??[]);$actualClass=implode('.',array_values(array_filter([(string)($cmp['actual_class_package']??''),(string)($cmp['actual_class_name']??'')],static fn(string $v):bool=>$v!=='')));
+                $diff=(array)($cmp['differences']??[]);$out.='<tr><td>#'.(int)($candidate['export_index']??-1).'</td><td>'.catalog_h((string)($candidate['object_name']??'')).'</td><td class="mono">'.catalog_h($actualClass).'</td><td class="mono">'.catalog_h((string)($candidate['outer_path']??'')).'</td><td class="mono">'.catalog_h((string)($cmp['flags_hex']??'')).'</td><td>'.catalog_h($diff===[]?'none':implode(', ',$diff)).'</td></tr>';
+            }$out.='</tbody></table></details>';}
+    }
+    $out.='</div>';return$out;
+}
+
 try{
-    $config=catalog_config();$db=catalog_db($config);if(!catalog_require_admin_page('Game Missing Dependencies'))exit;base_game_ensure($db);
+    $config=catalog_config();$db=catalog_db($config);$storageRoot=trim((string)($config['storage_path']??''));if(!catalog_require_admin_page('Game Missing Dependencies'))exit;base_game_ensure($db);
     $games=catalog_all($db,'SELECT id,name,slug FROM ue_games ORDER BY name');$gameId=game_missing_int('game_id');
-    $game=$gameId>0?catalog_one($db,'SELECT id,name,slug FROM ue_games WHERE id=?',[$gameId]):null;if(!$game)throw new RuntimeException('Choose a valid game from the Games page.');
+    $game=$gameId>0?catalog_one($db,'SELECT g.id,g.name,g.slug,UPPER(TRIM(p.engine_key)) engine_key FROM ue_games g LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 WHERE g.id=?',[$gameId]):null;if(!$game)throw new RuntimeException('Choose a valid game from the Games page.');
     $type=game_missing_type();$baseGameOnly=$type==='base_game';$packageSearch=game_missing_text('q',255);$objectSearch=game_missing_text('object_q',500);
-    $selectedPackage=game_missing_text('package',255);$selectedObject=game_missing_text('object',1000);$objectPage=max(1,game_missing_int('object_page',1));$objectLimit=200;
+    $selectedPackage=game_missing_text('package',255);$selectedObject=game_missing_text('object',1000);$objectPage=max(1,game_missing_int('object_page',1));$objectLimit=200;$engineKey=strtoupper(trim((string)($game['engine_key']??'')));$evidenceKey=game_missing_text('evidence',64);$evidenceFileId=0;$evidenceImportIndex=-1;if(preg_match('/^(\d+):(\d+)$/',$evidenceKey,$m)===1){$evidenceFileId=(int)$m[1];$evidenceImportIndex=(int)$m[2];}
     if(session_status()===PHP_SESSION_ACTIVE)session_write_close();
     $missingQuery=new PdoGameMissingDependencyQuery($db);$scope=$baseGameOnly?$missingQuery->officialBaseGamePackageNames($gameId):null;
     $totals=$missingQuery->totals($gameId,$scope);$packageRows=$missingQuery->packageRows($gameId,$scope,500,0,$packageSearch);
-    $objectRows=[];$objectTotal=0;$objectOffset=0;$packageProviders=[];$objectFiles=[];$diagnostic=null;
+    $objectRows=[];$objectTotal=0;$objectOffset=0;$packageProviders=[];$objectFiles=[];$diagnostic=null;$evidence=null;$sampleEvidence=null;
     if($selectedPackage!==''&&($scope===null||in_array(strtolower($selectedPackage),array_map('strtolower',$scope),true))){
         $objectTotal=$missingQuery->objectTotal($gameId,$selectedPackage,$scope,$objectSearch);$objectOffset=($objectPage-1)*$objectLimit;
         $objectRows=$missingQuery->objectRows($gameId,$selectedPackage,$scope,$objectLimit,$objectOffset,$objectSearch);
         $packageProviders=catalog_dependency_provider_candidates($db,$gameId,0,$selectedPackage);
-        if($selectedObject!==''){$objectFiles=$missingQuery->objectFileRows($gameId,$selectedPackage,$selectedObject,$scope,500,0);if($objectFiles!==[]){$sample=$objectFiles[0];$sample['required_package']=$selectedPackage;$sample['required_object_path']=$selectedObject;$diagnostic=gm_object_diagnostic($db,$gameId,$sample);}}
+        if($selectedObject!==''){
+            $objectFiles=$missingQuery->objectFileRows($gameId,$selectedPackage,$selectedObject,$scope,500,0);
+            if($objectFiles!==[]){
+                if($engineKey==='UE4'){
+                    $evidenceTarget=null;foreach($objectFiles as $candidateRow){if((int)$candidateRow['file_id']===$evidenceFileId&&(int)$candidateRow['import_index']===$evidenceImportIndex){$evidenceTarget=$candidateRow;break;}}
+                    if(is_array($evidenceTarget))$evidence=catalog_ue4_missing_import_evidence($db,$storageRoot,$gameId,(int)$evidenceTarget['file_id'],(int)$evidenceTarget['import_index'],$selectedPackage);
+                    $sample=$evidenceTarget??$objectFiles[0];$sampleEvidence=is_array($evidence)&&$evidenceTarget===$sample?$evidence:catalog_ue4_missing_import_evidence($db,$storageRoot,$gameId,(int)$sample['file_id'],(int)$sample['import_index'],$selectedPackage);
+                    $diagnostic=['reason'=>'Sample UE4 evidence: '.(string)($sampleEvidence['reason_label']??'Unknown'),'highlight_from'=>gm_leaf_index($selectedObject)];
+                }else{$sample=$objectFiles[0];$sample['required_package']=$selectedPackage;$sample['required_object_path']=$selectedObject;$diagnostic=gm_object_diagnostic($db,$gameId,$sample);}
+            }
+        }
     }
     $typeLabel=$baseGameOnly?'Official base-game missing dependencies':'All missing dependencies';
     catalog_head('Missing Dependencies — '.(string)$game['name']);
     echo <<<'CSS'
 <style>
-.gm-filter{display:flex;align-items:end;gap:10px;flex-wrap:wrap}.gm-filter label{display:grid;gap:5px}.gm-summary,.gm-table{width:100%;border-collapse:collapse}.gm-summary{max-width:760px}.gm-summary th,.gm-summary td,.gm-table th,.gm-table td{padding:9px 11px;border-bottom:1px solid var(--border,#2b3950);text-align:left;vertical-align:top}.gm-summary th,.gm-table th{font-size:.82em}.gm-table td.num,.gm-table th.num{text-align:right;white-space:nowrap}.gm-package-selected{background:rgba(80,140,220,.09)}.gm-package-detail td{padding:0 10px 18px}.gm-package-detail details{border:1px solid var(--border,#2b3950);border-radius:8px;padding:10px}.gm-package-detail summary{cursor:pointer;font-weight:700}.gm-missing-path{overflow-wrap:anywhere;font-family:var(--mono,monospace)}.gm-missing-part{background:rgba(235,90,80,.22);color:inherit;border-bottom:2px solid #ef6d63;padding:0 1px}.gm-dot{opacity:.65}.gm-reason{font-size:.9em;font-weight:700}.gm-actions{white-space:nowrap}.gm-note{padding:10px 12px;border-left:3px solid #d5a03d;background:rgba(213,160,61,.08);margin:10px 0}.gm-pager{display:flex;gap:8px;align-items:center;margin:10px 0}.gm-files td:first-child{white-space:nowrap}@media(max-width:850px){.gm-table{font-size:.9em}.gm-actions{white-space:normal}}
+.gm-filter{display:flex;align-items:end;gap:10px;flex-wrap:wrap}.gm-filter label{display:grid;gap:5px}.gm-summary,.gm-table{width:100%;border-collapse:collapse}.gm-summary{max-width:760px}.gm-summary th,.gm-summary td,.gm-table th,.gm-table td{padding:9px 11px;border-bottom:1px solid var(--border,#2b3950);text-align:left;vertical-align:top}.gm-summary th,.gm-table th{font-size:.82em}.gm-table td.num,.gm-table th.num{text-align:right;white-space:nowrap}.gm-package-selected{background:rgba(80,140,220,.09)}.gm-package-detail td{padding:0 10px 18px}.gm-package-detail details{border:1px solid var(--border,#2b3950);border-radius:8px;padding:10px}.gm-package-detail summary{cursor:pointer;font-weight:700}.gm-missing-path{overflow-wrap:anywhere;font-family:var(--mono,monospace)}.gm-missing-part{background:rgba(235,90,80,.22);color:inherit;border-bottom:2px solid #ef6d63;padding:0 1px}.gm-dot{opacity:.65}.gm-reason{font-size:.9em;font-weight:700}.gm-actions{white-space:nowrap}.gm-note{padding:10px 12px;border-left:3px solid #d5a03d;background:rgba(213,160,61,.08);margin:10px 0}.gm-pager{display:flex;gap:8px;align-items:center;margin:10px 0}.gm-files td:first-child{white-space:nowrap}.gm-evidence{margin:10px 0;padding:12px;border:1px solid var(--border,#2b3950);border-radius:8px;background:rgba(80,140,220,.05)}.gm-evidence__headline{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.gm-evidence__headline strong{font-size:1.05em}.gm-evidence-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px;margin:10px 0}.gm-evidence-chain{padding:8px 10px;background:rgba(255,255,255,.03);border-radius:6px;overflow-wrap:anywhere}.gm-provider-selected{background:rgba(80,140,220,.1)}.gm-candidates{margin-top:10px}.gm-candidates summary{cursor:pointer}.gm-evidence--proven_missing{border-left:4px solid #c94d43}.gm-evidence--needs_investigation,.gm-evidence--not_proven_missing{border-left:4px solid #d5a03d}.gm-evidence--not_missing{border-left:4px solid #6d9f5b}@media(max-width:850px){.gm-table{font-size:.9em}.gm-actions{white-space:normal}}
 </style>
 CSS;
     echo CatalogUi::pageHeader('Missing Dependencies — '.(string)$game['name'],$typeLabel.'. Only dependency rows currently classified as missing are shown.',['Games'=>'games.php','Global Missing Files'=>'missing.php','Game Files'=>'game-files.php?id='.$gameId]);
@@ -90,8 +144,14 @@ CSS;
             if($objectTotal>$objectLimit){$pages=(int)ceil($objectTotal/$objectLimit);echo'<div class="gm-pager"><span>Page '.$objectPage.' of '.$pages.' · '.$objectTotal.' object paths</span>';if($objectPage>1)echo'<a class="button secondary" href="'.catalog_h(game_missing_url($gameId,$type,['q'=>$packageSearch,'package'=>$name,'object_q'=>$objectSearch,'object_page'=>$objectPage-1])).'">Previous</a>';if($objectPage<$pages)echo'<a class="button secondary" href="'.catalog_h(game_missing_url($gameId,$type,['q'=>$packageSearch,'package'=>$name,'object_q'=>$objectSearch,'object_page'=>$objectPage+1])).'">Next</a>';echo'</div>';}
             if($selectedObject!==''&&$objectFiles!==[]){$h=is_array($diagnostic)?(int)$diagnostic['highlight_from']:gm_leaf_index($selectedObject);$reason=is_array($diagnostic)?(string)$diagnostic['reason']:'Missing/rejected object';
                 echo'<div class="gm-note"><strong>'.catalog_h($reason).'</strong><div class="gm-missing-path">'.gm_path_html($selectedObject,$h).'</div></div>';
-                echo'<h3>Affected files</h3><table class="gm-table gm-files"><thead><tr><th>File</th><th>Import</th><th>Expected class</th><th>Required path</th></tr></thead><tbody>';
-                foreach($objectFiles as $fileRow){$class=implode('.',array_values(array_filter([(string)$fileRow['class_package'],(string)$fileRow['class_name']],static fn(string $v):bool=>$v!=='')));echo'<tr><td><a href="file-info.php?id='.(int)$fileRow['file_id'].'"><strong>'.catalog_h((string)$fileRow['owner_package_name']).'</strong></a><br><a class="muted" href="file-examine.php?id='.(int)$fileRow['file_id'].'">'.catalog_h((string)$fileRow['owner_original_name']).'</a></td><td>#'.(int)$fileRow['import_index'].'</td><td class="mono">'.catalog_h($class!==''?$class:'(not recorded)').'</td><td class="gm-missing-path">'.gm_path_html((string)$fileRow['required_object_path'],$h).'</td></tr>';}
+                echo'<h3>Affected files</h3><table class="gm-table gm-files"><thead><tr><th>File</th><th>Import</th><th>Expected class</th><th>Required path</th><th>Evidence</th></tr></thead><tbody>';
+                foreach($objectFiles as $fileRow){
+                    $class=implode('.',array_values(array_filter([(string)$fileRow['class_package'],(string)$fileRow['class_name']],static fn(string $v):bool=>$v!=='')));
+                    $rowEvidenceKey=(int)$fileRow['file_id'].':'.(int)$fileRow['import_index'];$isEvidence=$engineKey==='UE4'&&$evidenceKey===$rowEvidenceKey;
+                    $evidenceUrl=game_missing_url($gameId,$type,['q'=>$packageSearch,'package'=>$name,'object_q'=>$objectSearch,'object_page'=>$objectPage,'object'=>$selectedObject,'evidence'=>$rowEvidenceKey]);
+                    echo'<tr'.($isEvidence?' class="gm-package-selected"':'').'><td><a href="file-info.php?id='.(int)$fileRow['file_id'].'"><strong>'.catalog_h((string)$fileRow['owner_package_name']).'</strong></a><br><a class="muted" href="file-examine.php?id='.(int)$fileRow['file_id'].'">'.catalog_h((string)$fileRow['owner_original_name']).'</a></td><td>#'.(int)$fileRow['import_index'].'</td><td class="mono">'.catalog_h($class!==''?$class:'(not recorded)').'</td><td class="gm-missing-path">'.gm_path_html((string)$fileRow['required_object_path'],$h).'</td><td class="gm-actions">'.($engineKey==='UE4'?'<a class="button secondary" href="'.catalog_h($evidenceUrl).'">'.($isEvidence?'Evidence open':'Show evidence').'</a>':'<span class="muted">Generic check only</span>').'</td></tr>';
+                    if($isEvidence&&is_array($evidence))echo'<tr class="gm-evidence-row"><td colspan="5">'.gm_ue4_evidence_html($evidence).'</td></tr>';
+                }
                 echo'</tbody></table>';
             }
             echo'</details></td></tr>';
