@@ -41,5 +41,6 @@ $check('worker_parent_runs_preflight_once',str_contains($cli,'pool_preflight_sta
 $check('worker_pool_emits_immediate_spawn_feedback',str_contains($cli,'worker_spawned')&&str_contains($cli,'fflush(STDOUT)'));
 $check('worker_pool_emits_heartbeats',str_contains($cli,'pool_heartbeat')&&str_contains($cli,'microtime(true)-$lastHeartbeat>=30.0'));
 $check('worker_emits_boot_before_remaining_id_query',str_contains($service,"'status'=>'worker_boot'")&&str_contains($service,'bool $skipPreflight = false'));
+$check('worker_pool_uses_direct_console_output',str_contains($cli,'1=>STDOUT')&&str_contains($cli,'2=>STDERR')&&!str_contains($cli,'stream_get_contents($stream)'));
 echo json_encode(['ok'=>$failures===[],'checks'=>$checks,'failures'=>$failures],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;
 exit($failures===[]?0:1);

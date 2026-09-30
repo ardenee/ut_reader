@@ -39,43 +39,17 @@ if($workers>1 && $workerIndex===null && !isset($options['preflight'])){
         $command[]='--skip-worker-preflight';
         if($apply){$command[]='--apply';}
         if($continuous){$command[]='--continuous';}
-        $pipes=[];
-        $process=proc_open($command,[0=>['file','NUL','r'],1=>['pipe','w'],2=>['pipe','w']],$pipes,$root);
+        $process=proc_open($command,[0=>['file','NUL','r'],1=>STDOUT,2=>STDERR],$pipes,$root);
         if(!is_resource($process)){throw new RuntimeException('Could not start UEDB5 worker #'.$index.'.');}
-        stream_set_blocking($pipes[1],false);stream_set_blocking($pipes[2],false);
-        $children[$index]=['process'=>$process,'stdout'=>$pipes[1],'stderr'=>$pipes[2],'stdout_buffer'=>'','stderr_buffer'=>''];
+        $children[$index]=['process'=>$process];
         $status=proc_get_status($process);
         echo json_encode(['status'=>'worker_spawned','worker_index'=>$index,'pid'=>(int)($status['pid']??0)],JSON_UNESCAPED_SLASHES),PHP_EOL; fflush(STDOUT);
     }
     $exitCodes=[];$lastHeartbeat=microtime(true);
     while($children!==[]){
         foreach(array_keys($children) as $index){
-            foreach(['stdout','stderr'] as $streamName){
-                $stream=$children[$index][$streamName];
-                $data=stream_get_contents($stream);
-                if($data!==false&&$data!==''){
-                    $bufferKey=$streamName.'_buffer';$children[$index][$bufferKey].=$data;
-                    while(($pos=strpos($children[$index][$bufferKey],"\n"))!==false){
-                        $line=trim(substr($children[$index][$bufferKey],0,$pos));
-                        $children[$index][$bufferKey]=substr($children[$index][$bufferKey],$pos+1);
-                        if($line==='')continue;
-                        $decoded=json_decode($line,true);
-                        if(is_array($decoded)){
-                            $decoded['worker_index']=$index;
-                            echo json_encode($decoded,JSON_UNESCAPED_SLASHES),PHP_EOL;
-                        }else{
-                            fwrite($streamName==='stderr'?STDERR:STDOUT,'[worker '.$index.'] '.$line.PHP_EOL);
-                        }
-                    }
-                }
-            }
             $status=proc_get_status($children[$index]['process']);
             if(!$status['running']){
-                foreach(['stdout','stderr'] as $streamName){
-                    $tail=trim((string)stream_get_contents($children[$index][$streamName]));
-                    if($tail!=='')fwrite($streamName==='stderr'?STDERR:STDOUT,'[worker '.$index.'] '.$tail.PHP_EOL);
-                    fclose($children[$index][$streamName]);
-                }
                 $exitCodes[$index]=(int)$status['exitcode'];
                 proc_close($children[$index]['process']);
                 unset($children[$index]);
@@ -103,7 +77,8 @@ try{
         echo json_encode(['ok'=>true,'preflight'=>$service->preflight($game)],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;
         exit(0);
     }
-    $emit=static function(array $row):void{
+    $emit=static function(array $row) use ($workerIndex):void{
+        if($workerIndex!==null){$row['worker_index']=$workerIndex;}
         $row['memory_mb']=round(memory_get_usage(true)/1048576,1);
         echo json_encode($row,JSON_UNESCAPED_SLASHES),PHP_EOL;
         fflush(STDOUT);
