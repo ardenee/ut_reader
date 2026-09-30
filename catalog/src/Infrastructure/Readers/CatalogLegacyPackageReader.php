@@ -399,6 +399,7 @@ abstract class CatalogLegacyPackageReaderBase
             }
             $this->names[] = [
                 'index' => $index,
+                'offset' => $entryOffset,
                 'name' => $name,
                 'text' => $name,
                 'flags' => $flags,
@@ -439,6 +440,7 @@ abstract class CatalogLegacyPackageReaderBase
             $objectNameText = $this->nameByIndex($objectName);
             $this->imports[] = [
                 'index' => $index,
+                'offset' => $entryOffset,
                 'classPackage' => $classPackage,
                 'className' => $className,
                 'outerIndex' => $outer,
@@ -487,6 +489,7 @@ abstract class CatalogLegacyPackageReaderBase
             }
             $this->exports[] = [
                 'index' => $index,
+                'offset' => $entryOffset,
                 'classIndex' => $class,
                 'class' => $class,
                 'superIndex' => $super,
