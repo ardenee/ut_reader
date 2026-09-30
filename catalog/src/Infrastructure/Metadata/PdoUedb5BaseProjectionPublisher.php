@@ -31,23 +31,12 @@ final class PdoUedb5BaseProjectionPublisher
                 'ue_uedb5_dependency_edges',
                 'ue_uedb5_object_candidates',
                 'ue_uedb5_name_candidates',
-                'ue_uedb5_provider_keys',
             ] as $table) {
                 Uedb5StagingIsolationContract::assertWriteTable($table);
                 $this->db->prepare('DELETE FROM ' . $table . ' WHERE file_id=?')->execute([$fileId]);
             }
 
-            Uedb5StagingIsolationContract::assertWriteTable('ue_uedb5_provider_keys');
-            $provider = $this->db->prepare(
-                'INSERT INTO ue_uedb5_provider_keys(source_kind,source_id,game_id,package_key_kind,package_key,file_id) '
-                . 'VALUES(?,?,?,?,?,?)'
-            );
-            foreach ((array)$projection['provider_keys'] as $row) {
-                $provider->execute([
-                    $row['source_kind'], $row['source_id'], $row['game_id'],
-                    $row['package_key_kind'], $row['package_key'], $row['file_id'],
-                ]);
-            }
+            $providerCount = (new PdoUedb5ProviderKeyPublisher($this->db))->publish($fileId);
             Uedb5StagingIsolationContract::assertWriteTable('ue_uedb5_search_keys');
             $search = $this->db->prepare(
                 'INSERT INTO ue_uedb5_search_keys(key_hash,key_length,key_fingerprint,normalized_text) '
@@ -85,7 +74,7 @@ final class PdoUedb5BaseProjectionPublisher
 
             if ($started) { $this->db->commit(); }
             return [
-                'provider_keys' => count((array)$projection['provider_keys']),
+                'provider_keys' => $providerCount,
                 'search_keys' => count((array)$projection['search_keys']),
                 'name_candidates' => count((array)$projection['name_candidates']),
                 'object_candidates' => count((array)$projection['object_candidates']),

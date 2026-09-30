@@ -36,6 +36,7 @@ foreach([
 'CREATE TABLE ue_games(id INTEGER PRIMARY KEY,name TEXT,slug TEXT,profile_id INTEGER)',
 'CREATE TABLE ue_files(id INTEGER PRIMARY KEY,game_id INTEGER,package_name TEXT,original_name TEXT,stored_name TEXT,file_size INTEGER,md5 TEXT,sha1 TEXT,package_version INTEGER,licensee_version INTEGER,name_count INTEGER,import_count INTEGER,export_count INTEGER,scan_status TEXT)',
 'CREATE TABLE ue_uedb5_files(file_id INTEGER PRIMARY KEY,game_id INTEGER,format_version INTEGER,codec INTEGER,compressed_size INTEGER,uncompressed_size INTEGER,payload_sha256 BLOB,block_count INTEGER,package_family TEXT,source_policy TEXT,package_key_kind INTEGER,package_key BLOB,package_name TEXT,section_counts_json TEXT)',
+'CREATE TABLE ue_file_package_aliases(id INTEGER PRIMARY KEY,file_id INTEGER,game_id INTEGER,package_name TEXT,original_name TEXT)',
 'CREATE TABLE ue_uedb5_provider_keys(source_kind INTEGER,source_id INTEGER,game_id INTEGER,package_key_kind INTEGER,package_key BLOB,file_id INTEGER)',
 'CREATE TABLE ue_uedb5_search_keys(key_hash BLOB,key_length INTEGER,key_fingerprint BLOB PRIMARY KEY,normalized_text BLOB)',
 'CREATE TABLE ue_uedb5_name_candidates(file_id INTEGER,name_key_hash BLOB,name_key_length INTEGER,name_key_fingerprint BLOB,first_name_index INTEGER)',

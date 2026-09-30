@@ -271,12 +271,13 @@ final class Uedb5MigrationValidator
         ];
         $expected = Uedb5SqlProjectionBuilder::build($snapshot, $registration);
         $fileId = (int)$context['id'];
+        $expectedProvider = (new PdoUedb5ProviderKeyPublisher($this->db))->expectedRows($fileId);
         $actualProvider = $this->dbRows(
             'SELECT source_kind,source_id,game_id,package_key_kind,package_key,file_id '
             . 'FROM ue_uedb5_provider_keys WHERE file_id=? ORDER BY source_kind,source_id',
             [$fileId]
         );
-        $this->assertRowsEqual($expected['provider_keys'], $actualProvider, ['package_key'], 'provider_projection_mismatch');
+        $this->assertRowsEqual($expectedProvider, $actualProvider, ['package_key'], 'provider_projection_mismatch');
         $actualNames = $this->dbRows(
             'SELECT file_id,name_key_hash,name_key_length,name_key_fingerprint,first_name_index '
             . 'FROM ue_uedb5_name_candidates WHERE file_id=? ORDER BY name_key_fingerprint',
@@ -292,7 +293,7 @@ final class Uedb5MigrationValidator
         $this->assertRowsEqual($expected['object_candidates'], $actualObjects, ['object_name_hash','public_export_hash'], 'object_projection_mismatch');
         $this->validateSearchKeys((array)$expected['search_keys']);
         return [
-            'provider_keys' => count((array)$expected['provider_keys']),
+            'provider_keys' => count($expectedProvider),
             'search_keys' => count((array)$expected['search_keys']),
             'name_candidates' => count((array)$expected['name_candidates']),
             'object_candidates' => count((array)$expected['object_candidates']),

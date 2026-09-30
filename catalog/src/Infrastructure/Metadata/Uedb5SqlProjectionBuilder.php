@@ -11,8 +11,6 @@ use RuntimeException;
 
 final class Uedb5SqlProjectionBuilder
 {
-    public const PROVIDER_SOURCE_PRIMARY = 1;
-
     /** @param array<string,mixed> $snapshot @param array<string,mixed> $registration */
     public static function build(array $snapshot, array $registration): array
     {
@@ -24,14 +22,7 @@ final class Uedb5SqlProjectionBuilder
         if ((int)($registration['file_id'] ?? 0) !== $fileId || (int)($registration['game_id'] ?? 0) !== $gameId) {
             throw new RuntimeException('UEDB5 SQL projection registration identity mismatch.');
         }
-        $provider = [[
-            'source_kind' => self::PROVIDER_SOURCE_PRIMARY,
-            'source_id' => $fileId,
-            'game_id' => $gameId,
-            'package_key_kind' => (int)($registration['package_key_kind'] ?? 0),
-            'package_key' => (string)($registration['package_key'] ?? ''),
-            'file_id' => $fileId,
-        ]];
+        $provider = Uedb5ProviderKeyBuilder::build($registration);
 
         $search = [];
         $names = [];
