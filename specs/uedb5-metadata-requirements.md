@@ -340,14 +340,17 @@ A missing optional or soft dependency must not inflate the same counter used for
 
 ## Current UEDB5 container foundation
 
-The format-5 container/staging foundation is implemented without changing the production UEDB4 runtime:
+The format-5 container and production-capable isolated V5 file components are implemented without changing the production UEDB4 runtime:
 
 - `Uedb5MetadataContainer` defines format version `5`, magic `UEDBM5` followed by two NUL bytes, the `.uedb5` extension, gzip-block framing, per-block SHA-256 verification, explicit `package_family` / `source_policy`, and optional per-section schema identifiers;
-- `Uedb5MetadataStagingReader` reads only an explicitly supplied staged `.uedb5` file and has no database-registration path;
-- `catalog/bin/verify-uedb5-container-foundation.php` verifies round-trip block reading, fixed-width unsigned-64 hex preservation, corruption rejection, and the isolation boundary from UEDB4;
+- `Uedb5MetadataStagingReader` remains an explicit-path migration/debug reader and has no database-registration path;
+- `Uedb5MetadataReader` reads the canonical `.uedb5` path from explicit game/file identity, verifies the entire container before caching its manifest, verifies every touched block again, supports paging/sparse positions/full snapshot reconstruction, and never falls back to UEDB4;
+- `Uedb5MetadataSnapshotWriter` builds and verifies a temporary V5 file, then replaces the canonical `.uedb5` path with a same-filesystem rename; it does not write `ue_file_metadata` or any SQL projection;
+- `Uedb5DependencyRebuilder` reads only V5 snapshots, requires explicitly selected physical provider files, dispatches to the applicable source-family resolver, replaces the `dependency_results` section and writes it back through the V5 writer; classic resolver diagnostics are normalized to the frozen five-state outcome contract;
+- `catalog/bin/verify-uedb5-production-reader-writer.php` and `catalog/bin/verify-uedb5-dependency-rebuilder.php` verify the production-capable V5 components and prove that matching `.uedb4` files are not touched;
 - production `BlockedCompressedMetadataContainer` / `BlockedCompressedMetadataReader` remain format 4 only and continue to use `.uedb4` until the migration/cutover is ready.
 
-The container foundation is intentionally source-shape agnostic. UE3/UE4 reparsed fields, remaining dependency projections/classifications, SQL publication/cutover, and Zen/IoStore metadata remain separate implementation sections.
+The Step 3 components are production-capable file primitives, not production publication. They deliberately have no PDO dependency, no V5 registration lookup, no V5 SQL projection writer and no `try V5, else V4` path. UE1-UE4 source-reparse builders, SQL publication, catalogue migration/cutover and V4 retirement remain later implementation sections.
 
 ## Current UE5 classic UEDB5 persistence
 
