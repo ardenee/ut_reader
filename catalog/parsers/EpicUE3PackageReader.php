@@ -297,8 +297,9 @@ final class CatalogUE3PackageReader
     {
         $r=$this->table((int)$this->header['nameOffset']);
         for ($i=0,$n=(int)$this->header['nameCount'];$i<$n;$i++) {
+            $entryOffset=$r->tell();
             $name=$r->fstring("NameMap[$i].Name"); $flags=$r->qword("NameMap[$i].Flags");
-            $this->names[]=['index'=>$i,'name'=>$name,'text'=>$name,'flags'=>$flags['low'],'objectFlags'=>$flags['low'],'objectFlagsHigh'=>$flags['high']];
+            $this->names[]=['index'=>$i,'offset'=>$entryOffset,'name'=>$name,'text'=>$name,'flags'=>$flags['low'],'objectFlags'=>$flags['low'],'objectFlagsHigh'=>$flags['high']];
         }
     }
     /** @return array{index:int,number:int} */
@@ -312,10 +313,11 @@ final class CatalogUE3PackageReader
     {
         $r=$this->table((int)$this->header['importOffset']);
         for ($i=0,$n=(int)$this->header['importCount'];$i<$n;$i++) {
+            $entryOffset=$r->tell();
             $cp=$this->fname($r,"ImportMap[$i].ClassPackage"); $cn=$this->fname($r,"ImportMap[$i].ClassName");
             $outer=$r->i32("ImportMap[$i].OuterIndex"); $on=$this->fname($r,"ImportMap[$i].ObjectName");
             $cpt=$this->name($cp); $cnt=$this->name($cn); $ont=$this->name($on);
-            $this->imports[]=['index'=>$i,'classPackage'=>$cp['index'],'className'=>$cn['index'],'outerIndex'=>$outer,'outer'=>$outer,
+            $this->imports[]=['index'=>$i,'offset'=>$entryOffset,'classPackage'=>$cp['index'],'className'=>$cn['index'],'outerIndex'=>$outer,'outer'=>$outer,
                 'objectName'=>$on['index'],'classPackageText'=>$cpt,'classNameText'=>$cnt,'objectNameText'=>$ont,
                 'ClassPackage'=>['index'=>$cp['index'],'number'=>$cp['number'],'text'=>$cpt],
                 'ClassName'=>['index'=>$cn['index'],'number'=>$cn['number'],'text'=>$cnt],'OuterIndex'=>$outer,
@@ -326,6 +328,7 @@ final class CatalogUE3PackageReader
     {
         $r=$this->table((int)$this->header['exportOffset']); $ver=(int)$this->header['version'];
         for ($i=0,$n=(int)$this->header['exportCount'];$i<$n;$i++) {
+            $entryOffset=$r->tell();
             $class=$r->i32("ExportMap[$i].ClassIndex"); $super=$r->i32("ExportMap[$i].SuperIndex"); $outer=$r->i32("ExportMap[$i].OuterIndex");
             $on=$this->fname($r,"ExportMap[$i].ObjectName"); $arch=$r->i32("ExportMap[$i].ArchetypeIndex"); $flags=$r->qword("ExportMap[$i].ObjectFlags");
             $objectFlags=($flags['high'] << 32) | $flags['low'];
@@ -335,7 +338,7 @@ final class CatalogUE3PackageReader
             $nc=$r->i32("ExportMap[$i].GenerationNetObjectCount.Count"); $this->arrayFits($r,$nc,4,"ExportMap[$i].GenerationNetObjectCount.Count");
             $net=[]; for ($j=0;$j<$nc;$j++) $net[]=$r->i32("ExportMap[$i].GenerationNetObjectCount[$j]");
             $guid=$r->guid("ExportMap[$i].PackageGuid"); $packageFlags=$r->u32("ExportMap[$i].PackageFlags"); $text=$this->name($on);
-            $this->exports[]=['index'=>$i,'classIndex'=>$class,'class'=>$class,'classIndexRef'=>$class,'superIndex'=>$super,'super'=>$super,
+            $this->exports[]=['index'=>$i,'offset'=>$entryOffset,'classIndex'=>$class,'class'=>$class,'classIndexRef'=>$class,'superIndex'=>$super,'super'=>$super,
                 'superIndexRef'=>$super,'packageIndex'=>$outer,'outerIndex'=>$outer,'outer'=>$outer,'outerIndexRef'=>$outer,'objectName'=>$on['index'],
                 'nameIndex'=>$on['index'],'nameNumber'=>$on['number'],'objectNameText'=>$text,'archetype'=>$arch,'archetypeIndexRef'=>$arch,
                 'objectFlags'=>$objectFlags,'objectFlagsLow'=>$flags['low'],'objectFlagsHigh'=>$flags['high'],'serialSize'=>$size,'serialOffset'=>$off,'components'=>$components,

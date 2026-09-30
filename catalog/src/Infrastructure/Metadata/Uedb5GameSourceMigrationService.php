@@ -212,6 +212,9 @@ final class Uedb5GameSourceMigrationService
             'ut2004' => $reader instanceof \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE2PackageReader
                 ? Uedb5Ut2004SnapshotBuilder::build($reader, $file)
                 : throw new RuntimeException('UT2004 migration did not resolve the canonical UE2 reader.'),
+            'ut3' => $reader instanceof \CatalogUE3PackageReader
+                ? Uedb5Ut3SnapshotBuilder::build($reader, $file)
+                : throw new RuntimeException('UT3 migration did not resolve the canonical UE3 reader.'),
             default => throw new RuntimeException('No Step 6 source builder is registered for game ' . $gameSlug . '.'),
         };
     }
@@ -262,6 +265,11 @@ final class Uedb5GameSourceMigrationService
                 'engine_key'=>'UE2',
                 'min_version'=>Uedb5Ut2004SnapshotBuilder::MIN_VERSION,
                 'max_version'=>Uedb5Ut2004SnapshotBuilder::MAX_VERSION,
+            ],
+            'ut3' => [
+                'engine_key'=>'UE3',
+                'min_version'=>Uedb5Ut3SnapshotBuilder::PACKAGE_VERSION,
+                'max_version'=>Uedb5Ut3SnapshotBuilder::PACKAGE_VERSION,
             ],
             default => throw new RuntimeException(
                 'Step 6 source migration is not yet implemented for game ' . $slug . '.'
