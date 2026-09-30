@@ -18,6 +18,9 @@ $check('projection_failure_removes_staged_registration',str_contains($service,'r
 $check('resume_selection_uses_missing_v5_registration',str_contains($service,'LEFT JOIN ue_uedb5_files v ON v.file_id=f.id')&&str_contains($service,'v.file_id IS NULL'));
 $check('continuous_run_has_internal_cursor',str_contains($service,'f.id>?')&&str_contains($service,'$cursor = (int)$file'));
 $check('ut99_is_source_version_bounded',str_contains($service,'Uedb5Ut99SnapshotBuilder::MIN_VERSION')&&str_contains($service,'Uedb5Ut99SnapshotBuilder::MAX_VERSION'));
+$check('ue5_classic_is_source_version_bounded',str_contains($service,"'min_version'=>1000")&&str_contains($service,"'max_version'=>1018"));
+$check('ue5_classic_uses_assigned_parser_profile',str_contains($service,'catalog_ue5_reader_options')&&str_contains($service,'catalog_ue5_set_next_reader_options'));
+$check('ue5_classic_uses_canonical_reader',str_contains($service,'\'ue5\' => $reader instanceof \\UnrealPackageReader5')&&str_contains($service,'Uedb5Ue5ClassicSnapshotBuilder::build'));
 $check('base_pass_clears_dependency_projection_for_second_pass',str_contains($publisher,'ue_uedb5_dependency_edges')&&str_contains($publisher,'ue_uedb5_dependency_packages'));
 $check('cli_defaults_to_explicit_apply',str_contains($cli,'isset($options')&&str_contains($cli,"'apply'"));
 $check('cli_supports_preflight',str_contains($cli,"'preflight'"));

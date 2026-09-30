@@ -194,15 +194,23 @@ final class Uedb5GameSourceMigrationService
             'Reader file loaded for package engine ',
             ['UE4','UE5']
         );
-        if ($engineKey === 'UE4') {
-            if (!function_exists('gp_required_profile_for_game')
-                || !function_exists('catalog_ue4_reader_options')
-                || !function_exists('catalog_ue4_set_next_reader_options')) {
-                throw new RuntimeException('UE4 parser-profile helpers are unavailable for Step 6 migration.');
+        if ($engineKey === 'UE4' || $engineKey === 'UE5') {
+            if (!function_exists('gp_required_profile_for_game')) {
+                throw new RuntimeException('Game parser-profile helper is unavailable for Step 6 migration.');
             }
             $game = $this->game($gameSlug);
             $profile = \gp_required_profile_for_game($this->db, (int)$file['game_id']);
-            \catalog_ue4_set_next_reader_options(\catalog_ue4_reader_options($this->config, $game, $profile));
+            if ($engineKey === 'UE4') {
+                if (!function_exists('catalog_ue4_reader_options') || !function_exists('catalog_ue4_set_next_reader_options')) {
+                    throw new RuntimeException('UE4 parser-profile helpers are unavailable for Step 6 migration.');
+                }
+                \catalog_ue4_set_next_reader_options(\catalog_ue4_reader_options($this->config, $game, $profile));
+            } else {
+                if (!function_exists('catalog_ue5_reader_options') || !function_exists('catalog_ue5_set_next_reader_options')) {
+                    throw new RuntimeException('UE5 parser-profile helpers are unavailable for Step 6 migration.');
+                }
+                \catalog_ue5_set_next_reader_options(\catalog_ue5_reader_options($this->config, $game, $profile));
+            }
         }
         $reader = new $readerClass($path);
 
@@ -228,6 +236,9 @@ final class Uedb5GameSourceMigrationService
             'ut4' => $reader instanceof \UnrealPackageReader4
                 ? Uedb5Ut4SnapshotBuilder::build($reader, $file)
                 : throw new RuntimeException('UT4 migration did not resolve the canonical UE4 reader.'),
+            'ue5' => $reader instanceof \UnrealPackageReader5
+                ? Uedb5Ue5ClassicSnapshotBuilder::build($reader, $file)
+                : throw new RuntimeException('UE5 classic migration did not resolve the canonical UE5 reader.'),
             default => throw new RuntimeException('No Step 6 source builder is registered for game ' . $gameSlug . '.'),
         };
     }
@@ -288,6 +299,11 @@ final class Uedb5GameSourceMigrationService
                 'engine_key'=>'UE4',
                 'min_version'=>Uedb5Ut4SnapshotBuilder::PACKAGE_VERSION,
                 'max_version'=>Uedb5Ut4SnapshotBuilder::PACKAGE_VERSION,
+            ],
+            'ue5' => [
+                'engine_key'=>'UE5',
+                'min_version'=>1000,
+                'max_version'=>1018,
             ],
             default => throw new RuntimeException(
                 'Step 6 source migration is not yet implemented for game ' . $slug . '.'
