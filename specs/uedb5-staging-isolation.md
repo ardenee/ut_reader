@@ -22,7 +22,7 @@ This coexistence is temporary. It exists only until the explicit atomic UEDB5 cu
 
 ## SQL isolation
 
-Before cutover, V5 staging may write only the baseline tables declared by `Uedb5SqlProjectionContract`:
+Before cutover, V5 staging may write only the baseline tables declared by `Uedb5SqlProjectionContract` plus the V5-only migration-control table `ue_uedb5_migration_status`:
 
 - `ue_uedb5_files`
 - `ue_uedb5_provider_keys`
@@ -31,6 +31,7 @@ Before cutover, V5 staging may write only the baseline tables declared by `Uedb5
 - `ue_uedb5_object_candidates`
 - `ue_uedb5_dependency_edges`
 - `ue_uedb5_dependency_packages`
+- `ue_uedb5_migration_status`
 
 Production catalogue tables may be read for identity/preflight, but live V4 registration/projection state is read-only during staging. In particular staging must not write `ue_file_metadata`, `ue_terms`, `ue_name_lookup`, `ue_export_lookup`, `ue_export_path_lookup`, `ue_legacy_export_identity_lookup`, `ue_dependency_links`, `ue_dependency_identity_lookup`, or `ue_search_documents`.
 

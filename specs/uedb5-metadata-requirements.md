@@ -386,6 +386,14 @@ Step 7 makes the pre-cutover coexistence rule executable. `Uedb5StagingIsolation
 
 `verify-uedb5-staging-isolation-contract.php` verifies the code boundary. `verify-uedb5-staging-coexistence.php` is a read-only live audit that proves no verified `ue_file_metadata` row has switched to format 5, every staged V5 registration still has a live format-4 registration, staged registrations are format 5, and sampled migrated files retain both `.uedb4` and `.uedb5` containers. Cutover remains a later explicit step.
 
+## Current Step 8 migration validation
+
+Step 8 is implemented by migration `202609300002_uedb5_migration_status.php`, `Uedb5MigrationStatus`, `PdoUedb5MigrationStatusRepository`, `Uedb5MigrationValidator`, and `Uedb5MigrationValidationService`. Every verified file can have one durable state: `pending`, `staged`, `validated`, or `failed`. Existing Step 6 staging is reconciled into this table without rerunning the source migration merely to create status rows.
+
+Final validation reopens the original verified Unreal bytes and rebuilds a fresh source-shaped snapshot through `Uedb5SourceSnapshotFactory`, the same game/engine reader dispatch used by Step 6. The staged V5 source snapshot must exactly match that fresh parse after excluding only derived `dependency_results`. Container/manifest/registration integrity, source hashes, name/import/export counts, engine-specific source fields, base SQL projections, dependency completeness, and dependency SQL projections are all checked. Validation contains no UEDB4 metadata reader or `ue_file_metadata` dependency.
+
+A correct Pass-1 file whose dependency Pass 2 is not yet complete remains `staged`, not `failed`. `validated` is tied to the exact V5 payload SHA-256 and validator-policy version, so a later dependency rebuild or validator-contract change makes old validation stale and requires revalidation. See `uedb5-migration-validation.md`.
+
 ## Current UE5 classic UEDB5 persistence
 
 Classic UE5 5.8.3 source-shaped persistence is implemented for offline/staging UEDB5 files without changing the production UEDB4 runtime:

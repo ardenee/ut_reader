@@ -409,6 +409,7 @@ As of this contract:
 - migration `202609300001_uedb5_staging_registration.php` defines the side-by-side V5 registration/projection schema and makes `ue_file_metadata` schema-ready for a later V5 cutover without rewriting its current V4 rows;
 - `PdoUedb5StagingRegistrationRepository` registers verified V5 files only in `ue_uedb5_files` and refuses registration unless the corresponding live production metadata row is still UEDB4;
 - `Uedb5StagingIsolationContract` enforces Step 7: V5 staging writes only approved `ue_uedb5_*` tables and asserts `.uedb5` publication cannot replace the matching `.uedb4`; read-only coexistence verification is provided by `verify-uedb5-staging-coexistence.php`;
+- Step 8 uses `Uedb5MigrationValidator`, `Uedb5MigrationValidationService`, and `ue_uedb5_migration_status` for durable per-file `pending` / `staged` / `validated` / `failed` state; validation reparses original source bytes through the same `Uedb5SourceSnapshotFactory` used by Step 6, compares source-shaped V5 content, verifies projections/dependencies, and never reads UEDB4;
 - classic UE5 5.8.3 source-shaped staging persistence is implemented by `Uedb5Ue5ClassicSnapshotBuilder`;
 - deterministic file-backed classic UE5 `VerifyImportInner` staging resolution is implemented by `Uedb5Ue5ClassicVerifyImportResolver`;
 - production metadata registration/runtime remains UEDB4;
