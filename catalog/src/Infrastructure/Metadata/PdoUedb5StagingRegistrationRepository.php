@@ -79,6 +79,7 @@ final class PdoUedb5StagingRegistrationRepository
         $row = $this->inspect($gameId, $fileId);
         $this->assertLiveV4Registration($gameId, $fileId);
         $timestamp = gmdate('Y-m-d H:i:s');
+        Uedb5StagingIsolationContract::assertWriteTable('ue_uedb5_files');
         $statement = $this->db->prepare(
             'INSERT INTO ue_uedb5_files('
             . 'file_id,game_id,format_version,codec,compressed_size,uncompressed_size,payload_sha256,'
@@ -109,6 +110,7 @@ final class PdoUedb5StagingRegistrationRepository
         if ($fileId < 1) {
             return;
         }
+        Uedb5StagingIsolationContract::assertWriteTable('ue_uedb5_files');
         $this->db->prepare('DELETE FROM ue_uedb5_files WHERE file_id=?')->execute([$fileId]);
     }
 

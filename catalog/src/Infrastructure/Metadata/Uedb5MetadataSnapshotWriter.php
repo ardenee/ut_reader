@@ -29,7 +29,8 @@ final class Uedb5MetadataSnapshotWriter
             throw new RuntimeException('UEDB5 snapshot writing requires positive file and game IDs.');
         }
 
-        $path = Uedb5MetadataContainer::path($this->storageRoot, $gameId, $fileId);
+        $paths = Uedb5StagingIsolationContract::assertContainerPathIsolation($this->storageRoot, $gameId, $fileId);
+        $path = $paths['v5'];
         $directory = dirname($path);
         if (!is_dir($directory) && !mkdir($directory, 0775, true) && !is_dir($directory)) {
             throw new RuntimeException('Could not create UEDB5 metadata directory: ' . $directory);

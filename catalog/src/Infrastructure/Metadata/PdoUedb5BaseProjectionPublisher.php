@@ -33,9 +33,11 @@ final class PdoUedb5BaseProjectionPublisher
                 'ue_uedb5_name_candidates',
                 'ue_uedb5_provider_keys',
             ] as $table) {
+                Uedb5StagingIsolationContract::assertWriteTable($table);
                 $this->db->prepare('DELETE FROM ' . $table . ' WHERE file_id=?')->execute([$fileId]);
             }
 
+            Uedb5StagingIsolationContract::assertWriteTable('ue_uedb5_provider_keys');
             $provider = $this->db->prepare(
                 'INSERT INTO ue_uedb5_provider_keys(source_kind,source_id,game_id,package_key_kind,package_key,file_id) '
                 . 'VALUES(?,?,?,?,?,?)'
@@ -46,6 +48,7 @@ final class PdoUedb5BaseProjectionPublisher
                     $row['package_key_kind'], $row['package_key'], $row['file_id'],
                 ]);
             }
+            Uedb5StagingIsolationContract::assertWriteTable('ue_uedb5_search_keys');
             $search = $this->db->prepare(
                 'INSERT INTO ue_uedb5_search_keys(key_hash,key_length,key_fingerprint,normalized_text) '
                 . 'VALUES(?,?,?,?) ON DUPLICATE KEY UPDATE '
@@ -55,6 +58,7 @@ final class PdoUedb5BaseProjectionPublisher
                 $search->execute([$row['hash'], $row['length'], $row['fingerprint'], $row['normalized_text']]);
             }
 
+            Uedb5StagingIsolationContract::assertWriteTable('ue_uedb5_name_candidates');
             $name = $this->db->prepare(
                 'INSERT INTO ue_uedb5_name_candidates('
                 . 'file_id,name_key_hash,name_key_length,name_key_fingerprint,first_name_index'
@@ -66,6 +70,7 @@ final class PdoUedb5BaseProjectionPublisher
                     $row['name_key_fingerprint'], $row['first_name_index'],
                 ]);
             }
+            Uedb5StagingIsolationContract::assertWriteTable('ue_uedb5_object_candidates');
             $object = $this->db->prepare(
                 'INSERT INTO ue_uedb5_object_candidates('
                 . 'file_id,object_kind,object_index,object_name_hash,object_name_length,public_export_hash'

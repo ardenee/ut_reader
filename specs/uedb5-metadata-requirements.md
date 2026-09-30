@@ -380,6 +380,12 @@ Pass-1 source reparse is implemented for the game slugs `ut99`, `unrealgold`, `u
 
 Base projection publication deliberately clears dependency projections. Dependency results are a second game pass after every provider candidate for that game has been staged, preventing partial-provider resolution from becoming authoritative. The live runtime remains UEDB4 throughout.
 
+## Current Step 7 staging isolation
+
+Step 7 makes the pre-cutover coexistence rule executable. `Uedb5StagingIsolationContract` allows SQL writes only to the baseline `ue_uedb5_*` tables and rejects live V4 registration/projection targets. `Uedb5MetadataSnapshotWriter` asserts that the canonical `.uedb5` path is distinct from the corresponding `.uedb4` path before publication. `PdoUedb5StagingRegistrationRepository` and `PdoUedb5BaseProjectionPublisher` pass their write targets through the isolation guard.
+
+`verify-uedb5-staging-isolation-contract.php` verifies the code boundary. `verify-uedb5-staging-coexistence.php` is a read-only live audit that proves no verified `ue_file_metadata` row has switched to format 5, every staged V5 registration still has a live format-4 registration, staged registrations are format 5, and sampled migrated files retain both `.uedb4` and `.uedb5` containers. Cutover remains a later explicit step.
+
 ## Current UE5 classic UEDB5 persistence
 
 Classic UE5 5.8.3 source-shaped persistence is implemented for offline/staging UEDB5 files without changing the production UEDB4 runtime:
