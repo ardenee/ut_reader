@@ -141,6 +141,21 @@ $check(
     'zen_dependency_filtered_export_requires_runtime_state'
 );
 
+$duplicateHashProvider = $snapshot($providerId, [], [[
+    'public_export_hash' => $publicHash, 'filter_flags' => 0, 'object_name' => ['text' => 'FirstTarget'],
+], [
+    'public_export_hash' => $publicHash, 'filter_flags' => 0, 'object_name' => ['text' => 'SecondTarget'],
+]], [], [[
+    'public_export_hash' => $cellHash, 'cpp_class_info' => ['text' => 'FirstCell'],
+], [
+    'public_export_hash' => $cellHash, 'cpp_class_info' => ['text' => 'SecondCell'],
+]]);
+$duplicateHash = Uedb5Ue5ZenDependencyResolver::resolve($consumer, [['provider_id' => 95, 'snapshot' => $duplicateHashProvider]]);
+$duplicateOrdinary = $find($duplicateHash, 'imports', 0);
+$duplicateCell = $find($duplicateHash, 'cell_imports', 0);
+$check(($duplicateOrdinary['selected_provider_object']['export_index'] ?? null) === 0 && str_contains($duplicateOrdinary['reason_code'], 'first_source_order_match'), 'zen_dependency_duplicate_public_hash_uses_first_export_source_order');
+$check(($duplicateCell['selected_provider_object']['cell_export_index'] ?? null) === 0 && str_contains($duplicateCell['reason_code'], 'first_source_order_match'), 'zen_dependency_duplicate_cell_hash_uses_first_cell_export_source_order');
+
 $duplicateRejected = false;
 try {
     Uedb5Ue5ZenDependencyResolver::resolve($consumer, [

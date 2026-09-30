@@ -156,13 +156,7 @@ final class Uedb5Ue5ZenDependencyResolver
                 $cellTarget ? 'public_cell_export_hash_missing' : 'public_export_hash_missing'
             );
         }
-        if (count($matches) !== 1) {
-            return self::row(
-                'PackageImport', $sourceSection, $sourceIndex, $classification,
-                $packageId, $publicHash, 'unresolved', $provider, null,
-                $cellTarget ? 'public_cell_export_hash_ambiguous' : 'public_export_hash_ambiguous'
-            );
-        }
+        $hasDuplicateHash = count($matches) > 1;
         $match = (array)$matches[0];
         if (!$cellTarget && (int)($match['filter_flags'] ?? 0) !== 0) {
             return self::row(
@@ -183,7 +177,9 @@ final class Uedb5Ue5ZenDependencyResolver
         return self::row(
             'PackageImport', $sourceSection, $sourceIndex, $classification,
             $packageId, $publicHash, 'resolved', $provider, $providerObject,
-            $cellTarget ? 'package_id_public_cell_export_hash_match' : 'package_id_public_export_hash_match'
+            $cellTarget
+                ? ($hasDuplicateHash ? 'package_id_public_cell_export_hash_first_source_order_match' : 'package_id_public_cell_export_hash_match')
+                : ($hasDuplicateHash ? 'package_id_public_export_hash_first_source_order_match' : 'package_id_public_export_hash_match')
         );
     }
 
