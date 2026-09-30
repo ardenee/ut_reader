@@ -76,7 +76,7 @@ final class Uedb5SqlProjectionContract
                     'file_id', 'game_id', 'format_version', 'codec',
                     'compressed_size', 'uncompressed_size', 'payload_sha256',
                     'block_count', 'package_family', 'source_policy',
-                    'package_key_kind', 'package_key', 'package_name',
+                    'package_key_kind', 'package_key', 'package_name', 'section_counts_json',
                     'created_at', 'updated_at',
                 ],
                 'indexes' => [
@@ -108,10 +108,10 @@ final class Uedb5SqlProjectionContract
             'ue_uedb5_name_candidates' => [
                 'cardinality' => 'one_per_file_and_distinct_normalized_fname',
                 'columns' => [
-                    'file_id', 'name_key_hash', 'name_key_length', 'first_name_index',
+                    'file_id', 'name_key_hash', 'name_key_length', 'name_key_fingerprint', 'first_name_index',
                 ],
                 'indexes' => [
-                    ['name_key_hash', 'name_key_length', 'file_id'],
+                    ['name_key_hash', 'name_key_length', 'name_key_fingerprint', 'file_id'],
                     ['file_id'],
                 ],
             ],            'ue_uedb5_object_candidates' => [
@@ -184,7 +184,8 @@ final class Uedb5SqlProjectionContract
             ],
             'ue_uedb5_name_candidates' => [
                 'file_id' => 'BIGINT UNSIGNED', 'name_key_hash' => 'BINARY(16)',
-                'name_key_length' => 'INT UNSIGNED', 'first_name_index' => 'INT UNSIGNED',
+                'name_key_length' => 'INT UNSIGNED', 'name_key_fingerprint' => 'BINARY(32)',
+                'first_name_index' => 'INT UNSIGNED',
             ],
             'ue_uedb5_object_candidates' => [
                 'file_id' => 'BIGINT UNSIGNED', 'object_kind' => 'TINYINT UNSIGNED',
