@@ -350,7 +350,7 @@ The format-5 container and production-capable isolated V5 file components are im
 - `catalog/bin/verify-uedb5-production-reader-writer.php` and `catalog/bin/verify-uedb5-dependency-rebuilder.php` verify the production-capable V5 components and prove that matching `.uedb4` files are not touched;
 - production `BlockedCompressedMetadataContainer` / `BlockedCompressedMetadataReader` remain format 4 only and continue to use `.uedb4` until the migration/cutover is ready.
 
-The Step 3 components are production-capable file primitives, not production publication. They deliberately have no PDO dependency, no V5 registration lookup, no V5 SQL projection writer and no `try V5, else V4` path. UE1-UE4 source-reparse builders, SQL publication, catalogue migration/cutover and V4 retirement remain later implementation sections.
+The Step 3 components are production-capable file primitives, not production publication. They deliberately have no PDO dependency, no V5 registration lookup, no V5 SQL projection writer and no `try V5, else V4` path. UT99 source reparse and base V5 projection publication are implemented; remaining game builders, dependency second-pass publication, catalogue cutover and V4 retirement remain later implementation sections.
 
 ## Current UEDB5 SQL projection contract
 
@@ -369,6 +369,14 @@ Step 5 adds migration `202609300001_uedb5_staging_registration.php` and `PdoUedb
 Pre-cutover V5 registration therefore lives only in `ue_uedb5_files`. The repository re-verifies the canonical `.uedb5` file, derives size/hash/block count/source policy/section counts and package identity from that file, requires the corresponding verified catalogue file to remain registered as UEDB4, and then upserts the staged V5 row. It never inserts or updates `ue_file_metadata`. Classic families use a normalized package-name candidate key; Zen stores the exact 8-byte `FPackageId` candidate key.
 
 The migration also creates the baseline Step 4 projection tables before catalogue migration begins. V5 projection rows foreign-key to `ue_uedb5_files`, so removing a staged registration cascades its V5-only projections. The optional object-path table remains absent/off by default. `verify-uedb5-staging-registration-contract.php` verifies both classic and Zen registration shapes and the V4/V5 isolation boundary.
+
+## Current Step 6 source reparse migration
+
+`Uedb5GameSourceMigrationService` and `catalog/bin/migrate-uedb5-game.php` provide the resumable game-by-game migration path. A file is read from the original verified store, checked against catalogue size/MD5/SHA1, parsed by the canonical game/engine reader, written as UEDB5, registered in `ue_uedb5_files`, and given base provider/search/FName/object projections. UEDB4 is never opened as migration input.
+
+The first implemented game policy is UT99. `Uedb5Ut99SnapshotBuilder` accepts only package versions 60-69 proven by the retail v1.400 and supplemental v430 sources, preserves the pre-68 heritage distinction, source row offsets, compact-index graph, flags, and conditional serial offset, and refuses later package versions until an authoritative source policy is added. Nonzero licensee bits use the supplemental source policy rather than being mislabeled as retail.
+
+Base projection publication deliberately clears dependency projections. Dependency results are a second game pass after every provider candidate for that game has been staged, preventing partial-provider resolution from becoming authoritative. The live runtime remains UEDB4 throughout.
 
 ## Current UE5 classic UEDB5 persistence
 
