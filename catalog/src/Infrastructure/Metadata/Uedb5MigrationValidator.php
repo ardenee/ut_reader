@@ -112,8 +112,9 @@ final class Uedb5MigrationValidator
     /** @param array<string,mixed> $context @return array<string,mixed> */
     private function validateSourceBytes(array $context): array
     {
+        $gameId = (int)$context['game_id'];
         $path = $this->storageRoot . DIRECTORY_SEPARATOR . 'games' . DIRECTORY_SEPARATOR
-            . (string)$context['slug'] . DIRECTORY_SEPARATOR . 'verified' . DIRECTORY_SEPARATOR
+            . Uedb5GameSourceRegistry::storageKey($gameId) . DIRECTORY_SEPARATOR . 'verified' . DIRECTORY_SEPARATOR
             . (string)$context['stored_name'];
         $this->require(is_file($path), 'source_file_missing', 'Original verified source file is missing.');
         $size = filesize($path);
@@ -122,7 +123,7 @@ final class Uedb5MigrationValidator
         $sha1 = sha1_file($path);
         $this->require(is_string($md5) && hash_equals(strtolower((string)$context['md5']), strtolower($md5)), 'source_md5_mismatch', 'Original source MD5 changed.');
         $this->require(is_string($sha1) && hash_equals(strtolower((string)$context['sha1']), strtolower($sha1)), 'source_sha1_mismatch', 'Original source SHA1 changed.');
-        return $this->sourceSnapshots->build((string)$context['slug'], $path, $context);
+        return $this->sourceSnapshots->buildForGameId($gameId, $path, $context);
     }
 
     /** @param array<string,mixed> $staged @param array<string,mixed> $source */

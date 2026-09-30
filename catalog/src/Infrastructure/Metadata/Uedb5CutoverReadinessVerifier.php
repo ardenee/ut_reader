@@ -191,9 +191,10 @@ final class Uedb5CutoverReadinessVerifier
         );
         foreach($games as $game){
             $slug=(string)$game['slug'];
-            try{$contract=$factory->contract($slug);}catch(Throwable $error){
-                $unsupportedGames[]=$slug;
-                $coverage[]=['game'=>$slug,'verified_count'=>(int)$game['verified_count'],'supported'=>false,'error'=>$error->getMessage()];
+            $gameId=(int)$game['id'];
+            try{$contract=$factory->contractForGameId($gameId);$sourceKey=Uedb5GameSourceRegistry::sourceKey($gameId);}catch(Throwable $error){
+                $unsupportedGames[]='game_id='.$gameId.' slug='.$slug;
+                $coverage[]=['game_id'=>$gameId,'game'=>$slug,'verified_count'=>(int)$game['verified_count'],'supported'=>false,'error'=>$error->getMessage()];
                 continue;
             }
             $outside=$this->count(
@@ -202,7 +203,7 @@ final class Uedb5CutoverReadinessVerifier
                 [(int)$game['id'],(int)$contract['min_version'],(int)$contract['max_version']]
             );
             $unsupportedVersions+=$outside;
-            $coverage[]=['game'=>$slug,'verified_count'=>(int)$game['verified_count'],'supported'=>true,
+            $coverage[]=['game_id'=>$gameId,'game'=>$slug,'source_key'=>$sourceKey,'verified_count'=>(int)$game['verified_count'],'supported'=>true,
                 'engine_key'=>(string)$contract['engine_key'],'source_version_range'=>[(int)$contract['min_version'],(int)$contract['max_version']],
                 'catalogue_version_range'=>[$game['min_version']!==null?(int)$game['min_version']:null,$game['max_version']!==null?(int)$game['max_version']:null],
                 'outside_source_contract'=>$outside];

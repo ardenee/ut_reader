@@ -33,9 +33,9 @@ final class Uedb5GameSourceMigrationService
         }
     }
     /** @return array<string,mixed> */
-    public function preflight(string $gameSlug): array
+    public function preflight(int $gameId): array
     {
-        $game = $this->game($gameSlug);
+        $game = $this->game($gameId);
         foreach ([
             'ue_file_metadata','ue_uedb5_files','ue_uedb5_provider_keys','ue_uedb5_search_keys',
             'ue_uedb5_name_candidates','ue_uedb5_object_candidates','ue_uedb5_dependency_edges',
@@ -43,7 +43,7 @@ final class Uedb5GameSourceMigrationService
         ] as $table) {
             if (!$this->tableExists($table)) { throw new RuntimeException('Required Step 5 table is missing: ' . $table); }
         }
-        $sourceDirectory = $this->verifiedDirectory((string)$game['slug']);
+        $sourceDirectory = $this->verifiedDirectory((int)$game['id']);
         if (!is_dir($sourceDirectory)) {
             throw new RuntimeException('Verified source directory is not accessible: ' . $sourceDirectory);
         }
@@ -69,7 +69,7 @@ final class Uedb5GameSourceMigrationService
             $missingStatement->execute([(int)$game['id']]);
             $missingV4 = $missingStatement->fetchAll(PDO::FETCH_ASSOC) ?: [];
         }
-        $contract = $this->sourceContract((string)$game['slug']);
+        $contract = $this->sourceContract((int)$game['id']);
         $unsupported = $this->db->prepare(
             'SELECT COUNT(*) FROM ue_files WHERE game_id=? AND scan_status="verified" '
             . 'AND (package_version IS NULL OR package_version < ? OR package_version > ?)'
@@ -102,6 +102,7 @@ final class Uedb5GameSourceMigrationService
             'staged_count' => (int)($counts['staged_count'] ?? 0),
             'unsupported_source_version_count' => $unsupportedCount,
             'unsupported_source_files' => $unsupportedFiles,
+            'source_key' => (string)$game['source_key'],
             'source_version_range' => [(int)$contract['min_version'], (int)$contract['max_version']],
             'package_version_distribution' => $versionDistribution,
             'verified_directory' => $sourceDirectory,
@@ -110,7 +111,7 @@ final class Uedb5GameSourceMigrationService
     }
     /** @return array<string,mixed> */
     public function migrate(
-        string $gameSlug,
+        int $gameId,
         bool $apply,
         int $limit = 1000,
         bool $continuous = false,
@@ -121,13 +122,13 @@ final class Uedb5GameSourceMigrationService
         bool $skipPreflight = false
     ): array {
         if ($emit) { $emit(['status'=>'worker_boot','worker_count'=>$workerCount,'worker_index'=>$workerIndex]); }
-        $preflight = $skipPreflight ? ['game'=>$this->game($gameSlug),'v4_ready'=>true,'worker_preflight_skipped'=>true] : $this->preflight($gameSlug);
+        $preflight = $skipPreflight ? ['game'=>$this->game($gameId),'v4_ready'=>true,'worker_preflight_skipped'=>true] : $this->preflight($gameId);
         if (empty($preflight['v4_ready'])) {
             $ids = array_map(static fn(array $row): int => (int)($row['id'] ?? 0), (array)($preflight['missing_v4_files'] ?? []));
             throw new RuntimeException('Every verified file must retain a live UEDB4 registration before staging V5. Missing V4 file IDs: ' . implode(',', array_filter($ids)));
         }
         $game = (array)$preflight['game'];
-        $contract = $this->sourceContract((string)$game['slug']);
+        $contract = $this->sourceContract((int)$game['id']);
         $limit = max(1, min(5000, $limit));
         $progressEvery = max(1, $progressEvery);
         $workerCount = max(1, min(8, $workerCount));
@@ -202,9 +203,9 @@ final class Uedb5GameSourceMigrationService
     /** @param array<string,mixed> $game @param array<string,mixed> $file @return array<string,mixed> */
     private function migrateFile(array $game, array $file, bool $apply): array
     {
-        $path = $this->sourcePath((string)$game['slug'], (string)$file['stored_name']);
+        $path = $this->sourcePath((int)$game['id'], (string)$file['stored_name']);
         $this->assertSourceIdentity($path, $file);
-        $snapshot = $this->snapshot((string)$game['slug'], $path, $file);
+        $snapshot = $this->snapshot((int)$game['id'], $path, $file);
         $sectionCounts = [];
         foreach ((array)$snapshot['sections'] as $section => $rows) {
             $sectionCounts[(string)$section] = count((array)$rows);
@@ -289,9 +290,9 @@ final class Uedb5GameSourceMigrationService
     }
 
     /** @param array<string,mixed> $file @return array<string,mixed> */
-    private function snapshot(string $gameSlug, string $path, array $file): array
+    private function snapshot(int $gameId, string $path, array $file): array
     {
-        return $this->sourceSnapshots->build($gameSlug, $path, $file);
+        return $this->sourceSnapshots->buildForGameId($gameId, $path, $file);
     }
 
     /** @param array<string,mixed> $file */
@@ -313,33 +314,34 @@ final class Uedb5GameSourceMigrationService
     }
 
     /** @return array{engine_key:string,min_version:int,max_version:int} */
-    private function sourceContract(string $slug): array
+    private function sourceContract(int $gameId): array
     {
-        return $this->sourceSnapshots->contract($slug);
+        return $this->sourceSnapshots->contractForGameId($gameId);
     }
 
     /** @return array<string,mixed> */
-    private function game(string $slug): array
+    private function game(int $gameId): array
     {
-        $statement = $this->db->prepare('SELECT id,name,slug,profile_id FROM ue_games WHERE slug=? LIMIT 1');
-        $statement->execute([trim($slug)]);
+        $statement = $this->db->prepare('SELECT id,name,slug,profile_id FROM ue_games WHERE id=? LIMIT 1');
+        $statement->execute([$gameId]);
         $row = $statement->fetch(PDO::FETCH_ASSOC);
-        if (!is_array($row)) { throw new RuntimeException('Unknown game slug: ' . $slug); }
+        if (!is_array($row)) { throw new RuntimeException('Unknown game_id: ' . $gameId); }
+        $row['source_key'] = Uedb5GameSourceRegistry::sourceKey($gameId);
         return $row;
     }
 
-    private function verifiedDirectory(string $slug): string
+    private function verifiedDirectory(int $gameId): string
     {
         return rtrim((string)$this->config['storage_path'], "\\/")
-            . DIRECTORY_SEPARATOR . 'games' . DIRECTORY_SEPARATOR . $slug . DIRECTORY_SEPARATOR . 'verified';
+            . DIRECTORY_SEPARATOR . 'games' . DIRECTORY_SEPARATOR . Uedb5GameSourceRegistry::storageKey($gameId) . DIRECTORY_SEPARATOR . 'verified';
     }
 
-    private function sourcePath(string $slug, string $storedName): string
+    private function sourcePath(int $gameId, string $storedName): string
     {
         if ($storedName === '' || basename($storedName) !== $storedName) {
             throw new RuntimeException('Invalid verified stored_name for Step 6 migration.');
         }
-        return $this->verifiedDirectory($slug) . DIRECTORY_SEPARATOR . $storedName;
+        return $this->verifiedDirectory($gameId) . DIRECTORY_SEPARATOR . $storedName;
     }
 
     private function tableExists(string $table): bool
