@@ -352,6 +352,16 @@ The format-5 container and production-capable isolated V5 file components are im
 
 The Step 3 components are production-capable file primitives, not production publication. They deliberately have no PDO dependency, no V5 registration lookup, no V5 SQL projection writer and no `try V5, else V4` path. UE1-UE4 source-reparse builders, SQL publication, catalogue migration/cutover and V4 retirement remain later implementation sections.
 
+## Current UEDB5 SQL projection contract
+
+Step 4 freezes the SQL boundary before any V5 projection publisher is allowed to create/populate database tables. The normative contract is `uedb5-sql-projection-contract.md`; `Uedb5SqlProjectionContract` exposes the same baseline table/column/outcome/classification rules to verification code.
+
+The baseline projection is deliberately side-by-side under `ue_uedb5_*`: file registration/package identity, provider keys, one distinct normalized search-key dictionary, deduplicated per-file FName candidates, narrow ObjectName/public-export-hash object candidates, compact dependency edges, and dependency package summaries. The optional object-path candidate table is disabled by default and requires a measured query contract.
+
+The baseline object candidate row contains only file/kind/index plus lookup hashes. Class package/name, class/super/template/outer graph, flags, serialization fields, preload ranges, raw Zen object indexes and resolver diagnostic payloads remain authoritative in `.uedb5`. `verify-uedb5-sql-projection-contract.php` also pins the current UT3 `SQL candidate export indexes -> UEDB source-row hydration` implementation as the model V5 resolver architecture.
+
+This step defines the contract only. It does not create/populate the V5 SQL tables, publish V5 registration, or switch production queries away from UEDB4.
+
 ## Current UE5 classic UEDB5 persistence
 
 Classic UE5 5.8.3 source-shaped persistence is implemented for offline/staging UEDB5 files without changing the production UEDB4 runtime:
@@ -408,7 +418,7 @@ Before full UE5 support can be marked complete, the UEDB5 update must include al
 4. [implemented by `Uedb5IoStoreTocReader`, `Uedb5IoStoreContainerHeaderReader`, and `Uedb5IoStoreCodec`] IoStore `.utoc`/`.ucas` ingestion preserving package-store provenance, redirects, optional segments, soft references, partition/block framing, compression dispatch and AES-key boundaries;
 5. [implemented by `Uedb5ZenPackageReader` and `Uedb5Ue5ZenIoStoreSnapshotBuilder`] Zen metadata blocks for PackageId/public-export-hash identity, typed `FPackageObjectIndex` values, export/dependency bundles, script imports and cell maps, using lossless unsigned-64 storage rather than PHP signed integers;
 6. [Zen/IoStore portion implemented by `Uedb5Ue5ZenIoStoreSnapshotBuilder` and `Uedb5Ue5ZenDependencyResolver`] separate hard, optional, soft, script, cell/Verse, load-order and runtime-derived classifications; build/cook dependencies remain separate AssetRegistry-source work and must not be fabricated from Zen package bytes;
-7. compact SQL projections only for fields that need indexed catalog lookup; auxiliary UE5 source blocks remain in compressed `.uedb5` metadata by default;
+7. [SQL projection contract frozen in `uedb5-sql-projection-contract.md` / `Uedb5SqlProjectionContract`; publication still pending] compact SQL projections only for fields that need indexed catalog lookup; auxiliary UE5 source blocks remain in compressed `.uedb5` metadata by default;
 8. migration/verification that reparses original bytes whenever UEDB4 did not retain a required serialized field.
 
 ## UEDB4 to UEDB5 migration rules

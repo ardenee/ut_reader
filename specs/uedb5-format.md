@@ -348,11 +348,13 @@ Catalog-only decisions such as base-game/common exclusion must identify that cat
 
 UEDB5 is the primary store for source-shaped package metadata. MySQL contains only indexes and materialized relationships that are justified by catalog queries.
 
-Suitable V5 projections include package/provider identity, candidate ObjectName/FName lookup, normalized/hash search keys, dependency edges/package summaries, and minimal object-path candidate indexes where measured queries require them.
+The normative physical/logical SQL boundary is `uedb5-sql-projection-contract.md` and its machine-readable companion `Uedb5SqlProjectionContract`. Baseline pre-cutover projections use dedicated `ue_uedb5_*` tables so V5 can be built beside the live V4 runtime without overwriting it.
 
-Full class/outer graphs, complete export records, object flags, serialization offsets/sizes, version-gated source fields, Zen bundle structures, and other source detail stay in `.uedb5` by default.
+Suitable V5 projections are limited to one-row-per-file registration/package identity, provider keys, a distinct normalized search-key dictionary, deduplicated per-file FName candidates, narrow ObjectName/public-export-hash candidate rows, dependency edges, and dependency package summaries. Object-path candidates are a separate optional/off-by-default table that requires measured query justification.
 
-SQL candidate lookup must return indexes/keys into UEDB5; SQL must not become a second authoritative source-shaped export table.
+Full class/outer graphs, complete export records, object/package flags, serialization offsets/sizes, version-gated source fields, Zen bundle structures, resolver diagnostic payloads and other source detail stay in `.uedb5`.
+
+SQL candidate lookup returns file/object indexes or compact keys into UEDB5; SQL must not become a second authoritative source-shaped export/import table. The UT3 candidate-index -> UEDB hydration implementation is the reference pattern.
 ## Per-file conformance and validation
 
 A UEDB5 file is conformant only when all applicable checks pass:
@@ -429,6 +431,7 @@ Use the source-specific documents below to interpret the UEDB5 fields; this file
 - `ue3-udkultimate-package-format.md`, `ue3-udkultimate-dependency-resolution.md`, and `ut3-v512-dependency-resolution.md`;
 - `ue4-4.27.2-package-format.md` and `ue4-4.27.2-dependency-resolution.md`;
 - `ue5-5.8.3-classic-package-format.md` and `ue5-5.8.3-classic-dependency-resolution.md`;
-- `uedb5-metadata-requirements.md` for the detailed UE3/UE4/UE5 source audit and implementation checklist.
+- `uedb5-metadata-requirements.md` for the detailed UE3/UE4/UE5 source audit and implementation checklist;
+- `uedb5-sql-projection-contract.md` for the normative V5 MySQL accelerator/projection boundary.
 
 Where this format contract and a source-specific package/dependency document appear to disagree about engine behavior, the authoritative engine/game source and its source-specific specification control the behavior; the UEDB5 schema must then be versioned or corrected without silently discarding source identity.
