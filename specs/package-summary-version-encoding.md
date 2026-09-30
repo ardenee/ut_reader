@@ -51,7 +51,7 @@ This semantic rule must be applied through the exact engine/revision reader sele
 | Unreal II | Package version 126; raw `FileVersion` splits low-16 Epic/high-16 licensee. >=68 uses GUID+generations; older packages use heritage count/offset. |
 | UE2.5 | Reviewed source also uses package version 126 and the Epic/licensee split, but remains its own reader revision. |
 | UT2003 | Package version 120, licensee 0x1C. Summary serializer guards on valid magic before consuming the remainder. |
-| UT2004 | Package version 128, licensee 0x1D; do not substitute UT2003 constants/layout gates. |
+| UT2004 | Supplied v3369 source uses package version 128; the supplied `UT2004SrcCmake` 64-bit revision uses 129. Both retain licensee 0x1D, minimum version 60, and the same package-summary field shape audited here; do not substitute UT2003 constants/layout gates. |
 | UE3 | Summary expands substantially: TotalHeaderSize, FolderName, DependsOffset, GUID-table metadata, thumbnail offset, engine/cooked versions, compression map, package source and additional cooked metadata. |
 | UE4 4.27.2 | Uses the negative legacy-version discriminator (current writer -7), UE4/licensee versions and custom versions, plus modern summary fields. Unversioned packages are an explicit state. |
 

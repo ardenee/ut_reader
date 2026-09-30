@@ -132,9 +132,10 @@ try {
     $accept('ut2003_120', Uedb5Ut2003SnapshotBuilder::class, CatalogUE2PackageReader::class, 4, 120, Uedb5Ut2003SnapshotBuilder::SOURCE_POLICY);
     $reject('ut2003', Uedb5Ut2003SnapshotBuilder::class, CatalogUE2PackageReader::class, 4, 121);
 
-    $accept('ut2004_60', Uedb5Ut2004SnapshotBuilder::class, CatalogUE2PackageReader::class, 5, 60, Uedb5Ut2004SnapshotBuilder::SOURCE_POLICY);
-    $accept('ut2004_128', Uedb5Ut2004SnapshotBuilder::class, CatalogUE2PackageReader::class, 5, 128, Uedb5Ut2004SnapshotBuilder::SOURCE_POLICY);
-    $reject('ut2004', Uedb5Ut2004SnapshotBuilder::class, CatalogUE2PackageReader::class, 5, 129);
+    $accept('ut2004_60', Uedb5Ut2004SnapshotBuilder::class, CatalogUE2PackageReader::class, 5, 60, Uedb5Ut2004SnapshotBuilder::POLICY_V128);
+    $accept('ut2004_128', Uedb5Ut2004SnapshotBuilder::class, CatalogUE2PackageReader::class, 5, 128, Uedb5Ut2004SnapshotBuilder::POLICY_V128);
+    $accept('ut2004_129', Uedb5Ut2004SnapshotBuilder::class, CatalogUE2PackageReader::class, 5, 129, Uedb5Ut2004SnapshotBuilder::POLICY_V129);
+    $reject('ut2004', Uedb5Ut2004SnapshotBuilder::class, CatalogUE2PackageReader::class, 5, 130);
 } finally {
     if (is_dir($temp)) {
         $items = new RecursiveIteratorIterator(

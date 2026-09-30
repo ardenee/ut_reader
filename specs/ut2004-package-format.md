@@ -6,10 +6,8 @@ This specification documents package serialization and reader behavior from the 
 
 - Repository: `ardenee/UT2004src`
 - Branch: `main`
-- `ENGINE_VERSION = 3369`
-- `PACKAGE_FILE_VERSION = 128`
-- `PACKAGE_FILE_VERSION_LICENSEE = 0x1D`
-- `PACKAGE_MIN_VERSION = 60`
+- `Unreal Tournament 2004 [v3369]`: `ENGINE_VERSION = 3369`, `PACKAGE_FILE_VERSION = 128`, `PACKAGE_FILE_VERSION_LICENSEE = 0x1D`, `PACKAGE_MIN_VERSION = 60`
+- `UT2004Src/UT2004SrcCmake`: the same engine/licensee/minimum constants with `PACKAGE_FILE_VERSION = 129`; its history labels 129 as the 64-bit revision
 
 No UT2003, UE2.5, Unreal II, or other implementation supplies missing behavior.
 
@@ -31,13 +29,15 @@ No UT2003, UE2.5, Unreal II, or other implementation supplies missing behavior.
 
 Normal little-endian bytes: `C1 83 2A 9E`.
 
-Current source constants:
+Supplied source constants:
 
 - engine build 3369
 - minimum network version 3180
-- Epic package version 128
+- Epic package version 128 in the v3369 tree and 129 in `UT2004SrcCmake`
 - licensee package version 29 / `0x1D`
 - minimum package version 60
+
+The v129 source retains the same `FPackageFileSummary`, `FObjectImport`, and `FObjectExport` serialized fields used by the canonical UnrealDB UE2 reader; the package-version history records `129 - 64bit`.
 
 The source's package-version history explicitly records:
 
@@ -48,6 +48,7 @@ The source's package-version history explicitly records:
 - 126 k-dop static-mesh collision merge
 - 127 static-mesh collision for skeletal meshes
 - 128 DetailMode added to FDecorationLayer
+- 129 64-bit revision (`UT2004SrcCmake`)
 
 These history entries establish version purposes; they do not by themselves define unrelated serialization branches.
 
@@ -252,7 +253,7 @@ UT2004 ULinkerLoad:
 1. opens ordinary file reader;
 2. rejects duplicate LinkerRoot;
 3. initializes MD5 context;
-4. initializes ArVer=128 and ArLicenseeVer=0x1D;
+4. initializes `ArVer=PACKAGE_FILE_VERSION` (128 in v3369, 129 in the supplied 64-bit source) and `ArLicenseeVer=0x1D`;
 5. sets loading/persistent and context state;
 6. reads Summary;
 7. feeds summary fields into QuickMD5 context;
