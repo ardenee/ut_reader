@@ -56,7 +56,7 @@ Its purpose is to let an engineer implement, review, or repair UnrealDB's parser
 - [x] UE5 5.8.3 Zen / IoStore format — `ue5-5.8.3-zen-iostore-format.md` (source-audited `.utoc`/`.ucas`, package-store and Zen-header contract; isolated reader, UEDB5 persistence and Zen dependency resolver implemented)
 - [x] UEDB5 normative format contract — `uedb5-format.md` (physical container and schema contract frozen; isolated production-capable V5 reader/writer/dependency rebuilder implemented while live runtime remains UEDB4)
 - [x] UEDB5 SQL projection contract — `uedb5-sql-projection-contract.md` (minimal side-by-side `ue_uedb5_*` accelerator schema frozen; source-shaped class/outer/flags/serialization data remains file-backed)
-- [x] UEDB5 source-audit requirements — `uedb5-metadata-requirements.md` (format-5 foundation, production-capable isolated V5 reader/writer/dependency rebuild, Step 5 side-by-side staging registration/schema, and UE5 classic + Zen staging implemented; UT99 source reparse + resumable base V5 staging implemented; remaining game builders, dependency second-pass, catalogue migration completion and cutover remain pending)
+- [x] UEDB5 source-audit requirements � `uedb5-metadata-requirements.md` (format-5 foundation, isolated V5 reader/writer/dependency rebuild, Step 5 staging schema, and resumable Step 6 Pass-1 source reparse are implemented for UT99, Unreal, Unreal II, UT2003, UT2004, UT3, UT4 and UE5 classic; dependency second-pass, Zen/IoStore catalogue migration, migration execution/verification and cutover remain pending)
 
 ### Redirect/archive/mod formats
 

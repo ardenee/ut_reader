@@ -374,7 +374,9 @@ The migration also creates the baseline Step 4 projection tables before catalogu
 
 `Uedb5GameSourceMigrationService` and `catalog/bin/migrate-uedb5-game.php` provide the resumable game-by-game migration path. A file is read from the original verified store, checked against catalogue size/MD5/SHA1, parsed by the canonical game/engine reader, written as UEDB5, registered in `ue_uedb5_files`, and given base provider/search/FName/object projections. UEDB4 is never opened as migration input.
 
-The first implemented game policy is UT99. `Uedb5Ut99SnapshotBuilder` accepts only package versions 60-69 proven by the retail v1.400 and supplemental v430 sources, preserves the pre-68 heritage distinction, source row offsets, compact-index graph, flags, and conditional serial offset, and refuses later package versions until an authoritative source policy is added. Nonzero licensee bits use the supplemental source policy rather than being mislabeled as retail.
+Pass-1 source reparse is implemented for the game slugs `ut99`, `unrealgold`, `unreal2`, `ut2003`, `ut2004`, `ut3`, `ut4`, and classic `ue5`. Each dispatch keeps its audited source/version boundary and dedicated source-policy/schema identifiers. UT99 accepts 60-69; UT3 accepts exactly 512; UT4 accepts exactly 511 and uses the assigned UE4 catalogue parser profile; UE5 classic accepts the audited UE5 component range 1000-1018 and uses the assigned UE5 parser profile. The legacy games likewise use their source-bounded policies rather than borrowing another game revision.
+
+`Uedb5Ut99SnapshotBuilder`, the dedicated legacy-game wrappers, `Uedb5Ut3SnapshotBuilder`, `Uedb5Ut4SnapshotBuilder`, and `Uedb5Ue5ClassicSnapshotBuilder` all build from the original package bytes. This is implementation readiness, not a claim that every game catalogue has already been migrated. UE5 Zen/IoStore container migration remains a separate input path because `.utoc`/`.ucas` package-store identity is not the same one-file classic package model.
 
 Base projection publication deliberately clears dependency projections. Dependency results are a second game pass after every provider candidate for that game has been staged, preventing partial-provider resolution from becoming authoritative. The live runtime remains UEDB4 throughout.
 
@@ -434,8 +436,8 @@ Before full UE5 support can be marked complete, the UEDB5 update must include al
 4. [implemented by `Uedb5IoStoreTocReader`, `Uedb5IoStoreContainerHeaderReader`, and `Uedb5IoStoreCodec`] IoStore `.utoc`/`.ucas` ingestion preserving package-store provenance, redirects, optional segments, soft references, partition/block framing, compression dispatch and AES-key boundaries;
 5. [implemented by `Uedb5ZenPackageReader` and `Uedb5Ue5ZenIoStoreSnapshotBuilder`] Zen metadata blocks for PackageId/public-export-hash identity, typed `FPackageObjectIndex` values, export/dependency bundles, script imports and cell maps, using lossless unsigned-64 storage rather than PHP signed integers;
 6. [Zen/IoStore portion implemented by `Uedb5Ue5ZenIoStoreSnapshotBuilder` and `Uedb5Ue5ZenDependencyResolver`] separate hard, optional, soft, script, cell/Verse, load-order and runtime-derived classifications; build/cook dependencies remain separate AssetRegistry-source work and must not be fabricated from Zen package bytes;
-7. [SQL projection contract frozen in `uedb5-sql-projection-contract.md` / `Uedb5SqlProjectionContract`; publication still pending] compact SQL projections only for fields that need indexed catalog lookup; auxiliary UE5 source blocks remain in compressed `.uedb5` metadata by default;
-8. migration/verification that reparses original bytes whenever UEDB4 did not retain a required serialized field.
+7. [base projection publication implemented; dependency publication remains Pass 2] compact SQL projections only for fields that need indexed catalog lookup; auxiliary UE5 source blocks remain in compressed `.uedb5` metadata by default;
+8. [classic Pass-1 source reparse implemented game-by-game] migration/verification reparses original bytes whenever UEDB4 did not retain a required serialized field; Zen/IoStore catalogue migration, dependency Pass 2, full execution/verification and cutover remain pending.
 
 ## UEDB4 to UEDB5 migration rules
 

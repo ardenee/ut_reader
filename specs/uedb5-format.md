@@ -411,11 +411,11 @@ As of this contract:
 - classic UE5 5.8.3 source-shaped staging persistence is implemented by `Uedb5Ue5ClassicSnapshotBuilder`;
 - deterministic file-backed classic UE5 `VerifyImportInner` staging resolution is implemented by `Uedb5Ue5ClassicVerifyImportResolver`;
 - production metadata registration/runtime remains UEDB4;
-- UT99 source reparse into V5 is implemented by `Uedb5Ut99SnapshotBuilder`; Unreal/Unreal II/UT2003/UT2004/UT3/UT4 source builders remain pending;
+- source-shaped Pass-1 builders are implemented for UT99, Unreal, Unreal II, UT2003, UT2004, UT3 and UT4; their game-specific source/version policies remain separate and are not collapsed into a generic UE1/UE2/UE3/UE4 policy;
 - UE5 5.8.3 IoStore ingestion is implemented by `Uedb5IoStoreTocReader`, `Uedb5IoStoreContainerHeaderReader`, and `Uedb5IoStoreCodec`;
 - UE5 5.8.3 Zen source-shaped staging persistence is implemented by `Uedb5ZenPackageReader` and `Uedb5Ue5ZenIoStoreSnapshotBuilder`;
 - deterministic Zen PackageImport/cell/load-order staging resolution is implemented by `Uedb5Ue5ZenDependencyResolver`;
-- `Uedb5GameSourceMigrationService` + `migrate-uedb5-game.php` implement resumable game-by-game base staging from original verified bytes; dependency second-pass, remaining game builders, cutover, and V4 retirement remain pending.
+- `Uedb5GameSourceMigrationService` + `migrate-uedb5-game.php` implement resumable game-by-game Pass-1 staging from original verified bytes for `ut99`, `unrealgold`, `unreal2`, `ut2003`, `ut2004`, `ut3`, `ut4`, and UE5 classic `ue5`; UE4/UE5 construction uses the assigned catalogue parser profile. Dependency second-pass, Zen/IoStore catalogue migration, migration completion/verification, cutover, and V4 retirement remain pending.
 
 The UE5 classic source resolver still uses internal labels such as `optional_missing` and `runtime_only`. `Uedb5DependencyRebuilder` treats those as resolver diagnostics and normalizes them to the five-state contract above (`missing` plus optional classification and `unresolved` plus runtime-derived classification) while retaining the resolver detail and deterministic reason code. Zen resolver rows already use the canonical outcome set.
 
