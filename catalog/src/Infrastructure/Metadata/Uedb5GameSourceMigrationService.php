@@ -120,9 +120,24 @@ final class Uedb5GameSourceMigrationService
         if ($workerIndex < 0 || $workerIndex >= $workerCount) {
             throw new RuntimeException('UEDB5 migration worker index is outside the configured worker count.');
         }
-        $cursor = 0;
+        $firstRemainingId = $this->firstRemainingFileId(
+            (int)$game['id'],
+            (int)$contract['min_version'],
+            (int)$contract['max_version'],
+            $workerCount,
+            $workerIndex
+        );
+        $cursor = $firstRemainingId !== null ? max(0, $firstRemainingId - 1) : 0;
         $processed = $succeeded = $failed = 0;
         $failures = [];
+        if ($emit) {
+            $emit([
+                'status'=>'worker_start',
+                'worker_count'=>$workerCount,
+                'worker_index'=>$workerIndex,
+                'first_remaining_file_id'=>$firstRemainingId,
+            ]);
+        }
         do {
             $rows = $this->batch(
                 (int)$game['id'], $cursor, $limit,
@@ -216,6 +231,25 @@ final class Uedb5GameSourceMigrationService
         } catch (Throwable) {
             // Preserve the original staging failure; status can be reconciled/retried later.
         }
+    }
+
+    private function firstRemainingFileId(
+        int $gameId,
+        int $minVersion,
+        int $maxVersion,
+        int $workerCount,
+        int $workerIndex
+    ): ?int {
+        $statement = $this->db->prepare(
+            'SELECT MIN(f.id) FROM ue_files f '
+            . 'JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=4 '
+            . 'LEFT JOIN ue_uedb5_files v ON v.file_id=f.id '
+            . 'WHERE f.game_id=? AND f.scan_status="verified" AND v.file_id IS NULL '
+            . 'AND f.package_version BETWEEN ? AND ? AND MOD(f.id,?)=?'
+        );
+        $statement->execute([$gameId, $minVersion, $maxVersion, $workerCount, $workerIndex]);
+        $value = $statement->fetchColumn();
+        return $value === false || $value === null ? null : (int)$value;
     }
 
     /** @return list<array<string,mixed>> */

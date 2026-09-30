@@ -34,6 +34,7 @@ $check('cli_loads_game_profile_helpers',str_contains($cli,"GameProfiles.php")&&s
 $check('cli_supports_continuous',str_contains($cli,"'continuous'"));
 $check('cli_supports_multiple_workers',str_contains($cli,"'workers::'")&&str_contains($cli,'proc_open')&&str_contains($cli,"'worker-index::'"));
 $check('workers_partition_file_ids_without_overlap',str_contains($service,'MOD(f.id,?)=?')&&str_contains($service,'$workerCount, $workerIndex'));
+$check('workers_start_at_lowest_remaining_partition_id',str_contains($service,'SELECT MIN(f.id)')&&str_contains($service,'first_remaining_file_id')&&str_contains($service,'$firstRemainingId - 1'));
 $check('projection_retries_mysql_contention',str_contains($publisher,'PdoContention::retryable')&&str_contains($publisher,'$maxAttempts = $started ? 5 : 1'));
 $check('search_dictionary_locks_use_deterministic_order',str_contains($publisher,'usort($searchRows')&&str_contains($publisher,'fingerprint'));
 echo json_encode(['ok'=>$failures===[],'checks'=>$checks,'failures'=>$failures],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;
