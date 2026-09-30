@@ -1,0 +1,119 @@
+# UEDB5 game-level behavioural parity audit
+
+Step 9 validates behaviour, not byte equality. UEDB4 and UEDB5 are different physical formats; the audit compares the catalogue/runtime decisions produced from them for the same fully migrated game.
+
+The audit is read-only. It does not publish V5, mutate V4, cut over runtime registration, repair rows, or rewrite either metadata container.
+
+## Readiness gate
+
+A game is eligible for the parity audit only when all of these are true:
+
+- every verified game file still has live format-4 production registration;
+- every verified game file has a staged `ue_uedb5_files` registration;
+- every verified game file is Step-8 `validated`;
+- there are zero `pending`, `staged`, or `failed` migration-status rows.
+
+`audit-uedb5-game-parity.php` refuses the actual audit until that invariant is true. `--preflight` is safe at any migration percentage and reports the current counts.
+
+## Behavioural surfaces
+
+The audit compares normalized behaviour across:
+
+- dependency outcome counts and per-import decisions;
+- selected physical provider file;
+- selected provider export/object index;
+- missing versus package-only versus common versus unresolved;
+- base-game missing dependencies;
+- resolved Requires / Required By relationship graph;
+- package aliases and primary provider keys;
+- duplicate-provider selection without provider merging;
+- public/private VerifyImport decisions;
+- invalid-file identity exclusions;
+- exact metadata search results for names, imports, and exports.
+
+## Authority and normalization
+
+V4 behaviour is read through the existing production SQL/search surfaces. V5 behaviour is read only from `ue_uedb5_*` accelerators plus authoritative `.uedb5` hydration.
+
+The V5 side follows the Step-4 rule:
+
+```text
+SQL candidate lookup -> UEDB5 authoritative row -> behavioural decision
+```
+
+The parity harness must not make UEDB4 bytes authoritative for V5. `Uedb5ParityV5ReadService` does not use `.uedb4` or `BlockedCompressedMetadataReader`.
+
+Dependency comparisons use canonical outcomes:
+
+```text
+missing
+resolved
+package_only
+common
+unresolved
+```
+
+Provider parity is physical-file parity. Multiple same-name providers are never merged to manufacture coverage.
+
+Requires / Required By compares the normalized resolved source-to-target graph. Package/alias fallback identity is audited separately so a UI fallback is not mistaken for an authoritative dependency resolution.
+
+## Search parity
+
+Step 8 already proves every file's V5 SQL projection exactly matches its UEDB5 source data. Step 9 therefore tests end-user search behaviour using a deterministic bounded query corpus from live V4 names, imports, and exports.
+
+Each search scope is tested independently so a generic FName hit cannot mask a broken import or export search path. V5 uses the appropriate narrow candidate index and then hydrates UEDB5 before accepting the match.
+
+## Intentional source-correction differences
+
+Parity does not mean preserving a known V4 mistake. Intentional differences must be explicitly allow-listed and must carry source evidence in V5.
+
+The initial rule is `ut3_source_unresolved`:
+
+```text
+V4 missing -> V5 unresolved
+```
+
+This is accepted only for UT3 when the V5 dependency result contains UE3 source-policy/resolver evidence showing that runtime/cooked state prevents a proven missing decision. A bare outcome change without that evidence remains a regression.
+
+The same allow-list is applied wherever that correction affects aggregate behaviour, including base-game missing totals and duplicate-provider cases. New source fixes must add a similarly narrow rule; there is no generic "V5 wins" exemption.
+
+## Provider aliases
+
+Classic V5 provider projection must include one primary provider key plus every `ue_file_package_aliases` identity for the staged physical file. Alias source IDs remain the catalogue alias IDs. Zen `FPackageId` providers do not invent package-name alias identity.
+
+Files staged before this provider-key correction can be repaired without source reparse or dependency rebuild:
+
+```powershell
+C:\php8.5\php.exe C:\Apache24\htdocs\unrealdb\catalog\bin\sync-uedb5-provider-keys.php --game=ut99 --apply --continuous
+```
+
+This command writes only `ue_uedb5_provider_keys`.
+
+## Operator commands
+
+Readiness check:
+
+```powershell
+C:\php8.5\php.exe C:\Apache24\htdocs\unrealdb\catalog\bin\audit-uedb5-game-parity.php --game=ut99 --preflight
+```
+Actual behavioural audit after readiness is true:
+
+```powershell
+C:\php8.5\php.exe C:\Apache24\htdocs\unrealdb\catalog\bin\audit-uedb5-game-parity.php --game=ut99 --max-details=100 --search-samples=150 --relation-samples=500
+```
+
+A nonzero mismatch exit means cutover for that game is blocked until every unexpected difference is explained and either fixed or represented by a source-backed expected-difference rule.
+
+## Current implementation boundary
+
+Step 9 infrastructure is implemented before any game is fully V5-ready. No game-level audit result is claimed yet.
+
+The executable pieces are:
+
+- `Uedb5GameParityAuditService`;
+- `Uedb5ParityV5ReadService`;
+- `Uedb5GameParityExpectedDifferences`;
+- `audit-uedb5-game-parity.php`;
+- `verify-uedb5-game-parity-audit-contract.php`.
+
+The harness remains pre-cutover and read-only. Production runtime remains UEDB4 until later atomic cutover work.

@@ -394,6 +394,14 @@ Final validation reopens the original verified Unreal bytes and rebuilds a fresh
 
 A correct Pass-1 file whose dependency Pass 2 is not yet complete remains `staged`, not `failed`. `validated` is tied to the exact V5 payload SHA-256 and validator-policy version, so a later dependency rebuild or validator-contract change makes old validation stale and requires revalidation. See `uedb5-migration-validation.md`.
 
+## Current Step 9 game-level parity audit
+
+Step 9 is implemented as a read-only pre-cutover harness by `Uedb5GameParityAuditService`, `Uedb5ParityV5ReadService`, `Uedb5GameParityExpectedDifferences`, and `audit-uedb5-game-parity.php`. The actual audit refuses to run until every verified file for the game still has live V4 registration, has staged V5 registration, and is Step-8 `validated`, with zero pending/staged/failed rows.
+
+The audit compares behavioural outcomes rather than container bytes: search results, dependency counts and outcomes, physical provider selection, resolved object coverage, missing/base-game dependencies, Requires / Required By relationships, package aliases, duplicate-provider handling, public/private VerifyImport decisions, and invalid-file exclusions. V5 search uses narrow SQL candidates followed by `.uedb5` hydration; the V5 parity reader never reads UEDB4 bytes.
+
+Intentional source fixes are accepted only through narrow evidence-backed rules. The initial `ut3_source_unresolved` rule permits V4 `missing` to become V5 `unresolved` only when the UEDB5 dependency row carries UE3 source/resolver evidence. This rule is propagated into affected aggregate comparisons rather than suppressing arbitrary differences. See `uedb5-game-parity-audit.md`.
+
 ## Current UE5 classic UEDB5 persistence
 
 Classic UE5 5.8.3 source-shaped persistence is implemented for offline/staging UEDB5 files without changing the production UEDB4 runtime:
