@@ -404,6 +404,16 @@ The audit compares behavioural outcomes rather than container bytes: search resu
 
 Intentional source fixes are accepted only through narrow evidence-backed rules. The initial `ut3_source_unresolved` rule permits V4 `missing` to become V5 `unresolved` only when the UEDB5 dependency row carries UE3 source/resolver evidence. This rule is propagated into affected aggregate comparisons rather than suppressing arbitrary differences. See `uedb5-game-parity-audit.md`.
 
+## Current Step 10/11 cutover readiness
+
+Step 10 remains the operational migration-completion target rather than an automated switch: the complete verified catalogue must have current validated V5 metadata and V5-derived projections before production cutover. No `try V5 else V4` mixed runtime is permitted.
+
+Step 11 is implemented by `Uedb5CutoverReadinessVerifier`, `verify-uedb5-cutover-ready.php`, and `verify-uedb5-cutover-ready-contract.php`. Source-only mode checks the candidate V5 read/validation path for executable V4 fallback references. Database mode requires complete staged format-5 coverage, current Step-8 validation status/hash, invalid-file exclusion, provider/dependency baseline completeness, and source-contract coverage. If any cheap global blocker remains, the expensive phase is skipped.
+
+Once global blockers are zero, the cutover gate read-only runs `Uedb5MigrationValidator` again for every verified file. This rechecks current container/hash integrity, fresh authoritative source parity, engine-specific fields, provider/search/name/object projections, dependency completeness, and dependency SQL projections. An old `validated` status therefore cannot hide later container corruption or SQL projection drift. `cutover_ready=true` is emitted only when the database mode deep-validates the entire verified catalogue with zero failures. See `uedb5-cutover-readiness.md`.
+
+Because Step 7 requires live UEDB4 to remain intact until the atomic switch, pre-cutover readiness does not require `ue_file_metadata` to have already changed to format 5. The gate instead proves that no verified file *needs* V4 for metadata correctness and that the prepared V5 read path has no V4 fallback. A later post-cutover contract must verify the live runtime/registrations are actually V5-only.
+
 ## Current UE5 classic UEDB5 persistence
 
 Classic UE5 5.8.3 source-shaped persistence is implemented for offline/staging UEDB5 files without changing the production UEDB4 runtime:

@@ -411,6 +411,7 @@ As of this contract:
 - `Uedb5StagingIsolationContract` enforces Step 7: V5 staging writes only approved `ue_uedb5_*` tables and asserts `.uedb5` publication cannot replace the matching `.uedb4`; read-only coexistence verification is provided by `verify-uedb5-staging-coexistence.php`;
 - Step 8 uses `Uedb5MigrationValidator`, `Uedb5MigrationValidationService`, and `ue_uedb5_migration_status` for durable per-file `pending` / `staged` / `validated` / `failed` state; validation reparses original source bytes through the same `Uedb5SourceSnapshotFactory` used by Step 6, compares source-shaped V5 content, verifies projections/dependencies, and never reads UEDB4;
 - Step 9 uses `Uedb5GameParityAuditService` and `Uedb5ParityV5ReadService` for read-only game-level behavioural parity against live V4; the audit is gated on complete V5 staging plus Step-8 validation, and source-backed expected differences are explicitly allow-listed;
+- Step 11 uses `Uedb5CutoverReadinessVerifier` and `verify-uedb5-cutover-ready.php` as the strict read-only whole-catalogue gate: cheap global completeness/source-contract blockers run first, then every verified file is deep revalidated from current source/V5/projection state before `cutover_ready=true`;
 - classic UE5 5.8.3 source-shaped staging persistence is implemented by `Uedb5Ue5ClassicSnapshotBuilder`;
 - deterministic file-backed classic UE5 `VerifyImportInner` staging resolution is implemented by `Uedb5Ue5ClassicVerifyImportResolver`;
 - production metadata registration/runtime remains UEDB4;
