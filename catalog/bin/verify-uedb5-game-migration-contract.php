@@ -37,5 +37,9 @@ $check('workers_partition_file_ids_without_overlap',str_contains($service,'MOD(f
 $check('workers_start_at_lowest_remaining_partition_id',str_contains($service,'SELECT MIN(f.id)')&&str_contains($service,'first_remaining_file_id')&&str_contains($service,'$firstRemainingId - 1'));
 $check('projection_retries_mysql_contention',str_contains($publisher,'PdoContention::retryable')&&str_contains($publisher,'$maxAttempts = $started ? 5 : 1'));
 $check('search_dictionary_locks_use_deterministic_order',str_contains($publisher,'usort($searchRows')&&str_contains($publisher,'fingerprint'));
+$check('worker_parent_runs_preflight_once',str_contains($cli,'pool_preflight_start')&&str_contains($cli,'--skip-worker-preflight'));
+$check('worker_pool_emits_immediate_spawn_feedback',str_contains($cli,'worker_spawned')&&str_contains($cli,'fflush(STDOUT)'));
+$check('worker_pool_emits_heartbeats',str_contains($cli,'pool_heartbeat')&&str_contains($cli,'microtime(true)-$lastHeartbeat>=30.0'));
+$check('worker_emits_boot_before_remaining_id_query',str_contains($service,"'status'=>'worker_boot'")&&str_contains($service,'bool $skipPreflight = false'));
 echo json_encode(['ok'=>$failures===[],'checks'=>$checks,'failures'=>$failures],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;
 exit($failures===[]?0:1);

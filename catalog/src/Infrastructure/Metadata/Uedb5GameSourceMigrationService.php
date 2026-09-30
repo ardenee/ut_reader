@@ -105,9 +105,11 @@ final class Uedb5GameSourceMigrationService
         int $progressEvery = 100,
         ?callable $emit = null,
         int $workerCount = 1,
-        int $workerIndex = 0
+        int $workerIndex = 0,
+        bool $skipPreflight = false
     ): array {
-        $preflight = $this->preflight($gameSlug);
+        if ($emit) { $emit(['status'=>'worker_boot','worker_count'=>$workerCount,'worker_index'=>$workerIndex]); }
+        $preflight = $skipPreflight ? ['game'=>$this->game($gameSlug),'v4_ready'=>true,'worker_preflight_skipped'=>true] : $this->preflight($gameSlug);
         if (empty($preflight['v4_ready'])) {
             $ids = array_map(static fn(array $row): int => (int)($row['id'] ?? 0), (array)($preflight['missing_v4_files'] ?? []));
             throw new RuntimeException('Every verified file must retain a live UEDB4 registration before staging V5. Missing V4 file IDs: ' . implode(',', array_filter($ids)));

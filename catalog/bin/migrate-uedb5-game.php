@@ -11,7 +11,7 @@ require_once $root . '/lib/CatalogUE5ParserProfile.php';
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5GameSourceMigrationService;
 
 $options=getopt('',[
-    'game:', 'apply', 'continuous', 'limit::', 'progress-every::', 'preflight', 'workers::', 'worker-index::'
+    'game:', 'apply', 'continuous', 'limit::', 'progress-every::', 'preflight', 'workers::', 'worker-index::', 'skip-worker-preflight'
 ]);
 $game=trim((string)($options['game'] ?? ''));
 if($game===''){
@@ -24,11 +24,19 @@ $limit=max(1,min(5000,(int)($options['limit'] ?? 1000)));
 $progressEvery=max(1,(int)($options['progress-every'] ?? 100));
 $workers=max(1,min(8,(int)($options['workers'] ?? 1)));
 $workerIndex=array_key_exists('worker-index',$options)?(int)$options['worker-index']:null;
+$skipWorkerPreflight=isset($options['skip-worker-preflight']);
 
 if($workers>1 && $workerIndex===null && !isset($options['preflight'])){
+    echo json_encode(['status'=>'pool_preflight_start','workers'=>$workers,'game'=>$game],JSON_UNESCAPED_SLASHES),PHP_EOL; fflush(STDOUT);
+    $parentApp=catalog_bootstrap();
+    $parentService=new Uedb5GameSourceMigrationService($parentApp->db,catalog_config());
+    $parentPreflight=$parentService->preflight($game);
+    if(empty($parentPreflight['v4_ready'])){ throw new RuntimeException('Game failed V4 readiness preflight before worker launch.'); }
+    echo json_encode(['status'=>'pool_preflight_complete','workers'=>$workers,'staged_count'=>$parentPreflight['staged_count']??0,'verified_count'=>$parentPreflight['verified_count']??0],JSON_UNESCAPED_SLASHES),PHP_EOL; fflush(STDOUT);
     $children=[];
     for($index=0;$index<$workers;$index++){
         $command=[PHP_BINARY,__FILE__,'--game='.$game,'--workers='.$workers,'--worker-index='.$index,'--limit='.$limit,'--progress-every='.$progressEvery];
+        $command[]='--skip-worker-preflight';
         if($apply){$command[]='--apply';}
         if($continuous){$command[]='--continuous';}
         $pipes=[];
@@ -36,8 +44,10 @@ if($workers>1 && $workerIndex===null && !isset($options['preflight'])){
         if(!is_resource($process)){throw new RuntimeException('Could not start UEDB5 worker #'.$index.'.');}
         stream_set_blocking($pipes[1],false);stream_set_blocking($pipes[2],false);
         $children[$index]=['process'=>$process,'stdout'=>$pipes[1],'stderr'=>$pipes[2],'stdout_buffer'=>'','stderr_buffer'=>''];
+        $status=proc_get_status($process);
+        echo json_encode(['status'=>'worker_spawned','worker_index'=>$index,'pid'=>(int)($status['pid']??0)],JSON_UNESCAPED_SLASHES),PHP_EOL; fflush(STDOUT);
     }
-    $exitCodes=[];
+    $exitCodes=[];$lastHeartbeat=microtime(true);
     while($children!==[]){
         foreach(array_keys($children) as $index){
             foreach(['stdout','stderr'] as $streamName){
@@ -71,6 +81,10 @@ if($workers>1 && $workerIndex===null && !isset($options['preflight'])){
                 unset($children[$index]);
             }
         }
+        if($children!==[] && microtime(true)-$lastHeartbeat>=30.0){
+            echo json_encode(['status'=>'pool_heartbeat','alive_workers'=>array_map('intval',array_keys($children))],JSON_UNESCAPED_SLASHES),PHP_EOL; fflush(STDOUT);
+            $lastHeartbeat=microtime(true);
+        }
         if($children!==[])usleep(50000);
     }
     ksort($exitCodes);$ok=!array_filter($exitCodes,static fn(int $code):bool=>$code!==0);
@@ -92,8 +106,9 @@ try{
     $emit=static function(array $row):void{
         $row['memory_mb']=round(memory_get_usage(true)/1048576,1);
         echo json_encode($row,JSON_UNESCAPED_SLASHES),PHP_EOL;
+        fflush(STDOUT);
     };
-    $result=$service->migrate($game,$apply,$limit,$continuous,$progressEvery,$emit,$workers,$workerIndex ?? 0);
+    $result=$service->migrate($game,$apply,$limit,$continuous,$progressEvery,$emit,$workers,$workerIndex ?? 0,$skipWorkerPreflight);
     $jsonFlags=JSON_UNESCAPED_SLASHES|($workerIndex===null?JSON_PRETTY_PRINT:0);
     echo json_encode(['ok'=>$result['failed']===0,'summary'=>$result],$jsonFlags),PHP_EOL;
     exit($result['failed']===0?0:2);
