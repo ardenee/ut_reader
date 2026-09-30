@@ -10,13 +10,14 @@ namespace UnrealDb\Catalog\Infrastructure\Metadata;
 use PDO;
 use RuntimeException;
 use Throwable;
-use UnrealDb\Catalog\Infrastructure\Readers\CatalogReaderResolver;
 
 final class Uedb5GameSourceMigrationService
 {
     private Uedb5MetadataSnapshotWriter $writer;
     private PdoUedb5StagingRegistrationRepository $registration;
     private PdoUedb5BaseProjectionPublisher $publisher;
+    private ?PdoUedb5MigrationStatusRepository $statuses = null;
+    private Uedb5SourceSnapshotFactory $sourceSnapshots;
 
     /** @param array<string,mixed> $config */
     public function __construct(private readonly PDO $db, private readonly array $config)
@@ -26,6 +27,10 @@ final class Uedb5GameSourceMigrationService
         $this->writer = new Uedb5MetadataSnapshotWriter($storage);
         $this->registration = new PdoUedb5StagingRegistrationRepository($db, $storage);
         $this->publisher = new PdoUedb5BaseProjectionPublisher($db);
+        $this->sourceSnapshots = new Uedb5SourceSnapshotFactory($db, $config);
+        if ($this->tableExists('ue_uedb5_migration_status')) {
+            $this->statuses = new PdoUedb5MigrationStatusRepository($db);
+        }
     }
     /** @return array<string,mixed> */
     public function preflight(string $gameSlug): array
@@ -88,6 +93,7 @@ final class Uedb5GameSourceMigrationService
             'source_version_range' => [(int)$contract['min_version'], (int)$contract['max_version']],
             'package_version_distribution' => $versionDistribution,
             'verified_directory' => $sourceDirectory,
+            'durable_status_tracking' => $this->statuses !== null,
         ];
     }
     /** @return array<string,mixed> */
@@ -129,7 +135,10 @@ final class Uedb5GameSourceMigrationService
                     }
                 } catch (Throwable $error) {
                     $failed++;
-                    if ($apply) { $this->registration->remove($cursor); }
+                    if ($apply) {
+                        $this->registration->remove($cursor);
+                        $this->markStageFailure($cursor, (int)$game['id'], $error);
+                    }
                     if (count($failures) < 50) {
                         $failures[] = ['file_id'=>$cursor,'error'=>$error->getMessage()];
                     }
@@ -170,6 +179,12 @@ final class Uedb5GameSourceMigrationService
         $registration = $this->registration->register((int)$file['game_id'], (int)$file['id']);
         try {
             $projection = $this->publisher->publish($snapshot, $registration);
+            if ($this->statuses !== null) {
+                $this->statuses->markStageSucceeded(
+                    (int)$file['id'],
+                    (int)$file['game_id']
+                );
+            }
         } catch (Throwable $error) {
             $this->registration->remove((int)$file['id']);
             throw $error;
@@ -181,6 +196,17 @@ final class Uedb5GameSourceMigrationService
             'section_counts'=>$sectionCounts,
             'projection'=>$projection,
         ];
+    }
+
+
+    private function markStageFailure(int $fileId, int $gameId, Throwable $error): void
+    {
+        if ($this->statuses === null) { return; }
+        try {
+            $this->statuses->markStageFailed($fileId, $gameId, 'source_stage_failed', $error->getMessage());
+        } catch (Throwable) {
+            // Preserve the original staging failure; status can be reconciled/retried later.
+        }
     }
 
     /** @return list<array<string,mixed>> */
@@ -205,62 +231,7 @@ final class Uedb5GameSourceMigrationService
     /** @param array<string,mixed> $file @return array<string,mixed> */
     private function snapshot(string $gameSlug, string $path, array $file): array
     {
-        $contract = $this->sourceContract($gameSlug);
-        $engineKey = (string)$contract['engine_key'];
-        $readerClass = CatalogReaderResolver::resolve(
-            $this->config,
-            $engineKey,
-            'Reader not found for package engine',
-            'Reader file loaded for package engine ',
-            ['UE4','UE5']
-        );
-        if ($engineKey === 'UE4' || $engineKey === 'UE5') {
-            if (!function_exists('gp_required_profile_for_game')) {
-                throw new RuntimeException('Game parser-profile helper is unavailable for Step 6 migration.');
-            }
-            $game = $this->game($gameSlug);
-            $profile = \gp_required_profile_for_game($this->db, (int)$file['game_id']);
-            if ($engineKey === 'UE4') {
-                if (!function_exists('catalog_ue4_reader_options') || !function_exists('catalog_ue4_set_next_reader_options')) {
-                    throw new RuntimeException('UE4 parser-profile helpers are unavailable for Step 6 migration.');
-                }
-                \catalog_ue4_set_next_reader_options(\catalog_ue4_reader_options($this->config, $game, $profile));
-            } else {
-                if (!function_exists('catalog_ue5_reader_options') || !function_exists('catalog_ue5_set_next_reader_options')) {
-                    throw new RuntimeException('UE5 parser-profile helpers are unavailable for Step 6 migration.');
-                }
-                \catalog_ue5_set_next_reader_options(\catalog_ue5_reader_options($this->config, $game, $profile));
-            }
-        }
-        $reader = new $readerClass($path);
-
-        return match ($gameSlug) {
-            'ut99' => $reader instanceof \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1PackageReader
-                ? Uedb5Ut99SnapshotBuilder::build($reader, $file)
-                : throw new RuntimeException('UT99 migration did not resolve the canonical UE1 reader.'),
-            'unrealgold' => $reader instanceof \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1PackageReader
-                ? Uedb5UnrealSnapshotBuilder::build($reader, $file)
-                : throw new RuntimeException('Unreal migration did not resolve the canonical UE1 reader.'),
-            'unreal2' => $reader instanceof \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE2PackageReader
-                ? Uedb5Unreal2SnapshotBuilder::build($reader, $file)
-                : throw new RuntimeException('Unreal II migration did not resolve the canonical UE2 reader.'),
-            'ut2003' => $reader instanceof \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE2PackageReader
-                ? Uedb5Ut2003SnapshotBuilder::build($reader, $file)
-                : throw new RuntimeException('UT2003 migration did not resolve the canonical UE2 reader.'),
-            'ut2004' => $reader instanceof \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE2PackageReader
-                ? Uedb5Ut2004SnapshotBuilder::build($reader, $file)
-                : throw new RuntimeException('UT2004 migration did not resolve the canonical UE2 reader.'),
-            'ut3' => $reader instanceof \CatalogUE3PackageReader
-                ? Uedb5Ut3SnapshotBuilder::build($reader, $file)
-                : throw new RuntimeException('UT3 migration did not resolve the canonical UE3 reader.'),
-            'ut4' => $reader instanceof \UnrealPackageReader4
-                ? Uedb5Ut4SnapshotBuilder::build($reader, $file)
-                : throw new RuntimeException('UT4 migration did not resolve the canonical UE4 reader.'),
-            'ue5' => $reader instanceof \UnrealPackageReader5
-                ? Uedb5Ue5ClassicSnapshotBuilder::build($reader, $file)
-                : throw new RuntimeException('UE5 classic migration did not resolve the canonical UE5 reader.'),
-            default => throw new RuntimeException('No Step 6 source builder is registered for game ' . $gameSlug . '.'),
-        };
+        return $this->sourceSnapshots->build($gameSlug, $path, $file);
     }
 
     /** @param array<string,mixed> $file */
@@ -284,51 +255,7 @@ final class Uedb5GameSourceMigrationService
     /** @return array{engine_key:string,min_version:int,max_version:int} */
     private function sourceContract(string $slug): array
     {
-        return match ($slug) {
-            'ut99' => [
-                'engine_key'=>'UE1',
-                'min_version'=>Uedb5Ut99SnapshotBuilder::MIN_VERSION,
-                'max_version'=>Uedb5Ut99SnapshotBuilder::MAX_VERSION,
-            ],
-            'unrealgold' => [
-                'engine_key'=>'UE1',
-                'min_version'=>Uedb5UnrealSnapshotBuilder::MIN_VERSION,
-                'max_version'=>Uedb5UnrealSnapshotBuilder::MAX_VERSION,
-            ],
-            'unreal2' => [
-                'engine_key'=>'UE2',
-                'min_version'=>Uedb5Unreal2SnapshotBuilder::MIN_VERSION,
-                'max_version'=>Uedb5Unreal2SnapshotBuilder::MAX_VERSION,
-            ],
-            'ut2003' => [
-                'engine_key'=>'UE2',
-                'min_version'=>Uedb5Ut2003SnapshotBuilder::MIN_VERSION,
-                'max_version'=>Uedb5Ut2003SnapshotBuilder::MAX_VERSION,
-            ],
-            'ut2004' => [
-                'engine_key'=>'UE2',
-                'min_version'=>Uedb5Ut2004SnapshotBuilder::MIN_VERSION,
-                'max_version'=>Uedb5Ut2004SnapshotBuilder::MAX_VERSION,
-            ],
-            'ut3' => [
-                'engine_key'=>'UE3',
-                'min_version'=>Uedb5Ut3SnapshotBuilder::PACKAGE_VERSION,
-                'max_version'=>Uedb5Ut3SnapshotBuilder::PACKAGE_VERSION,
-            ],
-            'ut4' => [
-                'engine_key'=>'UE4',
-                'min_version'=>Uedb5Ut4SnapshotBuilder::MIN_VERSION,
-                'max_version'=>Uedb5Ut4SnapshotBuilder::MAX_VERSION,
-            ],
-            'ue5' => [
-                'engine_key'=>'UE5',
-                'min_version'=>1000,
-                'max_version'=>1018,
-            ],
-            default => throw new RuntimeException(
-                'Step 6 source migration is not yet implemented for game ' . $slug . '.'
-            ),
-        };
+        return $this->sourceSnapshots->contract($slug);
     }
 
     /** @return array<string,mixed> */

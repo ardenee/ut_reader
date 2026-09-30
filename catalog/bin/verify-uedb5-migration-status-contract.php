@@ -1,0 +1,37 @@
+#!/usr/bin/env php
+<?php
+declare(strict_types=1);
+$root=realpath(dirname(__DIR__))?:dirname(__DIR__);
+$status=(string)file_get_contents($root.'/src/Infrastructure/Metadata/Uedb5MigrationStatus.php');
+$repo=(string)file_get_contents($root.'/src/Infrastructure/Metadata/PdoUedb5MigrationStatusRepository.php');
+$service=(string)file_get_contents($root.'/src/Infrastructure/Metadata/Uedb5MigrationValidationService.php');
+$validator=(string)file_get_contents($root.'/src/Infrastructure/Metadata/Uedb5MigrationValidator.php');
+$gameMigration=(string)file_get_contents($root.'/src/Infrastructure/Metadata/Uedb5GameSourceMigrationService.php');
+$factory=(string)file_get_contents($root.'/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php');
+$migration=(string)file_get_contents($root.'/migrations/202609300002_uedb5_migration_status.php');
+$cli=(string)file_get_contents($root.'/bin/validate-uedb5-migration.php');
+$checks=[];$failures=[];
+$check=static function(string $n,bool $ok)use(&$checks,&$failures):void{$checks[$n]=$ok;if(!$ok)$failures[]=$n;};
+$check('four_durable_states',str_contains($status,"PENDING = 'pending'")&&str_contains($status,"STAGED = 'staged'")&&str_contains($status,"VALIDATED = 'validated'")&&str_contains($status,"FAILED = 'failed'"));
+$check('status_table_is_per_file',str_contains($migration,'ue_uedb5_migration_status')&&str_contains($migration,'PRIMARY KEY (file_id)'));
+$check('status_table_tracks_exact_validated_payload',str_contains($migration,'validated_payload_sha256 BINARY(32)'));
+$check('status_table_tracks_attempt_and_failure',str_contains($migration,'attempt_count')&&str_contains($migration,'last_error_code')&&str_contains($migration,'last_result_json'));
+$check('stage_failure_is_durable_without_v5_registration',str_contains($repo,'s.status IN ("staged","validated")')&&str_contains($repo,'markStageFailed'));
+$check('step6_marks_stage_success_and_failure_when_status_exists',str_contains($gameMigration,'markStageSucceeded')&&str_contains($gameMigration,'markStageFailure'));
+$check('validator_reparses_authoritative_source',str_contains($validator,'sourceSnapshots->build')&&str_contains($validator,'validateSourceSnapshot'));
+$check('source_factory_uses_canonical_reader_resolver',str_contains($factory,'CatalogReaderResolver::resolve'));
+$check('reconcile_backfills_pending_and_staged',str_contains($repo,'CASE WHEN v.file_id IS NULL THEN "pending" ELSE "staged" END'));
+$check('validated_hash_change_returns_to_staged',str_contains($repo,'validated_payload_sha256<>v.payload_sha256')&&str_contains($repo,'s.status="staged"'));
+$check('validation_batch_is_resumable',str_contains($repo,'s.file_id>?')&&str_contains($repo,'status IN ("staged","failed")')&&str_contains($service,'$cursor = $fileId'));
+$check('dependency_not_ready_stays_staged',str_contains($service,'markStaged')&&str_contains($validator,"'dependency_results_not_built'"));
+$check('hard_validation_error_becomes_failed',str_contains($service,'markFailed')&&str_contains($service,'Uedb5ValidationException'));
+$check('successful_validation_becomes_validated',str_contains($service,'markValidated')&&str_contains($validator,"'ready' => (bool)\$dependency['ready']"));
+$check('validator_checks_source_hashes',str_contains($validator,'md5_file($path)')&&str_contains($validator,'sha1_file($path)'));
+$check('validator_checks_registration_manifest',str_contains($validator,'validateRegistrationManifest')&&str_contains($validator,'section_counts_json'));
+$check('validator_checks_exact_base_projections',str_contains($validator,'Uedb5SqlProjectionBuilder::build')&&str_contains($validator,'assertRowsEqual'));
+$check('validator_checks_dependency_projections',str_contains($validator,'Uedb5DependencyProjectionBuilder::build'));
+$check('validator_has_engine_specific_field_gates',str_contains($validator,'validateLegacyFields')&&str_contains($validator,'validateUe3Fields')&&str_contains($validator,'validateUe4Fields')&&str_contains($validator,'validateUe5ClassicFields')&&str_contains($validator,'validateZenFields'));
+$check('validator_has_no_v4_metadata_reads',!str_contains($validator,'ue_file_metadata')&&!str_contains($validator,'BlockedCompressedMetadataReader')&&!str_contains($validator,'.uedb4'));
+$check('cli_supports_preflight_sync_and_continuous',str_contains($cli,"'preflight'")&&str_contains($cli,"'sync-only'")&&str_contains($cli,"'continuous'")&&str_contains($cli,'GameProfiles.php'));
+echo json_encode(['ok'=>$failures===[],'checks'=>$checks,'failures'=>$failures],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;
+exit($failures===[]?0:1);

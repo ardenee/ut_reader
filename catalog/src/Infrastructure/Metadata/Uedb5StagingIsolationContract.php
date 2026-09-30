@@ -14,7 +14,10 @@ final class Uedb5StagingIsolationContract
     /** @return list<string> */
     public static function allowedWriteTables(): array
     {
-        return array_keys(Uedb5SqlProjectionContract::baselineTables());
+        return array_values(array_unique(array_merge(
+            array_keys(Uedb5SqlProjectionContract::baselineTables()),
+            ['ue_uedb5_migration_status']
+        )));
     }
 
     /** @return list<string> */

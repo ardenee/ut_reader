@@ -22,6 +22,11 @@ final class Uedb5SqlProjectionContract
     public const OBJECT_KIND_EXPORT = 1;
     public const OBJECT_KIND_CELL_EXPORT = 2;
 
+    public const DEP_SOURCE_IMPORT = 1;
+    public const DEP_SOURCE_CELL_IMPORT = 2;
+    public const DEP_SOURCE_SOFT_PACKAGE = 3;
+    public const DEP_SOURCE_LOAD_ORDER = 4;
+
     public const OUTCOME_MISSING = 0;
     public const OUTCOME_RESOLVED = 1;
     public const OUTCOME_PACKAGE_ONLY = 2;
