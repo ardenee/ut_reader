@@ -9,8 +9,9 @@ use RuntimeException;
 final class Uedb5Ut4SnapshotBuilder
 {
     public const PACKAGE_FAMILY = 'ue4-classic-package';
-    public const SOURCE_POLICY = 'ue4-ut4-v511-unrealtournament-clean-master';
-    public const PACKAGE_VERSION = 511;
+    public const SOURCE_POLICY = 'ue4-4.27.2-release-classic-package';
+    public const MIN_VERSION = 214;
+    public const MAX_VERSION = 522;
 
     /** @param array<string,mixed> $file @return array<string,mixed> */
     public static function build(\UnrealPackageReader4 $reader, array $file): array
@@ -21,8 +22,8 @@ final class Uedb5Ut4SnapshotBuilder
         }
         $header = $reader->getHeader();
         $version = (int)($header['version'] ?? -1);
-        if ($version !== self::PACKAGE_VERSION || !empty($header['unversioned'])) {
-            throw new RuntimeException('UT4 V5 source policy requires serialized UE4 package version 511.');
+        if ($version < self::MIN_VERSION || $version > self::MAX_VERSION) {
+            throw new RuntimeException('UE4 V5 source policy supports package versions 214-522.');
         }
         $fileId = (int)($file['id'] ?? 0);
         $gameId = (int)($file['game_id'] ?? 0);
@@ -72,9 +73,13 @@ final class Uedb5Ut4SnapshotBuilder
     private static function summaryRow(array $header): array
     {
         return [
-            'serialized_tag' => self::u32Hex((int)($header['signature'] ?? 0)),
+            'serialized_tag' => self::u32Hex((int)($header['serializedSignature'] ?? ($header['signature'] ?? 0))),
+            'normalized_tag' => self::u32Hex((int)($header['signature'] ?? 0)),
+            'byte_swapping' => (bool)($header['byteSwapping'] ?? false),
             'legacy_file_version' => (int)($header['legacyFileVersion'] ?? 0),
             'legacy_ue3_version' => (int)($header['legacyUE3Version'] ?? 0),
+            'serialized_package_version' => (int)($header['serializedUE4Version'] ?? ($header['version'] ?? 0)),
+            'serialized_licensee_version' => (int)($header['serializedLicenseeVersion'] ?? ($header['licenseeVersion'] ?? 0)),
             'package_version' => (int)($header['version'] ?? 0),
             'licensee_version' => (int)($header['licenseeVersion'] ?? 0),
             'unversioned' => (bool)($header['unversioned'] ?? false),
@@ -145,7 +150,8 @@ final class Uedb5Ut4SnapshotBuilder
             'class_name' => self::fname((array)($row['className'] ?? [])),
             'outer_index' => (int)($row['outerIndex'] ?? 0),
             'object_name' => self::fname((array)($row['objectName'] ?? [])),
-            'package_name' => self::fname((array)($row['packageName'] ?? [])),
+            'package_name_present' => (bool)($row['packageNamePresent'] ?? false),
+            'package_name' => !empty($row['packageNamePresent']) ? self::fname((array)($row['packageName'] ?? [])) : null,
         ];
     }
     /** @param array<string,mixed> $row @return array<string,mixed> */
@@ -157,22 +163,26 @@ final class Uedb5Ut4SnapshotBuilder
             'serialized_offset' => (int)($row['offset'] ?? -1),
             'class_index' => (int)($row['classIndex'] ?? 0),
             'super_index' => (int)($row['superIndex'] ?? 0),
-            'template_index' => (int)($row['templateIndex'] ?? 0),
+            'template_index_present' => (bool)($row['templateIndexPresent'] ?? false),
+            'template_index' => !empty($row['templateIndexPresent']) ? (int)($row['templateIndex'] ?? 0) : null,
             'outer_index' => (int)($row['outerIndex'] ?? 0),
             'object_name' => self::fname((array)($row['objectName'] ?? [])),
             'object_flags' => self::u32Hex((int)($row['objectFlags'] ?? 0)),
             'object_flags_serialized_width_bits' => 32,
             'serial_size' => (int)($row['serialSize'] ?? 0),
             'serial_offset' => (int)($row['serialOffset'] ?? 0),
-            'serial_range_serialized_width_bits' => 64,
+            'serial_range_serialized_width_bits' => (int)($row['serialSizeWidthBits'] ?? 0),
             'forced_export' => (bool)($row['forcedExport'] ?? false),
             'not_for_client' => (bool)($row['notForClient'] ?? false),
             'not_for_server' => (bool)($row['notForServer'] ?? false),
+            'not_for_editor_game_present' => (bool)($row['notForEditorGamePresent'] ?? false),
             'not_for_editor_game' => $row['notForEditorGame'] ?? null,
+            'is_asset_present' => (bool)($row['isAssetPresent'] ?? false),
             'is_asset' => $row['isAsset'] ?? null,
             'package_guid' => (string)($row['packageGuid'] ?? ''),
             'package_flags' => self::u32Hex((int)($row['packageFlags'] ?? 0)),
-            'preload' => (array)($row['preload'] ?? []),
+            'preload_present' => (bool)($row['preloadPresent'] ?? false),
+            'preload' => !empty($row['preloadPresent']) ? (array)($row['preload'] ?? []) : null,
         ];
     }
     /** @param array<string,mixed> $value @return array{name_index:int,number:int,text:string} */

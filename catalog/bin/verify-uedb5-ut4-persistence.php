@@ -90,11 +90,14 @@ try{
     $check('ut4_v511_uedb5_roundtrip',($round['sections']['exports'][0]['object_name']['text']??'')==='MyExport'
         && ($round['sections']['summary'][0]['parser_profile']['key']??'')==='ut4-alpha');
 
-    $bad=$temp.DIRECTORY_SEPARATOR.'fixture510.uasset';file_put_contents($bad,$buildFixture(510));
-    $p510=new \UnrealPackageReader4($bad,$options);$rejected=false;
-    try{Uedb5Ut4SnapshotBuilder::build($p510,['id'=>7510,'game_id'=>7,'package_name'=>'Bad','original_name'=>'Bad.uasset']);}
-    catch(RuntimeException $e){$rejected=str_contains($e->getMessage(),'requires serialized UE4 package version 511');}
-    $check('ut4_v510_not_claimed_as_ut4_policy',$p510->validatePackage()===[] && $rejected);
+    $older=$temp.DIRECTORY_SEPARATOR.'fixture510.uasset';file_put_contents($older,$buildFixture(510));
+    $p510=new \UnrealPackageReader4($older,$options);
+    $s510=Uedb5Ut4SnapshotBuilder::build($p510,['id'=>7510,'game_id'=>7,'package_name'=>'Old','original_name'=>'Old.uasset']);
+    $check('ue4_v510_is_source_loadable',$p510->validatePackage()===[]
+        && (int)($s510['sections']['summary'][0]['package_version']??0)===510
+        && (int)($s510['sections']['exports'][0]['serial_range_serialized_width_bits']??0)===32);
+    $check('ue4_policy_uses_4272_loadable_range',Uedb5Ut4SnapshotBuilder::MIN_VERSION===214
+        && Uedb5Ut4SnapshotBuilder::MAX_VERSION===522);
 }finally{
     if(is_dir($temp)){
         $it=new RecursiveIteratorIterator(new RecursiveDirectoryIterator($temp,FilesystemIterator::SKIP_DOTS),RecursiveIteratorIterator::CHILD_FIRST);

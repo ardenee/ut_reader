@@ -54,8 +54,15 @@ final class Uedb5GameSourceMigrationService
         $counts = $statement->fetch(PDO::FETCH_ASSOC) ?: [];
         $verified = (int)($counts['verified_count'] ?? 0);
         $v4 = (int)($counts['v4_count'] ?? 0);
+        $missingV4 = [];
         if ($v4 !== $verified) {
-            throw new RuntimeException('Every verified file must retain a live UEDB4 registration before staging V5: verified=' . $verified . ' v4=' . $v4);
+            $missingStatement = $this->db->prepare(
+                'SELECT f.id,f.original_name,f.package_version FROM ue_files f '
+                . 'LEFT JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=4 '
+                . 'WHERE f.game_id=? AND f.scan_status=\"verified\" AND m.file_id IS NULL ORDER BY f.id LIMIT 50'
+            );
+            $missingStatement->execute([(int)$game['id']]);
+            $missingV4 = $missingStatement->fetchAll(PDO::FETCH_ASSOC) ?: [];
         }
         $contract = $this->sourceContract((string)$game['slug']);
         $unsupported = $this->db->prepare(
@@ -64,13 +71,22 @@ final class Uedb5GameSourceMigrationService
         );
         $unsupported->execute([(int)$game['id'], (int)$contract['min_version'], (int)$contract['max_version']]);
         $unsupportedCount = (int)$unsupported->fetchColumn();
+        $distribution = $this->db->prepare(
+            'SELECT package_version,COUNT(*) file_count FROM ue_files '
+            . 'WHERE game_id=? AND scan_status=\"verified\" GROUP BY package_version ORDER BY package_version'
+        );
+        $distribution->execute([(int)$game['id']]);
+        $versionDistribution = $distribution->fetchAll(PDO::FETCH_ASSOC) ?: [];
         return [
             'game' => $game,
             'verified_count' => $verified,
             'v4_count' => $v4,
+            'v4_ready' => $v4 === $verified,
+            'missing_v4_files' => $missingV4,
             'staged_count' => (int)($counts['staged_count'] ?? 0),
             'unsupported_source_version_count' => $unsupportedCount,
             'source_version_range' => [(int)$contract['min_version'], (int)$contract['max_version']],
+            'package_version_distribution' => $versionDistribution,
             'verified_directory' => $sourceDirectory,
         ];
     }
@@ -84,6 +100,10 @@ final class Uedb5GameSourceMigrationService
         ?callable $emit = null
     ): array {
         $preflight = $this->preflight($gameSlug);
+        if (empty($preflight['v4_ready'])) {
+            $ids = array_map(static fn(array $row): int => (int)($row['id'] ?? 0), (array)($preflight['missing_v4_files'] ?? []));
+            throw new RuntimeException('Every verified file must retain a live UEDB4 registration before staging V5. Missing V4 file IDs: ' . implode(',', array_filter($ids)));
+        }
         $game = (array)$preflight['game'];
         $contract = $this->sourceContract((string)$game['slug']);
         $limit = max(1, min(5000, $limit));
@@ -297,8 +317,8 @@ final class Uedb5GameSourceMigrationService
             ],
             'ut4' => [
                 'engine_key'=>'UE4',
-                'min_version'=>Uedb5Ut4SnapshotBuilder::PACKAGE_VERSION,
-                'max_version'=>Uedb5Ut4SnapshotBuilder::PACKAGE_VERSION,
+                'min_version'=>Uedb5Ut4SnapshotBuilder::MIN_VERSION,
+                'max_version'=>Uedb5Ut4SnapshotBuilder::MAX_VERSION,
             ],
             'ue5' => [
                 'engine_key'=>'UE5',

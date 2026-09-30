@@ -199,10 +199,14 @@ final class UnrealPackageReader4
     {
         return [
             'signature' => 0,
+            'serializedSignature' => 0,
+            'byteSwapping' => false,
             'legacyFileVersion' => 0,
             'legacyUE3Version' => 0,
             'version' => 0,
             'licenseeVersion' => 0,
+            'serializedUE4Version' => 0,
+            'serializedLicenseeVersion' => 0,
             'unversioned' => false,
             'customVersions' => [],
             'totalHeaderSize' => 0,
@@ -267,6 +271,7 @@ final class UnrealPackageReader4
             throw new RuntimeException('UE4 package is smaller than the 32-byte minimum package summary size. fileSize=' . $this->fileSize);
         }
         $tag = $r->u32();
+        $serializedTag = $tag;
         if ($tag !== self::PACKAGE_FILE_TAG && $tag !== self::PACKAGE_FILE_TAG_SWAPPED) {
             throw new RuntimeException(sprintf('Bad UE4 package tag 0x%08X', $tag));
         }
@@ -280,6 +285,8 @@ final class UnrealPackageReader4
         $this->header = $this->blankHeader();
         $this->attachParserProfileToHeader();
         $this->header['signature'] = $tag;
+        $this->header['serializedSignature'] = $serializedTag;
+        $this->header['byteSwapping'] = $r->isByteSwapping();
         $this->header['legacyFileVersion'] = $legacy;
 
         if ($legacy >= 0) {
@@ -294,6 +301,8 @@ final class UnrealPackageReader4
 
         $ue4Version = $r->i32();
         $licensee = $r->i32();
+        $this->header['serializedUE4Version'] = $ue4Version;
+        $this->header['serializedLicenseeVersion'] = $licensee;
         $this->header['version'] = $ue4Version;
         $this->header['licenseeVersion'] = $licensee;
 
@@ -597,7 +606,8 @@ final class UnrealPackageReader4
             $className = $this->readFName($r);
             $outerIndex = $r->i32();
             $objectName = $this->readFName($r);
-            $packageName = $version >= self::VER_NON_OUTER_PACKAGE_IMPORT && !$filterEditorOnly
+            $packageNamePresent = $version >= self::VER_NON_OUTER_PACKAGE_IMPORT && !$filterEditorOnly;
+            $packageName = $packageNamePresent
                 ? $this->readFName($r)
                 : ['index' => 0, 'number' => 0, 'text' => ''];
             $this->imports[] = [
@@ -616,6 +626,7 @@ final class UnrealPackageReader4
                 'objectName' => $objectName,
                 'ObjectName' => $objectName,
                 'objectNameText' => $this->fnameText($objectName),
+                'packageNamePresent' => $packageNamePresent,
                 'packageName' => $packageName,
                 'PackageName' => $packageName,
                 'packageNameText' => $this->fnameText($packageName),
@@ -636,14 +647,16 @@ final class UnrealPackageReader4
             $start = $r->tell();
             $classIndex = $r->i32();
             $superIndex = $r->i32();
+            $templateIndexPresent = $version >= self::VER_TEMPLATE_INDEX_IN_COOKED_EXPORTS;
             $templateIndex = 0;
-            if ($version >= self::VER_TEMPLATE_INDEX_IN_COOKED_EXPORTS) {
+            if ($templateIndexPresent) {
                 $templateIndex = $r->i32();
             }
             $outerIndex = $r->i32();
             $objectName = $this->readFName($r);
             $objectFlags = $r->u32();
-            if ($version >= self::VER_64BIT_EXPORTMAP_SERIALSIZES) {
+            $serialSizeWidthBits = $version >= self::VER_64BIT_EXPORTMAP_SERIALSIZES ? 64 : 32;
+            if ($serialSizeWidthBits === 64) {
                 $serialSize = $r->i64();
                 $serialOffset = $r->i64();
             } else {
@@ -655,16 +668,13 @@ final class UnrealPackageReader4
             $notForServer = $r->i32() !== 0;
             $packageGuid = $r->guid();
             $packageFlags = $r->u32();
-            $notForEditorGame = null;
-            $isAsset = null;
-            if ($version >= self::VER_LOAD_FOR_EDITOR_GAME) {
-                $notForEditorGame = $r->i32() !== 0;
-            }
-            if ($version >= self::VER_COOKED_ASSETS_IN_EDITOR_SUPPORT) {
-                $isAsset = $r->i32() !== 0;
-            }
+            $notForEditorGamePresent = $version >= self::VER_LOAD_FOR_EDITOR_GAME;
+            $isAssetPresent = $version >= self::VER_COOKED_ASSETS_IN_EDITOR_SUPPORT;
+            $notForEditorGame = $notForEditorGamePresent ? $r->i32() !== 0 : null;
+            $isAsset = $isAssetPresent ? $r->i32() !== 0 : null;
+            $preloadPresent = $version >= self::VER_PRELOAD_DEPENDENCIES_IN_COOKED_EXPORTS;
             $preload = [];
-            if ($version >= self::VER_PRELOAD_DEPENDENCIES_IN_COOKED_EXPORTS) {
+            if ($preloadPresent) {
                 $preload = [
                     'firstExportDependency' => $r->i32(),
                     'serializationBeforeSerializationDependencies' => $r->i32(),
@@ -681,6 +691,7 @@ final class UnrealPackageReader4
                 'className' => $this->displayNameFromRef($classIndex),
                 'superIndex' => $superIndex,
                 'superName' => $this->displayNameFromRef($superIndex),
+                'templateIndexPresent' => $templateIndexPresent,
                 'templateIndex' => $templateIndex,
                 'templateName' => $this->displayNameFromRef($templateIndex),
                 'outerIndex' => $outerIndex,
@@ -689,15 +700,19 @@ final class UnrealPackageReader4
                 'ObjectName' => $objectName,
                 'objectNameText' => $this->fnameText($objectName),
                 'objectFlags' => $objectFlags,
+                'serialSizeWidthBits' => $serialSizeWidthBits,
                 'serialSize' => $serialSize,
                 'serialOffset' => $serialOffset,
                 'forcedExport' => $forcedExport,
                 'notForClient' => $notForClient,
                 'notForServer' => $notForServer,
+                'notForEditorGamePresent' => $notForEditorGamePresent,
                 'notForEditorGame' => $notForEditorGame,
+                'isAssetPresent' => $isAssetPresent,
                 'isAsset' => $isAsset,
                 'packageGuid' => $packageGuid,
                 'packageFlags' => $packageFlags,
+                'preloadPresent' => $preloadPresent,
                 'preload' => $preload,
             ];
         }

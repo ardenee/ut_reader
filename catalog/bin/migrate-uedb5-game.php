@@ -4,6 +4,9 @@ declare(strict_types=1);
 if (PHP_SAPI !== 'cli') { fwrite(STDERR,"CLI only.\n"); exit(1); }
 $root = realpath(dirname(__DIR__)) ?: dirname(__DIR__);
 require_once $root . '/bootstrap.php';
+require_once $root . '/lib/GameProfiles.php';
+require_once $root . '/lib/CatalogUE4ParserProfile.php';
+require_once $root . '/lib/CatalogUE5ParserProfile.php';
 
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5GameSourceMigrationService;
 

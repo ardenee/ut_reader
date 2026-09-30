@@ -131,6 +131,16 @@ $check(
     'Minimum serialized table widths follow the UE4 version gates instead of imposing one fixed export size on every loadable UE4 version.'
 );
 
+$check(
+    'serialized_version_identity_is_retained',
+    is_string($source)
+        && str_contains($source, "'serializedUE4Version'")
+        && str_contains($source, "'serializedLicenseeVersion'")
+        && str_contains($source, "'serializedSignature'")
+        && str_contains($source, "'byteSwapping'"),
+    'UE4 source-shaped migration retains serialized tag/version identity separately from effective unversioned parser state.'
+);
+
 $ok = !in_array(false, array_column($checks, 'ok'), true);
 echo json_encode(['ok' => $ok, 'checks' => $checks], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . PHP_EOL;
 exit($ok ? 0 : 1);
