@@ -404,7 +404,9 @@ As of this contract:
 - deterministic file-backed classic UE5 `VerifyImportInner` staging resolution is implemented by `Uedb5Ue5ClassicVerifyImportResolver`;
 - production metadata registration/runtime remains UEDB4;
 - UE1/UE2/UE3/UE4 V5 source-reparse builders remain to be implemented;
-- UE5 Zen/IoStore ingestion and UEDB5 writers remain to be implemented;
+- UE5 5.8.3 IoStore ingestion is implemented by `Uedb5IoStoreTocReader`, `Uedb5IoStoreContainerHeaderReader`, and `Uedb5IoStoreCodec`;
+- UE5 5.8.3 Zen source-shaped staging persistence is implemented by `Uedb5ZenPackageReader` and `Uedb5Ue5ZenIoStoreSnapshotBuilder`;
+- deterministic Zen PackageImport/cell/load-order staging resolution is implemented by `Uedb5Ue5ZenDependencyResolver`;
 - V5 SQL publication, catalogue migration, cutover, and V4 retirement remain later steps.
 
 The current UE5 classic staging resolver uses internal labels such as optional_missing and runtime_only. Those are staging diagnostics, not canonical persisted UEDB5 outcomes. A production V5 dependency writer must normalize them to the five-state contract above, for example missing plus optional classification and unresolved plus runtime-derived classification, while retaining the detailed reason/provenance.

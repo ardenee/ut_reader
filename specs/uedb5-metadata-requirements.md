@@ -362,7 +362,7 @@ Classic UE5 5.8.3 source-shaped persistence is implemented for offline/staging U
 - soft package references remain a separate section and retain every serialized FName row, including a serialized None entry if one exists;
 - `catalog/bin/verify-uedb5-ue5-classic-persistence.php` verifies full `.uedb5` round-trip preservation, including the filtered-editor-only serialized/effective `PackageName` distinction and serialized-zero versus assumed version identity for unversioned packages.
 
-The persistence layer itself does not publish UEDB5 SQL registrations or switch production readers. Classic UE5 `VerifyImportInner` source-parity resolution is implemented separately below; Zen/IoStore and production cutover remain pending.
+The persistence layer itself does not publish UEDB5 SQL registrations or switch production readers. Classic UE5 `VerifyImportInner` source-parity resolution is implemented separately below; isolated Zen/IoStore staging is implemented below; production cutover remains pending.
 
 ## Current UE5 classic dependency resolution
 
@@ -380,16 +380,31 @@ The deterministic file-backed portion of UE5 5.8.3 `FLinkerLoad::VerifyImportInn
 This resolver is deliberately not wired into production `PdoDependencyResolver` / `CompactDependencyRebuilder`; those still consume UEDB4 metadata and must remain unchanged until the UEDB5 migration/publication cutover.
 
 
+## Current UE5 Zen / IoStore staging implementation
+
+Step 2 is implemented as an isolated UEDB5 staging path and does not alter production UEDB4 runtime behavior:
+
+- `Uedb5IoStoreTocReader` reads UE5 5.8.3 `.utoc` framing, chunk IDs, offset/length records, perfect-hash sections, compression blocks/methods, signed/indexed framing and `.ucas` partitions; chunk reads use source-sized block reconstruction.
+- `Uedb5IoStoreCodec` handles uncompressed, zlib and gzip blocks directly, AES-256 encrypted block reads when the caller supplies the key, and an explicit Oodle FFI boundary; Oodle or any unsupported codec fails closed when its runtime is unavailable.
+- `Uedb5IoStoreContainerHeaderReader` reads current supported container-header versions, ordered package-store imports, shader-map hashes, optional-segment entries, redirects/localization and soft-reference relative views.
+- `Uedb5ZenPackageReader` parses the Zen summary/versioning/name map, bulk-data map, imported public-export hashes, typed raw `FPackageObjectIndex` maps, ordinary and cell exports, export/dependency bundles and imported package names with source-sized span/bounds checks.
+- `Uedb5Ue5ZenIoStoreSnapshotBuilder` persists the exact container/package-store provenance and Zen source-shaped sections under `package_family=zen-iostore`, keeping unsigned 64-bit identities as fixed-width hex.
+- `Uedb5Ue5ZenDependencyResolver` resolves ordinary PackageImports by `FPackageId + PublicExportHash` against the provider ordinary export map and cell imports against the provider cell-export map. It follows Epic table order for duplicate hashes, preserves ScriptImport as unresolved without script-object runtime context, separates soft/optional/cell/load-order classifications, and emits only the five canonical UEDB5 outcomes.
+- `verify-uedb5-ue5-iostore-foundation.php`, `verify-uedb5-ue5-zen-package.php`, and `verify-uedb5-ue5-zen-dependency-resolution.php` cover container reconstruction, Zen source-shape/UEDB5 round-trip, range rejection and dependency-resolution semantics.
+
+This completes the isolated UE5 Zen/IoStore staging scope. It does not implement UE5 AssetRegistry build/cook dependency metadata, V5 SQL publication, catalogue-wide migration, production cutover, or V4 retirement.
+
+
 ## UE5 implementation checklist for UEDB5
 
-Before full UE5 support can be marked complete, the UEDB5 update must include all of the following. The classic reader, classic staging persistence, and deterministic classic `VerifyImportInner` staging resolver are implemented; production publication/cutover, complete dependency projections/classification, and Zen/IoStore support remain:
+Before full UE5 support can be marked complete, the UEDB5 update must include all of the following. Classic and Zen/IoStore staging are implemented; production publication/cutover, UE5 AssetRegistry build/cook dependency ingestion, and the remaining catalogue-wide migration/projection work remain:
 
 1. [implemented in `b95dfe2c`] a dedicated UE5 reader using `FPackageFileVersion` and the UE5 summary/import/export gates, not `UnrealPackageReader4`;
 2. [implemented by `Uedb5Ue5ClassicSnapshotBuilder`] classic UE5 metadata blocks retaining `PackageName`, `bImportOptional`, complete raw package-index graphs and public-hash semantics;
 3. [implemented by `Uedb5Ue5ClassicVerifyImportResolver`] a UE5 classic dependency resolver implementing the audited deterministic file-backed `VerifyImportInner` rules without borrowing UE3 exact-tuple policy; runtime-only branches remain explicitly unresolved;
-4. IoStore `.utoc`/`.ucas` ingestion that preserves package-store provenance and package redirects/optional segments;
-5. Zen metadata blocks for PackageId/public-export-hash identity, typed `FPackageObjectIndex` values, export/dependency bundles, script imports and cell maps, using lossless unsigned-64 storage rather than PHP signed integers;
-6. separate dependency classifications for hard, optional, soft, build/cook, script, cell/Verse, load-order and runtime-derived references;
+4. [implemented by `Uedb5IoStoreTocReader`, `Uedb5IoStoreContainerHeaderReader`, and `Uedb5IoStoreCodec`] IoStore `.utoc`/`.ucas` ingestion preserving package-store provenance, redirects, optional segments, soft references, partition/block framing, compression dispatch and AES-key boundaries;
+5. [implemented by `Uedb5ZenPackageReader` and `Uedb5Ue5ZenIoStoreSnapshotBuilder`] Zen metadata blocks for PackageId/public-export-hash identity, typed `FPackageObjectIndex` values, export/dependency bundles, script imports and cell maps, using lossless unsigned-64 storage rather than PHP signed integers;
+6. [Zen/IoStore portion implemented by `Uedb5Ue5ZenIoStoreSnapshotBuilder` and `Uedb5Ue5ZenDependencyResolver`] separate hard, optional, soft, script, cell/Verse, load-order and runtime-derived classifications; build/cook dependencies remain separate AssetRegistry-source work and must not be fabricated from Zen package bytes;
 7. compact SQL projections only for fields that need indexed catalog lookup; auxiliary UE5 source blocks remain in compressed `.uedb5` metadata by default;
 8. migration/verification that reparses original bytes whenever UEDB4 did not retain a required serialized field.
 
@@ -458,4 +473,4 @@ UEDB5 verification must compare source-derived raw fields, not merely counts and
 | Cell/Verse resources | `Engine/Source/Runtime/CoreUObject/Public/UObject/ObjectResource.h`, `FCellResource`, `FCellImport`, `FCellExport` |
 | Import type hierarchy reading | `Engine/Source/Runtime/AssetRegistry/Private/PackageReader.cpp`, `FPackageReader::ReadImportTypeHierarchies` |
 
-This matrix is intentionally limited to behaviors audited for UEDB5. The dedicated UE5 classic package-format and dependency-resolution specifications cover the implemented LinkerLoad reader and deterministic file-backed `VerifyImportInner` resolver. `ue5-5.8.3-zen-iostore-format.md` now covers the source-audited `.utoc`/`.ucas`, package-store, Zen-header, PackageImport/public-export-hash, export/dependency-bundle, cell-map, optional-segment, redirect/localization, soft-reference, and codec/encryption boundaries. The isolated Zen/IoStore reader and UEDB5 persistence implementation remain pending until Step 2 is completed.
+This matrix is intentionally limited to behaviors audited for UEDB5. The dedicated UE5 classic package-format and dependency-resolution specifications cover the implemented LinkerLoad reader and deterministic file-backed `VerifyImportInner` resolver. `ue5-5.8.3-zen-iostore-format.md` now covers the source-audited `.utoc`/`.ucas`, package-store, Zen-header, PackageImport/public-export-hash, export/dependency-bundle, cell-map, optional-segment, redirect/localization, soft-reference, and codec/encryption boundaries. The isolated Zen/IoStore reader, UEDB5 persistence path, and source-keyed staging dependency resolver are now implemented. Production publication/cutover and AssetRegistry build/cook dependency work remain separate.
