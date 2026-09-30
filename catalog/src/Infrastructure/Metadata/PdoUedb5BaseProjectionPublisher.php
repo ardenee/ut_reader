@@ -10,6 +10,7 @@ namespace UnrealDb\Catalog\Infrastructure\Metadata;
 use PDO;
 use RuntimeException;
 use Throwable;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoContention;
 
 final class PdoUedb5BaseProjectionPublisher
 {
@@ -23,9 +24,15 @@ final class PdoUedb5BaseProjectionPublisher
             throw new RuntimeException('UEDB5 base projection requires a positive file ID.');
         }
         $projection = Uedb5SqlProjectionBuilder::build($snapshot, $registration);
+        $searchRows = array_values((array)$projection['search_keys']);
+        usort($searchRows, static fn(array $left, array $right): int =>
+            strcmp(bin2hex((string)$left['fingerprint']), bin2hex((string)$right['fingerprint']))
+        );
         $started = !$this->db->inTransaction();
-        if ($started) { $this->db->beginTransaction(); }
-        try {
+        $maxAttempts = $started ? 5 : 1;
+        for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
+            if ($started) { $this->db->beginTransaction(); }
+            try {
             foreach ([
                 'ue_uedb5_dependency_packages',
                 'ue_uedb5_dependency_edges',
@@ -43,7 +50,7 @@ final class PdoUedb5BaseProjectionPublisher
                 . 'VALUES(?,?,?,?) ON DUPLICATE KEY UPDATE '
                 . 'key_hash=VALUES(key_hash),key_length=VALUES(key_length),normalized_text=VALUES(normalized_text)'
             );
-            foreach ((array)$projection['search_keys'] as $row) {
+            foreach ($searchRows as $row) {
                 $search->execute([$row['hash'], $row['length'], $row['fingerprint'], $row['normalized_text']]);
             }
 
@@ -75,15 +82,20 @@ final class PdoUedb5BaseProjectionPublisher
             if ($started) { $this->db->commit(); }
             return [
                 'provider_keys' => $providerCount,
-                'search_keys' => count((array)$projection['search_keys']),
+                'search_keys' => count($searchRows),
                 'name_candidates' => count((array)$projection['name_candidates']),
                 'object_candidates' => count((array)$projection['object_candidates']),
                 'dependency_edges' => 0,
                 'dependency_packages' => 0,
             ];
-        } catch (Throwable $error) {
-            if ($started && $this->db->inTransaction()) { $this->db->rollBack(); }
-            throw $error;
+            } catch (Throwable $error) {
+                if ($started && $this->db->inTransaction()) { $this->db->rollBack(); }
+                if (!$started || !PdoContention::retryable($error) || $attempt >= $maxAttempts) {
+                    throw $error;
+                }
+                usleep(PdoContention::backoffMicros($attempt, 25000));
+            }
         }
+        throw new \LogicException('UEDB5 base projection contention retry loop exited unexpectedly.');
     }
 }

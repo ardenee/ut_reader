@@ -103,7 +103,9 @@ final class Uedb5GameSourceMigrationService
         int $limit = 1000,
         bool $continuous = false,
         int $progressEvery = 100,
-        ?callable $emit = null
+        ?callable $emit = null,
+        int $workerCount = 1,
+        int $workerIndex = 0
     ): array {
         $preflight = $this->preflight($gameSlug);
         if (empty($preflight['v4_ready'])) {
@@ -114,13 +116,18 @@ final class Uedb5GameSourceMigrationService
         $contract = $this->sourceContract((string)$game['slug']);
         $limit = max(1, min(5000, $limit));
         $progressEvery = max(1, $progressEvery);
+        $workerCount = max(1, min(8, $workerCount));
+        if ($workerIndex < 0 || $workerIndex >= $workerCount) {
+            throw new RuntimeException('UEDB5 migration worker index is outside the configured worker count.');
+        }
         $cursor = 0;
         $processed = $succeeded = $failed = 0;
         $failures = [];
         do {
             $rows = $this->batch(
                 (int)$game['id'], $cursor, $limit,
-                (int)$contract['min_version'], (int)$contract['max_version']
+                (int)$contract['min_version'], (int)$contract['max_version'],
+                $workerCount, $workerIndex
             );
             if ($rows === []) { break; }
             foreach ($rows as $file) {
@@ -157,6 +164,8 @@ final class Uedb5GameSourceMigrationService
             'succeeded' => $succeeded,
             'failed' => $failed,
             'last_file_id' => $cursor,
+            'worker_count' => $workerCount,
+            'worker_index' => $workerIndex,
             'failures' => $failures,
         ];
     }
@@ -215,16 +224,19 @@ final class Uedb5GameSourceMigrationService
         int $afterId,
         int $limit,
         int $minVersion,
-        int $maxVersion
+        int $maxVersion,
+        int $workerCount = 1,
+        int $workerIndex = 0
     ): array {
         $sql = 'SELECT f.id,f.game_id,f.package_name,f.original_name,f.stored_name,f.relative_path,'
             . 'f.file_size,f.md5,f.sha1,f.package_version,f.licensee_version '
             . 'FROM ue_files f JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=4 '
             . 'LEFT JOIN ue_uedb5_files v ON v.file_id=f.id '
             . 'WHERE f.game_id=? AND f.scan_status="verified" AND v.file_id IS NULL AND f.id>? '
-            . 'AND f.package_version BETWEEN ? AND ? ORDER BY f.id LIMIT ' . $limit;
+            . 'AND f.package_version BETWEEN ? AND ? '
+            . 'AND MOD(f.id,?)=? ORDER BY f.id LIMIT ' . $limit;
         $statement = $this->db->prepare($sql);
-        $statement->execute([$gameId, $afterId, $minVersion, $maxVersion]);
+        $statement->execute([$gameId, $afterId, $minVersion, $maxVersion, $workerCount, $workerIndex]);
         return $statement->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
 

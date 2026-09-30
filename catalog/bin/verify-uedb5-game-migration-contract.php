@@ -32,5 +32,9 @@ $check('cli_defaults_to_explicit_apply',str_contains($cli,'isset($options')&&str
 $check('cli_supports_preflight',str_contains($cli,"'preflight'"));
 $check('cli_loads_game_profile_helpers',str_contains($cli,"GameProfiles.php")&&str_contains($cli,"CatalogUE4ParserProfile.php")&&str_contains($cli,"CatalogUE5ParserProfile.php"));
 $check('cli_supports_continuous',str_contains($cli,"'continuous'"));
+$check('cli_supports_multiple_workers',str_contains($cli,"'workers::'")&&str_contains($cli,'proc_open')&&str_contains($cli,"'worker-index::'"));
+$check('workers_partition_file_ids_without_overlap',str_contains($service,'MOD(f.id,?)=?')&&str_contains($service,'$workerCount, $workerIndex'));
+$check('projection_retries_mysql_contention',str_contains($publisher,'PdoContention::retryable')&&str_contains($publisher,'$maxAttempts = $started ? 5 : 1'));
+$check('search_dictionary_locks_use_deterministic_order',str_contains($publisher,'usort($searchRows')&&str_contains($publisher,'fingerprint'));
 echo json_encode(['ok'=>$failures===[],'checks'=>$checks,'failures'=>$failures],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;
 exit($failures===[]?0:1);
