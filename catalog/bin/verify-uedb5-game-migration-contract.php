@@ -20,6 +20,7 @@ $check('continuous_run_has_internal_cursor',str_contains($service,'f.id>?')&&str
 $check('ut99_is_source_version_bounded',str_contains($service,'Uedb5Ut99SnapshotBuilder::MIN_VERSION')&&str_contains($service,'Uedb5Ut99SnapshotBuilder::MAX_VERSION'));
 $check('ut4_uses_4272_loadable_range',str_contains($service,'Uedb5Ut4SnapshotBuilder::MIN_VERSION')&&str_contains($service,'Uedb5Ut4SnapshotBuilder::MAX_VERSION'));
 $check('preflight_reports_version_distribution',str_contains($service,'package_version_distribution'));
+$check('preflight_sql_has_no_literal_quote_backslashes',!str_contains($service,'scan_status=\\\"verified\\\"'));
 $check('preflight_reports_missing_v4_files',str_contains($service,'missing_v4_files')&&str_contains($service,'v4_ready'));
 $check('ue5_classic_is_source_version_bounded',str_contains($service,"'min_version'=>1000")&&str_contains($service,"'max_version'=>1018"));
 $check('ue5_classic_uses_assigned_parser_profile',str_contains($service,'catalog_ue5_reader_options')&&str_contains($service,'catalog_ue5_set_next_reader_options'));

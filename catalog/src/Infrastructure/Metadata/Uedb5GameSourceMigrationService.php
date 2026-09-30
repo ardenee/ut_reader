@@ -59,7 +59,7 @@ final class Uedb5GameSourceMigrationService
             $missingStatement = $this->db->prepare(
                 'SELECT f.id,f.original_name,f.package_version FROM ue_files f '
                 . 'LEFT JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=4 '
-                . 'WHERE f.game_id=? AND f.scan_status=\"verified\" AND m.file_id IS NULL ORDER BY f.id LIMIT 50'
+                . 'WHERE f.game_id=? AND f.scan_status="verified" AND m.file_id IS NULL ORDER BY f.id LIMIT 50'
             );
             $missingStatement->execute([(int)$game['id']]);
             $missingV4 = $missingStatement->fetchAll(PDO::FETCH_ASSOC) ?: [];
@@ -73,7 +73,7 @@ final class Uedb5GameSourceMigrationService
         $unsupportedCount = (int)$unsupported->fetchColumn();
         $distribution = $this->db->prepare(
             'SELECT package_version,COUNT(*) file_count FROM ue_files '
-            . 'WHERE game_id=? AND scan_status=\"verified\" GROUP BY package_version ORDER BY package_version'
+            . 'WHERE game_id=? AND scan_status="verified" GROUP BY package_version ORDER BY package_version'
         );
         $distribution->execute([(int)$game['id']]);
         $versionDistribution = $distribution->fetchAll(PDO::FETCH_ASSOC) ?: [];
