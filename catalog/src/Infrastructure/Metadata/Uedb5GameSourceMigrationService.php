@@ -76,6 +76,17 @@ final class Uedb5GameSourceMigrationService
         );
         $unsupported->execute([(int)$game['id'], (int)$contract['min_version'], (int)$contract['max_version']]);
         $unsupportedCount = (int)$unsupported->fetchColumn();
+        $unsupportedFiles = [];
+        if ($unsupportedCount > 0) {
+            $unsupportedRows = $this->db->prepare(
+                'SELECT id,original_name,package_name,package_version,licensee_version FROM ue_files '
+                . 'WHERE game_id=? AND scan_status="verified" '
+                . 'AND (package_version IS NULL OR package_version < ? OR package_version > ?) '
+                . 'ORDER BY package_version,id LIMIT 100'
+            );
+            $unsupportedRows->execute([(int)$game['id'], (int)$contract['min_version'], (int)$contract['max_version']]);
+            $unsupportedFiles = $unsupportedRows->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        }
         $distribution = $this->db->prepare(
             'SELECT package_version,COUNT(*) file_count FROM ue_files '
             . 'WHERE game_id=? AND scan_status="verified" GROUP BY package_version ORDER BY package_version'
@@ -90,6 +101,7 @@ final class Uedb5GameSourceMigrationService
             'missing_v4_files' => $missingV4,
             'staged_count' => (int)($counts['staged_count'] ?? 0),
             'unsupported_source_version_count' => $unsupportedCount,
+            'unsupported_source_files' => $unsupportedFiles,
             'source_version_range' => [(int)$contract['min_version'], (int)$contract['max_version']],
             'package_version_distribution' => $versionDistribution,
             'verified_directory' => $sourceDirectory,

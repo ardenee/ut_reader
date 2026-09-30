@@ -22,6 +22,7 @@ $check('continuous_run_has_internal_cursor',str_contains($service,'f.id>?')&&str
 $check('ut99_is_source_version_bounded',str_contains($factory,'Uedb5Ut99SnapshotBuilder::MIN_VERSION')&&str_contains($factory,'Uedb5Ut99SnapshotBuilder::MAX_VERSION'));
 $check('ut4_uses_4272_loadable_range',str_contains($factory,'Uedb5Ut4SnapshotBuilder::MIN_VERSION')&&str_contains($factory,'Uedb5Ut4SnapshotBuilder::MAX_VERSION'));
 $check('preflight_reports_version_distribution',str_contains($service,'package_version_distribution'));
+$check('preflight_reports_unsupported_files',str_contains($service,'unsupported_source_files'));
 $check('preflight_sql_has_no_literal_quote_backslashes',!str_contains($service,'scan_status=\\\"verified\\\"'));
 $check('preflight_reports_missing_v4_files',str_contains($service,'missing_v4_files')&&str_contains($service,'v4_ready'));
 $check('ue5_classic_is_source_version_bounded',str_contains($factory,"'min_version'=>1000")&&str_contains($factory,"'max_version'=>1018"));
@@ -44,3 +45,4 @@ $check('worker_emits_boot_before_remaining_id_query',str_contains($service,"'sta
 $check('worker_pool_uses_direct_console_output',str_contains($cli,'1=>STDOUT')&&str_contains($cli,'2=>STDERR')&&!str_contains($cli,'stream_get_contents($stream)'));
 echo json_encode(['ok'=>$failures===[],'checks'=>$checks,'failures'=>$failures],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;
 exit($failures===[]?0:1);
+
