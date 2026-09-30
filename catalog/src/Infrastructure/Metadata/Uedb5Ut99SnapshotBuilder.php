@@ -14,7 +14,8 @@ final class Uedb5Ut99SnapshotBuilder
 {
     public const PACKAGE_FAMILY = 'classic-linkerload';
     public const POLICY_RETAIL = 'ue1-ut99-retail-v1400-1999-11-30';
-    public const POLICY_V69 = 'ue1-ut99-v69-supplemental-v430';
+    public const POLICY_SUPPLEMENTAL = 'ue1-ut99-supplemental-v430';
+    public const POLICY_V69 = self::POLICY_SUPPLEMENTAL;
     public const MIN_VERSION = 60;
     public const MAX_VERSION = 69;
 
@@ -48,7 +49,8 @@ final class Uedb5Ut99SnapshotBuilder
                 'original_name' => (string)($file['original_name'] ?? ''),
             ],
             'package_family' => self::PACKAGE_FAMILY,
-            'source_policy' => $version <= 68 ? self::POLICY_RETAIL : self::POLICY_V69,
+            'source_policy' => ($version <= 68 && (int)($header['licenseeVersion'] ?? 0) === 0)
+                ? self::POLICY_RETAIL : self::POLICY_SUPPLEMENTAL,
             'section_schemas' => self::sectionSchemas(),
             'sections' => [
                 'summary' => [self::summaryRow($header)],

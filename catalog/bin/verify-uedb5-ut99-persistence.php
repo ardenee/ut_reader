@@ -103,6 +103,17 @@ try {
         $check('v' . $version . '_container_hash_is_binary_sha256', strlen((string)($written['payload_sha256'] ?? '')) === 32);
     }
 
+    $licensed68Path = $temp . DIRECTORY_SEPARATOR . 'source-68-licensee7.unr';
+    file_put_contents($licensed68Path, $fixture(68, 7));
+    $licensed68 = new CatalogUE1PackageReader($licensed68Path);
+    $licensed68Snapshot = Uedb5Ut99SnapshotBuilder::build($licensed68, [
+        'id'=>1999,'game_id'=>3,'package_name'=>'Licensed68','original_name'=>'Licensed68.unr'
+    ]);
+    $check('v68_licensee_bits_use_supplemental_policy',
+        ($licensed68Snapshot['source_policy'] ?? '') === Uedb5Ut99SnapshotBuilder::POLICY_SUPPLEMENTAL);
+    $check('v68_licensee_bits_are_preserved',
+        (($licensed68Snapshot['sections']['summary'][0]['licensee_version'] ?? null) === 7));
+
     $unsupportedPath = $temp . DIRECTORY_SEPARATOR . 'source-71.unr';
     file_put_contents($unsupportedPath, $fixture(71, 0));
     $unsupported = new CatalogUE1PackageReader($unsupportedPath);
