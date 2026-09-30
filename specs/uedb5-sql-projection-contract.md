@@ -59,9 +59,10 @@ No baseline V5 projection may depend on `ue_terms`, `ue_export_path_lookup`, `ue
 - `package_family` and `source_policy`;
 - package-key kind and package key;
 - source-derived package name for the staged V5 identity;
+- the manifest section-count map as one JSON value;
 - creation/update timestamps.
 
-Name/import/export counts already exist on the catalogue file row and are not duplicated here merely for convenience.
+The complete manifest section-count map is stored once here because V5 package families do not all share the same Name/Import/Export table shape. It is registration metadata, not a per-object projection.
 
 The package key is an accelerator identity:
 
@@ -90,7 +91,7 @@ V5 does not use an auto-increment term ID as the identity carried by every proje
 - a SHA-256 fingerprint for deterministic dictionary uniqueness/collision separation;
 - the normalized text once for prefix/contains catalogue search.
 
-Candidate tables carry only the compact hash/length pair. A hash match is never authoritative: it is a candidate that must be checked against UEDB5 when source identity matters.
+High-cardinality object candidates carry only compact hash/length keys; the deduplicated FName table also carries the dictionary fingerprint so an MD5 collision cannot collapse two names. A hash match is never authoritative: it is a candidate that must be checked against UEDB5 when source identity matters.
 
 This avoids the V4 pattern where many different source strings and paths flowed through one large auto-increment `ue_terms` dictionary and were then repeated through several per-object lookup tables.
 
@@ -101,7 +102,7 @@ This avoids the V4 pattern where many different source strings and paths flowed 
 Its cardinality is **one row per file and distinct normalized FName**, not one row per serialized Name-table entry. The row contains only:
 
 - file ID;
-- normalized name hash/length;
+- normalized name hash/length plus SHA-256 fingerprint for collision-safe deduplication;
 - first matching Name-table index as a hydration hint.
 
 Duplicate serialized Name entries therefore do not automatically create duplicate SQL rows. If a caller needs every matching serialized Name index, it reads/scans that file's UEDB5 name section after SQL identifies the candidate file.
@@ -261,7 +262,9 @@ Per-file publication must replace that file's V5 projection rows atomically or t
 Projection verification compares candidate/edge/summary coverage to the UEDB5 manifest and sections, but the SQL row is never used to repair missing source fields in UEDB5.
 ## Cutover relationship
 
-This contract does not switch production to V5 and does not create the SQL tables yet. Step 4 freezes what later migration/publication code is allowed to create.
+Step 5 defines migration `202609300001_uedb5_staging_registration.php`, which prepares nullable V5-only columns on `ue_file_metadata` and creates the baseline side-by-side `ue_uedb5_*` schema. Applying that migration does not change an existing live metadata row from format 4 to format 5.
+
+`PdoUedb5StagingRegistrationRepository` registers a verified staged container only in `ue_uedb5_files`, after proving the corresponding verified catalogue file still has a live UEDB4 registration. V5 projection tables foreign-key to the staged registration so deleting it cascades staged projection rows.
 
 During migration the dedicated V5 tables may be populated and verified alongside V4. Production queries continue using the current V4 registration/projections until the explicit cutover step.
 

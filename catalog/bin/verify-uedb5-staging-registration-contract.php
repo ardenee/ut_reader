@@ -90,6 +90,10 @@ try {
     $check('live_registration_primary_key_is_not_changed',
         !str_contains(strtolower($migration), 'drop primary key')
         && !str_contains(strtolower($migration), 'modify primary key'));
+    $check('migration_does_not_rewrite_live_metadata_rows',
+        !preg_match('/(?:UPDATE|INSERT\s+INTO|REPLACE\s+INTO)\s+ue_file_metadata/i', $migration));
+    $check('v5_projection_rows_cascade_from_staged_registration',
+        substr_count($migration, 'REFERENCES ue_uedb5_files(file_id)') >= 7);
     $repoSource = $read('src/Infrastructure/Metadata/PdoUedb5StagingRegistrationRepository.php');
     $check('staging_repository_never_writes_live_registration',
         !preg_match('/(?:INSERT\s+INTO|UPDATE|REPLACE\s+INTO)\s+ue_file_metadata/i', $repoSource));

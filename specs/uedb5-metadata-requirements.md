@@ -360,7 +360,15 @@ The baseline projection is deliberately side-by-side under `ue_uedb5_*`: file re
 
 The baseline object candidate row contains only file/kind/index plus lookup hashes. Class package/name, class/super/template/outer graph, flags, serialization fields, preload ranges, raw Zen object indexes and resolver diagnostic payloads remain authoritative in `.uedb5`. `verify-uedb5-sql-projection-contract.php` also pins the current UT3 `SQL candidate export indexes -> UEDB source-row hydration` implementation as the model V5 resolver architecture.
 
-This step defines the contract only. It does not create/populate the V5 SQL tables, publish V5 registration, or switch production queries away from UEDB4.
+Step 4 defines the contract only; Step 5 adds the staging registration/schema implementation described below. Production queries still remain on UEDB4.
+
+## Current UEDB5 staging database registration
+
+Step 5 adds migration `202609300001_uedb5_staging_registration.php` and `PdoUedb5StagingRegistrationRepository` without switching production runtime. The migration makes `ue_file_metadata` V5-capable by adding nullable `block_count`, `package_family`, `source_policy`, and `section_counts_json` columns, but it does not rewrite existing rows or change the one-row-per-file primary key.
+
+Pre-cutover V5 registration therefore lives only in `ue_uedb5_files`. The repository re-verifies the canonical `.uedb5` file, derives size/hash/block count/source policy/section counts and package identity from that file, requires the corresponding verified catalogue file to remain registered as UEDB4, and then upserts the staged V5 row. It never inserts or updates `ue_file_metadata`. Classic families use a normalized package-name candidate key; Zen stores the exact 8-byte `FPackageId` candidate key.
+
+The migration also creates the baseline Step 4 projection tables before catalogue migration begins. V5 projection rows foreign-key to `ue_uedb5_files`, so removing a staged registration cascades its V5-only projections. The optional object-path table remains absent/off by default. `verify-uedb5-staging-registration-contract.php` verifies both classic and Zen registration shapes and the V4/V5 isolation boundary.
 
 ## Current UE5 classic UEDB5 persistence
 

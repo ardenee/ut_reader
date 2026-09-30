@@ -406,6 +406,8 @@ As of this contract:
 - `Uedb5MetadataReader` is the production-capable V5 file reader, keyed only by explicit game/file identity and the canonical `.uedb5` path; it has no UEDB4 fallback and no production registration lookup;
 - `Uedb5MetadataSnapshotWriter` performs verified temporary-file construction and same-filesystem rename replacement of `.uedb5` snapshots without publishing SQL registration;
 - `Uedb5DependencyRebuilder` rebuilds the authoritative `dependency_results` section from explicitly selected physical V5 providers, dispatches to the source-family resolver, and persists canonical five-state outcomes without SQL publication;
+- migration `202609300001_uedb5_staging_registration.php` defines the side-by-side V5 registration/projection schema and makes `ue_file_metadata` schema-ready for a later V5 cutover without rewriting its current V4 rows;
+- `PdoUedb5StagingRegistrationRepository` registers verified V5 files only in `ue_uedb5_files` and refuses registration unless the corresponding live production metadata row is still UEDB4;
 - classic UE5 5.8.3 source-shaped staging persistence is implemented by `Uedb5Ue5ClassicSnapshotBuilder`;
 - deterministic file-backed classic UE5 `VerifyImportInner` staging resolution is implemented by `Uedb5Ue5ClassicVerifyImportResolver`;
 - production metadata registration/runtime remains UEDB4;
@@ -413,7 +415,7 @@ As of this contract:
 - UE5 5.8.3 IoStore ingestion is implemented by `Uedb5IoStoreTocReader`, `Uedb5IoStoreContainerHeaderReader`, and `Uedb5IoStoreCodec`;
 - UE5 5.8.3 Zen source-shaped staging persistence is implemented by `Uedb5ZenPackageReader` and `Uedb5Ue5ZenIoStoreSnapshotBuilder`;
 - deterministic Zen PackageImport/cell/load-order staging resolution is implemented by `Uedb5Ue5ZenDependencyResolver`;
-- V5 SQL publication, catalogue migration, cutover, and V4 retirement remain later steps.
+- V5 projection population/publication, catalogue migration, cutover, and V4 retirement remain later steps.
 
 The UE5 classic source resolver still uses internal labels such as `optional_missing` and `runtime_only`. `Uedb5DependencyRebuilder` treats those as resolver diagnostics and normalizes them to the five-state contract above (`missing` plus optional classification and `unresolved` plus runtime-derived classification) while retaining the resolver detail and deterministic reason code. Zen resolver rows already use the canonical outcome set.
 
