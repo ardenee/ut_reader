@@ -194,6 +194,16 @@ final class Uedb5GameSourceMigrationService
             'Reader file loaded for package engine ',
             ['UE4','UE5']
         );
+        if ($engineKey === 'UE4') {
+            if (!function_exists('gp_required_profile_for_game')
+                || !function_exists('catalog_ue4_reader_options')
+                || !function_exists('catalog_ue4_set_next_reader_options')) {
+                throw new RuntimeException('UE4 parser-profile helpers are unavailable for Step 6 migration.');
+            }
+            $game = $this->game($gameSlug);
+            $profile = \gp_required_profile_for_game($this->db, (int)$file['game_id']);
+            \catalog_ue4_set_next_reader_options(\catalog_ue4_reader_options($this->config, $game, $profile));
+        }
         $reader = new $readerClass($path);
 
         return match ($gameSlug) {
@@ -215,6 +225,9 @@ final class Uedb5GameSourceMigrationService
             'ut3' => $reader instanceof \CatalogUE3PackageReader
                 ? Uedb5Ut3SnapshotBuilder::build($reader, $file)
                 : throw new RuntimeException('UT3 migration did not resolve the canonical UE3 reader.'),
+            'ut4' => $reader instanceof \UnrealPackageReader4
+                ? Uedb5Ut4SnapshotBuilder::build($reader, $file)
+                : throw new RuntimeException('UT4 migration did not resolve the canonical UE4 reader.'),
             default => throw new RuntimeException('No Step 6 source builder is registered for game ' . $gameSlug . '.'),
         };
     }
@@ -270,6 +283,11 @@ final class Uedb5GameSourceMigrationService
                 'engine_key'=>'UE3',
                 'min_version'=>Uedb5Ut3SnapshotBuilder::PACKAGE_VERSION,
                 'max_version'=>Uedb5Ut3SnapshotBuilder::PACKAGE_VERSION,
+            ],
+            'ut4' => [
+                'engine_key'=>'UE4',
+                'min_version'=>Uedb5Ut4SnapshotBuilder::PACKAGE_VERSION,
+                'max_version'=>Uedb5Ut4SnapshotBuilder::PACKAGE_VERSION,
             ],
             default => throw new RuntimeException(
                 'Step 6 source migration is not yet implemented for game ' . $slug . '.'
