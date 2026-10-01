@@ -23,6 +23,7 @@ $check('projection_failure_removes_staged_registration',str_contains($service,'r
 $check('resume_selection_uses_missing_v5_registration',str_contains($service,'LEFT JOIN ue_uedb5_files v ON v.file_id=f.id')&&str_contains($service,'v.file_id IS NULL'));
 $check('continuous_run_has_internal_cursor',str_contains($service,'f.id>?')&&str_contains($service,'$cursor = (int)$file'));
 $check('ut99_is_source_version_bounded',str_contains($factory,'Uedb5Ut99SnapshotBuilder::MIN_VERSION')&&str_contains($factory,'Uedb5Ut99SnapshotBuilder::MAX_VERSION'));
+$check('unreal_early_source_minimum_is_34',str_contains((string)file_get_contents($root.'/src/Infrastructure/Metadata/Uedb5UnrealSnapshotBuilder.php'),'public const MIN_VERSION = 34')&&str_contains((string)file_get_contents($root.'/src/Infrastructure/Metadata/Uedb5UnrealSnapshotBuilder.php'),'POLICY_V120_EARLY'));
 $check('ut4_uses_4272_loadable_range',str_contains($factory,'Uedb5Ut4SnapshotBuilder::MIN_VERSION')&&str_contains($factory,'Uedb5Ut4SnapshotBuilder::MAX_VERSION'));
 $check('preflight_reports_version_distribution',str_contains($service,'package_version_distribution'));
 $check('preflight_reports_unsupported_files',str_contains($service,'unsupported_source_files'));

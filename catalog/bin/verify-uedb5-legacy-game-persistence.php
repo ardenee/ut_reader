@@ -121,7 +121,7 @@ try {
     $accept('unreal60', Uedb5UnrealSnapshotBuilder::class, CatalogUE1PackageReader::class, 12, 60, Uedb5UnrealSnapshotBuilder::POLICY_V224);
     $accept('unreal68', Uedb5UnrealSnapshotBuilder::class, CatalogUE1PackageReader::class, 12, 68, Uedb5UnrealSnapshotBuilder::POLICY_V224);
     $accept('unreal69', Uedb5UnrealSnapshotBuilder::class, CatalogUE1PackageReader::class, 12, 69, Uedb5UnrealSnapshotBuilder::POLICY_V69_SHARED);
-    $reject('unreal', Uedb5UnrealSnapshotBuilder::class, CatalogUE1PackageReader::class, 12, 54);
+    $accept('unreal54', Uedb5UnrealSnapshotBuilder::class, CatalogUE1PackageReader::class, 12, 54, Uedb5UnrealSnapshotBuilder::POLICY_V120_EARLY);
     $reject('unreal', Uedb5UnrealSnapshotBuilder::class, CatalogUE1PackageReader::class, 12, 71);
 
     $accept('unreal2_60', Uedb5Unreal2SnapshotBuilder::class, CatalogUE2PackageReader::class, 2, 60, Uedb5Unreal2SnapshotBuilder::SOURCE_POLICY);
