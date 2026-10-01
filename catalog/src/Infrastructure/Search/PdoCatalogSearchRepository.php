@@ -62,14 +62,19 @@ final class PdoCatalogSearchRepository implements CatalogSearchRepository
         // applied leading-wildcard LIKE predicates to converted term BLOBs while
         // joined to very large export/dependency projections. On a mature catalog
         // that can scan tens of millions of rows and monopolise MySQL. Exact term
-        // identity uses ue_terms(value_hash,value_length), then indexed term-id
-        // references in the compact projections. Filename/package search above
-        // still supports prefix/contains matching.
+        // identity uses ue_terms(value_hash,value_length). Dot-delimited descendant
+        // paths use a trailing-wildcard prefix against indexed ue_terms.value_prefix,
+        // then indexed term-id references in the compact projections. Filename/package
+        // search above still supports prefix/contains matching.
         $matches = [];
         $rowLimit = min(self::MAX_ROWS, max(100, $limit * 12));
         $this->collectExactMetadataMatches($gameId, $query, $rowLimit, $matches, $filters);
         if (in_array('exports', $filters['fields'], true)) {
             $this->collectExactQualifiedExportMatches($gameId, $query, $rowLimit, $matches, $filters['extensions']);
+        }
+        $this->collectDescendantMetadataMatches($gameId, $query, $rowLimit, $matches, $filters);
+        if (in_array('exports', $filters['fields'], true)) {
+            $this->collectQualifiedExportDescendantMatches($gameId, $query, $rowLimit, $matches, $filters['extensions']);
         }
         if ($matches === []) {
             return $base;
@@ -421,6 +426,71 @@ final class PdoCatalogSearchRepository implements CatalogSearchRepository
         }
     }
 
+    /** @param array<int,list<array{field:string,value:string}>> $matches */
+    private function collectDescendantMetadataMatches(
+        ?int $gameId,
+        string $query,
+        int $rowLimit,
+        array &$matches,
+        array $filters
+    ): void {
+        if (in_array('exports', $filters['fields'], true)) {
+            $this->collectDescendantTermReferenceMatches(
+                'ue_export_lookup', 'local_path_term_id', 'export_index', 'Export local path',
+                $query, $gameId, $rowLimit, $matches, $filters['extensions']
+            );
+        }
+        if (in_array('imports', $filters['fields'], true)) {
+            $this->collectDescendantTermReferenceMatches(
+                'ue_dependency_links', 'required_object_term_id', 'import_index', 'Import path',
+                $query, $gameId, $rowLimit, $matches, $filters['extensions']
+            );
+        }
+    }
+
+    /** @param array<int,list<array{field:string,value:string}>> $matches */
+    private function collectDescendantTermReferenceMatches(
+        string $table,
+        string $termColumn,
+        string $orderColumn,
+        string $label,
+        string $prefix,
+        ?int $gameId,
+        int $rowLimit,
+        array &$matches,
+        array $extensions = []
+    ): void {
+        $pattern = self::escapeLike($prefix . '.') . '%';
+        $sql = 'SELECT l.file_id id,t.value_prefix match_value FROM ue_terms t '
+            . 'JOIN ' . $table . ' l ON l.' . $termColumn . '=t.id '
+            . 'JOIN ue_files f ON f.id=l.file_id AND f.scan_status="verified" '
+            . "WHERE t.value_prefix LIKE ? ESCAPE '='";
+        $args = [$pattern];
+        if ($gameId !== null) {
+            $sql .= ' AND f.game_id=?';
+            $args[] = $gameId;
+        }
+        if ($extensions !== []) {
+            $sql .= ' AND f.extension IN (' . implode(',', array_fill(0, count($extensions), '?')) . ')';
+            array_push($args, ...$extensions);
+        }
+        $sql .= ' ORDER BY t.value_length,t.id,l.file_id,l.' . $orderColumn . ' LIMIT ' . $rowLimit;
+
+        try {
+            $statement = $this->db->prepare($sql);
+            $statement->execute($args);
+            while (($row = $statement->fetch(PDO::FETCH_ASSOC)) !== false) {
+                self::addMatch($matches, (int)$row['id'], $label, (string)$row['match_value']);
+            }
+        } catch (PDOException $error) {
+            throw new CatalogSearchUnavailableException(
+                'Indexed compact descendant-path search failed: ' . $error->getMessage(),
+                0,
+                $error
+            );
+        }
+    }
+
     /**
      * @param array<int,list<array{field:string,value:string}>> $matches
      */
@@ -551,6 +621,90 @@ final class PdoCatalogSearchRepository implements CatalogSearchRepository
                 $error
             );
         }
+    }
+
+    /** @param array<int,list<array{field:string,value:string}>> $matches */
+    private function collectQualifiedExportDescendantMatches(
+        ?int $gameId,
+        string $query,
+        int $rowLimit,
+        array &$matches,
+        array $extensions = []
+    ): void {
+        $separator = strpos($query, '.');
+        if ($separator === false || $separator < 1 || $separator >= strlen($query) - 1) {
+            return;
+        }
+        $packageName = substr($query, 0, $separator);
+        $localPath = substr($query, $separator + 1);
+        $pattern = self::escapeLike($localPath . '.') . '%';
+
+        $sql = 'SELECT l.file_id id,f.package_name match_package,t.value_prefix match_local_path '
+            . 'FROM ue_terms t '
+            . 'JOIN ue_export_lookup l ON l.local_path_term_id=t.id '
+            . 'JOIN ue_files f ON f.id=l.file_id AND f.scan_status="verified" '
+            . "WHERE t.value_prefix LIKE ? ESCAPE '=' AND f.package_name=?";
+        $args = [$pattern, $packageName];
+        if ($gameId !== null) {
+            $sql .= ' AND f.game_id=?';
+            $args[] = $gameId;
+        }
+        if ($extensions !== []) {
+            $sql .= ' AND f.extension IN (' . implode(',', array_fill(0, count($extensions), '?')) . ')';
+            array_push($args, ...$extensions);
+        }
+        $sql .= ' ORDER BY t.value_length,t.id,l.file_id,l.export_index LIMIT ' . $rowLimit;
+
+        try {
+            $statement = $this->db->prepare($sql);
+            $statement->execute($args);
+            while (($row = $statement->fetch(PDO::FETCH_ASSOC)) !== false) {
+                self::addMatch(
+                    $matches,
+                    (int)$row['id'],
+                    'Export path',
+                    (string)$row['match_package'] . '.' . (string)$row['match_local_path']
+                );
+            }
+
+            $aliasSql = 'SELECT l.file_id id,a.package_name match_package,t.value_prefix match_local_path '
+                . 'FROM ue_terms t '
+                . 'JOIN ue_export_lookup l ON l.local_path_term_id=t.id '
+                . 'JOIN ue_file_package_aliases a ON a.file_id=l.file_id '
+                . 'JOIN ue_files f ON f.id=l.file_id AND f.game_id=a.game_id AND f.scan_status="verified" '
+                . "WHERE t.value_prefix LIKE ? ESCAPE '=' AND a.package_name=?";
+            $aliasArgs = [$pattern, $packageName];
+            if ($gameId !== null) {
+                $aliasSql .= ' AND a.game_id=?';
+                $aliasArgs[] = $gameId;
+            }
+            if ($extensions !== []) {
+                $aliasSql .= ' AND f.extension IN (' . implode(',', array_fill(0, count($extensions), '?')) . ')';
+                array_push($aliasArgs, ...$extensions);
+            }
+            $aliasSql .= ' ORDER BY t.value_length,t.id,l.file_id,l.export_index LIMIT ' . $rowLimit;
+            $aliasStatement = $this->db->prepare($aliasSql);
+            $aliasStatement->execute($aliasArgs);
+            while (($row = $aliasStatement->fetch(PDO::FETCH_ASSOC)) !== false) {
+                self::addMatch(
+                    $matches,
+                    (int)$row['id'],
+                    'Alias export path',
+                    (string)$row['match_package'] . '.' . (string)$row['match_local_path']
+                );
+            }
+        } catch (PDOException $error) {
+            throw new CatalogSearchUnavailableException(
+                'Indexed qualified export descendant search failed: ' . $error->getMessage(),
+                0,
+                $error
+            );
+        }
+    }
+
+    private static function escapeLike(string $value): string
+    {
+        return str_replace(['=', '%', '_'], ['==', '=%', '=_'], $value);
     }
 
     /** @return list<array{id:int,value:string}> */

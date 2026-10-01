@@ -306,8 +306,8 @@ try {
             . '<span data-ui-loading-indicator>' . CatalogUi::loadingState('Searching…', true) . '</span>'
             . '</div></form>'
             . '<p class="catalog-search-help">Public searches must be limited to one game. Logged-in administrators may search all games. '
-            . 'Names, Imports and Exports use compact indexes; file/package names retain broad matching. '
-            . 'GUID, MD5 and SHA1 use exact identity indexes.</p>'
+            . 'Names, Imports and Exports use compact indexes; dot-delimited Import/Export paths also include descendants (for example, Package.Class also finds Package.Class.Member). '
+            . 'File/package names retain broad matching. GUID, MD5 and SHA1 use exact identity indexes.</p>'
             . '</div></section>';
 
         // Authentication has already been resolved and the search page header is

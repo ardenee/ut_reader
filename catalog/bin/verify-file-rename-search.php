@@ -124,16 +124,18 @@ $record(
 );
 
 $record(
-    'compact_metadata_search_is_indexed_exact_term',
-    str_contains($search, 'WHERE value_hash=? AND value_length=? LIMIT 1')
+    'compact_metadata_search_is_indexed_exact_and_descendant',
+    str_contains($search, 'WHERE value_hash=? AND value_length=? ORDER BY id')
         && str_contains($search, "'object_term_id'")
         && str_contains($search, "'local_path_term_id'")
         && str_contains($search, "'import_object_term_id'")
         && str_contains($search, "'required_object_term_id'")
-        && !str_contains($search, 'private function collectMetadataMatches(')
-        && !str_contains($search, 'private function collectAliasExportMatches(')
+        && str_contains($search, "t.value_prefix LIKE ? ESCAPE '='")
+        && str_contains($search, 'collectDescendantMetadataMatches')
+        && str_contains($search, 'collectQualifiedExportDescendantMatches')
+        && !str_contains($search, "'%' . self::escapeLike(")
         && !str_contains($search, 'CONVERT(t.value_prefix USING utf8mb4) COLLATE'),
-    'Deep object/import/export search must use ue_terms identity plus indexed term-id references, not leading-wildcard metadata scans.'
+    'Deep metadata search must keep exact hash identity and add only indexed trailing-dot descendant prefixes, never leading-wildcard scans.'
 );
 
 $sessionClose = strpos($index, 'session_write_close();');
