@@ -62,7 +62,7 @@ final class PdoDependencyPackageSummary
     /**
      * Rebuild package summaries for many files in bounded transactions.
      *
-     * The summary projection reads the compact lookup tables directly. The
+     * The summary projection reads authoritative dependency-link rows directly and is metadata-format agnostic. The
      * generic dependency read source reconstructs human-readable source,
      * confidence and class labels that this aggregate never consumes; avoiding
      * those joins/conversions materially reduces work for large publications.
@@ -143,7 +143,6 @@ final class PdoDependencyPackageSummary
                     'INSERT INTO ue_dependency_package_summaries(' . $insertColumns . ') '
                     . 'SELECT ' . $selectColumns
                     . 'FROM ue_dependency_links l '
-                    . 'JOIN ue_file_metadata m ON m.file_id=l.file_id AND m.format_version=' . \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer::FORMAT_VERSION . ' '
                     . 'JOIN ue_files f ON f.id=l.file_id '
                     . 'JOIN ue_terms package_term ON package_term.id=l.required_package_term_id '
                     . 'JOIN ue_terms object_term ON object_term.id=l.required_object_term_id '

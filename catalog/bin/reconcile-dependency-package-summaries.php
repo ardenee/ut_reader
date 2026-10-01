@@ -10,7 +10,6 @@ $root = realpath(dirname(__DIR__)) ?: dirname(__DIR__);
 require_once $root . '/bootstrap/autoload.php';
 require_once $root . '/lib/CatalogSupport.php';
 
-use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyPackageSummary;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoGameCatalogStats;
 
@@ -30,13 +29,12 @@ $db = catalog_db($config);
 $game = catalog_one($db, 'SELECT id,name,slug FROM ue_games WHERE id=? LIMIT 1', [$gameId]);
 if (!is_array($game)) throw new RuntimeException('Game not found: ' . $gameId);
 
-$formatVersion = BlockedCompressedMetadataContainer::FORMAT_VERSION;
 $summaryWriter = new PdoDependencyPackageSummary($db);
 if (!$summaryWriter->available()) {
     throw new RuntimeException('Dependency package summary projection is unavailable.');
 }
 
-$totals = static function (PDO $db, int $gameId, int $formatVersion): array {
+$totals = static function (PDO $db, int $gameId): array {
     $links = catalog_one(
         $db,
         'SELECT COUNT(*) dependency_count,'
@@ -46,9 +44,8 @@ $totals = static function (PDO $db, int $gameId, int $formatVersion): array {
         . 'COALESCE(SUM(l.status=3),0) common_count,'
         . 'COALESCE(SUM(l.status=4),0) unresolved_count '
         . 'FROM ue_dependency_links l JOIN ue_files f ON f.id=l.file_id '
-        . 'JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=? '
         . 'WHERE f.game_id=? AND f.scan_status="verified"',
-        [$formatVersion, $gameId]
+        [$gameId]
     ) ?: [];
     $summaries = catalog_one(
         $db,
@@ -65,26 +62,25 @@ $totals = static function (PDO $db, int $gameId, int $formatVersion): array {
         'SELECT COUNT(DISTINCT s.file_id) stale_files,COUNT(*) stale_rows '
         . 'FROM ue_dependency_package_summaries s '
         . 'LEFT JOIN ue_files f ON f.id=s.file_id AND f.game_id=s.game_id AND f.scan_status="verified" '
-        . 'LEFT JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=? '
-        . 'WHERE s.game_id=? AND (f.id IS NULL OR m.file_id IS NULL)',
-        [$formatVersion, $gameId]
+        . 'WHERE s.game_id=? AND (f.id IS NULL OR NOT EXISTS ('
+        . 'SELECT 1 FROM ue_dependency_links l WHERE l.file_id=s.file_id))',
+        [$gameId]
     ) ?: [];
     return ['authoritative_links'=>$links, 'summary_projection'=>$summaries, 'stale_summary_rows'=>$stale];
 };
 
-$before = $totals($db, $gameId, $formatVersion);
+$before = $totals($db, $gameId);
 $eligibleCount = (int)(catalog_one(
     $db,
     'SELECT COUNT(*) eligible_files FROM ue_files f '
-    . 'JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=? '
     . 'WHERE f.game_id=? AND f.scan_status="verified" AND f.id>?',
-    [$formatVersion, $gameId, $afterId]
+    [$gameId, $afterId]
 )['eligible_files'] ?? 0);
 
 $summaryDependencyCount = (int)($before['summary_projection']['dependency_count'] ?? 0);
 if ($apply && $eligibleCount === 0 && $afterId === 0 && $summaryDependencyCount > 0) {
     throw new RuntimeException(
-        'Refusing to reconcile: no current-format verified files were found while summary rows still exist.'
+        'Refusing to reconcile: no verified files were found while summary rows still exist.'
     );
 }
 $selected = 0;
@@ -110,10 +106,9 @@ if ($apply) {
         $rows = catalog_all(
             $db,
             'SELECT f.id FROM ue_files f '
-            . 'JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=? '
             . 'WHERE f.game_id=? AND f.scan_status="verified" AND f.id>? '
             . 'ORDER BY f.id LIMIT ' . $take,
-            [$formatVersion, $gameId, $cursor]
+            [$gameId, $cursor]
         );
         if ($rows === []) break;
         $ids = array_map(static fn(array $row): int => (int)$row['id'], $rows);
@@ -153,10 +148,9 @@ if ($finalized) {
         $delete = $db->prepare(
             'DELETE s FROM ue_dependency_package_summaries s '
             . 'LEFT JOIN ue_files f ON f.id=s.file_id AND f.game_id=s.game_id AND f.scan_status="verified" '
-            . 'LEFT JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=? '
-            . 'WHERE s.game_id=? AND (f.id IS NULL OR m.file_id IS NULL)'
+            . 'WHERE s.game_id=? AND f.id IS NULL'
         );
-        $delete->execute([$formatVersion, $gameId]);
+        $delete->execute([$gameId]);
         $staleRowsDeleted = max(0, $delete->rowCount());
     } catch (Throwable $error) {
         $failed++;
@@ -174,7 +168,7 @@ if ($finalized) {
         $failures[] = ['phase'=>'game_stats','error'=>get_class($error).': '.$error->getMessage()];
     }
 }
-$after = $totals($db, $gameId, $formatVersion);
+$after = $totals($db, $gameId);
 $authoritativeMissing = (int)($after['authoritative_links']['missing_count'] ?? 0);
 $summaryMissing = (int)($after['summary_projection']['missing_count'] ?? 0);
 $parity = $authoritativeMissing === $summaryMissing;
@@ -183,7 +177,7 @@ $result = [
     'ok'=>$failed === 0 && $gameStatsFailed === 0,
     'apply'=>$apply,
     'game'=>$game,
-    'metadata_format_version'=>$formatVersion,
+    'projection_source'=>'ue_dependency_links',
     'after_id'=>$afterId,
     'resume_after_id'=>$lastCompletedId,
     'limit'=>$limit,
