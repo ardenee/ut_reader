@@ -14,11 +14,12 @@ use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyPackageSummary;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoGameCatalogStats;
 
 $options = getopt('', [
-    'apply', 'game-id:', 'after-id::', 'limit::',
+    'apply', 'game-id:', 'file-id::', 'after-id::', 'limit::',
     'batch-size::', 'progress-every::',
 ]);
 $apply = array_key_exists('apply', $options);
 $gameId = max(0, (int)($options['game-id'] ?? 0));
+$fileId = max(0, (int)($options['file-id'] ?? 0));
 $afterId = max(0, (int)($options['after-id'] ?? 0));
 $limit = max(0, (int)($options['limit'] ?? 0));
 $batchSize = max(25, min(2000, (int)($options['batch-size'] ?? 1000)));
@@ -70,12 +71,20 @@ $totals = static function (PDO $db, int $gameId): array {
 };
 
 $before = $totals($db, $gameId);
-$eligibleCount = (int)(catalog_one(
-    $db,
-    'SELECT COUNT(*) eligible_files FROM ue_files f '
-    . 'WHERE f.game_id=? AND f.scan_status="verified" AND f.id>?',
-    [$gameId, $afterId]
-)['eligible_files'] ?? 0);
+if ($fileId > 0) {
+    $owner = catalog_one($db, 'SELECT id,game_id,scan_status FROM ue_files WHERE id=? LIMIT 1', [$fileId]);
+    $hasSummary = catalog_one($db, 'SELECT file_id FROM ue_dependency_package_summaries WHERE game_id=? AND file_id=? LIMIT 1', [$gameId, $fileId]);
+    if (is_array($owner) && (int)$owner['game_id'] !== $gameId) throw new RuntimeException('Target file belongs to a different game: ' . $fileId);
+    if (!is_array($owner) && !is_array($hasSummary)) throw new RuntimeException('Target file/summary owner not found for game: ' . $fileId);
+    $eligibleCount = 1;
+} else {
+    $eligibleCount = (int)(catalog_one(
+        $db,
+        'SELECT COUNT(*) eligible_files FROM ue_files f '
+        . 'WHERE f.game_id=? AND f.scan_status="verified" AND f.id>?',
+        [$gameId, $afterId]
+    )['eligible_files'] ?? 0);
+}
 
 $summaryDependencyCount = (int)($before['summary_projection']['dependency_count'] ?? 0);
 if ($apply && $eligibleCount === 0 && $afterId === 0 && $summaryDependencyCount > 0) {
@@ -93,12 +102,24 @@ $failures = [];
 $started = microtime(true);
 
 fwrite(STDERR, sprintf(
-    "Dependency summary reconciliation | apply=%s | game=%d | after_id=%d | limit=%s | eligible=%d\n",
-    $apply ? 'yes' : 'no', $gameId, $afterId,
+    "Dependency summary reconciliation | apply=%s | game=%d | file_id=%s | after_id=%d | limit=%s | eligible=%d\n",
+    $apply ? 'yes' : 'no', $gameId, $fileId > 0 ? (string)$fileId : '-', $afterId,
     $limit > 0 ? (string)$limit : 'unlimited', $eligibleCount
 ));
 
-if ($apply) {
+if ($apply && $fileId > 0) {
+    try {
+        $result = $summaryWriter->rebuildFiles([$fileId]);
+        $selected = 1;
+        $summaryFiles = (int)($result['files'] ?? 0);
+        $summaryRows = (int)($result['summary_rows'] ?? 0);
+        $cursor = $fileId;
+        $lastCompletedId = $fileId;
+    } catch (Throwable $error) {
+        $failed++;
+        $failures[] = ['phase'=>'rebuild_exact_summary','file_id'=>$fileId,'error'=>get_class($error).': '.$error->getMessage()];
+    }
+} elseif ($apply) {
     while (true) {
         $remaining = $limit > 0 ? $limit - $selected : $batchSize;
         if ($limit > 0 && $remaining <= 0) break;
@@ -142,7 +163,7 @@ if ($apply) {
 $staleRowsDeleted = 0;
 $gameStatsRebuilt = 0;
 $gameStatsFailed = 0;
-$finalized = $apply && $limit === 0 && $failed === 0;
+$finalized = $apply && $fileId === 0 && $limit === 0 && $failed === 0;
 if ($finalized) {
     try {
         $delete = $db->prepare(
@@ -178,6 +199,7 @@ $result = [
     'apply'=>$apply,
     'game'=>$game,
     'projection_source'=>'ue_dependency_links',
+    'file_id'=>$fileId > 0 ? $fileId : null,
     'after_id'=>$afterId,
     'resume_after_id'=>$lastCompletedId,
     'limit'=>$limit,
