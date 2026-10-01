@@ -89,7 +89,7 @@ try{
     $selectedPackage=game_missing_text('package',255);$selectedObject=game_missing_text('object',1000);$objectPage=max(1,game_missing_int('object_page',1));$objectLimit=200;$engineKey=strtoupper(trim((string)($game['engine_key']??'')));$evidenceKey=game_missing_text('evidence',64);$evidenceFileId=0;$evidenceImportIndex=-1;if(preg_match('/^(\d+):(\d+)$/',$evidenceKey,$m)===1){$evidenceFileId=(int)$m[1];$evidenceImportIndex=(int)$m[2];}
     if(session_status()===PHP_SESSION_ACTIVE)session_write_close();
     $missingQuery=new PdoGameMissingDependencyQuery($db);$scope=$baseGameOnly?$missingQuery->officialBaseGamePackageNames($gameId):null;
-    $totals=$missingQuery->totals($gameId,$scope);$packageRows=$missingQuery->packageRows($gameId,$scope,500,0,$packageSearch);
+    $projectionHealth=$missingQuery->projectionHealth($gameId,20);$totals=$missingQuery->totals($gameId,$scope);$packageRows=$missingQuery->packageRows($gameId,$scope,500,0,$packageSearch);
     $objectRows=[];$objectTotal=0;$objectOffset=0;$packageProviders=[];$objectFiles=[];$diagnostic=null;$evidence=null;$sampleEvidence=null;
     if($selectedPackage!==''&&($scope===null||in_array(strtolower($selectedPackage),array_map('strtolower',$scope),true))){
         $objectTotal=$missingQuery->objectTotal($gameId,$selectedPackage,$scope,$objectSearch);$objectOffset=($objectPage-1)*$objectLimit;
@@ -119,6 +119,17 @@ CSS;
     echo '<label>Game<select name="game_id">';foreach($games as $g)echo'<option value="'.(int)$g['id'].'"'.((int)$g['id']===$gameId?' selected':'').'>'.catalog_h((string)$g['name']).'</option>';echo'</select></label>';
     echo '<label>Dependency type<select name="dependency_type"><option value="all"'.(!$baseGameOnly?' selected':'').'>All missing dependencies</option><option value="base_game"'.($baseGameOnly?' selected':'').'>Official base-game dependencies only</option></select></label>';
     echo '<label>Package search<input name="q" value="'.catalog_h($packageSearch).'" placeholder="package name"></label><button type="submit">Apply filters</button></form></div></section>';
+
+    if((int)($projectionHealth['stale_files']??0)>0){
+        $staleFiles=(int)$projectionHealth['stale_files'];$staleRows=(int)$projectionHealth['stale_rows'];$staleMissing=(int)$projectionHealth['stale_missing_rows'];$owners=(array)($projectionHealth['owners']??[]);
+        $cleanupPrefix='C:\\php8.5\\php.exe C:\\Apache24\\htdocs\\unrealdb\\catalog\\bin\\reconcile-dependency-package-summaries.php --apply --game-id='.$gameId.' --file-id=';
+        echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Projection health</h2><p>Stale package-summary owners are excluded from the missing-dependency counts below.</p></div></div><div class="ui-section__body">';
+        echo '<div class="gm-note"><strong>'.number_format($staleFiles).' stale summary owner'.($staleFiles===1?'':'s').' / '.number_format($staleRows).' stale summary rows / '.number_format($staleMissing).' stale missing counts.</strong><br>Stale here means the summary owner is no longer a verified/current file. These rows are projection drift, not current missing-dependency evidence.</div>';
+        if($owners!==[]){echo '<table class="gm-table"><thead><tr><th>Owner file</th><th>Status</th><th class="num">Summary rows</th><th class="num">Stale missing</th><th class="num">Live dependency rows</th><th>Cleanup</th></tr></thead><tbody>';
+            foreach($owners as $owner){$fid=(int)($owner['file_id']??0);$cleanup=$cleanupPrefix.$fid;echo '<tr><td class="mono">#'.$fid.'</td><td>'.catalog_h((string)($owner['scan_status']??'missing')).'</td><td class="num">'.(int)($owner['summary_rows']??0).'</td><td class="num">'.(int)($owner['stale_missing_rows']??0).'</td><td class="num">'.(int)($owner['live_dependency_rows']??0).'</td><td><code class="mono small">'.catalog_h($cleanup).'</code></td></tr>';}
+            echo '</tbody></table>';}
+        echo '<p class="muted small">The exact cleanup command rebuilds only that summary owner. For a failed owner with no current dependency rows it deletes the stale summaries and writes nothing back.</p></div></section>';
+    }
 
     echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Summary</h2><p>Current rows classified as missing. Source-unresolved UT3 cooked export-outer imports are excluded.</p></div></div><div class="ui-section__body"><table class="gm-summary"><tbody>';
     echo '<tr><th>Missing objects</th><td class="num"><strong>'.(int)$totals['missing_objects'].'</strong></td><td>Requested object identities that did not resolve.</td></tr>';
