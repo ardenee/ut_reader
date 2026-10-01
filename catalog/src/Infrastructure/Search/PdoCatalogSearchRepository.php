@@ -399,8 +399,7 @@ final class PdoCatalogSearchRepository implements CatalogSearchRepository
                 );
             }
             if (in_array('exports', $filters['fields'], true)) {
-                $this->collectTermReferenceMatches(
-                    'ue_export_lookup', 'object_term_id', 'export_index', 'Export object',
+                $this->collectExactExportObjectMatches(
                     $termId, $value, $gameId, $rowLimit, $matches, $filters['extensions']
                 );
                 $this->collectTermReferenceMatches(
@@ -485,6 +484,50 @@ final class PdoCatalogSearchRepository implements CatalogSearchRepository
         } catch (PDOException $error) {
             throw new CatalogSearchUnavailableException(
                 'Indexed compact descendant-path search failed: ' . $error->getMessage(),
+                0,
+                $error
+            );
+        }
+    }
+
+    /** @param array<int,list<array{field:string,value:string}>> $matches */
+    private function collectExactExportObjectMatches(
+        int $termId,
+        string $value,
+        ?int $gameId,
+        int $rowLimit,
+        array &$matches,
+        array $extensions = []
+    ): void {
+        $sql = 'SELECT l.file_id id,CONVERT(path_term.value_prefix USING utf8mb4) local_path '
+            . 'FROM ue_export_lookup l '
+            . 'JOIN ue_files f ON f.id=l.file_id AND f.scan_status="verified" '
+            . 'LEFT JOIN ue_terms path_term ON path_term.id=l.local_path_term_id '
+            . 'WHERE l.object_term_id=?';
+        $args = [$termId];
+        if ($gameId !== null) {
+            $sql .= ' AND f.game_id=?';
+            $args[] = $gameId;
+        }
+        if ($extensions !== []) {
+            $sql .= ' AND f.extension IN (' . implode(',', array_fill(0, count($extensions), '?')) . ')';
+            array_push($args, ...$extensions);
+        }
+        $sql .= ' ORDER BY l.file_id,l.export_index LIMIT ' . $rowLimit;
+        try {
+            $statement = $this->db->prepare($sql);
+            $statement->execute($args);
+            while (($row = $statement->fetch(PDO::FETCH_ASSOC)) !== false) {
+                $fileId = (int)$row['id'];
+                self::addMatch($matches, $fileId, 'Export object', $value);
+                $localPath = trim((string)($row['local_path'] ?? ''));
+                if ($localPath !== '') {
+                    self::addMatch($matches, $fileId, 'Export local path', $localPath);
+                }
+            }
+        } catch (PDOException $error) {
+            throw new CatalogSearchUnavailableException(
+                'Indexed compact export-object search failed: ' . $error->getMessage(),
                 0,
                 $error
             );
