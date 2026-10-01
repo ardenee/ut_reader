@@ -14,12 +14,13 @@ use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyPackageSummary;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoGameCatalogStats;
 
 $options = getopt('', [
-    'apply', 'game-id:', 'file-id::', 'after-id::', 'limit::',
+    'apply', 'game-id:', 'file-id::', 'package::', 'after-id::', 'limit::',
     'batch-size::', 'progress-every::',
 ]);
 $apply = array_key_exists('apply', $options);
 $gameId = max(0, (int)($options['game-id'] ?? 0));
 $fileId = max(0, (int)($options['file-id'] ?? 0));
+$package = trim((string)($options['package'] ?? ''));
 $afterId = max(0, (int)($options['after-id'] ?? 0));
 $limit = max(0, (int)($options['limit'] ?? 0));
 $batchSize = max(25, min(2000, (int)($options['batch-size'] ?? 1000)));
@@ -33,6 +34,30 @@ if (!is_array($game)) throw new RuntimeException('Game not found: ' . $gameId);
 $summaryWriter = new PdoDependencyPackageSummary($db);
 if (!$summaryWriter->available()) {
     throw new RuntimeException('Dependency package summary projection is unavailable.');
+}
+
+if ($package !== '') {
+    if ($apply) {
+        throw new InvalidArgumentException('--package is read-only; use the returned file_id with --file-id to rebuild one exact owner.');
+    }
+    $packageRows = catalog_all(
+        $db,
+        'SELECT s.file_id,s.required_package,s.dependency_count,s.missing_count,s.resolved_count,'
+        . 's.package_only_count,s.common_count,s.summary_status,f.scan_status,'
+        . '(SELECT COUNT(*) FROM ue_dependency_links l WHERE l.file_id=s.file_id) live_dependency_rows '
+        . 'FROM ue_dependency_package_summaries s '
+        . 'LEFT JOIN ue_files f ON f.id=s.file_id '
+        . 'WHERE s.game_id=? AND LOWER(s.required_package)=LOWER(?) ORDER BY s.file_id',
+        [$gameId, $package]
+    );
+    echo json_encode([
+        'ok'=>true,
+        'read_only'=>true,
+        'game'=>$game,
+        'package'=>$package,
+        'summary_owners'=>$packageRows,
+    ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . PHP_EOL;
+    exit(0);
 }
 
 $totals = static function (PDO $db, int $gameId): array {
