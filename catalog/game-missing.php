@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once __DIR__.'/lib/CatalogSupport.php';
 require_once __DIR__.'/lib/BaseGameProtection.php';
 require_once __DIR__.'/lib/CatalogDependencyDiagnostics.php';
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyPackageSummary;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoGameMissingDependencyQuery;
 
 catalog_start_session();
@@ -83,13 +84,37 @@ function gm_ue4_evidence_html(array $e):string
 
 try{
     $config=catalog_config();$db=catalog_db($config);$storageRoot=trim((string)($config['storage_path']??''));if(!catalog_require_admin_page('Game Missing Dependencies'))exit;base_game_ensure($db);
-    $games=catalog_all($db,'SELECT id,name,slug FROM ue_games ORDER BY name');$gameId=game_missing_int('game_id');
+    $isAdmin=catalog_support_is_admin();
+    $gameId=$_SERVER['REQUEST_METHOD']==='POST'?max(0,(int)($_POST['game_id']??0)):game_missing_int('game_id');
+    $games=catalog_all($db,'SELECT id,name,slug FROM ue_games ORDER BY name');
     $game=$gameId>0?catalog_one($db,'SELECT g.id,g.name,g.slug,UPPER(TRIM(p.engine_key)) engine_key FROM ue_games g LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 WHERE g.id=?',[$gameId]):null;if(!$game)throw new RuntimeException('Choose a valid game from the Games page.');
-    $type=game_missing_type();$baseGameOnly=$type==='base_game';$packageSearch=game_missing_text('q',255);$objectSearch=game_missing_text('object_q',500);
+    $type=$_SERVER['REQUEST_METHOD']==='POST'?(strtolower(trim((string)($_POST['dependency_type']??'all')))==='base_game'?'base_game':'all'):game_missing_type();
+    if($_SERVER['REQUEST_METHOD']==='POST'){
+        try{
+            if(!$isAdmin)throw new RuntimeException('Administrator access is required.');
+            catalog_check_csrf('game_missing_summary_cleanup');
+            if((string)($_POST['action']??'')!=='cleanup_stale_summary')throw new RuntimeException('Unknown missing-dependency action.');
+            $cleanupFileId=max(0,(int)($_POST['file_id']??0));if($cleanupFileId<1)throw new RuntimeException('Choose a valid stale summary owner.');
+            $owner=catalog_one($db,'SELECT s.file_id,MAX(COALESCE(f.scan_status,"missing")) scan_status,COUNT(*) summary_rows FROM ue_dependency_package_summaries s LEFT JOIN ue_files f ON f.id=s.file_id AND f.game_id=s.game_id WHERE s.game_id=? AND s.file_id=? GROUP BY s.file_id',[$gameId,$cleanupFileId]);
+            if(!is_array($owner)){
+                $_SESSION['game_missing_flash']='Summary owner #'.$cleanupFileId.' is already clean.';
+            }else{
+                if((string)($owner['scan_status']??'')==='verified')throw new RuntimeException('Refusing cleanup: summary owner #'.$cleanupFileId.' is currently verified.');
+                (new PdoDependencyPackageSummary($db))->rebuildFile($cleanupFileId);
+                $remaining=(int)(catalog_one($db,'SELECT COUNT(*) remaining FROM ue_dependency_package_summaries WHERE game_id=? AND file_id=?',[$gameId,$cleanupFileId])['remaining']??0);
+                if($remaining>0)throw new RuntimeException('Cleanup did not remove all stale summary rows for owner #'.$cleanupFileId.'.');
+                $_SESSION['game_missing_flash']='Stale dependency summaries cleaned for owner #'.$cleanupFileId.'.';
+            }
+        }catch(Throwable $cleanupError){$_SESSION['game_missing_flash']='Cleanup failed: '.$cleanupError->getMessage();}
+        header('Location: '.game_missing_url($gameId,$type));exit;
+    }
+    $cleanupCsrf=$isAdmin?catalog_csrf('game_missing_summary_cleanup'):'';
+    $flash=$_SESSION['game_missing_flash']??null;unset($_SESSION['game_missing_flash']);
+    $baseGameOnly=$type==='base_game';$packageSearch=game_missing_text('q',255);$objectSearch=game_missing_text('object_q',500);
     $selectedPackage=game_missing_text('package',255);$selectedObject=game_missing_text('object',1000);$objectPage=max(1,game_missing_int('object_page',1));$objectLimit=200;$engineKey=strtoupper(trim((string)($game['engine_key']??'')));$evidenceKey=game_missing_text('evidence',64);$evidenceFileId=0;$evidenceImportIndex=-1;if(preg_match('/^(\d+):(\d+)$/',$evidenceKey,$m)===1){$evidenceFileId=(int)$m[1];$evidenceImportIndex=(int)$m[2];}
     if(session_status()===PHP_SESSION_ACTIVE)session_write_close();
     $missingQuery=new PdoGameMissingDependencyQuery($db);$scope=$baseGameOnly?$missingQuery->officialBaseGamePackageNames($gameId):null;
-    $projectionHealth=$missingQuery->projectionHealth($gameId,20);$totals=$missingQuery->totals($gameId,$scope);$packageRows=$missingQuery->packageRows($gameId,$scope,500,0,$packageSearch);
+    $projectionHealth=$isAdmin?$missingQuery->projectionHealth($gameId,20):['stale_files'=>0,'stale_rows'=>0,'stale_missing_rows'=>0,'owners'=>[]];$totals=$missingQuery->totals($gameId,$scope);$packageRows=$missingQuery->packageRows($gameId,$scope,500,0,$packageSearch);
     $objectRows=[];$objectTotal=0;$objectOffset=0;$packageProviders=[];$objectFiles=[];$diagnostic=null;$evidence=null;$sampleEvidence=null;
     if($selectedPackage!==''&&($scope===null||in_array(strtolower($selectedPackage),array_map('strtolower',$scope),true))){
         $objectTotal=$missingQuery->objectTotal($gameId,$selectedPackage,$scope,$objectSearch);$objectOffset=($objectPage-1)*$objectLimit;
@@ -120,15 +145,14 @@ CSS;
     echo '<label>Dependency type<select name="dependency_type"><option value="all"'.(!$baseGameOnly?' selected':'').'>All missing dependencies</option><option value="base_game"'.($baseGameOnly?' selected':'').'>Official base-game dependencies only</option></select></label>';
     echo '<label>Package search<input name="q" value="'.catalog_h($packageSearch).'" placeholder="package name"></label><button type="submit">Apply filters</button></form></div></section>';
 
-    if((int)($projectionHealth['stale_files']??0)>0){
+    if($isAdmin&&(int)($projectionHealth['stale_files']??0)>0){
         $staleFiles=(int)$projectionHealth['stale_files'];$staleRows=(int)$projectionHealth['stale_rows'];$staleMissing=(int)$projectionHealth['stale_missing_rows'];$owners=(array)($projectionHealth['owners']??[]);
-        $cleanupPrefix='C:\\php8.5\\php.exe C:\\Apache24\\htdocs\\unrealdb\\catalog\\bin\\reconcile-dependency-package-summaries.php --apply --game-id='.$gameId.' --file-id=';
-        echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Projection health</h2><p>Stale package-summary owners are excluded from the missing-dependency counts below.</p></div></div><div class="ui-section__body">';
+        echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Projection health</h2><p>Admin-only cleanup. Stale package-summary owners are excluded from the missing-dependency counts below.</p></div></div><div class="ui-section__body">';
         echo '<div class="gm-note"><strong>'.number_format($staleFiles).' stale summary owner'.($staleFiles===1?'':'s').' / '.number_format($staleRows).' stale summary rows / '.number_format($staleMissing).' stale missing counts.</strong><br>Stale here means the summary owner is no longer a verified/current file. These rows are projection drift, not current missing-dependency evidence.</div>';
         if($owners!==[]){echo '<table class="gm-table"><thead><tr><th>Owner file</th><th>Status</th><th class="num">Summary rows</th><th class="num">Stale missing</th><th class="num">Live dependency rows</th><th>Cleanup</th></tr></thead><tbody>';
-            foreach($owners as $owner){$fid=(int)($owner['file_id']??0);$cleanup=$cleanupPrefix.$fid;echo '<tr><td class="mono">#'.$fid.'</td><td>'.catalog_h((string)($owner['scan_status']??'missing')).'</td><td class="num">'.(int)($owner['summary_rows']??0).'</td><td class="num">'.(int)($owner['stale_missing_rows']??0).'</td><td class="num">'.(int)($owner['live_dependency_rows']??0).'</td><td><code class="mono small">'.catalog_h($cleanup).'</code></td></tr>';}
+            foreach($owners as $owner){$fid=(int)($owner['file_id']??0);echo '<tr><td class="mono">#'.$fid.'</td><td>'.catalog_h((string)($owner['scan_status']??'missing')).'</td><td class="num">'.(int)($owner['summary_rows']??0).'</td><td class="num">'.(int)($owner['stale_missing_rows']??0).'</td><td class="num">'.(int)($owner['live_dependency_rows']??0).'</td><td><form method="post" class="gm-cleanup-form"><input type="hidden" name="csrf" value="'.catalog_h($cleanupCsrf).'"><input type="hidden" name="action" value="cleanup_stale_summary"><input type="hidden" name="game_id" value="'.$gameId.'"><input type="hidden" name="dependency_type" value="'.catalog_h($type).'"><input type="hidden" name="file_id" value="'.$fid.'"><button type="submit" class="button secondary gm-cleanup-button">Run cleanup</button></form></td></tr>';}
             echo '</tbody></table>';}
-        echo '<p class="muted small">The exact cleanup command rebuilds only that summary owner. For a failed owner with no current dependency rows it deletes the stale summaries and writes nothing back.</p></div></section>';
+        echo '<p class="muted small">Cleanup rebuilds only that summary owner. For a failed owner it removes the stale summaries and writes nothing back. The button disables as soon as it is submitted; after a successful cleanup the owner no longer appears on reload.</p></div></section>';
     }
 
     echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Summary</h2><p>Current rows classified as missing. Source-unresolved UT3 cooked export-outer imports are excluded.</p></div></div><div class="ui-section__body"><table class="gm-summary"><tbody>';
@@ -171,6 +195,7 @@ CSS;
         echo'</tbody></table>';
     }
     echo'</div></section>';
+    if($isAdmin)echo '<script>document.querySelectorAll(".gm-cleanup-form").forEach(function(form){form.addEventListener("submit",function(event){var button=form.querySelector(".gm-cleanup-button");if(!button||button.disabled){event.preventDefault();return;}if(!window.confirm("Clean stale dependency summaries for this owner?")){event.preventDefault();return;}button.disabled=true;button.textContent="Cleaning...";});});</script>';
     catalog_foot();
 }catch(Throwable $error){
     if(!headers_sent())catalog_head('Game missing dependencies error');
