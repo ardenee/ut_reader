@@ -16,11 +16,18 @@ final class Uedb5Ut4SnapshotBuilder
     /** @param array<string,mixed> $file @return array<string,mixed> */
     public static function build(\UnrealPackageReader4 $reader, array $file): array
     {
-        $issues = $reader->validatePackage();
+        $header = $reader->getHeader();
+        $informationalUnversionedIssue = !empty($header['unversioned'])
+            ? 'Package is unversioned; using assumed UE4 parser version ' . (int)($header['version'] ?? 0)
+                . ' from parser profile ' . (string)($header['parserProfileKey'] ?? '') . ' for table parsing.'
+            : '';
+        $issues = array_values(array_filter(
+            $reader->validatePackage(),
+            static fn(string $issue): bool => $issue !== $informationalUnversionedIssue
+        ));
         if ($issues !== []) {
             throw new RuntimeException('Cannot persist UT4 UEDB5 metadata: ' . implode('; ', $issues));
         }
-        $header = $reader->getHeader();
         $version = (int)($header['version'] ?? -1);
         if ($version < self::MIN_VERSION || $version > self::MAX_VERSION) {
             throw new RuntimeException('UE4 V5 source policy supports package versions 214-522.');

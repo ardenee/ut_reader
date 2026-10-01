@@ -149,7 +149,9 @@ final class Uedb5MigrationValidator
         $this->require((string)($context['staged_package_name'] ?? '') === (string)$context['package_name'], 'registered_package_name_mismatch', 'Staged package registration differs from source package identity.');
 
         $summary = $this->summaryRow($snapshot);
-        if (array_key_exists('package_version', $summary)) {
+        $ue4Unversioned = (string)($snapshot['package_family'] ?? '') === Uedb5Ut4SnapshotBuilder::PACKAGE_FAMILY
+            && !empty($summary['unversioned']);
+        if (array_key_exists('package_version', $summary) && !$ue4Unversioned) {
             $this->require((int)$summary['package_version'] === (int)$context['package_version'], 'package_version_mismatch', 'UEDB5 package version differs from source catalogue identity.');
         }
         if (array_key_exists('licensee_version', $summary)) {
@@ -229,6 +231,13 @@ final class Uedb5MigrationValidator
     {
         $summary = $this->summaryRow($snapshot);
         $this->requireKeys($summary, ['serialized_tag','normalized_tag','byte_swapping','serialized_package_version','serialized_licensee_version','package_version','unversioned','parser_profile'], 'UE4 summary');
+        if (!empty($summary['unversioned'])) {
+            $profile = (array)$summary['parser_profile'];
+            $assumedVersion = (int)($profile['assumed_unversioned_parser_version'] ?? 0);
+            $this->require((int)$summary['serialized_package_version'] === 0, 'ue4_unversioned_serialized_version', 'UE4 unversioned package must preserve serialized package version 0.');
+            $this->require((int)$summary['serialized_licensee_version'] === 0, 'ue4_unversioned_serialized_licensee', 'UE4 unversioned package must preserve serialized licensee version 0.');
+            $this->require($assumedVersion > 0 && (int)$summary['package_version'] === $assumedVersion, 'ue4_unversioned_effective_version', 'UE4 unversioned effective package version must equal the retained parser-profile assumption.');
+        }
         foreach ((array)($snapshot['sections']['imports'] ?? []) as $row) {
             $this->requireKeys((array)$row, ['serialized_offset','class_package','class_name','outer_index','object_name','package_name_present'], 'UE4 import');
         }

@@ -106,6 +106,7 @@ $check('script_import_hash_is_not_public_export_hash',($scriptEdge['required_obj
 $validatorSource=(string)file_get_contents($root.'/src/Infrastructure/Metadata/Uedb5MigrationValidator.php');
 $check('validator_never_reads_uedb4',!str_contains($validatorSource,'.uedb4')&&!str_contains($validatorSource,'BlockedCompressedMetadataReader'));
 $check('validator_never_reads_live_v4_registration',!str_contains($validatorSource,'ue_file_metadata'));
+$check('ue4_unversioned_does_not_trust_legacy_catalogue_version',str_contains($validatorSource,'$ue4Unversioned')&&str_contains($validatorSource,'ue4_unversioned_effective_version'));
 $check('durable_state_machine_has_four_states',Uedb5MigrationStatus::values()===['pending','staged','validated','failed']);
 $migration=(string)file_get_contents($root.'/migrations/202609300002_uedb5_migration_status.php');
 $check('status_schema_contains_four_durable_states',str_contains($migration,'pending')&&str_contains($migration,'staged')&&str_contains($migration,'validated')&&str_contains($migration,'failed'));
