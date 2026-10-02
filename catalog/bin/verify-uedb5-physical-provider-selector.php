@@ -7,6 +7,7 @@ require_once $root.'/bootstrap.php';
 use UnrealDb\Catalog\Infrastructure\Metadata\PdoUedb5PhysicalProviderSelector;
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5MetadataSnapshotWriter;
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5SqlProjectionContract;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5Ut4SnapshotBuilder;
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5ZenPackageReader;
 
 $checks=[];$failures=[];
@@ -88,6 +89,22 @@ $check('partial_duplicate_set_selects_one_physical_provider',
     count($selected)===1 && (int)$selected[0]['file_id']===20);
 $check('candidate_order_breaks_equal_coverage_ties',
     (int)$selected[0]['file_id']===20);
+
+$ut4=[
+    'file'=>['id'=>30,'game_id'=>7,'package_name'=>'/Game/Empty','original_name'=>'Empty.uasset'],
+    'package_family'=>Uedb5Ut4SnapshotBuilder::PACKAGE_FAMILY,
+    'source_policy'=>Uedb5Ut4SnapshotBuilder::SOURCE_POLICY,
+    'section_schemas'=>[
+        'summary'=>'ue4.ut4.package-summary.v1','names'=>'ue4.ut4.name-entry.v1',
+        'imports'=>'ue4.ut4.object-import.v1','exports'=>'ue4.ut4.object-export.v1',
+    ],
+    'sections'=>['summary'=>[['package_version'=>511]],'names'=>[],'imports'=>[],'exports'=>[]],
+];
+$writer->write($ut4);
+$db->prepare('INSERT INTO ue_files VALUES(?,?,?,?,?,?,?)')->execute([30,7,'verified','2026-10-02 14:00:00',30,md5('30'),sha1('30')]);
+$db->prepare('INSERT INTO ue_uedb5_files VALUES(?,?,?)')->execute([30,7,'/Game/Empty']);
+$check('ue4_classic_package_family_is_admitted',
+    (new PdoUedb5PhysicalProviderSelector($db,$tmp))->select(7,30)===[]);
 
 $zen=static function(int $fileId,string $packageId,array $imports,array $exports):array{
     return [

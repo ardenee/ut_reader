@@ -32,7 +32,10 @@ final class PdoUedb5PhysicalProviderSelector
         if ($family === Uedb5ZenPackageReader::PACKAGE_FAMILY) {
             return $this->selectZen($gameId, $fileId, $consumer);
         }
-        if ($family !== Uedb5Ue5ClassicSnapshotBuilder::PACKAGE_FAMILY) {
+        if (!in_array($family, [
+            Uedb5Ue5ClassicSnapshotBuilder::PACKAGE_FAMILY,
+            Uedb5Ut4SnapshotBuilder::PACKAGE_FAMILY,
+        ], true)) {
             throw new RuntimeException('No V5 provider selector is registered for package_family ' . $family . '.');
         }
         return $this->selectClassic($gameId, $fileId, $consumer, $options);
