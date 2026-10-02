@@ -66,7 +66,7 @@ if (!mkdir($temp, 0775, true) && !is_dir($temp)) {
 $writer = new Uedb5MetadataSnapshotWriter($temp);
 $reader = new Uedb5MetadataReader($temp);
 try {
-    foreach ([[61,0],[68,0],[69,127]] as $case => [$version,$licensee]) {
+    foreach ([[61,0],[68,0],[69,127],[71,0],[83,0]] as $case => [$version,$licensee]) {
         $source = $temp . DIRECTORY_SEPARATOR . 'source-' . $version . '.unr';
         file_put_contents($source, $fixture($version, $licensee));
         $package = new CatalogUE1PackageReader($source);
@@ -89,7 +89,10 @@ try {
             $check('v' . $version . '_uses_guid_generations', ($summary['summary_layout'] ?? '') === 'guid-generations');
             $check('v' . $version . '_generation_count_preserved', ($summary['generation_count'] ?? null) === 1);
         }
-        if ($version === 69) {
+        if ($version > 69) {
+            $check('v' . $version . '_uses_forward_compat_policy',
+                ($snapshot['source_policy'] ?? '') === Uedb5Ut99SnapshotBuilder::POLICY_FORWARD_COMPAT);
+        } elseif ($version === 69) {
             $check('v69_uses_supplemental_policy', ($snapshot['source_policy'] ?? '') === Uedb5Ut99SnapshotBuilder::POLICY_V69);
             $check('v69_licensee_bits_preserved', ($summary['licensee_version'] ?? null) === 127);
         } else {
@@ -114,17 +117,17 @@ try {
     $check('v68_licensee_bits_are_preserved',
         (($licensed68Snapshot['sections']['summary'][0]['licensee_version'] ?? null) === 7));
 
-    $unsupportedPath = $temp . DIRECTORY_SEPARATOR . 'source-71.unr';
-    file_put_contents($unsupportedPath, $fixture(71, 0));
+    $unsupportedPath = $temp . DIRECTORY_SEPARATOR . 'source-84.unr';
+    file_put_contents($unsupportedPath, $fixture(84, 0));
     $unsupported = new CatalogUE1PackageReader($unsupportedPath);
-    $check('v71_still_parses_structurally', $unsupported->validatePackage() === []);
+    $check('v84_still_parses_structurally', $unsupported->validatePackage() === []);
     $rejected = false;
     try {
         Uedb5Ut99SnapshotBuilder::build($unsupported, ['id'=>2000,'game_id'=>3,'package_name'=>'Unsupported','original_name'=>'Unsupported.unr']);
     } catch (RuntimeException $error) {
-        $rejected = str_contains($error->getMessage(), 'outside source-proven V5 range 60-69');
+        $rejected = str_contains($error->getMessage(), 'outside accepted V5 range 60-83');
     }
-    $check('v71_is_not_claimed_source_compliant', $rejected);
+    $check('v84_remains_outside_observed_compatibility_ceiling', $rejected);
 } finally {
     if (is_dir($temp)) {
         $items = new RecursiveIteratorIterator(
