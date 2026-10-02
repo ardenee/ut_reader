@@ -12,6 +12,9 @@ use Throwable;
 
 final class Uedb5MetadataSnapshotWriter
 {
+    private const REPLACE_RETRY_ATTEMPTS = 120;
+    private const REPLACE_RETRY_DELAY_US = 50000;
+
     public function __construct(private readonly string $storageRoot)
     {
         if (trim($storageRoot) === '') {
@@ -46,10 +49,10 @@ final class Uedb5MetadataSnapshotWriter
             }
 
             // Keep the old target intact unless the platform can replace it with one rename.
-            // There is intentionally no unlink-before-rename fallback.
-            if (!@rename($temporaryPath, $path)) {
-                throw new RuntimeException('Could not atomically replace UEDB5 metadata file: ' . $path);
-            }
+            // Windows can transiently reject replacement while another Pass-2 worker has
+            // the existing provider open for reading. Retry the same atomic operation;
+            // there is intentionally no unlink-before-rename fallback.
+            $this->replaceAtomically($temporaryPath, $path);
 
             clearstatcache(true, $path);
             $verified = Uedb5MetadataContainer::verifyFile(
@@ -79,6 +82,20 @@ final class Uedb5MetadataSnapshotWriter
         } finally {
             @unlink($temporaryPath);
         }
+    }
+
+    private function replaceAtomically(string $temporaryPath, string $path): void
+    {
+        for ($attempt = 1; $attempt <= self::REPLACE_RETRY_ATTEMPTS; $attempt++) {
+            if (@rename($temporaryPath, $path)) {
+                return;
+            }
+            if ($attempt < self::REPLACE_RETRY_ATTEMPTS) {
+                clearstatcache(true, $path);
+                usleep(self::REPLACE_RETRY_DELAY_US);
+            }
+        }
+        throw new RuntimeException('Could not atomically replace UEDB5 metadata file after sharing-lock retry: ' . $path);
     }
 
     public function path(int $gameId, int $fileId): string
