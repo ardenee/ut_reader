@@ -61,7 +61,14 @@ final class Uedb5SourceSnapshotFactory
     /** @param array<string,mixed> $file @return array<string,mixed> */
     public function buildForGameId(int $gameId, string $path, array $file): array
     {
-        $this->assertProfileAllowsSource($gameId, $path, $file);
+        if (!$this->profileAllowsCatalogRow($gameId, $file)) {
+            $version = array_key_exists('package_version', $file) && $file['package_version'] !== null
+                ? (int)$file['package_version'] : null;
+            throw new RuntimeException(
+                'Package version is outside the active game profile for game_id=' . $gameId
+                . ' (version=' . ($version ?? 'unknown') . ').'
+            );
+        }
         return $this->buildForSourceKey(Uedb5GameSourceRegistry::sourceKey($gameId), $gameId, $path, $file);
     }
 
@@ -113,6 +120,10 @@ final class Uedb5SourceSnapshotFactory
             $this->applyProfile($gameId, $engineKey);
         }
         $reader = new $readerClass($path);
+        if (!method_exists($reader, 'getHeader')) {
+            throw new RuntimeException('Canonical package reader does not expose its parsed header for profile validation.');
+        }
+        $this->assertParsedHeaderAllowed($gameId, $engineKey, (array)$reader->getHeader());
 
         return match ($sourceKey) {
             'ut99' => $reader instanceof \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1PackageReader
@@ -143,49 +154,40 @@ final class Uedb5SourceSnapshotFactory
         };
     }
 
-    /** @param array<string,mixed> $file */
-    private function assertProfileAllowsSource(int $gameId, string $path, array $file): void
+    /** @param array<string,mixed> $header */
+    private function assertParsedHeaderAllowed(int $gameId, string $engineKey, array $header): void
     {
-        $contract = $this->contractForGameId($gameId);
         $profile = $this->profileForGame($gameId);
-        $summary = \gp_read_legacy_summary($path);
-        if (empty($summary['ok'])) {
-            throw new RuntimeException(
-                'Package header is not readable under the active game profile for game_id=' . $gameId
-                . ': ' . (string)($summary['reason'] ?? 'unknown header error')
-            );
+        $signedPackageVersion = in_array($engineKey, ['UE4','UE5'], true);
+        if ($engineKey === 'UE4') {
+            $version = isset($header['legacyFileVersion']) ? (int)$header['legacyFileVersion'] : null;
+            $licensee = isset($header['serializedLicenseeVersion']) ? (int)$header['serializedLicenseeVersion'] : null;
+        } elseif ($engineKey === 'UE5') {
+            $version = isset($header['serializedUE5Version']) ? (int)$header['serializedUE5Version'] : null;
+            $licensee = isset($header['serializedLicenseeVersion']) ? (int)$header['serializedLicenseeVersion'] : null;
+        } else {
+            $version = isset($header['version']) ? (int)$header['version'] : null;
+            $licensee = isset($header['licenseeVersion'])
+                ? (int)$header['licenseeVersion']
+                : (isset($header['licensee']) ? (int)$header['licensee'] : null);
         }
-
-        $detectedEngine = strtoupper(trim((string)($summary['engine_hint'] ?? '')));
-        $version = array_key_exists('version', $summary) && $summary['version'] !== null
-            ? (int)$summary['version'] : null;
-        $licensee = array_key_exists('licensee', $summary) && $summary['licensee'] !== null
-            ? (int)$summary['licensee'] : null;
-        $signedPackageVersion = in_array((string)($summary['format'] ?? ''), ['ue4_package', 'ue5_package'], true);
         $decision = \gp_profile_version_decision(
             $profile,
             $version,
             $licensee,
-            $detectedEngine,
+            $engineKey,
             $signedPackageVersion
         );
         if (empty($decision['ok'])) {
             throw new RuntimeException(
-                'Package version is outside the active game profile for game_id=' . $gameId
+                'Parsed package version is outside the active game profile for game_id=' . $gameId
                 . ' (version=' . ($version ?? 'unknown') . ', reason=' . (string)($decision['reason'] ?? 'rejected') . ').'
             );
         }
-
         $compatibility = $decision['compatibility'] ?? null;
-        $readerEngine = is_array($compatibility)
-            ? strtoupper((string)($compatibility['reader_engine'] ?? ''))
-            : $detectedEngine;
-        $sourceEngine = (string)$contract['engine_key'];
-        if ($readerEngine !== $sourceEngine) {
-            throw new RuntimeException(
-                'Game profile selected reader engine ' . ($readerEngine !== '' ? $readerEngine : 'UNKNOWN')
-                . ', but this UEDB5 game source requires ' . $sourceEngine . ' for game_id=' . $gameId . '.'
-            );
+        if (is_array($compatibility)
+            && strtoupper((string)($compatibility['reader_engine'] ?? '')) !== $engineKey) {
+            throw new RuntimeException('Active game profile compatibility rule selected a different package reader engine.');
         }
     }
 

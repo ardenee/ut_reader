@@ -48,6 +48,10 @@ $publisherSource=(string)file_get_contents($root.'/src/Infrastructure/Metadata/P
 $check('publisher_never_writes_live_v4_registration',!str_contains($publisherSource,'ue_file_metadata'));
 $check('publisher_clears_stale_dependency_projection',str_contains($publisherSource,"'ue_uedb5_dependency_edges'") && str_contains($publisherSource,"'ue_uedb5_dependency_packages'"));
 $check('publisher_uses_staged_v5_tables',str_contains($publisherSource,'ue_uedb5_object_candidates') && str_contains($publisherSource,'ue_uedb5_name_candidates'));
+$check('publisher_batches_large_projection_inserts',
+    substr_count($publisherSource,'$this->insertBatches(')>=3
+    && str_contains($publisherSource,'array_chunk($rows, 250)')
+    && !str_contains($publisherSource,"foreach ((array)\$projection['object_candidates'] as \$row)"));
 
 echo json_encode(['ok'=>$failures===[],'checks'=>$checks,'failures'=>$failures],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;
 exit($failures===[]?0:1);

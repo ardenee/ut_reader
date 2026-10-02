@@ -45,39 +45,37 @@ final class PdoUedb5BaseProjectionPublisher
 
             $providerCount = (new PdoUedb5ProviderKeyPublisher($this->db))->publish($fileId);
             Uedb5StagingIsolationContract::assertWriteTable('ue_uedb5_search_keys');
-            $search = $this->db->prepare(
-                'INSERT INTO ue_uedb5_search_keys(key_hash,key_length,key_fingerprint,normalized_text) '
-                . 'VALUES(?,?,?,?) ON DUPLICATE KEY UPDATE '
-                . 'key_hash=VALUES(key_hash),key_length=VALUES(key_length),normalized_text=VALUES(normalized_text)'
+            $this->insertBatches(
+                'ue_uedb5_search_keys',
+                ['key_hash','key_length','key_fingerprint','normalized_text'],
+                $searchRows,
+                static fn(array $row): array => [
+                    $row['hash'],$row['length'],$row['fingerprint'],$row['normalized_text'],
+                ],
+                ' ON DUPLICATE KEY UPDATE '
+                    . 'key_hash=VALUES(key_hash),key_length=VALUES(key_length),normalized_text=VALUES(normalized_text)'
             );
-            foreach ($searchRows as $row) {
-                $search->execute([$row['hash'], $row['length'], $row['fingerprint'], $row['normalized_text']]);
-            }
 
             Uedb5StagingIsolationContract::assertWriteTable('ue_uedb5_name_candidates');
-            $name = $this->db->prepare(
-                'INSERT INTO ue_uedb5_name_candidates('
-                . 'file_id,name_key_hash,name_key_length,name_key_fingerprint,first_name_index'
-                . ') VALUES(?,?,?,?,?)'
+            $this->insertBatches(
+                'ue_uedb5_name_candidates',
+                ['file_id','name_key_hash','name_key_length','name_key_fingerprint','first_name_index'],
+                array_values((array)$projection['name_candidates']),
+                static fn(array $row): array => [
+                    $row['file_id'],$row['name_key_hash'],$row['name_key_length'],
+                    $row['name_key_fingerprint'],$row['first_name_index'],
+                ]
             );
-            foreach ((array)$projection['name_candidates'] as $row) {
-                $name->execute([
-                    $row['file_id'], $row['name_key_hash'], $row['name_key_length'],
-                    $row['name_key_fingerprint'], $row['first_name_index'],
-                ]);
-            }
             Uedb5StagingIsolationContract::assertWriteTable('ue_uedb5_object_candidates');
-            $object = $this->db->prepare(
-                'INSERT INTO ue_uedb5_object_candidates('
-                . 'file_id,object_kind,object_index,object_name_hash,object_name_length,public_export_hash'
-                . ') VALUES(?,?,?,?,?,?)'
+            $this->insertBatches(
+                'ue_uedb5_object_candidates',
+                ['file_id','object_kind','object_index','object_name_hash','object_name_length','public_export_hash'],
+                array_values((array)$projection['object_candidates']),
+                static fn(array $row): array => [
+                    $row['file_id'],$row['object_kind'],$row['object_index'],
+                    $row['object_name_hash'],$row['object_name_length'],$row['public_export_hash'],
+                ]
             );
-            foreach ((array)$projection['object_candidates'] as $row) {
-                $object->execute([
-                    $row['file_id'], $row['object_kind'], $row['object_index'],
-                    $row['object_name_hash'], $row['object_name_length'], $row['public_export_hash'],
-                ]);
-            }
 
             if ($started) { $this->db->commit(); }
             return [
@@ -97,5 +95,31 @@ final class PdoUedb5BaseProjectionPublisher
             }
         }
         throw new \LogicException('UEDB5 base projection contention retry loop exited unexpectedly.');
+    }
+
+    /** @param list<string> $columns @param list<array<string,mixed>> $rows */
+    private function insertBatches(
+        string $table,
+        array $columns,
+        array $rows,
+        callable $values,
+        string $suffix = ''
+    ): void {
+        if ($rows === []) { return; }
+        $width = count($columns);
+        if ($width < 1) { throw new RuntimeException('UEDB5 batch insert requires at least one column.'); }
+        foreach (array_chunk($rows, 250) as $batch) {
+            $placeholders = implode(',', array_fill(0, count($batch), '(' . implode(',', array_fill(0, $width, '?')) . ')'));
+            $params = [];
+            foreach ($batch as $row) {
+                $rowValues = $values($row);
+                if (count($rowValues) !== $width) {
+                    throw new RuntimeException('UEDB5 batch insert value width does not match its columns.');
+                }
+                array_push($params, ...$rowValues);
+            }
+            $sql = 'INSERT INTO ' . $table . '(' . implode(',', $columns) . ') VALUES ' . $placeholders . $suffix;
+            $this->db->prepare($sql)->execute($params);
+        }
     }
 }
