@@ -59,7 +59,8 @@ final class Uedb5MetadataReader
         $limit = max(1, min(5000, $limit));
         $end = $start + $limit;
         $rows = [];
-        $handle = $this->open((string)$context['path']);
+        [$context, $handle] = $this->openContext($gameId, $fileId, $context);
+        $section = $this->section($context, $section);
         try {
             foreach ((array)$context['manifest']['sections'][$section] as $block) {
                 $block = (array)$block;
@@ -97,7 +98,8 @@ final class Uedb5MetadataReader
             return [];
         }
         $rows = [];
-        $handle = $this->open((string)$context['path']);
+        [$context, $handle] = $this->openContext($gameId, $fileId, $context);
+        $section = $this->section($context, $section);
         try {
             foreach ((array)$context['manifest']['sections'][$section] as $block) {
                 $block = (array)$block;
@@ -136,7 +138,8 @@ final class Uedb5MetadataReader
     {
         $context = $this->context($gameId, $fileId);
         $section = $this->section($context, $section);
-        $handle = $this->open((string)$context['path']);
+        [$context, $handle] = $this->openContext($gameId, $fileId, $context);
+        $section = $this->section($context, $section);
         try {
             foreach ((array)$context['manifest']['sections'][$section] as $block) {
                 foreach ($this->readBlock($handle, $context, $section, (array)$block) as $row) {
@@ -193,16 +196,30 @@ final class Uedb5MetadataReader
             throw new RuntimeException('Positive game and file IDs are required for UEDB5 reading.');
         }
         $key = $this->cacheKey($gameId, $fileId);
-        if (isset($this->contextCache[$key])) {
+        $path = $this->path($gameId, $fileId);
+        $signature = $this->fileSignature($path);
+        if (isset($this->contextCache[$key])
+            && hash_equals((string)($this->contextCache[$key]['file_signature'] ?? ''), $signature)) {
             return $this->contextCache[$key];
         }
-        $verified = $this->verify($gameId, $fileId);
-        $context = [
-            'path' => (string)$verified['path'],
-            'manifest' => (array)$verified['manifest'],
-            'payload_start' => (int)$verified['payload_start'],
-        ];
-        return $this->contextCache[$key] = $context;
+        unset($this->contextCache[$key]);
+
+        for ($attempt = 0; $attempt < 3; $attempt++) {
+            $before = $this->fileSignature($path);
+            $verified = $this->verify($gameId, $fileId);
+            $after = $this->fileSignature($path);
+            if (!hash_equals($before, $after)) {
+                continue;
+            }
+            $context = [
+                'path' => (string)$verified['path'],
+                'manifest' => (array)$verified['manifest'],
+                'payload_start' => (int)$verified['payload_start'],
+                'file_signature' => $after,
+            ];
+            return $this->contextCache[$key] = $context;
+        }
+        throw new RuntimeException('UEDB5 container changed repeatedly while being opened: ' . $path);
     }
 
     /** @param array<string,mixed> $context */
@@ -245,6 +262,46 @@ final class Uedb5MetadataReader
             }
         }
         return $rows;
+    }
+
+    /** @param array<string,mixed> $context @return array{0:array<string,mixed>,1:resource} */
+    private function openContext(int $gameId, int $fileId, array $context): array
+    {
+        for ($attempt = 0; $attempt < 2; $attempt++) {
+            $handle = $this->open((string)$context['path']);
+            $stat = fstat($handle);
+            $signature = is_array($stat) ? $this->statSignature($stat) : '';
+            if ($signature !== ''
+                && hash_equals((string)($context['file_signature'] ?? ''), $signature)) {
+                return [$context, $handle];
+            }
+            fclose($handle);
+            $this->clearCache($gameId, $fileId);
+            $context = $this->context($gameId, $fileId);
+        }
+        throw new RuntimeException('UEDB5 container changed while opening cached section data.');
+    }
+
+    private function fileSignature(string $path): string
+    {
+        clearstatcache(true, $path);
+        $stat = @stat($path);
+        if (!is_array($stat)) {
+            throw new RuntimeException('UEDB5 container is missing: ' . $path);
+        }
+        return $this->statSignature($stat);
+    }
+
+    /** @param array<string,mixed> $stat */
+    private function statSignature(array $stat): string
+    {
+        return implode(':', [
+            (string)($stat['dev'] ?? ''),
+            (string)($stat['ino'] ?? ''),
+            (string)($stat['size'] ?? ''),
+            (string)($stat['mtime'] ?? ''),
+            (string)($stat['ctime'] ?? ''),
+        ]);
     }
 
     /** @return resource */
