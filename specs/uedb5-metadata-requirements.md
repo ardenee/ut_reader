@@ -393,6 +393,8 @@ This matches the audited UE1/UE2 loader behavior. Unreal, UT99, Unreal II, UT200
 
 Base projection publication deliberately clears dependency projections. Dependency results are a second game pass after every provider candidate for that game has been staged, preventing partial-provider resolution from becoming authoritative. The live runtime remains UEDB4 throughout.
 
+The Pass-2 resolver foundation is implemented by Uedb5ClassicDependencyResolver and Uedb5DependencyRebuilder: source-shaped UEDB5 snapshots now drive the audited UE1/UE2, UE3, UE4, UE5-classic and Zen dependency semantics without reading UEDB4 metadata. UE1/UE2 reuse the audited in-memory VerifyImport variants, including Unreal II's private-export rule; UE3 preserves the UT3 source policy and cooked export-outer unresolved state; UE4 preserves the file-backed VerifyImport/redirector rules. This foundation still requires an explicit selected physical provider per package. Catalogue-wide provider candidate selection, resumable game orchestration, dependency SQL publication and execution remain the Pass-2 work that follows.
+
 ## Current Step 7 staging isolation
 
 Step 7 makes the pre-cutover coexistence rule executable. `Uedb5StagingIsolationContract` allows SQL writes only to the baseline `ue_uedb5_*` tables and rejects live V4 registration/projection targets. `Uedb5MetadataSnapshotWriter` asserts that the canonical `.uedb5` path is distinct from the corresponding `.uedb4` path before publication. `PdoUedb5StagingRegistrationRepository` and `PdoUedb5BaseProjectionPublisher` pass their write targets through the isolation guard.
@@ -483,8 +485,8 @@ Before full UE5 support can be marked complete, the UEDB5 update must include al
 4. [implemented by `Uedb5IoStoreTocReader`, `Uedb5IoStoreContainerHeaderReader`, and `Uedb5IoStoreCodec`] IoStore `.utoc`/`.ucas` ingestion preserving package-store provenance, redirects, optional segments, soft references, partition/block framing, compression dispatch and AES-key boundaries;
 5. [implemented by `Uedb5ZenPackageReader` and `Uedb5Ue5ZenIoStoreSnapshotBuilder`] Zen metadata blocks for PackageId/public-export-hash identity, typed `FPackageObjectIndex` values, export/dependency bundles, script imports and cell maps, using lossless unsigned-64 storage rather than PHP signed integers;
 6. [Zen/IoStore portion implemented by `Uedb5Ue5ZenIoStoreSnapshotBuilder` and `Uedb5Ue5ZenDependencyResolver`] separate hard, optional, soft, script, cell/Verse, load-order and runtime-derived classifications; build/cook dependencies remain separate AssetRegistry-source work and must not be fabricated from Zen package bytes;
-7. [base projection publication implemented; dependency publication remains Pass 2] compact SQL projections only for fields that need indexed catalog lookup; auxiliary UE5 source blocks remain in compressed `.uedb5` metadata by default;
-8. [classic Pass-1 source reparse implemented game-by-game] migration/verification reparses original bytes whenever UEDB4 did not retain a required serialized field; Zen/IoStore catalogue migration, dependency Pass 2, full execution/verification and cutover remain pending.
+7. [base projection publication and V5 dependency resolver foundation implemented; game-level dependency publication remains Pass 2] compact SQL projections only for fields that need indexed catalog lookup; auxiliary UE5 source blocks remain in compressed `.uedb5` metadata by default;
+8. [classic Pass-1 source reparse implemented game-by-game] migration/verification reparses original bytes whenever UEDB4 did not retain a required serialized field; dependency Pass-2 game orchestration/publication, Zen/IoStore catalogue migration, full execution/verification and cutover remain pending.
 
 ## UEDB4 to UEDB5 migration rules
 

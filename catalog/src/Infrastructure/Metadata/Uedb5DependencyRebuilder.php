@@ -14,6 +14,7 @@ final class Uedb5DependencyRebuilder
 {
     public const SECTION = 'dependency_results';
     public const CLASSIC_SCHEMA = 'ue5.classic.dependency-result.v1';
+    public const UNREAL_CLASSIC_SCHEMA = 'unreal.classic.dependency-result.v1';
     public const ZEN_SCHEMA = 'ue5.zen.dependency-result.v1';
     private const CLASSIC_RESOLVER_POLICY = 'ue5-5.8.3-classic-verify-import-v1';
     private const OUTCOME_CODES = [
@@ -32,20 +33,25 @@ final class Uedb5DependencyRebuilder
 
     /**
      * @param list<array{game_id:int,file_id:int,package_name?:string}> $selectedProviders
+     * @param array{common_packages?:list<string>,class_remaps?:array<string,string>} $options
      * @return array<string,mixed>
      */
-    public function rebuild(int $gameId, int $fileId, array $selectedProviders): array
+    public function rebuild(int $gameId, int $fileId, array $selectedProviders, array $options = []): array
     {
         $consumer = $this->reader->snapshot($gameId, $fileId);
         $providers = $this->loadProviders($selectedProviders);
         $family = (string)($consumer['package_family'] ?? '');
 
-        if ($family === Uedb5Ue5ClassicSnapshotBuilder::PACKAGE_FAMILY) {
+        if ($family === Uedb5Ue5ClassicSnapshotBuilder::PACKAGE_FAMILY
+            && (string)($consumer['source_policy'] ?? '') === Uedb5Ue5ClassicSnapshotBuilder::SOURCE_POLICY) {
             $rows = $this->rebuildClassic($consumer, $providers);
             $schema = self::CLASSIC_SCHEMA;
         } elseif ($family === Uedb5ZenPackageReader::PACKAGE_FAMILY) {
             $rows = $this->rebuildZen($consumer, $providers);
             $schema = self::ZEN_SCHEMA;
+        } elseif (in_array($family, [Uedb5Ut99SnapshotBuilder::PACKAGE_FAMILY, Uedb5Ut4SnapshotBuilder::PACKAGE_FAMILY], true)) {
+            $rows = $this->rebuildUnrealClassic($consumer, $providers, $options);
+            $schema = self::UNREAL_CLASSIC_SCHEMA;
         } else {
             throw new RuntimeException('No UEDB5 dependency resolver is registered for package_family ' . $family . '.');
         }
@@ -124,6 +130,38 @@ final class Uedb5DependencyRebuilder
     }
 
     /** @param array<string,mixed> $consumer @param list<array<string,mixed>> $providers */
+    private function rebuildUnrealClassic(array $consumer, array $providers, array $options): array
+    {
+        $selected = [];
+        foreach ($providers as $provider) {
+            $selected[] = [
+                'package_name' => (string)$provider['package_name'],
+                'provider_id' => (int)$provider['file_id'],
+                'snapshot' => (array)$provider['snapshot'],
+            ];
+        }
+        $resolved = Uedb5ClassicDependencyResolver::resolve($consumer, $selected, $options);
+        $imports = [];
+        foreach ((array)$consumer['sections']['imports'] as $fallback => $row) {
+            $row = (array)$row;
+            $index = array_key_exists('index', $row) ? (int)$row['index'] : (int)$fallback;
+            $imports[$index] = $row;
+        }
+
+        $rows = [];
+        foreach ($resolved as $importIndex => $result) {
+            $importIndex = (int)$importIndex;
+            $rows[] = $this->normalizeUnrealClassicRow(
+                $consumer,
+                $importIndex,
+                (array)($imports[$importIndex] ?? []),
+                (array)$result
+            );
+        }
+        return $rows;
+    }
+
+    /** @param array<string,mixed> $consumer @param list<array<string,mixed>> $providers */
     private function rebuildZen(array $consumer, array $providers): array
     {
         $selected = [];
@@ -143,6 +181,59 @@ final class Uedb5DependencyRebuilder
             $rows[] = $row;
         }
         return $rows;
+    }
+
+    /** @param array<string,mixed> $consumer @param array<string,mixed> $import @param array<string,mixed> $result */
+    private function normalizeUnrealClassicRow(
+        array $consumer,
+        int $importIndex,
+        array $import,
+        array $result
+    ): array {
+        $outcome = (string)($result['status'] ?? '');
+        $this->assertCanonicalOutcome($outcome);
+        $providerPackage = trim((string)($result['provider_package'] ?? ''));
+        $providerId = $result['provider_id'] ?? null;
+        $objectName = $this->fnameText($import['object_name'] ?? null);
+        $classPackage = $this->fnameText($import['class_package'] ?? null);
+        $className = $this->fnameText($import['class_name'] ?? null);
+        $packageImport = (int)($import['outer_index'] ?? 0) === 0
+            && CatalogUnrealIdentityHash::nameKey($className) === CatalogUnrealIdentityHash::nameKey('Package');
+        $dependencyClass = (string)($result['dependency_class'] ?? 'hard');
+
+        return [
+            'dependency_kind' => 'ClassicImport',
+            'source_section' => 'imports',
+            'source_index' => $importIndex,
+            'required_package_identity' => $providerPackage === '' ? null : [
+                'kind' => 'package_name',
+                'value' => $providerPackage,
+            ],
+            'required_object_identity' => $packageImport || $objectName === '' ? null : [
+                'kind' => 'classic_import',
+                'object_name' => $objectName,
+                'class_package' => $classPackage,
+                'class_name' => $className,
+                'outer_index' => (int)($import['outer_index'] ?? 0),
+            ],
+            'dependency_class' => $dependencyClass,
+            'optional' => false,
+            'hard' => $dependencyClass === 'hard',
+            'outcome' => $outcome,
+            'outcome_code' => self::OUTCOME_CODES[$outcome],
+            'selected_provider_file_id' => $providerId !== null ? (int)$providerId : null,
+            'selected_provider_package_identity' => $providerId !== null && $providerPackage !== '' ? [
+                'kind' => 'package_name',
+                'value' => $providerPackage,
+            ] : null,
+            'selected_provider_object' => isset($result['export_index']) && $result['export_index'] !== null ? [
+                'export_index' => (int)$result['export_index'],
+            ] : null,
+            'resolver_policy' => (string)($result['resolver_policy'] ?? ''),
+            'source_policy' => (string)($consumer['source_policy'] ?? ''),
+            'reason_code' => (string)($result['reason'] ?? ''),
+            'resolver_detail' => $result,
+        ];
     }
 
     /**
