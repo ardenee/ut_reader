@@ -78,6 +78,22 @@ final class PdoUedb5StagingRegistrationRepository
     {
         $row = $this->inspect($gameId, $fileId);
         $this->assertLiveV4Registration($gameId, $fileId);
+        return $this->upsert($row);
+    }
+
+    /** Refresh an already staged V5 registration without consulting V4 metadata. */
+    public function refreshExisting(int $gameId, int $fileId): array
+    {
+        $existing = $this->find($fileId);
+        if (!is_array($existing) || (int)($existing['game_id'] ?? 0) !== $gameId) {
+            throw new RuntimeException('UEDB5 dependency pass requires an existing staged V5 registration.');
+        }
+        return $this->upsert($this->inspect($gameId, $fileId));
+    }
+
+    /** @param array<string,mixed> $row @return array<string,mixed> */
+    private function upsert(array $row): array
+    {
         $timestamp = gmdate('Y-m-d H:i:s');
         Uedb5StagingIsolationContract::assertWriteTable('ue_uedb5_files');
         $statement = $this->db->prepare(
@@ -104,7 +120,6 @@ final class PdoUedb5StagingRegistrationRepository
         ]);
         return $row + ['registered' => true, 'updated_at' => $timestamp];
     }
-
     public function remove(int $fileId): void
     {
         if ($fileId < 1) {

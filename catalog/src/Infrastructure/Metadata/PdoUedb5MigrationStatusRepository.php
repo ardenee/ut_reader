@@ -95,7 +95,8 @@ final class PdoUedb5MigrationStatusRepository
             'file_id,game_id,status,attempt_count,staged_at,created_at,updated_at' .
             ') VALUES(?,?,"staged",0,?,?,?) ON DUPLICATE KEY UPDATE ' .
             'game_id=VALUES(game_id),status="staged",validator_policy=NULL,' .
-            'last_checked_payload_sha256=NULL,validated_payload_sha256=NULL,' .
+            'last_checked_payload_sha256=NULL,validated_payload_sha256=NULL,dependency_policy=NULL,' .
+            'dependency_payload_sha256=NULL,dependency_completed_at=NULL,' .
             'last_error_code=NULL,last_error_text=NULL,last_result_json=NULL,' .
             'staged_at=COALESCE(staged_at,VALUES(staged_at)),validated_at=NULL,failed_at=NULL,updated_at=VALUES(updated_at)'
         );
@@ -111,13 +112,51 @@ final class PdoUedb5MigrationStatusRepository
             'file_id,game_id,status,attempt_count,last_error_code,last_error_text,failed_at,created_at,updated_at' .
             ') VALUES(?, ?, "failed", 1, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE ' .
             'game_id=VALUES(game_id),status="failed",validator_policy=NULL,last_checked_payload_sha256=NULL,' .
-            'validated_payload_sha256=NULL,attempt_count=attempt_count+1,last_error_code=VALUES(last_error_code),' .
+            'validated_payload_sha256=NULL,dependency_policy=NULL,dependency_payload_sha256=NULL,dependency_completed_at=NULL,' .
+            'attempt_count=attempt_count+1,last_error_code=VALUES(last_error_code),' .
             'last_error_text=VALUES(last_error_text),last_result_json=NULL,validated_at=NULL,' .
             'failed_at=VALUES(failed_at),updated_at=VALUES(updated_at)'
         );
         $statement->execute([$fileId,$gameId,$errorCode,$errorText,$now,$now,$now]);
     }
 
+    public function markDependencySucceeded(
+        int $fileId,
+        int $gameId,
+        string $payloadSha256,
+        string $policy
+    ): void {
+        Uedb5StagingIsolationContract::assertWriteTable('ue_uedb5_migration_status');
+        if ($fileId < 1 || $gameId < 1 || strlen($payloadSha256) !== 32 || trim($policy) === '') {
+            throw new RuntimeException('Invalid UEDB5 dependency-pass completion identity.');
+        }
+        $now = gmdate('Y-m-d H:i:s');
+        $statement = $this->db->prepare(
+            'INSERT INTO ue_uedb5_migration_status('
+            . 'file_id,game_id,status,dependency_policy,dependency_payload_sha256,dependency_completed_at,staged_at,created_at,updated_at'
+            . ') VALUES(?, ?, "staged", ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE '
+            . 'game_id=VALUES(game_id),status="staged",validator_policy=NULL,last_checked_payload_sha256=NULL,'
+            . 'validated_payload_sha256=NULL,dependency_policy=VALUES(dependency_policy),'
+            . 'dependency_payload_sha256=VALUES(dependency_payload_sha256),dependency_completed_at=VALUES(dependency_completed_at),'
+            . 'last_error_code=NULL,last_error_text=NULL,last_result_json=NULL,validated_at=NULL,failed_at=NULL,updated_at=VALUES(updated_at)'
+        );
+        $statement->execute([$fileId,$gameId,$policy,$payloadSha256,$now,$now,$now,$now]);
+    }
+
+    public function markDependencyFailed(int $fileId, int $gameId, string $errorCode, string $errorText): void
+    {
+        Uedb5StagingIsolationContract::assertWriteTable('ue_uedb5_migration_status');
+        $now = gmdate('Y-m-d H:i:s');
+        $statement = $this->db->prepare(
+            'INSERT INTO ue_uedb5_migration_status(file_id,game_id,status,attempt_count,last_error_code,last_error_text,failed_at,created_at,updated_at) '
+            . 'VALUES(?, ?, "failed", 1, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE '
+            . 'game_id=VALUES(game_id),status="failed",validator_policy=NULL,last_checked_payload_sha256=NULL,'
+            . 'validated_payload_sha256=NULL,dependency_policy=NULL,dependency_payload_sha256=NULL,dependency_completed_at=NULL,'
+            . 'attempt_count=attempt_count+1,last_error_code=VALUES(last_error_code),last_error_text=VALUES(last_error_text),'
+            . 'last_result_json=NULL,validated_at=NULL,failed_at=VALUES(failed_at),updated_at=VALUES(updated_at)'
+        );
+        $statement->execute([$fileId,$gameId,$errorCode,$errorText,$now,$now,$now]);
+    }
     /** @param array<string,mixed> $result */
     public function markValidated(int $fileId, string $payloadSha256, array $result): void
     {

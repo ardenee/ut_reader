@@ -9,15 +9,18 @@ $validator=(string)file_get_contents($root.'/src/Infrastructure/Metadata/Uedb5Mi
 $gameMigration=(string)file_get_contents($root.'/src/Infrastructure/Metadata/Uedb5GameSourceMigrationService.php');
 $factory=(string)file_get_contents($root.'/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php');
 $migration=(string)file_get_contents($root.'/migrations/202609300002_uedb5_migration_status.php');
+$dependencyMigration=(string)file_get_contents($root.'/migrations/202610020001_uedb5_dependency_pass_status.php');
 $cli=(string)file_get_contents($root.'/bin/validate-uedb5-migration.php');
 $checks=[];$failures=[];
 $check=static function(string $n,bool $ok)use(&$checks,&$failures):void{$checks[$n]=$ok;if(!$ok)$failures[]=$n;};
 $check('four_durable_states',str_contains($status,"PENDING = 'pending'")&&str_contains($status,"STAGED = 'staged'")&&str_contains($status,"VALIDATED = 'validated'")&&str_contains($status,"FAILED = 'failed'"));
 $check('status_table_is_per_file',str_contains($migration,'ue_uedb5_migration_status')&&str_contains($migration,'PRIMARY KEY (file_id)'));
 $check('status_table_tracks_exact_validated_payload',str_contains($migration,'validated_payload_sha256 BINARY(32)'));
+$check('status_table_tracks_exact_dependency_payload',str_contains($dependencyMigration,'dependency_payload_sha256 BINARY(32)')&&str_contains($dependencyMigration,'dependency_policy VARCHAR(64)'));
 $check('status_table_tracks_attempt_and_failure',str_contains($migration,'attempt_count')&&str_contains($migration,'last_error_code')&&str_contains($migration,'last_result_json'));
 $check('stage_failure_is_durable_without_v5_registration',str_contains($repo,'s.status IN ("staged","validated")')&&str_contains($repo,'markStageFailed'));
 $check('step6_marks_stage_success_and_failure_when_status_exists',str_contains($gameMigration,'markStageSucceeded')&&str_contains($gameMigration,'markStageFailure'));
+$check('source_reparse_invalidates_dependency_checkpoint',str_contains($repo,'dependency_policy=NULL')&&str_contains($repo,'dependency_payload_sha256=NULL'));
 $check('validator_reparses_authoritative_source',str_contains($validator,'sourceSnapshots->build')&&str_contains($validator,'validateSourceSnapshot'));
 $check('source_factory_uses_canonical_reader_resolver',str_contains($factory,'CatalogReaderResolver::resolve'));
 $check('reconcile_backfills_pending_and_staged',str_contains($repo,'CASE WHEN v.file_id IS NULL THEN "pending" ELSE "staged" END'));
