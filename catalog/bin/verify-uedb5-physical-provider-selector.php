@@ -90,6 +90,21 @@ $check('partial_duplicate_set_selects_one_physical_provider',
 $check('candidate_order_breaks_equal_coverage_ties',
     (int)$selected[0]['file_id']===20);
 
+$soloImports=[
+    ['index'=>0,'class_package'=>'Core','class_name'=>'Package','object_name'=>'Solo','outer_index'=>0],
+    ['index'=>1,'class_package'=>'Core','class_name'=>'Class','object_name'=>'OnlyObject','outer_index'=>-1],
+];
+$writer->write($snapshot(11,'SoloConsumer',$soloImports,[]));
+foreach([[11,'SoloConsumer'],[23,'Solo']] as [$id,$name]){
+    $db->prepare('INSERT INTO ue_files VALUES(?,?,?,?,?,?,?)')->execute([$id,3,'verified','2026-10-02 13:30:00',$id,md5((string)$id),sha1((string)$id)]);
+    $db->prepare('INSERT INTO ue_uedb5_files VALUES(?,?,?)')->execute([$id,3,$name]);
+}
+$db->prepare('INSERT INTO ue_uedb5_provider_keys VALUES(?,?,?,?,?,?)')
+    ->execute([1,23,3,$classic,md5('solo',true),23]);
+$soloSelected=(new PdoUedb5PhysicalProviderSelector($db,$tmp))->select(3,11);
+$check('single_provider_is_selected_without_expensive_scoring',
+    count($soloSelected)===1 && (int)$soloSelected[0]['file_id']===23);
+
 $ut4=[
     'file'=>['id'=>30,'game_id'=>7,'package_name'=>'/Game/Empty','original_name'=>'Empty.uasset'],
     'package_family'=>Uedb5Ut4SnapshotBuilder::PACKAGE_FAMILY,

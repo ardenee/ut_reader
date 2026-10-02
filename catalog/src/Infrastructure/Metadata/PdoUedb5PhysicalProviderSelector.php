@@ -171,7 +171,7 @@ final class PdoUedb5PhysicalProviderSelector
         array $options
     ): ?array {
         if ($candidates === []) { return null; }
-        if ($requiredIndexes === []) { return $candidates[0]; }
+        if (count($candidates) === 1 || $requiredIndexes === []) { return $candidates[0]; }
         $best = null;
         $bestMatches = -1;
         $bestRedirectors = -1;
