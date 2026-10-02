@@ -49,9 +49,16 @@ $check('publisher_never_writes_live_v4_registration',!str_contains($publisherSou
 $check('publisher_clears_stale_dependency_projection',str_contains($publisherSource,"'ue_uedb5_dependency_edges'") && str_contains($publisherSource,"'ue_uedb5_dependency_packages'"));
 $check('publisher_uses_staged_v5_tables',str_contains($publisherSource,'ue_uedb5_object_candidates') && str_contains($publisherSource,'ue_uedb5_name_candidates'));
 $check('publisher_batches_large_projection_inserts',
-    substr_count($publisherSource,'$this->insertBatches(')>=3
+    substr_count($publisherSource,'$this->insertBatches(')>=2
     && str_contains($publisherSource,'array_chunk($rows, 250)')
     && !str_contains($publisherSource,"foreach ((array)\$projection['object_candidates'] as \$row)"));
+$check('publisher_search_dictionary_is_insert_only',
+    str_contains($publisherSource,'INSERT IGNORE INTO ')
+    && !str_contains($publisherSource,'key_hash=VALUES(key_hash),key_length=VALUES(key_length),normalized_text=VALUES(normalized_text)'));
+$check('publisher_search_dictionary_precedes_file_transaction',
+    strpos($publisherSource,'publishSearchDictionary($searchRows)') < strpos($publisherSource,'$started = !$this->db->inTransaction()'));
+$check('publisher_sorts_file_candidates_for_secondary_indexes',
+    str_contains($publisherSource,'usort($nameRows') && str_contains($publisherSource,'usort($objectRows'));
 
 echo json_encode(['ok'=>$failures===[],'checks'=>$checks,'failures'=>$failures],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;
 exit($failures===[]?0:1);

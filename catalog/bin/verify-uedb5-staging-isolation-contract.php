@@ -41,10 +41,10 @@ $writeTargets = [];
 $unguardedDynamicWrites = [];
 foreach ($files as $file) {
     $source = (string)file_get_contents($file);
-    if (preg_match_all('/(?:INSERT\s+INTO|REPLACE\s+INTO|UPDATE|DELETE\s+FROM)\s+`?([a-zA-Z0-9_]+)`?/i', $source, $m)) {
+    if (preg_match_all('/(?:INSERT\s+(?:IGNORE\s+)?INTO|REPLACE\s+INTO|UPDATE|DELETE\s+FROM)\s+`?([a-zA-Z0-9_]+)`?/i', $source, $m)) {
         foreach ($m[1] as $table) { $writeTargets[] = strtolower((string)$table); }
     }
-    if (preg_match('/(?:INSERT\s+INTO|UPDATE|DELETE\s+FROM)\s*[\'\"]\s*\.\s*\$/i', $source)
+    if (preg_match('/(?:INSERT\s+(?:IGNORE\s+)?INTO|UPDATE|DELETE\s+FROM)\s*[\'\"]\s*\.\s*\$/i', $source)
         && !str_contains($source, 'Uedb5StagingIsolationContract::assertWriteTable')) {
         $unguardedDynamicWrites[] = basename($file);
     }

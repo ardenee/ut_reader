@@ -60,6 +60,8 @@ $check('workers_partition_file_ids_without_overlap',str_contains($service,'MOD(f
 $check('workers_start_at_lowest_remaining_partition_id',str_contains($service,'SELECT MIN(f.id)')&&str_contains($service,'first_remaining_file_id')&&str_contains($service,'$firstRemainingId - 1'));
 $check('projection_retries_mysql_contention',str_contains($publisher,'PdoContention::retryable')&&str_contains($publisher,'$maxAttempts = $started ? 5 : 1'));
 $check('search_dictionary_locks_use_deterministic_order',str_contains($publisher,'usort($searchRows')&&str_contains($publisher,'fingerprint'));
+$check('file_projection_locks_use_deterministic_order',str_contains($publisher,'usort($nameRows')&&str_contains($publisher,'usort($objectRows'));
+$check('shared_search_dictionary_uses_short_insert_only_batches',str_contains($publisher,'publishSearchDictionary($searchRows)')&&str_contains($publisher,'INSERT IGNORE INTO '));
 $check('source_factory_does_not_reopen_package_for_profile_gate',
     !str_contains($factory,'gp_read_legacy_summary($path)')
     &&str_contains($factory,'profileAllowsCatalogRow($gameId, $file)')

@@ -28,6 +28,32 @@ final class PdoUedb5BaseProjectionPublisher
         usort($searchRows, static fn(array $left, array $right): int =>
             strcmp(bin2hex((string)$left['fingerprint']), bin2hex((string)$right['fingerprint']))
         );
+        $nameRows = array_values((array)$projection['name_candidates']);
+        usort($nameRows, static function (array $left, array $right): int {
+            $cmp = strcmp(bin2hex((string)$left['name_key_hash']), bin2hex((string)$right['name_key_hash']));
+            if ($cmp !== 0) { return $cmp; }
+            $cmp = ((int)$left['name_key_length']) <=> ((int)$right['name_key_length']);
+            if ($cmp !== 0) { return $cmp; }
+            $cmp = strcmp(bin2hex((string)$left['name_key_fingerprint']), bin2hex((string)$right['name_key_fingerprint']));
+            return $cmp !== 0 ? $cmp : ((int)$left['first_name_index'] <=> (int)$right['first_name_index']);
+        });
+        $objectRows = array_values((array)$projection['object_candidates']);
+        usort($objectRows, static function (array $left, array $right): int {
+            $cmp = strcmp(bin2hex((string)$left['object_name_hash']), bin2hex((string)$right['object_name_hash']));
+            if ($cmp !== 0) { return $cmp; }
+            $cmp = ((int)$left['object_name_length']) <=> ((int)$right['object_name_length']);
+            if ($cmp !== 0) { return $cmp; }
+            $cmp = ((int)$left['object_kind']) <=> ((int)$right['object_kind']);
+            return $cmp !== 0 ? $cmp : ((int)$left['object_index'] <=> (int)$right['object_index']);
+        });
+
+        // Search keys are immutable global dictionary rows keyed by the SHA-256
+        // fingerprint. Publish them in short insert-only batches before taking
+        // file-owned candidate locks so parallel workers cannot form a lock cycle.
+        $searchPublishedOutsideFileTransaction = !$this->db->inTransaction();
+        if ($searchPublishedOutsideFileTransaction) {
+            $this->publishSearchDictionary($searchRows);
+        }
         $started = !$this->db->inTransaction();
         $maxAttempts = $started ? 5 : 1;
         for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
@@ -44,23 +70,15 @@ final class PdoUedb5BaseProjectionPublisher
             }
 
             $providerCount = (new PdoUedb5ProviderKeyPublisher($this->db))->publish($fileId);
-            Uedb5StagingIsolationContract::assertWriteTable('ue_uedb5_search_keys');
-            $this->insertBatches(
-                'ue_uedb5_search_keys',
-                ['key_hash','key_length','key_fingerprint','normalized_text'],
-                $searchRows,
-                static fn(array $row): array => [
-                    $row['hash'],$row['length'],$row['fingerprint'],$row['normalized_text'],
-                ],
-                ' ON DUPLICATE KEY UPDATE '
-                    . 'key_hash=VALUES(key_hash),key_length=VALUES(key_length),normalized_text=VALUES(normalized_text)'
-            );
+            if (!$searchPublishedOutsideFileTransaction) {
+                $this->insertSearchDictionaryBatches($searchRows);
+            }
 
             Uedb5StagingIsolationContract::assertWriteTable('ue_uedb5_name_candidates');
             $this->insertBatches(
                 'ue_uedb5_name_candidates',
                 ['file_id','name_key_hash','name_key_length','name_key_fingerprint','first_name_index'],
-                array_values((array)$projection['name_candidates']),
+                $nameRows,
                 static fn(array $row): array => [
                     $row['file_id'],$row['name_key_hash'],$row['name_key_length'],
                     $row['name_key_fingerprint'],$row['first_name_index'],
@@ -70,7 +88,7 @@ final class PdoUedb5BaseProjectionPublisher
             $this->insertBatches(
                 'ue_uedb5_object_candidates',
                 ['file_id','object_kind','object_index','object_name_hash','object_name_length','public_export_hash'],
-                array_values((array)$projection['object_candidates']),
+                $objectRows,
                 static fn(array $row): array => [
                     $row['file_id'],$row['object_kind'],$row['object_index'],
                     $row['object_name_hash'],$row['object_name_length'],$row['public_export_hash'],
@@ -81,8 +99,8 @@ final class PdoUedb5BaseProjectionPublisher
             return [
                 'provider_keys' => $providerCount,
                 'search_keys' => count($searchRows),
-                'name_candidates' => count((array)$projection['name_candidates']),
-                'object_candidates' => count((array)$projection['object_candidates']),
+                'name_candidates' => count($nameRows),
+                'object_candidates' => count($objectRows),
                 'dependency_edges' => 0,
                 'dependency_packages' => 0,
             ];
@@ -95,6 +113,41 @@ final class PdoUedb5BaseProjectionPublisher
             }
         }
         throw new \LogicException('UEDB5 base projection contention retry loop exited unexpectedly.');
+    }
+
+    /** @param list<array<string,mixed>> $rows */
+    private function publishSearchDictionary(array $rows): void
+    {
+        Uedb5StagingIsolationContract::assertWriteTable('ue_uedb5_search_keys');
+        foreach (array_chunk($rows, 250) as $batch) {
+            for ($attempt = 1; $attempt <= 5; $attempt++) {
+                try {
+                    $this->insertSearchDictionaryBatches($batch);
+                    break;
+                } catch (Throwable $error) {
+                    if (!PdoContention::retryable($error) || $attempt >= 5) { throw $error; }
+                    usleep(PdoContention::backoffMicros($attempt, 25000));
+                }
+            }
+        }
+    }
+
+    /** @param list<array<string,mixed>> $rows */
+    private function insertSearchDictionaryBatches(array $rows): void
+    {
+        if ($rows === []) { return; }
+        Uedb5StagingIsolationContract::assertWriteTable('ue_uedb5_search_keys');
+        $columns = ['key_hash','key_length','key_fingerprint','normalized_text'];
+        $width = count($columns);
+        foreach (array_chunk($rows, 250) as $batch) {
+            $placeholders = implode(',', array_fill(0, count($batch), '(' . implode(',', array_fill(0, $width, '?')) . ')'));
+            $params = [];
+            foreach ($batch as $row) {
+                array_push($params, $row['hash'], $row['length'], $row['fingerprint'], $row['normalized_text']);
+            }
+            $sql = 'INSERT IGNORE INTO ue_uedb5_search_keys(' . implode(',', $columns) . ') VALUES ' . $placeholders;
+            $this->db->prepare($sql)->execute($params);
+        }
     }
 
     /** @param list<string> $columns @param list<array<string,mixed>> $rows */
