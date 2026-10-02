@@ -206,13 +206,14 @@ final class PdoUe4VerifyImportProjectionResolver
             }
             $expectedOuter = $parentSource === self::TOP_LEVEL_PACKAGE ? 0 : $parentSource + 1;
             $redirector = self::findCandidate(
-                $candidates,
-                $objectName,
-                'ObjectRedirector',
-                '/Script/CoreUObject',
-                $expectedOuter,
-                self::privateImportAllowed($importIndex, $graphImports, $consumerExportsByIndex)
+                $candidates, $objectName, 'ObjectRedirector', '/Script/CoreUObject', $expectedOuter, false
             );
+            if ($redirector === self::PRIVATE_FAILURE
+                && self::privateImportAllowed($importIndex, $graphImports, $consumerExportsByIndex)) {
+                $redirector = self::findCandidate(
+                    $candidates, $objectName, 'ObjectRedirector', '/Script/CoreUObject', $expectedOuter, true
+                );
+            }
             if (is_int($redirector) && $redirector >= 0) {
                 $redirectors[$importIndex] = $redirector;
             }
@@ -506,13 +507,14 @@ final class PdoUe4VerifyImportProjectionResolver
         $expectedOuter = $parentSource === self::TOP_LEVEL_PACKAGE ? 0 : $parentSource + 1;
 
         $matched = self::findCandidate(
-            $candidates,
-            $objectName,
-            $className,
-            $classPackage,
-            $expectedOuter,
-            self::privateImportAllowed($index, $consumerGraphImports, $consumerExports)
+            $candidates, $objectName, $className, $classPackage, $expectedOuter, false
         );
+        if ($matched === self::PRIVATE_FAILURE
+            && self::privateImportAllowed($index, $consumerGraphImports, $consumerExports)) {
+            $matched = self::findCandidate(
+                $candidates, $objectName, $className, $classPackage, $expectedOuter, true
+            );
+        }
         unset($visiting[$index]);
         return $resolved[$index] = $matched;
     }
