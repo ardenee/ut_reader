@@ -34,6 +34,7 @@ file_put_contents($sourcePath,$header.$names.$import);
 $db=new PDO('sqlite::memory:');$db->setAttribute(PDO::ATTR_ERRMODE,PDO::ERRMODE_EXCEPTION);
 foreach([
 'CREATE TABLE ue_games(id INTEGER PRIMARY KEY,name TEXT,slug TEXT,profile_id INTEGER)',
+'CREATE TABLE ue_game_profiles(id INTEGER PRIMARY KEY,is_active INTEGER,engine_key TEXT,package_version_min INTEGER,package_version_max INTEGER,compatibility_rules_json TEXT,profile_name TEXT)',
 'CREATE TABLE ue_files(id INTEGER PRIMARY KEY,game_id INTEGER,package_name TEXT,original_name TEXT,stored_name TEXT,file_size INTEGER,md5 TEXT,sha1 TEXT,package_version INTEGER,licensee_version INTEGER,name_count INTEGER,import_count INTEGER,export_count INTEGER,scan_status TEXT)',
 'CREATE TABLE ue_uedb5_files(file_id INTEGER PRIMARY KEY,game_id INTEGER,format_version INTEGER,codec INTEGER,compressed_size INTEGER,uncompressed_size INTEGER,payload_sha256 BLOB,block_count INTEGER,package_family TEXT,source_policy TEXT,package_key_kind INTEGER,package_key BLOB,package_name TEXT,section_counts_json TEXT)',
 'CREATE TABLE ue_file_package_aliases(id INTEGER PRIMARY KEY,file_id INTEGER,game_id INTEGER,package_name TEXT,original_name TEXT)',
@@ -45,6 +46,7 @@ foreach([
 'CREATE TABLE ue_uedb5_dependency_packages(game_id INTEGER,file_id INTEGER,package_key_kind INTEGER,package_key BLOB,required_package_name TEXT,dependency_count INTEGER,resolved_count INTEGER,missing_count INTEGER,package_only_count INTEGER,common_count INTEGER,unresolved_count INTEGER,hard_missing_count INTEGER,nonhard_missing_count INTEGER,summary_outcome INTEGER,provider_file_id INTEGER)'
 ] as $sql){$db->exec($sql);}
 $db->exec("INSERT INTO ue_games VALUES(3,'Unreal Tournament','ut99',2)");
+$db->exec("INSERT INTO ue_game_profiles VALUES(2,1,'UE1',60,69,'[]','UT99 fixture')");
 $db->prepare('INSERT INTO ue_files VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)')->execute([
 8001,3,'TestPkg','Test.unr','source.unr',filesize($sourcePath),md5_file($sourcePath),sha1_file($sourcePath),68,0,3,1,0,'verified'
 ]);

@@ -1,5 +1,5 @@
 <?php
-/** Source-shaped UEDB5 persistence for UT3 package version 512. */
+/** Source-shaped UEDB5 persistence for UT3 packages using the audited Jan-2008 UE3 serialization rules. */
 declare(strict_types=1);
 
 namespace UnrealDb\Catalog\Infrastructure\Metadata;
@@ -9,7 +9,6 @@ use RuntimeException;
 final class Uedb5Ut3SnapshotBuilder
 {
     public const PACKAGE_FAMILY = 'classic-linkerload';
-    public const PACKAGE_VERSION = 512;
     public const SOURCE_POLICY = 'ue3-ut3-jan2008-package-v512';
 
     /** @param object $reader @param array<string,mixed> $file @return array<string,mixed> */
@@ -20,9 +19,6 @@ final class Uedb5Ut3SnapshotBuilder
             throw new RuntimeException('Cannot persist UT3 UEDB5 metadata: ' . implode('; ', $issues));
         }
         $header = (array)$reader->getHeader();
-        if ((int)($header['version'] ?? -1) !== self::PACKAGE_VERSION) {
-            throw new RuntimeException('UT3 V5 source policy requires package version 512.');
-        }
         $fileId = (int)($file['id'] ?? 0);
         $gameId = (int)($file['game_id'] ?? 0);
         if ($fileId < 1 || $gameId < 1) {

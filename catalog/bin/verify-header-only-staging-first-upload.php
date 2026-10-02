@@ -80,7 +80,8 @@ try {
     require_once $root . '/src/Application/Catalog/CatalogPackageHeaderInspector.php';
     $record(
         'header_version_selects_supported_legacy_engine',
-        gp_engine_from_version(69) === 'UE1'
+        gp_engine_from_version(34) === 'UE1'
+            && gp_engine_from_version(69) === 'UE1'
             && gp_engine_from_version(128) === 'UE2'
             && gp_engine_from_version(512) === 'UE3'
             && gp_engine_from_version(8261) === null,

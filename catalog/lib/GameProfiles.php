@@ -85,7 +85,7 @@ function gp_engine_from_version(?int $version): ?string
     if ($version >= 100 && $version <= 199) {
         return 'UE2';
     }
-    if ($version >= 40 && $version <= 99) {
+    if ($version >= 34 && $version <= 99) {
         return 'UE1';
     }
     return null;
@@ -115,6 +115,41 @@ function gp_engine_rank(string $engine): int
 function gp_compatibility_for_file(array $profile, string $ext, ?int $version, ?int $licensee, ?string $detectedEngine): ?array
 {
     return compat_rule_match($profile, $ext, $version, $licensee, $detectedEngine);
+}
+
+/**
+ * Canonical game-profile version gate shared by upload/classification and
+ * maintenance/migration paths. Explicit compatibility rules override the
+ * ordinary profile min/max range. Modern signed package summaries retain the
+ * existing behavior where their parser profile, not the legacy range fields,
+ * determines the effective serialization version.
+ *
+ * @return array{ok:bool,compatibility:?array,reason:string}
+ */
+function gp_profile_version_decision(
+    array $profile,
+    ?int $version,
+    ?int $licensee,
+    ?string $detectedEngine,
+    bool $signedPackageVersion = false
+): array {
+    $compatibility = gp_compatibility_for_file($profile, '', $version, $licensee, $detectedEngine);
+    if ($compatibility !== null) {
+        return ['ok' => true, 'compatibility' => $compatibility, 'reason' => 'compatibility_rule'];
+    }
+    if ($signedPackageVersion || $version === null) {
+        return ['ok' => true, 'compatibility' => null, 'reason' => 'not_legacy_range_gated'];
+    }
+
+    $min = $profile['package_version_min'] !== null ? (int)$profile['package_version_min'] : null;
+    $max = $profile['package_version_max'] !== null ? (int)$profile['package_version_max'] : null;
+    if ($min !== null && $version < $min) {
+        return ['ok' => false, 'compatibility' => null, 'reason' => 'below_profile_range'];
+    }
+    if ($max !== null && $version > $max) {
+        return ['ok' => false, 'compatibility' => null, 'reason' => 'above_profile_range'];
+    }
+    return ['ok' => true, 'compatibility' => null, 'reason' => 'profile_range'];
 }
 
 function gp_read_legacy_summary(string $path): array
@@ -286,22 +321,22 @@ function gp_classify_file(PDO $db, int $selectedGameId, string $path, string $or
         $notes[] = 'The serialized package header does not identify a supported engine reader; filename and extension fallback is disabled.';
     }
 
-    $compatibility = gp_compatibility_for_file($profile, $ext, $version, $licensee, $detectedEngine);
+    $versionDecision = gp_profile_version_decision(
+        $profile,
+        $version,
+        $licensee,
+        $detectedEngine,
+        $signedPackageVersion
+    );
+    $compatibility = $versionDecision['compatibility'];
     $compatible = $compatibility !== null;
+    $versionOk = (bool)$versionDecision['ok'];
     if ($compatible) {
         $notes[] = 'Accepted by explicit header compatibility rule: ' . $compatibility['label']
             . '. Parsed with ' . $compatibility['reader_engine'] . ' reader.';
-    }
-
-    $min = $profile['package_version_min'] !== null ? (int)$profile['package_version_min'] : null;
-    $max = $profile['package_version_max'] !== null ? (int)$profile['package_version_max'] : null;
-    $versionOk = true;
-    if (!$signedPackageVersion && !$compatible && $version !== null && $min !== null && $version < $min) {
-        $versionOk = false;
+    } elseif (($versionDecision['reason'] ?? '') === 'below_profile_range') {
         $notes[] = 'Package version is below the active game profile range.';
-    }
-    if (!$signedPackageVersion && !$compatible && $version !== null && $max !== null && $version > $max) {
-        $versionOk = false;
+    } elseif (($versionDecision['reason'] ?? '') === 'above_profile_range') {
         $notes[] = 'Package version is above the active game profile range.';
     }
 

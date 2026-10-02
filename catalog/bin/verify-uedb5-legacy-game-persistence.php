@@ -93,32 +93,6 @@ $accept = static function (
     $check($label . '_v' . $version . '_roundtrip_policy', ($roundTrip['source_policy'] ?? '') === $expectedPolicy);
 };
 
-$reject = static function (
-    string $label,
-    string $builder,
-    string $readerClass,
-    int $gameId,
-    int $version
-) use ($fixture, $temp, $check): void {
-    $path = $temp . DIRECTORY_SEPARATOR . $label . '-reject-' . $version . '.upk';
-    file_put_contents($path, $fixture($version));
-    $package = new $readerClass($path);
-    $rejected = false;
-    try {
-        $builder::build($package, [
-            'id' => $gameId * 1000 + $version,
-            'game_id' => $gameId,
-            'package_name' => 'Rejected' . $version,
-            'original_name' => 'Rejected' . $version . '.upk',
-        ]);
-    } catch (RuntimeException $error) {
-        $message = $error->getMessage();
-        $rejected = str_contains($message, 'outside accepted V5 range')
-            || str_contains($message, 'outside source-proven V5 range');
-    }
-    $check($label . '_v' . $version . '_rejected', $rejected);
-};
-
 try {
     $accept('unreal60', Uedb5UnrealSnapshotBuilder::class, CatalogUE1PackageReader::class, 12, 60, Uedb5UnrealSnapshotBuilder::POLICY_V224);
     $accept('unreal68', Uedb5UnrealSnapshotBuilder::class, CatalogUE1PackageReader::class, 12, 68, Uedb5UnrealSnapshotBuilder::POLICY_V224);
@@ -126,24 +100,24 @@ try {
     $accept('unreal54', Uedb5UnrealSnapshotBuilder::class, CatalogUE1PackageReader::class, 12, 54, Uedb5UnrealSnapshotBuilder::POLICY_V120_EARLY);
     $accept('unreal71', Uedb5UnrealSnapshotBuilder::class, CatalogUE1PackageReader::class, 12, 71, Uedb5UnrealSnapshotBuilder::POLICY_FORWARD_COMPAT);
     $accept('unreal76', Uedb5UnrealSnapshotBuilder::class, CatalogUE1PackageReader::class, 12, 76, Uedb5UnrealSnapshotBuilder::POLICY_FORWARD_COMPAT);
-    $reject('unreal', Uedb5UnrealSnapshotBuilder::class, CatalogUE1PackageReader::class, 12, 77);
+    $accept('unreal77', Uedb5UnrealSnapshotBuilder::class, CatalogUE1PackageReader::class, 12, 77, Uedb5UnrealSnapshotBuilder::POLICY_FORWARD_COMPAT);
 
     $accept('unreal2_60', Uedb5Unreal2SnapshotBuilder::class, CatalogUE2PackageReader::class, 2, 60, Uedb5Unreal2SnapshotBuilder::SOURCE_POLICY);
     $accept('unreal2_126', Uedb5Unreal2SnapshotBuilder::class, CatalogUE2PackageReader::class, 2, 126, Uedb5Unreal2SnapshotBuilder::SOURCE_POLICY);
     $accept('unreal2_127', Uedb5Unreal2SnapshotBuilder::class, CatalogUE2PackageReader::class, 2, 127, Uedb5Unreal2SnapshotBuilder::POLICY_FORWARD_COMPAT);
     $accept('unreal2_128', Uedb5Unreal2SnapshotBuilder::class, CatalogUE2PackageReader::class, 2, 128, Uedb5Unreal2SnapshotBuilder::POLICY_FORWARD_COMPAT);
-    $reject('unreal2', Uedb5Unreal2SnapshotBuilder::class, CatalogUE2PackageReader::class, 2, 129);
+    $accept('unreal2_129', Uedb5Unreal2SnapshotBuilder::class, CatalogUE2PackageReader::class, 2, 129, Uedb5Unreal2SnapshotBuilder::POLICY_FORWARD_COMPAT);
 
     $accept('ut2003_60', Uedb5Ut2003SnapshotBuilder::class, CatalogUE2PackageReader::class, 4, 60, Uedb5Ut2003SnapshotBuilder::SOURCE_POLICY);
     $accept('ut2003_120', Uedb5Ut2003SnapshotBuilder::class, CatalogUE2PackageReader::class, 4, 120, Uedb5Ut2003SnapshotBuilder::SOURCE_POLICY);
     $accept('ut2003_121', Uedb5Ut2003SnapshotBuilder::class, CatalogUE2PackageReader::class, 4, 121, Uedb5Ut2003SnapshotBuilder::POLICY_FORWARD_COMPAT);
     $accept('ut2003_128', Uedb5Ut2003SnapshotBuilder::class, CatalogUE2PackageReader::class, 4, 128, Uedb5Ut2003SnapshotBuilder::POLICY_FORWARD_COMPAT);
-    $reject('ut2003', Uedb5Ut2003SnapshotBuilder::class, CatalogUE2PackageReader::class, 4, 129);
+    $accept('ut2003_129', Uedb5Ut2003SnapshotBuilder::class, CatalogUE2PackageReader::class, 4, 129, Uedb5Ut2003SnapshotBuilder::POLICY_FORWARD_COMPAT);
 
     $accept('ut2004_60', Uedb5Ut2004SnapshotBuilder::class, CatalogUE2PackageReader::class, 5, 60, Uedb5Ut2004SnapshotBuilder::POLICY_V128);
     $accept('ut2004_128', Uedb5Ut2004SnapshotBuilder::class, CatalogUE2PackageReader::class, 5, 128, Uedb5Ut2004SnapshotBuilder::POLICY_V128);
     $accept('ut2004_129', Uedb5Ut2004SnapshotBuilder::class, CatalogUE2PackageReader::class, 5, 129, Uedb5Ut2004SnapshotBuilder::POLICY_V129);
-    $reject('ut2004', Uedb5Ut2004SnapshotBuilder::class, CatalogUE2PackageReader::class, 5, 130);
+    $accept('ut2004_130', Uedb5Ut2004SnapshotBuilder::class, CatalogUE2PackageReader::class, 5, 130, Uedb5Ut2004SnapshotBuilder::POLICY_V129);
 } finally {
     if (is_dir($temp)) {
         $items = new RecursiveIteratorIterator(

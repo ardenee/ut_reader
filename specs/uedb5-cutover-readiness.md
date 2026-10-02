@@ -57,7 +57,7 @@ The global gate fails unless:
 - every verified V5 file has its primary provider key;
 - classic-package dependency edge count matches the source import count;
 - every verified game has a registered source snapshot contract;
-- every verified source version is inside that game's audited contract.
+- every verified file is admitted by that game's active profile version range or an explicit header compatibility override.
 
 The output also reports current live V4 registration count as information only. Live V4 remains expected before the atomic cutover.
 

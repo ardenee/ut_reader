@@ -2,8 +2,8 @@
 /**
  * Builds source-shaped UEDB5 snapshots from authoritative UT99 package bytes.
  * Retail v1.400 proves package versions 60-68; UT99src-ext supplies v69 layout evidence.
- * The native loader only rejects versions below PACKAGE_MIN_VERSION and attempts newer
- * packages, so structurally valid catalogue outliers through the observed v83 are retained.
+ * Game-profile rules decide which package versions may be attempted. This builder preserves
+ * source-specific serialization policy after the canonical reader has successfully parsed them.
  */
 declare(strict_types=1);
 
@@ -18,9 +18,7 @@ final class Uedb5Ut99SnapshotBuilder
     public const POLICY_RETAIL = 'ue1-ut99-retail-v1400-1999-11-30';
     public const POLICY_SUPPLEMENTAL = 'ue1-ut99-supplemental-v430';
     public const POLICY_V69 = self::POLICY_SUPPLEMENTAL;
-    public const POLICY_FORWARD_COMPAT = 'ue1-ut99-forward-loader-compatible-v70-83';
-    public const MIN_VERSION = 60;
-    public const MAX_VERSION = 83;
+    public const POLICY_FORWARD_COMPAT = 'ue1-ut99-forward-loader-compatible';
 
     /** @param array<string,mixed> $file @return array<string,mixed> */
     public static function build(CatalogUE1PackageReader $reader, array $file): array
@@ -31,9 +29,6 @@ final class Uedb5Ut99SnapshotBuilder
         }
         $header = $reader->getHeader();
         $version = (int)($header['version'] ?? -1);
-        if ($version < self::MIN_VERSION || $version > self::MAX_VERSION) {
-            throw new RuntimeException('UT99 package version ' . $version . ' is outside accepted V5 range 60-83.');
-        }
         $fileId = (int)($file['id'] ?? 0);
         $gameId = (int)($file['game_id'] ?? 0);
         if ($fileId < 1 || $gameId < 1) {

@@ -119,8 +119,11 @@ try{
         && !empty($us['unversioned'])
         && (int)($us['parser_profile']['assumed_unversioned_parser_version']??0)===522
         && ($us['parser_profile']['key']??'')==='standard-ue4');
-    $check('ue4_policy_uses_4272_loadable_range',Uedb5Ut4SnapshotBuilder::MIN_VERSION===214
-        && Uedb5Ut4SnapshotBuilder::MAX_VERSION===522);
+    $builderSource=(string)file_get_contents($root.'/src/Infrastructure/Metadata/Uedb5Ut4SnapshotBuilder.php');
+    $readerSource=(string)file_get_contents(dirname($root).'/UE4/UnrealPackageReader.php');
+    $check('ue4_game_version_gate_is_not_in_snapshot_builder',!str_contains($builderSource,'MIN_VERSION')&&!str_contains($builderSource,'MAX_VERSION'));
+    $check('ue4_reader_retains_source_format_capability_checks',str_contains($readerSource,'VER_OLDEST_LOADABLE_PACKAGE')
+        &&str_contains($readerSource,'Package summary format is newer than UE4.27.2'));
 }finally{
     if(is_dir($temp)){
         $it=new RecursiveIteratorIterator(new RecursiveDirectoryIterator($temp,FilesystemIterator::SKIP_DOTS),RecursiveIteratorIterator::CHILD_FIRST);

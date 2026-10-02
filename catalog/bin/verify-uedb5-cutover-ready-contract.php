@@ -28,7 +28,9 @@ $check('requires_current_validated_hash',str_contains($service,'validated_status
 $check('checks_invalid_file_exclusions',str_contains($service,'invalid_file_identities_are_excluded_from_v5'));
 $check('checks_primary_provider_projection',str_contains($service,'every_verified_v5_has_primary_provider_key'));
 $check('checks_dependency_count_before_deep_pass',str_contains($service,'classic_dependency_edge_count_matches_import_count'));
-$check('checks_engine_source_contract_coverage',str_contains($service,'every_verified_game_has_v5_source_contract')&&str_contains($service,'every_verified_file_is_within_source_contract'));
+$check('checks_game_profile_version_coverage',str_contains($service,'every_verified_game_has_v5_source_contract')
+    &&str_contains($service,'every_verified_file_is_allowed_by_game_profile')
+    &&str_contains($service,'profileAllowsCatalogRow'));
 $check('deep_revalidates_every_verified_file',str_contains($service,'Uedb5MigrationValidator')&&str_contains($service,'$validator->validate($fileId)'));
 $check('deep_requires_dependency_ready',str_contains($service,'dependency_not_ready'));
 $check('deep_requires_container_hash_integrity',str_contains($service,'every_v5_container_exists_and_hash_matches_registration'));

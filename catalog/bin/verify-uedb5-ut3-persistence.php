@@ -54,11 +54,10 @@ try{
     $reader=new Uedb5MetadataReader($temp);$round=$reader->snapshot(6,6512);
     $check('ut3_v512_uedb5_roundtrip_flags',($round['sections']['exports'][0]['object_flags']??'')==='0000000400000000');
 
-    $bad=$temp.DIRECTORY_SEPARATOR.'fixture513.upk';file_put_contents($bad,$fixture(513));
-    $p513=new CatalogUE3PackageReader($bad);$rejected=false;
-    try{Uedb5Ut3SnapshotBuilder::build($p513,['id'=>6513,'game_id'=>6,'package_name'=>'Bad','original_name'=>'Bad.upk']);}
-    catch(RuntimeException $e){$rejected=str_contains($e->getMessage(),'requires package version 512');}
-    $check('ut3_v513_not_claimed_as_ut3_source_policy',$rejected);
+    $next=$temp.DIRECTORY_SEPARATOR.'fixture513.upk';file_put_contents($next,$fixture(513));
+    $p513=new CatalogUE3PackageReader($next);
+    $s513=Uedb5Ut3SnapshotBuilder::build($p513,['id'=>6513,'game_id'=>6,'package_name'=>'Next','original_name'=>'Next.upk']);
+    $check('ut3_v513_builder_defers_admission_to_game_profile',($s513['source_policy']??'')===Uedb5Ut3SnapshotBuilder::SOURCE_POLICY);
 }finally{
     if(is_dir($temp)){
         $it=new RecursiveIteratorIterator(new RecursiveDirectoryIterator($temp,FilesystemIterator::SKIP_DOTS),RecursiveIteratorIterator::CHILD_FIRST);

@@ -10,30 +10,50 @@ use UnrealDb\Catalog\Infrastructure\Readers\CatalogReaderResolver;
 
 final class Uedb5SourceSnapshotFactory
 {
+    /** @var array<int,array<string,mixed>> */
+    private array $profileCache = [];
+
     /** @param array<string,mixed> $config */
     public function __construct(
         private readonly PDO $db,
         private readonly array $config
-    ) {}
-
-    /** @return array{engine_key:string,min_version:int,max_version:int} */
-    public function contractForGameId(int $gameId): array
-    {
-        return $this->contract(Uedb5GameSourceRegistry::sourceKey($gameId));
+    ) {
+        require_once dirname(__DIR__, 3) . '/lib/GameProfiles.php';
     }
 
-    /** @return array{engine_key:string,min_version:int,max_version:int} */
+    /** @return array{engine_key:string,min_version:?int,max_version:?int,profile_id:int,compatibility_rules_json:?string} */
+    public function contractForGameId(int $gameId): array
+    {
+        $sourceKey = Uedb5GameSourceRegistry::sourceKey($gameId);
+        $source = $this->contract($sourceKey);
+        $profile = $this->profileForGame($gameId);
+        $profileEngine = strtoupper(trim((string)($profile['engine_key'] ?? '')));
+        if ($profileEngine !== (string)$source['engine_key']) {
+            throw new RuntimeException(
+                'Assigned game profile engine ' . ($profileEngine !== '' ? $profileEngine : 'UNKNOWN')
+                . ' does not match UEDB5 source engine ' . (string)$source['engine_key']
+                . ' for game_id=' . $gameId . '.'
+            );
+        }
+        return [
+            'engine_key' => $profileEngine,
+            'min_version' => $profile['package_version_min'] !== null ? (int)$profile['package_version_min'] : null,
+            'max_version' => $profile['package_version_max'] !== null ? (int)$profile['package_version_max'] : null,
+            'profile_id' => (int)$profile['id'],
+            'compatibility_rules_json' => $profile['compatibility_rules_json'] !== null
+                ? (string)$profile['compatibility_rules_json'] : null,
+        ];
+    }
+
+    /** @return array{engine_key:string} */
     public function contract(string $sourceKey): array
     {
         return match ($sourceKey) {
-            'ut99' => ['engine_key'=>'UE1','min_version'=>Uedb5Ut99SnapshotBuilder::MIN_VERSION,'max_version'=>Uedb5Ut99SnapshotBuilder::MAX_VERSION],
-            'unrealgold' => ['engine_key'=>'UE1','min_version'=>Uedb5UnrealSnapshotBuilder::MIN_VERSION,'max_version'=>Uedb5UnrealSnapshotBuilder::MAX_VERSION],
-            'unreal2' => ['engine_key'=>'UE2','min_version'=>Uedb5Unreal2SnapshotBuilder::MIN_VERSION,'max_version'=>Uedb5Unreal2SnapshotBuilder::MAX_VERSION],
-            'ut2003' => ['engine_key'=>'UE2','min_version'=>Uedb5Ut2003SnapshotBuilder::MIN_VERSION,'max_version'=>Uedb5Ut2003SnapshotBuilder::MAX_VERSION],
-            'ut2004' => ['engine_key'=>'UE2','min_version'=>Uedb5Ut2004SnapshotBuilder::MIN_VERSION,'max_version'=>Uedb5Ut2004SnapshotBuilder::MAX_VERSION],
-            'ut3' => ['engine_key'=>'UE3','min_version'=>Uedb5Ut3SnapshotBuilder::PACKAGE_VERSION,'max_version'=>Uedb5Ut3SnapshotBuilder::PACKAGE_VERSION],
-            'ut4' => ['engine_key'=>'UE4','min_version'=>Uedb5Ut4SnapshotBuilder::MIN_VERSION,'max_version'=>Uedb5Ut4SnapshotBuilder::MAX_VERSION],
-            'ue5' => ['engine_key'=>'UE5','min_version'=>1000,'max_version'=>1018],
+            'ut99', 'unrealgold' => ['engine_key'=>'UE1'],
+            'unreal2', 'ut2003', 'ut2004' => ['engine_key'=>'UE2'],
+            'ut3' => ['engine_key'=>'UE3'],
+            'ut4' => ['engine_key'=>'UE4'],
+            'ue5' => ['engine_key'=>'UE5'],
             default => throw new RuntimeException('No UEDB5 source snapshot builder is registered for source key ' . $sourceKey . '.'),
         };
     }
@@ -41,7 +61,33 @@ final class Uedb5SourceSnapshotFactory
     /** @param array<string,mixed> $file @return array<string,mixed> */
     public function buildForGameId(int $gameId, string $path, array $file): array
     {
+        $this->assertProfileAllowsSource($gameId, $path, $file);
         return $this->buildForSourceKey(Uedb5GameSourceRegistry::sourceKey($gameId), $gameId, $path, $file);
+    }
+
+    /** @param array<string,mixed> $file */
+    public function profileAllowsCatalogRow(int $gameId, array $file): bool
+    {
+        $profile = $this->profileForGame($gameId);
+        $source = $this->contract(Uedb5GameSourceRegistry::sourceKey($gameId));
+        $version = array_key_exists('package_version', $file) && $file['package_version'] !== null
+            ? (int)$file['package_version'] : null;
+        $licensee = array_key_exists('licensee_version', $file) && $file['licensee_version'] !== null
+            ? (int)$file['licensee_version'] : null;
+        $engineKey = (string)$source['engine_key'];
+        $decision = \gp_profile_version_decision(
+            $profile,
+            $version,
+            $licensee,
+            $engineKey,
+            in_array($engineKey, ['UE4', 'UE5'], true)
+        );
+        if (empty($decision['ok'])) {
+            return false;
+        }
+        $compatibility = $decision['compatibility'] ?? null;
+        return !is_array($compatibility)
+            || strtoupper((string)($compatibility['reader_engine'] ?? '')) === $engineKey;
     }
 
     /** Legacy slug entry point retained for compatibility; runtime migration uses game IDs. */
@@ -97,13 +143,59 @@ final class Uedb5SourceSnapshotFactory
         };
     }
 
+    /** @param array<string,mixed> $file */
+    private function assertProfileAllowsSource(int $gameId, string $path, array $file): void
+    {
+        $contract = $this->contractForGameId($gameId);
+        $profile = $this->profileForGame($gameId);
+        $summary = \gp_read_legacy_summary($path);
+        if (empty($summary['ok'])) {
+            throw new RuntimeException(
+                'Package header is not readable under the active game profile for game_id=' . $gameId
+                . ': ' . (string)($summary['reason'] ?? 'unknown header error')
+            );
+        }
+
+        $detectedEngine = strtoupper(trim((string)($summary['engine_hint'] ?? '')));
+        $version = array_key_exists('version', $summary) && $summary['version'] !== null
+            ? (int)$summary['version'] : null;
+        $licensee = array_key_exists('licensee', $summary) && $summary['licensee'] !== null
+            ? (int)$summary['licensee'] : null;
+        $signedPackageVersion = in_array((string)($summary['format'] ?? ''), ['ue4_package', 'ue5_package'], true);
+        $decision = \gp_profile_version_decision(
+            $profile,
+            $version,
+            $licensee,
+            $detectedEngine,
+            $signedPackageVersion
+        );
+        if (empty($decision['ok'])) {
+            throw new RuntimeException(
+                'Package version is outside the active game profile for game_id=' . $gameId
+                . ' (version=' . ($version ?? 'unknown') . ', reason=' . (string)($decision['reason'] ?? 'rejected') . ').'
+            );
+        }
+
+        $compatibility = $decision['compatibility'] ?? null;
+        $readerEngine = is_array($compatibility)
+            ? strtoupper((string)($compatibility['reader_engine'] ?? ''))
+            : $detectedEngine;
+        $sourceEngine = (string)$contract['engine_key'];
+        if ($readerEngine !== $sourceEngine) {
+            throw new RuntimeException(
+                'Game profile selected reader engine ' . ($readerEngine !== '' ? $readerEngine : 'UNKNOWN')
+                . ', but this UEDB5 game source requires ' . $sourceEngine . ' for game_id=' . $gameId . '.'
+            );
+        }
+    }
+
     private function applyProfile(int $gameId, string $engineKey): void
     {
         if ($gameId < 1 || !function_exists('gp_required_profile_for_game')) {
             throw new RuntimeException('Game parser-profile helper is unavailable for UEDB5 source parsing.');
         }
         $game = $this->gameById($gameId);
-        $profile = \gp_required_profile_for_game($this->db, $gameId);
+        $profile = $this->profileForGame($gameId);
         if ($engineKey === 'UE4') {
             if (!function_exists('catalog_ue4_reader_options') || !function_exists('catalog_ue4_set_next_reader_options')) {
                 throw new RuntimeException('UE4 parser-profile helpers are unavailable for UEDB5 source parsing.');
@@ -115,6 +207,15 @@ final class Uedb5SourceSnapshotFactory
             throw new RuntimeException('UE5 parser-profile helpers are unavailable for UEDB5 source parsing.');
         }
         \catalog_ue5_set_next_reader_options(\catalog_ue5_reader_options($this->config, $game, $profile));
+    }
+
+    /** @return array<string,mixed> */
+    private function profileForGame(int $gameId): array
+    {
+        if (!isset($this->profileCache[$gameId])) {
+            $this->profileCache[$gameId] = \gp_required_profile_for_game($this->db, $gameId);
+        }
+        return $this->profileCache[$gameId];
     }
 
     /** @return array<string,mixed> */

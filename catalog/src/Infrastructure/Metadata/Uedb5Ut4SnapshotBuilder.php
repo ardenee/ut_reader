@@ -10,8 +10,6 @@ final class Uedb5Ut4SnapshotBuilder
 {
     public const PACKAGE_FAMILY = 'ue4-classic-package';
     public const SOURCE_POLICY = 'ue4-4.27.2-release-classic-package';
-    public const MIN_VERSION = 214;
-    public const MAX_VERSION = 522;
 
     /** @param array<string,mixed> $file @return array<string,mixed> */
     public static function build(\UnrealPackageReader4 $reader, array $file): array
@@ -27,10 +25,6 @@ final class Uedb5Ut4SnapshotBuilder
         ));
         if ($issues !== []) {
             throw new RuntimeException('Cannot persist UT4 UEDB5 metadata: ' . implode('; ', $issues));
-        }
-        $version = (int)($header['version'] ?? -1);
-        if ($version < self::MIN_VERSION || $version > self::MAX_VERSION) {
-            throw new RuntimeException('UE4 V5 source policy supports package versions 214-522.');
         }
         $fileId = (int)($file['id'] ?? 0);
         $gameId = (int)($file['game_id'] ?? 0);

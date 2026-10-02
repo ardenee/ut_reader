@@ -70,22 +70,21 @@ final class Uedb5GameSourceMigrationService
             $missingV4 = $missingStatement->fetchAll(PDO::FETCH_ASSOC) ?: [];
         }
         $contract = $this->sourceContract((int)$game['id']);
-        $unsupported = $this->db->prepare(
-            'SELECT COUNT(*) FROM ue_files WHERE game_id=? AND scan_status="verified" '
-            . 'AND (package_version IS NULL OR package_version < ? OR package_version > ?)'
+        $profileRejectedCount = 0;
+        $profileRejectedFiles = [];
+        $profileRows = $this->db->prepare(
+            'SELECT id,original_name,package_name,package_version,licensee_version FROM ue_files '
+            . 'WHERE game_id=? AND scan_status="verified" ORDER BY id'
         );
-        $unsupported->execute([(int)$game['id'], (int)$contract['min_version'], (int)$contract['max_version']]);
-        $unsupportedCount = (int)$unsupported->fetchColumn();
-        $unsupportedFiles = [];
-        if ($unsupportedCount > 0) {
-            $unsupportedRows = $this->db->prepare(
-                'SELECT id,original_name,package_name,package_version,licensee_version FROM ue_files '
-                . 'WHERE game_id=? AND scan_status="verified" '
-                . 'AND (package_version IS NULL OR package_version < ? OR package_version > ?) '
-                . 'ORDER BY package_version,id LIMIT 100'
-            );
-            $unsupportedRows->execute([(int)$game['id'], (int)$contract['min_version'], (int)$contract['max_version']]);
-            $unsupportedFiles = $unsupportedRows->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        $profileRows->execute([(int)$game['id']]);
+        while (($profileRow = $profileRows->fetch(PDO::FETCH_ASSOC)) !== false) {
+            if ($this->sourceSnapshots->profileAllowsCatalogRow((int)$game['id'], $profileRow)) {
+                continue;
+            }
+            $profileRejectedCount++;
+            if (count($profileRejectedFiles) < 100) {
+                $profileRejectedFiles[] = $profileRow;
+            }
         }
         $distribution = $this->db->prepare(
             'SELECT package_version,COUNT(*) file_count FROM ue_files '
@@ -100,10 +99,14 @@ final class Uedb5GameSourceMigrationService
             'v4_ready' => $v4 === $verified,
             'missing_v4_files' => $missingV4,
             'staged_count' => (int)($counts['staged_count'] ?? 0),
-            'unsupported_source_version_count' => $unsupportedCount,
-            'unsupported_source_files' => $unsupportedFiles,
+            'unsupported_source_version_count' => $profileRejectedCount,
+            'unsupported_source_files' => $profileRejectedFiles,
+            'profile_rejected_count' => $profileRejectedCount,
+            'profile_rejected_files' => $profileRejectedFiles,
             'source_key' => (string)$game['source_key'],
-            'source_version_range' => [(int)$contract['min_version'], (int)$contract['max_version']],
+            'source_version_range' => [$contract['min_version'], $contract['max_version']],
+            'profile_version_range' => [$contract['min_version'], $contract['max_version']],
+            'version_gate' => 'game_profile',
             'package_version_distribution' => $versionDistribution,
             'verified_directory' => $sourceDirectory,
             'durable_status_tracking' => $this->statuses !== null,
@@ -128,7 +131,6 @@ final class Uedb5GameSourceMigrationService
             throw new RuntimeException('Every verified file must retain a live UEDB4 registration before staging V5. Missing V4 file IDs: ' . implode(',', array_filter($ids)));
         }
         $game = (array)$preflight['game'];
-        $contract = $this->sourceContract((int)$game['id']);
         $limit = max(1, min(5000, $limit));
         $progressEvery = max(1, $progressEvery);
         $workerCount = max(1, min(8, $workerCount));
@@ -137,8 +139,6 @@ final class Uedb5GameSourceMigrationService
         }
         $firstRemainingId = $this->firstRemainingFileId(
             (int)$game['id'],
-            (int)$contract['min_version'],
-            (int)$contract['max_version'],
             $workerCount,
             $workerIndex
         );
@@ -156,7 +156,6 @@ final class Uedb5GameSourceMigrationService
         do {
             $rows = $this->batch(
                 (int)$game['id'], $cursor, $limit,
-                (int)$contract['min_version'], (int)$contract['max_version'],
                 $workerCount, $workerIndex
             );
             if ($rows === []) { break; }
@@ -250,8 +249,6 @@ final class Uedb5GameSourceMigrationService
 
     private function firstRemainingFileId(
         int $gameId,
-        int $minVersion,
-        int $maxVersion,
         int $workerCount,
         int $workerIndex
     ): ?int {
@@ -260,9 +257,9 @@ final class Uedb5GameSourceMigrationService
             . 'JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=4 '
             . 'LEFT JOIN ue_uedb5_files v ON v.file_id=f.id '
             . 'WHERE f.game_id=? AND f.scan_status="verified" AND v.file_id IS NULL '
-            . 'AND f.package_version BETWEEN ? AND ? AND MOD(f.id,?)=?'
+            . 'AND MOD(f.id,?)=?'
         );
-        $statement->execute([$gameId, $minVersion, $maxVersion, $workerCount, $workerIndex]);
+        $statement->execute([$gameId, $workerCount, $workerIndex]);
         $value = $statement->fetchColumn();
         return $value === false || $value === null ? null : (int)$value;
     }
@@ -272,8 +269,6 @@ final class Uedb5GameSourceMigrationService
         int $gameId,
         int $afterId,
         int $limit,
-        int $minVersion,
-        int $maxVersion,
         int $workerCount = 1,
         int $workerIndex = 0
     ): array {
@@ -282,10 +277,9 @@ final class Uedb5GameSourceMigrationService
             . 'FROM ue_files f JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=4 '
             . 'LEFT JOIN ue_uedb5_files v ON v.file_id=f.id '
             . 'WHERE f.game_id=? AND f.scan_status="verified" AND v.file_id IS NULL AND f.id>? '
-            . 'AND f.package_version BETWEEN ? AND ? '
             . 'AND MOD(f.id,?)=? ORDER BY f.id LIMIT ' . $limit;
         $statement = $this->db->prepare($sql);
-        $statement->execute([$gameId, $afterId, $minVersion, $maxVersion, $workerCount, $workerIndex]);
+        $statement->execute([$gameId, $afterId, $workerCount, $workerIndex]);
         return $statement->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
 
@@ -313,7 +307,7 @@ final class Uedb5GameSourceMigrationService
         }
     }
 
-    /** @return array{engine_key:string,min_version:int,max_version:int} */
+    /** @return array{engine_key:string,min_version:?int,max_version:?int,profile_id:int,compatibility_rules_json:?string} */
     private function sourceContract(int $gameId): array
     {
         return $this->sourceSnapshots->contractForGameId($gameId);

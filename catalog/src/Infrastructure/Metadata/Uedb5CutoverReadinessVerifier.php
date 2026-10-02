@@ -183,7 +183,7 @@ final class Uedb5CutoverReadinessVerifier
         );
         $record('classic_dependency_edge_count_matches_import_count',$classicDependencyMismatch===0,'files_with_dependency_count_mismatch='.$classicDependencyMismatch);
         $factory=new Uedb5SourceSnapshotFactory($this->db,$this->config);
-        $coverage=[];$unsupportedGames=[];$unsupportedVersions=0;
+        $coverage=[];$unsupportedGames=[];$profileRejected=0;
         $games=$this->rows(
             'SELECT g.id,g.slug,COUNT(*) verified_count,MIN(f.package_version) min_version,MAX(f.package_version) max_version '
             .'FROM ue_files f JOIN ue_games g ON g.id=f.game_id WHERE f.scan_status="verified" '
@@ -197,19 +197,23 @@ final class Uedb5CutoverReadinessVerifier
                 $coverage[]=['game_id'=>$gameId,'game'=>$slug,'verified_count'=>(int)$game['verified_count'],'supported'=>false,'error'=>$error->getMessage()];
                 continue;
             }
-            $outside=$this->count(
-                'SELECT COUNT(*) FROM ue_files WHERE game_id=? AND scan_status="verified" '
-                .'AND (package_version IS NULL OR package_version<? OR package_version>?)',
-                [(int)$game['id'],(int)$contract['min_version'],(int)$contract['max_version']]
-            );
-            $unsupportedVersions+=$outside;
+            $outside=0;
+            foreach($this->rows(
+                'SELECT id,package_version,licensee_version FROM ue_files WHERE game_id=? AND scan_status="verified" ORDER BY id',
+                [$gameId]
+            ) as $file){
+                if(!$factory->profileAllowsCatalogRow($gameId,$file)){$outside++;}
+            }
+            $profileRejected+=$outside;
             $coverage[]=['game_id'=>$gameId,'game'=>$slug,'source_key'=>$sourceKey,'verified_count'=>(int)$game['verified_count'],'supported'=>true,
-                'engine_key'=>(string)$contract['engine_key'],'source_version_range'=>[(int)$contract['min_version'],(int)$contract['max_version']],
+                'engine_key'=>(string)$contract['engine_key'],'profile_version_range'=>[$contract['min_version'],$contract['max_version']],
+                'version_gate'=>'game_profile',
                 'catalogue_version_range'=>[$game['min_version']!==null?(int)$game['min_version']:null,$game['max_version']!==null?(int)$game['max_version']:null],
+                'outside_game_profile'=>$outside,
                 'outside_source_contract'=>$outside];
         }
         $record('every_verified_game_has_v5_source_contract',$unsupportedGames===[],$unsupportedGames===[]?'all supported':implode(', ',$unsupportedGames));
-        $record('every_verified_file_is_within_source_contract',$unsupportedVersions===0,'outside_source_contract='.$unsupportedVersions);
+        $record('every_verified_file_is_allowed_by_game_profile',$profileRejected===0,'outside_game_profile='.$profileRejected);
         $policyCoverage=$this->rows(
             'SELECT g.slug,v.package_family,v.source_policy,COUNT(*) file_count '
             .'FROM ue_files f JOIN ue_games g ON g.id=f.game_id JOIN ue_uedb5_files v ON v.file_id=f.id '
