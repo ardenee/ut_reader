@@ -12,6 +12,7 @@ if (PHP_SAPI !== 'cli') {
 
 require_once dirname(__DIR__) . '/bootstrap.php';
 
+use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer;
 use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataReader;
 use UnrealDb\Catalog\Infrastructure\Metadata\CompactSearchProjectionWriter;
 use UnrealDb\Catalog\Infrastructure\Metadata\CompactTermOverflowWriter;
@@ -19,11 +20,14 @@ use UnrealDb\Catalog\Infrastructure\Metadata\CompactTermOverflowWriter;
 $limit = 500;
 $afterId = 0;
 $all = false;
+$gameSlug = null;
 foreach (array_slice($argv, 1) as $argument) {
     if (preg_match('/^--limit=([0-9]+)$/', (string)$argument, $match) === 1) {
         $limit = max(1, min(5000, (int)$match[1]));
     } elseif (preg_match('/^--after-id=([0-9]+)$/', (string)$argument, $match) === 1) {
         $afterId = max(0, (int)$match[1]);
+    } elseif (preg_match('/^--game=([^\s]+)$/', (string)$argument, $match) === 1) {
+        $gameSlug = trim((string)$match[1]);
     } elseif ((string)$argument === '--all') {
         $all = true;
     }
@@ -45,6 +49,18 @@ try {
         throw new RuntimeException('Run php catalog/bin/migrate.php migrate before backfilling Names search.');
     }
 
+    $gameId = null;
+    $game = null;
+    if ($gameSlug !== null && $gameSlug !== '') {
+        $gameStatement = $db->prepare('SELECT id,name,slug FROM ue_games WHERE slug=? LIMIT 1');
+        $gameStatement->execute([$gameSlug]);
+        $game = $gameStatement->fetch(PDO::FETCH_ASSOC);
+        if (!is_array($game)) {
+            throw new RuntimeException('Unknown game slug: ' . $gameSlug);
+        }
+        $gameId = (int)$game['id'];
+    }
+
     $reader = new BlockedCompressedMetadataReader($db, $storageRoot);
     $writer = new CompactSearchProjectionWriter($db);
     $processed = 0;
@@ -53,15 +69,19 @@ try {
     $cursor = $afterId;
     $errors = [];
 
+    $gameWhere = $gameId !== null ? ' AND f.game_id=? ' : ' ';
     do {
         $statement = $db->prepare(
             'SELECT f.id,f.name_count FROM ue_files f '
-            . 'JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=3 '
-            . 'WHERE f.scan_status="verified" AND f.name_count>0 AND f.id>? '
-            . 'AND NOT EXISTS(SELECT 1 FROM ue_name_lookup n WHERE n.file_id=f.id LIMIT 1) '
+            . 'JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=? '
+            . 'WHERE f.scan_status="verified" AND f.id>? '
+            . $gameWhere
+            . 'AND (SELECT COUNT(*) FROM ue_name_lookup n WHERE n.file_id=f.id)<>f.name_count '
             . 'ORDER BY f.id ASC LIMIT ' . $limit
         );
-        $statement->execute([$cursor]);
+        $arguments = [BlockedCompressedMetadataContainer::FORMAT_VERSION, $cursor];
+        if ($gameId !== null) { $arguments[] = $gameId; }
+        $statement->execute($arguments);
         $files = $statement->fetchAll(PDO::FETCH_ASSOC) ?: [];
         if ($files === []) {
             break;
@@ -95,6 +115,11 @@ try {
                 $snapshot = ['file' => ['id' => $fileId], 'names' => $names];
                 $nameRows += $writer->writeNames($snapshot, $sqlBatches);
                 (new CompactTermOverflowWriter($db))->write($snapshot, $sqlBatches);
+                $verify = $db->prepare('SELECT COUNT(*) FROM ue_name_lookup WHERE file_id=?');
+                $verify->execute([$fileId]);
+                if ((int)$verify->fetchColumn() !== $expectedNames) {
+                    throw new RuntimeException('Name search projection count still differs after repair for file #' . $fileId . '.');
+                }
                 $processed++;
             } catch (Throwable $error) {
                 $errors[] = [
@@ -109,15 +134,23 @@ try {
         }
     } while (true);
 
-    $remaining = (int)$db->query(
+    $remainingStatement = $db->prepare(
         'SELECT COUNT(*) FROM ue_files f '
-        . 'JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=3 '
-        . 'WHERE f.scan_status="verified" AND f.name_count>0 '
-        . 'AND NOT EXISTS(SELECT 1 FROM ue_name_lookup n WHERE n.file_id=f.id LIMIT 1)'
-    )->fetchColumn();
+        . 'JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=? '
+        . 'WHERE f.scan_status="verified" '
+        . ($gameId !== null ? 'AND f.game_id=? ' : '')
+        . 'AND (SELECT COUNT(*) FROM ue_name_lookup n WHERE n.file_id=f.id)<>f.name_count'
+    );
+    $remainingArguments = [BlockedCompressedMetadataContainer::FORMAT_VERSION];
+    if ($gameId !== null) { $remainingArguments[] = $gameId; }
+    $remainingStatement->execute($remainingArguments);
+    $remaining = (int)$remainingStatement->fetchColumn();
+    $gameOption = $gameSlug !== null && $gameSlug !== '' ? ' --game=' . $gameSlug : '';
 
     fwrite(STDOUT, json_encode([
         'ok' => $errors === [],
+        'game' => $game,
+        'format_version' => BlockedCompressedMetadataContainer::FORMAT_VERSION,
         'processed_files' => $processed,
         'name_rows' => $nameRows,
         'sql_batches' => $sqlBatches,
@@ -126,8 +159,8 @@ try {
         'errors' => $errors,
         'next_command' => $remaining > 0
             ? ($errors !== []
-                ? 'php catalog/bin/backfill-name-search-projection.php --all'
-                : 'php catalog/bin/backfill-name-search-projection.php --all --after-id=' . $cursor)
+                ? 'php catalog/bin/backfill-name-search-projection.php --all' . $gameOption
+                : 'php catalog/bin/backfill-name-search-projection.php --all' . $gameOption . ' --after-id=' . $cursor)
             : null,
     ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . PHP_EOL);
     exit($errors === [] ? 0 : 2);
