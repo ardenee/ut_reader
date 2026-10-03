@@ -66,6 +66,8 @@ Step 9 tests end-user search behaviour using a deterministic bounded query corpu
 
 Each search scope is tested independently so a generic FName hit cannot mask a broken import or export search path. The parity corpus respects production metadata-search semantics and samples only terms of at least three UTF-8 characters, matching PdoCatalogSearchRepository::MIN_BROAD_QUERY_LENGTH. V5 uses the appropriate narrow candidate index, then hydrates only the indexed candidate row positions from authoritative UEDB5 blocks before accepting the match; parity search must not materialize whole package snapshots.
 
+If an authoritative UEDB5 name exists but `ue_uedb5_name_candidates` does not expose it, repair the disposable projection with `catalog/bin/sync-uedb5-name-candidates.php`. The synchronizer rebuilds expected rows through the same `Uedb5SqlProjectionBuilder` used by Pass 1, writes only `ue_uedb5_search_keys` and `ue_uedb5_name_candidates`, and immediately verifies each repaired file. It does not reparse source packages and does not modify provider, object, or dependency projections.
+
 ## Intentional source-correction differences
 
 Parity does not mean preserving a known V4 mistake. Intentional differences must be explicitly allow-listed and must carry source evidence in V5.
