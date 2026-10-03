@@ -23,7 +23,7 @@ final class Uedb5GameParityAuditService
     public function preflight(string $slug):array
     {
         $game=$this->game($slug);$gameId=(int)$game['id'];
-        foreach(['ue_file_metadata','ue_uedb5_files','ue_uedb5_migration_status','ue_dependency_links','ue_uedb5_dependency_edges'] as $table){
+        foreach(['ue_file_metadata','ue_uedb5_files','ue_uedb5_provider_keys','ue_uedb5_migration_status','ue_invalid_file_identities','ue_dependency_links','ue_uedb5_dependency_edges'] as $table){
             if(!$this->tableExists($table))throw new RuntimeException('Required parity table is missing: '.$table);
         }
         $verified=$this->count('SELECT COUNT(*) FROM ue_files WHERE game_id=? AND scan_status="verified"',[$gameId]);
@@ -33,15 +33,33 @@ final class Uedb5GameParityAuditService
         $s=$this->db->prepare('SELECT status,COUNT(*) c FROM ue_uedb5_migration_status WHERE game_id=? GROUP BY status');
         $s->execute([$gameId]);foreach($s->fetchAll(PDO::FETCH_ASSOC)?:[] as $row){$status[(string)$row['status']]=(int)$row['c'];}
         $validated=(int)($status[Uedb5MigrationStatus::VALIDATED]??0);
-        $ready=$verified>0&&$v4===$verified&&$v5===$verified&&$validated===$verified
-            &&($status[Uedb5MigrationStatus::PENDING]??0)===0
-            &&($status[Uedb5MigrationStatus::STAGED]??0)===0
-            &&($status[Uedb5MigrationStatus::FAILED]??0)===0;
+        $completed=$this->count(
+            'SELECT COUNT(*) FROM ue_files f JOIN ue_uedb5_files v ON v.file_id=f.id '
+            .'JOIN ue_uedb5_migration_status s ON s.file_id=f.id '
+            .'WHERE f.game_id=? AND f.scan_status="verified" AND s.dependency_policy=? '
+            .'AND s.dependency_payload_sha256=v.payload_sha256',
+            [$gameId,Uedb5GameDependencyPassService::DEPENDENCY_POLICY]
+        );
+        $missingPrimary=$this->count(
+            'SELECT COUNT(*) FROM ue_files f LEFT JOIN ue_uedb5_provider_keys p '
+            .'ON p.file_id=f.id AND p.source_kind=1 AND p.source_id=f.id '
+            .'WHERE f.game_id=? AND f.scan_status="verified" AND p.file_id IS NULL',[$gameId]
+        );
+        $invalidStaged=$this->count(
+            'SELECT COUNT(*) FROM ue_files f JOIN ue_uedb5_files v ON v.file_id=f.id '
+            .'JOIN ue_invalid_file_identities bad ON bad.file_size=f.file_size '
+            .'AND bad.md5=LOWER(f.md5) AND bad.sha1=LOWER(f.sha1) '
+            .'WHERE f.game_id=? AND f.scan_status="verified"',[$gameId]
+        );
+        $ready=$verified>0&&$v4===$verified&&$v5===$verified&&$completed===$verified
+            &&$missingPrimary===0&&$invalidStaged===0;
         return [
             'game'=>$game,'verified_count'=>$verified,'live_v4_count'=>$v4,
             'staged_v5_count'=>$v5,'migration_status'=>$status,'validated_count'=>$validated,
+            'dependency_complete_count'=>$completed,'missing_primary_provider_count'=>$missingPrimary,
+            'invalid_staged_count'=>$invalidStaged,'dependency_policy'=>Uedb5GameDependencyPassService::DEPENDENCY_POLICY,
             'ready'=>$ready,
-            'ready_rule'=>'every verified file must retain V4, have staged V5, and be Step-8 validated',
+            'ready_rule'=>'every verified file must retain V4, have staged V5, current Pass-2 dependency payload, primary provider coverage, and zero invalid staged identities',
             'expected_difference_rules'=>Uedb5GameParityExpectedDifferences::rules(),
         ];
     }
@@ -51,7 +69,7 @@ final class Uedb5GameParityAuditService
     {
         $preflight=$this->preflight($slug);
         if(empty($preflight['ready'])){
-            throw new RuntimeException('Game is not ready for Step 9 parity audit; run only after full V5 staging and Step 8 validation.');
+            throw new RuntimeException('Game is not ready for Step 9 parity audit; require full V4/V5 coverage and current completed V5 dependency Pass 2.');
         }
         $game=(array)$preflight['game'];$gameId=(int)$game['id'];
         $maxDetails=max(1,min(5000,$maxDetails));

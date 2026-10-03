@@ -13,7 +13,7 @@ $checks=[];$failures=[];
 $record=static function(string $name,bool $ok)use(&$checks,&$failures):void{$checks[$name]=$ok;if(!$ok)$failures[]=$name;};
 $categories=['dependencies','requires_required_by','base_game_missing','package_aliases','invalid_file_exclusions','duplicate_provider_handling','search_results','verify_import_decisions'];
 foreach($categories as $category)$record('category_'.$category,str_contains($service,"['$category']"));
-$record('full_game_readiness_requires_v4_v5_validated',str_contains($service,'$v4===$verified')&&str_contains($service,'$v5===$verified')&&str_contains($service,'$validated===$verified'));
+$record('full_game_readiness_requires_v4_v5_and_current_pass2',str_contains($service,'$v4===$verified')&&str_contains($service,'$v5===$verified')&&str_contains($service,'$completed===$verified')&&str_contains($service,'missing_primary_provider_count')&&str_contains($service,'invalid_staged_count')&&str_contains($service,'DEPENDENCY_POLICY'));
 $record('audit_refuses_before_ready',str_contains($service,'Game is not ready for Step 9 parity audit'));
 $record('v5_search_uses_candidate_then_uedb_hydration',str_contains($v5,'ue_uedb5_name_candidates')&&str_contains($v5,'ue_uedb5_object_candidates')&&str_contains($v5,'ue_uedb5_dependency_edges')&&str_contains($v5,'snapshotMatches'));
 $record('v5_parity_reader_never_reads_uedb4',!str_contains($v5,'.uedb4')&&!str_contains($v5,'BlockedCompressedMetadataReader'));

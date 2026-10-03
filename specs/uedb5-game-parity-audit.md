@@ -10,8 +10,11 @@ A game is eligible for the parity audit only when all of these are true:
 
 - every verified game file still has live format-4 production registration;
 - every verified game file has a staged `ue_uedb5_files` registration;
-- every verified game file is Step-8 `validated`;
-- there are zero `pending`, `staged`, or `failed` migration-status rows.
+- every verified game file has a current completed Pass-2 dependency checkpoint whose `dependency_payload_sha256` matches the staged V5 payload under `uedb5-dependency-pass-v1`;
+- every verified game file has its primary V5 provider key;
+- there are zero staged identities matching `ue_invalid_file_identities`.
+
+Step-8 validation status is reported for visibility but is not a Step-9 admission requirement. Skipping Step 8 does not mark files validated and does not weaken the current-payload Pass-2 checkpoint.
 
 `audit-uedb5-game-parity.php` refuses the actual audit until that invariant is true. `--preflight` is safe at any migration percentage and reports the current counts.
 
@@ -59,7 +62,7 @@ Requires / Required By compares the normalized resolved source-to-target graph. 
 
 ## Search parity
 
-Step 8 already proves every file's V5 SQL projection exactly matches its UEDB5 source data. Step 9 therefore tests end-user search behaviour using a deterministic bounded query corpus from live V4 names, imports, and exports.
+Step 9 tests end-user search behaviour using a deterministic bounded query corpus from live V4 names, imports, and exports. When Step 8 is skipped, Step 9 does not claim source-reparse validation; it compares the completed current V5 payload and its published V5 projections against live V4 behaviour.
 
 Each search scope is tested independently so a generic FName hit cannot mask a broken import or export search path. V5 uses the appropriate narrow candidate index and then hydrates UEDB5 before accepting the match.
 

@@ -58,7 +58,7 @@ Its purpose is to let an engineer implement, review, or repair UnrealDB's parser
 - [x] UEDB5 SQL projection contract — `uedb5-sql-projection-contract.md` (minimal side-by-side `ue_uedb5_*` accelerator schema frozen; source-shaped class/outer/flags/serialization data remains file-backed)
 - [x] UEDB5 staging isolation contract — `uedb5-staging-isolation.md` (Step 7 actively guards `.uedb4` + live V4 SQL from V5 staging writes until atomic cutover)
 - [x] UEDB5 migration validation contract — `uedb5-migration-validation.md` (Step 8 durable pending/staged/validated/failed state, fresh-source reparse validation, exact projection agreement, resumable batches)
-- [x] UEDB5 game-level parity audit - `uedb5-game-parity-audit.md` (Step 9 read-only V4-production vs staged-V5 behavioural audit harness; execution waits for a fully staged and Step-8 validated game)
+- [x] UEDB5 game-level parity audit - `uedb5-game-parity-audit.md` (Step 9 read-only V4-production vs staged-V5 behavioural audit harness; execution waits for full V4/V5 coverage plus current completed Pass-2 dependency payloads)
 - [x] UEDB5 cutover readiness gate - `uedb5-cutover-readiness.md` (Step 11 strict read-only whole-catalogue gate; source-only fallback checks plus exhaustive final V5/source/projection revalidation once global blockers are zero)
 - [x] UEDB5 source-audit requirements — `uedb5-metadata-requirements.md` (format-5 foundation, isolated V5 reader/writer/dependency rebuild, Step 5 staging schema, and resumable Step 6 Pass-1 source reparse are implemented for UT99, Unreal, Unreal II, UT2003, UT2004, UT3, UT4 and UE5 classic; dependency second-pass, Zen/IoStore catalogue migration, migration execution/verification and cutover remain pending)
 
