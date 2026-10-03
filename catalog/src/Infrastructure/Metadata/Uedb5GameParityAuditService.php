@@ -12,11 +12,15 @@ use UnrealDb\Catalog\Infrastructure\Search\PdoCatalogSearchRepository;
 final class Uedb5GameParityAuditService
 {
     private Uedb5ParityV5ReadService $v5;
+    private BlockedCompressedMetadataReader $v4;
 
     /** @param array<string,mixed> $config */
     public function __construct(private readonly PDO $db,private readonly array $config)
     {
         $this->v5=new Uedb5ParityV5ReadService($db,$config);
+        $storage=rtrim((string)($config['storage_path']??''), "\\/");
+        if($storage==='')throw new RuntimeException('Catalog storage_path is required for Step 9 parity.');
+        $this->v4=new BlockedCompressedMetadataReader($db,$storage);
     }
 
     /** @return array<string,mixed> */
@@ -80,7 +84,7 @@ final class Uedb5GameParityAuditService
         $categories['package_aliases']=$this->auditAliases($gameId,$maxDetails);
         $categories['invalid_file_exclusions']=$this->auditInvalidExclusions($gameId,$maxDetails);
         $categories['duplicate_provider_handling']=$this->auditDuplicateProviders($slug,$gameId,$maxDetails);
-        $categories['search_results']=$this->auditSearch($gameId,$searchSamples,$maxDetails);
+        $categories['search_results']=$this->auditSearch($slug,$gameId,$searchSamples,$maxDetails);
         $categories['verify_import_decisions']=$this->auditVerifyImportDecisions($slug,$gameId,$maxDetails);
         $ok=true;foreach($categories as $result){if(empty($result['ok'])){$ok=false;break;}}
         return ['ok'=>$ok,'preflight'=>$preflight,'categories'=>$categories];
@@ -397,12 +401,13 @@ final class Uedb5GameParityAuditService
         ];
     }
     /** @return array<string,mixed> */
-    private function auditSearch(int $gameId,int $sampleCount,int $maxDetails):array
+    private function auditSearch(string $slug,int $gameId,int $sampleCount,int $maxDetails):array
     {
         $sampleCount=max(1,min(500,$sampleCount));$perScope=max(1,(int)ceil($sampleCount/3));
         $queries=$this->searchCorpus($gameId,$perScope*4);
         $v4Search=new PdoCatalogSearchRepository($this->db);
-        $checked=0;$mismatch=0;$truncated=0;$details=[];$scopeCounts=['names'=>0,'imports'=>0,'exports'=>0];
+        $checked=0;$mismatch=0;$expectedQueries=0;$expectedFiles=0;$truncated=0;$details=[];
+        $scopeCounts=['names'=>0,'imports'=>0,'exports'=>0];
         foreach($queries as $item){
             $query=(string)$item['query'];$scope=(string)$item['scope'];
             if(($scopeCounts[$scope]??0)>=$perScope)continue;
@@ -411,21 +416,55 @@ final class Uedb5GameParityAuditService
             $v5=$this->v5->exactMetadataSearch($gameId,$query,[$scope],500);
             if(count($v4)>=500||count($v5)>=500){$truncated++;continue;}
             $checked++;$scopeCounts[$scope]++;
-            if($v4!==$v5){
-                $mismatch++;
-                if(count($details)<$maxDetails)$details[]=[
-                    'scope'=>$scope,'query'=>$query,'v4_file_ids'=>$v4,'v5_file_ids'=>$v5,
-                    'missing_in_v5'=>array_values(array_diff($v4,$v5)),'missing_in_v4'=>array_values(array_diff($v5,$v4)),
-                ];
+            if($v4===$v5)continue;
+            $missingInV5=array_values(array_diff($v4,$v5));
+            $missingInV4=array_values(array_diff($v5,$v4));
+            $expectedV5Only=[];$unexpectedV5Only=$missingInV4;$expectedRule=null;
+            if($scope==='names'&&$missingInV5===[]&&$missingInV4!==[]){
+                $unexpectedV5Only=[];
+                foreach($missingInV4 as $fileId){
+                    $evidence=$this->v4CaseOnlyNameEvidence((int)$fileId,$query);
+                    $rule=$evidence===null?null:Uedb5GameParityExpectedDifferences::classify(
+                        $slug,'search_case_normalization',
+                        ['scope'=>'names','query'=>$query,'authoritative_name'=>$evidence['name_text']],
+                        ['scope'=>'names','normalized_authoritative_match'=>true]
+                    );
+                    if($rule!==null){
+                        $expectedV5Only[]=(int)$fileId;$expectedFiles++;$expectedRule=$rule['id']??null;
+                    }else{$unexpectedV5Only[]=(int)$fileId;}
+                }
             }
+            $unexpected=$missingInV5!==[]||$unexpectedV5Only!==[];
+            if($unexpected){$mismatch++;}elseif($expectedV5Only!==[]){$expectedQueries++;}
+            if(count($details)<$maxDetails){$details[]=[
+                'scope'=>$scope,'query'=>$query,'v4_file_ids'=>$v4,'v5_file_ids'=>$v5,
+                'missing_in_v5'=>$missingInV5,'missing_in_v4'=>$missingInV4,
+                'expected_missing_in_v4'=>$expectedV5Only,'unexpected_missing_in_v4'=>$unexpectedV5Only,
+                'expected_rule'=>$expectedRule,
+            ];}
         }
         $covered=count(array_filter($scopeCounts,static fn(int $n):bool=>$n>0));
         return [
             'ok'=>$covered===3&&$mismatch===0,'requested_samples_per_scope'=>$perScope,'checked_queries'=>$checked,
             'checked_by_scope'=>$scopeCounts,'truncated_queries_skipped'=>$truncated,'mismatch_query_count'=>$mismatch,
+            'expected_difference_query_count'=>$expectedQueries,'expected_difference_file_count'=>$expectedFiles,
             'scope'=>'exact metadata search compared independently for names, imports and exports; candidates are hydrated from UEDB5',
             'details'=>$details,
         ];
+    }
+
+    /** @return array{name_text:string,name_index:int}|null */
+    private function v4CaseOnlyNameEvidence(int $fileId,string $query):?array
+    {
+        $normalized=$this->nameKey($query);if($normalized==='')return null;$candidate=null;
+        foreach($this->v4->scan($fileId,'names') as $row){
+            $text=(string)($row['name_text']??'');
+            if($text===$query)return null;
+            if($candidate===null&&$this->nameKey($text)===$normalized){
+                $candidate=['name_text'=>$text,'name_index'=>(int)($row['name_index']??0)];
+            }
+        }
+        return $candidate;
     }
 
     /** @return list<array{scope:string,query:string}> */

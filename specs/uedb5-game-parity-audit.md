@@ -68,6 +68,8 @@ Each search scope is tested independently so a generic FName hit cannot mask a b
 
 If an authoritative UEDB5 name exists but `ue_uedb5_name_candidates` does not expose it, repair the disposable projection with `catalog/bin/sync-uedb5-name-candidates.php`. The synchronizer rebuilds expected rows through the same `Uedb5SqlProjectionBuilder` used by Pass 1, writes only `ue_uedb5_search_keys` and `ue_uedb5_name_candidates`, and immediately verifies each repaired file. It does not reparse source packages and does not modify provider, object, or dependency projections.
 
+V5 FName discovery is intentionally normalized/case-insensitive because `ue_uedb5_name_candidates` is keyed by distinct normalized FName. A V5-only Names hit caused solely by source-case spelling (for example V4 `skin` queried as `Skin`) is an expected parity difference only when Step 9 re-reads authoritative UEDB4 metadata for that file, finds the same normalized FName with different casing, and finds no exact-case V4 source entry. V5 still hydrates the authoritative UEDB5 candidate row before the hit is accepted. Case differences in Imports/Exports, V4-only hits, or files with an exact-case V4 source name remain failures.
+
 ## Intentional source-correction differences
 
 Parity does not mean preserving a known V4 mistake. Intentional differences must be explicitly allow-listed and must carry source evidence in V5.

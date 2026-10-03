@@ -42,5 +42,17 @@ $badRule=Uedb5GameParityExpectedDifferences::classify('ut3','dependency_outcome'
 ]);
 $record('ut3_difference_requires_source_evidence',$badRule===null);
 
+$caseRule=Uedb5GameParityExpectedDifferences::classify('ut2003','search_case_normalization',[
+    'scope'=>'names','query'=>'Skin','authoritative_name'=>'skin',
+],['scope'=>'names','normalized_authoritative_match'=>true]);
+$record('normalized_fname_case_only_search_addition_is_expected',
+    is_array($caseRule)&&($caseRule['id']??'')==='normalized_fname_search_case');
+$exactCaseRule=Uedb5GameParityExpectedDifferences::classify('ut2003','search_case_normalization',[
+    'scope'=>'names','query'=>'Skin','authoritative_name'=>'Skin',
+],['scope'=>'names','normalized_authoritative_match'=>true]);
+$record('exact_case_search_difference_is_not_allowed',$exactCaseRule===null);
+$record('case_rule_requires_authoritative_v4_scan',str_contains($service,'v4CaseOnlyNameEvidence')&&str_contains($service,"->scan(\$fileId,'names')"));
+$record('search_reports_expected_case_differences',str_contains($service,'expected_difference_query_count')&&str_contains($service,'expected_missing_in_v4'));
+
 echo json_encode(['ok'=>$failures===[],'checks'=>$checks,'failures'=>$failures],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;
 exit($failures===[]?0:1);
