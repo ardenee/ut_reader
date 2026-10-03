@@ -64,7 +64,7 @@ Requires / Required By compares the normalized resolved source-to-target graph. 
 
 Step 9 tests end-user search behaviour using a deterministic bounded query corpus from live V4 names, imports, and exports. When Step 8 is skipped, Step 9 does not claim source-reparse validation; it compares the completed current V5 payload and its published V5 projections against live V4 behaviour.
 
-Each search scope is tested independently so a generic FName hit cannot mask a broken import or export search path. The parity corpus respects production metadata-search semantics and samples only terms of at least three UTF-8 characters, matching PdoCatalogSearchRepository::MIN_BROAD_QUERY_LENGTH. V5 uses the appropriate narrow candidate index and then hydrates UEDB5 before accepting the match.
+Each search scope is tested independently so a generic FName hit cannot mask a broken import or export search path. The parity corpus respects production metadata-search semantics and samples only terms of at least three UTF-8 characters, matching PdoCatalogSearchRepository::MIN_BROAD_QUERY_LENGTH. V5 uses the appropriate narrow candidate index, then hydrates only the indexed candidate row positions from authoritative UEDB5 blocks before accepting the match; parity search must not materialize whole package snapshots.
 
 ## Intentional source-correction differences
 

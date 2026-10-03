@@ -15,7 +15,9 @@ $categories=['dependencies','requires_required_by','base_game_missing','package_
 foreach($categories as $category)$record('category_'.$category,str_contains($service,"['$category']"));
 $record('full_game_readiness_requires_v4_v5_and_current_pass2',str_contains($service,'$v4===$verified')&&str_contains($service,'$v5===$verified')&&str_contains($service,'$completed===$verified')&&str_contains($service,'missing_primary_provider_count')&&str_contains($service,'invalid_staged_count')&&str_contains($service,'DEPENDENCY_POLICY'));
 $record('audit_refuses_before_ready',str_contains($service,'Game is not ready for Step 9 parity audit'));
-$record('v5_search_uses_candidate_then_uedb_hydration',str_contains($v5,'ue_uedb5_name_candidates')&&str_contains($v5,'ue_uedb5_object_candidates')&&str_contains($v5,'ue_uedb5_dependency_edges')&&str_contains($v5,'snapshotMatches'));
+$record('v5_search_uses_candidate_then_targeted_uedb_hydration',str_contains($v5,'ue_uedb5_name_candidates')&&str_contains($v5,'ue_uedb5_object_candidates')&&str_contains($v5,'ue_uedb5_dependency_edges')&&str_contains($v5,'rowsByPositions')&&str_contains($v5,'candidateRowsMatch'));
+$exactStart=strpos($v5,'public function exactMetadataSearch');$exactEnd=strpos($v5,'private function collectIds',$exactStart);$exactBody=substr($v5,$exactStart,$exactEnd-$exactStart);
+$record('v5_search_does_not_materialize_full_snapshots',!str_contains($exactBody,'->snapshot(')&&!str_contains($exactBody,'snapshotMatches'));
 $record('v5_parity_reader_never_reads_uedb4',!str_contains($v5,'.uedb4')&&!str_contains($v5,'BlockedCompressedMetadataReader'));
 $writePattern='/\b(INSERT|UPDATE|DELETE|REPLACE|CREATE|ALTER|DROP|TRUNCATE)\b/i';
 $record('parity_service_is_read_only',preg_match($writePattern,$service)===0&&preg_match($writePattern,$v5)===0);

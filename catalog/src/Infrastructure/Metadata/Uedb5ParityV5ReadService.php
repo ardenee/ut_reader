@@ -111,11 +111,88 @@ final class Uedb5ParityV5ReadService
                 .'OR (e.required_package_key_kind=1 AND e.required_package_key=?)) ORDER BY e.file_id LIMIT '.$limit,
                 [$gameId,$hash,md5(CatalogUnrealIdentityHash::nameKey($query),true)]);
         }
-        $out=[];$candidateIds=array_map('intval',array_keys($ids));sort($candidateIds,SORT_NUMERIC);
-        foreach(array_slice($candidateIds,0,$limit) as $fileId){
-            if($this->snapshotMatches($this->snapshot($gameId,$fileId),$query,$fields))$out[]=$fileId;
+        $candidateIds=array_map('intval',array_keys($ids));sort($candidateIds,SORT_NUMERIC);
+        $candidateIds=array_slice($candidateIds,0,$limit);if($candidateIds===[])return[];
+        $positions=$this->candidatePositions($candidateIds,$query,$fields,$hash,$finger);
+        $out=[];
+        try{
+            foreach($candidateIds as $fileId){
+                if($this->candidateRowsMatch($gameId,$fileId,$query,$fields,(array)($positions[$fileId]??[])))$out[]=$fileId;
+            }
+        }finally{
+            $this->reader->clearCache();
         }
-        return $out;
+        return$out;
+    }
+
+    /** @param list<int> $fileIds @return array<int,array<string,array<int,true>>> */
+    private function candidatePositions(array $fileIds,string $query,array $fields,string $hash,string $finger):array
+    {
+        $out=[];$placeholders=implode(',',array_fill(0,count($fileIds),'?'));
+        if(in_array('names',$fields,true)){
+            $sql='SELECT file_id,first_name_index FROM ue_uedb5_name_candidates WHERE file_id IN ('.$placeholders.') '
+                .'AND name_key_hash=? AND name_key_length=? AND name_key_fingerprint=? ORDER BY file_id,first_name_index';
+            $s=$this->db->prepare($sql);$s->execute(array_merge($fileIds,[$hash,strlen(CatalogUnrealIdentityHash::nameKey($this->candidateNeedle($query))),$finger]));
+            while(($row=$s->fetch(PDO::FETCH_ASSOC))!==false)$out[(int)$row['file_id']]['names'][(int)$row['first_name_index']]=true;
+        }
+        if(in_array('exports',$fields,true)){
+            $sql='SELECT file_id,object_kind,object_index FROM ue_uedb5_object_candidates WHERE file_id IN ('.$placeholders.') '
+                .'AND object_name_hash=? AND object_name_length=? ORDER BY file_id,object_kind,object_index';
+            $s=$this->db->prepare($sql);$s->execute(array_merge($fileIds,[$hash,strlen(CatalogUnrealIdentityHash::nameKey($this->candidateNeedle($query)))]));
+            while(($row=$s->fetch(PDO::FETCH_ASSOC))!==false){
+                $section=(int)$row['object_kind']===Uedb5SqlProjectionContract::OBJECT_KIND_CELL_EXPORT?'cell_exports':'exports';
+                $out[(int)$row['file_id']][$section][(int)$row['object_index']]=true;
+            }
+        }
+        if(in_array('imports',$fields,true)){
+            $packageHash=md5(CatalogUnrealIdentityHash::nameKey($query),true);
+            $sql='SELECT file_id,source_kind,source_index FROM ue_uedb5_dependency_edges WHERE file_id IN ('.$placeholders.') '
+                .'AND ((required_object_key_kind=1 AND required_object_key=?) OR (required_package_key_kind=1 AND required_package_key=?)) '
+                .'ORDER BY file_id,source_kind,source_index';
+            $s=$this->db->prepare($sql);$s->execute(array_merge($fileIds,[$hash,$packageHash]));
+            while(($row=$s->fetch(PDO::FETCH_ASSOC))!==false){
+                $kind=(int)$row['source_kind'];
+                if($kind===Uedb5SqlProjectionContract::DEP_SOURCE_IMPORT)$section='imports';
+                elseif($kind===Uedb5SqlProjectionContract::DEP_SOURCE_CELL_IMPORT)$section='cell_imports';
+                else continue;
+                $out[(int)$row['file_id']][$section][(int)$row['source_index']]=true;
+            }
+        }
+        return$out;
+    }
+
+    /** @param array<string,array<int,true>> $positions */
+    private function candidateRowsMatch(int $gameId,int $fileId,string $query,array $fields,array $positions):bool
+    {
+        $needle=CatalogUnrealIdentityHash::nameKey($query);$manifest=$this->reader->manifest($gameId,$fileId);
+        $available=(array)($manifest['sections']??[]);
+        if(in_array('names',$fields,true)&&isset($positions['names'])){
+            $section=array_key_exists('names',$available)?'names':(array_key_exists('name_map',$available)?'name_map':'');
+            if($section!==''&&$this->rowsContainName($gameId,$fileId,$section,array_keys($positions['names']),$needle,true))return true;
+        }
+        if(in_array('imports',$fields,true)){
+            foreach(['imports','cell_imports'] as $section){
+                if(isset($positions[$section])&&array_key_exists($section,$available)
+                    &&$this->rowsContainName($gameId,$fileId,$section,array_keys($positions[$section]),$needle,false))return true;
+            }
+        }
+        if(in_array('exports',$fields,true)){
+            foreach(['exports','cell_exports'] as $section){
+                if(isset($positions[$section])&&array_key_exists($section,$available)
+                    &&$this->rowsContainName($gameId,$fileId,$section,array_keys($positions[$section]),$needle,false))return true;
+            }
+        }
+        return false;
+    }
+
+    /** @param list<int> $positions */
+    private function rowsContainName(int $gameId,int $fileId,string $section,array $positions,string $needle,bool $nameRows):bool
+    {
+        foreach($this->reader->rowsByPositions($gameId,$fileId,$section,$positions) as $row){
+            $row=(array)$row;$text=$nameRows?$this->rowText($row):$this->fnameText($row['object_name']??$row['objectName']??null);
+            if($text!==''&&CatalogUnrealIdentityHash::nameKey($text)===$needle)return true;
+        }
+        return false;
     }
 
     /** @param array<int,bool> $ids @param list<mixed> $args */
