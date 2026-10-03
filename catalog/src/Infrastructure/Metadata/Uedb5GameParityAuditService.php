@@ -457,11 +457,15 @@ final class Uedb5GameParityAuditService
     private function v4CaseOnlyNameEvidence(int $fileId,string $query):?array
     {
         $normalized=$this->nameKey($query);if($normalized==='')return null;$candidate=null;
-        foreach($this->v4->scan($fileId,'names') as $row){
-            $text=(string)($row['name_text']??'');
-            if($text===$query)return null;
-            if($candidate===null&&$this->nameKey($text)===$normalized){
-                $candidate=['name_text'=>$text,'name_index'=>(int)($row['name_index']??0)];
+        $s=$this->db->prepare('SELECT name_count FROM ue_files WHERE id=? LIMIT 1');
+        $s->execute([$fileId]);$nameCount=(int)$s->fetchColumn();
+        for($start=0;$start<$nameCount;$start+=5000){
+            foreach($this->v4->page($fileId,'names',$start,min(5000,$nameCount-$start)) as $row){
+                $text=(string)($row['name_text']??'');
+                if($text===$query)return null;
+                if($candidate===null&&$this->nameKey($text)===$normalized){
+                    $candidate=['name_text'=>$text,'name_index'=>(int)($row['name_index']??0)];
+                }
             }
         }
         return $candidate;

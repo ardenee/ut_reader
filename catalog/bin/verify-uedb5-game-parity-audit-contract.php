@@ -51,7 +51,7 @@ $exactCaseRule=Uedb5GameParityExpectedDifferences::classify('ut2003','search_cas
     'scope'=>'names','query'=>'Skin','authoritative_name'=>'Skin',
 ],['scope'=>'names','normalized_authoritative_match'=>true]);
 $record('exact_case_search_difference_is_not_allowed',$exactCaseRule===null);
-$record('case_rule_requires_authoritative_v4_scan',str_contains($service,'v4CaseOnlyNameEvidence')&&str_contains($service,"->scan(\$fileId,'names')"));
+$record('case_rule_requires_authoritative_v4_scan',str_contains($service,'v4CaseOnlyNameEvidence')&&str_contains($service,"SELECT name_count FROM ue_files WHERE id=? LIMIT 1")&&str_contains($service,"->page(\$fileId,'names'"));
 $record('search_reports_expected_case_differences',str_contains($service,'expected_difference_query_count')&&str_contains($service,'expected_missing_in_v4'));
 
 echo json_encode(['ok'=>$failures===[],'checks'=>$checks,'failures'=>$failures],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;
