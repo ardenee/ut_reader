@@ -432,9 +432,9 @@ final class Uedb5GameParityAuditService
     private function searchCorpus(int $gameId,int $perScope):array
     {
         $definitions=[
-            'names'=>'SELECT CONVERT(t.value_prefix USING utf8mb4) q FROM ue_name_lookup x JOIN ue_files f ON f.id=x.file_id JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=4 JOIN ue_terms t ON t.id=x.name_term_id WHERE f.game_id=? AND f.scan_status="verified" AND t.value_length BETWEEN 1 AND 200 ORDER BY x.file_id,x.name_index LIMIT '.$perScope,
-            'exports'=>'SELECT CONVERT(t.value_prefix USING utf8mb4) q FROM ue_export_lookup x JOIN ue_files f ON f.id=x.file_id JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=4 JOIN ue_terms t ON t.id=x.object_term_id WHERE f.game_id=? AND f.scan_status="verified" AND t.value_length BETWEEN 1 AND 200 ORDER BY x.file_id,x.export_index LIMIT '.$perScope,
-            'imports'=>'SELECT CONVERT(t.value_prefix USING utf8mb4) q FROM ue_dependency_links x JOIN ue_files f ON f.id=x.file_id JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=4 JOIN ue_terms t ON t.id=x.import_object_term_id WHERE f.game_id=? AND f.scan_status="verified" AND t.value_length BETWEEN 1 AND 200 ORDER BY x.file_id,x.import_index LIMIT '.$perScope,
+            'names'=>'SELECT CONVERT(t.value_prefix USING utf8mb4) q FROM ue_name_lookup x JOIN ue_files f ON f.id=x.file_id JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=4 JOIN ue_terms t ON t.id=x.name_term_id WHERE f.game_id=? AND f.scan_status="verified" AND t.value_length BETWEEN 3 AND 200 ORDER BY x.file_id,x.name_index LIMIT '.$perScope,
+            'exports'=>'SELECT CONVERT(t.value_prefix USING utf8mb4) q FROM ue_export_lookup x JOIN ue_files f ON f.id=x.file_id JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=4 JOIN ue_terms t ON t.id=x.object_term_id WHERE f.game_id=? AND f.scan_status="verified" AND t.value_length BETWEEN 3 AND 200 ORDER BY x.file_id,x.export_index LIMIT '.$perScope,
+            'imports'=>'SELECT CONVERT(t.value_prefix USING utf8mb4) q FROM ue_dependency_links x JOIN ue_files f ON f.id=x.file_id JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=4 JOIN ue_terms t ON t.id=x.import_object_term_id WHERE f.game_id=? AND f.scan_status="verified" AND t.value_length BETWEEN 3 AND 200 ORDER BY x.file_id,x.import_index LIMIT '.$perScope,
         ];
         $out=[];
         foreach($definitions as $scope=>$sql){

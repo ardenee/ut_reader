@@ -20,6 +20,7 @@ $record('v5_parity_reader_never_reads_uedb4',!str_contains($v5,'.uedb4')&&!str_c
 $writePattern='/\b(INSERT|UPDATE|DELETE|REPLACE|CREATE|ALTER|DROP|TRUNCATE)\b/i';
 $record('parity_service_is_read_only',preg_match($writePattern,$service)===0&&preg_match($writePattern,$v5)===0);
 $record('cli_has_preflight',str_contains($cli,"'preflight'"));
+$record('search_corpus_respects_production_minimum_length',substr_count($service,'value_length BETWEEN 3 AND 200')===3);
 $record('provider_selection_is_compared',str_contains($service,'provider_selection_mismatch_count'));
 $record('object_coverage_is_compared',str_contains($service,'object_coverage_mismatch_count'));
 $record('base_game_missing_is_compared',str_contains($service,'officialBaseGamePackageNames'));
