@@ -12,12 +12,12 @@ use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5GameDependencyPassService;
 
 $options=getopt('',[
     'game-id:', 'game:', 'apply', 'continuous', 'limit::', 'progress-every::', 'preflight',
-    'workers::', 'worker-index::', 'skip-worker-preflight'
+    'workers::', 'worker-index::', 'skip-worker-preflight', 'force'
 ]);
 $gameId=(int)($options['game-id'] ?? 0);
 $legacyGameSlug=trim((string)($options['game'] ?? ''));
 if($gameId<1 && $legacyGameSlug===''){
-    fwrite(STDERR,"Usage: php catalog/bin/migrate-uedb5-dependencies.php --game-id=3 [--apply] [--continuous] [--limit=500] [--progress-every=50] [--workers=4] [--preflight]\n");
+    fwrite(STDERR,"Usage: php catalog/bin/migrate-uedb5-dependencies.php --game-id=3 [--apply] [--force] [--continuous] [--limit=500] [--progress-every=50] [--workers=4] [--preflight]\n");
     exit(1);
 }
 
@@ -40,6 +40,8 @@ $progressEvery=max(1,(int)($options['progress-every'] ?? 50));
 $workers=max(1,min(8,(int)($options['workers'] ?? 1)));
 $workerIndex=array_key_exists('worker-index',$options)?(int)$options['worker-index']:null;
 $skipWorkerPreflight=isset($options['skip-worker-preflight']);
+$force=isset($options['force']);
+if($force&&!$apply){fwrite(STDERR,json_encode(['ok'=>false,'error'=>'--force requires --apply'],JSON_UNESCAPED_SLASHES).PHP_EOL);exit(1);}
 
 if($workers>1 && $workerIndex===null && !isset($options['preflight'])){
     echo json_encode(['status'=>'pool_preflight_start','workers'=>$workers,'game_id'=>$gameId],JSON_UNESCAPED_SLASHES),PHP_EOL;
@@ -63,6 +65,7 @@ if($workers>1 && $workerIndex===null && !isset($options['preflight'])){
             '--limit='.$limit,'--progress-every='.$progressEvery,'--skip-worker-preflight'
         ];
         if($apply){$command[]='--apply';}
+        if($force){$command[]='--force';}
         if($continuous){$command[]='--continuous';}
         $process=proc_open($command,[0=>['file','NUL','r'],1=>STDOUT,2=>STDERR],$pipes,$root);
         if(!is_resource($process)){throw new RuntimeException('Could not start UEDB5 dependency worker #'.$index.'.');}
@@ -111,7 +114,7 @@ try{
     };
     $result=$service->run(
         $gameId,$apply,$limit,$continuous,$progressEvery,$emit,
-        $workers,$workerIndex ?? 0,$skipWorkerPreflight
+        $workers,$workerIndex ?? 0,$skipWorkerPreflight,$force
     );
     $jsonFlags=JSON_UNESCAPED_SLASHES|($workerIndex===null?JSON_PRETTY_PRINT:0);
     echo json_encode(['ok'=>$result['failed']===0,'summary'=>$result],$jsonFlags),PHP_EOL;

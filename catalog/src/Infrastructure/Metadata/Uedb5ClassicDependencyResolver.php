@@ -123,8 +123,15 @@ final class Uedb5ClassicDependencyResolver
                 $reason = $engine === 'ue3' && self::hasExportOuter($consumer['imports'], (int)$importIndex)
                     ? 'ue3_cooked_export_outer'
                     : 'package_root_unavailable';
+                $identityRoot = '';
+                if ($engine === 'ue3' && $reason === 'ue3_cooked_export_outer') {
+                    $identityPath = CatalogCompactIdentityEnricher::ue3EffectiveImportPath(
+                        $consumer['imports'], (int)$importIndex, $consumer['exports']
+                    );
+                    $identityRoot = trim((string)($identityPath['root'] ?? ''));
+                }
                 $resolved[(int)$importIndex] = self::result(
-                    'unresolved', '', null, null, $reason, $engine
+                    'unresolved', $identityRoot, null, null, $reason, $engine
                 );
                 continue;
             }

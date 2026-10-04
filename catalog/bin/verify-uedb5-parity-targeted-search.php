@@ -28,6 +28,7 @@ $snapshot=static function(int $fileId,string $name,string $nameValue,string $imp
         'section_schemas'=>[
             'summary'=>'ue1.ut99.package-summary.v1','names'=>'ue1.ut99.name-entry.v1',
             'imports'=>'ue1.ut99.object-import.v1','exports'=>'ue1.ut99.object-export.v1',
+            'dependency_results'=>'unreal.classic.dependency-result.v1',
         ],
         'sections'=>[
             'summary'=>[['package_version'=>69]],
@@ -37,6 +38,10 @@ $snapshot=static function(int $fileId,string $name,string $nameValue,string $imp
                 ['index'=>1,'class_package'=>'Core','class_name'=>'Class','object_name'=>$importValue,'outer_index'=>-1],
             ],
             'exports'=>[['index'=>0,'class_index'=>0,'super_index'=>0,'outer_index'=>0,'object_name'=>$exportValue,'object_flags'=>4]],
+            'dependency_results'=>[
+                ['source_section'=>'imports','source_index'=>0,'required_package_identity'=>['kind'=>'package_name','value'=>'Pkg']],
+                ['source_section'=>'imports','source_index'=>1,'required_package_identity'=>['kind'=>'package_name','value'=>$fileId===1?'Pkg':'DifferentPkg']],
+            ],
         ],
     ];
 };
@@ -64,6 +69,8 @@ $check('targeted_name_hydration_accepts_only_authoritative_v5_row',
     $service->exactMetadataSearch(3,'Alpha',['names'],500)===[1]);
 $check('targeted_import_hydration_accepts_only_authoritative_v5_row',
     $service->exactMetadataSearch(3,'ImportThing',['imports'],500)===[1]);
+$check('targeted_import_package_hydration_accepts_only_authoritative_dependency_row',
+    $service->exactMetadataSearch(3,'Pkg',['imports'],500)===[1]);
 $check('targeted_export_hydration_accepts_only_authoritative_v5_row',
     $service->exactMetadataSearch(3,'ExportThing',['exports'],500)===[1]);
 

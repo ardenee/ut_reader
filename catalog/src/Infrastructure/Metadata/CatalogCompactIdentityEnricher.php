@@ -274,22 +274,25 @@ final class CatalogCompactIdentityEnricher
 
     /**
      * Rebuild the deterministic import path from the post-FixupImportMap outer
-     * chain. Cooked import->export outers deliberately return empty identity.
+     * chain. When exports are supplied, cooked import->export outers follow the
+     * same mixed package-index graph used by UE3 GetImportPathName.
      *
      * @param array<int,array<string,mixed>> $imports
      * @return array{root:string,full:string,relative:string}
      */
-    public static function ue3EffectiveImportPath(array $imports, int $importIndex): array
+    public static function ue3EffectiveImportPath(array $imports, int $importIndex, array $exports = []): array
     {
         $imports = self::ue3FixupImportMap($imports);
         $parts = [];
         $seen = [];
+        $ref = -$importIndex - 1;
         while (true) {
-            if (isset($seen[$importIndex])) {
+            if ($ref === 0 || isset($seen[$ref])) {
                 return ['root' => '', 'full' => '', 'relative' => ''];
             }
-            $seen[$importIndex] = true;
-            $row = $imports[$importIndex] ?? null;
+            $seen[$ref] = true;
+            $isImport = $ref < 0;
+            $row = $isImport ? ($imports[-$ref - 1] ?? null) : ($exports[$ref - 1] ?? null);
             if (!is_array($row)) {
                 return ['root' => '', 'full' => '', 'relative' => ''];
             }
@@ -300,16 +303,17 @@ final class CatalogCompactIdentityEnricher
             array_unshift($parts, $name);
             $outerIndex = (int)($row['outer_index'] ?? 0);
             if ($outerIndex === 0) {
-                if (strcasecmp(trim((string)($row['class_name'] ?? '')), 'Package') !== 0
+                if (!$isImport
+                    || strcasecmp(trim((string)($row['class_name'] ?? '')), 'Package') !== 0
                     || strcasecmp(trim((string)($row['class_package'] ?? '')), 'Core') !== 0) {
                     return ['root' => '', 'full' => '', 'relative' => ''];
                 }
                 break;
             }
-            if ($outerIndex > 0) {
+            if ($outerIndex > 0 && $exports === []) {
                 return ['root' => '', 'full' => '', 'relative' => ''];
             }
-            $importIndex = -$outerIndex - 1;
+            $ref = $outerIndex;
         }
         $root = (string)($parts[0] ?? '');
         return [

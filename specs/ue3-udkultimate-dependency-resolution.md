@@ -186,7 +186,7 @@ UnrealDB must keep these separate from deterministic package-byte rules.
 10. Do not implement a non-qualified same-name fallback.
 11. Follow UObjectRedirector only when its serialized destination can actually be resolved.
 12. Do not emulate runtime native/transient lookup from insufficient catalog data.
-13. Preserve cooked import/export outer relationships without inventing the unresolved source TODO behavior.
+13. Preserve cooked import/export outer relationships: use the mixed import/export graph for `GetImportPathName`-style package/path identity, while keeping `VerifyImportInner` outcome unresolved where the audited source returns at its cooked import-to-export TODO.
 14. Keep runtime/configuration mechanisms explicitly separate.
 15. Never borrow a fallback from another engine or game because its version number appears similar.
 

@@ -27,6 +27,14 @@ final class Uedb5GameParityExpectedDifferences
                 'requires_v5_source_evidence'=>true,
                 'reason'=>'V5 FName discovery uses normalized keys; case-only V5 search additions are intentional when both metadata formats contain the same normalized FName.',
             ],
+            [
+                'id'=>'normalized_export_search_case',
+                'game'=>'*',
+                'category'=>'search_case_normalization',
+                'requires_v4_source_evidence'=>true,
+                'requires_v5_source_evidence'=>true,
+                'reason'=>'V5 export-object discovery uses normalized name keys; case-only V5 export search additions are intentional when both metadata formats contain the same normalized object name.',
+            ],
         ];
     }
 
@@ -36,10 +44,11 @@ final class Uedb5GameParityExpectedDifferences
         if ($category === 'search_case_normalization') {
             $query = (string)($v4['query'] ?? '');
             $source = (string)($v4['authoritative_name'] ?? '');
-            if (($v4['scope'] ?? '') !== 'names' || ($v5['scope'] ?? '') !== 'names') { return null; }
+            $scope = (string)($v4['scope'] ?? '');
+            if ($scope !== (string)($v5['scope'] ?? '') || !in_array($scope, ['names','exports'], true)) { return null; }
             if (empty($v5['normalized_authoritative_match']) || $query === '' || $source === '' || $query === $source) { return null; }
             if (CatalogUnrealIdentityHash::nameKey($query) !== CatalogUnrealIdentityHash::nameKey($source)) { return null; }
-            return self::rules()[1];
+            return self::rules()[$scope === 'names' ? 1 : 2];
         }
 
         if ($gameSlug !== 'ut3' || $category !== 'dependency_outcome') { return null; }

@@ -39,11 +39,14 @@ $check('pass2_worker_partition_is_resumable',
     str_contains($service,'MOD(f.id,?)=?')
     && str_contains($service,'firstRemainingFileId')
     && str_contains($service,'$cursor = $fileId'));
-$check('pass2_cli_supports_pool_and_preflight',
+$check('pass2_cli_supports_pool_preflight_and_force',
     str_contains($cli,"'workers::'")
     && str_contains($cli,"'worker-index::'")
     && str_contains($cli,"'continuous'")
-    && str_contains($cli,"'preflight'"));
+    && str_contains($cli,"'preflight'")
+    && str_contains($cli,"'force'"));
+$check('pass2_force_requires_apply',str_contains($cli,'--force requires --apply'));
+$check('pass2_force_bypasses_only_resume_filter',str_contains($service,'if(!$force)')&&str_contains($service,'bool $force = false'));
 $check('pass2_cli_uses_game_id_identity',str_contains($cli,"'game-id:'")&&str_contains($service,'Uedb5GameSourceRegistry::sourceKey'));
 $check('pass2_preflight_requires_complete_v5_not_v4',
     str_contains($service,"'pass2_ready' => \$ready")

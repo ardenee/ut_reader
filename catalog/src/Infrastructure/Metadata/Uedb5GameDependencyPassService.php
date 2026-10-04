@@ -117,7 +117,8 @@ final class Uedb5GameDependencyPassService
         ?callable $emit = null,
         int $workerCount = 1,
         int $workerIndex = 0,
-        bool $skipPreflight = false
+        bool $skipPreflight = false,
+        bool $force = false
     ): array {
         if ($emit) {
             $emit(['status'=>'worker_boot','worker_count'=>$workerCount,'worker_index'=>$workerIndex]);
@@ -138,7 +139,7 @@ final class Uedb5GameDependencyPassService
             throw new RuntimeException('UEDB5 dependency worker index is outside the configured worker count.');
         }
         $options = $this->resolverOptions($gameId);
-        $firstRemainingId = $this->firstRemainingFileId($gameId, $workerCount, $workerIndex);
+        $firstRemainingId = $this->firstRemainingFileId($gameId, $workerCount, $workerIndex, $force);
         $cursor = $firstRemainingId !== null ? max(0, $firstRemainingId - 1) : 0;
         $processed = $succeeded = $failed = 0;
         $failures = [];
@@ -148,10 +149,11 @@ final class Uedb5GameDependencyPassService
                 'worker_count'=>$workerCount,
                 'worker_index'=>$workerIndex,
                 'first_remaining_file_id'=>$firstRemainingId,
+                'force'=>$force,
             ]);
         }
         do {
-            $rows = $this->batch($gameId, $cursor, $limit, $workerCount, $workerIndex);
+            $rows = $this->batch($gameId, $cursor, $limit, $workerCount, $workerIndex, $force);
             if ($rows === []) { break; }
             foreach ($rows as $row) {
                 $fileId = (int)($row['file_id'] ?? 0);
@@ -190,7 +192,7 @@ final class Uedb5GameDependencyPassService
             'apply'=>$apply,'game'=>$game,'preflight'=>$preflight,
             'processed'=>$processed,'succeeded'=>$succeeded,'failed'=>$failed,
             'last_file_id'=>$cursor,'worker_count'=>$workerCount,'worker_index'=>$workerIndex,
-            'failures'=>$failures,
+            'force'=>$force,'failures'=>$failures,
         ];
     }
 
@@ -250,17 +252,19 @@ final class Uedb5GameDependencyPassService
         return ['common_packages'=>$common,'class_remaps'=>$classRemaps];
     }
 
-    private function firstRemainingFileId(int $gameId, int $workerCount, int $workerIndex): ?int
+    private function firstRemainingFileId(int $gameId, int $workerCount, int $workerIndex, bool $force): ?int
     {
-        $statement = $this->db->prepare(
-            'SELECT MIN(f.id) FROM ue_files f '
-            . 'JOIN ue_uedb5_files v ON v.file_id=f.id '
+        $sql = 'SELECT MIN(f.id) FROM ue_files f JOIN ue_uedb5_files v ON v.file_id=f.id '
             . 'LEFT JOIN ue_uedb5_migration_status s ON s.file_id=f.id '
-            . 'WHERE f.game_id=? AND f.scan_status="verified" AND MOD(f.id,?)=? '
-            . 'AND (s.dependency_policy IS NULL OR s.dependency_policy<>? '
-            . 'OR s.dependency_payload_sha256 IS NULL OR s.dependency_payload_sha256<>v.payload_sha256)'
-        );
-        $statement->execute([$gameId,$workerCount,$workerIndex,self::DEPENDENCY_POLICY]);
+            . 'WHERE f.game_id=? AND f.scan_status="verified" AND MOD(f.id,?)=?';
+        $args = [$gameId,$workerCount,$workerIndex];
+        if(!$force){
+            $sql .= ' AND (s.dependency_policy IS NULL OR s.dependency_policy<>? '
+                . 'OR s.dependency_payload_sha256 IS NULL OR s.dependency_payload_sha256<>v.payload_sha256)';
+            $args[] = self::DEPENDENCY_POLICY;
+        }
+        $statement = $this->db->prepare($sql);
+        $statement->execute($args);
         $value = $statement->fetchColumn();
         return $value === false || $value === null ? null : (int)$value;
     }
@@ -271,17 +275,22 @@ final class Uedb5GameDependencyPassService
         int $afterId,
         int $limit,
         int $workerCount,
-        int $workerIndex
+        int $workerIndex,
+        bool $force
     ): array {
         $sql = 'SELECT f.id file_id,v.payload_sha256 FROM ue_files f '
             . 'JOIN ue_uedb5_files v ON v.file_id=f.id '
             . 'LEFT JOIN ue_uedb5_migration_status s ON s.file_id=f.id '
-            . 'WHERE f.game_id=? AND f.scan_status="verified" AND f.id>? AND MOD(f.id,?)=? '
-            . 'AND (s.dependency_policy IS NULL OR s.dependency_policy<>? '
-            . 'OR s.dependency_payload_sha256 IS NULL OR s.dependency_payload_sha256<>v.payload_sha256) '
-            . 'ORDER BY f.id LIMIT ' . max(1, min(5000, $limit));
+            . 'WHERE f.game_id=? AND f.scan_status="verified" AND f.id>? AND MOD(f.id,?)=?';
+        $args = [$gameId,$afterId,$workerCount,$workerIndex];
+        if(!$force){
+            $sql .= ' AND (s.dependency_policy IS NULL OR s.dependency_policy<>? '
+                . 'OR s.dependency_payload_sha256 IS NULL OR s.dependency_payload_sha256<>v.payload_sha256)';
+            $args[] = self::DEPENDENCY_POLICY;
+        }
+        $sql .= ' ORDER BY f.id LIMIT ' . max(1, min(5000, $limit));
         $statement = $this->db->prepare($sql);
-        $statement->execute([$gameId,$afterId,$workerCount,$workerIndex,self::DEPENDENCY_POLICY]);
+        $statement->execute($args);
         return $statement->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
 

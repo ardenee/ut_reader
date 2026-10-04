@@ -58,7 +58,7 @@ unresolved
 
 Provider parity is physical-file parity. Multiple same-name providers are never merged to manufacture coverage.
 
-Requires / Required By compares the normalized resolved source-to-target graph. Package/alias fallback identity is audited separately so a UI fallback is not mistaken for an authoritative dependency resolution.
+Requires / Required By compares the normalized resolved source-to-target graph. Package/alias fallback identity is audited separately so a UI fallback is not mistaken for an authoritative dependency resolution. When V4 has a required-package term, a missing/null V5 classic package key is itself a parity mismatch; the audit does not silently skip absent V5 identity.
 
 ## Search parity
 
@@ -68,7 +68,7 @@ Each search scope is tested independently so a generic FName hit cannot mask a b
 
 If an authoritative UEDB5 name exists but `ue_uedb5_name_candidates` does not expose it, repair the disposable projection with `catalog/bin/sync-uedb5-name-candidates.php`. The synchronizer rebuilds expected rows through the same `Uedb5SqlProjectionBuilder` used by Pass 1, writes only `ue_uedb5_search_keys` and `ue_uedb5_name_candidates`, and immediately verifies each repaired file. It does not reparse source packages and does not modify provider, object, or dependency projections.
 
-V5 FName discovery is intentionally normalized/case-insensitive because `ue_uedb5_name_candidates` is keyed by distinct normalized FName. A V5-only Names hit caused solely by source-case spelling (for example V4 `skin` queried as `Skin`) is an expected parity difference only when Step 9 re-reads authoritative UEDB4 metadata for that file, finds the same normalized FName with different casing, and finds no exact-case V4 source entry. V5 still hydrates the authoritative UEDB5 candidate row before the hit is accepted. Case differences in Imports/Exports, V4-only hits, or files with an exact-case V4 source name remain failures.
+V5 FName and export-object discovery is intentionally normalized/case-insensitive because their candidate keys use normalized Unreal names. A V5-only Names or Exports hit caused solely by source-case spelling (for example V4 `skin` queried as `Skin`, or V4 `cube1` queried as `Cube1`) is an expected parity difference only when Step 9 re-reads the corresponding authoritative UEDB4 section for that file, finds the same normalized name with different casing, and finds no exact-case V4 source entry. V5 still hydrates the authoritative UEDB5 candidate row before the hit is accepted. Import-scope case differences, V4-only hits, or files with an exact-case V4 source name remain failures.
 
 ## Intentional source-correction differences
 
@@ -95,6 +95,14 @@ C:\php8.5\php.exe C:\Apache24\htdocs\unrealdb\catalog\bin\sync-uedb5-provider-ke
 ```
 
 This command writes only `ue_uedb5_provider_keys`.
+
+When a resolver/source-identity correction requires recomputing already-complete Pass-2 payloads for one game, the Pass-2 CLI supports an explicit maintenance rerun:
+
+```powershell
+C:\php8.5\php.exe C:\Apache24\htdocs\unrealdb\catalog\bin\migrate-uedb5-dependencies.php --game=ut3 --apply --force --continuous --workers=4 --limit=1000 --progress-every=100
+```
+
+`--force` requires `--apply`, still runs the normal game preflight, remains V5-only, and bypasses only the normal already-current resume filter. It is not part of ordinary resumable Pass 2 and should be scoped to the game whose dependency results require regeneration.
 
 ## Operator commands
 

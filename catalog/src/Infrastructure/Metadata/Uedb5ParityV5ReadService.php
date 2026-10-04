@@ -155,7 +155,9 @@ final class Uedb5ParityV5ReadService
                 if($kind===Uedb5SqlProjectionContract::DEP_SOURCE_IMPORT)$section='imports';
                 elseif($kind===Uedb5SqlProjectionContract::DEP_SOURCE_CELL_IMPORT)$section='cell_imports';
                 else continue;
-                $out[(int)$row['file_id']][$section][(int)$row['source_index']]=true;
+                $fileId=(int)$row['file_id'];$sourceIndex=(int)$row['source_index'];
+                $out[$fileId][$section][$sourceIndex]=true;
+                if($section==='imports')$out[$fileId]['dependency_results'][$sourceIndex]=true;
             }
         }
         return$out;
@@ -175,6 +177,8 @@ final class Uedb5ParityV5ReadService
                 if(isset($positions[$section])&&array_key_exists($section,$available)
                     &&$this->rowsContainName($gameId,$fileId,$section,array_keys($positions[$section]),$needle,false))return true;
             }
+            if(isset($positions['dependency_results'])&&array_key_exists('dependency_results',$available)
+                &&$this->dependencyRowsContainQuery($gameId,$fileId,array_keys($positions['dependency_results']),$query))return true;
         }
         if(in_array('exports',$fields,true)){
             foreach(['exports','cell_exports'] as $section){
@@ -191,6 +195,28 @@ final class Uedb5ParityV5ReadService
         foreach($this->reader->rowsByPositions($gameId,$fileId,$section,$positions) as $row){
             $row=(array)$row;$text=$nameRows?$this->rowText($row):$this->fnameText($row['object_name']??$row['objectName']??null);
             if($text!==''&&CatalogUnrealIdentityHash::nameKey($text)===$needle)return true;
+        }
+        return false;
+    }
+
+    /** @param list<int> $positions */
+    private function dependencyRowsContainQuery(int $gameId,int $fileId,array $positions,string $query):bool
+    {
+        $needle=CatalogUnrealIdentityHash::nameKey($query);$pathNeedle=CatalogUnrealIdentityHash::pathKey($query);
+        foreach($this->reader->rowsByPositions($gameId,$fileId,'dependency_results',$positions) as $position=>$row){
+            $row=(array)$row;
+            if(isset($row['source_index'])&&(int)$row['source_index']!==(int)$position)continue;
+            $pkg=$row['required_package_identity']??null;$obj=$row['required_object_identity']??null;$values=[];
+            if(is_array($pkg))$values[]=(string)($pkg['value']??'');else $values[]=(string)($row['required_package_id']??'');
+            if(is_array($obj)){
+                $values[]=(string)($obj['object_name']??'');
+                $values[]=(string)($obj['object_path']??'');
+            }else $values[]=(string)$obj;
+            $values[]=(string)($row['required_object_path']??'');
+            foreach($values as $value){
+                if($value!==''&&(CatalogUnrealIdentityHash::nameKey($value)===$needle
+                    ||CatalogUnrealIdentityHash::pathKey($value)===$pathNeedle))return true;
+            }
         }
         return false;
     }

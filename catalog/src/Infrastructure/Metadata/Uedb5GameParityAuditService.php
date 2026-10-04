@@ -264,8 +264,10 @@ final class Uedb5GameParityAuditService
             .'JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=4 '
             .'JOIN ue_terms t ON t.id=l.required_package_term_id '
             .'JOIN ue_uedb5_dependency_edges e ON e.file_id=l.file_id AND e.source_kind=1 AND e.source_index=l.import_index '
-            .'WHERE f.game_id=? AND f.scan_status="verified" AND e.required_package_key_kind=1 '
-            .'AND e.required_package_key<>UNHEX(MD5(LOWER(TRIM(CONVERT(t.value_prefix USING utf8mb4)))))',[$gameId]
+            .'WHERE f.game_id=? AND f.scan_status="verified" AND ('
+            .'e.required_package_key_kind IS NULL OR e.required_package_key IS NULL '
+            .'OR e.required_package_key_kind<>1 '
+            .'OR e.required_package_key<>UNHEX(MD5(LOWER(TRIM(CONVERT(t.value_prefix USING utf8mb4))))))',[$gameId]
         );
     }
     /** @return array<string,mixed> */
@@ -420,14 +422,14 @@ final class Uedb5GameParityAuditService
             $missingInV5=array_values(array_diff($v4,$v5));
             $missingInV4=array_values(array_diff($v5,$v4));
             $expectedV5Only=[];$unexpectedV5Only=$missingInV4;$expectedRule=null;
-            if($scope==='names'&&$missingInV5===[]&&$missingInV4!==[]){
+            if(in_array($scope,['names','exports'],true)&&$missingInV5===[]&&$missingInV4!==[]){
                 $unexpectedV5Only=[];
                 foreach($missingInV4 as $fileId){
-                    $evidence=$this->v4CaseOnlyNameEvidence((int)$fileId,$query);
+                    $evidence=$this->v4CaseOnlyMetadataEvidence((int)$fileId,$scope,$query);
                     $rule=$evidence===null?null:Uedb5GameParityExpectedDifferences::classify(
                         $slug,'search_case_normalization',
-                        ['scope'=>'names','query'=>$query,'authoritative_name'=>$evidence['name_text']],
-                        ['scope'=>'names','normalized_authoritative_match'=>true]
+                        ['scope'=>$scope,'query'=>$query,'authoritative_name'=>$evidence['name_text']],
+                        ['scope'=>$scope,'normalized_authoritative_match'=>true]
                     );
                     if($rule!==null){
                         $expectedV5Only[]=(int)$fileId;$expectedFiles++;$expectedRule=$rule['id']??null;
@@ -454,17 +456,19 @@ final class Uedb5GameParityAuditService
     }
 
     /** @return array{name_text:string,name_index:int}|null */
-    private function v4CaseOnlyNameEvidence(int $fileId,string $query):?array
+    private function v4CaseOnlyMetadataEvidence(int $fileId,string $scope,string $query):?array
     {
         $normalized=$this->nameKey($query);if($normalized==='')return null;$candidate=null;
-        $s=$this->db->prepare('SELECT name_count FROM ue_files WHERE id=? LIMIT 1');
-        $s->execute([$fileId]);$nameCount=(int)$s->fetchColumn();
-        for($start=0;$start<$nameCount;$start+=5000){
-            foreach($this->v4->page($fileId,'names',$start,min(5000,$nameCount-$start)) as $row){
-                $text=(string)($row['name_text']??'');
-                if($text===$query)return null;
+        if($scope==='names'){$section='names';$countColumn='name_count';$textColumn='name_text';$indexColumn='name_index';}
+        elseif($scope==='exports'){$section='exports';$countColumn='export_count';$textColumn='object_name';$indexColumn='export_index';}
+        else return null;
+        $s=$this->db->prepare('SELECT '.$countColumn.' FROM ue_files WHERE id=? LIMIT 1');
+        $s->execute([$fileId]);$rowCount=(int)$s->fetchColumn();
+        for($start=0;$start<$rowCount;$start+=5000){
+            foreach($this->v4->page($fileId,$section,$start,min(5000,$rowCount-$start)) as $row){
+                $text=(string)($row[$textColumn]??'');if($text===$query)return null;
                 if($candidate===null&&$this->nameKey($text)===$normalized){
-                    $candidate=['name_text'=>$text,'name_index'=>(int)($row['name_index']??0)];
+                    $candidate=['name_text'=>$text,'name_index'=>(int)($row[$indexColumn]??0)];
                 }
             }
         }
