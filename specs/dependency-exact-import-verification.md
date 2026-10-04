@@ -26,6 +26,12 @@ The retail `ULinkerLoad::VerifyImport` proves this sequence:
 
 UT99 retail contains explicit historical exceptions: `UnrealShare -> UnrealI` hashing/package compatibility, `Mesh -> LodMesh`, and an UnrealI/UnrealShare shareware package fallback. These are UE1 retail rules, not generic Unreal rules.
 
+### UE1 reader admission invariant
+
+The same classic linker rule is also a package-integrity constraint, not merely a dependency-resolution rule. Unreal v1.200 `ULinkerLoad::VerifyImport` shows that for `Ver() >= 50`, a non-`None` Import with `PackageIndex == 0` must have class identity `Core.Package`; any non-root Import must have a negative parent Import index. UnrealDB's UE1 reader therefore rejects decoded Import tables that contradict those serialized relationships even when byte decoding reaches the declared row count without throwing.
+
+This prevents deterministic garbage (for example a zero-filled Import table whose compact name references all decode to the same valid Name entry) from being accepted only because the table is byte-readable. Unverified-to-verified promotion must re-run the current reader against the physical package bytes before moving the file or setting `scan_status=verified`; historical staging metadata is not sufficient admission evidence.
+
 ## UE2 / UE2.5 / UT2003 / UT2004
 
 Use the exact supplied revision's `VerifyImport`/linker implementation. Do not carry the UT99 historical hacks forward unless that source retains them. UE2-family verification still derives provider, object, class and outer relationships from import/export tables, but later code must be treated as its own contract.

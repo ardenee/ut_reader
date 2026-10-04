@@ -96,6 +96,13 @@ final class CatalogUnverifiedPromotion
             }
 
             $sourceRelativePath = \scanner_normalize_source_relative_path((string)($row['source_relative_path'] ?? ''));
+            $this->emit($emit, 'reader_validate', 16, 'Revalidating queued package bytes with the current reader');
+            $this->staging->parse(
+                (string)$prepared['path'],
+                (string)$prepared['name'],
+                $targetGameId,
+                $sourceRelativePath
+            );
             $detectedEngine = strtoupper((string)($classification['detected_engine'] ?? $row['detected_engine_key'] ?? ''));
             if (in_array($detectedEngine, ['UE4', 'UE5'], true) && $sourceRelativePath === '') {
                 throw new \RuntimeException(

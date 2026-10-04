@@ -361,6 +361,7 @@ abstract class CatalogLegacyPackageReaderBase
         $this->readNames($version);
         $this->readImports($version);
         $this->readExports($version);
+        $this->validateDecodedStructure($version);
     }
 
     private function readGuid(CatalogLegacyBinaryStream $reader): void
@@ -510,6 +511,31 @@ abstract class CatalogLegacyPackageReaderBase
                 'exportFlags' => 0,
             ];
         }
+    }
+
+    private function validateDecodedStructure(int $version): void
+    {
+        if ($this->engineKey !== 'UE1' || $version < 50) { return; }
+        $invalidRoot = $positiveOuter = $invalidParent = 0;
+        $rootExample = $outerExample = $parentExample = '';
+        $count = count($this->imports);
+        foreach ($this->imports as $index => $row) {
+            $cp = trim((string)($row['classPackageText'] ?? ''));
+            $cn = trim((string)($row['classNameText'] ?? ''));
+            $on = trim((string)($row['objectNameText'] ?? ''));
+            if (strcasecmp($cp, 'None') === 0 || strcasecmp($cn, 'None') === 0 || strcasecmp($on, 'None') === 0) { continue; }
+            $outer = (int)($row['outerIndex'] ?? 0);
+            if ($outer === 0 && (strcasecmp($cp, 'Core') !== 0 || strcasecmp($cn, 'Package') !== 0)) {
+                $invalidRoot++; if ($rootExample === '') { $rootExample = "index=$index class=$cp.$cn object=$on"; } continue;
+            }
+            if ($outer > 0) { $positiveOuter++; if ($outerExample === '') { $outerExample = "index=$index outer=$outer object=$on"; } continue; }
+            if ($outer < 0 && (-$outer - 1 < 0 || -$outer - 1 >= $count)) {
+                $invalidParent++; if ($parentExample === '') { $parentExample = "index=$index outer=$outer object=$on"; }
+            }
+        }
+        if ($invalidRoot > 0) $this->issues[] = "Invalid UE1 root import identity: count=$invalidRoot; expected Core.Package for PackageIndex=0; first $rootExample";
+        if ($positiveOuter > 0) $this->issues[] = "Invalid UE1 import parent index: count=$positiveOuter; expected negative parent or zero root; first $outerExample";
+        if ($invalidParent > 0) $this->issues[] = "Invalid UE1 import parent reference: count=$invalidParent; import_count=$count; first $parentExample";
     }
 
     private function validateTable(string $label, int $count, int $offset, int $fileSize): void
