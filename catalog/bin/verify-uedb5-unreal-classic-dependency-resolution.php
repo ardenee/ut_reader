@@ -123,6 +123,17 @@ $check(($ut3Unresolved[1]['status'] ?? null) === 'unresolved'
     && ($ut3Unresolved[1]['provider_package'] ?? null) === 'Provider'
     && ($ut3Unresolved[1]['provider_id'] ?? null) === null,
     'ut3_cooked_export_outer_retains_path_identity_but_stays_unresolved');
+$ut3RootExportOuter = $snapshot(
+    43004, 'Consumer', 'classic-linkerload', 'ue3.ut3', 'ue3-ut3-jan2008-package-v512',
+    [$import(0, 'Obj', 'Engine', 'MaterialInstanceConstant', 2)],
+    [$export(0, 'Provider', '0000000400000000'), $export(1, 'Group', '0000000400000000', 1)], 512
+);
+$ut3RootExport = Uedb5ClassicDependencyResolver::resolve($ut3RootExportOuter, []);
+$check(($ut3RootExport[0]['status'] ?? null) === 'unresolved'
+    && ($ut3RootExport[0]['reason'] ?? null) === 'ue3_cooked_export_outer'
+    && ($ut3RootExport[0]['provider_package'] ?? null) === 'Provider'
+    && ($ut3RootExport[0]['provider_id'] ?? null) === null,
+    'ut3_cooked_root_export_retains_getimportpathname_root_but_stays_unresolved');
 
 $ue4Imports = [
     $import(0, 'Provider', '/Script/CoreUObject', 'Package', 0),

@@ -303,11 +303,6 @@ final class CatalogCompactIdentityEnricher
             array_unshift($parts, $name);
             $outerIndex = (int)($row['outer_index'] ?? 0);
             if ($outerIndex === 0) {
-                if (!$isImport
-                    || strcasecmp(trim((string)($row['class_name'] ?? '')), 'Package') !== 0
-                    || strcasecmp(trim((string)($row['class_package'] ?? '')), 'Core') !== 0) {
-                    return ['root' => '', 'full' => '', 'relative' => ''];
-                }
                 break;
             }
             if ($outerIndex > 0 && $exports === []) {

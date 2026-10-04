@@ -42,7 +42,7 @@ Apply this operation only after the exact package reader has validated indices a
 | UE2.5 | Retains UE2 parent-chain path behavior. |
 | UT2003 | Retains the same signed parent traversal. |
 | UT2004 | Retains the same core UE2 path model. |
-| UE3 | Cooked/seek-free outer graphs can mix import and export package indices; path rendering can distinguish subobject boundaries. |
+| UE3 | Cooked/seek-free outer graphs can mix import and export package indices; `GetImportPathName` follows either resource kind until `ROOTPACKAGE_INDEX`, so an outermost export is a valid first path component, and path rendering can distinguish subobject boundaries. |
 | UE4 4.27.2 | Signed `FPackageIndex` traversal remains, with explicit package-name/external-package metadata and modern `BuildPathName` behavior. |
 
 Later cooked formats therefore require per-hop package-index resolution rather than an import-only parent walk.
