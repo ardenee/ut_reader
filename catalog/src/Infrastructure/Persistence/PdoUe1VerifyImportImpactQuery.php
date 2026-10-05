@@ -34,9 +34,10 @@ final class PdoUe1VerifyImportImpactQuery
             $s=$this->db->prepare($sql);$s->execute($chunk);
             while($r=$s->fetch(PDO::FETCH_ASSOC))$rows[]=$r;
         }
-        $reasons=[];
+        $reasons=[];$ut99Audited=[];
         foreach($rows as$r){
             $fid=(int)$r['file_id'];$policy=(string)$r['source_policy'];$version=(int)($r['package_version']??0);
+            if($policy===Uedb5Ut99SnapshotBuilder::POLICY_RETAIL)$ut99Audited[]=$fid;
             if($policy===Uedb5UnrealSnapshotBuilder::POLICY_V120_EARLY && $version>0 && $version<50){
                 $reasons[$fid]['ue1_pre50_pass1_reparse']=true;
                 continue;
@@ -48,8 +49,23 @@ final class PdoUe1VerifyImportImpactQuery
             }
             if((int)$r['has_import_edges']===1)$reasons[$fid]['ue1_source_implementation_unavailable']=true;
         }
+        foreach($this->meshConsumerFiles($ut99Audited)as$fid)$reasons[$fid]['ut99_mesh_rehack']=true;
         $counts=[];foreach($reasons as$set)foreach(array_keys($set)as$reason)$counts[$reason]=($counts[$reason]??0)+1;
         ksort($counts,SORT_STRING);
         return['reasons_by_file'=>$reasons,'reason_counts'=>$counts,'total'=>count($reasons),'candidate_count'=>count($ids)];
+    }
+
+    /** @param list<int> $fileIds @return list<int> */
+    private function meshConsumerFiles(array $fileIds): array
+    {
+        if($fileIds===[])return[];$hit=[];
+        foreach(array_chunk($fileIds,self::CHUNK)as$chunk){
+            $in=implode(',',array_fill(0,count($chunk),'?'));
+            $sql='SELECT DISTINCT l.file_id FROM ue_dependency_links l JOIN ue_terms t ON t.id=l.import_class_name_term_id '
+                .'WHERE l.file_id IN ('.$in.') AND t.value_length=4 AND LOWER(t.value_prefix)=?';
+            $st=$this->db->prepare($sql);$st->execute(array_merge($chunk,['mesh']));
+            while(($fid=$st->fetchColumn())!==false)$hit[(int)$fid]=true;
+        }
+        return array_map('intval',array_keys($hit));
     }
 }

@@ -80,7 +80,8 @@ $check('canonical_v4_rebuild_supports_exact_file_target',
     &&str_contains($cli,'PdoGameCatalogStats'));
 $check('worker_fingerprint_tracks_legacy_verifyimport_resolvers',
     str_contains($worker,'/src/Infrastructure/Persistence/PdoLegacyVerifyImportProjectionResolver.php')
-    &&str_contains($worker,'/src/Infrastructure/Persistence/PdoUe1VerifyImportProjectionResolver.php'));
+    &&str_contains($worker,'/src/Infrastructure/Persistence/PdoUe1VerifyImportProjectionResolver.php')
+    &&str_contains($worker,'/src/Infrastructure/Persistence/PdoUe2VerifyImportProjectionResolver.php'));
 
 echo json_encode(['ok'=>$failures===[],'checks'=>$checks,'failures'=>$failures],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;
 exit($failures===[]?0:1);

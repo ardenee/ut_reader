@@ -63,6 +63,25 @@ $unreal=Ue1::resolveInMemoryOutcome(Ue1::PROFILE_UNREAL_V120,$meshConsumer,$prov
 $check('ut99_mesh_to_lodmesh',($ut99[1]['export_index']??null)===0&&($ut99[1]['reason']??'')==='ut99_mesh_to_lodmesh');
 $check('unreal_v120_does_not_inherit_mesh_fallback',($unreal[1]['status']??'')==='runtime_only');
 
+$meshExact=[['export_index'=>0,'class_index'=>-6,'object_name'=>'LegacyModel','outer_index'=>0,'object_flags'=>4]];
+$ut99MeshExact=Ue1::resolveInMemoryOutcome(Ue1::PROFILE_UT99_V1400,$meshConsumer,$providerImports,$meshExact,'TestPkg',68,68);
+$check('ut99_public_mesh_is_retained_if_lodmesh_rehack_misses',
+    ($ut99MeshExact[1]['export_index']??null)===0
+    &&($ut99MeshExact[1]['reason']??'')==='ut99_mesh_exact_retained_after_lodmesh_rehack');
+$meshAndLod=[
+ ['export_index'=>0,'class_index'=>-6,'object_name'=>'LegacyModel','outer_index'=>0,'object_flags'=>4],
+ ['export_index'=>1,'class_index'=>-5,'object_name'=>'LegacyModel','outer_index'=>0,'object_flags'=>4],
+];
+$ut99MeshAndLod=Ue1::resolveInMemoryOutcome(Ue1::PROFILE_UT99_V1400,$meshConsumer,$providerImports,$meshAndLod,'TestPkg',68,68);
+$check('ut99_lodmesh_rehack_can_replace_public_mesh_match',
+    ($ut99MeshAndLod[1]['export_index']??null)===1
+    &&($ut99MeshAndLod[1]['reason']??'')==='ut99_mesh_to_lodmesh');
+$meshAndPrivateLod=$meshAndLod;$meshAndPrivateLod[1]['object_flags']=0;
+$ut99MeshPrivateLod=Ue1::resolveInMemoryOutcome(Ue1::PROFILE_UT99_V1400,$meshConsumer,$providerImports,$meshAndPrivateLod,'TestPkg',68,68);
+$check('ut99_private_lodmesh_rehack_fails_after_public_mesh_match',
+    ($ut99MeshPrivateLod[1]['status']??'')==='private_export'
+    &&($ut99MeshPrivateLod[1]['candidate_export_index']??null)===1);
+
 $private=$exports;$private[0]['object_flags']=0;
 $ut99=Ue1::resolveInMemoryOutcome(Ue1::PROFILE_UT99_V1400,$consumer,$providerImports,$private,'TestPkg',68,68);
 $check('ut99_private_export_fails_before_runtime_fallback',($ut99[1]['status']??'')==='private_export'&&($ut99[1]['candidate_export_index']??null)===0);
@@ -121,8 +140,8 @@ $check('v4_ue1_uses_profile_resolver_and_ut99_only_package_retry',
 $v5Resolver=(string)file_get_contents($root.'/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php');
 $pass2Service=(string)file_get_contents($root.'/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php');
 $check('ue1_does_not_consume_catalog_class_remap',
-    str_contains($v5Resolver,"\$classRemaps = \$engine === 'ue2' ?")
-    &&str_contains($pass2Service,"\$engine === 'UE2' && \$this->tableExists('ue_class_remaps')"));
+    str_contains($v5Resolver,"\$classRemaps = \$legacyPolicy !== null")
+    &&str_contains($pass2Service,"\$sourceKey === 'ut2004' && \$this->tableExists('ue_class_remaps')"));
 
 $ok=$failures===[];
 echo json_encode(['ok'=>$ok,'checks'=>$checks,'failures'=>$failures],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;

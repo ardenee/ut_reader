@@ -8,6 +8,7 @@ use UnrealDb\Catalog\Infrastructure\Metadata\PdoUedb5PhysicalProviderSelector;
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5MetadataSnapshotWriter;
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5SqlProjectionContract;
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5Ut4SnapshotBuilder;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5Unreal2SnapshotBuilder;
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5ZenPackageReader;
 
 $checks=[];$failures=[];
@@ -27,7 +28,8 @@ $db->exec('CREATE TABLE ue_uedb5_provider_keys(source_kind INTEGER,source_id INT
 $fname=static fn(string $text):array=>['text'=>$text];
 $snapshot=static function(
     int $fileId,string $packageName,array $imports,array $exports,
-    string $sourcePolicy='test-ue1-provider-selection',int $packageVersion=69
+    string $sourcePolicy='test-ue1-provider-selection',int $packageVersion=69,
+    int $gameId=3,string $schemaPrefix='ue1.ut99'
 )use($fname):array{
     foreach($imports as &$row){
         foreach(['class_package','class_name','object_name'] as $field){
@@ -38,11 +40,11 @@ $snapshot=static function(
         if(isset($row['object_name'])&&!is_array($row['object_name']))$row['object_name']=$fname((string)$row['object_name']);
     } unset($row);
     return [
-        'file'=>['id'=>$fileId,'game_id'=>3,'package_name'=>$packageName,'original_name'=>$packageName.'.u'],
+        'file'=>['id'=>$fileId,'game_id'=>$gameId,'package_name'=>$packageName,'original_name'=>$packageName.'.u'],
         'package_family'=>'classic-linkerload','source_policy'=>$sourcePolicy,
         'section_schemas'=>[
-            'summary'=>'ue1.ut99.package-summary.v1','names'=>'ue1.ut99.name-entry.v1',
-            'imports'=>'ue1.ut99.object-import.v1','exports'=>'ue1.ut99.object-export.v1',
+            'summary'=>$schemaPrefix.'.package-summary.v1','names'=>$schemaPrefix.'.name-entry.v1',
+            'imports'=>$schemaPrefix.'.object-import.v1','exports'=>$schemaPrefix.'.object-export.v1',
         ],
         'sections'=>[
             'summary'=>[['package_version'=>$packageVersion]],'names'=>[],
@@ -145,6 +147,27 @@ $db->prepare('INSERT INTO ue_files VALUES(?,?,?,?,?,?,?)')->execute([26,3,'verif
 $db->prepare('INSERT INTO ue_uedb5_files VALUES(?,?,?)')->execute([26,3,'UnverifiedFallbackConsumer']);
 $unverifiedFallback=(new PdoUedb5PhysicalProviderSelector($db,$tmp))->select(3,26);
 $check('ut99_unverified_later_source_does_not_inherit_v1400_package_fallback',$unverifiedFallback===[]);
+
+$writer->write($snapshot(27,'Unreal2FallbackConsumer',$unrealIFallbackImports,[],Uedb5Unreal2SnapshotBuilder::POLICY_V69_2000,69,2,'ue2.unreal2'));
+$writer->write($snapshot(28,'UnrealShare',[],[$export(0,'LegacyTex')],Uedb5Unreal2SnapshotBuilder::POLICY_V69_2000,69,2,'ue2.unreal2'));
+foreach([[27,'Unreal2FallbackConsumer'],[28,'UnrealShare']] as [$id,$name]){
+    $db->prepare('INSERT INTO ue_files VALUES(?,?,?,?,?,?,?)')->execute([$id,2,'verified','2026-10-02 13:47:00',$id,md5((string)$id),sha1((string)$id)]);
+    $db->prepare('INSERT INTO ue_uedb5_files VALUES(?,?,?)')->execute([$id,2,$name]);
+}
+$db->prepare('INSERT INTO ue_uedb5_provider_keys VALUES(?,?,?,?,?,?)')
+    ->execute([1,28,2,$classic,md5('unrealshare',true),28]);
+$unreal2Fallback=(new PdoUedb5PhysicalProviderSelector($db,$tmp))->select(2,27);
+$check('unreal2_v69_unreali_package_load_retries_unrealshare',
+    count($unreal2Fallback)===1
+    &&($unreal2Fallback[0]['selection_status']??'')==='selected'
+    &&(int)($unreal2Fallback[0]['file_id']??0)===28
+    &&($unreal2Fallback[0]['source_fallback_package_name']??'')==='UnrealShare');
+
+$writer->write($snapshot(29,'Unreal2V126Consumer',$unrealIFallbackImports,[],Uedb5Unreal2SnapshotBuilder::SOURCE_POLICY,126,2,'ue2.unreal2'));
+$db->prepare('INSERT INTO ue_files VALUES(?,?,?,?,?,?,?)')->execute([29,2,'verified','2026-10-02 13:48:00',29,md5('29'),sha1('29')]);
+$db->prepare('INSERT INTO ue_uedb5_files VALUES(?,?,?)')->execute([29,2,'Unreal2V126Consumer']);
+$unreal2UnverifiedFallback=(new PdoUedb5PhysicalProviderSelector($db,$tmp))->select(2,29);
+$check('unreal2_v126_does_not_inherit_v69_package_fallback',$unreal2UnverifiedFallback===[]);
 
 $ut4=[
     'file'=>['id'=>30,'game_id'=>7,'package_name'=>'/Game/Empty','original_name'=>'Empty.uasset'],

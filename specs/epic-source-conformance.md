@@ -32,7 +32,7 @@ No reviewed source path tries every same-package physical file and chooses the f
 |---|---|---|---|
 | Unreal / Unreal Gold UE1 | `L:\Source\Games\Unreal\Unreal [v1.200] [1998-05-19]\Core\Src\UnLinker.h`, `UnObj.cpp`; v1.227 header also inspected | **partial source coverage** | v1.200 implementation proves one-linker-first selection. The supplied v1.227 subtree exposes `VerifyImport` declarations but no implementation body was found, so 227-specific provider-selection deltas remain open. Do not substitute UT99 behavior for that missing body. |
 | UT99 v1.400 | `L:\Source\Games\UT99\Unreal Tournament [v1.400] [1999-11-30]\Core\Src\UnLinker.h`, `UnObj.cpp` | **source-confirmed** | One `GetPackageLinker`; child imports inherit parent `SourceLinker`. |
-| Unreal II / UE2 | `L:\Source\Games\Unreal II\...\Core\Src\UnLinker.cpp`, `UnObj.cpp` | **source-confirmed** | One package linker precedes export matching. |
+| Unreal II / UE2 | `L:\Source\Games\Unreal II\Unreal II The Awakening [12-09-2000]\Unreal2_old\Core\Src\UnLinker.cpp`, `UnObj.cpp`, `Core\Inc\UnObjVer.h` | **partial source coverage** | Latest complete local linker is package v69 (loadable v60-69 for this audit). The newer/final v70-128 packages do not have a complete local UE2 `VerifyImport` implementation and therefore fail closed for object verification. |
 | UT2003 v2107 | `L:\Source\Games\UT2003\...\Core\Src\UnLinker.cpp`, `UnObj.cpp` | **source-confirmed** | One package linker; no catalogue coverage ranking. |
 | UT2004 v3369 / UE2.5 | `L:\Source\Games\UT2004\...\Core\Src\UnLinker.cpp`, `UnObj.cpp` | **source-confirmed** | One package linker; generation/file lookup is runtime environment state. |
 | UT3 Jan-2008 / UE3 | `L:\Source\Engine\UE3\Unreal Engine [v3.0] [01-00-2008]\...\Core\Src\UnLinker.cpp` | **source-confirmed** | `VerifyImportInner` selects one package linker, then verifies imports. |
@@ -71,9 +71,9 @@ No reviewed source path tries every same-package physical file and chooses the f
 - UE5 Zen duplicates are treated the same way at the physical catalogue boundary; `PublicExportHash` remains an object lookup inside an already-established `FPackageId` provider and never selects a provider file.
 - Cross-game repair candidate validation uses the target profile's UE1/UE2, UE3, or UE4 source-backed VerifyImport resolver. Unsupported profiles fail closed; generic path/class coverage cannot certify or queue a dependency-complete repair candidate.
 
-## Section 2 — provider identity derivation and package-loading transformations
+## Section 2 ï¿½ provider identity derivation and package-loading transformations
 
-### Section 2A — UE1/UE2/UE3 classic identity and load-time transformations
+### Section 2A ï¿½ UE1/UE2/UE3 classic identity and load-time transformations
 
 **Status: complete and source-confirmed for the active UE1/UE2/UE3 profiles covered below.** This subsection records the 2A checkpoint; Section 2B1 below extends the same exact-FName conclusion to UE4/UE5 classic only after their own source audit.
 
@@ -104,7 +104,7 @@ At the 2A checkpoint, UEDB5 introduced package-key kind `3` for exact-text, case
 
 `diagnose-classic-source-identity-impact.php` exposes the bounded proof read-only. It requires the UEDB5 staging/status schema in the database to which the checkout is connected.
 
-### Section 2B1 — UE4/UE5 classic PackageName and load-time identity transformations
+### Section 2B1 ï¿½ UE4/UE5 classic PackageName and load-time identity transformations
 
 **Status: complete and source-confirmed for UE4 4.27.2 and UE5 5.8.3 classic LinkerLoad packages.** Zen/IoStore remains Section 2B2 and is not changed by this checkpoint.
 
@@ -126,7 +126,7 @@ At the 2A checkpoint, UEDB5 introduced package-key kind `3` for exact-text, case
 
 #### V5 projection and bounded migration boundary
 
-All classic LinkerLoad schemas—UE1, UE2, UE3, UE4, and UE5 classic—now use package-key kind `3`, generated through the shared PHP exact-FName key function. UE5 Zen/IoStore remains keyed by `FPackageId` and is explicitly excluded from this transition.
+All classic LinkerLoad schemasï¿½UE1, UE2, UE3, UE4, and UE5 classicï¿½now use package-key kind `3`, generated through the shared PHP exact-FName key function. UE5 Zen/IoStore remains keyed by `FPackageId` and is explicitly excluded from this transition.
 
 Pass 2 is therefore `uedb5-dependency-pass-v4`. `transition-uedb5-source-identity-policy.php` accepts v1, v2, or v3 checkpoints and remains bounded:
 
@@ -169,7 +169,7 @@ Commit checkpoint: `c9adfc35` (`Align Zen package-store redirects with source`).
 1. **Pre-50 Unreal ImportMap layout is different.** Unreal v1.200 serializes `_ObjectPackage` as an `FName` when `Ar.Ver() < 50`; `PackageIndex` is not serialized and is set to zero on load. The legacy reader, V4 parsed snapshot, unverified snapshot and UEDB5 legacy snapshot now preserve this exact field boundary instead of decoding the third import field as an `INT OuterIndex`.
 2. **Direct `NAME_None` and `NAME_None` ancestry are different operations.** `VerifyImport()` returns immediately for a direct import whose `ClassPackage`, `ClassName` or `ObjectName` is `NAME_None`. A child of such an import is not itself source-irrelevant: recursive verification returns without establishing the parent `SourceLinker`, so the child fails the parent-linker requirement. The old generic `source_irrelevant_name_none_ancestor` UE1 rule is removed.
 3. **UT99 v1.400 preserves ExportHash visit order.** Matching uses the source hash traversal, which visits later prepended matching export indices first. Unreal v1.200 uses its own source scan order; UnrealDB no longer shares a generic UE1/UE2 candidate-order rule.
-4. **UT99-only compatibility remains UT99-only.** v1.400 supports the `UnrealI`/`UnrealShare` class-package hash compatibility, retries a failed `UnrealI` package load as `UnrealShare`, and retries class `Mesh` as `LodMesh`. These are not inherited by Unreal or UE2 profiles.
+4. **UT99 v1.400 compatibility is profile-specific.** v1.400 supports the `UnrealI`/`UnrealShare` class-package hash compatibility and retries a failed `UnrealI` package load as `UnrealShare`. Its `Mesh` branch is an **unconditional Rehack pass**: after the Mesh hash pass, `ClassName` is changed to `LodMesh` and the hash lookup runs again. A LodMesh match can replace an earlier public Mesh match, a private LodMesh match can still fail the import, and an earlier public Mesh match is retained only when the LodMesh pass finds nothing. Unreal v1.200 does not inherit these rules. UE2 profiles are audited separately rather than inheriting UT99 behavior.
 5. **Unreal v1.200 keeps its own old-version fallback.** The source retry for texture/sound-family classes can bind by object/class identity without reapplying the normal outer/public checks in that legacy branch. That rule is confined to the v1.200 profile.
 6. **Private exports remain source failures.** A direct identity/outer match that is not `RF_Public` is rejected before runtime fallback; UnrealDB does not continue searching for a different public duplicate.
 7. **A file-backed miss is not automatically proven missing.** After direct source matching/fallbacks fail, both audited UE1 implementations can consult runtime-loaded/native/transient class/object state and SafeReplace behavior. Static UnrealDB now reports that remaining path as unresolved/runtime unavailable rather than inventing a hard missing result.
@@ -178,7 +178,7 @@ Commit checkpoint: `c9adfc35` (`Align Zen package-store redirects with source`).
 
 #### Bounded migration boundary
 
-Pass 2 is `uedb5-dependency-pass-v5`. The existing transition now accepts v1-v4 and moves directly to v5:
+Section 3A1 introduced Pass 2 `uedb5-dependency-pass-v5`; Section 3A2 now supersedes it with `uedb5-dependency-pass-v6`. The 3A1 transition accepted v1-v4 and moved them to v5:
 
 - previous provider/source-FName transition rules remain intact;
 - audited UE1 files are rebuilt only when their staged dependency edges contain `missing` or `unresolved` outcomes that can change under the source-exact verifier;
@@ -190,4 +190,41 @@ Pass 2 is `uedb5-dependency-pass-v5`. The existing transition now accepts v1-v4 
 
 The connected development catalogue currently contains no verified Unreal file below package version 50, so the pre-50 repair path is a guarded source-correct boundary rather than a current bulk reparse requirement.
 
-**Next audit checkpoint: Section 3A2 - UE2 only (Unreal II and UT2003), each against its own latest complete local implementation.**
+A follow-up source-order review during 3A2 found that UT99's `Mesh -> LodMesh` branch is unconditional even after a public Mesh match. That delta is carried by Pass-2 policy v6 and is targeted through indexed Mesh-import consumers; the rest of the 3A1 v5 transition remains valid.
+
+### Section 3A2 - UE2 VerifyImport: Unreal II and UT2003
+
+**Status: complete for the exact UE2 implementations locally available. Unreal II final-package VerifyImport remains source-unverified beyond the v69 implementation; UT2003 v2107 is source-confirmed through package v120. UT2004/UE2.5 is deliberately deferred to 3A3.**
+
+#### Source authority and version boundary
+
+- **Unreal II:** the newer local `Unreal II The Awakening [01-07-2003]` tree does not contain a usable UE2 linker implementation and is not accepted as dependency authority. The latest complete local UE2 `VerifyImport` body is `L:\Source\Games\Unreal II\Unreal II The Awakening [12-09-2000]\Unreal2_old\Core\Src\UnLinker.cpp`; its `UnObjVer.h` declares `PACKAGE_FILE_VERSION 69`, `PACKAGE_MIN_VERSION 60`, and licensee version `0x7F`. UnrealDB applies this VerifyImport profile only to package versions 60-69. Later Unreal II package versions are not assigned v69 semantics.
+- **UT2003:** `L:\Source\Games\UT2003\Unreal Tournament 2003 [v2107] [2002-10-01]\Core\Src\UnLinker.cpp` is complete; `UnObjVer.h` declares `PACKAGE_FILE_VERSION 120`, `PACKAGE_MIN_VERSION 60`, and licensee version `0x1C`. UnrealDB applies the v2107 VerifyImport contract only to package versions 60-120. Later packages do not inherit it.
+- **UT2004/UE2.5:** no 3A2 rule is derived from either Unreal II or UT2003. Its existing legacy resolver remains isolated until Section 3A3 audits the UT2004 source directly.
+
+#### Source results and corrections
+
+1. **The profiles have separate parent-linker behavior.** Both recursively verify a negative `PackageIndex` parent, but Unreal II v69 asserts that the inherited parent `SourceLinker` exists. UT2003 v2107 has that assertion commented out and guards the subsequent export lookup with `if (Import.SourceLinker)`, so a source-linker-less parent is tolerated rather than treated as the Unreal II assertion boundary.
+2. **Direct `NAME_None` still returns immediately.** This does not justify a generic ancestor exemption. The descendant outcome follows each profile's real parent-linker behavior above.
+3. **Both audited profiles use `ExportHash` prepend order.** Later matching export indices are visited before earlier entries in the same hash chain; catalogue order must not replace this source order.
+4. **Unreal II v69 retains old UnrealI/UnrealShare compatibility.** Its `HashNames` maps `UnrealShare` class-package hashing to `UnrealI`, its class comparison accepts `UnrealShare` for an `UnrealI` import, and a failed top-level `UnrealI` package load retries `UnrealShare`. UT2003 v2107 contains none of these compatibility branches.
+5. **Mesh -> LodMesh is an unconditional Rehack in both audited UE2 profiles.** The source performs the Mesh hash pass, then changes `ClassName` to `LodMesh` and jumps back through lookup regardless of whether Mesh matched. A LodMesh result can replace a public Mesh result; a private LodMesh can fail after a public Mesh match; if LodMesh does not match, the earlier public Mesh source index remains.
+6. **Private exports are rejected by both audited profiles.** The earlier UnrealDB assumption that Unreal II accepted a private export was incorrect for the latest complete Unreal II v69 source. A matching non-`RF_Public` export enters the source failure/forgiving path before runtime recovery.
+7. **A file miss is runtime-dependent, not automatically hard-missing.** Both sources can search public native transient objects/classes and execute SafeReplace/forgiving behavior. Static UnrealDB therefore reports the residual branch unresolved/runtime-unavailable instead of fabricating a definite miss.
+8. **Catalogue ClassRemap is not part of these audited VerifyImport paths.** Unreal II/UT2003 no longer fetch or apply the administrator ClassRemap map. The remaining legacy ClassRemap plumbing is isolated to the not-yet-audited UT2004 path and will be decided in 3A3 from UT2004 source.
+9. **All production paths use the same profile boundary.** V4 dependency rebuilding, UEDB5 Pass 2, physical provider fallback, local/self-provider publication, and cross-game dependency certification dispatch through the exact Unreal II-v69/UT2003-v2107 profiles. Source-unverified later versions fail closed rather than falling back to the shared legacy UE2 resolver.
+
+#### Bounded migration boundary
+
+Pass 2 is now `uedb5-dependency-pass-v6`, and the transition accepts v1-v5:
+
+- v5 UE1 rows retain the completed 3A1 corrections and are rebuilt only for the newly identified UT99 `Mesh` Rehack delta;
+- UE2 impact is selected from staged SQL by exact file ID and only when an Unreal II/UT2003 file has object dependency edges whose VerifyImport semantics can change;
+- the three currently catalogued Unreal II files at package versions 60/68/69 require exact Pass-1 restage so their snapshot `source_policy` records the v69 source profile; this is an exact-file operation, not a game-wide reparse;
+- later Unreal II and UT2003 packages require Pass-2 dependency rebuild only; their package serialization is not reparsed solely to mark unsupported VerifyImport behavior;
+- unaffected rows roll forward without opening UEDB/package containers;
+- optional V4 repair remains exact-file only for the same impacted consumer IDs.
+
+This transition deliberately does **not** include UT2004. Section 3A3 must derive its resolver and any migration impact from the UT2004/UE2.5 source itself.
+
+**Next audit checkpoint: Section 3A3 - UT2004 / UE2.5 VerifyImport only, against the latest complete local UT2004 source.**

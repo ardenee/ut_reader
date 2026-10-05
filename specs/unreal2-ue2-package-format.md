@@ -16,6 +16,8 @@ The repository also contains older dated Unreal II trees. Their behavior is not 
 
 This is an **Unreal II-specific UE2 specification**. UT2003, UT2004, and generic UE2/UE2.5 behavior must not be inferred from it.
 
+> **3A2 source-authority correction:** the `01-07-2003` tree used by this older package-format document does not provide a usable UE2 `VerifyImport` implementation. It must therefore not be cited as dependency/import-resolution authority. The dependency contract is now `unreal2-ue2-dependency-resolution.md`, sourced from the latest complete local UE2 linker (`12-09-2000`, package v69). Package-format claims in this file are retained pending a separate first-principles serialization re-audit; they do not prove v126 `VerifyImport` behavior.
+
 ## Authoritative source references
 
 | Area | Source |
@@ -277,7 +279,7 @@ Package bytes provide the serialized summary, tables, names, object references, 
 
 Runtime context determines such things as edit/client/server name filtering, object/class availability, object construction, and import verification.
 
-No generic configuration-driven class remap is part of the package format. In this Unreal II source's `VerifyImport`, a `ClassRemap` block exists only inside `#if 0 //!!MERGE`; it is disabled and is therefore **not active behavior**. UnrealDB must not implement it as an Unreal II fallback.
+Configuration-driven class remapping is not serialized package identity. The previous `VerifyImport` claim in this section came from the non-authoritative v126-era tree and is superseded for dependency resolution by `unreal2-ue2-dependency-resolution.md`. The audited v69 production profile does not consume UnrealDB's administrator ClassRemap map.
 
 ## UnrealDB conformance requirements
 
@@ -296,7 +298,7 @@ For this Unreal II source target, UnrealDB should:
 11. expose exact payload spans;
 12. treat payload-size mismatch according to the Unreal II source when modeling engine behavior;
 13. not invent ClassRemap behavior from the disabled block;
-14. keep Unreal II rules separate from UT2003, UT2004, and UE2.5 rules;
+14. keep Unreal II package-format rules separate from UT2003, UT2004, and UE2.5 rules, and do not use this v126-era document as VerifyImport authority;
 15. optionally reproduce QuickMD5 exactly if UnrealDB needs source-compatible structural identity.
 
 ## Source-reference matrix
@@ -317,8 +319,8 @@ For this Unreal II source target, UnrealDB should:
 | QuickMD5 | same constructor; `ULinker::QuickMD5` |
 | payload boundary/mismatch behavior | `ULinkerLoad::Preload` |
 | missing-class behavior | `ULinkerLoad::CreateExport` |
-| disabled ClassRemap | `ULinkerLoad::VerifyImport`, `#if 0 //!!MERGE` |
+| dependency/VerifyImport authority | Superseded by `unreal2-ue2-dependency-resolution.md`; the v126-era tree is not accepted as a complete VerifyImport implementation |
 
 ## Deferred
 
-The next specification covers **Unreal II dependency and import resolution**. It must use this same source tree and must document the actual Unreal II `VerifyImport` behavior rather than copying UT99 fallback rules.
+Dependency and import resolution is documented separately in `unreal2-ue2-dependency-resolution.md`. Section 3A2 re-audited that operation against the latest complete local UE2 linker (12-09-2000, package v69) rather than inheriting claims from this v126-era package-format tree.

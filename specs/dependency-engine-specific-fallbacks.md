@@ -51,9 +51,9 @@ The UT99 baseline fallbacks remain documented above, but later source changes th
 
 | Revision | Source-backed fallback/compatibility notes |
 |---|---|
-| Unreal II | **Removes** active UnrealI/UnrealShare compatibility. Retains `Mesh -> LodMesh`, provider-root outer acceptance, runtime native/transient binding, broad SafeReplace and forgiving broken-link handling. ClassRemap/PackageRemap code present in this source is disabled. |
-| UE2.5 | Retains Mesh->LodMesh, provider-root outer acceptance, runtime binding, broad SafeReplace and forgiving mode. No active generic ClassRemap/PackageRemap or UnrealI/UnrealShare compatibility. |
-| UT2003 | Same core import fallbacks; additionally a runtime `GObjPackageRemap` retry exists in StaticLoadObject **outside VerifyImport**. |
+| Unreal II v69 (12-09-2000) | Retains the historical `UnrealI` -> `UnrealShare` package-load retry, UnrealShare-to-UnrealI hash normalization and the UnrealI/UnrealShare class-package match. Retains provider-root outer acceptance, runtime native/transient binding, broad SafeReplace and forgiving broken-link handling. `Mesh -> LodMesh` is an unconditional second hash pass. This profile is limited to package versions 60-69; later Unreal II versions are source-unverified. |
+| UE2.5 / UT2004 | Deferred to 3A3. Do not inherit either Unreal II or UT2003 fallbacks before the UT2004 source is audited directly. |
+| UT2003 v2107 | No UnrealI/UnrealShare compatibility. Retains root-outer acceptance, runtime native/transient binding, broad SafeReplace/forgiving behavior, and an unconditional `Mesh -> LodMesh` Rehack. A runtime `GObjPackageRemap` retry exists in `StaticLoadObject` **outside VerifyImport**. This VerifyImport profile is bounded to package versions 60-120. |
 | UT2004 | Same core import fallbacks; reviewed ClassRemap/PackageRemap are not active in VerifyImport and UnrealI/UnrealShare compatibility is absent. |
 | UE3 | Adds source-defined import fixups/remapping, UObjectRedirector fallback and cooked/seek-free/runtime conditions. |
 | UE4 4.27.2 | Adds CoreRedirects, instancing/package remapping, script/native/in-memory handling and external-package cases. No arbitrary fuzzy fallback is source-backed. |

@@ -151,16 +151,54 @@ $check(($noneAncestorResolved[1]['reason'] ?? null) === 'source_irrelevant_name_
 
 $unreal2Consumer = $snapshot(
     42001, 'Consumer', 'classic-linkerload', 'ue2.unreal2', 'ue2-unreal2-package-v126',
-    $consumerImports, []
+    $consumerImports, [], 126
 );
 $unreal2Private = $snapshot(
     42002, 'Provider', 'classic-linkerload', 'ue2.unreal2', 'ue2-unreal2-package-v126',
-    [], [$export(0, 'Obj', '00000000')]
+    [], [$export(0, 'Obj', '00000000')], 126
 );
 $unreal2 = Uedb5ClassicDependencyResolver::resolve($unreal2Consumer, [[
     'package_name'=>'Provider','provider_id'=>42002,'snapshot'=>$unreal2Private,
 ]]);
-$check(($unreal2[1]['status'] ?? null) === 'resolved', 'unreal2_private_export_exception_is_preserved');
+$check(($unreal2[1]['status'] ?? null) === 'unresolved'
+    && ($unreal2[1]['reason'] ?? null) === 'ue2_verify_import_source_implementation_unavailable',
+    'unreal2_v126_does_not_inherit_v69_verify_import');
+$unreal2V69Consumer = $snapshot(
+    42003, 'Consumer69', 'classic-linkerload', 'ue2.unreal2', 'ue2-unreal2-2000-12-09-package-v69',
+    $consumerImports, [], 69
+);
+$unreal2V69Private = $snapshot(
+    42004, 'Provider', 'classic-linkerload', 'ue2.unreal2', 'ue2-unreal2-2000-12-09-package-v69',
+    [], [$export(0, 'Obj', '00000000')], 69
+);
+$unreal2V69 = Uedb5ClassicDependencyResolver::resolve($unreal2V69Consumer, [[
+    'package_name'=>'Provider','provider_id'=>42004,'snapshot'=>$unreal2V69Private,
+]]);
+$check(($unreal2V69[1]['status'] ?? null) === 'missing'
+    && ($unreal2V69[1]['reason'] ?? null) === 'verify_import_private_export',
+    'unreal2_v69_private_export_is_rejected');
+$ut2003V120 = $snapshot(
+    42005, 'Consumer120', 'classic-linkerload', 'ue2.ut2003', 'ue2-ut2003-v2107-package-v120',
+    $consumerImports, [], 120
+);
+$ut2003Provider = $snapshot(
+    42006, 'Provider', 'classic-linkerload', 'ue2.ut2003', 'ue2-ut2003-v2107-package-v120',
+    [], [$export(0, 'Obj', '00000004')], 120
+);
+$ut2003Resolved = Uedb5ClassicDependencyResolver::resolve($ut2003V120, [[
+    'package_name'=>'Provider','provider_id'=>42006,'snapshot'=>$ut2003Provider,
+]]);
+$check(($ut2003Resolved[1]['status'] ?? null) === 'resolved', 'ut2003_v120_uses_v2107_verify_import');
+$ut2003V121 = $snapshot(
+    42007, 'Consumer121', 'classic-linkerload', 'ue2.ut2003', 'ue2-ut2003-forward-loader-compatible',
+    $consumerImports, [], 121
+);
+$ut2003Unverified = Uedb5ClassicDependencyResolver::resolve($ut2003V121, [[
+    'package_name'=>'Provider','provider_id'=>42006,'snapshot'=>$ut2003Provider,
+]]);
+$check(($ut2003Unverified[1]['status'] ?? null) === 'unresolved'
+    && ($ut2003Unverified[1]['reason'] ?? null) === 'ue2_verify_import_source_implementation_unavailable',
+    'ut2003_v121_does_not_inherit_v2107_verify_import');
 
 $ut3Consumer = $snapshot(
     43001, 'Consumer', 'classic-linkerload', 'ue3.ut3', 'ue3-ut3-jan2008-package-v512',

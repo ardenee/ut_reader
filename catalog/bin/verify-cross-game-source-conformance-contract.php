@@ -7,8 +7,18 @@ $checks=[];$failures=[];
 $check=static function(string $name,bool $ok)use(&$checks,&$failures):void{
     $checks[$name]=$ok;if(!$ok)$failures[]=$name;
 };
-$check('cross_game_ue1_ue2_uses_verify_import',
-    str_contains($source,'PdoLegacyVerifyImportProjectionResolver::resolveProviderVariants'));
+$check('cross_game_ue1_ue2_use_profiled_verify_import',
+    str_contains($source,'PdoUe1VerifyImportProjectionResolver::resolveProviderOutcome')
+    && str_contains($source,'PdoUe2VerifyImportProjectionResolver::resolveProviderOutcome')
+    && str_contains($source,'ue1VerifyImportProfile')
+    && str_contains($source,'ue2VerifyImportProfile'));
+$check('cross_game_legacy_ue2_path_is_ut2004_only',
+    str_contains($source,"return \$sourceKey === 'ut2004' ? 'standard' : null;")
+    && str_contains($source,'PdoLegacyVerifyImportProjectionResolver::resolveProviderVariants'));
+$check('cross_game_source_unverified_ue1_ue2_fail_closed',
+    str_contains($source,"\$targetEngine === 'UE1' && \$ue1Profile !== null")
+    && str_contains($source,"\$targetEngine === 'UE2' && \$ue2Profile !== null")
+    && str_contains($source,'cannot be certified or queued as dependency-complete here'));
 $check('cross_game_ue3_uses_verify_import',
     str_contains($source,'PdoUe3VerifyImportProjectionResolver::resolveProvider'));
 $check('cross_game_ue4_uses_verify_import',

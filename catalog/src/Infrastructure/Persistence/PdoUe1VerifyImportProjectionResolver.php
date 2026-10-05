@@ -246,10 +246,17 @@ final class PdoUe1VerifyImportProjectionResolver
             $consumerVersion,
             $providerVersion
         );
-        if ($match['status'] === 'resolved' || $match['status'] === 'private_export') {
+        $ut99Mesh = $profile === self::PROFILE_UT99_V1400
+            && self::same((string)($import['class_name'] ?? ''), 'Mesh');
+        if ($match['status'] === 'private_export') {
             unset($resolving[$index]);
             return $results[$index] = $match + ['source_linker' => $sourceLinker];
         }
+        if ($match['status'] === 'resolved' && !$ut99Mesh) {
+            unset($resolving[$index]);
+            return $results[$index] = $match + ['source_linker' => $sourceLinker];
+        }
+        $meshMatch = $match['status'] === 'resolved' ? $match : null;
 
         if ($profile === self::PROFILE_UNREAL_V120 && self::usesUnrealLegacyOuterFallback($import)) {
             $legacy = self::findUnrealLegacyNoOuterMatch($import, $exports);
@@ -264,8 +271,7 @@ final class PdoUe1VerifyImportProjectionResolver
             }
         }
 
-        if ($profile === self::PROFILE_UT99_V1400
-            && self::same((string)($import['class_name'] ?? ''), 'Mesh')) {
+        if ($ut99Mesh) {
             $lodImport = $import;
             $lodImport['class_name'] = 'LodMesh';
             $lod = self::findDirectMatch(
@@ -282,6 +288,11 @@ final class PdoUe1VerifyImportProjectionResolver
                     ? 'ut99_mesh_to_lodmesh'
                     : 'private_export';
                 return $results[$index] = $lod + ['source_linker' => $sourceLinker];
+            }
+            if (is_array($meshMatch)) {
+                unset($resolving[$index]);
+                $meshMatch['reason'] = 'ut99_mesh_exact_retained_after_lodmesh_rehack';
+                return $results[$index] = $meshMatch + ['source_linker' => $sourceLinker];
             }
         }
 

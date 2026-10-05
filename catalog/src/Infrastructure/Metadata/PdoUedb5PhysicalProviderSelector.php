@@ -80,11 +80,11 @@ final class PdoUedb5PhysicalProviderSelector
             );
             $sourceFallback = null;
             if ($candidates === []
-                && self::usesUt99V1400VerifyImport($consumer)
+                && self::usesUnrealIToUnrealSharePackageFallback($consumer)
                 && self::sameFname((string)$packageName, 'UnrealI')) {
-                // UT99 v1.400 GetPackageLinker catches a failed UnrealI load and
-                // retries the package as UnrealShare. This is a package-load
-                // fallback, not content scoring and not a generic UE1 alias.
+                // The exact audited source profile catches a failed UnrealI package load and
+                // retries as UnrealShare. This is source-specific package loading,
+                // not content scoring and not a generic classic-package alias.
                 $fallbackName = 'UnrealShare';
                 $fallbackKey = Uedb5SqlProjectionContract::classicPackageKeyBinary($fallbackName, $packageKeyKind);
                 $candidates = $this->candidateRows(
@@ -199,12 +199,14 @@ final class PdoUedb5PhysicalProviderSelector
             Uedb5ClassicDependencyResolver::resolve($snapshot, $providers, $options);
     }
 
-    private static function usesUt99V1400VerifyImport(array $snapshot): bool
+    private static function usesUnrealIToUnrealSharePackageFallback(array $snapshot): bool
     {
         $schema = strtolower(trim((string)($snapshot['section_schemas']['imports'] ?? '')));
         $policy = strtolower(trim((string)($snapshot['source_policy'] ?? '')));
-        return str_starts_with($schema, 'ue1.ut99.')
-            && $policy === strtolower(Uedb5Ut99SnapshotBuilder::POLICY_RETAIL);
+        return (str_starts_with($schema, 'ue1.ut99.')
+                && $policy === strtolower(Uedb5Ut99SnapshotBuilder::POLICY_RETAIL))
+            || (str_starts_with($schema, 'ue2.unreal2.')
+                && $policy === strtolower(Uedb5Unreal2SnapshotBuilder::POLICY_V69_2000));
     }
 
     private static function sameFname(string $a, string $b): bool

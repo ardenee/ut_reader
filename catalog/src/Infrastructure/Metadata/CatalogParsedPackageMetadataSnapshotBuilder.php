@@ -314,6 +314,32 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
         return null;
     }
 
+    private static function ue2VerifyImportProfile(int $gameId, ?int $packageVersion): ?string
+    {
+        if ($packageVersion === null || $packageVersion <= 0) { return null; }
+        try {
+            $sourceKey = Uedb5GameSourceRegistry::sourceKey($gameId);
+        } catch (\Throwable) {
+            return null;
+        }
+        if ($sourceKey === 'unreal2' && $packageVersion >= 60 && $packageVersion <= 69) {
+            return \UnrealDb\Catalog\Infrastructure\Persistence\PdoUe2VerifyImportProjectionResolver::PROFILE_UNREAL2_V69_2000;
+        }
+        if ($sourceKey === 'ut2003' && $packageVersion >= 60 && $packageVersion <= 120) {
+            return \UnrealDb\Catalog\Infrastructure\Persistence\PdoUe2VerifyImportProjectionResolver::PROFILE_UT2003_V2107;
+        }
+        return null;
+    }
+
+    private static function ue2UsesLegacyVerifyImport(int $gameId): bool
+    {
+        try {
+            return Uedb5GameSourceRegistry::sourceKey($gameId) === 'ut2004';
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
     /**
      * Resolve dependencies for an already normalized parsed snapshot.
      *
@@ -349,6 +375,10 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
         $ue1Profile = $ue1VerifyImport
             ? self::ue1VerifyImportProfile($gameId, $packageVersion, $licenseeVersion)
             : null;
+        $ue2Profile = $ue2VerifyImport
+            ? self::ue2VerifyImportProfile($gameId, $packageVersion)
+            : null;
+        $ue2LegacyVerifyImport = $ue2VerifyImport && self::ue2UsesLegacyVerifyImport($gameId);
         $ue3VerifyImport = $engineKey === 'UE3';
         $ut3SourcePolicy = $ue3VerifyImport
             && strtolower(trim((string)($engineRow['game_slug'] ?? ''))) === 'ut3';
@@ -381,6 +411,7 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
 
         $localExports = [];
         $localUe1VerifyImportOutcomes = [];
+        $localUe2VerifyImportOutcomes = [];
         $localVerifyImportMatches = ['standard' => [], 'unreal2' => [], 'unreal2_only' => []];
         $localUe3VerifyImportMatches = [];
         if ($ue1VerifyImport && $ue1Profile !== null) {
@@ -395,7 +426,17 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
                     $packageVersion,
                     $packageVersion
                 );
-        } elseif ($ue2VerifyImport) {
+        } elseif ($ue2Profile !== null) {
+            require_once dirname(__DIR__) . '/Persistence/PdoUe2VerifyImportProjectionResolver.php';
+            $localUe2VerifyImportOutcomes =
+                \UnrealDb\Catalog\Infrastructure\Persistence\PdoUe2VerifyImportProjectionResolver::resolveInMemoryOutcome(
+                    $ue2Profile,
+                    $importRows,
+                    $importRows,
+                    $exportRows,
+                    $packageName
+                );
+        } elseif ($ue2LegacyVerifyImport) {
             require_once dirname(__DIR__) . '/Persistence/PdoLegacyVerifyImportProjectionResolver.php';
             $localVerifyImportMatches = \UnrealDb\Catalog\Infrastructure\Persistence\PdoLegacyVerifyImportProjectionResolver::resolveInMemoryVariants(
                 $importRows,
@@ -455,6 +496,7 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
             $localExportIndex = null;
             $localUnreal2OnlyIndex = null;
             $localUe1Reason = null;
+            $localUe2Reason = null;
             if ($ue1VerifyImport
                 && $ue1Profile !== null
                 && $this->lookupKey((string)($import['root_package'] ?? '')) === $this->lookupKey($packageName)) {
@@ -464,7 +506,17 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
                     $localExportIndex = $ue1Outcome['export_index'] ?? null;
                     $localUe1Reason = (string)($ue1Outcome['reason'] ?? 'exact_verify_import_match');
                 }
-            } elseif ($ue2VerifyImport
+            } elseif ($ue2Profile !== null
+                && $this->lookupKey((string)($import['root_package'] ?? '')) === $this->lookupKey($packageName)) {
+                $importIndex = (int)($import['import_index'] ?? -1);
+                $ue2Outcome = (array)($localUe2VerifyImportOutcomes[$importIndex] ?? []);
+                if (($ue2Outcome['status'] ?? '') === 'resolved') {
+                    $localExportIndex = $ue2Outcome['export_index'] ?? null;
+                    $localUe2Reason = (string)($ue2Outcome['reason'] ?? 'exact_verify_import_match');
+                } elseif (($ue2Outcome['status'] ?? '') === 'private_export') {
+                    $localUnreal2OnlyIndex = $ue2Outcome['candidate_export_index'] ?? null;
+                }
+            } elseif ($ue2LegacyVerifyImport
                 && $this->lookupKey((string)($import['root_package'] ?? '')) === $this->lookupKey($packageName)) {
                 $importIndex = (int)($import['import_index'] ?? -1);
                 $localExportIndex = $localVerifyImportMatches['standard'][$importIndex] ?? null;
@@ -482,9 +534,11 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
                     'resolved_export_index' => (int)$localExportIndex,
                     'source' => $ue1VerifyImport
                         ? 'ue1_verify_import_local_' . ($localUe1Reason ?? 'exact')
-                        : ($ue2VerifyImport
-                            ? 'ue_verify_import_local'
-                            : ($ue3VerifyImport ? 'ue3_verify_import_local' : 'exact_object')),
+                        : ($ue2Profile !== null
+                            ? 'ue2_verify_import_local_' . ($localUe2Reason ?? 'exact')
+                            : ($ue2LegacyVerifyImport
+                                ? 'ue_verify_import_local'
+                                : ($ue3VerifyImport ? 'ue3_verify_import_local' : 'exact_object'))),
                     'confidence' => 'exact',
                 ];
             } elseif ($localUnreal2OnlyIndex !== null && (int)$import['is_common'] !== 1) {
@@ -492,8 +546,10 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
                     'status' => 'missing',
                     'resolved_file_id' => null,
                     'resolved_export_index' => null,
-                    'source' => 'ue_verify_import_unreal2_private_candidate',
-                    'confidence' => 'unreal2_candidate',
+                    'source' => $ue2Profile !== null
+                        ? 'ue2_verify_import_private_export'
+                        : 'ue_verify_import_unreal2_private_candidate',
+                    'confidence' => $ue2Profile !== null ? 'source_rejected' : 'unreal2_candidate',
                 ];
             }
 

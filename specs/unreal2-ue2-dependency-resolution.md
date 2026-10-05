@@ -1,374 +1,182 @@
 # Unreal II / UE2 Dependency and Import Resolution
 
-## Scope
+## Scope and authority
 
-This specification documents dependency/import resolution for the supplied Unreal II source:
+This specification documents only the latest **complete local Unreal II UE2 `VerifyImport` implementation** available during the Section 3A2 audit.
 
-- Repository: `ardenee/unreal2src`
-- Branch: `main`
-- Tree: `Unreal II The Awakening [01-07-2003]/U2XMP_all/depot`
+- Source tree: `L:\Source\Games\Unreal II\Unreal II The Awakening [12-09-2000]\Unreal2_old`
+- Primary implementation: `Core\Src\UnLinker.cpp`
+- Package-version authority: `Core\Inc\UnObjVer.h`
+- `PACKAGE_FILE_VERSION = 69`
+- `PACKAGE_MIN_VERSION = 60`
+- `PACKAGE_FILE_VERSION_LICENSEE = 0x7F`
 
-It is paired with `unreal2-ue2-package-format.md`.
+The newer local `Unreal II The Awakening [01-07-2003]` tree does not contain a usable complete UE2 linker implementation and is **not** accepted as `VerifyImport` authority. Consequently, UnrealDB applies this source contract only to Unreal II package versions **60-69**. Unreal II package versions 70 and later must not inherit these rules without a complete later implementation.
 
-Only behavior active in this Unreal II source is authoritative here. UT99, UT2003, UT2004, UE2.5, and other branches must not supply missing fallbacks.
+This is an Unreal-II-specific dependency contract. UT2003 and UT2004/UE2.5 are separate profiles.
 
 ## Authoritative source references
 
 | Behavior | Source |
 |---|---|
-| import verification | `Core/Src/UnLinker.cpp: ULinkerLoad::VerifyImport` |
-| verify pass | `Core/Src/UnLinker.cpp: ULinkerLoad::Verify` |
-| export hash | `Core/Src/UnLinker.cpp: HashNames`, `ULinkerLoad::ULinkerLoad` |
+| import verification | `Core\Src\UnLinker.cpp`: `ULinkerLoad::VerifyImport` |
+| verify pass | `Core\Src\UnLinker.cpp`: `ULinkerLoad::Verify` |
+| export hash | `Core\Src\UnLinker.cpp`: `HashNames`, `ULinkerLoad::ULinkerLoad` |
 | export class identity | `GetExportClassPackage`, `GetExportClassName` |
-| explicit export search | `FindExportIndex` |
-| import realization | `CreateImport` |
-| object-index resolution | `IndexToObject` |
-| provider package loading | `Core/Src/UnObj.cpp: UObject::GetPackageLinker` |
-| package creation | `Core/Src/UnObj.cpp: UObject::CreatePackage` |
+| import realization | `ULinkerLoad::CreateImport` |
+| provider loading | `UObject::GetPackageLinker` |
+| package-version boundary | `Core\Inc\UnObjVer.h` |
 
-## Dependency model
+## Verify pass and early return
 
-The serialized import table establishes external object references. A top-level package import names the provider package. Nested imports form a negative-index parent chain underneath that package.
+Unless verification is disabled by loader flags, the linker verifies serialized imports. `VerifyImport(i)` returns immediately when the import is already resolved or when any of these FNames is `NAME_None`:
 
-For catalog dependency extraction, the top-level package named by an import chain is the package dependency directly supported by the package bytes.
+- `ClassPackage`
+- `ClassName`
+- `ObjectName`
 
-Engine verification goes further: it attempts to find the requested object in that provider package and may bind runtime-native objects. These are separate questions and UnrealDB should preserve that distinction.
+A direct `NAME_None` import is therefore ignored by this operation. That does **not** create a generic ancestor exemption for children.
 
-## Verify pass
+## Provider package resolution
 
-Unless `LOAD_NoVerify` is set, the linker calls `Verify()` after loading tables and constructing the export hash.
+For a top-level import (`PackageIndex == 0`) source assertions require `Core.Package`. The linker creates/finds a package from `Import.ObjectName` and calls `GetPackageLinker`.
 
-`Verify()`:
+### UnrealI -> UnrealShare package retry
 
-1. clears `PKG_BrokenLinks` on the linker-root package;
-2. loops from `0` to `Summary.ImportCount - 1`;
-3. calls `VerifyImport(i)`;
-4. removes this linker from `GObjLoaders` and rethrows if verification throws;
-5. marks `Verified = 1`.
+This v69 source retains the historical compatibility path. If loading top-level package `UnrealI` throws, the loader creates `UnrealShare` and retries through the `SharewareKludge` label.
 
-The loop uses the serialized `Summary.ImportCount`, not an arbitrary scan.
+UnrealDB may reproduce this retry only for this source-backed profile. It is not a generic UE2 package alias.
 
-## VerifyImport early return
+## Nested imports and parent linker
 
-Verification returns immediately when:
+For `PackageIndex < 0`, the source:
 
-- both `SourceLinker` exists and `SourceIndex != INDEX_NONE`; or
-- `ClassPackage == NAME_None`; or
-- `ClassName == NAME_None`; or
-- `ObjectName == NAME_None`.
+1. recursively verifies the parent import;
+2. copies the parent `SourceLinker`;
+3. asserts that `SourceLinker` exists;
+4. walks the negative parent chain to determine depth and top package context.
 
-The first condition is notably stricter than simply testing `SourceIndex`: this Unreal II implementation requires the provider linker to exist as well before treating that state as already verified.
+This differs from UT2003 v2107, where the equivalent assertion is commented out and the following work is guarded by `if (Import.SourceLinker)`.
 
-## Top-level package imports
+Therefore a child of a direct `NAME_None` parent reaches a different source boundary in Unreal II v69 than in UT2003.
 
-When `PackageIndex == 0`, source assertions require:
+## ExportHash identity and order
 
-- `ClassName == Package`
-- `ClassPackage == Core`
-
-The engine creates/finds a top-level `UPackage` named by `Import.ObjectName`, then calls:
-
-`GetPackageLinker(TmpPkg, NULL, LOAD_Throw | (LoadFlags & LOAD_Propagate), NULL, NULL)`
-
-Any thrown error is simply rethrown.
-
-### No UT99 UnrealI -> UnrealShare package retry
-
-The reviewed Unreal II implementation contains **no active UnrealI-to-UnrealShare retry** here.
-
-This is an important difference from the UT99 retail source. UnrealDB must not carry that UT99 fallback into the Unreal II reader.
-
-## Provider filename resolution
-
-With no explicit filename, `GetPackageLinker` resolves the package by `InOuter->GetName()` using `appFindPackageFile`.
-
-It first reuses an already-loaded linker whose `LinkerRoot` is the requested package. Otherwise it resolves a file and creates a new `ULinkerLoad`.
-
-A compatible GUID can be supplied by callers and is checked against the provider summary, but `VerifyImport` passes no compatible GUID.
-
-Therefore ordinary import verification in this source resolves the provider by package name, not by an import-table GUID.
-
-UnrealDB cannot reproduce the engine's filesystem search policy merely from package bytes. Catalog resolution should use its own known-file/package-name index while keeping the source semantics explicit.
-
-## Nested imports
-
-A non-top-level import must have `PackageIndex < 0`.
-
-The engine:
-
-1. recursively verifies the parent import at `-PackageIndex - 1`;
-2. copies the parent's `SourceLinker`;
-3. only if that linker exists, walks upward through negative parent indices;
-4. counts the parent depth;
-5. creates/finds a runtime package named by the top import's `ObjectName`.
-
-Unlike the UT99 implementation previously documented, the source-linker assertion is commented out here:
-
-`//check(Import.SourceLinker);`
-
-Thus Unreal II explicitly tolerates the parent verification leaving no provider linker at this point.
-
-## Export hash
-
-The hash function in this Unreal II source is exactly:
+The hash function is:
 
 `A.GetIndex() + 7 * B.GetIndex() + 31 * C.GetIndex()`
 
-The 256-entry export hash uses:
+where A is object name, B is class name, and C is class package.
 
-- A = export object name
-- B = export class name
-- C = export class package
+Exports are prepended into the hash chain. Matching traversal therefore visits later matching export indices before earlier entries in the same bucket. UnrealDB must preserve this source order rather than substitute catalogue row order.
 
-### No UnrealShare hash normalization
+### UnrealShare -> UnrealI hash normalization
 
-Unlike the UT99 retail source, Unreal II's `HashNames` does **not** rewrite `UnrealShare` to `UnrealI`.
+Before hashing, this source changes class package `UnrealShare` to `UnrealI`. This compatibility is active in the v69 implementation.
 
-UnrealDB must not import that UT99 compatibility normalization.
+## Candidate identity and class-package compatibility
 
-## Candidate matching
+An export first matches by:
 
-If `Import.SourceLinker` exists, `VerifyImport` searches the provider's hash bucket.
+- exact `ObjectName`;
+- exact export class name;
+- exact class package, except for the source-defined compatibility below.
 
-A provider export is a candidate only when all three match exactly:
+The active `ClassHack` accepts a provider export whose class package is `UnrealShare` when the import requests `UnrealI`.
 
-- `Source.ObjectName == Import.ObjectName`
-- provider export class name == `Import.ClassName`
-- provider export class package == `Import.ClassPackage`
+This compatibility is source-backed for Unreal II v69. It must not be inferred for later Unreal II packages or UT2003.
 
-### No UT99 class-package compatibility hack
+## Parent / outer matching
 
-There is no active rule accepting an `UnrealShare` provider class package when the import requests `UnrealI`.
+For nested imports, the matched export is checked against the resolved parent import.
 
-Matching is exact in this Unreal II source.
-
-## Parent/outer matching
-
-For nested imports, after name/class matching, the requested parent import is examined.
-
-If the parent has a source linker:
-
-- if parent `SourceIndex == INDEX_NONE`, the candidate is rejected unless `Source.PackageIndex == 0`;
-- otherwise, if `ParentImport.SourceIndex + 1 != Source.PackageIndex`, the candidate is rejected unless `Source.PackageIndex == 0`.
-
-Thus a root export (`PackageIndex == 0`) is accepted as the fallback outer when the expected provider-side parent cannot be matched exactly.
-
-This behavior is source-proven and may be reproduced where UnrealDB needs object-level resolution.
+- If the parent has no `SourceIndex`, a candidate with nonzero provider `PackageIndex` is rejected.
+- If the parent has a `SourceIndex`, a nonzero provider `PackageIndex` must equal `Parent.SourceIndex + 1`.
+- In either case, provider `PackageIndex == 0` is accepted as the root-export fallback.
 
 ## RF_Public handling
 
-When a matching provider export lacks `RF_Public`:
+A matching export that lacks `RF_Public` is **not** accepted as a normal resolved import.
 
-- with `LOAD_Forgiving`, the current package is marked `PKG_BrokenLinks`, a broken-import message is logged, and verification returns;
-- without forgiving mode, the historical `FailedImportPrivate` throw is inside `#if 0` and is **disabled**.
+- With `LOAD_Forgiving`, the source marks broken links/logs and returns.
+- Otherwise it throws `FailedImportPrivate`.
 
-Execution therefore continues and sets `Import.SourceIndex = j` even when the matched export is non-public, provided forgiving mode was not requested.
+The earlier UnrealDB assumption that the reviewed Unreal II path accepted private exports was incorrect for this latest complete v69 source.
 
-This differs materially from the UT99 retail implementation and must not be normalized to UT99 behavior.
+## Mesh -> LodMesh Rehack
 
-## Active Mesh -> LodMesh compatibility fallback
+After the Mesh hash pass, the source checks whether `Import.ClassName` is `Mesh`. If so it changes the class name to `LodMesh` and jumps back to the hash lookup through `Rehack`.
 
-After the provider search, the source tests:
+This happens **regardless of whether the Mesh pass already found a public match**.
 
-`appStricmp(*Import.ClassName, TEXT("Mesh")) == 0`
+Consequences:
 
-If true, it mutates:
+- a LodMesh match can replace an earlier public Mesh match;
+- a private LodMesh match can fail the import after a public Mesh match;
+- if the LodMesh pass finds nothing, an earlier public Mesh `SourceIndex` remains in place.
 
-`Import.ClassName = FName(TEXT("LodMesh"))`
-
-and jumps back to the export lookup.
-
-This is active source behavior.
-
-As written, this check is not guarded by `SourceIndex == INDEX_NONE`. Therefore a `Mesh` import is renamed to `LodMesh` and lookup is repeated even if the preceding `Mesh` lookup found a candidate.
-
-UnrealDB should preserve the exact source flow if implementing engine-compatible object resolution rather than simplifying it into a conventional “only if missing” fallback.
-
-## Disabled ClassRemap
-
-A configuration-driven `ClassRemap` block exists in `VerifyImport`, but it is enclosed by:
-
-`#if 0 //!!MERGE`
-
-It is not compiled behavior.
-
-Therefore:
-
-- it is not an Unreal II fallback;
-- it must not be implemented by UnrealDB;
-- it must not be inferred from an INI file;
-- it must not be used when resolving package dependencies.
+This is not accurately modeled as a simple “retry only when Mesh is missing.”
 
 ## Runtime native/transient binding
 
-If no provider export was selected and a nested package context exists, the engine attempts runtime object binding.
+When file-backed lookup does not produce a source export and a runtime package context exists, the loader can search runtime state for:
 
-It finds:
+- the class package;
+- the class;
+- an object under the top-level package with the requested object name.
 
-1. the runtime package named by `Import.ClassPackage`;
-2. the runtime class named by `Import.ClassName`;
-3. an object of that class under the top-level package `Pkg`, named by `Import.ObjectName`.
+A found object must be public, native and transient to bind directly. This runtime state is not derivable from package bytes alone; static UnrealDB reports the residual branch as runtime-unavailable rather than fabricating a hard result.
 
-If the object exists and has all of:
+## SafeReplace behavior
 
-- `RF_Public`
-- `RF_Native`
-- `RF_Transient`
+In this v69 source the active `#if 1 //NEW` path sets `SafeReplace = 1` when the runtime class exists but the requested object does not satisfy native/transient binding. It does not require the older `CLASS_SafeReplace` test in the inactive `#else` branch.
 
-then it is assigned directly to `Import.XObject`.
+This runtime behavior must not be invented from package metadata.
 
-This is runtime state, not a dependency derivable from package bytes alone.
+## Depth-specific UnrealI / UnrealShare reparenting
 
-## Unreal II SafeReplace behavior
+The v69 source also retains an active shareware compatibility path after runtime lookup. When the top runtime package is `UnrealI` and import depth is 1, it:
 
-If `FindClass` exists but the required native/transient object does not satisfy the test, Unreal II:
+1. appends a new top-level `Core.Package` import for `UnrealShare`;
+2. reparents the current import to that new import;
+3. verifies the new import;
+4. jumps back to `SharewareHack` and retries the current import.
 
-- reports an editor load error when appropriate;
-- logs `Missing <class> <import>`;
-- sets `SafeReplace = 1`.
+This is active behavior in the audited source, not dead merge-era code. Static UnrealDB must keep it scoped to the v69 profile and must not infer it for later Unreal II packages.
 
-Crucially, this source does **not** test `CLASS_SafeReplace` here. Merely finding the runtime class and failing to bind the native/transient object sets `SafeReplace`.
+## Configuration/remap boundary
 
-That is another material difference from the UT99 retail implementation and must remain Unreal II-specific.
+No administrator-defined UnrealDB `ClassRemap` mapping is part of this source-backed profile. The authoritative v69 path does not consume UnrealDB's generic ClassRemap table.
 
-## Disabled PackageRemap
+Any runtime/configuration transformation not represented by this exact implementation and available serialized/runtime state remains outside deterministic package-only resolution.
 
-A configuration-driven `PackageRemap` block is also present but enclosed by:
+## Final unresolved handling
 
-`#if 0 //!!MERGE`
+If no export/native object resolves and SafeReplace does not suppress failure, the source logs a failed import and then either:
 
-It would dynamically create a replacement top-level package import, but it is disabled.
+- marks a broken link and returns under forgiving load; or
+- throws `FailedImport`.
 
-It is therefore not part of Unreal II dependency resolution and must not be implemented.
-
-The disabled block contains a `goto SharewareHack`, but there is no active `SharewareHack` label/path in the compiled function. This is dead merge-era code, not evidence of an active fallback.
-
-## Final unresolved-import handling
-
-The final failure block is reached only inside the nested-runtime branch (`Import.SourceIndex == INDEX_NONE && Pkg != NULL`).
-
-If there is still no `Import.XObject` and `SafeReplace == 0`:
-
-1. it logs `Failed import`;
-2. if `LOAD_Forgiving`:
-   - sets `PKG_BrokenLinks`;
-   - logs `Broken import`;
-   - returns;
-3. otherwise it throws `FailedImport`.
-
-If `SafeReplace == 1`, this final failure is suppressed.
-
-Because this block is nested beneath `Pkg != NULL`, UnrealDB must not rewrite it into a generic unconditional “all unresolved imports throw” rule.
-
-## CreateImport
-
-When an import object is requested:
-
-1. if `XObject` already exists, return it;
-2. if no `SourceLinker`, bracket a `VerifyImport(Index)` call with `BeginLoad()` / `EndLoad()`;
-3. if `SourceIndex != INDEX_NONE`, call the provider linker's `CreateExport(SourceIndex)`;
-4. assign the resulting object to `XObject`;
-5. increment `GImportCount`;
-6. return `XObject`.
-
-Thus import verification and actual provider-export object construction are separate stages.
-
-## FindExportIndex is not VerifyImport
-
-`FindExportIndex` is used when locating a requested object in a linker and has additional behavior that must not be incorrectly attributed to import verification.
-
-It first performs an exact hashed search by:
-
-- object name;
-- requested package index, unless `INDEX_NONE`;
-- class package;
-- class name.
-
-If no exact result is found, Unreal II then scans all exports with the requested object name/package and resolves each export's runtime class. It walks that class's superclass chain and returns the export if any parent class name equals the requested `ClassName`.
-
-Only after that subclass search does it apply the active `Mesh -> LodMesh` retry.
-
-This subclass search is source-proven Unreal II behavior for `FindExportIndex`, but `VerifyImport` itself does not perform it.
-
-## Dependency extraction for UnrealDB
-
-For package-level dependency discovery, UnrealDB should derive dependencies from the serialized import hierarchy rather than trying to emulate the complete runtime loader.
-
-For each import:
-
-- follow negative `PackageIndex` parents until reaching the top-level import;
-- the top-level `ObjectName` is the provider package name when the chain satisfies the package-import structure;
-- preserve the complete import path, class name, and class package for object-level analysis;
-- distinguish “declared dependency” from “resolved provider file”;
-- do not require runtime-native object creation to report the declared package dependency.
-
-Provider matching can then use UnrealDB's catalogue of actual files/packages. Engine filesystem search configuration is not serialized in the package.
-
-## Exact active compatibility behavior
-
-For this source revision, the compatibility behavior proven active in the relevant resolution paths is:
-
-1. `Mesh -> LodMesh` in `VerifyImport`;
-2. root-export outer acceptance when nested parent matching does not line up exactly;
-3. runtime public/native/transient object binding;
-4. Unreal II's broad `SafeReplace` suppression after finding the runtime class;
-5. `LOAD_Forgiving` broken-link handling;
-6. `Mesh -> LodMesh` in `FindExportIndex`;
-7. subclass matching in `FindExportIndex`.
-
-The following UT99 behaviors are **not present** and must not be inherited:
-
-- `UnrealI -> UnrealShare` provider retry;
-- `UnrealShare -> UnrealI` hash normalization;
-- UnrealI/UnrealShare class-package matching hack;
-- dynamic UnrealShare reparenting;
-- UT99's `CLASS_SafeReplace` test.
-
-The following Unreal II code is present but **disabled** and therefore not behavior:
-
-- `ClassRemap`;
-- `PackageRemap`.
+Because these outcomes depend on load flags and runtime object state, UnrealDB preserves the static result as unresolved/runtime-derived when the deterministic file-backed path is exhausted.
 
 ## UnrealDB conformance requirements
 
-For Unreal II dependency resolution:
+For the Unreal II v69 profile, UnrealDB must:
 
-1. derive package dependencies from import parent chains;
-2. preserve exact serialized class/package/object identity;
-3. do not import UT99 UnrealI/UnrealShare compatibility behavior;
-4. implement `Mesh -> LodMesh` only where source-compatible object resolution requires it;
-5. preserve exact parent/outer candidate rules;
-6. distinguish `VerifyImport` from `FindExportIndex`;
-7. do not implement disabled `ClassRemap` or `PackageRemap`;
-8. do not infer runtime-native objects from package bytes;
-9. do not require engine filesystem configuration for declaring a dependency;
-10. keep forgiving-mode results distinct from successful provider resolution;
-11. model Unreal II's non-public-export behavior exactly if emulating the runtime verifier;
-12. model Unreal II's broad `SafeReplace` behavior exactly if emulating runtime verification;
-13. keep these rules scoped to the supplied Unreal II source revision.
+1. apply this profile only to package versions 60-69;
+2. derive provider identity from the serialized import hierarchy;
+3. preserve exact FName object/class/package identity;
+4. preserve ExportHash visit order;
+5. implement the v69 `UnrealI` -> `UnrealShare` package retry only within this profile;
+6. implement the UnrealI/UnrealShare hash and class-package compatibility only within this profile;
+7. preserve the source parent-linker assertion boundary;
+8. reject non-public export matches according to source;
+9. model Mesh -> LodMesh as the unconditional Rehack pass;
+10. distinguish deterministic file-backed matches from runtime native/transient/SafeReplace behavior;
+11. preserve the active depth-specific UnrealShare reparenting boundary;
+12. not consume administrator ClassRemap as authoritative source behavior;
+13. fail closed for later Unreal II package versions until their own complete VerifyImport implementation is available.
 
-## Source-reference matrix
+## Migration consequence
 
-| Rule | Source symbol |
-|---|---|
-| verify loop | `ULinkerLoad::Verify` |
-| early-return state | `ULinkerLoad::VerifyImport` |
-| top-level package structure | `ULinkerLoad::VerifyImport` |
-| parent recursion | `ULinkerLoad::VerifyImport` |
-| hash formula | `HashNames` |
-| exact import candidate matching | `ULinkerLoad::VerifyImport` |
-| outer matching | `ULinkerLoad::VerifyImport` |
-| non-public behavior | `ULinkerLoad::VerifyImport` |
-| Mesh/LodMesh | `VerifyImport`, `FindExportIndex` |
-| disabled remaps | `VerifyImport` `#if 0 //!!MERGE` blocks |
-| runtime native/transient binding | `VerifyImport` |
-| SafeReplace behavior | `VerifyImport` |
-| forgiving broken links | `VerifyImport` |
-| provider package resolution | `UObject::GetPackageLinker` |
-| import realization | `ULinkerLoad::CreateImport` |
-| subclass export lookup | `ULinkerLoad::FindExportIndex` |
-| signed object lookup | `ULinkerLoad::IndexToObject` |
-
-## Next specification
-
-The next source target should be **UE2.5 package format and reading**, using only the supplied `ardenee/UE2.5` source as authority. Its rules must be established independently rather than assuming that Unreal II's UE2 behavior carried forward unchanged.
+Existing UEDB5 Unreal II package versions 60-69 that were staged under the older generic Unreal II source policy require an **exact-file Pass-1 restage** so the snapshot records `ue2-unreal2-2000-12-09-package-v69`. Dependency Pass 2 then rebuilds only impacted files under policy v6. This does not require a full Unreal II game reparse.

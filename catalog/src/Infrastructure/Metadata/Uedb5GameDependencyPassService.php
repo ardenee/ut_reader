@@ -11,7 +11,7 @@ use UnrealDb\Catalog\Infrastructure\Persistence\PdoClassRemapRepository;
 
 final class Uedb5GameDependencyPassService
 {
-    public const DEPENDENCY_POLICY = 'uedb5-dependency-pass-v5';
+    public const DEPENDENCY_POLICY = 'uedb5-dependency-pass-v6';
 
     private Uedb5MetadataReader $reader;
     private Uedb5DependencyRebuilder $rebuilder;
@@ -294,8 +294,8 @@ final class Uedb5GameDependencyPassService
             static fn(string $value): bool => $value !== ''
         ));
         $classRemaps = [];
-        $engine = $this->gameEngineKey($gameId);
-        if ($engine === 'UE2' && $this->tableExists('ue_class_remaps')) {
+        $sourceKey = Uedb5GameSourceRegistry::sourceKey($gameId);
+        if ($sourceKey === 'ut2004' && $this->tableExists('ue_class_remaps')) {
             $classRemaps = (new PdoClassRemapRepository($this->db))->mappingsForGame($gameId);
         }
         return ['common_packages'=>$common,'class_remaps'=>$classRemaps];

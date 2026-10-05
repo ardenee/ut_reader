@@ -131,11 +131,11 @@ $variants = PdoLegacyVerifyImportProjectionResolver::resolveInMemoryVariants(
     'TestPkg'
 );
 $check(
-    'private_export_revision_difference',
+    'legacy_unreal2_variant_private_difference_is_non_authoritative',
     !isset($variants['standard'][1])
         && ($variants['unreal2'][1] ?? null) === 0
         && ($variants['unreal2_only'][1] ?? null) === 0,
-    'UE2.5/UT2004 reject the private Export while the supplied Unreal II revision accepts it.'
+    'The retained legacy helper exposes an old unreal2 variant, but audited Unreal II v69 rejects private exports and production Unreal II no longer selects this variant.'
 );
 
 $meshPrivateExact = [
@@ -151,7 +151,7 @@ $variants = PdoLegacyVerifyImportProjectionResolver::resolveInMemoryVariants(
 $check(
     'private_exact_match_stops_before_lodmesh',
     !isset($variants['standard'][1]) && ($variants['unreal2'][1] ?? null) === 1,
-    'UE2.5/UT2004 fail on an exact private Mesh match and do not continue to the LodMesh retry.'
+    'The legacy standard path rejects the exact private Mesh candidate; source-profile Mesh Rehack behavior is verified separately by the UE2 profile contract.'
 );
 
 $source = (string)file_get_contents($root . '/src/Infrastructure/Persistence/PdoLegacyVerifyImportProjectionResolver.php');
@@ -160,7 +160,7 @@ $check(
     'runtime_uses_authoritative_provider_metadata',
     str_contains($source, 'BlockedCompressedMetadataSnapshotLoader')
         && !str_contains($source, 'ue_legacy_export_identity_lookup'),
-    'Normal UE1/UE2 VerifyImport must hydrate authoritative provider metadata; the legacy SQL hash projection is not source identity.'
+    'The retained legacy VerifyImport helper must hydrate authoritative provider metadata; source-profile UE1/UE2 resolvers are verified separately.'
 );
 $check(
     'legacy_identity_projection_is_non_authoritative_accelerator',
