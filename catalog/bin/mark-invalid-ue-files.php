@@ -3,10 +3,10 @@
 /**
  * Mark existing catalog files as confirmed-invalid Unreal package bytes.
  *
- * Dry-run by default. --apply persists the byte identity, removes provider
- * export/dependency projections for the invalid file, and refreshes files that
- * were resolved against it. The ue_files row and physical package are retained
- * so provenance and exact-byte rejection remain available.
+ * Dry-run by default. --apply persists the byte identity, removes the invalid
+ * package from verified storage plus its V4/V5 metadata projections, and marks
+ * the ue_files row failed so provenance and exact-byte rejection remain durable.
+ * V5 consumers that used the retired provider are made Pass-2 incomplete.
  */
 declare(strict_types=1);
 
