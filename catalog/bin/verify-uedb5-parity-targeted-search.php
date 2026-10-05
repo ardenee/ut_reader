@@ -61,7 +61,7 @@ foreach([1,2] as $fileId){
         ->execute([$fileId,Uedb5SqlProjectionContract::OBJECT_KIND_EXPORT,0,$export['hash'],$export['length']]);
     $db->prepare('INSERT INTO ue_uedb5_dependency_edges VALUES(?,?,?,?,?,?,?)')
         ->execute([$fileId,Uedb5SqlProjectionContract::DEP_SOURCE_IMPORT,1,
-            Uedb5SqlProjectionContract::PACKAGE_KEY_CLASSIC_NAME,$pkg['hash'],
+            Uedb5SqlProjectionContract::PACKAGE_KEY_CLASSIC_FNAME,$pkg['hash'],
             Uedb5SqlProjectionContract::OBJECT_KEY_NAME,$import['hash']]);
 }
 $service=new Uedb5ParityV5ReadService($db,['storage_path'=>$tmp]);

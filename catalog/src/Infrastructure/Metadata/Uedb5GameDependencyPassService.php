@@ -11,7 +11,7 @@ use UnrealDb\Catalog\Infrastructure\Persistence\PdoClassRemapRepository;
 
 final class Uedb5GameDependencyPassService
 {
-    public const DEPENDENCY_POLICY = 'uedb5-dependency-pass-v2';
+    public const DEPENDENCY_POLICY = 'uedb5-dependency-pass-v3';
 
     private Uedb5MetadataReader $reader;
     private Uedb5DependencyRebuilder $rebuilder;

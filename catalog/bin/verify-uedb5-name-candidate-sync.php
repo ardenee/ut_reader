@@ -39,7 +39,7 @@ $snapshot=[
 ];
 $writer->write($snapshot);
 $db->prepare('INSERT INTO ue_uedb5_files VALUES(?,?,?,?,?)')->execute([
-    42,4,Uedb5SqlProjectionContract::PACKAGE_KEY_CLASSIC_NAME,md5('syncfixture',true),'SyncFixture'
+    42,4,Uedb5SqlProjectionContract::PACKAGE_KEY_CLASSIC_FNAME,md5('syncfixture',true),'SyncFixture'
 ]);
 
 $key=static function(string $value):array{

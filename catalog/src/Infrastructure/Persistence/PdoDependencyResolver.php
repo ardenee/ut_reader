@@ -32,6 +32,7 @@ final class PdoDependencyResolver
         $legacyVerifyImport = $legacyPolicy !== null;
         $ue3VerifyImport = $engineKey === 'UE3';
         $ue4VerifyImport = $engineKey === 'UE4';
+        $sourceFnameLookup = $legacyVerifyImport || $ue3VerifyImport;
 
         $importsByIndex = [];
         foreach ($imports as $fallback => $import) {
@@ -43,6 +44,12 @@ final class PdoDependencyResolver
         $legacySourceIrrelevant = $legacyVerifyImport
             ? self::legacySourceIrrelevantIndexes($importsByIndex)
             : [];
+        $legacyRootPackages = [];
+        if ($legacyVerifyImport) {
+            foreach (array_keys($importsByIndex) as $importIndex) {
+                $legacyRootPackages[(int)$importIndex] = self::legacyRootPackageName($importsByIndex, (int)$importIndex);
+            }
+        }
         $ue3RootPackages = [];
         $ue3SourceUnresolved = [];
         if ($ue3VerifyImport) {
@@ -73,8 +80,8 @@ final class PdoDependencyResolver
                     continue;
                 }
                 $importIndex = isset($import['import_index']) ? (int)$import['import_index'] : (int)$fallback;
-                if (strcasecmp(trim((string)($import['root_package'] ?? '')), 'SequenceObjects') === 0
-                    && strcasecmp(trim((string)($ue3RootPackages[$importIndex] ?? '')), 'Engine') === 0) {
+                if (strcasecmp((string)($import['root_package'] ?? ''), 'SequenceObjects') === 0
+                    && strcasecmp((string)($ue3RootPackages[$importIndex] ?? ''), 'Engine') === 0) {
                     $import['is_common'] = 1;
                 }
             }
@@ -92,10 +99,12 @@ final class PdoDependencyResolver
                 continue;
             }
             $rootPackage = $ue3VerifyImport
-                ? trim((string)($ue3RootPackages[$importIndex] ?? ''))
-                : trim((string)($import['root_package'] ?? ''));
+                ? (string)($ue3RootPackages[$importIndex] ?? '')
+                : ($legacyVerifyImport
+                    ? (string)($legacyRootPackages[$importIndex] ?? '')
+                    : trim((string)($import['root_package'] ?? '')));
             if ($rootPackage !== '') {
-                $key = self::normalizeLookup($rootPackage);
+                $key = self::lookupKey($rootPackage, $sourceFnameLookup);
                 if ($key !== '' && !isset($packageNames[$key])) {
                     $packageNames[$key] = $rootPackage;
                 }
@@ -116,10 +125,10 @@ final class PdoDependencyResolver
             }
         }
 
-        $packageMatches = self::loadPackageMatches($db, $gameId, $fileId, array_values($packageNames));
+        $packageMatches = self::loadPackageMatches($db, $gameId, $fileId, array_values($packageNames), $sourceFnameLookup);
         $ambiguousPackageProviders = [];
         if ($legacyVerifyImport || $ue3VerifyImport || $ue4VerifyImport) {
-            $physicalCandidates = self::loadPackageCandidates($db, $gameId, $fileId, array_values($packageNames));
+            $physicalCandidates = self::loadPackageCandidates($db, $gameId, $fileId, array_values($packageNames), $sourceFnameLookup);
             foreach ($physicalCandidates as $packageKey => $candidates) {
                 if (count($candidates) <= 1) { continue; }
                 $ambiguousPackageProviders[$packageKey] = array_values(array_map(
@@ -147,8 +156,8 @@ final class PdoDependencyResolver
                 if (isset($legacySourceIrrelevant[$importIndex])) {
                     continue;
                 }
-                $rootPackage = trim((string)($import['root_package'] ?? ''));
-                $packageKey = self::normalizeLookup($rootPackage);
+                $rootPackage = (string)($legacyRootPackages[$importIndex] ?? '');
+                $packageKey = self::sourceFnameLookup($rootPackage);
                 if ($packageKey !== '') {
                     $packageRequirements[$packageKey]['package_name'] ??= $rootPackage;
                 }
@@ -160,8 +169,8 @@ final class PdoDependencyResolver
                     continue;
                 }
                 $importIndex = isset($import['import_index']) ? (int)$import['import_index'] : (int)$fallback;
-                $rootPackage = trim((string)($ue3RootPackages[$importIndex] ?? ''));
-                $packageKey = self::normalizeLookup($rootPackage);
+                $rootPackage = (string)($ue3RootPackages[$importIndex] ?? '');
+                $packageKey = self::sourceFnameLookup($rootPackage);
                 if ($packageKey !== '') {
                     $packageRequirements[$packageKey]['package_name'] ??= $rootPackage;
                 }
@@ -254,7 +263,9 @@ final class PdoDependencyResolver
             $importIndex = isset($import['import_index']) ? (int)$import['import_index'] : (int)$fallback;
             $rootPackage = $ue3VerifyImport
                 ? (string)($ue3RootPackages[$importIndex] ?? '')
-                : (string)($import['root_package'] ?? '');
+                : ($legacyVerifyImport
+                    ? (string)($legacyRootPackages[$importIndex] ?? '')
+                    : (string)($import['root_package'] ?? ''));
             $isObjectImport = self::isSourceObjectImport($import, $engineKey);
             $result = self::missing();
 
@@ -285,7 +296,7 @@ final class PdoDependencyResolver
                     'source' => 'ue4_v4_missing_package_name',
                     'confidence' => 'metadata_unresolved',
                 ];
-            } elseif (isset($ambiguousPackageProviders[self::normalizeLookup($rootPackage)])) {
+            } elseif (isset($ambiguousPackageProviders[self::lookupKey($rootPackage, $sourceFnameLookup)])) {
                 $result = [
                     'status' => 'unresolved',
                     'resolved_file_id' => null,
@@ -293,10 +304,10 @@ final class PdoDependencyResolver
                     'resolved_export_index' => null,
                     'source' => 'provider_environment_ambiguous',
                     'confidence' => 'source_unresolved',
-                    'candidate_file_ids' => $ambiguousPackageProviders[self::normalizeLookup($rootPackage)],
+                    'candidate_file_ids' => $ambiguousPackageProviders[self::lookupKey($rootPackage, $sourceFnameLookup)],
                 ];
             } elseif (!$isObjectImport) {
-                $packageMatch = $packageMatches[self::normalizeLookup($rootPackage)] ?? null;
+                $packageMatch = $packageMatches[self::lookupKey($rootPackage, $sourceFnameLookup)] ?? null;
                 if ($packageMatch !== null) {
                     $result = [
                         'status' => 'package_only',
@@ -308,7 +319,7 @@ final class PdoDependencyResolver
                     ];
                 }
             } else {
-                $packageKey = self::normalizeLookup($rootPackage);
+                $packageKey = self::lookupKey($rootPackage, $sourceFnameLookup);
                 $packageMatch = $packageMatches[$packageKey] ?? null;
 
                 if ($legacyVerifyImport) {
@@ -415,7 +426,8 @@ final class PdoDependencyResolver
                 ? (string)($ue3RootPackages[$importIndex] ?? '')
                 : (string)($import['root_package'] ?? '');
             $isObjectImport = self::isSourceObjectImport($import, $engineKey);
-            if (self::normalizeLookup($rootPackage) !== $packageKey || !$isObjectImport) {
+            $exactFname = in_array($engineKey, ['UE1', 'UE2', 'UE3'], true);
+            if (self::lookupKey($rootPackage, $exactFname) !== $packageKey || !$isObjectImport) {
                 continue;
             }
             $indexes[] = $importIndex;
@@ -506,6 +518,28 @@ final class PdoDependencyResolver
         }
     }
 
+    /** Source-shaped UE1/UE2 PackageIndex traversal; never use derived/trimmed display paths. */
+    private static function legacyRootPackageName(array $importsByIndex, int $importIndex): string
+    {
+        $seen = [];
+        while (true) {
+            if (isset($seen[$importIndex])) { return ''; }
+            $seen[$importIndex] = true;
+            $import = $importsByIndex[$importIndex] ?? null;
+            if (!is_array($import)) { return ''; }
+            $outerIndex = (int)($import['outer_index'] ?? $import['package_index'] ?? 0);
+            if ($outerIndex === 0) {
+                if (strcasecmp((string)($import['class_name'] ?? ''), 'Package') !== 0
+                    || strcasecmp((string)($import['class_package'] ?? ''), 'Core') !== 0) {
+                    return '';
+                }
+                return (string)($import['object_name'] ?? '');
+            }
+            if ($outerIndex > 0) { return ''; }
+            $importIndex = -$outerIndex - 1;
+        }
+    }
+
     /** @param array<int,array<string,mixed>> $importsByIndex */
     private static function ue3RootPackageName(array $importsByIndex, int $importIndex): string
     {
@@ -521,11 +555,11 @@ final class PdoDependencyResolver
             }
             $outerIndex = (int)($import['outer_index'] ?? 0);
             if ($outerIndex === 0) {
-                if (strcasecmp(trim((string)($import['class_name'] ?? '')), 'Package') !== 0
-                    || strcasecmp(trim((string)($import['class_package'] ?? '')), 'Core') !== 0) {
+                if (strcasecmp((string)($import['class_name'] ?? ''), 'Package') !== 0
+                    || strcasecmp((string)($import['class_package'] ?? ''), 'Core') !== 0) {
                     return '';
                 }
-                return trim((string)($import['object_name'] ?? ''));
+                return (string)($import['object_name'] ?? '');
             }
             if ($outerIndex > 0) {
                 // VerifyImportInner deliberately does not establish a provider
@@ -595,7 +629,7 @@ final class PdoDependencyResolver
     }
 
     /** @param list<string> $packageNames @return array<string,array{file_id:int,source:string}> */
-    private static function loadPackageMatches(PDO $db, int $gameId, int $fileId, array $packageNames): array
+    private static function loadPackageMatches(PDO $db, int $gameId, int $fileId, array $packageNames, bool $exactFname): array
     {
         $matches = [];
         foreach (array_chunk($packageNames, self::MAX_VALUES_PER_QUERY) as $chunk) {
@@ -623,10 +657,10 @@ final class PdoDependencyResolver
                 $rows = [];
             }
             foreach ($rows as $row) {
-                self::collectPackageMatch($row, $matches);
+                self::collectPackageMatch($row, $matches, $exactFname);
             }
 
-            $missing = self::missingLookupValues($chunk, $matches);
+            $missing = self::missingLookupValues($chunk, $matches, $exactFname);
             if ($missing !== []) {
                 $rows = \catalog_all(
                     $db,
@@ -639,11 +673,11 @@ final class PdoDependencyResolver
                     array_merge([$gameId], $missing, [$fileId])
                 );
                 foreach ($rows as $row) {
-                    self::collectPackageMatch($row, $matches);
+                    self::collectPackageMatch($row, $matches, $exactFname);
                 }
             }
 
-            $missing = self::missingLookupValues($missing, $matches);
+            $missing = self::missingLookupValues($missing, $matches, $exactFname);
             if ($missing !== []) {
                 $rows = \catalog_all(
                     $db,
@@ -657,7 +691,7 @@ final class PdoDependencyResolver
                     array_merge([$gameId], $missing, [$fileId])
                 );
                 foreach ($rows as $row) {
-                    self::collectPackageMatch($row, $matches);
+                    self::collectPackageMatch($row, $matches, $exactFname);
                 }
             }
         }
@@ -665,7 +699,7 @@ final class PdoDependencyResolver
     }
 
     /** @param list<string> $packageNames @return array<string,list<array{file_id:int,source:string}>> */
-    private static function loadPackageCandidates(PDO $db, int $gameId, int $fileId, array $packageNames): array
+    private static function loadPackageCandidates(PDO $db, int $gameId, int $fileId, array $packageNames, bool $exactFname): array
     {
         $candidates = [];
         foreach (array_chunk($packageNames, self::MAX_VALUES_PER_QUERY) as $chunk) {
@@ -693,7 +727,7 @@ final class PdoDependencyResolver
                 $rows = [];
             }
             foreach ($rows as $row) {
-                self::collectPackageCandidate($row, $candidates);
+                self::collectPackageCandidate($row, $candidates, $exactFname);
             }
 
             $rows = \catalog_all(
@@ -707,7 +741,7 @@ final class PdoDependencyResolver
                 array_merge([$gameId], $chunk, [$fileId])
             );
             foreach ($rows as $row) {
-                self::collectPackageCandidate($row, $candidates);
+                self::collectPackageCandidate($row, $candidates, $exactFname);
             }
 
             $rows = \catalog_all(
@@ -722,15 +756,15 @@ final class PdoDependencyResolver
                 array_merge([$gameId], $chunk, [$fileId])
             );
             foreach ($rows as $row) {
-                self::collectPackageCandidate($row, $candidates);
+                self::collectPackageCandidate($row, $candidates, $exactFname);
             }
         }
         return $candidates;
     }
 
-    private static function collectPackageCandidate(array $row, array &$candidates): void
+    private static function collectPackageCandidate(array $row, array &$candidates, bool $exactFname): void
     {
-        $key = self::normalizeLookup((string)($row['lookup_value'] ?? ''));
+        $key = self::lookupKey((string)($row['lookup_value'] ?? ''), $exactFname);
         $fileId = (int)($row['file_id'] ?? 0);
         if ($key === '' || $fileId < 1) {
             return;
@@ -746,9 +780,9 @@ final class PdoDependencyResolver
         ];
     }
 
-    private static function collectPackageMatch(array $row, array &$matches): void
+    private static function collectPackageMatch(array $row, array &$matches, bool $exactFname): void
     {
-        $key = self::normalizeLookup((string)($row['lookup_value'] ?? ''));
+        $key = self::lookupKey((string)($row['lookup_value'] ?? ''), $exactFname);
         if ($key === '' || isset($matches[$key])) {
             return;
         }
@@ -758,24 +792,35 @@ final class PdoDependencyResolver
         ];
     }
 
-    private static function missingLookupValues(array $values, array $matches): array
+    private static function missingLookupValues(array $values, array $matches, bool $exactFname): array
     {
         $missing = [];
         foreach ($values as $value) {
             $value = (string)$value;
-            if (!isset($matches[self::normalizeLookup($value)])) {
+            if (!isset($matches[self::lookupKey($value, $exactFname)])) {
                 $missing[] = $value;
             }
         }
         return $missing;
     }
 
+    private static function lookupKey(string|int $value, bool $exactFname): string
+    {
+        return $exactFname ? self::sourceFnameLookup($value) : self::normalizeLookup($value);
+    }
+
+    private static function sourceFnameLookup(string|int $value): string
+    {
+        $value = (string)$value;
+        if ($value === '') { return ''; }
+        $normalized = function_exists('mb_strtolower') ? mb_strtolower($value, 'UTF-8') : strtolower($value);
+        return 'k:' . $normalized;
+    }
+
     private static function normalizeLookup(string|int $value): string
     {
         $value = trim((string)$value);
-        if ($value === '') {
-            return '';
-        }
+        if ($value === '') { return ''; }
         $normalized = function_exists('mb_strtolower') ? mb_strtolower($value, 'UTF-8') : strtolower($value);
         // PHP coerces numeric-looking string array keys (for example package
         // name "123") to integers. Prefix all internal lookup keys so the

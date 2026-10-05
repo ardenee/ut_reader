@@ -9,7 +9,8 @@ $statusRepo=(string)file_get_contents($metadata.'/PdoUedb5MigrationStatusReposit
 $registration=(string)file_get_contents($metadata.'/PdoUedb5StagingRegistrationRepository.php');
 $migration=(string)file_get_contents($root.'/migrations/202610020001_uedb5_dependency_pass_status.php');
 $cli=(string)file_get_contents($root.'/bin/migrate-uedb5-dependencies.php');
-$transition=(string)file_get_contents($root.'/bin/transition-uedb5-provider-selection-policy.php');
+$transition=(string)file_get_contents($root.'/bin/transition-uedb5-source-identity-policy.php');
+$impact=(string)file_get_contents($root.'/src/Infrastructure/Persistence/PdoClassicSourceIdentityImpactQuery.php');
 $checks=[];$failures=[];
 $check=static function(string $name,bool $ok)use(&$checks,&$failures):void{
     $checks[$name]=$ok;if(!$ok)$failures[]=$name;
@@ -17,13 +18,14 @@ $check=static function(string $name,bool $ok)use(&$checks,&$failures):void{
 $check('pass2_has_exact_payload_checkpoint',
     str_contains($migration,'dependency_payload_sha256 BINARY(32)')
     && str_contains($migration,'dependency_policy VARCHAR(64)'));
-$check('pass2_provider_selection_semantics_use_v2_policy',
-    str_contains($service,"public const DEPENDENCY_POLICY = 'uedb5-dependency-pass-v2'"));
-$check('provider_selection_policy_transition_is_targeted',
-    str_contains($transition,"const OLD_POLICY = 'uedb5-dependency-pass-v1'")
-    && str_contains($transition,'HAVING COUNT(DISTINCT p.file_id)>1')
-    && str_contains($transition,'dependency_payload_sha256=v.payload_sha256')
-    && str_contains($transition,"'rebuild-impacted'"));
+$check('pass2_source_identity_semantics_use_v3_policy',
+    str_contains($service,"public const DEPENDENCY_POLICY = 'uedb5-dependency-pass-v3'"));
+$check('source_identity_policy_transition_is_targeted',
+    str_contains($transition,"const OLD_POLICIES=['uedb5-dependency-pass-v1','uedb5-dependency-pass-v2']")
+    && str_contains($transition,'PdoClassicSourceIdentityImpactQuery')
+    && str_contains($transition,'currentOldPolicyFiles')
+    && str_contains($transition,"'rebuild-impacted'")
+    && str_contains($impact,'dependency_payload_sha256=v.payload_sha256'));
 $check('pass2_selects_physical_v5_providers',str_contains($service,'PdoUedb5PhysicalProviderSelector'));
 $check('pass2_reports_ambiguous_provider_environment',
     str_contains($service,"'ambiguous_provider_count'")

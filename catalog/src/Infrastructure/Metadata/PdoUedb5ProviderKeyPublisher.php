@@ -23,7 +23,7 @@ final class PdoUedb5ProviderKeyPublisher
             throw new RuntimeException('Staged UEDB5 registration is missing for provider-key publication.');
         }
         $aliases = [];
-        if ((int)$registration['package_key_kind'] === Uedb5SqlProjectionContract::PACKAGE_KEY_CLASSIC_NAME) {
+        if (in_array((int)$registration['package_key_kind'], [Uedb5SqlProjectionContract::PACKAGE_KEY_CLASSIC_NAME, Uedb5SqlProjectionContract::PACKAGE_KEY_CLASSIC_FNAME], true)) {
             $alias = $this->db->prepare(
                 'SELECT id,file_id,game_id,package_name FROM ue_file_package_aliases '
                 . 'WHERE file_id=? AND game_id=? ORDER BY id'

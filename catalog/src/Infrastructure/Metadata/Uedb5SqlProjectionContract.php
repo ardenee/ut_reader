@@ -12,11 +12,15 @@ final class Uedb5SqlProjectionContract
 {
     public const FORMAT_VERSION = 5;
     public const NAME_KEY_ALGORITHM = 'md5-fname-ci-v1';
+    public const CLASSIC_PACKAGE_FNAME_KEY_ALGORITHM = 'md5-fname-ci-v2-exact-text';
     public const SEARCH_FINGERPRINT_ALGORITHM = 'sha256-fname-ci-v1';
     public const PATH_KEY_ALGORITHM = 'md5-fnamepath-ci-v1';
 
+    /** Legacy v1/v2 classic package key: search-normalized/trimmed name. */
     public const PACKAGE_KEY_CLASSIC_NAME = 1;
     public const PACKAGE_KEY_ZEN_PACKAGE_ID = 2;
+    /** Source identity key: case-insensitive FName text with no trimming/cleanup. */
+    public const PACKAGE_KEY_CLASSIC_FNAME = 3;
     public const OBJECT_KEY_NAME = 1;
     public const OBJECT_KEY_PUBLIC_EXPORT_HASH = 2;
     public const OBJECT_KIND_EXPORT = 1;
@@ -40,6 +44,29 @@ final class Uedb5SqlProjectionContract
     public const CLASS_CELL_VERSE = 6;
     public const CLASS_LOAD_ORDER = 7;
     public const CLASS_RUNTIME_DERIVED = 8;
+
+    /**
+     * Section-2A source rule: UE1/UE2/UE3 package lookup is FName identity.
+     * UE4/UE5 classic package-name normalization is intentionally left on the
+     * pre-existing kind until its separate source audit.
+     */
+    public static function classicPackageKeyKindForImportSchema(string $schema): int
+    {
+        $schema = strtolower(trim($schema));
+        return str_starts_with($schema, 'ue1.')
+            || str_starts_with($schema, 'ue2.')
+            || str_starts_with($schema, 'ue3.')
+            ? self::PACKAGE_KEY_CLASSIC_FNAME
+            : self::PACKAGE_KEY_CLASSIC_NAME;
+    }
+
+    public static function classicPackageKeyBinary(string $value, int $kind): string
+    {
+        $normalized = $kind === self::PACKAGE_KEY_CLASSIC_FNAME
+            ? CatalogUnrealIdentityHash::fnameKey($value)
+            : CatalogUnrealIdentityHash::nameKey($value);
+        return md5($normalized, true);
+    }
 
     /** @return array<string,int> */
     public static function outcomeCodes(): array

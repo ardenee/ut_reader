@@ -69,7 +69,7 @@ foreach([
     $db->prepare('INSERT INTO ue_files VALUES(?,?,?,?,?,?,?)')->execute([$id,3,'verified',$uploaded,$id,md5((string)$id),sha1((string)$id)]);
     $db->prepare('INSERT INTO ue_uedb5_files VALUES(?,?,?)')->execute([$id,3,$name]);
 }
-$classic=Uedb5SqlProjectionContract::PACKAGE_KEY_CLASSIC_NAME;
+$classic=Uedb5SqlProjectionContract::PACKAGE_KEY_CLASSIC_FNAME;
 $pkgKey=md5('pkg',true);
 foreach([
     [1,20,20],[1,21,21],[2,500,22],

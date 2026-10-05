@@ -33,7 +33,9 @@ final class Uedb5ClassicDependencyResolver
             if (!is_array($provider)) {
                 throw new RuntimeException('Classic UEDB5 provider selection contains a non-row value.');
             }
-            $lookupPackage = trim((string)($provider['package_name'] ?? ''));
+            $lookupPackage = $engine === 'ue4'
+                ? trim((string)($provider['package_name'] ?? ''))
+                : (string)($provider['package_name'] ?? '');
             $snapshot = $provider['snapshot'] ?? null;
             if ($lookupPackage === '' || !is_array($snapshot)) {
                 throw new RuntimeException('Classic UEDB5 provider selection requires package_name and snapshot.');
@@ -51,7 +53,9 @@ final class Uedb5ClassicDependencyResolver
             }
             $providers[$key] = [
                 'lookup_package' => $lookupPackage,
-                'physical_package' => trim((string)($snapshot['file']['package_name'] ?? $lookupPackage)),
+                'physical_package' => $engine === 'ue4'
+                    ? trim((string)($snapshot['file']['package_name'] ?? $lookupPackage))
+                    : (string)($snapshot['file']['package_name'] ?? $lookupPackage),
                 'provider_id' => $provider['provider_id'] ?? null,
                 'snapshot' => $snapshot,
                 'tables' => $tables,
@@ -144,7 +148,7 @@ final class Uedb5ClassicDependencyResolver
                     $identityPath = CatalogCompactIdentityEnricher::ue3EffectiveImportPath(
                         $consumer['imports'], (int)$importIndex, $consumer['exports']
                     );
-                    $identityRoot = trim((string)($identityPath['root'] ?? ''));
+                    $identityRoot = (string)($identityPath['root'] ?? '');
                 }
                 $resolved[(int)$importIndex] = self::result(
                     'unresolved', $identityRoot, null, null, $reason, $engine
@@ -294,7 +298,9 @@ final class Uedb5ClassicDependencyResolver
             $outer = (int)($row['outer_index'] ?? 0);
             if ($outer === 0) {
                 return self::key((string)($row['class_name'] ?? '')) === self::key('Package')
-                    ? trim((string)($row['object_name'] ?? ''))
+                    ? ($engine === 'ue4'
+                        ? trim((string)($row['object_name'] ?? ''))
+                        : (string)($row['object_name'] ?? ''))
                     : '';
             }
             if ($outer > 0) {

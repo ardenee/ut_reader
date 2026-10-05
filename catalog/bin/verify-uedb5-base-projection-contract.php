@@ -26,7 +26,7 @@ $snapshot=[
 ];
 $registration=[
     'file_id'=>42,'game_id'=>3,
-    'package_key_kind'=>Uedb5SqlProjectionContract::PACKAGE_KEY_CLASSIC_NAME,
+    'package_key_kind'=>Uedb5SqlProjectionContract::PACKAGE_KEY_CLASSIC_FNAME,
     'package_key'=>md5('dm-test',true),
 ];
 $projection=Uedb5SqlProjectionBuilder::build($snapshot,$registration);

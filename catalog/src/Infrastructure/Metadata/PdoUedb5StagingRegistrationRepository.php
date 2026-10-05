@@ -160,14 +160,14 @@ final class PdoUedb5StagingRegistrationRepository
             return [Uedb5SqlProjectionContract::PACKAGE_KEY_ZEN_PACKAGE_ID, $binary];
         }
 
-        $packageName = trim((string)($manifest['file']['package_name'] ?? ''));
+        $packageName = (string)($manifest['file']['package_name'] ?? '');
         if ($packageName === '') {
             throw new RuntimeException('Classic UEDB5 staging registration requires a package name.');
         }
-        return [
-            Uedb5SqlProjectionContract::PACKAGE_KEY_CLASSIC_NAME,
-            md5(CatalogUnrealIdentityHash::nameKey($packageName), true),
-        ];
+        $kind = Uedb5SqlProjectionContract::classicPackageKeyKindForImportSchema(
+            (string)($manifest['section_schemas']['imports'] ?? '')
+        );
+        return [$kind, Uedb5SqlProjectionContract::classicPackageKeyBinary($packageName, $kind)];
     }
 
     private function assertLiveV4Registration(int $gameId, int $fileId): void

@@ -261,14 +261,18 @@ final class Uedb5GameParityAuditService
     /** @return array{unexpected:int,expected:int} */
     private function requiredPackageKeyMismatches(string $slug,int $gameId):array
     {
+        $packageKeyKind=$this->classicPackageKeyKindForGame($gameId);
+        $packageHashSql=$packageKeyKind===Uedb5SqlProjectionContract::PACKAGE_KEY_CLASSIC_FNAME
+            ? 'UNHEX(MD5(LOWER(CONVERT(t.value_prefix USING utf8mb4))))'
+            : 'UNHEX(MD5(LOWER(TRIM(CONVERT(t.value_prefix USING utf8mb4)))))';
         $sql='SELECT l.file_id,l.import_index,l.status FROM ue_dependency_links l JOIN ue_files f ON f.id=l.file_id '
             .'JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=4 '
             .'JOIN ue_terms t ON t.id=l.required_package_term_id '
             .'JOIN ue_uedb5_dependency_edges e ON e.file_id=l.file_id AND e.source_kind=1 AND e.source_index=l.import_index '
             .'WHERE f.game_id=? AND f.scan_status="verified" AND ('
             .'e.required_package_key_kind IS NULL OR e.required_package_key IS NULL '
-            .'OR e.required_package_key_kind<>1 '
-            .'OR e.required_package_key<>UNHEX(MD5(LOWER(TRIM(CONVERT(t.value_prefix USING utf8mb4)))))) '
+            .'OR e.required_package_key_kind<>'.$packageKeyKind.' '
+            .'OR e.required_package_key<>'.$packageHashSql.') '
             .'ORDER BY l.file_id,l.import_index';
         $s=$this->db->prepare($sql);$s->execute([$gameId]);
         $unexpected=0;$expected=0;$cache=[];
@@ -321,6 +325,7 @@ final class Uedb5GameParityAuditService
     /** @return array<string,mixed> */
     private function auditAliases(int $gameId,int $maxDetails):array
     {
+        $packageKeyKind=$this->classicPackageKeyKindForGame($gameId);
         $s=$this->db->prepare(
             'SELECT a.id alias_id,a.file_id,a.package_name,p.source_id,p.game_id provider_game_id,p.package_key_kind,p.package_key,p.file_id provider_file_id '
             .'FROM ue_file_package_aliases a JOIN ue_uedb5_files v ON v.file_id=a.file_id AND v.game_id=a.game_id '
@@ -329,10 +334,10 @@ final class Uedb5GameParityAuditService
         );
         $s->execute([$gameId]);$total=0;$mismatch=0;$details=[];
         while(($row=$s->fetch(PDO::FETCH_ASSOC))!==false){
-            $total++;$expected=md5(CatalogUnrealIdentityHash::nameKey((string)$row['package_name']),true);
+            $total++;$expected=Uedb5SqlProjectionContract::classicPackageKeyBinary((string)$row['package_name'],$packageKeyKind);
             $ok=$row['source_id']!==null&&(int)$row['provider_game_id']===$gameId
                 &&(int)$row['provider_file_id']===(int)$row['file_id']
-                &&(int)$row['package_key_kind']===Uedb5SqlProjectionContract::PACKAGE_KEY_CLASSIC_NAME
+                &&(int)$row['package_key_kind']===$packageKeyKind
                 &&hash_equals($expected,(string)$row['package_key']);
             if(!$ok){$mismatch++;if(count($details)<$maxDetails)$details[]=['alias_id'=>(int)$row['alias_id'],'file_id'=>(int)$row['file_id'],'package_name'=>(string)$row['package_name']];}
         }
@@ -561,6 +566,16 @@ final class Uedb5GameParityAuditService
             if($key!=='')$counts[$key]=($counts[$key]??0)+1;
         }
         return $counts;
+    }
+
+    private function classicPackageKeyKindForGame(int $gameId):int
+    {
+        $s=$this->db->prepare(
+            'SELECT p.engine_key FROM ue_games g LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 WHERE g.id=? LIMIT 1'
+        );
+        $s->execute([$gameId]);
+        $engine=strtolower(trim((string)$s->fetchColumn()));
+        return Uedb5SqlProjectionContract::classicPackageKeyKindForImportSchema($engine.'.audit');
     }
 
     /** @return array<string,mixed> */

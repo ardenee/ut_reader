@@ -50,26 +50,32 @@ final class PdoUedb5PhysicalProviderSelector
     ): array {
         $resolver = $this->classicResolver($consumer);
         $baseline = $resolver($consumer, [], $options);
+        $packageKeyKind = Uedb5SqlProjectionContract::classicPackageKeyKindForImportSchema(
+            (string)($consumer['section_schemas']['imports'] ?? '')
+        );
         $requirements = [];
         foreach ($baseline as $result) {
             $result = (array)$result;
             if (str_starts_with((string)($result['reason'] ?? ''), 'source_irrelevant_name_none')) {
                 continue;
             }
-            $packageName = trim((string)($result['provider_package'] ?? ''));
+            $packageName = (string)($result['provider_package'] ?? '');
             if ($packageName === '' || (string)($result['status'] ?? '') === 'common') {
                 continue;
             }
-            $requirements[CatalogUnrealIdentityHash::nameKey($packageName)] ??= $packageName;
+            $requirementKey = $packageKeyKind === Uedb5SqlProjectionContract::PACKAGE_KEY_CLASSIC_FNAME
+                ? CatalogUnrealIdentityHash::fnameKey($packageName)
+                : CatalogUnrealIdentityHash::nameKey($packageName);
+            $requirements[$requirementKey] ??= $packageName;
         }
 
         $selected = [];
         foreach ($requirements as $packageName) {
-            $packageKey = md5(CatalogUnrealIdentityHash::nameKey((string)$packageName), true);
+            $packageKey = Uedb5SqlProjectionContract::classicPackageKeyBinary((string)$packageName, $packageKeyKind);
             $candidates = $this->candidateRows(
                 $gameId,
                 $consumerFileId,
-                Uedb5SqlProjectionContract::PACKAGE_KEY_CLASSIC_NAME,
+                $packageKeyKind,
                 $packageKey
             );
             // Epic selects one package/linker before VerifyImport inspects exports.

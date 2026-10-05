@@ -43,9 +43,9 @@ final class CatalogCompactIdentityEnricher
                 : '';
 
             if ($legacyVerifyImport) {
-                $objectName = trim((string)($row['object_name'] ?? ''));
-                $className = trim((string)($row['class_name'] ?? ''));
-                $classPackage = trim((string)($row['class_package'] ?? ''));
+                $objectName = (string)($row['object_name'] ?? '');
+                $className = (string)($row['class_name'] ?? '');
+                $classPackage = (string)($row['class_package'] ?? '');
                 $row['verify_identity_hash'] =
                     ($objectName !== '' && $className !== '' && $classPackage !== '')
                         ? CatalogUnrealIdentityHash::verifyImportHex($objectName, $className, $classPackage)
@@ -58,7 +58,7 @@ final class CatalogCompactIdentityEnricher
 
         $importsByIndex = self::indexRows($imports, 'import_index');
         $exportsByIndex = self::indexRows($exports, 'export_index');
-        $packageName = trim((string)($snapshot['file']['package_name'] ?? ''));
+        $packageName = (string)($snapshot['file']['package_name'] ?? '');
 
         foreach ($exports as &$row) {
             if (!is_array($row)) {
@@ -78,7 +78,7 @@ final class CatalogCompactIdentityEnricher
                 );
                 $row['verify_class_package'] = $classPackage;
                 $row['verify_class_name'] = $className;
-                $objectName = trim((string)($row['object_name'] ?? ''));
+                $objectName = (string)($row['object_name'] ?? '');
                 $row['verify_identity_hash'] =
                     ($objectName !== '' && $className !== '' && $classPackage !== '')
                         ? CatalogUnrealIdentityHash::verifyImportHex($objectName, $className, $classPackage)
@@ -120,7 +120,7 @@ final class CatalogCompactIdentityEnricher
             if (!is_array($classImport)) {
                 return ['', ''];
             }
-            $className = trim((string)($classImport['object_name'] ?? ''));
+            $className = (string)($classImport['object_name'] ?? '');
             $classOuter = (int)($classImport['outer_index'] ?? 0);
             if ($classOuter >= 0) {
                 return ['', $className];
@@ -128,7 +128,7 @@ final class CatalogCompactIdentityEnricher
             $classPackageImport = $imports[-$classOuter - 1] ?? null;
             return [
                 is_array($classPackageImport)
-                    ? trim((string)($classPackageImport['object_name'] ?? ''))
+                    ? (string)($classPackageImport['object_name'] ?? '')
                     : '',
                 $className,
             ];
@@ -137,9 +137,9 @@ final class CatalogCompactIdentityEnricher
         if ($classIndex > 0) {
             $classExport = $exports[$classIndex - 1] ?? null;
             return [
-                trim($packageName),
+                $packageName,
                 is_array($classExport)
-                    ? trim((string)($classExport['object_name'] ?? ''))
+                    ? (string)($classExport['object_name'] ?? '')
                     : '',
             ];
         }
@@ -181,13 +181,13 @@ final class CatalogCompactIdentityEnricher
             if (!is_array($classImport)) {
                 return ['', ''];
             }
-            $className = trim((string)($classImport['object_name'] ?? ''));
+            $className = (string)($classImport['object_name'] ?? '');
             $classOuter = (int)($classImport['outer_index'] ?? 0);
             if ($classOuter < 0) {
                 $classPackageImport = $imports[-$classOuter - 1] ?? null;
                 return [
                     is_array($classPackageImport)
-                        ? trim((string)($classPackageImport['object_name'] ?? ''))
+                        ? (string)($classPackageImport['object_name'] ?? '')
                         : '',
                     $className,
                 ];
@@ -202,7 +202,7 @@ final class CatalogCompactIdentityEnricher
                 $classPackageExport = $exports[$classOuter - 1] ?? null;
                 return [
                     is_array($classPackageExport)
-                        ? trim((string)($classPackageExport['object_name'] ?? ''))
+                        ? (string)($classPackageExport['object_name'] ?? '')
                         : '',
                     $className,
                 ];
@@ -213,9 +213,9 @@ final class CatalogCompactIdentityEnricher
         if ($classIndex > 0) {
             $classExport = $exports[$classIndex - 1] ?? null;
             return [
-                trim($packageName),
+                $packageName,
                 is_array($classExport)
-                    ? trim((string)($classExport['object_name'] ?? ''))
+                    ? (string)($classExport['object_name'] ?? '')
                     : '',
             ];
         }
@@ -239,10 +239,10 @@ final class CatalogCompactIdentityEnricher
         $sequenceClassIndex = 0;
         $prefabClassIndex = 0;
         foreach ($imports as $importIndex => $import) {
-            if (!is_array($import) || strcasecmp(trim((string)($import['class_name'] ?? '')), 'Class') !== 0) {
+            if (!is_array($import) || strcasecmp((string)($import['class_name'] ?? ''), 'Class') !== 0) {
                 continue;
             }
-            $name = trim((string)($import['object_name'] ?? ''));
+            $name = (string)($import['object_name'] ?? '');
             if (strcasecmp($name, 'Prefab') === 0 || strcasecmp($name, 'PrefabInstance') === 0) {
                 $requiresFixup = true;
             }
@@ -257,14 +257,14 @@ final class CatalogCompactIdentityEnricher
             return null;
         }
 
-        if (strcasecmp(trim((string)($export['object_name'] ?? '')), 'Prefabs') === 0) {
+        if (strcasecmp((string)($export['object_name'] ?? ''), 'Prefabs') === 0) {
             return ['Engine', 'PrefabSequenceContainer'];
         }
         $outerIndex = (int)($export['outer_index'] ?? 0);
         if ($outerIndex > 0) {
             $outer = $exports[$outerIndex - 1] ?? null;
             if (is_array($outer)
-                && (strcasecmp(trim((string)($outer['object_name'] ?? '')), 'Prefabs') === 0
+                && (strcasecmp((string)($outer['object_name'] ?? ''), 'Prefabs') === 0
                     || (int)($outer['class_index'] ?? 0) === $prefabClassIndex)) {
                 return ['Engine', 'PrefabSequence'];
             }
@@ -283,9 +283,10 @@ final class CatalogCompactIdentityEnricher
     public static function ue3EffectiveImportPath(array $imports, int $importIndex, array $exports = []): array
     {
         $imports = self::ue3FixupImportMap($imports);
-        $parts = [];
+        $segments = [];
         $seen = [];
         $ref = -$importIndex - 1;
+        $result = '';
         while (true) {
             if ($ref === 0 || isset($seen[$ref])) {
                 return ['root' => '', 'full' => '', 'relative' => ''];
@@ -296,11 +297,20 @@ final class CatalogCompactIdentityEnricher
             if (!is_array($row)) {
                 return ['root' => '', 'full' => '', 'relative' => ''];
             }
-            $name = trim((string)($row['object_name'] ?? ''));
+            $name = (string)($row['object_name'] ?? '');
             if ($name === '') {
                 return ['root' => '', 'full' => '', 'relative' => ''];
             }
-            array_unshift($parts, $name);
+            $segments[] = $name;
+            if ($result !== '') {
+                // UE3 GetImportPathName uses ':' when the current non-package
+                // resource sits directly under a package; otherwise it uses '.'.
+                $delimiter = self::ue3ResourceUsesSubobjectDelimiter($row, $isImport, $imports, $exports)
+                    ? ':' : '.';
+                $result = $name . $delimiter . $result;
+            } else {
+                $result = $name;
+            }
             $outerIndex = (int)($row['outer_index'] ?? 0);
             if ($outerIndex === 0) {
                 break;
@@ -310,12 +320,56 @@ final class CatalogCompactIdentityEnricher
             }
             $ref = $outerIndex;
         }
-        $root = (string)($parts[0] ?? '');
-        return [
-            'root' => $root,
-            'full' => implode('.', $parts),
-            'relative' => count($parts) > 1 ? implode('.', array_slice($parts, 1)) : '',
-        ];
+        $root = (string)end($segments);
+        $relative = '';
+        if ($root !== '' && $result !== $root) {
+            $relative = substr($result, strlen($root));
+            if ($relative !== '' && ($relative[0] === '.' || $relative[0] === ':')) {
+                $relative = substr($relative, 1);
+            }
+        }
+        return ['root' => $root, 'full' => $result, 'relative' => $relative];
+    }
+
+    /** Mirrors the delimiter decision inside UE3 ULinker::GetImportPathName. */
+    private static function ue3ResourceUsesSubobjectDelimiter(
+        array $row,
+        bool $isImport,
+        array $imports,
+        array $exports
+    ): bool {
+        $outer = (int)($row['outer_index'] ?? 0);
+        if ($isImport && strcasecmp((string)($row['class_name'] ?? ''), 'Package') === 0) {
+            return false;
+        }
+        if ($outer === 0) {
+            return !$isImport || strcasecmp((string)($row['class_name'] ?? ''), 'Package') !== 0;
+        }
+        return self::ue3ResourceClassName($outer, $imports, $exports) !== ''
+            && strcasecmp(self::ue3ResourceClassName($outer, $imports, $exports), 'Package') === 0;
+    }
+
+    private static function ue3ResourceClassName(int $ref, array $imports, array $exports): string
+    {
+        if ($ref < 0) {
+            $row = $imports[-$ref - 1] ?? null;
+            return is_array($row) ? (string)($row['class_name'] ?? '') : '';
+        }
+        if ($ref > 0) {
+            $row = $exports[$ref - 1] ?? null;
+            if (!is_array($row)) { return ''; }
+            $classIndex = (int)($row['class_index'] ?? 0);
+            if ($classIndex < 0) {
+                $classImport = $imports[-$classIndex - 1] ?? null;
+                return is_array($classImport) ? (string)($classImport['object_name'] ?? '') : '';
+            }
+            if ($classIndex > 0) {
+                $classExport = $exports[$classIndex - 1] ?? null;
+                return is_array($classExport) ? (string)($classExport['object_name'] ?? '') : '';
+            }
+            return 'Class';
+        }
+        return '';
     }
 
     /**
@@ -331,9 +385,9 @@ final class CatalogCompactIdentityEnricher
             if (!is_array($row)) {
                 continue;
             }
-            $objectName = trim((string)($row['object_name'] ?? ''));
-            $className = trim((string)($row['class_name'] ?? ''));
-            $classPackage = trim((string)($row['class_package'] ?? ''));
+            $objectName = (string)($row['object_name'] ?? '');
+            $className = (string)($row['class_name'] ?? '');
+            $classPackage = (string)($row['class_package'] ?? '');
             $outerIndex = (int)($row['outer_index'] ?? 0);
 
             if (strcasecmp($objectName, 'SoundCueLocalized') === 0
@@ -341,7 +395,7 @@ final class CatalogCompactIdentityEnricher
                 if ($outerIndex < 0) {
                     $outer = $imports[-$outerIndex - 1] ?? null;
                     if (is_array($outer)
-                        && strcasecmp(trim((string)($outer['object_name'] ?? '')), 'Engine') === 0) {
+                        && strcasecmp((string)($outer['object_name'] ?? ''), 'Engine') === 0) {
                         $row['object_name'] = 'SoundCue';
                     }
                 }
@@ -350,11 +404,11 @@ final class CatalogCompactIdentityEnricher
                 $row['class_name'] = 'SoundCue';
             }
 
-            if (strcasecmp(trim((string)($row['object_name'] ?? '')), 'SequenceObjects') === 0
-                && strcasecmp(trim((string)($row['class_name'] ?? '')), 'Package') === 0) {
+            if (strcasecmp((string)($row['object_name'] ?? ''), 'SequenceObjects') === 0
+                && strcasecmp((string)($row['class_name'] ?? ''), 'Package') === 0) {
                 $row['object_name'] = 'Engine';
             }
-            if (strcasecmp(trim((string)($row['class_package'] ?? '')), 'SequenceObjects') === 0) {
+            if (strcasecmp((string)($row['class_package'] ?? ''), 'SequenceObjects') === 0) {
                 $row['class_package'] = 'Engine';
             }
             $imports[$index] = $row;

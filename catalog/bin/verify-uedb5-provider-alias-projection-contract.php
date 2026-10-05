@@ -17,7 +17,7 @@ $db->setAttribute(PDO::ATTR_ERRMODE,PDO::ERRMODE_EXCEPTION);
 $db->exec('CREATE TABLE ue_uedb5_files(file_id INTEGER PRIMARY KEY,game_id INTEGER,package_key_kind INTEGER,package_key BLOB)');
 $db->exec('CREATE TABLE ue_file_package_aliases(id INTEGER PRIMARY KEY,file_id INTEGER,game_id INTEGER,package_name TEXT)');
 $db->exec('CREATE TABLE ue_uedb5_provider_keys(source_kind INTEGER,source_id INTEGER,game_id INTEGER,package_key_kind INTEGER,package_key BLOB,file_id INTEGER,PRIMARY KEY(source_kind,source_id))');
-$classic=Uedb5SqlProjectionContract::PACKAGE_KEY_CLASSIC_NAME;
+$classic=Uedb5SqlProjectionContract::PACKAGE_KEY_CLASSIC_FNAME;
 $primaryKey=md5('detail',true);
 $db->prepare('INSERT INTO ue_uedb5_files VALUES(?,?,?,?)')->execute([10,3,$classic,$primaryKey]);
 $db->prepare('INSERT INTO ue_file_package_aliases VALUES(?,?,?,?)')->execute([501,10,3,'Detail']);

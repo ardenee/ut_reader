@@ -190,9 +190,9 @@ final class PdoUe3VerifyImportProjectionResolver
             return $resolved[$importIndex] = self::FAILURE_SENTINEL;
         }
 
-        $objectName = trim((string)($import['object_name'] ?? ''));
-        $className = trim((string)($import['class_name'] ?? ''));
-        $classPackage = trim((string)($import['class_package'] ?? ''));
+        $objectName = (string)($import['object_name'] ?? '');
+        $className = (string)($import['class_name'] ?? '');
+        $classPackage = (string)($import['class_package'] ?? '');
         if ($objectName === '' || $className === '' || $classPackage === '') {
             return $resolved[$importIndex] = self::FAILURE_SENTINEL;
         }
@@ -435,8 +435,8 @@ final class PdoUe3VerifyImportProjectionResolver
             if (!is_array($export)) {
                 continue;
             }
-            $objectName = trim((string)($export['object_name'] ?? ''));
-            $discoveredName = trim((string)($refsByIndex[$exportIndex] ?? ''));
+            $objectName = (string)($export['object_name'] ?? '');
+            $discoveredName = (string)($refsByIndex[$exportIndex] ?? '');
             if ($objectName === '' || $discoveredName === '' || self::key($objectName) !== self::key($discoveredName)) {
                 continue;
             }
@@ -635,7 +635,7 @@ final class PdoUe3VerifyImportProjectionResolver
             if (!is_array($row) || (int)($row['outer_index'] ?? 0) === 0) {
                 continue;
             }
-            $name = trim((string)($row['object_name'] ?? ''));
+            $name = (string)($row['object_name'] ?? '');
             if ($name !== '') {
                 $names[self::key($name)] = $name;
             }
@@ -692,6 +692,6 @@ final class PdoUe3VerifyImportProjectionResolver
 
     private static function key(string $value): string
     {
-        return CatalogUnrealIdentityHash::nameKey(trim($value));
+        return CatalogUnrealIdentityHash::fnameKey($value);
     }
 }

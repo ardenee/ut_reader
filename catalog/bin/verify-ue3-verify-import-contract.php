@@ -21,6 +21,7 @@ require_once $root . '/src/Infrastructure/Persistence/PdoUe3VerifyImportProjecti
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoUe3VerifyImportProjectionResolver;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyResolver;
 use UnrealDb\Catalog\Infrastructure\Metadata\CatalogCompactIdentityEnricher;
+use UnrealDb\Catalog\Infrastructure\Metadata\CatalogUnrealIdentityHash;
 
 $rfPublic = 0x0000000400000000;
 $checks = [];
@@ -115,6 +116,66 @@ $check(
     ($sequenceFixup[0]['object_name'] ?? '') === 'Engine'
         && ($sequenceFixup[1]['class_package'] ?? '') === 'Engine',
     'UE3 FixupImportMap moves old SequenceObjects package/class references to Engine before VerifyImport identity matching.'
+);
+
+$paddedFixup = CatalogCompactIdentityEnricher::ue3FixupImportMap([
+    0 => ['import_index'=>0,'class_package'=>'Core','class_name'=>'Package','object_name'=>' SequenceObjects ','outer_index'=>0],
+    1 => ['import_index'=>1,'class_package'=>' SequenceObjects ','class_name'=>'SequenceAction','object_name'=>'Action','outer_index'=>-1],
+]);
+$check(
+    'ue3_fixup_does_not_trim_fname_identity',
+    ($paddedFixup[0]['object_name'] ?? '') === ' SequenceObjects '
+        && ($paddedFixup[1]['class_package'] ?? '') === ' SequenceObjects ',
+    'Epic compares FName values directly; whitespace-padded names must not trigger SequenceObjects fixups.'
+);
+
+$subobjectPath = CatalogCompactIdentityEnricher::ue3EffectiveImportPath([
+    0 => ['import_index'=>0,'class_package'=>'Core','class_name'=>'Package','object_name'=>'Foo','outer_index'=>0],
+    1 => ['import_index'=>1,'class_package'=>'Engine','class_name'=>'Object','object_name'=>'Group','outer_index'=>-1],
+    2 => ['import_index'=>2,'class_package'=>'Engine','class_name'=>'Object','object_name'=>'Child','outer_index'=>-2],
+], 2);
+$check(
+    'ue3_getimportpathname_uses_subobject_delimiter',
+    ($subobjectPath['root'] ?? '') === 'Foo'
+        && ($subobjectPath['full'] ?? '') === 'Foo.Group:Child'
+        && ($subobjectPath['relative'] ?? '') === 'Group:Child',
+    'UE3 GetImportPathName uses SUBOBJECT_DELIMITER (:), not dot, when a non-package object is directly under a package.'
+);
+
+$whitespaceConsumer = [
+    ['import_index'=>0,'class_package'=>'Core','class_name'=>'Package','object_name'=>'Foo','outer_index'=>0],
+    ['import_index'=>1,'class_package'=>'Engine','class_name'=>'Texture','object_name'=>' ','outer_index'=>-1],
+];
+$whitespaceExports = [
+    ['export_index'=>0,'class_index'=>-2,'object_name'=>' ','outer_index'=>0,'object_flags'=>$rfPublic],
+];
+$matches = PdoUe3VerifyImportProjectionResolver::resolveInMemory(
+    $whitespaceConsumer, $providerImports, $whitespaceExports, 'Foo'
+);
+$check(
+    'ue3_literal_whitespace_fname_is_identity',
+    ($matches[1] ?? null) === 0,
+    'A literal whitespace FName remains a valid non-empty identity in UE3 VerifyImport.'
+);
+
+$trimmedWhitespaceExports = $whitespaceExports;
+$trimmedWhitespaceExports[0]['object_name'] = '';
+$matches = PdoUe3VerifyImportProjectionResolver::resolveInMemory(
+    $whitespaceConsumer, $providerImports, $trimmedWhitespaceExports, 'Foo'
+);
+$check(
+    'ue3_whitespace_fname_does_not_equal_empty',
+    !isset($matches[1]),
+    'Whitespace FName identity must not collapse to the empty string.'
+);
+
+$check(
+    'verifyimport_hash_preserves_exact_fname_text',
+    CatalogUnrealIdentityHash::sourceFnameHex(' Wall ', 'Texture', 'Engine')
+        !== CatalogUnrealIdentityHash::sourceFnameHex('Wall', 'Texture', 'Engine')
+        && CatalogUnrealIdentityHash::fnameKey(' Wall ') === ' wall '
+        && CatalogUnrealIdentityHash::nameKey(' Wall ') === 'wall',
+    'Source FName hashes use exact case-folded text while ordinary catalogue/search normalization and the frozen V4 accelerator remain trimmed.'
 );
 
 $sequencePath = CatalogCompactIdentityEnricher::ue3EffectiveImportPath($sequenceFixup, 1);
@@ -328,8 +389,34 @@ $check(
     'UE3 must select one physical package/linker from the package environment before VerifyImport; provider contents must not choose a different linker.'
 );
 
+$packageLookupSegment = '';
+if (preg_match('/private static function loadPackageMatches.*?private static function loadPackageCandidates/s', $sharedResolver, $m) === 1) {
+    $packageLookupSegment = (string)$m[0];
+}
+$check(
+    'ordinary_import_provider_lookup_does_not_invent_guid_or_generation_constraint',
+    $packageLookupSegment !== ''
+        && !str_contains($packageLookupSegment, 'package_guid')
+        && !str_contains(strtolower($packageLookupSegment), 'generation'),
+    'Classic VerifyImport calls GetPackageLinker with no CompatibleGuid/GenerationLevel constraint; package summary GUID/generation must not be invented as ImportMap identity.'
+);
+
 $normalizeLookup = new ReflectionMethod(PdoDependencyResolver::class, 'normalizeLookup');
+$sourceFnameLookup = new ReflectionMethod(PdoDependencyResolver::class, 'sourceFnameLookup');
 $numericPackageKey = $normalizeLookup->invoke(null, '123');
+$normalizedWhitespacePackageKey = $normalizeLookup->invoke(null, ' Foo ');
+$whitespacePackageKey = $sourceFnameLookup->invoke(null, ' Foo ');
+$ue3RootMethod = new ReflectionMethod(PdoDependencyResolver::class, 'ue3RootPackageName');
+$legacyRootMethod = new ReflectionMethod(PdoDependencyResolver::class, 'legacyRootPackageName');
+$rootImports = [0=>['class_package'=>'Core','class_name'=>'Package','object_name'=>' Foo ','outer_index'=>0]];
+$check(
+    'classic_package_root_preserves_fname_text',
+    $whitespacePackageKey === 'k: foo '
+        && $normalizedWhitespacePackageKey === 'k:foo'
+        && $ue3RootMethod->invoke(null,$rootImports,0) === ' Foo '
+        && $legacyRootMethod->invoke(null,$rootImports,0) === ' Foo ',
+    'UE1/UE2/UE3 package roots and internal dependency keys must preserve exact FName text; no trim is source-backed.'
+);
 $check(
     'numeric_package_names_remain_string_lookup_keys',
     is_string($numericPackageKey) && $numericPackageKey === 'k:123',

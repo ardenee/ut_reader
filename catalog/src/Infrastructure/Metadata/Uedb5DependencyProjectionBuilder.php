@@ -20,9 +20,12 @@ final class Uedb5DependencyProjectionBuilder
         $edges = [];
         $packages = [];
         $zenNames = self::zenPackageNames($snapshot);
+        $classicPackageKeyKind = Uedb5SqlProjectionContract::classicPackageKeyKindForImportSchema(
+            (string)($snapshot['section_schemas']['imports'] ?? '')
+        );
         foreach ($rows as $row) {
             $row = (array)$row;
-            $edge = self::edge($fileId, $row);
+            $edge = self::edge($fileId, $row, $classicPackageKeyKind);
             $edges[] = $edge;
             if ($edge['required_package_key'] === null) { continue; }
             $packageId = $edge['required_package_key_kind'] . ':' . bin2hex((string)$edge['required_package_key']);
@@ -48,7 +51,7 @@ final class Uedb5DependencyProjectionBuilder
     }
 
     /** @param array<string,mixed> $row @return array<string,mixed> */
-    private static function edge(int $fileId, array $row): array
+    private static function edge(int $fileId, array $row, int $classicPackageKeyKind): array
     {
         $sourceSection = (string)($row['source_section'] ?? '');
         $sourceKind = match ($sourceSection) {
@@ -68,7 +71,7 @@ final class Uedb5DependencyProjectionBuilder
         if (!isset($outcomes[$outcomeName])) {
             throw new RuntimeException('Unknown UEDB5 dependency outcome: ' . $outcomeName);
         }
-        [$packageKind, $packageKey] = self::requiredPackageKey($row);
+        [$packageKind, $packageKey] = self::requiredPackageKey($row, $classicPackageKeyKind);
         [$objectKind, $objectKey] = self::requiredObjectKey($row);
         [$resolvedKind, $resolvedIndex] = self::resolvedObject($row);
         return [
@@ -88,15 +91,15 @@ final class Uedb5DependencyProjectionBuilder
     }
 
     /** @param array<string,mixed> $row @return array{0:?int,1:?string} */
-    private static function requiredPackageKey(array $row): array
+    private static function requiredPackageKey(array $row, int $classicPackageKeyKind): array
     {
         $classic = $row['required_package_identity'] ?? null;
         if (is_array($classic) && ($classic['kind'] ?? null) === 'package_name') {
-            $value = trim((string)($classic['value'] ?? ''));
+            $value = (string)($classic['value'] ?? '');
             if ($value !== '') {
                 return [
-                    Uedb5SqlProjectionContract::PACKAGE_KEY_CLASSIC_NAME,
-                    md5(CatalogUnrealIdentityHash::nameKey($value), true),
+                    $classicPackageKeyKind,
+                    Uedb5SqlProjectionContract::classicPackageKeyBinary($value, $classicPackageKeyKind),
                 ];
             }
         }
@@ -172,7 +175,7 @@ final class Uedb5DependencyProjectionBuilder
     {
         $classic = $row['required_package_identity'] ?? null;
         if (is_array($classic)) {
-            return trim((string)($classic['value'] ?? ''));
+            return (string)($classic['value'] ?? '');
         }
         $id = strtoupper(trim((string)($row['required_package_id'] ?? '')));
         return $id !== '' ? (string)($zenNames[$id] ?? $id) : '';

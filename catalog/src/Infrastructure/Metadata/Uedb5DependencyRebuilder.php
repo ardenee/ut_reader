@@ -56,7 +56,7 @@ final class Uedb5DependencyRebuilder
             throw new RuntimeException('No UEDB5 dependency resolver is registered for package_family ' . $family . '.');
         }
 
-        $rows = $this->applyProviderAmbiguity($rows, $ambiguousProviders);
+        $rows = $this->applyProviderAmbiguity($consumer, $rows, $ambiguousProviders);
         $consumer['sections'][self::SECTION] = $rows;
         $consumer['section_schemas'][self::SECTION] = $schema;
         $written = $this->writer->write($consumer);
@@ -99,9 +99,9 @@ final class Uedb5DependencyRebuilder
                 throw new RuntimeException('UEDB5 provider selection requires positive game_id and file_id.');
             }
             $snapshot = $this->reader->snapshot($gameId, $fileId);
-            $packageName = trim((string)($row['package_name'] ?? ''));
+            $packageName = (string)($row['package_name'] ?? '');
             if ($packageName === '') {
-                $packageName = trim((string)($snapshot['file']['package_name'] ?? ''));
+                $packageName = (string)($snapshot['file']['package_name'] ?? '');
             }
             $loaded[] = [
                 'game_id' => $gameId,
@@ -114,15 +114,16 @@ final class Uedb5DependencyRebuilder
     }
 
     /** @param list<array<string,mixed>> $rows @param list<array<string,mixed>> $ambiguousProviders @return list<array<string,mixed>> */
-    private function applyProviderAmbiguity(array $rows, array $ambiguousProviders): array
+    private function applyProviderAmbiguity(array $consumer, array $rows, array $ambiguousProviders): array
     {
         if ($ambiguousProviders === []) { return $rows; }
+        $exactClassic = self::usesExactClassicPackageKey($consumer);
         $classic = [];
         $zen = [];
         foreach ($ambiguousProviders as $ambiguous) {
             $name = (string)($ambiguous['package_name'] ?? '');
             if ($name !== '') {
-                $classic[CatalogUnrealIdentityHash::nameKey($name)] = (array)$ambiguous['candidate_file_ids'];
+                $classic[self::classicPackageLookupKey($name, $exactClassic)] = (array)$ambiguous['candidate_file_ids'];
             }
             $packageId = strtoupper((string)($ambiguous['package_id'] ?? ''));
             if ($packageId !== '') {
@@ -133,7 +134,7 @@ final class Uedb5DependencyRebuilder
             $candidateIds = null;
             $requiredPackage = (array)($row['required_package_identity'] ?? []);
             if (($requiredPackage['kind'] ?? null) === 'package_name') {
-                $candidateIds = $classic[CatalogUnrealIdentityHash::nameKey((string)($requiredPackage['value'] ?? ''))] ?? null;
+                $candidateIds = $classic[self::classicPackageLookupKey((string)($requiredPackage['value'] ?? ''), $exactClassic)] ?? null;
             }
             $requiredPackageId = strtoupper((string)($row['required_package_id'] ?? ''));
             if ($candidateIds === null && $requiredPackageId !== '') {
@@ -167,7 +168,7 @@ final class Uedb5DependencyRebuilder
         $selected = [];
         foreach ($providers as $provider) {
             $selected[] = [
-                'package_name' => (string)$provider['package_name'],
+                'package_name' => trim((string)$provider['package_name']),
                 'provider_id' => (int)$provider['file_id'],
                 'snapshot' => (array)$provider['snapshot'],
             ];
@@ -198,9 +199,11 @@ final class Uedb5DependencyRebuilder
     private function rebuildUnrealClassic(array $consumer, array $providers, array $options): array
     {
         $selected = [];
+        $exactClassic = self::usesExactClassicPackageKey($consumer);
         foreach ($providers as $provider) {
+            $packageName = (string)$provider['package_name'];
             $selected[] = [
-                'package_name' => (string)$provider['package_name'],
+                'package_name' => $exactClassic ? $packageName : trim($packageName),
                 'provider_id' => (int)$provider['file_id'],
                 'snapshot' => (array)$provider['snapshot'],
             ];
@@ -257,13 +260,16 @@ final class Uedb5DependencyRebuilder
     ): array {
         $outcome = (string)($result['status'] ?? '');
         $this->assertCanonicalOutcome($outcome);
-        $providerPackage = trim((string)($result['provider_package'] ?? ''));
+        $exactClassic = self::usesExactClassicPackageKey($consumer);
+        $providerPackageRaw = (string)($result['provider_package'] ?? '');
+        $providerPackage = $exactClassic ? $providerPackageRaw : trim($providerPackageRaw);
         $providerId = $result['provider_id'] ?? null;
         $objectName = $this->fnameText($import['object_name'] ?? null);
         $classPackage = $this->fnameText($import['class_package'] ?? null);
         $className = $this->fnameText($import['class_name'] ?? null);
         $packageImport = (int)($import['outer_index'] ?? 0) === 0
-            && CatalogUnrealIdentityHash::nameKey($className) === CatalogUnrealIdentityHash::nameKey('Package');
+            && self::classicPackageLookupKey($className, $exactClassic)
+                === self::classicPackageLookupKey('Package', $exactClassic);
         $sourceIrrelevantNone = (string)($result['reason'] ?? '') === 'source_irrelevant_name_none';
         $dependencyClass = (string)($result['dependency_class'] ?? 'hard');
 
@@ -328,7 +334,9 @@ final class Uedb5DependencyRebuilder
         $runtimeDerived = in_array($status, ['runtime_only', 'ignored'], true);
         $dependencyClass = $runtimeDerived ? 'runtime_derived' : ($optional ? 'optional' : 'hard');
         $hard = $dependencyClass === 'hard';
-        $providerPackage = trim((string)($result['provider_package'] ?? ''));
+        $exactClassic = self::usesExactClassicPackageKey($consumer);
+        $providerPackageRaw = (string)($result['provider_package'] ?? '');
+        $providerPackage = $exactClassic ? $providerPackageRaw : trim($providerPackageRaw);
         $objectName = $this->fnameText($import['object_name'] ?? null);
         $classPackage = $this->fnameText($import['class_package'] ?? null);
         $className = $this->fnameText($import['class_name'] ?? null);
@@ -400,6 +408,20 @@ final class Uedb5DependencyRebuilder
         if (!array_key_exists($outcome, self::OUTCOME_CODES)) {
             throw new RuntimeException('Dependency result uses a non-canonical UEDB5 outcome: ' . $outcome);
         }
+    }
+
+    private static function usesExactClassicPackageKey(array $snapshot): bool
+    {
+        return Uedb5SqlProjectionContract::classicPackageKeyKindForImportSchema(
+            (string)($snapshot['section_schemas']['imports'] ?? '')
+        ) === Uedb5SqlProjectionContract::PACKAGE_KEY_CLASSIC_FNAME;
+    }
+
+    private static function classicPackageLookupKey(string $value, bool $exact): string
+    {
+        return $exact
+            ? CatalogUnrealIdentityHash::fnameKey($value)
+            : CatalogUnrealIdentityHash::nameKey($value);
     }
 
     private function fnameText(mixed $value): string

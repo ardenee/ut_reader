@@ -53,7 +53,7 @@ try {
     $check('classic_registration_persists_source_policy',
         (string)$classicRegistration['source_policy'] === Uedb5Ue5ClassicSnapshotBuilder::SOURCE_POLICY
         && (string)$classicRegistration['package_family'] === Uedb5Ue5ClassicSnapshotBuilder::PACKAGE_FAMILY);
-    $check('classic_registration_uses_normalized_package_name_key',
+    $check('ue5_classic_registration_keeps_normalized_package_name_key_pending_2b',
         (int)$classicRegistration['package_key_kind'] === Uedb5SqlProjectionContract::PACKAGE_KEY_CLASSIC_NAME
         && strlen((string)$classicRegistration['package_key']) === 16);
 

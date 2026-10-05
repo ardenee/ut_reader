@@ -25,20 +25,22 @@ final class Uedb5ProviderKeyBuilder
             'source_kind'=>self::SOURCE_PRIMARY,'source_id'=>$fileId,'game_id'=>$gameId,
             'package_key_kind'=>$kind,'package_key'=>$key,'file_id'=>$fileId,
         ]];
-        if ($kind !== Uedb5SqlProjectionContract::PACKAGE_KEY_CLASSIC_NAME) {
+        if (!in_array($kind, [Uedb5SqlProjectionContract::PACKAGE_KEY_CLASSIC_NAME, Uedb5SqlProjectionContract::PACKAGE_KEY_CLASSIC_FNAME], true)) {
             return $rows;
         }
         foreach ($aliases as $alias) {
             $alias = (array)$alias;
             $aliasId = (int)($alias['id'] ?? 0);
-            $name = trim((string)($alias['package_name'] ?? ''));
+            $name = (string)($alias['package_name'] ?? '');
             if ($aliasId < 1 || $name === '') { continue; }
-            $normalized = CatalogUnrealIdentityHash::nameKey($name);
+            $normalized = $kind === Uedb5SqlProjectionContract::PACKAGE_KEY_CLASSIC_FNAME
+                ? CatalogUnrealIdentityHash::fnameKey($name)
+                : CatalogUnrealIdentityHash::nameKey($name);
             $rows[] = [
                 'source_kind'=>self::SOURCE_ALIAS,
                 'source_id'=>$aliasId,
                 'game_id'=>$gameId,
-                'package_key_kind'=>Uedb5SqlProjectionContract::PACKAGE_KEY_CLASSIC_NAME,
+                'package_key_kind'=>$kind,
                 'package_key'=>md5($normalized, true),
                 'file_id'=>$fileId,
             ];

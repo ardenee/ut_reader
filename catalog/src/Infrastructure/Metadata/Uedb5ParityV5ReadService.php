@@ -108,8 +108,9 @@ final class Uedb5ParityV5ReadService
             $this->collectIds($ids,
                 'SELECT DISTINCT e.file_id FROM ue_uedb5_dependency_edges e JOIN ue_files f ON f.id=e.file_id '
                 .'WHERE f.game_id=? AND f.scan_status="verified" AND ((e.required_object_key_kind=1 AND e.required_object_key=?) '
-                .'OR (e.required_package_key_kind=1 AND e.required_package_key=?)) ORDER BY e.file_id LIMIT '.$limit,
-                [$gameId,$hash,md5(CatalogUnrealIdentityHash::nameKey($query),true)]);
+                .'OR (e.required_package_key_kind='.Uedb5SqlProjectionContract::PACKAGE_KEY_CLASSIC_FNAME.' AND e.required_package_key=?) '
+                .'OR (e.required_package_key_kind='.Uedb5SqlProjectionContract::PACKAGE_KEY_CLASSIC_NAME.' AND e.required_package_key=?)) ORDER BY e.file_id LIMIT '.$limit,
+                [$gameId,$hash,md5(CatalogUnrealIdentityHash::fnameKey($query),true),md5(CatalogUnrealIdentityHash::nameKey($query),true)]);
         }
         $candidateIds=array_map('intval',array_keys($ids));sort($candidateIds,SORT_NUMERIC);
         $candidateIds=array_slice($candidateIds,0,$limit);if($candidateIds===[])return[];
@@ -145,11 +146,14 @@ final class Uedb5ParityV5ReadService
             }
         }
         if(in_array('imports',$fields,true)){
-            $packageHash=md5(CatalogUnrealIdentityHash::nameKey($query),true);
+            $packageHashExact=md5(CatalogUnrealIdentityHash::fnameKey($query),true);
+            $packageHashNormalized=md5(CatalogUnrealIdentityHash::nameKey($query),true);
             $sql='SELECT file_id,source_kind,source_index FROM ue_uedb5_dependency_edges WHERE file_id IN ('.$placeholders.') '
-                .'AND ((required_object_key_kind=1 AND required_object_key=?) OR (required_package_key_kind=1 AND required_package_key=?)) '
+                .'AND ((required_object_key_kind=1 AND required_object_key=?) '
+                .'OR (required_package_key_kind='.Uedb5SqlProjectionContract::PACKAGE_KEY_CLASSIC_FNAME.' AND required_package_key=?) '
+                .'OR (required_package_key_kind='.Uedb5SqlProjectionContract::PACKAGE_KEY_CLASSIC_NAME.' AND required_package_key=?)) '
                 .'ORDER BY file_id,source_kind,source_index';
-            $s=$this->db->prepare($sql);$s->execute(array_merge($fileIds,[$hash,$packageHash]));
+            $s=$this->db->prepare($sql);$s->execute(array_merge($fileIds,[$hash,$packageHashExact,$packageHashNormalized]));
             while(($row=$s->fetch(PDO::FETCH_ASSOC))!==false){
                 $kind=(int)$row['source_kind'];
                 if($kind===Uedb5SqlProjectionContract::DEP_SOURCE_IMPORT)$section='imports';
