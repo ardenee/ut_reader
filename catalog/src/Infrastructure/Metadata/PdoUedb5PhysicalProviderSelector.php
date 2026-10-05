@@ -54,6 +54,9 @@ final class PdoUedb5PhysicalProviderSelector
         $requirements = [];
         foreach ($baseline as $index => $result) {
             $result = (array)$result;
+            if (str_starts_with((string)($result['reason'] ?? ''), 'source_irrelevant_name_none')) {
+                continue;
+            }
             $packageName = trim((string)($result['provider_package'] ?? ''));
             if ($packageName === '' || (string)($result['status'] ?? '') === 'common') {
                 continue;

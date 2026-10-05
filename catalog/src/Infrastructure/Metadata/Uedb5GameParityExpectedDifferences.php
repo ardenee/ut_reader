@@ -26,7 +26,16 @@ final class Uedb5GameParityExpectedDifferences
                 'v4_outcome'=>'missing',
                 'v5_outcome'=>'unresolved',
                 'requires_v5_source_evidence'=>true,
-                'reason'=>'UE1/UE2 VerifyImport ignores imports whose class package, class name, or object name is NAME_None; V4 may have over-reported those rows as missing.',
+                'reason'=>'UE1/UE2 VerifyImport returns immediately for imports whose class package, class name, or object name is NAME_None; V5 records those source-irrelevant rows as non-hard unresolved instead of preserving V4 missing.',
+            ],
+            [
+                'id'=>'classic_none_import_ancestor_source_irrelevant',
+                'game'=>'*',
+                'category'=>'dependency_outcome',
+                'v4_outcome'=>'missing',
+                'v5_outcome'=>'unresolved',
+                'requires_v5_source_evidence'=>true,
+                'reason'=>'UE1/UE2 nested VerifyImport inherits SourceLinker from its parent; if an ancestor is NAME_None and VerifyImport returns before establishing that SourceLinker, the descendant cannot be proven against a provider.',
             ],
             [
                 'id'=>'normalized_fname_search_case',
@@ -65,26 +74,39 @@ final class Uedb5GameParityExpectedDifferences
             if ($scope !== (string)($v5['scope'] ?? '') || !in_array($scope, ['names','exports','imports'], true)) { return null; }
             if (empty($v5['normalized_authoritative_match']) || $query === '' || $source === '' || $query === $source) { return null; }
             if (CatalogUnrealIdentityHash::nameKey($query) !== CatalogUnrealIdentityHash::nameKey($source)) { return null; }
-            $ruleIndex = match ($scope) { 'names' => 2, 'exports' => 3, 'imports' => 4, default => -1 };
-            return self::rules()[$ruleIndex] ?? null;
+            $ruleId = match ($scope) {
+                'names' => 'normalized_fname_search_case',
+                'exports' => 'normalized_export_search_case',
+                'imports' => 'normalized_import_search_case',
+                default => '',
+            };
+            return self::rule($ruleId);
         }
 
+        $reason = strtolower(trim((string)($v5['reason_code'] ?? '')));
+        $policy = strtolower(trim((string)($v5['source_policy'] ?? '')));
+        $classicPolicy = str_starts_with($policy, 'ue1-') || str_starts_with($policy, 'ue2-');
         if ($category !== 'dependency_outcome'
             || ($v4['outcome'] ?? '') !== 'missing'
             || ($v5['outcome'] ?? '') !== 'unresolved') {
             return null;
         }
-
-        $reason = strtolower(trim((string)($v5['reason_code'] ?? '')));
-        $policy = strtolower(trim((string)($v5['source_policy'] ?? '')));
-        if ((str_starts_with($policy, 'ue1-') || str_starts_with($policy, 'ue2-'))
-            && $reason === 'package_root_unavailable') {
+        if ($classicPolicy && $reason === 'source_irrelevant_name_none') {
             $none = static fn(mixed $value): bool =>
                 CatalogUnrealIdentityHash::nameKey((string)$value) === CatalogUnrealIdentityHash::nameKey('None');
             if ($none($v5['required_object'] ?? '')
                 || $none($v5['class_package'] ?? '')
                 || $none($v5['class_name'] ?? '')) {
-                return self::rules()[1];
+                return self::rule('classic_none_import_source_irrelevant');
+            }
+        }
+        if ($classicPolicy && $reason === 'source_irrelevant_name_none_ancestor') {
+            $detail = (array)($v5['resolver_detail'] ?? []);
+            $ancestor = $detail['source_irrelevant_ancestor_index'] ?? null;
+            if (is_int($ancestor) || (is_string($ancestor) && ctype_digit($ancestor))) {
+                if ((int)$ancestor >= 0) {
+                    return self::rule('classic_none_import_ancestor_source_irrelevant');
+                }
             }
         }
 
@@ -97,6 +119,17 @@ final class Uedb5GameParityExpectedDifferences
             || str_starts_with($source, 'ue3_') || $confidence === 'source_unresolved'
         );
         if (!$hasEvidence) { return null; }
-        return self::rules()[0];
+        return self::rule('ut3_source_unresolved');
     }
+
+    /** @return array<string,mixed>|null */
+    private static function rule(string $id): ?array
+    {
+        if ($id === '') { return null; }
+        foreach (self::rules() as $rule) {
+            if (($rule['id'] ?? '') === $id) { return $rule; }
+        }
+        return null;
+    }
+
 }

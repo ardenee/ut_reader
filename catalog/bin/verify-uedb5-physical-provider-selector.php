@@ -51,6 +51,7 @@ $consumerImports=[
     ['index'=>0,'class_package'=>'Core','class_name'=>'Package','object_name'=>'Pkg','outer_index'=>0],
     ['index'=>1,'class_package'=>'Core','class_name'=>'Class','object_name'=>'A','outer_index'=>-1],
     ['index'=>2,'class_package'=>'Core','class_name'=>'Class','object_name'=>'B','outer_index'=>-1],
+    ['index'=>3,'class_package'=>'Core','class_name'=>'Class','object_name'=>'None','outer_index'=>-1],
 ];
 $public=0x00000004;
 $export=static fn(int $index,string $name):array=>[
@@ -59,7 +60,7 @@ $export=static fn(int $index,string $name):array=>[
 ];
 $writer->write($snapshot(10,'Consumer',$consumerImports,[]));
 $writer->write($snapshot(20,'Pkg',[],[$export(0,'A')]));
-$writer->write($snapshot(21,'Pkg',[],[$export(0,'B')]));
+$writer->write($snapshot(21,'Pkg',[],[$export(0,'B'),$export(1,'None')]));
 $writer->write($snapshot(22,'PkgVariant',[],[$export(0,'A'),$export(1,'B')]));
 foreach([
     [10,'Consumer','2026-10-01 10:00:00'],[20,'Pkg','2026-10-02 12:00:00'],
@@ -88,6 +89,8 @@ $selected=$selector->select(3,10);
 $check('partial_duplicate_set_selects_one_physical_provider',
     count($selected)===1 && (int)$selected[0]['file_id']===20);
 $check('candidate_order_breaks_equal_coverage_ties',
+    (int)$selected[0]['file_id']===20);
+$check('source_irrelevant_none_does_not_influence_provider_scoring',
     (int)$selected[0]['file_id']===20);
 
 $soloImports=[

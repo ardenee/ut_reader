@@ -13,9 +13,6 @@ namespace UnrealDb\Catalog\Infrastructure\Persistence;
 use PDO;
 use RuntimeException;
 use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataSnapshotLoader;
-use UnrealDb\Catalog\Infrastructure\Metadata\CatalogUnrealIdentityHash;
-
-require_once dirname(__DIR__) . '/Metadata/CatalogUnrealIdentityHash.php';
 
 final class PdoLegacyVerifyImportProjectionResolver
 {
@@ -66,7 +63,7 @@ final class PdoLegacyVerifyImportProjectionResolver
         $candidates = [];
         foreach ($providerExportsByIndex as $exportIndex => $export) {
             [$classPackage, $className] = self::exportClassIdentity($export, $providerImportsByIndex, $providerExportsByIndex, $providerPackageName);
-            $objectName = trim((string)($export['object_name'] ?? ''));
+            $objectName = (string)($export['object_name'] ?? '');
             if ($objectName === '' || $classPackage === '' || $className === '') {
                 continue;
             }
@@ -105,15 +102,15 @@ final class PdoLegacyVerifyImportProjectionResolver
         if ($classIndex < 0) {
             $classImport = $providerImports[-$classIndex - 1] ?? null;
             if (!is_array($classImport)) return ['', ''];
-            $className = trim((string)($classImport['object_name'] ?? ''));
+            $className = (string)($classImport['object_name'] ?? '');
             $classOuter = (int)($classImport['outer_index'] ?? 0);
             if ($classOuter >= 0) return ['', $className];
             $classPackageImport = $providerImports[-$classOuter - 1] ?? null;
-            return [is_array($classPackageImport) ? trim((string)($classPackageImport['object_name'] ?? '')) : '', $className];
+            return [is_array($classPackageImport) ? (string)($classPackageImport['object_name'] ?? '') : '', $className];
         }
         if ($classIndex > 0) {
             $classExport = $providerExports[$classIndex - 1] ?? null;
-            return [trim($providerPackageName), is_array($classExport) ? trim((string)($classExport['object_name'] ?? '')) : ''];
+            return [$providerPackageName, is_array($classExport) ? (string)($classExport['object_name'] ?? '') : ''];
         }
         return ['Core', 'Class'];
     }
@@ -138,6 +135,10 @@ final class PdoLegacyVerifyImportProjectionResolver
         }
         $resolving[$index] = true;
         $import = $imports[$index];
+        if (self::isNameNoneImport($import) || self::hasNameNoneAncestor($imports, $index)) {
+            unset($resolving[$index]);
+            return null;
+        }
 
         $expectedOuterIndex = null;
         $outerIndex = (int)($import['outer_index'] ?? $import['package_index'] ?? 0);
@@ -161,9 +162,9 @@ final class PdoLegacyVerifyImportProjectionResolver
 
     private static function resolveImport(array $import, array $candidates, bool $requirePublic, array $classRemaps, ?int $expectedOuterIndex): ?int
     {
-        $objectName = trim((string)($import['object_name'] ?? ''));
-        $className = trim((string)($import['class_name'] ?? ''));
-        $classPackage = trim((string)($import['class_package'] ?? ''));
+        $objectName = (string)($import['object_name'] ?? '');
+        $className = (string)($import['class_name'] ?? '');
+        $classPackage = (string)($import['class_package'] ?? '');
         if ($objectName === '' || $className === '' || $classPackage === '') return null;
 
         $candidateClass = $className;
@@ -184,9 +185,9 @@ final class PdoLegacyVerifyImportProjectionResolver
     private static function findCandidate(array $candidates, string $identityHash, string $objectName, string $className, string $classPackage, bool $requirePublic, ?int $expectedOuterIndex): ?int
     {
         foreach ($candidates[bin2hex($identityHash)] ?? [] as $candidate) {
-            if (CatalogUnrealIdentityHash::nameKey((string)$candidate['object_name']) !== CatalogUnrealIdentityHash::nameKey($objectName)
-                || CatalogUnrealIdentityHash::nameKey((string)$candidate['class_name']) !== CatalogUnrealIdentityHash::nameKey($className)
-                || CatalogUnrealIdentityHash::nameKey((string)$candidate['class_package']) !== CatalogUnrealIdentityHash::nameKey($classPackage)) {
+            if (self::key((string)$candidate['object_name']) !== self::key($objectName)
+                || self::key((string)$candidate['class_name']) !== self::key($className)
+                || self::key((string)$candidate['class_package']) !== self::key($classPackage)) {
                 continue;
             }
             if ($expectedOuterIndex !== null) {
@@ -206,13 +207,52 @@ final class PdoLegacyVerifyImportProjectionResolver
         return null;
     }
 
+    private static function isNameNoneImport(array $import): bool
+    {
+        foreach (['class_package','class_name','object_name'] as $field) {
+            if (self::key((string)($import[$field] ?? '')) === self::key('None')) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** @param array<int,array<string,mixed>> $imports */
+    private static function hasNameNoneAncestor(array $imports, int $index): bool
+    {
+        $seen = [];
+        while (isset($imports[$index]) && !isset($seen[$index])) {
+            $seen[$index] = true;
+            $outer = (int)($imports[$index]['outer_index'] ?? $imports[$index]['package_index'] ?? 0);
+            if ($outer >= 0) {
+                return false;
+            }
+            $index = -$outer - 1;
+            $parent = $imports[$index] ?? null;
+            if (!is_array($parent)) {
+                return false;
+            }
+            if (self::isNameNoneImport($parent)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static function identityHash(string $objectName, string $className, string $classPackage): string
     {
-        return CatalogUnrealIdentityHash::verifyImportBinary($objectName, $className, $classPackage);
+        // VerifyImport compares FName identity. Do not use the catalog-wide
+        // normalized search key here because that intentionally trims text.
+        return md5(
+            self::key($objectName) . "\0"
+            . self::key($className) . "\0"
+            . self::key($classPackage),
+            true
+        );
     }
 
     private static function key(string $value): string
     {
-        return CatalogUnrealIdentityHash::nameKey($value);
+        return function_exists('mb_strtolower') ? mb_strtolower($value, 'UTF-8') : strtolower($value);
     }
 }

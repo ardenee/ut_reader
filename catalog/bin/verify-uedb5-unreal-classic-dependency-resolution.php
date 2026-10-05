@@ -85,6 +85,67 @@ $private = Uedb5ClassicDependencyResolver::resolve($ut99Consumer, [[
     'package_name'=>'Provider','provider_id'=>41003,'snapshot'=>$ut99Private,
 ]]);
 $check(($private[1]['status'] ?? null) === 'missing', 'ut99_private_export_is_rejected');
+
+$whitespaceConsumer = $snapshot(
+    41004, 'WhitespaceConsumer', 'classic-linkerload', 'ue1.ut99', 'ue1-ut99-retail-v1400-1999-11-30',
+    [$import(0, 'WhitespaceProvider', 'Core', 'Package', 0), $import(1, ' ', 'Core', 'Package', -1)], []
+);
+$whitespaceProvider = $snapshot(
+    41005, 'WhitespaceProvider', 'classic-linkerload', 'ue1.ut99', 'ue1-ut99-retail-v1400-1999-11-30',
+    [$import(0, 'Core', 'Core', 'Package', 0), $import(1, 'Package', 'Core', 'Class', -1)],
+    [$export(0, ' ', '00000004', 0, -2)]
+);
+$whitespace = Uedb5ClassicDependencyResolver::resolve($whitespaceConsumer, [[
+    'package_name'=>'WhitespaceProvider','provider_id'=>41005,'snapshot'=>$whitespaceProvider,
+]]);
+$check(($whitespace[1]['status'] ?? null) === 'resolved'
+    && (int)($whitespace[1]['provider_id'] ?? 0) === 41005
+    && (int)($whitespace[1]['export_index'] ?? -1) === 0,
+    'ut99_literal_whitespace_fname_is_not_trimmed');
+
+$noneConsumer = $snapshot(
+    41006, 'NoneConsumer', 'classic-linkerload', 'ue1.ut99', 'ue1-ut99-retail-v1400-1999-11-30',
+    [
+        $import(0, 'Provider', 'Core', 'Package', 0),
+        $import(1, 'None', 'Core', 'Class', -1),
+        $import(2, 'Obj', 'None', 'Class', -1),
+        $import(3, 'Obj', 'Core', 'None', -1),
+    ], []
+);
+$noneResolved = Uedb5ClassicDependencyResolver::resolve($noneConsumer, [[
+    'package_name'=>'Provider','provider_id'=>41002,'snapshot'=>$ut99Public,
+]]);
+foreach ([1,2,3] as $noneIndex) {
+    $check(($noneResolved[$noneIndex]['status'] ?? null) === 'unresolved'
+        && ($noneResolved[$noneIndex]['reason'] ?? null) === 'source_irrelevant_name_none'
+        && ($noneResolved[$noneIndex]['dependency_class'] ?? null) === 'runtime_derived'
+        && ($noneResolved[$noneIndex]['provider_id'] ?? null) === null,
+        'ut99_name_none_import_' . $noneIndex . '_is_source_irrelevant');
+}
+
+$noneAncestorConsumer = $snapshot(
+    41007, 'NoneAncestorConsumer', 'classic-linkerload', 'ue1.ut99', 'ue1-ut99-retail-v1400-1999-11-30',
+    [
+        $import(0, 'Provider', 'Core', 'Package', 0),
+        $import(1, 'None', 'Core', 'Class', -1),
+        $import(2, 'Child', 'Core', 'Class', -2),
+    ], []
+);
+$noneAncestorProvider = $snapshot(
+    41008, 'Provider', 'classic-linkerload', 'ue1.ut99', 'ue1-ut99-retail-v1400-1999-11-30',
+    [], [$export(0, 'Child', '00000004')]
+);
+$noneAncestorResolved = Uedb5ClassicDependencyResolver::resolve($noneAncestorConsumer, [[
+    'package_name'=>'Provider','provider_id'=>41008,'snapshot'=>$noneAncestorProvider,
+]]);
+$check(($noneAncestorResolved[1]['reason'] ?? null) === 'source_irrelevant_name_none'
+    && ($noneAncestorResolved[2]['status'] ?? null) === 'unresolved'
+    && ($noneAncestorResolved[2]['reason'] ?? null) === 'source_irrelevant_name_none_ancestor'
+    && ($noneAncestorResolved[2]['dependency_class'] ?? null) === 'runtime_derived'
+    && (int)($noneAncestorResolved[2]['source_irrelevant_ancestor_index'] ?? -1) === 1
+    && ($noneAncestorResolved[2]['provider_id'] ?? null) === null,
+    'ut99_child_of_name_none_import_does_not_gain_source_linker');
+
 $unreal2Consumer = $snapshot(
     42001, 'Consumer', 'classic-linkerload', 'ue2.unreal2', 'ue2-unreal2-package-v126',
     $consumerImports, []
@@ -177,6 +238,46 @@ try {
         && ($rows[1]['outcome'] ?? null) === 'resolved'
         && (int)($rows[1]['selected_provider_file_id'] ?? 0) === 41002,
         'rebuilder_persists_v5_only_classic_results');
+
+    $writer->write($whitespaceConsumer);
+    $writer->write($whitespaceProvider);
+    (new Uedb5DependencyRebuilder($reader, $writer))->rebuild(99, 41004, [[
+        'game_id'=>99,'file_id'=>41005,'package_name'=>'WhitespaceProvider',
+    ]]);
+    $whitespaceRows = $reader->snapshot(99, 41004)['sections'][Uedb5DependencyRebuilder::SECTION] ?? [];
+    $whitespaceIdentity = (array)($whitespaceRows[1]['required_object_identity'] ?? []);
+    $check(($whitespaceRows[1]['outcome'] ?? null) === 'resolved'
+        && ($whitespaceIdentity['object_name'] ?? null) === ' '
+        && (int)($whitespaceRows[1]['selected_provider_file_id'] ?? 0) === 41005,
+        'rebuilder_preserves_literal_whitespace_fname_identity');
+
+    $writer->write($noneConsumer);
+    (new Uedb5DependencyRebuilder($reader, $writer))->rebuild(99, 41006, [[
+        'game_id'=>99,'file_id'=>41002,'package_name'=>'Provider',
+    ]]);
+    $noneRows = $reader->snapshot(99, 41006)['sections'][Uedb5DependencyRebuilder::SECTION] ?? [];
+    $noneIdentity = (array)($noneRows[1]['required_object_identity'] ?? []);
+    $check(($noneRows[1]['outcome'] ?? null) === 'unresolved'
+        && ($noneRows[1]['reason_code'] ?? null) === 'source_irrelevant_name_none'
+        && ($noneRows[1]['dependency_class'] ?? null) === 'runtime_derived'
+        && ($noneRows[1]['hard'] ?? true) === false
+        && ($noneRows[1]['required_package_identity'] ?? null) === null
+        && ($noneIdentity['object_name'] ?? null) === 'None',
+        'rebuilder_persists_source_irrelevant_name_none_without_hard_dependency');
+
+    $writer->write($noneAncestorConsumer);
+    $writer->write($noneAncestorProvider);
+    (new Uedb5DependencyRebuilder($reader, $writer))->rebuild(99, 41007, [[
+        'game_id'=>99,'file_id'=>41008,'package_name'=>'Provider',
+    ]]);
+    $ancestorRows = $reader->snapshot(99, 41007)['sections'][Uedb5DependencyRebuilder::SECTION] ?? [];
+    $check(($ancestorRows[2]['outcome'] ?? null) === 'unresolved'
+        && ($ancestorRows[2]['reason_code'] ?? null) === 'source_irrelevant_name_none_ancestor'
+        && ($ancestorRows[2]['dependency_class'] ?? null) === 'runtime_derived'
+        && ($ancestorRows[2]['hard'] ?? true) === false
+        && ($ancestorRows[2]['required_package_identity'] ?? null) === null
+        && (int)(($ancestorRows[2]['resolver_detail']['source_irrelevant_ancestor_index'] ?? -1)) === 1,
+        'rebuilder_persists_name_none_ancestor_as_nonhard_unresolved');
 } finally {
     if (is_dir($tempRoot)) {
         $iterator = new RecursiveIteratorIterator(

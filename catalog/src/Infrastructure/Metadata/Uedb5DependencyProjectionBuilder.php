@@ -118,11 +118,11 @@ final class Uedb5DependencyProjectionBuilder
         }
         $classic = $row['required_object_identity'] ?? null;
         if (is_array($classic) && ($classic['kind'] ?? null) === 'classic_import') {
-            $name = trim((string)($classic['object_name'] ?? ''));
+            $name = (string)($classic['object_name'] ?? '');
             if ($name !== '') {
                 return [
                     Uedb5SqlProjectionContract::OBJECT_KEY_NAME,
-                    md5(CatalogUnrealIdentityHash::nameKey($name), true),
+                    md5(self::fnameKey($name), true),
                 ];
             }
         }
@@ -250,5 +250,10 @@ final class Uedb5DependencyProjectionBuilder
             return Uedb5SqlProjectionContract::OUTCOME_COMMON;
         }
         return Uedb5SqlProjectionContract::OUTCOME_RESOLVED;
+    }
+
+    private static function fnameKey(string $value): string
+    {
+        return function_exists('mb_strtolower') ? mb_strtolower($value, 'UTF-8') : strtolower($value);
     }
 }

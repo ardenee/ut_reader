@@ -199,6 +199,7 @@ final class Uedb5DependencyRebuilder
         $className = $this->fnameText($import['class_name'] ?? null);
         $packageImport = (int)($import['outer_index'] ?? 0) === 0
             && CatalogUnrealIdentityHash::nameKey($className) === CatalogUnrealIdentityHash::nameKey('Package');
+        $sourceIrrelevantNone = (string)($result['reason'] ?? '') === 'source_irrelevant_name_none';
         $dependencyClass = (string)($result['dependency_class'] ?? 'hard');
 
         return [
@@ -209,7 +210,7 @@ final class Uedb5DependencyRebuilder
                 'kind' => 'package_name',
                 'value' => $providerPackage,
             ],
-            'required_object_identity' => $packageImport || $objectName === '' ? null : [
+            'required_object_identity' => (($packageImport && !$sourceIrrelevantNone) || $objectName === '') ? null : [
                 'kind' => 'classic_import',
                 'object_name' => $objectName,
                 'class_package' => $classPackage,
@@ -338,6 +339,8 @@ final class Uedb5DependencyRebuilder
 
     private function fnameText(mixed $value): string
     {
-        return is_array($value) ? trim((string)($value['text'] ?? '')) : '';
+        // Preserve serialized FName text exactly. Whitespace-only FNames are
+        // valid identity values and must not collapse to an absent object name.
+        return is_array($value) ? (string)($value['text'] ?? '') : '';
     }
 }

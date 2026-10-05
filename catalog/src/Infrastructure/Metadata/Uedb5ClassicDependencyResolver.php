@@ -112,6 +112,22 @@ final class Uedb5ClassicDependencyResolver
         $resolved = [];
         foreach ($consumer['imports'] as $importIndex => $import) {
             $root = self::rootPackage($consumer['imports'], (int)$importIndex, $engine);
+            if (($engine === 'ue1' || $engine === 'ue2') && self::isSourceIrrelevantNoneImport($import)) {
+                $resolved[(int)$importIndex] = self::result(
+                    'unresolved', '', null, null, 'source_irrelevant_name_none', $engine, 'runtime_derived'
+                );
+                continue;
+            }
+            if (($engine === 'ue1' || $engine === 'ue2')) {
+                $noneAncestor = self::sourceIrrelevantNoneAncestor($consumer['imports'], (int)$importIndex);
+                if ($noneAncestor !== null) {
+                    $resolved[(int)$importIndex] = self::result(
+                        'unresolved', '', null, null, 'source_irrelevant_name_none_ancestor', $engine,
+                        'runtime_derived', ['source_irrelevant_ancestor_index'=>$noneAncestor]
+                    );
+                    continue;
+                }
+            }
             if ($root !== '' && self::isCommon($root, $engine, $common)) {
                 $resolved[(int)$importIndex] = self::result(
                     'common', $root, null, null, 'common_or_script_package', $engine
@@ -208,8 +224,11 @@ final class Uedb5ClassicDependencyResolver
             $imports[$index] = [
                 'import_index' => $index,
                 'class_package' => self::fnameText($row['class_package'] ?? null),
+                'class_package_is_none' => self::fnameIsNone($row['class_package'] ?? null),
                 'class_name' => self::fnameText($row['class_name'] ?? null),
+                'class_name_is_none' => self::fnameIsNone($row['class_name'] ?? null),
                 'object_name' => self::fnameText($row['object_name'] ?? null),
+                'object_name_is_none' => self::fnameIsNone($row['object_name'] ?? null),
                 'outer_index' => (int)($row['outer_index'] ?? 0),
                 'package_name_present' => !empty($row['package_name_present'])
                     || !empty($row['serialized_package_name_present']),
@@ -304,6 +323,43 @@ final class Uedb5ClassicDependencyResolver
         return false;
     }
 
+    /** @param array<string,mixed> $import */
+    private static function isSourceIrrelevantNoneImport(array $import): bool
+    {
+        foreach (['class_package','class_name','object_name'] as $field) {
+            if (!empty($import[$field . '_is_none'])) {
+                return true;
+            }
+            if (!array_key_exists($field . '_is_none', $import)
+                && self::key((string)($import[$field] ?? '')) === self::key('None')) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** @param array<int,array<string,mixed>> $imports */
+    private static function sourceIrrelevantNoneAncestor(array $imports, int $importIndex): ?int
+    {
+        $seen = [];
+        while (isset($imports[$importIndex]) && !isset($seen[$importIndex])) {
+            $seen[$importIndex] = true;
+            $outer = (int)($imports[$importIndex]['outer_index'] ?? 0);
+            if ($outer >= 0) {
+                return null;
+            }
+            $importIndex = -$outer - 1;
+            $parent = $imports[$importIndex] ?? null;
+            if (!is_array($parent)) {
+                return null;
+            }
+            if (self::isSourceIrrelevantNoneImport($parent)) {
+                return $importIndex;
+            }
+        }
+        return null;
+    }
+
     /** @param array<string,true> $common */
     private static function isCommon(string $root, string $engine, array $common): bool
     {
@@ -326,9 +382,11 @@ final class Uedb5ClassicDependencyResolver
         int|string|null $providerId,
         ?int $exportIndex,
         string $reason,
-        string $engine
+        string $engine,
+        ?string $dependencyClass = null,
+        array $detail = []
     ): array {
-        return [
+        return array_merge([
             'status' => $status,
             'provider_package' => $providerPackage,
             'provider_id' => $providerId,
@@ -340,15 +398,29 @@ final class Uedb5ClassicDependencyResolver
                 'ue4' => 'ue4-verify-import-inner-source-v1',
                 default => 'classic-source-v1',
             },
-            'dependency_class' => $status === 'common' && strncasecmp($providerPackage, '/Script/', 8) === 0
-                ? 'script'
-                : 'hard',
-        ];
+            'dependency_class' => $dependencyClass ?? (
+                $status === 'common' && strncasecmp($providerPackage, '/Script/', 8) === 0
+                    ? 'script'
+                    : 'hard'
+            ),
+        ], $detail);
+    }
+
+    private static function fnameIsNone(mixed $value): bool
+    {
+        if (!is_array($value)) {
+            return self::key((string)$value) === self::key('None');
+        }
+        return (int)($value['number'] ?? 0) === 0
+            && self::key((string)($value['text'] ?? '')) === self::key('None');
     }
 
     private static function fnameText(mixed $value): string
     {
-        return is_array($value) ? trim((string)($value['text'] ?? '')) : trim((string)$value);
+        // FName text is identity data. Epic compares FNames; it does not trim
+        // their serialized text. A literal whitespace FName is therefore not
+        // equivalent to NAME_None/an empty name.
+        return is_array($value) ? (string)($value['text'] ?? '') : (string)$value;
     }
 
     private static function flagsInt(mixed $value): int
@@ -371,6 +443,6 @@ final class Uedb5ClassicDependencyResolver
 
     private static function key(string $value): string
     {
-        return CatalogUnrealIdentityHash::nameKey(trim($value));
+        return function_exists('mb_strtolower') ? mb_strtolower($value, 'UTF-8') : strtolower($value);
     }
 }

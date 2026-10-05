@@ -156,6 +156,8 @@ Each row may retain only what indexed catalogue queries need:
 
 The row deliberately omits required package/object strings, class identity, outer graph, flags, resolver reason text and source-specific raw structures. Those remain in UEDB5.
 
+For classic-import `required_object_key`, the compact key must preserve `FName` identity semantics: case folding is allowed for the lookup accelerator, but serialized text is **not trimmed** before hashing. A literal whitespace-only object name therefore receives a real object key and is not collapsed to an absent object identity. This rule is specific to dependency identity; catalogue search candidates may continue to use their documented normalized search-name policy, with UEDB5 hydration remaining authoritative.
+
 The outcome codes remain:
 
 | Outcome | Code |

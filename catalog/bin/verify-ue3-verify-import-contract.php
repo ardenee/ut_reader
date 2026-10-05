@@ -292,8 +292,9 @@ $check(
 $check(
     'ue3_parent_resolution_uses_serialized_outer_chain',
     str_contains($sharedResolver, 'self::ue3RootPackageName($importsByIndex')
-        && str_contains($sharedResolver, '$isObjectImport = $ue3VerifyImport')
-        && str_contains($sharedResolver, '? (int)($import[\'outer_index\'] ?? 0) !== 0'),
+        && str_contains($sharedResolver, '$isObjectImport = self::isSourceObjectImport($import, $engineKey);')
+        && str_contains($sharedResolver, "in_array(\$engineKey, ['UE1', 'UE2', 'UE3'], true)")
+        && str_contains($sharedResolver, "return (int)(\$import['outer_index'] ?? 0) !== 0;"),
     'UE3 package grouping and object-import classification must come from serialized OuterIndex/Core.Package roots, not generated path strings.'
 );
 

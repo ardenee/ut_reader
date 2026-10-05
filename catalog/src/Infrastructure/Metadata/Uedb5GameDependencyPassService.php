@@ -196,6 +196,50 @@ final class Uedb5GameDependencyPassService
         ];
     }
 
+    /** @return array<string,mixed> */
+    public function runFile(int $gameId, int $fileId, bool $apply, bool $skipPreflight = false): array
+    {
+        if ($fileId < 1) {
+            throw new RuntimeException('Targeted UEDB5 dependency Pass 2 requires a positive file ID.');
+        }
+        $preflight = $skipPreflight
+            ? ['game'=>$this->game($gameId),'pass2_ready'=>true,'worker_preflight_skipped'=>true]
+            : $this->preflight($gameId);
+        if (empty($preflight['pass2_ready'])) {
+            throw new RuntimeException(
+                'Targeted UEDB5 dependency Pass 2 requires complete staged V5/provider coverage and zero invalid staged identities.'
+            );
+        }
+        $statement = $this->db->prepare(
+            'SELECT f.id FROM ue_files f JOIN ue_uedb5_files v ON v.file_id=f.id AND v.game_id=f.game_id '
+            . 'WHERE f.id=? AND f.game_id=? AND f.scan_status="verified" LIMIT 1'
+        );
+        $statement->execute([$fileId, $gameId]);
+        if ($statement->fetchColumn() === false) {
+            throw new RuntimeException('Targeted UEDB5 dependency file is not a verified staged file in the requested game.');
+        }
+        try {
+            $result = $this->processFile($gameId, $fileId, $apply, $this->resolverOptions($gameId));
+        } catch (Throwable $error) {
+            if ($apply) {
+                try {
+                    $this->statuses->markDependencyFailed(
+                        $fileId, $gameId, 'dependency_pass_failed', $error->getMessage()
+                    );
+                } catch (Throwable) {
+                }
+            }
+            throw $error;
+        }
+        return [
+            'apply'=>$apply,
+            'game'=>(array)$preflight['game'],
+            'preflight'=>$preflight,
+            'file_id'=>$fileId,
+            'result'=>$result,
+        ];
+    }
+
     /** @param array<string,mixed> $options @return array<string,mixed> */
     private function processFile(int $gameId, int $fileId, bool $apply, array $options): array
     {

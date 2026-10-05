@@ -40,6 +40,9 @@ final class PdoDependencyResolver
                 $importsByIndex[$index] = $import;
             }
         }
+        $legacySourceIrrelevant = $legacyVerifyImport
+            ? self::legacySourceIrrelevantIndexes($importsByIndex)
+            : [];
         $ue3RootPackages = [];
         $ue3SourceUnresolved = [];
         if ($ue3VerifyImport) {
@@ -85,6 +88,9 @@ final class PdoDependencyResolver
                 continue;
             }
             $importIndex = isset($import['import_index']) ? (int)$import['import_index'] : (int)$fallback;
+            if ($legacyVerifyImport && isset($legacySourceIrrelevant[$importIndex])) {
+                continue;
+            }
             $rootPackage = $ue3VerifyImport
                 ? trim((string)($ue3RootPackages[$importIndex] ?? ''))
                 : trim((string)($import['root_package'] ?? ''));
@@ -116,10 +122,29 @@ final class PdoDependencyResolver
             : [];
 
         $packageRequirements = [];
-        if ($ue3VerifyImport) {
+        if ($legacyVerifyImport) {
+            // UE1/UE2 VerifyImport decides object-vs-package semantics from the
+            // serialized PackageIndex/outer graph. Derived display paths may be
+            // empty for valid FNames (for example a literal whitespace name).
             foreach ($imports as $fallback => $import) {
                 if (!is_array($import) || self::isCommonImport($import, $engineKey)
-                    || (int)($import['outer_index'] ?? 0) === 0) {
+                    || !self::isSourceObjectImport($import, $engineKey)) {
+                    continue;
+                }
+                $importIndex = isset($import['import_index']) ? (int)$import['import_index'] : (int)$fallback;
+                if (isset($legacySourceIrrelevant[$importIndex])) {
+                    continue;
+                }
+                $rootPackage = trim((string)($import['root_package'] ?? ''));
+                $packageKey = self::normalizeLookup($rootPackage);
+                if ($packageKey !== '') {
+                    $packageRequirements[$packageKey]['package_name'] ??= $rootPackage;
+                }
+            }
+        } elseif ($ue3VerifyImport) {
+            foreach ($imports as $fallback => $import) {
+                if (!is_array($import) || self::isCommonImport($import, $engineKey)
+                    || !self::isSourceObjectImport($import, $engineKey)) {
                     continue;
                 }
                 $importIndex = isset($import['import_index']) ? (int)$import['import_index'] : (int)$fallback;
@@ -147,7 +172,9 @@ final class PdoDependencyResolver
             require_once __DIR__ . '/PdoLegacyVerifyImportProjectionResolver.php';
             $legacyCandidates = self::loadPackageCandidates($db, $gameId, $fileId, array_values($packageNames));
             foreach ($packageRequirements as $packageKey => $requirement) {
-                $requiredImportIndexes = self::requiredImportIndexes($imports, $packageKey, $engineKey);
+                $requiredImportIndexes = self::requiredImportIndexes(
+                    $imports, $packageKey, $engineKey, [], $legacySourceIrrelevant
+                );
                 $bestCandidate = null;
                 $bestVariants = null;
                 $bestMatchCount = -1;
@@ -331,9 +358,7 @@ final class PdoDependencyResolver
             $rootPackage = $ue3VerifyImport
                 ? (string)($ue3RootPackages[$importIndex] ?? '')
                 : (string)($import['root_package'] ?? '');
-            $isObjectImport = $ue3VerifyImport
-                ? (int)($import['outer_index'] ?? 0) !== 0
-                : (string)($import['relative_object_path'] ?? '') !== '';
+            $isObjectImport = self::isSourceObjectImport($import, $engineKey);
             $result = self::missing();
 
             if (self::isCommonImport($import, $engineKey)) {
@@ -487,15 +512,60 @@ final class PdoDependencyResolver
             $rootPackage = $engineKey === 'UE3'
                 ? (string)($ue3RootPackages[$importIndex] ?? '')
                 : (string)($import['root_package'] ?? '');
-            $isObjectImport = $engineKey === 'UE3'
-                ? (int)($import['outer_index'] ?? 0) !== 0
-                : trim((string)($import['relative_object_path'] ?? '')) !== '';
+            $isObjectImport = self::isSourceObjectImport($import, $engineKey);
             if (self::normalizeLookup($rootPackage) !== $packageKey || !$isObjectImport) {
                 continue;
             }
             $indexes[] = $importIndex;
         }
         return $indexes;
+    }
+
+    /** @param array<int,array<string,mixed>> $importsByIndex @return array<int,array{reason:string,ancestor_index:int}> */
+    private static function legacySourceIrrelevantIndexes(array $importsByIndex): array
+    {
+        $irrelevant = [];
+        foreach ($importsByIndex as $index => $import) {
+            if (self::legacyImportHasNameNone((array)$import)) {
+                $irrelevant[(int)$index] = ['reason'=>'name_none','ancestor_index'=>(int)$index];
+            }
+        }
+        $changed = true;
+        while ($changed) {
+            $changed = false;
+            foreach ($importsByIndex as $index => $import) {
+                $index = (int)$index;
+                if (isset($irrelevant[$index])) { continue; }
+                $outer = (int)($import['outer_index'] ?? 0);
+                if ($outer >= 0) { continue; }
+                $parentIndex = -$outer - 1;
+                if (!isset($irrelevant[$parentIndex])) { continue; }
+                $irrelevant[$index] = [
+                    'reason'=>'name_none_ancestor',
+                    'ancestor_index'=>(int)$irrelevant[$parentIndex]['ancestor_index'],
+                ];
+                $changed = true;
+            }
+        }
+        return $irrelevant;
+    }
+
+    private static function legacyImportHasNameNone(array $import): bool
+    {
+        foreach (['class_package','class_name','object_name'] as $field) {
+            $value = (string)($import[$field] ?? '');
+            $key = function_exists('mb_strtolower') ? mb_strtolower($value, 'UTF-8') : strtolower($value);
+            if ($key === 'none') { return true; }
+        }
+        return false;
+    }
+
+    private static function isSourceObjectImport(array $import, string $engineKey): bool
+    {
+        if (in_array($engineKey, ['UE1', 'UE2', 'UE3'], true)) {
+            return (int)($import['outer_index'] ?? 0) !== 0;
+        }
+        return trim((string)($import['relative_object_path'] ?? '')) !== '';
     }
 
     private static function missing(): array

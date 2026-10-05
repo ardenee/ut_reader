@@ -29,6 +29,7 @@ use UnrealDb\Catalog\Infrastructure\Persistence\PdoUe3VerifyImportProjectionReso
 $options = getopt('', [
     'apply',
     'game-id::',
+    'file-id::',
     'engine::',
     'after-id::',
     'start-id::',
@@ -41,6 +42,7 @@ $options = getopt('', [
 
 $apply = array_key_exists('apply', $options);
 $gameId = isset($options['game-id']) ? max(0, (int)$options['game-id']) : 0;
+$fileId = isset($options['file-id']) ? max(0, (int)$options['file-id']) : 0;
 $engine = strtoupper(trim((string)($options['engine'] ?? '')));
 $afterId = isset($options['after-id'])
     ? max(0, (int)$options['after-id'])
@@ -59,13 +61,71 @@ $allowedEngines = ['UE1', 'UE2', 'UE3', 'UE4', 'UE5'];
 if ($engine !== '' && !in_array($engine, $allowedEngines, true)) {
     throw new InvalidArgumentException('--engine must be UE1, UE2, UE3, UE4, or UE5.');
 }
-if ($gameId < 1 && $engine === '') {
-    throw new InvalidArgumentException('Specify --game-id, --engine, or both.');
+if ($gameId < 1 && $engine === '' && $fileId < 1) {
+    throw new InvalidArgumentException('Specify --file-id, --game-id, --engine, or a compatible combination.');
+}
+if ($fileId > 0 && ($afterId > 0 || array_key_exists('start-id', $options) || array_key_exists('all', $options)
+    || array_key_exists('missing-only', $options))) {
+    throw new InvalidArgumentException('--file-id cannot be combined with cursor/all/missing-only selection options.');
 }
 
 $config = catalog_config();
 $db = catalog_db($config);
 $rebuilder = new PdoCatalogDependencyRebuilder($db, $config);
+
+if ($fileId > 0) {
+    $sql = 'SELECT f.id,f.game_id,f.package_name,UPPER(TRIM(p.engine_key)) engine_key'
+        . ' FROM ue_files f'
+        . ' JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=?'
+        . ' JOIN ue_games g ON g.id=f.game_id'
+        . ' JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1'
+        . ' WHERE f.id=? AND f.scan_status="verified"';
+    $args = [BlockedCompressedMetadataContainer::FORMAT_VERSION, $fileId];
+    if ($gameId > 0) {
+        $sql .= ' AND f.game_id=?';
+        $args[] = $gameId;
+    }
+    if ($engine !== '') {
+        $sql .= ' AND UPPER(TRIM(p.engine_key))=?';
+        $args[] = $engine;
+    }
+    $sql .= ' LIMIT 1';
+    $statement = $db->prepare($sql);
+    $statement->execute($args);
+    $file = $statement->fetch(PDO::FETCH_ASSOC);
+    if (!is_array($file)) {
+        throw new RuntimeException('Target file is not a verified current-format file matching the requested game/engine: ' . $fileId);
+    }
+    $targetGameId = (int)$file['game_id'];
+    $targetEngine = strtoupper(trim((string)$file['engine_key']));
+    if (!$apply) {
+        echo json_encode([
+            'ok'=>true,'apply'=>false,'targeted'=>true,'file_id'=>$fileId,
+            'game_id'=>$targetGameId,'engine'=>$targetEngine,
+            'package_name'=>(string)$file['package_name'],'status'=>'would_rebuild',
+        ], JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES), PHP_EOL;
+        exit(0);
+    }
+    if ($targetEngine === 'UE3' && !class_exists(PdoUe3VerifyImportProjectionResolver::class)) {
+        throw new RuntimeException('UE3 dependency rebuild requires PdoUe3VerifyImportProjectionResolver.');
+    }
+    $rebuilder->rebuild(
+        $fileId,
+        null,
+        0,
+        100,
+        'Rebuilding indexed dependencies',
+        true
+    );
+    $statsRebuilt = (new PdoGameCatalogStats($db))->rebuildGame($targetGameId, 15) !== null;
+    echo json_encode([
+        'ok'=>$statsRebuilt,'apply'=>true,'targeted'=>true,'file_id'=>$fileId,
+        'game_id'=>$targetGameId,'engine'=>$targetEngine,
+        'package_name'=>(string)$file['package_name'],'status'=>'rebuilt',
+        'dependency_summary_refreshed'=>true,'game_stats_rebuilt'=>$statsRebuilt,
+    ], JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES), PHP_EOL;
+    exit($statsRebuilt ? 0 : 2);
+}
 
 $cursor = $afterId;
 $processed = 0;

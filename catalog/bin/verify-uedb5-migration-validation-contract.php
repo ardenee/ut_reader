@@ -11,6 +11,7 @@ use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5MetadataSnapshotWriter;
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5MigrationStatus;
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5MigrationValidator;
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5SqlProjectionBuilder;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5SqlProjectionContract;
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5ValidationException;
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5Ut99SnapshotBuilder;
 use UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1PackageReader;
@@ -105,6 +106,19 @@ $scriptProjection=Uedb5DependencyProjectionBuilder::build([
 ]);
 $scriptEdge=(array)($scriptProjection['dependency_edges'][0]??[]);
 $check('script_import_hash_is_not_public_export_hash',($scriptEdge['required_object_key_kind']??null)===null&&($scriptEdge['required_object_key']??null)===null);
+$whitespaceProjection=Uedb5DependencyProjectionBuilder::build([
+'file'=>['id'=>9002,'game_id'=>3],
+'sections'=>['dependency_results'=>[[
+'dependency_kind'=>'ClassicImport','source_section'=>'imports','source_index'=>3,'dependency_class'=>'hard',
+'required_package_identity'=>['kind'=>'package_name','value'=>'produce'],
+'required_object_identity'=>['kind'=>'classic_import','object_name'=>' ','class_package'=>'Core','class_name'=>'Package','outer_index'=>-2],
+'hard'=>true,'outcome'=>'resolved','selected_provider_file_id'=>143870,'selected_provider_object'=>['export_index'=>26]
+]]]
+]);
+$whitespaceEdge=(array)($whitespaceProjection['dependency_edges'][0]??[]);
+$check('classic_whitespace_fname_dependency_key_is_preserved',
+    ($whitespaceEdge['required_object_key_kind']??null)===Uedb5SqlProjectionContract::OBJECT_KEY_NAME
+    && hash_equals((string)($whitespaceEdge['required_object_key']??''),md5(' ',true)));
 $validatorSource=(string)file_get_contents($root.'/src/Infrastructure/Metadata/Uedb5MigrationValidator.php');
 $check('validator_never_reads_uedb4',!str_contains($validatorSource,'.uedb4')&&!str_contains($validatorSource,'BlockedCompressedMetadataReader'));
 $check('validator_never_reads_live_v4_registration',!str_contains($validatorSource,'ue_file_metadata'));

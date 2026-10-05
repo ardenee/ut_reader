@@ -84,9 +84,15 @@ V4 missing -> V5 unresolved
 
 This is accepted only for UT3 when the V5 dependency result contains UE3 source-policy/resolver evidence showing that runtime/cooked state prevents a proven missing decision. A bare outcome change without that evidence remains a regression.
 
-`classic_none_import_source_irrelevant` covers a separate UE1/UE2 source rule. Both UT99 `ULinkerLoad::VerifyImport()` and UE2/2.5 `ULinkerLoad::VerifyImport()` return immediately when `ClassPackage`, `ClassName`, or `ObjectName` is `NAME_None`, describing that import as not relevant in the current context. Therefore a V4 `missing` result may be treated as an expected V5 `unresolved` result only when the authoritative V5 dependency row is under a UE1/UE2 source policy, has `package_root_unavailable`, and preserves an actual `None` class-package, class-name, or object-name identity. Ordinary package-root failures remain parity errors. The same source-backed exception applies to the otherwise-required V5 package identity key for that import.
+`classic_none_import_source_irrelevant` covers a separate UE1/UE2 source rule. Both UT99 `ULinkerLoad::VerifyImport()` and UE2/2.5 `ULinkerLoad::VerifyImport()` return immediately when `ClassPackage`, `ClassName`, or `ObjectName` is `NAME_None`, describing that import as not relevant in the current context. UEDB5 therefore records such an import directly as non-hard `runtime_derived` + `unresolved` with reason `source_irrelevant_name_none`; it does not run provider selection or VerifyImport matching for the row. A V4 `missing` result is an expected parity difference only when the authoritative V5 row preserves an actual `None` class-package, class-name, or object-name identity and carries that exact source-backed reason. Older staged rows that merely fell through to `package_root_unavailable` are stale and must be rebuilt rather than allow-listed.
 
-The same allow-list is applied wherever that correction affects aggregate behaviour, including base-game missing totals, required-package identity checks, and duplicate-provider cases. New source fixes must add a similarly narrow rule; there is no generic "V5 wins" exemption.
+`classic_none_import_ancestor_source_irrelevant` is the corresponding nested-import rule. Epic verifies the parent first and copies the parent's `SourceLinker`; when the parent returns early for `NAME_None`, no provider linker is established for its descendant. V5 therefore leaves such a descendant non-hard `unresolved` with reason `source_irrelevant_name_none_ancestor` and records the exact ancestor import index as resolver evidence. The parity allow-list requires that provenance; a generic unresolved child is not accepted.
+
+The source also shows that UE1/UE2 NameMap loading can map a serialized non-`None` name to runtime `NAME_None` when its name-entry flags do not intersect the active edit/client/server context flags. UEDB5 deliberately preserves the raw serialized name and flags. That context-dependent mapping is a separate runtime-policy question for the first-principles source audit; the migration correction here only claims the deterministic `NAME_None` identities represented by the staged import plus the proven ancestor consequence, and does not invent a single runtime context.
+
+UE1/UE2 `FName` identity is also exact with respect to whitespace: Epic compares `FName` values and does not trim their serialized text. A non-empty whitespace-only `FName` is distinct from `NAME_None`. V4 compact metadata preserves the raw ObjectName and serialized outer index even when a derived display path collapses; dependency rebuilding must therefore classify UE1/UE2 object imports from the serialized outer graph, not from a trimmed derived path. There is no parity exemption for this case: stale V4 `package_only` rows must be rebuilt so V4 and V5 both reach the same source-backed VerifyImport result.
+
+The same allow-list is applied wherever a source correction affects aggregate behaviour, including base-game missing totals, required-package identity checks, and duplicate-provider cases. New source fixes must add a similarly narrow rule; there is no generic "V5 wins" exemption.
 
 ## Provider aliases
 
@@ -100,13 +106,31 @@ C:\php8.5\php.exe C:\Apache24\htdocs\unrealdb\catalog\bin\sync-uedb5-provider-ke
 
 This command writes only `ue_uedb5_provider_keys`.
 
-When a resolver/source-identity correction requires recomputing already-complete Pass-2 payloads for one game, the Pass-2 CLI supports an explicit maintenance rerun:
+When a resolver/source-identity correction affects known individual consumers, repair those exact files rather than replaying the game. V4 and V5 have separate exact-file paths:
+
+```powershell
+# Current production V4 dependency row + per-file summary + cached game counters.
+C:\php8.5\php.exe C:\Apache24\htdocs\unrealdb\catalog\bin\rebuild-legacy-dependencies.php --file-id=143868 --game-id=3 --apply
+
+# Staged V5 Pass-2 dependency payload/projection only.
+C:\php8.5\php.exe C:\Apache24\htdocs\unrealdb\catalog\bin\migrate-uedb5-dependencies.php --game=ut99 --file-id=143868 --apply --force
+```
+
+The canonical V4 `--file-id` mode accepts only one verified current-format file, runs the normal production dependency rebuilder, refreshes that file's dependency-package summary, and rebuilds the small cached game-counter projection. It does not walk or rebuild dependency metadata for other files. V5 targeted `--file-id` mode runs the normal game preflight, verifies that the requested file is a verified staged V5 file in that game, and rebuilds/publishes only that file's Pass-2 dependency payload. A targeted V5 write requires both `--apply` and `--force`; it cannot be combined with `--continuous`, worker-pool options, or `--preflight`.
+
+For the literal-whitespace FName correction, affected V4 consumer rows can be discovered without a package/UEDB scan. The diagnostic first performs an exact indexed `ue_terms(value_hash,value_length)` lookup and then follows the indexed `import_object_term_id` rows:
+
+```powershell
+C:\php8.5\php.exe C:\Apache24\htdocs\unrealdb\catalog\bin\diagnose-uedb5-whitespace-fname-dependencies.php --game=ut99 --value-hex=20
+```
+
+Only when a resolver/source-identity correction genuinely invalidates a broad set of files should Pass 2 be forced for the whole affected game:
 
 ```powershell
 C:\php8.5\php.exe C:\Apache24\htdocs\unrealdb\catalog\bin\migrate-uedb5-dependencies.php --game=ut3 --apply --force --continuous --workers=4 --limit=1000 --progress-every=100
 ```
 
-`--force` requires `--apply`, still runs the normal game preflight, remains V5-only, and bypasses only the normal already-current resume filter. It is not part of ordinary resumable Pass 2 and should be scoped to the game whose dependency results require regeneration.
+Game-wide `--force` still runs the normal preflight, remains V5-only, and bypasses only the already-current resume filter. It is a maintenance fallback, not the default response to a localized parity defect.
 
 ## Operator commands
 
