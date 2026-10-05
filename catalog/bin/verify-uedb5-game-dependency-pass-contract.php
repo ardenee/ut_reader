@@ -22,10 +22,10 @@ $check=static function(string $name,bool $ok)use(&$checks,&$failures):void{
 $check('pass2_has_exact_payload_checkpoint',
     str_contains($migration,'dependency_payload_sha256 BINARY(32)')
     && str_contains($migration,'dependency_policy VARCHAR(64)'));
-$check('pass2_source_ue1_ue2_semantics_use_v6_policy',
-    str_contains($service,"public const DEPENDENCY_POLICY = 'uedb5-dependency-pass-v6'"));
+$check('pass2_source_ue1_ue2_semantics_use_v7_policy',
+    str_contains($service,"public const DEPENDENCY_POLICY = 'uedb5-dependency-pass-v7'"));
 $check('source_identity_policy_transition_is_targeted',
-    str_contains($transition,"const OLD_POLICIES=['uedb5-dependency-pass-v1','uedb5-dependency-pass-v2','uedb5-dependency-pass-v3','uedb5-dependency-pass-v4','uedb5-dependency-pass-v5']")
+    str_contains($transition,"const OLD_POLICIES=['uedb5-dependency-pass-v1','uedb5-dependency-pass-v2','uedb5-dependency-pass-v3','uedb5-dependency-pass-v4','uedb5-dependency-pass-v5','uedb5-dependency-pass-v6']")
     && str_contains($transition,'PdoClassicSourceIdentityImpactQuery')
     && str_contains($transition,'currentOldPolicyFiles')
     && str_contains($transition,"'rebuild-impacted'")
@@ -36,6 +36,7 @@ $check('source_identity_policy_transition_is_targeted',
     && str_contains($transition,'PdoUe2VerifyImportImpactQuery')
     && str_contains($ue2Impact,'ue2_source_implementation_unavailable')
     && str_contains($ue2Impact,'ue2_unreal2_v69_pass1_reparse')
+    && str_contains($ue2Impact,'ue2_ut2004_verifyimport_profile_change')
     && str_contains($transition,"'reparse-pass1-impacted'"));
 $check('pass1_supports_exact_file_restage_for_format_repairs',
     str_contains($pass1Cli,"'file-id::'")

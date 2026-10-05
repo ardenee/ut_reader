@@ -12,9 +12,7 @@ namespace UnrealDb\Catalog\Infrastructure\Unverified;
 use PDO;
 use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer;
 use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataSnapshotLoader;
-use UnrealDb\Catalog\Infrastructure\Persistence\PdoClassRemapRepository;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyReadSource;
-use UnrealDb\Catalog\Infrastructure\Persistence\PdoLegacyVerifyImportProjectionResolver;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoUe1VerifyImportProjectionResolver;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoUe2VerifyImportProjectionResolver;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoUe3VerifyImportProjectionResolver;
@@ -279,11 +277,6 @@ final class PdoGameDependencyCrossExamineQuery
     {
         $targetGameId = (int)($target['id'] ?? 0);
         $targetEngine = strtoupper(trim((string)($target['engine_key'] ?? '')));
-        $ue2LegacyPolicy = $targetEngine === 'UE2' ? $this->ue2LegacyVerifyImportPolicy($targetGameId) : null;
-        $classRemaps = $ue2LegacyPolicy !== null
-            ? (new PdoClassRemapRepository($this->db))->mappingsForGame($targetGameId)
-            : [];
-
         $affected = \catalog_all(
             $this->db,
             'SELECT DISTINCT l.file_id FROM ue_dependency_links l '
@@ -348,23 +341,6 @@ final class PdoGameDependencyCrossExamineQuery
                     $outcome = (array)($outcomes[$importIndex] ?? []);
                     if (($outcome['status'] ?? '') === 'resolved') {
                         $matchedIndexes[$importIndex] = (int)($outcome['export_index'] ?? -1);
-                        $matchedPaths[] = (string)$requirement['path'];
-                    } else {
-                        $missingPaths[] = (string)$requirement['path'];
-                    }
-                }
-            } elseif ($targetEngine === 'UE2' && $ue2LegacyPolicy !== null) {
-                require_once dirname(__DIR__) . '/Persistence/PdoLegacyVerifyImportProjectionResolver.php';
-                $variants = PdoLegacyVerifyImportProjectionResolver::resolveProviderVariants(
-                    $this->db,
-                    $sourceFileId,
-                    $allImports,
-                    $classRemaps
-                );
-                $matches = (array)($variants[$ue2LegacyPolicy] ?? []);
-                foreach ($requirements as $importIndex => $requirement) {
-                    if (array_key_exists($importIndex, $matches)) {
-                        $matchedIndexes[$importIndex] = (int)$matches[$importIndex];
                         $matchedPaths[] = (string)$requirement['path'];
                     } else {
                         $missingPaths[] = (string)$requirement['path'];
@@ -616,14 +592,10 @@ final class PdoGameDependencyCrossExamineQuery
         if ($sourceKey === 'ut2003' && $packageVersion >= 60 && $packageVersion <= 120) {
             return PdoUe2VerifyImportProjectionResolver::PROFILE_UT2003_V2107;
         }
+        if ($sourceKey === 'ut2004' && $packageVersion >= 60 && $packageVersion <= 129) {
+            return PdoUe2VerifyImportProjectionResolver::PROFILE_UT2004_V129;
+        }
         return null;
-    }
-
-    private function ue2LegacyVerifyImportPolicy(int $gameId): ?string
-    {
-        try { $sourceKey = \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5GameSourceRegistry::sourceKey($gameId); }
-        catch (\Throwable) { return null; }
-        return $sourceKey === 'ut2004' ? 'standard' : null;
     }
 
     /** @return array{version:int,licensee:int} */
@@ -644,11 +616,7 @@ final class PdoGameDependencyCrossExamineQuery
     {
         $engine = strtoupper(trim((string)($target['engine_key'] ?? '')));
         if ($engine === 'UE1') { return 'profiled_ue1_verify_import'; }
-        if ($engine === 'UE2') {
-            return $this->ue2LegacyVerifyImportPolicy((int)($target['id'] ?? 0)) !== null
-                ? 'legacy_ue2_verify_import'
-                : 'profiled_ue2_verify_import';
-        }
+        if ($engine === 'UE2') { return 'profiled_ue2_verify_import'; }
         return $engine === 'UE3' ? 'ue3_verify_import' : 'complete_package_object';
     }
 

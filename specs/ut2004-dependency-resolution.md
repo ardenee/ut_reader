@@ -4,13 +4,12 @@
 
 This specification documents dependency discovery and import resolution from the supplied UT2004 source only.
 
-- Repository: `ardenee/UT2004src`
-- Branch: `main`
-- Engine build: 3369
-- Package version: 128
+- Local source authority: `L:\Source\Games\UT2004\UT2004Src\UT2004SrcCmake`
+- Package version: 129
+- Minimum loadable package version: 60
 - Licensee version: 0x1D
 
-Primary authority is `Core/Src/UnLinker.cpp`, with `Core/Src/UnObj.cpp` used for package linker lookup and surrounding object-load behavior.
+Primary authority is `Core/Src/UnLinker.cpp`, with `Core/Src/UnObj.cpp` used for package linker lookup and surrounding object-load behavior. The v3369/v128 tree at `L:\Source\Games\UT2004\Unreal Tournament 2004 [v3369] [03-16-2004]` was independently cross-checked; the relevant `VerifyImport` control flow is the same, but the v129 tree is the latest complete local authority.
 
 No behavior is inherited from UT2003, UE2.5, Unreal II, UT99, or another engine/game.
 

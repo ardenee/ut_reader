@@ -14,7 +14,7 @@ use UnrealDb\Catalog\Infrastructure\Persistence\PdoGameCatalogStats;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoUe1VerifyImportImpactQuery;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoUe2VerifyImportImpactQuery;
 
-const OLD_POLICIES=['uedb5-dependency-pass-v1','uedb5-dependency-pass-v2','uedb5-dependency-pass-v3','uedb5-dependency-pass-v4','uedb5-dependency-pass-v5'];
+const OLD_POLICIES=['uedb5-dependency-pass-v1','uedb5-dependency-pass-v2','uedb5-dependency-pass-v3','uedb5-dependency-pass-v4','uedb5-dependency-pass-v5','uedb5-dependency-pass-v6'];
 $o=getopt('',['game-id::','apply','rebuild-impacted','rebuild-v4-impacted','reparse-pass1-impacted','limit::']);
 $gid=max(0,(int)($o['game-id']??0));
 $apply=isset($o['apply']);
@@ -26,10 +26,10 @@ if(($rebuild||$rebuildV4||$reparsePass1)&&!$apply){fwrite(STDERR,"Rebuild/repars
 
 $app=catalog_bootstrap();$db=$app->db;
 $new=Uedb5GameDependencyPassService::DEPENDENCY_POLICY;
-if($new!=='uedb5-dependency-pass-v6')throw new RuntimeException('Combined source/UE1/UE2 transition requires dependency policy v6.');
+if($new!=='uedb5-dependency-pass-v7')throw new RuntimeException('Combined source/UE1/UE2 transition requires dependency policy v7.');
 $tables=['ue_uedb5_migration_status','ue_uedb5_files','ue_uedb5_provider_keys','ue_uedb5_dependency_edges','ue_uedb5_dependency_packages','ue_dependency_links','ue_terms','ue_name_lookup','ue_file_package_aliases','ue_games','ue_game_profiles','ue_file_metadata'];
 $check=$db->prepare('SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=DATABASE() AND table_name=?');
-foreach($tables as$t){$check->execute([$t]);if((int)$check->fetchColumn()!==1){echo json_encode(['ok'=>false,'missing_table'=>$t,'error'=>'Run catalog/bin/migrate.php migrate before the v6 dependency transition.']),PHP_EOL;exit(1);}}
+foreach($tables as$t){$check->execute([$t]);if((int)$check->fetchColumn()!==1){echo json_encode(['ok'=>false,'missing_table'=>$t,'error'=>'Run catalog/bin/migrate.php migrate before the v7 dependency transition.']),PHP_EOL;exit(1);}}
 
 $q=new PdoClassicSourceIdentityImpactQuery($db);
 $current=$q->currentOldPolicyFiles($gid);
@@ -61,7 +61,10 @@ foreach($current as$r){
     $ue1Effective=$policy==='uedb5-dependency-pass-v5'
         ? array_values(array_intersect($ue1Why,['ut99_mesh_rehack']))
         : $ue1Why;
-    $ue2Effective=array_keys((array)($ue2Reasons[$fid]??[]));
+    $ue2Why=array_keys((array)($ue2Reasons[$fid]??[]));
+    $ue2Effective=$policy==='uedb5-dependency-pass-v6'
+        ? array_values(array_filter($ue2Why,static fn(string$x):bool=>str_starts_with($x,'ue2_ut2004_')))
+        : $ue2Why;
     $why=array_values(array_unique(array_merge($identityEffective,$ue1Effective,$ue2Effective)));
     $needs=$why!==[];
     $row=['file_id'=>$fid,'game_id'=>(int)$r['game_id'],'engine_key'=>(string)$r['engine_key'],'package_family'=>(string)$r['package_family'],'old_policy'=>$policy,'reasons'=>$why];

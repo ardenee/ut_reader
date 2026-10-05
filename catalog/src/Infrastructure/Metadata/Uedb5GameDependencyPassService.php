@@ -7,11 +7,10 @@ namespace UnrealDb\Catalog\Infrastructure\Metadata;
 use PDO;
 use RuntimeException;
 use Throwable;
-use UnrealDb\Catalog\Infrastructure\Persistence\PdoClassRemapRepository;
 
 final class Uedb5GameDependencyPassService
 {
-    public const DEPENDENCY_POLICY = 'uedb5-dependency-pass-v6';
+    public const DEPENDENCY_POLICY = 'uedb5-dependency-pass-v7';
 
     private Uedb5MetadataReader $reader;
     private Uedb5DependencyRebuilder $rebuilder;
@@ -286,19 +285,14 @@ final class Uedb5GameDependencyPassService
         ];
     }
 
-    /** @return array{common_packages:list<string>,class_remaps:array<string,string>} */
+    /** @return array{common_packages:list<string>} */
     private function resolverOptions(int $gameId): array
     {
         $common = array_values(array_filter(
             array_map(static fn(mixed $value): string => trim((string)$value), (array)($this->config['common_packages'] ?? [])),
             static fn(string $value): bool => $value !== ''
         ));
-        $classRemaps = [];
-        $sourceKey = Uedb5GameSourceRegistry::sourceKey($gameId);
-        if ($sourceKey === 'ut2004' && $this->tableExists('ue_class_remaps')) {
-            $classRemaps = (new PdoClassRemapRepository($this->db))->mappingsForGame($gameId);
-        }
-        return ['common_packages'=>$common,'class_remaps'=>$classRemaps];
+        return ['common_packages'=>$common];
     }
 
     private function gameEngineKey(int $gameId): string

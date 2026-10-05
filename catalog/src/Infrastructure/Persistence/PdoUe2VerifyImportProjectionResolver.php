@@ -13,6 +13,7 @@ final class PdoUe2VerifyImportProjectionResolver
     private const RF_PUBLIC = 0x00000004;
     public const PROFILE_UNREAL2_V69_2000 = 'ue2-unreal2-2000-v69';
     public const PROFILE_UT2003_V2107 = 'ue2-ut2003-v2107';
+    public const PROFILE_UT2004_V129 = 'ue2-ut2004-ut2004src-v129';
 
 
     /** @param list<array<string,mixed>> $consumerImports @return array<int,array<string,mixed>> */
@@ -43,7 +44,7 @@ final class PdoUe2VerifyImportProjectionResolver
         array $providerExports,
         string $providerPackageName
     ): array {
-        if (!in_array($profile,[self::PROFILE_UNREAL2_V69_2000,self::PROFILE_UT2003_V2107],true)) {
+        if (!in_array($profile,[self::PROFILE_UNREAL2_V69_2000,self::PROFILE_UT2003_V2107,self::PROFILE_UT2004_V129],true)) {
             throw new RuntimeException('Unsupported UE2 VerifyImport source profile: '.$profile);
         }
         $imports=self::indexImports($consumerImports);
@@ -92,9 +93,14 @@ final class PdoUe2VerifyImportProjectionResolver
             $sourceLinker=!empty($parent['source_linker']);
             if(!$sourceLinker){
                 unset($resolving[$index]);
+                $parentReason = match($profile) {
+                    self::PROFILE_UNREAL2_V69_2000 => 'parent_source_linker_unavailable',
+                    self::PROFILE_UT2003_V2107 => 'ut2003_parent_source_linker_unavailable_tolerated',
+                    self::PROFILE_UT2004_V129 => 'ut2004_parent_source_linker_unavailable_tolerated',
+                };
                 return $results[$index]=self::result(
                     $profile===self::PROFILE_UNREAL2_V69_2000?'invalid':'unresolved',
-                    $profile===self::PROFILE_UNREAL2_V69_2000?'parent_source_linker_unavailable':'ut2003_parent_source_linker_unavailable_tolerated',
+                    $parentReason,
                     false,
                     null,
                     ['parent_import_index'=>$parentIndex]
@@ -137,9 +143,11 @@ final class PdoUe2VerifyImportProjectionResolver
         if($isPackageLinkerImport)return $results[$index]=self::result('package_linker','top_level_package_linker',true,null);
         return $results[$index]=self::result(
             'runtime_only',
-            $profile===self::PROFILE_UNREAL2_V69_2000
-                ? 'unreal2_v69_runtime_native_transient_safe_replace_or_shareware_hack'
-                : 'ut2003_runtime_native_transient_safe_replace_or_forgiving',
+            match($profile) {
+                self::PROFILE_UNREAL2_V69_2000 => 'unreal2_v69_runtime_native_transient_safe_replace_or_shareware_hack',
+                self::PROFILE_UT2003_V2107 => 'ut2003_runtime_native_transient_safe_replace_or_forgiving',
+                self::PROFILE_UT2004_V129 => 'ut2004_v129_runtime_native_transient_safe_replace_or_forgiving',
+            },
             true,
             null
         );

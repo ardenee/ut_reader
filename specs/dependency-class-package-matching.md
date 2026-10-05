@@ -41,9 +41,9 @@ Apply this operation only after the exact package reader has validated indices a
 | Revision | Class/package matching |
 |---|---|
 | Unreal II v69 (12-09-2000) | Exact object/class matching plus an explicit compatibility exception: an `UnrealI` import may match an export whose class package is `UnrealShare`, and hashing normalizes `UnrealShare` to `UnrealI`. `Mesh -> LodMesh` is an unconditional second lookup pass. This is source-backed only for package versions 60-69. |
-| UE2.5 / UT2004 | Deferred to 3A3; no matching behavior is inherited from Unreal II or UT2003. |
+| UT2004 v129 | Exact ObjectName/ClassName/ClassPackage matching from the latest complete `UT2004SrcCmake` linker. No UnrealI/UnrealShare class-package exception is active. `Mesh -> LodMesh` is an unconditional second hash pass. This profile is source-backed for package versions 60-129. |
 | UT2003 v2107 | Exact class-package/name matching with no UnrealI/UnrealShare exception. `Mesh -> LodMesh` remains an unconditional Rehack; broader subclass matching belongs to FindExportIndex, not VerifyImport. This profile is source-backed for package versions 60-120. |
-| UT2004 | Same separation; no active ClassRemap/PackageRemap in the reviewed resolver. |
+| UE2.5 / Unreal Warfare | Remains its own separately documented engine profile; UT2004 behavior is not used as a substitute for that source. |
 | UE3 | Import fixups/redirectors can transform runtime resolution, but raw ClassPackage/ClassName remain the serialized identity. |
 | UE4 4.27.2 | CoreRedirects and instancing can alter runtime names/packages/classes; package privacy and explicit provider data also participate. These are transformations, not permission for fuzzy matching. |
 

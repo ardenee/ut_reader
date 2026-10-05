@@ -33,7 +33,7 @@ final class Uedb5DependencyRebuilder
 
     /**
      * @param list<array<string,mixed>> $selectedProviders
-     * @param array{common_packages?:list<string>,class_remaps?:array<string,string>} $options
+     * @param array{common_packages?:list<string>} $options
      * @return array<string,mixed>
      */
     public function rebuild(int $gameId, int $fileId, array $selectedProviders, array $options = []): array

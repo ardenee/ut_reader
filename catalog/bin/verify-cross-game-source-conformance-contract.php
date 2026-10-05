@@ -12,9 +12,10 @@ $check('cross_game_ue1_ue2_use_profiled_verify_import',
     && str_contains($source,'PdoUe2VerifyImportProjectionResolver::resolveProviderOutcome')
     && str_contains($source,'ue1VerifyImportProfile')
     && str_contains($source,'ue2VerifyImportProfile'));
-$check('cross_game_legacy_ue2_path_is_ut2004_only',
-    str_contains($source,"return \$sourceKey === 'ut2004' ? 'standard' : null;")
-    && str_contains($source,'PdoLegacyVerifyImportProjectionResolver::resolveProviderVariants'));
+$check('cross_game_ut2004_uses_profiled_v129_without_legacy_path',
+    str_contains($source,'PROFILE_UT2004_V129')
+    && !str_contains($source,'PdoLegacyVerifyImportProjectionResolver')
+    && !str_contains($source,'PdoClassRemapRepository'));
 $check('cross_game_source_unverified_ue1_ue2_fail_closed',
     str_contains($source,"\$targetEngine === 'UE1' && \$ue1Profile !== null")
     && str_contains($source,"\$targetEngine === 'UE2' && \$ue2Profile !== null")

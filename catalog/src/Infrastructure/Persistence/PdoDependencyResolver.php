@@ -38,7 +38,6 @@ final class PdoDependencyResolver
         $ue2Profile = $engineKey === 'UE2'
             ? self::ue2VerifyImportProfile($gameId, (int)$fileIdentity['version'], (int)$fileIdentity['licensee'])
             : null;
-        $legacyPolicy = $engineKey === 'UE2' ? self::ue2LegacyVerifyImportPolicy($gameId) : null;
         $ue3VerifyImport = $engineKey === 'UE3';
         $ue4VerifyImport = $engineKey === 'UE4';
         $sourceFnameLookup = $legacyVerifyImport || $ue3VerifyImport || $ue4VerifyImport;
@@ -55,7 +54,7 @@ final class PdoDependencyResolver
             : ($engineKey === 'UE2'
                 ? ($ue2Profile !== null
                     ? self::legacySourceIrrelevantIndexes($importsByIndex, false)
-                    : ($legacyPolicy !== null ? self::legacySourceIrrelevantIndexes($importsByIndex, true) : []))
+                    : [])
                 : []);
         $legacyRootPackages = [];
         if ($legacyVerifyImport) {
@@ -201,10 +200,6 @@ final class PdoDependencyResolver
                 }
             }
         }
-        $classRemaps = $legacyPolicy !== null
-            ? (new PdoClassRemapRepository($db))->mappingsForGame($gameId)
-            : [];
-
         $packageRequirements = [];
         if ($legacyVerifyImport) {
             // UE1/UE2 VerifyImport decides object-vs-package semantics from the
@@ -298,21 +293,9 @@ final class PdoDependencyResolver
                     $ue2Profile
                 );
             }
-        } elseif ($engineKey === 'UE2' && $legacyPolicy !== null) {
-            require_once __DIR__ . '/PdoLegacyVerifyImportProjectionResolver.php';
-            foreach ($packageRequirements as $packageKey => $requirement) {
-                $candidate = $packageMatches[$packageKey] ?? null;
-                if (!is_array($candidate)) { continue; }
-                $verifyImportMatches[$packageKey] = PdoLegacyVerifyImportProjectionResolver::resolveProviderVariants(
-                    $db,
-                    (int)$candidate['file_id'],
-                    $imports,
-                    $classRemaps
-                );
-            }
         }
 
-        $ue3VerifyImportMatches = [];
+        $ue3VerifyImportMatches= [];
         if ($ue3VerifyImport) {
             require_once __DIR__ . '/PdoUe3VerifyImportProjectionResolver.php';
             foreach ($packageRequirements as $packageKey => $requirement) {
@@ -489,7 +472,7 @@ final class PdoDependencyResolver
                         }
                     }
                 } elseif ($engineKey === 'UE2') {
-                    if ($ue2Profile === null && $legacyPolicy === null) {
+                    if ($ue2Profile === null) {
                         $result = [
                             'status' => 'unresolved',
                             'resolved_file_id' => $packageMatch !== null ? (int)$packageMatch['file_id'] : null,
@@ -511,16 +494,6 @@ final class PdoDependencyResolver
                             $result = ['status'=>'missing','resolved_file_id'=>null,'resolved_export_id'=>null,'resolved_export_index'=>null,'source'=>'ue2_verify_import_private_export','confidence'=>'source_rejected'];
                         } elseif ($packageMatch !== null && in_array($status,['runtime_only','unresolved','invalid'],true)) {
                             $result = ['status'=>'unresolved','resolved_file_id'=>null,'resolved_export_id'=>null,'resolved_export_index'=>null,'source'=>'ue2_'.(string)($ue2['reason'] ?? 'runtime_only_fallback_unavailable'),'confidence'=>$status==='runtime_only'?'runtime_unavailable':'source_unresolved'];
-                        }
-                    } else {
-                        $variants = $verifyImportMatches[$packageKey] ?? [];
-                        $exportIndex = is_array($variants) ? ($variants[$legacyPolicy][$importIndex] ?? null) : null;
-                        if ($packageMatch !== null && $exportIndex !== null) {
-                            $result = [
-                                'status'=>'resolved','resolved_file_id'=>(int)$packageMatch['file_id'],
-                                'resolved_export_id'=>null,'resolved_export_index'=>(int)$exportIndex,
-                                'source'=>'ue_verify_import','confidence'=>'exact',
-                            ];
                         }
                     }
                 } elseif ($ue3VerifyImport) {
@@ -841,14 +814,10 @@ final class PdoDependencyResolver
         if ($sourceKey === 'ut2003' && $packageVersion >= 60 && $packageVersion <= 120) {
             return PdoUe2VerifyImportProjectionResolver::PROFILE_UT2003_V2107;
         }
+        if ($sourceKey === 'ut2004' && $packageVersion >= 60 && $packageVersion <= 129) {
+            return PdoUe2VerifyImportProjectionResolver::PROFILE_UT2004_V129;
+        }
         return null;
-    }
-
-    private static function ue2LegacyVerifyImportPolicy(int $gameId): ?string
-    {
-        try { $sourceKey = \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5GameSourceRegistry::sourceKey($gameId); }
-        catch (\Throwable) { return null; }
-        return $sourceKey === 'ut2004' ? 'standard' : null;
     }
 
     private static function filePackageVersion(PDO $db, int $fileId): int

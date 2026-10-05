@@ -71,15 +71,15 @@ $check('legacy_verification_requirements_use_source_object_imports',
     &&str_contains($source,'$isObjectImport = self::isSourceObjectImport($import, $engineKey);'));
 $check('ue1_requirements_exclude_only_direct_source_irrelevant_none_imports',
     str_contains($source,'self::legacySourceIrrelevantIndexes($importsByIndex, false)')
-    &&str_contains($source,'self::legacySourceIrrelevantIndexes($importsByIndex, true)')
+    &&!str_contains($source,'self::legacySourceIrrelevantIndexes($importsByIndex, true)')
     &&str_contains($source,'isset($legacySourceIrrelevant[$importIndex])'));
 $check('canonical_v4_rebuild_supports_exact_file_target',
     str_contains($cli,"'file-id::'")
     &&str_contains($cli,"'targeted'=>true")
     &&str_contains($cli,"'dependency_summary_refreshed'=>true")
     &&str_contains($cli,'PdoGameCatalogStats'));
-$check('worker_fingerprint_tracks_legacy_verifyimport_resolvers',
-    str_contains($worker,'/src/Infrastructure/Persistence/PdoLegacyVerifyImportProjectionResolver.php')
+$check('worker_fingerprint_tracks_profiled_verifyimport_resolvers',
+    !str_contains($worker,'/src/Infrastructure/Persistence/PdoLegacyVerifyImportProjectionResolver.php')
     &&str_contains($worker,'/src/Infrastructure/Persistence/PdoUe1VerifyImportProjectionResolver.php')
     &&str_contains($worker,'/src/Infrastructure/Persistence/PdoUe2VerifyImportProjectionResolver.php'));
 

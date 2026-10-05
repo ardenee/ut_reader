@@ -19,7 +19,7 @@ final class PdoUedb5PhysicalProviderSelector
     }
 
     /**
-     * @param array{common_packages?:list<string>,class_remaps?:array<string,string>} $options
+     * @param array{common_packages?:list<string>} $options
      * @return list<array<string,mixed>>
      */
     public function select(int $gameId, int $fileId, array $options = []): array

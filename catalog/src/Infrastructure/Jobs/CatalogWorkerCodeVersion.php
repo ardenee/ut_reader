@@ -67,7 +67,6 @@ final class CatalogWorkerCodeVersion
             $this->catalogRoot . '/src/Infrastructure/Persistence/PdoDependencyResolver.php',
             $this->catalogRoot . '/src/Infrastructure/Metadata/CatalogCompactIdentityEnricher.php',
             $this->catalogRoot . '/src/Infrastructure/Metadata/CatalogUnrealIdentityHash.php',
-            $this->catalogRoot . '/src/Infrastructure/Persistence/PdoLegacyVerifyImportProjectionResolver.php',
             $this->catalogRoot . '/src/Infrastructure/Persistence/PdoUe1VerifyImportProjectionResolver.php',
             $this->catalogRoot . '/src/Infrastructure/Persistence/PdoUe2VerifyImportProjectionResolver.php',
             $this->catalogRoot . '/src/Infrastructure/Persistence/PdoUe3VerifyImportProjectionResolver.php',

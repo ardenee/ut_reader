@@ -200,6 +200,44 @@ $check(($ut2003Unverified[1]['status'] ?? null) === 'unresolved'
     && ($ut2003Unverified[1]['reason'] ?? null) === 'ue2_verify_import_source_implementation_unavailable',
     'ut2003_v121_does_not_inherit_v2107_verify_import');
 
+$ut2004V128 = $snapshot(
+    42008, 'Consumer128', 'classic-linkerload', 'ue2.ut2004', 'ue2-ut2004-v3369-package-v128',
+    $consumerImports, [], 128
+);
+$ut2004Provider128 = $snapshot(
+    42009, 'Provider', 'classic-linkerload', 'ue2.ut2004', 'ue2-ut2004-v3369-package-v128',
+    [], [$export(0, 'Obj', '00000004')], 128
+);
+$ut2004Resolved128 = Uedb5ClassicDependencyResolver::resolve($ut2004V128, [[
+    'package_name'=>'Provider','provider_id'=>42009,'snapshot'=>$ut2004Provider128,
+]]);
+$check(($ut2004Resolved128[1]['status'] ?? null) === 'resolved',
+    'ut2004_v128_uses_latest_v129_verify_import_loader');
+$ut2004V129 = $snapshot(
+    42010, 'Consumer129', 'classic-linkerload', 'ue2.ut2004', 'ue2-ut2004-ut2004src-v129-64bit',
+    $consumerImports, [], 129
+);
+$ut2004Private129 = $snapshot(
+    42011, 'Provider', 'classic-linkerload', 'ue2.ut2004', 'ue2-ut2004-ut2004src-v129-64bit',
+    [], [$export(0, 'Obj', '00000000')], 129
+);
+$ut2004Rejected = Uedb5ClassicDependencyResolver::resolve($ut2004V129, [[
+    'package_name'=>'Provider','provider_id'=>42011,'snapshot'=>$ut2004Private129,
+]]);
+$check(($ut2004Rejected[1]['status'] ?? null) === 'missing'
+    && ($ut2004Rejected[1]['reason'] ?? null) === 'verify_import_private_export',
+    'ut2004_v129_private_export_is_rejected');
+$ut2004V130 = $snapshot(
+    42012, 'Consumer130', 'classic-linkerload', 'ue2.ut2004', 'ue2-ut2004-ut2004src-v129-64bit',
+    $consumerImports, [], 130
+);
+$ut2004Unverified = Uedb5ClassicDependencyResolver::resolve($ut2004V130, [[
+    'package_name'=>'Provider','provider_id'=>42009,'snapshot'=>$ut2004Provider128,
+]]);
+$check(($ut2004Unverified[1]['status'] ?? null) === 'unresolved'
+    && ($ut2004Unverified[1]['reason'] ?? null) === 'ue2_verify_import_source_implementation_unavailable',
+    'ut2004_v130_does_not_inherit_v129_verify_import');
+
 $ut3Consumer = $snapshot(
     43001, 'Consumer', 'classic-linkerload', 'ue3.ut3', 'ue3-ut3-jan2008-package-v512',
     $consumerImports, [], 512

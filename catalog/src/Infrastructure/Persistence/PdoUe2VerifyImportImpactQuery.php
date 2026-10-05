@@ -6,6 +6,7 @@ namespace UnrealDb\Catalog\Infrastructure\Persistence;
 use PDO;
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5Unreal2SnapshotBuilder;
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5Ut2003SnapshotBuilder;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5Ut2004SnapshotBuilder;
 
 /** Bounded staged-SQL impact proof for the UE2 profile VerifyImport transition. */
 final class PdoUe2VerifyImportImpactQuery
@@ -38,7 +39,8 @@ final class PdoUe2VerifyImportImpactQuery
             $fid=(int)$r['file_id'];$policy=(string)$r['source_policy'];$version=(int)($r['package_version']??0);
             $isUnreal2=str_starts_with(strtolower($policy),'ue2-unreal2-');
             $isUt2003=str_starts_with(strtolower($policy),'ue2-ut2003-');
-            if(!$isUnreal2&&!$isUt2003)continue;
+            $isUt2004=str_starts_with(strtolower($policy),'ue2-ut2004-');
+            if(!$isUnreal2&&!$isUt2003&&!$isUt2004)continue;
             if($isUnreal2&&$version>=60&&$version<=69&&$policy!==Uedb5Unreal2SnapshotBuilder::POLICY_V69_2000){
                 $reasons[$fid]['ue2_unreal2_v69_pass1_reparse']=true;
             }
@@ -48,8 +50,13 @@ final class PdoUe2VerifyImportImpactQuery
                 else $reasons[$fid]['ue2_source_implementation_unavailable']=true;
                 continue;
             }
-            if($version>=60&&$version<=120)$reasons[$fid]['ue2_verifyimport_profile_change']=true;
-            else $reasons[$fid]['ue2_source_implementation_unavailable']=true;
+            if($isUt2003){
+                if($version>=60&&$version<=120)$reasons[$fid]['ue2_verifyimport_profile_change']=true;
+                else $reasons[$fid]['ue2_source_implementation_unavailable']=true;
+                continue;
+            }
+            if($version>=60&&$version<=129)$reasons[$fid]['ue2_ut2004_verifyimport_profile_change']=true;
+            else $reasons[$fid]['ue2_ut2004_source_implementation_unavailable']=true;
         }
         $counts=[];foreach($reasons as$set)foreach(array_keys($set)as$reason)$counts[$reason]=($counts[$reason]??0)+1;
         ksort($counts,SORT_STRING);

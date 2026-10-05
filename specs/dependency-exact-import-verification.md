@@ -83,9 +83,9 @@ Apply this operation only after the exact package reader has validated indices a
 | Revision | Source-confirmed change from the UT99 baseline |
 |---|---|
 | Unreal II v69 (12-09-2000) | Retains `UnrealI`/`UnrealShare` hash, provider-load and class-package compatibility. Uses exact object/class/provider matching, root-export outer acceptance, strict `RF_Public`, runtime native/transient binding and broad SafeReplace. `Mesh -> LodMesh` is an unconditional Rehack pass, not merely a retry on miss. Only package versions 60-69 are assigned this source profile; later Unreal II versions are source-unverified. |
-| UE2.5 / UT2004 | Not inferred from Unreal II or UT2003. The existing runtime path is isolated pending the dedicated 3A3 audit of the latest complete UT2004 source. |
+| UT2004 v129 | Latest complete `UT2004SrcCmake` VerifyImport uses exact hashed object/class/provider identity, root-export outer acceptance, strict `RF_Public`, runtime native/transient binding and broad SafeReplace. `Mesh -> LodMesh` is an unconditional Rehack. Package versions 60-129 use this profile; v130+ fail closed. |
 | UT2003 v2107 | Uses exact match/root outer fallback, strict `RF_Public`, runtime binding and broad SafeReplace. It has no UnrealI/UnrealShare compatibility. `Mesh -> LodMesh` is an unconditional Rehack pass. Package versions 60-120 use this profile; v121+ fail closed unless a later implementation is sourced. |
-| UT2004 | Retains the same core resolver inventory; reviewed ClassRemap/PackageRemap paths are not active in import verification. |
+| UE2.5 / Unreal Warfare | Kept separate from the UT2004 game profile; its own source remains authoritative. |
 | UE3 | Verification gains cooked/remapped-package conditions, import fixups, redirector handling and more runtime gates. Direct serialized matching remains separable from those runtime paths. |
 | UE4 4.27.2 | Verification includes full-before-short class-package matching, modern outer relationships, `RF_Public`, CoreRedirects, instancing/remapping, package privacy, script/native/in-memory handling and explicit `FObjectImport::PackageName` cases. |
 

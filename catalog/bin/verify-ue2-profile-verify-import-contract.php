@@ -25,7 +25,7 @@ $exports=[
  ['export_index'=>0,'class_index'=>-2,'object_name'=>'Parent','outer_index'=>0,'object_flags'=>4],
  ['export_index'=>1,'class_index'=>-2,'object_name'=>'Child','outer_index'=>1,'object_flags'=>4],
 ];
-foreach([Ue2::PROFILE_UNREAL2_V69_2000,Ue2::PROFILE_UT2003_V2107]as$profile){
+foreach([Ue2::PROFILE_UNREAL2_V69_2000,Ue2::PROFILE_UT2003_V2107,Ue2::PROFILE_UT2004_V129]as$profile){
  $r=Ue2::resolveInMemoryOutcome($profile,$consumer,$providerImports,$exports,'Provider');
  $check($profile.'_exact_parent',($r[1]['export_index']??null)===0&&($r[2]['export_index']??null)===1);
 }
@@ -42,7 +42,7 @@ $ut=Ue2::resolveInMemoryOutcome(Ue2::PROFILE_UT2003_V2107,$classHackConsumer,$pr
 $check('unreal2_v69_has_unreali_unrealshare_class_hack',($u2[1]['export_index']??null)===0&&($u2[1]['reason']??'')==='unreal2_v69_unreali_unrealshare_class_package');
 $check('ut2003_does_not_inherit_unreal2_class_hack',($ut[1]['status']??'')==='runtime_only');
 $private=$exports;$private[0]['object_flags']=0;
-foreach([Ue2::PROFILE_UNREAL2_V69_2000,Ue2::PROFILE_UT2003_V2107]as$profile){
+foreach([Ue2::PROFILE_UNREAL2_V69_2000,Ue2::PROFILE_UT2003_V2107,Ue2::PROFILE_UT2004_V129]as$profile){
  $r=Ue2::resolveInMemoryOutcome($profile,$consumer,$providerImports,$private,'Provider');
  $check($profile.'_private_export_rejected',($r[1]['status']??'')==='private_export');
 }
@@ -53,9 +53,11 @@ $none=[
 ];
 $u2=Ue2::resolveInMemoryOutcome(Ue2::PROFILE_UNREAL2_V69_2000,$none,$providerImports,$exports,'Provider');
 $ut=Ue2::resolveInMemoryOutcome(Ue2::PROFILE_UT2003_V2107,$none,$providerImports,$exports,'Provider');
-$check('ue2_direct_name_none_is_ignored',($u2[1]['status']??'')==='ignored'&&($ut[1]['status']??'')==='ignored');
+$ut04=Ue2::resolveInMemoryOutcome(Ue2::PROFILE_UT2004_V129,$none,$providerImports,$exports,'Provider');
+$check('ue2_direct_name_none_is_ignored',($u2[1]['status']??'')==='ignored'&&($ut[1]['status']??'')==='ignored'&&($ut04[1]['status']??'')==='ignored');
 $check('unreal2_v69_name_none_parent_triggers_source_linker_assert_boundary',($u2[2]['status']??'')==='invalid'&&($u2[2]['reason']??'')==='parent_source_linker_unavailable');
 $check('ut2003_name_none_parent_is_tolerated',($ut[2]['status']??'')==='unresolved'&&($ut[2]['reason']??'')==='ut2003_parent_source_linker_unavailable_tolerated');
+$check('ut2004_v129_name_none_parent_is_tolerated',($ut04[2]['status']??'')==='unresolved'&&($ut04[2]['reason']??'')==='ut2004_parent_source_linker_unavailable_tolerated');
 $mesh=[
  ['import_index'=>0,'class_package'=>'Core','class_name'=>'Package','object_name'=>'Provider','outer_index'=>0],
  ['import_index'=>1,'class_package'=>'Engine','class_name'=>'Mesh','object_name'=>'Model','outer_index'=>-1],
@@ -69,6 +71,10 @@ $r=Ue2::resolveInMemoryOutcome(Ue2::PROFILE_UT2003_V2107,$mesh,$providerImports,
 $check('ut2003_public_mesh_retained_when_lodmesh_rehack_misses',($r[1]['export_index']??null)===0&&($r[1]['reason']??'')==='mesh_exact_retained_after_lodmesh_rehack');
 $r=Ue2::resolveInMemoryOutcome(Ue2::PROFILE_UT2003_V2107,$mesh,$providerImports,$meshAndLod,'Provider');
 $check('ut2003_lodmesh_rehack_replaces_mesh',($r[1]['export_index']??null)===1&&($r[1]['reason']??'')==='mesh_to_lodmesh_rehack');
+$r=Ue2::resolveInMemoryOutcome(Ue2::PROFILE_UT2004_V129,$mesh,$providerImports,$meshOnly,'Provider');
+$check('ut2004_v129_public_mesh_retained_when_lodmesh_rehack_misses',($r[1]['export_index']??null)===0&&($r[1]['reason']??'')==='mesh_exact_retained_after_lodmesh_rehack');
+$r=Ue2::resolveInMemoryOutcome(Ue2::PROFILE_UT2004_V129,$mesh,$providerImports,$meshAndLod,'Provider');
+$check('ut2004_v129_lodmesh_rehack_replaces_mesh',($r[1]['export_index']??null)===1&&($r[1]['reason']??'')==='mesh_to_lodmesh_rehack');
 $meshAndPrivateLod=$meshAndLod;$meshAndPrivateLod[1]['object_flags']=0;
 $r=Ue2::resolveInMemoryOutcome(Ue2::PROFILE_UNREAL2_V69_2000,$mesh,$providerImports,$meshAndPrivateLod,'Provider');
 $check('unreal2_private_lodmesh_rehack_fails_after_public_mesh',($r[1]['status']??'')==='private_export'&&($r[1]['candidate_export_index']??null)===1);
@@ -76,7 +82,7 @@ $missing=[
  ['import_index'=>0,'class_package'=>'Core','class_name'=>'Package','object_name'=>'Provider','outer_index'=>0],
  ['import_index'=>1,'class_package'=>'Engine','class_name'=>'Texture','object_name'=>'Missing','outer_index'=>-1],
 ];
-foreach([Ue2::PROFILE_UNREAL2_V69_2000,Ue2::PROFILE_UT2003_V2107]as$profile){
+foreach([Ue2::PROFILE_UNREAL2_V69_2000,Ue2::PROFILE_UT2003_V2107,Ue2::PROFILE_UT2004_V129]as$profile){
  $r=Ue2::resolveInMemoryOutcome($profile,$missing,$providerImports,[],'Provider');
  $check($profile.'_file_miss_requires_runtime_state',($r[1]['status']??'')==='runtime_only');
 }
@@ -90,25 +96,28 @@ $check('v4_ut2003_v2107_profile_is_version_bounded',
     $v4Profile->invoke(null,4,60,0)===Ue2::PROFILE_UT2003_V2107
     &&$v4Profile->invoke(null,4,120,28)===Ue2::PROFILE_UT2003_V2107
     &&$v4Profile->invoke(null,4,121,29)===null);
-$v4Legacy=new ReflectionMethod(PdoDependencyResolver::class,'ue2LegacyVerifyImportPolicy');
-$check('v4_legacy_ue2_resolver_is_ut2004_only',
-    $v4Legacy->invoke(null,5)==='standard'
-    &&$v4Legacy->invoke(null,2)===null
-    &&$v4Legacy->invoke(null,4)===null);
+$check('v4_ut2004_v129_profile_is_latest_source_and_version_bounded',
+    $v4Profile->invoke(null,5,60,0)===Ue2::PROFILE_UT2004_V129
+    &&$v4Profile->invoke(null,5,128,29)===Ue2::PROFILE_UT2004_V129
+    &&$v4Profile->invoke(null,5,129,29)===Ue2::PROFILE_UT2004_V129
+    &&$v4Profile->invoke(null,5,130,29)===null);
 $localProfile=new ReflectionMethod(CatalogParsedPackageMetadataSnapshotBuilder::class,'ue2VerifyImportProfile');
 $check('local_self_provider_uses_same_ue2_profile_bounds',
     $localProfile->invoke(null,2,69)===Ue2::PROFILE_UNREAL2_V69_2000
     &&$localProfile->invoke(null,2,70)===null
     &&$localProfile->invoke(null,4,120)===Ue2::PROFILE_UT2003_V2107
-    &&$localProfile->invoke(null,4,121)===null);
-$localLegacy=new ReflectionMethod(CatalogParsedPackageMetadataSnapshotBuilder::class,'ue2UsesLegacyVerifyImport');
-$check('local_self_provider_legacy_ue2_path_is_ut2004_only',
-    $localLegacy->invoke(null,5)===true
-    &&$localLegacy->invoke(null,2)===false
-    &&$localLegacy->invoke(null,4)===false);
+    &&$localProfile->invoke(null,4,121)===null
+    &&$localProfile->invoke(null,5,60)===Ue2::PROFILE_UT2004_V129
+    &&$localProfile->invoke(null,5,129)===Ue2::PROFILE_UT2004_V129
+    &&$localProfile->invoke(null,5,130)===null);
 $localSource=(string)file_get_contents($root.'/src/Infrastructure/Metadata/CatalogParsedPackageMetadataSnapshotBuilder.php');
-$check('local_self_provider_invokes_profiled_ue2_resolver',
+$pass2Source=(string)file_get_contents($root.'/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php');
+$check('local_self_provider_invokes_profiled_ue2_resolver_without_legacy_path',
     str_contains($localSource,'PdoUe2VerifyImportProjectionResolver::resolveInMemoryOutcome')
     &&str_contains($localSource,"\$ue2Profile !== null")
-    &&str_contains($localSource,"\$ue2LegacyVerifyImport"));
+    &&!str_contains($localSource,'ue2LegacyVerifyImport')
+    &&!str_contains($localSource,'PdoLegacyVerifyImportProjectionResolver'));
+$check('ut2004_does_not_load_catalog_class_remap',
+    !str_contains($pass2Source,'PdoClassRemapRepository')
+    &&!str_contains($pass2Source,'class_remaps'));
 echo json_encode(['ok'=>$fail===[],'checks'=>$checks,'failures'=>$fail],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;exit($fail===[]?0:1);

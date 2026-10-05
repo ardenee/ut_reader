@@ -140,8 +140,10 @@ $check('v4_ue1_uses_profile_resolver_and_ut99_only_package_retry',
 $v5Resolver=(string)file_get_contents($root.'/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php');
 $pass2Service=(string)file_get_contents($root.'/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php');
 $check('ue1_does_not_consume_catalog_class_remap',
-    str_contains($v5Resolver,"\$classRemaps = \$legacyPolicy !== null")
-    &&str_contains($pass2Service,"\$sourceKey === 'ut2004' && \$this->tableExists('ue_class_remaps')"));
+    !str_contains($v5Resolver,'class_remaps')
+    && !str_contains($v5Resolver,'PdoClassRemapRepository')
+    && !str_contains($pass2Service,'ue_class_remaps')
+    && !str_contains($pass2Service,'PdoClassRemapRepository'));
 
 $ok=$failures===[];
 echo json_encode(['ok'=>$ok,'checks'=>$checks,'failures'=>$failures],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;
