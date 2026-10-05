@@ -39,6 +39,9 @@ $snapshot = static function (
     array $exports,
     ?int $packageVersion = null
 ): array {
+    if ($packageVersion === null && $schemaPrefix === 'ue1.ut99') {
+        $packageVersion = 68;
+    }
     $sections = ['imports'=>array_values($imports),'exports'=>array_values($exports)];
     $schemas = [
         'imports'=>$schemaPrefix . '.object-import.v1',
@@ -140,11 +143,11 @@ $noneAncestorResolved = Uedb5ClassicDependencyResolver::resolve($noneAncestorCon
 ]]);
 $check(($noneAncestorResolved[1]['reason'] ?? null) === 'source_irrelevant_name_none'
     && ($noneAncestorResolved[2]['status'] ?? null) === 'unresolved'
-    && ($noneAncestorResolved[2]['reason'] ?? null) === 'source_irrelevant_name_none_ancestor'
+    && ($noneAncestorResolved[2]['reason'] ?? null) === 'parent_source_linker_unavailable'
     && ($noneAncestorResolved[2]['dependency_class'] ?? null) === 'runtime_derived'
-    && (int)($noneAncestorResolved[2]['source_irrelevant_ancestor_index'] ?? -1) === 1
-    && ($noneAncestorResolved[2]['provider_id'] ?? null) === null,
-    'ut99_child_of_name_none_import_does_not_gain_source_linker');
+    && (int)($noneAncestorResolved[2]['parent_import_index'] ?? -1) === 1
+    && (int)($noneAncestorResolved[2]['provider_id'] ?? 0) === 41008,
+    'ut99_child_of_name_none_import_fails_parent_source_linker_check');
 
 $unreal2Consumer = $snapshot(
     42001, 'Consumer', 'classic-linkerload', 'ue2.unreal2', 'ue2-unreal2-package-v126',
@@ -272,12 +275,12 @@ try {
     ]]);
     $ancestorRows = $reader->snapshot(99, 41007)['sections'][Uedb5DependencyRebuilder::SECTION] ?? [];
     $check(($ancestorRows[2]['outcome'] ?? null) === 'unresolved'
-        && ($ancestorRows[2]['reason_code'] ?? null) === 'source_irrelevant_name_none_ancestor'
+        && ($ancestorRows[2]['reason_code'] ?? null) === 'parent_source_linker_unavailable'
         && ($ancestorRows[2]['dependency_class'] ?? null) === 'runtime_derived'
         && ($ancestorRows[2]['hard'] ?? true) === false
-        && ($ancestorRows[2]['required_package_identity'] ?? null) === null
-        && (int)(($ancestorRows[2]['resolver_detail']['source_irrelevant_ancestor_index'] ?? -1)) === 1,
-        'rebuilder_persists_name_none_ancestor_as_nonhard_unresolved');
+        && ($ancestorRows[2]['required_package_identity']['value'] ?? null) === 'Provider'
+        && (int)(($ancestorRows[2]['resolver_detail']['parent_import_index'] ?? -1)) === 1,
+        'rebuilder_persists_name_none_ancestor_as_invalid_parent_linker');
 } finally {
     if (is_dir($tempRoot)) {
         $iterator = new RecursiveIteratorIterator(

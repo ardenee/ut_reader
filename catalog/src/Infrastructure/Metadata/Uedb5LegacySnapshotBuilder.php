@@ -46,6 +46,9 @@ final class Uedb5LegacySnapshotBuilder
         $exports = $reader->getExports();
         self::assertCounts($label, $header, $names, $imports, $exports);
 
+        $version = (int)($header['version'] ?? 0);
+        $pre50Unreal = $prefix === 'ue1.unreal' && $version < 50;
+
         return [
             'file' => [
                 'id' => $fileId,
@@ -56,15 +59,15 @@ final class Uedb5LegacySnapshotBuilder
             'package_family' => 'classic-linkerload',
             'source_policy' => $policy,
             'section_schemas' => [
-                'summary' => $prefix . '.package-summary.v1',
+                'summary' => $prefix . ($pre50Unreal ? '.package-summary.v2' : '.package-summary.v1'),
                 'names' => $prefix . '.name-entry.v1',
-                'imports' => $prefix . '.object-import.v1',
+                'imports' => $prefix . ($pre50Unreal ? '.object-import.v2' : '.object-import.v1'),
                 'exports' => $prefix . '.object-export.v1',
             ],
             'sections' => [
                 'summary' => [self::summaryRow($header)],
                 'names' => array_map(self::nameRow(...), $names),
-                'imports' => array_map(self::importRow(...), $imports),
+                'imports' => array_map(static fn(array $row): array => self::importRow($row, $version), $imports),
                 'exports' => array_map(self::exportRow(...), $exports),
             ],
         ];
@@ -98,7 +101,8 @@ final class Uedb5LegacySnapshotBuilder
             'generations' => array_values((array)($header['generations'] ?? [])),
             'name_entry_encoding' => $version < 64 ? 'ansi-z' : 'fstring-compact-length',
             'fname_index_encoding' => 'compact-index',
-            'import_outer_index_encoding' => 'int32-le',
+            'import_outer_index_encoding' => $version < 50 ? 'not-serialized' : 'int32-le',
+            'import_object_package_encoding' => $version < 50 ? 'fname-compact-index' : 'not-serialized',
             'export_class_index_encoding' => 'compact-index',
             'export_super_index_encoding' => 'compact-index',
             'export_outer_index_encoding' => 'int32-le',
@@ -121,10 +125,10 @@ final class Uedb5LegacySnapshotBuilder
     }
 
     /** @param array<string,mixed> $row @return array<string,mixed> */
-    private static function importRow(array $row): array
+    private static function importRow(array $row, int $version): array
     {
         $index = (int)($row['index'] ?? -1);
-        return [
+        $result = [
             'index' => $index,
             'package_index' => -($index + 1),
             'serialized_offset' => (int)($row['offset'] ?? -1),
@@ -143,6 +147,15 @@ final class Uedb5LegacySnapshotBuilder
                 (string)($row['objectNameText'] ?? '')
             ),
         ];
+        if ($version < 50) {
+            $result['outer_index_serialized'] = false;
+            $result['object_package_present'] = true;
+            $result['object_package'] = self::fname(
+                (int)($row['objectPackage'] ?? -1),
+                (string)($row['objectPackageText'] ?? '')
+            );
+        }
+        return $result;
     }
 
     /** @param array<string,mixed> $row @return array<string,mixed> */

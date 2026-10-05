@@ -58,10 +58,23 @@ final class CatalogUnverifiedMetadataSnapshotBuilder
         $importPaths = [];
         foreach ($imports as $index => $import) {
             $row = is_array($import) ? $import : [];
-            $fullPath = \scanner_ref_path(-((int)$index + 1), $imports, $exports, $cache);
-            $parts = $fullPath !== '' ? explode('.', $fullPath) : [];
-            $rootPackage = (string)($parts[0] ?? '');
-            $relativeObjectPath = count($parts) > 1 ? implode('.', array_slice($parts, 1)) : '';
+            $objectPackagePresent = array_key_exists('objectPackage', $row) && $row['objectPackage'] !== null;
+            $objectPackage = $objectPackagePresent
+                ? (string)($row['objectPackageText'] ?? ($row['ObjectPackage']['text'] ?? ''))
+                : '';
+            if ($objectPackagePresent) {
+                $objectNameText = (string)($row['objectNameText'] ?? ($row['ObjectName']['text'] ?? ''));
+                $rootPackage = strcasecmp($objectPackage, 'None') === 0 ? '' : $objectPackage;
+                $relativeObjectPath = $objectNameText;
+                $fullPath = $rootPackage !== ''
+                    ? \scanner_join_path_parts([$rootPackage, $objectNameText])
+                    : $objectNameText;
+            } else {
+                $fullPath = \scanner_ref_path(-((int)$index + 1), $imports, $exports, $cache);
+                $parts = $fullPath !== '' ? explode('.', $fullPath) : [];
+                $rootPackage = (string)($parts[0] ?? '');
+                $relativeObjectPath = count($parts) > 1 ? implode('.', array_slice($parts, 1)) : '';
+            }
             $importRows[] = [
                 'id' => $this->virtualId($fileId, (int)$index),
                 'file_id' => $fileId,
@@ -69,6 +82,8 @@ final class CatalogUnverifiedMetadataSnapshotBuilder
                 'class_package' => (string)($row['classPackageText'] ?? ($row['ClassPackage']['text'] ?? '')),
                 'class_name' => (string)($row['classNameText'] ?? ($row['ClassName']['text'] ?? '')),
                 'object_name' => (string)($row['objectNameText'] ?? ($row['ObjectName']['text'] ?? '')),
+                'object_package_present' => $objectPackagePresent ? 1 : 0,
+                'object_package' => $objectPackage,
                 'outer_index' => (int)($row['outerIndex'] ?? $row['OuterIndex'] ?? $row['outer'] ?? 0),
                 'full_path' => $fullPath,
                 'root_package' => $rootPackage,

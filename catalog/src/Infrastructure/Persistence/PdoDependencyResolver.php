@@ -28,8 +28,12 @@ final class PdoDependencyResolver
         array $consumerGraphImports = []
     ): array {
         $engineKey = self::engineKey($db, $gameId);
-        $legacyPolicy = self::legacyVerifyImportPolicy($db, $gameId);
-        $legacyVerifyImport = $legacyPolicy !== null;
+        $legacyVerifyImport = in_array($engineKey, ['UE1', 'UE2'], true);
+        $legacyPolicy = $engineKey === 'UE2' ? self::legacyVerifyImportPolicy($db, $gameId) : null;
+        $ue1FileIdentity = $engineKey === 'UE1' ? self::filePackageIdentity($db, $fileId) : ['version'=>0,'licensee'=>0];
+        $ue1Profile = $engineKey === 'UE1'
+            ? self::ue1VerifyImportProfile($gameId, (int)$ue1FileIdentity['version'], (int)$ue1FileIdentity['licensee'])
+            : null;
         $ue3VerifyImport = $engineKey === 'UE3';
         $ue4VerifyImport = $engineKey === 'UE4';
         $sourceFnameLookup = $legacyVerifyImport || $ue3VerifyImport || $ue4VerifyImport;
@@ -41,9 +45,9 @@ final class PdoDependencyResolver
                 $importsByIndex[$index] = $import;
             }
         }
-        $legacySourceIrrelevant = $legacyVerifyImport
-            ? self::legacySourceIrrelevantIndexes($importsByIndex)
-            : [];
+        $legacySourceIrrelevant = $engineKey === 'UE1'
+            ? ($ue1Profile !== null ? self::legacySourceIrrelevantIndexes($importsByIndex, false) : [])
+            : ($engineKey === 'UE2' ? self::legacySourceIrrelevantIndexes($importsByIndex, true) : []);
         $legacyRootPackages = [];
         if ($legacyVerifyImport) {
             foreach (array_keys($importsByIndex) as $importIndex) {
@@ -160,7 +164,34 @@ final class PdoDependencyResolver
                 unset($packageMatches[$packageKey]);
             }
         }
-        $classRemaps = $legacyVerifyImport
+
+        if ($engineKey === 'UE1' && $ue1Profile === PdoUe1VerifyImportProjectionResolver::PROFILE_UT99_V1400) {
+            $unrealIKey = self::sourceFnameLookup('UnrealI');
+            if (isset($packageNames[$unrealIKey])
+                && !isset($packageMatches[$unrealIKey])
+                && !isset($ambiguousPackageProviders[$unrealIKey])) {
+                // UT99 v1.400 retries a failed UnrealI package load as
+                // UnrealShare. Keep the requirement keyed as UnrealI while the
+                // selected physical provider is the source-defined fallback.
+                $fallbackCandidates = self::loadPackageCandidates(
+                    $db, $gameId, $fileId, ['UnrealShare'], true
+                );
+                $unrealShareKey = self::sourceFnameLookup('UnrealShare');
+                $fallbackRows = (array)($fallbackCandidates[$unrealShareKey] ?? []);
+                if (count($fallbackRows) > 1) {
+                    $ambiguousPackageProviders[$unrealIKey] = array_values(array_map(
+                        static fn(array $candidate): int => (int)$candidate['file_id'],
+                        $fallbackRows
+                    ));
+                } elseif (count($fallbackRows) === 1) {
+                    $packageMatches[$unrealIKey] = [
+                        'file_id' => (int)$fallbackRows[0]['file_id'],
+                        'source' => 'ut99_unreali_to_unrealshare',
+                    ];
+                }
+            }
+        }
+        $classRemaps = $engineKey === 'UE2'
             ? (new PdoClassRemapRepository($db))->mappingsForGame($gameId)
             : [];
 
@@ -229,7 +260,22 @@ final class PdoDependencyResolver
         // their historical runtime package search/mount order is unavailable.
         // Provider contents must never choose a different physical package.
         $verifyImportMatches = [];
-        if ($legacyVerifyImport) {
+        $ue1VerifyImportOutcomes = [];
+        if ($engineKey === 'UE1' && $ue1Profile !== null) {
+            require_once __DIR__ . '/PdoUe1VerifyImportProjectionResolver.php';
+            $consumerVersion = self::filePackageVersion($db, $fileId);
+            foreach ($packageRequirements as $packageKey => $requirement) {
+                $candidate = $packageMatches[$packageKey] ?? null;
+                if (!is_array($candidate)) { continue; }
+                $ue1VerifyImportOutcomes[$packageKey] = PdoUe1VerifyImportProjectionResolver::resolveProviderOutcome(
+                    $db,
+                    (int)$candidate['file_id'],
+                    $imports,
+                    $ue1Profile,
+                    $consumerVersion
+                );
+            }
+        } elseif ($engineKey === 'UE2') {
             require_once __DIR__ . '/PdoLegacyVerifyImportProjectionResolver.php';
             foreach ($packageRequirements as $packageKey => $requirement) {
                 $candidate = $packageMatches[$packageKey] ?? null;
@@ -306,7 +352,16 @@ final class PdoDependencyResolver
             $isObjectImport = self::isSourceObjectImport($import, $engineKey);
             $result = self::missing();
 
-            if (self::isCommonImport($import, $engineKey)) {
+            if ($engineKey === 'UE1' && isset($legacySourceIrrelevant[$importIndex])) {
+                $result = [
+                    'status' => 'unresolved',
+                    'resolved_file_id' => null,
+                    'resolved_export_id' => null,
+                    'resolved_export_index' => null,
+                    'source' => 'source_irrelevant_name_none',
+                    'confidence' => 'source_irrelevant',
+                ];
+            } elseif (self::isCommonImport($import, $engineKey)) {
                 $result = [
                     'status' => 'common',
                     'resolved_file_id' => null,
@@ -359,7 +414,58 @@ final class PdoDependencyResolver
                 $packageKey = self::lookupKey($rootPackage, $sourceFnameLookup);
                 $packageMatch = $packageMatches[$packageKey] ?? null;
 
-                if ($legacyVerifyImport) {
+                if ($engineKey === 'UE1') {
+                    if ($ue1Profile === null) {
+                        $result = [
+                            'status' => 'unresolved',
+                            'resolved_file_id' => $packageMatch !== null ? (int)$packageMatch['file_id'] : null,
+                            'resolved_export_id' => null,
+                            'resolved_export_index' => null,
+                            'source' => 'ue1_verify_import_source_implementation_unavailable',
+                            'confidence' => 'source_unresolved',
+                        ];
+                    } else {
+                        $ue1 = (array)(($ue1VerifyImportOutcomes[$packageKey] ?? [])[$importIndex] ?? []);
+                        $status = (string)($ue1['status'] ?? '');
+                        if ($packageMatch !== null && $status === 'resolved') {
+                            $result = [
+                                'status' => 'resolved',
+                                'resolved_file_id' => (int)$packageMatch['file_id'],
+                                'resolved_export_id' => null,
+                                'resolved_export_index' => (int)($ue1['export_index'] ?? -1),
+                                'source' => 'ue1_verify_import_' . (string)($ue1['reason'] ?? 'exact'),
+                                'confidence' => 'exact',
+                            ];
+                        } elseif ($packageMatch !== null && $status === 'private_export') {
+                            $result = [
+                                'status' => 'missing',
+                                'resolved_file_id' => null,
+                                'resolved_export_id' => null,
+                                'resolved_export_index' => null,
+                                'source' => 'ue1_verify_import_private_export',
+                                'confidence' => 'source_rejected',
+                            ];
+                        } elseif ($packageMatch !== null && $status === 'runtime_only') {
+                            $result = [
+                                'status' => 'unresolved',
+                                'resolved_file_id' => null,
+                                'resolved_export_id' => null,
+                                'resolved_export_index' => null,
+                                'source' => 'ue1_' . (string)($ue1['reason'] ?? 'runtime_only_fallback_unavailable'),
+                                'confidence' => 'runtime_unavailable',
+                            ];
+                        } elseif ($packageMatch !== null && $status === 'invalid') {
+                            $result = [
+                                'status' => 'unresolved',
+                                'resolved_file_id' => null,
+                                'resolved_export_id' => null,
+                                'resolved_export_index' => null,
+                                'source' => 'ue1_' . (string)($ue1['reason'] ?? 'invalid_import_graph'),
+                                'confidence' => 'source_invalid',
+                            ];
+                        }
+                    }
+                } elseif ($engineKey === 'UE2') {
                     $variants = $verifyImportMatches[$packageKey] ?? [];
                     $exportIndex = is_array($variants) && $legacyPolicy !== null
                         ? ($variants[$legacyPolicy][$importIndex] ?? null)
@@ -476,7 +582,7 @@ final class PdoDependencyResolver
     }
 
     /** @param array<int,array<string,mixed>> $importsByIndex @return array<int,array{reason:string,ancestor_index:int}> */
-    private static function legacySourceIrrelevantIndexes(array $importsByIndex): array
+    private static function legacySourceIrrelevantIndexes(array $importsByIndex, bool $includeAncestors): array
     {
         $irrelevant = [];
         foreach ($importsByIndex as $index => $import) {
@@ -484,6 +590,7 @@ final class PdoDependencyResolver
                 $irrelevant[(int)$index] = ['reason'=>'name_none','ancestor_index'=>(int)$index];
             }
         }
+        if (!$includeAncestors) { return $irrelevant; }
         $changed = true;
         while ($changed) {
             $changed = false;
@@ -516,6 +623,10 @@ final class PdoDependencyResolver
 
     private static function isSourceObjectImport(array $import, string $engineKey): bool
     {
+        if ($engineKey === 'UE1' && !empty($import['object_package_present'])) {
+            $objectPackage = (string)($import['object_package'] ?? '');
+            return $objectPackage !== '' && strcasecmp($objectPackage, 'None') !== 0;
+        }
         if (in_array($engineKey, ['UE1', 'UE2', 'UE3', 'UE4'], true)) {
             return (int)($import['outer_index'] ?? 0) !== 0;
         }
@@ -567,6 +678,10 @@ final class PdoDependencyResolver
             $seen[$importIndex] = true;
             $import = $importsByIndex[$importIndex] ?? null;
             if (!is_array($import)) { return ''; }
+            if (!empty($import['object_package_present'])) {
+                $objectPackage = (string)($import['object_package'] ?? '');
+                return strcasecmp($objectPackage, 'None') === 0 ? '' : $objectPackage;
+            }
             $outerIndex = (int)($import['outer_index'] ?? $import['package_index'] ?? 0);
             if ($outerIndex === 0) {
                 if (strcasecmp((string)($import['class_name'] ?? ''), 'Package') !== 0
@@ -657,6 +772,22 @@ final class PdoDependencyResolver
             && strncasecmp((string)($import['root_package'] ?? ''), '/Script/', 8) === 0;
     }
 
+    private static function ue1VerifyImportProfile(int $gameId, int $packageVersion, int $licenseeVersion): ?string
+    {
+        try {
+            $sourceKey = \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5GameSourceRegistry::sourceKey($gameId);
+        } catch (\Throwable) {
+            return null;
+        }
+        if ($sourceKey === 'ut99' && $packageVersion > 0 && $packageVersion <= 68 && $licenseeVersion === 0) {
+            return PdoUe1VerifyImportProjectionResolver::PROFILE_UT99_V1400;
+        }
+        if ($sourceKey === 'unrealgold' && $packageVersion > 0 && $packageVersion < 60 && $licenseeVersion === 0) {
+            return PdoUe1VerifyImportProjectionResolver::PROFILE_UNREAL_V120;
+        }
+        return null;
+    }
+
     private static function legacyVerifyImportPolicy(PDO $db, int $gameId): ?string
     {
         $row = \catalog_one(
@@ -692,6 +823,18 @@ final class PdoDependencyResolver
         $statement = $db->prepare('SELECT package_version FROM ue_files WHERE id=? LIMIT 1');
         $statement->execute([$fileId]);
         return (int)($statement->fetchColumn() ?: 0);
+    }
+
+    /** @return array{version:int,licensee:int} */
+    private static function filePackageIdentity(PDO $db, int $fileId): array
+    {
+        if ($fileId < 1) { return ['version'=>0,'licensee'=>0]; }
+        $statement = $db->prepare('SELECT package_version,licensee_version FROM ue_files WHERE id=? LIMIT 1');
+        $statement->execute([$fileId]);
+        $row = $statement->fetch(PDO::FETCH_ASSOC);
+        return is_array($row)
+            ? ['version'=>(int)($row['package_version'] ?? 0),'licensee'=>(int)($row['licensee_version'] ?? 0)]
+            : ['version'=>0,'licensee'=>0];
     }
 
     private static function engineKey(PDO $db, int $gameId): string

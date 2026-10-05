@@ -28,8 +28,8 @@ $check('ue2_object_import_comes_from_serialized_outer',
     $method->invoke(null,$whitespaceImport,'UE2')===true);
 $check('legacy_root_package_import_stays_package_level',
     $method->invoke(null,$rootImport,'UE2')===false);
-$check('ue4_keeps_existing_derived_path_boundary',
-    $method->invoke(null,$whitespaceImport,'UE4')===false);
+$check('ue4_object_import_comes_from_serialized_outer',
+    $method->invoke(null,$whitespaceImport,'UE4')===true);
 
 $noneMethod=new ReflectionMethod(PdoDependencyResolver::class,'legacySourceIrrelevantIndexes');
 $noneGraph=[
@@ -37,14 +37,13 @@ $noneGraph=[
     1=>['import_index'=>1,'class_package'=>'Core','class_name'=>'Class','object_name'=>'None','outer_index'=>-1],
     2=>['import_index'=>2,'class_package'=>'Core','class_name'=>'Class','object_name'=>'Child','outer_index'=>-2],
 ];
-$noneIndexes=$noneMethod->invoke(null,$noneGraph);
-$check('legacy_name_none_is_excluded_from_provider_scoring',
-    !isset($noneIndexes[0])
-    &&($noneIndexes[1]['reason']??null)==='name_none'
-    &&(int)($noneIndexes[1]['ancestor_index']??-1)===1);
-$check('legacy_name_none_descendant_is_excluded_from_provider_scoring',
-    ($noneIndexes[2]['reason']??null)==='name_none_ancestor'
-    &&(int)($noneIndexes[2]['ancestor_index']??-1)===1);
+$ue1NoneIndexes=$noneMethod->invoke(null,$noneGraph,false);
+$check('ue1_direct_name_none_is_excluded_from_provider_scoring',
+    !isset($ue1NoneIndexes[0])
+    &&($ue1NoneIndexes[1]['reason']??null)==='name_none'
+    &&(int)($ue1NoneIndexes[1]['ancestor_index']??-1)===1);
+$check('ue1_name_none_descendant_is_not_source_irrelevant',
+    !isset($ue1NoneIndexes[2]));
 
 $consumer=[
     $rootImport,
@@ -70,17 +69,18 @@ $check('legacy_verification_requirements_use_source_object_imports',
     str_contains($source,'if ($legacyVerifyImport)')
     &&str_contains($source,'!self::isSourceObjectImport($import, $engineKey)')
     &&str_contains($source,'$isObjectImport = self::isSourceObjectImport($import, $engineKey);'));
-$check('legacy_requirements_exclude_source_irrelevant_none_imports',
-    str_contains($source,'$legacySourceIrrelevant = $legacyVerifyImport')
-    &&str_contains($source,'if ($legacyVerifyImport && isset($legacySourceIrrelevant[$importIndex]))')
-    &&str_contains($source,'if (isset($legacySourceIrrelevant[$importIndex]))'));
+$check('ue1_requirements_exclude_only_direct_source_irrelevant_none_imports',
+    str_contains($source,'self::legacySourceIrrelevantIndexes($importsByIndex, false)')
+    &&str_contains($source,'self::legacySourceIrrelevantIndexes($importsByIndex, true)')
+    &&str_contains($source,'isset($legacySourceIrrelevant[$importIndex])'));
 $check('canonical_v4_rebuild_supports_exact_file_target',
     str_contains($cli,"'file-id::'")
     &&str_contains($cli,"'targeted'=>true")
     &&str_contains($cli,"'dependency_summary_refreshed'=>true")
     &&str_contains($cli,'PdoGameCatalogStats'));
-$check('worker_fingerprint_tracks_legacy_verifyimport_resolver',
-    str_contains($worker,'/src/Infrastructure/Persistence/PdoLegacyVerifyImportProjectionResolver.php'));
+$check('worker_fingerprint_tracks_legacy_verifyimport_resolvers',
+    str_contains($worker,'/src/Infrastructure/Persistence/PdoLegacyVerifyImportProjectionResolver.php')
+    &&str_contains($worker,'/src/Infrastructure/Persistence/PdoUe1VerifyImportProjectionResolver.php'));
 
 echo json_encode(['ok'=>$failures===[],'checks'=>$checks,'failures'=>$failures],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;
 exit($failures===[]?0:1);

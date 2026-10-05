@@ -78,6 +78,25 @@ final class PdoUedb5PhysicalProviderSelector
                 $packageKeyKind,
                 $packageKey
             );
+            $sourceFallback = null;
+            if ($candidates === []
+                && self::usesUt99V1400VerifyImport($consumer)
+                && self::sameFname((string)$packageName, 'UnrealI')) {
+                // UT99 v1.400 GetPackageLinker catches a failed UnrealI load and
+                // retries the package as UnrealShare. This is a package-load
+                // fallback, not content scoring and not a generic UE1 alias.
+                $fallbackName = 'UnrealShare';
+                $fallbackKey = Uedb5SqlProjectionContract::classicPackageKeyBinary($fallbackName, $packageKeyKind);
+                $candidates = $this->candidateRows(
+                    $gameId,
+                    $consumerFileId,
+                    $packageKeyKind,
+                    $fallbackKey
+                );
+                if ($candidates !== []) {
+                    $sourceFallback = $fallbackName;
+                }
+            }
             // Epic selects one package/linker before VerifyImport inspects exports.
             // candidateRows() discovers the known physical candidate set only.
             // If more than one candidate remains, the missing runtime search/mount
@@ -93,6 +112,7 @@ final class PdoUedb5PhysicalProviderSelector
                         static fn(array $candidate): int => (int)$candidate['file_id'],
                         $candidates
                     )),
+                    'source_fallback_package_name' => $sourceFallback,
                 ];
                 continue;
             }
@@ -103,6 +123,7 @@ final class PdoUedb5PhysicalProviderSelector
                     'file_id' => (int)$provider['file_id'],
                     'package_name' => (string)$packageName,
                     'selection_status' => 'selected',
+                    'source_fallback_package_name' => $sourceFallback,
                 ];
             }
         }
@@ -176,6 +197,19 @@ final class PdoUedb5PhysicalProviderSelector
         }
         return static fn(array $snapshot, array $providers, array $options): array =>
             Uedb5ClassicDependencyResolver::resolve($snapshot, $providers, $options);
+    }
+
+    private static function usesUt99V1400VerifyImport(array $snapshot): bool
+    {
+        $schema = strtolower(trim((string)($snapshot['section_schemas']['imports'] ?? '')));
+        $policy = strtolower(trim((string)($snapshot['source_policy'] ?? '')));
+        return str_starts_with($schema, 'ue1.ut99.')
+            && $policy === strtolower(Uedb5Ut99SnapshotBuilder::POLICY_RETAIL);
+    }
+
+    private static function sameFname(string $a, string $b): bool
+    {
+        return CatalogUnrealIdentityHash::fnameKey($a) === CatalogUnrealIdentityHash::fnameKey($b);
     }
 
     /** @return list<array<string,mixed>> */

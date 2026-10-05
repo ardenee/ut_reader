@@ -11,7 +11,7 @@ use UnrealDb\Catalog\Infrastructure\Persistence\PdoClassRemapRepository;
 
 final class Uedb5GameDependencyPassService
 {
-    public const DEPENDENCY_POLICY = 'uedb5-dependency-pass-v4';
+    public const DEPENDENCY_POLICY = 'uedb5-dependency-pass-v5';
 
     private Uedb5MetadataReader $reader;
     private Uedb5DependencyRebuilder $rebuilder;
@@ -294,10 +294,22 @@ final class Uedb5GameDependencyPassService
             static fn(string $value): bool => $value !== ''
         ));
         $classRemaps = [];
-        if ($this->tableExists('ue_class_remaps')) {
+        $engine = $this->gameEngineKey($gameId);
+        if ($engine === 'UE2' && $this->tableExists('ue_class_remaps')) {
             $classRemaps = (new PdoClassRemapRepository($this->db))->mappingsForGame($gameId);
         }
         return ['common_packages'=>$common,'class_remaps'=>$classRemaps];
+    }
+
+    private function gameEngineKey(int $gameId): string
+    {
+        $statement = $this->db->prepare(
+            'SELECT UPPER(COALESCE(p.engine_key,"")) FROM ue_games g '
+            . 'LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 '
+            . 'WHERE g.id=? LIMIT 1'
+        );
+        $statement->execute([$gameId]);
+        return strtoupper(trim((string)($statement->fetchColumn() ?: '')));
     }
 
     private function firstRemainingFileId(int $gameId, int $workerCount, int $workerIndex, bool $force): ?int

@@ -25,7 +25,10 @@ $db->exec('CREATE TABLE ue_uedb5_files(file_id INTEGER PRIMARY KEY,game_id INTEG
 $db->exec('CREATE TABLE ue_uedb5_provider_keys(source_kind INTEGER,source_id INTEGER,game_id INTEGER,package_key_kind INTEGER,package_key BLOB,file_id INTEGER)');
 
 $fname=static fn(string $text):array=>['text'=>$text];
-$snapshot=static function(int $fileId,string $packageName,array $imports,array $exports)use($fname):array{
+$snapshot=static function(
+    int $fileId,string $packageName,array $imports,array $exports,
+    string $sourcePolicy='test-ue1-provider-selection',int $packageVersion=69
+)use($fname):array{
     foreach($imports as &$row){
         foreach(['class_package','class_name','object_name'] as $field){
             if(isset($row[$field])&&!is_array($row[$field]))$row[$field]=$fname((string)$row[$field]);
@@ -36,13 +39,13 @@ $snapshot=static function(int $fileId,string $packageName,array $imports,array $
     } unset($row);
     return [
         'file'=>['id'=>$fileId,'game_id'=>3,'package_name'=>$packageName,'original_name'=>$packageName.'.u'],
-        'package_family'=>'classic-linkerload','source_policy'=>'test-ue1-provider-selection',
+        'package_family'=>'classic-linkerload','source_policy'=>$sourcePolicy,
         'section_schemas'=>[
             'summary'=>'ue1.ut99.package-summary.v1','names'=>'ue1.ut99.name-entry.v1',
             'imports'=>'ue1.ut99.object-import.v1','exports'=>'ue1.ut99.object-export.v1',
         ],
         'sections'=>[
-            'summary'=>[['package_version'=>69]],'names'=>[],
+            'summary'=>[['package_version'=>$packageVersion]],'names'=>[],
             'imports'=>array_values($imports),'exports'=>array_values($exports),
         ],
     ];
@@ -115,6 +118,33 @@ $db->prepare('INSERT INTO ue_uedb5_provider_keys VALUES(?,?,?,?,?,?)')
 $soloSelected=(new PdoUedb5PhysicalProviderSelector($db,$tmp))->select(3,11);
 $check('single_provider_is_selected_without_expensive_scoring',
     count($soloSelected)===1 && (int)$soloSelected[0]['file_id']===23);
+
+$ut99Retail='ue1-ut99-retail-v1400-1999-11-30';
+$unrealIFallbackImports=[
+    ['index'=>0,'class_package'=>'Core','class_name'=>'Package','object_name'=>'UnrealI','outer_index'=>0],
+    ['index'=>1,'class_package'=>'UnrealI','class_name'=>'Texture','object_name'=>'LegacyTex','outer_index'=>-1],
+];
+$writer->write($snapshot(24,'FallbackConsumer',$unrealIFallbackImports,[],$ut99Retail,68));
+$writer->write($snapshot(25,'UnrealShare',[],[$export(0,'LegacyTex')],$ut99Retail,68));
+foreach([[24,'FallbackConsumer'],[25,'UnrealShare']] as [$id,$name]){
+    $db->prepare('INSERT INTO ue_files VALUES(?,?,?,?,?,?,?)')->execute([$id,3,'verified','2026-10-02 13:45:00',$id,md5((string)$id),sha1((string)$id)]);
+    $db->prepare('INSERT INTO ue_uedb5_files VALUES(?,?,?)')->execute([$id,3,$name]);
+}
+$db->prepare('INSERT INTO ue_uedb5_provider_keys VALUES(?,?,?,?,?,?)')
+    ->execute([1,25,3,$classic,md5('unrealshare',true),25]);
+$ut99Fallback=(new PdoUedb5PhysicalProviderSelector($db,$tmp))->select(3,24);
+$check('ut99_v1400_unreali_package_load_retries_unrealshare',
+    count($ut99Fallback)===1
+    && ($ut99Fallback[0]['selection_status']??'')==='selected'
+    && (int)($ut99Fallback[0]['file_id']??0)===25
+    && ($ut99Fallback[0]['package_name']??'')==='UnrealI'
+    && ($ut99Fallback[0]['source_fallback_package_name']??'')==='UnrealShare');
+
+$writer->write($snapshot(26,'UnverifiedFallbackConsumer',$unrealIFallbackImports,[],'ue1-ut99-supplemental-v430',69));
+$db->prepare('INSERT INTO ue_files VALUES(?,?,?,?,?,?,?)')->execute([26,3,'verified','2026-10-02 13:46:00',26,md5('26'),sha1('26')]);
+$db->prepare('INSERT INTO ue_uedb5_files VALUES(?,?,?)')->execute([26,3,'UnverifiedFallbackConsumer']);
+$unverifiedFallback=(new PdoUedb5PhysicalProviderSelector($db,$tmp))->select(3,26);
+$check('ut99_unverified_later_source_does_not_inherit_v1400_package_fallback',$unverifiedFallback===[]);
 
 $ut4=[
     'file'=>['id'=>30,'game_id'=>7,'package_name'=>'/Game/Empty','original_name'=>'Empty.uasset'],

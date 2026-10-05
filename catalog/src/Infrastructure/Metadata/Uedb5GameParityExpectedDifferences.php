@@ -20,22 +20,13 @@ final class Uedb5GameParityExpectedDifferences
                 'reason'=>'UE3 source-dependent runtime/cooked state may be unresolved rather than proven missing.',
             ],
             [
-                'id'=>'classic_none_import_source_irrelevant',
+                'id'=>'ue1_none_import_source_irrelevant',
                 'game'=>'*',
                 'category'=>'dependency_outcome',
                 'v4_outcome'=>'missing',
                 'v5_outcome'=>'unresolved',
                 'requires_v5_source_evidence'=>true,
-                'reason'=>'UE1/UE2 VerifyImport returns immediately for imports whose class package, class name, or object name is NAME_None; V5 records those source-irrelevant rows as non-hard unresolved instead of preserving V4 missing.',
-            ],
-            [
-                'id'=>'classic_none_import_ancestor_source_irrelevant',
-                'game'=>'*',
-                'category'=>'dependency_outcome',
-                'v4_outcome'=>'missing',
-                'v5_outcome'=>'unresolved',
-                'requires_v5_source_evidence'=>true,
-                'reason'=>'UE1/UE2 nested VerifyImport inherits SourceLinker from its parent; if an ancestor is NAME_None and VerifyImport returns before establishing that SourceLinker, the descendant cannot be proven against a provider.',
+                'reason'=>'The audited Unreal v1.200 and UT99 v1.400 VerifyImport implementations return immediately for a direct NAME_None import; V5 records those source-backed UE1 rows as non-hard unresolved instead of preserving V4 missing.',
             ],
             [
                 'id'=>'normalized_fname_search_case',
@@ -85,30 +76,25 @@ final class Uedb5GameParityExpectedDifferences
 
         $reason = strtolower(trim((string)($v5['reason_code'] ?? '')));
         $policy = strtolower(trim((string)($v5['source_policy'] ?? '')));
-        $classicPolicy = str_starts_with($policy, 'ue1-') || str_starts_with($policy, 'ue2-');
+        $ue1AuditedPolicy = in_array($policy, [
+            strtolower(Uedb5UnrealSnapshotBuilder::POLICY_V120_EARLY),
+            strtolower(Uedb5Ut99SnapshotBuilder::POLICY_RETAIL),
+        ], true);
         if ($category !== 'dependency_outcome'
             || ($v4['outcome'] ?? '') !== 'missing'
             || ($v5['outcome'] ?? '') !== 'unresolved') {
             return null;
         }
-        if ($classicPolicy && $reason === 'source_irrelevant_name_none') {
+        if ($ue1AuditedPolicy && $reason === 'source_irrelevant_name_none') {
             $none = static fn(mixed $value): bool =>
                 CatalogUnrealIdentityHash::nameKey((string)$value) === CatalogUnrealIdentityHash::nameKey('None');
             if ($none($v5['required_object'] ?? '')
                 || $none($v5['class_package'] ?? '')
                 || $none($v5['class_name'] ?? '')) {
-                return self::rule('classic_none_import_source_irrelevant');
+                return self::rule('ue1_none_import_source_irrelevant');
             }
         }
-        if ($classicPolicy && $reason === 'source_irrelevant_name_none_ancestor') {
-            $detail = (array)($v5['resolver_detail'] ?? []);
-            $ancestor = $detail['source_irrelevant_ancestor_index'] ?? null;
-            if (is_int($ancestor) || (is_string($ancestor) && ctype_digit($ancestor))) {
-                if ((int)$ancestor >= 0) {
-                    return self::rule('classic_none_import_ancestor_source_irrelevant');
-                }
-            }
-        }
+
 
         if ($gameSlug !== 'ut3') { return null; }
         $detail = (array)($v5['resolver_detail'] ?? []);

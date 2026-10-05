@@ -419,7 +419,16 @@ abstract class CatalogLegacyPackageReaderBase
             try {
                 $classPackage = $reader->packageIndex($version);
                 $className = $reader->packageIndex($version);
-                $outer = $reader->i32();
+                if ($this->engineKey === 'UE1' && $version < 50) {
+                    // Unreal v1.200 FObjectImport::operator<< serializes the old
+                    // _ObjectPackage FName here. PackageIndex is not serialized
+                    // before version 50 and is initialized to zero on load.
+                    $objectPackage = $reader->packageIndex($version);
+                    $outer = 0;
+                } else {
+                    $objectPackage = null;
+                    $outer = $reader->i32();
+                }
                 $objectName = $reader->packageIndex($version);
             } catch (Throwable $error) {
                 throw new RuntimeException(
@@ -438,6 +447,7 @@ abstract class CatalogLegacyPackageReaderBase
             }
             $classPackageText = $this->nameByIndex($classPackage);
             $classNameText = $this->nameByIndex($className);
+            $objectPackageText = $objectPackage !== null ? $this->nameByIndex($objectPackage) : null;
             $objectNameText = $this->nameByIndex($objectName);
             $this->imports[] = [
                 'index' => $index,
@@ -446,6 +456,8 @@ abstract class CatalogLegacyPackageReaderBase
                 'className' => $className,
                 'outerIndex' => $outer,
                 'outer' => $outer,
+                'objectPackage' => $objectPackage,
+                'objectPackageText' => $objectPackageText,
                 'objectName' => $objectName,
                 'classPackageText' => $classPackageText,
                 'classNameText' => $classNameText,
@@ -453,6 +465,9 @@ abstract class CatalogLegacyPackageReaderBase
                 'ClassPackage' => ['index' => $classPackage, 'number' => 0, 'text' => $classPackageText],
                 'ClassName' => ['index' => $className, 'number' => 0, 'text' => $classNameText],
                 'OuterIndex' => $outer,
+                'ObjectPackage' => $objectPackage !== null
+                    ? ['index' => $objectPackage, 'number' => 0, 'text' => (string)$objectPackageText]
+                    : null,
                 'ObjectName' => ['index' => $objectName, 'number' => 0, 'text' => $objectNameText],
             ];
         }

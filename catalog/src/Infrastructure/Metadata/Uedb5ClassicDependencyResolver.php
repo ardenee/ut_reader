@@ -6,6 +6,7 @@ namespace UnrealDb\Catalog\Infrastructure\Metadata;
 
 use RuntimeException;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoLegacyVerifyImportProjectionResolver;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoUe1VerifyImportProjectionResolver;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoUe3VerifyImportProjectionResolver;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoUe4VerifyImportProjectionResolver;
 
@@ -65,13 +66,31 @@ final class Uedb5ClassicDependencyResolver
                 $common[self::key($package)] = true;
             }
         }
-        $classRemaps = (array)($options['class_remaps'] ?? []);
-        $legacyPolicy = self::legacyPolicy($consumerSnapshot);
+        $classRemaps = $engine === 'ue2' ? (array)($options['class_remaps'] ?? []) : [];
+        $legacyPolicy = $engine === 'ue2' ? self::legacyPolicy($consumerSnapshot) : null;
+        $ue1Profile = $engine === 'ue1' ? self::ue1VerifyImportProfile($consumerSnapshot) : null;
+        $consumerVersion = self::packageVersion($consumerSnapshot);
         $providerOutcomes = [];
 
         foreach ($providers as $packageKey => $provider) {
             $providerTables = (array)$provider['tables'];
-            if ($engine === 'ue1' || $engine === 'ue2') {
+            if ($engine === 'ue1') {
+                $providerOutcomes[$packageKey] = [
+                    'ue1' => $ue1Profile !== null
+                        ? PdoUe1VerifyImportProjectionResolver::resolveInMemoryOutcome(
+                            $ue1Profile,
+                            array_values($consumer['imports']),
+                            array_values($providerTables['imports']),
+                            array_values($providerTables['exports']),
+                            (string)$provider['physical_package'],
+                            $consumerVersion,
+                            self::packageVersion((array)$provider['snapshot'])
+                        )
+                        : [],
+                    'redirectors' => [],
+                    'redirector_ancestry' => [],
+                ];
+            } elseif ($engine === 'ue2') {
                 $variants = PdoLegacyVerifyImportProjectionResolver::resolveInMemoryVariants(
                     array_values($consumer['imports']),
                     array_values($providerTables['imports']),
@@ -112,13 +131,14 @@ final class Uedb5ClassicDependencyResolver
         $resolved = [];
         foreach ($consumer['imports'] as $importIndex => $import) {
             $root = self::rootPackage($consumer['imports'], (int)$importIndex, $engine);
-            if (($engine === 'ue1' || $engine === 'ue2') && self::isSourceIrrelevantNoneImport($import)) {
+            if ((($engine === 'ue1' && $ue1Profile !== null) || $engine === 'ue2')
+                && self::isSourceIrrelevantNoneImport($import)) {
                 $resolved[(int)$importIndex] = self::result(
                     'unresolved', '', null, null, 'source_irrelevant_name_none', $engine, 'runtime_derived'
                 );
                 continue;
             }
-            if (($engine === 'ue1' || $engine === 'ue2')) {
+            if ($engine === 'ue2') {
                 $noneAncestor = self::sourceIrrelevantNoneAncestor($consumer['imports'], (int)$importIndex);
                 if ($noneAncestor !== null) {
                     $resolved[(int)$importIndex] = self::result(
@@ -154,7 +174,8 @@ final class Uedb5ClassicDependencyResolver
 
             $providerKey = self::key($root);
             $provider = $providers[$providerKey] ?? null;
-            $isPackageImport = (int)($import['outer_index'] ?? 0) === 0
+            $isPackageImport = empty($import['object_package_present'])
+                && (int)($import['outer_index'] ?? 0) === 0
                 && self::key((string)($import['class_name'] ?? '')) === self::key('Package');
 
             if ($isPackageImport) {
@@ -175,6 +196,47 @@ final class Uedb5ClassicDependencyResolver
             }
 
             $outcome = (array)($providerOutcomes[$providerKey] ?? []);
+            if ($engine === 'ue1') {
+                if ($ue1Profile === null) {
+                    $resolved[(int)$importIndex] = self::result(
+                        'unresolved', $root, $provider['provider_id'] ?? null, null,
+                        'ue1_verify_import_source_implementation_unavailable', $engine, 'runtime_derived'
+                    );
+                    continue;
+                }
+                $ue1 = (array)(($outcome['ue1'] ?? [])[(int)$importIndex] ?? []);
+                $ue1Status = (string)($ue1['status'] ?? '');
+                if ($ue1Status === 'resolved') {
+                    $resolved[(int)$importIndex] = self::result(
+                        'resolved', $root, $provider['provider_id'] ?? null, (int)($ue1['export_index'] ?? -1),
+                        (string)($ue1['reason'] ?? 'verify_import_match'), $engine
+                    );
+                    continue;
+                }
+                if ($ue1Status === 'private_export') {
+                    $resolved[(int)$importIndex] = self::result(
+                        'missing', $root, $provider['provider_id'] ?? null, null,
+                        'verify_import_private_export', $engine, 'hard', self::ue1Detail($ue1)
+                    );
+                    continue;
+                }
+                if ($ue1Status === 'runtime_only') {
+                    $resolved[(int)$importIndex] = self::result(
+                        'unresolved', $root, $provider['provider_id'] ?? null, null,
+                        (string)($ue1['reason'] ?? 'runtime_only_fallback_unavailable'), $engine,
+                        'runtime_derived', self::ue1Detail($ue1)
+                    );
+                    continue;
+                }
+                if ($ue1Status === 'invalid') {
+                    $resolved[(int)$importIndex] = self::result(
+                        'unresolved', $root, $provider['provider_id'] ?? null, null,
+                        (string)($ue1['reason'] ?? 'invalid_import_graph'), $engine, 'runtime_derived', self::ue1Detail($ue1)
+                    );
+                    continue;
+                }
+            }
+
             $exportIndex = $outcome['matches'][(int)$importIndex] ?? null;
             if ($exportIndex !== null) {
                 $resolved[(int)$importIndex] = self::result(
@@ -230,6 +292,8 @@ final class Uedb5ClassicDependencyResolver
                 'object_name' => self::fnameText($row['object_name'] ?? null),
                 'object_name_is_none' => self::fnameIsNone($row['object_name'] ?? null),
                 'outer_index' => (int)($row['outer_index'] ?? 0),
+                'object_package_present' => !empty($row['object_package_present']),
+                'object_package' => self::fnameText($row['object_package'] ?? null),
                 'package_name_present' => !empty($row['package_name_present'])
                     || !empty($row['serialized_package_name_present']),
                 'package_name' => self::fnameText(
@@ -272,6 +336,21 @@ final class Uedb5ClassicDependencyResolver
         throw new RuntimeException('Classic UEDB5 snapshot has no recognized engine import schema.');
     }
 
+    private static function ue1VerifyImportProfile(array $snapshot): ?string
+    {
+        $schema = strtolower(trim((string)($snapshot['section_schemas']['imports'] ?? '')));
+        $policy = strtolower(trim((string)($snapshot['source_policy'] ?? '')));
+        if (str_starts_with($schema, 'ue1.unreal.')
+            && $policy === strtolower(Uedb5UnrealSnapshotBuilder::POLICY_V120_EARLY)) {
+            return PdoUe1VerifyImportProjectionResolver::PROFILE_UNREAL_V120;
+        }
+        if (str_starts_with($schema, 'ue1.ut99.')
+            && $policy === strtolower(Uedb5Ut99SnapshotBuilder::POLICY_RETAIL)) {
+            return PdoUe1VerifyImportProjectionResolver::PROFILE_UT99_V1400;
+        }
+        return null;
+    }
+
     private static function legacyPolicy(array $snapshot): string
     {
         $schema = strtolower(trim((string)($snapshot['section_schemas']['imports'] ?? '')));
@@ -285,6 +364,10 @@ final class Uedb5ClassicDependencyResolver
         while (isset($imports[$importIndex]) && !isset($seen[$importIndex])) {
             $seen[$importIndex] = true;
             $row = $imports[$importIndex];
+            if ($engine === 'ue1' && !empty($row['object_package_present'])) {
+                $objectPackage = (string)($row['object_package'] ?? '');
+                return self::key($objectPackage) === self::key('None') ? '' : $objectPackage;
+            }
             if ($engine === 'ue4' && !empty($row['package_name_present'])) {
                 $explicit = (string)($row['package_name'] ?? '');
                 if ($explicit !== '') {
@@ -404,6 +487,20 @@ final class Uedb5ClassicDependencyResolver
                     : 'hard'
             ),
         ], $detail);
+    }
+
+    /** @param array<string,mixed> $detail @return array<string,mixed> */
+    private static function ue1Detail(array $detail): array
+    {
+        if (array_key_exists('status', $detail)) {
+            $detail['source_status'] = (string)$detail['status'];
+            unset($detail['status']);
+        }
+        if (array_key_exists('reason', $detail)) {
+            $detail['source_reason'] = (string)$detail['reason'];
+            unset($detail['reason']);
+        }
+        return $detail;
     }
 
     private static function fnameIsNone(mixed $value): bool

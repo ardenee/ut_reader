@@ -137,6 +137,57 @@ Pass 2 is therefore `uedb5-dependency-pass-v4`. `transition-uedb5-source-identit
 - impacted V5 files rebuild by exact file from already-staged UEDB5 metadata; no full-game reparse is required;
 - `--rebuild-v4-impacted` optionally refreshes only the exact live UE1/UE2/UE3/UE4 files whose source identity can change, then refreshes statistics for touched games.
 
-### Section 2B2 — queued
+### Section 2B2 - UE5 Zen/IoStore package-store redirects and localization
 
-Audit UE5 Zen/IoStore package-store redirects, localization and package identity. Do not infer Zen behavior from the classic LinkerLoad rules in 2B1.
+**Status: complete and source-confirmed for the audited UE5 5.8.3 package-store path.**
+
+The cooked package-store audit establishes a separate Zen identity pipeline from classic `LinkerLoad`:
+
+- serialized PackageImport `FPackageId` remains the dependency source identity;
+- explicit package-store redirects are container-global mappings and rewrite provider lookup identity before package lookup;
+- `PublicExportHash` is then resolved inside the redirect target package, not against the source package ID;
+- localized-package redirects are a distinct second-stage mapping and depend on runtime editor/culture state, so static UnrealDB does not guess a culture;
+- mounted containers are ordered by mount `Order` and then later mount `Sequence`; the first effective redirect/localization mapping wins;
+- `GetSoftReferences()` enumerates raw package IDs and does not eagerly apply package-store redirects;
+- raw 64-bit package IDs and public-export hashes are never used as unprefixed PHP array keys, avoiding numeric-string coercion;
+- redirect/localization UEDB5 section schemas are v2 because they preserve the complete container-global context rather than rows filtered to the current package.
+
+Commit checkpoint: `c9adfc35` (`Align Zen package-store redirects with source`).
+
+### Section 3A1 - UE1 VerifyImport: Unreal and UT99
+
+**Status: complete for the latest complete local VerifyImport implementations available for each UE1 profile. Later UE1 revisions with no local implementation body are deliberately not inferred.**
+
+#### Source authority and version boundary
+
+- Unreal: the newest local tree is `L:\Source\Games\Unreal\Unreal [v1.227]`, but it does not contain the `Core\Src` linker implementation. The latest complete local `VerifyImport` implementation is `L:\Source\Games\Unreal\Unreal [v1.200] [1998-05-19]\Core\Src\UnLinker.h`. UnrealDB therefore applies the v1.200 VerifyImport contract only to its source-backed early policy (`ue1-unreal-v120-loadable-v34-59`).
+- UT99: the newest local tree is `L:\Source\Games\UT99\Unreal Tournament v432`, but its local tree exposes linker declarations rather than the implementation body. The latest complete local implementation is `L:\Source\Games\UT99\Unreal Tournament [v1.400] [1999-11-30]\Core\Src\UnLinker.h`. UnrealDB therefore applies the v1.400 VerifyImport contract only to `ue1-ut99-retail-v1400-1999-11-30`.
+- `UT99src-ext`/the local v432 tree may prove later serialization layout, but it is not treated as proof that the v1.400 VerifyImport body remained unchanged.
+
+#### Source results and corrections
+
+1. **Pre-50 Unreal ImportMap layout is different.** Unreal v1.200 serializes `_ObjectPackage` as an `FName` when `Ar.Ver() < 50`; `PackageIndex` is not serialized and is set to zero on load. The legacy reader, V4 parsed snapshot, unverified snapshot and UEDB5 legacy snapshot now preserve this exact field boundary instead of decoding the third import field as an `INT OuterIndex`.
+2. **Direct `NAME_None` and `NAME_None` ancestry are different operations.** `VerifyImport()` returns immediately for a direct import whose `ClassPackage`, `ClassName` or `ObjectName` is `NAME_None`. A child of such an import is not itself source-irrelevant: recursive verification returns without establishing the parent `SourceLinker`, so the child fails the parent-linker requirement. The old generic `source_irrelevant_name_none_ancestor` UE1 rule is removed.
+3. **UT99 v1.400 preserves ExportHash visit order.** Matching uses the source hash traversal, which visits later prepended matching export indices first. Unreal v1.200 uses its own source scan order; UnrealDB no longer shares a generic UE1/UE2 candidate-order rule.
+4. **UT99-only compatibility remains UT99-only.** v1.400 supports the `UnrealI`/`UnrealShare` class-package hash compatibility, retries a failed `UnrealI` package load as `UnrealShare`, and retries class `Mesh` as `LodMesh`. These are not inherited by Unreal or UE2 profiles.
+5. **Unreal v1.200 keeps its own old-version fallback.** The source retry for texture/sound-family classes can bind by object/class identity without reapplying the normal outer/public checks in that legacy branch. That rule is confined to the v1.200 profile.
+6. **Private exports remain source failures.** A direct identity/outer match that is not `RF_Public` is rejected before runtime fallback; UnrealDB does not continue searching for a different public duplicate.
+7. **A file-backed miss is not automatically proven missing.** After direct source matching/fallbacks fail, both audited UE1 implementations can consult runtime-loaded/native/transient class/object state and SafeReplace behavior. Static UnrealDB now reports that remaining path as unresolved/runtime unavailable rather than inventing a hard missing result.
+8. **Administrator ClassRemap is not UE1 VerifyImport behavior.** The authoritative UE1 path no longer consumes the generic catalogue ClassRemap map.
+9. **Later UE1 source policies fail closed.** v224/v227-era Unreal, UT99 v432/v69 serializer policies and other forward-compatible UE1 packages are not assigned v1.200/v1.400 VerifyImport semantics without a complete local implementation proving them. Object verification is explicitly source-unresolved for those profiles.
+
+#### Bounded migration boundary
+
+Pass 2 is `uedb5-dependency-pass-v5`. The existing transition now accepts v1-v4 and moves directly to v5:
+
+- previous provider/source-FName transition rules remain intact;
+- audited UE1 files are rebuilt only when their staged dependency edges contain `missing` or `unresolved` outcomes that can change under the source-exact verifier;
+- later source-unverified UE1 files are rebuilt only when they actually contain import dependency edges, so those object decisions become explicitly unresolved rather than inherited;
+- any pre-50 Unreal file is flagged for exact Pass-1 restage before Pass 2, because its serialized ImportMap interpretation changed; `migrate-uedb5-game.php --file-id=<id> --apply` provides that exact-file path;
+- successful Pass-1 restage clears the old dependency checkpoint automatically;
+- unaffected files roll forward without UEDB/package container reads;
+- optional V4 dependency refresh remains exact-file only. A pre-50 V4 file would additionally require its package-owned metadata to be reparsed, not merely its dependencies rebuilt.
+
+The connected development catalogue currently contains no verified Unreal file below package version 50, so the pre-50 repair path is a guarded source-correct boundary rather than a current bulk reparse requirement.
+
+**Next audit checkpoint: Section 3A2 - UE2 only (Unreal II and UT2003), each against its own latest complete local implementation.**

@@ -199,6 +199,41 @@ final class Uedb5GameSourceMigrationService
         ];
     }
 
+    /** @return array<string,mixed> */
+    public function runFile(int $gameId, int $fileId, bool $apply): array
+    {
+        if ($fileId < 1) {
+            throw new RuntimeException('Targeted UEDB5 Pass 1 requires a positive file ID.');
+        }
+        $game = $this->game($gameId);
+        $statement = $this->db->prepare(
+            'SELECT f.id,f.game_id,f.package_name,f.original_name,f.stored_name,f.relative_path,'
+            . 'f.file_size,f.md5,f.sha1,f.package_version,f.licensee_version '
+            . 'FROM ue_files f JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=4 '
+            . 'WHERE f.id=? AND f.game_id=? AND f.scan_status="verified" LIMIT 1'
+        );
+        $statement->execute([$fileId, $gameId]);
+        $file = $statement->fetch(PDO::FETCH_ASSOC);
+        if (!is_array($file)) {
+            throw new RuntimeException('Targeted UEDB5 Pass 1 file is not a verified current-format file in the requested game.');
+        }
+        try {
+            $result = $this->migrateFile($game, $file, $apply);
+        } catch (Throwable $error) {
+            if ($apply) {
+                $this->markStageFailure($fileId, $gameId, $error);
+            }
+            throw $error;
+        }
+        return [
+            'apply'=>$apply,
+            'targeted'=>true,
+            'game'=>$game,
+            'file_id'=>$fileId,
+            'result'=>$result,
+        ];
+    }
+
     /** @param array<string,mixed> $game @param array<string,mixed> $file @return array<string,mixed> */
     private function migrateFile(array $game, array $file, bool $apply): array
     {

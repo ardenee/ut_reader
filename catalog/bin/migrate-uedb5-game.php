@@ -11,13 +11,13 @@ require_once $root . '/lib/CatalogUE5ParserProfile.php';
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5GameSourceMigrationService;
 
 $options=getopt('',[
-    'game-id:', 'game:', 'apply', 'continuous', 'limit::', 'progress-every::', 'preflight',
+    'game-id:', 'game:', 'file-id::', 'apply', 'continuous', 'limit::', 'progress-every::', 'preflight',
     'workers::', 'worker-index::', 'skip-worker-preflight'
 ]);
 $gameId=(int)($options['game-id'] ?? 0);
 $legacyGameSlug=trim((string)($options['game'] ?? ''));
 if($gameId<1 && $legacyGameSlug===''){
-    fwrite(STDERR,"Usage: php catalog/bin/migrate-uedb5-game.php --game-id=3 [--apply] [--continuous] [--limit=1000] [--progress-every=100] [--workers=4] [--preflight]\n");
+    fwrite(STDERR,"Usage: php catalog/bin/migrate-uedb5-game.php --game-id=3 [--file-id=123 --apply] [--apply] [--continuous] [--limit=1000] [--progress-every=100] [--workers=4] [--preflight]\n");
     exit(1);
 }
 
@@ -37,6 +37,15 @@ $progressEvery=max(1,(int)($options['progress-every'] ?? 100));
 $workers=max(1,min(8,(int)($options['workers'] ?? 1)));
 $workerIndex=array_key_exists('worker-index',$options)?(int)$options['worker-index']:null;
 $skipWorkerPreflight=isset($options['skip-worker-preflight']);
+$fileId=max(0,(int)($options['file-id'] ?? 0));
+if($fileId>0 && ($continuous || $workers>1 || $workerIndex!==null || isset($options['preflight']) || $skipWorkerPreflight)){
+    fwrite(STDERR,"--file-id cannot be combined with continuous/pool/preflight options.\n");
+    exit(1);
+}
+if($fileId>0 && !$apply){
+    fwrite(STDERR,"Targeted Pass 1 --file-id requires --apply.\n");
+    exit(1);
+}
 
 if($workers>1 && $workerIndex===null && !isset($options['preflight'])){
     echo json_encode(['status'=>'pool_preflight_start','workers'=>$workers,'game_id'=>$gameId],JSON_UNESCAPED_SLASHES),PHP_EOL; fflush(STDOUT);
@@ -85,6 +94,10 @@ if($workerIndex!==null && ($workerIndex<0 || $workerIndex>=$workers)){
     exit(1);
 }
 try{
+    if($fileId>0){
+        echo json_encode(['ok'=>true,'summary'=>$service->runFile($gameId,$fileId,true)],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;
+        exit(0);
+    }
     if(isset($options['preflight'])){
         echo json_encode(['ok'=>true,'preflight'=>$service->preflight($gameId)],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;
         exit(0);
