@@ -56,6 +56,12 @@ $exportCaseRule=Uedb5GameParityExpectedDifferences::classify('ut3','search_case_
 ],['scope'=>'exports','normalized_authoritative_match'=>true]);
 $record('normalized_export_case_only_search_addition_is_expected',
     is_array($exportCaseRule)&&($exportCaseRule['id']??'')==='normalized_export_search_case');
+$importCaseRule=Uedb5GameParityExpectedDifferences::classify('unrealgold','search_case_normalization',[
+    'scope'=>'imports','query'=>'Gblood1','authoritative_name'=>'GBLOOD1',
+],['scope'=>'imports','normalized_authoritative_match'=>true]);
+$record('normalized_import_case_only_search_addition_is_expected',
+    is_array($importCaseRule)&&($importCaseRule['id']??'')==='normalized_import_search_case');
+$record('case_rule_scans_authoritative_imports',str_contains($service,"\$countColumn='import_count'")&&str_contains($service,"\$section='imports'"));
 $record('case_rule_requires_authoritative_v4_scan',str_contains($service,'v4CaseOnlyMetadataEvidence')&&str_contains($service,"\$countColumn='export_count'")&&str_contains($service,'->page($fileId,$section'));
 $record('search_reports_expected_case_differences',str_contains($service,'expected_difference_query_count')&&str_contains($service,'expected_missing_in_v4'));
 $record('package_identity_audit_detects_missing_v5_key',str_contains($service,'e.required_package_key_kind IS NULL')&&str_contains($service,'e.required_package_key IS NULL'));

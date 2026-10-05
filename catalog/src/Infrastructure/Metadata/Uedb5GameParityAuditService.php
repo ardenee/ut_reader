@@ -422,7 +422,7 @@ final class Uedb5GameParityAuditService
             $missingInV5=array_values(array_diff($v4,$v5));
             $missingInV4=array_values(array_diff($v5,$v4));
             $expectedV5Only=[];$unexpectedV5Only=$missingInV4;$expectedRule=null;
-            if(in_array($scope,['names','exports'],true)&&$missingInV5===[]&&$missingInV4!==[]){
+            if(in_array($scope,['names','exports','imports'],true)&&$missingInV5===[]&&$missingInV4!==[]){
                 $unexpectedV5Only=[];
                 foreach($missingInV4 as $fileId){
                     $evidence=$this->v4CaseOnlyMetadataEvidence((int)$fileId,$scope,$query);
@@ -461,6 +461,7 @@ final class Uedb5GameParityAuditService
         $normalized=$this->nameKey($query);if($normalized==='')return null;$candidate=null;
         if($scope==='names'){$section='names';$countColumn='name_count';$textColumn='name_text';$indexColumn='name_index';}
         elseif($scope==='exports'){$section='exports';$countColumn='export_count';$textColumn='object_name';$indexColumn='export_index';}
+        elseif($scope==='imports'){$section='imports';$countColumn='import_count';$textColumn='object_name';$indexColumn='import_index';}
         else return null;
         $s=$this->db->prepare('SELECT '.$countColumn.' FROM ue_files WHERE id=? LIMIT 1');
         $s->execute([$fileId]);$rowCount=(int)$s->fetchColumn();
