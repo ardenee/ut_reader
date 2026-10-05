@@ -65,6 +65,28 @@ $publisher->publish($snapshot);
 $check('publisher_can_join_outer_transaction',$db->inTransaction());
 $db->rollBack();
 
+$zenSnapshot=[
+    'file'=>['id'=>11,'game_id'=>8,'package_name'=>'/Game/Consumer'],
+    'section_schemas'=>['imports'=>'ue5.zen.package-object-index.v1'],
+    'sections'=>[
+        'imported_package_ids'=>[[
+            'package_id'=>'1020304050607080',
+            'serialized_name'=>['text'=>'/Game/NumericProvider'],
+        ]],
+        'dependency_results'=>[[
+            'dependency_kind'=>'PackageImport','source_section'=>'imports','source_index'=>0,
+            'dependency_class'=>'hard','hard'=>true,'outcome'=>'resolved',
+            'required_package_id'=>'1020304050607080','required_object_identity'=>'1122334455667788',
+            'selected_provider_file_id'=>21,'selected_provider_object'=>['export_index'=>0],
+        ]],
+    ],
+];
+$zenResult=$publisher->publish($zenSnapshot);
+$check('zen_projection_numeric_u64_identity_publishes',($zenResult['dependency_edges']??-1)===1 && ($zenResult['dependency_packages']??-1)===1);
+$check('zen_projection_numeric_u64_name_lookup_is_lossless',
+    (string)$db->query("SELECT required_package_name FROM ue_uedb5_dependency_packages WHERE file_id=11")->fetchColumn()==='/Game/NumericProvider');
+$check('zen_projection_preserves_source_package_and_public_hash_keys',
+    (string)$db->query("SELECT hex(required_package_key)||':'||hex(required_object_key) FROM ue_uedb5_dependency_edges WHERE file_id=11 AND source_index=0")->fetchColumn()==='1020304050607080:1122334455667788');
 $source=(string)file_get_contents($root.'/src/Infrastructure/Metadata/PdoUedb5DependencyProjectionPublisher.php');
 $check('publisher_calls_staging_write_guard',str_contains($source,'Uedb5StagingIsolationContract::assertWriteTable'));
 $check('publisher_batches_dependency_rows',str_contains($source,'array_chunk($rows, 250)'));

@@ -29,7 +29,17 @@ $scriptImport = [
     'dependency_class' => 'script',
     'script_import_hash' => '0000000000001234',
 ];
-$snapshot = static function (string $packageId, array $imports, array $exports, array $cellImports = [], array $cellExports = [], array $soft = [], array $bundleEntries = []): array {
+$snapshot = static function (
+    string $packageId,
+    array $imports,
+    array $exports,
+    array $cellImports = [],
+    array $cellExports = [],
+    array $soft = [],
+    array $bundleEntries = [],
+    array $redirects = [],
+    array $localized = []
+): array {
     return [
         'package_family' => Uedb5ZenPackageReader::PACKAGE_FAMILY,
         'source_policy' => Uedb5ZenPackageReader::SOURCE_POLICY,
@@ -41,6 +51,8 @@ $snapshot = static function (string $packageId, array $imports, array $exports, 
             'cell_exports' => array_values($cellExports),
             'soft_package_references' => array_values($soft),
             'dependency_bundle_entries' => array_values($bundleEntries),
+            'package_redirects' => array_values($redirects),
+            'localized_packages' => array_values($localized),
         ],
     ];
 };
@@ -100,6 +112,112 @@ $check($loadCell['outcome'] === 'resolved' && ($loadCell['selected_provider_obje
 $missing = Uedb5Ue5ZenDependencyResolver::resolve($consumer, []);
 $check($find($missing, 'imports', 0)['outcome'] === 'missing', 'zen_dependency_missing_provider_is_missing');
 $check($find($missing, 'soft_package_references', 0)['outcome'] === 'missing', 'zen_dependency_missing_soft_provider_is_nonhard_missing');
+
+
+$redirectTargetId = 'A1A2A3A4A5A6A7A8';
+$redirectProvider = $snapshot($redirectTargetId, [], [[
+    'index' => 0,
+    'public_export_hash' => $publicHash,
+    'filter_flags' => 0,
+    'object_name' => ['text' => 'RedirectTargetObject'],
+]]);
+$redirectRow = [
+    'container_index' => 0,
+    'source_package_id' => $providerId,
+    'target_package_id' => $redirectTargetId,
+    'source_package_name' => ['text' => '/Game/RedirectSource'],
+];
+$redirectConsumer = $snapshot(
+    '0123456789ABCDEF',
+    [$packageImport()],
+    [], [], [], [], [],
+    [$redirectRow]
+);
+$redirectBaseline = Uedb5Ue5ZenDependencyResolver::resolve($redirectConsumer, []);
+$redirectBaselineRow = $find($redirectBaseline, 'imports', 0);
+$check(
+    $redirectBaselineRow['required_package_id'] === $providerId
+        && $redirectBaselineRow['provider_lookup_package_id'] === $redirectTargetId
+        && $redirectBaselineRow['outcome'] === 'missing'
+        && $redirectBaselineRow['reason_code'] === 'package_store_redirect_target_missing',
+    'zen_package_store_redirect_preserves_source_identity_and_changes_provider_lookup'
+);
+$redirectResolved = Uedb5Ue5ZenDependencyResolver::resolve($redirectConsumer, [[
+    'provider_id' => 96,
+    'snapshot' => $redirectProvider,
+]]);
+$redirectResolvedRow = $find($redirectResolved, 'imports', 0);
+$check(
+    $redirectResolvedRow['outcome'] === 'resolved'
+        && $redirectResolvedRow['required_package_id'] === $providerId
+        && $redirectResolvedRow['provider_lookup_package_id'] === $redirectTargetId
+        && $redirectResolvedRow['selected_provider_package_id'] === $redirectTargetId
+        && ($redirectResolvedRow['package_store_redirect']['source_package_name'] ?? null) === '/Game/RedirectSource'
+        && str_starts_with($redirectResolvedRow['reason_code'], 'package_store_redirect_'),
+    'zen_package_store_redirect_resolves_public_hash_in_target_provider'
+);
+
+$secondRedirectTargetId = 'B1B2B3B4B5B6B7B8';
+$firstRedirectWinsConsumer = $redirectConsumer;
+$firstRedirectWinsConsumer['sections']['package_redirects'][] = [
+    'container_index' => 1,
+    'source_package_id' => $providerId,
+    'target_package_id' => $secondRedirectTargetId,
+    'source_package_name' => ['text' => '/Game/SecondRedirect'],
+];
+$firstRedirectWins = Uedb5Ue5ZenDependencyResolver::resolve($firstRedirectWinsConsumer, [[
+    'provider_id' => 97,
+    'snapshot' => $redirectProvider,
+]]);
+$check(
+    $find($firstRedirectWins, 'imports', 0)['outcome'] === 'resolved'
+        && $find($firstRedirectWins, 'imports', 0)['provider_lookup_package_id'] === $redirectTargetId,
+    'zen_package_store_redirect_first_source_order_entry_wins'
+);
+
+$localizedRow = [
+    'container_index' => 0,
+    'source_package_id' => $providerId,
+    'source_package_name' => ['text' => '/Game/LocalizedSource'],
+];
+$localizedConsumer = $snapshot(
+    '0123456789ABCDEF',
+    [$packageImport()],
+    [], [], [], [], [],
+    [], [$localizedRow]
+);
+$localizedUnknown = Uedb5Ue5ZenDependencyResolver::resolve($localizedConsumer, [[
+    'provider_id' => 91,
+    'snapshot' => $provider,
+]]);
+$localizedUnknownRow = $find($localizedUnknown, 'imports', 0);
+$check(
+    $localizedUnknownRow['outcome'] === 'unresolved'
+        && $localizedUnknownRow['reason_code'] === 'localized_package_runtime_culture_required'
+        && ($localizedUnknownRow['localized_package']['source_package_name'] ?? null) === '/Game/LocalizedSource',
+    'zen_localized_package_requires_runtime_culture_outside_known_editor_context'
+);
+$localizedEditor = Uedb5Ue5ZenDependencyResolver::resolve(
+    $localizedConsumer,
+    [['provider_id' => 91, 'snapshot' => $provider]],
+    ['is_editor' => true]
+);
+$check(
+    $find($localizedEditor, 'imports', 0)['outcome'] === 'resolved',
+    'zen_editor_context_skips_file_package_store_localization_redirect'
+);
+
+$redirectAndLocalizedConsumer = $redirectConsumer;
+$redirectAndLocalizedConsumer['sections']['localized_packages'] = [$localizedRow];
+$redirectAndLocalized = Uedb5Ue5ZenDependencyResolver::resolve($redirectAndLocalizedConsumer, [[
+    'provider_id' => 96,
+    'snapshot' => $redirectProvider,
+]]);
+$check(
+    $find($redirectAndLocalized, 'imports', 0)['outcome'] === 'resolved'
+        && $find($redirectAndLocalized, 'imports', 0)['provider_lookup_package_id'] === $redirectTargetId,
+    'zen_explicit_package_store_redirect_precedes_localization_mapping'
+);
 
 $wrongCellProvider = $snapshot($providerId, [], [[
     'public_export_hash' => $publicHash, 'filter_flags' => 0, 'object_name' => ['text' => 'TargetObject'],

@@ -115,13 +115,16 @@ final class PdoUedb5PhysicalProviderSelector
         $baseline = Uedb5Ue5ZenDependencyResolver::resolve($consumer, []);
         $requirements = [];
         foreach ($baseline as $row) {
-            $packageId = strtoupper(trim((string)((array)$row)['required_package_id'] ?? ''));
+            $row = (array)$row;
+            $packageId = strtoupper(trim((string)($row['provider_lookup_package_id'] ?? $row['required_package_id'] ?? '')));
             if ($packageId !== '') {
-                $requirements[$packageId] = true;
+                // Never use raw FPackageId text as a PHP array key: an all-decimal
+                // 16-hex ID is coerced to int and loses its string identity.
+                $requirements['package:' . $packageId] = $packageId;
             }
         }
         $selected = [];
-        foreach (array_keys($requirements) as $packageId) {
+        foreach ($requirements as $packageId) {
             if (preg_match('/^[0-9A-F]{16}$/', $packageId) !== 1) {
                 throw new RuntimeException('Zen dependency provider FPackageId is invalid.');
             }

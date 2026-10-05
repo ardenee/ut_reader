@@ -170,6 +170,8 @@ The outcome codes remain:
 
 Classification is separate: hard, optional, soft, build/cook, script, cell/Verse, load-order and runtime-derived.
 
+For Zen package-store redirects, the compact required-package key remains the serialized/source `FPackageId`; it is not rewritten to the redirect target. The effective redirect target belongs in authoritative dependency-result provenance and provider selection, while `resolved_file_id` records the physical provider actually selected. This preserves reverse-dependency identity against what the consumer serialized instead of silently turning redirects into different source dependencies.
+
 This allows affected-file, reverse-dependency and missing-status queries without teaching SQL how to reproduce an engine loader.
 ## 7. Dependency package summaries
 

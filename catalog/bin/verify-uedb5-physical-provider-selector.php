@@ -132,7 +132,7 @@ $db->prepare('INSERT INTO ue_uedb5_files VALUES(?,?,?)')->execute([30,7,'/Game/E
 $check('ue4_classic_package_family_is_admitted',
     (new PdoUedb5PhysicalProviderSelector($db,$tmp))->select(7,30)===[]);
 
-$zen=static function(int $fileId,string $packageId,array $imports,array $exports):array{
+$zen=static function(int $fileId,string $packageId,array $imports,array $exports,array $redirects=[]):array{
     return [
         'file'=>['id'=>$fileId,'game_id'=>8,'package_name'=>'/Game/Test','original_name'=>'Test'],
         'package_family'=>Uedb5ZenPackageReader::PACKAGE_FAMILY,
@@ -143,6 +143,7 @@ $zen=static function(int $fileId,string $packageId,array $imports,array $exports
             'imports'=>array_values($imports),'exports'=>array_values($exports),
             'cell_imports'=>[],'cell_exports'=>[],'soft_package_references'=>[],
             'dependency_bundle_entries'=>[],
+            'package_redirects'=>array_values($redirects),'localized_packages'=>[],
         ],
     ];
 };
@@ -175,6 +176,35 @@ $check('zen_duplicate_package_id_environment_is_ambiguous',
     && (array)($zenSelected[0]['candidate_file_ids']??[])===[41,42,43]);
 $check('zen_public_export_coverage_does_not_select_a_duplicate_package_file',
     (int)($zenSelected[0]['file_id']??0)===0);
+
+$redirectSourceId='ABCDEF0011223344';
+$redirectTargetId='1020304050607080';
+$redirectHash='3333333333333333';
+$redirectImport=[[
+    'type'=>'PackageImport','provider_package_id'=>$redirectSourceId,
+    'provider_public_export_hash'=>$redirectHash,'dependency_class'=>'hard',
+]];
+$redirectRows=[[
+    'container_index'=>0,'source_package_id'=>$redirectSourceId,
+    'target_package_id'=>$redirectTargetId,
+    'source_package_name'=>['text'=>'/Game/RedirectSource'],
+]];
+$writer->write($zen(44,'9988776655443322',$redirectImport,[],$redirectRows));
+$writer->write($zen(45,$redirectTargetId,[],[$zenExport($redirectHash,'RedirectedObject')]));
+foreach([[44,'2026-10-02 14:00:00'],[45,'2026-10-02 14:01:00']] as [$id,$uploaded]){
+    $db->prepare('INSERT INTO ue_files VALUES(?,?,?,?,?,?,?)')->execute([$id,8,'verified',$uploaded,$id,md5((string)$id),sha1((string)$id)]);
+    $db->prepare('INSERT INTO ue_uedb5_files VALUES(?,?,?)')->execute([$id,8,'/Game/RedirectTest']);
+}
+$db->prepare('INSERT INTO ue_uedb5_provider_keys VALUES(?,?,?,?,?,?)')->execute([
+    1,45,8,$zenKind,hex2bin($redirectTargetId),45,
+]);
+$redirectSelected=(new PdoUedb5PhysicalProviderSelector($db,$tmp))->select(8,44);
+$check('zen_selector_uses_package_store_redirect_target_provider_id',
+    count($redirectSelected)===1
+    && ($redirectSelected[0]['selection_status']??'')==='selected'
+    && (int)($redirectSelected[0]['file_id']??0)===45
+    && ($redirectSelected[0]['package_id']??'')===$redirectTargetId);
+
 $source=(string)file_get_contents($root.'/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php');
 $check('selector_uses_v5_provider_keys',str_contains($source,'ue_uedb5_provider_keys'));
 $check('selector_reads_v5_snapshots',str_contains($source,'Uedb5MetadataReader'));

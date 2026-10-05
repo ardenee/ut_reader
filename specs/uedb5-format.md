@@ -286,12 +286,12 @@ For file-backed IoStore, UEDB5 must retain or durably reference:
 - the exact ordered imported package IDs used by that store entry;
 - package-store flags;
 - optional-segment package IDs and the package's optional-segment store-entry data;
-- localized-package mapping applicable to the package;
-- redirects applicable to the package, including source package ID/name and target package ID;
-- soft package references applicable to the package;
+- the selected container's complete localized-package mapping rows in source order, or a stable reference to shared container state from which the effective map can be reproduced;
+- the selected container's complete package-redirect rows in source order, including source package ID/name and target package ID, or equivalent stable shared provenance;
+- soft package references applicable to the package, retaining their raw source `FPackageId` values;
 - stable identity/integrity of the `.utoc`/container metadata from which the store entry came.
 
-The entire container header should not be duplicated into every package's `.uedb5`. Shared IoStore metadata may be stored once, but each package UEDB5 must contain a stable provenance key/hash plus the package-specific ordered data required to reproduce its references without guessing.
+The entire container header should not be duplicated into every package's `.uedb5`. Shared IoStore metadata may be stored once, but each package UEDB5 must contain a stable provenance key/hash plus the package-specific ordered data required to reproduce its references without guessing. If redirect/localization rows are denormalized into a per-package snapshot, they must preserve complete selected-container order rather than being filtered to rows that mention that package; a later caller with authoritative multi-container mount order may supply the effective merged package-store context.
 
 The `.utoc` table of contents and corresponding `.ucas` data container(s) are therefore part of the authoritative input for full file-backed Zen verification.
 
@@ -305,6 +305,7 @@ Each dependency-result row must identify, directly or by stable row reference:
 - dependency kind/classification;
 - source section and source row/index that created the requirement;
 - required package identity when one exists;
+- effective provider-lookup package identity when source loading remaps the required package (for example a Zen package-store redirect), retained separately rather than overwriting the serialized required identity;
 - required object identity when one exists;
 - whether the requirement is hard, optional, soft, build/cook, script, cell/Verse, load-order, or runtime-derived;
 - canonical outcome;
@@ -420,7 +421,7 @@ As of this contract:
 - source-shaped Pass-1 builders are implemented for UT99, Unreal, Unreal II, UT2003, UT2004, UT3 and UT4; their game-specific source/version policies remain separate and are not collapsed into a generic UE1/UE2/UE3/UE4 policy;
 - UE5 5.8.3 IoStore ingestion is implemented by `Uedb5IoStoreTocReader`, `Uedb5IoStoreContainerHeaderReader`, and `Uedb5IoStoreCodec`;
 - UE5 5.8.3 Zen source-shaped staging persistence is implemented by `Uedb5ZenPackageReader` and `Uedb5Ue5ZenIoStoreSnapshotBuilder`;
-- deterministic Zen PackageImport/cell/load-order staging resolution is implemented by `Uedb5Ue5ZenDependencyResolver`;
+- deterministic Zen PackageImport/cell/load-order staging resolution is implemented by `Uedb5Ue5ZenDependencyResolver`, including explicit package-store redirect targets while preserving serialized source `FPackageId`, runtime-gated localization provenance, raw soft-reference identity, and lossless prefixed internal map keys for unsigned-64 IDs/hashes;
 - `Uedb5GameSourceMigrationService` + `migrate-uedb5-game.php` implement resumable game-by-game Pass-1 staging from original verified bytes for `ut99`, `unrealgold`, `unreal2`, `ut2003`, `ut2004`, `ut3`, `ut4`, and UE5 classic `ue5`; UE4/UE5 construction uses the assigned catalogue parser profile. Dependency second-pass, Zen/IoStore catalogue migration, migration completion/verification, cutover, and V4 retirement remain pending.
 
 The UE5 classic source resolver still uses internal labels such as `optional_missing` and `runtime_only`. `Uedb5DependencyRebuilder` treats those as resolver diagnostics and normalizes them to the five-state contract above (`missing` plus optional classification and `unresolved` plus runtime-derived classification) while retaining the resolver detail and deterministic reason code. Zen resolver rows already use the canonical outcome set.

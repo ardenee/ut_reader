@@ -127,7 +127,7 @@ final class Uedb5DependencyRebuilder
             }
             $packageId = strtoupper((string)($ambiguous['package_id'] ?? ''));
             if ($packageId !== '') {
-                $zen[$packageId] = (array)$ambiguous['candidate_file_ids'];
+                $zen['u64:' . $packageId] = (array)$ambiguous['candidate_file_ids'];
             }
         }
         foreach ($rows as &$row) {
@@ -136,9 +136,11 @@ final class Uedb5DependencyRebuilder
             if (($requiredPackage['kind'] ?? null) === 'package_name') {
                 $candidateIds = $classic[self::classicPackageLookupKey((string)($requiredPackage['value'] ?? ''), $exactClassic)] ?? null;
             }
-            $requiredPackageId = strtoupper((string)($row['required_package_id'] ?? ''));
-            if ($candidateIds === null && $requiredPackageId !== '') {
-                $candidateIds = $zen[$requiredPackageId] ?? null;
+            $providerLookupPackageId = strtoupper((string)(
+                $row['provider_lookup_package_id'] ?? $row['required_package_id'] ?? ''
+            ));
+            if ($candidateIds === null && $providerLookupPackageId !== '') {
+                $candidateIds = $zen['u64:' . $providerLookupPackageId] ?? null;
             }
             if (!is_array($candidateIds)) { continue; }
             $row['outcome'] = 'unresolved';

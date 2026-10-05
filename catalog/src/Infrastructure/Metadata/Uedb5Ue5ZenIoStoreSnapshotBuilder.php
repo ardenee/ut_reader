@@ -45,8 +45,11 @@ final class Uedb5Ue5ZenIoStoreSnapshotBuilder
         $zen = Uedb5ZenPackageReader::parse($toc->readChunk($packageChunkIndex), $packageId, $storeEntry);
 
         $soft = self::softReferencesForPackage($containerHeader, $storeListIndex, $optionalSegment);
-        $redirects = self::relevantRedirects($containerHeader, $packageId);
-        $localized = self::relevantLocalized($containerHeader, $packageId);
+        // Package-store redirects/localization are container-global runtime lookup context.
+        // Retain the complete selected ContainerHeader order; filtering them to the current
+        // package loses redirects that Epic may apply to any imported FPackageId.
+        $redirects = self::containerRedirects($containerHeader);
+        $localized = self::containerLocalizedPackages($containerHeader);
         $zenPackageName = (array)$zen['package_name'];
         $packageName = trim((string)($file['package_name'] ?? ''));
         if ($packageName === '') {
@@ -136,8 +139,8 @@ final class Uedb5Ue5ZenIoStoreSnapshotBuilder
             'bulk_data_map' => 'ue5.zen.bulk-data-map-entry.v1',
             'imported_package_names' => 'ue5.zen.imported-package-name.v1',
             'soft_package_references' => 'ue5.zen.soft-package-reference.v1',
-            'package_redirects' => 'ue5.zen.package-redirect.v1',
-            'localized_packages' => 'ue5.zen.localized-package.v1',
+            'package_redirects' => 'ue5.zen.package-redirect.v2',
+            'localized_packages' => 'ue5.zen.localized-package.v2',
         ];
     }
 
@@ -249,27 +252,27 @@ final class Uedb5Ue5ZenIoStoreSnapshotBuilder
         return $rows;
     }
     /** @return list<array<string,mixed>> */
-    private static function relevantRedirects(array $containerHeader, string $packageId): array
+    private static function containerRedirects(array $containerHeader): array
     {
         $rows = [];
-        foreach ((array)($containerHeader['package_redirects'] ?? []) as $row) {
-            $row = (array)$row;
-            if (($row['source_package_id'] ?? null) === $packageId || ($row['target_package_id'] ?? null) === $packageId) {
-                $rows[] = ['dependency_class' => 'runtime_derived'] + $row;
-            }
+        foreach (array_values((array)($containerHeader['package_redirects'] ?? [])) as $index => $row) {
+            $rows[] = [
+                'container_index' => $index,
+                'dependency_class' => 'runtime_derived',
+            ] + (array)$row;
         }
         return $rows;
     }
 
     /** @return list<array<string,mixed>> */
-    private static function relevantLocalized(array $containerHeader, string $packageId): array
+    private static function containerLocalizedPackages(array $containerHeader): array
     {
         $rows = [];
-        foreach ((array)($containerHeader['localized_packages'] ?? []) as $row) {
-            $row = (array)$row;
-            if (($row['source_package_id'] ?? null) === $packageId) {
-                $rows[] = ['dependency_class' => 'runtime_derived'] + $row;
-            }
+        foreach (array_values((array)($containerHeader['localized_packages'] ?? [])) as $index => $row) {
+            $rows[] = [
+                'container_index' => $index,
+                'dependency_class' => 'runtime_derived',
+            ] + (array)$row;
         }
         return $rows;
     }

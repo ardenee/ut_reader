@@ -165,7 +165,7 @@ final class Uedb5DependencyProjectionBuilder
             if (is_array($name)) {
                 $name = (string)($name['text'] ?? '');
             }
-            $map[$id] = trim((string)$name);
+            $map['u64:' . $id] = trim((string)$name);
         }
         return $map;
     }
@@ -178,7 +178,7 @@ final class Uedb5DependencyProjectionBuilder
             return (string)($classic['value'] ?? '');
         }
         $id = strtoupper(trim((string)($row['required_package_id'] ?? '')));
-        return $id !== '' ? (string)($zenNames[$id] ?? $id) : '';
+        return $id !== '' ? (string)($zenNames['u64:' . $id] ?? $id) : '';
     }
 
     /** @return array<string,mixed> */

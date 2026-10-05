@@ -178,6 +178,35 @@ try {
         && ($ambiguousZenRows[0]['resolver_detail']['candidate_file_ids'] ?? []) === [$zenProviderId,39998],
         'v5_rebuilder_records_zen_provider_environment_ambiguity');
 
+    $redirectConsumerId = 30005;
+    $redirectTargetPackageId = '1020304050607080';
+    $redirectConsumer = $zenSnapshot($redirectConsumerId, '0011223344556677', [[
+        'type' => 'PackageImport',
+        'dependency_class' => 'hard',
+        'provider_package_id' => $providerPackageId,
+        'provider_public_export_hash' => $publicHash,
+    ]], []);
+    $redirectConsumer['sections']['package_redirects'] = [[
+        'source_package_id' => $providerPackageId,
+        'target_package_id' => $redirectTargetPackageId,
+        'source_package_name' => ['text' => '/Game/RedirectSource'],
+    ]];
+    $writer->write($redirectConsumer);
+    $rebuilder->rebuild($gameId, $redirectConsumerId, [[
+        'game_id' => $gameId,
+        'file_id' => null,
+        'package_id' => $redirectTargetPackageId,
+        'selection_status' => 'ambiguous',
+        'candidate_file_ids' => [39996, 39997],
+    ]]);
+    $redirectAmbiguousRows = $reader->snapshot($gameId, $redirectConsumerId)['sections'][Uedb5DependencyRebuilder::SECTION] ?? [];
+    $check(count($redirectAmbiguousRows) === 1
+        && ($redirectAmbiguousRows[0]['required_package_id'] ?? null) === $providerPackageId
+        && ($redirectAmbiguousRows[0]['provider_lookup_package_id'] ?? null) === $redirectTargetPackageId
+        && ($redirectAmbiguousRows[0]['outcome'] ?? null) === 'unresolved'
+        && ($redirectAmbiguousRows[0]['reason_code'] ?? null) === 'provider_environment_ambiguous'
+        && ($redirectAmbiguousRows[0]['resolver_detail']['candidate_file_ids'] ?? []) === [39996,39997],
+        'v5_rebuilder_applies_redirect_target_provider_ambiguity_without_rewriting_source_identity');
     $rebuilder->rebuild($gameId, $consumerId, []);
     $check(hash_file('sha256', $v4Path) === $v4Hash, 'v5_dependency_rebuild_does_not_touch_v4_container');
 
