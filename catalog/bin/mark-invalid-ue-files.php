@@ -4,9 +4,10 @@
  * Mark existing catalog files as confirmed-invalid Unreal package bytes.
  *
  * Dry-run by default. --apply persists the byte identity, removes the invalid
- * package from verified storage plus its V4/V5 metadata projections, and marks
- * the ue_files row failed so provenance and exact-byte rejection remain durable.
- * V5 consumers that used the retired provider are made Pass-2 incomplete.
+ * package from verified storage plus its V4/V5 metadata projections, then deletes
+ * the ue_files row. The durable invalid-byte identity remains independently stored
+ * so exact-byte rejection survives catalog deletion. Affected V5 consumers are made
+ * Pass-2 incomplete.
  */
 declare(strict_types=1);
 
@@ -112,8 +113,7 @@ try {
         if (is_file($uedb5Path) && !@unlink($uedb5Path)) {
             throw new RuntimeException('Could not remove UEDB5 metadata for invalid package #' . $fileId . '.');
         }
-        $db->prepare('UPDATE ue_files SET scan_status="failed",scan_notes=? WHERE id=?')
-            ->execute(['invalid_ue_file: ' . $reason, $fileId]);
+        $db->prepare('DELETE FROM ue_files WHERE id=?')->execute([$fileId]);
         $marked++;
     }
 

@@ -62,8 +62,9 @@ $record(
         && str_contains($marker, 'relative_path')
         && str_contains($marker, 'deleteFileProjections')
         && str_contains($marker, 'affectedUedb5ConsumerIds')
-        && str_contains($marker, 'invalidateUedb5DependencyPass'),
-    'Bulk invalid marking must require --apply, remove metadata projections, and invalidate affected V5 dependency passes.'
+        && str_contains($marker, 'invalidateUedb5DependencyPass')
+        && str_contains($marker, "DELETE FROM ue_files WHERE id=?"),
+    'Bulk invalid marking must require --apply, retire the catalog row, remove metadata projections, and invalidate affected V5 dependency passes.'
 );
 $record(
     'invalid_retirement_removes_both_metadata_generations',
@@ -74,6 +75,13 @@ $record(
         && str_contains($support, "DELETE FROM ue_uedb5_files WHERE file_id=?")
         && str_contains($support, "DELETE FROM ue_uedb5_migration_status WHERE file_id=?"),
     'Invalid retirement must remove V4/V5 files and per-file V5 registration/status rather than leave staged debris.'
+);
+$record(
+    'invalid_catalog_row_is_deleted_but_identity_survives',
+    str_contains($marker, "DELETE FROM ue_files WHERE id=?")
+        && str_contains($finalizer, "DELETE FROM ue_files WHERE id=?")
+        && str_contains($migration, 'ON DELETE SET NULL'),
+    'Confirmed-invalid files must leave ue_files entirely while the durable invalid-byte identity survives with source_file_id set NULL.'
 );
 $record(
     'affected_v5_consumers_become_pass2_incomplete',

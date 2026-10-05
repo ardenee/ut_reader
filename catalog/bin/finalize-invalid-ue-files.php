@@ -1,6 +1,6 @@
 #!/usr/bin/env php
 <?php
-/** Finalize already-marked invalid UE identities by removing their verified bytes. */
+/** Finalize already-marked invalid UE identities by removing bytes, metadata and catalog rows. */
 declare(strict_types=1);
 if (PHP_SAPI !== 'cli') { fwrite(STDERR, "CLI only.\n"); exit(1); }
 require_once dirname(__DIR__) . '/lib/CatalogSupport.php';
@@ -57,12 +57,7 @@ try {
         if (is_file($uedb5Path) && !@unlink($uedb5Path)) {
             throw new RuntimeException('Could not remove UEDB5 metadata for invalid package #' . $fileId . '.');
         }
-        $db->prepare(
-            'UPDATE ue_files SET scan_status="failed",scan_notes=CASE '
-            . 'WHEN scan_notes LIKE "invalid_ue_file:%" THEN scan_notes '
-            . 'ELSE CONCAT("invalid_ue_file: ",COALESCE(NULLIF(scan_notes,""),"Confirmed invalid Unreal package.")) END '
-            . 'WHERE id=?'
-        )->execute([$fileId]);
+        $db->prepare('DELETE FROM ue_files WHERE id=?')->execute([$fileId]);
         $finalized++;
     }
     $affectedV5 = array_values(array_unique(array_filter(array_map('intval', $affectedV5), static fn(int $id): bool => $id > 0)));
