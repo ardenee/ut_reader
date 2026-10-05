@@ -14,11 +14,13 @@ $read = static function (string $relative) use ($root): string {
     return is_string($value) ? $value : '';
 };
 
-$migration = $read('migrations/202609230002_invalid_ue_file_identities.php');
+$migration = $read('install.sql');
 $preflight = $read('src/Infrastructure/Import/CatalogPublicUploadBatchPreflight.php');
 $resolver = $read('src/Infrastructure/Persistence/PdoDependencyResolver.php');
 $coverage = $read('src/Infrastructure/Persistence/PdoPackageObjectCoverageResolver.php');
 $marker = $read('bin/mark-invalid-ue-files.php');
+$finalizer = $read('bin/finalize-invalid-ue-files.php');
+$support = $read('src/Infrastructure/Maintenance/CatalogFileMaintenanceSupport.php');
 
 $checks = [];
 $failures = [];
@@ -57,19 +59,38 @@ $record(
     'marking_is_explicit_and_dry_run_by_default',
     str_contains($marker, "array_key_exists('apply', \$options)")
         && str_contains($marker, "'dry_run' => !\$apply")
+        && str_contains($marker, 'relative_path')
         && str_contains($marker, 'deleteFileProjections')
-        && str_contains($marker, 'affectedIds')
-        && str_contains($marker, 'refreshIds'),
-    'Bulk invalid marking must require --apply, remove provider projections and refresh affected dependencies.'
+        && str_contains($marker, 'affectedUedb5ConsumerIds')
+        && str_contains($marker, 'invalidateUedb5DependencyPass'),
+    'Bulk invalid marking must require --apply, remove metadata projections, and invalidate affected V5 dependency passes.'
+);
+$record(
+    'invalid_retirement_removes_both_metadata_generations',
+    str_contains($marker, 'uedb5MetadataPath')
+        && str_contains($marker, 'Could not remove UEDB4 metadata')
+        && str_contains($marker, 'Could not remove UEDB5 metadata')
+        && str_contains($finalizer, 'uedb5MetadataPath')
+        && str_contains($support, "DELETE FROM ue_uedb5_files WHERE file_id=?")
+        && str_contains($support, "DELETE FROM ue_uedb5_migration_status WHERE file_id=?"),
+    'Invalid retirement must remove V4/V5 files and per-file V5 registration/status rather than leave staged debris.'
+);
+$record(
+    'affected_v5_consumers_become_pass2_incomplete',
+    str_contains($support, 'affectedUedb5ConsumerIds')
+        && str_contains($support, 'dependency_payload_sha256=NULL')
+        && str_contains($support, 'dependency_completed_at=NULL'),
+    'Consumers that resolved against an invalid provider must be selected by the normal resumable V5 dependency pass.'
 );
 
 $syntaxFailures = [];
 foreach ([
-    $root . '/migrations/202609230002_invalid_ue_file_identities.php',
     $root . '/src/Infrastructure/Import/CatalogPublicUploadBatchPreflight.php',
     $root . '/src/Infrastructure/Persistence/PdoDependencyResolver.php',
     $root . '/src/Infrastructure/Persistence/PdoPackageObjectCoverageResolver.php',
+    $root . '/src/Infrastructure/Maintenance/CatalogFileMaintenanceSupport.php',
     $root . '/bin/mark-invalid-ue-files.php',
+    $root . '/bin/finalize-invalid-ue-files.php',
     __FILE__,
 ] as $file) {
     $pipes = [];

@@ -13,6 +13,9 @@ $remove = (string)@file_get_contents(
 $action = (string)@file_get_contents(
     $root . '/src/Infrastructure/Maintenance/CatalogFileMaintenanceActionService.php'
 );
+$support = (string)@file_get_contents(
+    $root . '/src/Infrastructure/Maintenance/CatalogFileMaintenanceSupport.php'
+);
 
 $checks = [];
 $failures = [];
@@ -49,6 +52,15 @@ $record(
     str_contains($remove, 'DELETE FROM ue_file_package_aliases WHERE file_id=?')
         && !str_contains($action, 'DELETE FROM ue_file_package_aliases WHERE file_id=?'),
     'alias deletion must occur inside the same removal workflow rather than afterward'
+);
+
+$record(
+    'removal_cleans_staged_v5_metadata',
+    str_contains($remove, 'uedb5MetadataPath')
+        && str_contains($remove, 'affectedUedb5ConsumerIds')
+        && str_contains($remove, 'invalidateUedb5DependencyPass')
+        && str_contains($support, 'DELETE FROM ue_uedb5_files WHERE file_id=?'),
+    'normal verified-file removal must remove staged V5 metadata and invalidate consumers that used the provider'
 );
 
 echo json_encode([

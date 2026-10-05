@@ -28,25 +28,34 @@ try {
         . $whereIds . ' ORDER BY f.id',
         array_keys($requestedIds)
     );
-    $finalized = 0; $files = [];
+    $finalized = 0; $files = []; $affectedV5 = [];
     foreach ($rows as $file) {
         $fileId = (int)$file['id'];
         $storedPath = CatalogFileMaintenanceSupport::storagePath($config, $file);
         $metadataPath = CatalogFileMaintenanceSupport::metadataPath($config, (int)$file['game_id'], $fileId);
+        $uedb5Path = CatalogFileMaintenanceSupport::uedb5MetadataPath($config, (int)$file['game_id'], $fileId);
         $files[] = [
             'file_id' => $fileId,
             'name' => (string)$file['original_name'],
             'scan_status' => (string)$file['scan_status'],
             'stored_file_exists' => $storedPath !== null && is_file($storedPath),
-            'metadata_exists' => is_file($metadataPath),
+            'uedb4_exists' => is_file($metadataPath),
+            'uedb5_exists' => is_file($uedb5Path),
         ];
         if (!$apply) continue;
+        $affectedV5 = array_merge(
+            $affectedV5,
+            $support->affectedUedb5ConsumerIds((int)$file['game_id'], $fileId)
+        );
         $support->deleteFileProjections($fileId);
         if ($storedPath !== null && is_file($storedPath) && !@unlink($storedPath)) {
             throw new RuntimeException('Could not remove invalid package #' . $fileId . ' from verified storage.');
         }
         if (is_file($metadataPath) && !@unlink($metadataPath)) {
-            throw new RuntimeException('Could not remove compact metadata for invalid package #' . $fileId . '.');
+            throw new RuntimeException('Could not remove UEDB4 metadata for invalid package #' . $fileId . '.');
+        }
+        if (is_file($uedb5Path) && !@unlink($uedb5Path)) {
+            throw new RuntimeException('Could not remove UEDB5 metadata for invalid package #' . $fileId . '.');
         }
         $db->prepare(
             'UPDATE ue_files SET scan_status="failed",scan_notes=CASE '
@@ -56,9 +65,14 @@ try {
         )->execute([$fileId]);
         $finalized++;
     }
+    $affectedV5 = array_values(array_unique(array_filter(array_map('intval', $affectedV5), static fn(int $id): bool => $id > 0)));
+    $invalidatedV5 = $apply ? $support->invalidateUedb5DependencyPass($affectedV5) : 0;
     fwrite(STDOUT, json_encode([
         'ok' => true, 'dry_run' => !$apply, 'selected' => count($rows),
-        'finalized' => $finalized, 'files' => $files,
+        'finalized' => $finalized,
+        'affected_v5_dependencies_pending_refresh' => count($affectedV5),
+        'invalidated_v5_dependency_markers' => $invalidatedV5,
+        'files' => $files,
     ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . PHP_EOL);
 } catch (Throwable $e) {
     fwrite(STDERR, json_encode(['ok'=>false,'error'=>$e->getMessage()], JSON_PRETTY_PRINT) . PHP_EOL);

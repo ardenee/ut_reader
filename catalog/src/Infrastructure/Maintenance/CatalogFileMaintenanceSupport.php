@@ -16,6 +16,7 @@ use Throwable;
 use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer;
 use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataSnapshotWriter;
 use UnrealDb\Catalog\Infrastructure\Metadata\CompactFileMaintenanceSnapshot;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5MetadataContainer;
 
 final class CatalogFileMaintenanceSupport
 {
@@ -73,6 +74,16 @@ final class CatalogFileMaintenanceSupport
     public static function metadataPath(array $config, int $gameId, int $fileId): string
     {
         return BlockedCompressedMetadataContainer::path(
+            self::storageRoot($config),
+            $gameId,
+            $fileId
+        );
+    }
+
+    /** @param array<string,mixed> $config */
+    public static function uedb5MetadataPath(array $config, int $gameId, int $fileId): string
+    {
+        return Uedb5MetadataContainer::path(
             self::storageRoot($config),
             $gameId,
             $fileId
@@ -197,11 +208,11 @@ final class CatalogFileMaintenanceSupport
     }
 
     /**
-     * Remove every current per-file compact projection.
+     * Remove every current per-file metadata projection.
      *
      * Some callers (notably verified -> unverified demotion) deliberately keep
      * the ue_files row, so foreign-key cascades cannot be relied on here. Keep
-     * this list aligned with the projection writers for metadata format 4.
+     * this list aligned with both live V4 and staged V5 projection ownership.
      */
     public function deleteFileProjections(int $fileId): void
     {
@@ -218,6 +229,16 @@ final class CatalogFileMaintenanceSupport
             'ue_name_lookup',
         ] as $table) {
             $this->db->prepare('DELETE FROM ' . $table . ' WHERE file_id=?')->execute([$fileId]);
+        }
+
+        if ($this->tableExists('ue_uedb5_migration_status')) {
+            $this->db->prepare('DELETE FROM ue_uedb5_migration_status WHERE file_id=?')->execute([$fileId]);
+        }
+        if ($this->tableExists('ue_uedb5_files')) {
+            // Child V5 provider/search/object/dependency projections cascade from
+            // ue_uedb5_files; resolved/provider references in other files become
+            // NULL and their Pass-2 markers are invalidated separately.
+            $this->db->prepare('DELETE FROM ue_uedb5_files WHERE file_id=?')->execute([$fileId]);
         }
     }
 
@@ -276,6 +297,48 @@ final class CatalogFileMaintenanceSupport
         return array_map(static fn(array $row): int => (int)$row['file_id'], $rows);
     }
 
+    /** @return list<int> */
+    public function affectedUedb5ConsumerIds(int $gameId, int $removedFileId): array
+    {
+        if ($gameId < 1 || $removedFileId < 1 || !$this->tableExists('ue_uedb5_dependency_edges')) {
+            return [];
+        }
+        $rows = \catalog_all(
+            $this->db,
+            'SELECT DISTINCT e.file_id FROM ue_uedb5_dependency_edges e '
+            . 'JOIN ue_files owner ON owner.id=e.file_id '
+            . 'WHERE owner.game_id=? AND owner.scan_status="verified" '
+            . 'AND e.file_id<>? AND e.resolved_file_id=? ORDER BY e.file_id',
+            [$gameId, $removedFileId, $removedFileId]
+        );
+        return array_map(static fn(array $row): int => (int)$row['file_id'], $rows);
+    }
+
+    /** @param list<int> $fileIds */
+    public function invalidateUedb5DependencyPass(array $fileIds): int
+    {
+        $fileIds = array_values(array_unique(array_filter(
+            array_map('intval', $fileIds),
+            static fn(int $id): bool => $id > 0
+        )));
+        if ($fileIds === [] || !$this->tableExists('ue_uedb5_migration_status')) {
+            return 0;
+        }
+
+        $updated = 0;
+        foreach (array_chunk($fileIds, 500) as $chunk) {
+            $placeholders = implode(',', array_fill(0, count($chunk), '?'));
+            $statement = $this->db->prepare(
+                'UPDATE ue_uedb5_migration_status SET dependency_policy=NULL,'
+                . 'dependency_payload_sha256=NULL,dependency_completed_at=NULL,updated_at=NOW() '
+                . 'WHERE file_id IN (' . $placeholders . ')'
+            );
+            $statement->execute($chunk);
+            $updated += $statement->rowCount();
+        }
+        return $updated;
+    }
+
     /** @param list<int> $fileIds */
     public function refreshIds(
         array $fileIds,
@@ -304,6 +367,19 @@ final class CatalogFileMaintenanceSupport
                 $prefix . ' ' . ($index + 1) . '/' . $total
             );
         }
+    }
+
+    private function tableExists(string $table): bool
+    {
+        if (preg_match('/^[A-Za-z0-9_]+$/', $table) !== 1) {
+            return false;
+        }
+        $statement = $this->db->prepare(
+            'SELECT COUNT(*) FROM information_schema.tables '
+            . 'WHERE table_schema=DATABASE() AND table_name=?'
+        );
+        $statement->execute([$table]);
+        return (int)$statement->fetchColumn() > 0;
     }
 
     /** @param array<string,mixed> $file */

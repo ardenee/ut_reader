@@ -58,6 +58,7 @@ final class CatalogFileMaintenanceRemovalService
             static fn(string $name): bool => $name !== ''
         )));
         $metadataPath = \catalog_file_maintenance_metadata_path($this->config, $gameId, $fileId);
+        $uedb5Path = CatalogFileMaintenanceSupport::uedb5MetadataPath($this->config, $gameId, $fileId);
         $storedPath = \catalog_file_maintenance_storage_path($this->config, $file);
         $stagedPath = null;
         $support = new CatalogFileMaintenanceSupport($this->db, $this->config);
@@ -72,6 +73,7 @@ final class CatalogFileMaintenanceRemovalService
 
         try {
             $affectedFileIds = [];
+            $affectedUedb5FileIds = $support->affectedUedb5ConsumerIds($gameId, $fileId);
             foreach ($packageNames as $logicalPackageName) {
                 $affectedFileIds = array_merge(
                     $affectedFileIds,
@@ -94,6 +96,7 @@ final class CatalogFileMaintenanceRemovalService
             $support->deleteFileProjections($fileId);
             $this->db->prepare('DELETE FROM ue_file_package_aliases WHERE file_id=?')->execute([$fileId]);
             $this->db->prepare('DELETE FROM ue_files WHERE id=?')->execute([$fileId]);
+            $support->invalidateUedb5DependencyPass($affectedUedb5FileIds);
             if ($deferDependencyRefresh) {
                 \catalog_file_maintenance_emit(
                     $progress,
@@ -141,7 +144,10 @@ final class CatalogFileMaintenanceRemovalService
             $warnings[] = 'the staged package file could not be deleted';
         }
         if (is_file($metadataPath) && !@unlink($metadataPath)) {
-            $warnings[] = 'the compact metadata file could not be deleted';
+            $warnings[] = 'the UEDB4 metadata file could not be deleted';
+        }
+        if (is_file($uedb5Path) && !@unlink($uedb5Path)) {
+            $warnings[] = 'the UEDB5 metadata file could not be deleted';
         }
         \catalog_file_maintenance_emit($progress, 'done', 100, 'Package removal complete');
 

@@ -43,11 +43,12 @@ try {
     $missing = [];
     $marked = 0;
     $affected = [];
+    $affectedV5 = [];
 
     foreach ($ids as $fileId) {
         $file = catalog_one(
             $db,
-            'SELECT id,game_id,package_name,original_name,file_size,LOWER(md5) md5,LOWER(sha1) sha1,scan_status '
+            'SELECT id,game_id,package_name,original_name,relative_path,file_size,LOWER(md5) md5,LOWER(sha1) sha1,scan_status '
                 . 'FROM ue_files WHERE id=?',
             [$fileId]
         );
@@ -77,7 +78,11 @@ try {
         // Invalid-file retirement must not depend on compact metadata belonging
         // to otherwise-good consumers. Record direct resolved consumers only;
         // a normal/full dependency rebuild can reconcile broader package-name
-        // matches after the v3 cutover.
+        // matches after cutover.
+        $affectedV5 = array_merge(
+            $affectedV5,
+            $support->affectedUedb5ConsumerIds((int)$file['game_id'], $fileId)
+        );
         $consumerRows = catalog_all(
             $db,
             'SELECT DISTINCT file_id FROM ue_dependency_links WHERE resolved_file_id=? AND file_id<>?',
@@ -96,12 +101,16 @@ try {
         $statement->execute([$size, $md5, $sha1, $fileId, $reason]);
         $storedPath = CatalogFileMaintenanceSupport::storagePath($config, $file);
         $metadataPath = CatalogFileMaintenanceSupport::metadataPath($config, (int)$file['game_id'], $fileId);
+        $uedb5Path = CatalogFileMaintenanceSupport::uedb5MetadataPath($config, (int)$file['game_id'], $fileId);
         $support->deleteFileProjections($fileId);
         if ($storedPath !== null && is_file($storedPath) && !@unlink($storedPath)) {
             throw new RuntimeException('Could not remove invalid package #' . $fileId . ' from verified storage.');
         }
         if (is_file($metadataPath) && !@unlink($metadataPath)) {
-            throw new RuntimeException('Could not remove compact metadata for invalid package #' . $fileId . '.');
+            throw new RuntimeException('Could not remove UEDB4 metadata for invalid package #' . $fileId . '.');
+        }
+        if (is_file($uedb5Path) && !@unlink($uedb5Path)) {
+            throw new RuntimeException('Could not remove UEDB5 metadata for invalid package #' . $fileId . '.');
         }
         $db->prepare('UPDATE ue_files SET scan_status="failed",scan_notes=? WHERE id=?')
             ->execute(['invalid_ue_file: ' . $reason, $fileId]);
@@ -109,17 +118,20 @@ try {
     }
 
     $affected = array_values(array_unique(array_filter(array_map('intval', $affected), static fn(int $id): bool => $id > 0)));
-    // Do not synchronously rebuild consumer metadata here. During a v2->v3
-    // migration those otherwise-good verified consumers may not yet have active
-    // supported metadata. Provider resolution already excludes invalid identities;
-    // Full Sync / normal dependency refresh will rebuild consumers after cutover.
+    $affectedV5 = array_values(array_unique(array_filter(array_map('intval', $affectedV5), static fn(int $id): bool => $id > 0)));
+    $invalidatedV5 = $apply ? $support->invalidateUedb5DependencyPass($affectedV5) : 0;
 
+    // V4 consumers are reported for explicit reconciliation. V5 consumers are
+    // made incomplete immediately so the ordinary resumable Pass 2 selects only
+    // the packages that had depended on the retired provider.
     fwrite(STDOUT, json_encode([
         'ok' => $missing === [],
         'dry_run' => !$apply,
         'selected' => count($rows),
         'marked' => $marked,
-        'affected_dependencies_pending_refresh' => count($affected),
+        'affected_v4_dependencies_pending_refresh' => count($affected),
+        'affected_v5_dependencies_pending_refresh' => count($affectedV5),
+        'invalidated_v5_dependency_markers' => $invalidatedV5,
         'missing_file_ids' => $missing,
         'files' => $rows,
     ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . PHP_EOL);
