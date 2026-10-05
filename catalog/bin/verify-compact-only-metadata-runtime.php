@@ -172,11 +172,12 @@ $resolver = $read('src/Infrastructure/Persistence/PdoDependencyResolver.php');
 $resolverLegacyReferences = $retiredReferences($withoutComments($resolver));
 $record(
     'compact_object_resolution_boundary',
-    str_contains($resolver, 'PdoPackageObjectCoverageResolver::chooseCompleteProvider')
-        && str_contains($resolver, "'complete_package_object'")
+    !str_contains($resolver, 'PdoPackageObjectCoverageResolver::chooseCompleteProvider')
+        && !str_contains($resolver, "'complete_package_object'")
+        && str_contains($resolver, "'source_profile_not_implemented'")
         && $resolverLegacyReferences === [],
     $resolverLegacyReferences === []
-        ? 'object dependency resolution uses current export projections only'
+        ? 'authoritative dependency resolution uses only registered source-backed engine resolvers; generic catalog coverage is not a semantic fallback'
         : 'found retired metadata references: ' . implode(', ', $resolverLegacyReferences)
 );
 

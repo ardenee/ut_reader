@@ -15,8 +15,8 @@ use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataSnapshotLo
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoClassRemapRepository;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyReadSource;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoLegacyVerifyImportProjectionResolver;
-use UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageObjectCoverageResolver;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoUe3VerifyImportProjectionResolver;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoUe4VerifyImportProjectionResolver;
 
 final class PdoGameDependencyCrossExamineQuery
 {
@@ -27,8 +27,8 @@ final class PdoGameDependencyCrossExamineQuery
     /** @var array<int,list<array<string,mixed>>> */
     private array $consumerImportCache = [];
 
-    /** @var array<int,int> */
-    private array $sourceGameCache = [];
+    /** @var array<int,list<array<string,mixed>>> */
+    private array $consumerExportCache = [];
 
     /** @param array<string,mixed> $config */
     public function __construct(
@@ -265,10 +265,10 @@ final class PdoGameDependencyCrossExamineQuery
     /**
      * Evaluate every affected consumer against one physical candidate package.
      *
-     * Consumer Imports are loaded from authoritative compact metadata. UE1/UE2
-     * and UE3 are delegated to the same VerifyImport resolvers used by the normal
-     * dependency rebuild. Other generations use the same complete-package object
-     * coverage resolver used by PdoDependencyResolver, with the target engine key.
+     * Consumer Imports are loaded from authoritative compact metadata. UE1/UE2,
+     * UE3, and UE4 are delegated to the same source-backed VerifyImport resolvers
+     * used by normal dependency rebuilding. Profiles without a registered source
+     * resolver fail closed and cannot be promoted to queueable repair candidates.
      *
      * @param array<string,mixed> $target
      * @return array{complete_consumer_count:int,partial_consumer_count:int,consumers:list<array<string,mixed>>}
@@ -276,7 +276,7 @@ final class PdoGameDependencyCrossExamineQuery
     private function completeConsumerCoverage(array $target, int $sourceFileId, string $packageName): array
     {
         $targetGameId = (int)($target['id'] ?? 0);
-        $targetEngine = strtoupper(trim((string)($target['engine_key'] ?? ''));
+        $targetEngine = strtoupper(trim((string)($target['engine_key'] ?? '')));
         $legacyPolicy = $this->legacyVerifyImportPolicy($target);
         $classRemaps = $legacyPolicy === 'unreal2'
             ? (new PdoClassRemapRepository($this->db))->mappingsForGame($targetGameId)
@@ -343,37 +343,30 @@ final class PdoGameDependencyCrossExamineQuery
                         $missingPaths[] = (string)$requirement['path'];
                     }
                 }
-            } else {
-                [$paths, $classes] = $this->genericCoverageInputs($requirements);
-                $coverage = PdoPackageObjectCoverageResolver::evaluate(
+            } elseif ($targetEngine === 'UE4') {
+                require_once dirname(__DIR__) . '/Persistence/PdoUe4VerifyImportProjectionResolver.php';
+                $outcome = PdoUe4VerifyImportProjectionResolver::resolveProviderOutcome(
                     $this->db,
-                    $this->sourceGameIdForFile($sourceFileId),
-                    $packageName,
-                    $paths,
                     $sourceFileId,
-                    $classes,
-                    $targetEngine
+                    $allImports,
+                    $this->consumerExports($consumerId),
+                    $allImports
                 );
-                $candidate = null;
-                foreach ($coverage as $coverageRow) {
-                    if ((int)($coverageRow['file_id'] ?? 0) === $sourceFileId) {
-                        $candidate = $coverageRow;
-                        break;
-                    }
-                }
-                $matchedKeys = [];
-                foreach ((array)($candidate['matched_paths'] ?? []) as $matchedPath) {
-                    $matchedKeys[$this->key((string)$matchedPath)] = true;
-                }
+                $matches = (array)($outcome['matches'] ?? []);
                 foreach ($requirements as $importIndex => $requirement) {
-                    $path = (string)$requirement['path'];
-                    $relative = (string)$requirement['relative_path'];
-                    if (isset($matchedKeys[$this->key($path)]) || isset($matchedKeys[$this->key($relative)])) {
-                        $matchedIndexes[$importIndex] = (int)(($candidate['matched_exports'][$this->key($relative)] ?? -1));
-                        $matchedPaths[] = $path;
+                    if (array_key_exists($importIndex, $matches)) {
+                        $matchedIndexes[$importIndex] = (int)$matches[$importIndex];
+                        $matchedPaths[] = (string)$requirement['path'];
                     } else {
-                        $missingPaths[] = $path;
+                        $missingPaths[] = (string)$requirement['path'];
                     }
+                }
+            } else {
+                // Do not substitute path/class coverage for a missing engine source
+                // resolver. A cross-game copy candidate may be displayed elsewhere,
+                // but it cannot be certified or queued as dependency-complete here.
+                foreach ($requirements as $requirement) {
+                    $missingPaths[] = (string)$requirement['path'];
                 }
             }
 
@@ -430,6 +423,26 @@ final class PdoGameDependencyCrossExamineQuery
         return $this->consumerImportCache[$consumerFileId] = $imports;
     }
 
+    /** @return list<array<string,mixed>> */
+    private function consumerExports(int $consumerFileId): array
+    {
+        if (isset($this->consumerExportCache[$consumerFileId])) {
+            return $this->consumerExportCache[$consumerFileId];
+        }
+        $snapshot = (new BlockedCompressedMetadataSnapshotLoader($this->db, $this->storageRoot))
+            ->loadDependencySnapshot($consumerFileId, true);
+        if (!isset($this->consumerImportCache[$consumerFileId])) {
+            $this->consumerImportCache[$consumerFileId] = array_values(array_filter(
+                (array)($snapshot['imports'] ?? []),
+                'is_array'
+            ));
+        }
+        return $this->consumerExportCache[$consumerFileId] = array_values(array_filter(
+            (array)($snapshot['exports'] ?? []),
+            'is_array'
+        ));
+    }
+
     /**
      * @param list<array<string,mixed>> $imports
      * @return array<int,array{path:string,relative_path:string,class_package:string,class_name:string}>
@@ -462,40 +475,6 @@ final class PdoGameDependencyCrossExamineQuery
         }
         ksort($requirements);
         return $requirements;
-    }
-
-    /**
-     * @param array<int,array{path:string,relative_path:string,class_package:string,class_name:string}> $requirements
-     * @return array{0:list<string>,1:array<string,array{class_package:string,class_name:string}>}
-     */
-    private function genericCoverageInputs(array $requirements): array
-    {
-        $paths = [];
-        $classes = [];
-        foreach ($requirements as $requirement) {
-            $path = (string)$requirement['path'];
-            $key = $this->key($path);
-            if (!isset($paths[$key])) {
-                $paths[$key] = $path;
-            }
-            if ((string)$requirement['class_name'] !== '') {
-                $classes[$path] = [
-                    'class_package' => (string)$requirement['class_package'],
-                    'class_name' => (string)$requirement['class_name'],
-                ];
-            }
-        }
-        return [array_values($paths), $classes];
-    }
-
-    private function sourceGameIdForFile(int $fileId): int
-    {
-        if (isset($this->sourceGameCache[$fileId])) {
-            return $this->sourceGameCache[$fileId];
-        }
-        $stmt = $this->db->prepare('SELECT game_id FROM ue_files WHERE id=? LIMIT 1');
-        $stmt->execute([$fileId]);
-        return $this->sourceGameCache[$fileId] = (int)$stmt->fetchColumn();
     }
 
     /**

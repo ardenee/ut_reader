@@ -320,12 +320,12 @@ $check(
 );
 
 $check(
-    'ue3_provider_selection_keeps_partial_results_on_one_linker',
-    str_contains($sharedResolver, '$bestCandidate = null;')
-        && str_contains($sharedResolver, '$bestMatchCount = -1;')
-        && str_contains($sharedResolver, 'if ($matchCount > $bestMatchCount)')
-        && str_contains($sharedResolver, '$ue3VerifyImportMatches[$packageKey] = $bestMatches;'),
-    'UE3 must select one physical provider/linker, then retain that linker successful per-Import VerifyImport results even when sibling Imports fail.'
+    'ue3_provider_selected_before_verifyimport',
+    str_contains($sharedResolver, '$candidate = $packageMatches[$packageKey] ?? null;')
+        && str_contains($sharedResolver, '$ue3VerifyImportMatches[$packageKey] = PdoUe3VerifyImportProjectionResolver::resolveProvider(')
+        && !str_contains($sharedResolver, '$bestMatchCount = -1;')
+        && !str_contains($sharedResolver, 'if ($matchCount > $bestMatchCount)'),
+    'UE3 must select one physical package/linker from the package environment before VerifyImport; provider contents must not choose a different linker.'
 );
 
 $normalizeLookup = new ReflectionMethod(PdoDependencyResolver::class, 'normalizeLookup');

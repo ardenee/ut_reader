@@ -66,13 +66,14 @@ $check('legacy_verifyimport_resolves_literal_whitespace_fname',
 $source=(string)file_get_contents($root.'/src/Infrastructure/Persistence/PdoDependencyResolver.php');
 $cli=(string)file_get_contents($root.'/bin/rebuild-legacy-dependencies.php');
 $worker=(string)file_get_contents($root.'/src/Infrastructure/Jobs/CatalogWorkerCodeVersion.php');
-$check('legacy_provider_scoring_uses_source_object_imports',
+$check('legacy_verification_requirements_use_source_object_imports',
     str_contains($source,'if ($legacyVerifyImport)')
     &&str_contains($source,'!self::isSourceObjectImport($import, $engineKey)')
     &&str_contains($source,'$isObjectImport = self::isSourceObjectImport($import, $engineKey);'));
-$check('legacy_provider_scoring_excludes_source_irrelevant_none_imports',
+$check('legacy_requirements_exclude_source_irrelevant_none_imports',
     str_contains($source,'$legacySourceIrrelevant = $legacyVerifyImport')
-    &&str_contains($source,'$imports, $packageKey, $engineKey, [], $legacySourceIrrelevant'));
+    &&str_contains($source,'if ($legacyVerifyImport && isset($legacySourceIrrelevant[$importIndex]))')
+    &&str_contains($source,'if (isset($legacySourceIrrelevant[$importIndex]))'));
 $check('canonical_v4_rebuild_supports_exact_file_target',
     str_contains($cli,"'file-id::'")
     &&str_contains($cli,"'targeted'=>true")

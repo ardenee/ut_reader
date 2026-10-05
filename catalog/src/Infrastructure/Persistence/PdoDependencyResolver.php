@@ -117,6 +117,18 @@ final class PdoDependencyResolver
         }
 
         $packageMatches = self::loadPackageMatches($db, $gameId, $fileId, array_values($packageNames));
+        $ambiguousPackageProviders = [];
+        if ($legacyVerifyImport || $ue3VerifyImport || $ue4VerifyImport) {
+            $physicalCandidates = self::loadPackageCandidates($db, $gameId, $fileId, array_values($packageNames));
+            foreach ($physicalCandidates as $packageKey => $candidates) {
+                if (count($candidates) <= 1) { continue; }
+                $ambiguousPackageProviders[$packageKey] = array_values(array_map(
+                    static fn(array $candidate): int => (int)$candidate['file_id'],
+                    $candidates
+                ));
+                unset($packageMatches[$packageKey]);
+            }
+        }
         $classRemaps = $legacyVerifyImport
             ? (new PdoClassRemapRepository($db))->mappingsForGame($gameId)
             : [];
@@ -167,97 +179,45 @@ final class PdoDependencyResolver
             }
         }
 
+        // Epic selects one physical package/linker before import verification.
+        // packageMatches is used only when the physical provider set is unique;
+        // duplicate environments were removed above and remain unresolved because
+        // their historical runtime package search/mount order is unavailable.
+        // Provider contents must never choose a different physical package.
         $verifyImportMatches = [];
         if ($legacyVerifyImport) {
             require_once __DIR__ . '/PdoLegacyVerifyImportProjectionResolver.php';
-            $legacyCandidates = self::loadPackageCandidates($db, $gameId, $fileId, array_values($packageNames));
             foreach ($packageRequirements as $packageKey => $requirement) {
-                $requiredImportIndexes = self::requiredImportIndexes(
-                    $imports, $packageKey, $engineKey, [], $legacySourceIrrelevant
+                $candidate = $packageMatches[$packageKey] ?? null;
+                if (!is_array($candidate)) { continue; }
+                $verifyImportMatches[$packageKey] = PdoLegacyVerifyImportProjectionResolver::resolveProviderVariants(
+                    $db,
+                    (int)$candidate['file_id'],
+                    $imports,
+                    $classRemaps
                 );
-                $bestCandidate = null;
-                $bestVariants = null;
-                $bestMatchCount = -1;
-                foreach ($legacyCandidates[$packageKey] ?? [] as $candidate) {
-                    $variants = PdoLegacyVerifyImportProjectionResolver::resolveProviderVariants(
-                        $db,
-                        (int)$candidate['file_id'],
-                        $imports,
-                        $classRemaps
-                    );
-                    $matches = (array)($variants[$legacyPolicy] ?? []);
-                    $matchCount = 0;
-                    foreach ($requiredImportIndexes as $requiredImportIndex) {
-                        if (array_key_exists($requiredImportIndex, $matches)) {
-                            $matchCount++;
-                        }
-                    }
-                    if ($matchCount > $bestMatchCount) {
-                        $bestCandidate = $candidate;
-                        $bestVariants = $variants;
-                        $bestMatchCount = $matchCount;
-                    }
-                    if ($matchCount === count($requiredImportIndexes)) {
-                        break;
-                    }
-                }
-                if ($bestCandidate !== null && is_array($bestVariants)) {
-                    $packageMatches[$packageKey] = $bestCandidate;
-                    $verifyImportMatches[$packageKey] = $bestVariants;
-                }
             }
         }
 
         $ue3VerifyImportMatches = [];
         if ($ue3VerifyImport) {
             require_once __DIR__ . '/PdoUe3VerifyImportProjectionResolver.php';
-            $ue3Candidates = self::loadPackageCandidates($db, $gameId, $fileId, array_values($packageNames));
             foreach ($packageRequirements as $packageKey => $requirement) {
+                $candidate = $packageMatches[$packageKey] ?? null;
+                if (!is_array($candidate)) { continue; }
                 $requiredImportIndexes = self::requiredImportIndexes(
                     $imports,
                     $packageKey,
                     $engineKey,
                     $ue3RootPackages
                 );
-                $bestCandidate = null;
-                $bestMatches = [];
-                $bestMatchCount = -1;
-
-                // UE3 loads one SourceLinker for the package, then VerifyImport()
-                // resolves each Import independently against that linker. Do not
-                // discard successful sibling Imports just because one Import in
-                // the same package fails. UnrealDB can know several physical
-                // variants, so prefer a complete provider when one exists;
-                // otherwise retain the single candidate satisfying the greatest
-                // number of Imports. Candidate order breaks ties. Never combine
-                // matches from multiple physical providers.
-                foreach ($ue3Candidates[$packageKey] ?? [] as $candidate) {
-                    $matches = PdoUe3VerifyImportProjectionResolver::resolveProvider(
-                        $db,
-                        (int)$candidate['file_id'],
-                        $imports,
-                        $requiredImportIndexes,
-                        $storageRoot
-                    );
-                    $matchCount = 0;
-                    foreach ($requiredImportIndexes as $requiredImportIndex) {
-                        if (array_key_exists($requiredImportIndex, $matches)) {
-                            $matchCount++;
-                        }
-                    }
-                    if ($matchCount > $bestMatchCount) {
-                        $bestCandidate = $candidate;
-                        $bestMatches = $matches;
-                        $bestMatchCount = $matchCount;
-                    }
-                    if ($matchCount === count($requiredImportIndexes)) {
-                        break;
-                    }
-                }
-                if ($bestCandidate !== null) {
-                    $packageMatches[$packageKey] = $bestCandidate;
-                    $ue3VerifyImportMatches[$packageKey] = $bestMatches;
-                }
+                $ue3VerifyImportMatches[$packageKey] = PdoUe3VerifyImportProjectionResolver::resolveProvider(
+                    $db,
+                    (int)$candidate['file_id'],
+                    $imports,
+                    $requiredImportIndexes,
+                    $storageRoot
+                );
             }
         }
 
@@ -266,82 +226,19 @@ final class PdoDependencyResolver
         $ue4VerifyImportRedirectorAncestry = [];
         if ($ue4VerifyImport) {
             require_once __DIR__ . '/PdoUe4VerifyImportProjectionResolver.php';
-            $ue4Candidates = self::loadPackageCandidates($db, $gameId, $fileId, array_values($packageNames));
             foreach ($packageRequirements as $packageKey => $requirement) {
-                $requiredImportIndexes = self::requiredImportIndexes(
-                    $imports,
-                    $packageKey,
-                    $engineKey,
-                    [],
-                    $ue4MetadataUnresolved
-                );
-                $bestCandidate = null;
-                $bestMatches = [];
-                $bestRedirectors = [];
-                $bestRedirectorAncestry = [];
-                $bestMatchCount = -1;
-                $bestRedirectorCount = -1;
-                foreach ($ue4Candidates[$packageKey] ?? [] as $candidate) {
-                    $outcome = PdoUe4VerifyImportProjectionResolver::resolveProviderOutcome(
-                        $db,
-                        (int)$candidate['file_id'],
-                        $imports,
-                        $consumerExports,
-                        $consumerGraphImports
-                    );
-                    $matches = (array)($outcome['matches'] ?? []);
-                    $redirectors = (array)($outcome['redirectors'] ?? []);
-                    $redirectorAncestry = (array)($outcome['redirector_ancestry'] ?? []);
-                    $matchCount = 0;
-                    $redirectorCount = 0;
-                    foreach ($requiredImportIndexes as $requiredImportIndex) {
-                        if (array_key_exists($requiredImportIndex, $matches)) {
-                            $matchCount++;
-                        } elseif (array_key_exists($requiredImportIndex, $redirectors)) {
-                            $redirectorCount++;
-                        }
-                    }
-                    // VerifyImport is per Import. Catalogue duplicates must still
-                    // resolve through one physical provider. Exact Import matches
-                    // outrank redirector-only evidence; redirectors break exact-count
-                    // ties because that physical package reaches UE4's second pass.
-                    if ($matchCount > $bestMatchCount
-                        || ($matchCount === $bestMatchCount && $redirectorCount > $bestRedirectorCount)) {
-                        $bestCandidate = $candidate;
-                        $bestMatches = $matches;
-                        $bestRedirectors = $redirectors;
-                        $bestRedirectorAncestry = $redirectorAncestry;
-                        $bestMatchCount = $matchCount;
-                        $bestRedirectorCount = $redirectorCount;
-                    }
-                    if ($requiredImportIndexes !== [] && $matchCount === count($requiredImportIndexes)) {
-                        break;
-                    }
-                }
-                if ($bestCandidate !== null) {
-                    $packageMatches[$packageKey] = $bestCandidate;
-                    $ue4VerifyImportMatches[$packageKey] = $bestMatches;
-                    $ue4VerifyImportRedirectors[$packageKey] = $bestRedirectors;
-                    $ue4VerifyImportRedirectorAncestry[$packageKey] = $bestRedirectorAncestry;
-                }
-            }
-        }
-
-        $completeProviders = [];
-        if (!$legacyVerifyImport && !$ue3VerifyImport && !$ue4VerifyImport) {
-            foreach ($packageRequirements as $packageKey => $requirement) {
-                $provider = PdoPackageObjectCoverageResolver::chooseCompleteProvider(
+                $candidate = $packageMatches[$packageKey] ?? null;
+                if (!is_array($candidate)) { continue; }
+                $outcome = PdoUe4VerifyImportProjectionResolver::resolveProviderOutcome(
                     $db,
-                    $gameId,
-                    (string)$requirement['package_name'],
-                    array_values(array_unique((array)$requirement['paths'])),
-                    $fileId,
-                    (array)($requirement['classes'] ?? []),
-                    $engineKey
+                    (int)$candidate['file_id'],
+                    $imports,
+                    $consumerExports,
+                    $consumerGraphImports
                 );
-                if ($provider !== null) {
-                    $completeProviders[$packageKey] = $provider;
-                }
+                $ue4VerifyImportMatches[$packageKey] = (array)($outcome['matches'] ?? []);
+                $ue4VerifyImportRedirectors[$packageKey] = (array)($outcome['redirectors'] ?? []);
+                $ue4VerifyImportRedirectorAncestry[$packageKey] = (array)($outcome['redirector_ancestry'] ?? []);
             }
         }
 
@@ -387,6 +284,16 @@ final class PdoDependencyResolver
                     'resolved_export_index' => null,
                     'source' => 'ue4_v4_missing_package_name',
                     'confidence' => 'metadata_unresolved',
+                ];
+            } elseif (isset($ambiguousPackageProviders[self::normalizeLookup($rootPackage)])) {
+                $result = [
+                    'status' => 'unresolved',
+                    'resolved_file_id' => null,
+                    'resolved_export_id' => null,
+                    'resolved_export_index' => null,
+                    'source' => 'provider_environment_ambiguous',
+                    'confidence' => 'source_unresolved',
+                    'candidate_file_ids' => $ambiguousPackageProviders[self::normalizeLookup($rootPackage)],
                 ];
             } elseif (!$isObjectImport) {
                 $packageMatch = $packageMatches[self::normalizeLookup($rootPackage)] ?? null;
@@ -464,21 +371,16 @@ final class PdoDependencyResolver
                         ];
                     }
                 } else {
-                    $completeProvider = $completeProviders[$packageKey] ?? null;
-                    $relativeKey = self::normalizeLookup((string)($import['relative_object_path'] ?? ''));
-                    $exportIndex = is_array($completeProvider)
-                        ? ($completeProvider['matched_exports'][$relativeKey] ?? null)
-                        : null;
-                    if ($exportIndex !== null) {
-                        $result = [
-                            'status' => 'resolved',
-                            'resolved_file_id' => (int)$completeProvider['file_id'],
-                            'resolved_export_id' => null,
-                            'resolved_export_index' => (int)$exportIndex,
-                            'source' => 'complete_package_object',
-                            'confidence' => 'exact',
-                        ];
-                    }
+                    // No source-backed resolver is registered for this engine in
+                    // the live V4 path. Do not substitute catalog object coverage.
+                    $result = [
+                        'status' => 'unresolved',
+                        'resolved_file_id' => null,
+                        'resolved_export_id' => null,
+                        'resolved_export_index' => null,
+                        'source' => 'source_profile_not_implemented',
+                        'confidence' => 'source_unresolved',
+                    ];
                 }
             }
             $resolved[$importId] = $result;

@@ -86,6 +86,21 @@ try {
         && (int)($classicRows[1]['selected_provider_object']['export_index'] ?? -1) === 0,
         'v5_rebuilder_persists_classic_provider_provenance');
 
+    $rebuilder->rebuild($gameId, $consumerId, [[
+        'game_id' => $gameId,
+        'file_id' => null,
+        'package_name' => '/Game/Provider',
+        'selection_status' => 'ambiguous',
+        'candidate_file_ids' => [$providerId, 39999],
+    ]]);
+    $ambiguousClassicRows = $reader->snapshot($gameId, $consumerId)['sections'][Uedb5DependencyRebuilder::SECTION] ?? [];
+    $check(count($ambiguousClassicRows) === 2
+        && ($ambiguousClassicRows[0]['outcome'] ?? null) === 'unresolved'
+        && ($ambiguousClassicRows[1]['outcome'] ?? null) === 'unresolved'
+        && ($ambiguousClassicRows[0]['reason_code'] ?? null) === 'provider_environment_ambiguous'
+        && ($ambiguousClassicRows[1]['resolver_detail']['candidate_file_ids'] ?? []) === [$providerId,39999],
+        'v5_rebuilder_records_classic_provider_environment_ambiguity');
+
     $missingBuilt = $rebuilder->rebuild($gameId, $consumerId, []);
     $missingRows = $reader->snapshot($gameId, $consumerId)['sections'][Uedb5DependencyRebuilder::SECTION] ?? [];
     $check(count($missingRows) === 2 && ($missingRows[0]['outcome'] ?? null) === 'missing'
@@ -148,6 +163,20 @@ try {
         && ($zenRows[0]['required_package_id'] ?? null) === $providerPackageId
         && ($zenRows[0]['required_object_identity'] ?? null) === $publicHash,
         'v5_rebuilder_preserves_zen_package_hash_identity');
+
+    $rebuilder->rebuild($gameId, $zenConsumerId, [[
+        'game_id' => $gameId,
+        'file_id' => null,
+        'package_id' => $providerPackageId,
+        'selection_status' => 'ambiguous',
+        'candidate_file_ids' => [$zenProviderId, 39998],
+    ]]);
+    $ambiguousZenRows = $reader->snapshot($gameId, $zenConsumerId)['sections'][Uedb5DependencyRebuilder::SECTION] ?? [];
+    $check(count($ambiguousZenRows) === 1
+        && ($ambiguousZenRows[0]['outcome'] ?? null) === 'unresolved'
+        && ($ambiguousZenRows[0]['reason_code'] ?? null) === 'provider_environment_ambiguous'
+        && ($ambiguousZenRows[0]['resolver_detail']['candidate_file_ids'] ?? []) === [$zenProviderId,39998],
+        'v5_rebuilder_records_zen_provider_environment_ambiguity');
 
     $rebuilder->rebuild($gameId, $consumerId, []);
     $check(hash_file('sha256', $v4Path) === $v4Hash, 'v5_dependency_rebuild_does_not_touch_v4_container');

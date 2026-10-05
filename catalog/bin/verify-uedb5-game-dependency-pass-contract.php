@@ -4,10 +4,12 @@ declare(strict_types=1);
 $root=realpath(dirname(__DIR__))?:dirname(__DIR__);
 $metadata=$root.'/src/Infrastructure/Metadata';
 $service=(string)file_get_contents($metadata.'/Uedb5GameDependencyPassService.php');
+$rebuilder=(string)file_get_contents($metadata.'/Uedb5DependencyRebuilder.php');
 $statusRepo=(string)file_get_contents($metadata.'/PdoUedb5MigrationStatusRepository.php');
 $registration=(string)file_get_contents($metadata.'/PdoUedb5StagingRegistrationRepository.php');
 $migration=(string)file_get_contents($root.'/migrations/202610020001_uedb5_dependency_pass_status.php');
 $cli=(string)file_get_contents($root.'/bin/migrate-uedb5-dependencies.php');
+$transition=(string)file_get_contents($root.'/bin/transition-uedb5-provider-selection-policy.php');
 $checks=[];$failures=[];
 $check=static function(string $name,bool $ok)use(&$checks,&$failures):void{
     $checks[$name]=$ok;if(!$ok)$failures[]=$name;
@@ -15,7 +17,17 @@ $check=static function(string $name,bool $ok)use(&$checks,&$failures):void{
 $check('pass2_has_exact_payload_checkpoint',
     str_contains($migration,'dependency_payload_sha256 BINARY(32)')
     && str_contains($migration,'dependency_policy VARCHAR(64)'));
+$check('pass2_provider_selection_semantics_use_v2_policy',
+    str_contains($service,"public const DEPENDENCY_POLICY = 'uedb5-dependency-pass-v2'"));
+$check('provider_selection_policy_transition_is_targeted',
+    str_contains($transition,"const OLD_POLICY = 'uedb5-dependency-pass-v1'")
+    && str_contains($transition,'HAVING COUNT(DISTINCT p.file_id)>1')
+    && str_contains($transition,'dependency_payload_sha256=v.payload_sha256')
+    && str_contains($transition,"'rebuild-impacted'"));
 $check('pass2_selects_physical_v5_providers',str_contains($service,'PdoUedb5PhysicalProviderSelector'));
+$check('pass2_reports_ambiguous_provider_environment',
+    str_contains($service,"'ambiguous_provider_count'")
+    && str_contains($rebuilder,'provider_environment_ambiguous'));
 $check('pass2_rebuilds_authoritative_v5_dependencies',str_contains($service,'Uedb5DependencyRebuilder'));
 $check('pass2_refreshes_existing_v5_registration',str_contains($service,'refreshExisting'));
 $check('pass2_publishes_v5_dependency_sql',str_contains($service,'PdoUedb5DependencyProjectionPublisher'));

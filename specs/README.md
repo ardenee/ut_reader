@@ -17,20 +17,27 @@ Its purpose is to let an engineer implement, review, or repair UnrealDB's parser
 9. UnrealDB implementation notes are secondary. Each spec first states what the official engine/game code does.
 10. Source-compatible behavior takes precedence over convenience or historical UnrealDB behavior.
 
-## Authoritative repositories
+Current implementation audit ledger: `epic-source-conformance.md`.
 
-| Area | Repository | Source role |
-|---|---|---|
-| UE1 / UT99 retail v1.400 | `ardenee/UT99src` | Primary UT99 retail source of truth; use the `main` branch retail tree, including `Unreal Tournament [v1.400] [1999-11-30] (Retail)` |
-| UE1 / UT99 later code | `ardenee/UT99src-ext` | Supplemental newer UT99 source; may omit base files, so use only for explicitly newer behavior and never to overwrite retail rules without documenting the revision difference |
-| Unreal II / UE2 | `ardenee/unreal2src` | Unreal II / UE2 source of truth |
-| UE2.5 | `ardenee/UE2.5` | UE2.5 source of truth |
-| UT2003 | `ardenee/Unreal_Tournament_2003_v2107` | UT2003 source of truth |
-| UT2004 | `ardenee/UT2004src` | UT2004 source of truth |
-| UE3 | `ardenee/UE3src` | Primary UE3 source of truth |
-| UT3 | `ardenee/UT3src-comunity` | UT3 game-specific supplemental source |
-| UE4 | `ardenee/UnrealEngine4` | UE4 source of truth; 4.27.2-release lineage |
-| UE5 | `L:\Source\Engine\UE5\UE 5.8.3` | UE5 5.8.3 source of truth; `release` @ `396c9f059903aed5fec78ecd3d437a40c6415368` |
+## Authoritative local source trees
+
+Current conformance work must use the local source mirrors below. Historical GitHub repository names may remain in older spec provenance, but they are not a substitute for checking these local trees when auditing current code.
+
+| Area | Local source authority |
+|---|---|
+| UE2 / UE2.5 | `L:\Source\Engine\UE2` |
+| UE3 | `L:\Source\Engine\UE3` |
+| UE4 | `L:\Source\Engine\UE4` |
+| UE5 | `L:\Source\Engine\UE5` |
+| UDK | `L:\Source\Engine\UDK` — currently contains a game sample rather than the UDKUltimate linker C++ tree; affected claims must remain unresolved until the source is restored |
+| Unreal | `L:\Source\Games\Unreal` |
+| Unreal II | `L:\Source\Games\Unreal II` |
+| UT99 | `L:\Source\Games\UT99` |
+| UT2003 | `L:\Source\Games\UT2003` |
+| UT2004 | `L:\Source\Games\UT2004` |
+| UT3 | `L:\Source\Games\UT3` |
+| UT4 | `L:\Source\Games\UT4` |
+| Tools/reference utilities | `L:\Source\Tools` |
 
 ## Required specification coverage
 

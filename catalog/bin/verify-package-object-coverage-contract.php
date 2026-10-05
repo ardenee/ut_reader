@@ -73,40 +73,40 @@ $check(
 
 
 $check(
-    'dependency_resolver_groups_package_requirements',
+    'dependency_resolver_does_not_use_coverage_for_provider_selection',
     is_string($resolverSource)
-        && str_contains($resolverSource, '$packageRequirements')
-        && str_contains($resolverSource, 'chooseCompleteProvider'),
-    'Object Imports from one root package must be evaluated as one requirement set.'
+        && !str_contains($resolverSource, 'chooseCompleteProvider')
+        && !str_contains($resolverSource, '$completeProviders[$packageKey]'),
+    'Coverage analysis is diagnostic/catalog tooling only; Epic selects a package/linker before import verification.'
 );
 $check(
-    'dependency_resolver_uses_one_complete_provider',
+    'unsupported_source_profile_fails_closed',
     is_string($resolverSource)
-        && str_contains($resolverSource, '$completeProviders[$packageKey]')
-        && str_contains($resolverSource, "'complete_package_object'"),
-    'All object Imports for a package must resolve through the same complete provider.'
+        && str_contains($resolverSource, "'source_profile_not_implemented'")
+        && str_contains($resolverSource, "'source_unresolved'"),
+    'An engine without a registered source resolver must remain unresolved rather than using generic object coverage as invented semantics.'
 );
 $check(
     'dependency_resolver_has_no_independent_object_fallback',
     is_string($resolverSource)
         && !str_contains($resolverSource, 'loadExportMatches(')
         && !str_contains($resolverSource, 'PdoCompactCaseInsensitiveExportResolver::fill'),
-    'When no single provider covers the complete requirement set, object Imports must remain missing rather than being split across partial providers.'
+    'Authoritative resolution must not split one source package/linker across independent object-level fallbacks.'
 );
 $check(
     'coverage_returns_verified_export_indexes',
     is_string($source)
         && str_contains($source, "'matched_exports'")
         && str_contains($source, 'path_hash_ci'),
-    'The chosen provider must return Export indexes from normalized paths verified against the projected exact path term.'
+    'Diagnostic coverage rows may report Export indexes from normalized paths verified against the projected exact path term.'
 );
 $check(
-    'preferred_provider_cannot_beat_complete_provider',
+    'diagnostic_preferred_file_only_orders_equal_coverage',
     is_string($source)
         && strpos($source, "\$status !== 0") !== false
         && strpos($source, "\$preferredFileId > 0") !== false
         && strpos($source, "\$status !== 0") < strpos($source, "\$preferredFileId > 0"),
-    'Provider preference is only a tie-breaker after complete/partial coverage status.'
+    'Diagnostic report ordering may prefer a file only after the non-authoritative coverage status has been calculated.'
 );
 
 
@@ -129,28 +129,12 @@ $check(
 );
 
 
-$fooCoverage = [
-    ['file_id' => 101, 'status' => 'partially_satisfies', 'matched_paths' => ['Wall01', 'Wall02'], 'missing_paths' => ['Wall03', 'Sky01', 'Floor01']],
-    ['file_id' => 102, 'status' => 'partially_satisfies', 'matched_paths' => ['Wall03', 'Sky01'], 'missing_paths' => ['Wall01', 'Wall02', 'Floor01']],
-    ['file_id' => 103, 'status' => 'fully_satisfies', 'matched_paths' => ['Wall01', 'Wall02', 'Wall03', 'Sky01', 'Floor01'], 'missing_paths' => []],
-];
-$selectedFoo = \UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageObjectCoverageResolver::selectCompleteCoverage(
-    $fooCoverage,
-    101
-);
 $check(
-    'partial_foo_versions_cannot_be_combined',
-    is_array($selectedFoo) && (int)$selectedFoo['file_id'] === 103,
-    'A preferred partial Foo cannot combine with another partial Foo; the one complete superset must be selected.'
-);
-$noSuperset = \UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageObjectCoverageResolver::selectCompleteCoverage(
-    array_slice($fooCoverage, 0, 2),
-    101
-);
-$check(
-    'no_single_superset_means_no_provider',
-    $noSuperset === null,
-    'Two partial providers must not be treated as one satisfiable package dependency.'
+    'coverage_helper_exposes_no_provider_selector_api',
+    is_string($source)
+        && !str_contains($source, 'chooseCompleteProvider')
+        && !str_contains($source, 'selectCompleteCoverage'),
+    'Coverage tooling must remain reporting-only and expose no API that can choose an authoritative physical provider.'
 );
 
 $ok = !in_array(false, array_column($checks, 'ok'), true);

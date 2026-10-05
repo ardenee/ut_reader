@@ -28,11 +28,11 @@ A matching leaf/class under a different group/outer is a distinct object and mus
 
 ## Multi-provider catalog boundary
 
-Epic normally resolves one physical package linker for a logical package name. UnrealDB can retain several historical, trimmed, conflicting, or poorly named physical files for that same logical package.
+Epic resolves one physical package/linker before import verification. UnrealDB can retain several historical, trimmed, conflicting, or poorly named physical files for the same logical package, but that catalogue state does not create a new source-valid selection rule.
 
-That catalog-level difference must not weaken per-provider verification. UnrealDB must first evaluate every candidate provider using the applicable engine/game's source-backed import identity rules, including class identity, parent/outer matching, visibility, and only source-proven fallbacks. The resulting verified import coverage set is then used by UnrealDB's additional provider-selection/superset operation.
+When source/runtime provenance uniquely identifies one physical provider, run the exact profile's import verification against that provider only. When several valid physical providers remain and the original filesystem/mount/package-store ordering is unavailable, provider identity is unresolved. UnrealDB must not inspect candidate contents, count matches, rank coverage, or combine exports in order to choose one.
 
-A provider is a complete/common provider only when one physical file independently satisfies the complete required import set. Partial coverage from multiple physical files must never be combined. Export count, file size, age, or filename ordering must not substitute for verified import coverage.
+Coverage/superset reports may still compare package variants for diagnostics or manual repair analysis. They are not dependency semantics and must never feed authoritative provider selection.
 
 ## Source-reference matrix
 
@@ -46,7 +46,7 @@ A provider is a complete/common provider only when one physical file independent
 
 Apply this operation only after the exact package reader has validated indices and tables. Preserve enough structured evidence to explain why a dependency resolved or failed; do not reduce resolution to a filename/name-only boolean.
 
-For UE1/UE2 catalog provider selection, the coverage set must be produced by the same per-provider VerifyImport-compatible path used by production dependency resolution. Provider selection operates on those verified results; it must not maintain a second path-only approximation.
+For every profile, outer verification begins only after one physical provider has been established. Diagnostic multi-provider coverage may reuse source-backed matching for comparison, but it must not select the provider used by production dependency resolution.
 
 ## Later-generation verification changes
 

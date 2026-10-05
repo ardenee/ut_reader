@@ -11,7 +11,7 @@ use UnrealDb\Catalog\Infrastructure\Persistence\PdoClassRemapRepository;
 
 final class Uedb5GameDependencyPassService
 {
-    public const DEPENDENCY_POLICY = 'uedb5-dependency-pass-v1';
+    public const DEPENDENCY_POLICY = 'uedb5-dependency-pass-v2';
 
     private Uedb5MetadataReader $reader;
     private Uedb5DependencyRebuilder $rebuilder;
@@ -244,15 +244,21 @@ final class Uedb5GameDependencyPassService
     private function processFile(int $gameId, int $fileId, bool $apply, array $options): array
     {
         $selectedProviders = $this->selector->select($gameId, $fileId, $options);
+        $selectedProviderFileIds = array_values(array_map(
+            static fn(array $row): int => (int)$row['file_id'],
+            array_filter($selectedProviders, static fn(array $row): bool => (int)($row['file_id'] ?? 0) > 0)
+        ));
+        $ambiguousProviderCount = count(array_filter(
+            $selectedProviders,
+            static fn(array $row): bool => (string)($row['selection_status'] ?? '') === 'ambiguous'
+        ));
         if (!$apply) {
             $snapshot = $this->reader->snapshot($gameId, $fileId);
             return [
                 'package_family'=>(string)($snapshot['package_family'] ?? ''),
-                'provider_count'=>count($selectedProviders),
-                'selected_provider_file_ids'=>array_map(
-                    static fn(array $row): int => (int)$row['file_id'],
-                    $selectedProviders
-                ),
+                'provider_count'=>count($selectedProviderFileIds),
+                'ambiguous_provider_count'=>$ambiguousProviderCount,
+                'selected_provider_file_ids'=>$selectedProviderFileIds,
             ];
         }
 
@@ -269,11 +275,9 @@ final class Uedb5GameDependencyPassService
             self::DEPENDENCY_POLICY
         );
         return [
-            'provider_count'=>count($selectedProviders),
-            'selected_provider_file_ids'=>array_map(
-                static fn(array $row): int => (int)$row['file_id'],
-                $selectedProviders
-            ),
+            'provider_count'=>count($selectedProviderFileIds),
+            'ambiguous_provider_count'=>$ambiguousProviderCount,
+            'selected_provider_file_ids'=>$selectedProviderFileIds,
             'dependency_count'=>(int)($rebuilt['dependency_count'] ?? 0),
             'dependency_outcomes'=>(array)($rebuilt['dependency_outcomes'] ?? []),
             'dependency_schema'=>(string)($rebuilt['dependency_schema'] ?? ''),

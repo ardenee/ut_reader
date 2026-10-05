@@ -64,7 +64,7 @@ Current `.uedb4` metadata preserves the serialized Import/Export graph required 
 
 Return structured outcomes: resolved exact, resolved source-backed static fallback, missing provider, missing object, class mismatch, outer mismatch, non-public/inaccessible where applicable, runtime-only fallback unavailable, and malformed reference. Never silently turn a weaker name-only match into success.
 
-For UE4, `VerifyImport` is evaluated per Import. If several physical files represent one logical package, UnrealDB must still retain one physical provider candidate for that logical package and must never combine coverage from several provider files. However, one failed sibling Import does not invalidate exact matches for other sibling Imports in the selected provider. Catalogue duplicate selection may prefer the single candidate satisfying the greatest number of required Imports, with deterministic provider order as the tie-break; that ranking is UnrealDB policy, not an engine-format rule.
+For UE4, `VerifyImport` is evaluated per Import **after one provider linker has been selected**. One failed sibling Import does not invalidate exact matches for other siblings in that same linker. If UnrealDB has several physical files for the required package but lacks the runtime mount/search state that selected one in Epic, it must report provider-environment ambiguity; it must not score candidates by successful Imports or redirector evidence.
 
 ## Source-reference matrix
 

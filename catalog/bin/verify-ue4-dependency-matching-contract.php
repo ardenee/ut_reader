@@ -277,16 +277,17 @@ $check(!isset($matches[1]), 'v4_does_not_guess_ue4_export_outer_package_context'
 
 $resolverSource = file_get_contents($root . '/src/Infrastructure/Persistence/PdoDependencyResolver.php') ?: '';
 $ue4Start = strpos($resolverSource, '$ue4VerifyImportMatches = []');
-$ue4End = $ue4Start !== false ? strpos($resolverSource, '$completeProviders = []', $ue4Start) : false;
+$ue4End = $ue4Start !== false ? strpos($resolverSource, '$resolved = [];', $ue4Start) : false;
 $ue4Block = ($ue4Start !== false && $ue4End !== false)
     ? substr($resolverSource, $ue4Start, $ue4End - $ue4Start)
     : '';
 $check(
-    str_contains($ue4Block, '$bestMatchCount = -1;')
-        && str_contains($ue4Block, '$bestMatches = $matches;')
-        && !str_contains($ue4Block, 'isCompleteMatch(')
-        && str_contains($ue4Block, '$consumerExports'),
-    'ue4_single_provider_keeps_successful_siblings'
+    str_contains($ue4Block, '$candidate = $packageMatches[$packageKey] ?? null;')
+        && str_contains($ue4Block, 'PdoUe4VerifyImportProjectionResolver::resolveProviderOutcome(')
+        && str_contains($ue4Block, '$consumerExports')
+        && !str_contains($ue4Block, '$bestMatchCount')
+        && !str_contains($ue4Block, '$bestRedirectorCount'),
+    'ue4_provider_selected_before_verifyimport'
 );
 
 $auditSource = file_get_contents($root . '/bin/audit-ue4-missing-verifyimport.php') ?: '';

@@ -80,7 +80,7 @@ The UEDB5 manifest remains authoritative if the projection and file disagree.
 - provider file ID;
 - provider source kind and source ID.
 
-It does not contain exports, class graphs, object coverage, or a synthetic union of multiple physical files. Provider selection still chooses one physical file before source-specific object verification.
+It does not contain exports, class graphs, object coverage, or a synthetic union of multiple physical files. Source-valid provider resolution must establish exactly one physical file before source-specific object verification; if several valid physical files remain and runtime provider order is unavailable, the dependency remains unresolved rather than choosing one by catalogue policy.
 ## 3. Search-key dictionary
 
 V5 does not use an auto-increment term ID as the identity carried by every projection row.

@@ -79,19 +79,27 @@ foreach([
 }
 $selector=new PdoUedb5PhysicalProviderSelector($db,$tmp);
 $selected=$selector->select(3,10);
-$check('complete_alias_provider_beats_partial_primary_candidates',
-    count($selected)===1 && (int)$selected[0]['file_id']===22);
-$check('selected_alias_uses_required_lookup_package_identity',
-    ($selected[0]['package_name']??'')==='Pkg');
+$check('classic_duplicate_provider_environment_is_ambiguous',
+    count($selected)===1
+    && ($selected[0]['selection_status']??'')==='ambiguous'
+    && ($selected[0]['file_id']??null)===null
+    && ($selected[0]['package_name']??'')==='Pkg'
+    && (array)($selected[0]['candidate_file_ids']??[])===[20,21,22]);
+$check('later_complete_alias_is_not_content_scored_into_selection',
+    !in_array((int)($selected[0]['file_id']??0),[20,21,22],true));
 
 $db->exec('DELETE FROM ue_uedb5_provider_keys WHERE file_id=22');
 $selected=$selector->select(3,10);
-$check('partial_duplicate_set_selects_one_physical_provider',
-    count($selected)===1 && (int)$selected[0]['file_id']===20);
-$check('candidate_order_breaks_equal_coverage_ties',
-    (int)$selected[0]['file_id']===20);
-$check('source_irrelevant_none_does_not_influence_provider_scoring',
-    (int)$selected[0]['file_id']===20);
+$check('two_physical_candidates_remain_ambiguous',
+    count($selected)===1
+    && ($selected[0]['selection_status']??'')==='ambiguous'
+    && (array)($selected[0]['candidate_file_ids']??[])===[20,21]);
+$db->exec('DELETE FROM ue_uedb5_provider_keys WHERE file_id=21');
+$selected=$selector->select(3,10);
+$check('single_physical_provider_is_selected',
+    count($selected)===1
+    && ($selected[0]['selection_status']??'')==='selected'
+    && (int)$selected[0]['file_id']===20);
 
 $soloImports=[
     ['index'=>0,'class_package'=>'Core','class_name'=>'Package','object_name'=>'Solo','outer_index'=>0],
@@ -159,7 +167,14 @@ foreach([[1,41,41],[1,42,42],[2,700,43]] as [$sourceKind,$sourceId,$fileId]){
     $db->prepare('INSERT INTO ue_uedb5_provider_keys VALUES(?,?,?,?,?,?)')->execute([$sourceKind,$sourceId,8,$zenKind,$zenKey,$fileId]);
 }
 $zenSelected=(new PdoUedb5PhysicalProviderSelector($db,$tmp))->select(8,40);
-$check('zen_complete_provider_beats_partial_candidates',count($zenSelected)===1&&(int)$zenSelected[0]['file_id']===43);
+$check('zen_duplicate_package_id_environment_is_ambiguous',
+    count($zenSelected)===1
+    && ($zenSelected[0]['selection_status']??'')==='ambiguous'
+    && ($zenSelected[0]['file_id']??null)===null
+    && ($zenSelected[0]['package_id']??'')===$zenPackageId
+    && (array)($zenSelected[0]['candidate_file_ids']??[])===[41,42,43]);
+$check('zen_public_export_coverage_does_not_select_a_duplicate_package_file',
+    (int)($zenSelected[0]['file_id']??0)===0);
 $source=(string)file_get_contents($root.'/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php');
 $check('selector_uses_v5_provider_keys',str_contains($source,'ue_uedb5_provider_keys'));
 $check('selector_reads_v5_snapshots',str_contains($source,'Uedb5MetadataReader'));
@@ -167,6 +182,11 @@ $check('selector_excludes_known_invalid_identities',str_contains($source,'ue_inv
 $check('selector_never_reads_v4_provider_projection',!str_contains($source,'ue_package_providers'));
 $check('selector_never_reads_uedb4_container',!str_contains($source,'BlockedCompressedMetadata'));
 $check('selector_never_reads_v4_metadata_registration',!str_contains($source,'ue_file_metadata'));
+$check('selector_has_no_content_scoring',
+    !str_contains($source,'bestClassicCandidate')
+    && !str_contains($source,'bestZenCandidate')
+    && !str_contains($source,'matchCount')
+    && !str_contains($source,'redirectorCount'));
 $it=new RecursiveIteratorIterator(
     new RecursiveDirectoryIterator($tmp,FilesystemIterator::SKIP_DOTS),
     RecursiveIteratorIterator::CHILD_FIRST

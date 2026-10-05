@@ -20,7 +20,7 @@ final class PdoUedb5PhysicalProviderSelector
 
     /**
      * @param array{common_packages?:list<string>,class_remaps?:array<string,string>} $options
-     * @return list<array{game_id:int,file_id:int,package_name?:string}>
+     * @return list<array<string,mixed>>
      */
     public function select(int $gameId, int $fileId, array $options = []): array
     {
@@ -41,7 +41,7 @@ final class PdoUedb5PhysicalProviderSelector
         return $this->selectClassic($gameId, $fileId, $consumer, $options);
     }
 
-    /** @return list<array{game_id:int,file_id:int,package_name:string}> */
+    /** @return list<array<string,mixed>> */
     private function selectClassic(
         int $gameId,
         int $consumerFileId,
@@ -50,9 +50,8 @@ final class PdoUedb5PhysicalProviderSelector
     ): array {
         $resolver = $this->classicResolver($consumer);
         $baseline = $resolver($consumer, [], $options);
-        $imports = $this->indexedImports($consumer);
         $requirements = [];
-        foreach ($baseline as $index => $result) {
+        foreach ($baseline as $result) {
             $result = (array)$result;
             if (str_starts_with((string)($result['reason'] ?? ''), 'source_irrelevant_name_none')) {
                 continue;
@@ -61,68 +60,62 @@ final class PdoUedb5PhysicalProviderSelector
             if ($packageName === '' || (string)($result['status'] ?? '') === 'common') {
                 continue;
             }
-            $key = CatalogUnrealIdentityHash::nameKey($packageName);
-            if (!isset($requirements[$key])) {
-                $requirements[$key] = ['package_name' => $packageName, 'object_indexes' => []];
-            }
-            $import = (array)($imports[(int)$index] ?? []);
-            if (!$this->isPackageImport($import)) {
-                $requirements[$key]['object_indexes'][] = (int)$index;
-            }
+            $requirements[CatalogUnrealIdentityHash::nameKey($packageName)] ??= $packageName;
         }
 
         $selected = [];
-        foreach ($requirements as $requirement) {
-            $packageName = (string)$requirement['package_name'];
-            $packageKey = md5(CatalogUnrealIdentityHash::nameKey($packageName), true);
+        foreach ($requirements as $packageName) {
+            $packageKey = md5(CatalogUnrealIdentityHash::nameKey((string)$packageName), true);
             $candidates = $this->candidateRows(
                 $gameId,
                 $consumerFileId,
                 Uedb5SqlProjectionContract::PACKAGE_KEY_CLASSIC_NAME,
                 $packageKey
             );
-            $best = $this->bestClassicCandidate(
-                $gameId,
-                $consumer,
-                $packageName,
-                (array)$requirement['object_indexes'],
-                $candidates,
-                $resolver,
-                $options
-            );
-            if ($best !== null) {
+            // Epic selects one package/linker before VerifyImport inspects exports.
+            // candidateRows() discovers the known physical candidate set only.
+            // If more than one candidate remains, the missing runtime search/mount
+            // order is represented as ambiguity rather than guessed from DB order
+            // or candidate contents.
+            if (count($candidates) > 1) {
                 $selected[] = [
                     'game_id' => $gameId,
-                    'file_id' => (int)$best['file_id'],
-                    'package_name' => $packageName,
+                    'file_id' => null,
+                    'package_name' => (string)$packageName,
+                    'selection_status' => 'ambiguous',
+                    'candidate_file_ids' => array_values(array_map(
+                        static fn(array $candidate): int => (int)$candidate['file_id'],
+                        $candidates
+                    )),
+                ];
+                continue;
+            }
+            $provider = $candidates[0] ?? null;
+            if (is_array($provider)) {
+                $selected[] = [
+                    'game_id' => $gameId,
+                    'file_id' => (int)$provider['file_id'],
+                    'package_name' => (string)$packageName,
+                    'selection_status' => 'selected',
                 ];
             }
         }
         return $selected;
     }
 
-    /** @return list<array{game_id:int,file_id:int}> */
+    /** @return list<array<string,mixed>> */
     private function selectZen(int $gameId, int $consumerFileId, array $consumer): array
     {
         $baseline = Uedb5Ue5ZenDependencyResolver::resolve($consumer, []);
         $requirements = [];
         foreach ($baseline as $row) {
-            $row = (array)$row;
-            $packageId = strtoupper(trim((string)($row['required_package_id'] ?? '')));
-            if ($packageId === '') { continue; }
-            if (!isset($requirements[$packageId])) {
-                $requirements[$packageId] = [];
-            }
-            if (in_array((string)($row['source_section'] ?? ''), ['imports', 'cell_imports'], true)
-                && trim((string)($row['required_object_identity'] ?? '')) !== '') {
-                $requirements[$packageId][] = [
-                    'source_section' => (string)$row['source_section'],
-                    'source_index' => (int)$row['source_index'],
-                ];
+            $packageId = strtoupper(trim((string)((array)$row)['required_package_id'] ?? ''));
+            if ($packageId !== '') {
+                $requirements[$packageId] = true;
             }
         }
         $selected = [];
-        foreach ($requirements as $packageId => $requiredObjects) {
+        foreach (array_keys($requirements) as $packageId) {
             if (preg_match('/^[0-9A-F]{16}$/', $packageId) !== 1) {
                 throw new RuntimeException('Zen dependency provider FPackageId is invalid.');
             }
@@ -136,16 +129,29 @@ final class PdoUedb5PhysicalProviderSelector
                 Uedb5SqlProjectionContract::PACKAGE_KEY_ZEN_PACKAGE_ID,
                 $packageKey
             );
-            $best = $this->bestZenCandidate(
-                $gameId,
-                $consumer,
-                (array)$requiredObjects,
-                $candidates
-            );
-            if ($best !== null) {
+            // Epic's global import store is keyed by exact FPackageId and keeps
+            // a 1:1 PackageId->package relationship. Public-export hashes resolve
+            // inside that selected package; they must not select a different file.
+            if (count($candidates) > 1) {
                 $selected[] = [
                     'game_id' => $gameId,
-                    'file_id' => (int)$best['file_id'],
+                    'file_id' => null,
+                    'package_id' => $packageId,
+                    'selection_status' => 'ambiguous',
+                    'candidate_file_ids' => array_values(array_map(
+                        static fn(array $candidate): int => (int)$candidate['file_id'],
+                        $candidates
+                    )),
+                ];
+                continue;
+            }
+            $provider = $candidates[0] ?? null;
+            if (is_array($provider)) {
+                $selected[] = [
+                    'game_id' => $gameId,
+                    'file_id' => (int)$provider['file_id'],
+                    'package_id' => $packageId,
+                    'selection_status' => 'selected',
                 ];
             }
         }
@@ -163,86 +169,6 @@ final class PdoUedb5PhysicalProviderSelector
             Uedb5ClassicDependencyResolver::resolve($snapshot, $providers, $options);
     }
 
-    /** @param list<int> $requiredIndexes @param list<array<string,mixed>> $candidates */
-    private function bestClassicCandidate(
-        int $gameId,
-        array $consumer,
-        string $packageName,
-        array $requiredIndexes,
-        array $candidates,
-        callable $resolver,
-        array $options
-    ): ?array {
-        if ($candidates === []) { return null; }
-        if (count($candidates) === 1 || $requiredIndexes === []) { return $candidates[0]; }
-        $best = null;
-        $bestMatches = -1;
-        $bestRedirectors = -1;
-        foreach ($candidates as $candidate) {
-            $provider = [
-                'package_name' => $packageName,
-                'provider_id' => (int)$candidate['file_id'],
-                'snapshot' => $this->reader->snapshot($gameId, (int)$candidate['file_id']),
-            ];
-            $results = $resolver($consumer, [$provider], $options);
-            $matchCount = 0;
-            $redirectorCount = 0;
-            foreach ($requiredIndexes as $index) {
-                $result = (array)($results[(int)$index] ?? []);
-                if ((string)($result['status'] ?? '') === 'resolved') {
-                    $matchCount++;
-                    continue;
-                }
-                if ($this->isRedirectorEvidence($result)) {
-                    $redirectorCount++;
-                }
-            }
-            if ($matchCount > $bestMatches
-                || ($matchCount === $bestMatches && $redirectorCount > $bestRedirectors)) {
-                $best = $candidate;
-                $bestMatches = $matchCount;
-                $bestRedirectors = $redirectorCount;
-            }
-            if ($matchCount === count($requiredIndexes)) { break; }
-        }
-        return $best;
-    }
-
-    /** @param list<array{source_section:string,source_index:int}> $requiredObjects */
-    private function bestZenCandidate(
-        int $gameId,
-        array $consumer,
-        array $requiredObjects,
-        array $candidates
-    ): ?array {
-        if ($candidates === []) { return null; }
-        if ($requiredObjects === []) { return $candidates[0]; }
-        $best = null;
-        $bestMatches = -1;
-        foreach ($candidates as $candidate) {
-            $rows = Uedb5Ue5ZenDependencyResolver::resolve($consumer, [[
-                'provider_id' => (int)$candidate['file_id'],
-                'snapshot' => $this->reader->snapshot($gameId, (int)$candidate['file_id']),
-            ]]);
-            $outcomes = [];
-            foreach ($rows as $row) {
-                $row = (array)$row;
-                $key = (string)($row['source_section'] ?? '') . ':' . (int)($row['source_index'] ?? -1);
-                $outcomes[$key] = (string)($row['outcome'] ?? '');
-            }
-            $matchCount = 0;
-            foreach ($requiredObjects as $required) {
-                $key = (string)$required['source_section'] . ':' . (int)$required['source_index'];
-                if (($outcomes[$key] ?? '') === 'resolved') { $matchCount++; }
-            }
-            if ($matchCount > $bestMatches) {
-                $best = $candidate;
-                $bestMatches = $matchCount;
-            }
-            if ($matchCount === count($requiredObjects)) { break; }
-        }
-        return $best;
-    }
     /** @return list<array<string,mixed>> */
     private function candidateRows(
         int $gameId,
@@ -272,34 +198,5 @@ final class PdoUedb5PhysicalProviderSelector
             $rows[] = $row;
         }
         return $rows;
-    }
-    /** @return array<int,array<string,mixed>> */
-    private function indexedImports(array $snapshot): array
-    {
-        $indexed = [];
-        foreach ((array)($snapshot['sections']['imports'] ?? []) as $fallback => $row) {
-            if (!is_array($row)) { continue; }
-            $index = array_key_exists('index', $row) ? (int)$row['index'] : (int)$fallback;
-            $indexed[$index] = $row;
-        }
-        return $indexed;
-    }
-
-    private function isPackageImport(array $import): bool
-    {
-        $className = $import['class_name'] ?? null;
-        if (is_array($className)) {
-            $className = (string)($className['text'] ?? '');
-        }
-        return (int)($import['outer_index'] ?? 0) === 0
-            && CatalogUnrealIdentityHash::nameKey((string)$className)
-                === CatalogUnrealIdentityHash::nameKey('Package');
-    }
-
-    private function isRedirectorEvidence(array $result): bool
-    {
-        $reason = strtolower(trim((string)($result['reason'] ?? '')));
-        if ($reason === '') { return false; }
-        return str_contains($reason, 'redirector');
     }
 }

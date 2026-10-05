@@ -9,13 +9,13 @@ use UnrealDb\Catalog\Infrastructure\Metadata\CatalogUnrealIdentityHash;
 require_once dirname(__DIR__) . '/Metadata/CatalogUnrealIdentityHash.php';
 
 /**
- * Evaluates every current-format provider of a package against a complete set
- * of required object paths.
+ * Diagnostic comparison of current-format package variants against a requested
+ * object set. This is reporting/repair-analysis data only.
  *
- * This is deliberately separate from PdoDependencyResolver: normal Import
- * resolution still records one result per Import, while this service answers
- * the stronger question "which single package version satisfies this whole
- * requirement set?".
+ * Authoritative dependency resolution must never use these coverage results to
+ * choose a physical provider. Epic selects a package/linker first; when the
+ * catalogue contains several possible physical providers and runtime ordering
+ * is unavailable, the source-faithful dependency result is unresolved.
  */
 final class PdoPackageObjectCoverageResolver
 {
@@ -213,63 +213,6 @@ final class PdoPackageObjectCoverageResolver
                 <=> ($providerOrder[(int)$b['file_id']] ?? PHP_INT_MAX);
         });
         return $result;
-    }
-
-    /**
-     * Choose one provider only when that provider satisfies the entire object set.
-     * The preferred file is a tie-breaker among complete providers, never a reason
-     * to choose a partial provider.
-     *
-     * @param list<string> $requiredObjectPaths
-     * @return array<string,mixed>|null
-     */
-    public static function chooseCompleteProvider(
-        PDO $db,
-        int $gameId,
-        string $packageName,
-        array $requiredObjectPaths,
-        int $preferredFileId = 0,
-        array $requiredClassesByPath = [],
-        string $engineKey = ''
-    ): ?array {
-        return self::selectCompleteCoverage(
-            self::evaluate(
-                $db,
-                $gameId,
-                $packageName,
-                $requiredObjectPaths,
-                $preferredFileId,
-                $requiredClassesByPath,
-                $engineKey
-            ),
-            $preferredFileId
-        );
-    }
-
-    /**
-     * Pure selection boundary used by contracts and callers: partial providers
-     * can never be combined or promoted into a complete provider.
-     *
-     * @param list<array<string,mixed>> $coverage
-     * @return array<string,mixed>|null
-     */
-    public static function selectCompleteCoverage(array $coverage, int $preferredFileId = 0): ?array
-    {
-        $complete = array_values(array_filter(
-            $coverage,
-            static fn(array $row): bool => (string)($row['status'] ?? '') === 'fully_satisfies'
-        ));
-        if ($complete === []) {
-            return null;
-        }
-        if ($preferredFileId > 0) {
-            foreach ($complete as $row) {
-                if ((int)($row['file_id'] ?? 0) === $preferredFileId) {
-                    return $row;
-                }
-            }
-        }
-        return $complete[0];
     }
 
     /**

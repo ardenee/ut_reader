@@ -32,14 +32,14 @@ final class Uedb5DependencyRebuilder
     }
 
     /**
-     * @param list<array{game_id:int,file_id:int,package_name?:string}> $selectedProviders
+     * @param list<array<string,mixed>> $selectedProviders
      * @param array{common_packages?:list<string>,class_remaps?:array<string,string>} $options
      * @return array<string,mixed>
      */
     public function rebuild(int $gameId, int $fileId, array $selectedProviders, array $options = []): array
     {
         $consumer = $this->reader->snapshot($gameId, $fileId);
-        $providers = $this->loadProviders($selectedProviders);
+        [$providers, $ambiguousProviders] = $this->loadProviderSelections($selectedProviders);
         $family = (string)($consumer['package_family'] ?? '');
 
         if ($family === Uedb5Ue5ClassicSnapshotBuilder::PACKAGE_FAMILY
@@ -56,6 +56,7 @@ final class Uedb5DependencyRebuilder
             throw new RuntimeException('No UEDB5 dependency resolver is registered for package_family ' . $family . '.');
         }
 
+        $rows = $this->applyProviderAmbiguity($rows, $ambiguousProviders);
         $consumer['sections'][self::SECTION] = $rows;
         $consumer['section_schemas'][self::SECTION] = $schema;
         $written = $this->writer->write($consumer);
@@ -68,13 +69,29 @@ final class Uedb5DependencyRebuilder
         ];
     }
 
-    /** @param list<array<string,mixed>> $selectedProviders @return list<array<string,mixed>> */
-    private function loadProviders(array $selectedProviders): array
+    /**
+     * @param list<array<string,mixed>> $selectedProviders
+     * @return array{0:list<array<string,mixed>>,1:list<array<string,mixed>>}
+     */
+    private function loadProviderSelections(array $selectedProviders): array
     {
         $loaded = [];
+        $ambiguous = [];
         foreach ($selectedProviders as $row) {
             if (!is_array($row)) {
                 throw new RuntimeException('UEDB5 provider selection contains a non-row value.');
+            }
+            if ((string)($row['selection_status'] ?? 'selected') === 'ambiguous') {
+                $candidateIds = array_values(array_unique(array_map('intval', (array)($row['candidate_file_ids'] ?? []))));
+                if (count($candidateIds) < 2) {
+                    throw new RuntimeException('Ambiguous UEDB5 provider selection requires at least two candidate file IDs.');
+                }
+                $ambiguous[] = [
+                    'package_name' => (string)($row['package_name'] ?? ''),
+                    'package_id' => strtoupper((string)($row['package_id'] ?? '')),
+                    'candidate_file_ids' => $candidateIds,
+                ];
+                continue;
             }
             $gameId = (int)($row['game_id'] ?? 0);
             $fileId = (int)($row['file_id'] ?? 0);
@@ -93,7 +110,55 @@ final class Uedb5DependencyRebuilder
                 'snapshot' => $snapshot,
             ];
         }
-        return $loaded;
+        return [$loaded, $ambiguous];
+    }
+
+    /** @param list<array<string,mixed>> $rows @param list<array<string,mixed>> $ambiguousProviders @return list<array<string,mixed>> */
+    private function applyProviderAmbiguity(array $rows, array $ambiguousProviders): array
+    {
+        if ($ambiguousProviders === []) { return $rows; }
+        $classic = [];
+        $zen = [];
+        foreach ($ambiguousProviders as $ambiguous) {
+            $name = (string)($ambiguous['package_name'] ?? '');
+            if ($name !== '') {
+                $classic[CatalogUnrealIdentityHash::nameKey($name)] = (array)$ambiguous['candidate_file_ids'];
+            }
+            $packageId = strtoupper((string)($ambiguous['package_id'] ?? ''));
+            if ($packageId !== '') {
+                $zen[$packageId] = (array)$ambiguous['candidate_file_ids'];
+            }
+        }
+        foreach ($rows as &$row) {
+            $candidateIds = null;
+            $requiredPackage = (array)($row['required_package_identity'] ?? []);
+            if (($requiredPackage['kind'] ?? null) === 'package_name') {
+                $candidateIds = $classic[CatalogUnrealIdentityHash::nameKey((string)($requiredPackage['value'] ?? ''))] ?? null;
+            }
+            $requiredPackageId = strtoupper((string)($row['required_package_id'] ?? ''));
+            if ($candidateIds === null && $requiredPackageId !== '') {
+                $candidateIds = $zen[$requiredPackageId] ?? null;
+            }
+            if (!is_array($candidateIds)) { continue; }
+            $row['outcome'] = 'unresolved';
+            $row['outcome_code'] = self::OUTCOME_CODES['unresolved'];
+            $row['selected_provider_file_id'] = null;
+            if (array_key_exists('selected_provider_package_identity', $row)) {
+                $row['selected_provider_package_identity'] = null;
+            }
+            if (array_key_exists('selected_provider_package_id', $row)) {
+                $row['selected_provider_package_id'] = null;
+            }
+            $row['selected_provider_object'] = null;
+            $row['reason_code'] = 'provider_environment_ambiguous';
+            $detail = (array)($row['resolver_detail'] ?? []);
+            $detail['status'] = 'unresolved';
+            $detail['reason'] = 'provider_environment_ambiguous';
+            $detail['candidate_file_ids'] = $candidateIds;
+            $row['resolver_detail'] = $detail;
+        }
+        unset($row);
+        return $rows;
     }
 
     /** @param array<string,mixed> $consumer @param list<array<string,mixed>> $providers */

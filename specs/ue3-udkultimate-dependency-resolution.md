@@ -89,7 +89,7 @@ The derived full or relative object path is not part of this candidate lookup. I
 
 ULinkerLoad::Verify iterates every ImportMap entry and calls VerifyImport independently. Once a top-level package import establishes SourceLinker, each descendant import independently succeeds or fails by receiving its own SourceIndex. One failed object import does not erase successful sibling imports from the same SourceLinker.
 
-UnrealDB can contain several physical files for one logical package name, unlike one concrete loader search result. It must still choose one physical provider/linker at a time and must never combine exports from different files. Prefer a provider that satisfies the complete import set when one exists; otherwise retain the single provider with the greatest number of source-valid per-import matches so successful imports are not converted to missing merely because a sibling import failed.
+The source operates on one concrete provider linker chosen by the package-loading environment before per-Import verification. UnrealDB must never combine exports from different files or choose among duplicate catalogue providers by import coverage. If the original provider-selection environment is unavailable and several physical candidates remain, the static result is unresolved provider-environment ambiguity. This UDKUltimate rule remains historical documentation until its named C++ source tree is restored under the current local source authority.
 
 ## Outer qualification
 

@@ -2,69 +2,71 @@
 
 ## Scope and authority
 
-This is a dependency-operation specification for UnrealDB. It complements the engine-specific package/dependency specs and must never override their exact revision behavior.
+This is a dependency-operation specification for UnrealDB. The applicable Epic/game source revision is authoritative. Catalogue convenience must not add, remove, reorder, or weaken semantic loader processing.
 
-Primary source families: UT99 retail v1.400 (`ardenee/UT99src`), Unreal II (`ardenee/unreal2src`), UE2.5 (`ardenee/UE2.5`), UT2003, UT2004, UE3 UDKUltimate (`ardenee/UE3src`), and UE4 4.27.2 (`ardenee/UnrealEngine4`).
+Authoritative review now uses the local source trees under `L:\Source\Engine` and `L:\Source\Games`. See `epic-source-conformance.md` for the profile-by-profile audit ledger.
 
-Core principle: resolve from serialized package/import/export identity first. Runtime/configuration behavior is documented separately and is not guessed.
+## Source invariant
+
+Epic selects or establishes **one package/linker/package-store provider first**, then verifies or resolves imports/exports inside that selected provider.
+
+UnrealDB must preserve that order:
+
+1. derive the required provider identity exactly as the applicable source revision does;
+2. identify the physical provider from source/runtime environment evidence when that evidence is available;
+3. only after a single provider is established, apply that revision's import/export verification rules to it;
+4. never inspect several same-identity physical providers and choose the one whose contents resolve more imports.
+
+The following are not source-backed provider-selection rules and are forbidden in authoritative dependency resolution:
+
+- greatest import/export coverage;
+- complete/superset coverage preference;
+- largest file;
+- newest upload;
+- most exports;
+- closest filename;
+- redirector count;
+- trying each provider until one works.
+
+Coverage analysis may remain a diagnostic/catalog-comparison tool, but it cannot decide authoritative dependency outcomes.
 
 ## Provider derivation
 
-Provider selection starts from the import's outer chain, not from filename extension or a global same-name search.
+For classic UE1/UE2/UE3 packages, the top-level package import establishes the source package/linker. Nested imports recursively resolve their parent and inherit that parent's `SourceLinker`. Exact revision-specific rules remain in the engine/game specifications.
 
-A top-level package import is the source-defined root case: its object name identifies the required package. A nested import recursively follows its outer import/package index until the top-level package resource is reached, then searches that package's linker/export map.
+UE4/UE5 classic can additionally use serialized/effective `FObjectImport::PackageName` where the source version permits it. That field selects a provider independently of an import-only outer walk when the source does so.
 
-The provider's catalog filename may differ from the logical package name. Selection must therefore use parsed package identity/name/profile rules rather than "first file whose basename looks similar".
+UE5 Zen/IoStore uses exact package-store identity. A PackageImport identifies `ImportedPackageIds[ImportedPackageIndex]`; object resolution then uses the corresponding public-export hash **inside that selected package**. `FPackageId + PublicExportHash` is an object lookup key, not permission to select a different physical file based on export coverage.
 
-## Multiple candidates
+## Multiple physical catalogue candidates
 
-When multiple catalog files can provide the same logical package, UnrealDB must not pick arbitrarily. Filter candidates by the applicable game/engine profile, valid package format/revision, package identity information available to that revision, and ability to satisfy the required export identity.
+A running Unreal installation has filesystem paths, mounts, already-loaded packages, package-store/container order, redirects and other runtime state that determine which physical provider is visible for a logical package identity. UnrealDB's aggregate catalogue can contain several historical or duplicated physical files while lacking that original runtime ordering.
 
-A provider that merely contains an object with the same leaf name is insufficient.
+When exactly one valid physical candidate exists for the source-derived provider identity, UnrealDB may use it and then run the source resolver.
 
-## UnrealDB catalog-level superset selection
+When more than one valid physical candidate exists and no retained source/runtime provenance uniquely establishes which provider Epic would have selected, UnrealDB must return **unresolved provider-environment ambiguity**. It must preserve the candidate file IDs as diagnostic evidence. Database ordering may be used for display only; it must not turn ambiguity into a semantic resolution.
 
-A running Unreal installation will normally encounter one physical package for a logical package name according to its configured package search path. UnrealDB intentionally retains multiple historical, trimmed, duplicated, or poorly named physical package files, so it needs one additional catalog-level selection stage that does not exist as such in the engine loader.
+When no candidate exists, the source-derived provider is unavailable in the catalogue. This remains distinct from the multiple-provider ambiguity above.
 
-That additional stage must not weaken or replace engine verification. The required order is:
+## Runtime/configuration boundary
 
-1. derive requirements only from the consumer's serialized ImportMap;
-2. evaluate each physical candidate independently using the selected target game's source-backed import-verification semantics;
-3. record only imports that the candidate genuinely satisfies under those semantics;
-4. compare the resulting verified coverage sets;
-5. prefer a single candidate whose verified coverage contains the complete required set when one exists.
-
-The coverage identity is therefore whatever the applicable engine revision accepts during import verification, not a path-string approximation. For UE1/UE2 this includes the source-defined object/class/package/outer/public rules and only documented revision-specific fallbacks. For UE3 it includes the corresponding `VerifyImportInner` identity and visibility checks. Later generations use their applicable source-backed resolver rules.
-
-A package is a useful common/superset provider when its **verified coverage set** is a superset of the union of known required imports. It does not need to contain the most total exports, have the largest file size, or be the newest file. Several incomplete physical providers must never be combined to pretend that one package satisfies the complete requirement set.
-
-Cross-game provider discovery follows the same rule: the source game only tells UnrealDB where another physical candidate can be found. Whether that candidate satisfies an import is decided by the **target game's** dependency semantics. `dependency-cross-examine.php` must therefore use the same target-game verification path as normal dependency rebuilding before presenting a candidate as a full match or allowing it to be queued.
-
-## Runtime loading
-
-Engine loaders can search configured paths, mounted packages, already-loaded packages and runtime package systems. UnrealDB does not possess that complete search environment. Catalog provider policy must remain explicit and separate from claims about what a running game would choose.
+UnrealDB cannot reconstruct runtime state that was never retained. That limitation is a documented difference, not a license to substitute heuristics. The correct static outcome is unresolved when the missing runtime/environment state can change the result.
 
 ## Source-reference matrix
 
-| Concern | Authoritative symbols/files |
+| Profile | Source-confirmed provider step |
 |---|---|
-| UE1 retail import/export identity and verification | UT99 retail `Core/Src/UnLinker.h`: `FObjectImport`, `FObjectExport`, `GetImportFullName`, `GetExportFullName`, `ULinkerLoad::VerifyImport`, `FindExportIndex` |
-| UE3 package-index/resource and verification model | UE3 `Core/Inc/UnLinker.h`, `Core/Src/UnLinker.cpp`: `FObjectResource`, `FObjectImport`, `FObjectExport`, `VerifyImport`, `VerifyImportInner`, path/class helpers |
-| UE4 package-index/import/export model | UE4 `CoreUObject/Public/UObject/ObjectResource.h`, `LinkerLoad.h`, `Private/UObject/LinkerLoad.cpp`: `FPackageIndex`, `FObjectImport`, `FObjectExport`, `VerifyImport`, `FindExportIndex`, `BuildPathName` |
+| Unreal UE1 (available full v1.200 implementation) | `Core/Src/UnLinker.h::ULinkerLoad::VerifyImport` calls one `GetPackageLinker`; `Core/Src/UnObj.cpp` resolves it with `appFindPackageFile`. The supplied v1.227 subtree exposes the API but not the implementation body, so later Unreal-specific deltas remain separately auditable. |
+| UT99 v1.400 | `Core/Src/UnLinker.h::ULinkerLoad::VerifyImport` establishes one package linker; nested imports inherit the parent's linker. |
+| Unreal II / UE2 | `Core/Src/UnLinker.cpp::ULinkerLoad::VerifyImport` establishes one `GetPackageLinker` result; nested imports inherit it. |
+| UT2003 v2107 | Same source sequence in its own `Core/Src/UnLinker.cpp`; runtime file lookup remains `appFindPackageFile`. |
+| UT2004 v3369 / UE2.5 | Same one-linker sequence in its own `Core/Src/UnLinker.cpp`; `GetPackageLinker`/`appFindPackageFile` include that revision's generation/file lookup state. |
+| UT3 January 2008 / UE3 | `Core/Src/UnLinker.cpp::VerifyImportInner` obtains one package linker for a root package and descendants inherit it. |
+| UDKUltimate / later UE3 | Older spec names a UDKUltimate C++ tree, but the current local `L:\Source\Engine\UDK` contains a game sample rather than that linker source. This profile is **not re-verified from the current local authority** and must not be used to justify new behavior until the source tree is restored. |
+| UE4 4.27.2 / UT4 | `CoreUObject/Private/UObject/LinkerLoad.cpp::FLinkerLoad::VerifyImportInner` selects/loads one provider package/linker before export verification. |
+| UE5 5.8.3 classic | `CoreUObject/Private/UObject/LinkerLoad.cpp::FLinkerLoad::VerifyImportInner` follows the same one-provider-first sequence, with UE5-specific PackageName/runtime rules. |
+| UE5 5.8.3 Zen/IoStore | `AsyncLoading2.cpp` resolves PackageImports through ordered `ImportedPackageIds` and the global import/package store; the loader maintains a 1:1 PackageId-to-package relationship before public-export-hash lookup. |
 
 ## UnrealDB conformance
 
-Apply this operation only after the exact package reader has validated indices and tables. Preserve enough structured evidence to explain why a dependency resolved or failed; do not reduce resolution to a filename/name-only boolean.
-
-## Later-generation verification changes
-
-| Revision | Provider-selection change |
-|---|---|
-| Unreal II | Root package import still selects provider by package name; `VerifyImport` passes no compatible GUID. Filesystem `appFindPackageFile` policy is runtime state. |
-| UE2.5 | Same basic top-level package-import provider model. |
-| UT2003 | Same model, with runtime package-remap behavior existing outside import verification. |
-| UT2004 | Same serialized root-provider model; no active fuzzy/remap provider selection in the reviewed resolver. |
-| UE3 | Provider selection is affected by cooked/seek-free and remapped-package behavior; import fixups can alter runtime resolution. |
-| UE4 4.27.2 | Imports may carry/use explicit provider package information and external-package semantics; mounts, script packages, CoreRedirects and instancing can alter runtime selection. |
-
-Catalog selection should preserve the serialized provider first, then annotate any reproducible revision-specific transformation.
+Authoritative dependency resolution must never merge providers or use their contents to select among duplicates. Any unavoidable environment difference must be listed in `epic-source-conformance.md` with its source behavior, UnrealDB behavior, missing/extra processing status, and reason.
