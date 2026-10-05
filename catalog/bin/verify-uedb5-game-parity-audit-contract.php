@@ -42,6 +42,28 @@ $badRule=Uedb5GameParityExpectedDifferences::classify('ut3','dependency_outcome'
 ]);
 $record('ut3_difference_requires_source_evidence',$badRule===null);
 
+$noneRule=Uedb5GameParityExpectedDifferences::classify('ut99','dependency_outcome',['outcome'=>'missing'],[
+    'outcome'=>'unresolved','reason_code'=>'package_root_unavailable','source_policy'=>'ue1-ut99-supplemental-v430',
+    'required_object'=>'None','class_package'=>'None','class_name'=>'None',
+]);
+$record('classic_none_import_is_source_proven_expected_difference',
+    is_array($noneRule)&&($noneRule['id']??'')==='classic_none_import_source_irrelevant');
+$ue2NoneRule=Uedb5GameParityExpectedDifferences::classify('ut2004','dependency_outcome',['outcome'=>'missing'],[
+    'outcome'=>'unresolved','reason_code'=>'package_root_unavailable','source_policy'=>'ue2-ut2004-v3369-package-v128',
+    'required_object'=>'None','class_package'=>'Core','class_name'=>'Class',
+]);
+$record('ue2_none_import_uses_same_verifyimport_rule',
+    is_array($ue2NoneRule)&&($ue2NoneRule['id']??'')==='classic_none_import_source_irrelevant');
+$nonNoneRule=Uedb5GameParityExpectedDifferences::classify('ut99','dependency_outcome',['outcome'=>'missing'],[
+    'outcome'=>'unresolved','reason_code'=>'package_root_unavailable','source_policy'=>'ue1-ut99-supplemental-v430',
+    'required_object'=>'SomeObject','class_package'=>'Core','class_name'=>'Class',
+]);
+$record('classic_package_root_unavailable_requires_none_identity',$nonNoneRule===null);
+$record('relations_classify_source_proven_package_identity_differences',
+    str_contains($service,'expected_required_package_identity_difference_count')
+    &&str_contains($service,'requiredPackageKeyMismatches(string $slug,int $gameId)')
+    &&str_contains($service,"\$slug,'dependency_outcome'"));
+
 $caseRule=Uedb5GameParityExpectedDifferences::classify('ut2003','search_case_normalization',[
     'scope'=>'names','query'=>'Skin','authoritative_name'=>'skin',
 ],['scope'=>'names','normalized_authoritative_match'=>true]);

@@ -84,7 +84,9 @@ V4 missing -> V5 unresolved
 
 This is accepted only for UT3 when the V5 dependency result contains UE3 source-policy/resolver evidence showing that runtime/cooked state prevents a proven missing decision. A bare outcome change without that evidence remains a regression.
 
-The same allow-list is applied wherever that correction affects aggregate behaviour, including base-game missing totals and duplicate-provider cases. New source fixes must add a similarly narrow rule; there is no generic "V5 wins" exemption.
+`classic_none_import_source_irrelevant` covers a separate UE1/UE2 source rule. Both UT99 `ULinkerLoad::VerifyImport()` and UE2/2.5 `ULinkerLoad::VerifyImport()` return immediately when `ClassPackage`, `ClassName`, or `ObjectName` is `NAME_None`, describing that import as not relevant in the current context. Therefore a V4 `missing` result may be treated as an expected V5 `unresolved` result only when the authoritative V5 dependency row is under a UE1/UE2 source policy, has `package_root_unavailable`, and preserves an actual `None` class-package, class-name, or object-name identity. Ordinary package-root failures remain parity errors. The same source-backed exception applies to the otherwise-required V5 package identity key for that import.
+
+The same allow-list is applied wherever that correction affects aggregate behaviour, including base-game missing totals, required-package identity checks, and duplicate-provider cases. New source fixes must add a similarly narrow rule; there is no generic "V5 wins" exemption.
 
 ## Provider aliases
 

@@ -79,7 +79,7 @@ final class Uedb5GameParityAuditService
         $maxDetails=max(1,min(5000,$maxDetails));
         $categories=[];
         $categories['dependencies']=$this->auditDependencies($slug,$gameId,$maxDetails);
-        $categories['requires_required_by']=$this->auditRelations($gameId,$maxDetails,$relationSamples);
+        $categories['requires_required_by']=$this->auditRelations($slug,$gameId,$maxDetails,$relationSamples);
         $categories['base_game_missing']=$this->auditBaseGameMissing($slug,$gameId,$maxDetails);
         $categories['package_aliases']=$this->auditAliases($gameId,$maxDetails);
         $categories['invalid_file_exclusions']=$this->auditInvalidExclusions($gameId,$maxDetails);
@@ -197,7 +197,7 @@ final class Uedb5GameParityAuditService
         return match($code){1=>'resolved',2=>'package_only',3=>'common',4=>'unresolved',default=>'missing'};
     }
     /** @return array<string,mixed> */
-    private function auditRelations(int $gameId,int $maxDetails,int $relationSamples):array
+    private function auditRelations(string $slug,int $gameId,int $maxDetails,int $relationSamples):array
     {
         $v4Pairs=$this->count(
             'SELECT COUNT(*) FROM (SELECT DISTINCT l.file_id,l.resolved_file_id FROM ue_dependency_links l '
@@ -246,29 +246,42 @@ final class Uedb5GameParityAuditService
             );
             array_push($details,...$rows);
         }
-        $packageIdentityMismatch=$this->requiredPackageKeyMismatchCount($gameId);
+        $packageIdentity=$this->requiredPackageKeyMismatches($slug,$gameId);
         return [
-            'ok'=>$missingV5===0&&$missingV4===0&&$packageIdentityMismatch===0,
+            'ok'=>$missingV5===0&&$missingV4===0&&$packageIdentity['unexpected']===0,
             'v4_requires_pairs'=>$v4Pairs,'v5_requires_pairs'=>$v5Pairs,
             'missing_in_v5'=>$missingV5,'missing_in_v4'=>$missingV4,
-            'required_package_identity_mismatch_count'=>$packageIdentityMismatch,
+            'required_package_identity_mismatch_count'=>$packageIdentity['unexpected'],
+            'expected_required_package_identity_difference_count'=>$packageIdentity['expected'],
             'note'=>'Required By is the inverse of the same normalized source->target relationship graph; package/alias fallback identity is checked separately.',
             'details'=>$details,
         ];
     }
 
-    private function requiredPackageKeyMismatchCount(int $gameId):int
+    /** @return array{unexpected:int,expected:int} */
+    private function requiredPackageKeyMismatches(string $slug,int $gameId):array
     {
-        return $this->count(
-            'SELECT COUNT(*) FROM ue_dependency_links l JOIN ue_files f ON f.id=l.file_id '
+        $sql='SELECT l.file_id,l.import_index,l.status FROM ue_dependency_links l JOIN ue_files f ON f.id=l.file_id '
             .'JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=4 '
             .'JOIN ue_terms t ON t.id=l.required_package_term_id '
             .'JOIN ue_uedb5_dependency_edges e ON e.file_id=l.file_id AND e.source_kind=1 AND e.source_index=l.import_index '
             .'WHERE f.game_id=? AND f.scan_status="verified" AND ('
             .'e.required_package_key_kind IS NULL OR e.required_package_key IS NULL '
             .'OR e.required_package_key_kind<>1 '
-            .'OR e.required_package_key<>UNHEX(MD5(LOWER(TRIM(CONVERT(t.value_prefix USING utf8mb4))))))',[$gameId]
-        );
+            .'OR e.required_package_key<>UNHEX(MD5(LOWER(TRIM(CONVERT(t.value_prefix USING utf8mb4)))))) '
+            .'ORDER BY l.file_id,l.import_index';
+        $s=$this->db->prepare($sql);$s->execute([$gameId]);
+        $unexpected=0;$expected=0;$cache=[];
+        while(($row=$s->fetch(PDO::FETCH_ASSOC))!==false){
+            $fileId=(int)$row['file_id'];$index=(int)$row['import_index'];
+            $cache[$fileId]??=$this->v5->dependenciesByIndex($gameId,$fileId);
+            $v5=(array)($cache[$fileId][$index]??[]);
+            $rule=Uedb5GameParityExpectedDifferences::classify(
+                $slug,'dependency_outcome',['outcome'=>$this->outcomeLabel((int)$row['status'])],$v5
+            );
+            if($rule===null)$unexpected++;else$expected++;
+        }
+        return ['unexpected'=>$unexpected,'expected'=>$expected];
     }
     /** @return array<string,mixed> */
     private function auditBaseGameMissing(string $slug,int $gameId,int $maxDetails):array
@@ -531,7 +544,6 @@ final class Uedb5GameParityAuditService
     /** @return array<string,int> */
     private function expectedMissingToUnresolvedByPackage(string $slug,int $gameId):array
     {
-        if($slug!=='ut3')return[];
         $sql='SELECT l.file_id,l.import_index,CONVERT(t.value_prefix USING utf8mb4) required_package '
             .'FROM ue_dependency_links l JOIN ue_files f ON f.id=l.file_id '
             .'JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=4 '

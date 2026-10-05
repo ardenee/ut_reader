@@ -20,6 +20,15 @@ final class Uedb5GameParityExpectedDifferences
                 'reason'=>'UE3 source-dependent runtime/cooked state may be unresolved rather than proven missing.',
             ],
             [
+                'id'=>'classic_none_import_source_irrelevant',
+                'game'=>'*',
+                'category'=>'dependency_outcome',
+                'v4_outcome'=>'missing',
+                'v5_outcome'=>'unresolved',
+                'requires_v5_source_evidence'=>true,
+                'reason'=>'UE1/UE2 VerifyImport ignores imports whose class package, class name, or object name is NAME_None; V4 may have over-reported those rows as missing.',
+            ],
+            [
                 'id'=>'normalized_fname_search_case',
                 'game'=>'*',
                 'category'=>'search_case_normalization',
@@ -56,14 +65,30 @@ final class Uedb5GameParityExpectedDifferences
             if ($scope !== (string)($v5['scope'] ?? '') || !in_array($scope, ['names','exports','imports'], true)) { return null; }
             if (empty($v5['normalized_authoritative_match']) || $query === '' || $source === '' || $query === $source) { return null; }
             if (CatalogUnrealIdentityHash::nameKey($query) !== CatalogUnrealIdentityHash::nameKey($source)) { return null; }
-            $ruleIndex = match ($scope) { 'names' => 1, 'exports' => 2, 'imports' => 3, default => -1 };
+            $ruleIndex = match ($scope) { 'names' => 2, 'exports' => 3, 'imports' => 4, default => -1 };
             return self::rules()[$ruleIndex] ?? null;
         }
 
-        if ($gameSlug !== 'ut3' || $category !== 'dependency_outcome') { return null; }
-        if (($v4['outcome'] ?? '') !== 'missing' || ($v5['outcome'] ?? '') !== 'unresolved') { return null; }
+        if ($category !== 'dependency_outcome'
+            || ($v4['outcome'] ?? '') !== 'missing'
+            || ($v5['outcome'] ?? '') !== 'unresolved') {
+            return null;
+        }
+
         $reason = strtolower(trim((string)($v5['reason_code'] ?? '')));
         $policy = strtolower(trim((string)($v5['source_policy'] ?? '')));
+        if ((str_starts_with($policy, 'ue1-') || str_starts_with($policy, 'ue2-'))
+            && $reason === 'package_root_unavailable') {
+            $none = static fn(mixed $value): bool =>
+                CatalogUnrealIdentityHash::nameKey((string)$value) === CatalogUnrealIdentityHash::nameKey('None');
+            if ($none($v5['required_object'] ?? '')
+                || $none($v5['class_package'] ?? '')
+                || $none($v5['class_name'] ?? '')) {
+                return self::rules()[1];
+            }
+        }
+
+        if ($gameSlug !== 'ut3') { return null; }
         $detail = (array)($v5['resolver_detail'] ?? []);
         $source = strtolower(trim((string)($detail['source'] ?? $detail['resolution_source'] ?? '')));
         $confidence = strtolower(trim((string)($detail['confidence'] ?? $detail['resolution_confidence'] ?? '')));
