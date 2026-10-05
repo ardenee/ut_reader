@@ -18,13 +18,14 @@ $check=static function(string $name,bool $ok)use(&$checks,&$failures):void{
 $check('pass2_has_exact_payload_checkpoint',
     str_contains($migration,'dependency_payload_sha256 BINARY(32)')
     && str_contains($migration,'dependency_policy VARCHAR(64)'));
-$check('pass2_source_identity_semantics_use_v3_policy',
-    str_contains($service,"public const DEPENDENCY_POLICY = 'uedb5-dependency-pass-v3'"));
+$check('pass2_source_identity_semantics_use_v4_policy',
+    str_contains($service,"public const DEPENDENCY_POLICY = 'uedb5-dependency-pass-v4'"));
 $check('source_identity_policy_transition_is_targeted',
-    str_contains($transition,"const OLD_POLICIES=['uedb5-dependency-pass-v1','uedb5-dependency-pass-v2']")
+    str_contains($transition,"const OLD_POLICIES=['uedb5-dependency-pass-v1','uedb5-dependency-pass-v2','uedb5-dependency-pass-v3']")
     && str_contains($transition,'PdoClassicSourceIdentityImpactQuery')
     && str_contains($transition,'currentOldPolicyFiles')
     && str_contains($transition,"'rebuild-impacted'")
+    && str_contains($transition,"'rebuild-v4-impacted'")
     && str_contains($impact,'dependency_payload_sha256=v.payload_sha256'));
 $check('pass2_selects_physical_v5_providers',str_contains($service,'PdoUedb5PhysicalProviderSelector'));
 $check('pass2_reports_ambiguous_provider_environment',

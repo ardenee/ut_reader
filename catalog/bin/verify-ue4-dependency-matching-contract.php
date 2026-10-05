@@ -29,6 +29,19 @@ $scriptSnapshot = CatalogCompactIdentityEnricher::enrich([
 ], 'UE4');
 $check((int)$scriptSnapshot['imports'][0]['is_common'] === 1, 'ue4_script_package_is_common');
 
+$paddedScriptSnapshot = CatalogCompactIdentityEnricher::enrich([
+    'file' => ['id'=>2,'game_id'=>7,'package_name'=>'/Game/Test','original_name'=>'Test.uasset'],
+    'names'=>[],
+    'imports'=>[[
+        'import_index'=>0,'class_package'=>'/Script/CoreUObject','class_name'=>'Class','object_name'=>'Material',
+        'outer_index'=>-2,'full_path'=>' /Script/Engine.Material','root_package'=>' /Script/Engine',
+        'relative_object_path'=>'Material','is_common'=>0,
+    ]],
+    'exports'=>[],'dependencies'=>[],
+    'paths'=>['imports'=>[0=>['full'=>' /Script/Engine.Material','root'=>' /Script/Engine','relative'=>'Material']],'exports'=>[]],
+], 'UE4');
+$check((int)$paddedScriptSnapshot['imports'][0]['is_common'] === 0, 'ue4_padded_script_package_is_not_normalized_to_script');
+
 $consumer = [
     ['import_index'=>0,'class_package'=>'/Script/CoreUObject','class_name'=>'Package','object_name'=>'/Game/TestPkg','outer_index'=>0,'root_package'=>'/Game/TestPkg','relative_object_path'=>''],
     ['import_index'=>1,'class_package'=>'/Script/CoreUObject','class_name'=>'Class','object_name'=>'Material','outer_index'=>-1,'root_package'=>'/Game/TestPkg','relative_object_path'=>'Material'],
@@ -38,6 +51,15 @@ $publicRootExport = [[
 ]];
 $matches = PdoUe4VerifyImportProjectionResolver::resolveInMemory($consumer, [], $publicRootExport, '/Game/TestPkg');
 $check(($matches[1] ?? null) === 0, 'ue4_exact_public_root_match');
+
+$whitespaceConsumer = $consumer;
+$whitespaceConsumer[1]['object_name'] = ' Material ';
+$whitespaceMiss = PdoUe4VerifyImportProjectionResolver::resolveInMemory($whitespaceConsumer, [], $publicRootExport, '/Game/TestPkg');
+$check(!isset($whitespaceMiss[1]), 'ue4_fname_whitespace_is_identity_not_trimmed');
+$whitespaceProvider = $publicRootExport;
+$whitespaceProvider[0]['object_name'] = ' Material ';
+$whitespaceHit = PdoUe4VerifyImportProjectionResolver::resolveInMemory($whitespaceConsumer, [], $whitespaceProvider, '/Game/TestPkg');
+$check(($whitespaceHit[1] ?? null) === 0, 'ue4_exact_whitespace_fname_matches_exact_provider');
 
 $wrongOuter = $publicRootExport;
 $wrongOuter[0]['outer_index'] = 1;

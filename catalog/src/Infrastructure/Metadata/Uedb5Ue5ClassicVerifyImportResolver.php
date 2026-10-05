@@ -16,6 +16,7 @@ final class Uedb5Ue5ClassicVerifyImportResolver
     private const RF_PUBLIC = 0x00000001;
     private const CORE_UOBJECT_PACKAGE = '/Script/CoreUObject';
     private const OBJECT_REDIRECTOR = 'ObjectRedirector';
+    private const UE5_ADD_SOFTOBJECTPATH_LIST = 1008;
 
     /**
      * Resolve against one already-selected physical provider linker per package.
@@ -28,12 +29,13 @@ final class Uedb5Ue5ClassicVerifyImportResolver
     {
         self::assertClassicSnapshot($consumerSnapshot, 'consumer');
         $consumer = self::tables($consumerSnapshot);
+        $relocationContext = self::relocationContext($consumerSnapshot);
         $providers = [];
         foreach ($selectedProviders as $provider) {
             if (!is_array($provider)) {
                 throw new RuntimeException('UE5 classic provider selection contains a non-row value.');
             }
-            $packageName = trim((string)($provider['package_name'] ?? ''));
+            $packageName = (string)($provider['package_name'] ?? '');
             $snapshot = $provider['snapshot'] ?? null;
             if ($packageName === '' || !is_array($snapshot)) {
                 throw new RuntimeException('UE5 classic provider selection requires package_name and snapshot.');
@@ -53,7 +55,7 @@ final class Uedb5Ue5ClassicVerifyImportResolver
         $resolved = [];
         $visiting = [];
         foreach (array_keys($consumer['imports']) as $importIndex) {
-            self::resolveImport((int)$importIndex, $consumer, $providers, $resolved, $visiting);
+            self::resolveImport((int)$importIndex, $consumer, $providers, $resolved, $visiting, $relocationContext);
         }
         ksort($resolved, SORT_NUMERIC);
         return $resolved;
@@ -70,7 +72,8 @@ final class Uedb5Ue5ClassicVerifyImportResolver
         array $consumer,
         array $providers,
         array &$resolved,
-        array &$visiting
+        array &$visiting,
+        ?array $relocationContext
     ): array {
         if (isset($resolved[$importIndex])) {
             return $resolved[$importIndex];
@@ -94,6 +97,18 @@ final class Uedb5Ue5ClassicVerifyImportResolver
 
         $outerIndex = (int)($import['outer_index'] ?? 0);
         $explicitPackage = self::effectivePackageName($import);
+        if ($outerIndex === 0 && $relocationContext !== null) {
+            $relocated = self::relocatePackageName($relocationContext, $objectName);
+            if ($relocated !== null && $relocated !== $objectName) {
+                unset($visiting[$importIndex]);
+                return $resolved[$importIndex] = self::terminal(
+                    'runtime_only',
+                    'Package.Relocation runtime CVar may rewrite top-level import provider identity',
+                    $objectName,
+                    ['relocated_provider_package_if_enabled' => $relocated]
+                );
+            }
+        }
         if ($outerIndex === 0 && self::key($className) !== self::key('Package')) {
             unset($visiting[$importIndex]);
             return $resolved[$importIndex] = self::terminal('invalid', 'non-package import has null outer');
@@ -106,7 +121,8 @@ final class Uedb5Ue5ClassicVerifyImportResolver
                 $consumer,
                 $providers,
                 $resolved,
-                $visiting
+                $visiting,
+                $relocationContext
             );
         } elseif ($outerIndex > 0 && $explicitPackage === '') {
             unset($visiting[$importIndex]);
@@ -240,7 +256,7 @@ final class Uedb5Ue5ClassicVerifyImportResolver
         if (!is_array($name) || !empty($name['is_none'])) {
             return '';
         }
-        return trim((string)($name['text'] ?? ''));
+        return (string)($name['text'] ?? '');
     }
     /**
      * ExportHash is built low-to-high and prepends entries, so candidates with
@@ -275,7 +291,7 @@ final class Uedb5Ue5ClassicVerifyImportResolver
         if ($classIndex > 0) {
             $classExport = $provider['exports'][$classIndex - 1] ?? null;
             return [
-                trim($providerPackageName),
+                $providerPackageName,
                 is_array($classExport) ? self::fnameText($classExport['object_name'] ?? null) : '',
             ];
         }
@@ -321,7 +337,7 @@ final class Uedb5Ue5ClassicVerifyImportResolver
         if (!is_array($outerImport) || !is_array($outerResolution)) {
             return ['matches' => false, 'deferred_outer_class_verification' => false];
         }
-        $outerProviderPackage = trim((string)($outerResolution['provider_package'] ?? ''));
+        $outerProviderPackage = (string)($outerResolution['provider_package'] ?? '');
         if ($outerProviderPackage === '') {
             return ['matches' => false, 'deferred_outer_class_verification' => false];
         }
@@ -495,6 +511,52 @@ final class Uedb5Ue5ClassicVerifyImportResolver
         }
         return null;
     }
+    /** @return array{current_path:string,original_path:string,original_mount:string}|null */
+    private static function relocationContext(array $snapshot): ?array
+    {
+        $summary = (array)(((array)($snapshot['sections']['summary'] ?? []))[0] ?? []);
+        $version = (int)($summary['effective_file_version']['ue5'] ?? $summary['serialized_file_version']['ue5'] ?? 0);
+        if ($version < self::UE5_ADD_SOFTOBJECTPATH_LIST) { return null; }
+        $currentPath = self::packagePath((string)($snapshot['file']['package_name'] ?? ''));
+        $originalPath = self::packagePath((string)($summary['package_name'] ?? ''));
+        if ($currentPath === '' || $originalPath === '' || $currentPath === $originalPath) { return null; }
+        $mount = self::packageMount($originalPath);
+        if ($mount === '' || str_starts_with($mount, '/Classes_')) { return null; }
+        return ['current_path'=>$currentPath,'original_path'=>$originalPath,'original_mount'=>$mount];
+    }
+
+    private static function packagePath(string $packageName): string
+    {
+        $slash = strrpos($packageName, '/');
+        return $slash === false || $slash === 0 ? '' : substr($packageName, 0, $slash);
+    }
+
+    private static function packageMount(string $packagePath): string
+    {
+        if ($packagePath === '' || $packagePath[0] !== '/') { return ''; }
+        $next = strpos($packagePath, '/', 1);
+        if ($next === false) { return $packagePath . '/'; }
+        return substr($packagePath, 0, $next + 1);
+    }
+
+    /** Returns null when TryRelocateReference would not touch this package name. */
+    private static function relocatePackageName(array $context, string $packageName): ?string
+    {
+        $mount = (string)$context['original_mount'];
+        if (!str_starts_with($packageName, $mount)) { return null; }
+        $split = static fn(string $path): array => array_values(array_filter(explode('/', $path), static fn(string $v): bool => $v !== ''));
+        $target = $split(substr($packageName, strlen($mount)));
+        $original = $split(substr((string)$context['original_path'], strlen($mount)));
+        $identical = 0;
+        while ($identical < count($target) && $identical < count($original) && $target[$identical] === $original[$identical]) { $identical++; }
+        $folderUp = count($original) - $identical;
+        $append = array_slice($target, $identical);
+        $current = $split((string)$context['current_path']);
+        if (count($current) <= $folderUp) { return ''; }
+        $parts = array_merge(array_slice($current, 0, count($current) - $folderUp), $append);
+        return '/' . implode('/', $parts);
+    }
+
     private static function sameProvider(array $outerResolution, array $provider): bool
     {
         $outerId = $outerResolution['provider_id'] ?? null;
@@ -526,12 +588,12 @@ final class Uedb5Ue5ClassicVerifyImportResolver
     /** @param mixed $value */
     private static function fnameText(mixed $value): string
     {
-        return is_array($value) ? trim((string)($value['text'] ?? '')) : '';
+        return is_array($value) ? (string)($value['text'] ?? '') : '';
     }
 
     private static function key(string $value): string
     {
-        return CatalogUnrealIdentityHash::nameKey($value);
+        return CatalogUnrealIdentityHash::fnameKey($value);
     }
 
     /** @return array<string,mixed> */
@@ -566,9 +628,9 @@ final class Uedb5Ue5ClassicVerifyImportResolver
     }
 
     /** @return array<string,mixed> */
-    private static function terminal(string $status, string $reason, string $providerPackage = ''): array
+    private static function terminal(string $status, string $reason, string $providerPackage = '', array $detail = []): array
     {
-        return [
+        return array_merge([
             'status' => $status,
             'provider_package' => $providerPackage,
             'provider_id' => null,
@@ -577,7 +639,7 @@ final class Uedb5Ue5ClassicVerifyImportResolver
             'deferred_class_verification' => false,
             'deferred_outer_class_verification' => false,
             'private_graph' => self::emptyPrivateGraph(),
-        ];
+        ], $detail);
     }
     /**
      * @param array{allowed:bool,import_in_export:bool,export_in_import:bool,shared_outermost:bool} $privateGraph

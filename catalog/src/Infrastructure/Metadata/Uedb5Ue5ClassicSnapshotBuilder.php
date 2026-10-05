@@ -38,7 +38,7 @@ final class Uedb5Ue5ClassicSnapshotBuilder
             throw new RuntimeException('UE5 classic UEDB5 persistence requires positive file and game IDs.');
         }
 
-        $packageName = trim((string)($file['package_name'] ?? ''));
+        $packageName = (string)($file['package_name'] ?? '');
         if ($packageName === '') {
             $packageName = (string)($header['packageName'] ?? '');
         }

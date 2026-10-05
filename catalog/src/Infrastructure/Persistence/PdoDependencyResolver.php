@@ -32,7 +32,7 @@ final class PdoDependencyResolver
         $legacyVerifyImport = $legacyPolicy !== null;
         $ue3VerifyImport = $engineKey === 'UE3';
         $ue4VerifyImport = $engineKey === 'UE4';
-        $sourceFnameLookup = $legacyVerifyImport || $ue3VerifyImport;
+        $sourceFnameLookup = $legacyVerifyImport || $ue3VerifyImport || $ue4VerifyImport;
 
         $importsByIndex = [];
         foreach ($imports as $fallback => $import) {
@@ -61,6 +61,26 @@ final class PdoDependencyResolver
                     $ue3SourceUnresolved[$index] = true;
                 }
             }
+        }
+
+        $ue4RootPackages = [];
+        if ($ue4VerifyImport) {
+            foreach (array_keys($importsByIndex) as $importIndex) {
+                $ue4RootPackages[(int)$importIndex] = self::ue4RootPackageName($importsByIndex, (int)$importIndex);
+            }
+        }
+
+        if ($ue4VerifyImport) {
+            foreach ($imports as $fallback => &$import) {
+                if (!is_array($import)) { continue; }
+                $index = isset($import['import_index']) ? (int)$import['import_index'] : (int)$fallback;
+                $rawRoot = (string)($ue4RootPackages[$index] ?? '');
+                if ($rawRoot !== '') {
+                    $import['root_package'] = $rawRoot;
+                    $import['is_common'] = strncasecmp($rawRoot, '/Script/', 8) === 0 ? 1 : 0;
+                }
+            }
+            unset($import);
         }
 
         $ue4MetadataUnresolved = [];
@@ -102,7 +122,9 @@ final class PdoDependencyResolver
                 ? (string)($ue3RootPackages[$importIndex] ?? '')
                 : ($legacyVerifyImport
                     ? (string)($legacyRootPackages[$importIndex] ?? '')
-                    : trim((string)($import['root_package'] ?? '')));
+                    : ($ue4VerifyImport
+                        ? self::ue4ProviderPackageName($ue4RootPackages, $import, $importIndex)
+                        : trim((string)($import['root_package'] ?? ''))));
             if ($rootPackage !== '') {
                 $key = self::lookupKey($rootPackage, $sourceFnameLookup);
                 if ($key !== '' && !isset($packageNames[$key])) {
@@ -111,7 +133,7 @@ final class PdoDependencyResolver
             }
             $relativeObjectPath = trim((string)($import['relative_object_path'] ?? ''));
             $fullPath = trim((string)($import['full_path'] ?? ''));
-            if (!$ue3VerifyImport && $rootPackage !== '' && $relativeObjectPath !== '' && $fullPath !== '') {
+            if (!$ue3VerifyImport && !$ue4VerifyImport && $rootPackage !== '' && $relativeObjectPath !== '' && $fullPath !== '') {
                 $key = self::normalizeLookup($fullPath);
                 if ($key !== '' && !isset($objectLookups[$key])) {
                     $objectLookups[$key] = [
@@ -170,6 +192,19 @@ final class PdoDependencyResolver
                 }
                 $importIndex = isset($import['import_index']) ? (int)$import['import_index'] : (int)$fallback;
                 $rootPackage = (string)($ue3RootPackages[$importIndex] ?? '');
+                $packageKey = self::sourceFnameLookup($rootPackage);
+                if ($packageKey !== '') {
+                    $packageRequirements[$packageKey]['package_name'] ??= $rootPackage;
+                }
+            }
+        } elseif ($ue4VerifyImport) {
+            foreach ($imports as $fallback => $import) {
+                if (!is_array($import) || self::isCommonImport($import, $engineKey)
+                    || !self::isSourceObjectImport($import, $engineKey)) {
+                    continue;
+                }
+                $importIndex = isset($import['import_index']) ? (int)$import['import_index'] : (int)$fallback;
+                $rootPackage = self::ue4ProviderPackageName($ue4RootPackages, $import, $importIndex);
                 $packageKey = self::sourceFnameLookup($rootPackage);
                 if ($packageKey !== '') {
                     $packageRequirements[$packageKey]['package_name'] ??= $rootPackage;
@@ -265,7 +300,9 @@ final class PdoDependencyResolver
                 ? (string)($ue3RootPackages[$importIndex] ?? '')
                 : ($legacyVerifyImport
                     ? (string)($legacyRootPackages[$importIndex] ?? '')
-                    : (string)($import['root_package'] ?? ''));
+                    : ($ue4VerifyImport
+                        ? self::ue4ProviderPackageName($ue4RootPackages, $import, $importIndex)
+                        : (string)($import['root_package'] ?? '')));
             $isObjectImport = self::isSourceObjectImport($import, $engineKey);
             $result = self::missing();
 
@@ -424,9 +461,12 @@ final class PdoDependencyResolver
             }
             $rootPackage = $engineKey === 'UE3'
                 ? (string)($ue3RootPackages[$importIndex] ?? '')
-                : (string)($import['root_package'] ?? '');
+                : ($engineKey === 'UE4'
+                    ? (($raw=self::ue4RootPackageName(self::indexRowsForRootLookup($imports), $importIndex)) !== ''
+                    ? $raw : (string)($import['root_package'] ?? ''))
+                    : (string)($import['root_package'] ?? ''));
             $isObjectImport = self::isSourceObjectImport($import, $engineKey);
-            $exactFname = in_array($engineKey, ['UE1', 'UE2', 'UE3'], true);
+            $exactFname = in_array($engineKey, ['UE1', 'UE2', 'UE3', 'UE4'], true);
             if (self::lookupKey($rootPackage, $exactFname) !== $packageKey || !$isObjectImport) {
                 continue;
             }
@@ -476,7 +516,7 @@ final class PdoDependencyResolver
 
     private static function isSourceObjectImport(array $import, string $engineKey): bool
     {
-        if (in_array($engineKey, ['UE1', 'UE2', 'UE3'], true)) {
+        if (in_array($engineKey, ['UE1', 'UE2', 'UE3', 'UE4'], true)) {
             return (int)($import['outer_index'] ?? 0) !== 0;
         }
         return trim((string)($import['relative_object_path'] ?? '')) !== '';
@@ -540,6 +580,44 @@ final class PdoDependencyResolver
         }
     }
 
+    /** Use source-shaped UE4 root when reconstructible; retain the legacy derived root only for mixed/export-outer V4 boundaries. */
+    private static function ue4ProviderPackageName(array $ue4RootPackages, array $import, int $importIndex): string
+    {
+        $raw = (string)($ue4RootPackages[$importIndex] ?? '');
+        return $raw !== '' ? $raw : (string)($import['root_package'] ?? '');
+    }
+
+    /** UE4 serialized OuterIndex package-root traversal when PackageName is unavailable in UEDB4. */
+    private static function ue4RootPackageName(array $importsByIndex, int $importIndex): string
+    {
+        $seen = [];
+        while (true) {
+            if (isset($seen[$importIndex])) { return ''; }
+            $seen[$importIndex] = true;
+            $import = $importsByIndex[$importIndex] ?? null;
+            if (!is_array($import)) { return ''; }
+            $outerIndex = (int)($import['outer_index'] ?? 0);
+            if ($outerIndex === 0) {
+                if (strcasecmp((string)($import['class_name'] ?? ''), 'Package') !== 0) { return ''; }
+                return (string)($import['object_name'] ?? '');
+            }
+            if ($outerIndex > 0) { return ''; }
+            $importIndex = -$outerIndex - 1;
+        }
+    }
+
+    /** @param list<array<string,mixed>> $imports @return array<int,array<string,mixed>> */
+    private static function indexRowsForRootLookup(array $imports): array
+    {
+        $rows=[];
+        foreach ($imports as $fallback=>$row) {
+            if (!is_array($row)) { continue; }
+            $index=isset($row['import_index'])?(int)$row['import_index']:(int)$fallback;
+            $rows[$index]=$row;
+        }
+        return $rows;
+    }
+
     /** @param array<int,array<string,mixed>> $importsByIndex */
     private static function ue3RootPackageName(array $importsByIndex, int $importIndex): string
     {
@@ -576,7 +654,7 @@ final class PdoDependencyResolver
             return true;
         }
         return $engineKey === 'UE4'
-            && strncasecmp(trim((string)($import['root_package'] ?? '')), '/Script/', 8) === 0;
+            && strncasecmp((string)($import['root_package'] ?? ''), '/Script/', 8) === 0;
     }
 
     private static function legacyVerifyImportPolicy(PDO $db, int $gameId): ?string

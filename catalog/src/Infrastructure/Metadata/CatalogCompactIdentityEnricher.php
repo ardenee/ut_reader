@@ -418,7 +418,7 @@ final class CatalogCompactIdentityEnricher
 
     private static function isUe4ScriptPackage(string $packageName): bool
     {
-        return strncasecmp(trim($packageName), '/Script/', 8) === 0;
+        return strncasecmp($packageName, '/Script/', 8) === 0;
     }
 
     /**

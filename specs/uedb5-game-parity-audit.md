@@ -10,7 +10,7 @@ A game is eligible for the parity audit only when all of these are true:
 
 - every verified game file still has live format-4 production registration;
 - every verified game file has a staged `ue_uedb5_files` registration;
-- every verified game file has a current completed Pass-2 dependency checkpoint whose `dependency_payload_sha256` matches the staged V5 payload under `uedb5-dependency-pass-v3`;
+- every verified game file has a current completed Pass-2 dependency checkpoint whose `dependency_payload_sha256` matches the staged V5 payload under `uedb5-dependency-pass-v4`;
 - every verified game file has its primary V5 provider key;
 - there are zero staged identities matching `ue_invalid_file_identities`.
 

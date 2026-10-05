@@ -352,7 +352,7 @@ The normative physical/logical SQL boundary is `uedb5-sql-projection-contract.md
 
 Suitable V5 projections are limited to one-row-per-file registration/package identity, provider keys, a distinct normalized search-key dictionary, deduplicated per-file FName candidates, narrow ObjectName/public-export-hash candidate rows, dependency edges, and dependency package summaries. Object-path candidates are a separate optional/off-by-default table that requires measured query justification.
 
-For classic provider/dependency package accelerators, key semantics are source-profile specific. UE1/UE2/UE3 use an exact-text, case-insensitive FName key with no trimming. UE4/UE5 classic retain the normalized package-name key until their Section-2B source audit is complete. These keys are SQL accelerators only; the source-shaped UEDB5 records remain authoritative.
+For classic LinkerLoad provider/dependency package accelerators, UE1/UE2/UE3/UE4/UE5 classic all use the exact-text, case-insensitive FName key (kind `3`) with no trimming. This follows the Section-2B1 source audit: modern classic `ObjectName`/`ClassName`/`ClassPackage`/`PackageName` identities are FNames too. UE5 Zen/IoStore does not use this key; its provider identity is `FPackageId`. These keys are SQL accelerators only; the source-shaped UEDB5 records remain authoritative.
 
 Full class/outer graphs, complete export records, object/package flags, serialization offsets/sizes, version-gated source fields, Zen bundle structures, resolver diagnostic payloads and other source detail stay in `.uedb5`.
 

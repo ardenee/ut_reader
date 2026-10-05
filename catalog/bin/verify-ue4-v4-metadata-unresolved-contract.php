@@ -51,6 +51,11 @@ $imports = [
         'object_name'=>'Stock','outer_index'=>0,'full_path'=>'Stock',
         'root_package'=>'Stock','relative_object_path'=>'','is_common'=>0,
     ],
+    [
+        'id'=>5,'import_index'=>4,'class_package'=>'/Script/CoreUObject','class_name'=>'Package',
+        'object_name'=>' /Script/Engine','outer_index'=>0,'full_path'=>'/Script/Engine',
+        'root_package'=>'/Script/Engine','relative_object_path'=>'','is_common'=>1,
+    ],
 ];
 
 $resolved520 = PdoDependencyResolver::resolve($db, 7, 99, $imports, null);
@@ -65,14 +70,15 @@ $checks['ue4_metadata_reason_is_explicit'] = ($resolved520[1]['source'] ?? '') =
 $checks['pre_520_export_outer_stops_at_unknown_provider_environment'] = ($resolved519[1]['status'] ?? '') === 'unresolved'
     && ($resolved519[1]['source'] ?? '') === 'provider_environment_ambiguous';
 $checks['ordinary_absent_package_stays_missing'] = ($resolved520[3]['status'] ?? '') === 'missing';
+$checks['padded_script_fname_does_not_trust_normalized_common_flag'] = ($resolved520[5]['status'] ?? '') === 'missing';
 $checks['duplicate_provider_environment_is_unresolved_not_guessed'] = ($resolved520[4]['status'] ?? '') === 'unresolved'
     && ($resolved520[4]['source'] ?? '') === 'provider_environment_ambiguous'
     && ($resolved520[4]['confidence'] ?? '') === 'source_unresolved'
     && ($resolved520[4]['candidate_file_ids'] ?? []) === [100,101];
 $method = new ReflectionMethod(PdoDependencyResolver::class, 'requiredImportIndexes');
 $required = $method->invoke(null, [
-    ['import_index'=>0,'root_package'=>'Stock','relative_object_path'=>'NeedsPackageName','is_common'=>0],
-    ['import_index'=>1,'root_package'=>'Stock','relative_object_path'=>'Deterministic','is_common'=>0],
+    ['import_index'=>0,'root_package'=>'Stock','relative_object_path'=>'NeedsPackageName','outer_index'=>-1,'is_common'=>0],
+    ['import_index'=>1,'root_package'=>'Stock','relative_object_path'=>'Deterministic','outer_index'=>-1,'is_common'=>0],
 ], 'k:stock', 'UE4', [], [0=>true]);
 $checks['metadata_unresolved_import_does_not_poison_provider_completeness'] = $required === [1];
 $checks['compact_code_remains_distinct'] = CompactDependencyEncoding::codes('unresolved') === [4,4,0];

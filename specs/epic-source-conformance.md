@@ -75,7 +75,7 @@ No reviewed source path tries every same-package physical file and chooses the f
 
 ### Section 2A — UE1/UE2/UE3 classic identity and load-time transformations
 
-**Status: complete and source-confirmed for the active UE1/UE2/UE3 profiles covered below.** UE4/UE5 remain explicitly outside this checkpoint and retain their pre-2A package-key normalization until Section 2B.
+**Status: complete and source-confirmed for the active UE1/UE2/UE3 profiles covered below.** This subsection records the 2A checkpoint; Section 2B1 below extends the same exact-FName conclusion to UE4/UE5 classic only after their own source audit.
 
 #### Local authority checked
 
@@ -100,19 +100,43 @@ The directory `L:\Source\Games\Unreal II\Unreal II The Awakening [01-07-2003]` w
 
 #### V5 projection and migration boundary
 
-UEDB5 now has a distinct SQL accelerator key kind for the source-exact classic FName package identity. It is used only when the staged import schema is UE1, UE2, or UE3. UE4/UE5 classic packages continue to use the existing normalized package-name key until Section 2B verifies their `PackageName` and redirect/instancing rules.
+At the 2A checkpoint, UEDB5 introduced package-key kind `3` for exact-text, case-insensitive classic FName identity and limited it to UE1/UE2/UE3 until modern classic source could be audited. That historical v3 boundary is superseded by 2B1 below.
 
-Pass 2 is therefore `uedb5-dependency-pass-v3`. `transition-uedb5-source-identity-policy.php` combines the prior v1->v2 duplicate-provider correction with the Section-2A exact-FName correction:
+`diagnose-classic-source-identity-impact.php` exposes the bounded proof read-only. It requires the UEDB5 staging/status schema in the database to which the checkout is connected.
 
-- the read-only impact proof starts from files that actually have a current v1/v2 dependency checkpoint; it does not scan the whole term dictionary or original package store;
-- v1 files are rebuilt when either provider ambiguity or a source-FName correction can change the result;
-- v2 files are rebuilt only for the new source-FName corrections because v2 already incorporated provider ambiguity;
-- unaffected files are rolled forward and UE1/UE2/UE3 package keys are regenerated from retained SQL text through the same PHP FName-key function used by normal publication;
-- impacted files use exact-file Pass-2 rebuilding from already-staged UEDB5 metadata; no original game-package reparse is required;
-- UE4/UE5 package-key behavior is deliberately unchanged by this transition.
+### Section 2B1 — UE4/UE5 classic PackageName and load-time identity transformations
 
-`diagnose-classic-source-identity-impact.php` exposes the same proof read-only. It requires the UEDB5 staging/status schema in the database to which the checkout is connected.
+**Status: complete and source-confirmed for UE4 4.27.2 and UE5 5.8.3 classic LinkerLoad packages.** Zen/IoStore remains Section 2B2 and is not changed by this checkpoint.
 
-### Section 2B — queued
+#### Local authority checked
 
-Audit UE4/UE5 `PackageName`, CoreRedirect/fixup and instancing boundaries, then UE5 Zen redirects/localization/package-store context. Do not extend the Section-2A UE1/UE2/UE3 FName package-key conclusion into UE4/UE5 without that source audit.
+- UE4 4.27.2: `L:\Source\Engine\UE4\UE 4.27.2`, branch `4.27.2-release`, commit `d94b38ae3446da52224bedd2568c078f828b4039`, primarily `Engine/Source/Runtime/CoreUObject/Private/UObject/LinkerLoad.cpp`, `Linker.cpp`, and `ObjectResource.*`.
+- UE5 5.8.3: `L:\Source\Engine\UE5\UE 5.8.3`, release commit `396c9f059903aed5fec78ecd3d437a40c6415368`, primarily `LinkerLoad.cpp`, `Linker.cpp`, `ObjectResource.*`, and `PackageRelocation.cpp`.
+
+#### Source results and corrections
+
+1. **UE4/UE5 classic FName identity is also exact text, not trimmed.** `ObjectName`, `ClassName`, `ClassPackage`, top-level package imports, explicit `FObjectImport::PackageName`, provider package identity, and class-package traversal are compared as FNames. UnrealDB no longer applies `trim()` on those source-semantic paths. Search/display normalization remains separate.
+2. **UE4 UEDB4 derives package roots from the raw serialized outer graph whenever that graph is reconstructible.** For version 520+ mixed/export-outer imports, UEDB4 discarded serialized `PackageName`; those cases remain explicitly metadata-unresolved instead of guessing. Pre-520 mixed/export-outer cases retain the existing provider-environment unresolved boundary.
+3. **UE4 script-package commonness is recomputed from the raw source root.** An old normalized `is_common` value cannot turn a whitespace-padded serialized FName into `/Script/...`.
+4. **UE5 classic retains explicit `PackageName` losslessly.** The UEDB5 resolver uses the serialized/effective package FName exactly and can establish a different source linker where UE4 UEDB4 cannot.
+5. **UE5 class mismatch remains deferred by source.** After ObjectName/redirector/outer/private checks succeed, 5.8.3 assigns `SourceIndex` and queues class verification for create time; UnrealDB must not tighten this into a static class rejection.
+6. **CoreRedirects and instancing are real transformations but require runtime/config context.** UE4 and UE5 execute `FixupImportMap()` before `PopulateInstancingContext()`. Active CoreRedirect data and linker instancing mappings are not intrinsic package bytes, so static UnrealDB must preserve the serialized identity and mark those branches runtime/config-dependent rather than fabricate remaps.
+7. **UE5 package relocation is separately source-bounded.** 5.8.3 runs `RelocateReferences()` after instancing-context population. `Package.Relocation=1` may rewrite same-mount top-level package imports for packages at `EUnrealEngineObjectUE5Version::ADD_SOFTOBJECTPATH_LIST` (1008) or newer when the loaded parent path differs from the serialized original parent path. `FPathViews::GetMountPointNameFromPath` excludes `/Classes_<Mount>/...` paths through `bHasClassesPrefix`. The static resolver reproduces those eligibility gates and reports an eligible rewrite runtime/config-dependent, including the provider name mode 1 would produce; pre-1008 and `Classes_`-prefixed packages are not put behind that boundary.
+8. **UE4 4.27.2 does not have the UE5 relocation stages.** Its audited linker sequence is `FixupImportMap()` -> `PopulateInstancingContext()` -> `FixupExportMap()`; the earlier package-format wording that listed `RelocateReferences`/`ApplyInstancingContext` for UE4 was incorrect and is corrected in this checkpoint.
+
+#### V5 projection and bounded migration boundary
+
+All classic LinkerLoad schemas—UE1, UE2, UE3, UE4, and UE5 classic—now use package-key kind `3`, generated through the shared PHP exact-FName key function. UE5 Zen/IoStore remains keyed by `FPackageId` and is explicitly excluded from this transition.
+
+Pass 2 is therefore `uedb5-dependency-pass-v4`. `transition-uedb5-source-identity-policy.php` accepts v1, v2, or v3 checkpoints and remains bounded:
+
+- impact discovery starts from the exact old-policy file IDs and their file-leading dependency/provider indexes; it does not scan the entire term dictionary or original package store;
+- v1 files still reconsider provider ambiguity plus source-identity changes; v2 files reconsider source-identity changes; v3 files rebuild only when a UE4/UE5-classic source-identity change can affect them;
+- for modern classic packages where UEDB4 discarded explicit `PackageName`, the impact proof conservatively uses retained NameMap evidence rather than assuming the old derived root preserved that FName;
+- unaffected classic rows are rolled forward and re-keyed from retained SQL text with the same PHP FName-key function used by normal publication;
+- impacted V5 files rebuild by exact file from already-staged UEDB5 metadata; no full-game reparse is required;
+- `--rebuild-v4-impacted` optionally refreshes only the exact live UE1/UE2/UE3/UE4 files whose source identity can change, then refreshes statistics for touched games.
+
+### Section 2B2 — queued
+
+Audit UE5 Zen/IoStore package-store redirects, localization and package identity. Do not infer Zen behavior from the classic LinkerLoad rules in 2B1.

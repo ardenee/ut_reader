@@ -107,6 +107,38 @@ $check(
     'A top-level package establishes SourceLinker and its child must match a root export in that linker.'
 );
 
+$whitespaceConsumer = $snapshot([$rootP, $import(1, ' Obj ', 'Texture2D', '/Script/Engine', -1)], []);
+$whitespaceMiss = Uedb5Ue5ClassicVerifyImportResolver::resolve(
+    $whitespaceConsumer, [$provider('/Game/P', $providerP, 70)]
+);
+$check(
+    'ue5_classic_fname_whitespace_is_identity_not_trimmed',
+    ($whitespaceMiss[1]['status'] ?? '') === 'missing',
+    'UE5 FName equality does not trim serialized ObjectName text.'
+);
+$whitespaceProviderP = $snapshot([$classTexture, $classPkg], [$export(0, ' Obj ', -1, 0)]);
+$whitespaceHit = Uedb5Ue5ClassicVerifyImportResolver::resolve(
+    $whitespaceConsumer, [$provider('/Game/P', $whitespaceProviderP, 71)]
+);
+$check(
+    'ue5_classic_exact_whitespace_fname_matches',
+    ($whitespaceHit[1]['status'] ?? '') === 'resolved',
+    'Exact whitespace-bearing FName identity remains matchable.'
+);
+$explicitWhitespacePackage = $snapshot([
+    $import(0, 'ExternalObj', 'Class', '/Script/CoreUObject', 1, ' /Game/B'),
+], [$export(0, 'LocalOuter')]);
+$explicitWhitespace = Uedb5Ue5ClassicVerifyImportResolver::resolve(
+    $explicitWhitespacePackage,
+    [$provider('/Game/B', $snapshot([], [$export(0, 'ExternalObj')]), 72)]
+);
+$check(
+    'ue5_classic_explicit_package_name_is_not_trimmed',
+    ($explicitWhitespace[0]['status'] ?? '') === 'missing'
+        && ($explicitWhitespace[0]['provider_package'] ?? '') === ' /Game/B',
+    'Explicit serialized PackageName is provider identity and is not normalized by trim.'
+);
+
 $classStaticMesh = $import(0, 'StaticMesh', 'Class', '/Script/CoreUObject', -2);
 $classMismatchProvider = $snapshot([$classStaticMesh, $classPkg], [$export(0, 'Obj', -1, 0)]);
 $classMismatch = Uedb5Ue5ClassicVerifyImportResolver::resolve(
@@ -301,6 +333,58 @@ $check(
     'script_package_absence_is_runtime_only',
     ($script[0]['status'] ?? '') === 'runtime_only',
     'Compiled/native script package lookup must not be fabricated as a missing serialized package.'
+);
+
+$relocationConsumer = $snapshot([
+    $import(0, '/Game/Old/Dependency', 'Package', '/Script/CoreUObject', 0),
+], []);
+$relocationConsumer['file'] = ['package_name'=>'/Game/New/Consumer'];
+$relocationConsumer['sections']['summary'] = [[
+    'package_name'=>'/Game/Old/Consumer',
+    'effective_file_version'=>['ue5'=>1008],
+    'serialized_file_version'=>['ue5'=>1008],
+]];
+$relocationProvider = $snapshot([], []);
+$relocation = Uedb5Ue5ClassicVerifyImportResolver::resolve(
+    $relocationConsumer,
+    [$provider('/Game/Old/Dependency', $relocationProvider, 80)]
+);
+$check(
+    'ue5_relocation_eligible_provider_identity_is_runtime_config_dependent',
+    ($relocation[0]['status'] ?? '') === 'runtime_only'
+        && ($relocation[0]['relocated_provider_package_if_enabled'] ?? '') === '/Game/New/Dependency',
+    'Package.Relocation=1 would rewrite this top-level import, while mode 0 would not; static catalog resolution must not choose one runtime CVar state.'
+);
+$preRelocation = $relocationConsumer;
+$preRelocation['sections']['summary'][0]['effective_file_version']['ue5'] = 1007;
+$preRelocation['sections']['summary'][0]['serialized_file_version']['ue5'] = 1007;
+$preRelocationResult = Uedb5Ue5ClassicVerifyImportResolver::resolve(
+    $preRelocation,
+    [$provider('/Game/Old/Dependency', $relocationProvider, 81)]
+);
+$check(
+    'ue5_pre_1008_package_does_not_apply_relocation_boundary',
+    ($preRelocationResult[0]['status'] ?? '') === 'package_only',
+    'UE5 relocation mode 1 only applies at ADD_SOFTOBJECTPATH_LIST (1008) or newer.'
+);
+
+$classesRelocationConsumer = $snapshot([
+    $import(0, '/Classes_A/Old/Dependency', 'Package', '/Script/CoreUObject', 0),
+], []);
+$classesRelocationConsumer['file'] = ['package_name'=>'/Classes_A/New/Consumer'];
+$classesRelocationConsumer['sections']['summary'] = [[
+    'package_name'=>'/Classes_A/Old/Consumer',
+    'effective_file_version'=>['ue5'=>1008],
+    'serialized_file_version'=>['ue5'=>1008],
+]];
+$classesRelocation = Uedb5Ue5ClassicVerifyImportResolver::resolve(
+    $classesRelocationConsumer,
+    [$provider('/Classes_A/Old/Dependency', $relocationProvider, 82)]
+);
+$check(
+    'ue5_classes_prefix_is_excluded_from_package_relocation',
+    ($classesRelocation[0]['status'] ?? '') === 'package_only',
+    'FPathViews::GetMountPointNameFromPath sets bHasClassesPrefix for /Classes_<Mount>/ paths, so ShouldApplyRelocation must return false.'
 );
 
 $dynamicConsumer = $snapshot(

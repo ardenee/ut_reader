@@ -168,7 +168,7 @@ final class Uedb5DependencyRebuilder
         $selected = [];
         foreach ($providers as $provider) {
             $selected[] = [
-                'package_name' => trim((string)$provider['package_name']),
+                'package_name' => (string)$provider['package_name'],
                 'provider_id' => (int)$provider['file_id'],
                 'snapshot' => (array)$provider['snapshot'],
             ];

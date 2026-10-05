@@ -56,6 +56,8 @@ final class Uedb5SqlProjectionContract
         return str_starts_with($schema, 'ue1.')
             || str_starts_with($schema, 'ue2.')
             || str_starts_with($schema, 'ue3.')
+            || str_starts_with($schema, 'ue4.')
+            || str_starts_with($schema, 'ue5.')
             ? self::PACKAGE_KEY_CLASSIC_FNAME
             : self::PACKAGE_KEY_CLASSIC_NAME;
     }

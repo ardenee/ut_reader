@@ -133,7 +133,7 @@ final class PdoUe4VerifyImportProjectionResolver
 
         $candidates = [];
         foreach ($providerExportsByIndex as $exportIndex => $export) {
-            $objectName = trim((string)($export['object_name'] ?? ''));
+            $objectName = (string)($export['object_name'] ?? '');
             if ($objectName === '') {
                 continue;
             }
@@ -188,9 +188,9 @@ final class PdoUe4VerifyImportProjectionResolver
             if (isset($matches[$importIndex])) {
                 continue;
             }
-            $objectName = trim((string)($import['object_name'] ?? ''));
-            $className = trim((string)($import['class_name'] ?? ''));
-            $classPackage = trim((string)($import['class_package'] ?? ''));
+            $objectName = (string)($import['object_name'] ?? '');
+            $className = (string)($import['class_name'] ?? '');
+            $classPackage = (string)($import['class_package'] ?? '');
             if ($objectName === '' || $className === '' || $classPackage === ''
                 || self::key($objectName) === self::key('ObjectRedirector')) {
                 continue;
@@ -288,7 +288,7 @@ final class PdoUe4VerifyImportProjectionResolver
             if (!is_array($classImport)) {
                 return ['', ''];
             }
-            $className = trim((string)($classImport['object_name'] ?? ''));
+            $className = (string)($classImport['object_name'] ?? '');
             $classOuter = (int)($classImport['outer_index'] ?? 0);
             if ($classOuter === 0) {
                 return ['', $className];
@@ -298,7 +298,7 @@ final class PdoUe4VerifyImportProjectionResolver
                 : ($providerExports[$classOuter - 1] ?? null);
             return [
                 is_array($classPackageResource)
-                    ? trim((string)($classPackageResource['object_name'] ?? ''))
+                    ? (string)($classPackageResource['object_name'] ?? '')
                     : '',
                 $className,
             ];
@@ -308,7 +308,7 @@ final class PdoUe4VerifyImportProjectionResolver
         if (!is_array($classExport)) {
             return ['', ''];
         }
-        return [trim($providerPackageName), trim((string)($classExport['object_name'] ?? ''))];
+        return [$providerPackageName, (string)($classExport['object_name'] ?? '')];
     }
 
 
@@ -467,9 +467,9 @@ final class PdoUe4VerifyImportProjectionResolver
         $visiting[$index] = true;
         $import = $imports[$index];
 
-        $objectName = trim((string)($import['object_name'] ?? ''));
-        $className = trim((string)($import['class_name'] ?? ''));
-        $classPackage = trim((string)($import['class_package'] ?? ''));
+        $objectName = (string)($import['object_name'] ?? '');
+        $className = (string)($import['class_name'] ?? '');
+        $classPackage = (string)($import['class_package'] ?? '');
         if ($objectName === '' || $className === '' || $classPackage === '') {
             unset($visiting[$index]);
             return $resolved[$index] = null;
@@ -637,7 +637,7 @@ final class PdoUe4VerifyImportProjectionResolver
 
         $providerRows = [];
         foreach ($providerExportsByIndex as $exportIndex => $export) {
-            $objectName = trim((string)($export['object_name'] ?? ''));
+            $objectName = (string)($export['object_name'] ?? '');
             if ($objectName === '') continue;
             [$classPackage, $className] = self::exportClassIdentity(
                 $export, $providerImportsByIndex, $providerExportsByIndex, $providerPackageName
@@ -669,9 +669,9 @@ final class PdoUe4VerifyImportProjectionResolver
                 ];
                 continue;
             }
-            $objectName = trim((string)($import['object_name'] ?? ''));
-            $className = trim((string)($import['class_name'] ?? ''));
-            $classPackage = trim((string)($import['class_package'] ?? ''));
+            $objectName = (string)($import['object_name'] ?? '');
+            $className = (string)($import['class_name'] ?? '');
+            $classPackage = (string)($import['class_package'] ?? '');
             if ($objectName === '' || $className === '' || $classPackage === '') {
                 $rejections[$importIndex] = $base + ['reason'=>'incomplete_import_identity'];
                 continue;
@@ -775,7 +775,7 @@ final class PdoUe4VerifyImportProjectionResolver
 
     private static function shortPackageName(string $packageName): string
     {
-        $packageName = trim($packageName);
+        $packageName = (string)$packageName;
         if ($packageName === '') {
             return '';
         }
@@ -801,6 +801,6 @@ final class PdoUe4VerifyImportProjectionResolver
 
     private static function key(string $value): string
     {
-        return CatalogUnrealIdentityHash::nameKey(trim($value));
+        return CatalogUnrealIdentityHash::fnameKey($value);
     }
 }
