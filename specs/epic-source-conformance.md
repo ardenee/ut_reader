@@ -644,5 +644,15 @@ At the correction point, staged UT4 policy inventory was:
 
 The legacy-policy inventory was rechecked directly: **40,053 / 40,053** are package version 214-511/licensee 0 (observed range 216-511), with no version/licensee outliers. The exact **24,077** unversioned population is entirely contained in the bad-v510 repair set, so no known unversioned row remains eligible for metadata-only refresh. A real 1,000-row refresh preflight returned 1,000 eligible, zero deferred, and zero blocked.
 
-No further writes should use the superseded v510 remediation model. After all 24,194 bad-policy rows are repaired to canonical v511, the remaining 40,053 legacy rows can be policy-refreshed and Pass 2 can proceed under the existing dependency transition.
+No further writes should use the superseded v510 remediation model.
+
+### UT4 Pass-2 source-unresolved classification correction
+
+The full UT4 Pass-2 run completed 64,242 / 64,247 rows and isolated exactly five failures (`1346094`, `1351496`, `1352968`, `1355125`, `1355877`) with `Unknown UEDB5 dependency class: source_unresolved`.
+
+This was not a package/source failure. `source_unresolved` is resolver provenance/confidence, not one of the eight canonical UEDB5 dependency classifications. The SQL/format contract requires unresolved runtime/source-context references to use `runtime_derived` classification while retaining the unresolved reason/provenance in `resolver_detail`.
+
+`Uedb5ClassicDependencyResolver` now normalizes UE4 `runtime_only`, `unresolved`, `invalid`, and `ignored` source outcomes to canonical `unresolved` + `runtime_derived`; non-runtime-only source states additionally retain `confidence=source_unresolved`.
+
+The focused resolver, SQL-projection, and UE4 dependency contracts pass, including a regression case for an invalid UE4 import. A real read-only rerun of all five previously failing UT4 files succeeded 5/5 before applying the correction. The 24,194 bad-policy rows have been repaired, the 40,053 legacy rows have been metadata-refreshed, and all 64,247 UT4 staged rows now carry the canonical v511 policy.
 **Next checkpoint: Section 4H - UE5 5.8.3 classic package serialization and pre-dependency preprocessing, audited independently from the UE5 source before revisiting Zen/IoStore.**

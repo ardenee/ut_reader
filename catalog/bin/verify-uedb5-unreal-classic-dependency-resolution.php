@@ -366,6 +366,18 @@ $ut4MissingObject = Uedb5ClassicDependencyResolver::resolve($ut4Consumer, [[
 $check(($ut4MissingObject[1]['status'] ?? null) === 'unresolved'
     && ($ut4MissingObject[1]['reason'] ?? null) === 'runtime_native_transient_findif_fail_or_missing_class_context',
     'ut4_file_backed_object_miss_is_runtime_unresolved');
+$ut4InvalidConsumer = $snapshot(
+    44009, 'ConsumerInvalid', 'ue4-classic-package', 'ue4.ut4', 'ue4-ut4-clean-master-v511-classic-package',
+    [$import(0, 'Provider', '/Script/CoreUObject', 'Package', 0), $import(1, 'Obj', '', 'Class', -1)], []
+);
+$ut4Invalid = Uedb5ClassicDependencyResolver::resolve($ut4InvalidConsumer, [[
+    'package_name'=>'Provider','provider_id'=>44002,'snapshot'=>$ut4Provider,
+]]);
+$check(($ut4Invalid[1]['status'] ?? null) === 'unresolved'
+    && ($ut4Invalid[1]['reason'] ?? null) === 'incomplete_import_identity'
+    && ($ut4Invalid[1]['dependency_class'] ?? null) === 'runtime_derived'
+    && ($ut4Invalid[1]['confidence'] ?? null) === 'source_unresolved',
+    'ut4_source_unresolved_evidence_uses_runtime_derived_classification');
 $ut4PrivateProvider = $snapshot(
     44005, 'Provider', 'ue4-classic-package', 'ue4.ut4', 'ue4-ut4-clean-master-v511-classic-package',
     [], [$export(0, 'Obj', '00000000')]

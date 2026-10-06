@@ -363,9 +363,13 @@ final class Uedb5ClassicDependencyResolver
                     continue;
                 }
                 if (in_array($ue4Status, ['runtime_only','unresolved','invalid','ignored'], true)) {
+                    $detail = self::ue1Detail($ue4);
+                    if ($ue4Status !== 'runtime_only') {
+                        $detail['confidence'] = 'source_unresolved';
+                    }
                     $resolved[(int)$importIndex] = self::result(
                         'unresolved', $root, null, null, $ue4Reason, $engine,
-                        $ue4Status === 'runtime_only' ? 'runtime_derived' : 'source_unresolved', self::ue1Detail($ue4)
+                        'runtime_derived', $detail
                     );
                     continue;
                 }
