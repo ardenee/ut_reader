@@ -256,10 +256,15 @@ foreach ($eligible as $id => $needs) {
 }
 
 $result['ok'] = $failed === [] && $blocked === [];
-$result['repaired'] = $repaired;
-$result['failed'] = $failed;
-$result['already_canonical_file_ids'] = $alreadyCanonical;
-$result['blocked'] = $blocked;
+$result['repaired_count'] = count($repaired);
+$result['failed_count'] = count($failed);
+$result['already_canonical_count'] = count($alreadyCanonical);
+if (!isset($options['summary'])) {
+    $result['repaired'] = $repaired;
+    $result['failed'] = $failed;
+    $result['already_canonical_file_ids'] = $alreadyCanonical;
+    $result['blocked'] = $blocked;
+}
 $result['resume_after_id'] = $lastScannedId;
 
 echo json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES), PHP_EOL;
