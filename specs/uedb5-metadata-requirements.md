@@ -14,7 +14,7 @@ Authoritative local source roots used for this specification:
 - UE3: `L:\Source\Engine\UE3`
 - UE4: `L:\Source\Engine\UE4`
 - UE5: `L:\Source\Engine\UE5`
-- UDK: `L:\Source\Engine\UDK`
+- UDK / later UE3: `L:\Source\Engine\UE3\Unreal Engine [v3.0] UDKUltimate [05-11-17]` and `L:\Source\Engine\UE3\Unreal Engine [v3.0] [07-22-2013]`
 - Unreal: `L:\Source\Games\Unreal`
 - Unreal II: `L:\Source\Games\Unreal II`
 - UT99: `L:\Source\Games\UT99`

@@ -29,7 +29,7 @@ Current conformance work must use the local source mirrors below. Historical Git
 | UE3 | `L:\Source\Engine\UE3` |
 | UE4 | `L:\Source\Engine\UE4` |
 | UE5 | `L:\Source\Engine\UE5` |
-| UDK | `L:\Source\Engine\UDK` — currently contains a game sample rather than the UDKUltimate linker C++ tree; affected claims must remain unresolved until the source is restored |
+| UDK / later UE3 | `L:\Source\Engine\UE3\Unreal Engine [v3.0] UDKUltimate [05-11-17]` (engine 8364) and `L:\Source\Engine\UE3\Unreal Engine [v3.0] [07-22-2013]` (engine 10897 / changelist 1532151). The audited 10897 Core files are byte-identical to `CodeRedModding/UnrealEngine3`. |
 | Unreal | `L:\Source\Games\Unreal` |
 | Unreal II | `L:\Source\Games\Unreal II` |
 | UT99 | `L:\Source\Games\UT99` |

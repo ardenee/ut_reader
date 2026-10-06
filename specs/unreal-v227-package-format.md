@@ -19,6 +19,8 @@ Historical Unreal-only source is used only where the latest public v227 tree doe
 - `Unreal [v1.224] [1999-05-01] [INCOMPLETE]` — package version 68/minimum 60, headers/libs only for the relevant Core implementation.
 - `Unreal [v1.200] [1998-05-19]` — complete Core source, package version 61/minimum 34.
 
+The complete sibling inventory was also searched for the missing implementation bodies: v0.82, v0.83, v0.84a, v0.86x, v0.867, v1.200, v1.224 incomplete, and v1.227. The v0.x trees contain older implementations, while v1.200 remains the newest sibling with the relevant complete Core implementation. Neither v1.224 nor v1.227 adds the missing current serializer/linker bodies.
+
 No rule in this document is filled from UT99.
 
 ## Source-availability boundary
