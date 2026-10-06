@@ -32,9 +32,23 @@ UT3 `FName` stores the internal number. `UnName.h` defines:
 
 Therefore a serialized internal number of `1` renders as suffix `_0`, not `_1`. UnrealDB must apply this when converting serialized FNames to text.
 
+## NameMap preprocessing before import-map fixups
+
+Before Imports are interpreted, January 2008 `SerializeNameMap()` maps each serialized FNameEntry through the linker's load context. UT3 uses 64-bit load bits:
+
+- `RF_LoadForClient = 0x0001000000000000`
+- `RF_LoadForServer = 0x0002000000000000`
+- `RF_LoadForEdit = 0x0004000000000000`
+
+The deterministic catalogue context is the source-backed all-context mask `0x0007000000000000`. A Name whose flags do not intersect that mask becomes `NAME_None` before ImportMap deserialization semantics and before `FixupImportMap`.
+
+The Jan-2008 FNameEntry runtime buffer is `NAME_SIZE = 128`; the loaded base name is capped at 127 characters. Serialized FName references then combine the effective base with the serialized internal Number. If the base became `NAME_None`, the Number is consumed but does not revive the name.
+
+Raw serialized Name text, flags, NameIndex and Number remain source evidence in UnrealDB; only the effective dependency identity receives these transformations. See `ut3-v512-package-format.md`.
+
 ## Import-map fixups before matching
 
-January 2008 `ULinkerLoad::FixupImportMap()` performs these fixed engine remaps before import verification:
+January 2008 `ULinkerLoad::FixupImportMap()` runs **after** effective NameMap construction and performs these fixed engine remaps before import verification:
 
 1. `Engine.SoundCueLocalized` class references become `SoundCue` where the source conditions match.
 2. Imports whose class is `Engine.SoundCueLocalized` use class name `SoundCue`.

@@ -26,6 +26,9 @@ final class Uedb5ClassicDependencyResolver
 
         $consumer = self::tables($consumerSnapshot);
         if ($engine === 'ue3') {
+            if (self::ut3NameMapApplies($consumerSnapshot)) {
+                $consumer = self::applyUt3AllContextNameMap($consumer);
+            }
             $consumer['imports'] = CatalogCompactIdentityEnricher::ue3FixupImportMap($consumer['imports']);
         }
 
@@ -48,6 +51,9 @@ final class Uedb5ClassicDependencyResolver
             }
             $tables = self::tables($snapshot);
             if ($engine === 'ue3') {
+                if (self::ut3NameMapApplies($snapshot)) {
+                    $tables = self::applyUt3AllContextNameMap($tables);
+                }
                 $tables['imports'] = CatalogCompactIdentityEnricher::ue3FixupImportMap($tables['imports']);
             }
             $providers[$key] = [
@@ -416,12 +422,15 @@ final class Uedb5ClassicDependencyResolver
                 'import_index' => $index,
                 'class_package' => self::fnameText($row['class_package'] ?? null),
                 'class_package_name_index' => self::fnameIndex($row['class_package'] ?? null),
+                'class_package_number' => self::fnameNumber($row['class_package'] ?? null),
                 'class_package_is_none' => self::fnameIsNone($row['class_package'] ?? null),
                 'class_name' => self::fnameText($row['class_name'] ?? null),
                 'class_name_index' => self::fnameIndex($row['class_name'] ?? null),
+                'class_name_number' => self::fnameNumber($row['class_name'] ?? null),
                 'class_name_is_none' => self::fnameIsNone($row['class_name'] ?? null),
                 'object_name' => self::fnameText($row['object_name'] ?? null),
                 'object_name_index' => self::fnameIndex($row['object_name'] ?? null),
+                'object_name_number' => self::fnameNumber($row['object_name'] ?? null),
                 'object_name_is_none' => self::fnameIsNone($row['object_name'] ?? null),
                 'outer_index' => (int)($row['outer_index'] ?? 0),
                 'object_package_present' => !empty($row['object_package_present']),
@@ -452,6 +461,7 @@ final class Uedb5ClassicDependencyResolver
                 'archetype_index' => (int)($row['archetype_index'] ?? 0),
                 'object_name' => self::fnameText($row['object_name'] ?? null),
                 'object_name_index' => self::fnameIndex($row['object_name'] ?? null),
+                'object_name_number' => self::fnameNumber($row['object_name'] ?? null),
                 'object_flags' => self::flagsInt($row['object_flags'] ?? 0),
             ];
         }
@@ -459,6 +469,62 @@ final class Uedb5ClassicDependencyResolver
         ksort($imports, SORT_NUMERIC);
         ksort($exports, SORT_NUMERIC);
         return ['names' => $names, 'imports' => $imports, 'exports' => $exports];
+    }
+
+    /** @param array{names:array<int,array<string,mixed>>,imports:array<int,array<string,mixed>>,exports:array<int,array<string,mixed>>} $tables */
+    private static function applyUt3AllContextNameMap(array $tables): array
+    {
+        if ($tables['names'] === []) {
+            return $tables;
+        }
+        $effective = CatalogLegacyNameMapPreprocessor::effectiveNameMap(
+            array_values($tables['names']),
+            CatalogLegacyNameMapPreprocessor::UE3_ALL_LOAD_CONTEXTS,
+            127
+        );
+        foreach ($tables['imports'] as &$import) {
+            foreach ([
+                ['class_package','class_package_name_index','class_package_number','class_package_is_none'],
+                ['class_name','class_name_index','class_name_number','class_name_is_none'],
+                ['object_name','object_name_index','object_name_number','object_name_is_none'],
+            ] as [$textKey,$indexKey,$numberKey,$noneKey]) {
+                if (!array_key_exists($indexKey, $import) || $import[$indexKey] === null) {
+                    continue;
+                }
+                $text = CatalogLegacyNameMapPreprocessor::effectiveFNameText(
+                    $effective,
+                    (int)$import[$indexKey],
+                    (int)($import[$numberKey] ?? 0),
+                    (string)($import[$textKey] ?? '')
+                );
+                $import[$textKey] = $text;
+                $import[$noneKey] = self::key($text) === self::key('None');
+            }
+        }
+        unset($import);
+        foreach ($tables['exports'] as &$export) {
+            if (($export['object_name_index'] ?? null) === null) {
+                continue;
+            }
+            $export['object_name'] = CatalogLegacyNameMapPreprocessor::effectiveFNameText(
+                $effective,
+                (int)$export['object_name_index'],
+                (int)($export['object_name_number'] ?? 0),
+                (string)($export['object_name'] ?? '')
+            );
+        }
+        unset($export);
+        return $tables;
+    }
+
+    private static function ut3NameMapApplies(array $snapshot): bool
+    {
+        $schema = strtolower(trim((string)($snapshot['section_schemas']['imports'] ?? '')));
+        $policy = strtolower(trim((string)($snapshot['source_policy'] ?? '')));
+        return str_starts_with($schema, 'ue3.ut3.')
+            && $policy === strtolower(Uedb5Ut3SnapshotBuilder::SOURCE_POLICY)
+            && self::packageVersion($snapshot) === 512
+            && self::licenseeVersion($snapshot) === 0;
     }
 
     /** @param array{names:array<int,array<string,mixed>>,imports:array<int,array<string,mixed>>,exports:array<int,array<string,mixed>>} $tables */
@@ -769,6 +835,11 @@ final class Uedb5ClassicDependencyResolver
         }
         $index = $value['name_index'] ?? $value['index'] ?? null;
         return $index === null || $index === '' ? null : (int)$index;
+    }
+
+    private static function fnameNumber(mixed $value): int
+    {
+        return is_array($value) ? (int)($value['number'] ?? 0) : 0;
     }
 
     private static function fnameIsNone(mixed $value): bool

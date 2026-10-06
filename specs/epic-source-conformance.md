@@ -562,4 +562,34 @@ This recovery checkpoint changes source availability only. It does not widen a g
 - Only exact negative-`serial_size` files require original package bytes; all other 4E remediation is metadata/Pass-2 scope.
 - This checkout's connected DB lacks `ue_uedb5_files`, so the diagnostic fails closed and no impact count is fabricated.
 
-**Next checkpoint: Section 4F - UT3 / UE3 package serialization and pre-dependency preprocessing, audited independently from the UT3 source before using later UE3 build 10897 as supplemental comparison.**
+## Section 4F - UT3 / UE3 package serialization and pre-dependency preprocessing
+
+**Status: complete for the active UT3 package-v512/licensee-0 profile against the Jan-2008 UE3 source; build 10897 is supplemental comparison only.**
+
+### Source authority
+
+- Primary: `L:\Source\Engine\UE3\Unreal Engine [v3.0] [01-00-2008]\epic.jan2008\UnrealEngine3\Development\Src\Core`.
+- The source defines `VER_FULL_VERSION_OF_UT3_BUMP = 512`, minimum package v491, and later history through v530. UnrealDB's UT3 game profile remains exactly v512/licensee 0.
+- The Jan source contains complete summary/name/import/export/load/fixup implementation bodies.
+- Supplemental later source: `L:\Source\Engine\UE3\Unreal Engine 3 (10897)`, the pinned CodeRedModding checkout at commit `601d6a1f50a0a4a67e3ee0c352333783408d1ba7`.
+
+### Source results and corrections
+
+1. **UT3 uses a 64-bit NameMap load-context mask.** The load bits are `0x0001000000000000`, `0x0002000000000000`, and `0x0004000000000000`; the all-context catalogue mask is therefore `0x0007000000000000`, not the UE1/UE2 low-bit mask.
+2. **FNameEntry preprocessing is source-significant.** Jan-2008 `NAME_SIZE = 128`; loaded base names cap at 127 characters. Raw serialized FString text remains preserved in metadata.
+3. **FName Number must survive preprocessing.** The linker consumes NameIndex + Number; a context-filtered base yields `NAME_None` regardless of Number, otherwise the serialized internal Number renders with UE3's `_(N-1)` convention.
+4. **The source order is NameMap -> Imports -> Exports -> FixupImportMap.** UnrealDB previously applied the correct SoundCueLocalized/SequenceObjects fixups to raw FName text. Current and V5 dependency paths now build the effective NameMap first, then run `ue3FixupImportMap`.
+5. **Raw 64-bit Name flags are now preserved in current compact metadata.** The UE3 parser already retained both halves; current snapshot construction now combines them rather than retaining only the low 32 bits.
+6. **UEDB5 hydration now retains FName Number fields.** This is required to reconstruct source-equivalent effective FNames after NameMap filtering/truncation.
+7. **Later UE3 is materially different and is not back-ported.** Build 10897 raises `NAME_SIZE` to 1024, disregards name context flags in later final-release NameMap loading, greatly expands `FixupImportMap`, and adds a separate `RemapClasses` pass including the pre-v536 prefab compatibility rewrite. None of those later rules are used for UT3 v512.
+
+### Regression and migration boundary
+
+- New `specs/ut3-v512-package-format.md` freezes the v512 serialization and preprocessing contract separately from later UDK/10897.
+- `verify-ut3-name-map-preprocessing.php` proves raw-name preservation, 64-bit context flags, 127-character effective base names, numbered-FName reconstruction, `NAME_None` precedence over SequenceObjects fixup, V5 parity, and no v512 NameMap inheritance at v513.
+- Existing UE3 VerifyImport, UEDB5 UT3 persistence, V5 classic dependency, and v513/licensee fail-closed transition regressions remain green.
+- `diagnose-ut3-name-map-impact.php` scans staged UEDB5 metadata only for referenced v512 names affected by context filtering or 127-character runtime truncation. Raw name flags/indices/numbers are already staged, so this 4F correction requires **no original UT3 package reread**.
+- Run `D:\php8.5\php.exe catalog\bin\diagnose-ut3-name-map-impact.php --summary` on the real staging DB, then rerun without `--summary` for exact file IDs.
+- This checkout's DB lacks `ue_uedb5_files`; the diagnostic therefore fails closed and no impact count is invented.
+
+**Next checkpoint: Section 4G - UT4 / UE4 4.27.2 package serialization and pre-dependency preprocessing, audited independently from the supplied UE4.27.2 source.**

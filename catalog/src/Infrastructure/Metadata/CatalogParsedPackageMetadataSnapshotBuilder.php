@@ -99,6 +99,7 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
         }
         $legacyAllContextNameMap = $engineKey === 'UE1' && $sourceKey === 'ut99';
         $legacyNameMaxCharacters = null;
+        $ut3AllContextNameMap = false;
         if ($engineKey === 'UE2' && in_array($sourceKey, ['unreal2','ut2003','ut2004'], true)) {
             $versionRow = \catalog_one(
                 $this->db,
@@ -122,16 +123,31 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
                 $legacyNameMaxCharacters = $sourceVersion >= 64 ? 63 : null;
             }
         }
+        if ($engineKey === 'UE3' && $sourceKey === 'ut3') {
+            $versionRow = \catalog_one(
+                $this->db,
+                'SELECT package_version,licensee_version FROM ue_files WHERE id=? LIMIT 1',
+                [$fileId]
+            );
+            $ut3AllContextNameMap = isset($versionRow['package_version'])
+                && (int)$versionRow['package_version'] === 512
+                && (int)($versionRow['licensee_version'] ?? 0) === 0;
+        }
 
         $nameRows = [];
         foreach ($names as $index => $name) {
             $row = is_array($name) ? $name : [];
+            $flags = isset($row['flags']) ? (int)$row['flags'] : null;
+            if ($engineKey === 'UE3' && $flags !== null) {
+                $flags = (((int)($row['objectFlagsHigh'] ?? 0)) << 32)
+                    | ($flags & 0xFFFFFFFF);
+            }
             $nameRows[] = [
                 'id' => $this->virtualId($fileId, (int)$index),
                 'file_id' => $fileId,
                 'name_index' => (int)$index,
                 'name_text' => (string)($row['name'] ?? $row['text'] ?? ''),
-                'flags' => isset($row['flags']) ? (int)$row['flags'] : null,
+                'flags' => $flags,
             ];
         }
 
@@ -177,6 +193,51 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
                 if (is_array($export['ObjectName'] ?? null)) {
                     $export['ObjectName']['text'] = $text;
                 }
+            }
+            unset($export);
+        }
+
+        if ($ut3AllContextNameMap) {
+            $effectiveNames = CatalogLegacyNameMapPreprocessor::effectiveNameMap(
+                $nameRows,
+                CatalogLegacyNameMapPreprocessor::UE3_ALL_LOAD_CONTEXTS,
+                127
+            );
+            foreach ($imports as &$import) {
+                if (!is_array($import)) { continue; }
+                foreach ([
+                    ['classPackage','ClassPackage','classPackageText'],
+                    ['className','ClassName','classNameText'],
+                    ['objectName','ObjectName','objectNameText'],
+                ] as [$indexKey,$objectKey,$textKey]) {
+                    $reference = $import[$objectKey] ?? $import[$indexKey] ?? null;
+                    $nameIndex = $this->fnameIndex($reference);
+                    $number = $this->fnameNumber($reference);
+                    $fallback = (string)($import[$textKey] ?? (
+                        is_array($import[$objectKey] ?? null) ? ($import[$objectKey]['text'] ?? '') : ''
+                    ));
+                    $text = CatalogLegacyNameMapPreprocessor::effectiveFNameText(
+                        $effectiveNames, $nameIndex, $number, $fallback
+                    );
+                    $import[$textKey] = $text;
+                    if (is_array($import[$objectKey] ?? null)) {
+                        $import[$objectKey]['text'] = $text;
+                    }
+                }
+            }
+            unset($import);
+            foreach ($exports as &$export) {
+                if (!is_array($export)) { continue; }
+                $nameIndex = $this->fnameIndex(
+                    $export['ObjectName'] ?? $export['objectName'] ?? $export['nameIndex'] ?? null
+                );
+                $number = isset($export['nameNumber'])
+                    ? (int)$export['nameNumber']
+                    : $this->fnameNumber($export['ObjectName'] ?? null);
+                $fallback = (string)($export['objectNameText'] ?? '');
+                $export['objectNameText'] = CatalogLegacyNameMapPreprocessor::effectiveFNameText(
+                    $effectiveNames, $nameIndex, $number, $fallback
+                );
             }
             unset($export);
         }
@@ -882,12 +943,17 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
     private function fnameIndex(mixed $value): ?int
     {
         if (is_array($value)) {
-            $value = $value['index'] ?? null;
+            $value = $value['index'] ?? $value['name_index'] ?? null;
         }
         if ($value === null || $value === '') {
             return null;
         }
         return (int)$value;
+    }
+
+    private function fnameNumber(mixed $value): int
+    {
+        return is_array($value) ? (int)($value['number'] ?? 0) : 0;
     }
 
     private static function nullableScalarString(mixed $value): ?string

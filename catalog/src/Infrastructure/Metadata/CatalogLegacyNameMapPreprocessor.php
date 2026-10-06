@@ -6,8 +6,9 @@ namespace UnrealDb\Catalog\Infrastructure\Metadata;
 use RuntimeException;
 
 /**
- * Reproduces legacy UE1/UE2 linker NameMap filtering for an explicit
- * edit/client/server load context while keeping the serialized name table intact.
+ * Reproduces source Linker NameMap filtering for an explicit edit/client/server
+ * load context while keeping the serialized name table intact. UE1/UE2 and
+ * early UE3 use different serialized flag bit positions.
  */
 final class CatalogLegacyNameMapPreprocessor
 {
@@ -16,6 +17,12 @@ final class CatalogLegacyNameMapPreprocessor
     public const RF_LOAD_FOR_EDIT = 0x00040000;
     public const ALL_LOAD_CONTEXTS =
         self::RF_LOAD_FOR_CLIENT | self::RF_LOAD_FOR_SERVER | self::RF_LOAD_FOR_EDIT;
+
+    public const UE3_RF_LOAD_FOR_CLIENT = 0x0001000000000000;
+    public const UE3_RF_LOAD_FOR_SERVER = 0x0002000000000000;
+    public const UE3_RF_LOAD_FOR_EDIT = 0x0004000000000000;
+    public const UE3_ALL_LOAD_CONTEXTS =
+        self::UE3_RF_LOAD_FOR_CLIENT | self::UE3_RF_LOAD_FOR_SERVER | self::UE3_RF_LOAD_FOR_EDIT;
 
     /**
      * UCC/UnrealEd-style catalogue context: all three source load contexts enabled.
@@ -28,7 +35,6 @@ final class CatalogLegacyNameMapPreprocessor
         int $contextFlags = self::ALL_LOAD_CONTEXTS,
         ?int $maxCharacters = null
     ): array {
-        $contextFlags &= self::ALL_LOAD_CONTEXTS;
         if ($contextFlags === 0) {
             throw new RuntimeException('Legacy NameMap preprocessing requires a non-zero source load context.');
         }
@@ -68,9 +74,23 @@ final class CatalogLegacyNameMapPreprocessor
             return $fallback;
         }
         if (!array_key_exists($nameIndex, $effective)) {
-            throw new RuntimeException('Legacy FName references a name index absent from the serialized NameMap.');
+            throw new RuntimeException('FName references a name index absent from the serialized NameMap.');
         }
         return (string)$effective[$nameIndex];
+    }
+
+    /** @param array<int,string> $effective */
+    public static function effectiveFNameText(
+        array $effective,
+        ?int $nameIndex,
+        int $number,
+        string $fallback
+    ): string {
+        $base = self::effectiveText($effective, $nameIndex, $fallback);
+        if (strcasecmp($base, 'None') === 0) {
+            return 'None';
+        }
+        return $number !== 0 && $base !== '' ? $base . '_' . ($number - 1) : $base;
     }
 
     private static function flagsInt(mixed $value): int

@@ -54,9 +54,10 @@ Current conformance work must use the local source mirrors below. Historical Git
 - [x] UT2003 dependency and import resolution — `ut2003-v2107-dependency-resolution.md`
 - [x] UT2004 / UE2.5 package serialization and pre-dependency preprocessing — `ut2004-package-format.md` (v3186/v127, v3369/v128, and latest v129 cross-checked; post-v129 admitted packages explicitly unresolved)
 - [x] UT2004 dependency and import resolution — `ut2004-dependency-resolution.md`
-- [x] UE3 package format and reading — `ue3-udkultimate-package-format.md`
-- [x] UE3 dependency resolution — `ue3-udkultimate-dependency-resolution.md`
+- [x] UT3 / early UE3 package serialization and pre-dependency preprocessing — `ut3-v512-package-format.md` (Jan-2008 v512 source; later build 10897 compared only as a non-inherited supplemental boundary)
 - [x] UT3 package-version-512 dependency resolution — `ut3-v512-dependency-resolution.md`
+- [x] Later UE3 / UDK package format and reading — `ue3-udkultimate-package-format.md`
+- [x] Later UE3 / UDK dependency resolution — `ue3-udkultimate-dependency-resolution.md`
 - [x] UE4 package format and reading — `ue4-4.27.2-package-format.md`
 - [x] UE4 dependency resolution — `ue4-4.27.2-dependency-resolution.md`
 - [x] UE5 5.8.3 classic package format and reading — `ue5-5.8.3-classic-package-format.md` (classic LinkerLoad path implemented; Zen/IoStore is implemented separately in isolated UEDB5 staging)
