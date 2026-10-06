@@ -348,14 +348,27 @@ final class PdoGameDependencyCrossExamineQuery
                 }
             } elseif ($targetEngine === 'UE3') {
                 require_once dirname(__DIR__) . '/Persistence/PdoUe3VerifyImportProjectionResolver.php';
-                $matches = PdoUe3VerifyImportProjectionResolver::resolveProvider(
-                    $this->db,
-                    $sourceFileId,
-                    $allImports
-                );
+                $identity = $this->consumerPackageIdentity($consumerId);
+                $profile = strtolower(trim((string)($target['slug'] ?? ''))) === 'ut3'
+                    && (int)$identity['version'] === 512
+                    && (int)$identity['licensee'] === 0
+                        ? PdoUe3VerifyImportProjectionResolver::PROFILE_UT3_V512
+                        : null;
+                $outcomes = $profile !== null
+                    ? PdoUe3VerifyImportProjectionResolver::resolveProviderOutcome(
+                        $this->db,
+                        $sourceFileId,
+                        $allImports,
+                        $profile,
+                        $this->consumerExports($consumerId),
+                        array_map('intval', array_keys($requirements)),
+                        $this->storageRoot
+                    )
+                    : [];
                 foreach ($requirements as $importIndex => $requirement) {
-                    if (array_key_exists($importIndex, $matches)) {
-                        $matchedIndexes[$importIndex] = (int)$matches[$importIndex];
+                    $outcome = (array)($outcomes[(int)$importIndex] ?? []);
+                    if (($outcome['status'] ?? '') === 'resolved') {
+                        $matchedIndexes[$importIndex] = (int)($outcome['export_index'] ?? -1);
                         $matchedPaths[] = (string)$requirement['path'];
                     } else {
                         $missingPaths[] = (string)$requirement['path'];
@@ -617,7 +630,9 @@ final class PdoGameDependencyCrossExamineQuery
         $engine = strtoupper(trim((string)($target['engine_key'] ?? '')));
         if ($engine === 'UE1') { return 'profiled_ue1_verify_import'; }
         if ($engine === 'UE2') { return 'profiled_ue2_verify_import'; }
-        return $engine === 'UE3' ? 'ue3_verify_import' : 'complete_package_object';
+        return $engine === 'UE3'
+            ? (strtolower(trim((string)($target['slug'] ?? ''))) === 'ut3' ? 'ut3_v512_verify_import' : 'source_profile_unavailable')
+            : 'complete_package_object';
     }
 
     /**

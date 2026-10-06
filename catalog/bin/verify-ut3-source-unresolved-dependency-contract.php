@@ -21,10 +21,11 @@ $db->exec('CREATE TABLE ue_game_profiles(id INTEGER PRIMARY KEY,engine_key TEXT,
 $db->exec('CREATE TABLE ue_games(id INTEGER PRIMARY KEY,name TEXT,slug TEXT,profile_id INTEGER)');
 $db->exec("INSERT INTO ue_game_profiles VALUES(1,'UE3',1,'UT3 January 2008','source policy')");
 $db->exec("INSERT INTO ue_games VALUES(6,'Unreal Tournament 3','ut3',1)");
-$db->exec('CREATE TABLE ue_files(id INTEGER PRIMARY KEY,game_id INTEGER,scan_status TEXT,file_size INTEGER,md5 TEXT,sha1 TEXT,package_name TEXT,uploaded_at TEXT)');
+$db->exec('CREATE TABLE ue_files(id INTEGER PRIMARY KEY,game_id INTEGER,scan_status TEXT,file_size INTEGER,md5 TEXT,sha1 TEXT,package_name TEXT,uploaded_at TEXT,package_version INTEGER,licensee_version INTEGER)');
 $db->exec('CREATE TABLE ue_package_providers(game_id INTEGER,package_name TEXT,file_id INTEGER,source_kind TEXT,source_id INTEGER,provider_created_at TEXT)');
 $db->exec('CREATE TABLE ue_file_package_aliases(id INTEGER PRIMARY KEY,file_id INTEGER,game_id INTEGER,package_name TEXT)');
 $db->exec('CREATE TABLE ue_invalid_file_identities(file_size INTEGER,md5 TEXT,sha1 TEXT)');
+$db->exec("INSERT INTO ue_files VALUES(99,6,'verified',99,'m','s','Consumer','2026-10-05',512,0)");
 
 $imports = [
     [

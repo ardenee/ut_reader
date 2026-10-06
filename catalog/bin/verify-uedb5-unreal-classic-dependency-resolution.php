@@ -48,7 +48,7 @@ $snapshot = static function (
         'exports'=>$schemaPrefix . '.object-export.v1',
     ];
     if ($packageVersion !== null) {
-        $sections['summary'] = [['package_version'=>$packageVersion]];
+        $sections['summary'] = [['package_version'=>$packageVersion,'licensee_version'=>0]];
         $schemas['summary'] = $schemaPrefix . '.package-summary.v1';
     }
     return [
@@ -237,6 +237,27 @@ $ut2004Unverified = Uedb5ClassicDependencyResolver::resolve($ut2004V130, [[
 $check(($ut2004Unverified[1]['status'] ?? null) === 'unresolved'
     && ($ut2004Unverified[1]['reason'] ?? null) === 'ue2_verify_import_source_implementation_unavailable',
     'ut2004_v130_does_not_inherit_v129_verify_import');
+
+$ut3Policy='ue3-ut3-jan2008-package-v512';
+$ut3Consumer=$snapshot(43001,'Consumer','classic-linkerload','ue3.ut3',$ut3Policy,$consumerImports,[],512);
+$ut3Public=$snapshot(43002,'Provider','classic-linkerload','ue3.ut3',$ut3Policy,[],[$export(0,'Obj','0000000400000000')],512);
+$ut3Resolved=Uedb5ClassicDependencyResolver::resolve($ut3Consumer,[['package_name'=>'Provider','provider_id'=>43002,'snapshot'=>$ut3Public]]);
+$check(($ut3Resolved[1]['status']??null)==='resolved','ut3_v512_public_export_resolves');
+$ut3Missing=$snapshot(43003,'Provider','classic-linkerload','ue3.ut3',$ut3Policy,[],[],512);
+$ut3Runtime=Uedb5ClassicDependencyResolver::resolve($ut3Consumer,[['package_name'=>'Provider','provider_id'=>43003,'snapshot'=>$ut3Missing]]);
+$check(($ut3Runtime[1]['status']??null)==='unresolved'
+    &&($ut3Runtime[1]['reason']??null)==='runtime_native_transient_findif_fail_or_missing_class_context',
+    'ut3_v512_file_miss_is_runtime_unresolved');
+$ut3Private=$snapshot(43004,'Provider','classic-linkerload','ue3.ut3',$ut3Policy,[],[$export(0,'Obj','0000000000000000')],512);
+$ut3PrivateContext=Uedb5ClassicDependencyResolver::resolve($ut3Consumer,[['package_name'=>'Provider','provider_id'=>43004,'snapshot'=>$ut3Private]]);
+$check(($ut3PrivateContext[1]['status']??null)==='unresolved'
+    &&($ut3PrivateContext[1]['reason']??null)==='private_export_editor_safe_replace_context',
+    'ut3_v512_unreferenced_private_export_is_runtime_context');
+$ut3V513=$snapshot(43005,'Consumer513','classic-linkerload','ue3.ut3',$ut3Policy,$consumerImports,[],513);
+$ut3Unverified=Uedb5ClassicDependencyResolver::resolve($ut3V513,[['package_name'=>'Provider','provider_id'=>43002,'snapshot'=>$ut3Public]]);
+$check(($ut3Unverified[1]['status']??null)==='unresolved'
+    &&($ut3Unverified[1]['reason']??null)==='ue3_verify_import_source_implementation_unavailable',
+    'ut3_v513_does_not_inherit_v512_verify_import');
 
 $ut3Consumer = $snapshot(
     43001, 'Consumer', 'classic-linkerload', 'ue3.ut3', 'ue3-ut3-jan2008-package-v512',

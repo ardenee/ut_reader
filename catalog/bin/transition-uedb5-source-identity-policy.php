@@ -13,8 +13,9 @@ use UnrealDb\Catalog\Infrastructure\Persistence\PdoClassicSourceIdentityImpactQu
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoGameCatalogStats;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoUe1VerifyImportImpactQuery;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoUe2VerifyImportImpactQuery;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoUe3VerifyImportImpactQuery;
 
-const OLD_POLICIES=['uedb5-dependency-pass-v1','uedb5-dependency-pass-v2','uedb5-dependency-pass-v3','uedb5-dependency-pass-v4','uedb5-dependency-pass-v5','uedb5-dependency-pass-v6'];
+const OLD_POLICIES=['uedb5-dependency-pass-v1','uedb5-dependency-pass-v2','uedb5-dependency-pass-v3','uedb5-dependency-pass-v4','uedb5-dependency-pass-v5','uedb5-dependency-pass-v6','uedb5-dependency-pass-v7'];
 $o=getopt('',['game-id::','apply','rebuild-impacted','rebuild-v4-impacted','reparse-pass1-impacted','limit::']);
 $gid=max(0,(int)($o['game-id']??0));
 $apply=isset($o['apply']);
@@ -26,10 +27,10 @@ if(($rebuild||$rebuildV4||$reparsePass1)&&!$apply){fwrite(STDERR,"Rebuild/repars
 
 $app=catalog_bootstrap();$db=$app->db;
 $new=Uedb5GameDependencyPassService::DEPENDENCY_POLICY;
-if($new!=='uedb5-dependency-pass-v7')throw new RuntimeException('Combined source/UE1/UE2 transition requires dependency policy v7.');
+if($new!=='uedb5-dependency-pass-v8')throw new RuntimeException('Combined source/UE1/UE2/UE3 transition requires dependency policy v8.');
 $tables=['ue_uedb5_migration_status','ue_uedb5_files','ue_uedb5_provider_keys','ue_uedb5_dependency_edges','ue_uedb5_dependency_packages','ue_dependency_links','ue_terms','ue_name_lookup','ue_file_package_aliases','ue_games','ue_game_profiles','ue_file_metadata'];
 $check=$db->prepare('SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=DATABASE() AND table_name=?');
-foreach($tables as$t){$check->execute([$t]);if((int)$check->fetchColumn()!==1){echo json_encode(['ok'=>false,'missing_table'=>$t,'error'=>'Run catalog/bin/migrate.php migrate before the v7 dependency transition.']),PHP_EOL;exit(1);}}
+foreach($tables as$t){$check->execute([$t]);if((int)$check->fetchColumn()!==1){echo json_encode(['ok'=>false,'missing_table'=>$t,'error'=>'Run catalog/bin/migrate.php migrate before the v8 dependency transition.']),PHP_EOL;exit(1);}}
 
 $q=new PdoClassicSourceIdentityImpactQuery($db);
 $current=$q->currentOldPolicyFiles($gid);
@@ -41,9 +42,11 @@ $identityCandidateIds=array_values(array_map(
 $identity=$q->run($gid,$identityCandidateIds);
 $ue1=(new PdoUe1VerifyImportImpactQuery($db))->run($currentIds);
 $ue2=(new PdoUe2VerifyImportImpactQuery($db))->run($currentIds);
+$ue3=(new PdoUe3VerifyImportImpactQuery($db))->run($currentIds);
 $identityReasons=(array)$identity['reasons_by_file'];
 $ue1Reasons=(array)$ue1['reasons_by_file'];
 $ue2Reasons=(array)$ue2['reasons_by_file'];
+$ue3Reasons=(array)$ue3['reasons_by_file'];
 
 $impacted=[];$unaffected=[];$v4Impacted=[];$pass1Required=[];
 foreach($current as$r){
@@ -64,8 +67,12 @@ foreach($current as$r){
     $ue2Why=array_keys((array)($ue2Reasons[$fid]??[]));
     $ue2Effective=$policy==='uedb5-dependency-pass-v6'
         ? array_values(array_filter($ue2Why,static fn(string$x):bool=>str_starts_with($x,'ue2_ut2004_')))
-        : $ue2Why;
-    $why=array_values(array_unique(array_merge($identityEffective,$ue1Effective,$ue2Effective)));
+        : ($policy==='uedb5-dependency-pass-v7' ? [] : $ue2Why);
+    $ue3Why=array_keys((array)($ue3Reasons[$fid]??[]));
+    $ue3Effective=$policy==='uedb5-dependency-pass-v7'
+        ? array_values(array_filter($ue3Why,static fn(string$x):bool=>str_starts_with($x,'ue3_ut3_')))
+        : $ue3Why;
+    $why=array_values(array_unique(array_merge($identityEffective,$ue1Effective,$ue2Effective,$ue3Effective)));
     $needs=$why!==[];
     $row=['file_id'=>$fid,'game_id'=>(int)$r['game_id'],'engine_key'=>(string)$r['engine_key'],'package_family'=>(string)$r['package_family'],'old_policy'=>$policy,'reasons'=>$why];
     if(array_intersect($why,['ue1_pre50_pass1_reparse','ue2_unreal2_v69_pass1_reparse'])!==[])$pass1Required[]=$row;
@@ -77,7 +84,7 @@ foreach($current as$r){
 $where=$gid>0?' AND s.game_id=?':'';$in=implode(',',array_fill(0,count(OLD_POLICIES),'?'));$args=array_merge(OLD_POLICIES,$gid>0?[$gid]:[]);
 $staleSql='SELECT COUNT(*) FROM ue_uedb5_migration_status s JOIN ue_uedb5_files v ON v.file_id=s.file_id AND v.game_id=s.game_id JOIN ue_files f ON f.id=s.file_id AND f.game_id=s.game_id WHERE f.scan_status="verified" AND s.dependency_policy IN ('.$in.') AND (s.dependency_payload_sha256 IS NULL OR s.dependency_payload_sha256<>v.payload_sha256)'.$where;
 $stale=$db->prepare($staleSql);$stale->execute($args);$staleCount=(int)$stale->fetchColumn();
-$combinedCounts=(array)$identity['reason_counts'];foreach([(array)$ue1['reason_counts'],(array)$ue2['reason_counts']]as$counts){foreach($counts as$k=>$v)$combinedCounts[$k]=($combinedCounts[$k]??0)+(int)$v;}ksort($combinedCounts,SORT_STRING);
+$combinedCounts=(array)$identity['reason_counts'];foreach([(array)$ue1['reason_counts'],(array)$ue2['reason_counts'],(array)$ue3['reason_counts']]as$counts){foreach($counts as$k=>$v)$combinedCounts[$k]=($combinedCounts[$k]??0)+(int)$v;}ksort($combinedCounts,SORT_STRING);
 $pre=['old_policies'=>OLD_POLICIES,'new_policy'=>$new,'game_id'=>$gid?:null,'current_old_policy_count'=>count($current),'unaffected_rollforward_count'=>count($unaffected),'impacted_rebuild_count'=>count($impacted),'pass1_reparse_required_count'=>count($pass1Required),'v4_impacted_count'=>count($v4Impacted),'stale_old_payload_count'=>$staleCount,'impact_reason_counts'=>$combinedCounts,'impacted_file_ids_by_game'=>[],'pass1_reparse_file_ids_by_game'=>[]];
 foreach($impacted as$r)$pre['impacted_file_ids_by_game'][$r['game_id']][]=$r['file_id'];
 foreach($pass1Required as$r)$pre['pass1_reparse_file_ids_by_game'][$r['game_id']][]=$r['file_id'];

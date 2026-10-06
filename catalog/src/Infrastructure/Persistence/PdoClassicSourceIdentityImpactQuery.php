@@ -9,7 +9,7 @@ use PDO;
 final class PdoClassicSourceIdentityImpactQuery
 {
     private const CHUNK = 250;
-    private const OLD_POLICIES = ['uedb5-dependency-pass-v1','uedb5-dependency-pass-v2','uedb5-dependency-pass-v3','uedb5-dependency-pass-v4','uedb5-dependency-pass-v5','uedb5-dependency-pass-v6'];
+    private const OLD_POLICIES = ['uedb5-dependency-pass-v1','uedb5-dependency-pass-v2','uedb5-dependency-pass-v3','uedb5-dependency-pass-v4','uedb5-dependency-pass-v5','uedb5-dependency-pass-v6','uedb5-dependency-pass-v7'];
     private const TRIM_HEX = ['20','09','0A','0D','00','0B'];
     private const UE5_CLASSIC_FAMILY = 'classic-linkerload';
 

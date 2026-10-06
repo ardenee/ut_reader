@@ -6,9 +6,12 @@ This specification documents deterministic import/dependency resolution for Unre
 
 Authoritative source used for this audit:
 
-- Source tree: `L:\Source\Engine\UE3\Unreal Engine [v3.0] [01-00-2008]\epic.jan2008\UnrealEngine3`
+- Primary tree: `L:\Source\Engine\UE3\Unreal Engine [v3.0] [01-00-2008]\epic.jan2008\UnrealEngine3`
+- Cross-check tree: `L:\Source\Engine\UE3\Unreal Engine [v3.0] [03-00-2008]\UnrealEngine3`
 - Core source: `Development/Src/Core`
-- `UnObjVer.h` defines package version 512 as `VER_FULL_VERSION_OF_UT3_BUMP`.
+- The two trees' `UnLinker.cpp` files are byte-identical (SHA-256 `E19F04113B7634656AF145F8C7BC363E9492A19B819B007328D2A3036407E603`), and their `UnObjVer.h` files are also byte-identical (SHA-256 `91A7FCBB65E40A8C6931424E1A5FCC2199DF70E3A6A3FD652957F56EFA029650`).
+- `UnObjVer.h` defines package version 512 as `VER_FULL_VERSION_OF_UT3_BUMP`, but the same checkout continues through `VER_LATEST_ENGINE = 530`; `UnObjVer.cpp` sets `GPackageFileMinVersion = 491`.
+- UnrealDB's active UT3 game profile remains deliberately bounded to package version 512/licensee 0. The early-2008 linker proves the behavior used by that profile; the source checkout's wider engine load range does not authorize applying the UT3 game policy to every UE3 package from 491-530.
 
 The later `ue3-udkultimate-dependency-resolution.md` remains the authority for the supplied UDKUltimate tree. Later UE3 behavior must not be back-ported to UT3 merely because both are UE3.
 
@@ -68,17 +71,21 @@ For an ordinary non-root import, the outer import is verified first and its `Sou
 
 The resolved outer must also agree. If the outer import has no `SourceIndex`, the candidate export must be root-level. Otherwise `OuterImport.SourceIndex + 1` must equal the candidate export's `OuterIndex`.
 
-An otherwise matching provider export must have `RF_Public` for normal external loading. A same-name private export is not interchangeable with a public provider export.
+A direct import whose `ClassPackage`, `ClassName`, or `ObjectName` is `NAME_None` returns immediately as not relevant in this context. That does **not** make descendants source-irrelevant: a descendant whose parent failed to establish a `SourceLinker` follows the source's tolerated parent-linker/runtime path and is unresolved.
 
-For cooked packages whose import outer is an export, this source returns with an Epic TODO rather than inventing the ordinary provider-linker path. UnrealDB must preserve that unresolved behavior.
+An otherwise matching provider export normally requires `RF_Public`, but the January/March 2008 source has an editor-only private-import SafeReplace branch. If the private import is referenced as an export super/class/outer/archetype or as another import's outer, SafeReplace is forced false and the private match is a deterministic source rejection. If it is not referenced that way, the outcome depends on `GIsEditor`/`GIsUCC`; static UnrealDB records that case as runtime-unresolved rather than hard-missing.
 
-Catalog classification rule: this source return is **unresolved**, not proof that the required package/object is missing. UnrealDB records these imports (and descendants whose import-outer ancestry reaches one) as source-unresolved and excludes them from missing-dependency counts.
+For cooked packages whose import outer is an export, this source returns with an Epic TODO rather than inventing the ordinary provider-linker path. UnrealDB preserves that unresolved behavior.
 
-## VerifyImport wrapper and redirectors
+Catalog classification rule: source branches that require runtime/editor state are **unresolved**, not proof that the required package/object is missing. UnrealDB excludes them from hard missing-dependency counts.
 
-`VerifyImport()` first calls `VerifyImportInner()`. If the package linker exists but the requested non-root object is absent, it can retry as `Core.ObjectRedirector` and then load/preload the redirector to obtain `DestinationObject`.
+## VerifyImport wrapper, runtime fallback, and redirectors
 
-UnrealDB may only reproduce this when the redirector's serialized destination can actually be decoded. A loose same-name or same-path fallback is not source-equivalent.
+`VerifyImport()` first calls `VerifyImportInner()`. A deterministic public file-backed match is resolved immediately. If the provider linker exists but the requested non-root object is not found, source still has runtime public/native/transient lookup, `LOAD_FindIfFail`, SafeReplace, and class-presence behavior. Static UnrealDB therefore records the residual file-backed miss as runtime-unresolved instead of hard-missing.
+
+If the original object is absent and its name is not already `ObjectRedirector`, `VerifyImport()` retries the same identity/outer search as `Core.ObjectRedirector`. Finding a serialized redirector proves only that runtime would create/preload it and inspect `DestinationObject`; the destination payload is not currently decoded by this dependency resolver, so UnrealDB records `object_redirector_target_unavailable` rather than pretending the original import is resolved or missing.
+
+A loose same-name or same-path fallback is not source-equivalent.
 
 ## UnrealDB implementation invariants
 
@@ -92,7 +99,7 @@ UnrealDB may only reproduce this when the redirector's serialized destination ca
 
 ## Source boundary
 
-These rules are specifically proven for UT3 package version 512 from the January 2008 source tree. Later UE3 revisions may differ in class remapping and export-class-package derivation and must be audited against their own source before sharing this policy.
+These rules are applied only to the active UT3 package-version-512/licensee-0 profile. The early-2008 source tree itself contains engine version history through 530/minimum 491; that broader engine range is not treated as a UT3 game-profile inheritance rule. Package version 513+, nonzero licensee versions, and other UE3 games therefore fail closed until their own source profile is audited.
 
 ## RF_Public and 64-bit ObjectFlags
 

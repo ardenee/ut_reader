@@ -342,6 +342,69 @@ $check(
     'Only a verified Core.Package root may have SourceIndex INDEX_NONE; an unresolved non-root parent must propagate failure.'
 );
 
+$profile = PdoUe3VerifyImportProjectionResolver::PROFILE_UT3_V512;
+$sourceExact = PdoUe3VerifyImportProjectionResolver::resolveInMemoryOutcome(
+    $profile, $consumer, $providerImports, $providerExports, 'Foo', 512, []
+);
+$check(
+    'ut3_v512_source_outcome_resolves_public_exact_match',
+    ($sourceExact[2]['status'] ?? '') === 'resolved' && ($sourceExact[2]['export_index'] ?? null) === 1,
+    'The profiled outcome resolver must preserve deterministic public exact matches.'
+);
+$noneConsumer = [
+    ['import_index'=>0,'class_package'=>'Core','class_name'=>'Package','object_name'=>'Foo','outer_index'=>0],
+    ['import_index'=>1,'class_package'=>'None','class_name'=>'None','object_name'=>'None','outer_index'=>-1],
+    ['import_index'=>2,'class_package'=>'Engine','class_name'=>'Texture','object_name'=>'Child','outer_index'=>-2],
+];
+$noneOutcome = PdoUe3VerifyImportProjectionResolver::resolveInMemoryOutcome(
+    $profile, $noneConsumer, $providerImports, [], 'Foo', 512, []
+);
+$check('ut3_direct_name_none_is_ignored',($noneOutcome[1]['status']??'')==='ignored','Direct NAME_None returns immediately in source.');
+$check('ut3_name_none_parent_descendant_is_runtime_unresolved',
+    ($noneOutcome[2]['status']??'')==='runtime_only' && ($noneOutcome[2]['reason']??'')==='parent_source_linker_unavailable_tolerated',
+    'A NAME_None parent does not establish SourceLinker; the child is tolerated/unresolved, not source-irrelevant.'
+);
+$missingOutcome=PdoUe3VerifyImportProjectionResolver::resolveInMemoryOutcome(
+    $profile,
+    [['import_index'=>0,'class_package'=>'Core','class_name'=>'Package','object_name'=>'Foo','outer_index'=>0],['import_index'=>1,'class_package'=>'Engine','class_name'=>'Texture','object_name'=>'Missing','outer_index'=>-1]],
+    $providerImports, [], 'Foo', 512, []
+);
+$check('ut3_file_backed_miss_is_runtime_dependent',
+    ($missingOutcome[1]['status']??'')==='runtime_only' && ($missingOutcome[1]['reason']??'')==='runtime_native_transient_findif_fail_or_missing_class_context',
+    'After a file-backed miss, source still has runtime native/transient, FindIfFail, SafeReplace and redirector paths.'
+);
+$redirectExports=[['export_index'=>0,'class_index'=>0,'object_name'=>'Missing','outer_index'=>0,'object_flags'=>$rfPublic]];
+$redirectProviderImports=[['import_index'=>0,'class_package'=>'Core','class_name'=>'Package','object_name'=>'Core','outer_index'=>0],['import_index'=>1,'class_package'=>'Core','class_name'=>'Class','object_name'=>'ObjectRedirector','outer_index'=>-1]];
+$redirectExports[0]['class_index']=-2;
+$redirectOutcome=PdoUe3VerifyImportProjectionResolver::resolveInMemoryOutcome(
+    $profile,
+    [['import_index'=>0,'class_package'=>'Core','class_name'=>'Package','object_name'=>'Foo','outer_index'=>0],['import_index'=>1,'class_package'=>'Engine','class_name'=>'Texture','object_name'=>'Missing','outer_index'=>-1]],
+    $redirectProviderImports,$redirectExports,'Foo',512,[]
+);
+$check('ut3_object_redirector_candidate_is_payload_unresolved',
+    ($redirectOutcome[1]['status']??'')==='unresolved' && ($redirectOutcome[1]['reason']??'')==='object_redirector_target_unavailable',
+    'A serialized redirector candidate is evidence to continue runtime loading, not proof that the original object is missing.'
+);
+$privateUnreferenced=$providerExports;$privateUnreferenced[1]['object_flags']=0;
+$privateOutcome=PdoUe3VerifyImportProjectionResolver::resolveInMemoryOutcome($profile,$consumer,$providerImports,$privateUnreferenced,'Foo',512,[]);
+$check('ut3_unreferenced_private_export_depends_on_editor_context',
+    ($privateOutcome[2]['status']??'')==='runtime_only' && ($privateOutcome[2]['reason']??'')==='private_export_editor_safe_replace_context',
+    'Private import SafeReplace can depend on GIsEditor/GIsUCC when the import is not referenced by the consumer graph.'
+);
+$consumerGraph=[['export_index'=>99,'class_index'=>0,'super_index'=>0,'outer_index'=>-3,'archetype_index'=>0]];
+$privateHard=PdoUe3VerifyImportProjectionResolver::resolveInMemoryOutcome($profile,$consumer,$providerImports,$privateUnreferenced,'Foo',512,$consumerGraph);
+$check('ut3_referenced_private_export_is_source_failure',
+    ($privateHard[2]['status']??'')==='private_export',
+    'A consumer export/import graph reference forces SafeReplace false, making the private match a deterministic source rejection.'
+);
+$ue3ProfileMethod=new ReflectionMethod(PdoDependencyResolver::class,'ue3VerifyImportProfile');
+$check('ut3_profile_is_exactly_v512_licensee_zero',
+    $ue3ProfileMethod->invoke(null,6,512,0)===$profile
+    &&$ue3ProfileMethod->invoke(null,6,513,0)===null
+    &&$ue3ProfileMethod->invoke(null,6,512,1)===null,
+    'The active UT3 game profile is package v512/licensee 0; later UE3 packages must not inherit this policy.'
+);
+
 $check(
     'ue3_db_lookup_uses_serialized_object_identity_not_path_hash',
     str_contains($ue3Resolver, '(value_hash=? AND value_length=?)')
@@ -354,14 +417,14 @@ $check(
     'ue3_parent_resolution_uses_serialized_outer_chain',
     str_contains($sharedResolver, 'self::ue3RootPackageName($importsByIndex')
         && str_contains($sharedResolver, '$isObjectImport = self::isSourceObjectImport($import, $engineKey);')
-        && str_contains($sharedResolver, "in_array(\$engineKey, ['UE1', 'UE2', 'UE3'], true)")
+        && str_contains($sharedResolver, "in_array(\$engineKey, ['UE1', 'UE2', 'UE3', 'UE4'], true)")
         && str_contains($sharedResolver, "return (int)(\$import['outer_index'] ?? 0) !== 0;"),
     'UE3 package grouping and object-import classification must come from serialized OuterIndex/Core.Package roots, not generated path strings.'
 );
 
 $check(
     'ue3_provider_lookup_is_scoped_and_indexed',
-    preg_match('/PdoUe3VerifyImportProjectionResolver::resolveProvider\([^;]+\$requiredImportIndexes/s', $sharedResolver) === 1
+    preg_match('/PdoUe3VerifyImportProjectionResolver::resolveProviderOutcome\([^;]+\$requiredImportIndexes/s', $sharedResolver) === 1
         && str_contains($ue3Resolver, 'loadExactObjectNameTerms')
         && str_contains($ue3Resolver, 'loadSourceCandidates')
         && str_contains($ue3Resolver, 'rowsByIndexes')
@@ -383,7 +446,7 @@ $check(
 $check(
     'ue3_provider_selected_before_verifyimport',
     str_contains($sharedResolver, '$candidate = $packageMatches[$packageKey] ?? null;')
-        && str_contains($sharedResolver, '$ue3VerifyImportMatches[$packageKey] = PdoUe3VerifyImportProjectionResolver::resolveProvider(')
+        && str_contains($sharedResolver, '$ue3VerifyImportOutcomes[$packageKey] = PdoUe3VerifyImportProjectionResolver::resolveProviderOutcome(')
         && !str_contains($sharedResolver, '$bestMatchCount = -1;')
         && !str_contains($sharedResolver, 'if ($matchCount > $bestMatchCount)'),
     'UE3 must select one physical package/linker from the package environment before VerifyImport; provider contents must not choose a different linker.'
@@ -462,8 +525,8 @@ $check(
     'canonical_rebuild_keeps_ue3_on_shared_source_policy',
     str_contains($canonicalRebuild, 'PdoCatalogDependencyRebuilder')
         && str_contains($canonicalRebuild, 'PdoUe3VerifyImportProjectionResolver')
-        && str_contains($sharedResolver, '$ue3VerifyImport = $engineKey === \'UE3\';')
-        && str_contains($sharedResolver, "PdoUe3VerifyImportProjectionResolver::resolveProvider("),
+        && str_contains($sharedResolver, '$ue3Engine = $engineKey === \'UE3\';') && str_contains($sharedResolver,'ue3VerifyImportProfile')
+        && str_contains($sharedResolver, "PdoUe3VerifyImportProjectionResolver::resolveProviderOutcome("),
     'rebuild-legacy-dependencies.php must remain the canonical rebuild command and UE3 must dispatch through its VerifyImport projection resolver.'
 );
 

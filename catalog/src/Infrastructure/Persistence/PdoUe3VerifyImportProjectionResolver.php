@@ -18,6 +18,134 @@ final class PdoUe3VerifyImportProjectionResolver
     private const HASH_BATCH_SIZE = 300;
     private const FAILURE_SENTINEL = -2147483648;
 
+    public const PROFILE_UT3_V512 = 'ue3-ut3-v512-early2008';
+
+    /**
+     * Source-shaped UT3 VerifyImport outcome using the selected provider only.
+     * The provider is chosen before this method; provider contents never select a different file.
+     *
+     * @param list<array<string,mixed>> $consumerImports
+     * @param list<array<string,mixed>> $consumerExports
+     * @param list<int>|null $targetImportIndexes
+     * @return array<int,array<string,mixed>>
+     */
+    public static function resolveProviderOutcome(
+        PDO $db,
+        int $providerFileId,
+        array $consumerImports,
+        string $profile,
+        array $consumerExports = [],
+        ?array $targetImportIndexes = null,
+        ?string $storageRoot = null
+    ): array {
+        if ($profile !== self::PROFILE_UT3_V512 || $providerFileId < 1 || $consumerImports === []) {
+            return [];
+        }
+        $imports = self::indexedImports($consumerImports);
+        $imports = \UnrealDb\Catalog\Infrastructure\Metadata\CatalogCompactIdentityEnricher::ue3FixupImportMap($imports);
+        $targets = $targetImportIndexes === null
+            ? array_map('intval', array_keys($imports))
+            : array_values(array_unique(array_map('intval', $targetImportIndexes)));
+        if ($targets === []) { return []; }
+        $needed = self::importClosure($imports, $targets);
+        $objectNames = self::objectNamesForImports($imports, $needed);
+        $sourceBacked = trim((string)$storageRoot) !== '' && self::isUt3Provider($db, $providerFileId);
+        $candidates = $sourceBacked
+            ? self::loadSourceCandidates($db, $providerFileId, $objectNames, (string)$storageRoot)
+            : self::loadCandidates($db, $providerFileId, $objectNames);
+        $outcomes = self::resolveTargetOutcomes($imports, $candidates, $targets, $consumerExports);
+
+        $fallbackTargets = [];
+        foreach ($targets as $importIndex) {
+            $row = $imports[(int)$importIndex] ?? null;
+            $status = (string)($outcomes[(int)$importIndex]['status'] ?? '');
+            if (is_array($row)
+                && (int)($row['outer_index'] ?? 0) < 0
+                && !self::hasNameNone($row)
+                && $status !== 'resolved'
+                && $status !== 'private_export') {
+                $fallbackTargets[] = (int)$importIndex;
+            }
+        }
+        if ($fallbackTargets === []) { return $outcomes; }
+        $fallbackNeeded = self::importClosure($imports, $fallbackTargets);
+        $fallbackNames = self::objectNamesForImports($imports, $fallbackNeeded);
+        $fallback = $sourceBacked
+            ? self::loadSourceCaseInsensitiveCandidates($db, $providerFileId, $fallbackNames, (string)$storageRoot)
+            : self::loadCaseInsensitiveCandidates($db, $providerFileId, $fallbackNames);
+        if ($fallback === []) { return $outcomes; }
+        return self::resolveTargetOutcomes(
+            $imports,
+            self::mergeCandidates($candidates, $fallback),
+            $targets,
+            $consumerExports
+        );
+    }
+
+    /**
+     * In-memory source outcome for UEDB5/local publication.
+     *
+     * @param list<array<string,mixed>> $consumerImports
+     * @param list<array<string,mixed>> $providerImports
+     * @param list<array<string,mixed>> $providerExports
+     * @param list<array<string,mixed>> $consumerExports
+     * @return array<int,array<string,mixed>>
+     */
+    public static function resolveInMemoryOutcome(
+        string $profile,
+        array $consumerImports,
+        array $providerImports,
+        array $providerExports,
+        string $providerPackageName,
+        ?int $providerPackageVersion = null,
+        array $consumerExports = []
+    ): array {
+        if ($profile !== self::PROFILE_UT3_V512) { return []; }
+        $imports = \UnrealDb\Catalog\Infrastructure\Metadata\CatalogCompactIdentityEnricher::ue3FixupImportMap(
+            self::indexedImports($consumerImports)
+        );
+        $providerImportsByIndex = \UnrealDb\Catalog\Infrastructure\Metadata\CatalogCompactIdentityEnricher::ue3FixupImportMap(
+            self::indexedImports($providerImports)
+        );
+        $providerExportsByIndex = [];
+        foreach ($providerExports as $fallback => $row) {
+            if (!is_array($row)) { continue; }
+            $providerExportsByIndex[isset($row['export_index']) ? (int)$row['export_index'] : (int)$fallback] = $row;
+        }
+        $candidates = [];
+        foreach ($providerExportsByIndex as $exportIndex => $export) {
+            $objectName = (string)($export['object_name'] ?? '');
+            if ($objectName === '') { continue; }
+            [$classPackage,$className] = \UnrealDb\Catalog\Infrastructure\Metadata\CatalogCompactIdentityEnricher::ue3ExportClassIdentity(
+                $export,
+                $providerImportsByIndex,
+                $providerExportsByIndex,
+                $providerPackageName,
+                $providerPackageVersion,
+                true
+            );
+            $identityKey = self::identityKey($objectName,$className,$classPackage);
+            $candidates[$identityKey][] = [
+                'export_index'=>(int)$exportIndex,
+                'object_name'=>$objectName,
+                'outer_index'=>(int)($export['outer_index'] ?? 0),
+                'object_flags'=>(int)($export['object_flags'] ?? 0),
+                'class_package'=>$classPackage,
+                'class_name'=>$className,
+            ];
+        }
+        foreach ($candidates as &$rows) {
+            usort($rows, static fn(array $a,array $b):int => (int)$b['export_index'] <=> (int)$a['export_index']);
+        }
+        unset($rows);
+        return self::resolveTargetOutcomes(
+            $imports,
+            $candidates,
+            array_map('intval', array_keys($imports)),
+            $consumerExports
+        );
+    }
+
     /**
      * @param list<array<string,mixed>> $consumerImports
      * @return array<int,int>
@@ -163,6 +291,177 @@ final class PdoUe3VerifyImportProjectionResolver
             }
         }
         return $matches;
+    }
+
+    /** @param list<array<string,mixed>> $rows @return array<int,array<string,mixed>> */
+    private static function indexedImports(array $rows): array
+    {
+        $result=[];
+        foreach($rows as $fallback=>$row){
+            if(!is_array($row))continue;
+            $result[isset($row['import_index'])?(int)$row['import_index']:(int)$fallback]=$row;
+        }
+        return $result;
+    }
+
+    /**
+     * @param array<int,array<string,mixed>> $imports
+     * @param array<string,list<array<string,mixed>>> $candidates
+     * @param list<int> $targets
+     * @param list<array<string,mixed>> $consumerExports
+     * @return array<int,array<string,mixed>>
+     */
+    private static function resolveTargetOutcomes(array $imports,array $candidates,array $targets,array $consumerExports): array
+    {
+        $cache=[];$visiting=[];
+        foreach($targets as$index){
+            self::resolveImportOutcome((int)$index,$imports,$candidates,$consumerExports,$cache,$visiting);
+        }
+        $result=[];
+        foreach($targets as$index){
+            if(isset($cache[(int)$index]))$result[(int)$index]=$cache[(int)$index];
+        }
+        return $result;
+    }
+
+    /**
+     * @param array<int,array<string,mixed>> $imports
+     * @param array<string,list<array<string,mixed>>> $candidates
+     * @param list<array<string,mixed>> $consumerExports
+     * @param array<int,array<string,mixed>> $cache
+     * @param array<int,true> $visiting
+     * @return array<string,mixed>
+     */
+    private static function resolveImportOutcome(int $index,array $imports,array $candidates,array $consumerExports,array &$cache,array &$visiting): array
+    {
+        if(isset($cache[$index]))return $cache[$index];
+        if(isset($visiting[$index]))return $cache[$index]=self::outcome('invalid','import_parent_cycle',false,null);
+        $import=$imports[$index]??null;
+        if(!is_array($import))return $cache[$index]=self::outcome('invalid','import_index_unavailable',false,null);
+        $visiting[$index]=true;
+        if(self::hasNameNone($import)){
+            unset($visiting[$index]);
+            return $cache[$index]=self::outcome('ignored','name_none',false,null);
+        }
+        $outer=(int)($import['outer_index']??0);
+        if($outer===0){
+            unset($visiting[$index]);
+            if(self::key((string)($import['class_name']??''))!==self::key('Package')
+                ||self::key((string)($import['class_package']??''))!==self::key('Core')){
+                return $cache[$index]=self::outcome('invalid','root_import_is_not_core_package',false,null);
+            }
+            return $cache[$index]=self::outcome('package_linker','top_level_package_linker',true,null);
+        }
+        if($outer>0){
+            unset($visiting[$index]);
+            return $cache[$index]=self::outcome('unresolved','cooked_export_outer_source_todo',false,null);
+        }
+        $parentIndex=-$outer-1;
+        $parent=self::resolveImportOutcome($parentIndex,$imports,$candidates,$consumerExports,$cache,$visiting);
+        $parentStatus=(string)($parent['status']??'');
+        if(!in_array($parentStatus,['package_linker','resolved'],true)){
+            unset($visiting[$index]);
+            if(in_array($parentStatus,['private_export','invalid'],true)){
+                return $cache[$index]=self::outcome('invalid','parent_verify_import_failed',false,null,['parent_import_index'=>$parentIndex]);
+            }
+            $reason=!empty($parent['source_linker'])
+                ?'parent_runtime_context_unavailable'
+                :'parent_source_linker_unavailable_tolerated';
+            return $cache[$index]=self::outcome('runtime_only',$reason,(bool)($parent['source_linker']??false),null,['parent_import_index'=>$parentIndex]);
+        }
+        $parentSourceIndex=$parentStatus==='resolved'?(int)($parent['export_index']??-1):null;
+        $direct=self::candidateOutcome(
+            $index,$import,(string)($import['class_name']??''),(string)($import['class_package']??''),
+            $parentSourceIndex,$imports,$consumerExports,$candidates,false
+        );
+        if(($direct['status']??'')==='resolved'||($direct['status']??'')==='private_export'||($direct['status']??'')==='runtime_only'){
+            unset($visiting[$index]);
+            return $cache[$index]=$direct;
+        }
+        if(self::key((string)($import['object_name']??''))!==self::key('ObjectRedirector')){
+            $redir=self::candidateOutcome(
+                $index,$import,'ObjectRedirector','Core',$parentSourceIndex,$imports,$consumerExports,$candidates,true
+            );
+            if(($redir['status']??'')==='resolved'){
+                unset($visiting[$index]);
+                return $cache[$index]=self::outcome(
+                    'unresolved','object_redirector_target_unavailable',true,null,
+                    ['redirector_index'=>(int)($redir['export_index']??-1)]
+                );
+            }
+            if(($redir['status']??'')==='private_export'||($redir['status']??'')==='runtime_only'){
+                unset($visiting[$index]);
+                return $cache[$index]=$redir;
+            }
+        }
+        unset($visiting[$index]);
+        return $cache[$index]=self::outcome(
+            'runtime_only','runtime_native_transient_findif_fail_or_missing_class_context',true,null
+        );
+    }
+
+    /**
+     * @param array<string,mixed> $import
+     * @param array<int,array<string,mixed>> $imports
+     * @param list<array<string,mixed>> $consumerExports
+     * @param array<string,list<array<string,mixed>>> $candidates
+     * @return array<string,mixed>
+     */
+    private static function candidateOutcome(
+        int $importIndex,array $import,string $className,string $classPackage,?int $parentSourceIndex,
+        array $imports,array $consumerExports,array $candidates,bool $redirector
+    ): array {
+        $objectName=(string)($import['object_name']??'');
+        $identity=self::identityKey($objectName,$className,$classPackage);
+        foreach($candidates[$identity]??[]as$candidate){
+            $sourceOuter=(int)($candidate['outer_index']??0);
+            if($parentSourceIndex===null){if($sourceOuter!==0)continue;}
+            elseif($sourceOuter!==$parentSourceIndex+1)continue;
+            $exportIndex=(int)($candidate['export_index']??-1);
+            if((((int)($candidate['object_flags']??0))&self::RF_PUBLIC)===0){
+                if(self::privateImportIsReferenced($importIndex,$imports,$consumerExports)){
+                    return self::outcome('private_export',$redirector?'redirector_private_export':'private_export',true,null,['candidate_export_index'=>$exportIndex]);
+                }
+                return self::outcome(
+                    'runtime_only',
+                    $redirector?'redirector_private_editor_safe_replace_context':'private_export_editor_safe_replace_context',
+                    true,null,['candidate_export_index'=>$exportIndex]
+                );
+            }
+            return self::outcome('resolved',$redirector?'object_redirector_match':'exact_verify_import_match',true,$exportIndex);
+        }
+        return self::outcome('not_found',$redirector?'object_redirector_not_found':'verify_import_not_found',true,null);
+    }
+
+    /** @param array<int,array<string,mixed>> $imports @param list<array<string,mixed>> $exports */
+    private static function privateImportIsReferenced(int $importIndex,array $imports,array $exports): bool
+    {
+        $foundIndex=-($importIndex+1);
+        foreach($exports as$export){
+            if(!is_array($export))continue;
+            foreach(['super_index','class_index','outer_index','archetype_index']as$field){
+                if(array_key_exists($field,$export)&&(int)$export[$field]===$foundIndex)return true;
+            }
+        }
+        foreach($imports as$import){
+            if(is_array($import)&&(int)($import['outer_index']??0)===$foundIndex)return true;
+        }
+        return false;
+    }
+
+    /** @param array<string,mixed> $import */
+    private static function hasNameNone(array $import): bool
+    {
+        foreach(['class_package','class_name','object_name']as$field){
+            if(self::key((string)($import[$field]??''))===self::key('None'))return true;
+        }
+        return false;
+    }
+
+    /** @param array<string,mixed> $detail @return array<string,mixed> */
+    private static function outcome(string $status,string $reason,bool $sourceLinker,?int $exportIndex,array $detail=[]): array
+    {
+        return ['status'=>$status,'reason'=>$reason,'source_linker'=>$sourceLinker,'source_index'=>$exportIndex,'export_index'=>$exportIndex]+$detail;
     }
 
     /**

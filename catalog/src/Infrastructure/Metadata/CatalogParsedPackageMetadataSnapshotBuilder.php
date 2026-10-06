@@ -372,9 +372,14 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
         $ue2Profile = $ue2VerifyImport
             ? self::ue2VerifyImportProfile($gameId, $packageVersion)
             : null;
-        $ue3VerifyImport = $engineKey === 'UE3';
-        $ut3SourcePolicy = $ue3VerifyImport
-            && strtolower(trim((string)($engineRow['game_slug'] ?? ''))) === 'ut3';
+        $ue3Engine = $engineKey === 'UE3';
+        $ue3Profile = $ue3Engine
+            && strtolower(trim((string)($engineRow['game_slug'] ?? ''))) === 'ut3'
+            && $packageVersion === 512
+            && $licenseeVersion === 0
+                ? \UnrealDb\Catalog\Infrastructure\Persistence\PdoUe3VerifyImportProjectionResolver::PROFILE_UT3_V512
+                : null;
+        $ue3VerifyImport = $ue3Profile !== null;
         $ue3ImportsByIndex = [];
         if ($ue3VerifyImport) {
             foreach ($importRows as $fallback => $import) {
@@ -385,8 +390,8 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
             }
             $ue3ImportsByIndex = CatalogCompactIdentityEnricher::ue3FixupImportMap($ue3ImportsByIndex);
         }
-        $effectiveIdentity = static function (array $import) use ($ue3VerifyImport, $ue3ImportsByIndex): array {
-            if (!$ue3VerifyImport) {
+        $effectiveIdentity = static function (array $import) use ($ue3Engine, $ue3VerifyImport, $ue3ImportsByIndex): array {
+            if (!$ue3Engine || !$ue3VerifyImport) {
                 return [
                     'root' => (string)($import['root_package'] ?? ''),
                     'full' => (string)($import['full_path'] ?? ''),
@@ -405,7 +410,7 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
         $localExports = [];
         $localUe1VerifyImportOutcomes = [];
         $localUe2VerifyImportOutcomes = [];
-        $localUe3VerifyImportMatches = [];
+        $localUe3VerifyImportOutcomes = [];
         if ($ue1VerifyImport && $ue1Profile !== null) {
             require_once dirname(__DIR__) . '/Persistence/PdoUe1VerifyImportProjectionResolver.php';
             $localUe1VerifyImportOutcomes =
@@ -430,14 +435,15 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
                 );
         } elseif ($ue3VerifyImport) {
             require_once dirname(__DIR__) . '/Persistence/PdoUe3VerifyImportProjectionResolver.php';
-            $localUe3VerifyImportMatches =
-                \UnrealDb\Catalog\Infrastructure\Persistence\PdoUe3VerifyImportProjectionResolver::resolveInMemory(
+            $localUe3VerifyImportOutcomes =
+                \UnrealDb\Catalog\Infrastructure\Persistence\PdoUe3VerifyImportProjectionResolver::resolveInMemoryOutcome(
+                    $ue3Profile,
                     $importRows,
                     $importRows,
                     $exportRows,
                     $packageName,
                     $packageVersion,
-                    $ut3SourcePolicy
+                    $exportRows
                 );
         } else {
             foreach ($exportRows as $export) {
@@ -481,6 +487,7 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
             $localUnreal2OnlyIndex = null;
             $localUe1Reason = null;
             $localUe2Reason = null;
+            $localUe3Outcome = [];
             if ($ue1VerifyImport
                 && $ue1Profile !== null
                 && $this->lookupKey((string)($import['root_package'] ?? '')) === $this->lookupKey($packageName)) {
@@ -502,8 +509,12 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
                 }
             } elseif ($ue3VerifyImport
                 && $this->lookupKey((string)$effectiveIdentity($import)['root']) === $this->lookupKey($packageName)) {
-                $localExportIndex = $localUe3VerifyImportMatches[(int)($import['import_index'] ?? -1)] ?? null;
-            } elseif (!$legacyVerifyImport) {
+                $importIndex = (int)($import['import_index'] ?? -1);
+                $localUe3Outcome = (array)($localUe3VerifyImportOutcomes[$importIndex] ?? []);
+                if (($localUe3Outcome['status'] ?? '') === 'resolved') {
+                    $localExportIndex = $localUe3Outcome['export_index'] ?? null;
+                }
+            } elseif (!$legacyVerifyImport && !$ue3Engine) {
                 $localExportIndex = $localExports[$this->lookupKey((string)$import['full_path'])] ?? null;
             }
             if ($localExportIndex !== null && (int)$import['is_common'] !== 1) {
@@ -515,9 +526,32 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
                         ? 'ue1_verify_import_local_' . ($localUe1Reason ?? 'exact')
                         : ($ue2Profile !== null
                             ? 'ue2_verify_import_local_' . ($localUe2Reason ?? 'exact')
-                            : ($ue3VerifyImport ? 'ue3_verify_import_local' : 'exact_object')),
+                            : ($ue3VerifyImport
+                                ? 'ue3_verify_import_local_' . (string)($localUe3Outcome['reason'] ?? 'exact')
+                                : 'exact_object')),
                     'confidence' => 'exact',
                 ];
+            } elseif ($ue3Engine && (int)$import['is_common'] !== 1) {
+                if ($ue3Profile === null) {
+                    $resolution = [
+                        'status'=>'unresolved','resolved_file_id'=>null,'resolved_export_index'=>null,
+                        'source'=>'ue3_verify_import_source_implementation_unavailable','confidence'=>'source_unresolved',
+                    ];
+                } elseif ($localUe3Outcome !== []) {
+                    $status=(string)($localUe3Outcome['status'] ?? '');
+                    if ($status === 'private_export') {
+                        $resolution = [
+                            'status'=>'missing','resolved_file_id'=>null,'resolved_export_index'=>null,
+                            'source'=>'ue3_'.(string)($localUe3Outcome['reason'] ?? 'private_export'),'confidence'=>'source_rejected',
+                        ];
+                    } elseif (in_array($status,['runtime_only','unresolved','invalid','ignored'],true)) {
+                        $resolution = [
+                            'status'=>'unresolved','resolved_file_id'=>null,'resolved_export_index'=>null,
+                            'source'=>'ue3_'.(string)($localUe3Outcome['reason'] ?? 'runtime_context_unavailable'),
+                            'confidence'=>$status==='runtime_only'?'runtime_unavailable':'source_unresolved',
+                        ];
+                    }
+                }
             } elseif ($localUnreal2OnlyIndex !== null && (int)$import['is_common'] !== 1) {
                 $resolution = [
                     'status' => 'missing',

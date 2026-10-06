@@ -35,7 +35,7 @@ No reviewed source path tries every same-package physical file and chooses the f
 | Unreal II / UE2 | `L:\Source\Games\Unreal II\Unreal II The Awakening [12-09-2000]\Unreal2_old\Core\Src\UnLinker.cpp`, `UnObj.cpp`, `Core\Inc\UnObjVer.h` | **partial source coverage** | Latest complete local linker is package v69 (loadable v60-69 for this audit). The newer/final v70-128 packages do not have a complete local UE2 `VerifyImport` implementation and therefore fail closed for object verification. |
 | UT2003 v2107 | `L:\Source\Games\UT2003\...\Core\Src\UnLinker.cpp`, `UnObj.cpp` | **source-confirmed** | One package linker; no catalogue coverage ranking. |
 | UT2004 v129 / UE2.5 game profile | `L:\Source\Games\UT2004\UT2004Src\UT2004SrcCmake\Core\Src\UnLinker.cpp`, `UnObj.cpp`, `Core\Inc\UnObjVer.h` | **source-confirmed** | Latest complete local source; package v129/min v60. v3369/v128 was cross-checked. One package linker precedes exact import verification. |
-| UT3 Jan-2008 / UE3 | `L:\Source\Engine\UE3\Unreal Engine [v3.0] [01-00-2008]\...\Core\Src\UnLinker.cpp` | **source-confirmed** | `VerifyImportInner` selects one package linker, then verifies imports. |
+| UT3 v512 / early-2008 UE3 | `L:\Source\Engine\UE3\Unreal Engine [v3.0] [01-00-2008]\...\Core\Src\UnLinker.cpp`; March-2008 copy hash-identical | **source-confirmed** | Active game profile is v512/licensee 0. The checkout itself reaches engine v530/min491; that wider engine range is not inherited as UT3 policy. `VerifyImportInner` selects one package linker, then verifies imports. |
 | UDKUltimate / later UE3 | Current `L:\Source\Engine\UDK` contains a game sample, not the UDKUltimate C++ linker tree named by the existing spec | **not re-verified locally** | No active catalogue game profile currently depends on this tree. Restore the authoritative source before new conformance claims. |
 | UT4 / UE4 4.27.2 | `L:\Source\Engine\UE4\UE 4.27.2\Engine\Source\Runtime\CoreUObject\Private\UObject\LinkerLoad.cpp` | **source-confirmed** | `LoadImportPackage`/`GetPackageLinker` establishes provider before export verification. |
 | UE5 5.8.3 classic | `L:\Source\Engine\UE5\UE 5.8.3\Engine\Source\Runtime\CoreUObject\Private\UObject\LinkerLoad.cpp` | **source-confirmed** | One provider linker, with UE5-specific PackageName/runtime branches. |
@@ -252,7 +252,7 @@ The v6 transition deliberately excluded UT2004; Section 3A3 below adds only the 
 
 #### Bounded migration boundary
 
-Pass 2 is now `uedb5-dependency-pass-v7`; the transition accepts v1-v6.
+Section 3A3 advanced Pass 2 to `uedb5-dependency-pass-v7`, accepting v1-v6; Section 3B1 below now supersedes that checkpoint with v8.
 
 - A v6 file is reconsidered only for the new `ue2_ut2004_*` reasons; earlier UE1/UE2 corrections are not replayed.
 - UT2004 package-only files roll forward without opening UEDB/package containers.
@@ -260,4 +260,38 @@ Pass 2 is now `uedb5-dependency-pass-v7`; the transition accepts v1-v6.
 - No UT2004 Pass-1/package-byte reparse is required for 3A3.
 - Optional V4 repair remains exact-file only for the same impacted consumers.
 
-**Next audit checkpoint: Section 3B - UE3 VerifyImportInner, starting with the exact UT3 profile/latest applicable local source rather than inheriting UE2 behavior.**
+### Section 3B1 - UT3 / UE3 VerifyImportInner and VerifyImport wrapper
+
+**Status: complete for the active UT3 package-version-512/licensee-0 profile. No later UE3/UDK behavior is inherited.**
+
+#### Source authority and profile boundary
+
+- Primary authority: `L:\Source\Engine\UE3\Unreal Engine [v3.0] [01-00-2008]\epic.jan2008\UnrealEngine3\Development\Src\Core\Src\UnLinker.cpp`.
+- `L:\Source\Engine\UE3\Unreal Engine [v3.0] [03-00-2008]\UnrealEngine3\Development\Src\Core\Src\UnLinker.cpp` is byte-identical to the January copy (SHA-256 `E19F04113B7634656AF145F8C7BC363E9492A19B819B007328D2A3036407E603`); the two `UnObjVer.h` files are also byte-identical (SHA-256 `91A7FCBB65E40A8C6931424E1A5FCC2199DF70E3A6A3FD652957F56EFA029650`).
+- The early-2008 source defines `VER_FULL_VERSION_OF_UT3_BUMP = 512`, but its `VER_LATEST_ENGINE` is 530 and `GPackageFileMinVersion` is 491. Therefore 512 is the UT3 content/game-profile boundary, not the checkout's final engine version.
+- UnrealDB deliberately registers `PROFILE_UT3_V512` only for game `ut3`, package version 512, licensee 0. v513+, nonzero licensee versions, and other UE3 profiles fail closed rather than inheriting this implementation.
+
+#### Source results and corrections
+
+1. **Direct `NAME_None` returns immediately.** `ClassPackage == NAME_None`, `ClassName == NAME_None`, or `ObjectName == NAME_None` makes the direct import irrelevant to `VerifyImportInner`. Descendants are different: if their parent never establishes a `SourceLinker`, the source tolerates that missing linker; UnrealDB records the descendant runtime/source-linker dependency as unresolved rather than treating the entire ancestry as ignored.
+2. **Root imports are exactly `Core.Package`.** A top-level import establishes the one package linker used by descendants. Non-root imports recurse through their serialized negative `OuterIndex`; cooked import-to-export outers hit the source TODO/return and remain unresolved.
+3. **Provider matching is exact.** File-backed candidates require exact FName `ObjectName`, export class name, export class package, and the resolved outer relationship. Derived catalogue paths are not VerifyImport identity.
+4. **UT3 `RF_Public` is 64-bit.** The audited flag is `0x0000000400000000`; low-32-bit truncation is not equivalent.
+5. **Private exports are context-sensitive in this UE3 source.** If the import is referenced by a consumer export's super/class/outer/archetype or by another import's outer, the source forces `SafeReplace = FALSE` and the private match is a deterministic rejection. Otherwise editor state (`GIsEditor && !GIsUCC`) can permit the SafeReplace path, so static UnrealDB reports runtime-unresolved rather than a hard missing dependency.
+6. **A file-backed miss is not hard-missing.** After no export match, source can still use public/native/transient runtime objects/classes, `LOAD_FindIfFail`, SafeReplace, and class-presence state. UnrealDB now records the residual branch as `runtime_native_transient_findif_fail_or_missing_class_context`/unresolved.
+7. **`VerifyImport()` retries `Core.ObjectRedirector`.** A matching serialized redirector is real source evidence, but the dependency resolver does not deserialize/preload `DestinationObject`; it therefore records `object_redirector_target_unavailable` rather than guessing the target.
+8. **All authoritative UT3 resolution surfaces share the same profile/outcome resolver.** V4 dependency rebuilding, UEDB5 Pass 2, local/self-provider publication, physical-provider evaluation, and cross-game certification call the profiled UE3 outcome API. No production caller remains on the old match-only UE3 API.
+9. **Later UE3 remains separate.** Later `RemapClasses`/export-class-package rules and UDK behavior are not back-ported merely because the engine can deserialize older packages.
+
+#### Bounded migration boundary
+
+Pass 2 is now `uedb5-dependency-pass-v8`; the transition accepts v1-v7.
+
+- A v7 file is reconsidered only for the new `ue3_ut3_*` reasons; completed UE1/UE2/UT2004 corrections are not replayed.
+- UT3 package-only rows and already-resolved deterministic public object edges roll forward without opening UEDB/package containers.
+- UT3 v512 files rebuild from already-staged UEDB5 metadata only when staged object edges contain outcomes that can change under the full source outcome model.
+- UT3 package versions other than 512 or nonzero licensee versions with object edges are rebuilt only to become explicitly source-implementation-unavailable; they do not inherit v512 behavior.
+- No Pass-1/package-byte reparse is required for 3B1.
+- Optional V4 repair remains exact-file only for the same impacted consumers.
+
+**Next audit checkpoint: Section 3C - UT4 / UE4 4.27.2 VerifyImportInner and redirector/runtime branches, against the local 4.27.2 source.**

@@ -29,7 +29,7 @@ final class PdoDependencyResolver
     ): array {
         $engineKey = self::engineKey($db, $gameId);
         $legacyVerifyImport = in_array($engineKey, ['UE1', 'UE2'], true);
-        $fileIdentity = in_array($engineKey, ['UE1','UE2'], true)
+        $fileIdentity = in_array($engineKey, ['UE1','UE2','UE3'], true)
             ? self::filePackageIdentity($db, $fileId)
             : ['version'=>0,'licensee'=>0];
         $ue1Profile = $engineKey === 'UE1'
@@ -38,9 +38,13 @@ final class PdoDependencyResolver
         $ue2Profile = $engineKey === 'UE2'
             ? self::ue2VerifyImportProfile($gameId, (int)$fileIdentity['version'], (int)$fileIdentity['licensee'])
             : null;
-        $ue3VerifyImport = $engineKey === 'UE3';
+        $ue3Engine = $engineKey === 'UE3';
+        $ue3Profile = $ue3Engine
+            ? self::ue3VerifyImportProfile($gameId, (int)$fileIdentity['version'], (int)$fileIdentity['licensee'])
+            : null;
+        $ue3VerifyImport = $ue3Profile !== null;
         $ue4VerifyImport = $engineKey === 'UE4';
-        $sourceFnameLookup = $legacyVerifyImport || $ue3VerifyImport || $ue4VerifyImport;
+        $sourceFnameLookup = $legacyVerifyImport || $ue3Engine || $ue4VerifyImport;
 
         $importsByIndex = [];
         foreach ($imports as $fallback => $import) {
@@ -64,12 +68,14 @@ final class PdoDependencyResolver
         }
         $ue3RootPackages = [];
         $ue3SourceUnresolved = [];
-        if ($ue3VerifyImport) {
-            $importsByIndex = \UnrealDb\Catalog\Infrastructure\Metadata\CatalogCompactIdentityEnricher::ue3FixupImportMap($importsByIndex);
+        if ($ue3Engine) {
+            if ($ue3VerifyImport) {
+                $importsByIndex = \UnrealDb\Catalog\Infrastructure\Metadata\CatalogCompactIdentityEnricher::ue3FixupImportMap($importsByIndex);
+            }
             foreach (array_keys($importsByIndex) as $importIndex) {
                 $index = (int)$importIndex;
                 $ue3RootPackages[$index] = self::ue3RootPackageName($importsByIndex, $index);
-                if (self::hasExportOuterInImportAncestry($importsByIndex, $index)) {
+                if ($ue3VerifyImport && self::hasExportOuterInImportAncestry($importsByIndex, $index)) {
                     $ue3SourceUnresolved[$index] = true;
                 }
             }
@@ -130,7 +136,7 @@ final class PdoDependencyResolver
             if ($legacyVerifyImport && isset($legacySourceIrrelevant[$importIndex])) {
                 continue;
             }
-            $rootPackage = $ue3VerifyImport
+            $rootPackage = $ue3Engine
                 ? (string)($ue3RootPackages[$importIndex] ?? '')
                 : ($legacyVerifyImport
                     ? (string)($legacyRootPackages[$importIndex] ?? '')
@@ -145,7 +151,7 @@ final class PdoDependencyResolver
             }
             $relativeObjectPath = trim((string)($import['relative_object_path'] ?? ''));
             $fullPath = trim((string)($import['full_path'] ?? ''));
-            if (!$ue3VerifyImport && !$ue4VerifyImport && $rootPackage !== '' && $relativeObjectPath !== '' && $fullPath !== '') {
+            if (!$ue3Engine && !$ue4VerifyImport && $rootPackage !== '' && $relativeObjectPath !== '' && $fullPath !== '') {
                 $key = self::normalizeLookup($fullPath);
                 if ($key !== '' && !isset($objectLookups[$key])) {
                     $objectLookups[$key] = [
@@ -161,7 +167,7 @@ final class PdoDependencyResolver
 
         $packageMatches = self::loadPackageMatches($db, $gameId, $fileId, array_values($packageNames), $sourceFnameLookup);
         $ambiguousPackageProviders = [];
-        if ($legacyVerifyImport || $ue3VerifyImport || $ue4VerifyImport) {
+        if ($legacyVerifyImport || $ue3Engine || $ue4VerifyImport) {
             $physicalCandidates = self::loadPackageCandidates($db, $gameId, $fileId, array_values($packageNames), $sourceFnameLookup);
             foreach ($physicalCandidates as $packageKey => $candidates) {
                 if (count($candidates) <= 1) { continue; }
@@ -220,7 +226,7 @@ final class PdoDependencyResolver
                     $packageRequirements[$packageKey]['package_name'] ??= $rootPackage;
                 }
             }
-        } elseif ($ue3VerifyImport) {
+        } elseif ($ue3Engine) {
             foreach ($imports as $fallback => $import) {
                 if (!is_array($import) || self::isCommonImport($import, $engineKey)
                     || !self::isSourceObjectImport($import, $engineKey)) {
@@ -295,7 +301,7 @@ final class PdoDependencyResolver
             }
         }
 
-        $ue3VerifyImportMatches= [];
+        $ue3VerifyImportOutcomes = [];
         if ($ue3VerifyImport) {
             require_once __DIR__ . '/PdoUe3VerifyImportProjectionResolver.php';
             foreach ($packageRequirements as $packageKey => $requirement) {
@@ -307,10 +313,12 @@ final class PdoDependencyResolver
                     $engineKey,
                     $ue3RootPackages
                 );
-                $ue3VerifyImportMatches[$packageKey] = PdoUe3VerifyImportProjectionResolver::resolveProvider(
+                $ue3VerifyImportOutcomes[$packageKey] = PdoUe3VerifyImportProjectionResolver::resolveProviderOutcome(
                     $db,
                     (int)$candidate['file_id'],
                     $imports,
+                    $ue3Profile,
+                    $consumerExports,
                     $requiredImportIndexes,
                     $storageRoot
                 );
@@ -348,7 +356,7 @@ final class PdoDependencyResolver
                 continue;
             }
             $importIndex = isset($import['import_index']) ? (int)$import['import_index'] : (int)$fallback;
-            $rootPackage = $ue3VerifyImport
+            $rootPackage = $ue3Engine
                 ? (string)($ue3RootPackages[$importIndex] ?? '')
                 : ($legacyVerifyImport
                     ? (string)($legacyRootPackages[$importIndex] ?? '')
@@ -496,17 +504,34 @@ final class PdoDependencyResolver
                             $result = ['status'=>'unresolved','resolved_file_id'=>null,'resolved_export_id'=>null,'resolved_export_index'=>null,'source'=>'ue2_'.(string)($ue2['reason'] ?? 'runtime_only_fallback_unavailable'),'confidence'=>$status==='runtime_only'?'runtime_unavailable':'source_unresolved'];
                         }
                     }
-                } elseif ($ue3VerifyImport) {
-                    $exportIndex = $ue3VerifyImportMatches[$packageKey][$importIndex] ?? null;
-                    if ($packageMatch !== null && $exportIndex !== null) {
+                } elseif ($ue3Engine) {
+                    if ($ue3Profile === null) {
                         $result = [
-                            'status' => 'resolved',
-                            'resolved_file_id' => (int)$packageMatch['file_id'],
-                            'resolved_export_id' => null,
-                            'resolved_export_index' => (int)$exportIndex,
-                            'source' => 'ue3_verify_import',
-                            'confidence' => 'exact',
+                            'status'=>'unresolved','resolved_file_id'=>$packageMatch !== null ? (int)$packageMatch['file_id'] : null,
+                            'resolved_export_id'=>null,'resolved_export_index'=>null,
+                            'source'=>'ue3_verify_import_source_implementation_unavailable','confidence'=>'source_unresolved',
                         ];
+                    } else {
+                        $ue3 = (array)(($ue3VerifyImportOutcomes[$packageKey] ?? [])[$importIndex] ?? []);
+                        $status = (string)($ue3['status'] ?? '');
+                        if ($packageMatch !== null && $status === 'resolved') {
+                            $result = [
+                                'status'=>'resolved','resolved_file_id'=>(int)$packageMatch['file_id'],
+                                'resolved_export_id'=>null,'resolved_export_index'=>(int)($ue3['export_index'] ?? -1),
+                                'source'=>'ue3_verify_import_'.(string)($ue3['reason'] ?? 'exact'),'confidence'=>'exact',
+                            ];
+                        } elseif ($packageMatch !== null && $status === 'private_export') {
+                            $result = [
+                                'status'=>'missing','resolved_file_id'=>null,'resolved_export_id'=>null,'resolved_export_index'=>null,
+                                'source'=>'ue3_'.(string)($ue3['reason'] ?? 'private_export'),'confidence'=>'source_rejected',
+                            ];
+                        } elseif ($packageMatch !== null && in_array($status,['runtime_only','unresolved','invalid','ignored'],true)) {
+                            $result = [
+                                'status'=>'unresolved','resolved_file_id'=>null,'resolved_export_id'=>null,'resolved_export_index'=>null,
+                                'source'=>'ue3_'.(string)($ue3['reason'] ?? 'runtime_context_unavailable'),
+                                'confidence'=>$status==='runtime_only'?'runtime_unavailable':'source_unresolved',
+                            ];
+                        }
                     }
                 } elseif ($ue4VerifyImport) {
                     $exportIndex = $ue4VerifyImportMatches[$packageKey][$importIndex] ?? null;
@@ -802,6 +827,15 @@ final class PdoDependencyResolver
             return PdoUe1VerifyImportProjectionResolver::PROFILE_UNREAL_V120;
         }
         return null;
+    }
+
+    private static function ue3VerifyImportProfile(int $gameId, int $packageVersion, int $licenseeVersion): ?string
+    {
+        try { $sourceKey = \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5GameSourceRegistry::sourceKey($gameId); }
+        catch (\Throwable) { return null; }
+        return $sourceKey === 'ut3' && $packageVersion === 512 && $licenseeVersion === 0
+            ? PdoUe3VerifyImportProjectionResolver::PROFILE_UT3_V512
+            : null;
     }
 
     private static function ue2VerifyImportProfile(int $gameId, int $packageVersion, int $licenseeVersion): ?string
