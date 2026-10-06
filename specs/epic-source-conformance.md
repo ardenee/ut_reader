@@ -354,7 +354,7 @@ Section 3C advanced Pass 2 to `uedb5-dependency-pass-v9`, accepting v1-v8; Secti
 
 #### Bounded migration boundary
 
-Pass 2 is now `uedb5-dependency-pass-v10`; the transition accepts v1-v9.
+Section 3D advanced Pass 2 to `uedb5-dependency-pass-v10`, accepting v1-v9; Section 3E below supersedes that checkpoint with v11.
 
 - v9 UE1-UE4 rows do not replay their completed source deltas.
 - Only UE5 classic rows under the 5.8.3 source policy are candidates for the new 3D transition.
@@ -364,4 +364,38 @@ Pass 2 is now `uedb5-dependency-pass-v10`; the transition accepts v1-v9.
 - No Pass-1 reparse is required: raw FName number/text, package flags, PackageName, import/export graphs and optional bits are already present in UEDB5.
 - UE5 classic is not currently a registered game migration target, so this v10 rule does not create a current full-game replay; it prevents future staged UE5 rows from carrying a semantically stale v9 checkpoint.
 
-**Next audit checkpoint: Section 3E - UE5 5.8.3 Zen/IoStore dependency resolution and package-store/runtime redirect boundaries, independently from classic LinkerLoad.**
+### Section 3E - UE5 5.8.3 Zen/IoStore dependency resolution and package-store/runtime boundaries
+
+**Status: complete against the local UE5 5.8.3 package-store and AsyncLoading2 source. Zen remains independent from classic LinkerLoad/VerifyImport.**
+
+#### Source authority
+
+- `Runtime/PakFile/Private/FilePackageStore.cpp` - mounted-container ordering, package entries, optional segments, redirects/localization and soft references.
+- `Runtime/CoreUObject/Private/Serialization/PackageStore.cpp` - backend-priority arbitration.
+- `Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp` / `Public/Serialization/AsyncLoading2.h` - PackageImport keys, global import store, public-export lookup, redirector handling, imported-package rewrites, optional headers and runtime status/filter behavior.
+- Local UE5 source revision remains `396c9f059903aed5fec78ecd3d437a40c6415368`.
+
+#### Source results and corrections
+
+1. **The exact Zen object key is `(FPackageId, PublicExportHash)`.** `FPublicExportKey::FromPackageImport()` uses the package ID from the active header's `ImportedPackageIds` and the serialized imported public-export hash. There is no package-name/object-path fallback.
+2. **Imported package identity can be rewritten before object lookup.** AsyncLoading2 applies enabled CoreRedirect package-name rewriting, instancing remap and loose-file localization before consulting the package store. These transformations can rewrite `ImportedPackageId`, `PackageIdToLoad`, or both, and they depend on live redirect/instancing/culture state. Static UnrealDB therefore requires an explicit authoritative pre-store identity context. With none, every serialized Zen `PackageImport` remains `package_identity_runtime_context_required`; an authoritative empty rewrite set explicitly proves that the serialized identity survives those stages unchanged. When a caller has the real aggregate result, `package_identity_rewrites` records source ID, effective import ID and package ID to load without replacing the serialized dependency identity.
+3. **Single-container package-store state is never proof of the effective global store.** `FFilePackageStoreBackend` orders mounted containers by descending mount `Order`, then later `Sequence`; `FindOrAdd` makes the first effective redirect/localization row win. `FPackageStore` separately arbitrates mounted backends by priority, and hybrid/editor or already-loaded-package state can alter which loader/provider is used. Therefore absence of a redirect/localization row from the consumer's own ContainerHeader does **not** prove that no mounted backend redirects it. After pre-store identity is proven, static UnrealDB requires an authoritative effective package-store context for every Zen `PackageImport`; otherwise the result is `package_store_mount_context_required`. A selected-container row is evidence only, never a global winner by itself.
+4. **Explicit package-store redirects precede localization.** Under authoritative context, explicit source->target ID redirects apply first. Localization is skipped in editor and otherwise requires active culture plus proof that the localized target package exists. Serialized required/source package identity remains unchanged while an effective provider lookup ID is recorded separately.
+5. **Duplicate public hashes are runtime/order ambiguous for dependency lookup.** `ConditionalCreateImport()` checks the global import store first. If absent, `GetPublicExportIndex()` scans the main header low-to-high and, under `WITH_EDITOR`, then the optional header; cell fallback scans the main cell map. But every later `StoreGlobalObject()`/`StoreGlobalCell()` for the same `(PackageId, PublicExportHash)` overwrites the same global slot. Thus the first conditional-create fallback and the object ultimately visible after later export construction need not be the same duplicate. UnrealDB does not invent a stable winner: duplicate ordinary/cell hashes remain unresolved with all candidate indices preserved.
+6. **`WITH_EDITOR` and runtime `GIsEditor` are different source inputs.** `FPackageImportStore::GetImportObject()` follows `UObjectRedirector::DestinationObject` only when compiled `WITH_EDITOR`; optional Zen headers/exports are likewise editor-build state. By contrast, `FFilePackageStoreBackend::GetPackageRedirectInfo()` uses runtime `GIsEditor` only for localized-package redirection. UnrealDB now carries `with_editor` and `is_editor` separately and does not substitute one for the other. Epic's exact ScriptImport hash for `/Script/CoreUObject.ObjectRedirector` is `1D39669A89BAECB6`; editor-build lookup remains payload-dependent, while a known non-editor build returns the redirector object itself.
+7. **Optional segments augment the ordinary package; they are not alternative packages.** The same `FPackageId` can own one ordinary store entry and one optional-segment store entry. Main ExportBundleData is chunk index `0`; optional data is chunk index `1`. The previous builder incorrectly rejected this valid source shape and `findPackageChunk()` ignored chunk index. UEDB5 now preserves the main header plus a separate nested optional header/store entry. Optional consumer imports/load-order rows stay distinct from main source indices; optional ordinary provider exports can satisfy imports only under `WITH_EDITOR`, after main exports. Cell fallback remains main `CellExportMap` only.
+8. **Export filter flags follow the exact build/runtime predicate.** Under `WITH_EDITOR`, `AsyncLoading2_ShouldSkipLoadingExport()` always returns false. A `UE_SERVER` build applies `NotForServer`; a build without server code applies `NotForClient`; otherwise dedicated-server/client-only runtime state decides those two bits, while mixed/listen state keeps the export. UnrealDB resolves the predicate when those inputs are authoritative and reports `export_filter_runtime_state_required` only when the necessary state is genuinely unknown. A deterministic filtered export is retained as unresolved provenance (`export_filtered_for_runtime_build`) rather than fabricated as a different object.
+9. **`Missing`, `NotInstalled`, and `Pending` are package-store environment states.** The static catalogue indexes physically available staged providers and cannot manufacture on-demand backend status. A provider absent from the catalogue remains a catalogue missing result; runtime `NotInstalled`/`Pending` behavior is explicitly outside the standalone package snapshot until authoritative backend state is supplied.
+10. **Soft references retain raw package IDs.** `FFilePackageStoreBackend::GetSoftReferences()` does not apply package-store redirect lookup during enumeration, so soft references remain source IDs and are not rewritten just because a redirect row exists.
+
+#### Bounded migration boundary
+
+Pass 2 is now `uedb5-dependency-pass-v11`; the transition accepts v1-v10.
+
+- Completed UE1/UE2/UE3/UE4/UE5-classic deltas are not replayed by later-policy rows; the transition suppression table now explicitly carries those completed boundaries through v10.
+- The v11 Zen impact query is SQL-bounded to staged UE5 Zen files that actually have PackageImport/cell/import-load-order dependency edges keyed by Zen `FPackageId`. Those rows are reopened because v3 now requires explicit pre-store identity proof and effective package-store proof before static resolution, in addition to the optional/filter/redirector corrections. Script imports, soft references, main-local export-only load-order rows, UE5 classic and non-UE5 files roll forward.
+- Normal production Pass 2 does not possess live CoreRedirect/instancing/culture, already-loaded-package, hybrid-loader, backend-priority or mounted-container state. It therefore preserves serialized Zen identities but leaves affected package imports unresolved instead of asserting an environment-specific provider. Tests or future runtime-aware callers may supply explicit authoritative identity/store contexts; an empty context is meaningful proof, not an implicit default.
+- The optional-segment source-shape correction requires Pass-1 restaging only for Zen packages that actually have an optional segment, because the previous builder could not represent the valid main+optional entry pair. No registered UE5 game migration target currently exists, so this does not trigger a present catalogue-wide scan.
+- No V4 dependency metadata is used to make Zen decisions.
+
+**Next audit checkpoint: Section 4A - package serialization and pre-dependency preprocessing for the latest Unreal/UE1 profile, starting from Unreal v227 source independently of UT99 or later engines.**

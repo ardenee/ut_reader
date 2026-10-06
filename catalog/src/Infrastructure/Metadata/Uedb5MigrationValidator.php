@@ -373,6 +373,17 @@ final class Uedb5MigrationValidator
     private function zenDependencySourceCount(array $snapshot): int
     {
         $sections = (array)($snapshot['sections'] ?? []);
+        $count = $this->zenHeaderDependencySourceCount($sections);
+        $optional = (array)(($sections['optional_segment'] ?? [])[0] ?? []);
+        if ($optional !== []) {
+            $count += $this->zenHeaderDependencySourceCount($optional);
+        }
+        return $count;
+    }
+
+    /** @param array<string,mixed> $sections */
+    private function zenHeaderDependencySourceCount(array $sections): int
+    {
         $count = 0;
         foreach (['imports','cell_imports'] as $section) {
             foreach ((array)($sections[$section] ?? []) as $row) {

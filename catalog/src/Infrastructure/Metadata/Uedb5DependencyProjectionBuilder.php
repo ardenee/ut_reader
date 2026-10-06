@@ -59,6 +59,10 @@ final class Uedb5DependencyProjectionBuilder
             'cell_imports' => Uedb5SqlProjectionContract::DEP_SOURCE_CELL_IMPORT,
             'soft_package_references' => Uedb5SqlProjectionContract::DEP_SOURCE_SOFT_PACKAGE,
             'dependency_bundle_entries' => Uedb5SqlProjectionContract::DEP_SOURCE_LOAD_ORDER,
+            'optional_segment_imports' => Uedb5SqlProjectionContract::DEP_SOURCE_OPTIONAL_IMPORT,
+            'optional_segment_cell_imports' => Uedb5SqlProjectionContract::DEP_SOURCE_OPTIONAL_CELL_IMPORT,
+            'optional_segment_soft_package_references' => Uedb5SqlProjectionContract::DEP_SOURCE_OPTIONAL_SOFT_PACKAGE,
+            'optional_segment_dependency_bundle_entries' => Uedb5SqlProjectionContract::DEP_SOURCE_OPTIONAL_LOAD_ORDER,
             default => throw new RuntimeException('Unknown UEDB5 dependency source section: ' . $sourceSection),
         };
         $className = (string)($row['dependency_class'] ?? 'runtime_derived');
@@ -149,6 +153,9 @@ final class Uedb5DependencyProjectionBuilder
         }
         if (array_key_exists('cell_export_index', $object)) {
             return [Uedb5SqlProjectionContract::OBJECT_KIND_CELL_EXPORT, (int)$object['cell_export_index']];
+        }
+        if (array_key_exists('optional_segment_export_index', $object)) {
+            return [Uedb5SqlProjectionContract::OBJECT_KIND_OPTIONAL_EXPORT, (int)$object['optional_segment_export_index']];
         }
         return [null, null];
     }

@@ -158,9 +158,14 @@ try {
     ]);
     $zenRows = $reader->snapshot($gameId, $zenConsumerId)['sections'][Uedb5DependencyRebuilder::SECTION] ?? [];
     $check($zenBuilt['dependency_schema'] === Uedb5DependencyRebuilder::ZEN_SCHEMA, 'v5_rebuilder_uses_zen_dependency_schema');
-    $check(count($zenRows) === 1 && ($zenRows[0]['outcome'] ?? null) === 'resolved', 'v5_rebuilder_persists_zen_canonical_outcome');
-    $check((int)($zenRows[0]['selected_provider_file_id'] ?? 0) === $zenProviderId
+    $check(count($zenRows) === 1
+        && ($zenRows[0]['outcome'] ?? null) === 'unresolved'
+        && ($zenRows[0]['reason_code'] ?? null) === 'package_identity_runtime_context_required',
+        'v5_rebuilder_persists_zen_canonical_outcome');
+    $check(($zenRows[0]['selected_provider_file_id'] ?? null) === null
         && ($zenRows[0]['required_package_id'] ?? null) === $providerPackageId
+        && ($zenRows[0]['effective_import_package_id'] ?? null) === $providerPackageId
+        && ($zenRows[0]['provider_lookup_package_id'] ?? null) === $providerPackageId
         && ($zenRows[0]['required_object_identity'] ?? null) === $publicHash,
         'v5_rebuilder_preserves_zen_package_hash_identity');
 
@@ -202,11 +207,11 @@ try {
     $redirectAmbiguousRows = $reader->snapshot($gameId, $redirectConsumerId)['sections'][Uedb5DependencyRebuilder::SECTION] ?? [];
     $check(count($redirectAmbiguousRows) === 1
         && ($redirectAmbiguousRows[0]['required_package_id'] ?? null) === $providerPackageId
-        && ($redirectAmbiguousRows[0]['provider_lookup_package_id'] ?? null) === $redirectTargetPackageId
+        && ($redirectAmbiguousRows[0]['effective_import_package_id'] ?? null) === $providerPackageId
+        && ($redirectAmbiguousRows[0]['provider_lookup_package_id'] ?? null) === $providerPackageId
         && ($redirectAmbiguousRows[0]['outcome'] ?? null) === 'unresolved'
-        && ($redirectAmbiguousRows[0]['reason_code'] ?? null) === 'provider_environment_ambiguous'
-        && ($redirectAmbiguousRows[0]['resolver_detail']['candidate_file_ids'] ?? []) === [39996,39997],
-        'v5_rebuilder_applies_redirect_target_provider_ambiguity_without_rewriting_source_identity');
+        && ($redirectAmbiguousRows[0]['reason_code'] ?? null) === 'package_identity_runtime_context_required',
+        'v5_rebuilder_does_not_apply_container_redirect_before_pre_store_runtime_context');
     $rebuilder->rebuild($gameId, $consumerId, []);
     $check(hash_file('sha256', $v4Path) === $v4Hash, 'v5_dependency_rebuild_does_not_touch_v4_container');
 

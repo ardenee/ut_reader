@@ -135,7 +135,8 @@ $containerHeader = $containerPrefix
     . $softPayload;
 
 $packageBytes = "ZEN-PACKAGE-FIXTURE\0" . str_repeat('P', 91);
-$logical = $containerHeader . $packageBytes;
+$optionalPackageBytes = "ZEN-OPTIONAL-FIXTURE\0" . str_repeat('O', 53);
+$logical = $containerHeader . $packageBytes . $optionalPackageBytes;
 $blockSize = 64;
 $blocks = str_split($logical, $blockSize);
 $physical = '';
@@ -154,12 +155,13 @@ foreach ($blocks as $index => $block) {
     $physical .= $compressed;
 }
 
-$chunkId = static function (string $id, int $type) use ($u64le): string {
-    return $u64le($id) . pack('n', 0) . "\0" . chr($type);
+$chunkId = static function (string $id, int $type, int $chunkIndex = 0) use ($u64le): string {
+    return $u64le($id) . pack('n', $chunkIndex) . "\0" . chr($type);
 };
 $chunks = [
     ['id' => $chunkId($containerId, 6), 'offset' => 0, 'length' => strlen($containerHeader)],
-    ['id' => $chunkId($p1, 1), 'offset' => strlen($containerHeader), 'length' => strlen($packageBytes)],
+    ['id' => $chunkId($p1, 1, 0), 'offset' => strlen($containerHeader), 'length' => strlen($packageBytes)],
+    ['id' => $chunkId($p1, 1, 1), 'offset' => strlen($containerHeader) + strlen($packageBytes), 'length' => strlen($optionalPackageBytes)],
 ];
 
 $header = Uedb5IoStoreTocReader::TOC_MAGIC
@@ -214,14 +216,17 @@ try {
     $check($toc->header()['version'] === 8, 'toc_version_8_parsed');
     $check($toc->header()['container_id'] === $containerId, 'toc_container_id_is_lossless_u64');
     $check($toc->compressionMethods() === ['None', 'Zlib'], 'toc_compression_method_table_parsed');
-    $check(count($toc->chunks()) === 2, 'toc_chunk_table_count_matches');
+    $check(count($toc->chunks()) === 3, 'toc_chunk_table_count_matches');
     $check($toc->chunks()[1]['package_id'] === $p1, 'toc_package_id_is_lossless_u64');
     $check($toc->readChunk(0) === $containerHeader, 'ucas_multiblock_zlib_container_chunk_reconstructed');
     $check($toc->readChunk(1) === $packageBytes, 'ucas_midblock_package_chunk_reconstructed');
+    $check($toc->readChunk(2) === $optionalPackageBytes, 'ucas_optional_segment_chunk_reconstructed');
 
     $containerChunkIndexes = $toc->chunkIndexesByType(Uedb5IoStoreTocReader::CHUNK_TYPE_CONTAINER_HEADER);
     $check($containerChunkIndexes === [0], 'container_header_chunk_type_selected');
     $check($toc->findPackageChunk($p1) === 1, 'package_chunk_selected_by_fpackageid');
+    $check($toc->findPackageChunk($p1, Uedb5IoStoreTocReader::CHUNK_TYPE_EXPORT_BUNDLE_DATA, 0) === 1, 'package_main_chunk_selected_by_chunk_index');
+    $check($toc->findPackageChunk($p1, Uedb5IoStoreTocReader::CHUNK_TYPE_EXPORT_BUNDLE_DATA, 1) === 2, 'package_optional_chunk_selected_by_chunk_index');
 
     $parsed = Uedb5IoStoreContainerHeaderReader::parse($toc->readChunk(0));
     $check($parsed['container_id'] === $containerId, 'container_header_id_parsed');

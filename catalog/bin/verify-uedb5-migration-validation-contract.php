@@ -119,6 +119,19 @@ $whitespaceEdge=(array)($whitespaceProjection['dependency_edges'][0]??[]);
 $check('classic_whitespace_fname_dependency_key_is_preserved',
     ($whitespaceEdge['required_object_key_kind']??null)===Uedb5SqlProjectionContract::OBJECT_KEY_NAME
     && hash_equals((string)($whitespaceEdge['required_object_key']??''),md5(' ',true)));
+$optionalProjection=Uedb5DependencyProjectionBuilder::build([
+'file'=>['id'=>9003,'game_id'=>8],
+'sections'=>['dependency_results'=>[[
+'dependency_kind'=>'PackageImport','source_section'=>'optional_segment_imports','source_index'=>0,'dependency_class'=>'optional',
+'required_package_id'=>'0011223344556677','required_object_identity'=>'8899AABBCCDDEEFF','hard'=>false,'outcome'=>'resolved',
+'selected_provider_file_id'=>77,'selected_provider_object'=>['optional_segment_export_index'=>4]
+]]]
+]);
+$optionalEdge=(array)($optionalProjection['dependency_edges'][0]??[]);
+$check('optional_segment_dependency_projection_preserves_source_and_provider_kind',
+    ($optionalEdge['source_kind']??null)===Uedb5SqlProjectionContract::DEP_SOURCE_OPTIONAL_IMPORT
+    &&($optionalEdge['resolved_object_kind']??null)===Uedb5SqlProjectionContract::OBJECT_KIND_OPTIONAL_EXPORT
+    &&($optionalEdge['resolved_object_index']??null)===4);
 $validatorSource=(string)file_get_contents($root.'/src/Infrastructure/Metadata/Uedb5MigrationValidator.php');
 $check('validator_never_reads_uedb4',!str_contains($validatorSource,'.uedb4')&&!str_contains($validatorSource,'BlockedCompressedMetadataReader'));
 $check('validator_never_reads_live_v4_registration',!str_contains($validatorSource,'ue_file_metadata'));

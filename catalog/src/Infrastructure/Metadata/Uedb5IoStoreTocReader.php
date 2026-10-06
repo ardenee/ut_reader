@@ -117,13 +117,17 @@ final class Uedb5IoStoreTocReader
         return $indexes;
     }
 
-    public function findPackageChunk(string $packageIdHex, int $chunkType = self::CHUNK_TYPE_EXPORT_BUNDLE_DATA): ?int
-    {
+    public function findPackageChunk(
+        string $packageIdHex,
+        int $chunkType = self::CHUNK_TYPE_EXPORT_BUNDLE_DATA,
+        ?int $chunkIndex = null
+    ): ?int {
         $packageIdHex = strtoupper(trim($packageIdHex));
         foreach ($this->chunks as $index => $chunk) {
             if (
                 (int)$chunk['chunk_type'] === $chunkType
                 && (string)$chunk['package_id'] === $packageIdHex
+                && ($chunkIndex === null || (int)($chunk['chunk_index'] ?? -1) === $chunkIndex)
             ) {
                 return $index;
             }

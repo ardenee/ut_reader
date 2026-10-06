@@ -35,16 +35,29 @@ final class Uedb5Ue5ZenIoStoreSnapshotBuilder
             throw new RuntimeException('IoStore ContainerHeader ContainerId does not match the selected TOC.');
         }
 
-        [$storeEntry, $storeListIndex, $optionalSegment] = self::findStoreEntry($containerHeader, $packageId);
-        $packageChunkIndex = $toc->findPackageChunk($packageId);
+        [$storeEntry, $storeListIndex, $optionalStoreEntry, $optionalStoreListIndex] = self::findStoreEntries($containerHeader, $packageId);
+        $packageChunkIndex = $toc->findPackageChunk($packageId, Uedb5IoStoreTocReader::CHUNK_TYPE_EXPORT_BUNDLE_DATA, 0);
         if ($packageChunkIndex === null) {
             throw new RuntimeException('IoStore TOC has no ExportBundleData chunk for FPackageId ' . $packageId . '.');
         }
         $chunks = $toc->chunks();
         $chunk = $chunks[$packageChunkIndex];
         $zen = Uedb5ZenPackageReader::parse($toc->readChunk($packageChunkIndex), $packageId, $storeEntry);
+        $optionalZen = null;
+        $optionalChunkIndex = null;
+        $optionalChunk = null;
+        $optionalSoft = [];
+        if (is_array($optionalStoreEntry)) {
+            $optionalChunkIndex = $toc->findPackageChunk($packageId, Uedb5IoStoreTocReader::CHUNK_TYPE_EXPORT_BUNDLE_DATA, 1);
+            if ($optionalChunkIndex === null) {
+                throw new RuntimeException('IoStore package-store entry declares an optional segment but chunk index 1 is absent for FPackageId ' . $packageId . '.');
+            }
+            $optionalChunk = $toc->chunks()[$optionalChunkIndex];
+            $optionalZen = Uedb5ZenPackageReader::parse($toc->readChunk($optionalChunkIndex), $packageId, $optionalStoreEntry);
+            $optionalSoft = self::softReferencesForPackage($containerHeader, (int)$optionalStoreListIndex, true);
+        }
 
-        $soft = self::softReferencesForPackage($containerHeader, $storeListIndex, $optionalSegment);
+        $soft = self::softReferencesForPackage($containerHeader, $storeListIndex, false);
         // Package-store redirects/localization are container-global runtime lookup context.
         // Retain the complete selected ContainerHeader order; filtering them to the current
         // package loses redirects that Epic may apply to any imported FPackageId.
@@ -82,6 +95,10 @@ final class Uedb5Ue5ZenIoStoreSnapshotBuilder
                     'package_chunk_raw_id' => (string)$chunk['raw'],
                     'package_chunk_offset' => (int)$chunk['offset'],
                     'package_chunk_length' => (int)$chunk['length'],
+                    'optional_segment_chunk_toc_index' => $optionalChunkIndex,
+                    'optional_segment_chunk_raw_id' => is_array($optionalChunk) ? (string)$optionalChunk['raw'] : null,
+                    'optional_segment_chunk_offset' => is_array($optionalChunk) ? (int)$optionalChunk['offset'] : null,
+                    'optional_segment_chunk_length' => is_array($optionalChunk) ? (int)$optionalChunk['length'] : null,
                 ]],
                 'package_summary' => [[
                     'package_id' => $packageId,
@@ -95,17 +112,23 @@ final class Uedb5Ue5ZenIoStoreSnapshotBuilder
                 ]],
                 'package_store' => [[
                     'package_id' => $packageId,
-                    'optional_segment' => $optionalSegment,
+                    'optional_segment' => false,
                     'store_entry_index' => $storeListIndex,
                     'imported_package_ids' => array_values((array)$storeEntry['imported_package_ids']),
                     'shader_map_hashes' => array_values((array)$storeEntry['shader_map_hashes']),
+                    'has_optional_segment' => is_array($optionalStoreEntry),
+                    'optional_segment_store_entry_index' => $optionalStoreListIndex,
+                    'optional_segment_imported_package_ids' => is_array($optionalStoreEntry)
+                        ? array_values((array)$optionalStoreEntry['imported_package_ids']) : [],
+                    'optional_segment_shader_map_hashes' => is_array($optionalStoreEntry)
+                        ? array_values((array)$optionalStoreEntry['shader_map_hashes']) : [],
                 ]],
                 'name_map' => self::indexedRows((array)$zen['name_map']),
                 'imported_package_ids' => self::importedPackageRows($zen),
                 'imported_public_export_hashes' => self::hashRows((array)$zen['imported_public_export_hashes']),
-                'imports' => self::classifiedObjectIndexes((array)$zen['import_map'], $optionalSegment, false),
+                'imports' => self::classifiedObjectIndexes((array)$zen['import_map'], false, false),
                 'exports' => self::indexedRows((array)$zen['exports']),
-                'cell_imports' => self::classifiedObjectIndexes((array)$zen['cell_import_map'], $optionalSegment, true),
+                'cell_imports' => self::classifiedObjectIndexes((array)$zen['cell_import_map'], false, true),
                 'cell_exports' => self::indexedRows((array)$zen['cell_exports']),
                 'export_bundle_entries' => self::classifiedLoadOrderRows((array)$zen['export_bundle_entries']),
                 'dependency_bundle_headers' => self::indexedRows((array)$zen['dependency_bundle_headers']),
@@ -115,6 +138,27 @@ final class Uedb5Ue5ZenIoStoreSnapshotBuilder
                 'soft_package_references' => $soft,
                 'package_redirects' => $redirects,
                 'localized_packages' => $localized,
+                'optional_segment' => $optionalZen === null ? [] : [[
+                    'package_id' => $packageId,
+                    'summary' => (array)$optionalZen['summary'],
+                    'versioning_info' => $optionalZen['versioning_info'],
+                    'cell_offsets' => (array)$optionalZen['cell_offsets'],
+                    'header_bytes' => (int)$optionalZen['header_bytes'],
+                    'exports_data_bytes' => (int)$optionalZen['exports_data_bytes'],
+                    'name_map' => self::indexedRows((array)$optionalZen['name_map']),
+                    'imported_package_ids' => self::importedPackageRows($optionalZen),
+                    'imported_public_export_hashes' => self::hashRows((array)$optionalZen['imported_public_export_hashes']),
+                    'imports' => self::classifiedObjectIndexes((array)$optionalZen['import_map'], true, false),
+                    'exports' => self::indexedRows((array)$optionalZen['exports']),
+                    'cell_imports' => self::classifiedObjectIndexes((array)$optionalZen['cell_import_map'], true, true),
+                    'cell_exports' => self::indexedRows((array)$optionalZen['cell_exports']),
+                    'export_bundle_entries' => self::classifiedLoadOrderRows((array)$optionalZen['export_bundle_entries']),
+                    'dependency_bundle_headers' => self::indexedRows((array)$optionalZen['dependency_bundle_headers']),
+                    'dependency_bundle_entries' => self::classifiedDependencyBundleRows((array)$optionalZen['dependency_bundle_entries']),
+                    'bulk_data_map' => self::indexedRows((array)$optionalZen['bulk_data_map']),
+                    'imported_package_names' => self::indexedRows((array)$optionalZen['imported_package_names']),
+                    'soft_package_references' => $optionalSoft,
+                ]],
             ],
         ];
     }
@@ -141,27 +185,35 @@ final class Uedb5Ue5ZenIoStoreSnapshotBuilder
             'soft_package_references' => 'ue5.zen.soft-package-reference.v1',
             'package_redirects' => 'ue5.zen.package-redirect.v2',
             'localized_packages' => 'ue5.zen.localized-package.v2',
+            'optional_segment' => 'ue5.zen.optional-segment.v1',
         ];
     }
 
-    /** @return array{0:array<string,mixed>,1:int,2:bool} */
-    private static function findStoreEntry(array $containerHeader, string $packageId): array
+    /** @return array{0:array<string,mixed>,1:int,2:?array<string,mixed>,3:?int} */
+    private static function findStoreEntries(array $containerHeader, string $packageId): array
     {
-        $matches = [];
+        $ordinary = [];
         foreach ((array)$containerHeader['store_entries'] as $index => $entry) {
             if ((string)($entry['package_id'] ?? '') === $packageId) {
-                $matches[] = [(array)$entry, (int)$index, false];
+                $ordinary[] = [(array)$entry, (int)$index];
             }
         }
+        if (count($ordinary) !== 1) {
+            throw new RuntimeException('FPackageId must have exactly one ordinary package-store entry in the selected container context.');
+        }
+        $optional = [];
         foreach ((array)$containerHeader['optional_segment_store_entries'] as $index => $entry) {
             if ((string)($entry['package_id'] ?? '') === $packageId) {
-                $matches[] = [(array)$entry, (int)$index, true];
+                $optional[] = [(array)$entry, (int)$index];
             }
         }
-        if (count($matches) !== 1) {
-            throw new RuntimeException('FPackageId must have exactly one package-store entry in the selected container context.');
+        if (count($optional) > 1) {
+            throw new RuntimeException('FPackageId has more than one optional-segment package-store entry in the selected container context.');
         }
-        return $matches[0];
+        return [
+            $ordinary[0][0], $ordinary[0][1],
+            $optional[0][0] ?? null, $optional[0][1] ?? null,
+        ];
     }
 
     /** @return list<array<string,mixed>> */

@@ -252,11 +252,8 @@ $db->prepare('INSERT INTO ue_uedb5_provider_keys VALUES(?,?,?,?,?,?)')->execute(
     1,45,8,$zenKind,hex2bin($redirectTargetId),45,
 ]);
 $redirectSelected=(new PdoUedb5PhysicalProviderSelector($db,$tmp))->select(8,44);
-$check('zen_selector_uses_package_store_redirect_target_provider_id',
-    count($redirectSelected)===1
-    && ($redirectSelected[0]['selection_status']??'')==='selected'
-    && (int)($redirectSelected[0]['file_id']??0)===45
-    && ($redirectSelected[0]['package_id']??'')===$redirectTargetId);
+$check('zen_selector_does_not_guess_single_container_redirect_target',
+    $redirectSelected===[]);
 
 $source=(string)file_get_contents($root.'/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php');
 $check('selector_uses_v5_provider_keys',str_contains($source,'ue_uedb5_provider_keys'));

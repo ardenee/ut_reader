@@ -261,12 +261,13 @@ $globalLocalizedSourceId = 'DEAD00000000BEEF';
 $globalRedirectSourceId = 'AAAA000000001111';
 $globalRedirectTargetId = 'BBBB000000002222';
 $storeEntries = pack('V2', 1, 16) . pack('V2', 0, 0) . $u64le($providerId);
+$optionalStoreEntries = pack('V2', 1, 16) . pack('V2', 0, 0) . $u64le($providerId);
 $containerHeader = pack('V2', Uedb5IoStoreContainerHeaderReader::SIGNATURE, 5)
     . $u64le($containerId)
     . $arrayU64([$packageId])
     . $arrayBytes($storeEntries)
-    . pack('V', 0)
-    . $arrayBytes('')
+    . $arrayU64([$packageId])
+    . $arrayBytes($optionalStoreEntries)
     . $nameBatch(['/Game/GlobalLocalized', '/Game/GlobalRedirect'])
     . pack('V', 1)
     . $u64le($globalLocalizedSourceId)
@@ -276,14 +277,16 @@ $containerHeader = pack('V2', Uedb5IoStoreContainerHeaderReader::SIGNATURE, 5)
     . $u64le($globalRedirectTargetId)
     . $mappedName(1)
     . pack('V4', 0, 0, 0, 0);
-$chunkId = static function (string $id, int $type) use ($u64le): string {
-    return $u64le($id) . pack('n', 0) . "\0" . chr($type);
+$chunkId = static function (string $id, int $type, int $chunkIndex = 0) use ($u64le): string {
+    return $u64le($id) . pack('n', $chunkIndex) . "\0" . chr($type);
 };
-$logical = $containerHeader . $packageBytes;
+$optionalPackageBytes = $packageBytes;
+$logical = $containerHeader . $packageBytes . $optionalPackageBytes;
 $blockSize = 65536;
 $chunks = [
     ['id' => $chunkId($containerId, Uedb5IoStoreTocReader::CHUNK_TYPE_CONTAINER_HEADER), 'offset' => 0, 'length' => strlen($containerHeader)],
-    ['id' => $chunkId($packageId, Uedb5IoStoreTocReader::CHUNK_TYPE_EXPORT_BUNDLE_DATA), 'offset' => strlen($containerHeader), 'length' => strlen($packageBytes)],
+    ['id' => $chunkId($packageId, Uedb5IoStoreTocReader::CHUNK_TYPE_EXPORT_BUNDLE_DATA, 0), 'offset' => strlen($containerHeader), 'length' => strlen($packageBytes)],
+    ['id' => $chunkId($packageId, Uedb5IoStoreTocReader::CHUNK_TYPE_EXPORT_BUNDLE_DATA, 1), 'offset' => strlen($containerHeader) + strlen($packageBytes), 'length' => strlen($optionalPackageBytes)],
 ];
 $tocHeader = Uedb5IoStoreTocReader::TOC_MAGIC
     . chr(8) . "\0" . pack('v', 0)
@@ -335,6 +338,9 @@ try {
     $check($snapshot['file']['package_name'] === '/Game/TestPackage', 'zen_snapshot_package_name');
     $check($snapshot['sections']['container_provenance'][0]['utoc_sha256'] === hash('sha256', $utoc), 'zen_snapshot_utoc_provenance_hash');
     $check($snapshot['sections']['package_store'][0]['imported_package_ids'] === [$providerId], 'zen_snapshot_store_entry_preserved');
+    $check(!empty($snapshot['sections']['package_store'][0]['has_optional_segment']) && $snapshot['sections']['package_store'][0]['optional_segment_imported_package_ids'] === [$providerId], 'zen_snapshot_optional_store_entry_augments_main_package');
+    $check(($snapshot['sections']['container_provenance'][0]['optional_segment_chunk_toc_index'] ?? null) === 2, 'zen_snapshot_optional_chunk_provenance_preserved');
+    $check(count($snapshot['sections']['optional_segment']) === 1 && ($snapshot['sections']['optional_segment'][0]['imports'][0]['dependency_class'] ?? null) === 'optional', 'zen_snapshot_optional_header_preserved_separately');
     $check($snapshot['sections']['imports'][0]['dependency_class'] === 'hard', 'zen_snapshot_hard_import_classified');
     $check($snapshot['sections']['cell_imports'][0]['dependency_class'] === 'script', 'zen_snapshot_script_cell_import_classified');
     $check($snapshot['sections']['dependency_bundle_entries'][0]['dependency_class'] === 'load_order', 'zen_snapshot_load_order_classified');
@@ -354,13 +360,15 @@ try {
 
     $check(
         ($snapshot['section_schemas']['package_redirects'] ?? '') === 'ue5.zen.package-redirect.v2'
-        && ($snapshot['section_schemas']['localized_packages'] ?? '') === 'ue5.zen.localized-package.v2',
+        && ($snapshot['section_schemas']['localized_packages'] ?? '') === 'ue5.zen.localized-package.v2'
+        && ($snapshot['section_schemas']['optional_segment'] ?? '') === 'ue5.zen.optional-segment.v1',
         'zen_snapshot_container_global_redirect_schemas_are_v2'
     );
     Uedb5MetadataContainer::buildToFile($snapshot, $uedb5Path, 2);
     $staged = new Uedb5MetadataStagingReader($uedb5Path, 7);
     $check($staged->manifest()['package_family'] === 'zen-iostore', 'zen_snapshot_uedb5_manifest_family');
     $check($staged->count('imports') === 1, 'zen_snapshot_uedb5_import_count');
+    $check($staged->count('optional_segment') === 1, 'zen_snapshot_uedb5_optional_segment_count');
     $roundTripImports = $staged->page('imports', 0, 10);
     $check(
         $roundTripImports[0]['provider_package_id'] === $providerId

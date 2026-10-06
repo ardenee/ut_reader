@@ -10,7 +10,7 @@ use Throwable;
 
 final class Uedb5GameDependencyPassService
 {
-    public const DEPENDENCY_POLICY = 'uedb5-dependency-pass-v10';
+    public const DEPENDENCY_POLICY = 'uedb5-dependency-pass-v11';
 
     private Uedb5MetadataReader $reader;
     private Uedb5DependencyRebuilder $rebuilder;
