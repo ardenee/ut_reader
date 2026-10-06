@@ -59,6 +59,7 @@ Current conformance work must use the local source mirrors below. Historical Git
 - [x] Later UE3 / UDK package format and reading — `ue3-udkultimate-package-format.md`
 - [x] Later UE3 / UDK dependency resolution — `ue3-udkultimate-dependency-resolution.md`
 - [x] UT4 / UE4 clean-master v510 package serialization and pre-dependency preprocessing — `ut4-clean-master-v510-package-format.md`
+- [x] UT4 explicit v511 structural package metadata boundary — `ut4-v511-structural-package-format.md` (package tables source-backed by Epic `ae727f8d`; exact UT/Main v511 VerifyImport remains unavailable)
 - [x] UT4 / UE4 clean-master v510 dependency and VerifyImport resolution — `ut4-clean-master-v510-dependency-resolution.md`
 - [x] Final UE4.27.2 generic package format and reading — `ue4-4.27.2-package-format.md` (supplemental later-engine reference; not UT4 authority)
 - [x] Final UE4.27.2 generic dependency resolution — `ue4-4.27.2-dependency-resolution.md` (supplemental later-engine reference; not UT4 authority)

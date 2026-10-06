@@ -87,7 +87,7 @@ only when:
 - package version is 214-510;
 - licensee version is 0.
 
-v511+ or nonzero-licensee rows do not inherit UT4 VerifyImport.
+v511+ or nonzero-licensee rows do not inherit UT4 VerifyImport. In particular, explicit v511 packages may carry the separate structural source policy `ue4-epic-dev-main-ae727f8d-v511-ut4-structural-package`, but that policy intentionally has **no** VerifyImport resolver profile because the exact UT/Main v511 linker source is unavailable.
 
 ## Migration policy
 
@@ -98,8 +98,10 @@ The transition reopens only the UT4 delta introduced by correcting clean-master 
 Potential actions are separated:
 
 - exact changed reader-gate or old-unversioned rows: Pass-1 reread required;
-- explicit non-gate v214-510 rows with legacy source policy: metadata-only source-policy refresh;
-- object rows whose clean-master VerifyImport outcome can differ: Pass-2 rebuild;
-- package versions above 510 / nonzero licensee: source-profile review/fail closed.
+- explicit non-gate v214-510 rows with legacy source policy: metadata-only source-policy refresh to the clean-master policy;
+- explicit v511/licensee-0 rows whose staged summary proves `unversioned=false`: metadata-only source-policy refresh to the v511 structural policy;
+- object rows whose clean-master VerifyImport outcome can differ: Pass-2 rebuild only for v214-510 clean-master packages;
+- v511 object-import verification: source-profile review/fail closed until exact UT/Main v511 linker semantics are recovered;
+- v512+ / nonzero-licensee rows: source-profile review/fail closed.
 
 No whole-game original-byte reparse is justified merely by the policy rename.

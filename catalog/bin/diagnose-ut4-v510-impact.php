@@ -10,11 +10,17 @@ require_once $root . '/bootstrap.php';
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5MetadataReader;
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5Ut4SnapshotBuilder;
 
-$options = getopt('', ['summary']);
+$options = getopt('', ['summary','storage-root::','after-id::','limit::']);
+$afterId = max(0, (int)($options['after-id'] ?? 0));
+$limit = max(1, min(10000, (int)($options['limit'] ?? 5000)));
 $app = catalog_bootstrap();
 $db = $app->db;
 $config = catalog_config();
-$storage = rtrim((string)($config['storage_path'] ?? ''), "\\/");
+$storageOverride = trim((string)($options['storage-root'] ?? ''));
+$storage = rtrim(
+    $storageOverride !== '' ? $storageOverride : (string)($config['storage_path'] ?? ''),
+    "\\/"
+);
 
 $table = $db->query(
     "SELECT COUNT(*) FROM information_schema.tables"
@@ -32,15 +38,23 @@ if (!is_array($game)) {
 }
 $gameId = (int)$game['id'];
 $reader = new Uedb5MetadataReader($storage);
+$totalStatement = $db->prepare('SELECT COUNT(*) FROM ue_uedb5_files WHERE game_id=?');
+$totalStatement->execute([$gameId]);
+$stagedFileCount = (int)$totalStatement->fetchColumn();
 
 $sql = 'SELECT v.file_id,v.source_policy,f.package_version,f.licensee_version,'
     . 'EXISTS(SELECT 1 FROM ue_uedb5_dependency_edges e'
     . ' WHERE e.file_id=v.file_id AND e.source_kind=1 AND e.required_object_key IS NOT NULL) has_object_edges '
     . 'FROM ue_uedb5_files v JOIN ue_files f ON f.id=v.file_id AND f.game_id=v.game_id '
-    . 'WHERE v.game_id=? ORDER BY v.file_id';
+    . 'WHERE v.game_id=? AND v.file_id>? ORDER BY v.file_id LIMIT ' . ($limit + 1);
 $statement = $db->prepare($sql);
-$statement->execute([$gameId]);
+$statement->execute([$gameId, $afterId]);
 $rows = $statement->fetchAll(PDO::FETCH_ASSOC) ?: [];
+$hasMore = count($rows) > $limit;
+if ($hasMore) {
+    array_pop($rows);
+}
+$nextAfterId = $rows !== [] ? (int)$rows[array_key_last($rows)]['file_id'] : $afterId;
 
 $readerGateVersions = [325,335,364,383,443,458,484,503,506,507,509,510];
 $readerGatePass1 = [];
@@ -59,8 +73,11 @@ foreach ($rows as $row) {
     $licensee = (int)($row['licensee_version'] ?? 0);
     $policy = (string)($row['source_policy'] ?? '');
     $hasObjects = (int)($row['has_object_edges'] ?? 0) === 1;
-    $layoutRisk = $version <= 0 || $version > 510;
-    $legacyPolicy = $policy !== Uedb5Ut4SnapshotBuilder::SOURCE_POLICY;
+    $needsSummaryInspection = $version <= 0 || $version >= 511;
+    $legacyPolicy = !in_array($policy, [
+        Uedb5Ut4SnapshotBuilder::SOURCE_POLICY,
+        Uedb5Ut4SnapshotBuilder::SOURCE_POLICY_V511,
+    ], true);
     $readerGateRisk = $legacyPolicy
         && $licensee === 0
         && in_array($version, $readerGateVersions, true);
@@ -68,7 +85,7 @@ foreach ($rows as $row) {
     $assumed = null;
     $unversionedNeedsPass1 = false;
 
-    if ($layoutRisk) {
+    if ($needsSummaryInspection) {
         try {
             $summary = $reader->page($gameId, $fileId, 'summary', 0, 1)[0] ?? null;
             if (!is_array($summary)) {
@@ -112,33 +129,43 @@ foreach ($rows as $row) {
         $policyRefresh[] = $fileId;
     }
 
-    $explicitSourceValid = $version >= 214 && $version <= 510 && $licensee === 0;
-    $sourceValid = $explicitSourceValid || $unversionedNeedsPass1;
+    $explicitCleanMaster = $version >= 214 && $version <= 510 && $licensee === 0;
+    $explicitStructuralV511 = $version === 511 && $licensee === 0 && !$unversioned;
+    $sourceValid = $explicitCleanMaster || $explicitStructuralV511 || $unversionedNeedsPass1;
+    $expectedPolicy = $explicitStructuralV511
+        ? Uedb5Ut4SnapshotBuilder::SOURCE_POLICY_V511
+        : Uedb5Ut4SnapshotBuilder::SOURCE_POLICY;
+    $policyNeedsRefresh = $policy !== $expectedPolicy;
     if (!$sourceValid) {
         $sourceUnavailable[] = $fileId;
     } else {
-        if ($legacyPolicy && !$readerGateRisk && !$unversionedNeedsPass1) {
+        if ($policyNeedsRefresh) {
+            $policyRefresh[] = $fileId;
+        }
+        if ($policyNeedsRefresh && !$readerGateRisk && !$unversionedNeedsPass1) {
             $metadataPolicyRefresh[] = $fileId;
         }
-        if ($hasObjects) {
+        // v511 package structure is proven, but exact UT/Main VerifyImport is not.
+        if ($hasObjects && !$explicitStructuralV511) {
             $pass2Candidates[] = $fileId;
         }
     }
 
-    if ($readerGateRisk || $layoutRisk || $legacyPolicy || !$sourceValid) {
+    if ($readerGateRisk || $needsSummaryInspection || $policyNeedsRefresh || !$sourceValid) {
         $details[(string)$fileId] = [
             'package_version' => $version,
             'licensee_version' => $licensee,
             'source_policy_current' => $policy,
-            'source_policy_expected' => Uedb5Ut4SnapshotBuilder::SOURCE_POLICY,
+            'source_policy_expected' => $expectedPolicy,
             'unversioned' => $unversioned,
             'assumed_unversioned_parser_version' => $assumed,
             'reader_gate_pass1_reparse_required' => $readerGateRisk,
             'unversioned_pass1_reparse_required' => $unversionedNeedsPass1,
-            'metadata_only_source_policy_refresh' => $legacyPolicy
+            'metadata_only_source_policy_refresh' => $policyNeedsRefresh
                 && !$readerGateRisk
                 && !$unversionedNeedsPass1
                 && $sourceValid,
+            'structural_v511_verifyimport_review_required' => $explicitStructuralV511 && $hasObjects,
             'source_valid_after_prerequisites' => $sourceValid,
             'has_object_edges' => $hasObjects,
         ];
@@ -159,7 +186,12 @@ $result = [
     'ok' => $inspectionErrors === [],
     'read_only' => true,
     'game_id' => $gameId,
-    'staged_file_count' => count($rows),
+    'staged_file_count' => $stagedFileCount,
+    'slice_file_count' => count($rows),
+    'after_id' => $afterId,
+    'limit' => $limit,
+    'next_after_id' => $nextAfterId,
+    'has_more' => $hasMore,
     'uedb5_summary_reads' => $summaryReads,
     'inspection_error_count' => count($inspectionErrors),
     'reader_gate_versions' => $readerGateVersions,
@@ -169,6 +201,10 @@ $result = [
     'metadata_only_source_policy_refresh_file_count' => count($metadataPolicyRefresh),
     'source_policy_refresh_file_count' => count($policyRefresh),
     'verifyimport_pass2_candidate_file_count' => count($pass2Candidates),
+    'structural_v511_verifyimport_review_file_count' => count(array_filter(
+        $details,
+        static fn(array $detail): bool => !empty($detail['structural_v511_verifyimport_review_required'])
+    )),
     'source_unavailable_file_count' => count($sourceUnavailable),
     'requires_original_package_read' => $pass1 !== [],
 ];

@@ -397,7 +397,8 @@ $check(($ut4Unsupported[1]['status'] ?? null) === 'unresolved'
     && ($ut4Unsupported[1]['reason'] ?? null) === 'ue4_verify_import_source_implementation_unavailable',
     'unprofiled_ue4_does_not_inherit_ut4_clean_master_verifyimport');
 $ut4TooNewConsumer = $snapshot(
-    44008, 'Consumer511', 'ue4-classic-package', 'ue4.ut4', 'ue4-ut4-clean-master-v510-classic-package',
+    44008, 'Consumer511', 'ue4-classic-package', 'ue4.ut4',
+    'ue4-epic-dev-main-ae727f8d-v511-ut4-structural-package',
     $ue4Imports, [], 511
 );
 $ut4TooNew = Uedb5ClassicDependencyResolver::resolve($ut4TooNewConsumer, [[
@@ -405,7 +406,7 @@ $ut4TooNew = Uedb5ClassicDependencyResolver::resolve($ut4TooNewConsumer, [[
 ]]);
 $check(($ut4TooNew[1]['status'] ?? null) === 'unresolved'
     && ($ut4TooNew[1]['reason'] ?? null) === 'ue4_verify_import_source_implementation_unavailable',
-    'ut4_v511_is_above_clean_master_v510_verifyimport_boundary');
+    'ut4_v511_structural_policy_does_not_gain_clean_master_verifyimport');
 $ut4NoProvider = Uedb5ClassicDependencyResolver::resolve($ut4Consumer, []);
 $check(($ut4NoProvider[1]['status'] ?? null) === 'missing'
     && ($ut4NoProvider[1]['reason'] ?? null) === 'package_provider_unavailable',

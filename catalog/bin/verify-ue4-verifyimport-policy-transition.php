@@ -24,7 +24,8 @@ $files=[
  [3,7,Uedb5Ut4SnapshotBuilder::SOURCE_POLICY,508,0],[4,7,Uedb5Ut4SnapshotBuilder::SOURCE_POLICY,508,0],
  [5,7,Uedb5Ut4SnapshotBuilder::SOURCE_POLICY,508,0],[6,7,'ue4-other-source-policy',508,0],
  [7,6,'ue3-ut3-jan2008-package-v512',512,0],[8,7,'ue4-4.27.2-release-classic-package',510,0],
- [9,7,'ue4-4.27.2-release-classic-package',508,0],[10,7,'ue4-4.27.2-release-classic-package',522,0]
+ [9,7,'ue4-4.27.2-release-classic-package',508,0],[10,7,'ue4-4.27.2-release-classic-package',521,0],
+ [11,7,'ue4-4.27.2-release-classic-package',511,0],[12,7,Uedb5Ut4SnapshotBuilder::SOURCE_POLICY_V511,511,0]
 ];
 $insF=$db->prepare('INSERT INTO ue_files VALUES(?,?,"verified",?,?)');$insV=$db->prepare('INSERT INTO ue_uedb5_files VALUES(?,?,?)');
 foreach($files as[$id,$game,$policy,$version,$licensee]){$insF->execute([$id,$game,$version,$licensee]);$insV->execute([$id,$game,$policy]);}
@@ -37,8 +38,10 @@ $edge->execute([4,1,0,Uedb5SqlProjectionContract::OUTCOME_RESOLVED,$objectKey,10
 $edge->execute([5,1,0,Uedb5SqlProjectionContract::OUTCOME_PACKAGE_ONLY,null,103,null]);
 $edge->execute([6,1,0,Uedb5SqlProjectionContract::OUTCOME_RESOLVED,$objectKey,104,0]);
 $edge->execute([7,1,0,Uedb5SqlProjectionContract::OUTCOME_MISSING,$objectKey,null,null]);
+$edge->execute([11,1,0,Uedb5SqlProjectionContract::OUTCOME_UNRESOLVED,$objectKey,null,null]);
+$edge->execute([12,1,0,Uedb5SqlProjectionContract::OUTCOME_UNRESOLVED,$objectKey,null,null]);
 $db->exec('INSERT INTO ue_export_path_lookup VALUES(101,0,1),(102,0,0),(104,0,1)');
-$out=(new PdoUe4VerifyImportImpactQuery($db))->run([1,2,3,4,5,6,7,8,9,10]);
+$out=(new PdoUe4VerifyImportImpactQuery($db))->run([1,2,3,4,5,6,7,8,9,10,11,12]);
 $r=$out['reasons_by_file'];$checks=[];
 $checks['legacy_ut4_missing_edge_requires_policy_refresh_and_rebuild']=isset($r[1]['ue4_ut4_source_policy_refresh_required'])
     && isset($r[1]['ue4_ut4_verifyimport_outcome_change']);
@@ -50,8 +53,14 @@ $checks['unprofiled_ue4_object_edge_fails_closed']=isset($r[6]['ue4_source_imple
 $checks['ue3_is_outside_ue4_transition']=!isset($r[7]);
 $checks['legacy_reader_gate_requires_pass1']=isset($r[8]['ue4_ut4_reader_gate_pass1_reparse']);
 $checks['legacy_non_gate_without_object_edges_still_requires_policy_refresh']=isset($r[9]['ue4_ut4_source_policy_refresh_required']);
-$checks['legacy_above_clean_master_requires_profile_review']=isset($r[10]['ue4_ut4_source_profile_review_required']);
-$checks['impact_count_is_exact']=(int)$out['total']===7;
+$checks['legacy_above_structural_boundary_requires_profile_review']=isset($r[10]['ue4_ut4_source_profile_review_required']);
+$checks['legacy_v511_requires_structural_policy_refresh_and_verifyimport_review']=isset($r[11]['ue4_ut4_source_policy_refresh_required'])
+    && isset($r[11]['ue4_ut4_source_profile_review_required'])
+    && !isset($r[11]['ue4_ut4_verifyimport_outcome_change']);
+$checks['structural_v511_policy_still_requires_verifyimport_review']=isset($r[12]['ue4_ut4_source_profile_review_required'])
+    && !isset($r[12]['ue4_ut4_source_policy_refresh_required'])
+    && !isset($r[12]['ue4_ut4_verifyimport_outcome_change']);
+$checks['impact_count_is_exact']=(int)$out['total']===9;
 $failures=array_keys(array_filter($checks,static fn(bool$v):bool=>!$v));
 echo json_encode(['ok'=>$failures===[],'checks'=>$checks,'failures'=>$failures,'impact'=>$out],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES).PHP_EOL;
 exit($failures===[]?0:1);

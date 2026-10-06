@@ -592,7 +592,7 @@ This recovery checkpoint changes source availability only. It does not widen a g
 
 ## Section 4G - UT4 / UE4 clean-master package serialization and pre-dependency preprocessing
 
-**Status: complete against the supplied UnrealTournament clean-master source. The earlier UT4=UE4.27.2 assumption is corrected and superseded.**
+**Status: package serialization/pre-dependency structure is complete for clean-master v214-510 and source-proven explicit v511. The earlier UT4=UE4.27.2 assumption is corrected and superseded. Exact UT/Main v511 VerifyImport/runtime source remains unavailable and is explicitly fail-closed.**
 
 ### Source authority
 
@@ -600,6 +600,8 @@ This recovery checkpoint changes source availability only. It does not widen a g
 - branch `clean-master`
 - commit `cc3df7642980e2541fe2d7842f0782bae6c70cd5`
 - primary files: `ObjectVersion.h`, `PackageFileSummary.cpp`, `ObjectResource.cpp`, `Linker.cpp`, and `LinkerLoad.cpp`
+- explicit v511 structural authority: Epic UE4 commit `ae727f8dabbec201963ce68d12aed0a7da6fab91` (parent `6744552b76c61394f4dd0eb34557ccd257ec6f4c`), Dev-Mobile -> Dev-Main @ 3383462, introducing `VER_UE4_SKYLIGHT_MOBILE_IRRADIANCE_MAP = 511`
+- exact stock 4.15.0 reference: `76085d1106078d8988e4404391428252ba1eb9a7` (still package v509); it is evidence that the observed UT/Main v511 packages were ahead of stock 4.15.0, not a v511 authority itself
 - final UE4.27.2 is supplemental comparison only.
 
 ### Source results and corrections
@@ -611,19 +613,23 @@ This recovery checkpoint changes source availability only. It does not widen a g
 5. **The exact export-width boundary is v510.** v509 uses 32-bit SerialSize/SerialOffset; v510 uses 64-bit.
 6. **Clean-master VerifyImport is materially different from 4.27.2.** UT4 requires non-null Import outers to be Imports, does not contain the later recursive private-import containment allowance, and treats private candidates through runtime/editor SafeReplace state. The UT4 resolver now follows clean-master rather than the later 4.27.2 implementation.
 7. **Load-time fixups remain runtime/config dependent.** `FixupImportMap`, `RemapImports`, and `FixupExportMap` consume live redirect/plugin/game configuration. UnrealDB preserves serialized identity and does not invent those runtime maps.
-8. **All UT4 current/V5 entry points share one source boundary.** `PROFILE_UT4_CLEAN_MASTER` and source policy `ue4-ut4-clean-master-v510-classic-package` apply only to versions 214-510/licensee 0; later/nonzero-licensee rows fail closed.
+8. **Package structure and VerifyImport now have deliberately different source boundaries.** `PROFILE_UT4_CLEAN_MASTER` and source policy `ue4-ut4-clean-master-v510-classic-package` apply to versions 214-510/licensee 0. Explicit v511/licensee-0 packages use structural-only policy `ue4-epic-dev-main-ae727f8d-v511-ut4-structural-package`; they do not receive `PROFILE_UT4_CLEAN_MASTER`. v512+ and nonzero-licensee rows remain outside the source-backed UT4 package boundary.
+9. **The v510->v511 metadata boundary is source-proven unchanged.** `PackageFileSummary.h/.cpp`, `ObjectResource.h/.cpp`, `LinkerLoad.cpp`, `NameTypes.h`, and `UnrealNames.cpp` have identical Git blobs between Epic v510 parent `6744552b...` and v511 commit `ae727f8d...`. v511 adds only SkyLight object-payload serialization, which UnrealDB does not deserialize.
+10. **The exact UT/Main v511 producer/linker source is absent.** UT commit `89f90b867d` / CL 3228288 is package v509; clean-master ends at v510; the UT repository has no v511 enum or SkyLight serialization implementation. Therefore v511 package tables are supported but object-level VerifyImport remains `source_implementation_unavailable`.
 
 ### Regression and migration boundary
 
-- New normative specs: `ut4-clean-master-v510-package-format.md` and `ut4-clean-master-v510-dependency-resolution.md`.
+- Normative specs: `ut4-clean-master-v510-package-format.md`, `ut4-v511-structural-package-format.md`, and `ut4-clean-master-v510-dependency-resolution.md`.
 - `verify-ue4-427-reader-contract.php` now freezes the exact UE4.27.2 enum values and shared historical gates.
-- `verify-uedb5-ut4-persistence.php` proves UT4 v510 uses 64-bit export serial fields, v509 uses 32-bit, unversioned UT4 assumes 510, and the UT4 builder rejects final-UE4 source attribution.
+- `verify-uedb5-ut4-persistence.php` proves UT4 v510 uses 64-bit export serial fields, v509 uses 32-bit, unversioned UT4 assumes 510, explicit v511 uses the separate structural policy with the same package-table layout, and final-UE4 source attribution is rejected.
 - `verify-ue4-dependency-matching-contract.php` freezes the clean-master private/export-outer behavior.
 - UEDB5 dependency policy advances to `uedb5-dependency-pass-v12`, reopening only the UT4 clean-master delta while suppressing already-completed UE1/UE2/UE3/UE5 deltas.
 - Exact old-reader gate versions `325,335,364,383,443,458,484,503,506,507,509,510` require Pass-1 reread because the previous thresholds were one too high.
 - Old-unversioned UT4 snapshots require Pass-1 reread at assumed v510.
 - Explicit non-gate v214-510/licensee-0 snapshots can receive metadata-only source-policy refresh, then targeted Pass 2 where object outcomes are affected.
+- Explicit v511/licensee-0 snapshots whose staged summary proves `unversioned=false` can receive metadata-only refresh to the v511 structural policy, but are excluded from VerifyImport Pass 2 pending exact UT/Main linker source.
+- The real 64,247-file UT4 diagnostic established 24,077 old-unversioned Pass-1 reparses, 1,813 explicit corrected-gate Pass-1 reparses, 18,510 v214-510 metadata-only refreshes, and 19,847 genuine explicit-v511 structural rows. Raw-byte sampling confirmed the 19,847 v511 population is genuinely serialized as 511 rather than an old database off-by-one.
 - `diagnose-ut4-v510-impact.php` and `refresh-ut4-v510-source-policy.php` are bounded and fail closed when DB registration and UEDB5 storage are not from the same environment.
-- This PRD Desktop Commander session executes the DEV source checkout but its PHP config points DB host `127.0.0.1`, therefore the observed PRD registration/storage mismatch is **not** accepted as DEV migration impact and no exact 4G file counts are recorded here.
+- The full impact diagnostic was run read-only against the matching PRD registration and staged UEDB5 storage via the PRD-local scratch copy. Those counts are the recorded 4G impact baseline above; no remediation writes were performed.
 
 **Next checkpoint: Section 4H - UE5 5.8.3 classic package serialization and pre-dependency preprocessing, audited independently from the UE5 source before revisiting Zen/IoStore.**

@@ -32,6 +32,8 @@ Unversioned UT4 packages therefore load with effective UE4 version **510**, not 
 
 Final UE4.27.2 continues the same enum history after UT4 and adds versions 511-521. Its final `VER_UE4_AUTOMATIC_VERSION` is 521.
 
+UT4 content in the catalogue also contains genuine **explicit v511** packages. That population is covered separately by `ut4-v511-structural-package-format.md`; it is not reclassified as clean-master v510.
+
 ## Exact shared UE4 version gates
 
 The shared UnrealDB UE4 reader must use the actual UE4 enum values:
@@ -107,7 +109,7 @@ The source-backed game profile is accepted only for:
 - licensee version 0;
 - unversioned packages interpreted with assumed version 510.
 
-Anything outside that boundary fails closed as source implementation unavailable.
+Anything outside that clean-master boundary does not inherit the clean-master source policy. Explicit v511/licensee-0 packages may use the separate structural-only policy documented in `ut4-v511-structural-package-format.md`; v512+ or nonzero-licensee packages remain outside the source-backed UT4 package boundary.
 
 ## Migration impact of the corrected reader gates
 
@@ -120,6 +122,8 @@ Those exact files require Pass-1 reread from original package bytes.
 Unversioned UT4 packages previously staged with the old assumed version also require Pass-1 reread using v510.
 
 Explicit v214-510/licensee-0 packages that are not on a changed reader gate can refresh the UEDB5 source-policy label from staged metadata without reopening the original package.
+
+Explicit v511/licensee-0 packages can also receive metadata-only refresh **only** after their staged summary proves they are not unversioned. Their destination policy is `ue4-epic-dev-main-ae727f8d-v511-ut4-structural-package`; they do not become clean-master v510 dependencies and are not Pass-2 VerifyImport candidates.
 
 Use:
 

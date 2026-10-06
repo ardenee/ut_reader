@@ -104,6 +104,22 @@ try{
         && (int)($s509['sections']['summary'][0]['package_version']??0)===509
         && (int)($s509['sections']['exports'][0]['serial_range_serialized_width_bits']??0)===32);
 
+    $v511Path=$temp.DIRECTORY_SEPARATOR.'fixture511.uasset';file_put_contents($v511Path,$buildFixture(511));
+    $p511=new \UnrealPackageReader4($v511Path,$options);
+    $s511=Uedb5Ut4SnapshotBuilder::build($p511,[
+        'id'=>7513,'game_id'=>7,'package_name'=>'Structural511','original_name'=>'Structural511.uasset'
+    ]);
+    $v511Summary=(array)$s511['sections']['summary'][0];
+    $check('ut4_v511_structural_reader_has_no_issues',$p511->validatePackage()===[]);
+    $check('ut4_v511_uses_separate_structural_source_policy',
+        ($s511['source_policy']??'')===Uedb5Ut4SnapshotBuilder::SOURCE_POLICY_V511
+        && (int)($v511Summary['serialized_package_version']??0)===511
+        && (int)($v511Summary['package_version']??0)===511);
+    $check('ut4_v511_package_tables_retain_v510_layout',
+        (int)($s511['sections']['exports'][0]['serial_range_serialized_width_bits']??0)===64
+        && ($s511['sections']['imports'][0]['object_name']['text']??'')==='MyObject'
+        && (int)($s511['sections']['preload_dependencies'][0]['ref']??0)===1);
+
     $unversionedPath=$temp.DIRECTORY_SEPARATOR.'fixture-unversioned.uasset';file_put_contents($unversionedPath,$buildFixture(510,0));
     $pu=new \UnrealPackageReader4($unversionedPath,$options);
     $unversionedIssues=$pu->validatePackage();
@@ -131,13 +147,15 @@ try{
             ['id'=>7521,'game_id'=>7,'package_name'=>'FinalUE4','original_name'=>'FinalUE4.uasset']
         );
     } catch (RuntimeException $e) {
-        $rejectedFinal=str_contains($e->getMessage(),'requires UE4 package version 214-510 and licensee 0');
+        $rejectedFinal=str_contains($e->getMessage(),'requires explicit UE4 version 214-511');
     }
     $check('ut4_builder_rejects_final_ue4_source_attribution',$rejectedFinal);
     $builderSource=(string)file_get_contents($root.'/src/Infrastructure/Metadata/Uedb5Ut4SnapshotBuilder.php');
     $readerSource=(string)file_get_contents(dirname($root).'/UE4/UnrealPackageReader.php');
-    $check('ut4_builder_has_clean_master_source_gate',
-        str_contains($builderSource,'$effectiveVersion < 214 || $effectiveVersion > 510')
+    $check('ut4_builder_separates_clean_master_and_v511_structural_source',
+        str_contains($builderSource,'$effectiveVersion >= 214 && $effectiveVersion <= 510')
+        && str_contains($builderSource,'$effectiveVersion === 511 && $serializedVersion === 511')
+        && str_contains($builderSource,'SOURCE_POLICY_V511')
         && str_contains($builderSource,'$licenseeVersion !== 0')
     );
     $check('ue4_reader_retains_source_format_capability_checks',str_contains($readerSource,'VER_OLDEST_LOADABLE_PACKAGE')

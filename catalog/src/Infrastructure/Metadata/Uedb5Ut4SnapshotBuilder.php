@@ -10,23 +10,43 @@ final class Uedb5Ut4SnapshotBuilder
 {
     public const PACKAGE_FAMILY = 'ue4-classic-package';
     public const SOURCE_POLICY = 'ue4-ut4-clean-master-v510-classic-package';
+    public const SOURCE_POLICY_V511 = 'ue4-epic-dev-main-ae727f8d-v511-ut4-structural-package';
 
     /** @param array<string,mixed> $file @return array<string,mixed> */
     public static function build(\UnrealPackageReader4 $reader, array $file): array
     {
         $header = $reader->getHeader();
         $effectiveVersion = (int)($header['version'] ?? 0);
+        $serializedVersion = (int)($header['serializedUE4Version'] ?? $effectiveVersion);
         $licenseeVersion = (int)($header['licenseeVersion'] ?? 0);
-        if ($effectiveVersion < 214 || $effectiveVersion > 510 || $licenseeVersion !== 0) {
+        $unversioned = !empty($header['unversioned']);
+        if ($licenseeVersion !== 0) {
             throw new RuntimeException(
-                'UT4 clean-master source profile requires UE4 package version 214-510 and licensee 0; got version='
+                'UT4 source-backed package structure requires licensee version 0; got version='
                 . $effectiveVersion . ' licensee=' . $licenseeVersion . '.'
             );
         }
-        if (!empty($header['unversioned'])
-            && (int)($header['assumedUnversionedParserVersion'] ?? 0) !== 510) {
+        if ($unversioned) {
+            if ($serializedVersion !== 0
+                || $effectiveVersion !== 510
+                || (int)($header['assumedUnversionedParserVersion'] ?? 0) !== 510) {
+                throw new RuntimeException(
+                    'UT4 unversioned packages require serialized version 0/0 and clean-master assumed parser version 510.'
+                );
+            }
+            $sourcePolicy = self::SOURCE_POLICY;
+        } elseif ($effectiveVersion >= 214 && $effectiveVersion <= 510 && $serializedVersion === $effectiveVersion) {
+            $sourcePolicy = self::SOURCE_POLICY;
+        } elseif ($effectiveVersion === 511 && $serializedVersion === 511) {
+            // Epic Dev-Main ae727f8d adds only SkyLight object-payload serialization at v511.
+            // Package summary, NameMap, ImportMap, ExportMap and preload-dependency serializers
+            // are byte-identical to its v510 parent, so UEDB5 structural extraction is source-backed.
+            $sourcePolicy = self::SOURCE_POLICY_V511;
+        } else {
             throw new RuntimeException(
-                'UT4 unversioned packages require clean-master assumed parser version 510.'
+                'UT4 source-backed package structure requires explicit UE4 version 214-511 (v511 structural only) '
+                . 'or unversioned 0/0 interpreted at 510; got serialized=' . $serializedVersion
+                . ' effective=' . $effectiveVersion . ' licensee=' . $licenseeVersion . '.'
             );
         }
         $informationalUnversionedIssue = !empty($header['unversioned'])
@@ -58,7 +78,7 @@ final class Uedb5Ut4SnapshotBuilder
                 'original_name' => (string)($file['original_name'] ?? ''),
             ],
             'package_family' => self::PACKAGE_FAMILY,
-            'source_policy' => self::SOURCE_POLICY,
+            'source_policy' => $sourcePolicy,
             'section_schemas' => self::sectionSchemas(),
             'sections' => [
                 'summary' => [self::summaryRow($header)],
