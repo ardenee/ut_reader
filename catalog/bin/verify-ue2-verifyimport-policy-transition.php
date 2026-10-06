@@ -17,8 +17,8 @@ $db->exec('CREATE TABLE ue_uedb5_dependency_edges(file_id INTEGER,source_kind IN
 $db->exec("INSERT INTO ue_game_profiles VALUES(1,'UE2',1),(2,'UE1',1)");
 $db->exec('INSERT INTO ue_games VALUES(6,1),(4,1),(5,1),(3,2)');
 $rows=[
- [1,6,69,0,Uedb5Unreal2SnapshotBuilder::SOURCE_POLICY,1],
- [2,6,126,29,Uedb5Unreal2SnapshotBuilder::SOURCE_POLICY,1],
+ [1,6,69,0,'ue2-unreal2-package-v126',1],
+ [2,6,126,29,Uedb5Unreal2SnapshotBuilder::POLICY_V126_GENERIC,1],
  [3,6,69,0,Uedb5Unreal2SnapshotBuilder::POLICY_V69_2000,0],
  [4,4,120,28,Uedb5Ut2003SnapshotBuilder::SOURCE_POLICY,1],
  [5,4,121,29,Uedb5Ut2003SnapshotBuilder::POLICY_FORWARD_COMPAT,1],

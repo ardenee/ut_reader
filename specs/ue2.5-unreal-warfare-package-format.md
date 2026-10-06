@@ -340,18 +340,21 @@ The package summary defined by this source has no package compression/encryption
 
 Therefore this specification establishes no package-level compression or encryption layer for this reader path. UZ/UZ2 or other wrappers/containers require separate source-backed specifications.
 
-## Comparison with supplied Unreal II source
+## Comparison with audited Unreal II source
 
-The UE2.5 tree and supplied Unreal II tree share much of the structural serialization, including version 126, licensee splitting, FString encoding, QuickMD5, table layouts, and export construction.
+Section 4C established that the actual Unreal-II-specific authority is the v69 `Unreal2_old` tree, while this Warfare tree is later generic UE2/package-v126 evidence.
 
-However, this specification is based on the UE2.5 repository itself.
+The two sources independently share the core summary/import/export layout, licensee splitting, FString representation, context-filtered NameMap, fixed-width PackageIndex fields, compact class/super/size/offset fields, and fatal `Preload` SerialSize mismatch handling.
 
-One directly verified behavioral difference is critical:
+The verified differences include:
 
-- supplied Unreal II `Preload`: SerialSize mismatch -> warning;
-- this UE2.5 `Preload`: SerialSize mismatch -> fatal `appErrorf`.
+- Unreal-II v69 package version 69/licensee 0x7F versus Warfare v126/licensee 0;
+- v126 truncates loaded v64+ FName text to 63 TCHARs; v69 does not contain that truncation;
+- v126 computes QuickMD5; v69 does not;
+- v126 can skip an export whose nonzero class reference is unavailable; v69 falls back to `UClass::StaticClass()`;
+- v69 skips `Camera`; v126 skips `Camera` and `PlayerInput`.
 
-This demonstrates why UnrealDB must keep target-specific reader behavior source-backed rather than assuming all version-126 UE2-family implementations are interchangeable.
+The previous claim that Unreal II only warned on SerialSize mismatch was incorrect and is withdrawn.
 
 ## Runtime/config boundary
 

@@ -198,7 +198,7 @@ A follow-up source-order review during 3A2 found that UT99's `Mesh -> LodMesh` b
 
 #### Source authority and version boundary
 
-- **Unreal II:** the directory labelled `Unreal II The Awakening [01-07-2003]` is actually UE4 4.0.2 source (`ENGINE_MAJOR_VERSION 4`, `ENGINE_MINOR_VERSION 0`, `ENGINE_PATCH_VERSION 2`) and is rejected as Unreal-II authority. The latest complete **Unreal-II-specific** `VerifyImport` body remains `L:\Source\Games\Unreal II\Unreal II The Awakening [12-09-2000]\Unreal2_old\Core\Src\UnLinker.cpp`; its `UnObjVer.h` declares package v69/min60/licensee `0x7F`, so UnrealDB keeps that profile at versions 60-69. A complete generic UE2/Warfare linker also exists at `L:\Source\Engine\UE2\Unreal Engine [v2.5]_ Unreal Warfare [09-29-2007]` with package v126/min60; it may prove generic UE2 serialization/preprocessing in the corresponding audit, but it is not silently assigned as Unreal-II-specific `VerifyImport` semantics for v70-126.
+- **Unreal II:** the directory labelled `Unreal II The Awakening [01-07-2003]` is actually UE4 4.0.2 source (`ENGINE_MAJOR_VERSION 4`, `ENGINE_MINOR_VERSION 0`, `ENGINE_PATCH_VERSION 2`) and is rejected as Unreal-II authority. The latest complete **Unreal-II-specific** `VerifyImport` body remains `L:\Source\Games\Unreal II\Unreal II The Awakening [12-09-2000]\Unreal2_old\Core\Src\UnLinker.cpp`; its `UnObjVer.h` declares package v69/min60/licensee `0x7F`, so UnrealDB keeps that profile at versions 60-69. Section 4C separately confirms the complete generic UE2/Warfare v126 linker as serialization/preprocessing authority through v126, without assigning its `VerifyImport` semantics to Unreal II.
 - **UT2003:** `L:\Source\Games\UT2003\Unreal Tournament 2003 [v2107] [2002-10-01]\Core\Src\UnLinker.cpp` is complete; `UnObjVer.h` declares `PACKAGE_FILE_VERSION 120`, `PACKAGE_MIN_VERSION 60`, and licensee version `0x1C`. UnrealDB applies the v2107 VerifyImport contract only to package versions 60-120. Later packages do not inherit it.
 - **UT2004/UE2.5:** no 3A2 rule was derived from either Unreal II or UT2003. Section 3A3 below audits the latest UT2004 source directly and supersedes the former isolated legacy path.
 
@@ -438,7 +438,7 @@ Pass 2 is now `uedb5-dependency-pass-v11`; the transition accepts v1-v10.
 The previously listed source-availability gaps were re-audited before Section 4B:
 
 1. **Unreal v227:** every sibling Unreal tree under `L:\Source\Games\Unreal` was searched. No v1.224/v1.227 Core serializer/linker implementation body exists there; v1.200 remains the newest complete Unreal-only implementation. The v227 unresolved boundary is therefore confirmed rather than merely unsearched.
-2. **Unreal II / later UE2:** `Unreal II The Awakening [01-07-2003]` is UE4 4.0.2 source and cannot be used. The separate UE2.5/Warfare tree is complete at package v126/min60 and supplies generic UE2 source for future serialization/preprocessing auditing. It does **not** by itself prove Unreal-II-specific `VerifyImport` behavior after v69, so the existing fail-closed object-verification boundary remains until matching game-branch evidence is found.
+2. **Unreal II / later UE2:** `Unreal II The Awakening [01-07-2003]` is UE4 4.0.2 source and cannot be used. The separate UE2/Warfare tree is complete at package v126/min60; Section 4C now audits it as generic UE2 serialization/preprocessing authority through v126. It still does **not** prove Unreal-II-specific `VerifyImport` behavior after v69, so the fail-closed object-verification boundary remains until matching game-branch evidence is found.
 3. **Later UE3:** both the local UDKUltimate engine-8364 tree and `L:\Source\Engine\UE3\Unreal Engine 3 (10897)` contain full Core linker sources. The 10897 checkout is the `CodeRedModding/UnrealEngine3` repository at commit `601d6a1f50a0a4a67e3ee0c352333783408d1ba7`; its `UnObjVer.cpp` (`27efc4042ec0e93dd98ad898950140904bbc398a`), `UnObjVer.h` (`a6d3f58762b7dc2fa5fef5f72dcc3faf9ceb9b13`), `UnLinker.cpp` (`0e8e58f0c31d5223093d5d4b716273b1d6a31457`) and `UnLinker.h` (`d7f59456fb37e1e63172268a0b4e93fec23c78f9`) are hash-identical to the older local 2013 copy. The earlier "source unavailable" classification is withdrawn.
 
 This recovery checkpoint changes source availability only. It does not widen a game-specific resolver profile until the corresponding source-conformance section audits and tests that behavior.
@@ -472,3 +472,39 @@ This recovery checkpoint changes source availability only. It does not widen a g
 - The UE1 VerifyImport profile, UT99 persistence, cross-game legacy persistence, parity-contract and physical-provider tests remain green.
 - Existing staged/current UT99 metadata can be affected only where a referenced Name row has no bit in `0x00070000`, plus rows whose old v69+ source-policy labels need refresh. Name flags are not projected into the Step-5 SQL candidate tables, so exact impact discovery scans compact UEDB5 metadata, **not original package bytes**. Run `D:\php8.5\php.exe catalog\bin\diagnose-ut99-name-map-impact.php --summary` against the real staging DB for the bounded count, then rerun without `--summary` for exact file IDs. Only those IDs require current-format rebuild or Pass-2 refresh; no game-wide package reparse is justified by 4B. The diagnostic fails closed if `ue_uedb5_files` is absent.
 - The next package-serialization checkpoint should continue independently with the next engine/game profile rather than inheriting UT99 preprocessing into UE2 without its own source comparison.
+
+## Section 4C - Unreal II / UE2 package serialization and pre-dependency preprocessing
+
+**Status: complete for the supplied Unreal-II v69 source and generic UE2/Warfare v126 serialization/preprocessing surface. Unreal-II-specific VerifyImport remains intentionally bounded to package versions 60-69.**
+
+### Source authority and availability
+
+- Unreal-II-specific authority: `L:\Source\Games\Unreal II\Unreal II The Awakening [12-09-2000]\Unreal2_old`, engine 411, package v69, licensee `0x7F`, minimum v60.
+- Later generic UE2 authority: `L:\Source\Engine\UE2\Unreal Engine [v2.5]_ Unreal Warfare [09-29-2007]`, engine 1226, package v126, licensee 0, minimum v60.
+- The directory labelled `Unreal II The Awakening [01-07-2003]` is UE4 4.0.2 in the supplied archive and contains no `U2XMP_all` subtree. It is rejected as UE2/Unreal-II authority.
+- Both accepted trees contain complete `UnLinker.cpp`, `UnName.cpp`, `UnObj.cpp`, and version headers, so the serialization/preprocessing comparison has no missing implementation-body gap.
+
+### Source results and corrections
+
+1. **The core package-table byte layout is shared across v69 and v126.** Both serialize the same summary fields and v68 generation/heritage branch, the same Import fields, and the same Export fields. Import/Export `PackageIndex` is fixed-width INT; FName references, class/super indices and serial size/offset are compact.
+2. **UE2 SerialOffset uses truthiness, not positivity.** Both `FObjectExport::operator<<` bodies use `if (E.SerialSize)`. UnrealDB previously consumed UE2 SerialOffset only for `SerialSize > 0`; the reader now consumes it for every nonzero value, matching the source.
+3. **Both sources preprocess Names before Imports/Exports.** `ULinker` builds `_ContextFlags` from editor/client/server state and `LoadNames` maps nonmatching rows to `NAME_None`. UnrealDB now applies the explicit source-backed UCC/editor all-context mask `0x00070000` to Unreal II before deriving current-format or UEDB5 dependency identity while preserving raw serialized Names/flags.
+4. **v126 has a real runtime-name-length delta.** Unreal-II v69 copies the FString into the FName buffer directly; Warfare v126 copies `Str.Left(NAME_SIZE-1)`. UnrealDB therefore keeps raw serialized text but caps effective v70-126 catalogue FNames at 63 characters. Versions 60-69 retain the v69 behavior.
+5. **The v126 rule stops at 126.** UEDB5/current preprocessing does not apply v126 truncation or NameMap authority to admitted versions above 126.
+6. **Export hashing is built from effective Names/class identity.** Both linkers create the export hash only after Names, Imports, and Exports are loaded. The existing source-profile VerifyImport resolvers continue to own game-specific hash traversal/matching; no v126 Unreal-II VerifyImport profile was added.
+7. **Warfare QuickMD5 is non-transforming and generic-only.** v126 hashes two structural raw-byte ranges after table loading and before export-hash construction. v69 has no corresponding block. QuickMD5 does not change table/dependency identity, so it is documented rather than substituted with another hash.
+8. **The old payload-mismatch documentation was wrong.** Both v69 and v126 `Preload` call fatal `appErrorf` when consumed bytes differ from `SerialSize`; the previous “Unreal II warning” claim was removed from both Unreal-II and UE2.5 specs.
+9. **Runtime export-creation differences stay revision-specific.** v69 falls back to `UClass::StaticClass()` for a missing resolved class and skips `Camera`; v126 returns null for a missing nonzero class reference and skips both `Camera` and `PlayerInput`. These are not projected into static dependency identity.
+10. **Source-policy attribution now states the actual proof.** Versions 60-69 use `ue2-unreal2-2000-12-09-package-v69`; versions 70-126 use `ue2-warfare-v126-serialization`; admitted versions above 126 use `ue2-unreal2-post-v126-profile-admitted-unresolved`. The generic v126 policy does not activate Unreal-II v69 VerifyImport semantics.
+
+### Regression and migration boundary
+
+- `verify-legacy-ue2-serialization-contract.php` now proves that a negative/nonzero compact SerialSize still carries a serialized SerialOffset.
+- `verify-unreal2-name-map-preprocessing.php` proves v69 effective names are not v126-truncated, v126 raw text is preserved while effective text is capped at 63 characters, zero-context Names become `NAME_None`, V5 uses the same rules, and v127 does not inherit v126 preprocessing.
+- The existing UE2 VerifyImport profile regression remains green and still proves Unreal-II VerifyImport stops at v69.
+- The UE2 transition query recognizes both historical `ue2-unreal2-*` policies and the new generic v126 serialization policy, so migration impact cannot disappear merely because attribution changed.
+- Run `D:\php8.5\php.exe catalog\bin\diagnose-unreal2-name-map-impact.php --summary` against the real staging DB for a bounded metadata-only impact count; rerun without `--summary` for exact file IDs.
+- That diagnostic reads staged UEDB5 only. Context-filtered Names, v70-126 >63-character effective names, and source-policy changes do **not** require original Unreal package reads. A staged export with negative `serial_size` is separately reported because the old reader would have skipped its serialized offset; only that exact file set requires Pass-1 reparsing from original bytes.
+- This checkout's connected database still lacks `ue_uedb5_files`, so the diagnostic correctly exits before scanning and no impact count is fabricated.
+
+**Next checkpoint: Section 4D - UT2003 / UE2 package serialization and pre-dependency preprocessing, audited independently from its own source rather than inheriting Unreal II/Warfare behavior.**

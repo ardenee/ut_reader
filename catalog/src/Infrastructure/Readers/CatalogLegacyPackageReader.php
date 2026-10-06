@@ -501,13 +501,10 @@ abstract class CatalogLegacyPackageReaderBase
                 $objectName = $reader->packageIndex($version);
                 $flags = $reader->u32();
                 $serialSize = $reader->packageIndex($version);
-                // Unreal v1.200 tests truthiness, not positivity: any non-zero
-                // UE1 serialized size is followed by a compact SerialOffset.
-                // Do not project that rule onto the separately audited UE2 path here.
-                $hasSerialOffset = $this->engineKey === 'UE1'
-                    ? $serialSize !== 0
-                    : $serialSize > 0;
-                $serialOffset = $hasSerialOffset ? $reader->packageIndex($version) : 0;
+                // Unreal v1.200 UE1, Unreal II v69 and generic UE2/Warfare
+                // v126 all test truthiness: any non-zero serialized size is
+                // followed by a compact SerialOffset.
+                $serialOffset = $serialSize !== 0 ? $reader->packageIndex($version) : 0;
             } catch (Throwable $error) {
                 throw new RuntimeException(
                     'Export table entry parse failed'

@@ -97,7 +97,22 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
         } catch (RuntimeException) {
             // Non-UEDB5/custom game IDs retain the existing raw metadata path.
         }
-        $ut99AllContextNameMap = $engineKey === 'UE1' && $sourceKey === 'ut99';
+        $legacyAllContextNameMap = $engineKey === 'UE1' && $sourceKey === 'ut99';
+        $legacyNameMaxCharacters = null;
+        if ($engineKey === 'UE2' && $sourceKey === 'unreal2') {
+            $versionRow = \catalog_one(
+                $this->db,
+                'SELECT package_version FROM ue_files WHERE id=? LIMIT 1',
+                [$fileId]
+            );
+            $sourceVersion = isset($versionRow['package_version'])
+                ? (int)$versionRow['package_version']
+                : null;
+            if ($sourceVersion !== null && $sourceVersion >= 60 && $sourceVersion <= 126) {
+                $legacyAllContextNameMap = true;
+                $legacyNameMaxCharacters = $sourceVersion >= 70 ? 63 : null;
+            }
+        }
 
         $nameRows = [];
         foreach ($names as $index => $name) {
@@ -111,8 +126,12 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
             ];
         }
 
-        if ($ut99AllContextNameMap) {
-            $effectiveNames = CatalogLegacyNameMapPreprocessor::effectiveNameMap($nameRows);
+        if ($legacyAllContextNameMap) {
+            $effectiveNames = CatalogLegacyNameMapPreprocessor::effectiveNameMap(
+                $nameRows,
+                CatalogLegacyNameMapPreprocessor::ALL_LOAD_CONTEXTS,
+                $legacyNameMaxCharacters
+            );
             foreach ($imports as &$import) {
                 if (!is_array($import)) { continue; }
                 foreach ([

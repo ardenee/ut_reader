@@ -72,11 +72,26 @@ final class Uedb5ClassicDependencyResolver
         $ue1Profile = $engine === 'ue1' ? self::ue1VerifyImportProfile($consumerSnapshot) : null;
         if ($engine === 'ue1'
             && $ue1Profile === PdoUe1VerifyImportProjectionResolver::PROFILE_UT99_V1400) {
-            $consumer = self::applyUt99AllContextNameMap($consumer);
+            $consumer = self::applyLegacyAllContextNameMap($consumer);
             foreach ($providers as &$provider) {
-                $provider['tables'] = self::applyUt99AllContextNameMap((array)$provider['tables']);
+                $provider['tables'] = self::applyLegacyAllContextNameMap((array)$provider['tables']);
             }
             unset($provider);
+        } elseif ($engine === 'ue2') {
+            $consumerNameLimit = self::unreal2NameMapMaxCharacters($consumerSnapshot);
+            if ($consumerNameLimit !== false) {
+                $consumer = self::applyLegacyAllContextNameMap($consumer, $consumerNameLimit);
+                foreach ($providers as &$provider) {
+                    $providerNameLimit = self::unreal2NameMapMaxCharacters((array)$provider['snapshot']);
+                    if ($providerNameLimit !== false) {
+                        $provider['tables'] = self::applyLegacyAllContextNameMap(
+                            (array)$provider['tables'],
+                            $providerNameLimit
+                        );
+                    }
+                }
+                unset($provider);
+            }
         }
         $consumerVersion = self::packageVersion($consumerSnapshot);
         $providerOutcomes = [];
@@ -447,14 +462,18 @@ final class Uedb5ClassicDependencyResolver
     }
 
     /** @param array{names:array<int,array<string,mixed>>,imports:array<int,array<string,mixed>>,exports:array<int,array<string,mixed>>} $tables */
-    private static function applyUt99AllContextNameMap(array $tables): array
+    private static function applyLegacyAllContextNameMap(array $tables, ?int $maxCharacters = null): array
     {
         // Synthetic/unit snapshots may already contain effective FName text and
         // omit the serialized name section. Real UEDB5 snapshots always retain it.
         if ($tables['names'] === []) {
             return $tables;
         }
-        $effective = CatalogLegacyNameMapPreprocessor::effectiveNameMap(array_values($tables['names']));
+        $effective = CatalogLegacyNameMapPreprocessor::effectiveNameMap(
+            array_values($tables['names']),
+            CatalogLegacyNameMapPreprocessor::ALL_LOAD_CONTEXTS,
+            $maxCharacters
+        );
         foreach ($tables['imports'] as &$import) {
             foreach ([
                 ['class_package','class_package_name_index','class_package_is_none'],
@@ -489,6 +508,19 @@ final class Uedb5ClassicDependencyResolver
         }
         unset($export);
         return $tables;
+    }
+
+    private static function unreal2NameMapMaxCharacters(array $snapshot): int|false|null
+    {
+        $schema = strtolower(trim((string)($snapshot['section_schemas']['imports'] ?? '')));
+        $version = self::packageVersion($snapshot);
+        if (!str_starts_with($schema, 'ue2.unreal2.')
+            || $version === null
+            || $version < 60
+            || $version > 126) {
+            return false;
+        }
+        return $version >= 70 ? 63 : null;
     }
 
     private static function engine(array $snapshot): string

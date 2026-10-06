@@ -46,7 +46,7 @@ Current conformance work must use the local source mirrors below. Historical Git
 - [x] Unreal / Unreal Gold UE1 v227 package serialization and pre-dependency preprocessing — `unreal-v227-package-format.md` (latest public v227 surface audited independently; missing Core serializer/linker bodies explicitly remain unresolved)
 - [x] UE1 / UT99 package serialization and pre-dependency preprocessing — `ue1-ut99-retail-v1400-package-format.md` (retail v400 complete; v430/v69 summary/import/export inline source confirmed, v69 `FNameEntry` body explicitly unresolved)
 - [x] UE1 / UT99 dependency and import resolution — `ue1-ut99-retail-v1400-dependency-resolution.md`
-- [x] Unreal II / UE2 package format and reading — `unreal2-ue2-package-format.md`
+- [x] Unreal II / UE2 package serialization and pre-dependency preprocessing — `unreal2-ue2-package-format.md` (Unreal-II v69 authoritative; generic UE2/Warfare v126 independently covers serialization/preprocessing through v126; later Unreal-II VerifyImport remains separate)
 - [x] Unreal II / UE2 dependency and import resolution — `unreal2-ue2-dependency-resolution.md`
 - [x] UE2.5 package format and reading — `ue2.5-unreal-warfare-package-format.md`
 - [x] UE2.5 dependency and import resolution — `ue2.5-unreal-warfare-dependency-resolution.md`

@@ -25,11 +25,15 @@ final class CatalogLegacyNameMapPreprocessor
      */
     public static function effectiveNameMap(
         array $names,
-        int $contextFlags = self::ALL_LOAD_CONTEXTS
+        int $contextFlags = self::ALL_LOAD_CONTEXTS,
+        ?int $maxCharacters = null
     ): array {
         $contextFlags &= self::ALL_LOAD_CONTEXTS;
         if ($contextFlags === 0) {
             throw new RuntimeException('Legacy NameMap preprocessing requires a non-zero source load context.');
+        }
+        if ($maxCharacters !== null && $maxCharacters < 1) {
+            throw new RuntimeException('Legacy NameMap preprocessing requires a positive name-length limit.');
         }
 
         $effective = [];
@@ -47,6 +51,9 @@ final class CatalogLegacyNameMapPreprocessor
                 throw new RuntimeException('Legacy NameMap preprocessing requires serialized name flags.');
             }
             $text = (string)($value['name_text'] ?? $value['text'] ?? $value['name'] ?? '');
+            if ($maxCharacters !== null) {
+                $text = mb_substr($text, 0, $maxCharacters, 'UTF-8');
+            }
             $flags = self::flagsInt($value['flags']);
             $effective[$index] = (($flags & $contextFlags) !== 0) ? $text : 'None';
         }

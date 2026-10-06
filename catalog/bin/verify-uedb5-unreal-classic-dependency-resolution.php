@@ -191,11 +191,11 @@ $check(($noneAncestorResolved[1]['reason'] ?? null) === 'source_irrelevant_name_
     'ut99_child_of_name_none_import_fails_parent_source_linker_check');
 
 $unreal2Consumer = $snapshot(
-    42001, 'Consumer', 'classic-linkerload', 'ue2.unreal2', 'ue2-unreal2-package-v126',
+    42001, 'Consumer', 'classic-linkerload', 'ue2.unreal2', 'ue2-warfare-v126-serialization',
     $consumerImports, [], 126
 );
 $unreal2Private = $snapshot(
-    42002, 'Provider', 'classic-linkerload', 'ue2.unreal2', 'ue2-unreal2-package-v126',
+    42002, 'Provider', 'classic-linkerload', 'ue2.unreal2', 'ue2-warfare-v126-serialization',
     [], [$export(0, 'Obj', '00000000')], 126
 );
 $unreal2 = Uedb5ClassicDependencyResolver::resolve($unreal2Consumer, [[

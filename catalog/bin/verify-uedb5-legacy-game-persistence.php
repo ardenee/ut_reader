@@ -104,10 +104,10 @@ try {
 
     $accept('unreal2_60', Uedb5Unreal2SnapshotBuilder::class, CatalogUE2PackageReader::class, 2, 60, Uedb5Unreal2SnapshotBuilder::POLICY_V69_2000);
     $accept('unreal2_69', Uedb5Unreal2SnapshotBuilder::class, CatalogUE2PackageReader::class, 2, 69, Uedb5Unreal2SnapshotBuilder::POLICY_V69_2000);
-    $accept('unreal2_126', Uedb5Unreal2SnapshotBuilder::class, CatalogUE2PackageReader::class, 2, 126, Uedb5Unreal2SnapshotBuilder::SOURCE_POLICY);
-    $accept('unreal2_127', Uedb5Unreal2SnapshotBuilder::class, CatalogUE2PackageReader::class, 2, 127, Uedb5Unreal2SnapshotBuilder::POLICY_FORWARD_COMPAT);
-    $accept('unreal2_128', Uedb5Unreal2SnapshotBuilder::class, CatalogUE2PackageReader::class, 2, 128, Uedb5Unreal2SnapshotBuilder::POLICY_FORWARD_COMPAT);
-    $accept('unreal2_129', Uedb5Unreal2SnapshotBuilder::class, CatalogUE2PackageReader::class, 2, 129, Uedb5Unreal2SnapshotBuilder::POLICY_FORWARD_COMPAT);
+    $accept('unreal2_126', Uedb5Unreal2SnapshotBuilder::class, CatalogUE2PackageReader::class, 2, 126, Uedb5Unreal2SnapshotBuilder::POLICY_V126_GENERIC);
+    $accept('unreal2_127', Uedb5Unreal2SnapshotBuilder::class, CatalogUE2PackageReader::class, 2, 127, Uedb5Unreal2SnapshotBuilder::POLICY_POST_V126_UNRESOLVED);
+    $accept('unreal2_128', Uedb5Unreal2SnapshotBuilder::class, CatalogUE2PackageReader::class, 2, 128, Uedb5Unreal2SnapshotBuilder::POLICY_POST_V126_UNRESOLVED);
+    $accept('unreal2_129', Uedb5Unreal2SnapshotBuilder::class, CatalogUE2PackageReader::class, 2, 129, Uedb5Unreal2SnapshotBuilder::POLICY_POST_V126_UNRESOLVED);
 
     $accept('ut2003_60', Uedb5Ut2003SnapshotBuilder::class, CatalogUE2PackageReader::class, 4, 60, Uedb5Ut2003SnapshotBuilder::SOURCE_POLICY);
     $accept('ut2003_120', Uedb5Ut2003SnapshotBuilder::class, CatalogUE2PackageReader::class, 4, 120, Uedb5Ut2003SnapshotBuilder::SOURCE_POLICY);

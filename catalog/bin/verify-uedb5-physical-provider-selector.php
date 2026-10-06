@@ -163,7 +163,7 @@ $check('unreal2_v69_unreali_package_load_retries_unrealshare',
     &&(int)($unreal2Fallback[0]['file_id']??0)===28
     &&($unreal2Fallback[0]['source_fallback_package_name']??'')==='UnrealShare');
 
-$writer->write($snapshot(29,'Unreal2V126Consumer',$unrealIFallbackImports,[],Uedb5Unreal2SnapshotBuilder::SOURCE_POLICY,126,2,'ue2.unreal2'));
+$writer->write($snapshot(29,'Unreal2V126Consumer',$unrealIFallbackImports,[],Uedb5Unreal2SnapshotBuilder::POLICY_V126_GENERIC,126,2,'ue2.unreal2'));
 $db->prepare('INSERT INTO ue_files VALUES(?,?,?,?,?,?,?)')->execute([29,2,'verified','2026-10-02 13:48:00',29,md5('29'),sha1('29')]);
 $db->prepare('INSERT INTO ue_uedb5_files VALUES(?,?,?)')->execute([29,2,'Unreal2V126Consumer']);
 $unreal2UnverifiedFallback=(new PdoUedb5PhysicalProviderSelector($db,$tmp))->select(2,29);

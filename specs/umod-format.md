@@ -13,8 +13,8 @@ Primary baseline:
 Later/source-line verification:
 
 - `ardenee/UT99src-ext` (`master`), especially `Core/Inc/FFileManagerArc.h` and `Setup/Src/USetupDefinition.cpp`.
-- `ardenee/unreal2src`, including the later `U2XMP_all/depot/Core/Inc/FFileManagerArc.h`.
-- `ardenee/UE2.5`, `Core/Inc/FFileManagerArc.h`.
+- supplied Unreal-II-specific v69 source, `Unreal II The Awakening [12-09-2000]/Unreal2_old/Core/Inc/FFileManagerArc.h`.
+- supplied generic UE2/Warfare v126 source, `Unreal Engine [v2.5]_ Unreal Warfare [09-29-2007]/Core/Inc/FFileManagerArc.h`.
 - `ardenee/Unreal_Tournament_2003_v2107`, `Core/Inc/FFileManagerArc.h`.
 - `ardenee/UT2004src`, `Core/Inc/FFileManagerArc.h`.
 
@@ -355,8 +355,8 @@ UnrealDB should:
 | compact TArray count | `UT99src-ext/Core/Inc/UnTemplate.h` | `TArray<T>::operator<<` uses `AR_INDEX` |
 | fixed integer byte-order serialization | `UT99src-ext/Core/Inc/UnArc.h` | `FArchive::ByteOrderSerialize`, integer operators |
 | later common archive contract | `UT99src-ext/Core/Inc/FFileManagerArc.h` | `FArchiveHeader`, `FArchiveItem`, `Init` |
-| Unreal II persistence | `unreal2src/.../U2XMP_all/depot/Core/Inc/FFileManagerArc.h` | same archive structures/reader |
-| UE2.5 persistence/platform branches | `UE2.5/.../Core/Inc/FFileManagerArc.h` | same structures plus platform branches |
+| Unreal II v69 persistence | `Unreal II The Awakening [12-09-2000]/Unreal2_old/Core/Inc/FFileManagerArc.h` | same archive structures/reader |
+| generic UE2/Warfare v126 persistence/platform branches | `Unreal Engine [v2.5]_ Unreal Warfare [09-29-2007]/Core/Inc/FFileManagerArc.h` | same structures plus platform branches |
 | UT2003 persistence | `Unreal_Tournament_2003_v2107/Core/Inc/FFileManagerArc.h` | same archive structures/reader |
 | UT2004 persistence/path refinement | `UT2004src/Core/Inc/FFileManagerArc.h` | same structures; slash-aware `FromArcFilename` |
 | textual file record | `UT99src/.../Setup/Inc/Setup.h` | `FFileInfo` |

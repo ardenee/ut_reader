@@ -37,7 +37,8 @@ final class PdoUe2VerifyImportImpactQuery
         $reasons=[];
         foreach($rows as$r){
             $fid=(int)$r['file_id'];$policy=(string)$r['source_policy'];$version=(int)($r['package_version']??0);
-            $isUnreal2=str_starts_with(strtolower($policy),'ue2-unreal2-');
+            $isUnreal2=str_starts_with(strtolower($policy),'ue2-unreal2-')
+                || $policy===Uedb5Unreal2SnapshotBuilder::POLICY_V126_GENERIC;
             $isUt2003=str_starts_with(strtolower($policy),'ue2-ut2003-');
             $isUt2004=str_starts_with(strtolower($policy),'ue2-ut2004-');
             if(!$isUnreal2&&!$isUt2003&&!$isUt2004)continue;

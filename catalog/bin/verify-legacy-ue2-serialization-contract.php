@@ -126,6 +126,30 @@ try {
             && ($exports[0]['outerIndex'] ?? null) === 0,
         'FObjectImport.PackageIndex and FObjectExport.PackageIndex remain ordinary serialized INT fields.'
     );
+
+    $exportEntry126 = $compact(0)
+        . $compact(0)
+        . pack('V', 0)
+        . $compact(0)
+        . pack('V', 1)
+        . $compact(-1)
+        . $compact(7);
+    $header126 = pack('Vvv', 0x9E2A83C1, 126, 0)
+        . pack('V', 1)
+        . pack('V2', 1, $nameOffset)
+        . pack('V2', 1, $exportOffset)
+        . pack('V2', 1, $importOffset)
+        . pack('V4', 0x11223344, 0x55667788, 0x99AABBCC, 0xDDEEFF00)
+        . pack('V', 0);
+    file_put_contents($temporary, $header126 . $nameEntry . $importEntry . $exportEntry126);
+    $reader126 = new CatalogUE2PackageReader($temporary);
+    $exports126 = $reader126->getExports();
+    $record(
+        'ue2_nonzero_negative_serial_size_has_serial_offset',
+        ($exports126[0]['serialSize'] ?? null) === -1
+            && ($exports126[0]['serialOffset'] ?? null) === 7,
+        'Unreal II v69 and UE2/Warfare v126 both serialize SerialOffset whenever SerialSize is nonzero.'
+    );
 } finally {
     @unlink($temporary);
 }
