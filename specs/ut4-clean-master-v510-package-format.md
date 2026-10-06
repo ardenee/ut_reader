@@ -131,7 +131,13 @@ Use:
 
 Then run without `--summary` for exact IDs.
 
-Metadata-only eligible rows can be refreshed with:
+Pass-1 candidates can be reparsed in bounded, resumable slices with:
+
+`D:\php8.5\php.exe catalog\bin\reparse-ut4-v510-pass1.php --limit=100`
+
+Add `--apply` only after the same slice succeeds read-only. The runner selects corrected reader-gate rows plus staged summaries proven to be old-unversioned, and skips genuine explicit-v511 packages.
+
+Metadata-only eligible rows can be refreshed separately with:
 
 `D:\php8.5\php.exe catalog\bin\refresh-ut4-v510-source-policy.php`
 

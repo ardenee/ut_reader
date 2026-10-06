@@ -92,8 +92,12 @@ final class PdoUe4VerifyImportImpactQuery
                 }
             }
 
+            // A reparsed unversioned package retains its legacy catalogue
+            // package_version=511 so live V4 metadata is not mutated during staging.
+            // The staged source policy is authoritative evidence that its raw 0/0
+            // package was reparsed at clean-master effective v510.
             $cleanMaster = $sourcePolicy === Uedb5Ut4SnapshotBuilder::SOURCE_POLICY
-                && $version >= 214 && $version <= 510 && $licensee === 0;
+                && $version >= 214 && $version <= 511 && $licensee === 0;
             $structuralV511 = $sourcePolicy === Uedb5Ut4SnapshotBuilder::SOURCE_POLICY_V511
                 && $version === 511 && $licensee === 0;
             if (!$cleanMaster && !$structuralV511) {
