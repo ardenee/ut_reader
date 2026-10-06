@@ -249,11 +249,13 @@ abstract class CatalogLegacyPackageReaderBase
     private array $exports = [];
     /** @var list<string> */
     private array $issues = [];
+    private bool $unrealV227SummarySemantics;
 
-    protected function __construct(string $path, string $engineKey)
+    protected function __construct(string $path, string $engineKey, bool $unrealV227SummarySemantics = false)
     {
         $this->path = $path;
         $this->engineKey = $engineKey;
+        $this->unrealV227SummarySemantics = $unrealV227SummarySemantics;
         try {
             $this->parse();
         } catch (Throwable $error) {
@@ -338,14 +340,23 @@ abstract class CatalogLegacyPackageReaderBase
             ]];
         } else {
             $this->readGuid($reader);
-            $generationCount = $reader->i32();
-            if ($generationCount < 0 || $generationCount > intdiv($reader->remaining(), 8)) {
-                throw new RuntimeException(
-                    'Invalid legacy package generation count: ' . $generationCount
-                    . ' remaining=' . $reader->remaining()
-                );
+            $serializedGenerationCount = $reader->i32();
+            if ($this->unrealV227SummarySemantics) {
+                // Unreal v227 FPackageFileSummary clamps the serialized count
+                // to [0,64] before allocating/deserializing generation records.
+                $generationCount = max(0, min($serializedGenerationCount, 64));
+            } else {
+                if ($serializedGenerationCount < 0
+                    || $serializedGenerationCount > intdiv($reader->remaining(), 8)) {
+                    throw new RuntimeException(
+                        'Invalid legacy package generation count: ' . $serializedGenerationCount
+                        . ' remaining=' . $reader->remaining()
+                    );
+                }
+                $generationCount = $serializedGenerationCount;
             }
-            $this->header['genCount'] = $generationCount;
+            $this->header['genCount'] = $serializedGenerationCount;
+            $this->header['effectiveGenCount'] = $generationCount;
             for ($index = 0; $index < $generationCount; $index++) {
                 $exports = $reader->i32();
                 $names = $reader->i32();
@@ -483,11 +494,21 @@ abstract class CatalogLegacyPackageReaderBase
             try {
                 $class = $reader->packageIndex($version);
                 $super = $reader->packageIndex($version);
-                $outer = $reader->i32();
+                // Unreal v1.200 does not serialize FObjectExport.PackageIndex
+                // before package version 50; loading initializes it to zero.
+                $outer = $this->engineKey === 'UE1' && $version < 50
+                    ? 0
+                    : $reader->i32();
                 $objectName = $reader->packageIndex($version);
                 $flags = $reader->u32();
                 $serialSize = $reader->packageIndex($version);
-                $serialOffset = $serialSize > 0 ? $reader->packageIndex($version) : 0;
+                // Unreal v1.200 tests truthiness, not positivity: any non-zero
+                // UE1 serialized size is followed by a compact SerialOffset.
+                // Do not project that rule onto the separately audited UE2 path here.
+                $hasSerialOffset = $this->engineKey === 'UE1'
+                    ? $serialSize !== 0
+                    : $serialSize > 0;
+                $serialOffset = $hasSerialOffset ? $reader->packageIndex($version) : 0;
             } catch (Throwable $error) {
                 throw new RuntimeException(
                     'Export table entry parse failed'
@@ -689,9 +710,9 @@ abstract class CatalogLegacyPackageReaderBase
 
 final class CatalogUE1PackageReader extends CatalogLegacyPackageReaderBase
 {
-    public function __construct(string $path)
+    public function __construct(string $path, bool $unrealV227SummarySemantics = false)
     {
-        parent::__construct($path, 'UE1');
+        parent::__construct($path, 'UE1', $unrealV227SummarySemantics);
     }
 }
 

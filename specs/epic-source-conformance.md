@@ -398,4 +398,36 @@ Pass 2 is now `uedb5-dependency-pass-v11`; the transition accepts v1-v10.
 - The optional-segment source-shape correction requires Pass-1 restaging only for Zen packages that actually have an optional segment, because the previous builder could not represent the valid main+optional entry pair. No registered UE5 game migration target currently exists, so this does not trigger a present catalogue-wide scan.
 - No V4 dependency metadata is used to make Zen decisions.
 
-**Next audit checkpoint: Section 4A - package serialization and pre-dependency preprocessing for the latest Unreal/UE1 profile, starting from Unreal v227 source independently of UT99 or later engines.**
+## Section 4A - Unreal / UE1 package serialization and pre-dependency preprocessing
+
+**Status: complete for the supplied Unreal source surface; latest-v227 serializer/linker implementation bodies are explicitly unresolved rather than inherited from UT99.**
+
+### Source authority and availability
+
+- Latest Unreal tree: `L:\Source\Games\Unreal\Unreal [v1.227]`, revision `2bd1ce95a78bfd95fb83e7834abbb878b40b3cb6`.
+- v227 defines engine 227, package version 69, licensee version 227 and minimum package version 60.
+- The public v227 checkout contains the relevant Core headers but no `Core\Src` implementation bodies. Git history also contains no missing Core linker/name/object source bodies.
+- `L:\Source\Games\Unreal\Unreal [v1.224] [1999-05-01] [INCOMPLETE]` provides v68/min60 constants but likewise not the required linker implementation.
+- `L:\Source\Games\Unreal\Unreal [v1.200] [1998-05-19]` is the latest complete Unreal-only Core implementation available locally for historical serialization branches. No Section-4A rule is sourced from UT99.
+
+### Source results and corrections
+
+1. **v227 summary generation count is clamped on load.** The inline `FPackageFileSummary` serializer clamps the serialized generation count to 0..64 before reading generation records. UnrealDB's game-aware `unrealgold` UEDB5 reader path now reproduces that behavior while preserving both serialized and effective counts. The rule is not projected onto UT99 or UE2.
+2. **Pre-v50 Unreal exports omit PackageIndex.** Complete v1.200 `FObjectExport::operator<<` serializes the fixed-width PackageIndex only for version >=50 and initializes it to zero otherwise. UnrealDB previously consumed four bytes unconditionally and could misalign old exports. The UE1 pre-v50 path is corrected and UEDB5 records the outer as not serialized.
+3. **SerialOffset follows nonzero SerialSize.** v1.200 uses `if (E.SerialSize)`, not `> 0`. The UE1 reader now consumes the compact SerialOffset for any nonzero serialized size. This correction is intentionally not projected onto UE2 by this checkpoint.
+4. **v227 exposes a persistent ArchetypeIndex but not its serializer body.** `FObjectExport` declares `ArchetypeIndex`; `RF_HasArchtype` is part of `RF_Load`. Without the friend `operator<<` body, the byte order and gate cannot be asserted. UnrealDB therefore does not claim full v227 export-layout parity.
+5. **v227 current serializers are demonstrably used.** `UWebAdmin/Src/WebAdminFile.cpp` reads the current summary, name entries and imports and identifies root package imports via `PackageIndex == 0 && ClassName == Package`. This proves current-type use but does not reveal the missing serializer implementations.
+6. **Historical pre-dependency preprocessing is source-proven only where the body exists.** v1.200 loads summary/heritage/names/imports/exports, applies runtime name-context mapping, derives export ClassPackage/ClassName from ClassIndex, then begins VerifyImport. v227 declares related linker APIs and context state, but its missing body prevents silently promoting the v1.200 algorithm to a complete v227 claim.
+7. **Unreal source-policy attribution is corrected.** Versions 60..68 are marked `ue1-unreal-v224-v60-68-public-source-partial`; v69 is `ue1-unreal-v227-v69-public-source-partial`; profile-admitted versions above 69 are `ue1-unreal-post-v69-profile-admitted-unresolved`. The previous Unreal v69 attribution to a UT432 shared serializer has been removed.
+
+### UEDB5 and regression boundary
+
+- Pre-v50 Unreal exports use `ue1.unreal.object-export.v2` and explicitly record that outer PackageIndex was not serialized.
+- v227-summary snapshots retain `generation_count` plus `effective_generation_count`.
+- `verify-ue1-pre50-import-layout.php` now covers the corrected export layout and nonzero SerialOffset condition.
+- `verify-unreal-v227-summary-contract.php` proves the 65->64 and negative->0 generation-count behavior.
+- Existing UE2 serialization and legacy-game persistence tests remain green.
+- The database currently connected to this checkout does not contain the Step-5 UEDB5 tables, so no catalogue impact count is fabricated here. Required restaging is narrowly bounded to pre-v50 Unreal files plus any v68+ Unreal file whose serialized generation count lies outside 0..64; 60+ source-policy labels must also be refreshed before cutover.
+- Full source notes and the unresolved-body matrix are in `specs/unreal-v227-package-format.md`.
+
+**Section 4A does not certify the missing v227 Core implementation. The next Unreal checkpoint must not claim full v227 serializer/preprocessing parity unless those implementation bodies are obtained or another first-party source artifact proves the missing branches.**

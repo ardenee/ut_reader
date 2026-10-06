@@ -62,19 +62,19 @@ final class Uedb5LegacySnapshotBuilder
                 'summary' => $prefix . ($pre50Unreal ? '.package-summary.v2' : '.package-summary.v1'),
                 'names' => $prefix . '.name-entry.v1',
                 'imports' => $prefix . ($pre50Unreal ? '.object-import.v2' : '.object-import.v1'),
-                'exports' => $prefix . '.object-export.v1',
+                'exports' => $prefix . ($pre50Unreal ? '.object-export.v2' : '.object-export.v1'),
             ],
             'sections' => [
-                'summary' => [self::summaryRow($header)],
+                'summary' => [self::summaryRow($header, $pre50Unreal)],
                 'names' => array_map(self::nameRow(...), $names),
                 'imports' => array_map(static fn(array $row): array => self::importRow($row, $version), $imports),
-                'exports' => array_map(self::exportRow(...), $exports),
+                'exports' => array_map(static fn(array $row): array => self::exportRow($row, $pre50Unreal), $exports),
             ],
         ];
     }
 
     /** @param array<string,mixed> $header @return array<string,mixed> */
-    private static function summaryRow(array $header): array
+    private static function summaryRow(array $header, bool $pre50Unreal): array
     {
         $version = (int)($header['version'] ?? 0);
         $pre68 = $version < 68;
@@ -98,6 +98,9 @@ final class Uedb5LegacySnapshotBuilder
             'heritage_offset' => $pre68 ? (int)($header['heritageOffset'] ?? 0) : null,
             'generation_count_present' => !$pre68,
             'generation_count' => !$pre68 ? (int)($header['genCount'] ?? 0) : null,
+            'effective_generation_count' => !$pre68
+                ? (int)($header['effectiveGenCount'] ?? $header['genCount'] ?? 0)
+                : null,
             'generations' => array_values((array)($header['generations'] ?? [])),
             'name_entry_encoding' => $version < 64 ? 'ansi-z' : 'fstring-compact-length',
             'fname_index_encoding' => 'compact-index',
@@ -105,7 +108,7 @@ final class Uedb5LegacySnapshotBuilder
             'import_object_package_encoding' => $version < 50 ? 'fname-compact-index' : 'not-serialized',
             'export_class_index_encoding' => 'compact-index',
             'export_super_index_encoding' => 'compact-index',
-            'export_outer_index_encoding' => 'int32-le',
+            'export_outer_index_encoding' => $pre50Unreal ? 'not-serialized' : 'int32-le',
             'export_serial_size_encoding' => 'compact-index',
             'export_serial_offset_encoding' => 'compact-index-if-size-nonzero',
             'package_compression' => 'none',
@@ -159,7 +162,7 @@ final class Uedb5LegacySnapshotBuilder
     }
 
     /** @param array<string,mixed> $row @return array<string,mixed> */
-    private static function exportRow(array $row): array
+    private static function exportRow(array $row, bool $pre50Unreal): array
     {
         $index = (int)($row['index'] ?? -1);
         $serialSize = (int)($row['serialSize'] ?? 0);
@@ -170,7 +173,8 @@ final class Uedb5LegacySnapshotBuilder
             'class_index' => (int)($row['classIndex'] ?? 0),
             'super_index' => (int)($row['superIndex'] ?? 0),
             'outer_index' => (int)($row['outerIndex'] ?? 0),
-            'outer_index_serialized_width_bits' => 32,
+            'outer_index_serialized' => !$pre50Unreal,
+            'outer_index_serialized_width_bits' => $pre50Unreal ? null : 32,
             'object_name' => self::fname(
                 (int)($row['objectName'] ?? -1),
                 (string)($row['objectNameText'] ?? '')

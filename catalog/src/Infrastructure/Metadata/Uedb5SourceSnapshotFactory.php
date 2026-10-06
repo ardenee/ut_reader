@@ -119,7 +119,10 @@ final class Uedb5SourceSnapshotFactory
         if ($engineKey === 'UE4' || $engineKey === 'UE5') {
             $this->applyProfile($gameId, $engineKey);
         }
-        $reader = new $readerClass($path);
+        $reader = $sourceKey === 'unrealgold'
+            && $readerClass === \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1PackageReader::class
+            ? new $readerClass($path, true)
+            : new $readerClass($path);
         if (!method_exists($reader, 'getHeader')) {
             throw new RuntimeException('Canonical package reader does not expose its parsed header for profile validation.');
         }
