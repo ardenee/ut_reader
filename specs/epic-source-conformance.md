@@ -655,4 +655,12 @@ This was not a package/source failure. `source_unresolved` is resolver provenanc
 `Uedb5ClassicDependencyResolver` now normalizes UE4 `runtime_only`, `unresolved`, `invalid`, and `ignored` source outcomes to canonical `unresolved` + `runtime_derived`; non-runtime-only source states additionally retain `confidence=source_unresolved`.
 
 The focused resolver, SQL-projection, and UE4 dependency contracts pass, including a regression case for an invalid UE4 import. A real read-only rerun of all five previously failing UT4 files succeeded 5/5 before applying the correction. The 24,194 bad-policy rows have been repaired, the 40,053 legacy rows have been metadata-refreshed, and all 64,247 UT4 staged rows now carry the canonical v511 policy.
+
+### UT4 validation path normalization correction
+
+The first 20 migration-validation attempts all failed with `source_snapshot_mismatch`. Field-level staged-vs-fresh comparison proved the only difference was `sections.summary.0.uexp_path`: the staged snapshot used Windows backslashes while the PRD scratch runtime produced an equivalent mixed-separator absolute path.
+
+`uexp_path` is an environment-derived local filesystem locator, not serialized Unreal package identity, and it is not consumed by resolver/projection/runtime contracts. `Uedb5MigrationValidator` now removes this field from both staged and fresh source-comparison snapshots while retaining all serialized/source-shaped metadata checks.
+
+The migration-validation, migration-status, and cutover-readiness contracts pass with a regression assertion that validation is independent of local `uexp_path` formatting. The 20 rows marked failed by the pre-fix validator must have their dependency checkpoint rebuilt before validation resumes because hard validation failure intentionally clears dependency completion state.
 **Next checkpoint: Section 4H - UE5 5.8.3 classic package serialization and pre-dependency preprocessing, audited independently from the UE5 source before revisiting Zen/IoStore.**

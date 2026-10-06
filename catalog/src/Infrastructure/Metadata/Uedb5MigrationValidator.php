@@ -129,13 +129,26 @@ final class Uedb5MigrationValidator
     /** @param array<string,mixed> $staged @param array<string,mixed> $source */
     private function validateSourceSnapshot(array $staged, array $source): void
     {
-        $stagedBase = $staged;
-        unset($stagedBase['sections']['dependency_results'], $stagedBase['section_schemas']['dependency_results']);
+        $stagedBase = $this->sourceComparableSnapshot($staged);
+        $sourceBase = $this->sourceComparableSnapshot($source);
         $this->require(
-            $this->canonicalSnapshot($stagedBase) === $this->canonicalSnapshot($source),
+            $this->canonicalSnapshot($stagedBase) === $this->canonicalSnapshot($sourceBase),
             'source_snapshot_mismatch',
             'Staged UEDB5 source-shaped metadata differs from a fresh authoritative source parse.'
         );
+    }
+
+    /** @param array<string,mixed> $snapshot @return array<string,mixed> */
+    private function sourceComparableSnapshot(array $snapshot): array
+    {
+        unset($snapshot['sections']['dependency_results'], $snapshot['section_schemas']['dependency_results']);
+        if (isset($snapshot['sections']['summary'][0]) && is_array($snapshot['sections']['summary'][0])) {
+            // uexp_path is a local filesystem locator derived by the reader, not
+            // serialized package identity. Validation must not depend on which
+            // equivalent path separator/style was used by the staging runtime.
+            unset($snapshot['sections']['summary'][0]['uexp_path']);
+        }
+        return $snapshot;
     }
 
     /** @param array<string,mixed> $snapshot @param array<string,mixed> $context */
