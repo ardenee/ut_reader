@@ -16,9 +16,9 @@ final class Uedb5Ut99SnapshotBuilder
 {
     public const PACKAGE_FAMILY = 'classic-linkerload';
     public const POLICY_RETAIL = 'ue1-ut99-retail-v1400-1999-11-30';
-    public const POLICY_SUPPLEMENTAL = 'ue1-ut99-supplemental-v430';
+    public const POLICY_SUPPLEMENTAL = 'ue1-ut99-v430-public-source-partial';
     public const POLICY_V69 = self::POLICY_SUPPLEMENTAL;
-    public const POLICY_FORWARD_COMPAT = 'ue1-ut99-forward-loader-compatible';
+    public const POLICY_FORWARD_COMPAT = 'ue1-ut99-post-v69-profile-admitted-unresolved';
 
     /** @param array<string,mixed> $file @return array<string,mixed> */
     public static function build(CatalogUE1PackageReader $reader, array $file): array

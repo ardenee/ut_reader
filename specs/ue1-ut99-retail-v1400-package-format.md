@@ -101,7 +101,11 @@ For `Ar.Ver() < 64`, the name is read one ANSI byte at a time through the termin
 
 For version 64 and later, the name is serialized through `FString`, copied into the entry's name buffer, and then the entry flags are serialized. Version 64 is therefore an authoritative name-entry format boundary.
 
-The retail runtime only maps a name into its runtime `NameMap` when its flags intersect the edit/client/server context flags; otherwise it inserts `NAME_None`. That is runtime context filtering, not absence of the serialized name. UnrealDB should preserve the actual on-disk entry.
+The retail runtime only maps a name into its runtime `NameMap` when its flags intersect `_ContextFlags`; otherwise it inserts `NAME_None`. `ULinker` builds that mask from `RF_LoadForEdit`, `RF_LoadForClient`, and `RF_LoadForServer`.
+
+For deterministic catalogue preprocessing, UnrealDB now uses the source-backed **UCC/UnrealEd all-context configuration**: all three load bits enabled (`0x00070000`). This is an explicit Epic loader context, not a claim that every game runtime uses the same mask. The serialized name row and flags remain unchanged in metadata; only the effective FName used to derive Imports/Exports/dependencies is mapped to `NAME_None` when `NameEntry.Flags & 0x00070000 == 0`.
+
+This preprocessing occurs before import/export semantics, matching Epic's order. A raw root import therefore must not be rejected as non-`Core.Package` before its referenced names have passed through the effective `NameMap`; a filtered name makes `VerifyImport` return through the `NAME_None` branch before those assertions.
 
 ## Import table
 
@@ -186,6 +190,8 @@ The relevant loader order is:
 12. build export hash
 13. optionally verify imports unless `LOAD_NoVerify`
 
+The important preprocessing detail is that step 9 does not merely retain strings: it constructs the effective runtime `NameMap`. Steps 10-13 consume those effective FNames. UnrealDB's raw package reader therefore preserves the serialized tables, while the UT99 metadata/dependency layer applies the explicit all-context NameMap before deriving object/package identity.
+
 Other proven checks include valid FName indices, valid signed object indices, and exact export payload byte consumption.
 
 The retail source does **not** prove arbitrary hard caps such as maximum table counts, maximum string bytes, or maximum export size. Such UnrealDB safety limits must not be presented as UT99 format rules.
@@ -198,17 +204,19 @@ Those behaviors will be specified separately in the **UT99 dependency and import
 
 ## Later revision evidence: UT99src-ext
 
-`ardenee/UT99src-ext` is supplemental later code, not the retail v1.400 authority. Its available headers prove at least:
+`ardenee/UT99src-ext` and the local `L:\Source\Games\UT99\Unreal Tournament v432` public distribution are supplemental later code, not the retail v1.400 authority. Their available Core headers prove:
 - `ENGINE_VERSION = 430`
 - `PACKAGE_FILE_VERSION = 69`
+- `PACKAGE_FILE_VERSION_LICENSEE = 0`
 - `PACKAGE_MIN_VERSION = 60`
-- same `PACKAGE_FILE_TAG = 0x9E2A83C1`
+- the same `PACKAGE_FILE_TAG = 0x9E2A83C1`
 - a logical split of the serialized 32-bit version into low 16-bit Epic version and high 16-bit licensee version
-- summary version gates using the low 16-bit `GetFileVersion()`
+- summary version gates using low-16-bit `GetFileVersion()`
+- the complete inline v69 `FPackageFileSummary`, `FObjectImport`, and `FObjectExport` serializers, including nonzero-`SerialSize` gating of `SerialOffset`
 
-Its header defines `GetFileVersion() = FileVersion & 0xffff` and `GetFileVersionLicensee() = (FileVersion >> 16) & 0xffff`.
+The v432 public distribution does **not** provide `Core/Src/UnName.cpp`; `FNameEntry::operator<<` remains only declared. The checked `UT99src-ext` Git history likewise contains no hidden Core name/linker implementation body. Public v432 mirrors checked during Section 4B expose the same header/lib boundary. Therefore the exact v69 name-entry serializer remains source-unresolved and must not be silently inherited from retail v1.400.
 
-This later licensee-version interpretation must not be retroactively claimed for the retail v68 source. The supplemental repository lacks the same complete Core/Src base implementation set, so unproven later behavior remains unresolved.
+UEDB5 records that distinction explicitly: v69/licensee-era rows use `ue1-ut99-v430-public-source-partial`, while admitted versions above 69 use `ue1-ut99-post-v69-profile-admitted-unresolved`. This later licensee-version interpretation is not retroactively claimed for retail v68.
 
 ## Compression and encryption
 
@@ -227,11 +235,14 @@ A retail-compatible UnrealDB reader must:
 8. omit export `SerialOffset` when `SerialSize == 0`;
 9. validate table references before dereferencing;
 10. preserve signed import/export index semantics;
-11. preserve serialized names rather than applying runtime context filtering as data loss;
-12. expose payload spans from `SerialOffset`/`SerialSize`;
-13. avoid invented format caps or fallbacks;
-14. keep later v69/licensee semantics distinct from retail v68;
-15. allow structural metadata extraction without requiring external provider packages.
+11. preserve serialized names and flags without destructive filtering;
+12. build the effective UT99 all-context `NameMap` before deriving import/export/dependency identity;
+13. never apply `Core.Package`/parent runtime assertions to raw FName text before that preprocessing;
+14. expose payload spans from `SerialOffset`/`SerialSize`;
+15. avoid invented format caps or fallbacks;
+16. keep v69's source-proven summary/import/export serializers distinct from its unresolved `FNameEntry` body;
+17. label post-v69 admitted parsing as source-unresolved rather than forward-compatible proof;
+18. allow structural metadata extraction without requiring external provider packages.
 
 ## Source-reference matrix
 
@@ -246,6 +257,9 @@ A retail-compatible UnrealDB reader must:
 | Import layout | `Core/Src/UnLinker.h: FObjectImport operator<<` |
 | Export layout | `Core/Src/UnLinker.h: FObjectExport operator<<` |
 | FName reference decoding | `ULinkerLoad::operator<<(FName&)` |
+| NameMap context preprocessing | `ULinker::ULinker`, `ULinkerLoad::LoadNames`; UCC/UnrealEd startup context assignments |
+| v430/v69 inline summary/import/export layout | local v432 `Core/Inc/UnLinker.h` |
+| v430/v69 name serializer boundary | local v432 `Core/Inc/UnName.h` declaration; missing `Core/Src/UnName.cpp` |
 | Signed object indices | `ULinkerLoad::IndexToObject` |
 | Class identity | `GetExportClassName`, `GetExportClassPackage` |
 | Outer/path traversal | `GetImportFullName`, `GetExportFullName` |

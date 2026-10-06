@@ -47,6 +47,8 @@ Therefore normal retail loading verifies every serialized import, not merely top
 
 The source comment describes the latter cases as not relevant in the current context.
 
+These comparisons use the **effective** FNames already produced by the linker's NameMap, not raw name-table text. Section 4B fixes UnrealDB's preprocessing contract accordingly: raw Names remain preserved, while dependency verification uses the UCC/UnrealEd all-context mask `0x00070000`. A serialized non-`None` name whose flags have no load-context bit becomes `NAME_None` before this early-return test.
+
 ## Top-level package imports
 
 An import with `PackageIndex == 0` is required by assertions to have:
@@ -254,9 +256,9 @@ Thus provider discovery/matching belongs to verification; object creation consum
 
 For static cataloging, the serialized import table proves two useful levels:
 
-**Required package**: each root `Core.Package` import (`PackageIndex == 0`) identifies a provider package name via `ObjectName`.
+**Required package**: after NameMap preprocessing, each effective root `Core.Package` import (`PackageIndex == 0`) identifies a provider package name via effective `ObjectName`. A row filtered to `NAME_None` is context-irrelevant rather than a provider requirement.
 
-**Required object**: a nested import identifies an object by its full import outer chain plus `ClassName` and `ClassPackage`.
+**Required object**: after the same preprocessing, a nested import identifies an object by its effective full import outer chain plus effective `ClassName` and `ClassPackage`.
 
 However, "the engine can successfully resolve this dependency" is stronger than "the package declares this dependency." Exact engine resolution additionally depends on provider exports, `RF_Public`, compatibility fallbacks, and in some cases live runtime native/class state.
 
@@ -292,18 +294,19 @@ If other UT99 subsystems contain configurable remapping, that does not make it p
 
 For UT99 dependency extraction and optional source-compatible verification, UnrealDB should:
 
-1. identify root provider packages from `Core.Package` imports with `PackageIndex == 0`;
-2. reconstruct nested dependency paths by following negative import `PackageIndex` chains;
-3. retain `ClassPackage`, `ClassName`, `ObjectName`, and parent chain for object dependencies;
-4. derive provider export class name/package exactly as the retail source does;
-5. require exact object/class/class-package matching except for the explicit UnrealI/UnrealShare exception;
-6. reproduce the documented parent/outer matching rule if performing verification;
-7. account for `RF_Public` when deciding whether a provider export is loadable;
-8. implement `Mesh` -> `LodMesh` only for this source-backed path;
-9. keep the two UnrealI/UnrealShare fallback mechanisms distinct;
-10. not emulate runtime native/transient or `CLASS_SafeReplace` success from package bytes alone;
-11. distinguish a declared dependency from a dependency proven resolvable;
-12. not introduce generalized class remaps, package aliases, fuzzy matching, or other fallbacks absent from this source.
+1. preserve the serialized Name table/flags, then build the explicit all-context effective NameMap before dependency identity;
+2. identify root provider packages only from effective `Core.Package` imports with `PackageIndex == 0`;
+3. reconstruct nested dependency paths by following negative import `PackageIndex` chains;
+4. retain the serialized FName indices plus effective `ClassPackage`, `ClassName`, `ObjectName`, and parent chain for object dependencies;
+5. derive provider export class name/package exactly as the retail source does;
+6. require exact object/class/class-package matching except for the explicit UnrealI/UnrealShare exception;
+7. reproduce the documented parent/outer matching rule if performing verification;
+8. account for `RF_Public` when deciding whether a provider export is loadable;
+9. implement `Mesh` -> `LodMesh` only for this source-backed path;
+10. keep the two UnrealI/UnrealShare fallback mechanisms distinct;
+11. not emulate runtime native/transient or `CLASS_SafeReplace` success from package bytes alone;
+12. distinguish a declared dependency from a dependency proven resolvable;
+13. not introduce generalized class remaps, package aliases, fuzzy matching, or other fallbacks absent from this source.
 
 ## Source-reference matrix
 

@@ -26,6 +26,7 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
         require_once $root . '/lib/Scanner/CatalogScannerPath.php';
         require_once $root . '/lib/Scanner/CatalogScannerSupport.php';
         require_once __DIR__ . '/CatalogUnrealIdentityHash.php';
+        require_once __DIR__ . '/CatalogLegacyNameMapPreprocessor.php';
     }
 
     /**
@@ -82,6 +83,22 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
             throw new RuntimeException('Parsed compact metadata requires valid file, game and package identities.');
         }
 
+        $engineRow = \catalog_one(
+            $this->db,
+            'SELECT p.engine_key FROM ue_games g'
+            . ' LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1'
+            . ' WHERE g.id=? LIMIT 1',
+            [$gameId]
+        );
+        $engineKey = strtoupper(trim((string)($engineRow['engine_key'] ?? '')));
+        $sourceKey = '';
+        try {
+            $sourceKey = Uedb5GameSourceRegistry::sourceKey($gameId);
+        } catch (RuntimeException) {
+            // Non-UEDB5/custom game IDs retain the existing raw metadata path.
+        }
+        $ut99AllContextNameMap = $engineKey === 'UE1' && $sourceKey === 'ut99';
+
         $nameRows = [];
         foreach ($names as $index => $name) {
             $row = is_array($name) ? $name : [];
@@ -92,6 +109,48 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
                 'name_text' => (string)($row['name'] ?? $row['text'] ?? ''),
                 'flags' => isset($row['flags']) ? (int)$row['flags'] : null,
             ];
+        }
+
+        if ($ut99AllContextNameMap) {
+            $effectiveNames = CatalogLegacyNameMapPreprocessor::effectiveNameMap($nameRows);
+            foreach ($imports as &$import) {
+                if (!is_array($import)) { continue; }
+                foreach ([
+                    ['classPackage','ClassPackage','classPackageText'],
+                    ['className','ClassName','classNameText'],
+                    ['objectName','ObjectName','objectNameText'],
+                    ['objectPackage','ObjectPackage','objectPackageText'],
+                ] as [$indexKey,$objectKey,$textKey]) {
+                    if (!array_key_exists($indexKey, $import) && !array_key_exists($objectKey, $import)) {
+                        continue;
+                    }
+                    $nameIndex = $this->fnameIndex($import[$indexKey] ?? $import[$objectKey] ?? null);
+                    $fallback = (string)($import[$textKey] ?? (
+                        is_array($import[$objectKey] ?? null) ? ($import[$objectKey]['text'] ?? '') : ''
+                    ));
+                    $text = CatalogLegacyNameMapPreprocessor::effectiveText($effectiveNames, $nameIndex, $fallback);
+                    $import[$textKey] = $text;
+                    if (is_array($import[$objectKey] ?? null)) {
+                        $import[$objectKey]['text'] = $text;
+                    }
+                }
+            }
+            unset($import);
+            foreach ($exports as &$export) {
+                if (!is_array($export)) { continue; }
+                $nameIndex = $this->fnameIndex(
+                    $export['objectName'] ?? $export['ObjectName'] ?? $export['nameIndex'] ?? null
+                );
+                $fallback = (string)($export['objectNameText'] ?? (
+                    is_array($export['ObjectName'] ?? null) ? ($export['ObjectName']['text'] ?? '') : ''
+                ));
+                $text = CatalogLegacyNameMapPreprocessor::effectiveText($effectiveNames, $nameIndex, $fallback);
+                $export['objectNameText'] = $text;
+                if (is_array($export['ObjectName'] ?? null)) {
+                    $export['ObjectName']['text'] = $text;
+                }
+            }
+            unset($export);
         }
 
         $nameUsage = [];
@@ -238,17 +297,7 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
         ];
 
         require_once __DIR__ . '/CatalogCompactIdentityEnricher.php';
-        $engineRow = \catalog_one(
-            $this->db,
-            'SELECT p.engine_key FROM ue_games g'
-            . ' LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1'
-            . ' WHERE g.id=? LIMIT 1',
-            [$gameId]
-        );
-        return CatalogCompactIdentityEnricher::enrich(
-            $snapshot,
-            strtoupper(trim((string)($engineRow['engine_key'] ?? '')))
-        );
+        return CatalogCompactIdentityEnricher::enrich($snapshot, $engineKey);
     }
 
     /**

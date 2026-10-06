@@ -70,6 +70,14 @@ final class Uedb5ClassicDependencyResolver
         $ue3Profile = $engine === 'ue3' ? self::ue3VerifyImportProfile($consumerSnapshot) : null;
         $ue4Profile = $engine === 'ue4' ? self::ue4VerifyImportProfile($consumerSnapshot) : null;
         $ue1Profile = $engine === 'ue1' ? self::ue1VerifyImportProfile($consumerSnapshot) : null;
+        if ($engine === 'ue1'
+            && $ue1Profile === PdoUe1VerifyImportProjectionResolver::PROFILE_UT99_V1400) {
+            $consumer = self::applyUt99AllContextNameMap($consumer);
+            foreach ($providers as &$provider) {
+                $provider['tables'] = self::applyUt99AllContextNameMap((array)$provider['tables']);
+            }
+            unset($provider);
+        }
         $consumerVersion = self::packageVersion($consumerSnapshot);
         $providerOutcomes = [];
 
@@ -360,10 +368,26 @@ final class Uedb5ClassicDependencyResolver
         return $resolved;
     }
 
-    /** @return array{imports:array<int,array<string,mixed>>,exports:array<int,array<string,mixed>>} */
+    /** @return array{names:array<int,array<string,mixed>>,imports:array<int,array<string,mixed>>,exports:array<int,array<string,mixed>>} */
     private static function tables(array $snapshot): array
     {
         $sections = (array)($snapshot['sections'] ?? []);
+        $names = [];
+        foreach ((array)($sections['names'] ?? []) as $fallback => $row) {
+            if (!is_array($row)) {
+                throw new RuntimeException('Classic UEDB5 name section contains a non-row value.');
+            }
+            $index = array_key_exists('index', $row) ? (int)$row['index'] : (int)$fallback;
+            if ($index < 0 || isset($names[$index])) {
+                throw new RuntimeException('Classic UEDB5 name section contains an invalid or duplicate index.');
+            }
+            $names[$index] = [
+                'name_index' => $index,
+                'name_text' => (string)($row['text'] ?? ''),
+                'flags' => $row['flags'] ?? 0,
+            ];
+        }
+
         $imports = [];
         foreach ((array)($sections['imports'] ?? []) as $fallback => $row) {
             if (!is_array($row)) {
@@ -376,14 +400,18 @@ final class Uedb5ClassicDependencyResolver
             $imports[$index] = [
                 'import_index' => $index,
                 'class_package' => self::fnameText($row['class_package'] ?? null),
+                'class_package_name_index' => self::fnameIndex($row['class_package'] ?? null),
                 'class_package_is_none' => self::fnameIsNone($row['class_package'] ?? null),
                 'class_name' => self::fnameText($row['class_name'] ?? null),
+                'class_name_index' => self::fnameIndex($row['class_name'] ?? null),
                 'class_name_is_none' => self::fnameIsNone($row['class_name'] ?? null),
                 'object_name' => self::fnameText($row['object_name'] ?? null),
+                'object_name_index' => self::fnameIndex($row['object_name'] ?? null),
                 'object_name_is_none' => self::fnameIsNone($row['object_name'] ?? null),
                 'outer_index' => (int)($row['outer_index'] ?? 0),
                 'object_package_present' => !empty($row['object_package_present']),
                 'object_package' => self::fnameText($row['object_package'] ?? null),
+                'object_package_name_index' => self::fnameIndex($row['object_package'] ?? null),
                 'package_name_present' => !empty($row['package_name_present'])
                     || !empty($row['serialized_package_name_present']),
                 'package_name' => self::fnameText(
@@ -408,12 +436,59 @@ final class Uedb5ClassicDependencyResolver
                 'outer_index' => (int)($row['outer_index'] ?? 0),
                 'archetype_index' => (int)($row['archetype_index'] ?? 0),
                 'object_name' => self::fnameText($row['object_name'] ?? null),
+                'object_name_index' => self::fnameIndex($row['object_name'] ?? null),
                 'object_flags' => self::flagsInt($row['object_flags'] ?? 0),
             ];
         }
+        ksort($names, SORT_NUMERIC);
         ksort($imports, SORT_NUMERIC);
         ksort($exports, SORT_NUMERIC);
-        return ['imports' => $imports, 'exports' => $exports];
+        return ['names' => $names, 'imports' => $imports, 'exports' => $exports];
+    }
+
+    /** @param array{names:array<int,array<string,mixed>>,imports:array<int,array<string,mixed>>,exports:array<int,array<string,mixed>>} $tables */
+    private static function applyUt99AllContextNameMap(array $tables): array
+    {
+        // Synthetic/unit snapshots may already contain effective FName text and
+        // omit the serialized name section. Real UEDB5 snapshots always retain it.
+        if ($tables['names'] === []) {
+            return $tables;
+        }
+        $effective = CatalogLegacyNameMapPreprocessor::effectiveNameMap(array_values($tables['names']));
+        foreach ($tables['imports'] as &$import) {
+            foreach ([
+                ['class_package','class_package_name_index','class_package_is_none'],
+                ['class_name','class_name_index','class_name_is_none'],
+                ['object_name','object_name_index','object_name_is_none'],
+                ['object_package','object_package_name_index',null],
+            ] as [$textKey,$indexKey,$noneKey]) {
+                if (!array_key_exists($indexKey, $import) || $import[$indexKey] === null) {
+                    continue;
+                }
+                $text = CatalogLegacyNameMapPreprocessor::effectiveText(
+                    $effective,
+                    (int)$import[$indexKey],
+                    (string)($import[$textKey] ?? '')
+                );
+                $import[$textKey] = $text;
+                if ($noneKey !== null) {
+                    $import[$noneKey] = self::key($text) === self::key('None');
+                }
+            }
+        }
+        unset($import);
+        foreach ($tables['exports'] as &$export) {
+            if (($export['object_name_index'] ?? null) === null) {
+                continue;
+            }
+            $export['object_name'] = CatalogLegacyNameMapPreprocessor::effectiveText(
+                $effective,
+                (int)$export['object_name_index'],
+                (string)($export['object_name'] ?? '')
+            );
+        }
+        unset($export);
+        return $tables;
     }
 
     private static function engine(array $snapshot): string
@@ -641,6 +716,15 @@ final class Uedb5ClassicDependencyResolver
             unset($detail['reason']);
         }
         return $detail;
+    }
+
+    private static function fnameIndex(mixed $value): ?int
+    {
+        if (!is_array($value)) {
+            return null;
+        }
+        $index = $value['name_index'] ?? $value['index'] ?? null;
+        return $index === null || $index === '' ? null : (int)$index;
     }
 
     private static function fnameIsNone(mixed $value): bool

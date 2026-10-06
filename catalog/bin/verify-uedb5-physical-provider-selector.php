@@ -142,7 +142,7 @@ $check('ut99_v1400_unreali_package_load_retries_unrealshare',
     && ($ut99Fallback[0]['package_name']??'')==='UnrealI'
     && ($ut99Fallback[0]['source_fallback_package_name']??'')==='UnrealShare');
 
-$writer->write($snapshot(26,'UnverifiedFallbackConsumer',$unrealIFallbackImports,[],'ue1-ut99-supplemental-v430',69));
+$writer->write($snapshot(26,'UnverifiedFallbackConsumer',$unrealIFallbackImports,[],'ue1-ut99-v430-public-source-partial',69));
 $db->prepare('INSERT INTO ue_files VALUES(?,?,?,?,?,?,?)')->execute([26,3,'verified','2026-10-02 13:46:00',26,md5('26'),sha1('26')]);
 $db->prepare('INSERT INTO ue_uedb5_files VALUES(?,?,?)')->execute([26,3,'UnverifiedFallbackConsumer']);
 $unverifiedFallback=(new PdoUedb5PhysicalProviderSelector($db,$tmp))->select(3,26);

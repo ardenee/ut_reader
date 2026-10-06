@@ -126,6 +126,47 @@ foreach ([1,2,3] as $noneIndex) {
         'ut99_name_none_import_' . $noneIndex . '_is_source_irrelevant');
 }
 
+$indexedFname = static fn(int $index, string $text): array => [
+    'name_index'=>$index,'number'=>0,'text'=>$text,
+];
+$contextFilteredConsumer = $snapshot(
+    41009, 'ContextFilteredConsumer', 'classic-linkerload', 'ue1.ut99',
+    'ue1-ut99-retail-v1400-1999-11-30',
+    [
+        [
+            'index'=>0,
+            'class_package'=>$indexedFname(0,'Core'),
+            'class_name'=>$indexedFname(1,'Package'),
+            'outer_index'=>0,
+            'object_name'=>$indexedFname(2,'Provider'),
+        ],
+        [
+            'index'=>1,
+            'class_package'=>$indexedFname(0,'Core'),
+            'class_name'=>$indexedFname(3,'Class'),
+            'outer_index'=>-1,
+            'object_name'=>$indexedFname(4,'FilteredObject'),
+        ],
+    ],
+    []
+);
+$contextFilteredConsumer['sections']['names'] = [
+    ['index'=>0,'text'=>'Core','flags'=>'00070000'],
+    ['index'=>1,'text'=>'Package','flags'=>'00070000'],
+    ['index'=>2,'text'=>'Provider','flags'=>'00070000'],
+    ['index'=>3,'text'=>'Class','flags'=>'00070000'],
+    ['index'=>4,'text'=>'FilteredObject','flags'=>'00000000'],
+];
+$contextFilteredConsumer['section_schemas']['names'] = 'ue1.ut99.name-entry.v1';
+$contextFiltered = Uedb5ClassicDependencyResolver::resolve($contextFilteredConsumer, [[
+    'package_name'=>'Provider','provider_id'=>41002,'snapshot'=>$ut99Public,
+]]);
+$check(($contextFiltered[1]['status'] ?? null) === 'unresolved'
+    && ($contextFiltered[1]['reason'] ?? null) === 'source_irrelevant_name_none'
+    && ($contextFiltered[1]['dependency_class'] ?? null) === 'runtime_derived'
+    && ($contextFiltered[1]['provider_id'] ?? null) === null,
+    'ut99_zero_load_context_name_maps_to_none_before_verify_import');
+
 $noneAncestorConsumer = $snapshot(
     41007, 'NoneAncestorConsumer', 'classic-linkerload', 'ue1.ut99', 'ue1-ut99-retail-v1400-1999-11-30',
     [

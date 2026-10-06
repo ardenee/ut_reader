@@ -54,7 +54,7 @@ $ue2NoneRule=Uedb5GameParityExpectedDifferences::classify('ut2004','dependency_o
 ]);
 $record('ue2_none_import_is_not_allowlisted_before_ue2_profile_audit',$ue2NoneRule===null);
 $laterUt99NoneRule=Uedb5GameParityExpectedDifferences::classify('ut99','dependency_outcome',['outcome'=>'missing'],[
-    'outcome'=>'unresolved','reason_code'=>'source_irrelevant_name_none','source_policy'=>'ue1-ut99-supplemental-v430',
+    'outcome'=>'unresolved','reason_code'=>'source_irrelevant_name_none','source_policy'=>'ue1-ut99-v430-public-source-partial',
     'required_object'=>'None','class_package'=>'Core','class_name'=>'Class',
 ]);
 $record('later_ut99_none_import_is_not_inherited_from_v1400',$laterUt99NoneRule===null);
@@ -70,13 +70,13 @@ $ancestorNoneRule=Uedb5GameParityExpectedDifferences::classify('ut99','dependenc
 ]);
 $record('ue1_none_ancestor_is_not_source_irrelevant',$ancestorNoneRule===null);
 $nonNoneRule=Uedb5GameParityExpectedDifferences::classify('ut99','dependency_outcome',['outcome'=>'missing'],[
-    'outcome'=>'unresolved','reason_code'=>'package_root_unavailable','source_policy'=>'ue1-ut99-supplemental-v430',
+    'outcome'=>'unresolved','reason_code'=>'package_root_unavailable','source_policy'=>'ue1-ut99-v430-public-source-partial',
     'required_object'=>'SomeObject','class_package'=>'Core','class_name'=>'Class',
 ]);
 $record('classic_package_root_unavailable_is_not_source_irrelevant',$nonNoneRule===null);
 
 $staleWhitespaceRule=Uedb5GameParityExpectedDifferences::classify('ut99','dependency_outcome',['outcome'=>'package_only'],[
-    'outcome'=>'resolved','reason_code'=>'verify_import_match','source_policy'=>'ue1-ut99-supplemental-v430',
+    'outcome'=>'resolved','reason_code'=>'verify_import_match','source_policy'=>'ue1-ut99-v430-public-source-partial',
     'required_object'=>' ','class_package'=>'Core','class_name'=>'Package',
 ]);
 $record('classic_whitespace_v4_row_must_be_rebuilt_not_allowlisted',$staleWhitespaceRule===null);

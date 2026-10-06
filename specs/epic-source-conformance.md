@@ -439,6 +439,36 @@ The previously listed source-availability gaps were re-audited before Section 4B
 
 1. **Unreal v227:** every sibling Unreal tree under `L:\Source\Games\Unreal` was searched. No v1.224/v1.227 Core serializer/linker implementation body exists there; v1.200 remains the newest complete Unreal-only implementation. The v227 unresolved boundary is therefore confirmed rather than merely unsearched.
 2. **Unreal II / later UE2:** `Unreal II The Awakening [01-07-2003]` is UE4 4.0.2 source and cannot be used. The separate UE2.5/Warfare tree is complete at package v126/min60 and supplies generic UE2 source for future serialization/preprocessing auditing. It does **not** by itself prove Unreal-II-specific `VerifyImport` behavior after v69, so the existing fail-closed object-verification boundary remains until matching game-branch evidence is found.
-3. **Later UE3:** both the local UDKUltimate engine-8364 tree and the local 2013 engine-10897/changelist-1532151 tree contain full Core linker sources. The local 10897 `UnObjVer.cpp` (`27efc4042ec0e93dd98ad898950140904bbc398a`), `UnObjVer.h` (`a6d3f58762b7dc2fa5fef5f72dcc3faf9ceb9b13`) and `UnLinker.cpp` (`0e8e58f0c31d5223093d5d4b716273b1d6a31457`) exactly match the Git blob hashes exposed by `CodeRedModding/UnrealEngine3` build 10897 at commit `601d6a1f50a0a4a67e3ee0c352333783408d1ba7`. The earlier "source unavailable" classification is withdrawn.
+3. **Later UE3:** both the local UDKUltimate engine-8364 tree and `L:\Source\Engine\UE3\Unreal Engine 3 (10897)` contain full Core linker sources. The 10897 checkout is the `CodeRedModding/UnrealEngine3` repository at commit `601d6a1f50a0a4a67e3ee0c352333783408d1ba7`; its `UnObjVer.cpp` (`27efc4042ec0e93dd98ad898950140904bbc398a`), `UnObjVer.h` (`a6d3f58762b7dc2fa5fef5f72dcc3faf9ceb9b13`), `UnLinker.cpp` (`0e8e58f0c31d5223093d5d4b716273b1d6a31457`) and `UnLinker.h` (`d7f59456fb37e1e63172268a0b4e93fec23c78f9`) are hash-identical to the older local 2013 copy. The earlier "source unavailable" classification is withdrawn.
 
 This recovery checkpoint changes source availability only. It does not widen a game-specific resolver profile until the corresponding source-conformance section audits and tests that behavior.
+
+## Section 4B - UT99 / UE1 package serialization and pre-dependency preprocessing
+
+**Status: complete for retail v1.400/package v68; v430/package v69 is source-confirmed for summary/import/export serialization but remains partial for the missing `FNameEntry` implementation body.**
+
+### Source authority and version boundary
+
+- Complete retail authority: `L:\Source\Games\UT99\Unreal Tournament [v1.400] [1999-11-30]`, engine 400, package v68, minimum v60.
+- Later public authority: `L:\Source\Games\UT99\Unreal Tournament v432` plus `C:\Users\arden\source\repos\UT99src-ext`; the headers report engine 430, package v69, licensee 0, minimum v60.
+- `L:\src\Repos\UT99src` contains the same retail v400 complete source. `C:\Users\arden\source\repos\UnrealTournament` is not used as Core serializer authority.
+- The v432 public tree and `UT99src-ext` contain the inline `FPackageFileSummary`, `FObjectImport`, and `FObjectExport` serializers. Neither contains `Core/Src/UnName.cpp`; the complete Git history of `UT99src-ext` also contains no hidden name/linker implementation body.
+
+### Source results and corrections
+
+1. **Retail v400 table serialization is fully source-backed.** Names branch at package v64; summary branches at v68; Import `PackageIndex` and Export `PackageIndex` are fixed-width INT; Class/Super/SerialSize/SerialOffset use compact indices; SerialOffset is present for any nonzero SerialSize.
+2. **v430/v69 is more complete than the old audit wording said.** Its headers directly prove the low/high 16-bit Epic/licensee split and the complete summary/import/export byte serializers. Those rules no longer need to be described merely as generic “layout evidence.”
+3. **The exact v69 name-entry serializer remains unresolved.** `FNameEntry::operator<<` is declared in the v430 header but its body is absent from the public distribution. UnrealDB does not claim that the retail v400 `FString` branch is first-party proof for v69.
+4. **Epic preprocesses the NameMap before reading Imports/Exports.** Retail `ULinker` builds `_ContextFlags` from edit/client/server load flags; `LoadNames` inserts either the serialized FName or `NAME_None`. Import/export FName references then resolve through that effective map before `VerifyImport`.
+5. **UnrealDB now uses an explicit source-backed catalogue context instead of raw-name semantics.** The catalogue mask is the UCC/UnrealEd all-context state `RF_LoadForClient | RF_LoadForServer | RF_LoadForEdit = 0x00070000`. Raw serialized names and flags remain stored; Imports/Exports/dependency identity use the effective map. This is not claimed as the only runtime mode.
+6. **The low-level UE1 reader no longer applies runtime import assertions to raw FName text.** The previous `Core.Package`/positive-parent validation could reject a row that Epic would first map to `NAME_None` and ignore. Those assertions belong after NameMap preprocessing/VerifyImport, not in byte parsing.
+7. **Both current and V5 metadata paths apply the same preprocessing.** `CatalogParsedPackageMetadataSnapshotBuilder` applies the UT99 all-context NameMap before current-format paths/dependencies are derived. `Uedb5ClassicDependencyResolver` reconstructs the same effective map from UEDB5 Names before UE1 VerifyImport while leaving the source-shaped UEDB5 Names section unchanged.
+8. **UT99 source policies now expose the real boundary.** v69/licensee-era snapshots use `ue1-ut99-v430-public-source-partial`; versions above 69 use `ue1-ut99-post-v69-profile-admitted-unresolved`. The former `supplemental-v430` and `forward-loader-compatible` labels were too strong.
+
+### Regression and migration boundary
+
+- `verify-ue1-root-import-integrity.php` proves that raw imports are preserved and that zero load-context name flags map to `NAME_None` only in preprocessing.
+- `verify-uedb5-unreal-classic-dependency-resolution.php` proves the same mapping happens before V5 VerifyImport and yields the source-irrelevant `NAME_None` result.
+- The UE1 VerifyImport profile, UT99 persistence, cross-game legacy persistence, parity-contract and physical-provider tests remain green.
+- Existing staged/current UT99 metadata can be affected only where a referenced Name row has no bit in `0x00070000`, plus rows whose old v69+ source-policy labels need refresh. Name flags are not projected into the Step-5 SQL candidate tables, so exact impact discovery scans compact UEDB5 metadata, **not original package bytes**. Run `D:\php8.5\php.exe catalog\bin\diagnose-ut99-name-map-impact.php --summary` against the real staging DB for the bounded count, then rerun without `--summary` for exact file IDs. Only those IDs require current-format rebuild or Pass-2 refresh; no game-wide package reparse is justified by 4B. The diagnostic fails closed if `ue_uedb5_files` is absent.
+- The next package-serialization checkpoint should continue independently with the next engine/game profile rather than inheriting UT99 preprocessing into UE2 without its own source comparison.

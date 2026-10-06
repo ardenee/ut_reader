@@ -44,7 +44,7 @@ Current conformance work must use the local source mirrors below. Historical Git
 ### Unreal package formats and readers
 
 - [x] Unreal / Unreal Gold UE1 v227 package serialization and pre-dependency preprocessing — `unreal-v227-package-format.md` (latest public v227 surface audited independently; missing Core serializer/linker bodies explicitly remain unresolved)
-- [x] UE1 / UT99 package format and reading — `ue1-ut99-retail-v1400-package-format.md`
+- [x] UE1 / UT99 package serialization and pre-dependency preprocessing — `ue1-ut99-retail-v1400-package-format.md` (retail v400 complete; v430/v69 summary/import/export inline source confirmed, v69 `FNameEntry` body explicitly unresolved)
 - [x] UE1 / UT99 dependency and import resolution — `ue1-ut99-retail-v1400-dependency-resolution.md`
 - [x] Unreal II / UE2 package format and reading — `unreal2-ue2-package-format.md`
 - [x] Unreal II / UE2 dependency and import resolution — `unreal2-ue2-dependency-resolution.md`
