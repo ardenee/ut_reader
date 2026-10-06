@@ -5,7 +5,7 @@
  *
  * This intentionally does not claim VerifyImport correctness. It classifies the
  * currently persisted missing rows by package shape/provider presence and reports
- * UE4 object-version exposure to VER_UE4_NON_OUTER_PACKAGE_IMPORT (519), so the
+ * UE4 object-version exposure to VER_UE4_NON_OUTER_PACKAGE_IMPORT (520), so the
  * source-conformance repair can be planned without rewriting catalog state.
  */
 declare(strict_types=1);
@@ -37,8 +37,8 @@ if (!$game) throw new RuntimeException('Game not found: ' . $gameId);
 $versions = catalog_one(
     $db,
     'SELECT COUNT(*) verified_files,MIN(package_version) min_package_version,MAX(package_version) max_package_version,'
-    . 'SUM(CASE WHEN package_version>=519 THEN 1 ELSE 0 END) files_version_519_plus,'
-    . 'SUM(CASE WHEN package_version<519 THEN 1 ELSE 0 END) files_before_519 '
+    . 'SUM(CASE WHEN package_version>=520 THEN 1 ELSE 0 END) files_version_520_plus,'
+    . 'SUM(CASE WHEN package_version<520 THEN 1 ELSE 0 END) files_before_520 '
     . 'FROM ue_files WHERE game_id=? AND scan_status="verified"',
     [$gameId]
 ) ?: [];
@@ -128,7 +128,7 @@ echo json_encode([
     'read_only' => true,
     'game' => $game,
     'metadata_format_version' => $formatVersion,
-    'ue4_non_outer_package_import_version' => 519,
+    'ue4_non_outer_package_import_version' => 520,
     'verified_file_versions' => $versions,
     'missing_totals' => $totals,
     'missing_package_shapes' => $shapeRows,
@@ -137,7 +137,7 @@ echo json_encode([
     'examples' => $sampleRows,
     'notes' => [
         'This audit reports persisted state only; it does not assert that current UE4 dependency matching is source-conformant.',
-        'package_version >= 519 matters because UE4 can serialize FObjectImport::PackageName independently of OuterIndex.',
+        'package_version >= 520 matters because UE4 can serialize FObjectImport::PackageName independently of OuterIndex.',
         'A high /Script/* count may indicate script-package common handling needs review; it is not automatically proof of a resolver bug.',
         'Exact-provider presence is package-name evidence only. Object/class/outer/public verification requires the UE4 VerifyImport audit.',
     ],

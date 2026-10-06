@@ -21,7 +21,7 @@ final class PdoUe4VerifyImportProjectionResolver
     private const TOP_LEVEL_PACKAGE = -2147483647;
     private const PRIVATE_FAILURE = -2147483648;
 
-    public const PROFILE_UT4_CLEAN_MASTER = 'ue4-ut4-clean-master-v510';
+    public const PROFILE_UT4_CLEAN_MASTER = 'ue4-ut4-clean-master-v511';
 
     /** @param list<array<string,mixed>> $consumerImports @return array<int,int> */
     public static function resolveProvider(

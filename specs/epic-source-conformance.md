@@ -37,7 +37,7 @@ No reviewed source path tries every same-package physical file and chooses the f
 | UT2004 v129 / UE2.5 game profile | `L:\Source\Games\UT2004\UT2004Src\UT2004SrcCmake\Core\Src\UnLinker.cpp`, `UnObj.cpp`, `Core\Inc\UnObjVer.h` | **source-confirmed** | Latest complete local source; package v129/min v60. v3369/v128 was cross-checked. One package linker precedes exact import verification. |
 | UT3 v512 / early-2008 UE3 | `L:\Source\Engine\UE3\Unreal Engine [v3.0] [01-00-2008]\...\Core\Src\UnLinker.cpp`; March-2008 copy hash-identical | **source-confirmed** | Active game profile is v512/licensee 0. The checkout itself reaches engine v530/min491; that wider engine range is not inherited as UT3 policy. `VerifyImportInner` selects one package linker, then verifies imports. |
 | UDKUltimate / later UE3 | `L:\Source\Engine\UE3\Unreal Engine [v3.0] UDKUltimate [05-11-17]\UDKUltimate\Development\Src\Core` (engine 8364) and `L:\Source\Engine\UE3\Unreal Engine 3 (10897)\Development\Src\Core` (engine 10897 / changelist 1532151); `CodeRedModding/UnrealEngine3` build 10897 | **source-confirmed** | Full Core linker/name/version implementations are present locally. The local 10897 `UnObjVer.cpp`, `UnObjVer.h`, and `UnLinker.cpp` Git blob hashes exactly match the CodeRedModding 10897 repository at commit `601d6a1f50a0a4a67e3ee0c352333783408d1ba7`. Later generic UE3 source is therefore available; game-specific UT3 authority remains separate. |
-| UT4 / UE4 clean-master v510 | `L:\Source\Games\UT4\UnrealTournament\Engine\Source\Runtime\CoreUObject\Private\UObject\LinkerLoad.cpp` and `Core\Public\UObject\ObjectVersion.h` | **source-confirmed** | Game authority is clean-master v510/licensee 0; final UE4 4.27.2 is supplemental only and is not inherited. |
+| UT4 / UE4 clean-master v511 | `L:\Source\Games\UT4\UnrealTournament\Engine\Source\Runtime\CoreUObject\Private\UObject\LinkerLoad.cpp` and `Core\Public\UObject\ObjectVersion.h` | **source-confirmed** | Game authority is clean-master v511/licensee 0; complete enum counting includes `VAR_UE4_ARRAY_PROPERTY_INNER_TAGS`; final UE4 4.27.2 is supplemental only and is not inherited. |
 | UE5 5.8.3 classic | `L:\Source\Engine\UE5\UE 5.8.3\Engine\Source\Runtime\CoreUObject\Private\UObject\LinkerLoad.cpp` | **source-confirmed** | One provider linker, with UE5-specific PackageName/runtime branches. |
 | UE5 5.8.3 Zen/IoStore | `L:\Source\Engine\UE5\UE 5.8.3\Engine\Source\Runtime\CoreUObject\Private\Serialization\AsyncLoading2.cpp` and package-store types | **source-confirmed** | Exact PackageId provider relationship precedes public-export-hash lookup. |
 
@@ -296,36 +296,37 @@ Section 3B1 advanced Pass 2 to `uedb5-dependency-pass-v8`, accepting v1-v7; Sect
 
 ### Section 3C - UT4 / UE4 clean-master VerifyImportInner and VerifyImport wrapper
 
-**Status: corrected by Section 4G. UT4 game-profile authority is the supplied UnrealTournament clean-master UE4 source, not final UE4 4.27.2. The earlier 4.27.2 attribution is superseded.**
+**Status: complete against the supplied UnrealTournament clean-master source, with the package-version boundary corrected by the Section 4G enum-audit repair.**
 
 #### Source authority and profile boundary
 
 - Authority: `L:\Source\Games\UT4\UnrealTournament\Engine\Source\Runtime\CoreUObject\Private\UObject\LinkerLoad.cpp`, especially `FLinkerLoad::VerifyImportInner()` and `FLinkerLoad::VerifyImport()`.
-- Version authority: the same clean-master tree's `Core/Public/UObject/ObjectVersion.h` and `Core/Private/UObject/ObjectVersion.cpp`; `GPackageFileUE4Version` resolves to package version 510, oldest loadable 214, licensee 0.
-- V5 is gated by `ue4.ut4.*`, source policy `ue4-ut4-clean-master-v510-classic-package`, package version 214-510 and licensee 0. V4/current metadata uses the same game/version/licensee boundary. Other UE4 profiles fail closed.
-- UE4 4.27.2 remains a valid independent generic/final UE4 reference. Its later PackageName, instancing, CoreRedirect and VerifyImport behavior is not projected backward into UT4.
+- Version authority: the same clean-master tree's `Core/Public/UObject/ObjectVersion.h`; every C++ enum member is counted, including typoed `VAR_UE4_ARRAY_PROPERTY_INNER_TAGS`.
+- `GPackageFileUE4Version` resolves to package version **511**, oldest loadable 214, licensee 0.
+- V5 canonical source policy is `ue4-ut4-clean-master-v511-classic-package`; clean-master VerifyImport applies to package versions 214-511/licensee 0.
+- UE4 4.27.2 remains a later generic reference. Its later PackageName/private-import behavior is not projected backward into UT4.
 
-#### Source results and corrections
+#### Source results
 
 1. **Direct `NAME_None` is an early return.** `ClassPackage`, `ClassName`, or `ObjectName == NAME_None` makes the import irrelevant to `VerifyImportInner`.
-2. **UT4 establishes the provider from the top-level Package import.** Clean-master v510 predates serialized `FObjectImport::PackageName`; top-level Package imports load by `Import.ObjectName`, then child imports reuse the outer import's SourceLinker.
-3. **File-backed matching is exact and ordered.** ObjectName and ClassName are exact FName matches. Clean-master first checks whether any full ClassPackage match exists; only when none exists may `FPackageName::GetShortFName` be used. Candidate outer identity must match the resolved outer export, or be null when the outer is the provider root package.
-4. **A positive/export Import outer is outside this source contract.** For every non-null Import outer, clean-master executes `checkf(Import.OuterIndex.IsImport())`. UnrealDB therefore records a positive outer as `export_outer_source_assert_boundary`, not as a later-UE4 PackageName case.
-5. **Private exports never become deterministic static matches.** Clean-master starts SafeReplace from `GIsEditor && !IsRunningCommandlet()`. It then forces SafeReplace false when the import is directly referenced as an export super/class/outer or another import's outer. A directly referenced private candidate is a deterministic rejection; otherwise it remains runtime/editor-context unresolved. The later 4.27.2 `IsPrivateImportAllowed()` containment predicates are not present here and have been removed from the UT4 resolver.
-6. **A file-backed object miss is not hard missing.** Clean-master can still recover through in-memory packages, `LOAD_FindIfFail`, native/transient objects or CDOs, moved script structs, class lookup and SafeReplace/runtime state. A genuinely absent physical provider remains hard missing.
-7. **The wrapper retries ObjectRedirector but destination validation is revision-specific.** UT4 creates/preloads the redirector and requires the destination class to equal the original import ClassName, except for the CDO exception. The later 4.27.2 superclass-chain acceptance is not inherited. DestinationObject remains payload/runtime state, so table-only evidence is unresolved rather than fabricated success.
-8. **Load-time import/export fixups are runtime/config dependent.** Clean-master runs `FixupImportMap`, `RemapImports`, and `FixupExportMap` before final verification. These consume live redirect/plugin/game-name maps; UnrealDB preserves serialized identity and does not invent that runtime configuration.
-9. **All authoritative UT4 surfaces use one clean-master profile.** V4/current rebuilding, UEDB5 Pass 2, local/self-provider publication, physical-provider evaluation and cross-game certification now share `PROFILE_UT4_CLEAN_MASTER` and the 214-510/licensee-0 gate.
-10. **Legacy unverified staging still fails closed where its schema is insufficient.** A same-path local export is not promoted when the source-exact provider class/outer graph cannot be reconstructed.
+2. **UT4 establishes the provider from the top-level Package import.** Clean-master v511 predates serialized `FObjectImport::PackageName`; top-level Package imports load by `Import.ObjectName`, then child imports reuse the outer import's SourceLinker.
+3. **File-backed matching is exact and ordered.** ObjectName/ClassName are exact FName matches; full ClassPackage candidates suppress short-package fallback; outer identity must match source rules.
+4. **A positive/export Import outer is a source assert boundary.** Non-null Import outers must themselves be Imports.
+5. **Private exports depend on SafeReplace/editor context.** Direct serialized hard references force SafeReplace false; private candidates are never promoted to unconditional static matches.
+6. **File-backed object misses can remain runtime-derived.** Native/transient objects, `LOAD_FindIfFail`, CDO/class lookup, already-loaded state and SafeReplace prevent treating every provider object miss as hard missing.
+7. **ObjectRedirector destination validation needs runtime payload state.** Static table-only evidence stays unresolved where the destination cannot be proven.
+8. **`FixupImportMap`, `RemapImports`, and `FixupExportMap` consume runtime/config state.** UnrealDB does not invent redirect/plugin/game mappings.
+9. **All authoritative UT4 surfaces use one profile.** V4/current rebuilding, UEDB5 Pass 2, provider evaluation and cross-game certification share `PROFILE_UT4_CLEAN_MASTER = ue4-ut4-clean-master-v511` and the 214-511/licensee-0 boundary.
+10. **Legacy/unverified staging fails closed where source-required graph evidence is absent.**
 
-#### Bounded migration boundary
+#### Migration boundary
 
-- The historical v9 transition was built under the former 4.27.2 attribution. Section 4G reopens only UT4 rows that can differ under clean-master semantics; other completed engine profiles are not replayed.
-- Explicit versioned UT4 packages in 214-510/licensee 0 do not need original-byte reparsing solely for the resolver correction. Missing/unresolved object edges and resolved-private edges are rebuilt from staged UEDB5 metadata; deterministic public matches can roll forward after source-policy refresh.
-- Unversioned UT4 packages previously parsed using assumed version 522 are a package-layout risk and require exact-file Pass-1 reparse with assumed version 510 before Pass 2.
-- Explicit versions outside 214-510 or nonzero licensee versions fail closed as source-implementation-unavailable rather than inheriting clean-master.
-- Runtime/config redirect tables are not guessed during migration.
-
+- The erroneous v510 profile created during the first 4G audit is not a second valid engine profile; it is a staged-data repair marker.
+- Rows carrying `ue4-ut4-clean-master-v510-classic-package` must be reread from original verified bytes using the corrected v511 reader.
+- Rows still carrying the older `ue4-4.27.2-release-classic-package` metadata were produced by the pre-4G reader with the source-correct numeric gates and need policy refresh/Pass-2 handling rather than byte rereading solely for this correction.
+- Explicit v511 is inside clean-master VerifyImport.
+- v512+ or nonzero-licensee rows fail closed.
+- Runtime/config redirect tables are never guessed during migration.
 ### Section 3D - UE5 5.8.3 classic VerifyImportInner and VerifyImport wrapper
 
 **Status: complete for the dedicated UE5 5.8.3 classic LinkerLoad source policy. This audit was performed independently from UE4 4.27.2; shared-looking branches were re-proven rather than inherited.**
@@ -592,7 +593,7 @@ This recovery checkpoint changes source availability only. It does not widen a g
 
 ## Section 4G - UT4 / UE4 clean-master package serialization and pre-dependency preprocessing
 
-**Status: package serialization/pre-dependency structure is complete for clean-master v214-510 and source-proven explicit v511. The earlier UT4=UE4.27.2 assumption is corrected and superseded. Exact UT/Main v511 VerifyImport/runtime source remains unavailable and is explicitly fail-closed.**
+**Status: corrected and source-proven for package versions 214-511/licensee 0. The earlier v510/structural-v511 split is withdrawn; its root cause and repair are documented in `ut4-version-enum-audit-correction.md`.**
 
 ### Source authority
 
@@ -600,39 +601,48 @@ This recovery checkpoint changes source availability only. It does not widen a g
 - branch `clean-master`
 - commit `cc3df7642980e2541fe2d7842f0782bae6c70cd5`
 - primary files: `ObjectVersion.h`, `PackageFileSummary.cpp`, `ObjectResource.cpp`, `Linker.cpp`, and `LinkerLoad.cpp`
-- explicit v511 structural authority: Epic UE4 commit `ae727f8dabbec201963ce68d12aed0a7da6fab91` (parent `6744552b76c61394f4dd0eb34557ccd257ec6f4c`), Dev-Mobile -> Dev-Main @ 3383462, introducing `VER_UE4_SKYLIGHT_MOBILE_IRRADIANCE_MAP = 511`
-- exact stock 4.15.0 reference: `76085d1106078d8988e4404391428252ba1eb9a7` (still package v509); it is evidence that the observed UT/Main v511 packages were ahead of stock 4.15.0, not a v511 authority itself
-- final UE4.27.2 is supplemental comparison only.
+- final UE4.27.2 remains supplemental comparison only.
 
-### Source results and corrections
+### Corrected source results
 
-1. **UT4 latest package version is 510, not 511/522.** Clean-master defines oldest loadable 214, `VER_UE4_64BIT_EXPORTMAP_SERIALSIZES = 510`, `VER_UE4_AUTOMATIC_VERSION_PLUS_ONE = 511`, therefore `VER_UE4_AUTOMATIC_VERSION = 510`. Unversioned UT4 must be interpreted at 510.
-2. **Final UE4.27.2 latest is 521, not 522.** Its `VER_UE4_AUTOMATIC_VERSION_PLUS_ONE = 522`; the real latest version is one lower.
-3. **The shared UE4 reader had a systematic +1 gate error.** Source-exact values are now used: SerializeText 458; StringAssetReferences 383; EngineVersionObject 335; CompatibleEngineVersion 443; changed ChunkID-array 325; LoadForEditorGame 364; CookedAssetsInEditor 484; NameHashes 503; PreloadDependencies 506; TemplateIndex 507; SearchableNames 509; 64-bit export serials 510; SoftObjectPath 513; LocalizationId 515; PackageOwner 517; NonOuterPackageImport 519; final UE4 521.
-4. **UT4 never serializes the later FObjectImport::PackageName field.** That field begins at final-UE4 version 519, beyond clean-master v510. Provider identity for UT4 therefore comes from the top-level Package import/outer graph.
-5. **The exact export-width boundary is v510.** v509 uses 32-bit SerialSize/SerialOffset; v510 uses 64-bit.
-6. **Clean-master VerifyImport is materially different from 4.27.2.** UT4 requires non-null Import outers to be Imports, does not contain the later recursive private-import containment allowance, and treats private candidates through runtime/editor SafeReplace state. The UT4 resolver now follows clean-master rather than the later 4.27.2 implementation.
-7. **Load-time fixups remain runtime/config dependent.** `FixupImportMap`, `RemapImports`, and `FixupExportMap` consume live redirect/plugin/game configuration. UnrealDB preserves serialized identity and does not invent those runtime maps.
-8. **Package structure and VerifyImport now have deliberately different source boundaries.** `PROFILE_UT4_CLEAN_MASTER` and source policy `ue4-ut4-clean-master-v510-classic-package` apply to versions 214-510/licensee 0. Explicit v511/licensee-0 packages use structural-only policy `ue4-epic-dev-main-ae727f8d-v511-ut4-structural-package`; they do not receive `PROFILE_UT4_CLEAN_MASTER`. v512+ and nonzero-licensee rows remain outside the source-backed UT4 package boundary.
-9. **The v510->v511 metadata boundary is source-proven unchanged.** `PackageFileSummary.h/.cpp`, `ObjectResource.h/.cpp`, `LinkerLoad.cpp`, `NameTypes.h`, and `UnrealNames.cpp` have identical Git blobs between Epic v510 parent `6744552b...` and v511 commit `ae727f8d...`. v511 adds only SkyLight object-payload serialization, which UnrealDB does not deserialize.
-10. **The exact UT/Main v511 producer/linker source is absent.** UT commit `89f90b867d` / CL 3228288 is package v509; clean-master ends at v510; the UT repository has no v511 enum or SkyLight serialization implementation. Therefore v511 package tables are supported but object-level VerifyImport remains `source_implementation_unavailable`.
+1. **UT4 clean-master latest is 511.** The enum contains the real typoed member `VAR_UE4_ARRAY_PROPERTY_INNER_TAGS`; the original 4G audit incorrectly counted only names beginning `VER_UE4_` and therefore shifted later values down by one.
+2. **Final UE4.27.2 latest is 522.** Its complete enum has `VER_UE4_AUTOMATIC_VERSION_PLUS_ONE = 523`.
+3. **The shared UE4 reader uses the complete enum values.** Key gates are EngineVersionObject 336; StringAssetReferences 384; CompatibleEngineVersion 444; SerializeText 459; LoadForEditorGame 365; CookedAssetsInEditor 485; NameHashes 504; PreloadDependencies 507; TemplateIndex 508; SearchableNames 510; 64-bit export serials 511; SoftObjectPath 514; LocalizationId 516; PackageOwner 518; NonOuterPackageImport 520; final UE4 522.
+4. **UT4 does not serialize later FObjectImport::PackageName.** That field begins at v520, beyond clean-master v511.
+5. **The export-width boundary is v511.** v510 uses 32-bit `SerialSize`/`SerialOffset`; v511 uses 64-bit.
+6. **Explicit v511 is ordinary clean-master UT4.** It uses canonical source policy `ue4-ut4-clean-master-v511-classic-package` and `PROFILE_UT4_CLEAN_MASTER = ue4-ut4-clean-master-v511`.
+7. **Clean-master VerifyImport remains game-specific.** The private/export-outer/runtime behavior established in Section 3C applies through v511.
+8. **Runtime/config fixups remain unresolved unless their runtime inputs are available.** `FixupImportMap`, `RemapImports`, and `FixupExportMap` are not fabricated.
+9. **The prior separate v511 structural policy is withdrawn.** `ue4-epic-dev-main-ae727f8d-v511-ut4-structural-package` is retained only as a migration alias if encountered.
+10. **Enum audits must count every C++ enumerator.** Prefix-based enumeration is prohibited for future source-conformance work.
+
+### Real-package proof
+
+- The faulty one-low reader failed on real v335/v383/v503/v506 assets with summary/name/preload misalignment.
+- The pre-4G reader's original numeric gates parsed those files successfully and recovered UE4 4.4/4.12/4.14 producer metadata.
+- After restoring the complete-enum values, all 16 previously blocked files parse with zero issues.
+- An unversioned sample now reads serialized 0, effective 511, assumed 511.
+- An explicit v511 sample reads serialized/effective 511 and builds the canonical clean-master policy.
 
 ### Regression and migration boundary
 
-- Normative specs: `ut4-clean-master-v510-package-format.md`, `ut4-v511-structural-package-format.md`, and `ut4-clean-master-v510-dependency-resolution.md`.
-- `verify-ue4-427-reader-contract.php` now freezes the exact UE4.27.2 enum values and shared historical gates.
-- `verify-uedb5-ut4-persistence.php` proves UT4 v510 uses 64-bit export serial fields, v509 uses 32-bit, unversioned UT4 assumes 510, explicit v511 uses the separate structural policy with the same package-table layout, and final-UE4 source attribution is rejected.
-- `verify-ue4-dependency-matching-contract.php` freezes the clean-master private/export-outer behavior.
-- UEDB5 dependency policy advances to `uedb5-dependency-pass-v12`, reopening only the UT4 clean-master delta while suppressing already-completed UE1/UE2/UE3/UE5 deltas.
-- Exact old-reader gate versions `325,335,364,383,443,458,484,503,506,507,509,510` require Pass-1 reread because the previous thresholds were one too high.
-- Old-unversioned UT4 snapshots require Pass-1 reread at assumed v510.
-- Explicit non-gate v214-510/licensee-0 snapshots can receive metadata-only source-policy refresh, then targeted Pass 2 where object outcomes are affected.
-- Explicit v511/licensee-0 snapshots whose staged summary proves `unversioned=false` can receive metadata-only refresh to the v511 structural policy, but are excluded from VerifyImport Pass 2 pending exact UT/Main linker source.
-- The real 64,247-file UT4 diagnostic established 24,077 old-unversioned Pass-1 reparses, 1,813 explicit corrected-gate Pass-1 reparses, 18,510 v214-510 metadata-only refreshes, and 19,847 genuine explicit-v511 structural rows. Raw-byte sampling confirmed the 19,847 v511 population is genuinely serialized as 511 rather than an old database off-by-one.
-- `diagnose-ut4-v510-impact.php` and `refresh-ut4-v510-source-policy.php` are bounded and fail closed when DB registration and UEDB5 storage are not from the same environment.
-- The full impact diagnostic was run read-only against the matching PRD registration and staged UEDB5 storage via the PRD-local scratch copy. Those counts are the recorded 4G impact baseline above.
-- `reparse-ut4-v510-pass1.php` is the bounded Pass-1 remediation runner. It is read-only by default, selects only legacy-policy rows at the corrected reader gates or DB-v511 rows proven unversioned by staged summary, skips genuine explicit-v511 rows, supports storage override/resume cursors, and does not mutate live `ue_files.package_version` during staging.
-- After an unversioned Pass-1 reparse, the staged clean-master source policy is authoritative even though the live catalogue row intentionally retains its old version 511 until cutover. The V5 transition therefore trusts that staged policy rather than rewriting production V4 metadata.
-- **Remediation execution checkpoint (2026-10-06):** 20,520 / 25,890 required UT4 Pass-1 reparses are applied through candidate cursor/file ID `134045`; all 20,520 processed so far were old-unversioned rows, zero were blocked, all registrations now carry the clean-master policy, and all dependency policy/payload/completion state was invalidated. Resume Pass 1 at `--after-id=134045`; metadata-only refresh remains a separate later phase.
+- Normative specs: `ut4-clean-master-v511-package-format.md` and `ut4-clean-master-v511-dependency-resolution.md`.
+- Correction record: `ut4-version-enum-audit-correction.md`.
+- `verify-ue4-427-reader-contract.php` freezes the complete UE4 enum values and explicitly guards the nonstandard `VAR_UE4_ARRAY_PROPERTY_INNER_TAGS` member.
+- `verify-uedb5-ut4-persistence.php` proves v510 uses 32-bit export serial fields, v511 uses 64-bit, unversioned UT4 assumes 511, and v511 uses the canonical clean-master policy.
+- `verify-uedb5-unreal-classic-dependency-resolution.php` proves explicit v511 uses clean-master VerifyImport.
+- `verify-ue4-verifyimport-policy-transition.php` distinguishes the bad v510 staging policy from source-correct legacy rows.
+- `reparse-ut4-v510-pass1.php` is hard-disabled.
+- `repair-ut4-v511-pass1.php` is the bounded, read-only-by-default repair command for rows carrying `ue4-ut4-clean-master-v510-classic-package`.
+- `refresh-ut4-v511-source-policy.php` is the bounded metadata-only refresh for source-correct legacy registrations; it refuses unversioned rows, does not open original package bytes, writes only the canonical v511 policy, and transactionally invalidates dependency state.
 
+At the correction point, staged UT4 policy inventory was:
+
+- bad v510 policy: **24,194 rows** — mandatory original-byte reread;
+- original legacy policy: **40,053 rows** — source-correct package tables; metadata-only policy refresh;
+- erroneous separate v511 structural policy: **0 rows**.
+
+The legacy-policy inventory was rechecked directly: **40,053 / 40,053** are package version 214-511/licensee 0 (observed range 216-511), with no version/licensee outliers. The exact **24,077** unversioned population is entirely contained in the bad-v510 repair set, so no known unversioned row remains eligible for metadata-only refresh. A real 1,000-row refresh preflight returned 1,000 eligible, zero deferred, and zero blocked.
+
+No further writes should use the superseded v510 remediation model. After all 24,194 bad-policy rows are repaired to canonical v511, the remaining 40,053 legacy rows can be policy-refreshed and Pass 2 can proceed under the existing dependency transition.
 **Next checkpoint: Section 4H - UE5 5.8.3 classic package serialization and pre-dependency preprocessing, audited independently from the UE5 source before revisiting Zen/IoStore.**

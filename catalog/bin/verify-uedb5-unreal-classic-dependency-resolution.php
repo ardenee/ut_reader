@@ -42,7 +42,7 @@ $snapshot = static function (
     if ($packageVersion === null && $schemaPrefix === 'ue1.ut99') {
         $packageVersion = 68;
     } elseif ($packageVersion === null && $schemaPrefix === 'ue4.ut4') {
-        $packageVersion = 510;
+        $packageVersion = 511;
     }
     $sections = ['imports'=>array_values($imports),'exports'=>array_values($exports)];
     $schemas = [
@@ -344,11 +344,11 @@ $ue4Imports = [
     $import(1, 'Obj', '/Script/CoreUObject', 'Class', -1),
 ];
 $ut4Consumer = $snapshot(
-    44001, 'Consumer', 'ue4-classic-package', 'ue4.ut4', 'ue4-ut4-clean-master-v510-classic-package',
+    44001, 'Consumer', 'ue4-classic-package', 'ue4.ut4', 'ue4-ut4-clean-master-v511-classic-package',
     $ue4Imports, []
 );
 $ut4Provider = $snapshot(
-    44002, 'Provider', 'ue4-classic-package', 'ue4.ut4', 'ue4-ut4-clean-master-v510-classic-package',
+    44002, 'Provider', 'ue4-classic-package', 'ue4.ut4', 'ue4-ut4-clean-master-v511-classic-package',
     [], [$export(0, 'Obj', '00000001')]
 );
 $ut4 = Uedb5ClassicDependencyResolver::resolve($ut4Consumer, [[
@@ -357,7 +357,7 @@ $ut4 = Uedb5ClassicDependencyResolver::resolve($ut4Consumer, [[
 $check(($ut4[1]['status'] ?? null) === 'resolved', 'ut4_verify_import_resolves_from_v5_tables');
 
 $ut4MissingProvider = $snapshot(
-    44004, 'Provider', 'ue4-classic-package', 'ue4.ut4', 'ue4-ut4-clean-master-v510-classic-package',
+    44004, 'Provider', 'ue4-classic-package', 'ue4.ut4', 'ue4-ut4-clean-master-v511-classic-package',
     [], [$export(0, 'Different', '00000001')]
 );
 $ut4MissingObject = Uedb5ClassicDependencyResolver::resolve($ut4Consumer, [[
@@ -367,7 +367,7 @@ $check(($ut4MissingObject[1]['status'] ?? null) === 'unresolved'
     && ($ut4MissingObject[1]['reason'] ?? null) === 'runtime_native_transient_findif_fail_or_missing_class_context',
     'ut4_file_backed_object_miss_is_runtime_unresolved');
 $ut4PrivateProvider = $snapshot(
-    44005, 'Provider', 'ue4-classic-package', 'ue4.ut4', 'ue4-ut4-clean-master-v510-classic-package',
+    44005, 'Provider', 'ue4-classic-package', 'ue4.ut4', 'ue4-ut4-clean-master-v511-classic-package',
     [], [$export(0, 'Obj', '00000000')]
 );
 $ut4Private = Uedb5ClassicDependencyResolver::resolve($ut4Consumer, [[
@@ -377,7 +377,7 @@ $check(($ut4Private[1]['status'] ?? null) === 'unresolved'
     && ($ut4Private[1]['reason'] ?? null) === 'private_export_editor_safe_replace_context',
     'ut4_private_export_without_hard_reference_is_runtime_context');
 $ut4NoneConsumer = $snapshot(
-    44006, 'Consumer', 'ue4-classic-package', 'ue4.ut4', 'ue4-ut4-clean-master-v510-classic-package',
+    44006, 'Consumer', 'ue4-classic-package', 'ue4.ut4', 'ue4-ut4-clean-master-v511-classic-package',
     [$import(0, 'Provider', '/Script/CoreUObject', 'Package', 0), $import(1, 'None', '/Script/CoreUObject', 'Class', -1)], []
 );
 $ut4None = Uedb5ClassicDependencyResolver::resolve($ut4NoneConsumer, [[
@@ -396,23 +396,23 @@ $ut4Unsupported = Uedb5ClassicDependencyResolver::resolve($ut4UnsupportedConsume
 $check(($ut4Unsupported[1]['status'] ?? null) === 'unresolved'
     && ($ut4Unsupported[1]['reason'] ?? null) === 'ue4_verify_import_source_implementation_unavailable',
     'unprofiled_ue4_does_not_inherit_ut4_clean_master_verifyimport');
-$ut4TooNewConsumer = $snapshot(
+$ut4V511Consumer = $snapshot(
     44008, 'Consumer511', 'ue4-classic-package', 'ue4.ut4',
-    'ue4-epic-dev-main-ae727f8d-v511-ut4-structural-package',
+    'ue4-ut4-clean-master-v511-classic-package',
     $ue4Imports, [], 511
 );
-$ut4TooNew = Uedb5ClassicDependencyResolver::resolve($ut4TooNewConsumer, [[
+$ut4V511 = Uedb5ClassicDependencyResolver::resolve($ut4V511Consumer, [[
     'package_name'=>'Provider','provider_id'=>44002,'snapshot'=>$ut4Provider,
 ]]);
-$check(($ut4TooNew[1]['status'] ?? null) === 'unresolved'
-    && ($ut4TooNew[1]['reason'] ?? null) === 'ue4_verify_import_source_implementation_unavailable',
-    'ut4_v511_structural_policy_does_not_gain_clean_master_verifyimport');
+$check(($ut4V511[1]['status'] ?? null) === 'resolved'
+    && (int)($ut4V511[1]['provider_id'] ?? 0) === 44002,
+    'ut4_v511_uses_clean_master_verifyimport');
 $ut4NoProvider = Uedb5ClassicDependencyResolver::resolve($ut4Consumer, []);
 $check(($ut4NoProvider[1]['status'] ?? null) === 'missing'
     && ($ut4NoProvider[1]['reason'] ?? null) === 'package_provider_unavailable',
     'ut4_absent_physical_provider_remains_hard_missing');
 $scriptConsumer = $snapshot(
-    44003, 'Consumer', 'ue4-classic-package', 'ue4.ut4', 'ue4-ut4-clean-master-v510-classic-package',
+    44003, 'Consumer', 'ue4-classic-package', 'ue4.ut4', 'ue4-ut4-clean-master-v511-classic-package',
     [$import(0, '/Script/Engine', '/Script/CoreUObject', 'Package', 0)], []
 );
 $script = Uedb5ClassicDependencyResolver::resolve($scriptConsumer, []);

@@ -12,7 +12,6 @@ final class PdoUe4VerifyImportImpactQuery
 {
     private const CHUNK = 250;
     private const LEGACY_UT4_POLICY = 'ue4-4.27.2-release-classic-package';
-    private const READER_GATE_VERSIONS = [325,335,364,383,443,458,484,503,506,507,509,510];
 
     public function __construct(private readonly PDO $db) {}
 
@@ -60,55 +59,34 @@ final class PdoUe4VerifyImportImpactQuery
             $licensee = (int)($row['licensee_version'] ?? 0);
             $hasObjectEdges = (int)$row['has_object_edges'] === 1;
 
-            if ($sourcePolicy === self::LEGACY_UT4_POLICY) {
-                if ($licensee === 0 && in_array($version, self::READER_GATE_VERSIONS, true)) {
-                    $reasons[$fileId]['ue4_ut4_reader_gate_pass1_reparse'] = true;
-                    continue;
-                }
-                if ($version <= 0 || $version > 511 || $licensee !== 0) {
-                    // SQL cannot distinguish an old unversioned effective-v511 row
-                    // from a genuinely explicit v511 package. The bounded UEDB5
-                    // summary diagnostic resolves v511 source identity before refresh.
+            if ($sourcePolicy === Uedb5Ut4SnapshotBuilder::LEGACY_SOURCE_POLICY_V510) {
+                // This policy was written only by the faulty 4G enum audit and may
+                // contain tables parsed with one-low version gates / assumed v510.
+                // Original bytes must be reread under the corrected clean-master v511 profile.
+                $reasons[$fileId]['ue4_ut4_bad_v510_pass1_repair_required'] = true;
+                continue;
+            }
+
+            if ($sourcePolicy === self::LEGACY_UT4_POLICY
+                || $sourcePolicy === Uedb5Ut4SnapshotBuilder::LEGACY_SOURCE_POLICY_V511_STRUCTURAL) {
+                if ($version < 214 || $version > 511 || $licensee !== 0) {
                     $reasons[$fileId]['ue4_ut4_source_profile_review_required'] = true;
                     continue;
                 }
-                if ($version >= 214 && $version <= 510) {
-                    $reasons[$fileId]['ue4_ut4_source_policy_refresh_required'] = true;
-                    if ($hasObjectEdges
-                        && ((int)$row['has_changeable_edges'] === 1
-                            || (int)$row['has_resolved_private'] === 1)) {
-                        $reasons[$fileId]['ue4_ut4_verifyimport_outcome_change'] = true;
-                    }
-                    continue;
-                }
-                if ($version === 511) {
-                    $reasons[$fileId]['ue4_ut4_source_policy_refresh_required'] = true;
-                    if ($hasObjectEdges) {
-                        // v511 package/table structure is source-backed by Epic ae727f8d,
-                        // but the exact UT/Main VerifyImport implementation is unavailable.
-                        $reasons[$fileId]['ue4_ut4_source_profile_review_required'] = true;
-                    }
-                    continue;
-                }
-            }
-
-            // A reparsed unversioned package retains its legacy catalogue
-            // package_version=511 so live V4 metadata is not mutated during staging.
-            // The staged source policy is authoritative evidence that its raw 0/0
-            // package was reparsed at clean-master effective v510.
-            $cleanMaster = $sourcePolicy === Uedb5Ut4SnapshotBuilder::SOURCE_POLICY
-                && $version >= 214 && $version <= 511 && $licensee === 0;
-            $structuralV511 = $sourcePolicy === Uedb5Ut4SnapshotBuilder::SOURCE_POLICY_V511
-                && $version === 511 && $licensee === 0;
-            if (!$cleanMaster && !$structuralV511) {
-                if ($hasObjectEdges) {
-                    $reasons[$fileId]['ue4_source_implementation_unavailable'] = true;
+                $reasons[$fileId]['ue4_ut4_source_policy_refresh_required'] = true;
+                if ($hasObjectEdges
+                    && ((int)$row['has_changeable_edges'] === 1
+                        || (int)$row['has_resolved_private'] === 1)) {
+                    $reasons[$fileId]['ue4_ut4_verifyimport_outcome_change'] = true;
                 }
                 continue;
             }
-            if ($structuralV511) {
+
+            $cleanMaster = $sourcePolicy === Uedb5Ut4SnapshotBuilder::SOURCE_POLICY
+                && $version >= 214 && $version <= 511 && $licensee === 0;
+            if (!$cleanMaster) {
                 if ($hasObjectEdges) {
-                    $reasons[$fileId]['ue4_ut4_source_profile_review_required'] = true;
+                    $reasons[$fileId]['ue4_source_implementation_unavailable'] = true;
                 }
                 continue;
             }

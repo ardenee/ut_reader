@@ -9,8 +9,9 @@ use RuntimeException;
 final class Uedb5Ut4SnapshotBuilder
 {
     public const PACKAGE_FAMILY = 'ue4-classic-package';
-    public const SOURCE_POLICY = 'ue4-ut4-clean-master-v510-classic-package';
-    public const SOURCE_POLICY_V511 = 'ue4-epic-dev-main-ae727f8d-v511-ut4-structural-package';
+    public const SOURCE_POLICY = 'ue4-ut4-clean-master-v511-classic-package';
+    public const LEGACY_SOURCE_POLICY_V510 = 'ue4-ut4-clean-master-v510-classic-package';
+    public const LEGACY_SOURCE_POLICY_V511_STRUCTURAL = 'ue4-epic-dev-main-ae727f8d-v511-ut4-structural-package';
 
     /** @param array<string,mixed> $file @return array<string,mixed> */
     public static function build(\UnrealPackageReader4 $reader, array $file): array
@@ -28,24 +29,19 @@ final class Uedb5Ut4SnapshotBuilder
         }
         if ($unversioned) {
             if ($serializedVersion !== 0
-                || $effectiveVersion !== 510
-                || (int)($header['assumedUnversionedParserVersion'] ?? 0) !== 510) {
+                || $effectiveVersion !== 511
+                || (int)($header['assumedUnversionedParserVersion'] ?? 0) !== 511) {
                 throw new RuntimeException(
-                    'UT4 unversioned packages require serialized version 0/0 and clean-master assumed parser version 510.'
+                    'UT4 unversioned packages require serialized version 0/0 and clean-master assumed parser version 511.'
                 );
             }
             $sourcePolicy = self::SOURCE_POLICY;
-        } elseif ($effectiveVersion >= 214 && $effectiveVersion <= 510 && $serializedVersion === $effectiveVersion) {
+        } elseif ($effectiveVersion >= 214 && $effectiveVersion <= 511 && $serializedVersion === $effectiveVersion) {
             $sourcePolicy = self::SOURCE_POLICY;
-        } elseif ($effectiveVersion === 511 && $serializedVersion === 511) {
-            // Epic Dev-Main ae727f8d adds only SkyLight object-payload serialization at v511.
-            // Package summary, NameMap, ImportMap, ExportMap and preload-dependency serializers
-            // are byte-identical to its v510 parent, so UEDB5 structural extraction is source-backed.
-            $sourcePolicy = self::SOURCE_POLICY_V511;
         } else {
             throw new RuntimeException(
-                'UT4 source-backed package structure requires explicit UE4 version 214-511 (v511 structural only) '
-                . 'or unversioned 0/0 interpreted at 510; got serialized=' . $serializedVersion
+                'UT4 clean-master source profile requires explicit UE4 version 214-511/licensee 0 '
+                . 'or unversioned 0/0 interpreted at 511; got serialized=' . $serializedVersion
                 . ' effective=' . $effectiveVersion . ' licensee=' . $licenseeVersion . '.'
             );
         }

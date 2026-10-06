@@ -379,7 +379,7 @@ final class PdoGameDependencyCrossExamineQuery
                 $identity = $this->consumerPackageIdentity($consumerId);
                 $profile = strtolower(trim((string)($target['slug'] ?? ''))) === 'ut4'
                     && (int)$identity['version'] >= 214
-                    && (int)$identity['version'] <= 510
+                    && (int)$identity['version'] <= 511
                     && (int)$identity['licensee'] === 0
                         ? PdoUe4VerifyImportProjectionResolver::PROFILE_UT4_CLEAN_MASTER
                         : null;
@@ -647,7 +647,7 @@ final class PdoGameDependencyCrossExamineQuery
         }
         if ($engine === 'UE4') {
             return strtolower(trim((string)($target['slug'] ?? ''))) === 'ut4'
-                ? 'ut4_clean_master_v510_verify_import'
+                ? 'ut4_clean_master_v511_verify_import'
                 : 'source_profile_unavailable';
         }
         return 'complete_package_object';

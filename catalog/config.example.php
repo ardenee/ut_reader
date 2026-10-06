@@ -118,7 +118,7 @@ return [
             'label' => 'Standard UE4 package parser',
             // Parser assumption for unversioned UE4 packages; not a version read
             // from the package file itself.
-            'assumed_unversioned_parser_version' => 521,
+            'assumed_unversioned_parser_version' => 522,
             'source_reference' => 'UE4 package summary / FLinkerLoad behaviour',
         ],
         // Per-game overlays are keyed by ue_games.slug or a cleaned profile name.
@@ -129,7 +129,7 @@ return [
                 'label' => 'Unreal Tournament 4 clean-master UE4 parser',
                 // UT4 clean-master GPackageFileUE4Version. The runtime helper
                 // enforces this source-backed value for game slug "ut4".
-                'assumed_unversioned_parser_version' => 510,
+                'assumed_unversioned_parser_version' => 511,
                 'source_reference' => 'UT4 clean-master cc3df76429 / GPackageFileUE4Version',
             ],
         ],

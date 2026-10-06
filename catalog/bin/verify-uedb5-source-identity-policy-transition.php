@@ -52,8 +52,9 @@ $check('v7_only_rebuilds_new_ut3_delta',str_contains($tool,"'uedb5-dependency-pa
 $check('v12_reopens_ut4_for_clean_master_delta',
     str_contains($tool,'$ue4Effective=$ue4Why')
     && str_contains($ue4Impact,'ue4_ut4_verifyimport_outcome_change')
-    && str_contains($ue4Impact,'ue4_ut4_reader_gate_pass1_reparse')
+    && str_contains($ue4Impact,'ue4_ut4_bad_v510_pass1_repair_required')
     && str_contains($ue4Impact,'ue4_ut4_source_policy_refresh_required')
+    && str_contains($tool,"'ue4_ut4_bad_v510_pass1_repair_required'")
     && str_contains($ue4Impact,'ue_export_path_lookup')
 );
 $check('completed_ue5_classic_delta_is_not_replayed_by_v10_or_v11',

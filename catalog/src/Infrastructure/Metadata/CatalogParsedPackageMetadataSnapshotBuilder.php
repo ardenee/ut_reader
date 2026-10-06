@@ -522,7 +522,7 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
         $ue4Profile = $ue4Engine
             && strtolower(trim((string)($engineRow['game_slug'] ?? ''))) === 'ut4'
             && $packageVersion >= 214
-            && $packageVersion <= 510
+            && $packageVersion <= 511
             && $licenseeVersion === 0
                 ? \UnrealDb\Catalog\Infrastructure\Persistence\PdoUe4VerifyImportProjectionResolver::PROFILE_UT4_CLEAN_MASTER
                 : null;

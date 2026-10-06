@@ -15,7 +15,7 @@ use PDOException;
 final class PdoDependencyResolver
 {
     private const MAX_VALUES_PER_QUERY = 500;
-    private const UE4_NON_OUTER_PACKAGE_IMPORT_VERSION = 519;
+    private const UE4_NON_OUTER_PACKAGE_IMPORT_VERSION = 520;
 
     /** @param list<array<string,mixed>> $imports */
     public static function resolve(
@@ -854,7 +854,7 @@ final class PdoDependencyResolver
         catch (\Throwable) { return null; }
         return $sourceKey === 'ut4'
             && $packageVersion >= 214
-            && $packageVersion <= 510
+            && $packageVersion <= 511
             && $licenseeVersion === 0
                 ? PdoUe4VerifyImportProjectionResolver::PROFILE_UT4_CLEAN_MASTER
                 : null;

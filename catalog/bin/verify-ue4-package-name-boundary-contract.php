@@ -68,7 +68,7 @@ $snapshot = $builder->buildParsedSections(
 $storedImport = (array)(($snapshot['imports'] ?? [])[0] ?? []);
 
 $checks = [];
-$checks['reader_gate_is_version_519'] = str_contains($readerSource, 'private const VER_NON_OUTER_PACKAGE_IMPORT = 519;');
+$checks['reader_gate_is_version_520'] = str_contains($readerSource, 'private const VER_NON_OUTER_PACKAGE_IMPORT = 520;');
 $checks['reader_honors_editor_only_filter_gate'] = str_contains(
     $readerSource,
     '$version >= self::VER_NON_OUTER_PACKAGE_IMPORT && !$filterEditorOnly'

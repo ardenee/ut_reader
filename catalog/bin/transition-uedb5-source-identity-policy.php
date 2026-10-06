@@ -96,7 +96,7 @@ foreach($current as$r){
     $why=array_values(array_unique(array_merge($identityEffective,$ue1Effective,$ue2Effective,$ue3Effective,$ue4Effective,$ue5Effective,$zenEffective)));
     $needs=$why!==[];
     $row=['file_id'=>$fid,'game_id'=>(int)$r['game_id'],'engine_key'=>(string)$r['engine_key'],'package_family'=>(string)$r['package_family'],'old_policy'=>$policy,'reasons'=>$why];
-    $pass1Reasons=['ue1_pre50_pass1_reparse','ue2_unreal2_v69_pass1_reparse','ue4_ut4_reader_gate_pass1_reparse'];
+    $pass1Reasons=['ue1_pre50_pass1_reparse','ue2_unreal2_v69_pass1_reparse','ue4_ut4_bad_v510_pass1_repair_required'];
     if(array_intersect($why,$pass1Reasons)!==[])$pass1Required[]=$row;
     if(in_array('ue4_ut4_source_policy_refresh_required',$why,true))$policyRefreshRequired[]=$row;
     if(in_array('ue4_ut4_source_profile_review_required',$why,true))$sourceReviewRequired[]=$row;
@@ -152,7 +152,7 @@ if($rebuild){
     $svc=new Uedb5GameDependencyPassService($db,catalog_config());
     foreach(array_slice($impacted,0,$limit)as$r){
         $fid=(int)$r['file_id'];$reasons=(array)$r['reasons'];
-        $needsPass1=array_intersect($reasons,['ue1_pre50_pass1_reparse','ue2_unreal2_v69_pass1_reparse','ue4_ut4_reader_gate_pass1_reparse'])!==[];
+        $needsPass1=array_intersect($reasons,['ue1_pre50_pass1_reparse','ue2_unreal2_v69_pass1_reparse','ue4_ut4_bad_v510_pass1_repair_required'])!==[];
         if(in_array('ue4_ut4_source_profile_review_required',$reasons,true)){
             $blockedPrerequisites[]=['game_id'=>(int)$r['game_id'],'file_id'=>$fid,'reason'=>'source_profile_review_required'];continue;
         }

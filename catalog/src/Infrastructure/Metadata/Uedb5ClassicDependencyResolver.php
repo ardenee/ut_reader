@@ -651,7 +651,7 @@ final class Uedb5ClassicDependencyResolver
             && $policy === strtolower(Uedb5Ut4SnapshotBuilder::SOURCE_POLICY)
             && $version !== null
             && $version >= 214
-            && $version <= 510
+            && $version <= 511
             && self::licenseeVersion($snapshot) === 0
                 ? PdoUe4VerifyImportProjectionResolver::PROFILE_UT4_CLEAN_MASTER
                 : null;
