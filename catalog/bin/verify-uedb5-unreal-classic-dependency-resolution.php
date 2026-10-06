@@ -231,7 +231,7 @@ $ut2003Resolved = Uedb5ClassicDependencyResolver::resolve($ut2003V120, [[
 ]]);
 $check(($ut2003Resolved[1]['status'] ?? null) === 'resolved', 'ut2003_v120_uses_v2107_verify_import');
 $ut2003V121 = $snapshot(
-    42007, 'Consumer121', 'classic-linkerload', 'ue2.ut2003', 'ue2-ut2003-forward-loader-compatible',
+    42007, 'Consumer121', 'classic-linkerload', 'ue2.ut2003', 'ue2-ut2003-post-v120-profile-admitted-unresolved',
     $consumerImports, [], 121
 );
 $ut2003Unverified = Uedb5ClassicDependencyResolver::resolve($ut2003V121, [[

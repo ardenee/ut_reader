@@ -126,7 +126,6 @@ try {
             && ($exports[0]['outerIndex'] ?? null) === 0,
         'FObjectImport.PackageIndex and FObjectExport.PackageIndex remain ordinary serialized INT fields.'
     );
-
     $exportEntry126 = $compact(0)
         . $compact(0)
         . pack('V', 0)

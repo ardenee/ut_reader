@@ -111,9 +111,9 @@ try {
 
     $accept('ut2003_60', Uedb5Ut2003SnapshotBuilder::class, CatalogUE2PackageReader::class, 4, 60, Uedb5Ut2003SnapshotBuilder::SOURCE_POLICY);
     $accept('ut2003_120', Uedb5Ut2003SnapshotBuilder::class, CatalogUE2PackageReader::class, 4, 120, Uedb5Ut2003SnapshotBuilder::SOURCE_POLICY);
-    $accept('ut2003_121', Uedb5Ut2003SnapshotBuilder::class, CatalogUE2PackageReader::class, 4, 121, Uedb5Ut2003SnapshotBuilder::POLICY_FORWARD_COMPAT);
-    $accept('ut2003_128', Uedb5Ut2003SnapshotBuilder::class, CatalogUE2PackageReader::class, 4, 128, Uedb5Ut2003SnapshotBuilder::POLICY_FORWARD_COMPAT);
-    $accept('ut2003_129', Uedb5Ut2003SnapshotBuilder::class, CatalogUE2PackageReader::class, 4, 129, Uedb5Ut2003SnapshotBuilder::POLICY_FORWARD_COMPAT);
+    $accept('ut2003_121', Uedb5Ut2003SnapshotBuilder::class, CatalogUE2PackageReader::class, 4, 121, Uedb5Ut2003SnapshotBuilder::POLICY_POST_V120_UNRESOLVED);
+    $accept('ut2003_128', Uedb5Ut2003SnapshotBuilder::class, CatalogUE2PackageReader::class, 4, 128, Uedb5Ut2003SnapshotBuilder::POLICY_POST_V120_UNRESOLVED);
+    $accept('ut2003_129', Uedb5Ut2003SnapshotBuilder::class, CatalogUE2PackageReader::class, 4, 129, Uedb5Ut2003SnapshotBuilder::POLICY_POST_V120_UNRESOLVED);
 
     $accept('ut2004_60', Uedb5Ut2004SnapshotBuilder::class, CatalogUE2PackageReader::class, 5, 60, Uedb5Ut2004SnapshotBuilder::POLICY_V128);
     $accept('ut2004_128', Uedb5Ut2004SnapshotBuilder::class, CatalogUE2PackageReader::class, 5, 128, Uedb5Ut2004SnapshotBuilder::POLICY_V128);

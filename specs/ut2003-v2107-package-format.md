@@ -404,7 +404,35 @@ For UT2003 v2107 source compatibility:
 14. preserve UT2003 CreateExport's null-class behavior;
 15. do not substitute UE2.5 LinksToCode logic;
 16. do not invent package compression/encryption;
-17. do not import behavior from UT2004, UE2.5, or Unreal II without source proof.
+17. do not import behavior from UT2004, UE2.5, or Unreal II without source proof;
+18. preserve serialized Name text/flags but build the effective all-context NameMap before deriving import/export/dependency identity;
+19. use the source-backed UCC/UnrealEd all-context mask `RF_LoadForClient | RF_LoadForServer | RF_LoadForEdit = 0x00070000` for deterministic catalogue preprocessing;
+20. do not apply the later Warfare v126 `NAME_SIZE-1` truncation: UT2003 v2107 copies the full loaded FString into the runtime FName buffer;
+21. stop this preprocessing authority at package v120 and label later admitted versions source-unresolved.
+
+## Section 4D catalogue preprocessing and policy boundary
+
+The first-principles 4D audit re-checked these rules directly against
+`L:\Source\Games\UT2003\Unreal Tournament 2003 [v2107] [2002-10-01]`.
+
+- `ULinker` constructs `_ContextFlags` from editor/client/server mode before any table is read.
+- `LoadNames` maps each serialized Name to either its FName or `NAME_None` before Imports and Exports are deserialized.
+- UCC and UnrealEd both have source-backed all-context startup states with client/server/editor enabled together, so `0x00070000` is an explicit Epic catalogue context rather than an invented mask.
+- The v2107 `FNameEntry` serializer uses `appStrcpy(E.Name,*Str)` for v64+, so the v126 Warfare 63-character truncation must not be inherited.
+- `FObjectExport::operator<<` uses `if (E.SerialSize)`; therefore every nonzero compact SerialSize, including a negative value, carries a compact SerialOffset.
+- The summary serializer reads only `Tag` when loading bad magic. UnrealDB already rejects unsupported magic immediately after the first four bytes, so no additional reader change was required there.
+
+UEDB5 source attribution is therefore:
+- versions 60-120: `ue2-ut2003-v2107-package-v120`;
+- admitted versions above 120: `ue2-ut2003-post-v120-profile-admitted-unresolved`.
+
+Raw serialized Names remain preserved. Only the effective current/V5 identity used for source-compatible import/export/dependency processing receives the all-context NameMap transformation. Post-v120 rows do not inherit that behavior.
+
+For bounded migration impact, run:
+
+`D:\php8.5\php.exe catalog\bin\diagnose-ut2003-name-map-impact.php --summary`
+
+against the real staging DB, then rerun without `--summary` for exact file IDs. The diagnostic reads staged UEDB5 metadata only. Context-filter and policy-only changes do not need original-package reads; only an exact file containing a staged negative `serial_size` is flagged for Pass-1 reparse because the old reader could have skipped its serialized offset.
 
 ## Source-reference matrix
 

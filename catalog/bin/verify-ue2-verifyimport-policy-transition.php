@@ -21,7 +21,7 @@ $rows=[
  [2,6,126,29,Uedb5Unreal2SnapshotBuilder::POLICY_V126_GENERIC,1],
  [3,6,69,0,Uedb5Unreal2SnapshotBuilder::POLICY_V69_2000,0],
  [4,4,120,28,Uedb5Ut2003SnapshotBuilder::SOURCE_POLICY,1],
- [5,4,121,29,Uedb5Ut2003SnapshotBuilder::POLICY_FORWARD_COMPAT,1],
+ [5,4,121,29,Uedb5Ut2003SnapshotBuilder::POLICY_POST_V120_UNRESOLVED,1],
  [6,5,128,29,Uedb5Ut2004SnapshotBuilder::POLICY_V128,1],
  [7,3,68,0,'ue1-ut99-retail-v1400-1999-11-30',1],
  [8,5,129,29,Uedb5Ut2004SnapshotBuilder::POLICY_V129,1],

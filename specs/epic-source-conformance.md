@@ -507,4 +507,31 @@ This recovery checkpoint changes source availability only. It does not widen a g
 - That diagnostic reads staged UEDB5 only. Context-filtered Names, v70-126 >63-character effective names, and source-policy changes do **not** require original Unreal package reads. A staged export with negative `serial_size` is separately reported because the old reader would have skipped its serialized offset; only that exact file set requires Pass-1 reparsing from original bytes.
 - This checkout's connected database still lacks `ue_uedb5_files`, so the diagnostic correctly exits before scanning and no impact count is fabricated.
 
-**Next checkpoint: Section 4D - UT2003 / UE2 package serialization and pre-dependency preprocessing, audited independently from its own source rather than inheriting Unreal II/Warfare behavior.**
+## Section 4D - UT2003 / UE2 package serialization and pre-dependency preprocessing
+
+**Status: complete against the sole supplied UT2003 v2107 source tree, independently from Unreal II, generic Warfare v126, and UT2004.**
+
+### Source authority
+
+- `L:\Source\Games\UT2003\Unreal Tournament 2003 [v2107] [2002-10-01]`
+- `ENGINE_VERSION = 1107 + DEMO_VERSION_OFFSET`, package v120, licensee `0x1C`, minimum v60.
+- The tree contains complete `UnLinker.cpp`, `UnName.cpp`, `UnObj.cpp`, and headers; there is no missing serializer/preprocessing implementation gap for this profile.
+
+### Source results and corrections
+
+1. **UT2003 retains the classic UE2 table layout independently.** Summary, Import, and Export fields match the audited source: fixed INT PackageIndex/outer fields, compact FName/class/super/SerialSize/SerialOffset, and SerialOffset present whenever SerialSize is nonzero.
+2. **The summary has a strict tag guard.** On load, `FPackageFileSummary` reads Tag first and does not consume the remaining summary if Tag is wrong. UnrealDB already rejects unsupported tag immediately after four bytes, so no code change was needed.
+3. **Names are preprocessed before Imports/Exports.** `ULinker` constructs `_ContextFlags`, then `LoadNames` maps nonmatching rows to `NAME_None`. UCC and UnrealEd prove an all-context state with edit/client/server all enabled; UnrealDB now uses that explicit `0x00070000` catalogue context for UT2003 v60-120.
+4. **UT2003 does not inherit Warfare's 63-character runtime-name truncation.** Its v64+ `FNameEntry` path copies the loaded FString directly with `appStrcpy`. Raw and effective long names therefore remain intact for v60-120.
+5. **Later admitted versions fail closed.** The old `ue2-ut2003-forward-loader-compatible` label is replaced by `ue2-ut2003-post-v120-profile-admitted-unresolved`; post-v120 rows do not inherit v2107 NameMap or VerifyImport behavior.
+6. **The existing UE2 nonzero SerialOffset fix covers UT2003 too.** The source uses `if (E.SerialSize)`, matching the reader correction made in 4C.
+
+### Regression and migration boundary
+
+- `verify-ut2003-name-map-preprocessing.php` proves v120 preserves raw/full long names, filters zero-context names to `NAME_None`, and that v121 inherits neither transformation in current nor V5 paths.
+- `verify-legacy-ue2-serialization-contract.php` retains the nonzero/negative SerialSize -> SerialOffset regression.
+- Existing UE2 VerifyImport, UEDB5 classic dependency, persistence, and transition tests remain green.
+- `diagnose-ut2003-name-map-impact.php` performs bounded staged-metadata discovery only. Run with `--summary` for counts and without it for exact file IDs. Only a negative-`serial_size` file requires Pass-1 original-byte reparse; context/policy changes are metadata/Pass-2 scope.
+- This checkout's connected DB lacks `ue_uedb5_files`, so the diagnostic fails closed before scanning and no impact count is invented.
+
+**Next checkpoint: Section 4E - UT2004 / UE2.5 package serialization and pre-dependency preprocessing, audited independently against the latest UT2004 source.**

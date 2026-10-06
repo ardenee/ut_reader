@@ -78,11 +78,11 @@ final class Uedb5ClassicDependencyResolver
             }
             unset($provider);
         } elseif ($engine === 'ue2') {
-            $consumerNameLimit = self::unreal2NameMapMaxCharacters($consumerSnapshot);
+            $consumerNameLimit = self::ue2NameMapMaxCharacters($consumerSnapshot);
             if ($consumerNameLimit !== false) {
                 $consumer = self::applyLegacyAllContextNameMap($consumer, $consumerNameLimit);
                 foreach ($providers as &$provider) {
-                    $providerNameLimit = self::unreal2NameMapMaxCharacters((array)$provider['snapshot']);
+                    $providerNameLimit = self::ue2NameMapMaxCharacters((array)$provider['snapshot']);
                     if ($providerNameLimit !== false) {
                         $provider['tables'] = self::applyLegacyAllContextNameMap(
                             (array)$provider['tables'],
@@ -510,17 +510,21 @@ final class Uedb5ClassicDependencyResolver
         return $tables;
     }
 
-    private static function unreal2NameMapMaxCharacters(array $snapshot): int|false|null
+    private static function ue2NameMapMaxCharacters(array $snapshot): int|false|null
     {
         $schema = strtolower(trim((string)($snapshot['section_schemas']['imports'] ?? '')));
+        $policy = strtolower(trim((string)($snapshot['source_policy'] ?? '')));
         $version = self::packageVersion($snapshot);
-        if (!str_starts_with($schema, 'ue2.unreal2.')
-            || $version === null
-            || $version < 60
-            || $version > 126) {
-            return false;
+        if (str_starts_with($schema, 'ue2.unreal2.')
+            && $version !== null && $version >= 60 && $version <= 126) {
+            return $version >= 70 ? 63 : null;
         }
-        return $version >= 70 ? 63 : null;
+        if (str_starts_with($schema, 'ue2.ut2003.')
+            && $policy === strtolower(Uedb5Ut2003SnapshotBuilder::SOURCE_POLICY)
+            && $version !== null && $version >= 60 && $version <= 120) {
+            return null;
+        }
+        return false;
     }
 
     private static function engine(array $snapshot): string
