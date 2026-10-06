@@ -327,7 +327,7 @@ final class Uedb5DependencyRebuilder
         $outcome = match ($status) {
             'resolved' => 'resolved',
             'package_only' => 'package_only',
-            'missing', 'optional_missing', 'private_export' => 'missing',
+            'missing', 'private_export' => 'missing',
             'runtime_only', 'invalid', 'ignored' => 'unresolved',
             default => throw new RuntimeException('Unknown UE5 classic dependency resolver status: ' . $status),
         };
@@ -384,7 +384,6 @@ final class Uedb5DependencyRebuilder
             'resolved' => 'verify_import_match',
             'package_only' => 'package_linker_only',
             'missing' => 'verify_import_missing',
-            'optional_missing' => 'optional_import_missing',
             'private_export' => 'private_export_rejected',
             'runtime_only' => 'runtime_state_required',
             'invalid' => 'invalid_import_graph',

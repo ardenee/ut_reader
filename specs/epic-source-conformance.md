@@ -318,7 +318,7 @@ Section 3B1 advanced Pass 2 to `uedb5-dependency-pass-v8`, accepting v1-v7; Sect
 
 #### Bounded migration boundary
 
-Pass 2 is now `uedb5-dependency-pass-v9`; the transition accepts v1-v8.
+Section 3C advanced Pass 2 to `uedb5-dependency-pass-v9`, accepting v1-v8; Section 3D below supersedes that checkpoint with v10.
 
 - A v8 row is reconsidered only for the new UE4/UT4 delta; completed UE1/UE2/UE3 corrections are not replayed.
 - UT4 object edges already persisted as missing/unresolved are rebuilt because 4.27.2 runtime fallback semantics can change their classification.
@@ -328,4 +328,40 @@ Pass 2 is now `uedb5-dependency-pass-v9`; the transition accepts v1-v8.
 - No Pass-1/package-byte reparse is required for 3C.
 - Optional V4 repair remains exact-file only for the same impacted consumers.
 
-**Next audit checkpoint: Section 3D - UE5 5.8.3 classic `VerifyImportInner`/`VerifyImport` runtime and redirector branches, independently from UE4.**
+### Section 3D - UE5 5.8.3 classic VerifyImportInner and VerifyImport wrapper
+
+**Status: complete for the dedicated UE5 5.8.3 classic LinkerLoad source policy. This audit was performed independently from UE4 4.27.2; shared-looking branches were re-proven rather than inherited.**
+
+#### Source authority
+
+- Authority: `L:\Source\Engine\UE5\UE 5.8.3\Engine\Source\Runtime\CoreUObject\Private\UObject\LinkerLoad.cpp`, especially `FLinkerLoad::VerifyImportInner()`, `FLinkerLoad::VerifyImport()`, `IsPackageReferenceAllowed()`, `TryCreatePlaceholderClassImport()` and create-time `ImportsToVerifyOnCreate` handling.
+- Local UE5 source revision: `396c9f059903aed5fec78ecd3d437a40c6415368`.
+- Resolver/profile: `Uedb5Ue5ClassicVerifyImportResolver` under source policy `ue5-5.8.3-classic-linkerload` only. Zen/IoStore remains a separate package/dependency model and does not inherit this classic LinkerLoad policy.
+
+#### Source results and corrections
+
+1. **Direct `NAME_None` returns immediately.** Raw staged FName number/text is now used to reproduce `FName::IsNone()`; literal `None` with number zero is not treated as an ordinary dependency merely because its rendered text is non-empty.
+2. **Provider selection remains package-first, including effective `PackageName`.** Package relocation, instancing/remapping and filtered package-name behavior are kept separate from deterministic serialized provider identity; runtime configuration is not guessed.
+3. **Initial UE5 export matching is not UE4 class-tuple matching.** UE5 5.8.3 hashes/searches by `ObjectName` and requires only redirector/non-redirector class parity at this stage. Class name/package mismatch is accepted as a file-backed match and queued in `ImportsToVerifyOnCreate`; create time later warns when the resolved object's class is not serialization-compatible. UnrealDB therefore keeps the dependency resolved while recording deferred class verification.
+4. **Different-linker outer class identity can also be deferred.** When the source-linker outer import has the same object name but a different class name/package, UE5 adds the outer import to `ImportsToVerifyOnCreate` rather than rejecting the candidate immediately. The resolver preserves this as `deferred_outer_class_verification`.
+5. **The three private-import graph allowances are unconditional in UE5 5.8.3.** Unlike UE4 4.27.2, `IsPrivateImportAllowed()` is not wrapped in `WITH_EDITOR`; `ImportIsInAnyExport`, `AnyExportIsInImport`, or `AnyExportShareOuterWithImport` directly permit the matching private export.
+6. **Private matches outside those allowances are still context-sensitive.** Source initializes SafeReplace from `GIsEditor && !IsRunningCommandlet()` and then forces it false when the import is referenced as a consumer export super/class/outer or another import's outer. UnrealDB now reports unreferenced private matches as runtime/editor-context unresolved and only hard-referenced private matches as deterministic `private_export` rejection. The same distinction is retained when the wrapper is considering a private `ObjectRedirector` candidate.
+7. **A file-backed object miss is not hard missing.** UE5 can still recover through memory-only/instanced packages, dynamic-import linker substitution, `LOAD_FindIfFail`, native/transient objects and CDOs, moved script structs, placeholder type creation while deserializing redirector destinations, and SafeReplace/class runtime state. Provider-table exhaustion is therefore `runtime_only`; only physical provider absence remains hard missing.
+8. **`bImportOptional` is metadata, not a classic VerifyImport result.** The audited UE5 source serializes/authors the flag but does not consult it in `VerifyImportInner()` or `VerifyImport()`. The previous `optional_missing` classic outcome has been removed. Optional-resource semantics remain preserved for the UE5 systems that actually consume the flag.
+9. **`IsPackageReferenceAllowed()` is deterministic from staged package flags.** `PKG_NotExternallyReferenceable` (`0x00000800`) makes a provider `Private`; a cross-mount reference is rejected, while same-mount reference is allowed. `PKG_AccessSpecifierEpicInternal` (`0x00001000`) is not rejected by this helper. UEDB5 retains the required flags and package names, so UnrealDB reproduces this gate instead of calling it runtime-only.
+10. **`ObjectRedirector` remains payload-dependent.** The wrapper retries the same object name as `CoreUObject.ObjectRedirector`, creates/preloads it, reads `DestinationObject`, then validates the destination class/superclass chain (with the CDO exception). Static table evidence proves only the redirector candidate; the destination remains runtime/payload unresolved.
+11. **Dynamic imports and placeholder objects are not fabricated.** `DynamicImportsIndex` rows are runtime-added and editor-only placeholder type creation depends on live serialization/property-bag state. Serialized evidence such as `RF_HasDynamicImports` does not authorize UnrealDB to invent those objects or linkers.
+
+#### Bounded migration boundary
+
+Pass 2 is now `uedb5-dependency-pass-v10`; the transition accepts v1-v9.
+
+- v9 UE1-UE4 rows do not replay their completed source deltas.
+- Only UE5 classic rows under the 5.8.3 source policy are candidates for the new 3D transition.
+- Existing UE5 classic missing/unresolved object edges are rebuilt because their source outcome may now become runtime-derived unresolved under the corrected post-file-miss and private SafeReplace rules.
+- Existing resolved/package-only UE5 classic provider relations are re-opened once to apply `IsPackageReferenceAllowed()`. Provider `package_flags` are authoritative in staged UEDB5 but intentionally are not duplicated in the dependency SQL accelerator, so SQL alone cannot prove that an old resolved relation is not a cross-mount private-package reference.
+- Common/script-only rows with no affected provider relation roll forward.
+- No Pass-1 reparse is required: raw FName number/text, package flags, PackageName, import/export graphs and optional bits are already present in UEDB5.
+- UE5 classic is not currently a registered game migration target, so this v10 rule does not create a current full-game replay; it prevents future staged UE5 rows from carrying a semantically stale v9 checkpoint.
+
+**Next audit checkpoint: Section 3E - UE5 5.8.3 Zen/IoStore dependency resolution and package-store/runtime redirect boundaries, independently from classic LinkerLoad.**

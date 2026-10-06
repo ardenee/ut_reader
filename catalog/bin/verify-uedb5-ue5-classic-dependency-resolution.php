@@ -113,7 +113,7 @@ $whitespaceMiss = Uedb5Ue5ClassicVerifyImportResolver::resolve(
 );
 $check(
     'ue5_classic_fname_whitespace_is_identity_not_trimmed',
-    ($whitespaceMiss[1]['status'] ?? '') === 'missing',
+    ($whitespaceMiss[1]['status'] ?? '') === 'runtime_only',
     'UE5 FName equality does not trim serialized ObjectName text.'
 );
 $whitespaceProviderP = $snapshot([$classTexture, $classPkg], [$export(0, ' Obj ', -1, 0)]);
@@ -124,6 +124,20 @@ $check(
     'ue5_classic_exact_whitespace_fname_matches',
     ($whitespaceHit[1]['status'] ?? '') === 'resolved',
     'Exact whitespace-bearing FName identity remains matchable.'
+);
+
+$noneConsumer = $snapshot([
+    $rootP,
+    $import(1, 'None', 'Texture2D', '/Script/Engine', -1),
+], []);
+$noneConsumer['sections']['imports'][1]['object_name']['number'] = 0;
+$noneOutcome = Uedb5Ue5ClassicVerifyImportResolver::resolve(
+    $noneConsumer, [$provider('/Game/P', $providerP, 73)]
+);
+$check(
+    'ue5_direct_name_none_is_source_irrelevant',
+    ($noneOutcome[1]['status'] ?? '') === 'ignored',
+    'FName::IsNone() is based on raw name identity, not only an empty rendered string.'
 );
 $explicitWhitespacePackage = $snapshot([
     $import(0, 'ExternalObj', 'Class', '/Script/CoreUObject', 1, ' /Game/B'),
@@ -216,8 +230,22 @@ $private = Uedb5Ue5ClassicVerifyImportResolver::resolve(
 );
 $check(
     'private_export_rejected_without_graph_exception',
-    ($private[1]['status'] ?? '') === 'private_export',
-    'A private provider export is not accepted merely because its name and outer match.'
+    ($private[1]['status'] ?? '') === 'runtime_only',
+    'A private provider export outside the three graph allowances still depends on editor/commandlet SafeReplace unless hard-referenced.'
+);
+
+$hardPrivateConsumer = $snapshot(
+    [$rootP, $import(1, 'Obj', 'Class', '/Script/CoreUObject', -1)],
+    [$export(0, 'UsesPrivateImport', -2, 0)]
+);
+$hardPrivate = Uedb5Ue5ClassicVerifyImportResolver::resolve(
+    $hardPrivateConsumer,
+    [$provider('/Game/P', $privateProvider, 35)]
+);
+$check(
+    'hard_referenced_private_export_is_source_rejected',
+    ($hardPrivate[1]['status'] ?? '') === 'private_export',
+    'A private import referenced as a consumer export class/super/outer forces SafeReplace false in source.'
 );
 $markAsNativeOnly = $snapshot([], [$export(0, 'Obj', 0, 0, '0000000000000004')]);
 $rfPublic = Uedb5Ue5ClassicVerifyImportResolver::resolve(
@@ -226,7 +254,7 @@ $rfPublic = Uedb5Ue5ClassicVerifyImportResolver::resolve(
 );
 $check(
     'ue5_rf_public_is_bit_0',
-    ($rfPublic[1]['status'] ?? '') === 'private_export',
+    ($rfPublic[1]['status'] ?? '') === 'runtime_only',
     'UE5 RF_Public is 0x00000001; RF_MarkAsNative 0x00000004 must not be mistaken for public.'
 );
 $consumerImportInExport = $snapshot([
@@ -292,8 +320,8 @@ $duplicateOrder = Uedb5Ue5ClassicVerifyImportResolver::resolve(
 );
 $check(
     'export_hash_order_stops_on_first_private_match',
-    ($duplicateOrder[1]['status'] ?? '') === 'private_export',
-    'ExportHash prepends low-to-high inserts, so higher-index private duplicates are encountered before lower public ones.'
+    ($duplicateOrder[1]['status'] ?? '') === 'runtime_only',
+    'ExportHash prepends low-to-high inserts, so the higher-index private duplicate stops the file-backed walk before the lower public one; its final outcome still depends on SafeReplace runtime context.'
 );
 
 $optionalConsumer = $snapshot([
@@ -305,9 +333,49 @@ $optional = Uedb5Ue5ClassicVerifyImportResolver::resolve(
     [$provider('/Game/P', $snapshot([], []), 41)]
 );
 $check(
-    'optional_missing_is_not_hard_missing',
-    ($optional[1]['status'] ?? '') === 'optional_missing',
-    'bImportOptional must preserve a distinct missing classification.'
+    'b_import_optional_is_metadata_not_verifyimport_outcome',
+    ($optional[1]['status'] ?? '') === 'missing',
+    'UE5 5.8.3 serializes bImportOptional but classic VerifyImport does not consult it; an absent physical provider therefore remains the same hard provider miss as a non-optional import.'
+);
+
+$privatePackageConsumer = $snapshot([
+    $import(0, '/PluginA/Provider', 'Package', '/Script/CoreUObject', 0),
+], []);
+$privatePackageConsumer['file'] = ['package_name'=>'/Game/Consumer'];
+$privatePackageProvider = $snapshot([], []);
+$privatePackageProvider['file'] = ['package_name'=>'/PluginA/Provider'];
+$privatePackageProvider['sections']['summary'] = [['package_flags'=>'00000800']];
+$privatePackageCrossMount = Uedb5Ue5ClassicVerifyImportResolver::resolve(
+    $privatePackageConsumer,
+    [$provider('/PluginA/Provider', $privatePackageProvider, 74)]
+);
+$check(
+    'cross_mount_private_package_is_source_rejected',
+    ($privatePackageCrossMount[0]['status'] ?? '') === 'missing'
+        && str_contains((string)($privatePackageCrossMount[0]['reason'] ?? ''), 'IsPackageReferenceAllowed'),
+    'PKG_NotExternallyReferenceable blocks a provider package referenced from a different mount point.'
+);
+$sameMountConsumer = $privatePackageConsumer;
+$sameMountConsumer['file']['package_name'] = '/PluginA/Consumer';
+$privatePackageSameMount = Uedb5Ue5ClassicVerifyImportResolver::resolve(
+    $sameMountConsumer,
+    [$provider('/PluginA/Provider', $privatePackageProvider, 75)]
+);
+$check(
+    'same_mount_private_package_is_allowed',
+    ($privatePackageSameMount[0]['status'] ?? '') === 'package_only',
+    'The private-package access rule permits references within the same mount point.'
+);
+$epicInternalProvider = $privatePackageProvider;
+$epicInternalProvider['sections']['summary'][0]['package_flags'] = '00001000';
+$epicInternal = Uedb5Ue5ClassicVerifyImportResolver::resolve(
+    $privatePackageConsumer,
+    [$provider('/PluginA/Provider', $epicInternalProvider, 76)]
+);
+$check(
+    'epic_internal_flag_is_not_private_package_gate',
+    ($epicInternal[0]['status'] ?? '') === 'package_only',
+    'IsPackageReferenceAllowed checks EAssetAccessSpecifier::Private, not EpicInternal.'
 );
 
 $duplicateRejected = false;

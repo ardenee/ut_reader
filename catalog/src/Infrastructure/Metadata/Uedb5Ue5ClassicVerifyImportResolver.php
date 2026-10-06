@@ -17,6 +17,7 @@ final class Uedb5Ue5ClassicVerifyImportResolver
     private const CORE_UOBJECT_PACKAGE = '/Script/CoreUObject';
     private const OBJECT_REDIRECTOR = 'ObjectRedirector';
     private const UE5_ADD_SOFTOBJECTPATH_LIST = 1008;
+    private const PKG_NOT_EXTERNALLY_REFERENCEABLE = 0x00000800;
 
     /**
      * Resolve against one already-selected physical provider linker per package.
@@ -29,6 +30,7 @@ final class Uedb5Ue5ClassicVerifyImportResolver
     {
         self::assertClassicSnapshot($consumerSnapshot, 'consumer');
         $consumer = self::tables($consumerSnapshot);
+        $consumerPackageName = (string)($consumerSnapshot['file']['package_name'] ?? '');
         $relocationContext = self::relocationContext($consumerSnapshot);
         $providers = [];
         foreach ($selectedProviders as $provider) {
@@ -48,6 +50,7 @@ final class Uedb5Ue5ClassicVerifyImportResolver
             $providers[$key] = [
                 'package_name' => $packageName,
                 'provider_id' => $provider['provider_id'] ?? null,
+                'package_flags' => self::snapshotPackageFlags($snapshot),
                 'tables' => self::tables($snapshot),
             ];
         }
@@ -55,7 +58,7 @@ final class Uedb5Ue5ClassicVerifyImportResolver
         $resolved = [];
         $visiting = [];
         foreach (array_keys($consumer['imports']) as $importIndex) {
-            self::resolveImport((int)$importIndex, $consumer, $providers, $resolved, $visiting, $relocationContext);
+            self::resolveImport((int)$importIndex, $consumer, $providers, $resolved, $visiting, $relocationContext, $consumerPackageName);
         }
         ksort($resolved, SORT_NUMERIC);
         return $resolved;
@@ -73,7 +76,8 @@ final class Uedb5Ue5ClassicVerifyImportResolver
         array $providers,
         array &$resolved,
         array &$visiting,
-        ?array $relocationContext
+        ?array $relocationContext,
+        string $consumerPackageName
     ): array {
         if (isset($resolved[$importIndex])) {
             return $resolved[$importIndex];
@@ -90,9 +94,11 @@ final class Uedb5Ue5ClassicVerifyImportResolver
         $className = self::fnameText($import['class_name'] ?? null);
         $classPackage = self::fnameText($import['class_package'] ?? null);
         $objectName = self::fnameText($import['object_name'] ?? null);
-        if ($className === '' || $classPackage === '' || $objectName === '') {
+        if (self::fnameIsNone($import['class_name'] ?? null)
+            || self::fnameIsNone($import['class_package'] ?? null)
+            || self::fnameIsNone($import['object_name'] ?? null)) {
             unset($visiting[$importIndex]);
-            return $resolved[$importIndex] = self::terminal('ignored', 'None class/package/object name');
+            return $resolved[$importIndex] = self::terminal('ignored', 'direct NAME_None import is not relevant to VerifyImportInner');
         }
 
         $outerIndex = (int)($import['outer_index'] ?? 0);
@@ -122,7 +128,8 @@ final class Uedb5Ue5ClassicVerifyImportResolver
                 $providers,
                 $resolved,
                 $visiting,
-                $relocationContext
+                $relocationContext,
+                $consumerPackageName
             );
         } elseif ($outerIndex > 0 && $explicitPackage === '') {
             unset($visiting[$importIndex]);
@@ -155,12 +162,26 @@ final class Uedb5Ue5ClassicVerifyImportResolver
             return $resolved[$importIndex] = self::missing($import, $providerPackage);
         }
 
+        if (self::privatePackageReferenceRejected($consumerPackageName, $provider)) {
+            unset($visiting[$importIndex]);
+            return $resolved[$importIndex] = self::providerResult(
+                'missing',
+                $provider,
+                null,
+                'IsPackageReferenceAllowed rejects cross-mount reference to PKG_NotExternallyReferenceable provider',
+                false,
+                self::emptyPrivateGraph(),
+                false
+            );
+        }
+
         if ($outerIndex === 0) {
             unset($visiting[$importIndex]);
             return $resolved[$importIndex] = self::packageOnly($provider);
         }
         $providerTables = (array)$provider['tables'];
         $redirectorFallbackSeen = false;
+        $redirectorRuntimeContextSeen = false;
         foreach (self::candidateExports($providerTables, $objectName) as $candidate) {
             $exportIndex = (int)$candidate['index'];
             [$exportClassPackage, $exportClassName] = self::exportClassIdentity(
@@ -180,9 +201,12 @@ final class Uedb5Ue5ClassicVerifyImportResolver
                         $outerResolution
                     );
                     $redirectPrivate = self::privateGraphAllowance($consumer, $importIndex);
-                    if ($redirectOuter['matches']
-                        && (self::isPublicExport($candidate) || $redirectPrivate['allowed'])) {
-                        $redirectorFallbackSeen = true;
+                    if ($redirectOuter['matches']) {
+                        if (self::isPublicExport($candidate) || $redirectPrivate['allowed']) {
+                            $redirectorFallbackSeen = true;
+                        } elseif (!self::privateSafeReplaceBlocked($consumer, $importIndex)) {
+                            $redirectorRuntimeContextSeen = true;
+                        }
                     }
                 }
                 continue;
@@ -201,12 +225,15 @@ final class Uedb5Ue5ClassicVerifyImportResolver
 
             $privateGraph = self::privateGraphAllowance($consumer, $importIndex);
             if (!self::isPublicExport($candidate) && !$privateGraph['allowed']) {
+                $hardPrivateReference = self::privateSafeReplaceBlocked($consumer, $importIndex);
                 unset($visiting[$importIndex]);
                 return $resolved[$importIndex] = self::providerResult(
-                    'private_export',
+                    $hardPrivateReference ? 'private_export' : 'runtime_only',
                     $provider,
                     null,
-                    'first matching export is private and no source graph exception applies',
+                    $hardPrivateReference
+                        ? 'private export is hard-referenced and SafeReplace is forced false'
+                        : 'private export depends on editor/commandlet SafeReplace runtime context',
                     false,
                     $privateGraph,
                     (bool)$outerCheck['deferred_outer_class_verification']
@@ -227,22 +254,24 @@ final class Uedb5Ue5ClassicVerifyImportResolver
             );
         }
         unset($visiting[$importIndex]);
-        if ($redirectorFallbackSeen) {
+        if ($redirectorFallbackSeen || $redirectorRuntimeContextSeen) {
             return $resolved[$importIndex] = self::providerResult(
                 'runtime_only',
                 $provider,
                 null,
-                'ObjectRedirector fallback requires runtime object loading',
+                $redirectorFallbackSeen
+                    ? 'ObjectRedirector fallback requires runtime DestinationObject loading and class validation'
+                    : 'private ObjectRedirector fallback depends on editor/commandlet SafeReplace runtime context',
                 false,
                 self::emptyPrivateGraph(),
                 false
             );
         }
         return $resolved[$importIndex] = self::providerResult(
-            self::isOptional($import) ? 'optional_missing' : 'missing',
+            'runtime_only',
             $provider,
             null,
-            'no file-backed export matches VerifyImportInner',
+            'file-backed miss still permits memory-only, dynamic-import, native/transient, LOAD_FindIfFail, placeholder and SafeReplace runtime recovery',
             false,
             self::emptyPrivateGraph(),
             false
@@ -568,6 +597,31 @@ final class Uedb5Ue5ClassicVerifyImportResolver
             === self::key((string)($provider['package_name'] ?? ''));
     }
 
+    private static function snapshotPackageFlags(array $snapshot): int
+    {
+        $summary = (array)(((array)($snapshot['sections']['summary'] ?? []))[0] ?? []);
+        $hex = strtoupper(trim((string)($summary['package_flags'] ?? '00000000')));
+        return preg_match('/^[0-9A-F]{8}$/', $hex) === 1 ? (int)hexdec($hex) : 0;
+    }
+
+    /** @param array<string,mixed> $provider */
+    private static function privatePackageReferenceRejected(string $consumerPackageName, array $provider): bool
+    {
+        if ((((int)($provider['package_flags'] ?? 0)) & self::PKG_NOT_EXTERNALLY_REFERENCEABLE) === 0) {
+            return false;
+        }
+        $consumerMount = self::mountPoint($consumerPackageName);
+        $providerMount = self::mountPoint((string)($provider['package_name'] ?? ''));
+        return $consumerMount !== '' && $providerMount !== '' && self::key($consumerMount) !== self::key($providerMount);
+    }
+
+    private static function mountPoint(string $packageName): string
+    {
+        if ($packageName === '' || $packageName[0] !== '/') { return ''; }
+        $slash = strpos($packageName, '/', 1);
+        return $slash === false ? $packageName : substr($packageName, 0, $slash);
+    }
+
     /** @param array<string,mixed> $export */
     private static function isPublicExport(array $export): bool
     {
@@ -577,6 +631,43 @@ final class Uedb5Ue5ClassicVerifyImportResolver
         }
         $low = (int)hexdec(substr($hex, -8));
         return ($low & self::RF_PUBLIC) !== 0;
+    }
+
+    /** @param mixed $value */
+    private static function fnameIsNone(mixed $value): bool
+    {
+        if (!is_array($value)) {
+            return true;
+        }
+        $text = (string)($value['text'] ?? '');
+        $number = (int)($value['number'] ?? 0);
+        return $text === '' || ($number === 0 && strcasecmp($text, 'None') === 0);
+    }
+
+    /**
+     * Source SafeReplace hard-reference scan after a private match that is not
+     * covered by the three unconditional UE5 graph allowances.
+     *
+     * @param array{imports:array<int,array<string,mixed>>,exports:array<int,array<string,mixed>>} $consumer
+     */
+    private static function privateSafeReplaceBlocked(array $consumer, int $importIndex): bool
+    {
+        $foundIndex = -($importIndex + 1);
+        foreach ($consumer['exports'] as $export) {
+            if (!is_array($export)) { continue; }
+            foreach (['super_index','class_index','outer_index'] as $field) {
+                if (array_key_exists($field, $export) && (int)$export[$field] === $foundIndex) {
+                    return true;
+                }
+            }
+        }
+        foreach ($consumer['imports'] as $index => $otherImport) {
+            if ((int)$index === $importIndex || !is_array($otherImport)) { continue; }
+            if ((int)($otherImport['outer_index'] ?? 0) === $foundIndex) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /** @param array<string,mixed> $import */
@@ -607,7 +698,7 @@ final class Uedb5Ue5ClassicVerifyImportResolver
             );
         }
         return self::terminal(
-            self::isOptional($import) ? 'optional_missing' : 'missing',
+            'missing',
             'selected package linker is unavailable',
             $providerPackage
         );
