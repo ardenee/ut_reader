@@ -1,9 +1,9 @@
 <?php
 /**
- * Resolves UE4 Imports against one physical provider using the deterministic,
- * file-backed portion of FLinkerLoad::VerifyImportInner.
+ * Resolves UT4 clean-master UE4 Imports against one physical provider using
+ * the deterministic, file-backed portion of FLinkerLoad::VerifyImportInner.
  *
- * Runtime-only CoreRedirects, instancing and already-loaded native/transient
+ * Runtime-only redirects, editor state and already-loaded native/transient
  * object behavior are deliberately excluded from static catalog resolution.
  */
 declare(strict_types=1);
@@ -21,7 +21,7 @@ final class PdoUe4VerifyImportProjectionResolver
     private const TOP_LEVEL_PACKAGE = -2147483647;
     private const PRIVATE_FAILURE = -2147483648;
 
-    public const PROFILE_UT4_4272 = 'ue4-ut4-4.27.2-release';
+    public const PROFILE_UT4_CLEAN_MASTER = 'ue4-ut4-clean-master-v510';
 
     /** @param list<array<string,mixed>> $consumerImports @return array<int,int> */
     public static function resolveProvider(
@@ -211,12 +211,6 @@ final class PdoUe4VerifyImportProjectionResolver
             $redirector = self::findCandidate(
                 $candidates, $objectName, 'ObjectRedirector', '/Script/CoreUObject', $expectedOuter, false
             );
-            if ($redirector === self::PRIVATE_FAILURE
-                && self::privateImportAllowed($importIndex, $graphImports, $consumerExportsByIndex)) {
-                $redirector = self::findCandidate(
-                    $candidates, $objectName, 'ObjectRedirector', '/Script/CoreUObject', $expectedOuter, true
-                );
-            }
             if (is_int($redirector) && $redirector >= 0) {
                 $redirectors[$importIndex] = $redirector;
             }
@@ -341,7 +335,7 @@ final class PdoUe4VerifyImportProjectionResolver
             }
             if ($outerIndex > 0) {
                 $outcomes[$importIndex] = self::sourceOutcome(
-                    'unresolved', 'mixed_export_outer_package_context_unavailable'
+                    'invalid', 'export_outer_source_assert_boundary'
                 );
                 continue;
             }
@@ -412,29 +406,9 @@ final class PdoUe4VerifyImportProjectionResolver
     }
 
     /**
-     * UE4 editor-only private-import exception used by VerifyImportInner.
-     * The predicates mirror FLinker::ImportIsInAnyExport, AnyExportIsInImport,
-     * and AnyExportShareOuterWithImport over serialized FPackageIndex graphs.
-     *
-     * @param list<array<string,mixed>> $consumerImports
-     * @param list<array<string,mixed>> $consumerExports
-     */
-    public static function privateImportAllowedInMemory(
-        int $importIndex,
-        array $consumerImports,
-        array $consumerExports
-    ): bool {
-        return self::privateImportAllowed(
-            $importIndex,
-            self::indexRows($consumerImports, 'import_index'),
-            self::indexRows($consumerExports, 'export_index')
-        );
-    }
-
-    /**
      * UE4 FLinker::GetExportClassName/GetExportClassPackage equivalent using the
      * parsed signed ClassIndex graph. Current v4 metadata retains the complete
-     * provider import/export graph required for pre-520 packages.
+     * provider import/export graph required for pre-519 packages.
      *
      * @param array<int,array<string,mixed>> $providerImports
      * @param array<int,array<string,mixed>> $providerExports
@@ -480,137 +454,6 @@ final class PdoUe4VerifyImportProjectionResolver
     }
 
 
-    /** @param array<int,array<string,mixed>> $imports @param array<int,array<string,mixed>> $exports */
-    private static function privateImportAllowed(int $importIndex, array $imports, array $exports): bool
-    {
-        return self::importIsInAnyExport($importIndex, $imports, $exports)
-            || self::anyExportIsInImport($importIndex, $imports, $exports)
-            || self::anyExportShareOuterWithImport($importIndex, $imports, $exports);
-    }
-
-    /** Mirrors FLinker::ImportIsInAnyExport. */
-    private static function importIsInAnyExport(int $importIndex, array $imports, array $exports): bool
-    {
-        if (!isset($imports[$importIndex])) {
-            return false;
-        }
-        $linkerIndex = (int)($imports[$importIndex]['outer_index'] ?? 0);
-        $seen = [];
-        while ($linkerIndex !== 0) {
-            if (isset($seen[$linkerIndex])) {
-                return false;
-            }
-            $seen[$linkerIndex] = true;
-            $outer = self::resourceOuterIndex($linkerIndex, $imports, $exports);
-            if ($outer === null) {
-                return false;
-            }
-            $linkerIndex = $outer;
-            if ($linkerIndex > 0) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /** Mirrors FLinker::AnyExportIsInImport. */
-    private static function anyExportIsInImport(int $importIndex, array $imports, array $exports): bool
-    {
-        $outerIndex = -$importIndex - 1;
-        foreach (array_keys($exports) as $exportIndex) {
-            if (self::resourceIsIn((int)$exportIndex + 1, $outerIndex, $imports, $exports)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /** Mirrors FLinker::AnyExportShareOuterWithImport. */
-    private static function anyExportShareOuterWithImport(int $importIndex, array $imports, array $exports): bool
-    {
-        $importResource = -$importIndex - 1;
-        $importOutermost = self::resourceGetOutermost($importResource, $imports, $exports);
-        if ($importOutermost === null) {
-            return false;
-        }
-        foreach ($exports as $exportIndex => $export) {
-            if ((int)($export['outer_index'] ?? 0) >= 0) {
-                continue;
-            }
-            $exportOutermost = self::resourceGetOutermost((int)$exportIndex + 1, $imports, $exports);
-            if ($exportOutermost !== null && $exportOutermost === $importOutermost) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /** Mirrors FLinker::ResourceGetOutermost. */
-    private static function resourceGetOutermost(int $linkerIndex, array $imports, array $exports): ?int
-    {
-        if ($linkerIndex === 0) {
-            return 0;
-        }
-        $seen = [];
-        while (true) {
-            if (isset($seen[$linkerIndex])) {
-                return null;
-            }
-            $seen[$linkerIndex] = true;
-            $outer = self::resourceOuterIndex($linkerIndex, $imports, $exports);
-            if ($outer === null) {
-                return null;
-            }
-            if ($outer === 0) {
-                return $linkerIndex;
-            }
-            $linkerIndex = $outer;
-        }
-    }
-
-    /** Mirrors FLinker::ResourceIsIn, including its first-outer step. */
-    private static function resourceIsIn(
-        int $linkerIndex,
-        int $outerIndex,
-        array $imports,
-        array $exports
-    ): bool {
-        $current = self::resourceOuterIndex($linkerIndex, $imports, $exports);
-        if ($current === null) {
-            return false;
-        }
-        $seen = [];
-        while ($current !== 0) {
-            if (isset($seen[$current])) {
-                return false;
-            }
-            $seen[$current] = true;
-            $next = self::resourceOuterIndex($current, $imports, $exports);
-            if ($next === null) {
-                return false;
-            }
-            $current = $next;
-            if ($current === $outerIndex) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /** FPackageIndex resource lookup: negative=Import, positive=Export, zero=null. */
-    private static function resourceOuterIndex(int $linkerIndex, array $imports, array $exports): ?int
-    {
-        if ($linkerIndex === 0) {
-            return 0;
-        }
-        if ($linkerIndex < 0) {
-            $index = -$linkerIndex - 1;
-            return isset($imports[$index]) ? (int)($imports[$index]['outer_index'] ?? 0) : null;
-        }
-        $index = $linkerIndex - 1;
-        return isset($exports[$index]) ? (int)($exports[$index]['outer_index'] ?? 0) : null;
-    }
-
     /**
      * @param array<int,array<string,mixed>> $imports
      * @param array<string,list<array<string,mixed>>> $candidates
@@ -655,9 +498,8 @@ final class PdoUe4VerifyImportProjectionResolver
                 : null;
         }
         if ($outerIndex > 0) {
-            // Modern UE4 supports import/export mixed outer graphs, but correct
-            // provider selection for those imports can depend on serialized
-            // FObjectImport::PackageName (>=520), which v4 metadata discarded.
+            // UT4 clean-master asserts that every non-null Import outer is
+            // another Import. Export-outers are outside this source profile.
             unset($visiting[$index]);
             return $resolved[$index] = null;
         }
@@ -681,12 +523,6 @@ final class PdoUe4VerifyImportProjectionResolver
         $matched = self::findCandidate(
             $candidates, $objectName, $className, $classPackage, $expectedOuter, false
         );
-        if ($matched === self::PRIVATE_FAILURE
-            && self::privateImportAllowed($index, $consumerGraphImports, $consumerExports)) {
-            $matched = self::findCandidate(
-                $candidates, $objectName, $className, $classPackage, $expectedOuter, true
-            );
-        }
         unset($visiting[$index]);
         return $resolved[$index] = $matched;
     }
@@ -922,11 +758,15 @@ final class PdoUe4VerifyImportProjectionResolver
                 ];
                 continue;
             }
-            $privateAllowed = self::privateImportAllowed($importIndex, $graphImports, $consumerExportsByIndex);
             $candidate = $outerRows[0];
-            if ((((int)$candidate['object_flags']) & self::RF_PUBLIC) === 0 && !$privateAllowed) {
+            if ((((int)$candidate['object_flags']) & self::RF_PUBLIC) === 0) {
+                $hardReference = self::privateSafeReplaceBlocked(
+                    $importIndex, $graphImports, $consumerExportsByIndex
+                );
                 $rejections[$importIndex] = $base + [
-                    'reason'=>'private_export_rejected',
+                    'reason'=>$hardReference
+                        ? 'private_export_rejected'
+                        : 'private_export_editor_safe_replace_context',
                     'candidate_export_index'=>(int)$candidate['export_index'],
                 ];
                 continue;

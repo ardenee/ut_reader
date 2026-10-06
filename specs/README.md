@@ -58,8 +58,10 @@ Current conformance work must use the local source mirrors below. Historical Git
 - [x] UT3 package-version-512 dependency resolution — `ut3-v512-dependency-resolution.md`
 - [x] Later UE3 / UDK package format and reading — `ue3-udkultimate-package-format.md`
 - [x] Later UE3 / UDK dependency resolution — `ue3-udkultimate-dependency-resolution.md`
-- [x] UE4 package format and reading — `ue4-4.27.2-package-format.md`
-- [x] UE4 dependency resolution — `ue4-4.27.2-dependency-resolution.md`
+- [x] UT4 / UE4 clean-master v510 package serialization and pre-dependency preprocessing — `ut4-clean-master-v510-package-format.md`
+- [x] UT4 / UE4 clean-master v510 dependency and VerifyImport resolution — `ut4-clean-master-v510-dependency-resolution.md`
+- [x] Final UE4.27.2 generic package format and reading — `ue4-4.27.2-package-format.md` (supplemental later-engine reference; not UT4 authority)
+- [x] Final UE4.27.2 generic dependency resolution — `ue4-4.27.2-dependency-resolution.md` (supplemental later-engine reference; not UT4 authority)
 - [x] UE5 5.8.3 classic package format and reading — `ue5-5.8.3-classic-package-format.md` (classic LinkerLoad path implemented; Zen/IoStore is implemented separately in isolated UEDB5 staging)
 - [x] UE5 5.8.3 classic dependency resolution — `ue5-5.8.3-classic-dependency-resolution.md` (UEDB5 staging/source-parity `VerifyImportInner` resolver implemented; production cutover remains pending)
 - [x] UE5 5.8.3 Zen / IoStore format — `ue5-5.8.3-zen-iostore-format.md` (source-audited `.utoc`/`.ucas`, package-store and Zen-header contract; isolated reader, UEDB5 persistence and Zen dependency resolver implemented)

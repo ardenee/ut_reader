@@ -26,10 +26,10 @@ $check=static function(string $name,bool $ok)use(&$checks,&$failures):void{
 $check('pass2_has_exact_payload_checkpoint',
     str_contains($migration,'dependency_payload_sha256 BINARY(32)')
     && str_contains($migration,'dependency_policy VARCHAR(64)'));
-$check('pass2_source_ue1_ue2_ue3_ue4_ue5_classic_zen_semantics_use_v11_policy',
-    str_contains($service,"public const DEPENDENCY_POLICY = 'uedb5-dependency-pass-v11'"));
+$check('pass2_source_ue1_ue2_ue3_ue4_ue5_classic_zen_ut4_semantics_use_v12_policy',
+    str_contains($service,"public const DEPENDENCY_POLICY = 'uedb5-dependency-pass-v12'"));
 $check('source_identity_policy_transition_is_targeted',
-    str_contains($transition,"const OLD_POLICIES=['uedb5-dependency-pass-v1','uedb5-dependency-pass-v2','uedb5-dependency-pass-v3','uedb5-dependency-pass-v4','uedb5-dependency-pass-v5','uedb5-dependency-pass-v6','uedb5-dependency-pass-v7','uedb5-dependency-pass-v8','uedb5-dependency-pass-v9','uedb5-dependency-pass-v10']")
+    str_contains($transition,"const OLD_POLICIES=['uedb5-dependency-pass-v1','uedb5-dependency-pass-v2','uedb5-dependency-pass-v3','uedb5-dependency-pass-v4','uedb5-dependency-pass-v5','uedb5-dependency-pass-v6','uedb5-dependency-pass-v7','uedb5-dependency-pass-v8','uedb5-dependency-pass-v9','uedb5-dependency-pass-v10','uedb5-dependency-pass-v11']")
     && str_contains($transition,'PdoClassicSourceIdentityImpactQuery')
     && str_contains($transition,'currentOldPolicyFiles')
     && str_contains($transition,"'rebuild-impacted'")

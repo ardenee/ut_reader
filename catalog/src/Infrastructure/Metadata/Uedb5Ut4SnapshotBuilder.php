@@ -9,12 +9,26 @@ use RuntimeException;
 final class Uedb5Ut4SnapshotBuilder
 {
     public const PACKAGE_FAMILY = 'ue4-classic-package';
-    public const SOURCE_POLICY = 'ue4-4.27.2-release-classic-package';
+    public const SOURCE_POLICY = 'ue4-ut4-clean-master-v510-classic-package';
 
     /** @param array<string,mixed> $file @return array<string,mixed> */
     public static function build(\UnrealPackageReader4 $reader, array $file): array
     {
         $header = $reader->getHeader();
+        $effectiveVersion = (int)($header['version'] ?? 0);
+        $licenseeVersion = (int)($header['licenseeVersion'] ?? 0);
+        if ($effectiveVersion < 214 || $effectiveVersion > 510 || $licenseeVersion !== 0) {
+            throw new RuntimeException(
+                'UT4 clean-master source profile requires UE4 package version 214-510 and licensee 0; got version='
+                . $effectiveVersion . ' licensee=' . $licenseeVersion . '.'
+            );
+        }
+        if (!empty($header['unversioned'])
+            && (int)($header['assumedUnversionedParserVersion'] ?? 0) !== 510) {
+            throw new RuntimeException(
+                'UT4 unversioned packages require clean-master assumed parser version 510.'
+            );
+        }
         $informationalUnversionedIssue = !empty($header['unversioned'])
             ? 'Package is unversioned; using assumed UE4 parser version ' . (int)($header['version'] ?? 0)
                 . ' from parser profile ' . (string)($header['parserProfileKey'] ?? '') . ' for table parsing.'

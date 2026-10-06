@@ -15,8 +15,8 @@ $check = static function(string $name, bool $ok, string $detail='') use (&$check
 $check('repair_script_exists', is_string($source) && $source !== '');
 $source = is_string($source) ? $source : '';
 $check(
-    'selection_is_version520_plus_missing_only',
-    str_contains($source, 'f.package_version>=520')
+    'selection_is_version519_plus_missing_only',
+    str_contains($source, 'f.package_version>=519')
         && str_contains($source, 'l.status=0')
         && str_contains($source, 'm.format_version=?'),
     'Repair must not scan every UE4 file.'

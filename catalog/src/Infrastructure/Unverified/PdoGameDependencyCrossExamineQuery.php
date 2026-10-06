@@ -376,9 +376,13 @@ final class PdoGameDependencyCrossExamineQuery
                 }
             } elseif ($targetEngine === 'UE4') {
                 require_once dirname(__DIR__) . '/Persistence/PdoUe4VerifyImportProjectionResolver.php';
+                $identity = $this->consumerPackageIdentity($consumerId);
                 $profile = strtolower(trim((string)($target['slug'] ?? ''))) === 'ut4'
-                    ? PdoUe4VerifyImportProjectionResolver::PROFILE_UT4_4272
-                    : null;
+                    && (int)$identity['version'] >= 214
+                    && (int)$identity['version'] <= 510
+                    && (int)$identity['licensee'] === 0
+                        ? PdoUe4VerifyImportProjectionResolver::PROFILE_UT4_CLEAN_MASTER
+                        : null;
                 $outcome = $profile !== null
                     ? PdoUe4VerifyImportProjectionResolver::resolveProviderOutcome(
                         $this->db,
@@ -643,7 +647,7 @@ final class PdoGameDependencyCrossExamineQuery
         }
         if ($engine === 'UE4') {
             return strtolower(trim((string)($target['slug'] ?? ''))) === 'ut4'
-                ? 'ut4_4272_verify_import'
+                ? 'ut4_clean_master_v510_verify_import'
                 : 'source_profile_unavailable';
         }
         return 'complete_package_object';

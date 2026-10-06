@@ -125,7 +125,7 @@ while (!$stop) {
     $sql = 'SELECT f.id,f.package_name,f.package_version FROM ue_files f '
         . 'JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=? '
         . 'WHERE f.game_id=? AND f.scan_status="verified" '
-        . 'AND f.package_version>=520 AND f.id>? '
+        . 'AND f.package_version>=519 AND f.id>? '
         . 'AND EXISTS (SELECT 1 FROM ue_dependency_links l '
         . 'WHERE l.file_id=f.id AND l.status=0) '
         . 'ORDER BY f.id LIMIT ' . (int)$take;

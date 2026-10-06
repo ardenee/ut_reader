@@ -24,13 +24,13 @@ $buildFixture=static function(int $version,?int $serializedVersion=null)use($u32
     $names=['CoreUObject','Class','MyObject','MyExport'];
     $nameBytes='';foreach($names as $name)$nameBytes.=$nameEntry($name);
     $importBytes=$fname(0).$fname(1).$i32(0).$fname(2);
-    if($version>=520)$importBytes.=$fname(0);
-    $serial=$version>=511?$i64(0).$i64(0):$i32(0).$i32(0);
+    if($version>=519)$importBytes.=$fname(0);
+    $serial=$version>=510?$i64(0).$i64(0):$i32(0).$i32(0);
     $exportBytes=$i32(0).$i32(0).$i32(0).$i32(0).$fname(3).$u32(0x4).$serial;
     $exportBytes.=$i32(0).$i32(0).$i32(0).str_repeat("\0",16).$u32(0);
     $exportBytes.=$i32(0).$i32(1);
     $exportBytes.=$i32(0).$i32(1).$i32(0).$i32(0).$i32(0);
-    $stringRefBytes=$version>=514?$fname(2).$fstring(''):$fstring('/Game/SoftPkg');
+    $stringRefBytes=$version>=513?$fname(2).$fstring(''):$fstring('/Game/SoftPkg');
     $preloadBytes=$i32(1);
 
     $buildSummary=static function(int $headerSize,int $nameOffset,int $importOffset,int $exportOffset,int $stringOffset,int $preloadOffset)
@@ -38,12 +38,12 @@ $buildFixture=static function(int $version,?int $serializedVersion=null)use($u32
         $b=$u32(0x9E2A83C1).$i32(-7).$i32(864).$i32($serializedVersion).$i32(0).$i32(0);
         $b.=$i32($headerSize).$fstring('/Game/Test').$u32(0);
         $b.=$i32(4).$i32($nameOffset);
-        if($version>=516)$b.=$fstring('');
+        if($version>=515)$b.=$fstring('');
         $b.=$i32(0).$i32(0);
         $b.=$i32(1).$i32($exportOffset).$i32(1).$i32($importOffset).$i32(0);
         $b.=$i32(1).$i32($stringOffset).$i32(0).$i32(0);
         $b.=str_repeat("\0",16);
-        if($version>=518)$b.=str_repeat("\0",16);
+        if($version>=517)$b.=str_repeat("\0",16);
         $b.=$i32(0);
         $b.=$engineVersion().$engineVersion();
         $b.=$u32(0).$i32(0).$u32(0).$i32(0);
@@ -66,13 +66,14 @@ $buildFixture=static function(int $version,?int $serializedVersion=null)use($u32
 $temp=sys_get_temp_dir().DIRECTORY_SEPARATOR.'unrealdb-uedb5-ut4-'.bin2hex(random_bytes(5));
 if(!mkdir($temp,0775,true)&&!is_dir($temp))throw new RuntimeException('Could not create UT4 verifier temp.');
 $options=['parser_profile'=>[
-    'profile_key'=>'ut4-alpha','label'=>'Unreal Tournament 4 Alpha UE4 parser',
-    'assumed_unversioned_parser_version'=>522,'source_reference'=>'ardenee/UnrealTournament clean-master',
+    'profile_key'=>'ut4-alpha','label'=>'Unreal Tournament 4 clean-master UE4 parser',
+    'assumed_unversioned_parser_version'=>510,
+    'source_reference'=>'UT4 clean-master cc3df76429 / GPackageFileUE4Version',
 ]];
 try{
-    $path=$temp.DIRECTORY_SEPARATOR.'fixture.uasset';file_put_contents($path,$buildFixture(511));
+    $path=$temp.DIRECTORY_SEPARATOR.'fixture.uasset';file_put_contents($path,$buildFixture(510));
     $package=new \UnrealPackageReader4($path,$options);
-    $check('ut4_v511_reader_has_no_issues',$package->validatePackage()===[]);
+    $check('ut4_v510_reader_has_no_issues',$package->validatePackage()===[]);
     $snapshot=Uedb5Ut4SnapshotBuilder::build($package,[
         'id'=>7511,'game_id'=>7,'package_name'=>'/Game/Test','original_name'=>'Test.uasset'
     ]);
@@ -80,48 +81,65 @@ try{
     $name=(array)$snapshot['sections']['names'][0];
     $import=(array)$snapshot['sections']['imports'][0];
     $export=(array)$snapshot['sections']['exports'][0];
-    $check('ut4_v511_source_policy',($snapshot['source_policy']??'')===Uedb5Ut4SnapshotBuilder::SOURCE_POLICY);
-    $check('ut4_v511_profile_retained',($summary['parser_profile']['key']??'')==='ut4-alpha'
-        && ($summary['parser_profile']['source_reference']??'')==='ardenee/UnrealTournament clean-master');
-    $check('ut4_v511_name_hashes_retained',(int)($name['non_case_hash']??0)===0x11 && (int)($name['case_hash']??0)===0x22);
-    $check('ut4_v511_import_fname_identity',($import['object_name']['text']??'')==='MyObject');
-    $check('ut4_v511_export_serial_width',(int)($export['serial_range_serialized_width_bits']??0)===64);
-    $check('ut4_v511_export_source_fields',($export['object_name']['text']??'')==='MyExport'
+    $check('ut4_v510_source_policy',($snapshot['source_policy']??'')===Uedb5Ut4SnapshotBuilder::SOURCE_POLICY);
+    $check('ut4_v510_profile_retained',($summary['parser_profile']['key']??'')==='ut4-alpha'
+        && (int)($summary['parser_profile']['assumed_unversioned_parser_version']??0)===510
+        && ($summary['parser_profile']['source_reference']??'')==='UT4 clean-master cc3df76429 / GPackageFileUE4Version');
+    $check('ut4_v510_name_hashes_retained',(int)($name['non_case_hash']??0)===0x11 && (int)($name['case_hash']??0)===0x22);
+    $check('ut4_v510_import_fname_identity',($import['object_name']['text']??'')==='MyObject');
+    $check('ut4_v510_export_serial_width',(int)($export['serial_range_serialized_width_bits']??0)===64);
+    $check('ut4_v510_export_source_fields',($export['object_name']['text']??'')==='MyExport'
         && ($export['object_flags']??'')==='00000004' && !empty($export['is_asset']));
-    $check('ut4_v511_string_reference_retained',($snapshot['sections']['string_asset_references'][0]['path']??'')==='/Game/SoftPkg');
-    $check('ut4_v511_preload_dependency_retained',(int)($snapshot['sections']['preload_dependencies'][0]['ref']??0)===1);
+    $check('ut4_v510_string_reference_retained',($snapshot['sections']['string_asset_references'][0]['path']??'')==='/Game/SoftPkg');
+    $check('ut4_v510_preload_dependency_retained',(int)($snapshot['sections']['preload_dependencies'][0]['ref']??0)===1);
     $writer=new Uedb5MetadataSnapshotWriter($temp);$writer->write($snapshot,1024);
     $reader=new Uedb5MetadataReader($temp);$round=$reader->snapshot(7,7511);
-    $check('ut4_v511_uedb5_roundtrip',($round['sections']['exports'][0]['object_name']['text']??'')==='MyExport'
+    $check('ut4_v510_uedb5_roundtrip',($round['sections']['exports'][0]['object_name']['text']??'')==='MyExport'
         && ($round['sections']['summary'][0]['parser_profile']['key']??'')==='ut4-alpha');
 
-    $older=$temp.DIRECTORY_SEPARATOR.'fixture510.uasset';file_put_contents($older,$buildFixture(510));
-    $p510=new \UnrealPackageReader4($older,$options);
-    $s510=Uedb5Ut4SnapshotBuilder::build($p510,['id'=>7510,'game_id'=>7,'package_name'=>'Old','original_name'=>'Old.uasset']);
-    $check('ue4_v510_is_source_loadable',$p510->validatePackage()===[]
-        && (int)($s510['sections']['summary'][0]['package_version']??0)===510
-        && (int)($s510['sections']['exports'][0]['serial_range_serialized_width_bits']??0)===32);
+    $older=$temp.DIRECTORY_SEPARATOR.'fixture509.uasset';file_put_contents($older,$buildFixture(509));
+    $p509=new \UnrealPackageReader4($older,$options);
+    $s509=Uedb5Ut4SnapshotBuilder::build($p509,['id'=>7509,'game_id'=>7,'package_name'=>'Old','original_name'=>'Old.uasset']);
+    $check('ut4_v509_is_source_loadable',$p509->validatePackage()===[]
+        && (int)($s509['sections']['summary'][0]['package_version']??0)===509
+        && (int)($s509['sections']['exports'][0]['serial_range_serialized_width_bits']??0)===32);
 
-    $unversionedPath=$temp.DIRECTORY_SEPARATOR.'fixture-unversioned.uasset';file_put_contents($unversionedPath,$buildFixture(522,0));
+    $unversionedPath=$temp.DIRECTORY_SEPARATOR.'fixture-unversioned.uasset';file_put_contents($unversionedPath,$buildFixture(510,0));
+    $pu=new \UnrealPackageReader4($unversionedPath,$options);
+    $unversionedIssues=$pu->validatePackage();
+    $su=Uedb5Ut4SnapshotBuilder::build($pu,['id'=>7512,'game_id'=>7,'package_name'=>'Unversioned','original_name'=>'Unversioned.uasset']);
+    $us=(array)$su['sections']['summary'][0];
+    $check('ut4_unversioned_notice_is_informational',count($unversionedIssues)===1
+        && str_starts_with((string)$unversionedIssues[0],'Package is unversioned; using assumed UE4 parser version 510'));
+    $check('ut4_unversioned_source_identity_retained',(int)($us['serialized_package_version']??-1)===0
+        && (int)($us['serialized_licensee_version']??-1)===0
+        && (int)($us['package_version']??0)===510
+        && !empty($us['unversioned'])
+        && (int)($us['parser_profile']['assumed_unversioned_parser_version']??0)===510
+        && ($us['parser_profile']['key']??'')==='ut4-alpha');
+
+    $finalPath=$temp.DIRECTORY_SEPARATOR.'fixture-final-ue4.uasset';file_put_contents($finalPath,$buildFixture(521));
     $standardOptions=['parser_profile'=>[
         'profile_key'=>'standard-ue4','label'=>'Standard UE4 package parser',
-        'assumed_unversioned_parser_version'=>522,'source_reference'=>'UE4 final-release package summary layout',
+        'assumed_unversioned_parser_version'=>521,'source_reference'=>'UE4 final-release package summary layout',
     ]];
-    $pu=new \UnrealPackageReader4($unversionedPath,$standardOptions);
-    $unversionedIssues=$pu->validatePackage();
-    $su=Uedb5Ut4SnapshotBuilder::build($pu,['id'=>7522,'game_id'=>7,'package_name'=>'Unversioned','original_name'=>'Unversioned.uasset']);
-    $us=(array)$su['sections']['summary'][0];
-    $check('ue4_unversioned_notice_is_informational',count($unversionedIssues)===1
-        && str_starts_with((string)$unversionedIssues[0],'Package is unversioned; using assumed UE4 parser version 522'));
-    $check('ue4_unversioned_source_identity_retained',(int)($us['serialized_package_version']??-1)===0
-        && (int)($us['serialized_licensee_version']??-1)===0
-        && (int)($us['package_version']??0)===522
-        && !empty($us['unversioned'])
-        && (int)($us['parser_profile']['assumed_unversioned_parser_version']??0)===522
-        && ($us['parser_profile']['key']??'')==='standard-ue4');
+    $finalReader=new \UnrealPackageReader4($finalPath,$standardOptions);
+    $rejectedFinal=false;
+    try {
+        Uedb5Ut4SnapshotBuilder::build(
+            $finalReader,
+            ['id'=>7521,'game_id'=>7,'package_name'=>'FinalUE4','original_name'=>'FinalUE4.uasset']
+        );
+    } catch (RuntimeException $e) {
+        $rejectedFinal=str_contains($e->getMessage(),'requires UE4 package version 214-510 and licensee 0');
+    }
+    $check('ut4_builder_rejects_final_ue4_source_attribution',$rejectedFinal);
     $builderSource=(string)file_get_contents($root.'/src/Infrastructure/Metadata/Uedb5Ut4SnapshotBuilder.php');
     $readerSource=(string)file_get_contents(dirname($root).'/UE4/UnrealPackageReader.php');
-    $check('ue4_game_version_gate_is_not_in_snapshot_builder',!str_contains($builderSource,'MIN_VERSION')&&!str_contains($builderSource,'MAX_VERSION'));
+    $check('ut4_builder_has_clean_master_source_gate',
+        str_contains($builderSource,'$effectiveVersion < 214 || $effectiveVersion > 510')
+        && str_contains($builderSource,'$licenseeVersion !== 0')
+    );
     $check('ue4_reader_retains_source_format_capability_checks',str_contains($readerSource,'VER_OLDEST_LOADABLE_PACKAGE')
         &&str_contains($readerSource,'Package summary format is newer than UE4.27.2'));
 }finally{

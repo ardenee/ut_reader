@@ -153,26 +153,28 @@ final class UnrealPackageReader4
     private const PACKAGE_FILE_TAG_SWAPPED = 0xC1832A9E;
 
     // Version gates matching the UT4-era UE4 package summary layout used by this reader.
-    private const VER_SERIALIZE_TEXT_IN_PACKAGES = 459;
-    private const VER_ADD_STRING_ASSET_REFERENCES_MAP = 384;
-    private const VER_ADDED_SEARCHABLE_NAMES = 510;
-    private const VER_ENGINE_VERSION_OBJECT = 336;
-    private const VER_PACKAGE_SUMMARY_HAS_COMPATIBLE_ENGINE_VERSION = 444;
+    // Exact UE4.27.2 EUnrealEngineObjectUE4Version values. UT4 clean-master
+    // shares these historical values through its final version 510.
+    private const VER_SERIALIZE_TEXT_IN_PACKAGES = 458;
+    private const VER_ADD_STRING_ASSET_REFERENCES_MAP = 383;
+    private const VER_ADDED_SEARCHABLE_NAMES = 509;
+    private const VER_ENGINE_VERSION_OBJECT = 335;
+    private const VER_PACKAGE_SUMMARY_HAS_COMPATIBLE_ENGINE_VERSION = 443;
     private const VER_WORLD_LEVEL_INFO = 224;
     private const VER_ADDED_CHUNKID_TO_ASSETDATA_AND_UPACKAGE = 278;
-    private const VER_CHANGED_CHUNKID_TO_BE_AN_ARRAY_OF_CHUNKIDS = 326;
-    private const VER_PRELOAD_DEPENDENCIES_IN_COOKED_EXPORTS = 507;
-    private const VER_TEMPLATE_INDEX_IN_COOKED_EXPORTS = 508;
-    private const VER_LOAD_FOR_EDITOR_GAME = 365;
-    private const VER_COOKED_ASSETS_IN_EDITOR_SUPPORT = 485;
-    private const VER_64BIT_EXPORTMAP_SERIALSIZES = 511;
-    private const VER_NAME_HASHES_SERIALIZED = 504;
-    private const VER_ADDED_SOFT_OBJECT_PATH = 514;
-    private const VER_ADDED_PACKAGE_SUMMARY_LOCALIZATION_ID = 516;
-    private const VER_ADDED_PACKAGE_OWNER = 518;
-    private const VER_NON_OUTER_PACKAGE_IMPORT = 520;
+    private const VER_CHANGED_CHUNKID_TO_BE_AN_ARRAY_OF_CHUNKIDS = 325;
+    private const VER_PRELOAD_DEPENDENCIES_IN_COOKED_EXPORTS = 506;
+    private const VER_TEMPLATE_INDEX_IN_COOKED_EXPORTS = 507;
+    private const VER_LOAD_FOR_EDITOR_GAME = 364;
+    private const VER_COOKED_ASSETS_IN_EDITOR_SUPPORT = 484;
+    private const VER_64BIT_EXPORTMAP_SERIALSIZES = 510;
+    private const VER_NAME_HASHES_SERIALIZED = 503;
+    private const VER_ADDED_SOFT_OBJECT_PATH = 513;
+    private const VER_ADDED_PACKAGE_SUMMARY_LOCALIZATION_ID = 515;
+    private const VER_ADDED_PACKAGE_OWNER = 517;
+    private const VER_NON_OUTER_PACKAGE_IMPORT = 519;
     private const VER_OLDEST_LOADABLE_PACKAGE = 214;
-    private const DEFAULT_ASSUMED_UNVERSIONED_UE4_VERSION = 522;
+    private const DEFAULT_ASSUMED_UNVERSIONED_UE4_VERSION = 521;
     private const NAME_SIZE = 1024;
 
     public function __construct(string $path, array $options = [])

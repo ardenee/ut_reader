@@ -15,7 +15,7 @@ use PDOException;
 final class PdoDependencyResolver
 {
     private const MAX_VALUES_PER_QUERY = 500;
-    private const UE4_NON_OUTER_PACKAGE_IMPORT_VERSION = 520;
+    private const UE4_NON_OUTER_PACKAGE_IMPORT_VERSION = 519;
 
     /** @param list<array<string,mixed>> $imports */
     public static function resolve(
@@ -29,7 +29,7 @@ final class PdoDependencyResolver
     ): array {
         $engineKey = self::engineKey($db, $gameId);
         $legacyVerifyImport = in_array($engineKey, ['UE1', 'UE2'], true);
-        $fileIdentity = in_array($engineKey, ['UE1','UE2','UE3'], true)
+        $fileIdentity = in_array($engineKey, ['UE1','UE2','UE3','UE4'], true)
             ? self::filePackageIdentity($db, $fileId)
             : ['version'=>0,'licensee'=>0];
         $ue1Profile = $engineKey === 'UE1'
@@ -44,7 +44,13 @@ final class PdoDependencyResolver
             : null;
         $ue3VerifyImport = $ue3Profile !== null;
         $ue4Engine = $engineKey === 'UE4';
-        $ue4Profile = $ue4Engine ? self::ue4VerifyImportProfile($gameId) : null;
+        $ue4Profile = $ue4Engine
+            ? self::ue4VerifyImportProfile(
+                $gameId,
+                (int)$fileIdentity['version'],
+                (int)$fileIdentity['licensee']
+            )
+            : null;
         $ue4VerifyImport = $ue4Profile !== null;
         $sourceFnameLookup = $legacyVerifyImport || $ue3Engine || $ue4Engine;
 
@@ -839,13 +845,19 @@ final class PdoDependencyResolver
             : null;
     }
 
-    private static function ue4VerifyImportProfile(int $gameId): ?string
-    {
+    private static function ue4VerifyImportProfile(
+        int $gameId,
+        int $packageVersion,
+        int $licenseeVersion
+    ): ?string {
         try { $sourceKey = \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5GameSourceRegistry::sourceKey($gameId); }
         catch (\Throwable) { return null; }
         return $sourceKey === 'ut4'
-            ? PdoUe4VerifyImportProjectionResolver::PROFILE_UT4_4272
-            : null;
+            && $packageVersion >= 214
+            && $packageVersion <= 510
+            && $licenseeVersion === 0
+                ? PdoUe4VerifyImportProjectionResolver::PROFILE_UT4_CLEAN_MASTER
+                : null;
     }
 
     /** @param array<string,mixed> $import */

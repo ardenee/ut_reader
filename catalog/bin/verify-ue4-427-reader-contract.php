@@ -68,11 +68,33 @@ $check(
 $check(
     'soft_object_path_layout_is_versioned',
     is_string($source)
-        && str_contains($source, 'VER_ADDED_SOFT_OBJECT_PATH = 514')
+        && str_contains($source, 'VER_ADDED_SOFT_OBJECT_PATH = 513')
         && str_contains($source, '$assetPathName = $this->readFName($r);')
         && str_contains($source, '$subPath = trim($r->fstring());'),
     'VER_UE4_ADDED_SOFT_OBJECT_PATH changes soft references from FString to FName + FString.'
 );
+$check(
+    'ue4_427_version_gates_match_source_exactly',
+    is_string($source)
+        && str_contains($source, 'VER_SERIALIZE_TEXT_IN_PACKAGES = 458')
+        && str_contains($source, 'VER_ADD_STRING_ASSET_REFERENCES_MAP = 383')
+        && str_contains($source, 'VER_ENGINE_VERSION_OBJECT = 335')
+        && str_contains($source, 'VER_PACKAGE_SUMMARY_HAS_COMPATIBLE_ENGINE_VERSION = 443')
+        && str_contains($source, 'VER_LOAD_FOR_EDITOR_GAME = 364')
+        && str_contains($source, 'VER_COOKED_ASSETS_IN_EDITOR_SUPPORT = 484')
+        && str_contains($source, 'VER_NAME_HASHES_SERIALIZED = 503')
+        && str_contains($source, 'VER_PRELOAD_DEPENDENCIES_IN_COOKED_EXPORTS = 506')
+        && str_contains($source, 'VER_TEMPLATE_INDEX_IN_COOKED_EXPORTS = 507')
+        && str_contains($source, 'VER_ADDED_SEARCHABLE_NAMES = 509')
+        && str_contains($source, 'VER_64BIT_EXPORTMAP_SERIALSIZES = 510')
+        && str_contains($source, 'VER_ADDED_SOFT_OBJECT_PATH = 513')
+        && str_contains($source, 'VER_ADDED_PACKAGE_SUMMARY_LOCALIZATION_ID = 515')
+        && str_contains($source, 'VER_ADDED_PACKAGE_OWNER = 517')
+        && str_contains($source, 'VER_NON_OUTER_PACKAGE_IMPORT = 519')
+        && str_contains($source, 'DEFAULT_ASSUMED_UNVERSIONED_UE4_VERSION = 521'),
+    'Reader constants must match UE4.27.2 ObjectVersion.h exactly; UT4 clean-master shares the historical values through v510.'
+);
+
 $check(
     'arbitrary_collection_caps_removed',
     is_string($source)

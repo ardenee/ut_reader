@@ -646,9 +646,14 @@ final class Uedb5ClassicDependencyResolver
     {
         $schema = strtolower(trim((string)($snapshot['section_schemas']['imports'] ?? '')));
         $policy = strtolower(trim((string)($snapshot['source_policy'] ?? '')));
+        $version = self::packageVersion($snapshot);
         return str_starts_with($schema, 'ue4.ut4.')
             && $policy === strtolower(Uedb5Ut4SnapshotBuilder::SOURCE_POLICY)
-                ? PdoUe4VerifyImportProjectionResolver::PROFILE_UT4_4272
+            && $version !== null
+            && $version >= 214
+            && $version <= 510
+            && self::licenseeVersion($snapshot) === 0
+                ? PdoUe4VerifyImportProjectionResolver::PROFILE_UT4_CLEAN_MASTER
                 : null;
     }
 

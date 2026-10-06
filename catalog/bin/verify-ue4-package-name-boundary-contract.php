@@ -68,7 +68,7 @@ $snapshot = $builder->buildParsedSections(
 $storedImport = (array)(($snapshot['imports'] ?? [])[0] ?? []);
 
 $checks = [];
-$checks['reader_gate_is_version_520'] = str_contains($readerSource, 'private const VER_NON_OUTER_PACKAGE_IMPORT = 520;');
+$checks['reader_gate_is_version_519'] = str_contains($readerSource, 'private const VER_NON_OUTER_PACKAGE_IMPORT = 519;');
 $checks['reader_honors_editor_only_filter_gate'] = str_contains(
     $readerSource,
     '$version >= self::VER_NON_OUTER_PACKAGE_IMPORT && !$filterEditorOnly'
@@ -83,7 +83,7 @@ $checks['audit_classifies_import_outer_uncertainty'] = str_contains(
 );
 $checks['audit_keeps_cross_linker_runtime_cases_out_of_static_resolution'] = str_contains(
     $auditSource,
-    'pre-520 different-linker cases require runtime redirect/instancing state.'
+    'pre-519 different-linker cases require runtime redirect/instancing state.'
 ) && str_contains(
     $auditSource,
     'exact Import-outer explicit-PackageName reconstruction requires reparsing the original package or migrating to metadata that retains PackageName.'

@@ -40,7 +40,7 @@ function catalog_ue4_parser_profile(array $config, array $game = [], array $prof
         'profile_key' => 'standard-ue4',
         'label' => 'Standard UE4 package parser',
         'source_reference' => 'UE4 final-release package summary layout',
-        'assumed_unversioned_parser_version' => 522,
+        'assumed_unversioned_parser_version' => 521,
         'notes' => 'Base final-UE4 parser profile. Game profiles should override only known differences.',
     ];
 
@@ -75,9 +75,22 @@ function catalog_ue4_parser_profile(array $config, array $game = [], array $prof
         }
     }
 
+    // UT4 clean-master ends at VER_UE4_64BIT_EXPORTMAP_SERIALSIZES (package v510).
+    // Epic loads unversioned 0/0 packages as the running engine's
+    // GPackageFileUE4Version, so the UT4 game profile must use 510 rather than
+    // final UE4.27.2's later package version. This source-backed game boundary
+    // deliberately overrides stale configuration that may still specify 522.
+    if (catalog_ue4_parser_profile_key((string)($game['slug'] ?? '')) === 'ut4') {
+        $base['profile_key'] = 'ut4-alpha';
+        $base['label'] = 'Unreal Tournament 4 clean-master UE4 parser';
+        $base['assumed_unversioned_parser_version'] = 510;
+        $base['source_reference'] = 'UT4 clean-master cc3df76429 / GPackageFileUE4Version';
+        $base['notes'] = 'Unversioned UT4 packages reproduce the UT4 engine source version, not final UE4.27.2.';
+    }
+
     $base['assumed_unversioned_parser_version'] = max(0, (int)($base['assumed_unversioned_parser_version'] ?? 0));
     if ($base['assumed_unversioned_parser_version'] <= 0) {
-        $base['assumed_unversioned_parser_version'] = 522;
+        $base['assumed_unversioned_parser_version'] = 521;
     }
 
     return $base;
