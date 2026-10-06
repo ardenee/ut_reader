@@ -51,6 +51,25 @@ $publicRootExport = [[
 ]];
 $matches = PdoUe4VerifyImportProjectionResolver::resolveInMemory($consumer, [], $publicRootExport, '/Game/TestPkg');
 $check(($matches[1] ?? null) === 0, 'ue4_exact_public_root_match');
+$publicSourceOutcome = PdoUe4VerifyImportProjectionResolver::resolveInMemoryOutcome(
+    $consumer, [], $publicRootExport, '/Game/TestPkg'
+);
+$check(
+    ($publicSourceOutcome['source_outcomes'][1]['status'] ?? null) === 'resolved'
+        && (int)($publicSourceOutcome['source_outcomes'][1]['export_index'] ?? -1) === 0,
+    'ue4_source_outcome_resolves_public_exact_match'
+);
+
+$nameNoneConsumer = $consumer;
+$nameNoneConsumer[1]['object_name'] = 'None';
+$nameNoneOutcome = PdoUe4VerifyImportProjectionResolver::resolveInMemoryOutcome(
+    $nameNoneConsumer, [], $publicRootExport, '/Game/TestPkg'
+);
+$check(
+    ($nameNoneOutcome['source_outcomes'][1]['status'] ?? null) === 'ignored'
+        && ($nameNoneOutcome['source_outcomes'][1]['reason'] ?? null) === 'name_none',
+    'ue4_direct_name_none_returns_as_source_irrelevant'
+);
 
 $whitespaceConsumer = $consumer;
 $whitespaceConsumer[1]['object_name'] = ' Material ';
@@ -84,6 +103,26 @@ $check(
     ($privateDiagnostic['rejections'][1]['reason'] ?? null) === 'private_export_rejected',
     'ue4_diagnostic_names_private_export_rejection'
 );
+
+$privateSourceOutcome = PdoUe4VerifyImportProjectionResolver::resolveInMemoryOutcome(
+    $consumer, [], $private, '/Game/TestPkg'
+);
+$check(
+    ($privateSourceOutcome['source_outcomes'][1]['status'] ?? null) === 'runtime_only'
+        && ($privateSourceOutcome['source_outcomes'][1]['reason'] ?? null) === 'private_export_editor_safe_replace_context',
+    'ue4_private_export_without_hard_reference_is_editor_runtime_context'
+);
+$hardPrivateConsumerExports = [[
+    'export_index'=>0,'class_index'=>-2,'object_name'=>'UsesPrivateImport','outer_index'=>0,'object_flags'=>1,
+]];
+$hardPrivateOutcome = PdoUe4VerifyImportProjectionResolver::resolveInMemoryOutcome(
+    $consumer, [], $private, '/Game/TestPkg', $hardPrivateConsumerExports
+);
+$check(
+    ($hardPrivateOutcome['source_outcomes'][1]['status'] ?? null) === 'private_export'
+        && ($hardPrivateOutcome['source_outcomes'][1]['reason'] ?? null) === 'private_export_rejected',
+    'ue4_private_export_with_hard_reference_is_source_rejected'
+);
 $missingObjectDiagnostic = PdoUe4VerifyImportProjectionResolver::diagnoseInMemoryOutcome(
     $consumer, [], [[
         'export_index'=>0,'class_index'=>0,'object_name'=>'DifferentObject','outer_index'=>0,'object_flags'=>1,
@@ -92,6 +131,17 @@ $missingObjectDiagnostic = PdoUe4VerifyImportProjectionResolver::diagnoseInMemor
 $check(
     ($missingObjectDiagnostic['rejections'][1]['reason'] ?? null) === 'object_name_not_found',
     'ue4_diagnostic_names_missing_object_rejection'
+);
+
+$missingSourceOutcome = PdoUe4VerifyImportProjectionResolver::resolveInMemoryOutcome(
+    $consumer, [], [[
+        'export_index'=>0,'class_index'=>0,'object_name'=>'DifferentObject','outer_index'=>0,'object_flags'=>1,
+    ]], '/Game/TestPkg'
+);
+$check(
+    ($missingSourceOutcome['source_outcomes'][1]['status'] ?? null) === 'runtime_only'
+        && ($missingSourceOutcome['source_outcomes'][1]['reason'] ?? null) === 'runtime_native_transient_findif_fail_or_missing_class_context',
+    'ue4_file_backed_object_miss_is_runtime_context_not_hard_missing'
 );
 $wrongClassConsumer = $consumer;
 $wrongClassConsumer[1]['class_name'] = 'Material';
@@ -134,6 +184,14 @@ $matches = PdoUe4VerifyImportProjectionResolver::resolveInMemory(
     $consumer, [], $private, '/Game/TestPkg', $consumerExportGraph
 );
 $check(($matches[1] ?? null) === 0, 'ue4_private_export_resolves_when_source_graph_exception_applies');
+$containedPrivateOutcome = PdoUe4VerifyImportProjectionResolver::resolveInMemoryOutcome(
+    $consumer, [], $private, '/Game/TestPkg', $consumerExportGraph
+);
+$check(
+    ($containedPrivateOutcome['source_outcomes'][1]['status'] ?? null) === 'runtime_only'
+        && ($containedPrivateOutcome['source_outcomes'][1]['reason'] ?? null) === 'private_export_with_editor_containment_context',
+    'ue4_editor_private_containment_is_not_unconditional_static_resolution'
+);
 
 $targetedConsumer = [$consumer[0], $consumer[1]];
 $fullGraphImports = $consumer;
@@ -221,6 +279,11 @@ $redirectOutcome = PdoUe4VerifyImportProjectionResolver::resolveInMemoryOutcome(
 );
 $check(!isset($redirectOutcome['matches'][1]), 'ue4_redirector_is_not_exact_original_import_match');
 $check(($redirectOutcome['redirectors'][1] ?? null) === 0, 'ue4_verifyimport_second_pass_detects_object_redirector');
+$check(
+    ($redirectOutcome['source_outcomes'][1]['status'] ?? null) === 'unresolved'
+        && ($redirectOutcome['source_outcomes'][1]['reason'] ?? null) === 'object_redirector_target_unavailable',
+    'ue4_redirector_requires_runtime_destination_payload'
+);
 
 $redirectDescendantConsumer = $redirectConsumer;
 $redirectDescendantConsumer[] = [
@@ -298,7 +361,7 @@ $matches = PdoUe4VerifyImportProjectionResolver::resolveInMemory($exportOuterCon
 $check(!isset($matches[1]), 'v4_does_not_guess_ue4_export_outer_package_context');
 
 $resolverSource = file_get_contents($root . '/src/Infrastructure/Persistence/PdoDependencyResolver.php') ?: '';
-$ue4Start = strpos($resolverSource, '$ue4VerifyImportMatches = []');
+$ue4Start = strpos($resolverSource, '$ue4VerifyImportOutcomes = []');
 $ue4End = $ue4Start !== false ? strpos($resolverSource, '$resolved = [];', $ue4Start) : false;
 $ue4Block = ($ue4Start !== false && $ue4End !== false)
     ? substr($resolverSource, $ue4Start, $ue4End - $ue4Start)
@@ -322,18 +385,18 @@ $check(
 );
 
 $dependencyResolverSource = file_get_contents($root . '/src/Infrastructure/Persistence/PdoDependencyResolver.php') ?: '';
+$ue4ResolverSource = file_get_contents($root . '/src/Infrastructure/Persistence/PdoUe4VerifyImportProjectionResolver.php') ?: '';
 $check(
-    str_contains($dependencyResolverSource, "'source' => 'ue4_object_redirector_target_unavailable'")
-        && str_contains($dependencyResolverSource, "'confidence' => 'payload_unresolved'")
-        && str_contains($dependencyResolverSource, '$ue4VerifyImportRedirectors')
-        && str_contains($dependencyResolverSource, '$ue4VerifyImportRedirectorAncestry')
-        && str_contains($dependencyResolverSource, "'source' => 'ue4_object_redirector_ancestor_target_unavailable'"),
+    str_contains($dependencyResolverSource, '$ue4VerifyImportOutcomes')
+        && str_contains($dependencyResolverSource, "['source_outcomes']")
+        && str_contains($ue4ResolverSource, "'object_redirector_target_unavailable'")
+        && str_contains($ue4ResolverSource, "'object_redirector_ancestor_target_unavailable'"),
     'ue4_redirector_outcome_persists_as_unresolved_without_fabricated_target'
 );
 
 $result = [
     'ok' => $failures === [],
-    'checks' => 27,
+    'checks' => 36,
     'failures' => $failures,
     'contract' => [
         'consumer_imports_only_create_requirements',

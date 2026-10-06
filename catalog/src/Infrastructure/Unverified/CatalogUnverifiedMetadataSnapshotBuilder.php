@@ -150,6 +150,12 @@ final class CatalogUnverifiedMetadataSnapshotBuilder
         if ($fileId < 1 || $gameId < 1 || trim($packageName) === '') {
             throw new RuntimeException('Current metadata requires valid file, game and package identities.');
         }
+        try {
+            $sourceKey = \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5GameSourceRegistry::sourceKey($gameId);
+        } catch (\Throwable) {
+            $sourceKey = '';
+        }
+        $ut4SourceProfile = $sourceKey === 'ut4';
 
         $names = [];
         foreach (array_values((array)($staging['names'] ?? [])) as $index => $source) {
@@ -209,7 +215,18 @@ final class CatalogUnverifiedMetadataSnapshotBuilder
                 'confidence' => 'missing',
             ];
             $localExportIndex = $localExports[$this->lookupKey((string)($import['full_path'] ?? ''))] ?? null;
-            if ($localExportIndex !== null && (int)($import['is_common'] ?? 0) !== 1) {
+            if ($ut4SourceProfile
+                && (int)($import['is_common'] ?? 0) !== 1
+                && (int)($import['outer_index'] ?? 0) !== 0
+                && $this->lookupKey((string)($import['root_package'] ?? '')) === $this->lookupKey($packageName)) {
+                // unverified-staging-v1 does not retain UE4 export ClassIndex/provider
+                // class-package identity, so a same-path local export is not source proof.
+                $resolution = [
+                    'status'=>'unresolved','resolved_file_id'=>null,'resolved_export_index'=>null,
+                    'source'=>'ue4_unverified_local_verify_import_metadata_incomplete',
+                    'confidence'=>'metadata_unresolved',
+                ];
+            } elseif ($localExportIndex !== null && (int)($import['is_common'] ?? 0) !== 1) {
                 $resolution = [
                     'status' => 'resolved',
                     'resolved_file_id' => $fileId,

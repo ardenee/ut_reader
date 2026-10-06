@@ -51,8 +51,11 @@ For the deterministic file-backed path, `VerifyImportInner()` establishes these 
 3. candidate Exports are compared by `ObjectName`, `ClassName` and `ClassPackage`;
 4. UE4 first determines whether a full `ClassPackage` match exists for that object/class identity; only when no full-package candidate exists may the short package name participate in the package-name-transition fallback;
 5. outer identity is then verified: a resource whose parent is the top-level source package must be a linker-root Export, while a resolved parent Export in the same source linker must equal the candidate Export's `OuterIndex` through `FPackageIndex::FromExport(parent SourceIndex)`;
-6. an ordinary external match must be `RF_Public`; editor-only private-import exceptions depend on runtime/editor graph state and are not a general catalog fallback;
-7. only after direct verification fails do redirector/runtime recovery paths become relevant.
+6. direct `NAME_None` class-package/class-name/object-name imports return immediately as not relevant to verification;
+7. an ordinary external match must be `RF_Public`; `IsPrivateImportAllowed` exists only under `WITH_EDITOR` and uses the three consumer-graph containment predicates, so such a private match is compile/editor-context evidence rather than unconditional static success;
+8. outside that containment allowance, UE4 SafeReplace begins from `GIsEditor && !IsRunningCommandlet()` and is forced false when the import is referenced as an export super/class/outer or another import's outer; only that hard-referenced private case is a deterministic static rejection;
+9. after file-backed lookup misses, memory-only/instancing, `LOAD_FindIfFail`, native/transient/CDO/script-struct and class/SafeReplace runtime state remain active, so static UnrealDB reports the object branch unresolved rather than hard missing;
+10. `VerifyImport()` then retries as `Core.ObjectRedirector`; a table-visible redirector is unresolved until its `DestinationObject` payload and destination-class validity are known.
 
 `/Script/*` packages such as `/Script/Engine` and `/Script/CoreUObject` are script/native module packages. UnrealDB classifies those UE4 dependencies as `common_script`; it must not search for a physical `.uasset` package provider with that long package name.
 

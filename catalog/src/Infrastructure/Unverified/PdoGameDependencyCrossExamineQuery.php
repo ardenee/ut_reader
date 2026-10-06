@@ -376,17 +376,23 @@ final class PdoGameDependencyCrossExamineQuery
                 }
             } elseif ($targetEngine === 'UE4') {
                 require_once dirname(__DIR__) . '/Persistence/PdoUe4VerifyImportProjectionResolver.php';
-                $outcome = PdoUe4VerifyImportProjectionResolver::resolveProviderOutcome(
-                    $this->db,
-                    $sourceFileId,
-                    $allImports,
-                    $this->consumerExports($consumerId),
-                    $allImports
-                );
-                $matches = (array)($outcome['matches'] ?? []);
+                $profile = strtolower(trim((string)($target['slug'] ?? ''))) === 'ut4'
+                    ? PdoUe4VerifyImportProjectionResolver::PROFILE_UT4_4272
+                    : null;
+                $outcome = $profile !== null
+                    ? PdoUe4VerifyImportProjectionResolver::resolveProviderOutcome(
+                        $this->db,
+                        $sourceFileId,
+                        $allImports,
+                        $this->consumerExports($consumerId),
+                        $allImports
+                    )
+                    : ['source_outcomes'=>[]];
+                $sourceOutcomes = (array)($outcome['source_outcomes'] ?? []);
                 foreach ($requirements as $importIndex => $requirement) {
-                    if (array_key_exists($importIndex, $matches)) {
-                        $matchedIndexes[$importIndex] = (int)$matches[$importIndex];
+                    $sourceOutcome = (array)($sourceOutcomes[(int)$importIndex] ?? []);
+                    if (($sourceOutcome['status'] ?? '') === 'resolved') {
+                        $matchedIndexes[$importIndex] = (int)($sourceOutcome['export_index'] ?? -1);
                         $matchedPaths[] = (string)$requirement['path'];
                     } else {
                         $missingPaths[] = (string)$requirement['path'];
@@ -630,9 +636,17 @@ final class PdoGameDependencyCrossExamineQuery
         $engine = strtoupper(trim((string)($target['engine_key'] ?? '')));
         if ($engine === 'UE1') { return 'profiled_ue1_verify_import'; }
         if ($engine === 'UE2') { return 'profiled_ue2_verify_import'; }
-        return $engine === 'UE3'
-            ? (strtolower(trim((string)($target['slug'] ?? ''))) === 'ut3' ? 'ut3_v512_verify_import' : 'source_profile_unavailable')
-            : 'complete_package_object';
+        if ($engine === 'UE3') {
+            return strtolower(trim((string)($target['slug'] ?? ''))) === 'ut3'
+                ? 'ut3_v512_verify_import'
+                : 'source_profile_unavailable';
+        }
+        if ($engine === 'UE4') {
+            return strtolower(trim((string)($target['slug'] ?? ''))) === 'ut4'
+                ? 'ut4_4272_verify_import'
+                : 'source_profile_unavailable';
+        }
+        return 'complete_package_object';
     }
 
     /**

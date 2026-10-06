@@ -312,6 +312,51 @@ $ut4 = Uedb5ClassicDependencyResolver::resolve($ut4Consumer, [[
     'package_name'=>'Provider','provider_id'=>44002,'snapshot'=>$ut4Provider,
 ]]);
 $check(($ut4[1]['status'] ?? null) === 'resolved', 'ut4_verify_import_resolves_from_v5_tables');
+
+$ut4MissingProvider = $snapshot(
+    44004, 'Provider', 'ue4-classic-package', 'ue4.ut4', 'ue4-4.27.2-release-classic-package',
+    [], [$export(0, 'Different', '00000001')]
+);
+$ut4MissingObject = Uedb5ClassicDependencyResolver::resolve($ut4Consumer, [[
+    'package_name'=>'Provider','provider_id'=>44004,'snapshot'=>$ut4MissingProvider,
+]]);
+$check(($ut4MissingObject[1]['status'] ?? null) === 'unresolved'
+    && ($ut4MissingObject[1]['reason'] ?? null) === 'runtime_native_transient_findif_fail_or_missing_class_context',
+    'ut4_file_backed_object_miss_is_runtime_unresolved');
+$ut4PrivateProvider = $snapshot(
+    44005, 'Provider', 'ue4-classic-package', 'ue4.ut4', 'ue4-4.27.2-release-classic-package',
+    [], [$export(0, 'Obj', '00000000')]
+);
+$ut4Private = Uedb5ClassicDependencyResolver::resolve($ut4Consumer, [[
+    'package_name'=>'Provider','provider_id'=>44005,'snapshot'=>$ut4PrivateProvider,
+]]);
+$check(($ut4Private[1]['status'] ?? null) === 'unresolved'
+    && ($ut4Private[1]['reason'] ?? null) === 'private_export_editor_safe_replace_context',
+    'ut4_private_export_without_hard_reference_is_runtime_context');
+$ut4NoneConsumer = $snapshot(
+    44006, 'Consumer', 'ue4-classic-package', 'ue4.ut4', 'ue4-4.27.2-release-classic-package',
+    [$import(0, 'Provider', '/Script/CoreUObject', 'Package', 0), $import(1, 'None', '/Script/CoreUObject', 'Class', -1)], []
+);
+$ut4None = Uedb5ClassicDependencyResolver::resolve($ut4NoneConsumer, [[
+    'package_name'=>'Provider','provider_id'=>44002,'snapshot'=>$ut4Provider,
+]]);
+$check(($ut4None[1]['status'] ?? null) === 'unresolved'
+    && ($ut4None[1]['reason'] ?? null) === 'source_irrelevant_name_none',
+    'ut4_direct_name_none_is_source_irrelevant');
+$ut4UnsupportedConsumer = $snapshot(
+    44007, 'Consumer', 'ue4-classic-package', 'ue4.ut4', 'ue4-other-source-policy',
+    $ue4Imports, []
+);
+$ut4Unsupported = Uedb5ClassicDependencyResolver::resolve($ut4UnsupportedConsumer, [[
+    'package_name'=>'Provider','provider_id'=>44002,'snapshot'=>$ut4Provider,
+]]);
+$check(($ut4Unsupported[1]['status'] ?? null) === 'unresolved'
+    && ($ut4Unsupported[1]['reason'] ?? null) === 'ue4_verify_import_source_implementation_unavailable',
+    'unprofiled_ue4_does_not_inherit_ut4_4272_verifyimport');
+$ut4NoProvider = Uedb5ClassicDependencyResolver::resolve($ut4Consumer, []);
+$check(($ut4NoProvider[1]['status'] ?? null) === 'missing'
+    && ($ut4NoProvider[1]['reason'] ?? null) === 'package_provider_unavailable',
+    'ut4_absent_physical_provider_remains_hard_missing');
 $scriptConsumer = $snapshot(
     44003, 'Consumer', 'ue4-classic-package', 'ue4.ut4', 'ue4-4.27.2-release-classic-package',
     [$import(0, '/Script/Engine', '/Script/CoreUObject', 'Package', 0)], []

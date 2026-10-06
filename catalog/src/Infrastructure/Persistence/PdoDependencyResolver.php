@@ -43,8 +43,10 @@ final class PdoDependencyResolver
             ? self::ue3VerifyImportProfile($gameId, (int)$fileIdentity['version'], (int)$fileIdentity['licensee'])
             : null;
         $ue3VerifyImport = $ue3Profile !== null;
-        $ue4VerifyImport = $engineKey === 'UE4';
-        $sourceFnameLookup = $legacyVerifyImport || $ue3Engine || $ue4VerifyImport;
+        $ue4Engine = $engineKey === 'UE4';
+        $ue4Profile = $ue4Engine ? self::ue4VerifyImportProfile($gameId) : null;
+        $ue4VerifyImport = $ue4Profile !== null;
+        $sourceFnameLookup = $legacyVerifyImport || $ue3Engine || $ue4Engine;
 
         $importsByIndex = [];
         foreach ($imports as $fallback => $import) {
@@ -82,13 +84,13 @@ final class PdoDependencyResolver
         }
 
         $ue4RootPackages = [];
-        if ($ue4VerifyImport) {
+        if ($ue4Engine) {
             foreach (array_keys($importsByIndex) as $importIndex) {
                 $ue4RootPackages[(int)$importIndex] = self::ue4RootPackageName($importsByIndex, (int)$importIndex);
             }
         }
 
-        if ($ue4VerifyImport) {
+        if ($ue4Engine) {
             foreach ($imports as $fallback => &$import) {
                 if (!is_array($import)) { continue; }
                 $index = isset($import['import_index']) ? (int)$import['import_index'] : (int)$fallback;
@@ -102,7 +104,7 @@ final class PdoDependencyResolver
         }
 
         $ue4MetadataUnresolved = [];
-        if ($ue4VerifyImport
+        if ($ue4Engine
             && self::filePackageVersion($db, $fileId) >= self::UE4_NON_OUTER_PACKAGE_IMPORT_VERSION) {
             foreach (array_keys($importsByIndex) as $importIndex) {
                 $index = (int)$importIndex;
@@ -140,7 +142,7 @@ final class PdoDependencyResolver
                 ? (string)($ue3RootPackages[$importIndex] ?? '')
                 : ($legacyVerifyImport
                     ? (string)($legacyRootPackages[$importIndex] ?? '')
-                    : ($ue4VerifyImport
+                    : ($ue4Engine
                         ? self::ue4ProviderPackageName($ue4RootPackages, $import, $importIndex)
                         : trim((string)($import['root_package'] ?? ''))));
             if ($rootPackage !== '') {
@@ -325,9 +327,7 @@ final class PdoDependencyResolver
             }
         }
 
-        $ue4VerifyImportMatches = [];
-        $ue4VerifyImportRedirectors = [];
-        $ue4VerifyImportRedirectorAncestry = [];
+        $ue4VerifyImportOutcomes = [];
         if ($ue4VerifyImport) {
             require_once __DIR__ . '/PdoUe4VerifyImportProjectionResolver.php';
             foreach ($packageRequirements as $packageKey => $requirement) {
@@ -340,9 +340,7 @@ final class PdoDependencyResolver
                     $consumerExports,
                     $consumerGraphImports
                 );
-                $ue4VerifyImportMatches[$packageKey] = (array)($outcome['matches'] ?? []);
-                $ue4VerifyImportRedirectors[$packageKey] = (array)($outcome['redirectors'] ?? []);
-                $ue4VerifyImportRedirectorAncestry[$packageKey] = (array)($outcome['redirector_ancestry'] ?? []);
+                $ue4VerifyImportOutcomes[$packageKey] = (array)($outcome['source_outcomes'] ?? []);
             }
         }
 
@@ -374,6 +372,11 @@ final class PdoDependencyResolver
                     'resolved_export_index' => null,
                     'source' => 'source_irrelevant_name_none',
                     'confidence' => 'source_irrelevant',
+                ];
+            } elseif ($ue4VerifyImport && self::sourceNameNoneImport($import)) {
+                $result = [
+                    'status'=>'unresolved','resolved_file_id'=>null,'resolved_export_id'=>null,'resolved_export_index'=>null,
+                    'source'=>'ue4_name_none','confidence'=>'source_irrelevant',
                 ];
             } elseif (self::isCommonImport($import, $engineKey)) {
                 $result = [
@@ -533,37 +536,35 @@ final class PdoDependencyResolver
                             ];
                         }
                     }
-                } elseif ($ue4VerifyImport) {
-                    $exportIndex = $ue4VerifyImportMatches[$packageKey][$importIndex] ?? null;
-                    $redirectorIndex = $ue4VerifyImportRedirectors[$packageKey][$importIndex] ?? null;
-                    $redirectorAncestorIndex = $ue4VerifyImportRedirectorAncestry[$packageKey][$importIndex] ?? null;
-                    if ($packageMatch !== null && $exportIndex !== null) {
+                } elseif ($ue4Engine) {
+                    if ($ue4Profile === null) {
                         $result = [
-                            'status' => 'resolved',
-                            'resolved_file_id' => (int)$packageMatch['file_id'],
-                            'resolved_export_id' => null,
-                            'resolved_export_index' => (int)$exportIndex,
-                            'source' => 'ue4_verify_import',
-                            'confidence' => 'exact',
+                            'status'=>'unresolved','resolved_file_id'=>$packageMatch !== null ? (int)$packageMatch['file_id'] : null,
+                            'resolved_export_id'=>null,'resolved_export_index'=>null,
+                            'source'=>'ue4_verify_import_source_implementation_unavailable','confidence'=>'source_unresolved',
                         ];
-                    } elseif ($packageMatch !== null && $redirectorIndex !== null) {
-                        $result = [
-                            'status' => 'unresolved',
-                            'resolved_file_id' => null,
-                            'resolved_export_id' => null,
-                            'resolved_export_index' => null,
-                            'source' => 'ue4_object_redirector_target_unavailable',
-                            'confidence' => 'payload_unresolved',
-                        ];
-                    } elseif ($packageMatch !== null && $redirectorAncestorIndex !== null) {
-                        $result = [
-                            'status' => 'unresolved',
-                            'resolved_file_id' => null,
-                            'resolved_export_id' => null,
-                            'resolved_export_index' => null,
-                            'source' => 'ue4_object_redirector_ancestor_target_unavailable',
-                            'confidence' => 'payload_unresolved',
-                        ];
+                    } else {
+                        $ue4 = (array)(($ue4VerifyImportOutcomes[$packageKey] ?? [])[$importIndex] ?? []);
+                        $status = (string)($ue4['status'] ?? '');
+                        $reason = (string)($ue4['reason'] ?? 'runtime_context_unavailable');
+                        if ($packageMatch !== null && $status === 'resolved') {
+                            $result = [
+                                'status'=>'resolved','resolved_file_id'=>(int)$packageMatch['file_id'],
+                                'resolved_export_id'=>null,'resolved_export_index'=>(int)($ue4['export_index'] ?? -1),
+                                'source'=>'ue4_verify_import_'.$reason,'confidence'=>'exact',
+                            ];
+                        } elseif ($packageMatch !== null && $status === 'private_export') {
+                            $result = [
+                                'status'=>'missing','resolved_file_id'=>null,'resolved_export_id'=>null,'resolved_export_index'=>null,
+                                'source'=>'ue4_'.$reason,'confidence'=>'source_rejected',
+                            ];
+                        } elseif ($packageMatch !== null && in_array($status,['runtime_only','unresolved','invalid','ignored'],true)) {
+                            $result = [
+                                'status'=>'unresolved','resolved_file_id'=>null,'resolved_export_id'=>null,'resolved_export_index'=>null,
+                                'source'=>'ue4_'.$reason,
+                                'confidence'=>$status==='runtime_only'?'runtime_unavailable':'source_unresolved',
+                            ];
+                        }
                     }
                 } else {
                     // No source-backed resolver is registered for this engine in
@@ -836,6 +837,24 @@ final class PdoDependencyResolver
         return $sourceKey === 'ut3' && $packageVersion === 512 && $licenseeVersion === 0
             ? PdoUe3VerifyImportProjectionResolver::PROFILE_UT3_V512
             : null;
+    }
+
+    private static function ue4VerifyImportProfile(int $gameId): ?string
+    {
+        try { $sourceKey = \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5GameSourceRegistry::sourceKey($gameId); }
+        catch (\Throwable) { return null; }
+        return $sourceKey === 'ut4'
+            ? PdoUe4VerifyImportProjectionResolver::PROFILE_UT4_4272
+            : null;
+    }
+
+    /** @param array<string,mixed> $import */
+    private static function sourceNameNoneImport(array $import): bool
+    {
+        foreach (['class_package','class_name','object_name'] as $field) {
+            if (strcasecmp((string)($import[$field] ?? ''), 'None') === 0) { return true; }
+        }
+        return false;
     }
 
     private static function ue2VerifyImportProfile(int $gameId, int $packageVersion, int $licenseeVersion): ?string

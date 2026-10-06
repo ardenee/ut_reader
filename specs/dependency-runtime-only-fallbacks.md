@@ -52,6 +52,7 @@ Apply this operation only after the exact package reader has validated indices a
 |---|---|
 | Unreal II | Filesystem package search, already-loaded linkers, native/transient objects, class availability, SafeReplace and forgiving load mode. Disabled ClassRemap/PackageRemap must not be treated as behavior. |
 | UE2.5 | Same broad runtime object/class and forgiving/SafeReplace dependencies; no active generic remap in reviewed linker. |
+| UT4 / UE4 4.27.2 | Memory-only/instanced packages, `LOAD_FindIfFail`, already-loaded native/transient objects and CDOs, moved script structs, editor/commandlet SafeReplace state, compile-time `WITH_EDITOR` private-import containment, and `ObjectRedirector::DestinationObject` payload/class validation. These branches are unresolved unless their runtime state is actually available. |
 | UT2003 | Adds runtime package-remap retry in StaticLoadObject; this is not serialized import identity. |
 | UT2004 | Runtime search/object/class state remains relevant; no active resolver remap should be invented. |
 | UE3 | Game/editor/UCC/cooker state, LOAD flags, loaded native/transient objects, compiling state, script patcher, multilanguage/seek-free remapping and redirectors affect resolution. |

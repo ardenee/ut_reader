@@ -14,7 +14,7 @@ Implementation architecture may differ for storage, indexing, caching, batching 
 
 A runtime/configuration state that was not retained is **not** permission to guess. If that state can change the result, the static result must remain unresolved.
 
-## Section 1 — physical package/provider selection before import verification
+## Section 1 â€” physical package/provider selection before import verification
 
 ### Source result
 
@@ -45,7 +45,7 @@ No reviewed source path tries every same-package physical file and chooses the f
 
 **Previous UnrealDB behavior:** V4 and V5 enumerated duplicate physical providers, executed import/object resolution against each one, counted successful matches (and in UE4 redirector evidence), and chose the best/complete provider.
 
-**Classification:** **extra processing — non-compliant.** It could select a physical package Epic would not have selected in the original runtime environment.
+**Classification:** **extra processing â€” non-compliant.** It could select a physical package Epic would not have selected in the original runtime environment.
 
 **Correction:** authoritative dependency resolution no longer uses provider-content coverage to choose a physical file. Coverage tooling remains diagnostic only.
 
@@ -71,9 +71,9 @@ No reviewed source path tries every same-package physical file and chooses the f
 - UE5 Zen duplicates are treated the same way at the physical catalogue boundary; `PublicExportHash` remains an object lookup inside an already-established `FPackageId` provider and never selects a provider file.
 - Cross-game repair candidate validation uses the target profile's UE1/UE2, UE3, or UE4 source-backed VerifyImport resolver. Unsupported profiles fail closed; generic path/class coverage cannot certify or queue a dependency-complete repair candidate.
 
-## Section 2 � provider identity derivation and package-loading transformations
+## Section 2 ï¿½ provider identity derivation and package-loading transformations
 
-### Section 2A � UE1/UE2/UE3 classic identity and load-time transformations
+### Section 2A ï¿½ UE1/UE2/UE3 classic identity and load-time transformations
 
 **Status: complete and source-confirmed for the active UE1/UE2/UE3 profiles covered below.** This subsection records the 2A checkpoint; Section 2B1 below extends the same exact-FName conclusion to UE4/UE5 classic only after their own source audit.
 
@@ -104,7 +104,7 @@ At the 2A checkpoint, UEDB5 introduced package-key kind `3` for exact-text, case
 
 `diagnose-classic-source-identity-impact.php` exposes the bounded proof read-only. It requires the UEDB5 staging/status schema in the database to which the checkout is connected.
 
-### Section 2B1 � UE4/UE5 classic PackageName and load-time identity transformations
+### Section 2B1 ï¿½ UE4/UE5 classic PackageName and load-time identity transformations
 
 **Status: complete and source-confirmed for UE4 4.27.2 and UE5 5.8.3 classic LinkerLoad packages.** Zen/IoStore remains Section 2B2 and is not changed by this checkpoint.
 
@@ -126,7 +126,7 @@ At the 2A checkpoint, UEDB5 introduced package-key kind `3` for exact-text, case
 
 #### V5 projection and bounded migration boundary
 
-All classic LinkerLoad schemas�UE1, UE2, UE3, UE4, and UE5 classic�now use package-key kind `3`, generated through the shared PHP exact-FName key function. UE5 Zen/IoStore remains keyed by `FPackageId` and is explicitly excluded from this transition.
+All classic LinkerLoad schemasï¿½UE1, UE2, UE3, UE4, and UE5 classicï¿½now use package-key kind `3`, generated through the shared PHP exact-FName key function. UE5 Zen/IoStore remains keyed by `FPackageId` and is explicitly excluded from this transition.
 
 Pass 2 is therefore `uedb5-dependency-pass-v4`. `transition-uedb5-source-identity-policy.php` accepts v1, v2, or v3 checkpoints and remains bounded:
 
@@ -285,7 +285,7 @@ Section 3A3 advanced Pass 2 to `uedb5-dependency-pass-v7`, accepting v1-v6; Sect
 
 #### Bounded migration boundary
 
-Pass 2 is now `uedb5-dependency-pass-v8`; the transition accepts v1-v7.
+Section 3B1 advanced Pass 2 to `uedb5-dependency-pass-v8`, accepting v1-v7; Section 3C below now supersedes that checkpoint with v9.
 
 - A v7 file is reconsidered only for the new `ue3_ut3_*` reasons; completed UE1/UE2/UT2004 corrections are not replayed.
 - UT3 package-only rows and already-resolved deterministic public object edges roll forward without opening UEDB/package containers.
@@ -294,4 +294,38 @@ Pass 2 is now `uedb5-dependency-pass-v8`; the transition accepts v1-v7.
 - No Pass-1/package-byte reparse is required for 3B1.
 - Optional V4 repair remains exact-file only for the same impacted consumers.
 
-**Next audit checkpoint: Section 3C - UT4 / UE4 4.27.2 VerifyImportInner and redirector/runtime branches, against the local 4.27.2 source.**
+### Section 3C - UT4 / UE4 4.27.2 VerifyImportInner and VerifyImport wrapper
+
+**Status: complete for the UT4 game profile against the local UE4 4.27.2 release source. Other UE4 profiles do not inherit this policy automatically.**
+
+#### Source authority and profile boundary
+
+- Authority: `L:\Source\Engine\UE4\UE 4.27.2\Engine\Source\Runtime\CoreUObject\Private\UObject\LinkerLoad.cpp`, especially `FLinkerLoad::VerifyImportInner()` and `FLinkerLoad::VerifyImport()`.
+- Source tree/branch: local UE4 4.27.2 release (`d94b38ae3446da52224bedd2568c078f828b4039`).
+- V5 is gated by `ue4.ut4.*` plus source policy `ue4-4.27.2-release-classic-package`; V4 is gated by the stable `ut4` game source key. Other UE4 catalogues fail closed for object verification instead of inheriting the UT4 contract.
+- Section 2B1 remains authoritative for `FObjectImport::PackageName`, instancing/CoreRedirect boundaries and the V4 metadata-loss boundary. 3C does not invent missing PackageName state.
+
+#### Source results and corrections
+
+1. **Direct `NAME_None` is an early return.** `ClassPackage`, `ClassName`, or `ObjectName == NAME_None` makes that direct import not relevant to `VerifyImportInner`; UnrealDB no longer treats the literal FName `None` as an ordinary object requirement.
+2. **One provider linker still precedes object verification.** Top-level `Package` imports and assigned `PackageName` load/establish a package before export lookup. Provider content never chooses a different physical package.
+3. **File-backed matching remains exact and ordered.** `ObjectName` and `ClassName` are exact FName matches. UE4 first determines whether any full `ClassPackage` match exists; only if none exists may `FPackageName::GetShortFName` participate in the package-name-transition fallback. Outer matching follows the serialized import/export graph, including the separate-linker outer-import identity check.
+4. **Private export handling is compile/runtime-context dependent.** `IsPrivateImportAllowed()` is compiled only under `WITH_EDITOR` and permits the three source graph predicates `ImportIsInAnyExport`, `AnyExportIsInImport`, and `AnyExportShareOuterWithImport`. Static UnrealDB therefore does not turn such a private match into unconditional resolution. Outside that allowance, source initializes SafeReplace from `GIsEditor && !IsRunningCommandlet()` and then forces it false when the import is referenced as an export super/class/outer or another import's outer. A hard-referenced private candidate is a deterministic source rejection; otherwise the result is runtime/editor-context unresolved.
+5. **An object miss inside an established provider is not hard missing.** After export lookup, 4.27.2 can resolve memory-only/instanced packages, use `LOAD_FindIfFail`, bind public native/transient objects or CDOs, find moved script structs, or suppress failure through class/SafeReplace state. UnrealDB now records this residual branch as `runtime_native_transient_findif_fail_or_missing_class_context`/unresolved. A genuinely absent physical provider remains hard missing.
+6. **The wrapper retries `Core.ObjectRedirector`.** If the original object is absent, `VerifyImport()` retries as `Core.ObjectRedirector`, creates/preloads the redirector, reads `DestinationObject`, and validates the destination's class/superclass chain (with the CDO exception) before rewriting runtime import state. Static table evidence can prove that a redirector candidate exists, but not its serialized runtime destination; UnrealDB therefore records redirector and redirector-descendant cases as unresolved rather than fabricated success or hard missing.
+7. **All authoritative UT4 surfaces now share the source outcome contract.** V4 rebuilding, UEDB5 Pass 2, parsed local/self-provider publication, physical-provider evaluation, and cross-game certification use the 4.27.2 profile and accept only deterministic public source outcomes as static resolution. The older generic local full-path success path is no longer allowed to certify a UT4 import.
+8. **Legacy unverified staging fails closed where its schema is insufficient.** `unverified-staging-v1` does not retain enough UE4 provider class-index/class-package graph to rerun source-exact local VerifyImport, so a same-path local export is reported metadata-unresolved instead of being promoted to exact resolution.
+
+#### Bounded migration boundary
+
+Pass 2 is now `uedb5-dependency-pass-v9`; the transition accepts v1-v8.
+
+- A v8 row is reconsidered only for the new UE4/UT4 delta; completed UE1/UE2/UE3 corrections are not replayed.
+- UT4 object edges already persisted as missing/unresolved are rebuilt because 4.27.2 runtime fallback semantics can change their classification.
+- Previously resolved UT4 edges are rebuilt only when the selected provider export is private. The transition uses the still-live pre-cutover V4 export-flag projection solely as an indexed **impact-discovery accelerator**; the actual dependency rebuild remains V5-only and reads the staged UEDB5 snapshot/provider data.
+- Deterministic public resolved edges and package-only rows roll forward without opening UEDB/package containers.
+- Unprofiled UE4 object edges are rebuilt only to become explicitly source-implementation-unavailable.
+- No Pass-1/package-byte reparse is required for 3C.
+- Optional V4 repair remains exact-file only for the same impacted consumers.
+
+**Next audit checkpoint: Section 3D - UE5 5.8.3 classic `VerifyImportInner`/`VerifyImport` runtime and redirector branches, independently from UE4.**

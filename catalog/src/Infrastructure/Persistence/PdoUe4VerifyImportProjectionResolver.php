@@ -21,6 +21,8 @@ final class PdoUe4VerifyImportProjectionResolver
     private const TOP_LEVEL_PACKAGE = -2147483647;
     private const PRIVATE_FAILURE = -2147483648;
 
+    public const PROFILE_UT4_4272 = 'ue4-ut4-4.27.2-release';
+
     /** @param list<array<string,mixed>> $consumerImports @return array<int,int> */
     public static function resolveProvider(
         PDO $db,
@@ -42,7 +44,7 @@ final class PdoUe4VerifyImportProjectionResolver
      * @param list<array<string,mixed>> $consumerImports
      * @param list<array<string,mixed>> $consumerExports
      * @param list<array<string,mixed>> $consumerGraphImports
-     * @return array{matches:array<int,int>,redirectors:array<int,int>,redirector_ancestry:array<int,int>}
+     * @return array{matches:array<int,int>,redirectors:array<int,int>,redirector_ancestry:array<int,int>,source_outcomes:array<int,array<string,mixed>>}
      */
     public static function resolveProviderOutcome(
         PDO $db,
@@ -52,7 +54,7 @@ final class PdoUe4VerifyImportProjectionResolver
         array $consumerGraphImports = []
     ): array {
         if ($providerFileId < 1 || $consumerImports === []) {
-            return ['matches' => [], 'redirectors' => [], 'redirector_ancestry' => []];
+            return ['matches' => [], 'redirectors' => [], 'redirector_ancestry' => [], 'source_outcomes' => []];
         }
         if (!function_exists('catalog_config')) {
             throw new RuntimeException('Catalog configuration is required for authoritative UE4 VerifyImport resolution.');
@@ -112,7 +114,7 @@ final class PdoUe4VerifyImportProjectionResolver
      * @param list<array<string,mixed>> $providerExports
      * @param list<array<string,mixed>> $consumerExports
      * @param list<array<string,mixed>> $consumerGraphImports
-     * @return array{matches:array<int,int>,redirectors:array<int,int>,redirector_ancestry:array<int,int>}
+     * @return array{matches:array<int,int>,redirectors:array<int,int>,redirector_ancestry:array<int,int>,source_outcomes:array<int,array<string,mixed>>}
      */
     public static function resolveInMemoryOutcome(
         array $consumerImports,
@@ -192,6 +194,7 @@ final class PdoUe4VerifyImportProjectionResolver
             $className = (string)($import['class_name'] ?? '');
             $classPackage = (string)($import['class_package'] ?? '');
             if ($objectName === '' || $className === '' || $classPackage === ''
+                || self::hasNameNone($import)
                 || self::key($objectName) === self::key('ObjectRedirector')) {
                 continue;
             }
@@ -240,7 +243,172 @@ final class PdoUe4VerifyImportProjectionResolver
             }
         }
 
-        return ['matches' => $matches, 'redirectors' => $redirectors, 'redirector_ancestry' => $redirectorAncestry];
+        $sourceOutcomes = self::sourceOutcomes(
+            $imports,
+            $graphImports,
+            $consumerExportsByIndex,
+            $providerExportsByIndex,
+            $resolved,
+            $matches,
+            $redirectors,
+            $redirectorAncestry
+        );
+
+        return [
+            'matches' => $matches,
+            'redirectors' => $redirectors,
+            'redirector_ancestry' => $redirectorAncestry,
+            'source_outcomes' => $sourceOutcomes,
+        ];
+    }
+
+    /**
+     * Source-shaped 4.27.2 outcomes layered over the deterministic table matcher.
+     * Only a public file-backed export is statically resolved. Compile/editor,
+     * SafeReplace, native/transient, memory-only and redirector payload branches
+     * remain unresolved because their required runtime state is not package metadata.
+     *
+     * @param array<int,array<string,mixed>> $imports
+     * @param array<int,array<string,mixed>> $graphImports
+     * @param array<int,array<string,mixed>> $consumerExports
+     * @param array<int,array<string,mixed>> $providerExports
+     * @param array<int,int|null> $resolved
+     * @param array<int,int> $matches
+     * @param array<int,int> $redirectors
+     * @param array<int,int> $redirectorAncestry
+     * @return array<int,array<string,mixed>>
+     */
+    private static function sourceOutcomes(
+        array $imports,
+        array $graphImports,
+        array $consumerExports,
+        array $providerExports,
+        array $resolved,
+        array $matches,
+        array $redirectors,
+        array $redirectorAncestry
+    ): array {
+        $outcomes = [];
+        foreach ($imports as $importIndex => $import) {
+            $importIndex = (int)$importIndex;
+            if (self::hasNameNone($import)) {
+                $outcomes[$importIndex] = self::sourceOutcome('ignored', 'name_none');
+                continue;
+            }
+            if (isset($redirectors[$importIndex])) {
+                $outcomes[$importIndex] = self::sourceOutcome(
+                    'unresolved', 'object_redirector_target_unavailable',
+                    ['redirector_index'=>(int)$redirectors[$importIndex]]
+                );
+                continue;
+            }
+            if (isset($redirectorAncestry[$importIndex])) {
+                $outcomes[$importIndex] = self::sourceOutcome(
+                    'unresolved', 'object_redirector_ancestor_target_unavailable',
+                    ['blocked_by_import_index'=>(int)$redirectorAncestry[$importIndex]]
+                );
+                continue;
+            }
+            if (isset($matches[$importIndex])) {
+                $exportIndex = (int)$matches[$importIndex];
+                $flags = (int)($providerExports[$exportIndex]['object_flags'] ?? 0);
+                if (($flags & self::RF_PUBLIC) === 0) {
+                    $outcomes[$importIndex] = self::sourceOutcome(
+                        'runtime_only', 'private_export_with_editor_containment_context',
+                        ['candidate_export_index'=>$exportIndex]
+                    );
+                } else {
+                    $outcomes[$importIndex] = self::sourceOutcome(
+                        'resolved', 'exact_verify_import_match', ['export_index'=>$exportIndex]
+                    );
+                }
+                continue;
+            }
+
+            $objectName = (string)($import['object_name'] ?? '');
+            $className = (string)($import['class_name'] ?? '');
+            $classPackage = (string)($import['class_package'] ?? '');
+            if ($objectName === '' || $className === '' || $classPackage === '') {
+                $outcomes[$importIndex] = self::sourceOutcome('invalid', 'incomplete_import_identity');
+                continue;
+            }
+            $outerIndex = (int)($import['outer_index'] ?? 0);
+            if ($outerIndex === 0) {
+                $outcomes[$importIndex] = self::key($className) === self::key('Package')
+                    ? self::sourceOutcome('package_linker', 'top_level_package_linker')
+                    : self::sourceOutcome('invalid', 'null_outer_non_package_import');
+                continue;
+            }
+            if ($outerIndex > 0) {
+                $outcomes[$importIndex] = self::sourceOutcome(
+                    'unresolved', 'mixed_export_outer_package_context_unavailable'
+                );
+                continue;
+            }
+
+            $state = $resolved[$importIndex] ?? null;
+            if ($state === self::PRIVATE_FAILURE) {
+                $hardReference = self::privateSafeReplaceBlocked($importIndex, $graphImports, $consumerExports);
+                $outcomes[$importIndex] = $hardReference
+                    ? self::sourceOutcome('private_export', 'private_export_rejected')
+                    : self::sourceOutcome('runtime_only', 'private_export_editor_safe_replace_context');
+                continue;
+            }
+
+            $parentIndex = -$outerIndex - 1;
+            $parentState = $resolved[$parentIndex] ?? null;
+            if ($parentState === null || $parentState === self::PRIVATE_FAILURE) {
+                $outcomes[$importIndex] = self::sourceOutcome(
+                    'runtime_only', 'parent_source_linker_or_runtime_context_unavailable',
+                    ['parent_import_index'=>$parentIndex]
+                );
+                continue;
+            }
+
+            $outcomes[$importIndex] = self::sourceOutcome(
+                'runtime_only', 'runtime_native_transient_findif_fail_or_missing_class_context'
+            );
+        }
+        ksort($outcomes, SORT_NUMERIC);
+        return $outcomes;
+    }
+
+    /** @param array<int,array<string,mixed>> $imports @param array<int,array<string,mixed>> $exports */
+    private static function privateSafeReplaceBlocked(int $importIndex, array $imports, array $exports): bool
+    {
+        $foundIndex = -($importIndex + 1);
+        foreach ($exports as $export) {
+            if (!is_array($export)) { continue; }
+            foreach (['super_index','class_index','outer_index'] as $field) {
+                if (array_key_exists($field, $export) && (int)$export[$field] === $foundIndex) {
+                    return true;
+                }
+            }
+        }
+        foreach ($imports as $otherIndex => $otherImport) {
+            if ((int)$otherIndex === $importIndex || !is_array($otherImport)) { continue; }
+            if ((int)($otherImport['outer_index'] ?? 0) === $foundIndex) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** @param array<string,mixed> $detail @return array<string,mixed> */
+    private static function sourceOutcome(string $status, string $reason, array $detail=[]): array
+    {
+        return ['status'=>$status,'reason'=>$reason] + $detail;
+    }
+
+    /** @param array<string,mixed> $import */
+    private static function hasNameNone(array $import): bool
+    {
+        foreach (['class_package','class_name','object_name'] as $field) {
+            if (self::key((string)($import[$field] ?? '')) === self::key('None')) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -470,6 +638,10 @@ final class PdoUe4VerifyImportProjectionResolver
         $objectName = (string)($import['object_name'] ?? '');
         $className = (string)($import['class_name'] ?? '');
         $classPackage = (string)($import['class_package'] ?? '');
+        if (self::hasNameNone($import)) {
+            unset($visiting[$index]);
+            return $resolved[$index] = null;
+        }
         if ($objectName === '' || $className === '' || $classPackage === '') {
             unset($visiting[$index]);
             return $resolved[$index] = null;

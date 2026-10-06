@@ -380,6 +380,12 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
                 ? \UnrealDb\Catalog\Infrastructure\Persistence\PdoUe3VerifyImportProjectionResolver::PROFILE_UT3_V512
                 : null;
         $ue3VerifyImport = $ue3Profile !== null;
+        $ue4Engine = $engineKey === 'UE4';
+        $ue4Profile = $ue4Engine
+            && strtolower(trim((string)($engineRow['game_slug'] ?? ''))) === 'ut4'
+                ? \UnrealDb\Catalog\Infrastructure\Persistence\PdoUe4VerifyImportProjectionResolver::PROFILE_UT4_4272
+                : null;
+        $ue4VerifyImport = $ue4Profile !== null;
         $ue3ImportsByIndex = [];
         if ($ue3VerifyImport) {
             foreach ($importRows as $fallback => $import) {
@@ -411,6 +417,7 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
         $localUe1VerifyImportOutcomes = [];
         $localUe2VerifyImportOutcomes = [];
         $localUe3VerifyImportOutcomes = [];
+        $localUe4VerifyImportOutcomes = [];
         if ($ue1VerifyImport && $ue1Profile !== null) {
             require_once dirname(__DIR__) . '/Persistence/PdoUe1VerifyImportProjectionResolver.php';
             $localUe1VerifyImportOutcomes =
@@ -445,6 +452,17 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
                     $packageVersion,
                     $exportRows
                 );
+        } elseif ($ue4VerifyImport) {
+            require_once dirname(__DIR__) . '/Persistence/PdoUe4VerifyImportProjectionResolver.php';
+            $ue4TableOutcome = \UnrealDb\Catalog\Infrastructure\Persistence\PdoUe4VerifyImportProjectionResolver::resolveInMemoryOutcome(
+                $importRows,
+                $importRows,
+                $exportRows,
+                $packageName,
+                $exportRows,
+                $importRows
+            );
+            $localUe4VerifyImportOutcomes = (array)($ue4TableOutcome['source_outcomes'] ?? []);
         } else {
             foreach ($exportRows as $export) {
                 if (!is_array($export)) {
@@ -480,14 +498,15 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
             ];
 
             // The file being published does not have lookup projections yet.
-            // UE1/UE2 and UE3 use their source-specific in-memory VerifyImport
-            // semantics; later engines retain the generic local path behavior
-            // until their own source audit is completed.
+            // UE1/UE2, UT3 and UT4 use their source-specific in-memory
+            // VerifyImport semantics. Unprofiled engines must not be certified
+            // by generic local path coverage.
             $localExportIndex = null;
             $localUnreal2OnlyIndex = null;
             $localUe1Reason = null;
             $localUe2Reason = null;
             $localUe3Outcome = [];
+            $localUe4Outcome = [];
             if ($ue1VerifyImport
                 && $ue1Profile !== null
                 && $this->lookupKey((string)($import['root_package'] ?? '')) === $this->lookupKey($packageName)) {
@@ -514,7 +533,14 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
                 if (($localUe3Outcome['status'] ?? '') === 'resolved') {
                     $localExportIndex = $localUe3Outcome['export_index'] ?? null;
                 }
-            } elseif (!$legacyVerifyImport && !$ue3Engine) {
+            } elseif ($ue4VerifyImport
+                && $this->lookupKey((string)($import['root_package'] ?? '')) === $this->lookupKey($packageName)) {
+                $importIndex = (int)($import['import_index'] ?? -1);
+                $localUe4Outcome = (array)($localUe4VerifyImportOutcomes[$importIndex] ?? []);
+                if (($localUe4Outcome['status'] ?? '') === 'resolved') {
+                    $localExportIndex = $localUe4Outcome['export_index'] ?? null;
+                }
+            } elseif (!$legacyVerifyImport && !$ue3Engine && !$ue4Engine) {
                 $localExportIndex = $localExports[$this->lookupKey((string)$import['full_path'])] ?? null;
             }
             if ($localExportIndex !== null && (int)$import['is_common'] !== 1) {
@@ -528,7 +554,9 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
                             ? 'ue2_verify_import_local_' . ($localUe2Reason ?? 'exact')
                             : ($ue3VerifyImport
                                 ? 'ue3_verify_import_local_' . (string)($localUe3Outcome['reason'] ?? 'exact')
-                                : 'exact_object')),
+                                : ($ue4VerifyImport
+                                    ? 'ue4_verify_import_local_' . (string)($localUe4Outcome['reason'] ?? 'exact')
+                                    : 'exact_object'))),
                     'confidence' => 'exact',
                 ];
             } elseif ($ue3Engine && (int)$import['is_common'] !== 1) {
@@ -548,6 +576,28 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
                         $resolution = [
                             'status'=>'unresolved','resolved_file_id'=>null,'resolved_export_index'=>null,
                             'source'=>'ue3_'.(string)($localUe3Outcome['reason'] ?? 'runtime_context_unavailable'),
+                            'confidence'=>$status==='runtime_only'?'runtime_unavailable':'source_unresolved',
+                        ];
+                    }
+                }
+            } elseif ($ue4Engine && (int)$import['is_common'] !== 1) {
+                if ($ue4Profile === null) {
+                    $resolution = [
+                        'status'=>'unresolved','resolved_file_id'=>null,'resolved_export_index'=>null,
+                        'source'=>'ue4_verify_import_source_implementation_unavailable','confidence'=>'source_unresolved',
+                    ];
+                } elseif ($localUe4Outcome !== []) {
+                    $status=(string)($localUe4Outcome['status'] ?? '');
+                    $reason=(string)($localUe4Outcome['reason'] ?? 'runtime_context_unavailable');
+                    if ($status === 'private_export') {
+                        $resolution = [
+                            'status'=>'missing','resolved_file_id'=>null,'resolved_export_index'=>null,
+                            'source'=>'ue4_'.$reason,'confidence'=>'source_rejected',
+                        ];
+                    } elseif (in_array($status,['runtime_only','unresolved','invalid','ignored'],true)) {
+                        $resolution = [
+                            'status'=>'unresolved','resolved_file_id'=>null,'resolved_export_index'=>null,
+                            'source'=>'ue4_'.$reason,
                             'confidence'=>$status==='runtime_only'?'runtime_unavailable':'source_unresolved',
                         ];
                     }

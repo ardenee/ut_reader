@@ -68,6 +68,7 @@ final class Uedb5ClassicDependencyResolver
         }
         $ue2Profile = $engine === 'ue2' ? self::ue2VerifyImportProfile($consumerSnapshot) : null;
         $ue3Profile = $engine === 'ue3' ? self::ue3VerifyImportProfile($consumerSnapshot) : null;
+        $ue4Profile = $engine === 'ue4' ? self::ue4VerifyImportProfile($consumerSnapshot) : null;
         $ue1Profile = $engine === 'ue1' ? self::ue1VerifyImportProfile($consumerSnapshot) : null;
         $consumerVersion = self::packageVersion($consumerSnapshot);
         $providerOutcomes = [];
@@ -123,14 +124,16 @@ final class Uedb5ClassicDependencyResolver
                     'redirector_ancestry' => [],
                 ];
             } else {
-                $providerOutcomes[$packageKey] = PdoUe4VerifyImportProjectionResolver::resolveInMemoryOutcome(
-                    array_values($consumer['imports']),
-                    array_values($providerTables['imports']),
-                    array_values($providerTables['exports']),
-                    (string)$provider['physical_package'],
-                    array_values($consumer['exports']),
-                    array_values($consumer['imports'])
-                );
+                $providerOutcomes[$packageKey] = $ue4Profile !== null
+                    ? PdoUe4VerifyImportProjectionResolver::resolveInMemoryOutcome(
+                        array_values($consumer['imports']),
+                        array_values($providerTables['imports']),
+                        array_values($providerTables['exports']),
+                        (string)$provider['physical_package'],
+                        array_values($consumer['exports']),
+                        array_values($consumer['imports'])
+                    )
+                    : ['matches'=>[],'redirectors'=>[],'redirector_ancestry'=>[],'source_outcomes'=>[]];
             }
         }
 
@@ -139,7 +142,8 @@ final class Uedb5ClassicDependencyResolver
             $root = self::rootPackage($consumer['imports'], (int)$importIndex, $engine);
             if ((($engine === 'ue1' && $ue1Profile !== null)
                     || ($engine === 'ue2' && $ue2Profile !== null)
-                    || ($engine === 'ue3' && $ue3Profile !== null))
+                    || ($engine === 'ue3' && $ue3Profile !== null)
+                    || ($engine === 'ue4' && $ue4Profile !== null))
                 && self::isSourceIrrelevantNoneImport($import)) {
                 $resolved[(int)$importIndex] = self::result(
                     'unresolved', '', null, null, 'source_irrelevant_name_none', $engine, 'runtime_derived'
@@ -305,6 +309,39 @@ final class Uedb5ClassicDependencyResolver
                 }
             }
 
+            if ($engine === 'ue4') {
+                if ($ue4Profile === null) {
+                    $resolved[(int)$importIndex] = self::result(
+                        'unresolved', $root, $provider['provider_id'] ?? null, null,
+                        'ue4_verify_import_source_implementation_unavailable', $engine, 'runtime_derived'
+                    );
+                    continue;
+                }
+                $ue4 = (array)(($outcome['source_outcomes'] ?? [])[(int)$importIndex] ?? []);
+                $ue4Status = (string)($ue4['status'] ?? '');
+                $ue4Reason = (string)($ue4['reason'] ?? 'runtime_context_unavailable');
+                if ($ue4Status === 'resolved') {
+                    $resolved[(int)$importIndex] = self::result(
+                        'resolved', $root, $provider['provider_id'] ?? null, (int)($ue4['export_index'] ?? -1),
+                        $ue4Reason, $engine
+                    );
+                    continue;
+                }
+                if ($ue4Status === 'private_export') {
+                    $resolved[(int)$importIndex] = self::result(
+                        'missing', $root, null, null, $ue4Reason, $engine, 'hard', self::ue1Detail($ue4)
+                    );
+                    continue;
+                }
+                if (in_array($ue4Status, ['runtime_only','unresolved','invalid','ignored'], true)) {
+                    $resolved[(int)$importIndex] = self::result(
+                        'unresolved', $root, null, null, $ue4Reason, $engine,
+                        $ue4Status === 'runtime_only' ? 'runtime_derived' : 'source_unresolved', self::ue1Detail($ue4)
+                    );
+                    continue;
+                }
+            }
+
             $exportIndex = $outcome['matches'][(int)$importIndex] ?? null;
             if ($exportIndex !== null) {
                 $resolved[(int)$importIndex] = self::result(
@@ -312,21 +349,6 @@ final class Uedb5ClassicDependencyResolver
                     'verify_import_match', $engine
                 );
                 continue;
-            }
-
-            if ($engine === 'ue4') {
-                if (array_key_exists((int)$importIndex, (array)($outcome['redirectors'] ?? []))) {
-                    $resolved[(int)$importIndex] = self::result(
-                        'unresolved', $root, null, null, 'object_redirector_target_unavailable', $engine
-                    );
-                    continue;
-                }
-                if (array_key_exists((int)$importIndex, (array)($outcome['redirector_ancestry'] ?? []))) {
-                    $resolved[(int)$importIndex] = self::result(
-                        'unresolved', $root, null, null, 'object_redirector_ancestor_target_unavailable', $engine
-                    );
-                    continue;
-                }
             }
 
             $resolved[(int)$importIndex] = self::result(
@@ -433,6 +455,16 @@ final class Uedb5ClassicDependencyResolver
             return PdoUe3VerifyImportProjectionResolver::PROFILE_UT3_V512;
         }
         return null;
+    }
+
+    private static function ue4VerifyImportProfile(array $snapshot): ?string
+    {
+        $schema = strtolower(trim((string)($snapshot['section_schemas']['imports'] ?? '')));
+        $policy = strtolower(trim((string)($snapshot['source_policy'] ?? '')));
+        return str_starts_with($schema, 'ue4.ut4.')
+            && $policy === strtolower(Uedb5Ut4SnapshotBuilder::SOURCE_POLICY)
+                ? PdoUe4VerifyImportProjectionResolver::PROFILE_UT4_4272
+                : null;
     }
 
     private static function ue2VerifyImportProfile(array $snapshot): ?string
