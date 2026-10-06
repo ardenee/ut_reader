@@ -437,7 +437,34 @@ These must not be inferred into the byte parser.
 14. do not substitute another engine/game's QuickMD5;
 15. preserve UT2004 LinksToCode behavior separately;
 16. do not invent package compression/encryption;
-17. do not import UT2003/UE2.5 behavior without UT2004 source proof.
+17. do not import UT2003/UE2.5 behavior without UT2004 source proof;
+18. preserve serialized Names/flags while deriving effective FNames through the source NameMap before import/export/dependency identity;
+19. use the explicit UCC/UnrealEd all-context mask `0x00070000` for deterministic catalogue preprocessing;
+20. apply no runtime name-length cap for package versions 60-63, but cap effective v64-129 names at `NAME_SIZE-1 = 63` characters;
+21. stop v129 preprocessing/source attribution at package 129 and label later admitted versions unresolved.
+
+## Section 4E catalogue preprocessing and revision boundary
+
+The first-principles 4E audit independently checked all three supplied UT2004 trees:
+
+- `Unreal Tournament 2004 - v3186`: package v127;
+- `Unreal Tournament 2004 [v3369] [03-16-2004]`: package v128;
+- `UT2004Src/UT2004SrcCmake`: package v129, latest authority.
+
+All three retain the same relevant package-table/preprocessing rules: strict Tag guard before the rest of the summary, fixed INT PackageIndex, compact class/super/SerialSize/SerialOffset, `if (E.SerialSize)`, context-filtered NameMap before Imports/Exports, and v64+ `Str.Left(NAME_SIZE-1)` runtime-name truncation. The v128/v129 serializer-body diff is formatting/build-only for these fields; the v127 cross-check confirms the same behavior one revision earlier.
+
+UCC/UnrealEd provide a real all-context edit/client/server state, so UnrealDB uses `0x00070000` as its deterministic source-compatible catalogue context. Raw serialized Name text remains untouched; only effective import/export/dependency identity is filtered/truncated.
+
+UEDB5 source attribution is now:
+- versions 60-128: `ue2-ut2004-v3369-package-v128`;
+- version 129: `ue2-ut2004-ut2004src-v129-64bit`;
+- admitted versions above 129: `ue2-ut2004-post-v129-profile-admitted-unresolved`.
+
+For bounded migration discovery use:
+
+`D:\php8.5\php.exe catalog\bin\diagnose-ut2004-name-map-impact.php --summary`
+
+and rerun without `--summary` for exact file IDs. The diagnostic reads staged UEDB5 metadata only; only an exact negative-`serial_size` file needs original-package Pass-1 reparsing.
 
 ## Source-reference matrix
 

@@ -269,7 +269,7 @@ $check(($ut2004Rejected[1]['status'] ?? null) === 'missing'
     && ($ut2004Rejected[1]['reason'] ?? null) === 'verify_import_private_export',
     'ut2004_v129_private_export_is_rejected');
 $ut2004V130 = $snapshot(
-    42012, 'Consumer130', 'classic-linkerload', 'ue2.ut2004', 'ue2-ut2004-ut2004src-v129-64bit',
+    42012, 'Consumer130', 'classic-linkerload', 'ue2.ut2004', 'ue2-ut2004-post-v129-profile-admitted-unresolved',
     $consumerImports, [], 130
 );
 $ut2004Unverified = Uedb5ClassicDependencyResolver::resolve($ut2004V130, [[

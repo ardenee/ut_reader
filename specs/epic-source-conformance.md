@@ -534,4 +534,32 @@ This recovery checkpoint changes source availability only. It does not widen a g
 - `diagnose-ut2003-name-map-impact.php` performs bounded staged-metadata discovery only. Run with `--summary` for counts and without it for exact file IDs. Only a negative-`serial_size` file requires Pass-1 original-byte reparse; context/policy changes are metadata/Pass-2 scope.
 - This checkout's connected DB lacks `ue_uedb5_files`, so the diagnostic fails closed before scanning and no impact count is invented.
 
-**Next checkpoint: Section 4E - UT2004 / UE2.5 package serialization and pre-dependency preprocessing, audited independently against the latest UT2004 source.**
+## Section 4E - UT2004 / UE2.5 package serialization and pre-dependency preprocessing
+
+**Status: complete against all supplied UT2004 source revisions, with v129 as latest authority and v127/v128 independently cross-checked.**
+
+### Source authority
+
+- v3186 / package v127: `L:\Source\Games\UT2004\Unreal Tournament 2004 - v3186`.
+- v3369 / package v128: `L:\Source\Games\UT2004\Unreal Tournament 2004 [v3369] [03-16-2004]`.
+- latest package v129: `L:\Source\Games\UT2004\UT2004Src\UT2004SrcCmake`.
+- All three declare minimum package v60 and licensee `0x1D`; all contain complete Core linker/name/object implementations.
+
+### Source results and corrections
+
+1. **The serialized table contract is stable across v127-v129.** v128/v129 serializer differences are formatting/build-only for summary/import/export; v127 independently confirms the same field layout.
+2. **Strict bad-tag handling is source-proven.** Summary serialization stops immediately after Tag on mismatch; UnrealDB already rejects bad magic after four bytes.
+3. **NameMap preprocessing is mandatory.** All audited revisions construct `_ContextFlags` before tables and map nonmatching Names to `NAME_None` before Imports/Exports. UCC/UnrealEd prove an all-context `0x00070000` mode.
+4. **UT2004's name truncation is version-gated.** v60-63 uses the legacy ANSI branch without the later explicit cap; v64-129 loads FString and copies `Str.Left(NAME_SIZE-1)`, so effective catalogue names cap at 63 characters while raw serialized text remains preserved.
+5. **SerialOffset follows every nonzero SerialSize.** All audited revisions use `if (E.SerialSize)`; the shared UE2 reader correction from 4C therefore applies directly.
+6. **Package 130+ no longer masquerades as v129 authority.** The old builder assigned `POLICY_V129` to every version >=129. It now uses `ue2-ut2004-post-v129-profile-admitted-unresolved` above 129, matching the existing VerifyImport fail-closed boundary.
+
+### Regression and migration boundary
+
+- `verify-ut2004-name-map-preprocessing.php` proves v63 filtering without truncation, v64/v129 63-character effective names, raw-name preservation, and no v129 inheritance at v130 in both current and V5 paths.
+- Existing UE2 serialization, UT2004 VerifyImport, V5 dependency, persistence, and transition regressions remain green.
+- `diagnose-ut2004-name-map-impact.php` provides staged-metadata-only counts/IDs for context filtering, runtime truncation, policy refresh, and negative-size reparsing.
+- Only exact negative-`serial_size` files require original package bytes; all other 4E remediation is metadata/Pass-2 scope.
+- This checkout's connected DB lacks `ue_uedb5_files`, so the diagnostic fails closed and no impact count is fabricated.
+
+**Next checkpoint: Section 4F - UT3 / UE3 package serialization and pre-dependency preprocessing, audited independently from the UT3 source before using later UE3 build 10897 as supplemental comparison.**

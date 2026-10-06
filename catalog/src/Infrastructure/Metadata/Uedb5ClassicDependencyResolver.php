@@ -524,6 +524,14 @@ final class Uedb5ClassicDependencyResolver
             && $version !== null && $version >= 60 && $version <= 120) {
             return null;
         }
+        if (str_starts_with($schema, 'ue2.ut2004.')
+            && $version !== null && $version >= 60 && $version <= 129
+            && in_array($policy, [
+                strtolower(Uedb5Ut2004SnapshotBuilder::POLICY_V128),
+                strtolower(Uedb5Ut2004SnapshotBuilder::POLICY_V129),
+            ], true)) {
+            return $version >= 64 ? 63 : null;
+        }
         return false;
     }
 

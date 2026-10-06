@@ -52,7 +52,7 @@ Current conformance work must use the local source mirrors below. Historical Git
 - [x] UE2.5 dependency and import resolution — `ue2.5-unreal-warfare-dependency-resolution.md`
 - [x] UT2003 / UE2 package serialization and pre-dependency preprocessing — `ut2003-v2107-package-format.md` (v2107/package v120 independently source-audited; post-v120 admitted packages explicitly unresolved)
 - [x] UT2003 dependency and import resolution — `ut2003-v2107-dependency-resolution.md`
-- [x] UT2004 package/version differences — `ut2004-package-format.md`
+- [x] UT2004 / UE2.5 package serialization and pre-dependency preprocessing — `ut2004-package-format.md` (v3186/v127, v3369/v128, and latest v129 cross-checked; post-v129 admitted packages explicitly unresolved)
 - [x] UT2004 dependency and import resolution — `ut2004-dependency-resolution.md`
 - [x] UE3 package format and reading — `ue3-udkultimate-package-format.md`
 - [x] UE3 dependency resolution — `ue3-udkultimate-dependency-resolution.md`

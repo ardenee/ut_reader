@@ -118,7 +118,7 @@ try {
     $accept('ut2004_60', Uedb5Ut2004SnapshotBuilder::class, CatalogUE2PackageReader::class, 5, 60, Uedb5Ut2004SnapshotBuilder::POLICY_V128);
     $accept('ut2004_128', Uedb5Ut2004SnapshotBuilder::class, CatalogUE2PackageReader::class, 5, 128, Uedb5Ut2004SnapshotBuilder::POLICY_V128);
     $accept('ut2004_129', Uedb5Ut2004SnapshotBuilder::class, CatalogUE2PackageReader::class, 5, 129, Uedb5Ut2004SnapshotBuilder::POLICY_V129);
-    $accept('ut2004_130', Uedb5Ut2004SnapshotBuilder::class, CatalogUE2PackageReader::class, 5, 130, Uedb5Ut2004SnapshotBuilder::POLICY_V129);
+    $accept('ut2004_130', Uedb5Ut2004SnapshotBuilder::class, CatalogUE2PackageReader::class, 5, 130, Uedb5Ut2004SnapshotBuilder::POLICY_POST_V129_UNRESOLVED);
 } finally {
     if (is_dir($temp)) {
         $items = new RecursiveIteratorIterator(

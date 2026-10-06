@@ -25,7 +25,7 @@ $rows=[
  [6,5,128,29,Uedb5Ut2004SnapshotBuilder::POLICY_V128,1],
  [7,3,68,0,'ue1-ut99-retail-v1400-1999-11-30',1],
  [8,5,129,29,Uedb5Ut2004SnapshotBuilder::POLICY_V129,1],
- [9,5,130,29,Uedb5Ut2004SnapshotBuilder::POLICY_V129,1],
+ [9,5,130,29,Uedb5Ut2004SnapshotBuilder::POLICY_POST_V129_UNRESOLVED,1],
  [10,5,128,29,Uedb5Ut2004SnapshotBuilder::POLICY_V128,0],
 ];
 $if=$db->prepare('INSERT INTO ue_files VALUES(?,?,?,?,"verified")');$iv=$db->prepare('INSERT INTO ue_uedb5_files VALUES(?,?,?)');$ie=$db->prepare('INSERT INTO ue_uedb5_dependency_edges VALUES(?,1,1,?)');

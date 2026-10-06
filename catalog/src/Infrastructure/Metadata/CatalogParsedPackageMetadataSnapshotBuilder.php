@@ -99,7 +99,7 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
         }
         $legacyAllContextNameMap = $engineKey === 'UE1' && $sourceKey === 'ut99';
         $legacyNameMaxCharacters = null;
-        if ($engineKey === 'UE2' && in_array($sourceKey, ['unreal2','ut2003'], true)) {
+        if ($engineKey === 'UE2' && in_array($sourceKey, ['unreal2','ut2003','ut2004'], true)) {
             $versionRow = \catalog_one(
                 $this->db,
                 'SELECT package_version FROM ue_files WHERE id=? LIMIT 1',
@@ -116,6 +116,10 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
                 && $sourceVersion !== null && $sourceVersion >= 60 && $sourceVersion <= 120) {
                 $legacyAllContextNameMap = true;
                 $legacyNameMaxCharacters = null;
+            } elseif ($sourceKey === 'ut2004'
+                && $sourceVersion !== null && $sourceVersion >= 60 && $sourceVersion <= 129) {
+                $legacyAllContextNameMap = true;
+                $legacyNameMaxCharacters = $sourceVersion >= 64 ? 63 : null;
             }
         }
 
