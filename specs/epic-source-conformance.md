@@ -662,5 +662,17 @@ The first 20 migration-validation attempts all failed with `source_snapshot_mism
 
 `uexp_path` is an environment-derived local filesystem locator, not serialized Unreal package identity, and it is not consumed by resolver/projection/runtime contracts. `Uedb5MigrationValidator` now removes this field from both staged and fresh source-comparison snapshots while retaining all serialized/source-shaped metadata checks.
 
-The migration-validation, migration-status, and cutover-readiness contracts pass with a regression assertion that validation is independent of local `uexp_path` formatting. The 20 rows marked failed by the pre-fix validator must have their dependency checkpoint rebuilt before validation resumes because hard validation failure intentionally clears dependency completion state.
+The migration-validation, migration-status, and cutover-readiness contracts pass with a regression assertion that validation is independent of local `uexp_path` formatting.
+
+### UT4 metadata-only refresh provenance/projection correction
+
+The interrupted UT4 validation established a deterministic split: exactly 24,077 rows validated, matching the original-byte-reparsed unversioned population, while explicit-versioned metadata-refreshed rows failed `source_snapshot_mismatch`.
+
+A field-level staged-vs-fresh comparison proved the explicit package tables themselves were source-correct. The stale fields were retained parser provenance only: `parser_profile.key=standard-ue4`, assumed version `522`, and the final-UE4 source reference instead of the canonical UT4 clean-master v511 profile. Because this provenance is deliberately stored in the UEDB5 summary, validation must not hide the mismatch.
+
+After correcting the parser profile on a 20-row sample, validation advanced to `provider_projection_mismatch`. The staged registration correctly used package-key kind `3` (exact classic FName), while `ue_uedb5_provider_keys` still carried legacy kind `1`; the binary package key was otherwise identical. The earlier metadata-only source-policy refresh had refreshed `ue_uedb5_files` but had not republished provider keys.
+
+`repair-ut4-v511-parser-profile.php` is the bounded correction. It consumes the exact prior refresh ID list, refuses unversioned/noncanonical/dependency-stale rows, updates only the retained UT4 parser profile when needed, proves dependency-results are unchanged, republishes provider keys, refreshes registration when the payload changes, and rebinds the existing dependency-pass checkpoint to the resulting payload SHA without reopening original package bytes or rerunning dependency resolution.
+
+The exact stale set is 40,053 rows: the initial 20 metadata-refresh test rows plus 40,033 rows from the completed source-policy refresh log. A real 20-row repair and subsequent migration validation succeeded 20/20.
 **Next checkpoint: Section 4H - UE5 5.8.3 classic package serialization and pre-dependency preprocessing, audited independently from the UE5 source before revisiting Zen/IoStore.**
