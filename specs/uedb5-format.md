@@ -24,7 +24,7 @@ Engine source:
 - UE3: `L:\Source\Engine\UE3`
 - UE4: `L:\Source\Engine\UE4`
 - UE5: `L:\Source\Engine\UE5`
-- UDK / later UE3: `L:\Source\Engine\UE3\Unreal Engine [v3.0] UDKUltimate [05-11-17]` and `L:\Source\Engine\UE3\Unreal Engine [v3.0] [07-22-2013]`
+- UDK / later UE3: `L:\Source\Engine\UE3\Unreal Engine [v3.0] UDKUltimate [05-11-17]` and `L:\Source\Engine\UE3\Unreal Engine 3 (10897)`
 Game source:
 
 - Unreal: `L:\Source\Games\Unreal`
