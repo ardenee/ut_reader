@@ -1,5 +1,3 @@
-[Reading 726 lines from start (total: 726 lines, 0 remaining)]
-
 # Epic/Game Source Conformance Audit
 
 ## Governing rule
