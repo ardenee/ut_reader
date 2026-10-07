@@ -25,7 +25,7 @@ $apply=isset($o['apply']);
 $rebuild=isset($o['rebuild-impacted']);
 $rebuildV4=isset($o['rebuild-v4-impacted']);
 $reparsePass1=isset($o['reparse-pass1-impacted']);
-$limit=max(1,min(100000,(int)($o['limit']??1000)));
+$limit=max(1,min(1000000,(int)($o['limit']??1000)));
 $semanticFiles=['ut99'=>(string)($o['ut99-semantic-ids']??''),'ut2004'=>(string)($o['ut2004-semantic-ids']??''),'ut3'=>(string)($o['ut3-semantic-ids']??'')];
 $loadIds=static function(string $path,string $label):array{if($path===''||!is_file($path))throw new RuntimeException("Missing 4J semantic ID file for $label: $path");$ids=[];foreach(file($path,FILE_IGNORE_NEW_LINES|FILE_SKIP_EMPTY_LINES)?:[]as$line){$id=(int)trim($line);if($id>0)$ids[$id]=true;}return array_map('intval',array_keys($ids));};
 $semanticIds=[];foreach($semanticFiles as$slug=>$path)$semanticIds[$slug]=$loadIds($path,$slug);
