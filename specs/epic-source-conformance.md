@@ -723,4 +723,39 @@ These are parity classifications only and do not change UEDB5 dependency data. V
 - UE5 classic is not currently a registered full-game UEDB5 migration target, so this correction does not require a present game-wide Pass-1 replay or dependency rebuild. Future UE5 classic staging must use the corrected reader contract.
 - The stale local experimental 521/off-by-one edits discovered during this audit are explicitly rejected; they were never source-correct and must not be committed.
 
-**Next checkpoint: Section 4I - UE5 5.8.3 Zen/IoStore serialization and pre-dependency preprocessing. Reuse the completed Section 3E package-store/runtime arbitration results rather than re-auditing them.**
+## Section 4I - UE5 5.8.3 Zen/IoStore serialization and pre-dependency preprocessing
+
+**Status: complete against the local UE5 5.8.3 IoStore, container-header, Zen-header, NameBatch and AsyncLoading2 serialization source at commit `396c9f059903aed5fec78ecd3d437a40c6415368`. Section 3E remains the independent authority for runtime package-store/dependency arbitration.**
+
+### Source authority
+
+- `Runtime/Core/Internal/IO/IoStore.h` and `Runtime/Core/Private/IO/IoStore.cpp` - TOC header/version branches, chunk tables, compressed-block packing, signatures, directory index, metadata widths, partition behavior and block read/decrypt/decompress rules.
+- `Runtime/Core/Public/IO/IoChunkId.h` and `Runtime/Core/Private/IO/IoChunkId.cpp` - 12-byte chunk-ID construction, network-order chunk index and chunk-type byte.
+- `Runtime/Core/Public/IO/IoContainerHeader.h` and `Runtime/Core/Private/IO/IoContainerHeader.cpp` - container-header versions, store-entry arrays, redirect/localization mappings and soft-reference serialization.
+- `Developer/IoStoreUtilities/Private/IoStoreUtilities.cpp::CreateContainerHeader` - source writer for package ordering, relative C-array views, optional segments, shader-map hashes and soft-reference views.
+- `Runtime/Core/Private/UObject/UnrealNames.cpp` - archive NameBatch layout and `FSerializedNameHeader`.
+- `Runtime/CoreUObject/Public/Serialization/AsyncLoading2.h`, `Private/Serialization/AsyncLoading2.cpp`, and `Private/Serialization/ZenPackageHeader.cpp` - Zen summary/versioning, object indices, export/cell maps, bulk map, export/dependency bundles and imported package names.
+
+### Source results and corrections
+
+1. **The IoStore TOC reader matches the supported 5.8.3 range and table order.** UE5 accepts TOC versions DirectoryIndex=2 through ReplaceIoChunkHashWithIoHash=8, requires the 144-byte header and 12-byte compressed-block entries, applies perfect-hash/overflow tables only at their source versions, uses the old 32-byte chunk hash plus flags before v8 and the 20-byte `FIoHash` plus flags/pad at v8, and forces one unlimited partition before PartitionSize v3. UnrealDB matches those branches.
+2. **Chunk reconstruction is source-equivalent.** `FIoOffsetAndLength` uses 5-byte big-endian offset/length fields, compressed blocks carry 40-bit offset plus 24-bit sizes and method index, physical offsets select `.ucas` partitions, encrypted reads round compressed size to the 16-byte AES boundary before AES-256 decryption, and decompression occurs before slicing the logical chunk.
+3. **`FIoChunkId` is byte-exact.** Bytes 0-7 hold the raw package/container ID, bytes 8-9 hold `ChunkIndex` in network order, byte 10 is chunk group and byte 11 is chunk type. Main ExportBundleData uses index 0; manual optional segment data uses index 1. The reader's big-endian chunk-index decode is therefore intentional.
+4. **Container package-store views match the writer.** `FFilePackageStoreEntry` is two 8-byte relative array views. `CreateContainerHeader()` writes all fixed entry headers first, then appended data; each `OffsetToDataFromThis` is relative to its own view header. Packages are sorted by global `FPackageId`. `FShaderHash` is an 8-byte `FXxHash64`, matching the reader's element width.
+5. **Optional and soft-reference container structures are source-shaped.** Manual optional segments retain a separate optional package/store entry; auto-optional packages use the optional container's ordinary list. Soft references use a sorted deduplicated package-ID array plus one relative `uint32` index view per ordinary package. Version 4 serializes the soft-reference object inline; version 5 serializes `FIoContainerHeaderSerialInfo` and the writer places the payload immediately afterward at the recorded absolute offset.
+6. **Container mapped-name validation is now source-equivalent.** Redirect/localization names come from a map explicitly typed `FMappedName::EType::Container`. Epic's `FNameMap::GetName()` requires the mapped type to match and the index to be in range. UnrealDB previously retained invalid type/out-of-range rows with a null display name; it now fails closed.
+7. **Container serialized bool validation is now source-equivalent.** `bContainsSoftPackageReferences` uses legacy 32-bit `FArchive` bool serialization. Epic marks values greater than one as archive corruption. UnrealDB previously treated any nonzero value as true; it now rejects values outside 0/1.
+8. **NameBatch decoding matches the archive serializer.** Nonempty batches serialize count, total string-byte count, 64-bit hash algorithm ID, one uint64 hash per name, one two-byte `FSerializedNameHeader` per name, then contiguous raw strings. Header bit 7 selects UTF-16 and the remaining 15 bits encode length. The archive form has no per-name alignment bytes between separated headers and strings.
+9. **Zen package structures and operators match field-for-field.** `FZenPackageSummary` is 52 bytes; optional cell offsets, NameMap, bulk-data prefix/map, imported public hashes, import/export/cell maps, export bundles, dependency headers/entries and imported package names are sliced in the same source order. `FExportMapEntry` is 72 bytes, `FCellExportMapEntry` 40, `FDependencyBundleHeader` 20, `FExportBundleEntry` 8 and `FBulkDataMapEntry` 32.
+10. **`FPackageObjectIndex` identity remains exact.** The top two bits select Export/ScriptImport/PackageImport/Null; PackageImport payload is exactly `(ImportedPackageIndex << 32) | ImportedPublicExportHashIndex`. Imported package IDs come from the ordered selected store entry and public hashes from the Zen header. No path/name substitute is introduced.
+11. **Imported package names are editor-side serialized evidence, not dependency identity.** Their container serializes a NameBatch followed by one FName Number per entry. UnrealDB preserves them for auditing/display while PackageImport resolution continues to use package ID + public-export hash.
+12. **No Section 3E runtime rules were reopened.** Mount order, backend priority, CoreRedirect/instancing/culture state, optional editor visibility, export filtering, redirector targets and duplicate public-hash runtime behavior remain exactly as frozen in Section 3E.
+
+### Regression and migration boundary
+
+- `verify-uedb5-ue5-iostore-foundation.php` remains green and now additionally proves wrong container-mapped-name types, out-of-range redirect-name indices and serialized bool values greater than one are rejected.
+- `verify-uedb5-ue5-zen-package.php`, `verify-uedb5-ue5-zen-dependency-resolution.php`, and `verify-ue5-zen-dependency-policy-transition.php` remain green after the stricter container-header validation.
+- The correction changes only acceptance of malformed/corrupt container-header bytes; it does not alter valid source-produced staged payloads, dependency outcomes, package-store policy or migration checkpoints. No currently staged game requires a replay from this 4I correction.
+- Existing Zen dependency policy remains `uedb5-dependency-pass-v11` at the original 3E checkpoint and is later superseded by the documented global policy transition; 4I does not create a new dependency-policy version because valid package semantics are unchanged.
+
+**Next checkpoint: Section 4J - cross-engine source-conformance closure / remaining serialization-preprocessing gaps before final UEDB5 cutover work.**
