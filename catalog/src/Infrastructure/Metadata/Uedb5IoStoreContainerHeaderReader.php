@@ -223,8 +223,14 @@ final class Uedb5IoStoreContainerHeaderReader
         $rawIndex = $reader->u32le();
         $number = $reader->u32le();
         $decoded = Uedb5BinaryReader::decodeMappedNameIndex($rawIndex);
+        if ((int)$decoded['type'] !== 1) {
+            throw new RuntimeException('IoStore redirect/localization FMappedName is not a container-name-map entry.');
+        }
         $nameIndex = (int)$decoded['index'];
-        $baseText = isset($names[$nameIndex]) ? (string)$names[$nameIndex]['text'] : null;
+        if (!isset($names[$nameIndex])) {
+            throw new RuntimeException('IoStore redirect/localization FMappedName index is outside RedirectsNameMap.');
+        }
+        $baseText = (string)$names[$nameIndex]['text'];
         $displayText = $baseText;
         if ($baseText !== null && $number > 0) {
             $displayText .= '_' . ($number - 1);
@@ -319,7 +325,11 @@ final class Uedb5IoStoreContainerHeaderReader
         int $packageEntryCount,
         ?array $serialInfo
     ): array {
-        $contains = $reader->u32le() !== 0; // FArchive::SerializeBool uses legacy uint32.
+        $serializedContains = $reader->u32le(); // FArchive::SerializeBool uses legacy uint32.
+        if ($serializedContains > 1) {
+            throw new RuntimeException('IoStore soft-reference boolean is not a valid serialized bool.');
+        }
+        $contains = $serializedContains !== 0;
         if (!$contains) {
             return [
                 'contains_soft_package_references' => false,
