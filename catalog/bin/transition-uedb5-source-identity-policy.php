@@ -161,7 +161,20 @@ if($manifestOut!==''){
     if(file_put_contents($manifestOut,$json.PHP_EOL,LOCK_EX)===false)throw new RuntimeException('Failed to write v13 impact manifest: '.$manifestOut);
     $pre['manifest_out']=$manifestOut;$pre['manifest_sha256']=hash_file('sha256',$manifestOut);
 }
-if(!$apply){echo json_encode(['ok'=>true,'apply'=>false,'read_only'=>true,'preflight'=>$pre],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;exit(0);}
+if(!$apply){
+    if($manifestOut!==''){
+        echo json_encode([
+            'ok'=>true,'apply'=>false,'read_only'=>true,'manifest_out'=>$manifestOut,'manifest_sha256'=>$pre['manifest_sha256'],
+            'new_policy'=>$new,'current_old_policy_count'=>count($current),'impacted_rebuild_count'=>count($impacted),
+            'v4_impacted_count'=>count($v4Impacted),'pass1_reparse_required_count'=>count($pass1Required),
+            'source_policy_refresh_required_count'=>count($policyRefreshRequired),'source_profile_review_required_count'=>count($sourceReviewRequired),
+            'stale_old_payload_count'=>$staleCount,'semantic_input_counts'=>$semanticInputCounts,'impact_reason_counts'=>$combinedCounts,
+        ],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;
+    }else{
+        echo json_encode(['ok'=>true,'apply'=>false,'read_only'=>true,'preflight'=>$pre],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;
+    }
+    exit(0);
+}
 
 // Preserve the v1-v3 exact-FName transition. v4 rows are already exact and simply skip these updates.
 $scope=$gid>0?' AND v.game_id='.(int)$gid:'';
