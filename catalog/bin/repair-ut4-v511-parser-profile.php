@@ -231,12 +231,11 @@ foreach ($eligible as $id => $needs) {
                 throw new RuntimeException('refreshed_payload_hash_invalid');
             }
             $publishedProviders = $providerPublisher->publish($id);
-            $statuses->markDependencySucceeded(
-                $id,
-                $gameId,
-                $payload,
-                Uedb5GameDependencyPassService::DEPENDENCY_POLICY
-            );
+            // Provider-key publication changes the physical candidate graph used
+            // by dependency Pass 2. Never preserve/rebind an old dependency
+            // checkpoint after that graph changes; force dependency rebuild and
+            // validation from the corrected environment.
+            $statuses->markStageSucceeded($id, $gameId);
             $db->commit();
         } catch (Throwable $dbError) {
             if ($db->inTransaction()) { $db->rollBack(); }

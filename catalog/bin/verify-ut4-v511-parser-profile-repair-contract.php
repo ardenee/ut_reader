@@ -22,7 +22,9 @@ $check('requires_current_dependency_checkpoint', str_contains($script, 'dependen
 $check('preserves_dependency_results', str_contains($script, 'dependency_results_changed_during_profile_refresh'));
 $check('refreshes_registration_only_after_write', str_contains($script, 'refreshExisting($gameId, $id)'));
 $check('republishes_provider_keys', str_contains($script, '$providerPublisher->publish($id)'));
-$check('rebinds_dependency_checkpoint_to_new_payload', str_contains($script, 'markDependencySucceeded'));
+$check('invalidates_dependency_and_validation_after_provider_graph_change',
+    str_contains($script, 'markStageSucceeded($id, $gameId)')
+    && !str_contains($script, 'markDependencySucceeded('));
 $check('does_not_open_original_source_bytes',
     !str_contains($script, "DIRECTORY_SEPARATOR . 'verified'")
     && !str_contains($script, 'md5_file(')
