@@ -19,7 +19,7 @@ use UnrealDb\Catalog\Infrastructure\Persistence\PdoUe5ClassicVerifyImportImpactQ
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoUe5ZenDependencyImpactQuery;
 
 const OLD_POLICIES=['uedb5-dependency-pass-v1','uedb5-dependency-pass-v2','uedb5-dependency-pass-v3','uedb5-dependency-pass-v4','uedb5-dependency-pass-v5','uedb5-dependency-pass-v6','uedb5-dependency-pass-v7','uedb5-dependency-pass-v8','uedb5-dependency-pass-v9','uedb5-dependency-pass-v10','uedb5-dependency-pass-v11','uedb5-dependency-pass-v12'];
-$o=getopt('',['game-id::','apply','rebuild-impacted','rebuild-v4-impacted','reparse-pass1-impacted','limit::','ut99-semantic-ids:','ut2004-semantic-ids:','ut3-semantic-ids:']);
+$o=getopt('',['game-id::','apply','rebuild-impacted','rebuild-v4-impacted','reparse-pass1-impacted','limit::','ut99-semantic-ids:','ut2004-semantic-ids:','ut3-semantic-ids:','manifest-out::']);
 $gid=max(0,(int)($o['game-id']??0));
 $apply=isset($o['apply']);
 $rebuild=isset($o['rebuild-impacted']);
@@ -139,6 +139,28 @@ foreach($impacted as$r)$pre['impacted_file_ids_by_game'][$r['game_id']][]=$r['fi
 foreach($pass1Required as$r)$pre['pass1_reparse_file_ids_by_game'][$r['game_id']][]=$r['file_id'];
 foreach($policyRefreshRequired as$r)$pre['source_policy_refresh_file_ids_by_game'][$r['game_id']][]=$r['file_id'];
 foreach($sourceReviewRequired as$r)$pre['source_profile_review_file_ids_by_game'][$r['game_id']][]=$r['file_id'];
+$manifestOut=trim((string)($o['manifest-out']??''));
+if($manifestOut!==''){
+    $manifest=[
+        'schema'=>'uedb5-v13-impact-manifest-v1',
+        'new_policy'=>$new,
+        'old_policies'=>OLD_POLICIES,
+        'game_id'=>$gid?:null,
+        'current_old_policy_count'=>count($current),
+        'stale_old_payload_count'=>$staleCount,
+        'semantic_input_counts'=>$semanticInputCounts,
+        'impact_reason_counts'=>$combinedCounts,
+        'impacted'=>$impacted,
+        'v4_impacted'=>$v4Impacted,
+        'pass1_required'=>$pass1Required,
+        'source_policy_refresh_required'=>$policyRefreshRequired,
+        'source_profile_review_required'=>$sourceReviewRequired,
+    ];
+    $dir=dirname($manifestOut);if(!is_dir($dir)||!is_writable($dir))throw new RuntimeException('Manifest directory is not writable: '.$dir);
+    $json=json_encode($manifest,JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES);if($json===false)throw new RuntimeException('Failed to encode v13 impact manifest.');
+    if(file_put_contents($manifestOut,$json.PHP_EOL,LOCK_EX)===false)throw new RuntimeException('Failed to write v13 impact manifest: '.$manifestOut);
+    $pre['manifest_out']=$manifestOut;$pre['manifest_sha256']=hash_file('sha256',$manifestOut);
+}
 if(!$apply){echo json_encode(['ok'=>true,'apply'=>false,'read_only'=>true,'preflight'=>$pre],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;exit(0);}
 
 // Preserve the v1-v3 exact-FName transition. v4 rows are already exact and simply skip these updates.
