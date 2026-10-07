@@ -1,5 +1,3 @@
-[Reading 979 lines from start (total: 979 lines, 0 remaining)]
-
 <?php
 /**
  * UnrealDB PHP File Audit
