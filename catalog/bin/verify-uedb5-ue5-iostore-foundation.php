@@ -263,6 +263,39 @@ try {
         'soft_package_reference_serial_info_parsed'
     );
 
+    $localizedMappedNameBytes = $mappedName(1);
+    $localizedMappedNameOffset = strpos($containerHeader, $localizedMappedNameBytes);
+    if ($localizedMappedNameOffset === false) {
+        throw new RuntimeException('Could not locate localized FMappedName fixture.');
+    }
+
+    $badMappedTypeRejected = false;
+    try {
+        $bad = substr_replace($containerHeader, pack('V2', 1, 0), $localizedMappedNameOffset, 8);
+        Uedb5IoStoreContainerHeaderReader::parse($bad);
+    } catch (RuntimeException $exception) {
+        $badMappedTypeRejected = str_contains($exception->getMessage(), 'container-name-map');
+    }
+    $check($badMappedTypeRejected, 'container_mapped_name_wrong_type_rejected');
+
+    $badMappedIndexRejected = false;
+    try {
+        $bad = substr_replace($containerHeader, pack('V2', 0x40000063, 0), $localizedMappedNameOffset, 8);
+        Uedb5IoStoreContainerHeaderReader::parse($bad);
+    } catch (RuntimeException $exception) {
+        $badMappedIndexRejected = str_contains($exception->getMessage(), 'outside RedirectsNameMap');
+    }
+    $check($badMappedIndexRejected, 'container_mapped_name_out_of_range_rejected');
+
+    $badSoftBoolRejected = false;
+    try {
+        $bad = substr_replace($containerHeader, pack('V', 2), $softOffset, 4);
+        Uedb5IoStoreContainerHeaderReader::parse($bad);
+    } catch (RuntimeException $exception) {
+        $badSoftBoolRejected = str_contains($exception->getMessage(), 'serialized bool');
+    }
+    $check($badSoftBoolRejected, 'soft_reference_invalid_serialized_bool_rejected');
+
     $oodleFailedClosed = false;
     try {
         (new Uedb5IoStoreCodec($temp . DIRECTORY_SEPARATOR . 'missing-oodle.dll'))->decode('Oodle', 'x', 1);
