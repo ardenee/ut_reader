@@ -18,6 +18,9 @@ $check('policy_repair_verifies_provider_identity_unchanged',str_contains($repair
 $check('policy_repair_rebinds_same_dependency_policy',str_contains($repair,'markDependencySucceeded($fid,$gid,$newPayload,(string)$meta[\'dependency_policy\'])'));
 $check('policy_repair_does_not_publish_provider_graph',!str_contains($repair,'PdoUedb5ProviderKeyPublisher'));
 $check('unrealgold_pass1_boundaries_fail_closed',str_contains($repair,'pre50_requires_pass1_reparse')&&str_contains($repair,'generation_count_out_of_range_requires_pass1_reparse'));
+$check('policy_repair_supports_continuous_batches',str_contains($repair,"'continuous'")&&str_contains($repair,'$continuous=isset($o[\'continuous\'])')&&str_contains($repair,"'status'=>'batch_complete'"));
+$check('policy_repair_continuous_advances_resume_cursor',str_contains($repair,'$cursor=$next')&&str_contains($repair,'Continuous source-policy repair made no forward progress.'));
+$check('policy_repair_preserves_single_batch_mode',str_contains($repair,'if(!$continuous)break;')&&str_contains($repair,"'continuous'=>true"));
 $failed=array_keys(array_filter($checks,static fn(bool$v):bool=>!$v));
 echo json_encode(['ok'=>$failed===[],'checks'=>$checks,'failures'=>$failed],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;
 exit($failed===[]?0:2);
