@@ -26,10 +26,10 @@ $check=static function(string $name,bool $ok)use(&$checks,&$failures):void{
 $check('pass2_has_exact_payload_checkpoint',
     str_contains($migration,'dependency_payload_sha256 BINARY(32)')
     && str_contains($migration,'dependency_policy VARCHAR(64)'));
-$check('pass2_source_ue1_ue2_ue3_ue4_ue5_classic_zen_ut4_semantics_use_v12_policy',
-    str_contains($service,"public const DEPENDENCY_POLICY = 'uedb5-dependency-pass-v12'"));
+$check('pass2_source_ue1_ue2_ue3_ue4_ue5_classic_zen_ut4_semantics_use_v13_policy',
+    str_contains($service,"public const DEPENDENCY_POLICY = 'uedb5-dependency-pass-v13'"));
 $check('source_identity_policy_transition_is_targeted',
-    str_contains($transition,"const OLD_POLICIES=['uedb5-dependency-pass-v1','uedb5-dependency-pass-v2','uedb5-dependency-pass-v3','uedb5-dependency-pass-v4','uedb5-dependency-pass-v5','uedb5-dependency-pass-v6','uedb5-dependency-pass-v7','uedb5-dependency-pass-v8','uedb5-dependency-pass-v9','uedb5-dependency-pass-v10','uedb5-dependency-pass-v11']")
+    str_contains($transition,"const OLD_POLICIES=['uedb5-dependency-pass-v1','uedb5-dependency-pass-v2','uedb5-dependency-pass-v3','uedb5-dependency-pass-v4','uedb5-dependency-pass-v5','uedb5-dependency-pass-v6','uedb5-dependency-pass-v7','uedb5-dependency-pass-v8','uedb5-dependency-pass-v9','uedb5-dependency-pass-v10','uedb5-dependency-pass-v11','uedb5-dependency-pass-v12']")
     && str_contains($transition,'PdoClassicSourceIdentityImpactQuery')
     && str_contains($transition,'currentOldPolicyFiles')
     && str_contains($transition,"'rebuild-impacted'")
@@ -50,7 +50,11 @@ $check('source_identity_policy_transition_is_targeted',
     && str_contains($ue5Impact,'ue5_classic_private_package_access_recheck')
     && str_contains($transition,'PdoUe5ZenDependencyImpactQuery')
     && str_contains($zenImpact,'ue5_zen_dependency_v3_outcome_change')
-    && str_contains($transition,"'reparse-pass1-impacted'"));
+    && str_contains($transition,"'reparse-pass1-impacted'")
+    && str_contains($transition,"'ut99-semantic-ids:'")
+    && str_contains($transition,'ue1_ut99_name_preprocessing_v13')
+    && str_contains($transition,'ue2_ut2004_name_preprocessing_v13')
+    && str_contains($transition,'ue3_ut3_name_preprocessing_v13'));
 $check('pass1_supports_exact_file_restage_for_format_repairs',
     str_contains($pass1Cli,"'file-id::'")
     &&str_contains($pass1Cli,'$service->runFile($gameId,$fileId,true)')
