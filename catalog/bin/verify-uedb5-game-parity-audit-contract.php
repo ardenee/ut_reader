@@ -21,16 +21,64 @@ $record('v5_search_does_not_materialize_full_snapshots',!str_contains($exactBody
 $record('v5_parity_reader_never_reads_uedb4',!str_contains($v5,'.uedb4')&&!str_contains($v5,'BlockedCompressedMetadataReader'));
 $writePattern='/\b(INSERT|UPDATE|DELETE|REPLACE|CREATE|ALTER|DROP|TRUNCATE)\b/i';
 $record('parity_service_is_read_only',preg_match($writePattern,$service)===0&&preg_match($writePattern,$v5)===0);
+$record('dependency_reader_releases_context_per_file',str_contains($v5,'$this->reader->clearCache($gameId,$fileId)'));
+$record('ordered_dependency_evidence_cache_is_bounded',
+    !str_contains($service,'$cache[$fileId]??=')
+    &&!str_contains($service,'$depCache[$fileId]??=')
+    &&str_contains($service,'$currentFileId'));
 $record('cli_has_preflight',str_contains($cli,"'preflight'"));
+$record('cli_supports_category_selection_and_resume',
+    str_contains($cli,"'category:'")
+    &&str_contains($cli,"'list-categories'")
+    &&str_contains($cli,"'rerun'")
+    &&str_contains($cli,"'checkpoint::'")
+    &&str_contains($cli,"skipped_checkpointed")
+    &&str_contains($cli,"parity-audit-"));
 $record('search_corpus_respects_production_minimum_length',substr_count($service,'value_length BETWEEN 3 AND 200')===3);
 $record('provider_selection_is_compared',str_contains($service,'provider_selection_mismatch_count'));
 $record('object_coverage_is_compared',str_contains($service,'object_coverage_mismatch_count'));
 $record('base_game_missing_is_compared',str_contains($service,'officialBaseGamePackageNames'));
-$record('requires_required_by_graph_is_compared',str_contains($service,'v4_requires_pairs')&&str_contains($service,'v5_requires_pairs'));
+$record('requires_required_by_graph_is_compared',str_contains($service,'v4_requires_pairs')&&str_contains($service,'v5_requires_pairs')&&str_contains($service,'expected_missing_in_v5')&&str_contains($service,'ue_uedb5_provider_keys'));
 $record('invalid_identity_exclusion_is_checked',str_contains($service,'ue_invalid_file_identities'));
 $record('duplicate_providers_never_merge',str_contains($service,'one physical provider must independently satisfy a dependency'));
 $record('aliases_are_provider_keys',str_contains($service,'source_kind=2')&&str_contains($service,'ue_file_package_aliases'));
 $record('private_verifyimport_is_audited',str_contains($service,'private_export_rejected'));
+
+$ut4Ambiguous=Uedb5GameParityExpectedDifferences::classify('ut4','dependency_outcome',['outcome'=>'resolved'],[
+    'outcome'=>'unresolved','reason_code'=>'provider_environment_ambiguous',
+    'source_policy'=>'ue4-ut4-clean-master-v511-classic-package',
+]);
+$record('ut4_duplicate_provider_runtime_order_is_expected',
+    is_array($ut4Ambiguous)&&($ut4Ambiguous['id']??'')==='ut4_provider_environment_ambiguous');
+$ut4Private=Uedb5GameParityExpectedDifferences::classify('ut4','dependency_outcome',['outcome'=>'missing'],[
+    'outcome'=>'unresolved','reason_code'=>'private_export_editor_safe_replace_context',
+    'source_policy'=>'ue4-ut4-clean-master-v511-classic-package',
+]);
+$record('ut4_private_safe_replace_context_is_expected',
+    is_array($ut4Private)&&($ut4Private['id']??'')==='ut4_private_safe_replace_runtime_context');
+$ut4Exact=Uedb5GameParityExpectedDifferences::classify('ut4','dependency_outcome',['outcome'=>'missing'],[
+    'outcome'=>'resolved','reason_code'=>'exact_verify_import_match',
+    'source_policy'=>'ue4-ut4-clean-master-v511-classic-package',
+]);
+$record('ut4_exact_verify_import_v4_false_negative_is_expected',
+    is_array($ut4Exact)&&($ut4Exact['id']??'')==='ut4_exact_verify_import_v4_false_negative');
+$ut4RuntimeReasons=[
+    'runtime_native_transient_findif_fail_or_missing_class_context'=>'ut4_runtime_fallback_context_unresolved',
+    'parent_source_linker_or_runtime_context_unavailable'=>'ut4_parent_source_linker_context_unresolved',
+    'object_redirector_target_unavailable'=>'ut4_object_redirector_target_unresolved',
+];
+foreach($ut4RuntimeReasons as $reason=>$ruleId){
+    $runtimeRule=Uedb5GameParityExpectedDifferences::classify('ut4','dependency_outcome',['outcome'=>'missing'],[
+        'outcome'=>'unresolved','reason_code'=>$reason,
+        'source_policy'=>'ue4-ut4-clean-master-v511-classic-package',
+    ]);
+    $record('ut4_'.$reason.'_is_expected',is_array($runtimeRule)&&($runtimeRule['id']??'')===$ruleId);
+}
+$ut4Bad=Uedb5GameParityExpectedDifferences::classify('ut4','dependency_outcome',['outcome'=>'resolved'],[
+    'outcome'=>'unresolved','reason_code'=>'provider_environment_ambiguous',
+    'source_policy'=>'ue4-4.27.2-generic',
+]);
+$record('ut4_expected_differences_require_canonical_source_policy',$ut4Bad===null);
 
 $rule=Uedb5GameParityExpectedDifferences::classify('ut3','dependency_outcome',['outcome'=>'missing'],[
     'outcome'=>'unresolved','reason_code'=>'source_unresolved','source_policy'=>'ue3-ut3-2008-01-01',

@@ -32,29 +32,35 @@ final class Uedb5ParityV5ReadService
     /** @return list<array<string,mixed>> */
     public function dependencies(int $gameId,int $fileId):array
     {
-        $manifest=$this->reader->manifest($gameId,$fileId);
-        $counts=(array)($manifest['counts']??[]);
-        if(!array_key_exists('dependency_results',$counts))return[];
-        $policy=(string)($manifest['source_policy']??'');$rows=[];
-        foreach($this->reader->scan($gameId,$fileId,'dependency_results') as $raw){
-            $row=(array)$raw;$selected=(array)($row['selected_provider_object']??[]);
-            $requiredPackage=$row['required_package_identity']??null;
-            $requiredObject=$row['required_object_identity']??null;
-            $rows[]=[
-                'source_index'=>(int)($row['source_index']??-1),'source_section'=>(string)($row['source_section']??''),
-                'outcome'=>(string)($row['outcome']??''),
-                'required_package'=>is_array($requiredPackage)?(string)($requiredPackage['value']??''):(string)($row['required_package_id']??''),
-                'required_object'=>is_array($requiredObject)?(string)($requiredObject['object_name']??''):(string)$requiredObject,
-                'required_object_path'=>is_array($requiredObject)?(string)($requiredObject['object_path']??''):(string)($row['required_object_path']??''),
-                'class_package'=>is_array($requiredObject)?(string)($requiredObject['class_package']??''):'',
-                'class_name'=>is_array($requiredObject)?(string)($requiredObject['class_name']??''):'',
-                'resolved_file_id'=>isset($row['selected_provider_file_id'])?(int)$row['selected_provider_file_id']:null,
-                'resolved_object_index'=>array_key_exists('export_index',$selected)?(int)$selected['export_index']:(array_key_exists('cell_export_index',$selected)?(int)$selected['cell_export_index']:null),
-                'reason_code'=>(string)($row['reason_code']??''),'source_policy'=>(string)($row['source_policy']??$policy),
-                'resolver_detail'=>(array)($row['resolver_detail']??[]),'hard'=>(bool)($row['hard']??false),
-            ];
+        try{
+            $manifest=$this->reader->manifest($gameId,$fileId);
+            $counts=(array)($manifest['counts']??[]);
+            if(!array_key_exists('dependency_results',$counts))return[];
+            $policy=(string)($manifest['source_policy']??'');$rows=[];
+            foreach($this->reader->scan($gameId,$fileId,'dependency_results') as $raw){
+                $row=(array)$raw;$selected=(array)($row['selected_provider_object']??[]);
+                $requiredPackage=$row['required_package_identity']??null;
+                $requiredObject=$row['required_object_identity']??null;
+                $rows[]=[
+                    'source_index'=>(int)($row['source_index']??-1),'source_section'=>(string)($row['source_section']??''),
+                    'outcome'=>(string)($row['outcome']??''),
+                    'required_package'=>is_array($requiredPackage)?(string)($requiredPackage['value']??''):(string)($row['required_package_id']??''),
+                    'required_object'=>is_array($requiredObject)?(string)($requiredObject['object_name']??''):(string)$requiredObject,
+                    'required_object_path'=>is_array($requiredObject)?(string)($requiredObject['object_path']??''):(string)($row['required_object_path']??''),
+                    'class_package'=>is_array($requiredObject)?(string)($requiredObject['class_package']??''):'',
+                    'class_name'=>is_array($requiredObject)?(string)($requiredObject['class_name']??''):'',
+                    'resolved_file_id'=>isset($row['selected_provider_file_id'])?(int)$row['selected_provider_file_id']:null,
+                    'resolved_object_index'=>array_key_exists('export_index',$selected)?(int)$selected['export_index']:(array_key_exists('cell_export_index',$selected)?(int)$selected['cell_export_index']:null),
+                    'reason_code'=>(string)($row['reason_code']??''),'source_policy'=>(string)($row['source_policy']??$policy),
+                    'resolver_detail'=>(array)($row['resolver_detail']??[]),'hard'=>(bool)($row['hard']??false),
+                ];
+            }
+            usort($rows,static fn(array$a,array$b):int=>$a['source_index']<=>$b['source_index']);return$rows;
+        }finally{
+            // Parity scans touch many files; retaining every reader context makes
+            // a full-game audit grow linearly in memory.
+            $this->reader->clearCache($gameId,$fileId);
         }
-        usort($rows,static fn(array$a,array$b):int=>$a['source_index']<=>$b['source_index']);return$rows;
     }
 
     /** @return array<int,array<string,mixed>> */

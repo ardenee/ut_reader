@@ -685,4 +685,13 @@ The cause is now source/mechanism-proven. The original Pass 2 was executed while
 Because provider-key publication can change the candidate environment for consumers other than the repaired provider file itself, dependency results cannot be repaired safely by rebinding old checkpoints. The entire UT4 dependency/validation state must be reopened after the corrected provider graph is complete, then Pass 2 must be rebuilt from all 64,247 canonical staged files and migration validation rerun. `reset-ut4-v511-provider-graph-dependencies.php` is the read-only-by-default guarded reset for this boundary; it requires all UT4 staged rows to use the canonical v511 source policy and exactly one primary exact-FName provider key before clearing dependency and validation checkpoints.
 
 No parity exception is permitted for these stale results. Parity resumes only after the corrected-provider full Pass-2 rebuild and revalidation complete.
-**Next checkpoint: finish the corrected-provider UT4 Pass-2 rebuild/validation/parity before Section 4H - UE5 5.8.3 classic package serialization and pre-dependency preprocessing.**
+
+### UT4 corrected-provider parity completion
+
+The corrected-provider rebuild is now complete. UT4 Pass 2 and migration validation are fully current for all **64,247** staged files, with **64,247 validated, 0 staged, 0 pending, and 0 failed**.
+
+The final read-only Step-9 category audit is green in all eight categories. The dependency audit compares **748,145** V4 rows to **748,145** V5 rows and reports **281,132 source-backed expected differences with 0 unexpected mismatches**. Allowed differences require the canonical UT4 clean-master v511 source policy plus the exact V5 source reason: duplicate-provider runtime PAK/mount-order ambiguity; private SafeReplace editor/runtime context; deterministic exact public VerifyImport matches missed by legacy V4; runtime native/transient/`LOAD_FindIfFail`/class-context fallback; parent `SourceLinker` runtime context; or `ObjectRedirector` destination-runtime context.
+
+These are parity classifications only and do not change UEDB5 dependency data. V5 remains fail-closed where runtime state is unavailable. Provider-selection and object-coverage parity both have **0 unexpected differences**. Required/Required-By parity records **126,442** V4 pairs omitted from V5, all source-proven duplicate-provider environment choices with **0 unexpected pairs**. Base-game missing parity is green (**556** V4 missing imports, **0** V5 hard-missing imports, **556** expected source-backed differences). VerifyImport parity is green with **32** private SafeReplace runtime-context rows and **68** deterministic exact-match V4 false negatives, all expected.
+
+**Next checkpoint: UT4 Step 9 is complete; resume from the next unfinished migration/source-audit section rather than reopening UT4 parity unless its source policy, provider graph, dependency policy, or staged payloads change.**

@@ -106,9 +106,14 @@ final class Uedb5GameParityAuditService
         $s=$this->db->prepare($sql);$s->execute([$gameId]);
         $unexpected=0;$expected=0;$expectedMissingToUnresolved=0;$details=[];
         $providerMismatch=0;$providerUnexpected=0;$objectMismatch=0;$objectUnexpected=0;$privateRows=0;
+        $currentFileId=null;$currentDependencies=[];
         while(($row=$s->fetch(PDO::FETCH_ASSOC))!==false){
             $fileId=(int)$row['file_id'];$index=(int)$row['source_index'];
-            $v5=$this->v5->dependenciesByIndex($gameId,$fileId)[$index]??[];
+            if($currentFileId!==$fileId){
+                $currentFileId=$fileId;
+                $currentDependencies=$this->v5->dependenciesByIndex($gameId,$fileId);
+            }
+            $v5=$currentDependencies[$index]??[];
             if(($v5['reason_code']??'')==='private_export_rejected')$privateRows++;
             $v4=['outcome'=>$this->outcomeLabel((int)$row['v4_outcome'])];
             $rule=Uedb5GameParityExpectedDifferences::classify($slug,'dependency_outcome',$v4,$v5);
@@ -223,6 +228,24 @@ final class Uedb5GameParityAuditService
             .'AND NOT EXISTS(SELECT 1 FROM ue_dependency_links l JOIN ue_file_metadata m ON m.file_id=l.file_id AND m.format_version=4 '
             .'WHERE l.file_id=e.file_id AND l.resolved_file_id=e.resolved_file_id AND l.status<>3)) q',[$gameId]
         );
+        $expectedMissingV5=0;
+        if($slug==='ut4'&&$missingV5>0){
+            $expectedMissingV5=$this->count(
+                'SELECT COUNT(*) FROM (SELECT DISTINCT l.file_id,l.resolved_file_id FROM ue_dependency_links l '
+                .'JOIN ue_files f ON f.id=l.file_id JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=4 '
+                .'JOIN ue_uedb5_dependency_edges e ON e.file_id=l.file_id AND e.source_kind=1 AND e.source_index=l.import_index AND e.outcome=4 '
+                .'JOIN ue_uedb5_provider_keys p ON p.game_id=f.game_id AND p.package_key_kind=e.required_package_key_kind '
+                .'AND p.package_key=e.required_package_key AND p.file_id=l.resolved_file_id '
+                .'WHERE f.game_id=? AND f.scan_status="verified" AND l.resolved_file_id IS NOT NULL '
+                .'AND l.resolved_file_id<>l.file_id AND l.status<>3 '
+                .'AND NOT EXISTS(SELECT 1 FROM ue_uedb5_dependency_edges e2 WHERE e2.file_id=l.file_id '
+                .'AND e2.resolved_file_id=l.resolved_file_id AND e2.outcome<>3) '
+                .'AND (SELECT COUNT(DISTINCT p2.file_id) FROM ue_uedb5_provider_keys p2 '
+                .'WHERE p2.game_id=f.game_id AND p2.package_key_kind=e.required_package_key_kind '
+                .'AND p2.package_key=e.required_package_key)>1) q',[$gameId]
+            );
+        }
+        $unexpectedMissingV5=max(0,$missingV5-$expectedMissingV5);
         $detailLimit=max(1,min($maxDetails,$relationSamples));$details=[];
         if($missingV5>0){
             $rows=$this->rows(
@@ -248,12 +271,13 @@ final class Uedb5GameParityAuditService
         }
         $packageIdentity=$this->requiredPackageKeyMismatches($slug,$gameId);
         return [
-            'ok'=>$missingV5===0&&$missingV4===0&&$packageIdentity['unexpected']===0,
+            'ok'=>$unexpectedMissingV5===0&&$missingV4===0&&$packageIdentity['unexpected']===0,
             'v4_requires_pairs'=>$v4Pairs,'v5_requires_pairs'=>$v5Pairs,
-            'missing_in_v5'=>$missingV5,'missing_in_v4'=>$missingV4,
+            'missing_in_v5'=>$missingV5,'expected_missing_in_v5'=>$expectedMissingV5,
+            'unexpected_missing_in_v5'=>$unexpectedMissingV5,'missing_in_v4'=>$missingV4,
             'required_package_identity_mismatch_count'=>$packageIdentity['unexpected'],
             'expected_required_package_identity_difference_count'=>$packageIdentity['expected'],
-            'note'=>'Required By is the inverse of the same normalized source->target relationship graph; package/alias fallback identity is checked separately.',
+            'note'=>'Required By is the inverse of the same normalized source->target relationship graph; UT4 V4 pairs whose target is one of multiple source-equivalent physical providers are expected when runtime PAK/mount order is unavailable.',
             'details'=>$details,
         ];
     }
@@ -275,11 +299,14 @@ final class Uedb5GameParityAuditService
             .'OR e.required_package_key<>'.$packageHashSql.') '
             .'ORDER BY l.file_id,l.import_index';
         $s=$this->db->prepare($sql);$s->execute([$gameId]);
-        $unexpected=0;$expected=0;$cache=[];
+        $unexpected=0;$expected=0;$currentFileId=null;$currentDependencies=[];
         while(($row=$s->fetch(PDO::FETCH_ASSOC))!==false){
             $fileId=(int)$row['file_id'];$index=(int)$row['import_index'];
-            $cache[$fileId]??=$this->v5->dependenciesByIndex($gameId,$fileId);
-            $v5=(array)($cache[$fileId][$index]??[]);
+            if($currentFileId!==$fileId){
+                $currentFileId=$fileId;
+                $currentDependencies=$this->v5->dependenciesByIndex($gameId,$fileId);
+            }
+            $v5=(array)($currentDependencies[$index]??[]);
             $rule=Uedb5GameParityExpectedDifferences::classify(
                 $slug,'dependency_outcome',['outcome'=>$this->outcomeLabel((int)$row['status'])],$v5
             );
@@ -397,7 +424,7 @@ final class Uedb5GameParityAuditService
             .'LEFT JOIN ue_file_metadata m ON m.file_id=l.file_id AND m.format_version=4 '
             .'WHERE f.game_id=? AND f.scan_status="verified" AND e.source_kind=1 ORDER BY e.file_id,e.source_index';
         $s=$this->db->prepare($sql);$s->execute([$gameId,$gameId]);
-        $dependencyRows=0;$mismatch=0;$expected=0;$details=[];$depCache=[];
+        $dependencyRows=0;$mismatch=0;$expected=0;$details=[];$currentFileId=null;$currentDependencies=[];
         while(($row=$s->fetch(PDO::FETCH_ASSOC))!==false){
             $dependencyRows++;$fileId=(int)$row['file_id'];$index=(int)$row['source_index'];
             $ok=$row['v4_outcome']!==null&&(int)$row['v4_outcome']===(int)$row['outcome']
@@ -405,8 +432,11 @@ final class Uedb5GameParityAuditService
                 ||(int)$row['v4_provider']===(int)$row['v5_provider']);
             $rule=null;
             if(!$ok&&$row['v4_outcome']!==null){
-                $depCache[$fileId]??=$this->v5->dependenciesByIndex($gameId,$fileId);
-                $v5=(array)($depCache[$fileId][$index]??[]);
+                if($currentFileId!==$fileId){
+                    $currentFileId=$fileId;
+                    $currentDependencies=$this->v5->dependenciesByIndex($gameId,$fileId);
+                }
+                $v5=(array)($currentDependencies[$index]??[]);
                 $rule=Uedb5GameParityExpectedDifferences::classify($slug,'dependency_outcome',['outcome'=>$this->outcomeLabel((int)$row['v4_outcome'])],$v5);
             }
             if(!$ok&&$rule===null)$mismatch++;elseif(!$ok)$expected++;
@@ -535,15 +565,31 @@ final class Uedb5GameParityAuditService
                 ];
             }
         }
-        $resolvedMismatch=$this->count(
-            'SELECT COUNT(*) FROM ue_uedb5_dependency_edges e JOIN ue_files f ON f.id=e.file_id '
+        $resolvedSql='SELECT e.file_id,e.source_index,l.status v4_status '
+            .'FROM ue_uedb5_dependency_edges e JOIN ue_files f ON f.id=e.file_id '
             .'LEFT JOIN ue_dependency_links l ON l.file_id=e.file_id AND l.import_index=e.source_index '
-            .'WHERE f.game_id=? AND f.scan_status="verified" AND e.source_kind=1 AND e.outcome=1 AND (l.file_id IS NULL OR l.status<>1)',[$gameId]
-        );
+            .'WHERE f.game_id=? AND f.scan_status="verified" AND e.source_kind=1 AND e.outcome=1 '
+            .'AND (l.file_id IS NULL OR l.status<>1) ORDER BY e.file_id,e.source_index';
+        $resolved=$this->db->prepare($resolvedSql);$resolved->execute([$gameId]);
+        $resolvedMismatch=0;$resolvedExpected=0;$currentFileId=null;$currentDependencies=[];
+        while(($row=$resolved->fetch(PDO::FETCH_ASSOC))!==false){
+            $fileId=(int)$row['file_id'];$index=(int)$row['source_index'];
+            if($currentFileId!==$fileId){
+                $currentFileId=$fileId;
+                $currentDependencies=$this->v5->dependenciesByIndex($gameId,$fileId);
+            }
+            $v5=(array)($currentDependencies[$index]??[]);
+            $v4Outcome=$row['v4_status']===null?'absent':$this->outcomeLabel((int)$row['v4_status']);
+            $rule=$row['v4_status']===null?null:Uedb5GameParityExpectedDifferences::classify(
+                $slug,'dependency_outcome',['outcome'=>$v4Outcome],$v5
+            );
+            if($rule===null)$resolvedMismatch++;else$resolvedExpected++;
+        }
         return [
             'ok'=>$privateMismatch===0&&$resolvedMismatch===0,'private_rejection_rows'=>$private,
             'private_unexpected_mismatch_count'=>$privateMismatch,'private_expected_difference_count'=>$expected,
-            'resolved_acceptance_mismatch_count'=>$resolvedMismatch,'details'=>$details,
+            'resolved_acceptance_mismatch_count'=>$resolvedMismatch,
+            'resolved_acceptance_expected_difference_count'=>$resolvedExpected,'details'=>$details,
         ];
     }
     /** @return array<string,int> */
@@ -554,12 +600,15 @@ final class Uedb5GameParityAuditService
             .'JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=4 '
             .'JOIN ue_terms t ON t.id=l.required_package_term_id '
             .'JOIN ue_uedb5_dependency_edges e ON e.file_id=l.file_id AND e.source_kind=1 AND e.source_index=l.import_index '
-            .'WHERE f.game_id=? AND f.scan_status="verified" AND l.status=0 AND e.outcome=4 ORDER BY l.file_id,l.import_index';
-        $s=$this->db->prepare($sql);$s->execute([$gameId]);$counts=[];$cache=[];
+            .'WHERE f.game_id=? AND f.scan_status="verified" AND l.status=0 AND e.outcome IN (1,4) ORDER BY l.file_id,l.import_index';
+        $s=$this->db->prepare($sql);$s->execute([$gameId]);$counts=[];$currentFileId=null;$currentDependencies=[];
         while(($row=$s->fetch(PDO::FETCH_ASSOC))!==false){
             $fileId=(int)$row['file_id'];$index=(int)$row['import_index'];
-            $cache[$fileId]??=$this->v5->dependenciesByIndex($gameId,$fileId);
-            $v5=(array)($cache[$fileId][$index]??[]);
+            if($currentFileId!==$fileId){
+                $currentFileId=$fileId;
+                $currentDependencies=$this->v5->dependenciesByIndex($gameId,$fileId);
+            }
+            $v5=(array)($currentDependencies[$index]??[]);
             $rule=Uedb5GameParityExpectedDifferences::classify($slug,'dependency_outcome',['outcome'=>'missing'],$v5);
             if($rule===null)continue;
             $key=$this->nameKey((string)$row['required_package']);

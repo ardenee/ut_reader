@@ -145,11 +145,30 @@ Actual behavioural audit after readiness is true:
 C:\php8.5\php.exe C:\Apache24\htdocs\unrealdb\catalog\bin\audit-uedb5-game-parity.php --game=ut99 --max-details=100 --search-samples=150 --relation-samples=500
 ```
 
+The original no-`--category` command remains the monolithic compatibility mode. For resumable/category-scoped operation, list categories and run one, several, or all categories through the same CLI:
+
+```powershell
+C:\php8.5\php.exe C:\Apache24\htdocs\unrealdb\catalog\bin\audit-uedb5-game-parity.php --list-categories
+C:\php8.5\php.exe C:\Apache24\htdocs\unrealdb\catalog\bin\audit-uedb5-game-parity.php --game=ut4 --category=dependencies
+C:\php8.5\php.exe C:\Apache24\htdocs\unrealdb\catalog\bin\audit-uedb5-game-parity.php --game=ut4 --category=dependencies,search_results
+C:\php8.5\php.exe C:\Apache24\htdocs\unrealdb\catalog\bin\audit-uedb5-game-parity.php --game=ut4 --category=all
+```
+
+Category mode checkpoints each completed category under `catalog/storage/parity-audit-<game>.json`. Restarting without `--rerun` skips completed selected categories. `--rerun` replaces only the selected category results, so a focused fix does not require repeating already-green categories. `--checkpoint=<path>` may be used when an operator needs a different persistent checkpoint location.
+
 A nonzero mismatch exit means cutover for that game is blocked until every unexpected difference is explained and either fixed or represented by a source-backed expected-difference rule.
+
+## UT4 completed parity result
+
+After the corrected-provider graph Pass-2 rebuild and revalidation, UT4 has **64,247 / 64,247 validated files**, zero staged/pending/failed rows, complete dependency payloads, complete primary-provider coverage, and zero invalid staged identities.
+
+The category audit is green across all eight Step-9 categories. Dependency row totals are identical at **748,145**. V4/V5 outcome counts intentionally differ because source-correct V5 refuses to guess runtime environment state. The final dependency audit records **281,132 source-backed expected differences and 0 unexpected mismatches**. These consist of duplicate-provider runtime PAK/mount-order ambiguity, editor SafeReplace runtime context, exact public VerifyImport matches missed by legacy V4, runtime native/transient/`LOAD_FindIfFail`/class-context branches, parent `SourceLinker` runtime context, and `ObjectRedirector` destination-runtime context. Provider-selection and object-coverage differences have **0 unexpected rows**.
+
+The relation audit records **126,442** V4 source->target pairs missing from V5, all expected because the V4 target is one of multiple physical providers for the same source-equivalent package identity and the runtime PAK/mount winner is unavailable. Base-game missing parity is green with **556 V4 missing imports, 0 V5 hard-missing imports, and 556 source-backed expected differences**. VerifyImport parity is green with **32** private SafeReplace runtime-context differences and **68** exact-match V4 false negatives, all expected.
 
 ## Current implementation boundary
 
-Step 9 infrastructure is implemented before any game is fully V5-ready. No game-level audit result is claimed yet.
+Step 9 infrastructure is implemented and UT4 has completed the full source-backed game-level parity audit successfully. Other games still require their own full readiness and category audit before cutover.
 
 The executable pieces are:
 
