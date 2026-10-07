@@ -10,10 +10,10 @@ require_once $root . '/lib/CatalogUE5ParserProfile.php';
 
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5MigrationValidationService;
 
-$options = getopt('', ['game:','continuous','limit::','progress-every::','preflight','sync-only']);
+$options = getopt('', ['game:','continuous','limit::','progress-every::','preflight','sync-only','summary']);
 $game = trim((string)($options['game'] ?? ''));
 if ($game === '') {
-    fwrite(STDERR,"Usage: php catalog/bin/validate-uedb5-migration.php --game=ut99 [--continuous] [--limit=500] [--progress-every=100] [--preflight|--sync-only]\n");
+    fwrite(STDERR,"Usage: php catalog/bin/validate-uedb5-migration.php --game=ut99 [--continuous] [--limit=500] [--progress-every=100] [--summary] [--preflight|--sync-only]\n");
     exit(1);
 }
 $app = catalog_bootstrap();
@@ -30,7 +30,8 @@ try {
     $limit = max(1, min(5000, (int)($options['limit'] ?? 500)));
     $continuous = isset($options['continuous']);
     $progressEvery = max(1, (int)($options['progress-every'] ?? 100));
-    $emit = static function(array $row): void {
+    $summaryOnly = isset($options['summary']);
+    $emit = $summaryOnly ? null : static function(array $row): void {
         $row['memory_mb'] = round(memory_get_usage(true) / 1048576, 1);
         echo json_encode($row, JSON_UNESCAPED_SLASHES), PHP_EOL;
     };
