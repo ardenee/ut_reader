@@ -1,3 +1,5 @@
+[Reading 726 lines from start (total: 726 lines, 0 remaining)]
+
 # Epic/Game Source Conformance Audit
 
 ## Governing rule
@@ -694,4 +696,35 @@ The final read-only Step-9 category audit is green in all eight categories. The 
 
 These are parity classifications only and do not change UEDB5 dependency data. V5 remains fail-closed where runtime state is unavailable. Provider-selection and object-coverage parity both have **0 unexpected differences**. Required/Required-By parity records **126,442** V4 pairs omitted from V5, all source-proven duplicate-provider environment choices with **0 unexpected pairs**. Base-game missing parity is green (**556** V4 missing imports, **0** V5 hard-missing imports, **556** expected source-backed differences). VerifyImport parity is green with **32** private SafeReplace runtime-context rows and **68** deterministic exact-match V4 false negatives, all expected.
 
-**Next checkpoint: UT4 Step 9 is complete; resume from the next unfinished migration/source-audit section rather than reopening UT4 parity unless its source policy, provider graph, dependency policy, or staged payloads change.**
+## Section 4H - UE5 5.8.3 classic package serialization and pre-dependency preprocessing
+
+**Status: complete against the local UE5 5.8.3 classic LinkerLoad source at commit `396c9f059903aed5fec78ecd3d437a40c6415368`. Zen/IoStore remains a separate 4I audit.**
+
+### Source authority
+
+- `L:\Source\Engine\UE5\UE 5.8.3`
+- `Runtime/Core/Public/UObject/ObjectVersion.h`
+- `Runtime/Core/Private/UObject/ObjectVersion.cpp`
+- `Runtime/CoreUObject/Private/UObject/PackageFileSummary.cpp`
+- `Runtime/CoreUObject/Private/UObject/ObjectResource.cpp`
+- existing classic LinkerLoad/VerifyImport source from Sections 2B1 and 3D
+
+### Source results and corrections
+
+1. **UE5 retains the complete UE4 version enum.** The classic reader must use the complete C++ enum values rather than counting only `VER_UE4_*` names. The audited gates are EngineVersionObject 336; StringAssetReferences 384; CompatibleEngineVersion 444; SerializeText 459; LoadForEditorGame 365; CookedAssetsInEditor 485; NameHashes 504; PreloadDependencies 507; TemplateIndex 508; SearchableNames 510; 64-bit export serials 511; SoftObjectPath 514; LocalizationId 516; PackageOwner 518; NonOuterPackageImport 520; final UE4 version 522.
+2. **UE5 5.8.3 current package version is the pair UE4 522 / UE5 1018.** `GPackageFileUEVersion` constructs exactly that pair. Unversioned classic packages therefore use 522/1018 as parser assumptions while preserving serialized zero versions separately.
+3. **Summary/import/export order is source-aligned.** `FPackageFileSummary`, `FObjectImport`, and `FObjectExport` field order and gates in `UnrealPackageReader5` match the audited serializers, including SavedHash placement, PackageName/bImportOptional, removed export PackageGuid, inherited/public-hash bits, preload ranges, and script serialization offsets.
+4. **`FName::IsNone()` is not trimmed-string semantics.** Exact `None` with Number zero is semantic None; a whitespace-bearing serialized FName such as `" None "` is a different identity. The reader previously trimmed before its effective-PackageName None check and could therefore collapse a valid distinct name. That normalization is removed.
+5. **Soft package references preserve exact FName text.** `FLinkerTables::SoftPackageReferenceList` is `TArray<FName>`; the reader previously trimmed its rendered path projection. That trim is removed so raw/rendered identity stays source-shaped at the reader boundary.
+6. **No broader classic dependency change is required.** The existing UE5 classic dependency resolver already treats whitespace-bearing FNames as exact identity, so the reader fix brings raw parsing into parity with the resolver rather than changing VerifyImport policy.
+
+### Regression and migration boundary
+
+- `verify-ue5-583-reader-contract.php` now freezes the complete inherited UE4 gate table, 522/1018 unversioned assumptions, exact `NAME_None` semantics, whitespace-bearing non-None behavior, and exact soft-reference FName text.
+- `verify-uedb5-ue5-classic-persistence.php`, `verify-uedb5-ue5-classic-dependency-resolution.php`, and `verify-ue5-classic-verifyimport-policy-transition.php` remain green after the correction.
+- UE5 classic is not currently a registered full-game UEDB5 migration target, so this correction does not require a present game-wide Pass-1 replay or dependency rebuild. Future UE5 classic staging must use the corrected reader contract.
+- The stale local experimental 521/off-by-one edits discovered during this audit are explicitly rejected; they were never source-correct and must not be committed.
+
+**Next checkpoint: Section 4I - UE5 5.8.3 Zen/IoStore serialization and pre-dependency preprocessing. Reuse the completed Section 3E package-store/runtime arbitration results rather than re-auditing them.**
+
+[executed on device: Lelly-pc (1e6f9b87-60aa-4fe3-bf48-4166e6555d43)]
