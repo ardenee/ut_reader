@@ -8,9 +8,9 @@ $repair=(string)file_get_contents($root.'/bin/repair-uedb5-4j-source-policies.ph
 $checks=[];
 $check=static function(string$n,bool$ok)use(&$checks):void{$checks[$n]=$ok;};
 $check('candidate_scan_is_read_only',!str_contains($scan,'UPDATE ')&&!str_contains($scan,'DELETE ')&&!str_contains($scan,'INSERT INTO '));
-$check('candidate_scan_is_names_only',str_contains($scan,'scan($gid,$fid,\'names\')')&&!str_contains($scan,'scan($gid,$fid,\'imports\')')&&!str_contains($scan,'scan($gid,$fid,\'exports\')'));
+$check('candidate_scan_streams_each_table_once',str_contains($scan,'scan($gid,$fid,\'imports\')')&&str_contains($scan,'scan($gid,$fid,\'exports\')')&&str_contains($scan,'scan($gid,$fid,\'names\')')&&!str_contains($scan,'rowsByPositions'));
 $check('candidate_scan_persists_ids',str_contains($scan,'file_put_contents($idsFile'));
-$check('candidate_scan_marks_conservative',str_contains($scan,"'conservative'=>true"));
+$check('candidate_scan_is_exact_reference_intersection',str_contains($scan,"'exact'=>true")&&str_contains($scan,'isset($refs[$idx])'));
 $check('policy_repair_is_dry_run_by_default',str_contains($repair,'$apply=isset($o[\'apply\'])')&&strpos($repair,'if(!$apply)')!==false);
 $check('policy_repair_requires_current_dependency_checkpoint',str_contains($repair,'dependency_checkpoint_not_current_payload'));
 $check('policy_repair_verifies_dependency_rows_unchanged',str_contains($repair,'dependency_results_changed_during_policy_refresh'));
