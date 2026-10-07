@@ -15,7 +15,7 @@ $ue5Impact=(string)file_get_contents($root.'/src/Infrastructure/Persistence/PdoU
 $zenImpact=(string)file_get_contents($root.'/src/Infrastructure/Persistence/PdoUe5ZenDependencyImpactQuery.php');
 $pass1=(string)file_get_contents($root.'/src/Infrastructure/Metadata/Uedb5GameSourceMigrationService.php');
 $checks=[];$fail=[];$check=static function(string$n,bool$ok)use(&$checks,&$fail){$checks[$n]=$ok;if(!$ok)$fail[]=$n;};
-$check('transition_moves_v1_through_v11_to_v12',str_contains($tool,"const OLD_POLICIES=['uedb5-dependency-pass-v1','uedb5-dependency-pass-v2','uedb5-dependency-pass-v3','uedb5-dependency-pass-v4','uedb5-dependency-pass-v5','uedb5-dependency-pass-v6','uedb5-dependency-pass-v7','uedb5-dependency-pass-v8','uedb5-dependency-pass-v9','uedb5-dependency-pass-v10','uedb5-dependency-pass-v11']")&&str_contains($service,"DEPENDENCY_POLICY = 'uedb5-dependency-pass-v12'"));
+$check('transition_moves_v1_through_v12_to_v13',str_contains($tool,"const OLD_POLICIES=['uedb5-dependency-pass-v1','uedb5-dependency-pass-v2','uedb5-dependency-pass-v3','uedb5-dependency-pass-v4','uedb5-dependency-pass-v5','uedb5-dependency-pass-v6','uedb5-dependency-pass-v7','uedb5-dependency-pass-v8','uedb5-dependency-pass-v9','uedb5-dependency-pass-v10','uedb5-dependency-pass-v11','uedb5-dependency-pass-v12']")&&str_contains($service,"DEPENDENCY_POLICY = 'uedb5-dependency-pass-v13'"));
 $check('exact_classic_package_key_has_distinct_kind',str_contains($contract,'PACKAGE_KEY_CLASSIC_FNAME = 3')&&str_contains($tool,'PACKAGE_KEY_CLASSIC_FNAME'));
 $check('all_classic_linkerload_schemas_use_exact_fname_key',str_contains($contract,"str_starts_with(\$schema, 'ue1.')")&&str_contains($contract,"str_starts_with(\$schema, 'ue4.')")&&str_contains($contract,"str_starts_with(\$schema, 'ue5.')")&&str_contains($contract,'? self::PACKAGE_KEY_CLASSIC_FNAME'));
 $check('verifyimport_hash_algorithm_is_exact_text_revision',str_contains($hash,"SOURCE_FNAME_ALGORITHM = 'md5-fname-ci-v2-exact-text'")&&str_contains($hash,'sourceFnameBinary')&&str_contains($hash,'self::fnameKey($objectName)'));
@@ -31,11 +31,11 @@ $check('policy_specific_rebuild_rules_are_preserved',
     && str_contains($tool,"'uedb5-dependency-pass-v3'=>\$modern?\$identityWithoutAmbiguity:[]")
     && str_contains($tool,'default=>[]')
     && str_contains($tool,"array_intersect(\$ue1Why,['ut99_mesh_rehack'])")
-    && str_contains($tool,"'uedb5-dependency-pass-v11'=>[]")
+    && str_contains($tool,"'uedb5-dependency-pass-v11','uedb5-dependency-pass-v12'=>[]")
 );
 $check('unaffected_rows_roll_forward_without_container_reads',str_contains($tool,'rolled_forward_unaffected')&&str_contains($tool,'UPDATE ue_uedb5_dependency_edges')&&str_contains($tool,'UPDATE ue_uedb5_dependency_packages')&&!str_contains($tool,'Uedb5MetadataReader'));
 $check('exact_package_hash_uses_shared_php_fname_key_not_sql_lower',str_contains($tool,'classicPackageKeyBinary')&&!str_contains($tool,'MD5(LOWER(CONVERT('));
-$check('v12_impacted_rebuild_is_exact_file_and_skips_game_preflight_only_inside_transition',str_contains($tool,'$svc->runFile((int)$r[\'game_id\'],$fid,true,true)')&&str_contains($tool,"'rebuild-impacted'"));
+$check('v13_impacted_rebuild_is_exact_file_and_skips_game_preflight_only_inside_transition',str_contains($tool,'$svc->runFile((int)$r[\'game_id\'],$fid,true,true)')&&str_contains($tool,"'rebuild-impacted'"));
 $check('live_v4_refresh_is_optional_exact_file_only',str_contains($tool,"'rebuild-v4-impacted'")&&str_contains($tool,'$v4->rebuild((int)$r[\'file_id\']')&&str_contains($tool,'PdoGameCatalogStats'));
 $check('ue1_transition_is_bounded_to_file_indexed_staged_edges',str_contains($ue1Impact,'e.file_id=v.file_id')&&str_contains($ue1Impact,'e.outcome IN (0,4)')&&str_contains($ue1Impact,'l.file_id IN (')&&str_contains($ue1Impact,'import_class_name_term_id'));
 $check('pre50_ue1_requires_exact_pass1_restage',str_contains($ue1Impact,'ue1_pre50_pass1_reparse')&&str_contains($tool,"'reparse-pass1-impacted'")&&str_contains($pass1,'public function runFile(int $gameId, int $fileId, bool $apply)'));
@@ -49,30 +49,40 @@ $check('v6_only_rebuilds_new_ut2004_delta',str_contains($tool,"'uedb5-dependency
 $check('unreal2_v69_requires_exact_pass1_restage',str_contains($ue2Impact,'ue2_unreal2_v69_pass1_reparse')&&str_contains($tool,"'ue2_unreal2_v69_pass1_reparse'"));
 $check('v5_ue1_only_rebuilds_new_mesh_delta',str_contains($tool,"'uedb5-dependency-pass-v5'=>array_values(array_intersect(\$ue1Why,['ut99_mesh_rehack']))"));
 $check('v7_only_rebuilds_new_ut3_delta',str_contains($tool,"'uedb5-dependency-pass-v7'=>array_values(array_filter(\$ue3Why")&&str_contains($tool,"str_starts_with(\$x,'ue3_ut3_')")&&str_contains($ue3Impact,'required_object_key IS NOT NULL'));
-$check('v12_reopens_ut4_for_clean_master_delta',
-    str_contains($tool,'$ue4Effective=$ue4Why')
+$check('v12_does_not_reopen_completed_ut4_delta',
+    str_contains($tool,'$ue4Effective=$policy===\'uedb5-dependency-pass-v12\'?[]:$ue4Why')
     && str_contains($ue4Impact,'ue4_ut4_verifyimport_outcome_change')
     && str_contains($ue4Impact,'ue4_ut4_bad_v510_pass1_repair_required')
     && str_contains($ue4Impact,'ue4_ut4_source_policy_refresh_required')
-    && str_contains($tool,"'ue4_ut4_bad_v510_pass1_repair_required'")
     && str_contains($ue4Impact,'ue_export_path_lookup')
 );
-$check('completed_ue5_classic_delta_is_not_replayed_by_v10_or_v11',
-    str_contains($tool,"\$ue5Effective=in_array(\$policy,['uedb5-dependency-pass-v10','uedb5-dependency-pass-v11'],true)?[]:\$ue5Why")
+$check('completed_ue5_classic_delta_is_not_replayed_by_v10_through_v12',
+    str_contains($tool,'$ue5Effective=in_array($policy,[\'uedb5-dependency-pass-v10\',\'uedb5-dependency-pass-v11\',\'uedb5-dependency-pass-v12\'],true)?[]:$ue5Why')
     && str_contains($ue5Impact,'ue5_classic_verifyimport_outcome_change')
     && str_contains($ue5Impact,'ue5_classic_private_package_access_recheck')
 );
-$check('completed_ue5_zen_delta_is_not_replayed_by_v11',
-    str_contains($tool,"\$zenEffective=\$policy==='uedb5-dependency-pass-v11'?[]:\$zenWhy")
+$check('completed_ue5_zen_delta_is_not_replayed_by_v11_or_v12',
+    str_contains($tool,'$zenEffective=in_array($policy,[\'uedb5-dependency-pass-v11\',\'uedb5-dependency-pass-v12\'],true)?[]:$zenWhy')
     && str_contains($zenImpact,'ue5_zen_dependency_v3_outcome_change')
     && str_contains($zenImpact,'PACKAGE_KEY_ZEN_PACKAGE_ID')
     && str_contains($zenImpact,'DEP_SOURCE_CELL_IMPORT')
     && str_contains($zenImpact,'DEP_SOURCE_LOAD_ORDER')
 );
 $check('later_policies_do_not_replay_completed_legacy_deltas',
-    str_contains($tool,"'uedb5-dependency-pass-v6','uedb5-dependency-pass-v7','uedb5-dependency-pass-v8','uedb5-dependency-pass-v9','uedb5-dependency-pass-v10','uedb5-dependency-pass-v11'=>[]")
-    && str_contains($tool,"'uedb5-dependency-pass-v7','uedb5-dependency-pass-v8','uedb5-dependency-pass-v9','uedb5-dependency-pass-v10','uedb5-dependency-pass-v11'=>[]")
-    && str_contains($tool,"'uedb5-dependency-pass-v8','uedb5-dependency-pass-v9','uedb5-dependency-pass-v10','uedb5-dependency-pass-v11'=>[]")
+    str_contains($tool,"'uedb5-dependency-pass-v6','uedb5-dependency-pass-v7','uedb5-dependency-pass-v8','uedb5-dependency-pass-v9','uedb5-dependency-pass-v10','uedb5-dependency-pass-v11','uedb5-dependency-pass-v12'=>[]")
+    && str_contains($tool,"'uedb5-dependency-pass-v7','uedb5-dependency-pass-v8','uedb5-dependency-pass-v9','uedb5-dependency-pass-v10','uedb5-dependency-pass-v11','uedb5-dependency-pass-v12'=>[]")
+    && str_contains($tool,"'uedb5-dependency-pass-v8','uedb5-dependency-pass-v9','uedb5-dependency-pass-v10','uedb5-dependency-pass-v11','uedb5-dependency-pass-v12'=>[]")
 );
+$check('v13_requires_durable_4j_semantic_id_inputs',
+    str_contains($tool,"'ut99-semantic-ids:'")
+    && str_contains($tool,"'ut2004-semantic-ids:'")
+    && str_contains($tool,"'ut3-semantic-ids:'")
+    && str_contains($tool,'Missing 4J semantic ID file'));
+$check('v13_4j_semantic_reasons_are_explicit',
+    str_contains($tool,'ue1_ut99_name_preprocessing_v13')
+    && str_contains($tool,'ue2_ut2004_name_preprocessing_v13')
+    && str_contains($tool,'ue3_ut3_name_preprocessing_v13')
+    && str_contains($tool,'$preprocessWhy')
+    && str_contains($tool,'semantic_input_counts'));
 $check('transition_is_read_only_by_default',strpos($tool,'if(!$apply)')!==false&&strpos($tool,'if(!$apply)')<strpos($tool,'$db->beginTransaction()'));
 echo json_encode(['ok'=>$fail===[],'checks'=>$checks,'failures'=>$fail],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;exit($fail===[]?0:1);
