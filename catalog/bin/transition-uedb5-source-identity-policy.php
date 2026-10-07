@@ -18,26 +18,45 @@ use UnrealDb\Catalog\Infrastructure\Persistence\PdoUe4VerifyImportImpactQuery;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoUe5ClassicVerifyImportImpactQuery;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoUe5ZenDependencyImpactQuery;
 
-const OLD_POLICIES=['uedb5-dependency-pass-v1','uedb5-dependency-pass-v2','uedb5-dependency-pass-v3','uedb5-dependency-pass-v4','uedb5-dependency-pass-v5','uedb5-dependency-pass-v6','uedb5-dependency-pass-v7','uedb5-dependency-pass-v8','uedb5-dependency-pass-v9','uedb5-dependency-pass-v10','uedb5-dependency-pass-v11'];
-$o=getopt('',['game-id::','apply','rebuild-impacted','rebuild-v4-impacted','reparse-pass1-impacted','limit::']);
+const OLD_POLICIES=['uedb5-dependency-pass-v1','uedb5-dependency-pass-v2','uedb5-dependency-pass-v3','uedb5-dependency-pass-v4','uedb5-dependency-pass-v5','uedb5-dependency-pass-v6','uedb5-dependency-pass-v7','uedb5-dependency-pass-v8','uedb5-dependency-pass-v9','uedb5-dependency-pass-v10','uedb5-dependency-pass-v11','uedb5-dependency-pass-v12'];
+$o=getopt('',['game-id::','apply','rebuild-impacted','rebuild-v4-impacted','reparse-pass1-impacted','limit::','ut99-semantic-ids:','ut2004-semantic-ids:','ut3-semantic-ids:']);
 $gid=max(0,(int)($o['game-id']??0));
 $apply=isset($o['apply']);
 $rebuild=isset($o['rebuild-impacted']);
 $rebuildV4=isset($o['rebuild-v4-impacted']);
 $reparsePass1=isset($o['reparse-pass1-impacted']);
 $limit=max(1,min(100000,(int)($o['limit']??1000)));
+$semanticFiles=['ut99'=>(string)($o['ut99-semantic-ids']??''),'ut2004'=>(string)($o['ut2004-semantic-ids']??''),'ut3'=>(string)($o['ut3-semantic-ids']??'')];
+$loadIds=static function(string $path,string $label):array{if($path===''||!is_file($path))throw new RuntimeException("Missing 4J semantic ID file for $label: $path");$ids=[];foreach(file($path,FILE_IGNORE_NEW_LINES|FILE_SKIP_EMPTY_LINES)?:[]as$line){$id=(int)trim($line);if($id>0)$ids[$id]=true;}return array_map('intval',array_keys($ids));};
+$semanticIds=[];foreach($semanticFiles as$slug=>$path)$semanticIds[$slug]=$loadIds($path,$slug);
 if(($rebuild||$rebuildV4||$reparsePass1)&&!$apply){fwrite(STDERR,"Rebuild/reparse options require --apply.\n");exit(1);}
 
 $app=catalog_bootstrap();$db=$app->db;
 $new=Uedb5GameDependencyPassService::DEPENDENCY_POLICY;
-if($new!=='uedb5-dependency-pass-v12')throw new RuntimeException('Combined source/UE1/UE2/UE3/UE4/UE5-classic/UE5-Zen/UT4-clean-master transition requires dependency policy v12.');
+if($new!=='uedb5-dependency-pass-v13')throw new RuntimeException('Final source-conformance transition requires dependency policy v13.');
 $tables=['ue_uedb5_migration_status','ue_uedb5_files','ue_uedb5_provider_keys','ue_uedb5_dependency_edges','ue_uedb5_dependency_packages','ue_dependency_links','ue_terms','ue_name_lookup','ue_file_package_aliases','ue_games','ue_game_profiles','ue_file_metadata','ue_export_path_lookup'];
 $check=$db->prepare('SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=DATABASE() AND table_name=?');
-foreach($tables as$t){$check->execute([$t]);if((int)$check->fetchColumn()!==1){echo json_encode(['ok'=>false,'missing_table'=>$t,'error'=>'Run catalog/bin/migrate.php migrate before the v12 dependency transition.']),PHP_EOL;exit(1);}}
+foreach($tables as$t){$check->execute([$t]);if((int)$check->fetchColumn()!==1){echo json_encode(['ok'=>false,'missing_table'=>$t,'error'=>'Run catalog/bin/migrate.php migrate before the v13 dependency transition.']),PHP_EOL;exit(1);}}
 
 $q=new PdoClassicSourceIdentityImpactQuery($db);
 $current=$q->currentOldPolicyFiles($gid);
 $currentIds=array_map(static fn(array$r):int=>(int)$r['file_id'],$current);
+$currentById=[];foreach($current as$row)$currentById[(int)$row['file_id']]=$row;
+$gameIds=[];$gs=$db->query('SELECT id,slug FROM ue_games WHERE slug IN ("ut99","ut2004","ut3")');
+foreach($gs->fetchAll(PDO::FETCH_ASSOC)?:[]as$row)$gameIds[(string)$row['slug']]=(int)$row['id'];
+$preprocessReasons=[];$semanticInputCounts=[];
+$semanticReasonNames=['ut99'=>'ue1_ut99_name_preprocessing_v13','ut2004'=>'ue2_ut2004_name_preprocessing_v13','ut3'=>'ue3_ut3_name_preprocessing_v13'];
+foreach($semanticIds as$slug=>$ids){
+    $expectedGameId=(int)($gameIds[$slug]??0);
+    if($expectedGameId<1)throw new RuntimeException("4J semantic game registration missing: $slug");
+    $semanticInputCounts[$slug]=count($ids);
+    foreach($ids as$fid){
+        $row=$currentById[$fid]??null;
+        if(!is_array($row))throw new RuntimeException("4J semantic file #$fid for $slug is not in the selected old-policy transition scope.");
+        if((int)$row['game_id']!==$expectedGameId)throw new RuntimeException("4J semantic file #$fid belongs to the wrong game.");
+        $preprocessReasons[$fid][$semanticReasonNames[$slug]]=true;
+    }
+}
 $identityCandidateIds=array_values(array_map(
     static fn(array$r):int=>(int)$r['file_id'],
     array_filter($current,static fn(array$r):bool=>(string)$r['dependency_policy']!=='uedb5-dependency-pass-v5')
@@ -72,28 +91,29 @@ foreach($current as$r){
     $ue1Why=array_keys((array)($ue1Reasons[$fid]??[]));
     $ue1Effective=match($policy){
         'uedb5-dependency-pass-v5'=>array_values(array_intersect($ue1Why,['ut99_mesh_rehack'])),
-        'uedb5-dependency-pass-v6','uedb5-dependency-pass-v7','uedb5-dependency-pass-v8','uedb5-dependency-pass-v9','uedb5-dependency-pass-v10','uedb5-dependency-pass-v11'=>[],
+        'uedb5-dependency-pass-v6','uedb5-dependency-pass-v7','uedb5-dependency-pass-v8','uedb5-dependency-pass-v9','uedb5-dependency-pass-v10','uedb5-dependency-pass-v11','uedb5-dependency-pass-v12'=>[],
         default=>$ue1Why,
     };
     $ue2Why=array_keys((array)($ue2Reasons[$fid]??[]));
     $ue2Effective=match($policy){
         'uedb5-dependency-pass-v6'=>array_values(array_filter($ue2Why,static fn(string$x):bool=>str_starts_with($x,'ue2_ut2004_'))),
-        'uedb5-dependency-pass-v7','uedb5-dependency-pass-v8','uedb5-dependency-pass-v9','uedb5-dependency-pass-v10','uedb5-dependency-pass-v11'=>[],
+        'uedb5-dependency-pass-v7','uedb5-dependency-pass-v8','uedb5-dependency-pass-v9','uedb5-dependency-pass-v10','uedb5-dependency-pass-v11','uedb5-dependency-pass-v12'=>[],
         default=>$ue2Why,
     };
     $ue3Why=array_keys((array)($ue3Reasons[$fid]??[]));
     $ue3Effective=match($policy){
         'uedb5-dependency-pass-v7'=>array_values(array_filter($ue3Why,static fn(string$x):bool=>str_starts_with($x,'ue3_ut3_'))),
-        'uedb5-dependency-pass-v8','uedb5-dependency-pass-v9','uedb5-dependency-pass-v10','uedb5-dependency-pass-v11'=>[],
+        'uedb5-dependency-pass-v8','uedb5-dependency-pass-v9','uedb5-dependency-pass-v10','uedb5-dependency-pass-v11','uedb5-dependency-pass-v12'=>[],
         default=>$ue3Why,
     };
     $ue4Why=array_keys((array)($ue4Reasons[$fid]??[]));
-    $ue4Effective=$ue4Why;
+    $ue4Effective=$policy==='uedb5-dependency-pass-v12'?[]:$ue4Why;
     $ue5Why=array_keys((array)($ue5Reasons[$fid]??[]));
-    $ue5Effective=in_array($policy,['uedb5-dependency-pass-v10','uedb5-dependency-pass-v11'],true)?[]:$ue5Why;
+    $ue5Effective=in_array($policy,['uedb5-dependency-pass-v10','uedb5-dependency-pass-v11','uedb5-dependency-pass-v12'],true)?[]:$ue5Why;
     $zenWhy=array_keys((array)($zenReasons[$fid]??[]));
-    $zenEffective=$policy==='uedb5-dependency-pass-v11'?[]:$zenWhy;
-    $why=array_values(array_unique(array_merge($identityEffective,$ue1Effective,$ue2Effective,$ue3Effective,$ue4Effective,$ue5Effective,$zenEffective)));
+    $zenEffective=in_array($policy,['uedb5-dependency-pass-v11','uedb5-dependency-pass-v12'],true)?[]:$zenWhy;
+    $preprocessWhy=array_keys((array)($preprocessReasons[$fid]??[]));
+    $why=array_values(array_unique(array_merge($identityEffective,$ue1Effective,$ue2Effective,$ue3Effective,$ue4Effective,$ue5Effective,$zenEffective,$preprocessWhy)));
     $needs=$why!==[];
     $row=['file_id'=>$fid,'game_id'=>(int)$r['game_id'],'engine_key'=>(string)$r['engine_key'],'package_family'=>(string)$r['package_family'],'old_policy'=>$policy,'reasons'=>$why];
     $pass1Reasons=['ue1_pre50_pass1_reparse','ue2_unreal2_v69_pass1_reparse','ue4_ut4_bad_v510_pass1_repair_required'];
@@ -113,8 +133,8 @@ foreach($current as$r){
 $where=$gid>0?' AND s.game_id=?':'';$in=implode(',',array_fill(0,count(OLD_POLICIES),'?'));$args=array_merge(OLD_POLICIES,$gid>0?[$gid]:[]);
 $staleSql='SELECT COUNT(*) FROM ue_uedb5_migration_status s JOIN ue_uedb5_files v ON v.file_id=s.file_id AND v.game_id=s.game_id JOIN ue_files f ON f.id=s.file_id AND f.game_id=s.game_id WHERE f.scan_status="verified" AND s.dependency_policy IN ('.$in.') AND (s.dependency_payload_sha256 IS NULL OR s.dependency_payload_sha256<>v.payload_sha256)'.$where;
 $stale=$db->prepare($staleSql);$stale->execute($args);$staleCount=(int)$stale->fetchColumn();
-$combinedCounts=(array)$identity['reason_counts'];foreach([(array)$ue1['reason_counts'],(array)$ue2['reason_counts'],(array)$ue3['reason_counts'],(array)$ue4['reason_counts'],(array)$ue5['reason_counts'],(array)$zen['reason_counts']]as$counts){foreach($counts as$k=>$v)$combinedCounts[$k]=($combinedCounts[$k]??0)+(int)$v;}ksort($combinedCounts,SORT_STRING);
-$pre=['old_policies'=>OLD_POLICIES,'new_policy'=>$new,'game_id'=>$gid?:null,'current_old_policy_count'=>count($current),'unaffected_rollforward_count'=>count($unaffected),'impacted_rebuild_count'=>count($impacted),'pass1_reparse_required_count'=>count($pass1Required),'source_policy_refresh_required_count'=>count($policyRefreshRequired),'source_profile_review_required_count'=>count($sourceReviewRequired),'v4_impacted_count'=>count($v4Impacted),'stale_old_payload_count'=>$staleCount,'impact_reason_counts'=>$combinedCounts,'impacted_file_ids_by_game'=>[],'pass1_reparse_file_ids_by_game'=>[],'source_policy_refresh_file_ids_by_game'=>[],'source_profile_review_file_ids_by_game'=>[]];
+$combinedCounts=(array)$identity['reason_counts'];foreach([(array)$ue1['reason_counts'],(array)$ue2['reason_counts'],(array)$ue3['reason_counts'],(array)$ue4['reason_counts'],(array)$ue5['reason_counts'],(array)$zen['reason_counts']]as$counts){foreach($counts as$k=>$v)$combinedCounts[$k]=($combinedCounts[$k]??0)+(int)$v;}foreach($preprocessReasons as$set)foreach(array_keys($set)as$reason)$combinedCounts[$reason]=($combinedCounts[$reason]??0)+1;ksort($combinedCounts,SORT_STRING);
+$pre=['old_policies'=>OLD_POLICIES,'new_policy'=>$new,'game_id'=>$gid?:null,'current_old_policy_count'=>count($current),'unaffected_rollforward_count'=>count($unaffected),'impacted_rebuild_count'=>count($impacted),'pass1_reparse_required_count'=>count($pass1Required),'source_policy_refresh_required_count'=>count($policyRefreshRequired),'source_profile_review_required_count'=>count($sourceReviewRequired),'v4_impacted_count'=>count($v4Impacted),'stale_old_payload_count'=>$staleCount,'semantic_input_counts'=>$semanticInputCounts,'impact_reason_counts'=>$combinedCounts,'impacted_file_ids_by_game'=>[],'pass1_reparse_file_ids_by_game'=>[],'source_policy_refresh_file_ids_by_game'=>[],'source_profile_review_file_ids_by_game'=>[]];
 foreach($impacted as$r)$pre['impacted_file_ids_by_game'][$r['game_id']][]=$r['file_id'];
 foreach($pass1Required as$r)$pre['pass1_reparse_file_ids_by_game'][$r['game_id']][]=$r['file_id'];
 foreach($policyRefreshRequired as$r)$pre['source_policy_refresh_file_ids_by_game'][$r['game_id']][]=$r['file_id'];
