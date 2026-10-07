@@ -1,3 +1,5 @@
+[Reading 260 lines from start (total: 260 lines, 0 remaining)]
+
 <?php
 declare(strict_types=1);
 
@@ -5,6 +7,7 @@ if (PHP_SAPI !== 'cli') { exit(1); }
 $root = realpath(dirname(__DIR__)) ?: dirname(__DIR__);
 require_once $root . '/bootstrap/autoload.php';
 require_once $root . '/lib/GameProfiles.php';
+require_once $root . '/lib/CatalogUE5ParserProfile.php';
 require_once dirname($root) . '/UE5/UnrealPackageReader.php';
 
 $u16 = static fn(int $v): string => pack('v', $v & 0xffff);
@@ -21,7 +24,7 @@ $fname = static fn(int $index, int $number = 0): string => pack('V2', $index, $n
 $nameEntry = static function (string $name) use ($i32, $u16): string {
     return $i32(strlen($name) + 1) . $name . "\0" . $u16(0) . $u16(0);
 };
-$names = ['CoreUObject', 'Class', 'MyObject', 'MyExport', '/Game/SoftPkg'];
+$names = ['CoreUObject', 'Class', 'MyObject', 'MyExport', ' /Game/SoftPkg '];
 $nameBytes = '';
 foreach ($names as $name) $nameBytes .= $nameEntry($name);
 
@@ -93,8 +96,8 @@ $buildPreHashFixture = static function () use ($u16, $u32, $i32, $i64, $fstring,
     $summary = $build(strlen($summary0) + strlen($nameBytes), strlen($summary0));
     return $summary . $nameBytes;
 };
-$buildNonePackageNameFixture = static function () use ($u32, $i32, $i64, $fstring, $fname, $nameEntry, $engineVersion): string {
-    $names = ['None', 'CoreUObject', 'Class', 'MyObject'];
+$buildNonePackageNameFixture = static function (string $packageNameLiteral = 'None') use ($u32, $i32, $i64, $fstring, $fname, $nameEntry, $engineVersion): string {
+    $names = [$packageNameLiteral, 'CoreUObject', 'Class', 'MyObject'];
     $nameBytes = '';
     foreach ($names as $name) $nameBytes .= $nameEntry($name);
     $importBytes = $fname(1) . $fname(2) . $i32(0) . $fname(3) . $fname(0) . $i32(0);
@@ -140,14 +143,57 @@ $fixture = $summary . $nameBytes . $importBytes . $exportBytes . $softReferenceB
 $path = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'unrealdb-ue5-583-reader-contract.uasset';
 $preHashPath = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'unrealdb-ue5-pre-name-hash-contract.uasset';
 $nonePackageNamePath = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'unrealdb-ue5-none-package-name-contract.uasset';
+$whitespaceNonePath = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'unrealdb-ue5-whitespace-none-package-name-contract.uasset';
 file_put_contents($path, $fixture);
 file_put_contents($preHashPath, $buildPreHashFixture());
 file_put_contents($nonePackageNamePath, $buildNonePackageNameFixture());
+file_put_contents($whitespaceNonePath, $buildNonePackageNameFixture(' None '));
 
 $checks = [];
 $check = static function (string $name, bool $ok, string $detail) use (&$checks): void {
     $checks[] = ['check' => $name, 'ok' => $ok, 'detail' => $detail];
 };
+
+$expectedReaderConstants = [
+    'VER_SERIALIZE_TEXT_IN_PACKAGES' => 459,
+    'VER_ADD_STRING_ASSET_REFERENCES_MAP' => 384,
+    'VER_ADDED_SEARCHABLE_NAMES' => 510,
+    'VER_ENGINE_VERSION_OBJECT' => 336,
+    'VER_PACKAGE_SUMMARY_HAS_COMPATIBLE_ENGINE_VERSION' => 444,
+    'VER_WORLD_LEVEL_INFO' => 224,
+    'VER_ADDED_CHUNKID_TO_ASSETDATA_AND_UPACKAGE' => 278,
+    'VER_CHANGED_CHUNKID_TO_BE_AN_ARRAY_OF_CHUNKIDS' => 326,
+    'VER_PRELOAD_DEPENDENCIES_IN_COOKED_EXPORTS' => 507,
+    'VER_TEMPLATE_INDEX_IN_COOKED_EXPORTS' => 508,
+    'VER_LOAD_FOR_EDITOR_GAME' => 365,
+    'VER_COOKED_ASSETS_IN_EDITOR_SUPPORT' => 485,
+    'VER_64BIT_EXPORTMAP_SERIALSIZES' => 511,
+    'VER_NAME_HASHES_SERIALIZED' => 504,
+    'VER_ADDED_SOFT_OBJECT_PATH' => 514,
+    'VER_ADDED_PACKAGE_SUMMARY_LOCALIZATION_ID' => 516,
+    'VER_ADDED_PACKAGE_OWNER' => 518,
+    'VER_NON_OUTER_PACKAGE_IMPORT' => 520,
+    'DEFAULT_ASSUMED_UNVERSIONED_UE4_VERSION' => 522,
+    'CURRENT_UE5_VERSION' => 1018,
+];
+$readerReflection = new ReflectionClass(UnrealPackageReader5::class);
+$gateMismatches = [];
+foreach ($expectedReaderConstants as $name => $expected) {
+    $constant = $readerReflection->getReflectionConstant($name);
+    $actual = $constant?->getValue();
+    if ($actual !== $expected) {
+        $gateMismatches[$name] = ['expected' => $expected, 'actual' => $actual];
+    }
+}
+$check('ue5_583_version_gates_match_complete_source_enum', $gateMismatches === [],
+    $gateMismatches === [] ? 'All inherited UE4 and UE5 current gates match the audited source.' : json_encode($gateMismatches));
+
+$profileDefaults = catalog_ue5_parser_profile([]);
+$check('unversioned_profile_uses_current_522_1018',
+    (int)($profileDefaults['assumed_unversioned_ue4_version'] ?? 0) === 522
+    && (int)($profileDefaults['assumed_unversioned_ue5_version'] ?? 0) === 1018,
+    'UE5 5.8.3 unversioned classic packages must use GPackageFileUEVersion = UE4 522 / UE5 1018.');
+
 try {
     $summaryRoute = gp_read_legacy_summary($path);
     $reader = new UnrealPackageReader5($path);
@@ -174,7 +220,9 @@ try {
     $check('generate_public_hash_preserved', !empty($export['bGeneratePublicHash']), 'bGeneratePublicHash must be retained.');
     $check('script_serialization_offsets_preserved', (int)($export['scriptSerializationStartOffset'] ?? 0) === 11
         && (int)($export['scriptSerializationEndOffset'] ?? 0) === 22, 'Versioned UE5 exports must retain script offsets.');
-    $check('soft_package_reference_is_fname', (string)($soft[0]['path'] ?? '') === '/Game/SoftPkg', 'SoftPackageReferenceList is TArray<FName>.');
+    $check('soft_package_reference_is_exact_fname', (string)($soft[0]['path'] ?? '') === ' /Game/SoftPkg '
+        && (string)($soft[0]['name']['text'] ?? '') === ' /Game/SoftPkg ',
+        'SoftPackageReferenceList is TArray<FName>; reader must not trim serialized FName identity.');
 
     $preHashReader = new UnrealPackageReader5($preHashPath);
     $preHashNames = $preHashReader->getNames();
@@ -182,7 +230,7 @@ try {
         && (string)($preHashNames[0]['name'] ?? '') === 'PreHashName'
         && ($preHashNames[0]['nonCaseHash'] ?? null) === null
         && ($preHashNames[0]['caseHash'] ?? null) === null,
-        'VER_UE4_NAME_HASHES_SERIALIZED must be gated by the UE4 version component, not the UE5 version.');
+        'UE4 503 is the last pre-hash version; VER_UE4_NAME_HASHES_SERIALIZED=504 must be gated by the UE4 component, not UE5.');
 
     $nonePackageNameReader = new UnrealPackageReader5($nonePackageNamePath);
     $nonePackageNameImport = $nonePackageNameReader->getImports()[0] ?? [];
@@ -190,6 +238,13 @@ try {
         && (string)($nonePackageNameImport['serializedPackageNameText'] ?? '') === 'None'
         && (string)($nonePackageNameImport['packageNameText'] ?? 'x') === '',
         'Serialized NAME_None must remain raw evidence while effective PackageName behaves like FName::IsNone().');
+
+    $whitespaceNoneReader = new UnrealPackageReader5($whitespaceNonePath);
+    $whitespaceNoneImport = $whitespaceNoneReader->getImports()[0] ?? [];
+    $check('whitespace_none_is_not_name_none', $whitespaceNoneReader->validatePackage() === []
+        && (string)($whitespaceNoneImport['serializedPackageNameText'] ?? '') === ' None '
+        && (string)($whitespaceNoneImport['packageNameText'] ?? '') === ' None ',
+        'FName::IsNone() must not trim serialized FName text.');
 
     $resolved = \UnrealDb\Catalog\Infrastructure\Readers\CatalogReaderResolver::resolve(
         [], 'UE5', 'Reader not found', 'Reader class missing ', ['UE4', 'UE5']
@@ -199,8 +254,11 @@ try {
     @unlink($path);
     @unlink($preHashPath);
     @unlink($nonePackageNamePath);
+    @unlink($whitespaceNonePath);
 }
 
 $failed = array_values(array_filter($checks, static fn(array $row): bool => !$row['ok']));
 echo json_encode(['ok' => $failed === [], 'checks' => $checks], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES), PHP_EOL;
 exit($failed === [] ? 0 : 2);
+
+[executed on device: Lelly-pc (1e6f9b87-60aa-4fe3-bf48-4166e6555d43)]
