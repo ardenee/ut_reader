@@ -1,3 +1,5 @@
+[Reading 979 lines from start (total: 979 lines, 0 remaining)]
+
 <?php
 /**
  * UnrealDB PHP File Audit
@@ -736,7 +738,7 @@ final class UnrealPackageReader5
     }
     private function isNoneFName(array $name): bool
     {
-        $text = trim((string)($name['text'] ?? ''));
+        $text = (string)($name['text'] ?? '');
         return $text === '' || ((int)($name['number'] ?? 0) === 0 && strcasecmp($text, 'None') === 0);
     }
 
@@ -836,7 +838,7 @@ final class UnrealPackageReader5
                 $entryOffset = $r->tell();
                 // FLinkerTables::SoftPackageReferenceList is TArray<FName> in UE5.
                 $name = $this->readFName($r);
-                $path = trim($this->fnameText($name));
+                $path = $this->fnameText($name);
                 $this->stringAssetReferences[] = [
                     'index' => $i,
                     'offset' => $entryOffset,
@@ -977,3 +979,5 @@ final class UnrealPackageReader5
         ];
     }
 }
+
+[executed on device: Lelly-pc (1e6f9b87-60aa-4fe3-bf48-4166e6555d43)]
