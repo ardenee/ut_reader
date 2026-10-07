@@ -260,5 +260,3 @@ try {
 $failed = array_values(array_filter($checks, static fn(array $row): bool => !$row['ok']));
 echo json_encode(['ok' => $failed === [], 'checks' => $checks], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES), PHP_EOL;
 exit($failed === [] ? 0 : 2);
-
-[executed on device: Lelly-pc (1e6f9b87-60aa-4fe3-bf48-4166e6555d43)]
