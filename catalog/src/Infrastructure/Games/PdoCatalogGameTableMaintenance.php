@@ -43,7 +43,6 @@ final class PdoCatalogGameTableMaintenance
             'ue_uedb5_provider_keys',
             'ue_uedb5_migration_status',
             'ue_uedb5_files',
-            'ue_dependency_package_summaries',
             'ue_dependency_links',
             'ue_export_lookup',
             'ue_file_metadata',
