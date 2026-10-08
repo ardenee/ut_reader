@@ -13,13 +13,12 @@ use UnrealDb\Catalog\Application\Jobs\JobExecutionContext;
 use UnrealDb\Catalog\Application\Jobs\JobHandler;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
-use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer;
+use UnrealDb\Catalog\Infrastructure\Metadata\PdoUedb5ProviderKeyPublisher;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5VerifiedFilePublisher;
 use UnrealDb\Catalog\Infrastructure\Metadata\VerifiedCompactMetadataHealth;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoCatalogDependencyRebuilder;
-use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyPackageSummary;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoGameCatalogStats;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
-use UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageProviderRepository;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoWorkflowChildStateQuery;
 
 final class CatalogDependencyRefreshJobHandler implements JobHandler
@@ -99,55 +98,62 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
             && $deferGameStats
             && $deferSummaryPolicy;
 
+        $publishedForRename = false;
+        if ($renameRefresh) {
+            $context->checkpoint([
+                'stage' => 'uedb5_identity',
+                'done' => 0,
+                'total' => 4,
+                'percent' => 5,
+                'message' => 'Republishing UEDB5 for the corrected package identity.',
+                'file_id' => $fileId,
+            ]);
+            (new Uedb5VerifiedFilePublisher($this->db, $this->config))->publish($fileId);
+            $publishedForRename = true;
+        }
+
         $this->ensureCompactMetadataReady($job, $context, $fileId, (string)$file['original_name']);
 
-        (new PdoCatalogDependencyRebuilder($this->db, $this->config))->rebuild(
-            $fileId,
-            static function (array $progress) use ($context, $fileId): void {
-                $progress['file_id'] = $fileId;
-                $context->heartbeatIfDue($progress);
-            },
-            0,
-            70,
-            'Refreshing file dependency links',
-            false
-        );
+        if (!$publishedForRename) {
+            (new PdoCatalogDependencyRebuilder($this->db, $this->config))->rebuild(
+                $fileId,
+                static function (array $progress) use ($context, $fileId): void {
+                    $progress['file_id'] = $fileId;
+                    $context->heartbeatIfDue($progress);
+                },
+                0,
+                70,
+                'Refreshing UEDB5 dependencies',
+                false
+            );
+        }
 
         $context->checkpoint([
             'stage' => 'package_provider',
             'done' => 1,
             'total' => 4,
             'percent' => 74,
-            'message' => 'Reconciling the package provider.',
+            'message' => 'Reconciling the UEDB5 package provider keys.',
             'file_id' => $fileId,
         ]);
-        (new PdoPackageProviderRepository($this->db))->reconcileFile($fileId);
+        (new PdoUedb5ProviderKeyPublisher($this->db))->publish($fileId);
 
-        $summaryRows = 0;
-        if ($deferWorkflowSummary) {
-            $context->checkpoint([
-                'stage' => 'dependency_summary_deferred',
-                'done' => 2,
-                'total' => 4,
-                'percent' => 82,
-                'message' => 'Dependency summary deferred to the parent workflow bulk publisher.',
-                'file_id' => $fileId,
-            ]);
-        } else {
-            $context->checkpoint([
-                'stage' => 'dependency_summary',
-                'done' => 2,
-                'total' => 4,
-                'percent' => 82,
-                'message' => 'Rebuilding the file dependency summary.',
-                'file_id' => $fileId,
-            ]);
-            $summary = (new PdoDependencyPackageSummary($this->db))->rebuildFile($fileId);
-            if (empty($summary['available'])) {
-                throw new RuntimeException('Dependency package summary projection is unavailable after compact rebuild.');
-            }
-            $summaryRows = (int)($summary['summary_rows'] ?? 0);
-        }
+        $summaryStatement = $this->db->prepare(
+            'SELECT COUNT(*) FROM ue_uedb5_dependency_packages WHERE file_id=?'
+        );
+        $summaryStatement->execute([$fileId]);
+        $summaryRows = (int)($summaryStatement->fetchColumn() ?: 0);
+        $context->checkpoint([
+            'stage' => $deferWorkflowSummary ? 'dependency_summary_deferred' : 'dependency_summary',
+            'done' => 2,
+            'total' => 4,
+            'percent' => 82,
+            'message' => $deferWorkflowSummary
+                ? 'UEDB5 dependency summary is already published; parent workflow will aggregate counters.'
+                : 'UEDB5 dependency summary is already published by the file dependency pass.',
+            'file_id' => $fileId,
+            'dependency_summary_rows' => $summaryRows,
+        ]);
 
         $affectedJobId = 0;
         if ($postImport) {
@@ -557,9 +563,8 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
     }
 
     /**
-     * Publishes dependency summaries for completed child jobs without holding one
-     * worker for the entire game. PdoDependencyPackageSummary performs its own
-     * 250-file transaction batching inside each durable 1,000-child cursor step.
+     * Aggregates already-published UEDB5 dependency summaries for completed child
+     * jobs without replaying any file dependency work.
      *
      * @param array<string,mixed> $resume
      * @return array{last_child_job_id:int,files:int,rows:int}
@@ -588,12 +593,14 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
         }
 
         if ($fileIds !== []) {
-            $published = (new PdoDependencyPackageSummary($this->db))->rebuildFiles($fileIds);
-            if (empty($published['available'])) {
-                throw new RuntimeException('Dependency package summary projection is unavailable during game bulk publication.');
-            }
-            $summaryFiles += (int)($published['files'] ?? 0);
-            $summaryRows += (int)($published['summary_rows'] ?? 0);
+            $placeholders = implode(',', array_fill(0, count($fileIds), '?'));
+            $count = $this->db->prepare(
+                'SELECT COUNT(*) FROM ue_uedb5_dependency_packages '
+                . 'WHERE file_id IN (' . $placeholders . ')'
+            );
+            $count->execute($fileIds);
+            $summaryFiles += count($fileIds);
+            $summaryRows += (int)($count->fetchColumn() ?: 0);
         }
 
         if (count($rows) === self::SUMMARY_BATCH_SIZE) {
@@ -742,9 +749,9 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
                 'percent' => 2,
                 'file_id' => $fileId,
                 'metadata_repair_job_id' => $repairJobId,
-                'message' => 'Format-3 metadata is missing or unreadable for '
+                'message' => 'UEDB5 metadata is missing or unreadable for '
                     . ($originalName !== '' ? $originalName : ('file #' . $fileId))
-                    . '; queued globally deduplicated v3 repair job #' . $repairJobId . '.',
+                    . '; queued globally deduplicated UEDB5 repair job #' . $repairJobId . '.',
             ]);
         }
 
@@ -752,7 +759,7 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
         if (in_array($status, ['failed', 'dead_letter', 'cancelled'], true)) {
             $error = trim((string)($repair['last_error'] ?? ''));
             throw new RuntimeException(
-                'Compact metadata repair job #' . $repairId . ' is ' . $status
+                'UEDB5 metadata repair job #' . $repairId . ' is ' . $status
                 . ' for file #' . $fileId
                 . ($error !== '' ? ': ' . mb_substr($error, 0, 500, 'UTF-8') : '.')
             );
@@ -771,7 +778,7 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
                 'file_id' => $fileId,
                 'metadata_repair_job_id' => $repairId,
                 'metadata_repair_status' => $status,
-                'message' => 'Waiting for compact metadata repair job #' . $repairId
+                'message' => 'Waiting for UEDB5 metadata repair job #' . $repairId
                     . ' (' . $status . ', ' . $repairPercent . '%).',
             ]);
         }
@@ -779,8 +786,8 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
         // Reaching this branch means a completed repair was observed before the
         // health check above; do not loop forever if its output is already bad.
         throw new RuntimeException(
-            'Compact metadata repair job #' . $repairId
-            . ' completed, but format-3 metadata is still missing or unreadable for file #' . $fileId . '.'
+            'UEDB5 metadata repair job #' . $repairId
+            . ' completed, but UEDB5 metadata is still missing or unreadable for file #' . $fileId . '.'
         );
     }
 
