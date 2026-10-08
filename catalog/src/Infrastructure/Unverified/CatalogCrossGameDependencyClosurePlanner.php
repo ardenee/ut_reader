@@ -7,7 +7,8 @@ declare(strict_types=1);
 namespace UnrealDb\Catalog\Infrastructure\Unverified;
 
 use PDO;
-use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyReadSource;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5MetadataContainer;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5SqlProjectionContract;
 
 final class CatalogCrossGameDependencyClosurePlanner
 {
@@ -33,12 +34,12 @@ final class CatalogCrossGameDependencyClosurePlanner
 
         $root = \catalog_one(
             $this->db,
-            'SELECT f.id,f.game_id,f.scan_status,m.format_version,g.profile_id,'
+            'SELECT f.id,f.game_id,f.scan_status,v.format_version,g.profile_id,'
             . 'COALESCE(p.engine_key,"") source_engine '
             . 'FROM ue_files f '
             . 'JOIN ue_games g ON g.id=f.game_id '
             . 'LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 '
-            . 'LEFT JOIN ue_file_metadata m ON m.file_id=f.id '
+            . 'LEFT JOIN ue_uedb5_files v ON v.file_id=f.id AND v.game_id=f.game_id '
             . 'WHERE f.id=? AND f.scan_status="verified" LIMIT 1',
             [$rootFileId]
         );
@@ -63,12 +64,11 @@ final class CatalogCrossGameDependencyClosurePlanner
         if (!$this->compatibleEngine((string)$target['engine_key'], (string)$root['source_engine'])) {
             throw new \RuntimeException('The selected source package is outside the dependency-compatible engine family for this target.');
         }
-        if ((int)($root['format_version'] ?? 0) !== \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer::FORMAT_VERSION) {
+        if ((int)($root['format_version'] ?? 0) !== Uedb5MetadataContainer::FORMAT_VERSION) {
             throw new \RuntimeException('The selected source package has no current-format dependency metadata.');
         }
 
         $sourceGameId = (int)$root['game_id'];
-        $dependencySource = PdoDependencyReadSource::sql($this->db);
         $queue = [$rootFileId];
         $scheduled = [$rootFileId => true];
         $visited = [];
@@ -85,23 +85,32 @@ final class CatalogCrossGameDependencyClosurePlanner
             $placeholders = implode(',', array_fill(0, count($chunk), '?'));
             $rows = \catalog_all(
                 $this->db,
-                'SELECT d.id,d.file_id,d.required_package,d.required_object_path,d.resolved_file_id,d.status,'
-                . 'provider.game_id provider_game_id,provider_meta.file_id provider_metadata_file_id '
-                . 'FROM ' . $dependencySource . ' d '
-                . 'LEFT JOIN ue_files provider ON provider.id=d.resolved_file_id AND provider.scan_status="verified" '
-                . 'LEFT JOIN ue_file_metadata provider_meta ON provider_meta.file_id=provider.id AND provider_meta.format_version=' . \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer::FORMAT_VERSION . ' '
-                . 'WHERE d.file_id IN (' . $placeholders . ') '
-                . 'ORDER BY d.file_id,d.required_package,d.required_object_path,d.id',
+                'SELECT e.file_id,e.source_kind,e.source_index,e.outcome,e.resolved_file_id,'
+                . 'e.required_package_key_kind,HEX(e.required_package_key) required_package_key_hex,'
+                . 'e.required_object_key_kind,HEX(e.required_object_key) required_object_key_hex,'
+                . 'provider.game_id provider_game_id,provider_v5.file_id provider_metadata_file_id '
+                . 'FROM ue_uedb5_dependency_edges e '
+                . 'LEFT JOIN ue_files provider ON provider.id=e.resolved_file_id AND provider.scan_status="verified" '
+                . 'LEFT JOIN ue_uedb5_files provider_v5 ON provider_v5.file_id=provider.id AND provider_v5.game_id=provider.game_id '
+                . 'WHERE e.file_id IN (' . $placeholders . ') '
+                . 'ORDER BY e.file_id,e.source_kind,e.source_index',
                 $chunk
             );
 
             foreach ($rows as $row) {
-                $status = strtolower(trim((string)($row['status'] ?? 'missing')));
+                $outcome = (int)($row['outcome'] ?? Uedb5SqlProjectionContract::OUTCOME_MISSING);
+                $status = match ($outcome) {
+                    Uedb5SqlProjectionContract::OUTCOME_RESOLVED => 'resolved',
+                    Uedb5SqlProjectionContract::OUTCOME_PACKAGE_ONLY => 'package_only',
+                    Uedb5SqlProjectionContract::OUTCOME_COMMON => 'common',
+                    Uedb5SqlProjectionContract::OUTCOME_UNRESOLVED => 'unresolved',
+                    default => 'missing',
+                };
                 $resolvedFileId = $row['resolved_file_id'] !== null ? (int)$row['resolved_file_id'] : 0;
-                $key = strtolower(
-                    trim((string)($row['required_package'] ?? '')) . '|'
-                    . trim((string)($row['required_object_path'] ?? ''))
-                );
+                $key = (int)($row['required_package_key_kind'] ?? 0) . ':'
+                    . (string)($row['required_package_key_hex'] ?? '') . '|'
+                    . (int)($row['required_object_key_kind'] ?? 0) . ':'
+                    . (string)($row['required_object_key_hex'] ?? '');
 
                 if ($status === 'common') {
                     $commonKeys[$key] = true;
