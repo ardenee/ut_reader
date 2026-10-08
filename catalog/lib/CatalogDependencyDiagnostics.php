@@ -119,13 +119,16 @@ function catalog_ue4_import_outer_chain(array $imports,array $exports,int $impor
 function catalog_ue4_missing_import_evidence(PDO $db,string $storageRoot,int $gameId,int $fileId,int $importIndex,string $requiredPackage):array
 {
     $requiredPackage=trim($requiredPackage);
-    $loader=new \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataSnapshotLoader($db,$storageRoot);
-    $snapshot=$loader->loadDependencySnapshot($fileId,true);$imports=array_values((array)($snapshot['imports']??[]));$exports=array_values((array)($snapshot['exports']??[]));
+    $loader=new \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5RuntimeProviderSnapshotLoader($db,$storageRoot);
+    $snapshot=$loader->load($fileId);$imports=array_values((array)($snapshot['imports']??[]));$exports=array_values((array)($snapshot['exports']??[]));
+    $coverage=\UnrealDb\Catalog\Infrastructure\Metadata\Uedb5ClassicDependencyResolver::importCoverageRows((array)$snapshot['snapshot']);
+    foreach($coverage as $row){$idx=(int)($row['import_index']??-1);if($idx>=0&&isset($imports[$idx]))$imports[$idx]=array_replace($imports[$idx],$row);}
+    $v5Dependencies=(new \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5ParityV5ReadService($db,['storage_path'=>$storageRoot]))->dependenciesByIndex($gameId,$fileId);
     $target=null;$required=[];foreach($imports as $fallback=>$row){if(!is_array($row))continue;$idx=isset($row['import_index'])?(int)$row['import_index']:(int)$fallback;if($idx===$importIndex)$target=$row;if(strcasecmp(trim((string)($row['root_package']??'')),$requiredPackage)===0&&trim((string)($row['relative_object_path']??''))!=='')$required[]=$idx;}
     if(!is_array($target))throw new RuntimeException('Selected UE4 Import is not present in compact metadata.');
     $sqlStatus=null;$s=$db->prepare('SELECT status FROM ue_dependency_links WHERE file_id=? AND import_index=? LIMIT 1');$s->execute([$fileId,$importIndex]);$v=$s->fetchColumn();if($v!==false)$sqlStatus=(int)$v;
-    $compactDependency=null;foreach((array)($snapshot['dependencies']??[]) as $row){if(is_array($row)&&(int)($row['import_index']??-1)===$importIndex){$compactDependency=$row;break;}}
-    $compactStatus=is_array($compactDependency)?trim((string)($compactDependency['status']??'')):'';
+    $compactDependency=$v5Dependencies[$importIndex]??null;
+    $compactStatus=is_array($compactDependency)?trim((string)($compactDependency['outcome']??'')):'';
     $base=[
         'file_id'=>$fileId,'import_index'=>$importIndex,'required_package'=>$requiredPackage,
         'sql_status'=>$sqlStatus,'compact_dependency'=>$compactDependency,

@@ -52,9 +52,10 @@ $check(
 );
 $diagSource = file_get_contents($root . '/lib/CatalogDependencyDiagnostics.php') ?: '';
 $check(
-    'ue4_diagnostic_uses_current_export_projection',
-    str_contains($diagSource, "\$engine==='UE3'||\$engine==='UE4'")
-        && str_contains($diagSource, 'ue_export_path_lookup')
+    'ue4_diagnostic_uses_current_v5_export_projection',
+    str_contains($diagSource, 'Uedb5DependencyExportDiagnostics::candidates')
+        && str_contains($diagSource, 'Uedb5DependencyExportDiagnostics::outerPath')
+        && !str_contains($diagSource, 'ue_export_path_lookup')
 );
 $syntax = shell_exec(escapeshellarg(PHP_BINARY) . ' -l ' . escapeshellarg($scriptPath) . ' 2>&1') ?: '';
 $check('php_syntax', str_contains($syntax, 'No syntax errors detected'), trim($syntax));
