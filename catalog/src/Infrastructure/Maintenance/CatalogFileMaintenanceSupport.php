@@ -223,24 +223,13 @@ final class CatalogFileMaintenanceSupport
      * Remove every current per-file metadata projection.
      *
      * Some callers (notably verified -> unverified demotion) deliberately keep
-     * the ue_files row, so foreign-key cascades cannot be relied on here. Keep
-     * this list aligned with both live V4 and staged V5 projection ownership.
+     * the ue_files row, so remove the UEDB5 registration explicitly. Its child
+     * provider/search/object/dependency projections cascade from that registration.
      */
     public function deleteFileProjections(int $fileId): void
     {
         if ($fileId < 1) {
             return;
-        }
-
-        foreach ([
-            'ue_dependency_identity_lookup',
-            'ue_dependency_links',
-            'ue_legacy_export_identity_lookup',
-            'ue_export_path_lookup',
-            'ue_export_lookup',
-            'ue_name_lookup',
-        ] as $table) {
-            $this->db->prepare('DELETE FROM ' . $table . ' WHERE file_id=?')->execute([$fileId]);
         }
 
         if ($this->tableExists('ue_uedb5_migration_status')) {
