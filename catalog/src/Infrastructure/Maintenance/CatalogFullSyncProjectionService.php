@@ -13,9 +13,8 @@ namespace UnrealDb\Catalog\Infrastructure\Maintenance;
 use PDO;
 use RuntimeException;
 use Throwable;
-use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyPackageSummary;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5GameDependencyPassService;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoGameCatalogStats;
-use UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageProviderRepository;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageCoverageCache;
 
 final class CatalogFullSyncProjectionService
@@ -37,9 +36,8 @@ final class CatalogFullSyncProjectionService
      * Sync source pass. Stable ue_files identities, source paths, locations and
      * upload provenance are deliberately untouched.
      *
-     * Each source package will republish its parser-owned format-4 metadata with
-     * unresolved dependency rows. Dependency matching starts only after every
-     * selected-game package has been reparsed.
+     * Each source package will republish its parser-owned UEDB5 metadata as it is reparsed. A final dependency pass still runs after every
+     * selected-game package has been republished so provider selection sees the complete set.
      *
      * @return array<string,int>
      */
@@ -48,7 +46,7 @@ final class CatalogFullSyncProjectionService
         return $this->withWriteLock(function () use ($gameId): array {
             $this->requireGame($gameId);
             $fileIds = $this->verifiedFileIds($gameId);
-            $this->emit('reset', 5, 'Clearing selected-game dependency and provider projections.');
+            $this->emit('reset', 5, 'Clearing selected-game UEDB5 dependency/provider projections.');
 
             $counts = [
                 'dependency_links' => 0,
@@ -60,23 +58,31 @@ final class CatalogFullSyncProjectionService
             ];
 
             $delete = $this->db->prepare(
-                'DELETE l FROM ue_dependency_links l JOIN ue_files f ON f.id=l.file_id WHERE f.game_id=?'
+                'DELETE e FROM ue_uedb5_dependency_edges e '
+                . 'JOIN ue_files f ON f.id=e.file_id WHERE f.game_id=?'
             );
             $delete->execute([$gameId]);
             $counts['dependency_links'] = max(0, $delete->rowCount());
 
             $delete = $this->db->prepare(
-                'DELETE i FROM ue_dependency_identity_lookup i '
-                . 'JOIN ue_files f ON f.id=i.file_id WHERE f.game_id=?'
-            );
-            $delete->execute([$gameId]);
-            $counts['dependency_identity_rows'] = max(0, $delete->rowCount());
-
-            $delete = $this->db->prepare(
-                'DELETE s FROM ue_dependency_package_summaries s JOIN ue_files f ON f.id=s.file_id WHERE f.game_id=?'
+                'DELETE p FROM ue_uedb5_dependency_packages p WHERE p.game_id=?'
             );
             $delete->execute([$gameId]);
             $counts['dependency_summaries'] = max(0, $delete->rowCount());
+
+            $delete = $this->db->prepare(
+                'DELETE p FROM ue_uedb5_provider_keys p WHERE p.game_id=?'
+            );
+            $delete->execute([$gameId]);
+            $counts['provider_rows'] = max(0, $delete->rowCount());
+
+            $status = $this->db->prepare(
+                'UPDATE ue_uedb5_migration_status SET dependency_policy=NULL,'
+                . 'dependency_payload_sha256=NULL,dependency_completed_at=NULL,updated_at=NOW() '
+                . 'WHERE game_id=?'
+            );
+            $status->execute([$gameId]);
+            $counts['dependency_identity_rows'] = max(0, $status->rowCount());
 
             $delete = $this->db->prepare('DELETE FROM ue_package_provider_coverage_cache WHERE game_id=?');
             $delete->execute([$gameId]);
@@ -86,14 +92,10 @@ final class CatalogFullSyncProjectionService
             $delete->execute([$gameId]);
             $counts['coverage_rows'] = max(0, $delete->rowCount());
 
-            $delete = $this->db->prepare('DELETE FROM ue_package_providers WHERE game_id=?');
-            $delete->execute([$gameId]);
-            $counts['provider_rows'] = max(0, $delete->rowCount());
-
             $this->emit(
                 'reset',
                 100,
-                'Selected-game derived dependency state cleared for ' . count($fileIds) . ' verified package(s).'
+                'Selected-game UEDB5 derived dependency state cleared for ' . count($fileIds) . ' verified package(s).'
             );
             return $counts + ['verified_files' => count($fileIds)];
         });
@@ -104,19 +106,48 @@ final class CatalogFullSyncProjectionService
     {
         return $this->withWriteLock(function () use ($gameId): array {
             $this->requireGame($gameId);
-            $this->emit('providers', 5, 'Rebuilding package-provider projection before dependency resolution.');
-            $providers = (new PdoPackageProviderRepository($this->db))->reconcileGame($gameId);
+            $this->emit('providers', 5, 'Verifying UEDB5 package-provider projection before dependency resolution.');
+
+            $counts = $this->db->prepare(
+                'SELECT '
+                . 'SUM(source_kind=1) primary_count,'
+                . 'SUM(source_kind=2) alias_count,COUNT(*) total_count '
+                . 'FROM ue_uedb5_provider_keys WHERE game_id=?'
+            );
+            $counts->execute([$gameId]);
+            $row = $counts->fetch(PDO::FETCH_ASSOC) ?: [];
+
+            $missing = $this->db->prepare(
+                'SELECT COUNT(*) FROM ue_files f '
+                . 'LEFT JOIN ue_uedb5_provider_keys p '
+                . 'ON p.file_id=f.id AND p.game_id=f.game_id AND p.source_kind=1 AND p.source_id=f.id '
+                . 'WHERE f.game_id=? AND f.scan_status="verified" AND p.file_id IS NULL'
+            );
+            $missing->execute([$gameId]);
+            $missingPrimary = (int)($missing->fetchColumn() ?: 0);
+            if ($missingPrimary > 0) {
+                throw new RuntimeException(
+                    'Full Sync UEDB5 provider projection is incomplete; missing primary providers=' . $missingPrimary . '.'
+                );
+            }
+
+            $providers = [
+                'primary'=>(int)($row['primary_count'] ?? 0),
+                'aliases'=>(int)($row['alias_count'] ?? 0),
+                'total'=>(int)($row['total_count'] ?? 0),
+                'missing_primary'=>$missingPrimary,
+            ];
             $this->emit(
                 'providers',
                 100,
-                'Package-provider projection ready: ' . (int)$providers['primary']
-                    . ' primary, ' . (int)$providers['aliases'] . ' aliases.'
+                'UEDB5 package-provider projection ready: ' . $providers['primary']
+                    . ' primary, ' . $providers['aliases'] . ' aliases.'
             );
             return [
-                'ok' => true,
-                'game_id' => $gameId,
-                'providers' => $providers,
-                'message' => 'Package providers rebuilt for final dependency resolution.',
+                'ok'=>true,
+                'game_id'=>$gameId,
+                'providers'=>$providers,
+                'message'=>'UEDB5 package providers verified for final dependency resolution.',
             ];
         });
     }
@@ -136,12 +167,16 @@ final class CatalogFullSyncProjectionService
             $this->emit(
                 'dependency_summaries',
                 5,
-                'Verifying package dependency summaries for ' . count($fileIds) . ' package(s).'
+                'Verifying UEDB5 package dependency summaries for ' . count($fileIds) . ' package(s).'
             );
-            $summaries = (new PdoDependencyPackageSummary($this->db))->rebuildFiles($fileIds);
-            if (empty($summaries['available'])) {
-                throw new RuntimeException('Dependency package summary projection is unavailable.');
-            }
+            $summaryStatement = $this->db->prepare(
+                'SELECT COUNT(DISTINCT p.file_id) files,COUNT(*) summary_rows '
+                . 'FROM ue_uedb5_dependency_packages p '
+                . 'JOIN ue_files f ON f.id=p.file_id AND f.game_id=p.game_id AND f.scan_status="verified" '
+                . 'WHERE p.game_id=?'
+            );
+            $summaryStatement->execute([$gameId]);
+            $summaries = $summaryStatement->fetch(PDO::FETCH_ASSOC) ?: ['files'=>0,'summary_rows'=>0];
 
             $this->emit('package_coverage', 70, 'Rebuilding cached selected-game package object coverage.');
             $coverage = (new PdoPackageCoverageCache($this->db))->rebuildGame(
@@ -170,7 +205,7 @@ final class CatalogFullSyncProjectionService
                 'summary_rows' => (int)($summaries['summary_rows'] ?? 0),
                 'coverage_packages' => (int)($coverage['packages'] ?? 0),
                 'stats' => $stats,
-                'message' => 'Package providers, dependency summaries and game counters finalized.',
+                'message' => 'UEDB5 providers, dependency summaries and game counters finalized.',
             ];
         });
     }
