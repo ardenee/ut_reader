@@ -529,7 +529,7 @@ final class Uedb5ClassicDependencyResolver
             $names[$index] = [
                 'name_index' => $index,
                 'name_text' => (string)($row['text'] ?? ''),
-                'flags' => $row['flags'] ?? 0,
+                'flags' => self::flagsInt($row['flags'] ?? 0),
             ];
         }
 
