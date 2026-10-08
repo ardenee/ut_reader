@@ -1,22 +1,18 @@
 <?php
-/**
- * UnrealDB PHP File Audit
- * Purpose: Defines the infrastructure class `PdoPackageProviderRepository` for PDO package provider repository.
- * Why: It keeps this responsibility in the namespaced architecture instead of repeating it in page, API, or worker
- *      entry points.
- * Role: Infrastructure implementation for persistence, files, parsing, workers, security, storage, or external
- *       services.
- * Audit: Primary namespaced implementation; prefer reusing this layer over creating parallel page-local copies of the
- *        same behavior.
- */
 declare(strict_types=1);
 
 namespace UnrealDb\Catalog\Infrastructure\Persistence;
 
 use PDO;
-use Throwable;
+use UnrealDb\Catalog\Infrastructure\Metadata\PdoUedb5ProviderKeyPublisher;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5ProviderKeyBuilder;
 
-/** Maintains the compact package-provider lookup from normal application writes. */
+/**
+ * Compatibility facade for package-provider publication.
+ *
+ * Provider identity is authoritative in ue_uedb5_provider_keys. Historical
+ * callers retain this API while all writes target V5 only.
+ */
 final class PdoPackageProviderRepository
 {
     public function __construct(private readonly PDO $db)
@@ -25,25 +21,7 @@ final class PdoPackageProviderRepository
 
     public function syncFile(int $fileId): void
     {
-        if ($fileId < 1) {
-            return;
-        }
-
-        $this->db->prepare(
-            'DELETE FROM ue_package_providers WHERE source_kind="primary" AND source_id=?'
-        )->execute([$fileId]);
-
-        $this->db->prepare(
-            'INSERT INTO ue_package_providers('
-            . 'source_kind,source_id,game_id,package_name,file_id,provider_created_at'
-            . ') '
-            . 'SELECT "primary",f.id,f.game_id,f.package_name,f.id,f.uploaded_at '
-            . 'FROM ue_files f '
-            . 'WHERE f.id=? AND f.game_id IS NOT NULL AND f.scan_status="verified" '
-            . 'ON DUPLICATE KEY UPDATE '
-            . 'game_id=VALUES(game_id),package_name=VALUES(package_name),'
-            . 'file_id=VALUES(file_id),provider_created_at=VALUES(provider_created_at)'
-        )->execute([$fileId]);
+        $this->publishFileIfRegistered($fileId);
     }
 
     public function syncAlias(int $aliasId): void
@@ -51,100 +29,53 @@ final class PdoPackageProviderRepository
         if ($aliasId < 1) {
             return;
         }
-
-        $this->removeAlias($aliasId);
-
-        $this->db->prepare(
-            'INSERT INTO ue_package_providers('
-            . 'source_kind,source_id,game_id,package_name,file_id,provider_created_at'
-            . ') '
-            . 'SELECT "alias",a.id,a.game_id,a.package_name,a.file_id,a.created_at '
-            . 'FROM ue_file_package_aliases a '
-            . 'JOIN ue_files f ON f.id=a.file_id AND f.game_id=a.game_id '
-            . 'WHERE a.id=? AND f.scan_status="verified" '
-            . 'ON DUPLICATE KEY UPDATE '
-            . 'game_id=VALUES(game_id),package_name=VALUES(package_name),'
-            . 'file_id=VALUES(file_id),provider_created_at=VALUES(provider_created_at)'
-        )->execute([$aliasId]);
+        $statement = $this->db->prepare(
+            'SELECT file_id FROM ue_file_package_aliases WHERE id=? LIMIT 1'
+        );
+        $statement->execute([$aliasId]);
+        $fileId = (int)($statement->fetchColumn() ?: 0);
+        if ($fileId > 0) {
+            $this->publishFileIfRegistered($fileId);
+        }
     }
 
-    /** Rebuild all primary and alias provider rows owned by one file. */
     public function reconcileFile(int $fileId): void
     {
-        if ($fileId < 1) {
-            return;
-        }
-
-        $this->removeFile($fileId);
-        $this->syncFile($fileId);
-        $this->db->prepare(
-            'INSERT INTO ue_package_providers('
-            . 'source_kind,source_id,game_id,package_name,file_id,provider_created_at'
-            . ') '
-            . 'SELECT "alias",a.id,a.game_id,a.package_name,a.file_id,a.created_at '
-            . 'FROM ue_file_package_aliases a '
-            . 'JOIN ue_files f ON f.id=a.file_id AND f.game_id=a.game_id '
-            . 'WHERE a.file_id=? AND f.scan_status="verified" '
-            . 'ON DUPLICATE KEY UPDATE '
-            . 'game_id=VALUES(game_id),package_name=VALUES(package_name),'
-            . 'file_id=VALUES(file_id),provider_created_at=VALUES(provider_created_at)'
-        )->execute([$fileId]);
+        $this->publishFileIfRegistered($fileId);
     }
 
     /** @return array{primary:int,aliases:int,total:int} */
     public function reconcileGame(int $gameId): array
     {
         if ($gameId < 1) {
-            return ['primary' => 0, 'aliases' => 0, 'total' => 0];
+            return ['primary'=>0,'aliases'=>0,'total'=>0];
+        }
+        $statement = $this->db->prepare(
+            'SELECT f.id FROM ue_files f '
+            . 'JOIN ue_uedb5_files v ON v.file_id=f.id AND v.game_id=f.game_id '
+            . 'WHERE f.game_id=? AND f.scan_status="verified" ORDER BY f.id'
+        );
+        $statement->execute([$gameId]);
+        $publisher = new PdoUedb5ProviderKeyPublisher($this->db);
+        foreach ($statement->fetchAll(PDO::FETCH_COLUMN) ?: [] as $fileId) {
+            $publisher->publish((int)$fileId);
         }
 
-        $ownsTransaction = !$this->db->inTransaction();
-        if ($ownsTransaction) {
-            $this->db->beginTransaction();
-        }
-
-        try {
-            $delete = $this->db->prepare('DELETE FROM ue_package_providers WHERE game_id=?');
-            $delete->execute([$gameId]);
-
-            $primary = $this->db->prepare(
-                'INSERT INTO ue_package_providers('
-                . 'source_kind,source_id,game_id,package_name,file_id,provider_created_at'
-                . ') '
-                . 'SELECT "primary",f.id,f.game_id,f.package_name,f.id,f.uploaded_at '
-                . 'FROM ue_files f '
-                . 'WHERE f.game_id=? AND f.scan_status="verified"'
-            );
-            $primary->execute([$gameId]);
-            $primaryCount = $primary->rowCount();
-
-            $aliases = $this->db->prepare(
-                'INSERT INTO ue_package_providers('
-                . 'source_kind,source_id,game_id,package_name,file_id,provider_created_at'
-                . ') '
-                . 'SELECT "alias",a.id,a.game_id,a.package_name,a.file_id,a.created_at '
-                . 'FROM ue_file_package_aliases a '
-                . 'JOIN ue_files f ON f.id=a.file_id AND f.game_id=a.game_id '
-                . 'WHERE a.game_id=? AND f.scan_status="verified"'
-            );
-            $aliases->execute([$gameId]);
-            $aliasCount = $aliases->rowCount();
-
-            if ($ownsTransaction) {
-                $this->db->commit();
-            }
-
-            return [
-                'primary' => max(0, $primaryCount),
-                'aliases' => max(0, $aliasCount),
-                'total' => max(0, $primaryCount) + max(0, $aliasCount),
-            ];
-        } catch (Throwable $error) {
-            if ($ownsTransaction && $this->db->inTransaction()) {
-                $this->db->rollBack();
-            }
-            throw $error;
-        }
+        $counts = $this->db->prepare(
+            'SELECT '
+            . 'COALESCE(SUM(source_kind=?),0) primary_count,'
+            . 'COALESCE(SUM(source_kind=?),0) alias_count '
+            . 'FROM ue_uedb5_provider_keys WHERE game_id=?'
+        );
+        $counts->execute([
+            Uedb5ProviderKeyBuilder::SOURCE_PRIMARY,
+            Uedb5ProviderKeyBuilder::SOURCE_ALIAS,
+            $gameId,
+        ]);
+        $row = $counts->fetch(PDO::FETCH_ASSOC) ?: [];
+        $primary = (int)($row['primary_count'] ?? 0);
+        $aliases = (int)($row['alias_count'] ?? 0);
+        return ['primary'=>$primary,'aliases'=>$aliases,'total'=>$primary + $aliases];
     }
 
     public function removeFile(int $fileId): void
@@ -152,7 +83,7 @@ final class PdoPackageProviderRepository
         if ($fileId < 1) {
             return;
         }
-        $this->db->prepare('DELETE FROM ue_package_providers WHERE file_id=?')->execute([$fileId]);
+        $this->db->prepare('DELETE FROM ue_uedb5_provider_keys WHERE file_id=?')->execute([$fileId]);
     }
 
     public function removeAlias(int $aliasId): void
@@ -160,9 +91,26 @@ final class PdoPackageProviderRepository
         if ($aliasId < 1) {
             return;
         }
-
         $this->db->prepare(
-            'DELETE FROM ue_package_providers WHERE source_kind="alias" AND source_id=?'
-        )->execute([$aliasId]);
+            'DELETE FROM ue_uedb5_provider_keys WHERE source_kind=? AND source_id=?'
+        )->execute([Uedb5ProviderKeyBuilder::SOURCE_ALIAS, $aliasId]);
+    }
+
+    private function publishFileIfRegistered(int $fileId): void
+    {
+        if ($fileId < 1) {
+            return;
+        }
+        $statement = $this->db->prepare(
+            'SELECT 1 FROM ue_uedb5_files v '
+            . 'JOIN ue_files f ON f.id=v.file_id AND f.game_id=v.game_id '
+            . 'WHERE v.file_id=? AND f.scan_status="verified" LIMIT 1'
+        );
+        $statement->execute([$fileId]);
+        if ($statement->fetchColumn() === false) {
+            $this->removeFile($fileId);
+            return;
+        }
+        (new PdoUedb5ProviderKeyPublisher($this->db))->publish($fileId);
     }
 }
