@@ -14,11 +14,12 @@ use PDO;
 use RuntimeException;
 use Throwable;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogProjectionReconciliationQueue;
-use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataSnapshotLoader;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5MetadataReader;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5VerifiedFilePublisher;
 
 final class CatalogLegacyPackageNormalizationService
 {
-    private readonly BlockedCompressedMetadataSnapshotLoader $snapshotLoader;
+    private readonly Uedb5MetadataReader $metadataReader;
 
     /** @param array<string,mixed> $config */
     public function __construct(
@@ -34,7 +35,7 @@ final class CatalogLegacyPackageNormalizationService
         if ($storageRoot === '') {
             throw new RuntimeException('Catalog storage_path is required for package normalization.');
         }
-        $this->snapshotLoader = new BlockedCompressedMetadataSnapshotLoader($db, $storageRoot);
+        $this->metadataReader = new Uedb5MetadataReader($storageRoot);
     }
 
     /** @return list<array<string,mixed>> */
@@ -208,12 +209,8 @@ final class CatalogLegacyPackageNormalizationService
             $this->db->prepare('UPDATE ue_files SET package_name=?,original_name=? WHERE id=?')
                 ->execute([$cleanPackage, $cleanOriginal, $fileId]);
             try {
-                $exportDirty = \catalog_compact_metadata_rewrite_package_identity(
-                    $this->db,
-                    $this->config,
-                    $fileId,
-                    $cleanPackage
-                );
+                (new Uedb5VerifiedFilePublisher($this->db, $this->config))->publish($fileId);
+                $exportDirty = 0;
             } catch (Throwable $error) {
                 $this->db->prepare('UPDATE ue_files SET package_name=?,original_name=? WHERE id=?')
                     ->execute([$oldPackage, $oldOriginal, $fileId]);
@@ -267,23 +264,16 @@ final class CatalogLegacyPackageNormalizationService
 
     private function exportDirtyCount(int $fileId, string $cleanPackage): int
     {
-        $format = \catalog_one($this->db, 'SELECT format_version FROM ue_file_metadata WHERE file_id=?', [$fileId]);
-        $formatVersion = (int)($format['format_version'] ?? 0);
-        if ($formatVersion < 2) {
+        $statement = $this->db->prepare(
+            'SELECT game_id FROM ue_uedb5_files WHERE file_id=? AND format_version=5 LIMIT 1'
+        );
+        $statement->execute([$fileId]);
+        $gameId = (int)($statement->fetchColumn() ?: 0);
+        if ($gameId < 1) {
             throw new RuntimeException(
-                'File #' . $fileId . ' has no current format-3 metadata; package normalization cannot use retired export rows.'
+                'File #' . $fileId . ' has no authoritative UEDB5 metadata; package normalization cannot proceed.'
             );
         }
-
-        $snapshot = $this->snapshotLoader->load($fileId);
-        $dirty = 0;
-        foreach ((array)($snapshot['exports'] ?? []) as $export) {
-            $localPath = (string)($export['local_path'] ?? '');
-            $expected = \catalog_compact_metadata_join_package_path($cleanPackage, $localPath);
-            if ((string)($export['full_path'] ?? '') !== $expected) {
-                $dirty++;
-            }
-        }
-        return $dirty;
-    }
-}
+        $manifest = $this->metadataReader->manifest($gameId, $fileId);
+        return strcasecmp((string)($manifest['file']['package_name'] ?? ''), $cleanPackage) === 0 ? 0 : 1;
+    }}
