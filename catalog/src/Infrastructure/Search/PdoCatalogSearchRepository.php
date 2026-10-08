@@ -58,14 +58,10 @@ final class PdoCatalogSearchRepository implements CatalogSearchRepository
             $order[] = $fileId;
         }
 
-        // Deep metadata search must stay index-driven. The previous implementation
-        // applied leading-wildcard LIKE predicates to converted term BLOBs while
-        // joined to very large export/dependency projections. On a mature catalog
-        // that can scan tens of millions of rows and monopolise MySQL. Exact term
-        // identity uses ue_terms(value_hash,value_length). Dot-delimited descendant
-        // paths use a trailing-wildcard prefix against indexed ue_terms.value_prefix,
-        // then indexed term-id references in the compact projections. Filename/package
-        // search above still supports prefix/contains matching.
+        // Deep metadata search stays candidate-first and index-driven. V5 SQL
+        // projections narrow candidate rows; authoritative .uedb5 data confirms
+        // exact object/path matches. Filename/package contains matching remains
+        // confined to the comparatively small file/alias identity tables.
         $needed = max(1, $limit - count($rowsById));
         $rowLimit = min(self::MAX_ROWS, max(20, min(500, $needed * 3)));
         $matches = (new Uedb5CatalogMetadataSearch($this->db))
