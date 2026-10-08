@@ -17,7 +17,6 @@ use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer;
 use UnrealDb\Catalog\Infrastructure\Metadata\VerifiedCompactMetadataHealth;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoCatalogDependencyRebuilder;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyPackageSummary;
-use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyReadSource;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoGameCatalogStats;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageProviderRepository;
@@ -874,9 +873,9 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
         }
         $placeholders = implode(',', array_fill(0, count($fileIds), '?'));
         $statement = $this->db->prepare(
-            'SELECT COUNT(*) total,SUM(status="resolved") resolved,SUM(status="missing") missing,'
-            . 'SUM(status="package_only") package_only,SUM(status="common") common '
-            . 'FROM ' . PdoDependencyReadSource::sql($this->db) . ' dependencies '
+            'SELECT COUNT(*) total,SUM(outcome=1) resolved,SUM(outcome=0) missing,'
+            . 'SUM(outcome=2) package_only,SUM(outcome=3) common '
+            . 'FROM ue_uedb5_dependency_edges dependencies '
             . 'WHERE dependencies.file_id IN (' . $placeholders . ')'
         );
         $statement->execute($fileIds);
@@ -887,9 +886,9 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
     private function statsForGame(int $gameId): array
     {
         $statement = $this->db->prepare(
-            'SELECT COUNT(*) total,SUM(d.status="resolved") resolved,SUM(d.status="missing") missing,'
-            . 'SUM(d.status="package_only") package_only,SUM(d.status="common") common '
-            . 'FROM ' . PdoDependencyReadSource::sql($this->db) . ' d '
+            'SELECT COUNT(*) total,SUM(d.outcome=1) resolved,SUM(d.outcome=0) missing,'
+            . 'SUM(d.outcome=2) package_only,SUM(d.outcome=3) common '
+            . 'FROM ue_uedb5_dependency_edges d '
             . 'JOIN ue_files f ON f.id=d.file_id WHERE f.game_id=? AND f.scan_status="verified"'
         );
         $statement->execute([$gameId]);
