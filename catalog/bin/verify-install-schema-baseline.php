@@ -134,9 +134,13 @@ if ($withDatabase) {
         'ue_invalid_file_identities',
         'ue_package_coverage_cache',
         'ue_package_provider_coverage_cache',
-        'ue_legacy_export_identity_lookup',
-        'ue_export_path_lookup',
-        'ue_dependency_identity_lookup',
+        'ue_uedb5_files',
+        'ue_uedb5_provider_keys',
+        'ue_uedb5_name_candidates',
+        'ue_uedb5_object_candidates',
+        'ue_uedb5_dependency_edges',
+        'ue_uedb5_dependency_packages',
+        'ue_uedb5_migration_status',
     ];
     $missingTables = [];
     foreach ($requiredTables as $table) {
@@ -165,7 +169,7 @@ if ($withDatabase) {
         ['ue_geoip_country_ranges', 'latitude'],
         ['ue_geoip_country_ranges', 'longitude'],
         ['ue_geoip_country_ranges', 'accuracy_radius_km'],
-        ['ue_legacy_export_identity_lookup', 'path_hash_ci'],
+        ['ue_uedb5_files', 'payload_sha256'],
     ];
     $missingColumns = [];
     foreach ($requiredColumns as [$table, $column]) {
@@ -186,7 +190,7 @@ if ($withDatabase) {
         ['ue_files', 'idx_ue_files_game_dependency_stem_key'],
         ['ue_base_game_files', 'idx_ue_base_game_dependency_package_key'],
         ['ue_base_game_files', 'idx_ue_base_game_dependency_stem_key'],
-        ['ue_dependency_package_summaries', 'idx_ue_dep_summary_game_missing_package'],
+        ['ue_uedb5_files', 'idx_ue_uedb5_files_package'],
     ];
     $missingIndexes = [];
     foreach ($requiredIndexes as [$table, $index]) {
