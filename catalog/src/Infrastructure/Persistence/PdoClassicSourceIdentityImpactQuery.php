@@ -9,7 +9,7 @@ use PDO;
 final class PdoClassicSourceIdentityImpactQuery
 {
     private const CHUNK = 250;
-    private const OLD_POLICIES = ['uedb5-dependency-pass-v1','uedb5-dependency-pass-v2','uedb5-dependency-pass-v3','uedb5-dependency-pass-v4','uedb5-dependency-pass-v5','uedb5-dependency-pass-v6','uedb5-dependency-pass-v7','uedb5-dependency-pass-v8','uedb5-dependency-pass-v9','uedb5-dependency-pass-v10','uedb5-dependency-pass-v11'];
+    private const OLD_POLICIES = ['uedb5-dependency-pass-v1','uedb5-dependency-pass-v2','uedb5-dependency-pass-v3','uedb5-dependency-pass-v4','uedb5-dependency-pass-v5','uedb5-dependency-pass-v6','uedb5-dependency-pass-v7','uedb5-dependency-pass-v8','uedb5-dependency-pass-v9','uedb5-dependency-pass-v10','uedb5-dependency-pass-v11','uedb5-dependency-pass-v12'];
     private const TRIM_HEX = ['20','09','0A','0D','00','0B'];
     private const UE5_CLASSIC_FAMILY = 'classic-linkerload';
 
@@ -51,10 +51,9 @@ final class PdoClassicSourceIdentityImpactQuery
         $candidateIds=array_map('intval',array_keys($fileMeta));
         if($candidateIds===[])return['file_ids_by_game'=>[],'reasons_by_file'=>[],'reason_counts'=>[],'total'=>0,'candidate_count'=>0];
 
-        $relations=$this->providerRelations($candidateIds);$reasons=[];
+        $reasons=[];
         // Section 1 provider-environment ambiguity applies to every package family.
-        $byConsumerKey=[];foreach($relations as$r){$fid=(int)$r['consumer_file_id'];$key=(int)$r['package_key_kind'].':'.(string)$r['package_key_hex'];$byConsumerKey[$fid][$key][(int)$r['provider_file_id']]=true;}
-        foreach($byConsumerKey as$fid=>$keys){foreach($keys as$providers){if(count($providers)>1){$reasons[(int)$fid]['provider_environment_ambiguity']=true;break;}}}
+        foreach($this->ambiguousProviderConsumerFiles($candidateIds) as $fid)$reasons[$fid]['provider_environment_ambiguity']=true;
 
         $classicIds=[];$modernIds=[];
         foreach($fileMeta as$fid=>$meta){
@@ -67,10 +66,7 @@ final class PdoClassicSourceIdentityImpactQuery
         // UEDB4 does not project UE4/UE5 explicit PackageName. Any trim-sensitive NameMap term in a modern consumer is conservatively impacted.
         foreach($this->sensitiveNameMapFiles($modernIds)as$fid)$reasons[$fid]['consumer_modern_namemap_normalization']=true;
 
-        $classicSet=array_fill_keys($classicIds,true);$providerIds=[];$providerNameSensitive=[];$consumerProviders=[];
-        foreach($relations as$r){$consumer=(int)$r['consumer_file_id'];if(!isset($classicSet[$consumer]))continue;$provider=(int)$r['provider_file_id'];$providerIds[$provider]=true;$consumerProviders[$consumer][$provider]=true;if(self::trimWouldChange((string)$r['provider_name']))$providerNameSensitive[$provider]=true;}
-        $providerSensitive=$this->sensitiveNameMapFiles(array_map('intval',array_keys($providerIds)));$providerSensitiveSet=array_fill_keys($providerSensitive,true)+$providerNameSensitive;
-        foreach($consumerProviders as$consumer=>$providers){foreach(array_keys($providers)as$provider){if(isset($providerSensitiveSet[(int)$provider])){$reasons[(int)$consumer]['provider_fname_normalization']=true;break;}}}
+        foreach($this->providerSensitiveConsumerFiles($classicIds) as $fid)$reasons[$fid]['provider_fname_normalization']=true;
 
         $byGame=[];$reasonCounts=[];foreach($reasons as$fid=>$set){if(!isset($fileMeta[$fid]))continue;$gid=(int)$fileMeta[$fid]['game_id'];$byGame[$gid][]=(int)$fid;foreach(array_keys($set)as$reason)$reasonCounts[$reason]=($reasonCounts[$reason]??0)+1;}
         foreach($byGame as&$ids){$ids=array_values(array_unique(array_map('intval',$ids)));sort($ids,SORT_NUMERIC);}unset($ids);ksort($byGame,SORT_NUMERIC);ksort($reasonCounts,SORT_STRING);
@@ -88,21 +84,68 @@ final class PdoClassicSourceIdentityImpactQuery
         return in_array($engineKey,['UE1','UE2','UE3','UE4'],true)||($engineKey==='UE5'&&$packageFamily===self::UE5_CLASSIC_FAMILY);
     }
 
-    /** @param list<int> $fileIds @return list<array<string,mixed>> */
-    private function providerRelations(array $fileIds): array
+    /** @param list<int> $fileIds @return list<int> */
+    private function ambiguousProviderConsumerFiles(array $fileIds): array
     {
-        $out=[];foreach(array_chunk($fileIds,self::CHUNK)as$chunk){if($chunk===[])continue;$in=implode(',',array_fill(0,count($chunk),'?'));
-            $sql='SELECT DISTINCT e.file_id consumer_file_id,cf.game_id,e.required_package_key_kind,HEX(e.required_package_key) package_key_hex,'
-                .'p.file_id provider_file_id,p.source_kind,p.source_id,CASE WHEN p.source_kind=2 THEN COALESCE(a.package_name,"") ELSE pv.package_name END provider_name '
+        $hit=[];
+        foreach(array_chunk($fileIds,self::CHUNK)as$chunk){
+            if($chunk===[])continue;
+            $in=implode(',',array_fill(0,count($chunk),'?'));
+            $sql='SELECT e.file_id '
                 .'FROM ue_uedb5_dependency_edges e JOIN ue_uedb5_files cf ON cf.file_id=e.file_id '
                 .'JOIN ue_uedb5_provider_keys p ON p.game_id=cf.game_id AND p.package_key_kind=e.required_package_key_kind AND p.package_key=e.required_package_key '
                 .'JOIN ue_uedb5_files pv ON pv.file_id=p.file_id AND pv.game_id=p.game_id JOIN ue_files pf ON pf.id=p.file_id AND pf.game_id=p.game_id AND pf.scan_status="verified" '
                 .'LEFT JOIN ue_file_package_aliases a ON p.source_kind=2 AND a.id=p.source_id AND a.file_id=p.file_id AND a.game_id=p.game_id '
                 .'WHERE e.file_id IN ('.$in.') AND e.required_package_key IS NOT NULL '
                 .'AND NOT EXISTS (SELECT 1 FROM ue_invalid_file_identities bad WHERE bad.file_size=pf.file_size AND bad.md5=LOWER(pf.md5) AND bad.sha1=LOWER(pf.sha1)) '
-                .'AND ((p.source_kind=1 AND p.source_id=p.file_id) OR (p.source_kind=2 AND a.id IS NOT NULL))';
-            $s=$this->db->prepare($sql);$s->execute($chunk);while($r=$s->fetch(PDO::FETCH_ASSOC))$out[]=$r;
-        }return$out;
+                .'AND ((p.source_kind=1 AND p.source_id=p.file_id) OR (p.source_kind=2 AND a.id IS NOT NULL)) '
+                .'GROUP BY e.file_id,e.required_package_key_kind,e.required_package_key HAVING COUNT(DISTINCT p.file_id)>1';
+            $s=$this->db->prepare($sql);$s->execute($chunk);
+            while(($fid=$s->fetchColumn())!==false)$hit[(int)$fid]=true;
+        }
+        return array_map('intval',array_keys($hit));
+    }
+
+    /** @param list<int> $fileIds @return list<int> */
+    private function providerSensitiveConsumerFiles(array $fileIds): array
+    {
+        $hit=[];
+        foreach(array_chunk($fileIds,self::CHUNK)as$chunk){
+            if($chunk===[])continue;
+            $relations=$this->providerRelationsChunk($chunk);
+            $providerIds=[];$providerNameSensitive=[];$consumerProviders=[];
+            foreach($relations as$r){
+                $consumer=(int)$r['consumer_file_id'];$provider=(int)$r['provider_file_id'];
+                $providerIds[$provider]=true;$consumerProviders[$consumer][$provider]=true;
+                if(self::trimWouldChange((string)$r['provider_name']))$providerNameSensitive[$provider]=true;
+            }
+            $providerSensitiveSet=array_fill_keys($this->sensitiveNameMapFiles(array_map('intval',array_keys($providerIds))),true)+$providerNameSensitive;
+            foreach($consumerProviders as$consumer=>$providers){
+                foreach(array_keys($providers)as$provider){
+                    if(isset($providerSensitiveSet[(int)$provider])){$hit[(int)$consumer]=true;break;}
+                }
+            }
+        }
+        return array_map('intval',array_keys($hit));
+    }
+
+    /** @param list<int> $chunk @return list<array<string,mixed>> */
+    private function providerRelationsChunk(array $chunk): array
+    {
+        if($chunk===[])return[];
+        $in=implode(',',array_fill(0,count($chunk),'?'));
+        $sql='SELECT DISTINCT e.file_id consumer_file_id,p.file_id provider_file_id,'
+            .'CASE WHEN p.source_kind=2 THEN COALESCE(a.package_name,"") ELSE pv.package_name END provider_name '
+            .'FROM ue_uedb5_dependency_edges e JOIN ue_uedb5_files cf ON cf.file_id=e.file_id '
+            .'JOIN ue_uedb5_provider_keys p ON p.game_id=cf.game_id AND p.package_key_kind=e.required_package_key_kind AND p.package_key=e.required_package_key '
+            .'JOIN ue_uedb5_files pv ON pv.file_id=p.file_id AND pv.game_id=p.game_id JOIN ue_files pf ON pf.id=p.file_id AND pf.game_id=p.game_id AND pf.scan_status="verified" '
+            .'LEFT JOIN ue_file_package_aliases a ON p.source_kind=2 AND a.id=p.source_id AND a.file_id=p.file_id AND a.game_id=p.game_id '
+            .'WHERE e.file_id IN ('.$in.') AND e.required_package_key IS NOT NULL '
+            .'AND NOT EXISTS (SELECT 1 FROM ue_invalid_file_identities bad WHERE bad.file_size=pf.file_size AND bad.md5=LOWER(pf.md5) AND bad.sha1=LOWER(pf.sha1)) '
+            .'AND ((p.source_kind=1 AND p.source_id=p.file_id) OR (p.source_kind=2 AND a.id IS NOT NULL))';
+        $s=$this->db->prepare($sql);$s->execute($chunk);$out=[];
+        while($r=$s->fetch(PDO::FETCH_ASSOC))$out[]=$r;
+        return$out;
     }
     /** @param list<int> $fileIds @return list<int> */
     private function sensitiveConsumerFiles(array $fileIds): array
