@@ -121,5 +121,5 @@ foreach ($ids as $position=>$fileId) {
     }
 }
 echo json_encode(['status'=>'complete','summary'=>$summary,'issues'=>$issues],
-    JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;
+    JSON_UNESCAPED_SLASHES),PHP_EOL;
 exit($summary['failed'] === 0 ? 0 : 2);
