@@ -9,14 +9,6 @@ $statusRepo=(string)file_get_contents($metadata.'/PdoUedb5MigrationStatusReposit
 $registration=(string)file_get_contents($metadata.'/PdoUedb5StagingRegistrationRepository.php');
 $migration=(string)file_get_contents($root.'/migrations/202610020001_uedb5_dependency_pass_status.php');
 $cli=(string)file_get_contents($root.'/bin/migrate-uedb5-dependencies.php');
-$transition=(string)file_get_contents($root.'/bin/transition-uedb5-source-identity-policy.php');
-$impact=(string)file_get_contents($root.'/src/Infrastructure/Persistence/PdoClassicSourceIdentityImpactQuery.php');
-$ue1Impact=(string)file_get_contents($root.'/src/Infrastructure/Persistence/PdoUe1VerifyImportImpactQuery.php');
-$ue2Impact=(string)file_get_contents($root.'/src/Infrastructure/Persistence/PdoUe2VerifyImportImpactQuery.php');
-$ue3Impact=(string)file_get_contents($root.'/src/Infrastructure/Persistence/PdoUe3VerifyImportImpactQuery.php');
-$ue4Impact=(string)file_get_contents($root.'/src/Infrastructure/Persistence/PdoUe4VerifyImportImpactQuery.php');
-$ue5Impact=(string)file_get_contents($root.'/src/Infrastructure/Persistence/PdoUe5ClassicVerifyImportImpactQuery.php');
-$zenImpact=(string)file_get_contents($root.'/src/Infrastructure/Persistence/PdoUe5ZenDependencyImpactQuery.php');
 $pass1=(string)file_get_contents($metadata.'/Uedb5GameSourceMigrationService.php');
 $pass1Cli=(string)file_get_contents($root.'/bin/migrate-uedb5-game.php');
 $checks=[];$failures=[];
@@ -28,33 +20,10 @@ $check('pass2_has_exact_payload_checkpoint',
     && str_contains($migration,'dependency_policy VARCHAR(64)'));
 $check('pass2_source_ue1_ue2_ue3_ue4_ue5_classic_zen_ut4_semantics_use_v13_policy',
     str_contains($service,"public const DEPENDENCY_POLICY = 'uedb5-dependency-pass-v13'"));
-$check('source_identity_policy_transition_is_targeted',
-    str_contains($transition,"const OLD_POLICIES=['uedb5-dependency-pass-v1','uedb5-dependency-pass-v2','uedb5-dependency-pass-v3','uedb5-dependency-pass-v4','uedb5-dependency-pass-v5','uedb5-dependency-pass-v6','uedb5-dependency-pass-v7','uedb5-dependency-pass-v8','uedb5-dependency-pass-v9','uedb5-dependency-pass-v10','uedb5-dependency-pass-v11','uedb5-dependency-pass-v12']")
-    && str_contains($transition,'PdoClassicSourceIdentityImpactQuery')
-    && str_contains($transition,'currentOldPolicyFiles')
-    && str_contains($transition,"'rebuild-impacted'")
-    && str_contains($transition,"'rebuild-v4-impacted'")
-    && str_contains($impact,'dependency_payload_sha256=v.payload_sha256')
-    && str_contains($transition,'PdoUe1VerifyImportImpactQuery')
-    && str_contains($ue1Impact,'ut99_mesh_rehack')
-    && str_contains($transition,'PdoUe2VerifyImportImpactQuery')
-    && str_contains($ue2Impact,'ue2_source_implementation_unavailable')
-    && str_contains($ue2Impact,'ue2_unreal2_v69_pass1_reparse')
-    && str_contains($ue2Impact,'ue2_ut2004_verifyimport_profile_change')
-    && str_contains($ue3Impact,'ue3_ut3_verifyimport_outcome_change')
-    && str_contains($transition,'PdoUe4VerifyImportImpactQuery')
-    && str_contains($ue4Impact,'ue4_ut4_verifyimport_outcome_change')
-    && str_contains($ue4Impact,'ue4_source_implementation_unavailable')
-    && str_contains($transition,'PdoUe5ClassicVerifyImportImpactQuery')
-    && str_contains($ue5Impact,'ue5_classic_verifyimport_outcome_change')
-    && str_contains($ue5Impact,'ue5_classic_private_package_access_recheck')
-    && str_contains($transition,'PdoUe5ZenDependencyImpactQuery')
-    && str_contains($zenImpact,'ue5_zen_dependency_v3_outcome_change')
-    && str_contains($transition,"'reparse-pass1-impacted'")
-    && str_contains($transition,"'ut99-semantic-ids:'")
-    && str_contains($transition,'ue1_ut99_name_preprocessing_v13')
-    && str_contains($transition,'ue2_ut2004_name_preprocessing_v13')
-    && str_contains($transition,'ue3_ut3_name_preprocessing_v13'));
+$check('retired_v1_to_v12_transition_removed',
+    !is_file($root.'/bin/transition-uedb5-source-identity-policy.php')
+    && !is_file($root.'/src/Infrastructure/Persistence/PdoClassicSourceIdentityImpactQuery.php')
+    && !is_file($root.'/src/Infrastructure/Persistence/PdoUe4VerifyImportImpactQuery.php'));
 $check('pass1_supports_exact_file_restage_for_format_repairs',
     str_contains($pass1Cli,"'file-id::'")
     &&str_contains($pass1Cli,'$service->runFile($gameId,$fileId,true)')
