@@ -159,7 +159,7 @@ function catalog_performance_count_cacheable(PDO $db, string $normalizedSql): bo
     $lower = strtolower($normalizedSql);
     foreach ([
         'ue_files',
-        'ue_dependency_package_summaries',
+        'ue_uedb5_dependency_packages',
         'ue_background_jobs',
         'ue_federation_peer_files',
         'ue_federation_requests',
@@ -207,7 +207,7 @@ function catalog_performance_count_ttl(string $normalizedSql): int
     if (str_contains($lower, 'ue_federation_')) {
         return 30;
     }
-    if (str_contains($lower, 'ue_dependency_package_summaries')) {
+    if (str_contains($lower, 'ue_uedb5_dependency_packages')) {
         return 60;
     }
     if (str_contains($lower, 'ue_files')) {
