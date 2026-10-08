@@ -16,8 +16,6 @@ use UnrealDb\Catalog\Application\Pagination\CatalogKeysetPaginator;
 /** Loads parent/child federation inventory pages from compact package summaries. */
 final class PdoFederationInventoryListQuery
 {
-    private ?bool $examplePathAvailable = null;
-
     public function __construct(private PDO $db)
     {
     }
@@ -119,16 +117,16 @@ final class PdoFederationInventoryListQuery
         $rows = \catalog_all(
             $this->db,
             'SELECT inventory.* FROM ('
-            . 'SELECT needs.game_id,needs.game_name,needs.engine_key,needs.required_package,'
+            . 'SELECT needs.game_id,needs.game_name,needs.engine_key,needs.required_package_name,'
             . 'needs.required_object_path,needs.object_count,needs.use_count,needs.is_base_game,'
             . 'MAX(CASE WHEN pf.id IS NOT NULL THEN 1 ELSE 0 END) parent_available,'
             . 'MAX(pf.id) parent_peer_file_id,MAX(pf.original_name) parent_file,MAX(pf.file_size) parent_file_size '
             . 'FROM (' . $this->childNeedsSql( $ignoreBaseGame) . ') needs '
             . 'LEFT JOIN ue_federation_peer_files pf ON pf.peer_id=? '
-            . 'AND LOWER(TRIM(pf.package_name))=LOWER(TRIM(needs.required_package)) '
+            . 'AND LOWER(TRIM(pf.package_name))=LOWER(TRIM(needs.required_package_name)) '
             . 'AND (pf.game_id=needs.game_id OR pf.remote_game_name=needs.game_name)'
             . $peerPolicy . ' '
-            . 'GROUP BY needs.game_id,needs.game_name,needs.engine_key,needs.required_package,'
+            . 'GROUP BY needs.game_id,needs.game_name,needs.engine_key,needs.required_package_name,'
             . 'needs.required_object_path,needs.object_count,needs.use_count,needs.is_base_game'
             . ') inventory'
             . $where
@@ -153,13 +151,13 @@ final class PdoFederationInventoryListQuery
             . 'FROM ue_federation_peer_files pf '
             . 'LEFT JOIN ue_games g ON g.id=pf.game_id '
             . 'LEFT JOIN ('
-            . 'SELECT s.game_id,ng.name game_name,LOWER(TRIM(s.required_package)) package_key,'
+            . 'SELECT s.game_id,ng.name game_name,LOWER(TRIM(s.required_package_name)) package_key,'
             . 'COUNT(*) needed_by_parent_files '
-            . 'FROM ue_dependency_package_summaries s '
+            . 'FROM ue_uedb5_dependency_packages s '
             . 'JOIN ue_files needer ON needer.id=s.file_id AND needer.scan_status="verified" '
             . 'JOIN ue_games ng ON ng.id=s.game_id '
             . 'WHERE s.missing_count>0 '
-            . 'GROUP BY s.game_id,ng.name,LOWER(TRIM(s.required_package))'
+            . 'GROUP BY s.game_id,ng.name,LOWER(TRIM(s.required_package_name))'
             . ') need ON need.package_key=LOWER(TRIM(pf.package_name)) '
             . 'AND ((COALESCE(pf.remote_game_name,"")<>"" AND need.game_name=pf.remote_game_name) '
             . 'OR (COALESCE(pf.remote_game_name,"")="" AND pf.game_id IS NOT NULL AND need.game_id=pf.game_id)) '
@@ -173,39 +171,18 @@ final class PdoFederationInventoryListQuery
 
     private function childNeedsSql(bool $ignoreBaseGame): string
     {
-        $baseGameSql = \federation_base_game_package_exists_sql('s.required_package', 's.game_id');
+        $baseGameSql = \federation_base_game_package_exists_sql('s.required_package_name', 's.game_id');
         $policy = $ignoreBaseGame ? ' AND NOT (' . $baseGameSql . ')' : '';
-        $examplePath = $this->hasExamplePathColumn()
-            ? 'COALESCE(MIN(NULLIF(s.example_required_object_path,"")),"")'
-            : '""';
-        return 'SELECT s.game_id,g.name game_name,COALESCE(gp.engine_key,"") engine_key,s.required_package,'
-            . $examplePath . ' required_object_path,'
+        return 'SELECT s.game_id,g.name game_name,COALESCE(gp.engine_key,"") engine_key,'
+            . 's.required_package_name required_package,"" required_object_path,'
             . 'SUM(s.missing_count) object_count,COUNT(*) use_count,'
             . 'MAX(CASE WHEN ' . $baseGameSql . ' THEN 1 ELSE 0 END) is_base_game '
-            . 'FROM ue_dependency_package_summaries s '
+            . 'FROM ue_uedb5_dependency_packages s '
             . 'JOIN ue_files f ON f.id=s.file_id AND f.scan_status="verified" '
             . 'JOIN ue_games g ON g.id=s.game_id '
             . 'LEFT JOIN ue_game_profiles gp ON gp.id=g.profile_id AND gp.is_active=1 '
-            . 'WHERE s.missing_count>0 AND s.required_package<>""' . $policy . ' '
-            . 'GROUP BY s.game_id,g.name,gp.engine_key,s.required_package';
-    }
-
-    private function hasExamplePathColumn(): bool
-    {
-        if ($this->examplePathAvailable !== null) {
-            return $this->examplePathAvailable;
-        }
-        try {
-            $statement = $this->db->query(
-                'SELECT 1 FROM information_schema.columns WHERE table_schema=DATABASE() '
-                . 'AND table_name="ue_dependency_package_summaries" '
-                . 'AND column_name="example_required_object_path" LIMIT 1'
-            );
-            $this->examplePathAvailable = $statement !== false && $statement->fetchColumn() !== false;
-        } catch (\Throwable) {
-            $this->examplePathAvailable = false;
-        }
-        return $this->examplePathAvailable;
+            . 'WHERE s.missing_count>0 AND s.required_package_name<>""' . $policy . ' '
+            . 'GROUP BY s.game_id,g.name,gp.engine_key,s.required_package_name';
     }
 
     private static function move(string $move): string
