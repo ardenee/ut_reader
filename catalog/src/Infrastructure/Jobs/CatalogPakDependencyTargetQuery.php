@@ -12,12 +12,12 @@ declare(strict_types=1);
 namespace UnrealDb\Catalog\Infrastructure\Jobs;
 
 use PDO;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5SqlProjectionContract;
 
 final class CatalogPakDependencyTargetQuery
 {
     private const FILE_BATCH_SIZE = 500;
-    private const TERM_BATCH_SIZE = 250;
-    private const LINK_BATCH_SIZE = 500;
+    private const PACKAGE_BATCH_SIZE = 200;
 
     public function __construct(private readonly PDO $db)
     {
@@ -44,8 +44,7 @@ final class CatalogPakDependencyTargetQuery
         }
 
         $packageNames = $this->providerPackageNames($sourceFileIds, $gameId);
-        $termIds = $this->termIds($packageNames);
-        $affectedFileIds = $this->affectedFileIds($termIds, $gameId);
+        $affectedFileIds = $this->affectedFileIds($packageNames, $gameId);
 
         $targets = [];
         foreach (array_merge($sourceFileIds, $affectedFileIds) as $fileId) {
@@ -155,69 +154,35 @@ final class CatalogPakDependencyTargetQuery
     }
 
     /** @param list<string> $packageNames @return list<int> */
-    private function termIds(array $packageNames): array
+    private function affectedFileIds(array $packageNames, int $gameId): array
     {
+        if ($packageNames === []) {
+            return [];
+        }
         $ids = [];
-        foreach (array_chunk($packageNames, self::TERM_BATCH_SIZE) as $chunk) {
+        foreach (array_chunk($packageNames, self::PACKAGE_BATCH_SIZE) as $chunk) {
             $predicates = [];
-            $arguments = [];
-            $expected = [];
+            $arguments = [$gameId];
             foreach ($chunk as $name) {
-                $hash = md5($name, true);
-                $length = strlen($name);
-                $predicates[] = '(value_hash=? AND value_length=?)';
-                $arguments[] = $hash;
-                $arguments[] = $length;
-                $expected[bin2hex($hash) . ':' . $length] = [
-                    'prefix' => substr($name, 0, 200),
-                    'overflow' => $length > 200 ? 1 : 0,
-                ];
+                foreach ([
+                    Uedb5SqlProjectionContract::PACKAGE_KEY_CLASSIC_FNAME,
+                    Uedb5SqlProjectionContract::PACKAGE_KEY_CLASSIC_NAME,
+                ] as $kind) {
+                    $predicates[] = '(p.package_key_kind=? AND p.package_key=?)';
+                    $arguments[] = $kind;
+                    $arguments[] = Uedb5SqlProjectionContract::classicPackageKeyBinary($name, $kind);
+                }
             }
             if ($predicates === []) {
                 continue;
             }
             $statement = $this->db->prepare(
-                'SELECT id,value_hash,value_length,value_prefix,is_overflow FROM ue_terms WHERE '
-                . implode(' OR ', $predicates)
+                'SELECT DISTINCT p.file_id FROM ue_uedb5_dependency_packages p '
+                . 'JOIN ue_files f ON f.id=p.file_id AND f.game_id=p.game_id '
+                . 'WHERE p.game_id=? AND f.scan_status="verified" AND ('
+                . implode(' OR ', $predicates) . ')'
             );
             $statement->execute($arguments);
-            while (($row = $statement->fetch(PDO::FETCH_ASSOC)) !== false) {
-                $key = bin2hex((string)$row['value_hash']) . ':' . (int)$row['value_length'];
-                $match = $expected[$key] ?? null;
-                if (!is_array($match)) {
-                    continue;
-                }
-                $stored = (string)$row['value_prefix'];
-                $prefix = (string)$match['prefix'];
-                $prefixMatches = (int)$row['is_overflow'] === 1
-                    ? str_starts_with($stored, $prefix)
-                    : hash_equals($stored, $prefix);
-                if ($prefixMatches && (int)$row['is_overflow'] === (int)$match['overflow']) {
-                    $ids[(int)$row['id']] = true;
-                }
-            }
-        }
-        $result = array_map('intval', array_keys($ids));
-        sort($result, SORT_NUMERIC);
-        return $result;
-    }
-
-    /** @param list<int> $termIds @return list<int> */
-    private function affectedFileIds(array $termIds, int $gameId): array
-    {
-        if ($termIds === []) {
-            return [];
-        }
-        $ids = [];
-        foreach (array_chunk($termIds, self::LINK_BATCH_SIZE) as $chunk) {
-            $statement = $this->db->prepare(
-                'SELECT DISTINCT l.file_id FROM ue_dependency_links l '
-                . 'JOIN ue_files f ON f.id=l.file_id '
-                . 'WHERE f.game_id=? AND f.scan_status="verified" '
-                . 'AND l.required_package_term_id IN ('
-                . implode(',', array_fill(0, count($chunk), '?')) . ')'
-            );
-            $statement->execute(array_merge([$gameId], $chunk));
             foreach ($statement->fetchAll(PDO::FETCH_COLUMN) ?: [] as $fileId) {
                 $ids[(int)$fileId] = true;
             }
@@ -226,4 +191,5 @@ final class CatalogPakDependencyTargetQuery
         sort($result, SORT_NUMERIC);
         return $result;
     }
+
 }
