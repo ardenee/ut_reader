@@ -47,7 +47,6 @@ final class PdoCatalogGameTableMaintenance
             'ue_export_lookup',
             'ue_file_metadata',
             'ue_unverified_metadata',
-            'ue_package_providers',
             'ue_external_mirror_jobs',
             'ue_external_download_links',
             'ue_source_file_fingerprints',
