@@ -15,6 +15,12 @@ use PDO;
 use RuntimeException;
 use Throwable;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
+use UnrealDb\Catalog\Infrastructure\Metadata\CatalogUnrealIdentityHash;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5ClassicDependencyResolver;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5MetadataReader;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5ParityV5ReadService;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5SqlProjectionContract;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5VerifiedFilePublisher;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 
 final class CatalogVerifiedFileRenameService
@@ -172,62 +178,116 @@ final class CatalogVerifiedFileRenameService
             return [];
         }
 
-        $terms = $this->db->prepare(
-            'SELECT DISTINCT object_term_id FROM ue_export_lookup '
-            . 'WHERE file_id=? AND object_term_id IS NOT NULL LIMIT ' . self::MAX_SUGGESTION_EXPORT_TERMS
-        );
-        $terms->execute([$fileId]);
-        $objectTermIds = array_values(array_filter(
-            array_map('intval', $terms->fetchAll(PDO::FETCH_COLUMN) ?: []),
-            static fn(int $id): bool => $id > 0
-        ));
-        if ($objectTermIds === []) {
+        $storageRoot = trim((string)($this->config['storage_path'] ?? ''));
+        if ($storageRoot === '') {
+            throw new RuntimeException('Catalog storage_path is required for UEDB5 rename suggestions.');
+        }
+        $gameId = (int)$file['game_id'];
+        $reader = new Uedb5MetadataReader($storageRoot);
+        try {
+            $snapshot = $reader->snapshot($gameId, $fileId);
+            $exports = Uedb5ClassicDependencyResolver::exportCoverageRows($snapshot);
+        } finally {
+            $reader->clearCache($gameId, $fileId);
+        }
+
+        $objectKeys = [];
+        foreach ($exports as $export) {
+            $name = trim((string)($export['object_name'] ?? ''));
+            if ($name === '') {
+                continue;
+            }
+            $normalized = CatalogUnrealIdentityHash::fnameKey($name);
+            if ($normalized === '') {
+                continue;
+            }
+            $objectKeys[$normalized] = md5($normalized, true);
+            if (count($objectKeys) >= self::MAX_SUGGESTION_EXPORT_TERMS) {
+                break;
+            }
+        }
+        if ($objectKeys === []) {
             return [];
         }
 
-        $placeholders = implode(',', array_fill(0, count($objectTermIds), '?'));
-        $sql = 'SELECT d.file_id,d.import_object_term_id,'
-            . 'CONVERT(t.value_prefix USING utf8mb4) package_name '
-            . 'FROM ue_dependency_links d '
-            . 'JOIN ue_files f ON f.id=d.file_id AND f.game_id=? AND f.scan_status="verified" '
-            . 'JOIN ue_terms t ON t.id=d.required_package_term_id '
-            . 'WHERE d.import_object_term_id IN (' . $placeholders . ') '
-            . 'AND d.resolved_file_id IS NULL AND d.file_id<>? '
-            . 'ORDER BY d.file_id,d.import_index LIMIT ' . self::MAX_SUGGESTION_DEPENDENCY_ROWS;
-        $arguments = array_merge([(int)$file['game_id']], $objectTermIds, [$fileId]);
-        $statement = $this->db->prepare($sql);
-        $statement->execute($arguments);
-
-        $currentPackage = mb_strtolower((string)$file['package_name'], 'UTF-8');
-        $candidates = [];
-        while (($row = $statement->fetch(PDO::FETCH_ASSOC)) !== false) {
-            $packageName = trim((string)($row['package_name'] ?? ''));
-            if ($packageName === ''
-                || str_contains($packageName, '/')
-                || str_contains($packageName, '\\')
-                || mb_strtolower($packageName, 'UTF-8') === $currentPackage) {
-                continue;
-            }
-            $key = mb_strtolower($packageName, 'UTF-8');
-            if (!isset($candidates[$key])) {
-                $candidates[$key] = [
-                    'package_name' => $packageName,
-                    'object_terms' => [],
-                    'files' => [],
-                ];
-            }
-            $candidates[$key]['object_terms'][(int)$row['import_object_term_id']] = true;
-            $candidates[$key]['files'][(int)$row['file_id']] = true;
+        $predicates = [];
+        $args = [$gameId, $fileId];
+        foreach ($objectKeys as $binary) {
+            $predicates[] = 'e.required_object_key=?';
+            $args[] = $binary;
+        }
+        $statement = $this->db->prepare(
+            'SELECT e.file_id,e.source_index,p.required_package_name '
+            . 'FROM ue_uedb5_dependency_edges e '
+            . 'JOIN ue_uedb5_dependency_packages p ON p.file_id=e.file_id '
+            . 'AND p.package_key_kind=e.required_package_key_kind AND p.package_key=e.required_package_key '
+            . 'JOIN ue_files f ON f.id=e.file_id AND f.game_id=p.game_id AND f.scan_status="verified" '
+            . 'WHERE p.game_id=? AND e.file_id<>? AND e.source_kind=1 AND e.outcome=0 '
+            . 'AND e.required_object_key_kind=' . Uedb5SqlProjectionContract::OBJECT_KEY_NAME . ' '
+            . 'AND (' . implode(' OR ', $predicates) . ') '
+            . 'ORDER BY e.file_id,e.source_index LIMIT ' . self::MAX_SUGGESTION_DEPENDENCY_ROWS
+        );
+        $statement->execute($args);
+        $rows = $statement->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        if ($rows === []) {
+            return [];
         }
 
-        $result = [];
+        $byFile = [];
+        foreach ($rows as $row) {
+            $ownerId = (int)$row['file_id'];
+            $index = (int)$row['source_index'];
+            $byFile[$ownerId]['meta'][$index] = $row;
+            $byFile[$ownerId]['indexes'][] = $index;
+        }
+
+        $dependencyReader = new Uedb5ParityV5ReadService($this->db, $this->config);
+        $currentPackage = CatalogUnrealIdentityHash::fnameKey((string)$file['package_name']);
+        $candidates = [];
+        foreach ($byFile as $ownerId => $entry) {
+            $details = $dependencyReader->dependenciesAtIndexes(
+                $gameId,
+                (int)$ownerId,
+                array_values(array_unique((array)$entry['indexes']))
+            );
+            foreach ((array)$entry['meta'] as $index => $meta) {
+                $detail = $details[(int)$index] ?? null;
+                if (!is_array($detail) || (string)($detail['outcome'] ?? '') !== 'missing') {
+                    continue;
+                }
+                $objectName = trim((string)($detail['required_object'] ?? ''));
+                $objectKey = CatalogUnrealIdentityHash::fnameKey($objectName);
+                if ($objectKey === '' || !isset($objectKeys[$objectKey])) {
+                    continue;
+                }
+
+                $packageName = trim((string)($detail['required_package'] ?? $meta['required_package_name'] ?? ''));
+                if ($packageName === ''
+                    || str_contains($packageName, '/')
+                    || str_contains($packageName, '\\')
+                    || CatalogUnrealIdentityHash::fnameKey($packageName) === $currentPackage) {
+                    continue;
+                }
+                $key = CatalogUnrealIdentityHash::fnameKey($packageName);
+                $candidates[$key] ??= [
+                    'package_name'=>$packageName,
+                    'object_keys'=>[],
+                    'files'=>[],
+                ];
+                $candidates[$key]['object_keys'][$objectKey] = true;
+                $candidates[$key]['files'][(int)$ownerId] = true;
+            }
+        }
+
         $extension = strtolower((string)$file['extension']);
+        $result = [];
         foreach ($candidates as $candidate) {
             $result[] = [
-                'package_name' => (string)$candidate['package_name'],
-                'suggested_filename' => (string)$candidate['package_name'] . ($extension !== '' ? '.' . $extension : ''),
-                'matched_objects' => count($candidate['object_terms']),
-                'referencing_files' => count($candidate['files']),
+                'package_name'=>(string)$candidate['package_name'],
+                'suggested_filename'=>(string)$candidate['package_name']
+                    . ($extension !== '' ? '.' . $extension : ''),
+                'matched_objects'=>count($candidate['object_keys']),
+                'referencing_files'=>count($candidate['files']),
             ];
         }
         usort($result, static function (array $left, array $right): int {
