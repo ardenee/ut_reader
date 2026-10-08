@@ -110,25 +110,22 @@ $check(
     && !in_array('required_package_name', (array)$baseline['ue_uedb5_dependency_edges']['columns'], true),
     'v5_dependency_edges_use_compact_package_keys_not_repeated_strings'
 );
-$ut3 = $read('src/Infrastructure/Persistence/PdoUe3VerifyImportProjectionResolver.php');
+$v5Search = $read('src/Infrastructure/Search/Uedb5CatalogMetadataSearch.php');
+$v5Resolver = $read('src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php');
 $check(
-    str_contains($ut3, 'SELECT export_index,object_term_id FROM ue_export_lookup')
-    && str_contains($ut3, '$candidateExports = $reader->rowsByIndexes(')
-    && str_contains($ut3, "'exports',")
-    && str_contains($ut3, 'source-semantic class/outer/flag fields from authoritative UEDB4'),
+    str_contains($v5Search, 'rowsByPositions(')
+    && str_contains($v5Resolver, 'normalizedTables(')
+    && !str_contains($v5Search, 'ue_export_lookup'),
     'ut3_candidate_then_uedb_hydration_is_v5_model'
 );
-
-$v4Writer = $read('src/Infrastructure/Metadata/CompressedMetadataLookupWriter.php');
 $check(
-    str_contains($v4Writer, "'class_package_term_id', 'class_name_term_id', 'object_flags', 'outer_index'")
+    !is_file($root . '/src/Infrastructure/Metadata/CompressedMetadataLookupWriter.php')
     && !in_array('class_package_term_id', (array)$baseline['ue_uedb5_object_candidates']['columns'], true)
     && !in_array('class_name_term_id', (array)$baseline['ue_uedb5_object_candidates']['columns'], true)
     && !in_array('object_flags', (array)$baseline['ue_uedb5_object_candidates']['columns'], true)
     && !in_array('outer_index', (array)$baseline['ue_uedb5_object_candidates']['columns'], true),
     'v5_does_not_repeat_v4_export_path_identity_projection'
 );
-
 $v5RuntimeFiles = [
     $read('src/Infrastructure/Metadata/Uedb5MetadataReader.php'),
     $read('src/Infrastructure/Metadata/Uedb5MetadataSnapshotWriter.php'),
