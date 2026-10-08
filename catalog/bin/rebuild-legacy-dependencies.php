@@ -21,7 +21,7 @@ $root = realpath(dirname(__DIR__)) ?: dirname(__DIR__);
 require_once $root . '/bootstrap/autoload.php';
 require_once $root . '/lib/CatalogSupport.php';
 
-use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5MetadataContainer;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoCatalogDependencyRebuilder;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoGameCatalogStats;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoUe3VerifyImportProjectionResolver;
@@ -76,11 +76,11 @@ $rebuilder = new PdoCatalogDependencyRebuilder($db, $config);
 if ($fileId > 0) {
     $sql = 'SELECT f.id,f.game_id,f.package_name,UPPER(TRIM(p.engine_key)) engine_key'
         . ' FROM ue_files f'
-        . ' JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=?'
+        . ' JOIN ue_uedb5_files m ON m.file_id=f.id AND m.game_id=f.game_id AND m.format_version=?'
         . ' JOIN ue_games g ON g.id=f.game_id'
         . ' JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1'
         . ' WHERE f.id=? AND f.scan_status="verified"';
-    $args = [BlockedCompressedMetadataContainer::FORMAT_VERSION, $fileId];
+    $args = [Uedb5MetadataContainer::FORMAT_VERSION, $fileId];
     if ($gameId > 0) {
         $sql .= ' AND f.game_id=?';
         $args[] = $gameId;
@@ -156,11 +156,11 @@ while (true) {
 
     $sql = 'SELECT f.id,f.game_id,f.package_name,UPPER(TRIM(p.engine_key)) engine_key'
         . ' FROM ue_files f'
-        . ' JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=?'
+        . ' JOIN ue_uedb5_files m ON m.file_id=f.id AND m.game_id=f.game_id AND m.format_version=?'
         . ' JOIN ue_games g ON g.id=f.game_id'
         . ' JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1'
         . ' WHERE f.scan_status="verified" AND f.id>?';
-    $args = [BlockedCompressedMetadataContainer::FORMAT_VERSION, $cursor];
+    $args = [Uedb5MetadataContainer::FORMAT_VERSION, $cursor];
 
     if ($engine !== '') {
         $sql .= ' AND UPPER(TRIM(p.engine_key))=?';
@@ -171,7 +171,7 @@ while (true) {
         $args[] = $gameId;
     }
     if ($missingOnly) {
-        $sql .= ' AND EXISTS (SELECT 1 FROM ue_dependency_links l WHERE l.file_id=f.id AND l.status=0)';
+        $sql .= ' AND EXISTS (SELECT 1 FROM ue_uedb5_dependency_edges l WHERE l.file_id=f.id AND l.outcome=0)';
     }
     $sql .= ' ORDER BY f.id LIMIT ' . (int)$take;
 
