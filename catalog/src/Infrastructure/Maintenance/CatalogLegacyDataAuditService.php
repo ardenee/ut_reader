@@ -1,7 +1,7 @@
 <?php
 /**
  * Purpose: Performs read-only UE1/UE2/UE3 package projection audits against a fresh parse.
- * Why: Reader validation should compare fresh parser output with the authoritative format-3 metadata snapshot, not retired SQL tables.
+ * Why: Reader validation should compare fresh parser output with the authoritative UEDB5 metadata snapshot, not retired SQL tables.
  * Role: Infrastructure maintenance service preserving the Legacy Data Audit feature after physical legacy-table retirement.
  */
 declare(strict_types=1);
@@ -10,7 +10,8 @@ namespace UnrealDb\Catalog\Infrastructure\Maintenance;
 
 use PDO;
 use RuntimeException;
-use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataSnapshotLoader;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5MetadataReader;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5ParityV5ReadService;
 
 final class CatalogLegacyDataAuditService
 {
@@ -60,7 +61,7 @@ final class CatalogLegacyDataAuditService
 
     /**
      * Read-only verification of one UE1/UE2/UE3 package. It reparses the stored
-     * bytes and compares the fresh reader output with the authoritative format-3 snapshot.
+     * bytes and compares the fresh reader output with the authoritative UEDB5 snapshot.
      *
      * @param null|callable(array<string,mixed>):void $progress
      * @return array<string,mixed>
@@ -108,17 +109,25 @@ final class CatalogLegacyDataAuditService
             throw new RuntimeException('Fresh reader reported: ' . implode(' | ', array_map('strval', $readerIssues)));
         }
 
-        \scanner_emit_percent($progress, 'audit', 12, 'Reading fresh package tables and current compact metadata');
+        \scanner_emit_percent($progress, 'audit', 12, 'Reading fresh package tables and authoritative UEDB5 metadata');
         $header = $pkg->getHeader();
         $names = $pkg->getNames();
         $imports = $pkg->getImports();
         $exports = $pkg->getExports();
-        $snapshot = (new BlockedCompressedMetadataSnapshotLoader($this->db, $storageRoot))->load($fileId);
 
-        $storedNames = $this->rowsByIndex((array)($snapshot['names'] ?? []), 'name_index');
-        $storedImports = $this->rowsByIndex((array)($snapshot['imports'] ?? []), 'import_index');
-        $storedExports = $this->rowsByIndex((array)($snapshot['exports'] ?? []), 'export_index');
-        $storedDependencies = array_values((array)($snapshot['dependencies'] ?? []));
+        $v5 = (new Uedb5MetadataReader($storageRoot))->snapshot((int)$file['game_id'], $fileId);
+        $stored = $this->v5AuditRows($v5, (string)$file['package_name']);
+        $storedNames = $this->rowsByIndex($stored['names'], 'name_index');
+        $storedImports = $this->rowsByIndex($stored['imports'], 'import_index');
+        $storedExports = $this->rowsByIndex($stored['exports'], 'export_index');
+        $storedDependencies = array_values(array_map(
+            static function (array $row): array {
+                $row['import_index'] = (int)($row['source_index'] ?? -1);
+                return $row;
+            },
+            (new Uedb5ParityV5ReadService($this->db, $this->config))
+                ->dependencies((int)$file['game_id'], $fileId)
+        ));
 
         $found = [];
         $add = static function (array $issue) use (&$found): void {
@@ -153,7 +162,7 @@ final class CatalogLegacyDataAuditService
                     'metadata_count_mismatch',
                     'metadata.' . $key,
                     null,
-                    ucfirst($key) . ' count in format-3 metadata differs from a fresh parse.',
+                    ucfirst($key) . ' count in UEDB5 metadata differs from a fresh parse.',
                     $freshCount,
                     $storedCount
                 ));
@@ -192,7 +201,7 @@ final class CatalogLegacyDataAuditService
             ));
         }
 
-        \scanner_emit_percent($progress, 'audit', 24, 'Comparing Names with format-3 metadata');
+        \scanner_emit_percent($progress, 'audit', 24, 'Comparing Names with UEDB5 metadata');
         foreach ($names as $index => $name) {
             $stored = $storedNames[$index] ?? null;
             if (!$stored) {
@@ -415,6 +424,128 @@ final class CatalogLegacyDataAuditService
             'issues' => $found,
             'issue_limit_reached' => count($found) >= 250,
         ];
+    }
+
+    /**
+     * Adapt raw source-shaped UEDB5 rows to the historical audit view.
+     *
+     * @param array<string,mixed> $snapshot
+     * @return array{names:list<array<string,mixed>>,imports:list<array<string,mixed>>,exports:list<array<string,mixed>>}
+     */
+    private function v5AuditRows(array $snapshot, string $packageName): array
+    {
+        $sections = (array)($snapshot['sections'] ?? []);
+        $rawNames = array_values((array)($sections['names'] ?? []));
+        $rawImports = array_values((array)($sections['imports'] ?? []));
+        $rawExports = array_values((array)($sections['exports'] ?? []));
+
+        $names = [];
+        foreach ($rawNames as $fallback => $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $names[] = [
+                'name_index' => (int)($row['index'] ?? $fallback),
+                'name_text' => (string)($row['text'] ?? ''),
+                'flags' => $this->v5FlagsInt($row['flags'] ?? 0),
+            ];
+        }
+
+        $imports = [];
+        foreach ($rawImports as $fallback => $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $index = (int)($row['index'] ?? $fallback);
+            $fullPath = $this->v5RefPath(-($index + 1), $rawImports, $rawExports);
+            $parts = $fullPath !== '' ? explode('.', $fullPath) : [];
+            $imports[] = [
+                'import_index' => $index,
+                'class_package' => $this->v5FnameText($row['class_package'] ?? null),
+                'class_name' => $this->v5FnameText($row['class_name'] ?? null),
+                'object_name' => $this->v5FnameText($row['object_name'] ?? null),
+                'outer_index' => (int)($row['outer_index'] ?? 0),
+                'full_path' => $fullPath,
+                'root_package' => (string)($parts[0] ?? ''),
+                'relative_object_path' => count($parts) > 1 ? implode('.', array_slice($parts, 1)) : '',
+            ];
+        }
+
+        $exports = [];
+        foreach ($rawExports as $fallback => $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $index = (int)($row['index'] ?? $fallback);
+            $localPath = $this->v5RefPath($index + 1, $rawImports, $rawExports);
+            $classIndex = (int)($row['class_index'] ?? 0);
+            $exports[] = [
+                'export_index' => $index,
+                'class_name' => $classIndex !== 0
+                    ? $this->v5RefPath($classIndex, $rawImports, $rawExports)
+                    : '',
+                'object_name' => $this->v5FnameText($row['object_name'] ?? null),
+                'outer_index' => (int)($row['outer_index'] ?? 0),
+                'local_path' => $localPath,
+                'full_path' => \scanner_join_path_parts([$packageName, $localPath]),
+                'serial_size' => array_key_exists('serial_size', $row) ? (int)$row['serial_size'] : null,
+                'serial_offset' => array_key_exists('serial_offset', $row) ? (int)$row['serial_offset'] : null,
+            ];
+        }
+
+        return ['names'=>$names,'imports'=>$imports,'exports'=>$exports];
+    }
+
+    /** @param list<array<string,mixed>> $imports @param list<array<string,mixed>> $exports */
+    private function v5RefPath(int $ref, array $imports, array $exports): string
+    {
+        $parts = [];
+        $seen = [];
+        $limit = count($imports) + count($exports) + 1;
+        for ($step = 0; $ref !== 0 && $step < $limit; $step++) {
+            if (isset($seen[$ref])) {
+                return '';
+            }
+            $seen[$ref] = true;
+            if ($ref < 0) {
+                $row = $imports[-$ref - 1] ?? null;
+            } else {
+                $row = $exports[$ref - 1] ?? null;
+            }
+            if (!is_array($row)) {
+                return '';
+            }
+            $name = $this->v5FnameText($row['object_name'] ?? null);
+            if ($name !== '') {
+                $parts[] = $name;
+            }
+            $ref = (int)($row['outer_index'] ?? 0);
+        }
+        return implode('.', array_reverse($parts));
+    }
+
+    private function v5FnameText(mixed $value): string
+    {
+        return is_array($value) ? (string)($value['text'] ?? '') : (string)$value;
+    }
+
+    private function v5FlagsInt(mixed $value): int
+    {
+        if (is_int($value)) {
+            return $value;
+        }
+        $hex = strtoupper(trim((string)$value));
+        if ($hex === '') {
+            return 0;
+        }
+        if (str_starts_with($hex, '0X')) {
+            $hex = substr($hex, 2);
+        }
+        if (preg_match('/^[0-9A-F]{1,16}$/', $hex) !== 1) {
+            throw new RuntimeException('UEDB5 audit encountered non-canonical flag data.');
+        }
+        $hex = str_pad($hex, 16, '0', STR_PAD_LEFT);
+        return ((int)hexdec(substr($hex, 0, 8)) << 32) | (int)hexdec(substr($hex, 8, 8));
     }
 
     /** @param array<int,mixed> $rows @return array<int,array<string,mixed>> */
