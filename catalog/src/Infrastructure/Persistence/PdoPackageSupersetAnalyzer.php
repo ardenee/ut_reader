@@ -4,13 +4,11 @@ declare(strict_types=1);
 namespace UnrealDb\Catalog\Infrastructure\Persistence;
 
 use PDO;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5ParityV5ReadService;
 
 /**
  * Builds the catalog-wide union of object paths required from one logical
- * package and evaluates every verified v3 provider against that union.
- *
- * This is reporting/analysis state. It does not change the administrator's
- * primary provider selection and is not persisted into individual .uedb4 files.
+ * package and evaluates every verified UEDB5 provider against that union.
  */
 final class PdoPackageSupersetAnalyzer
 {
@@ -38,69 +36,43 @@ final class PdoPackageSupersetAnalyzer
             ];
         }
 
+        $statement = $db->prepare(
+            'SELECT DISTINCT p.file_id FROM ue_uedb5_dependency_packages p '
+            . 'JOIN ue_files f ON f.id=p.file_id AND f.game_id=p.game_id AND f.scan_status="verified" '
+            . 'WHERE p.game_id=? AND p.required_package_name=? ORDER BY p.file_id'
+        );
+        $statement->execute([$gameId, $packageName]);
+        $consumerIds = array_map('intval', $statement->fetchAll(PDO::FETCH_COLUMN) ?: []);
+
         $requirements = [];
         $requiredClasses = [];
         $consumers = [];
-        $rows = \catalog_all(
-            $db,
-            'SELECT f.id file_id,l.import_index'
-            . ' FROM ue_dependency_links l'
-            . ' JOIN ue_files f ON f.id=l.file_id'
-            . ' JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=' . \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer::FORMAT_VERSION . ''
-            . ' JOIN ue_terms p ON p.id=l.required_package_term_id'
-            . ' WHERE f.game_id=? AND f.scan_status="verified"'
-            . ' AND p.value_hash=? AND p.value_length=?'
-            . ' AND p.value_prefix=? AND p.is_overflow=0'
-            . ' ORDER BY f.id,l.import_index',
-            [$gameId, md5($packageName, true), strlen($packageName), $packageName]
-        );
-        if ($rows !== []) {
-            $reader = self::metadataReader($db);
-            $byFile = [];
-            foreach ($rows as $row) {
-                $byFile[(int)$row['file_id']][] = (int)$row['import_index'];
-            }
-            foreach ($byFile as $consumerFileId => $importIndexes) {
-                sort($importIndexes, SORT_NUMERIC);
-                foreach (self::contiguousRanges(array_values(array_unique($importIndexes))) as [$start, $length]) {
-                    try {
-                        $importRows = $reader->page($consumerFileId, 'imports', $start, $length);
-                    } catch (\Throwable $error) {
-                        \UnrealDb\Catalog\Infrastructure\Metadata\VerifiedCompactMetadataHealth::queueRepair(
-                            $db,
-                            self::catalogConfig(),
-                            $consumerFileId,
-                            null,
-                            $error
-                        );
+        if ($consumerIds !== []) {
+            $reader = new Uedb5ParityV5ReadService($db, self::catalogConfig());
+            foreach ($consumerIds as $consumerFileId) {
+                foreach ($reader->dependencies($gameId, $consumerFileId) as $dependency) {
+                    if (strcasecmp((string)($dependency['required_package'] ?? ''), $packageName) !== 0) {
                         continue;
                     }
-                    foreach ($importRows as $import) {
-                    if (!is_array($import)) {
-                        continue;
-                    }
-                    $fullPath = trim((string)($import['full_path'] ?? ''));
-                    $relativePath = trim((string)($import['relative_object_path'] ?? ''));
-                    if ($relativePath === '') {
-                        $relativePath = self::relativePath($packageName, $fullPath);
-                    }
+                    $fullPath = trim((string)($dependency['required_object_path'] ?? ''));
+                    $relativePath = self::relativePath($packageName, $fullPath);
                     if ($relativePath === '') {
                         continue;
                     }
                     $key = self::key($relativePath);
                     $requirements[$key] ??= $relativePath;
-                    $className = trim((string)($import['class_name'] ?? ''));
+                    $className = trim((string)($dependency['class_name'] ?? ''));
                     if ($className !== '') {
                         $requiredClasses[$relativePath] ??= [
-                            'class_package' => trim((string)($import['class_package'] ?? '')),
+                            'class_package' => trim((string)($dependency['class_package'] ?? '')),
                             'class_name' => $className,
                         ];
                     }
                     $consumers[$consumerFileId] = true;
-                    }
                 }
             }
         }
+
         $paths = array_values($requirements);
         $providers = $paths === []
             ? []
@@ -123,41 +95,11 @@ final class PdoPackageSupersetAnalyzer
         ];
     }
 
-    /** @param list<int> $indexes @return list<array{0:int,1:int}> */
-    private static function contiguousRanges(array $indexes): array
-    {
-        if ($indexes === []) {
-            return [];
-        }
-        $ranges = [];
-        $start = $indexes[0];
-        $previous = $start;
-        foreach (array_slice($indexes, 1) as $index) {
-            if ($index === $previous + 1) {
-                $previous = $index;
-                continue;
-            }
-            $ranges[] = [$start, $previous - $start + 1];
-            $start = $previous = $index;
-        }
-        $ranges[] = [$start, $previous - $start + 1];
-        return $ranges;
-    }
-
     /** @return array<string,mixed> */
     private static function catalogConfig(): array
     {
         $root = dirname(__DIR__, 3);
         return require $root . '/config.php';
-    }
-
-    private static function metadataReader(PDO $db): \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataReader
-    {
-        $root = dirname(__DIR__, 3);
-        require_once $root . '/src/Infrastructure/Metadata/BlockedCompressedMetadataReader.php';
-        $config = self::catalogConfig();
-        $storageRoot = (string)($config['storage_path'] ?? ($root . '/storage'));
-        return new \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataReader($db, $storageRoot);
     }
 
     private static function relativePath(string $packageName, string $fullPath): string
@@ -170,8 +112,6 @@ final class PdoPackageSupersetAnalyzer
         if (str_starts_with(self::key($fullPath), self::key($prefix))) {
             return trim(substr($fullPath, strlen($prefix)), '.');
         }
-        // Dependency rows written by older/current builders may already contain
-        // a package-relative path. Preserve it rather than discarding useful data.
         return $fullPath;
     }
 
