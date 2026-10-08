@@ -13,10 +13,14 @@ namespace UnrealDb\Catalog\Infrastructure\Maintenance;
 use PDO;
 use RuntimeException;
 use Throwable;
-use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer;
-use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataSnapshotWriter;
 use UnrealDb\Catalog\Infrastructure\Metadata\CompactFileMaintenanceSnapshot;
+use UnrealDb\Catalog\Infrastructure\Metadata\PdoUedb5BaseProjectionPublisher;
+use UnrealDb\Catalog\Infrastructure\Metadata\PdoUedb5MigrationStatusRepository;
+use UnrealDb\Catalog\Infrastructure\Metadata\PdoUedb5StagingRegistrationRepository;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5GameDependencyPassService;
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5MetadataContainer;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5MetadataSnapshotWriter;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5SqlProjectionContract;
 
 final class CatalogFileMaintenanceSupport
 {
@@ -73,11 +77,7 @@ final class CatalogFileMaintenanceSupport
     /** @param array<string,mixed> $config */
     public static function metadataPath(array $config, int $gameId, int $fileId): string
     {
-        return BlockedCompressedMetadataContainer::path(
-            self::storageRoot($config),
-            $gameId,
-            $fileId
-        );
+        return self::uedb5MetadataPath($config, $gameId, $fileId);
     }
 
     /** @param array<string,mixed> $config */
@@ -169,10 +169,22 @@ final class CatalogFileMaintenanceSupport
 
         $this->restoreExistingFileRow($file);
 
-        (new BlockedCompressedMetadataSnapshotWriter(
+        $gameId = (int)($file['game_id'] ?? 0);
+        if ($gameId < 1) {
+            throw new RuntimeException('Maintenance rollback snapshot has no game identity.');
+        }
+        $storageRoot = self::storageRoot($this->config);
+        (new Uedb5MetadataSnapshotWriter($storageRoot))->write($metadata);
+        $registration = (new PdoUedb5StagingRegistrationRepository(
             $this->db,
-            self::storageRoot($this->config)
-        ))->write($metadata);
+            $storageRoot
+        ))->register($gameId, $fileId);
+        (new PdoUedb5BaseProjectionPublisher($this->db))->publish($metadata, $registration);
+        (new PdoUedb5MigrationStatusRepository($this->db))->markStageSucceeded($fileId, $gameId);
+        (new Uedb5GameDependencyPassService(
+            $this->db,
+            $this->config
+        ))->runFile($gameId, $fileId, true, true);
     }
 
     /**
@@ -277,24 +289,25 @@ final class CatalogFileMaintenanceSupport
         }
 
         $packageName = trim($packageName);
-        $rows = \catalog_all(
-            $this->db,
-            'SELECT DISTINCT l.file_id FROM ue_dependency_links l '
-            . 'JOIN ue_terms t ON t.id=l.required_package_term_id '
-            . 'JOIN ue_files owner ON owner.id=l.file_id '
-            . 'WHERE owner.game_id=? AND l.file_id<>? AND ('
-            . 'l.resolved_file_id=? OR (t.value_hash=? AND t.value_length=? AND t.value_prefix=?))',
-            [
-                $gameId,
-                $removedFileId,
-                $removedFileId,
-                md5($packageName, true),
-                strlen($packageName),
-                substr($packageName, 0, 200),
-            ]
+        $conditions = ['e.resolved_file_id=?'];
+        $args = [$gameId, $removedFileId, $removedFileId];
+        if ($packageName !== '') {
+            $exactKind = Uedb5SqlProjectionContract::PACKAGE_KEY_CLASSIC_FNAME;
+            $legacyKind = Uedb5SqlProjectionContract::PACKAGE_KEY_CLASSIC_NAME;
+            $conditions[] = '(e.required_package_key_kind=? AND e.required_package_key=?)';
+            $args[] = $exactKind;
+            $args[] = Uedb5SqlProjectionContract::classicPackageKeyBinary($packageName, $exactKind);
+            $conditions[] = '(e.required_package_key_kind=? AND e.required_package_key=?)';
+            $args[] = $legacyKind;
+            $args[] = Uedb5SqlProjectionContract::classicPackageKeyBinary($packageName, $legacyKind);
+        }
+        $statement = $this->db->prepare(
+            'SELECT DISTINCT e.file_id FROM ue_uedb5_dependency_edges e '
+            . 'JOIN ue_files owner ON owner.id=e.file_id AND owner.scan_status="verified" '
+            . 'WHERE owner.game_id=? AND e.file_id<>? AND (' . implode(' OR ', $conditions) . ')'
         );
-
-        return array_map(static fn(array $row): int => (int)$row['file_id'], $rows);
+        $statement->execute($args);
+        return array_map('intval', $statement->fetchAll(PDO::FETCH_COLUMN) ?: []);
     }
 
     /** @return list<int> */
@@ -356,17 +369,25 @@ final class CatalogFileMaintenanceSupport
             self::emit($progress, 'dependencies', $endPercent, $prefix . ': no affected packages');
             return;
         }
+        $dependencyPass = new Uedb5GameDependencyPassService($this->db, $this->config);
+        $gameStatement = $this->db->prepare(
+            'SELECT game_id FROM ue_files WHERE id=? AND scan_status="verified"'
+        );
         foreach ($fileIds as $index => $fileId) {
-            \scanner_rebuild_dependencies(
-                $this->db,
-                $this->config,
-                $fileId,
+            $gameStatement->execute([$fileId]);
+            $gameId = (int)($gameStatement->fetchColumn() ?: 0);
+            if ($gameId < 1) {
+                continue;
+            }
+            self::emit(
                 $progress,
+                'dependencies',
                 \scanner_range_percent($startPercent, $endPercent, $index, $total),
-                \scanner_range_percent($startPercent, $endPercent, $index + 1, $total),
                 $prefix . ' ' . ($index + 1) . '/' . $total
             );
+            $dependencyPass->runFile($gameId, $fileId, true, true);
         }
+        self::emit($progress, 'dependencies', $endPercent, $prefix . ': complete');
     }
 
     private function tableExists(string $table): bool
