@@ -13,7 +13,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/lib/CatalogSupport.php';
 require_once __DIR__ . '/lib/CatalogUpkPackage.php';
 
-use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataSnapshotLoader;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5MetadataReader;
 
 catalog_start_session();
 
@@ -94,13 +94,17 @@ try {
     if ($storageRoot === '') {
         throw new RuntimeException('Catalog storage_path is required for compact UPK metadata reading.');
     }
-    $snapshotLoader = new BlockedCompressedMetadataSnapshotLoader($db, $storageRoot);
+    $metadataReader = new Uedb5MetadataReader($storageRoot);
     foreach ($rows as &$row) {
-        $snapshot = $snapshotLoader->load((int)$row['id']);
-        $row['serialized_export_bytes'] = array_sum(array_map(
-            static fn(array $export): int => max(0, (int)($export['serial_size'] ?? 0)),
-            array_values((array)($snapshot['exports'] ?? []))
-        ));
+        $fileId = (int)$row['id'];
+        $exportCount = $metadataReader->count($gameId, $fileId, 'exports');
+        $serialBytes = 0;
+        for ($offset = 0; $offset < $exportCount; $offset += 5000) {
+            foreach ($metadataReader->page($gameId, $fileId, 'exports', $offset, 5000) as $export) {
+                $serialBytes += max(0, (int)($export['serial_size'] ?? 0));
+            }
+        }
+        $row['serialized_export_bytes'] = $serialBytes;
     }
     unset($row);
 
