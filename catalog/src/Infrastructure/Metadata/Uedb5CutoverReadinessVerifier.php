@@ -27,9 +27,11 @@ final class Uedb5CutoverReadinessVerifier
         };
         $runtimeCandidates=[
             'src/Infrastructure/Metadata/Uedb5MetadataReader.php',
-            'src/Infrastructure/Metadata/Uedb5MigrationValidator.php',
-            'src/Infrastructure/Metadata/Uedb5ParityV5ReadService.php',
-            'src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php',
+            'src/Infrastructure/Metadata/Uedb5RuntimeMetadataReader.php',
+            'src/Infrastructure/Metadata/Uedb5VerifiedFilePublisher.php',
+            'src/Infrastructure/Metadata/VerifiedCompactMetadataHealth.php',
+            'src/Infrastructure/Metadata/CatalogCompactDependencyReadService.php',
+            'src/Infrastructure/Persistence/PdoCatalogDependencyRebuilder.php',
         ];
         $withoutComments=static function(string $source):string{
             $out='';
@@ -96,7 +98,7 @@ final class Uedb5CutoverReadinessVerifier
             if(!$ok){$failures[]=$name.($detail!==''?': '.$detail:'');}
         };
         $requiredTables=[
-            'ue_files','ue_games','ue_file_metadata','ue_invalid_file_identities',
+            'ue_files','ue_games','ue_invalid_file_identities',
             'ue_uedb5_files','ue_uedb5_provider_keys','ue_uedb5_search_keys',
             'ue_uedb5_name_candidates','ue_uedb5_object_candidates','ue_uedb5_dependency_edges',
             'ue_uedb5_dependency_packages','ue_uedb5_migration_status',
@@ -228,10 +230,12 @@ final class Uedb5CutoverReadinessVerifier
             .'JOIN ue_files f ON f.id=s.file_id WHERE f.scan_status="verified" GROUP BY s.status'
         ) as $row){$statusCounts[(string)$row['status']]=(int)$row['file_count'];}
 
-        $liveV4=$this->count(
-            'SELECT COUNT(*) FROM ue_files f JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=4 '
-            .'WHERE f.scan_status="verified"'
-        );
+        $liveV4=$this->tableExists('ue_file_metadata')
+            ? $this->count(
+                'SELECT COUNT(*) FROM ue_files f JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=4 '
+                .'WHERE f.scan_status="verified"'
+            )
+            : 0;
         $summary=[
             'verified_count'=>$verified,
             'live_v4_registration_count'=>$liveV4,
