@@ -418,6 +418,49 @@ final class Uedb5ClassicDependencyResolver
     }
 
     /**
+     * Source-derived import coverage keyed to the persisted dependency source_index.
+     *
+     * @return list<array{import_index:int,full_path:string,root_package:string,relative_object_path:string,object_name:string,class_package:string,class_name:string}>
+     */
+    public static function importCoverageRows(array $snapshot): array
+    {
+        $engine = self::engine($snapshot);
+        $tables = self::normalizedTables($snapshot);
+        $rows = [];
+        foreach ($tables['imports'] as $importIndex => $import) {
+            if ($engine === 'ue3') {
+                $path = CatalogCompactIdentityEnricher::ue3EffectiveImportPath(
+                    $tables['imports'],
+                    (int)$importIndex,
+                    $tables['exports']
+                );
+                $root = (string)($path['root'] ?? '');
+                $full = (string)($path['full'] ?? '');
+                $relative = (string)($path['relative'] ?? '');
+            } else {
+                $full = self::coveragePackageIndexPath(
+                    -((int)$importIndex + 1),
+                    $tables['imports'],
+                    $tables['exports']
+                );
+                $parts = $full !== '' ? explode('.', $full) : [];
+                $root = (string)($parts[0] ?? '');
+                $relative = count($parts) > 1 ? implode('.', array_slice($parts, 1)) : '';
+            }
+            $rows[] = [
+                'import_index'=>(int)$importIndex,
+                'full_path'=>$full,
+                'root_package'=>$root,
+                'relative_object_path'=>$relative,
+                'object_name'=>(string)($import['object_name'] ?? ''),
+                'class_package'=>(string)($import['class_package'] ?? ''),
+                'class_name'=>(string)($import['class_name'] ?? ''),
+            ];
+        }
+        return $rows;
+    }
+
+    /**
      * Source-derived export coverage used by runtime package coverage analysis.
      *
      * @return list<array{export_index:int,local_path:string,object_name:string,class_package:string,class_name:string,object_flags:int}>
@@ -486,9 +529,13 @@ final class Uedb5ClassicDependencyResolver
 
     private static function coverageExportPath(int $exportIndex, array $imports, array $exports): string
     {
+        return self::coveragePackageIndexPath($exportIndex + 1, $imports, $exports);
+    }
+
+    private static function coveragePackageIndexPath(int $packageIndex, array $imports, array $exports): string
+    {
         $parts = [];
         $seen = [];
-        $packageIndex = $exportIndex + 1;
         while ($packageIndex !== 0 && count($parts) < 128) {
             if (isset($seen[$packageIndex])) {
                 return '';
