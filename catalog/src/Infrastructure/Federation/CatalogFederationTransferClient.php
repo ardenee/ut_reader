@@ -11,7 +11,6 @@ namespace UnrealDb\Catalog\Infrastructure\Federation;
 
 use PDO;
 use RuntimeException;
-use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyReadSource;
 
 final class CatalogFederationTransferClient
 {
@@ -238,13 +237,12 @@ final class CatalogFederationTransferClient
             $args[] = (int)$peerFile['game_id'];
         }
 
-        $source = PdoDependencyReadSource::sql($this->db);
         return \catalog_one(
             $this->db,
-            'SELECT d.id FROM ' . $source . ' d '
-            . 'JOIN ue_files f ON f.id=d.file_id AND f.scan_status="verified" '
+            'SELECT p.file_id id FROM ue_uedb5_dependency_packages p '
+            . 'JOIN ue_files f ON f.id=p.file_id AND f.game_id=p.game_id AND f.scan_status="verified" '
             . 'JOIN ue_games g ON g.id=f.game_id '
-            . 'WHERE d.status="missing" AND LOWER(d.required_package)=LOWER(?)'
+            . 'WHERE p.missing_count>0 AND LOWER(p.required_package_name)=LOWER(?)'
             . $gameSql . ' LIMIT 1',
             $args
         ) !== null;
