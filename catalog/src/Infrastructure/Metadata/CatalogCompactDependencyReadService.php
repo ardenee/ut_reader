@@ -1,9 +1,9 @@
 <?php
 /**
- * UnrealDB PHP File Audit
- * Purpose: Reads dependency views exclusively from current metadata format and compact projections.
- * Why: Verified dependency pages must have one authoritative representation and must not merge or fall back to retired row-per-object metadata storage.
- * Role: Infrastructure current-metadata dependency read service.
+ * V5-only runtime dependency read service.
+ *
+ * UEDB5 dependency_results remain the authoritative source-shaped detail;
+ * ue_uedb5_dependency_edges is the indexed accelerator for reverse lookups.
  */
 declare(strict_types=1);
 
@@ -22,29 +22,260 @@ final class CatalogCompactDependencyReadService
 
     public function available(): bool
     {
-        $key=spl_object_id($this->db); if(array_key_exists($key,self::$availabilityCache))return self::$availabilityCache[$key];
-        $tables=['ue_file_metadata','ue_dependency_links','ue_terms'];$s=$this->db->prepare('SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME IN ('.implode(',',array_fill(0,count($tables),'?')).')');$s->execute($tables);if((int)$s->fetchColumn()!==count($tables))return self::$availabilityCache[$key]=false;
-        $columns=['resolution_source_term_id','resolution_confidence_term_id'];$s=$this->db->prepare('SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME="ue_dependency_links" AND COLUMN_NAME IN ('.implode(',',array_fill(0,count($columns),'?')).')');$s->execute($columns);return self::$availabilityCache[$key]=((int)$s->fetchColumn()===count($columns));
+        $key = spl_object_id($this->db);
+        if (array_key_exists($key, self::$availabilityCache)) {
+            return self::$availabilityCache[$key];
+        }
+        $tables = ['ue_uedb5_files','ue_uedb5_dependency_edges'];
+        $s = $this->db->prepare(
+            'SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() '
+            . 'AND TABLE_NAME IN (' . implode(',', array_fill(0, count($tables), '?')) . ')'
+        );
+        $s->execute($tables);
+        return self::$availabilityCache[$key] = ((int)$s->fetchColumn() === count($tables));
     }
-    public function metadataVersion(int $fileId): int{if($fileId<1||!$this->available())return 0;$s=$this->db->prepare('SELECT m.format_version FROM ue_files f LEFT JOIN ue_file_metadata m ON m.file_id=f.id WHERE f.id=? AND f.scan_status="verified"');$s->execute([$fileId]);return(int)($s->fetchColumn()?:0);}
-    public static function statusLabel(int $status): string{return match($status){1=>'resolved',2=>'package_only',3=>'common',4=>'unresolved',default=>'missing'};}
+
+    public function metadataVersion(int $fileId): int
+    {
+        if ($fileId < 1 || !$this->available()) {
+            return 0;
+        }
+        $s = $this->db->prepare(
+            'SELECT v.format_version FROM ue_files f '
+            . 'LEFT JOIN ue_uedb5_files v ON v.file_id=f.id AND v.game_id=f.game_id '
+            . 'WHERE f.id=? AND f.scan_status="verified"'
+        );
+        $s->execute([$fileId]);
+        return (int)($s->fetchColumn() ?: 0);
+    }
+
+    public static function statusLabel(int $status): string
+    {
+        return match($status) {
+            Uedb5SqlProjectionContract::OUTCOME_RESOLVED => 'resolved',
+            Uedb5SqlProjectionContract::OUTCOME_PACKAGE_ONLY => 'package_only',
+            Uedb5SqlProjectionContract::OUTCOME_COMMON => 'common',
+            Uedb5SqlProjectionContract::OUTCOME_UNRESOLVED => 'unresolved',
+            default => 'missing',
+        };
+    }
 
     /** @return list<array<string,mixed>> */
     public function compactRows(int $fileId): array
     {
-        $this->requireCurrentFile($fileId);$reader=new BlockedCompressedMetadataReader($this->db,$this->storagePath());$blockedByImport=[];$start=0;$pageSize=1000;
-        do{try{$page=$reader->page($fileId,'dependencies',$start,$pageSize);}catch(\Throwable$error){VerifiedCompactMetadataHealth::queueRepair($this->db,$this->config,$fileId,null,$error);throw$error;}foreach($page as$row)$blockedByImport[(int)$row['import_index']]=$row;$start+=count($page);}while(count($page)===$pageSize);
-        $importsByIndex=[];$start=0;do{try{$page=$reader->page($fileId,'imports',$start,$pageSize);}catch(\Throwable$error){VerifiedCompactMetadataHealth::queueRepair($this->db,$this->config,$fileId,null,$error);throw$error;}foreach($page as$row)$importsByIndex[(int)$row['import_index']]=$row;$start+=count($page);}while(count($page)===$pageSize);
-        $s=$this->db->prepare('SELECT l.file_id,l.import_index,l.resolved_file_id,l.resolved_export_index,l.status, package_term.value_prefix required_package_prefix, source_term.value_prefix resolution_source_label, confidence_term.value_prefix resolution_confidence_label, rf.id resolved_id,rf.package_name resolved_package,rf.original_name resolved_file,rf.package_guid resolved_guid,rf.md5 resolved_md5,rf.sha1 resolved_sha1,rf.file_size resolved_size FROM ue_dependency_links l JOIN ue_terms package_term ON package_term.id=l.required_package_term_id LEFT JOIN ue_terms source_term ON source_term.id=l.resolution_source_term_id LEFT JOIN ue_terms confidence_term ON confidence_term.id=l.resolution_confidence_term_id LEFT JOIN ue_files rf ON rf.id=l.resolved_file_id WHERE l.file_id=? ORDER BY l.import_index');$s->execute([$fileId]);$links=$s->fetchAll(PDO::FETCH_ASSOC)?:[];
-        if(count($links)!==count($blockedByImport))throw new RuntimeException('Compact dependency row count mismatch for file #'.$fileId.': container='.count($blockedByImport).', projection='.count($links).'.');
-        $rows=[];foreach($links as$link){$i=(int)$link['import_index'];$blocked=$blockedByImport[$i]??null;if(!is_array($blocked))throw new RuntimeException('Compact dependency projection references missing import index '.$i.' for file #'.$fileId.'.');if($link['resolution_source_label']===null||$link['resolution_confidence_label']===null)throw new RuntimeException('Compact dependency resolution labels are incomplete for file #'.$fileId.', import #'.$i.'.');$imp=$importsByIndex[$i]??[];
-            $rows[]=['id'=>$i+1,'file_id'=>$fileId,'import_id'=>null,'import_index'=>$i,'required_package'=>(string)$blocked['required_package'],'required_object_path'=>(string)$blocked['required_object_path'],'import_object_name'=>(string)($imp['object_name']??''),'import_class_name'=>(string)($imp['class_name']??''),'import_class_package'=>(string)($imp['class_package']??''),'import_outer_index'=>(int)($imp['outer_index']??0),'resolved_file_id'=>$link['resolved_file_id']!==null?(int)$link['resolved_file_id']:null,'resolved_export_id'=>null,'resolved_export_index'=>$link['resolved_export_index']!==null?(int)$link['resolved_export_index']:null,'status'=>self::statusLabel((int)$link['status']),'resolution_source'=>(string)$link['resolution_source_label'],'resolution_confidence'=>(string)$link['resolution_confidence_label'],'resolved_id'=>$link['resolved_id']!==null?(int)$link['resolved_id']:null,'resolved_package'=>(string)($link['resolved_package']??''),'resolved_file'=>(string)($link['resolved_file']??''),'resolved_guid'=>(string)($link['resolved_guid']??''),'resolved_md5'=>(string)($link['resolved_md5']??''),'resolved_sha1'=>(string)($link['resolved_sha1']??''),'resolved_size'=>$link['resolved_size']!==null?(int)$link['resolved_size']:0,'_metadata_source'=>'compact'];}
-        $weights=['missing'=>0,'unresolved'=>1,'package_only'=>2,'resolved'=>3,'common'=>4];usort($rows,static function(array$a,array$b)use($weights):int{$c=($weights[(string)($a['status']??'missing')]??9)<=>($weights[(string)($b['status']??'missing')]??9);if($c!==0)return$c;foreach(['resolution_confidence','resolution_source','required_package','required_object_path']as$f){$c=strnatcasecmp((string)($a[$f]??''),(string)($b[$f]??''));if($c!==0)return$c;}return(int)$a['import_index']<=>(int)$b['import_index'];});return$rows;
+        $gameId = $this->requireCurrentFile($fileId);
+        $reader = new Uedb5ParityV5ReadService($this->db, $this->runtimeConfig());
+        $dependencies = $reader->dependencies($gameId, $fileId);
+
+        $resolvedIds = [];
+        foreach ($dependencies as $row) {
+            $id = $row['resolved_file_id'] ?? null;
+            if ($id !== null) {
+                $resolvedIds[(int)$id] = true;
+            }
+        }
+        $resolved = $this->resolvedFiles(array_map('intval', array_keys($resolvedIds)));
+
+        $rows = [];
+        foreach ($dependencies as $row) {
+            $i = (int)($row['source_index'] ?? -1);
+            $resolvedFileId = $row['resolved_file_id'] ?? null;
+            $resolvedRow = $resolvedFileId !== null ? ($resolved[(int)$resolvedFileId] ?? []) : [];
+            $detail = (array)($row['resolver_detail'] ?? []);
+            $rows[] = [
+                'id' => $i + 1,
+                'file_id' => $fileId,
+                'import_id' => null,
+                'import_index' => $i,
+                'required_package' => (string)($row['required_package'] ?? ''),
+                'required_object_path' => (string)($row['required_object_path'] ?? ''),
+                'import_object_name' => (string)($row['required_object'] ?? ''),
+                'import_class_name' => (string)($row['class_name'] ?? ''),
+                'import_class_package' => (string)($row['class_package'] ?? ''),
+                'import_outer_index' => 0,
+                'resolved_file_id' => $resolvedFileId !== null ? (int)$resolvedFileId : null,
+                'resolved_export_id' => null,
+                'resolved_export_index' => $row['resolved_object_index'] !== null ? (int)$row['resolved_object_index'] : null,
+                'status' => (string)($row['outcome'] ?? 'missing'),
+                'resolution_source' => (string)($detail['resolution_source'] ?? $detail['source'] ?? 'uedb5'),
+                'resolution_confidence' => (string)($detail['resolution_confidence'] ?? $detail['confidence'] ?? 'source-exact'),
+                'resolved_id' => $resolvedRow !== [] ? (int)$resolvedRow['id'] : null,
+                'resolved_package' => (string)($resolvedRow['package_name'] ?? ''),
+                'resolved_file' => (string)($resolvedRow['original_name'] ?? ''),
+                'resolved_guid' => (string)($resolvedRow['package_guid'] ?? ''),
+                'resolved_md5' => (string)($resolvedRow['md5'] ?? ''),
+                'resolved_sha1' => (string)($resolvedRow['sha1'] ?? ''),
+                'resolved_size' => isset($resolvedRow['file_size']) ? (int)$resolvedRow['file_size'] : 0,
+                '_metadata_source' => 'uedb5',
+            ];
+        }
+
+        $weights = ['missing'=>0,'unresolved'=>1,'package_only'=>2,'resolved'=>3,'common'=>4];
+        usort($rows, static function(array $a, array $b) use ($weights): int {
+            $cmp = ($weights[(string)($a['status'] ?? 'missing')] ?? 9)
+                <=> ($weights[(string)($b['status'] ?? 'missing')] ?? 9);
+            if ($cmp !== 0) {
+                return $cmp;
+            }
+            foreach (['resolution_confidence','resolution_source','required_package','required_object_path'] as $field) {
+                $cmp = strnatcasecmp((string)($a[$field] ?? ''), (string)($b[$field] ?? ''));
+                if ($cmp !== 0) {
+                    return $cmp;
+                }
+            }
+            return (int)$a['import_index'] <=> (int)$b['import_index'];
+        });
+        return $rows;
     }
-    public function rows(int$fileId):array{return$this->compactRows($fileId);}
-    public function usedByRows(int$targetFileId,int$limit=200):array{if(!$this->available())throw new RuntimeException('Current compact dependency projections are unavailable.');$limit=max(1,min(5000,$limit));$s=$this->db->prepare('SELECT DISTINCT src.id,src.package_name,src.original_name,src.package_guid,src.md5,src.sha1,src.file_size FROM ue_dependency_links l JOIN ue_file_metadata m ON m.file_id=l.file_id AND m.format_version='.BlockedCompressedMetadataContainer::FORMAT_VERSION.' JOIN ue_files src ON src.id=l.file_id AND src.scan_status="verified" WHERE l.resolved_file_id=? ORDER BY src.package_name,src.original_name LIMIT '.$limit);$s->execute([$targetFileId]);return$s->fetchAll(PDO::FETCH_ASSOC)?:[];}
-    public static function uniqueStrings(array$values):array{$out=[];$seen=[];foreach($values as$value){$value=trim((string)$value);if($value==='')continue;$key=function_exists('mb_strtolower')?mb_strtolower($value,'UTF-8'):strtolower($value);if(!isset($seen[$key])){$seen[$key]=true;$out[]=$value;}}return$out;}
-    public function reverseRows(int$gameId,int$targetFileId,array$identityNames):array{if(!$this->available())throw new RuntimeException('Current compact dependency projections are unavailable.');$identityNames=self::uniqueStrings($identityNames);$pred=[];$params=[$gameId,$targetFileId,$targetFileId];foreach($identityNames as$n){$pred[]='(package_term.value_hash=? AND package_term.value_length=?)';$params[]=md5($n,true);$params[]=strlen($n);}$condition='l.resolved_file_id=?';if($pred!==[])$condition.=' OR '.implode(' OR ',$pred);$s=$this->db->prepare('SELECT l.file_id source_file_id,l.import_index,l.resolved_file_id,l.status, package_term.value_prefix required_package_prefix, src.id,src.package_name,src.original_name,src.package_guid,src.md5,src.sha1,src.file_size FROM ue_dependency_links l JOIN ue_file_metadata m ON m.file_id=l.file_id AND m.format_version='.BlockedCompressedMetadataContainer::FORMAT_VERSION.' JOIN ue_files src ON src.id=l.file_id AND src.game_id=? AND src.scan_status="verified" JOIN ue_terms package_term ON package_term.id=l.required_package_term_id WHERE src.id<>? AND ('.$condition.') ORDER BY src.original_name,l.import_index');$s->execute($params);$compact=$s->fetchAll(PDO::FETCH_ASSOC)?:[];$reader=$compact!==[]?new BlockedCompressedMetadataReader($this->db,$this->storagePath()):null;$by=[];foreach($compact as$r)$by[(int)$r['source_file_id']][]=(int)$r['import_index'];$details=[];foreach($by as$fid=>$idx){try{$details[$fid]=$reader->dependenciesForImportIndexes($fid,array_values(array_unique($idx)));}catch(\Throwable$e){VerifiedCompactMetadataHealth::queueRepair($this->db,$this->config,$fid,null,$e);throw$e;}}$rows=[];foreach($compact as$r){$fid=(int)$r['source_file_id'];$i=(int)$r['import_index'];$d=$details[$fid][$i]??null;if(!is_array($d))throw new RuntimeException('Reverse compact dependency detail is missing for file #'.$fid.', import #'.$i.'.');$r['dependency_id']=$i+1;$r['required_package']=(string)$d['required_package'];$r['required_object_path']=(string)$d['required_object_path'];$r['status']=self::statusLabel((int)$r['status']);$rows[]=$r;}usort($rows,static function(array$a,array$b):int{$c=strnatcasecmp((string)$a['original_name'],(string)$b['original_name']);if($c!==0)return$c;$c=(int)$a['source_file_id']<=>(int)$b['source_file_id'];return$c!==0?$c:(int)($a['import_index']??0)<=>(int)($b['import_index']??0);});return$rows;}
-    private function requireCurrentFile(int$fileId):void{if($this->metadataVersion($fileId)!==BlockedCompressedMetadataContainer::FORMAT_VERSION)throw new RuntimeException('Verified file #'.$fileId.' is missing current format-'.BlockedCompressedMetadataContainer::FORMAT_VERSION.' dependency metadata; runtime legacy reads are disabled.');}
-    private function storagePath():string{$p=trim((string)($this->config['storage_path']??''));if($p==='')throw new RuntimeException('Catalog storage_path is not configured.');return$p;}
+
+    public function rows(int $fileId): array
+    {
+        return $this->compactRows($fileId);
+    }
+
+    /** @return list<array<string,mixed>> */
+    public function usedByRows(int $targetFileId, int $limit = 200): array
+    {
+        if (!$this->available()) {
+            throw new RuntimeException('Current UEDB5 dependency projections are unavailable.');
+        }
+        $limit = max(1, min(5000, $limit));
+        $s = $this->db->prepare(
+            'SELECT DISTINCT src.id,src.package_name,src.original_name,src.package_guid,src.md5,src.sha1,src.file_size '
+            . 'FROM ue_uedb5_dependency_edges e '
+            . 'JOIN ue_files src ON src.id=e.file_id AND src.scan_status="verified" '
+            . 'WHERE e.resolved_file_id=? ORDER BY src.package_name,src.original_name LIMIT ' . $limit
+        );
+        $s->execute([$targetFileId]);
+        return $s->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+
+    public static function uniqueStrings(array $values): array
+    {
+        $out=[];$seen=[];
+        foreach($values as $value){
+            $value=trim((string)$value);
+            if($value==='')continue;
+            $key=function_exists('mb_strtolower')?mb_strtolower($value,'UTF-8'):strtolower($value);
+            if(!isset($seen[$key])){$seen[$key]=true;$out[]=$value;}
+        }
+        return $out;
+    }
+
+    /** @return list<array<string,mixed>> */
+    public function reverseRows(int $gameId, int $targetFileId, array $identityNames): array
+    {
+        if (!$this->available()) {
+            throw new RuntimeException('Current UEDB5 dependency projections are unavailable.');
+        }
+        $identityNames = self::uniqueStrings($identityNames);
+        $conditions = ['e.resolved_file_id=?'];
+        $params = [$gameId, $targetFileId, $targetFileId];
+        foreach ($identityNames as $name) {
+            $conditions[] = '(e.required_package_key_kind=' . Uedb5SqlProjectionContract::PACKAGE_KEY_CLASSIC_FNAME
+                . ' AND e.required_package_key=?)';
+            $params[] = Uedb5SqlProjectionContract::classicPackageKeyBinary(
+                $name,
+                Uedb5SqlProjectionContract::PACKAGE_KEY_CLASSIC_FNAME
+            );
+        }
+        $sql = 'SELECT DISTINCT e.file_id source_file_id,e.source_index import_index,e.resolved_file_id,e.outcome '
+            . 'FROM ue_uedb5_dependency_edges e '
+            . 'JOIN ue_files src ON src.id=e.file_id AND src.game_id=? AND src.scan_status="verified" '
+            . 'WHERE src.id<>? AND e.source_kind=' . Uedb5SqlProjectionContract::DEP_SOURCE_IMPORT
+            . ' AND (' . implode(' OR ', $conditions) . ') ORDER BY e.file_id,e.source_index';
+        $s = $this->db->prepare($sql);
+        $s->execute($params);
+        $candidates = $s->fetchAll(PDO::FETCH_ASSOC) ?: [];
+
+        if ($candidates === []) {
+            return [];
+        }
+        $reader = new Uedb5ParityV5ReadService($this->db, $this->runtimeConfig());
+        $byFile = [];
+        foreach ($candidates as $row) {
+            $byFile[(int)$row['source_file_id']][(int)$row['import_index']] = $row;
+        }
+        $sourceFiles = $this->resolvedFiles(array_map('intval', array_keys($byFile)));
+        $rows = [];
+        foreach ($byFile as $fileId => $indexes) {
+            $details = $reader->dependenciesByIndex($gameId, $fileId);
+            $source = $sourceFiles[$fileId] ?? [];
+            foreach ($indexes as $index => $candidate) {
+                $detail = $details[$index] ?? null;
+                if (!is_array($detail)) {
+                    throw new RuntimeException('UEDB5 dependency detail is missing for file #' . $fileId . ', import #' . $index . '.');
+                }
+                $rows[] = [
+                    'source_file_id' => $fileId,
+                    'import_index' => $index,
+                    'resolved_file_id' => $candidate['resolved_file_id'] !== null ? (int)$candidate['resolved_file_id'] : null,
+                    'status' => (string)($detail['outcome'] ?? self::statusLabel((int)$candidate['outcome'])),
+                    'required_package' => (string)($detail['required_package'] ?? ''),
+                    'required_object_path' => (string)($detail['required_object_path'] ?? ''),
+                    'dependency_id' => $index + 1,
+                    'id' => (int)($source['id'] ?? $fileId),
+                    'package_name' => (string)($source['package_name'] ?? ''),
+                    'original_name' => (string)($source['original_name'] ?? ''),
+                    'package_guid' => (string)($source['package_guid'] ?? ''),
+                    'md5' => (string)($source['md5'] ?? ''),
+                    'sha1' => (string)($source['sha1'] ?? ''),
+                    'file_size' => (int)($source['file_size'] ?? 0),
+                ];
+            }
+        }
+        usort($rows, static function(array $a,array $b):int {
+            $cmp=strnatcasecmp((string)$a['original_name'],(string)$b['original_name']);
+            if($cmp!==0)return $cmp;
+            $cmp=(int)$a['source_file_id']<=>(int)$b['source_file_id'];
+            return $cmp!==0?$cmp:(int)$a['import_index']<=>(int)$b['import_index'];
+        });
+        return $rows;
+    }
+
+    private function requireCurrentFile(int $fileId): int
+    {
+        if ($this->metadataVersion($fileId) !== Uedb5MetadataContainer::FORMAT_VERSION) {
+            throw new RuntimeException(
+                'Verified file #' . $fileId . ' is missing current format-'
+                . Uedb5MetadataContainer::FORMAT_VERSION . ' dependency metadata.'
+            );
+        }
+        $s = $this->db->prepare(
+            'SELECT game_id FROM ue_uedb5_files WHERE file_id=? AND format_version=?'
+        );
+        $s->execute([$fileId, Uedb5MetadataContainer::FORMAT_VERSION]);
+        $gameId = (int)($s->fetchColumn() ?: 0);
+        if ($gameId < 1) {
+            throw new RuntimeException('Verified file #' . $fileId . ' has no UEDB5 game identity.');
+        }
+        return $gameId;
+    }
+
+    /** @param list<int> $fileIds @return array<int,array<string,mixed>> */
+    private function resolvedFiles(array $fileIds): array
+    {
+        if ($fileIds === []) {
+            return [];
+        }
+        $in = implode(',', array_fill(0, count($fileIds), '?'));
+        $s = $this->db->prepare(
+            'SELECT id,package_name,original_name,package_guid,md5,sha1,file_size FROM ue_files WHERE id IN (' . $in . ')'
+        );
+        $s->execute($fileIds);
+        $out=[];
+        while(($row=$s->fetch(PDO::FETCH_ASSOC))!==false)$out[(int)$row['id']]=$row;
+        return $out;
+    }
+
+    /** @return array<string,mixed> */
+    private function runtimeConfig(): array
+    {
+        $config = $this->config;
+        $path = trim((string)($config['storage_path'] ?? ''));
+        if ($path === '') {
+            throw new RuntimeException('Catalog storage_path is not configured.');
+        }
+        return $config;
+    }
 }
