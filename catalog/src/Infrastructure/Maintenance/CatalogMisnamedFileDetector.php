@@ -128,18 +128,66 @@ final class CatalogMisnamedFileDetector
             $leafRequirements[$requirement['leaf_key']][$requirementKey] = $requirement;
         }
 
-        $providerRowsByFile = [];
+        $safeLeafRequirements = [];
         $ambiguousTerms = 0;
         foreach (array_chunk(array_keys($leafRequirements), 150) as $leafChunk) {
+            $predicates = [];
+            $args = [$gameId, $ownerFileId];
+            $identityByPair = [];
+            foreach ($leafChunk as $leafKey) {
+                $hash = md5($leafKey, true);
+                $length = strlen($leafKey);
+                $predicates[] = '(o.object_name_hash=? AND o.object_name_length=?)';
+                $args[] = $hash;
+                $args[] = $length;
+                $identityByPair[strtoupper(bin2hex($hash)) . ':' . $length] = $leafKey;
+            }
+            if ($predicates === []) {
+                continue;
+            }
+            $statement = $this->db->prepare(
+                'SELECT HEX(o.object_name_hash) object_name_hash_hex,o.object_name_length,'
+                . 'COUNT(DISTINCT o.file_id) provider_count '
+                . 'FROM ue_uedb5_object_candidates o '
+                . 'JOIN ue_files f ON f.id=o.file_id AND f.scan_status="verified" '
+                . 'WHERE f.game_id=? AND f.id<>? AND o.object_kind=1 AND (' . implode(' OR ', $predicates) . ') '
+                . 'GROUP BY o.object_name_hash,o.object_name_length'
+            );
+            $statement->execute($args);
+            $counts = [];
+            while (($row = $statement->fetch(PDO::FETCH_ASSOC)) !== false) {
+                $pair = strtoupper((string)$row['object_name_hash_hex']) . ':' . (int)$row['object_name_length'];
+                $counts[$pair] = (int)$row['provider_count'];
+            }
+            foreach ($identityByPair as $pair => $leafKey) {
+                $count = (int)($counts[$pair] ?? 0);
+                if ($count > self::MAX_OBJECT_PROVIDER_FANOUT) {
+                    $ambiguousTerms++;
+                    continue;
+                }
+                if ($count > 0) {
+                    $safeLeafRequirements[$leafKey] = $leafRequirements[$leafKey];
+                }
+            }
+        }
+
+        if ($safeLeafRequirements === []) {
+            return [
+                'candidates'=>[],
+                'imports_examined'=>$missingExamined,
+                'truncated'=>$truncated,
+                'ambiguous_terms'=>$ambiguousTerms,
+            ];
+        }
+
+        $providerRowsByFile = [];
+        foreach (array_chunk(array_keys($safeLeafRequirements), 150) as $leafChunk) {
             $predicates = [];
             $args = [$gameId, $ownerFileId];
             foreach ($leafChunk as $leafKey) {
                 $predicates[] = '(o.object_name_hash=? AND o.object_name_length=?)';
                 $args[] = md5($leafKey, true);
                 $args[] = strlen($leafKey);
-            }
-            if ($predicates === []) {
-                continue;
             }
             $statement = $this->db->prepare(
                 'SELECT o.file_id,o.object_index,f.package_name,f.original_name,f.extension,'
@@ -148,7 +196,7 @@ final class CatalogMisnamedFileDetector
                 . 'JOIN ue_files f ON f.id=o.file_id AND f.scan_status="verified" '
                 . 'JOIN ue_uedb5_files v ON v.file_id=f.id AND v.game_id=f.game_id AND v.format_version=5 '
                 . 'JOIN ue_games g ON g.id=f.game_id '
-                . 'WHERE f.game_id=? AND f.id<>? AND (' . implode(' OR ', $predicates) . ') '
+                . 'WHERE f.game_id=? AND f.id<>? AND o.object_kind=1 AND (' . implode(' OR ', $predicates) . ') '
                 . 'ORDER BY o.file_id,o.object_index'
             );
             $statement->execute($args);
@@ -161,13 +209,11 @@ final class CatalogMisnamedFileDetector
                 'candidates'=>[],
                 'imports_examined'=>$missingExamined,
                 'truncated'=>$truncated,
-                'ambiguous_terms'=>0,
+                'ambiguous_terms'=>$ambiguousTerms,
             ];
         }
 
         $matchedProviders = [];
-        $leafProviderCounts = [];
-
         foreach ($providerRowsByFile as $candidateFileId => $providerMeta) {
             if (isset($official['file_ids'][$candidateFileId])
                 || $this->isOfficialPackage((string)$providerMeta['package_name'], $official['names'])) {
@@ -190,11 +236,11 @@ final class CatalogMisnamedFileDetector
                 $parts = explode('.', $localPath);
                 $leaf = trim((string)end($parts));
                 $leafKey = CatalogUnrealIdentityHash::nameKey($leaf);
-                if (!isset($leafRequirements[$leafKey])) {
+                if (!isset($safeLeafRequirements[$leafKey])) {
                     continue;
                 }
                 $relativeKey = self::key($localPath);
-                foreach ($leafRequirements[$leafKey] as $requirementKey => $requirement) {
+                foreach ($safeLeafRequirements[$leafKey] as $requirementKey => $requirement) {
                     if ($relativeKey !== $requirement['relative_key']) {
                         continue;
                     }
@@ -203,20 +249,6 @@ final class CatalogMisnamedFileDetector
                         'local_path'=>$localPath,
                         'export_index'=>(int)($export['export_index'] ?? -1),
                     ];
-                    $leafProviderCounts[$leafKey][$candidateFileId] = true;
-                }
-            }
-        }
-
-        foreach ($leafProviderCounts as $leafKey => $files) {
-            if (count($files) > self::MAX_OBJECT_PROVIDER_FANOUT) {
-                $ambiguousTerms++;
-                foreach (array_keys($files) as $candidateFileId) {
-                    foreach ((array)($matchedProviders[$candidateFileId] ?? []) as $requirementKey => $match) {
-                        if (($match['requirement']['leaf_key'] ?? '') === $leafKey) {
-                            unset($matchedProviders[$candidateFileId][$requirementKey]);
-                        }
-                    }
                 }
             }
         }
