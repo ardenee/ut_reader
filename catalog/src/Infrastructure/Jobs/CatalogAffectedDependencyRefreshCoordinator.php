@@ -14,8 +14,9 @@ use PDO;
 use PDOException;
 use Throwable;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
+use UnrealDb\Catalog\Infrastructure\Metadata\PdoUedb5ProviderKeyPublisher;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5SqlProjectionContract;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
-use UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageProviderRepository;
 
 /**
  * Finds dependency owners whose exact package/object resolution can change after
@@ -60,23 +61,22 @@ final class CatalogAffectedDependencyRefreshCoordinator
             }
         }
 
-        // Affected-file discovery must use authoritative dependency links and
-        // indexed term identities, never package-summary text scans.
+        // V5 dependency-package keys are the authoritative indexed package identity.
         $fileIds = [];
         $packageNames = self::packageNames($packageName, $additionalPackageNames);
         foreach ($packageNames as $name) {
-            self::collectFileIds(
-                $db,
-                'SELECT DISTINCT l.file_id'
-                . ' FROM ue_dependency_links l'
-                . ' JOIN ue_terms t ON t.id=l.required_package_term_id'
-                . ' JOIN ue_files f ON f.id=l.file_id'
-                . ' WHERE t.value_hash=? AND t.value_length=?'
-                . ' AND l.file_id<>? AND f.game_id=? AND f.scan_status="verified"'
-                . ' ORDER BY l.file_id',
-                [md5($name, true), strlen($name), $newFileId, $gameId],
-                $fileIds
-            );
+            foreach (self::packageKeys($name) as [$kind, $key]) {
+                self::collectFileIds(
+                    $db,
+                    'SELECT DISTINCT p.file_id '
+                    . 'FROM ue_uedb5_dependency_packages p '
+                    . 'JOIN ue_files f ON f.id=p.file_id AND f.game_id=p.game_id '
+                    . 'WHERE p.game_id=? AND p.package_key_kind=? AND p.package_key=? '
+                    . 'AND p.file_id<>? AND f.scan_status="verified" ORDER BY p.file_id',
+                    [$gameId, $kind, $key, $newFileId],
+                    $fileIds
+                );
+            }
         }
 
         // A rename must also invalidate files that were already resolved to the
@@ -85,12 +85,11 @@ final class CatalogAffectedDependencyRefreshCoordinator
         if ($includeResolvedProvider) {
             self::collectFileIds(
                 $db,
-                'SELECT DISTINCT l.file_id'
-                . ' FROM ue_dependency_links l'
-                . ' JOIN ue_files f ON f.id=l.file_id'
-                . ' WHERE l.resolved_file_id=? AND l.file_id<>?'
-                . ' AND f.game_id=? AND f.scan_status="verified"'
-                . ' ORDER BY l.file_id',
+                'SELECT DISTINCT e.file_id '
+                . 'FROM ue_uedb5_dependency_edges e '
+                . 'JOIN ue_files f ON f.id=e.file_id '
+                . 'WHERE e.outcome=1 AND e.resolved_file_id=? AND e.file_id<>? '
+                . 'AND f.game_id=? AND f.scan_status="verified" ORDER BY e.file_id',
                 [$newFileId, $newFileId, $gameId],
                 $fileIds
             );
@@ -192,30 +191,52 @@ final class CatalogAffectedDependencyRefreshCoordinator
     private static function syncProvider(PDO $db, int $fileId): void
     {
         try {
-            (new PdoPackageProviderRepository($db))->syncFile($fileId);
-        } catch (PDOException $exception) {
-            // The authoritative ue_files row remains valid. The resolver keeps an
-            // exact fallback and maintenance can reconcile the provider cache.
-            error_log('[UnrealDB package provider] file_id=' . $fileId . ' sync failed: ' . $exception->getMessage());
+            (new PdoUedb5ProviderKeyPublisher($db))->publish($fileId);
+        } catch (Throwable $error) {
+            error_log('[UnrealDB UEDB5 provider] file_id=' . $fileId . ' sync failed: ' . $error->getMessage());
         }
     }
 
     private static function hasAffectedFiles(PDO $db, int $gameId, int $newFileId, string $packageName): bool
     {
-        $statement = $db->prepare(
-            'SELECT 1 FROM ue_dependency_links l'
-            . ' JOIN ue_terms t ON t.id=l.required_package_term_id'
-            . ' JOIN ue_files f ON f.id=l.file_id'
-            . ' WHERE t.value_hash=? AND t.value_length=?'
-            . ' AND l.file_id<>? AND f.game_id=? AND f.scan_status="verified" LIMIT 1'
-        );
-        $statement->execute([
-            md5($packageName, true),
-            strlen($packageName),
-            $newFileId,
-            $gameId,
-        ]);
-        return $statement->fetchColumn() !== false;
+        foreach (self::packageKeys($packageName) as [$kind, $key]) {
+            $statement = $db->prepare(
+                'SELECT 1 FROM ue_uedb5_dependency_packages p '
+                . 'JOIN ue_files f ON f.id=p.file_id AND f.game_id=p.game_id '
+                . 'WHERE p.game_id=? AND p.package_key_kind=? AND p.package_key=? '
+                . 'AND p.file_id<>? AND f.scan_status="verified" LIMIT 1'
+            );
+            $statement->execute([$gameId, $kind, $key, $newFileId]);
+            if ($statement->fetchColumn() !== false) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** @return list<array{0:int,1:string}> */
+    private static function packageKeys(string $packageName): array
+    {
+        $packageName = trim($packageName);
+        if ($packageName === '') {
+            return [];
+        }
+        return [
+            [
+                Uedb5SqlProjectionContract::PACKAGE_KEY_CLASSIC_FNAME,
+                Uedb5SqlProjectionContract::classicPackageKeyBinary(
+                    $packageName,
+                    Uedb5SqlProjectionContract::PACKAGE_KEY_CLASSIC_FNAME
+                ),
+            ],
+            [
+                Uedb5SqlProjectionContract::PACKAGE_KEY_CLASSIC_NAME,
+                Uedb5SqlProjectionContract::classicPackageKeyBinary(
+                    $packageName,
+                    Uedb5SqlProjectionContract::PACKAGE_KEY_CLASSIC_NAME
+                ),
+            ],
+        ];
     }
 
     /**
