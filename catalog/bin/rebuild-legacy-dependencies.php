@@ -41,10 +41,6 @@ $options = getopt('', [
 ]);
 
 $apply = array_key_exists('apply', $options);
-if ($apply) {
-    fwrite(STDERR, "UEDB4 dependency writes are retired. Use migrate-uedb5-dependencies.php --game-id=<id> --file-id=<id> --apply --force for an explicitly targeted V5 dependency refresh.\n");
-    exit(2);
-}
 $gameId = isset($options['game-id']) ? max(0, (int)$options['game-id']) : 0;
 $fileId = isset($options['file-id']) ? max(0, (int)$options['file-id']) : 0;
 $engine = strtoupper(trim((string)($options['engine'] ?? '')));
