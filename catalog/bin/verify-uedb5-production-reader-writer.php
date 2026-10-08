@@ -37,7 +37,7 @@ $snapshot = [
 ];
 
 try {
-    $v4Path = BlockedCompressedMetadataContainer::path($tempRoot, $gameId, $fileId);
+    $v4Path = $tempRoot . DIRECTORY_SEPARATOR . 'metadata' . DIRECTORY_SEPARATOR . 'game-' . $gameId . DIRECTORY_SEPARATOR . $fileId . '.uedb4';
     $v4Dir = dirname($v4Path);
     if (!is_dir($v4Dir)) { mkdir($v4Dir, 0775, true); }
     file_put_contents($v4Path, 'UEDB4-SENTINEL');

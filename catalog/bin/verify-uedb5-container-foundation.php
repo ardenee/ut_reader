@@ -93,19 +93,16 @@ try {
         && strlen((string)$built['payload_sha256']) === 32,
         'Block-size 1 must produce independently verified blocks and a binary SHA-256.');
 
-    $v4Path = BlockedCompressedMetadataContainer::path($tempRoot, $gameId, $fileId);
-    $check('production_v4_identity_unchanged', BlockedCompressedMetadataContainer::FORMAT_VERSION === 4
-        && str_ends_with($v4Path, '.uedb4'),
-        'Production metadata runtime must remain format 4 until cutover.');
-    $v4RejectedV5 = false;
+    $legacyPath = $tempRoot . DIRECTORY_SEPARATOR . 'legacy-format.uedb4';
+    file_put_contents($legacyPath, 'UEDB4-SENTINEL');
+    $legacyRejected = false;
     try {
-        BlockedCompressedMetadataContainer::verifyFile($path, $fileId);
+        Uedb5MetadataContainer::verifyFile($legacyPath, $fileId);
     } catch (RuntimeException) {
-        $v4RejectedV5 = true;
+        $legacyRejected = true;
     }
-    $check('production_v4_rejects_v5_container', $v4RejectedV5,
-        'The UEDB4 container verifier must not accept staged UEDB5 files.');
-
+    $check('v5_rejects_retired_container_format', $legacyRejected,
+        'The V5 verifier must reject retired-format bytes without any legacy parser.');
     $bytes = file_get_contents($path);
     $corruptionRejected = false;
     if (is_string($bytes) && $bytes !== '') {
