@@ -11,11 +11,11 @@ use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5SqlProjectionContract;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoCatalogDependencyRebuilder;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoGameCatalogStats;
 
-$o=getopt('',['manifest:','apply','rebuild-v4','reparse-pass1','progress-every::']);
+$o=getopt('',['manifest:','apply','rebuild-v4','reparse-pass1','defer-impacted-rebuild','progress-every::']);
 $manifestPath=trim((string)($o['manifest']??''));
 if($manifestPath===''||!is_file($manifestPath)){fwrite(STDERR,"Usage: php catalog/bin/apply-uedb5-v13-impact-manifest.php --manifest=PATH --apply [--rebuild-v4] [--reparse-pass1] [--progress-every=N]\n");exit(1);}
 if(!isset($o['apply'])){fwrite(STDERR,"--apply is required. This tool never performs discovery or a dry-run scan.\n");exit(1);}
-$rebuildV4=isset($o['rebuild-v4']);$reparsePass1=isset($o['reparse-pass1']);$progressEvery=max(1,(int)($o['progress-every']??1000));
+$rebuildV4=isset($o['rebuild-v4']);$reparsePass1=isset($o['reparse-pass1']);$deferImpacted=isset($o['defer-impacted-rebuild']);$progressEvery=max(1,(int)($o['progress-every']??1000));
 $manifest=json_decode((string)file_get_contents($manifestPath),true,512,JSON_THROW_ON_ERROR);
 if(!is_array($manifest)||($manifest['schema']??'')!=='uedb5-v13-impact-manifest-v1')throw new RuntimeException('Unsupported v13 impact manifest.');
 if(($manifest['new_policy']??'')!=='uedb5-dependency-pass-v13')throw new RuntimeException('Manifest target policy is not v13.');
@@ -82,13 +82,16 @@ if($pass1Required!==[]){
  foreach($pass1Required as$r){$fid=(int)$r['file_id'];try{$out=$svc1->runFile((int)$r['game_id'],$fid,true);$pass1Done[$fid]=true;$pass1Reparsed[]=['game_id'=>(int)$r['game_id'],'file_id'=>$fid,'source_policy'=>(string)($out['result']['source_policy']??'')];}catch(Throwable$e){$pass1Failed[]=['game_id'=>(int)$r['game_id'],'file_id'=>$fid,'error'=>$e->getMessage()];}}
 }
 
-$svc=new Uedb5GameDependencyPassService($db,catalog_config());$rebuilt=[];$failed=[];$blocked=[];
-foreach($impacted as$r){
- $fid=(int)$r['file_id'];$reasons=(array)($r['reasons']??[]);
- $needsPass1=array_intersect($reasons,['ue1_pre50_pass1_reparse','ue2_unreal2_v69_pass1_reparse','ue4_ut4_bad_v510_pass1_repair_required'])!==[];
- if($needsPass1&&!isset($pass1Done[$fid])){$blocked[]=['game_id'=>(int)$r['game_id'],'file_id'=>$fid,'reason'=>'pass1_reparse_required'];continue;}
- try{$out=$svc->runFile((int)$r['game_id'],$fid,true,true);$rebuilt[]=['game_id'=>(int)$r['game_id'],'file_id'=>$fid,'reasons'=>$reasons,'dependency_count'=>(int)($out['result']['dependency_count']??0)];}
- catch(Throwable$e){$failed[]=['game_id'=>(int)$r['game_id'],'file_id'=>$fid,'error'=>$e->getMessage()];}
+$rebuilt=[];$failed=[];$blocked=[];
+if(!$deferImpacted){
+ $svc=new Uedb5GameDependencyPassService($db,catalog_config());
+ foreach($impacted as$r){
+  $fid=(int)$r['file_id'];$reasons=(array)($r['reasons']??[]);
+  $needsPass1=array_intersect($reasons,['ue1_pre50_pass1_reparse','ue2_unreal2_v69_pass1_reparse','ue4_ut4_bad_v510_pass1_repair_required'])!==[];
+  if($needsPass1&&!isset($pass1Done[$fid])){$blocked[]=['game_id'=>(int)$r['game_id'],'file_id'=>$fid,'reason'=>'pass1_reparse_required'];continue;}
+  try{$out=$svc->runFile((int)$r['game_id'],$fid,true,true);$rebuilt[]=['game_id'=>(int)$r['game_id'],'file_id'=>$fid,'reasons'=>$reasons,'dependency_count'=>(int)($out['result']['dependency_count']??0)];}
+  catch(Throwable$e){$failed[]=['game_id'=>(int)$r['game_id'],'file_id'=>$fid,'error'=>$e->getMessage()];}
+ }
 }
 
 $v4Rebuilt=[];$v4Failed=[];
