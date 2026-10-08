@@ -13,6 +13,7 @@ namespace UnrealDb\Catalog\Infrastructure\Maintenance;
 use PDO;
 use RuntimeException;
 use Throwable;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5SqlProjectionContract;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoCatalogDependencyRebuilder;
 
 final class CatalogFileMaintenanceActionService
@@ -210,19 +211,22 @@ final class CatalogFileMaintenanceActionService
         $conditions = [];
         $args = [$gameId];
         foreach ($packageNames as $packageName) {
-            $conditions[] = '(t.value_hash=? AND t.value_length=? AND t.value_prefix=?)';
-            $args[] = md5($packageName, true);
-            $args[] = strlen($packageName);
-            $args[] = substr($packageName, 0, 200);
+            foreach ([
+                Uedb5SqlProjectionContract::PACKAGE_KEY_CLASSIC_FNAME,
+                Uedb5SqlProjectionContract::PACKAGE_KEY_CLASSIC_NAME,
+            ] as $kind) {
+                $conditions[] = '(p.package_key_kind=? AND p.package_key=?)';
+                $args[] = $kind;
+                $args[] = Uedb5SqlProjectionContract::classicPackageKeyBinary($packageName, $kind);
+            }
         }
 
-        $sql = 'SELECT DISTINCT l.file_id'
-            . ' FROM ue_dependency_links l'
-            . ' JOIN ue_terms t ON t.id=l.required_package_term_id'
-            . ' JOIN ue_files owner ON owner.id=l.file_id'
-            . ' WHERE owner.game_id=? AND (' . implode(' OR ', $conditions) . ')';
+        $sql = 'SELECT DISTINCT p.file_id '
+            . 'FROM ue_uedb5_dependency_packages p '
+            . 'JOIN ue_files owner ON owner.id=p.file_id AND owner.game_id=p.game_id '
+            . 'WHERE owner.game_id=? AND owner.scan_status="verified" AND (' . implode(' OR ', $conditions) . ')';
         if ($excludeFileId > 0) {
-            $sql .= ' AND l.file_id<>?';
+            $sql .= ' AND p.file_id<>?';
             $args[] = $excludeFileId;
         }
 
