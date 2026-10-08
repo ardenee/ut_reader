@@ -15,6 +15,10 @@ declare(strict_types=1);
 namespace UnrealDb\Catalog\Infrastructure\Maintenance;
 
 use PDO;
+use UnrealDb\Catalog\Infrastructure\Metadata\CatalogUnrealIdentityHash;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5ClassicDependencyResolver;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5MetadataReader;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5ParityV5ReadService;
 
 final class CatalogMisnamedFileDetector
 {
@@ -39,246 +43,264 @@ final class CatalogMisnamedFileDetector
     public function scanOwner(int $ownerFileId): array
     {
         $owner = $this->one(
-            'SELECT f.id,f.game_id,f.package_name,f.original_name,'
-            . 'COALESCE(m.name_count,f.name_count,0) name_count,'
-            . 'COALESCE(m.import_count,f.import_count,0) import_count,'
-            . 'COALESCE(m.export_count,f.export_count,0) export_count,g.name game_name '
-            . 'FROM ue_files f '
-            . 'JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=' . \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer::FORMAT_VERSION . ' '
+            'SELECT f.id,f.game_id,f.package_name,f.original_name,f.name_count,f.import_count,f.export_count,'
+            . 'g.name game_name FROM ue_files f '
+            . 'JOIN ue_uedb5_files v ON v.file_id=f.id AND v.game_id=f.game_id AND v.format_version=5 '
             . 'JOIN ue_games g ON g.id=f.game_id '
             . 'WHERE f.id=? AND f.scan_status="verified"',
             [$ownerFileId]
         );
         if ($owner === null) {
-            return ['candidates' => [], 'imports_examined' => 0, 'truncated' => false, 'ambiguous_terms' => 0];
+            return ['candidates'=>[],'imports_examined'=>0,'truncated'=>false,'ambiguous_terms'=>0];
         }
 
         $gameId = (int)$owner['game_id'];
         $official = $this->officialBaseGameIdentity($gameId);
-        if (isset($official['file_ids'][(int)$owner['id']])
+        if (isset($official['file_ids'][$ownerFileId])
             || $this->isOfficialPackage((string)$owner['package_name'], $official['names'])) {
-            return ['candidates' => [], 'imports_examined' => 0, 'truncated' => false, 'ambiguous_terms' => 0];
+            return ['candidates'=>[],'imports_examined'=>0,'truncated'=>false,'ambiguous_terms'=>0];
         }
 
-        // Status 0 is the authoritative compact "missing" state. Status 3
-        // (common) is deliberately excluded. required_path_hash represents the
-        // object path below the package root, so package-name damage can be
-        // detected without reducing the comparison to a coincidental leaf name.
-        $statement = $this->db->prepare(
-            'SELECT import_index,required_package_term_id,required_object_term_id,import_object_term_id,'
-            . 'HEX(required_path_hash) required_path_hash_hex '
-            . 'FROM ue_dependency_links '
-            . 'WHERE file_id=? AND status=0 AND resolved_file_id IS NULL '
-            . 'AND required_package_term_id IS NOT NULL AND import_object_term_id IS NOT NULL '
-            . 'AND required_path_hash IS NOT NULL '
-            . 'ORDER BY import_index LIMIT ' . (self::MAX_IMPORTS_PER_OWNER + 1)
-        );
-        $statement->execute([$ownerFileId]);
-        $dependencies = $statement->fetchAll(PDO::FETCH_ASSOC) ?: [];
-        $truncated = count($dependencies) > self::MAX_IMPORTS_PER_OWNER;
-        if ($truncated) {
-            $dependencies = array_slice($dependencies, 0, self::MAX_IMPORTS_PER_OWNER);
+        $config = function_exists('catalog_config') ? \catalog_config() : [];
+        $storageRoot = is_array($config) ? trim((string)($config['storage_path'] ?? '')) : '';
+        if ($storageRoot === '') {
+            throw new \RuntimeException('Catalog storage_path is required for UEDB5 misnamed-file detection.');
         }
-        if ($dependencies === []) {
-            return ['candidates' => [], 'imports_examined' => 0, 'truncated' => $truncated, 'ambiguous_terms' => 0];
+        $reader = new Uedb5MetadataReader($storageRoot);
+        $ownerSnapshot = $reader->snapshot($gameId, $ownerFileId);
+        $importCoverage = [];
+        foreach (Uedb5ClassicDependencyResolver::importCoverageRows($ownerSnapshot) as $row) {
+            $importCoverage[(int)$row['import_index']] = $row;
         }
+        $reader->clearCache($gameId, $ownerFileId);
 
-        /** @var array<int,array<int,array<string,int>>> $requirementsByObject */
-        $requirementsByObject = [];
-        $requiredPackageTermIds = [];
-        $requiredObjectTermIds = [];
-        $objectTermIds = [];
+        $dependencies = (new Uedb5ParityV5ReadService($this->db, is_array($config) ? $config : []))
+            ->dependencies($gameId, $ownerFileId);
+        $requirements = [];
+        $missingExamined = 0;
+        $truncated = false;
         foreach ($dependencies as $dependency) {
-            $objectTermId = (int)($dependency['import_object_term_id'] ?? 0);
-            $packageTermId = (int)($dependency['required_package_term_id'] ?? 0);
-            $requiredObjectTermId = (int)($dependency['required_object_term_id'] ?? 0);
-            $pathHash = strtoupper(trim((string)($dependency['required_path_hash_hex'] ?? '')));
-            if ($objectTermId < 1 || $packageTermId < 1 || $pathHash === '') {
+            if ((string)($dependency['outcome'] ?? '') !== 'missing') {
                 continue;
             }
-            $requirementsByObject[$objectTermId][$packageTermId][$pathHash] = $requiredObjectTermId;
-            $requiredPackageTermIds[$packageTermId] = true;
-            if ($requiredObjectTermId > 0) {
-                $requiredObjectTermIds[$requiredObjectTermId] = true;
+            $missingExamined++;
+            if ($missingExamined > self::MAX_IMPORTS_PER_OWNER) {
+                $truncated = true;
+                break;
             }
-            $objectTermIds[$objectTermId] = true;
-        }
-        if ($objectTermIds === []) {
-            return [
-                'candidates' => [],
-                'imports_examined' => count($dependencies),
-                'truncated' => $truncated,
-                'ambiguous_terms' => 0,
+            $sourceIndex = (int)($dependency['source_index'] ?? -1);
+            $coverage = $importCoverage[$sourceIndex] ?? null;
+            if (!is_array($coverage)) {
+                continue;
+            }
+            $packageName = trim((string)($dependency['required_package'] ?? $coverage['root_package'] ?? ''));
+            $fullPath = trim((string)($coverage['full_path'] ?? ''));
+            $relativePath = trim((string)($coverage['relative_object_path'] ?? ''), '. ');
+            if ($packageName === '' || $fullPath === '' || $relativePath === '') {
+                continue;
+            }
+            $parts = preg_split('/[.:]/', $relativePath) ?: [];
+            $leaf = trim((string)end($parts));
+            if ($leaf === '') {
+                continue;
+            }
+            $packageKey = self::key($packageName);
+            $relativeKey = self::key($relativePath);
+            $requirementKey = $packageKey . '|' . $relativeKey;
+            $requirements[$requirementKey] = [
+                'package_name'=>$packageName,
+                'package_key'=>$packageKey,
+                'full_path'=>$fullPath,
+                'relative_path'=>$relativePath,
+                'relative_key'=>$relativeKey,
+                'leaf'=>$leaf,
+                'leaf_key'=>CatalogUnrealIdentityHash::nameKey($leaf),
             ];
         }
-
-        $safeObjectTermIds = $this->safeObjectTerms(array_map('intval', array_keys($objectTermIds)));
-        $ambiguousTerms = count($objectTermIds) - count($safeObjectTermIds);
-        if ($safeObjectTermIds === []) {
-            return [
-                'candidates' => [],
-                'imports_examined' => count($dependencies),
-                'truncated' => $truncated,
-                'ambiguous_terms' => max(0, $ambiguousTerms),
-            ];
+        if ($requirements === []) {
+            return ['candidates'=>[],'imports_examined'=>$missingExamined,'truncated'=>$truncated,'ambiguous_terms'=>0];
         }
 
-        $packageNames = $this->termValues(array_map('intval', array_keys($requiredPackageTermIds)));
-        $requiredObjectPaths = $this->termValues(array_map('intval', array_keys($requiredObjectTermIds)));
-
-        // Build the complete unique rootless requirement set for each expected
-        // package. This is the denominator used to distinguish FULL from PARTIAL
-        // rename evidence; matched paths alone are not enough to recommend a rename.
         $requiredPathsByPackage = [];
-        foreach ($requirementsByObject as $packageRequirements) {
-            foreach ($packageRequirements as $packageTermId => $pathHashes) {
-                $packageName = trim((string)($packageNames[(int)$packageTermId] ?? ''));
-                foreach ($pathHashes as $pathHash => $requiredObjectTermId) {
-                    $fullPath = trim((string)($requiredObjectPaths[(int)$requiredObjectTermId] ?? ''));
-                    $rootlessPath = $fullPath;
-                    if ($packageName !== '' && strncasecmp($fullPath, $packageName . '.', strlen($packageName) + 1) === 0) {
-                        $rootlessPath = substr($fullPath, strlen($packageName) + 1);
-                    }
-                    $requiredPathsByPackage[(int)$packageTermId][(string)$pathHash] = [
-                        'term_id' => (int)$requiredObjectTermId,
-                        'full_path' => $fullPath,
-                        'rootless_path' => $rootlessPath,
-                    ];
-                }
+        $leafRequirements = [];
+        foreach ($requirements as $requirementKey => $requirement) {
+            $requiredPathsByPackage[$requirement['package_key']][$requirement['relative_key']] = $requirement;
+            $leafRequirements[$requirement['leaf_key']][$requirementKey] = $requirement;
+        }
+
+        $providerRowsByFile = [];
+        $ambiguousTerms = 0;
+        foreach (array_chunk(array_keys($leafRequirements), 150) as $leafChunk) {
+            $predicates = [];
+            $args = [$gameId, $ownerFileId];
+            foreach ($leafChunk as $leafKey) {
+                $predicates[] = '(o.object_name_hash=? AND o.object_name_length=?)';
+                $args[] = md5($leafKey, true);
+                $args[] = strlen($leafKey);
+            }
+            if ($predicates === []) {
+                continue;
+            }
+            $statement = $this->db->prepare(
+                'SELECT o.file_id,o.object_index,f.package_name,f.original_name,f.extension,'
+                . 'f.name_count,f.import_count,f.export_count,g.name game_name '
+                . 'FROM ue_uedb5_object_candidates o '
+                . 'JOIN ue_files f ON f.id=o.file_id AND f.scan_status="verified" '
+                . 'JOIN ue_uedb5_files v ON v.file_id=f.id AND v.game_id=f.game_id AND v.format_version=5 '
+                . 'JOIN ue_games g ON g.id=f.game_id '
+                . 'WHERE f.game_id=? AND f.id<>? AND (' . implode(' OR ', $predicates) . ') '
+                . 'ORDER BY o.file_id,o.object_index'
+            );
+            $statement->execute($args);
+            while (($row = $statement->fetch(PDO::FETCH_ASSOC)) !== false) {
+                $providerRowsByFile[(int)$row['file_id']] = $row;
             }
         }
-        $providers = $this->providersForTerms(
-            $safeObjectTermIds,
-            $gameId,
-            $ownerFileId
-        );
-        $providers = array_values(array_filter(
-            $providers,
-            fn(array $provider): bool => !isset($official['file_ids'][(int)$provider['file_id']])
-                && !$this->isOfficialPackage((string)$provider['package_name'], $official['names'])
-        ));
-        if ($providers === []) {
+        if ($providerRowsByFile === []) {
             return [
-                'candidates' => [],
-                'imports_examined' => count($dependencies),
-                'truncated' => $truncated,
-                'ambiguous_terms' => max(0, $ambiguousTerms),
+                'candidates'=>[],
+                'imports_examined'=>$missingExamined,
+                'truncated'=>$truncated,
+                'ambiguous_terms'=>0,
             ];
         }
 
-        $candidateIds = [];
-        foreach ($providers as $provider) {
-            $candidateIds[(int)$provider['file_id']] = true;
-        }
-        $dependants = $this->resolvedDependantCounts(array_map('intval', array_keys($candidateIds)));
+        $matchedProviders = [];
+        $leafProviderCounts = [];
 
-        /** @var array<string,array<string,mixed>> $groups */
-        $groups = [];
-        foreach ($providers as $provider) {
-            $objectTermId = (int)$provider['object_term_id'];
-            $candidateFileId = (int)$provider['file_id'];
-            $providerPathHash = strtoupper(trim((string)($provider['path_hash_hex'] ?? '')));
-
-            // A historical filename-cleanup victim should be effectively orphaned.
-            // If the current package identity is already resolving dependencies,
-            // do not suggest replacing it with another package name.
-            if ($providerPathHash === '' || (int)($dependants[$candidateFileId] ?? 0) !== 0) {
+        foreach ($providerRowsByFile as $candidateFileId => $providerMeta) {
+            if (isset($official['file_ids'][$candidateFileId])
+                || $this->isOfficialPackage((string)$providerMeta['package_name'], $official['names'])) {
                 continue;
             }
+            try {
+                $snapshot = $reader->snapshot($gameId, $candidateFileId);
+                $exports = Uedb5ClassicDependencyResolver::exportCoverageRows($snapshot);
+            } catch (\Throwable) {
+                continue;
+            } finally {
+                $reader->clearCache($gameId, $candidateFileId);
+            }
 
-            foreach (($requirementsByObject[$objectTermId] ?? []) as $packageTermId => $requiredPathHashes) {
-                $packageTermId = (int)$packageTermId;
-
-                // Leaf-name collisions are not evidence. The object hierarchy below
-                // the package root must be exactly the same on both sides.
-                if (!isset($requiredPathHashes[$providerPathHash])) {
+            foreach ($exports as $export) {
+                $localPath = trim((string)($export['local_path'] ?? ''), '. ');
+                if ($localPath === '') {
                     continue;
                 }
+                $parts = explode('.', $localPath);
+                $leaf = trim((string)end($parts));
+                $leafKey = CatalogUnrealIdentityHash::nameKey($leaf);
+                if (!isset($leafRequirements[$leafKey])) {
+                    continue;
+                }
+                $relativeKey = self::key($localPath);
+                foreach ($leafRequirements[$leafKey] as $requirementKey => $requirement) {
+                    if ($relativeKey !== $requirement['relative_key']) {
+                        continue;
+                    }
+                    $matchedProviders[$candidateFileId][$requirementKey] = [
+                        'requirement'=>$requirement,
+                        'local_path'=>$localPath,
+                        'export_index'=>(int)($export['export_index'] ?? -1),
+                    ];
+                    $leafProviderCounts[$leafKey][$candidateFileId] = true;
+                }
+            }
+        }
 
-                $suggestedPackage = trim((string)($packageNames[$packageTermId] ?? ''));
+        foreach ($leafProviderCounts as $leafKey => $files) {
+            if (count($files) > self::MAX_OBJECT_PROVIDER_FANOUT) {
+                $ambiguousTerms++;
+                foreach (array_keys($files) as $candidateFileId) {
+                    foreach ((array)($matchedProviders[$candidateFileId] ?? []) as $requirementKey => $match) {
+                        if (($match['requirement']['leaf_key'] ?? '') === $leafKey) {
+                            unset($matchedProviders[$candidateFileId][$requirementKey]);
+                        }
+                    }
+                }
+            }
+        }
+
+        $candidateIds = array_values(array_map('intval', array_keys($matchedProviders)));
+        $dependants = $this->resolvedDependantCounts($candidateIds);
+        $groups = [];
+
+        foreach ($matchedProviders as $candidateFileId => $matches) {
+            $provider = $providerRowsByFile[$candidateFileId] ?? null;
+            if (!is_array($provider) || (int)($dependants[$candidateFileId] ?? 0) !== 0) {
+                continue;
+            }
+            foreach ($matches as $match) {
+                $requirement = (array)$match['requirement'];
+                $suggestedPackage = (string)$requirement['package_name'];
                 if ($suggestedPackage === ''
                     || strcasecmp($suggestedPackage, (string)$provider['package_name']) === 0
                     || $this->isOfficialPackage($suggestedPackage, $official['names'])) {
                     continue;
                 }
-
-                [$similarityLabel, $similarityPoints] = self::nameSimilarity(
-                    (string)$provider['package_name'],
-                    $suggestedPackage
-                );
-                // Exact rootless object-path evidence is authoritative. Historical
-                // renames can be completely unrelated to the expected package name,
-                // so name similarity is retained only as a confidence/ranking signal.
+                [$similarityLabel] = self::nameSimilarity((string)$provider['package_name'], $suggestedPackage);
                 $collisionSuffixMatch = $similarityLabel === 'copy suffix (1-9)';
+                $packageKey = (string)$requirement['package_key'];
+                $key = $candidateFileId . ':' . $packageKey;
 
-                $key = $candidateFileId . ':' . $packageTermId;
                 if (!isset($groups[$key])) {
+                    $requiredSet = (array)($requiredPathsByPackage[$packageKey] ?? []);
                     $groups[$key] = [
-                        'candidate_file_id' => $candidateFileId,
-                        'game_id' => (int)$provider['game_id'],
-                        'game_name' => (string)$provider['game_name'],
-                        'candidate_original_name' => (string)$provider['original_name'],
-                        'candidate_package_name' => (string)$provider['package_name'],
-                        'candidate_extension' => (string)$provider['extension'],
-                        'candidate_name_count' => max(0, (int)($provider['name_count'] ?? 0)),
-                        'candidate_import_count' => max(0, (int)($provider['import_count'] ?? 0)),
-                        'candidate_export_count' => max(0, (int)($provider['export_count'] ?? 0)),
-                        'suggested_package_name' => $suggestedPackage,
-                        'suggested_filename' => self::suggestedFilename(
-                            $suggestedPackage,
-                            (string)$provider['extension']
-                        ),
-                        'current_dependants' => 0,
-                        'required_objects' => count((array)($requiredPathsByPackage[$packageTermId] ?? [])),
-                        'required_paths' => array_values(array_filter(array_map(
-                            static fn(array $path): string => trim((string)($path['full_path'] ?? $path['rootless_path'] ?? '')),
-                            array_values((array)($requiredPathsByPackage[$packageTermId] ?? []))
-                        ), static fn(string $path): bool => $path !== '')),
-                        'collision_suffix_match' => $collisionSuffixMatch,
-                        'matched_object_term_ids' => [],
-                        'best_same_file_matches' => 0,
-                        'matching_files' => 1,
-                        'evidence' => [[
-                            'file_id' => $ownerFileId,
-                            'original_name' => (string)$owner['original_name'],
-                            'package_name' => (string)$owner['package_name'],
-                            'name_count' => max(0, (int)($owner['name_count'] ?? 0)),
-                            'import_count' => max(0, (int)($owner['import_count'] ?? 0)),
-                            'export_count' => max(0, (int)($owner['export_count'] ?? 0)),
-                            'matched_objects' => 0,
-                            'matched_paths' => [],
+                        'candidate_file_id'=>$candidateFileId,
+                        'game_id'=>$gameId,
+                        'game_name'=>(string)$provider['game_name'],
+                        'candidate_original_name'=>(string)$provider['original_name'],
+                        'candidate_package_name'=>(string)$provider['package_name'],
+                        'candidate_extension'=>(string)$provider['extension'],
+                        'candidate_name_count'=>max(0,(int)($provider['name_count'] ?? 0)),
+                        'candidate_import_count'=>max(0,(int)($provider['import_count'] ?? 0)),
+                        'candidate_export_count'=>max(0,(int)($provider['export_count'] ?? 0)),
+                        'suggested_package_name'=>$suggestedPackage,
+                        'suggested_filename'=>self::suggestedFilename($suggestedPackage,(string)$provider['extension']),
+                        'current_dependants'=>0,
+                        'required_objects'=>count($requiredSet),
+                        'required_paths'=>array_values(array_map(
+                            static fn(array $r): string => (string)$r['full_path'],
+                            $requiredSet
+                        )),
+                        'collision_suffix_match'=>$collisionSuffixMatch,
+                        'matched_object_term_ids'=>[],
+                        'best_same_file_matches'=>0,
+                        'matching_files'=>1,
+                        'evidence'=>[[
+                            'file_id'=>$ownerFileId,
+                            'original_name'=>(string)$owner['original_name'],
+                            'package_name'=>(string)$owner['package_name'],
+                            'name_count'=>max(0,(int)($owner['name_count'] ?? 0)),
+                            'import_count'=>max(0,(int)($owner['import_count'] ?? 0)),
+                            'export_count'=>max(0,(int)($owner['export_count'] ?? 0)),
+                            'matched_objects'=>0,
+                            'matched_paths'=>[],
                         ]],
                     ];
                 }
-                if ($collisionSuffixMatch) {
-                    $groups[$key]['collision_suffix_match'] = true;
-                }
-                $groups[$key]['matched_object_term_ids'][(string)$objectTermId] = true;
-                $requiredObjectTermId = (int)($requiredPathHashes[$providerPathHash] ?? 0);
-                $matchedPath = trim((string)($provider['local_path'] ?? ''));
-                if ($matchedPath === '' && $requiredObjectTermId > 0) {
-                    $matchedPath = trim((string)($requiredObjectPaths[$requiredObjectTermId] ?? ''));
-                }
-                if ($matchedPath !== ''
-                    && count((array)$groups[$key]['evidence'][0]['matched_paths'])
-                        < self::MAX_MATCHED_PATHS_PER_EVIDENCE) {
-                    $groups[$key]['evidence'][0]['matched_paths'][$matchedPath] = true;
+                $groups[$key]['collision_suffix_match'] = !empty($groups[$key]['collision_suffix_match'])
+                    || $collisionSuffixMatch;
+                $relativeKey = (string)$requirement['relative_key'];
+                $groups[$key]['matched_object_term_ids'][$relativeKey] = true;
+                if (count((array)$groups[$key]['evidence'][0]['matched_paths']) < self::MAX_MATCHED_PATHS_PER_EVIDENCE) {
+                    $groups[$key]['evidence'][0]['matched_paths'][(string)$requirement['full_path']] = true;
                 }
             }
         }
 
         $candidates = [];
         foreach ($groups as $group) {
-            $termIds = array_map('intval', array_keys((array)$group['matched_object_term_ids']));
-            $matched = count($termIds);
-            $group['matched_object_term_ids'] = $termIds;
+            $matchedKeys = array_keys((array)$group['matched_object_term_ids']);
+            $matched = count($matchedKeys);
+            $group['matched_object_term_ids'] = $matchedKeys;
             $group['matching_objects'] = $matched;
-            $requiredTotal = max(0, (int)($group['required_objects'] ?? 0));
-            $requiredPaths = array_values(array_unique(array_map('strval', (array)($group['required_paths'] ?? []))));
-            sort($requiredPaths, SORT_NATURAL | SORT_FLAG_CASE);
+            $requiredTotal = max(0,(int)($group['required_objects'] ?? 0));
+            $requiredPaths = array_values(array_unique(array_map('strval',(array)$group['required_paths'])));
+            sort($requiredPaths,SORT_NATURAL|SORT_FLAG_CASE);
             $group['required_paths'] = $requiredPaths;
             $matchedPathSet = [];
-            foreach ((array)($group['evidence'] ?? []) as $evidenceRow) {
+            foreach ((array)$group['evidence'] as $evidenceRow) {
                 foreach ((array)($evidenceRow['matched_paths'] ?? []) as $path => $value) {
                     $matchedPathSet[is_string($path) ? $path : (string)$value] = true;
                 }
@@ -289,26 +311,22 @@ final class CatalogMisnamedFileDetector
             ));
             $group['coverage_status'] = $requiredTotal > 0 && $matched >= $requiredTotal ? 'full' : 'partial';
             $group['coverage_percent'] = $requiredTotal > 0
-                ? min(100, (int)floor(($matched * 100) / $requiredTotal))
+                ? min(100,(int)floor(($matched * 100) / $requiredTotal))
                 : 0;
             $group['best_same_file_matches'] = $matched;
             $group['evidence'][0]['matched_objects'] = $matched;
             $paths = array_keys((array)($group['evidence'][0]['matched_paths'] ?? []));
-            sort($paths, SORT_NATURAL | SORT_FLAG_CASE);
-            $group['evidence'][0]['matched_paths'] = array_slice(
-                $paths,
-                0,
-                self::MAX_MATCHED_PATHS_PER_EVIDENCE
-            );
+            sort($paths,SORT_NATURAL|SORT_FLAG_CASE);
+            $group['evidence'][0]['matched_paths'] = array_slice($paths,0,self::MAX_MATCHED_PATHS_PER_EVIDENCE);
             $candidates[] = self::rankCandidate($group);
         }
 
-        usort($candidates, [self::class, 'compareCandidates']);
+        usort($candidates,[self::class,'compareCandidates']);
         return [
-            'candidates' => $candidates,
-            'imports_examined' => count($dependencies),
-            'truncated' => $truncated,
-            'ambiguous_terms' => max(0, $ambiguousTerms),
+            'candidates'=>$candidates,
+            'imports_examined'=>$missingExamined,
+            'truncated'=>$truncated,
+            'ambiguous_terms'=>max(0,$ambiguousTerms),
         ];
     }
 
@@ -360,76 +378,6 @@ final class CatalogMisnamedFileDetector
             <=> [$leftConfidence, (int)($left['score'] ?? 0), (int)($left['best_same_file_matches'] ?? 0)];
     }
 
-    /** @param list<int> $termIds @return list<int> */
-    private function safeObjectTerms(array $termIds): array
-    {
-        $safe = [];
-        foreach (array_chunk(array_values(array_unique($termIds)), self::TERM_CHUNK_SIZE) as $chunk) {
-            if ($chunk === []) {
-                continue;
-            }
-            $placeholders = implode(',', array_fill(0, count($chunk), '?'));
-            $statement = $this->db->prepare(
-                'SELECT object_term_id,COUNT(DISTINCT file_id) provider_count '
-                . 'FROM ue_export_lookup WHERE object_term_id IN (' . $placeholders . ') '
-                . 'GROUP BY object_term_id HAVING COUNT(DISTINCT file_id)<=' . self::MAX_OBJECT_PROVIDER_FANOUT
-            );
-            $statement->execute($chunk);
-            while (($row = $statement->fetch(PDO::FETCH_ASSOC)) !== false) {
-                $safe[] = (int)$row['object_term_id'];
-            }
-        }
-        return array_values(array_unique(array_filter($safe, static fn(int $id): bool => $id > 0)));
-    }
-
-    /** @param list<int> $termIds @return list<array<string,mixed>> */
-    private function providersForTerms(array $termIds, int $gameId, int $ownerFileId): array
-    {
-        $providers = [];
-        foreach (array_chunk($termIds, self::TERM_CHUNK_SIZE) as $chunk) {
-            $placeholders = implode(',', array_fill(0, count($chunk), '?'));
-            $statement = $this->db->prepare(
-                'SELECT e.object_term_id,HEX(e.path_hash) path_hash_hex,'
-                . 'COALESCE(CONVERT(path_term.value_prefix USING utf8mb4),"") local_path,'
-                . 'c.id file_id,c.game_id,c.package_name,c.original_name,c.extension,'
-                . 'COALESCE(m.name_count,c.name_count,0) name_count,'
-                . 'COALESCE(m.import_count,c.import_count,0) import_count,'
-                . 'COALESCE(m.export_count,c.export_count,0) export_count,g.name game_name '
-                . 'FROM ue_export_lookup e '
-                . 'JOIN ue_files c ON c.id=e.file_id AND c.scan_status="verified" '
-                . 'JOIN ue_file_metadata m ON m.file_id=c.id AND m.format_version=' . \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer::FORMAT_VERSION . ' '
-                . 'JOIN ue_games g ON g.id=c.game_id '
-                . 'LEFT JOIN ue_terms path_term ON path_term.id=e.local_path_term_id '
-                . 'WHERE e.object_term_id IN (' . $placeholders . ') AND c.game_id=? AND c.id<>? '
-                . 'AND e.path_hash IS NOT NULL '
-                . 'ORDER BY e.object_term_id,c.id'
-            );
-            $statement->execute(array_merge($chunk, [$gameId, $ownerFileId]));
-            while (($row = $statement->fetch(PDO::FETCH_ASSOC)) !== false) {
-                $providers[] = $row;
-            }
-        }
-        return $providers;
-    }
-
-    /** @param list<int> $termIds @return array<int,string> */
-    private function termValues(array $termIds): array
-    {
-        $values = [];
-        foreach (array_chunk(array_values(array_unique($termIds)), self::TERM_CHUNK_SIZE) as $chunk) {
-            $placeholders = implode(',', array_fill(0, count($chunk), '?'));
-            $statement = $this->db->prepare(
-                'SELECT id,CONVERT(value_prefix USING utf8mb4) value_text '
-                . 'FROM ue_terms WHERE id IN (' . $placeholders . ')'
-            );
-            $statement->execute($chunk);
-            while (($row = $statement->fetch(PDO::FETCH_ASSOC)) !== false) {
-                $values[(int)$row['id']] = (string)$row['value_text'];
-            }
-        }
-        return $values;
-    }
-
     /** @param list<int> $fileIds @return array<int,int> */
     private function resolvedDependantCounts(array $fileIds): array
     {
@@ -441,8 +389,8 @@ final class CatalogMisnamedFileDetector
             $placeholders = implode(',', array_fill(0, count($chunk), '?'));
             $statement = $this->db->prepare(
                 'SELECT resolved_file_id,COUNT(DISTINCT file_id) dependant_count '
-                . 'FROM ue_dependency_links '
-                . 'WHERE resolved_file_id IN (' . $placeholders . ') AND file_id<>resolved_file_id '
+                . 'FROM ue_uedb5_dependency_edges '
+                . 'WHERE outcome=1 AND resolved_file_id IN (' . $placeholders . ') AND file_id<>resolved_file_id '
                 . 'GROUP BY resolved_file_id'
             );
             $statement->execute($chunk);
@@ -451,6 +399,13 @@ final class CatalogMisnamedFileDetector
             }
         }
         return $counts;
+    }
+
+    private static function key(string $value): string
+    {
+        return function_exists('mb_strtolower')
+            ? mb_strtolower(trim($value), 'UTF-8')
+            : strtolower(trim($value));
     }
 
     /** @return array{names:array<string,true>,file_ids:array<int,true>} */
