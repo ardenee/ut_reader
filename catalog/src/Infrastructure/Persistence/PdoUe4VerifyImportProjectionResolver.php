@@ -12,7 +12,7 @@ namespace UnrealDb\Catalog\Infrastructure\Persistence;
 
 use PDO;
 use RuntimeException;
-use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataSnapshotLoader;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5RuntimeProviderSnapshotLoader;
 use UnrealDb\Catalog\Infrastructure\Metadata\CatalogUnrealIdentityHash;
 
 final class PdoUe4VerifyImportProjectionResolver
@@ -65,7 +65,7 @@ final class PdoUe4VerifyImportProjectionResolver
             throw new RuntimeException('Catalog storage_path is required for authoritative UE4 VerifyImport resolution.');
         }
 
-        $snapshot = (new BlockedCompressedMetadataSnapshotLoader($db, $storageRoot))->load($providerFileId);
+        $snapshot = (new Uedb5RuntimeProviderSnapshotLoader($db, $storageRoot))->load($providerFileId);
         $file = (array)($snapshot['file'] ?? []);
         return self::resolveInMemoryOutcome(
             $consumerImports,
@@ -602,7 +602,7 @@ final class PdoUe4VerifyImportProjectionResolver
         if ($storageRoot === '') {
             throw new RuntimeException('Catalog storage_path is required for authoritative UE4 VerifyImport diagnosis.');
         }
-        $snapshot = (new BlockedCompressedMetadataSnapshotLoader($db, $storageRoot))->load($providerFileId);
+        $snapshot = (new Uedb5RuntimeProviderSnapshotLoader($db, $storageRoot))->load($providerFileId);
         $file = (array)($snapshot['file'] ?? []);
         return self::diagnoseInMemoryOutcome(
             $consumerImports,
