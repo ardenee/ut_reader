@@ -9,6 +9,7 @@ namespace UnrealDb\Catalog\Infrastructure\Persistence;
 
 use PDO;
 use UnrealDb\Catalog\Infrastructure\Metadata\CatalogUnrealIdentityHash;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5RuntimeProviderSnapshotLoader;
 
 require_once dirname(__DIR__) . '/Metadata/CatalogUnrealIdentityHash.php';
 
@@ -49,10 +50,12 @@ final class PdoUe3VerifyImportProjectionResolver
         if ($targets === []) { return []; }
         $needed = self::importClosure($imports, $targets);
         $objectNames = self::objectNamesForImports($imports, $needed);
-        $sourceBacked = trim((string)$storageRoot) !== '' && self::isUt3Provider($db, $providerFileId);
-        $candidates = $sourceBacked
-            ? self::loadSourceCandidates($db, $providerFileId, $objectNames, (string)$storageRoot)
-            : self::loadCandidates($db, $providerFileId, $objectNames);
+        $candidates = self::loadUedb5Candidates(
+            $db,
+            $providerFileId,
+            $objectNames,
+            self::storageRoot($storageRoot)
+        );
         $outcomes = self::resolveTargetOutcomes($imports, $candidates, $targets, $consumerExports);
 
         $fallbackTargets = [];
@@ -70,9 +73,12 @@ final class PdoUe3VerifyImportProjectionResolver
         if ($fallbackTargets === []) { return $outcomes; }
         $fallbackNeeded = self::importClosure($imports, $fallbackTargets);
         $fallbackNames = self::objectNamesForImports($imports, $fallbackNeeded);
-        $fallback = $sourceBacked
-            ? self::loadSourceCaseInsensitiveCandidates($db, $providerFileId, $fallbackNames, (string)$storageRoot)
-            : self::loadCaseInsensitiveCandidates($db, $providerFileId, $fallbackNames);
+        $fallback = self::loadUedb5Candidates(
+            $db,
+            $providerFileId,
+            $fallbackNames,
+            self::storageRoot($storageRoot)
+        );
         if ($fallback === []) { return $outcomes; }
         return self::resolveTargetOutcomes(
             $imports,
@@ -180,10 +186,12 @@ final class PdoUe3VerifyImportProjectionResolver
 
         $needed = self::importClosure($imports, $targets);
         $objectNames = self::objectNamesForImports($imports, $needed);
-        $sourceBacked = trim((string)$storageRoot) !== '' && self::isUt3Provider($db, $providerFileId);
-        $candidates = $sourceBacked
-            ? self::loadSourceCandidates($db, $providerFileId, $objectNames, (string)$storageRoot)
-            : self::loadCandidates($db, $providerFileId, $objectNames);
+        $candidates = self::loadUedb5Candidates(
+            $db,
+            $providerFileId,
+            $objectNames,
+            self::storageRoot($storageRoot)
+        );
         $matches = self::resolveTargetImports($imports, $candidates, $targets);
 
         $unresolved = [];
@@ -202,9 +210,12 @@ final class PdoUe3VerifyImportProjectionResolver
         // fallback that discovers differently-cased provider terms.
         $fallbackNeeded = self::importClosure($imports, $unresolved);
         $fallbackNames = self::objectNamesForImports($imports, $fallbackNeeded);
-        $fallback = $sourceBacked
-            ? self::loadSourceCaseInsensitiveCandidates($db, $providerFileId, $fallbackNames, (string)$storageRoot)
-            : self::loadCaseInsensitiveCandidates($db, $providerFileId, $fallbackNames);
+        $fallback = self::loadUedb5Candidates(
+            $db,
+            $providerFileId,
+            $fallbackNames,
+            self::storageRoot($storageRoot)
+        );
         if ($fallback === []) {
             return $matches;
         }
@@ -564,57 +575,13 @@ final class PdoUe3VerifyImportProjectionResolver
         return $resolved[$importIndex] = self::FAILURE_SENTINEL;
     }
 
-    private static function isUt3Provider(PDO $db, int $providerFileId): bool
-    {
-        $statement = $db->prepare(
-            'SELECT LOWER(TRIM(g.slug)) FROM ue_files f JOIN ue_games g ON g.id=f.game_id WHERE f.id=? LIMIT 1'
-        );
-        $statement->execute([$providerFileId]);
-        return (string)($statement->fetchColumn() ?: '') === 'ut3';
-    }
-
     /**
-     * Discover candidate export indexes through the indexed SQL accelerator, then
-     * obtain the source-semantic class/outer/flag fields from authoritative UEDB4.
+     * Load UE3 provider candidates from authoritative UEDB5.
      *
-     * @param array<string,string> $objectNames
+     * @param array<string,string> $objectNames normalized name => original name
      * @return array<string,list<array<string,mixed>>>
      */
-    private static function loadSourceCandidates(
-        PDO $db,
-        int $providerFileId,
-        array $objectNames,
-        string $storageRoot
-    ): array {
-        $termNames = self::loadExactObjectNameTerms($db, $objectNames);
-        if ($termNames === []) {
-            return [];
-        }
-        $refs = [];
-        foreach (array_chunk($termNames, self::HASH_BATCH_SIZE, true) as $chunk) {
-            $termIds = array_map('intval', array_keys($chunk));
-            $statement = $db->prepare(
-                'SELECT export_index,object_term_id FROM ue_export_lookup '
-                . 'WHERE file_id=? AND object_term_id IN ('
-                . implode(',', array_fill(0, count($termIds), '?')) . ') '
-                . 'ORDER BY export_index DESC'
-            );
-            $statement->execute(array_merge([$providerFileId], $termIds));
-            while (($row = $statement->fetch(PDO::FETCH_ASSOC)) !== false) {
-                $objectName = (string)($chunk[(int)$row['object_term_id']] ?? '');
-                if ($objectName !== '' && isset($objectNames[self::key($objectName)])) {
-                    $refs[] = [
-                        'export_index' => (int)$row['export_index'],
-                        'object_name' => $objectName,
-                    ];
-                }
-            }
-        }
-        return self::hydrateSourceCandidates($db, $providerFileId, $refs, $storageRoot);
-    }
-
-    /** @param array<string,string> $objectNames @return array<string,list<array<string,mixed>>> */
-    private static function loadSourceCaseInsensitiveCandidates(
+    private static function loadUedb5Candidates(
         PDO $db,
         int $providerFileId,
         array $objectNames,
@@ -623,134 +590,45 @@ final class PdoUe3VerifyImportProjectionResolver
         if ($objectNames === []) {
             return [];
         }
-        $refs = [];
-        foreach (array_chunk(array_values($objectNames), self::HASH_BATCH_SIZE) as $chunk) {
-            $statement = $db->prepare(
-                'SELECT e.export_index,ot.value_prefix object_name FROM ue_export_lookup e '
-                . 'JOIN ue_terms ot ON ot.id=e.object_term_id '
-                . 'WHERE e.file_id=? AND CONVERT(ot.value_prefix USING utf8mb4) '
-                . 'COLLATE utf8mb4_unicode_ci IN ('
-                . implode(',', array_fill(0, count($chunk), '?')) . ') '
-                . 'ORDER BY e.export_index DESC'
-            );
-            $statement->execute(array_merge([$providerFileId], $chunk));
-            while (($row = $statement->fetch(PDO::FETCH_ASSOC)) !== false) {
-                $objectName = (string)($row['object_name'] ?? '');
-                if ($objectName !== '' && isset($objectNames[self::key($objectName)])) {
-                    $refs[] = [
-                        'export_index' => (int)$row['export_index'],
-                        'object_name' => $objectName,
-                    ];
-                }
-            }
-        }
-        return self::hydrateSourceCandidates($db, $providerFileId, $refs, $storageRoot);
-    }
-
-    /**
-     * @param list<array{export_index:int,object_name:string}> $refs
-     * @return array<string,list<array<string,mixed>>>
-     */
-    private static function hydrateSourceCandidates(
-        PDO $db,
-        int $providerFileId,
-        array $refs,
-        string $storageRoot
-    ): array {
-        if ($refs === []) {
-            return [];
-        }
-        $provider = $db->prepare(
-            'SELECT package_name,package_version FROM ue_files WHERE id=? AND scan_status="verified" LIMIT 1'
-        );
-        $provider->execute([$providerFileId]);
-        $providerRow = $provider->fetch(PDO::FETCH_ASSOC);
-        if (!is_array($providerRow)) {
-            return [];
-        }
-
-        $reader = new \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataReader(
-            $db,
-            $storageRoot
-        );
-        $candidateIndexes = array_values(array_unique(array_map(
-            static fn(array $row): int => (int)$row['export_index'],
-            $refs
-        )));
-        $candidateExports = $reader->rowsByIndexes($providerFileId, 'exports', $candidateIndexes);
-        if ($candidateExports === []) {
-            return [];
-        }
-
-        $classImportIndexes = [];
-        $classExportIndexes = [];
-        foreach ($candidateExports as $export) {
-            $classIndex = (int)($export['class_index'] ?? 0);
-            if ($classIndex < 0) {
-                $classImportIndexes[-$classIndex - 1] = true;
-            } elseif ($classIndex > 0) {
-                $classExportIndexes[$classIndex - 1] = true;
-            }
-        }
-        $providerImports = $reader->rowsByIndexes(
-            $providerFileId,
-            'imports',
-            array_map('intval', array_keys($classImportIndexes))
-        );
-        $outerImportIndexes = [];
-        foreach ($providerImports as $import) {
-            $outer = (int)($import['outer_index'] ?? 0);
-            if ($outer < 0) {
-                $outerImportIndexes[-$outer - 1] = true;
-            }
-        }
-        if ($outerImportIndexes !== []) {
-            $providerImports += $reader->rowsByIndexes(
-                $providerFileId,
-                'imports',
-                array_map('intval', array_keys($outerImportIndexes))
-            );
-        }
+        $snapshot = (new Uedb5RuntimeProviderSnapshotLoader($db, $storageRoot))->load($providerFileId);
+        $providerImports = self::indexedImports((array)($snapshot['imports'] ?? []));
         $providerImports = \UnrealDb\Catalog\Infrastructure\Metadata\CatalogCompactIdentityEnricher::ue3FixupImportMap(
             $providerImports
         );
-
-        $identityExports = $candidateExports;
-        if ($classExportIndexes !== []) {
-            $identityExports += $reader->rowsByIndexes(
-                $providerFileId,
-                'exports',
-                array_map('intval', array_keys($classExportIndexes))
-            );
-        }
-
-        $refsByIndex = [];
-        foreach ($refs as $ref) {
-            $refsByIndex[(int)$ref['export_index']] = (string)$ref['object_name'];
-        }
-        $result = [];
-        foreach ($candidateIndexes as $exportIndex) {
-            $export = $candidateExports[$exportIndex] ?? null;
-            if (!is_array($export)) {
+        $providerExports = [];
+        foreach ((array)($snapshot['exports'] ?? []) as $fallback => $row) {
+            if (!is_array($row)) {
                 continue;
             }
+            $index = isset($row['export_index']) ? (int)$row['export_index']
+                : (isset($row['index']) ? (int)$row['index'] : (int)$fallback);
+            $providerExports[$index] = $row;
+        }
+        $file = (array)($snapshot['file'] ?? []);
+        $summary = (array)($snapshot['summary'] ?? []);
+        $providerPackageName = (string)($file['package_name'] ?? '');
+        $providerPackageVersion = array_key_exists('package_version',$summary)
+            ? (int)$summary['package_version']
+            : (isset($file['package_version']) ? (int)$file['package_version'] : null);
+
+        $result = [];
+        foreach ($providerExports as $exportIndex => $export) {
             $objectName = (string)($export['object_name'] ?? '');
-            $discoveredName = (string)($refsByIndex[$exportIndex] ?? '');
-            if ($objectName === '' || $discoveredName === '' || self::key($objectName) !== self::key($discoveredName)) {
+            if ($objectName === '' || !isset($objectNames[self::key($objectName)])) {
                 continue;
             }
             [$classPackage, $className] =
                 \UnrealDb\Catalog\Infrastructure\Metadata\CatalogCompactIdentityEnricher::ue3ExportClassIdentity(
                     $export,
                     $providerImports,
-                    $identityExports,
-                    (string)$providerRow['package_name'],
-                    isset($providerRow['package_version']) ? (int)$providerRow['package_version'] : null,
+                    $providerExports,
+                    $providerPackageName,
+                    $providerPackageVersion,
                     true
                 );
             $identityKey = self::identityKey($objectName, $className, $classPackage);
             $result[$identityKey][] = [
-                'export_index' => $exportIndex,
+                'export_index' => (int)$exportIndex,
                 'object_name' => $objectName,
                 'outer_index' => (int)($export['outer_index'] ?? 0),
                 'object_flags' => (int)($export['object_flags'] ?? 0),
@@ -759,150 +637,29 @@ final class PdoUe3VerifyImportProjectionResolver
             ];
         }
         foreach ($result as &$rows) {
-            usort($rows, static fn(array $a, array $b): int => $b['export_index'] <=> $a['export_index']);
+            usort($rows, static fn(array $left,array $right):int =>
+                (int)$right['export_index'] <=> (int)$left['export_index']
+            );
         }
         unset($rows);
         return $result;
     }
 
-    /**
-     * Load UE3 candidates by serialized ObjectName, mirroring the first key of
-     * VerifyImportInner. The fast path resolves exact ue_terms IDs through the
-     * dictionary hash index, then probes ue_export_lookup by object_term_id.
-     *
-     * @param array<string,string> $objectNames normalized name => original name
-     * @return array<string,list<array<string,mixed>>>
-     */
-    private static function loadCandidates(PDO $db, int $providerFileId, array $objectNames): array
+    private static function storageRoot(?string $storageRoot): string
     {
-        if ($objectNames === []) {
-            return [];
+        $storageRoot = trim((string)$storageRoot);
+        if ($storageRoot !== '') {
+            return $storageRoot;
         }
-        return self::loadCandidatesForTerms(
-            $db,
-            $providerFileId,
-            $objectNames,
-            self::loadExactObjectNameTerms($db, $objectNames)
-        );
-    }
-
-    /** @param array<string,string> $objectNames @return array<int,string> */
-    private static function loadExactObjectNameTerms(PDO $db, array $objectNames): array
-    {
-        $result = [];
-        foreach (array_chunk(array_values($objectNames), self::HASH_BATCH_SIZE) as $chunk) {
-            $predicates = [];
-            $arguments = [];
-            $expected = [];
-            foreach ($chunk as $name) {
-                $hash = md5($name, true);
-                $length = strlen($name);
-                $predicates[] = '(value_hash=? AND value_length=?)';
-                $arguments[] = $hash;
-                $arguments[] = $length;
-                $expected[bin2hex($hash) . ':' . $length] = $name;
-            }
-            $statement = $db->prepare(
-                'SELECT id,value_hash,value_length FROM ue_terms WHERE ' . implode(' OR ', $predicates)
-            );
-            $statement->execute($arguments);
-            while (($row = $statement->fetch(PDO::FETCH_ASSOC)) !== false) {
-                $key = bin2hex((string)$row['value_hash']) . ':' . (int)$row['value_length'];
-                if (isset($expected[$key])) {
-                    $result[(int)$row['id']] = $expected[$key];
-                }
-            }
+        if (!function_exists('catalog_config')) {
+            throw new \RuntimeException('Catalog configuration is required for authoritative UE3 VerifyImport resolution.');
         }
-        return $result;
-    }
-
-    /**
-     * @param array<string,string> $objectNames
-     * @param array<int,string> $termNames
-     * @return array<string,list<array<string,mixed>>>
-     */
-    private static function loadCandidatesForTerms(
-        PDO $db,
-        int $providerFileId,
-        array $objectNames,
-        array $termNames
-    ): array {
-        if ($termNames === []) {
-            return [];
+        $config = \catalog_config();
+        $storageRoot = is_array($config) ? trim((string)($config['storage_path'] ?? '')) : '';
+        if ($storageRoot === '') {
+            throw new \RuntimeException('Catalog storage_path is required for authoritative UE3 VerifyImport resolution.');
         }
-        $result = [];
-        foreach (array_chunk($termNames, self::HASH_BATCH_SIZE, true) as $chunk) {
-            $termIds = array_map('intval', array_keys($chunk));
-            $placeholders = implode(',', array_fill(0, count($termIds), '?'));
-            $statement = $db->prepare(
-                'SELECT e.export_index,e.object_term_id,l.outer_index,l.object_flags,'
-                . 'cpt.value_prefix class_package,cnt.value_prefix class_name'
-                . ' FROM ue_export_lookup e'
-                . ' JOIN ue_export_path_lookup l ON l.file_id=e.file_id AND l.export_index=e.export_index'
-                . ' LEFT JOIN ue_terms cpt ON cpt.id=l.class_package_term_id'
-                . ' LEFT JOIN ue_terms cnt ON cnt.id=l.class_name_term_id'
-                . ' WHERE e.file_id=? AND e.object_term_id IN (' . $placeholders . ')'
-                . ' ORDER BY e.export_index DESC'
-            );
-            $statement->execute(array_merge([$providerFileId], $termIds));
-            while (($row = $statement->fetch(PDO::FETCH_ASSOC)) !== false) {
-                $objectName = (string)($chunk[(int)$row['object_term_id']] ?? '');
-                if ($objectName === '' || !isset($objectNames[self::key($objectName)])) {
-                    continue;
-                }
-                self::appendCandidate($result, $row, $objectName);
-            }
-        }
-        return $result;
-    }
-
-    /** @param array<string,string> $objectNames @return array<string,list<array<string,mixed>>> */
-    private static function loadCaseInsensitiveCandidates(PDO $db, int $providerFileId, array $objectNames): array
-    {
-        if ($objectNames === []) {
-            return [];
-        }
-        $result = [];
-        foreach (array_chunk(array_values($objectNames), self::HASH_BATCH_SIZE) as $chunk) {
-            $placeholders = implode(',', array_fill(0, count($chunk), '?'));
-            $statement = $db->prepare(
-                'SELECT e.export_index,ot.value_prefix object_name,l.outer_index,l.object_flags,'
-                . 'cpt.value_prefix class_package,cnt.value_prefix class_name'
-                . ' FROM ue_export_lookup e'
-                . ' JOIN ue_export_path_lookup l ON l.file_id=e.file_id AND l.export_index=e.export_index'
-                . ' JOIN ue_terms ot ON ot.id=e.object_term_id'
-                . ' LEFT JOIN ue_terms cpt ON cpt.id=l.class_package_term_id'
-                . ' LEFT JOIN ue_terms cnt ON cnt.id=l.class_name_term_id'
-                . ' WHERE e.file_id=? AND CONVERT(ot.value_prefix USING utf8mb4)'
-                . ' COLLATE utf8mb4_unicode_ci IN (' . $placeholders . ')'
-                . ' ORDER BY e.export_index DESC'
-            );
-            $statement->execute(array_merge([$providerFileId], $chunk));
-            while (($row = $statement->fetch(PDO::FETCH_ASSOC)) !== false) {
-                $objectName = (string)($row['object_name'] ?? '');
-                if ($objectName === '' || !isset($objectNames[self::key($objectName)])) {
-                    continue;
-                }
-                self::appendCandidate($result, $row, $objectName);
-            }
-        }
-        return $result;
-    }
-
-    /** @param array<string,list<array<string,mixed>>> $result @param array<string,mixed> $row */
-    private static function appendCandidate(array &$result, array $row, string $objectName): void
-    {
-        $className = (string)($row['class_name'] ?? '');
-        $classPackage = (string)($row['class_package'] ?? '');
-        $identityKey = self::identityKey($objectName, $className, $classPackage);
-        $result[$identityKey][] = [
-            'export_index' => (int)$row['export_index'],
-            'object_name' => $objectName,
-            'outer_index' => (int)($row['outer_index'] ?? 0),
-            'object_flags' => (int)($row['object_flags'] ?? 0),
-            'class_package' => $classPackage,
-            'class_name' => $className,
-        ];
+        return $storageRoot;
     }
 
     /** @param array<int,array<string,mixed>> $imports @param list<int> $targets @return list<int> */
