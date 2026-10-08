@@ -296,7 +296,6 @@ final class CatalogVerifiedFileReassignmentService
         try {
             $this->db->beginTransaction();
             $support->deleteFileProjections($fileId);
-            $this->db->prepare('DELETE FROM ue_dependency_package_summaries WHERE file_id=?')->execute([$fileId]);
             \catalog_package_aliases_ensure($this->db);
             $this->db->prepare('DELETE FROM ue_file_package_aliases WHERE file_id=?')->execute([$fileId]);
             $statement = $this->db->prepare(
