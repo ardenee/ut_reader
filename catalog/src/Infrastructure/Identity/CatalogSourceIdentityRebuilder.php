@@ -15,7 +15,6 @@ use Throwable;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogProjectionReconciliationQueue;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoCatalogDependencyRebuilder;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoCatalogSourcePathStore;
-use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyReadSource;
 
 final class CatalogSourceIdentityRebuilder
 {
@@ -241,10 +240,9 @@ final class CatalogSourceIdentityRebuilder
         if ($packageNames === []) {
             return [];
         }
-        $dependencySource = PdoDependencyReadSource::sql($this->db);
-        $sql = 'SELECT DISTINCT d.file_id FROM ' . $dependencySource . ' d '
-            . 'JOIN ue_files owner ON owner.id=d.file_id '
-            . 'WHERE owner.game_id=? AND d.file_id<>? AND d.required_package IN ('
+        $sql = 'SELECT DISTINCT p.file_id FROM ue_uedb5_dependency_packages p '
+            . 'JOIN ue_files owner ON owner.id=p.file_id AND owner.game_id=p.game_id '
+            . 'WHERE owner.game_id=? AND p.file_id<>? AND p.required_package_name IN ('
             . implode(',', array_fill(0, count($packageNames), '?')) . ')';
         $ids = [];
         foreach (\catalog_all($this->db, $sql, [$gameId, $fileId, ...$packageNames]) as $row) {
