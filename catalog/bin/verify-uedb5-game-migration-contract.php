@@ -27,6 +27,12 @@ $check('game_profile_is_version_gate',str_contains($factory,'gp_required_profile
     &&str_contains($factory,"'min_version' => \$profile['package_version_min']")
     &&str_contains($factory,"'max_version' => \$profile['package_version_max']")
     &&str_contains($factory,'gp_profile_version_decision'));
+$check('ut2004_ue1_compatibility_uses_explicit_profile_reader',
+    str_contains($factory, "'ut2004' && isset(\$file['package_version'])")
+    && str_contains($factory, "\$readerEngine = 'UE1'")
+    && str_contains($factory, "'ue1-ut2004-legacy-texture-profile-compatible'")
+    && str_contains($factory, 'assertParsedHeaderAllowed($gameId, $readerEngine')
+    && str_contains($factory, 'Uedb5LegacySnapshotBuilder::build($reader, $file'));
 $check('migration_selection_has_no_private_version_between',!str_contains($service,'f.package_version BETWEEN'));
 $check('legacy_builders_have_no_private_game_version_bounds',
     !str_contains((string)file_get_contents($root.'/src/Infrastructure/Metadata/Uedb5Ut99SnapshotBuilder.php'),'MIN_VERSION')
@@ -69,7 +75,7 @@ $check('shared_search_dictionary_uses_short_insert_only_batches',str_contains($p
 $check('source_factory_does_not_reopen_package_for_profile_gate',
     !str_contains($factory,'gp_read_legacy_summary($path)')
     &&str_contains($factory,'profileAllowsCatalogRow($gameId, $file)')
-    &&str_contains($factory,'assertParsedHeaderAllowed($gameId, $engineKey'));
+    &&str_contains($factory,'assertParsedHeaderAllowed($gameId, $readerEngine'));
 $check('worker_parent_runs_preflight_once',str_contains($cli,'pool_preflight_start')&&str_contains($cli,'--skip-worker-preflight'));
 $check('worker_pool_emits_immediate_spawn_feedback',str_contains($cli,'worker_spawned')&&str_contains($cli,'fflush(STDOUT)'));
 $check('worker_pool_emits_heartbeats',str_contains($cli,'pool_heartbeat')&&str_contains($cli,'microtime(true)-$lastHeartbeat>=30.0'));

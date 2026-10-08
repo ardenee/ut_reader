@@ -86,7 +86,7 @@ final class Uedb5SourceSnapshotFactory
             $profile,
             $version,
             $licensee,
-            $engineKey,
+            Uedb5GameSourceRegistry::sourceKey($gameId) === 'ut2004' && $version !== null && $version < 100 ? 'UE1' : $engineKey,
             in_array($engineKey, ['UE4', 'UE5'], true)
         );
         if (empty($decision['ok'])) {
@@ -94,7 +94,8 @@ final class Uedb5SourceSnapshotFactory
         }
         $compatibility = $decision['compatibility'] ?? null;
         return !is_array($compatibility)
-            || strtoupper((string)($compatibility['reader_engine'] ?? '')) === $engineKey;
+            || strtoupper((string)($compatibility['reader_engine'] ?? '')) === $engineKey
+            || (Uedb5GameSourceRegistry::sourceKey($gameId) === 'ut2004' && strtoupper((string)($compatibility['reader_engine'] ?? '')) === 'UE1');
     }
 
     /** Legacy slug entry point retained for compatibility; runtime migration uses game IDs. */
@@ -109,9 +110,19 @@ final class Uedb5SourceSnapshotFactory
     {
         $contract = $this->contract($sourceKey);
         $engineKey = (string)$contract['engine_key'];
+        $readerEngine = $engineKey;
+        if ($sourceKey === 'ut2004' && isset($file['package_version']) && (int)$file['package_version'] < 100) {
+            $decision = \gp_profile_version_decision(
+                $this->profileForGame($gameId), (int)$file['package_version'],
+                isset($file['licensee_version']) ? (int)$file['licensee_version'] : null, 'UE1'
+            );
+            if (!empty($decision['ok']) && strtoupper((string)($decision['compatibility']['reader_engine'] ?? '')) === 'UE1') {
+                $readerEngine = 'UE1';
+            }
+        }
         $readerClass = CatalogReaderResolver::resolve(
             $this->config,
-            $engineKey,
+            $readerEngine,
             'Reader not found for package engine',
             'Reader file loaded for package engine ',
             ['UE4','UE5']
@@ -126,7 +137,7 @@ final class Uedb5SourceSnapshotFactory
         if (!method_exists($reader, 'getHeader')) {
             throw new RuntimeException('Canonical package reader does not expose its parsed header for profile validation.');
         }
-        $this->assertParsedHeaderAllowed($gameId, $engineKey, (array)$reader->getHeader());
+        $this->assertParsedHeaderAllowed($gameId, $readerEngine, (array)$reader->getHeader());
 
         return match ($sourceKey) {
             'ut99' => $reader instanceof \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1PackageReader
@@ -143,7 +154,13 @@ final class Uedb5SourceSnapshotFactory
                 : throw new RuntimeException('UT2003 did not resolve the canonical UE2 reader.'),
             'ut2004' => $reader instanceof \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE2PackageReader
                 ? Uedb5Ut2004SnapshotBuilder::build($reader, $file)
-                : throw new RuntimeException('UT2004 did not resolve the canonical UE2 reader.'),
+                : ($readerEngine === 'UE1' && $reader instanceof \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1PackageReader
+                    ? Uedb5LegacySnapshotBuilder::build($reader, $file, [
+                        'label'=>'UT2004 UE1 compatibility',
+                        'policy'=>'ue1-ut2004-legacy-texture-profile-compatible',
+                        'schema_prefix'=>'ue1.ut2004.compat',
+                    ])
+                    : throw new RuntimeException('UT2004 did not resolve the profile-authorized package reader.')),
             'ut3' => $reader instanceof \CatalogUE3PackageReader
                 ? Uedb5Ut3SnapshotBuilder::build($reader, $file)
                 : throw new RuntimeException('UT3 did not resolve the canonical UE3 reader.'),
