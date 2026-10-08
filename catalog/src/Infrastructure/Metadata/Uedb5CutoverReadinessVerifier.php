@@ -110,6 +110,19 @@ final class Uedb5CutoverReadinessVerifier
             return ['checks'=>$checks,'failures'=>$failures,'cutover_ready'=>false,'deep_validation'=>['skipped'=>true,'reason'=>'missing_tables']];
         }
 
+        // Fast-fail before expensive catalogue-wide projection audits.
+        // Never attempt deep source parsing while any file awaits Step 8.
+        $awaitingValidation=$this->count(
+            'SELECT COUNT(*) FROM ue_uedb5_migration_status WHERE status<>"validated"'
+        );
+        if($awaitingValidation>0){
+            $record('every_verified_file_is_step8_validated',false,'not_validated='.$awaitingValidation);
+            return [
+                'checks'=>$checks,'failures'=>$failures,'cutover_ready'=>false,
+                'summary'=>['not_validated'=>$awaitingValidation],
+                'deep_validation'=>['skipped'=>true,'reason'=>'step8_incomplete'],
+            ];
+        }
         $verified=$this->count('SELECT COUNT(*) FROM ue_files WHERE scan_status="verified"');
         $record('verified_catalogue_is_nonempty',$verified>0,'verified='.$verified);
         $missingV5=$this->count(
