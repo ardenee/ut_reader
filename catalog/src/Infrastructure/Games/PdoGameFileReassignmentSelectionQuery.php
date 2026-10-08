@@ -155,7 +155,7 @@ final class PdoGameFileReassignmentSelectionQuery
         $dependency = (string)$filters['dep_filter'];
         if ($dependency !== '') {
             if ($dependency === 'any') {
-                $where[] = 'EXISTS (SELECT 1 FROM ue_dependency_package_summaries dx WHERE dx.file_id=f.id)';
+                $where[] = 'EXISTS (SELECT 1 FROM ue_uedb5_dependency_packages dx WHERE dx.file_id=f.id)';
             } else {
                 $column = match ($dependency) {
                     'resolved' => 'resolved_count',
@@ -163,7 +163,7 @@ final class PdoGameFileReassignmentSelectionQuery
                     'package_only' => 'package_only_count',
                     default => 'common_count',
                 };
-                $where[] = 'EXISTS (SELECT 1 FROM ue_dependency_package_summaries dx WHERE dx.file_id=f.id AND dx.' . $column . '>0)';
+                $where[] = 'EXISTS (SELECT 1 FROM ue_uedb5_dependency_packages dx WHERE dx.file_id=f.id AND dx.' . $column . '>0)';
             }
         }
 
