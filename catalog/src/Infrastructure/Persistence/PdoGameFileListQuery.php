@@ -135,7 +135,7 @@ final class PdoGameFileListQuery
         return \catalog_all(
             $this->db,
             'SELECT f.id,f.package_name,f.original_name,COALESCE(SUM(s.missing_count),0) missing_count '
-            . 'FROM ue_files f LEFT JOIN ue_dependency_package_summaries s ON s.file_id=f.id '
+            . 'FROM ue_files f LEFT JOIN ue_uedb5_dependency_packages s ON s.file_id=f.id '
             . $whereSql . ' GROUP BY f.id,f.package_name,f.original_name' . $having
             . ' ORDER BY ' . CatalogKeysetPaginator::order($columns, $directions, $reverse)
             . ' LIMIT ' . $limit,
@@ -159,7 +159,7 @@ final class PdoGameFileListQuery
             . 'COALESCE(SUM(s.missing_count),0) missing_count,'
             . 'COALESCE(SUM(s.package_only_count),0) package_only_count,'
             . 'COALESCE(SUM(s.common_count),0) common_count '
-            . 'FROM ue_files f LEFT JOIN ue_dependency_package_summaries s ON s.file_id=f.id '
+            . 'FROM ue_files f LEFT JOIN ue_uedb5_dependency_packages s ON s.file_id=f.id '
             . 'WHERE f.id IN (' . $placeholders . ') GROUP BY f.id',
             $fileIds
         );
