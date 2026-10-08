@@ -65,10 +65,10 @@ final class CatalogAssetMetadataService
 
         $storageRoot = trim((string)($this->config['storage_path'] ?? ''));
         if ($storageRoot === '') {
-            throw new RuntimeException('Catalog storage_path is required for compact asset metadata reading.');
+            throw new RuntimeException('Catalog storage_path is required for UEDB5 asset metadata reading.');
         }
-        $snapshot = (new BlockedCompressedMetadataSnapshotLoader($this->db, $storageRoot))->load($fileId);
-        $exports = array_values((array)($snapshot['exports'] ?? []));
+        $snapshot = (new Uedb5MetadataReader($storageRoot))->snapshot((int)$file['game_id'], $fileId);
+        $exports = Uedb5ClassicDependencyResolver::exportCoverageRows($snapshot);
         $insertAsset = $this->db->prepare(
             'INSERT IGNORE INTO ue_asset_registry_assets('
             . 'file_id,object_path,package_name,package_path,asset_name,asset_class'
@@ -81,7 +81,8 @@ final class CatalogAssetMetadataService
         $redirectors = 0;
 
         foreach ($exports as $export) {
-            $objectPath = trim((string)($export['full_path'] ?? ''));
+            $localPath = trim((string)($export['local_path'] ?? ''));
+            $objectPath = $localPath !== '' ? $packageName . '.' . $localPath : '';
             $assetName = trim((string)($export['object_name'] ?? ''));
             if ($objectPath === '' || $assetName === '') {
                 continue;
