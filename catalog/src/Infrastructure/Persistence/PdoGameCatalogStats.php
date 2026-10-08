@@ -119,11 +119,9 @@ final class PdoGameCatalogStats
             . 'COALESCE(SUM(s.resolved_count),0) resolved_dependency_count,'
             . 'COALESCE(SUM(s.package_only_count),0) package_only_dependency_count,'
             . 'COALESCE(SUM(s.common_count),0) common_dependency_count,'
-            . 'COUNT(DISTINCT CASE WHEN s.missing_count>0 THEN s.required_package END) missing_package_count '
-            . 'FROM ue_dependency_package_summaries s '
+            . 'COUNT(DISTINCT CASE WHEN s.missing_count>0 THEN s.required_package_name END) missing_package_count '
+            . 'FROM ue_uedb5_dependency_packages s '
             . 'JOIN ue_files f ON f.id=s.file_id AND f.game_id=s.game_id AND f.scan_status="verified" '
-            . 'JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version='
-            . \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer::FORMAT_VERSION . ' '
             . 'WHERE s.game_id=?'
         );
         $dependencyStatement->execute([$gameId]);
@@ -178,10 +176,8 @@ final class PdoGameCatalogStats
             // equality keys on both sides of one bounded derived-table join.
             $statement = $this->db->prepare(
                 'SELECT COALESCE(SUM(s.missing_count),0) '
-                . 'FROM ue_dependency_package_summaries s '
+                . 'FROM ue_uedb5_dependency_packages s '
                 . 'JOIN ue_files f ON f.id=s.file_id AND f.game_id=s.game_id AND f.scan_status="verified" '
-                . 'JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version='
-                . \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer::FORMAT_VERSION . ' '
                 . 'JOIN ('
                 . 'SELECT game_id,dependency_package_key package_key '
                 . 'FROM ue_base_game_files WHERE dependency_package_key<>"" '
@@ -196,7 +192,7 @@ final class PdoGameCatalogStats
                 . 'SELECT bg.game_id,src.dependency_original_stem_key package_key '
                 . 'FROM ue_base_game_files bg JOIN ue_files src ON src.id=bg.source_file_id '
                 . 'WHERE src.dependency_original_stem_key<>""'
-                . ') base_keys ON base_keys.game_id=s.game_id AND base_keys.package_key=s.required_package '
+                . ') base_keys ON base_keys.game_id=s.game_id AND base_keys.package_key=s.required_package_name '
                 . 'WHERE s.game_id=? AND s.missing_count>0'
             );
             $statement->execute([$gameId]);
@@ -206,22 +202,20 @@ final class PdoGameCatalogStats
         // Upgrade compatibility until the performance migration has been run.
         $statement = $this->db->prepare(
             'SELECT COALESCE(SUM(s.missing_count),0) '
-            . 'FROM ue_dependency_package_summaries s '
+            . 'FROM ue_uedb5_dependency_packages s '
             . 'JOIN ue_files f ON f.id=s.file_id AND f.game_id=s.game_id AND f.scan_status="verified" '
-            . 'JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version='
-            . \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer::FORMAT_VERSION . ' '
             . 'WHERE s.game_id=? AND s.missing_count>0 AND EXISTS ('
             . 'SELECT 1 FROM ue_base_game_files bg '
             . 'LEFT JOIN ue_files src ON src.id=bg.source_file_id '
             . 'WHERE bg.game_id=s.game_id AND ('
-            . 'LOWER(TRIM(COALESCE(bg.package_name,"")))=LOWER(TRIM(s.required_package)) '
+            . 'LOWER(TRIM(COALESCE(bg.package_name,"")))=LOWER(TRIM(s.required_package_name)) '
             . 'OR LOWER(TRIM(CASE WHEN LOCATE(".",COALESCE(bg.original_name,""))>0 '
             . 'THEN LEFT(bg.original_name,CHAR_LENGTH(bg.original_name)-CHAR_LENGTH(SUBSTRING_INDEX(bg.original_name,".",-1))-1) '
-            . 'ELSE COALESCE(bg.original_name,"") END))=LOWER(TRIM(s.required_package)) '
-            . 'OR LOWER(TRIM(COALESCE(src.package_name,"")))=LOWER(TRIM(s.required_package)) '
+            . 'ELSE COALESCE(bg.original_name,"") END))=LOWER(TRIM(s.required_package_name)) '
+            . 'OR LOWER(TRIM(COALESCE(src.package_name,"")))=LOWER(TRIM(s.required_package_name)) '
             . 'OR LOWER(TRIM(CASE WHEN LOCATE(".",COALESCE(src.original_name,""))>0 '
             . 'THEN LEFT(src.original_name,CHAR_LENGTH(src.original_name)-CHAR_LENGTH(SUBSTRING_INDEX(src.original_name,".",-1))-1) '
-            . 'ELSE COALESCE(src.original_name,"") END))=LOWER(TRIM(s.required_package))'
+            . 'ELSE COALESCE(src.original_name,"") END))=LOWER(TRIM(s.required_package_name))'
             . '))'
         );
         $statement->execute([$gameId]);
