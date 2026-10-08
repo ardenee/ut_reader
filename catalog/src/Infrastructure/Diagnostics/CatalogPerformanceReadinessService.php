@@ -52,7 +52,7 @@ final class CatalogPerformanceReadinessService
     {
         $requiredTables = [
             'ue_game_catalog_stats',
-            'ue_dependency_package_summaries',
+            'ue_uedb5_dependency_packages',
             'ue_exact_count_telemetry',
             'ue_exact_count_query_plans',
             'ue_exact_count_cache',
