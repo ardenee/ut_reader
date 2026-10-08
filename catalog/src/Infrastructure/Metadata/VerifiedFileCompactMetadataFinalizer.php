@@ -1,9 +1,9 @@
 <?php
 /**
- * UnrealDB PHP File Audit
- * Purpose: Ensures every verified package uses the authoritative current metadata container.
- * Why: Parsed package metadata is published directly from reader output and no retired SQL metadata staging is written.
- * Role: Infrastructure verified-import compact metadata finalizer.
+ * Finalizes verified files by publishing authoritative UEDB5 metadata.
+ *
+ * The legacy method names are retained for scanner/import callers, but there is
+ * no UEDB4 verification, publication, repair, or fallback path.
  */
 declare(strict_types=1);
 
@@ -12,34 +12,20 @@ namespace UnrealDb\Catalog\Infrastructure\Metadata;
 use PDO;
 use RuntimeException;
 use Throwable;
-use UnrealDb\Catalog\Infrastructure\Persistence\PdoContention;
 
 final class VerifiedFileCompactMetadataFinalizer
 {
-    private const PUBLICATION_CONTENTION_ATTEMPTS = 5;
-
     /** @var array<int,array<string,mixed>> */
     private static array $maintenanceBaselines = [];
 
-    /**
-     * Scope an already validated maintenance snapshot to one synchronous reimport.
-     *
-     * Full Sync captures this before the parser runs. It allows finalizeParsed()
-     * to compare package-owned metadata without re-reading or rewriting an
-     * unchanged .uedb4. A corrupt/missing compact file deliberately has no
-     * baseline, which forces publication from parser output.
-     *
-     * @param array<string,mixed> $snapshot
-     */
+    /** @param array<string,mixed> $snapshot */
     public static function setMaintenanceBaseline(int $fileId, array $snapshot): void
     {
-        $file = is_array($snapshot['file'] ?? null) ? $snapshot['file'] : [];
-        $metadata = is_array($snapshot['metadata'] ?? null) ? $snapshot['metadata'] : [];
-        if ($fileId < 1
-            || (int)($file['id'] ?? 0) !== $fileId
-            || (int)($metadata['file']['id'] ?? 0) !== $fileId) {
-            throw new RuntimeException('Maintenance compact metadata baseline identity mismatch.');
+        if ($fileId < 1) {
+            throw new RuntimeException('Maintenance metadata baseline requires a positive file ID.');
         }
+        // Retained only as caller-compatible maintenance scope. UEDB5 publication
+        // reparses authoritative source bytes and does not trust a V4 baseline.
         self::$maintenanceBaselines[$fileId] = $snapshot;
     }
 
@@ -49,8 +35,6 @@ final class VerifiedFileCompactMetadataFinalizer
     }
 
     /**
-     * Verify an already-published current metadata result.
-     *
      * @param array<int|string,mixed> $result
      * @return array<int|string,mixed>
      */
@@ -60,50 +44,13 @@ final class VerifiedFileCompactMetadataFinalizer
         array $result,
         ?callable $progress = null
     ): array {
-        if ((string)($result[0] ?? '') !== 'verified') {
-            return $result;
-        }
-
-        $fileId = self::fileId($result);
-        $storageRoot = self::storageRoot($config);
-        VerifiedMetadataPublicationState::pending($db, $fileId);
-        self::emit($progress, 99, 'Verifying compact metadata for file #' . $fileId);
-
-        try {
-            $statement = $db->prepare('SELECT format_version FROM ue_file_metadata WHERE file_id=?');
-            $statement->execute([$fileId]);
-            $formatVersion = (int)($statement->fetchColumn() ?: 0);
-            if ($formatVersion !== BlockedCompressedMetadataContainer::FORMAT_VERSION) {
-                throw new RuntimeException(
-                    'Verified file #' . $fileId . ' has no current format-' . BlockedCompressedMetadataContainer::FORMAT_VERSION . ' metadata.'
-                );
-            }
-            $conversion = (new BlockedCompressedMetadataReader($db, $storageRoot))->verify($fileId);
-            $conversion['already_compact'] = true;
-        } catch (Throwable $error) {
-            VerifiedMetadataPublicationState::failed($db, $fileId, $error->getMessage());
-            self::recordFailure($db, $fileId, $error->getMessage());
-            throw new RuntimeException(
-                'Compact metadata verification failed for verified file #' . $fileId . ': '
-                . $error->getMessage(),
-                0,
-                $error
-            );
-        }
-
-        VerifiedMetadataPublicationState::ready($db, $fileId);
-        return self::complete($result, $conversion, $progress);
+        return self::publish($db, $config, $result, $progress);
     }
 
     /**
-     * Publish parser output only when package-owned metadata changed or the
-     * existing compact container could not be validated before reimport.
-     *
-     * New imports have no maintenance baseline and therefore always publish.
-     * Normal maintenance reparses may reuse an unchanged validated container.
-     * Full Sync passes resolveDependencies=false. UT3/UE3 may use a narrow
-     * source-refresh publisher when parser/search structure is unchanged; all
-     * other cases retain the complete unresolved-dependency publication path.
+     * Parser rows remain accepted for compatibility with the import pipeline.
+     * UEDB5 is rebuilt from authoritative source bytes so game-specific summary,
+     * FName, compression and dependency-source fields are never lost.
      *
      * @param array<int|string,mixed> $result
      * @param array<int,mixed> $names
@@ -121,203 +68,42 @@ final class VerifiedFileCompactMetadataFinalizer
         ?callable $progress = null,
         bool $resolveDependencies = true
     ): array {
+        unset($names, $imports, $exports, $resolveDependencies);
+        return self::publish($db, $config, $result, $progress);
+    }
+
+    /**
+     * @param array<int|string,mixed> $result
+     * @return array<int|string,mixed>
+     */
+    private static function publish(PDO $db, array $config, array $result, ?callable $progress): array
+    {
         if ((string)($result[0] ?? '') !== 'verified') {
             return $result;
         }
 
         $fileId = self::fileId($result);
-        $storageRoot = self::storageRoot($config);
         VerifiedMetadataPublicationState::pending($db, $fileId);
-        self::emit($progress, 99, 'Reconciling compact metadata for verified file #' . $fileId);
+        self::emit($progress, 99, 'Publishing UEDB5 metadata for file #' . $fileId);
 
         try {
-            $statement = $db->prepare(
-                'SELECT f.id,f.game_id,f.package_name,f.original_name,f.scan_status,f.package_version,'
-                . 'UPPER(TRIM(COALESCE(p.engine_key,""))) engine_key,LOWER(TRIM(g.slug)) game_slug '
-                . 'FROM ue_files f JOIN ue_games g ON g.id=f.game_id '
-                . 'LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 '
-                . 'WHERE f.id=?'
-            );
-            $statement->execute([$fileId]);
-            $file = $statement->fetch(PDO::FETCH_ASSOC);
-            if (!is_array($file) || (string)($file['scan_status'] ?? '') !== 'verified') {
-                throw new RuntimeException('Verified file row is unavailable during compact metadata publication.');
+            $conversion = (new Uedb5VerifiedFilePublisher($db, $config))->publish($fileId);
+            if (empty($conversion['verified'])
+                || (int)($conversion['format_version'] ?? 0) !== Uedb5MetadataContainer::FORMAT_VERSION) {
+                throw new RuntimeException('Verified file publication did not return UEDB5 format version 5.');
             }
-
-            $builder = new CatalogParsedPackageMetadataSnapshotBuilder($db, $config);
-            $parsed = $builder->buildParsedSections(
-                $fileId,
-                (int)$file['game_id'],
-                (string)$file['package_name'],
-                (string)$file['original_name'],
-                $names,
-                $imports,
-                $exports
-            );
-
-            $baseline = self::$maintenanceBaselines[$fileId] ?? null;
-            $baselineMetadata = is_array($baseline)
-                && is_array($baseline['metadata'] ?? null)
-                ? $baseline['metadata']
-                : null;
-
-            $sameContent = is_array($baselineMetadata)
-                && CatalogParsedPackageMetadataSnapshotBuilder::parsedContentFingerprint($parsed)
-                    === CatalogParsedPackageMetadataSnapshotBuilder::parsedContentFingerprint($baselineMetadata);
-            $sameStructure = is_array($baselineMetadata)
-                && CatalogParsedPackageMetadataSnapshotBuilder::parsedStructureFingerprint($parsed)
-                    === CatalogParsedPackageMetadataSnapshotBuilder::parsedStructureFingerprint($baselineMetadata);
-            $narrowUe3FullSync = !$resolveDependencies
-                && $sameStructure
-                && (string)($file['engine_key'] ?? '') === 'UE3'
-                && (string)($file['game_slug'] ?? '') === 'ut3'
-                && self::ue3NarrowProjectionAvailable(
-                    $db,
-                    $fileId,
-                    count((array)$parsed['names']),
-                    count((array)$parsed['exports'])
-                );
-
-            if ($resolveDependencies && $sameContent) {
-                $registration = is_array($baseline['registration'] ?? null)
-                    ? $baseline['registration']
-                    : [];
-                $conversion = [
-                    'verified' => true,
-                    'file_id' => $fileId,
-                    'format_version' => BlockedCompressedMetadataContainer::FORMAT_VERSION,
-                    'compressed_size' => (int)($registration['compressed_size'] ?? 0),
-                    'uncompressed_size' => (int)($registration['uncompressed_size'] ?? 0),
-                    'name_count' => count((array)$parsed['names']),
-                    'import_count' => count((array)$parsed['imports']),
-                    'export_count' => count((array)$parsed['exports']),
-                    'already_compact' => true,
-                    'reused_unchanged' => true,
-                    'republished_from_parser' => false,
-                ];
-            } else {
-                $snapshot = $resolveDependencies
-                    ? $builder->withDependencies($parsed)
-                    : $builder->withUnresolvedDependencies($parsed);
-                if ($narrowUe3FullSync) {
-                    self::emit($progress, 99, 'Publishing narrow UT3 identity refresh for file #' . $fileId);
-                    $conversion = (new BlockedCompressedMetadataSnapshotWriter($db, $storageRoot))
-                        ->writeUe3FullSyncSourceRefresh(
-                            $snapshot,
-                            isset($file['package_version']) ? (int)$file['package_version'] : null
-                        );
-                } else {
-                    $conversion = self::publishWithContentionRetry(
-                        $db,
-                        $storageRoot,
-                        $snapshot,
-                        $fileId,
-                        $progress
-                    );
-                }
-                $conversion['already_compact'] = false;
-                $conversion['reused_unchanged'] = false;
-                $conversion['republished_from_parser'] = true;
-                $conversion['dependencies_deferred'] = !$resolveDependencies;
-                $conversion['narrow_ue3_full_sync'] = $narrowUe3FullSync;
-            }
-
-            if (
-                empty($conversion['verified'])
-                || (int)($conversion['format_version'] ?? 0) !== BlockedCompressedMetadataContainer::FORMAT_VERSION
-            ) {
-                throw new RuntimeException('Compact metadata reconciliation did not return format version ' . BlockedCompressedMetadataContainer::FORMAT_VERSION . '.');
-            }
+            VerifiedMetadataPublicationState::ready($db, $fileId);
+            return self::complete($result, $conversion, $progress);
         } catch (Throwable $error) {
             VerifiedMetadataPublicationState::failed($db, $fileId, $error->getMessage());
             self::recordFailure($db, $fileId, $error->getMessage());
             throw new RuntimeException(
-                'Imported file #' . $fileId . ' was stored, but direct compact metadata publication failed: '
-                . $error->getMessage(),
+                'UEDB5 metadata publication failed for verified file #' . $fileId . ': ' . $error->getMessage(),
                 0,
                 $error
             );
-        }
-
-        VerifiedMetadataPublicationState::ready($db, $fileId);
-        return self::complete($result, $conversion, $progress);
-    }
-
-    private static function ue3NarrowProjectionAvailable(
-        PDO $db,
-        int $fileId,
-        int $expectedNames,
-        int $expectedExports
-    ): bool {
-        if ($fileId < 1 || $expectedNames < 0 || $expectedExports < 0) {
-            return false;
-        }
-        $statement = $db->prepare(
-            'SELECT '
-            . '(SELECT COUNT(*) FROM ue_export_path_lookup WHERE file_id=?) path_rows,'
-            . '(SELECT MIN(export_index) FROM ue_export_path_lookup WHERE file_id=?) min_path_index,'
-            . '(SELECT MAX(export_index) FROM ue_export_path_lookup WHERE file_id=?) max_path_index,'
-            . '(SELECT COUNT(*) FROM ue_export_path_lookup '
-            . ' WHERE file_id=? AND path_hash_ci IS NOT NULL AND local_path_term_id IS NOT NULL) path_term_rows,'
-            . '(SELECT COUNT(*) FROM ue_export_lookup WHERE file_id=?) export_rows,'
-            . '(SELECT COUNT(*) FROM ue_export_lookup '
-            . ' WHERE file_id=? AND object_term_id IS NOT NULL AND local_path_term_id IS NOT NULL) export_term_rows,'
-            . '(SELECT COUNT(*) FROM ue_name_lookup WHERE file_id=?) name_rows,'
-            . '(SELECT COUNT(*) FROM ue_name_lookup WHERE file_id=? AND name_term_id IS NOT NULL) name_term_rows'
-        );
-        $statement->execute([
-            $fileId, $fileId, $fileId, $fileId,
-            $fileId, $fileId, $fileId, $fileId,
-        ]);
-        $row = $statement->fetch(PDO::FETCH_ASSOC) ?: [];
-        if ((int)($row['path_rows'] ?? -1) !== $expectedExports
-            || (int)($row['path_term_rows'] ?? -1) !== $expectedExports
-            || (int)($row['export_rows'] ?? -1) !== $expectedExports
-            || (int)($row['export_term_rows'] ?? -1) !== $expectedExports
-            || (int)($row['name_rows'] ?? -1) !== $expectedNames
-            || (int)($row['name_term_rows'] ?? -1) !== $expectedNames) {
-            return false;
-        }
-        if ($expectedExports === 0) {
-            return true;
-        }
-        return (int)($row['min_path_index'] ?? -1) === 0
-            && (int)($row['max_path_index'] ?? -1) === $expectedExports - 1;
-    }
-
-    /**
-     * The snapshot writer owns the complete SQL transaction and restores the
-     * previous .uedb4 file on failure, so retry the whole publication rather than
-     * retrying individual projection statements inside a rolled-back transaction.
-     *
-     * @param array<string,mixed> $snapshot
-     * @return array<string,mixed>
-     */
-    private static function publishWithContentionRetry(
-        PDO $db,
-        string $storageRoot,
-        array $snapshot,
-        int $fileId,
-        ?callable $progress
-    ): array {
-        for ($attempt = 1; ; $attempt++) {
-            try {
-                return (new BlockedCompressedMetadataSnapshotWriter($db, $storageRoot))->write($snapshot);
-            } catch (Throwable $error) {
-                if (!PdoContention::retryable($error) || $attempt >= self::PUBLICATION_CONTENTION_ATTEMPTS) {
-                    throw $error;
-                }
-
-                $nextAttempt = $attempt + 1;
-                self::emit(
-                    $progress,
-                    99,
-                    'Compact metadata database contention for file #' . $fileId
-                    . '; retrying publication (' . $nextAttempt . '/'
-                    . self::PUBLICATION_CONTENTION_ATTEMPTS . ').'
-                );
-                usleep(PdoContention::backoffMicros($attempt, 25000));
-            }
+        } finally {
+            self::clearMaintenanceBaseline($fileId);
         }
     }
 
@@ -331,50 +117,33 @@ final class VerifiedFileCompactMetadataFinalizer
         return $fileId;
     }
 
-    /** @param array<string,mixed> $config */
-    private static function storageRoot(array $config): string
-    {
-        $storageRoot = trim((string)($config['storage_path'] ?? ''));
-        if ($storageRoot === '') {
-            throw new RuntimeException('Catalog storage_path is required for compact metadata finalisation.');
-        }
-        return $storageRoot;
-    }
-
     /**
      * @param array<int|string,mixed> $result
      * @param array<string,mixed> $conversion
      * @return array<int|string,mixed>
      */
-    private static function complete(
-        array $result,
-        array $conversion,
-        ?callable $progress
-    ): array {
+    private static function complete(array $result, array $conversion, ?callable $progress): array
+    {
         $fileId = self::fileId($result);
         $message = trim((string)($result[2] ?? ''));
-        $suffix = 'compact metadata=v' . BlockedCompressedMetadataContainer::FORMAT_VERSION;
+        $suffix = 'metadata=v' . Uedb5MetadataContainer::FORMAT_VERSION;
         if (array_key_exists('block_count', $conversion)) {
             $suffix .= ', blocks=' . (int)$conversion['block_count'];
-        }
-        if (!empty($conversion['reused_unchanged'])) {
-            $suffix .= ', reused=unchanged';
         }
         if ($message === '' || !str_contains($message, $suffix)) {
             $result[2] = $message !== '' ? $message . '; ' . $suffix : $suffix;
         }
 
         $details = is_array($result[4] ?? null) ? $result[4] : [];
-        $details['metadata_format_version'] = BlockedCompressedMetadataContainer::FORMAT_VERSION;
+        $details['metadata_format_version'] = Uedb5MetadataContainer::FORMAT_VERSION;
         $details['metadata_block_count'] = (int)($conversion['block_count'] ?? 0);
         $details['metadata_compressed_size'] = (int)($conversion['compressed_size'] ?? 0);
-        $details['metadata_already_compact'] = !empty($conversion['already_compact']);
-        $details['metadata_reused_unchanged'] = !empty($conversion['reused_unchanged']);
-        $details['metadata_republished_from_parser'] = !empty($conversion['republished_from_parser']);
-        $details['metadata_dependencies_deferred'] = !empty($conversion['dependencies_deferred']);
+        $details['metadata_source_policy'] = (string)($conversion['source_policy'] ?? '');
+        $details['metadata_dependencies_deferred'] = false;
+        $details['metadata_republished_from_parser'] = false;
         $result[4] = $details;
 
-        self::emit($progress, 100, 'Verified compact metadata for file #' . $fileId);
+        self::emit($progress, 100, 'Published UEDB5 metadata for file #' . $fileId);
         return $result;
     }
 
@@ -384,17 +153,14 @@ final class VerifiedFileCompactMetadataFinalizer
             $statement = $db->prepare(
                 'UPDATE ue_files SET scan_notes=CONCAT_WS("\n",NULLIF(scan_notes,""),?) WHERE id=?'
             );
-            $statement->execute([
-                'Compact metadata finalisation failed: ' . trim($message),
-                $fileId,
-            ]);
+            $statement->execute(['UEDB5 metadata finalisation failed: ' . trim($message), $fileId]);
         } catch (Throwable $recordError) {
             error_log(
-                '[UnrealDB compact metadata] file_id=' . $fileId
+                '[UnrealDB UEDB5 metadata] file_id=' . $fileId
                 . ' could not record failure: ' . $recordError->getMessage()
             );
         }
-        error_log('[UnrealDB compact metadata] file_id=' . $fileId . ' finalisation failed: ' . $message);
+        error_log('[UnrealDB UEDB5 metadata] file_id=' . $fileId . ' finalisation failed: ' . $message);
     }
 
     private static function emit(?callable $progress, int $percent, string $message): void
@@ -403,7 +169,7 @@ final class VerifiedFileCompactMetadataFinalizer
             return;
         }
         $progress([
-            'stage' => 'compact_metadata',
+            'stage' => 'uedb5_metadata',
             'done' => max(0, min(100, $percent)),
             'total' => 100,
             'percent' => max(0, min(100, $percent)),
