@@ -13,7 +13,8 @@ declare(strict_types=1);
 require_once __DIR__ . '/lib/CatalogSupport.php';
 require_once __DIR__ . '/lib/CatalogUpkPackage.php';
 
-use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataSnapshotLoader;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5MetadataReader;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5UpkExportRows;
 
 catalog_start_session();
 
@@ -61,8 +62,8 @@ try {
     if ($storageRoot === '') {
         throw new RuntimeException('Catalog storage_path is required for compact UPK metadata reading.');
     }
-    $snapshot = (new BlockedCompressedMetadataSnapshotLoader($db, $storageRoot))->load($fileId);
-    $allExports = array_values((array)($snapshot['exports'] ?? []));
+    $snapshot = (new Uedb5MetadataReader($storageRoot))->snapshot((int)$upk["game_id"], $fileId);
+    $allExports = Uedb5UpkExportRows::fromSnapshot($snapshot);
     usort(
         $allExports,
         static fn(array $left, array $right): int => (int)($left['export_index'] ?? 0) <=> (int)($right['export_index'] ?? 0)
