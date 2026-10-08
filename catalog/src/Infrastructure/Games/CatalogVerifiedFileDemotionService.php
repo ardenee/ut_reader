@@ -72,7 +72,7 @@ final class CatalogVerifiedFileDemotionService
         $packageName = trim((string)($file['package_name'] ?? ''));
         $originalName = trim((string)($file['original_name'] ?? '')) ?: basename($sourcePath);
         $sourceRelativePath = CatalogFileMaintenanceSupport::sourceRelativePath($rollbackState);
-        $oldMetadataPath = CatalogFileMaintenanceSupport::metadataPath($this->config, $sourceGameId, $fileId);
+        $oldMetadataPath = CatalogFileMaintenanceSupport::uedb5MetadataPath($this->config, $sourceGameId, $fileId);
         $affectedIds = $support->affectedIds($sourceGameId, $fileId, $packageName, false);
 
         $directory = CatalogUnverifiedQueueStorage::uploadBucketDirectory($this->config, true);
@@ -137,7 +137,6 @@ final class CatalogVerifiedFileDemotionService
                 \catalog_package_aliases_ensure($this->db);
                 $this->db->prepare('DELETE FROM ue_file_package_aliases WHERE file_id=?')->execute([$fileId]);
             }
-            $this->db->prepare('DELETE FROM ue_file_metadata WHERE file_id=?')->execute([$fileId]);
             $this->db->prepare(
                 'UPDATE ue_files SET metadata_status="ready",metadata_error=NULL,metadata_updated_at=UTC_TIMESTAMP() WHERE id=?'
             )->execute([$fileId]);
