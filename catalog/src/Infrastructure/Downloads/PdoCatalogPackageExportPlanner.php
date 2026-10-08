@@ -11,7 +11,7 @@ namespace UnrealDb\Catalog\Infrastructure\Downloads;
 
 use PDO;
 use RuntimeException;
-use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyReadSource;
+use UnrealDb\Catalog\Infrastructure\Metadata\CatalogCompactDependencyReadService;
 
 final class PdoCatalogPackageExportPlanner
 {
@@ -73,7 +73,7 @@ final class PdoCatalogPackageExportPlanner
         $provenance = [];
         $totalBytes = 0;
         $transitive = !empty($settings['include_transitive']);
-        $dependencySource = PdoDependencyReadSource::sql($this->db);
+        $dependencyReader = new CatalogCompactDependencyReadService($this->db, $this->config);
         $overrides = is_array($settings['dependency_file_overrides'] ?? null) ? $settings['dependency_file_overrides'] : [];
         $reportConflicts = !empty($settings['report_dependency_conflicts']);
 
@@ -130,14 +130,7 @@ final class PdoCatalogPackageExportPlanner
                 continue;
             }
 
-            $dependencies = \catalog_all(
-                $this->db,
-                'SELECT d.id,d.required_package,d.required_object_path,d.resolved_file_id,d.status '
-                . 'FROM ' . $dependencySource . ' d '
-                . 'WHERE d.file_id=? '
-                . 'ORDER BY d.required_package,d.required_object_path,d.id',
-                [$fileId]
-            );
+            $dependencies = $dependencyReader->rows($fileId);
             foreach ($dependencies as $dependency) {
                 $status = (string)$dependency['status'];
                 $resolvedId = $dependency['resolved_file_id'] !== null
