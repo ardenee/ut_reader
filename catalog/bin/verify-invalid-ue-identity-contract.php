@@ -51,8 +51,8 @@ $record(
 );
 $record(
     'dependency_object_coverage_excludes_invalid_bytes',
-    substr_count($coverage, 'ue_invalid_file_identities') >= 2
-        && str_contains($coverage, 'NOT EXISTS'),
+    str_contains($coverage, 'FROM ue_uedb5_provider_keys p')
+        && str_contains($coverage, 'NOT EXISTS (SELECT 1 FROM ue_invalid_file_identities bad'),
     'Object-level complete-provider selection must exclude invalid byte identities.'
 );
 $record(
@@ -67,14 +67,15 @@ $record(
     'Bulk invalid marking must require --apply, retire the catalog row, remove metadata projections, and invalidate affected V5 dependency passes.'
 );
 $record(
-    'invalid_retirement_removes_both_metadata_generations',
+    'invalid_retirement_removes_v5_metadata_only',
     str_contains($marker, 'uedb5MetadataPath')
-        && str_contains($marker, 'Could not remove UEDB4 metadata')
+        && !str_contains($marker, 'Could not remove UEDB4 metadata')
+        && !str_contains($marker, 'ue_dependency_links')
         && str_contains($marker, 'Could not remove UEDB5 metadata')
         && str_contains($finalizer, 'uedb5MetadataPath')
         && str_contains($support, "DELETE FROM ue_uedb5_files WHERE file_id=?")
         && str_contains($support, "DELETE FROM ue_uedb5_migration_status WHERE file_id=?"),
-    'Invalid retirement must remove V4/V5 files and per-file V5 registration/status rather than leave staged debris.'
+    'Invalid retirement must remove V5 metadata/registration/status and avoid legacy V4 tables.'
 );
 $record(
     'invalid_catalog_row_is_deleted_but_identity_survives',
