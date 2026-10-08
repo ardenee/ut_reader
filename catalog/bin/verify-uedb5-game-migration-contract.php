@@ -37,7 +37,11 @@ $check('legacy_builders_have_no_private_game_version_bounds',
 $check('preflight_reports_version_distribution',str_contains($service,'package_version_distribution'));
 $check('preflight_reports_unsupported_files',str_contains($service,'unsupported_source_files'));
 $check('preflight_sql_has_no_literal_quote_backslashes',!str_contains($service,'scan_status=\\\"verified\\\"'));
-$check('preflight_reports_missing_v4_files',str_contains($service,'missing_v4_files')&&str_contains($service,'v4_ready'));
+$check('preflight_uses_source_profile_without_v4_registration',
+    str_contains($service, "'source_ready' => ") && str_contains($service, '$profileRejectedCount === 0')
+    && str_contains($cli, "'source_ready'")
+    && !str_contains($service, 'ue_file_metadata')
+    && !str_contains($service, 'v4_ready'));
 $check('ue5_game_version_gate_is_profile_owned',str_contains($factory,"'ue5' => ['engine_key'=>'UE5']")
     &&!str_contains($factory,"'min_version'=>1000")&&!str_contains($factory,"'max_version'=>1018"));
 $check('ue5_classic_uses_assigned_parser_profile',str_contains($factory,'catalog_ue5_reader_options')&&str_contains($factory,'catalog_ue5_set_next_reader_options'));

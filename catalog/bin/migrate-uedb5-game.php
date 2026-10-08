@@ -50,7 +50,7 @@ if($fileId>0 && !$apply){
 if($workers>1 && $workerIndex===null && !isset($options['preflight'])){
     echo json_encode(['status'=>'pool_preflight_start','workers'=>$workers,'game_id'=>$gameId],JSON_UNESCAPED_SLASHES),PHP_EOL; fflush(STDOUT);
     $parentPreflight=$service->preflight($gameId);
-    if(empty($parentPreflight['v4_ready'])){ throw new RuntimeException('Game failed V4 readiness preflight before worker launch.'); }
+    if(empty($parentPreflight['source_ready'])){ throw new RuntimeException('Verified files failed source-profile readiness before V5 worker launch.'); }
     echo json_encode([
         'status'=>'pool_preflight_complete','workers'=>$workers,'game_id'=>$gameId,
         'source_key'=>$parentPreflight['source_key']??null,

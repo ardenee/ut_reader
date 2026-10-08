@@ -37,7 +37,7 @@ final class Uedb5GameSourceMigrationService
     {
         $game = $this->game($gameId);
         foreach ([
-            'ue_file_metadata','ue_uedb5_files','ue_uedb5_provider_keys','ue_uedb5_search_keys',
+            'ue_uedb5_files','ue_uedb5_provider_keys','ue_uedb5_search_keys',
             'ue_uedb5_name_candidates','ue_uedb5_object_candidates','ue_uedb5_dependency_edges',
             'ue_uedb5_dependency_packages',
         ] as $table) {
@@ -49,26 +49,13 @@ final class Uedb5GameSourceMigrationService
         }
         $statement = $this->db->prepare(
             'SELECT COUNT(*) verified_count,'
-            . 'SUM(CASE WHEN m.format_version=4 THEN 1 ELSE 0 END) v4_count,'
             . 'SUM(CASE WHEN v.file_id IS NOT NULL THEN 1 ELSE 0 END) staged_count '
-            . 'FROM ue_files f LEFT JOIN ue_file_metadata m ON m.file_id=f.id '
-            . 'LEFT JOIN ue_uedb5_files v ON v.file_id=f.id '
+            . 'FROM ue_files f LEFT JOIN ue_uedb5_files v ON v.file_id=f.id AND v.game_id=f.game_id '
             . 'WHERE f.game_id=? AND f.scan_status="verified"'
         );
         $statement->execute([(int)$game['id']]);
         $counts = $statement->fetch(PDO::FETCH_ASSOC) ?: [];
         $verified = (int)($counts['verified_count'] ?? 0);
-        $v4 = (int)($counts['v4_count'] ?? 0);
-        $missingV4 = [];
-        if ($v4 !== $verified) {
-            $missingStatement = $this->db->prepare(
-                'SELECT f.id,f.original_name,f.package_version FROM ue_files f '
-                . 'LEFT JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=4 '
-                . 'WHERE f.game_id=? AND f.scan_status="verified" AND m.file_id IS NULL ORDER BY f.id LIMIT 50'
-            );
-            $missingStatement->execute([(int)$game['id']]);
-            $missingV4 = $missingStatement->fetchAll(PDO::FETCH_ASSOC) ?: [];
-        }
         $contract = $this->sourceContract((int)$game['id']);
         $profileRejectedCount = 0;
         $profileRejectedFiles = [];
@@ -95,9 +82,7 @@ final class Uedb5GameSourceMigrationService
         return [
             'game' => $game,
             'verified_count' => $verified,
-            'v4_count' => $v4,
-            'v4_ready' => $v4 === $verified,
-            'missing_v4_files' => $missingV4,
+            'source_ready' => $profileRejectedCount === 0,
             'staged_count' => (int)($counts['staged_count'] ?? 0),
             'unsupported_source_version_count' => $profileRejectedCount,
             'unsupported_source_files' => $profileRejectedFiles,
@@ -125,10 +110,11 @@ final class Uedb5GameSourceMigrationService
         bool $skipPreflight = false
     ): array {
         if ($emit) { $emit(['status'=>'worker_boot','worker_count'=>$workerCount,'worker_index'=>$workerIndex]); }
-        $preflight = $skipPreflight ? ['game'=>$this->game($gameId),'v4_ready'=>true,'worker_preflight_skipped'=>true] : $this->preflight($gameId);
-        if (empty($preflight['v4_ready'])) {
-            $ids = array_map(static fn(array $row): int => (int)($row['id'] ?? 0), (array)($preflight['missing_v4_files'] ?? []));
-            throw new RuntimeException('Every verified file must retain a live UEDB4 registration before staging V5. Missing V4 file IDs: ' . implode(',', array_filter($ids)));
+        $preflight = $skipPreflight
+            ? ['game'=>$this->game($gameId),'source_ready'=>true,'worker_preflight_skipped'=>true]
+            : $this->preflight($gameId);
+        if (empty($preflight['source_ready'])) {
+            throw new RuntimeException('Verified source files do not all satisfy the game source profile; review unsupported_source_files before V5 staging.');
         }
         $game = (array)$preflight['game'];
         $limit = max(1, min(5000, $limit));
@@ -209,7 +195,7 @@ final class Uedb5GameSourceMigrationService
         $statement = $this->db->prepare(
             'SELECT f.id,f.game_id,f.package_name,f.original_name,f.stored_name,f.relative_path,'
             . 'f.file_size,f.md5,f.sha1,f.package_version,f.licensee_version '
-            . 'FROM ue_files f JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=4 '
+            . 'FROM ue_files f '
             . 'WHERE f.id=? AND f.game_id=? AND f.scan_status="verified" LIMIT 1'
         );
         $statement->execute([$fileId, $gameId]);
@@ -289,8 +275,8 @@ final class Uedb5GameSourceMigrationService
     ): ?int {
         $statement = $this->db->prepare(
             'SELECT MIN(f.id) FROM ue_files f '
-            . 'JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=4 '
-            . 'LEFT JOIN ue_uedb5_files v ON v.file_id=f.id '
+            . ''
+            . 'LEFT JOIN ue_uedb5_files v ON v.file_id=f.id AND v.game_id=f.game_id '
             . 'WHERE f.game_id=? AND f.scan_status="verified" AND v.file_id IS NULL '
             . 'AND MOD(f.id,?)=?'
         );
@@ -309,8 +295,8 @@ final class Uedb5GameSourceMigrationService
     ): array {
         $sql = 'SELECT f.id,f.game_id,f.package_name,f.original_name,f.stored_name,f.relative_path,'
             . 'f.file_size,f.md5,f.sha1,f.package_version,f.licensee_version '
-            . 'FROM ue_files f JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=4 '
-            . 'LEFT JOIN ue_uedb5_files v ON v.file_id=f.id '
+            . 'FROM ue_files f '
+            . 'LEFT JOIN ue_uedb5_files v ON v.file_id=f.id AND v.game_id=f.game_id '
             . 'WHERE f.game_id=? AND f.scan_status="verified" AND v.file_id IS NULL AND f.id>? '
             . 'AND MOD(f.id,?)=? ORDER BY f.id LIMIT ' . $limit;
         $statement = $this->db->prepare($sql);
