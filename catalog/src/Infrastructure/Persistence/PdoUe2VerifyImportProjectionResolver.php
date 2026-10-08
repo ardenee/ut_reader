@@ -6,7 +6,7 @@ namespace UnrealDb\Catalog\Infrastructure\Persistence;
 
 use PDO;
 use RuntimeException;
-use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataSnapshotLoader;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5RuntimeProviderSnapshotLoader;
 
 final class PdoUe2VerifyImportProjectionResolver
 {
@@ -23,7 +23,7 @@ final class PdoUe2VerifyImportProjectionResolver
         if(!function_exists('catalog_config'))throw new RuntimeException('Catalog configuration is required for authoritative UE2 VerifyImport resolution.');
         $storageRoot=trim((string)(\catalog_config()['storage_path']??''));
         if($storageRoot==='')throw new RuntimeException('Catalog storage_path is required for authoritative UE2 VerifyImport resolution.');
-        $snapshot=(new BlockedCompressedMetadataSnapshotLoader($db,$storageRoot))->load($providerFileId);
+        $snapshot=(new Uedb5RuntimeProviderSnapshotLoader($db,$storageRoot))->load($providerFileId);
         $file=(array)($snapshot['file']??[]);
         return self::resolveInMemoryOutcome(
             $profile,$consumerImports,array_values((array)($snapshot['imports']??[])),
