@@ -394,6 +394,30 @@ final class Uedb5ClassicDependencyResolver
     }
 
     /** @return array{names:array<int,array<string,mixed>>,imports:array<int,array<string,mixed>>,exports:array<int,array<string,mixed>>} */
+    public static function normalizedTables(array $snapshot): array
+    {
+        $engine = self::engine($snapshot);
+        $tables = self::tables($snapshot);
+        if ($engine === 'ue3') {
+            if (self::ut3NameMapApplies($snapshot)) {
+                $tables = self::applyUt3AllContextNameMap($tables);
+            }
+            $tables['imports'] = CatalogCompactIdentityEnricher::ue3FixupImportMap($tables['imports']);
+        } elseif ($engine === 'ue1') {
+            $profile = self::ue1VerifyImportProfile($snapshot);
+            if ($profile === PdoUe1VerifyImportProjectionResolver::PROFILE_UT99_V1400) {
+                $tables = self::applyLegacyAllContextNameMap($tables);
+            }
+        } elseif ($engine === 'ue2') {
+            $limit = self::ue2NameMapMaxCharacters($snapshot);
+            if ($limit !== false) {
+                $tables = self::applyLegacyAllContextNameMap($tables, $limit);
+            }
+        }
+        return $tables;
+    }
+
+    /** @return array{names:array<int,array<string,mixed>>,imports:array<int,array<string,mixed>>,exports:array<int,array<string,mixed>>} */
     private static function tables(array $snapshot): array
     {
         $sections = (array)($snapshot['sections'] ?? []);
