@@ -6,7 +6,7 @@ namespace UnrealDb\Catalog\Infrastructure\Persistence;
 
 use PDO;
 use RuntimeException;
-use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataSnapshotLoader;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5RuntimeProviderSnapshotLoader;
 
 final class PdoUe1VerifyImportProjectionResolver
 {
@@ -37,7 +37,7 @@ final class PdoUe1VerifyImportProjectionResolver
         if ($storageRoot === '') {
             throw new RuntimeException('Catalog storage_path is required for authoritative UE1 VerifyImport resolution.');
         }
-        $snapshot = (new BlockedCompressedMetadataSnapshotLoader($db, $storageRoot))->load($providerFileId);
+        $snapshot = (new Uedb5RuntimeProviderSnapshotLoader($db, $storageRoot))->load($providerFileId);
         $providerVersion = null;
         try {
             $statement = $db->prepare('SELECT package_version FROM ue_files WHERE id=? LIMIT 1');
