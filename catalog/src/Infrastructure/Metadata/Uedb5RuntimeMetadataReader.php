@@ -16,18 +16,27 @@ use RuntimeException;
 final class Uedb5RuntimeMetadataReader
 {
     private Uedb5MetadataReader $reader;
+    private Uedb5ParityV5ReadService $dependencyReader;
     /** @var array<int,int> */
     private array $gameIds = [];
 
     public function __construct(private readonly PDO $db, string $storageRoot)
     {
         $this->reader = new Uedb5MetadataReader($storageRoot);
+        $this->dependencyReader = new Uedb5ParityV5ReadService($db, ['storage_path' => $storageRoot]);
     }
 
     /** @return list<array<string,mixed>> */
     public function page(int $fileId, string $section, int $start, int $limit): array
     {
-        return $this->reader->page($this->gameId($fileId), $fileId, $section, $start, $limit);
+        $gameId = $this->gameId($fileId);
+        $start = max(0, $start);
+        $limit = max(1, min(5000, $limit));
+        if ($section === 'dependencies') {
+            return array_slice($this->dependencyRows($gameId, $fileId), $start, $limit);
+        }
+        $section = $this->sectionAlias($gameId, $fileId, $section);
+        return $this->reader->page($gameId, $fileId, $section, $start, $limit);
     }
 
     /** @param list<string> $values @return array<string,int> */
@@ -43,11 +52,14 @@ final class Uedb5RuntimeMetadataReader
         if ($wanted === []) {
             return [];
         }
+        $gameId = $this->gameId($fileId);
+        $section = $this->sectionAlias($gameId, $fileId, 'names');
         $found = [];
-        foreach ($this->reader->scan($this->gameId($fileId), $fileId, 'names') as $row) {
-            $key = $this->key((string)($row['name_text'] ?? ''));
+        foreach ($this->reader->scan($gameId, $fileId, $section) as $position => $row) {
+            $text = (string)($row['name_text'] ?? $row['text'] ?? $row['name'] ?? '');
+            $key = $this->key($text);
             if (isset($wanted[$key]) && !isset($found[$key])) {
-                $found[$key] = (int)($row['name_index'] ?? -1);
+                $found[$key] = (int)($row['name_index'] ?? $row['index'] ?? $position);
                 if (count($found) === count($wanted)) {
                     break;
                 }
@@ -121,13 +133,10 @@ final class Uedb5RuntimeMetadataReader
             return [];
         }
         $found = [];
-        foreach ($this->reader->scan($this->gameId($fileId), $fileId, 'dependencies') as $row) {
-            $index = (int)($row['import_index'] ?? -1);
+        foreach ($this->dependencyRows($this->gameId($fileId), $fileId) as $row) {
+            $index = (int)$row['import_index'];
             if (isset($wanted[$index])) {
                 $found[$index] = $row;
-                if (count($found) === count($wanted)) {
-                    break;
-                }
             }
         }
         return $found;
@@ -152,6 +161,40 @@ final class Uedb5RuntimeMetadataReader
             'metadata_path' => (string)$verified['path'],
             'format_version' => Uedb5MetadataContainer::FORMAT_VERSION,
         ];
+    }
+
+
+    /** @return list<array<string,mixed>> */
+    private function dependencyRows(int $gameId, int $fileId): array
+    {
+        $rows = [];
+        foreach ($this->dependencyReader->dependencies($gameId, $fileId) as $row) {
+            $rows[] = [
+                'import_index' => (int)($row['source_index'] ?? -1),
+                'required_package' => (string)($row['required_package'] ?? ''),
+                'required_object_path' => (string)($row['required_object_path'] ?? ''),
+                'class_package' => (string)($row['class_package'] ?? ''),
+                'class_name' => (string)($row['class_name'] ?? ''),
+                'outcome' => (string)($row['outcome'] ?? ''),
+                'resolved_file_id' => $row['resolved_file_id'] ?? null,
+                'resolved_export_index' => $row['resolved_object_index'] ?? null,
+                'reason_code' => (string)($row['reason_code'] ?? ''),
+                'source_policy' => (string)($row['source_policy'] ?? ''),
+            ];
+        }
+        return $rows;
+    }
+
+    private function sectionAlias(int $gameId, int $fileId, string $section): string
+    {
+        $sections = array_fill_keys($this->reader->sectionNames($gameId, $fileId), true);
+        if (isset($sections[$section])) {
+            return $section;
+        }
+        if ($section === 'names' && isset($sections['name_map'])) {
+            return 'name_map';
+        }
+        throw new RuntimeException('UEDB5 file #' . $fileId . ' has no runtime section ' . $section . '.');
     }
 
     private function gameId(int $fileId): int
