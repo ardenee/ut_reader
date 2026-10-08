@@ -144,10 +144,8 @@ final class CatalogMisnamedFileScanJobHandler implements JobHandler
             . 'WHERE bg.game_id=f.game_id AND bg.source_file_id=f.id'
             . ') '
             . 'AND EXISTS ('
-            . 'SELECT 1 FROM ue_dependency_links d WHERE d.file_id=f.id '
-            . 'AND d.status=0 AND d.resolved_file_id IS NULL '
-            . 'AND d.required_package_term_id IS NOT NULL AND d.import_object_term_id IS NOT NULL '
-            . 'AND d.required_path_hash IS NOT NULL'
+            . 'SELECT 1 FROM ue_uedb5_dependency_packages p '
+            . 'WHERE p.file_id=f.id AND p.game_id=f.game_id AND p.missing_count>0'
             . ') ORDER BY f.id LIMIT ' . self::OWNER_BATCH_SIZE;
 
         $statement = $this->db->prepare($sql);
