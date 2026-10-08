@@ -50,14 +50,14 @@ final class PdoDependencySchemaManager
     public function ensure(): void
     {
         $requiredTables = [
-            'ue_file_metadata',
-            'ue_terms',
-            'ue_export_lookup',
-            'ue_export_path_lookup',
-            'ue_legacy_export_identity_lookup',
-            'ue_dependency_links',
-            'ue_dependency_identity_lookup',
-            'ue_package_providers',
+            'ue_uedb5_files',
+            'ue_uedb5_provider_keys',
+            'ue_uedb5_search_keys',
+            'ue_uedb5_name_candidates',
+            'ue_uedb5_object_candidates',
+            'ue_uedb5_dependency_edges',
+            'ue_uedb5_dependency_packages',
+            'ue_uedb5_migration_status',
             'ue_asset_registry_assets',
             'ue_asset_registry_tags',
             'ue_asset_registry_dependencies',
