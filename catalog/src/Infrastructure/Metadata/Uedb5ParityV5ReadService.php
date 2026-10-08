@@ -68,6 +68,44 @@ final class Uedb5ParityV5ReadService
     {
         $out=[];foreach($this->dependencies($gameId,$fileId) as $row)$out[(int)$row['source_index']]=$row;return$out;
     }
+
+    /** @param list<int> $indexes @return array<int,array<string,mixed>> */
+    public function dependenciesAtIndexes(int $gameId,int $fileId,array $indexes):array
+    {
+        $wanted=[];
+        foreach($indexes as $index){$index=(int)$index;if($index>=0)$wanted[$index]=true;}
+        if($wanted===[])return[];
+        $manifest=$this->reader->manifest($gameId,$fileId);
+        if(!array_key_exists('dependency_results',(array)($manifest['sections']??[])))return[];
+        $policy=(string)($manifest['source_policy']??'');$out=[];
+        try{
+            foreach($this->reader->rowsByPositions($gameId,$fileId,'dependency_results',array_keys($wanted)) as $position=>$raw){
+                $row=(array)$raw;
+                $sourceIndex=(int)($row['source_index']??$position);
+                if(!isset($wanted[$sourceIndex]))continue;
+                $selected=(array)($row['selected_provider_object']??[]);
+                $requiredPackage=$row['required_package_identity']??null;
+                $requiredObject=$row['required_object_identity']??null;
+                $out[$sourceIndex]=[
+                    'source_index'=>$sourceIndex,'source_section'=>(string)($row['source_section']??''),
+                    'outcome'=>(string)($row['outcome']??''),
+                    'required_package'=>is_array($requiredPackage)?(string)($requiredPackage['value']??''):(string)($row['required_package_id']??''),
+                    'required_object'=>is_array($requiredObject)?(string)($requiredObject['object_name']??''):(string)$requiredObject,
+                    'required_object_path'=>is_array($requiredObject)?(string)($requiredObject['object_path']??''):(string)($row['required_object_path']??''),
+                    'class_package'=>is_array($requiredObject)?(string)($requiredObject['class_package']??''):'',
+                    'class_name'=>is_array($requiredObject)?(string)($requiredObject['class_name']??''):'',
+                    'resolved_file_id'=>isset($row['selected_provider_file_id'])?(int)$row['selected_provider_file_id']:null,
+                    'resolved_object_index'=>array_key_exists('export_index',$selected)?(int)$selected['export_index']:(array_key_exists('cell_export_index',$selected)?(int)$selected['cell_export_index']:null),
+                    'reason_code'=>(string)($row['reason_code']??''),'source_policy'=>(string)($row['source_policy']??$policy),
+                    'resolver_detail'=>(array)($row['resolver_detail']??[]),'hard'=>(bool)($row['hard']??false),
+                ];
+            }
+            ksort($out,SORT_NUMERIC);
+            return$out;
+        }finally{
+            $this->reader->clearCache($gameId,$fileId);
+        }
+    }
     /** @return list<int> */
     public function requiresFileIds(int $gameId,int $fileId):array
     {
