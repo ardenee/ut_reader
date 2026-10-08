@@ -23,7 +23,7 @@ final class Uedb5StagingIsolationContract
     /** @return list<string> */
     public static function liveReadOnlyTables(): array
     {
-        return ['ue_files', 'ue_games', 'ue_file_metadata'];
+        return ['ue_files', 'ue_games'];
     }
 
     /** @return list<string> */
@@ -47,7 +47,7 @@ final class Uedb5StagingIsolationContract
         $table = strtolower(trim($table, " \t\n\r\0\x0B`"));
         if (!in_array($table, self::allowedWriteTables(), true)) {
             throw new RuntimeException(
-                'UEDB5 staging may not write non-V5 table: ' . $table
+                'UEDB5 runtime may not write non-V5 metadata table: ' . $table
             );
         }
     }
@@ -58,11 +58,16 @@ final class Uedb5StagingIsolationContract
         int $gameId,
         int $fileId
     ): array {
-        $v4 = BlockedCompressedMetadataContainer::path($storageRoot, $gameId, $fileId);
+        $root = rtrim($storageRoot, "\\/");
+        if ($root === '' || $gameId < 1 || $fileId < 1) {
+            throw new RuntimeException('UEDB5 metadata path requires valid storage, game and file identities.');
+        }
+        $v4 = $root . DIRECTORY_SEPARATOR . 'metadata' . DIRECTORY_SEPARATOR . 'game-' . $gameId
+            . DIRECTORY_SEPARATOR . $fileId . '.uedb4';
         $v5 = Uedb5MetadataContainer::path($storageRoot, $gameId, $fileId);
         if ($v4 === $v5 || strtolower(pathinfo($v4, PATHINFO_EXTENSION)) !== 'uedb4'
             || strtolower(pathinfo($v5, PATHINFO_EXTENSION)) !== 'uedb5') {
-            throw new RuntimeException('UEDB5 staging path is not isolated from live UEDB4 metadata.');
+            throw new RuntimeException('UEDB5 metadata path collides with a retired UEDB4 path.');
         }
         return ['v4' => $v4, 'v5' => $v5];
     }
@@ -71,11 +76,10 @@ final class Uedb5StagingIsolationContract
     public static function rules(): array
     {
         return [
-            'live_uedb4_registration_is_read_only_during_staging',
-            'live_v4_projection_tables_are_read_only_during_staging',
-            'staged_sql_writes_use_only_ue_uedb5_tables',
-            'uedb5_file_path_must_not_replace_uedb4_file_path',
-            'cutover_is_the_only_step_allowed_to_replace_live_registration',
+            'runtime_metadata_writes_use_only_ue_uedb5_tables',
+            'retired_v4_projection_tables_are_never_written',
+            'uedb5_file_path_must_not_reuse_retired_uedb4_path',
+            'verified_runtime_metadata_is_uedb5_only',
         ];
     }
 }
