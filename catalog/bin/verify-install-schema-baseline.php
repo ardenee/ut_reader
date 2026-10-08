@@ -92,12 +92,33 @@ foreach (glob($root . '/migrations/*.php') ?: [] as $path) {
     $activeMigrationFiles[] = basename($path);
 }
 sort($activeMigrationFiles, SORT_STRING);
+$requiredPostBaselineMigrations = [
+    '202609250001_ue3_export_identity_projection.php',
+    '202609260001_class_remaps.php',
+    '202609300001_uedb5_staging_registration.php',
+    '202609300002_uedb5_migration_status.php',
+    '202610020001_uedb5_dependency_pass_status.php',
+];
 $record(
-    'no_post_baseline_migrations',
-    $activeMigrationFiles === [],
-    $activeMigrationFiles === [] ? 'none' : implode(', ', $activeMigrationFiles)
+    'known_post_baseline_migrations_present',
+    $activeMigrationFiles === $requiredPostBaselineMigrations,
+    $activeMigrationFiles === $requiredPostBaselineMigrations
+        ? 'five current migrations tracked'
+        : 'unexpected migration set: ' . implode(', ', $activeMigrationFiles)
 );
-
+$runnerInstance = new \UnrealDb\Catalog\Infrastructure\Persistence\MigrationRunner(
+    new PDO('sqlite::memory:'),
+    $root . '/migrations'
+);
+$discovered = $runnerInstance->discover();
+$record(
+    'migration_files_have_valid_versions_and_checksums',
+    count($discovered) === count($requiredPostBaselineMigrations)
+        && count(array_filter($discovered, static fn(array $migration): bool =>
+            is_string($migration['checksum']) && strlen($migration['checksum']) === 64
+        )) === count($requiredPostBaselineMigrations),
+    'runner verified migration definitions, unique versions, and SHA-256 checksums'
+);
 if ($withDatabase) {
     $db = catalog_db(catalog_config());
     $schema = new SchemaInspector($db);
