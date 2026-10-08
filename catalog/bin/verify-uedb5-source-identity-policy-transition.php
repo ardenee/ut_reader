@@ -25,6 +25,7 @@ $check('zen_is_excluded_from_classic_fname_transition',str_contains($impact,"UE5
 $check('impact_covers_provider_identity',str_contains($impact,'ue_uedb5_provider_keys')&&str_contains($impact,'ue_name_lookup')&&str_contains($impact,'provider_fname_normalization'));
 $check('impact_covers_php_trim_byte_set_and_complete_overflow_values',str_contains($impact,"TRIM_HEX = ['20','09','0A','0D','00','0B']")&&str_contains($impact,'HEX(RIGHT(')&&str_contains($impact,'t.is_overflow=1')&&str_contains($impact,'<>t.value_length')&&str_contains($overflow,'Stores complete values for compact terms longer than the historical 200-byte prefix.'));
 $check('impact_starts_from_exact_old_policy_file_ids_not_full_term_scan',str_contains($impact,'currentOldPolicyFiles')&&str_contains($impact,'file_id IN (')&&!str_contains($impact,'sensitiveTermIds'));
+$check('impact_query_includes_v12_and_bounds_provider_memory',str_contains($impact,"'uedb5-dependency-pass-v12'")&&str_contains($impact,'ambiguousProviderConsumerFiles')&&str_contains($impact,'providerSensitiveConsumerFiles')&&str_contains($impact,'providerRelationsChunk')&&!str_contains($impact,'$relations=$this->providerRelations($candidateIds)'));
 $check('policy_specific_rebuild_rules_are_preserved',
     str_contains($tool,"'uedb5-dependency-pass-v1'=>\$identityWhy")
     && str_contains($tool,"'uedb5-dependency-pass-v2'=>\$identityWithoutAmbiguity")
