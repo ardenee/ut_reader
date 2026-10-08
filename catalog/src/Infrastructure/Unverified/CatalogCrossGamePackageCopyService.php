@@ -120,18 +120,18 @@ final class CatalogCrossGamePackageCopyService
             $this->db,
             'SELECT f.id,f.game_id,f.package_name,f.original_name,f.relative_path,f.extension,f.file_size,'
             . 'f.md5,f.sha1,f.package_guid,f.detected_engine_key,f.detected_package_version,f.detected_licensee_version,'
-            . 'g.name source_game_name,COALESCE(p.engine_key,"") source_engine,m.format_version metadata_format_version '
+            . 'g.name source_game_name,COALESCE(p.engine_key,"") source_engine,v.format_version metadata_format_version '
             . 'FROM ue_files f '
             . 'JOIN ue_games g ON g.id=f.game_id '
             . 'LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 '
-            . 'LEFT JOIN ue_file_metadata m ON m.file_id=f.id '
+            . 'LEFT JOIN ue_uedb5_files v ON v.file_id=f.id AND v.game_id=f.game_id '
             . 'WHERE f.id=? AND f.scan_status="verified" LIMIT 1',
             [$sourceFileId]
         );
         if (!$source || (int)$source['game_id'] === $targetGameId) {
             return null;
         }
-        if ((int)($source['metadata_format_version'] ?? 0) !== 3) {
+        if ((int)($source['metadata_format_version'] ?? 0) !== 5) {
             return null;
         }
 
