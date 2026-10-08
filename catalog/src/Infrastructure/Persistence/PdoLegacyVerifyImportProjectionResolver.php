@@ -12,7 +12,7 @@ namespace UnrealDb\Catalog\Infrastructure\Persistence;
 
 use PDO;
 use RuntimeException;
-use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataSnapshotLoader;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5RuntimeProviderSnapshotLoader;
 
 final class PdoLegacyVerifyImportProjectionResolver
 {
@@ -33,7 +33,7 @@ final class PdoLegacyVerifyImportProjectionResolver
         if ($storageRoot === '') {
             throw new RuntimeException('Catalog storage_path is required for authoritative VerifyImport resolution.');
         }
-        $snapshot = (new BlockedCompressedMetadataSnapshotLoader($db, $storageRoot))->load($providerFileId);
+        $snapshot = (new Uedb5RuntimeProviderSnapshotLoader($db, $storageRoot))->load($providerFileId);
         $file = (array)($snapshot['file'] ?? []);
         return self::resolveInMemoryVariants($consumerImports, (array)($snapshot['imports'] ?? []), (array)($snapshot['exports'] ?? []), (string)($file['package_name'] ?? ''), $classRemaps);
     }
