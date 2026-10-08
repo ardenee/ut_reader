@@ -72,3 +72,11 @@ The internal file-ID cursor advances past failures, so one bad file cannot trap 
 `--sync-only` reconciles existing catalogue state into durable statuses. This backfills files staged before the Step 8 table existed without reparsing them merely to create status rows.
 
 Step 6 also writes `staged` or `failed` status directly when the Step 8 table exists. Pass-1 failures without a V5 registration remain durably `failed`; they are not silently converted back to `pending` by reconciliation.
+
+### Resumable Step 8 repair of already-staged V5 files
+
+`catalog/bin/repair-uedb5-staged.php --game=ut2004 --limit=50 --apply` processes a bounded set of **staged V5 files only**. It validates an unchanged snapshot directly; when a known historical UE1/UE2 summary field is missing, or the authoritative source validator reports `source_snapshot_mismatch`, it backs up that one `.uedb5` file, reruns source-backed Pass 1, refreshes V5 Pass 2 dependencies, and records full Step 8 validation. Successful backups are deleted; a backup path is reported if a repair fails. No V4 container or V4 lookup table is consulted.
+
+Omit `--apply` for a read-only diagnostic. Use `--limit=N` (maximum 500) to bound each invocation and `--after=FILE_ID` for explicit cursor navigation. Without `--after`, repeated invocations automatically select the next staged files, because validated files are excluded. Failure states are deliberately not automatically retried. Inspect and address those separately; a failure must never be silently marked validated. The source parser and Epic-backed validation checks remain mandatory.
+
+UT2004's explicit game-profile compatibility allowance for legacy UE1 texture packages uses the UE1 reader and a distinct V5 source-policy identifier, rather than forcing a UE2 parse or broadening accepted versions.
