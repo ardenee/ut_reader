@@ -286,7 +286,7 @@ final class CatalogVerifiedFileReassignmentService
         $fileId = (int)$source['id'];
         $sourceGameId = (int)$source['game_id'];
         $packageName = trim((string)($source['package_name'] ?? ''));
-        $metadataPath = CatalogFileMaintenanceSupport::metadataPath($this->config, $sourceGameId, $fileId);
+        $metadataPath = CatalogFileMaintenanceSupport::uedb5MetadataPath($this->config, $sourceGameId, $fileId);
         $affectedIds = $support->affectedIds($sourceGameId, $fileId, $packageName, false);
         $stagedPath = $sourcePath . '.moving-out-' . bin2hex(random_bytes(8));
         if (!@rename($sourcePath, $stagedPath)) {
@@ -299,7 +299,6 @@ final class CatalogVerifiedFileReassignmentService
             $this->db->prepare('DELETE FROM ue_dependency_package_summaries WHERE file_id=?')->execute([$fileId]);
             \catalog_package_aliases_ensure($this->db);
             $this->db->prepare('DELETE FROM ue_file_package_aliases WHERE file_id=?')->execute([$fileId]);
-            $this->db->prepare('DELETE FROM ue_file_metadata WHERE file_id=?')->execute([$fileId]);
             $statement = $this->db->prepare(
                 'DELETE FROM ue_files WHERE id=? AND game_id=? AND scan_status="verified"'
             );
