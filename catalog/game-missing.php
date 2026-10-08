@@ -54,9 +54,9 @@ function gm_ue4_evidence_html(array $e):string
     $out='<div class="gm-evidence gm-evidence--'.catalog_h($verdict).'">';
     $out.='<div class="gm-evidence__headline"><strong>'.catalog_h(gm_evidence_verdict_label($verdict)).'</strong><span>'.catalog_h((string)($e['reason_label']??$reason)).'</span></div>';
     $out.='<p>'.catalog_h((string)($e['explanation']??'')).'</p>';
-    $compact=(array)($e['compact_dependency']??[]);$compactStatus=(string)($compact['status']??'(not recorded)');$compactSource=(string)($compact['resolution_source']??'');$compactConfidence=(string)($compact['resolution_confidence']??'');$sqlStatus=$e['sql_status']??null;$sqlLabel=$sqlStatus===0?'missing (0)':($sqlStatus===null?'not recorded':(string)$sqlStatus);
+    $compact=(array)($e['compact_dependency']??[]);$compactStatus=(string)($compact['outcome']??'(not recorded)');$compactSource=(string)($compact['reason_code']??'');$compactConfidence=(string)($compact['source_policy']??'');$sqlStatus=$e['sql_status']??null;$sqlLabel=$sqlStatus===0?'missing (0)':($sqlStatus===null?'not recorded':(string)$sqlStatus);
     $compactDetail=implode(' · ',array_values(array_filter([$compactStatus,$compactSource,$compactConfidence],static fn(string $v):bool=>$v!=='')));
-    $out.='<div class="gm-evidence-grid"><div><b>Persistence</b><br>SQL '.catalog_h($sqlLabel).' · UEDB4 '.catalog_h($compactDetail).'</div>';
+    $out.='<div class="gm-evidence-grid"><div><b>Persistence</b><br>SQL '.catalog_h($sqlLabel).' · UEDB5 '.catalog_h($compactDetail).'</div>';
     $class=implode('.',array_values(array_filter([(string)($target['class_package']??''),(string)($target['class_name']??'')],static fn(string $v):bool=>$v!=='')));
     $out.='<div><b>Serialized Import #'.(int)($e['import_index']??-1).'</b><br>'.catalog_h((string)($target['object_name']??'')).' · '.catalog_h($class).' · OuterIndex '.(int)($target['outer_index']??0).'</div></div>';
     $chain=[];foreach((array)($e['serialized_outer_chain']??[]) as $node){if(!is_array($node))continue;$chain[]=ucfirst((string)($node['kind']??'resource')).' #'.(int)($node['index']??-1).' '.(string)($node['object_name']??'').' [outer '.(int)($node['outer_index']??0).']';}

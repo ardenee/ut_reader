@@ -65,8 +65,8 @@ function catalog_dependency_evidence_reason_label(string $reason):string
         'object_redirector_ancestor_target_unavailable'=>'Outer ObjectRedirector destination payload unavailable',
         'v4_package_context_unavailable'=>'UEDB4 PackageName context unavailable',
         'exact_match'=>'Current resolver finds an exact match',
-        'compact_not_missing'=>'UEDB4 does not classify this Import as missing',
-        'compact_dependency_missing'=>'UEDB4 dependency row is unavailable',
+        'compact_not_missing'=>'UEDB5 does not classify this Import as missing',
+        'compact_dependency_missing'=>'UEDB5 dependency row is unavailable',
         'sql_dependency_missing'=>'SQL dependency row is unavailable',
         'unclassified'=>'Unclassified VerifyImport rejection',
         default=>$reason!==''?$reason:'Unknown rejection',
@@ -89,8 +89,8 @@ function catalog_dependency_evidence_reason_explanation(string $reason,array $de
         'object_redirector_ancestor_target_unavailable'=>'An outer Import reaches ObjectRedirector; UE4 needs DestinationObject before descendant resolution can continue. This is payload-unresolved, not proven missing.',
         'v4_package_context_unavailable'=>'The deterministic UE4 branch requires FObjectImport::PackageName, which UEDB4 does not retain. This is metadata-unresolved, not proven missing.',
         'exact_match'=>'The current UE4 resolver finds this Import at export #'.(int)($detail['export_index']??-1).' in the selected provider. A persisted missing row is therefore suspicious and should be rebuilt/investigated.',
-        'compact_not_missing'=>'The SQL missing projection disagrees with the UEDB4 dependency row. The dependency is not proven missing until that projection mismatch is resolved.',
-        'compact_dependency_missing'=>'The compact snapshot has no dependency row for this serialized Import. Treat this as metadata integrity work, not proof of a missing dependency.',
+        'compact_not_missing'=>'The SQL missing projection disagrees with the UEDB5 dependency row. The dependency is not proven missing until that projection mismatch is resolved.',
+        'compact_dependency_missing'=>'The authoritative V5 snapshot has no dependency row for this serialized Import. Treat this as metadata integrity work, not proof of a missing dependency.',
         'sql_dependency_missing'=>'The SQL dependency projection has no row for this serialized Import. Treat this as projection integrity work, not proof of a missing dependency.',
         default=>'The current UE4 resolver rejected this Import, but the diagnostic reason is not yet classified.',
     };
@@ -126,7 +126,10 @@ function catalog_ue4_missing_import_evidence(PDO $db,string $storageRoot,int $ga
     $v5Dependencies=(new \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5ParityV5ReadService($db,['storage_path'=>$storageRoot]))->dependenciesByIndex($gameId,$fileId);
     $target=null;$required=[];foreach($imports as $fallback=>$row){if(!is_array($row))continue;$idx=isset($row['import_index'])?(int)$row['import_index']:(int)$fallback;if($idx===$importIndex)$target=$row;if(strcasecmp(trim((string)($row['root_package']??'')),$requiredPackage)===0&&trim((string)($row['relative_object_path']??''))!=='')$required[]=$idx;}
     if(!is_array($target))throw new RuntimeException('Selected UE4 Import is not present in compact metadata.');
-    $sqlStatus=null;$s=$db->prepare('SELECT status FROM ue_dependency_links WHERE file_id=? AND import_index=? LIMIT 1');$s->execute([$fileId,$importIndex]);$v=$s->fetchColumn();if($v!==false)$sqlStatus=(int)$v;
+    $sqlStatus=null;
+    $s=$db->prepare('SELECT outcome FROM ue_uedb5_dependency_edges WHERE file_id=? AND source_kind=? AND source_index=? LIMIT 1');
+    $s->execute([$fileId,\UnrealDb\Catalog\Infrastructure\Metadata\Uedb5SqlProjectionContract::DEP_SOURCE_IMPORT,$importIndex]);
+    $v=$s->fetchColumn();if($v!==false)$sqlStatus=(int)$v;
     $compactDependency=$v5Dependencies[$importIndex]??null;
     $compactStatus=is_array($compactDependency)?trim((string)($compactDependency['outcome']??'')):'';
     $base=[
