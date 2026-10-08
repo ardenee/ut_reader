@@ -1181,21 +1181,6 @@ CREATE TABLE ue_download_audit (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 202608020001-004 and 202608030001: compressed per-file metadata and compact lookups.
-CREATE TABLE ue_file_metadata (
-  file_id BIGINT UNSIGNED NOT NULL,
-  format_version SMALLINT UNSIGNED NOT NULL,
-  codec TINYINT UNSIGNED NOT NULL,
-  compressed_size BIGINT UNSIGNED NOT NULL,
-  uncompressed_size BIGINT UNSIGNED NOT NULL,
-  payload_sha256 BINARY(32) NOT NULL,
-  name_count INT UNSIGNED NOT NULL,
-  import_count INT UNSIGNED NOT NULL,
-  export_count INT UNSIGNED NOT NULL,
-  created_at DATETIME NOT NULL,
-  updated_at DATETIME NOT NULL,
-  PRIMARY KEY (file_id),
-  CONSTRAINT fk_ue_file_metadata_file FOREIGN KEY (file_id) REFERENCES ue_files(id) ON DELETE CASCADE
-) ENGINE=InnoDB;
 
 CREATE TABLE ue_terms (
   id INT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -1208,53 +1193,8 @@ CREATE TABLE ue_terms (
   KEY idx_ue_terms_value_prefix (value_prefix(100))
 ) ENGINE=InnoDB;
 
-CREATE TABLE ue_name_lookup (
-  file_id BIGINT UNSIGNED NOT NULL,
-  name_index INT UNSIGNED NOT NULL,
-  name_term_id INT UNSIGNED NOT NULL,
-  PRIMARY KEY (file_id,name_index),
-  KEY idx_ue_name_lookup_term (name_term_id,file_id),
-  CONSTRAINT fk_ue_name_lookup_file FOREIGN KEY (file_id) REFERENCES ue_files(id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE ue_export_lookup (
-  file_id BIGINT UNSIGNED NOT NULL,
-  export_index INT UNSIGNED NOT NULL,
-  object_term_id INT UNSIGNED NOT NULL,
-  class_term_id INT UNSIGNED NULL,
-  path_hash BINARY(16) NOT NULL,
-  local_path_term_id INT UNSIGNED NULL,
-  PRIMARY KEY (file_id, export_index),
-  KEY idx_ue_export_lookup_object (object_term_id, file_id),
-  KEY idx_ue_export_lookup_path (path_hash, file_id),
-  KEY idx_ue_export_lookup_local_path (local_path_term_id, file_id, export_index)
-) ENGINE=InnoDB;
 
-CREATE TABLE ue_dependency_links (
-  file_id BIGINT UNSIGNED NOT NULL,
-  import_index INT UNSIGNED NOT NULL,
-  required_package_term_id INT UNSIGNED NOT NULL,
-  required_path_hash BINARY(16) NOT NULL,
-  required_object_term_id INT UNSIGNED NULL,
-  import_class_package_term_id INT UNSIGNED NULL,
-  import_class_name_term_id INT UNSIGNED NULL,
-  import_object_term_id INT UNSIGNED NULL,
-  resolved_file_id BIGINT UNSIGNED NULL,
-  resolved_export_index INT UNSIGNED NULL,
-  status TINYINT UNSIGNED NOT NULL,
-  resolution_source TINYINT UNSIGNED NOT NULL,
-  resolution_source_term_id INT UNSIGNED NULL,
-  resolution_confidence TINYINT UNSIGNED NOT NULL,
-  resolution_confidence_term_id INT UNSIGNED NULL,
-  PRIMARY KEY (file_id, import_index),
-  KEY idx_ue_dependency_required (required_package_term_id, status),
-  KEY idx_ue_dependency_resolved (resolved_file_id, resolved_export_index),
-  KEY idx_ue_dependency_source_term (resolution_source_term_id, file_id),
-  KEY idx_ue_dependency_confidence_term (resolution_confidence_term_id, file_id),
-  KEY idx_ue_dependency_file_status (file_id, status, required_package_term_id, import_index),
-  KEY idx_ue_dependency_object_term (required_object_term_id, status, file_id),
-  KEY idx_ue_dependency_import_object (import_object_term_id, file_id, import_index)
-) ENGINE=InnoDB;
 
 -- 202608060001: administrator-controlled background-job resource limits.
 CREATE TABLE ue_job_resource_limits (
@@ -1501,9 +1441,6 @@ ALTER TABLE ue_base_game_files
   ADD KEY idx_ue_base_game_dependency_package_key (game_id,dependency_package_key,id),
   ADD KEY idx_ue_base_game_dependency_stem_key (game_id,dependency_original_stem_key,id);
 
-ALTER TABLE ue_dependency_links
-  ADD KEY idx_ue_dependency_required_file (required_package_term_id,file_id),
-  ADD KEY idx_ue_dependency_resolved_file (resolved_file_id,file_id);
 
 ALTER TABLE ue_dependency_package_summaries
   ADD KEY idx_ue_dep_summary_game_missing_package
@@ -1645,47 +1582,7 @@ CREATE TABLE ue_package_provider_coverage_cache (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 202609240001 + 202609240002: UE1/UE2 VerifyImport and v4 identity projections.
-CREATE TABLE ue_legacy_export_identity_lookup (
-  file_id BIGINT UNSIGNED NOT NULL,
-  export_index INT UNSIGNED NOT NULL,
-  identity_hash BINARY(16) NOT NULL,
-  path_hash_ci BINARY(16) NULL,
-  object_term_id INT UNSIGNED NOT NULL,
-  class_package_term_id INT UNSIGNED NOT NULL,
-  class_name_term_id INT UNSIGNED NOT NULL,
-  outer_index INT NOT NULL,
-  object_flags BIGINT UNSIGNED NOT NULL DEFAULT 0,
-  PRIMARY KEY (file_id,export_index),
-  KEY idx_legacy_verify_identity (file_id,identity_hash,export_index),
-  KEY idx_legacy_verify_path (file_id,path_hash_ci,export_index)
-) ENGINE=InnoDB;
 
-CREATE TABLE ue_export_path_lookup (
-  file_id BIGINT UNSIGNED NOT NULL,
-  export_index INT UNSIGNED NOT NULL,
-  path_hash_ci BINARY(16) NOT NULL,
-  local_path_term_id INT UNSIGNED NOT NULL,
-  class_term_id INT UNSIGNED NULL,
-  class_package_term_id INT UNSIGNED NULL,
-  class_name_term_id INT UNSIGNED NULL,
-  object_flags BIGINT UNSIGNED NULL,
-  outer_index INT NULL,
-  PRIMARY KEY (file_id,export_index),
-  KEY idx_export_path_ci (path_hash_ci,file_id,export_index),
-  KEY idx_export_path_file_hash (file_id,path_hash_ci,export_index)
-) ENGINE=InnoDB;
 
-CREATE TABLE ue_dependency_identity_lookup (
-  file_id BIGINT UNSIGNED NOT NULL,
-  import_index INT UNSIGNED NOT NULL,
-  required_package_term_id INT UNSIGNED NOT NULL,
-  verify_identity_hash BINARY(16) NULL,
-  required_path_hash_ci BINARY(16) NOT NULL,
-  PRIMARY KEY (file_id,import_index),
-  KEY idx_dependency_verify_identity
-    (required_package_term_id,verify_identity_hash,file_id,import_index),
-  KEY idx_dependency_path_ci
-    (required_package_term_id,required_path_hash_ci,file_id,import_index)
-) ENGINE=InnoDB;
 
 SET FOREIGN_KEY_CHECKS = 1;

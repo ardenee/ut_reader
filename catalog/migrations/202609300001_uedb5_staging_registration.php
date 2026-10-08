@@ -7,29 +7,6 @@ return [
     'version' => '202609300001',
     'description' => 'Add side-by-side UEDB5 staging registration and minimal projection schema.',
     'up' => static function (PDO $db, SchemaInspector $schema): void {
-        // Prepare the live registration table for a later atomic V5 cutover without
-        // changing any current V4 rows or readers during this migration.
-        $schema->ensureColumn(
-            'ue_file_metadata',
-            'block_count',
-            'ALTER TABLE ue_file_metadata ADD COLUMN block_count INT UNSIGNED NULL AFTER export_count'
-        );
-        $schema->ensureColumn(
-            'ue_file_metadata',
-            'package_family',
-            'ALTER TABLE ue_file_metadata ADD COLUMN package_family VARCHAR(32) NULL AFTER block_count'
-        );
-        $schema->ensureColumn(
-            'ue_file_metadata',
-            'source_policy',
-            'ALTER TABLE ue_file_metadata ADD COLUMN source_policy VARCHAR(96) NULL AFTER package_family'
-        );
-        $schema->ensureColumn(
-            'ue_file_metadata',
-            'section_counts_json',
-            'ALTER TABLE ue_file_metadata ADD COLUMN section_counts_json JSON NULL AFTER source_policy'
-        );
-
         $schema->ensureTable(
             'ue_uedb5_files',
             'CREATE TABLE ue_uedb5_files ('

@@ -52,7 +52,6 @@ $requiredInstallFragments = [
     'ADD COLUMN metadata_status',
     'CREATE TABLE ue_unverified_pak_members',
     'dependency_package_key',
-    'idx_ue_dependency_required_file',
     'CREATE TABLE ue_geoip_country_ranges',
     'CREATE TABLE ue_access_events',
     'CREATE TABLE ue_site_blocked_ips',
@@ -62,10 +61,6 @@ $requiredInstallFragments = [
     'CREATE TABLE ue_invalid_file_identities',
     'CREATE TABLE ue_package_coverage_cache',
     'CREATE TABLE ue_package_provider_coverage_cache',
-    'CREATE TABLE ue_legacy_export_identity_lookup',
-    'path_hash_ci BINARY(16) NULL',
-    'CREATE TABLE ue_export_path_lookup',
-    'CREATE TABLE ue_dependency_identity_lookup',
 ];
 $missingFragments = [];
 foreach ($requiredInstallFragments as $fragment) {
@@ -79,6 +74,19 @@ $record(
     $missingFragments === [] ? 'all current baseline fragments present' : implode(', ', $missingFragments)
 );
 
+$retiredMetadataTables = [
+    'ue_file_metadata','ue_name_lookup','ue_export_lookup','ue_dependency_links',
+    'ue_legacy_export_identity_lookup','ue_export_path_lookup','ue_dependency_identity_lookup',
+];
+$retiredDefinitions = array_values(array_filter(
+    $retiredMetadataTables,
+    static fn(string $table): bool => str_contains($install, 'CREATE TABLE ' . $table . ' (')
+));
+$record(
+    'fresh_install_does_not_recreate_retired_metadata',
+    $retiredDefinitions === [],
+    $retiredDefinitions === [] ? 'all seven retired definitions absent' : implode(', ', $retiredDefinitions)
+);
 $activeMigrationFiles = [];
 foreach (glob($root . '/migrations/*.php') ?: [] as $path) {
     $activeMigrationFiles[] = basename($path);
@@ -157,15 +165,7 @@ if ($withDatabase) {
         ['ue_files', 'idx_ue_files_game_dependency_stem_key'],
         ['ue_base_game_files', 'idx_ue_base_game_dependency_package_key'],
         ['ue_base_game_files', 'idx_ue_base_game_dependency_stem_key'],
-        ['ue_dependency_links', 'idx_ue_dependency_required_file'],
-        ['ue_dependency_links', 'idx_ue_dependency_resolved_file'],
         ['ue_dependency_package_summaries', 'idx_ue_dep_summary_game_missing_package'],
-        ['ue_legacy_export_identity_lookup', 'idx_legacy_verify_identity'],
-        ['ue_legacy_export_identity_lookup', 'idx_legacy_verify_path'],
-        ['ue_export_path_lookup', 'idx_export_path_ci'],
-        ['ue_export_path_lookup', 'idx_export_path_file_hash'],
-        ['ue_dependency_identity_lookup', 'idx_dependency_verify_identity'],
-        ['ue_dependency_identity_lookup', 'idx_dependency_path_ci'],
     ];
     $missingIndexes = [];
     foreach ($requiredIndexes as [$table, $index]) {
