@@ -65,7 +65,7 @@ CSS;
         echo CatalogUi::alert('danger', 'Cross-game batch could not start', $error);
     }
 
-    echo '<p class="cross-note"><strong>What counts as a candidate:</strong> the target game must currently have a dependency marked missing for the package/object. The selected source game (same or earlier Unreal Engine generation) must contain a verified package with the same package identity and its current <span class="mono">ue_export_lookup.path_hash</span> must exactly match the missing dependency\'s <span class="mono">required_path_hash</span>. Package-version/profile ranges are not used to hide cross-game providers.</p>';
+    echo '<p class="cross-note"><strong>What counts as a candidate:</strong> the target game must currently have a dependency marked missing for the package/object. The selected source game (same or earlier Unreal Engine generation) must contain a verified package with the same package identity and its UEDB5 dependency and export identities must match the missing dependency. Package-version/profile ranges are not used to hide cross-game providers.</p>';
 
     echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Compare games</h2><p>Choose the game whose missing dependencies you want to repair.</p></div></div><div class="ui-section__body">';
     echo '<form class="cross-controls" method="get">';
