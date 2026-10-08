@@ -928,29 +928,6 @@ final class PdoDependencyResolver
                 continue;
             }
             $placeholders = self::placeholders(count($chunk));
-            try {
-                $rows = \catalog_all(
-                    $db,
-                    'SELECT p.package_name lookup_value,p.file_id,p.source_kind FROM ue_package_providers p '
-                    . 'JOIN ue_files f ON f.id=p.file_id AND f.game_id=p.game_id '
-                    . 'LEFT JOIN ue_file_package_aliases a ON p.source_kind="alias" AND a.id=p.source_id '
-                    . 'AND a.file_id=p.file_id AND a.game_id=p.game_id AND a.package_name=p.package_name '
-                    . 'WHERE p.game_id=? AND f.scan_status="verified" '
-                    . 'AND NOT EXISTS (SELECT 1 FROM ue_invalid_file_identities bad '
-                    . 'WHERE bad.file_size=f.file_size AND bad.md5=LOWER(f.md5) AND bad.sha1=LOWER(f.sha1)) '
-                    . 'AND p.package_name IN (' . $placeholders . ') '
-                    . 'AND ((p.source_kind="primary" AND f.package_name=p.package_name) '
-                    . 'OR (p.source_kind="alias" AND a.id IS NOT NULL)) '
-                    . 'ORDER BY p.package_name,(p.source_kind="primary") DESC,(p.file_id=?) DESC,p.provider_created_at DESC,p.source_id ASC',
-                    array_merge([$gameId], $chunk, [$fileId])
-                );
-            } catch (PDOException) {
-                $rows = [];
-            }
-            foreach ($rows as $row) {
-                self::collectPackageMatch($row, $matches, $exactFname);
-            }
-
             $missing = self::missingLookupValues($chunk, $matches, $exactFname);
             if ($missing !== []) {
                 $rows = \catalog_all(
@@ -998,29 +975,6 @@ final class PdoDependencyResolver
                 continue;
             }
             $placeholders = self::placeholders(count($chunk));
-            try {
-                $rows = \catalog_all(
-                    $db,
-                    'SELECT p.package_name lookup_value,p.file_id,p.source_kind FROM ue_package_providers p '
-                    . 'JOIN ue_files f ON f.id=p.file_id AND f.game_id=p.game_id '
-                    . 'LEFT JOIN ue_file_package_aliases a ON p.source_kind="alias" AND a.id=p.source_id '
-                    . 'AND a.file_id=p.file_id AND a.game_id=p.game_id AND a.package_name=p.package_name '
-                    . 'WHERE p.game_id=? AND f.scan_status="verified" '
-                    . 'AND NOT EXISTS (SELECT 1 FROM ue_invalid_file_identities bad '
-                    . 'WHERE bad.file_size=f.file_size AND bad.md5=LOWER(f.md5) AND bad.sha1=LOWER(f.sha1)) '
-                    . 'AND p.package_name IN (' . $placeholders . ') '
-                    . 'AND ((p.source_kind="primary" AND f.package_name=p.package_name) '
-                    . 'OR (p.source_kind="alias" AND a.id IS NOT NULL)) '
-                    . 'ORDER BY p.package_name,(p.source_kind="primary") DESC,(p.file_id=?) DESC,p.provider_created_at DESC,p.source_id ASC',
-                    array_merge([$gameId], $chunk, [$fileId])
-                );
-            } catch (PDOException) {
-                $rows = [];
-            }
-            foreach ($rows as $row) {
-                self::collectPackageCandidate($row, $candidates, $exactFname);
-            }
-
             $rows = \catalog_all(
                 $db,
                 'SELECT f.package_name lookup_value,f.id file_id,"primary" source_kind FROM ue_files f '
