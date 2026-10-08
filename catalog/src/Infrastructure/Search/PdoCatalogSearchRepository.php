@@ -66,16 +66,10 @@ final class PdoCatalogSearchRepository implements CatalogSearchRepository
         // paths use a trailing-wildcard prefix against indexed ue_terms.value_prefix,
         // then indexed term-id references in the compact projections. Filename/package
         // search above still supports prefix/contains matching.
-        $matches = [];
-        $rowLimit = min(self::MAX_ROWS, max(100, $limit * 12));
-        $this->collectExactMetadataMatches($gameId, $query, $rowLimit, $matches, $filters);
-        if (in_array('exports', $filters['fields'], true)) {
-            $this->collectExactQualifiedExportMatches($gameId, $query, $rowLimit, $matches, $filters['extensions']);
-        }
-        $this->collectDescendantMetadataMatches($gameId, $query, $rowLimit, $matches, $filters);
-        if (in_array('exports', $filters['fields'], true)) {
-            $this->collectQualifiedExportDescendantMatches($gameId, $query, $rowLimit, $matches, $filters['extensions']);
-        }
+        $needed = max(1, $limit - count($rowsById));
+        $rowLimit = min(self::MAX_ROWS, max(20, min(500, $needed * 3)));
+        $matches = (new Uedb5CatalogMetadataSearch($this->db))
+            ->findMatches($gameId, $query, $rowLimit, $filters);
         if ($matches === []) {
             return $base;
         }
@@ -349,28 +343,8 @@ final class PdoCatalogSearchRepository implements CatalogSearchRepository
             return self::$compactAvailability[$key];
         }
         try {
-            $columns = [];
-            if (in_array('names', $fields, true)) {
-                $columns[] = ['ue_name_lookup', 'name_term_id'];
-            }
-            if (in_array('exports', $fields, true)) {
-                $columns[] = ['ue_export_lookup', 'local_path_term_id'];
-            }
-            if (in_array('imports', $fields, true)) {
-                $columns[] = ['ue_dependency_links', 'import_object_term_id'];
-                $columns[] = ['ue_dependency_links', 'required_object_term_id'];
-            }
-            foreach ($columns as [$table, $column]) {
-                $statement = $this->db->prepare(
-                    'SELECT 1 FROM information_schema.COLUMNS '
-                    . 'WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=? AND COLUMN_NAME=? LIMIT 1'
-                );
-                $statement->execute([$table, $column]);
-                if ($statement->fetchColumn() === false) {
-                    return self::$compactAvailability[$key] = false;
-                }
-            }
-            return self::$compactAvailability[$key] = true;
+            return self::$compactAvailability[$key]
+                = (new Uedb5CatalogMetadataSearch($this->db))->available($fields);
         } catch (Throwable) {
             return self::$compactAvailability[$key] = false;
         }
