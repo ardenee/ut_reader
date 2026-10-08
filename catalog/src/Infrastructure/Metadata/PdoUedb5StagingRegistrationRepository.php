@@ -77,7 +77,7 @@ final class PdoUedb5StagingRegistrationRepository
     public function register(int $gameId, int $fileId): array
     {
         $row = $this->inspect($gameId, $fileId);
-        $this->assertLiveV4Registration($gameId, $fileId);
+        $this->assertVerifiedCatalogFile($gameId, $fileId);
         return $this->upsert($row);
     }
 
@@ -170,24 +170,17 @@ final class PdoUedb5StagingRegistrationRepository
         return [$kind, Uedb5SqlProjectionContract::classicPackageKeyBinary($packageName, $kind)];
     }
 
-    private function assertLiveV4Registration(int $gameId, int $fileId): void
+    private function assertVerifiedCatalogFile(int $gameId, int $fileId): void
     {
         $statement = $this->db->prepare(
-            'SELECT f.game_id,f.scan_status,m.format_version '
-            . 'FROM ue_files f LEFT JOIN ue_file_metadata m ON m.file_id=f.id '
-            . 'WHERE f.id=? LIMIT 1'
+            'SELECT game_id,scan_status FROM ue_files WHERE id=? LIMIT 1'
         );
         $statement->execute([$fileId]);
         $row = $statement->fetch(PDO::FETCH_ASSOC);
         if (!is_array($row)
             || (int)($row['game_id'] ?? 0) !== $gameId
             || (string)($row['scan_status'] ?? '') !== 'verified') {
-            throw new RuntimeException('UEDB5 staging registration requires the matching verified catalogue file.');
-        }
-        if ((int)($row['format_version'] ?? 0) !== BlockedCompressedMetadataContainer::FORMAT_VERSION) {
-            throw new RuntimeException(
-                'UEDB5 staging registration requires the live production registration to remain UEDB4.'
-            );
+            throw new RuntimeException('UEDB5 registration requires the matching verified catalogue file.');
         }
     }
 }
