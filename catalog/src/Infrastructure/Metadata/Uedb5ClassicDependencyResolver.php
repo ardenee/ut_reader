@@ -417,6 +417,102 @@ final class Uedb5ClassicDependencyResolver
         return $tables;
     }
 
+    /**
+     * Source-derived export coverage used by runtime package coverage analysis.
+     *
+     * @return list<array{export_index:int,local_path:string,object_name:string,class_package:string,class_name:string,object_flags:int}>
+     */
+    public static function exportCoverageRows(array $snapshot): array
+    {
+        $tables = self::normalizedTables($snapshot);
+        $packageName = (string)($snapshot['file']['package_name'] ?? '');
+        $rows = [];
+        foreach ($tables['exports'] as $exportIndex => $export) {
+            [$classPackage, $className] = self::coverageClassIdentity(
+                (array)$export,
+                $tables['imports'],
+                $tables['exports'],
+                $packageName
+            );
+            $rows[] = [
+                'export_index' => (int)$exportIndex,
+                'local_path' => self::coverageExportPath(
+                    (int)$exportIndex,
+                    $tables['imports'],
+                    $tables['exports']
+                ),
+                'object_name' => (string)($export['object_name'] ?? ''),
+                'class_package' => $classPackage,
+                'class_name' => $className,
+                'object_flags' => (int)($export['object_flags'] ?? 0),
+            ];
+        }
+        return $rows;
+    }
+
+    /** @return array{0:string,1:string} */
+    private static function coverageClassIdentity(
+        array $export,
+        array $imports,
+        array $exports,
+        string $providerPackageName
+    ): array {
+        $classIndex = (int)($export['class_index'] ?? 0);
+        if ($classIndex < 0) {
+            $classImport = $imports[-$classIndex - 1] ?? null;
+            if (!is_array($classImport)) {
+                return ['', ''];
+            }
+            $className = (string)($classImport['object_name'] ?? '');
+            $outer = (int)($classImport['outer_index'] ?? 0);
+            if ($outer < 0) {
+                $packageImport = $imports[-$outer - 1] ?? null;
+                return [
+                    is_array($packageImport) ? (string)($packageImport['object_name'] ?? '') : '',
+                    $className,
+                ];
+            }
+            return ['', $className];
+        }
+        if ($classIndex > 0) {
+            $classExport = $exports[$classIndex - 1] ?? null;
+            return [
+                $providerPackageName,
+                is_array($classExport) ? (string)($classExport['object_name'] ?? '') : '',
+            ];
+        }
+        return ['', 'Class'];
+    }
+
+    private static function coverageExportPath(int $exportIndex, array $imports, array $exports): string
+    {
+        $parts = [];
+        $seen = [];
+        $packageIndex = $exportIndex + 1;
+        while ($packageIndex !== 0 && count($parts) < 128) {
+            if (isset($seen[$packageIndex])) {
+                return '';
+            }
+            $seen[$packageIndex] = true;
+            if ($packageIndex > 0) {
+                $index = $packageIndex - 1;
+                $row = $exports[$index] ?? null;
+            } else {
+                $index = -$packageIndex - 1;
+                $row = $imports[$index] ?? null;
+            }
+            if (!is_array($row)) {
+                return '';
+            }
+            $name = trim((string)($row['object_name'] ?? ''));
+            if ($name !== '') {
+                $parts[] = $name;
+            }
+            $packageIndex = (int)($row['outer_index'] ?? 0);
+        }
+        return implode('.', array_reverse($parts));
+    }
+
     /** @return array{names:array<int,array<string,mixed>>,imports:array<int,array<string,mixed>>,exports:array<int,array<string,mixed>>} */
     private static function tables(array $snapshot): array
     {
