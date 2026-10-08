@@ -30,7 +30,8 @@ final class VerifiedCompactMetadataHealth
 
         try {
             $statement = $db->prepare(
-                'SELECT f.game_id,f.scan_status,v.format_version,v.payload_sha256,'
+                'SELECT f.game_id,f.scan_status,f.package_name catalog_package_name,'
+                . 'v.format_version,v.package_name metadata_package_name,v.payload_sha256,'
                 . 's.dependency_policy,s.dependency_payload_sha256 '
                 . 'FROM ue_files f '
                 . 'LEFT JOIN ue_uedb5_files v ON v.file_id=f.id AND v.game_id=f.game_id '
@@ -45,6 +46,14 @@ final class VerifiedCompactMetadataHealth
             $gameId = (int)($row['game_id'] ?? 0);
             if ($gameId < 1 || (int)($row['format_version'] ?? 0) !== Uedb5MetadataContainer::FORMAT_VERSION) {
                 throw new RuntimeException('File #' . $fileId . ' has no authoritative UEDB5 registration.');
+            }
+            if (!hash_equals(
+                (string)($row['catalog_package_name'] ?? ''),
+                (string)($row['metadata_package_name'] ?? '')
+            )) {
+                throw new RuntimeException(
+                    'File #' . $fileId . ' UEDB5 package identity does not match the catalogue package identity.'
+                );
             }
 
             $result = (new Uedb5MetadataReader($storageRoot))->verify($gameId, $fileId);
