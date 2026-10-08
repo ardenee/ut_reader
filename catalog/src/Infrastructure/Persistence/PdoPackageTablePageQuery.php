@@ -11,7 +11,7 @@ namespace UnrealDb\Catalog\Infrastructure\Persistence;
 
 use PDO;
 use RuntimeException;
-use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataReader;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5RuntimeMetadataReader;
 
 final class PdoPackageTablePageQuery
 {
@@ -20,7 +20,7 @@ final class PdoPackageTablePageQuery
     /** @var array<string,int> */
     private static array $formatCache = [];
 
-    /** @var array<string,BlockedCompressedMetadataReader> */
+    /** @var array<string,Uedb5RuntimeMetadataReader> */
     private static array $readerCache = [];
 
     /** @return array{index_column:string,count_column:string,columns:list<string>} */
@@ -87,7 +87,7 @@ final class PdoPackageTablePageQuery
         $page = max(1, min($page, $pages));
         $start = ($page - 1) * $pageSize;
         $fileId = (int)$file['id'];
-        $rows = self::withRecovery($db, $fileId, static fn(BlockedCompressedMetadataReader $reader): array =>
+        $rows = self::withRecovery($db, $fileId, static fn(Uedb5RuntimeMetadataReader $reader): array =>
             $reader->page($fileId, $table, $start, $pageSize)
         );
 
@@ -105,7 +105,7 @@ final class PdoPackageTablePageQuery
     /** @return array<int,array<string,mixed>> */
     public static function dependencyPage(PDO $db, int $fileId, int $start, int $limit): array
     {
-        $rows = self::withRecovery($db, $fileId, static fn(BlockedCompressedMetadataReader $reader): array =>
+        $rows = self::withRecovery($db, $fileId, static fn(Uedb5RuntimeMetadataReader $reader): array =>
             $reader->page($fileId, 'dependencies', max(0, $start), max(1, min(5000, $limit)))
         );
         $byIndex = [];
@@ -124,7 +124,7 @@ final class PdoPackageTablePageQuery
         return $values === [] ? [] : self::withRecovery(
             $db,
             $fileId,
-            static fn(BlockedCompressedMetadataReader $reader): array => $reader->findNameIndexes($fileId, $values)
+            static fn(Uedb5RuntimeMetadataReader $reader): array => $reader->findNameIndexes($fileId, $values)
         );
     }
 
@@ -138,7 +138,7 @@ final class PdoPackageTablePageQuery
         return self::withRecovery(
             $db,
             $fileId,
-            static fn(BlockedCompressedMetadataReader $reader): array => $reader->nameUsage($fileId, $names)
+            static fn(Uedb5RuntimeMetadataReader $reader): array => $reader->nameUsage($fileId, $names)
         );
     }
 
@@ -152,7 +152,7 @@ final class PdoPackageTablePageQuery
         $byIndex = self::withRecovery(
             $db,
             $fileId,
-            static fn(BlockedCompressedMetadataReader $reader): array =>
+            static fn(Uedb5RuntimeMetadataReader $reader): array =>
                 $reader->dependenciesForImportIndexes($fileId, $indexes)
         );
         $map = [];
@@ -167,30 +167,16 @@ final class PdoPackageTablePageQuery
 
     private static function withRecovery(PDO $db, int $fileId, callable $operation): mixed
     {
-        try {
-            return $operation(self::reader($db, $fileId));
-        } catch (\Throwable $error) {
-            $config = function_exists('catalog_config') ? \catalog_config() : [];
-            if (is_array($config)) {
-                \UnrealDb\Catalog\Infrastructure\Metadata\VerifiedCompactMetadataHealth::queueRepair(
-                    $db,
-                    $config,
-                    $fileId,
-                    null,
-                    $error
-                );
-            }
-            throw $error;
-        }
+        return $operation(self::reader($db, $fileId));
     }
 
-    private static function reader(PDO $db, int $fileId): BlockedCompressedMetadataReader
+    private static function reader(PDO $db, int $fileId): Uedb5RuntimeMetadataReader
     {
         if ($fileId < 1) {
             throw new RuntimeException('A positive verified file ID is required for compact metadata reads.');
         }
         $format = self::metadataFormat($db, $fileId);
-        if ($format !== \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer::FORMAT_VERSION) {
+        if ($format !== \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5MetadataContainer::FORMAT_VERSION) {
             throw new RuntimeException(
                 'Verified file #' . $fileId . ' is missing supported compact metadata; runtime legacy reads are disabled.'
             );
@@ -200,7 +186,7 @@ final class PdoPackageTablePageQuery
             throw new RuntimeException('Catalog storage_path is required for compact package table reads.');
         }
         $key = spl_object_id($db) . ':' . $storageRoot;
-        return self::$readerCache[$key] ??= new BlockedCompressedMetadataReader($db, $storageRoot);
+        return self::$readerCache[$key] ??= new Uedb5RuntimeMetadataReader($db, $storageRoot);
     }
 
     private static function metadataFormat(PDO $db, int $fileId): int
@@ -211,7 +197,7 @@ final class PdoPackageTablePageQuery
         }
         $statement = $db->prepare(
             'SELECT m.format_version FROM ue_files f '
-            . 'LEFT JOIN ue_file_metadata m ON m.file_id=f.id '
+            . 'LEFT JOIN ue_uedb5_files m ON m.file_id=f.id AND m.game_id=f.game_id '
             . 'WHERE f.id=? AND f.scan_status="verified"'
         );
         $statement->execute([$fileId]);
