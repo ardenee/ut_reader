@@ -94,7 +94,7 @@ final class CatalogCompactIdentityEnricher
         $snapshot['imports'] = $imports;
         $snapshot['exports'] = $exports;
         $snapshot['identity_schema'] = [
-            'format_version' => BlockedCompressedMetadataContainer::FORMAT_VERSION,
+            'format_version' => Uedb5MetadataContainer::FORMAT_VERSION,
             'verify_import_hash_algorithm' => CatalogUnrealIdentityHash::VERIFY_IMPORT_ALGORITHM,
             'object_path_hash_algorithm' => CatalogUnrealIdentityHash::OBJECT_PATH_ALGORITHM,
             'engine_key' => $engineKey,
