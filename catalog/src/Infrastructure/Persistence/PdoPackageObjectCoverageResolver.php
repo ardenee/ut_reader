@@ -5,35 +5,20 @@ namespace UnrealDb\Catalog\Infrastructure\Persistence;
 
 use PDO;
 use UnrealDb\Catalog\Infrastructure\Metadata\CatalogUnrealIdentityHash;
-
-require_once dirname(__DIR__) . '/Metadata/CatalogUnrealIdentityHash.php';
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5ClassicDependencyResolver;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5MetadataReader;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5SqlProjectionContract;
 
 /**
- * Diagnostic comparison of current-format package variants against a requested
- * object set. This is reporting/repair-analysis data only.
- *
- * Authoritative dependency resolution must never use these coverage results to
- * choose a physical provider. Epic selects a package/linker first; when the
- * catalogue contains several possible physical providers and runtime ordering
- * is unavailable, the source-faithful dependency result is unresolved.
+ * Evaluates candidate physical providers against required package-relative
+ * object paths using authoritative UEDB5 source-shaped exports.
  */
 final class PdoPackageObjectCoverageResolver
 {
-    private const MAX_PATHS_PER_QUERY = 250;
-
     /**
-     * @param list<string> $requiredObjectPaths Full or package-relative object paths.
-     * @return list<array{
-     *   file_id:int,
-     *   source:string,
-     *   required_count:int,
-     *   matched_count:int,
-     *   missing_count:int,
-     *   status:string,
-     *   matched_paths:list<string>,
-     *   missing_paths:list<string>,
-     *   matched_exports:array<string,int>
-     * }>
+     * @param list<string> $requiredObjectPaths
+     * @param array<string,mixed> $requiredClassesByPath
+     * @return list<array<string,mixed>>
      */
     public static function evaluate(
         PDO $db,
@@ -57,108 +42,69 @@ final class PdoPackageObjectCoverageResolver
             return [];
         }
 
+        $reader = new Uedb5MetadataReader(self::storageRoot());
         $matched = [];
         $matchedExports = [];
         foreach (array_keys($providers) as $fileId) {
             $matched[$fileId] = [];
             $matchedExports[$fileId] = [];
-        }
+            if ($requirements === []) {
+                continue;
+            }
+            try {
+                $snapshot = $reader->snapshot($gameId, (int)$fileId);
+                $exports = Uedb5ClassicDependencyResolver::exportCoverageRows($snapshot);
+            } catch (\Throwable $error) {
+                error_log(
+                    '[UnrealDB UEDB5 provider coverage] file_id=' . (int)$fileId
+                    . ' error=' . $error->getMessage()
+                );
+                continue;
+            } finally {
+                $reader->clearCache($gameId, (int)$fileId);
+            }
 
-        if ($requirements !== []) {
-            foreach (array_chunk($requirements, self::MAX_PATHS_PER_QUERY, true) as $chunk) {
-                $hashes = [];
-                foreach ($chunk as $key => $path) {
-                    $hash = CatalogUnrealIdentityHash::objectPathBinary($path);
-                    $hashes[bin2hex($hash)] = ['hash' => $hash, 'key' => $key];
+            foreach ($exports as $export) {
+                $localPath = trim((string)($export['local_path'] ?? ''), '. ');
+                $requiredKey = self::key($localPath);
+                if ($requiredKey === '' || !isset($requirements[$requiredKey])) {
+                    continue;
                 }
 
-                $providerIds = array_keys($providers);
-                $sql = 'SELECT l.file_id,l.export_index,l.path_hash_ci,l.object_flags,'
-                    . 'pt.value_prefix local_path,ct.value_prefix class_name,'
-                    . 'cpt.value_prefix exact_class_package,cnt.value_prefix exact_class_name'
-                    . ' FROM ue_export_path_lookup l'
-                    . ' JOIN ue_files f ON f.id=l.file_id'
-                    . ' JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=' . \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer::FORMAT_VERSION . ''
-                    . ' JOIN ue_terms pt ON pt.id=l.local_path_term_id'
-                    . ' LEFT JOIN ue_terms ct ON ct.id=l.class_term_id'
-                    . ' LEFT JOIN ue_terms cpt ON cpt.id=l.class_package_term_id'
-                    . ' LEFT JOIN ue_terms cnt ON cnt.id=l.class_name_term_id'
-                    . ' WHERE f.game_id=? AND f.scan_status="verified"'
-                    . ' AND l.file_id IN (' . self::placeholders(count($providerIds)) . ')'
-                    . ' AND l.path_hash_ci IN (' . self::placeholders(count($hashes)) . ')'
-                    . ' ORDER BY l.export_index DESC';
-                $rows = \catalog_all(
-                    $db,
-                    $sql,
-                    array_merge(
-                        [$gameId],
-                        $providerIds,
-                        array_map(static fn(array $entry): string => $entry['hash'], array_values($hashes))
-                    )
-                );
-
-                foreach ($rows as $row) {
-                    $fileId = (int)$row['file_id'];
-                    $entry = $hashes[bin2hex((string)$row['path_hash_ci'])] ?? null;
-                    if (!is_array($entry) || !isset($providers[$fileId])) {
+                $requiredClass = $requiredClasses[$requiredKey] ?? null;
+                if ($engineKey === 'UE3') {
+                    if (!is_array($requiredClass)) {
                         continue;
                     }
-
-                    $requiredKey = (string)$entry['key'];
-                    if (self::key((string)$row['local_path']) !== $requiredKey) {
+                    $requiredName = self::key((string)($requiredClass['class_name'] ?? ''));
+                    $requiredPackage = self::key((string)($requiredClass['class_package'] ?? ''));
+                    $actualName = self::key((string)($export['class_name'] ?? ''));
+                    $actualPackage = self::key((string)($export['class_package'] ?? ''));
+                    if ($requiredName === '' || $requiredPackage === ''
+                        || $actualName !== $requiredName || $actualPackage !== $requiredPackage) {
                         continue;
                     }
-
-                    $requiredClass = $requiredClasses[$requiredKey] ?? null;
-                    if ($engineKey === 'UE3') {
-                        // UE3 VerifyImportInner compares ObjectName, ClassName and
-                        // ClassPackage exactly, qualifies the resolved Outer, and
-                        // rejects an ordinary external match without RF_Public.
-                        // Exact path identity above represents the complete outer
-                        // chain, so only the remaining class/visibility gates are
-                        // evaluated here.
-                        if (!is_array($requiredClass)) {
-                            continue;
-                        }
-                        $requiredName = self::key((string)($requiredClass['class_name'] ?? ''));
-                        $requiredPackage = self::key((string)($requiredClass['class_package'] ?? ''));
-                        $actualName = self::key((string)($row['exact_class_name'] ?? ''));
-                        $actualPackage = self::key((string)($row['exact_class_package'] ?? ''));
-                        if ($requiredName === '' || $requiredPackage === ''
-                            || $actualName !== $requiredName || $actualPackage !== $requiredPackage) {
-                            continue;
-                        }
-                        if ((((int)($row['object_flags'] ?? 0)) & 0x00000004) === 0) {
-                            continue;
-                        }
-                    } elseif (is_array($requiredClass)) {
-                        $actual = self::key((string)($row['class_name'] ?? ''));
-                        $name = self::key((string)($requiredClass['class_name'] ?? ''));
-                        $package = self::key((string)($requiredClass['class_package'] ?? ''));
-                        if ($name !== '') {
-                            // A required serialized class identity cannot be
-                            // satisfied by an export whose class projection is
-                            // absent. VerifyImport compares class identity; a
-                            // missing projection must remain unresolved rather
-                            // than being treated as a wildcard.
-                            if ($actual === '') {
-                                continue;
-                            }
-                            $qualified = $package !== '' ? $package . '.' . $name : $name;
-                            if (str_contains($actual, '.')) {
-                                if ($actual !== $qualified && $actual !== $name) {
-                                    continue;
-                                }
-                            } elseif ($actual !== $name) {
-                                continue;
-                            }
-                        }
+                    // UE3 RF_Public is bit 34 in the source-width 64-bit object flags.
+                    if ((((int)($export['object_flags'] ?? 0)) & 0x0000000400000000) === 0) {
+                        continue;
                     }
-
-                    if (!isset($matched[$fileId][$requiredKey])) {
-                        $matched[$fileId][$requiredKey] = true;
-                        $matchedExports[$fileId][$requiredKey] = (int)$row['export_index'];
+                } elseif (is_array($requiredClass)) {
+                    $actualName = self::key((string)($export['class_name'] ?? ''));
+                    $actualPackage = self::key((string)($export['class_package'] ?? ''));
+                    $requiredName = self::key((string)($requiredClass['class_name'] ?? ''));
+                    $requiredPackage = self::key((string)($requiredClass['class_package'] ?? ''));
+                    if ($requiredName !== '' && $actualName !== $requiredName) {
+                        continue;
                     }
+                    if ($requiredPackage !== '' && $actualPackage !== ''
+                        && $actualPackage !== $requiredPackage) {
+                        continue;
+                    }
+                }
+
+                if (!isset($matched[$fileId][$requiredKey])) {
+                    $matched[$fileId][$requiredKey] = true;
+                    $matchedExports[$fileId][$requiredKey] = (int)($export['export_index'] ?? -1);
                 }
             }
         }
@@ -167,6 +113,7 @@ final class PdoPackageObjectCoverageResolver
         foreach (array_keys($providers) as $position => $providerFileId) {
             $providerOrder[(int)$providerFileId] = $position;
         }
+
         $result = [];
         foreach ($providers as $fileId => $provider) {
             $matchedPaths = [];
@@ -186,8 +133,8 @@ final class PdoPackageObjectCoverageResolver
                 : ($matchedCount > 0 ? 'partially_satisfies' : 'does_not_satisfy');
 
             $result[] = [
-                'file_id' => $fileId,
-                'source' => $provider['source'],
+                'file_id' => (int)$fileId,
+                'source' => (string)$provider['source'],
                 'required_count' => $requiredCount,
                 'matched_count' => $matchedCount,
                 'missing_count' => $missingCount,
@@ -197,14 +144,16 @@ final class PdoPackageObjectCoverageResolver
                 'matched_exports' => $matchedExports[$fileId],
             ];
         }
+
         usort($result, static function (array $a, array $b) use ($preferredFileId, $providerOrder): int {
-            $rank = ['fully_satisfies' => 0, 'partially_satisfies' => 1, 'does_not_satisfy' => 2];
+            $rank = ['fully_satisfies'=>0,'partially_satisfies'=>1,'does_not_satisfy'=>2];
             $status = ($rank[$a['status']] ?? 9) <=> ($rank[$b['status']] ?? 9);
             if ($status !== 0) {
                 return $status;
             }
             if ($preferredFileId > 0) {
-                $preferred = ((int)$b['file_id'] === $preferredFileId) <=> ((int)$a['file_id'] === $preferredFileId);
+                $preferred = ((int)$b['file_id'] === $preferredFileId)
+                    <=> ((int)$a['file_id'] === $preferredFileId);
                 if ($preferred !== 0) {
                     return $preferred;
                 }
@@ -215,10 +164,7 @@ final class PdoPackageObjectCoverageResolver
         return $result;
     }
 
-    /**
-     * @param list<string> $paths
-     * @return array<string,string> normalized key => package-relative path
-     */
+    /** @param list<string> $paths @return array<string,string> */
     private static function requirements(string $packageName, array $paths): array
     {
         $requirements = [];
@@ -241,10 +187,7 @@ final class PdoPackageObjectCoverageResolver
         return $requirements;
     }
 
-    /**
-     * @param array<string,mixed> $classesByPath
-     * @return array<string,array{class_package:string,class_name:string}>
-     */
+    /** @param array<string,mixed> $classesByPath @return array<string,array{class_package:string,class_name:string}> */
     private static function requiredClasses(string $packageName, array $classesByPath): array
     {
         $result = [];
@@ -269,71 +212,60 @@ final class PdoPackageObjectCoverageResolver
     /** @return array<int,array{source:string}> */
     private static function providers(PDO $db, int $gameId, string $packageName, int $preferredFileId): array
     {
-        $providers = [];
-        try {
-            $rows = \catalog_all(
-                $db,
-                'SELECT p.file_id,p.source_kind FROM ue_package_providers p'
-                . ' JOIN ue_files f ON f.id=p.file_id AND f.game_id=p.game_id'
-                . ' JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=' . \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer::FORMAT_VERSION . ''
-                . ' LEFT JOIN ue_file_package_aliases a ON p.source_kind="alias"'
-                . ' AND a.id=p.source_id AND a.file_id=p.file_id AND a.game_id=p.game_id'
-                . ' AND a.package_name=p.package_name'
-                . ' WHERE p.game_id=? AND p.package_name=? AND f.scan_status="verified"'
-                . ' AND NOT EXISTS (SELECT 1 FROM ue_invalid_file_identities bad'
-                . ' WHERE bad.file_size=f.file_size AND bad.md5=LOWER(f.md5) AND bad.sha1=LOWER(f.sha1))'
-                . ' AND ((p.source_kind="primary" AND f.package_name=p.package_name)'
-                . ' OR (p.source_kind="alias" AND a.id IS NOT NULL))'
-                . ' ORDER BY (p.source_kind="primary") DESC,p.provider_created_at DESC,p.source_id ASC',
-                [$gameId, $packageName]
-            );
-        } catch (\PDOException) {
-            $rows = [];
-        }
+        $exactKind = Uedb5SqlProjectionContract::PACKAGE_KEY_CLASSIC_FNAME;
+        $legacyKind = Uedb5SqlProjectionContract::PACKAGE_KEY_CLASSIC_NAME;
+        $exactKey = Uedb5SqlProjectionContract::classicPackageKeyBinary($packageName, $exactKind);
+        $legacyKey = Uedb5SqlProjectionContract::classicPackageKeyBinary($packageName, $legacyKind);
+        $statement = $db->prepare(
+            'SELECT p.file_id,p.source_kind,p.source_id,v.package_name,f.uploaded_at,a.package_name alias_name '
+            . 'FROM ue_uedb5_provider_keys p '
+            . 'JOIN ue_uedb5_files v ON v.file_id=p.file_id AND v.game_id=p.game_id '
+            . 'JOIN ue_files f ON f.id=p.file_id AND f.game_id=p.game_id AND f.scan_status="verified" '
+            . 'LEFT JOIN ue_file_package_aliases a ON p.source_kind=2 AND a.id=p.source_id '
+            . 'WHERE p.game_id=? AND ('
+            . '(p.package_key_kind=? AND p.package_key=?) OR '
+            . '(p.package_key_kind=? AND p.package_key=?)) '
+            . 'AND NOT EXISTS (SELECT 1 FROM ue_invalid_file_identities bad '
+            . 'WHERE bad.file_size=f.file_size AND bad.md5=LOWER(f.md5) AND bad.sha1=LOWER(f.sha1)) '
+            . 'ORDER BY (p.file_id=?) DESC,(p.source_kind=1) DESC,f.uploaded_at DESC,p.source_id ASC,p.file_id ASC'
+        );
+        $statement->execute([
+            $gameId,$exactKind,$exactKey,$legacyKind,$legacyKey,$preferredFileId
+        ]);
 
-        foreach ($rows as $row) {
+        $wanted = CatalogUnrealIdentityHash::fnameKey($packageName);
+        $providers = [];
+        while (($row = $statement->fetch(PDO::FETCH_ASSOC)) !== false) {
+            $sourceName = (int)$row['source_kind'] === 2
+                ? (string)($row['alias_name'] ?? '')
+                : (string)($row['package_name'] ?? '');
+            if (CatalogUnrealIdentityHash::fnameKey($sourceName) !== $wanted) {
+                continue;
+            }
             $fileId = (int)$row['file_id'];
             if ($fileId > 0 && !isset($providers[$fileId])) {
                 $providers[$fileId] = [
-                    'source' => (string)$row['source_kind'] === 'alias'
-                        ? 'package_alias'
-                        : 'package_primary',
+                    'source' => (int)$row['source_kind'] === 2 ? 'package_alias' : 'package_primary',
                 ];
             }
         }
-
-        // Preserve the resolver's fallback behavior if the provider projection is
-        // not yet populated for this package.
-        if ($providers === []) {
-            $rows = \catalog_all(
-                $db,
-                'SELECT f.id file_id FROM ue_files f'
-                . ' JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=' . \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer::FORMAT_VERSION . ''
-                . ' WHERE f.game_id=? AND f.scan_status="verified" AND f.package_name=?'
-                . ' AND NOT EXISTS (SELECT 1 FROM ue_invalid_file_identities bad'
-                . ' WHERE bad.file_size=f.file_size AND bad.md5=LOWER(f.md5) AND bad.sha1=LOWER(f.sha1))'
-                . ' ORDER BY f.uploaded_at DESC',
-                [$gameId, $packageName]
-            );
-            foreach ($rows as $row) {
-                $fileId = (int)$row['file_id'];
-                if ($fileId > 0) {
-                    $providers[$fileId] = ['source' => 'package_primary'];
-                }
-            }
-        }
-
         return $providers;
+    }
+
+    private static function storageRoot(): string
+    {
+        $config = function_exists('catalog_config') ? \catalog_config() : require dirname(__DIR__, 3) . '/config.php';
+        $path = is_array($config) ? trim((string)($config['storage_path'] ?? '')) : '';
+        if ($path === '') {
+            throw new \RuntimeException('Catalog storage_path is required for UEDB5 provider coverage.');
+        }
+        return $path;
     }
 
     private static function key(string $value): string
     {
-        $value = trim($value);
-        return function_exists('mb_strtolower') ? mb_strtolower($value, 'UTF-8') : strtolower($value);
-    }
-
-    private static function placeholders(int $count): string
-    {
-        return implode(',', array_fill(0, max(1, $count), '?'));
+        return function_exists('mb_strtolower')
+            ? mb_strtolower($value, 'UTF-8')
+            : strtolower($value);
     }
 }
