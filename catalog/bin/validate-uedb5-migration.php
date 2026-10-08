@@ -10,15 +10,24 @@ require_once $root . '/lib/CatalogUE5ParserProfile.php';
 
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5MigrationValidationService;
 
-$options = getopt('', ['game:','continuous','limit::','progress-every::','preflight','sync-only','summary']);
+$options = getopt('', ['game:','file-id::','continuous','limit::','progress-every::','preflight','sync-only','summary']);
 $game = trim((string)($options['game'] ?? ''));
 if ($game === '') {
-    fwrite(STDERR,"Usage: php catalog/bin/validate-uedb5-migration.php --game=ut99 [--continuous] [--limit=500] [--progress-every=100] [--summary] [--preflight|--sync-only]\n");
+    fwrite(STDERR,"Usage: php catalog/bin/validate-uedb5-migration.php --game=ut99 [--file-id=123 | --continuous] [--limit=500] [--progress-every=100] [--summary] [--preflight|--sync-only]\n");
     exit(1);
 }
 $app = catalog_bootstrap();
 $service = new Uedb5MigrationValidationService($app->db, catalog_config());
 try {
+    if (array_key_exists('file-id', $options)) {
+        if (isset($options['preflight']) || isset($options['sync-only']) || isset($options['continuous'])) {
+            throw new RuntimeException('--file-id cannot be combined with --preflight, --sync-only or --continuous.');
+        }
+        $fileId = (int)$options['file-id'];
+        $result = $service->validateFile($game, $fileId);
+        echo json_encode(['ok'=>true,'targeted'=>true,'summary'=>$result], JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES), PHP_EOL;
+        exit(0);
+    }
     if (isset($options['preflight'])) {
         echo json_encode(['ok'=>true,'preflight'=>$service->preflight($game)], JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES), PHP_EOL;
         exit(0);

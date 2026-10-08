@@ -37,6 +37,46 @@ final class Uedb5MigrationValidationService
         ];
     }
 
+    /** Validate exactly one registered V5 file and persist Step 8 evidence. */
+    public function validateFile(string $gameSlug, int $fileId): array
+    {
+        if ($fileId < 1) {
+            throw new RuntimeException('A positive file ID is required.');
+        }
+        $game = $this->game($gameSlug);
+        $statement = $this->db->prepare(
+            'SELECT s.file_id,s.game_id,s.status,v.payload_sha256 '
+            . 'FROM ue_uedb5_migration_status s '
+            . 'JOIN ue_uedb5_files v ON v.file_id=s.file_id AND v.game_id=s.game_id '
+            . 'JOIN ue_files f ON f.id=s.file_id '
+            . 'WHERE s.file_id=? AND s.game_id=? AND f.scan_status="verified" LIMIT 1'
+        );
+        $statement->execute([$fileId, (int)$game['id']]);
+        $row = $statement->fetch(PDO::FETCH_ASSOC);
+        if (!is_array($row) || !in_array((string)$row['status'], [
+            Uedb5MigrationStatus::STAGED, Uedb5MigrationStatus::FAILED,
+        ], true)) {
+            throw new RuntimeException('The requested file is not staged for Step 8 validation in this game.');
+        }
+        $payload = (string)$row['payload_sha256'];
+        try {
+            $result = $this->validator->validate($fileId);
+            if (!empty($result['ready'])) {
+                $this->statuses->markValidated($fileId, $payload, $result);
+                $state = Uedb5MigrationStatus::VALIDATED;
+            } else {
+                $this->statuses->markStaged($fileId, $payload, $result);
+                $state = Uedb5MigrationStatus::STAGED;
+            }
+            return ['file_id'=>$fileId,'game'=>$game,'status'=>$state,'result'=>$result];
+        } catch (Throwable $error) {
+            $code = $error instanceof Uedb5ValidationException
+                ? $error->reasonCode : 'validator_exception';
+            $this->statuses->markFailed($fileId, $payload, $code, $error->getMessage());
+            throw $error;
+        }
+    }
+
     /** @return array<string,mixed> */
     public function validateGame(
         string $gameSlug,
