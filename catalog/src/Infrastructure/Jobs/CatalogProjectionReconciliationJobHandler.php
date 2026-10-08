@@ -19,7 +19,6 @@ use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoCatalogDependencyRebuilder;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyPackageSummary;
-use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyReadSource;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoGameCatalogStats;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageCoverageCache;
@@ -462,20 +461,13 @@ final class CatalogProjectionReconciliationJobHandler implements JobHandler
         foreach ($gameIds as $gameId) {
             foreach (array_chunk($packageNames, 100) as $chunk) {
                 $placeholders = implode(',', array_fill(0, count($chunk), '?'));
-                if ($summaryAvailable) {
-                    $sql = 'SELECT DISTINCT s.file_id FROM ue_dependency_package_summaries s '
-                        . 'JOIN ue_files f ON f.id=s.file_id '
-                        . 'WHERE s.game_id=? AND s.required_package IN (' . $placeholders . ') '
-                        . 'AND f.scan_status="verified"';
-                } else {
-                    $sql = 'SELECT DISTINCT d.file_id FROM ' . PdoDependencyReadSource::sql($this->db) . ' d '
-                        . 'JOIN ue_files f ON f.id=d.file_id '
-                        . 'WHERE f.game_id=? AND d.required_package IN (' . $placeholders . ') '
-                        . 'AND f.scan_status="verified"';
-                }
+                $sql = 'SELECT DISTINCT p.file_id FROM ue_uedb5_dependency_packages p '
+                    . 'JOIN ue_files f ON f.id=p.file_id AND f.game_id=p.game_id '
+                    . 'WHERE p.game_id=? AND p.required_package_name IN (' . $placeholders . ') '
+                    . 'AND f.scan_status="verified"';
                 $args = [$gameId, ...$chunk];
                 if ($excludeFileId > 0) {
-                    $sql .= $summaryAvailable ? ' AND s.file_id<>?' : ' AND d.file_id<>?';
+                    $sql .= ' AND p.file_id<>?';
                     $args[] = $excludeFileId;
                 }
                 $statement = $this->db->prepare($sql);
