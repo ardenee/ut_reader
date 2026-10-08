@@ -1,14 +1,4 @@
 <?php
-/**
- * UnrealDB PHP File Audit
- * Purpose: Defines the infrastructure class `CompactFileMaintenanceSnapshot` for compact file maintenance snapshot.
- * Why: It keeps this responsibility in the namespaced architecture instead of repeating it in page, API, or worker
- *      entry points.
- * Role: Infrastructure implementation for persistence, files, parsing, workers, security, storage, or external
- *       services.
- * Audit: Primary namespaced implementation; prefer reusing this layer over creating parallel page-local copies of the
- *        same behavior.
- */
 declare(strict_types=1);
 
 namespace UnrealDb\Catalog\Infrastructure\Metadata;
@@ -17,13 +7,7 @@ use PDO;
 use RuntimeException;
 use Throwable;
 
-/**
- * Captures and restores a verified file without reading legacy metadata tables.
- *
- * The relational file/location/alias rows are retained exactly. Names, Imports,
- * Exports and dependencies are loaded from the current-format container and restored
- * through the compact snapshot writer.
- */
+/** Captures and restores one verified file using authoritative UEDB5 metadata. */
 final class CompactFileMaintenanceSnapshot
 {
     public function __construct(
@@ -31,7 +15,7 @@ final class CompactFileMaintenanceSnapshot
         private readonly string $storageRoot
     ) {
         if (trim($storageRoot) === '') {
-            throw new RuntimeException('A catalog storage path is required for compact maintenance snapshots.');
+            throw new RuntimeException('A catalog storage path is required for UEDB5 maintenance snapshots.');
         }
     }
 
@@ -41,44 +25,36 @@ final class CompactFileMaintenanceSnapshot
         if ($fileId < 1) {
             throw new RuntimeException('A positive file ID is required.');
         }
-
         $file = $this->one('SELECT * FROM ue_files WHERE id=?', [$fileId]);
-        if ($file === null) {
-            throw new RuntimeException('File #' . $fileId . ' was not found.');
+        if ($file === null || (string)($file['scan_status'] ?? '') !== 'verified') {
+            throw new RuntimeException('File #' . $fileId . ' is not an active verified file.');
         }
-        if ((string)($file['scan_status'] ?? '') !== 'verified') {
-            throw new RuntimeException('File #' . $fileId . ' is not verified.');
+        $gameId = (int)($file['game_id'] ?? 0);
+        if ($gameId < 1) {
+            throw new RuntimeException('File #' . $fileId . ' has no game identity.');
         }
 
-        $metadata = (new BlockedCompressedMetadataSnapshotLoader(
-            $this->db,
-            $this->storageRoot
-        ))->load($fileId);
-
+        $metadata = (new Uedb5MetadataReader($this->storageRoot))->snapshot($gameId, $fileId);
         $registration = $this->one(
-            'SELECT format_version,codec,compressed_size,uncompressed_size,payload_sha256,'
-            . 'name_count,import_count,export_count FROM ue_file_metadata WHERE file_id=?',
-            [$fileId]
+            'SELECT file_id,game_id,format_version,codec,compressed_size,uncompressed_size,'
+            . 'payload_sha256,block_count,package_family,source_policy,package_key_kind,package_key,'
+            . 'package_name,section_counts_json FROM ue_uedb5_files WHERE file_id=? AND game_id=?',
+            [$fileId, $gameId]
         );
-        if ($registration === null || (int)$registration['format_version'] !== BlockedCompressedMetadataContainer::FORMAT_VERSION) {
-            throw new RuntimeException('File #' . $fileId . ' has no valid current-format registration.');
+        if ($registration === null
+            || (int)$registration['format_version'] !== Uedb5MetadataContainer::FORMAT_VERSION) {
+            throw new RuntimeException('File #' . $fileId . ' has no valid UEDB5 registration.');
         }
 
         return [
-            'format' => 'unrealdb.compact-maintenance-snapshot',
-            'format_version' => 1,
+            'format' => 'unrealdb.uedb5-maintenance-snapshot',
+            'format_version' => 2,
             'file' => $file,
             'metadata' => $metadata,
             'registration' => $registration,
-            'locations' => $this->rows(
-                'SELECT * FROM ue_file_locations WHERE file_id=? ORDER BY id',
-                [$fileId]
-            ),
+            'locations' => $this->rows('SELECT * FROM ue_file_locations WHERE file_id=? ORDER BY id', [$fileId]),
             'aliases' => $this->tableExists('ue_file_package_aliases')
-                ? $this->rows(
-                    'SELECT * FROM ue_file_package_aliases WHERE file_id=? ORDER BY id',
-                    [$fileId]
-                )
+                ? $this->rows('SELECT * FROM ue_file_package_aliases WHERE file_id=? ORDER BY id', [$fileId])
                 : [],
             'captured_at' => gmdate('c'),
         ];
@@ -89,7 +65,9 @@ final class CompactFileMaintenanceSnapshot
     {
         $this->assertSnapshot($snapshot);
         $file = (array)$snapshot['file'];
+        $metadata = (array)$snapshot['metadata'];
         $fileId = (int)$file['id'];
+        $gameId = (int)$file['game_id'];
 
         if ($this->one('SELECT id FROM ue_files WHERE id=?', [$fileId]) !== null) {
             throw new RuntimeException('Refusing to restore file #' . $fileId . ' because it already exists.');
@@ -118,56 +96,74 @@ final class CompactFileMaintenanceSnapshot
             throw $error;
         }
 
+        $path = Uedb5MetadataContainer::path($this->storageRoot, $gameId, $fileId);
         try {
-            $written = (new BlockedCompressedMetadataSnapshotWriter(
+            $written = (new Uedb5MetadataSnapshotWriter($this->storageRoot))->write($metadata);
+            $registration = (new PdoUedb5StagingRegistrationRepository(
                 $this->db,
                 $this->storageRoot
-            ))->write((array)$snapshot['metadata']);
+            ))->register($gameId, $fileId);
+            $projection = (new PdoUedb5BaseProjectionPublisher($this->db))
+                ->publish($metadata, $registration);
+            (new PdoUedb5MigrationStatusRepository($this->db))->markStageSucceeded($fileId, $gameId);
+            $dependency = (new Uedb5GameDependencyPassService(
+                $this->db,
+                ['storage_path' => $this->storageRoot]
+            ))->runFile($gameId, $fileId, true, true);
         } catch (Throwable $error) {
             try {
                 $this->db->prepare('DELETE FROM ue_files WHERE id=?')->execute([$fileId]);
             } catch (Throwable $cleanupError) {
-                error_log(
-                    '[UnrealDB compact maintenance restore] file_id=' . $fileId
-                    . ' cleanup failed: ' . $cleanupError->getMessage()
-                );
+                error_log('[UnrealDB UEDB5 maintenance restore] file_id=' . $fileId
+                    . ' cleanup failed: ' . $cleanupError->getMessage());
+            }
+            if (is_file($path)) {
+                @unlink($path);
             }
             throw new RuntimeException(
-                'Could not restore compact metadata for file #' . $fileId . ': ' . $error->getMessage(),
+                'Could not restore UEDB5 metadata for file #' . $fileId . ': ' . $error->getMessage(),
                 0,
                 $error
             );
         }
 
-        return array_merge($written, [
+        return [
+            'verified' => true,
+            'format_version' => Uedb5MetadataContainer::FORMAT_VERSION,
+            'metadata_path' => (string)($written['path'] ?? $path),
+            'compressed_size' => (int)($written['compressed_size'] ?? 0),
+            'uncompressed_size' => (int)($written['uncompressed_size'] ?? 0),
+            'block_count' => (int)($written['block_count'] ?? 0),
             'restored' => true,
             'file_id' => $fileId,
             'locations_restored' => count((array)$snapshot['locations']),
             'aliases_restored' => count((array)$snapshot['aliases']),
+            'base_projection' => $projection,
+            'dependency_result' => (array)($dependency['result'] ?? []),
             'legacy_metadata_rows_restored' => 0,
             'compact_native' => true,
-        ]);
+        ];
     }
 
     /** @param array<string,mixed> $snapshot */
     private function assertSnapshot(array $snapshot): void
     {
-        if ((string)($snapshot['format'] ?? '') !== 'unrealdb.compact-maintenance-snapshot') {
-            throw new RuntimeException('Unsupported compact maintenance snapshot format.');
-        }
-        if ((int)($snapshot['format_version'] ?? 0) !== 1) {
-            throw new RuntimeException('Unsupported compact maintenance snapshot version.');
+        if ((string)($snapshot['format'] ?? '') !== 'unrealdb.uedb5-maintenance-snapshot'
+            || (int)($snapshot['format_version'] ?? 0) !== 2) {
+            throw new RuntimeException('Unsupported UEDB5 maintenance snapshot format.');
         }
         $file = (array)($snapshot['file'] ?? []);
         $metadata = (array)($snapshot['metadata'] ?? []);
         $fileId = (int)($file['id'] ?? 0);
         if ($fileId < 1 || (int)($metadata['file']['id'] ?? 0) !== $fileId) {
-            throw new RuntimeException('Compact maintenance snapshot identity mismatch.');
+            throw new RuntimeException('UEDB5 maintenance snapshot identity mismatch.');
         }
-        foreach (['names', 'imports', 'exports', 'dependencies', 'paths'] as $section) {
-            if (!array_key_exists($section, $metadata)) {
-                throw new RuntimeException('Compact maintenance snapshot is missing ' . $section . '.');
-            }
+        if ((int)($file['game_id'] ?? 0) < 1
+            || (int)($metadata['file']['game_id'] ?? 0) !== (int)$file['game_id']) {
+            throw new RuntimeException('UEDB5 maintenance snapshot game identity mismatch.');
+        }
+        if (!is_array($metadata['sections'] ?? null) || !is_array($metadata['section_schemas'] ?? null)) {
+            throw new RuntimeException('UEDB5 maintenance snapshot is missing source-shaped sections.');
         }
     }
 
@@ -192,21 +188,18 @@ final class CompactFileMaintenanceSnapshot
     private function insertExact(string $table, array $row): void
     {
         if ($row === [] || preg_match('/^[A-Za-z0-9_]+$/', $table) !== 1) {
-            throw new RuntimeException('Invalid compact maintenance restore row.');
+            throw new RuntimeException('Invalid UEDB5 maintenance restore row.');
         }
         $columns = array_keys($row);
         foreach ($columns as $column) {
             if (preg_match('/^[A-Za-z0-9_]+$/', (string)$column) !== 1) {
-                throw new RuntimeException('Invalid compact maintenance restore column.');
+                throw new RuntimeException('Invalid UEDB5 maintenance restore column.');
             }
         }
-        $quoted = implode(',', array_map(
-            static fn(string $column): string => '`' . $column . '`',
-            array_map('strval', $columns)
-        ));
+        $columnSql = implode(',', array_map('strval', $columns));
         $placeholders = implode(',', array_fill(0, count($columns), '?'));
         $statement = $this->db->prepare(
-            'INSERT INTO `' . $table . '` (' . $quoted . ') VALUES (' . $placeholders . ')'
+            'INSERT INTO ' . $table . ' (' . $columnSql . ') VALUES (' . $placeholders . ')'
         );
         $statement->execute(array_values($row));
     }
