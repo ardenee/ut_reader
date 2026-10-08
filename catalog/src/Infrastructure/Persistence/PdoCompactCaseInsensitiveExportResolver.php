@@ -1,11 +1,6 @@
 <?php
 /**
- * UnrealDB PHP File Audit
- * Purpose: Resolves rare case-only Export path misses from current-format metadata containers.
- * Why: Historical MySQL text comparisons were case-insensitive while ue_export_lookup.path_hash is byte-sensitive.
- *      Exact hash matching remains the fast path; this bounded fallback preserves the historical lookup semantics
- *      entirely from current compact metadata.
- * Role: Infrastructure current-metadata compatibility resolver used only after compact hash lookup misses.
+ * Resolves rare case-only export path misses from authoritative UEDB5.
  */
 declare(strict_types=1);
 
@@ -14,13 +9,14 @@ namespace UnrealDb\Catalog\Infrastructure\Persistence;
 use PDO;
 use RuntimeException;
 use Throwable;
-use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataReader;
+use UnrealDb\Catalog\Infrastructure\Metadata\CatalogUnrealIdentityHash;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5ClassicDependencyResolver;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5MetadataReader;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5SqlProjectionContract;
 use UnrealDb\Catalog\Infrastructure\Telemetry\CatalogSystemErrorRecorder;
 
 final class PdoCompactCaseInsensitiveExportResolver
 {
-    private const PAGE_SIZE = 5000;
-
     /** @var array<int,true> */
     private static array $reportedUnreadableProviders = [];
 
@@ -42,7 +38,7 @@ final class PdoCompactCaseInsensitiveExportResolver
                 continue;
             }
             $packageName = trim((string)$lookup['package_name']);
-            $localPath = (string)$lookup['local_path'];
+            $localPath = trim((string)$lookup['local_path']);
             if ($packageName === '' || $localPath === '') {
                 continue;
             }
@@ -55,53 +51,29 @@ final class PdoCompactCaseInsensitiveExportResolver
             return;
         }
 
-        $config = function_exists('catalog_config') ? \catalog_config() : [];
-        $storageRoot = is_array($config) ? trim((string)($config['storage_path'] ?? '')) : '';
-        if ($storageRoot === '') {
-            throw new RuntimeException(
-                'Catalog storage_path is required for current-metadata case-insensitive Export resolution.'
-            );
-        }
-        $reader = new BlockedCompressedMetadataReader($db, $storageRoot);
-
+        $reader = new Uedb5MetadataReader(self::storageRoot());
         foreach ($pendingByPackage as $group) {
             $packageName = (string)$group['package_name'];
             $pendingPaths = (array)$group['paths'];
-
+            $providers = self::providerFileIds($db, $gameId, $preferredFileId, $packageName);
             self::matchProviderFiles(
                 $db,
                 $reader,
-                self::primaryProviderFileIds($db, $gameId, $preferredFileId, $packageName),
+                $gameId,
+                $providers,
                 $pendingPaths,
-                'exact_object',
                 $matches,
                 $preferredFileId
             );
-            if ($pendingPaths !== []) {
-                self::matchProviderFiles(
-                    $db,
-                    $reader,
-                    self::aliasProviderFileIds($db, $gameId, $preferredFileId, $packageName),
-                    $pendingPaths,
-                    'exact_object_alias',
-                    $matches,
-                    $preferredFileId
-                );
-            }
         }
     }
 
     /**
-     * Bounded rare-path fallback for one known provider.
-     *
      * @param list<string> $localPaths
      * @return array<string,int> normalized path => export index
      */
-    public static function matchProviderPaths(
-        PDO $db,
-        int $fileId,
-        array $localPaths
-    ): array {
+    public static function matchProviderPaths(PDO $db, int $fileId, array $localPaths): array
+    {
         $pending = [];
         foreach ($localPaths as $path) {
             $path = trim((string)$path);
@@ -112,30 +84,36 @@ final class PdoCompactCaseInsensitiveExportResolver
         if ($fileId < 1 || $pending === []) {
             return [];
         }
-        $config = function_exists('catalog_config') ? \catalog_config() : [];
-        $storageRoot = is_array($config) ? trim((string)($config['storage_path'] ?? '')) : '';
-        if ($storageRoot === '') {
-            throw new RuntimeException('Catalog storage_path is required for case-insensitive Export resolution.');
+
+        $statement = $db->prepare(
+            'SELECT game_id FROM ue_uedb5_files WHERE file_id=? AND format_version=5 LIMIT 1'
+        );
+        $statement->execute([$fileId]);
+        $gameId = (int)($statement->fetchColumn() ?: 0);
+        if ($gameId < 1) {
+            return [];
         }
-        $reader = new BlockedCompressedMetadataReader($db, $storageRoot);
+
+        $reader = new Uedb5MetadataReader(self::storageRoot());
+        try {
+            $snapshot = $reader->snapshot($gameId, $fileId);
+            $exports = Uedb5ClassicDependencyResolver::exportCoverageRows($snapshot);
+        } catch (Throwable $error) {
+            self::reportUnreadableProvider($db, $fileId, $error);
+            return [];
+        } finally {
+            $reader->clearCache($gameId, $fileId);
+        }
+
         $matches = [];
-        for ($start = 0; $pending !== []; $start += self::PAGE_SIZE) {
-            try {
-                clearstatcache();
-                $page = $reader->page($fileId, 'exports', $start, self::PAGE_SIZE);
-            } catch (Throwable $error) {
-                self::reportUnreadableProvider($db, $fileId, $error);
-                break;
+        foreach ($exports as $export) {
+            $key = self::key((string)($export['local_path'] ?? ''));
+            if (!isset($pending[$key])) {
+                continue;
             }
-            foreach ($page as $export) {
-                $key = self::key((string)($export['local_path'] ?? ''));
-                if (!isset($pending[$key])) {
-                    continue;
-                }
-                $matches[$key] = (int)$export['export_index'];
-                unset($pending[$key]);
-            }
-            if (count($page) < self::PAGE_SIZE) {
+            $matches[$key] = (int)($export['export_index'] ?? -1);
+            unset($pending[$key]);
+            if ($pending === []) {
                 break;
             }
         }
@@ -143,64 +121,52 @@ final class PdoCompactCaseInsensitiveExportResolver
     }
 
     /**
-     * @param list<int> $fileIds
+     * @param list<array{file_id:int,source:string}> $providers
      * @param array<string,list<string>> $pendingPaths
      * @param array<string,array{file_id:int,export_index:int,source:string}> $matches
      */
     private static function matchProviderFiles(
         PDO $db,
-        BlockedCompressedMetadataReader $reader,
-        array $fileIds,
+        Uedb5MetadataReader $reader,
+        int $gameId,
+        array $providers,
         array &$pendingPaths,
-        string $source,
         array &$matches,
         int $preferredFileId
     ): void {
-        foreach ($fileIds as $fileId) {
-            for ($start = 0; ; $start += self::PAGE_SIZE) {
-                try {
-                    // Long-lived workers may have seen this stable path before a
-                    // concurrent/earlier current-format replacement. Never let PHP's stat
-                    // cache manufacture a provider size mismatch.
-                    clearstatcache();
-                    $page = $reader->page($fileId, 'exports', $start, self::PAGE_SIZE);
-                } catch (Throwable $error) {
-                    // One damaged provider is an issue with that provider, not with
-                    // every consumer that happens to reference it. Skip it and try
-                    // the next provider. The preferred file is the package currently
-                    // being finalized/repaired; its previous container may legitimately
-                    // be absent until this publication completes, so do not create a
-                    // transient operator error for that self-provider case. If the
-                    // final publication itself fails, that failure is reported by the
-                    // importer/repair workflow instead.
-                    if ($fileId !== $preferredFileId) {
-                        self::reportUnreadableProvider($db, $fileId, $error);
-                    }
-                    break;
+        foreach ($providers as $provider) {
+            $fileId = (int)$provider['file_id'];
+            try {
+                $snapshot = $reader->snapshot($gameId, $fileId);
+                $exports = Uedb5ClassicDependencyResolver::exportCoverageRows($snapshot);
+            } catch (Throwable $error) {
+                if ($fileId !== $preferredFileId) {
+                    self::reportUnreadableProvider($db, $fileId, $error);
                 }
-                foreach ($page as $export) {
-                    $pathKey = self::key((string)($export['local_path'] ?? ''));
-                    $lookupValues = $pendingPaths[$pathKey] ?? null;
-                    if (!is_array($lookupValues)) {
-                        continue;
-                    }
-                    foreach ($lookupValues as $lookupValue) {
-                        $lookupKey = self::key($lookupValue);
-                        if (!isset($matches[$lookupKey])) {
-                            $matches[$lookupKey] = [
-                                'file_id' => $fileId,
-                                'export_index' => (int)$export['export_index'],
-                                'source' => $source,
-                            ];
-                        }
-                    }
-                    unset($pendingPaths[$pathKey]);
-                    if ($pendingPaths === []) {
-                        return;
+                continue;
+            } finally {
+                $reader->clearCache($gameId, $fileId);
+            }
+
+            foreach ($exports as $export) {
+                $pathKey = self::key((string)($export['local_path'] ?? ''));
+                $lookupValues = $pendingPaths[$pathKey] ?? null;
+                if (!is_array($lookupValues)) {
+                    continue;
+                }
+                foreach ($lookupValues as $lookupValue) {
+                    $lookupKey = self::key($lookupValue);
+                    if (!isset($matches[$lookupKey])) {
+                        $matches[$lookupKey] = [
+                            'file_id' => $fileId,
+                            'export_index' => (int)($export['export_index'] ?? -1),
+                            'source' => (string)$provider['source'],
+                        ];
                     }
                 }
-                if (count($page) < self::PAGE_SIZE) {
-                    break;
+                unset($pendingPaths[$pathKey]);
+                if ($pendingPaths === []) {
+                    return;
                 }
             }
         }
@@ -213,23 +179,12 @@ final class PdoCompactCaseInsensitiveExportResolver
         }
         self::$reportedUnreadableProviders[$fileId] = true;
 
-        $config = function_exists('catalog_config') ? \catalog_config() : [];
-        if (is_array($config)) {
-            \UnrealDb\Catalog\Infrastructure\Metadata\VerifiedCompactMetadataHealth::queueRepair(
-                $db,
-                $config,
-                $fileId,
-                null,
-                $error
-            );
-        }
-
         CatalogSystemErrorRecorder::record([
-            'source_kind' => 'compact-metadata-provider',
+            'source_kind' => 'uedb5-metadata-provider',
             'severity' => 'error',
-            'error_type' => 'UnreadableCompactMetadataProvider',
+            'error_type' => 'UnreadableUedb5MetadataProvider',
             'message' => 'Verified provider file #' . $fileId
-                . ' has unreadable current-format metadata and was skipped during dependency resolution: '
+                . ' has unreadable UEDB5 metadata and was skipped during dependency resolution: '
                 . trim($error->getMessage()),
             'source_file' => $error->getFile(),
             'source_line' => $error->getLine(),
@@ -241,46 +196,61 @@ final class PdoCompactCaseInsensitiveExportResolver
         ]);
     }
 
-    /** @return list<int> */
-    private static function primaryProviderFileIds(
+    /** @return list<array{file_id:int,source:string}> */
+    private static function providerFileIds(
         PDO $db,
         int $gameId,
         int $preferredFileId,
         string $packageName
     ): array {
+        $exactKind = Uedb5SqlProjectionContract::PACKAGE_KEY_CLASSIC_FNAME;
+        $legacyKind = Uedb5SqlProjectionContract::PACKAGE_KEY_CLASSIC_NAME;
+        $exactKey = Uedb5SqlProjectionContract::classicPackageKeyBinary($packageName, $exactKind);
+        $legacyKey = Uedb5SqlProjectionContract::classicPackageKeyBinary($packageName, $legacyKind);
         $statement = $db->prepare(
-            'SELECT f.id FROM ue_files f '
-            . 'JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=' . \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer::FORMAT_VERSION . ' '
-            . 'WHERE f.game_id=? AND f.scan_status="verified" AND f.package_name=? '
-            . 'ORDER BY (f.id=?) DESC,f.uploaded_at DESC,f.id DESC'
+            'SELECT p.file_id,p.source_kind,p.source_id,v.package_name,a.package_name alias_name,f.uploaded_at '
+            . 'FROM ue_uedb5_provider_keys p '
+            . 'JOIN ue_uedb5_files v ON v.file_id=p.file_id AND v.game_id=p.game_id '
+            . 'JOIN ue_files f ON f.id=p.file_id AND f.game_id=p.game_id AND f.scan_status="verified" '
+            . 'LEFT JOIN ue_file_package_aliases a ON p.source_kind=2 AND a.id=p.source_id '
+            . 'WHERE p.game_id=? AND ('
+            . '(p.package_key_kind=? AND p.package_key=?) OR '
+            . '(p.package_key_kind=? AND p.package_key=?)) '
+            . 'ORDER BY (p.file_id=?) DESC,(p.source_kind=1) DESC,f.uploaded_at DESC,p.source_id ASC,p.file_id ASC'
         );
-        $statement->execute([$gameId, $packageName, $preferredFileId]);
-        return array_values(array_map('intval', $statement->fetchAll(PDO::FETCH_COLUMN) ?: []));
+        $statement->execute([$gameId,$exactKind,$exactKey,$legacyKind,$legacyKey,$preferredFileId]);
+
+        $wanted = CatalogUnrealIdentityHash::fnameKey($packageName);
+        $seen = [];
+        $rows = [];
+        while (($row = $statement->fetch(PDO::FETCH_ASSOC)) !== false) {
+            $sourceName = (int)$row['source_kind'] === 2
+                ? (string)($row['alias_name'] ?? '')
+                : (string)($row['package_name'] ?? '');
+            if (CatalogUnrealIdentityHash::fnameKey($sourceName) !== $wanted) {
+                continue;
+            }
+            $fileId = (int)$row['file_id'];
+            if ($fileId < 1 || isset($seen[$fileId])) {
+                continue;
+            }
+            $seen[$fileId] = true;
+            $rows[] = [
+                'file_id' => $fileId,
+                'source' => (int)$row['source_kind'] === 2 ? 'exact_object_alias' : 'exact_object',
+            ];
+        }
+        return $rows;
     }
 
-    /** @return list<int> */
-    private static function aliasProviderFileIds(
-        PDO $db,
-        int $gameId,
-        int $preferredFileId,
-        string $packageName
-    ): array {
-        $statement = $db->prepare(
-            'SELECT a.file_id FROM ue_file_package_aliases a '
-            . 'JOIN ue_files f ON f.id=a.file_id AND f.game_id=a.game_id '
-            . 'JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=' . \UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer::FORMAT_VERSION . ' '
-            . 'WHERE a.game_id=? AND f.scan_status="verified" AND a.package_name=? '
-            . 'ORDER BY (f.id=?) DESC,f.uploaded_at DESC,a.id ASC'
-        );
-        $statement->execute([$gameId, $packageName, $preferredFileId]);
-        $ids = [];
-        foreach ($statement->fetchAll(PDO::FETCH_COLUMN) ?: [] as $value) {
-            $id = (int)$value;
-            if ($id > 0 && !isset($ids[$id])) {
-                $ids[$id] = true;
-            }
+    private static function storageRoot(): string
+    {
+        $config = function_exists('catalog_config') ? \catalog_config() : [];
+        $storageRoot = is_array($config) ? trim((string)($config['storage_path'] ?? '')) : '';
+        if ($storageRoot === '') {
+            throw new RuntimeException('Catalog storage_path is required for UEDB5 export resolution.');
         }
-        return array_keys($ids);
+        return $storageRoot;
     }
 
     private static function key(string $value): string
