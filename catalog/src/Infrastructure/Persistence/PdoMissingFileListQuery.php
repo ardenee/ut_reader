@@ -48,8 +48,8 @@ final class PdoMissingFileListQuery
             $this->db,
             'SELECT f.id file_id,f.package_name,f.original_name,g.id game_id,g.name game_name,'
             . 'SUM(s.missing_count) missing_object_rows,COUNT(*) missing_package_count,'
-            . 'GROUP_CONCAT(s.required_package ORDER BY s.required_package SEPARATOR ", ") missing_package_names '
-            . 'FROM ue_dependency_package_summaries s '
+            . 'GROUP_CONCAT(s.required_package_name ORDER BY s.required_package_name SEPARATOR ", ") missing_package_names '
+            . 'FROM ue_uedb5_dependency_packages s '
             . 'JOIN ue_files f ON f.id=s.file_id JOIN ue_games g ON g.id=s.game_id '
             . 'WHERE s.missing_count>0 GROUP BY f.id,f.package_name,f.original_name,g.id,g.name'
             . $having . ' ORDER BY ' . CatalogKeysetPaginator::order($columns, $directions, $reverse)
