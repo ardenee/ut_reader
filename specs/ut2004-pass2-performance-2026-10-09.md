@@ -33,5 +33,26 @@ Using the live V5-only source, dependency and validation services directly, each
 
 All three files finished as `validated`, with original metadata snapshots preserved at `C:/Temp/uedb5-benchmark-original-{file_id}.uedb5`. This is **not** a controlled throughput comparison with the wrapper; the first file may include cold or initialization effects, and file structures vary. Pass 1 covers source identity/hash, parser read, V5 container write, registration and SQL projection publication. It is the dominant measured cost for the large file, but these results **do not yet isolate which Pass 1 suboperation** is slow. No extra 20 GiB memory allocation is justified: peak observed PHP use was 244 MB. D: free space was 41.7 GiB after the test.
 
+## Pass 1 breakdown — exact production components, two additional files
+
+A disposable local benchmark `C:/Temp/ut2004-pass1-breakdown.php` invoked the existing source verification, source parsing, V5 writer, staging registration, SQL base projection publisher, Pass 2 and Step 8 in their normal order, measuring each component independently. No code was modified in the actual migration services. Each affected V5 file had a SHA-256-verified backup saved before modification, and each was fully validated afterwards. The active Unreal Gold workers continued uninterrupted.
+
+| Operation | File 1314511, 5 MB | File 1312145, 20 MB |
+|---|---:|---:|
+| Source size/MD5/SHA1 verification | 0.1462 s | 0.2095 s |
+| Source package parse | 0.0228 s | 0.0360 s |
+| V5 write/compression/integrity verification | 0.0361 s | 0.0722 s |
+| Staging registration SQL | 0.0174 s | 1.5966 s |
+| **Base SQL projection build + publication** | **1.4553 s** | **28.0092 s** |
+| Pass 1 status transition | 0.0041 s | 0.0025 s |
+| Pass 2 dependency resolution + publication | 0.2198 s | 0.6735 s |
+| Step 8 verification | 0.1259 s | 0.3541 s |
+| Total | 2.0292 s | 30.9548 s |
+| Peak PHP memory | 20 MB | 54 MB |
+
+The 5 MB file generated 1,332 search keys, 1,331 name candidates and 1,098 object candidates; the 20 MB file generated 3,790 search keys, 3,789 name candidates and 3,473 object candidates. Source and V5 write cost is low for both. For the 20 MB file, base SQL projection processing accounts for approximately 90% of end-to-end time. These observations **do not yet distinguish** projection building/sorting from search-dictionary publication, provider/name/object SQL inserts, lock waiting and commit time.
+
+Existing `PdoUedb5BaseProjectionPublisher` already batches insert rows in groups of 250, publishes immutable search dictionary keys outside the per-file transaction to avoid lock cycles, sorts rows deterministically, and commits each file's own candidate/projection changes atomically. The adjacent per-file V5 writer is not part of that SQL transaction. Buffering tens of files in one transaction must preserve these lock-order, per-file recovery and V5/SQL consistency guarantees; larger transactions may worsen contention. Neither disk spin-up nor PHP memory use explains these SQL timings by itself, but SQL waits versus actual execution time remain to be measured.
+
 ## Next checkpoint
-Instrument Pass 1 suboperations (source hash/parse, V5 write, registration, SQL projection publication) independently on a **small and disjoint** UT2004 sample, using existing test harnesses where possible. Investigate query contention versus cold I/O before changing SQL indexing or memory settings. Do not repeat these three validated files or interrupt the active Unreal Gold migration. Only propose a separate-pass migration strategy after measuring the whole write path with comparable workloads. Preserve Epic resolver behavior.
+Instrument `PdoUedb5BaseProjectionPublisher` (build, sort, dictionary insert, transaction begin, deletion, provider publish, name/object inserts, commit) **without changing SQL semantics** on one or two additional UT2004 staged files; also inspect InnoDB lock-wait metrics before and after. Compare warm and cold runs. Do not rerun the five now-validated benchmark files or interrupt current Unreal Gold workers. Only after confirming where SQL time is spent, prototype bounded multi-file publication (e.g. 10–50 files with memory and SQL size caps) versus the existing per-file transaction and 250-row inserts. Preserve Epic source semantics and durable per-file recovery.
