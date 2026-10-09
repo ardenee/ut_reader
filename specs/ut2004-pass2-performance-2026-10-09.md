@@ -56,3 +56,35 @@ Existing `PdoUedb5BaseProjectionPublisher` already batches insert rows in groups
 
 ## Next checkpoint
 Instrument `PdoUedb5BaseProjectionPublisher` (build, sort, dictionary insert, transaction begin, deletion, provider publish, name/object inserts, commit) **without changing SQL semantics** on one or two additional UT2004 staged files; also inspect InnoDB lock-wait metrics before and after. Compare warm and cold runs. Do not rerun the five now-validated benchmark files or interrupt current Unreal Gold workers. Only after confirming where SQL time is spent, prototype bounded multi-file publication (e.g. 10–50 files with memory and SQL size caps) versus the existing per-file transaction and 250-row inserts. Preserve Epic source semantics and durable per-file recovery.
+
+## SQL projection internals — isolated benchmark checkpoint
+
+Dev-only timing instrumentation was temporarily added to `PdoUedb5BaseProjectionPublisher`, with production unchanged, and removed after testing. Actual production Pass 1, Pass 2 and Step 8 components were invoked on separate UT2004 staged files; each original V5 container was SHA-256 backed up before writes. All files ended validated. The existing Unreal Gold migration continued.
+
+**Two projection-stage benchmarks:**
+
+| Stage | File 1308795 (~5 MB) | File 1305067 (~20 MB) |
+|---|---:|---:|
+| Build SQL rows | 0.0082 s | 0.0526 s |
+| Sort | 0.0145 s | 0.1557 s |
+| Search dictionary INSERT | 0.0244 s | 0.1408 s |
+| Transaction start | 0.0002 s | 0.0002 s |
+| **Four per-file DELETEs combined** | **7.3088 s** | **7.6244 s** |
+| Provider publication | 0.0030 s | 0.0027 s |
+| Name INSERTs | 0.0578 s | 0.2249 s |
+| Object INSERTs | 0.0568 s | 0.2313 s |
+| Commit | 0.0051 s | 0.0075 s |
+| Total projection stage | 7.4806 s | 8.4503 s |
+
+The further per-table measurement of file 1329406 (~5 MB) isolated:
+
+| DELETE table | Deleted rows | Measured seconds |
+|---|---:|---:|
+| `ue_uedb5_dependency_packages` | 47 | 0.5656 |
+| `ue_uedb5_dependency_edges` | 388 | 1.8905 |
+| `ue_uedb5_object_candidates` | 3,374 | **31.5073** |
+| `ue_uedb5_name_candidates` | 3,965 | 2.1659 |
+
+The four deletes consumed ~36.13 of 36.48 seconds in the projection stage on that sample. Its Pass 1 SQL registration independently took ~1.30 seconds. This strongly indicates DELETE/row-replacement overhead, not source parsing, compression, sorting or INSERT batching. Existing single-file `DELETE ... WHERE file_id=?` uses the `file_id` prefix of a primary key for all four tables (verified using `EXPLAIN DELETE`). Each table has secondary indexes and FKs to `ue_uedb5_files`; referential effects and lock waits are **possibilities, not yet proven causes**. Timings on a live DB can vary considerably.
+
+**Important next checkpoint:** Investigate the expensive `ue_uedb5_object_candidates` delete with MySQL Performance Schema statement/lock/I/O metrics and index/foreign-key cost, without repeating production scans. Do not replace indexed deletes with table scans, disable FK checks, widen transactions or buffer 20 GiB of PHP data on the basis of these benchmarks. Test an equivalent safe deletion/upsert strategy on bounded disjoint files only after identifying the mechanism. Production source was not modified; the dev-only instrumentation was reverted. Original V5 backups remain in `C:\Temp\uedb5-benchmark-original-<file-id>.uedb5`.
