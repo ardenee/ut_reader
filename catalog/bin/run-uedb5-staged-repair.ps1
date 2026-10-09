@@ -14,12 +14,17 @@ param(
     [int]$ProgressEvery=100,
     [ValidateRange(1,1000)]
     [int]$MinFreeGB=15,
+    [ValidateRange(1,4)]
+    [int]$Workers=1,
+    [ValidateRange(0,3)]
+    [int]$WorkerIndex=0,
     [string]$PhpPath='C:\php8.5\php.exe'
 )
 $ErrorActionPreference='Stop'
 $worker=Join-Path $PSScriptRoot 'repair-uedb5-staged.php'
 if(!(Test-Path $PhpPath)){throw ('PHP not found: '+$PhpPath)}
 if(!(Test-Path $worker)){throw ('Repair worker not found: '+$worker)}
+if($WorkerIndex -ge $Workers){throw 'WorkerIndex must be less than Workers.'}
 $cursor=$StartAfter
 $batches=0
 $totalValidated=0
@@ -32,7 +37,7 @@ do {
         throw ('Stopping V5 migration: D: has less than '+$MinFreeGB+' GiB free.')
     }
     $completed=$null
-    & $PhpPath $worker "--game=$Game" "--limit=$BatchSize" "--after=$cursor" --apply "--progress-every=$ProgressEvery" 2>&1 | ForEach-Object {
+    & $PhpPath $worker "--game=$Game" "--limit=$BatchSize" "--after=$cursor" --apply "--progress-every=$ProgressEvery" "--workers=$Workers" "--worker-index=$WorkerIndex" 2>&1 | ForEach-Object {
         $line=[string]$_
         Write-Output $line
         if($line.StartsWith('{')) {

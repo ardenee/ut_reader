@@ -6,7 +6,13 @@ $projectionRepair=(string)file_get_contents($root.'/src/Infrastructure/Metadata/
 $sourceMigration=(string)file_get_contents($root.'/src/Infrastructure/Metadata/Uedb5GameSourceMigrationService.php');
 $validator=(string)file_get_contents($root.'/src/Infrastructure/Metadata/Uedb5MigrationValidator.php');
 $validation=(string)file_get_contents($root.'/src/Infrastructure/Metadata/Uedb5MigrationValidationService.php');
+$wrapper=(string)file_get_contents($root.'/bin/run-uedb5-staged-repair.ps1');
 $checks=[
+ 'disjoint_worker_partitioning'=>str_contains($source, 'MOD(s.file_id,?)=?')
+    && str_contains($source, '$select->execute([$gameId, $after, $workers, $workerIndex])')
+    && str_contains($source, "'list-only'")
+    && str_contains($wrapper, '"--workers=$Workers"')
+    && str_contains($wrapper, '"--worker-index=$WorkerIndex"'),
  'same_process_source_snapshot_handoff'=>str_contains($sourceMigration, '$verifiedSourceSnapshot = $snapshot;')
     && str_contains($source, '$source->runFile($gameId,$fileId,true,$verifiedSourceSnapshot)')
     && str_contains($source, '$validation->validateFile($slug,$fileId,$verifiedSourceSnapshot)'),

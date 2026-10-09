@@ -16,12 +16,17 @@ use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5MetadataReader;
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5MetadataContainer;
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5ValidationException;
 
-$options = getopt('', ['game:', 'limit::', 'after::', 'apply', 'progress-every::']);
+$options = getopt('', ['game:', 'limit::', 'after::', 'apply', 'progress-every::', 'workers::', 'worker-index::', 'list-only']);
 $slug = trim((string)($options['game'] ?? ''));
 $limit = max(1, min(500, (int)($options['limit'] ?? 50)));
 $after = max(0, (int)($options['after'] ?? 0));
 $apply = isset($options['apply']);
 $progressEvery = max(1, (int)($options['progress-every'] ?? 10));
+$workers = (int)($options['workers'] ?? 1);
+$workerIndex = (int)($options['worker-index'] ?? 0);
+if ($workers < 1 || $workers > 4 || $workerIndex < 0 || $workerIndex >= $workers) {
+    throw new InvalidArgumentException('Expected 1..4 workers and a worker-index in 0..workers-1.');
+}
 if ($slug === '') {
     fwrite(STDERR, "Usage: php repair-uedb5-staged.php --game=ut2004 --limit=50 [--after=123] [--apply]\n");
     exit(1);
@@ -37,16 +42,21 @@ if ($gameId < 1) { throw new RuntimeException('Unknown game: '.$slug); }
 $select = $db->prepare(
     'SELECT s.file_id FROM ue_uedb5_migration_status s '
     . 'JOIN ue_uedb5_files v ON v.file_id=s.file_id AND v.game_id=s.game_id '
-    . 'WHERE s.game_id=? AND s.status="staged" AND s.file_id>? '
+    . 'WHERE s.game_id=? AND s.status="staged" AND s.file_id>? AND MOD(s.file_id,?)=? '
     . 'ORDER BY s.file_id LIMIT '.$limit
 );
-$select->execute([$gameId, $after]);
+$select->execute([$gameId, $after, $workers, $workerIndex]);
 $ids = array_map('intval', $select->fetchAll(PDO::FETCH_COLUMN));
+if (isset($options['list-only'])) {
+    if ($apply) { throw new InvalidArgumentException('--list-only cannot be combined with --apply.'); }
+    echo json_encode(['game'=>$slug,'workers'=>$workers,'worker_index'=>$workerIndex,'file_ids'=>$ids],JSON_UNESCAPED_SLASHES),PHP_EOL;
+    exit(0);
+}
 $validation = new Uedb5MigrationValidationService($db, $config);
 $reader = new Uedb5MetadataReader((string)$config['storage_path']);
 $source = $apply ? new Uedb5GameSourceMigrationService($db, $config) : null;
 $dependencies = $apply ? new Uedb5GameDependencyPassService($db, $config) : null;
-$summary = ['game'=>$slug,'read_only'=>!$apply,'selected'=>count($ids),
+$summary = ['game'=>$slug,'read_only'=>!$apply,'workers'=>$workers,'worker_index'=>$workerIndex,'selected'=>count($ids),
     'validated_existing'=>0,'repaired_validated'=>0,'not_ready'=>0,'failed'=>0,'last_file_id'=>$after];
 $issues = [];
 foreach ($ids as $position=>$fileId) {
