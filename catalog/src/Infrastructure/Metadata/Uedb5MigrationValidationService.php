@@ -38,7 +38,7 @@ final class Uedb5MigrationValidationService
     }
 
     /** Validate exactly one registered V5 file and persist Step 8 evidence. */
-    public function validateFile(string $gameSlug, int $fileId, ?array $previouslyVerifiedSourceSnapshot = null): array
+    public function validateFile(string $gameSlug, int $fileId, ?array $previouslyVerifiedSourceSnapshot = null, bool $trustStagedSource = false): array
     {
         if ($fileId < 1) {
             throw new RuntimeException('A positive file ID is required.');
@@ -60,7 +60,7 @@ final class Uedb5MigrationValidationService
         }
         $payload = (string)$row['payload_sha256'];
         try {
-            $result = $this->validator->validate($fileId, $previouslyVerifiedSourceSnapshot);
+            $result = $this->validator->validate($fileId, $previouslyVerifiedSourceSnapshot, $trustStagedSource);
             if (!empty($result['ready'])) {
                 $this->statuses->markValidated($fileId, $payload, $result);
                 $state = Uedb5MigrationStatus::VALIDATED;

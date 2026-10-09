@@ -19,6 +19,7 @@ param(
     [ValidateRange(0,3)]
     [int]$WorkerIndex=0,
     [switch]$ResyncStaged,
+    [switch]$TrustStagedSource,
     [string]$PhpPath='C:\php8.5\php.exe'
 )
 $ErrorActionPreference='Stop'
@@ -40,6 +41,7 @@ do {
     $completed=$null
     $workerArgs=@($worker,"--game=$Game","--limit=$BatchSize","--after=$cursor",'--apply',"--progress-every=$ProgressEvery","--workers=$Workers","--worker-index=$WorkerIndex")
     if($ResyncStaged){$workerArgs+='--resync-staged'}
+    if($TrustStagedSource){$workerArgs+='--trust-staged-source'}
     & $PhpPath @workerArgs 2>&1 | ForEach-Object {
         $line=[string]$_
         Write-Output $line

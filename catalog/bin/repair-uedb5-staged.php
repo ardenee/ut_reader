@@ -16,12 +16,19 @@ use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5MetadataReader;
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5MetadataContainer;
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5ValidationException;
 
-$options = getopt('', ['game:', 'limit::', 'after::', 'apply', 'progress-every::', 'workers::', 'worker-index::', 'list-only', 'resync-staged']);
+$options = getopt('', ['game:', 'limit::', 'after::', 'apply', 'progress-every::', 'workers::', 'worker-index::', 'list-only', 'resync-staged', 'trust-staged-source']);
 $slug = trim((string)($options['game'] ?? ''));
 $limit = max(1, min(500, (int)($options['limit'] ?? 50)));
 $after = max(0, (int)($options['after'] ?? 0));
 $apply = isset($options['apply']);
 $resyncStaged = isset($options['resync-staged']);
+$trustStagedSource = isset($options['trust-staged-source']);
+if ($trustStagedSource && $slug !== 'ut3') {
+    throw new InvalidArgumentException('Trusting frozen staged source is currently restricted to UT3; other games may contain outdated V5 snapshots.');
+}
+if ($trustStagedSource && $resyncStaged) {
+    throw new InvalidArgumentException('--trust-staged-source and --resync-staged are different validation modes.');
+}
 if ($resyncStaged && !$apply) {
     throw new InvalidArgumentException('--resync-staged requires --apply.');
 }
@@ -60,7 +67,7 @@ $validation = new Uedb5MigrationValidationService($db, $config);
 $reader = new Uedb5MetadataReader((string)$config['storage_path']);
 $source = $apply ? new Uedb5GameSourceMigrationService($db, $config) : null;
 $dependencies = $apply ? new Uedb5GameDependencyPassService($db, $config) : null;
-$summary = ['game'=>$slug,'mode'=>$resyncStaged ? 'resync_staged' : 'repair_staged','read_only'=>!$apply,'workers'=>$workers,'worker_index'=>$workerIndex,'selected'=>count($ids),
+$summary = ['game'=>$slug,'mode'=>$resyncStaged ? 'resync_staged' : ($trustStagedSource ? 'trust_staged_source' : 'repair_staged'),'read_only'=>!$apply,'workers'=>$workers,'worker_index'=>$workerIndex,'selected'=>count($ids),
     'validated_existing'=>0,'repaired_validated'=>0,'not_ready'=>0,'failed'=>0,'last_file_id'=>$after];
 $issues = [];
 foreach ($ids as $position=>$fileId) {
@@ -81,7 +88,7 @@ foreach ($ids as $position=>$fileId) {
         if (!$resyncStaged && !$repairNeeded) {
             if ($apply) {
                 try {
-                    $checked = $validation->validateFile($slug, $fileId);
+                    $checked = $validation->validateFile($slug, $fileId, null, $trustStagedSource);
                     if (($checked['status'] ?? '') === 'validated') {
                         ++$summary['validated_existing'];
                         if (($position+1)%$progressEvery===0) {

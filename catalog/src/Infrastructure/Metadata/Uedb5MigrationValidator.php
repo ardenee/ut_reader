@@ -25,7 +25,7 @@ final class Uedb5MigrationValidator
     }
 
     /** @return array<string,mixed> */
-    public function validate(int $fileId, ?array $previouslyVerifiedSourceSnapshot = null): array
+    public function validate(int $fileId, ?array $previouslyVerifiedSourceSnapshot = null, bool $trustStagedSource = false): array
     {
         $context = $this->context($fileId);
         $gameId = (int)$context['game_id'];
@@ -48,8 +48,10 @@ final class Uedb5MigrationValidator
         // A source snapshot supplied by the same-process Pass 1 was already
         // parsed after file-size/MD5/SHA1 verification. All V5/SQL checks below
         // remain mandatory. Normal callers still verify and reparse source.
-        $sourceSnapshot = $previouslyVerifiedSourceSnapshot ?? $this->validateSourceBytes($context);
-        $this->validateSourceSnapshot($snapshot, $sourceSnapshot);
+        $sourceSnapshot = $previouslyVerifiedSourceSnapshot ?? ($trustStagedSource ? $snapshot : $this->validateSourceBytes($context));
+        if (!$trustStagedSource || $previouslyVerifiedSourceSnapshot !== null) {
+            $this->validateSourceSnapshot($snapshot, $sourceSnapshot);
+        }
         $this->validatePackageIdentity($snapshot, $context);
         $counts = $this->validateCounts($snapshot, $context, $sourceSnapshot);
         $this->validateEngineSpecificFields($snapshot);
@@ -59,6 +61,7 @@ final class Uedb5MigrationValidator
         return [
             'ready' => (bool)$dependency['ready'],
             'validator_policy' => Uedb5MigrationStatus::VALIDATOR_POLICY,
+            'source_validation_mode' => $previouslyVerifiedSourceSnapshot !== null ? 'same_process_verified_source' : ($trustStagedSource ? 'trusted_staged_source' : 'fresh_verified_source'),
             'file_id' => $fileId,
             'game_id' => $gameId,
             'payload_sha256_hex' => strtoupper(bin2hex($payloadSha)),

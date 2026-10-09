@@ -8,6 +8,11 @@ $validator=(string)file_get_contents($root.'/src/Infrastructure/Metadata/Uedb5Mi
 $validation=(string)file_get_contents($root.'/src/Infrastructure/Metadata/Uedb5MigrationValidationService.php');
 $wrapper=(string)file_get_contents($root.'/bin/run-uedb5-staged-repair.ps1');
 $checks=[
+ 'ut3_staged_snapshot_mode_explicit'=>str_contains($source, "'trust-staged-source'")
+    && str_contains($source, "\$slug !== 'ut3'")
+    && str_contains($source, '$validation->validateFile($slug, $fileId, null, $trustStagedSource)')
+    && str_contains($validator, "'trusted_staged_source'")
+    && str_contains($wrapper, "'--trust-staged-source'"),
  'staged_resync_bypasses_duplicate_source_validation'=>str_contains($source, "'resync-staged'")
     && str_contains($source, 'if (!$resyncStaged && !$repairNeeded)')
     && str_contains($source, '$source->runFile($gameId,$fileId,true,$verifiedSourceSnapshot)')
@@ -22,8 +27,8 @@ $checks=[
  'same_process_source_snapshot_handoff'=>str_contains($sourceMigration, '$verifiedSourceSnapshot = $snapshot;')
     && str_contains($source, '$source->runFile($gameId,$fileId,true,$verifiedSourceSnapshot)')
     && str_contains($source, '$validation->validateFile($slug,$fileId,$verifiedSourceSnapshot)'),
- 'ordinary_step8_keeps_source_reparse'=>str_contains($validator, '$previouslyVerifiedSourceSnapshot ?? $this->validateSourceBytes($context)')
-    && str_contains($validation, '$this->validator->validate($fileId, $previouslyVerifiedSourceSnapshot)'),
+ 'ordinary_step8_keeps_source_reparse'=>str_contains($validator, '$trustStagedSource ? $snapshot : $this->validateSourceBytes($context)')
+    && str_contains($validation, '$this->validator->validate($fileId, $previouslyVerifiedSourceSnapshot, $trustStagedSource)'),
  'empty_v5_projection_recovery_only'=>str_contains($projectionRepair, 'if ($present !== 0)')
     && str_contains($projectionRepair, 'PdoUedb5BaseProjectionPublisher')
     && str_contains($projectionRepair, 'Uedb5GameDependencyPassService')
