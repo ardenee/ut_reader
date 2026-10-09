@@ -16,13 +16,21 @@ use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5MetadataReader;
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5MetadataContainer;
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5ValidationException;
 
-$options = getopt('', ['game:', 'limit::', 'after::', 'apply', 'progress-every::', 'workers::', 'worker-index::', 'list-only', 'resync-staged', 'trust-staged-source']);
+$options = getopt('', ['game:', 'limit::', 'after::', 'apply', 'progress-every::', 'workers::', 'worker-index::', 'list-only', 'resync-staged', 'trust-staged-source', 'retry-failed', 'failed-only']);
 $slug = trim((string)($options['game'] ?? ''));
 $limit = max(1, min(500, (int)($options['limit'] ?? 50)));
 $after = max(0, (int)($options['after'] ?? 0));
 $apply = isset($options['apply']);
 $resyncStaged = isset($options['resync-staged']);
 $trustStagedSource = isset($options['trust-staged-source']);
+$retryFailed = isset($options['retry-failed']);
+$failedOnly = isset($options['failed-only']);
+if ($failedOnly && (!$apply || !$resyncStaged)) {
+    throw new InvalidArgumentException('--failed-only requires --apply --resync-staged.');
+}
+if ($retryFailed && (!$apply || !$resyncStaged)) {
+    throw new InvalidArgumentException('--retry-failed requires --apply --resync-staged.');
+}
 if ($trustStagedSource && $slug !== 'ut3') {
     throw new InvalidArgumentException('Trusting frozen staged source is currently restricted to UT3; other games may contain outdated V5 snapshots.');
 }
@@ -53,7 +61,7 @@ if ($gameId < 1) { throw new RuntimeException('Unknown game: '.$slug); }
 $select = $db->prepare(
     'SELECT s.file_id FROM ue_uedb5_migration_status s '
     . 'JOIN ue_uedb5_files v ON v.file_id=s.file_id AND v.game_id=s.game_id '
-    . 'WHERE s.game_id=? AND s.status="staged" AND s.file_id>? AND MOD(s.file_id,?)=? '
+    . 'WHERE s.game_id=? AND s.status IN (' . ($failedOnly ? '"failed"' : ($retryFailed ? '"staged","failed"' : '"staged"')) . ') AND s.file_id>? AND MOD(s.file_id,?)=? '
     . 'ORDER BY s.file_id LIMIT '.$limit
 );
 $select->execute([$gameId, $after, $workers, $workerIndex]);

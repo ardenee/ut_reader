@@ -7,7 +7,17 @@ $sourceMigration=(string)file_get_contents($root.'/src/Infrastructure/Metadata/U
 $validator=(string)file_get_contents($root.'/src/Infrastructure/Metadata/Uedb5MigrationValidator.php');
 $validation=(string)file_get_contents($root.'/src/Infrastructure/Metadata/Uedb5MigrationValidationService.php');
 $wrapper=(string)file_get_contents($root.'/bin/run-uedb5-staged-repair.ps1');
+$profileRepair=(string)file_get_contents($root.'/bin/repair-unreal2-v69-profile.php');
 $checks=[
+ 'unreal2_profile_fix_source_scoped'=>str_contains($profileRepair, "'package_version_min'=>60,'package_version_max'=>69")
+    && str_contains($profileRepair, "'detected_engine'=>'UE2','reader_engine'=>'UE2'")
+    && str_contains($profileRepair, 'SHA2(CAST(compatibility_rules_json AS CHAR),256)=?'),
+ 'failed_file_retry_is_opt_in'=>str_contains($source, "'failed-only'")
+    && str_contains($source, "'retry-failed'")
+    && str_contains($source, "\$failedOnly ? '\"failed\"'")
+    && str_contains($wrapper, "'--retry-failed'"),
+ 'batch_failure_cursor_persisted'=>str_contains($wrapper, "\$exit -eq 2 -and [int]\$completed.failed")
+    && str_contains($wrapper, "\$totalFailed += [int]\$completed.failed"),
  'ut3_staged_snapshot_mode_explicit'=>str_contains($source, "'trust-staged-source'")
     && str_contains($source, "\$slug !== 'ut3'")
     && str_contains($source, '$validation->validateFile($slug, $fileId, null, $trustStagedSource)')
@@ -36,7 +46,7 @@ $checks=[
  'batch_recovers_only_object_projection_mismatch'=>str_contains($source, "'object_projection_mismatch'")
     && str_contains($source, 'Uedb5MissingObjectProjectionRepair'),
  'bounded_batch'=>str_contains($source,'min(500, $limit)') || str_contains($source,'min(500, (int)'),
- 'staged_only'=>str_contains($source,'s.status="staged"'),
+ 'staged_only'=>str_contains($source, "\$retryFailed ? '\"staged\",\"failed\"' : '\"staged\"'"),
  'v5_registration_only'=>str_contains($source,'JOIN ue_uedb5_files'),
  'requires_explicit_apply'=>str_contains($source, "'apply'") && str_contains($source, 'isset($options'),
  'original_container_backup'=>str_contains($source,'Uedb5MetadataContainer::path') && str_contains($source,'hash_file'),

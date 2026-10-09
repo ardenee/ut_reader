@@ -19,6 +19,7 @@ param(
     [ValidateRange(0,3)]
     [int]$WorkerIndex=0,
     [switch]$ResyncStaged,
+    [switch]$RetryFailed,
     [switch]$TrustStagedSource,
     [string]$PhpPath='C:\php8.5\php.exe'
 )
@@ -32,6 +33,7 @@ $batches=0
 $totalValidated=0
 $totalRepaired=0
 $totalNotReady=0
+$totalFailed=0
 do {
     $dataDrive=Get-PSDrive -Name D -ErrorAction SilentlyContinue
     if($null -eq $dataDrive){throw 'MySQL D: data volume could not be inspected.'}
@@ -41,6 +43,7 @@ do {
     $completed=$null
     $workerArgs=@($worker,"--game=$Game","--limit=$BatchSize","--after=$cursor",'--apply',"--progress-every=$ProgressEvery","--workers=$Workers","--worker-index=$WorkerIndex")
     if($ResyncStaged){$workerArgs+='--resync-staged'}
+    if($RetryFailed){$workerArgs+='--retry-failed'}
     if($TrustStagedSource){$workerArgs+='--trust-staged-source'}
     & $PhpPath @workerArgs 2>&1 | ForEach-Object {
         $line=[string]$_
@@ -55,22 +58,25 @@ do {
         }
     }
     $exit=$LASTEXITCODE
-    if($exit -ne 0){throw ('V5 batch failed at cursor '+$cursor+'. Exit '+$exit)}
-    if($null -eq $completed){throw ('V5 batch did not report completion at cursor '+$cursor)}
+    if($null -eq $completed){throw ('V5 batch did not report completion at cursor '+$cursor+'. Exit '+$exit)}
+    if($exit -ne 0 -and $exit -ne 2){throw ('V5 batch failed unexpectedly at cursor '+$cursor+'. Exit '+$exit)}
+    if($exit -eq 2 -and [int]$completed.failed -le 0){throw ('V5 batch exited 2 without recorded file failures at cursor '+$cursor)}
     if($completed.selected -eq 0){break}
     if([int]$completed.last_file_id -le $cursor){throw 'V5 batch cursor did not advance.'}
     $totalValidated += [int]$completed.validated_existing
     $totalRepaired += [int]$completed.repaired_validated
     $totalNotReady += [int]$completed.not_ready
+    $totalFailed += [int]$completed.failed
     $cursor=[int]$completed.last_file_id
     $batches++
     Write-Output ('V5_CHECKPOINT game='+$Game+' batches='+$batches+' last_file_id='+$cursor+
         ' validated_existing='+$totalValidated+' repaired_validated='+$totalRepaired+
-        ' not_ready='+$totalNotReady)
+        ' not_ready='+$totalNotReady+' failed='+$totalFailed)
 } while($MaxBatches -eq 0 -or $batches -lt $MaxBatches)
 Write-Output ('V5_RUN_COMPLETE game='+$Game+' batches='+$batches+' last_file_id='+$cursor+
     ' validated_existing='+$totalValidated+' repaired_validated='+$totalRepaired+
-    ' not_ready='+$totalNotReady)
+    ' not_ready='+$totalNotReady+' failed='+$totalFailed)
+if($totalFailed -gt 0){Write-Warning ('V5 encountered '+$totalFailed+' failed file(s). Review recorded file IDs before cutover.')}
 if($totalNotReady -gt 0){
     Write-Warning 'Some files remain staged and require a source-backed investigation; cutover is not ready.'
 }
