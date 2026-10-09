@@ -186,7 +186,7 @@ final class Uedb5GameSourceMigrationService
     }
 
     /** @return array<string,mixed> */
-    public function runFile(int $gameId, int $fileId, bool $apply): array
+    public function runFile(int $gameId, int $fileId, bool $apply, ?array &$verifiedSourceSnapshot = null): array
     {
         if ($fileId < 1) {
             throw new RuntimeException('Targeted UEDB5 Pass 1 requires a positive file ID.');
@@ -204,7 +204,7 @@ final class Uedb5GameSourceMigrationService
             throw new RuntimeException('Targeted UEDB5 Pass 1 file is not a verified current-format file in the requested game.');
         }
         try {
-            $result = $this->migrateFile($game, $file, $apply);
+            $result = $this->migrateFile($game, $file, $apply, $verifiedSourceSnapshot);
         } catch (Throwable $error) {
             if ($apply) {
                 $this->markStageFailure($fileId, $gameId, $error);
@@ -221,7 +221,7 @@ final class Uedb5GameSourceMigrationService
     }
 
     /** @param array<string,mixed> $game @param array<string,mixed> $file @return array<string,mixed> */
-    private function migrateFile(array $game, array $file, bool $apply): array
+    private function migrateFile(array $game, array $file, bool $apply, ?array &$verifiedSourceSnapshot = null): array
     {
         $path = $this->sourcePath((int)$game['id'], (string)$file['stored_name']);
         $this->assertSourceIdentity($path, $file);
@@ -248,6 +248,9 @@ final class Uedb5GameSourceMigrationService
             $this->registration->remove((int)$file['id']);
             throw $error;
         }
+        // Source identity and both digests were already checked before this parse.
+        // Hand off only after a successful V5 write/registration/projection publish.
+        $verifiedSourceSnapshot = $snapshot;
         return [
             'source_path'=>$path,
             'uedb5_path'=>(string)$written['path'],

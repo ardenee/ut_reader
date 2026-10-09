@@ -3,7 +3,15 @@ declare(strict_types=1);
 $root=dirname(__DIR__);
 $source=(string)file_get_contents($root.'/bin/repair-uedb5-staged.php');
 $projectionRepair=(string)file_get_contents($root.'/src/Infrastructure/Metadata/Uedb5MissingObjectProjectionRepair.php');
+$sourceMigration=(string)file_get_contents($root.'/src/Infrastructure/Metadata/Uedb5GameSourceMigrationService.php');
+$validator=(string)file_get_contents($root.'/src/Infrastructure/Metadata/Uedb5MigrationValidator.php');
+$validation=(string)file_get_contents($root.'/src/Infrastructure/Metadata/Uedb5MigrationValidationService.php');
 $checks=[
+ 'same_process_source_snapshot_handoff'=>str_contains($sourceMigration, '$verifiedSourceSnapshot = $snapshot;')
+    && str_contains($source, '$source->runFile($gameId,$fileId,true,$verifiedSourceSnapshot)')
+    && str_contains($source, '$validation->validateFile($slug,$fileId,$verifiedSourceSnapshot)'),
+ 'ordinary_step8_keeps_source_reparse'=>str_contains($validator, '$previouslyVerifiedSourceSnapshot ?? $this->validateSourceBytes($context)')
+    && str_contains($validation, '$this->validator->validate($fileId, $previouslyVerifiedSourceSnapshot)'),
  'empty_v5_projection_recovery_only'=>str_contains($projectionRepair, 'if ($present !== 0)')
     && str_contains($projectionRepair, 'PdoUedb5BaseProjectionPublisher')
     && str_contains($projectionRepair, 'Uedb5GameDependencyPassService')
@@ -15,9 +23,9 @@ $checks=[
  'v5_registration_only'=>str_contains($source,'JOIN ue_uedb5_files'),
  'requires_explicit_apply'=>str_contains($source, "'apply'") && str_contains($source, 'isset($options'),
  'original_container_backup'=>str_contains($source,'Uedb5MetadataContainer::path') && str_contains($source,'hash_file'),
- 'authoritative_pass1'=>str_contains($source,'$source->runFile($gameId,$fileId,true)'),
+ 'authoritative_pass1'=>str_contains($source,'$source->runFile($gameId,$fileId,true,$verifiedSourceSnapshot)'),
  'v5_dependency_pass2'=>str_contains($source,'$dependencies->runFile($gameId,$fileId,true,true)'),
- 'step8_source_validation'=>str_contains($source,'$validation->validateFile($slug,$fileId)'),
+ 'step8_source_validation'=>str_contains($source,'$validation->validateFile($slug,$fileId,$verifiedSourceSnapshot)'),
  'no_legacy_sql'=>preg_match('/ue_(?:file_metadata|export_lookup|name_lookup|dependency_links)/',$source)===0,
  'resume_cursor'=>str_contains($source,'s.file_id>?'),
 ];

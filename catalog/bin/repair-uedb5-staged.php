@@ -111,10 +111,15 @@ foreach ($ids as $position=>$fileId) {
         if (!copy($original, $backup) || !hash_equals(hash_file('sha256',$original),hash_file('sha256',$backup))) {
             throw new RuntimeException('Could not verify original V5 container backup.');
         }
-        $source->runFile($gameId,$fileId,true);
+        $verifiedSourceSnapshot = null;
+        $source->runFile($gameId,$fileId,true,$verifiedSourceSnapshot);
         // Targeted Pass 2 checks this file and its registered provider identity.
         $dependencies->runFile($gameId,$fileId,true,true);
-        $checked = $validation->validateFile($slug,$fileId);
+        if (!is_array($verifiedSourceSnapshot)) {
+            throw new RuntimeException('Pass 1 did not return verified source evidence.');
+        }
+        $checked = $validation->validateFile($slug,$fileId,$verifiedSourceSnapshot);
+        unset($verifiedSourceSnapshot);
         if (($checked['status'] ?? '') !== 'validated') {
             throw new RuntimeException('Step 8 did not mark the repaired file validated.');
         }

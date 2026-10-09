@@ -25,7 +25,7 @@ final class Uedb5MigrationValidator
     }
 
     /** @return array<string,mixed> */
-    public function validate(int $fileId): array
+    public function validate(int $fileId, ?array $previouslyVerifiedSourceSnapshot = null): array
     {
         $context = $this->context($fileId);
         $gameId = (int)$context['game_id'];
@@ -45,7 +45,10 @@ final class Uedb5MigrationValidator
         $this->validateRegistrationManifest($verified, $manifest, $context);
 
         $snapshot = $this->reader->snapshot($gameId, $fileId);
-        $sourceSnapshot = $this->validateSourceBytes($context);
+        // A source snapshot supplied by the same-process Pass 1 was already
+        // parsed after file-size/MD5/SHA1 verification. All V5/SQL checks below
+        // remain mandatory. Normal callers still verify and reparse source.
+        $sourceSnapshot = $previouslyVerifiedSourceSnapshot ?? $this->validateSourceBytes($context);
         $this->validateSourceSnapshot($snapshot, $sourceSnapshot);
         $this->validatePackageIdentity($snapshot, $context);
         $counts = $this->validateCounts($snapshot, $context, $sourceSnapshot);
