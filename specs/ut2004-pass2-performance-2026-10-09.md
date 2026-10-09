@@ -21,5 +21,17 @@ A/B tests on 3 initial and 18 additional real UT2004 files produced **identical 
 
 The run-order dependency makes speedups inconclusive. The batch method increased first-run time and does not justify a production change at this checkpoint. **Local code was reverted to the original selector, production never changed, and Git working tree was clean.**
 
+## Mutating Pass 1 / Pass 2 / Step 8 isolated follow-up
+
+Using the live V5-only source, dependency and validation services directly, each selected staged file was backed up with SHA-256 comparison before write. The test performed exactly one authoritative Pass 1 restage, Pass 2 resolution/persistence and Step 8 validation per selected file. No full-game operation or concurrent UT2004 migration was started; both Unreal Gold workers were left alone.
+
+| File ID | Source package size | Pass 1 (s) | Pass 2 (s) | Step 8 (s) | Peak PHP memory (MB) |
+|---|---:|---:|---:|---:|---:|
+| 156185 | 0.5 MB | 11.9041 | 0.2102 | 0.1256 | 18 |
+| 1309589 | 5 MB | 0.7612 | 0.1173 | 0.0768 | 20 |
+| 139509 | 50 MB | 45.2417 | 7.9994 | 1.8879 | 244 |
+
+All three files finished as `validated`, with original metadata snapshots preserved at `C:/Temp/uedb5-benchmark-original-{file_id}.uedb5`. This is **not** a controlled throughput comparison with the wrapper; the first file may include cold or initialization effects, and file structures vary. Pass 1 covers source identity/hash, parser read, V5 container write, registration and SQL projection publication. It is the dominant measured cost for the large file, but these results **do not yet isolate which Pass 1 suboperation** is slow. No extra 20 GiB memory allocation is justified: peak observed PHP use was 244 MB. D: free space was 41.7 GiB after the test.
+
 ## Next checkpoint
-Measure authoritative *mutating* Pass 1 restage, Pass 2 resolution/persistence and Step 8 separately on a small, disjoint UT2004 file subset with exact IDs. Preserve existing backups and status, do not start game-wide workers, and compare separate-pass elapsed time with combined repair. Investigate cold V5 reads, disk I/O and SQL candidate-lookup metrics before adding caches or substantially increasing concurrency. Reconcile outputs against Epic-source semantics; never treat a speedup as permission to relax resolver behavior.
+Instrument Pass 1 suboperations (source hash/parse, V5 write, registration, SQL projection publication) independently on a **small and disjoint** UT2004 sample, using existing test harnesses where possible. Investigate query contention versus cold I/O before changing SQL indexing or memory settings. Do not repeat these three validated files or interrupt the active Unreal Gold migration. Only propose a separate-pass migration strategy after measuring the whole write path with comparable workloads. Preserve Epic resolver behavior.
