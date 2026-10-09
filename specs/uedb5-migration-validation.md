@@ -73,6 +73,12 @@ The internal file-ID cursor advances past failures, so one bad file cannot trap 
 
 Step 6 also writes `staged` or `failed` status directly when the Step 8 table exists. Pass-1 failures without a V5 registration remain durably `failed`; they are not silently converted back to `pending` by reconciliation.
 
+### Combined staged-file resync (Pass 1 + Pass 2 + Step 8)
+
+Use `run-uedb5-staged-repair.ps1 -Game unreal2 -ResyncStaged -BatchSize 250` to **rebuild only still-staged V5 files**, not validated files. This is deliberately different from the original `migrate-uedb5-game.php` Pass 1 command, which selects only files lacking a V5 registration and does **not** perform dependency Pass 2 or Step 8. The combined resync skips the pre-repair full source comparison and immediately verifies original size/MD5/SHA1, parses from Epic-compatible source, writes and registers V5, publishes provider/name/object/search SQL projections, runs targeted V5 dependency Pass 2, verifies the newly written container and SQL/dependency projections against the same verified source snapshot, and marks Step 8 validated only on complete success. It keeps the original V5 backup until success and retains disk-space and disjoint worker protections. A failure is logged with its file ID and original-container backup path.
+
+This mode is most appropriate when source snapshots are broadly outdated (UE1/UE2). For games where most staged V5 snapshots are already current (such as the observed UT3 sample), validation-only repair can do less work; a resync unconditionally rewrites the remaining staged V5 files. The V5 game summary and eventual cutover/parity requirements remain separate; do not infer that missing-dependency dashboard totals refresh automatically.
+
 ### Resumable Step 8 repair of already-staged V5 files
 
 `catalog/bin/repair-uedb5-staged.php --game=ut2004 --limit=50 --apply` processes a bounded set of **staged V5 files only**. It validates an unchanged snapshot directly; when a known historical UE1/UE2 summary field is missing, or the authoritative source validator reports `source_snapshot_mismatch`, it backs up that one `.uedb5` file, reruns source-backed Pass 1, refreshes V5 Pass 2 dependencies, and records full Step 8 validation. Successful backups are deleted; a backup path is reported if a repair fails. No V4 container or V4 lookup table is consulted.

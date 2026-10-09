@@ -18,6 +18,7 @@ param(
     [int]$Workers=1,
     [ValidateRange(0,3)]
     [int]$WorkerIndex=0,
+    [switch]$ResyncStaged,
     [string]$PhpPath='C:\php8.5\php.exe'
 )
 $ErrorActionPreference='Stop'
@@ -37,7 +38,9 @@ do {
         throw ('Stopping V5 migration: D: has less than '+$MinFreeGB+' GiB free.')
     }
     $completed=$null
-    & $PhpPath $worker "--game=$Game" "--limit=$BatchSize" "--after=$cursor" --apply "--progress-every=$ProgressEvery" "--workers=$Workers" "--worker-index=$WorkerIndex" 2>&1 | ForEach-Object {
+    $workerArgs=@($worker,"--game=$Game","--limit=$BatchSize","--after=$cursor",'--apply',"--progress-every=$ProgressEvery","--workers=$Workers","--worker-index=$WorkerIndex")
+    if($ResyncStaged){$workerArgs+='--resync-staged'}
+    & $PhpPath @workerArgs 2>&1 | ForEach-Object {
         $line=[string]$_
         Write-Output $line
         if($line.StartsWith('{')) {

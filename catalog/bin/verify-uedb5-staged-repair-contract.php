@@ -8,6 +8,12 @@ $validator=(string)file_get_contents($root.'/src/Infrastructure/Metadata/Uedb5Mi
 $validation=(string)file_get_contents($root.'/src/Infrastructure/Metadata/Uedb5MigrationValidationService.php');
 $wrapper=(string)file_get_contents($root.'/bin/run-uedb5-staged-repair.ps1');
 $checks=[
+ 'staged_resync_bypasses_duplicate_source_validation'=>str_contains($source, "'resync-staged'")
+    && str_contains($source, 'if (!$resyncStaged && !$repairNeeded)')
+    && str_contains($source, '$source->runFile($gameId,$fileId,true,$verifiedSourceSnapshot)')
+    && str_contains($source, '$dependencies->runFile($gameId,$fileId,true,true)')
+    && str_contains($source, '$validation->validateFile($slug,$fileId,$verifiedSourceSnapshot)')
+    && str_contains($wrapper, "'--resync-staged'"),
  'disjoint_worker_partitioning'=>str_contains($source, 'MOD(s.file_id,?)=?')
     && str_contains($source, '$select->execute([$gameId, $after, $workers, $workerIndex])')
     && str_contains($source, "'list-only'")

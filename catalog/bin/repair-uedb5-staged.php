@@ -16,11 +16,15 @@ use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5MetadataReader;
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5MetadataContainer;
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5ValidationException;
 
-$options = getopt('', ['game:', 'limit::', 'after::', 'apply', 'progress-every::', 'workers::', 'worker-index::', 'list-only']);
+$options = getopt('', ['game:', 'limit::', 'after::', 'apply', 'progress-every::', 'workers::', 'worker-index::', 'list-only', 'resync-staged']);
 $slug = trim((string)($options['game'] ?? ''));
 $limit = max(1, min(500, (int)($options['limit'] ?? 50)));
 $after = max(0, (int)($options['after'] ?? 0));
 $apply = isset($options['apply']);
+$resyncStaged = isset($options['resync-staged']);
+if ($resyncStaged && !$apply) {
+    throw new InvalidArgumentException('--resync-staged requires --apply.');
+}
 $progressEvery = max(1, (int)($options['progress-every'] ?? 10));
 $workers = (int)($options['workers'] ?? 1);
 $workerIndex = (int)($options['worker-index'] ?? 0);
@@ -56,7 +60,7 @@ $validation = new Uedb5MigrationValidationService($db, $config);
 $reader = new Uedb5MetadataReader((string)$config['storage_path']);
 $source = $apply ? new Uedb5GameSourceMigrationService($db, $config) : null;
 $dependencies = $apply ? new Uedb5GameDependencyPassService($db, $config) : null;
-$summary = ['game'=>$slug,'read_only'=>!$apply,'workers'=>$workers,'worker_index'=>$workerIndex,'selected'=>count($ids),
+$summary = ['game'=>$slug,'mode'=>$resyncStaged ? 'resync_staged' : 'repair_staged','read_only'=>!$apply,'workers'=>$workers,'worker_index'=>$workerIndex,'selected'=>count($ids),
     'validated_existing'=>0,'repaired_validated'=>0,'not_ready'=>0,'failed'=>0,'last_file_id'=>$after];
 $issues = [];
 foreach ($ids as $position=>$fileId) {
@@ -67,14 +71,14 @@ foreach ($ids as $position=>$fileId) {
     try {
         // Missing fields in older UE1/UE2 source snapshots are proven serializer drift.
         // Still reparse and run the complete validator after any repair.
-        if (in_array($slug, ['unreal2','ut2003','ut2004','unrealgold'], true)) {
+        if (!$resyncStaged && in_array($slug, ['unreal2','ut2003','ut2004','unrealgold'], true)) {
             $summaryRow = $reader->page($gameId, $fileId, 'summary', 0, 1)[0] ?? [];
             $repairNeeded = is_array($summaryRow)
                 && (!array_key_exists('effective_generation_count', $summaryRow)
                     || !array_key_exists('import_object_package_encoding', $summaryRow));
             if ($repairNeeded) { $reason = 'retired_source_summary_schema'; }
         }
-        if (!$repairNeeded) {
+        if (!$resyncStaged && !$repairNeeded) {
             if ($apply) {
                 try {
                     $checked = $validation->validateFile($slug, $fileId);
