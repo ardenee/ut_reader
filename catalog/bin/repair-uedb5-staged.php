@@ -79,6 +79,19 @@ foreach ($ids as $position=>$fileId) {
                     ++$summary['not_ready'];
                     continue;
                 } catch (Uedb5ValidationException $error) {
+                    if ($error->reasonCode === 'object_projection_mismatch') {
+                        $repaired = (new \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5MissingObjectProjectionRepair($db, $config))
+                            ->repairFile($fileId);
+                        if (($repaired['status'] ?? '') !== 'validated') {
+                            throw new RuntimeException('Missing object projection repair did not complete Step 8.');
+                        }
+                        ++$summary['repaired_validated'];
+                        if (($position+1)%$progressEvery===0) {
+                            echo json_encode(['status'=>'progress']+$summary,JSON_UNESCAPED_SLASHES),PHP_EOL;
+                            fflush(STDOUT);
+                        }
+                        continue;
+                    }
                     if ($error->reasonCode !== 'source_snapshot_mismatch') { throw $error; }
                     $repairNeeded = true;
                     $reason = 'source_snapshot_mismatch';

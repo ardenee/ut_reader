@@ -2,7 +2,14 @@
 declare(strict_types=1);
 $root=dirname(__DIR__);
 $source=(string)file_get_contents($root.'/bin/repair-uedb5-staged.php');
+$projectionRepair=(string)file_get_contents($root.'/src/Infrastructure/Metadata/Uedb5MissingObjectProjectionRepair.php');
 $checks=[
+ 'empty_v5_projection_recovery_only'=>str_contains($projectionRepair, 'if ($present !== 0)')
+    && str_contains($projectionRepair, 'PdoUedb5BaseProjectionPublisher')
+    && str_contains($projectionRepair, 'Uedb5GameDependencyPassService')
+    && str_contains($projectionRepair, 'validateFile('),
+ 'batch_recovers_only_object_projection_mismatch'=>str_contains($source, "'object_projection_mismatch'")
+    && str_contains($source, 'Uedb5MissingObjectProjectionRepair'),
  'bounded_batch'=>str_contains($source,'min(500, $limit)') || str_contains($source,'min(500, (int)'),
  'staged_only'=>str_contains($source,'s.status="staged"'),
  'v5_registration_only'=>str_contains($source,'JOIN ue_uedb5_files'),
