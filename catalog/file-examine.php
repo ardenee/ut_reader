@@ -10,6 +10,15 @@
  */
 declare(strict_types=1);
 
+// Emergency availability guard: this page currently receives incompatible
+// projection rows and generates repeated SQL-backed PHP warning reports.
+// Keep other catalog routes usable until row-shape handling is corrected.
+http_response_code(503);
+header('Retry-After: 1800');
+header('Content-Type: text/plain; charset=UTF-8');
+echo 'File examination is temporarily unavailable while it is repaired.';
+exit;
+
 require_once __DIR__ . '/lib/CatalogSupport.php';
 require_once __DIR__ . '/lib/CatalogFileFeedback.php';
 

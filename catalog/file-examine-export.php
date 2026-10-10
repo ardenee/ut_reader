@@ -65,7 +65,10 @@ try {
             foreach ($page['rows'] as $row) {
                 $values = [];
                 foreach ($columns as $column) {
-                    $values[] = $row[$column] ?? null;
+                    $value = $row[$column] ?? null;
+                    $values[] = is_array($value) || is_object($value)
+                        ? json_encode($value, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE | JSON_THROW_ON_ERROR)
+                        : $value;
                 }
                 fputcsv($output, $values, ',', '"', '');
             }
