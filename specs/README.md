@@ -18,6 +18,7 @@ Its purpose is to let an engineer implement, review, or repair UnrealDB's parser
 10. Source-compatible behavior takes precedence over convenience or historical UnrealDB behavior.
 
 Current implementation audit ledger: `epic-source-conformance.md`.
+Game-profile admission (no package/licensee min/max rejection): `game-profile-version-admission-2026-10-10.md`.
 
 ## Authoritative local source trees
 

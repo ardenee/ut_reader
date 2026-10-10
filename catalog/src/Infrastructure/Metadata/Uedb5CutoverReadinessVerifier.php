@@ -221,14 +221,14 @@ final class Uedb5CutoverReadinessVerifier
             }
             $profileRejected+=$outside;
             $coverage[]=['game_id'=>$gameId,'game'=>$slug,'source_key'=>$sourceKey,'verified_count'=>(int)$game['verified_count'],'supported'=>true,
-                'engine_key'=>(string)$contract['engine_key'],'profile_version_range'=>[$contract['min_version'],$contract['max_version']],
-                'version_gate'=>'game_profile',
+                'engine_key'=>(string)$contract['engine_key'],'historic_profile_version_range'=>[$contract['min_version'],$contract['max_version']],
+                'version_gate'=>'canonical_reader',
                 'catalogue_version_range'=>[$game['min_version']!==null?(int)$game['min_version']:null,$game['max_version']!==null?(int)$game['max_version']:null],
                 'outside_game_profile'=>$outside,
                 'outside_source_contract'=>$outside];
         }
         $record('every_verified_game_has_v5_source_contract',$unsupportedGames===[],$unsupportedGames===[]?'all supported':implode(', ',$unsupportedGames));
-        $record('every_verified_file_is_allowed_by_game_profile',$profileRejected===0,'outside_game_profile='.$profileRejected);
+        $record('every_verified_file_has_compatible_reader_dispatch',$profileRejected===0,'reader_dispatch_conflicts='.$profileRejected);
         $policyCoverage=$this->rows(
             'SELECT g.slug,v.package_family,v.source_policy,COUNT(*) file_count '
             .'FROM ue_files f JOIN ue_games g ON g.id=f.game_id JOIN ue_uedb5_files v ON v.file_id=f.id '

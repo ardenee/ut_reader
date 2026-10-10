@@ -18,10 +18,7 @@ function gm_profile_label(array $profile): string
 {
     $exts = json_decode((string)($profile['allowed_extensions_json'] ?? '[]'), true);
     $extText = is_array($exts) && $exts !== [] ? ' / .' . implode(' .', $exts) : '';
-    $range = ($profile['package_version_min'] !== null || $profile['package_version_max'] !== null)
-        ? ' / version ' . ($profile['package_version_min'] ?? '?') . '-' . ($profile['package_version_max'] ?? '?')
-        : '';
-    return gp_profile_display_name($profile) . ' / ' . (string)$profile['engine_key'] . $extText . $range;
+    return gp_profile_display_name($profile) . ' / ' . (string)$profile['engine_key'] . $extText;
 }
 
 function gm_json_reply(array $payload, int $status = 200): never
@@ -150,12 +147,9 @@ CSS;
     if ($games === []) {
         echo '<p class="muted">No games configured.</p>';
     } else {
-        echo '<table><tr><th>Game</th><th>Assigned profile</th><th>Engine</th><th>Extensions</th><th>Version range</th><th>Files</th><th>Sources</th><th>Actions</th></tr>';
+        echo '<table><tr><th>Game</th><th>Assigned profile</th><th>Engine</th><th>Extensions</th><th>Files</th><th>Sources</th><th>Actions</th></tr>';
         foreach ($games as $game) {
             $exts = json_decode((string)($game['allowed_extensions_json'] ?? '[]'), true);
-            $range = ($game['package_version_min'] !== null || $game['package_version_max'] !== null)
-                ? (($game['package_version_min'] ?? '?') . ' - ' . ($game['package_version_max'] ?? '?'))
-                : 'not fixed';
             $engine = $game['profile_engine'] ?: 'missing profile';
             $engineClass = $game['profile_engine'] ? 'good-pill' : 'bad-pill';
             $gameId = (int)$game['id'];
@@ -166,7 +160,6 @@ CSS;
                 . '<td>' . catalog_h($game['profile_name'] ?? 'none') . '</td>'
                 . '<td><span class="pill ' . $engineClass . '">' . catalog_h($engine) . '</span></td>'
                 . '<td class="mono small">' . catalog_h(is_array($exts) ? implode(', ', $exts) : '') . '</td>'
-                . '<td class="mono">' . catalog_h($range) . '</td>'
                 . '<td>' . number_format($fileCount) . '</td>'
                 . '<td>' . number_format($sourceCount) . '</td>'
                 . '<td><div class="game-actions">'

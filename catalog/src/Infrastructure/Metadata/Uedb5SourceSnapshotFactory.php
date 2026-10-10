@@ -65,7 +65,7 @@ final class Uedb5SourceSnapshotFactory
             $version = array_key_exists('package_version', $file) && $file['package_version'] !== null
                 ? (int)$file['package_version'] : null;
             throw new RuntimeException(
-                'Package version is outside the active game profile for game_id=' . $gameId
+                'Configured compatibility reader does not match the selected source reader for game_id=' . $gameId
                 . ' (version=' . ($version ?? 'unknown') . ').'
             );
         }
@@ -198,12 +198,6 @@ final class Uedb5SourceSnapshotFactory
             $engineKey,
             $signedPackageVersion
         );
-        if (empty($decision['ok'])) {
-            throw new RuntimeException(
-                'Parsed package version is outside the active game profile for game_id=' . $gameId
-                . ' (version=' . ($version ?? 'unknown') . ', reason=' . (string)($decision['reason'] ?? 'rejected') . ').'
-            );
-        }
         $compatibility = $decision['compatibility'] ?? null;
         if (is_array($compatibility)
             && strtoupper((string)($compatibility['reader_engine'] ?? '')) !== $engineKey) {

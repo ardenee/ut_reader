@@ -23,7 +23,7 @@ $check('migration_registers_v5_only_after_source_parse',str_contains($service,'r
 $check('projection_failure_removes_staged_registration',str_contains($service,'registration->remove'));
 $check('resume_selection_uses_missing_v5_registration',str_contains($service,'LEFT JOIN ue_uedb5_files v ON v.file_id=f.id')&&str_contains($service,'v.file_id IS NULL'));
 $check('continuous_run_has_internal_cursor',str_contains($service,'f.id>?')&&str_contains($service,'$cursor = (int)$file'));
-$check('game_profile_is_version_gate',str_contains($factory,'gp_required_profile_for_game')
+$check('game_profile_is_reader_dispatch_only',str_contains($factory,'gp_required_profile_for_game')
     &&str_contains($factory,"'min_version' => \$profile['package_version_min']")
     &&str_contains($factory,"'max_version' => \$profile['package_version_max']")
     &&str_contains($factory,'gp_profile_version_decision'));
@@ -41,14 +41,14 @@ $check('legacy_builders_have_no_private_game_version_bounds',
     &&!str_contains((string)file_get_contents($root.'/src/Infrastructure/Metadata/Uedb5Ut2003SnapshotBuilder.php'),'MIN_VERSION')
     &&!str_contains((string)file_get_contents($root.'/src/Infrastructure/Metadata/Uedb5Ut2004SnapshotBuilder.php'),'MIN_VERSION'));
 $check('preflight_reports_version_distribution',str_contains($service,'package_version_distribution'));
-$check('preflight_reports_unsupported_files',str_contains($service,'unsupported_source_files'));
+$check('preflight_reports_reader_dispatch_conflicts',str_contains($service,'reader_dispatch_conflict_files'));
 $check('preflight_sql_has_no_literal_quote_backslashes',!str_contains($service,'scan_status=\\\"verified\\\"'));
 $check('preflight_uses_source_profile_without_v4_registration',
     str_contains($service, "'source_ready' => ") && str_contains($service, '$profileRejectedCount === 0')
     && str_contains($cli, "'source_ready'")
     && !str_contains($service, 'ue_file_metadata')
     && !str_contains($service, 'v4_ready'));
-$check('ue5_game_version_gate_is_profile_owned',str_contains($factory,"'ue5' => ['engine_key'=>'UE5']")
+$check('ue5_reader_dispatch_is_profile_owned',str_contains($factory,"'ue5' => ['engine_key'=>'UE5']")
     &&!str_contains($factory,"'min_version'=>1000")&&!str_contains($factory,"'max_version'=>1018"));
 $check('ue5_classic_uses_assigned_parser_profile',str_contains($factory,'catalog_ue5_reader_options')&&str_contains($factory,'catalog_ue5_set_next_reader_options'));
 $check('ue5_classic_uses_canonical_reader',str_contains($factory,'\'ue5\' => $reader instanceof \\UnrealPackageReader5')&&str_contains($factory,'Uedb5Ue5ClassicSnapshotBuilder::build'));
@@ -90,6 +90,8 @@ $profileFixture=[
 $check('profile_native_range_is_accepted',!empty(gp_profile_version_decision($profileFixture,69,0,'UE1')['ok']));
 $overrideDecision=gp_profile_version_decision($profileFixture,71,0,'UE1');
 $check('profile_compatibility_rule_overrides_range',!empty($overrideDecision['ok'])&&is_array($overrideDecision['compatibility']));
-$check('profile_rejects_version_outside_range_and_override',empty(gp_profile_version_decision($profileFixture,84,0,'UE1')['ok']));
+$check('profile_admits_versions_outside_advisory_range',!empty(gp_profile_version_decision($profileFixture,84,0,'UE1')['ok'])
+    &&!empty(gp_profile_version_decision($profileFixture,54,0,'UE1')['ok']));
+$check('profile_retains_legacy_licensee_as_metadata',!empty(gp_profile_version_decision($profileFixture,84,999,'UE1')['ok']));
 echo json_encode(['ok'=>$failures===[],'checks'=>$checks,'failures'=>$failures],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;
 exit($failures===[]?0:1);

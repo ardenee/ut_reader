@@ -84,14 +84,11 @@ final class Uedb5GameSourceMigrationService
             'verified_count' => $verified,
             'source_ready' => $profileRejectedCount === 0,
             'staged_count' => (int)($counts['staged_count'] ?? 0),
-            'unsupported_source_version_count' => $profileRejectedCount,
-            'unsupported_source_files' => $profileRejectedFiles,
-            'profile_rejected_count' => $profileRejectedCount,
-            'profile_rejected_files' => $profileRejectedFiles,
+            'reader_dispatch_conflict_count' => $profileRejectedCount,
+            'reader_dispatch_conflict_files' => $profileRejectedFiles,
             'source_key' => (string)$game['source_key'],
-            'source_version_range' => [$contract['min_version'], $contract['max_version']],
-            'profile_version_range' => [$contract['min_version'], $contract['max_version']],
-            'version_gate' => 'game_profile',
+            'historic_profile_version_range' => [$contract['min_version'], $contract['max_version']],
+            'version_gate' => 'canonical_reader',
             'package_version_distribution' => $versionDistribution,
             'verified_directory' => $sourceDirectory,
             'durable_status_tracking' => $this->statuses !== null,
@@ -114,7 +111,7 @@ final class Uedb5GameSourceMigrationService
             ? ['game'=>$this->game($gameId),'source_ready'=>true,'worker_preflight_skipped'=>true]
             : $this->preflight($gameId);
         if (empty($preflight['source_ready'])) {
-            throw new RuntimeException('Verified source files do not all satisfy the game source profile; review unsupported_source_files before V5 staging.');
+            throw new RuntimeException('Verified source files include incompatible reader-dispatch rules; review reader_dispatch_conflict_files before V5 staging.');
         }
         $game = (array)$preflight['game'];
         $limit = max(1, min(5000, $limit));

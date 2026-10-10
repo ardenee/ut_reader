@@ -29,7 +29,7 @@ $check('checks_invalid_file_exclusions',str_contains($service,'invalid_file_iden
 $check('checks_primary_provider_projection',str_contains($service,'every_verified_v5_has_primary_provider_key'));
 $check('checks_dependency_count_before_deep_pass',str_contains($service,'classic_dependency_edge_count_matches_import_count'));
 $check('checks_game_profile_version_coverage',str_contains($service,'every_verified_game_has_v5_source_contract')
-    &&str_contains($service,'every_verified_file_is_allowed_by_game_profile')
+    &&str_contains($service,'every_verified_file_has_compatible_reader_dispatch')
     &&str_contains($service,'profileAllowsCatalogRow'));
 $check('deep_revalidates_every_verified_file',str_contains($service,'Uedb5MigrationValidator')&&str_contains($service,'$validator->validate($fileId)'));
 $check('deep_requires_dependency_ready',str_contains($service,'dependency_not_ready'));

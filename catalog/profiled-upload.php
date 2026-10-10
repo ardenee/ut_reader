@@ -300,15 +300,12 @@ try {
     echo '<div id="upload-progress-log" class="upload-progress-log"></div></div>';
     echo '</form></div>';
 
-    echo '<div class="card"><h2>Game profiles</h2><table><tr><th>Game</th><th>Profile engine</th><th>Discovery extensions</th><th>Version range</th><th>Open</th></tr>';
+    echo '<div class="card"><h2>Game profiles</h2><table><tr><th>Game</th><th>Profile engine</th><th>Discovery extensions</th><th>Open</th></tr>';
     foreach ($games as $game) {
         $extensions = json_decode((string)($game['allowed_extensions_json'] ?? '[]'), true);
-        $range = ($game['package_version_min'] !== null || $game['package_version_max'] !== null)
-            ? (($game['package_version_min'] ?? '?') . ' - ' . ($game['package_version_max'] ?? '?'))
-            : 'not fixed';
         $engine = (string)($game['profile_engine'] ?: 'missing profile');
         echo '<tr><td>' . catalog_h($game['name']) . '</td><td>' . catalog_h($engine) . '</td><td class="mono">'
-            . catalog_h(is_array($extensions) ? implode(', ', $extensions) : '') . '</td><td class="mono">' . catalog_h($range)
+            . catalog_h(is_array($extensions) ? implode(', ', $extensions) : '')
             . '</td><td><a class="button" href="profiled-upload.php?game_id=' . (int)$game['id'] . '">select</a></td></tr>';
     }
     echo '</table><p class="muted small">Discovery extensions are only source/file-picker hints. They are not trusted for engine detection or package acceptance.</p></div>';

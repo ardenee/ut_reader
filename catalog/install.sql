@@ -474,11 +474,13 @@ INSERT INTO ue_games(name, slug, description) VALUES
 ('Unreal Tournament 3', 'ut3', 'UE3 packages such as .ut3 and .upk'),
 ('Unreal Engine 4', 'ue4', 'UE4 .uasset and .umap packages');
 
-INSERT INTO ue_game_profiles(profile_name, engine_key, allowed_extensions_json, package_version_min, package_version_max, confidence_policy, notes) VALUES
-('UE1 standard package profile', 'UE1', JSON_ARRAY('u','unr','utx','umx','uax'), 60, 69, 'normal', 'UE1 era package profile. Exact ranges can be refined from known-good samples.'),
-('UE2 / UE2.5 standard package profile', 'UE2', JSON_ARRAY('u','un2','ut2','utx','usx','ukx','uax','umx'), 100, 130, 'normal', 'UE2/UE2.5 profile. The header identifies family but does not always prove the exact game.'),
-('UE3 standard package profile', 'UE3', JSON_ARRAY('ut3','upk','u'), 512, 512, 'loose', 'UE3/UT3 package profile. Compressed packages may need LZO support.'),
-('UE4 standard package profile', 'UE4', JSON_ARRAY('uasset','umap'), NULL, NULL, 'loose', 'UE4 package profile. Versioned and unversioned packages require profile-aware parsing.');
+-- Version columns remain nullable for historical backup/restore compatibility;
+-- no newly installed profile imposes a package/licensee version gate.
+INSERT INTO ue_game_profiles(profile_name, engine_key, allowed_extensions_json, confidence_policy, notes) VALUES
+('UE1 standard package profile', 'UE1', JSON_ARRAY('u','unr','utx','umx','uax'), 'normal', 'UE1 reader selection; individual file versions are retained and interpreted by the reader.'),
+('UE2 / UE2.5 standard package profile', 'UE2', JSON_ARRAY('u','un2','ut2','utx','usx','ukx','uax','umx'), 'normal', 'UE2/UE2.5 profile. The header identifies family but does not always prove the exact game.'),
+('UE3 standard package profile', 'UE3', JSON_ARRAY('ut3','upk','u'), 'loose', 'UE3/UT3 package profile. Compressed packages may need LZO support.'),
+('UE4 standard package profile', 'UE4', JSON_ARRAY('uasset','umap'), 'loose', 'UE4 package profile. Versioned and unversioned packages require source-backed parsing.');
 
 UPDATE ue_games g JOIN ue_game_profiles p ON p.profile_name='UE1 standard package profile' SET g.profile_id=p.id WHERE g.slug='ut99';
 UPDATE ue_games g JOIN ue_game_profiles p ON p.profile_name='UE2 / UE2.5 standard package profile' SET g.profile_id=p.id WHERE g.slug='ut2004';

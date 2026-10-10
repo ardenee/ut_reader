@@ -50,7 +50,7 @@ try {
 
     echo '<div class="card"><h2>Setup workflow</h2><div class="grid">';
     catalog_tool_card('1. Game Manager', 'game-manager.php', 'Add/edit games and their scanner profiles in one place.', 'primary');
-    catalog_tool_card('2. Game Profiles', 'game-profiles.php', 'Edit scanner-only rules: engine family, extensions, version ranges, and policy.', 'settings');
+    catalog_tool_card('2. Game Profiles', 'game-profiles.php', 'Edit scanner-only rules: engine family, discovery extensions, reader compatibility, and policy.', 'settings');
     catalog_tool_card('3. Profiled upload scanner', 'profiled-upload.php', 'New scanner path with engine/version/profile checks before importing as verified.', 'new');
     catalog_tool_card('4. Add storage locations', 'sources.php', 'Register local folders, server paths, HTTP mirrors, or redirect sources.');
     catalog_tool_card('5. Scan local storage', 'source-scan.php', 'Recursively scan a configured game source and preserve its relative file paths.');

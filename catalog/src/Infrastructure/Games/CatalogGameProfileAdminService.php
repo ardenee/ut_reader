@@ -43,10 +43,6 @@ final class CatalogGameProfileAdminService
         $engine = strtoupper(trim((string)($input['engine_key'] ?? '')));
         $extensions = (string)($input['extensions'] ?? '');
         $compatibilityRules = (string)($input['compatibility_rules_json'] ?? '');
-        $versionMin = trim((string)($input['package_version_min'] ?? ''));
-        $versionMax = trim((string)($input['package_version_max'] ?? ''));
-        $licenseeMin = trim((string)($input['licensee_version_min'] ?? ''));
-        $licenseeMax = trim((string)($input['licensee_version_max'] ?? ''));
         $policy = in_array((string)($input['confidence_policy'] ?? 'normal'), ['strict', 'normal', 'loose'], true)
             ? (string)$input['confidence_policy']
             : 'normal';
@@ -63,10 +59,6 @@ final class CatalogGameProfileAdminService
             $engine,
             $extensionsJson,
             $rulesJson,
-            $versionMin === '' ? null : (int)$versionMin,
-            $versionMax === '' ? null : (int)$versionMax,
-            $licenseeMin === '' ? null : (int)$licenseeMin,
-            $licenseeMax === '' ? null : (int)$licenseeMax,
             $policy,
             $notes ?: null,
         ];
@@ -77,16 +69,14 @@ final class CatalogGameProfileAdminService
             }
             $this->db->prepare(
                 'UPDATE ue_game_profiles SET profile_name=?,game_id=NULL,engine_key=?,allowed_extensions_json=?,'
-                . 'compatibility_rules_json=?,package_version_min=?,package_version_max=?,licensee_version_min=?,'
-                . 'licensee_version_max=?,confidence_policy=?,notes=?,is_active=1 WHERE id=?'
+                . 'compatibility_rules_json=?,confidence_policy=?,notes=?,is_active=1 WHERE id=?'
             )->execute(array_merge($values, [$profileId]));
             return $profileId;
         }
 
         $this->db->prepare(
             'INSERT INTO ue_game_profiles(profile_name,game_id,engine_key,allowed_extensions_json,'
-            . 'compatibility_rules_json,package_version_min,package_version_max,licensee_version_min,'
-            . 'licensee_version_max,confidence_policy,notes,is_active) VALUES(?,NULL,?,?,?,?,?,?,?,?,?,1)'
+            . 'compatibility_rules_json,confidence_policy,notes,is_active) VALUES(?,NULL,?,?,?,?,?,1)'
         )->execute($values);
         return (int)$this->db->lastInsertId();
     }

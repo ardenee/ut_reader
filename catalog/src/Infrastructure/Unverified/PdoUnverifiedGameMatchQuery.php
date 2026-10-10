@@ -159,28 +159,19 @@ final class PdoUnverifiedGameMatchQuery
                         $detectedEngine
                     )
                     : null;
+                // A legacy package-version band is only an engine hint. Let a
+                // selected UE1/UE2/UE3 reader try it; actual parsing determines
+                // whether the format is supported. Modern UE4/UE5 headers remain
+                // structurally distinct and cannot fall back across families.
+                $legacyCandidate = in_array($profileEngine, ['UE1','UE2','UE3'], true)
+                    && ($detectedEngine === 'UNKNOWN' || in_array($detectedEngine, ['UE1','UE2','UE3'], true));
                 $engineOk = $profileExists
-                    && ($profileEngine === $detectedEngine || $compatibility !== null);
+                    && ($legacyCandidate || $profileEngine === $detectedEngine || $compatibility !== null);
 
+                // File and licensee versions remain visible as header evidence;
+                // neither is an admission boundary for a game match.
                 $versionOk = $profileExists;
-                if ($versionOk && !$signedUe4Version && $packageVersion !== null && $compatibility === null) {
-                    if ($game['package_version_min'] !== null && $packageVersion < (int)$game['package_version_min']) {
-                        $versionOk = false;
-                    }
-                    if ($game['package_version_max'] !== null && $packageVersion > (int)$game['package_version_max']) {
-                        $versionOk = false;
-                    }
-                }
-
                 $licenseeOk = $profileExists;
-                if ($licenseeOk && $licenseeVersion !== null && $compatibility === null) {
-                    if ($game['licensee_version_min'] !== null && $licenseeVersion < (int)$game['licensee_version_min']) {
-                        $licenseeOk = false;
-                    }
-                    if ($game['licensee_version_max'] !== null && $licenseeVersion > (int)$game['licensee_version_max']) {
-                        $licenseeOk = false;
-                    }
-                }
 
                 $compatible = $profileExists && $extensionOk && $engineOk && $versionOk && $licenseeOk;
                 if ($compatible && $exact > 0) {
@@ -205,8 +196,6 @@ final class PdoUnverifiedGameMatchQuery
                 if (!$profileExists) $reasons[] = 'No active game profile';
                 if ($profileExists && !$extensionOk) $reasons[] = 'Extension not allowed';
                 if ($profileExists && !$engineOk) $reasons[] = 'Engine mismatch';
-                if ($profileExists && !$versionOk) $reasons[] = 'Package version outside profile range';
-                if ($profileExists && !$licenseeOk) $reasons[] = 'Licensee version outside profile range';
                 if ($compatibility !== null) $reasons[] = (string)($compatibility['label'] ?? 'Compatibility rule');
 
                 $rows[] = [

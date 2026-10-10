@@ -118,11 +118,10 @@ function gp_compatibility_for_file(array $profile, string $ext, ?int $version, ?
 }
 
 /**
- * Canonical game-profile version gate shared by upload/classification and
- * maintenance/migration paths. Explicit compatibility rules override the
- * ordinary profile min/max range. Modern signed package summaries retain the
- * existing behavior where their parser profile, not the legacy range fields,
- * determines the effective serialization version.
+ * Shared header compatibility decision for upload/classification and
+ * maintenance/migration. Stored game-profile min/max fields are historical
+ * metadata, never hard admission gates. Explicit header compatibility rules
+ * select alternate readers, and source readers enforce real format support.
  *
  * @return array{ok:bool,compatibility:?array,reason:string}
  */
@@ -137,19 +136,10 @@ function gp_profile_version_decision(
     if ($compatibility !== null) {
         return ['ok' => true, 'compatibility' => $compatibility, 'reason' => 'compatibility_rule'];
     }
-    if ($signedPackageVersion || $version === null) {
-        return ['ok' => true, 'compatibility' => null, 'reason' => 'not_legacy_range_gated'];
-    }
-
-    $min = $profile['package_version_min'] !== null ? (int)$profile['package_version_min'] : null;
-    $max = $profile['package_version_max'] !== null ? (int)$profile['package_version_max'] : null;
-    if ($min !== null && $version < $min) {
-        return ['ok' => false, 'compatibility' => null, 'reason' => 'below_profile_range'];
-    }
-    if ($max !== null && $version > $max) {
-        return ['ok' => false, 'compatibility' => null, 'reason' => 'above_profile_range'];
-    }
-    return ['ok' => true, 'compatibility' => null, 'reason' => 'profile_range'];
+    // Profile range values are retained for historical reporting, not admission.
+    // The canonical reader enforces genuine source-backed format constraints.
+    // Compatibility rules still select explicit alternate reader engines.
+    return ['ok' => true, 'compatibility' => null, 'reason' => 'reader_version_validation'];
 }
 
 function gp_read_legacy_summary(string $path): array
@@ -334,23 +324,27 @@ function gp_classify_file(PDO $db, int $selectedGameId, string $path, string $or
     if ($compatible) {
         $notes[] = 'Accepted by explicit header compatibility rule: ' . $compatibility['label']
             . '. Parsed with ' . $compatibility['reader_engine'] . ' reader.';
-    } elseif (($versionDecision['reason'] ?? '') === 'below_profile_range') {
-        $notes[] = 'Package version is below the active game profile range.';
-    } elseif (($versionDecision['reason'] ?? '') === 'above_profile_range') {
-        $notes[] = 'Package version is above the active game profile range.';
     }
 
-    // Modern package families are source-selected from the serialized summary.
-    // UE5 must not fall back to the UE4 reader merely because both use the package tag.
-    $engineOk = $detectedEngine !== 'UNKNOWN'
-        && ($selectedEngine === '' || $detectedEngine === $selectedEngine || $compatible);
+    // UE1/UE2/UE3 share a legacy summary whose numeric version is only a
+    // provisional engine hint. Never reject the selected legacy reader solely
+    // because that version falls in a different heuristic band (or no band).
+    // UE4/UE5 retain their distinct, source-backed header format dispatch.
+    $legacySelectedReader = ($summary['format'] ?? '') === 'legacy_package'
+        && in_array($selectedEngine, ['UE1', 'UE2', 'UE3'], true);
+    $engineOk = $legacySelectedReader || ($detectedEngine !== 'UNKNOWN'
+        && ($selectedEngine === '' || $detectedEngine === $selectedEngine || $compatible));
+    if ($legacySelectedReader && $detectedEngine !== $selectedEngine) {
+        $notes[] = 'Legacy engine hint is not authoritative; attempting the selected game reader.';
+    }
     if (!$engineOk) {
         $notes[] = 'Header-detected engine ' . $detectedEngine
             . ' does not match active game profile engine ' . ($selectedEngine !== '' ? $selectedEngine : 'UNKNOWN') . '.';
     }
 
     if ($engineOk && $versionOk && !empty($summary['ok'])) {
-        $confidence = $compatible ? 'medium' : 'high';
+        $confidence = ($compatible || ($legacySelectedReader && $detectedEngine !== $selectedEngine))
+            ? 'medium' : 'high';
     } elseif ($detectedEngine === 'UNKNOWN') {
         $confidence = 'unknown';
     } elseif (!$engineOk) {
@@ -378,7 +372,7 @@ function gp_classify_file(PDO $db, int $selectedGameId, string $path, string $or
 
     $readerEngine = $compatible
         ? strtoupper((string)$compatibility['reader_engine'])
-        : $detectedEngine;
+        : ($legacySelectedReader ? $selectedEngine : $detectedEngine);
     if (!in_array($readerEngine, ['UE1', 'UE2', 'UE3', 'UE4', 'UE5'], true)) {
         $readerEngine = 'UNKNOWN';
     }
