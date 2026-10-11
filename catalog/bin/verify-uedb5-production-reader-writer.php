@@ -5,7 +5,6 @@ if (PHP_SAPI !== 'cli') { exit(1); }
 $root = realpath(dirname(__DIR__)) ?: dirname(__DIR__);
 require_once $root . '/bootstrap/autoload.php';
 
-use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer;
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5MetadataContainer;
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5MetadataReader;
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5MetadataSnapshotWriter;

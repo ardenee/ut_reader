@@ -5,7 +5,6 @@ if (PHP_SAPI !== 'cli') {
     exit(1);
 }
 
-use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer;
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5MetadataContainer;
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5MetadataStagingReader;
 

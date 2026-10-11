@@ -5,7 +5,6 @@ if (PHP_SAPI !== 'cli') { exit(1); }
 $root = realpath(dirname(__DIR__)) ?: dirname(__DIR__);
 require_once $root . '/bootstrap/autoload.php';
 
-use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer;
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5DependencyRebuilder;
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5MetadataReader;
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5MetadataSnapshotWriter;
@@ -108,7 +107,8 @@ try {
         'v5_rebuilder_replaces_not_appends_dependency_results');
     $check((int)($missingBuilt['dependency_outcomes']['missing'] ?? 0) === 2, 'v5_rebuilder_returns_canonical_outcome_counts');
 
-    $v4Path = BlockedCompressedMetadataContainer::path($tempRoot, $gameId, $consumerId);
+    $v4Path = $tempRoot . DIRECTORY_SEPARATOR . 'metadata' . DIRECTORY_SEPARATOR . 'game-' . $gameId
+        . DIRECTORY_SEPARATOR . $consumerId . '.uedb4';
     $v4Dir = dirname($v4Path);
     if (!is_dir($v4Dir)) { mkdir($v4Dir, 0775, true); }
     file_put_contents($v4Path, 'V4-UNCHANGED');
