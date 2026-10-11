@@ -25,16 +25,17 @@ $record = static function (string $name, bool $ok, string $detail = '') use (&$c
 
 $record(
     'full_sync_resets_dependency_identity_projection',
-    str_contains($projection, 'DELETE i FROM ue_dependency_identity_lookup i')
-        && str_contains($projection, "'dependency_identity_rows'"),
-    'Full Sync reset must clear v4 dependency identity rows with dependency links'
+    str_contains($projection, 'DELETE e FROM ue_uedb5_dependency_edges e')
+        && str_contains($projection, 'DELETE p FROM ue_uedb5_dependency_packages p')
+        && str_contains($projection, 'DELETE p FROM ue_uedb5_provider_keys p'),
+    'Full Sync reset must clear UEDB5 dependency edges, package summaries and provider keys'
 );
 
 $record(
-    'full_sync_documents_format4_publication',
-    str_contains($projection, 'format-4 metadata')
-        && !str_contains($projection, 'format-3 metadata'),
-    'Full Sync documentation must describe current format-4 publication'
+    'full_sync_documents_uedb5_publication',
+    str_contains($projection, 'UEDB5 metadata')
+        && !str_contains($projection, 'format-4 metadata'),
+    'Full Sync documentation must describe UEDB5 publication'
 );
 
 $record(

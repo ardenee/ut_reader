@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 if (PHP_SAPI !== 'cli') { exit(1); }
 
-use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer;
 use UnrealDb\Catalog\Infrastructure\Metadata\PdoUedb5StagingRegistrationRepository;
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5MetadataSnapshotWriter;
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5SqlProjectionContract;
@@ -97,16 +96,16 @@ try {
     $repoSource = $read('src/Infrastructure/Metadata/PdoUedb5StagingRegistrationRepository.php');
     $check('staging_repository_never_writes_live_registration',
         !preg_match('/(?:INSERT\s+INTO|UPDATE|REPLACE\s+INTO)\s+ue_file_metadata/i', $repoSource));
-    $check('staging_repository_requires_live_v4_before_register',
-        str_contains($repoSource, 'BlockedCompressedMetadataContainer::FORMAT_VERSION')
-        && str_contains($repoSource, 'ue_file_metadata'));
+    $check('staging_registration_requires_verified_catalog_file',
+        str_contains($repoSource, 'assertVerifiedCatalogFile($gameId, $fileId)')
+        && str_contains($repoSource, "'SELECT game_id,scan_status FROM ue_files WHERE id=? LIMIT 1'"));
     $check('staging_repository_writes_only_v5_registration_table',
         str_contains($repoSource, 'INSERT INTO ue_uedb5_files('));
 
-    $v4Reader = $read('src/Infrastructure/Metadata/BlockedCompressedMetadataReader.php');
-    $check('production_reader_still_rejects_non_v4_registration',
-        str_contains($v4Reader, '!== BlockedCompressedMetadataContainer::FORMAT_VERSION')
-        && str_contains($v4Reader, 'UEDBM4'));
+    $check('staging_refresh_does_not_consult_v4_registration',
+        str_contains($repoSource, 'public function refreshExisting(')
+        && str_contains($repoSource, 'return $this->upsert($this->inspect($gameId, $fileId));')
+        && !str_contains($repoSource, 'BlockedCompressedMetadataContainer'));
 
     $contract = Uedb5SqlProjectionContract::baselineTables();
     $nameColumns = (array)($contract['ue_uedb5_name_candidates']['columns'] ?? []);
