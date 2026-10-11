@@ -270,6 +270,29 @@ $ut2004Rejected = Uedb5ClassicDependencyResolver::resolve($ut2004V129, [[
 $check(($ut2004Rejected[1]['status'] ?? null) === 'missing'
     && ($ut2004Rejected[1]['reason'] ?? null) === 'verify_import_private_export',
     'ut2004_v129_private_export_is_rejected');
+// Epic UT2004 GetPackageLinker can load an older UE1 package by name.
+// VerifyImport must inspect its actual exports, not reject engine identity.
+$ut2004Ue1Public = Uedb5ClassicDependencyResolver::resolve($ut2004V129, [[
+    'package_name'=>'Provider','provider_id'=>41002,'snapshot'=>$ut99Public,
+]]);
+$check(($ut2004Ue1Public[1]['status'] ?? null) === 'resolved'
+    && ($ut2004Ue1Public[1]['provider_id'] ?? null) === 41002,
+    'ut2004_v129_accepts_ue1_provider_public_export');
+$ut2004Ue1Private = Uedb5ClassicDependencyResolver::resolve($ut2004V129, [[
+    'package_name'=>'Provider','provider_id'=>41003,'snapshot'=>$ut99Private,
+]]);
+$check(($ut2004Ue1Private[1]['status'] ?? null) === 'missing'
+    && ($ut2004Ue1Private[1]['reason'] ?? null) === 'verify_import_private_export',
+    'ut2004_v129_ue1_provider_still_enforces_public_export');
+$ue1ConsumerWithUe2ProviderRejected = false;
+try {
+    Uedb5ClassicDependencyResolver::resolve($ut99Consumer, [[
+        'package_name'=>'Provider','provider_id'=>42009,'snapshot'=>$ut2004Provider128,
+    ]]);
+} catch (RuntimeException $error) {
+    $ue1ConsumerWithUe2ProviderRejected = str_contains($error->getMessage(), 'provider engine does not match');
+}
+$check($ue1ConsumerWithUe2ProviderRejected, 'ue1_consumer_does_not_silently_inherit_ue2_semantics');
 $ut2004V130 = $snapshot(
     42012, 'Consumer130', 'classic-linkerload', 'ue2.ut2004', 'ue2-ut2004-post-v129-profile-admitted-unresolved',
     $consumerImports, [], 130

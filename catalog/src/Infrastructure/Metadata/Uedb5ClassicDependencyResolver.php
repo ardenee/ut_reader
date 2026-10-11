@@ -42,7 +42,13 @@ final class Uedb5ClassicDependencyResolver
             if ($lookupPackage === '' || !is_array($snapshot)) {
                 throw new RuntimeException('Classic UEDB5 provider selection requires package_name and snapshot.');
             }
-            if (self::engine($snapshot) !== $engine) {
+            $providerEngine = self::engine($snapshot);
+            // UE2 GetPackageLinker loads the named package and VerifyImport
+            // inspects its objects; it does not require an equal producer engine.
+            // UE1 classic imports/exports have the common fields needed by the
+            // UE2 source-backed VerifyImport projection. Preserve the provider's
+            // own parsed schema and serialization policy instead of relabelling it.
+            if ($providerEngine !== $engine && !($engine === 'ue2' && $providerEngine === 'ue1')) {
                 throw new RuntimeException('Classic UEDB5 provider engine does not match the consumer engine.');
             }
             $key = self::key($lookupPackage);

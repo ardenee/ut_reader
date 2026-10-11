@@ -89,6 +89,12 @@ It creates/finds a runtime package named by Import.ObjectName and calls:
 
 There is no alternate provider name or alias retry in this VerifyImport path.
 
+### Older UE1-format provider packages
+
+`GetPackageLinker` invokes the package linker for the named physical package; `VerifyImport` does **not** compare the provider's original UE1/UE2 engine-family identity against the consumer. `ULinkerLoad::ULinkerLoad` checks `Summary.GetFileVersion() < PACKAGE_MIN_VERSION` with an old-version confirmation (`GWarn->YesNof`) rather than rejecting all older files. If permitted, the loader attempts the old package's version-dependent deserialization and then matches imports against its exports. Failure to load the provider or resolve an import is still an error.
+
+UEDB5 mirrors this for **UE2 consumers with a separately parsed UE1 provider snapshot** by passing the provider's actual UE1 imports and exports through the **UE2 consumer's** game-specific `VerifyImport` projection. Existing public/private export and missing-object outcomes remain enforced. This is not a guarantee that an arbitrary older physical package is loadable: UEDB5 has already parsed the provider. An unverified UE2-specific consumer policy remains unresolved, and UE1-consumer to UE2-provider behaviour is a separate case not covered by this change. Regression: `catalog/bin/verify-uedb5-unreal-classic-dependency-resolution.php`.
+
 ## Package linker lookup
 
 With no explicit filename, GetPackageLinker resolves a file from the package name using `appFindPackageFile`.
