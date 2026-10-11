@@ -261,8 +261,8 @@ try {
     $relationshipCounts = catalog_one(
         $db,
         'SELECT '
-        . '(SELECT COUNT(DISTINCT resolved_file_id) FROM ue_dependency_links WHERE file_id=? AND resolved_file_id IS NOT NULL) uses_count,'
-        . '(SELECT COUNT(DISTINCT file_id) FROM ue_dependency_links WHERE resolved_file_id=?) used_by_count',
+        . '(SELECT COUNT(DISTINCT resolved_file_id) FROM ue_uedb5_dependency_edges WHERE file_id=? AND resolved_file_id IS NOT NULL) uses_count,'
+        . '(SELECT COUNT(DISTINCT file_id) FROM ue_uedb5_dependency_edges WHERE resolved_file_id=?) used_by_count',
         [$fileId, $fileId]
     ) ?: ['uses_count' => 0, 'used_by_count' => 0];
 
@@ -270,13 +270,13 @@ try {
     if ($table === 'uses') {
         $relationshipRows = catalog_all($db,
             'SELECT l.resolved_file_id file_id,f.original_name,f.package_name,f.file_size,f.package_guid,f.md5,f.sha1,COUNT(*) reference_count '
-            . 'FROM ue_dependency_links l JOIN ue_files f ON f.id=l.resolved_file_id '
+            . 'FROM ue_uedb5_dependency_edges l JOIN ue_files f ON f.id=l.resolved_file_id '
             . 'WHERE l.file_id=? AND l.resolved_file_id IS NOT NULL AND f.scan_status="verified" '
             . 'GROUP BY l.resolved_file_id,f.original_name,f.package_name,f.file_size,f.package_guid,f.md5,f.sha1 ORDER BY f.package_name,f.original_name', [$fileId]);
     } elseif ($table === 'used-by') {
         $relationshipRows = catalog_all($db,
             'SELECT l.file_id,f.original_name,f.package_name,f.file_size,f.package_guid,f.md5,f.sha1,COUNT(*) reference_count '
-            . 'FROM ue_dependency_links l JOIN ue_files f ON f.id=l.file_id '
+            . 'FROM ue_uedb5_dependency_edges l JOIN ue_files f ON f.id=l.file_id '
             . 'WHERE l.resolved_file_id=? AND f.scan_status="verified" '
             . 'GROUP BY l.file_id,f.original_name,f.package_name,f.file_size,f.package_guid,f.md5,f.sha1 ORDER BY f.package_name,f.original_name', [$fileId]);
     }
