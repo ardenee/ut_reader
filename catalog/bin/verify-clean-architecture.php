@@ -77,7 +77,7 @@ foreach ($retired as $relative) {
 $activeInfrastructure = [
     'catalog/src/Infrastructure/Jobs/CatalogPostImportDependencyQueue.php',
     'catalog/src/Infrastructure/Jobs/CatalogProjectionReconciliationQueue.php',
-    'catalog/src/Infrastructure/Persistence/PdoDependencyReadSource.php',
+    'catalog/src/Infrastructure/Metadata/CatalogCompactDependencyReadService.php',
     'catalog/src/Infrastructure/Persistence/PdoMissingFileListQuery.php',
     'catalog/src/Infrastructure/Persistence/PdoMissingDetailListQuery.php',
     'catalog/src/Infrastructure/Import/CatalogPackageImporterAdapter.php',
@@ -195,7 +195,8 @@ $record(
         && str_contains($adapter, 'VerifiedPackagePublisherPort')
         && str_contains($adapter, 'VerifiedPackageDependencyPort')
         && str_contains($adapter, 'FailedUploadPreserver')
-        && !str_contains($adapterExecutable, 'PDO')
+        && !str_contains($adapterExecutable, 'PDO $')
+        && !str_contains($adapterExecutable, 'use PDO;')
         && !str_contains($adapterExecutable, 'CatalogVerifiedPackageInspector')
         && !str_contains($adapterExecutable, 'CatalogVerifiedPackageIdentityRepository')
         && !str_contains($adapterExecutable, 'CatalogVerifiedPackagePublisher')

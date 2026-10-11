@@ -83,7 +83,7 @@ $record(
 $planner = $read('catalog/src/Infrastructure/Downloads/PdoCatalogPackageExportPlanner.php');
 $record(
     'planner_owns_dependency_closure',
-    str_contains($planner, 'PdoDependencyReadSource::sql')
+    str_contains($planner, 'CatalogCompactDependencyReadService')
         && str_contains($planner, 'CatalogPackageExportFormatPolicy::enabled')
         && str_contains($planner, 'base_game_file_is_protected')
         && str_contains($planner, "\$settings['max_files']")
@@ -91,7 +91,7 @@ $record(
         && str_contains($planner, "\$status === 'common'")
         && str_contains($planner, "\$status === 'missing'")
         && str_contains($planner, "\$status === 'package_only'")
-        && str_contains($planner, 'Two catalog files map to the same package path'),
+        && str_contains($planner, 'multiple catalog files map to '),
     'planner must preserve compact dependency reads, redistribution policy, limits and path-collision checks'
 );
 

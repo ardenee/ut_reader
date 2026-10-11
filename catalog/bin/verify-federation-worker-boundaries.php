@@ -97,7 +97,7 @@ $record(
         && str_contains($transport, '/api/federation/download-file.php')
         && str_contains($transport, '/api/federation/download-approved-file.php')
         && str_contains($transport, '/api/federation/upload-file.php')
-        && str_contains($transport, 'PdoDependencyReadSource::sql')
+        && !str_contains($transport, 'PdoDependencyReadSource::sql')
         && str_contains($transport, '3600')
         && str_contains($transport, '7200'),
     'signed federation endpoints, compact dependency exception and transfer timeouts must remain unchanged'

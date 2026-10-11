@@ -21,7 +21,7 @@ $require(is_string($planner), 'dependency closure planner exists');
 $require(is_string($service), 'cross-game copy service exists');
 
 if (is_string($planner)) {
-    $require(str_contains($planner, 'PdoDependencyReadSource::sql($this->db)'), 'planner uses authoritative compact dependency source');
+    $require(str_contains($planner, 'FROM ue_uedb5_dependency_edges e'), 'planner uses authoritative compact dependency source');
     $require(str_contains($planner, "if (\$status === 'common')"), 'planner excludes common dependencies from copy closure');
     $require(str_contains($planner, "if (\$status === 'missing' || \$resolvedFileId < 1)"), 'planner does not invent unresolved dependencies');
     $require(str_contains($planner, "if (\$status === 'package_only')"), 'planner preserves package-only dependency traversal');
@@ -38,8 +38,8 @@ if (is_string($service)) {
     $require(str_contains($service, "'cross_game_dependency_support' => \$dependencySupport"), 'import payload identifies dependency-support jobs');
     $require(str_contains($service, '$dependencyAlreadyPresent++'), 'already-present dependency bytes are skipped');
     $require(str_contains($service, "'cross-game-copy:' . hash("), 'shared dependency imports keep the normal cross-game dedupe key');
-    $require(str_contains($service, "                5,\n                \$sourceFileId,\n                true"), 'dependency imports receive earlier queue priority');
-    $require(str_contains($service, "            6,\n            \$sourceFileId,\n            false"), 'selected root is queued after dependency imports');
+    $require(preg_match('/,\s*5,\s*\$sourceFileId,\s*true\s*\)/', $service) === 1, 'dependency imports receive earlier queue priority');
+    $require(preg_match('/,\s*6,\s*\$sourceFileId,\s*false\s*\)/', $service) === 1, 'selected root is queued after dependency imports');
 }
 
 if ($failed !== []) {
