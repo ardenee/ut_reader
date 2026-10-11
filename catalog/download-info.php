@@ -15,7 +15,6 @@ require_once __DIR__ . '/lib/ExternalMirrors.php';
 
 use UnrealDb\Catalog\Infrastructure\Downloads\CatalogPackageExportSettingsService;
 use UnrealDb\Catalog\Infrastructure\Downloads\PdoCatalogPackageExportPlanner;
-use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyReadSource;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageObjectCoverageResolver;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageCoverageCache;
 
@@ -93,12 +92,12 @@ try {
     $formDependencies = !isset($_GET['dependencies']) || (string)$_GET['dependencies'] !== '0';
     $formAllowIncomplete = $settings['allow_incomplete'] && (string)($_GET['allow_incomplete'] ?? '0') === '1';
 
-    $dependencySource = PdoDependencyReadSource::sql($db);
+    $dependencySource = 'ue_uedb5_dependency_edges';
     $depCount = (int)(catalog_one(
         $db,
         'SELECT COUNT(DISTINCT rf.id) c FROM ' . $dependencySource . ' d '
         . 'JOIN ue_files rf ON rf.id=d.resolved_file_id '
-        . 'WHERE d.file_id=? AND d.status IN ("resolved","package_only")',
+        . 'WHERE d.file_id=? AND d.outcome IN (1,2)',
         [$id]
     )['c'] ?? 0);
 

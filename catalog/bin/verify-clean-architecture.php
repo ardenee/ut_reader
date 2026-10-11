@@ -170,10 +170,10 @@ $gameMissingPage = $read('game-missing.php');
 $gameMissingApi = $read('api/v1/game-missing-counts.php');
 $record(
     'dependency_read_source_is_infrastructure_owned',
-    str_contains($downloadPage, 'PdoDependencyReadSource::sql(')
-        && str_contains($gameMissingPage, 'PdoDependencyReadSource::sql(')
-        && str_contains($gameMissingApi, 'PdoDependencyReadSource::sql(')
-        && !str_contains($downloadPage . $gameMissingPage . $gameMissingApi, 'CatalogDependencyReadSource'),
+    str_contains($downloadPage, 'ue_uedb5_dependency_edges')
+        && str_contains($gameMissingPage, 'PdoGameMissingDependencyQuery')
+        && str_contains($gameMissingApi, 'ue_uedb5_dependency_edges')
+        && !str_contains($downloadPage . $gameMissingPage . $gameMissingApi, 'PdoDependencyReadSource::'),
     'SQL read-source selection must remain outside Application'
 );
 
