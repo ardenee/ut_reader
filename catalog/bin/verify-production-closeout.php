@@ -137,19 +137,16 @@ if ($withDatabase) {
         $record('db_connection', $version !== '', $version);
 
         try {
-            $dependencySource = \UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyReadSource::sql($db);
+            $dependencySource = 'ue_uedb5_dependency_edges';
             $statement = $db->query(
                 'SELECT COUNT(*) FROM ' . $dependencySource . ' runtime_dependencies WHERE 1=0'
             );
             $statement->fetchColumn();
+            $db->query('SELECT file_id FROM ue_uedb5_provider_keys LIMIT 0');
             $record(
                 'db_dependency_read_source_compiles',
                 true,
-                'mode=compact-only compact=' . (
-                    \UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyReadSource::compactAvailable($db)
-                    ? 'yes'
-                    : 'no'
-                )
+                'mode=uedb5'
             );
         } catch (Throwable $error) {
             $record('db_dependency_read_source_compiles', false, $error->getMessage());
