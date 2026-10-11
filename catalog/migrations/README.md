@@ -118,18 +118,8 @@ The run phase creates a dense old→new mapping and a compacted dictionary, then
 
 ## Metadata format 4 cutover
 
-Production metadata is now format 4 (`.uedb4`) only. The runtime reader/writer does not support `.uedb2` or `.uedb3`.
-
-The v3 -> v4 bridge is deliberately isolated under `catalog/bin/v4-migration/` and is used only by:
-
-```text
-php catalog/bin/migrate-uedb3-to-uedb4.php
-```
-
-After all verified metadata registrations are format 4, obsolete files are removed with:
-
-```text
-php catalog/bin/cleanup-obsolete-metadata-files.php --apply
-```
-
-For a future v5+, do not add compatibility branches to production metadata classes. Add an offline prior-format reader/loader under the matching migration directory, publish the new extension/magic/version atomically, then remove the previous-format files after database coverage verifies cleanly.
+Production verified-file metadata uses UEDB5 (.uedb5) exclusively.
+Active runtime readers and verified-file publication must not read or publish UEDB4.
+Legacy V1–V4 database tables are retained until the separate post-cutover database-retirement phase.
+V5 source-only runtime check: php catalog/bin/verify-uedb5-cutover-ready.php
+Historical V3-to-V4 migration and obsolete file cleanup tools are retired; do not use them against V5.
