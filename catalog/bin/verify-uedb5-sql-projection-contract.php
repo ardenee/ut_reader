@@ -5,7 +5,7 @@ if (PHP_SAPI !== 'cli') { exit(1); }
 $root = realpath(dirname(__DIR__)) ?: dirname(__DIR__);
 require_once $root . '/bootstrap/autoload.php';
 
-use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5MetadataContainer;
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5SqlProjectionContract;
 
 $checks = [];
@@ -136,8 +136,8 @@ $check(
     'step4_contract_does_not_publish_v5_sql_yet'
 );
 $check(
-    BlockedCompressedMetadataContainer::FORMAT_VERSION === 4,
-    'production_runtime_remains_uedb4_during_projection_contract_step'
+    Uedb5MetadataContainer::FORMAT_VERSION === 5,
+    'production_runtime_is_uedb5_only'
 );
 
 $rules = Uedb5SqlProjectionContract::rules();
