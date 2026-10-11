@@ -243,15 +243,8 @@ final class Uedb5CutoverReadinessVerifier
             .'JOIN ue_files f ON f.id=s.file_id WHERE f.scan_status="verified" GROUP BY s.status'
         ) as $row){$statusCounts[(string)$row['status']]=(int)$row['file_count'];}
 
-        $liveV4=$this->tableExists('ue_file_metadata')
-            ? $this->count(
-                'SELECT COUNT(*) FROM ue_files f JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=4 '
-                .'WHERE f.scan_status="verified"'
-            )
-            : 0;
         $summary=[
             'verified_count'=>$verified,
-            'live_v4_registration_count'=>$liveV4,
             'status_counts'=>$statusCounts,
             'engine_source_coverage'=>$coverage,
             'source_policy_coverage'=>$policyCoverage,
