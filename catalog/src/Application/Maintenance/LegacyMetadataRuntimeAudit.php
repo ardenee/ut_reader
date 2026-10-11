@@ -22,6 +22,14 @@ final class LegacyMetadataRuntimeAudit
     /** @var list<string> */
     private const OTHER_RETIRED_TABLES = [
         'ue_search_documents',
+        'ue_file_metadata',
+        'ue_terms',
+        'ue_name_lookup',
+        'ue_export_lookup',
+        'ue_export_path_lookup',
+        'ue_legacy_export_identity_lookup',
+        'ue_dependency_links',
+        'ue_dependency_identity_lookup',
     ];
 
     /** @return list<string> */

@@ -54,6 +54,17 @@ final class LegacyMetadataRuntimeScanner
                 if ($trimmed === '' || str_starts_with($trimmed, '//') || str_starts_with($trimmed, '*')) {
                     continue;
                 }
+                // Only these non-executable negative assertions and forbidden-write
+                // literals are exempt; all SQL references remain auditable.
+                if ($relative === 'src/Infrastructure/Metadata/Uedb5StagingIsolationContract.php'
+                    && preg_match("/^'ue_[a-z0-9_]+'[,]?$/i", $trimmed) === 1) {
+                    continue;
+                }
+                if ($relative === 'src/Infrastructure/Metadata/Uedb5CutoverReadinessVerifier.php'
+                    && (str_contains($trimmed, '!str_contains(')
+                        || str_contains($trimmed, "if(preg_match('/BlockedCompressedMetadataReader|"))) {
+                    continue;
+                }
                 foreach (LegacyMetadataRuntimeAudit::retiredTables() as $table) {
                     if (!preg_match('/\b' . preg_quote($table, '/') . '\b/i', $line)) {
                         continue;
