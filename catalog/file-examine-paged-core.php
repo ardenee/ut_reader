@@ -380,13 +380,13 @@ try {
     echo examine_pagination($fileId, $table, $page);
 
     if ($table === 'names') {
-        echo '<h2>Names</h2><div class="examine-table-region"><table><thead><tr><th>Index</th><th>Name</th>' . ($metadataVersion >= 3 ? '<th>Used by</th>' : '') . '<th>Flags / hashes</th></tr></thead><tbody>';
+        echo '<h2>Names</h2><div class="examine-table-region"><table><thead><tr><th>Index</th><th>Name</th>' . '' . '<th>Flags / hashes</th></tr></thead><tbody>';
         foreach ($rows as $row) {
             $index = (int)$row['name_index'];
             $rowId = 'name-' . $index;
             $text = (string)$row['name_text'];
             echo '<tr id="' . $rowId . '"' . ($target === $rowId ? ' class="is-reference-target"' : '') . '><td class="mono">' . $index . '</td><td class="mono path">' . catalog_h($text) . '</td>'
-                . ($metadataVersion >= 3 ? '<td>' . examine_stored_usage($row, $fileId, $pageSize) . '</td>' : '')
+
                 . '<td class="mono">' . examine_name_flags($row['flags'] ?? null) . '</td></tr>';
         }
         echo '</tbody></table></div>';
@@ -410,7 +410,7 @@ try {
             $rowId = 'export-' . $index;
             echo '<tr id="' . $rowId . '"' . ($target === $rowId ? ' class="is-reference-target"' : '') . '><td class="mono">' . $index . '</td>'
                 . '<td class="mono"><a class="xref mono" href="' . catalog_h(examine_href($fileId, $rowId, $pageSize)) . '">' . ($index + 1) . '</a></td>'
-                . '<td>' . examine_object_label((string)$row['class_name'], (int)($row['class_index'] ?? 0), $fileId, $pageSize) . '</td>'
+                . '<td>' . examine_reference((int)($row['class_index'] ?? 0), $fileId, $pageSize) . '</td>'
                 . '<td>' . examine_name_index_link((string)$row['object_name'], isset($row['object_name_index']) ? (int)$row['object_name_index'] : null, $fileId, $pageSize) . '</td>'
                 . '<td>' . examine_reference((int)$row['outer_index'], $fileId, $pageSize) . '</td><td class="mono path">' . catalog_h((string)$row['local_path']) . '</td><td class="mono path">' . catalog_h((string)$row['full_path']) . '</td><td class="mono">' . catalog_h((string)($row['object_flags'] ?? '')) . '</td><td class="mono">' . catalog_h((string)($row['serial_size'] ?? '')) . '</td><td class="mono">' . catalog_h((string)($row['serial_offset'] ?? '')) . '</td></tr>';
         }

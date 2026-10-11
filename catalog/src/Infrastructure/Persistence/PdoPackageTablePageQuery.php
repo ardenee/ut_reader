@@ -91,6 +91,7 @@ final class PdoPackageTablePageQuery
             $reader->page($fileId, $table, $start, $pageSize)
         );
 
+        $rows = self::presentV5Rows($rows, $table);
         return [
             'rows' => $rows,
             'page' => $page,
@@ -102,6 +103,46 @@ final class PdoPackageTablePageQuery
         ];
     }
 
+    /**
+     * Normalize V5 source-shaped rows for the existing bounded examiner.
+     * Do not invent absent derived paths or class identities.
+     *
+     * @param list<array<string,mixed>> $rows
+     * @return list<array<string,mixed>>
+     */
+    private static function presentV5Rows(array $rows, string $table): array
+    {
+        $fname = static fn(mixed $value): string => is_array($value)
+            ? (string)($value['text'] ?? '')
+            : (string)($value ?? '');
+        foreach ($rows as &$row) {
+            if ($table === 'names') {
+                $row['name_index'] = (int)($row['name_index'] ?? $row['index'] ?? 0);
+                $row['name_text'] = (string)($row['name_text'] ?? $row['text'] ?? '');
+            } elseif ($table === 'imports') {
+                $row['import_index'] = (int)($row['import_index'] ?? $row['index'] ?? 0);
+                foreach (['class_package', 'class_name', 'object_name'] as $field) {
+                    $value = $row[$field] ?? null;
+                    if (is_array($value) && array_key_exists('name_index', $value)) {
+                        $row[$field . '_name_index'] = (int)$value['name_index'];
+                    }
+                    $row[$field] = $fname($value);
+                }
+            } elseif ($table === 'exports') {
+                $row['export_index'] = (int)($row['export_index'] ?? $row['index'] ?? 0);
+                $value = $row['object_name'] ?? null;
+                if (is_array($value) && array_key_exists('name_index', $value)) {
+                    $row['object_name_name_index'] = (int)$value['name_index'];
+                }
+                $row['object_name'] = $fname($value);
+                $row['class_name'] = $fname($row['class_name'] ?? null);
+                $row['local_path'] = (string)($row['local_path'] ?? '');
+                $row['full_path'] = (string)($row['full_path'] ?? '');
+            }
+        }
+        unset($row);
+        return $rows;
+    }
     /** @return array<int,array<string,mixed>> */
     public static function dependencyPage(PDO $db, int $fileId, int $start, int $limit): array
     {
