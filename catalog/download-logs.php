@@ -11,6 +11,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
+require_once __DIR__ . '/lib/CatalogCountryFlag.php';
 
 use UnrealDb\Catalog\Infrastructure\Downloads\CatalogGeoIpLocationResolver;
 use UnrealDb\Catalog\Infrastructure\Security\CatalogSiteBlocklist;
@@ -699,8 +700,7 @@ try {
             echo '</td>';
             echo '<td class="download-country">';
             if ($countryCode !== '' && $countryName !== '') {
-                echo '<img class="download-country-flag" src="country-flag.php?code=' . rawurlencode(strtolower($countryCode))
-                    . '" alt="" title="' . catalog_h($countryCode) . '" loading="lazy" width="20" height="15">';
+                echo catalog_country_flag_html($countryCode, 'download-country-flag');
             } else {
                 echo '<span class="download-country-empty" title="Country not recorded">—</span>';
             }
@@ -765,8 +765,7 @@ try {
             echo '</td>';
             echo '<td class="download-country">';
             if ($countryCode !== '' && $countryName !== '') {
-                echo '<img class="download-country-flag" src="country-flag.php?code=' . rawurlencode(strtolower($countryCode))
-                    . '" alt="" title="' . catalog_h($countryCode) . '" loading="lazy" width="20" height="15">';
+                echo catalog_country_flag_html($countryCode, 'download-country-flag');
             } else {
                 echo '<span class="download-country-empty" title="Country not recorded">—</span>';
             }

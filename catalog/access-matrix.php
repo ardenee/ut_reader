@@ -9,6 +9,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
+require_once __DIR__ . '/lib/CatalogCountryFlag.php';
 
 use UnrealDb\Catalog\Infrastructure\Downloads\CatalogGeoIpLocationResolver;
 use UnrealDb\Catalog\Infrastructure\Security\CatalogSiteBlocklist;
@@ -799,8 +800,7 @@ try {
                 : '';
             $isBlockedIp = $ipText !== '' && isset($blockedLookup[strtolower($ipText)]);
             $countryFlagHtml = preg_match('/^[A-Z]{2}$/', $countryCode) === 1
-                ? '<img class="access-country-flag" src="country-flag.php?code=' . rawurlencode(strtolower($countryCode))
-                    . '" alt="" title="' . catalog_h($countryCode) . '" loading="lazy" width="20" height="15"> '
+                ? catalog_country_flag_html($countryCode, 'access-country-flag') . ' '
                 : '';
             echo '</td><td class="mono am-ip"><div class="access-matrix-ip-line"><span class="access-matrix-ip-value">'
                 . $countryFlagHtml . catalog_h($ipText) . '</span>';

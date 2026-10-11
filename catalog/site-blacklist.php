@@ -5,6 +5,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
+require_once __DIR__ . '/lib/CatalogCountryFlag.php';
 
 use UnrealDb\Catalog\Infrastructure\Downloads\CatalogGeoIpLocationResolver;
 use UnrealDb\Catalog\Infrastructure\Security\CatalogSiteBlocklist;
@@ -199,8 +200,7 @@ try {
             $countryName = trim((string)($mapLocation['country_name'] ?? ''));
             $mapAttributes = catalog_world_map_attributes($ipText, $mapLocation);
             $countryFlagHtml = preg_match('/^[A-Z]{2}$/', $countryCode) === 1
-                ? '<img class="site-blacklist-country-flag" src="country-flag.php?code=' . rawurlencode(strtolower($countryCode))
-                    . '" alt="" title="' . catalog_h($countryCode) . '" loading="lazy" width="20" height="15"> '
+                ? catalog_country_flag_html($countryCode, 'site-blacklist-country-flag') . ' '
                 : '';
             echo '<tr' . $mapAttributes . '><td class="mono site-blacklist-ip">' . $countryFlagHtml . catalog_h((string)$row['ip']) . '</td>'
                 . '<td>' . catalog_h((string)$row['note']) . '</td>'
@@ -226,8 +226,7 @@ try {
             $feedbackCountryCode = strtoupper(trim((string)($feedbackLocation['country_code'] ?? '')));
             $feedbackCountryName = trim((string)($feedbackLocation['country_name'] ?? ''));
             $feedbackCountryFlagHtml = preg_match('/^[A-Z]{2}$/', $feedbackCountryCode) === 1
-                ? '<img class="site-blacklist-country-flag" src="country-flag.php?code=' . rawurlencode(strtolower($feedbackCountryCode))
-                    . '" alt="" title="' . catalog_h($feedbackCountryCode) . '" loading="lazy" width="20" height="15"> '
+                ? catalog_country_flag_html($feedbackCountryCode, 'site-blacklist-country-flag') . ' '
                 : '';
             echo '<tr><td class="mono small site-blacklist-time">' . catalog_h(site_blacklist_time($row['created_at'])) . '</td>'
                 . '<td class="mono site-blacklist-ip">' . $feedbackCountryFlagHtml . catalog_h((string)$row['ip']) . '</td>'
