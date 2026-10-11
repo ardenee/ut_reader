@@ -1182,18 +1182,7 @@ CREATE TABLE ue_download_audit (
   KEY idx_ue_download_audit_status (status, started_at, id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 202608020001-004 and 202608030001: compressed per-file metadata and compact lookups.
-
-CREATE TABLE ue_terms (
-  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  value_hash BINARY(16) NOT NULL,
-  value_length SMALLINT UNSIGNED NOT NULL,
-  value_prefix MEDIUMBLOB NOT NULL,
-  is_overflow TINYINT UNSIGNED NOT NULL DEFAULT 0,
-  PRIMARY KEY (id),
-  UNIQUE KEY uq_ue_terms_hash_length (value_hash, value_length),
-  KEY idx_ue_terms_value_prefix (value_prefix(100))
-) ENGINE=InnoDB;
+-- Retired V1-V4 compact term tables are not created by fresh V5 installations.
 
 
 
