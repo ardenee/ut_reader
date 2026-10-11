@@ -280,7 +280,7 @@ try {
             . 'WHERE l.resolved_file_id=? AND f.scan_status="verified" '
             . 'GROUP BY l.file_id,f.original_name,f.package_name,f.file_size,f.package_guid,f.md5,f.sha1 ORDER BY f.package_name,f.original_name', [$fileId]);
     }
-    $metadataVersion = (int)(catalog_one($db, 'SELECT format_version FROM ue_file_metadata WHERE file_id=?', [$fileId])['format_version'] ?? 0);
+    $metadataVersion = (int)(catalog_one($db, 'SELECT format_version FROM ue_uedb5_files WHERE file_id=?', [$fileId])['format_version'] ?? 0);
     // Keep the initial examiner request bounded to the requested metadata page.
     // Cross-reference/usage/dependency enrichment is loaded after first paint by
     // file-examine-enrichment.php so a large package cannot block the page shell.

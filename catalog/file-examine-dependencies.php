@@ -30,8 +30,8 @@ try {
     $requires = catalog_all(
         $db,
         'SELECT DISTINCT dst.id,dst.original_name file,dst.package_name package,dst.file_size size,dst.package_guid guid,dst.md5'
-        . ' FROM ue_dependency_links l'
-        . ' JOIN ue_file_metadata m ON m.file_id=l.file_id AND m.format_version=3'
+        . ' FROM ue_uedb5_dependency_edges l'
+        . ' JOIN ue_uedb5_files m ON m.file_id=l.file_id AND m.format_version=5'
         . ' JOIN ue_files dst ON dst.id=l.resolved_file_id AND dst.scan_status="verified"'
         . ' WHERE l.file_id=? AND l.resolved_file_id IS NOT NULL AND l.resolved_file_id<>?'
         . ' ORDER BY dst.original_name,dst.id LIMIT 5000',
@@ -40,8 +40,8 @@ try {
     $requiredBy = catalog_all(
         $db,
         'SELECT DISTINCT src.id,src.original_name file,src.package_name package,src.file_size size,src.package_guid guid,src.md5'
-        . ' FROM ue_dependency_links l'
-        . ' JOIN ue_file_metadata m ON m.file_id=l.file_id AND m.format_version=3'
+        . ' FROM ue_uedb5_dependency_edges l'
+        . ' JOIN ue_uedb5_files m ON m.file_id=l.file_id AND m.format_version=5'
         . ' JOIN ue_files src ON src.id=l.file_id AND src.scan_status="verified"'
         . ' WHERE l.resolved_file_id=? AND l.file_id<>?'
         . ' ORDER BY src.original_name,src.id LIMIT 5000',
