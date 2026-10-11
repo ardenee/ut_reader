@@ -57,7 +57,6 @@ final class CatalogFileMaintenanceRemovalService
             $packageNames,
             static fn(string $name): bool => $name !== ''
         )));
-        $metadataPath = \catalog_file_maintenance_metadata_path($this->config, $gameId, $fileId);
         $uedb5Path = CatalogFileMaintenanceSupport::uedb5MetadataPath($this->config, $gameId, $fileId);
         $storedPath = \catalog_file_maintenance_storage_path($this->config, $file);
         $stagedPath = null;
@@ -142,9 +141,6 @@ final class CatalogFileMaintenanceRemovalService
         );
         if ($stagedPath !== null && is_file($stagedPath) && !@unlink($stagedPath)) {
             $warnings[] = 'the staged package file could not be deleted';
-        }
-        if (is_file($metadataPath) && !@unlink($metadataPath)) {
-            $warnings[] = 'the UEDB4 metadata file could not be deleted';
         }
         if (is_file($uedb5Path) && !@unlink($uedb5Path)) {
             $warnings[] = 'the UEDB5 metadata file could not be deleted';
