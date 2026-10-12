@@ -174,16 +174,6 @@ function examine_usage(array $usage, int $fileId, int $pageSize): string
     return $parts !== [] ? implode(' <span class="muted">·</span> ', $parts) : '<span class="muted">none</span>';
 }
 
-function examine_dependency(?array $dependency): string
-{
-    if ($dependency === null) {
-        return '<span class="muted">not built</span>';
-    }
-    $status = (string)($dependency['status'] ?? 'unknown');
-    $title = trim((string)($dependency['required_object_path'] ?? ''));
-    return '<span class="dep ' . catalog_h($status) . '"' . ($title !== '' ? ' title="' . catalog_h($title) . '"' : '') . '>' . catalog_h($status) . '</span>';
-}
-
 function examine_pagination(int $fileId, string $table, array $page): string
 {
     if ((int)$page['pages'] <= 1) {
@@ -261,8 +251,8 @@ try {
     $relationshipCounts = catalog_one(
         $db,
         'SELECT '
-        . '(SELECT COUNT(DISTINCT resolved_file_id) FROM ue_uedb5_dependency_edges WHERE file_id=? AND resolved_file_id IS NOT NULL) uses_count,'
-        . '(SELECT COUNT(DISTINCT file_id) FROM ue_uedb5_dependency_edges WHERE resolved_file_id=?) used_by_count',
+        . '(SELECT COUNT(DISTINCT resolved_file_id) FROM ue_uedb5_dependency_edges WHERE file_id=? AND resolved_file_id IS NOT NULL AND outcome IN (1,2)) uses_count,'
+        . '(SELECT COUNT(DISTINCT file_id) FROM ue_uedb5_dependency_edges WHERE resolved_file_id=? AND outcome IN (1,2)) used_by_count',
         [$fileId, $fileId]
     ) ?: ['uses_count' => 0, 'used_by_count' => 0];
 
@@ -271,13 +261,13 @@ try {
         $relationshipRows = catalog_all($db,
             'SELECT l.resolved_file_id file_id,f.original_name,f.package_name,f.file_size,f.package_guid,f.md5,f.sha1,COUNT(*) reference_count '
             . 'FROM ue_uedb5_dependency_edges l JOIN ue_files f ON f.id=l.resolved_file_id '
-            . 'WHERE l.file_id=? AND l.resolved_file_id IS NOT NULL AND f.scan_status="verified" '
+            . 'WHERE l.file_id=? AND l.resolved_file_id IS NOT NULL AND l.outcome IN (1,2) AND f.scan_status="verified" '
             . 'GROUP BY l.resolved_file_id,f.original_name,f.package_name,f.file_size,f.package_guid,f.md5,f.sha1 ORDER BY f.package_name,f.original_name', [$fileId]);
     } elseif ($table === 'used-by') {
         $relationshipRows = catalog_all($db,
             'SELECT l.file_id,f.original_name,f.package_name,f.file_size,f.package_guid,f.md5,f.sha1,COUNT(*) reference_count '
             . 'FROM ue_uedb5_dependency_edges l JOIN ue_files f ON f.id=l.file_id '
-            . 'WHERE l.resolved_file_id=? AND f.scan_status="verified" '
+            . 'WHERE l.resolved_file_id=? AND l.outcome IN (1,2) AND f.scan_status="verified" '
             . 'GROUP BY l.file_id,f.original_name,f.package_name,f.file_size,f.package_guid,f.md5,f.sha1 ORDER BY f.package_name,f.original_name', [$fileId]);
     }
     $metadataVersion = (int)(catalog_one($db, 'SELECT format_version FROM ue_uedb5_files WHERE file_id=?', [$fileId])['format_version'] ?? 0);
@@ -286,9 +276,7 @@ try {
     // file-examine-enrichment.php so a large package cannot block the page shell.
     $nameLookup = [];
     $usage = [];
-    $dependencies = $table === 'imports' && $metadataVersion >= 3
-        ? PdoPackageTablePageQuery::dependencyPage($db, $fileId, max(0, (int)$page['start'] - 1), $pageSize)
-        : [];
+    // The imports table shows serialized Unreal entries, not resolver-state labels.
 
     $back = examine_back((int)$file['game_id']);
     catalog_head('Examine ' . (string)$file['package_name']);
@@ -348,7 +336,7 @@ try {
 
     if ($table === 'uses' || $table === 'used-by') {
         $heading = $table === 'uses' ? 'Uses' : 'Used By';
-        echo '<h2>' . $heading . '</h2><p class="muted">Package relationships from the current dependency projection.</p>';
+        echo '<h2>' . $heading . '</h2><p class="muted">Package links recorded as package-level or export-level matches.</p>';
         if ($relationshipRows === []) {
             echo '<p class="muted">No resolved package relationships found.</p></section></div><a class="to-top" href="#top">↑</a>';
             catalog_foot();
@@ -391,7 +379,7 @@ try {
         }
         echo '</tbody></table></div>';
     } elseif ($table === 'imports') {
-        echo '<h2>Imports</h2><p class="muted">Object references: 0 = null; &lt; 0 = import; &gt; 0 = export.</p><div class="examine-table-region"><table class="examine-imports-table"><thead><tr><th>Index</th><th>Package ref</th><th>Class package</th><th>Class</th><th>Object</th><th>Outer ref</th><th>Full path</th><th>Root</th><th>Dependency</th></tr></thead><tbody>';
+        echo '<h2>Imports</h2><p class="muted">Object references: 0 = null; &lt; 0 = import; &gt; 0 = export.</p><div class="examine-table-region"><table class="examine-imports-table"><thead><tr><th>Index</th><th>Package ref</th><th>Class package</th><th>Class</th><th>Object</th><th>Outer ref</th><th>Full path</th><th>Root</th></tr></thead><tbody>';
         foreach ($rows as $row) {
             $index = (int)$row['import_index'];
             $rowId = 'import-' . $index;
@@ -400,7 +388,7 @@ try {
                 . '<td>' . examine_name_index_link((string)$row['class_package'], isset($row['class_package_name_index']) ? (int)$row['class_package_name_index'] : null, $fileId, $pageSize) . '</td>'
                 . '<td>' . examine_name_index_link((string)$row['class_name'], isset($row['class_name_index']) ? (int)$row['class_name_index'] : null, $fileId, $pageSize) . '</td>'
                 . '<td>' . examine_name_index_link((string)$row['object_name'], isset($row['object_name_index']) ? (int)$row['object_name_index'] : null, $fileId, $pageSize) . '</td>'
-                . '<td>' . examine_reference((int)$row['outer_index'], $fileId, $pageSize) . '</td><td class="mono path">' . catalog_h((string)($row['full_path'] ?? '')) . '</td><td class="mono path">' . catalog_h((string)($row['root_package'] ?? '')) . '</td><td>' . examine_dependency($dependencies[$index] ?? null) . '</td></tr>';
+                . '<td>' . examine_reference((int)$row['outer_index'], $fileId, $pageSize) . '</td><td class="mono path">' . catalog_h((string)($row['full_path'] ?? '')) . '</td><td class="mono path">' . catalog_h((string)($row['root_package'] ?? '')) . '</td></tr>';
         }
         echo '</tbody></table></div>';
     } else {

@@ -92,6 +92,9 @@ final class PdoPackageTablePageQuery
         );
 
         $rows = self::presentV5Rows($rows, $table);
+        if ($table === 'imports' || $table === 'exports') {
+            $rows = self::withSerializedObjectPaths($db, $fileId, $table, $rows, (string)($file['package_name'] ?? ''));
+        }
         return [
             'rows' => $rows,
             'page' => $page,
@@ -143,6 +146,92 @@ final class PdoPackageTablePageQuery
         unset($row);
         return $rows;
     }
+    /**
+     * Build display paths from the serialized Unreal FObjectImport/FObjectExport
+     * object names and signed PackageIndex outer references. UEDB5 stores the
+     * original records, not derived full-path strings.
+     *
+     * A null/invalid outer is never guessed into a path; loops and broken
+     * references leave the derived path blank.
+     *
+     * @param list<array<string,mixed>> $rows
+     * @return list<array<string,mixed>>
+     */
+    private static function withSerializedObjectPaths(PDO $db, int $fileId, string $table, array $rows, string $packageName): array
+    {
+        $lookup = [];
+        $reader = self::reader($db, $fileId);
+        foreach ($rows as $row) {
+            $index = (int)$row[$table === 'imports' ? 'import_index' : 'export_index'];
+            $ref = $table === 'imports' ? -($index + 1) : $index + 1;
+            $lookup[$ref] = $row;
+        }
+
+        // Fetch only missing ancestors; never scan the complete exports table.
+        $find = static function (int $ref) use (&$lookup, $reader, $fileId): ?array {
+            if ($ref === 0) return null;
+            if (array_key_exists($ref, $lookup)) return $lookup[$ref];
+            $section = $ref < 0 ? 'imports' : 'exports';
+            $index = abs($ref) - 1;
+            $raw = $reader->page($fileId, $section, $index, 1);
+            $normalized = self::presentV5Rows($raw, $section);
+            $row = $normalized[0] ?? null;
+            if (!is_array($row)
+                || (int)($row[$section === 'imports' ? 'import_index' : 'export_index'] ?? -1) !== $index) {
+                return $lookup[$ref] = null;
+            }
+            return $lookup[$ref] = $row;
+        };
+
+        foreach ($rows as &$row) {
+            $chain = [];
+            $seen = [];
+            $ownIndex = (int)$row[$table === 'imports' ? 'import_index' : 'export_index'];
+            $ref = $table === 'imports' ? -($ownIndex + 1) : $ownIndex + 1;
+            $complete = true;
+            $externalRoot = false;
+            for ($depth = 0; $ref !== 0; $depth++) {
+                if ($depth >= 128 || isset($seen[$ref])) {
+                    $complete = false;
+                    break;
+                }
+                $seen[$ref] = true;
+                $record = $find($ref);
+                if ($record === null) {
+                    $complete = false;
+                    break;
+                }
+                $name = trim((string)($record['object_name'] ?? ''));
+                if ($name === '') {
+                    $complete = false;
+                    break;
+                }
+                $chain[] = $name;
+                if ($ref < 0) $externalRoot = true;
+                $ref = (int)($record['outer_index'] ?? 0);
+            }
+            if (!$complete || !$chain) {
+                $row['full_path'] = '';
+                if ($table === 'imports') $row['root_package'] = '';
+                else $row['local_path'] = '';
+                continue;
+            }
+            $chain = array_reverse($chain);
+            $local = implode('.', $chain);
+            if ($table === 'imports') {
+                $row['root_package'] = $chain[0];
+                $row['full_path'] = $local;
+            } else {
+                $row['local_path'] = $local;
+                $row['full_path'] = !$externalRoot && $packageName !== ''
+                    ? $packageName . '.' . $local
+                    : $local;
+            }
+        }
+        unset($row);
+        return $rows;
+    }
+
     /** @return array<int,array<string,mixed>> */
     public static function dependencyPage(PDO $db, int $fileId, int $start, int $limit): array
     {

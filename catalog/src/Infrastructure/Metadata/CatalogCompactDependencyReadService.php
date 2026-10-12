@@ -144,7 +144,7 @@ final class CatalogCompactDependencyReadService
             'SELECT DISTINCT src.id,src.package_name,src.original_name,src.package_guid,src.md5,src.sha1,src.file_size '
             . 'FROM ue_uedb5_dependency_edges e '
             . 'JOIN ue_files src ON src.id=e.file_id AND src.scan_status="verified" '
-            . 'WHERE e.resolved_file_id=? ORDER BY src.package_name,src.original_name LIMIT ' . $limit
+            . 'WHERE e.resolved_file_id=? AND e.outcome IN (1,2) ORDER BY src.package_name,src.original_name LIMIT ' . $limit
         );
         $s->execute([$targetFileId]);
         return $s->fetchAll(PDO::FETCH_ASSOC) ?: [];
