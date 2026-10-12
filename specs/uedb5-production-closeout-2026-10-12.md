@@ -79,3 +79,9 @@ No live SQL changes, metadata reparse, file deletion, or global parity rescan wa
 - Live `EXPLAIN` confirmed the name-candidate and object-name composite indexes serve real lookups. No indexes or tables changed. Further savings require a candidate-schema prototype, objective query-plan metrics, and no-loss search/provider/object-parity checks; the earlier 138.06-GiB two-table footprint cannot be safely removed by dropping an active secondary index.
 
 **Closeout remains partial:** physical V4 retirement is held for verified recovery and comprehensive V5 hash evidence; full all-game source parity and Zen production acceptance remain unproved; SQL shrink and retired-test/tool migration remain pending. The 14 fresh-source samples are a meaningful confidence improvement, not a substitute for these gates.
+
+## Physical UEDB4 retirement completed — 2026-10-12
+
+At the user's direction, the 14-file V5 source sample was accepted and further per-file V5 verification was explicitly skipped for this deletion. On PRD, `catalog/bin/retire-uedb4-containers.php --apply` deleted **235,239** canonical `metadata/{game}/{shard}/*.uedb4` files, **29,885,781,801 bytes (27.833 GiB)**, with **zero unlink failures**. The command only selected numeric `.uedb4` file basenames under numeric game/shard directories; it did not touch `.uedb5` files, SQL tables or unrelated storage. These disk savings do **not** reduce the V5 candidate SQL tables.
+
+The July 2026 backup evidence was not established as current; deletion was performed on explicit user instruction without awaiting an independent October recovery-copy gate. Remaining Epic parity, Zen/IoStore production ingestion, SQL footprint optimisation and obsolete-tool cleanup are separate open items. Earlier sections of this document describing physical V4 retirement as pending are historical checkpoints and are superseded by this section.
