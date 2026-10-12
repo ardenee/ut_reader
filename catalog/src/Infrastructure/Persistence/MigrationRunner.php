@@ -130,7 +130,7 @@ final class MigrationRunner
                 'checksum' => (string)$row['checksum'],
                 'path' => '',
                 'up' => null,
-                'state' => $archived ? 'archived' : 'orphaned',
+                'state' => !$archived ? 'orphaned' : (str_pad((string)$version, 20, '0', STR_PAD_LEFT) === str_pad(self::BASELINE_VERSION, 20, '0', STR_PAD_LEFT) ? 'baseline' : 'archived'),
                 'batch' => (int)$row['batch'],
                 'execution_ms' => (int)$row['execution_ms'],
                 'applied_at' => (string)$row['applied_at'],
