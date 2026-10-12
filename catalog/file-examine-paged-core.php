@@ -245,6 +245,14 @@ try {
         . ' elapsed_ms=' . $fetchElapsedMs
     );
     $rows = $page['rows'];
+    $packageFiles = [];
+    if ($table === 'imports') {
+        $roots = array_values(array_unique(array_filter(array_map(
+            static fn(array $row): string => trim((string)($row['root_package'] ?? '')),
+            $rows
+        ))));
+        $packageFiles = PdoPackageTablePageQuery::packageFiles($db, (int)$file['game_id'], $roots);
+    }
     // Relationship counts belong to the tab chrome, so compute the two
     // distinct-package counts on every examiner request rather than only after
     // the relationship tab has been selected.
@@ -388,7 +396,7 @@ try {
                 . '<td>' . examine_name_index_link((string)$row['class_package'], isset($row['class_package_name_index']) ? (int)$row['class_package_name_index'] : null, $fileId, $pageSize) . '</td>'
                 . '<td>' . examine_name_index_link((string)$row['class_name'], isset($row['class_name_index']) ? (int)$row['class_name_index'] : null, $fileId, $pageSize) . '</td>'
                 . '<td>' . examine_name_index_link((string)$row['object_name'], isset($row['object_name_index']) ? (int)$row['object_name_index'] : null, $fileId, $pageSize) . '</td>'
-                . '<td>' . examine_reference((int)$row['outer_index'], $fileId, $pageSize) . '</td><td class="mono path">' . catalog_h((string)($row['full_path'] ?? '')) . '</td><td class="mono path">' . catalog_h((string)($row['root_package'] ?? '')) . '</td></tr>';
+                . '<td>' . examine_reference((int)$row['outer_index'], $fileId, $pageSize) . '</td><td class="mono path">' . catalog_h((string)($row['full_path'] ?? '')) . '</td><td class="mono path">' . PdoPackageTablePageQuery::packageReferenceHtml((string)($row['root_package'] ?? ''), (int)$file['game_id'], $packageFiles[strtolower((string)($row['root_package'] ?? ''))] ?? []) . '</td></tr>';
         }
         echo '</tbody></table></div>';
     } else {

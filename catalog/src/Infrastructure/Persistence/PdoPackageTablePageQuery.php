@@ -232,6 +232,49 @@ final class PdoPackageTablePageQuery
         return $rows;
     }
 
+    /**
+     * Find verified same-game catalog files with exact package names.
+     * A package name is an identity, not proof of an import/export match.
+     * Return all IDs so callers never silently choose among duplicates.
+     *
+     * @param list<string> $packageNames
+     * @return array<string,list<int>>
+     */
+    public static function packageFiles(PDO $db, int $gameId, array $packageNames): array
+    {
+        $names = self::uniqueValues($packageNames);
+        if ($gameId < 1 || $names === []) return [];
+        $result = [];
+        foreach (array_chunk($names, 250) as $chunk) {
+            $placeholders = implode(',', array_fill(0, count($chunk), '?'));
+            $statement = $db->prepare(
+                'SELECT id,package_name FROM ue_files WHERE game_id=? AND scan_status="verified"'
+                . ' AND package_name IN ('.$placeholders.') ORDER BY id'
+            );
+            $statement->execute(array_merge([$gameId], $chunk));
+            while ($row = $statement->fetch(PDO::FETCH_ASSOC)) {
+                $key = strtolower((string)$row['package_name']);
+                $result[$key][] = (int)$row['id'];
+            }
+        }
+        return $result;
+    }
+
+    /** @param list<int> $ids */
+    public static function packageReferenceHtml(string $package, int $gameId, array $ids): string
+    {
+        $name = \catalog_h($package);
+        if ($package === '') return '—';
+        if (count($ids) === 1) {
+            return '<a href="file-info.php?id='.(int)$ids[0].'">'.$name.'</a>';
+        }
+        if (count($ids) > 1) {
+            return '<a href="game-files.php?id='.$gameId.'&file_filter='.rawurlencode($package).'">'
+                .$name.'</a> <span class="muted">('.count($ids).' files)</span>';
+        }
+        return $name;
+    }
+
     /** @return array<int,array<string,mixed>> */
     public static function dependencyPage(PDO $db, int $fileId, int $start, int $limit): array
     {

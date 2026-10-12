@@ -12,7 +12,7 @@ require_once __DIR__.'/lib/CatalogFileFeedback.php';
 require_once __DIR__.'/lib/CatalogDependencyDiagnostics.php';
 
 function file_info_type_from_extension(string $ext):array{$ext=strtolower(trim($ext,'. '));return match($ext){'unr','un2','ut2','ut3','umap'=>['map','type-map'],'umx'=>['music','type-music'],'uax'=>['sound','type-sound'],'utx'=>['texture','type-texture'],'usx'=>['static mesh','type-static-mesh'],'ukx'=>['animation','type-animation'],'upx'=>['particle/effect','type-particle-effect'],'ugx'=>['gui','type-gui'],'con'=>['content','type-content'],'u','upk','uasset'=>['package','type-package'],default=>[$ext!==''?$ext:'unknown','type-unknown']};}
-function file_info_imports_table(array $imports, array $dependencyByIndex, int $fileId): string {
+function file_info_imports_table(array $imports, array $dependencyByIndex, int $fileId, int $gameId, array $packageFiles): string {
     if ($imports === []) return '<p class="muted">No import entries are present in this portion of the file.</p>';
     $html = '<div class="file-imports-scroll"><table class="file-imports-table" data-sortable-table><thead><tr>'
           . '<th>Import</th><th>Package</th><th>Object / class</th><th>Outer</th><th>External file / export</th>'
@@ -24,6 +24,7 @@ function file_info_imports_table(array $imports, array $dependencyByIndex, int $
         $dep = $dependencyByIndex[$index] ?? [];
         $package = trim((string)($row['root_package'] ?? ''));
         if ($package === '') $package = trim((string)($dep['required_package'] ?? ''));
+        $packageLink = \UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageTablePageQuery::packageReferenceHtml($package, $gameId, $packageFiles[strtolower($package)] ?? []);
         $classPackage = trim((string)($row['class_package'] ?? ''));
         $className = trim((string)($row['class_name'] ?? ''));
         $class = implode('.', array_filter([$classPackage,$className],static fn($v)=>$v!==''));
@@ -71,6 +72,8 @@ try{
 $config=catalog_config();$db=catalog_db($config);catalog_dependency_schema_ensure($db);$id=(int)($_GET['id']??0);$file=catalog_one($db,'SELECT f.*,g.name game_name FROM ue_files f JOIN ue_games g ON g.id=f.game_id WHERE f.id=?',[$id]);if(!$file)throw new RuntimeException('File not found');$deps=catalog_dependency_rows($db,$config,$id);
 $dependencyByIndex=[];foreach($deps as $dep){$index=(int)($dep['import_index']??-1);if($index>=0)$dependencyByIndex[$index]=$dep;}
 $importPage=\UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageTablePageQuery::fetchPage($db,$file,'imports',1,250);
+$rootNames=array_values(array_unique(array_filter(array_map(static fn(array $r):string => trim((string)($r['root_package']??'')), $importPage['rows']))));
+$packageFiles=\UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageTablePageQuery::packageFiles($db,(int)$file['game_id'],$rootNames);
 catalog_head('File info');echo <<<'CSS'
 <style>
 .file-info-title{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.file-info-title h1{margin:0}.file-info-context{margin:8px 0}.file-imports-scroll{overflow-x:auto}.file-imports-table{width:100%}.file-imports-table th:nth-child(1){width:9%}.file-imports-table th:nth-child(2){width:22%}.file-imports-table th:nth-child(3){width:32%}.file-imports-table th:nth-child(4){width:9%}.file-imports-table th:nth-child(5){width:28%}.file-map-nav{display:flex;gap:10px;flex-wrap:wrap}.file-map-nav a{display:flex;gap:12px;align-items:center;border:1px solid var(--border,#2b3950);border-radius:8px;padding:12px;text-decoration:none}.file-relations-map{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap}.file-map-node{flex:1;min-width:160px;display:flex;flex-direction:column;gap:8px;border:1px solid var(--border,#2b3950);padding:14px;border-radius:10px}.file-map-node strong{overflow-wrap:anywhere}.file-map-current{border-color:var(--blue,#76a9ff)}.file-map-arrow{font-size:24px}[data-sortable-table] th{cursor:pointer;user-select:none}[data-sortable-table] th::after{content:'↕';display:inline-block;margin-left:7px;color:var(--muted);font-size:11px;opacity:.7}[data-sortable-table] th.is-sort-ascending::after{content:'▲';color:var(--blue);opacity:1}[data-sortable-table] th.is-sort-descending::after{content:'▼';color:var(--blue);opacity:1}
@@ -86,7 +89,7 @@ echo '<div class="card"><h2>Inside this file</h2><nav class="file-map-nav">'
 echo '<div class="card" id="dependencies"><h2>Imports and linked files</h2>'
     . '<p class="muted">Each row comes from the serialized Unreal import table. External file links are shown only for V5 package-level or object-level matches. An export link is shown only when V5 confirms a specific export identity. A dash does not mean the import is invalid or that Unreal Engine cannot load it.</p>'
     . '<p class="muted">Showing '.count($importPage['rows']).' of '.(int)$file['import_count'].' import entries. <a href="file-examine.php?id='.$id.'&tab=imports">View every import</a>.</p>'
-    . file_info_imports_table($importPage['rows'], $dependencyByIndex, $id) . '</div>';
+    . file_info_imports_table($importPage['rows'], $dependencyByIndex, $id, (int)$file['game_id'], $packageFiles) . '</div>';
 $usesById=[];foreach($deps as$d){$target=(int)($d['resolved_id']??0);if($target<1||$target===$id||!in_array((string)($d['status']??''),['resolved','package_only'],true))continue;$usesById[$target]=['id'=>$target,'package_name'=>(string)($d['resolved_package']??''),'original_name'=>(string)($d['resolved_file']??''),'package_guid'=>(string)($d['resolved_guid']??''),'md5'=>(string)($d['resolved_md5']??''),'sha1'=>(string)($d['resolved_sha1']??''),'file_size'=>(int)($d['resolved_size']??0)];}$uses=array_values($usesById);usort($uses,static fn($a,$b)=>strnatcasecmp((string)$a['package_name'],(string)$b['package_name'])?:strnatcasecmp((string)$a['original_name'],(string)$b['original_name']));
 $reverseCounts=catalog_one($db,'SELECT COUNT(DISTINCT file_id) AS c FROM ue_uedb5_dependency_edges WHERE resolved_file_id=? AND outcome IN (1,2)',[$id]);$reverseCount=(int)($reverseCounts['c']??0);
 echo '<div class="card"><h2>File connections</h2><div class="file-relations-map">'
