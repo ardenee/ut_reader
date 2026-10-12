@@ -288,7 +288,7 @@ try {
 
     $back = examine_back((int)$file['game_id']);
     catalog_head('Examine ' . (string)$file['package_name']);
-    echo '<style>.examine-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px;border-bottom:1px solid var(--line);padding-bottom:10px}.examine-tab{display:inline-flex;gap:6px;min-height:34px;padding:6px 10px;border:1px solid var(--line2);border-radius:9px;color:var(--text);background:rgba(255,255,255,.035);font-weight:650;text-decoration:none}.examine-tab.is-active{color:#07111f;background:linear-gradient(180deg,#9dc2ff,#76a9ff);border-color:#a9c9ff}.examine-table-region{overflow-x:auto;border:1px solid var(--line);border-radius:12px}.examine-imports-table{min-width:1420px}.examine-exports-table{min-width:1320px}.is-reference-target td{background:rgba(246,196,83,.18)!important;box-shadow:inset 4px 0 0 #f6c453}.path{white-space:normal}.table-tools{display:flex;align-items:end;gap:10px;flex-wrap:wrap;margin:10px 0}.to-top{position:fixed;right:20px;bottom:20px;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:rgba(16,24,39,.94);border:1px solid var(--line2);font-size:22px}</style>';
+    echo '<style>.examine-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px;border-bottom:1px solid var(--line);padding-bottom:10px}.examine-tab{display:inline-flex;gap:6px;min-height:34px;padding:6px 10px;border:1px solid var(--line2);border-radius:9px;color:var(--text);background:rgba(255,255,255,.035);font-weight:650;text-decoration:none}.examine-tab.is-active{color:#07111f;background:linear-gradient(180deg,#9dc2ff,#76a9ff);border-color:#a9c9ff}.examine-table-region{overflow-x:auto;border:1px solid var(--line);border-radius:12px}.used-by-identity span{display:block;overflow-wrap:anywhere}.examine-imports-table{min-width:1420px}.examine-exports-table{min-width:1320px}.is-reference-target td{background:rgba(246,196,83,.18)!important;box-shadow:inset 4px 0 0 #f6c453}.path{white-space:normal}.table-tools{display:flex;align-items:end;gap:10px;flex-wrap:wrap;margin:10px 0}.to-top{position:fixed;right:20px;bottom:20px;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:rgba(16,24,39,.94);border:1px solid var(--line2);font-size:22px}</style>';
 
     echo '<div class="card hero" id="top"><h1>Examine ' . catalog_h($file['package_name']) . '</h1><p class="muted">Bounded database-backed Names, Imports and Exports pages. Cross-references open the page containing the selected row.</p><p><a class="button" href="' . catalog_h($back) . '">Back to files</a> <a class="button" href="file-info.php?id=' . $fileId . '">Package details</a> <a class="button" href="download-info.php?id=' . $fileId . '">Download options</a> <a class="button" href="package-coverage.php?file_id=' . $fileId . '">Send to Package Coverage</a></p></div>';
 
@@ -350,15 +350,16 @@ try {
             catalog_foot();
             return;
         }
-        echo '<div class="examine-table-region"><table><thead><tr><th>File</th><th>Package</th><th>Size</th><th>GUID</th><th>MD5</th><th>SHA1</th><th>References</th></tr></thead><tbody>';
+        echo '<div class="examine-table-region"><table><thead><tr><th>File</th><th>Package</th><th>Size</th><th>Identity</th><th>References</th></tr></thead><tbody>';
         foreach ($relationshipRows as $relation) {
             $relatedId=(int)$relation['file_id'];
             echo '<tr><td class="mono path"><a href="file-examine.php?id=' . $relatedId . '">' . catalog_h((string)$relation['original_name']) . '</a></td>'
                 . '<td class="mono path"><a href="file-info.php?id=' . $relatedId . '">' . catalog_h((string)$relation['package_name']) . '</a></td>'
                 . '<td class="mono">' . catalog_h(catalog_bytes((int)$relation['file_size'])) . '</td>'
-                . '<td class="mono path">' . catalog_h(trim((string)$relation['package_guid']) ?: '—') . '</td>'
-                . '<td class="mono path">' . catalog_h(trim((string)$relation['md5']) ?: '—') . '</td>'
-                . '<td class="mono path">' . catalog_h(trim((string)$relation['sha1']) ?: '—') . '</td>'
+                . '<td class="mono small used-by-identity">'
+                . '<span>GUID: ' . catalog_h(trim((string)$relation['package_guid']) ?: '—') . '</span>'
+                . '<span>MD5: ' . catalog_h(trim((string)$relation['md5']) ?: '—') . '</span>'
+                . '<span>SHA1: ' . catalog_h(trim((string)$relation['sha1']) ?: '—') . '</span></td>'
                 . '<td>' . (int)$relation['reference_count'] . '</td></tr>';
         }
         echo '</tbody></table></div></section></div><a class="to-top" href="#top">↑</a>';
