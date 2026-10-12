@@ -1,6 +1,6 @@
 -- consolidated schema assembly boundary 1
 -- UnrealDB consolidated catalog schema
--- Consolidated migration baseline: 202609240002
+-- Consolidated migration baseline: 202610120001
 -- Canonical baseline for a new, empty MySQL 8+ or MariaDB database.
 -- Do not import this over a populated catalog. Test a dedicated upgrade path first.
 
@@ -1577,3 +1577,154 @@ CREATE TABLE ue_package_provider_coverage_cache (
 
 
 SET FOREIGN_KEY_CHECKS = 1;
+
+-- UEDB5 consolidated schema baseline (2026-10-12).
+
+CREATE TABLE `ue_class_remaps` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `game_id` int unsigned NOT NULL,
+  `mappings_text` mediumtext COLLATE utf8mb4_unicode_ci NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_ue_class_remaps_game` (`game_id`),
+  CONSTRAINT `fk_ue_class_remaps_game` FOREIGN KEY (`game_id`) REFERENCES `ue_games` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `ue_uedb5_files` (
+  `file_id` bigint unsigned NOT NULL,
+  `game_id` int unsigned NOT NULL,
+  `format_version` smallint unsigned NOT NULL,
+  `codec` tinyint unsigned NOT NULL,
+  `compressed_size` bigint unsigned NOT NULL,
+  `uncompressed_size` bigint unsigned NOT NULL,
+  `payload_sha256` binary(32) NOT NULL,
+  `block_count` int unsigned NOT NULL,
+  `package_family` varchar(32) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `source_policy` varchar(96) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `package_key_kind` tinyint unsigned NOT NULL,
+  `package_key` varbinary(16) NOT NULL,
+  `package_name` varchar(512) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `section_counts_json` json NOT NULL,
+  `created_at` datetime NOT NULL,
+  `updated_at` datetime NOT NULL,
+  PRIMARY KEY (`file_id`),
+  KEY `idx_ue_uedb5_files_package` (`game_id`,`package_key_kind`,`package_key`,`file_id`),
+  CONSTRAINT `fk_ue_uedb5_files_file` FOREIGN KEY (`file_id`) REFERENCES `ue_files` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `ue_uedb5_migration_status` (
+  `file_id` bigint unsigned NOT NULL,
+  `game_id` int unsigned NOT NULL,
+  `status` enum('pending','staged','validated','failed') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pending',
+  `validator_policy` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `last_checked_payload_sha256` binary(32) DEFAULT NULL,
+  `validated_payload_sha256` binary(32) DEFAULT NULL,
+  `dependency_policy` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `dependency_payload_sha256` binary(32) DEFAULT NULL,
+  `dependency_completed_at` datetime DEFAULT NULL,
+  `attempt_count` int unsigned NOT NULL DEFAULT '0',
+  `last_error_code` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `last_error_text` text COLLATE utf8mb4_unicode_ci,
+  `last_result_json` json DEFAULT NULL,
+  `staged_at` datetime DEFAULT NULL,
+  `validated_at` datetime DEFAULT NULL,
+  `failed_at` datetime DEFAULT NULL,
+  `created_at` datetime NOT NULL,
+  `updated_at` datetime NOT NULL,
+  PRIMARY KEY (`file_id`),
+  KEY `idx_ue_uedb5_migration_status_game` (`game_id`,`status`,`file_id`),
+  CONSTRAINT `fk_ue_uedb5_migration_status_file` FOREIGN KEY (`file_id`) REFERENCES `ue_files` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `ue_uedb5_name_candidates` (
+  `file_id` bigint unsigned NOT NULL,
+  `name_key_hash` binary(16) NOT NULL,
+  `name_key_length` int unsigned NOT NULL,
+  `name_key_fingerprint` binary(32) NOT NULL,
+  `first_name_index` int unsigned NOT NULL,
+  PRIMARY KEY (`file_id`,`name_key_fingerprint`),
+  KEY `idx_ue_uedb5_name_lookup` (`name_key_hash`,`name_key_length`,`name_key_fingerprint`,`file_id`),
+  CONSTRAINT `fk_ue_uedb5_name_file` FOREIGN KEY (`file_id`) REFERENCES `ue_uedb5_files` (`file_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE `ue_uedb5_object_candidates` (
+  `file_id` bigint unsigned NOT NULL,
+  `object_kind` tinyint unsigned NOT NULL,
+  `object_index` int unsigned NOT NULL,
+  `object_name_hash` binary(16) NOT NULL,
+  `object_name_length` int unsigned NOT NULL,
+  `public_export_hash` binary(8) DEFAULT NULL,
+  PRIMARY KEY (`file_id`,`object_kind`,`object_index`),
+  KEY `idx_ue_uedb5_object_name` (`object_name_hash`,`object_name_length`,`file_id`,`object_kind`,`object_index`),
+  KEY `idx_ue_uedb5_public_export` (`file_id`,`object_kind`,`public_export_hash`,`object_index`),
+  CONSTRAINT `fk_ue_uedb5_object_file` FOREIGN KEY (`file_id`) REFERENCES `ue_uedb5_files` (`file_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE `ue_uedb5_provider_keys` (
+  `source_kind` tinyint unsigned NOT NULL,
+  `source_id` bigint unsigned NOT NULL,
+  `game_id` int unsigned NOT NULL,
+  `package_key_kind` tinyint unsigned NOT NULL,
+  `package_key` varbinary(16) NOT NULL,
+  `file_id` bigint unsigned NOT NULL,
+  PRIMARY KEY (`source_kind`,`source_id`),
+  KEY `idx_ue_uedb5_provider_lookup` (`game_id`,`package_key_kind`,`package_key`,`file_id`),
+  KEY `idx_ue_uedb5_provider_file` (`file_id`),
+  CONSTRAINT `fk_ue_uedb5_provider_file` FOREIGN KEY (`file_id`) REFERENCES `ue_uedb5_files` (`file_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `ue_uedb5_search_keys` (
+  `key_hash` binary(16) NOT NULL,
+  `key_length` int unsigned NOT NULL,
+  `key_fingerprint` binary(32) NOT NULL,
+  `normalized_text` mediumblob NOT NULL,
+  PRIMARY KEY (`key_fingerprint`),
+  KEY `idx_ue_uedb5_search_hash` (`key_hash`,`key_length`),
+  KEY `idx_ue_uedb5_search_prefix` (`normalized_text`(191))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE `ue_uedb5_dependency_edges` (
+  `file_id` bigint unsigned NOT NULL,
+  `source_kind` tinyint unsigned NOT NULL,
+  `source_index` int unsigned NOT NULL,
+  `classification` tinyint unsigned NOT NULL,
+  `outcome` tinyint unsigned NOT NULL,
+  `required_package_key_kind` tinyint unsigned DEFAULT NULL,
+  `required_package_key` varbinary(16) DEFAULT NULL,
+  `required_object_key_kind` tinyint unsigned DEFAULT NULL,
+  `required_object_key` varbinary(16) DEFAULT NULL,
+  `resolved_file_id` bigint unsigned DEFAULT NULL,
+  `resolved_object_kind` tinyint unsigned DEFAULT NULL,
+  `resolved_object_index` int unsigned DEFAULT NULL,
+  PRIMARY KEY (`file_id`,`source_kind`,`source_index`),
+  KEY `idx_ue_uedb5_dep_required` (`required_package_key_kind`,`required_package_key`,`outcome`,`file_id`),
+  KEY `idx_ue_uedb5_dep_resolved` (`resolved_file_id`,`file_id`),
+  CONSTRAINT `fk_ue_uedb5_dep_file` FOREIGN KEY (`file_id`) REFERENCES `ue_uedb5_files` (`file_id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_ue_uedb5_dep_resolved_file` FOREIGN KEY (`resolved_file_id`) REFERENCES `ue_uedb5_files` (`file_id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE `ue_uedb5_dependency_packages` (
+  `game_id` int unsigned NOT NULL,
+  `file_id` bigint unsigned NOT NULL,
+  `package_key_kind` tinyint unsigned NOT NULL,
+  `package_key` varbinary(16) NOT NULL,
+  `required_package_name` varchar(512) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `dependency_count` int unsigned NOT NULL DEFAULT '0',
+  `resolved_count` int unsigned NOT NULL DEFAULT '0',
+  `missing_count` int unsigned NOT NULL DEFAULT '0',
+  `package_only_count` int unsigned NOT NULL DEFAULT '0',
+  `common_count` int unsigned NOT NULL DEFAULT '0',
+  `unresolved_count` int unsigned NOT NULL DEFAULT '0',
+  `hard_missing_count` int unsigned NOT NULL DEFAULT '0',
+  `nonhard_missing_count` int unsigned NOT NULL DEFAULT '0',
+  `summary_outcome` tinyint unsigned NOT NULL,
+  `provider_file_id` bigint unsigned DEFAULT NULL,
+  `updated_at` datetime NOT NULL,
+  PRIMARY KEY (`file_id`,`package_key_kind`,`package_key`),
+  KEY `idx_ue_uedb5_dep_pkg_status` (`game_id`,`summary_outcome`,`package_key_kind`,`package_key`,`file_id`),
+  KEY `idx_ue_uedb5_dep_pkg_lookup` (`package_key_kind`,`package_key`,`game_id`,`summary_outcome`,`file_id`),
+  KEY `idx_ue_uedb5_dep_pkg_provider` (`provider_file_id`,`file_id`),
+  CONSTRAINT `fk_ue_uedb5_dep_pkg_file` FOREIGN KEY (`file_id`) REFERENCES `ue_uedb5_files` (`file_id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_ue_uedb5_dep_pkg_provider` FOREIGN KEY (`provider_file_id`) REFERENCES `ue_uedb5_files` (`file_id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

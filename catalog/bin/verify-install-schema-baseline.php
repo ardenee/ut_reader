@@ -2,7 +2,7 @@
 <?php
 /**
  * Verifies that the consolidated fresh-install schema, migration boundary and
- * optional live database all agree with baseline 202609240002.
+ * optional live database all agree with baseline 202610120001.
  */
 declare(strict_types=1);
 
@@ -18,7 +18,7 @@ require_once $root . '/lib/CatalogSupport.php';
 use UnrealDb\Catalog\Infrastructure\Persistence\SchemaInspector;
 
 $withDatabase = in_array('--database', array_slice($argv, 1), true);
-$baseline = '202609240002';
+$baseline = '202610120001';
 $checks = [];
 $failures = [];
 
@@ -61,6 +61,10 @@ $requiredInstallFragments = [
     'CREATE TABLE ue_invalid_file_identities',
     'CREATE TABLE ue_package_coverage_cache',
     'CREATE TABLE ue_package_provider_coverage_cache',
+    'CREATE TABLE `ue_uedb5_files`',
+    'CREATE TABLE `ue_uedb5_dependency_edges`',
+    'CREATE TABLE `ue_uedb5_migration_status`',
+    'CREATE TABLE `ue_class_remaps`',
 ];
 $missingFragments = [];
 foreach ($requiredInstallFragments as $fragment) {
@@ -76,7 +80,7 @@ $record(
 
 $retiredMetadataTables = [
     'ue_file_metadata','ue_name_lookup','ue_export_lookup','ue_dependency_links',
-    'ue_legacy_export_identity_lookup','ue_export_path_lookup','ue_dependency_identity_lookup',
+    'ue_legacy_export_identity_lookup','ue_export_path_lookup','ue_dependency_identity_lookup','ue_terms',
 ];
 $retiredDefinitions = array_values(array_filter(
     $retiredMetadataTables,
@@ -85,25 +89,19 @@ $retiredDefinitions = array_values(array_filter(
 $record(
     'fresh_install_does_not_recreate_retired_metadata',
     $retiredDefinitions === [],
-    $retiredDefinitions === [] ? 'all seven retired definitions absent' : implode(', ', $retiredDefinitions)
+    $retiredDefinitions === [] ? 'all eight retired definitions absent' : implode(', ', $retiredDefinitions)
 );
 $activeMigrationFiles = [];
 foreach (glob($root . '/migrations/*.php') ?: [] as $path) {
     $activeMigrationFiles[] = basename($path);
 }
 sort($activeMigrationFiles, SORT_STRING);
-$requiredPostBaselineMigrations = [
-    '202609250001_ue3_export_identity_projection.php',
-    '202609260001_class_remaps.php',
-    '202609300001_uedb5_staging_registration.php',
-    '202609300002_uedb5_migration_status.php',
-    '202610020001_uedb5_dependency_pass_status.php',
-];
+$requiredPostBaselineMigrations = [];
 $record(
     'known_post_baseline_migrations_present',
     $activeMigrationFiles === $requiredPostBaselineMigrations,
     $activeMigrationFiles === $requiredPostBaselineMigrations
-        ? 'five current migrations tracked'
+        ? 'post-baseline migrations consolidated'
         : 'unexpected migration set: ' . implode(', ', $activeMigrationFiles)
 );
 $runnerInstance = new \UnrealDb\Catalog\Infrastructure\Persistence\MigrationRunner(
