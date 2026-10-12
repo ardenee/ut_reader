@@ -28,6 +28,20 @@ try {
     $check('v5_excludes_nonverified', $invalid === 0, $invalid);
     $check('legacy_sql_tables_absent', $legacy === 0, $legacy);
     $check('v5_source_has_no_v4_fallback', (bool)($source['checks'] ?? false) && ($source['failures'] ?? []) === [], $source['failures'] ?? []);
+    // Two deterministic representative file hashes per active game. This uses
+    // the registered raw BINARY(32) digest and verifies the complete V5 container.
+    $sampleIds = $db->query('SELECT game_id,MIN(id) first_id,MAX(id) last_id FROM ue_files WHERE scan_status="verified" GROUP BY game_id')->fetchAll(\PDO::FETCH_ASSOC);
+    $reader = new \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5RuntimeMetadataReader($db,(string)(catalog_config()['storage_path'] ?? ''));
+    $sampleFailures = [];
+    $sampleCount = 0;
+    foreach ($sampleIds as $group) {
+        foreach (array_unique([(int)$group['first_id'],(int)$group['last_id']]) as $fileId) {
+            $sampleCount++;
+            try { $reader->verify($fileId); }
+            catch (\Throwable $error) { $sampleFailures[] = ['file_id'=>$fileId,'error'=>$error->getMessage()]; }
+        }
+    }
+    $check('representative_v5_container_hashes_match_registration', $sampleCount > 0 && $sampleFailures === [], ['sample_count'=>$sampleCount,'failures'=>$sampleFailures]);
     $ok = !in_array(false, array_column($checks, 'ok'), true);
     echo json_encode(['ok'=>$ok,'scope'=>'bounded post-cutover SQL/source contract; excludes physical .uedb4 inventory, exhaustive hashes and source parity','checks'=>$checks],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;
     exit($ok?0:2);

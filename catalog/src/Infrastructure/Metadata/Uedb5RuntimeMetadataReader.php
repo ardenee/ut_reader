@@ -194,7 +194,8 @@ final class Uedb5RuntimeMetadataReader
         if (!is_string($hash) || $hash === '') {
             throw new RuntimeException('File #' . $fileId . ' has no current UEDB5 registration.');
         }
-        $verified = $this->reader->verify($gameId, $fileId, bin2hex($hash));
+        // Registration SHA-256 is BINARY(32); the container verifier compares raw digest bytes.
+        $verified = $this->reader->verify($gameId, $fileId, $hash);
         return [
             'verified' => true,
             'file_id' => $fileId,
