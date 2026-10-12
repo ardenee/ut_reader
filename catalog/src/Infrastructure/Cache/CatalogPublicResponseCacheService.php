@@ -30,7 +30,9 @@ final class CatalogPublicResponseCacheService
             'library.php' => 120,
             'game-page.php' => 120,
             'game-files.php' => 60,
-            'file-info.php' => 300,
+            // File dependencies and diagnostics must reflect deployments immediately;
+            // do not serve an earlier generated HTML snapshot for this route.
+            'file-info.php' => 0,
             'file-examine.php' => 300,
             'game-paks.php' => 120,
             'game-upks.php' => 120,

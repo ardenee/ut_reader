@@ -1,6 +1,10 @@
 <?php
 /** Catalog file information and dependency diagnostics. */
 declare(strict_types=1);
+// File details must not retain a pre-deployment HTML response in browser caches.
+header('Cache-Control: private, no-store, no-cache, must-revalidate, max-age=0');
+header('Pragma: no-cache');
+header('Expires: 0');
 require_once __DIR__.'/lib/CatalogSupport.php';
 require_once __DIR__.'/lib/CatalogDependencySchema.php';
 require_once __DIR__.'/lib/CatalogCompactDependencies.php';
