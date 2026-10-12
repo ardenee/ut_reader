@@ -107,6 +107,38 @@ final class PdoPackageTablePageQuery
     }
 
     /**
+     * Search the entire V5 section, then paginate the matches while keeping
+     * serialized row indexes for links and outer-reference navigation.
+     *
+     * @return array{rows:list<array<string,mixed>>,page:int,pages:int,total:int,page_size:int,start:int,end:int}
+     */
+    public static function fetchFilteredPage(PDO $db, array $file, string $table, string $query, int $page, int $pageSize): array
+    {
+        $table = self::normalizeTable($table);
+        $query = trim($query);
+        if ($query === '') return self::fetchPage($db, $file, $table, $page, $pageSize);
+        $pageSize = self::normalizePageSize($pageSize);
+        $requestedPage = max(1, $page);
+        $fileId = (int)$file['id'];
+        $search = self::withRecovery($db, $fileId, static fn(Uedb5RuntimeMetadataReader $reader): array =>
+            $reader->searchPage($fileId, $table, $query, ($requestedPage-1)*$pageSize, $pageSize)
+        );
+        $total = (int)$search['total'];
+        $pages = max(1, (int)ceil($total/$pageSize));
+        if ($requestedPage > $pages) {
+            $requestedPage = $pages;
+            $search = self::withRecovery($db, $fileId, static fn(Uedb5RuntimeMetadataReader $reader): array =>
+                $reader->searchPage($fileId, $table, $query, ($requestedPage-1)*$pageSize, $pageSize)
+            );
+        }
+        $rows = self::presentV5Rows((array)$search['rows'], $table);
+        if ($table !== 'names') $rows = self::withSerializedObjectPaths($db, $fileId, $table, $rows, (string)($file['package_name']??''));
+        $start = ($requestedPage-1)*$pageSize;
+        return ['rows'=>$rows,'page'=>$requestedPage,'pages'=>$pages,'total'=>$total,
+            'page_size'=>$pageSize,'start'=>$total ? $start+1 : 0,'end'=>$start+count($rows)];
+    }
+
+    /**
      * Normalize V5 source-shaped rows for the existing bounded examiner.
      * Do not invent absent derived paths or class identities.
      *

@@ -39,6 +39,46 @@ final class Uedb5RuntimeMetadataReader
         return $this->reader->page($gameId, $fileId, $section, $start, $limit);
     }
 
+    /**
+     * Search every serialized row using a streaming scan, not the visible page.
+     * Collect only the requested match page; return the full match count.
+     * Does not modify or persist package metadata.
+     *
+     * @return array{total:int,rows:list<array<string,mixed>>}
+     */
+    public function searchPage(int $fileId, string $section, string $needle, int $offset, int $limit): array
+    {
+        if (!in_array($section, ['names','imports','exports'], true)) {
+            throw new RuntimeException('Unsupported package search section.');
+        }
+        $gameId = $this->gameId($fileId);
+        $needle = trim($needle);
+        $offset = max(0, $offset);
+        $limit = max(1, min(1000, $limit));
+        $rows = [];
+        $total = 0;
+        foreach ($this->reader->scan($gameId, $fileId, $this->sectionAlias($gameId, $fileId, $section)) as $position => $row) {
+            $fields = match ($section) {
+                'names' => [$row['text'] ?? $row['name_text'] ?? '', $row['index'] ?? $position],
+                'imports' => [$row['object_name'] ?? '', $row['class_name'] ?? '',
+                    $row['class_package'] ?? '', $row['index'] ?? $position],
+                'exports' => [$row['object_name'] ?? '', $row['index'] ?? $position],
+            };
+            $found = false;
+            foreach ($fields as $field) {
+                $value = is_array($field) ? (string)($field['text'] ?? '') : (string)$field;
+                if (stripos($value, $needle) !== false) {
+                    $found = true;
+                    break;
+                }
+            }
+            if (!$found) continue;
+            if ($total >= $offset && count($rows) < $limit) $rows[] = $row;
+            $total++;
+        }
+        return ['total'=>$total,'rows'=>$rows];
+    }
+
     /** @param list<string> $values @return array<string,int> */
     public function findNameIndexes(int $fileId, array $values): array
     {

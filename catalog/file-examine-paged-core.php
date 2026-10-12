@@ -66,12 +66,13 @@ function examine_tab_href(int $fileId, string $table, int $pageSize): string
 
 function examine_page_href(int $fileId, string $table, int $page, int $pageSize): string
 {
-    return 'file-examine.php?' . http_build_query([
+    return 'file-examine.php?' . http_build_query(array_filter([
         'id' => $fileId,
         'tab' => $table,
         'page' => max(1, $page),
         'page_size' => $pageSize,
-    ]) . '#package-tables';
+        'filter' => trim((string)($_GET['filter'] ?? '')),
+    ],static fn($value):bool=>$value !== '')) . '#package-tables';
 }
 
 function examine_back(int $gameId): string
@@ -206,6 +207,10 @@ try {
         : PdoPackageTablePageQuery::normalizeTable($requestedTab);
     $pageSize = PdoPackageTablePageQuery::normalizePageSize(examine_int('page_size', PdoPackageTablePageQuery::DEFAULT_PAGE_SIZE));
     $requestedPage = max(1, examine_int('page', 1));
+    $filter = substr(trim((string)($_GET['filter'] ?? '')),0,128);
+    // An explicit cross-reference target must be opened by original index,
+    // even when the user arrived from an existing filtered result set.
+    if ($target !== '') $filter = '';
 
     $file = catalog_one(
         $db,
@@ -233,7 +238,7 @@ try {
     if ($table === 'uses' || $table === 'used-by') {
         $page = ['rows'=>[],'page'=>1,'pages'=>1,'total'=>0,'page_size'=>$pageSize,'start'=>0,'end'=>0];
     } else {
-        $page = PdoPackageTablePageQuery::fetchPage($db, $file, $table, $requestedPage, $pageSize);
+        $page = PdoPackageTablePageQuery::fetchFilteredPage($db, $file, $table, $filter, $requestedPage, $pageSize);
     }
     $fetchElapsedMs = (int)round((microtime(true) - $fetchStarted) * 1000);
     error_log(
@@ -367,13 +372,22 @@ try {
         return;
     }
 
-    echo '<div class="table-tools"><form method="get"><input type="hidden" name="id" value="' . $fileId . '"><input type="hidden" name="tab" value="' . catalog_h($table) . '"><label>Rows per page<br><select name="page_size" onchange="this.form.submit()">';
+    echo '<div class="table-tools"><form method="get" action="file-examine.php">'
+       . '<input type="hidden" name="id" value="'.$fileId.'">'
+       . '<input type="hidden" name="tab" value="'.catalog_h($table).'">'
+       . '<input type="hidden" name="page_size" value="'.$pageSize.'">'
+       . '<label>Search all '.catalog_h(ucfirst($table)).' <input type="search" name="filter" maxlength="128" value="'.catalog_h($filter).'" placeholder="Object, class, name or index"></label> '
+       . '<button class="button" type="submit">Filter</button> '
+       . '<a class="button secondary" href="'.catalog_h(examine_tab_href($fileId,$table,$pageSize)).'">Clear</a></form>'
+       . '<form method="get"><input type="hidden" name="id" value="'.$fileId.'"><input type="hidden" name="tab" value="'.catalog_h($table).'">'
+       . '<input type="hidden" name="filter" value="'.catalog_h($filter).'">'
+       . '<label>Rows per page<br><select name="page_size" onchange="this.form.submit()">';
     foreach ([100,250,500,1000] as $option) {
         echo '<option value="' . $option . '"' . ($pageSize === $option ? ' selected' : '') . '>' . $option . '</option>';
     }
-    echo '</select></label></form><span class="muted">Showing ' . (int)$page['start'] . '–' . (int)$page['end'] . ' of ' . (int)$page['total'] . '.</span>';
-    echo '<a class="button" href="file-examine-export.php?' . catalog_h(http_build_query(['id' => $fileId,'table' => $table,'format' => 'csv'])) . '">CSV</a>';
-    echo '<a class="button" href="file-examine-export.php?' . catalog_h(http_build_query(['id' => $fileId,'table' => $table,'format' => 'json'])) . '">JSON</a></div>';
+    echo '</select></label></form><span class="muted">Showing ' . (int)$page['start'] . '–' . (int)$page['end'] . ' of ' . (int)$page['total'] . ($filter !== '' ? ' matching rows (entire table searched).' : '.') . '</span>';
+    echo '<a class="button" href="file-examine-export.php?' . catalog_h(http_build_query(['id' => $fileId,'table' => $table,'format' => 'csv'])) . '">CSV (all)</a>';
+    echo '<a class="button" href="file-examine-export.php?' . catalog_h(http_build_query(['id' => $fileId,'table' => $table,'format' => 'json'])) . '">JSON (all)</a></div>';
     echo examine_pagination($fileId, $table, $page);
 
     if ($table === 'names') {
