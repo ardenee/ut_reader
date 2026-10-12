@@ -1,5 +1,8 @@
 # UEDB5 game-level behavioural parity audit
 
+> **Production status (2026-10-12):** Current production uses UEDB5-only runtime registration for all 235,239 verified files; the retired V4 metadata SQL tables are absent. Statements below describing UEDB4 as the *current* runtime are historical staging-era descriptions, not today's production architecture. See [UEDB5 production closeout evidence](uedb5-production-closeout-2026-10-12.md) for verified facts, open source-parity/Zen/physical-file-retirement gates and the bounded post-cutover verifier. Do not interpret registration/validation counts as exhaustive source-compliance proof.
+
+
 Step 9 validates behaviour, not byte equality. UEDB4 and UEDB5 are different physical formats; the audit compares the catalogue/runtime decisions produced from them for the same fully migrated game.
 
 The audit is read-only. It does not publish V5, mutate V4, cut over runtime registration, repair rows, or rewrite either metadata container.

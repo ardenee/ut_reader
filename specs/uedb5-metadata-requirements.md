@@ -1,5 +1,8 @@
 # UEDB5 metadata requirements
 
+> **Production status (2026-10-12):** Current production uses UEDB5-only runtime registration for all 235,239 verified files; the retired V4 metadata SQL tables are absent. Statements below describing UEDB4 as the *current* runtime are historical staging-era descriptions, not today's production architecture. See [UEDB5 production closeout evidence](uedb5-production-closeout-2026-10-12.md) for verified facts, open source-parity/Zen/physical-file-retirement gates and the bounded post-cutover verifier. Do not interpret registration/validation counts as exhaustive source-compliance proof.
+
+
 ## Scope
 
 UEDB5 is the next UnrealDB compact metadata format. Its purpose is not merely to add fields to UEDB4; it establishes a lossless source-identity boundary for dependency and package semantics that UEDB4 cannot represent for all supported engine generations.

@@ -1,5 +1,8 @@
 # UEDB5 Staging Isolation Contract
 
+> **Production status (2026-10-12):** Current production uses UEDB5-only runtime registration for all 235,239 verified files; the retired V4 metadata SQL tables are absent. Statements below describing UEDB4 as the *current* runtime are historical staging-era descriptions, not today's production architecture. See [UEDB5 production closeout evidence](uedb5-production-closeout-2026-10-12.md) for verified facts, open source-parity/Zen/physical-file-retirement gates and the bounded post-cutover verifier. Do not interpret registration/validation counts as exhaustive source-compliance proof.
+
+
 ## Purpose
 
 Step 7 freezes the pre-cutover coexistence rule. UEDB5 migration may build and verify V5 state while production continues to use UEDB4, but staging must not mutate, replace, or partially retire the live V4 runtime.
