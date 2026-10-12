@@ -72,11 +72,12 @@ $record(
 );
 
 $record(
-    'dependency_failures_are_visible',
-    str_contains($display, 'showDependencyLoadError(error)')
-        && str_contains($display, 'Uses / Used By unavailable:')
-        && str_contains($display, 'file-dependency-load-error'),
-    'A dependency endpoint failure must render on the page instead of disappearing into the browser console.'
+    'file_info_uses_server_rendered_dependency_table',
+    !str_contains($display, 'installFileInfoDependencies(')
+        && !str_contains($display, 'file-dependency-files.php?id=')
+        && !str_contains($display, 'Lookup confidence')
+        && !str_contains($display, '<th>Confidence</th>'),
+    'JavaScript must not overwrite server-rendered file-info dependencies or restore synthetic confidence and source columns.'
 );
 
 $record(

@@ -14,27 +14,6 @@
             .replace(/'/g, '&#039;');
     }
 
-    function statusLabel(status) {
-        return ({
-            missing: 'Missing',
-            object_missing: 'Object missing',
-            package_only: 'Package only',
-            resolved: 'Resolved',
-            common: 'Common'
-        })[status] || status;
-    }
-
-    function sourceLabel(source) {
-        return ({
-            exact_package: 'exact package',
-            exact_package_alias: 'package alias',
-            exact_object: 'exact object',
-            exact_object_alias: 'alias object',
-            common_script: 'common script',
-            none: 'none'
-        })[source] || source || 'unknown';
-    }
-
     function addStyle() {
         var style = document.createElement('style');
         style.textContent = [
@@ -188,89 +167,6 @@
 
         var selected = params.get('tab');
         if (selected === 'requires' || selected === 'required-by') show(selected, false);
-    }
-
-    function dependencyTable(rows) {
-        if (!rows.length) return '<p class="muted">No dependencies in this status.</p>';
-        return '<table data-file-dependency-sort><thead><tr><th>Status</th><th>Source</th><th>Confidence</th><th>Required object</th><th>Resolved package</th></tr></thead><tbody>'
-            + rows.map(function (row) {
-                var resolved = row.resolved_file
-                    ? '<a href="file-info.php?id=' + encodeURIComponent(row.resolved_file.id) + '">' + h(row.resolved_file.package || row.resolved_file.file) + '</a>'
-                    : '<span class="muted">not resolved</span>';
-                return '<tr>'
-                    + '<td><span class="dep ' + h(row.status) + '">' + h(statusLabel(row.status)) + '</span></td>'
-                    + '<td><span class="dep resolution-source">' + h(sourceLabel(row.source)) + '</span></td>'
-                    + '<td class="mono">' + h(row.confidence) + '</td>'
-                    + '<td class="mono path">' + h(row.required_object) + '</td>'
-                    + '<td>' + resolved + '</td>'
-                    + '</tr>';
-            }).join('') + '</tbody></table>';
-    }
-
-    function installFileInfoDependencies(data) {
-        var card = document.getElementById('dependencies');
-        if (!card) return;
-        var statuses = [
-            ['missing', 'Missing'],
-            ['object_missing', 'Object missing'],
-            ['package_only', 'Package only'],
-            ['resolved', 'Resolved'],
-            ['common', 'Common']
-        ];
-        if (!data.dependencies.length) {
-            card.innerHTML = '<h2>Dependencies</h2><p class="muted">No dependencies were recorded for this file.</p>';
-            return;
-        }
-
-        var initial = data.dependency_counts.missing ? 'missing'
-            : (data.dependency_counts.object_missing ? 'object_missing' : 'all');
-        var tabs = '<nav class="file-dependency-tabs" role="tablist">'
-            + '<a class="dep file-dependency-tab' + (initial === 'all' ? ' is-active' : '') + '" href="#dependency-all" data-fd-info-tab="all">All: ' + data.dependencies.length + '</a>'
-            + statuses.map(function (item) {
-                var status = item[0];
-                return '<a class="dep ' + status + ' file-dependency-tab' + (initial === status ? ' is-active' : '') + '" href="#dependency-' + status + '" data-fd-info-tab="' + status + '">' + h(item[1]) + ': ' + Number(data.dependency_counts[status] || 0) + '</a>';
-            }).join('') + '</nav>';
-
-        var panels = '<section class="file-dependency-panel" data-fd-info-panel="all"' + (initial === 'all' ? '' : ' hidden') + '>' + dependencyTable(data.dependencies) + '</section>'
-            + statuses.map(function (item) {
-                var status = item[0];
-                var rows = data.dependencies.filter(function (row) { return row.status === status; });
-                return '<section class="file-dependency-panel" data-fd-info-panel="' + status + '"' + (initial === status ? '' : ' hidden') + '>' + dependencyTable(rows) + '</section>';
-            }).join('');
-        card.innerHTML = '<h2>Dependencies</h2>' + tabs + panels;
-        bindNewTables(card);
-
-        card.querySelectorAll('[data-fd-info-tab]').forEach(function (tab) {
-            tab.addEventListener('click', function (event) {
-                event.preventDefault();
-                var selected = tab.dataset.fdInfoTab;
-                card.querySelectorAll('[data-fd-info-panel]').forEach(function (panel) {
-                    panel.hidden = panel.dataset.fdInfoPanel !== selected;
-                });
-                card.querySelectorAll('[data-fd-info-tab]').forEach(function (other) {
-                    other.classList.toggle('is-active', other.dataset.fdInfoTab === selected);
-                });
-                window.history.replaceState(null, '', '#dependency-' + selected);
-            });
-        });
-    }
-
-    function showDependencyLoadError(error) {
-        var message = error && error.message ? error.message : 'Could not load file dependency relationships.';
-        var root = document.getElementById('package-tables');
-        if (root && !root.querySelector('.file-dependency-load-error')) {
-            var notice = document.createElement('div');
-            notice.className = 'file-dependency-load-error';
-            notice.innerHTML = '<p class="dep missing"><strong>Uses / Used By unavailable:</strong> ' + h(message) + '</p>';
-            root.insertBefore(notice, root.firstChild);
-        }
-        var card = document.getElementById('dependencies');
-        if (card && !card.querySelector('.file-dependency-load-error')) {
-            card.insertAdjacentHTML(
-                'beforeend',
-                '<p class="file-dependency-load-error dep missing"><strong>Dependency relationships unavailable:</strong> ' + h(message) + '</p>'
-            );
-        }
     }
 
     function installPakSources(data) {
@@ -441,27 +337,6 @@
     }
     loadRawHeader();
     loadExaminerEnrichment();
-    var dependencyEndpoint = 'file-dependency-files.php?id=' + encodeURIComponent(fileId);
-    fetch(dependencyEndpoint, {
-        credentials: 'same-origin',
-        cache: 'no-store',
-        headers: {'Accept': 'application/json'}
-    }).then(function (response) {
-        return response.json().then(function (payload) {
-            if (!response.ok || !payload.ok) throw new Error(payload.error || 'Could not load file dependencies.');
-            return payload;
-        });
-    }).then(function (data) {
-        if (examineRoot) {
-            installExamineTabs(data);
-        } else {
-            installFileInfoDependencies(data);
-        }
-    }).catch(function (error) {
-        console.error('[UnrealDB file dependencies]', error);
-        showDependencyLoadError(error);
-    });
-
     fetch('file-pak-sources.php?id=' + encodeURIComponent(fileId), {
         credentials: 'same-origin',
         cache: 'no-store',
