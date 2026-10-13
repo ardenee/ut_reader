@@ -1,0 +1,7 @@
+# Compact V5 candidate temporary-store lifecycle (2026-10-13)
+
+Implemented `catalog/src/Infrastructure/Metadata/Uedb5CompactTemporaryCandidateStore.php`, a transactional adapter for session-only temporary dictionary/name/object tables. It calls the source-backed `Uedb5SqlProjectionBuilder` and `Uedb5CompactCandidateProjectionBuilder`, validates dictionary fingerprint/hash/length/normalized text, writes dictionary IDs using a unique SHA-256 fingerprint, and supports republishing, file deletion, and exact name/object lookup. It is a prototype, not a replacement for active production SQL readers/writers.
+
+Added `catalog/bin/verify-uedb5-compact-temp-store-lifecycle.php`. PHP lint and production execution passed seven of seven real V5 game samples. Each verified original candidate counts, repeat publishing, exact-name lookup, file deletion and republishing to the same counts. It created and dropped session temporary tables only, left the live catalogue unchanged, and did not attempt a huge migration.
+
+Important limits: the new store does not yet prove full exact-object lookup parity, multi-session transactions/concurrency, rollback on injected failures, all admin import/restore/re-sync paths, or result ranking/prefix searches. Production source data and the existing V5 SQL tables stay authoritative. The temporary store must not be silently connected to live search until these contracts pass and a safe reversible migration is implemented.
