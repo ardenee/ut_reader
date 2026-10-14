@@ -79,11 +79,10 @@ try{
  // index and public export hash; count checks guarantee no extra rows.
  $nameMismatch=$db->prepare(
   'SELECT n.name_key_fingerprint FROM ue_uedb5_name_candidates n
-   LEFT JOIN '.$names.' cn ON cn.file_id=n.file_id
-   LEFT JOIN '.$dict.' d ON d.name_id=cn.name_id
-     AND d.name_key_fingerprint=n.name_key_fingerprint
+   LEFT JOIN '.$dict.' d ON d.name_key_fingerprint=n.name_key_fingerprint
      AND d.name_key_hash=n.name_key_hash AND d.name_key_length=n.name_key_length
-   WHERE n.file_id=? AND (d.name_id IS NULL OR cn.first_name_index<>n.first_name_index) LIMIT 1');
+   LEFT JOIN '.$names.' cn ON cn.file_id=n.file_id AND cn.name_id=d.name_id
+   WHERE n.file_id=? AND (cn.name_id IS NULL OR cn.first_name_index<>n.first_name_index) LIMIT 1');
  $objectMismatch=$db->prepare(
   'SELECT o.object_kind,o.object_index FROM ue_uedb5_object_candidates o
    LEFT JOIN '.$objects.' co ON co.file_id=o.file_id
