@@ -55,8 +55,13 @@ final class PdoUedb5CompactCandidatePublisher
                 ON DUPLICATE KEY UPDATE name_id=LAST_INSERT_ID(name_id)');
             $fetch = $this->db->prepare('SELECT name_id,name_key_hash,name_key_length,name_key_fingerprint
                 FROM '.$this->dictionary.' WHERE name_key_fingerprint=?');
+            // Canonical lock-acquisition order across parallel workers.
+            // The legacy base publisher sorts dictionary fingerprints likewise.
+            $keys = array_values((array)($projection['search_keys'] ?? []));
+            usort($keys, static fn(array $a, array $b): int =>
+                strcmp((string)($a['fingerprint'] ?? ''), (string)($b['fingerprint'] ?? '')));
             $dictionary = [];
-            foreach ((array)($projection['search_keys'] ?? []) as $key) {
+            foreach ($keys as $key) {
                 $hash = (string)($key['hash'] ?? '');
                 $len = (int)($key['length'] ?? -1);
                 $fp = (string)($key['fingerprint'] ?? '');
