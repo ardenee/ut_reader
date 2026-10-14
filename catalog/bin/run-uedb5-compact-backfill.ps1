@@ -6,7 +6,7 @@ param(
     [string]$Log = 'C:\Temp\uedb5-compact-migration-progress.jsonl'
 )
 $ErrorActionPreference = 'Stop'
-$runner = Join-Path $Catalog 'bin\backfill-uedb5-compact-candidates.php'
+$runner = Join-Path $Catalog 'bin\backfill-uedb5-compact-candidates-sql.php'
 if (-not (Test-Path $runner)) { throw "Backfill executor missing: $runner" }
 if (-not (Test-Path $Php)) { throw "PHP executable missing: $Php" }
 
@@ -15,7 +15,7 @@ if (-not (Test-Path $Php)) { throw "PHP executable missing: $Php" }
 # migration launcher terminates, never while it is running.
 $self = $PID
 $existing = @(Get-CimInstance Win32_Process -Filter "Name = 'php.exe'" |
-    Where-Object { $_.CommandLine -match 'backfill-uedb5-compact-candidates[.]php' })
+    Where-Object { $_.CommandLine -match 'backfill-uedb5-compact-candidates(?:-sql)?[.]php' })
 if ($existing.Count -gt 0) {
     throw ('An existing compact backfill PHP process is active: ' +
         (($existing | ForEach-Object ProcessId) -join ', ') +
