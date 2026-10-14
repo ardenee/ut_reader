@@ -17,7 +17,7 @@ use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5MetadataReader as Reader;
 
 $opts=getopt('', ['game-id:','limit::','apply','maintenance-frozen','test-temporary']);
 $game=(int)($opts['game-id']??0);
-$limit=max(1,min(25,(int)($opts['limit']??10)));
+$limit=max(1,min(500,(int)($opts['limit']??50)));
 $test=array_key_exists('test-temporary',$opts);
 $apply=array_key_exists('apply',$opts);
 $freeze=array_key_exists('maintenance-frozen',$opts);
