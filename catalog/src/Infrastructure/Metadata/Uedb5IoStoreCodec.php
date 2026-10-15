@@ -84,8 +84,8 @@ final class Uedb5IoStoreCodec
             );
 
             $inputLength = strlen($compressed);
-            $input = FFI::new('uint8_t[' . max(1, $inputLength) . ']');
-            $output = FFI::new('uint8_t[' . max(1, $uncompressedSize) . ']');
+            $input = $ffi->new('uint8_t[' . max(1, $inputLength) . ']');
+            $output = $ffi->new('uint8_t[' . max(1, $uncompressedSize) . ']');
             if ($inputLength > 0) {
                 FFI::memcpy($input, $compressed, $inputLength);
             }

@@ -176,3 +176,31 @@ The read-only obsolete-schema inventory avoids naming retired tables in scanner-
 Old-file quarantine remains recoverable at `C:\Temp\uedb5-legacy-quarantine-20261015`; keep its per-file SHA-256 journal. No further database table deletion is authorized: both compact candidate tables are active production V5 tables.
 
 A successful bounded seven-game integration fixture and read-only production checks do not imply all 235,239 files were source-reparsed in this checkpoint. Production queue/storage and source packages were not rewritten by the isolated integration tests.
+
+## Real Satisfactory dedicated-server IoStore checkpoint — 2026-10-15
+
+**Read-only source:** `\\192.168.0.51\c$\Program Files (x86)\Steam\steamapps\common\SatisfactoryDedicatedServer\FactoryGame\Content\Paks`.
+
+The source directory contains `global.utoc`/`global.ucas` and `FactoryGame-WindowsServer.utoc`/`FactoryGame-WindowsServer.ucas`. The large `.ucas` was never copied wholesale or modified.
+
+**Native decoder:** PRD PHP 8.5 uses `C:\php8.5\ext\oo2core_9_win64.dll` via FFI and Apache's `UNREALDB_OODLE_LIBRARY` environment variable. This is **not** a PHP extension, and it must not be listed as `extension=...` in `php.ini`. A real compressed Satisfactory chunk decompressed to its expected 2,243 bytes; Oodle support is no longer blocked. The FFI buffer allocation uses `$ffi->new()` to avoid PHP 8.5 static-call deprecation warnings.
+
+### Verified against actual cooked data
+
+- Parsed `global.utoc` and `FactoryGame-WindowsServer.utoc` using existing `Uedb5IoStoreTocReader`.
+- Main TOC: 27,240 export-bundle chunks and one ContainerHeader. Real ContainerHeader **version 5** parsed successfully.
+- `verify-uedb5-satisfactory-oodle-sample-readonly.php`: first **12** real package IDs successfully decoded into Zen snapshots, including Oodle chunks. Package name map, typed imports, exports, dependency-bundle entries and container provenance populated.
+- `verify-uedb5-satisfactory-oodle-v5-roundtrip-readonly.php`: all **12/12** snapshots written to isolated temporary `.uedb5` containers, verified and read back with matching package names, import/export and dependency-bundle counts. Temporary containers were removed afterward.
+- Existing `verify-uedb5-ue5-iostore-foundation.php`, `verify-uedb5-ue5-zen-package.php` and `verify-uedb5-container-foundation.php` passed unchanged.
+- **No production SQL writes, registration, queue jobs or edits to the Steam game files**.
+
+### Remaining integration gate
+
+This is **real Zen parsing + V5 persistence**, not an end-to-end published game import. The normal scanner/importer expects an individual classic package file, while IoStore is a container with `FPackageId`-indexed packages plus mounted package-store context. Before production ingestion:
+
+1. Introduce a **container ingestion entry point** that accepts a compatible `.utoc/.ucas` set, validates mount/partition context and drives one stable catalog identity per Zen package.
+2. Use the existing V5 snapshot writer, registration repository, compact SQL candidate/provider publication and dependency projection, with idempotent per-package jobs and rollback.
+3. Validate the full flow in standalone MySQL/isolated storage using a bounded subset of Satisfactory packages before enabling a new game/profile or live upload route.
+4. Preserve global package-store redirects, localization and mounted container priority according to the matching Epic-source version; do not infer authoritative lookup behavior from the package's own header alone.
+
+**Important:** This Satisfactory dedicated-server container may not match the UE5 5.8.3 source revision used to audit some other engine policies. Record its TOC, container-header and serialized package versions and check the correct Epic source/version before declaring complete source-parity.
