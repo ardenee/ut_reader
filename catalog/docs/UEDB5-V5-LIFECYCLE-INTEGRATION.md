@@ -215,3 +215,18 @@ Using the standalone **127.0.0.1:3339** MySQL instance, the isolated schema `ued
 - **Not yet completed:** normal `.utoc/.ucas` ingest through upload/restore/reimport, source-version-specific mounted-container aggregation and authoritative package-store dependency resolution. The 28 unresolved rows **must not be promoted to resolved** merely because their package IDs exist in one sampled container.
 
 The standalone schema is not a real Satisfactory game profile and does not prove live production ingestion. No production database record or Steam file was changed.
+
+### Bounded reusable Zen package publication service — next checkpoint
+
+Added `CatalogZenIoStorePackagePublisher` in `src/Infrastructure/Import/`, with a separate **opt-in** `verify-uedb5-zen-container-publisher-standalone.php` test. The service consumes a prevalidated `Uedb5IoStoreTocReader`, an exact fixed-width `FPackageId`, and an existing **verified** catalog file/game identity. It delegates to the current V5 snapshot writer, registration repository and compact candidate publisher, and owns the SQL registration/projection transaction.
+
+The service fails closed for invalid package identities, non-verified catalog rows, mismatched game/file IDs, existing different package IDs on the same file, already-registered duplicate package IDs, missing or mismatched V5 containers, and conflicting container `utoc_sha256` provenance. A successful repeated publication of the same package and TOC is **idempotent**; it does not overwrite the existing container or duplicate SQL projections. Tests use only the separately provisioned `uedb5_zen_satisfactory_test` schema and scratch storage.
+
+**Not yet integrated with the public upload path.** Ordinary `ProfiledUploadService` and `CatalogPackageImporterAdapter` are designed for *single classic package files*. IoStore is a mounted container whose packages are identified by `FPackageId`. The complete production workflow must first:
+
+1. Accept/retain a **complete** container family (`.utoc`, `.ucas`, numbered partitions, and relevant `.pak`/AssetRegistry context) without treating the TOC itself as a classic package.
+2. Establish a UE5 game/profile and stable catalog file identity for **each** package, retaining the relationship to its containing source files. This is not handled by the publication service; do not create fake production records.
+3. Determine authoritative mounted-container order/redirect context and source-version rules before final dependency outcomes; missing context must remain unresolved, not guessed.
+4. Enqueue resumable bounded per-package publication and dependency reconciliation, support clean rollback and backup/restore, and validate retries/concurrency on isolated full-schema MySQL prior to production enablement.
+
+Neither this service nor the test modifies production SQL or the Satisfactory installation. Integration with upload/backup/reimport is intentionally gated pending the above container-level contracts.
