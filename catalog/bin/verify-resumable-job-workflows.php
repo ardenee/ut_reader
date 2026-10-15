@@ -76,7 +76,7 @@ $check(
         : implode(' | ', $destructive)
 );
 
-$migration = $read('migrations/202608120001_job_workflow_recovery_logging.php');
+$migration = $read('install.sql');
 $enqueuer = $read('src/Infrastructure/Persistence/PdoJobEnqueuer.php');
 $check(
     'workflow_children_are_durable_and_idempotent',
@@ -132,25 +132,14 @@ $check(
 
 $check(
     'file_dependency_missing_metadata_is_repaired_without_full_preverify',
-    str_contains($dependencies, 'private function compactMetadataPhysicallyPresent(int $fileId): bool')
-        && str_contains($dependencies, 'BlockedCompressedMetadataContainer::path(')
-        && str_contains($dependencies, 'm.compressed_size')
-        && str_contains($dependencies, 'JobType::REPAIR_COMPACT_METADATA_FILE')
-        && str_contains($dependencies, "'metadata-repair'")
-        && str_contains($dependencies, "'stage' => 'metadata_repair_wait'")
-        && str_contains($dependencies, 'Restart that repair child; this dependency job will resume after it succeeds.')
+    str_contains($dependencies, 'private function ensureCompactMetadataReady(')
         && str_contains($dependencies, 'VerifiedCompactMetadataHealth::healthy($this->db, $this->config, $fileId)')
-        && strpos($dependencies, 'VerifiedCompactMetadataHealth::healthy($this->db, $this->config, $fileId)')
-            > strpos($dependencies, "if (\$status !== 'completed')")
-        && !str_contains(
-            substr(
-                $dependencies,
-                (int)strpos($dependencies, 'private function compactMetadataPhysicallyPresent'),
-                2400
-            ),
-            'BlockedCompressedMetadataReader'
-        ),
-    'Per-file dependency work must cheaply detect missing/size-mismatched compact metadata, defer to the existing repair child, and reserve full container verification for post-repair confirmation.'
+        && str_contains($dependencies, 'VerifiedCompactMetadataHealth::queueRepair(')
+        && str_contains($dependencies, "'stage' => 'metadata_repair_wait'")
+        && str_contains($dependencies, "['failed', 'dead_letter', 'cancelled']")
+        && str_contains($dependencies, 'completed, but UEDB5 metadata is still missing or unreadable')
+        && !str_contains($dependencies, 'BlockedCompressedMetadataReader'),
+    'Dependency work must verify authoritative V5 metadata, deduplicate repair, defer while it runs and fail terminal or ineffective repairs.'
 );
 
 $affected = $read('src/Infrastructure/Jobs/CatalogAffectedDependencyRefreshJobHandler.php');
@@ -334,7 +323,8 @@ $check(
     $profiledCompletePosition !== false
         && (($profiledChunkQueuePosition !== false && $profiledCompletePosition < $profiledChunkQueuePosition)
             || ($profiledPakQueuePosition !== false && $profiledCompletePosition < $profiledPakQueuePosition))
-        && str_contains($profiledUpload, 'recovery begins after the complete file is durably staged'),
+        && str_contains($profiledChunk, "if (\$action === 'complete')")
+        && str_contains($profiledChunk, "'relative_path' => 'chunk-upload:' . \$uploadId"),
     'Chunk transport is not the recovery contract; the completed server file must exist before a game import job is created.'
 );
 
