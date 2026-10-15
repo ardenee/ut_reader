@@ -47,11 +47,14 @@ $check('base_pass_leaves_dependencies_for_second_pass',$projection['dependency_e
 $publisherSource=(string)file_get_contents($root.'/src/Infrastructure/Metadata/PdoUedb5BaseProjectionPublisher.php');
 $check('publisher_never_writes_live_v4_registration',!str_contains($publisherSource,'ue_file_metadata'));
 $check('publisher_clears_stale_dependency_projection',str_contains($publisherSource,"'ue_uedb5_dependency_edges'") && str_contains($publisherSource,"'ue_uedb5_dependency_packages'"));
-$check('publisher_uses_staged_v5_tables',str_contains($publisherSource,'ue_uedb5_object_candidates') && str_contains($publisherSource,'ue_uedb5_name_candidates'));
-$check('publisher_batches_large_projection_inserts',
-    substr_count($publisherSource,'$this->insertBatches(')>=2
-    && str_contains($publisherSource,'array_chunk($rows, 250)')
-    && !str_contains($publisherSource,"foreach ((array)\$projection['object_candidates'] as \$row)"));
+$check('publisher_uses_compact_v5_candidates',
+    str_contains($publisherSource,'PdoUedb5CompactCandidatePublisher')
+    && !str_contains($publisherSource,'ue_uedb5_object_candidates')
+    && !str_contains($publisherSource,'ue_uedb5_name_candidates'));
+$check('publisher_compact_candidates_share_outer_transaction',
+    str_contains($publisherSource, 'PdoUedb5CompactCandidatePublisher($this->db, false)')
+    && str_contains($publisherSource, '->publish($snapshot, $registration)')
+    && strpos($publisherSource, '->publish($snapshot, $registration)') < strpos($publisherSource, '$this->db->commit()'));
 $check('publisher_search_dictionary_is_insert_only',
     str_contains($publisherSource,'INSERT IGNORE INTO ')
     && !str_contains($publisherSource,'key_hash=VALUES(key_hash),key_length=VALUES(key_length),normalized_text=VALUES(normalized_text)'));
