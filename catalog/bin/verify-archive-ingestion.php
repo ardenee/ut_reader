@@ -288,13 +288,13 @@ $record(
 );
 
 $record(
-    'queued_staged_archives_are_reclassified_on_worker_start',
+    'queued_staged_archives_can_be_reclassified_on_settings_save',
     str_contains($resourceLimitStoreSource, 'JobResourcePolicy::SOURCE_ARCHIVE_IMPORT')
         && str_contains($resourceLimitStoreSource, 'JobType::IMPORT_STAGED_PAK')
         && str_contains($resourceLimitStoreSource, 'JobType::IMPORT_STAGED_ARCHIVE')
         && str_contains($resourceLimitStoreSource, 'CONCAT("import:source-job:",id)')
         && str_contains($resourceLimitStoreSource, '$sourceArchiveRows'),
-    'Already-queued staged source archives must learn the parallel per-source resource policy when workers restart; operators must not need to delete and requeue them.'
+    'Already-queued staged source archives can be synchronized when administrator resource settings are saved; new jobs receive policy at enqueue time.'
 );
 
 $factory = (string)@file_get_contents($root . '/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php');
@@ -307,10 +307,14 @@ $record(
         && str_contains($factory, 'new CatalogBucketStagedPackageJobHandler'),
     'Archive roots must route through the lifecycle coordinator, which delegates extraction to CatalogArchiveImportJobHandler; staged archive members must retain content routing.'
 );
+$poolReconciler = (string)@file_get_contents($root . '/src/Infrastructure/Jobs/CatalogWorkerPoolReconciler.php');
+$enqueuer = (string)@file_get_contents($root . '/src/Infrastructure/Persistence/PdoJobEnqueuer.php');
 $record(
-    'worker_start_synchronizes_queued_resource_policy',
-    str_contains($factory, 'synchronizeQueuedPolicies()'),
-    'Worker startup must repair persisted queued resource policy before claiming work.'
+    'worker_start_avoids_mass_queue_policy_rewrites',
+    str_contains($poolReconciler, "'skipped_on_start' => true")
+        && str_contains($enqueuer, 'JobResourcePolicy::for($type, $payload)')
+        && str_contains($resourceLimitStoreSource, '$this->synchronizeQueuedPolicies()'),
+    'Worker startup must avoid O(queue-size) rewriting; enqueue and administrator settings updates own resource policy synchronization.'
 );
 
 $bucketApi = (string)@file_get_contents($root . '/api/v1/upload-bucket-chunk.php');
