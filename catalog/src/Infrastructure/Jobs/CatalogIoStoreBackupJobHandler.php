@@ -59,9 +59,11 @@ final class CatalogIoStoreBackupJobHandler implements JobHandler
         $containerId=(int)$result['container_id'];
         $queue=new PdoJobQueue($this->db);
         $nameJobId=$queue->enqueue($job->queue,JobType::INDEX_IOSTORE_PACKAGE_NAMES,
-            ['container_id'=>$containerId],110,null,null,null,3);
+            ['container_id'=>$containerId],110,null,
+            'iostore-name-index-'.$containerId,null,3);
         $publishJobId=$queue->enqueue($job->queue,JobType::PUBLISH_IOSTORE_PACKAGES,
-            ['container_id'=>$containerId],110,null,null,null,3);
+            ['container_id'=>$containerId],110,null,
+            'iostore-publish-'.$containerId,null,3);
         $context->checkpoint(['stage'=>'container_restored','game_id'=>$gameId,
             'container_id'=>$containerId,'percent'=>100,
             'name_job_id'=>$nameJobId,'publish_job_id'=>$publishJobId]);
