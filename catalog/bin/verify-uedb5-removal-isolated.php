@@ -53,11 +53,35 @@ try{
  $report['failed_delete_kept_file_row']=(int)$db->query('SELECT COUNT(*) FROM ue_files WHERE id=322')->fetchColumn()===1;
  $report['failed_delete_kept_alias']=(int)$db->query('SELECT COUNT(*) FROM ue_file_package_aliases WHERE file_id=322')->fetchColumn()===1;
  $report['failed_delete_rolled_back_v5_status']=(int)$db->query('SELECT COUNT(*) FROM ue_uedb5_migration_status WHERE file_id=322')->fetchColumn()===1;
+ // Failure after the core SQL commit must never resurrect an orphan source file.
+ $db->exec('CREATE TABLE ue_uedb5_files(file_id INTEGER PRIMARY KEY)');
+ $postFixture=$storage.DIRECTORY_SEPARATOR.'postcommit.uasset';
+ file_put_contents($postFixture,'isolated-post-commit-failure');
+ $db->prepare('INSERT INTO ue_files VALUES(323,7,?,?,?,?)')
+    ->execute(['Postcommit','postcommit.uasset','storage/'.basename($storage).'/postcommit.uasset','verified']);
+ $db->exec('INSERT INTO ue_uedb5_files VALUES(323)');
+ $db->exec('INSERT INTO ue_uedb5_migration_status VALUES(323)');
+ $throwAfterCommit=static function(array $progress):void{
+    if(($progress['stage']??'')==='dependencies')throw new RuntimeException('isolated postcommit injection');
+ };
+ try{
+    (new CatalogFileMaintenanceRemovalService($db,['storage_path'=>$storage]))
+       ->remove(323,$throwAfterCommit,true);
+    $report['postcommit_failure_exposed']=false;
+ }catch(RuntimeException $error){
+    $report['postcommit_failure_exposed']=str_contains($error->getMessage(),'Catalog deletion was committed');
+ }
+ $report['postcommit_no_orphan_file']=!is_file($postFixture);
+ $report['postcommit_sql_remains_deleted']=(int)$db->query('SELECT COUNT(*) FROM ue_files WHERE id=323')->fetchColumn()===0
+    &&(int)$db->query('SELECT COUNT(*) FROM ue_uedb5_files WHERE file_id=323')->fetchColumn()===0;
+ $report['postcommit_no_staged_copy']=count(glob($postFixture.'.deleting-*')?:[])===0;
  $report['ok']=$report['file_deleted']&&$report['file_row_deleted']&&$report['alias_deleted']
     &&$report['deferred_reconciliation']&&$report['v5_registration_deleted']
     &&$report['v5_migration_status_deleted']&&$report['failure_injection_rejected']
     &&$report['failed_delete_restored_source']&&$report['failed_delete_kept_file_row']
-    &&$report['failed_delete_kept_alias']&&$report['failed_delete_rolled_back_v5_status'];
+    &&$report['failed_delete_kept_alias']&&$report['failed_delete_rolled_back_v5_status']
+    &&$report['postcommit_failure_exposed']&&$report['postcommit_no_orphan_file']
+    &&$report['postcommit_sql_remains_deleted']&&$report['postcommit_no_staged_copy'];
 }catch(Throwable $e){$report['error']=$e->getMessage();}
 finally{
  if(is_file($fixture))@unlink($fixture);

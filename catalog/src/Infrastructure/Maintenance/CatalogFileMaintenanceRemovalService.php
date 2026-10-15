@@ -71,6 +71,8 @@ final class CatalogFileMaintenanceRemovalService
         }
 
         $ownsTransaction = false;
+        $coreDeletionCommitted = false;
+        $reconciliationJobId = null;
         try {
             $affectedFileIds = [];
             $affectedUedb5FileIds = $support->affectedUedb5ConsumerIds($gameId, $fileId);
@@ -107,6 +109,7 @@ final class CatalogFileMaintenanceRemovalService
                 $this->db->commit();
                 $ownsTransaction = false;
             }
+            $coreDeletionCommitted = true;
             if ($deferDependencyRefresh) {
                 \catalog_file_maintenance_emit(
                     $progress,
@@ -125,25 +128,40 @@ final class CatalogFileMaintenanceRemovalService
                     'Refreshing affected dependency links'
                 );
             }
+            if (!$deferDependencyRefresh) {
+                $reconciliationJobId = CatalogProjectionReconciliationQueue::enqueue(
+                    $this->db,
+                    $fileId,
+                    [$gameId],
+                    $packageNames,
+                    $this->config
+                );
+            }
         } catch (Throwable $error) {
             if ($ownsTransaction && $this->db->inTransaction()) {
                 $this->db->rollBack();
+            }
+            if ($coreDeletionCommitted) {
+                // SQL deletion is committed. Never resurrect the source file without
+                // its ue_files identity; retain neither a dangling staged file nor
+                // old V5 container when downstream dependency refresh fails.
+                if ($stagedPath !== null && is_file($stagedPath)) {
+                    @unlink($stagedPath);
+                }
+                if (is_file($uedb5Path)) {
+                    @unlink($uedb5Path);
+                }
+                throw new RuntimeException(
+                    'Catalog deletion was committed for file #' . $fileId
+                    . ', but post-deletion dependency refresh failed: ' . $error->getMessage(),
+                    0,
+                    $error
+                );
             }
             if ($stagedPath !== null && is_file($stagedPath) && $storedPath !== null) {
                 @rename($stagedPath, $storedPath);
             }
             throw $error;
-        }
-
-        $reconciliationJobId = null;
-        if (!$deferDependencyRefresh) {
-            $reconciliationJobId = CatalogProjectionReconciliationQueue::enqueue(
-                $this->db,
-                $fileId,
-                [$gameId],
-                $packageNames,
-                $this->config
-            );
         }
 
         $warnings = [];
