@@ -39,3 +39,11 @@ MySQL session-temporary tables can support source/SQL publisher tests but **cann
 - Preserve Epic-source parity and never enable V4 fallbacks or silent unsupported-version gates.
 - Report **which** layer passed: source parser, compact publisher, worker with fake queue, actual durable queue, or full user lifecycle.
 - When finishing an integration gap, update this checklist with fixture identity, exact command, outcome and any limits. Avoid rerunning unchanged broad audits.
+
+## Candidate-table cutover verification (2026-10-15)
+
+Command: `C:\php8.5\php.exe catalog\bin\verify-uedb5-candidate-cutover-readonly.php`
+
+Result: **passed**. The live catalog database exposes exactly two tables with `candidate` in their names: `ue_uedb5_compact_name_candidates` and `ue_uedb5_compact_object_candidates`. No other candidate-named tables remain, and the retired-table runtime scanner reports 0 source files / 0 references for its retired vocabulary.
+
+**Do not drop either compact table:** both are active production V5 search and SQL projection dependencies. This bounded evidence supersedes older notes claiming separate *candidate-named* tables await deletion; it does **not** prove all obsolete V1-V4 tables or files have been removed. The runtime diagnostics include V4-era reason labels whose semantics must be audited separately before removal.
