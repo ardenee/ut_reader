@@ -13,7 +13,7 @@ $path.=$hash.'/FactoryGame-WindowsServer.utoc';
 $toc=new Uedb5IoStoreTocReader($path,null,'C:/php8.5/ext/oo2core_9_win64.dll');
 $publisher=new CatalogIoStoreMemberCatalogPublisher($db,'C:/Temp/uedb5-iostore-retention-test');
 $results=[];
-foreach([702,703] as $entry){
+foreach([52,53] as $entry){
  $a=$publisher->publish($toc,1,$entry);
  $b=$publisher->publish($toc,1,$entry);
  $results[]=['entry'=>$entry,'first'=>$a,'replay'=>$b];

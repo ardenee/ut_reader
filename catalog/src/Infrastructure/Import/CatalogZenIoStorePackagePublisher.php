@@ -12,7 +12,9 @@ use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5MetadataSnapshotWriter;
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5MetadataContainer;
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5MetadataReader;
 use UnrealDb\Catalog\Infrastructure\Metadata\PdoUedb5StagingRegistrationRepository;
-use UnrealDb\Catalog\Infrastructure\Metadata\PdoUedb5CompactCandidatePublisher;
+use UnrealDb\Catalog\Infrastructure\Metadata\PdoUedb5BaseProjectionPublisher;
+use UnrealDb\Catalog\Infrastructure\Metadata\PdoUedb5MigrationStatusRepository;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5MigrationValidator;
 
 /**
  * Publishes one Zen package from a validated mounted IoStore container.
@@ -85,14 +87,23 @@ final class CatalogZenIoStorePackagePublisher
         }
         $snapshot = Uedb5Ue5ZenIoStoreSnapshotBuilder::build($toc, $packageId, [
             'id'=>$fileId,'game_id'=>$gameId,'package_name'=>'',
-            'original_name'=>$toc->utocFilename(),
+            'original_name'=>$packageId.'.zenpkg',
         ]);
         $written = (new Uedb5MetadataSnapshotWriter($this->storageRoot))->write($snapshot);
         try {
             $this->db->beginTransaction();
             $registration = $registry->register($gameId, $fileId);
-            $projection = (new PdoUedb5CompactCandidatePublisher($this->db, false))
+            $projection = (new PdoUedb5BaseProjectionPublisher($this->db))
                 ->publish($snapshot, $registration);
+            $statuses=new PdoUedb5MigrationStatusRepository($this->db);
+            $statuses->markStageSucceeded($fileId, $gameId);
+            $validation=(new Uedb5MigrationValidator($this->db,['storage_path'=>$this->storageRoot]))
+                ->validate($fileId,$snapshot);
+            if(!empty($validation['ready'])) {
+                $statuses->markValidated($fileId,(string)$written['payload_sha256'],$validation);
+            }else{
+                $statuses->markStaged($fileId,(string)$written['payload_sha256'],$validation);
+            }
             $this->db->commit();
         } catch (Throwable $e) {
             if ($this->db->inTransaction()) $this->db->rollBack();
@@ -102,6 +113,10 @@ final class CatalogZenIoStorePackagePublisher
         return ['status'=>'published','file_id'=>$fileId,'package_id'=>$packageId,
             'package_name'=>$snapshot['file']['package_name'],
             'v5_bytes'=>(int)$written['compressed_size'],
-            'candidate_names'=>$projection['names'],'candidate_objects'=>$projection['objects']];
+            'candidate_names'=>$projection['name_candidates'],'candidate_objects'=>$projection['object_candidates'],
+            'provider_keys'=>$projection['provider_keys'],'search_keys'=>$projection['search_keys'],
+            'name_count'=>count($snapshot['sections']['name_map']??[]),
+            'import_count'=>count($snapshot['sections']['imports']??[]),
+            'export_count'=>count($snapshot['sections']['exports']??[])];
     }
 }

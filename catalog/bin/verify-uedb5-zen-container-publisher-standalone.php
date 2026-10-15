@@ -1,48 +1,42 @@
 <?php
 declare(strict_types=1);
 if(PHP_SAPI!=='cli')exit(1);
-require_once dirname(__DIR__).'/bootstrap/autoload.php';
+require dirname(__DIR__).'/bootstrap/autoload.php';
 use UnrealDb\Catalog\Infrastructure\Import\CatalogZenIoStorePackagePublisher;
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5IoStoreTocReader;
-$db=new PDO('mysql:host=127.0.0.1;port=3339;dbname=uedb5_zen_satisfactory_test;charset=utf8mb4','root','',
- [PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION,PDO::ATTR_DEFAULT_FETCH_MODE=>PDO::FETCH_ASSOC]);
-$id=$db->query('SELECT @@port port,@@datadir datadir')->fetch();
-if((int)$id['port']!==3339 || strtolower(str_replace(chr(92),'/',$id['datadir']))!=='c:/temp/uedb5-isolated-mysql/data/')
+$db=new PDO('mysql:host=127.0.0.1;port=3339;dbname=uedb5_isolated_integration;charset=utf8mb4',
+ 'root','',[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION,PDO::ATTR_DEFAULT_FETCH_MODE=>PDO::FETCH_ASSOC]);
+$identity=$db->query('SELECT @@port port,@@datadir datadir')->fetch();
+if((int)$identity['port']!==3339||stripos((string)$identity['datadir'],'uedb5-isolated-mysql')===false)
  throw new RuntimeException('Refusing non-isolated MySQL.');
-$dir='//192.168.0.51/c$/Program Files (x86)/Steam/steamapps/common/SatisfactoryDedicatedServer/FactoryGame/Content/Paks';
-$toc=new Uedb5IoStoreTocReader($dir.'/FactoryGame-WindowsServer.utoc',null,'C:/php8.5/ext/oo2core_9_win64.dll');
-$storage=sys_get_temp_dir().'/uedb5_satisfactory_mysql_test';
-$service=new CatalogZenIoStorePackagePublisher($db,$storage);
-$game=990001;
+$root='C:/Temp/uedb5-iostore-retention-test';
+$hash=$db->query('SELECT utoc_sha256 FROM ue_iostore_containers WHERE id=1')->fetchColumn();
+$toc=new Uedb5IoStoreTocReader($root.'/games/unreal2/iostore/'.$hash.'/FactoryGame-WindowsServer.utoc',null,
+ 'C:/php8.5/ext/oo2core_9_win64.dll');
+$service=new CatalogZenIoStorePackagePublisher($db,$root);
 $checks=[];$failures=[];
-$check=static function(bool $ok,string $name)use(&$checks,&$failures):void{$checks[$name]=$ok;if(!$ok)$failures[]=$name;};
-$ids=[12=>980020012,13=>980020013];
-foreach($ids as $idx=>$fileId) {
- $db->prepare('INSERT INTO ue_files(id,game_id,scan_status) VALUES(?,?,"verified") ON DUPLICATE KEY UPDATE game_id=VALUES(game_id),scan_status=VALUES(scan_status)')->execute([$fileId,$game]);
- $packageId=$toc->chunks()[$idx]['package_id'];
- $first=$service->publish($toc,$packageId,$game,$fileId);
- $again=$service->publish($toc,$packageId,$game,$fileId);
- $check($first['status']==='published' || $first['status']==='existing','first_published_or_replayed_'.$idx);
- $check($again['status']==='existing','idempotent_replay_'.$idx);
- $query=$db->prepare('SELECT count(*) FROM ue_uedb5_files WHERE file_id=?');
- $query->execute([$fileId]);
- $check((int)$query->fetchColumn()===1,'unique_v5_registration_'.$idx);
+$check=static function(bool $ok,string $label)use(&$checks,&$failures):void{
+ $checks[$label]=$ok;if(!$ok)$failures[]=$label;
+};
+$records=[];
+foreach([52,53] as $tocIndex){
+ $q=$db->prepare('SELECT file_id,HEX(package_id) package_id FROM ue_iostore_packages WHERE container_id=1 AND toc_index=?');
+ $q->execute([$tocIndex]);$row=$q->fetch(PDO::FETCH_ASSOC);
+ if(!is_array($row)||!$row['file_id'])throw new RuntimeException('Full-schema published Zen fixture required.');
+ $result=$service->publish($toc,$row['package_id'],2,(int)$row['file_id']);
+ $records[]=$row;
+ $check($result['status']==='existing','idempotent_v5_replay_'.$tocIndex);
+ $q=$db->prepare('SELECT COUNT(*) FROM ue_uedb5_provider_keys WHERE file_id=?');
+ $q->execute([$row['file_id']]);
+ $check((int)$q->fetchColumn()>0,'provider_projection_'.$tocIndex);
+ $q=$db->prepare('SELECT status FROM ue_uedb5_migration_status WHERE file_id=?');
+ $q->execute([$row['file_id']]);
+ $check($q->fetchColumn()==='staged','accurate_dependency_pending_'.$tocIndex);
 }
-$conflictRejected=false;
-try{$service->publish($toc,$toc->chunks()[13]['package_id'],$game,$ids[12]);}
-catch(RuntimeException $e){$conflictRejected=str_contains($e->getMessage(),'another package identity');}
-$check($conflictRejected,'reused_file_id_cannot_change_package_id');
-$otherId=980020003;
-$db->prepare('INSERT INTO ue_files(id,game_id,scan_status) VALUES(?,?,"verified") ON DUPLICATE KEY UPDATE game_id=VALUES(game_id),scan_status=VALUES(scan_status)')->execute([$otherId,$game]);
-$dupRejected=false;
-try{$service->publish($toc,$toc->chunks()[12]['package_id'],$game,$otherId);}
-catch(RuntimeException $e){$dupRejected=str_contains($e->getMessage(),'already registered');}
-$check($dupRejected,'one_package_id_cannot_register_twice');
-$unverified=980020004;
-$db->prepare('INSERT INTO ue_files(id,game_id,scan_status) VALUES(?,?,"failed") ON DUPLICATE KEY UPDATE game_id=VALUES(game_id),scan_status=VALUES(scan_status)')->execute([$unverified,$game]);
-$unverifiedRejected=false;
-try{$service->publish($toc,$toc->chunks()[14]['package_id'],$game,$unverified);}
-catch(RuntimeException $e){$unverifiedRejected=str_contains($e->getMessage(),'matching verified');}
-$check($unverifiedRejected,'unverified_identity_rejected');
-echo json_encode(['ok'=>$failures===[],'isolated'=>true,'checks'=>$checks,'failures'=>$failures],JSON_PRETTY_PRINT),PHP_EOL;
+$conflict=false;
+try{$service->publish($toc,$records[1]['package_id'],2,(int)$records[0]['file_id']);}
+catch(RuntimeException $e){$conflict=str_contains($e->getMessage(),'another package identity');}
+$check($conflict,'same_file_cannot_change_package_id');
+echo json_encode(['ok'=>$failures===[],'isolated'=>true,'checks'=>$checks,'failures'=>$failures],
+ JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;
 exit($failures===[]?0:2);

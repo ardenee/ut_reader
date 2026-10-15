@@ -23,13 +23,16 @@ final class CatalogIoStoreMemberCatalogPublisher
     {
         if($this->db->inTransaction())throw new RuntimeException('IoStore member publisher requires its own SQL transaction.');
         $query=$this->db->prepare(
-          'SELECT m.id member_id,m.file_id,m.publication_status,HEX(m.package_id) package_id,m.logical_size,'
+          'SELECT m.id member_id,m.file_id,m.publication_status,m.metadata_status,m.package_name,m.name_count,m.import_count,m.export_count,HEX(m.package_id) package_id,m.logical_size,'
          .'c.game_id,c.utoc_sha256,c.status container_status,g.slug '
          .'FROM ue_iostore_packages m JOIN ue_iostore_containers c ON c.id=m.container_id '
          .'JOIN ue_games g ON g.id=c.game_id WHERE m.container_id=? AND m.toc_index=?'
         );
         $query->execute([$containerId,$tocIndex]);$member=$query->fetch(PDO::FETCH_ASSOC);
-        if(!is_array($member)||$member['container_status']!=='ready')throw new RuntimeException('IoStore container/member is not ready.');
+        if(!is_array($member)||$member['container_status']!=='ready'||$member['metadata_status']!=='ready')
+            throw new RuntimeException('IoStore container and member names must be indexed before catalog publication.');
+        $logicalName=(string)$member['package_name'];
+        if($logicalName===''||strlen($logicalName)>255)throw new RuntimeException('IoStore package name cannot fit the current catalog identity column.');
         if(!hash_equals(strtolower((string)$member['utoc_sha256']),strtolower($toc->tocSha256())))throw new RuntimeException('IoStore source TOC differs from retained container.');
         $chunk=$toc->chunks()[$tocIndex]??null;
         $packageId=(string)$member['package_id'];
@@ -84,12 +87,12 @@ final class CatalogIoStoreMemberCatalogPublisher
             $this->db->beginTransaction();
             $insert=$this->db->prepare(
                 'INSERT INTO ue_files(game_id,package_name,original_name,stored_name,relative_path,extension,'
-                .'detected_engine_key,detection_confidence,file_size,md5,sha1,scan_status,scan_notes) '
-                .'VALUES(?,?,?,?,?,?,"UE5","high",?,?,?,"verified",?)'
+                .'detected_engine_key,detection_confidence,file_size,md5,sha1,name_count,import_count,export_count,scan_status,scan_notes) '
+                .'VALUES(?,?,?,?,?,?,"UE5","high",?,?,?,?,?, ?,"verified",?)'
             );
-            $displayName=substr($packageId,0,16);
-            $insert->execute([$gameId,$displayName,$packageId.'.zenpkg',basename($destination),'storage/'.$relative,'zenpkg',
-                strlen($bytes),$md5,$sha1,'Indexed Zen FPackageId '.$packageId.' in IoStore container #'.$containerId]);
+            $insert->execute([$gameId,$logicalName,$packageId.'.zenpkg',basename($destination),'storage/'.$relative,'zenpkg',
+                strlen($bytes),$md5,$sha1,(int)$member['name_count'],(int)$member['import_count'],(int)$member['export_count'],
+                'Indexed Zen FPackageId '.$packageId.' in IoStore container #'.$containerId]);
             $fileId=(int)$this->db->lastInsertId();
             $link=$this->db->prepare('UPDATE ue_iostore_packages SET file_id=?,publication_status="indexed" WHERE id=? AND file_id IS NULL');
             $link->execute([$fileId,$memberId]);
