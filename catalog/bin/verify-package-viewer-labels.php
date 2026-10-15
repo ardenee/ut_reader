@@ -5,7 +5,9 @@ $files=[
  'lib/CatalogNavigation.php'=>['Package Viewer','paks.php'],
  'paks.php'=>['Package Viewer','IoStore (.utoc/.ucas) browsing is being integrated'],
  'game-paks.php'=>['Package Viewer','PAK containers','IoStore containers','iostore-info.php?id='],
- 'iostore-info.php'=>['IoStore container','FPackageId prefix','ue_iostore_packages'],
+ 'iostore-info.php'=>['IoStore container','FPackageId prefix','ue_iostore_packages','iostore-package-info.php'],
+ 'iostore-package-info.php'=>['CatalogIoStoreIndexedPackageReader','Zen package details','file-info.php'],
+ 'src/Infrastructure/Storage/CatalogIoStoreIndexedPackageReader.php'=>['ue_iostore_container_parts','utoc_sha256','Uedb5Ue5ZenIoStoreSnapshotBuilder'],
  'pak-info.php'=>['Package Viewer','pak-info.php'],
 ];
 $results=[];

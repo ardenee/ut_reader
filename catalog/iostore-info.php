@@ -42,7 +42,7 @@ try {
     foreach($rows->fetchAll(PDO::FETCH_ASSOC) as $row){
         $link=(int)($row['file_id']??0);
         echo '<tr><td>'.number_format((int)$row['toc_index']).'</td><td class="mono">'
-           .catalog_h((string)$row['package_hex']).'</td><td>'.(int)$row['chunk_index'].'</td><td>'
+           .'<a href="iostore-package-info.php?id='.$id.'&entry='.(int)$row['toc_index'].'">'.catalog_h((string)$row['package_hex']).'</a></td><td>'.(int)$row['chunk_index'].'</td><td>'
            .catalog_h(catalog_bytes((int)$row['logical_size'])).'</td><td>';
         if($link>0)echo '<a href="file-info.php?id='.$link.'">View package</a>';
         else echo catalog_h((string)$row['publication_status']);

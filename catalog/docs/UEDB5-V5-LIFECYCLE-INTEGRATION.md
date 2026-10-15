@@ -253,3 +253,11 @@ Real Satisfactory isolated MySQL tests:
 - verify-package-viewer-labels.php: IoStore list and paginated iostore-info.php with FPackageId prefix filtering. Existing PAK browsing remains unchanged.
 
 Scope: These fixtures intentionally use isolated game ID 2 and test-only paths. No production Satisfactory game, live UE5 upload route, per-package catalog file identities or 27,240 V5 snapshot publications were created. To finish production IoStore acceptance, wire multi-file/chunked upload, verified UE5 game and physical source identity, durable per-package V5 publication, backup/restore, ownership-aware deletion and authoritative mounted package-store dependency resolution. This checkpoint does not claim those remainings are complete.
+
+### IoStore on-demand Zen package inspection from retained containers
+
+Added CatalogIoStoreIndexedPackageReader and a read-only iostore-package-info.php endpoint. An indexed member is opened by container ID and TOC index, validated against the retained SHA-256-registered TOC and complete partition manifest, then decoded on demand using the existing Zen snapshot builder and Oodle support. The viewer now links every FPackageId to this inspection page; links to the normal file-info.php are provided only for members with published catalog file identities.
+
+Real isolated Satisfactory verification: verify-iostore-package-inspection-standalone.php passed 5/5 member package inspections (names, name maps, imports, exports, dependency-bundle counts) directly from the full retained main UCAS; rejected a nonexistent member in the global container. No production SQL or Steam source modifications. The on-demand viewer deliberately avoids pre-parsing all 27,240 packages at page load.
+
+This is read-only indexed-container browsing. Normal multipart browser upload, per-member ue_files publication/ownership and mounted-store dependency resolution remain separate pending integration work.
