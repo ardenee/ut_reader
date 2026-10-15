@@ -44,7 +44,7 @@ $phpFiles = [
     'src/Infrastructure/Maintenance/CatalogFullSyncDependencyBatchService.php',
     'src/Infrastructure/Maintenance/CatalogFullSyncProjectionService.php',
     'src/Infrastructure/Maintenance/CatalogFileMaintenanceReimportService.php',
-    'src/Infrastructure/Metadata/BlockedCompressedMetadataSnapshotWriter.php',
+    'src/Infrastructure/Metadata/Uedb5MetadataSnapshotWriter.php',
     'src/Infrastructure/Metadata/VerifiedFileCompactMetadataFinalizer.php',
     'src/Infrastructure/Persistence/PdoJobClaimer.php',
     'src/Infrastructure/Persistence/PdoJobLeaseStore.php',
@@ -95,7 +95,7 @@ $recovery = $read('src/Infrastructure/Persistence/PdoJobRecovery.php');
 $enqueuer = $read('src/Infrastructure/Persistence/PdoJobEnqueuer.php');
 $childStateQuery = $read('src/Infrastructure/Persistence/PdoWorkflowChildStateQuery.php');
 $projector = $read('src/Infrastructure/Jobs/CatalogBackgroundJobFileTreeProjector.php');
-$migration = $read('migrations/202608120001_job_workflow_recovery_logging.php');
+$migration = $read('install.sql');
 $worker = $read('src/Application/Jobs/JobWorker.php');
 $fingerprint = $read('src/Infrastructure/Jobs/CatalogWorkerCodeVersion.php');
 
@@ -232,7 +232,7 @@ $record(
     'dependency_batch_change_resumes_existing_workflow',
     str_contains($handler, '\'planned_units\' => $planned')
         && str_contains($handler, 'pre-batching workflow resumes from its existing checkpoint')
-        && str_contains($handler, 'private const WORKFLOW_VERSION = 2'),
+        && str_contains($handler, 'private const WORKFLOW_VERSION = 3'),
     'An in-progress pre-batching Full Sync must keep its cursor/checkpoint and switch only the remaining dependency files to batches.'
 );
 
@@ -287,19 +287,19 @@ $record(
 
 $batch = $read('src/Infrastructure/Maintenance/CatalogFullSyncDependencyBatchService.php');
 $record(
-    'dependency_unit_repair_is_format2_safe',
+    'dependency_pass_does_not_reparse_v5_sources',
     str_contains($batch, 'clearstatcache()')
-        && str_contains($batch, 'isCompactMetadataIntegrityFailure')
-        && str_contains($batch, "execute('sync_reimport'")
-        && str_contains($batch, 'private readonly bool $recordFailures = true'),
-    'A dependency unit may repair an unreadable format-2 container and retry without generating transient error noise.'
+        && str_contains($batch, 'private readonly bool $recordFailures = true')
+        && str_contains($batch, 'Full Sync already reparsed and republished every selected-game source')
+        && !str_contains($batch, "execute('sync_reimport'"),
+    'Pass 2 must rebuild dependencies without reparsing files or silently hiding bad pass-1 publication.'
 );
 
-$writer = $read('src/Infrastructure/Metadata/BlockedCompressedMetadataSnapshotWriter.php');
+$writer = $read('src/Infrastructure/Metadata/Uedb5MetadataSnapshotWriter.php');
 $record(
-    'blocked_metadata_publish_clears_stat_cache',
+    'v5_metadata_publish_clears_stat_cache',
     str_contains($writer, 'clearstatcache(true, $path)'),
-    'Replacing a .uedb2 must invalidate PHP stat caching before size/hash verification.'
+    'Replacing a .uedb5 must invalidate PHP stat caching before size/hash verification.'
 );
 
 if ($withDatabase) {
