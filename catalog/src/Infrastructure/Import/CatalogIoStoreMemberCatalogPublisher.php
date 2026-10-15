@@ -43,8 +43,20 @@ final class CatalogIoStoreMemberCatalogPublisher
         $destination=$root.'/'.$relative;
         $fileId=(int)($member['file_id']??0);
         if($fileId>0){
+            $fileCheck=$this->db->prepare('SELECT relative_path,md5,sha1,game_id,scan_status FROM ue_files WHERE id=?');
+            $fileCheck->execute([$fileId]);
+            $existingFile=$fileCheck->fetch(PDO::FETCH_ASSOC);
+            if(!is_array($existingFile)||(int)$existingFile['game_id']!==$gameId
+                ||$existingFile['scan_status']!=='verified'
+                ||(string)$existingFile['relative_path']!=='storage/'.$relative
+                ||!is_file($destination)||md5_file($destination)!==$existingFile['md5']
+                ||sha1_file($destination)!==$existingFile['sha1']) {
+                throw new RuntimeException('Existing Zen member has missing or inconsistent catalog source bytes.');
+            }
             $response=(new CatalogZenIoStorePackagePublisher($this->db,$this->storageRoot))
                 ->publish($toc,$packageId,$gameId,$fileId);
+            $this->db->prepare('UPDATE ue_iostore_packages SET publication_status="published" WHERE id=? AND file_id=?')
+                ->execute([$memberId,$fileId]);
             return $response+['member_id'=>$memberId,'source_relative_path'=>$relative,'status'=>'existing'];
         }
         $bytes=$toc->readChunk($tocIndex);

@@ -42,6 +42,7 @@ final class JobExecutionContext
                 JobType::IMPORT_STAGED_PACKAGE,
                 JobType::IMPORT_IOSTORE_CONTAINER,
                 JobType::INDEX_IOSTORE_PACKAGE_NAMES,
+                JobType::PUBLISH_IOSTORE_PACKAGES,
                 JobType::IMPORT_STAGED_PAK,
                 JobType::IMPORT_STAGED_ARCHIVE,
                 JobType::REBUILD_AFFECTED_DEPENDENCIES,
