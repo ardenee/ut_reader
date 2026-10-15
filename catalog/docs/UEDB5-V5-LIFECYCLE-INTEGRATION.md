@@ -279,3 +279,11 @@ Additive migration `202610150002_iostore_package_names.php` and matching fresh-i
 - Indexed Zen package extraction verified 5 original SHA-256 byte matches and an extraction size-limit rejection.
 
 **NOT COMPLETE:** schema migrations are still pending on production; real per-member catalogue identities and durable full V5 SQL publication, mounted-container package-store arbitration/dependency resolution, backup/restore, container-member ownership-aware deletion, browser chunked multi-gigabyte uploads, encrypted containers, and production integration have not been proven. Never claim all IoStore support is complete merely because retention and viewer browsing work.
+
+### Zen member catalog publication proof — isolated checkpoint
+
+`CatalogIoStoreMemberCatalogPublisher` now performs opt-in per-member extraction to a separately named `.zenpkg` source file under the retained container's game/hash namespace, with real decoded-byte MD5/SHA-1, a genuine `ue_files` record, and the existing guarded V5 snapshot registration and compact SQL publication. The source path registered in the catalog uses the `storage/` prefix. It deliberately refuses to merge a different FPackageId on identical game/MD5 identity.
+
+In the isolated standalone MySQL fixture, two real Satisfactory member entries (TOC indexes 700 and 701) each created a new catalog identity and verified V5 registration/search candidates. Their immediate replay returned existing rather than a duplicate. The fixture was executed before the later `storage/` path-prefix correction; a new fresh-row path test remains required before wiring the durable production job.
+
+**This is not enabled from any live upload, queue or restore route.** The staged durable handler was discarded while incomplete. Remaining gates include fresh-row physical source resolution, failure/retry/concurrent publish, container/member ownership-aware delete and restore, end-to-end V5 dependency arbitration, and production UE5 game-profile readiness.
