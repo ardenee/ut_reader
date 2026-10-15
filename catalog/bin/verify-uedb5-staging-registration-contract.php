@@ -76,23 +76,29 @@ try {
         (string)$zenRegistration['source_policy'] === Uedb5ZenPackageReader::SOURCE_POLICY
         && (string)$zenRegistration['package_family'] === Uedb5ZenPackageReader::PACKAGE_FAMILY);
 
-    $migration = $read('migrations/202609300001_uedb5_staging_registration.php');
+    // The current installation contract is catalog/install.sql; the 2026
+    // one-shot side-by-side migration file is no longer distributed.
+    $migration = $read('install.sql');
     foreach (array_keys(Uedb5SqlProjectionContract::baselineTables()) as $table) {
-        $check('migration_creates_' . $table, str_contains($migration, 'CREATE TABLE ' . $table . ' '));
+        $check('install_creates_' . $table,
+            str_contains($migration, 'CREATE TABLE '.$table.' (')
+            || str_contains($migration, 'CREATE TABLE `'.$table.'` ('));
     }
-    $check('optional_object_path_projection_not_created_early',
-        !str_contains($migration, 'CREATE TABLE ue_uedb5_object_path_candidates '));
-    foreach (['block_count', 'package_family', 'source_policy', 'section_counts_json'] as $column) {
-        $check('ue_file_metadata_v5_column_' . $column,
-            str_contains($migration, 'ALTER TABLE ue_file_metadata ADD COLUMN ' . $column . ' '));
+    $check('optional_object_path_projection_is_absent',
+        !str_contains($migration, 'CREATE TABLE ue_uedb5_object_path_candidates ')
+        && !str_contains($migration, 'CREATE TABLE `ue_uedb5_object_path_candidates` '));
+    $position = strpos($migration, 'CREATE TABLE `ue_uedb5_files` (');
+    $endPosition = $position === false ? false : strpos($migration, 'CREATE TABLE ', $position + 13);
+    $registrationDDL = $position === false ? '' : substr($migration, $position,
+        $endPosition === false ? null : $endPosition - $position);
+    foreach (['block_count','package_family','source_policy','section_counts_json'] as $column) {
+        $check('uedb5_registration_column_'.$column,
+            str_contains($registrationDDL, '`'.$column.'`'));
     }
-    $check('live_registration_primary_key_is_not_changed',
-        !str_contains(strtolower($migration), 'drop primary key')
-        && !str_contains(strtolower($migration), 'modify primary key'));
-    $check('migration_does_not_rewrite_live_metadata_rows',
-        !preg_match('/(?:UPDATE|INSERT\s+INTO|REPLACE\s+INTO)\s+ue_file_metadata/i', $migration));
-    $check('v5_projection_rows_cascade_from_staged_registration',
-        substr_count($migration, 'REFERENCES ue_uedb5_files(file_id)') >= 7);
+    $check('install_does_not_rewrite_live_metadata_rows',
+        !preg_match('/(?:UPDATE|INSERT\\s+INTO|REPLACE\\s+INTO)\\s+ue_file_metadata/i', $migration));
+    $check('v5_candidate_files_have_cascading_registration_fk',
+        str_contains($migration, 'REFERENCES ue_uedb5_files(file_id) ON DELETE CASCADE'));
     $repoSource = $read('src/Infrastructure/Metadata/PdoUedb5StagingRegistrationRepository.php');
     $check('staging_repository_never_writes_live_registration',
         !preg_match('/(?:INSERT\s+INTO|UPDATE|REPLACE\s+INTO)\s+ue_file_metadata/i', $repoSource));
@@ -115,7 +121,7 @@ try {
     $fileColumns = (array)($contract['ue_uedb5_files']['columns'] ?? []);
     $check('v5_registration_contract_includes_section_counts',
         in_array('section_counts_json', $fileColumns, true)
-        && str_contains($migration, 'section_counts_json JSON NOT NULL'));
+        && str_contains($registrationDDL, '`section_counts_json`'));
 } finally {
     if (is_dir($tempRoot)) {
         $iterator = new RecursiveIteratorIterator(
