@@ -9,11 +9,16 @@ require_once dirname(__DIR__).'/lib/CatalogUE5ParserProfile.php';
 use UnrealDb\Catalog\Infrastructure\Metadata\PdoUedb5CompactCandidatePublisher as P;
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5SourceSnapshotFactory;
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5GameSourceRegistry;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5MetadataSnapshotWriter;
+use UnrealDb\Catalog\Infrastructure\Metadata\PdoUedb5StagingRegistrationRepository;
 $db=catalog_bootstrap(false)->db;
 $config=catalog_config();
 $sourceFactory=new Uedb5SourceSnapshotFactory($db,$config);
 $sourceRoot=rtrim((string)$config['storage_path'], '\\/');
 $fileQuery=$db->prepare('SELECT * FROM ue_files WHERE id=? AND game_id=? AND scan_status="verified" LIMIT 1');
+$tempStorage=sys_get_temp_dir().DIRECTORY_SEPARATOR.'uedb5-source-sql-'.bin2hex(random_bytes(8));
+$writer=new Uedb5MetadataSnapshotWriter($tempStorage);
+$inspector=new PdoUedb5StagingRegistrationRepository($db,$tempStorage);
 $tables=['u5_v2_test_dictionary','u5_v2_test_names','u5_v2_test_objects'];
 $ddl=[
 'CREATE TEMPORARY TABLE u5_v2_test_dictionary(name_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,name_key_hash BINARY(16) NOT NULL,name_key_length INT UNSIGNED NOT NULL,name_key_fingerprint BINARY(32) NOT NULL,UNIQUE KEY fingerprint(name_key_fingerprint)) ENGINE=InnoDB',
@@ -23,11 +28,10 @@ $created=[];$fail=[];$passed=0;$rollback=0;
 try{
  foreach($ddl as $i=>$sql){$db->exec($sql);$created[]=$tables[$i];}
  $pub=new P($db,true);
- $reg=$db->prepare('SELECT * FROM ue_uedb5_files WHERE game_id=? AND file_id=?');
+
  foreach([2=>111139,3=>113253,4=>148919,5=>111460,6=>112300,7=>113526,12=>110902] as $game=>$file){
    try{
-     $reg->execute([$game,$file]);$row=$reg->fetch(PDO::FETCH_ASSOC);
-     if(!is_array($row))throw new RuntimeException('Registration missing');
+
      $fileQuery->execute([$file,$game]);$sourceRow=$fileQuery->fetch(PDO::FETCH_ASSOC);
      if(!is_array($sourceRow))throw new RuntimeException('Verified source row missing');
      $stored=(string)($sourceRow['stored_name']??'');
@@ -41,6 +45,10 @@ try{
        || !hash_equals(strtolower((string)$sourceRow['sha1']),(string)sha1_file($sourcePath)))
        throw new RuntimeException('Source package identity mismatch');
      $snapshot=$sourceFactory->buildForGameId($game,$sourcePath,$sourceRow);
+     $written=$writer->write($snapshot);
+     $row=$inspector->inspect($game,$file);
+     if(!hash_equals((string)$written['payload_sha256'],(string)$row['payload_sha256']))
+       throw new RuntimeException('Fresh V5 registration inspector hash mismatch');
      $first=$pub->publish($snapshot,$row);
      $second=$pub->publish($snapshot,$row);
      $expected=['names'=>$first['names'],'objects'=>$first['objects']];
@@ -70,8 +78,13 @@ finally{
    try{$db->exec('DROP TEMPORARY TABLE IF EXISTS '.$table);}
    catch(Throwable $e){$fail[]=['cleanup_error'=>$e->getMessage()];}
  }
+ if(is_dir($tempStorage)){
+   $walk=new RecursiveIteratorIterator(new RecursiveDirectoryIterator($tempStorage,FilesystemIterator::SKIP_DOTS),RecursiveIteratorIterator::CHILD_FIRST);
+   foreach($walk as $entry){if($entry->isDir()){@rmdir($entry->getPathname());}else{@unlink($entry->getPathname());}}
+   @rmdir($tempStorage);
+ }
 }
-echo json_encode(['ok'=>$fail===[]&&$passed===7,'session_temporary_tables_only'=>true,'fresh_source_parsed'=>true,
+echo json_encode(['ok'=>$fail===[]&&$passed===7,'session_temporary_tables_only'=>true,'fresh_source_parsed'=>true,'fresh_v5_registration_inspected'=>true,
  'games_passed'=>$passed,'rollback_passed'=>$rollback,'failures'=>$fail],
  JSON_PRETTY_PRINT|JSON_INVALID_UTF8_SUBSTITUTE),PHP_EOL;
 exit($fail===[]&&$passed===7?0:2);
