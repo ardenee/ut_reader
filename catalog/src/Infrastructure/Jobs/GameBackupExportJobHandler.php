@@ -55,6 +55,16 @@ final class GameBackupExportJobHandler implements JobHandler
 
         $gameId = $this->positiveInt($job->payload, 'game_id');
         $backupKey = $this->requiredString($job->payload, 'backup_key');
+        // Classic game-backup manifests contain standalone package files only.
+        // Silently omitting an IoStore container would create an unrecoverable
+        // backup: a Zen member's .zenpkg alone cannot rebuild its mount context.
+        if (\UnrealDb\Catalog\Infrastructure\Storage\CatalogIoStoreContainerIndexer::schemaInstalled($this->db)) {
+            $iostore = $this->db->prepare('SELECT COUNT(*) FROM ue_iostore_containers WHERE game_id=?');
+            $iostore->execute([$gameId]);
+            if ((int)$iostore->fetchColumn()>0) {
+                throw new \RuntimeException('Standard game backup cannot preserve IoStore containers; use the dedicated IoStore container backup workflow.');
+            }
+        }
         $store = new GameBackupStore($this->config);
         $checkpoint = new GameBackupExportCheckpoint($store, $backupKey);
 

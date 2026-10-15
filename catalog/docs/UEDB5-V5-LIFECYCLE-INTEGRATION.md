@@ -326,3 +326,17 @@ Tests on standalone MySQL 3339:
 - Existing `verify-uedb5-metadata-mutation-identity.php` regression passed after Zen branch routing.
 
 Reimport intentionally resets dependency pass rather than copying possibly stale resolved dependency results. Source/package-store mounted-context reconciliation still requires its own authoritative pass.
+
+### Hash-verified IoStore backup, restore and durable administrative workflow
+
+Added `CatalogIoStoreContainerBackupService` to preserve an entire ready IoStore TOC/UCAS partition family as a self-contained, manifest-verified backup. Source and target bytes are checked by size and SHA-256. A complete backup is atomically published under `iostore-<TOC-SHA256>`; repeated exports verify and reuse it. Restoration requires an existing active UE5 destination game, validates every backup component before writes, and retains/reindexes the original complete container set using `CatalogIoStoreContainerStorage`.
+
+Real Satisfactory isolated MySQL results:
+- `verify-iostore-container-backup-restore-standalone.php`: global TOC/UCAS pair exported, re-exported idempotently, and restored as a new isolated UE5 container with verified partition.
+- `verify-iostore-main-backup-restore-standalone.php`: full ~621 MB FactoryGame-WindowsServer UCAS + TOC exported, hash-verified, restored into a different isolated UE5 game, and all **27,240** original FPackageId members indexed (8.52s measured in the test run).
+- `verify-iostore-backup-corruption-standalone.php`: single-byte change in an independently copied UCAS rejected restoration before SQL mutation.
+- `verify-iostore-backup-jobs-standalone.php`: one real queued `catalog.backup_iostore_container` and one `catalog.restore_iostore_container` completed through `JobWorker` with persisted result IDs; uses the configured `GameBackupStore` root for dedicated backup sets.
+- New **admin-only** `iostore-backup.php` in Package Viewer queues these operations. The UI has migration/status gates, CSRF validation, active UE5 game selection and bounded backup-key/TOC identity validation. `verify-package-viewer-labels.php` passes.
+- Standard game-backup export now **fails closed** when a game has IoStore containers: the old standalone-package export format does not preserve TOC/UCAS and would create a misleading incomplete backup. The dedicated IoStore backup route is required. Existing `verify-uedb5-full-sync-backup-lifecycle.php` passed.
+
+**Scope:** Complete container retention and index recovery are demonstrated. These dedicated backups are not yet a single full-game backup that automatically restores every derived `ue_files` Zen member, its V5 status and dependency graph; reimported containers require bounded name-index/V5 publication and authoritative mounted-store dependency jobs. Full production migrations are still pending. Do not label standard game backup/restore as IoStore-compatible or automatically queue it until its complete lifecycle has independent tests.
