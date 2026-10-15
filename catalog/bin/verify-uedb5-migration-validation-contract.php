@@ -145,7 +145,7 @@ $check('validator_ignores_environment_derived_uexp_path',
     str_contains($validatorSource,'sourceComparableSnapshot')
     && str_contains($validatorSource,"['uexp_path']"));
 $check('durable_state_machine_has_four_states',Uedb5MigrationStatus::values()===['pending','staged','validated','failed']);
-$migration=(string)file_get_contents($root.'/migrations/202609300002_uedb5_migration_status.php');
+$migration=(string)file_get_contents($root.'/install.sql');
 $check('status_schema_contains_four_durable_states',str_contains($migration,'pending')&&str_contains($migration,'staged')&&str_contains($migration,'validated')&&str_contains($migration,'failed'));
 
 if(is_dir($temp)){
