@@ -94,3 +94,26 @@ On 2026-10-15, 11 relevant suites exited 0:
 - Concurrent workers, lease expiry/retry, alias variations, complete backup export, and fault-injected restores/deletions require further isolated test cases.
 - The standalone MySQL fixture is **not production traffic or production queue certification**. PRD cutover remains subject to production reconciliation and V4 artifact cleanup.
 - Do not assume that hard-coded one-shot fixture scripts are safe to rerun after deletion or backup import; **preserve this checkpoint** and use a freshly reset standalone database for additional full lifecycle runs.
+
+
+### Pausing the standalone integration environment safely
+
+The isolated MySQL instance uses a deliberately local-only passwordless fixture account. It must **not** be exposed on a network or left running unnecessarily.
+
+To resume on PRD, start it in a dedicated PowerShell session (not the production MySQL service):
+
+```powershell
+$exe = 'C:\Program Files\MySQL\MySQL Server 8.4\bin\mysqld.exe'
+$args = '--no-defaults "--basedir=C:\Program Files\MySQL\MySQL Server 8.4" --datadir=C:\Temp\uedb5-isolated-mysql\data --bind-address=127.0.0.1 --port=3339 --mysqlx=OFF --log-error=C:\Temp\uedb5-isolated-mysql\isolated.err --skip-log-bin'
+Start-Process -FilePath $exe -ArgumentList $args -WindowStyle Hidden
+```
+
+Before tests, query `SELECT @@port, @@datadir` on **127.0.0.1:3339**, and require `3339` and `C:\Temp\uedb5-isolated-mysql\data\`. All fixture scripts check this connection identity.
+
+To stop **only** this standalone instance:
+
+```powershell
+& 'C:\Program Files\MySQL\MySQL Server 8.4\bin\mysqladmin.exe' --protocol=tcp --host=127.0.0.1 --port=3339 --user=root shutdown
+```
+
+Stopping MySQL retains the fixture data and completed job history. For new destructive integration runs, reset the *isolated* fixture deliberately rather than replaying old file IDs. Do not use the production MySQL port.
