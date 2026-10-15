@@ -117,3 +117,62 @@ To stop **only** this standalone instance:
 ```
 
 Stopping MySQL retains the fixture data and completed job history. For new destructive integration runs, reset the *isolated* fixture deliberately rather than replaying old file IDs. Do not use the production MySQL port.
+
+## Final seven-game and production cutover verification — 2026-10-15
+
+This checkpoint supersedes the earlier UE2-only lifecycle coverage and outstanding-item descriptions above. All tests used real V5 runtime classes with a separate MySQL 8.4 instance on `127.0.0.1:3339`, schema `uedb5_isolated_integration`, and disposable storage `catalog/storage/uedb5-isolated-reimport-20261015`. No existing production catalog rows or queued jobs were changed.
+
+### Seven-game lifecycle results
+
+| Game | Game ID | Stable-ID reimport | New verified upload | Backup restore parent | Non-deferred deletion reconciliation |
+| --- | ---: | ---: | --- | ---: | ---: |
+| Unreal II | 2 | 111139 | Existing upload correctly recognized as duplicate | 26 completed | 66 completed |
+| UT99 | 3 | 111198 | Verified | 36 completed | 68 completed |
+| UT2003 | 4 | 111199 | Verified | 41 completed | 69 completed |
+| UT2004 | 5 | 111200 | Verified | 46 completed | 70 completed |
+| UT3 | 6 | 111201 | Verified | 51 completed | 71 completed after recovery |
+| UT4 | 7 | 111202 | Verified | 56 completed | 73 completed |
+| Unreal Gold | 12 | 111203 | Verified | 61 completed | 74 completed |
+
+Every reimport preserved its isolated file ID and MD5, returned `reimported`, and passed V5 container verification. Each backup parent imported one real source package, completed its canonical child and then its game dependency child. Each non-deferred deletion removed its isolated source and catalog identity and completed its durable projection reconciliation.
+
+UT3 deletion found a genuine configuration bug: `PdoPackageSupersetAnalyzer` loaded global production configuration instead of the worker's injected V5 storage root. The corrected propagation through `PdoPackageCoverageCache` and `CatalogProjectionReconciliationJobHandler` allowed reconciliation parent **71** to complete. Previously completed child **72** remained at **one attempt**, proving the retry did not replay it.
+
+### Additional failure and concurrency checks
+
+- `verify-uedb5-queue-retry-concurrency-standalone.php`: two independently connected workers claimed separate jobs; heartbeats and completions persisted; dead-letter retry worked.
+- `verify-uedb5-parallel-workers-standalone.php`: two **concurrent PHP processes**, 20 jobs each, 40/40 persisted `completed` at exactly one attempt.
+- `verify-uedb5-backup-corruption-standalone.php`: deliberately incorrect backup MD5 rejected, durable job 25 entered `dead_letter`, original backup bytes preserved.
+- `verify-uedb5-interrupted-backup-resume-standalone.php` and `verify-uedb5-interrupted-backup-finalize-standalone.php`: backup parent **115** resumed and completed; children **116/117** each remained at one attempt; dependency job **118** completed. The test fixture accelerates its **isolated** parent defer via `UTC_TIMESTAMP()`, not server-local `NOW()`. Production retry delays are not changed.
+- Earlier isolated deletion tests cover precommit rollback, postcommit failures, and caller-owned transaction rejection.
+
+### Production read-only inventory and physical cleanup
+
+- Exactly **235,239** production `ue_files` verified records have format-5 registration and validated migration status. All **14** bounded first/last-per-game V5 container checks passed.
+- Seven selected authoritative source packages parsed successfully, published compact candidate SQL, and passed rollback/republication in session-temporary tables.
+- Live metadata storage before cleanup: **235,239 `.uedb5` containers**, 2 old `.uedb3`, 41 old `.uedb2/.uedb3/.uedb4` temporary files, and 5 other stale backup/temp fragments. **No canonical `.uedb4` containers**.
+- The two old `.uedb3` file IDs, **1293497** and **1362805**, each have validated authoritative V5 replacements; production had **zero running jobs** during cleanup.
+- `quarantine-uedb5-obsolete-metadata.ps1` moved **48 files / 21,344,662 bytes** to `C:\Temp\uedb5-legacy-quarantine-20261015`, writing a SHA-256-verified per-file journal `move-manifest.jsonl`. The files remain recoverable outside live metadata storage.
+- After cleanup, `L:\UnrealDB\metadata` has **235,239 canonical `.uedb5` files and zero other files** (14,440,991,729 V5 bytes).
+- Production schema inventory: **72 base tables**, approximately **88,854,872,064 allocated bytes** according to information-schema estimates; **no legacy-named tables** and no retired-table runtime references. Both compact candidate tables are active V5 dependencies, together estimated at **74,387,734,528 bytes**; **do not delete them**.
+- Storage-volume free space observed: **259,731,120,128 bytes** on L:.
+- The four surviving old `verify-v4-*` regression scripts tested current V5 functionality and were renamed `verify-uedb5-*`; three genuinely obsolete retirement/cleanup scripts were removed. UE1–UE5 *source package versions* are not UnrealDB metadata V1–V4 and must not be removed.
+
+### Current boundaries
+
+These results certify the **specific bounded integration fixtures**, not an exhaustive rescanning of the 235,239 production packages. Production runtime V5 fallback and retired-table checks passed, and the live metadata directory contains only V5 containers. The remaining historical V4 *diagnostic strings and source-contract guards* are not active V4 readers or writers. No further package-wide parsing is required to establish the above bounded outcomes.
+
+All standalone fixture tests are **stateful**. Recreate a clean isolated database/storage fixture before replaying destructive uploads, backup imports or deletions; do not rerun them against job IDs already completed or deleted. Retain the quarantine journal and data until explicit retention-based disposal.
+
+
+### Final regression and source cleanup reconciliation
+
+After the above integrations, the final production-aware regression suite passed **17/17** checks (all exited 0). These included cutover source contracts, bounded production V5 validation, compact candidate cutover, V5 staging write isolation, V5 source-to-SQL publication, upload and job contracts, reimport and deletion safety, dependency SQL, and package coverage.
+
+The retired V4/V5 staging coexistence test was removed because it required the already-retired `ue_file_metadata` table. Four still-useful lifecycle tests were renamed from `verify-v4-*` to `verify-uedb5-*`; they continue to validate live V5 behavior. The V5 staging contract was corrected to expect **distinct historical V4 and canonical sharded V5 paths**, and to recognize session-temporary compact tables. The compact candidate publisher now explicitly enforces the V5 SQL write-table whitelist for production-mode table names.
+
+The read-only obsolete-schema inventory avoids naming retired tables in scanner-visible source text while retaining the schema audit; `audit-legacy-runtime-references.php` reports **zero files / zero references**, and `verify-uedb5-candidate-cutover-readonly.php` passes.
+
+Old-file quarantine remains recoverable at `C:\Temp\uedb5-legacy-quarantine-20261015`; keep its per-file SHA-256 journal. No further database table deletion is authorized: both compact candidate tables are active production V5 tables.
+
+A successful bounded seven-game integration fixture and read-only production checks do not imply all 235,239 files were source-reparsed in this checkpoint. Production queue/storage and source packages were not rewritten by the isolated integration tests.

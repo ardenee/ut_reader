@@ -9,7 +9,7 @@ final class PdoPackageCoverageCache
 {
     private const TEXT_COLLATION = 'utf8mb4_unicode_ci';
 
-    public function __construct(private readonly PDO $db) {}
+    public function __construct(private readonly PDO $db, private readonly ?array $config = null) {}
 
     /** @return array<string,mixed>|null */
     public function read(int $gameId, string $packageName): ?array
@@ -29,7 +29,7 @@ final class PdoPackageCoverageCache
     /** @return array<string,mixed> */
     public function rebuildPackage(int $gameId, string $packageName): array
     {
-        $result = PdoPackageSupersetAnalyzer::analyze($this->db, $gameId, $packageName);
+        $result = PdoPackageSupersetAnalyzer::analyze($this->db, $gameId, $packageName, $this->config);
         $this->persistResult($gameId, $packageName, $result);
         return $result;
     }
@@ -57,7 +57,7 @@ final class PdoPackageCoverageCache
             ];
         }
 
-        $result = PdoPackageSupersetAnalyzer::analyze($this->db, $gameId, $packageName);
+        $result = PdoPackageSupersetAnalyzer::analyze($this->db, $gameId, $packageName, $this->config);
         $providers = array_values((array)($result['providers'] ?? []));
         $requiredCount = max(0, (int)($result['required_object_count'] ?? 0));
 

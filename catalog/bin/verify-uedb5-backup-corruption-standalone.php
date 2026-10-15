@@ -1,0 +1,26 @@
+<?php
+declare(strict_types=1);
+if(PHP_SAPI!=='cli')exit(1);
+require_once dirname(__DIR__).'/bootstrap.php';
+use UnrealDb\Catalog\Infrastructure\Storage\GameBackupStore;
+use UnrealDb\Catalog\Infrastructure\Jobs\GameBackupImportJobHandler;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
+use UnrealDb\Catalog\Application\Jobs\JobWorker;
+use UnrealDb\Catalog\Domain\Jobs\JobType;
+$db=new PDO('mysql:host=127.0.0.1;port=3339;dbname=uedb5_isolated_integration','root','',[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION,PDO::ATTR_DEFAULT_FETCH_MODE=>PDO::FETCH_ASSOC]);
+$i=$db->query('SELECT @@port port,@@datadir datadir')->fetch();
+if((int)$i['port']!==3339||strtolower(str_replace(chr(92),'/',$i['datadir']))!=='c:/temp/uedb5-isolated-mysql/data/')throw new RuntimeException('Unsafe database');
+$config=catalog_config();$root=dirname(__DIR__).'/storage/uedb5-isolated-reimport-20261015';
+$config['storage_path']=$root;$config['game_backups']['path']=$root.'/game-backups';$config['queue']['name']='uedb5-bad-backup-'.bin2hex(random_bytes(5));
+$store=new GameBackupStore($config);$key='isolated-corrupt-'.bin2hex(random_bytes(5));$store->create($key);
+$source=dirname(__DIR__).'/storage/games/unreal2/verified/a8e8a367e1f299279356c614c5c99617.utx';
+if(!is_file($source)||filesize($source)!==1451061)throw new RuntimeException('Changed fixture');
+$destination=$store->filesPath($key).'/DetailTextures.utx';copy($source,$destination);
+$store->publishManifest($key,['format'=>'unrealdb-game-backup','format_version'=>1,'source_game'=>['id'=>2,'name'=>'Unreal II','slug'=>'unreal2'],'files'=>[['file_id'=>0,'original_name'=>'DetailTextures.utx','exported_relative_path'=>'DetailTextures.utx','source_relative_path'=>'corrupt/DetailTextures.utx','file_size'=>1451061,'md5'=>str_repeat('0',32),'is_alias'=>false]],'summary'=>['entries'=>1,'physical_files'=>1,'bytes'=>1451061]]);
+$queue=new PdoJobQueue($db);$jobId=$queue->enqueue($config['queue']['name'],JobType::IMPORT_GAME_BACKUP_ENTRY,['game_id'=>2,'backup_key'=>$key,'entry_position'=>0,'strict_profile'=>true],100,null,null,null,1);
+$handler=new GameBackupImportJobHandler($db,$config);$handlers=array_fill_keys(JobType::all(),static function():array{return [];});$handlers[JobType::IMPORT_GAME_BACKUP_ENTRY]=$handler;
+$worker=new JobWorker($queue,$handlers,$config['queue']['name'],'bad-backup-worker',120);$run=$worker->runOne();
+$st=$db->prepare('SELECT status,last_error FROM ue_background_jobs WHERE id=?');$st->execute([$jobId]);$row=$st->fetch();
+$ok=($row['status']??'')==='dead_letter'&&str_contains(strtolower((string)($row['last_error']??'')),'md5')&&is_file($destination)&&hash_file('md5',$destination)==='a8e8a367e1f299279356c614c5c99617';
+echo json_encode(['ok'=>$ok,'isolated'=>true,'backup_key'=>$key,'job_id'=>$jobId,'durable_status'=>$row['status']??null,'failure'=>$row['last_error']??null,'backup_preserved'=>is_file($destination),'run_status'=>$run['status']??null],JSON_PRETTY_PRINT),PHP_EOL;
+exit($ok?0:2);

@@ -29,6 +29,9 @@ final class PdoUedb5CompactCandidatePublisher
             $this->dictionary = 'ue_uedb5_compact_name_dictionary';
             $this->names = 'ue_uedb5_compact_name_candidates';
             $this->objects = 'ue_uedb5_compact_object_candidates';
+            foreach ([$this->dictionary, $this->names, $this->objects] as $table) {
+                Uedb5StagingIsolationContract::assertWriteTable($table);
+            }
         }
     }
 

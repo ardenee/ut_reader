@@ -22,7 +22,7 @@ final class PdoPackageSupersetAnalyzer
      *   providers:list<array<string,mixed>>
      * }
      */
-    public static function analyze(PDO $db, int $gameId, string $packageName): array
+    public static function analyze(PDO $db, int $gameId, string $packageName, ?array $config = null): array
     {
         $packageName = trim($packageName);
         if ($gameId < 1 || $packageName === '') {
@@ -48,7 +48,7 @@ final class PdoPackageSupersetAnalyzer
         $requiredClasses = [];
         $consumers = [];
         if ($consumerIds !== []) {
-            $reader = new Uedb5ParityV5ReadService($db, self::catalogConfig());
+            $reader = new Uedb5ParityV5ReadService($db, $config ?? self::catalogConfig());
             foreach ($consumerIds as $consumerFileId) {
                 foreach ($reader->dependencies($gameId, $consumerFileId) as $dependency) {
                     if (strcasecmp((string)($dependency['required_package'] ?? ''), $packageName) !== 0) {

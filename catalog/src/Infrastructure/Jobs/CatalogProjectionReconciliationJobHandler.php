@@ -161,7 +161,7 @@ final class CatalogProjectionReconciliationJobHandler implements JobHandler
             $summaryFilesRefreshed = (int)($bulkSummary['files'] ?? 0);
         }
 
-        $coverage = new PdoPackageCoverageCache($this->db);
+        $coverage = new PdoPackageCoverageCache($this->db, $this->config);
         $coverageRefreshed = 0;
         $coveragePruned = 0;
         foreach ($gameIds as $gameId) {

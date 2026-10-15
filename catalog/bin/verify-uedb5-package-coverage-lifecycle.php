@@ -13,6 +13,9 @@ $cache = (string)@file_get_contents(
 $reconcile = (string)@file_get_contents(
     $root . '/src/Infrastructure/Jobs/CatalogProjectionReconciliationJobHandler.php'
 );
+$analyzer = (string)@file_get_contents(
+    $root . '/src/Infrastructure/Persistence/PdoPackageSupersetAnalyzer.php'
+);
 $workerVersion = (string)@file_get_contents(
     $root . '/src/Infrastructure/Jobs/CatalogWorkerCodeVersion.php'
 );
@@ -50,8 +53,17 @@ $record(
 $record(
     'game_rebuild_normalizes_union_collation',
     str_contains($cache, "private const TEXT_COLLATION = 'utf8mb4_unicode_ci'")
-        && substr_count($cache, 'CONVERT(package_name USING utf8mb4) COLLATE ') >= 2,
+        && str_contains($cache, 'CONVERT(CASE WHEN p.source_kind=2 THEN a.package_name ELSE f.package_name END USING utf8mb4)')
+        && str_contains($cache, 'CONVERT(package_name USING utf8mb4) COLLATE '),
     'provider and cached package-name UNION branches must use one explicit collation'
+);
+
+$record(
+    'provider_coverage_uses_supplied_storage_config',
+    str_contains($analyzer, 'new Uedb5ParityV5ReadService($db, $config ?? self::catalogConfig())')
+        && str_contains($cache, 'PdoPackageSupersetAnalyzer::analyze($this->db, $gameId, $packageName, $this->config)')
+        && str_contains($reconcile, 'new PdoPackageCoverageCache($this->db, $this->config)'),
+    'reconciliation must pass its authoritative storage root into V5 provider coverage'
 );
 
 $record(
@@ -62,7 +74,8 @@ $record(
 
 $record(
     'projection_reconciliation_refreshes_coverage',
-    str_contains($reconcile, 'new PdoPackageCoverageCache($this->db)')
+    str_contains($reconcile, 'new PdoPackageCoverageCache($this->db, $this->config)')
+        && str_contains($cache, 'PdoPackageSupersetAnalyzer::analyze($this->db, $gameId, $packageName, $this->config)')
         && str_contains($reconcile, '->reconcilePackage($gameId, $packageName)'),
     'provider/dependency projection reconciliation must refresh package coverage'
 );
