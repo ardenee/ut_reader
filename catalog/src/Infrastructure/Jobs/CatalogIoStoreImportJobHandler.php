@@ -10,6 +10,7 @@ use UnrealDb\Catalog\Application\Jobs\JobHandler;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Storage\CatalogIoStoreContainerStorage;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 
 /**
  * Durable verified retention + TOC index for an IoStore container family.
@@ -65,13 +66,24 @@ final class CatalogIoStoreImportJobHandler implements JobHandler
             null,
             ($library=getenv('UNREALDB_OODLE_LIBRARY'))!==false&&$library!==''?$library:null
         );
-        $context->checkpoint(['stage'=>'container_indexed','percent'=>100,'container_id'=>$result['container_id'],'package_count'=>$result['package_count']]);
+        // Queue durable name extraction first; publication self-defers until the
+        // name-index job has processed every member. The queue retains explicit
+        // failures rather than falsely reporting the whole container published.
+        $queue=new PdoJobQueue($this->db);
+        $containerId=(int)$result['container_id'];
+        $nameJobId=$queue->enqueue($job->queue,JobType::INDEX_IOSTORE_PACKAGE_NAMES,
+            ['container_id'=>$containerId],110,null,null,null,3);
+        $publishJobId=$queue->enqueue($job->queue,JobType::PUBLISH_IOSTORE_PACKAGES,
+            ['container_id'=>$containerId],110,null,null,null,3);
+        $context->checkpoint(['stage'=>'container_indexed','percent'=>100,'container_id'=>$containerId,'package_count'=>$result['package_count'],'name_job_id'=>$nameJobId,'publish_job_id'=>$publishJobId]);
         return [
             'status'=>'indexed',
             'container_id'=>(int)$result['container_id'],
             'package_count'=>(int)$result['package_count'],
             'retained_parts'=>(int)$result['retained_parts'],
             'retention_status'=>(string)$result['retention_status'],
+            'name_job_id'=>$nameJobId,
+            'publish_job_id'=>$publishJobId,
             'note'=>'Container safely retained and indexed; package publication is a separate workflow.'
         ];
     }

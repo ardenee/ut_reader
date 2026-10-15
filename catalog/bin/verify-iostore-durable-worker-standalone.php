@@ -5,6 +5,8 @@ require dirname(__DIR__).'/bootstrap/autoload.php';
 use UnrealDb\Catalog\Application\Jobs\JobWorker;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogIoStoreImportJobHandler;
+use UnrealDb\Catalog\Infrastructure\Jobs\CatalogIoStoreNameIndexJobHandler;
+use UnrealDb\Catalog\Infrastructure\Jobs\CatalogIoStoreMemberPublishJobHandler;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 $db=new PDO('mysql:host=127.0.0.1;port=3339;dbname=uedb5_isolated_integration;charset=utf8mb4','root','',
  [PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION,PDO::ATTR_DEFAULT_FETCH_MODE=>PDO::FETCH_ASSOC]);
@@ -20,6 +22,8 @@ $q=new PdoJobQueue($db);
 $handler=new CatalogIoStoreImportJobHandler($db,$config);
 $routes=array_fill_keys(JobType::all(),static fn():array=>[]);
 $routes[JobType::IMPORT_IOSTORE_CONTAINER]=$handler;
+$routes[JobType::INDEX_IOSTORE_PACKAGE_NAMES]=new CatalogIoStoreNameIndexJobHandler($db,$config);
+$routes[JobType::PUBLISH_IOSTORE_PACKAGES]=new CatalogIoStoreMemberPublishJobHandler($db,$config);
 $worker=new JobWorker($q,$routes,$queueName,'isolated-iostore-worker',120);
 $results=[];
 foreach([1,2] as $iteration){
@@ -30,11 +34,17 @@ foreach([1,2] as $iteration){
  $st->execute([$id]);$row=$st->fetch();
  $results[]=['id'=>$id,'status'=>$row['status'],'attempts'=>$row['attempts'],'result'=>json_decode((string)$row['result_json'],true),'error'=>$row['last_error']];
 }
+// Complete the four automatically scheduled child jobs in the same isolated queue.
+for($n=0;$n<4;$n++)$worker->runOne();
+$childStatus=$db->prepare('SELECT status,COUNT(*) count FROM ue_background_jobs WHERE queue_name=? AND job_type IN (?,?) GROUP BY status');
+$childStatus->execute([$queueName,JobType::INDEX_IOSTORE_PACKAGE_NAMES,JobType::PUBLISH_IOSTORE_PACKAGES]);
+$children=$childStatus->fetchAll(PDO::FETCH_ASSOC);
 $index=$db->query('SELECT id,status,package_count FROM ue_iostore_containers WHERE game_id=9001')->fetchAll();
 $parts=$db->query('SELECT count(*) FROM ue_iostore_container_parts WHERE container_id IN (SELECT id FROM ue_iostore_containers WHERE game_id=9001)')->fetchColumn();
 $ok=count($results)===2&&$results[0]['status']==='completed'&&$results[1]['status']==='completed'
  &&$results[0]['attempts']==1&&$results[1]['attempts']==1
  &&count($index)===1&&$index[0]['status']==='ready'&&(int)$parts===1
- &&($results[0]['result']['container_id']??0)===($results[1]['result']['container_id']??-1);
-echo json_encode(['ok'=>$ok,'isolated'=>true,'queue'=>$queueName,'jobs'=>$results,'containers'=>$index,'parts'=>$parts],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;
+ &&($results[0]['result']['container_id']??0)===($results[1]['result']['container_id']??-1)
+ &&count($children)===1&&$children[0]['status']==='completed'&&(int)$children[0]['count']===4;
+echo json_encode(['ok'=>$ok,'isolated'=>true,'queue'=>$queueName,'jobs'=>$results,'containers'=>$index,'parts'=>$parts,'followup_jobs'=>$children],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;
 exit($ok?0:2);

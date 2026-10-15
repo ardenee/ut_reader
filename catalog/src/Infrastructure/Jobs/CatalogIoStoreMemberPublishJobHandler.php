@@ -61,15 +61,22 @@ final class CatalogIoStoreMemberPublishJobHandler implements JobHandler
             }
             $counts=$this->db->prepare('SELECT COUNT(*) total, '
                .'SUM(publication_status="published") published, '
-               .'SUM(metadata_status="ready" AND publication_status<>"published") remaining '
+               .'SUM(metadata_status="ready" AND publication_status<>"published") remaining, '
+               .'SUM(metadata_status="indexed") awaiting_names, '
+               .'SUM(metadata_status="failed") failed_names '
                .'FROM ue_iostore_packages WHERE container_id=?');
             $counts->execute([$id]);$c=$counts->fetch(PDO::FETCH_ASSOC);
             $state=['stage'=>'publishing_zen_members','container_id'=>$id,
                 'total'=>(int)$c['total'],'published'=>(int)$c['published'],
-                'remaining'=>(int)$c['remaining'],'processed_in_batch'=>$published];
+                'remaining'=>(int)$c['remaining'],
+                'awaiting_names'=>(int)$c['awaiting_names'],
+                'failed_names'=>(int)$c['failed_names'],
+                'processed_in_batch'=>$published];
             $context->checkpoint($state);
-            if($state['remaining']>0)$context->defer(1,$state,false);
-            return $state+['status'=>'bounded_complete'];
+            if($state['remaining']>0 || $state['awaiting_names']>0){
+                $context->defer($state['remaining']>0?1:30,$state,false);
+            }
+            return $state+['status'=>$state['failed_names']>0?'completed_with_failures':'bounded_complete'];
         }finally{
             $release=$this->db->prepare('SELECT RELEASE_LOCK(?)');
             $release->execute([$lockName]);
