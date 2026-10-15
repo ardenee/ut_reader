@@ -103,7 +103,7 @@ echo json_encode([
         'mismatch_details' => $mismatchDetails,
         'failures' => $failures,
         'source' => 'authoritative UEDB5 names section',
-        'writes' => $apply ? ['ue_uedb5_search_keys','ue_uedb5_name_candidates'] : [],
+        'writes' => $apply ? ['ue_uedb5_search_keys','ue_uedb5_compact_name_candidates'] : [],
     ],
 ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES), PHP_EOL;
 exit($failed === 0 ? 0 : 2);
