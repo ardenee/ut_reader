@@ -64,24 +64,26 @@ $health = $read('src/Infrastructure/Metadata/VerifiedCompactMetadataHealth.php')
 $record(
     'metadata_health_is_physical',
     $health !== ''
-        && str_contains($health, 'BlockedCompressedMetadataReader')
-        && str_contains($health, '->verify($fileId)')
+        && str_contains($health, 'new Uedb5MetadataReader($storageRoot)')
+        && str_contains($health, '->verify($gameId, $fileId)')
+        && str_contains($health, 'UEDB5 registration payload does not match the container.')
         && str_contains($health, 'VerifiedMetadataPublicationState::ready')
         && str_contains($health, 'VerifiedMetadataPublicationState::failed'),
-    'format-2 DB registration alone must never be treated as proof of a healthy .uedb2 container'
+    'Format-5 database registration must match physical .uedb5 bytes, the registered hash and publication state'
 );
 
 $unverifiedFinalizer = $read('src/Infrastructure/Unverified/CatalogUnverifiedCompactMetadataFinalizer.php');
 $record(
     'unverified_metadata_self_heals',
     $unverifiedFinalizer !== ''
-        && str_contains($unverifiedFinalizer, 'VerifiedCompactMetadataHealth::verify')
-        && str_contains($unverifiedFinalizer, '$this->store->has($fileId)')
+        && str_contains($unverifiedFinalizer, 'new Uedb5VerifiedFilePublisher(')
+        && str_contains($unverifiedFinalizer, '->publish($fileId)')
+        && str_contains($unverifiedFinalizer, 'Uedb5MetadataContainer::FORMAT_VERSION')
         && str_contains($unverifiedFinalizer, 'VerifiedMetadataPublicationState::pending')
         && str_contains($unverifiedFinalizer, 'VerifiedMetadataPublicationState::ready')
         && str_contains($unverifiedFinalizer, 'VerifiedMetadataPublicationState::failed')
-        && str_contains($unverifiedFinalizer, 'cleanupStaging('),
-    'promotion recovery must verify physical metadata and republish from retained staging when possible'
+        && str_contains($unverifiedFinalizer, '$this->cleanupStaging($fileId);'),
+    'Promotion must rebuild and verify V5 publication before marking ready or discarding retained unverified staging'
 );
 
 $dependencyRecovery = $read('src/Infrastructure/Unverified/CatalogUnverifiedDependencyRecovery.php');
@@ -140,9 +142,12 @@ $dependencyCoordinator = $read('src/Infrastructure/Import/CatalogVerifiedPackage
 $record(
     'duplicate_targets_only_verified_rows',
     $identity !== ''
-        && str_contains($identity, 'WHERE game_id=? AND scan_status="verified"')
+        && str_contains($identity, 'scan_status IN ("verified","duplicate")')
+        && str_contains($identity, 'ORDER BY (scan_status="verified") DESC,id ASC LIMIT 1')
+        && str_contains($identity, 'WHERE game_id=? AND package_guid=? AND scan_status="verified"')
+        && str_contains($identity, 'matched_retired_duplicate_id')
         && str_contains($importer, 'findVerifiedDuplicate('),
-    'failed/duplicate/unverified history rows must not absorb a physical verified import'
+    'Exact-MD5 retired duplicate rows must not cause unique-key retries, and their GUID must redirect to a verified canonical row when available'
 );
 $record(
     'verified_import_has_one_compact_publication_pass',
