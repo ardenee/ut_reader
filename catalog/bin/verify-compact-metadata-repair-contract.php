@@ -23,14 +23,15 @@ $check = static function (string $name, bool $ok, string $detail) use (&$checks,
 };
 
 $resolver = $read('src/Infrastructure/Persistence/PdoCompactCaseInsensitiveExportResolver.php');
-$reader = $read('src/Infrastructure/Metadata/BlockedCompressedMetadataReader.php');
+$reader = $read('src/Infrastructure/Metadata/Uedb5MetadataReader.php');
+$container = $read('src/Infrastructure/Metadata/Uedb5MetadataContainer.php');
+$health = $read('src/Infrastructure/Metadata/VerifiedCompactMetadataHealth.php');
 $handler = $read('src/Infrastructure/Jobs/CatalogCompactMetadataRepairJobHandler.php');
 $recorder = $read('src/Infrastructure/Telemetry/CatalogSystemErrorRecorder.php');
 $jobType = $read('src/Domain/Jobs/JobType.php');
 $factory = $read('src/Infrastructure/Jobs/CatalogJobWorkerFactory.php');
 $policy = $read('src/Domain/Jobs/JobResourcePolicy.php');
-$cli = $read('bin/verify-compact-metadata-files.php');
-$health = $read('src/Infrastructure/Metadata/VerifiedCompactMetadataHealth.php');
+$recoveryFixture = $read('bin/verify-uedb5-isolated-recovery.php');
 $dependencyHandler = $read('src/Infrastructure/Jobs/CatalogDependencyRefreshJobHandler.php');
 
 $check(
@@ -38,14 +39,15 @@ $check(
     str_contains($resolver, 'catch (Throwable $error)')
         && str_contains($resolver, 'reportUnreadableProvider($db, $fileId, $error)')
         && str_contains($resolver, 'CatalogSystemErrorRecorder::record')
-        && str_contains($resolver, 'clearstatcache();'),
+        && str_contains($resolver, 'self::$reportedUnreadableProviders[$fileId] = true')
+        && str_contains($resolver, 'continue;'),
     'Unreadable provider metadata must not abort every consumer; it must be skipped and reported once.'
 );
 $check(
     'self_provider_repair_is_not_operator_error',
     str_contains($resolver, 'if ($fileId !== $preferredFileId)')
         && str_contains($resolver, 'self::reportUnreadableProvider($db, $fileId, $error)')
-        && str_contains($resolver, 'previous container may legitimately')
+        && str_contains($resolver, 'continue;')
         && str_contains($resolver, '$preferredFileId'),
     'The file currently being finalized/repaired may have no previous container; that transient self-provider miss must not create an open System Error.'
 );
@@ -61,10 +63,11 @@ $check(
 $check(
     'reader_distinguishes_missing_from_size_mismatch',
     str_contains($reader, 'clearstatcache(true, $path)')
-        && str_contains($reader, 'Blocked metadata file is missing: ')
-        && str_contains($reader, '(expected=')
-        && str_contains($reader, ', actual='),
-    'Storage diagnostics must distinguish a missing metadata file from a real DB/on-disk size disagreement.'
+        && str_contains($reader, 'UEDB5 container is missing: ')
+        && str_contains($container, 'UEDB5 container is missing or too small: ')
+        && str_contains($container, 'UEDB5 container has unexpected trailing or missing bytes.')
+        && str_contains($health, 'UEDB5 registration payload does not match the container.'),
+    'V5 health checks must distinguish missing, structurally damaged and registration-mismatched containers.'
 );
 $check(
     'repair_job_is_registered',
@@ -92,20 +95,22 @@ $check(
     'Successful metadata repair must survive a later affected-dependency failure/restart.'
 );
 $check(
-    'targeted_cli_only_queues_invalid_files',
-    str_contains($cli, "'status' => 'valid'")
-        && str_contains($cli, "'status' => \$queueRepair ? 'repair_queued' : 'invalid'")
-        && str_contains($cli, "'compact-metadata-repair:' . \$fileId")
-        && str_contains($cli, "array_key_exists('queue-repair', \$options)"),
-    'The diagnostic command must verify first and only queue repair for containers that actually fail verification.'
+    'v5_health_verifies_before_scheduling_repair',
+    str_contains($health, 'public static function verifyOrQueueRepair(')
+        && str_contains($health, 'return self::verify($db, $config, $fileId);')
+        && str_contains($health, 'self::queueRepair($db, $config, $fileId, $requestedBy, $error);')
+        && str_contains($health, "'compact-metadata-repair:' . \$fileId"),
+    'V5 health check must verify first, scheduling repair only on verification failure.'
 );
 $check(
-    'targeted_cli_makes_storage_root_explicit',
-    str_contains($cli, "'storage-root:'")
-        && str_contains($cli, "'storage_root' => \$storageRoot")
-        && str_contains($cli, "'storage_root_source'")
-        && str_contains($cli, "'configured_storage_root'"),
-    'A source checkout and deployed runtime can have different storage trees, so diagnostics must expose and allow overriding the storage root.'
+    'v5_recovery_uses_isolated_storage',
+    str_contains($recoveryFixture, 'sys_get_temp_dir()')
+        && str_contains($recoveryFixture, 'Uedb5MetadataSnapshotWriter')
+        && str_contains($recoveryFixture, 'missing_file_rejected')
+        && str_contains($recoveryFixture, 'truncated_file_rejected')
+        && str_contains($recoveryFixture, 'damaged_payload_rejected')
+        && str_contains($recoveryFixture, 'restored_file_revalidated'),
+    'V5 file-recovery regression must use disposable storage and cover missing, damaged and restored containers.'
 );
 
 
