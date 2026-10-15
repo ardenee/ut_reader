@@ -287,12 +287,12 @@ final class Uedb5SqlProjectionContract
         return [
             'sql_is_candidate_accelerator_not_source_of_truth',
             'uedb5_hydrates_authoritative_verifyimport_identity',
-            'v5_projection_tables_coexist_with_v4_until_cutover',
+            'v5_compact_candidates_join_exact_name_fingerprint_dictionary',
             'baseline_object_projection_contains_no_class_outer_flag_or_serialization_graph',
             'hash_collisions_may_add_candidates_but_must_never_authorize_a_match',
             'object_path_projection_is_optional_and_requires_measured_query_need',
             'new_projection_requires_query_index_cardinality_and_storage_justification',
-            'no_auto_increment_term_id_in_v5_projection',
+            'compact_name_id_is_internal_non_authoritative_surrogate',
         ];
     }
 }
