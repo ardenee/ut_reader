@@ -34,22 +34,24 @@ $action = $read('api/v1/job-action.php');
 $bulkApi = $read('api/v1/job-bulk.php');
 $resourceStore = $read('src/Infrastructure/Jobs/CatalogJobResourceLimitStore.php');
 $page = $read('background-jobs.php');
-$stable = $read('assets/background-jobs-stable.js');
-$async = $read('assets/background-jobs-async-cleanup.js');
+$stable = $read('assets/background-jobs-files.js');
+$async = $stable;
 
 $check(
     'cleanup_type_and_handler',
     str_contains($jobType, 'CLEAN_BACKGROUND_JOB_HISTORY')
-        && str_contains($factory, 'CLEAN_BACKGROUND_JOB_HISTORY => $jobHistoryCleanup')
+        && str_contains($factory, 'JobType::CLEAN_BACKGROUND_JOB_HISTORY => static fn() => new CatalogBackgroundJobHistoryCleanupJobHandler')
         && str_contains($factory, 'new CatalogBackgroundJobHistoryCleanupJobHandler'),
     'The cleanup job type must exist and be executable by the worker factory.'
 );
 
 $check(
     'bounded_resume_cursor',
-    str_contains($handler, 'BATCH_SIZE = 200')
+    str_contains($handler, 'private const BATCH_SIZE = 10000')
+        && str_contains($handler, 'private const MAX_WORKFLOW_ROWS_PER_CLAIM = 100000')
         && str_contains($handler, 'snapshot_offset')
-        && str_contains($handler, 'array_slice($ids, $offset, self::BATCH_SIZE)')
+        && str_contains($handler, '$rootsThisClaim < self::BATCH_SIZE')
+        && str_contains($handler, '$workflowRowsThisClaim >= self::MAX_WORKFLOW_ROWS_PER_CLAIM')
         && str_contains($handler, '$context->defer('),
     'History cleanup must process bounded slices and persist an exact offset between claims.'
 );
@@ -92,8 +94,7 @@ $check(
 
 $check(
     'background_jobs_loads_real_clients',
-    str_contains($page, 'background-jobs-stable.js')
-        && str_contains($page, 'background-jobs-async-cleanup.js')
+    str_contains($page, 'background-jobs-files.js')
         && !str_contains($page, 'background-jobs-v2.js')
         && $stable !== ''
         && $async !== '',
@@ -102,10 +103,10 @@ $check(
 
 $check(
     'cleanup_ui_reports_queue_not_fake_delete',
-    str_contains($async, "getElementById('jobs-message')")
+    str_contains($async, "getElementById('jobs-cleanup')")
         && str_contains($async, 'cleanup_job_id')
-        && str_contains($async, 'Queued background-job cleanup #')
-        && str_contains($async, 'Actual deleted/skipped/staged-file counts'),
+        && str_contains($async, 'cleanup job reports deleted rows, staged files and reclaimed bytes')
+        && str_contains($async, 'setNotice('),
     'The UI must describe cleanup as queued work and leave actual deletion counts to the worker result.'
 );
 
