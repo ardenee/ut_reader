@@ -1,0 +1,22 @@
+<?php
+declare(strict_types=1);
+require dirname(__DIR__).'/bootstrap/autoload.php';
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5IoStoreTocReader;
+use UnrealDb\Catalog\Infrastructure\Storage\CatalogIoStoreContainerIndexer;
+$db=new PDO('mysql:host=127.0.0.1;port=3339;dbname=uedb5_isolated_integration','root','',[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION,PDO::ATTR_DEFAULT_FETCH_MODE=>PDO::FETCH_ASSOC]);
+$identity=$db->query('SELECT @@port port,@@datadir datadir')->fetch();
+if((int)$identity['port']!==3339||stripos($identity['datadir'],'uedb5-isolated-mysql')===false)throw new RuntimeException('Wrong database');
+$m=require dirname(__DIR__).'/migrations/202610150001_iostore_container_index.php';
+($m['up'])($db,new UnrealDb\Catalog\Infrastructure\Persistence\SchemaInspector($db));
+$path='//192.168.0.51/c$/Program Files (x86)/Steam/steamapps/common/SatisfactoryDedicatedServer/FactoryGame/Content/Paks/FactoryGame-WindowsServer.utoc';
+$toc=new Uedb5IoStoreTocReader($path);
+$indexer=new CatalogIoStoreContainerIndexer($db);
+$a=$indexer->index($toc,2,'test-only/FactoryGame-WindowsServer.utoc');
+$b=$indexer->index($toc,2,'test-only/FactoryGame-WindowsServer.utoc');
+$q=$db->prepare('SELECT COUNT(*) FROM ue_iostore_packages WHERE container_id=?');
+$q->execute([$a['container_id']]);
+$count=(int)$q->fetchColumn();
+$expected=count($toc->chunkIndexesByType(Uedb5IoStoreTocReader::CHUNK_TYPE_EXPORT_BUNDLE_DATA));
+$ok=$count===$expected&&$b['status']==='existing';
+echo json_encode(['ok'=>$ok,'read_only_source'=>true,'standalone_sql_only'=>true,'retention_not_tested'=>true,'indexed'=>$a,'repeat'=>$b,'actual_members'=>$count,'expected_members'=>$expected],JSON_PRETTY_PRINT),PHP_EOL;
+exit($ok?0:2);

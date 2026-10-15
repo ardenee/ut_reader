@@ -13,6 +13,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/lib/CatalogSupport.php';
 
 use UnrealDb\Catalog\Infrastructure\Storage\CatalogPakArchiveStore;
+use UnrealDb\Catalog\Infrastructure\Storage\CatalogIoStoreContainerIndexer;
 
 catalog_start_session();
 
@@ -126,6 +127,25 @@ try {
     if (isset($_SESSION['pak_maintenance_flash'])) {
         catalog_flash((string)$_SESSION['pak_maintenance_flash']);
         unset($_SESSION['pak_maintenance_flash']);
+    }
+
+    if (CatalogIoStoreContainerIndexer::schemaInstalled($db)) {
+        $iostore = catalog_all($db,
+            'SELECT id,name,package_count,status FROM ue_iostore_containers WHERE game_id=? ORDER BY created_at DESC,id DESC LIMIT 100',
+            [$gameId]
+        );
+        echo '<section class="ui-section"><div class="ui-section__header"><h2>IoStore containers</h2></div><div class="ui-section__body">';
+        if ($iostore === []) {
+            echo '<p>No indexed IoStore containers for this game. Complete .utoc/.ucas ingestion is not yet enabled.</p>';
+        } else {
+            echo '<div class="ui-table-region"><table><thead><tr><th>Container</th><th>Zen packages</th><th>Status</th><th>Browse</th></tr></thead><tbody>';
+            foreach ($iostore as $c) {
+                echo '<tr><td>' . catalog_h((string)$c['name']) . '</td><td>' . number_format((int)$c['package_count'])
+                    . '</td><td>' . catalog_h((string)$c['status']) . '</td><td><a href="iostore-info.php?id=' . (int)$c['id'] . '">View contents</a></td></tr>';
+            }
+            echo '</tbody></table></div>';
+        }
+        echo '</div></section>';
     }
 
     echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Package Viewer: PAK containers</h2><p>'

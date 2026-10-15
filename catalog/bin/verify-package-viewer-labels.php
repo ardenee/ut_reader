@@ -4,7 +4,8 @@ $root=dirname(__DIR__);
 $files=[
  'lib/CatalogNavigation.php'=>['Package Viewer','paks.php'],
  'paks.php'=>['Package Viewer','IoStore (.utoc/.ucas) browsing is being integrated'],
- 'game-paks.php'=>['Package Viewer','PAK containers'],
+ 'game-paks.php'=>['Package Viewer','PAK containers','IoStore containers','iostore-info.php?id='],
+ 'iostore-info.php'=>['IoStore container','FPackageId prefix','ue_iostore_packages'],
  'pak-info.php'=>['Package Viewer','pak-info.php'],
 ];
 $results=[];

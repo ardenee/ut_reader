@@ -238,3 +238,18 @@ The UI's generic navigation and PAK browser title are renamed **Package Viewer**
 An IoStore container comprises a `.utoc` table of contents and companion `.ucas` payload (possibly numbered partitions). The container is the upload/retention unit; **each Zen package inside is catalogued by `FPackageId`**, not by misidentifying either raw companion file as an ordinary `.upk`.
 
 Target Package Viewer workflow: upload a complete container set; validate matching TOC/payload/partition/encryption/compression context; retain its source safely; enumerate its contained packages and provenance; publish each package's V5 metadata and compact search; expose package list, contents and file-info links; run authoritative mounted-container dependency reconciliation. Recovery, reimport, backup restore, and deletion must retain container/member ownership correctly. No public IoStore upload route is enabled until those lifecycle contracts pass real isolated tests.
+
+### IoStore retained-container index and Package Viewer — next checkpoint
+
+Additive migration 202610150001_iostore_container_index.php defines three dedicated tables: ue_iostore_containers (TOC identity, game and status); ue_iostore_container_parts (retained UCAS partition path, size and SHA-256); and ue_iostore_packages (TOC index, binary 64-bit FPackageId, logical size, optional linked catalog file). Fresh-install install.sql was updated as well. Production migration has NOT been applied.
+
+CatalogIoStoreContainerIndexer indexes the complete package IDs from validated TOC metadata, owns its SQL transaction, and recognizes repeat indexing. CatalogIoStoreContainerStorage validates TOC and every UCAS partition, copies and SHA-256 verifies them in isolated storage, registers their manifests and marks the container ready only after all parts match. An incomplete container cannot become ready.
+
+Real Satisfactory isolated MySQL tests:
+- verify-iostore-container-index-standalone.php: 27,240/27,240 package members indexed, repeat indexing idempotent.
+- verify-iostore-container-retention-standalone.php: global.utoc and global.ucas retained and verified, repeat import recognized.
+- verify-iostore-main-retention-standalone.php: full 621 MB main UCAS plus TOC retained and verified in isolated storage, 27,240 package members indexed, ready status after part validation.
+- verify-iostore-missing-part-standalone.php: missing UCAS partition rejected with no database changes.
+- verify-package-viewer-labels.php: IoStore list and paginated iostore-info.php with FPackageId prefix filtering. Existing PAK browsing remains unchanged.
+
+Scope: These fixtures intentionally use isolated game ID 2 and test-only paths. No production Satisfactory game, live UE5 upload route, per-package catalog file identities or 27,240 V5 snapshot publications were created. To finish production IoStore acceptance, wire multi-file/chunked upload, verified UE5 game and physical source identity, durable per-package V5 publication, backup/restore, ownership-aware deletion and authoritative mounted package-store dependency resolution. This checkpoint does not claim those remainings are complete.
