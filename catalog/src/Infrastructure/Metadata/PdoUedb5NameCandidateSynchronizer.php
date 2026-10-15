@@ -121,8 +121,9 @@ final class PdoUedb5NameCandidateSynchronizer
     private function actualCandidates(int $fileId): array
     {
         $statement = $this->db->prepare(
-            'SELECT name_key_hash,name_key_length,name_key_fingerprint,first_name_index '
-            . 'FROM ue_uedb5_name_candidates WHERE file_id=? ORDER BY name_key_fingerprint'
+            'SELECT d.name_key_hash,d.name_key_length,d.name_key_fingerprint,n.first_name_index '
+            . 'FROM ue_uedb5_compact_name_candidates n JOIN ue_uedb5_compact_name_dictionary d ON d.name_id=n.name_id '
+            . 'WHERE n.file_id=? ORDER BY d.name_key_fingerprint'
         );
         $statement->execute([$fileId]);
         $out = [];
@@ -199,31 +200,45 @@ final class PdoUedb5NameCandidateSynchronizer
     /** @param list<array<string,mixed>> $rows */
     private function replaceCandidates(int $fileId, array $rows): void
     {
-        Uedb5StagingIsolationContract::assertWriteTable('ue_uedb5_name_candidates');
         usort($rows, static fn(array $a, array $b): int =>
-            strcmp(bin2hex((string)$a['name_key_fingerprint']), bin2hex((string)$b['name_key_fingerprint']))
-        );
-
+            strcmp((string)$a['name_key_fingerprint'], (string)$b['name_key_fingerprint']));
         $started = !$this->db->inTransaction();
         $maxAttempts = $started ? 5 : 1;
         for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
             if ($started) { $this->db->beginTransaction(); }
             try {
-                $this->db->prepare('DELETE FROM ue_uedb5_name_candidates WHERE file_id=?')->execute([$fileId]);
-                foreach (array_chunk($rows, 250) as $batch) {
-                    $placeholders = implode(',', array_fill(0, count($batch), '(?,?,?,?,?)'));
-                    $params = [];
-                    foreach ($batch as $row) {
-                        array_push($params,
-                            $row['file_id'], $row['name_key_hash'], $row['name_key_length'],
-                            $row['name_key_fingerprint'], $row['first_name_index']
-                        );
+                $dictionary = $this->db->prepare(
+                    'INSERT IGNORE INTO ue_uedb5_compact_name_dictionary '
+                    . '(name_key_hash,name_key_length,name_key_fingerprint) VALUES (?,?,?)'
+                );
+                $resolve = $this->db->prepare(
+                    'SELECT name_id,name_key_hash,name_key_length FROM ue_uedb5_compact_name_dictionary '
+                    . 'WHERE name_key_fingerprint=?'
+                );
+                $delete = $this->db->prepare(
+                    'DELETE FROM ue_uedb5_compact_name_candidates WHERE file_id=?'
+                );
+                $insert = $this->db->prepare(
+                    'INSERT INTO ue_uedb5_compact_name_candidates '
+                    . '(file_id,name_id,first_name_index) VALUES (?,?,?)'
+                );
+                $delete->execute([$fileId]);
+                foreach ($rows as $row) {
+                    $hash=(string)$row['name_key_hash'];
+                    $length=(int)$row['name_key_length'];
+                    $fp=(string)$row['name_key_fingerprint'];
+                    if(strlen($hash)!==16 || strlen($fp)!==32) {
+                        throw new RuntimeException('Invalid compact name candidate identity.');
                     }
-                    $this->db->prepare(
-                        'INSERT INTO ue_uedb5_name_candidates('
-                        . 'file_id,name_key_hash,name_key_length,name_key_fingerprint,first_name_index) VALUES '
-                        . $placeholders
-                    )->execute($params);
+                    $dictionary->execute([$hash,$length,$fp]);
+                    $resolve->execute([$fp]);
+                    $found=$resolve->fetch(PDO::FETCH_ASSOC);
+                    if(!is_array($found) || (int)$found['name_id']<1
+                        || !hash_equals((string)$found['name_key_hash'],$hash)
+                        || (int)$found['name_key_length']!==$length) {
+                        throw new RuntimeException('Compact name dictionary fingerprint conflict.');
+                    }
+                    $insert->execute([$fileId,(int)$found['name_id'],(int)$row['first_name_index']]);
                 }
                 if ($started) { $this->db->commit(); }
                 return;
