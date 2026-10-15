@@ -11,6 +11,7 @@ use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Storage\CatalogIoStoreContainerBackupService;
 use UnrealDb\Catalog\Infrastructure\Storage\GameBackupStore;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 
 final class CatalogIoStoreBackupJobHandler implements JobHandler
 {
@@ -52,7 +53,20 @@ final class CatalogIoStoreBackupJobHandler implements JobHandler
         if(!is_string($slug)||$slug==='')throw new RuntimeException('Backup restore destination game not found.');
         $context->checkpoint(['stage'=>'restoring_iostore','game_id'=>$gameId,'percent'=>2]);
         $result=$service->restore($backupPath.'/iostore-'.$sha,$gameId,$slug);
-        $context->checkpoint(['stage'=>'complete','game_id'=>$gameId,'container_id'=>$result['container_id'],'percent'=>100]);
-        return $result+['operation'=>'restore_iostore_container','backup_key'=>$key];
+        // A restored container is retained and indexed, not yet visible as fully
+        // published V5 package members. Queue the same durable follow-up steps
+        // used for a new IoStore upload, including idempotent restore retries.
+        $containerId=(int)$result['container_id'];
+        $queue=new PdoJobQueue($this->db);
+        $nameJobId=$queue->enqueue($job->queue,JobType::INDEX_IOSTORE_PACKAGE_NAMES,
+            ['container_id'=>$containerId],110,null,null,null,3);
+        $publishJobId=$queue->enqueue($job->queue,JobType::PUBLISH_IOSTORE_PACKAGES,
+            ['container_id'=>$containerId],110,null,null,null,3);
+        $context->checkpoint(['stage'=>'container_restored','game_id'=>$gameId,
+            'container_id'=>$containerId,'percent'=>100,
+            'name_job_id'=>$nameJobId,'publish_job_id'=>$publishJobId]);
+        return $result+['operation'=>'restore_iostore_container','backup_key'=>$key,
+            'name_job_id'=>$nameJobId,'publish_job_id'=>$publishJobId,
+            'note'=>'Container restored and indexed; package name indexing and V5 publication are queued.'];
     }
 }
