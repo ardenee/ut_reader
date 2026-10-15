@@ -308,15 +308,18 @@ final class Uedb5MigrationValidator
         );
         $this->assertRowsEqual($expectedProvider, $actualProvider, ['package_key'], 'provider_projection_mismatch');
         $actualNames = $this->dbRows(
-            'SELECT file_id,name_key_hash,name_key_length,name_key_fingerprint,first_name_index '
-            . 'FROM ue_uedb5_name_candidates WHERE file_id=? ORDER BY name_key_fingerprint',
+            'SELECT n.file_id,d.name_key_hash,d.name_key_length,d.name_key_fingerprint,n.first_name_index '
+            . 'FROM ue_uedb5_compact_name_candidates n JOIN ue_uedb5_compact_name_dictionary d ON d.name_id=n.name_id '
+            . 'WHERE n.file_id=? ORDER BY d.name_key_fingerprint',
             [$fileId]
         );
         $this->assertRowsEqual($expected['name_candidates'], $actualNames, ['name_key_hash','name_key_fingerprint'], 'name_projection_mismatch');
 
         $actualObjects = $this->dbRows(
-            'SELECT file_id,object_kind,object_index,object_name_hash,object_name_length,public_export_hash '
-            . 'FROM ue_uedb5_object_candidates WHERE file_id=? ORDER BY object_kind,object_index',
+            'SELECT o.file_id,o.object_kind,o.object_index,d.name_key_hash AS object_name_hash,'
+            . 'd.name_key_length AS object_name_length,o.public_export_hash '
+            . 'FROM ue_uedb5_compact_object_candidates o JOIN ue_uedb5_compact_name_dictionary d ON d.name_id=o.name_id '
+            . 'WHERE o.file_id=? ORDER BY o.object_kind,o.object_index',
             [$fileId]
         );
         $this->assertRowsEqual($expected['object_candidates'], $actualObjects, ['object_name_hash','public_export_hash'], 'object_projection_mismatch');
