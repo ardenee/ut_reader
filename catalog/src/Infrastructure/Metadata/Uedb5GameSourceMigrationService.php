@@ -38,7 +38,8 @@ final class Uedb5GameSourceMigrationService
         $game = $this->game($gameId);
         foreach ([
             'ue_uedb5_files','ue_uedb5_provider_keys','ue_uedb5_search_keys',
-            'ue_uedb5_name_candidates','ue_uedb5_object_candidates','ue_uedb5_dependency_edges',
+            'ue_uedb5_compact_name_dictionary',
+            'ue_uedb5_compact_name_candidates','ue_uedb5_compact_object_candidates','ue_uedb5_dependency_edges',
             'ue_uedb5_dependency_packages',
         ] as $table) {
             if (!$this->tableExists($table)) { throw new RuntimeException('Required Step 5 table is missing: ' . $table); }
