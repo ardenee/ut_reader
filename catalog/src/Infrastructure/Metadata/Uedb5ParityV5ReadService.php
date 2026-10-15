@@ -136,15 +136,15 @@ final class Uedb5ParityV5ReadService
         $hash=md5($needle,true);$finger=hash('sha256',$needle,true);$ids=[];
         if(in_array('names',$fields,true)){
             $this->collectIds($ids,
-                'SELECT n.file_id FROM ue_uedb5_name_candidates n JOIN ue_files f ON f.id=n.file_id '
-                .'WHERE f.game_id=? AND f.scan_status="verified" AND n.name_key_hash=? AND n.name_key_length=? '
-                .'AND n.name_key_fingerprint=? ORDER BY n.file_id LIMIT '.$limit,
+                'SELECT n.file_id FROM ue_uedb5_compact_name_dictionary d JOIN ue_uedb5_compact_name_candidates n ON n.name_id=d.name_id JOIN ue_files f ON f.id=n.file_id '
+                .'WHERE f.game_id=? AND f.scan_status="verified" AND d.name_key_hash=? AND d.name_key_length=? '
+                .'AND d.name_key_fingerprint=? ORDER BY n.file_id LIMIT '.$limit,
                 [$gameId,$hash,strlen($needle),$finger]);
         }
         if(in_array('exports',$fields,true)){
             $this->collectIds($ids,
-                'SELECT DISTINCT o.file_id FROM ue_uedb5_object_candidates o JOIN ue_files f ON f.id=o.file_id '
-                .'WHERE f.game_id=? AND f.scan_status="verified" AND o.object_name_hash=? AND o.object_name_length=? '
+                'SELECT DISTINCT o.file_id FROM ue_uedb5_compact_name_dictionary d JOIN ue_uedb5_compact_object_candidates o ON o.name_id=d.name_id JOIN ue_files f ON f.id=o.file_id '
+                .'WHERE f.game_id=? AND f.scan_status="verified" AND d.name_key_hash=? AND d.name_key_length=? '
                 .'ORDER BY o.file_id LIMIT '.$limit,
                 [$gameId,$hash,strlen($needle)]);
         }
@@ -175,14 +175,14 @@ final class Uedb5ParityV5ReadService
     {
         $out=[];$placeholders=implode(',',array_fill(0,count($fileIds),'?'));
         if(in_array('names',$fields,true)){
-            $sql='SELECT file_id,first_name_index FROM ue_uedb5_name_candidates WHERE file_id IN ('.$placeholders.') '
-                .'AND name_key_hash=? AND name_key_length=? AND name_key_fingerprint=? ORDER BY file_id,first_name_index';
+            $sql='SELECT n.file_id,n.first_name_index FROM ue_uedb5_compact_name_dictionary d JOIN ue_uedb5_compact_name_candidates n ON n.name_id=d.name_id WHERE n.file_id IN ('.$placeholders.') '
+                .'AND d.name_key_hash=? AND d.name_key_length=? AND d.name_key_fingerprint=? ORDER BY n.file_id,n.first_name_index';
             $s=$this->db->prepare($sql);$s->execute(array_merge($fileIds,[$hash,strlen(CatalogUnrealIdentityHash::nameKey($this->candidateNeedle($query))),$finger]));
             while(($row=$s->fetch(PDO::FETCH_ASSOC))!==false)$out[(int)$row['file_id']]['names'][(int)$row['first_name_index']]=true;
         }
         if(in_array('exports',$fields,true)){
-            $sql='SELECT file_id,object_kind,object_index FROM ue_uedb5_object_candidates WHERE file_id IN ('.$placeholders.') '
-                .'AND object_name_hash=? AND object_name_length=? ORDER BY file_id,object_kind,object_index';
+            $sql='SELECT o.file_id,o.object_kind,o.object_index FROM ue_uedb5_compact_name_dictionary d JOIN ue_uedb5_compact_object_candidates o ON o.name_id=d.name_id WHERE o.file_id IN ('.$placeholders.') '
+                .'AND d.name_key_hash=? AND d.name_key_length=? ORDER BY o.file_id,o.object_kind,o.object_index';
             $s=$this->db->prepare($sql);$s->execute(array_merge($fileIds,[$hash,strlen(CatalogUnrealIdentityHash::nameKey($this->candidateNeedle($query)))]));
             while(($row=$s->fetch(PDO::FETCH_ASSOC))!==false){
                 $section=(int)$row['object_kind']===Uedb5SqlProjectionContract::OBJECT_KIND_CELL_EXPORT?'cell_exports':'exports';
