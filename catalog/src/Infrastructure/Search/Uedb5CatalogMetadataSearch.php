@@ -39,9 +39,11 @@ final class Uedb5CatalogMetadataSearch
     {
         $tables = ['ue_uedb5_files'];
         if (in_array('names', $fields, true)) {
+            $tables[] = 'ue_uedb5_compact_name_dictionary';
             $tables[] = 'ue_uedb5_compact_name_candidates';
         }
         if (in_array('exports', $fields, true)) {
+            $tables[] = 'ue_uedb5_compact_name_dictionary';
             $tables[] = 'ue_uedb5_compact_object_candidates';
         }
         if (in_array('imports', $fields, true)) {
