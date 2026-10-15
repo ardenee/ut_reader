@@ -86,9 +86,20 @@ final class CatalogIoStoreContainerBackupService
         if(!is_array($game)||$game['slug']!==$gameSlug||!str_starts_with(strtoupper((string)$game['engine_key']),'UE5'))
             throw new RuntimeException('IoStore backup restoration requires an active UE5 game profile.');
         $manifest=$this->loadManifest(rtrim($backupDirectory,'/\\').'/manifest.json');
-        $toc=null;$partCount=0;
+        $toc=null;$partCount=0;$seenNames=[];$seenParts=[];
         foreach($manifest['files'] as $row){
-            $file=rtrim($backupDirectory,'/\\').'/'.$row['filename'];
+            $filename=(string)$row['filename'];
+            if(isset($seenNames[$filename]))throw new RuntimeException('Duplicate IoStore backup filename.');
+            $seenNames[$filename]=true;
+            if($row['role']==='part'){
+                $index=$row['index']??null;
+                if(!is_int($index)||$index<0||$index>127||isset($seenParts[$index]))
+                    throw new RuntimeException('Invalid or duplicate IoStore backup partition index.');
+                $seenParts[$index]=true;
+            }elseif(($row['index']??null)!==-1){
+                throw new RuntimeException('Invalid IoStore backup TOC index.');
+            }
+            $file=rtrim($backupDirectory,'/\\').'/'.$filename;
             if(!is_file($file)||is_link($file)||(int)filesize($file)!==(int)$row['size']
                ||hash_file('sha256',$file)!==$row['sha256'])
                 throw new RuntimeException('IoStore backup component changed: '.$row['filename']);
@@ -96,6 +107,9 @@ final class CatalogIoStoreContainerBackupService
                 if($toc!==null)throw new RuntimeException('Backup contains multiple TOC files.');
                 $toc=$file;
             }else{$partCount++;}
+        }
+        for($index=0;$index<$partCount;$index++){
+            if(!isset($seenParts[$index]))throw new RuntimeException('Incomplete IoStore backup partition inventory.');
         }
         if($toc===null||$partCount<1||hash_file('sha256',$toc)!==$manifest['toc_sha256'])
             throw new RuntimeException('IoStore backup has invalid TOC or partition inventory.');
