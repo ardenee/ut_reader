@@ -120,6 +120,7 @@ try {
             'Files' => 'game-files.php?id=' . $gameId,
             'Package Viewer' => 'game-paks.php?id=' . $gameId,
             'Import PAK' => 'pak-import.php?game_id=' . $gameId,
+            'Import IoStore' => 'iostore-import.php?game_id=' . $gameId,
             'Back to games' => 'games.php',
         ]
     );

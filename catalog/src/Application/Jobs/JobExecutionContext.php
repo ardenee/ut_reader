@@ -40,6 +40,8 @@ final class JobExecutionContext
                 JobType::PROCESS_BUCKET_STAGED_PACKAGE,
                 JobType::REPAIR_UNVERIFIED_METADATA,
                 JobType::IMPORT_STAGED_PACKAGE,
+                JobType::IMPORT_IOSTORE_CONTAINER,
+                JobType::INDEX_IOSTORE_PACKAGE_NAMES,
                 JobType::IMPORT_STAGED_PAK,
                 JobType::IMPORT_STAGED_ARCHIVE,
                 JobType::REBUILD_AFFECTED_DEPENDENCIES,

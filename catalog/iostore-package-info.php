@@ -29,6 +29,9 @@ try {
         'Logical chunk size'=>catalog_bytes((int)$details['logical_size'])
     ] as $label=>$value)echo '<tr><th>'.catalog_h((string)$label).'</th><td>'.catalog_h((string)$value).'</td></tr>';
     echo '</tbody></table>';
+    if(catalog_support_is_admin()){
+        echo '<p><a class="button" href="iostore-package-download.php?id='.$container.'&entry='.$entry.'">Extract original Zen package (.zenpkg)</a></p>';
+    }
     if((int)($details['file_id']??0)>0){
         echo '<p><a class="button primary" href="file-info.php?id='.(int)$details['file_id'].'">Open catalog file details</a></p>';
     }else{

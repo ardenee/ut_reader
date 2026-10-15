@@ -261,3 +261,21 @@ Added CatalogIoStoreIndexedPackageReader and a read-only iostore-package-info.ph
 Real isolated Satisfactory verification: verify-iostore-package-inspection-standalone.php passed 5/5 member package inspections (names, name maps, imports, exports, dependency-bundle counts) directly from the full retained main UCAS; rejected a nonexistent member in the global container. No production SQL or Steam source modifications. The on-demand viewer deliberately avoids pre-parsing all 27,240 packages at page load.
 
 This is read-only indexed-container browsing. Normal multipart browser upload, per-member ue_files publication/ownership and mounted-store dependency resolution remain separate pending integration work.
+
+### IoStore HTTP uploads, durable queue, member extraction and searchable names — 2026-10-15 continuation
+
+Implemented admin-only `iostore-import.php` supporting either a local complete `.utoc/.ucas` family or a multipart browser upload (one TOC and all named UCAS partitions). `CatalogIoStoreUploadStager` requires PHP-verified HTTP uploads, matching complete partition filenames/count, safe filenames and durable private staging before queuing. Existing `CatalogQueueWorkerStarter` wakes the durable worker. `JobType::IMPORT_IOSTORE_CONTAINER` routes to `CatalogIoStoreImportJobHandler`; this validates an active UE5 game profile and queued TOC SHA-256, retains/hashes all parts, and idempotently indexes them. The admin import form is guarded by the additive IoStore schema migration. This is **container retention/indexing**, not classic-file import.
+
+`iostore-package-download.php` now permits **administrator-only** extraction of one decoded Zen export-bundle package from retained container data, naming it `.zenpkg` rather than falsely claiming it is a standalone `.uasset`. Default maximum is 128 MiB per extraction. Real isolated tests matched original SHA-256 for 5/5 Satisfactory packages and rejected oversized requests.
+
+Additive migration `202610150002_iostore_package_names.php` and matching fresh-install `install.sql` columns persist real Zen package names, import/export/dependency counts, metadata status and error text. A bounded `CatalogIoStorePackageNameIndexer` and `JobType::INDEX_IOSTORE_PACKAGE_NAMES` worker index packages in slices of 100 and defer for retry/resume. The Package Viewer now shows and searches persisted names or FPackageId, with a fallback if migration 202610150002 is not installed. The names are separate from the conventional `ue_files` catalog; no fabricated classic-file identities.
+
+**Verified in standalone MySQL 127.0.0.1:3339 only:**
+- Real HTTP POST of Satisfactory global.utoc/global.ucas to a loopback PHP fixture succeeded and retained the files. Missing/misnamed UCAS returned HTTP 422.
+- The retained multipart pair passed through real `PdoJobQueue` and `JobWorker` to a completed container import.
+- Two independent repeated durable imports completed with one container identity and one part manifest.
+- Non-UE5 game and changed TOC hash produced expected dead-letter errors.
+- Name index worker recovered across three deferred 100-package slices; **457 Satisfactory members named, zero failures** after correcting missing Oodle DLL discovery for CLI workers. The 193 initial isolated failures all had the same missing-DLL error, not a source-version parsing error. `Uedb5IoStoreCodec` now falls back to the known `oo2core_9_win64.dll` in this PHP installation's extension directory when the Apache environment variable is absent.
+- Indexed Zen package extraction verified 5 original SHA-256 byte matches and an extraction size-limit rejection.
+
+**NOT COMPLETE:** schema migrations are still pending on production; real per-member catalogue identities and durable full V5 SQL publication, mounted-container package-store arbitration/dependency resolution, backup/restore, container-member ownership-aware deletion, browser chunked multi-gigabyte uploads, encrypted containers, and production integration have not been proven. Never claim all IoStore support is complete merely because retention and viewer browsing work.

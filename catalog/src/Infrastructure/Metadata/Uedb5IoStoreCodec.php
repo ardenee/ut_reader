@@ -64,9 +64,21 @@ final class Uedb5IoStoreCodec
         if ($path === '') {
             $path = trim((string)getenv('UNREALDB_OODLE_LIBRARY'));
         }
+        if ($path === '') {
+            // Apache SetEnv does not carry over into detached PHP CLI workers.
+            // Discover only the explicitly installed DLL in this PHP runtime's
+            // own extension directory; never load a DLL from an untrusted PATH.
+            $extensionDir=(string)ini_get('extension_dir');
+            $candidates=[];
+            foreach([$extensionDir,dirname(PHP_BINARY).'/ext'] as $directory){
+                $candidate=rtrim($directory,'/\\\\').'/oo2core_9_win64.dll';
+                if(is_file($candidate))$candidates[]=$candidate;
+            }
+            $path=$candidates[0]??'';
+        }
         if ($path === '' || !is_file($path)) {
             throw new RuntimeException(
-                'IoStore Oodle decoding requires UNREALDB_OODLE_LIBRARY or an explicit Oodle runtime DLL path.'
+                'IoStore Oodle decoding requires UNREALDB_OODLE_LIBRARY, an explicit runtime DLL path, or oo2core_9_win64.dll in PHP extension_dir.'
             );
         }
         if (!class_exists(FFI::class)) {

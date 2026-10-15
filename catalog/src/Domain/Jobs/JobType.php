@@ -45,6 +45,8 @@ final class JobType
     public const IMPORT_GAME_BACKUP = 'catalog.import_game_backup';
     public const IMPORT_GAME_BACKUP_ENTRY = 'catalog.import_game_backup_entry';
     public const IMPORT_STAGED_PACKAGE = 'catalog.import_staged_package';
+    public const IMPORT_IOSTORE_CONTAINER = 'catalog.import_iostore_container';
+    public const INDEX_IOSTORE_PACKAGE_NAMES = 'catalog.index_iostore_package_names';
     public const IMPORT_STAGED_PAK = 'catalog.import_staged_pak';
     public const IMPORT_STAGED_PAK_ENTRY = 'catalog.import_staged_pak_entry';
     public const IMPORT_STAGED_ARCHIVE = 'catalog.import_staged_archive';
@@ -93,6 +95,8 @@ final class JobType
             self::IMPORT_GAME_BACKUP,
             self::IMPORT_GAME_BACKUP_ENTRY,
             self::IMPORT_STAGED_PACKAGE,
+            self::IMPORT_IOSTORE_CONTAINER,
+            self::INDEX_IOSTORE_PACKAGE_NAMES,
             self::IMPORT_STAGED_PAK,
             self::IMPORT_STAGED_PAK_ENTRY,
             self::IMPORT_STAGED_ARCHIVE,

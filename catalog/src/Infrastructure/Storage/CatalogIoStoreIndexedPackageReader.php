@@ -19,6 +19,38 @@ final class CatalogIoStoreIndexedPackageReader
         private readonly ?string $oodleLibraryPath = null
     ) {}
 
+    /**
+     * Extracts original decoded Zen export-bundle bytes for an indexed member.
+     * These are NOT a standalone classic UE package; callers must label them as Zen data.
+     *
+     * @return array{package_id:string,bytes:string}
+     */
+    public function extract(int $containerId,int $tocIndex,int $maxBytes=134217728):array
+    {
+        $metadata=$this->inspect($containerId,$tocIndex);
+        $size=(int)$metadata['logical_size'];
+        if($size<0||$size>$maxBytes)throw new RuntimeException('Zen package exceeds this extraction size limit.');
+        $q=$this->db->prepare('SELECT utoc_relative_path,utoc_sha256 FROM ue_iostore_containers WHERE id=? AND status="ready"');
+        $q->execute([$containerId]);$row=$q->fetch(PDO::FETCH_ASSOC);
+        if(!is_array($row))throw new RuntimeException('Container is no longer ready.');
+        $root=realpath($this->storageRoot);
+        $relative=str_replace(chr(92),'/',(string)$row['utoc_relative_path']);
+        if($root===false||!str_starts_with($relative,'games/')||str_contains($relative,'..')||str_contains($relative,':')) {
+            throw new RuntimeException('Invalid retained IoStore TOC location.');
+        }
+        $path=realpath($root.DIRECTORY_SEPARATOR.str_replace('/',DIRECTORY_SEPARATOR,$relative));
+        if($path===false||!str_starts_with(strtolower(str_replace(chr(92),'/',$path)),strtolower(str_replace(chr(92),'/',$root)).'/')) {
+            throw new RuntimeException('Retained IoStore TOC escaped storage.');
+        }
+        $toc=new Uedb5IoStoreTocReader($path,null,$this->oodleLibraryPath);
+        if(!hash_equals(strtolower((string)$row['utoc_sha256']),strtolower($toc->tocSha256()))) {
+            throw new RuntimeException('Retained IoStore TOC hash changed.');
+        }
+        $bytes=$toc->readChunk($tocIndex);
+        if(strlen($bytes)!==$size)throw new RuntimeException('Extracted Zen package size mismatch.');
+        return ['package_id'=>(string)$metadata['package_id'],'bytes'=>$bytes];
+    }
+
     /** @return array<string,mixed> */
     public function inspect(int $containerId,int $tocIndex):array
     {
