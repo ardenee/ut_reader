@@ -327,8 +327,18 @@ $wrongCell = $resolve($consumer, [['provider_id' => 94, 'snapshot' => $wrongCell
 $wrongCellRow = $find($wrongCell, 'cell_imports', 0);
 $check($wrongCellRow['outcome'] === 'missing' && $wrongCellRow['reason_code'] === 'public_cell_export_hash_missing', 'zen_dependency_cell_import_rejects_ordinary_export_hash_match');
 
+// Real IoStore V5 snapshots decorate map and embedded bundle object rows with
+// non-serialized index/dependency_class metadata. The identity must still match.
+$decoratedConsumer = $consumer;
+$decoratedConsumer['sections']['imports'][0]['index'] = 0;
+$decoratedConsumer['sections']['dependency_bundle_entries'][1]['object_index']['index'] = 0;
+$decoratedConsumer['sections']['dependency_bundle_entries'][1]['object_index']['dependency_class'] = 'load_order';
+$decoratedRows = $resolve($decoratedConsumer, [['provider_id' => 91, 'snapshot' => $provider]]);
+$check($find($decoratedRows, 'dependency_bundle_entries', 1)['outcome'] === 'resolved',
+    'zen_dependency_bundle_ignores_nonserialized_v5_row_metadata');
+
 $bundleMismatchRejected = false;
-$badBundleConsumer = $consumer;
+$badBundleConsumer = $decoratedConsumer;
 $badBundleConsumer['sections']['dependency_bundle_entries'][1]['object_index'] = $scriptImport;
 try {
     $resolve($badBundleConsumer, [['provider_id' => 91, 'snapshot' => $provider]]);

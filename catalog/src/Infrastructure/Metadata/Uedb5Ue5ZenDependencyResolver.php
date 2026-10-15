@@ -70,7 +70,7 @@ final class Uedb5Ue5ZenDependencyResolver
                 $combinedIndex = (int)($edge['combined_import_index'] ?? -1);
                 [$object, $cellTarget] = self::combinedImport($consumer, $combinedIndex);
                 $edgeObject = (array)($edge['object_index'] ?? []);
-                if ($edgeObject !== [] && $edgeObject !== $object) {
+                if ($edgeObject !== [] && self::serializedObjectIndex($edgeObject) !== self::serializedObjectIndex($object)) {
                     throw new RuntimeException('Zen dependency bundle object_index does not match the combined import map.');
                 }
                 $result = self::resolveObjectIndex($object, $providers, $packageStoreContext, 'dependency_bundle_entries', (int)$index, 'load_order', $cellTarget);
@@ -133,7 +133,7 @@ final class Uedb5Ue5ZenDependencyResolver
                     $combinedIndex = (int)($edge['combined_import_index'] ?? -1);
                     [$object, $cellTarget] = self::combinedImportSections($optional, $combinedIndex);
                     $edgeObject = (array)($edge['object_index'] ?? []);
-                    if ($edgeObject !== [] && $edgeObject !== $object) {
+                    if ($edgeObject !== [] && self::serializedObjectIndex($edgeObject) !== self::serializedObjectIndex($object)) {
                         throw new RuntimeException('Zen optional-segment dependency bundle object_index does not match the combined import map.');
                     }
                     $result = self::resolveObjectIndex($object, $providers, $packageStoreContext, 'optional_segment_dependency_bundle_entries', (int)$index, 'optional', $cellTarget);
@@ -573,6 +573,20 @@ final class Uedb5Ue5ZenDependencyResolver
             throw new RuntimeException('Zen dependency bundle import index is outside ordinary/cell import maps.');
         }
         return [(array)$cellImports[$cellIndex], true];
+    }
+
+    /**
+     * The snapshot classifies each import with index/dependency_class for V5
+     * storage. Bundle object_index is the original decoded FPackageObjectIndex;
+     * compare serialized identity, not those non-serialized decorations.
+     *
+     * @param array<string,mixed> $object
+     * @return array<string,mixed>
+     */
+    private static function serializedObjectIndex(array $object): array
+    {
+        unset($object['index'], $object['dependency_class']);
+        return $object;
     }
 
     /** @return array<string,mixed>|null */

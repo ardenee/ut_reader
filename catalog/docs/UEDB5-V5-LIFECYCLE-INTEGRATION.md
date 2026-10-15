@@ -204,3 +204,14 @@ This is **real Zen parsing + V5 persistence**, not an end-to-end published game 
 4. Preserve global package-store redirects, localization and mounted container priority according to the matching Epic-source version; do not infer authoritative lookup behavior from the package's own header alone.
 
 **Important:** This Satisfactory dedicated-server container may not match the UE5 5.8.3 source revision used to audit some other engine policies. Record its TOC, container-header and serialized package versions and check the correct Epic source/version before declaring complete source-parity.
+
+### Real Zen SQL publication and provider-rich dependency checkpoint
+
+Using the standalone **127.0.0.1:3339** MySQL instance, the isolated schema `uedb5_zen_satisfactory_test` and synthetic *test-only* file/game identities:
+
+- `verify-uedb5-satisfactory-zen-sql-standalone.php`: **3/3** Satisfactory Zen packages passed actual `Uedb5MetadataSnapshotWriter`, `PdoUedb5StagingRegistrationRepository` and `PdoUedb5CompactCandidatePublisher`. UEDB5 registration stored the exact hexadecimal FPackageId and created 54 compact name and 5 object candidate rows. Repeating the test succeeded without duplicate candidate publication.
+- `verify-uedb5-satisfactory-zen-dependencies-standalone.php`: first real consumer references **7 distinct physical providers** present in the same container; each provider was parsed into an isolated V5 container. `Uedb5DependencyRebuilder` built **29** dependency result rows with the current, conservative package-store policy: **1 local load-order edge resolved**, **28 unresolved** pending authoritative mounted package-store context.
+- This test exposed a real V5 decoration bug: serialized `object_index` fields from Zen dependency bundles were compared against V5 rows containing extra `index` and `dependency_class` bookkeeping fields. The resolver now excludes **only those non-serialized fields on both sides**, retaining strict comparison of every serialized field. The resolver's existing negative test continues to reject genuinely mismatched objects; a new decorated-row positive regression also passes.
+- **Not yet completed:** normal `.utoc/.ucas` ingest through upload/restore/reimport, source-version-specific mounted-container aggregation and authoritative package-store dependency resolution. The 28 unresolved rows **must not be promoted to resolved** merely because their package IDs exist in one sampled container.
+
+The standalone schema is not a real Satisfactory game profile and does not prove live production ingestion. No production database record or Steam file was changed.
