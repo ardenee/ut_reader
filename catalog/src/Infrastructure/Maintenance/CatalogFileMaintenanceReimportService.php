@@ -45,6 +45,15 @@ final class CatalogFileMaintenanceReimportService
         // maintenance operation whose purpose is to rebuild it from the stored package.
         $reimportState = $support->reimportState($fileId);
         $file = (array)$reimportState['file'];
+        if (strtolower((string)($file['extension'] ?? '')) === 'zenpkg') {
+            // Zen package source is a decoded IoStore chunk, not a classic .uasset.
+            // Retain stable catalog identity and reconstruct from its mounted
+            // container's original bytes instead of invoking the classic scanner.
+            return (new CatalogIoStoreMemberReimportService(
+                $this->db,
+                CatalogFileMaintenanceSupport::storageRoot($this->config)
+            ))->reimport($fileId);
+        }
         $storedPath = \catalog_file_maintenance_storage_path($this->config, $file);
         if ($storedPath === null || !is_file($storedPath)) {
             throw new RuntimeException('The stored package file is missing, so it cannot be re-imported.');
