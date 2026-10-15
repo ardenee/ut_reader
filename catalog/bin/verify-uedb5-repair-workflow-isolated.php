@@ -7,6 +7,7 @@ require_once dirname(__DIR__) . '/bootstrap/autoload.php';
 use UnrealDb\Catalog\Application\Jobs\JobQueue;
 use UnrealDb\Catalog\Application\Jobs\JobExecutionContext;
 use UnrealDb\Catalog\Application\Jobs\JobDeferred;
+use UnrealDb\Catalog\Application\Jobs\JobWorker;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogCompactMetadataRepairJobHandler;
@@ -19,11 +20,19 @@ $db->exec("INSERT INTO ue_files VALUES (321,7,'Fixture','Fixture.uasset','012345
 
 $queue = new class implements JobQueue {
     public array $snapshots = [];
+    public array $pending = [];
+    public array $claims = [];
+    public array $deferred = [];
     public function enqueue(string $queue, string $type, array $payload, int $priority=100, ?DateTimeImmutable $availableAt=null, ?string $dedupeKey=null, ?int $createdBy=null, int $maxAttempts=3, ?int $parentJobId=null, ?string $workflowUnitKey=null): int { throw new RuntimeException('Unexpected enqueue from isolated resume test'); }
-    public function claim(string $queue, string $workerId, int $leaseSeconds, ?int $preferredRootJobId=null): ?ClaimedJob { return null; }
+    public function claim(string $queue, string $workerId, int $leaseSeconds, ?int $preferredRootJobId=null): ?ClaimedJob {
+        $this->claims[] = $preferredRootJobId;
+        if ($this->pending === []) { return null; }
+        if ($preferredRootJobId !== null && $this->pending[0]->rootJobId() !== $preferredRootJobId) { return null; }
+        return array_shift($this->pending);
+    }
     public function complete(ClaimedJob $job, array $result=[]): string { return 'completed'; }
     public function fail(ClaimedJob $job, Throwable $exception, int $retryDelaySeconds): string { return 'dead_letter'; }
-    public function defer(ClaimedJob $job, int $delaySeconds, array $progress=[]): void {}
+    public function defer(ClaimedJob $job, int $delaySeconds, array $progress=[]): void { $this->deferred[$job->id] = ['delay'=>$delaySeconds,'progress'=>$progress]; }
     public function heartbeat(ClaimedJob $job, int $leaseSeconds, array $progress=[]): string { $this->snapshots[]=$progress; return 'active'; }
     public function requestCancellation(int $jobId, ?int $requestedBy=null, string $reason=''): string { return 'not_found'; }
     public function cancelClaimed(ClaimedJob $job, string $reason=''): void {}
@@ -85,6 +94,51 @@ $invalidRejected = false;
 try { $handler->handle($invalidJob, new JobExecutionContext($queue, $invalidJob, 120)); }
 catch (RuntimeException $e) { $invalidRejected = str_contains($e->getMessage(), 'positive file_id'); }
 $results['invalid_file_id_rejected'] = $invalidRejected;
+// Execute the real JobWorker, not just the handler's deferred exception:
+ // a blocked repair root must release affinity so unrelated work can proceed.
+$db->exec('DELETE FROM ue_background_jobs');
+$db->prepare('INSERT INTO ue_background_jobs VALUES (444,77,?,?,"{}","{}","")')
+    ->execute(['dependencies','failed']);
+$blocked = new ClaimedJob(77,'isolated',JobType::REPAIR_COMPACT_METADATA_FILE,
+    ['file_id'=>321],'isolated-lease',1,5,new DateTimeImmutable('+5 minutes'),
+    resumeProgress:['stage'=>'compact_repair_dependency_wait','file_id'=>321,'repaired'=>true]);
+$unrelated = new ClaimedJob(78,'isolated',JobType::REPAIR_COMPACT_METADATA_FILE,
+    ['file_id'=>999999],'isolated-lease',1,5,new DateTimeImmutable('+5 minutes'));
+$queue->pending = [$blocked,$unrelated];
+$handlers = array_fill_keys(JobType::all(),static function():array{return [];});
+$handlers[JobType::REPAIR_COMPACT_METADATA_FILE] = $handler;
+$worker = new JobWorker($queue,$handlers,'isolated','worker-isolated');
+$first = $worker->runOne();
+$second = $worker->runOne();
+$results['worker_blocked_child_releases_affinity'] =
+    ($first['status']??'')==='deferred'
+    && ($first['affinity_held']??true)===false
+    && ($queue->deferred[77]['delay']??0)===30;
+$results['worker_runs_unrelated_root_after_terminal_child'] =
+    ($second['status']??'')==='completed'
+    && ($second['job_id']??0)===78
+    && ($second['result']['status']??'')==='already_removed'
+    && end($queue->claims)===null;
+// An active child is different: preserve root affinity until its workflow advances.
+$db->exec('DELETE FROM ue_background_jobs');
+$db->prepare('INSERT INTO ue_background_jobs VALUES (445,77,? ,?,"{}","{}","")')
+    ->execute(['dependencies','queued']);
+$queue->pending = [$blocked,$unrelated];
+$queue->claims = [];
+$queue->deferred = [];
+$worker = new JobWorker($queue,$handlers,'isolated','worker-isolated-active');
+$activeFirst = $worker->runOne();
+$activeSecond = $worker->runOne();
+$results['worker_active_child_keeps_affinity'] =
+    ($activeFirst['status']??'')==='deferred'
+    && ($activeFirst['affinity_held']??false)===true
+    && ($queue->deferred[77]['delay']??0)===2;
+$results['worker_active_root_blocks_unrelated_claim'] =
+    ($activeSecond['status']??'')==='idle'
+    && ($activeSecond['affinity_held']??false)===true
+    && ($activeSecond['root_job_id']??0)===77
+    && count($queue->pending)===1
+    && end($queue->claims)===77;
 $failures=array_keys(array_filter($results,static fn($v):bool=>$v!==true));
 echo json_encode(['ok'=>$failures===[],'sqlite_memory_only'=>true,'checks'=>$results,'failures'=>$failures],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES).PHP_EOL;
 exit($failures===[]?0:2);
