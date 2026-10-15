@@ -39,10 +39,10 @@ final class Uedb5CatalogMetadataSearch
     {
         $tables = ['ue_uedb5_files'];
         if (in_array('names', $fields, true)) {
-            $tables[] = 'ue_uedb5_name_candidates';
+            $tables[] = 'ue_uedb5_compact_name_candidates';
         }
         if (in_array('exports', $fields, true)) {
-            $tables[] = 'ue_uedb5_object_candidates';
+            $tables[] = 'ue_uedb5_compact_object_candidates';
         }
         if (in_array('imports', $fields, true)) {
             $tables[] = 'ue_uedb5_dependency_edges';
@@ -165,9 +165,9 @@ final class Uedb5CatalogMetadataSearch
         }
 
         if (in_array('names', $fields, true)) {
-            $sql = 'SELECT n.file_id,f.game_id,n.first_name_index FROM ue_uedb5_name_candidates n '
+            $sql = 'SELECT n.file_id,f.game_id,n.first_name_index FROM ue_uedb5_compact_name_dictionary d JOIN ue_uedb5_compact_name_candidates n ON n.name_id=d.name_id '
                 . 'JOIN ue_files f ON f.id=n.file_id AND f.scan_status="verified" '
-                . 'WHERE n.name_key_hash=? AND n.name_key_length=? AND n.name_key_fingerprint=?';
+                . 'WHERE d.name_key_hash=? AND d.name_key_length=? AND d.name_key_fingerprint=?';
             $args = [md5($nameKey, true), strlen($nameKey), hash('sha256', $nameKey, true)];
             $this->appendScope($sql, $args, $gameId, $extensions);
             $sql .= ' ORDER BY n.file_id LIMIT ' . $rowLimit;
@@ -204,9 +204,9 @@ final class Uedb5CatalogMetadataSearch
 
         if (in_array('exports', $fields, true)) {
             $sql = 'SELECT o.file_id,f.game_id,o.object_kind,o.object_index '
-                . 'FROM ue_uedb5_object_candidates o '
+                . 'FROM ue_uedb5_compact_name_dictionary d JOIN ue_uedb5_compact_object_candidates o ON o.name_id=d.name_id '
                 . 'JOIN ue_files f ON f.id=o.file_id AND f.scan_status="verified" '
-                . 'WHERE o.object_name_hash=? AND o.object_name_length=?';
+                . 'WHERE d.name_key_hash=? AND d.name_key_length=?';
             $args = [md5($nameKey, true), strlen($nameKey)];
             $this->appendScope($sql, $args, $gameId, $extensions);
             $sql .= ' ORDER BY o.file_id,o.object_kind,o.object_index LIMIT ' . $rowLimit;
@@ -310,9 +310,9 @@ final class Uedb5CatalogMetadataSearch
         }
         $hash = md5($needle, true);
         $finger = hash('sha256', $needle, true);
-        $sql = 'SELECT DISTINCT n.file_id,f.game_id FROM ue_uedb5_name_candidates n '
+        $sql = 'SELECT DISTINCT n.file_id,f.game_id FROM ue_uedb5_compact_name_dictionary d JOIN ue_uedb5_compact_name_candidates n ON n.name_id=d.name_id '
             . 'JOIN ue_files f ON f.id=n.file_id AND f.scan_status="verified" '
-            . 'WHERE n.name_key_hash=? AND n.name_key_length=? AND n.name_key_fingerprint=?';
+            . 'WHERE d.name_key_hash=? AND d.name_key_length=? AND d.name_key_fingerprint=?';
         $args = [$hash, strlen($needle), $finger];
         $this->appendScope($sql, $args, $gameId, $extensions);
         $sql .= ' ORDER BY n.file_id LIMIT ' . $limit;
@@ -331,9 +331,9 @@ final class Uedb5CatalogMetadataSearch
         if ($needle === '') {
             return;
         }
-        $sql = 'SELECT DISTINCT o.file_id,f.game_id FROM ue_uedb5_object_candidates o '
+        $sql = 'SELECT DISTINCT o.file_id,f.game_id FROM ue_uedb5_compact_name_dictionary d JOIN ue_uedb5_compact_object_candidates o ON o.name_id=d.name_id '
             . 'JOIN ue_files f ON f.id=o.file_id AND f.scan_status="verified" '
-            . 'WHERE o.object_name_hash=? AND o.object_name_length=?';
+            . 'WHERE d.name_key_hash=? AND d.name_key_length=?';
         $args = [md5($needle, true), strlen($needle)];
         $this->appendScope($sql, $args, $gameId, $extensions);
         $sql .= ' ORDER BY o.file_id LIMIT ' . $limit;
