@@ -25,6 +25,17 @@ try{
  $db->exec("INSERT INTO ue_file_package_aliases VALUES(1,321,'AliasFixture')");
  $db->exec('INSERT INTO ue_uedb5_files VALUES(321)');
  $db->exec('INSERT INTO ue_uedb5_migration_status VALUES(321)');
+ $db->beginTransaction();
+ try{
+  (new CatalogFileMaintenanceRemovalService($db,['storage_path'=>$storage]))->remove(321,null,true);
+  $report['external_transaction_rejected']=false;
+ }catch(RuntimeException $e){
+  $report['external_transaction_rejected']=str_contains($e->getMessage(),'own database transaction');
+ }
+ $report['external_transaction_keeps_source']=is_file($fixture);
+ $report['external_transaction_keeps_record']=(int)$db->query('SELECT COUNT(*) FROM ue_files WHERE id=321')->fetchColumn()===1;
+ $report['external_transaction_still_owned_by_caller']=$db->inTransaction();
+ $db->commit();
  $result=(new CatalogFileMaintenanceRemovalService($db,['storage_path'=>$storage]))
   ->remove(321,null,true);
  $report['file_deleted']=!is_file($fixture);
@@ -81,7 +92,9 @@ try{
     &&$report['failed_delete_restored_source']&&$report['failed_delete_kept_file_row']
     &&$report['failed_delete_kept_alias']&&$report['failed_delete_rolled_back_v5_status']
     &&$report['postcommit_failure_exposed']&&$report['postcommit_no_orphan_file']
-    &&$report['postcommit_sql_remains_deleted']&&$report['postcommit_no_staged_copy'];
+    &&$report['postcommit_sql_remains_deleted']&&$report['postcommit_no_staged_copy']
+    &&$report['external_transaction_rejected']&&$report['external_transaction_keeps_source']
+    &&$report['external_transaction_keeps_record']&&$report['external_transaction_still_owned_by_caller'];
 }catch(Throwable $e){$report['error']=$e->getMessage();}
 finally{
  if(is_file($fixture))@unlink($fixture);

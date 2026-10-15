@@ -39,6 +39,13 @@ final class CatalogFileMaintenanceRemovalService
             throw new RuntimeException('File no longer exists in the catalog.');
         }
 
+        // Deletion stages and eventually unlinks a physical source file. It must
+        // own the SQL commit; a caller-owned transaction could later roll back
+        // after the source was irreversibly removed.
+        if ($this->db->inTransaction()) {
+            throw new RuntimeException('Package removal requires its own database transaction.');
+        }
+
         $gameId = (int)$file['game_id'];
         $packageName = trim((string)$file['package_name']);
         \catalog_package_aliases_ensure($this->db);
