@@ -8,7 +8,11 @@ use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5MetadataSnapshotWriter;
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5DependencyRebuilder;
 use UnrealDb\Catalog\Infrastructure\Metadata\PdoUedb5PhysicalProviderSelector;
 $app=catalog_bootstrap(false);
-$db=$app->db;$game=2;$file=111139;
+$db=$app->db;
+$optionsCli=getopt('', ['game-id::','file-id::']);
+$game=(int)($optionsCli['game-id']??2);
+$file=(int)($optionsCli['file-id']??111139);
+if($game<1||$file<1){fwrite(STDERR,'Positive game-id and file-id required'.PHP_EOL);exit(1);}
 $storage=sys_get_temp_dir().DIRECTORY_SEPARATOR.'u5-provider-parity-'.bin2hex(random_bytes(8));
 $prod=new Uedb5MetadataReader((string)$app->config['storage_path']);
 $reader=new Uedb5MetadataReader($storage);$writer=new Uedb5MetadataSnapshotWriter($storage);
