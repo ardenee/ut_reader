@@ -25,8 +25,9 @@ $expectedTables = [
     'ue_uedb5_files',
     'ue_uedb5_provider_keys',
     'ue_uedb5_search_keys',
-    'ue_uedb5_name_candidates',
-    'ue_uedb5_object_candidates',
+    'ue_uedb5_compact_name_dictionary',
+    'ue_uedb5_compact_name_candidates',
+    'ue_uedb5_compact_object_candidates',
     'ue_uedb5_dependency_edges',
     'ue_uedb5_dependency_packages',
 ];
@@ -49,7 +50,7 @@ $check(
 );
 
 $forbidden = array_fill_keys(Uedb5SqlProjectionContract::forbiddenPerObjectSourceColumns(), true);
-$objectColumns = array_fill_keys((array)$baseline['ue_uedb5_object_candidates']['columns'], true);
+$objectColumns = array_fill_keys((array)$baseline['ue_uedb5_compact_object_candidates']['columns'], true);
 $edgeColumns = array_fill_keys((array)$baseline['ue_uedb5_dependency_edges']['columns'], true);
 $forbiddenObject = array_intersect_key($objectColumns, $forbidden);
 $forbiddenEdge = array_intersect_key($edgeColumns, $forbidden);
@@ -57,16 +58,15 @@ $check($forbiddenObject === [], 'v5_object_candidates_do_not_duplicate_source_gr
 $check($forbiddenEdge === [], 'v5_dependency_edges_do_not_duplicate_source_graph');
 $check(
     $objectColumns === array_fill_keys([
-        'file_id', 'object_kind', 'object_index',
-        'object_name_hash', 'object_name_length', 'public_export_hash',
+        'file_id', 'object_kind', 'object_index', 'name_id', 'public_export_hash',
     ], true),
     'v5_object_candidate_row_is_narrow_and_index_only'
 );
 
 $types = Uedb5SqlProjectionContract::highCardinalityColumnTypes();
 $check(
-    ($types['ue_uedb5_object_candidates']['object_name_hash'] ?? '') === 'BINARY(16)'
-    && ($types['ue_uedb5_object_candidates']['public_export_hash'] ?? '') === 'BINARY(8) NULL',
+    ($types['ue_uedb5_compact_object_candidates']['name_id'] ?? '') === 'BIGINT UNSIGNED'
+    && ($types['ue_uedb5_compact_object_candidates']['public_export_hash'] ?? '') === 'BINARY(8) NULL',
     'v5_object_candidate_hash_widths_are_frozen'
 );
 $check(
@@ -74,9 +74,9 @@ $check(
     && ($types['ue_uedb5_dependency_edges']['required_object_key'] ?? '') === 'VARBINARY(16) NULL',
     'v5_dependency_edge_keys_stay_compact'
 );
-$nameContract = (array)$baseline['ue_uedb5_name_candidates'];
+$nameContract = (array)$baseline['ue_uedb5_compact_name_candidates'];
 $check(
-    (string)($nameContract['cardinality'] ?? '') === 'one_per_file_and_distinct_normalized_fname',
+    (string)($nameContract['cardinality'] ?? '') === 'one_per_file_and_exact_name_id',
     'v5_fname_projection_deduplicates_within_file'
 );
 $check(
@@ -120,10 +120,10 @@ $check(
 );
 $check(
     !is_file($root . '/src/Infrastructure/Metadata/CompressedMetadataLookupWriter.php')
-    && !in_array('class_package_term_id', (array)$baseline['ue_uedb5_object_candidates']['columns'], true)
-    && !in_array('class_name_term_id', (array)$baseline['ue_uedb5_object_candidates']['columns'], true)
-    && !in_array('object_flags', (array)$baseline['ue_uedb5_object_candidates']['columns'], true)
-    && !in_array('outer_index', (array)$baseline['ue_uedb5_object_candidates']['columns'], true),
+    && !in_array('class_package_term_id', (array)$baseline['ue_uedb5_compact_object_candidates']['columns'], true)
+    && !in_array('class_name_term_id', (array)$baseline['ue_uedb5_compact_object_candidates']['columns'], true)
+    && !in_array('object_flags', (array)$baseline['ue_uedb5_compact_object_candidates']['columns'], true)
+    && !in_array('outer_index', (array)$baseline['ue_uedb5_compact_object_candidates']['columns'], true),
     'v5_does_not_repeat_v4_export_path_identity_projection'
 );
 $v5RuntimeFiles = [
@@ -143,7 +143,7 @@ $check(
 $rules = Uedb5SqlProjectionContract::rules();
 $check(in_array('sql_is_candidate_accelerator_not_source_of_truth', $rules, true), 'v5_sql_authority_rule_is_explicit');
 $check(in_array('new_projection_requires_query_index_cardinality_and_storage_justification', $rules, true), 'v5_sql_growth_gate_is_explicit');
-$check(in_array('no_auto_increment_term_id_in_v5_projection', $rules, true), 'v5_sql_has_no_auto_increment_term_identity');
+$check(in_array('compact_name_id_is_internal_non_authoritative_surrogate', $rules, true), 'v5_sql_has_no_auto_increment_term_identity');
 
 echo json_encode(['ok' => $failures === [], 'checks' => $checks, 'failures' => $failures], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . PHP_EOL;
 exit($failures === [] ? 0 : 1);
