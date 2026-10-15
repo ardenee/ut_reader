@@ -108,7 +108,7 @@ try {
         && !str_contains($repoSource, 'BlockedCompressedMetadataContainer'));
 
     $contract = Uedb5SqlProjectionContract::baselineTables();
-    $nameColumns = (array)($contract['ue_uedb5_name_candidates']['columns'] ?? []);
+    $nameColumns = (array)($contract['ue_uedb5_compact_name_dictionary']['columns'] ?? []);
     $check('fname_dedup_key_is_collision_safe',
         in_array('name_key_fingerprint', $nameColumns, true)
         && str_contains($migration, 'name_key_fingerprint BINARY(32) NOT NULL'));
