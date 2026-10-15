@@ -1,5 +1,7 @@
 # Database migrations
 
+> **Current status:** [Current project status](../../docs/current-project-status.md) records the authoritative 15 October 2026 V5 production checkpoint.
+
 For a complete fresh-install sequence, PHP/Apache/MySQL prerequisites and first-run setup, see the [installation guide](../../docs/installation.md).
 
 `catalog/install.sql` is the consolidated base schema for a new UnrealDB installation. Schema changes newer than that baseline are delivered as ordered, immutable migration files in this directory.
@@ -100,26 +102,14 @@ See [`../../docs/database-migrations.md`](../../docs/database-migrations.md) and
 
 
 
-## Exhausted compact term IDs
+## Historical V4 compact-term ID handling (retired)
 
-Historical compact publication used duplicate-heavy `INSERT IGNORE` priming for `ue_terms`. InnoDB could consume AUTO_INCREMENT values for ignored duplicates, so an installation may reach the `INT UNSIGNED` ceiling while containing only a small fraction of 4.29 billion real terms.
+The old `ue_terms` and associated V4 lookup tables were retired. The former `compact-ue-term-ids.php` compaction/rekey tool is **not shipped and must not be executed**. V5 uses a separate compact name dictionary and candidate schema; consult the current V5 SQL publication contract and current project status.
 
-Current writers resolve existing terms first and insert only genuinely missing terms. For an installation that already exhausted the live ID range, do **not** widen all projection tables to BIGINT merely to preserve sparse IDs. Use the resumable offline compaction utility instead:
-
-```text
-php catalog/bin/compact-ue-term-ids.php status
-php catalog/bin/compact-ue-term-ids.php run --offline-confirmed
-php catalog/bin/compact-ue-term-ids.php verify
-php catalog/bin/compact-ue-term-ids.php cleanup --offline-confirmed
-```
-
-The run phase creates a dense old→new mapping and a compacted dictionary, then rekeys `ue_name_lookup`, `ue_dependency_links` and `ue_export_lookup` in bounded `file_id` ranges. Each range update and its resume cursor commit in the same transaction. The final dictionary swap occurs only after every reference table has been rekeyed. Apache/public writes and Background Jobs workers must remain stopped for the complete run + verify sequence because reference IDs and the active dictionary intentionally differ during the rekey.
-
-
-## Metadata format 4 cutover
+## UEDB5 production metadata cutover
 
 Production verified-file metadata uses UEDB5 (.uedb5) exclusively.
 Active runtime readers and verified-file publication must not read or publish UEDB4.
-Legacy V1–V4 database tables are retained until the separate post-cutover database-retirement phase.
-V5 source-only runtime check: php catalog/bin/verify-uedb5-cutover-ready.php
+Legacy V1-V4 verified-metadata tables have been retired from the checked production schema; do not reintroduce them. Both compact V5 candidate tables remain required.
+V5 source-only runtime check: `php catalog/bin/verify-uedb5-cutover-ready.php`. Bounded production check: `php catalog/bin/verify-uedb5-post-cutover-bounded.php`.
 Historical V3-to-V4 migration and obsolete file cleanup tools are retired; do not use them against V5.

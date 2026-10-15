@@ -1,6 +1,6 @@
 # Presentation controller-debt audit
 
-`php catalog/bin/audit-controller-debt.php` is the read-only baseline for the remaining broad architecture cleanup.
+The historical `catalog/bin/audit-controller-debt.php` audit (retired from this checkout) was the read-only baseline for the remaining broad architecture cleanup.
 
 It scans browser pages, `api/v1` endpoints and federation UI entry points for concrete boundary debt instead of ranking files only by size. Current rule categories are:
 
@@ -18,8 +18,6 @@ The resumable profiled-upload completion path has now migrated to `CatalogQueueW
 Use the audit together with the regression guards:
 
 ```text
-php catalog/bin/audit-controller-debt.php
-php catalog/bin/verify-general-controller-boundaries.php
 php catalog/bin/verify-controller-boundaries.php
 php catalog/bin/verify-federation-boundaries.php
 php catalog/bin/verify-upload-worker-contracts.php

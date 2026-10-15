@@ -1,5 +1,8 @@
 # UT2004 UEDB5 Pass 2 benchmark — 2026-10-09
 
+> **Current production status (15 October 2026):** UnrealDB uses **UEDB5-only** metadata registration and runtime. All **235,239** verified packages have validated format-5 registration; the bounded production verifier and **17/17** current regressions passed. The canonical live metadata tree contains **235,239 `.uedb5` files and no V1-V4 containers**. Actual upload, stable-ID reimport, backup restore, and non-deferred deletion/reconciliation were successfully exercised across all seven games against isolated MySQL; the results do not imply a new exhaustive production-package parse. Historical V4 staging/candidate statements below are **not current operational instructions**. See [the maintained V5 lifecycle evidence](../catalog/docs/UEDB5-V5-LIFECYCLE-INTEGRATION.md).
+
+
 ## Scope
 Read-only provider selection benchmarks, no changes to the production DB or V5 containers. Existing Unreal Gold workers were left running. PHP 8.5 and the real production MariaDB were used. This is a performance experiment, **not** an Epic semantic certification or an end-to-end Pass 1/Pass 2 comparison.
 

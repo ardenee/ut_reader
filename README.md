@@ -1,10 +1,12 @@
 # UnrealDB
 
+> **Current status:** [Current project status](docs/current-project-status.md) records the authoritative 15 October 2026 V5 production checkpoint.
+
 UnrealDB is a catalogue, dependency-analysis and preservation system for Unreal Engine game files.
 
 It is designed to identify packages accurately, preserve physical and logical package identity, inspect Unreal package metadata, track dependencies, find missing requirements, reduce duplicate storage, repair catalogue state, and distribute verified files through controlled downloads and generated packages.
 
-> **Project status — 29 September 2026:** UnrealDB is an active working catalogue/admin system. Production currently uses the UEDB4 compact-metadata runtime. Source-backed package/dependency specifications now cover the supported UE1-UE5 classic families, the isolated UEDB5 staging foundation and UE5 5.8.3 classic reader/persistence/VerifyImport resolver are implemented, and the main remaining format work is UEDB5 production migration/cutover plus UE5 Zen/IoStore (`.utoc`/`.ucas`).
+> **Current production status (15 October 2026):** UnrealDB uses **UEDB5-only** metadata registration and runtime. All **235,239** verified packages have validated format-5 registration; the bounded production verifier and **17/17** current regressions passed. The canonical live metadata tree contains **235,239 `.uedb5` files and no V1-V4 containers**. Actual upload, stable-ID reimport, backup restore, and non-deferred deletion/reconciliation were successfully exercised across all seven games against isolated MySQL; the results do not imply a new exhaustive production-package parse. Historical V4 staging/candidate statements below are **not current operational instructions**. See [the maintained V5 lifecycle evidence](catalog/docs/UEDB5-V5-LIFECYCLE-INTEGRATION.md).
 
 ## Runtime model
 
@@ -63,14 +65,14 @@ The complete clean-install, Apache/PHP/MySQL, storage, worker, GeoIP and optiona
 | Public catalogue/search | Active | Browse games/files, exact identity search, broader catalogue search, dependency information and controlled downloads. |
 | Administration | Active | Game/profile management, uploads, unverified files, jobs, backups, federation, maintenance and diagnostics. |
 | Durable background jobs | Active | Long work is split into resumable parent/child workflows with persisted progress, bounded concurrency and explicit operator control. |
-| Production metadata | UEDB4 active | Verified package metadata is stored in blocked-compressed `.uedb4` containers with compact SQL search/dependency projections. |
-| UEDB5 | Staging / migration work | Format-5 container isolation, UE5 5.8.3 classic persistence and its source-parity staging resolver are implemented; production cutover has not happened. |
+| Production metadata | **UEDB5 active** | All 235,239 verified packages use validated `.uedb5` metadata and compact V5 SQL search/dependency projections. |
+| UEDB5 | **Production cutover complete** | Seven-game lifecycle examples passed isolated MySQL integration; the post-cutover verifier and legacy-table audit pass. |
 | UE1 / UT99 | Active / source-aligned | Audited against the authoritative UT99 source and implemented to follow its package serialization, compact-index, provider-selection and object-level dependency rules. |
 | Unreal II / UE2 | Active / source-aligned | Audited against the authoritative Unreal II / UE2 source, including its source-specific private-export VerifyImport behavior and other revision differences. |
 | UE2.5 / UT2003 / UT2004 | Active / source-aligned | Audited against the authoritative UE2.5, UT2003 and UT2004 sources; package/dependency behavior and game-specific revision rules are implemented to those source contracts. |
 | UE3 / UT3 | Active / source-aligned | Audited against the authoritative UE3/UT3 sources. UT3 v512 dependency matching follows its VerifyImport rules, including exact outer/class identity and the 64-bit UE3 `RF_Public` flag. Historical lossy metadata requires source-byte repair/reparse. |
 | UE4 4.27.2 | Active / source-aligned | Audited against the authoritative UE4 4.27.2 source. Classic package parsing/dependency behavior follows that source contract; UEDB5 migration must preserve serialized import `PackageName` rather than reconstructing it from paths. |
-| UE5 5.8.3 classic | Staging / source-aligned | Audited against the authoritative UE5 5.8.3 source. The dedicated reader, source-shaped UEDB5 persistence and deterministic file-backed `VerifyImportInner` resolver follow that source contract but are not yet wired into production runtime. |
+| UE5 5.8.3 classic | Source-aligned reader / V5 | Dedicated classic parsing, source-shaped V5 persistence and file-backed `VerifyImportInner` are implemented; comprehensive production UE5 classic ingestion is not established by the seven-game cutover. |
 | UE5 Zen / IoStore | Pending | Authoritative `.utoc`/`.ucas`, PackageId/public-export-hash and `FPackageObjectIndex` support remain the largest UE5 format gap. |
 | `.uz` / `.uz2` / `.uz3` | Active / source-aligned | UZ, UZ2 and UZ3 compression/decompression formats have been audited against the relevant source/game behavior and are implemented to those format contracts. |
 | UMOD / UT2MOD / UT4MOD | Source-aligned | The mod-container formats have been audited and documented against their relevant engine/game sources; they are not an outstanding format-validation item. |
@@ -114,17 +116,17 @@ See [`docs/background-jobs.md`](docs/background-jobs.md).
 
 ### Compact metadata
 
-Production verified metadata currently uses **UEDB4**.
+Production verified metadata uses **UEDB5 only**.
 
 - `ue_files` is the stable physical/catalogue identity row.
-- `ue_file_metadata` registers the authoritative compact metadata container.
-- package metadata is stored in blocked-compressed `.uedb4` containers;
+- `ue_uedb5_files` registers the authoritative format-5 metadata container; `ue_uedb5_migration_status` records validation.
+- package metadata is stored in verified `.uedb5` containers;
 - SQL lookup/projection tables provide indexed package, object, search and dependency access without restoring the old row-per-object metadata schema;
 - legacy `ue_names`, `ue_imports`, `ue_exports` and `ue_dependencies` are no longer the verified runtime metadata model;
 - source-shaped fields that affect Epic load/VerifyImport behavior are retained in compact metadata whenever the format can represent them, while SQL is treated as an accelerator rather than the authority;
 - compact publication is atomic and retryable database contention cannot leave a partially published package.
 
-**UEDB5** is the next metadata format and is deliberately isolated from production UEDB4. The format-5 container/staging reader, UE5 5.8.3 classic persistence and classic `VerifyImportInner` staging resolver are implemented, but the production runtime still reads UEDB4 only. UEDB5 cutover requires source-byte reparse wherever UEDB4 did not retain required serialized identity, including historical UE3 64-bit `ObjectFlags` and UE4/UE5 import `PackageName` cases.
+**UEDB5** is the production metadata format. All 235,239 verified packages have validated V5 registration. The 15 October bounded post-cutover verification checks 14 representative container hashes; it is not a fresh reparse of the complete collection. Active compact V5 candidate tables support search and publication. Historical V4 metadata is retired, with stale on-disk fragments quarantined outside the live metadata directory.
 
 ## Upload and import flow
 
@@ -207,7 +209,7 @@ Full Sync is a resumable multi-phase workflow:
 3. rebuild dependencies in bounded durable batches;
 4. publish final dependency summaries and game statistics.
 
-Completed child work is retained, so restart resumes incomplete phases/children instead of returning to file 1. Children cancelled by stopping the parent can be resumed without replaying successful units. Source-specific maintenance paths avoid rewriting unrelated SQL projections; for example, the UT3 source pass can rewrite/register corrected UEDB4 metadata without updating every export row individually.
+Completed child work is retained, so restart resumes incomplete phases/children instead of returning to file 1. Children cancelled by stopping the parent can be resumed without replaying successful units. Source-specific maintenance paths avoid rewriting unrelated SQL projections; for example, the UT3 source pass can rewrite/register corrected UEDB5 metadata without updating every export row individually.
 
 ## Package/container support
 
@@ -217,7 +219,7 @@ Classic package readers preserve the engine/source-specific package summary, Nam
 
 UE3 `.upk` files remain packages; their internal exports can be examined without pretending that each export is an independent package file. UT3 package-version-512 dependency matching uses the January-2008 source policy, including its 64-bit `RF_Public` value and source-specific outer/class rules.
 
-UE4 4.27.2 classic packages and UE5 5.8.3 classic packages have separate audited readers/policies. UE5 classic support is currently staged through UEDB5 rather than published into the production metadata runtime.
+UE4 4.27.2 classic packages and UE5 5.8.3 classic packages have separate audited readers/policies. UE5 classic source-shaped support is implemented in V5; end-to-end production UE5 ingestion is not demonstrated by the seven currently catalogued games.
 
 ### PAK files
 
@@ -357,8 +359,8 @@ php catalog/bin/verify-solo-maintainer-hardening.php --run
 
 The main active areas are:
 
-- completing the UEDB4 -> UEDB5 migration/publication path and clean production cutover;
-- reparsing authoritative package bytes where older UEDB4 metadata discarded dependency-relevant serialized identity instead of guessing the missing values;
+- maintaining verified UEDB5-only runtime behavior and bounded source-policy parity across supported games;
+- expanding source-backed edge-case tests without reparsing the complete 235,239-file production dataset unnecessarily;
 - implementing UE5 Zen/IoStore `.utoc`/`.ucas` package-store ingestion and its PackageId/public-export-hash/object-index dependency model;
 - completing UEDB5 dependency classifications for hard, optional, soft, build/cook, script, cell/Verse, load-order and runtime-derived references;
 - reducing measured database/publication hotspots while keeping detailed source semantics in compact files rather than expanding MySQL back toward row-per-object metadata;

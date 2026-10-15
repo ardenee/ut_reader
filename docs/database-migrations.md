@@ -1,5 +1,7 @@
 # UnrealDB database schema and migrations
 
+> **Current status:** [Current project status](current-project-status.md) records the authoritative 15 October 2026 V5 production checkpoint.
+
 For a clean host/database setup before this migration sequence, see the [installation guide](installation.md).
 
 ## Consolidated baseline
@@ -8,7 +10,7 @@ For a clean host/database setup before this migration sequence, see the [install
 
 Historical migrations represented by that baseline have been retired. Existing installations may still contain their rows in `ue_schema_migrations`; the migration runner reports those rows as `archived` rather than treating the removed files as drift.
 
-The baseline intentionally omits retired row-per-object verified metadata tables. Current verified metadata is format-2 compact metadata plus maintained lookup/summary projections.
+The baseline omits retired row-per-object and V1-V4 verified metadata tables. Current verified metadata is **UEDB5** using `ue_uedb5_files`, V5 compact candidate/dictionary tables, and V5 dependency projections. All 235,239 verified production files passed the bounded post-cutover registration/status check on 15 October 2026.
 
 Do not import `catalog/install.sql` over a populated database.
 
@@ -23,11 +25,11 @@ A fresh database loads the consolidated baseline and is current immediately unle
 5. Run `php catalog/bin/migrate.php verify`.
 6. Create the first administrator with `catalog/bin/create-admin.php`.
 
-At the current baseline there are no active post-baseline migrations.
+Run `php catalog/bin/migrate.php status` to determine whether this checkout includes post-baseline incremental migrations; do not infer production status from an old baseline note.
 
 ## Current incremental migrations
 
-There are currently no active incremental migrations newer than baseline `202609240002`. Future schema changes must use a version greater than that boundary and remain incremental until the next deliberate consolidation.
+Treat `202609240002` as the documented consolidated baseline boundary; check the actual `catalog/migrations` files and `php catalog/bin/migrate.php status` for subsequently introduced migrations. Applied migrations remain immutable.
 
 ## Deployment sequence
 

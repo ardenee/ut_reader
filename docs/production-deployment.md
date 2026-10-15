@@ -1,5 +1,7 @@
 # UnrealDB production deployment
 
+> **Current status:** [Current project status](current-project-status.md) records the authoritative 15 October 2026 V5 production checkpoint.
+
 For a clean installation, system prerequisites and first-run configuration, start with the [installation guide](installation.md).
 
 ## Deployment position

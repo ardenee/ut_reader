@@ -1,5 +1,7 @@
 # UnrealDB installation and first-run setup
 
+> **Current status:** [Current project status](current-project-status.md) records the authoritative 15 October 2026 V5 production checkpoint.
+
 This guide covers a clean UnrealDB installation, the supported Windows/Apache/PHP/MySQL production foundation, database creation, application configuration, storage, migrations, the first administrator, workers, optional GeoIP data and optional federation.
 
 For later upgrades, also read [production-deployment.md](production-deployment.md) and [database-migrations.md](database-migrations.md).

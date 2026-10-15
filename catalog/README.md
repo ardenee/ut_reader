@@ -1,5 +1,7 @@
 # UnrealDB Catalog
 
+> **Current status:** [Current project status](../docs/current-project-status.md) records the authoritative 15 October 2026 V5 production checkpoint.
+
 `catalog/` contains the main UnrealDB web application, database model, durable background-job system, package metadata store, dependency engine, administration tools, APIs, migrations and production diagnostics.
 
 The catalogue builds on the Unreal Engine readers in the repository and currently targets UE1 through UE5 material, with the strongest coverage in UE1/UE2 and ongoing validation of UE3/UE4/UE5 edge cases.
@@ -267,14 +269,14 @@ php catalog/bin/verify-archive-ingestion.php
 
 ## Compact metadata
 
-Verified package metadata uses the format-2 compact metadata model.
+Verified package metadata uses the production **UEDB5** compact metadata model (15 October 2026).
 
 - `ue_files` stores stable catalogue/file identity and operational summary state.
-- `ue_file_metadata` registers the current compact metadata container.
-- detailed Names/Imports/Exports are stored in blocked compressed `.uedb2` metadata.
-- lookup/dependency/search projections remain relational where indexed access is useful.
+- `ue_uedb5_files` registers the authoritative V5 container; `ue_uedb5_migration_status` records validation.
+- detailed Names/Imports/Exports and source-shaped serialized identity are stored in validated `.uedb5` metadata.
+- lookup/dependency/search projections use V5 SQL: `ue_uedb5_compact_name_dictionary`, `ue_uedb5_compact_name_candidates`, `ue_uedb5_compact_object_candidates`, `ue_uedb5_provider_keys`, and `ue_uedb5_dependency_*` tables.
 - the historical row-per-object `ue_names`, `ue_imports`, `ue_exports` and `ue_dependencies` model is no longer the verified runtime metadata architecture.
-- verified files expose explicit metadata publication state (`pending`, `ready`, `failed`) so incomplete publication can be detected and repaired.
+- V5 migration/validation status is tracked per file; all 235,239 production verified files were validated at the 15 October cutover checkpoint.
 
 Compact metadata publication is treated as one recoverable publication operation rather than allowing a verified file to appear healthy with partially published metadata.
 

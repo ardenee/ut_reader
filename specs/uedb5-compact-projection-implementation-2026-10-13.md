@@ -1,5 +1,8 @@
 # Compact V5 candidate projection implementation — 2026-10-13
 
+> **Current production status (15 October 2026):** UnrealDB uses **UEDB5-only** metadata registration and runtime. All **235,239** verified packages have validated format-5 registration; the bounded production verifier and **17/17** current regressions passed. The canonical live metadata tree contains **235,239 `.uedb5` files and no V1-V4 containers**. Actual upload, stable-ID reimport, backup restore, and non-deferred deletion/reconciliation were successfully exercised across all seven games against isolated MySQL; the results do not imply a new exhaustive production-package parse. Historical V4 staging/candidate statements below are **not current operational instructions**. See [the maintained V5 lifecycle evidence](../catalog/docs/UEDB5-V5-LIFECYCLE-INTEGRATION.md).
+
+
 The initial code now provides `Uedb5CompactCandidateProjectionBuilder`, a pure source-backed conversion of the existing V5 name/object SQL projection into compact dictionary-ID candidate records. It validates dictionary SHA-256 fingerprints, raw MD5, normalized text, source snapshot row/index identity and file ID, and refuses invalid/missing/tampered mappings rather than selecting ambiguous hash matches. It does not modify or use live SQL tables.
 
 `verify-uedb5-compact-candidate-source-contract.php` passed 7/7 rejection and positive regression cases on PRD. `verify-uedb5-compact-real-snapshot-samples.php` passed 7/7 real UEDB5 samples, one from each game, using V5-derived search keys as the virtual dictionary. These are targeted examples, not comprehensive Epic-source signoff.

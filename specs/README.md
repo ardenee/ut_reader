@@ -1,6 +1,8 @@
 # UnrealDB Official Format Specifications
 
-> **Production status (2026-10-12):** Current production uses UEDB5-only runtime registration for all 235,239 verified files; the retired V4 metadata SQL tables are absent. Statements below describing UEDB4 as the *current* runtime are historical staging-era descriptions, not today's production architecture. See [UEDB5 production closeout evidence](uedb5-production-closeout-2026-10-12.md) for verified facts, open source-parity/Zen/physical-file-retirement gates and the bounded post-cutover verifier. Do not interpret registration/validation counts as exhaustive source-compliance proof.
+> **Current status:** [Current project status](../docs/current-project-status.md) records the authoritative 15 October 2026 V5 production checkpoint.
+
+> **Current status (15 October 2026):** UEDB5-only production registration and runtime are verified for 235,239 files. Seven-game upload, reimport, backup and deletion/reconciliation cases passed isolated integration; 17/17 current regression suites passed. Live metadata storage contains 235,239 canonical V5 files and no V1-V4 containers. Historical source/conformance and staging documents below retain their original dated findings. See [current lifecycle evidence](../catalog/docs/UEDB5-V5-LIFECYCLE-INTEGRATION.md).
 
 
 This directory is the source-backed specification library for UnrealDB.
@@ -68,15 +70,15 @@ Current conformance work must use the local source mirrors below. Historical Git
 - [x] Final UE4.27.2 generic package format and reading — `ue4-4.27.2-package-format.md` (supplemental later-engine reference; not UT4 authority)
 - [x] Final UE4.27.2 generic dependency resolution — `ue4-4.27.2-dependency-resolution.md` (supplemental later-engine reference; not UT4 authority)
 - [x] UE5 5.8.3 classic package format and reading — `ue5-5.8.3-classic-package-format.md` (classic LinkerLoad path implemented; Zen/IoStore is implemented separately in isolated UEDB5 staging)
-- [x] UE5 5.8.3 classic dependency resolution — `ue5-5.8.3-classic-dependency-resolution.md` (UEDB5 staging/source-parity `VerifyImportInner` resolver implemented; production cutover remains pending)
+- [x] UE5 5.8.3 classic dependency resolution — `ue5-5.8.3-classic-dependency-resolution.md` (V5 `VerifyImportInner` source-conformance work implemented; seven-game cutover complete, UE5 production ingestion coverage separately limited)
 - [x] UE5 5.8.3 Zen / IoStore format — `ue5-5.8.3-zen-iostore-format.md` (source-audited `.utoc`/`.ucas`, package-store and Zen-header contract; isolated reader, UEDB5 persistence and Zen dependency resolver implemented)
-- [x] UEDB5 normative format contract — `uedb5-format.md` (physical container and schema contract frozen; isolated production-capable V5 reader/writer/dependency rebuilder implemented while live runtime remains UEDB4)
+- [x] UEDB5 normative format contract — `uedb5-format.md` (production V5 reader/writer/dependency projection deployed and validated; historical staging design retained)
 - [x] UEDB5 SQL projection contract — `uedb5-sql-projection-contract.md` (minimal side-by-side `ue_uedb5_*` accelerator schema frozen; source-shaped class/outer/flags/serialization data remains file-backed)
-- [x] UEDB5 staging isolation contract — `uedb5-staging-isolation.md` (Step 7 actively guards `.uedb4` + live V4 SQL from V5 staging writes until atomic cutover)
+- [x] UEDB5 staging isolation contract — `uedb5-staging-isolation.md` (historical Step 7; V5 write-table isolation guard remains useful, but V4 coexistence has ended)
 - [x] UEDB5 migration validation contract — `uedb5-migration-validation.md` (Step 8 durable pending/staged/validated/failed state, fresh-source reparse validation, exact projection agreement, resumable batches)
-- [x] UEDB5 game-level parity audit - `uedb5-game-parity-audit.md` (Step 9 read-only V4-production vs staged-V5 behavioural audit harness; execution waits for full V4/V5 coverage plus current completed Pass-2 dependency payloads)
-- [x] UEDB5 cutover readiness gate - `uedb5-cutover-readiness.md` (Step 11 strict read-only whole-catalogue gate; source-only fallback checks plus exhaustive final V5/source/projection revalidation once global blockers are zero)
-- [x] UEDB5 source-audit requirements — `uedb5-metadata-requirements.md` (format-5 foundation, isolated V5 reader/writer/dependency rebuild, Step 5 staging schema, and resumable Step 6 Pass-1 source reparse are implemented for UT99, Unreal, Unreal II, UT2003, UT2004, UT3, UT4 and UE5 classic; dependency second-pass, Zen/IoStore catalogue migration, migration execution/verification and cutover remain pending)
+- [x] UEDB5 game-level parity audit - `uedb5-game-parity-audit.md` (historical Step 9 parity design; current production is V5-only, with bounded seven-game lifecycle evidence)
+- [x] UEDB5 cutover readiness gate - `uedb5-cutover-readiness.md` (historical Step 11 cutover plan; current bounded post-cutover verifier is `catalog/bin/verify-uedb5-post-cutover-bounded.php`)
+- [x] UEDB5 source-audit requirements — `uedb5-metadata-requirements.md` (historical migration implementation record; all seven production games have validated V5 registrations and isolated lifecycle coverage; live UE5 Zen/IoStore ingestion remains a separate coverage limit)
 
 ### Redirect/archive/mod formats
 

@@ -1,5 +1,7 @@
 # Catalog performance model
 
+> **Current status:** [Current project status](current-project-status.md) records the authoritative 15 October 2026 V5 production checkpoint.
+
 ## Current read model
 
 ### File and dependency listings
@@ -16,10 +18,10 @@ Public broad search is restricted to the selected game. Administrators may searc
 
 GUID, MD5 and SHA-1 use direct indexed identity lookups. Package names, filenames, stored names and aliases use bounded prefix/contains queries. Import and export object matches are provided by `CatalogCompactSearchService` from:
 
-- `ue_file_metadata`
-- `ue_terms`
-- `ue_export_lookup`
-- `ue_dependency_links`
+- `ue_uedb5_compact_name_dictionary`
+- `ue_uedb5_compact_name_candidates`
+- `ue_uedb5_compact_object_candidates`
+- `ue_uedb5_provider_keys` and V5 dependency projections
 
 The retired `ue_search_documents` projection, its FULLTEXT indexer and its migration/backfill utilities are not part of the runtime or baseline schema.
 
@@ -29,7 +31,7 @@ The historical background-job type `catalog.rebuild_file_search_index` remains a
 
 Names, Imports and Exports are loaded in bounded pages from the current compact per-file metadata representation. Full CSV and JSON exports stream rows in batches instead of loading complete package tables into PHP memory.
 
-Per-file compressed metadata is stored in `ue_file_metadata`, with reusable string terms and compact export/dependency lookup rows. The retired row-per-object metadata tables are physically absent and are not runtime fallback sources.
+Per-file compressed metadata is stored in canonical `.uedb5` files registered by `ue_uedb5_files`, with compact V5 candidate search and dependency SQL projections. The retired row-per-object metadata tables are physically absent and are not runtime fallback sources.
 
 ### Imports and maintenance
 
@@ -47,7 +49,7 @@ Federation inventory, request, transfer and log pages use signed keyset cursors.
 
 ## Schema baseline
 
-`catalog/install.sql` is the canonical empty-database schema through baseline `202608090002`. Historical migration PHP files through that version have been consolidated and removed.
+`catalog/install.sql` is the canonical empty-database schema; consult `docs/database-migrations.md` and the migration runner for the current baseline and incremental changes. Historical migration PHP files through that version have been consolidated and removed.
 
 For an existing database:
 

@@ -1,5 +1,7 @@
 # UnrealDB Architecture Baseline
 
+> **Current status:** [Current project status](current-project-status.md) records the authoritative 15 October 2026 V5 production checkpoint.
+
 This document describes the current runtime architecture after the August 2026 queue/upload refactor. Architecture-only changes preserve file identity, package parsing rules, import outcomes, routes, API payloads, job types, queue names, dedupe keys, retry policy, federation semantics and public behaviour.
 
 ## Runtime shape

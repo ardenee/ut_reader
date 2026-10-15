@@ -1,5 +1,7 @@
 # UnrealDB catalog system architecture
 
+> **Current status:** [Current project status](current-project-status.md) records the authoritative 15 October 2026 V5 production checkpoint.
+
 ## Status
 
 The authoritative current implementation detail is documented in [`docs/architecture.md`](architecture.md). This document keeps the higher-level production topology and evolution strategy only; it must not duplicate stale runtime details.

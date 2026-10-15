@@ -1,5 +1,8 @@
 # UEDB5 compact candidate permanent-schema checkpoint (2026-10-13)
 
+> **Current production status (15 October 2026):** UnrealDB uses **UEDB5-only** metadata registration and runtime. All **235,239** verified packages have validated format-5 registration; the bounded production verifier and **17/17** current regressions passed. The canonical live metadata tree contains **235,239 `.uedb5` files and no V1-V4 containers**. Actual upload, stable-ID reimport, backup restore, and non-deferred deletion/reconciliation were successfully exercised across all seven games against isolated MySQL; the results do not imply a new exhaustive production-package parse. Historical V4 staging/candidate statements below are **not current operational instructions**. See [the maintained V5 lifecycle evidence](../catalog/docs/UEDB5-V5-LIFECYCLE-INTEGRATION.md).
+
+
 Added `catalog/sql/uedb5-compact-candidate-v2-schema.sql` as an **opt-in schema proposal**, not part of `catalog/install.sql` and not applied to production. Defines `ue_uedb5_compact_name_dictionary` with SHA-256 uniqueness, `ue_uedb5_compact_name_candidates` with file/name primary key, and `ue_uedb5_compact_object_candidates` with file/kind/index primary key. Both candidate tables reference V5 files and dictionary IDs and retain their respective lookup and public-export indexes.
 
 Added `catalog/bin/verify-uedb5-compact-schema-temp.php`. It derives three session-only temporary tables from the actual SQL DDL, omitting foreign keys because MySQL does not support them in temporary tables, and verifies required indexes through SHOW INDEX. PHP lint and test on PRD MySQL 8.4.11 both passed: 3/3 tables, all required indexes. No persistent SQL changes or whole-catalogue scans.

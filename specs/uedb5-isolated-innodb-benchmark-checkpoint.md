@@ -1,5 +1,8 @@
 # UEDB5 isolated InnoDB name-candidate benchmark gate
 
+> **Historical CLI references:** Some commands and utility filenames quoted in this dated record were retired or renamed during V5 cutover. They are provenance only and **must not be used as current maintenance instructions**. Use the supported commands in [current project status](../docs/current-project-status.md) and the [V5 lifecycle evidence](../catalog/docs/UEDB5-V5-LIFECYCLE-INTEGRATION.md).
+
+
 Checkpoint 2026-10-13. Script: `catalog/bin/benchmark-uedb5-isolated-innodb.php`.
 
 - `--fixtures` was executed on PRD (PHP 8.5) with **8 cases passing** and a synthetic MD5+length collision detected; no SQL writes.

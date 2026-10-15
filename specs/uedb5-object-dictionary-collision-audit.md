@@ -1,5 +1,11 @@
 # UEDB5 object dictionary collision-safety checkpoint
 
+> **Historical CLI references:** Some commands and utility filenames quoted in this dated record were retired or renamed during V5 cutover. They are provenance only and **must not be used as current maintenance instructions**. Use the supported commands in [current project status](../docs/current-project-status.md) and the [V5 lifecycle evidence](../catalog/docs/UEDB5-V5-LIFECYCLE-INTEGRATION.md).
+
+
+> **Current production status (15 October 2026):** UnrealDB uses **UEDB5-only** metadata registration and runtime. All **235,239** verified packages have validated format-5 registration; the bounded production verifier and **17/17** current regressions passed. The canonical live metadata tree contains **235,239 `.uedb5` files and no V1-V4 containers**. Actual upload, stable-ID reimport, backup restore, and non-deferred deletion/reconciliation were successfully exercised across all seven games against isolated MySQL; the results do not imply a new exhaustive production-package parse. Historical V4 staging/candidate statements below are **not current operational instructions**. See [the maintained V5 lifecycle evidence](../catalog/docs/UEDB5-V5-LIFECYCLE-INTEGRATION.md).
+
+
 ## Measured production sample
 
 On 2026-10-13, the bounded `catalog/bin/audit-uedb5-object-dictionary-identity.php` command ran on PRD. It selected 10,000 `ue_uedb5_object_candidates` rows from fourteen indexed file IDs and joined the distinct object-name hash/length identities to the current `ue_uedb5_search_keys` dictionary. Its session-local temporary tables were dropped.

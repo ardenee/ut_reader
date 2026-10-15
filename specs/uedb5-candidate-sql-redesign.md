@@ -1,5 +1,8 @@
 # UEDB5 candidate SQL footprint — measured redesign proposal (2026-10-12)
 
+> **Current production status (15 October 2026):** UnrealDB uses **UEDB5-only** metadata registration and runtime. All **235,239** verified packages have validated format-5 registration; the bounded production verifier and **17/17** current regressions passed. The canonical live metadata tree contains **235,239 `.uedb5` files and no V1-V4 containers**. Actual upload, stable-ID reimport, backup restore, and non-deferred deletion/reconciliation were successfully exercised across all seven games against isolated MySQL; the results do not imply a new exhaustive production-package parse. Historical V4 staging/candidate statements below are **not current operational instructions**. See [the maintained V5 lifecycle evidence](../catalog/docs/UEDB5-V5-LIFECYCLE-INTEGRATION.md).
+
+
 ## Verified baseline
 
 Production MySQL/InnoDB `ue_uedb5_name_candidates` has approximately 320,561,132 rows and occupies 47,627,370,496 bytes of data plus 42,059,186,176 bytes of indexes. `ue_uedb5_object_candidates` has approximately 355,295,715 rows and occupies 23,141,007,360 bytes of data plus 35,413,377,024 bytes of indexes. These are `information_schema` estimates. All three sampled lookup plans use existing composite indexes; there is no authorised safe drop in the current physical schema.

@@ -1,5 +1,7 @@
 # UnrealDB catalog architecture
 
+> **Current status:** [Current project status](current-project-status.md) records the authoritative 15 October 2026 V5 production checkpoint.
+
 ## Scope
 
 This document describes the current production behavior and the seams used for incremental refactoring. The intent is to improve reliability, scalability, and maintainability without changing public URLs, file formats, profile validation rules, or catalog results.
