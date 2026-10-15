@@ -354,3 +354,5 @@ Isolated `verify-iostore-durable-worker-standalone.php` now registers all three 
 - GitHub `fc6a2974`: restore manifest verification now rejects duplicate component filenames, duplicate partition indices, missing indices and invalid TOC index; existing size/SHA checks remain in place.
 - These patches received repository source inspection only in this session. They are **not yet certified by PHP lint or standalone MySQL tests**. Keep PRD unchanged until a clean DEV or isolated test workspace executes the new coverage.
 - PRD checkout at `5ac0d8f0` contains numerous unrelated local modifications/untracked files; do not reset or bulk-overlay it. Only the PRD Desktop Commander device was accessible during this continuation.
+
+- GitHub `55e5e581` and `e692c3a3`: import and restore follow-up enqueue use deterministic container-scoped dedupe keys to prevent concurrent/retried parent jobs from creating duplicate active name-index/publication workers. The queue deduplication implementation was inspected; an actual retry/concurrency test is still outstanding.
