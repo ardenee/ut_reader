@@ -148,12 +148,16 @@ $expectedBaseTables = [
     'ue_asset_registry_tags',
     'ue_asset_registry_dependencies',
     'ue_asset_registry_assets',
-    'ue_dependency_package_summaries',
-    'ue_dependency_links',
-    'ue_export_lookup',
-    'ue_file_metadata',
+    'ue_uedb5_dependency_packages',
+    'ue_uedb5_dependency_edges',
+    'ue_uedb5_compact_object_candidates',
+    'ue_uedb5_compact_name_dictionary',
+    'ue_uedb5_compact_name_candidates',
+    'ue_uedb5_search_keys',
+    'ue_uedb5_provider_keys',
+    'ue_uedb5_migration_status',
+    'ue_uedb5_files',
     'ue_unverified_metadata',
-    'ue_package_providers',
     'ue_external_mirror_jobs',
     'ue_external_download_links',
     'ue_source_file_fingerprints',
@@ -203,9 +207,11 @@ $record(
 
 $record(
     'legacy_audit_ownership_moved',
-    str_contains($audit, "'src/Infrastructure/Games/PdoCatalogGameTableMaintenance.php'")
-        && !str_contains($audit, "'lib/GameManagerLifecycle.php'"),
-    'optional legacy table names belong to the maintenance collaborator, not the facade'
+    str_contains($audit, 'public static function retiredTables(): array')
+        && str_contains($audit, 'ue_file_metadata')
+        && !str_contains($facade, 'ue_file_metadata')
+        && !str_contains($tables, "'ue_file_metadata'"),
+    'Retired metadata vocabulary must live in the audit policy, not the lifecycle facade or current table maintenance list.'
 );
 
 require_once $catalogRoot . '/lib/GameManagerLifecycle.php';
