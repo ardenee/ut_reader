@@ -109,6 +109,14 @@ final class CatalogFileMaintenanceRemovalService
                 $ownsTransaction = true;
             }
             $support->deleteFileProjections($fileId);
+            // An IoStore member remains indexed in its retained .utoc/.ucas set
+            // after its derived catalog file is removed. Clear publication state
+            // in the same transaction as ue_files/V5 deletion, so it may be
+            // republished from authoritative container bytes later.
+            if (\UnrealDb\Catalog\Infrastructure\Storage\CatalogIoStoreContainerIndexer::schemaInstalled($this->db)) {
+                $this->db->prepare('UPDATE ue_iostore_packages SET publication_status="indexed" WHERE file_id=?')
+                    ->execute([$fileId]);
+            }
             $this->db->prepare('DELETE FROM ue_file_package_aliases WHERE file_id=?')->execute([$fileId]);
             $this->db->prepare('DELETE FROM ue_files WHERE id=?')->execute([$fileId]);
             $support->invalidateUedb5DependencyPass($affectedUedb5FileIds);
