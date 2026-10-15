@@ -346,3 +346,11 @@ Real Satisfactory isolated MySQL results:
 After a verified `catalog.import_iostore_container` job retains and indexes a complete TOC/UCAS set, it now enqueues `catalog.index_iostore_package_names` and `catalog.publish_iostore_packages` on the same durable queue, returning their IDs in the import job result. Follow-up jobs use priority 110 (normal import 100); their insertion/order remains durable across worker restart. The bounded publication handler defers not just while ready members remain unpublished but also while members still await name indexing. If any names permanently fail, the final publication result says `completed_with_failures`, never silently reports a fully successful 27,240-member import. This orchestration does not synthesize Epic mount-order/backend priority or promote staged dependency results to validated.
 
 Isolated `verify-iostore-durable-worker-standalone.php` now registers all three real job handlers, tests two idempotent Satisfactory global-container imports and drains all four automatically scheduled name/publication jobs. Result: both imports completed once, same retained container ID, all four child jobs completed. The global fixture contains zero export-bundle package members; this proves queue choreography, **not** end-to-end 27,240-member completion or production mounted-store dependency results.
+
+
+### 2026-10-15 backup restore follow-up hardening
+
+- GitHub `81f02ee9`: durable `catalog.restore_iostore_container` now schedules package-name indexing and V5 member publication jobs, matching the direct import route. Successful restoration still means retained/indexed; downstream publication remains asynchronous and must be checked independently.
+- GitHub `fc6a2974`: restore manifest verification now rejects duplicate component filenames, duplicate partition indices, missing indices and invalid TOC index; existing size/SHA checks remain in place.
+- These patches received repository source inspection only in this session. They are **not yet certified by PHP lint or standalone MySQL tests**. Keep PRD unchanged until a clean DEV or isolated test workspace executes the new coverage.
+- PRD checkout at `5ac0d8f0` contains numerous unrelated local modifications/untracked files; do not reset or bulk-overlay it. Only the PRD Desktop Commander device was accessible during this continuation.
