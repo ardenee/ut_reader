@@ -17,8 +17,9 @@ $writer=new Uedb5MetadataSnapshotWriter($tmp);
 $db=new PDO('sqlite::memory:');
 $db->setAttribute(PDO::ATTR_ERRMODE,PDO::ERRMODE_EXCEPTION);
 $db->exec('CREATE TABLE ue_files(id INTEGER PRIMARY KEY,game_id INTEGER,scan_status TEXT)');
-$db->exec('CREATE TABLE ue_uedb5_name_candidates(file_id INTEGER,name_key_hash BLOB,name_key_length INTEGER,name_key_fingerprint BLOB,first_name_index INTEGER)');
-$db->exec('CREATE TABLE ue_uedb5_object_candidates(file_id INTEGER,object_kind INTEGER,object_index INTEGER,object_name_hash BLOB,object_name_length INTEGER,public_export_hash BLOB)');
+$db->exec('CREATE TABLE ue_uedb5_compact_name_dictionary(name_id INTEGER PRIMARY KEY AUTOINCREMENT,name_key_hash BLOB,name_key_length INTEGER,name_key_fingerprint BLOB UNIQUE)');
+$db->exec('CREATE TABLE ue_uedb5_compact_name_candidates(file_id INTEGER,name_id INTEGER,first_name_index INTEGER)');
+$db->exec('CREATE TABLE ue_uedb5_compact_object_candidates(file_id INTEGER,object_kind INTEGER,object_index INTEGER,name_id INTEGER,public_export_hash BLOB)');
 $db->exec('CREATE TABLE ue_uedb5_dependency_edges(file_id INTEGER,source_kind INTEGER,source_index INTEGER,required_package_key_kind INTEGER,required_package_key BLOB,required_object_key_kind INTEGER,required_object_key BLOB)');
 
 $snapshot=static function(int $fileId,string $name,string $nameValue,string $importValue,string $exportValue):array{
@@ -54,11 +55,16 @@ $key=static function(string $value):array{
     return ['hash'=>md5($normalized,true),'length'=>strlen($normalized),'fingerprint'=>hash('sha256',$normalized,true)];
 };
 $alpha=$key('Alpha');$export=$key('ExportThing');$import=$key('ImportThing');$pkg=$key('Pkg');
+$insertIdentity=$db->prepare('INSERT INTO ue_uedb5_compact_name_dictionary(name_key_hash,name_key_length,name_key_fingerprint) VALUES(?,?,?)');
+$insertIdentity->execute([$alpha['hash'],$alpha['length'],$alpha['fingerprint']]);
+$alphaId=(int)$db->lastInsertId();
+$insertIdentity->execute([$export['hash'],$export['length'],$export['fingerprint']]);
+$exportId=(int)$db->lastInsertId();
 foreach([1,2] as $fileId){
-    $db->prepare('INSERT INTO ue_uedb5_name_candidates VALUES(?,?,?,?,?)')
-        ->execute([$fileId,$alpha['hash'],$alpha['length'],$alpha['fingerprint'],0]);
-    $db->prepare('INSERT INTO ue_uedb5_object_candidates VALUES(?,?,?,?,?,NULL)')
-        ->execute([$fileId,Uedb5SqlProjectionContract::OBJECT_KIND_EXPORT,0,$export['hash'],$export['length']]);
+    $db->prepare('INSERT INTO ue_uedb5_compact_name_candidates VALUES(?,?,?)')
+        ->execute([$fileId,$alphaId,0]);
+    $db->prepare('INSERT INTO ue_uedb5_compact_object_candidates VALUES(?,?,?,?,NULL)')
+        ->execute([$fileId,Uedb5SqlProjectionContract::OBJECT_KIND_EXPORT,0,$exportId]);
     $db->prepare('INSERT INTO ue_uedb5_dependency_edges VALUES(?,?,?,?,?,?,?)')
         ->execute([$fileId,Uedb5SqlProjectionContract::DEP_SOURCE_IMPORT,1,
             Uedb5SqlProjectionContract::PACKAGE_KEY_CLASSIC_FNAME,$pkg['hash'],
