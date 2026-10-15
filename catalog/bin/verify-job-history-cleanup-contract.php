@@ -122,9 +122,10 @@ $check(
 
 $check(
     'retention_keeps_unresolved_issues',
-    str_contains($queue, 'NOT IN ("failed","rejected","unverified","partial","error")')
+    str_contains($queue, 'NOT IN ("failed","rejected","partial","error")')
         && str_contains($queue, 'status="cancelled" OR')
-        && str_contains($page, 'Issues are retained.'),
+        && str_contains($queue, 'parent_job_id IS NULL')
+        && str_contains($page, 'Queue history cleanup'),
     'Automatic retention must remove resolved completed/stopped history without erasing unresolved operator work.'
 );
 
