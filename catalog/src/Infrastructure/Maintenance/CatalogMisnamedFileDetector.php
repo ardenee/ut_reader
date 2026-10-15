@@ -146,7 +146,7 @@ final class CatalogMisnamedFileDetector
                 continue;
             }
             $statement = $this->db->prepare(
-                'SELECT HEX(d.name_key_hash) object_name_hash_hex,d.name_key_length,'
+                'SELECT HEX(d.name_key_hash) object_name_hash_hex,d.name_key_length AS object_name_length,'
                 . 'COUNT(DISTINCT o.file_id) provider_count '
                 . 'FROM ue_uedb5_compact_name_dictionary d JOIN ue_uedb5_compact_object_candidates o ON o.name_id=d.name_id '
                 . 'JOIN ue_files f ON f.id=o.file_id AND f.scan_status="verified" '
