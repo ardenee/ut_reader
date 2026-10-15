@@ -19,7 +19,8 @@ $db=new PDO('sqlite::memory:');
 $db->setAttribute(PDO::ATTR_ERRMODE,PDO::ERRMODE_EXCEPTION);
 $db->exec('CREATE TABLE ue_uedb5_files(file_id INTEGER PRIMARY KEY,game_id INTEGER,package_key_kind INTEGER,package_key BLOB,package_name TEXT)');
 $db->exec('CREATE TABLE ue_uedb5_search_keys(key_hash BLOB,key_length INTEGER,key_fingerprint BLOB PRIMARY KEY,normalized_text BLOB)');
-$db->exec('CREATE TABLE ue_uedb5_object_candidates(file_id INTEGER,object_kind INTEGER,object_index INTEGER,object_name_hash BLOB,object_name_length INTEGER,public_export_hash BLOB,PRIMARY KEY(file_id,object_kind,object_index))');
+$db->exec('CREATE TABLE ue_uedb5_compact_name_dictionary(name_id INTEGER PRIMARY KEY AUTOINCREMENT,name_key_hash BLOB,name_key_length INTEGER,name_key_fingerprint BLOB UNIQUE)');
+$db->exec('CREATE TABLE ue_uedb5_compact_object_candidates(file_id INTEGER,object_kind INTEGER,object_index INTEGER,name_id INTEGER,public_export_hash BLOB,PRIMARY KEY(file_id,object_kind,object_index))');
 $db->exec('CREATE TABLE ue_uedb5_dependency_edges(file_id INTEGER,source_kind INTEGER,source_index INTEGER)');
 $db->exec('INSERT INTO ue_uedb5_dependency_edges VALUES(42,1,7)');
 
@@ -43,15 +44,15 @@ $db->prepare('INSERT INTO ue_uedb5_files VALUES(?,?,?,?,?)')->execute([
 ]);
 $key=static function(string $value):array{
     $normalized=CatalogUnrealIdentityHash::nameKey($value);
-    return ['hash'=>md5($normalized,true),'length'=>strlen($normalized)];
+    return ['hash'=>md5($normalized,true),'length'=>strlen($normalized),'fingerprint'=>hash('sha256',$normalized,true)];
 };
 $wrong=$key('Wrong');$stale=$key('Stale');
-$db->prepare('INSERT INTO ue_uedb5_object_candidates VALUES(?,?,?,?,?,NULL)')->execute([
-    42,Uedb5SqlProjectionContract::OBJECT_KIND_EXPORT,0,$wrong['hash'],$wrong['length']
-]);
-$db->prepare('INSERT INTO ue_uedb5_object_candidates VALUES(?,?,?,?,?,NULL)')->execute([
-    42,Uedb5SqlProjectionContract::OBJECT_KIND_EXPORT,2,$stale['hash'],$stale['length']
-]);
+$insDict=$db->prepare('INSERT INTO ue_uedb5_compact_name_dictionary(name_key_hash,name_key_length,name_key_fingerprint) VALUES(?,?,?)');
+$insObject=$db->prepare('INSERT INTO ue_uedb5_compact_object_candidates(file_id,object_kind,object_index,name_id,public_export_hash) VALUES(?,?,?,?,NULL)');
+foreach([[$wrong,0],[$stale,2]] as [$identity,$index]){
+    $insDict->execute([$identity['hash'],$identity['length'],$identity['fingerprint']]);
+    $insObject->execute([42,Uedb5SqlProjectionContract::OBJECT_KIND_EXPORT,$index,(int)$db->lastInsertId()]);
+}
 
 $sync=new PdoUedb5ObjectCandidateSynchronizer($db,$tmp);
 $before=$sync->reconcile(42,false);
