@@ -208,7 +208,7 @@ final class PdoUedb5NameCandidateSynchronizer
             if ($started) { $this->db->beginTransaction(); }
             try {
                 $dictionary = $this->db->prepare(
-                    'INSERT IGNORE INTO ue_uedb5_compact_name_dictionary '
+                    ($this->db->getAttribute(PDO::ATTR_DRIVER_NAME) === 'sqlite' ? 'INSERT OR IGNORE INTO ' : 'INSERT IGNORE INTO ') . 'ue_uedb5_compact_name_dictionary '
                     . '(name_key_hash,name_key_length,name_key_fingerprint) VALUES (?,?,?)'
                 );
                 $resolve = $this->db->prepare(
