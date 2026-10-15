@@ -33,7 +33,7 @@ final class Uedb5DependencyRebuilder
 
     /**
      * @param list<array<string,mixed>> $selectedProviders
-     * @param array{common_packages?:list<string>} $options
+     * @param array{common_packages?:list<string>,zen_runtime_context?:array<string,mixed>} $options
      * @return array<string,mixed>
      */
     public function rebuild(int $gameId, int $fileId, array $selectedProviders, array $options = []): array
@@ -47,7 +47,11 @@ final class Uedb5DependencyRebuilder
             $rows = $this->rebuildClassic($consumer, $providers);
             $schema = self::CLASSIC_SCHEMA;
         } elseif ($family === Uedb5ZenPackageReader::PACKAGE_FAMILY) {
-            $rows = $this->rebuildZen($consumer, $providers);
+            $zenContext = $options['zen_runtime_context'] ?? [];
+            if (!is_array($zenContext)) {
+                throw new RuntimeException('Zen runtime context must be an object/array.');
+            }
+            $rows = $this->rebuildZen($consumer, $providers, $zenContext);
             $schema = self::ZEN_SCHEMA;
         } elseif (in_array($family, [Uedb5Ut99SnapshotBuilder::PACKAGE_FAMILY, Uedb5Ut4SnapshotBuilder::PACKAGE_FAMILY], true)) {
             $rows = $this->rebuildUnrealClassic($consumer, $providers, $options);
@@ -232,7 +236,7 @@ final class Uedb5DependencyRebuilder
     }
 
     /** @param array<string,mixed> $consumer @param list<array<string,mixed>> $providers */
-    private function rebuildZen(array $consumer, array $providers): array
+    private function rebuildZen(array $consumer, array $providers, array $runtimeContext = []): array
     {
         $selected = [];
         foreach ($providers as $provider) {
@@ -241,7 +245,7 @@ final class Uedb5DependencyRebuilder
                 'snapshot' => (array)$provider['snapshot'],
             ];
         }
-        $resolved = Uedb5Ue5ZenDependencyResolver::resolve($consumer, $selected);
+        $resolved = Uedb5Ue5ZenDependencyResolver::resolve($consumer, $selected, $runtimeContext);
         $rows = [];
         foreach ($resolved as $row) {
             $row = (array)$row;
