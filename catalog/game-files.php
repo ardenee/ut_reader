@@ -223,7 +223,8 @@ html { scroll-behavior: smooth; }
 #game-files-table .game-files-actions {
     width: 1%;
 }
-#game-files-table .identity-cell { white-space: nowrap; }
+#game-files-table .identity-cell { white-space: nowrap; padding-right: 26px; }
+#game-files-table .game-files-version { padding-left: 14px; }
 #game-files-table .game-files-version,
 #game-files-table .game-files-size,
 #game-files-table .game-files-compression,
