@@ -73,6 +73,16 @@ $run('failed_child','failed','deferred');
 $run('cancelled_child','cancelled','deferred');
 $run('dead_letter_child','dead_letter','deferred');
 $run('missing_child',null,'deferred');
+$removedJob = new ClaimedJob(78,'isolated',JobType::REPAIR_COMPACT_METADATA_FILE,
+    ['file_id'=>999999],'isolated-lease',1,5,new DateTimeImmutable('+5 minutes'));
+$removedResult = $handler->handle($removedJob, new JobExecutionContext($queue, $removedJob, 120));
+$results['removed_file_noop'] = ($removedResult['status'] ?? '') === 'already_removed';
+$invalidJob = new ClaimedJob(79,'isolated',JobType::REPAIR_COMPACT_METADATA_FILE,
+    ['file_id'=>0],'isolated-lease',1,5,new DateTimeImmutable('+5 minutes'));
+$invalidRejected = false;
+try { $handler->handle($invalidJob, new JobExecutionContext($queue, $invalidJob, 120)); }
+catch (RuntimeException $e) { $invalidRejected = str_contains($e->getMessage(), 'positive file_id'); }
+$results['invalid_file_id_rejected'] = $invalidRejected;
 $failures=array_keys(array_filter($results,static fn($v):bool=>$v!==true));
 echo json_encode(['ok'=>$failures===[],'sqlite_memory_only'=>true,'checks'=>$results,'failures'=>$failures],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES).PHP_EOL;
 exit($failures===[]?0:2);
