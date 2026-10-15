@@ -14,7 +14,7 @@ if ($fileId < 1) {
 $app = catalog_bootstrap();
 $db = $app->db;
 $q = $db->prepare(
-    'SELECT v.game_id,s.status,(SELECT COUNT(*) FROM ue_uedb5_object_candidates o WHERE o.file_id=v.file_id) object_count '
+    'SELECT v.game_id,s.status,(SELECT COUNT(*) FROM ue_uedb5_compact_object_candidates o WHERE o.file_id=v.file_id) object_count '
     . 'FROM ue_uedb5_files v JOIN ue_uedb5_migration_status s ON s.file_id=v.file_id WHERE v.file_id=?'
 );
 $q->execute([$fileId]);
