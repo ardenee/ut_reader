@@ -119,8 +119,10 @@ final class PdoUedb5ObjectCandidateSynchronizer
     private function actualRows(int $fileId): array
     {
         $statement = $this->db->prepare(
-            'SELECT object_kind,object_index,object_name_hash,object_name_length,public_export_hash '
-            . 'FROM ue_uedb5_object_candidates WHERE file_id=? ORDER BY object_kind,object_index'
+            'SELECT o.object_kind,o.object_index,d.name_key_hash AS object_name_hash,'
+            . 'd.name_key_length AS object_name_length,o.public_export_hash '
+            . 'FROM ue_uedb5_compact_object_candidates o JOIN ue_uedb5_compact_name_dictionary d ON d.name_id=o.name_id '
+            . 'WHERE o.file_id=? ORDER BY o.object_kind,o.object_index'
         );
         $statement->execute([$fileId]);
         $rows = [];
@@ -178,34 +180,61 @@ final class PdoUedb5ObjectCandidateSynchronizer
     /** @param list<array<string,mixed>> $rows */
     private function replaceCandidates(int $fileId, array $rows): void
     {
-        Uedb5StagingIsolationContract::assertWriteTable('ue_uedb5_object_candidates');
         usort($rows, static fn(array $a, array $b): int =>
-            [(int)$a['object_kind'], (int)$a['object_index']] <=> [(int)$b['object_kind'], (int)$b['object_index']]
-        );
+            [(int)$a['object_kind'], (int)$a['object_index']] <=>
+            [(int)$b['object_kind'], (int)$b['object_index']]);
         $started = !$this->db->inTransaction();
         $maxAttempts = $started ? 5 : 1;
         for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
             if ($started) { $this->db->beginTransaction(); }
             try {
-                $this->db->prepare('DELETE FROM ue_uedb5_object_candidates WHERE file_id=?')->execute([$fileId]);
-                foreach (array_chunk($rows, 250) as $batch) {
-                    $placeholders = implode(',', array_fill(0, count($batch), '(?,?,?,?,?,?)'));
-                    $params = [];
-                    foreach ($batch as $row) {
-                        array_push($params, $row['file_id'], $row['object_kind'], $row['object_index'],
-                            $row['object_name_hash'], $row['object_name_length'], $row['public_export_hash']);
+                $seed = $this->db->prepare(
+                    'INSERT IGNORE INTO ue_uedb5_compact_name_dictionary '
+                    . '(name_key_hash,name_key_length,name_key_fingerprint) '
+                    . 'SELECT key_hash,key_length,key_fingerprint FROM ue_uedb5_search_keys '
+                    . 'WHERE key_hash=? AND key_length=?'
+                );
+                $resolve = $this->db->prepare(
+                    'SELECT name_id FROM ue_uedb5_compact_name_dictionary '
+                    . 'WHERE name_key_hash=? AND name_key_length=? LIMIT 2'
+                );
+                $delete = $this->db->prepare(
+                    'DELETE FROM ue_uedb5_compact_object_candidates WHERE file_id=?'
+                );
+                $insert = $this->db->prepare(
+                    'INSERT INTO ue_uedb5_compact_object_candidates '
+                    . '(file_id,object_kind,object_index,name_id,public_export_hash) VALUES (?,?,?,?,?)'
+                );
+                $delete->execute([$fileId]);
+                $cache=[];
+                foreach ($rows as $row) {
+                    $hash=(string)$row['object_name_hash'];
+                    $length=(int)$row['object_name_length'];
+                    if(strlen($hash)!==16) {
+                        throw new RuntimeException('Invalid compact object candidate hash.');
                     }
-                    $this->db->prepare(
-                        'INSERT INTO ue_uedb5_object_candidates('
-                        . 'file_id,object_kind,object_index,object_name_hash,object_name_length,public_export_hash) VALUES '
-                        . $placeholders
-                    )->execute($params);
+                    $key=bin2hex($hash).':'.$length;
+                    if(!isset($cache[$key])){
+                        $seed->execute([$hash,$length]);
+                        $resolve->execute([$hash,$length]);
+                        $ids=$resolve->fetchAll(PDO::FETCH_COLUMN);
+                        if(count($ids)!==1) {
+                            throw new RuntimeException('Missing or ambiguous compact object dictionary identity.');
+                        }
+                        $cache[$key]=(int)$ids[0];
+                    }
+                    $insert->execute([
+                        $fileId,(int)$row['object_kind'],(int)$row['object_index'],
+                        $cache[$key],$row['public_export_hash']
+                    ]);
                 }
                 if ($started) { $this->db->commit(); }
                 return;
             } catch (Throwable $error) {
                 if ($started && $this->db->inTransaction()) { $this->db->rollBack(); }
-                if (!$started || !PdoContention::retryable($error) || $attempt >= $maxAttempts) { throw $error; }
+                if (!$started || !PdoContention::retryable($error) || $attempt >= $maxAttempts) {
+                    throw $error;
+                }
                 usleep(PdoContention::backoffMicros($attempt, 25000));
             }
         }
