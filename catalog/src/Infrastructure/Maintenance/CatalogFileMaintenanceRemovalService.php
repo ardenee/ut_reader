@@ -70,6 +70,7 @@ final class CatalogFileMaintenanceRemovalService
             }
         }
 
+        $ownsTransaction = false;
         try {
             $affectedFileIds = [];
             $affectedUedb5FileIds = $support->affectedUedb5ConsumerIds($gameId, $fileId);
@@ -92,10 +93,20 @@ final class CatalogFileMaintenanceRemovalService
                 20,
                 'Removing catalog records and compact projections'
             );
+            // V5 registration, aliases, file identity and Pass-2 invalidation must
+            // succeed or fail together; restoring only the staged source is insufficient.
+            if (!$this->db->inTransaction()) {
+                $this->db->beginTransaction();
+                $ownsTransaction = true;
+            }
             $support->deleteFileProjections($fileId);
             $this->db->prepare('DELETE FROM ue_file_package_aliases WHERE file_id=?')->execute([$fileId]);
             $this->db->prepare('DELETE FROM ue_files WHERE id=?')->execute([$fileId]);
             $support->invalidateUedb5DependencyPass($affectedUedb5FileIds);
+            if ($ownsTransaction) {
+                $this->db->commit();
+                $ownsTransaction = false;
+            }
             if ($deferDependencyRefresh) {
                 \catalog_file_maintenance_emit(
                     $progress,
@@ -115,6 +126,9 @@ final class CatalogFileMaintenanceRemovalService
                 );
             }
         } catch (Throwable $error) {
+            if ($ownsTransaction && $this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
             if ($stagedPath !== null && is_file($stagedPath) && $storedPath !== null) {
                 @rename($stagedPath, $storedPath);
             }
