@@ -90,8 +90,11 @@ $record(
 $record(
     'cross_game_copy_preserves_alias_repair',
     str_contains($cross, "'already_in_target' => \$targetProvidesPackageIdentity")
-        && str_contains($crossQuery, 'target_existing.package_name=f.package_name OR EXISTS (')
-        && str_contains($crossQuery, 'catalog_package_alias_row_exists('),
+        && str_contains($cross, 'strcasecmp(')
+        && str_contains($cross, 'catalog_package_alias_row_exists(')
+        && str_contains($crossQuery, 'sourceFilesForMissingPackages(')
+        && str_contains($crossQuery, 'FROM ue_uedb5_dependency_packages p')
+        && str_contains($crossQuery, 'AND f.package_name IN ('),
     'Same bytes in the target are only complete when the required logical package identity is also present.'
 );
 $record(
