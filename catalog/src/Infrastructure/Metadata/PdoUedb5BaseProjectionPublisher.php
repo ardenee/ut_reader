@@ -62,8 +62,6 @@ final class PdoUedb5BaseProjectionPublisher
             foreach ([
                 'ue_uedb5_dependency_packages',
                 'ue_uedb5_dependency_edges',
-                'ue_uedb5_object_candidates',
-                'ue_uedb5_name_candidates',
             ] as $table) {
                 Uedb5StagingIsolationContract::assertWriteTable($table);
                 $this->db->prepare('DELETE FROM ' . $table . ' WHERE file_id=?')->execute([$fileId]);
@@ -74,26 +72,15 @@ final class PdoUedb5BaseProjectionPublisher
                 $this->insertSearchDictionaryBatches($searchRows);
             }
 
-            Uedb5StagingIsolationContract::assertWriteTable('ue_uedb5_name_candidates');
-            $this->insertBatches(
-                'ue_uedb5_name_candidates',
-                ['file_id','name_key_hash','name_key_length','name_key_fingerprint','first_name_index'],
-                $nameRows,
-                static fn(array $row): array => [
-                    $row['file_id'],$row['name_key_hash'],$row['name_key_length'],
-                    $row['name_key_fingerprint'],$row['first_name_index'],
-                ]
-            );
-            Uedb5StagingIsolationContract::assertWriteTable('ue_uedb5_object_candidates');
-            $this->insertBatches(
-                'ue_uedb5_object_candidates',
-                ['file_id','object_kind','object_index','object_name_hash','object_name_length','public_export_hash'],
-                $objectRows,
-                static fn(array $row): array => [
-                    $row['file_id'],$row['object_kind'],$row['object_index'],
-                    $row['object_name_hash'],$row['object_name_length'],$row['public_export_hash'],
-                ]
-            );
+            // Publish the canonical V5 projection into compact candidates in
+            // this same transaction. The legacy candidate tables are no longer
+            // written: searches and validators use the compact dictionary.
+            $compact = (new PdoUedb5CompactCandidatePublisher($this->db, false))
+                ->publish($snapshot, $registration);
+            if ((int)$compact['names'] !== count($nameRows)
+                || (int)$compact['objects'] !== count($objectRows)) {
+                throw new RuntimeException('Compact V5 candidate counts differ from source projection.');
+            }
 
             if ($started) { $this->db->commit(); }
             return [
