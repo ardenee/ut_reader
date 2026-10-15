@@ -14,8 +14,9 @@ use UnrealDb\Catalog\Application\Jobs\JobExecutionContext;
 use UnrealDb\Catalog\Application\Jobs\JobHandler;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
-use UnrealDb\Catalog\Infrastructure\Backup\GameBackupStore;
+use UnrealDb\Catalog\Infrastructure\Storage\GameBackupStore;
 use UnrealDb\Catalog\Infrastructure\Import\PdoCatalogPackageImporter;
+use UnrealDb\Catalog\Infrastructure\Metadata\VerifiedFileCompactMetadataFinalizer;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoWorkflowChildStateQuery;
 
@@ -31,6 +32,7 @@ final class GameBackupImportJobHandler implements JobHandler
         private readonly array $config
     ) {
         require_once dirname(__DIR__, 3) . '/lib/CatalogSupport.php';
+        require_once dirname(__DIR__, 3) . '/lib/Scanner/CatalogScannerPath.php';
     }
 
     public function supports(string $jobType): bool
@@ -54,7 +56,7 @@ final class GameBackupImportJobHandler implements JobHandler
         $userId = (int)($job->payload['user_id'] ?? 0);
         $userId = $userId > 0 ? $userId : null;
         $strict = !array_key_exists('strict_profile', $job->payload) || !empty($job->payload['strict_profile']);
-        $store = new GameBackupStore((string)$this->config['storage_path']);
+        $store = new GameBackupStore($this->config);
         $manifest = $this->manifest($store, $backupKey);
         $entries = $this->entries($manifest);
 
@@ -227,7 +229,7 @@ final class GameBackupImportJobHandler implements JobHandler
         $userId = (int)($job->payload['user_id'] ?? 0);
         $userId = $userId > 0 ? $userId : null;
         $strict = !array_key_exists('strict_profile', $job->payload) || !empty($job->payload['strict_profile']);
-        $store = new GameBackupStore((string)$this->config['storage_path']);
+        $store = new GameBackupStore($this->config);
         $manifest = $this->manifest($store, $backupKey);
         $entries = $this->entries($manifest);
         $entry = $entries[$position] ?? null;
@@ -239,7 +241,7 @@ final class GameBackupImportJobHandler implements JobHandler
         if ($exportedRelative === '') {
             throw new \RuntimeException('Game backup entry has no exported file path.');
         }
-        $source = $store->entryPath($backupKey, $exportedRelative);
+        $source = $store->resolveBackupFile($backupKey, $exportedRelative);
         if (!is_file($source)) {
             throw new \RuntimeException('Game backup file is missing: ' . $exportedRelative);
         }

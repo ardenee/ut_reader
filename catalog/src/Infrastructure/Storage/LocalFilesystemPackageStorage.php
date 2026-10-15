@@ -35,6 +35,7 @@ final class LocalFilesystemPackageStorage implements PackageStoragePort
         bool $discardDuplicateSource = true
     ): array {
         $slug = \scanner_slug_text($gameSlug);
+        $relativeRoot = $this->relativeStorageRoot();
         // Keep the historical path construction byte-for-byte. Mixed slash style
         // is valid on Windows and existing error/log output may include this path.
         $directory = rtrim($this->storageRoot, DIRECTORY_SEPARATOR)
@@ -66,10 +67,40 @@ final class LocalFilesystemPackageStorage implements PackageStoragePort
         return [
             'stored_name' => $storedName,
             'destination' => $destination,
-            'relative_path' => 'storage/games/' . $slug . '/verified/' . $storedName,
+            'relative_path' => $relativeRoot . '/games/' . $slug . '/verified/' . $storedName,
             'created' => $created,
             'source_path' => $sourcePath,
         ];
+    }
+
+    private function relativeStorageRoot(): string
+    {
+        $application = realpath($this->applicationRoot);
+        $storage = realpath($this->storageRoot);
+        if ($application === false || $storage === false) {
+            throw new RuntimeException('Application or storage root is unavailable.');
+        }
+        // catalog/storage can be a Windows junction to a separate volume.
+        // Derive the recorded path from its canonical storage mount, not from
+        // a physical-drive comparison against the PHP application directory.
+        $mount = realpath($application . DIRECTORY_SEPARATOR . 'storage');
+        if ($mount === false) {
+            throw new RuntimeException('Catalog storage mount is unavailable.');
+        }
+        $normalizedStorage = rtrim(str_replace(chr(92), '/', $storage), '/');
+        $mountPath = rtrim(str_replace(chr(92), '/', $mount), '/');
+        if (strcasecmp($normalizedStorage, $mountPath) === 0) {
+            return 'storage';
+        }
+        $mountPrefix = $mountPath . '/';
+        if (strncasecmp($normalizedStorage, $mountPrefix, strlen($mountPrefix)) !== 0) {
+            throw new RuntimeException('Verified package storage is outside the catalog storage mount.');
+        }
+        $relative = 'storage/' . trim(substr($normalizedStorage, strlen($mountPrefix)), '/');
+        if ($relative !== 'storage' && !str_starts_with($relative, 'storage/')) {
+            throw new RuntimeException('Verified package storage is outside the catalog storage tree.');
+        }
+        return $relative;
     }
 
     public function rollbackVerified(array $stored): void

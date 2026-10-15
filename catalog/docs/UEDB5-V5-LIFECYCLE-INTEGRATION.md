@@ -47,3 +47,50 @@ Command: `C:\php8.5\php.exe catalog\bin\verify-uedb5-candidate-cutover-readonly.
 Result: **passed**. The live catalog database exposes exactly two tables with `candidate` in their names: `ue_uedb5_compact_name_candidates` and `ue_uedb5_compact_object_candidates`. No other candidate-named tables remain, and the retired-table runtime scanner reports 0 source files / 0 references for its retired vocabulary.
 
 **Do not drop either compact table:** both are active production V5 search and SQL projection dependencies. This bounded evidence supersedes older notes claiming separate *candidate-named* tables await deletion; it does **not** prove all obsolete V1-V4 tables or files have been removed. The runtime diagnostics include V4-era reason labels whose semantics must be audited separately before removal.
+
+
+## All four requested lifecycle milestones — 2026-10-15 standalone MySQL integration
+
+**Status: four successful, bounded end-to-end paths verified.** This section supersedes the earlier “End-to-end gaps” section for these *successful-path examples only*. Failure and concurrency coverage beyond the named examples remains incomplete.
+
+### Isolation
+
+- Separate MySQL 8.4 instance on **127.0.0.1:3339**, physical data directory **C:\\Temp\\uedb5-isolated-mysql\\data**, schema `uedb5_isolated_integration`; independent of production MySQL service and production database.
+- Ordinary tables created from the live catalog schema **structure only**; no wholesale production table data imported.
+- Four explicitly selected UE2 verified package rows, associated V5 registration/status/provider keys and copied V5 containers were used as fixtures.
+- Storage: `catalog/storage/uedb5-isolated-reimport-20261015` (junction-backed path), physically inside the catalog's configured storage mount.
+- Test scripts verify the standalone server port and physical data path before using writable PDO connections. Do not run against the live MySQL port or live package storage.
+- Important: these integration scripts use **mutable, non-idempotent fixtures**, including deletes. Prepare a fresh standalone database/storage snapshot before replaying the destructive cases. Do not run a successful delete test twice against the same rows.
+
+### Verified actual workflows
+
+| Milestone | Isolated evidence | Result |
+| --- | --- | --- |
+| **1. Scanner-driven reimport** | `verify-uedb5-reimport-standalone.php`: file 111139 (`343T.utx`), real `sync_reimport`; 298 names, 31 imports, 236 exports; stable file ID and MD5, V5 registration/container verified | PASS |
+| **2a. Normal upload** | `verify-uedb5-upload-standalone.php`: `CreditsT.utx` created verified file 111195; 20 names, 3 imports, 2 exports, four V5 blocks | PASS |
+| **2b. Game backup restore** | `verify-uedb5-backup-entry-standalone.php`: `DetailTextures.utx`, imported file 111196; durable entry job 8 completed with V5 publication | PASS |
+| **2c. Full game backup coordinator** | `verify-uedb5-backup-workflow-standalone.php`: `Glands.utx`; parent job 9 completed, child import 10 completed, game dependency job 11 completed; imported=1 | PASS |
+| **3. Durable MySQL queue + V5 dependency publication** | `verify-uedb5-durable-dependency-standalone.php`: consumer file 111139, three physically copied external providers; job 5 completed, 31 dependency edges and 7 summary rows, V5 dependency policy `uedb5-dependency-pass-v13`; independent invalid job dead-letter persistence tested | PASS |
+| **4. Non-deferred deletion and full reconciliation** | `verify-uedb5-nondeferred-delete-standalone.php`: provider file 111194 (`WeaponFXT.utx`) physically/catalog-deleted; six prior resolved provider edges became zero; reconciliation parent 19 and both file children completed; two affected consumer files, 76 targeted imports, two summaries and one game statistics refresh; zero failures | PASS |
+
+### Runtime fixes proven by the integrations
+
+1. `LocalFilesystemPackageStorage`: recorded `relative_path` now derives from the **canonical configured storage mount**, including Windows junctions and nested isolated storage subtrees. Production mount produces `storage/games/...`; nested mount produces `storage/<subdir>/games/...`. Paths outside the catalog storage mount are rejected. Verified by `verify-uedb5-storage-junction-isolated.php` (3 checks).
+2. `GameBackupImportJobHandler`: import the real `Infrastructure\\Storage\\GameBackupStore` class, pass the correct config array to its constructor, call `resolveBackupFile()` instead of absent `entryPath()`, load scanner path helpers and import `VerifiedFileCompactMetadataFinalizer`.
+
+### Regression result
+
+On 2026-10-15, 11 relevant suites exited 0:
+`verify-uedb5-storage-junction-isolated.php`, `verify-uedb5-reimport-safety-isolated.php`,
+`verify-uedb5-reimport-rollback-isolated.php`, `verify-uedb5-removal-isolated.php`,
+`verify-uedb5-repair-workflow-isolated.php`, `verify-uedb5-dependency-sql-isolated.php`,
+`verify-import-dependency-consistency-contract.php`, `verify-upload-worker-contracts.php`,
+`verify-game-lifecycle-boundaries.php`, `verify-uedb5-post-cutover-bounded.php`,
+`verify-uedb5-candidate-cutover-readonly.php`.
+
+### Remaining coverage, not blockers to the four success paths
+
+- These are **bounded UE2 workflows**, not a claim that all seven engine profiles passed every lifecycle operation.
+- Concurrent workers, lease expiry/retry, alias variations, complete backup export, and fault-injected restores/deletions require further isolated test cases.
+- The standalone MySQL fixture is **not production traffic or production queue certification**. PRD cutover remains subject to production reconciliation and V4 artifact cleanup.
+- Do not assume that hard-coded one-shot fixture scripts are safe to rerun after deletion or backup import; **preserve this checkpoint** and use a freshly reset standalone database for additional full lifecycle runs.
