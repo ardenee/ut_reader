@@ -229,7 +229,8 @@ html { scroll-behavior: smooth; }
 #game-files-table .game-files-compression,
 #game-files-table .game-files-actions { white-space: nowrap; }
 .game-files-primary-file { margin-bottom: 3px; }
-.game-files-primary-package { margin-bottom: 5px; }
+.game-files-primary-package { margin-bottom: 0; }
+.game-files-version-type { margin-top: 5px; }
 .game-files-file-link, .game-files-package-link { font-weight: 650; overflow-wrap: anywhere; word-break: break-word; }
 .game-files-primary-package .game-files-package-link { font-weight: 550; }
 .game-files-dependencies { min-width: 130px; white-space: normal; }
@@ -497,10 +498,12 @@ try {
             echo '<td class="game-files-primary">'
                 . '<div class="game-files-primary-file"><a class="game-files-file-link" href="file-examine.php?id=' . $id . '" title="Examine file">' . catalog_h($originalName) . '</a></div>'
                 . '<div class="game-files-primary-package mono small"><a class="game-files-package-link" href="file-info.php?id=' . $id . '" title="View package details">' . catalog_h($packageName) . '</a></div>'
-                . '<span class="dep file-type-pill ' . catalog_h($fileTypeClass) . '">' . catalog_h($fileType) . '</span>'
                 . '</td>';
             echo '<td class="identity-cell"><span class="mono small guid-value">' . catalog_h($file['package_guid']) . '</span><br><span class="mono small identity-md5">MD5 ' . catalog_h($file['md5']) . '</span></td>';
-            echo '<td class="mono game-files-version">' . catalog_h($versionText) . '</td>';
+            echo '<td class="game-files-version">'
+                . '<div class="mono">' . catalog_h($versionText) . '</div>'
+                . '<div class="game-files-version-type"><span class="dep file-type-pill ' . catalog_h($fileTypeClass) . '">' . catalog_h($fileType) . '</span></div>'
+                . '</td>';
             echo '<td class="game-files-size">' . catalog_h(catalog_bytes((int)$file['file_size'])) . '</td>';
             if ($showCompression) {
                 echo '<td class="game-files-compression">' . $compression . '</td>';

@@ -73,7 +73,7 @@ The complete clean-install, Apache/PHP/MySQL, storage, worker, GeoIP and optiona
 | UE3 / UT3 | Active / source-aligned | Audited against the authoritative UE3/UT3 sources. UT3 v512 dependency matching follows its VerifyImport rules, including exact outer/class identity and the 64-bit UE3 `RF_Public` flag. Historical lossy metadata requires source-byte repair/reparse. |
 | UE4 4.27.2 | Active / source-aligned | Audited against the authoritative UE4 4.27.2 source. Classic package parsing/dependency behavior follows that source contract; UEDB5 migration must preserve serialized import `PackageName` rather than reconstructing it from paths. |
 | UE5 5.8.3 classic | Source-aligned reader / V5 | Dedicated classic parsing, source-shaped V5 persistence and file-backed `VerifyImportInner` are implemented; comprehensive production UE5 classic ingestion is not established by the seven-game cutover. |
-| UE5 Zen / IoStore | Pending | Authoritative `.utoc`/`.ucas`, PackageId/public-export-hash and `FPackageObjectIndex` support remain the largest UE5 format gap. |
+| UE5 Zen / IoStore | **Implemented foundation; production ingestion unverified** | `.utoc`/`.ucas` readers, Zen snapshot construction, package-store identity, typed object-index and dependency-resolution support are implemented and covered by isolated fixtures; normal upload-to-production publication and live Zen acceptance are not yet demonstrated. |
 | `.uz` / `.uz2` / `.uz3` | Active / source-aligned | UZ, UZ2 and UZ3 compression/decompression formats have been audited against the relevant source/game behavior and are implemented to those format contracts. |
 | UMOD / UT2MOD / UT4MOD | Source-aligned | The mod-container formats have been audited and documented against their relevant engine/game sources; they are not an outstanding format-validation item. |
 | ZIP / 7z / RAR uploads | Active | Unpack-only ingestion extracts supported Unreal files and hands each file to the normal durable package/redirect/PAK workflow. |
@@ -231,7 +231,9 @@ Encrypted PAK content and unsupported compression/container variants are not sil
 
 ### UE5 Zen / IoStore
 
-Authoritative cooked UE5 Zen/IoStore support is not complete. Full support requires `.utoc`/`.ucas` ingestion plus package-store provenance, `FPackageId`, imported package IDs, public-export hashes, typed `FPackageObjectIndex` identity, export/dependency bundles, optional segments, redirects and other source-defined container context. These values require lossless unsigned-64 handling and are being designed for UEDB5 rather than forced into the classic package model.
+The **UE5 Zen/IoStore parsing and V5 metadata foundation is implemented**, rather than still awaiting initial format support. It includes `.utoc`/`.ucas` TOC/chunk reading (with supported compression and AES handling), container-header and package-store parsing, `FPackageId`, imported package IDs, public-export hashes, typed `FPackageObjectIndex` identities, export/dependency bundles, optional segments, redirects and source-defined container context. Lossless unsigned-64 identity is retained in UEDB5.
+
+**What is not established:** end-to-end live catalog ingestion/publication of Zen containers through ordinary upload and backup workflows, across realistic mounted-container context and game-specific cook/AssetRegistry data. The current seven-game production inventory contains no confirmed Zen registrations. Isolated foundation and resolver tests passing does not prove this final production acceptance.
 
 ### Unreal redirect archives
 
@@ -361,7 +363,7 @@ The main active areas are:
 
 - maintaining verified UEDB5-only runtime behavior and bounded source-policy parity across supported games;
 - expanding source-backed edge-case tests without reparsing the complete 235,239-file production dataset unnecessarily;
-- implementing UE5 Zen/IoStore `.utoc`/`.ucas` package-store ingestion and its PackageId/public-export-hash/object-index dependency model;
+- completing and verifying normal production upload/registration for the already implemented UE5 Zen/IoStore foundation (including mounted package-store context and real cooked-container fixtures);
 - completing UEDB5 dependency classifications for hard, optional, soft, build/cook, script, cell/Verse, load-order and runtime-derived references;
 - reducing measured database/publication hotspots while keeping detailed source semantics in compact files rather than expanding MySQL back toward row-per-object metadata;
 - improving worker-pool supervision so code-version recycling and recovery do not require operator intervention;

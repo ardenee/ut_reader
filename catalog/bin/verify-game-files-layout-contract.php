@@ -37,8 +37,11 @@ $record(
         && str_contains($page, 'class="game-files-primary-package mono small"')
         && str_contains($page, 'href="file-examine.php?id=')
         && str_contains($page, 'href="file-info.php?id=')
-        && str_contains($page, 'file-type-pill'),
-    'The main table column must show the filename first, package underneath, then the type badge, while retaining both detail links.'
+        && str_contains($page, 'class="game-files-version-type"')
+        && str_contains($page, 'file-type-pill')
+        && strpos($page, 'file-type-pill') > strpos($page, "echo '<td class=\"game-files-version\">'")
+        && strpos($page, 'file-type-pill') < strpos($page, "echo '<td class=\"game-files-size\">'"),
+    'The main table column must show only filename and package with both links; the Version column holds the file type underneath the numeric version.'
 );
 
 $record(
