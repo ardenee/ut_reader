@@ -41,8 +41,9 @@ foreach([
 'CREATE TABLE ue_file_package_aliases(id INTEGER PRIMARY KEY,file_id INTEGER,game_id INTEGER,package_name TEXT,original_name TEXT)',
 'CREATE TABLE ue_uedb5_provider_keys(source_kind INTEGER,source_id INTEGER,game_id INTEGER,package_key_kind INTEGER,package_key BLOB,file_id INTEGER)',
 'CREATE TABLE ue_uedb5_search_keys(key_hash BLOB,key_length INTEGER,key_fingerprint BLOB PRIMARY KEY,normalized_text BLOB)',
-'CREATE TABLE ue_uedb5_name_candidates(file_id INTEGER,name_key_hash BLOB,name_key_length INTEGER,name_key_fingerprint BLOB,first_name_index INTEGER)',
-'CREATE TABLE ue_uedb5_object_candidates(file_id INTEGER,object_kind INTEGER,object_index INTEGER,object_name_hash BLOB,object_name_length INTEGER,public_export_hash BLOB)',
+'CREATE TABLE ue_uedb5_compact_name_dictionary(name_id INTEGER PRIMARY KEY AUTOINCREMENT,name_key_hash BLOB,name_key_length INTEGER,name_key_fingerprint BLOB UNIQUE)',
+'CREATE TABLE ue_uedb5_compact_name_candidates(file_id INTEGER,name_id INTEGER,first_name_index INTEGER)',
+'CREATE TABLE ue_uedb5_compact_object_candidates(file_id INTEGER,object_kind INTEGER,object_index INTEGER,name_id INTEGER,public_export_hash BLOB)',
 'CREATE TABLE ue_uedb5_dependency_edges(file_id INTEGER,source_kind INTEGER,source_index INTEGER,classification INTEGER,outcome INTEGER,required_package_key_kind INTEGER,required_package_key BLOB,required_object_key_kind INTEGER,required_object_key BLOB,resolved_file_id INTEGER,resolved_object_kind INTEGER,resolved_object_index INTEGER)',
 'CREATE TABLE ue_uedb5_dependency_packages(game_id INTEGER,file_id INTEGER,package_key_kind INTEGER,package_key BLOB,required_package_name TEXT,dependency_count INTEGER,resolved_count INTEGER,missing_count INTEGER,package_only_count INTEGER,common_count INTEGER,unresolved_count INTEGER,hard_missing_count INTEGER,nonhard_missing_count INTEGER,summary_outcome INTEGER,provider_file_id INTEGER)'
 ] as $sql){$db->exec($sql);}
@@ -64,8 +65,12 @@ $base=Uedb5SqlProjectionBuilder::build($snapshot,$registration);
 $insertBase=static function(PDO $db,array $base):void{
 $p=$db->prepare('INSERT INTO ue_uedb5_provider_keys VALUES(?,?,?,?,?,?)');foreach($base['provider_keys'] as $r)$p->execute([$r['source_kind'],$r['source_id'],$r['game_id'],$r['package_key_kind'],$r['package_key'],$r['file_id']]);
 $s=$db->prepare('INSERT INTO ue_uedb5_search_keys VALUES(?,?,?,?)');foreach($base['search_keys'] as $r)$s->execute([$r['hash'],$r['length'],$r['fingerprint'],$r['normalized_text']]);
-$n=$db->prepare('INSERT INTO ue_uedb5_name_candidates VALUES(?,?,?,?,?)');foreach($base['name_candidates'] as $r)$n->execute([$r['file_id'],$r['name_key_hash'],$r['name_key_length'],$r['name_key_fingerprint'],$r['first_name_index']]);
-$o=$db->prepare('INSERT INTO ue_uedb5_object_candidates VALUES(?,?,?,?,?,?)');foreach($base['object_candidates'] as $r)$o->execute([$r['file_id'],$r['object_kind'],$r['object_index'],$r['object_name_hash'],$r['object_name_length'],$r['public_export_hash']]);
+$d=$db->prepare('INSERT OR IGNORE INTO ue_uedb5_compact_name_dictionary(name_key_hash,name_key_length,name_key_fingerprint) VALUES(?,?,?)');
+foreach($base['search_keys'] as $r)$d->execute([$r['hash'],$r['length'],$r['fingerprint']]);
+$n=$db->prepare('INSERT INTO ue_uedb5_compact_name_candidates(file_id,name_id,first_name_index) SELECT ?,name_id,? FROM ue_uedb5_compact_name_dictionary WHERE name_key_fingerprint=?');
+foreach($base['name_candidates'] as $r)$n->execute([$r['file_id'],$r['first_name_index'],$r['name_key_fingerprint']]);
+$o=$db->prepare('INSERT INTO ue_uedb5_compact_object_candidates(file_id,object_kind,object_index,name_id,public_export_hash) SELECT ?,?,?,name_id,? FROM ue_uedb5_compact_name_dictionary WHERE name_key_hash=? AND name_key_length=?');
+foreach($base['object_candidates'] as $r)$o->execute([$r['file_id'],$r['object_kind'],$r['object_index'],$r['public_export_hash'],$r['object_name_hash'],$r['object_name_length']]);
 };
 $insertBase($db,$base);
 $validator=new Uedb5MigrationValidator($db,['storage_path'=>$temp]);
@@ -92,7 +97,7 @@ foreach($dep['dependency_packages'] as $r)$pkg->execute(array_values($r));
 $ready=$validator->validate(8001);
 $check('dependency_complete_becomes_validation_ready',!empty($ready['ready'])&&($ready['dependency']['dependency_count']??0)===1);
 $check('dependency_projection_exact_match',($ready['dependency']['dependency_edges']??0)===1&&($ready['dependency']['dependency_packages']??0)===1);
-$db->exec('DELETE FROM ue_uedb5_name_candidates WHERE file_id=8001 AND first_name_index=2');
+$db->exec('DELETE FROM ue_uedb5_compact_name_candidates WHERE file_id=8001 AND first_name_index=2');
 $caught=false;
 try{$validator->validate(8001);}catch(Uedb5ValidationException $ex){$caught=$ex->reasonCode==='name_projection_mismatch';}
 $check('projection_drift_fails_validation',$caught);
