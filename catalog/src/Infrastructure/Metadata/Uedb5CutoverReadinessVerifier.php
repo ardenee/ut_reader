@@ -100,7 +100,8 @@ final class Uedb5CutoverReadinessVerifier
         $requiredTables=[
             'ue_files','ue_games','ue_invalid_file_identities',
             'ue_uedb5_files','ue_uedb5_provider_keys','ue_uedb5_search_keys',
-            'ue_uedb5_name_candidates','ue_uedb5_object_candidates','ue_uedb5_dependency_edges',
+            'ue_uedb5_compact_name_dictionary',
+            'ue_uedb5_compact_name_candidates','ue_uedb5_compact_object_candidates','ue_uedb5_dependency_edges',
             'ue_uedb5_dependency_packages','ue_uedb5_migration_status',
         ];
         $missingTables=[];
