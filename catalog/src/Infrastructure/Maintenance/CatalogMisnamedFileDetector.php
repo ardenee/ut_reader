@@ -137,7 +137,7 @@ final class CatalogMisnamedFileDetector
             foreach ($leafChunk as $leafKey) {
                 $hash = md5($leafKey, true);
                 $length = strlen($leafKey);
-                $predicates[] = '(o.object_name_hash=? AND o.object_name_length=?)';
+                $predicates[] = '(d.name_key_hash=? AND d.name_key_length=?)';
                 $args[] = $hash;
                 $args[] = $length;
                 $identityByPair[strtoupper(bin2hex($hash)) . ':' . $length] = $leafKey;
@@ -146,12 +146,12 @@ final class CatalogMisnamedFileDetector
                 continue;
             }
             $statement = $this->db->prepare(
-                'SELECT HEX(o.object_name_hash) object_name_hash_hex,o.object_name_length,'
+                'SELECT HEX(d.name_key_hash) object_name_hash_hex,d.name_key_length,'
                 . 'COUNT(DISTINCT o.file_id) provider_count '
-                . 'FROM ue_uedb5_object_candidates o '
+                . 'FROM ue_uedb5_compact_name_dictionary d JOIN ue_uedb5_compact_object_candidates o ON o.name_id=d.name_id '
                 . 'JOIN ue_files f ON f.id=o.file_id AND f.scan_status="verified" '
                 . 'WHERE f.game_id=? AND f.id<>? AND o.object_kind=1 AND (' . implode(' OR ', $predicates) . ') '
-                . 'GROUP BY o.object_name_hash,o.object_name_length'
+                . 'GROUP BY d.name_key_hash,d.name_key_length'
             );
             $statement->execute($args);
             $counts = [];
@@ -185,14 +185,14 @@ final class CatalogMisnamedFileDetector
             $predicates = [];
             $args = [$gameId, $ownerFileId];
             foreach ($leafChunk as $leafKey) {
-                $predicates[] = '(o.object_name_hash=? AND o.object_name_length=?)';
+                $predicates[] = '(d.name_key_hash=? AND d.name_key_length=?)';
                 $args[] = md5($leafKey, true);
                 $args[] = strlen($leafKey);
             }
             $statement = $this->db->prepare(
                 'SELECT o.file_id,o.object_index,f.package_name,f.original_name,f.extension,'
                 . 'f.name_count,f.import_count,f.export_count,g.name game_name '
-                . 'FROM ue_uedb5_object_candidates o '
+                . 'FROM ue_uedb5_compact_name_dictionary d JOIN ue_uedb5_compact_object_candidates o ON o.name_id=d.name_id '
                 . 'JOIN ue_files f ON f.id=o.file_id AND f.scan_status="verified" '
                 . 'JOIN ue_uedb5_files v ON v.file_id=f.id AND v.game_id=f.game_id AND v.format_version=5 '
                 . 'JOIN ue_games g ON g.id=f.game_id '
