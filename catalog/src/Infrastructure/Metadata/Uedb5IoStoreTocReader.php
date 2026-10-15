@@ -40,6 +40,10 @@ final class Uedb5IoStoreTocReader
     private array $chunkMetas = [];
     private string $directoryIndex = '';
     private string $tocSha256 = '';
+    /** @var array<int,list<int>>|null */
+    private ?array $chunkTypeIndex = null;
+    /** @var array<string,int>|null */
+    private ?array $packageChunkIndex = null;
 
     public function __construct(
         private readonly string $utocPath,
@@ -108,13 +112,14 @@ final class Uedb5IoStoreTocReader
     /** @return list<int> */
     public function chunkIndexesByType(int $chunkType): array
     {
-        $indexes = [];
-        foreach ($this->chunks as $index => $chunk) {
-            if ((int)$chunk['chunk_type'] === $chunkType) {
-                $indexes[] = $index;
+        if ($this->chunkTypeIndex === null) {
+            $this->chunkTypeIndex = [];
+            foreach ($this->chunks as $index => $chunk) {
+                $type=(int)$chunk['chunk_type'];
+                $this->chunkTypeIndex[$type][]=$index;
             }
         }
-        return $indexes;
+        return $this->chunkTypeIndex[$chunkType]??[];
     }
 
     public function findPackageChunk(
@@ -123,16 +128,16 @@ final class Uedb5IoStoreTocReader
         ?int $chunkIndex = null
     ): ?int {
         $packageIdHex = strtoupper(trim($packageIdHex));
-        foreach ($this->chunks as $index => $chunk) {
-            if (
-                (int)$chunk['chunk_type'] === $chunkType
-                && (string)$chunk['package_id'] === $packageIdHex
-                && ($chunkIndex === null || (int)($chunk['chunk_index'] ?? -1) === $chunkIndex)
-            ) {
-                return $index;
+        if ($this->packageChunkIndex === null) {
+            $this->packageChunkIndex = [];
+            foreach ($this->chunks as $index => $chunk) {
+                $base=(int)$chunk['chunk_type'].':'.(string)$chunk['package_id'];
+                $this->packageChunkIndex[$base]??=$index;
+                $this->packageChunkIndex[$base.':'.(int)($chunk['chunk_index']??-1)]??=$index;
             }
         }
-        return null;
+        $key=$chunkType.':'.$packageIdHex.($chunkIndex===null?'':':'.$chunkIndex);
+        return $this->packageChunkIndex[$key]??null;
     }
 
     public function readChunk(int $tocIndex): string
