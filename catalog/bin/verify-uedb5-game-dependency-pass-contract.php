@@ -7,7 +7,7 @@ $service=(string)file_get_contents($metadata.'/Uedb5GameDependencyPassService.ph
 $rebuilder=(string)file_get_contents($metadata.'/Uedb5DependencyRebuilder.php');
 $statusRepo=(string)file_get_contents($metadata.'/PdoUedb5MigrationStatusRepository.php');
 $registration=(string)file_get_contents($metadata.'/PdoUedb5StagingRegistrationRepository.php');
-$migration=(string)file_get_contents($root.'/migrations/202610020001_uedb5_dependency_pass_status.php');
+$migration=(string)file_get_contents($root.'/install.sql');
 $cli=(string)file_get_contents($root.'/bin/migrate-uedb5-dependencies.php');
 $pass1=(string)file_get_contents($metadata.'/Uedb5GameSourceMigrationService.php');
 $pass1Cli=(string)file_get_contents($root.'/bin/migrate-uedb5-game.php');
@@ -16,8 +16,8 @@ $check=static function(string $name,bool $ok)use(&$checks,&$failures):void{
     $checks[$name]=$ok;if(!$ok)$failures[]=$name;
 };
 $check('pass2_has_exact_payload_checkpoint',
-    str_contains($migration,'dependency_payload_sha256 BINARY(32)')
-    && str_contains($migration,'dependency_policy VARCHAR(64)'));
+    str_contains($migration,'`dependency_payload_sha256` binary(32)')
+    && str_contains($migration,'`dependency_policy` varchar(64)'));
 $check('pass2_source_ue1_ue2_ue3_ue4_ue5_classic_zen_ut4_semantics_use_v13_policy',
     str_contains($service,"public const DEPENDENCY_POLICY = 'uedb5-dependency-pass-v13'"));
 $check('retired_v1_to_v12_transition_removed',
@@ -27,7 +27,7 @@ $check('retired_v1_to_v12_transition_removed',
 $check('pass1_supports_exact_file_restage_for_format_repairs',
     str_contains($pass1Cli,"'file-id::'")
     &&str_contains($pass1Cli,'$service->runFile($gameId,$fileId,true)')
-    &&str_contains($pass1,'public function runFile(int $gameId, int $fileId, bool $apply)'));
+    &&str_contains($pass1,'public function runFile(int $gameId, int $fileId, bool $apply, ?array &$verifiedSourceSnapshot = null)'));
 $check('pass2_selects_physical_v5_providers',str_contains($service,'PdoUedb5PhysicalProviderSelector'));
 $check('pass2_reports_ambiguous_provider_environment',
     str_contains($service,"'ambiguous_provider_count'")
