@@ -26,8 +26,8 @@ $check = static function (string $name, bool $ok, string $detail = '') use (&$ch
     }
 };
 
-$migration = $read('migrations/202608280001_public_uploads.php');
-$migrationGuard = $read('migrations/202608280002_public_upload_active_identity.php');
+$migration = $read('install.sql');
+$migrationGuard = $migration;
 $settings = $read('src/Infrastructure/Settings/CatalogPublicUploadSettingsStore.php');
 $preflight = $read('src/Infrastructure/Import/CatalogPublicUploadBatchPreflight.php');
 $transfer = $read('src/Infrastructure/Import/CatalogPublicUploadTransferStore.php');
@@ -65,15 +65,13 @@ $install = $read('install.sql');
 
 $check(
     'public_upload_schema',
-    str_contains($migration, "'ue_public_uploads'")
+    str_contains($migration, 'CREATE TABLE ue_public_uploads (')
         && str_contains($migration, 'active_identity_key CHAR(64) NULL')
         && str_contains($migration, 'UNIQUE KEY uq_ue_public_uploads_active_identity')
         && str_contains($migration, 'idx_ue_public_uploads_identity')
         && str_contains($migration, 'submitter_ip VARBINARY(16)')
-        && str_contains($migrationGuard, "version' => '202608280002'")
-        && str_contains($migrationGuard, 'ensureColumn(')
-        && str_contains($migrationGuard, 'ensureIndex('),
-    'Public quarantine/reservation state and the concurrent-identity guard must be migration-backed.'
+        && str_contains($migrationGuard, 'UNIQUE KEY uq_ue_public_uploads_active_identity'),
+    'Current installation schema must include public upload quarantine, reservation and concurrent-identity enforcement.'
 );
 
 $check(
@@ -512,8 +510,6 @@ $check(
 
 $syntaxFailures = [];
 foreach ([
-    'migrations/202608280001_public_uploads.php',
-    'migrations/202608280002_public_upload_active_identity.php',
     'src/Infrastructure/Settings/CatalogPublicUploadSettingsStore.php',
     'src/Infrastructure/Import/CatalogPublicUploadBatchPreflight.php',
     'src/Infrastructure/Import/CatalogPublicUploadTransferStore.php',

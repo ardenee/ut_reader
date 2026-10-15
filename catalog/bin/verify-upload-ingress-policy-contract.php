@@ -27,7 +27,7 @@ $checks = [
         ['pruneStale'],
     ],
     'profiled browser client' => [
-        $root . '/assets/profiled-upload-jobs.js',
+        $root . '/assets/profiled-upload-jobs-core.js',
         [
             'function clientPolicy(file)',
             'unsupported/oversized file(s) skipped',
