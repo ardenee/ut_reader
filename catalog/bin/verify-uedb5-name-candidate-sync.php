@@ -20,7 +20,8 @@ $db->setAttribute(PDO::ATTR_ERRMODE,PDO::ERRMODE_EXCEPTION);
 
 $db->exec('CREATE TABLE ue_uedb5_files(file_id INTEGER PRIMARY KEY,game_id INTEGER,package_key_kind INTEGER,package_key BLOB,package_name TEXT)');
 $db->exec('CREATE TABLE ue_uedb5_search_keys(key_hash BLOB,key_length INTEGER,key_fingerprint BLOB PRIMARY KEY,normalized_text BLOB)');
-$db->exec('CREATE TABLE ue_uedb5_name_candidates(file_id INTEGER,name_key_hash BLOB,name_key_length INTEGER,name_key_fingerprint BLOB,first_name_index INTEGER,PRIMARY KEY(file_id,name_key_fingerprint))');
+$db->exec('CREATE TABLE ue_uedb5_compact_name_dictionary(name_id INTEGER PRIMARY KEY AUTOINCREMENT,name_key_hash BLOB,name_key_length INTEGER,name_key_fingerprint BLOB UNIQUE)');
+$db->exec('CREATE TABLE ue_uedb5_compact_name_candidates(file_id INTEGER,name_id INTEGER,first_name_index INTEGER,PRIMARY KEY(file_id,name_id))');
 $db->exec('CREATE TABLE ue_uedb5_dependency_edges(file_id INTEGER,source_kind INTEGER,source_index INTEGER)');
 $db->exec('INSERT INTO ue_uedb5_dependency_edges VALUES(42,1,7)');
 
@@ -47,12 +48,12 @@ $key=static function(string $value):array{
     return ['hash'=>md5($normalized,true),'length'=>strlen($normalized),'fingerprint'=>hash('sha256',$normalized,true)];
 };
 $beta=$key('Beta');$gamma=$key('Gamma');
-$db->prepare('INSERT INTO ue_uedb5_name_candidates VALUES(?,?,?,?,?)')->execute([
-    42,$beta['hash'],$beta['length'],$beta['fingerprint'],99
-]);
-$db->prepare('INSERT INTO ue_uedb5_name_candidates VALUES(?,?,?,?,?)')->execute([
-    42,$gamma['hash'],$gamma['length'],$gamma['fingerprint'],3
-]);
+$insDict=$db->prepare('INSERT INTO ue_uedb5_compact_name_dictionary(name_key_hash,name_key_length,name_key_fingerprint) VALUES(?,?,?)');
+$insName=$db->prepare('INSERT INTO ue_uedb5_compact_name_candidates(file_id,name_id,first_name_index) VALUES(?,?,?)');
+foreach([[$beta,99],[$gamma,3]] as [$identity,$index]){
+    $insDict->execute([$identity['hash'],$identity['length'],$identity['fingerprint']]);
+    $insName->execute([42,(int)$db->lastInsertId(),$index]);
+}
 
 $sync=new PdoUedb5NameCandidateSynchronizer($db,$tmp);
 $before=$sync->reconcile(42,false);
