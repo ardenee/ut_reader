@@ -19,10 +19,10 @@ catalog_start_session();
 try {
     $config = catalog_config();
     $db = catalog_db($config);
-    catalog_head('PAK Archives');
+    catalog_head('Package Viewer');
     catalog_page_header(
-        'PAK Archives',
-        'Original UE4 and UE5 PAK containers are stored and managed separately from the package files extracted from them.',
+        'Package Viewer',
+        'Browse retained package containers and their indexed package contents. PAK is available now; UE5 IoStore (.utoc/.ucas) browsing is being integrated.',
         ['Import PAK' => 'pak-import.php', 'Background Jobs' => 'background-jobs.php', 'Games' => 'games.php']
     );
 
@@ -43,7 +43,7 @@ try {
         . 'ORDER BY g.name'
     );
 
-    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>UE4 and UE5 game PAK collections</h2><p>Select a game to switch between its normal extracted files and original PAK containers.</p></div></div><div class="ui-section__body">';
+    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>UE4 and UE5 package containers</h2><p>Select a game to browse extracted packages and retained PAK containers. IoStore viewing is not yet enabled.</p></div></div><div class="ui-section__body">';
     if ($games === []) {
         echo CatalogUi::emptyState('No UE4 or UE5 games configured', 'Assign a UE4 or UE5 game profile before importing PAK archives.', ['label' => 'Game manager', 'href' => 'game-manager.php'], '▣');
     } else {
@@ -53,7 +53,7 @@ try {
             echo '<p><span class="mono small">' . catalog_h((string)$game['engine_key']) . '</span><br><strong>' . number_format((int)$game['pak_count']) . '</strong> PAK archive(s)<br>'
                 . number_format((int)$game['entry_count']) . ' indexed entries<br>'
                 . catalog_h(catalog_bytes((int)$game['pak_bytes'])) . ' retained container data</p>';
-            echo '<p><a class="button primary" href="game-paks.php?id=' . (int)$game['id'] . '">View PAK archives</a> '
+            echo '<p><a class="button primary" href="game-paks.php?id=' . (int)$game['id'] . '">Open Package Viewer</a> '
                 . '<a class="button" href="game-files.php?id=' . (int)$game['id'] . '">View extracted files</a> '
                 . '<a class="button" href="pak-import.php?game_id=' . (int)$game['id'] . '">Import PAK</a></p></div>';
         }
@@ -63,8 +63,8 @@ try {
     catalog_foot();
 } catch (Throwable $error) {
     if (!headers_sent()) {
-        catalog_head('PAK archive error');
+        catalog_head('Package Viewer error');
     }
-    echo CatalogUi::alert('danger', catalog_exception_display_message($error), 'PAK archive management could not be loaded.');
+    echo CatalogUi::alert('danger', catalog_exception_display_message($error), 'Package Viewer could not be loaded.');
     catalog_foot();
 }

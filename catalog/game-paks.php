@@ -59,11 +59,11 @@ try {
         throw new RuntimeException('Game not found.');
     }
 
-    catalog_head((string)$game['name'] . ' PAK archives');
+    catalog_head((string)$game['name'] . ' Package Viewer');
     if (!CatalogPakArchiveStore::schemaInstalled($db)) {
         echo CatalogUi::pageHeader(
             (string)$game['name'],
-            'PAK archives are stored separately from extracted package files.',
+            'PAK containers are stored separately from extracted packages; IoStore browsing requires container-level indexing.',
             ['Files' => 'game-files.php?id=' . $gameId, 'Back to games' => 'games.php']
         );
         echo CatalogUi::alert('warning', 'PAK archive management is not installed. Run php catalog/bin/migrate.php migrate.');
@@ -78,7 +78,7 @@ try {
             'PAK archives are managed for UE4 and UE5 game profiles.',
             ['Files' => 'game-files.php?id=' . $gameId, 'Back to games' => 'games.php']
         );
-        echo CatalogUi::emptyState('No PAK archive view', 'This game is not assigned to a UE4 or UE5 profile.', ['label' => 'View files', 'href' => 'game-files.php?id=' . $gameId], '▣');
+        echo CatalogUi::emptyState('No package container view', 'This game is not assigned to a UE4 or UE5 profile.', ['label' => 'View files', 'href' => 'game-files.php?id=' . $gameId], '▣');
         catalog_foot();
         exit;
     }
@@ -117,7 +117,7 @@ try {
         'Switch between extracted package files and their original self-contained UE' . $engineMajor . ' PAK archives.',
         [
             'Files' => 'game-files.php?id=' . $gameId,
-            'PAK archives' => 'game-paks.php?id=' . $gameId,
+            'Package Viewer' => 'game-paks.php?id=' . $gameId,
             'Import PAK' => 'pak-import.php?game_id=' . $gameId,
             'Back to games' => 'games.php',
         ]
@@ -128,7 +128,7 @@ try {
         unset($_SESSION['pak_maintenance_flash']);
     }
 
-    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>PAK archives</h2><p>'
+    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Package Viewer: PAK containers</h2><p>'
         . number_format($total) . ' original archive(s). PAKs are not mixed into the extracted file list.</p></div></div><div class="ui-section__body">';
     echo '<form class="table-controls" method="get"><input type="hidden" name="id" value="' . $gameId . '">';
     echo '<label>Search <input type="search" name="pak_filter" value="' . catalog_h($filter) . '" placeholder="Name, hash or mount point"></label> ';
@@ -190,8 +190,8 @@ try {
     catalog_foot();
 } catch (Throwable $error) {
     if (!headers_sent()) {
-        catalog_head('PAK archive error');
+        catalog_head('Package Viewer error');
     }
-    echo CatalogUi::alert('danger', catalog_exception_display_message($error), 'PAK archive list could not be loaded.');
+    echo CatalogUi::alert('danger', catalog_exception_display_message($error), 'Package Viewer could not be loaded.');
     catalog_foot();
 }

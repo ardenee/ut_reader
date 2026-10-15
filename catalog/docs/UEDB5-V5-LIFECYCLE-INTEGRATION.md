@@ -230,3 +230,11 @@ The service fails closed for invalid package identities, non-verified catalog ro
 4. Enqueue resumable bounded per-package publication and dependency reconciliation, support clean rollback and backup/restore, and validate retries/concurrency on isolated full-schema MySQL prior to production enablement.
 
 Neither this service nor the test modifies production SQL or the Satisfactory installation. Integration with upload/backup/reimport is intentionally gated pending the above container-level contracts.
+
+### Package Viewer naming and future IoStore container import
+
+The UI's generic navigation and PAK browser title are renamed **Package Viewer** (existing `paks.php`, `game-paks.php`, `pak-info.php` URLs intentionally remain stable). The existing backend, `ue_pak_archives` / `ue_pak_entries`, **still handles only self-contained `.pak` archives**; this rename does not enable IoStore browsing. The current UI states that IoStore browsing is being integrated.
+
+An IoStore container comprises a `.utoc` table of contents and companion `.ucas` payload (possibly numbered partitions). The container is the upload/retention unit; **each Zen package inside is catalogued by `FPackageId`**, not by misidentifying either raw companion file as an ordinary `.upk`.
+
+Target Package Viewer workflow: upload a complete container set; validate matching TOC/payload/partition/encryption/compression context; retain its source safely; enumerate its contained packages and provenance; publish each package's V5 metadata and compact search; expose package list, contents and file-info links; run authoritative mounted-container dependency reconciliation. Recovery, reimport, backup restore, and deletion must retain container/member ownership correctly. No public IoStore upload route is enabled until those lifecycle contracts pass real isolated tests.

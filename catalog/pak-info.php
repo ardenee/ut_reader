@@ -151,7 +151,7 @@ CSS;
         (string)$pak['original_name'],
         (string)$pak['game_name'] . ' original self-contained PAK archive.',
         [
-            'PAK archives' => 'game-paks.php?id=' . (int)$pak['game_id'],
+            'Package Viewer' => 'game-paks.php?id=' . (int)$pak['game_id'],
             'Extracted files' => 'game-files.php?id=' . (int)$pak['game_id'],
         ]
     );
@@ -169,7 +169,7 @@ CSS;
     catalog_stat_card('Archive size', catalog_bytes((int)$pak['file_size']));
     echo '</div>';
 
-    echo '<div class="card"><h2>Original PAK details</h2><table class="pak-info-natural-table">';
+    echo '<div class="card"><h2>Original package container details (PAK)</h2><table class="pak-info-natural-table">';
     echo '<tr><th>Game</th><td><a href="game-paks.php?id=' . (int)$pak['game_id'] . '">' . catalog_h((string)$pak['game_name']) . '</a></td></tr>';
     echo '<tr><th>Original filename</th><td>' . catalog_h((string)$pak['original_name']) . '</td></tr>';
     echo '<tr><th>Mount point</th><td class="mono path">' . catalog_h((string)$pak['mount_point']) . '</td></tr>';

@@ -178,7 +178,7 @@
                 + '<td>' + h(pak.import_status) + '</td>'
                 + '<td>' + h(pak.size_text) + '</td>'
                 + '<td><span class="mono small">MD5 ' + h(pak.md5) + '</span><br><span class="mono small">SHA256 ' + h(pak.sha256) + '</span></td>'
-                + '<td class="pak-source-actions"><a class="button" href="pak-info.php?id=' + encodeURIComponent(pak.id) + '">View PAK</a> <a class="button" href="pak-download.php?id=' + encodeURIComponent(pak.id) + '">Download original PAK</a></td>'
+                + '<td class="pak-source-actions"><a class="button" href="pak-info.php?id=' + encodeURIComponent(pak.id) + '">View container</a> <a class="button" href="pak-download.php?id=' + encodeURIComponent(pak.id) + '">Download original PAK</a></td>'
                 + '</tr>';
         }).join('');
         var card = document.createElement('div');
