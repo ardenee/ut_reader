@@ -144,24 +144,33 @@ final class Uedb5SqlProjectionContract
                     ['normalized_text(191)'],
                 ],
             ],
-            'ue_uedb5_name_candidates' => [
-                'cardinality' => 'one_per_file_and_distinct_normalized_fname',
+            'ue_uedb5_compact_name_dictionary' => [
+                'cardinality' => 'one_per_exact_normalized_name_fingerprint',
                 'columns' => [
-                    'file_id', 'name_key_hash', 'name_key_length', 'name_key_fingerprint', 'first_name_index',
+                    'name_id', 'name_key_hash', 'name_key_length', 'name_key_fingerprint',
                 ],
                 'indexes' => [
-                    ['name_key_hash', 'name_key_length', 'name_key_fingerprint', 'file_id'],
-                    ['file_id'],
+                    ['name_id'],
+                    ['name_key_fingerprint'],
+                    ['name_key_hash', 'name_key_length', 'name_key_fingerprint'],
                 ],
-            ],            'ue_uedb5_object_candidates' => [
+            ],
+            'ue_uedb5_compact_name_candidates' => [
+                'cardinality' => 'one_per_file_and_exact_name_id',
+                'columns' => ['file_id', 'name_id', 'first_name_index'],
+                'indexes' => [
+                    ['file_id', 'name_id'],
+                    ['name_id', 'file_id'],
+                ],
+            ],
+            'ue_uedb5_compact_object_candidates' => [
                 'cardinality' => 'one_per_export_or_cell_export',
                 'columns' => [
-                    'file_id', 'object_kind', 'object_index',
-                    'object_name_hash', 'object_name_length', 'public_export_hash',
+                    'file_id', 'object_kind', 'object_index', 'name_id', 'public_export_hash',
                 ],
                 'indexes' => [
                     ['file_id', 'object_kind', 'object_index'],
-                    ['object_name_hash', 'object_name_length', 'file_id', 'object_kind', 'object_index'],
+                    ['name_id', 'file_id', 'object_kind', 'object_index'],
                     ['file_id', 'object_kind', 'public_export_hash', 'object_index'],
                 ],
             ],
@@ -221,15 +230,23 @@ final class Uedb5SqlProjectionContract
                 'key_hash' => 'BINARY(16)', 'key_length' => 'INT UNSIGNED',
                 'key_fingerprint' => 'BINARY(32)', 'normalized_text' => 'MEDIUMBLOB',
             ],
-            'ue_uedb5_name_candidates' => [
-                'file_id' => 'BIGINT UNSIGNED', 'name_key_hash' => 'BINARY(16)',
-                'name_key_length' => 'INT UNSIGNED', 'name_key_fingerprint' => 'BINARY(32)',
+            'ue_uedb5_compact_name_dictionary' => [
+                'name_id' => 'BIGINT UNSIGNED',
+                'name_key_hash' => 'BINARY(16)',
+                'name_key_length' => 'INT UNSIGNED',
+                'name_key_fingerprint' => 'BINARY(32)',
+            ],
+            'ue_uedb5_compact_name_candidates' => [
+                'file_id' => 'BIGINT UNSIGNED',
+                'name_id' => 'BIGINT UNSIGNED',
                 'first_name_index' => 'INT UNSIGNED',
             ],
-            'ue_uedb5_object_candidates' => [
-                'file_id' => 'BIGINT UNSIGNED', 'object_kind' => 'TINYINT UNSIGNED',
-                'object_index' => 'INT UNSIGNED', 'object_name_hash' => 'BINARY(16)',
-                'object_name_length' => 'INT UNSIGNED', 'public_export_hash' => 'BINARY(8) NULL',
+            'ue_uedb5_compact_object_candidates' => [
+                'file_id' => 'BIGINT UNSIGNED',
+                'object_kind' => 'TINYINT UNSIGNED',
+                'object_index' => 'INT UNSIGNED',
+                'name_id' => 'BIGINT UNSIGNED',
+                'public_export_hash' => 'BINARY(8) NULL',
             ],
             'ue_uedb5_dependency_edges' => [
                 'file_id' => 'BIGINT UNSIGNED', 'source_kind' => 'TINYINT UNSIGNED',
