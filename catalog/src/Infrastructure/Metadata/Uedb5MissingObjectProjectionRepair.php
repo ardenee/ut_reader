@@ -28,7 +28,7 @@ final class Uedb5MissingObjectProjectionRepair
             throw new RuntimeException('File must have a verified V5 registration and staged/failed validation status.');
         }
         $count = $this->db->prepare(
-            'SELECT COUNT(*) FROM ue_uedb5_object_candidates WHERE file_id=?'
+            'SELECT COUNT(*) FROM ue_uedb5_compact_object_candidates WHERE file_id=?'
         );
         $count->execute([$fileId]);
         $present = (int)$count->fetchColumn();
