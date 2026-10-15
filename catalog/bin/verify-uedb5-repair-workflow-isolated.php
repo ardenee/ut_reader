@@ -50,13 +50,18 @@ $run = static function (string $case, ?string $childStatus, string $expected) us
     } catch (JobDeferred $e) {
         $delay = match ($case) {
             'queued_child' => 2,
-            'failed_child' => 30,
+            'failed_child', 'cancelled_child', 'dead_letter_child' => 30,
             'missing_child' => 1,
             default => 0,
         };
         $results[$case] = ($expected === 'deferred' && $e->delaySeconds === $delay
             && ($case === 'missing_child' || ($e->progress['stage'] ?? '') === 'compact_repair_dependency_wait')
-            && ($case !== 'failed_child' || ($e->progress['dependency_status'] ?? '') === 'failed'));
+            && (!in_array($case, ['failed_child', 'cancelled_child', 'dead_letter_child'], true)
+                || ($e->progress['dependency_status'] ?? '') === match ($case) {
+                    'failed_child' => 'failed',
+                    'cancelled_child' => 'cancelled',
+                    'dead_letter_child' => 'dead_letter',
+                }));
     } catch (Throwable $e) {
         $results[$case]=false;
         $results[$case.'_error']=$e->getMessage();
@@ -65,6 +70,8 @@ $run = static function (string $case, ?string $childStatus, string $expected) us
 $run('completed_child','completed','completed');
 $run('queued_child','queued','deferred');
 $run('failed_child','failed','deferred');
+$run('cancelled_child','cancelled','deferred');
+$run('dead_letter_child','dead_letter','deferred');
 $run('missing_child',null,'deferred');
 $failures=array_keys(array_filter($results,static fn($v):bool=>$v!==true));
 echo json_encode(['ok'=>$failures===[],'sqlite_memory_only'=>true,'checks'=>$results,'failures'=>$failures],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES).PHP_EOL;
