@@ -184,7 +184,7 @@ final class CatalogCompactMetadataRepairJobHandler implements JobHandler
                         'dependency_job_id' => (int)$dependency['id'],
                         'dependency_status' => $status,
                     ]
-                ));
+                ), false);
             }
             if ($status !== 'completed') {
                 $inner = json_decode((string)($dependency['progress_json'] ?? ''), true);

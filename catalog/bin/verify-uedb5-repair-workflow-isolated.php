@@ -54,7 +54,9 @@ $run = static function (string $case, ?string $childStatus, string $expected) us
             'missing_child' => 1,
             default => 0,
         };
+        $terminalChild = in_array($case, ['failed_child', 'cancelled_child', 'dead_letter_child'], true);
         $results[$case] = ($expected === 'deferred' && $e->delaySeconds === $delay
+            && $e->retainWorkerAffinity === !$terminalChild
             && ($case === 'missing_child' || ($e->progress['stage'] ?? '') === 'compact_repair_dependency_wait')
             && (!in_array($case, ['failed_child', 'cancelled_child', 'dead_letter_child'], true)
                 || ($e->progress['dependency_status'] ?? '') === match ($case) {
