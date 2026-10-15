@@ -104,3 +104,17 @@ For an actual Pass 1 repair, the same-process worker now hands the already MD5/S
 UT2004's explicit game-profile compatibility allowance for legacy UE1 texture packages uses the UE1 reader and a distinct V5 source-policy identifier, rather than forcing a UE2 parse or broadening accepted versions.
 
 For a full game in PowerShell, run `powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\catalog\bin\run-uedb5-staged-repair.ps1 -Game ut2004 -BatchSize 500` from the repository root. The wrapper launches fresh PHP processes for bounded batches, emits last-file-ID checkpoints, and checks free disk space on the MySQL D: volume before each batch (default minimum 15 GiB). Use `-MaxBatches 1` for a single bounded trial. Stop on errors; rerunning from the beginning skips files already marked validated. To parallelize CPU-heavy validation, use separate processes with `-Workers 2 -WorkerIndex 0` and `-Workers 2 -WorkerIndex 1` (each in its own PowerShell console/log). Each selects disjoint staged file IDs using `MOD(file_id, workers) = worker_index`, so cursors and writes cannot overlap. Do not run a partitioned invocation while the original unpartitioned invocation for the same game remains active. Start with two workers; greater concurrency may increase MySQL contention. The final cutover readiness verifier must still pass before any legacy metadata tables are removed.
+
+## Post-cutover operational verification (October 2026)
+
+The production V5-only cutover and 235,239-file migration are complete. Do not rerun migration/backfill commands or treat removed pre-cutover candidate tables (`ue_uedb5_name_candidates`, `ue_uedb5_object_candidates`) as active dependencies.
+
+Current bounded, non-destructive PRD checks (using `C:\php8.5\php.exe`):
+
+- `catalog/bin/verify-uedb5-post-cutover-bounded.php` — registered/validated verified-file coverage, legacy table absence, runtime fallback checks, and two container hash samples per game.
+- `catalog/bin/verify-uedb5-compact-schema-live.php` — authoritative compact tables, indexes, and foreign keys through `information_schema` without candidate row scans.
+- `catalog/bin/verify-uedb5-isolated-recovery.php` — temporary-file healthy/missing/truncated/corrupted/restored container cases.
+- `catalog/bin/verify-compact-metadata-repair-contract.php` — source-level queued-repair and affected-dependency contract.
+- `catalog/bin/verify-uedb5-compact-v2-publisher.php` — session-temporary compact publication and rollback for all seven games.
+
+The former backfill planners, launchers, and surrogate benchmark scripts were retired after deletion of their source candidate tables. Passing these checks does not establish exhaustive original-byte/source parity or end-to-end queued repair execution; those require separate controlled integration fixtures. Production storage and database must not be intentionally corrupted for testing.

@@ -14,7 +14,7 @@ UEDB4 must never be treated as the authoritative source for a UEDB5 field that U
 
 This contract freezes the UEDB5 container framing, common logical model, dependency outcome/provenance model, and engine-family extension rules. Per-engine package and dependency specifications remain authoritative for the meaning and version gates of source fields.
 
-Production runtime remains UEDB4 until the separate UEDB5 migration, validation, and cutover steps are complete.
+Production runtime is UEDB5-only following the completed cutover. UEDB4 is not a runtime fallback, and retired UEDB4/legacy SQL metadata tables are not part of the current production schema. Historical migration material below documents the transition and must not be interpreted as a current operational procedure.
 
 ## Authoritative local source roots
 
