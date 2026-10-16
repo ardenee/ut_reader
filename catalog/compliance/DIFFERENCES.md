@@ -43,3 +43,13 @@ The user provided an authoritative **isolated integration DB** check for `contai
 5. **Expand independent source-derived inventories for UE1–UE5**, prioritizing reachable package parsing/dependency semantics rather than runtime-only callback names.
 
 **Audit honesty rule:** a classified source symbol is not a difference, a fix, or certified parity. Every actual difference must have an explicit expected/actual comparison and closure evidence.
+
+
+## 2026-10-16 synchronization checkpoint (non-destructive)
+
+- GitHub main: `4a533498` when staging completed.
+- Live DEV: `D:\Apache24\htdocs\unrealdb` at `5ac0d8f0`, **112 locally modified tracked files**, all 112 paths also changed upstream.
+- Live PRD: `C:\Apache24\htdocs\unrealdb` at `5ac0d8f0`, **330 locally modified tracked files**, all 330 paths also changed upstream.
+- Saved *tracked* local Git diffs / status manifests: `C:\Temp\unrealdb-prd-20261016-audit-sync.patch`, `C:\Temp\unrealdb-prd-20261016-audit-sync-status.txt`, `D:\Temp\unrealdb-dev-20261016-audit-sync.patch` and status manifest on DEV. These are **not full backups of untracked files or databases**.
+- Clean, detached current-main worktrees: PRD `C:\Temp\unrealdb-prd-main-20261016`, DEV `D:\Temp\unrealdb-dev-main-20261016`. Both match `4a533498`, zero modified tracked files, and pass the bounded **12/12** UE5 audit tests.
+- **Live applications are NOT upgraded or version-aligned yet.** Full cutover must merge/reconcile the local overlapping modifications and separately protect untracked files, deployment config and databases before activating code. Staging new worktrees is not equivalent to deploying them.
