@@ -1,0 +1,75 @@
+{
+  "schema": 1,
+  "batch": "B003",
+  "engine": "UE5",
+  "profile": "UE5.8.3",
+  "status": "partial",
+  "inventory_a": "FGlobalImportStore call tracing",
+  "inventory_b": "FPackageObjectIndex constructors, conditional registrations and cooked debug table",
+  "complete_inventory": false,
+  "operations": [
+    {
+      "id": "UE5-583-SCRIPT-004",
+      "summary": "Runtime script object indices originate from script paths and registration including public nested objects",
+      "source": {
+        "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+        "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9",
+        "symbols": [
+          "FGlobalImportStore::AddScriptObject",
+          "FPackageObjectIndex::FromScriptPath"
+        ],
+        "lines": [
+          2712,
+          2721,
+          2737
+        ]
+      },
+      "implementation": {
+        "path": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenDependencyResolver.php",
+        "sha256": "d9799db4159c612c6d8bb330f8dccd3294efec00b7abdc32c9054081609c9381"
+      },
+      "tests": [
+        "catalog/bin/verify-uedb5-ue5-zen-dependency-resolution.php"
+      ],
+      "disposition": "partial",
+      "reason": "UnrealDB deliberately does not reconstruct live UObject registrations from offline package data; editor branch and nested public objects documented but not certified."
+    },
+    {
+      "id": "UE5-583-SCRIPT-005",
+      "summary": "Runtime lookup uses ScriptObjects.FindRef; debug chunk only supplies optional diagnostic fallback name",
+      "source": {
+        "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+        "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9",
+        "symbols": [
+          "FGlobalImportStore::FindScriptImportObject",
+          "GetImportName",
+          "FCookedScriptObjectsDebug::LoadDebugData"
+        ],
+        "lines": [
+          2604,
+          2608,
+          2851,
+          2863,
+          6983
+        ]
+      },
+      "implementation": {
+        "path": "catalog/src/Infrastructure/Metadata/Uedb5ZenScriptObjectsReader.php",
+        "sha256": "1885cc3cb3f6479aae6c9ab80afe2f3985bbbfbe7e84ba44e1f89e043244fd86"
+      },
+      "tests": [
+        "catalog/bin/verify-uedb5-zen-script-objects-standalone.php"
+      ],
+      "disposition": "partial",
+      "reason": "Source confirms GetImportName diagnostic fallback is not proof of loaded UObject; real chunk and consumer tests remain."
+    }
+  ],
+  "next_batch": "B004",
+  "gate_status": {
+    "inventory": false,
+    "contracts": false,
+    "implementation": false,
+    "independent_verification": false,
+    "change_integrity": true
+  }
+}
