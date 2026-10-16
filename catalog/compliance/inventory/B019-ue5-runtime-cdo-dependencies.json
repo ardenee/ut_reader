@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "batch": "B019",
+  "source": {
+    "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+    "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9"
+  },
+  "classification": "source-body-first",
+  "status": "partial",
+  "reviewed": [
+    {
+      "symbol": "FAsyncPackage2::SetupScriptDependencies",
+      "line": 6863,
+      "disposition": "runtime-dependent",
+      "reason": "Uses live unresolved CDO registration and includes optional header dependencies under WITH_EDITOR; offline V5 may retain references but cannot reproduce CDO readiness or scheduling.",
+      "verified": false
+    }
+  ],
+  "evidence_limitations": [
+    "Source body inspection is bounded; branch/call coverage and negative/real-file tests remain open",
+    "Runtime-only exclusions require explicit source-backed scope and dependency analysis"
+  ],
+  "next_batch": "B020"
+}
