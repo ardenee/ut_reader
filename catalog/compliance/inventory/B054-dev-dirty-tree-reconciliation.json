@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "batch": "B054",
+  "status": "blocked",
+  "dev": {
+    "head": "5ac0d8f0fb58a09c447881d093ad13fa35dedf93",
+    "branch": "main",
+    "behind_origin_main": 461,
+    "ahead_origin_main": 0,
+    "modified_tracked_files": 112,
+    "diff_insertions": 6932,
+    "diff_deletions": 1445
+  },
+  "finding": "DEV has substantial uncommitted implementation changes and is 461 commits behind GitHub main. Do not perform bulk pull/reset/copy or cherry-pick missing projection publisher without reconciling dirty paths.",
+  "safe_path": "Use isolated review checkout for current-main SQLite/integration tests; copy only explicit audited checkpoint files to DEV; preserve existing DEV working files.",
+  "next_batch": "B055",
+  "certified": false
+}
