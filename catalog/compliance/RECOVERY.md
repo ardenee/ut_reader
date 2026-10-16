@@ -15,13 +15,13 @@ second competing audit system is introduced.
   reconciled. UE4.27.2 classic and UE5.8.3 classic/IoStore format targets
   are listed separately because the seven-game registry is not a complete
   list of supported format readers.
-* UE5 formal batch manifests: **15 containing 18 operations; 6 verified (B004, B005, B009, B010, B011, B012), 12 partial**.
+* UE5 formal batch manifests: **15 containing 18 operations; 7 verified (B004, B005, B006, B009, B010, B011, B012), 11 partial**.
   Baseline was 33 formal open evidence gates. B005 now has exhaustive scoped
   source/inventory/implementation acceptance, including the pinned hybrid
   editor branch model, real V5 selector/rebuilder and isolated temporary MySQL.
   B004, B009 and B010 now have complete source-defined, operation-level
-  executable acceptance. **21 original evidence gates remain open.** Full application/engine compliance remains unverified.
-* D001-D015: fifteen known differences linked to original operations or
+  executable acceptance. **19 original evidence gates remain open.** Full application/engine compliance remains unverified.
+* D001-D016: sixteen known differences linked to original operations or
   explicitly categorized as cross-cutting or previously uncovered behavior.
   D010/D011 are now marked fixed and regression-verified. Original B009 and
   B010 now pass source-contract, implementation, caller, downstream V5 and
@@ -58,7 +58,7 @@ second competing audit system is introduced.
 | 4 | UE5-583-IMPORTED-PACKAGE-NAMES-001 | **VERIFIED**: source-pinned name batch + separate int32 per name, UTF16, empty names, trailing-header allowance D014, malformed bounds, synthetic IoStore and V5 round-trip |
 | 5 | UE5-583-OPTIONAL-EXPORT-SEGMENT-001 | **VERIFIED**: separate main/optional package IDs and index-1 chunks, editor/runtime loading gates, main-first public export hash (D015), V5 and dependency consumers |
 | 6 | UE5-583-BACKEND-STATUS-001 | **VERIFIED**: ordinary and hybrid source branch oracles, exhaustive caller inventory, selector/rebuilder and real temporary-table SQL test. Runtime authority is explicit, never guessed. |
-| 7 | UE5-583-FILE-STORE-001 | Complete mounted family, order/sequence, first-wins maps |
+| 7 | UE5-583-FILE-STORE-001 | **VERIFIED**: pinned Epic source order/sequence, file-entry selection, NAME_None redirect/localization refill (D016), backend/physical consumers; no runtime session fabricated |
 | 8 | UE5-583-IMPORT-REDIRECT-001 | Core redirect, localization, package-store arbitration and identity rewrites |
 | 9 | UE5-583-PUBLIC-EXPORT-001 | Exact package + export hash lookup and collision scenarios |
 | 10 | UE5-583-B016-1 | Public cell exports separate from ordinary public exports |

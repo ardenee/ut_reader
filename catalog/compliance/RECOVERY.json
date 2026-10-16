@@ -312,6 +312,14 @@
       "rationale": "Epic UE5.8.3 GetPublicExportIndex searches main exports first, then optional WITH_EDITOR. UnrealDB classified a matching hash in both as ambiguous. Independent regression failed before 27788226 and passed after; main+optional archive store entries now use distinct provider IDs and missing optional chunk is rejected. B012 original metadata/consumer operation is verified by source and end-to-end drivers.",
       "state": "fixed_regression_verified",
       "audit_escape": "none"
+    },
+    {
+      "id": "UE5-D016",
+      "kind": "mapped",
+      "operations": ["UE5-583-FILE-STORE-001"],
+      "rationale": "Epic FilePackageStore.cpp:788-808 uses FindOrAdd but allows a later mounted entry to fill redirect/localization name while its saved FName is NAME_None. UnrealDB made the first observed source ID unconditional, blocking valid lower-mount name/target. Two independent source-shaped cases failed before 7a8708fb and pass afterwards; first-wins valid names, physical entries and missing-name-unknown behavior are preserved. Original B006 has bounded operation-level acceptance.",
+      "state": "fixed_regression_verified",
+      "audit_escape": "none"
     }
   ],
   "coverage_gaps": [

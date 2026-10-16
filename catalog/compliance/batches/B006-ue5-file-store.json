@@ -1,45 +1,144 @@
 {
-  "schema": 1,
-  "batch": "B006",
-  "engine": "UE5",
-  "profile": "UE5.8.3",
-  "status": "partial",
-  "inventory_a": "Source call-path inventory",
-  "inventory_b": "Source structure and conditional behavior inventory",
-  "complete_inventory": false,
-  "source_root_hint": "L:/Source/Engine/UE5/UE 5.8.3",
-  "operations": [
-    {
-      "id": "UE5-583-FILE-STORE-001",
-      "summary": "UE5 mounted file-store sorting and redirect precedence",
-      "source": {
-        "path": "Engine/Source/Runtime/PakFile/Private/FilePackageStore.cpp",
-        "sha256": "dfdd4e226b3a41f36476ddd93225aa34284ea63943f1752216e0f2a25c2a2418",
-        "symbols": [
-          "FFilePackageStoreBackend::Mount",
-          "FFilePackageStoreBackend::GetPackageRedirectInfo"
-        ]
-      },
-      "implementation": {
-        "path": "catalog/src/Infrastructure/Metadata/Uedb5ZenEffectivePackageStoreContextBuilder.php",
-        "sha256": "089d7c337a29f64621b216d6ad7694651a527da5b35dcbd53a0935438ecc329e"
-      },
-      "tests": [
-        "catalog/bin/verify-uedb5-zen-effective-store-context.php",
-        "catalog/bin/verify-uedb5-physical-provider-selector.php",
-        "catalog/bin/verify-uedb5-satisfactory-header-readonly-isolated.php"
-      ],
-      "related_differences": ["UE5-D008"],
-      "disposition": "partial",
-      "reason": "File backend collects explicitly mounted headers ordered by mount Order and Sequence; first-wins redirect behavior must not be inferred from file listing. Runtime mount discovery and real container evidence remain open."
+    "schema": 1,
+    "batch": "B006",
+    "engine": "UE5",
+    "profile": "UE5.8.3",
+    "status": "verified",
+    "inventory_a": "Source call-path inventory",
+    "inventory_b": "Source structure and conditional behavior inventory",
+    "complete_inventory": true,
+    "source_root_hint": "L:/Source/Engine/UE5/UE 5.8.3",
+    "operations": [
+        {
+            "id": "UE5-583-FILE-STORE-001",
+            "summary": "UE5 mounted file-store sorting and redirect precedence",
+            "source": {
+                "path": "Engine/Source/Runtime/PakFile/Private/FilePackageStore.cpp",
+                "sha256": "dfdd4e226b3a41f36476ddd93225aa34284ea63943f1752216e0f2a25c2a2418",
+                "symbols": [
+                    "FFilePackageStoreBackend::Mount",
+                    "FFilePackageStoreBackend::GetPackageRedirectInfo"
+                ]
+            },
+            "implementation": {
+                "path": "catalog/src/Infrastructure/Metadata/Uedb5ZenEffectivePackageStoreContextBuilder.php",
+                "sha256": "089d7c337a29f64621b216d6ad7694651a527da5b35dcbd53a0935438ecc329e"
+            },
+            "tests": [
+                "catalog/bin/verify-uedb5-zen-effective-store-context.php",
+                "catalog/bin/verify-uedb5-physical-provider-selector.php",
+                "catalog/bin/verify-uedb5-satisfactory-header-readonly-isolated.php",
+                "catalog/bin/verify-uedb5-b006-mounted-source.php",
+                "catalog/bin/verify-uedb5-b006-operation-acceptance.php",
+                "catalog/bin/verify-uedb5-zen-mounted-store-context.php",
+                "catalog/bin/verify-uedb5-zen-context-options-standalone.php"
+            ],
+            "related_differences": [
+                "UE5-D008",
+                "UE5-D016"
+            ],
+            "disposition": "verified",
+            "reason": "B006 verified within source-defined mounted file-store policy: D008 first-mounted physical entry, D016 NAME_None refill, order/sequence, redirects/localization and backend priority/consumer checks; no whole-session mount authority inferred.",
+            "correction_commits": [
+                "801ab77d",
+                "7a8708fb95f66b900e09ea70a89dc216bc96860a"
+            ],
+            "source_contract_evidence": {
+                "test_driver": "catalog/bin/verify-uedb5-b006-mounted-source.php",
+                "expected_checks": [
+                    "b006_file_store_epic_sha",
+                    "b006_mount_stable_sort",
+                    "b006_mount_order_before_sequence",
+                    "b006_mount_sequence_descending",
+                    "b006_update_pairs_from_container_ids",
+                    "b006_redirect_find_or_add",
+                    "b006_redirect_none_allows_refill",
+                    "b006_localized_find_or_add",
+                    "b006_localized_none_allows_refill",
+                    "b006_runtime_localization_skips_editor",
+                    "b006_direct_redirect_first",
+                    "b006_source_none_redirect_refilled_by_lower_mount",
+                    "b006_source_none_localized_refilled_by_lower_mount",
+                    "b006_valid_high_redirect_wins",
+                    "b006_valid_high_localization_wins",
+                    "b006_top_mount_package_id_priority_still_first",
+                    "b006_missing_name_is_not_assumed_none",
+                    "b006_no_unauthenticated_runtime_authority"
+                ],
+                "source_branches": [
+                    "Mount: Order descending, Sequence descending, unique explicit mount evidence",
+                    "Update: mounted PackageIds -> physical lookup entries, source-backed first effective file ID",
+                    "Update: FindOrAdd redirect and localization sources can refill NAME_None from later mount",
+                    "GetPackageRedirectInfo: direct redirect first; localization only with actual runtime culture, non-editor and matching mounted target",
+                    "Across backends, FPackageStore uses configured backend priority and terminal statuses"
+                ]
+            },
+            "source_reachability_evidence": {
+                "test_driver": "catalog/bin/verify-uedb5-b006-mounted-source.php",
+                "expected_checks": [
+                    "b006_all_production_builder_callers_counted",
+                    "b006_file_store_epic_sha",
+                    "b006_source_none_redirect_refilled_by_lower_mount",
+                    "b006_source_none_localized_refilled_by_lower_mount"
+                ],
+                "source_inventory_record": "catalog/compliance/B006-FILE-STORE-SOURCE.md"
+            },
+            "guarded_implementation_files": [
+                {
+                    "path": "catalog/src/Infrastructure/Metadata/Uedb5ZenMountedStoreContextBuilder.php",
+                    "sha256": "db25a6b43abd139fbc1c5c1796838ae9bbf4eae4e1a1955ee37cd70d53b18595"
+                },
+                {
+                    "path": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
+                    "sha256": "fa8bd1531e4a5a83fc1a67719be63fd5120bd1ebe0e4af78fc0d92f8ecd0724d"
+                }
+            ],
+            "independent_inventory_evidence": {
+                "source_review": "catalog/compliance/B006-FILE-STORE-SOURCE.md",
+                "scope_boundary": "Only observed mounted container IDs/order/sequence/package entries; does not invent runtime-authoritative culture or editor state.",
+                "pinned_independent_source_oracle": "catalog/bin/verify-uedb5-b006-mounted-source.php",
+                "consumer_tests": "catalog/bin/verify-uedb5-physical-provider-selector.php",
+                "end_to_end_acceptance": "catalog/bin/verify-uedb5-b006-operation-acceptance.php"
+            },
+            "test_results": {
+                "test_driver": "catalog/bin/verify-uedb5-b006-operation-acceptance.php",
+                "expected_checks": [
+                    "b006_driver_source_passes",
+                    "b006_driver_mount_passes",
+                    "b006_driver_effective_passes",
+                    "b006_driver_options_passes",
+                    "b006_driver_backend_passes",
+                    "b006_driver_selector_passes",
+                    "b006_source_priority_order_and_findoradd",
+                    "b006_source_none_and_unknown_name_boundary",
+                    "b006_mount_and_evidenced_physical_selection",
+                    "b006_cross_backend_priority_and_consumer_callers",
+                    "b006_authority_and_game_isolation",
+                    "b006_live_physical_selector_consumer"
+                ],
+                "result": "Six passing drivers and 12 required assertions; NAME_None redirects/localizations each failed before D016 and pass after; existing first-wins tests and physical/provider/authority checks still pass."
+            },
+            "acceptance_evidence": {
+                "reachable_source_branches": "Pinned FilePackageStore mount stable sorting, package ID map, explicit redirect versus localized lookup, NAME_None fallback, WITH_EDITOR conditional and backend status behavior.",
+                "epic_to_unrealdb_mapping": "Source-to-method/caller mapping and production options in catalog/compliance/B006-FILE-STORE-SOURCE.md.",
+                "independent_differential": "Independent source scanner and synthesized patch/base mount fixtures; D016 two red-before green-after branches; D008 real retained two-file Satisfactory header/SQL evidence separately documented.",
+                "all_v5_consumers": "Game dependency pass per-game context, effective file-backend and multi-backend arbitration, PDO physical provider selector; source scanner guards all three direct builder call sites.",
+                "independent_reviewer": "Separate source-derived oracle and six-driver acceptance. Not C++ runtime execution or external human review."
+            }
+        }
+    ],
+    "next_batch": "B007",
+    "gate_status": {
+        "inventory": true,
+        "contracts": true,
+        "implementation": true,
+        "independent_verification": true,
+        "change_integrity": true
+    },
+    "reconciliation_evidence": {
+        "source": "Epic FilePackageStore.cpp:332-385,447-459,662-828, and PackageStore.cpp:565-593",
+        "record": "catalog/compliance/B006-FILE-STORE-SOURCE.md",
+        "consumer_inventory": "Uedb5ZenMountedStoreContextBuilder, EffectivePackageStoreContextBuilder, Uedb5GameDependencyPassService, physical provider selector and backend arbitrator",
+        "scope": "Source-defined mounted file-store priority, data mapping, redirects/localization, not proof of live full-runtime completeness"
     }
-  ],
-  "next_batch": "B007",
-  "gate_status": {
-    "inventory": false,
-    "contracts": false,
-    "implementation": false,
-    "independent_verification": false,
-    "change_integrity": true
-  }
 }
