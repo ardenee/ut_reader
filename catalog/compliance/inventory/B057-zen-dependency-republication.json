@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "batch": "B057",
+  "status": "partial",
+  "test": "catalog/bin/verify-uedb5-dependency-projection-publisher.php",
+  "mode": "isolated in-memory SQLite",
+  "finding": "Re-publishing a Zen dependency snapshot with an obsolete unresolved edge removed replaces compact SQL rows and leaves only the surviving source_index.",
+  "checks": [
+    "republication_removes_stale_zen_dependency_edge"
+  ],
+  "certified": false,
+  "next_batch": "B058"
+}
