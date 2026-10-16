@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "batch": "B053",
+  "status": "partial",
+  "finding": "DEV checkout HEAD=5ac0d8f0 is behind and different from GitHub review main=a612ec72. DEV git ls-files does not track catalog/src/Infrastructure/Metadata/PdoUedb5DependencyProjectionPublisher.php, confirming branch/version divergence instead of autoload fault. The isolated SQLite publisher regression passes on current review main.",
+  "evidence": {
+    "dev_head": "5ac0d8f0",
+    "review_main": "a612ec72",
+    "dev_publisher_tracked": false,
+    "isolated_sqlite_regression": "pass"
+  },
+  "decision": "Avoid cherry-picking runtime publisher alone; reconcile the DEV worktree and deployment policy before full sync.",
+  "certified": false,
+  "next_batch": "B054"
+}
