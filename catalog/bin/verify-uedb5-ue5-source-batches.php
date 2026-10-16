@@ -1,0 +1,31 @@
+<?php
+declare(strict_types=1);
+if(PHP_SAPI!=='cli'){exit(1);}
+$root=dirname(__DIR__);
+$tests=[
+ 'audit-ue5-source-definitions.php',
+ 'audit-ue5-store-definitions.php',
+ 'verify-uedb5-zen-reason-flow-contract.php',
+ 'verify-uedb5-dependency-projection-publisher.php',
+ 'verify-uedb5-ue5-zen-dependency-resolution.php',
+ 'verify-uedb5-ue5-zen-package.php',
+ 'verify-uedb5-zen-export-filter-context.php',
+ 'verify-uedb5-zen-dependency-partitions.php',
+ 'verify-uedb5-zen-object-index-boundaries.php',
+ 'verify-uedb5-zen-export-map-fields.php',
+ 'verify-uedb5-zen-malformed-export-map.php',
+ 'verify-uedb5-zen-backend-arbitration.php',
+];
+$results=[];$failures=[];
+foreach($tests as $test){
+ $script=$root.'/bin/'.$test;
+ $output=[];$code=127;
+ if(is_file($script)){
+  exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' 2>&1',$output,$code);
+ }
+ $lastOutput=implode("\n",array_slice($output,-5));
+ $results[]=['test'=>$test,'exit_code'=>$code,'ok'=>$code===0,'error_excerpt'=>$code===0?null:$lastOutput];
+ if($code!==0)$failures[]=$test;
+}
+echo json_encode(['ok'=>$failures===[],'total'=>count($tests),'passed'=>count($tests)-count($failures),'failed'=>count($failures),'tests'=>$results,'failures'=>$failures],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;
+exit($failures===[]?0:1);
