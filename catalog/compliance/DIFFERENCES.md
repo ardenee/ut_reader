@@ -4,9 +4,9 @@ This is the **engineering audit tracker**, distinct from method classification a
 
 ## Current engineering status — 2026-10-16
 
-- **Source-code deployment:** Prior confirmed GitHub/DEV/PRD alignment at `c0932c01`. The next source-backed IoStore header fix is `f847f4ea` (UE5-D007); verify deployment alignment in the last synchronization result. All work preserves untracked files, configuration, databases and old stashes. The V5 provider-consensus fix `450d3542` was tested with disposable SQLite and MySQL session-temporary tables and made no persistent catalog database writes.
+- **Source-code deployment:** After the D008 correction (`801ab77d`) and evidence update (`1f3a6f68`), GitHub `main`, DEV and PRD all verified at `1f3a6f6804345b7b32168f1753181dc55d07e518`; tracked worktrees were clean and PRD root/catalog HTTP returned 200. Untracked files, configuration, databases and old stashes were preserved; no production persistent catalog data was rewritten.
 - **Formal verifier:** 15 manifests / 18 operations; 18 pinned source hashes and 36 source symbol checks pass; **0 operations fully verified, 33 verification gates open, 0 validator issues**. These are evidence gates, not 33 discovered defects.
-- **Bounded tests:** the PRD suite now passes **18/18** (D001/D007 and four mounted-store/provider-selection contracts), with D008 red-before/green-after and real retained Satisfactory data evidence. Verify 18/18 on DEV after synchronization. PRD HTTP root/catalog previously returned 200. Full session-mounted context, dependency-pass correctness and production DB acceptance are not yet claimed.
+- **Bounded tests:** PRD **and DEV each pass 18/18** (D001/D007 and four mounted-store/provider-selection contracts), with D008 negative-before/positive-after regression and read-only authentic Satisfactory two-provider evidence. The formal 18-operation register remains distinct from the 18 bounded tests. Full session-mounted authority, dependency-pass publication and production DB acceptance are not claimed.
 - **Historical notes below are chronology, not the active backlog.** Do not revive old DEV/PRD stash reconciliation as an audit obligation.
 
 ## Demonstrated differences / limitations
