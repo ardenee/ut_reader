@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "batch": "B095",
+  "source": {
+    "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+    "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9"
+  },
+  "classification": "bounded source-body review",
+  "status": "partial",
+  "reviewed": [
+    {
+      "symbol": "FAsyncPackage2::ExecutePostLoadLinkerLoadPackageExports",
+      "line": 8109,
+      "disposition": "runtime-only",
+      "reason": "Routes classic linker export UObjects to thread-safe postload where ready; maintains BeginLoad/EndLoad and defers unsafe postloads.",
+      "verified": false
+    },
+    {
+      "symbol": "FAsyncPackage2::ExecuteDeferredPostLoadLinkerLoadPackageExports",
+      "line": 8170,
+      "disposition": "runtime-only",
+      "reason": "Deferred classic postload considers linker export map and newly constructed UObjects, including reinstantiation changes and thread-safety/flush constraints.",
+      "verified": false
+    },
+    {
+      "symbol": "FAsyncPackage2::MoveConstructedObjectsToPhase2",
+      "line": 12219,
+      "disposition": "runtime-only",
+      "reason": "Moves constructed objects, class default subobjects and linker root from async phase1 to phase2 once load/init flags are clear.",
+      "verified": false
+    }
+  ],
+  "evidence_limitations": [
+    "Static source-method classification does not certify runtime behavior",
+    "External reads can be file-format relevant without being represented by ordinary import rows"
+  ],
+  "next_batch": "B096"
+}
