@@ -97,6 +97,7 @@ final class CatalogCompactDependencyReadService
                 'resolved_export_id' => null,
                 'resolved_export_index' => $row['resolved_object_index'] !== null ? (int)$row['resolved_object_index'] : null,
                 'status' => (string)($row['outcome'] ?? 'missing'),
+                'reason_code' => (string)($row['reason_code'] ?? ''),
                 'resolution_source' => (string)($detail['resolution_source'] ?? $detail['source'] ?? 'uedb5'),
                 'resolution_confidence' => (string)($detail['resolution_confidence'] ?? $detail['confidence'] ?? 'source-exact'),
                 'resolved_id' => $resolvedRow !== [] ? (int)$resolvedRow['id'] : null,
