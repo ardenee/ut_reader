@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "batch": "B005",
+  "engine": "UE5",
+  "profile": "UE5.8.3",
+  "status": "partial",
+  "inventory_a": "Source call-path inventory",
+  "inventory_b": "Source structure and conditional behavior inventory",
+  "complete_inventory": false,
+  "source_root_hint": "L:/Source/Engine/UE5/UE 5.8.3",
+  "operations": [
+    {
+      "id": "UE5-583-BACKEND-STATUS-001",
+      "summary": "UE5 package store terminal status and backend priority",
+      "source": {
+        "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/PackageStore.cpp",
+        "sha256": "fb5c1930f5b8e6611392c3009dde16922661c7942f2eaa8d875492c8981f67b9",
+        "symbols": [
+          "FPackageStore::GetPackageStoreEntry",
+          "FPackageStore::Mount"
+        ]
+      },
+      "implementation": {
+        "path": "catalog/src/Infrastructure/Metadata/Uedb5ZenPackageStoreBackendArbitrator.php",
+        "sha256": "b917e7aea4259a93d19499bba0840bea05af8a545230f1ea02235f57635dcefd"
+      },
+      "tests": [
+        "catalog/bin/verify-uedb5-zen-backend-arbitration.php"
+      ],
+      "disposition": "partial",
+      "reason": "None/Missing continue; NotInstalled/Pending/Ok stop; priority descending and equal-priority newer first. NotInstalled omission was fixed and tested. Wider status propagation to V5 publisher/provider selector remains an open check."
+    }
+  ],
+  "next_batch": "B006",
+  "gate_status": {
+    "inventory": false,
+    "contracts": false,
+    "implementation": false,
+    "independent_verification": false,
+    "change_integrity": true
+  }
+}
