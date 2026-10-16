@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "batch": "B043",
+  "status": "partial",
+  "source": {
+    "path": "Engine/Source/Runtime/CoreUObject/Public/Serialization/AsyncLoading2.h",
+    "sha256": "088f00a8c970458e4bb717490ac4d50361d635ddf8cb0b7b1a5c93ff4d9feef2",
+    "line": 253,
+    "symbol": "EExportFilterFlags"
+  },
+  "enum_values": {
+    "None": 0,
+    "NotForClient": 1,
+    "NotForServer": 2
+  },
+  "finding": "Epic enum has only 0,1,2 named enumerators; raw value 3 was preserved in B042 byte-level regression but is not a declared enum enumerator. Do not infer full validity of flag 3 from preservation.",
+  "test": "catalog/bin/verify-uedb5-zen-export-map-fields.php",
+  "certified": false,
+  "remaining": [
+    "Audit all consumers of EExportFilterFlags and handling of unknown values",
+    "Real cooked-file differential"
+  ],
+  "next_batch": "B044"
+}
