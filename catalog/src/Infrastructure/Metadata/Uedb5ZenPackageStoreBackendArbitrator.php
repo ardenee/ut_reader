@@ -13,7 +13,7 @@ final class Uedb5ZenPackageStoreBackendArbitrator
             if($row===null)continue;
             if(!is_array($row))throw new RuntimeException('Package-store entry must be an object.');
             $status=(string)($row['status']??'');
-            if(!in_array($status,['None','Missing','Ok','Pending'],true))
+            if(!in_array($status,['None','Missing','NotInstalled','Ok','Pending'],true))
                 throw new RuntimeException('Unsupported package-store backend status: '.$status);
             if($status==='None'||$status==='Missing')continue;
             return ['status'=>$status,'backend_id'=>$backend['backend_id'],'entry'=>$row];
