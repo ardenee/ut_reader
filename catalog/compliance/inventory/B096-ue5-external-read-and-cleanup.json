@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "batch": "B096",
+  "source": {
+    "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+    "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9"
+  },
+  "classification": "bounded source-body review",
+  "status": "partial",
+  "reviewed": [
+    {
+      "symbol": "FAsyncPackage2::ProcessExternalReads",
+      "line": 12458,
+      "disposition": "file-format-relevant",
+      "reason": "Polls/waits registered external read callbacks and only releases ExportsSerialized barrier after all complete; serialized source dependency edge alone does not prove completion.",
+      "verified": false
+    },
+    {
+      "symbol": "FAsyncPackage2::PostLoadInstances",
+      "line": 12486,
+      "disposition": "runtime-only",
+      "reason": "Calls UObject class PostLoadInstance for extant, nonfiltered, nonfailed export UObjects subject to time budget.",
+      "verified": false
+    },
+    {
+      "symbol": "FGlobalImportStore::FlushDeferredCleanupPackagesQueue",
+      "line": 13194,
+      "disposition": "runtime-only",
+      "reason": "Delegates to AsyncLoadingThread deferred package cleanup processing; reference lifetime management.",
+      "verified": false
+    }
+  ],
+  "evidence_limitations": [
+    "Static source-method classification does not certify runtime behavior",
+    "External reads can be file-format relevant without being represented by ordinary import rows"
+  ],
+  "next_batch": "B097"
+}
