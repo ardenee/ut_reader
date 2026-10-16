@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "batch": "B061",
+  "status": "blocked",
+  "finding": "New cross-reader contract passes on current-main isolated review checkout, but fails when run from divergent DEV checkout because Uedb5ParityV5ReadService.php, Uedb5RuntimeMetadataReader.php and Uedb5DependencyRebuilder.php are not present in DEV at expected paths.",
+  "test": "catalog/bin/verify-uedb5-zen-reason-flow-contract.php",
+  "results": {
+    "isolated_main": "6/6",
+    "dev": "3/6",
+    "dev_exit": 1
+  },
+  "decision": "Do not bulk sync missing runtime dependencies into dirty DEV worktree; use isolated checkout as validated current-main test target.",
+  "next_batch": "B062",
+  "certified": false
+}
