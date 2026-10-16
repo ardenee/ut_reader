@@ -339,6 +339,47 @@ final class Uedb5Ue5ZenDependencyResolver
         }
 
         $provider = $providers[self::mapKey($lookupPackageId)] ?? null;
+        // FPackageStore::GetPackageStoreEntry traverses backends in priority
+        // order. Only None/Missing continue searching; Pending, NotInstalled
+        // and Ok are terminal. Mirror the SAME observed result the physical
+        // selector used before persisting a dependency outcome.
+        if ($packageStoreContext['authoritative']
+            && $packageStoreContext['backend_results'] !== null) {
+            $answer = Uedb5ZenPackageStoreBackendArbitrator::entry(
+                $packageStoreContext['backend_results'], $lookupPackageId
+            );
+            $extra['package_store_backend_status'] = $answer['status'];
+            $extra['package_store_backend_id'] = $answer['backend_id'];
+            if ($answer['status'] === 'Pending') {
+                return self::row(
+                    'PackageImport', $sourceSection, $sourceIndex, $classification,
+                    $packageId, $publicHash, 'unresolved', null, null,
+                    'package_store_entry_pending', $extra
+                );
+            }
+            if ($answer['status'] === 'NotInstalled' || $answer['status'] === 'Missing') {
+                return self::row(
+                    'PackageImport', $sourceSection, $sourceIndex, $classification,
+                    $packageId, $publicHash, 'missing', null, null,
+                    $answer['status'] === 'NotInstalled'
+                        ? 'package_store_entry_not_installed' : 'package_store_entry_missing',
+                    $extra
+                );
+            }
+            $expectedProviderId = (int)($answer['entry']['file_id'] ?? 0);
+            if ($expectedProviderId < 1 || $provider === null
+                || (int)($provider['provider_id'] ?? 0) !== $expectedProviderId) {
+                // Epic has an Ok package-store entry, but the exact selected
+                // physical snapshot is not staged. This is not "Missing".
+                $extra['evidenced_provider_file_id'] = $expectedProviderId > 0
+                    ? $expectedProviderId : null;
+                return self::row(
+                    'PackageImport', $sourceSection, $sourceIndex, $classification,
+                    $packageId, $publicHash, 'unresolved', null, null,
+                    'package_store_evidenced_provider_unavailable', $extra
+                );
+            }
+        }
         if ($provider === null) {
             return self::row(
                 'PackageImport', $sourceSection, $sourceIndex, $classification,
@@ -493,6 +534,8 @@ final class Uedb5Ue5ZenDependencyResolver
             'authoritative' => !empty($runtimeContext['package_store_context_authoritative']),
             'identity_authoritative' => !empty($runtimeContext['package_identity_context_authoritative']),
             'identity_rewrites' => $identityRewrites,
+            'backend_results' => isset($runtimeContext['package_store_backend_results'])
+                ? (array)$runtimeContext['package_store_backend_results'] : null,
             // WITH_EDITOR controls optional segments, redirector following and the editor filter rule.
             'with_editor' => array_key_exists('with_editor', $runtimeContext)
                 ? (bool)$runtimeContext['with_editor']

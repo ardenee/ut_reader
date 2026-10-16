@@ -5,6 +5,8 @@ use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5IoStoreTocReader;
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5IoStoreContainerHeaderReader;
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5ZenEffectivePackageStoreContextBuilder;
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5ZenPackageStoreBackendArbitrator;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5Ue5ZenIoStoreSnapshotBuilder;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5Ue5ZenDependencyResolver;
 $db=new PDO('mysql:host=127.0.0.1;port=3339;dbname=uedb5_isolated_integration','root','',[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION,PDO::ATTR_DEFAULT_FETCH_MODE=>PDO::FETCH_ASSOC]);
 $id=$db->query('SELECT @@port port,@@datadir datadir')->fetch();
 if((int)$id['port']!==3339||stripos($id['datadir'],'uedb5-isolated-mysql')===false){throw new RuntimeException('Not the isolated database');}
@@ -62,9 +64,39 @@ foreach($entryList as $entry){
   'selected_file_id'=>$answer['entry']['file_id']??null,
   'status'=>$answer['status'],'backend_id'=>$answer['backend_id']];
 }
+// Parse only two retained package chunks, then resolve their dependency
+// rows in memory. This is a source-shaped read-only check, not Pass 2 write.
+$dependencySamples=[];
+foreach($published as $row){
+ $packageId=(string)$row['package_id'];
+ $snapshot=Uedb5Ue5ZenIoStoreSnapshotBuilder::build(
+  $toc,$packageId,[
+   'id'=>(int)$row['file_id'],'game_id'=>(int)$row['game_id'],
+   'package_name'=>'','original_name'=>'FactoryGame-WindowsServer.utoc',
+  ]
+ );
+ $dependencyRows=Uedb5Ue5ZenDependencyResolver::resolve($snapshot,[]);
+ $packageRows=array_values(array_filter($dependencyRows,
+  static fn(array $item):bool=>($item['dependency_kind']??'')==='PackageImport'));
+ $allConservative=true;
+ foreach($packageRows as $dependency){
+  $allConservative=$allConservative
+   &&($dependency['outcome']??'')==='unresolved'
+   &&($dependency['reason_code']??'')==='package_identity_runtime_context_required';
+ }
+ $dependencySamples[]=[
+  'file_id'=>(int)$row['file_id'],
+  'total_dependency_rows'=>count($dependencyRows),
+  'package_import_rows'=>count($packageRows),
+  'unknown_runtime_context_did_not_guess'=>$allConservative,
+ ];
+}
 $ok=count($results)>0 && count($matched)===2 && count($entryList)===2
  &&$built['package_store_context_authoritative']===false
- &&count($selected)===2;
+ &&count($selected)===2 &&count($dependencySamples)===2;
+foreach($dependencySamples as $item){
+ $ok=$ok&&$item['total_dependency_rows']>0&&$item['unknown_runtime_context_did_not_guess'];
+}
 foreach($selected as $i=>$result){
  $ok=$ok && $result['status']==='Ok'
    &&$result['backend_id']==='file'
@@ -72,6 +104,7 @@ foreach($selected as $i=>$result){
 }
 echo json_encode(['ok'=>$ok,'read_only'=>true,'isolated_mysql'=>true,
  'header'=>$results,'checked_published_members'=>$matched,
- 'file_backend_selection'=>$selected,'runtime_authority_claimed'=>false],
+ 'file_backend_selection'=>$selected,'dependency_samples'=>$dependencySamples,
+ 'runtime_authority_claimed'=>false],
  JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;
 exit($ok?0:2);

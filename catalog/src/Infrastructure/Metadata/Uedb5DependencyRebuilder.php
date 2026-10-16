@@ -51,6 +51,16 @@ final class Uedb5DependencyRebuilder
             if (!is_array($zenContext)) {
                 throw new RuntimeException('Zen runtime context must be an object/array.');
             }
+            // The provider selector uses the same backend arbitration. Preserve
+            // its terminal Ok/Pending/NotInstalled/Missing evidence when writing
+            // dependency results, rather than turning Pending into Missing.
+            if (array_key_exists('zen_package_store_backend_results', $options)) {
+                $backends = $options['zen_package_store_backend_results'];
+                if (!is_array($backends) || !array_is_list($backends)) {
+                    throw new RuntimeException('Zen package-store backend results must be an explicit list.');
+                }
+                $zenContext['package_store_backend_results'] = $backends;
+            }
             $rows = $this->rebuildZen($consumer, $providers, $zenContext);
             $schema = self::ZEN_SCHEMA;
         } elseif (in_array($family, [Uedb5Ut99SnapshotBuilder::PACKAGE_FAMILY, Uedb5Ut4SnapshotBuilder::PACKAGE_FAMILY], true)) {

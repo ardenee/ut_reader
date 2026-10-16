@@ -169,6 +169,33 @@ try {
         && ($zenRows[0]['required_object_identity'] ?? null) === $publicHash,
         'v5_rebuilder_preserves_zen_package_hash_identity');
 
+    $pendingOptions=[
+        'zen_runtime_context'=>[
+            'package_identity_context_authoritative'=>true,
+            'package_store_context_authoritative'=>true,
+            'package_redirects'=>[],'localized_packages'=>[],
+        ],
+        'zen_package_store_backend_results'=>[[
+            'backend_id'=>'runtime','priority'=>10,
+            'entries'=>[$providerPackageId=>['status'=>'Pending']],
+            'redirects'=>[],
+        ]],
+    ];
+    $rebuilder->rebuild($gameId,$zenConsumerId,[],$pendingOptions);
+    $pendingRows=$reader->snapshot($gameId,$zenConsumerId)['sections'][Uedb5DependencyRebuilder::SECTION]??[];
+    $check(count($pendingRows)===1
+        &&($pendingRows[0]['outcome']??null)==='unresolved'
+        &&($pendingRows[0]['reason_code']??null)==='package_store_entry_pending',
+        'v5_rebuilder_forwards_authoritative_package_store_pending_status');
+    $missingBackendOptions=$pendingOptions;
+    $missingBackendOptions['zen_package_store_backend_results'][0]['entries'][$providerPackageId]=['status'=>'Missing'];
+    $rebuilder->rebuild($gameId,$zenConsumerId,[],$missingBackendOptions);
+    $missingBackendRows=$reader->snapshot($gameId,$zenConsumerId)['sections'][Uedb5DependencyRebuilder::SECTION]??[];
+    $check(count($missingBackendRows)===1
+        &&($missingBackendRows[0]['outcome']??null)==='missing'
+        &&($missingBackendRows[0]['reason_code']??null)==='package_store_entry_missing',
+        'v5_rebuilder_preserves_authoritative_missing_status');
+
     $rebuilder->rebuild($gameId, $zenConsumerId, [[
         'game_id' => $gameId,
         'file_id' => null,

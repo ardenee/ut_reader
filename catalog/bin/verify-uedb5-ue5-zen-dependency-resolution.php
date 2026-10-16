@@ -106,6 +106,48 @@ $find = static function (array $rows, string $section, int $index): array {
     }
     throw new RuntimeException('Expected resolver row was not emitted.');
 };
+$backendStatusRows=static function(string $status, array $providers)use(
+ $consumer,$providerId,$authoritativeContext,$find
+):array{
+ $context=$authoritativeContext;
+ $context['package_store_backend_results']=[[
+  'backend_id'=>'runtime','priority'=>10,
+  'entries'=>[$providerId=>['status'=>$status,'file_id'=>91]],
+  'redirects'=>[],
+ ]];
+ $rows=Uedb5Ue5ZenDependencyResolver::resolve($consumer,$providers,$context);
+ return $find($rows,'imports',0);
+};
+$pendingBackend=$backendStatusRows('Pending',[['provider_id'=>91,'snapshot'=>$provider]]);
+$check(($pendingBackend['outcome']??'')==='unresolved'
+ &&($pendingBackend['reason_code']??'')==='package_store_entry_pending',
+ 'zen_pending_package_store_backend_does_not_publish_false_missing_or_resolved');
+$notInstalledBackend=$backendStatusRows('NotInstalled',[['provider_id'=>91,'snapshot'=>$provider]]);
+$check(($notInstalledBackend['outcome']??'')==='missing'
+ &&($notInstalledBackend['reason_code']??'')==='package_store_entry_not_installed',
+ 'zen_not_installed_terminal_backend_is_not_silently_overridden_by_staged_file');
+$absentBackend=$backendStatusRows('Missing',[['provider_id'=>91,'snapshot'=>$provider]]);
+$check(($absentBackend['outcome']??'')==='missing'
+ &&($absentBackend['reason_code']??'')==='package_store_entry_missing',
+ 'zen_authoritative_missing_backend_does_not_select_staged_catalogue_file');
+$okContext=$authoritativeContext;
+$okContext['package_store_backend_results']=[[
+ 'backend_id'=>'runtime','priority'=>10,
+ 'entries'=>[$providerId=>['status'=>'Ok','file_id'=>91]],
+ 'redirects'=>[],
+]];
+$notStaged=Uedb5Ue5ZenDependencyResolver::resolve($consumer,[],$okContext);
+$notStagedImport=$find($notStaged,'imports',0);
+$check(($notStagedImport['outcome']??'')==='unresolved'
+ &&($notStagedImport['reason_code']??'')==='package_store_evidenced_provider_unavailable',
+ 'zen_backend_ok_without_staged_provider_remains_unresolved');
+$wrongId=Uedb5Ue5ZenDependencyResolver::resolve($consumer,
+ [['provider_id'=>92,'snapshot'=>$provider]],$okContext);
+$wrongIdImport=$find($wrongId,'imports',0);
+$check(($wrongIdImport['outcome']??'')==='unresolved'
+ &&($wrongIdImport['reason_code']??'')==='package_store_evidenced_provider_unavailable',
+ 'zen_backend_ok_rejects_mismatching_selected_physical_file');
+
 $hard = $find($resolved, 'imports', 0);
 $script = $find($resolved, 'imports', 1);
 $cell = $find($resolved, 'cell_imports', 0);
