@@ -15,7 +15,7 @@ This is **not** a complete Unreal Engine file-format spec or a complete inventor
 
 ## Audit status and acceptance
 
-As of B108, `verify-source-compliance.php --all` reported **18 operations, 0 verified, 33 open gates**. The source-symbol/hash checks passed on pinned sources; those are *presence checks*, not behavioral proof. The combined isolated UE5 test runner passed 12/12 bounded tests. Neither outcome proves Epic compliance.
+As of B108, `verify-source-compliance.php --all` reported **18 operations, 0 verified, 33 open gates**. The source-symbol/hash checks passed on pinned sources; those are *presence checks*, not behavioral proof. The historical B108 combined isolated UE5 test runner passed 12/12 bounded tests. The current runner now has **13** checks, including the D001 disposable SQLite plus real UEDB5 metadata-file round-trip; it passed **13/13** on PRD on 2026-10-16. Neither outcome proves Epic compliance. The code revision synchronization blocker was closed separately; see `DIFFERENCES.md` for the current active backlog and evidence.
 
 For each actual divergence create a ledger entry containing: stable difference ID, affected engine/game, Epic source path/hash/lines and precise behavior, UnrealDB code reference, observed mismatch, correction commit, test fixture, passing/failing evidence and acceptance gate. Only mark **fixed+verified** when a negative-before/positive-after test and a source-compatible fixture prove the change. If not demonstrably mismatched use **unverified**, not **fixed**.
 

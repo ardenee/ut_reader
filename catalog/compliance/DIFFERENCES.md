@@ -6,14 +6,14 @@ This is the **engineering audit tracker**, distinct from method classification a
 
 - **Source-code deployment:** GitHub `main`, live DEV (`D:\\Apache24\\htdocs\\unrealdb`) and live PRD (`C:\\Apache24\\htdocs\\unrealdb`) were independently verified at `9d968aa5` before this audit. The focused UE5 fix `470d7b1d02426e66062f4e11307040400292a5d9` was pushed to `main` and fast-forwarded to DEV; PRD is the commit's originating checkout. Untracked files, settings, databases and old stashes were not altered.
 - **Formal verifier:** 15 manifests / 18 operations; 18 pinned source hashes and 36 source symbol checks pass; **0 operations fully verified, 33 verification gates open, 0 validator issues**. These are evidence gates, not 33 discovered defects.
-- **Bounded tests:** PRD 12/12 combined UE5 source suite, effective store context and physical-provider-selector tests pass after the fix. No complete-container fixture differential or production database acceptance is claimed.
+- **Bounded tests:** PRD 13/13 combined UE5 source suite (now includes a disposable DB-backed D001 metadata/read-facade regression), effective store context and physical-provider-selector tests pass. No complete-container fixture differential or production database acceptance is claimed.
 - **Historical notes below are chronology, not the active backlog.** Do not revive old DEV/PRD stash reconciliation as an audit obligation.
 
 ## Demonstrated differences / limitations
 
 | ID | Scope | Epic rule / expected behavior | UnrealDB finding | Correction / evidence | State |
 |---|---|---|---|---|---|
-| UE5-D001 | Zen dependency read facade | Runtime filtering yields distinct `export_filtered_for_runtime_build` versus `export_filter_runtime_state_required` reasons (AsyncLoading2.cpp, pinned SHA256 `43ce5d78…`) | `CatalogCompactDependencyReadService::compactRows` discarded `reason_code` although other read facades retained it | B048 added returned field; PHP syntax passed. `verify-uedb5-zen-reason-flow-contract.php` checks the current source flow; not yet database-backed facade fixture | **Code changed; integration unverified** |
+| UE5-D001 | Zen dependency read facade | Runtime filtering yields distinct `export_filtered_for_runtime_build` versus `export_filter_runtime_state_required` reasons (AsyncLoading2.cpp, pinned SHA256 `43ce5d78…`) | Historically `CatalogCompactDependencyReadService::compactRows` discarded `reason_code` although other read facades retained it | B048 added returned field. New `verify-uedb5-zen-compact-reason-db.php` constructs a real temporary UEDB5 metadata container and disposable SQLite schema: the parity reader, compact facade and `rows()` alias each retained both distinct unresolved reason codes (5/5 checks; PRD combined suite 13/13). No production MySQL touched. | **Reader fix verified through isolated DB-backed round-trip; Epic-cooked fixture parity remains open** |
 | UE5-D002 | Compact SQL projection | Distinct unresolved reasons must remain distinguishable *if* consumer requires them | `ue_uedb5_dependency_edges` stores canonical outcome but no `reason_code`; two different unresolved reasons collapse to same outcome | B050/B056 SQLite fixture proves this, B057 proves republish removes stale edges. Preserve full V5 staged metadata for detailed diagnosis until a documented schema/consumer decision is made | **Open design/consumer requirement** |
 | UE5-D003 | UE5 source-definition audit harness | Newer checkpoint classifications must be counted | `B0??` glob silently omitted B100+ inventory | B101 fixed `B[0-9][0-9][0-9]`; B102 requires explicit classification and negative-test failure when withheld | **Fixed; synthetic negative/positive regression passed** |
 | UE5-D004 | Cross-environment consistency | Same tested implementation needed on release target | Historically DEV/PRD were behind GitHub, with dirty tracked changes | **Resolved:** the live code revisions matched `9d968aa5`; focused fix `470d7b1d` was pushed to GitHub and fast-forwarded to DEV from PRD. Earlier stashes remain preserved, not applied. | **Resolved for code revision consistency; full HTTP/DB acceptance separate** |
@@ -39,14 +39,14 @@ The user provided an authoritative **isolated integration DB** check for `contai
 | 2 Connect to V5 dependency resolver | Runtime resolver and backend helper exist; targeted synthetic tests pass | Demonstrate live ingestion → metadata → resolver → stored edges with real fixture |
 | 3 Optional game-specific/runtime overrides | Context-aware filter tests pass | Verify defaults work without overrides, and override precedences with real fixtures |
 | 4 Name indexing + publish 27,240 | **Completed for isolated `container_id=1`** per observed SQL counts | Only independent content correctness checks, not repeat full scan |
-| 5 Dependencies / failures / retries / backup/restore / workers | Several targeted standalone suites exist; 12-suite bounded baseline green | Consolidated end-to-end lifecycle acceptance on isolated test DB and retained container |
+| 5 Dependencies / failures / retries / backup/restore / workers | Several targeted standalone suites exist; current 13-suite bounded UE5 regression is green | Consolidated end-to-end lifecycle acceptance on isolated test DB and retained container |
 | 6 Sync GitHub / DEV / PRD and deploy | Code aligned at `470d7b1d` after prior live alignment; prior HTTP 200 checks on PRD | Recheck live HTTP/DB acceptance after substantive runtime updates; do not reopen old stash comparisons |
 
 ## Current actionable backlog (do not create another batch just to rename it)
 
 1. **Close backend FPackageId D005 fixture gate** with an authentic mounted-container/backend result differential; code fix and bounded tests have passed. Keep the existing DEV/PRD backups untouched.
 2. **Turn the isolated 27,240-package result into reproducible integration acceptance**, including dependency sample comparisons, retries/failures, restore and concurrent worker tests. Reuse retained packages; no full scan just to remeasure counts.
-3. **Close D001/D002** with a database-backed compact/full metadata round-trip test and documented consumer contract.
+3. **Complete D002 consumer decision and authentic D001 differential**: D001's isolated DB-backed compact/full metadata read round-trip now passes; D002 still needs a documented requirement for persisting detailed reasons in compact SQL.
 4. **Cross-reference the formal 18 operation IDs and 33 open gates** with real tests/evidence; only set verified after all acceptance conditions pass.
 5. **Expand independent source-derived inventories for UE1–UE5**, prioritizing reachable package parsing/dependency semantics rather than runtime-only callback names.
 
@@ -57,7 +57,7 @@ The user provided an authoritative **isolated integration DB** check for `contai
 | Work | Confirmed evidence | Not yet verified |
 |---|---|---|
 | D005 FPackageId casing | Pinned numeric Epic lookup; failing-before/passing-after PHP lookup regression; 12/12 suite | Real cooked/mounted family backend input differential |
-| D001 compact reader reason field | Returned field and source-flow contract test | DB-backed compact-facade readout |
+| D001 compact reader reason field | Returned field, source-flow regression and real UEDB5 file → disposable SQLite → compact reader round-trip (5/5 assertions) | Independent Epic-cooked fixture data; production MySQL not tested |
 | D002 compact SQL reason persistence | Two reason codes collapse in isolated SQLite SQL projection | Determine whether any required consumer needs detailed reasons in compact storage |
 | UE5 mounted-store precedence and redirects | Synthetic priority/redirect tests and Epic method anchors | Complete multi-container authentic runtime fixture; provider/redirect round-trip |
 | UE5 end-to-end dependency correctness | Isolated 27,240 publication complete (not repeated) | Sample package dependency outcomes, retry/recovery, concurrency and restore acceptance |
