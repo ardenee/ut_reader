@@ -32,10 +32,10 @@ $q->execute([$second]);$secondJob=$q->fetch();
 $restore=json_decode((string)$secondJob['result_json'],true);
 // A separate restore job for an already indexed destination must reuse active
 // name/publication follow-ups, rather than making competing workers.
-$replayQueue=$queueName.'-replay';
+$replayQueue=$queueName;
 $third=$queue->enqueue($replayQueue,JobType::RESTORE_IOSTORE_CONTAINER,[
  'game_id'=>9003,'backup_key'=>$backupKey,'utoc_sha256'=>$hash
-],100,null,null,null,1);
+],120,null,null,null,1);
 $replayWorker=new JobWorker($queue,$routes,$replayQueue,'isolated-zen-replay',120);
 $replayWorker->runOne();
 $q->execute([$third]);$thirdJob=$q->fetch();
