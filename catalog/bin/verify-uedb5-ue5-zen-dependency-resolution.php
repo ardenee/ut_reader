@@ -391,6 +391,32 @@ $check(
     'zen_server_build_applies_not_for_server_filter'
 );
 
+$clientFiltered = $resolve($consumer, [['provider_id' => 93, 'snapshot' => $filteredProvider]], [
+    'with_editor' => false, 'ue_server' => false, 'with_server_code' => false,
+]);
+$check(
+    $find($clientFiltered, 'imports', 0)['outcome'] === 'unresolved'
+    && $find($clientFiltered, 'imports', 0)['reason_code'] === 'export_filtered_for_runtime_build',
+    'zen_client_only_build_applies_not_for_client_filter'
+);
+$combinedClient = $resolve($consumer, [['provider_id' => 93, 'snapshot' => $filteredProvider]], [
+    'with_editor' => false, 'ue_server' => false, 'with_server_code' => true,
+    'is_client' => true, 'is_server' => false,
+]);
+$check(
+    $find($combinedClient, 'imports', 0)['outcome'] === 'unresolved'
+    && $find($combinedClient, 'imports', 0)['reason_code'] === 'export_filtered_for_runtime_build',
+    'zen_combined_client_role_applies_not_for_client_filter'
+);
+$combinedServer = $resolve($consumer, [['provider_id' => 93, 'snapshot' => $filteredProvider]], [
+    'with_editor' => false, 'ue_server' => false, 'with_server_code' => true,
+    'is_client' => false, 'is_server' => true,
+]);
+$check(
+    $find($combinedServer, 'imports', 0)['outcome'] === 'resolved',
+    'zen_combined_server_role_keeps_not_for_client_export'
+);
+
 $duplicateHashProvider = $snapshot($providerId, [], [[
     'public_export_hash' => $publicHash, 'filter_flags' => 0, 'object_name' => ['text' => 'FirstTarget'],
 ], [
