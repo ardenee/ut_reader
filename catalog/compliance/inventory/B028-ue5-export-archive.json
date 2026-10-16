@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "batch": "B028",
+  "source": {
+    "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+    "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9"
+  },
+  "classification": "bounded source-body review",
+  "status": "partial",
+  "reviewed": [
+    {
+      "symbol": "FAsyncPackage2::InitializeExportArchive",
+      "line": 8544,
+      "disposition": "file-format-relevant",
+      "reason": "Sets UE, licensee and custom versions, unversioned-property serialization, cooked package and editor-filter flags. Requires comparison with metadata reader's decoded flags and package versions; serialized UObject property decoding is not covered.",
+      "verified": false
+    }
+  ],
+  "evidence_limitations": [
+    "Full call graph, compile-time gates and game fixture parity remain outstanding",
+    "Classification is not certification of any operation"
+  ],
+  "next_batch": "B029"
+}
