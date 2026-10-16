@@ -1,0 +1,26 @@
+{
+  "schema": 1,
+  "batch": "B055",
+  "status": "partial",
+  "execution_target": "isolated GitHub-main review checkout",
+  "checks": [
+    {
+      "script": "catalog/bin/verify-uedb5-dependency-projection-publisher.php",
+      "result": "pass",
+      "mode": "in-memory SQLite"
+    },
+    {
+      "script": "catalog/bin/verify-uedb5-ue5-zen-dependency-resolution.php",
+      "result": "pass",
+      "mode": "synthetic fixtures"
+    }
+  ],
+  "dev_policy": "Do not replace 112 modified files or perform git reset/pull into dirty DEV. Treat DEV checkout separately from latest-main review checkout.",
+  "remaining": [
+    "DEV worktree reconciliation",
+    "End-to-end stored metadata reason readback on isolated MySQL",
+    "Full UE1–UE5 source coverage"
+  ],
+  "certified": false,
+  "next_batch": "B056"
+}
