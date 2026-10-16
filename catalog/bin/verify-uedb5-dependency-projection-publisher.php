@@ -87,6 +87,31 @@ $check('zen_projection_numeric_u64_name_lookup_is_lossless',
     (string)$db->query("SELECT required_package_name FROM ue_uedb5_dependency_packages WHERE file_id=11")->fetchColumn()==='/Game/NumericProvider');
 $check('zen_projection_preserves_source_package_and_public_hash_keys',
     (string)$db->query("SELECT hex(required_package_key)||':'||hex(required_object_key) FROM ue_uedb5_dependency_edges WHERE file_id=11 AND source_index=0")->fetchColumn()==='1020304050607080:1122334455667788');
+$zenReasonSnapshot=$zenSnapshot;
+$zenReasonSnapshot['file']['id']=12;
+$zenReasonSnapshot['sections']['dependency_results']=[
+    [
+        'dependency_kind'=>'PackageImport','source_section'=>'imports','source_index'=>0,
+        'dependency_class'=>'hard','hard'=>true,'outcome'=>'unresolved',
+        'reason_code'=>'export_filter_runtime_state_required',
+        'required_package_id'=>'1020304050607080',
+        'required_object_identity'=>'1122334455667788',
+    ],
+    [
+        'dependency_kind'=>'PackageImport','source_section'=>'imports','source_index'=>1,
+        'dependency_class'=>'hard','hard'=>true,'outcome'=>'unresolved',
+        'reason_code'=>'export_filtered_for_runtime_build',
+        'required_package_id'=>'1020304050607080',
+        'required_object_identity'=>'9988776655443322',
+    ],
+];
+$publisher->publish($zenReasonSnapshot);
+$reasonOutcomes=$db->query('SELECT outcome FROM ue_uedb5_dependency_edges WHERE file_id=12 ORDER BY source_index')->fetchAll(PDO::FETCH_COLUMN);
+$check('compact_projection_preserves_both_unresolved_edges',count($reasonOutcomes)===2 && $reasonOutcomes[0]===$reasonOutcomes[1]);
+$check('source_detail_distinguishes_filter_reasons',
+    $zenReasonSnapshot['sections']['dependency_results'][0]['reason_code']!==$zenReasonSnapshot['sections']['dependency_results'][1]['reason_code']);
+$columns=$db->query('PRAGMA table_info(ue_uedb5_dependency_edges)')->fetchAll(PDO::FETCH_ASSOC);
+$check('compact_projection_has_no_reason_column',!in_array('reason_code',array_column($columns,'name'),true));
 $source=(string)file_get_contents($root.'/src/Infrastructure/Metadata/PdoUedb5DependencyProjectionPublisher.php');
 $check('publisher_calls_staging_write_guard',str_contains($source,'Uedb5StagingIsolationContract::assertWriteTable'));
 $check('publisher_batches_dependency_rows',str_contains($source,'array_chunk($rows, 250)'));
