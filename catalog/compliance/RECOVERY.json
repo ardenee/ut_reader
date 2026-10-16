@@ -304,6 +304,14 @@
       "rationale": "Epic UE5.8.3 FZenPackageImportedPackageNamesContainer reader never requires ImportedPackageNamesDataReader to reach HeaderSize. UnrealDB imposed an additional rejection on unconsumed trailing bytes; two source-shaped fixtures failed before the a9b4b3cf correction and pass afterwards. B011 is accepted with pinned source, independent wire/IoStore and dependency consumer tests.",
       "state": "fixed_regression_verified",
       "audit_escape": "original_B011_unfinished_source_branch"
+    },
+    {
+      "id": "UE5-D015",
+      "kind": "mapped",
+      "operations": ["UE5-583-OPTIONAL-EXPORT-SEGMENT-001"],
+      "rationale": "Epic UE5.8.3 GetPublicExportIndex searches main exports first, then optional WITH_EDITOR. UnrealDB classified a matching hash in both as ambiguous. Independent regression failed before 27788226 and passed after; main+optional archive store entries now use distinct provider IDs and missing optional chunk is rejected. B012 original metadata/consumer operation is verified by source and end-to-end drivers.",
+      "state": "fixed_regression_verified",
+      "audit_escape": "none"
     }
   ],
   "coverage_gaps": [

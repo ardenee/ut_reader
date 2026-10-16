@@ -3,10 +3,10 @@
     "batch": "B012",
     "engine": "UE5",
     "profile": "UE5.8.3",
-    "status": "partial",
+    "status": "verified",
     "inventory_a": "targeted loader call path",
     "inventory_b": "serialized field and branch inventory",
-    "complete_inventory": false,
+    "complete_inventory": true,
     "operations": [
         {
             "id": "UE5-583-OPTIONAL-EXPORT-SEGMENT-001",
@@ -24,18 +24,132 @@
                 "sha256": "6b79d5a8465d01bbe784f06aaf07f0033e9dc84300d6761b135eb29c74b871da"
             },
             "tests": [
-                "catalog/bin/verify-uedb5-ue5-zen-dependency-resolution.php"
+                "catalog/bin/verify-uedb5-ue5-zen-dependency-resolution.php",
+                "catalog/bin/verify-uedb5-b012-optional-source.php",
+                "catalog/bin/verify-uedb5-b012-operation-acceptance.php",
+                "catalog/bin/verify-uedb5-ue5-zen-package.php",
+                "catalog/bin/verify-uedb5-zen-version-staging-contract.php"
             ],
-            "disposition": "partial",
-            "reason": "Epic source references optional chunk index 1 and distinct import state; UnrealDB must check distinct segment provider mapping and editor-only/runtime conditions."
+            "disposition": "verified",
+            "reason": "Entire original B012 optional export-segment metadata/consumer operation verified under pinned Epic 5.8.3 source. D015 main-first public hash match fixed; 27 source oracle and 12 acceptance assertions; independent main/optional imported IDs; missing chunk rejection; editor/noneditor/unknown cases; V5 and dependency outcomes. Live editor runtime state not inferred.",
+            "related_differences": [
+                "UE5-D015"
+            ],
+            "correction_commits": [
+                "27788226c68ae3a7179d3646a9405fd351d069a0"
+            ],
+            "source_contract_evidence": {
+                "test_driver": "catalog/bin/verify-uedb5-b012-optional-source.php",
+                "expected_checks": [
+                    "b012_epic_583_async_loading_hash_pinned",
+                    "b012_editor_only_optional_segment",
+                    "b012_optional_import_package_ids_separate",
+                    "b012_editor_two_export_bundles",
+                    "b012_runtime_one_export_bundle",
+                    "b012_import_recursion_optional_header",
+                    "b012_optional_chunk_index_one",
+                    "b012_main_chunk_runtime_zero",
+                    "b012_main_chunk_editor_replacement",
+                    "b012_main_optional_headers_separate",
+                    "b012_two_exports_preinsert_editor",
+                    "b012_optional_export_archive_selects_header",
+                    "b012_optional_bundle_second",
+                    "b012_hash_source_first_main",
+                    "b012_hash_optional_second",
+                    "b012_hash_optional_global_index",
+                    "b012_optional_provider_release",
+                    "b012_get_public_export_index_main_precedes_optional",
+                    "b012_optional_lookup_within_editor_preprocessor",
+                    "b012_two_export_bundle_chunk_requests_in_builder",
+                    "b012_separate_optional_import_store_entry_in_builder",
+                    "b012_both_segments_same_parser",
+                    "b012_optional_imports_not_flattened_into_main",
+                    "b012_resolver_editor_gate",
+                    "b012_resolver_checks_optional_import_bundle_identity",
+                    "b012_resolver_main_export_precedence_explicit",
+                    "b012_reader_uses_per_segment_store_ids"
+                ],
+                "source_branches": [
+                    "WITH_EDITOR initializes separate optional imported IDs and two bundles; non-editor processes only one bundle.",
+                    "Optional chunk is ExportBundleData index 1; live editor bRequestOptionalChunk may choose index 1 instead of 0 for main request.",
+                    "Optional header deserialization, import recursion, export archive and bundle indexes remain separate under WITH_EDITOR.",
+                    "GetPublicExportIndex returns main export hash match first, optional only if main misses; optional return index adds main export count."
+                ]
+            },
+            "source_reachability_evidence": {
+                "test_driver": "catalog/bin/verify-uedb5-b012-optional-source.php",
+                "expected_checks": [
+                    "b012_two_export_bundle_chunk_requests_in_builder",
+                    "b012_separate_optional_import_store_entry_in_builder",
+                    "b012_both_segments_same_parser",
+                    "b012_optional_imports_not_flattened_into_main",
+                    "b012_resolver_editor_gate",
+                    "b012_resolver_checks_optional_import_bundle_identity",
+                    "b012_resolver_main_export_precedence_explicit",
+                    "b012_reader_uses_per_segment_store_ids"
+                ],
+                "source_inventory_record": "catalog/compliance/B012-OPTIONAL-EXPORT-SEGMENT-SOURCE.md"
+            },
+            "guarded_implementation_files": [
+                {
+                    "path": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenDependencyResolver.php",
+                    "sha256": "d7e5e41bf69508ab4df6426e036125c4a83afcbf48f9a184069ec7b9a35ac6d1"
+                },
+                {
+                    "path": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenIoStoreSnapshotBuilder.php",
+                    "sha256": "dccb03419fb8e64e143f49d452f02538b2bb98a03d4316e1c4de0d43950ccdc9"
+                }
+            ],
+            "independent_inventory_evidence": {
+                "source_review": "catalog/compliance/B012-OPTIONAL-EXPORT-SEGMENT-SOURCE.md",
+                "scope_boundary": "Source-defined optional/main package metadata, chunk provenance, distinct imported IDs, editor-only dependency/lookup treatment, no fabricated live editor state. Whole UObject loading and generic B007/B016 hashing remain separate.",
+                "independent_source_oracle": "catalog/bin/verify-uedb5-b012-optional-source.php",
+                "synthetic_iostore": "catalog/bin/verify-uedb5-ue5-zen-package.php",
+                "real_dependency_resolver": "catalog/bin/verify-uedb5-ue5-zen-dependency-resolution.php",
+                "complete_operation_test": "catalog/bin/verify-uedb5-b012-operation-acceptance.php"
+            },
+            "test_results": {
+                "test_driver": "catalog/bin/verify-uedb5-b012-operation-acceptance.php",
+                "expected_checks": [
+                    "b012_driver_source_passes",
+                    "b012_driver_iostore_passes",
+                    "b012_driver_resolver_passes",
+                    "b012_driver_v5_passes",
+                    "b012_epic_independent_editor_and_runtime_source",
+                    "b012_epic_chunk1_and_separate_package_store_imports",
+                    "b012_epic_hash_lookup_main_before_optional",
+                    "b012_serialized_real_iostore_main_optional_provider_ids_distinct",
+                    "b012_optional_chunk_missing_rejected_and_main_retained",
+                    "b012_runtime_editor_unknown_resolution_contract",
+                    "b012_cell_and_export_provider_modes_remain_distinct",
+                    "b012_v5_optional_segment_header_validation"
+                ],
+                "result": "Source-pinned 27 assertions, synthetic real-chunk IoStore with distinct provider IDs, missing-chunk rejection, V5 persistence and real resolver; 12 required acceptance assertions rerun by formal verifier. Cross-segment duplicate public hash failed before D015 fix and passes after."
+            },
+            "acceptance_evidence": {
+                "reachable_source_branches": "Pinned AsyncLoading2.cpp main/optional store, editor/runtime compile guards, separate imports/bundles/reads, chunk index 1, export archive branch, optional hash lookup after main, cross-segment offset.",
+                "epic_to_unrealdb_mapping": "catalog/compliance/B012-OPTIONAL-EXPORT-SEGMENT-SOURCE.md: main/optional reader, IoStore snapshot builder, independent V5 sections, dependency resolver and production option-guarded outcome reporting.",
+                "independent_differential": "Source-pinned scanner and four independent drivers; regression main+optional duplicate hash failed before 27788226; mutated synthetic IoStore fixture proves different main/optional provider ID mappings and absent chunk rejection; V5 roundtrip.",
+                "all_v5_consumers": "Direct reader and builder source inventory plus real dependency resolver optional import/provider/exports/cell paths and Uedb5MigrationValidator optional V5 layout checks.",
+                "independent_reviewer": "Source-derived executable oracle and distinct operation-level acceptance driver. This is not external human review or C++ editor execution."
+            }
         }
     ],
     "next_batch": "B013",
     "gate_status": {
-        "inventory": false,
-        "contracts": false,
-        "implementation": false,
-        "independent_verification": false,
+        "inventory": true,
+        "contracts": true,
+        "implementation": true,
+        "independent_verification": true,
         "change_integrity": true
+    },
+    "reconciliation_evidence": {
+        "source": "Epic UE5.8.3 AsyncLoading2.cpp:5539-5598, 7443-7466, 7591-7631, 8415-8435, 8544-8576, 8609-8645, 8930-8953, 12167-12169",
+        "record": "catalog/compliance/B012-OPTIONAL-EXPORT-SEGMENT-SOURCE.md",
+        "production_inventory": "Uedb5Ue5ZenIoStoreSnapshotBuilder ordinary+optional store entry readers, ZenPackageReader shared parser, Uedb5Ue5ZenDependencyResolver main/optional import/export consumers, final V5 layout validator.",
+        "exclusions": [
+            "live WITH_EDITOR flag and editor-only optional chunk replacement authority",
+            "unrelated UObject export payload execution and B007/B016 public hash/cell collisions"
+        ]
     }
 }
