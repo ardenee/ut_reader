@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "batch": "B013",
+  "engine": "UE5",
+  "profile": "UE5.8.3",
+  "status": "partial",
+  "inventory_a": "script import constructor call path",
+  "inventory_b": "script path hashing field semantics",
+  "complete_inventory": false,
+  "operations": [
+    {
+      "id": "UE5-583-SCRIPT-HASH-001",
+      "summary": "Script import hash normalization, CityHash64 and upper type-bit mask",
+      "source": {
+        "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+        "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9",
+        "symbols": [
+          "FPackageObjectIndex::GenerateImportHashFromObjectPath",
+          "FullImportPath",
+          "CityHash64"
+        ]
+      },
+      "implementation": {
+        "path": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenDependencyResolver.php",
+        "sha256": "d9799db4159c612c6d8bb330f8dccd3294efec00b7abdc32c9054081609c9381"
+      },
+      "tests": [
+        "catalog/bin/verify-uedb5-ue5-zen-dependency-resolution.php"
+      ],
+      "disposition": "partial",
+      "reason": "Epic normalizes . and : to /, lowercases TCHARs, applies CityHash64 over TCHAR bytes, and clears two high bits. Current offline resolver consumes serialized script_import_hash; no claim of source-equivalent independent path hashing. Need native/source differential fixtures before implementing."
+    }
+  ],
+  "next_batch": "B014",
+  "gate_status": {
+    "inventory": false,
+    "contracts": false,
+    "implementation": false,
+    "independent_verification": false,
+    "change_integrity": true
+  }
+}
