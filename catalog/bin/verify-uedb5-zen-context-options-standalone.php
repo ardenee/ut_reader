@@ -21,9 +21,23 @@ $known=$run(['zen_runtime_context_by_game'=>[9001=>[
 $reject=false;
 try {$run(['zen_runtime_context_by_game'=>[9001=>['package_store_context_authoritative'=>true]]]);}
 catch(RuntimeException $e){$reject=str_contains($e->getMessage(),'evidence_source');}
+$mountContext=$run(['zen_mounted_containers_by_game'=>[9001=>[
+ ['container_id'=>'base','order'=>1,'sequence'=>1,
+  'package_redirects'=>[['source_package_id'=>'AABBCCDDEEFF0011','target_package_id'=>'1111111111111111']],
+  'localized_packages'=>[]],
+ ['container_id'=>'patch','order'=>2,'sequence'=>2,
+  'package_redirects'=>[['source_package_id'=>'AABBCCDDEEFF0011','target_package_id'=>'2222222222222222']],
+  'localized_packages'=>[]],
+]]]);
+$mountIsolated=$run(['zen_mounted_containers_by_game'=>[9002=>[
+ ['container_id'=>'another','order'=>1,'sequence'=>1,'package_redirects'=>[],'localized_packages'=>[]],
+]]]);
 $ok=!isset($baseline['zen_runtime_context'])&&!isset($other['zen_runtime_context'])
     &&($known['zen_runtime_context']['package_identity_context_authoritative']??null)===true
     &&($known['zen_runtime_context']['package_store_context_authoritative']??null)===false
-    &&$reject;
-echo json_encode(['ok'=>$ok,'baseline_unknown'=>$baseline,'other_game_isolation'=>$other,'known_context'=>$known,'unsupported_authority_rejected'=>$reject],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;
+    &&$reject
+    &&($mountContext['zen_runtime_context']['package_redirects'][0]['target_package_id']??'')==='2222222222222222'
+    &&($mountContext['zen_runtime_context']['package_store_context_authoritative']??null)===false
+    &&!isset($mountIsolated['zen_runtime_context']);
+echo json_encode(['ok'=>$ok,'baseline_unknown'=>$baseline,'other_game_isolation'=>$other,'known_context'=>$known,'unsupported_authority_rejected'=>$reject,'derived_mount_context'=>$mountContext,'mount_isolation'=>$mountIsolated],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;
 exit($ok?0:2);
