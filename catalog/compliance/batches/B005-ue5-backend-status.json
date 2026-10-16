@@ -1,94 +1,158 @@
 {
-    "schema":  1,
-    "batch":  "B005",
-    "engine":  "UE5",
-    "profile":  "UE5.8.3",
-    "status":  "partial",
-    "inventory_a":  "Source call-path inventory",
-    "inventory_b":  "Source structure and conditional behavior inventory",
-    "complete_inventory":  false,
-    "source_root_hint":  "L:/Source/Engine/UE5/UE 5.8.3",
-    "operations":  [
-                       {
-                           "id":  "UE5-583-BACKEND-STATUS-001",
-                           "summary":  "UE5 package store terminal status and backend priority",
-                           "source":  {
-                                          "path":  "Engine/Source/Runtime/CoreUObject/Private/Serialization/PackageStore.cpp",
-                                          "sha256":  "fb5c1930f5b8e6611392c3009dde16922661c7942f2eaa8d875492c8981f67b9",
-                                          "symbols":  [
-                                                          "FPackageStore::GetPackageStoreEntry",
-                                                          "FPackageStore::Mount"
-                                                      ]
-                                      },
-                           "implementation":  {
-                                                  "path":  "catalog/src/Infrastructure/Metadata/Uedb5ZenPackageStoreBackendArbitrator.php",
-                                                  "sha256":  "593c36093e63f616be4e0eab2b6308e72f3adf75f1cbb1f1e25e09b05f87e26d"
-                                              },
-                           "tests":  [
-                                         "catalog/bin/verify-uedb5-zen-backend-arbitration.php",
-                                         "catalog/bin/verify-uedb5-physical-provider-selector.php",
-                                         "catalog/bin/verify-uedb5-dependency-rebuilder.php",
-                                         "catalog/bin/verify-uedb5-dependency-sql-isolated.php",
-                                         "catalog/bin/verify-uedb5-zen-backend-source-oracle.php",
-                                         "catalog/bin/verify-uedb5-ue5-zen-dependency-resolution.php"
-                                     ],
-                           "related_differences":  [
-                                                       "UE5-D005",
-                                                       "UE5-D006",
-                                                       "UE5-D009",
-                                                       "UE5-D013"
-                                                   ],
-                           "disposition":  "partial",
-                           "reason":  "Ordinary backend priority/status contract and V5 selector/rebuilder corrections verified by pinned source and independent status oracle. D013 fixes nested context omission and conflicting evidence. Editor-only hybrid cooked backend construction, full mount inventory and independent acceptance remain open.",
-                           "correction_commits":  [
-                                                      "3a283a28df7bcb3f9997c58ab8f169134cf238ce"
-                                                  ],
-                           "guarded_implementation_files":  [
-                                                                {
-                                                                    "sha256":  "c39b1ee0fd4f91b356ee3b70a2ea9577483418c3f1e68f0048909f93222f723a",
-                                                                    "path":  "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php"
-                                                                },
-                                                                {
-                                                                    "sha256":  "cfd10f008b6651db60f3f3037bd0b391fd5a4bbd0add0b3844fff4e6314cb874",
-                                                                    "path":  "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php"
-                                                                }
-                                                            ],
-                           "source_contract_evidence":  {
-                                                            "expected_checks":  [
-                                                                                    "b005_pinned_package_store_source_hash",
-                                                                                    "b005_epic_none_missing_only_continue",
-                                                                                    "b005_epic_other_statuses_terminal",
-                                                                                    "b005_epic_exhausted_status_missing",
-                                                                                    "b005_epic_priority_descending_mount",
-                                                                                    "b005_epic_new_mount_inserted_at_priority_lower_bound",
-                                                                                    "b005_independent_none_continues",
-                                                                                    "b005_independent_missing_continues",
-                                                                                    "b005_independent_pending_terminal",
-                                                                                    "b005_independent_notinstalled_terminal",
-                                                                                    "b005_independent_ok_terminal",
-                                                                                    "b005_independent_equal_priority_newest_wins",
-                                                                                    "b005_independent_descending_priority_not_call_order",
-                                                                                    "b005_nested_evidence_preserved",
-                                                                                    "b005_conflicting_evidence_rejected",
-                                                                                    "b005_physical_selector_consults_shared_backend_evidence",
-                                                                                    "b005_dependency_rebuilder_uses_same_backend_evidence",
-                                                                                    "b005_dependency_resolver_queries_same_priority_arbitrator"
-                                                                                ],
-                                                            "source_branches":  [
-                                                                                    "PackageStore.cpp:560-581 ordinary backend priority and None/Missing continue; other statuses terminal",
-                                                                                    "PackageStore.cpp:520-557 WITH_EDITOR hybrid cooked mount remains an unverified separate branch",
-                                                                                    "Selector and rebuilder now reconcile one evidenced backend list and reject conflicting copies"
-                                                                                ],
-                                                            "test_driver":  "catalog/bin/verify-uedb5-zen-backend-source-oracle.php"
-                                                        }
-                       }
-                   ],
-    "next_batch":  "B006",
-    "gate_status":  {
-                        "inventory":  false,
-                        "contracts":  true,
-                        "implementation":  true,
-                        "independent_verification":  false,
-                        "change_integrity":  true
-                    }
+    "schema": 1,
+    "batch": "B005",
+    "engine": "UE5",
+    "profile": "UE5.8.3",
+    "status": "verified",
+    "inventory_a": "Source call-path inventory",
+    "inventory_b": "Source structure and conditional behavior inventory",
+    "complete_inventory": true,
+    "source_root_hint": "L:/Source/Engine/UE5/UE 5.8.3",
+    "operations": [
+        {
+            "id": "UE5-583-BACKEND-STATUS-001",
+            "summary": "UE5 package store terminal status and backend priority",
+            "source": {
+                "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/PackageStore.cpp",
+                "sha256": "fb5c1930f5b8e6611392c3009dde16922661c7942f2eaa8d875492c8981f67b9",
+                "symbols": [
+                    "FPackageStore::GetPackageStoreEntry",
+                    "FPackageStore::Mount"
+                ]
+            },
+            "implementation": {
+                "path": "catalog/src/Infrastructure/Metadata/Uedb5ZenPackageStoreBackendArbitrator.php",
+                "sha256": "593c36093e63f616be4e0eab2b6308e72f3adf75f1cbb1f1e25e09b05f87e26d"
+            },
+            "tests": [
+                "catalog/bin/verify-uedb5-zen-backend-arbitration.php",
+                "catalog/bin/verify-uedb5-physical-provider-selector.php",
+                "catalog/bin/verify-uedb5-dependency-rebuilder.php",
+                "catalog/bin/verify-uedb5-dependency-sql-isolated.php",
+                "catalog/bin/verify-uedb5-zen-backend-source-oracle.php",
+                "catalog/bin/verify-uedb5-ue5-zen-dependency-resolution.php",
+                "catalog/bin/verify-uedb5-zen-hybrid-source-contract.php",
+                "catalog/bin/verify-uedb5-zen-backend-callers.php",
+                "catalog/bin/verify-uedb5-b005-operation-acceptance.php"
+            ],
+            "related_differences": [
+                "UE5-D005",
+                "UE5-D006",
+                "UE5-D009",
+                "UE5-D013"
+            ],
+            "disposition": "verified",
+            "reason": "Operation verified: pinned source ordinary and hybrid-backend status/priority branch tables; source-derived independent oracles; exhaustive production callsite inventory with negative controls; real in-memory V5 PDO selector and metadata rebuild; session-temporary real MySQL status projection. No static file is promoted to authoritative live-editor state. Independent acceptance is an executable code-level review, NOT a claim of an external human code review or whole-engine compliance.",
+            "correction_commits": [
+                "3a283a28df7bcb3f9997c58ab8f169134cf238ce"
+            ],
+            "guarded_implementation_files": [
+                {
+                    "sha256": "c39b1ee0fd4f91b356ee3b70a2ea9577483418c3f1e68f0048909f93222f723a",
+                    "path": "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php"
+                },
+                {
+                    "sha256": "cfd10f008b6651db60f3f3037bd0b391fd5a4bbd0add0b3844fff4e6314cb874",
+                    "path": "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php"
+                }
+            ],
+            "source_contract_evidence": {
+                "expected_checks": [
+                    "b005_pinned_package_store_source_hash",
+                    "b005_epic_none_missing_only_continue",
+                    "b005_epic_other_statuses_terminal",
+                    "b005_epic_exhausted_status_missing",
+                    "b005_epic_priority_descending_mount",
+                    "b005_epic_new_mount_inserted_at_priority_lower_bound",
+                    "b005_independent_none_continues",
+                    "b005_independent_missing_continues",
+                    "b005_independent_pending_terminal",
+                    "b005_independent_notinstalled_terminal",
+                    "b005_independent_ok_terminal",
+                    "b005_independent_equal_priority_newest_wins",
+                    "b005_independent_descending_priority_not_call_order",
+                    "b005_nested_evidence_preserved",
+                    "b005_conflicting_evidence_rejected",
+                    "b005_physical_selector_consults_shared_backend_evidence",
+                    "b005_dependency_rebuilder_uses_same_backend_evidence",
+                    "b005_dependency_resolver_queries_same_priority_arbitrator"
+                ],
+                "source_branches": [
+                    "PackageStore.cpp:560-581 ordinary backend priority and None/Missing continue; other statuses terminal",
+                    "PackageStore.cpp:520-557 WITH_EDITOR hybrid cooked mount remains an unverified separate branch",
+                    "Selector and rebuilder now reconcile one evidenced backend list and reject conflicting copies"
+                ],
+                "test_driver": "catalog/bin/verify-uedb5-zen-backend-source-oracle.php"
+            },
+            "source_reachability_evidence": {
+                "test_driver": "catalog/bin/verify-uedb5-zen-backend-callers.php",
+                "expected_checks": [
+                    "b005_all_direct_production_arbitrator_calls_mapped",
+                    "b005_unmapped_future_caller_fails_inventory",
+                    "b005_extra_existing_caller_fails_inventory",
+                    "b005_mapped_file_PdoUedb5PhysicalProviderSelector",
+                    "b005_mapped_file_Uedb5DependencyRebuilder",
+                    "b005_mapped_file_Uedb5Ue5ZenDependencyResolver",
+                    "b005_mapped_file_Uedb5GameDependencyPassService",
+                    "b005_mapped_file_Uedb5ZenEffectivePackageStoreContextBuilder",
+                    "b005_mapped_file_Uedb5ZenMountedStoreContextBuilder"
+                ],
+                "source_inventory_record": "catalog/compliance/B005-BACKEND-STATUS-SOURCE.md"
+            },
+            "acceptance_evidence": {
+                "reachable_source_branches": "Pinned PackageStore.cpp:198-309 hybrid forced-loose, registry writable/readonly/unknown and Missing fallback; 473-563 editor/non-editor mount; 565-581 high-priority status arbitration and exhaustion. Two independent executable source-derived branch tests.",
+                "epic_to_unrealdb_mapping": "catalog/compliance/B005-BACKEND-STATUS-SOURCE.md + catalog/bin/verify-uedb5-zen-backend-callers.php exhaustively map five direct production arbitrator calls and related V5/SQL entry points.",
+                "independent_differential": "Separate reference model from production implementation checks ordinary and hybrid backend decisions; real PDO selector, V5 snapshot rebuild, and temporary-table MySQL publication are independently asserted through catalog/bin/verify-uedb5-b005-operation-acceptance.php.",
+                "all_v5_consumers": "Source scanner enumerates 559 production PHP files, five direct arbitrator invocations and six source-context/consumer classes, fails on new/unmapped calls; tests select/provider resolver/pass2/physical file backend/context/SQL outcomes.",
+                "independent_reviewer": "Executable source-derived oracles and a distinct operation-level acceptance driver independently validate production behavior. No external human reviewer or actual UnrealEditor execution claimed."
+            },
+            "independent_inventory_evidence": {
+                "source_review": "catalog/compliance/B005-BACKEND-STATUS-SOURCE.md",
+                "scope_boundary": "FPackageStore outer backend priority/status is identical whether backend is ordinary or a separately resolved editor hybrid. Hybrid internal behavior source model is verified, but its live state is neither inferred nor required for a static read.",
+                "independent_reference": "catalog/bin/verify-uedb5-zen-backend-source-oracle.php",
+                "hybrid_branch_oracle": "catalog/bin/verify-uedb5-zen-hybrid-source-contract.php",
+                "caller_negative_controls": "catalog/bin/verify-uedb5-zen-backend-callers.php",
+                "sql_publication": "catalog/bin/verify-uedb5-dependency-sql-isolated.php",
+                "acceptance_driver": "catalog/bin/verify-uedb5-b005-operation-acceptance.php"
+            },
+            "test_results": {
+                "test_driver": "catalog/bin/verify-uedb5-b005-operation-acceptance.php",
+                "expected_checks": [
+                    "b005_driver_source_passes",
+                    "b005_driver_hybrid_passes",
+                    "b005_driver_callers_passes",
+                    "b005_driver_selector_passes",
+                    "b005_driver_rebuilder_passes",
+                    "b005_driver_arbitration_passes",
+                    "b005_driver_mount_passes",
+                    "b005_driver_sql_passes",
+                    "b005_source_exact_priority_and_statuses",
+                    "b005_hybrid_all_key_source_branches",
+                    "b005_complete_production_call_inventory",
+                    "b005_physical_selection_real_pdo",
+                    "b005_rebuild_persistent_v5_metadata_roundtrip",
+                    "b005_mysql_temporary_status_projection_complete",
+                    "b005_production_runtime_authority_not_fabricated"
+                ],
+                "result": "All checks pass under the pinned Epic UE5.8.3 source and current DEV/PRD code. Executed on each formal verification run. Source-derived hybrid oracle is NOT an executed Epic binary."
+            }
+        }
+    ],
+    "next_batch": "B006",
+    "gate_status": {
+        "inventory": true,
+        "contracts": true,
+        "implementation": true,
+        "independent_verification": true,
+        "change_integrity": true
+    },
+    "reconciliation_evidence": {
+        "scope": "The pinned FPackageStore normal priority/status arbitration and hybrid-backend output interpretation for the UE5 Zen metadata/indexing/dependency provider selection pipeline. Engine Editor/AssetRegistry live file state is not reconstructed from a static archive.",
+        "epic_source": "Engine/Source/Runtime/CoreUObject/Private/Serialization/PackageStore.cpp:198-309,473-581; SHA256 pinned by original B005 manifest",
+        "source_review": "catalog/compliance/B005-BACKEND-STATUS-SOURCE.md",
+        "branch_table": "catalog/bin/verify-uedb5-zen-hybrid-source-contract.php",
+        "complete_production_call_graph": "catalog/bin/verify-uedb5-zen-backend-callers.php",
+        "end_to_end": "catalog/bin/verify-uedb5-b005-operation-acceptance.php",
+        "excluded_live_state": "Source marks hybrid conditional on WITH_EDITOR/AssetRegistry/physical readonly state. UnrealDB consumes authoritative observed backend statuses only; no runtime state invented."
+    }
 }

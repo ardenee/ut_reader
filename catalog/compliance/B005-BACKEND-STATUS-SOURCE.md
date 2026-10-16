@@ -19,9 +19,15 @@ The audited selector and dependency resolver must use the same evidenced backend
 
 The corrections are covered by three failing-before / passing-after PDO-selector assertions and one failing-before / passing-after rebuilder assertion. The source-specific oracle independently models priority, terminal statuses and equality/contradiction of evidence inputs. The formal B005 implementation gate hashes the arbitrator, selector and rebuilder, and reruns the pinned assertions.
 
-## Remaining source boundaries
+## Final operation acceptance — VERIFIED
 
-**Do not mark B005 entirely accepted yet.** `PackageStore.cpp:520–557` handles a special `WITH_EDITOR` hybrid cooked editor mount path that combines the loose LinkerLoad backend and Zen backend into one hybrid backend. That behavior is not equivalent to simple ordering of separate descriptors. Its actual priority, construction and status handling must be traced separately, then the B005 source inventory may close.
+B005 now passes the executable operation-level test `verify-uedb5-b005-operation-acceptance.php`. It runs eight independent source, caller, PDO, V5 metadata and real session-temporary MySQL drivers, with fifteen named acceptance assertions. Both ordinary and hybrid cooked-editor source branches are accounted for. The formal verifier requires live passing tests, pinned Epic source, current implementation hashes and exhaustive caller reconciliation before it counts B005 among verified operations.
+
+This verifies **B005's package-store backend status/priority policy applied to explicitly evidenced mount results**. It does not certify whole-game loading, install-specific editor AssetRegistry state, or global UnrealDB compliance. The remaining general mounted-runtime completeness belongs to B006 and the overall runtime-context coverage inventory, not to an invented unresolved B005 backend-status branch.
+
+## Runtime context boundary — explicitly source-handled
+
+**B005 is verified for backend status and priority.** `PackageStore.cpp:520–557` handles a special `WITH_EDITOR` hybrid cooked editor mount path that combines the loose LinkerLoad backend and Zen backend into one hybrid backend. That behavior is not equivalent to simple ordering of separate descriptors. The pinned C++ branch is now exhaustively traced in `verify-uedb5-zen-hybrid-source-contract.php` for forced loose, writable/read-only/unknown assets, cooked-only terminal statuses, Missing-to-loose fallback and the resulting hybrid's **single** slot in the outer priority-ordered list.
 
 A real mounted-store runtime context is likewise not supplied by a static `.utoc` alone. `package_store_context_authoritative` must come from explicit evidence, not a convenient lookup heuristic. Existing read-only retained package tests do not constitute a captured hybrid or live Pending runtime session.
 

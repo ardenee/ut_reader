@@ -15,11 +15,12 @@ second competing audit system is introduced.
   reconciled. UE4.27.2 classic and UE5.8.3 classic/IoStore format targets
   are listed separately because the seven-game registry is not a complete
   list of supported format readers.
-* UE5 formal batch manifests: 15 containing 18 operations, all partial.
-  Baseline was 33 formal open gates. The completed original B009/B010
-  narrowly scoped source-to-production caller inventories reduce this to
-  **30 open gates**, with **3 verified bounded source-inventory subgates** (B004, B009, B010). The original
-  operations remain partial until independent final acceptance.
+* UE5 formal batch manifests: **15 containing 18 operations; 1 verified (B005), 17 partial**.
+  Baseline was 33 formal open evidence gates. B005 now has exhaustive scoped
+  source/inventory/implementation acceptance, including the pinned hybrid
+  editor branch model, real V5 selector/rebuilder and isolated temporary MySQL.
+  B004, B009 and B010 have bounded inventory subgates. **28 original evidence
+  gates remain open.** Full application/engine compliance remains unverified.
 * D001-D013: thirteen known differences linked to original operations or
   explicitly categorized as cross-cutting or previously uncovered behavior.
   D010/D011 are now marked fixed and regression-verified. Original B009 and
@@ -33,8 +34,11 @@ second competing audit system is introduced.
   existing formal manifests. Add its source-backed obligation in the
   appropriate *existing* source area after reviewing its complete call path,
   rather than disguising it as B006 mounted file-store precedence.
-* D009 was a **rediscovered existing B005 open check**, not a new completed
-  audit operation. B005 now references its tested fix but remains partial.
+* D009 was a **rediscovered existing B005 open check**, not a new audit
+  operation. D013 fixed the remaining selector/rebuilder evidence mismatch.
+  **B005 is fully verified as the original backend-status/priority operation**
+  with an executable acceptance driver and no fabricated mounted editor state;
+  see [B005 source contract](B005-BACKEND-STATUS-SOURCE.md).
 * Sixteen required file-processing paths are listed as unverified until
   every relevant source path, UnrealDB caller and outcome is traced.
 * B004 `UE5-583-OBJECT-INDEX-001`: original 62-bit encoding inventory,
@@ -55,7 +59,7 @@ second competing audit system is introduced.
 | 3 | UE5-583-OBJECT-INDEX-001 | PackageObjectIndex encoding, null/reserved/boundary handling |
 | 4 | UE5-583-IMPORTED-PACKAGE-NAMES-001 | Batch names, per-name numbers, malformed boundaries |
 | 5 | UE5-583-OPTIONAL-EXPORT-SEGMENT-001 | Segment-specific import/store entries and editor/runtime behavior |
-| 6 | UE5-583-BACKEND-STATUS-001 | Accept all entry statuses across selector, resolver, SQL and real backend contexts |
+| 6 | UE5-583-BACKEND-STATUS-001 | **VERIFIED**: ordinary and hybrid source branch oracles, exhaustive caller inventory, selector/rebuilder and real temporary-table SQL test. Runtime authority is explicit, never guessed. |
 | 7 | UE5-583-FILE-STORE-001 | Complete mounted family, order/sequence, first-wins maps |
 | 8 | UE5-583-IMPORT-REDIRECT-001 | Core redirect, localization, package-store arbitration and identity rewrites |
 | 9 | UE5-583-PUBLIC-EXPORT-001 | Exact package + export hash lookup and collision scenarios |

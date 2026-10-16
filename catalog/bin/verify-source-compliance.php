@@ -273,7 +273,60 @@ foreach($files as $file){
                 else{$verifiedConsumerGates++;}
             }
         }
-        if(($record['disposition']??'')==='verified'){$verified++;}else{$open++;}
+        // Operation-level acceptance is executable, not a reviewer-shaped
+        // blank field. Every declared independent source oracle, caller
+        // inventory and SQL fixture must be rechecked on the current code.
+        $accepted=($record['disposition']??'')==='verified';
+        $independent=($gates['independent_verification']??false)===true;
+        if($accepted||$independent){
+            $proof=(array)($record['test_results']??[]);
+            $evidence=(array)($record['independent_inventory_evidence']??[]);
+            $driver=(string)($proof['test_driver']??'');
+            $required=(array)($proof['expected_checks']??[]);
+            $driverPath=realpath($root.'/'.str_replace(chr(92),'/',$driver));
+            $safeRoot=realpath($root);
+            $valid=$accepted&&$independent
+                &&($data['status']??'')==='verified'
+                &&($data['complete_inventory']??false)===true
+                &&($gates['inventory']??false)===true
+                &&($gates['contracts']??false)===true
+                &&($gates['implementation']??false)===true
+                &&($gates['change_integrity']??false)===true
+                &&!empty($record['source_reachability_evidence'])
+                &&!empty($record['source_contract_evidence'])
+                &&!empty($evidence['source_review'])
+                &&!empty($evidence['scope_boundary'])
+                &&$sourceRoot!==''
+                &&count($required)>=5&&array_is_list($required)
+                &&is_string($driverPath)&&is_string($safeRoot)
+                &&str_starts_with(strtolower(str_replace(chr(92),'/',$driverPath)),
+                    strtolower(str_replace(chr(92),'/',$safeRoot)).'/');
+            if(!$valid){
+                $failures[]=$id.': entire-operation acceptance lacks verified source scope, gates or independent driver';
+            }else{
+                if(!array_key_exists($driverPath,$contractTestRuns)){
+                    $lines=[];$result=127;
+                    exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($driverPath).' 2>&1',
+                        $lines,$result);
+                    $parsed=json_decode(implode("\n",$lines),true);
+                    $contractTestRuns[$driverPath]=[
+                        'exit'=>$result,'result'=>is_array($parsed)?$parsed:[]
+                    ];
+                }
+                $test=$contractTestRuns[$driverPath];
+                $pass=($test['exit']??1)===0
+                    &&($test['result']['ok']??false)===true
+                    &&($test['result']['operation']??'')===$id;
+                foreach($required as $case){
+                    if(!is_string($case)||($test['result']['checks'][$case]??false)!==true){
+                        $pass=false;
+                        $failures[]=$id.': operation acceptance regression failed: '.(string)$case;
+                    }
+                }
+                if(!$pass){$failures[]=$id.': operation-level independent acceptance driver failed';}
+                else{$verified++;}
+            }
+        }else{$open++;}
     }
 }
 $recovery=null;
