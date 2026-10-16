@@ -15,7 +15,7 @@
         "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
         "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9",
         "symbols": [
-          "FPackageStore::GetPackageRedirectInfo",
+          "GetPackageRedirectInfo",
           "FAsyncPackageDesc2::FromPackageImport"
         ]
       },
