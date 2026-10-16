@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "batch": "B044",
+  "status": "partial",
+  "source": {
+    "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+    "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9",
+    "symbol": "AsyncLoading2_ShouldSkipLoadingExport",
+    "line": 674
+  },
+  "implementation": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenDependencyResolver.php",
+  "test": "catalog/bin/verify-uedb5-zen-export-filter-context.php",
+  "result": "9 synthetic execution-context cases pass against actual resolver",
+  "certified": false,
+  "remaining": [
+    "Independent source completeness audit",
+    "Authentic cooked fixture differential",
+    "Projection consumer verification"
+  ],
+  "next_batch": "B045"
+}
