@@ -23,5 +23,5 @@ foreach($inventory['symbols'] as $symbol){
 }
 $gaps=array_values(array_filter($rows,fn($r)=>$r['gap']));
 $missing=array_values(array_filter($rows,fn($r)=>!$r['source_present']));
-echo json_encode(['ok'=>$missing===[],'batch'=>'B014','seeded_symbols'=>count($rows),'unmapped_count'=>count($gaps),'unmapped'=>array_column($gaps,'symbol'),'missing_source_symbols'=>array_column($missing,'symbol'),'certification'=>'not certified; seeded inventory only'],JSON_PRETTY_PRINT),PHP_EOL;
-exit($missing===[]?0:1);
+echo json_encode(['ok'=>$missing===[]&&$gaps===[],'batch'=>'B014','seeded_symbols'=>count($rows),'unmapped_count'=>count($gaps),'unmapped'=>array_column($gaps,'symbol'),'missing_source_symbols'=>array_column($missing,'symbol'),'certification'=>'not certified; seeded inventory only'],JSON_PRETTY_PRINT),PHP_EOL;
+exit($missing===[]&&$gaps===[]?0:1);
