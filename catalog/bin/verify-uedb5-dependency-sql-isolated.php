@@ -7,6 +7,8 @@ require_once dirname(__DIR__) . '/bootstrap.php';
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5MetadataReader;
 use UnrealDb\Catalog\Infrastructure\Metadata\PdoUedb5DependencyProjectionPublisher;
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5DependencyProjectionBuilder;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5Ue5ZenDependencyResolver;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5ZenPackageReader;
 
 $app = catalog_bootstrap(false);
 $db = $app->db;
@@ -38,6 +40,7 @@ $ddl = [
         PRIMARY KEY(file_id,package_key_kind,package_key)) ENGINE=InnoDB'
 ];
 $created = []; $results = []; $failures = []; $providerConsensusFixture = null;
+$backendStatusFixture = [];
 $files = [2=>111139,3=>113253,4=>148919,5=>111460,6=>112300,7=>113526,12=>110902];
 try {
     foreach ($ddl as $i=>$sql) { $db->exec($sql); $created[]=$tables[$i]; }
@@ -105,6 +108,78 @@ try {
     if(!$providerConsensusFixture['ok']){
         $failures[]=['provider_consensus_fixture'=>'A conflicted package summary regained a provider identity.'];
     }
+
+    // D009: real MySQL SQL projection retains outcome distinctions across
+    // terminal UE5 package-store backend states; only temporary tables exist
+    // in this session. Source-shaped metadata still owns detailed reasons.
+    $zenPackageId='AABBCCDDEEFF0011';
+    $zenConsumer=[
+        'package_family'=>Uedb5ZenPackageReader::PACKAGE_FAMILY,
+        'source_policy'=>Uedb5ZenPackageReader::SOURCE_POLICY,
+        'sections'=>[
+            'package_summary'=>[['package_id'=>'0102030405060708']],
+            'imports'=>[[
+                'type'=>'PackageImport','dependency_class'=>'hard',
+                'provider_package_id'=>$zenPackageId,
+                'provider_public_export_hash'=>'1122334455667788',
+            ]],
+            'exports'=>[],'cell_imports'=>[],'cell_exports'=>[],
+            'soft_package_references'=>[],'dependency_bundle_entries'=>[],
+            'package_redirects'=>[],'localized_packages'=>[],
+        ],
+    ];
+    $expectedStatuses=[
+        'Pending'=>['unresolved','package_store_entry_pending'],
+        'NotInstalled'=>['missing','package_store_entry_not_installed'],
+        'Missing'=>['missing','package_store_entry_missing'],
+        'Ok'=>['unresolved','package_store_evidenced_provider_unavailable'],
+    ];
+    $statusFixtureId=900000002;
+    foreach($expectedStatuses as $backendStatus=>[$expectedOutcome,$expectedReason]){
+        $context=[
+            'package_identity_context_authoritative'=>true,
+            'package_store_context_authoritative'=>true,
+            'package_redirects'=>[],'localized_packages'=>[],
+            'package_store_backend_results'=>[[
+                'backend_id'=>'runtime','priority'=>10,
+                'entries'=>[$zenPackageId=>[
+                    'status'=>$backendStatus,'file_id'=>910000077,
+                ]],
+                'redirects'=>[],
+            ]],
+        ];
+        $resolved=Uedb5Ue5ZenDependencyResolver::resolve($zenConsumer,[],$context);
+        $statusSnapshot=[
+            'file'=>['id'=>$statusFixtureId,'game_id'=>7,
+                'package_name'=>'/Game/D009BackendStatus'],
+            'section_schemas'=>['imports'=>'ue5.zen.package-object-index.v1'],
+            'sections'=>['dependency_results'=>$resolved],
+        ];
+        $projected=Uedb5DependencyProjectionBuilder::build($statusSnapshot);
+        $publisher->publish($statusSnapshot);
+        $sql=$db->query('SELECT p.dependency_count,p.missing_count,'
+          .'p.unresolved_count,p.provider_file_id,e.outcome AS edge_outcome '
+          .'FROM ue_uedb5_dependency_packages p JOIN ue_uedb5_dependency_edges e '
+          .'ON e.file_id=p.file_id '
+          .'WHERE p.file_id='.$statusFixtureId)->fetch(PDO::FETCH_ASSOC);
+        $match=count($resolved)===1
+            &&($resolved[0]['outcome']??'')===$expectedOutcome
+            &&($resolved[0]['reason_code']??'')===$expectedReason
+            &&is_array($sql)
+            &&(int)$sql['dependency_count']===1
+            &&(int)$sql['missing_count']===($expectedOutcome==='missing'?1:0)
+            &&(int)$sql['unresolved_count']===($expectedOutcome==='unresolved'?1:0)
+            &&$sql['provider_file_id']===null
+            &&(int)$sql['edge_outcome']===(int)$projected['dependency_edges'][0]['outcome'];
+        $backendStatusFixture[]=['status'=>$backendStatus,'ok'=>$match,
+            'source_outcome'=>$resolved[0]['outcome']??null,
+            'source_reason'=>$resolved[0]['reason_code']??null,
+            'sql_missing'=>$sql['missing_count']??null,
+            'sql_unresolved'=>$sql['unresolved_count']??null];
+        if(!$match){
+            $failures[]=['backend_status_fixture'=>$backendStatus.' SQL projection mismatch.'];
+        }
+    }
 } catch (Throwable $error) { $failures[]=['setup_error'=>$error->getMessage()]; }
 finally {
     if ($db->inTransaction()) { $db->rollBack(); }
@@ -115,7 +190,8 @@ finally {
 }
 $ok = $failures===[] && count($results)===count($files);
 echo json_encode(['ok'=>$ok,'temporary_sql_only'=>true,
-    'source'=>'existing V5 dependency snapshots, not fresh resolver execution',
-    'results'=>$results,'provider_consensus_fixture'=>$providerConsensusFixture,'failures'=>$failures],
+    'source'=>'seven retained V5 snapshots plus synthetic Zen backend-status resolver execution; session-temporary SQL only',
+    'results'=>$results,'provider_consensus_fixture'=>$providerConsensusFixture,
+    'backend_status_fixture'=>$backendStatusFixture,'failures'=>$failures],
     JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;
 exit($ok?0:2);

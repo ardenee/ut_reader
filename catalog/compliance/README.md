@@ -28,6 +28,8 @@ Set `UNREALDB_EPIC_SOURCE_ROOT` to the pinned UE5.8.3 source root, then run:
 & C:\php8.5\php.exe catalog\bin\audit-ue5-store-definitions.php
 & C:\php8.5\php.exe catalog\bin\verify-uedb5-ue5-source-batches.php
 & C:\php8.5\php.exe catalog\bin\verify-source-compliance.php --all --strict
+# MySQL session-temporary SQL publisher acceptance (no persistent SQL writes):
+& C:\php8.5\php.exe catalog\bin\verify-uedb5-dependency-sql-isolated.php
 # Isolated Satisfactory real container-header read-only fixture (MySQL port 3339):
 & C:\php8.5\php.exe catalog\bin\verify-uedb5-satisfactory-header-readonly-isolated.php
 # Indexed, read-only live-data check (explicit file IDs are mandatory):
