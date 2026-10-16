@@ -53,6 +53,8 @@ $tests=[
  'verify-uedb5-b001-mapped-name-source.php',
  'verify-uedb5-b001-authentic-scriptobjects.php',
  'verify-uedb5-b001-operation-acceptance.php',
+ 'verify-uedb5-b002-name-batch-source.php',
+ 'verify-uedb5-b002-operation-acceptance.php',
  'verify-uedb5-zen-script-objects-standalone.php',
  'verify-uedb5-zen-mounted-store-context.php',
  'verify-uedb5-zen-effective-store-context.php',

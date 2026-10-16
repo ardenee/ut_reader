@@ -28,10 +28,148 @@
                 "sha256": "6b79d5a8465d01bbe784f06aaf07f0033e9dc84300d6761b135eb29c74b871da"
             },
             "tests": [
-                "catalog/bin/verify-uedb5-zen-script-objects-standalone.php"
+                "catalog/bin/verify-uedb5-b002-name-batch-source.php",
+                "catalog/bin/verify-uedb5-b002-operation-acceptance.php",
+                "catalog/bin/verify-uedb5-b001-authentic-scriptobjects.php",
+                "catalog/bin/verify-uedb5-b001-operation-acceptance.php",
+                "catalog/bin/verify-uedb5-zen-script-objects-standalone.php",
+                "catalog/bin/verify-uedb5-ue5-zen-package.php"
             ],
-            "disposition": "partial",
-            "reason": "Synthetic test passed; real global chunk evidence outstanding."
+            "disposition": "verified",
+            "reason": "Original source-defined offline cooked ScriptObjects NameBatch wire-index mapping verified with four pinned Epic sources, 18 branch/source checks, authentic 50640-name global chunk, 559/590 platform inventory and 11 accepted operation assertions. Live FNamePool/registration remains outside this original obligation; B002 sibling SCRIPT-003 still partial.",
+            "operation_status": "verified",
+            "complete_inventory": true,
+            "gate_status": {
+                "inventory": true,
+                "contracts": true,
+                "implementation": true,
+                "independent_verification": true,
+                "change_integrity": true
+            },
+            "additional_sources": [
+                {
+                    "path": "Engine/Source/Runtime/Core/Private/UObject/UnrealNames.cpp",
+                    "sha256": "1a4f7f23564afebc8c18d080a4757b16958c15fcab513c9e3a1f0a67e565f67c",
+                    "symbols": [
+                        "struct FSerializedNameHeader",
+                        "struct FNameBatchLoader",
+                        "LoadNameBatch(FArchive& Ar"
+                    ]
+                },
+                {
+                    "path": "Engine/Source/Runtime/Core/Public/UObject/NameBatchSerialization.h",
+                    "sha256": "63fa10b5509a03cd9c55e836b5ab2eaa1522bd7a43e4564b96a5de80a9c7c979",
+                    "symbols": [
+                        "LoadNameBatch(FArchive& Ar",
+                        "ENameBatchLoadingFlags"
+                    ]
+                },
+                {
+                    "path": "Engine/Source/Runtime/Core/Public/Serialization/MappedName.h",
+                    "sha256": "5221b85d9a40d300607e13d7146900e88a23d0894650296497014ec4f0f2787a",
+                    "symbols": [
+                        "class FMappedName",
+                        "GetIndex() const"
+                    ]
+                }
+            ],
+            "source_contract_evidence": {
+                "test_driver": "catalog/bin/verify-uedb5-b002-name-batch-source.php",
+                "expected_checks": [
+                    "b002_epic_async_source_sha256",
+                    "b002_epic_names_source_sha256",
+                    "b002_epic_batch_source_sha256",
+                    "b002_epic_mapped_source_sha256",
+                    "b002_epic_zero_names_returns_without_header",
+                    "b002_epic_wire_count_string_bytes_hash_and_arrays",
+                    "b002_epic_saved_hash_rehash_or_input_shard_branch",
+                    "b002_epic_header_utf16_and_15bit_length",
+                    "b002_epic_cooked_loader_preserves_name_map_order",
+                    "b002_unrealdb_name_batch_wire_decoder_maps_field_order",
+                    "b002_unrealdb_name_batch_preserves_index_and_original_hash",
+                    "b002_utf8_utf16_names_are_ordered_and_roundtrip",
+                    "b002_zero_names_consume_only_count",
+                    "b002_truncated_utf16_still_rejected",
+                    "b002_declared_name_bytes_outside_available_rejected",
+                    "b002_real_50640_name_map_has_54968_serialized_consumers",
+                    "b002_real_first_record_mapped_name_index_and_display",
+                    "b002_complete_source_files_and_one_script_diagnostic_caller"
+                ],
+                "source_branches": [
+                    "Ar << uint32 Num; zero names returns before reading additional name metadata",
+                    "uint32 NumStringBytes, uint64 HashVersion, one uint64 saved hash and two-byte header per name, concatenated UTF8/UTF16 string bytes",
+                    "Epic GetIndex/GetNumber mapped index lookup and invariant name positions",
+                    "Saved-hash compatibility/re-hash and input-order/shard-order branches are live FNamePool effects, not offline mutation",
+                    "Direct consumer inventory of the ScriptObjects name-batch entry point and original error-path bounds"
+                ]
+            },
+            "source_reachability_evidence": {
+                "test_driver": "catalog/bin/verify-uedb5-b002-name-batch-source.php",
+                "expected_checks": [
+                    "b002_epic_cooked_loader_preserves_name_map_order",
+                    "b002_unrealdb_name_batch_wire_decoder_maps_field_order",
+                    "b002_complete_source_files_and_one_script_diagnostic_caller"
+                ],
+                "source_inventory_record": "catalog/compliance/B002-SCRIPT-NAME-BATCH-SOURCE.md",
+                "complete_php_source_scan": "PRD 559 files / DEV 590 files, exactly one direct cooked ScriptObjects caller on either"
+            },
+            "source_equivalence_evidence": {
+                "conclusion": "no_source_difference_found",
+                "independent_test_driver": "catalog/bin/verify-uedb5-b002-name-batch-source.php",
+                "required_source_checks": [
+                    "b002_epic_wire_count_string_bytes_hash_and_arrays",
+                    "b002_epic_header_utf16_and_15bit_length",
+                    "b002_unrealdb_name_batch_wire_decoder_maps_field_order",
+                    "b002_unrealdb_name_batch_preserves_index_and_original_hash",
+                    "b002_real_50640_name_map_has_54968_serialized_consumers"
+                ],
+                "scope": "Serialized global cooked ScriptObjects NameBatch wire/order only; runtime FNamePool rehash and intern not claimed"
+            },
+            "guarded_implementation_files": [
+                {
+                    "path": "catalog/src/Infrastructure/Metadata/Uedb5ZenScriptObjectsReader.php",
+                    "sha256": "9d1a273cab4b32fb5820dd41409e4a2c5618262381f219f7130699df343acc46"
+                },
+                {
+                    "path": "catalog/src/Infrastructure/Metadata/Uedb5IoStoreTocReader.php",
+                    "sha256": "5abc88d9d0e9123c8c24c04d32f60b97279740b9382be88b20dbd987a7a26a73"
+                },
+                {
+                    "path": "catalog/src/Infrastructure/Metadata/Uedb5BinaryReader.php",
+                    "sha256": "e4404bfec9d8dcc20a49bd705a95994e78665e79dc46dbe7be5265ca36754230"
+                }
+            ],
+            "test_results": {
+                "test_driver": "catalog/bin/verify-uedb5-b002-operation-acceptance.php",
+                "expected_checks": [
+                    "b002_driver_source_passes",
+                    "b002_driver_authentic_passes",
+                    "b002_driver_b001_passes",
+                    "b002_driver_standalone_passes",
+                    "b002_driver_zen_passes",
+                    "b002_exact_epic_batch_structure_and_zero_count",
+                    "b002_input_and_shard_order_mapping",
+                    "b002_utf8_utf16_and_negative_bounds",
+                    "b002_actual_cooked_name_map",
+                    "b002_exact_one_name_batch_caller_in_production_inventory",
+                    "b002_diagnostic_names_not_runtime_objects"
+                ],
+                "result": "Five executable independent drivers; 11 accepted assertions, 18 source-name tests and authentic 50640-name/54968-record Satisfactory chunk; no code difference for source-defined offline NameBatch."
+            },
+            "independent_inventory_evidence": {
+                "source_review": "catalog/compliance/B002-SCRIPT-NAME-BATCH-SOURCE.md",
+                "scope_boundary": "Offline cooked global NameBatch bytes, serialized indices and display name; live engine FNamePool/shard rehash/registration excluded, SCRIPT-003 remains partial",
+                "independent_source_oracle": "catalog/bin/verify-uedb5-b002-name-batch-source.php",
+                "empirical_authentic_cooked_fixture": "catalog/bin/verify-uedb5-b001-authentic-scriptobjects.php",
+                "operation_acceptance": "catalog/bin/verify-uedb5-b002-operation-acceptance.php"
+            },
+            "acceptance_evidence": {
+                "reachable_source_branches": "Pinned UnrealNames.cpp::FNameBatchLoader and FSerializedNameHeader, NameBatchSerialization.h and AsyncLoading2.cpp diagnostic use; zero count, UTF16 and saved hash branches accounted for",
+                "epic_to_unrealdb_mapping": "B002-SCRIPT-NAME-BATCH-SOURCE.md source layout-to-index and direct consumer mapping; preserved raw hash version and display names; no runtime FNamePool claims",
+                "independent_differential": "Authentic 50640-name Satisfactory global.utoc NameBatch consumed by 54968 mapped ScriptObject records; UTF8 UTF16 fixtures, corrupt length and zero count. No offline name-map source difference found.",
+                "all_v5_consumers": "559 PRD and 590 DEV PHP files enumerated, exactly one direct cooked ScriptObjects name-mapping reader; Zen package parser and real IoStore chunk consumer tested",
+                "independent_reviewer": "Five-driver source-pinned B002 acceptance, no-change source oracle with original unchanged implementation SHA; no invented fix"
+            }
         },
         {
             "id": "UE5-583-SCRIPT-003",
@@ -66,5 +204,10 @@
         "implementation": false,
         "independent_verification": false,
         "change_integrity": true
+    },
+    "reconciliation_evidence": {
+        "verified_original": "SCRIPT-002 wire-index operation independently accepted with source-derived and authentic evidence",
+        "open_original": "SCRIPT-003 remains partial: live script import object store/runtime",
+        "record": "catalog/compliance/B002-SCRIPT-NAME-BATCH-SOURCE.md"
     }
 }

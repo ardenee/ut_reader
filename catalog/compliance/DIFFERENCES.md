@@ -4,7 +4,7 @@ This is the **engineering audit tracker**, distinct from method classification a
 
 ## Current engineering status — 2026-10-16
 
-- **Original source operations:** 15 manifests, 18 operations; **12 verified** (B001, B004, B005, B006, B007, B008, B009, B010, B011, B012, B015-2, B016), 6 partial and **10 open evidence gates**. No global Epic compliance claim.
+- **Original source operations:** 15 manifests, 18 operations; **13 verified** (B001, B002/SCRIPT-002, B004, B005, B006, B007, B008, B009, B010, B011, B012, B015-2, B016), 5 partial and **9 open evidence gates**. No global Epic compliance claim.
 - **Engineering evidence:** Differences D001–D026 below link source rules, corrections, negative-before/positive-after fixtures and active boundaries. New source discoveries within an original operation retain that operation ID.
 - **Tests:** 43/43 source-focused PRD regression scripts passed after B007's D019/D020 corrections. GitHub/DEV deployments are confirmed separately by revision and running tests; historical revisions in the chronological rows are not current deployment status.
 - **Scope:** Complete UE1–UE4 source call graphs, all operational file paths and live mounted runtime state are not accepted. Runtime mount order, culture, flags and non-file backends must never be invented from a static container.
