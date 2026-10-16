@@ -1,0 +1,424 @@
+﻿{
+    "batch": "B017",
+    "source": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+    "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9",
+    "method": "source-derived qualified-definition candidates",
+    "candidate_count": 88,
+    "unmapped_count": 82,
+    "unmapped": [
+        {
+            "symbol": "FAsyncPackage2::AddCompletionCallback",
+            "first_line": 12611,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::AddProgressCallback",
+            "first_line": 12618,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::AddRequestID",
+            "first_line": 12317,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::BeginAsyncLoad",
+            "first_line": 12350,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::CallProgressCallbacks",
+            "first_line": 8521,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::CanRunNodeAsync",
+            "first_line": 9311,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::CheckThatAllDependenciesHaveReachedStateDebug",
+            "first_line": 10002,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::ClearConstructedObjects",
+            "first_line": 12276,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::ClearImportedPackages",
+            "first_line": 12196,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::ConditionalBeginDeferredPostLoad",
+            "first_line": 6053,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::ConditionalBeginPostLoad",
+            "first_line": 6043,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::ConditionalBeginPostLoadPhase",
+            "first_line": 8289,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::ConditionalBeginProcessPackageExports",
+            "first_line": 10201,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::ConditionalBeginResolveImports",
+            "first_line": 8275,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::ConditionalCreateCellExport",
+            "first_line": 9069,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::ConditionalCreateCellImport",
+            "first_line": 9091,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::ConditionalCreateExport",
+            "first_line": 8956,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::ConditionalCreateImport",
+            "first_line": 8989,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::ConditionalFinishLoading",
+            "first_line": 10215,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::ConditionalReleasePartialRequests",
+            "first_line": 9853,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::ConditionalSerializeCellExport",
+            "first_line": 9079,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::ConditionalSerializeCellImport",
+            "first_line": 9122,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::ConditionalSerializeExport",
+            "first_line": 8965,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::ConditionalSerializeImport",
+            "first_line": 9019,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::CreateClusters",
+            "first_line": 12506,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::CreateLinker",
+            "first_line": 7495,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::CreateLinkerLoadExports",
+            "first_line": 8038,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::CreatePackageNodes",
+            "first_line": 12140,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::CreateRuntimeExports",
+            "first_line": 8590,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::CreateUPackage",
+            "first_line": 12379,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::DetachLinker",
+            "first_line": 7533,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::DumpState",
+            "first_line": 13315,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::DumpStateImpl",
+            "first_line": 13327,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::EndAsyncLoad",
+            "first_line": 12365,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::EventDrivenCreateCellExport",
+            "first_line": 9749,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::EventDrivenCreateExport",
+            "first_line": 9358,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::EventDrivenIndexToObject",
+            "first_line": 8804,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::EventDrivenSerializeCellExport",
+            "first_line": 9796,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::EventDrivenSerializeExport",
+            "first_line": 9589,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::Event_CreateExports",
+            "first_line": 8242,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::Event_DeferredPostLoad",
+            "first_line": 10369,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::Event_DependenciesReady",
+            "first_line": 8508,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::Event_ExportsDone",
+            "first_line": 9938,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::Event_PostLoad",
+            "first_line": 10233,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::Event_PreloadExports",
+            "first_line": 8332,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::Event_ProcessDependencies",
+            "first_line": 8494,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::Event_ProcessPackageSummary",
+            "first_line": 8381,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::Event_ResolveImports",
+            "first_line": 8306,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::ExecuteDeferredPostLoadLinkerLoadPackageExports",
+            "first_line": 8170,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::ExecutePostLoadLinkerLoadPackageExports",
+            "first_line": 8109,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::FAsyncPackage2",
+            "first_line": 12121,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::FinishUPackage",
+            "first_line": 12526,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::GetCurrentlyExecutingPackage",
+            "first_line": 9838,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::GetLoadStartTime",
+            "first_line": 12340,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::GetNameFromPackageObjectIndex",
+            "first_line": 9149,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::GetPackageNode",
+            "first_line": 10501,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::GetPublicCellExportIndexAsLocalIndex",
+            "first_line": 9056,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::GetPublicExportIndex",
+            "first_line": 8930,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::GetSerializeContext",
+            "first_line": 6858,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::HasDependencyToPackageDebug",
+            "first_line": 9971,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::InitializeLinkerLoadState",
+            "first_line": 7488,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::MoveConstructedObjectsToPhase2",
+            "first_line": 12219,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::PostLoadInstances",
+            "first_line": 12486,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::PreloadLinkerLoadExports",
+            "first_line": 7900,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::PreloadRuntimeExports",
+            "first_line": 8702,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::ProcessExportDependencies",
+            "first_line": 8855,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::ProcessExternalReads",
+            "first_line": 12458,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::ProcessLinkerLoadPackageSummary",
+            "first_line": 7702,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::Release",
+            "first_line": 12184,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::ResolveLinkerLoadImports",
+            "first_line": 7943,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::SetupScriptDependencies",
+            "first_line": 6863,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::StartLoading",
+            "first_line": 7566,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::UpdateDependenciesStateRecursive",
+            "first_line": 10039,
+            "mapped": false
+        },
+        {
+            "symbol": "FAsyncPackage2::WaitForAllDependenciesToReachState",
+            "first_line": 10176,
+            "mapped": false
+        },
+        {
+            "symbol": "FCookedScriptObjectsDebug::FCookedScriptObjectsDebug",
+            "first_line": 6956,
+            "mapped": false
+        },
+        {
+            "symbol": "FCookedScriptObjectsDebug::GetPathName",
+            "first_line": 7123,
+            "mapped": false
+        },
+        {
+            "symbol": "FCookedScriptObjectsDebug::GetPathNameInternal",
+            "first_line": 7098,
+            "mapped": false
+        },
+        {
+            "symbol": "FCookedScriptObjectsDebug::OnCompiledInUObjectsRegistered",
+            "first_line": 6971,
+            "mapped": false
+        },
+        {
+            "symbol": "FCookedScriptObjectsDebug::TrimDebugData",
+            "first_line": 7021,
+            "mapped": false
+        },
+        {
+            "symbol": "FGlobalImportStore::FlushDeferredCleanupPackagesQueue",
+            "first_line": 13194,
+            "mapped": false
+        },
+        {
+            "symbol": "FGlobalImportStore::RegistrationComplete",
+            "first_line": 7138,
+            "mapped": false
+        },
+        {
+            "symbol": "FPackageObjectIndex::GenerateImportHashFromVersePath",
+            "first_line": 323,
+            "mapped": false
+        }
+    ],
+    "limitations": [
+        "Definition-pattern inventory only; virtual dispatch and indirect serialization remain to inventory",
+        "Mapped means referenced by a manifest, not verified implementation"
+    ]
+}
