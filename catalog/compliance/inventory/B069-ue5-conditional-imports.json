@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "batch": "B069",
+  "source": {
+    "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+    "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9"
+  },
+  "classification": "bounded source-body review",
+  "status": "partial",
+  "reviewed": [
+    {
+      "symbol": "FAsyncPackage2::ConditionalCreateImport",
+      "line": 8989,
+      "disposition": "file-format-relevant",
+      "reason": "Validates package-import object index, obtains provider package by FPackageImportReference, and resolves PublicExportHash before conditional create. Return paths require loaded-state interpretation.",
+      "verified": false
+    },
+    {
+      "symbol": "FAsyncPackage2::ConditionalSerializeImport",
+      "line": 9019,
+      "disposition": "file-format-relevant",
+      "reason": "Skips already loaded import UObjects; otherwise resolves provider public export hash and conditionally serializes provider export, with runtime header reference race handling.",
+      "verified": false
+    }
+  ],
+  "evidence_limitations": [
+    "Offline resolver covers stable FPackageId plus public export hash, not UObject load race transitions",
+    "Provider import-store runtime availability remains distinct from file-level existence"
+  ],
+  "next_batch": "B070"
+}
