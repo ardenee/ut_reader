@@ -30,7 +30,7 @@ final class PdoUedb5PhysicalProviderSelector
         $consumer = $this->reader->snapshot($gameId, $fileId);
         $family = (string)($consumer['package_family'] ?? '');
         if ($family === Uedb5ZenPackageReader::PACKAGE_FAMILY) {
-            return $this->selectZen($gameId, $fileId, $consumer);
+            return $this->selectZen($gameId, $fileId, $consumer, $options);
         }
         if (!in_array($family, [
             Uedb5Ue5ClassicSnapshotBuilder::PACKAGE_FAMILY,
@@ -131,9 +131,13 @@ final class PdoUedb5PhysicalProviderSelector
     }
 
     /** @return list<array<string,mixed>> */
-    private function selectZen(int $gameId, int $consumerFileId, array $consumer): array
+    private function selectZen(int $gameId, int $consumerFileId, array $consumer, array $options): array
     {
-        $baseline = Uedb5Ue5ZenDependencyResolver::resolve($consumer, []);
+        $runtimeContext = $options['zen_runtime_context'] ?? [];
+        if (!is_array($runtimeContext)) {
+            throw new RuntimeException('Zen runtime context must be an array.');
+        }
+        $baseline = Uedb5Ue5ZenDependencyResolver::resolve($consumer, [], $runtimeContext);
         $requirements = [];
         foreach ($baseline as $row) {
             $row = (array)$row;
