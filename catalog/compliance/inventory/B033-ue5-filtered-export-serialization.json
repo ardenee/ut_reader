@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "batch": "B033",
+  "source": {
+    "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+    "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9"
+  },
+  "classification": "bounded source-body review",
+  "status": "partial",
+  "reviewed": [
+    {
+      "symbol": "FAsyncPackage2::EventDrivenSerializeExport",
+      "line": 9589,
+      "disposition": "mixed",
+      "reason": "Filtered or previously failed exports bypass runtime deserialization; serialization dependencies run for applicable exports. Offline reader must preserve serialized filter flags and must not claim actual UObject deserialization.",
+      "verified": false
+    }
+  ],
+  "evidence_limitations": [
+    "File-format parity tests and detailed error-path coverage outstanding",
+    "These findings refine earlier source-body classifications, not additional unique functions"
+  ],
+  "next_batch": "B034"
+}
