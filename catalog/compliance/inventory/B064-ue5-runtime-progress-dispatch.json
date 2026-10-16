@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "batch": "B064",
+  "source": {
+    "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+    "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9"
+  },
+  "classification": "bounded source-body review",
+  "status": "partial",
+  "reviewed": [
+    {
+      "symbol": "FAsyncPackage2::CallProgressCallbacks",
+      "line": 8521,
+      "disposition": "runtime-only",
+      "reason": "Loads progress callback list, guards failed/unstarted progress, dispatches package runtime progress with linker root.",
+      "verified": false
+    }
+  ],
+  "evidence_limitations": [
+    "Runtime behavior not simulated in offline parser",
+    "Full caller graph not certified"
+  ],
+  "next_batch": "B065"
+}
