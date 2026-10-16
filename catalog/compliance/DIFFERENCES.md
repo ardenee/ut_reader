@@ -62,3 +62,13 @@ The user provided an authoritative **isolated integration DB** check for `contai
 - To prevent overwrites of older untracked files newly tracked in main, **776 PRD files** were moved to `C:\Temp\unrealdb-prd-untracked-collisions-20261016`, and **180 DEV files** to `D:\Temp\unrealdb-dev-untracked-collisions-20261016`. Other untracked and ignored files were not deliberately removed.
 - Both `catalog/config.php` paths remain present. PHP lint passed for `catalog/index.php`, bootstrap autoloader and Zen package reader. This is a code/test validation, **not a live HTTP or production MySQL acceptance test**.
 - The six-task workflow's source-code synchronization stage is fulfilled at the commit level. Deployment-wide acceptance still needs HTTP/DB verification and independent integration checks. Next doc-only commit should be fast-forwarded to both live trees.
+
+
+## Live PRD acceptance and preserved-change triage (2026-10-16)
+
+- **PRD HTTP:** `http://127.0.0.1/` and `http://127.0.0.1/catalog/` both HTTP 200. URLs beginning `/unrealdb/` returned 404 because this Apache instance serves UnrealDB at the document root.
+- **Isolated MySQL verified again after deployment:** direct read-only query on port 3339, `uedb5_isolated_integration.ue_iostore_packages`, `container_id=1`: **27,240 total, 27,240 published, 0 failed**. No full rescan.
+- **Two targeted IoStore negative-path integration regressions on live PRD PHP against isolated MySQL** passed: `verify-iostore-missing-part-standalone.php` (reject incomplete container, SQL row count unchanged) and `verify-iostore-worker-guards-standalone.php` (reject inactive/non-UE5 profile and changed queued TOC hash via dead-letter jobs). Production MySQL remains outside this test path.
+- **PRD old stash:** 330 formerly modified tracked paths; **308 byte-identical to current GitHub main**, **22 differ**, including V4 legacy compressed metadata files, older migrations and compact metadata utilities. Do not blindly restore those 22; investigate whether each is obsolete or a legitimate unmerged fix.
+- **DEV old stash:** 112 formerly modified tracked paths; **46 byte-identical to current GitHub main**, **66 differ**, focused on job/upload APIs, workers, UI, archive processing, persistence and compact writers. **Source work not automatically recovered**: assess 66 potentially divergent files individually, with tests. Existing stashes and collision backups remain intact.
+- Open checks: HTTP behavior with real authenticated requests, nonisolated production database smoke test, end-to-end retained full-family container dependency fixture, retry/recovery/backup-restore, concurrent workers. Do not claim that passing only synthetic/source inventories certifies Epic parity.
