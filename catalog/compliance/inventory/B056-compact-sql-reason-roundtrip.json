@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "batch": "B056",
+  "status": "partial",
+  "test": "catalog/bin/verify-uedb5-dependency-projection-publisher.php",
+  "mode": "isolated in-memory SQLite",
+  "finding": "Two Zen PackageImport dependency rows with different unresolved reason codes persist as two SQL edges with equal unresolved outcomes; compact schema has no reason_code column. Source-shaped dependency_results retains distinct reason_code values.",
+  "checks": [
+    "compact_projection_preserves_both_unresolved_edges",
+    "source_detail_distinguishes_filter_reasons",
+    "compact_projection_has_no_reason_column"
+  ],
+  "certified": false,
+  "next_batch": "B057"
+}
