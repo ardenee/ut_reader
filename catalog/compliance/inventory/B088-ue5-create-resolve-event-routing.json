@@ -1,0 +1,30 @@
+{
+  "schema": 1,
+  "batch": "B088",
+  "source": {
+    "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+    "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9"
+  },
+  "classification": "bounded source-body review",
+  "status": "partial",
+  "reviewed": [
+    {
+      "symbol": "FAsyncPackage2::Event_CreateExports",
+      "line": 8242,
+      "disposition": "file-format-relevant",
+      "reason": "Chooses LinkerLoad or Zen runtime export creation path based on loaded package kind and gates import resolution on successful creation.",
+      "verified": false
+    },
+    {
+      "symbol": "FAsyncPackage2::Event_ResolveImports",
+      "line": 8306,
+      "disposition": "file-format-relevant",
+      "reason": "Handles import resolution via LinkerLoad path when applicable and advances to export preload; Zen runtime import path differs from classic LinkerLoad.",
+      "verified": false
+    }
+  ],
+  "evidence_limitations": [
+    "Detailed runtime branch handlers require separate parity review"
+  ],
+  "next_batch": "B089"
+}
