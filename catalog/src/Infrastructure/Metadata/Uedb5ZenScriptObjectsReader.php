@@ -5,6 +5,31 @@ use RuntimeException;
 
 final class Uedb5ZenScriptObjectsReader
 {
+    /**
+     * Read the optional cooked ScriptObjects chunk from a retained global container.
+     * No synthetic object identities are created when the chunk is absent.
+     */
+    public static function fromToc(Uedb5IoStoreTocReader $toc, int $maxObjects = 1000000): array
+    {
+        // UE5 EIoChunkType::ScriptObjects=5; CreateIoChunkId(0,0,...).
+        $matches = [];
+        foreach ($toc->chunkIndexesByType(5) as $index) {
+            $chunk = $toc->chunks()[$index];
+            if ((string)$chunk['package_id'] === '0000000000000000'
+                && (int)($chunk['chunk_index'] ?? 0) === 0) {
+                $matches[] = $index;
+            }
+        }
+        if (count($matches) === 0) {
+            return ['present'=>false,'count'=>0,'objects'=>[],'runtime_authoritative'=>false];
+        }
+        if (count($matches) !== 1) {
+            throw new RuntimeException('Ambiguous global ScriptObjects chunks.');
+        }
+        $parsed = self::parse($toc->readChunk($matches[0]), $maxObjects);
+        return ['present'=>true] + $parsed;
+    }
+
     /** Cooked global ScriptObjects diagnostics, never runtime authority. */
     public static function parse(string $bytes, int $maxObjects = 1000000): array
     {
