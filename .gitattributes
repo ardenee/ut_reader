@@ -1,0 +1,3 @@
+# Keep the pinned UE5 resolver source fingerprint stable across Windows Git autocrlf configurations.
+# Formal compliance manifests hash exact source bytes; these must remain LF on checkout.
+catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenDependencyResolver.php text eol=lf
