@@ -1,0 +1,26 @@
+{
+  "schema": 1,
+  "batch": "B039",
+  "status": "partial",
+  "source": {
+    "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+    "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9"
+  },
+  "classification": "tested synthetic export map field layout",
+  "reviewed": [
+    {
+      "symbol": "FAsyncPackage2::EventDrivenCreateExport",
+      "disposition": "file-format-relevant",
+      "verified": false,
+      "reason": "Actual Zen reader synthetic fixture confirms separate null class/outer/super/template indices and serialized offset, length, object flags, filter flag and mapped name."
+    }
+  ],
+  "test_evidence": [
+    "catalog/bin/verify-uedb5-zen-export-map-fields.php"
+  ],
+  "remaining": [
+    "Exact Epic fixture differential and source-defined export filtering semantics",
+    "Broader malformed field and branch coverage"
+  ],
+  "next_batch": "B040"
+}
