@@ -1,0 +1,30 @@
+{
+  "schema": 1,
+  "batch": "B062",
+  "source": {
+    "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+    "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9"
+  },
+  "classification": "bounded source-body review",
+  "status": "partial",
+  "reviewed": [
+    {
+      "symbol": "FAsyncPackage2::AddCompletionCallback",
+      "line": 12611,
+      "disposition": "runtime-only",
+      "reason": "Appends load completion delegate to runtime callback list; no package bytes parsed.",
+      "verified": false
+    },
+    {
+      "symbol": "FAsyncPackage2::AddProgressCallback",
+      "line": 12618,
+      "disposition": "runtime-only",
+      "reason": "Registers progress delegate in lock-free linked list; runtime loading-state notifications.",
+      "verified": false
+    }
+  ],
+  "evidence_limitations": [
+    "Complete async lifecycle not certified"
+  ],
+  "next_batch": "B063"
+}
