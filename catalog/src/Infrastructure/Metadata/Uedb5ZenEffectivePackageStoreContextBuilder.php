@@ -38,6 +38,7 @@ final class Uedb5ZenEffectivePackageStoreContextBuilder
             }
         }
         $file['package_redirects']=$effective;
+        $file['package_store_backend_results']=$ordered;
         $file['package_store_backend_order']=array_map(static fn(array $backend):array=>[
             'backend_id'=>$backend['backend_id'],
             'priority'=>$backend['priority'],
