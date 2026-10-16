@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "batch": "B046",
+  "status": "partial",
+  "source": {
+    "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+    "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9",
+    "symbol": "AsyncLoading2_ShouldSkipLoadingExport"
+  },
+  "implementation": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenDependencyResolver.php",
+  "test": "catalog/bin/verify-uedb5-ue5-zen-dependency-resolution.php",
+  "passing_checks": [
+    "zen_combined_unknown_runtime_role_is_unresolved_not_missing"
+  ],
+  "finding": "A combined build with unknown client/server role retains an unresolved outcome, never declaring the export missing.",
+  "certified": false,
+  "remaining": [
+    "Authentic cooked file differential",
+    "Complete metadata-publisher propagation audit"
+  ],
+  "next_batch": "B047"
+}
