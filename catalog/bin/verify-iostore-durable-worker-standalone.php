@@ -45,6 +45,8 @@ $ok=count($results)===2&&$results[0]['status']==='completed'&&$results[1]['statu
  &&$results[0]['attempts']==1&&$results[1]['attempts']==1
  &&count($index)===1&&$index[0]['status']==='ready'&&(int)$parts===1
  &&($results[0]['result']['container_id']??0)===($results[1]['result']['container_id']??-1)
- &&count($children)===1&&$children[0]['status']==='completed'&&(int)$children[0]['count']===4;
+ &&count($children)===1&&$children[0]['status']==='completed'&&(int)$children[0]['count']===2
+ &&($results[0]['result']['name_job_id']??0)===($results[1]['result']['name_job_id']??-1)
+ &&($results[0]['result']['publish_job_id']??0)===($results[1]['result']['publish_job_id']??-1);
 echo json_encode(['ok'=>$ok,'isolated'=>true,'queue'=>$queueName,'jobs'=>$results,'containers'=>$index,'parts'=>$parts,'followup_jobs'=>$children],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;
 exit($ok?0:2);
