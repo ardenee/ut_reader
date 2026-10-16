@@ -36,8 +36,11 @@ final class Uedb5ZenScriptObjectsReader
         $reader = new Uedb5BinaryReader($bytes, 'UE5 ScriptObjects');
         $names = Uedb5ZenPackageReader::readNameBatchForScriptObjects($reader);
         $count = $reader->u32le();
-        if ($count > $maxObjects || $count > intdiv($reader->remaining(), 32)
-            || $reader->remaining() !== $count * 32) {
+        // Epic's FCookedScriptObjectsDebug::LoadDebugData creates a view of
+        // exactly NumObjects entries at Ar.Tell(); it does not require the
+        // ScriptObjects chunk to end immediately after that view. Retain the
+        // bounded truncated-record check but allow unused trailing bytes.
+        if ($count > $maxObjects || $count > intdiv($reader->remaining(), 32)) {
             throw new RuntimeException('Invalid ScriptObjects count or record length.');
         }
         $objects = [];

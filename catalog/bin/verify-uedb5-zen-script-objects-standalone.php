@@ -11,8 +11,15 @@ $parsed = Uedb5ZenScriptObjectsReader::parse($bytes);
 $object = reset($parsed['objects']);
 $ok = $parsed['count']===1 && $parsed['runtime_authoritative']===false
     && $object['name']==='Test' && $object['runtime_resolved']===false;
+$trailing = Uedb5ZenScriptObjectsReader::parse($bytes."\xAA\xBB");
+$zero = Uedb5ZenScriptObjectsReader::parse($nameBatch.$pack(0)."\xAA");
+$ok = $ok && $trailing['count']===1 && $zero['count']===0;
 $rejected = 0;
-foreach ([$bytes."\0", $nameBatch.$pack(2).$record, $nameBatch.$pack(1).$record.$record] as $invalid) {
+foreach ([
+    $nameBatch.$pack(2).$record,
+    $nameBatch.$pack(1).substr($record, 0, 31),
+    $nameBatch.$pack(1).$pack(0x40000001).substr($record, 4),
+] as $invalid) {
     try { Uedb5ZenScriptObjectsReader::parse($invalid); }
     catch (Throwable) { $rejected++; }
 }
