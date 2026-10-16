@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "batch": "B076",
+  "source": {
+    "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+    "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9"
+  },
+  "classification": "bounded source-body review",
+  "status": "partial",
+  "reviewed": [
+    {
+      "symbol": "FAsyncPackage2::ConditionalFinishLoading",
+      "line": 10215,
+      "disposition": "runtime-only",
+      "reason": "Waits for dependent package DeferredPostLoadDone states, queues package finalization and wakes game thread; runtime scheduling.",
+      "verified": false
+    }
+  ],
+  "evidence_limitations": [
+    "Full runtime lifecycle not certified"
+  ],
+  "next_batch": "B077"
+}
