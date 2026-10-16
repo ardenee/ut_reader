@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "batch": "B063",
+  "source": {
+    "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+    "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9"
+  },
+  "classification": "bounded source-body review",
+  "status": "partial",
+  "reviewed": [
+    {
+      "symbol": "FAsyncPackage2::AddRequestID",
+      "line": 12317,
+      "disposition": "runtime-only",
+      "reason": "Tracks unique positive asynchronous request IDs; bookkeeping rather than serialized package identity.",
+      "verified": false
+    }
+  ],
+  "evidence_limitations": [
+    "Complete async lifecycle not certified"
+  ],
+  "next_batch": "B064"
+}
