@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "batch": "B058",
+  "status": "partial",
+  "finding": "Six source-contract checks confirm the currently implemented dependency reason-code handoff across resolver, rebuilder, parity, runtime and compact read paths.",
+  "test": "catalog/bin/verify-uedb5-zen-reason-flow-contract.php",
+  "evidence": {
+    "isolated_review": "pass",
+    "dev_runtime": "not run for all suites",
+    "production": "not touched"
+  },
+  "unresolved": [
+    "Authentic Epic cooked UE5 differential",
+    "DEV current-main reconciliation",
+    "Full UE1-UE5 source behavioral certification"
+  ],
+  "next_batch": "B059"
+}
