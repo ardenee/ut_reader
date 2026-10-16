@@ -21,14 +21,22 @@ foreach(glob($root.'/catalog/compliance/batches/*.json')?:[] as $manifest){
     $data=json_decode((string)file_get_contents($manifest),true);
     foreach(($data['operations']??[]) as $op)foreach(($op['source']['symbols']??[]) as $symbol)$registered[]=$symbol;
 }
+$classified=[];
+foreach(glob($root.'/catalog/compliance/inventory/B0??-ue5-*.json')?:[] as $classificationFile){
+    $classification=json_decode((string)file_get_contents($classificationFile),true);
+    foreach(($classification['reviewed']??[]) as $review){
+        if(!empty($review['symbol']) && !empty($review['disposition']) && !empty($review['reason']))$classified[$review['symbol']]=$review['disposition'];
+    }
+}
 $rows=[];
 foreach($found as $row){
     $symbol=$row['symbol'];$name=substr($symbol,strpos($symbol,'::')+2);
     $mapped=false;
     foreach($registered as $anchor){if(str_contains($anchor,$symbol)||$anchor===$name){$mapped=true;break;}}
-    $rows[]=$row+['mapped'=>$mapped];
+    $rows[]=$row+['mapped'=>$mapped,'classified_as'=>$classified[$symbol]??null];
 }
-$unmapped=array_values(array_filter($rows,static fn($r)=>!$r['mapped']));
-$output=['batch'=>'B017','source'=>$relative,'sha256'=>hash_file('sha256',$path),'method'=>'source-derived qualified-definition candidates','candidate_count'=>count($rows),'unmapped_count'=>count($unmapped),'unmapped'=>$unmapped,'limitations'=>['Definition-pattern inventory only; virtual dispatch and indirect serialization remain to inventory','Mapped means referenced by a manifest, not verified implementation']];
+$unmapped=array_values(array_filter($rows,static fn($r)=>!$r['mapped'] && $r['classified_as']===null));
+$classifiedCount=count(array_filter($rows,static fn($r)=>$r['classified_as']!==null));
+$output=['batch'=>'B017','source'=>$relative,'sha256'=>hash_file('sha256',$path),'method'=>'source-derived qualified-definition candidates','candidate_count'=>count($rows),'unmapped_count'=>count($unmapped),'classified_count'=>$classifiedCount,'unmapped'=>$unmapped,'limitations'=>['Definition-pattern inventory only; virtual dispatch and indirect serialization remain to inventory','Mapped means referenced by a manifest, not verified implementation']];
 echo json_encode($output,JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;
 exit($unmapped===[]?0:1);
