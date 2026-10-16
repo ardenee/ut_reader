@@ -21,5 +21,5 @@ $ties=Arb::ordered([
 $ok=$ties[0]['backend_id']==='second'&&$a['backend_id']==='middle'&&$a['status']==='Pending'
  &&$r['backend_id']==='higher'&&$c['backend_id']==='higher'
  &&$f['backend_id']==='file'&&$bad;
-echo json_encode(['ok'=>$ok,'pending_stops'=>$a,'redirect_priority'=>$r,'higher_priority_ok'=>$c,'none_missing_fallback'=>$f,'reject_bad_priority'=>$bad,'equal_priority_newest_first'=>$ties[0]['backend_id']]==='second' ],JSON_PRETTY_PRINT),PHP_EOL;
+echo json_encode(['ok'=>$ok,'pending_stops'=>$a,'redirect_priority'=>$r,'higher_priority_ok'=>$c,'none_missing_fallback'=>$f,'reject_bad_priority'=>$bad,'equal_priority_newest_first'=>($ties[0]['backend_id']==='second') ],JSON_PRETTY_PRINT),PHP_EOL;
 exit($ok?0:2);
