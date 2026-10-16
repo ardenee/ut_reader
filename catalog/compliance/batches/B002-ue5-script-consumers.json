@@ -1,0 +1,70 @@
+{
+  "schema": 1,
+  "batch": "B002",
+  "engine": "UE5",
+  "profile": "UE5.8.3",
+  "status": "partial",
+  "inventory_a": "AsyncLoading2 entry-point call path",
+  "inventory_b": "script-name/object index serialization",
+  "complete_inventory": false,
+  "operations": [
+    {
+      "id": "UE5-583-SCRIPT-002",
+      "summary": "Global cooked ScriptObjects name mapping",
+      "source": {
+        "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+        "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9",
+        "symbols": [
+          "LoadNameBatch",
+          "FCookedScriptObjectsDebug::LoadDebugData"
+        ],
+        "lines": [
+          7005,
+          7013
+        ]
+      },
+      "implementation": {
+        "path": "catalog/src/Infrastructure/Metadata/Uedb5ZenPackageReader.php",
+        "sha256": "742376ce307651b5ccb0fc0ec54707877e21e6bbfa8873ab84605a73d0041d31"
+      },
+      "tests": [
+        "catalog/bin/verify-uedb5-zen-script-objects-standalone.php"
+      ],
+      "disposition": "partial",
+      "reason": "Synthetic test passed; real global chunk evidence outstanding."
+    },
+    {
+      "id": "UE5-583-SCRIPT-003",
+      "summary": "Script import resolution via live object store",
+      "source": {
+        "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+        "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9",
+        "symbols": [
+          "FindScriptImportObject",
+          "GetImportObject"
+        ],
+        "lines": [
+          2604,
+          2831
+        ]
+      },
+      "implementation": {
+        "path": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenDependencyResolver.php",
+        "sha256": "d9799db4159c612c6d8bb330f8dccd3294efec00b7abdc32c9054081609c9381"
+      },
+      "tests": [
+        "catalog/bin/verify-uedb5-ue5-zen-dependency-resolution.php"
+      ],
+      "disposition": "partial",
+      "reason": "Offline unresolved behavior preserved; full runtime registration path not certified."
+    }
+  ],
+  "next_batch": "B003",
+  "gate_status": {
+    "inventory": false,
+    "contracts": false,
+    "implementation": false,
+    "independent_verification": false,
+    "change_integrity": true
+  }
+}
