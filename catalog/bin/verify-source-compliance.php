@@ -8,6 +8,7 @@ $sourceRoot=getenv('UNREALDB_EPIC_SOURCE_ROOT')?:'';
 $sourceChecks=0;
 $files=glob($dir.'/*.json')?:[];
 $failures=[];$open=0;$verified=0;$entries=0;$globalIds=[];$inventoryChecks=0;
+$verifiedContractGates=0;$verifiedImplementationGates=0;$contractChecks=0;$contractTestRuns=[];
 if($strict && $sourceRoot==='')$failures[]='Strict mode requires UNREALDB_EPIC_SOURCE_ROOT for source hash verification.';
 if($files===[])$failures[]='No audit batches exist.';
 foreach($files as $file){
@@ -90,6 +91,64 @@ foreach($files as $file){
         foreach($record['tests'] as $test){
             if(!is_file($root.'/'.str_replace('\\','/',$test)))$failures[]=$id.': test missing: '.$test;
         }
+        // The original manifest gates are not self-attested. If a contract
+        // or implementation gate is marked closed, execute every declared
+        // source-branch regression and match its exact named outcome.
+        $gates=(array)($data['gate_status']??[]);
+        if(($gates['contracts']??false)===true){
+            $contract=(array)($record['source_contract_evidence']??[]);
+            $driver=(string)($contract['test_driver']??'');
+            $expected=(array)($contract['expected_checks']??[]);
+            if($driver===''||$expected===[]||empty($contract['source_branches'])
+                ||!array_is_list($expected)){
+                $failures[]=$id.': closed source-contract gate lacks branch/check evidence';
+            } else {
+                $driverPath=realpath($root.'/'.str_replace(chr(92),'/',$driver));
+                $safeRoot=realpath($root);
+                if(!is_string($driverPath)||!is_string($safeRoot)
+                    ||!str_starts_with(strtolower(str_replace(chr(92),'/',$driverPath)),
+                        strtolower(str_replace(chr(92),'/',$safeRoot)).'/')){
+                    $failures[]=$id.': unsafe or missing source-contract test driver';
+                } else {
+                    if(!array_key_exists($driverPath,$contractTestRuns)){
+                        $lines=[];$result=127;
+                        exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($driverPath).' 2>&1',
+                            $lines,$result);
+                        $parsed=json_decode(implode("\n",$lines),true);
+                        $contractTestRuns[$driverPath]=[
+                            'exit'=>$result,'result'=>is_array($parsed)?$parsed:[]
+                        ];
+                    }
+                    $test=$contractTestRuns[$driverPath];
+                    if($test['exit']!==0||($test['result']['ok']??false)!==true){
+                        $failures[]=$id.': source-contract test driver failed';
+                    } else {
+                        $passed=true;
+                        foreach($expected as $check){
+                            $contractChecks++;
+                            if(!is_string($check)||$check===''
+                                ||($test['result']['checks'][$check]??null)!==true){
+                                $failures[]=$id.': source-contract branch not proven: '
+                                    .(string)$check;
+                                $passed=false;
+                            }
+                        }
+                        if($passed){$verifiedContractGates++;}
+                    }
+                }
+            }
+        }
+        if(($gates['implementation']??false)===true){
+            if(($gates['contracts']??false)!==true
+                ||empty($record['correction_commits'])
+                ||empty($record['source_contract_evidence'])){
+                $failures[]=$id.': closed implementation gate lacks proven source contract/correction';
+            } elseif($hash!==false && hash_equals(
+                strtolower((string)$impl['sha256']),strtolower((string)$hash))
+                &&($gates['contracts']??false)===true){
+                $verifiedImplementationGates++;
+            }
+        }
         if(($record['disposition']??'')==='verified'){$verified++;}else{$open++;}
     }
 }
@@ -118,6 +177,8 @@ if (in_array('--all',$argv,true)) {
 if($strict&&$open>0)$failures[]='Strict mode: '.$open.' open/partial inventory or behavior gates.';
 echo json_encode(['ok'=>$failures===[],'batches'=>count($files),'operations'=>$entries,'verified'=>$verified,
     'source_hash_checks'=>$sourceChecks,'source_symbol_checks'=>$inventoryChecks,
-    'open_gates'=>$open,'recovery'=>$recovery,'issues'=>$failures],
+    'open_gates'=>$open,'closed_source_contract_gates'=>$verifiedContractGates,
+    'closed_implementation_gates'=>$verifiedImplementationGates,
+    'executed_contract_assertions'=>$contractChecks,'recovery'=>$recovery,'issues'=>$failures],
     JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;
 exit($failures===[]?0:1);

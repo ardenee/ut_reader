@@ -1,51 +1,124 @@
 {
-  "schema": 1,
-  "batch": "B009",
-  "engine": "UE5",
-  "profile": "UE5.8.3",
-  "status": "partial",
-  "inventory_a": "source call path",
-  "inventory_b": "source structure and branch coverage",
-  "complete_inventory": false,
-  "operations": [
-    {
-      "id": "UE5-583-ZEN-VERSIONING-001",
-      "summary": "Zen package versioning deserializes ZenVersion, PackageVersion, LicenseeVersion and custom versions",
-      "source": {
-        "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
-        "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9",
-        "symbols": [
-          "FZenPackageVersioningInfo& VersioningInfo",
-          "FZenPackageVersioningInfo"
-        ]
-      },
-      "implementation": {
-        "path": "catalog/src/Infrastructure/Metadata/Uedb5ZenPackageReader.php",
-        "sha256": "22f83309b2c09582001002605fac6b86118aa5c5309b55983ab0b3c663da4bab"
-      },
-      "tests": [
-        "catalog/bin/verify-uedb5-ue5-zen-package.php",
-        "catalog/bin/verify-uedb5-satisfactory-header-readonly-isolated.php"
-      ],
-      "additional_sources": [
+    "schema": 1,
+    "batch": "B009",
+    "engine": "UE5",
+    "profile": "UE5.8.3",
+    "status": "partial",
+    "inventory_a": "source call path",
+    "inventory_b": "source structure and branch coverage",
+    "complete_inventory": false,
+    "operations": [
         {
-          "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/ZenPackageHeader.cpp",
-          "sha256": "954117a45b9a802d3f289b30f2a0e191a7bb82cdcb107a22fef134a73172995b",
-          "symbols": ["FZenPackageHeader::MakeView", "bHasVersioningInfo", "VersioningInfo.Emplace"],
-          "lines": [18, 35]
+            "id": "UE5-583-ZEN-VERSIONING-001",
+            "summary": "Zen package versioning deserializes ZenVersion, PackageVersion, LicenseeVersion and custom versions",
+            "source": {
+                "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+                "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9",
+                "symbols": [
+                    "FZenPackageVersioningInfo& VersioningInfo",
+                    "FZenPackageVersioningInfo"
+                ]
+            },
+            "implementation": {
+                "path": "catalog/src/Infrastructure/Metadata/Uedb5ZenPackageReader.php",
+                "sha256": "58e7e9027438a7453503112b559b629ada5d7a078fc132502a1ddded52de275d"
+            },
+            "tests": [
+                "catalog/bin/verify-uedb5-ue5-zen-package.php",
+                "catalog/bin/verify-uedb5-satisfactory-header-readonly-isolated.php"
+            ],
+            "additional_sources": [
+                {
+                    "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/ZenPackageHeader.cpp",
+                    "sha256": "954117a45b9a802d3f289b30f2a0e191a7bb82cdcb107a22fef134a73172995b",
+                    "symbols": [
+                        "FZenPackageHeader::MakeView",
+                        "bHasVersioningInfo",
+                        "VersioningInfo.Emplace"
+                    ],
+                    "lines": [
+                        18,
+                        35
+                    ]
+                },
+                {
+                    "path": "Engine/Source/Runtime/CoreUObject/Public/Serialization/AsyncLoading2.h",
+                    "sha256": "088f00a8c970458e4bb717490ac4d50361d635ddf8cb0b7b1a5c93ff4d9feef2",
+                    "symbols": [
+                        "struct FZenPackageVersioningInfo",
+                        "struct FZenPackageSummary"
+                    ],
+                    "lines": [
+                        282,
+                        316
+                    ]
+                },
+                {
+                    "path": "Engine/Source/Runtime/Core/Private/UObject/ObjectVersion.cpp",
+                    "sha256": "b7d6bcc25f5ade60b0b64a588beeb99a3e1b8c6d8768b5f96443219d3d391026",
+                    "symbols": [
+                        "operator<<(FArchive& Ar, FPackageFileVersion& Version)"
+                    ],
+                    "lines": [
+                        34,
+                        40
+                    ]
+                },
+                {
+                    "path": "Engine/Source/Runtime/Core/Private/Serialization/CustomVersion.cpp",
+                    "sha256": "08827e1157efcb956568d34e85dd44a7a586cacc2f925cfa77733f4bbec42597",
+                    "symbols": [
+                        "FCustomVersionContainer::Serialize",
+                        "ECustomVersionSerializationFormat::Optimized"
+                    ],
+                    "lines": [
+                        287,
+                        351
+                    ]
+                }
+            ],
+            "related_differences": [
+                "UE5-D010"
+            ],
+            "disposition": "partial",
+            "reason": "D010 corrected the extra serialized uint32 bHasVersioningInfo == 0/1 rejection: Epic's MakeView tests nonzero. Original regression failed before, passed after; synthetic versioned/absent layouts and real Satisfactory no-versioning samples pass. Source/version custom-version serialization, complete error-path inventory and independent real versioned-header differential remain open; this operation is NOT accepted.",
+            "source_contract_evidence": {
+                "test_driver": "catalog/bin/verify-uedb5-ue5-zen-package.php",
+                "expected_checks": [
+                    "zen_versioning_info_parsed",
+                    "zen_ue5_package_version_parsed",
+                    "zen_custom_versions_parsed",
+                    "b009_epic_nonzero_versioning_flag_enters_versioned_branch",
+                    "b009_zero_custom_versions_source_array",
+                    "b009_multi_custom_guid_versions_preserve_signed_values",
+                    "b009_corrupt_negative_custom_version_count_rejected",
+                    "b009_b010_no_versioning_latest_layout_source_branch_and_import_integrity",
+                    "b009_zen_version_custom_guid_preserved_through_v5_storage"
+                ],
+                "source_branches": [
+                    "ZenPackageHeader.cpp:30-35: bHasVersioningInfo nonzero => deserialize; zero => no VersioningInfo",
+                    "AsyncLoading2.cpp:164-170: ZenVersion, FPackageFileVersion, LicenseeVersion, optimized CustomVersions",
+                    "ObjectVersion.cpp:34-40: UE4 and UE5 package versions serialized as int32",
+                    "CustomVersion.cpp:287-351: optimized array count and GUID/version pairs",
+                    "AsyncLoading2.cpp:8464-8474: versioned LinkerRoot fields; absent versioning uses GPackageFileUEVersion and GPackageFileLicenseeUEVersion (runtime fallback NOT YET VERIFIED IN UNREALDB)"
+                ],
+                "remaining_gates": [
+                    "Independent real Epic-cooked versioned Zen header positive differential",
+                    "Source reachability completeness and runtime version fallback/caller acceptance",
+                    "Independent review of mapped source branches and error outcomes"
+                ]
+            },
+            "correction_commits": [
+                "ee2a4e253638c61add4a2501186674add3ad293d"
+            ]
         }
-      ],
-      "related_differences": ["UE5-D010"],
-      "disposition": "partial",
-      "reason": "D010 corrected the extra serialized uint32 bHasVersioningInfo == 0/1 rejection: Epic's MakeView tests nonzero. Original regression failed before, passed after; synthetic versioned/absent layouts and real Satisfactory no-versioning samples pass. Source/version custom-version serialization, complete error-path inventory and independent real versioned-header differential remain open; this operation is NOT accepted."
+    ],
+    "next_batch": "B012",
+    "gate_status": {
+        "inventory": false,
+        "contracts": true,
+        "implementation": true,
+        "independent_verification": false,
+        "change_integrity": true
     }
-  ],
-  "next_batch": "B012",
-  "gate_status": {
-    "inventory": false,
-    "contracts": false,
-    "implementation": false,
-    "independent_verification": false,
-    "change_integrity": true
-  }
 }

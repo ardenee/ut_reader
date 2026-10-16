@@ -262,7 +262,7 @@ $check($unsafePadRejected, 'b010_unsafe_bulk_pad_count_stays_rejected');
 // Rebuild structurally valid variants: old versions omit both tables,
 // DATA_RESOURCES (1009) adds BulkDataMap, VERSE_CELLS (1015) adds cell maps.
 // No versioning info follows the current cooked layout for both.
-$buildVersionBranch = static function (?int $ue5Version) use (
+$buildVersionBranch = static function (?int $ue5Version, ?int $forcedBulkPad = null, ?string $customVersioningBytes = null) use (
     $versioning, $names, $bulkEntry, $u64le, $i64le, $mapped,
     $importedHash, $packageObject, $exportMap, $scriptObject, $cellExport,
     $exportBundles, $dependencyHeaders, $dependencyEntries, $importedNames
@@ -270,12 +270,12 @@ $buildVersionBranch = static function (?int $ue5Version) use (
     $includeCell = $ue5Version === null || $ue5Version >= 1015;
     $includeBulk = $ue5Version === null || $ue5Version >= 1009;
     $versionBytes = $ue5Version === null
-        ? '' : substr_replace($versioning, pack('V', $ue5Version), 8, 4);
+        ? '' : substr_replace($customVersioningBytes ?? $versioning, pack('V', $ue5Version), 8, 4);
     $fixedPrefixLength = Uedb5ZenPackageReader::SUMMARY_SIZE
         + strlen($versionBytes) + ($includeCell ? 8 : 0) + strlen($names);
     $bulkBytes = '';
     if ($includeBulk) {
-        $pad = (8 - (($fixedPrefixLength + 8) % 8)) % 8;
+        $pad = $forcedBulkPad ?? ((8 - (($fixedPrefixLength + 8) % 8)) % 8);
         $bulkBytes = $u64le(str_pad(strtoupper(dechex($pad)), 16, '0', STR_PAD_LEFT))
             . str_repeat("\0", $pad) . $i64le(strlen($bulkEntry)) . $bulkEntry;
     }
@@ -313,6 +313,50 @@ $buildVersionBranch = static function (?int $ue5Version) use (
     }
     return $headerBytes . 'DATA';
 };
+// An exactly eight-byte scratch read is in-bounds in the pinned C++ source.
+// Make this a complete header with recomputed offsets, not a malformed byte patch.
+$eightPadAccepted = false;
+try {
+    $eightPad = Uedb5ZenPackageReader::parse(
+        $buildVersionBranch(1015, 8), $packageId, $storeEntry
+    );
+    $eightPadAccepted = $eightPad['bulk_data_pad'] === 8
+        && count($eightPad['bulk_data_map']) === 1
+        && count($eightPad['export_bundle_entries']) === 4;
+} catch (RuntimeException) {}
+$check($eightPadAccepted, 'b010_source_eight_byte_bulk_pad_scratch_boundary');
+// Epic serializes FCustomVersionContainer with Optimized TArray format:
+// int32 element count followed by FGuid (four uint32 words) and int32 version.
+$makeVersionInfo = static fn(int $count, string $entries): string =>
+    pack('V', 3) . pack('V2', 522, 1015) . pack('V', 0)
+    . pack('V', $count) . $entries;
+$zeroCustom = Uedb5ZenPackageReader::parse(
+    $buildVersionBranch(1015, null, $makeVersionInfo(0, '')),
+    $packageId, $storeEntry
+);
+$check(count($zeroCustom['versioning_info']['custom_versions']) === 0
+    && count($zeroCustom['import_map']) === 1,
+    'b009_zero_custom_versions_source_array');
+$twoCustom = Uedb5ZenPackageReader::parse(
+    $buildVersionBranch(1015, null,
+        $makeVersionInfo(2, pack('V5', 1, 2, 3, 4, 7)
+            . pack('V5', 5, 6, 7, 8, 0xFFFFFFFF))),
+    $packageId, $storeEntry
+);
+$check(count($twoCustom['versioning_info']['custom_versions']) === 2
+    && ($twoCustom['versioning_info']['custom_versions'][0]['key_words'][0] ?? '') === '00000001'
+    && ($twoCustom['versioning_info']['custom_versions'][1]['key_words'][3] ?? '') === '00000008'
+    && ($twoCustom['versioning_info']['custom_versions'][1]['version'] ?? null) === -1,
+    'b009_multi_custom_guid_versions_preserve_signed_values');
+$negativeCustomCountRejected = false;
+try {
+    Uedb5ZenPackageReader::parse(
+        $buildVersionBranch(1015, null, $makeVersionInfo(0xFFFFFFFF, '')),
+        $packageId, $storeEntry
+    );
+} catch (RuntimeException) { $negativeCustomCountRejected = true; }
+$check($negativeCustomCountRejected, 'b009_corrupt_negative_custom_version_count_rejected');
+
 foreach ([
     ['label'=>'pre_data_resources', 'version'=>1008,'cells'=>false,'bulk'=>false],
     ['label'=>'data_resources_boundary', 'version'=>1009,'cells'=>false,'bulk'=>true],
@@ -483,6 +527,23 @@ try {
     $check($staged->manifest()['package_family'] === 'zen-iostore', 'zen_snapshot_uedb5_manifest_family');
     $check($staged->count('imports') === 1, 'zen_snapshot_uedb5_import_count');
     $check($staged->count('optional_segment') === 1, 'zen_snapshot_uedb5_optional_segment_count');
+    $summaryRoundTrip = $staged->page('package_summary', 0, 1);
+    $check(
+        ($summaryRoundTrip[0]['versioning_info']['zen_version'] ?? null) === 3
+        && ($summaryRoundTrip[0]['versioning_info']['package_version']['ue4'] ?? null) === 522
+        && ($summaryRoundTrip[0]['versioning_info']['package_version']['ue5'] ?? null) === 1018
+        && ($summaryRoundTrip[0]['versioning_info']['licensee_version'] ?? null) === 0
+        && ($summaryRoundTrip[0]['versioning_info']['custom_versions'][0]['version'] ?? null) === 7,
+        'b009_zen_version_custom_guid_preserved_through_v5_storage'
+    );
+    $check(
+        ($summaryRoundTrip[0]['cell_offsets']['serialized'] ?? null) === true
+        && ($summaryRoundTrip[0]['cell_offsets']['cell_import_map_offset'] ?? null) === $cellImportOffset
+        && ($summaryRoundTrip[0]['cell_offsets']['cell_export_map_offset'] ?? null) === $cellExportOffset
+        && $staged->count('bulk_data_map') === 1
+        && ($staged->page('bulk_data_map', 0, 1)[0]['cooked_index'] ?? null) === 2,
+        'b010_zen_cell_and_bulk_map_preserved_through_v5_storage'
+    );
     $roundTripImports = $staged->page('imports', 0, 10);
     $check(
         $roundTripImports[0]['provider_package_id'] === $providerId

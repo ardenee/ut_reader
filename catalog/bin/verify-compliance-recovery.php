@@ -43,7 +43,7 @@ foreach ($manifests as $file) {
         $id = (string)($op['id'] ?? '');
         $require($id !== '' && !isset($operations[$id]),
             'Duplicate or missing formal operation: '.$id);
-        if ($id !== '') { $operations[$id] = $op; }
+        if ($id !== '') { $op['recovery_gate_status']=(array)($json['gate_status']??[]); $operations[$id] = $op; }
     }
 }
 $priority = (array)($baseline['original_operation_priority'] ?? []);
@@ -127,8 +127,25 @@ foreach ($maps as $entry) {
         'Invalid or duplicate difference ID: '.$id);
     $require(in_array($kind,['mapped','cross_cutting','audit_control','unregistered_source_behavior'],true),
         'Invalid mapping type for '.$id);
-    $require($state==='evidence_partial' || $state==='accepted',
+    $require(in_array($state,['evidence_partial','fixed_regression_verified','accepted'],true),
         'Invalid recovery evidence state for '.$id);
+    if($state==='fixed_regression_verified'){
+        $require($kind==='mapped' && count($parent)>0,
+            'Regression-verified source correction lacks original parent: '.$id);
+        foreach($parent as $related){
+            $original=(array)($operations[$related]??[]);
+            $manifestGates=(array)($original['recovery_gate_status']??[]);
+            // The source contract and implementation evidence are declared
+            // within the original operation, and the formal verifier runs
+            // every pinned branch test before accepting these gate flags.
+            $require(($manifestGates['contracts']??false)===true
+                && ($manifestGates['implementation']??false)===true
+                && !empty($original['source_contract_evidence'])
+                && !empty($original['correction_commits'])
+                && !empty($original['source_contract_evidence']['expected_checks']),
+                'Fixed source difference has no original-operation verification: '.$id);
+        }
+    }
     if ($state==='accepted') {
         $require(!empty($entry['independent_acceptance_evidence'])
             && !empty($entry['correction_or_waiver_evidence']),

@@ -97,7 +97,27 @@ foreach($published as $row){
   'unknown_runtime_context_did_not_guess'=>$allConservative,
  ];
 }
+// Source-independent real-file check of actual serialized first uint32.
+// Fifteen widely spread, indexed members only; never enumerate every chunk.
+$versioningTocIndexes=[50,51,52,55,64,80,128,256,512,1024,2048,4096,8192,16384,22000];
+$versionRows=$db->query('SELECT toc_index,HEX(package_id) package_id '
+ .'FROM ue_iostore_packages WHERE container_id=1 AND toc_index IN ('
+ .implode(',',$versioningTocIndexes).') ORDER BY toc_index')->fetchAll(PDO::FETCH_ASSOC);
+$versionFlagSummary=['sampled'=>0,'unversioned'=>0,'versioned'=>0,'invalid'=>0];
+foreach($versionRows as $row){
+ $idx=$toc->findPackageChunk((string)$row['package_id'],
+  Uedb5IoStoreTocReader::CHUNK_TYPE_EXPORT_BUNDLE_DATA,0);
+ if($idx===null){$versionFlagSummary['invalid']++;continue;}
+ $chunkBytes=$toc->readChunk($idx);
+ if(strlen($chunkBytes)<4){$versionFlagSummary['invalid']++;continue;}
+ $flag=unpack('V',substr($chunkBytes,0,4))[1];
+ $versionFlagSummary['sampled']++;
+ $versionFlagSummary[$flag===0?'unversioned':'versioned']++;
+}
 $ok=count($results)>0 && count($matched)===2 && count($entryList)===2
+ &&count($versionRows)===count($versioningTocIndexes)
+ &&$versionFlagSummary['sampled']===count($versioningTocIndexes)
+ &&$versionFlagSummary['invalid']===0
  &&$built['package_store_context_authoritative']===false
  &&count($selected)===2 &&count($dependencySamples)===2;
 foreach($dependencySamples as $item){
@@ -111,6 +131,7 @@ foreach($selected as $i=>$result){
 echo json_encode(['ok'=>$ok,'read_only'=>true,'isolated_mysql'=>true,
  'header'=>$results,'checked_published_members'=>$matched,
  'file_backend_selection'=>$selected,'dependency_samples'=>$dependencySamples,
+ 'bounded_real_versioning_flags'=>$versionFlagSummary,
  'runtime_authority_claimed'=>false],
  JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;
 exit($ok?0:2);

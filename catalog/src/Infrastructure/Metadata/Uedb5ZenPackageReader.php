@@ -80,8 +80,10 @@ final class Uedb5ZenPackageReader
         if ($versioning === null || $packageVersion >= self::UE5_DATA_RESOURCES) {
             $bulkDataPadHex = $reader->u64HexLe();
             $bulkDataPad = Uedb5BinaryReader::unsignedHexLeToIntOrNull($bulkDataPadHex);
-            if ($bulkDataPad === null || $bulkDataPad > 7) {
-                throw new RuntimeException('Zen BulkDataPad is outside the source alignment range.');
+            if ($bulkDataPad === null || $bulkDataPad > 8) {
+                // Epic reads into uint8 PadBytes[sizeof(uint64)]: eight bytes
+                // are safe, nine or more would exceed the destination.
+                throw new RuntimeException('Zen BulkDataPad exceeds Epic scratch-buffer capacity.');
             }
             // Epic reads BulkDataPad bytes into a scratch array without
             // requiring them to be zero. Preserve bounds checking above but

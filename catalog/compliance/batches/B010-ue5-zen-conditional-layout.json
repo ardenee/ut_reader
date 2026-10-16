@@ -1,51 +1,102 @@
 {
-  "schema": 1,
-  "batch": "B010",
-  "engine": "UE5",
-  "profile": "UE5.8.3",
-  "status": "partial",
-  "inventory_a": "targeted loader call path",
-  "inventory_b": "serialized field and branch inventory",
-  "complete_inventory": false,
-  "operations": [
-    {
-      "id": "UE5-583-ZEN-CONDITIONAL-LAYOUT-001",
-      "summary": "Zen CellOffsets and BulkDataMap layout depend on serialized versioning and UE5 version gates",
-      "source": {
-        "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
-        "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9",
-        "symbols": [
-          "FZenPackageVersioningInfo",
-          "FZenPackageHeader"
-        ]
-      },
-      "implementation": {
-        "path": "catalog/src/Infrastructure/Metadata/Uedb5ZenPackageReader.php",
-        "sha256": "22f83309b2c09582001002605fac6b86118aa5c5309b55983ab0b3c663da4bab"
-      },
-      "tests": [
-        "catalog/bin/verify-uedb5-ue5-zen-package.php",
-        "catalog/bin/verify-uedb5-satisfactory-header-readonly-isolated.php"
-      ],
-      "additional_sources": [
+    "schema": 1,
+    "batch": "B010",
+    "engine": "UE5",
+    "profile": "UE5.8.3",
+    "status": "partial",
+    "inventory_a": "targeted loader call path",
+    "inventory_b": "serialized field and branch inventory",
+    "complete_inventory": false,
+    "operations": [
         {
-          "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/ZenPackageHeader.cpp",
-          "sha256": "954117a45b9a802d3f289b30f2a0e191a7bb82cdcb107a22fef134a73172995b",
-          "symbols": ["FZenPackageHeader::MakeView", "VERSE_CELLS", "DATA_RESOURCES", "BulkDataPad"],
-          "lines": [37, 65]
+            "id": "UE5-583-ZEN-CONDITIONAL-LAYOUT-001",
+            "summary": "Zen CellOffsets and BulkDataMap layout depend on serialized versioning and UE5 version gates",
+            "source": {
+                "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+                "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9",
+                "symbols": [
+                    "FZenPackageVersioningInfo",
+                    "FZenPackageHeader"
+                ]
+            },
+            "implementation": {
+                "path": "catalog/src/Infrastructure/Metadata/Uedb5ZenPackageReader.php",
+                "sha256": "58e7e9027438a7453503112b559b629ada5d7a078fc132502a1ddded52de275d"
+            },
+            "tests": [
+                "catalog/bin/verify-uedb5-ue5-zen-package.php",
+                "catalog/bin/verify-uedb5-satisfactory-header-readonly-isolated.php"
+            ],
+            "additional_sources": [
+                {
+                    "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/ZenPackageHeader.cpp",
+                    "sha256": "954117a45b9a802d3f289b30f2a0e191a7bb82cdcb107a22fef134a73172995b",
+                    "symbols": [
+                        "FZenPackageHeader::MakeView",
+                        "VERSE_CELLS",
+                        "DATA_RESOURCES",
+                        "BulkDataPad"
+                    ],
+                    "lines": [
+                        37,
+                        65
+                    ]
+                },
+                {
+                    "path": "Engine/Source/Runtime/Core/Public/UObject/ObjectVersion.h",
+                    "sha256": "4c1ce99232b6bcd538654d67d0fb3e05fc55eea982b249883a3159303d020c87",
+                    "symbols": [
+                        "DATA_RESOURCES",
+                        "VERSE_CELLS"
+                    ],
+                    "lines": [
+                        74,
+                        94
+                    ]
+                }
+            ],
+            "related_differences": [
+                "UE5-D011"
+            ],
+            "disposition": "partial",
+            "reason": "D011 corrected both the extra nonzero BulkDataPad-content rejection and the erroneous 7-byte limit; Epic's eight-byte scratch buffer permits a declared length of 8. Source-gated boundary fixtures 1008/1009/1014/1015 and no-versioning, plus real Satisfactory unversioned snapshots, pass. Complete malformed-header behavior, other consumers and independently cooked threshold fixtures remain open; NOT accepted.",
+            "source_contract_evidence": {
+                "test_driver": "catalog/bin/verify-uedb5-ue5-zen-package.php",
+                "expected_checks": [
+                    "zen_bulk_data_map_parsed",
+                    "b010_epic_bulk_pad_does_not_require_zero_bytes",
+                    "b010_source_eight_byte_bulk_pad_scratch_boundary",
+                    "b010_unsafe_bulk_pad_count_stays_rejected",
+                    "b009_b010_pre_data_resources_source_branch_and_import_integrity",
+                    "b009_b010_data_resources_boundary_source_branch_and_import_integrity",
+                    "b009_b010_pre_verse_cells_source_branch_and_import_integrity",
+                    "b009_b010_verse_cells_boundary_source_branch_and_import_integrity",
+                    "b009_b010_no_versioning_latest_layout_source_branch_and_import_integrity",
+                    "b010_zen_cell_and_bulk_map_preserved_through_v5_storage"
+                ],
+                "source_branches": [
+                    "ZenPackageHeader.cpp:37-47: absent version or UE5>=VERSE_CELLS => serialized cell offsets; older version => export bundle offset defaults",
+                    "ZenPackageHeader.cpp:55-65: absent version or UE5>=DATA_RESOURCES => BulkDataPad and BulkDataMap; older => empty",
+                    "ZenPackageHeader.cpp:58-62: uint8 PadBytes[sizeof(uint64)] permits exactly eight bytes; no zero-content requirement",
+                    "ZenPackageHeader.cpp:67-101: offset views and export/dependency cardinality, source-shaped negative tests"
+                ],
+                "remaining_gates": [
+                    "Independently cooked real versioned threshold headers (UE5 1009 and 1015)",
+                    "Other reachable source/caller and malformed-header paths independent review",
+                    "Runtime build-mode and full isolated end-to-end path acceptance"
+                ]
+            },
+            "correction_commits": [
+                "ee2a4e253638c61add4a2501186674add3ad293d"
+            ]
         }
-      ],
-      "related_differences": ["UE5-D011"],
-      "disposition": "partial",
-      "reason": "D011 corrected the extra nonzero BulkDataPad-content rejection absent from Epic MakeView. Source-gated boundary fixtures 1008/1009/1014/1015 and no-versioning, plus real Satisfactory unversioned snapshots, pass. Complete malformed-header behavior, other consumers and independently cooked threshold fixtures remain open; NOT accepted."
+    ],
+    "next_batch": "B011",
+    "gate_status": {
+        "inventory": false,
+        "contracts": true,
+        "implementation": true,
+        "independent_verification": false,
+        "change_integrity": true
     }
-  ],
-  "next_batch": "B011",
-  "gate_status": {
-    "inventory": false,
-    "contracts": false,
-    "implementation": false,
-    "independent_verification": false,
-    "change_integrity": true
-  }
 }

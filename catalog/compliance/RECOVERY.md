@@ -19,7 +19,10 @@ second competing audit system is introduced.
   Existing formal verifier: 33 open gates; no formal operation fully verified.
 * D001-D011: eleven known differences linked to original operations or
   explicitly categorized as cross-cutting or previously uncovered behavior.
-  D010/D011 fix two decoder gates under B009/B010, not the complete audit.
+  D010/D011 are now marked fixed and regression-verified. Original B009 and
+  B010 each have source-contract and implementation subgates closed by
+  executable branch checks; independently cooked versioned-header and
+  complete call-path acceptance are still open.
   A correction is not proof that its parent operation is complete.
 * D007 IoContainerHeader.cpp behavior is genuinely **unregistered** by the
   existing formal manifests. Add its source-backed obligation in the
@@ -111,10 +114,14 @@ compliance claim, missing workflow route, duplicate operation, lost
 reciprocal link, and strict denial.
 
 **Current implementation checkpoint:** original B009 and B010 now have
-source-pinned D010/D011 corrections, two failing-before/passing-after
-regressions, five version-threshold/no-versioning byte fixtures, and two
-real retained Satisfactory no-versioning examples. Their formal dispositions
-remain partial. Next: finish independent real versioned-header differential,
+source-pinned D010/D011 corrections, three failing-before/passing-after
+regressions (including the eight-byte scratch boundary), five version-threshold/no-versioning
+byte fixtures, nine B009 and ten B010 enforced contract assertions, and two
+real retained Satisfactory no-versioning snapshots, plus a read-only
+15-member spread sampling of actual serialized versioning flags (15 unversioned,
+zero versioned). The machine verifier
+closes two source-contract and two implementation subgates. Their formal
+operation dispositions remain partial. Next: finish independent real versioned-header differential,
 custom-version and corrupted-input branch review, and applicable V5 caller
 acceptance before closing B009/B010 or advancing to B004. No additional B
 checkpoint was created.
