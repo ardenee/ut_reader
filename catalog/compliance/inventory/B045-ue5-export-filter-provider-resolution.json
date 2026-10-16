@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "batch": "B045",
+  "status": "partial",
+  "source": {
+    "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+    "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9",
+    "symbol": "AsyncLoading2_ShouldSkipLoadingExport"
+  },
+  "implementation": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenDependencyResolver.php",
+  "test": "catalog/bin/verify-uedb5-ue5-zen-dependency-resolution.php",
+  "passing_checks": [
+    "zen_client_only_build_applies_not_for_client_filter",
+    "zen_combined_client_role_applies_not_for_client_filter",
+    "zen_combined_server_role_keeps_not_for_client_export"
+  ],
+  "finding": "Client-only and combined role flags are propagated into actual package-import provider resolution; filtered outcomes remain unresolved.",
+  "certified": false,
+  "remaining": [
+    "Authentic cooked file differential",
+    "Complete metadata-publisher propagation audit"
+  ],
+  "next_batch": "B046"
+}
