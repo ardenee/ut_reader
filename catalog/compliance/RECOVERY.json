@@ -336,6 +336,22 @@
       "rationale": "A bare package_identity_context_authoritative flag previously represented an absent CoreRedirect/instancing/loose-localization rewrite result as a proven empty mapping. B008 negative-before regression failed; the resolver now distinguishes no result (unknown/unresolved) from explicitly supplied empty package_identity_rewrites (known no rewrite), retaining independent serialized/effective/load package IDs.",
       "state": "fixed_regression_verified",
       "audit_escape": "none"
+    },
+    {
+      "id": "UE5-D019",
+      "kind": "mapped",
+      "operations": ["UE5-583-PUBLIC-EXPORT-001"],
+      "rationale": "Epic FPublicExportKey::MakeKey rejects zero ExportHash and invalid FPackageId. UnrealDB had treated a zero import hash, zero imported package ID and zero selected-provider package ID as normal missing evidence. Three source-derived tests failed before 14f3c1e4 and now reject invalid source keys explicitly; all valid-key lookups and V5 consumers pass.",
+      "state": "fixed_regression_verified",
+      "audit_escape": "none"
+    },
+    {
+      "id": "UE5-D020",
+      "kind": "mapped",
+      "operations": ["UE5-583-PUBLIC-EXPORT-001"],
+      "rationale": "Epic's header GetPublicExportIndex scans main exports first, stops on the earliest matching index and tests optional only under WITH_EDITOR. But live FGlobalImportStore StorePublicExport may replace an object under the same hash. UnrealDB previously suppressed source-header first-candidate provenance when collision rows remained unresolved. First-candidate evidence is now recorded with runtime_lookup_authoritative=false; a negative-before regression and temporary real UEDB5 round-trip confirm that the live winner is never fabricated.",
+      "state": "fixed_regression_verified",
+      "audit_escape": "none"
     }
   ],
   "coverage_gaps": [

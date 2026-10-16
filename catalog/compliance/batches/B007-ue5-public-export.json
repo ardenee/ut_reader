@@ -1,44 +1,181 @@
 {
-  "schema": 1,
-  "batch": "B007",
-  "engine": "UE5",
-  "profile": "UE5.8.3",
-  "status": "partial",
-  "inventory_a": "source call path",
-  "inventory_b": "source structure and branch coverage",
-  "complete_inventory": false,
-  "operations": [
-    {
-      "id": "UE5-583-PUBLIC-EXPORT-001",
-      "summary": "FPublicExportKey lookup uses imported package IDs plus public-export hashes",
-      "source": {
-        "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
-        "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9",
-        "symbols": [
-          "FindPublicExportObject",
-          "FPublicExportKey::FromPackageImport"
-        ]
-      },
-      "implementation": {
-        "path": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenDependencyResolver.php",
-        "sha256": "0456c0f879e8d70af406634c76cd18437242de1f4b427d31d263df110a52e35e"
-      },
-      "tests": [
-        "catalog/bin/verify-uedb5-ue5-zen-dependency-resolution.php",
-        "catalog/bin/verify-uedb5-zen-compact-reason-db.php",
-        "catalog/bin/verify-uedb5-dependency-sql-isolated.php"
-      ],
-      "related_differences": ["UE5-D001", "UE5-D002", "UE5-D006"],
-      "disposition": "partial",
-      "reason": "Source 2587–2601 and 2829–2835. Offline resolution maps both exact identities; selected-provider correctness and duplicate hashes require complete fixture parity."
+    "schema": 1,
+    "batch": "B007",
+    "engine": "UE5",
+    "profile": "UE5.8.3",
+    "status": "verified",
+    "inventory_a": "source call path",
+    "inventory_b": "source structure and branch coverage",
+    "complete_inventory": true,
+    "operations": [
+        {
+            "id": "UE5-583-PUBLIC-EXPORT-001",
+            "summary": "FPublicExportKey lookup uses imported package IDs plus public-export hashes",
+            "source": {
+                "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+                "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9",
+                "symbols": [
+                    "FindPublicExportObject",
+                    "FPublicExportKey::FromPackageImport"
+                ]
+            },
+            "implementation": {
+                "path": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenDependencyResolver.php",
+                "sha256": "0456c0f879e8d70af406634c76cd18437242de1f4b427d31d263df110a52e35e"
+            },
+            "tests": [
+                "catalog/bin/verify-uedb5-ue5-zen-dependency-resolution.php",
+                "catalog/bin/verify-uedb5-zen-compact-reason-db.php",
+                "catalog/bin/verify-uedb5-dependency-sql-isolated.php",
+                "catalog/bin/verify-uedb5-b007-public-export-source.php",
+                "catalog/bin/verify-uedb5-b007-operation-acceptance.php",
+                "catalog/bin/verify-uedb5-b007-v5-roundtrip.php",
+                "catalog/bin/verify-uedb5-b005-operation-acceptance.php",
+                "catalog/bin/verify-uedb5-b012-operation-acceptance.php",
+                "catalog/bin/verify-uedb5-b008-operation-acceptance.php",
+                "catalog/bin/verify-uedb5-dependency-rebuilder.php"
+            ],
+            "related_differences": [
+                "UE5-D001",
+                "UE5-D002",
+                "UE5-D006",
+                "UE5-D019",
+                "UE5-D020"
+            ],
+            "disposition": "verified",
+            "reason": "Original B007 full bounded public-export key/lookup operation verified: exact package ID + nonzero hash, source header-first candidate versus mutable runtime global object, duplicate ambiguities retained, V5 and SQL/consumer consistency; no live UObject-state claims.",
+            "correction_commits": [
+                "14f3c1e48bb008a11d6b5664a069af3c85775d21"
+            ],
+            "additional_sources": [
+                {
+                    "path": "Engine/Source/Runtime/CoreUObject/Public/Serialization/AsyncLoading2.h",
+                    "sha256": "088f00a8c970458e4bb717490ac4d50361d635ddf8cb0b7b1a5c93ff4d9feef2",
+                    "symbols": [
+                        "FPublicExportKey",
+                        "FromPackageImport",
+                        "check(PackageId.IsValid())",
+                        "check(ExportHash)"
+                    ]
+                }
+            ],
+            "source_contract_evidence": {
+                "test_driver": "catalog/bin/verify-uedb5-b007-public-export-source.php",
+                "expected_checks": [
+                    "b007_epic_cpp_pinned",
+                    "b007_epic_public_header_pinned",
+                    "b007_from_import_20bb4500",
+                    "b007_from_import_2aca9463",
+                    "b007_from_import_0545cad1",
+                    "b007_zero_hash_fatal_in_epic_key",
+                    "b007_invalid_package_id_fatal_in_epic_key",
+                    "b007_key_equality_requires_both_fields",
+                    "b007_runtime_first_package_id_then_hash",
+                    "b007_global_hash_collision_replaces_existing",
+                    "b007_global_export_store_disallows_hash_zero",
+                    "b007_header_main_before_optional",
+                    "b007_header_immediately_returns_first_match",
+                    "b007_optional_export_editor_only",
+                    "b007_live_store_lookup_before_header_fallback",
+                    "b007_duplicated_live_export_remains_unresolved",
+                    "b007_source_header_first_index_provenance_not_runtime_resolution",
+                    "b007_invalid_zero_import_hash_rejected_like_epic",
+                    "b007_import_zero_fpackageid_rejected_like_epic",
+                    "b007_provider_zero_fpackageid_rejected_like_epic",
+                    "b007_same_hash_wrong_package_does_not_resolve",
+                    "b007_exact_provider_and_hash_resolves",
+                    "b007_complete_production_resolver_caller_inventory",
+                    "b007_new_unregistered_callsite_fails_inventory"
+                ],
+                "source_branches": [
+                    "FPublicExportKey::FromPackageImport uses FPackageId and exact PublicExportHash, MakeKey rejects zero IDs/hashes.",
+                    "FGlobalImportStore first locates package ID and then export hash; later StorePublicExport replaces prior runtime hash object.",
+                    "GetPublicExportIndex checks main headers first then optional WITH_EDITOR and returns first match in each.",
+                    "ConditionalCreateImport/SerializeImport try already loaded global object, else use source header first candidate.",
+                    "ObjectRedirector editor follow and runtime filter are separate live execution conditions, not inferred from archived bytes."
+                ]
+            },
+            "source_reachability_evidence": {
+                "test_driver": "catalog/bin/verify-uedb5-b007-public-export-source.php",
+                "expected_checks": [
+                    "b007_complete_production_resolver_caller_inventory",
+                    "b007_new_unregistered_callsite_fails_inventory",
+                    "b007_live_store_lookup_before_header_fallback",
+                    "b007_runtime_first_package_id_then_hash"
+                ],
+                "source_inventory_record": "catalog/compliance/B007-PUBLIC-EXPORT-SOURCE.md",
+                "production_file_count": 559,
+                "direct_consumer_count": 2
+            },
+            "guarded_implementation_files": [
+                {
+                    "path": "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php",
+                    "sha256": "c39b1ee0fd4f91b356ee3b70a2ea9577483418c3f1e68f0048909f93222f723a"
+                },
+                {
+                    "path": "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php",
+                    "sha256": "cfd10f008b6651db60f3f3037bd0b391fd5a4bbd0add0b3844fff4e6314cb874"
+                },
+                {
+                    "path": "catalog/src/Infrastructure/Metadata/Uedb5DependencyProjectionBuilder.php",
+                    "sha256": "ac455a7e5b58dd2b9f4df15d9f7685373e9df893dbc0432dc3599df4b9b3de2c"
+                },
+                {
+                    "path": "catalog/src/Infrastructure/Metadata/CatalogCompactDependencyReadService.php",
+                    "sha256": "5e723c7f06db17b948c540ccff9966579a49c6475f260327573462f86efa9e4b"
+                }
+            ],
+            "independent_inventory_evidence": {
+                "source_review": "catalog/compliance/B007-PUBLIC-EXPORT-SOURCE.md",
+                "scope_boundary": "Snapshot matching and source-first header candidates cannot attest to live FGlobalImportStore object identity; B016 Verse cell behavior remains separate.",
+                "independent_source_oracle": "catalog/bin/verify-uedb5-b007-public-export-source.php",
+                "real_v5_roundtrip": "catalog/bin/verify-uedb5-b007-v5-roundtrip.php",
+                "operation_level_acceptance": "catalog/bin/verify-uedb5-b007-operation-acceptance.php"
+            },
+            "test_results": {
+                "test_driver": "catalog/bin/verify-uedb5-b007-operation-acceptance.php",
+                "expected_checks": [
+                    "b007_driver_source_passes",
+                    "b007_driver_resolver_passes",
+                    "b007_driver_v5_passes",
+                    "b007_driver_compact_passes",
+                    "b007_driver_backend_passes",
+                    "b007_driver_optional_passes",
+                    "b007_driver_identity_passes",
+                    "b007_driver_rebuilder_passes",
+                    "b007_driver_sql_passes",
+                    "b007_pinned_makekey_import_identity",
+                    "b007_invalid_zero_hash_or_package_rejected",
+                    "b007_duplicate_header_first_vs_live_overwrite",
+                    "b007_exact_package_and_hash_and_provider_required",
+                    "b007_source_editor_and_filter_branches",
+                    "b007_real_v5_snapshot_preserves_collision_provenance",
+                    "b007_compact_reader_preserves_unresolved_reasons",
+                    "b007_production_caller_inventory_and_downstream"
+                ],
+                "result": "24 pinned-source+repro assertions and 17 operation assertions in nine independent drivers, real temporary V5 writer/reader and isolated SQL. Four negative-before cases: zero import hash, zero import ID, zero provider ID, missing header-first-candidate provenance. Existing provider ambiguity, filter, editor and B012 optional precedence remain green."
+            },
+            "acceptance_evidence": {
+                "reachable_source_branches": "Epic key header and async loader source hashes pinned, public key validity, per-package store lookup, collision overwrite, first header index, editor optional, filtered/redirector, physical lookup constraints.",
+                "epic_to_unrealdb_mapping": "catalog/compliance/B007-PUBLIC-EXPORT-SOURCE.md reconciles Epic global store and header fallback separately with original offline V5 resolver and consumers.",
+                "independent_differential": "D019 zero-key checks fail before and pass after 14f3c1e4; D020 source-header first-candidate provenance likewise fails before and passes after, remaining explicitly nonauthoritative about live hash store.",
+                "all_v5_consumers": "All direct resolver calls among 559 production PHP files; PDO selected provider, dependency rebuilder, isolated MySQL SQL projection, compact/read facades, V5 compressed writer/reader, optional/store/context acceptance.",
+                "independent_reviewer": "Independent executable pinned-source oracle with negative controls and nine-driver operation-level acceptance; not an external human review or a live UnrealEditor/UObject load."
+            }
+        }
+    ],
+    "next_batch": "B010",
+    "gate_status": {
+        "inventory": true,
+        "contracts": true,
+        "implementation": true,
+        "independent_verification": true,
+        "change_integrity": true
+    },
+    "reconciliation_evidence": {
+        "source": "Epic UE5.8.3 AsyncLoading2.h:179-250; AsyncLoading2.cpp:1214-1260,2587-2692,2829-2850,8930-9054",
+        "record": "catalog/compliance/B007-PUBLIC-EXPORT-SOURCE.md",
+        "scope": "Offline exact package+public-export hash and source collision provenance; not live UObject store state",
+        "consumer_inventory": "All 559 production PHP files; two direct resolver callers, PDO provider selection and metadata dependency rebuilder"
     }
-  ],
-  "next_batch": "B010",
-  "gate_status": {
-    "inventory": false,
-    "contracts": false,
-    "implementation": false,
-    "independent_verification": false,
-    "change_integrity": true
-  }
 }
