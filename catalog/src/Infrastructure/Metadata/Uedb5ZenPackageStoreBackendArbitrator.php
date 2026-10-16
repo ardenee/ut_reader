@@ -45,6 +45,18 @@ final class Uedb5ZenPackageStoreBackendArbitrator
             foreach(['entries','redirects'] as $field){
                 if(!isset($backend[$field])||!is_array($backend[$field]))
                     throw new RuntimeException('Backend '.$field.' must be explicit.');
+                // Epic keys its store by binary FPackageId, not a case-sensitive
+                // hexadecimal string. Normalize textual keys before arbitration.
+                $normalized=[];
+                foreach($backend[$field] as $rawPackageId=>$value){
+                    $canonical=strtoupper((string)$rawPackageId);
+                    if(!preg_match('/^[0-9A-F]{16}$/D',$canonical))
+                        throw new RuntimeException('Backend '.$field.' requires 16-digit hexadecimal FPackageId keys.');
+                    if(array_key_exists($canonical,$normalized))
+                        throw new RuntimeException('Duplicate FPackageId in backend '.$field.' after normalization: '.$canonical);
+                    $normalized[$canonical]=$value;
+                }
+                $backend[$field]=$normalized;
             }
             $seen[$id]=true;$backend['_ordinal']=$i;$rows[]=$backend;
         }

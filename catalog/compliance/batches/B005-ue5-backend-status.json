@@ -22,7 +22,7 @@
       },
       "implementation": {
         "path": "catalog/src/Infrastructure/Metadata/Uedb5ZenPackageStoreBackendArbitrator.php",
-        "sha256": "b917e7aea4259a93d19499bba0840bea05af8a545230f1ea02235f57635dcefd"
+        "sha256": "1890cb58c23d40d941716c6924dd3c070a22cfed3685369fec54b04246f81f18"
       },
       "tests": [
         "catalog/bin/verify-uedb5-zen-backend-arbitration.php"
