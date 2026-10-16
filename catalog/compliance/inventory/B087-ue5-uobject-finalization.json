@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "batch": "B087",
+  "source": {
+    "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+    "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9"
+  },
+  "classification": "bounded source-body review",
+  "status": "partial",
+  "reviewed": [
+    {
+      "symbol": "FAsyncPackage2::CreateUPackage",
+      "line": 12379,
+      "disposition": "file-format-relevant",
+      "reason": "Finds or constructs live UPackage and applies package path, importability flag, FPackageId and package flags from load descriptor; runtime package identity semantics.",
+      "verified": false
+    },
+    {
+      "symbol": "FAsyncPackage2::FinishUPackage",
+      "line": 12526,
+      "disposition": "runtime-only",
+      "reason": "Marks UPackage fully loaded when root exists and no loading failure, sets loaded flags and elapsed time.",
+      "verified": false
+    },
+    {
+      "symbol": "FAsyncPackage2::CreateClusters",
+      "line": 12506,
+      "disposition": "runtime-only",
+      "reason": "Creates live GC clusters only for exports neither filtered nor failed and eligible as cluster roots, subject to loading time limit.",
+      "verified": false
+    }
+  ],
+  "evidence_limitations": [
+    "Offline package metadata cannot fully model live UObject lifecycle",
+    "Full source call graph is not certified"
+  ],
+  "next_batch": "B088"
+}
