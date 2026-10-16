@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "batch": "B085",
+  "source": {
+    "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+    "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9"
+  },
+  "classification": "bounded source-body review",
+  "status": "partial",
+  "reviewed": [
+    {
+      "symbol": "FAsyncPackage2::UpdateDependenciesStateRecursive",
+      "line": 10039,
+      "disposition": "file-format-relevant",
+      "reason": "Walks loaded imported-package dependency graph, handles waiting packages, cycles and preorder traversal state for load-phase completion; dynamic scheduling distinct from static import rows.",
+      "verified": false
+    },
+    {
+      "symbol": "FAsyncPackage2::WaitForAllDependenciesToReachState",
+      "line": 10176,
+      "disposition": "file-format-relevant",
+      "reason": "Updates recursion tick, traverses dependency wait graph and wakes packages when required load phase is reached; distinguishes loaded-state reachability from metadata provider existence.",
+      "verified": false
+    }
+  ],
+  "evidence_limitations": [
+    "Dynamic loading-state graph not equivalent to offline static edges",
+    "Complete cycle-handling semantics need dedicated implementation checks"
+  ],
+  "next_batch": "B086"
+}
