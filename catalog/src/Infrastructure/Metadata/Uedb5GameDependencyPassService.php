@@ -332,6 +332,18 @@ final class Uedb5GameDependencyPassService
                 if (!is_array($backends) || !array_is_list($backends)) {
                     throw new RuntimeException('Zen backend descriptors must be a list for game '.$gameId.'.');
                 }
+                // An authoritative runtime file-backend result cannot be
+                // constructed from redirect-only mount descriptors. Require
+                // an explicit physical package-entry mapping for every mount.
+                if (!empty($options['zen_runtime_context']['package_store_context_authoritative'])) {
+                    foreach ($mounts as $mount) {
+                        if (!is_array($mount) || !array_key_exists('package_entries', $mount)) {
+                            throw new RuntimeException(
+                                'Authoritative Zen mounted file backend requires evidenced package_entries for every container.'
+                            );
+                        }
+                    }
+                }
                 $priorities = $this->config['zen_file_backend_priority_by_game'] ?? [];
                 if (!is_array($priorities) || !isset($priorities[$gameId])
                     || !is_int($priorities[$gameId])) {

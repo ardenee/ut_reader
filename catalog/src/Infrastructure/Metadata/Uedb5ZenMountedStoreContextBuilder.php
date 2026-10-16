@@ -7,6 +7,9 @@ final class Uedb5ZenMountedStoreContextBuilder
 {
     /**
      * A declared mount set is not by itself proof of the complete runtime environment.
+     * Each optional package_entries list maps source-observed 16-hex FPackageId
+     * to a separately verified positive catalog file_id. Missing entries do not
+     * imply Missing at runtime, and these lists do not confer authority.
      * @param list<array<string,mixed>> $mounts
      * @return array<string,mixed>
      */
@@ -32,7 +35,27 @@ final class Uedb5ZenMountedStoreContextBuilder
         usort($ordered,static fn(array $a,array $b):int=>
             ($b['order']<=>$a['order'])?:($b['sequence']<=>$a['sequence']));
         $redirects=[];$localized=[];$seenRedirect=[];$seenLocalized=[];
+        $entries=[];
         foreach($ordered as $mount){
+            // FilePackageStore::Update builds its package map from PackageIds
+            // in the effective mount order. Physical catalog file IDs must be
+            // independently evidenced; never infer them from a TOC alone.
+            if(array_key_exists('package_entries',$mount)){
+                if(!is_array($mount['package_entries'])||!array_is_list($mount['package_entries']))
+                    throw new RuntimeException('Mount package_entries must be an explicit list.');
+                foreach($mount['package_entries'] as $row){
+                    if(!is_array($row))throw new RuntimeException('Mount package entry must be an object.');
+                    $id=strtoupper((string)($row['package_id']??''));
+                    if(!preg_match('/^[0-9A-F]{16}$/D',$id))
+                        throw new RuntimeException('Mount package entry requires 16-digit FPackageId.');
+                    $fileId=$row['file_id']??null;
+                    if(!is_int($fileId)||$fileId<1)
+                        throw new RuntimeException('Mount package entry requires evidenced positive integer file_id.');
+                    if(!isset($entries[$id])){
+                        $entries[$id]=['status'=>'Ok','file_id'=>$fileId];
+                    }
+                }
+            }
             foreach($mount['package_redirects'] as $row){
                 if(!is_array($row))throw new RuntimeException('Mount redirect must be an object.');
                 $source=self::packageId($row);
@@ -52,6 +75,7 @@ final class Uedb5ZenMountedStoreContextBuilder
             }
         }
         return [
+            'file_backend_entries'=>$entries,
             'package_redirects'=>$redirects,
             'localized_packages'=>$localized,
             'mounted_container_order'=>array_map(static fn(array $m):array=>[

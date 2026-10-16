@@ -44,6 +44,35 @@ $combined=$run([
  ]],
  'zen_file_backend_priority_by_game'=>[9001=>1],
 ]);
+$authorityWithoutEntriesRejected=false;
+try {
+ $run([
+  'zen_runtime_context_by_game'=>[9001=>[
+   'package_store_context_authoritative'=>true,'evidence_source'=>'captured runtime proof']],
+  'zen_mounted_containers_by_game'=>[9001=>[
+   ['container_id'=>'incomplete','order'=>1,'sequence'=>0,
+    'package_redirects'=>[],'localized_packages'=>[]]]],
+  'zen_package_store_backends_by_game'=>[9001=>[]],
+  'zen_file_backend_priority_by_game'=>[9001=>1],
+ ]);
+}catch(RuntimeException $e){
+ $authorityWithoutEntriesRejected=str_contains($e->getMessage(),'package_entries');
+}
+$authoritativeEntries=$run([
+ 'zen_runtime_context_by_game'=>[9001=>[
+  'package_store_context_authoritative'=>true,'evidence_source'=>'captured runtime proof']],
+ 'zen_mounted_containers_by_game'=>[9001=>[
+  ['container_id'=>'complete','order'=>1,'sequence'=>0,
+   'package_redirects'=>[],'localized_packages'=>[],
+   'package_entries'=>[['package_id'=>'AABBCCDDEEFF0011','file_id'=>87]]]]],
+ 'zen_package_store_backends_by_game'=>[9001=>[]],
+ 'zen_file_backend_priority_by_game'=>[9001=>1],
+]);
+$authBackendEntries=$authoritativeEntries['zen_package_store_backend_results']??[];
+$authFileEntries=array_values(array_filter($authBackendEntries,
+ static fn(array $row):bool=>($row['backend_id']??'')==='file'));
+$authOk=($authFileEntries[0]['entries']['AABBCCDDEEFF0011']['file_id']??0)===87
+ &&($authoritativeEntries['zen_runtime_context']['package_store_context_authoritative']??false)===true;
 $evidencedMount=$run([
  'zen_runtime_context_by_game'=>[9001=>[
   'evidence_source'=>'complete verified runtime capture',
@@ -83,6 +112,7 @@ $ok=!isset($baseline['zen_runtime_context'])&&!isset($other['zen_runtime_context
     &&!array_key_exists('is_client',$partialOverride['zen_runtime_context'])
     &&!isset($otherOverride['zen_runtime_context'])
     &&($mergedOverride['zen_runtime_context']['is_editor']??null)===false
+    &&$authorityWithoutEntriesRejected &&$authOk
     &&$invalidOverrideRejected&&$authorityOverrideRejected;
 echo json_encode(['ok'=>$ok,'baseline_unknown'=>$baseline,'other_game_isolation'=>$other,'known_context'=>$known,'unsupported_authority_rejected'=>$reject,'derived_mount_context'=>$mountContext,'mount_isolation'=>$mountIsolated,'backend_merged_context'=>$combined,'evidenced_mount_context'=>$evidencedMount,'partial_override'=>$partialOverride,'invalid_override_rejected'=>$invalidOverrideRejected,'authority_override_rejected'=>$authorityOverrideRejected],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;
 exit($ok?0:2);

@@ -17,6 +17,10 @@ $tests=[
  'verify-uedb5-zen-export-map-fields.php',
  'verify-uedb5-zen-malformed-export-map.php',
  'verify-uedb5-zen-backend-arbitration.php',
+ 'verify-uedb5-zen-mounted-store-context.php',
+ 'verify-uedb5-zen-effective-store-context.php',
+ 'verify-uedb5-zen-context-options-standalone.php',
+ 'verify-uedb5-physical-provider-selector.php',
 ];
 $results=[];$failures=[];
 foreach($tests as $test){

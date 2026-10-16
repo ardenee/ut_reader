@@ -10,6 +10,7 @@ use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5SqlProjectionContract;
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5Ut4SnapshotBuilder;
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5Unreal2SnapshotBuilder;
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5ZenPackageReader;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5ZenEffectivePackageStoreContextBuilder;
 
 $checks=[];$failures=[];
 $check=static function(string $name,bool $ok)use(&$checks,&$failures):void{
@@ -240,6 +241,58 @@ $backendSelected=(new PdoUedb5PhysicalProviderSelector($db,$tmp))->select(8,40,[
 ]);
 $check('zen_evidenced_backend_disambiguates_exact_physical_package',
  count($backendSelected)===1 && (int)($backendSelected[0]['file_id']??0)===42);
+
+// Exercise the real builder -> prioritized backend -> PDO selector chain.
+// The observed mount entries are explicit; this synthetic fixture separately
+// asserts runtime completeness, rather than deriving authority from a UTOC.
+$mountedEvidence=Uedb5ZenEffectivePackageStoreContextBuilder::build([
+ ['container_id'=>'base','order'=>1,'sequence'=>0,'package_redirects'=>[],
+  'localized_packages'=>[],
+  'package_entries'=>[['package_id'=>$zenPackageId,'file_id'=>41]]],
+ ['container_id'=>'patch','order'=>2,'sequence'=>1,'package_redirects'=>[],
+  'localized_packages'=>[],
+  'package_entries'=>[['package_id'=>strtolower($zenPackageId),'file_id'=>42]]],
+],[
+ ['backend_id'=>'runtime','priority'=>10,
+  'entries'=>[$zenPackageId=>['status'=>'Missing']],'redirects'=>[]],
+],1);
+$mountedSelected=(new PdoUedb5PhysicalProviderSelector($db,$tmp))->select(8,40,[
+ 'zen_runtime_context'=>[
+  'package_identity_context_authoritative'=>true,
+  'package_store_context_authoritative'=>true,
+  'package_redirects'=>$mountedEvidence['package_redirects'],
+  'localized_packages'=>$mountedEvidence['localized_packages'],
+ ],
+ 'zen_package_store_backend_results'=>$mountedEvidence['package_store_backend_results'],
+]);
+$check('zen_mounted_file_backend_actual_selector_respects_mount_order',
+ count($mountedSelected)===1
+ &&(int)($mountedSelected[0]['file_id']??0)===42
+ &&($mountedSelected[0]['selected_backend_id']??'')==='file');
+$mountedWithoutAuthority=(new PdoUedb5PhysicalProviderSelector($db,$tmp))->select(8,40,[
+ 'zen_runtime_context'=>$mountedEvidence,
+ 'zen_package_store_backend_results'=>$mountedEvidence['package_store_backend_results'],
+]);
+$check('zen_mounted_file_entries_without_authority_stay_ambiguous',
+ ($mountedWithoutAuthority[0]['selection_status']??'')==='ambiguous'
+ &&($mountedWithoutAuthority[0]['file_id']??null)===null);
+$mountedPending=$mountedEvidence['package_store_backend_results'];
+foreach($mountedPending as &$backend){
+ if($backend['backend_id']==='runtime'){
+  $backend['entries'][$zenPackageId]=['status'=>'Pending'];
+ }
+}
+unset($backend);
+$pendingSelection=(new PdoUedb5PhysicalProviderSelector($db,$tmp))->select(8,40,[
+ 'zen_runtime_context'=>[
+  'package_identity_context_authoritative'=>true,
+  'package_store_context_authoritative'=>true,
+  'package_redirects'=>[],'localized_packages'=>[],
+ ],
+ 'zen_package_store_backend_results'=>$mountedPending,
+]);
+$check('zen_mounted_file_backend_does_not_override_higher_pending_backend',
+ $pendingSelection===[]);
 $backendUnknown=(new PdoUedb5PhysicalProviderSelector($db,$tmp))->select(8,40,[
  'zen_runtime_context'=>['package_identity_context_authoritative'=>true,
   'package_store_context_authoritative'=>false,'package_redirects'=>[],'localized_packages'=>[]],

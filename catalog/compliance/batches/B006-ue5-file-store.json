@@ -22,7 +22,7 @@
       },
       "implementation": {
         "path": "catalog/src/Infrastructure/Metadata/Uedb5ZenEffectivePackageStoreContextBuilder.php",
-        "sha256": "e59441431e6040a0ad11adc5daad6ddf0079c1d5eece02e6a9df0e40176d8888"
+        "sha256": "089d7c337a29f64621b216d6ad7694651a527da5b35dcbd53a0935438ecc329e"
       },
       "tests": [
         "catalog/bin/verify-uedb5-zen-effective-store-context.php"

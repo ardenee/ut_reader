@@ -21,7 +21,7 @@ final class Uedb5ZenEffectivePackageStoreContextBuilder
         $backends[]=[
             'backend_id'=>'file',
             'priority'=>$fileBackendPriority,
-            'entries'=>[],
+            'entries'=>$file['file_backend_entries'],
             'redirects'=>$redirects,
         ];
         $ordered=Uedb5ZenPackageStoreBackendArbitrator::ordered($backends);
