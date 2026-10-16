@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "batch": "B034",
+  "source": {
+    "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+    "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9"
+  },
+  "status": "partial",
+  "classification": "source-to-regression follow-up",
+  "reviewed": [
+    {
+      "symbol": "FAsyncPackage2::ProcessExportDependencies",
+      "disposition": "file-format-relevant",
+      "reason": "Four counts and negative dependency indices tested with actual Uedb5ZenPackageReader private parsing methods; synthetic not real fixture.",
+      "verified": false
+    }
+  ],
+  "test_evidence": [
+    "catalog/bin/verify-uedb5-zen-dependency-partitions.php"
+  ],
+  "next_batch": "B035"
+}
