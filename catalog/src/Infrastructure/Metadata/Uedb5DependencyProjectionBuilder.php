@@ -42,6 +42,8 @@ final class Uedb5DependencyProjectionBuilder
         }
         foreach ($packages as &$summary) {
             $summary['summary_outcome'] = self::summaryOutcome($summary);
+            // Internal aggregation state must not leak into the SQL projection.
+            unset($summary['_provider_conflict']);
         }
         unset($summary);
         return [
@@ -212,6 +214,7 @@ final class Uedb5DependencyProjectionBuilder
             'nonhard_missing_count' => 0,
             'summary_outcome' => Uedb5SqlProjectionContract::OUTCOME_RESOLVED,
             'provider_file_id' => null,
+            '_provider_conflict' => false,
         ];
     }
 
@@ -234,12 +237,14 @@ final class Uedb5DependencyProjectionBuilder
             else { $summary['nonhard_missing_count']++; }
         }
         $provider = $edge['resolved_file_id'] ?? null;
-        if ($provider !== null) {
+        if ($provider !== null && !$summary['_provider_conflict']) {
             $provider = (int)$provider;
             if ($summary['provider_file_id'] === null) {
                 $summary['provider_file_id'] = $provider;
             } elseif ((int)$summary['provider_file_id'] !== $provider) {
+                // A later matching edge must not restore a disputed provider.
                 $summary['provider_file_id'] = null;
+                $summary['_provider_conflict'] = true;
             }
         }
     }

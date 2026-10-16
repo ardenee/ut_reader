@@ -37,7 +37,7 @@ $ddl = [
         updated_at DATETIME NOT NULL,
         PRIMARY KEY(file_id,package_key_kind,package_key)) ENGINE=InnoDB'
 ];
-$created = []; $results = []; $failures = [];
+$created = []; $results = []; $failures = []; $providerConsensusFixture = null;
 $files = [2=>111139,3=>113253,4=>148919,5=>111460,6=>112300,7=>113526,12=>110902];
 try {
     foreach ($ddl as $i=>$sql) { $db->exec($sql); $created[]=$tables[$i]; }
@@ -73,6 +73,38 @@ try {
             $reader->clearCache($gameId,$fileId);
         }
     }
+    // Bounded three-provider regression on the real MySQL writer, but exclusively
+    // inside session-temporary tables (never persistent catalog projections).
+    $fixtureId=900000001;
+    $fixture=[
+        'file'=>['id'=>$fixtureId,'game_id'=>7,'package_name'=>'/Game/ProviderConsensusAudit'],
+        'section_schemas'=>['imports'=>'ue5.zen.package-object-index.v1'],
+        'sections'=>['dependency_results'=>[]],
+    ];
+    foreach([31,32,33] as $index=>$providerId){
+        $fixture['sections']['dependency_results'][]=[
+            'source_section'=>'imports','source_index'=>$index,
+            'dependency_kind'=>'PackageImport','dependency_class'=>'hard',
+            'hard'=>true,'outcome'=>'resolved',
+            'required_package_id'=>'1020304050607080',
+            'required_object_identity'=>'1122334455667788',
+            'selected_provider_file_id'=>$providerId,
+            'selected_provider_object'=>['export_index'=>$index],
+        ];
+    }
+    $publisher->publish($fixture);
+    $raw=$db->query('SELECT dependency_count,provider_file_id FROM ue_uedb5_dependency_packages WHERE file_id='.$fixtureId)->fetch(PDO::FETCH_ASSOC);
+    $firstOk=is_array($raw) && (int)$raw['dependency_count']===3 && $raw['provider_file_id']===null;
+    $fixture['sections']['dependency_results'][2]['selected_provider_file_id']=31;
+    $publisher->publish($fixture);
+    $raw=$db->query('SELECT provider_file_id FROM ue_uedb5_dependency_packages WHERE file_id='.$fixtureId)->fetch(PDO::FETCH_ASSOC);
+    $secondOk=is_array($raw) && $raw['provider_file_id']===null;
+    $providerConsensusFixture=['ok'=>$firstOk && $secondOk,
+        'three_distinct_conflicting_providers'=>$firstOk,
+        'later_repeated_provider_does_not_restore_consensus'=>$secondOk];
+    if(!$providerConsensusFixture['ok']){
+        $failures[]=['provider_consensus_fixture'=>'A conflicted package summary regained a provider identity.'];
+    }
 } catch (Throwable $error) { $failures[]=['setup_error'=>$error->getMessage()]; }
 finally {
     if ($db->inTransaction()) { $db->rollBack(); }
@@ -84,6 +116,6 @@ finally {
 $ok = $failures===[] && count($results)===count($files);
 echo json_encode(['ok'=>$ok,'temporary_sql_only'=>true,
     'source'=>'existing V5 dependency snapshots, not fresh resolver execution',
-    'results'=>$results,'failures'=>$failures],
+    'results'=>$results,'provider_consensus_fixture'=>$providerConsensusFixture,'failures'=>$failures],
     JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;
 exit($ok?0:2);

@@ -115,6 +115,40 @@ $zenReasonReplacement['sections']['dependency_results']=[$zenReasonSnapshot['sec
 $publisher->publish($zenReasonReplacement);
 $remainingIndex=$db->query('SELECT source_index FROM ue_uedb5_dependency_edges WHERE file_id=12')->fetchAll(PDO::FETCH_COLUMN);
 $check('republication_removes_stale_zen_dependency_edge',count($remainingIndex)===1 && (int)$remainingIndex[0]===1);
+
+// A package summary may only advertise one provider when all observed,
+// non-null per-edge provider identities agree. Once disputed it must not
+// silently regain an identity from a later edge.
+$providerConsensusSnapshot=$zenSnapshot;
+$providerConsensusSnapshot['file']['id']=13;
+$providerConsensusSnapshot['sections']['dependency_results']=[];
+foreach([31,32,33] as $index=>$providerId){
+    $edge=$zenSnapshot['sections']['dependency_results'][0];
+    $edge['source_index']=$index;
+    $edge['selected_provider_file_id']=$providerId;
+    $providerConsensusSnapshot['sections']['dependency_results'][]=$edge;
+}
+$providerSummary=static function(PDO $db):array{
+    return (array)$db->query('SELECT dependency_count,provider_file_id FROM ue_uedb5_dependency_packages WHERE file_id=13')->fetch(PDO::FETCH_ASSOC);
+};
+$publisher->publish($providerConsensusSnapshot);
+$conflictSummary=$providerSummary($db);
+$check('conflicting_three_providers_never_regain_consensus',
+    (int)($conflictSummary['dependency_count']??0)===3
+    && array_key_exists('provider_file_id',$conflictSummary)
+    && $conflictSummary['provider_file_id']===null);
+$edgeProviders=array_map('intval',$db->query('SELECT resolved_file_id FROM ue_uedb5_dependency_edges WHERE file_id=13 ORDER BY source_index')->fetchAll(PDO::FETCH_COLUMN));
+$check('conflicting_provider_edges_remain_individually_exact',$edgeProviders===[31,32,33]);
+$providerConsensusSnapshot['sections']['dependency_results'][2]['selected_provider_file_id']=31;
+$publisher->publish($providerConsensusSnapshot);
+$check('repeated_first_provider_does_not_clear_conflict',$providerSummary($db)['provider_file_id']===null);
+$providerConsensusSnapshot['sections']['dependency_results'][1]['selected_provider_file_id']=31;
+$publisher->publish($providerConsensusSnapshot);
+$check('three_agreeing_providers_retain_consensus',(int)$providerSummary($db)['provider_file_id']===31);
+$providerConsensusSnapshot['sections']['dependency_results'][1]['selected_provider_file_id']=null;
+$publisher->publish($providerConsensusSnapshot);
+$check('missing_provider_does_not_invent_conflict',(int)$providerSummary($db)['provider_file_id']===31);
+
 $columns=$db->query('PRAGMA table_info(ue_uedb5_dependency_edges)')->fetchAll(PDO::FETCH_ASSOC);
 $check('compact_projection_has_no_reason_column',!in_array('reason_code',array_column($columns,'name'),true));
 $source=(string)file_get_contents($root.'/src/Infrastructure/Metadata/PdoUedb5DependencyProjectionPublisher.php');
