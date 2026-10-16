@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "batch": "B072",
+  "source": {
+    "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+    "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9"
+  },
+  "classification": "bounded source-body review",
+  "status": "partial",
+  "reviewed": [
+    {
+      "symbol": "FAsyncPackage2::Event_ExportsDone",
+      "line": 9938,
+      "disposition": "file-format-relevant",
+      "reason": "Transitions export processing to ExportsDone and marks global import-store package public exports loaded only when load succeeded and package is importable; availability differs from header-level public-hash presence.",
+      "verified": false
+    }
+  ],
+  "evidence_limitations": [
+    "Further shader-map and postload branches not yet certified",
+    "Offline metadata should not claim live UObject availability based on hash alone"
+  ],
+  "next_batch": "B073"
+}
