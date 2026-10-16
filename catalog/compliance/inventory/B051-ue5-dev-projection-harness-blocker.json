@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "batch": "B051",
+  "status": "blocked",
+  "finding": "Isolated review checkout passes verify-uedb5-dependency-projection-publisher.php against SQLite; DEV checkout cannot run this test because PdoUedb5DependencyProjectionPublisher class is not available to its autoloader.",
+  "implication": "Deployment/checkouts differ; a passed isolated projection test must not be attributed to DEV. Compare DEV composer/bootstrap source topology before copying implementation code.",
+  "tested": {
+    "isolated_checkout": "pass",
+    "dev_checkout": "fatal class not found",
+    "dev_exit": 255
+  },
+  "no_production_changes": true,
+  "next_batch": "B052"
+}
