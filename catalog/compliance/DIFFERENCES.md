@@ -72,3 +72,12 @@ The user provided an authoritative **isolated integration DB** check for `contai
 - **PRD old stash:** 330 formerly modified tracked paths; **308 byte-identical to current GitHub main**, **22 differ**, including V4 legacy compressed metadata files, older migrations and compact metadata utilities. Do not blindly restore those 22; investigate whether each is obsolete or a legitimate unmerged fix.
 - **DEV old stash:** 112 formerly modified tracked paths; **46 byte-identical to current GitHub main**, **66 differ**, focused on job/upload APIs, workers, UI, archive processing, persistence and compact writers. **Source work not automatically recovered**: assess 66 potentially divergent files individually, with tests. Existing stashes and collision backups remain intact.
 - Open checks: HTTP behavior with real authenticated requests, nonisolated production database smoke test, end-to-end retained full-family container dependency fixture, retry/recovery/backup-restore, concurrent workers. Do not claim that passing only synthetic/source inventories certifies Epic parity.
+
+
+## DEV preserved-change reconciliation — first confirmed decisions (2026-10-16)
+
+- **JobWorkerFactory:** preserved DEV version attempts to synchronize queued resource policies and run historical profile/outcome/system-error/parent-lifecycle repairs on *every worker startup*. GitHub main intentionally uses side-effect-free worker construction and explicit maintenance commands. **Decision: retain main; do not reintroduce startup writes.** Current PRD `verify-worker-startup-no-invalid-ue-backfill.php` passed.
+- **Job action API:** preserved DEV `catalog/api/v1/job-action.php` lacks the newer `retry_children` and `revalidate` handling present in main (saved-version diff: 2 insertions / 167 deletions). **Decision: retain main.**
+- **Targeted regression evidence:** PRD `verify-upload-worker-contracts.php` and `verify-resumable-job-workflows.php` both passed (exit 0); these are bounded scripts, not full authenticated end-to-end acceptance.
+- **CompactSearchProjectionWriter:** preserved DEV version lacks the newer writer implementation (saved-version diff: 511 deletions compared with main). **Do not restore older file.** Separate source-to-writer behavior review remains open.
+- No older stash files have been restored. Further 60+ DEV and 22 PRD divergent files remain to triage; exclude old intentionally deprecated V4 files from restoration, but retain recovery stashes.
