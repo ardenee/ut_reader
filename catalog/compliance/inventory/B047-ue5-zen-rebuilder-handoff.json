@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "batch": "B047",
+  "status": "partial",
+  "topic": "Zen dependency rebuilder handoff",
+  "source": {
+    "path": "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php",
+    "symbol": "rebuildZen",
+    "line": 239
+  },
+  "finding": "The Zen rebuild path calls Uedb5Ue5ZenDependencyResolver::resolve and forwards each row after canonical-outcome validation and appending outcome_code. It does not rewrite reason_code, so export_filter_runtime_state_required and export_filtered_for_runtime_build remain distinguishable through this step.",
+  "evidence": "Bounded source review of lines 239-260",
+  "verified": false,
+  "remaining": [
+    "Test persisted compact SQL projection and runtime readback",
+    "Test against an authentic UE5 cooked fixture"
+  ],
+  "next_batch": "B048"
+}
