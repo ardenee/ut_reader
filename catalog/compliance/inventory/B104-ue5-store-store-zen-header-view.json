@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "batch": "B104",
+  "status": "partial",
+  "classification": "bounded source-body review",
+  "sources": {
+    "PackageStore": "FB5C1930F5B8E6611392C3009DDE16922661C7942F2EAA8D875492C8981F67B9",
+    "ZenPackageHeader": "954117A45B9A802D3F289B30F2A0E191A7BB82CDCB107A22FEF134A73172995B"
+  },
+  "reviewed": [
+    {
+      "symbol": "FZenPackageHeader::MakeView",
+      "line": 18,
+      "disposition": "file-format-relevant",
+      "reason": "Overloads construct source-shaped Zen header views; parse optional versioning, version-gated cell offsets and bulk map, name map, package/import/export maps and exact two-command export bundle cardinality; editor-only imported package names.",
+      "verified": false
+    },
+    {
+      "symbol": "FZenPackageHeader::Reset",
+      "line": 115,
+      "disposition": "runtime-only",
+      "reason": "Clears in-memory pointers/views of imported hashes, import/export/cell/bulk/bundle maps without modifying serialized package bytes.",
+      "verified": false
+    }
+  ],
+  "evidence_limitations": [
+    "Static method classification, not implementation parity certification",
+    "IoStore backend mount arbitration across sources still requires differential tests"
+  ],
+  "next_batch": "B105"
+}
