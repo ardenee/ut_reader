@@ -173,7 +173,9 @@ final class PdoUedb5PhysicalProviderSelector
                     throw new RuntimeException('Zen package-store backend results must be an explicit list.');
                 }
                 $entry = Uedb5ZenPackageStoreBackendArbitrator::entry($backendResults, $packageId);
-                if ($entry['status'] === 'Pending') {
+                if ($entry['status'] !== 'Ok') {
+                    // Runtime package store has not selected a physical file.
+                    // Pending and Missing must not fall back to catalogue order.
                     continue;
                 }
                 if ($entry['status'] === 'Ok') {
