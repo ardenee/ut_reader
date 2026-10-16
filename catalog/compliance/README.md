@@ -15,7 +15,7 @@ This is **not** a complete Unreal Engine file-format spec or a complete inventor
 
 ## Audit status and acceptance
 
-As of B108, `verify-source-compliance.php --all` reported **18 operations, 0 verified, 33 open gates**. The source-symbol/hash checks passed on pinned sources; those are *presence checks*, not behavioral proof. The historical B108 combined isolated UE5 test runner passed 12/12 bounded tests. The current runner now has **13** checks, including the D001 disposable SQLite plus real UEDB5 metadata-file round-trip; it passed **13/13** on PRD on 2026-10-16. Neither outcome proves Epic compliance. D006 additionally demonstrates a real provider-summary conflict bug (two red checks before, 23 green after), corrected at `450d3542` and verified using the real MySQL connection with temporary shadow tables across seven existing V5 snapshots plus a three-provider conflict fixture; no production catalog rows were altered. D002 is now explicitly documented as a compact SQL accelerator design decision, not a reason-code data-loss defect in the source-shaped UEDB5 read path. The code revision synchronization blocker was closed separately; see `DIFFERENCES.md` for the current active backlog and evidence.
+As of B108, `verify-source-compliance.php --all` reported **18 operations, 0 verified, 33 open gates**. The source-symbol/hash checks passed on pinned sources; those are *presence checks*, not behavioral proof. The historical B108 combined isolated UE5 test runner passed 12/12 bounded tests. The current runner now has **14** checks, including the D001 disposable SQLite plus real UEDB5 metadata-file round-trip and D007 IoStore container-header source-boundary regression; it passed **14/14** on PRD on 2026-10-16. Neither outcome proves Epic compliance. D006 additionally demonstrates a real provider-summary conflict bug (two red checks before, 23 green after), corrected at `450d3542` and verified using the real MySQL connection with temporary shadow tables across seven existing V5 snapshots plus a three-provider conflict fixture; no production catalog rows were altered. D002 is now explicitly documented as a compact SQL accelerator design decision, not a reason-code data-loss defect in the source-shaped UEDB5 read path. The code revision synchronization blocker was closed separately; see `DIFFERENCES.md` for the current active backlog and evidence.
 
 For each actual divergence create a ledger entry containing: stable difference ID, affected engine/game, Epic source path/hash/lines and precise behavior, UnrealDB code reference, observed mismatch, correction commit, test fixture, passing/failing evidence and acceptance gate. Only mark **fixed+verified** when a negative-before/positive-after test and a source-compatible fixture prove the change. If not demonstrably mismatched use **unverified**, not **fixed**.
 
@@ -28,6 +28,8 @@ Set `UNREALDB_EPIC_SOURCE_ROOT` to the pinned UE5.8.3 source root, then run:
 & C:\php8.5\php.exe catalog\bin\audit-ue5-store-definitions.php
 & C:\php8.5\php.exe catalog\bin\verify-uedb5-ue5-source-batches.php
 & C:\php8.5\php.exe catalog\bin\verify-source-compliance.php --all --strict
+# Isolated Satisfactory real container-header read-only fixture (MySQL port 3339):
+& C:\php8.5\php.exe catalog\bin\verify-uedb5-satisfactory-header-readonly-isolated.php
 # Indexed, read-only live-data check (explicit file IDs are mandatory):
 & C:\php8.5\php.exe catalog\bin\diagnose-uedb5-provider-consensus-readonly.php --file-ids=111139,113253
 ```
