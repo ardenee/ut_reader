@@ -1,0 +1,26 @@
+{
+  "schema": 1,
+  "batch": "B037",
+  "status": "partial",
+  "source": {
+    "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+    "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9"
+  },
+  "classification": "source-to-implementation regression evidence",
+  "reviewed": [
+    {
+      "symbol": "FAsyncPackage2::EventDrivenIndexToObject",
+      "disposition": "file-format-relevant",
+      "verified": false,
+      "reason": "Synthetic regression verifies Null sentinel, valid export zero, reserved tag and out-of-range export rejection in UnrealDB's actual decoder."
+    }
+  ],
+  "test_evidence": [
+    "catalog/bin/verify-uedb5-zen-object-index-boundaries.php"
+  ],
+  "remaining": [
+    "Run differential tests on authentic Epic cooked files",
+    "Reconcile all source-visible error and condition branches"
+  ],
+  "next_batch": "B038"
+}
