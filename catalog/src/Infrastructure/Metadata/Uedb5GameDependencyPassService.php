@@ -323,7 +323,26 @@ final class Uedb5GameDependencyPassService
             if (!is_array($mounts) || !array_is_list($mounts)) {
                 throw new RuntimeException('Zen mounted containers must be an ordered list for game '.$gameId.'.');
             }
-            $mountedContext = Uedb5ZenMountedStoreContextBuilder::build($mounts);
+            $backendSets = $this->config['zen_package_store_backends_by_game'] ?? [];
+            if (!is_array($backendSets)) {
+                throw new RuntimeException('zen_package_store_backends_by_game must be a game ID keyed array.');
+            }
+            $backends = $backendSets[$gameId] ?? $backendSets[(string)$gameId] ?? null;
+            if ($backends !== null) {
+                if (!is_array($backends) || !array_is_list($backends)) {
+                    throw new RuntimeException('Zen backend descriptors must be a list for game '.$gameId.'.');
+                }
+                $priorities = $this->config['zen_file_backend_priority_by_game'] ?? [];
+                if (!is_array($priorities) || !isset($priorities[$gameId])
+                    || !is_int($priorities[$gameId])) {
+                    throw new RuntimeException('Explicit file backend priority required for game '.$gameId.'.');
+                }
+                $mountedContext = Uedb5ZenEffectivePackageStoreContextBuilder::build(
+                    $mounts, $backends, $priorities[$gameId]
+                );
+            } else {
+                $mountedContext = Uedb5ZenMountedStoreContextBuilder::build($mounts);
+            }
             $previous = (array)($options['zen_runtime_context'] ?? []);
             // Mapping precedence is derived from explicitly supplied mount metadata,
             // never from incidental file enumeration. Do not promote authority flags.
