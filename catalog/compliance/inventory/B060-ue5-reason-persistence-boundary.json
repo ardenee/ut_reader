@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "batch": "B060",
+  "status": "partial",
+  "finding": "Isolated in-memory SQLite projection distinguishes dependency source indexes and outcomes but intentionally lacks detailed reason_code; authoritative staging data remains necessary.",
+  "test": "catalog/bin/verify-uedb5-dependency-projection-publisher.php",
+  "evidence": {
+    "isolated_review": "pass",
+    "dev_runtime": "not run for all suites",
+    "production": "not touched"
+  },
+  "unresolved": [
+    "Authentic Epic cooked UE5 differential",
+    "DEV current-main reconciliation",
+    "Full UE1-UE5 source behavioral certification"
+  ],
+  "next_batch": "B061"
+}
