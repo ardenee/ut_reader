@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "batch": "B048",
+  "status": "partial",
+  "finding": "CatalogCompactDependencyReadService compactRows omitted reason_code even though parity reader retained it. Added reason_code to compatibility rows.",
+  "implementation": "catalog/src/Infrastructure/Metadata/CatalogCompactDependencyReadService.php",
+  "commit": "06c9f14b8a4d2759d8f522ade7edf31a82c7f58d",
+  "verification": [
+    "PHP syntax check passes"
+  ],
+  "pending": [
+    "Database-backed readback integration on isolated MySQL",
+    "Validate public compatibility consumers of added field"
+  ],
+  "certified": false,
+  "next_batch": "B049"
+}
