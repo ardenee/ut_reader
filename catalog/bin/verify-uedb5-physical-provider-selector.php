@@ -255,6 +255,21 @@ $redirectSelected=(new PdoUedb5PhysicalProviderSelector($db,$tmp))->select(8,44)
 $check('zen_selector_does_not_guess_single_container_redirect_target',
     $redirectSelected===[]);
 
+$redirectContext=[
+    'package_identity_context_authoritative'=>true,
+    'package_store_context_authoritative'=>true,
+    'package_redirects'=>$redirectRows,
+    'localized_packages'=>[],
+    'with_editor'=>false,
+    'is_editor'=>false,
+];
+$redirectWithContext=(new PdoUedb5PhysicalProviderSelector($db,$tmp))->select(
+    8,44,['zen_runtime_context'=>$redirectContext]
+);
+$check('zen_selector_uses_same_authoritative_redirect_as_dependency_resolver',
+    count($redirectWithContext)===1
+    &&(int)($redirectWithContext[0]['file_id']??0)===45
+    &&($redirectWithContext[0]['package_id']??'')===$redirectTargetId);
 $source=(string)file_get_contents($root.'/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php');
 $check('selector_uses_v5_provider_keys',str_contains($source,'ue_uedb5_provider_keys'));
 $check('selector_reads_v5_snapshots',str_contains($source,'Uedb5MetadataReader'));
