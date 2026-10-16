@@ -7,7 +7,8 @@ $strict=in_array('--strict',$argv,true);
 $sourceRoot=getenv('UNREALDB_EPIC_SOURCE_ROOT')?:'';
 $sourceChecks=0;
 $files=glob($dir.'/*.json')?:[];
-$failures=[];$open=0;$verified=0;$entries=0;
+$failures=[];$open=0;$verified=0;$entries=0;$globalIds=[];
+if($strict && $sourceRoot==='')$failures[]='Strict mode requires UNREALDB_EPIC_SOURCE_ROOT for source hash verification.';
 if($files===[])$failures[]='No audit batches exist.';
 foreach($files as $file){
     $data=json_decode((string)file_get_contents($file),true);
@@ -21,6 +22,8 @@ foreach($files as $file){
         $id=(string)($record['id']??'');
         if($id===''||isset($seen[$id])){$failures[]=basename($file).': missing/duplicate operation ID';continue;}
         $seen[$id]=true;
+        if(isset($globalIds[$id]))$failures[]=$id.': duplicate operation across batches';
+        $globalIds[$id]=true;
         $source=$record['source']??[];
         $impl=$record['implementation']??[];
         if(empty($source['path'])||empty($source['sha256'])||empty($source['symbols'])
