@@ -16,7 +16,10 @@ foreach([
  'options'=>'verify-uedb5-zen-context-options-standalone.php'
 ] as $key=>$filename){
  $output=[];$exit=127;
- exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($root.'/bin/'.$filename).' 2>&1',$output,$exit);
+ // Only the backend-status MySQL fixture belongs to B008; DEV does not
+ // contain PRD's unrelated seven retained V5 snapshot files.
+ $sqlArgument=$key==='sql'?' '.escapeshellarg('--backend-status-only'):'';
+ exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($root.'/bin/'.$filename).$sqlArgument.' 2>&1',$output,$exit);
  $j=json_decode(implode("\n",$output),true);
  $reports[$key]=is_array($j)?$j:[];
  $drivers[$key]=['ok'=>$reports[$key]['ok']??false,'exit'=>$exit];
