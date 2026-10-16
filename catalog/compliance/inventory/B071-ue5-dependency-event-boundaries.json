@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "batch": "B071",
+  "source": {
+    "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+    "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9"
+  },
+  "classification": "bounded source-body review",
+  "status": "partial",
+  "reviewed": [
+    {
+      "symbol": "FAsyncPackage2::Event_ProcessDependencies",
+      "line": 8494,
+      "disposition": "file-format-relevant",
+      "reason": "Completes imported package scheduling and sets up script dependencies before releasing DependenciesReady barrier; dependencies outside serialized maps can be runtime-derived.",
+      "verified": false
+    },
+    {
+      "symbol": "FAsyncPackage2::Event_DependenciesReady",
+      "line": 8508,
+      "disposition": "runtime-only",
+      "reason": "Transitions waiting state to DependenciesReady and triggers processing export nodes; no new serialized dependency record decoded.",
+      "verified": false
+    }
+  ],
+  "evidence_limitations": [
+    "Full script-object setup path remains to be audited",
+    "Does not assert completed Epic runtime parity"
+  ],
+  "next_batch": "B072"
+}
