@@ -1,0 +1,30 @@
+{
+  "schema": 1,
+  "batch": "B018",
+  "kind": "triage_checkpoint",
+  "status": "open",
+  "basis": "catalog/compliance/inventory/B017-ue5-async-loading-definitions.json",
+  "source_sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9",
+  "source_derived_candidate_count": 88,
+  "mapped_candidate_count": 6,
+  "unmapped_candidate_count": 82,
+  "triage_rules": [
+    "Every candidate must receive a file-format-relevant, runtime-only, diagnostic-only, or unknown disposition with an exact source-backed reason.",
+    "Runtime-only functions still require documented boundaries when their behavior affects provider selection, redirects, package identity or error signaling.",
+    "New evidence cannot be certified from source symbol presence alone; retain a positive/negative test and pinned implementation fingerprint.",
+    "Do not silently discard compiler-conditional or version-conditional branches."
+  ],
+  "priority_review": [
+    "FAsyncPackage2::ProcessLinkerLoadPackageSummary",
+    "FAsyncPackage2::ImportPackagesRecursive",
+    "FAsyncPackage2::InitializeLinkerLoadState",
+    "FAsyncPackage2::ProcessPackageSummary",
+    "FAsyncPackage2::ProcessExportBundle",
+    "FAsyncPackage2::SetupScriptDependencies"
+  ],
+  "limitations": [
+    "This is a triage plan, not completed per-candidate classification.",
+    "The B017 expression scans only four qualified UE5 classes and can miss virtual, inline, macro, or serializer dispatch."
+  ],
+  "next_batch": "B019"
+}
