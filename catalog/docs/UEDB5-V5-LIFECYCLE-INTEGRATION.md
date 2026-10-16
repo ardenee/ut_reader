@@ -378,3 +378,11 @@ Isolated `verify-iostore-durable-worker-standalone.php` now registers all three 
 - **Remaining:** full 27,240-member name/publication lifecycle, actual package-store-global mounted-context dependency rebuild and validation, plus adversarial failures/concurrency. This is not a full lifecycle certification. The fixture remains partially processed by design; do not restart broad seven-game scans.
 
 - `C:\\php8.5\\php.exe catalog\\bin\\verify-uedb5-satisfactory-zen-dependencies-standalone.php`: PASS as a conservative resolver contract, not a complete dependency outcome. One isolated consumer (file ID 980000000), seven referenced packages/physical provider candidates, 29 dependency rows: 1 resolved, 28 unresolved. Unresolved sample reason `package_identity_runtime_context_required` confirms authoritative runtime mounted-store context is still missing for a complete result. Do **not** convert these unresolved rows into resolved guesses.
+
+
+### 2026-10-16 production dependency-path blocker (deployment gate)
+
+- Rechecked GitHub main `9dbd307e` in independent PRD-host checkout. `verify-uedb5-ue5-zen-dependency-resolution.php` and `verify-uedb5-ue5-iostore-foundation.php` report no failures (isolated contract tests).
+- Actual `Uedb5GameDependencyPassService::processFile()` forwards `$options` to `Uedb5DependencyRebuilder::rebuild()`, but `resolverOptions()` currently returns **only** `common_packages`. Therefore no production path there provides the required `zen_runtime_context` keys `package_identity_context_authoritative` and `package_store_context_authoritative` or Epic-accurate mounted package-store arbitration.
+- Do not set these authority flags to true merely because a TOC/UCAS file or container registry exists. Identity rewrites, backend priority, mount Order/Sequence, redirects, localization and build/runtime environment must be established from genuine context. Unresolved source reason `package_identity_runtime_context_required` is correct pending that work.
+- **Do not deploy/certify full IoStore V5 production ingestion yet**: the user's 'apply after completion' precondition is not satisfied. No production files were changed during this verification.
