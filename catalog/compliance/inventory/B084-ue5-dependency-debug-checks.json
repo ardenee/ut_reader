@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "batch": "B084",
+  "source": {
+    "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+    "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9"
+  },
+  "classification": "bounded source-body review",
+  "status": "partial",
+  "reviewed": [
+    {
+      "symbol": "FAsyncPackage2::HasDependencyToPackageDebug",
+      "line": 9971,
+      "disposition": "runtime-only",
+      "reason": "Under ALT2_ENABLE_PACKAGE_DEPENDENCY_DEBUGGING, walks imported package pointer graph to detect dependency back-edge.",
+      "verified": false
+    },
+    {
+      "symbol": "FAsyncPackage2::CheckThatAllDependenciesHaveReachedStateDebug",
+      "line": 10002,
+      "disposition": "runtime-only",
+      "reason": "Debug check of current imported-package graph and circular dependency loading-state constraints; no new source records decoded.",
+      "verified": false
+    }
+  ],
+  "evidence_limitations": [
+    "Dynamic loading-state graph not equivalent to offline static edges",
+    "Complete cycle-handling semantics need dedicated implementation checks"
+  ],
+  "next_batch": "B085"
+}
