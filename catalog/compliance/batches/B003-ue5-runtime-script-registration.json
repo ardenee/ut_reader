@@ -26,7 +26,7 @@
       },
       "implementation": {
         "path": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenDependencyResolver.php",
-        "sha256": "40fb76d32e35cff21317d030e4117b9c15d02fcc77a2753a776107beebdb8ce7"
+        "sha256": "3e9131079450ab3c6da4a0f216c6b2d9d1938b1778e916dc9ce7a9e64b94f289"
       },
       "tests": [
         "catalog/bin/verify-uedb5-ue5-zen-dependency-resolution.php"
