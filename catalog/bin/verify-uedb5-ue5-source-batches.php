@@ -16,6 +16,8 @@ $tests=[
  'verify-uedb5-zen-runtime-version-source.php',
  'verify-uedb5-b009-operation-acceptance.php',
  'verify-uedb5-b010-operation-acceptance.php',
+ 'verify-uedb5-b011-imported-name-source.php',
+ 'verify-uedb5-b011-operation-acceptance.php',
  'verify-uedb5-zen-version-callers.php',
  'verify-uedb5-zen-version-staging-contract.php',
  'verify-uedb5-ue5-iostore-foundation.php',

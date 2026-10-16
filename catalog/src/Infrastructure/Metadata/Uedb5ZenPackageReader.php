@@ -711,9 +711,10 @@ final class Uedb5ZenPackageReader
                 'display_text' => $number > 0 ? $base . '_' . ($number - 1) : $base,
             ];
         }
-        if ($reader->remaining() !== 0) {
-            throw new RuntimeException('Zen ImportedPackageNames has unexpected trailing bytes.');
-        }
+        // Epic ZenPackageHeader.cpp makes a reader over the remainder of
+        // HeaderSize and invokes operator<< for the imported name container.
+        // It does not require that reader to consume every trailing byte.
+        // Do not invent an additional end-of-archive rejection here.
         return $result;
     }
 

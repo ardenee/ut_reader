@@ -223,6 +223,22 @@ $check(
 );
 $check($parsed['exports_data_bytes'] === 4, 'zen_header_boundary_preserves_exports_payload');
 
+// B011: Epic ZenPackageHeader.cpp passes ImportedPackageNamesOffset..
+// HeaderSize to FMemoryReaderView and does not require AtEnd after
+// deserializing the name batch and int32 numbers. This synthetic IoStore
+// package retains the exact existing maps/exports and appends spare header
+// bytes (before exports payload), with HeaderSize updated accordingly.
+$withTrailingHeader = substr_replace($packageBytes,pack('V',$headerSize+4),4,4);
+$withTrailingHeader = substr_replace($withTrailingHeader,"\xCA\xFE\x01\x02",$headerSize,0);
+$trailingNameHeaderAccepted=false;
+try {
+    $variant=Uedb5ZenPackageReader::parse($withTrailingHeader,$packageId,$storeEntry);
+    $trailingNameHeaderAccepted=($variant['imported_package_names'][0]['display_text']??'')==='/Game/Provider'
+        &&($variant['exports_data_bytes']??null)===4
+        &&($variant['import_map'][0]['provider_package_id']??'')===$providerId;
+} catch (RuntimeException) {}
+$check($trailingNameHeaderAccepted,'b011_non_consumed_header_suffix_does_not_hide_imports');
+
 // B009/B010 negative-before / positive-after parity with source MakeView:
 // FZenPackageSummary::bHasVersioningInfo is uint32; Epic branches on nonzero.
 // BulkDataPad bytes are read into a local scratch array but not validated
