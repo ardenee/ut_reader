@@ -1,0 +1,45 @@
+{
+  "schema": 1,
+  "batch": "B030",
+  "source": {
+    "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+    "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9"
+  },
+  "classification": "bounded source-body review",
+  "status": "partial",
+  "reviewed": [
+    {
+      "symbol": "FAsyncPackage2::EventDrivenCreateExport",
+      "line": 9358,
+      "disposition": "mixed",
+      "reason": "Reads FExportMapEntry name and object identity and then creates live UObject; serialized export metadata relevant, live construction excluded.",
+      "verified": false
+    },
+    {
+      "symbol": "FAsyncPackage2::EventDrivenSerializeExport",
+      "line": 9589,
+      "disposition": "mixed",
+      "reason": "Uses CookedSerialSize and filtered/failed export state while deserializing UObject payload; offline metadata must preserve size and visibility without pretending to perform object deserialization.",
+      "verified": false
+    },
+    {
+      "symbol": "FAsyncPackage2::EventDrivenCreateCellExport",
+      "line": 9749,
+      "disposition": "mixed",
+      "reason": "Verse cell exports use cell map and dependency command Create; runtime cell allocation excluded but independent cell identity required.",
+      "verified": false
+    },
+    {
+      "symbol": "FAsyncPackage2::EventDrivenSerializeCellExport",
+      "line": 9796,
+      "disposition": "mixed",
+      "reason": "Verse cell serialization uses separate cell map and Serialize dependency command; do not collapse into UObject export map.",
+      "verified": false
+    }
+  ],
+  "evidence_limitations": [
+    "Full call graph, compile-time gates and game fixture parity remain outstanding",
+    "Classification is not certification of any operation"
+  ],
+  "next_batch": "B031"
+}
