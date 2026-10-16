@@ -365,6 +365,30 @@ final class Uedb5GameDependencyPassService
                     $mountedContext['package_store_backend_results'];
             }
         }
+        // Optional game-specific settings may provide only the values that are
+        // actually known. Never turn missing values into guessed engine defaults.
+        $overrides = $this->config['zen_runtime_overrides_by_game'] ?? [];
+        if (!is_array($overrides)) {
+            throw new RuntimeException('zen_runtime_overrides_by_game must be a game ID keyed array.');
+        }
+        $override = $overrides[$gameId] ?? $overrides[(string)$gameId] ?? null;
+        if ($override !== null) {
+            if (!is_array($override)) {
+                throw new RuntimeException('Zen runtime override must be an array for game '.$gameId.'.');
+            }
+            $allowed = [
+                'with_editor','is_editor','ue_server','with_server_code',
+                'is_server','is_client',
+            ];
+            foreach ($override as $key => $value) {
+                if (!in_array($key, $allowed, true) || !is_bool($value)) {
+                    throw new RuntimeException('Invalid or unsupported Zen runtime override: '.$key);
+                }
+            }
+            $context = (array)($options['zen_runtime_context'] ?? []);
+            // Empty overrides are harmless; explicit false is not the same as unknown.
+            $options['zen_runtime_context'] = array_replace($context, $override);
+        }
         return $options;
     }
 
