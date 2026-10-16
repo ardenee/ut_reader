@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "batch": "B082",
+  "source": {
+    "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+    "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9"
+  },
+  "classification": "bounded source-body review",
+  "status": "partial",
+  "reviewed": [
+    {
+      "symbol": "FCookedScriptObjectsDebug::TrimDebugData",
+      "line": 7021,
+      "disposition": "runtime-only",
+      "reason": "Removes live registered runtime script objects from debug map but preserves outer chains required for remaining diagnostic objects.",
+      "verified": false
+    },
+    {
+      "symbol": "FCookedScriptObjectsDebug::GetPathNameInternal",
+      "line": 7098,
+      "disposition": "file-format-relevant",
+      "reason": "Reconstructs debug path from cached scripted object OuterIndex; uses dot for first depth, subobject delimiter for second, question mark beyond ambiguous depth.",
+      "verified": false
+    },
+    {
+      "symbol": "FCookedScriptObjectsDebug::GetPathName",
+      "line": 7123,
+      "disposition": "runtime-only",
+      "reason": "Returns diagnostic cooked-script-object path by ScriptObjectIndex if present, otherwise empty FString.",
+      "verified": false
+    }
+  ],
+  "evidence_limitations": [
+    "ScriptObjects debugging is build-gated",
+    "Full global-script import source call graph remains open"
+  ],
+  "next_batch": "B083"
+}
