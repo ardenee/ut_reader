@@ -15,13 +15,13 @@ second competing audit system is introduced.
   reconciled. UE4.27.2 classic and UE5.8.3 classic/IoStore format targets
   are listed separately because the seven-game registry is not a complete
   list of supported format readers.
-* UE5 formal batch manifests: **15 containing 18 operations; 11 verified (B004, B005, B006, B007, B008, B009, B010, B011, B012, B015-2, B016), 7 partial**.
+* UE5 formal batch manifests: **15 containing 18 operations; 12 verified (B001, B004, B005, B006, B007, B008, B009, B010, B011, B012, B015-2, B016), 6 partial**.
   Baseline was 33 formal open evidence gates. B005 now has exhaustive scoped
   source/inventory/implementation acceptance, including the pinned hybrid
   editor branch model, real V5 selector/rebuilder and isolated temporary MySQL.
   B004, B009 and B010 now have complete source-defined, operation-level
-  executable acceptance. **12 original evidence gates remain open.** Full application/engine compliance remains unverified.
-* D001-D024: twenty-four known differences linked to original operations or
+  executable acceptance. **10 original evidence gates remain open.** Full application/engine compliance remains unverified.
+* D001-D026: twenty-six known differences linked to original operations or
   explicitly categorized as cross-cutting or previously uncovered behavior.
   D010/D011 are now marked fixed and regression-verified. Original B009 and
   B010 now pass source-contract, implementation, caller, downstream V5 and
@@ -63,7 +63,7 @@ second competing audit system is introduced.
 | 9 | UE5-583-PUBLIC-EXPORT-001 | **VERIFIED**: exact valid package/hash keys D019, header-first candidate vs mutable live store D020, collision kept unresolved, V5/SQL/consumer acceptance |
 | 10 | UE5-583-B016-1 | **VERIFIED**: pinned Epic main-only cell lookup and combined indices, separate live Verse registry, four negative-before fixtures, compressed V5/SQL and two direct production callers. |
 | 11 | UE5-583-B015-2 | **VERIFIED**: Epic's offline ImportedPackageIds enumeration, source identity, optional editor gate, runtime status conservatism and exact provider requirements; original runtime scheduling is not simulated. |
-| 12 | UE5-583-SCRIPT-001 | Cooked ScriptObjects chunk and diagnostics |
+| 12 | UE5-583-SCRIPT-001 | **VERIFIED (offline debug reader):** Source-pinned FScriptObjectEntry, mapped-name lower-30-bit GetIndex D025, TMap last-wins D026, no strict EOF D024, real Satisfactory global.utoc 54,968 cooked entries; full 559-file PHP reachability inventory and runtime exclusion. |
 | 13 | UE5-583-SCRIPT-002 | Global ScriptObjects name-map evidence |
 | 14 | UE5-583-SCRIPT-003 | Script-import resolution vs live object store |
 | 15 | UE5-583-SCRIPT-004 | Script registration, nested public object identities |

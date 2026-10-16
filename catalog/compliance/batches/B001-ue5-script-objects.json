@@ -3,11 +3,11 @@
     "batch": "B001",
     "engine": "UE5",
     "profile": "UE5.8.3",
-    "status": "partial",
+    "status": "verified",
     "inventory_a": "entry_point",
     "inventory_b": "serialized_structure",
     "source_root_hint": "L:/Source/Engine/UE5/UE 5.8.3/Engine/Source",
-    "complete_inventory": false,
+    "complete_inventory": true,
     "operations": [
         {
             "id": "UE5-583-SCRIPT-001",
@@ -28,50 +28,172 @@
             },
             "implementation": {
                 "path": "catalog/src/Infrastructure/Metadata/Uedb5ZenScriptObjectsReader.php",
-                "sha256": "0504d850c2d862da4b0a03658a81dab89e784bd8c13e75242ae4e2d3822dff38"
+                "sha256": "9d1a273cab4b32fb5820dd41409e4a2c5618262381f219f7130699df343acc46"
             },
             "tests": [
                 "catalog/bin/verify-uedb5-zen-script-objects-standalone.php",
-                "catalog/bin/verify-uedb5-b001-script-objects-source.php"
+                "catalog/bin/verify-uedb5-b001-script-objects-source.php",
+                "catalog/bin/verify-uedb5-b001-mapped-name-source.php",
+                "catalog/bin/verify-uedb5-b001-authentic-scriptobjects.php",
+                "catalog/bin/verify-uedb5-b001-operation-acceptance.php"
             ],
-            "disposition": "partial",
-            "reason": "D024 extra trailing-byte gate removed and pinned-source negative-before/positive-after accepted; complete source behavior, real chunk differential and runtime/diagnostic caller coverage still open.",
+            "disposition": "verified",
+            "reason": "Entire source-defined cooked ScriptObjects debug-chunk decoding/diagnostics operation accepted through pinned branches, correct map replacement, exhaustive 559-file PHP caller inventory, original/fixed differential and 54,968 authentic cooked entries. Live registration and runtime script dependencies remain separately unverified.",
             "correction_commits": [
-                "2ab7af1622cc7328500c257d4f7b1a11d8db6419"
+                "2ab7af1622cc7328500c257d4f7b1a11d8db6419",
+                "471b6d14c580c60c92eff6761c2b8deb76078a29"
             ],
             "related_differences": [
-                "UE5-D024"
+                "UE5-D024",
+                "UE5-D025",
+                "UE5-D026"
             ],
             "source_contract_evidence": {
-                "test_driver": "catalog/bin/verify-uedb5-b001-script-objects-source.php",
+                "test_driver": "catalog/bin/verify-uedb5-b001-mapped-name-source.php",
                 "expected_checks": [
-                    "b001_epic_cpp_pinned",
-                    "b001_epic_struct_header_pinned",
-                    "b001_epic_chunk_enum_pinned",
-                    "b001_epic_global_script_chunk_exists_gate",
-                    "b001_epic_name_batch_then_int32_count_then_contiguous_view",
-                    "b001_epic_record_fields_and_map_key",
-                    "b001_epic_no_end_of_chunk_exact_gate",
-                    "b001_historical_original_checked_out",
-                    "b001_negative_before_positive_after_trailing_bytes",
-                    "b001_zero_records_trailing_bytes_allowed",
-                    "b001_truncated_record_still_rejected",
-                    "b001_cooked_chunk_never_proves_live_runtime"
+                    "b001_mapped_epic_mapped_source_pinned",
+                    "b001_mapped_epic_map_source_pinned",
+                    "b001_mapped_epic_set_source_pinned",
+                    "b001_mapped_epic_async_source_pinned",
+                    "b001_mapped_epic_all_three_name_types",
+                    "b001_mapped_epic_index_only_with_no_type_gate",
+                    "b001_mapped_epic_map_emplace_replaces_duplicate",
+                    "b001_mapped_historical_b001_reader_pinned",
+                    "b001_mapped_type_0_uses_index_not_type",
+                    "b001_mapped_historical_rejected_valid_type_0",
+                    "b001_mapped_type_1_uses_index_not_type",
+                    "b001_mapped_type_2_uses_index_not_type",
+                    "b001_mapped_historical_rejected_valid_type_2",
+                    "b001_mapped_duplicate_last_emplace_wins",
+                    "b001_mapped_original_rejected_replaceable_duplicate",
+                    "b001_mapped_out_of_range_index_still_rejected",
+                    "b001_mapped_complete_production_php_inventory",
+                    "b001_mapped_no_production_runtime_consumer_is_fabricated",
+                    "b001_mapped_cooked_debug_is_optional_not_live_registration"
                 ],
                 "source_branches": [
-                    "Cooked debug reader uses global ScriptObjects chunk, name batch, signed count and contiguous FScriptObjectEntry view.",
-                    "Source has no end-of-chunk enforcement after reading NumObjects entries.",
-                    "Diagnostics map is never substituted for live global script object store."
+                    "Debugging-gated global zero-ID ScriptObjects chunk read; no invented chunk when not mounted",
+                    "LoadNameBatch followed by signed object count, fixed mapped/global/outer/CDO record layout",
+                    "Raw lower 30-bit GetIndex and GetNumber without mapped EType gate at this callsite",
+                    "TMap::Emplace -> TSet::TryReplaceExisting for repeated GlobalIndex, last record wins",
+                    "No end-of-chunk exact-length gate, but short/bounded records are rejected offline",
+                    "Trimming/debug display separate from live FGlobalImportStore registration, public nested objects and Verse"
                 ]
+            },
+            "additional_sources": [
+                {
+                    "path": "Engine/Source/Runtime/CoreUObject/Public/Serialization/AsyncLoading2.h",
+                    "sha256": "088f00a8c970458e4bb717490ac4d50361d635ddf8cb0b7b1a5c93ff4d9feef2",
+                    "symbols": [
+                        "struct FScriptObjectEntry",
+                        "FPackageObjectIndex CDOClassIndex"
+                    ]
+                },
+                {
+                    "path": "Engine/Source/Runtime/Core/Public/IO/IoChunkId.h",
+                    "sha256": "64ebf25a5cf436e1cc353a8fefbd16bbb231ef28ff914a4ef6296e27b20b30b1",
+                    "symbols": [
+                        "ScriptObjects = 5"
+                    ]
+                },
+                {
+                    "path": "Engine/Source/Runtime/Core/Public/Serialization/MappedName.h",
+                    "sha256": "5221b85d9a40d300607e13d7146900e88a23d0894650296497014ec4f0f2787a",
+                    "symbols": [
+                        "class FMappedName",
+                        "EType",
+                        "GetIndex() const"
+                    ]
+                },
+                {
+                    "path": "Engine/Source/Runtime/Core/Public/Containers/Map.h.inl",
+                    "sha256": "8abbac8d11e3988601a7e226e3ed3a082cda2ceef783a90d0434fad32b1153d0",
+                    "symbols": [
+                        "Pairs.Emplace",
+                        "ValueType& Emplace("
+                    ]
+                },
+                {
+                    "path": "Engine/Source/Runtime/Core/Public/Containers/SparseSet.h.inl",
+                    "sha256": "946e30739b523bc7a20a3c78c95c9a9216d6a99fd5839b82b3d318cf66c88408",
+                    "symbols": [
+                        "TryReplaceExisting",
+                        "MoveByRelocate(Elements[ExistingIndex].Value, Element.Value)"
+                    ]
+                }
+            ],
+            "source_reachability_evidence": {
+                "test_driver": "catalog/bin/verify-uedb5-b001-mapped-name-source.php",
+                "expected_checks": [
+                    "b001_mapped_complete_production_php_inventory",
+                    "b001_mapped_no_production_runtime_consumer_is_fabricated",
+                    "b001_mapped_cooked_debug_is_optional_not_live_registration"
+                ],
+                "complete_scanned_php_count": 559,
+                "direct_reader_callers": 0,
+                "epic_callers": "AsyncLoading2.cpp compiled-in registration pre-CDO LoadDebugData; registration completion TrimDebugData; GetImportName diagnostic GetPathName; live NotifyRegistrationEvent and FGlobalImportStore::AddScriptObject separate"
+            },
+            "guarded_implementation_files": [
+                {
+                    "path": "catalog/src/Infrastructure/Metadata/Uedb5IoStoreTocReader.php",
+                    "sha256": "5abc88d9d0e9123c8c24c04d32f60b97279740b9382be88b20dbd987a7a26a73"
+                },
+                {
+                    "path": "catalog/src/Infrastructure/Metadata/Uedb5ZenPackageReader.php",
+                    "sha256": "6b79d5a8465d01bbe784f06aaf07f0033e9dc84300d6761b135eb29c74b871da"
+                },
+                {
+                    "path": "catalog/src/Infrastructure/Metadata/Uedb5BinaryReader.php",
+                    "sha256": "e4404bfec9d8dcc20a49bd705a95994e78665e79dc46dbe7be5265ca36754230"
+                }
+            ],
+            "test_results": {
+                "test_driver": "catalog/bin/verify-uedb5-b001-operation-acceptance.php",
+                "expected_checks": [
+                    "b001_driver_layout_passes",
+                    "b001_driver_mapped_passes",
+                    "b001_driver_authentic_passes",
+                    "b001_driver_standalone_passes",
+                    "b001_cooked_reader_trailing_byte_source_parity",
+                    "b001_all_mapped_name_kinds_and_global_index_parity",
+                    "b001_source_backed_last_duplicate_wins",
+                    "b001_real_cooked_chunk_rejects_historical_reader",
+                    "b001_real_toc_present_and_absent_paths",
+                    "b001_invalid_script_record_safety_preserved",
+                    "b001_complete_production_callsite_boundary",
+                    "b001_ue5_runtime_registry_not_asserted"
+                ],
+                "result": "4 independent executable drivers, 12 acceptance assertions, 12+19+15 source/real checks, authentic chunk SHA and all 54968 entries, 3 negative standalone cases"
+            },
+            "independent_inventory_evidence": {
+                "source_review": "catalog/compliance/B001-SCRIPT-OBJECTS-SOURCE.md",
+                "scope_boundary": "Only offline cooked ScriptObjects diagnostic reader parity; no running Epic async loader or live global UObject registry. Other original script registration/runtime obligations remain partial.",
+                "independent_source_oracle": "catalog/bin/verify-uedb5-b001-mapped-name-source.php",
+                "authentic_cooked_fixture": "catalog/bin/verify-uedb5-b001-authentic-scriptobjects.php",
+                "historical_differential": "Original 2b4377b0 rejects trailing bytes; original a3d159a3 rejects all 54968 genuine global type-2 entries and replacement duplicate; corrected 471b6d14 accepts",
+                "operation_acceptance": "catalog/bin/verify-uedb5-b001-operation-acceptance.php"
+            },
+            "acceptance_evidence": {
+                "reachable_source_branches": "Six pinned Epic source files: global diagnostic chunk read, name index/type, TMap/TSet replacement, debug flags and runtime separation.",
+                "epic_to_unrealdb_mapping": "catalog/compliance/B001-SCRIPT-OBJECTS-SOURCE.md maps each source rule to Uedb5ZenScriptObjectsReader::fromToc/parse, NameBatch decoder and three original differences D024/D025/D026.",
+                "independent_differential": "Real Satisfactory cooked ScriptObjects SHA 46d8ca91: 50640 names and 54968 type-2 entries; old a3d159a3 rejected real file, fixed decodes all, named sample identity matches; distinct 3 malformed cases.",
+                "all_v5_consumers": "Bounded exhaustive 559 production PHP file inventory: no direct ScriptObjects diagnostic resolver consumers; dedicated tested TocReader read/no-chunk, Zen NameBatch and BinaryReader hash-guarded; no fake SQL or live UObject write.",
+                "independent_reviewer": "Four executable independent drivers rechecked by formal verifier with 12 acceptance assertions, stable original revisions and real cooked-file hashes; no engine binary runtime executed."
             }
         }
     ],
     "next_batch": "B002",
     "gate_status": {
-        "inventory": false,
-        "contracts": false,
-        "implementation": false,
-        "independent_verification": false,
+        "inventory": true,
+        "contracts": true,
+        "implementation": true,
+        "independent_verification": true,
         "change_integrity": true
+    },
+    "reconciliation_evidence": {
+        "source": "Epic local UE5.8.3 debug-chunk loading and map/name helpers, all diagnostic branches listed in B001-SCRIPT-OBJECTS-SOURCE.md",
+        "unrealdb": "Explicit 559-file PHP source inventory, exactly one standalone diagnostic reader, no production runtime callsites, three corrected differences.",
+        "empirical": "Pinned installed Satisfactory authentic chunk 0f72c200.../46d8ca91..., 54968 records, tested both present/absent toc, original rejected vs fixed accepted.",
+        "scope_boundary": "Source-defined debug diagnostic reader only, live registration covered by other original operations."
     }
 }

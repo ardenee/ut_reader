@@ -390,7 +390,27 @@
             "UE5-583-SCRIPT-001"
         ],
         "rationale": "Epic FCookedScriptObjectsDebug::LoadDebugData reads exactly NumObjects fixed-size entries from a contiguous view without requiring end-of-chunk; UnrealDB rejected trailing bytes. 2ab7af16 removes only the unsourced strict-EOF gate. Pinned Epic oracle and original 2b4377b0 before/after pass; complete B001 remains partial.",
-        "state": "evidence_partial",
+        "state": "fixed_regression_verified",
+        "audit_escape": "none"
+    },
+    {
+        "id": "UE5-D025",
+        "kind": "mapped",
+        "operations": [
+            "UE5-583-SCRIPT-001"
+        ],
+        "rationale": "Epic debug ScriptObjects uses FMappedName::GetIndex() without checking EType; Global mapped type=2 in every one of 54968 authentic Satisfactory cooked entries. UnrealDB previously demanded type=1, so the real chunk failed. 471b6d14 permits mapped types 0/1/2 using valid bounded index; original a3d159a3 rejected type 2; source+real fixture prove corrected behavior.",
+        "state": "fixed_regression_verified",
+        "audit_escape": "none"
+    },
+    {
+        "id": "UE5-D026",
+        "kind": "mapped",
+        "operations": [
+            "UE5-583-SCRIPT-001"
+        ],
+        "rationale": "Epic debug Objects.Emplace(GlobalIndex) routes through TMap::Emplace and TSet::TryReplaceExisting, replacing prior values on duplicate keys. UnrealDB rejected duplicates as malformed. 471b6d14 implements last-entry-wins with independent Epic helper oracles and original-vs-fixed duplicate regression; retained real chunk happens to have no duplicates.",
+        "state": "fixed_regression_verified",
         "audit_escape": "none"
     }
   ],
