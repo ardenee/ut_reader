@@ -223,6 +223,109 @@ $check(
 );
 $check($parsed['exports_data_bytes'] === 4, 'zen_header_boundary_preserves_exports_payload');
 
+// B009/B010 negative-before / positive-after parity with source MakeView:
+// FZenPackageSummary::bHasVersioningInfo is uint32; Epic branches on nonzero.
+// BulkDataPad bytes are read into a local scratch array but not validated
+// as zero. Keep structurally safe bounds and record the exact serialized count.
+$noncanonicalVersionFlag = substr_replace($packageBytes, pack('V', 2), 0, 4);
+$noncanonicalVersionAccepted = false;
+try {
+    $variant = Uedb5ZenPackageReader::parse($noncanonicalVersionFlag, $packageId, $storeEntry);
+    $noncanonicalVersionAccepted = ($variant['versioning_info']['package_version']['ue5'] ?? null) === 1018;
+} catch (RuntimeException) {}
+$check($noncanonicalVersionAccepted,
+    'b009_epic_nonzero_versioning_flag_enters_versioned_branch');
+
+$nonzeroBulkPadAccepted = false;
+if ($bulkPad < 1) { throw new RuntimeException('Bulk pad fixture requires a nonzero alignment padding count.'); }
+$nonzeroPadBytes = substr_replace($packageBytes, "\x7F", $prefixBeforePad, 1);
+try {
+    $variant = Uedb5ZenPackageReader::parse($nonzeroPadBytes, $packageId, $storeEntry);
+    $nonzeroBulkPadAccepted = count($variant['bulk_data_map']) === 1
+        && ($variant['bulk_data_map'][0]['cooked_index'] ?? null) === 2;
+} catch (RuntimeException) {}
+$check($nonzeroBulkPadAccepted,
+    'b010_epic_bulk_pad_does_not_require_zero_bytes');
+
+// B009/B010: exact Epic 5.8.3 branch boundaries and no-versioning case.
+// Rebuild structurally valid variants: old versions omit both tables,
+// DATA_RESOURCES (1009) adds BulkDataMap, VERSE_CELLS (1015) adds cell maps.
+// No versioning info follows the current cooked layout for both.
+$buildVersionBranch = static function (?int $ue5Version) use (
+    $versioning, $names, $bulkEntry, $u64le, $i64le, $mapped,
+    $importedHash, $packageObject, $exportMap, $scriptObject, $cellExport,
+    $exportBundles, $dependencyHeaders, $dependencyEntries, $importedNames
+): string {
+    $includeCell = $ue5Version === null || $ue5Version >= 1015;
+    $includeBulk = $ue5Version === null || $ue5Version >= 1009;
+    $versionBytes = $ue5Version === null
+        ? '' : substr_replace($versioning, pack('V', $ue5Version), 8, 4);
+    $fixedPrefixLength = Uedb5ZenPackageReader::SUMMARY_SIZE
+        + strlen($versionBytes) + ($includeCell ? 8 : 0) + strlen($names);
+    $bulkBytes = '';
+    if ($includeBulk) {
+        $pad = (8 - (($fixedPrefixLength + 8) % 8)) % 8;
+        $bulkBytes = $u64le(str_pad(strtoupper(dechex($pad)), 16, '0', STR_PAD_LEFT))
+            . str_repeat("\0", $pad) . $i64le(strlen($bulkEntry)) . $bulkEntry;
+    }
+    $variablePrefixLength = $fixedPrefixLength + strlen($bulkBytes);
+    $alignment = (8 - ($variablePrefixLength % 8)) % 8;
+    $hashOffset = $variablePrefixLength + $alignment;
+    $importOffset = $hashOffset + 8;
+    $exportOffset = $importOffset + 8;
+    $cellImportOffset = $exportOffset + Uedb5ZenPackageReader::EXPORT_MAP_ENTRY_SIZE;
+    $cellExportOffset = $cellImportOffset + ($includeCell ? 8 : 0);
+    $bundleOffset = $cellExportOffset
+        + ($includeCell ? Uedb5ZenPackageReader::CELL_EXPORT_MAP_ENTRY_SIZE : 0);
+    $bundleBytes = $includeCell ? $exportBundles
+        : pack('V2', 0, 0) . pack('V2', 0, 1);
+    $dependencyHeaderBytes = $includeCell ? $dependencyHeaders
+        : pack('V5', 0, 1, 0, 0, 0);
+    $dependencyHeadersOffset = $bundleOffset + strlen($bundleBytes);
+    $dependencyEntriesOffset = $dependencyHeadersOffset + strlen($dependencyHeaderBytes);
+    $importedNamesOffset = $dependencyEntriesOffset + strlen($dependencyEntries);
+    $headerSize = $importedNamesOffset + strlen($importedNames);
+    $summaryBytes = pack('V2', $ue5Version === null ? 0 : 1, $headerSize)
+        . $mapped(0) . pack('V2', 0, 0)
+        . pack('V7', $hashOffset, $importOffset, $exportOffset,
+            $bundleOffset, $dependencyHeadersOffset, $dependencyEntriesOffset,
+            $importedNamesOffset);
+    $headerBytes = $summaryBytes . $versionBytes
+        . ($includeCell ? pack('V2', $cellImportOffset, $cellExportOffset) : '')
+        . $names . $bulkBytes . str_repeat("\0", $alignment)
+        . $u64le($importedHash) . $packageObject(0, 0) . $exportMap
+        . ($includeCell ? $scriptObject(0x5678) . $cellExport : '')
+        . $bundleBytes . $dependencyHeaderBytes . $dependencyEntries
+        . $importedNames;
+    if (strlen($headerBytes) !== $headerSize) {
+        throw new RuntimeException('Version-branch fixture offset mismatch.');
+    }
+    return $headerBytes . 'DATA';
+};
+foreach ([
+    ['label'=>'pre_data_resources', 'version'=>1008,'cells'=>false,'bulk'=>false],
+    ['label'=>'data_resources_boundary', 'version'=>1009,'cells'=>false,'bulk'=>true],
+    ['label'=>'pre_verse_cells', 'version'=>1014,'cells'=>false,'bulk'=>true],
+    ['label'=>'verse_cells_boundary', 'version'=>1015,'cells'=>true,'bulk'=>true],
+    ['label'=>'no_versioning_latest_layout', 'version'=>null,'cells'=>true,'bulk'=>true],
+] as $case) {
+    $variant = Uedb5ZenPackageReader::parse(
+        $buildVersionBranch($case['version']), $packageId, $storeEntry
+    );
+    $check(
+        ($variant['versioning_info'] === null) === ($case['version'] === null)
+        && (bool)$variant['cell_offsets']['serialized'] === $case['cells']
+        && count($variant['cell_import_map']) === ($case['cells'] ? 1 : 0)
+        && count($variant['cell_exports']) === ($case['cells'] ? 1 : 0)
+        && ($variant['bulk_data_map_size'] !== null) === $case['bulk']
+        && count($variant['bulk_data_map']) === ($case['bulk'] ? 1 : 0)
+        && count($variant['export_bundle_entries']) === ($case['cells'] ? 4 : 2)
+        && count($variant['dependency_bundle_entries']) === 1
+        && ($variant['import_map'][0]['provider_public_export_hash'] ?? '') === $importedHash,
+        'b009_b010_' . $case['label'] . '_source_branch_and_import_integrity'
+    );
+}
+
 $u40be = static function (int $value): string {
     $bytes = '';
     for ($shift = 32; $shift >= 0; $shift -= 8) { $bytes .= chr(($value >> $shift) & 0xff); }

@@ -49,12 +49,10 @@ final class Uedb5ZenPackageReader
         if ($headerSize < self::SUMMARY_SIZE || $headerSize > strlen($bytes)) {
             throw new RuntimeException('Zen HeaderSize is outside the reconstructed package chunk.');
         }
-        if (!in_array((int)$summary['has_versioning_info'], [0, 1], true)) {
-            throw new RuntimeException('Zen bHasVersioningInfo is not a serialized boolean value.');
-        }
-
+        // Epic's FZenPackageHeader::MakeView uses the serialized uint32 as a
+        // truth value. Every nonzero value enters the versioning branch.
         $versioning = null;
-        if ((int)$summary['has_versioning_info'] === 1) {
+        if ((int)$summary['has_versioning_info'] !== 0) {
             $versioning = self::readVersioningInfo($reader);
         }
         $packageVersion = $versioning === null ? null : (int)$versioning['package_version']['ue5'];
@@ -85,10 +83,10 @@ final class Uedb5ZenPackageReader
             if ($bulkDataPad === null || $bulkDataPad > 7) {
                 throw new RuntimeException('Zen BulkDataPad is outside the source alignment range.');
             }
-            $padBytes = $reader->read($bulkDataPad);
-            if ($padBytes !== str_repeat("\0", $bulkDataPad)) {
-                throw new RuntimeException('Zen BulkDataPad contains non-zero bytes.');
-            }
+            // Epic reads BulkDataPad bytes into a scratch array without
+            // requiring them to be zero. Preserve bounds checking above but
+            // do not invent a content restriction absent from the source.
+            $reader->read($bulkDataPad);
             $bulkDataMapSize = $reader->i64le();
             if ($bulkDataMapSize < 0 || ($bulkDataMapSize % self::BULK_DATA_MAP_ENTRY_SIZE) !== 0) {
                 throw new RuntimeException('Zen BulkDataMapSize is invalid.');
