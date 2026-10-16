@@ -179,14 +179,40 @@ foreach($files as $file){
             }
         }
         if(($gates['implementation']??false)===true){
+            // A source comparison can find NO discrepancy. Do not require
+            // inventing a fix commit; require an independently authored,
+            // pinned source-oracle driver with executed named assertions.
+            $equiv=(array)($record['source_equivalence_evidence']??[]);
+            $noChange=($equiv['conclusion']??'')==='no_source_difference_found'
+                &&($equiv['independent_test_driver']??'')===
+                    ($record['source_contract_evidence']['test_driver']??null)
+                &&count((array)($equiv['required_source_checks']??[]))>=3
+                &&!empty($record['source_contract_evidence']['expected_checks']);
+            $driverPath=realpath($root.'/'.str_replace(chr(92),'/',
+                (string)($equiv['independent_test_driver']??'')));
+            $test=$driverPath!==false ? ($contractTestRuns[$driverPath]??null) : null;
+            $evidenceOk=false;
+            if($noChange&&is_array($test)
+                &&($test['exit']??1)===0
+                &&($test['result']['ok']??false)===true){
+                $evidenceOk=true;
+                foreach($equiv['required_source_checks'] as $case){
+                    if(!is_string($case)||
+                        ($test['result']['checks'][$case]??null)!==true){
+                        $evidenceOk=false;
+                        $failures[]=$id.': no-change implementation oracle missing '.(string)$case;
+                    }
+                }
+            }
             if(($gates['contracts']??false)!==true
-                ||empty($record['correction_commits'])
-                ||empty($record['source_contract_evidence'])){
-                $failures[]=$id.': closed implementation gate lacks proven source contract/correction';
+                ||empty($record['source_contract_evidence'])
+                ||(empty($record['correction_commits'])&&!$evidenceOk)){
+                $failures[]=$id.': implementation gate lacks proven correction or independent no-change oracle';
             } elseif($hash!==false && hash_equals(
-                strtolower((string)$impl['sha256']),strtolower((string)$hash))
-                &&($gates['contracts']??false)===true){
+                strtolower((string)$impl['sha256']),strtolower((string)$hash))){
                 $verifiedImplementationGates++;
+            } else {
+                $failures[]=$id.': implementation hash differs from verified source contract';
             }
         }
         // B009/B010 consumer closure must survive both code changes and

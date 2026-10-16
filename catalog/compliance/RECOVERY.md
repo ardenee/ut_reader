@@ -18,7 +18,7 @@ second competing audit system is introduced.
 * UE5 formal batch manifests: 15 containing 18 operations, all partial.
   Baseline was 33 formal open gates. The completed original B009/B010
   narrowly scoped source-to-production caller inventories reduce this to
-  **31 open gates**, with **2 verified inventory subgates**. The original
+  **30 open gates**, with **3 verified bounded source-inventory subgates** (B004, B009, B010). The original
   operations remain partial until independent final acceptance.
 * D001-D012: twelve known differences linked to original operations or
   explicitly categorized as cross-cutting or previously uncovered behavior.
@@ -37,6 +37,13 @@ second competing audit system is introduced.
   audit operation. B005 now references its tested fix but remains partial.
 * Sixteen required file-processing paths are listed as unverified until
   every relevant source path, UnrealDB caller and outcome is traced.
+* B004 `UE5-583-OBJECT-INDEX-001`: original 62-bit encoding inventory,
+  source contract and implementation equivalence subgates are verified by
+  an independently implemented source reference decoder. No code defect was
+  found within its bounded encoding contract, so **no fake correction commit
+  or invented difference ID** was created. See
+  [B004 source record](B004-OBJECT-INDEX-SOURCE.md); independent final
+  acceptance remains open.
 * Source completeness denominator is unknown: **no percentage** is valid.
 
 ## Operation closure order (original work, no new B numbers)

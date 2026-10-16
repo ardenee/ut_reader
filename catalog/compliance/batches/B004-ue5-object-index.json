@@ -1,43 +1,111 @@
 {
-  "schema": 1,
-  "batch": "B004",
-  "engine": "UE5",
-  "profile": "UE5.8.3",
-  "status": "partial",
-  "inventory_a": "Source call-path inventory",
-  "inventory_b": "Source structure and conditional behavior inventory",
-  "complete_inventory": false,
-  "source_root_hint": "L:/Source/Engine/UE5/UE 5.8.3",
-  "operations": [
-    {
-      "id": "UE5-583-OBJECT-INDEX-001",
-      "summary": "UE5 package object index encoding",
-      "source": {
-        "path": "Engine/Source/Runtime/CoreUObject/Public/Serialization/AsyncLoading2.h",
-        "sha256": "088f00a8c970458e4bb717490ac4d50361d635ddf8cb0b7b1a5c93ff4d9feef2",
-        "symbols": [
-          "FPackageObjectIndex",
-          "FromPackageImportRef",
-          "FromScriptPath"
+    "schema": 1,
+    "batch": "B004",
+    "engine": "UE5",
+    "profile": "UE5.8.3",
+    "status": "partial",
+    "inventory_a": "Source call-path inventory",
+    "inventory_b": "Source structure and conditional behavior inventory",
+    "complete_inventory": true,
+    "source_root_hint": "L:/Source/Engine/UE5/UE 5.8.3",
+    "operations": [
+        {
+            "id": "UE5-583-OBJECT-INDEX-001",
+            "summary": "UE5 package object index encoding",
+            "source": {
+                "path": "Engine/Source/Runtime/CoreUObject/Public/Serialization/AsyncLoading2.h",
+                "sha256": "088f00a8c970458e4bb717490ac4d50361d635ddf8cb0b7b1a5c93ff4d9feef2",
+                "symbols": [
+                    "FPackageObjectIndex",
+                    "FromPackageImportRef",
+                    "FromScriptPath"
+                ]
+            },
+            "implementation": {
+                "path": "catalog/src/Infrastructure/Metadata/Uedb5ZenPackageReader.php",
+                "sha256": "58e7e9027438a7453503112b559b629ada5d7a078fc132502a1ddded52de275d"
+            },
+            "tests": [
+                "catalog/bin/verify-uedb5-ue5-zen-dependency-resolution.php",
+                "catalog/bin/verify-uedb5-zen-object-index-source-oracle.php",
+                "catalog/bin/verify-uedb5-zen-object-index-boundaries.php",
+                "catalog/bin/verify-uedb5-ue5-zen-package.php"
+            ],
+            "disposition": "partial",
+            "reason": "Pinned UE5.8.3 source and independently authored byte-level oracle verify existing UnrealDB FPackageObjectIndex decoding and explicit malformed-input protections. No production code difference found; source contract, bounded index caller inventory and implementation gates close without inventing a correction commit. Full independent acceptance and broader provider/mount semantics remain separate/open.",
+            "source_contract_evidence": {
+                "test_driver": "catalog/bin/verify-uedb5-zen-object-index-source-oracle.php",
+                "expected_checks": [
+                    "source_583_header_hash_pinned",
+                    "epic_two_bit_type_shift_62",
+                    "epic_null_sentinel_all_ones",
+                    "epic_package_import_high32_low32",
+                    "epic_imported_ref_extract_high30_low32",
+                    "epic_raw_export_conversion_uint32",
+                    "reference_null_exact_sentinel",
+                    "reference_export_first",
+                    "reference_export_last",
+                    "reference_script_zero",
+                    "reference_script_all_low62_bits",
+                    "reference_package_zero_zero",
+                    "reference_package_one_hash_two",
+                    "reference_package_two_hash_one",
+                    "malformed_reserved_type_zero",
+                    "malformed_reserved_type_near_null",
+                    "malformed_export_out_of_bounds",
+                    "malformed_export_62bit_noncanonical",
+                    "malformed_package_index_missing",
+                    "malformed_package_hash_missing"
+                ],
+                "source_branches": [
+                    "AsyncLoading2.h:58-78: 62-bit IndexMask, high two-bit type, exact all-ones null sentinel.",
+                    "AsyncLoading2.h:86-116: FromExportIndex and FromScriptPath / FromPackageImportRef constructors.",
+                    "AsyncLoading2.h:139-155: ToExport low32 and ToPackageImportRef high30/low32 split.",
+                    "Uedb5ZenPackageReader.php:443-499: independent source-derived oracle matches valid index types/ids and defensively rejects malformed selectors."
+                ]
+            },
+            "source_reachability_evidence": {
+                "test_driver": "catalog/bin/verify-uedb5-zen-object-index-source-oracle.php",
+                "expected_checks": [
+                    "all_five_object_index_decoder_call_sites_remain_mapped",
+                    "import_and_cell_import_spans_share_the_same_decoder",
+                    "all_four_export_object_index_fields_are_decoded",
+                    "main_optional_and_cell_index_metadata_remain_separately_classified",
+                    "dependency_resolver_uses_original_decoded_object_index"
+                ],
+                "source_inventory_record": "catalog/compliance/B004-OBJECT-INDEX-SOURCE.md"
+            },
+            "source_equivalence_evidence": {
+                "conclusion": "no_source_difference_found",
+                "independent_test_driver": "catalog/bin/verify-uedb5-zen-object-index-source-oracle.php",
+                "required_source_checks": [
+                    "source_583_header_hash_pinned",
+                    "epic_two_bit_type_shift_62",
+                    "epic_null_sentinel_all_ones",
+                    "epic_package_import_high32_low32",
+                    "epic_imported_ref_extract_high30_low32",
+                    "epic_raw_export_conversion_uint32"
+                ],
+                "verification_scope": "Type 0/1/2, exact Null, encoded 30/32-bit package reference, local export index bounds and invalid/reserved inputs."
+            }
+        }
+    ],
+    "next_batch": "B005",
+    "gate_status": {
+        "inventory": true,
+        "contracts": true,
+        "implementation": true,
+        "independent_verification": false,
+        "change_integrity": true
+    },
+    "reconciliation_evidence": {
+        "scope": "UE5.8.3 FPackageObjectIndex 64-bit type and value decoding only; dependency provider behavior remains in existing separate B005/B007/B015.",
+        "source": "Engine/Source/Runtime/CoreUObject/Public/Serialization/AsyncLoading2.h:34-159; AsyncLoading2.cpp import/exports runtime consumers",
+        "mapping": "catalog/compliance/B004-OBJECT-INDEX-SOURCE.md",
+        "tests": [
+            "catalog/bin/verify-uedb5-zen-object-index-source-oracle.php",
+            "catalog/bin/verify-uedb5-ue5-zen-package.php",
+            "catalog/bin/verify-uedb5-ue5-zen-dependency-resolution.php"
         ]
-      },
-      "implementation": {
-        "path": "catalog/src/Infrastructure/Metadata/Uedb5ZenPackageReader.php",
-        "sha256": "58e7e9027438a7453503112b559b629ada5d7a078fc132502a1ddded52de275d"
-      },
-      "tests": [
-        "catalog/bin/verify-uedb5-ue5-zen-dependency-resolution.php"
-      ],
-      "disposition": "partial",
-      "reason": "Top two bits encode Export/ScriptImport/PackageImport/Null; package import reference uses imported package index and hash table index. UnrealDB decoder implements this; reserved/null, bounds, and exact fixture parity remain open."
     }
-  ],
-  "next_batch": "B005",
-  "gate_status": {
-    "inventory": false,
-    "contracts": false,
-    "implementation": false,
-    "independent_verification": false,
-    "change_integrity": true
-  }
 }
