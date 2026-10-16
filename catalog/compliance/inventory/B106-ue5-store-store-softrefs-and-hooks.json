@@ -1,0 +1,52 @@
+{
+  "schema": 1,
+  "batch": "B106",
+  "status": "partial",
+  "classification": "bounded source-body review",
+  "sources": {
+    "PackageStore": "FB5C1930F5B8E6611392C3009DDE16922661C7942F2EAA8D875492C8981F67B9",
+    "ZenPackageHeader": "954117A45B9A802D3F289B30F2A0E191A7BB82CDCB107A22FEF134A73172995B"
+  },
+  "reviewed": [
+    {
+      "symbol": "FPackageStore::GetSoftReferences",
+      "line": 596,
+      "disposition": "file-format-relevant",
+      "reason": "Returns first non-empty SoftReferences result from ordered backends; empty results allow lower backend fallback.",
+      "verified": false
+    },
+    {
+      "symbol": "FPackageStore::Get",
+      "line": 509,
+      "disposition": "runtime-only",
+      "reason": "Returns process-local singleton package store instance.",
+      "verified": false
+    },
+    {
+      "symbol": "FPackageStore::OnPendingEntriesAdded",
+      "line": 609,
+      "disposition": "runtime-only",
+      "reason": "Returns event hook from backend context for pending entries.",
+      "verified": false
+    },
+    {
+      "symbol": "FPackageStore::HasAnyBackendsMounted",
+      "line": 614,
+      "disposition": "runtime-only",
+      "reason": "Reports whether mounted backend array is nonempty.",
+      "verified": false
+    },
+    {
+      "symbol": "FPackageStore::IterateBackends",
+      "line": 619,
+      "disposition": "file-format-relevant",
+      "reason": "Visits backends in priority order and stops iteration if visitor returns false.",
+      "verified": false
+    }
+  ],
+  "evidence_limitations": [
+    "Static method classification, not implementation parity certification",
+    "IoStore backend mount arbitration across sources still requires differential tests"
+  ],
+  "next_batch": "B107"
+}
