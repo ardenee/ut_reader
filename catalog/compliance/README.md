@@ -1,20 +1,37 @@
-# Epic-source compliance audit — durable batches
+# UnrealDB ↔ Epic source compliance — master audit register
 
-This is a **coverage register, not a certification**. A passing validator checks registered obligations, not the unknown remainder of a source tree.
+**Purpose:** identify file-format/runtime-resolution differences between Epic source and UnrealDB, implement corrections, and retain reproducible evidence so an area is not audited again without a source change.
 
-## Batch protocol
-1. Pin authoritative source root, revision or snapshot hashes. Never reference mutable `latest`.
-2. Inventory from two independent directions: entry-point/call graph and serialized structures/dispatch registrations. Persist each finding as a record; record explicit exclusions.
-3. Reconcile both inventories and publish an unresolved-operations list. New batches only append/update records against their pinned sources.
-4. Every obligation carries a stable ID, source anchor/hash, applicability, implementation anchor/hash, tests and disposition.
-5. Verify evidence hashes and tests before changing disposition to `verified`. Any fingerprint mismatch makes an entry stale.
-6. Commit the batch checkpoint and report the next batch ID. Do not perform a full package scan as part of this audit.
+**Important: B001–B108 are checkpoint identifiers, NOT 108 fixes or a finite denominator.** Many B019–B106 entries are source-method classifications, not demonstrated defects. Do not use the latest batch number as a percent complete.
 
-Use `php catalog/bin/verify-source-compliance.php --all --strict` locally. Strict returns nonzero for unresolved, unreviewed and stale entries.
+## Layout and authoritative evidence
 
-## Status
-- B001 UE5 script-object provenance: **partial / open** (synthetic test passes; full family integration not verified).
-- B002 onward: not started.
-- UE1–UE4: not certified or inventoried here.
+- `batches/`: 15 registered *source-to-implementation obligations* (18 operations) for the compliance verifier. These are the formal gates. Preserve their stable operation IDs and hashes.
+- `inventory/`: append-only review evidence, individual source-method classifications, regression test observations and environment notes. **An inventory entry does not certify or close an obligation.**
+- `DIFFERENCES.md`: human-readable difference → fix → tests → outstanding work ledger. **Use this first** to understand actual engineering work.
+- `README.md`: process and navigation.
 
-Do not mark a profile compliant until independently reconciled inventory and all five gates have passed.
+This is **not** a complete Unreal Engine file-format spec or a complete inventory of all Epic source. The current UE5 definition checks cover four selected classes in `AsyncLoading2.cpp` (88/88 classified) plus selected `PackageStore.cpp` and `ZenPackageHeader.cpp` methods (11/11 classified); the other C++ classes/sources and UE1–UE4 need their own reconciled inventories.
+
+## Audit status and acceptance
+
+As of B108, `verify-source-compliance.php --all` reported **18 operations, 0 verified, 33 open gates**. The source-symbol/hash checks passed on pinned sources; those are *presence checks*, not behavioral proof. The combined isolated UE5 test runner passed 12/12 bounded tests. Neither outcome proves Epic compliance.
+
+For each actual divergence create a ledger entry containing: stable difference ID, affected engine/game, Epic source path/hash/lines and precise behavior, UnrealDB code reference, observed mismatch, correction commit, test fixture, passing/failing evidence and acceptance gate. Only mark **fixed+verified** when a negative-before/positive-after test and a source-compatible fixture prove the change. If not demonstrably mismatched use **unverified**, not **fixed**.
+
+## Commands
+
+Set `UNREALDB_EPIC_SOURCE_ROOT` to the pinned UE5.8.3 source root, then run:
+
+```powershell
+& C:\php8.5\php.exe catalog\bin\audit-ue5-source-definitions.php
+& C:\php8.5\php.exe catalog\bin\audit-ue5-store-definitions.php
+& C:\php8.5\php.exe catalog\bin\verify-uedb5-ue5-source-batches.php
+& C:\php8.5\php.exe catalog\bin\verify-source-compliance.php --all --strict
+```
+
+A strict failure while gates remain open is expected; it must not be reported as certification.
+
+## Deployment rule
+
+GitHub main, DEV, and PRD runtime code must be reconciled from their own worktrees before deployment. Do not equate copied audit JSONs with runtime sync. Preserve uncommitted changes and production data, and validate deployment against the application being used. The isolated MySQL `uedb5_isolated_integration` is not proof of a production-schema cutover.
