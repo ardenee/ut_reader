@@ -215,6 +215,23 @@ foreach($files as $file){
                 $failures[]=$id.': implementation hash differs from verified source contract';
             }
         }
+        // A source-equivalent shared arbitrator can still be bypassed if
+        // a physical selector or V5 rebuilder changes. Bind all declared
+        // downstream implementations to the original gate's source hashes.
+        if(($gates['implementation']??false)===true){
+            foreach((array)($record['guarded_implementation_files']??[]) as $related){
+                $relative=(string)($related['path']??'');
+                $expected=strtolower((string)($related['sha256']??''));
+                $candidate=realpath($root.'/'.str_replace(chr(92),'/',$relative));
+                $safe=strtolower(str_replace(chr(92),'/',(string)realpath($root))).'/';
+                if(!is_string($candidate)||!str_starts_with(
+                    strtolower(str_replace(chr(92),'/',$candidate)),$safe)
+                    ||strlen($expected)!==64||!ctype_xdigit($expected)
+                    ||!hash_equals($expected,(string)hash_file('sha256',$candidate))){
+                    $failures[]=$id.': downstream implementation evidence changed: '.$relative;
+                }
+            }
+        }
         // B009/B010 consumer closure must survive both code changes and
         // regenerated test outcomes. Never count a manually toggled flag.
         if(($gates['consumer_validation']??false)===true){

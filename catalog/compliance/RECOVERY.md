@@ -20,7 +20,7 @@ second competing audit system is introduced.
   narrowly scoped source-to-production caller inventories reduce this to
   **30 open gates**, with **3 verified bounded source-inventory subgates** (B004, B009, B010). The original
   operations remain partial until independent final acceptance.
-* D001-D012: twelve known differences linked to original operations or
+* D001-D013: thirteen known differences linked to original operations or
   explicitly categorized as cross-cutting or previously uncovered behavior.
   D010/D011 are now marked fixed and regression-verified. Original B009 and
   B010 each have source-contract and implementation subgates closed by

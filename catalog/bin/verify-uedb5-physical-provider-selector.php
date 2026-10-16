@@ -241,6 +241,56 @@ $backendSelected=(new PdoUedb5PhysicalProviderSelector($db,$tmp))->select(8,40,[
 ]);
 $check('zen_evidenced_backend_disambiguates_exact_physical_package',
  count($backendSelected)===1 && (int)($backendSelected[0]['file_id']??0)===42);
+// B005: authoritative evidence may enter via zen_runtime_context, the same
+// structure the dependency rebuilder/resolver consume. Physical selection
+// must never ignore it and silently use unordered V5 catalogue candidates.
+$nestedOk=(new PdoUedb5PhysicalProviderSelector($db,$tmp))->select(8,40,[
+ 'zen_runtime_context'=>[
+  'package_identity_context_authoritative'=>true,
+  'package_store_context_authoritative'=>true,
+  'package_redirects'=>[],'localized_packages'=>[],
+  'package_store_backend_results'=>[
+   ['backend_id'=>'runtime','priority'=>10,
+    'entries'=>[$zenPackageId=>['status'=>'Ok','file_id'=>42]],'redirects'=>[]],
+  ],
+ ],
+]);
+$check('b005_nested_backend_ok_picks_exact_evidenced_provider',
+ count($nestedOk)===1 && (int)($nestedOk[0]['file_id']??0)===42
+ && ($nestedOk[0]['selection_source']??'')==='evidenced_package_store_backend');
+$nestedPending=(new PdoUedb5PhysicalProviderSelector($db,$tmp))->select(8,40,[
+ 'zen_runtime_context'=>[
+  'package_identity_context_authoritative'=>true,
+  'package_store_context_authoritative'=>true,
+  'package_redirects'=>[],'localized_packages'=>[],
+  'package_store_backend_results'=>[
+   ['backend_id'=>'runtime','priority'=>10,
+    'entries'=>[$zenPackageId=>['status'=>'Pending','file_id'=>42]],'redirects'=>[]],
+  ],
+ ],
+]);
+$check('b005_nested_backend_pending_never_guesses_catalogue_file',
+ $nestedPending===[]);
+$conflictingEvidenceRejected=false;
+try {
+ (new PdoUedb5PhysicalProviderSelector($db,$tmp))->select(8,40,[
+  'zen_runtime_context'=>[
+   'package_identity_context_authoritative'=>true,
+   'package_store_context_authoritative'=>true,
+   'package_redirects'=>[],'localized_packages'=>[],
+   'package_store_backend_results'=>[
+    ['backend_id'=>'runtime','priority'=>10,
+     'entries'=>[$zenPackageId=>['status'=>'Pending']],'redirects'=>[]],
+   ],
+  ],
+  'zen_package_store_backend_results'=>[
+   ['backend_id'=>'runtime','priority'=>10,
+    'entries'=>[$zenPackageId=>['status'=>'Ok','file_id'=>42]],'redirects'=>[]],
+  ],
+ ]);
+} catch(RuntimeException) {$conflictingEvidenceRejected=true;}
+$check('b005_conflicting_backend_evidence_must_not_select_a_file',
+ $conflictingEvidenceRejected);
 
 // Exercise the real builder -> prioritized backend -> PDO selector chain.
 // The observed mount entries are explicit; this synthetic fixture separately

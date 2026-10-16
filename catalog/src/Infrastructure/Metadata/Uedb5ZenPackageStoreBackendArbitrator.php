@@ -20,6 +20,32 @@ final class Uedb5ZenPackageStoreBackendArbitrator
         }
         return ['status'=>'Missing','backend_id'=>null,'entry'=>null];
     }
+    /**
+     * The selector and dependency publisher must consume one identical
+     * source-evidenced backend list. Reject contradictory input paths rather
+     * than accepting an Ok provider on one path and Pending on another.
+     *
+     * @param array<string,mixed> $runtimeContext
+     * @param array<string,mixed> $options
+     * @return list<array<string,mixed>>|null
+     */
+    public static function evidencedBackends(array $runtimeContext, array $options): ?array
+    {
+        $nested=$runtimeContext['package_store_backend_results']??null;
+        $explicit=$options['zen_package_store_backend_results']??null;
+        foreach([$nested,$explicit] as $source){
+            if($source!==null && (!is_array($source)||!array_is_list($source))){
+                throw new RuntimeException('Zen package-store backend results must be an explicit list.');
+            }
+        }
+        if($nested!==null && $explicit!==null
+            && self::ordered($nested)!==self::ordered($explicit)){
+            throw new RuntimeException(
+                'Conflicting authoritative Zen backend evidence between runtime context and selector options.'
+            );
+        }
+        return $explicit??$nested;
+    }
     /** @param list<array<string,mixed>> $backends */
     public static function redirect(array $backends, string $packageId): ?array
     {

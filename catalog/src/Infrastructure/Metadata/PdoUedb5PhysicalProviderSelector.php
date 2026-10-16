@@ -137,6 +137,14 @@ final class PdoUedb5PhysicalProviderSelector
         if (!is_array($runtimeContext)) {
             throw new RuntimeException('Zen runtime context must be an array.');
         }
+        // B005: the V5 dependency resolver accepts evidenced backends
+        // inside zen_runtime_context, while the game pass may also supply
+        // the same evidence as a top-level selector option. Both represent
+        // ONE Epic FPackageStore mount state: never silently disregard the
+        // context evidence or select from inconsistent backend snapshots.
+        $backendResults = Uedb5ZenPackageStoreBackendArbitrator::evidencedBackends(
+            $runtimeContext, $options
+        );
         $baseline = Uedb5Ue5ZenDependencyResolver::resolve($consumer, [], $runtimeContext);
         $requirements = [];
         foreach ($baseline as $row) {
@@ -166,12 +174,8 @@ final class PdoUedb5PhysicalProviderSelector
             // Runtime FPackageStore may identify a particular mounted physical file.
             // Accept only an explicitly evidenced backend Ok result with a file_id
             // present in the same game's V5 candidates. Pending must not fall through.
-            $backendResults = $options['zen_package_store_backend_results'] ?? null;
             if ($backendResults !== null
                 && !empty($runtimeContext['package_store_context_authoritative'])) {
-                if (!is_array($backendResults) || !array_is_list($backendResults)) {
-                    throw new RuntimeException('Zen package-store backend results must be an explicit list.');
-                }
                 $entry = Uedb5ZenPackageStoreBackendArbitrator::entry($backendResults, $packageId);
                 if ($entry['status'] !== 'Ok') {
                     // Runtime package store has not selected a physical file.

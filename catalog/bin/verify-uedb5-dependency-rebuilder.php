@@ -187,6 +187,27 @@ try {
         &&($pendingRows[0]['outcome']??null)==='unresolved'
         &&($pendingRows[0]['reason_code']??null)==='package_store_entry_pending',
         'v5_rebuilder_forwards_authoritative_package_store_pending_status');
+    $nestedPendingOptions=$pendingOptions;
+    $nestedPendingOptions['zen_runtime_context']['package_store_backend_results'] =
+        $nestedPendingOptions['zen_package_store_backend_results'];
+    unset($nestedPendingOptions['zen_package_store_backend_results']);
+    $rebuilder->rebuild($gameId,$zenConsumerId,[],$nestedPendingOptions);
+    $nestedPendingRows=$reader->snapshot($gameId,$zenConsumerId)['sections'][Uedb5DependencyRebuilder::SECTION]??[];
+    $check(count($nestedPendingRows)===1
+        && ($nestedPendingRows[0]['reason_code']??null)==='package_store_entry_pending',
+        'b005_rebuilder_uses_nested_authoritative_pending_evidence');
+    $conflictingOptions=$pendingOptions;
+    $conflictingOptions['zen_runtime_context']['package_store_backend_results'] = [[
+        'backend_id'=>'runtime','priority'=>10,
+        'entries'=>[$providerPackageId=>['status'=>'NotInstalled']],
+        'redirects'=>[],
+    ]];
+    $conflictingRebuildRejected=false;
+    try {
+        $rebuilder->rebuild($gameId,$zenConsumerId,[],$conflictingOptions);
+    } catch(RuntimeException) {$conflictingRebuildRejected=true;}
+    $check($conflictingRebuildRejected,
+        'b005_rebuilder_rejects_conflicting_authoritative_backend_evidence');
     $missingBackendOptions=$pendingOptions;
     $missingBackendOptions['zen_package_store_backend_results'][0]['entries'][$providerPackageId]=['status'=>'Missing'];
     $rebuilder->rebuild($gameId,$zenConsumerId,[],$missingBackendOptions);

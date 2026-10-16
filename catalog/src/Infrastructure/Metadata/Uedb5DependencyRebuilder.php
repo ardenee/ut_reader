@@ -54,11 +54,10 @@ final class Uedb5DependencyRebuilder
             // The provider selector uses the same backend arbitration. Preserve
             // its terminal Ok/Pending/NotInstalled/Missing evidence when writing
             // dependency results, rather than turning Pending into Missing.
-            if (array_key_exists('zen_package_store_backend_results', $options)) {
-                $backends = $options['zen_package_store_backend_results'];
-                if (!is_array($backends) || !array_is_list($backends)) {
-                    throw new RuntimeException('Zen package-store backend results must be an explicit list.');
-                }
+            $backends = Uedb5ZenPackageStoreBackendArbitrator::evidencedBackends(
+                $zenContext, $options
+            );
+            if ($backends !== null) {
                 $zenContext['package_store_backend_results'] = $backends;
             }
             $rows = $this->rebuildZen($consumer, $providers, $zenContext);

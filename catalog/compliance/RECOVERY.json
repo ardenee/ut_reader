@@ -288,6 +288,14 @@
       "rationale": "B009/B010 Step 8 V5 consumer accepted inconsistent versioning and conditional header layout. Seven failures reproduced before correction; 12 checks and isolated real fixtures pass after. Original operations remain partial.",
       "state": "fixed_regression_verified",
       "audit_escape": "none"
+    },
+    {
+      "id": "UE5-D013",
+      "kind": "mapped",
+      "operations": ["UE5-583-BACKEND-STATUS-001"],
+      "rationale": "B005 selector ignored nested runtime backend evidence and rebuilder overwrote conflicting evidence. Shared arbitration now rejects contradictory snapshots; four original negative-before regressions pass after correction. Hybrid editor mount acceptance remains open.",
+      "state": "fixed_regression_verified",
+      "audit_escape": "none"
     }
   ],
   "coverage_gaps": [
