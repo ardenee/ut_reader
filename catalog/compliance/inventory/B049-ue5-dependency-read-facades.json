@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "batch": "B049",
+  "status": "partial",
+  "topic": "V5 runtime dependency facade reason-code preservation",
+  "evidence": [
+    {
+      "path": "catalog/src/Infrastructure/Metadata/Uedb5ParityV5ReadService.php",
+      "finding": "dependencies() and dependenciesAtIndexes() retain serialized reason_code"
+    },
+    {
+      "path": "catalog/src/Infrastructure/Metadata/Uedb5RuntimeMetadataReader.php",
+      "finding": "dependencyRows() retains reason_code"
+    },
+    {
+      "path": "catalog/src/Infrastructure/Metadata/CatalogCompactDependencyReadService.php",
+      "finding": "compactRows() now retains reason_code after B048"
+    }
+  ],
+  "certified": false,
+  "open_gates": [
+    "Isolated database readback of compact projection",
+    "End-to-end UI read format inspection",
+    "Authentic UE5 cooked container differential"
+  ],
+  "next_batch": "B050"
+}
