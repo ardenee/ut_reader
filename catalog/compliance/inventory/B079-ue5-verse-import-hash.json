@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "batch": "B079",
+  "source": {
+    "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+    "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9"
+  },
+  "classification": "bounded source-body review",
+  "status": "partial",
+  "reviewed": [
+    {
+      "symbol": "FPackageObjectIndex::GenerateImportHashFromVersePath",
+      "line": 323,
+      "disposition": "file-format-relevant",
+      "reason": "Hashes exact UTF-8 VersePath bytes with CityHash64 and clears top two type-tag bits; cannot replace with ordinary TCHAR import-path hashing.",
+      "verified": false
+    }
+  ],
+  "evidence_limitations": [
+    "Exact byte-for-byte implementations and known vectors not yet independently tested",
+    "Full imported name and type tag parity remains open"
+  ],
+  "next_batch": "B080"
+}
