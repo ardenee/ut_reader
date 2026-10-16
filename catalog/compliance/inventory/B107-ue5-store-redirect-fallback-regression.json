@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "batch": "B107",
+  "status": "partial",
+  "source": {
+    "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/PackageStore.cpp",
+    "sha256": "FB5C1930F5B8E6611392C3009DDE16922661C7942F2EAA8D875492C8981F67B9",
+    "symbol": "FPackageStore::GetPackageRedirectInfo",
+    "line": 583
+  },
+  "test": "catalog/bin/verify-uedb5-zen-backend-arbitration.php",
+  "finding": "Expanded real Uedb5ZenPackageStoreBackendArbitrator regression verifies redirect fallback to lower-priority backend when the higher backend lacks a redirect; existing priority, missing/none fallback and pending stop checks pass.",
+  "result": "pass",
+  "certified": false,
+  "pending": [
+    "Soft reference lookup first-nonempty semantics are not represented in this helper",
+    "Authentic mounted backend differential remains open"
+  ],
+  "next_batch": "B108"
+}
