@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "batch": "B080",
+  "source": {
+    "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+    "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9"
+  },
+  "classification": "bounded source-body review",
+  "status": "partial",
+  "reviewed": [
+    {
+      "symbol": "FAsyncPackage2::GetNameFromPackageObjectIndex",
+      "line": 9149,
+      "disposition": "file-format-relevant",
+      "reason": "Exports resolve names via LinkerLoad map or local mapped package name map, imports resolve through ImportStore.GetImportName, and other index kinds give empty result.",
+      "verified": false
+    }
+  ],
+  "evidence_limitations": [
+    "Exact byte-for-byte implementations and known vectors not yet independently tested",
+    "Full imported name and type tag parity remains open"
+  ],
+  "next_batch": "B081"
+}
