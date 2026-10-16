@@ -1,0 +1,26 @@
+{
+  "schema": 1,
+  "batch": "B040",
+  "status": "partial",
+  "source": {
+    "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+    "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9"
+  },
+  "classification": "source-based synthetic reader negative regression",
+  "reviewed": [
+    {
+      "symbol": "FAsyncPackage2::ProcessExportDependencies",
+      "disposition": "file-format-relevant",
+      "verified": false,
+      "reason": "Added negative fixtures for FirstEntryIndex=-1 with nonzero counts, invalid negative first offset, and truncated 20-byte dependency header."
+    }
+  ],
+  "test_evidence": [
+    "catalog/bin/verify-uedb5-zen-dependency-partitions.php"
+  ],
+  "remaining": [
+    "Authentic cooked UE5 fixture differential is still required",
+    "Complete source call graph and serializer branches remain open"
+  ],
+  "next_batch": "B041"
+}
