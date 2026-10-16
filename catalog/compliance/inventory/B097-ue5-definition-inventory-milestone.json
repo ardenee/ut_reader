@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "batch": "B097",
+  "status": "partial",
+  "source": {
+    "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+    "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9"
+  },
+  "source_inventory": {
+    "candidate_count": 88,
+    "unmapped_count": 0,
+    "classified_count": 84,
+    "validator_exit": 0
+  },
+  "scope_limitations": [
+    "Only a qualified method-definition pattern across four selected classes in one AsyncLoading2.cpp source file",
+    "Mapped method is not a verified UnrealDB implementation",
+    "Call-graph branches, other headers/sources, package-format differentials and UE1-UE4 audits remain"
+  ],
+  "next_batch": "B098",
+  "certified": false
+}
