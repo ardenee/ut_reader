@@ -33,19 +33,22 @@ final class Uedb5ZenMountedStoreContextBuilder
             ($b['order']<=>$a['order'])?:($b['sequence']<=>$a['sequence']));
         $redirects=[];$localized=[];$seenRedirect=[];$seenLocalized=[];
         foreach($ordered as $mount){
-            foreach([['package_redirects',&$redirects,&$seenRedirect],
-                     ['localized_packages',&$localized,&$seenLocalized]] as &$set){
-                [$key,&$target,&$dedupe]=$set;
-                foreach($mount[$key] as $row){
-                    if(!is_array($row))throw new RuntimeException('Mount mapping must be an object.');
-                    $source=strtoupper(trim((string)($row['source_package_id']??'')));
-                    if(!preg_match('/^[0-9A-F]{16}$/D',$source))
-                        throw new RuntimeException('Mount mapping requires 16-digit hexadecimal source_package_id.');
-                    if(isset($dedupe[$source]))continue;
-                    $dedupe[$source]=true;
-                    $target[]=$row;
-                }
-                unset($set);
+            foreach($mount['package_redirects'] as $row){
+                if(!is_array($row))throw new RuntimeException('Mount redirect must be an object.');
+                $source=self::packageId($row);
+                $target=strtoupper(trim((string)($row['target_package_id']??'')));
+                if(!preg_match('/^[0-9A-F]{16}$/D',$target))
+                    throw new RuntimeException('Mount redirect requires 16-digit hexadecimal target_package_id.');
+                if(isset($seenRedirect[$source]))continue;
+                $seenRedirect[$source]=true;
+                $redirects[]=$row;
+            }
+            foreach($mount['localized_packages'] as $row){
+                if(!is_array($row))throw new RuntimeException('Mount localization must be an object.');
+                $source=self::packageId($row);
+                if(isset($seenLocalized[$source]))continue;
+                $seenLocalized[$source]=true;
+                $localized[]=$row;
             }
         }
         return [
@@ -59,5 +62,12 @@ final class Uedb5ZenMountedStoreContextBuilder
             'package_store_context_authoritative'=>false,
             'package_identity_context_authoritative'=>false,
         ];
+    }
+    private static function packageId(array $row): string
+    {
+        $source=strtoupper(trim((string)($row['source_package_id']??'')));
+        if(!preg_match('/^[0-9A-F]{16}$/D',$source))
+            throw new RuntimeException('Mount mapping requires 16-digit hexadecimal source_package_id.');
+        return $source;
     }
 }
