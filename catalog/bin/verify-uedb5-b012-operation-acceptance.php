@@ -1,0 +1,74 @@
+<?php
+declare(strict_types=1);
+/** Original B012 scoped optional export-segment operation acceptance. */
+if(PHP_SAPI!=='cli')exit(2);
+$root=dirname(__DIR__);$checks=[];$fail=[];$reports=[];$drivers=[];
+$check=static function(string $name,bool $ok)use(&$checks,&$fail){
+ $checks[$name]=$ok;if(!$ok)$fail[]=$name;
+};
+foreach([
+ 'source'=>'verify-uedb5-b012-optional-source.php',
+ 'iostore'=>'verify-uedb5-ue5-zen-package.php',
+ 'resolver'=>'verify-uedb5-ue5-zen-dependency-resolution.php',
+ 'v5'=>'verify-uedb5-zen-version-staging-contract.php'
+] as $name=>$script){
+ $lines=[];$exit=127;
+ exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($root.'/bin/'.$script).' 2>&1',$lines,$exit);
+ $decoded=json_decode(implode("\n",$lines),true);
+ $reports[$name]=is_array($decoded)?$decoded:[];
+ $drivers[$name]=['ok'=>$reports[$name]['ok']??false,'exit'=>$exit];
+ $check('b012_driver_'.$name.'_passes',$exit===0&&($reports[$name]['ok']??false)===true);
+}
+$has=static fn(string $driver,string $key):bool=>
+ ($reports[$driver]['checks'][$key]??false)===true;
+$check('b012_epic_independent_editor_and_runtime_source',
+ $has('source','b012_epic_583_async_loading_hash_pinned')
+ &&$has('source','b012_editor_two_export_bundles')
+ &&$has('source','b012_runtime_one_export_bundle')
+ &&$has('source','b012_import_recursion_optional_header')
+ &&$has('source','b012_optional_export_archive_selects_header')
+ &&$has('source','b012_main_chunk_editor_replacement'));
+$check('b012_epic_chunk1_and_separate_package_store_imports',
+ $has('source','b012_optional_import_package_ids_separate')
+ &&$has('source','b012_optional_chunk_index_one')
+ &&$has('source','b012_two_export_bundle_chunk_requests_in_builder')
+ &&$has('source','b012_both_segments_same_parser')
+ &&$has('source','b012_separate_optional_import_store_entry_in_builder'));
+$check('b012_epic_hash_lookup_main_before_optional',
+ $has('source','b012_get_public_export_index_main_precedes_optional')
+ &&$has('source','b012_optional_lookup_within_editor_preprocessor')
+ &&$has('resolver','b012_epic_main_public_export_precedes_matching_optional_hash')
+ &&$has('resolver','b012_main_export_precedence_non_editor')
+ &&$has('resolver','b012_main_export_precedence_build_unknown'));
+$check('b012_serialized_real_iostore_main_optional_provider_ids_distinct',
+ $has('iostore','zen_snapshot_optional_store_entry_augments_main_package')
+ &&$has('iostore','b012_optional_and_main_independently_map_provider_package_ids')
+ &&$has('iostore','zen_snapshot_optional_chunk_provenance_preserved')
+ &&$has('iostore','zen_snapshot_optional_header_preserved_separately')
+ &&$has('iostore','zen_snapshot_uedb5_optional_segment_count'));
+$check('b012_optional_chunk_missing_rejected_and_main_retained',
+ $has('iostore','b012_missing_declared_optional_chunk_rejected')
+ &&$has('iostore','zen_snapshot_hard_import_classified')
+ &&$has('iostore','zen_snapshot_uedb5_package_import_round_trip'));
+$check('b012_runtime_editor_unknown_resolution_contract',
+ $has('resolver','zen_optional_provider_export_requires_editor_build_context_when_unknown')
+ &&$has('resolver','zen_editor_import_searches_optional_provider_exports_after_main_exports')
+ &&$has('resolver','zen_noneditor_import_does_not_search_optional_provider_exports')
+ &&$has('resolver','zen_optional_consumer_import_requires_editor_build_context_when_unknown')
+ &&$has('resolver','zen_editor_resolves_optional_consumer_import_from_optional_header_identity')
+ &&$has('resolver','zen_noneditor_optional_consumer_header_is_not_loaded'));
+$check('b012_cell_and_export_provider_modes_remain_distinct',
+ $has('resolver','zen_editor_cell_import_searches_optional_provider_cell_exports')
+ &&$has('resolver','zen_noneditor_cell_import_does_not_search_optional_provider_cell_exports')
+ &&$has('source','b012_optional_imports_not_flattened_into_main')
+ &&$has('source','b012_resolver_checks_optional_import_bundle_identity'));
+$check('b012_v5_optional_segment_header_validation',
+ $has('v5','malformed_optional_segment_versioning_rejected')
+ &&$has('v5','missing_persisted_cell_offsets_rejected'));
+echo json_encode([
+ 'ok'=>$fail===[],'operation'=>'UE5-583-OPTIONAL-EXPORT-SEGMENT-001',
+ 'checks'=>$checks,'drivers'=>$drivers,'failures'=>$fail,
+ 'source_derived_no_editor_executable'=>true,
+ 'metadata_only_no_runtime_state_inferred'=>true
+],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;
+exit($fail===[]?0:1);

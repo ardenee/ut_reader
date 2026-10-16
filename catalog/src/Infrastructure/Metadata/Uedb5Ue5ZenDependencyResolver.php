@@ -401,6 +401,20 @@ final class Uedb5Ue5ZenDependencyResolver
                 $extra
             );
         }
+        // Epic UE5.8.3 FAsyncPackage2::GetPublicExportIndex scans the
+        // ordinary ExportMap first and returns immediately on a hit; only
+        // if none exists does it search OptionalSegmentHeaderData->ExportMap
+        // (WITH_EDITOR). The same hash in main+optional is NOT an ambiguous
+        // ordinary export. Preserve separate duplicate detection *within*
+        // a source map; do not extrapolate this precedence to cell exports.
+        if (!$cellTarget && count($matches) > 1) {
+            $mainMatches = array_values(array_filter($matches,
+                static fn(array $candidate): bool => ($candidate['segment'] ?? 'main') === 'main'
+            ));
+            if ($mainMatches !== []) {
+                $matches = $mainMatches;
+            }
+        }
         if (count($matches) > 1) {
             $candidateIndices = array_values(array_map(
                 static fn(array $candidate): int => (int)$candidate['index'],

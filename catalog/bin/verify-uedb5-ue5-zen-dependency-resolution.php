@@ -677,14 +677,25 @@ $mainOptionalCollision = $resolve(
 );
 $collisionRow = $find($mainOptionalCollision, 'imports', 0);
 $check(
-    $collisionRow['outcome'] === 'unresolved'
-        && $collisionRow['reason_code'] === 'public_export_hash_runtime_collision_ambiguous'
-        && ($collisionRow['candidate_provider_exports'] ?? null) === [
-            ['segment'=>'main','index'=>0],
-            ['segment'=>'optional','index'=>0],
-        ],
-    'zen_main_optional_duplicate_public_hash_is_runtime_collision_ambiguous'
+    $collisionRow['outcome'] === 'resolved'
+        && ($collisionRow['selected_provider_object']['export_index'] ?? null) === 0
+        && ($collisionRow['selected_provider_object']['object_name']['text'] ?? null) !== 'OptionalCollision',
+    'b012_epic_main_public_export_precedes_matching_optional_hash'
 );
+foreach (['non_editor'=>false,'build_unknown'=>null] as $case=>$withEditor) {
+    $collisionOptions = $withEditor === null ? [] : ['is_editor'=>$withEditor];
+    $resolvedCollision = $resolve(
+        $consumer,
+        [['provider_id'=>100,'snapshot'=>$mainAndOptionalDuplicate]],
+        $collisionOptions
+    );
+    $collisionCandidate = $find($resolvedCollision,'imports',0);
+    $check(
+        $collisionCandidate['outcome']==='resolved'
+            && ($collisionCandidate['selected_provider_object']['export_index']??null)===0,
+        'b012_main_export_precedence_'.$case
+    );
+}
 
 $duplicateRejected = false;
 try {

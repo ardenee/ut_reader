@@ -56,6 +56,7 @@ $nullObject = str_repeat("\xFF", 8);
 
 $packageId = '0123456789ABCDEF';
 $providerId = 'FEDCBA9876543210';
+$optionalProviderId = '0011223344556677';
 $importedHash = '1122334455667788';
 
 $versioning = pack('V', 3)
@@ -435,7 +436,7 @@ $globalLocalizedSourceId = 'DEAD00000000BEEF';
 $globalRedirectSourceId = 'AAAA000000001111';
 $globalRedirectTargetId = 'BBBB000000002222';
 $storeEntries = pack('V2', 1, 16) . pack('V2', 0, 0) . $u64le($providerId);
-$optionalStoreEntries = pack('V2', 1, 16) . pack('V2', 0, 0) . $u64le($providerId);
+$optionalStoreEntries = pack('V2', 1, 16) . pack('V2', 0, 0) . $u64le($optionalProviderId);
 $containerHeader = pack('V2', Uedb5IoStoreContainerHeaderReader::SIGNATURE, 5)
     . $u64le($containerId)
     . $arrayU64([$packageId])
@@ -546,9 +547,40 @@ try {
     $check($snapshot['file']['package_name'] === '/Game/TestPackage', 'zen_snapshot_package_name');
     $check($snapshot['sections']['container_provenance'][0]['utoc_sha256'] === hash('sha256', $utoc), 'zen_snapshot_utoc_provenance_hash');
     $check($snapshot['sections']['package_store'][0]['imported_package_ids'] === [$providerId], 'zen_snapshot_store_entry_preserved');
-    $check(!empty($snapshot['sections']['package_store'][0]['has_optional_segment']) && $snapshot['sections']['package_store'][0]['optional_segment_imported_package_ids'] === [$providerId], 'zen_snapshot_optional_store_entry_augments_main_package');
+    $check(!empty($snapshot['sections']['package_store'][0]['has_optional_segment']) && $snapshot['sections']['package_store'][0]['optional_segment_imported_package_ids'] === [$optionalProviderId], 'zen_snapshot_optional_store_entry_augments_main_package');
     $check(($snapshot['sections']['container_provenance'][0]['optional_segment_chunk_toc_index'] ?? null) === 2, 'zen_snapshot_optional_chunk_provenance_preserved');
+    // B012: the optional store entry and its index-1 ExportBundleData
+    // chunk are a coupled Epic source contract. A declared optional
+    // segment without that chunk cannot silently become main-only data.
+    $withoutOptionalChunk = substr_replace(
+        $utoc, pack('n', 3),
+        Uedb5IoStoreTocReader::TOC_HEADER_SIZE + 2 * 12 + 8, 2
+    );
+    $missingOptionalRejected = false;
+    try {
+        file_put_contents($base . '.utoc', $withoutOptionalChunk);
+        $missingOptionalToc = new Uedb5IoStoreTocReader($base . '.utoc');
+        Uedb5Ue5ZenIoStoreSnapshotBuilder::build(
+            $missingOptionalToc,$packageId,[
+                'id'=>7,'game_id'=>7,
+                'package_name'=>'','original_name'=>'fixture.utoc',
+            ]
+        );
+    } catch (RuntimeException $exception) {
+        $missingOptionalRejected = str_contains($exception->getMessage(),
+            'optional segment but chunk index 1 is absent');
+    } finally {
+        file_put_contents($base . '.utoc', $utoc);
+    }
+    $check($missingOptionalRejected, 'b012_missing_declared_optional_chunk_rejected');
     $check(count($snapshot['sections']['optional_segment']) === 1 && ($snapshot['sections']['optional_segment'][0]['imports'][0]['dependency_class'] ?? null) === 'optional', 'zen_snapshot_optional_header_preserved_separately');
+    $check(
+        ($snapshot['sections']['optional_segment'][0]['imported_package_ids'][0]['package_id'] ?? null) === $optionalProviderId
+        && ($snapshot['sections']['imported_package_ids'][0]['package_id'] ?? null) === $providerId
+        && ($snapshot['sections']['optional_segment'][0]['imports'][0]['provider_package_id'] ?? null) === $optionalProviderId
+        && ($snapshot['sections']['imports'][0]['provider_package_id'] ?? null) === $providerId,
+        'b012_optional_and_main_independently_map_provider_package_ids'
+    );
     $check($snapshot['sections']['imports'][0]['dependency_class'] === 'hard', 'zen_snapshot_hard_import_classified');
     $check($snapshot['sections']['cell_imports'][0]['dependency_class'] === 'script', 'zen_snapshot_script_cell_import_classified');
     $check($snapshot['sections']['dependency_bundle_entries'][0]['dependency_class'] === 'load_order', 'zen_snapshot_load_order_classified');
