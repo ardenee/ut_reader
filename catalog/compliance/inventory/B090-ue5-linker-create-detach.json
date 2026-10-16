@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "batch": "B090",
+  "source": {
+    "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+    "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9"
+  },
+  "classification": "bounded source-body review",
+  "status": "partial",
+  "reviewed": [
+    {
+      "symbol": "FAsyncPackage2::CreateLinker",
+      "line": 7495,
+      "disposition": "file-format-relevant",
+      "reason": "Creates/reuses classic FLinkerLoad with async flags, editor PIE/load flags and instancing context; distinct from cooked Zen header path.",
+      "verified": false
+    },
+    {
+      "symbol": "FAsyncPackage2::DetachLinker",
+      "line": 7533,
+      "disposition": "runtime-only",
+      "reason": "Clears LinkerLoad ImportMap runtime object/source linker references and removes async owner association; does not rewrite serialized import map.",
+      "verified": false
+    }
+  ],
+  "evidence_limitations": [
+    "Detailed classic LinkerLoad loader path not certified",
+    "Do not conflate classic redirect-nulled class with Zen null-class default"
+  ],
+  "next_batch": "B091"
+}
