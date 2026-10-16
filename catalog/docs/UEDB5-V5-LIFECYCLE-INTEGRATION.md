@@ -356,3 +356,14 @@ Isolated `verify-iostore-durable-worker-standalone.php` now registers all three 
 - PRD checkout at `5ac0d8f0` contains numerous unrelated local modifications/untracked files; do not reset or bulk-overlay it. Only the PRD Desktop Commander device was accessible during this continuation.
 
 - GitHub `55e5e581` and `e692c3a3`: import and restore follow-up enqueue use deterministic container-scoped dedupe keys to prevent concurrent/retried parent jobs from creating duplicate active name-index/publication workers. The queue deduplication implementation was inspected; an actual retry/concurrency test is still outstanding.
+
+
+### 2026-10-16 isolated PRD-host regression checkpoint
+
+- Source was checked out independently to `C:\\Temp\\uedb5-iostore-review-20261016`; production application checkout remained unchanged. Standalone MySQL verified itself as `127.0.0.1:3339` with `C:\\Temp\\uedb5-isolated-mysql\\data\\` (never the live instance).
+- PHP 8.5 lint passed for `CatalogIoStoreBackupJobHandler.php`, `CatalogIoStoreImportJobHandler.php`, `CatalogIoStoreContainerBackupService.php` and the amended backup-job test.
+- `verify-iostore-backup-jobs-standalone.php`: PASS, real durable backup and restore jobs; restored container returned both durable follow-up job IDs.
+- `verify-iostore-backup-corruption-standalone.php`: PASS, one-byte UCAS tamper rejected without creating a new destination container.
+- `verify-iostore-durable-worker-standalone.php`: PASS after updating expected active follow-ups from four to two (same-container import replay dedupe), with IDs shared between the two import results.
+- `verify-iostore-main-backup-restore-standalone.php`: PASS, retained/restored 27,240 indexed package members and verified complete TOC/UCAS pair. This test observes an existing indexed destination; it does **not** publish 27,240 member V5 metadata rows.
+- **Not yet certified:** full multi-member name indexing, V5 publication and authoritative Zen mounted-store dependency rebuild; backup-manifest adversarial tests for duplicate/missing parts; concurrent worker/retry edge cases. Do not deploy or mark full IoStore production lifecycle complete on these bounded results alone.
