@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "batch": "B070",
+  "source": {
+    "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+    "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9"
+  },
+  "classification": "bounded source-body review",
+  "status": "partial",
+  "reviewed": [
+    {
+      "symbol": "FAsyncPackage2::GetPublicExportIndex",
+      "line": 8930,
+      "disposition": "file-format-relevant",
+      "reason": "Searches main ordinary export map by exact PublicExportHash; editor builds additionally search optional-segment ordinary exports and offset the returned local index.",
+      "verified": false
+    },
+    {
+      "symbol": "FAsyncPackage2::GetPublicCellExportIndexAsLocalIndex",
+      "line": 9056,
+      "disposition": "file-format-relevant",
+      "reason": "Searches main CellExportMap by exact PublicExportHash and returns cell index offset by ordinary ExportMap count; lacks analogous optional-segment lookup here.",
+      "verified": false
+    }
+  ],
+  "evidence_limitations": [
+    "Full caller context and package-store mount arbitration not certified",
+    "Offline provider collision ambiguity is a separate conservative policy requiring verification"
+  ],
+  "next_batch": "B071"
+}
