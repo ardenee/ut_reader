@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "batch": "B050",
+  "status": "blocked",
+  "finding": "Compact dependency SQL schema stores canonical outcome but has no reason_code column; distinct unresolved Zen filter outcomes collapse in SQL projection. Full V5 dependency metadata retains reason_code and parity read facade surfaces it.",
+  "evidence": {
+    "publisher_test": "catalog/bin/verify-uedb5-dependency-projection-publisher.php",
+    "result": "passed using isolated in-memory SQLite",
+    "compact_read": "catalog/src/Infrastructure/Metadata/CatalogCompactDependencyReadService.php",
+    "projection": "catalog/src/Infrastructure/Metadata/PdoUedb5DependencyProjectionPublisher.php"
+  },
+  "impact": "Do not claim SQL-only reason-code roundtrip. Preserve V5 full metadata as authoritative for reason-detail until product contract and schema change are evaluated.",
+  "certified": false,
+  "next_batch": "B051"
+}
