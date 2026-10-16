@@ -263,6 +263,65 @@ try {
         'soft_package_reference_serial_info_parsed'
     );
 
+    // UE5.8.3 IoContainerHeader.cpp checks only Version < NoExportInfo
+    // on loading. Versions >= SoftPackageReferencesOffset share its layout.
+    $futureVersion = substr_replace($containerHeader, pack('V', 6), 4, 4);
+    try {
+        $futureParsed = Uedb5IoStoreContainerHeaderReader::parse($futureVersion);
+        $check($futureParsed['version'] === 6
+            && $futureParsed['package_ids'] === [$p1, $p2],
+            'container_header_future_version_uses_ue5_source_layout');
+    } catch (RuntimeException) {
+        $check(false, 'container_header_future_version_uses_ue5_source_layout');
+    }
+    $oldVersionRejected = false;
+    try {
+        Uedb5IoStoreContainerHeaderReader::parse(
+            substr_replace($containerHeader, pack('V', 2), 4, 4)
+        );
+    } catch (RuntimeException) { $oldVersionRejected = true; }
+    $check($oldVersionRejected, 'container_header_version_below_epic_minimum_rejected');
+
+    // The stored offset is serialized but not consulted by Epic's loading
+    // branch: the loader skips Size bytes from the current position.
+    $unmatchedOffset = substr_replace(
+        $containerHeader, pack('V2', $softOffset + 17, 0), $softOffset - 16, 8
+    );
+    try {
+        $offsetParsed = Uedb5IoStoreContainerHeaderReader::parse($unmatchedOffset);
+        $check(($offsetParsed['soft_package_references']['serial_info']['offset'] ?? null)
+            === $softOffset + 17
+            && ($offsetParsed['soft_package_references']['package_references'][0][0]['package_id'] ?? null) === $p2,
+            'container_header_serialized_offset_does_not_override_stream_position');
+    } catch (RuntimeException) {
+        $check(false, 'container_header_serialized_offset_does_not_override_stream_position');
+    }
+
+    // FIoContainerHeaderSerialInfo initializes Size to -1; Epic's loader
+    // does not skip or error when Size <= 0.
+    $noSoftPayload = substr($containerHeader, 0, $softOffset);
+    $noSoftPayload = substr_replace(
+        $noSoftPayload, str_repeat("\xff", 8), $softOffset - 8, 8
+    );
+    try {
+        $emptyParsed = Uedb5IoStoreContainerHeaderReader::parse($noSoftPayload);
+        $check(
+            ($emptyParsed['soft_package_references']['serial_info']['size'] ?? null) === -1
+            && ($emptyParsed['soft_package_references']['contains_soft_package_references'] ?? null) === false,
+            'container_header_default_negative_serial_size_accepted');
+    } catch (RuntimeException) {
+        $check(false, 'container_header_default_negative_serial_size_accepted');
+    }
+
+    // Epic does not assert that the container-header archive is at EOF.
+    try {
+        $extended = Uedb5IoStoreContainerHeaderReader::parse($containerHeader."EXT");
+        $check($extended['package_ids'] === [$p1, $p2],
+            'container_header_unconsumed_extension_bytes_are_not_rejected');
+    } catch (RuntimeException) {
+        $check(false, 'container_header_unconsumed_extension_bytes_are_not_rejected');
+    }
+
     $localizedMappedNameBytes = $mappedName(1);
     $localizedMappedNameOffset = strpos($containerHeader, $localizedMappedNameBytes);
     if ($localizedMappedNameOffset === false) {

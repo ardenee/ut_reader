@@ -26,7 +26,10 @@ final class Uedb5IoStoreContainerHeaderReader
             throw new RuntimeException('IoStore container header signature mismatch.');
         }
         $version = $reader->u32le();
-        if ($version < self::VERSION_NO_EXPORT_INFO || $version > self::VERSION_LATEST) {
+        // Epic UE5.8.3 IoContainerHeader.cpp rejects only versions below
+        // NoExportInfo. Later versions use the >= SoftPackageReferencesOffset
+        // branch without a Latest upper-bound gate on loading.
+        if ($version < self::VERSION_NO_EXPORT_INFO) {
             throw new RuntimeException('Unsupported IoStore container header version: ' . $version);
         }
 
@@ -72,10 +75,11 @@ final class Uedb5IoStoreContainerHeaderReader
         } elseif ($version >= self::VERSION_SOFT_PACKAGE_REFERENCES_OFFSET) {
             $serialOffset = $reader->i64le();
             $serialSize = $reader->i64le();
-            if ($serialSize < 0 || $serialSize > $reader->remaining()) {
+            // Epic skips Size bytes only when Size > 0. Negative defaults
+            // (FIoContainerHeaderSerialInfo::Size = -1) are not load errors.
+            if ($serialSize > $reader->remaining()) {
                 throw new RuntimeException('IoStore soft-reference serial size is outside the container header.');
             }
-            $payloadStart = $reader->tell();
             if ($serialSize > 0) {
                 $softReader = new Uedb5BinaryReader(
                     $reader->read($serialSize),
@@ -92,15 +96,9 @@ final class Uedb5IoStoreContainerHeaderReader
             } else {
                 $softReferences['serial_info'] = ['offset' => $serialOffset, 'size' => $serialSize];
             }
-            if ($serialOffset >= 0 && $serialSize > 0 && $serialOffset !== $payloadStart) {
-                throw new RuntimeException('IoStore soft-reference serial offset does not point at its payload.');
-            }
-        }
-
-        if ($reader->remaining() !== 0) {
-            throw new RuntimeException(
-                'IoStore container header has ' . $reader->remaining() . ' unexpected trailing bytes.'
-            );
+            // Epic reads the offset for provenance but does not compare it
+            // with the stream position during load. It also does not require
+            // consuming the complete archive after reading this structure.
         }
 
         $storeEntries = self::parseStoreEntries($storeBytes, $packageIds, false);
