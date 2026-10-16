@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "batch": "B089",
+  "source": {
+    "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+    "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9"
+  },
+  "classification": "bounded source-body review",
+  "status": "partial",
+  "reviewed": [
+    {
+      "symbol": "FAsyncPackage2::Event_PreloadExports",
+      "line": 8332,
+      "disposition": "file-format-relevant",
+      "reason": "Checks preload state and branches to LinkerLoad or runtime export preload, with timeout semantics and loading-phase transitions.",
+      "verified": false
+    }
+  ],
+  "evidence_limitations": [
+    "Detailed runtime branch handlers require separate parity review"
+  ],
+  "next_batch": "B090"
+}
