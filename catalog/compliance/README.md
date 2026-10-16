@@ -9,7 +9,7 @@
 [RECOVERY.md](RECOVERY.md) describes the executable recovery and original-operation
 closure order. [RECOVERY.json](RECOVERY.json) is the **machine-checked**
 reconciliation of seven supported games, all 18 existing source obligations,
-D001-D009 differences, lifecycle routes and known gaps.
+D001-D011 differences, lifecycle routes and known gaps.
 
 Run `catalog/bin/verify-compliance-recovery.php` and its negative regression
 before source acceptance. `verify-source-compliance.php --all` now checks

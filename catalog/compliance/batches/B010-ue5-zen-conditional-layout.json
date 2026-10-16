@@ -21,13 +21,23 @@
       },
       "implementation": {
         "path": "catalog/src/Infrastructure/Metadata/Uedb5ZenPackageReader.php",
-        "sha256": "742376ce307651b5ccb0fc0ec54707877e21e6bbfa8873ab84605a73d0041d31"
+        "sha256": "22f83309b2c09582001002605fac6b86118aa5c5309b55983ab0b3c663da4bab"
       },
       "tests": [
-        "catalog/bin/verify-uedb5-ue5-zen-dependency-resolution.php"
+        "catalog/bin/verify-uedb5-ue5-zen-package.php",
+        "catalog/bin/verify-uedb5-satisfactory-header-readonly-isolated.php"
       ],
+      "additional_sources": [
+        {
+          "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/ZenPackageHeader.cpp",
+          "sha256": "954117a45b9a802d3f289b30f2a0e191a7bb82cdcb107a22fef134a73172995b",
+          "symbols": ["FZenPackageHeader::MakeView", "VERSE_CELLS", "DATA_RESOURCES", "BulkDataPad"],
+          "lines": [37, 65]
+        }
+      ],
+      "related_differences": ["UE5-D011"],
       "disposition": "partial",
-      "reason": "UnrealDB conditionally reads cell offsets and bulk data maps; verify gates and the no-versioning path against Epic layout headers and real fixtures."
+      "reason": "D011 corrected the extra nonzero BulkDataPad-content rejection absent from Epic MakeView. Source-gated boundary fixtures 1008/1009/1014/1015 and no-versioning, plus real Satisfactory unversioned snapshots, pass. Complete malformed-header behavior, other consumers and independently cooked threshold fixtures remain open; NOT accepted."
     }
   ],
   "next_batch": "B011",

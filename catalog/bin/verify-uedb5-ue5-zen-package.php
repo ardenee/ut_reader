@@ -246,6 +246,17 @@ try {
 } catch (RuntimeException) {}
 $check($nonzeroBulkPadAccepted,
     'b010_epic_bulk_pad_does_not_require_zero_bytes');
+// Source writes to an eight-byte scratch array. Keep defensive rejection
+// when the declared read length would overrun the scratch/alignment bound.
+$unsafePadRejected = false;
+try {
+    $oversizePad = substr_replace($packageBytes, $u64le('0000000000000009'),
+        $prefixBeforePad - 8, 8);
+    Uedb5ZenPackageReader::parse($oversizePad, $packageId, $storeEntry);
+} catch (RuntimeException) {
+    $unsafePadRejected = true;
+}
+$check($unsafePadRejected, 'b010_unsafe_bulk_pad_count_stays_rejected');
 
 // B009/B010: exact Epic 5.8.3 branch boundaries and no-versioning case.
 // Rebuild structurally valid variants: old versions omit both tables,

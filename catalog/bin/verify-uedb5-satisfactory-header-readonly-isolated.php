@@ -84,8 +84,14 @@ foreach($published as $row){
    &&($dependency['outcome']??'')==='unresolved'
    &&($dependency['reason_code']??'')==='package_identity_runtime_context_required';
  }
+ $summary=(array)(($snapshot['sections']['package_summary']??[])[0]??[]);
+ $version=(array)($summary['versioning_info']??[]);
+ $cells=(array)($summary['cell_offsets']??[]);
  $dependencySamples[]=[
   'file_id'=>(int)$row['file_id'],
+  'ue5_package_version'=>$version['package_version']['ue5']??null,
+  'serialized_cell_offsets'=>$cells['serialized']??null,
+  'bulk_data_rows'=>count((array)($snapshot['sections']['bulk_data_map']??[])),
   'total_dependency_rows'=>count($dependencyRows),
   'package_import_rows'=>count($packageRows),
   'unknown_runtime_context_did_not_guess'=>$allConservative,

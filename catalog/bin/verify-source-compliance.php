@@ -48,6 +48,40 @@ foreach($files as $file){
                 $failures[]=$id.': Epic source missing or changed';
             }
         }
+        // A parser's behavioral gate may live in a different Epic source
+        // file than the version-structure serializer. Verify every pinned
+        // additional source anchor, not just the first/source-symbol presence.
+        foreach ((array)($record['additional_sources']??[]) as $additional) {
+            if (!is_array($additional)
+                || empty($additional['path'])
+                || empty($additional['sha256'])
+                || empty($additional['symbols'])) {
+                $failures[]=$id.': additional source evidence incomplete';
+                continue;
+            }
+            if ($sourceRoot==='') { continue; }
+            $additionalPath=rtrim($sourceRoot,'/').'/'
+                .str_replace(chr(92),'/',(string)$additional['path']);
+            $additionalHash=is_file($additionalPath)
+                ? hash_file('sha256',$additionalPath) : false;
+            $sourceChecks++;
+            if($additionalHash===false
+                ||!hash_equals(strtolower((string)$additional['sha256']),
+                    strtolower((string)$additionalHash))){
+                $failures[]=$id.': additional Epic source missing or changed: '
+                    .$additional['path'];
+            }
+            if(is_file($additionalPath)){
+                $additionalText=(string)file_get_contents($additionalPath);
+                foreach($additional['symbols'] as $symbol){
+                    $inventoryChecks++;
+                    if(!is_string($symbol)||$symbol===''
+                        ||strpos($additionalText,$symbol)===false){
+                        $failures[]=$id.': additional Epic symbol absent: '.(string)$symbol;
+                    }
+                }
+            }
+        }
         $implPath=$root.'/'.str_replace('\\','/',$impl['path']);
         $hash=is_file($implPath)?hash_file('sha256',$implPath):false;
         if($hash===false||!hash_equals(strtolower((string)$impl['sha256']),strtolower($hash))){

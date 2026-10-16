@@ -264,6 +264,22 @@
       "rationale": "Originally documented B005 downstream status-propagation gate rediscovered and fixed after unrelated work; record as reopened known work, not proof of audit completion.",
       "state": "evidence_partial",
       "audit_escape": "rediscovered_preexisting_open_gate"
+    },
+    {
+      "id": "UE5-D010",
+      "kind": "mapped",
+      "operations": ["UE5-583-ZEN-VERSIONING-001"],
+      "rationale": "B009 Epic MakeView treats the serialized bHasVersioningInfo uint32 as boolean; UnrealDB erroneously rejected nonzero values other than 1. Source-backed fix and negative-before/positive-after synthetic tests; original operation still partial.",
+      "state": "evidence_partial",
+      "audit_escape": "none"
+    },
+    {
+      "id": "UE5-D011",
+      "kind": "mapped",
+      "operations": ["UE5-583-ZEN-CONDITIONAL-LAYOUT-001"],
+      "rationale": "B010 Epic MakeView consumes BulkDataPad bytes without requiring zero contents; UnrealDB imposed an unsupported zero-content rejection. Branch-threshold fixtures and bounded real no-versioning sample pass; original operation still partial.",
+      "state": "evidence_partial",
+      "audit_escape": "none"
     }
   ],
   "coverage_gaps": [

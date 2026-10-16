@@ -17,8 +17,9 @@ second competing audit system is introduced.
   list of supported format readers.
 * UE5 formal batch manifests: 15 containing 18 operations, all partial.
   Existing formal verifier: 33 open gates; no formal operation fully verified.
-* D001-D009: all nine linked to an original operation or explicitly
-  classified as cross-cutting, a process control, or uncovered Epic behavior.
+* D001-D011: eleven known differences linked to original operations or
+  explicitly categorized as cross-cutting or previously uncovered behavior.
+  D010/D011 fix two decoder gates under B009/B010, not the complete audit.
   A correction is not proof that its parent operation is complete.
 * D007 IoContainerHeader.cpp behavior is genuinely **unregistered** by the
   existing formal manifests. Add its source-backed obligation in the
@@ -109,12 +110,14 @@ operation, orphaned difference, invalid parent, missing game, false
 compliance claim, missing workflow route, duplicate operation, lost
 reciprocal link, and strict denial.
 
-**Next implementation target:** finish original
-`UE5-583-ZEN-VERSIONING-001` and
-`UE5-583-ZEN-CONDITIONAL-LAYOUT-001` using pinned UE5.8.3
-serializer call paths and retained bounded real file fixtures. Close or
-explicitly block their original evidence gates before branching into
-another discovered problem. Then proceed through the existing queue.
+**Current implementation checkpoint:** original B009 and B010 now have
+source-pinned D010/D011 corrections, two failing-before/passing-after
+regressions, five version-threshold/no-versioning byte fixtures, and two
+real retained Satisfactory no-versioning examples. Their formal dispositions
+remain partial. Next: finish independent real versioned-header differential,
+custom-version and corrupted-input branch review, and applicable V5 caller
+acceptance before closing B009/B010 or advancing to B004. No additional B
+checkpoint was created.
 
 No full-file backfill, production database write, destructive checkout,
 or blanket source scan is authorized by this baseline.
