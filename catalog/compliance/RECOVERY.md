@@ -15,13 +15,13 @@ second competing audit system is introduced.
   reconciled. UE4.27.2 classic and UE5.8.3 classic/IoStore format targets
   are listed separately because the seven-game registry is not a complete
   list of supported format readers.
-* UE5 formal batch manifests: **15 containing 18 operations; 9 verified (B004, B005, B006, B007, B008, B009, B010, B011, B012), 9 partial**.
+* UE5 formal batch manifests: **15 containing 18 operations; 10 verified (B004, B005, B006, B007, B008, B009, B010, B011, B012, B016), 8 partial**.
   Baseline was 33 formal open evidence gates. B005 now has exhaustive scoped
   source/inventory/implementation acceptance, including the pinned hybrid
   editor branch model, real V5 selector/rebuilder and isolated temporary MySQL.
   B004, B009 and B010 now have complete source-defined, operation-level
-  executable acceptance. **15 original evidence gates remain open.** Full application/engine compliance remains unverified.
-* D001-D020: twenty known differences linked to original operations or
+  executable acceptance. **13 original evidence gates remain open.** Full application/engine compliance remains unverified.
+* D001-D022: twenty-two known differences linked to original operations or
   explicitly categorized as cross-cutting or previously uncovered behavior.
   D010/D011 are now marked fixed and regression-verified. Original B009 and
   B010 now pass source-contract, implementation, caller, downstream V5 and
@@ -61,7 +61,7 @@ second competing audit system is introduced.
 | 7 | UE5-583-FILE-STORE-001 | **VERIFIED**: pinned Epic source order/sequence, file-entry selection, NAME_None redirect/localization refill (D016), backend/physical consumers; no runtime session fabricated |
 | 8 | UE5-583-IMPORT-REDIRECT-001 | **VERIFIED**: CoreRedirect/instancing/loose localization ordering, explicit global store authority D017, explicit identity result D018, editor/runtime ambiguity, PDO/SQL consumer acceptance |
 | 9 | UE5-583-PUBLIC-EXPORT-001 | **VERIFIED**: exact valid package/hash keys D019, header-first candidate vs mutable live store D020, collision kept unresolved, V5/SQL/consumer acceptance |
-| 10 | UE5-583-B016-1 | Public cell exports separate from ordinary public exports |
+| 10 | UE5-583-B016-1 | **VERIFIED**: pinned Epic main-only cell lookup and combined indices, separate live Verse registry, four negative-before fixtures, compressed V5/SQL and two direct production callers. |
 | 11 | UE5-583-B015-2 | Recursive imported-package scheduling and optional-context behavior |
 | 12 | UE5-583-SCRIPT-001 | Cooked ScriptObjects chunk and diagnostics |
 | 13 | UE5-583-SCRIPT-002 | Global ScriptObjects name-map evidence |

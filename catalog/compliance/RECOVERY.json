@@ -352,6 +352,26 @@
       "rationale": "Epic's header GetPublicExportIndex scans main exports first, stops on the earliest matching index and tests optional only under WITH_EDITOR. But live FGlobalImportStore StorePublicExport may replace an object under the same hash. UnrealDB previously suppressed source-header first-candidate provenance when collision rows remained unresolved. First-candidate evidence is now recorded with runtime_lookup_authoritative=false; a negative-before regression and temporary real UEDB5 round-trip confirm that the live winner is never fabricated.",
       "state": "fixed_regression_verified",
       "audit_escape": "none"
+    },
+    {
+        "id": "UE5-D021",
+        "kind": "mapped",
+        "operations": [
+            "UE5-583-B016-1"
+        ],
+        "rationale": "B016 optional cell-only header metadata falsely resolved without Epic live Verse registration. 4e4eaf9e before/after reproduced; operation oracle and V5 consumers pass.",
+        "state": "fixed_regression_verified",
+        "audit_escape": "none"
+    },
+    {
+        "id": "UE5-D022",
+        "kind": "mapped",
+        "operations": [
+            "UE5-583-B016-1"
+        ],
+        "rationale": "B016 combined cell import/export offsets and first main-header candidate collision provenance were missing; three independent 4e4eaf9e regressions pass after correction.",
+        "state": "fixed_regression_verified",
+        "audit_escape": "none"
     }
   ],
   "coverage_gaps": [

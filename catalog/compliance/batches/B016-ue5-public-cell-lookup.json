@@ -1,40 +1,157 @@
 {
-  "schema": 1,
-  "batch": "B016",
-  "engine": "UE5",
-  "profile": "UE5.8.3",
-  "status": "partial",
-  "inventory_a": "Independent B014 seeded source discovery",
-  "inventory_b": "Targeted UE5 loader structure trace pending",
-  "complete_inventory": false,
-  "operations": [
-    {
-      "id": "UE5-583-B016-1",
-      "summary": "Public cell export lookup distinct from ordinary public UObject export lookup",
-      "source": {
-        "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
-        "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9",
-        "symbols": [
-          "FindPublicExportCell"
-        ]
-      },
-      "implementation": {
-        "path": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenDependencyResolver.php",
-        "sha256": "0456c0f879e8d70af406634c76cd18437242de1f4b427d31d263df110a52e35e"
-      },
-      "tests": [
-        "catalog/bin/verify-uedb5-ue5-zen-dependency-resolution.php"
-      ],
-      "disposition": "partial",
-      "reason": "Newly discovered during independent inventory reconciliation. Exact branching, operational applicability and parity tests not yet proven."
+    "schema": 1,
+    "batch": "B016",
+    "engine": "UE5",
+    "profile": "UE5.8.3",
+    "status": "verified",
+    "inventory_a": "Independent B014 seeded source discovery",
+    "inventory_b": "Independent source-defined branch trace plus full direct production caller inventory",
+    "complete_inventory": true,
+    "operations": [
+        {
+            "id": "UE5-583-B016-1",
+            "summary": "Public cell export lookup distinct from ordinary public UObject export lookup",
+            "source": {
+                "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+                "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9",
+                "symbols": [
+                    "FindPublicExportCell"
+                ]
+            },
+            "implementation": {
+                "path": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenDependencyResolver.php",
+                "sha256": "40fb76d32e35cff21317d030e4117b9c15d02fcc77a2753a776107beebdb8ce7"
+            },
+            "tests": [
+                "catalog/bin/verify-uedb5-b016-public-cell-source.php",
+                "catalog/bin/verify-uedb5-b016-historical-regression.php",
+                "catalog/bin/verify-uedb5-ue5-zen-dependency-resolution.php",
+                "catalog/bin/verify-uedb5-b016-v5-roundtrip.php",
+                "catalog/bin/verify-uedb5-b016-operation-acceptance.php",
+                "catalog/bin/verify-uedb5-b012-operation-acceptance.php",
+                "catalog/bin/verify-uedb5-b007-operation-acceptance.php",
+                "catalog/bin/verify-uedb5-b008-operation-acceptance.php",
+                "catalog/bin/verify-uedb5-dependency-rebuilder.php",
+                "catalog/bin/verify-uedb5-dependency-sql-isolated.php",
+                "catalog/bin/verify-uedb5-zen-compact-reason-db.php"
+            ],
+            "disposition": "verified",
+            "reason": "Pinned UE5.8.3 main-cell lookup, combined indices, distinct live Verse cell registry, collision provenance and explicit optional-runtime evidence; negative-before regression and V5/SQL consumer checks complete. No live Verse VM inference.",
+            "related_differences": [
+                "UE5-D021",
+                "UE5-D022"
+            ],
+            "correction_commits": [
+                "a1a0e9147d69f9be63f5dd8a1486c1b162f5d189"
+            ],
+            "source_contract_evidence": {
+                "test_driver": "catalog/bin/verify-uedb5-b016-public-cell-source.php",
+                "expected_checks": [
+                    "b016_epic_async_loading_hash_pinned",
+                    "b016_header_search_main_cell_map_only",
+                    "b016_cell_local_export_offsets_ordinary_exports",
+                    "b016_cell_header_first_match_then_not_found",
+                    "b016_cell_import_offsets_ordinary_imports",
+                    "b016_cell_fallback_uses_separate_cell_index",
+                    "b016_cell_serialize_import_uses_combined_index",
+                    "b016_cell_serialize_uses_cell_export_path",
+                    "b016_verse_registry_uses_package_id_and_hash",
+                    "b016_verse_registry_updates_same_hash",
+                    "b016_cell_import_uses_public_export_key",
+                    "b016_verse_registry_separate_from_uobject_registry",
+                    "b016_cell_store_requires_importable_package_and_hash",
+                    "b016_cell_creation_verse_vm_build_guarded",
+                    "b016_unrealdb_separate_cell_export_hash_map",
+                    "b016_optional_cell_registration_not_assumed",
+                    "b016_cell_first_header_candidate_explicitly_not_live",
+                    "b016_unrealdb_combined_cell_index_provenance",
+                    "b016_exact_two_direct_production_consumers"
+                ],
+                "source_branches": [
+                    "Main cell export map only; first match plus ordinary export offset, -1 when absent.",
+                    "Cell import/serialize subtract ordinary import count from combined index.",
+                    "Separate Verse cell registry uses exact package ID + hash; overwritten hash is runtime-dependent.",
+                    "EventDrivenCreateCellExport requires importable package, nonzero hash and Verse compile guard.",
+                    "Optional cell export metadata is insufficient to establish live registration."
+                ]
+            },
+            "source_reachability_evidence": {
+                "test_driver": "catalog/bin/verify-uedb5-b016-public-cell-source.php",
+                "expected_checks": [
+                    "b016_exact_two_direct_production_consumers",
+                    "b016_cell_import_uses_public_export_key",
+                    "b016_verse_registry_separate_from_uobject_registry",
+                    "b016_optional_cell_registration_not_assumed"
+                ],
+                "source_inventory_record": "catalog/compliance/B016-PUBLIC-CELL-SOURCE.md",
+                "production_file_count": 559,
+                "direct_consumer_count": 2
+            },
+            "guarded_implementation_files": [
+                {
+                    "path": "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php",
+                    "sha256": "c39b1ee0fd4f91b356ee3b70a2ea9577483418c3f1e68f0048909f93222f723a"
+                },
+                {
+                    "path": "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php",
+                    "sha256": "cfd10f008b6651db60f3f3037bd0b391fd5a4bbd0add0b3844fff4e6314cb874"
+                }
+            ],
+            "independent_inventory_evidence": {
+                "source_review": "catalog/compliance/B016-PUBLIC-CELL-SOURCE.md",
+                "scope_boundary": "Offline source-defined resolution only; neither live Verse VM nor editor mount state inferred.",
+                "independent_source_oracle": "catalog/bin/verify-uedb5-b016-public-cell-source.php",
+                "historical_before_after": "catalog/bin/verify-uedb5-b016-historical-regression.php",
+                "real_v5_roundtrip": "catalog/bin/verify-uedb5-b016-v5-roundtrip.php",
+                "operation_level_acceptance": "catalog/bin/verify-uedb5-b016-operation-acceptance.php"
+            },
+            "test_results": {
+                "test_driver": "catalog/bin/verify-uedb5-b016-operation-acceptance.php",
+                "expected_checks": [
+                    "b016_driver_source_passes",
+                    "b016_driver_resolver_passes",
+                    "b016_driver_v5_passes",
+                    "b016_driver_optional_passes",
+                    "b016_driver_public_passes",
+                    "b016_driver_identity_passes",
+                    "b016_driver_rebuilder_passes",
+                    "b016_driver_sql_passes",
+                    "b016_driver_compact_passes",
+                    "b016_pinned_epic_cell_header_search_and_offsets",
+                    "b016_import_indices_and_creation_path_source_verified",
+                    "b016_live_verse_registry_not_fabricated_from_header",
+                    "b016_exact_key_and_static_vs_live_separation",
+                    "b016_combined_source_and_provider_indices_proven",
+                    "b016_collisions_remain_unresolved_with_header_first_provenance",
+                    "b016_optional_cell_needs_live_runtime_registration",
+                    "b016_compressed_v5_roundtrip_retains_key_and_collision",
+                    "b016_all_direct_php_consumers_enumerated",
+                    "b016_previous_public_optional_identity_operations_still_pass",
+                    "b016_rebuilder_sql_and_compact_consumer_acceptance"
+                ],
+                "result": "20 operation checks in nine drivers plus 19 pinned source checks, historical four-case negative-before/positive-after test, real temporary compressed V5 reader/writer and session-temporary SQL backend acceptance."
+            },
+            "acceptance_evidence": {
+                "reachable_source_branches": "All pinned GetPublicCellExportIndexAsLocalIndex, conditional create/serialize cell import, FindPublicExportCell, StorePublicCellExport and EventDrivenCreateCellExport branches are directly checked.",
+                "epic_to_unrealdb_mapping": "catalog/compliance/B016-PUBLIC-CELL-SOURCE.md maps separate main, optional, live Verse and combined index rules to UnrealDB outcome fields.",
+                "independent_differential": "Four behavior failures reproduced against original 4e4eaf9e resolver; corrected resolver passes same fixtures. Live Verse winner remains explicitly unobserved.",
+                "all_v5_consumers": "All 559 production PHP files inventoried; two direct resolver consumers; provider selection, Pass 2 dependency rebuilder, V5 writer/reader, read facades and SQL tested.",
+                "independent_reviewer": "Independent pinned source oracle and nine-driver operation acceptance. No external human or compiled Verse-VM execution claimed."
+            }
+        }
+    ],
+    "next_batch": "B017",
+    "gate_status": {
+        "inventory": true,
+        "contracts": true,
+        "implementation": true,
+        "independent_verification": true,
+        "change_integrity": true
+    },
+    "reconciliation_evidence": {
+        "source": "Pinned UE5.8.3 AsyncLoading2.cpp source SHA256 43ce5d78..., cell import/export/Verse registry source branches.",
+        "record": "catalog/compliance/B016-PUBLIC-CELL-SOURCE.md",
+        "scope": "Offline source-defined public Verse-cell hash lookup, main and optional provenance; runtime cell store separate.",
+        "consumer_inventory": "559 production PHP files scanned, two direct resolver consumers."
     }
-  ],
-  "next_batch": "B017",
-  "gate_status": {
-    "inventory": false,
-    "contracts": false,
-    "implementation": false,
-    "independent_verification": false,
-    "change_integrity": true
-  }
 }

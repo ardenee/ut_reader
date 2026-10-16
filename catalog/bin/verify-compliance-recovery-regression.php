@@ -29,7 +29,7 @@ try {
         &&($report['compliance_accepted']??null)===false
         &&($report['scope_denominator_known']??null)===false
         &&($report['registered_operations']??null)===18
-        &&($report['ledger_differences']??null)===20);
+        &&($report['ledger_differences']??null)===count($baseline['known_differences']));
     $check('unregistered_iostore_behavior_exposed',
         ($report['unregistered_source_differences']??[])===['UE5-D007']);
     [$exit,$report]=$run($baseline,true);
