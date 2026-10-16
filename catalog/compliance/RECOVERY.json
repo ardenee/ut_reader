@@ -372,6 +372,16 @@
         "rationale": "B016 combined cell import/export offsets and first main-header candidate collision provenance were missing; three independent 4e4eaf9e regressions pass after correction.",
         "state": "fixed_regression_verified",
         "audit_escape": "none"
+    },
+    {
+        "id": "UE5-D023",
+        "kind": "mapped",
+        "operations": [
+            "UE5-583-B015-2"
+        ],
+        "rationale": "Epic recursively considers imported FPackageIds even without public object imports. Prior UnrealDB persisted IDs but failed to emit standalone resolver requirements, omitting them from physical provider discovery/SQL. Historical f6d59d11 produced zero edges; 15208171 now writes main/optional V5 dependencies and isolated SQL 9/10, with live loader state conservatively unresolved.",
+        "state": "fixed_regression_verified",
+        "audit_escape": "none"
     }
   ],
   "coverage_gaps": [

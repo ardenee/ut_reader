@@ -27,6 +27,11 @@ foreach($files as $file){
         $seen[$id]=true;
         if(isset($globalIds[$id]))$failures[]=$id.': duplicate operation across batches';
         $globalIds[$id]=true;
+        // Mixed-status original batches (B015 has two original operations)
+        // carry per-operation acceptance without falsely closing siblings.
+        $operationStatus=(string)($record['operation_status']??$data['status']??'partial');
+        $operationComplete=($record['complete_inventory']??$data['complete_inventory']??false)===true;
+        $gates=(array)($record['gate_status']??$data['gate_status']??[]);
         $source=$record['source']??[];
         if(($record['disposition']??'')==='verified' && empty($record['test_results']))$failures[]=$id.': verified requires retained test results';
         if(($record['disposition']??'')==='verified' && empty($record['independent_inventory_evidence']))$failures[]=$id.': verified requires independent inventory evidence';
@@ -95,13 +100,13 @@ foreach($files as $file){
         // B009/B010 source reachability is bounded to the Zen header
         // contract. Verify the exhaustive production callsite scanner and
         // its negative controls before accepting an inventory gate.
-        if(((array)($data['gate_status']??[]))['inventory']??false){
+        if(($gates['inventory']??false)===true){
             $reach=(array)($record['source_reachability_evidence']??[]);
             $driver=(string)($reach['test_driver']??'');
             $want=(array)($reach['expected_checks']??[]);
             $resolved=realpath($root.'/'.str_replace(chr(92),'/',$driver));
             $rootPath=realpath($root);
-            if(($data['complete_inventory']??false)!==true
+            if(!$operationComplete
                 ||!is_string($resolved)||!is_string($rootPath)
                 ||!str_starts_with(strtolower(str_replace(chr(92),'/',$resolved)),
                     strtolower(str_replace(chr(92),'/',$rootPath)).'/')
@@ -134,7 +139,6 @@ foreach($files as $file){
         // The original manifest gates are not self-attested. If a contract
         // or implementation gate is marked closed, execute every declared
         // source-branch regression and match its exact named outcome.
-        $gates=(array)($data['gate_status']??[]);
         if(($gates['contracts']??false)===true){
             $contract=(array)($record['source_contract_evidence']??[]);
             $driver=(string)($contract['test_driver']??'');
@@ -286,8 +290,8 @@ foreach($files as $file){
             $driverPath=realpath($root.'/'.str_replace(chr(92),'/',$driver));
             $safeRoot=realpath($root);
             $valid=$accepted&&$independent
-                &&($data['status']??'')==='verified'
-                &&($data['complete_inventory']??false)===true
+                &&$operationStatus==='verified'
+                &&$operationComplete
                 &&($gates['inventory']??false)===true
                 &&($gates['contracts']??false)===true
                 &&($gates['implementation']??false)===true

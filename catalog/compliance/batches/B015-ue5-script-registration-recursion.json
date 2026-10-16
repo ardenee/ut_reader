@@ -1,60 +1,191 @@
 {
-  "schema": 1,
-  "batch": "B015",
-  "engine": "UE5",
-  "profile": "UE5.8.3",
-  "status": "partial",
-  "inventory_a": "Independent B014 seeded source discovery",
-  "inventory_b": "Targeted UE5 loader structure trace pending",
-  "complete_inventory": false,
-  "operations": [
-    {
-      "id": "UE5-583-B015-1",
-      "summary": "Runtime enumeration of script packages, public and Verse VNI script objects, editor branches and registration verification",
-      "source": {
-        "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
-        "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9",
-        "symbols": [
-          "FindAllScriptObjects"
-        ]
-      },
-      "implementation": {
-        "path": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenDependencyResolver.php",
-        "sha256": "3e9131079450ab3c6da4a0f216c6b2d9d1938b1778e916dc9ce7a9e64b94f289"
-      },
-      "tests": [
-        "catalog/bin/verify-uedb5-ue5-zen-dependency-resolution.php"
-      ],
-      "disposition": "partial",
-      "reason": "Newly discovered during independent inventory reconciliation. Exact branching, operational applicability and parity tests not yet proven."
+    "schema": 1,
+    "batch": "B015",
+    "engine": "UE5",
+    "profile": "UE5.8.3",
+    "status": "partial",
+    "inventory_a": "Independent B014 seeded source discovery",
+    "inventory_b": "Targeted UE5 loader structure trace pending",
+    "complete_inventory": false,
+    "operations": [
+        {
+            "id": "UE5-583-B015-1",
+            "summary": "Runtime enumeration of script packages, public and Verse VNI script objects, editor branches and registration verification",
+            "source": {
+                "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+                "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9",
+                "symbols": [
+                    "FindAllScriptObjects"
+                ]
+            },
+            "implementation": {
+                "path": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenDependencyResolver.php",
+                "sha256": "d2eb027f822dd93df23d5b5807aaf9fa3911de9b185a4d61adb9cbc79d3435ff"
+            },
+            "tests": [
+                "catalog/bin/verify-uedb5-ue5-zen-dependency-resolution.php"
+            ],
+            "disposition": "partial",
+            "reason": "Newly discovered during independent inventory reconciliation. Exact branching, operational applicability and parity tests not yet proven."
+        },
+        {
+            "id": "UE5-583-B015-2",
+            "summary": "Recursive import-package scheduling, localization and redirects with optional-segment inputs",
+            "source": {
+                "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+                "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9",
+                "symbols": [
+                    "ImportPackagesRecursiveInner"
+                ]
+            },
+            "implementation": {
+                "path": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenDependencyResolver.php",
+                "sha256": "d2eb027f822dd93df23d5b5807aaf9fa3911de9b185a4d61adb9cbc79d3435ff"
+            },
+            "tests": [
+                "catalog/bin/verify-uedb5-b015-recursive-imports.php",
+                "catalog/bin/verify-uedb5-b015-recursive-before-after.php",
+                "catalog/bin/verify-uedb5-b015-operation-acceptance.php",
+                "catalog/bin/verify-uedb5-ue5-zen-dependency-resolution.php",
+                "catalog/bin/verify-uedb5-b005-operation-acceptance.php",
+                "catalog/bin/verify-uedb5-b008-operation-acceptance.php",
+                "catalog/bin/verify-uedb5-b011-operation-acceptance.php",
+                "catalog/bin/verify-uedb5-b012-operation-acceptance.php",
+                "catalog/bin/verify-uedb5-dependency-projection-publisher.php",
+                "catalog/bin/verify-uedb5-dependency-rebuilder.php",
+                "catalog/bin/verify-uedb5-zen-backend-callers.php"
+            ],
+            "disposition": "verified",
+            "reason": "Epic source-defined offline imported-package requirements, identity/store status boundaries, separate optional segment, provider discovery and SQL/V5 persistence verified; actual async scheduling explicitly not inferred.",
+            "operation_status": "verified",
+            "complete_inventory": true,
+            "gate_status": {
+                "inventory": true,
+                "contracts": true,
+                "implementation": true,
+                "independent_verification": true,
+                "change_integrity": true
+            },
+            "correction_commits": [
+                "15208171166b6af5ea12fc95b87dd23c58fa4e0c"
+            ],
+            "related_differences": [
+                "UE5-D023"
+            ],
+            "source_contract_evidence": {
+                "test_driver": "catalog/bin/verify-uedb5-b015-recursive-imports.php",
+                "expected_checks": [
+                    "b0152_pinned_epic_source",
+                    "b0152_every_package_id_enumerated",
+                    "b0152_names_either_absent_or_equal_count",
+                    "b0152_epic_redirect_instancing_localization_order",
+                    "b0152_existing_package_lookup_precedes_store",
+                    "b0152_fully_loaded_precedes_missing_and_not_installed",
+                    "b0152_pending_enqueue_and_cross_loader_barrier",
+                    "b0152_once_and_optional_editor_guard",
+                    "b0152_existing_load_context_runtime_not_fabricated",
+                    "b0152_no_context_still_emits_main_package_only_imports",
+                    "b0152_optional_unknown_context_unresolved",
+                    "b0152_exact_evidenced_provider_is_package_only_not_runtime_loaded",
+                    "b0152_pending_kept_unresolved",
+                    "b0152_noneditor_optional_not_loaded",
+                    "b0152_editor_optional_separate_source_row",
+                    "b0152_not_installed_does_not_invent_unloaded_state",
+                    "b0152_redirect_precedes_evidenced_provider",
+                    "b0152_identity_remap_before_backend_lookup",
+                    "b0152_no_backend_status_never_claims_loaded_or_missing",
+                    "b0152_sql_main_source_kind_9_preserves_indices",
+                    "b0152_sql_optional_source_kind_10_and_no_fake_object",
+                    "b0152_sql_retains_package_count_and_outcomes",
+                    "b0152_real_isolated_sql_persists_package_source_kinds",
+                    "b0152_real_isolated_sql_separates_optional_and_main",
+                    "b0152_real_compressed_v5_roundtrip"
+                ],
+                "source_branches": [
+                    "Main imported FPackageIds are independently enumerated, with names either absent or count-matched.",
+                    "Optional-segment imported package IDs are separately enumerated under WITH_EDITOR.",
+                    "CoreRedirect and instancing happen before loose localization, then effective package-store redirection.",
+                    "Existing loaded package lookup precedes package-store read; fully loaded wins before NotInstalled/Missing skip.",
+                    "Pending, scheduling, linker reload, refcount and sync-context are distinct runtime states, not static dependencies."
+                ]
+            },
+            "source_reachability_evidence": {
+                "test_driver": "catalog/bin/verify-uedb5-b016-public-cell-source.php",
+                "expected_checks": [
+                    "b016_exact_two_direct_production_consumers",
+                    "b016_unrealdb_separate_cell_export_hash_map"
+                ],
+                "source_inventory_record": "catalog/compliance/B015-RECURSIVE-IMPORT-SOURCE.md",
+                "production_file_count": 559,
+                "direct_consumer_count": 2
+            },
+            "guarded_implementation_files": [
+                {
+                    "path": "catalog/src/Infrastructure/Metadata/Uedb5DependencyProjectionBuilder.php",
+                    "sha256": "7c6071bef4c38f7a682045c9b1a3cb247f243fc44564d8d56b42c656a7707b93"
+                },
+                {
+                    "path": "catalog/src/Infrastructure/Metadata/Uedb5SqlProjectionContract.php",
+                    "sha256": "a0f18870069e4057387d7c99980a6c5b2fecd159f2a4c864b4aa13f658ceaefe"
+                },
+                {
+                    "path": "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php",
+                    "sha256": "c39b1ee0fd4f91b356ee3b70a2ea9577483418c3f1e68f0048909f93222f723a"
+                },
+                {
+                    "path": "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php",
+                    "sha256": "cfd10f008b6651db60f3f3037bd0b391fd5a4bbd0add0b3844fff4e6314cb874"
+                }
+            ],
+            "test_results": {
+                "test_driver": "catalog/bin/verify-uedb5-b015-operation-acceptance.php",
+                "expected_checks": [
+                    "b0152_driver_source_passes",
+                    "b0152_driver_historical_passes",
+                    "b0152_driver_backend_passes",
+                    "b0152_driver_identity_passes",
+                    "b0152_driver_names_passes",
+                    "b0152_driver_optional_passes",
+                    "b0152_driver_public_passes",
+                    "b0152_driver_cell_passes",
+                    "b0152_driver_rebuilder_passes",
+                    "b0152_driver_publisher_passes",
+                    "b0152_driver_callers_passes",
+                    "b0152_epic_source_enumeration_and_order",
+                    "b0152_original_defect_reproducible",
+                    "b0152_live_runtime_status_not_guessed",
+                    "b0152_main_optional_and_redirect_identity",
+                    "b0152_compressed_v5_sql_republished",
+                    "b0152_downstream_existing_acceptance_unbroken"
+                ],
+                "result": "11 independent drivers; 17 named operation assertions, 25 source+offline behavior assertions, 4 historical before/after, temporary compressed UEDB5 and isolated SQLite publisher. No live UE async loader execution."
+            },
+            "independent_inventory_evidence": {
+                "source_review": "catalog/compliance/B015-RECURSIVE-IMPORT-SOURCE.md",
+                "scope_boundary": "Offline source-defined ImportedPackageIds provider requirements. Live async scheduler, mount state and FindOrInsertPackage excluded; runtime unknown stays unresolved.",
+                "independent_source_oracle": "catalog/bin/verify-uedb5-b015-recursive-imports.php",
+                "historical_before_after": "catalog/bin/verify-uedb5-b015-recursive-before-after.php",
+                "operation_level_acceptance": "catalog/bin/verify-uedb5-b015-operation-acceptance.php"
+            },
+            "acceptance_evidence": {
+                "reachable_source_branches": "Pinned Epic imported ID loop, names count, editor optional, redirect/instancing/culture, existing loaded precedence, Pending and non-installed branches.",
+                "epic_to_unrealdb_mapping": "B015-RECURSIVE-IMPORT-SOURCE.md maps each Epic source-defined offline requirement to resolver row, selected physical package and V5 SQL source IDs 9/10.",
+                "independent_differential": "Historical f6d59d11 without object imports emitted zero rows; corrected source emits main and optional rows. Runtime state is explicitly nonauthoritative.",
+                "all_v5_consumers": "Two direct production resolver callers across 559 PHP files, provider selector, Pass 2 rebuilder, isolated SQLite SQL publisher, temporary compressed V5 reader and SQL schema.",
+                "independent_reviewer": "Executable pinned-source branch oracle and 11-driver operation acceptance; no external human or live UnrealEditor/Verse VM executed."
+            }
+        }
+    ],
+    "next_batch": "B016",
+    "gate_status": {
+        "inventory": false,
+        "contracts": false,
+        "implementation": false,
+        "independent_verification": false,
+        "change_integrity": true
     },
-    {
-      "id": "UE5-583-B015-2",
-      "summary": "Recursive import-package scheduling, localization and redirects with optional-segment inputs",
-      "source": {
-        "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
-        "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9",
-        "symbols": [
-          "ImportPackagesRecursiveInner"
-        ]
-      },
-      "implementation": {
-        "path": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenDependencyResolver.php",
-        "sha256": "3e9131079450ab3c6da4a0f216c6b2d9d1938b1778e916dc9ce7a9e64b94f289"
-      },
-      "tests": [
-        "catalog/bin/verify-uedb5-ue5-zen-dependency-resolution.php"
-      ],
-      "disposition": "partial",
-      "reason": "Newly discovered during independent inventory reconciliation. Exact branching, operational applicability and parity tests not yet proven."
+    "reconciliation_evidence": {
+        "source": "UE5.8.3 AsyncLoading2.cpp:7158-7464, one independent source-defined operation accepted; sibling B015-1 remains partial.",
+        "record": "catalog/compliance/B015-RECURSIVE-IMPORT-SOURCE.md"
     }
-  ],
-  "next_batch": "B016",
-  "gate_status": {
-    "inventory": false,
-    "contracts": false,
-    "implementation": false,
-    "independent_verification": false,
-    "change_integrity": true
-  }
 }

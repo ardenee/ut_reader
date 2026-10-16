@@ -20,7 +20,7 @@
             },
             "implementation": {
                 "path": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenDependencyResolver.php",
-                "sha256": "3e9131079450ab3c6da4a0f216c6b2d9d1938b1778e916dc9ce7a9e64b94f289"
+                "sha256": "d2eb027f822dd93df23d5b5807aaf9fa3911de9b185a4d61adb9cbc79d3435ff"
             },
             "tests": [
                 "catalog/bin/verify-uedb5-b016-public-cell-source.php",

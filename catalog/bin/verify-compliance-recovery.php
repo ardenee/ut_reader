@@ -43,7 +43,7 @@ foreach ($manifests as $file) {
         $id = (string)($op['id'] ?? '');
         $require($id !== '' && !isset($operations[$id]),
             'Duplicate or missing formal operation: '.$id);
-        if ($id !== '') { $op['recovery_gate_status']=(array)($json['gate_status']??[]); $operations[$id] = $op; }
+        if ($id !== '') { $op['recovery_gate_status']=(array)($op['gate_status']??$json['gate_status']??[]); $operations[$id] = $op; }
     }
 }
 $priority = (array)($baseline['original_operation_priority'] ?? []);

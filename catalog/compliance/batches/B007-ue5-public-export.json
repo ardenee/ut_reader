@@ -21,7 +21,7 @@
             },
             "implementation": {
                 "path": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenDependencyResolver.php",
-                "sha256": "3e9131079450ab3c6da4a0f216c6b2d9d1938b1778e916dc9ce7a9e64b94f289"
+                "sha256": "d2eb027f822dd93df23d5b5807aaf9fa3911de9b185a4d61adb9cbc79d3435ff"
             },
             "tests": [
                 "catalog/bin/verify-uedb5-ue5-zen-dependency-resolution.php",
@@ -118,7 +118,7 @@
                 },
                 {
                     "path": "catalog/src/Infrastructure/Metadata/Uedb5DependencyProjectionBuilder.php",
-                    "sha256": "ac455a7e5b58dd2b9f4df15d9f7685373e9df893dbc0432dc3599df4b9b3de2c"
+                    "sha256": "7c6071bef4c38f7a682045c9b1a3cb247f243fc44564d8d56b42c656a7707b93"
                 },
                 {
                     "path": "catalog/src/Infrastructure/Metadata/CatalogCompactDependencyReadService.php",
