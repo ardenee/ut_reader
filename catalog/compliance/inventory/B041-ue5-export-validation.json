@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "batch": "B041",
+  "status": "partial",
+  "topic": "Zen export-map malformed-field rejection",
+  "test": "catalog/bin/verify-uedb5-zen-malformed-export-map.php",
+  "results": {
+    "truncated_record_rejected": true,
+    "invalid_name_rejected": true,
+    "out_of_range_reference_rejected": true
+  },
+  "certified": false,
+  "next_batch": "B042"
+}
