@@ -320,6 +320,22 @@
       "rationale": "Epic FilePackageStore.cpp:788-808 uses FindOrAdd but allows a later mounted entry to fill redirect/localization name while its saved FName is NAME_None. UnrealDB made the first observed source ID unconditional, blocking valid lower-mount name/target. Two independent source-shaped cases failed before 7a8708fb and pass afterwards; first-wins valid names, physical entries and missing-name-unknown behavior are preserved. Original B006 has bounded operation-level acceptance.",
       "state": "fixed_regression_verified",
       "audit_escape": "none"
+    },
+    {
+      "id": "UE5-D017",
+      "kind": "mapped",
+      "operations": ["UE5-583-IMPORT-REDIRECT-001"],
+      "rationale": "A bare package_store_context_authoritative flag previously fell back to the consumer container header when either effective global redirect/localization table was absent, falsely promoting local redirects over other mounted backends. B008 negative-before source-derived fixture failed and now returns unresolved until both explicit global mapping arrays are provided; source priority and isolated SQL consumers pass.",
+      "state": "fixed_regression_verified",
+      "audit_escape": "none"
+    },
+    {
+      "id": "UE5-D018",
+      "kind": "mapped",
+      "operations": ["UE5-583-IMPORT-REDIRECT-001"],
+      "rationale": "A bare package_identity_context_authoritative flag previously represented an absent CoreRedirect/instancing/loose-localization rewrite result as a proven empty mapping. B008 negative-before regression failed; the resolver now distinguishes no result (unknown/unresolved) from explicitly supplied empty package_identity_rewrites (known no rewrite), retaining independent serialized/effective/load package IDs.",
+      "state": "fixed_regression_verified",
+      "audit_escape": "none"
     }
   ],
   "coverage_gaps": [

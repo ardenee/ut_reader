@@ -1,41 +1,201 @@
 {
-  "schema": 1,
-  "batch": "B008",
-  "engine": "UE5",
-  "profile": "UE5.8.3",
-  "status": "partial",
-  "inventory_a": "source call path",
-  "inventory_b": "source structure and branch coverage",
-  "complete_inventory": false,
-  "operations": [
-    {
-      "id": "UE5-583-IMPORT-REDIRECT-001",
-      "summary": "Imported package identities undergo localization followed by package-store redirect before load",
-      "source": {
-        "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
-        "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9",
-        "symbols": [
-          "GetPackageRedirectInfo",
-          "FAsyncPackageDesc2::FromPackageImport"
-        ]
-      },
-      "implementation": {
-        "path": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenDependencyResolver.php",
-        "sha256": "4a1f448fea2e619500e778d93e38bbcfb5b5eb093558f4c8e53940c355db522d"
-      },
-      "tests": [
-        "catalog/bin/verify-uedb5-ue5-zen-dependency-resolution.php"
-      ],
-      "disposition": "partial",
-      "reason": "Source 7238–7370. Runtime ordering and full backend context must be evidenced, not inferred from a consumer container."
+    "schema": 1,
+    "batch": "B008",
+    "engine": "UE5",
+    "profile": "UE5.8.3",
+    "status": "verified",
+    "inventory_a": "source call path",
+    "inventory_b": "source structure and branch coverage",
+    "complete_inventory": true,
+    "operations": [
+        {
+            "id": "UE5-583-IMPORT-REDIRECT-001",
+            "summary": "Imported package identities undergo localization followed by package-store redirect before load",
+            "source": {
+                "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+                "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9",
+                "symbols": [
+                    "GetPackageRedirectInfo",
+                    "FAsyncPackageDesc2::FromPackageImport"
+                ]
+            },
+            "implementation": {
+                "path": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenDependencyResolver.php",
+                "sha256": "4a1f448fea2e619500e778d93e38bbcfb5b5eb093558f4c8e53940c355db522d"
+            },
+            "tests": [
+                "catalog/bin/verify-uedb5-ue5-zen-dependency-resolution.php",
+                "catalog/bin/verify-uedb5-b008-import-redirect-source.php",
+                "catalog/bin/verify-uedb5-b008-operation-acceptance.php",
+                "catalog/bin/verify-uedb5-b005-operation-acceptance.php",
+                "catalog/bin/verify-uedb5-b006-operation-acceptance.php",
+                "catalog/bin/verify-uedb5-dependency-rebuilder.php",
+                "catalog/bin/verify-uedb5-dependency-sql-isolated.php",
+                "catalog/bin/verify-uedb5-zen-context-options-standalone.php"
+            ],
+            "disposition": "verified",
+            "reason": "Entire B008 source-defined import identity and package redirect metadata operation verified. Authority must include explicit global effective mapping arrays and identity rewrite result; Epic branch sequencing, backend priority, editor/runtime localization, mounted NAME_None, real SQL/rebuild and runtime-unknown outcomes are pinned and executable. No live state fabricated.",
+            "related_differences": [
+                "UE5-D017",
+                "UE5-D018"
+            ],
+            "correction_commits": [
+                "620078887282d82e7b2bb32a8f0b2aebce378b03"
+            ],
+            "additional_sources": [
+                {
+                    "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/PackageStore.cpp",
+                    "sha256": "fb5c1930f5b8e6611392c3009dde16922661c7942f2eaa8d875492c8981f67b9",
+                    "symbols": [
+                        "FPackageStore::GetPackageRedirectInfo",
+                        "Backend.Value->GetPackageRedirectInfo"
+                    ]
+                },
+                {
+                    "path": "Engine/Source/Runtime/PakFile/Private/FilePackageStore.cpp",
+                    "sha256": "dfdd4e226b3a41f36476ddd93225aa34284ea63943f1752216e0f2a25c2a2418",
+                    "symbols": [
+                        "FFilePackageStoreBackend::GetPackageRedirectInfo",
+                        "RedirectsPackageMap.Find(PackageId)",
+                        "LocalizedPackages.Find(PackageId)"
+                    ]
+                }
+            ],
+            "source_contract_evidence": {
+                "test_driver": "catalog/bin/verify-uedb5-b008-import-redirect-source.php",
+                "expected_checks": [
+                    "b008_pinned_async_sha256",
+                    "b008_pinned_store_sha256",
+                    "b008_pinned_file_sha256",
+                    "b008_runtime_branch_core",
+                    "b008_runtime_branch_instance",
+                    "b008_runtime_branch_loose",
+                    "b008_runtime_branch_store",
+                    "b008_runtime_branch_load",
+                    "b008_rewrite_phase_order_core_instance_loose_store_load",
+                    "b008_core_redirect_gate",
+                    "b008_core_redirect_requires_name",
+                    "b008_core_redirect_rewrites_import_id",
+                    "b008_instancing_name_to_upackage",
+                    "b008_instancing_id_without_name",
+                    "b008_localization_only_load_identity",
+                    "b008_package_store_redirect_sets_load_id",
+                    "b008_package_store_redirect_clears_load_name",
+                    "b008_runtime_reads_instanced_upackage",
+                    "b008_unnamed_import_list_permitted",
+                    "b008_loose_localization_requires_runtime_and_loose_mode",
+                    "b008_redirect_queries_all_mounted_backends_in_priority_order",
+                    "b008_file_backend_explicit_redirect_before_localization",
+                    "b008_file_localization_non_editor_and_installed_only",
+                    "b008_identity_rewrite_table_required",
+                    "b008_redirect_global_map_required",
+                    "b008_localization_global_map_required",
+                    "b008_explicit_none_can_refill",
+                    "b008_global_absence_not_local_proof",
+                    "b008_unknown_identity_not_resolved",
+                    "b008_culture_not_guessed",
+                    "b008_backend_status_shared",
+                    "b008_game_source_requires_evidence_origin_for_authority",
+                    "b008_exhaustive_production_resolver_callsite_inventory",
+                    "b008_unregistered_direct_resolver_call_negative_control"
+                ],
+                "source_branches": [
+                    "AsyncLoading2.cpp:7156-7275 core redirect gated by GAllowPackageRedirectorSupport; pre-store instancing (name or ID), then loose-file localization, then PackageStore redirect, then load lookup.",
+                    "AsyncLoading2.cpp:700-726 runtime only (!GIsEditor and bLooseFileLoadingEnabled) loose localization; package ID vs UPackage identity differ.",
+                    "PackageStore.cpp:583-593 global priority-ordered backend redirect query with first-success termination.",
+                    "FilePackageStore.cpp:359-387 explicit redirect before localized, runtime-only active-culture target and mounted entry requirements.",
+                    "B008 D017/D018 require explicit complete global mappings and explicit identity result instead of authority flag alone."
+                ]
+            },
+            "source_reachability_evidence": {
+                "test_driver": "catalog/bin/verify-uedb5-b008-import-redirect-source.php",
+                "expected_checks": [
+                    "b008_exhaustive_production_resolver_callsite_inventory",
+                    "b008_unregistered_direct_resolver_call_negative_control",
+                    "b008_game_source_requires_evidence_origin_for_authority",
+                    "b008_identity_rewrite_table_required",
+                    "b008_redirect_global_map_required",
+                    "b008_localization_global_map_required"
+                ],
+                "source_inventory_record": "catalog/compliance/B008-IMPORT-REDIRECT-SOURCE.md",
+                "production_caller_count": 2,
+                "scanned_production_php_count": 559
+            },
+            "guarded_implementation_files": [
+                {
+                    "path": "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php",
+                    "sha256": "c39b1ee0fd4f91b356ee3b70a2ea9577483418c3f1e68f0048909f93222f723a"
+                },
+                {
+                    "path": "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php",
+                    "sha256": "cfd10f008b6651db60f3f3037bd0b391fd5a4bbd0add0b3844fff4e6314cb874"
+                },
+                {
+                    "path": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
+                    "sha256": "fa8bd1531e4a5a83fc1a67719be63fd5120bd1ebe0e4af78fc0d92f8ecd0724d"
+                },
+                {
+                    "path": "catalog/src/Infrastructure/Metadata/Uedb5ZenMountedStoreContextBuilder.php",
+                    "sha256": "db25a6b43abd139fbc1c5c1796838ae9bbf4eae4e1a1955ee37cd70d53b18595"
+                },
+                {
+                    "path": "catalog/src/Infrastructure/Metadata/Uedb5ZenEffectivePackageStoreContextBuilder.php",
+                    "sha256": "089d7c337a29f64621b216d6ad7694651a527da5b35dcbd53a0935438ecc329e"
+                },
+                {
+                    "path": "catalog/src/Infrastructure/Metadata/Uedb5ZenPackageStoreBackendArbitrator.php",
+                    "sha256": "593c36093e63f616be4e0eab2b6308e72f3adf75f1cbb1f1e25e09b05f87e26d"
+                }
+            ],
+            "independent_inventory_evidence": {
+                "source_review": "catalog/compliance/B008-IMPORT-REDIRECT-SOURCE.md",
+                "scope_boundary": "Only source-derived application of authoritative aggregate identity and global package-store metadata. The editor, active culture, package instancing and real mounted backend state cannot be derived from static archive data.",
+                "independent_source_oracle": "catalog/bin/verify-uedb5-b008-import-redirect-source.php",
+                "all_production_callsite_negative_control": "b008_unregistered_direct_resolver_call_negative_control",
+                "source_to_pdo_sql_consumer": "catalog/bin/verify-uedb5-b008-operation-acceptance.php"
+            },
+            "test_results": {
+                "test_driver": "catalog/bin/verify-uedb5-b008-operation-acceptance.php",
+                "expected_checks": [
+                    "b008_driver_source_passes",
+                    "b008_driver_resolver_passes",
+                    "b008_driver_mounted_passes",
+                    "b008_driver_backend_passes",
+                    "b008_driver_rebuild_passes",
+                    "b008_driver_sql_passes",
+                    "b008_driver_options_passes",
+                    "b008_pinned_epic_ordering_and_cook_context",
+                    "b008_complete_global_package_store_maps_required",
+                    "b008_complete_pre_store_identity_result_required",
+                    "b008_explicit_redirect_and_name_remap_order",
+                    "b008_source_none_refill_and_unknown_name_distinguished",
+                    "b008_localization_requires_real_culture_and_runtime_mode",
+                    "b008_backend_arbitration_terminal_results_reach_resolver",
+                    "b008_game_lifecycle_entrypoints_and_sql_persistence"
+                ],
+                "result": "Seven source/caller/selector/rebuilder/backend/isolated SQL drivers and 15 mandatory acceptance checks all passed. Both authority-bypass tests failed before source correction 62007888 and pass after."
+            },
+            "acceptance_evidence": {
+                "reachable_source_branches": "Pinned source comparison covers 34 independent assertions across core redirect, instance (name and ID), loose localization, global backend/explicit localization precedence, editor/build-mode conditions, import-table rewriting and lookup order.",
+                "epic_to_unrealdb_mapping": "catalog/compliance/B008-IMPORT-REDIRECT-SOURCE.md maps Epic import load ID/UPackage changes into required/effective/lookup FPackageId metadata and per-game context propagation.",
+                "independent_differential": "Two negative-before tests caught false authority with missing global maps (D017) and missing identity result (D018); name-none/unknown and provider-selected redirect fixtures positive. No editor binary is needed to derive actual source branches.",
+                "all_v5_consumers": "Exact two production resolver call sites among 559 PHP files, PDO physical provider selector, durable dependency rebuilder, isolated SQL projection, mount and backend arbitration, per-game context, negative unregistered caller check.",
+                "independent_reviewer": "Independent source-driven executable oracle and full seven-driver operation acceptance; does not claim external human review or full runtime capture."
+            }
+        }
+    ],
+    "next_batch": "B011",
+    "gate_status": {
+        "inventory": true,
+        "contracts": true,
+        "implementation": true,
+        "independent_verification": true,
+        "change_integrity": true
+    },
+    "reconciliation_evidence": {
+        "source": "AsyncLoading2.cpp:700-726,7156-7275, PackageStore.cpp:583-593, FilePackageStore.cpp:359-387/788-808",
+        "record": "catalog/compliance/B008-IMPORT-REDIRECT-SOURCE.md",
+        "scope": "Provenance-backed rewrite/map handling and consumer publication, NOT reproduction of live FCoreRedirects/PIE/GIsEditor/culture",
+        "invariants": "A global file-store mount authority without both complete map arrays is false; identity authority without an explicit aggregate result list is false."
     }
-  ],
-  "next_batch": "B011",
-  "gate_status": {
-    "inventory": false,
-    "contracts": false,
-    "implementation": false,
-    "independent_verification": false,
-    "change_integrity": true
-  }
 }
