@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "batch": "B036",
+  "source": {
+    "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+    "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9"
+  },
+  "status": "partial",
+  "classification": "source-to-regression follow-up",
+  "reviewed": [
+    {
+      "symbol": "FAsyncPackage2::EventDrivenSerializeExport",
+      "disposition": "file-format-relevant",
+      "reason": "Epic runtime skips filtered and failed export serialization; source-only classification, runtime behavior not claimed by offline reader.",
+      "verified": false
+    }
+  ],
+  "test_evidence": [],
+  "next_batch": "B037"
+}
