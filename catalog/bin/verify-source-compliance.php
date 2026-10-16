@@ -4,6 +4,8 @@ declare(strict_types=1);
 $root=dirname(__DIR__,2);
 $dir=$root.'/catalog/compliance/batches';
 $strict=in_array('--strict',$argv,true);
+$sourceRoot=getenv('UNREALDB_EPIC_SOURCE_ROOT')?:'';
+$sourceChecks=0;
 $files=glob($dir.'/*.json')?:[];
 $failures=[];$open=0;$verified=0;$entries=0;
 if($files===[])$failures[]='No audit batches exist.';
@@ -37,5 +39,5 @@ foreach($files as $file){
     }
 }
 if($strict&&$open>0)$failures[]='Strict mode: '.$open.' open/partial inventory or behavior gates.';
-echo json_encode(['ok'=>$failures===[],'batches'=>count($files),'operations'=>$entries,'verified'=>$verified,'open_gates'=>$open,'issues'=>$failures],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;
+echo json_encode(['ok'=>$failures===[],'batches'=>count($files),'operations'=>$entries,'verified'=>$verified,'source_hash_checks'=>$sourceChecks,'open_gates'=>$open,'issues'=>$failures],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;
 exit($failures===[]?0:1);
