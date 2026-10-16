@@ -227,6 +227,29 @@ $check('zen_duplicate_package_id_environment_is_ambiguous',
     && ($zenSelected[0]['file_id']??null)===null
     && ($zenSelected[0]['package_id']??'')===$zenPackageId
     && (array)($zenSelected[0]['candidate_file_ids']??[])===[41,42,43]);
+$backendSelected=(new PdoUedb5PhysicalProviderSelector($db,$tmp))->select(8,40,[
+ 'zen_runtime_context'=>[
+  'package_identity_context_authoritative'=>true,
+  'package_store_context_authoritative'=>true,
+  'package_redirects'=>[],'localized_packages'=>[],
+ ],
+ 'zen_package_store_backend_results'=>[
+  ['backend_id'=>'file','priority'=>1,
+   'entries'=>[$zenPackageId=>['status'=>'Ok','file_id'=>42]],'redirects'=>[]],
+ ],
+]);
+$check('zen_evidenced_backend_disambiguates_exact_physical_package',
+ count($backendSelected)===1 && (int)($backendSelected[0]['file_id']??0)===42);
+$backendUnknown=(new PdoUedb5PhysicalProviderSelector($db,$tmp))->select(8,40,[
+ 'zen_runtime_context'=>['package_identity_context_authoritative'=>true,
+  'package_store_context_authoritative'=>false,'package_redirects'=>[],'localized_packages'=>[]],
+ 'zen_package_store_backend_results'=>[
+  ['backend_id'=>'file','priority'=>1,
+   'entries'=>[$zenPackageId=>['status'=>'Ok','file_id'=>42]],'redirects'=>[]],
+ ],
+]);
+$check('zen_unproven_backend_does_not_select_physical_package',
+ ($backendUnknown[0]['selection_status']??'')==='ambiguous');
 $check('zen_public_export_coverage_does_not_select_a_duplicate_package_file',
     (int)($zenSelected[0]['file_id']??0)===0);
 
