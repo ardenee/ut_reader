@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "batch": "B094",
+  "source": {
+    "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+    "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9"
+  },
+  "classification": "bounded source-body review",
+  "status": "partial",
+  "reviewed": [
+    {
+      "symbol": "FAsyncPackage2::Event_PostLoad",
+      "line": 10233,
+      "disposition": "runtime-only",
+      "reason": "Routes classic LinkerLoad postload separately, otherwise postloads cooked runtime exports only after external reads complete and load not failed.",
+      "verified": false
+    },
+    {
+      "symbol": "FAsyncPackage2::Event_DeferredPostLoad",
+      "line": 10369,
+      "disposition": "runtime-only",
+      "reason": "Defers postload under visibility filter AsyncLoadingPhase1 to hide incomplete UObject state, separates linker path and Zen export bundles.",
+      "verified": false
+    }
+  ],
+  "evidence_limitations": [
+    "Do not equate pre-inserted public hash with completed loaded export",
+    "Full postload phase and runtime visibility behavior remain outside offline parser"
+  ],
+  "next_batch": "B095"
+}
