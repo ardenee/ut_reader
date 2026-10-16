@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "batch": "B067",
+  "source": {
+    "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+    "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9"
+  },
+  "classification": "bounded source-body review",
+  "status": "partial",
+  "reviewed": [
+    {
+      "symbol": "FAsyncPackage2::ConditionalCreateCellExport",
+      "line": 9069,
+      "disposition": "file-format-relevant",
+      "reason": "Subtracts ordinary export count to address cell export map, and creates Verse cell only if absent.",
+      "verified": false
+    },
+    {
+      "symbol": "FAsyncPackage2::ConditionalSerializeCellExport",
+      "line": 9079,
+      "disposition": "file-format-relevant",
+      "reason": "Creates Verse cell if necessary and serializes only if cell bSerialized is false; distinct from ordinary UObject export phases.",
+      "verified": false
+    }
+  ],
+  "evidence_limitations": [
+    "Verse cell runtime object creation not simulated offline",
+    "Pending differential tests for ordinary-versus-cell index partition"
+  ],
+  "next_batch": "B068"
+}
