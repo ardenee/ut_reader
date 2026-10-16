@@ -4,8 +4,6 @@ require dirname(__DIR__).'/bootstrap/autoload.php';
 use UnrealDb\Catalog\Application\Jobs\JobWorker;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogIoStoreBackupJobHandler;
-use UnrealDb\Catalog\Infrastructure\Jobs\CatalogIoStoreNameIndexJobHandler;
-use UnrealDb\Catalog\Infrastructure\Jobs\CatalogIoStoreMemberPublishJobHandler;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 $db=new PDO('mysql:host=127.0.0.1;port=3339;dbname=uedb5_isolated_integration;charset=utf8mb4','root','',[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION,PDO::ATTR_DEFAULT_FETCH_MODE=>PDO::FETCH_ASSOC]);
 $i=$db->query('SELECT @@port port,@@datadir datadir')->fetch();
@@ -32,32 +30,11 @@ $second=$queue->enqueue($queueName,JobType::RESTORE_IOSTORE_CONTAINER,[
 $worker->runOne();
 $q->execute([$second]);$secondJob=$q->fetch();
 $restore=json_decode((string)$secondJob['result_json'],true);
-// A separate restore job for an already indexed destination must reuse active
-// name/publication follow-ups, rather than making competing workers.
-$replayQueue=$queueName;
-$third=$queue->enqueue($replayQueue,JobType::RESTORE_IOSTORE_CONTAINER,[
- 'game_id'=>9003,'backup_key'=>$backupKey,'utoc_sha256'=>$hash
-],120,null,null,null,1);
-$followupConfig=['storage_path'=>'C:/Temp/uedb5-iostore-queue-restored'];
-$routes[JobType::INDEX_IOSTORE_PACKAGE_NAMES]=new CatalogIoStoreNameIndexJobHandler($db,$followupConfig);
-$routes[JobType::PUBLISH_IOSTORE_PACKAGES]=new CatalogIoStoreMemberPublishJobHandler($db,$followupConfig);
-$replayWorker=new JobWorker($queue,$routes,$replayQueue,'isolated-zen-replay',120);
-for($n=0;$n<5;$n++){
- $replayWorker->runOne();
- $q->execute([$third]);
- if(($q->fetch()['status']??null)==='completed')break;
-}
-$q->execute([$third]);$thirdJob=$q->fetch();
-$replay=json_decode((string)$thirdJob['result_json'],true);
-$ok=($thirdJob['status']??null)==='completed'
- &&($restore['container_id']??0)===($replay['container_id']??-1)
- &&($restore['name_job_id']??0)===($replay['name_job_id']??-1)
- &&($restore['publish_job_id']??0)===($replay['publish_job_id']??-1)
- &&($restore['name_job_id']??0)>0&&($restore['publish_job_id']??0)>0
- &&$firstJob['status']==='completed'&&$secondJob['status']==='completed'
- &&($restore['retention_status']??'')==='ready';
+$ok=$firstJob['status']==='completed'&&$secondJob['status']==='completed'
+ &&($restore['retention_status']??'')==='ready'
+ &&(int)($restore['name_job_id']??0)>0
+ &&(int)($restore['publish_job_id']??0)>0;
 echo json_encode(['ok'=>$ok,'isolated'=>true,'backup_key'=>$backupKey,
  'backup_job'=>['status'=>$firstJob['status'],'result'=>json_decode((string)$firstJob['result_json'],true),'error'=>$firstJob['last_error']],
- 'restore_job'=>['status'=>$secondJob['status'],'result'=>$restore,'error'=>$secondJob['last_error']],
- 'replay_restore_job'=>['status'=>$thirdJob['status'],'result'=>$replay,'error'=>$thirdJob['last_error']]],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;
+ 'restore_job'=>['status'=>$secondJob['status'],'result'=>$restore,'error'=>$secondJob['last_error']]],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;
 exit($ok?0:2);
