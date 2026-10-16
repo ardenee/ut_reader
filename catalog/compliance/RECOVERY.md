@@ -21,8 +21,10 @@ second competing audit system is introduced.
   explicitly categorized as cross-cutting or previously uncovered behavior.
   D010/D011 are now marked fixed and regression-verified. Original B009 and
   B010 each have source-contract and implementation subgates closed by
-  executable branch checks; independently cooked versioned-header and
-  complete call-path acceptance are still open.
+  executable branch checks. The pinned UE5.8.3 runtime now provides a
+  separate source-verified full version-to-export-archive handoff; a
+  real cooked versioned-header fixture is optional empirical differential
+  evidence, not a prerequisite to establish Epic's actual source rules.
   A correction is not proof that its parent operation is complete.
 * D007 IoContainerHeader.cpp behavior is genuinely **unregistered** by the
   existing formal manifests. Add its source-backed obligation in the
@@ -108,6 +110,11 @@ returns nonzero until genuine accepted coverage is established. The existing
 check and fails if the register becomes internally inconsistent. It does not
 turn an open/partial gate into a verified one.
 
+The pinned UE5.8.3 Zen version-handling call path can be checked without
+UnrealEditor: run `catalog/bin/verify-uedb5-zen-runtime-version-source.php`
+and see [the runtime header source contract](UE5-ZEN-VERSIONED-HEADER-SOURCE.md).
+These checks verify source control flow, not compiled UE runtime execution.
+
 Eleven regression assertions exercise negative cases: missing original
 operation, orphaned difference, invalid parent, missing game, false
 compliance claim, missing workflow route, duplicate operation, lost
@@ -121,9 +128,13 @@ real retained Satisfactory no-versioning snapshots, plus a read-only
 15-member spread sampling of actual serialized versioning flags (15 unversioned,
 zero versioned). The machine verifier
 closes two source-contract and two implementation subgates. Their formal
-operation dispositions remain partial. Next: finish independent real versioned-header differential,
-custom-version and corrupted-input branch review, and applicable V5 caller
-acceptance before closing B009/B010 or advancing to B004. No additional B
+operation dispositions remain partial. The absence of an UnrealEditor binary
+and a particular cooked versioned sample are **not blockers to auditing the
+pinned engine source**. The exact runtime call graph, versioned/unversioned
+fallback and export archive handoff are documented in
+[UE5-ZEN-VERSIONED-HEADER-SOURCE.md](UE5-ZEN-VERSIONED-HEADER-SOURCE.md).
+Next: close specifically unverified V5 callers, malformed input outcomes and
+independent coverage review; avoid inventing a cooked-file prerequisite. No additional B
 checkpoint was created.
 
 No full-file backfill, production database write, destructive checkout,

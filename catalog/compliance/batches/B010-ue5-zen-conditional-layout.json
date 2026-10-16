@@ -25,6 +25,7 @@
             },
             "tests": [
                 "catalog/bin/verify-uedb5-ue5-zen-package.php",
+                "catalog/bin/verify-uedb5-zen-runtime-version-source.php",
                 "catalog/bin/verify-uedb5-satisfactory-header-readonly-isolated.php"
             ],
             "additional_sources": [
@@ -59,7 +60,7 @@
                 "UE5-D011"
             ],
             "disposition": "partial",
-            "reason": "D011 corrected both the extra nonzero BulkDataPad-content rejection and the erroneous 7-byte limit; Epic's eight-byte scratch buffer permits a declared length of 8. Source-gated boundary fixtures 1008/1009/1014/1015 and no-versioning, plus real Satisfactory unversioned snapshots, pass. Complete malformed-header behavior, other consumers and independently cooked threshold fixtures remain open; NOT accepted.",
+            "reason": "D011 corrected both the extra nonzero BulkDataPad-content rejection and the erroneous 7-byte limit; Epic's eight-byte scratch buffer permits a declared length of 8. Source-gated boundary fixtures 1008/1009/1014/1015 and no-versioning, plus real Satisfactory unversioned snapshots, pass. Pinned runtime source and version-threshold byte fixtures establish branch semantics without an editor or cooked-file prerequisite; actual full caller coverage and malformed-header differential review still remain open.",
             "source_contract_evidence": {
                 "test_driver": "catalog/bin/verify-uedb5-ue5-zen-package.php",
                 "expected_checks": [
@@ -78,10 +79,11 @@
                     "ZenPackageHeader.cpp:37-47: absent version or UE5>=VERSE_CELLS => serialized cell offsets; older version => export bundle offset defaults",
                     "ZenPackageHeader.cpp:55-65: absent version or UE5>=DATA_RESOURCES => BulkDataPad and BulkDataMap; older => empty",
                     "ZenPackageHeader.cpp:58-62: uint8 PadBytes[sizeof(uint64)] permits exactly eight bytes; no zero-content requirement",
-                    "ZenPackageHeader.cpp:67-101: offset views and export/dependency cardinality, source-shaped negative tests"
+                    "ZenPackageHeader.cpp:67-101: offset views and export/dependency cardinality, source-shaped negative tests",
+                    "AsyncLoading2.cpp:8415,8464-8474,8544-8553: runtime loader uses MakeView, linker version fields and export-archive handoff; nothing requires UnrealEditor or an external versioned-header reference"
                 ],
                 "remaining_gates": [
-                    "Independently cooked real versioned threshold headers (UE5 1009 and 1015)",
+                    "Exact threshold semantics (1009 and 1015) verified against pinned Epic source and structurally source-shaped headers; independently cooked threshold packages remain optional additional differential evidence",
                     "Other reachable source/caller and malformed-header paths independent review",
                     "Runtime build-mode and full isolated end-to-end path acceptance"
                 ]

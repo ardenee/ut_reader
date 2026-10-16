@@ -25,6 +25,7 @@
             },
             "tests": [
                 "catalog/bin/verify-uedb5-ue5-zen-package.php",
+                "catalog/bin/verify-uedb5-zen-runtime-version-source.php",
                 "catalog/bin/verify-uedb5-satisfactory-header-readonly-isolated.php"
             ],
             "additional_sources": [
@@ -81,7 +82,7 @@
                 "UE5-D010"
             ],
             "disposition": "partial",
-            "reason": "D010 corrected the extra serialized uint32 bHasVersioningInfo == 0/1 rejection: Epic's MakeView tests nonzero. Original regression failed before, passed after; synthetic versioned/absent layouts and real Satisfactory no-versioning samples pass. Source/version custom-version serialization, complete error-path inventory and independent real versioned-header differential remain open; this operation is NOT accepted.",
+            "reason": "D010 corrected the extra serialized uint32 bHasVersioningInfo == 0/1 rejection: Epic's MakeView tests nonzero. Original regression failed before, passed after; synthetic versioned/absent layouts and real Satisfactory no-versioning samples pass. Source-derived wire serialization, compiled default fallback and archive handoff are now pinned and tested; remaining V5 caller coverage, error semantics and independent review keep this operation open.",
             "source_contract_evidence": {
                 "test_driver": "catalog/bin/verify-uedb5-ue5-zen-package.php",
                 "expected_checks": [
@@ -100,11 +101,12 @@
                     "AsyncLoading2.cpp:164-170: ZenVersion, FPackageFileVersion, LicenseeVersion, optimized CustomVersions",
                     "ObjectVersion.cpp:34-40: UE4 and UE5 package versions serialized as int32",
                     "CustomVersion.cpp:287-351: optimized array count and GUID/version pairs",
-                    "AsyncLoading2.cpp:8464-8474: versioned LinkerRoot fields; absent versioning uses GPackageFileUEVersion and GPackageFileLicenseeUEVersion (runtime fallback NOT YET VERIFIED IN UNREALDB)"
+                    "AsyncLoading2.cpp:8464-8474: versioned linker receives serialized package/licensee/custom versions; absent versioning takes engine-defined compiled defaults; UnrealDB records source-serialized metadata rather than instantiating runtime linker",
+                    "AsyncLoading2.cpp:8544-8553: InitializeExportArchive applies the effective package/licensee/custom versions to the archive before UObject export payload deserialization; runtime branch is source-verified without UnrealEditor"
                 ],
                 "remaining_gates": [
-                    "Independent real Epic-cooked versioned Zen header positive differential",
-                    "Source reachability completeness and runtime version fallback/caller acceptance",
+                    "Source-only behavior is now proven by pinned runtime call-chain assertions and source-layout byte fixtures; a real cooked versioned differential is optional additional evidence, not a prerequisite for determining header semantics",
+                    "Complete the V5 caller/consumer map and separate header metadata semantics from UObject export-payload deserialization; Epic linker fallback and export-archive handoff are now proven in pinned source",
                     "Independent review of mapped source branches and error outcomes"
                 ]
             },
