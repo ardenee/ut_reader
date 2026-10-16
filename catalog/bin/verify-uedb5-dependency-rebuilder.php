@@ -172,6 +172,7 @@ try {
     $pendingOptions=[
         'zen_runtime_context'=>[
             'package_identity_context_authoritative'=>true,
+        'package_identity_rewrites'=>[],
             'package_store_context_authoritative'=>true,
             'package_redirects'=>[],'localized_packages'=>[],
         ],

@@ -58,6 +58,7 @@ $snapshot = static function (
 };
 $authoritativeContext = [
     'package_identity_context_authoritative' => true,
+    'package_identity_rewrites' => [],
     'package_store_context_authoritative' => true,
     'package_redirects' => [],
     'localized_packages' => [],
@@ -180,6 +181,7 @@ $mountUnknownWithoutLocalRows = Uedb5Ue5ZenDependencyResolver::resolve($consumer
     'snapshot' => $provider,
 ]], [
     'package_identity_context_authoritative' => true,
+    'package_identity_rewrites' => [],
 ]);
 $check(
     $find($mountUnknownWithoutLocalRows, 'imports', 0)['outcome'] === 'unresolved'
@@ -232,8 +234,35 @@ $check(
         && ($identityRewriteRow['package_identity_rewrite']['reason'] ?? null) === 'test_core_redirect_instancing_localization_aggregate',
     'zen_authoritative_pre_store_identity_rewrite_preserves_serialized_source_identity'
 );
+// B008 source-first negative controls: flags alone do not establish that
+// the caller supplied the complete effective FPackageStore redirect maps or
+// the empty authoritative CoreRedirect/instancing/loose-localization result.
+$incompleteStoreContext=Uedb5Ue5ZenDependencyResolver::resolve(
+    $redirectConsumer,[['provider_id'=>96,'snapshot'=>$redirectProvider]],[
+        'package_store_context_authoritative'=>true,
+        'package_identity_context_authoritative'=>true,
+        'package_identity_rewrites'=>[],
+    ]
+);
+$incompleteStoreRow=$find($incompleteStoreContext,'imports',0);
+$check($incompleteStoreRow['outcome']==='unresolved'
+    &&$incompleteStoreRow['reason_code']==='package_store_mount_context_required'
+    &&$incompleteStoreRow['provider_lookup_package_id']===$providerId,
+    'b008_authority_flag_without_effective_global_store_maps_fails_closed');
+$incompleteIdentity=Uedb5Ue5ZenDependencyResolver::resolve(
+    $consumer,[['provider_id'=>91,'snapshot'=>$provider]],[
+        'package_store_context_authoritative'=>true,
+        'package_redirects'=>[],'localized_packages'=>[],
+        'package_identity_context_authoritative'=>true,
+    ]
+);
+$incompleteIdentityRow=$find($incompleteIdentity,'imports',0);
+$check($incompleteIdentityRow['outcome']==='unresolved'
+    &&$incompleteIdentityRow['reason_code']==='package_identity_runtime_context_required',
+    'b008_authority_flag_without_explicit_identity_result_fails_closed');
 $redirectBaseline = Uedb5Ue5ZenDependencyResolver::resolve($redirectConsumer, [], [
     'package_identity_context_authoritative' => true,
+    'package_identity_rewrites' => [],
 ]);
 $redirectBaselineRow = $find($redirectBaseline, 'imports', 0);
 $check(
@@ -288,6 +317,35 @@ $check(
     'zen_authoritative_package_store_redirect_first_effective_order_entry_wins'
 );
 
+// Epic FilePackageStore Update uses FindOrAdd and allows a later valid
+// source name to fill an earlier NAME_None, even for identical FPackageIds.
+$firstNoneRedirect=$redirectRow;
+$firstNoneRedirect['source_package_name']=['text'=>'None'];
+$firstNoneRedirect['target_package_id']=$secondRedirectTargetId;
+$refilledRedirect=$resolve($redirectConsumer,[
+    ['provider_id'=>96,'snapshot'=>$redirectProvider],
+],[
+    'package_store_context_authoritative'=>true,
+    'package_redirects'=>[$firstNoneRedirect,$redirectRow],
+    'localized_packages'=>[],
+    'is_editor'=>false,
+]);
+$refilledRedirectRow=$find($refilledRedirect,'imports',0);
+$check($refilledRedirectRow['outcome']==='resolved'
+    &&$refilledRedirectRow['provider_lookup_package_id']===$redirectTargetId,
+    'b008_epic_none_redirect_filled_by_later_valid_global_entry');
+$opaqueFirstRedirect=$firstNoneRedirect;
+unset($opaqueFirstRedirect['source_package_name']);
+$opaqueFirstRows=$resolve($redirectConsumer,[
+    ['provider_id'=>96,'snapshot'=>$redirectProvider],
+],[
+    'package_store_context_authoritative'=>true,
+    'package_redirects'=>[$opaqueFirstRedirect,$redirectRow],
+    'localized_packages'=>[],
+]);
+$check($find($opaqueFirstRows,'imports',0)['provider_lookup_package_id']===$secondRedirectTargetId,
+    'b008_missing_name_not_assumed_none_in_global_map');
+
 $localizedRow = [
     'container_index' => 0,
     'source_package_id' => $providerId,
@@ -304,6 +362,7 @@ $localizedSingleContainer = Uedb5Ue5ZenDependencyResolver::resolve($localizedCon
     'snapshot' => $provider,
 ]], [
     'package_identity_context_authoritative' => true,
+    'package_identity_rewrites' => [],
 ]);
 $localizedSingleContainerRow = $find($localizedSingleContainer, 'imports', 0);
 $check(

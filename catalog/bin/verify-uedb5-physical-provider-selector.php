@@ -231,6 +231,7 @@ $check('zen_duplicate_package_id_environment_is_ambiguous',
 $backendSelected=(new PdoUedb5PhysicalProviderSelector($db,$tmp))->select(8,40,[
  'zen_runtime_context'=>[
   'package_identity_context_authoritative'=>true,
+        'package_identity_rewrites'=>[],
   'package_store_context_authoritative'=>true,
   'package_redirects'=>[],'localized_packages'=>[],
  ],
@@ -247,6 +248,7 @@ $check('zen_evidenced_backend_disambiguates_exact_physical_package',
 $nestedOk=(new PdoUedb5PhysicalProviderSelector($db,$tmp))->select(8,40,[
  'zen_runtime_context'=>[
   'package_identity_context_authoritative'=>true,
+        'package_identity_rewrites'=>[],
   'package_store_context_authoritative'=>true,
   'package_redirects'=>[],'localized_packages'=>[],
   'package_store_backend_results'=>[
@@ -261,6 +263,7 @@ $check('b005_nested_backend_ok_picks_exact_evidenced_provider',
 $nestedPending=(new PdoUedb5PhysicalProviderSelector($db,$tmp))->select(8,40,[
  'zen_runtime_context'=>[
   'package_identity_context_authoritative'=>true,
+        'package_identity_rewrites'=>[],
   'package_store_context_authoritative'=>true,
   'package_redirects'=>[],'localized_packages'=>[],
   'package_store_backend_results'=>[
@@ -276,6 +279,7 @@ try {
  (new PdoUedb5PhysicalProviderSelector($db,$tmp))->select(8,40,[
   'zen_runtime_context'=>[
    'package_identity_context_authoritative'=>true,
+        'package_identity_rewrites'=>[],
    'package_store_context_authoritative'=>true,
    'package_redirects'=>[],'localized_packages'=>[],
    'package_store_backend_results'=>[
@@ -309,6 +313,7 @@ $mountedEvidence=Uedb5ZenEffectivePackageStoreContextBuilder::build([
 $mountedSelected=(new PdoUedb5PhysicalProviderSelector($db,$tmp))->select(8,40,[
  'zen_runtime_context'=>[
   'package_identity_context_authoritative'=>true,
+        'package_identity_rewrites'=>[],
   'package_store_context_authoritative'=>true,
   'package_redirects'=>$mountedEvidence['package_redirects'],
   'localized_packages'=>$mountedEvidence['localized_packages'],
@@ -336,6 +341,7 @@ unset($backend);
 $pendingSelection=(new PdoUedb5PhysicalProviderSelector($db,$tmp))->select(8,40,[
  'zen_runtime_context'=>[
   'package_identity_context_authoritative'=>true,
+        'package_identity_rewrites'=>[],
   'package_store_context_authoritative'=>true,
   'package_redirects'=>[],'localized_packages'=>[],
  ],
@@ -345,6 +351,7 @@ $check('zen_mounted_file_backend_does_not_override_higher_pending_backend',
  $pendingSelection===[]);
 $backendUnknown=(new PdoUedb5PhysicalProviderSelector($db,$tmp))->select(8,40,[
  'zen_runtime_context'=>['package_identity_context_authoritative'=>true,
+        'package_identity_rewrites'=>[],
   'package_store_context_authoritative'=>false,'package_redirects'=>[],'localized_packages'=>[]],
  'zen_package_store_backend_results'=>[
   ['backend_id'=>'file','priority'=>1,
@@ -354,6 +361,7 @@ $backendUnknown=(new PdoUedb5PhysicalProviderSelector($db,$tmp))->select(8,40,[
 $backendMissing=(new PdoUedb5PhysicalProviderSelector($db,$tmp))->select(8,40,[
  'zen_runtime_context'=>[
   'package_identity_context_authoritative'=>true,
+        'package_identity_rewrites'=>[],
   'package_store_context_authoritative'=>true,
   'package_redirects'=>[],'localized_packages'=>[],
  ],
@@ -396,6 +404,7 @@ $check('zen_selector_does_not_guess_single_container_redirect_target',
 
 $redirectContext=[
     'package_identity_context_authoritative'=>true,
+        'package_identity_rewrites'=>[],
     'package_store_context_authoritative'=>true,
     'package_redirects'=>$redirectRows,
     'localized_packages'=>[],

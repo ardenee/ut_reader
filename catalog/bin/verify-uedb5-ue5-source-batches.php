@@ -37,6 +37,8 @@ $tests=[
  'verify-uedb5-b005-operation-acceptance.php',
  'verify-uedb5-b006-mounted-source.php',
  'verify-uedb5-b006-operation-acceptance.php',
+ 'verify-uedb5-b008-import-redirect-source.php',
+ 'verify-uedb5-b008-operation-acceptance.php',
  'verify-uedb5-zen-mounted-store-context.php',
  'verify-uedb5-zen-effective-store-context.php',
  'verify-uedb5-zen-context-options-standalone.php',

@@ -507,6 +507,15 @@ final class Uedb5Ue5ZenDependencyResolver
         );
     }
 
+    /** A missing serialized name is unknown, not proof of FName::IsNone(). */
+    private static function packageSourceNameIsNone(array $row): bool
+    {
+        if (!array_key_exists('source_package_name', $row)) return false;
+        $name=$row['source_package_name'];
+        if (is_array($name)) $name=$name['base_text']??$name['text']??null;
+        return $name===null || in_array(strtolower(trim((string)$name)),['','none'],true);
+    }
+
     /** @return array<string,mixed> */
     private static function packageStoreContext(array $consumer, array $runtimeContext): array
     {
@@ -522,15 +531,22 @@ final class Uedb5Ue5ZenDependencyResolver
         foreach ($redirectRows as $row) {
             $row = (array)$row;
             $source = self::u64((string)($row['source_package_id'] ?? ''), 'PackageRedirect source FPackageId');
-            // FilePackageStore uses FindOrAdd while traversing the effective mounted-container order;
-            // the first row for a source FPackageId wins.
-            $redirects[self::mapKey($source)] ??= $row;
+            // The source of these maps must be the complete effective FPackageStore,
+            // never only the consumer container. FilePackageStore's FindOrAdd
+            // also permits a lower mount to refill a higher NAME_None name.
+            $key=self::mapKey($source);
+            if (!isset($redirects[$key]) || self::packageSourceNameIsNone($redirects[$key])) {
+                $redirects[$key]=$row;
+            }
         }
         $localized = [];
         foreach ($localizedRows as $row) {
             $row = (array)$row;
             $source = self::u64((string)($row['source_package_id'] ?? ''), 'LocalizedPackage source FPackageId');
-            $localized[self::mapKey($source)] ??= $row;
+            $key=self::mapKey($source);
+            if (!isset($localized[$key]) || self::packageSourceNameIsNone($localized[$key])) {
+                $localized[$key]=$row;
+            }
         }
 
         $identityRewrites = [];
@@ -545,8 +561,14 @@ final class Uedb5Ue5ZenDependencyResolver
         return [
             'redirects' => $redirects,
             'localized' => $localized,
-            'authoritative' => !empty($runtimeContext['package_store_context_authoritative']),
-            'identity_authoritative' => !empty($runtimeContext['package_identity_context_authoritative']),
+            'authoritative' => !empty($runtimeContext['package_store_context_authoritative'])
+                && array_key_exists('package_redirects',$runtimeContext)
+                && is_array($runtimeContext['package_redirects'])
+                && array_key_exists('localized_packages',$runtimeContext)
+                && is_array($runtimeContext['localized_packages']),
+            'identity_authoritative' => !empty($runtimeContext['package_identity_context_authoritative'])
+                && array_key_exists('package_identity_rewrites',$runtimeContext)
+                && is_array($runtimeContext['package_identity_rewrites']),
             'identity_rewrites' => $identityRewrites,
             'backend_results' => isset($runtimeContext['package_store_backend_results'])
                 ? (array)$runtimeContext['package_store_backend_results'] : null,

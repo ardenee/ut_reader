@@ -142,6 +142,7 @@ try {
     foreach($expectedStatuses as $backendStatus=>[$expectedOutcome,$expectedReason]){
         $context=[
             'package_identity_context_authoritative'=>true,
+        'package_identity_rewrites'=>[],
             'package_store_context_authoritative'=>true,
             'package_redirects'=>[],'localized_packages'=>[],
             'package_store_backend_results'=>[[
