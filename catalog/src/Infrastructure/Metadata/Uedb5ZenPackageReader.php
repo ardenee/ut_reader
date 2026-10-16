@@ -298,6 +298,12 @@ final class Uedb5ZenPackageReader
     }
 
     /** @return list<array<string,mixed>> */
+    /** Public bounded name-batch decoder reused by the global ScriptObjects chunk. */
+    public static function readNameBatchForScriptObjects(Uedb5BinaryReader $reader): array
+    {
+        return self::readNameBatch($reader, 'UE5 ScriptObjects name map');
+    }
+
     private static function readNameBatch(Uedb5BinaryReader $reader, string $label): array
     {
         $count = $reader->u32le();
