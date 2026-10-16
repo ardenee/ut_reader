@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "batch": "B092",
+  "source": {
+    "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+    "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9"
+  },
+  "classification": "bounded source-body review",
+  "status": "partial",
+  "reviewed": [
+    {
+      "symbol": "FAsyncPackage2::CreateRuntimeExports",
+      "line": 8590,
+      "disposition": "file-format-relevant",
+      "reason": "Processes Zen export bundle entries in Create command phase, separates editor optional segment from main header and initializes per-segment export archive; load-failed early exit.",
+      "verified": false
+    },
+    {
+      "symbol": "FAsyncPackage2::PreloadRuntimeExports",
+      "line": 8702,
+      "disposition": "file-format-relevant",
+      "reason": "Processes Zen export bundle entries in Serialize command phase, with main/optional segment distinction and archive initialization; load-failed early exit.",
+      "verified": false
+    }
+  ],
+  "evidence_limitations": [
+    "Full loops, optional cell export conditions and timeout paths not yet byte-differential tested",
+    "These operations are not certified by name-level source coverage"
+  ],
+  "next_batch": "B093"
+}
