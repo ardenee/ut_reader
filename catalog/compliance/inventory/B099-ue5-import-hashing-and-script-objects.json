@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "batch": "B099",
+  "source": {
+    "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+    "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9"
+  },
+  "classification": "bounded source-body review",
+  "status": "partial",
+  "reviewed": [
+    {
+      "symbol": "FPackageObjectIndex::GenerateImportHashFromObjectPath",
+      "line": 302,
+      "disposition": "file-format-relevant",
+      "reason": "Canonicalizes every dot/colon to slash and lowercases remaining TCHARs before CityHash64 over TCHAR bytes; clears high two object-index type bits. This is distinct from VersePath UTF8 hashing.",
+      "verified": false
+    },
+    {
+      "symbol": "FGlobalImportStore::FindAllScriptObjects",
+      "line": 6884,
+      "disposition": "file-format-relevant",
+      "reason": "Scans runtime /Script and Verse VNI packages, includes public objects and excludes Verse compiler-generated non-UHT objects; builds/verifies script object hash identities.",
+      "verified": false
+    }
+  ],
+  "evidence_limitations": [
+    "Existing earlier manifest mapping did not equal behavioral certification",
+    "Full package-store arbitration and hash differential vectors remain open"
+  ],
+  "next_batch": "B100"
+}
