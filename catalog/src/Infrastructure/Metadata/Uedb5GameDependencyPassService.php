@@ -359,6 +359,11 @@ final class Uedb5GameDependencyPassService
                     'package_store_backend_order' => $mountedContext['package_store_backend_order'] ?? [],
                 ]
             );
+            if (!empty($options['zen_runtime_context']['package_store_context_authoritative'])
+                && isset($mountedContext['package_store_backend_results'])) {
+                $options['zen_package_store_backend_results'] =
+                    $mountedContext['package_store_backend_results'];
+            }
         }
         return $options;
     }
