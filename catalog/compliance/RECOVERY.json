@@ -296,6 +296,14 @@
       "rationale": "B005 selector ignored nested runtime backend evidence and rebuilder overwrote conflicting evidence. Shared arbitration now rejects contradictory snapshots; four original negative-before regressions pass after correction. Hybrid editor mount acceptance remains open.",
       "state": "fixed_regression_verified",
       "audit_escape": "none"
+    },
+    {
+      "id": "UE5-D014",
+      "kind": "mapped",
+      "operations": ["UE5-583-IMPORTED-PACKAGE-NAMES-001"],
+      "rationale": "Epic UE5.8.3 FZenPackageImportedPackageNamesContainer reader never requires ImportedPackageNamesDataReader to reach HeaderSize. UnrealDB imposed an additional rejection on unconsumed trailing bytes; two source-shaped fixtures failed before the a9b4b3cf correction and pass afterwards. B011 is accepted with pinned source, independent wire/IoStore and dependency consumer tests.",
+      "state": "fixed_regression_verified",
+      "audit_escape": "original_B011_unfinished_source_branch"
     }
   ],
   "coverage_gaps": [

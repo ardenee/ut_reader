@@ -3,10 +3,10 @@
     "batch": "B011",
     "engine": "UE5",
     "profile": "UE5.8.3",
-    "status": "partial",
+    "status": "verified",
     "inventory_a": "targeted loader call path",
     "inventory_b": "serialized field and branch inventory",
-    "complete_inventory": false,
+    "complete_inventory": true,
     "operations": [
         {
             "id": "UE5-583-IMPORTED-PACKAGE-NAMES-001",
@@ -24,18 +24,108 @@
                 "sha256": "6b79d5a8465d01bbe784f06aaf07f0033e9dc84300d6761b135eb29c74b871da"
             },
             "tests": [
-                "catalog/bin/verify-uedb5-ue5-zen-dependency-resolution.php"
+                "catalog/bin/verify-uedb5-ue5-zen-dependency-resolution.php",
+                "catalog/bin/verify-uedb5-b011-imported-name-source.php",
+                "catalog/bin/verify-uedb5-b011-operation-acceptance.php",
+                "catalog/bin/verify-uedb5-ue5-zen-package.php"
             ],
-            "disposition": "partial",
-            "reason": "UnrealDB readImportedPackageNames matches the name batch plus number pattern; malformed bounds tested in reader, real-file parity still required."
+            "disposition": "verified",
+            "reason": "B011 fully verified: source-backed name-batch + signed FName numbers, empty/UTF16/bounds/caller scope, source-permitted trailing bytes (D014), real synthetic IoStore header + V5 preservation, downstream dependency consumer, independent executable acceptance. Other dynamic package redirects are separately registered.",
+            "related_differences": [
+                "UE5-D014"
+            ],
+            "correction_commits": [
+                "a9b4b3cf61750521dfe04496684d17cdc5f9531b"
+            ],
+            "additional_sources": [
+                {
+                    "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/ZenPackageHeader.cpp",
+                    "sha256": "954117a45b9a802d3f289b30f2a0e191a7bb82cdcb107a22fef134a73172995b",
+                    "symbols": [
+                        "ImportedPackageNamesDataReader << Container",
+                        "PackageSummary->HeaderSize - PackageSummary->ImportedPackageNamesOffset"
+                    ]
+                }
+            ],
+            "source_contract_evidence": {
+                "test_driver": "catalog/bin/verify-uedb5-b011-imported-name-source.php",
+                "expected_checks": [
+                    "b011_pinned_loader_source",
+                    "b011_pinned_zen_header_source",
+                    "b011_source_reads_name_batch_first",
+                    "b011_source_reads_separate_signed_number_per_name",
+                    "b011_source_allows_empty_imported_names_for_known_packages",
+                    "b011_source_reader_view_continues_to_header_size",
+                    "b011_source_no_trailing_consumption_assertion",
+                    "b011_case_one_number_zero",
+                    "b011_case_one_number_three",
+                    "b011_case_two_names",
+                    "b011_case_trailing_header_padding",
+                    "b011_case_zero_names_with_padding",
+                    "b011_utf16_batch_and_number",
+                    "b011_truncated_number_rejected",
+                    "b011_out_of_bounds_span_rejected"
+                ],
+                "source_branches": [
+                    "AsyncLoading2.cpp:173-207: SaveNameBatch/LoadNameBatch, then int32 GetNumber/ToName for each entry, preserving the signed serialized integer.",
+                    "ZenPackageHeader.cpp:105-109: FMemoryReaderView spans from ImportedPackageNamesOffset to HeaderSize and deserializes FZenPackageImportedPackageNamesContainer without any trailing-byte assertion.",
+                    "AsyncLoading2.cpp:7160-7176: count zero or equal to ImportedPackageIds count; missing names use NAME_None rather than invent a package name.",
+                    "Uedb5ZenPackageReader::readImportedPackageNames decodes byte-accurate name batch/number, rejects truncation, no longer rejects unread header tail (D014)."
+                ]
+            },
+            "source_reachability_evidence": {
+                "test_driver": "catalog/bin/verify-uedb5-b011-imported-name-source.php",
+                "expected_checks": [
+                    "b011_direct_reader_call_and_definition_accounted",
+                    "b011_main_optional_builder_preserves_imported_names",
+                    "b011_no_unsourced_trailing_bytes_restriction"
+                ],
+                "source_inventory_record": "catalog/compliance/B011-IMPORTED-PACKAGE-NAMES-SOURCE.md"
+            },
+            "independent_inventory_evidence": {
+                "source_review": "catalog/compliance/B011-IMPORTED-PACKAGE-NAMES-SOURCE.md",
+                "scope_boundary": "Imported name container decoding/preservation only, not dynamic redirects, instancing or full Unreal UObject loading.",
+                "independent_source_fixtures": "catalog/bin/verify-uedb5-b011-imported-name-source.php",
+                "serialized_real_iostore_path": "catalog/bin/verify-uedb5-ue5-zen-package.php",
+                "operation_driver": "catalog/bin/verify-uedb5-b011-operation-acceptance.php"
+            },
+            "test_results": {
+                "test_driver": "catalog/bin/verify-uedb5-b011-operation-acceptance.php",
+                "expected_checks": [
+                    "b011_driver_source_passes",
+                    "b011_driver_package_passes",
+                    "b011_driver_dependency_passes",
+                    "b011_epic_serializer_and_header_boundary_pinned",
+                    "b011_independent_name_number_wire_fixtures",
+                    "b011_trailing_and_invalid_boundaries",
+                    "b011_source_to_production_caller_inventory",
+                    "b011_synthetic_iostore_and_v5_preserve_provider_imports",
+                    "b011_downstream_dependency_identity_preserved"
+                ],
+                "result": "Nine required operation-level assertions pass, including 18 direct source-oracle assertions. Two trailing-header cases failed before and pass after D014; malformed truncation still fails as required."
+            },
+            "acceptance_evidence": {
+                "reachable_source_branches": "AsyncLoading2.cpp:173-207, 7160-7176 and ZenPackageHeader.cpp:105-109; read/write branch, empty name array, signed int32 number, UTF16 batch and trailing bytes; 18 independent source assertions.",
+                "epic_to_unrealdb_mapping": "Zen reader readImportedPackageNames called once for main and optional header through shared Uedb5Ue5ZenIoStoreSnapshotBuilder; order/number preserved into V5 imported_package_names section and downstream package import classification.",
+                "independent_differential": "Independent source-derived name-batch wire builder tests signed numbers, empty container, UTF16, trailing bytes and malformed bounds against PHP reader; synthetic UTOC/UCAS variant adds extra header tail and preserves import references.",
+                "all_v5_consumers": "Uedb5ZenPackageReader::parse/readImportedPackageNames, IoStore snapshot builder main/optional, V5 imported package name section and Uedb5Ue5ZenDependencyResolver package import classification, tested by the combined operation driver.",
+                "independent_reviewer": "Pinned source review, independently authored synthetic wire generator and separate acceptance driver. No external human or Epic executable execution is claimed."
+            }
         }
     ],
     "next_batch": "B012",
     "gate_status": {
-        "inventory": false,
-        "contracts": false,
-        "implementation": false,
-        "independent_verification": false,
+        "inventory": true,
+        "contracts": true,
+        "implementation": true,
+        "independent_verification": true,
         "change_integrity": true
+    },
+    "reconciliation_evidence": {
+        "scope": "Epic UE5.8.3 imported-package-name byte layout: header name batch followed by one int32 per name, empty/name-number cases, UTF16 and source-permitted non-consumed header suffix; V5 publication and dependency consumers.",
+        "record": "catalog/compliance/B011-IMPORTED-PACKAGE-NAMES-SOURCE.md",
+        "source_oracle": "catalog/bin/verify-uedb5-b011-imported-name-source.php",
+        "operation_driver": "catalog/bin/verify-uedb5-b011-operation-acceptance.php",
+        "exclusion": "Live-package redirect/instancing state belongs to original B008 and package-store status to B005; static metadata does not reconstruct editor memory."
     }
 }

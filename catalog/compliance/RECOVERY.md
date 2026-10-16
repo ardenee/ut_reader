@@ -15,13 +15,13 @@ second competing audit system is introduced.
   reconciled. UE4.27.2 classic and UE5.8.3 classic/IoStore format targets
   are listed separately because the seven-game registry is not a complete
   list of supported format readers.
-* UE5 formal batch manifests: **15 containing 18 operations; 4 verified (B004, B005, B009, B010), 14 partial**.
+* UE5 formal batch manifests: **15 containing 18 operations; 5 verified (B004, B005, B009, B010, B011), 13 partial**.
   Baseline was 33 formal open evidence gates. B005 now has exhaustive scoped
   source/inventory/implementation acceptance, including the pinned hybrid
   editor branch model, real V5 selector/rebuilder and isolated temporary MySQL.
   B004, B009 and B010 now have complete source-defined, operation-level
-  executable acceptance. **25 original evidence gates remain open.** Full application/engine compliance remains unverified.
-* D001-D013: thirteen known differences linked to original operations or
+  executable acceptance. **23 original evidence gates remain open.** Full application/engine compliance remains unverified.
+* D001-D014: fourteen known differences linked to original operations or
   explicitly categorized as cross-cutting or previously uncovered behavior.
   D010/D011 are now marked fixed and regression-verified. Original B009 and
   B010 now pass source-contract, implementation, caller, downstream V5 and
@@ -55,7 +55,7 @@ second competing audit system is introduced.
 | 1 | UE5-583-ZEN-VERSIONING-001 | **VERIFIED**: pinned Epic source, versioned/unversioned and custom GUID wire layouts, malformed headers, V5 round-trip, source-to-caller inventory |
 | 2 | UE5-583-ZEN-CONDITIONAL-LAYOUT-001 | **VERIFIED**: Epic threshold 1009/1015, eight-byte scratch pad, main/optional chunks, negative boundaries, final V5 validator |
 | 3 | UE5-583-OBJECT-INDEX-001 | **VERIFIED**: exact Epic bit encoding, malformed types, source-derived independent oracle, direct consumers and V5 metadata round-trip |
-| 4 | UE5-583-IMPORTED-PACKAGE-NAMES-001 | Batch names, per-name numbers, malformed boundaries |
+| 4 | UE5-583-IMPORTED-PACKAGE-NAMES-001 | **VERIFIED**: source-pinned name batch + separate int32 per name, UTF16, empty names, trailing-header allowance D014, malformed bounds, synthetic IoStore and V5 round-trip |
 | 5 | UE5-583-OPTIONAL-EXPORT-SEGMENT-001 | Segment-specific import/store entries and editor/runtime behavior |
 | 6 | UE5-583-BACKEND-STATUS-001 | **VERIFIED**: ordinary and hybrid source branch oracles, exhaustive caller inventory, selector/rebuilder and real temporary-table SQL test. Runtime authority is explicit, never guessed. |
 | 7 | UE5-583-FILE-STORE-001 | Complete mounted family, order/sequence, first-wins maps |
