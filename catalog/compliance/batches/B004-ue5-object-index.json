@@ -3,7 +3,7 @@
     "batch": "B004",
     "engine": "UE5",
     "profile": "UE5.8.3",
-    "status": "partial",
+    "status": "verified",
     "inventory_a": "Source call-path inventory",
     "inventory_b": "Source structure and conditional behavior inventory",
     "complete_inventory": true,
@@ -29,10 +29,11 @@
                 "catalog/bin/verify-uedb5-ue5-zen-dependency-resolution.php",
                 "catalog/bin/verify-uedb5-zen-object-index-source-oracle.php",
                 "catalog/bin/verify-uedb5-zen-object-index-boundaries.php",
-                "catalog/bin/verify-uedb5-ue5-zen-package.php"
+                "catalog/bin/verify-uedb5-ue5-zen-package.php",
+                "catalog/bin/verify-uedb5-b004-operation-acceptance.php"
             ],
-            "disposition": "partial",
-            "reason": "Pinned UE5.8.3 source and independently authored byte-level oracle verify existing UnrealDB FPackageObjectIndex decoding and explicit malformed-input protections. No production code difference found; source contract, bounded index caller inventory and implementation gates close without inventing a correction commit. Full independent acceptance and broader provider/mount semantics remain separate/open.",
+            "disposition": "verified",
+            "reason": "Entire original encoded FPackageObjectIndex decoding operation VERIFIED from pinned Epic source, independent byte-level reference, exact caller inventory, source-shaped IoStore package and V5 persistence, malformed inputs and dependency consumers. No production code difference; no fabricated fix. Broader backend provider resolution remains B005/B007/B015.",
             "source_contract_evidence": {
                 "test_driver": "catalog/bin/verify-uedb5-zen-object-index-source-oracle.php",
                 "expected_checks": [
@@ -87,6 +88,36 @@
                     "epic_raw_export_conversion_uint32"
                 ],
                 "verification_scope": "Type 0/1/2, exact Null, encoded 30/32-bit package reference, local export index bounds and invalid/reserved inputs."
+            },
+            "independent_inventory_evidence": {
+                "source_review": "catalog/compliance/B004-OBJECT-INDEX-SOURCE.md",
+                "scope_boundary": "Pinned UE5.8.3 FPackageObjectIndex 64-bit encoded null/export/script import/package import and callsites; provider backend/mount and script object registration are independently tracked original obligations.",
+                "independent_reference": "catalog/bin/verify-uedb5-zen-object-index-source-oracle.php",
+                "source_behavior": "Engine/Source/Runtime/CoreUObject/Public/Serialization/AsyncLoading2.h:34-159, pinned SHA256 and branch-level oracle",
+                "end_to_end": "catalog/bin/verify-uedb5-b004-operation-acceptance.php"
+            },
+            "test_results": {
+                "test_driver": "catalog/bin/verify-uedb5-b004-operation-acceptance.php",
+                "expected_checks": [
+                    "b004_driver_source_passes",
+                    "b004_driver_boundaries_passes",
+                    "b004_driver_io_passes",
+                    "b004_driver_deps_passes",
+                    "b004_source_defines_complete_type_encoding",
+                    "b004_independent_valid_encoded_imports_and_exports",
+                    "b004_independent_reserved_and_out_of_bounds_rejection",
+                    "b004_decoder_caller_inventory_complete",
+                    "b004_real_synthetic_iostore_serialization_and_v5_persistence",
+                    "b004_dependency_index_consumers_source_equivalent"
+                ],
+                "result": "Four independent bounded drivers are rerun on formal verification. No production decoder difference was found or correction invented. Real engine runtime has not been executed."
+            },
+            "acceptance_evidence": {
+                "reachable_source_branches": "FPackageObjectIndex type tags 0/1/2/3, exact all-ones Null, 62-bit script hash, 30/32-bit package-import reference, valid/invalid local export ranges and reserved tags; 31 oracle assertions.",
+                "epic_to_unrealdb_mapping": "catalog/compliance/B004-OBJECT-INDEX-SOURCE.md and oracle trace five direct object-index decoder callers across import maps, cell maps and export references.",
+                "independent_differential": "Independent source-derived 64-bit hex reference compared to production Uedb5ZenPackageReader for valid and malformed encoded values; additional synthetic IoStore container and V5 round-trip.",
+                "all_v5_consumers": "Uedb5ZenPackageReader, Uedb5Ue5ZenIoStoreSnapshotBuilder and Uedb5Ue5ZenDependencyResolver: import/export/cell/optional caller preservation and provider ID/hash resolution tested.",
+                "independent_reviewer": "Distinct independent source encoding oracle and end-to-end operation acceptance test, not an external human reviewer or a claim of whole Unreal Engine compliance."
             }
         }
     ],
@@ -95,7 +126,7 @@
         "inventory": true,
         "contracts": true,
         "implementation": true,
-        "independent_verification": false,
+        "independent_verification": true,
         "change_integrity": true
     },
     "reconciliation_evidence": {

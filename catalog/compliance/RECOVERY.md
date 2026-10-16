@@ -15,11 +15,11 @@ second competing audit system is introduced.
   reconciled. UE4.27.2 classic and UE5.8.3 classic/IoStore format targets
   are listed separately because the seven-game registry is not a complete
   list of supported format readers.
-* UE5 formal batch manifests: **15 containing 18 operations; 1 verified (B005), 17 partial**.
+* UE5 formal batch manifests: **15 containing 18 operations; 2 verified (B004 and B005), 16 partial**.
   Baseline was 33 formal open evidence gates. B005 now has exhaustive scoped
   source/inventory/implementation acceptance, including the pinned hybrid
   editor branch model, real V5 selector/rebuilder and isolated temporary MySQL.
-  B004, B009 and B010 have bounded inventory subgates. **28 original evidence
+  B004, B009 and B010 have bounded inventory subgates. **27 original evidence
   gates remain open.** Full application/engine compliance remains unverified.
 * D001-D013: thirteen known differences linked to original operations or
   explicitly categorized as cross-cutting or previously uncovered behavior.
@@ -41,13 +41,11 @@ second competing audit system is introduced.
   see [B005 source contract](B005-BACKEND-STATUS-SOURCE.md).
 * Sixteen required file-processing paths are listed as unverified until
   every relevant source path, UnrealDB caller and outcome is traced.
-* B004 `UE5-583-OBJECT-INDEX-001`: original 62-bit encoding inventory,
-  source contract and implementation equivalence subgates are verified by
-  an independently implemented source reference decoder. No code defect was
-  found within its bounded encoding contract, so **no fake correction commit
-  or invented difference ID** was created. See
-  [B004 source record](B004-OBJECT-INDEX-SOURCE.md); independent final
-  acceptance remains open.
+* B004 `UE5-583-OBJECT-INDEX-001`: **entire source-defined encoding operation
+  verified** by independent 62-bit type/index oracle, negative boundaries,
+  all direct parser callers, full synthetic Zen header/V5 persistence and
+  dependency-consumer tests. No code defect was found; **no fictitious fix
+  was created**. See [B004 source record](B004-OBJECT-INDEX-SOURCE.md).
 * Source completeness denominator is unknown: **no percentage** is valid.
 
 ## Operation closure order (original work, no new B numbers)
@@ -56,7 +54,7 @@ second competing audit system is introduced.
 |---|---|---|
 | 1 | UE5-583-ZEN-VERSIONING-001 | Versioning and custom-version serializations, real positive/negative headers |
 | 2 | UE5-583-ZEN-CONDITIONAL-LAYOUT-001 | Version-dependent CellOffsets/BulkDataMap and no-versioning branches |
-| 3 | UE5-583-OBJECT-INDEX-001 | PackageObjectIndex encoding, null/reserved/boundary handling |
+| 3 | UE5-583-OBJECT-INDEX-001 | **VERIFIED**: exact Epic bit encoding, malformed types, source-derived independent oracle, direct consumers and V5 metadata round-trip |
 | 4 | UE5-583-IMPORTED-PACKAGE-NAMES-001 | Batch names, per-name numbers, malformed boundaries |
 | 5 | UE5-583-OPTIONAL-EXPORT-SEGMENT-001 | Segment-specific import/store entries and editor/runtime behavior |
 | 6 | UE5-583-BACKEND-STATUS-001 | **VERIFIED**: ordinary and hybrid source branch oracles, exhaustive caller inventory, selector/rebuilder and real temporary-table SQL test. Runtime authority is explicit, never guessed. |

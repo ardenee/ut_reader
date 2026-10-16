@@ -1,0 +1,70 @@
+<?php
+declare(strict_types=1);
+/** B004 full original object-index encoding acceptance; no persistent writes. */
+if(PHP_SAPI!=='cli')exit(2);
+$root=dirname(__DIR__);
+$checks=[];$fail=[];$evidence=[];
+$check=static function(string $name,bool $ok)use(&$checks,&$fail):void {
+ $checks[$name]=$ok;
+ if(!$ok)$fail[]=$name;
+};
+$scripts=[
+ 'source'=>'verify-uedb5-zen-object-index-source-oracle.php',
+ 'boundaries'=>'verify-uedb5-zen-object-index-boundaries.php',
+ 'io'=>'verify-uedb5-ue5-zen-package.php',
+ 'deps'=>'verify-uedb5-ue5-zen-dependency-resolution.php'
+];
+$r=[];
+foreach($scripts as $key=>$script){
+ $lines=[];$exit=127;
+ exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($root.'/bin/'.$script).' 2>&1',$lines,$exit);
+ $data=json_decode(implode("\n",$lines),true);
+ $r[$key]=is_array($data)?$data:[];
+ $evidence[$key]=['exit'=>$exit,'ok'=>$r[$key]['ok']??false];
+ $check('b004_driver_'.$key.'_passes',$exit===0&&($r[$key]['ok']??false)===true);
+}
+$has=static fn($driver,$key):bool=>($r[$driver]['checks'][$key]??false)===true;
+$check('b004_source_defines_complete_type_encoding',
+ $has('source','source_583_header_hash_pinned')
+ &&$has('source','epic_two_bit_type_shift_62')
+ &&$has('source','epic_null_sentinel_all_ones')
+ &&$has('source','epic_package_import_high32_low32')
+ &&$has('source','epic_imported_ref_extract_high30_low32'));
+$check('b004_independent_valid_encoded_imports_and_exports',
+ $has('source','reference_null_exact_sentinel')
+ &&$has('source','reference_export_last')
+ &&$has('source','reference_script_all_low62_bits')
+ &&$has('source','reference_package_one_hash_two')
+ &&$has('source','reference_package_two_hash_one'));
+$check('b004_independent_reserved_and_out_of_bounds_rejection',
+ $has('source','malformed_reserved_type_zero')
+ &&$has('source','malformed_reserved_type_near_null')
+ &&$has('source','malformed_export_out_of_bounds')
+ &&$has('source','malformed_export_62bit_noncanonical')
+ &&$has('source','malformed_package_index_missing')
+ &&$has('source','malformed_package_hash_missing'));
+$check('b004_decoder_caller_inventory_complete',
+ $has('source','all_five_object_index_decoder_call_sites_remain_mapped')
+ &&$has('source','import_and_cell_import_spans_share_the_same_decoder')
+ &&$has('source','all_four_export_object_index_fields_are_decoded')
+ &&$has('source','main_optional_and_cell_index_metadata_remain_separately_classified')
+ &&$has('source','dependency_resolver_uses_original_decoded_object_index'));
+$check('b004_real_synthetic_iostore_serialization_and_v5_persistence',
+ $has('io','zen_package_import_pairs_store_id_and_public_hash')
+ &&$has('io','zen_snapshot_hard_import_classified')
+ &&$has('io','zen_snapshot_uedb5_package_import_round_trip')
+ &&$has('io','zen_snapshot_uedb5_import_count')
+ &&$has('io','zen_cell_import_map_parsed'));
+$check('b004_dependency_index_consumers_source_equivalent',
+ $has('deps','zen_dependency_package_import_resolved_by_id_hash')
+ &&$has('deps','zen_dependency_script_import_is_unresolved')
+ &&$has('deps','zen_dependency_cell_import_classified')
+ &&$has('deps','zen_dependency_bundle_object_index_must_match_combined_import')
+ &&$has('deps','zen_dependency_cell_load_order_uses_combined_import_index'));
+echo json_encode(['ok'=>$fail===[],
+ 'operation'=>'UE5-583-OBJECT-INDEX-001',
+ 'independent_source_reference'=>true,'real_engine_runtime_executed'=>false,
+ 'temporary_fixture_only'=>true,'checks'=>$checks,
+ 'evidence'=>$evidence,'failures'=>$fail
+],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;
+exit($fail===[]?0:1);

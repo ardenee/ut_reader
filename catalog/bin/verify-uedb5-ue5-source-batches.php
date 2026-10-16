@@ -21,6 +21,7 @@ $tests=[
  'verify-uedb5-zen-dependency-partitions.php',
  'verify-uedb5-zen-object-index-boundaries.php',
  'verify-uedb5-zen-object-index-source-oracle.php',
+ 'verify-uedb5-b004-operation-acceptance.php',
  'verify-uedb5-zen-export-map-fields.php',
  'verify-uedb5-zen-malformed-export-map.php',
  'verify-uedb5-zen-backend-arbitration.php',
