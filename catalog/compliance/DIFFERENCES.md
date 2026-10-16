@@ -1,12 +1,12 @@
 # Epic ↔ UnrealDB difference and acceptance ledger
 
-This is the **engineering audit tracker**, distinct from method classification and manifest source-symbol checks. Source inventory: [README](README.md). Classification counts do not imply changes or compliance.
+This is the **engineering audit tracker**, distinct from method classification and manifest source-symbol checks. Source inventory: [README](README.md). Recovery baseline and original-operation traceability: [RECOVERY.md](RECOVERY.md) and [RECOVERY.json](RECOVERY.json). Classification counts do not imply changes or compliance.
 
 ## Current engineering status — 2026-10-16
 
-- **Source-code deployment:** After the D008 correction (`801ab77d`) and evidence update (`1f3a6f68`), GitHub `main`, DEV and PRD all verified at `1f3a6f6804345b7b32168f1753181dc55d07e518`; tracked worktrees were clean and PRD root/catalog HTTP returned 200. Untracked files, configuration, databases and old stashes were preserved; no production persistent catalog data was rewritten.
+- **Source-code deployment:** Latest verified D009 implementation and SQL evidence at `f3fde99b98fe031959b7e83fac3929419d8c4f07`, synchronized across GitHub `main`, DEV and PRD with clean tracked worktrees. Recovery baseline extends the original register without declaring any source operation accepted. Untracked files, configuration, databases and stashes remain preserved.
 - **Formal verifier:** 15 manifests / 18 operations; 18 pinned source hashes and 36 source symbol checks pass; **0 operations fully verified, 33 verification gates open, 0 validator issues**. These are evidence gates, not 33 discovered defects.
-- **Bounded tests:** after D009, PRD passes **19/19**, adding the real V5 snapshot-rebuilder contract and five direct resolver checks (seven failures reproduced before correction). The previous DEV run passed 18/18; the expanded suite must pass on DEV after synchronization. The formal 18-operation register is distinct from the 19 bounded tests. Full session-mounted authority, dependency-pass publication and production DB acceptance are not claimed.
+- **Bounded tests:** PRD and DEV each passed **19/19** source-oriented bounded checks after D009. Recovery now adds a register checker and 11 negative/positive assertions (21 runner scripts total); these are audit-control checks, **not new compliance coverage**. All 18 original operations remain partial, the source denominator remains unknown, and full runtime mounted context and dependency acceptance remain open.
 - **Historical notes below are chronology, not the active backlog.** Do not revive old DEV/PRD stash reconciliation as an audit obligation.
 
 ## Demonstrated differences / limitations

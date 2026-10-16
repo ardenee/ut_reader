@@ -1,0 +1,120 @@
+# Compliance recovery: accountable source-first closure
+
+**Status: recovery baseline only, NOT an Epic-compliance certificate.**
+The machine-readable register is [RECOVERY.json](RECOVERY.json). The original
+behavioral obligations remain [batches/](batches/); the existing fixes and
+evidence remain [DIFFERENCES.md](DIFFERENCES.md). No new checkpoint sequence or
+second competing audit system is introduced.
+
+## Confirmed baseline (2026-10-16)
+
+* Git starting revision: `f3fde99b`.
+* Active UEDB5 game profile registry: 7 game IDs (Unreal Gold, UT99,
+  Unreal II, UT2003, UT2004, UT3, UT4). Their historical source audits are
+  **not accepted** until source reachability and branch inventories are
+  reconciled. UE4.27.2 classic and UE5.8.3 classic/IoStore format targets
+  are listed separately because the seven-game registry is not a complete
+  list of supported format readers.
+* UE5 formal batch manifests: 15 containing 18 operations, all partial.
+  Existing formal verifier: 33 open gates; no formal operation fully verified.
+* D001-D009: all nine linked to an original operation or explicitly
+  classified as cross-cutting, a process control, or uncovered Epic behavior.
+  A correction is not proof that its parent operation is complete.
+* D007 IoContainerHeader.cpp behavior is genuinely **unregistered** by the
+  existing formal manifests. Add its source-backed obligation in the
+  appropriate *existing* source area after reviewing its complete call path,
+  rather than disguising it as B006 mounted file-store precedence.
+* D009 was a **rediscovered existing B005 open check**, not a new completed
+  audit operation. B005 now references its tested fix but remains partial.
+* Sixteen required file-processing paths are listed as unverified until
+  every relevant source path, UnrealDB caller and outcome is traced.
+* Source completeness denominator is unknown: **no percentage** is valid.
+
+## Operation closure order (original work, no new B numbers)
+
+| Order | Existing obligation | Unfinished acceptance scope |
+|---|---|---|
+| 1 | UE5-583-ZEN-VERSIONING-001 | Versioning and custom-version serializations, real positive/negative headers |
+| 2 | UE5-583-ZEN-CONDITIONAL-LAYOUT-001 | Version-dependent CellOffsets/BulkDataMap and no-versioning branches |
+| 3 | UE5-583-OBJECT-INDEX-001 | PackageObjectIndex encoding, null/reserved/boundary handling |
+| 4 | UE5-583-IMPORTED-PACKAGE-NAMES-001 | Batch names, per-name numbers, malformed boundaries |
+| 5 | UE5-583-OPTIONAL-EXPORT-SEGMENT-001 | Segment-specific import/store entries and editor/runtime behavior |
+| 6 | UE5-583-BACKEND-STATUS-001 | Accept all entry statuses across selector, resolver, SQL and real backend contexts |
+| 7 | UE5-583-FILE-STORE-001 | Complete mounted family, order/sequence, first-wins maps |
+| 8 | UE5-583-IMPORT-REDIRECT-001 | Core redirect, localization, package-store arbitration and identity rewrites |
+| 9 | UE5-583-PUBLIC-EXPORT-001 | Exact package + export hash lookup and collision scenarios |
+| 10 | UE5-583-B016-1 | Public cell exports separate from ordinary public exports |
+| 11 | UE5-583-B015-2 | Recursive imported-package scheduling and optional-context behavior |
+| 12 | UE5-583-SCRIPT-001 | Cooked ScriptObjects chunk and diagnostics |
+| 13 | UE5-583-SCRIPT-002 | Global ScriptObjects name-map evidence |
+| 14 | UE5-583-SCRIPT-003 | Script-import resolution vs live object store |
+| 15 | UE5-583-SCRIPT-004 | Script registration, nested public object identities |
+| 16 | UE5-583-SCRIPT-005 | FindRef/diagnostic fallback distinctions |
+| 17 | UE5-583-SCRIPT-HASH-001 | TCHAR path normalization, CityHash64 and hash bit mask |
+| 18 | UE5-583-B015-1 | Script/Verse VNI enumeration, editor/runtime registration branches |
+
+The order is a dependency-driven *work queue*, not a claim that these
+18 operations exhaust UE5. Source coverage needs to be expanded and
+reconciled for Unreal Gold, UT99, Unreal II, UT2003, UT2004, UT3, UT4,
+UE4.27.2 and UE5.8.3 separately. Do not import rules between sources
+without explicit shared-source evidence.
+
+## Acceptance contract
+
+Every operation must demonstrate, with pinned applicable Epic source:
+
+1. Enumerated reachable paths, conditional branches, version/error paths,
+   with documented intentionally excluded runtime-only operations.
+2. A source-to-UnrealDB mapping for all relevant branches, including caller
+   coverage through upload, restore, resync, repair, Pass 2, search and reads.
+3. Every difference linked both ways to the original operation, with a
+   disposition and correction revision, or an explicit justified unsupported
+   behavior. **Never silently skip.**
+4. Failing-before/passing-after regressions for corrections and independent
+   differential evidence from real packages/source-derived execution where
+   feasible; synthetic checks alone are not parity acceptance.
+5. V5 metadata and persisted SQL outcomes checked end to end. Runtime-only
+   state (mount order, active culture, editor flags, script objects) must be
+   independently supplied or remain explicitly unresolved, never guessed.
+6. An independent audit reviewer checks the coverage map and acceptance
+   evidence. Accepted behavior is reopened when the source baseline,
+   implementation, or any consumer changes.
+
+An omission in an **accepted** operation becomes a documented audit escape.
+D009 was instead a rediscovery of a **previously open** B005 gate. Both are
+tracked, but must not be conflated.
+
+## Enforced commands
+
+From the repository root, with PHP 8.5:
+
+```powershell
+& C:\php8.5\php.exe catalog\bin\verify-compliance-recovery.php
+& C:\php8.5\php.exe catalog\bin\verify-compliance-recovery-regression.php
+& C:\php8.5\php.exe catalog\bin\verify-uedb5-ue5-source-batches.php
+$env:UNREALDB_EPIC_SOURCE_ROOT='L:\Source\Engine\UE5\UE 5.8.3'
+& C:\php8.5\php.exe catalog\bin\verify-source-compliance.php --all
+```
+
+`verify-compliance-recovery.php` returns success when the *inventory is
+internally consistent*, while its `compliance_accepted=false` and
+`scope_denominator_known=false` remain explicit. `--strict` intentionally
+returns nonzero until genuine accepted coverage is established. The existing
+`verify-source-compliance.php --all` now includes the recovery consistency
+check and fails if the register becomes internally inconsistent. It does not
+turn an open/partial gate into a verified one.
+
+Eleven regression assertions exercise negative cases: missing original
+operation, orphaned difference, invalid parent, missing game, false
+compliance claim, missing workflow route, duplicate operation, lost
+reciprocal link, and strict denial.
+
+**Next implementation target:** finish original
+`UE5-583-ZEN-VERSIONING-001` and
+`UE5-583-ZEN-CONDITIONAL-LAYOUT-001` using pinned UE5.8.3
+serializer call paths and retained bounded real file fixtures. Close or
+explicitly block their original evidence gates before branching into
+another discovered problem. Then proceed through the existing queue.
+
+No full-file backfill, production database write, destructive checkout,
+or blanket source scan is authorized by this baseline.

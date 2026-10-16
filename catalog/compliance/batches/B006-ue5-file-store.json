@@ -25,8 +25,11 @@
         "sha256": "089d7c337a29f64621b216d6ad7694651a527da5b35dcbd53a0935438ecc329e"
       },
       "tests": [
-        "catalog/bin/verify-uedb5-zen-effective-store-context.php"
+        "catalog/bin/verify-uedb5-zen-effective-store-context.php",
+        "catalog/bin/verify-uedb5-physical-provider-selector.php",
+        "catalog/bin/verify-uedb5-satisfactory-header-readonly-isolated.php"
       ],
+      "related_differences": ["UE5-D008"],
       "disposition": "partial",
       "reason": "File backend collects explicitly mounted headers ordered by mount Order and Sequence; first-wins redirect behavior must not be inferred from file listing. Runtime mount discovery and real container evidence remain open."
     }

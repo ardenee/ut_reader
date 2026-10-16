@@ -1,0 +1,309 @@
+{
+  "schema": 1,
+  "name": "UnrealDB source compliance recovery baseline",
+  "as_of": "2026-10-16",
+  "origin_revision": "f3fde99b98fe031959b7e83fac3929419d8c4f07",
+  "scope_complete": false,
+  "compliance_claim": "unverified",
+  "game_profiles": [
+    {
+      "game_id": 12,
+      "source_key": "unrealgold",
+      "engine": "UE1",
+      "source_baseline": "Unreal v227",
+      "source_inventory": "not_reconciled",
+      "compliance": "unverified"
+    },
+    {
+      "game_id": 3,
+      "source_key": "ut99",
+      "engine": "UE1",
+      "source_baseline": "Unreal Tournament v432",
+      "source_inventory": "not_reconciled",
+      "compliance": "unverified"
+    },
+    {
+      "game_id": 2,
+      "source_key": "unreal2",
+      "engine": "UE2",
+      "source_baseline": "Unreal II The Awakening 2003-01-07",
+      "source_inventory": "not_reconciled",
+      "compliance": "unverified"
+    },
+    {
+      "game_id": 4,
+      "source_key": "ut2003",
+      "engine": "UE2",
+      "source_baseline": "UT2003 v2107",
+      "source_inventory": "not_reconciled",
+      "compliance": "unverified"
+    },
+    {
+      "game_id": 5,
+      "source_key": "ut2004",
+      "engine": "UE2",
+      "source_baseline": "UT2004 v3369",
+      "source_inventory": "not_reconciled",
+      "compliance": "unverified"
+    },
+    {
+      "game_id": 6,
+      "source_key": "ut3",
+      "engine": "UE3",
+      "source_baseline": "UE3 10897 plus UT3 applicable source",
+      "source_inventory": "not_reconciled",
+      "compliance": "unverified"
+    },
+    {
+      "game_id": 7,
+      "source_key": "ut4",
+      "engine": "UE4",
+      "source_baseline": "UT4 clean-master v511",
+      "source_inventory": "not_reconciled",
+      "compliance": "unverified"
+    }
+  ],
+  "additional_format_targets": [
+    {
+      "engine": "UE4",
+      "source_baseline": "UE4.27.2",
+      "inventory": "unverified",
+      "game_id": null
+    },
+    {
+      "engine": "UE5",
+      "source_baseline": "UE5.8.3 classic and Zen/IoStore",
+      "inventory": "partial",
+      "game_id": null
+    }
+  ],
+  "required_workflow_paths": [
+    {
+      "name": "identify",
+      "coverage": "unverified",
+      "source_to_entry_point_map": []
+    },
+    {
+      "name": "read_decode",
+      "coverage": "unverified",
+      "source_to_entry_point_map": []
+    },
+    {
+      "name": "extract_import_export",
+      "coverage": "unverified",
+      "source_to_entry_point_map": []
+    },
+    {
+      "name": "discover_dependencies",
+      "coverage": "unverified",
+      "source_to_entry_point_map": []
+    },
+    {
+      "name": "select_physical_providers",
+      "coverage": "unverified",
+      "source_to_entry_point_map": []
+    },
+    {
+      "name": "resolve_object_references",
+      "coverage": "unverified",
+      "source_to_entry_point_map": []
+    },
+    {
+      "name": "stage_v5",
+      "coverage": "unverified",
+      "source_to_entry_point_map": []
+    },
+    {
+      "name": "dependency_pass2",
+      "coverage": "unverified",
+      "source_to_entry_point_map": []
+    },
+    {
+      "name": "persist_sql_projections",
+      "coverage": "unverified",
+      "source_to_entry_point_map": []
+    },
+    {
+      "name": "metadata_query_search",
+      "coverage": "unverified",
+      "source_to_entry_point_map": []
+    },
+    {
+      "name": "upload",
+      "coverage": "unverified",
+      "source_to_entry_point_map": []
+    },
+    {
+      "name": "archive_import",
+      "coverage": "unverified",
+      "source_to_entry_point_map": []
+    },
+    {
+      "name": "backup_restore",
+      "coverage": "unverified",
+      "source_to_entry_point_map": []
+    },
+    {
+      "name": "resync",
+      "coverage": "unverified",
+      "source_to_entry_point_map": []
+    },
+    {
+      "name": "repair",
+      "coverage": "unverified",
+      "source_to_entry_point_map": []
+    },
+    {
+      "name": "validation",
+      "coverage": "unverified",
+      "source_to_entry_point_map": []
+    }
+  ],
+  "original_operation_priority": [
+    "UE5-583-ZEN-VERSIONING-001",
+    "UE5-583-ZEN-CONDITIONAL-LAYOUT-001",
+    "UE5-583-OBJECT-INDEX-001",
+    "UE5-583-IMPORTED-PACKAGE-NAMES-001",
+    "UE5-583-OPTIONAL-EXPORT-SEGMENT-001",
+    "UE5-583-BACKEND-STATUS-001",
+    "UE5-583-FILE-STORE-001",
+    "UE5-583-IMPORT-REDIRECT-001",
+    "UE5-583-PUBLIC-EXPORT-001",
+    "UE5-583-B016-1",
+    "UE5-583-B015-2",
+    "UE5-583-SCRIPT-001",
+    "UE5-583-SCRIPT-002",
+    "UE5-583-SCRIPT-003",
+    "UE5-583-SCRIPT-004",
+    "UE5-583-SCRIPT-005",
+    "UE5-583-SCRIPT-HASH-001",
+    "UE5-583-B015-1"
+  ],
+  "known_differences": [
+    {
+      "id": "UE5-D001",
+      "kind": "cross_cutting",
+      "operations": [
+        "UE5-583-PUBLIC-EXPORT-001"
+      ],
+      "rationale": "Zen dependency-result read facade; Epic behavior linked to export-filter/import-outcome rules, but SQL/read-facade consumer coverage is not in formal operation.",
+      "state": "evidence_partial",
+      "audit_escape": "none"
+    },
+    {
+      "id": "UE5-D002",
+      "kind": "cross_cutting",
+      "operations": [
+        "UE5-583-PUBLIC-EXPORT-001"
+      ],
+      "rationale": "V5 compact SQL accelerator deliberately drops detailed reasons; source-shaped metadata remains authoritative. Consumer-contract inventory missing.",
+      "state": "evidence_partial",
+      "audit_escape": "none"
+    },
+    {
+      "id": "UE5-D003",
+      "kind": "audit_control",
+      "operations": [],
+      "rationale": "Inventory filename glob correction; no Epic file-format operation.",
+      "state": "evidence_partial",
+      "audit_escape": "none"
+    },
+    {
+      "id": "UE5-D004",
+      "kind": "audit_control",
+      "operations": [],
+      "rationale": "Deployment and revision alignment; not a file-format source obligation.",
+      "state": "evidence_partial",
+      "audit_escape": "none"
+    },
+    {
+      "id": "UE5-D005",
+      "kind": "mapped",
+      "operations": [
+        "UE5-583-BACKEND-STATUS-001"
+      ],
+      "rationale": "Numeric FPackageId backend lookup canonicalization.",
+      "state": "evidence_partial",
+      "audit_escape": "none"
+    },
+    {
+      "id": "UE5-D006",
+      "kind": "cross_cutting",
+      "operations": [
+        "UE5-583-BACKEND-STATUS-001",
+        "UE5-583-PUBLIC-EXPORT-001"
+      ],
+      "rationale": "V5 SQL provider-summary consistency downstream of source-selected providers; not covered by Epic lookup operation alone.",
+      "state": "evidence_partial",
+      "audit_escape": "none"
+    },
+    {
+      "id": "UE5-D007",
+      "kind": "unregistered_source_behavior",
+      "operations": [],
+      "rationale": "IoContainerHeader.cpp serialization/version acceptance fix has no dedicated operation in the 15 manifests; must add an obligation within the existing applicable source area before source compliance can be accepted.",
+      "state": "evidence_partial",
+      "audit_escape": "none"
+    },
+    {
+      "id": "UE5-D008",
+      "kind": "mapped",
+      "operations": [
+        "UE5-583-FILE-STORE-001"
+      ],
+      "rationale": "Evidenced mounted file-backend package entries, first wins by order/sequence.",
+      "state": "evidence_partial",
+      "audit_escape": "none"
+    },
+    {
+      "id": "UE5-D009",
+      "kind": "mapped",
+      "operations": [
+        "UE5-583-BACKEND-STATUS-001"
+      ],
+      "rationale": "Originally documented B005 downstream status-propagation gate rediscovered and fixed after unrelated work; record as reopened known work, not proof of audit completion.",
+      "state": "evidence_partial",
+      "audit_escape": "rediscovered_preexisting_open_gate"
+    }
+  ],
+  "coverage_gaps": [
+    {
+      "id": "SCOPE-UE1-UE4",
+      "status": "open",
+      "reason": "No reconciled complete source-to-implementation inventory for all seven supported game source baselines."
+    },
+    {
+      "id": "SCOPE-UE5-REACHABILITY",
+      "status": "open",
+      "reason": "Selected UE5.8.3 method classifications do not prove full reachable call graph, version branches, error and runtime context coverage."
+    },
+    {
+      "id": "UE5-IOSTORE-HEADER",
+      "status": "open",
+      "difference_id": "UE5-D007",
+      "reason": "Source-backed D007 fix lacks a formal behavioral obligation."
+    },
+    {
+      "id": "V5-WORKFLOW-CALLERS",
+      "status": "open",
+      "reason": "Upload, archive, backup/restore, re-sync, repair, query and Pass 2 callers have not been exhaustively mapped for source-equivalent behavior."
+    },
+    {
+      "id": "INDEPENDENT-DIFFERENTIAL",
+      "status": "open",
+      "reason": "Synthetic tests and bounded fixture checks do not prove comprehensive independent Epic-versus-UnrealDB output equivalence."
+    }
+  ],
+  "acceptance": {
+    "accepted_operations_allowed_only_after": [
+      "source_reachable_behavior_inventory",
+      "all_relevant_branches_and_versions_accounted",
+      "source_to_implementation_mapping",
+      "identified_differences_resolved_or_explicitly_unsupported",
+      "independent_differential_validation",
+      "end_to_end_v5_workflow_validation",
+      "independent_review_and_change_integrity"
+    ],
+    "unknown_scope_percentages_allowed": false
+  }
+}

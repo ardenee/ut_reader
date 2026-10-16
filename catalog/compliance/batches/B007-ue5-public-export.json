@@ -24,8 +24,11 @@
         "sha256": "84e09e840e608e32321e12e6a2b5c6dc5cf808de2dd49f6bdeede3d9d07b70d3"
       },
       "tests": [
-        "catalog/bin/verify-uedb5-ue5-zen-dependency-resolution.php"
+        "catalog/bin/verify-uedb5-ue5-zen-dependency-resolution.php",
+        "catalog/bin/verify-uedb5-zen-compact-reason-db.php",
+        "catalog/bin/verify-uedb5-dependency-sql-isolated.php"
       ],
+      "related_differences": ["UE5-D001", "UE5-D002", "UE5-D006"],
       "disposition": "partial",
       "reason": "Source 2587–2601 and 2829–2835. Offline resolution maps both exact identities; selected-provider correctness and duplicate hashes require complete fixture parity."
     }

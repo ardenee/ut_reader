@@ -59,6 +59,31 @@ foreach($files as $file){
         if(($record['disposition']??'')==='verified'){$verified++;}else{$open++;}
     }
 }
+$recovery=null;
+if (in_array('--all',$argv,true)) {
+    // Source symbol/hash checks alone are not a compliance inventory. Reject
+    // missing or internally inconsistent recovery accountability in --all.
+    $validator=$root.'/catalog/bin/verify-compliance-recovery.php';
+    $output=[];$code=127;
+    exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($validator).' 2>&1',$output,$code);
+    $parsed=json_decode(implode("\n",$output),true);
+    if($code!==0||!is_array($parsed)||($parsed['ok']??false)!==true){
+        $failures[]='Recovery accountability failed: '.implode(' | ',
+            array_slice(is_array($parsed)?(array)($parsed['issues']??[]):$output,0,4));
+    } else {
+        $recovery=[
+            'scope_denominator_known'=>$parsed['scope_denominator_known']??false,
+            'compliance_accepted'=>$parsed['compliance_accepted']??false,
+            'registered_game_profiles'=>$parsed['game_profiles']??null,
+            'unregistered_source_differences'=>$parsed['unregistered_source_differences']??[],
+            'workflow_paths_unverified'=>$parsed['workflow_paths_unverified']??null,
+            'coverage_gaps_open'=>$parsed['coverage_gaps_open']??null,
+        ];
+    }
+}
 if($strict&&$open>0)$failures[]='Strict mode: '.$open.' open/partial inventory or behavior gates.';
-echo json_encode(['ok'=>$failures===[],'batches'=>count($files),'operations'=>$entries,'verified'=>$verified,'source_hash_checks'=>$sourceChecks,'source_symbol_checks'=>$inventoryChecks,'open_gates'=>$open,'issues'=>$failures],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;
+echo json_encode(['ok'=>$failures===[],'batches'=>count($files),'operations'=>$entries,'verified'=>$verified,
+    'source_hash_checks'=>$sourceChecks,'source_symbol_checks'=>$inventoryChecks,
+    'open_gates'=>$open,'recovery'=>$recovery,'issues'=>$failures],
+    JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;
 exit($failures===[]?0:1);

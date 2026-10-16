@@ -3,6 +3,8 @@ declare(strict_types=1);
 if(PHP_SAPI!=='cli'){exit(1);}
 $root=dirname(__DIR__);
 $tests=[
+ 'verify-compliance-recovery.php',
+ 'verify-compliance-recovery-regression.php',
  'audit-ue5-source-definitions.php',
  'audit-ue5-store-definitions.php',
  'verify-uedb5-zen-reason-flow-contract.php',

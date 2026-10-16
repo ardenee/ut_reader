@@ -25,10 +25,14 @@
         "sha256": "1890cb58c23d40d941716c6924dd3c070a22cfed3685369fec54b04246f81f18"
       },
       "tests": [
-        "catalog/bin/verify-uedb5-zen-backend-arbitration.php"
+        "catalog/bin/verify-uedb5-zen-backend-arbitration.php",
+        "catalog/bin/verify-uedb5-physical-provider-selector.php",
+        "catalog/bin/verify-uedb5-dependency-rebuilder.php",
+        "catalog/bin/verify-uedb5-dependency-sql-isolated.php"
       ],
+      "related_differences": ["UE5-D005", "UE5-D006", "UE5-D009"],
       "disposition": "partial",
-      "reason": "None/Missing continue; NotInstalled/Pending/Ok stop; priority descending and equal-priority newer first. NotInstalled omission was fixed and tested. Wider status propagation to V5 publisher/provider selector remains an open check."
+      "reason": "None/Missing continue; Pending/NotInstalled/Ok stop. D005 canonicalized package keys and D009 fixed status propagation through V5 rebuild and SQL projections; negative-before/positive-after and temporary MySQL checks pass. Full independent mounted-runtime evidence and source-to-consumer path/branch coverage remain open; do not claim this original operation closed."
     }
   ],
   "next_batch": "B006",
