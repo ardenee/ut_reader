@@ -36,7 +36,8 @@ foreach($found as $row){
     $rows[]=$row+['mapped'=>$mapped,'classified_as'=>$classified[$symbol]??null];
 }
 $unmapped=array_values(array_filter($rows,static fn($r)=>!$r['mapped'] && $r['classified_as']===null));
+$unclassified=array_values(array_filter($rows,static fn($r)=>$r['classified_as']===null));
 $classifiedCount=count(array_filter($rows,static fn($r)=>$r['classified_as']!==null));
-$output=['batch'=>'B017','source'=>$relative,'sha256'=>hash_file('sha256',$path),'method'=>'source-derived qualified-definition candidates','candidate_count'=>count($rows),'unmapped_count'=>count($unmapped),'classified_count'=>$classifiedCount,'unmapped'=>$unmapped,'limitations'=>['Definition-pattern inventory only; virtual dispatch and indirect serialization remain to inventory','Mapped means referenced by a manifest, not verified implementation']];
+$output=['batch'=>'B017','source'=>$relative,'sha256'=>hash_file('sha256',$path),'method'=>'source-derived qualified-definition candidates','candidate_count'=>count($rows),'unmapped_count'=>count($unmapped),'unclassified_count'=>count($unclassified),'classified_count'=>$classifiedCount,'unmapped'=>$unmapped,'limitations'=>['Definition-pattern inventory only; virtual dispatch and indirect serialization remain to inventory','Mapped means referenced by a manifest, not verified implementation']];
 echo json_encode($output,JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;
-exit($unmapped===[]?0:1);
+exit($unclassified===[]?0:1);
