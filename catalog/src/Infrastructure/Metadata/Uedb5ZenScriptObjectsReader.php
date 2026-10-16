@@ -48,17 +48,21 @@ final class Uedb5ZenScriptObjectsReader
             $rawIndex = $reader->u32le();
             $number = $reader->u32le();
             $mapped = Uedb5BinaryReader::decodeMappedNameIndex($rawIndex);
-            if ((int)$mapped['type'] !== 1 || !isset($names[(int)$mapped['index']])) {
-                throw new RuntimeException('ScriptObjects global mapped-name index is invalid.');
+            // Epic's LoadDebugData indexes the freshly decoded NameMap with
+            // Entry.Mapped.GetIndex(). Unlike FNameMap::GetName it does not
+            // check the serialized mapped-name type (Package/Container/Global).
+            if (!isset($names[(int)$mapped['index']])) {
+                throw new RuntimeException('ScriptObjects mapped-name index is outside the name batch.');
             }
             $base = (string)$names[(int)$mapped['index']]['text'];
             $name = $number > 0 ? $base.'_'.($number-1) : $base;
             $globalIndex = $reader->u64HexLe();
             $outerIndex = $reader->u64HexLe();
             $cdoClassIndex = $reader->u64HexLe();
-            if (isset($objects[$globalIndex])) {
-                throw new RuntimeException('Duplicate ScriptObjects global index.');
-            }
+            // Epic Objects.Emplace uses TMap -> TSet::Emplace, replacing an
+            // existing value under the same FPackageObjectIndex. The last
+            // cooked diagnostic entry wins; never reject it as a malformed
+            // package when Epic would replace the earlier record.
             $objects[$globalIndex] = [
                 'name'=>$name, 'global_index'=>$globalIndex,
                 'outer_index'=>$outerIndex, 'cdo_class_index'=>$cdoClassIndex,
