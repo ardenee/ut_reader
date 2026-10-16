@@ -17,7 +17,7 @@ second competing audit system is introduced.
   list of supported format readers.
 * UE5 formal batch manifests: 15 containing 18 operations, all partial.
   Existing formal verifier: 33 open gates; no formal operation fully verified.
-* D001-D011: eleven known differences linked to original operations or
+* D001-D012: twelve known differences linked to original operations or
   explicitly categorized as cross-cutting or previously uncovered behavior.
   D010/D011 are now marked fixed and regression-verified. Original B009 and
   B010 each have source-contract and implementation subgates closed by
@@ -127,14 +127,17 @@ byte fixtures, nine B009 and ten B010 enforced contract assertions, and two
 real retained Satisfactory no-versioning snapshots, plus a read-only
 15-member spread sampling of actual serialized versioning flags (15 unversioned,
 zero versioned). The machine verifier
-closes two source-contract and two implementation subgates. Their formal
-operation dispositions remain partial. The absence of an UnrealEditor binary
+closes two source-contract, two implementation, and two downstream Step 8
+consumer-validation subgates. D012 records seven failing-before/passing-after
+consumer checks. All six subgates are backed by executable evidence; the
+complete operations remain partial. The absence of an UnrealEditor binary
 and a particular cooked versioned sample are **not blockers to auditing the
 pinned engine source**. The exact runtime call graph, versioned/unversioned
 fallback and export archive handoff are documented in
 [UE5-ZEN-VERSIONED-HEADER-SOURCE.md](UE5-ZEN-VERSIONED-HEADER-SOURCE.md).
-Next: close specifically unverified V5 callers, malformed input outcomes and
-independent coverage review; avoid inventing a cooked-file prerequisite. No additional B
+Next: close the remaining unverified V5 production entry-point reachability,
+independent inventory coverage, malformed-input behavior and independent
+review. A cooked-file example is not a prerequisite for reading Epic source. No additional B
 checkpoint was created.
 
 No full-file backfill, production database write, destructive checkout,

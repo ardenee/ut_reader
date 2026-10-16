@@ -281,12 +281,84 @@ final class Uedb5MigrationValidator
 
     private function validateZenFields(array $snapshot): void
     {
-        foreach (['container_provenance','package_summary','package_store','name_map','imports','exports','cell_imports','cell_exports','dependency_bundle_entries'] as $section) {
-            $this->require(isset($snapshot['sections'][$section]) && is_array($snapshot['sections'][$section]), 'zen_section_missing', 'Zen snapshot is missing source section ' . $section . '.');
+        foreach (['container_provenance','package_summary','package_store','name_map','imports','exports',
+            'cell_imports','cell_exports','dependency_bundle_entries','bulk_data_map','optional_segment'] as $section) {
+            $this->require(isset($snapshot['sections'][$section]) && is_array($snapshot['sections'][$section]),
+                'zen_section_missing', 'Zen snapshot is missing source section ' . $section . '.');
         }
-        $summary = (array)($snapshot['sections']['package_summary'][0] ?? []);
-        $this->requireKeys($summary, ['package_id','summary','header_bytes','exports_data_bytes'], 'Zen package summary');
-        $this->require(preg_match('/^[0-9A-F]{16}$/', (string)$summary['package_id']) === 1, 'zen_package_id', 'Zen FPackageId is invalid.');
+        $sections = (array)$snapshot['sections'];
+        $summary = (array)($sections['package_summary'][0] ?? []);
+        $this->requireKeys($summary,
+            ['package_id','summary','versioning_info','cell_offsets','header_bytes','exports_data_bytes'],
+            'Zen package summary');
+        $this->require(preg_match('/^[0-9A-F]{16}$/', (string)$summary['package_id']) === 1,
+            'zen_package_id', 'Zen FPackageId is invalid.');
+        $this->validateZenVersionLayout($summary, (array)$sections['bulk_data_map'],
+            (array)$sections['cell_imports'], (array)$sections['cell_exports'], 'main');
+        foreach ((array)$sections['optional_segment'] as $optional) {
+            $optional = (array)$optional;
+            $this->requireKeys($optional,
+                ['summary','versioning_info','cell_offsets','bulk_data_map','cell_imports','cell_exports'],
+                'Zen optional segment');
+            $this->validateZenVersionLayout($optional, (array)$optional['bulk_data_map'],
+                (array)$optional['cell_imports'], (array)$optional['cell_exports'], 'optional');
+        }
+    }
+
+    /**
+     * Epic UE5.8.3 ZenPackageHeader.cpp MakeView: the serialized uint32 flag
+     * controls whether version info exists; absent info uses the newest
+     * cooked layout. The two UE5 version thresholds select the serialized
+     * CellOffsets and BulkDataMap independently for main/optional segments.
+     * The V5 validator must not accept metadata contradicting those rules.
+     *
+     * @param array<string,mixed> $row
+     * @param list<mixed> $bulkRows
+     * @param list<mixed> $cellImports
+     * @param list<mixed> $cellExports
+     */
+    private function validateZenVersionLayout(
+        array $row, array $bulkRows, array $cellImports, array $cellExports, string $segment
+    ): void {
+        $summary = (array)($row['summary'] ?? []);
+        $this->requireKeys($summary, ['has_versioning_info','export_bundle_entries_offset'],
+            'Zen ' . $segment . ' serialized summary');
+        $hasVersioning = (int)$summary['has_versioning_info'] !== 0;
+        $info = $row['versioning_info'] ?? null;
+        $this->require($hasVersioning === is_array($info),
+            'zen_versioning_presence_mismatch',
+            'Zen ' . $segment . ' serialized bHasVersioningInfo disagrees with the V5 versioning data.');
+        $ue5Version = null;
+        if ($hasVersioning) {
+            $this->requireKeys((array)$info,
+                ['zen_version','package_version','licensee_version','custom_versions'],
+                'Zen ' . $segment . ' versioning');
+            $versions = (array)$info['package_version'];
+            $this->requireKeys($versions, ['ue4','ue5'], 'Zen ' . $segment . ' package version');
+            $this->require(is_array($info['custom_versions']),
+                'zen_custom_versions_invalid', 'Zen custom versions must preserve the serialized array.');
+            $ue5Version = (int)$versions['ue5'];
+        }
+        $cell = (array)($row['cell_offsets'] ?? []);
+        $this->requireKeys($cell,
+            ['serialized','cell_import_map_offset','cell_export_map_offset'],
+            'Zen ' . $segment . ' cell offsets');
+        $hasCells = !$hasVersioning || $ue5Version >= 1015; // VERSE_CELLS
+        $hasBulk = !$hasVersioning || $ue5Version >= 1009; // DATA_RESOURCES
+        $this->require($cell['serialized'] === $hasCells,
+            'zen_cell_offsets_version_mismatch',
+            'Zen ' . $segment . ' cell-offset layout contradicts serialized UE5 version.');
+        if (!$hasCells) {
+            $bundleOffset = (int)$summary['export_bundle_entries_offset'];
+            $this->require((int)$cell['cell_import_map_offset'] === $bundleOffset
+                && (int)$cell['cell_export_map_offset'] === $bundleOffset
+                && $cellImports === [] && $cellExports === [],
+                'zen_old_version_cell_maps_present',
+                'Zen ' . $segment . ' pre-VERSE_CELLS package must not declare cell maps.');
+        }
+        $this->require($hasBulk || $bulkRows === [],
+            'zen_old_version_bulk_map_present',
+            'Zen ' . $segment . ' pre-DATA_RESOURCES package must not declare bulk rows.');
     }
 
     /** @return array<string,int> */

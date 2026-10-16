@@ -26,7 +26,8 @@
             "tests": [
                 "catalog/bin/verify-uedb5-ue5-zen-package.php",
                 "catalog/bin/verify-uedb5-zen-runtime-version-source.php",
-                "catalog/bin/verify-uedb5-satisfactory-header-readonly-isolated.php"
+                "catalog/bin/verify-uedb5-satisfactory-header-readonly-isolated.php",
+                "catalog/bin/verify-uedb5-zen-version-staging-contract.php"
             ],
             "additional_sources": [
                 {
@@ -57,7 +58,8 @@
                 }
             ],
             "related_differences": [
-                "UE5-D011"
+                "UE5-D011",
+                "UE5-D012"
             ],
             "disposition": "partial",
             "reason": "D011 corrected both the extra nonzero BulkDataPad-content rejection and the erroneous 7-byte limit; Epic's eight-byte scratch buffer permits a declared length of 8. Source-gated boundary fixtures 1008/1009/1014/1015 and no-versioning, plus real Satisfactory unversioned snapshots, pass. Pinned runtime source and version-threshold byte fixtures establish branch semantics without an editor or cooked-file prerequisite; actual full caller coverage and malformed-header differential review still remain open.",
@@ -90,7 +92,24 @@
             },
             "correction_commits": [
                 "ee2a4e253638c61add4a2501186674add3ad293d"
-            ]
+            ],
+            "consumer_validation_evidence": {
+                "implementation_path": "catalog/src/Infrastructure/Metadata/Uedb5MigrationValidator.php",
+                "implementation_sha256": "89bdff85896937b46ebd0249aeafc31bf884022132ec8318c34742880be94b40",
+                "test_driver": "catalog/bin/verify-uedb5-zen-version-staging-contract.php",
+                "expected_checks": [
+                    "pre_verse_cells_serialized_offsets_rejected",
+                    "pre_data_resources_bulk_rows_rejected",
+                    "missing_persisted_cell_offsets_rejected",
+                    "missing_persisted_bulk_map_section_rejected",
+                    "valid_versioned_1015_passes",
+                    "valid_unversioned_latest_layout_passes",
+                    "valid_versioned_1014_pre_cells_passes",
+                    "valid_versioned_1008_pre_bulk_passes",
+                    "malformed_optional_segment_versioning_rejected"
+                ],
+                "consumer_scope": "Final Step 8 validator validates source-versioned/null header sections, optional segments, cell-map/bulk-map conditionals and V5 metadata integrity. It does not run the Epic UObject export loader."
+            }
         }
     ],
     "next_batch": "B011",
@@ -99,6 +118,7 @@
         "contracts": true,
         "implementation": true,
         "independent_verification": false,
-        "change_integrity": true
+        "change_integrity": true,
+        "consumer_validation": true
     }
 }

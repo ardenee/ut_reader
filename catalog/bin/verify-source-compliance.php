@@ -9,6 +9,7 @@ $sourceChecks=0;
 $files=glob($dir.'/*.json')?:[];
 $failures=[];$open=0;$verified=0;$entries=0;$globalIds=[];$inventoryChecks=0;
 $verifiedContractGates=0;$verifiedImplementationGates=0;$contractChecks=0;$contractTestRuns=[];
+$verifiedConsumerGates=0;$consumerChecks=0;
 if($strict && $sourceRoot==='')$failures[]='Strict mode requires UNREALDB_EPIC_SOURCE_ROOT for source hash verification.';
 if($files===[])$failures[]='No audit batches exist.';
 foreach($files as $file){
@@ -149,6 +150,47 @@ foreach($files as $file){
                 $verifiedImplementationGates++;
             }
         }
+        // B009/B010 consumer closure must survive both code changes and
+        // regenerated test outcomes. Never count a manually toggled flag.
+        if(($gates['consumer_validation']??false)===true){
+            $consumer=(array)($record['consumer_validation_evidence']??[]);
+            $file=(string)($consumer['implementation_path']??'');
+            $sha=strtolower((string)($consumer['implementation_sha256']??''));
+            $driver=(string)($consumer['test_driver']??'');
+            $expected=(array)($consumer['expected_checks']??[]);
+            $implReal=realpath($root.'/'.str_replace(chr(92),'/',$file));
+            $testReal=realpath($root.'/'.str_replace(chr(92),'/',$driver));
+            $safeRoot=strtolower(str_replace(chr(92),'/',(string)realpath($root))).'/';
+            $inside=static fn($path):bool=>is_string($path)
+                &&str_starts_with(strtolower(str_replace(chr(92),'/',$path)),$safeRoot);
+            if(!$inside($implReal)||!$inside($testReal)||$expected===[]
+                ||!array_is_list($expected)||!ctype_xdigit($sha)||strlen($sha)!==64){
+                $failures[]=$id.': missing or unsafe consumer validation evidence';
+            } elseif(!hash_equals($sha,(string)hash_file('sha256',$implReal))){
+                $failures[]=$id.': consumer implementation changed; invalidate gate';
+            }else {
+                if(!array_key_exists($testReal,$contractTestRuns)){
+                    $out=[];$code=127;
+                    exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($testReal).' 2>&1',
+                        $out,$code);
+                    $result=json_decode(implode("\n",$out),true);
+                    $contractTestRuns[$testReal]=[
+                        'exit'=>$code,'result'=>is_array($result)?$result:[]
+                    ];
+                }
+                $test=$contractTestRuns[$testReal];
+                $passed=$test['exit']===0&&($test['result']['ok']??false)===true;
+                foreach($expected as $check){
+                    $consumerChecks++;
+                    if(!is_string($check)||($test['result']['checks'][$check]??null)!==true){
+                        $failures[]=$id.': failed consumer field assertion '.(string)$check;
+                        $passed=false;
+                    }
+                }
+                if(!$passed){$failures[]=$id.': consumer validation test failed';}
+                else{$verifiedConsumerGates++;}
+            }
+        }
         if(($record['disposition']??'')==='verified'){$verified++;}else{$open++;}
     }
 }
@@ -179,6 +221,9 @@ echo json_encode(['ok'=>$failures===[],'batches'=>count($files),'operations'=>$e
     'source_hash_checks'=>$sourceChecks,'source_symbol_checks'=>$inventoryChecks,
     'open_gates'=>$open,'closed_source_contract_gates'=>$verifiedContractGates,
     'closed_implementation_gates'=>$verifiedImplementationGates,
-    'executed_contract_assertions'=>$contractChecks,'recovery'=>$recovery,'issues'=>$failures],
+    'executed_contract_assertions'=>$contractChecks,
+    'closed_consumer_validation_gates'=>$verifiedConsumerGates,
+    'executed_consumer_assertions'=>$consumerChecks,
+    'recovery'=>$recovery,'issues'=>$failures],
     JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;
 exit($failures===[]?0:1);

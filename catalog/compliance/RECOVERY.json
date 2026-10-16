@@ -280,6 +280,14 @@
       "rationale": "B010 source-backed corrections remove the unsupported zero-content gate and accept eight safe scratch bytes. Ten pinned conditional-layout/metadata checks pass; full operation remains partial pending independently cooked versioned threshold fixtures.",
       "state": "fixed_regression_verified",
       "audit_escape": "none"
+    },
+    {
+      "id": "UE5-D012",
+      "kind": "mapped",
+      "operations": ["UE5-583-ZEN-VERSIONING-001", "UE5-583-ZEN-CONDITIONAL-LAYOUT-001"],
+      "rationale": "B009/B010 Step 8 V5 consumer accepted inconsistent versioning and conditional header layout. Seven failures reproduced before correction; 12 checks and isolated real fixtures pass after. Original operations remain partial.",
+      "state": "fixed_regression_verified",
+      "audit_escape": "none"
     }
   ],
   "coverage_gaps": [
