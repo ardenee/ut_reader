@@ -110,6 +110,11 @@ $reasonOutcomes=$db->query('SELECT outcome FROM ue_uedb5_dependency_edges WHERE 
 $check('compact_projection_preserves_both_unresolved_edges',count($reasonOutcomes)===2 && $reasonOutcomes[0]===$reasonOutcomes[1]);
 $check('source_detail_distinguishes_filter_reasons',
     $zenReasonSnapshot['sections']['dependency_results'][0]['reason_code']!==$zenReasonSnapshot['sections']['dependency_results'][1]['reason_code']);
+$zenReasonReplacement=$zenReasonSnapshot;
+$zenReasonReplacement['sections']['dependency_results']=[$zenReasonSnapshot['sections']['dependency_results'][1]];
+$publisher->publish($zenReasonReplacement);
+$remainingIndex=$db->query('SELECT source_index FROM ue_uedb5_dependency_edges WHERE file_id=12')->fetchAll(PDO::FETCH_COLUMN);
+$check('republication_removes_stale_zen_dependency_edge',count($remainingIndex)===1 && (int)$remainingIndex[0]===1);
 $columns=$db->query('PRAGMA table_info(ue_uedb5_dependency_edges)')->fetchAll(PDO::FETCH_ASSOC);
 $check('compact_projection_has_no_reason_column',!in_array('reason_code',array_column($columns,'name'),true));
 $source=(string)file_get_contents($root.'/src/Infrastructure/Metadata/PdoUedb5DependencyProjectionPublisher.php');
