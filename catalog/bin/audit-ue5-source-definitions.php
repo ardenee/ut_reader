@@ -22,7 +22,7 @@ foreach(glob($root.'/catalog/compliance/batches/*.json')?:[] as $manifest){
     foreach(($data['operations']??[]) as $op)foreach(($op['source']['symbols']??[]) as $symbol)$registered[]=$symbol;
 }
 $classified=[];
-foreach(glob($root.'/catalog/compliance/inventory/B0??-ue5-*.json')?:[] as $classificationFile){
+foreach(glob($root.'/catalog/compliance/inventory/B[0-9][0-9][0-9]-ue5-*.json')?:[] as $classificationFile){
     $classification=json_decode((string)file_get_contents($classificationFile),true);
     foreach(($classification['reviewed']??[]) as $review){
         if(!empty($review['symbol']) && !empty($review['disposition']) && !empty($review['reason']))$classified[$review['symbol']]=$review['disposition'];
