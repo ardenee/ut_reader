@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "batch": "B100",
+  "source": {
+    "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+    "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9"
+  },
+  "classification": "bounded source-body review",
+  "status": "partial",
+  "reviewed": [
+    {
+      "symbol": "FCookedScriptObjectsDebug::LoadDebugData",
+      "line": 6983,
+      "disposition": "file-format-relevant",
+      "reason": "Optionally reads ScriptObjects IoStore chunk and parses name batch plus FScriptObjectEntry mapped-name/global-index/outer-index records for debugging, not authoritative runtime object registration.",
+      "verified": false
+    },
+    {
+      "symbol": "FAsyncPackage2::ImportPackagesRecursiveInner",
+      "line": 7158,
+      "disposition": "file-format-relevant",
+      "reason": "Walks imported FPackageId entries, applies core package redirects and LinkerLoad instancing remaps, may rewrite import IDs/names and handles package store status before scheduling imports.",
+      "verified": false
+    }
+  ],
+  "evidence_limitations": [
+    "Existing earlier manifest mapping did not equal behavioral certification",
+    "Full package-store arbitration and hash differential vectors remain open"
+  ],
+  "next_batch": "B101"
+}
