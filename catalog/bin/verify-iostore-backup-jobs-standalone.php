@@ -30,9 +30,23 @@ $second=$queue->enqueue($queueName,JobType::RESTORE_IOSTORE_CONTAINER,[
 $worker->runOne();
 $q->execute([$second]);$secondJob=$q->fetch();
 $restore=json_decode((string)$secondJob['result_json'],true);
-$ok=$firstJob['status']==='completed'&&$secondJob['status']==='completed'
+// A separate restore job for an already indexed destination must reuse active
+// name/publication follow-ups, rather than making competing workers.
+$third=$queue->enqueue($queueName,JobType::RESTORE_IOSTORE_CONTAINER,[
+ 'game_id'=>9003,'backup_key'=>$backupKey,'utoc_sha256'=>$hash
+],100,null,null,null,1);
+$worker->runOne();
+$q->execute([$third]);$thirdJob=$q->fetch();
+$replay=json_decode((string)$thirdJob['result_json'],true);
+$ok=($thirdJob['status']??null)==='completed'
+ &&($restore['container_id']??0)===($replay['container_id']??-1)
+ &&($restore['name_job_id']??0)===($replay['name_job_id']??-1)
+ &&($restore['publish_job_id']??0)===($replay['publish_job_id']??-1)
+ &&($restore['name_job_id']??0)>0&&($restore['publish_job_id']??0)>0
+ &&$firstJob['status']==='completed'&&$secondJob['status']==='completed'
  &&($restore['retention_status']??'')==='ready';
 echo json_encode(['ok'=>$ok,'isolated'=>true,'backup_key'=>$backupKey,
  'backup_job'=>['status'=>$firstJob['status'],'result'=>json_decode((string)$firstJob['result_json'],true),'error'=>$firstJob['last_error']],
- 'restore_job'=>['status'=>$secondJob['status'],'result'=>$restore,'error'=>$secondJob['last_error']]],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;
+ 'restore_job'=>['status'=>$secondJob['status'],'result'=>$restore,'error'=>$secondJob['last_error']],
+ 'replay_restore_job'=>['status'=>$thirdJob['status'],'result'=>$replay,'error'=>$thirdJob['last_error']]],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;
 exit($ok?0:2);
