@@ -56,6 +56,18 @@ $evidencedMount=$run([
    'package_redirects'=>[],'localized_packages'=>[]],
  ]],
 ]);
+$partialOverride=$run(['zen_runtime_overrides_by_game'=>[9001=>['with_editor'=>false,'is_server'=>true]]]);
+$otherOverride=$run(['zen_runtime_overrides_by_game'=>[9002=>['with_editor'=>true]]]);
+$invalidOverrideRejected=false;
+try{$run(['zen_runtime_overrides_by_game'=>[9001=>['is_editor'=>'yes']]]);}
+catch(RuntimeException){$invalidOverrideRejected=true;}
+$authorityOverrideRejected=false;
+try{$run(['zen_runtime_overrides_by_game'=>[9001=>['package_store_context_authoritative'=>true]]]);}
+catch(RuntimeException){$authorityOverrideRejected=true;}
+$mergedOverride=$run([
+ 'zen_runtime_context_by_game'=>[9001=>['is_editor'=>true]],
+ 'zen_runtime_overrides_by_game'=>[9001=>['is_editor'=>false]],
+]);
 $ok=!isset($baseline['zen_runtime_context'])&&!isset($other['zen_runtime_context'])
     &&($known['zen_runtime_context']['package_identity_context_authoritative']??null)===true
     &&($known['zen_runtime_context']['package_store_context_authoritative']??null)===false
@@ -65,6 +77,12 @@ $ok=!isset($baseline['zen_runtime_context'])&&!isset($other['zen_runtime_context
     &&!isset($mountIsolated['zen_runtime_context'])
     &&($combined['zen_runtime_context']['package_redirects'][0]['target_package_id']??'')==='2222222222222222'
     &&($evidencedMount['zen_runtime_context']['package_store_context_authoritative']??false)===true
-    &&($evidencedMount['zen_runtime_context']['package_identity_context_authoritative']??false)===true;
-echo json_encode(['ok'=>$ok,'baseline_unknown'=>$baseline,'other_game_isolation'=>$other,'known_context'=>$known,'unsupported_authority_rejected'=>$reject,'derived_mount_context'=>$mountContext,'mount_isolation'=>$mountIsolated,'backend_merged_context'=>$combined,'evidenced_mount_context'=>$evidencedMount],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;
+    &&($evidencedMount['zen_runtime_context']['package_identity_context_authoritative']??false)===true
+    &&($partialOverride['zen_runtime_context']['with_editor']??null)===false
+    &&($partialOverride['zen_runtime_context']['is_server']??null)===true
+    &&!array_key_exists('is_client',$partialOverride['zen_runtime_context'])
+    &&!isset($otherOverride['zen_runtime_context'])
+    &&($mergedOverride['zen_runtime_context']['is_editor']??null)===false
+    &&$invalidOverrideRejected&&$authorityOverrideRejected;
+echo json_encode(['ok'=>$ok,'baseline_unknown'=>$baseline,'other_game_isolation'=>$other,'known_context'=>$known,'unsupported_authority_rejected'=>$reject,'derived_mount_context'=>$mountContext,'mount_isolation'=>$mountIsolated,'backend_merged_context'=>$combined,'evidenced_mount_context'=>$evidencedMount,'partial_override'=>$partialOverride,'invalid_override_rejected'=>$invalidOverrideRejected,'authority_override_rejected'=>$authorityOverrideRejected],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;
 exit($ok?0:2);
