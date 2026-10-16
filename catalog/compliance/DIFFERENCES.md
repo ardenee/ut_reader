@@ -53,3 +53,12 @@ The user provided an authoritative **isolated integration DB** check for `contai
 - Saved *tracked* local Git diffs / status manifests: `C:\Temp\unrealdb-prd-20261016-audit-sync.patch`, `C:\Temp\unrealdb-prd-20261016-audit-sync-status.txt`, `D:\Temp\unrealdb-dev-20261016-audit-sync.patch` and status manifest on DEV. These are **not full backups of untracked files or databases**.
 - Clean, detached current-main worktrees: PRD `C:\Temp\unrealdb-prd-main-20261016`, DEV `D:\Temp\unrealdb-dev-main-20261016`. Both match `4a533498`, zero modified tracked files, and pass the bounded **12/12** UE5 audit tests.
 - **Live applications are NOT upgraded or version-aligned yet.** Full cutover must merge/reconcile the local overlapping modifications and separately protect untracked files, deployment config and databases before activating code. Staging new worktrees is not equivalent to deploying them.
+
+
+## 2026-10-16 live code alignment (completed)
+
+- **Live PRD and DEV were fast-forwarded to GitHub `df87f0a2`**, with zero modified tracked files after upgrade and the bounded 12/12 UE5 source regression suite passing on both live application paths.
+- Prior tracked changes are saved as labeled Git stashes (`pre-main-sync-PRD-20261016`, `pre-main-sync-DEV-20261016`) and tracked patches. Stashes were not reapplied over current code; any unmerged local changes require explicit review rather than silent reintroduction.
+- To prevent overwrites of older untracked files newly tracked in main, **776 PRD files** were moved to `C:\Temp\unrealdb-prd-untracked-collisions-20261016`, and **180 DEV files** to `D:\Temp\unrealdb-dev-untracked-collisions-20261016`. Other untracked and ignored files were not deliberately removed.
+- Both `catalog/config.php` paths remain present. PHP lint passed for `catalog/index.php`, bootstrap autoloader and Zen package reader. This is a code/test validation, **not a live HTTP or production MySQL acceptance test**.
+- The six-task workflow's source-code synchronization stage is fulfilled at the commit level. Deployment-wide acceptance still needs HTTP/DB verification and independent integration checks. Next doc-only commit should be fast-forwarded to both live trees.
