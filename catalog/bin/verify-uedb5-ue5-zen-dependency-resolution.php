@@ -417,6 +417,15 @@ $check(
     'zen_combined_server_role_keeps_not_for_client_export'
 );
 
+$unknownRole = $resolve($consumer, [['provider_id' => 93, 'snapshot' => $filteredProvider]], [
+    'with_editor' => false, 'ue_server' => false, 'with_server_code' => true,
+]);
+$check(
+    $find($unknownRole, 'imports', 0)['outcome'] === 'unresolved'
+    && $find($unknownRole, 'imports', 0)['reason_code'] === 'export_filter_runtime_state_required',
+    'zen_combined_unknown_runtime_role_is_unresolved_not_missing'
+);
+
 $duplicateHashProvider = $snapshot($providerId, [], [[
     'public_export_hash' => $publicHash, 'filter_flags' => 0, 'object_name' => ['text' => 'FirstTarget'],
 ], [
