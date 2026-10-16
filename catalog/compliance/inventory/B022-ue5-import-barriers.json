@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "batch": "B022",
+  "source": {
+    "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+    "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9"
+  },
+  "classification": "bounded source-body review",
+  "status": "partial",
+  "reviewed": [
+    {
+      "symbol": "FAsyncPackage2::ConditionalBeginResolveImports",
+      "line": 8275,
+      "disposition": "runtime-only",
+      "reason": "Waits for dependencies to enter import-ready state, then releases ResolveImports barrier; runtime scheduling, not serialized provider identity.",
+      "verified": false
+    }
+  ],
+  "evidence_limitations": [
+    "The call graph and engine conditional compilation require further audit",
+    "Offline exclusion is not runtime compliance"
+  ],
+  "next_batch": "B023"
+}
