@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "batch": "B068",
+  "source": {
+    "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+    "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9"
+  },
+  "classification": "bounded source-body review",
+  "status": "partial",
+  "reviewed": [
+    {
+      "symbol": "FAsyncPackage2::ConditionalCreateCellImport",
+      "line": 9091,
+      "disposition": "file-format-relevant",
+      "reason": "Adjusts index by ordinary ImportMap count, looks up Verse cell import and resolves provider cell export through FPackageImportReference and public hash.",
+      "verified": false
+    },
+    {
+      "symbol": "FAsyncPackage2::ConditionalSerializeCellImport",
+      "line": 9122,
+      "disposition": "file-format-relevant",
+      "reason": "Converts local cell import index and resolves provider public cell export hash before invoking conditional cell serialization.",
+      "verified": false
+    }
+  ],
+  "evidence_limitations": [
+    "Verse cell runtime object creation not simulated offline",
+    "Pending differential tests for ordinary-versus-cell index partition"
+  ],
+  "next_batch": "B069"
+}
