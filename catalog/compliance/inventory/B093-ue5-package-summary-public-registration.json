@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "batch": "B093",
+  "source": {
+    "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+    "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9"
+  },
+  "classification": "bounded source-body review",
+  "status": "partial",
+  "reviewed": [
+    {
+      "symbol": "FAsyncPackage2::Event_ProcessPackageSummary",
+      "line": 8381,
+      "disposition": "file-format-relevant",
+      "reason": "Creates FZenPackageHeader views from IoRequests, optional header only for editor, pre-inserts public exports into global import store (main plus optional editor), verifies PackageIdToLoad derived from header PackageName; marks importable package failed on Io error.",
+      "verified": false
+    }
+  ],
+  "evidence_limitations": [
+    "Do not equate pre-inserted public hash with completed loaded export",
+    "Full postload phase and runtime visibility behavior remain outside offline parser"
+  ],
+  "next_batch": "B094"
+}
