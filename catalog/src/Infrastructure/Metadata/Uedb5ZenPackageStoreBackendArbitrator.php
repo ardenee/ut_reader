@@ -49,7 +49,7 @@ final class Uedb5ZenPackageStoreBackendArbitrator
             $seen[$id]=true;$backend['_ordinal']=$i;$rows[]=$backend;
         }
         usort($rows,static fn(array $a,array $b):int=>
-            ($b['priority']<=>$a['priority'])?:($a['_ordinal']<=>$b['_ordinal']));
+            ($b['priority']<=>$a['priority'])?:($b['_ordinal']<=>$a['_ordinal']));
         return $rows;
     }
 }
