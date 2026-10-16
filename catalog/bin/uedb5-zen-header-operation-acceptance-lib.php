@@ -1,0 +1,109 @@
+<?php
+declare(strict_types=1);
+/**
+ * Shared internal helper for the two original Zen header contract operations.
+ * No editor executable or PRD-only retained metadata is required. Each
+ * accepted branch has pinned Epic source and independent synthetic bytes.
+ */
+function verifyZenHeaderOriginalOperation(string $which):void
+{
+ $root=dirname(__DIR__);$checks=[];$fail=[];$drivers=[];
+ $check=static function(string $key,bool $ok)use(&$checks,&$fail):void {
+  $checks[$key]=$ok;if(!$ok)$fail[]=$key;
+ };
+ $scripts=[
+  'source'=>'verify-uedb5-zen-runtime-version-source.php',
+  'wire'=>'verify-uedb5-ue5-zen-package.php',
+  'v5'=>'verify-uedb5-zen-version-staging-contract.php',
+  'callers'=>'verify-uedb5-zen-version-callers.php',
+  'deps'=>'verify-uedb5-ue5-zen-dependency-resolution.php'
+ ];
+ $reports=[];
+ foreach($scripts as $tag=>$filename){
+  $out=[];$code=127;
+  exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($root.'/bin/'.$filename).' 2>&1',
+   $out,$code);
+  $j=json_decode(implode("\n",$out),true);
+  $reports[$tag]=is_array($j)?$j:[];
+  $drivers[$tag]=['exit'=>$code,'ok'=>$reports[$tag]['ok']??false];
+  $check('b0'.$which.'_driver_'.$tag.'_passes',$code===0&&($reports[$tag]['ok']??false)===true);
+ }
+ $has=static fn($tag,$name):bool=>($reports[$tag]['checks'][$name]??false)===true;
+ $tag='b0'.$which;
+ $check($tag.'_pinned_epic_header_loader_source_and_archive_handoff',
+  $has('source','pinned_header_source_sha')
+  &&$has('source','pinned_loader_source_sha')
+  &&$has('source','runtime_calls_makeview')
+  &&$has('source','versioned_header_applied_to_linker')
+  &&$has('source','no_version_uses_engine_defaults')
+  &&$has('source','export_archive_inherits_effective_versions'));
+ $check($tag.'_production_entry_point_inventory_complete',
+  $has('callers','only_shared_snapshot_builder_invokes_zen_header_parser')
+  &&$has('callers','all_four_production_snapshot_builder_consumers_accounted')
+  &&$has('callers','unregistered_builder_call_fails_closed')
+  &&$has('callers','unregistered_direct_parser_call_fails_closed'));
+ $check($tag.'_real_synthetic_iostore_optional_main_v5_processing',
+  $has('wire','zen_snapshot_optional_store_entry_augments_main_package')
+  &&$has('wire','zen_snapshot_uedb5_provenance_round_trip')
+  &&$has('wire','zen_snapshot_optional_header_preserved_separately'));
+ if($which==='09'){
+  $check($tag.'_serialized_versioning_wire_and_custom_guid_layout',
+   $has('source','nonzero_flag_reads_versioning')
+   &&$has('source','source_versioning_field_order')
+   &&$has('source','package_versions_serialize_separately')
+   &&$has('source','custom_versions_optimized_array')
+   &&$has('wire','zen_versioning_info_parsed')
+   &&$has('wire','zen_ue5_package_version_parsed')
+   &&$has('wire','zen_custom_versions_parsed')
+   &&$has('wire','b009_multi_custom_guid_versions_preserve_signed_values'));
+  $check($tag.'_versioned_unversioned_and_noncanonical_flag',
+   $has('wire','b009_epic_nonzero_versioning_flag_enters_versioned_branch')
+   &&$has('wire','b009_zero_custom_versions_source_array')
+   &&$has('wire','b009_b010_no_versioning_latest_layout_source_branch_and_import_integrity')
+   &&$has('v5','noncanonical_nonzero_serialized_flag_accepted')
+   &&$has('v5','valid_unversioned_latest_layout_passes'));
+  $check($tag.'_versioning_corrupt_source_bytes_rejected',
+   $has('wire','b009_corrupt_negative_custom_version_count_rejected')
+   &&$has('wire','b009_corrupt_versioning_rejected_through_iostore_snapshot_builder')
+   &&$has('v5','serialized_version_flag_without_version_data_rejected')
+   &&$has('v5','unversioned_flag_with_serialized_version_data_rejected'));
+  $check($tag.'_versioning_preserved_in_v5_and_dependency_consumers',
+   $has('wire','b009_zen_version_custom_guid_preserved_through_v5_storage')
+   &&$has('deps','zen_dependency_package_import_resolved_by_id_hash')
+   &&$has('deps','zen_dependency_cell_import_classified'));
+ }elseif($which==='10'){
+  $check($tag.'_source_thresholds_and_pre_threshold_fallbacks',
+   $has('source','cell_map_conditional')
+   &&$has('source','bulk_map_conditional')
+   &&$has('source','old_cell_offsets_use_bundle_boundary')
+   &&$has('wire','b009_b010_pre_data_resources_source_branch_and_import_integrity')
+   &&$has('wire','b009_b010_data_resources_boundary_source_branch_and_import_integrity')
+   &&$has('wire','b009_b010_pre_verse_cells_source_branch_and_import_integrity')
+   &&$has('wire','b009_b010_verse_cells_boundary_source_branch_and_import_integrity'));
+  $check($tag.'_padding_source_byte_rules',
+   $has('source','bulk_pad_read_does_not_require_zero')
+   &&$has('wire','b010_epic_bulk_pad_does_not_require_zero_bytes')
+   &&$has('wire','b010_source_eight_byte_bulk_pad_scratch_boundary')
+   &&$has('wire','b010_unsafe_bulk_pad_count_stays_rejected'));
+  $check($tag.'_conditional_layout_corruption_rejected',
+   $has('wire','b010_corrupt_cell_offset_rejected_through_iostore_snapshot_builder')
+   &&$has('v5','pre_verse_cells_serialized_offsets_rejected')
+   &&$has('v5','pre_data_resources_bulk_rows_rejected')
+   &&$has('v5','missing_persisted_cell_offsets_rejected')
+   &&$has('v5','missing_persisted_bulk_map_section_rejected'));
+  $check($tag.'_conditional_v5_optional_and_dependency_layout_roundtrip',
+   $has('wire','b010_zen_cell_and_bulk_map_preserved_through_v5_storage')
+   &&$has('v5','malformed_optional_segment_versioning_rejected')
+   &&$has('v5','valid_versioned_1014_pre_cells_passes')
+   &&$has('v5','valid_versioned_1008_pre_bulk_passes')
+   &&$has('deps','zen_dependency_cell_import_uses_cell_export_map'));
+ }else{throw new RuntimeException('Expected original B009 or B010');}
+ echo json_encode([
+  'ok'=>$fail===[],'operation'=>'UE5-583-ZEN-'.
+    ($which==='09'?'VERSIONING':'CONDITIONAL-LAYOUT').'-001',
+  'source_derived_no_editor_executable'=>true,
+  'temporary_synthetic_package_only'=>true,
+  'checks'=>$checks,'drivers'=>$drivers,'failures'=>$fail,
+ ],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;
+ exit($fail===[]?0:1);
+}

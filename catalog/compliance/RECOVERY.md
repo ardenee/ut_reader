@@ -15,17 +15,17 @@ second competing audit system is introduced.
   reconciled. UE4.27.2 classic and UE5.8.3 classic/IoStore format targets
   are listed separately because the seven-game registry is not a complete
   list of supported format readers.
-* UE5 formal batch manifests: **15 containing 18 operations; 2 verified (B004 and B005), 16 partial**.
+* UE5 formal batch manifests: **15 containing 18 operations; 4 verified (B004, B005, B009, B010), 14 partial**.
   Baseline was 33 formal open evidence gates. B005 now has exhaustive scoped
   source/inventory/implementation acceptance, including the pinned hybrid
   editor branch model, real V5 selector/rebuilder and isolated temporary MySQL.
-  B004, B009 and B010 have bounded inventory subgates. **27 original evidence
-  gates remain open.** Full application/engine compliance remains unverified.
+  B004, B009 and B010 now have complete source-defined, operation-level
+  executable acceptance. **25 original evidence gates remain open.** Full application/engine compliance remains unverified.
 * D001-D013: thirteen known differences linked to original operations or
   explicitly categorized as cross-cutting or previously uncovered behavior.
   D010/D011 are now marked fixed and regression-verified. Original B009 and
-  B010 each have source-contract and implementation subgates closed by
-  executable branch checks. The pinned UE5.8.3 runtime now provides a
+  B010 now pass source-contract, implementation, caller, downstream V5 and
+  operation-level acceptance with five test drivers each. The pinned UE5.8.3 runtime now provides a
   separate source-verified full version-to-export-archive handoff; a
   real cooked versioned-header fixture is optional empirical differential
   evidence, not a prerequisite to establish Epic's actual source rules.
@@ -52,8 +52,8 @@ second competing audit system is introduced.
 
 | Order | Existing obligation | Unfinished acceptance scope |
 |---|---|---|
-| 1 | UE5-583-ZEN-VERSIONING-001 | Versioning and custom-version serializations, real positive/negative headers |
-| 2 | UE5-583-ZEN-CONDITIONAL-LAYOUT-001 | Version-dependent CellOffsets/BulkDataMap and no-versioning branches |
+| 1 | UE5-583-ZEN-VERSIONING-001 | **VERIFIED**: pinned Epic source, versioned/unversioned and custom GUID wire layouts, malformed headers, V5 round-trip, source-to-caller inventory |
+| 2 | UE5-583-ZEN-CONDITIONAL-LAYOUT-001 | **VERIFIED**: Epic threshold 1009/1015, eight-byte scratch pad, main/optional chunks, negative boundaries, final V5 validator |
 | 3 | UE5-583-OBJECT-INDEX-001 | **VERIFIED**: exact Epic bit encoding, malformed types, source-derived independent oracle, direct consumers and V5 metadata round-trip |
 | 4 | UE5-583-IMPORTED-PACKAGE-NAMES-001 | Batch names, per-name numbers, malformed boundaries |
 | 5 | UE5-583-OPTIONAL-EXPORT-SEGMENT-001 | Segment-specific import/store entries and editor/runtime behavior |
