@@ -167,7 +167,8 @@ final class PdoUedb5PhysicalProviderSelector
             // Accept only an explicitly evidenced backend Ok result with a file_id
             // present in the same game's V5 candidates. Pending must not fall through.
             $backendResults = $options['zen_package_store_backend_results'] ?? null;
-            if ($backendResults !== null) {
+            if ($backendResults !== null
+                && !empty($runtimeContext['package_store_context_authoritative'])) {
                 if (!is_array($backendResults) || !array_is_list($backendResults)) {
                     throw new RuntimeException('Zen package-store backend results must be an explicit list.');
                 }
