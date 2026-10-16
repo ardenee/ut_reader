@@ -12,5 +12,13 @@ $ok=$record['object_name']['text']==='ExampleExport'
   &&$record['outer_index']['type']==='Null' &&$record['class_index']['type']==='Null'
   &&$record['super_index']['type']==='Null' &&$record['template_index']['type']==='Null'
   &&$record['filter_flags']===2 &&$record['object_flags']==='00001234';
-echo json_encode(['ok'=>$ok,'name'=>$record['object_name']['text'],'serial_size'=>$record['cooked_serial_size'],'class_type'=>$record['class_index']['type'],'filter_flags'=>$record['filter_flags']],JSON_PRETTY_PRINT),PHP_EOL;
+$flagCases=[];
+foreach([0,1,2,3] as $flag){
+    $variant=substr_replace($bytes,chr($flag),68,1);
+    $entry=$parse($variant,[['text'=>'ExampleExport']])[0];
+    $flagCases[]=$entry['filter_flags'];
+    $ok=$ok&&$entry['filter_flags']===$flag;
+}
+$ok=$ok&&$flagCases===[0,1,2,3];
+echo json_encode(['ok'=>$ok,'name'=>$record['object_name']['text'],'serial_size'=>$record['cooked_serial_size'],'class_type'=>$record['class_index']['type'],'filter_flags'=>$record['filter_flags'],'round_trip_filter_flags'=>$flagCases],JSON_PRETTY_PRINT),PHP_EOL;
 exit($ok?0:2);
