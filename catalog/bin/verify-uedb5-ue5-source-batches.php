@@ -49,6 +49,8 @@ $tests=[
  'verify-uedb5-b015-recursive-imports.php',
  'verify-uedb5-b015-recursive-before-after.php',
  'verify-uedb5-b015-operation-acceptance.php',
+ 'verify-uedb5-b001-script-objects-source.php',
+ 'verify-uedb5-zen-script-objects-standalone.php',
  'verify-uedb5-zen-mounted-store-context.php',
  'verify-uedb5-zen-effective-store-context.php',
  'verify-uedb5-zen-context-options-standalone.php',

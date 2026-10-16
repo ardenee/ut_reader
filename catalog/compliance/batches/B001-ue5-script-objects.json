@@ -1,48 +1,77 @@
 {
-  "schema": 1,
-  "batch": "B001",
-  "engine": "UE5",
-  "profile": "UE5.8.3",
-  "status": "partial",
-  "inventory_a": "entry_point",
-  "inventory_b": "serialized_structure",
-  "source_root_hint": "L:/Source/Engine/UE5/UE 5.8.3/Engine/Source",
-  "complete_inventory": false,
-  "operations": [
-    {
-      "id": "UE5-583-SCRIPT-001",
-      "summary": "Cooked ScriptObjects chunk name-map and entry diagnostics",
-      "source": {
-        "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
-        "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9",
-        "symbols": [
-          "FCookedScriptObjectsDebug::LoadDebugData",
-          "FScriptObjectEntry"
-        ],
-        "lines": [
-          238,
-          6983,
-          6988,
-          7009
-        ]
-      },
-      "implementation": {
-        "path": "catalog/src/Infrastructure/Metadata/Uedb5ZenScriptObjectsReader.php",
-        "sha256": "1885cc3cb3f6479aae6c9ab80afe2f3985bbbfbe7e84ba44e1f89e043244fd86"
-      },
-      "tests": [
-        "catalog/bin/verify-uedb5-zen-script-objects-standalone.php"
-      ],
-      "disposition": "partial",
-      "reason": "Synthetic record verified; retained real chunk and runtime mapping have not passed acceptance gates; diagnostic records must not imply live script-object resolution."
+    "schema": 1,
+    "batch": "B001",
+    "engine": "UE5",
+    "profile": "UE5.8.3",
+    "status": "partial",
+    "inventory_a": "entry_point",
+    "inventory_b": "serialized_structure",
+    "source_root_hint": "L:/Source/Engine/UE5/UE 5.8.3/Engine/Source",
+    "complete_inventory": false,
+    "operations": [
+        {
+            "id": "UE5-583-SCRIPT-001",
+            "summary": "Cooked ScriptObjects chunk name-map and entry diagnostics",
+            "source": {
+                "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+                "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9",
+                "symbols": [
+                    "FCookedScriptObjectsDebug::LoadDebugData",
+                    "FScriptObjectEntry"
+                ],
+                "lines": [
+                    238,
+                    6983,
+                    6988,
+                    7009
+                ]
+            },
+            "implementation": {
+                "path": "catalog/src/Infrastructure/Metadata/Uedb5ZenScriptObjectsReader.php",
+                "sha256": "0504d850c2d862da4b0a03658a81dab89e784bd8c13e75242ae4e2d3822dff38"
+            },
+            "tests": [
+                "catalog/bin/verify-uedb5-zen-script-objects-standalone.php",
+                "catalog/bin/verify-uedb5-b001-script-objects-source.php"
+            ],
+            "disposition": "partial",
+            "reason": "D024 extra trailing-byte gate removed and pinned-source negative-before/positive-after accepted; complete source behavior, real chunk differential and runtime/diagnostic caller coverage still open.",
+            "correction_commits": [
+                "2ab7af1622cc7328500c257d4f7b1a11d8db6419"
+            ],
+            "related_differences": [
+                "UE5-D024"
+            ],
+            "source_contract_evidence": {
+                "test_driver": "catalog/bin/verify-uedb5-b001-script-objects-source.php",
+                "expected_checks": [
+                    "b001_epic_cpp_pinned",
+                    "b001_epic_struct_header_pinned",
+                    "b001_epic_chunk_enum_pinned",
+                    "b001_epic_global_script_chunk_exists_gate",
+                    "b001_epic_name_batch_then_int32_count_then_contiguous_view",
+                    "b001_epic_record_fields_and_map_key",
+                    "b001_epic_no_end_of_chunk_exact_gate",
+                    "b001_historical_original_checked_out",
+                    "b001_negative_before_positive_after_trailing_bytes",
+                    "b001_zero_records_trailing_bytes_allowed",
+                    "b001_truncated_record_still_rejected",
+                    "b001_cooked_chunk_never_proves_live_runtime"
+                ],
+                "source_branches": [
+                    "Cooked debug reader uses global ScriptObjects chunk, name batch, signed count and contiguous FScriptObjectEntry view.",
+                    "Source has no end-of-chunk enforcement after reading NumObjects entries.",
+                    "Diagnostics map is never substituted for live global script object store."
+                ]
+            }
+        }
+    ],
+    "next_batch": "B002",
+    "gate_status": {
+        "inventory": false,
+        "contracts": false,
+        "implementation": false,
+        "independent_verification": false,
+        "change_integrity": true
     }
-  ],
-  "next_batch": "B002",
-  "gate_status": {
-    "inventory": false,
-    "contracts": false,
-    "implementation": false,
-    "independent_verification": false,
-    "change_integrity": true
-  }
 }

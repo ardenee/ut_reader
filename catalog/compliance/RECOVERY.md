@@ -21,7 +21,7 @@ second competing audit system is introduced.
   editor branch model, real V5 selector/rebuilder and isolated temporary MySQL.
   B004, B009 and B010 now have complete source-defined, operation-level
   executable acceptance. **12 original evidence gates remain open.** Full application/engine compliance remains unverified.
-* D001-D023: twenty-three known differences linked to original operations or
+* D001-D024: twenty-four known differences linked to original operations or
   explicitly categorized as cross-cutting or previously uncovered behavior.
   D010/D011 are now marked fixed and regression-verified. Original B009 and
   B010 now pass source-contract, implementation, caller, downstream V5 and

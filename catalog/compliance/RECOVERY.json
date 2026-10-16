@@ -382,6 +382,16 @@
         "rationale": "Epic recursively considers imported FPackageIds even without public object imports. Prior UnrealDB persisted IDs but failed to emit standalone resolver requirements, omitting them from physical provider discovery/SQL. Historical f6d59d11 produced zero edges; 15208171 now writes main/optional V5 dependencies and isolated SQL 9/10, with live loader state conservatively unresolved.",
         "state": "fixed_regression_verified",
         "audit_escape": "none"
+    },
+    {
+        "id": "UE5-D024",
+        "kind": "mapped",
+        "operations": [
+            "UE5-583-SCRIPT-001"
+        ],
+        "rationale": "Epic FCookedScriptObjectsDebug::LoadDebugData reads exactly NumObjects fixed-size entries from a contiguous view without requiring end-of-chunk; UnrealDB rejected trailing bytes. 2ab7af16 removes only the unsourced strict-EOF gate. Pinned Epic oracle and original 2b4377b0 before/after pass; complete B001 remains partial.",
+        "state": "evidence_partial",
+        "audit_escape": "none"
     }
   ],
   "coverage_gaps": [

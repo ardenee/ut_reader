@@ -55,7 +55,7 @@
       },
       "implementation": {
         "path": "catalog/src/Infrastructure/Metadata/Uedb5ZenScriptObjectsReader.php",
-        "sha256": "1885cc3cb3f6479aae6c9ab80afe2f3985bbbfbe7e84ba44e1f89e043244fd86"
+        "sha256": "0504d850c2d862da4b0a03658a81dab89e784bd8c13e75242ae4e2d3822dff38"
       },
       "tests": [
         "catalog/bin/verify-uedb5-zen-script-objects-standalone.php"
