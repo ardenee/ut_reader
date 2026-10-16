@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "batch": "B086",
+  "source": {
+    "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+    "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9"
+  },
+  "classification": "bounded source-body review",
+  "status": "partial",
+  "reviewed": [
+    {
+      "symbol": "FAsyncPackage2::FAsyncPackage2",
+      "line": 12121,
+      "disposition": "runtime-only",
+      "reason": "Initializes async descriptor and event nodes, adds request ID and global import-store package reference; no package data parse.",
+      "verified": false
+    },
+    {
+      "symbol": "FAsyncPackage2::CreatePackageNodes",
+      "line": 12140,
+      "disposition": "runtime-only",
+      "reason": "Placement-new constructs event load nodes with initial barrier count for each package phase.",
+      "verified": false
+    },
+    {
+      "symbol": "FAsyncPackage2::Release",
+      "line": 12184,
+      "disposition": "runtime-only",
+      "reason": "Reference-count release enqueues package for deferred cleanup when last reference drops.",
+      "verified": false
+    }
+  ],
+  "evidence_limitations": [
+    "Offline package metadata cannot fully model live UObject lifecycle",
+    "Full source call graph is not certified"
+  ],
+  "next_batch": "B087"
+}
