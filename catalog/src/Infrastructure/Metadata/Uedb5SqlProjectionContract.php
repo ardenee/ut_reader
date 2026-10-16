@@ -35,6 +35,8 @@ final class Uedb5SqlProjectionContract
     public const DEP_SOURCE_OPTIONAL_CELL_IMPORT = 6;
     public const DEP_SOURCE_OPTIONAL_SOFT_PACKAGE = 7;
     public const DEP_SOURCE_OPTIONAL_LOAD_ORDER = 8;
+    public const DEP_SOURCE_IMPORTED_PACKAGE = 9;
+    public const DEP_SOURCE_OPTIONAL_IMPORTED_PACKAGE = 10;
 
     public const OUTCOME_MISSING = 0;
     public const OUTCOME_RESOLVED = 1;

@@ -28,6 +28,19 @@ final class Uedb5Ue5ZenDependencyResolver
         $packageStoreContext = self::packageStoreContext($consumer, $runtimeContext);
         $rows = [];
 
+        // Epic ImportPackagesRecursiveInner enumerates FZenPackageHeader's
+        // ImportedPackageIds independently of object and cell import maps.
+        // Preserve those package-only requirements even if no object uses them.
+        foreach ((array)($consumer['sections']['imported_package_ids'] ?? []) as $index => $entry) {
+            $rows[] = self::resolveImportedPackageId((array)$entry, $providers, $packageStoreContext, 'imported_package_ids', (int)$index);
+        }
+        $optionalPackageHeader = self::optionalSegment($consumer);
+        if ($optionalPackageHeader !== null) {
+            foreach ((array)($optionalPackageHeader['imported_package_ids'] ?? []) as $index => $entry) {
+                $rows[] = self::resolveImportedPackageId((array)$entry, $providers, $packageStoreContext, 'optional_segment_imported_package_ids', (int)$index);
+            }
+        }
+
         foreach ((array)$consumer['sections']['imports'] as $index => $import) {
             $result = self::resolveObjectIndex((array)$import, $providers, $packageStoreContext, 'imports', (int)$index, null, false);
             if ($result !== null) { $rows[] = $result; }
@@ -149,6 +162,98 @@ final class Uedb5Ue5ZenDependencyResolver
         }
         return $rows;
     }
+    /**
+     * This is a package requirement, not a simulation of Epic's async loader.
+     * Epic searches already-loaded packages before consulting the store, then
+     * skips missing/uninstalled packages and queues Pending ones. Without a
+     * captured live import store that ordering is not an offline outcome.
+     */
+    private static function resolveImportedPackageId(
+        array $entry, array $providers, array $context, string $section, int $index
+    ): array {
+        $id = self::u64((string)($entry['package_id'] ?? ''), 'ImportedPackageIds FPackageId');
+        if (array_key_exists('index', $entry) && (int)$entry['index'] !== $index) {
+            throw new RuntimeException('Zen ImportedPackageIds source index is inconsistent.');
+        }
+        $optional = $section === 'optional_segment_imported_package_ids';
+        $class = $optional ? 'optional' : 'hard';
+        $extra = [
+            'effective_import_package_id' => $id,
+            'provider_lookup_package_id' => $id,
+            'serialized_package_name' => $entry['serialized_name'] ?? null,
+            'runtime_schedule_authoritative' => false,
+        ];
+        $emit = static function(string $outcome, ?array $provider, string $reason, array $meta = [])
+            use (&$extra, $section, $index, $class, $id): array {
+            return self::row('ImportedPackage', $section, $index, $class, $id, null,
+                $outcome, $provider, null, $reason, array_replace($extra, $meta));
+        };
+        if ($optional && $context['with_editor'] !== true) {
+            return $emit('unresolved', null, $context['with_editor'] === false
+                ? 'optional_segment_not_loaded_non_editor'
+                : 'optional_segment_editor_build_context_required');
+        }
+        if (!$context['identity_authoritative']) {
+            return $emit('unresolved', null, 'package_identity_runtime_context_required');
+        }
+        $rewrite = $context['identity_rewrites'][self::mapKey($id)] ?? null;
+        $lookup = $id;
+        if (is_array($rewrite)) {
+            $effective = self::u64((string)($rewrite['imported_package_id'] ?? $id),
+                'recursive import effective FPackageId');
+            $lookup = self::u64((string)($rewrite['package_id_to_load'] ?? $effective),
+                'recursive import load FPackageId');
+            $extra['effective_import_package_id'] = $effective;
+            $extra['provider_lookup_package_id'] = $lookup;
+            $extra['package_identity_rewrite'] = [
+                'source_package_id' => $id,
+                'imported_package_id' => $effective,
+                'package_id_to_load' => $lookup,
+                'reason' => (string)($rewrite['reason'] ?? 'authoritative_runtime_identity_rewrite'),
+            ];
+        }
+        if (!$context['authoritative']) {
+            return $emit('unresolved', null, 'package_store_mount_context_required');
+        }
+        $redirect = $context['redirects'][self::mapKey($lookup)] ?? null;
+        $localized = $context['localized'][self::mapKey($lookup)] ?? null;
+        if (is_array($redirect)) {
+            $original = $lookup;
+            $lookup = self::u64((string)($redirect['target_package_id'] ?? ''),
+                'recursive import redirect target FPackageId');
+            $extra['provider_lookup_package_id'] = $lookup;
+            $extra['package_store_redirect'] = [
+                'source_package_id' => $original,
+                'target_package_id' => $lookup,
+                'source_package_name' => self::mappedNameText($redirect['source_package_name'] ?? null),
+            ];
+        } elseif (is_array($localized) && $context['is_editor'] !== true) {
+            return $emit('unresolved', null, 'localized_package_runtime_culture_required');
+        }
+        // A source-backed package-store status is not proof that no package
+        // already exists in the global import store. Do not assert a live skip.
+        $provider = $providers[self::mapKey($lookup)] ?? null;
+        $meta = ['provider_lookup_package_id' => $lookup];
+        if ($context['backend_results'] === null) {
+            return $emit('unresolved', null, 'recursive_import_package_store_status_required', $meta);
+        }
+        $answer = Uedb5ZenPackageStoreBackendArbitrator::entry($context['backend_results'], $lookup);
+        $meta['package_store_backend_status'] = $answer['status'];
+        $meta['package_store_backend_id'] = $answer['backend_id'];
+        if ($answer['status'] !== 'Ok') {
+            return $emit('unresolved', null,
+                $answer['status'] === 'Pending' ? 'package_store_entry_pending'
+                    : 'recursive_import_existing_loaded_package_state_required', $meta);
+        }
+        $exactFile = (int)($answer['entry']['file_id'] ?? 0);
+        if ($exactFile < 1 || $provider === null
+            || (int)($provider['provider_id'] ?? 0) !== $exactFile) {
+            return $emit('unresolved', null, 'package_store_evidenced_provider_unavailable', $meta);
+        }
+        return $emit('package_only', $provider,
+            'recursive_import_provider_known_runtime_load_unverified', $meta);
+    }
+
     /** @return array<string,array<string,mixed>> */
     private static function providers(array $selectedProviders): array
     {

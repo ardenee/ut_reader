@@ -58,6 +58,8 @@ final class Uedb5DependencyProjectionBuilder
         $sourceSection = (string)($row['source_section'] ?? '');
         $sourceKind = match ($sourceSection) {
             'imports' => Uedb5SqlProjectionContract::DEP_SOURCE_IMPORT,
+            'imported_package_ids' => Uedb5SqlProjectionContract::DEP_SOURCE_IMPORTED_PACKAGE,
+            'optional_segment_imported_package_ids' => Uedb5SqlProjectionContract::DEP_SOURCE_OPTIONAL_IMPORTED_PACKAGE,
             'cell_imports' => Uedb5SqlProjectionContract::DEP_SOURCE_CELL_IMPORT,
             'soft_package_references' => Uedb5SqlProjectionContract::DEP_SOURCE_SOFT_PACKAGE,
             'dependency_bundle_entries' => Uedb5SqlProjectionContract::DEP_SOURCE_LOAD_ORDER,

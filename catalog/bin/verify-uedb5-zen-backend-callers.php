@@ -23,7 +23,7 @@ $check=static function(string $key,bool $ok)use(&$checks,&$fail){
 $expected=[
  'PdoUedb5PhysicalProviderSelector.php'=>['evidencedBackends'=>1,'entry'=>1],
  'Uedb5DependencyRebuilder.php'=>['evidencedBackends'=>1],
- 'Uedb5Ue5ZenDependencyResolver.php'=>['entry'=>1],
+ 'Uedb5Ue5ZenDependencyResolver.php'=>['entry'=>2],
  'Uedb5ZenEffectivePackageStoreContextBuilder.php'=>['ordered'=>1],
 ];
 $actual=[];
