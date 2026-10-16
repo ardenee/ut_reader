@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "batch": "B009",
+  "engine": "UE5",
+  "profile": "UE5.8.3",
+  "status": "partial",
+  "inventory_a": "source call path",
+  "inventory_b": "source structure and branch coverage",
+  "complete_inventory": false,
+  "operations": [
+    {
+      "id": "UE5-583-ZEN-VERSIONING-001",
+      "summary": "Zen package versioning deserializes ZenVersion, PackageVersion, LicenseeVersion and custom versions",
+      "source": {
+        "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+        "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9",
+        "symbols": [
+          "operator<<(FArchive&, FZenPackageVersioningInfo&)",
+          "FZenPackageVersioningInfo"
+        ]
+      },
+      "implementation": {
+        "path": "catalog/src/Infrastructure/Metadata/Uedb5ZenPackageReader.php",
+        "sha256": "742376ce307651b5ccb0fc0ec54707877e21e6bbfa8873ab84605a73d0041d31"
+      },
+      "tests": [
+        "catalog/bin/verify-uedb5-ue5-zen-dependency-resolution.php"
+      ],
+      "disposition": "partial",
+      "reason": "Source lines 164–171. Must reconcile actual Zen version gating and custom-version serialization with file reader before any certification."
+    }
+  ],
+  "next_batch": "B012",
+  "gate_status": {
+    "inventory": false,
+    "contracts": false,
+    "implementation": false,
+    "independent_verification": false,
+    "change_integrity": true
+  }
+}
