@@ -44,6 +44,18 @@ $combined=$run([
  ]],
  'zen_file_backend_priority_by_game'=>[9001=>1],
 ]);
+$evidencedMount=$run([
+ 'zen_runtime_context_by_game'=>[9001=>[
+  'evidence_source'=>'complete verified runtime capture',
+  'package_identity_context_authoritative'=>true,
+  'package_store_context_authoritative'=>true,
+  'package_identity_rewrites'=>[],
+ ]],
+ 'zen_mounted_containers_by_game'=>[9001=>[
+  ['container_id'=>'evidenced','order'=>1,'sequence'=>1,
+   'package_redirects'=>[],'localized_packages'=>[]],
+ ]],
+]);
 $ok=!isset($baseline['zen_runtime_context'])&&!isset($other['zen_runtime_context'])
     &&($known['zen_runtime_context']['package_identity_context_authoritative']??null)===true
     &&($known['zen_runtime_context']['package_store_context_authoritative']??null)===false
@@ -51,6 +63,8 @@ $ok=!isset($baseline['zen_runtime_context'])&&!isset($other['zen_runtime_context
     &&($mountContext['zen_runtime_context']['package_redirects'][0]['target_package_id']??'')==='2222222222222222'
     &&($mountContext['zen_runtime_context']['package_store_context_authoritative']??null)===false
     &&!isset($mountIsolated['zen_runtime_context'])
-    &&($combined['zen_runtime_context']['package_redirects'][0]['target_package_id']??'')==='2222222222222222';
-echo json_encode(['ok'=>$ok,'baseline_unknown'=>$baseline,'other_game_isolation'=>$other,'known_context'=>$known,'unsupported_authority_rejected'=>$reject,'derived_mount_context'=>$mountContext,'mount_isolation'=>$mountIsolated,'backend_merged_context'=>$combined],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;
+    &&($combined['zen_runtime_context']['package_redirects'][0]['target_package_id']??'')==='2222222222222222'
+    &&($evidencedMount['zen_runtime_context']['package_store_context_authoritative']??false)===true
+    &&($evidencedMount['zen_runtime_context']['package_identity_context_authoritative']??false)===true;
+echo json_encode(['ok'=>$ok,'baseline_unknown'=>$baseline,'other_game_isolation'=>$other,'known_context'=>$known,'unsupported_authority_rejected'=>$reject,'derived_mount_context'=>$mountContext,'mount_isolation'=>$mountIsolated,'backend_merged_context'=>$combined,'evidenced_mount_context'=>$evidencedMount],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;
 exit($ok?0:2);
