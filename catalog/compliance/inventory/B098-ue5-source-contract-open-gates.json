@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "batch": "B098",
+  "status": "partial",
+  "validation": {
+    "source_definitions": {
+      "candidate_count": 88,
+      "unmapped_count": 0,
+      "classified_count": 84,
+      "exit_code": 0
+    },
+    "source_compliance_manifests": {
+      "batches": 15,
+      "operations": 18,
+      "verified": 0,
+      "source_hash_checks": 18,
+      "source_symbol_checks": 36,
+      "open_gates": 33,
+      "issues": 0
+    },
+    "isolated_regression_suite": {
+      "scripts": 9,
+      "passed": 9,
+      "failed": 0
+    }
+  },
+  "finding": "Completion of method-name inventory in one UE5 source file does not close behavioral verification of registered source contracts or 33 open gates. Source compliance manifest still has zero verified operations.",
+  "scope": "Pinned Epic UE5.8.3 AsyncLoading2.cpp and current-main isolated review checkout",
+  "certified": false,
+  "next_batch": "B099"
+}
