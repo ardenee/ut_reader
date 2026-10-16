@@ -14,8 +14,12 @@ $c=Arb::entry($b,$id);
 $b[1]['entries'][$id]=['status'=>'None'];$b[2]['entries'][$id]=['status'=>'Missing'];
 $f=Arb::entry($b,$id);
 $bad=false;try{Arb::ordered([['backend_id'=>'bad','priority'=>'high','entries'=>[],'redirects'=>[]]]);}catch(RuntimeException){$bad=true;}
-$ok=$a['backend_id']==='middle'&&$a['status']==='Pending'
+$ties=Arb::ordered([
+ ['backend_id'=>'first','priority'=>7,'entries'=>[],'redirects'=>[]],
+ ['backend_id'=>'second','priority'=>7,'entries'=>[],'redirects'=>[]],
+]);
+$ok=$ties[0]['backend_id']==='second'&&$a['backend_id']==='middle'&&$a['status']==='Pending'
  &&$r['backend_id']==='higher'&&$c['backend_id']==='higher'
  &&$f['backend_id']==='file'&&$bad;
-echo json_encode(['ok'=>$ok,'pending_stops'=>$a,'redirect_priority'=>$r,'higher_priority_ok'=>$c,'none_missing_fallback'=>$f,'reject_bad_priority'=>$bad],JSON_PRETTY_PRINT),PHP_EOL;
+echo json_encode(['ok'=>$ok,'pending_stops'=>$a,'redirect_priority'=>$r,'higher_priority_ok'=>$c,'none_missing_fallback'=>$f,'reject_bad_priority'=>$bad,'equal_priority_newest_first'=>$ties[0]['backend_id']]==='second' ],JSON_PRETTY_PRINT),PHP_EOL;
 exit($ok?0:2);
