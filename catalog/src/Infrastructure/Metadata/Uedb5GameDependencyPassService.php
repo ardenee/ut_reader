@@ -346,11 +346,17 @@ final class Uedb5GameDependencyPassService
             $previous = (array)($options['zen_runtime_context'] ?? []);
             // Mapping precedence is derived from explicitly supplied mount metadata,
             // never from incidental file enumeration. Do not promote authority flags.
+            // The mount builder itself never asserts runtime completeness. However,
+            // separately supplied, evidenced environment authority must not be
+            // erased by aggregating deterministic file-backend mappings.
             $options['zen_runtime_context'] = array_replace(
-                $previous, $mountedContext,
+                $mountedContext,
+                $previous,
                 [
-                    'package_store_context_authoritative' => false,
-                    'package_identity_context_authoritative' => false,
+                    'package_redirects' => $mountedContext['package_redirects'],
+                    'localized_packages' => $mountedContext['localized_packages'],
+                    'mounted_container_order' => $mountedContext['mounted_container_order'],
+                    'package_store_backend_order' => $mountedContext['package_store_backend_order'] ?? [],
                 ]
             );
         }
