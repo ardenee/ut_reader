@@ -248,6 +248,19 @@ $backendUnknown=(new PdoUedb5PhysicalProviderSelector($db,$tmp))->select(8,40,[
    'entries'=>[$zenPackageId=>['status'=>'Ok','file_id'=>42]],'redirects'=>[]],
  ],
 ]);
+$backendMissing=(new PdoUedb5PhysicalProviderSelector($db,$tmp))->select(8,40,[
+ 'zen_runtime_context'=>[
+  'package_identity_context_authoritative'=>true,
+  'package_store_context_authoritative'=>true,
+  'package_redirects'=>[],'localized_packages'=>[],
+ ],
+ 'zen_package_store_backend_results'=>[
+  ['backend_id'=>'file','priority'=>1,
+   'entries'=>[$zenPackageId=>['status'=>'Missing']],'redirects'=>[]],
+ ],
+]);
+$check('zen_authoritative_missing_does_not_guess_catalogue_candidate',
+ $backendMissing===[]);
 $check('zen_unproven_backend_does_not_select_physical_package',
  ($backendUnknown[0]['selection_status']??'')==='ambiguous');
 $check('zen_public_export_coverage_does_not_select_a_duplicate_package_file',
