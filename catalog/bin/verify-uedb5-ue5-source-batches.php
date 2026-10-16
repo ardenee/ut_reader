@@ -14,6 +14,7 @@ $tests=[
  'verify-uedb5-ue5-zen-dependency-resolution.php',
  'verify-uedb5-ue5-zen-package.php',
  'verify-uedb5-zen-runtime-version-source.php',
+ 'verify-uedb5-zen-version-callers.php',
  'verify-uedb5-zen-version-staging-contract.php',
  'verify-uedb5-ue5-iostore-foundation.php',
  'verify-uedb5-zen-export-filter-context.php',

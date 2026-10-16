@@ -486,6 +486,40 @@ file_put_contents($base . '.ucas', $logical);
 $uedb5Path = $temp . DIRECTORY_SEPARATOR . '7.uedb5';
 try {
     $toc = new Uedb5IoStoreTocReader($base . '.utoc');
+    // B009/B010: exercise the REAL IoStore -> header-builder route, not just
+    // a direct parser call. Corruption is confined to the temporary fixture
+    // and always restored before any subsequent assertion.
+    $assertBadChunk = static function (int $byteOffset, string $badValue, string $expectedMessage)
+        use ($base, $logical, $packageId): bool {
+        $broken = substr_replace($logical, $badValue, $byteOffset, strlen($badValue));
+        try {
+            if (file_put_contents($base . '.ucas', $broken) !== strlen($broken)) {
+                throw new RuntimeException('Cannot write temporary corrupted Zen chunk');
+            }
+            $badToc = new Uedb5IoStoreTocReader($base . '.utoc');
+            Uedb5Ue5ZenIoStoreSnapshotBuilder::build($badToc, $packageId, [
+                'id'=>7,'game_id'=>7,
+                'package_name'=>'','original_name'=>'fixture.utoc',
+            ]);
+            return false;
+        } catch (RuntimeException $e) {
+            return str_contains($e->getMessage(), $expectedMessage);
+        } finally {
+            if (file_put_contents($base . '.ucas', $logical) !== strlen($logical)) {
+                throw new RuntimeException('Could not restore original bounded fixture bytes');
+            }
+        }
+    };
+    $check(
+        $assertBadChunk(strlen($containerHeader) + Uedb5ZenPackageReader::SUMMARY_SIZE
+            + 16, pack('V', 0xFFFFFFFF), 'custom-version count'),
+        'b009_corrupt_versioning_rejected_through_iostore_snapshot_builder'
+    );
+    $check(
+        $assertBadChunk(strlen($containerHeader) + Uedb5ZenPackageReader::SUMMARY_SIZE
+            + strlen($versioning), pack('V', 0x7FFFFFFF), 'outside HeaderSize'),
+        'b010_corrupt_cell_offset_rejected_through_iostore_snapshot_builder'
+    );
     $snapshot = Uedb5Ue5ZenIoStoreSnapshotBuilder::build($toc, $packageId, [
         'id' => 7,
         'game_id' => 7,

@@ -6,7 +6,7 @@
     "status": "partial",
     "inventory_a": "targeted loader call path",
     "inventory_b": "serialized field and branch inventory",
-    "complete_inventory": false,
+    "complete_inventory": true,
     "operations": [
         {
             "id": "UE5-583-ZEN-CONDITIONAL-LAYOUT-001",
@@ -27,7 +27,8 @@
                 "catalog/bin/verify-uedb5-ue5-zen-package.php",
                 "catalog/bin/verify-uedb5-zen-runtime-version-source.php",
                 "catalog/bin/verify-uedb5-satisfactory-header-readonly-isolated.php",
-                "catalog/bin/verify-uedb5-zen-version-staging-contract.php"
+                "catalog/bin/verify-uedb5-zen-version-staging-contract.php",
+                "catalog/bin/verify-uedb5-zen-version-callers.php"
             ],
             "additional_sources": [
                 {
@@ -75,7 +76,8 @@
                     "b009_b010_pre_verse_cells_source_branch_and_import_integrity",
                     "b009_b010_verse_cells_boundary_source_branch_and_import_integrity",
                     "b009_b010_no_versioning_latest_layout_source_branch_and_import_integrity",
-                    "b010_zen_cell_and_bulk_map_preserved_through_v5_storage"
+                    "b010_zen_cell_and_bulk_map_preserved_through_v5_storage",
+                    "b010_corrupt_cell_offset_rejected_through_iostore_snapshot_builder"
                 ],
                 "source_branches": [
                     "ZenPackageHeader.cpp:37-47: absent version or UE5>=VERSE_CELLS => serialized cell offsets; older version => export bundle offset defaults",
@@ -109,16 +111,59 @@
                     "malformed_optional_segment_versioning_rejected"
                 ],
                 "consumer_scope": "Final Step 8 validator validates source-versioned/null header sections, optional segments, cell-map/bulk-map conditionals and V5 metadata integrity. It does not run the Epic UObject export loader."
+            },
+            "source_reachability_evidence": {
+                "test_driver": "catalog/bin/verify-uedb5-zen-version-callers.php",
+                "expected_checks": [
+                    "only_shared_snapshot_builder_invokes_zen_header_parser",
+                    "all_four_production_snapshot_builder_consumers_accounted",
+                    "unregistered_builder_call_fails_closed",
+                    "unregistered_direct_parser_call_fails_closed",
+                    "production_path_Uedb5Ue5ZenIoStoreSnapshotBuilder.php_2",
+                    "production_path_Uedb5Ue5ZenIoStoreSnapshotBuilder.php_3",
+                    "production_path_Uedb5Ue5ZenIoStoreSnapshotBuilder.php_4",
+                    "production_path_Uedb5Ue5ZenIoStoreSnapshotBuilder.php_5",
+                    "production_path_Uedb5Ue5ZenIoStoreSnapshotBuilder.php_6",
+                    "production_path_CatalogZenIoStorePackagePublisher.php_1",
+                    "production_path_CatalogZenIoStorePackagePublisher.php_4",
+                    "production_path_CatalogZenIoStorePackagePublisher.php_5",
+                    "production_path_CatalogZenIoStorePackagePublisher.php_6",
+                    "production_path_CatalogIoStoreMemberReimportService.php_1",
+                    "production_path_CatalogIoStoreMemberReimportService.php_4",
+                    "production_path_CatalogIoStoreMemberReimportService.php_5",
+                    "production_path_CatalogIoStoreIndexedPackageReader.php_1",
+                    "production_path_CatalogIoStorePackageNameIndexer.php_1",
+                    "production_path_CatalogIoStorePackageNameIndexer.php_2",
+                    "production_path_CatalogIoStoreMemberCatalogPublisher.php_2",
+                    "production_path_CatalogFileMaintenanceReimportService.php_1",
+                    "production_path_Uedb5MigrationValidator.php_1",
+                    "production_path_Uedb5MigrationValidator.php_2",
+                    "production_path_Uedb5MigrationValidator.php_3",
+                    "production_path_CatalogIoStoreNameIndexJobHandler.php_1"
+                ],
+                "source_inventory_record": "catalog/compliance/B009-B010-CALLPATHS.md"
             }
         }
     ],
     "next_batch": "B011",
     "gate_status": {
-        "inventory": false,
+        "inventory": true,
         "contracts": true,
         "implementation": true,
         "independent_verification": false,
         "change_integrity": true,
         "consumer_validation": true
+    },
+    "reconciliation_evidence": {
+        "scope": "Only the pinned Epic UE5.8.3 Zen versioned header/conditional layout operations, not all UE5 runtime behavior.",
+        "record": "catalog/compliance/B009-B010-CALLPATHS.md",
+        "production_inventory": "All PHP files under catalog/src enumerated at run time; direct Zen parser calls and builder callers must match exact counts.",
+        "epic_source_driver": "catalog/bin/verify-uedb5-zen-runtime-version-source.php",
+        "exclusions": [
+            "full UObject payload loading",
+            "runtime mounted package store",
+            "non-Zen classic packages",
+            "independent engine binary execution"
+        ]
     }
 }

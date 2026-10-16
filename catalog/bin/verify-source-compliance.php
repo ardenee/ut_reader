@@ -9,7 +9,7 @@ $sourceChecks=0;
 $files=glob($dir.'/*.json')?:[];
 $failures=[];$open=0;$verified=0;$entries=0;$globalIds=[];$inventoryChecks=0;
 $verifiedContractGates=0;$verifiedImplementationGates=0;$contractChecks=0;$contractTestRuns=[];
-$verifiedConsumerGates=0;$consumerChecks=0;
+$verifiedConsumerGates=0;$consumerChecks=0;$closedReachabilityGates=0;$reachabilityAssertions=0;
 if($strict && $sourceRoot==='')$failures[]='Strict mode requires UNREALDB_EPIC_SOURCE_ROOT for source hash verification.';
 if($files===[])$failures[]='No audit batches exist.';
 foreach($files as $file){
@@ -91,6 +91,45 @@ foreach($files as $file){
         }
         foreach($record['tests'] as $test){
             if(!is_file($root.'/'.str_replace('\\','/',$test)))$failures[]=$id.': test missing: '.$test;
+        }
+        // B009/B010 source reachability is bounded to the Zen header
+        // contract. Verify the exhaustive production callsite scanner and
+        // its negative controls before accepting an inventory gate.
+        if(((array)($data['gate_status']??[]))['inventory']??false){
+            $reach=(array)($record['source_reachability_evidence']??[]);
+            $driver=(string)($reach['test_driver']??'');
+            $want=(array)($reach['expected_checks']??[]);
+            $resolved=realpath($root.'/'.str_replace(chr(92),'/',$driver));
+            $rootPath=realpath($root);
+            if(($data['complete_inventory']??false)!==true
+                ||!is_string($resolved)||!is_string($rootPath)
+                ||!str_starts_with(strtolower(str_replace(chr(92),'/',$resolved)),
+                    strtolower(str_replace(chr(92),'/',$rootPath)).'/')
+                ||$want===[]||!array_is_list($want)){
+                $failures[]=$id.': closed inventory lacks verified bounded reachability evidence';
+            } else {
+                if(!array_key_exists($resolved,$contractTestRuns)){
+                    $lines=[];$result=127;
+                    exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($resolved).' 2>&1',
+                        $lines,$result);
+                    $parsed=json_decode(implode("\n",$lines),true);
+                    $contractTestRuns[$resolved]=[
+                        'exit'=>$result,'result'=>is_array($parsed)?$parsed:[]
+                    ];
+                }
+                $test=$contractTestRuns[$resolved];
+                $pass=$test['exit']===0&&($test['result']['ok']??false)===true;
+                foreach($want as $named){
+                    $reachabilityAssertions++;
+                    if(!is_string($named)
+                        ||($test['result']['checks'][$named]??null)!==true){
+                        $pass=false;
+                        $failures[]=$id.': source/production caller evidence missing: '.(string)$named;
+                    }
+                }
+                if(!$pass){$failures[]=$id.': reachability scanner did not verify inventory';}
+                else{$closedReachabilityGates++;}
+            }
         }
         // The original manifest gates are not self-attested. If a contract
         // or implementation gate is marked closed, execute every declared
@@ -222,6 +261,8 @@ echo json_encode(['ok'=>$failures===[],'batches'=>count($files),'operations'=>$e
     'open_gates'=>$open,'closed_source_contract_gates'=>$verifiedContractGates,
     'closed_implementation_gates'=>$verifiedImplementationGates,
     'executed_contract_assertions'=>$contractChecks,
+    'closed_source_reachability_gates'=>$closedReachabilityGates,
+    'executed_reachability_assertions'=>$reachabilityAssertions,
     'closed_consumer_validation_gates'=>$verifiedConsumerGates,
     'executed_consumer_assertions'=>$consumerChecks,
     'recovery'=>$recovery,'issues'=>$failures],

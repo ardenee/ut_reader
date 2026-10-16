@@ -16,7 +16,10 @@ second competing audit system is introduced.
   are listed separately because the seven-game registry is not a complete
   list of supported format readers.
 * UE5 formal batch manifests: 15 containing 18 operations, all partial.
-  Existing formal verifier: 33 open gates; no formal operation fully verified.
+  Baseline was 33 formal open gates. The completed original B009/B010
+  narrowly scoped source-to-production caller inventories reduce this to
+  **31 open gates**, with **2 verified inventory subgates**. The original
+  operations remain partial until independent final acceptance.
 * D001-D012: twelve known differences linked to original operations or
   explicitly categorized as cross-cutting or previously uncovered behavior.
   D010/D011 are now marked fixed and regression-verified. Original B009 and
@@ -127,8 +130,12 @@ byte fixtures, nine B009 and ten B010 enforced contract assertions, and two
 real retained Satisfactory no-versioning snapshots, plus a read-only
 15-member spread sampling of actual serialized versioning flags (15 unversioned,
 zero versioned). The machine verifier
-closes two source-contract, two implementation, and two downstream Step 8
-consumer-validation subgates. D012 records seven failing-before/passing-after
+closes two source-contract, two implementation, two downstream Step 8
+consumer-validation, and two source-to-production reachability subgates.
+The reachability inventory [B009-B010-CALLPATHS.md](B009-B010-CALLPATHS.md)
+scans all production PHP (559 files in the recorded run) and rejects
+unmapped direct parser/builder calls. Main and optional header corruption
+is now also tested through the IoStore snapshot builder. D012 records seven failing-before/passing-after
 consumer checks. All six subgates are backed by executable evidence; the
 complete operations remain partial. The absence of an UnrealEditor binary
 and a particular cooked versioned sample are **not blockers to auditing the
