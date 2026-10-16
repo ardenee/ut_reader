@@ -1,0 +1,43 @@
+{
+  "schema": 1,
+  "batch": "B004",
+  "engine": "UE5",
+  "profile": "UE5.8.3",
+  "status": "partial",
+  "inventory_a": "Source call-path inventory",
+  "inventory_b": "Source structure and conditional behavior inventory",
+  "complete_inventory": false,
+  "source_root_hint": "L:/Source/Engine/UE5/UE 5.8.3",
+  "operations": [
+    {
+      "id": "UE5-583-OBJECT-INDEX-001",
+      "summary": "UE5 package object index encoding",
+      "source": {
+        "path": "Engine/Source/Runtime/CoreUObject/Public/Serialization/AsyncLoading2.h",
+        "sha256": "088f00a8c970458e4bb717490ac4d50361d635ddf8cb0b7b1a5c93ff4d9feef2",
+        "symbols": [
+          "FPackageObjectIndex",
+          "FromPackageImportRef",
+          "FromScriptPath"
+        ]
+      },
+      "implementation": {
+        "path": "catalog/src/Infrastructure/Metadata/Uedb5ZenPackageReader.php",
+        "sha256": "742376ce307651b5ccb0fc0ec54707877e21e6bbfa8873ab84605a73d0041d31"
+      },
+      "tests": [
+        "catalog/bin/verify-uedb5-ue5-zen-dependency-resolution.php"
+      ],
+      "disposition": "partial",
+      "reason": "Top two bits encode Export/ScriptImport/PackageImport/Null; package import reference uses imported package index and hash table index. UnrealDB decoder implements this; reserved/null, bounds, and exact fixture parity remain open."
+    }
+  ],
+  "next_batch": "B005",
+  "gate_status": {
+    "inventory": false,
+    "contracts": false,
+    "implementation": false,
+    "independent_verification": false,
+    "change_integrity": true
+  }
+}
