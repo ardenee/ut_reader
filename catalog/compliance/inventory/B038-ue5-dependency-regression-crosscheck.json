@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "batch": "B038",
+  "status": "partial",
+  "source": {
+    "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+    "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9"
+  },
+  "classification": "source-to-implementation regression evidence",
+  "reviewed": [
+    {
+      "symbol": "FAsyncPackage2::ProcessExportDependencies",
+      "disposition": "file-format-relevant",
+      "verified": false,
+      "reason": "Both focused dependency partition regression and existing Zen package regression passed. Still lacks Epic-generated fixture differential and complete create/serialize graph parity."
+    }
+  ],
+  "test_evidence": [
+    "catalog/bin/verify-uedb5-zen-dependency-partitions.php",
+    "catalog/bin/verify-uedb5-ue5-zen-package.php"
+  ],
+  "remaining": [
+    "Run differential tests on authentic Epic cooked files",
+    "Reconcile all source-visible error and condition branches"
+  ],
+  "next_batch": "B039"
+}
