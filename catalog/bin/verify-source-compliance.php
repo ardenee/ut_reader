@@ -27,6 +27,14 @@ foreach($files as $file){
            ||empty($impl['path'])||empty($impl['sha256'])||empty($record['tests'])){
             $failures[]=$id.': evidence incomplete';continue;
         }
+        if($sourceRoot!=='') {
+            $sourcePath=rtrim($sourceRoot,'/').'/'.str_replace(chr(92),'/',$source['path']);
+            $sourceHash=is_file($sourcePath)?hash_file('sha256',$sourcePath):false;
+            $sourceChecks++;
+            if($sourceHash===false||!hash_equals(strtolower((string)$source['sha256']),strtolower($sourceHash))) {
+                $failures[]=$id.': Epic source missing or changed';
+            }
+        }
         $implPath=$root.'/'.str_replace('\\','/',$impl['path']);
         $hash=is_file($implPath)?hash_file('sha256',$implPath):false;
         if($hash===false||!hash_equals(strtolower((string)$impl['sha256']),strtolower($hash))){
