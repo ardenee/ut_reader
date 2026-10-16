@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "batch": "B108",
+  "status": "partial",
+  "runner": "catalog/bin/verify-uedb5-ue5-source-batches.php",
+  "isolated_main_result": {
+    "total": 12,
+    "passed": 12,
+    "failed": 0,
+    "exit_code": 0
+  },
+  "included": [
+    "Two pinned UE5 source inventories",
+    "Source-flow contract",
+    "SQLite dependency projection",
+    "Zen dependency resolution and package parsing",
+    "Export filters, indexes, malformed export-map/bundles",
+    "Backend priority/redirect arbitration"
+  ],
+  "scope_limitations": [
+    "DEV dirty checkout lacks several current-main runtime files so aggregate is proven on isolated main checkout only",
+    "No production database or full game package scans",
+    "Epic behavioral certification and other sources remain open"
+  ],
+  "certified": false,
+  "next_batch": "B109"
+}
