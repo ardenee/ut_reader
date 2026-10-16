@@ -1,0 +1,60 @@
+{
+  "schema": 1,
+  "batch": "B015",
+  "engine": "UE5",
+  "profile": "UE5.8.3",
+  "status": "partial",
+  "inventory_a": "Independent B014 seeded source discovery",
+  "inventory_b": "Targeted UE5 loader structure trace pending",
+  "complete_inventory": false,
+  "operations": [
+    {
+      "id": "UE5-583-B015-1",
+      "summary": "Runtime enumeration of script packages, public and Verse VNI script objects, editor branches and registration verification",
+      "source": {
+        "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+        "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9",
+        "symbols": [
+          "FindAllScriptObjects"
+        ]
+      },
+      "implementation": {
+        "path": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenDependencyResolver.php",
+        "sha256": "d9799db4159c612c6d8bb330f8dccd3294efec00b7abdc32c9054081609c9381"
+      },
+      "tests": [
+        "catalog/bin/verify-uedb5-ue5-zen-dependency-resolution.php"
+      ],
+      "disposition": "partial",
+      "reason": "Newly discovered during independent inventory reconciliation. Exact branching, operational applicability and parity tests not yet proven."
+    },
+    {
+      "id": "UE5-583-B015-2",
+      "summary": "Recursive import-package scheduling, localization and redirects with optional-segment inputs",
+      "source": {
+        "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+        "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9",
+        "symbols": [
+          "ImportPackagesRecursiveInner"
+        ]
+      },
+      "implementation": {
+        "path": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenDependencyResolver.php",
+        "sha256": "d9799db4159c612c6d8bb330f8dccd3294efec00b7abdc32c9054081609c9381"
+      },
+      "tests": [
+        "catalog/bin/verify-uedb5-ue5-zen-dependency-resolution.php"
+      ],
+      "disposition": "partial",
+      "reason": "Newly discovered during independent inventory reconciliation. Exact branching, operational applicability and parity tests not yet proven."
+    }
+  ],
+  "next_batch": "B016",
+  "gate_status": {
+    "inventory": false,
+    "contracts": false,
+    "implementation": false,
+    "independent_verification": false,
+    "change_integrity": true
+  }
+}
