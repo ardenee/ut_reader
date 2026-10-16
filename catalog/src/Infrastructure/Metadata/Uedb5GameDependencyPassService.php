@@ -314,6 +314,27 @@ final class Uedb5GameDependencyPassService
             }
             $options['zen_runtime_context'] = $context;
         }
+        $mountSets = $this->config['zen_mounted_containers_by_game'] ?? [];
+        if (!is_array($mountSets)) {
+            throw new RuntimeException('zen_mounted_containers_by_game must be a game ID keyed array.');
+        }
+        $mounts = $mountSets[$gameId] ?? $mountSets[(string)$gameId] ?? null;
+        if ($mounts !== null) {
+            if (!is_array($mounts) || !array_is_list($mounts)) {
+                throw new RuntimeException('Zen mounted containers must be an ordered list for game '.$gameId.'.');
+            }
+            $mountedContext = Uedb5ZenMountedStoreContextBuilder::build($mounts);
+            $previous = (array)($options['zen_runtime_context'] ?? []);
+            // Mapping precedence is derived from explicitly supplied mount metadata,
+            // never from incidental file enumeration. Do not promote authority flags.
+            $options['zen_runtime_context'] = array_replace(
+                $previous, $mountedContext,
+                [
+                    'package_store_context_authoritative' => false,
+                    'package_identity_context_authoritative' => false,
+                ]
+            );
+        }
         return $options;
     }
 
