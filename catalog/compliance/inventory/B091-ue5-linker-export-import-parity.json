@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "batch": "B091",
+  "source": {
+    "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+    "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9"
+  },
+  "classification": "bounded source-body review",
+  "status": "partial",
+  "reviewed": [
+    {
+      "symbol": "FAsyncPackage2::CreateLinkerLoadExports",
+      "line": 8038,
+      "disposition": "file-format-relevant",
+      "reason": "Creates classic linker exports, skips metadata and special FixupExportMap null-class + null-outer + NAME_None entries, and registers public export hashes with global import store only for importable packages.",
+      "verified": false
+    },
+    {
+      "symbol": "FAsyncPackage2::ResolveLinkerLoadImports",
+      "line": 7943,
+      "disposition": "file-format-relevant",
+      "reason": "Resolves LinkerLoad imports after provider phase checks; distinguishes classic circular dependency readiness from Zen provider ExportsDone readiness.",
+      "verified": false
+    },
+    {
+      "symbol": "FAsyncPackage2::PreloadLinkerLoadExports",
+      "line": 7900,
+      "disposition": "file-format-relevant",
+      "reason": "Preloads classic UObject exports requiring load and synchronizes its export state with mutable linker export entries, including bExportLoadFailed.",
+      "verified": false
+    }
+  ],
+  "evidence_limitations": [
+    "Detailed classic LinkerLoad loader path not certified",
+    "Do not conflate classic redirect-nulled class with Zen null-class default"
+  ],
+  "next_batch": "B092"
+}
