@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "batch": "B066",
+  "source": {
+    "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+    "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9"
+  },
+  "classification": "bounded source-body review",
+  "status": "partial",
+  "reviewed": [
+    {
+      "symbol": "FAsyncPackage2::ConditionalCreateExport",
+      "line": 8956,
+      "disposition": "file-format-relevant",
+      "reason": "Conditionally creates a local export only when no UObject exists and dispatches EventDrivenCreateExport; offline resolver need not construct UObject but must preserve object-identity conditions.",
+      "verified": false
+    },
+    {
+      "symbol": "FAsyncPackage2::ConditionalSerializeExport",
+      "line": 8965,
+      "disposition": "file-format-relevant",
+      "reason": "Skips filtered or failed exports, conditionally creates missing objects, and serializes only when RF_LoadCompleted not set. Filter/load-failure distinctions affect dependency parity.",
+      "verified": false
+    }
+  ],
+  "evidence_limitations": [
+    "Actual UObject race/load flags cannot be reproduced by offline metadata projection",
+    "Detailed conditional branches still require source-backed parity tests"
+  ],
+  "next_batch": "B067"
+}
