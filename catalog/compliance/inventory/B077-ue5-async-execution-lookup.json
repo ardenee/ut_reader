@@ -1,0 +1,30 @@
+{
+  "schema": 1,
+  "batch": "B077",
+  "source": {
+    "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+    "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9"
+  },
+  "classification": "bounded source-body review",
+  "status": "partial",
+  "reviewed": [
+    {
+      "symbol": "FAsyncPackage2::GetCurrentlyExecutingPackage",
+      "line": 9838,
+      "disposition": "runtime-only",
+      "reason": "Traverses currently executing event-node stack to find active package excluding a specified package.",
+      "verified": false
+    },
+    {
+      "symbol": "FAsyncPackage2::GetLoadStartTime",
+      "line": 12340,
+      "disposition": "runtime-only",
+      "reason": "Returns in-memory loading start timestamp, not cooked package metadata.",
+      "verified": false
+    }
+  ],
+  "evidence_limitations": [
+    "Full runtime call graph not certified"
+  ],
+  "next_batch": "B078"
+}
