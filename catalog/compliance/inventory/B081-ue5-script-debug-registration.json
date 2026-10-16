@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "batch": "B081",
+  "source": {
+    "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+    "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9"
+  },
+  "classification": "bounded source-body review",
+  "status": "partial",
+  "reviewed": [
+    {
+      "symbol": "FCookedScriptObjectsDebug::FCookedScriptObjectsDebug",
+      "line": 6956,
+      "disposition": "runtime-only",
+      "reason": "Registers compiled-in UObject delegate only on cooked platforms for optional script-import diagnostic loading.",
+      "verified": false
+    },
+    {
+      "symbol": "FCookedScriptObjectsDebug::OnCompiledInUObjectsRegistered",
+      "line": 6971,
+      "disposition": "runtime-only",
+      "reason": "PreCDO hook optionally loads cooked script debugging data and unregisters delegate; debug lifecycle, not ordinary Zen import resolution.",
+      "verified": false
+    }
+  ],
+  "evidence_limitations": [
+    "ScriptObjects debugging is build-gated",
+    "Full global-script import source call graph remains open"
+  ],
+  "next_batch": "B082"
+}
