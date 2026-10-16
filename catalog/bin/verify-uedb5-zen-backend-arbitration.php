@@ -9,6 +9,10 @@ $b=[
  ['backend_id'=>'middle','priority'=>2,'entries'=>[$id=>['status'=>'Pending']],'redirects'=>[]]
 ];
 $a=Arb::entry($b,$id);$r=Arb::redirect($b,$id);
+$redirectFallback=Arb::redirect([
+ ['backend_id'=>'higher','priority'=>5,'entries'=>[],'redirects'=>[]],
+ ['backend_id'=>'lower','priority'=>1,'entries'=>[],'redirects'=>[$id=>['target_package_id'=>'5555555555555555']]],
+],$id);
 $b[1]['entries'][$id]=['status'=>'Ok'];
 $c=Arb::entry($b,$id);
 $b[1]['entries'][$id]=['status'=>'None'];$b[2]['entries'][$id]=['status'=>'Missing'];
@@ -22,7 +26,7 @@ $ties=Arb::ordered([
 ]);
 $ok=$ties[0]['backend_id']==='second'&&$a['backend_id']==='middle'&&$a['status']==='Pending'
  &&$r['backend_id']==='higher'&&$c['backend_id']==='higher'
- &&$f['backend_id']==='file'&&$bad
+ &&$f['backend_id']==='file'&&$redirectFallback['backend_id']==='lower'&&$bad
  &&$notInstalled['status']==='NotInstalled'&&$notInstalled['backend_id']==='higher';
-echo json_encode(['ok'=>$ok,'pending_stops'=>$a,'redirect_priority'=>$r,'higher_priority_ok'=>$c,'none_missing_fallback'=>$f,'not_installed_stops'=>$notInstalled,'reject_bad_priority'=>$bad,'equal_priority_newest_first'=>($ties[0]['backend_id']==='second') ],JSON_PRETTY_PRINT),PHP_EOL;
+echo json_encode(['ok'=>$ok,'pending_stops'=>$a,'redirect_priority'=>$r,'redirect_fallback'=>$redirectFallback,'higher_priority_ok'=>$c,'none_missing_fallback'=>$f,'not_installed_stops'=>$notInstalled,'reject_bad_priority'=>$bad,'equal_priority_newest_first'=>($ties[0]['backend_id']==='second') ],JSON_PRETTY_PRINT),PHP_EOL;
 exit($ok?0:2);
