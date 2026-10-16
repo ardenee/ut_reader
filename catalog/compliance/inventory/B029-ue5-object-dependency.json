@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "batch": "B029",
+  "source": {
+    "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+    "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9"
+  },
+  "classification": "bounded source-body review",
+  "status": "partial",
+  "reviewed": [
+    {
+      "symbol": "FAsyncPackage2::EventDrivenIndexToObject",
+      "line": 8804,
+      "disposition": "mixed",
+      "reason": "Converts null/export/import indices into live UObject references, with missing-export diagnostics; offline index classification and fail-closed resolution require parity.",
+      "verified": false
+    },
+    {
+      "symbol": "FAsyncPackage2::ProcessExportDependencies",
+      "line": 8855,
+      "disposition": "file-format-relevant",
+      "reason": "Traverses per-export FDependencyBundleHeader and command-partitioned dependency entries; package metadata dependency projection must preserve create versus serialize edges.",
+      "verified": false
+    }
+  ],
+  "evidence_limitations": [
+    "Full call graph, compile-time gates and game fixture parity remain outstanding",
+    "Classification is not certification of any operation"
+  ],
+  "next_batch": "B030"
+}
