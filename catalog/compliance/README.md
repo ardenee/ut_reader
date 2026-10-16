@@ -28,6 +28,8 @@ Set `UNREALDB_EPIC_SOURCE_ROOT` to the pinned UE5.8.3 source root, then run:
 & C:\php8.5\php.exe catalog\bin\audit-ue5-store-definitions.php
 & C:\php8.5\php.exe catalog\bin\verify-uedb5-ue5-source-batches.php
 & C:\php8.5\php.exe catalog\bin\verify-source-compliance.php --all --strict
+# Indexed, read-only live-data check (explicit file IDs are mandatory):
+& C:\php8.5\php.exe catalog\bin\diagnose-uedb5-provider-consensus-readonly.php --file-ids=111139,113253
 ```
 
 A strict failure while gates remain open is expected; it must not be reported as certification.
