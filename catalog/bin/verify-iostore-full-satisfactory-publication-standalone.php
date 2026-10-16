@@ -11,6 +11,18 @@ $db=new PDO('mysql:host=127.0.0.1;port=3339;dbname=uedb5_isolated_integration;ch
 $identity=$db->query('SELECT @@port AS port,@@datadir AS dir')->fetch();
 if((int)$identity['port']!==3339||stripos((string)$identity['dir'],'uedb5-isolated-mysql')===false)
  throw new RuntimeException('Refusing non-isolated MySQL.');
+// Isolated fixture was historically catalogued under a UE2 profile.
+// Scope the UE5 profile assignment to this test and restore it at exit.
+$fixtureGameId=2;
+$originalProfile=$db->query('SELECT profile_id FROM ue_games WHERE id=2')->fetchColumn();
+if($originalProfile===false)throw new RuntimeException('Isolated fixture game missing.');
+$restoreProfile=$db->prepare('UPDATE ue_games SET profile_id=? WHERE id=2');
+register_shutdown_function(static function()use($restoreProfile,$originalProfile):void{
+ try{$restoreProfile->execute([$originalProfile]);}catch(Throwable $e){
+  error_log('Could not restore isolated fixture game profile: '.$e->getMessage());
+ }
+});
+$db->exec('UPDATE ue_games SET profile_id=9001 WHERE id=2');
 $root='C:/Temp/uedb5-iostore-retention-test';
 $containerId=1;
 $info=$db->query('SELECT c.game_id,c.status,c.utoc_relative_path,c.utoc_sha256,p.engine_key FROM ue_iostore_containers c JOIN ue_games g ON g.id=c.game_id JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 WHERE c.id=1')->fetch();
