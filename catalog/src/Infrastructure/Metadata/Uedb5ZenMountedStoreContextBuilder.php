@@ -62,16 +62,29 @@ final class Uedb5ZenMountedStoreContextBuilder
                 $target=strtoupper(trim((string)($row['target_package_id']??'')));
                 if(!preg_match('/^[0-9A-F]{16}$/D',$target))
                     throw new RuntimeException('Mount redirect requires 16-digit hexadecimal target_package_id.');
-                if(isset($seenRedirect[$source]))continue;
-                $seenRedirect[$source]=true;
-                $redirects[]=$row;
+                // Epic FindOrAdd only freezes this key after its stored
+                // FName ceases to be NAME_None. A later mounted container
+                // may fill the name and target if the earlier one is None.
+                if(isset($seenRedirect[$source])){
+                    $slot=$seenRedirect[$source]-1;
+                    if(!self::sourceNameIsNone($redirects[$slot]))continue;
+                    $redirects[$slot]=$row;
+                }else{
+                    $seenRedirect[$source]=count($redirects)+1;
+                    $redirects[]=$row;
+                }
             }
             foreach($mount['localized_packages'] as $row){
                 if(!is_array($row))throw new RuntimeException('Mount localization must be an object.');
                 $source=self::packageId($row);
-                if(isset($seenLocalized[$source]))continue;
-                $seenLocalized[$source]=true;
-                $localized[]=$row;
+                if(isset($seenLocalized[$source])){
+                    $slot=$seenLocalized[$source]-1;
+                    if(!self::sourceNameIsNone($localized[$slot]))continue;
+                    $localized[$slot]=$row;
+                }else{
+                    $seenLocalized[$source]=count($localized)+1;
+                    $localized[]=$row;
+                }
             }
         }
         return [
@@ -87,6 +100,14 @@ final class Uedb5ZenMountedStoreContextBuilder
             'package_identity_context_authoritative'=>false,
         ];
     }
+    private static function sourceNameIsNone(array $row): bool
+    {
+        if (!array_key_exists('source_package_name', $row)) return false;
+        $name = $row['source_package_name'];
+        if (is_array($name)) $name = $name['base_text'] ?? $name['text'] ?? null;
+        return $name === null || in_array(strtolower(trim((string)$name)), ['', 'none'], true);
+    }
+
     private static function packageId(array $row): string
     {
         $source=strtoupper(trim((string)($row['source_package_id']??'')));

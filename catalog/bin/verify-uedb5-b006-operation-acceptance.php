@@ -1,0 +1,61 @@
+<?php
+declare(strict_types=1);
+if(PHP_SAPI!=='cli')exit(2);
+$root=dirname(__DIR__);
+$tests=[
+ 'source'=>'verify-uedb5-b006-mounted-source.php',
+ 'mount'=>'verify-uedb5-zen-mounted-store-context.php',
+ 'effective'=>'verify-uedb5-zen-effective-store-context.php',
+ 'options'=>'verify-uedb5-zen-context-options-standalone.php',
+ 'backend'=>'verify-uedb5-zen-backend-arbitration.php',
+ 'selector'=>'verify-uedb5-physical-provider-selector.php',
+];
+$reports=[];$drivers=[];$checks=[];$fails=[];
+$check=static function(string $name,bool $pass)use(&$checks,&$fails):void{
+ $checks[$name]=$pass;if(!$pass)$fails[]=$name;
+};
+foreach($tests as $kind=>$name){
+ $out=[];$exit=127;
+ exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($root.'/bin/'.$name).' 2>&1',$out,$exit);
+ $result=json_decode(implode("\n",$out),true);
+ $reports[$kind]=is_array($result)?$result:[];
+ $drivers[$kind]=['exit'=>$exit,'ok'=>$reports[$kind]['ok']??false];
+ $check('b006_driver_'.$kind.'_passes',$exit===0&&($reports[$kind]['ok']??false)===true);
+}
+$has=static fn(string $key,string $test):bool=>($reports[$key]['checks'][$test]??false)===true;
+$check('b006_source_priority_order_and_findoradd',
+ $has('source','b006_file_store_epic_sha')
+ &&$has('source','b006_mount_stable_sort')
+ &&$has('source','b006_mount_order_before_sequence')
+ &&$has('source','b006_mount_sequence_descending')
+ &&$has('source','b006_redirect_none_allows_refill')
+ &&$has('source','b006_localized_none_allows_refill'));
+$check('b006_source_none_and_unknown_name_boundary',
+ $has('source','b006_source_none_redirect_refilled_by_lower_mount')
+ &&$has('source','b006_source_none_localized_refilled_by_lower_mount')
+ &&$has('source','b006_missing_name_is_not_assumed_none')
+ &&$has('source','b006_valid_high_redirect_wins'));
+$check('b006_mount_and_evidenced_physical_selection',
+ $has('source','b006_top_mount_package_id_priority_still_first')
+ &&($reports['effective']['file_backend_entry_evidenced']??null)===true
+ &&($reports['effective']['malformed_mount_entry_rejected']??null)===true
+ &&($reports['mount']['incomplete_rejected']??null)===true);
+$check('b006_cross_backend_priority_and_consumer_callers',
+ ($reports['effective']['runtime_backend_wins'][0]['target_package_id']??null)==='9999999999999999'
+ &&($reports['effective']['file_backend_wins'][0]['target_package_id']??null)==='1111111111111111'
+ &&$has('source','b006_all_production_builder_callers_counted'));
+$check('b006_authority_and_game_isolation',
+ $has('source','b006_no_unauthenticated_runtime_authority')
+ &&($reports['options']['unsupported_authority_rejected']??false)===true
+ &&isset($reports['options']['mount_isolation'])
+ &&isset($reports['options']['evidenced_mount_context']));
+$check('b006_live_physical_selector_consumer',
+ $has('selector','zen_mounted_file_backend_does_not_override_higher_pending_backend')
+ &&$has('selector','zen_mounted_file_entries_without_authority_stay_ambiguous')
+ &&$has('selector','b005_nested_backend_ok_picks_exact_evidenced_provider'));
+echo json_encode(['ok'=>$fails===[],
+ 'operation'=>'UE5-583-FILE-STORE-001',
+ 'checks'=>$checks,'drivers'=>$drivers,'failures'=>$fails,
+ 'source_derived'=>true,'runtime_mount_executed'=>false
+],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;
+exit($fails===[]?0:1);

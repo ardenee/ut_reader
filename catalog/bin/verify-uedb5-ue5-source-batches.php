@@ -35,6 +35,8 @@ $tests=[
  'verify-uedb5-zen-hybrid-source-contract.php',
  'verify-uedb5-zen-backend-callers.php',
  'verify-uedb5-b005-operation-acceptance.php',
+ 'verify-uedb5-b006-mounted-source.php',
+ 'verify-uedb5-b006-operation-acceptance.php',
  'verify-uedb5-zen-mounted-store-context.php',
  'verify-uedb5-zen-effective-store-context.php',
  'verify-uedb5-zen-context-options-standalone.php',
