@@ -163,6 +163,38 @@ final class PdoUedb5PhysicalProviderSelector
                 Uedb5SqlProjectionContract::PACKAGE_KEY_ZEN_PACKAGE_ID,
                 $packageKey
             );
+            // Runtime FPackageStore may identify a particular mounted physical file.
+            // Accept only an explicitly evidenced backend Ok result with a file_id
+            // present in the same game's V5 candidates. Pending must not fall through.
+            $backendResults = $options['zen_package_store_backend_results'] ?? null;
+            if ($backendResults !== null) {
+                if (!is_array($backendResults) || !array_is_list($backendResults)) {
+                    throw new RuntimeException('Zen package-store backend results must be an explicit list.');
+                }
+                $entry = Uedb5ZenPackageStoreBackendArbitrator::entry($backendResults, $packageId);
+                if ($entry['status'] === 'Pending') {
+                    continue;
+                }
+                if ($entry['status'] === 'Ok') {
+                    $resolvedId = (int)($entry['entry']['file_id'] ?? 0);
+                    $matches = array_values(array_filter($candidates,
+                        static fn(array $candidate):bool=>(int)$candidate['file_id']===$resolvedId));
+                    if ($resolvedId < 1 || count($matches) !== 1) {
+                        // Even an authoritative backend response is not permission to
+                        // select a file absent from the game's verified V5 candidates.
+                        continue;
+                    }
+                    $selected[] = [
+                        'game_id'=>$gameId,
+                        'file_id'=>$resolvedId,
+                        'package_id'=>$packageId,
+                        'selection_status'=>'selected',
+                        'selection_source'=>'evidenced_package_store_backend',
+                        'selected_backend_id'=>$entry['backend_id'],
+                    ];
+                    continue;
+                }
+            }
             // Epic's global import store is keyed by exact FPackageId and keeps
             // a 1:1 PackageId->package relationship. Public-export hashes resolve
             // inside that selected package; they must not select a different file.
