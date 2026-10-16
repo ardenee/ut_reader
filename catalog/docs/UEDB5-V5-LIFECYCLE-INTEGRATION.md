@@ -367,3 +367,12 @@ Isolated `verify-iostore-durable-worker-standalone.php` now registers all three 
 - `verify-iostore-durable-worker-standalone.php`: PASS after updating expected active follow-ups from four to two (same-container import replay dedupe), with IDs shared between the two import results.
 - `verify-iostore-main-backup-restore-standalone.php`: PASS, retained/restored 27,240 indexed package members and verified complete TOC/UCAS pair. This test observes an existing indexed destination; it does **not** publish 27,240 member V5 metadata rows.
 - **Not yet certified:** full multi-member name indexing, V5 publication and authoritative Zen mounted-store dependency rebuild; backup-manifest adversarial tests for duplicate/missing parts; concurrent worker/retry edge cases. Do not deploy or mark full IoStore production lifecycle complete on these bounded results alone.
+
+
+### 2026-10-16 bounded Zen member publication and name-index checkpoint
+
+- Independent GitHub checkout and standalone MySQL `127.0.0.1:3339` confirmed before jobs. PRD live code/storage/database untouched.
+- `C:\\php8.5\\php.exe catalog\\bin\\verify-iostore-member-worker-standalone.php`: PASS. Two 10-member durable publish batches; after test 48 published, 413 metadata-ready remaining and 26,783 awaiting names. Job correctly remains queued (deferred), no reported error.
+- `C:\\php8.5\\php.exe catalog\\bin\\verify-iostore-name-job-standalone.php`: PASS. Three 100-member bounded name-index batches, ending with 757 ready, 26,483 awaiting names, zero failed; empty global container's job completed.
+- `C:\\php8.5\\php.exe catalog\\bin\\verify-iostore-v5-source-validation-standalone.php`: PASS for fixture entries 50 and 51, source identity valid, but dependency readiness explicitly false for both (`dependency_results_not_built`; 3 expected, 0 constructed). No claim of dependency completion.
+- **Remaining:** full 27,240-member name/publication lifecycle, actual package-store-global mounted-context dependency rebuild and validation, plus adversarial failures/concurrency. This is not a full lifecycle certification. The fixture remains partially processed by design; do not restart broad seven-game scans.
