@@ -1,0 +1,45 @@
+{
+  "schema": 1,
+  "batch": "B105",
+  "status": "partial",
+  "classification": "bounded source-body review",
+  "sources": {
+    "PackageStore": "FB5C1930F5B8E6611392C3009DDE16922661C7942F2EAA8D875492C8981F67B9",
+    "ZenPackageHeader": "954117A45B9A802D3F289B30F2A0E191A7BB82CDCB107A22FEF134A73172995B"
+  },
+  "reviewed": [
+    {
+      "symbol": "FPackageStore::FPackageStore",
+      "line": 473,
+      "disposition": "file-format-relevant",
+      "reason": "Initializes backend context and mounts loose LinkerLoad backend above cooked stores in editor, below default otherwise, when loose-file loading is enabled.",
+      "verified": false
+    },
+    {
+      "symbol": "FPackageStore::Mount",
+      "line": 516,
+      "disposition": "file-format-relevant",
+      "reason": "Inserts store backends in descending priority and optionally forms hybrid cooked editor backend blending Zen and LinkerLoad.",
+      "verified": false
+    },
+    {
+      "symbol": "FPackageStore::GetPackageStoreEntry",
+      "line": 565,
+      "disposition": "file-format-relevant",
+      "reason": "Queries ordered backends until a status other than None or Missing is returned; lower priority can satisfy higher backend misses.",
+      "verified": false
+    },
+    {
+      "symbol": "FPackageStore::GetPackageRedirectInfo",
+      "line": 583,
+      "disposition": "file-format-relevant",
+      "reason": "First redirect reported by ordered backend list wins; no redirect if all return false.",
+      "verified": false
+    }
+  ],
+  "evidence_limitations": [
+    "Static method classification, not implementation parity certification",
+    "IoStore backend mount arbitration across sources still requires differential tests"
+  ],
+  "next_batch": "B106"
+}
