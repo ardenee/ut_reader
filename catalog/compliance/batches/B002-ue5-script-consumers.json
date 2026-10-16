@@ -194,7 +194,13 @@
                 "catalog/bin/verify-uedb5-ue5-zen-dependency-resolution.php"
             ],
             "disposition": "partial",
-            "reason": "Offline unresolved behavior preserved; full runtime registration path not certified."
+            "reason": "Pinned Epic FindScriptImportObject -> live ScriptObjects.FindRef, separate GetImportObject PackageImport branch and optional diagnostic GetImportName proved. Offline unresolved, editor optional gate and null SQL provider remain source-conservative; actual live UObject map and registration-session evidence is not available, so SCRIPT-003 stays partial.",
+            "source_boundary_evidence": {
+                "test_driver": "catalog/bin/verify-uedb5-b002-script-import-runtime-boundary.php",
+                "result": "11/11 Epic branch and offline SQL/optional/editor identity checks; no live Unreal runtime executed",
+                "source_review": "catalog/compliance/B002-SCRIPT-IMPORT-RUNTIME-BOUNDARY.md",
+                "complete_runtime_evidence": false
+            }
         }
     ],
     "next_batch": "B003",

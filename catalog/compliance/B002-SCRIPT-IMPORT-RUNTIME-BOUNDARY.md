@@ -1,0 +1,16 @@
+# B002 / UE5-583-SCRIPT-003 — live ScriptImport object resolution boundary
+
+**Original operation:** `UE5-583-SCRIPT-003`, same original B002 manifest as independently accepted SCRIPT-002. **Status: partial**. Do not re-label as an offline NameBatch problem or claim Epic live-UObject resolution.
+
+Pinned Epic UE5.8.3 `Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp` SHA256 `43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9`:
+
+- `FGlobalImportStore::FindScriptImportObject` (2604–2610) asserts `GlobalIndex.IsScriptImport()` and looks up **`ScriptObjects.FindRef(GlobalIndex)`**; that is a *live populated UObject map*, not serialized cooked metadata.
+- `FPackageImportStore::GetImportObject` (2820–2850) branches first for ScriptImport via `FindScriptImportObject`; PackageImport goes separately to `FindPublicExportObject(FPublicExportKey...)`, with editor redirector handling only in that branch. These are not interchangeable.
+- `FPackageImportStore::GetImportName` (2851–2865) first asks for the live object. Only when no object is returned, the optional `ALT2_ENABLE_SCRIPT_IMPORTS_DEBUGGING` branch can report a **cooked diagnostic path string** through `CookedScriptObjectsDebug.GetPathName`; this is **not** object resolution.
+- `FAsyncLoadingThread2::NotifyRegistrationEvent` (11982–11996) on `NRP_Finished` registers real objects through `GlobalImportStore.AddScriptObject`. `RegistrationComplete` and public nested object registration belong to the separate original SCRIPT-004, SCRIPT-005 and B015-1 runtime obligations.
+
+UnrealDB's `Uedb5Ue5ZenDependencyResolver::resolveObjectIndex` currently returns an **unresolved** ScriptImport result with `script_object_runtime_context_unavailable` and retains the serialized `script_import_hash`. It **never guesses** a selected provider, marks a cooked record as runtime-loaded, or substitutes public export keys. For optional imports it also enforces editor build known/unknown decisions. `Uedb5DependencyProjectionBuilder` correctly declines to treat a ScriptImport hash as a package ID or PublicExportHash and leaves the SQL provider and object fields NULL.
+
+`catalog/bin/verify-uedb5-b002-script-import-runtime-boundary.php` executes **11 source-backed assertions** on Epic branch order, runtime-only FindRef, diagnostic fallback, main + optional editor and non-editor outcomes, unknown context and SQL projection. The fixture performs offline PHP and SQL projection computation **only**; the actual Epic `FGlobalImportStore` was **not executed**.
+
+**Still needed before closure:** Source-to-implementation mapping for actual runtime registration and timing, a captured authoritative script object registration / lookup session or source-level executable substitute that can distinguish live found, null, unreachable and destroyed entries; conditional editor registration, public nested object and Verse script cases as appropriate. Preserve the original SCRIPT-003 operation as partial and link these runtime requirements to the existing SCRIPT-004/005/B015-1 without claiming the diagnostic source as an authority. No new difference or fix is recorded, because current offline-unresolved behavior is conservative and no source discrepancy has been proven.
