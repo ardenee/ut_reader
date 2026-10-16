@@ -155,6 +155,9 @@ final class Uedb5Ue5ZenDependencyResolver
             self::assertZenSnapshot($snapshot, 'provider');
             $summary = (array)(($snapshot['sections']['package_summary'] ?? [])[0] ?? []);
             $packageId = self::u64((string)($summary['package_id'] ?? ''), 'provider FPackageId');
+            if ($packageId === '0000000000000000') {
+                throw new RuntimeException('Epic FPublicExportKey provider FPackageId cannot be zero.');
+            }
             if (isset($providers[self::mapKey($packageId)])) {
                 throw new RuntimeException('Zen resolver requires exactly one selected physical provider per FPackageId.');
             }
@@ -240,7 +243,15 @@ final class Uedb5Ue5ZenDependencyResolver
         }
 
         $packageId = self::u64((string)($object['provider_package_id'] ?? ''), 'PackageImport provider FPackageId');
+        if ($packageId === '0000000000000000') {
+            throw new RuntimeException('PackageImport FPackageId cannot be zero in Epic FPublicExportKey::MakeKey.');
+        }
         $publicHash = self::u64((string)($object['provider_public_export_hash'] ?? ''), 'PackageImport PublicExportHash');
+        // FPublicExportKey::MakeKey asserts a nonzero import export hash.
+        // A zero key is malformed, not an ordinary missing public export.
+        if ($publicHash === '0000000000000000') {
+            throw new RuntimeException('PackageImport PublicExportHash cannot be zero in Epic FPublicExportKey::MakeKey.');
+        }
         $effectiveImportPackageId = $packageId;
         $lookupPackageId = $packageId;
         $extra = [
@@ -416,6 +427,17 @@ final class Uedb5Ue5ZenDependencyResolver
             }
         }
         if (count($matches) > 1) {
+            if (!$cellTarget) {
+                // GetPublicExportIndex: main map then optional map, first match
+                // in each. This is a header-search candidate, NOT proof of
+                // which live object FGlobalImportStore currently holds: its
+                // StorePublicExport overwrites an existing hash slot.
+                $extra['source_header_first_export'] = [
+                    'segment' => (string)($matches[0]['segment'] ?? 'main'),
+                    'index' => (int)$matches[0]['index'],
+                    'runtime_lookup_authoritative' => false,
+                ];
+            }
             $candidateIndices = array_values(array_map(
                 static fn(array $candidate): int => (int)$candidate['index'],
                 $matches
