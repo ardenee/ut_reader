@@ -1,0 +1,30 @@
+{
+  "schema": 1,
+  "batch": "B078",
+  "source": {
+    "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+    "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9"
+  },
+  "classification": "bounded source-body review",
+  "status": "partial",
+  "reviewed": [
+    {
+      "symbol": "FAsyncPackage2::ConditionalReleasePartialRequests",
+      "line": 9853,
+      "disposition": "runtime-only",
+      "reason": "Walks synchronous load context stack and releases request IDs once package reaches a later loading phase.",
+      "verified": false
+    },
+    {
+      "symbol": "FAsyncPackage2::GetPackageNode",
+      "line": 10501,
+      "disposition": "runtime-only",
+      "reason": "Returns runtime event node indexed by async loading phase after bounds assertion.",
+      "verified": false
+    }
+  ],
+  "evidence_limitations": [
+    "Full runtime call graph not certified"
+  ],
+  "next_batch": "B079"
+}
