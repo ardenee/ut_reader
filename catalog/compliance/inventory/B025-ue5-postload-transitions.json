@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "batch": "B025",
+  "source": {
+    "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+    "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9"
+  },
+  "classification": "bounded source-body review",
+  "status": "partial",
+  "reviewed": [
+    {
+      "symbol": "FAsyncPackage2::ConditionalBeginPostLoad",
+      "line": 6043,
+      "disposition": "runtime-only",
+      "reason": "Transitions ExportsDone to PostLoad and releases partial requests; no offline serialization behavior.",
+      "verified": false
+    },
+    {
+      "symbol": "FAsyncPackage2::ConditionalBeginDeferredPostLoad",
+      "line": 6053,
+      "disposition": "runtime-only",
+      "reason": "Moves constructed UObject phase and releases deferred-postload barrier; runtime state transition.",
+      "verified": false
+    }
+  ],
+  "evidence_limitations": [
+    "Full callers and conditional paths not certified",
+    "Classification does not certify whole loading pipeline"
+  ],
+  "next_batch": "B026"
+}
