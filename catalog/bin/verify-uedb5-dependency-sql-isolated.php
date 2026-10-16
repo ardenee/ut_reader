@@ -42,6 +42,10 @@ $ddl = [
 $created = []; $results = []; $failures = []; $providerConsensusFixture = null;
 $backendStatusFixture = [];
 $files = [2=>111139,3=>113253,4=>148919,5=>111460,6=>112300,7=>113526,12=>110902];
+// Portable source-contract mode tests the complete real MySQL publisher with
+// synthetic V5 and backend status fixtures; it does not require unrelated
+// retained production V5 snapshots to exist on the machine running PHP.
+if (in_array('--backend-status-only', $argv, true)) { $files = []; }
 try {
     foreach ($ddl as $i=>$sql) { $db->exec($sql); $created[]=$tables[$i]; }
     $publisher = new PdoUedb5DependencyProjectionPublisher($db);
@@ -190,7 +194,9 @@ finally {
 }
 $ok = $failures===[] && count($results)===count($files);
 echo json_encode(['ok'=>$ok,'temporary_sql_only'=>true,
-    'source'=>'seven retained V5 snapshots plus synthetic Zen backend-status resolver execution; session-temporary SQL only',
+    'source'=>$files === []
+        ? 'portable synthetic provider-consensus and Zen backend-status fixtures; real MySQL session-temporary tables only'
+        : 'seven retained V5 snapshots plus synthetic Zen backend-status resolver execution; session-temporary SQL only',
     'results'=>$results,'provider_consensus_fixture'=>$providerConsensusFixture,
     'backend_status_fixture'=>$backendStatusFixture,'failures'=>$failures],
     JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;

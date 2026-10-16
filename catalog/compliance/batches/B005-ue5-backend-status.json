@@ -134,7 +134,7 @@
                     "b005_mysql_temporary_status_projection_complete",
                     "b005_production_runtime_authority_not_fabricated"
                 ],
-                "result": "All checks pass under the pinned Epic UE5.8.3 source and current DEV/PRD code. Executed on each formal verification run. Source-derived hybrid oracle is NOT an executed Epic binary."
+                "result": "All checks pass under the pinned Epic UE5.8.3 source and current DEV/PRD code. Executed on each formal verification run. Portable SQL fixture runs session-temporary real MySQL without requiring PRD-only retained V5 snapshots; full PRD SQL fixture separately replays seven real snapshots. Source-derived hybrid oracle is NOT an executed Epic binary."
             }
         }
     ],

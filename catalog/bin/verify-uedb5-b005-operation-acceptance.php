@@ -10,9 +10,11 @@ $root=dirname(__DIR__);$checks=[];$fail=[];$evidence=[];
 $check=static function(string $key,bool $good)use(&$checks,&$fail):void{
  $checks[$key]=$good;if(!$good)$fail[]=$key;
 };
-$exec=static function(string $name)use($root,&$evidence):array{
+$exec=static function(string $name,array $arguments=[])use($root,&$evidence):array{
  $script=$root.'/bin/'.$name;
- $cmd=escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' 2>&1';
+ $cmd=escapeshellarg(PHP_BINARY).' '.escapeshellarg($script);
+ foreach($arguments as $argument){$cmd.=' '.escapeshellarg($argument);}
+ $cmd.=' 2>&1';
  $out=[];$code=127;exec($cmd,$out,$code);
  $result=json_decode(implode("\n",$out),true);
  $evidence[$name]=['exit'=>$code,'ok'=>is_array($result)?($result['ok']??false):false];
@@ -30,7 +32,7 @@ $tests=[
 ];
 $reports=[];
 foreach($tests as $key=>$test){
- [$code,$data]=$exec($test);
+ [$code,$data]=$exec($test,$key==='sql'?['--backend-status-only']:[]);
  $reports[$key]=$data;
  $check('b005_driver_'.$key.'_passes',$code===0&&($data['ok']??false)===true);
 }
