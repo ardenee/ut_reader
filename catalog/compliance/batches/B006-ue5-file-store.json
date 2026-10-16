@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "batch": "B006",
+  "engine": "UE5",
+  "profile": "UE5.8.3",
+  "status": "partial",
+  "inventory_a": "Source call-path inventory",
+  "inventory_b": "Source structure and conditional behavior inventory",
+  "complete_inventory": false,
+  "source_root_hint": "L:/Source/Engine/UE5/UE 5.8.3",
+  "operations": [
+    {
+      "id": "UE5-583-FILE-STORE-001",
+      "summary": "UE5 mounted file-store sorting and redirect precedence",
+      "source": {
+        "path": "Engine/Source/Runtime/PakFile/Private/FilePackageStore.cpp",
+        "sha256": "dfdd4e226b3a41f36476ddd93225aa34284ea63943f1752216e0f2a2418",
+        "symbols": [
+          "FFilePackageStoreBackend::Mount",
+          "FFilePackageStoreBackend::GetPackageRedirectInfo"
+        ]
+      },
+      "implementation": {
+        "path": "catalog/src/Infrastructure/Metadata/Uedb5ZenEffectivePackageStoreContextBuilder.php",
+        "sha256": "e59441431e6040a0ad11adc5daad6ddf0079c1d5eece02e6a9df0e40176d8888"
+      },
+      "tests": [
+        "catalog/bin/verify-uedb5-zen-effective-store-context.php"
+      ],
+      "disposition": "partial",
+      "reason": "File backend collects explicitly mounted headers ordered by mount Order and Sequence; first-wins redirect behavior must not be inferred from file listing. Runtime mount discovery and real container evidence remain open."
+    }
+  ],
+  "next_batch": "B007",
+  "gate_status": {
+    "inventory": false,
+    "contracts": false,
+    "implementation": false,
+    "independent_verification": false,
+    "change_integrity": true
+  }
+}
