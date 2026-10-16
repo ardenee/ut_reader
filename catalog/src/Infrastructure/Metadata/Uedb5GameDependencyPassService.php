@@ -292,7 +292,29 @@ final class Uedb5GameDependencyPassService
             array_map(static fn(mixed $value): string => trim((string)$value), (array)($this->config['common_packages'] ?? [])),
             static fn(string $value): bool => $value !== ''
         ));
-        return ['common_packages'=>$common];
+        $options = ['common_packages'=>$common];
+        // The engine's resolution algorithm is global, but its effective mounted-store,
+        // identity rewrites and runtime flags belong to a specific game/session.
+        // Do not infer authoritative runtime context from a TOC or installation path.
+        $contexts = $this->config['zen_runtime_context_by_game'] ?? [];
+        if (!is_array($contexts)) {
+            throw new RuntimeException('zen_runtime_context_by_game must be a game ID keyed array.');
+        }
+        $context = $contexts[$gameId] ?? $contexts[(string)$gameId] ?? null;
+        if ($context !== null) {
+            if (!is_array($context)) {
+                throw new RuntimeException('Zen runtime context must be an array for game '.$gameId.'.');
+            }
+            // An explicit, traceable source is required before accepting authority claims.
+            if (!empty($context['package_identity_context_authoritative'])
+                || !empty($context['package_store_context_authoritative'])) {
+                if (trim((string)($context['evidence_source'] ?? '')) === '') {
+                    throw new RuntimeException('Authoritative Zen context requires evidence_source for game '.$gameId.'.');
+                }
+            }
+            $options['zen_runtime_context'] = $context;
+        }
+        return $options;
     }
 
     private function gameEngineKey(int $gameId): string
