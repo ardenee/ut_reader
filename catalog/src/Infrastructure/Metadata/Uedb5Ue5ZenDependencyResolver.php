@@ -34,7 +34,10 @@ final class Uedb5Ue5ZenDependencyResolver
         }
         foreach ((array)$consumer['sections']['cell_imports'] as $index => $import) {
             $result = self::resolveObjectIndex((array)$import, $providers, $packageStoreContext, 'cell_imports', (int)$index, null, true);
-            if ($result !== null) { $rows[] = $result; }
+            if ($result !== null) {
+                $result['source_local_import_index'] = count((array)$consumer['sections']['imports']) + (int)$index;
+                $rows[] = $result;
+            }
         }
         foreach ((array)$consumer['sections']['soft_package_references'] as $index => $soft) {
             $soft = (array)$soft;
@@ -74,7 +77,10 @@ final class Uedb5Ue5ZenDependencyResolver
                     throw new RuntimeException('Zen dependency bundle object_index does not match the combined import map.');
                 }
                 $result = self::resolveObjectIndex($object, $providers, $packageStoreContext, 'dependency_bundle_entries', (int)$index, 'load_order', $cellTarget);
-                if ($result !== null) { $rows[] = $result; }
+                if ($result !== null) {
+                    if ($cellTarget) $result['source_local_import_index'] = $combinedIndex;
+                    $rows[] = $result;
+                }
             }
         }
         $optional = self::optionalSegment($consumer);
@@ -196,6 +202,7 @@ final class Uedb5Ue5ZenDependencyResolver
                 'package_id' => $packageId,
                 'provider_id' => $selected['provider_id'] ?? null,
                 'snapshot' => $snapshot,
+                'main_export_count' => count((array)$snapshot['sections']['exports']),
                 'exports_by_hash' => $exportsByHash,
                 'cell_exports_by_hash' => $cellExportsByHash,
             ];
@@ -427,6 +434,7 @@ final class Uedb5Ue5ZenDependencyResolver
             }
         }
         if (count($matches) > 1) {
+            if ($cellTarget) $extra['source_header_first_cell_export'] = (($matches[0]['segment'] ?? 'main') === 'main' ? ['segment'=>'main', 'cell_export_index'=>(int)$matches[0]['index'], 'local_export_index'=>(int)$provider['main_export_count']+(int)$matches[0]['index'], 'runtime_lookup_authoritative'=>false] : null);
             if (!$cellTarget) {
                 // GetPublicExportIndex: main map then optional map, first match
                 // in each. This is a header-search candidate, NOT proof of
@@ -461,6 +469,21 @@ final class Uedb5Ue5ZenDependencyResolver
         }
         $match = (array)$matches[0];
         if ((string)($match['segment'] ?? 'main') === 'optional') {
+            if ($cellTarget && $packageStoreContext['with_editor'] === true) {
+                // Epic GetPublicCellExportIndexAsLocalIndex searches the main
+                // CellExportMap only. An optional cell can still be registered
+                // in the separate live PackageCells store by its export bundle;
+                // archived optional metadata does not prove that happened.
+                $extra['optional_cell_export_candidate'] = [
+                    'cell_export_index' => (int)$match['index'],
+                    'runtime_lookup_authoritative' => false,
+                ];
+                return self::row(
+                    'PackageImport', $sourceSection, $sourceIndex, $classification,
+                    $packageId, $publicHash, 'unresolved', $provider, null,
+                    'optional_segment_public_cell_runtime_registration_required', $extra
+                );
+            }
             if ($packageStoreContext['with_editor'] === false) {
                 return self::row(
                     'PackageImport', $sourceSection, $sourceIndex, $classification,
@@ -515,6 +538,7 @@ final class Uedb5Ue5ZenDependencyResolver
         if (!$cellTarget) {
             $providerObject['object_name'] = $match['object_name'] ?? null;
         } else {
+            $providerObject['local_export_index'] = (int)$provider['main_export_count'] + (int)$match['index'];
             $providerObject['cpp_class_info'] = $match['cpp_class_info'] ?? null;
         }
         $reason = $cellTarget

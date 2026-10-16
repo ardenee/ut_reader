@@ -162,6 +162,8 @@ $check($hard['selected_provider_object']['export_index'] === 0, 'zen_dependency_
 $check($script['outcome'] === 'unresolved' && $script['dependency_class'] === 'script', 'zen_dependency_script_import_is_unresolved');
 $check($cell['outcome'] === 'resolved' && $cell['dependency_class'] === 'cell_verse' && $cell['hard'] === true, 'zen_dependency_cell_import_classified');
 $check(($cell['selected_provider_object']['cell_export_index'] ?? null) === 0, 'zen_dependency_cell_import_uses_cell_export_map');
+$check(($cell['selected_provider_object']['local_export_index'] ?? null) === 1, 'b016_main_cell_local_export_index_offsets_object_exports');
+$check(($cell['source_local_import_index'] ?? null) === 2, 'b016_cell_import_local_index_offsets_object_imports');
 $check($soft['outcome'] === 'package_only' && $soft['hard'] === false, 'zen_dependency_soft_known_is_package_only');
 $check($loadExport['outcome'] === 'resolved' && $loadExport['dependency_class'] === 'load_order', 'zen_dependency_local_load_order_resolved');
 $check($loadImport['outcome'] === 'resolved' && $loadImport['dependency_class'] === 'load_order' && $loadImport['hard'] === false, 'zen_dependency_import_load_order_classified');
@@ -546,6 +548,12 @@ $check(
     'zen_dependency_duplicate_public_hash_is_runtime_collision_ambiguous'
 );
 $check(
+    ($duplicateCell['source_header_first_cell_export']['cell_export_index'] ?? null) === 0
+        && ($duplicateCell['source_header_first_cell_export']['local_export_index'] ?? null) === 2
+        && ($duplicateCell['source_header_first_cell_export']['runtime_lookup_authoritative'] ?? null) === false,
+    'b016_duplicate_cell_source_header_first_candidate_without_live_claim'
+);
+$check(
     $duplicateCell['outcome'] === 'unresolved'
         && $duplicateCell['reason_code'] === 'public_cell_export_hash_runtime_collision_ambiguous'
         && ($duplicateCell['candidate_cell_export_indices'] ?? null) === [0, 1],
@@ -657,8 +665,8 @@ $optionalCellEditor = $resolve(
     ['is_editor' => true]
 );
 $check(
-    $find($optionalCellEditor, 'cell_imports', 0)['outcome'] === 'resolved'
-        && ($find($optionalCellEditor, 'cell_imports', 0)['selected_provider_object']['cell_export_index'] ?? null) === 0,
+    $find($optionalCellEditor, 'cell_imports', 0)['outcome'] === 'unresolved'
+        && ($find($optionalCellEditor, 'cell_imports', 0)['reason_code'] ?? null) === 'optional_segment_public_cell_runtime_registration_required',
     'zen_editor_cell_import_searches_optional_provider_cell_exports'
 );
 $optionalCellRuntime = $resolve(
