@@ -158,3 +158,5 @@ checkpoint was created.
 
 No full-file backfill, production database write, destructive checkout,
 or blanket source scan is authorized by this baseline.
+
+**Outstanding real-engine capture:** \`catalog/compliance/UE5-SCRIPT-RUNTIME-TRACE-PREPARATION.md\` provides a pinned opt-in source probe and 16-check disposable Git patch verifier for the four partial SCRIPT-003/004/005/B015-1 operations. This is trace *preparation*, not actual runtime evidence; there is no runnable UE5.8.3 editor yet and no claim of additional verified operations.

@@ -34,7 +34,8 @@
                 "catalog/bin/verify-uedb5-b003-script-hash-sql-projection.php",
                 "catalog/bin/verify-uedb5-b003-script-hash-mysql-isolated.php",
                 "catalog/bin/verify-uedb5-b003-script-registration-boundary-acceptance.php",
-                "catalog/bin/verify-uedb5-b015-native-source-execution.php"
+                "catalog/bin/verify-uedb5-b015-native-source-execution.php",
+                "catalog/bin/verify-ue5-script-runtime-trace-preparation.php"
             ],
             "disposition": "partial",
             "reason": "Pinned Epic source covers Finished-only registration, WITH_EDITOR package identity, public nested objects, compiled-in/Verse VNI branches, live FindRef and GC cleanup. UE5-D027 SQL ScriptImport hash omission fixed and independently proven with historical red/green, authentic cooked hash, SQLite and session-temporary real MySQL. Actual Epic live UObject map and events were not executed, so SCRIPT-004 remains partial.",
@@ -65,6 +66,20 @@
                 "boundary_acceptance": "catalog/bin/verify-uedb5-b003-script-registration-boundary-acceptance.php",
                 "executable_source_substitute": "catalog/bin/verify-uedb5-b015-native-source-execution.php",
                 "executable_source_substitute_is_not_live_engine": true
+            },
+            "runtime_trace_preparation_evidence": {
+                "source_review": "catalog/compliance/UE5-SCRIPT-RUNTIME-TRACE-PREPARATION.md",
+                "generator": "catalog/bin/prepare-ue5-script-runtime-trace.php",
+                "generator_sha256": "ebd716995550ffc9e79a783de5475c8a73ce0150f815308dd79c48f5db204917",
+                "regression": "catalog/bin/verify-ue5-script-runtime-trace-preparation.php",
+                "regression_sha256": "041b3b7d0b049bbd2d5c4ca64c371a7d4c40cd08fece265e0baa8de98c84e28b",
+                "expected_source_sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9",
+                "unique_trace_injections": 15,
+                "verified_disposable_patch_checks": 16,
+                "live_unreal_engine_executed": false,
+                "real_runtime_events_collected": false,
+                "disposition": "preparation_only",
+                "remaining": "Controlled UE5.8.3 editor/game build, real runtime trace, independent source-to-UnrealDB acceptance"
             }
         },
         {
@@ -94,7 +109,8 @@
                 "catalog/bin/verify-uedb5-zen-script-objects-standalone.php",
                 "catalog/bin/verify-uedb5-b003-script-diagnostic-path-source.php",
                 "catalog/bin/verify-uedb5-b003-script-lookup-boundary-acceptance.php",
-                "catalog/bin/verify-uedb5-b015-native-source-execution.php"
+                "catalog/bin/verify-uedb5-b015-native-source-execution.php",
+                "catalog/bin/verify-ue5-script-runtime-trace-preparation.php"
             ],
             "disposition": "partial",
             "reason": "Epic uses live ScriptObjects.FindRef first, GetImportName falls back to an optional compiled-in PreCDO cooked diagnostic path only on null; RegistrationComplete trims live indices but retains outers for missing cooked entries. UnrealDB previously decoded cooked names/outer links without a source-shaped diagnostic path/trim preview (D028). Opt-in offline preview fixed and tested on authentic Satisfactory 54,968 entries; no actual live UE5 registry/flags/GC execution, so original operation stays partial.",
@@ -128,7 +144,21 @@
                     "path": "catalog/src/Infrastructure/Metadata/Uedb5ZenScriptImportDiagnosticPreview.php",
                     "sha256": "9faf0b096c8f355ba3a5f48f174299ab4007c81c6ed1ab09aeef9c5728c50e62"
                 }
-            ]
+            ],
+            "runtime_trace_preparation_evidence": {
+                "source_review": "catalog/compliance/UE5-SCRIPT-RUNTIME-TRACE-PREPARATION.md",
+                "generator": "catalog/bin/prepare-ue5-script-runtime-trace.php",
+                "generator_sha256": "ebd716995550ffc9e79a783de5475c8a73ce0150f815308dd79c48f5db204917",
+                "regression": "catalog/bin/verify-ue5-script-runtime-trace-preparation.php",
+                "regression_sha256": "041b3b7d0b049bbd2d5c4ca64c371a7d4c40cd08fece265e0baa8de98c84e28b",
+                "expected_source_sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9",
+                "unique_trace_injections": 15,
+                "verified_disposable_patch_checks": 16,
+                "live_unreal_engine_executed": false,
+                "real_runtime_events_collected": false,
+                "disposition": "preparation_only",
+                "remaining": "Controlled UE5.8.3 editor/game build, real runtime trace, independent source-to-UnrealDB acceptance"
+            }
         }
     ],
     "next_batch": "B004",

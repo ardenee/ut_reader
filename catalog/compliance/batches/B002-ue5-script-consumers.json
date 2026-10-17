@@ -192,7 +192,8 @@
             },
             "tests": [
                 "catalog/bin/verify-uedb5-ue5-zen-dependency-resolution.php",
-                "catalog/bin/verify-uedb5-b015-native-source-execution.php"
+                "catalog/bin/verify-uedb5-b015-native-source-execution.php",
+                "catalog/bin/verify-ue5-script-runtime-trace-preparation.php"
             ],
             "disposition": "partial",
             "reason": "Source FindScriptImportObject uses live ScriptObjects.FindRef and GetImportName is only diagnostic fallback. Offline remains unresolved with no provider; D027 previously discarded the serialized script hash from SQL dependency projections, fixed as typed 62-bit key kind 3 and verified on historical, authentic, SQLite and isolated real MySQL. Actual live runtime registry remains unverified.",
@@ -210,7 +211,21 @@
             },
             "related_differences": [
                 "UE5-D027"
-            ]
+            ],
+            "runtime_trace_preparation_evidence": {
+                "source_review": "catalog/compliance/UE5-SCRIPT-RUNTIME-TRACE-PREPARATION.md",
+                "generator": "catalog/bin/prepare-ue5-script-runtime-trace.php",
+                "generator_sha256": "ebd716995550ffc9e79a783de5475c8a73ce0150f815308dd79c48f5db204917",
+                "regression": "catalog/bin/verify-ue5-script-runtime-trace-preparation.php",
+                "regression_sha256": "041b3b7d0b049bbd2d5c4ca64c371a7d4c40cd08fece265e0baa8de98c84e28b",
+                "expected_source_sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9",
+                "unique_trace_injections": 15,
+                "verified_disposable_patch_checks": 16,
+                "live_unreal_engine_executed": false,
+                "real_runtime_events_collected": false,
+                "disposition": "preparation_only",
+                "remaining": "Controlled UE5.8.3 editor/game build, real runtime trace, independent source-to-UnrealDB acceptance"
+            }
         }
     ],
     "next_batch": "B003",
