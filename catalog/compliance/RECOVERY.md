@@ -21,7 +21,7 @@ second competing audit system is introduced.
   editor branch model, real V5 selector/rebuilder and isolated temporary MySQL.
   B004, B009 and B010 now have complete source-defined, operation-level
   executable acceptance. **9 original evidence gates remain open.** Full application/engine compliance remains unverified.
-* D001-D027: twenty-seven known differences linked to original operations or
+* D001-D028: twenty-eight known differences linked to original operations or
   explicitly categorized as cross-cutting or previously uncovered behavior.
   D010/D011 are now marked fixed and regression-verified. Original B009 and
   B010 now pass source-contract, implementation, caller, downstream V5 and
@@ -67,7 +67,7 @@ second competing audit system is introduced.
 | 13 | UE5-583-SCRIPT-002 | **VERIFIED (offline global NameBatch):** pinned UnrealNames.cpp NameBatch count, UTF8/UTF16, hash/version metadata, input/shard order, 50,640 authentic Satisfactory names and one direct ScriptObjects diagnostic caller; no parser fix and no live FNamePool claims. SCRIPT-003 remains partial. |
 | 14 | UE5-583-SCRIPT-003 | **PARTIAL:** Epic live ScriptObjects.FindRef vs cooked diagnostics; offline unverified resolution remains conservative, D027 now retains 62-bit script hash as kind-3 SQL key without fake provider; live lookup unverified. |
 | 15 | UE5-583-SCRIPT-004 | **PARTIAL:** pinned Epic NRP_Finished, WITH_EDITOR package identity, public nested objects and compiled-in/Verse VNI branches; offline ScriptImport SQL hash loss D027 fixed with historical/real MySQL tests; actual live UObject registry remains unverified. |
-| 16 | UE5-583-SCRIPT-005 | FindRef/diagnostic fallback distinctions |
+| 16 | UE5-583-SCRIPT-005 | **PARTIAL:** source-pinned live FindRef vs optional cooked debug GetImportName; D028 diagnostic-only path and trim preview implemented, authentic 54,968-record source regression and four-driver acceptance; actual live runtime behavior remains unverified. |
 | 17 | UE5-583-SCRIPT-HASH-001 | TCHAR path normalization, CityHash64 and hash bit mask |
 | 18 | UE5-583-B015-1 | Script/Verse VNI enumeration, editor/runtime registration branches |
 

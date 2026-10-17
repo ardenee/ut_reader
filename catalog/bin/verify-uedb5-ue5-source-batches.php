@@ -60,6 +60,8 @@ $tests=[
  'verify-uedb5-b003-script-hash-sql-projection.php',
  'verify-uedb5-b003-script-hash-mysql-isolated.php',
  'verify-uedb5-b003-script-registration-boundary-acceptance.php',
+ 'verify-uedb5-b003-script-diagnostic-path-source.php',
+ 'verify-uedb5-b003-script-lookup-boundary-acceptance.php',
  'verify-uedb5-zen-script-objects-standalone.php',
  'verify-uedb5-zen-mounted-store-context.php',
  'verify-uedb5-zen-effective-store-context.php',

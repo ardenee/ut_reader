@@ -423,6 +423,16 @@
         "rationale": "Epic UE5.8.3 FPackageObjectIndex::FromScriptPath generates a 62-bit script hash used by live ScriptObjects.FindRef. UnrealDB V5 dependency_results retained ScriptImport required_object_identity, but Uedb5DependencyProjectionBuilder stripped it from SQL dependency_edges (NULL kind and key). Fixed a1338232cf078677a8d62814009e100f1b9e3f00 by new distinct OBJECT_KEY_SCRIPT_IMPORT_HASH=3 and exact 8-byte binary identity without inventing package/provider/live registration. Historical baseline dropped the key; fixed source+authentic Satisfactory hash, SQLite publisher and session-temporary real MySQL tests passed. Both SCRIPT-003 and SCRIPT-004 remain partial for actual Epic live registry evidence.",
         "state": "evidence_partial",
         "audit_escape": "none"
+    },
+    {
+        "id": "UE5-D028",
+        "kind": "mapped",
+        "operations": [
+            "UE5-583-SCRIPT-005"
+        ],
+        "rationale": "Epic UE5.8.3 AsyncLoading2.cpp GetImportName returns live UObject name when FindRef succeeds, otherwise optionally cooked diagnostic GetPathName. The cooked debug map is trimmed against live ScriptObjects while retaining outer ancestors of missing entries, rendering paths with dot/colon/question separators. UnrealDB cooked reader retained names/outer indices but lacked a diagnostic-only path or trim preview. f3c960bb adds source-shaped explicit offline preview, tested against 54,968 authentic Satisfactory entries and synthetic trim/outer/cycle cases. No running UE5 registry or fallback selection is claimed; original SCRIPT-005 remains partial.",
+        "state": "evidence_partial",
+        "audit_escape": "none"
     }
   ],
   "coverage_gaps": [
