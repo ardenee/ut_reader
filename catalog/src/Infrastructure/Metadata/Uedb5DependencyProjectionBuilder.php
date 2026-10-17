@@ -125,7 +125,16 @@ final class Uedb5DependencyProjectionBuilder
     private static function requiredObjectKey(array $row): array
     {
         if ((string)($row['dependency_kind'] ?? '') === 'ScriptImport') {
-            return [null, null];
+            // Epic's live ScriptObjects.FindRef uses a typed FPackageObjectIndex
+            // whose 62-bit payload is GenerateImportHashFromObjectPath.
+            // Preserve that source identity in the SQL accelerator without
+            // treating it as PublicExportHash or asserting a loaded UObject.
+            $hash = strtoupper(trim((string)($row['required_object_identity'] ?? '')));
+            if ($hash === '') { return [null, null]; }
+            if (preg_match('/^[0-3][0-9A-F]{15}$/', $hash) !== 1) {
+                throw new RuntimeException('Dependency ScriptImport hash must be a 62-bit FPackageObjectIndex payload.');
+            }
+            return [Uedb5SqlProjectionContract::OBJECT_KEY_SCRIPT_IMPORT_HASH, hex2bin($hash) ?: null];
         }
         $classic = $row['required_object_identity'] ?? null;
         if (is_array($classic) && ($classic['kind'] ?? null) === 'classic_import') {

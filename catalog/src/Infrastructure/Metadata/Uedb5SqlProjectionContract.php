@@ -23,6 +23,8 @@ final class Uedb5SqlProjectionContract
     public const PACKAGE_KEY_CLASSIC_FNAME = 3;
     public const OBJECT_KEY_NAME = 1;
     public const OBJECT_KEY_PUBLIC_EXPORT_HASH = 2;
+    /** UE5 ScriptImport: the lower 62 bits of FPackageObjectIndex, not PublicExportHash. */
+    public const OBJECT_KEY_SCRIPT_IMPORT_HASH = 3;
     public const OBJECT_KIND_EXPORT = 1;
     public const OBJECT_KIND_CELL_EXPORT = 2;
     public const OBJECT_KIND_OPTIONAL_EXPORT = 3;

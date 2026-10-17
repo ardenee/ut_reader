@@ -5,6 +5,7 @@ require dirname(__DIR__).'/bootstrap/autoload.php';
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5Ue5ZenDependencyResolver as Resolver;
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5DependencyProjectionBuilder as Projection;
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5ZenPackageReader as Zen;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5SqlProjectionContract as Sql;
 $root=dirname(__DIR__,2);$sourceRoot=rtrim((string)getenv('UNREALDB_EPIC_SOURCE_ROOT'),'/\\');
 $cpp=$sourceRoot.'/Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp';
 $source=is_file($cpp)?(string)file_get_contents($cpp):'';
@@ -81,7 +82,8 @@ $projected=Projection::build($consumer);
 $importEdge=$projected['dependency_edges'][0]??[];
 $check('b002_script3_sql_unresolved_does_not_claim_package_or_object',
  ($importEdge['required_package_key']??null)===null
- &&($importEdge['required_object_key']??null)===null
+ &&($importEdge['required_object_key_kind']??null)===Sql::OBJECT_KEY_SCRIPT_IMPORT_HASH
+ &&strtoupper(bin2hex((string)($importEdge['required_object_key']??'')))==='1D39669A89BAECB6'
  &&($importEdge['resolved_file_id']??null)===null
  &&count($projected['dependency_packages'])===0);
 $check('b002_script3_script_hash_not_conflated_with_zen_public_export_hash',
