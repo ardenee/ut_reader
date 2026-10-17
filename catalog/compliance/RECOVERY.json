@@ -412,6 +412,17 @@
         "rationale": "Epic debug Objects.Emplace(GlobalIndex) routes through TMap::Emplace and TSet::TryReplaceExisting, replacing prior values on duplicate keys. UnrealDB rejected duplicates as malformed. 471b6d14 implements last-entry-wins with independent Epic helper oracles and original-vs-fixed duplicate regression; retained real chunk happens to have no duplicates.",
         "state": "fixed_regression_verified",
         "audit_escape": "none"
+    },
+    {
+        "id": "UE5-D027",
+        "kind": "mapped",
+        "operations": [
+            "UE5-583-SCRIPT-003",
+            "UE5-583-SCRIPT-004"
+        ],
+        "rationale": "Epic UE5.8.3 FPackageObjectIndex::FromScriptPath generates a 62-bit script hash used by live ScriptObjects.FindRef. UnrealDB V5 dependency_results retained ScriptImport required_object_identity, but Uedb5DependencyProjectionBuilder stripped it from SQL dependency_edges (NULL kind and key). Fixed a1338232cf078677a8d62814009e100f1b9e3f00 by new distinct OBJECT_KEY_SCRIPT_IMPORT_HASH=3 and exact 8-byte binary identity without inventing package/provider/live registration. Historical baseline dropped the key; fixed source+authentic Satisfactory hash, SQLite publisher and session-temporary real MySQL tests passed. Both SCRIPT-003 and SCRIPT-004 remain partial for actual Epic live registry evidence.",
+        "state": "evidence_partial",
+        "audit_escape": "none"
     }
   ],
   "coverage_gaps": [

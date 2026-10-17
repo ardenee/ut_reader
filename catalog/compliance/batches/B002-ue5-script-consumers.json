@@ -194,13 +194,20 @@
                 "catalog/bin/verify-uedb5-ue5-zen-dependency-resolution.php"
             ],
             "disposition": "partial",
-            "reason": "Pinned Epic FindScriptImportObject -> live ScriptObjects.FindRef, separate GetImportObject PackageImport branch and optional diagnostic GetImportName proved. Offline unresolved, editor optional gate and null SQL provider remain source-conservative; actual live UObject map and registration-session evidence is not available, so SCRIPT-003 stays partial.",
+            "reason": "Source FindScriptImportObject uses live ScriptObjects.FindRef and GetImportName is only diagnostic fallback. Offline remains unresolved with no provider; D027 previously discarded the serialized script hash from SQL dependency projections, fixed as typed 62-bit key kind 3 and verified on historical, authentic, SQLite and isolated real MySQL. Actual live runtime registry remains unverified.",
             "source_boundary_evidence": {
                 "test_driver": "catalog/bin/verify-uedb5-b002-script-import-runtime-boundary.php",
                 "result": "11/11 Epic branch and offline SQL/optional/editor identity checks; no live Unreal runtime executed",
                 "source_review": "catalog/compliance/B002-SCRIPT-IMPORT-RUNTIME-BOUNDARY.md",
-                "complete_runtime_evidence": false
-            }
+                "complete_runtime_evidence": false,
+                "sql_source_identity_difference": "UE5-D027",
+                "sql_fixed_revision": "a1338232cf078677a8d62814009e100f1b9e3f00",
+                "sql_regression": "catalog/bin/verify-uedb5-b003-script-hash-sql-projection.php",
+                "sql_mysql": "catalog/bin/verify-uedb5-b003-script-hash-mysql-isolated.php"
+            },
+            "related_differences": [
+                "UE5-D027"
+            ]
         }
     ],
     "next_batch": "B003",

@@ -1,75 +1,105 @@
 {
-  "schema": 1,
-  "batch": "B003",
-  "engine": "UE5",
-  "profile": "UE5.8.3",
-  "status": "partial",
-  "inventory_a": "FGlobalImportStore call tracing",
-  "inventory_b": "FPackageObjectIndex constructors, conditional registrations and cooked debug table",
-  "complete_inventory": false,
-  "operations": [
-    {
-      "id": "UE5-583-SCRIPT-004",
-      "summary": "Runtime script object indices originate from script paths and registration including public nested objects",
-      "source": {
-        "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
-        "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9",
-        "symbols": [
-          "FGlobalImportStore::AddScriptObject",
-          "FPackageObjectIndex::FromScriptPath"
-        ],
-        "lines": [
-          2712,
-          2721,
-          2737
-        ]
-      },
-      "implementation": {
-        "path": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenDependencyResolver.php",
-        "sha256": "d2eb027f822dd93df23d5b5807aaf9fa3911de9b185a4d61adb9cbc79d3435ff"
-      },
-      "tests": [
-        "catalog/bin/verify-uedb5-ue5-zen-dependency-resolution.php"
-      ],
-      "disposition": "partial",
-      "reason": "UnrealDB deliberately does not reconstruct live UObject registrations from offline package data; editor branch and nested public objects documented but not certified."
-    },
-    {
-      "id": "UE5-583-SCRIPT-005",
-      "summary": "Runtime lookup uses ScriptObjects.FindRef; debug chunk only supplies optional diagnostic fallback name",
-      "source": {
-        "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
-        "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9",
-        "symbols": [
-          "FindScriptImportObject",
-          "GetImportName",
-          "FCookedScriptObjectsDebug::LoadDebugData"
-        ],
-        "lines": [
-          2604,
-          2608,
-          2851,
-          2863,
-          6983
-        ]
-      },
-      "implementation": {
-        "path": "catalog/src/Infrastructure/Metadata/Uedb5ZenScriptObjectsReader.php",
-        "sha256": "9d1a273cab4b32fb5820dd41409e4a2c5618262381f219f7130699df343acc46"
-      },
-      "tests": [
-        "catalog/bin/verify-uedb5-zen-script-objects-standalone.php"
-      ],
-      "disposition": "partial",
-      "reason": "Source confirms GetImportName diagnostic fallback is not proof of loaded UObject; real chunk and consumer tests remain."
+    "schema": 1,
+    "batch": "B003",
+    "engine": "UE5",
+    "profile": "UE5.8.3",
+    "status": "partial",
+    "inventory_a": "FGlobalImportStore call tracing",
+    "inventory_b": "FPackageObjectIndex constructors, conditional registrations and cooked debug table",
+    "complete_inventory": false,
+    "operations": [
+        {
+            "id": "UE5-583-SCRIPT-004",
+            "summary": "Runtime script object indices originate from script paths and registration including public nested objects",
+            "source": {
+                "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+                "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9",
+                "symbols": [
+                    "FGlobalImportStore::AddScriptObject",
+                    "FPackageObjectIndex::FromScriptPath"
+                ],
+                "lines": [
+                    2712,
+                    2721,
+                    2737
+                ]
+            },
+            "implementation": {
+                "path": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenDependencyResolver.php",
+                "sha256": "d2eb027f822dd93df23d5b5807aaf9fa3911de9b185a4d61adb9cbc79d3435ff"
+            },
+            "tests": [
+                "catalog/bin/verify-uedb5-ue5-zen-dependency-resolution.php",
+                "catalog/bin/verify-uedb5-b003-script-registration-source.php",
+                "catalog/bin/verify-uedb5-b003-script-hash-sql-projection.php",
+                "catalog/bin/verify-uedb5-b003-script-hash-mysql-isolated.php",
+                "catalog/bin/verify-uedb5-b003-script-registration-boundary-acceptance.php"
+            ],
+            "disposition": "partial",
+            "reason": "Pinned Epic source covers Finished-only registration, WITH_EDITOR package identity, public nested objects, compiled-in/Verse VNI branches, live FindRef and GC cleanup. UE5-D027 SQL ScriptImport hash omission fixed and independently proven with historical red/green, authentic cooked hash, SQLite and session-temporary real MySQL. Actual Epic live UObject map and events were not executed, so SCRIPT-004 remains partial.",
+            "related_differences": [
+                "UE5-D027"
+            ],
+            "source_boundary_evidence": {
+                "source_review": "catalog/compliance/B003-SCRIPT-REGISTRATION-SOURCE.md",
+                "source_driver": "catalog/bin/verify-uedb5-b003-script-registration-source.php",
+                "source_assertions": 15,
+                "source_branches": [
+                    "NotifyRegistrationEvent NRP_Finished only",
+                    "FPathViews package + object name; FPackageObjectIndex::FromScriptPath",
+                    "WITH_EDITOR package identity; unconditional registered UObject identity",
+                    "ForEachObjectWithOuter IncludeNestedObjects and RF_Public filter; full subobject paths",
+                    "FindAllRuntimeScriptPackages compiled-in /Script/ and Verse VNI; VNI UHT-only public filter",
+                    "WITH_EDITOR RegistrationComplete Add vs DO_CHECK verify-only",
+                    "GC RemoveUnreachableScriptObjects and live ScriptObjects.FindRef",
+                    "Separate Verse ScriptCells registration"
+                ],
+                "runtime_uobject_registry_executed": false,
+                "registration_outcome": "offline_unresolved_never_fabricated",
+                "remaining_acceptance": "Actual in-memory UObject registration and lookup through the appropriate Epic runtime/editor, with live/ref/null/unreachable and public/private/nested distinctions",
+                "correction_commit": "a1338232cf078677a8d62814009e100f1b9e3f00",
+                "correction_difference": "UE5-D027",
+                "script_identity_sql_regression": "catalog/bin/verify-uedb5-b003-script-hash-sql-projection.php",
+                "isolated_mysql_roundtrip": "catalog/bin/verify-uedb5-b003-script-hash-mysql-isolated.php",
+                "boundary_acceptance": "catalog/bin/verify-uedb5-b003-script-registration-boundary-acceptance.php"
+            }
+        },
+        {
+            "id": "UE5-583-SCRIPT-005",
+            "summary": "Runtime lookup uses ScriptObjects.FindRef; debug chunk only supplies optional diagnostic fallback name",
+            "source": {
+                "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+                "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9",
+                "symbols": [
+                    "FindScriptImportObject",
+                    "GetImportName",
+                    "FCookedScriptObjectsDebug::LoadDebugData"
+                ],
+                "lines": [
+                    2604,
+                    2608,
+                    2851,
+                    2863,
+                    6983
+                ]
+            },
+            "implementation": {
+                "path": "catalog/src/Infrastructure/Metadata/Uedb5ZenScriptObjectsReader.php",
+                "sha256": "9d1a273cab4b32fb5820dd41409e4a2c5618262381f219f7130699df343acc46"
+            },
+            "tests": [
+                "catalog/bin/verify-uedb5-zen-script-objects-standalone.php"
+            ],
+            "disposition": "partial",
+            "reason": "Source confirms GetImportName diagnostic fallback is not proof of loaded UObject; real chunk and consumer tests remain."
+        }
+    ],
+    "next_batch": "B004",
+    "gate_status": {
+        "inventory": false,
+        "contracts": false,
+        "implementation": false,
+        "independent_verification": false,
+        "change_integrity": true
     }
-  ],
-  "next_batch": "B004",
-  "gate_status": {
-    "inventory": false,
-    "contracts": false,
-    "implementation": false,
-    "independent_verification": false,
-    "change_integrity": true
-  }
 }

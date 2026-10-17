@@ -122,11 +122,11 @@
             "guarded_implementation_files": [
                 {
                     "path": "catalog/src/Infrastructure/Metadata/Uedb5DependencyProjectionBuilder.php",
-                    "sha256": "7c6071bef4c38f7a682045c9b1a3cb247f243fc44564d8d56b42c656a7707b93"
+                    "sha256": "2d17738e8c01a155507a33512f9e253d6e814a448954ec0e4a8bcf17157e3494"
                 },
                 {
                     "path": "catalog/src/Infrastructure/Metadata/Uedb5SqlProjectionContract.php",
-                    "sha256": "a0f18870069e4057387d7c99980a6c5b2fecd159f2a4c864b4aa13f658ceaefe"
+                    "sha256": "a06845204b5a007a218474e9c840822acbab4aff3dbdf001a504590d8bb3df89"
                 },
                 {
                     "path": "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php",
