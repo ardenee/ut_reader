@@ -48,6 +48,9 @@ try{
   &&hash_file('sha256',$candidate)===($data['proposed_source_sha256']??null)
   &&$manifestData===$data);
  $instrumented=(string)file_get_contents($candidate);
+ $assert('trace_full_typed_script_indices_not_masked_payloads',
+  substr_count($instrumented, '.Value() | (1ull << 62)')===11
+  &&!preg_match('/UEDB_RT\|[^\n]*?, [A-Za-z]+(?:GlobalImportIndex|Index)\.Value\(\)\s*[,)]/', $instrumented));
  $assert('trace_hooks_include_registration_lookup_gc_debug_and_verse',
   str_contains($instrumented,'UEDB_RT|event=lookup|')
   &&str_contains($instrumented,'UEDB_RT|event=add_cell|')

@@ -52,3 +52,6 @@ An `ok=true` report certifies **only the internal shape of an untrusted text tra
 4. Inspect trace shape, then compare actual runtime behavior with B002/B003/B015 original source contracts, raw import identities and negative cases; only then evaluate whether each **original** operation can be formally closed.
 
 No metadata backfill, package rescan, production MySQL write, UnrealDB runtime parser alteration, or UE installation repair was performed by the present trace-inspection work.
+
+
+**First instrumented UnrealPak runtime evidence (17 Oct 2026):** see [UE5-SCRIPT-RUNTIME-UNREALPAK-EVIDENCE.md](UE5-SCRIPT-RUNTIME-UNREALPAK-EVIDENCE.md). A real disposable UE5.8.3 CoreUObject binary emitted 858 events; its first probe omitted the FPackageObjectIndex type bits on 851 script registration indices. A separate derived normalized log passes 858/858 strict trace checks. The probe generator is corrected; these observations do not establish all runtime branches or close any original operation.

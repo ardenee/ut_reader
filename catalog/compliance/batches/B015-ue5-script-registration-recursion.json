@@ -79,9 +79,9 @@
             "runtime_trace_preparation_evidence": {
                 "source_review": "catalog/compliance/UE5-SCRIPT-RUNTIME-TRACE-PREPARATION.md",
                 "generator": "catalog/bin/prepare-ue5-script-runtime-trace.php",
-                "generator_sha256": "7d0211969b1d3fe5189a10036eed5a150abe2afa6a43c0f9896fe7144b7822aa",
+                "generator_sha256": "bed038677fd0e62a7b42d67a03578c7e6d1a3d3bf032ed45908aee694c1cfbd5",
                 "regression": "catalog/bin/verify-ue5-script-runtime-trace-preparation.php",
-                "regression_sha256": "041b3b7d0b049bbd2d5c4ca64c371a7d4c40cd08fece265e0baa8de98c84e28b",
+                "regression_sha256": "0005c26402ca107404426124bfc52e3a74cf721904a4c44c9b335fb1c326d648",
                 "expected_source_sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9",
                 "unique_trace_injections": 15,
                 "verified_disposable_patch_checks": 16,
