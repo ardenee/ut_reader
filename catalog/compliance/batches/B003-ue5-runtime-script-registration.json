@@ -38,9 +38,47 @@
                 "catalog/bin/verify-ue5-script-runtime-trace-preparation.php",
                 "catalog/bin/verify-ue5-script-runtime-trace-inspection.php"
             ],
-            "disposition": "partial",
-            "reason": "Pinned Epic source covers Finished-only registration, WITH_EDITOR package identity, public nested objects, compiled-in/Verse VNI branches, live FindRef and GC cleanup. UE5-D027 SQL ScriptImport hash omission fixed and independently proven with historical red/green, authentic cooked hash, SQLite and session-temporary real MySQL. Actual Epic live UObject map and events were not executed, so SCRIPT-004 remains partial.",
-            "related_differences": [
+            "disposition": "verified",
+            "reason": "Pinned Epic source covers Finished-only registration, WITH_EDITOR package identity, public nested objects, compiled-in/Verse VNI branches, live FindRef and GC cleanup. UE5-D027 SQL ScriptImport hash omission fixed and independently proven with historical red/green, authentic cooked hash, SQLite and session-temporary real MySQL. Actual Epic editor UObject registration, typed indices, nested-public enumeration and GC removal have now executed and passed full trace/operation acceptance. Conditional Verse and other registration branches remain SCRIPT-005/B015-1.",
+            "operation_status": "verified",
+"complete_inventory": true,
+"gate_status": {"inventory": true, "contracts": true, "implementation": true, "independent_verification": true, "change_integrity": true},
+"source_contract_evidence": {
+  "test_driver": "catalog/bin/verify-uedb5-b003-script004-operation-acceptance.php",
+  "expected_checks": ["script004_source_15", "script004_boundary_14", "script004_original_trace_sha256", "script004_live_initial_editor_package", "script004_live_nested_public", "script004_editor_completion_and_gc", "script004_typed_indices", "script004_strict_trace_67206"],
+  "source_branches": ["Finished-only notification source branch", "Script path FromScriptPath hashing", "WITH_EDITOR package registration", "RF_Public nested registration", "actual editor script map registration and GC remove"]
+},
+"source_reachability_evidence": {
+  "test_driver": "catalog/bin/verify-uedb5-b003-script004-operation-acceptance.php",
+  "expected_checks": ["script004_source_15", "script004_live_initial_editor_package", "script004_live_nested_public"],
+  "source_inventory_record": "catalog/compliance/B003-SCRIPT-REGISTRATION-SOURCE.md",
+  "complete_php_source_scan": "Existing B003 source registration and UnrealDB main/optional V5 resolver, SQL projection and publishing paths; other conditional Verse/noneditor branches remain SCRIPT-005/B015-1"
+},
+"source_equivalence_evidence": {
+  "conclusion": "no_source_difference_found",
+  "independent_test_driver": "catalog/bin/verify-uedb5-b003-script004-operation-acceptance.php",
+  "required_source_checks": ["script004_source_15", "script004_boundary_14", "script004_live_nested_public", "script004_typed_indices"],
+  "scope": "Only SCRIPT-004 FromScriptPath/editor registration/nested public/GC branch mapping; runtime registry is not available offline; SQL script hash correction D027 already separately recorded"
+},
+"test_results": {
+  "test_driver": "catalog/bin/verify-uedb5-b003-script004-operation-acceptance.php",
+  "expected_checks": ["script004_source_15", "script004_boundary_14", "script004_original_trace_sha256", "script004_live_initial_editor_package", "script004_live_nested_public", "script004_editor_completion_and_gc", "script004_typed_indices", "script004_strict_trace_67206"],
+  "result": "Eight checks pass; 15 source and 14 boundary assertions; genuine original editor SHA CD3EED15774F748038F7C996CDA5EA59834A61B2FECBF3BBB52F4EB35AA4CEC6; 67206/67206 typed runtime events inspected"
+},
+"independent_inventory_evidence": {
+  "source_review": "catalog/compliance/B003-SCRIPT-REGISTRATION-SOURCE.md",
+  "scope_boundary": "SCRIPT-004 registration, editor package identity, nested-public and GC removal; Verse VNI, ScriptCells and noneditor conditional registration remain SCRIPT-005/B015-1",
+  "independent_source_oracle": "catalog/bin/verify-uedb5-b003-script-registration-source.php",
+  "empirical_authentic_runtime_record": "catalog/compliance/UE5-SCRIPT-RUNTIME-UNREALPAK-EVIDENCE.md",
+  "operation_acceptance": "catalog/bin/verify-uedb5-b003-script004-operation-acceptance.php"
+},
+"acceptance_evidence": {
+  "reachable_source_branches": "Pinned Epic AddScriptObject and NotifyRegistrationEvent NRP_Finished; editor package and RF_Public nested paths; RegistrationComplete editor enumeration; gc cleanup. Source fixture passes 15 checks.",
+  "epic_to_unrealdb_mapping": "Uedb5Ue5ZenDependencyResolver preserves typed ScriptImport hash conservatively unresolved outside Epic live UObject registry; D027 SQL script index projection correction verified.",
+  "independent_differential": "Original direct UE5.8.3 editor log SHA CD3EED15774F748038F7C996CDA5EA59834A61B2FECBF3BBB52F4EB35AA4CEC6 inspected 67206/67206 without rejection; 14239 editor package, 14239 initial, 9782 nested public, 23376 enumerated public adds; one GC removal.",
+  "all_v5_consumers": "Existing B003 executable boundary driver covers dependency resolver, SQL projection, isolated MySQL, serialized script key; live registration retained under UE5's global UObject registry; distinct Verse branch requirements remain other original operations.",
+  "independent_reviewer": "Unchanged independent B003 15-check source and 14-check boundary drivers plus strict 67206-event typed trace inspector and eight-check operation driver; mismatched registration-path negative fixture correctly failed before correction."
+},"related_differences": [
                 "UE5-D027"
             ],
             "source_boundary_evidence": {
@@ -57,7 +95,7 @@
                     "GC RemoveUnreachableScriptObjects and live ScriptObjects.FindRef",
                     "Separate Verse ScriptCells registration"
                 ],
-                "runtime_uobject_registry_executed": false,
+                "runtime_uobject_registry_executed": true,
                 "registration_outcome": "offline_unresolved_never_fabricated",
                 "remaining_acceptance": "Actual in-memory UObject registration and lookup through the appropriate Epic runtime/editor, with live/ref/null/unreachable and public/private/nested distinctions",
                 "correction_commit": "a1338232cf078677a8d62814009e100f1b9e3f00",
