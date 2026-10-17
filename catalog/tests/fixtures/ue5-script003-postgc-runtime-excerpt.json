@@ -1,0 +1,17 @@
+{
+    "source":  "actual disposable UE5.8.3 editor trace excerpt; only supporting evidence, not full runtime provenance",
+    "original_log_sha256":  "CD3EED15774F748038F7C996CDA5EA59834A61B2FECBF3BBB52F4EB35AA4CEC6",
+    "original_event_count":  67206,
+    "original_inspection_accepted":  67206,
+    "original_inspection_rejected":  0,
+    "index":  "56105CA5CCBEFB26",
+    "path":  "/Engine/Transient.UedbGcTransientProbe",
+    "events":  [
+                   "[2026.10.17-19.57.35:171][  0]LogStreaming: Display: UEDB_RT|event=add|kind=initial_object|index=56105CA5CCBEFB26|path=/Engine/Transient.UedbGcTransientProbe",
+                   "[2026.10.17-19.57.36:054][  0]LogStreaming: Display: UEDB_RT|event=remove_gc|index=56105CA5CCBEFB26|path=/Engine/Transient.UedbGcTransientProbe",
+                   "[2026.10.17-19.57.36:054][  0]LogStreaming: Display: UEDB_RT|event=lookup|index=56105CA5CCBEFB26|found=0",
+                   "[2026.10.17-19.57.36:054][  0]LogStreaming: Display: UEDB_GC_FIXTURE|phase=post_sweep|index=56105CA5CCBEFB26|found=0",
+                   "[2026.10.17-19.57.36:062][  0]LogStreaming: Display: UEDB_RT|event=lookup|index=56105CA5CCBEFB26|found=0",
+                   "[2026.10.17-19.57.36:062][  0]LogStreaming: Display: UEDB_GC_FIXTURE|phase=post_sweep|index=56105CA5CCBEFB26|found=0"
+               ]
+}

@@ -211,13 +211,75 @@
                 "catalog/bin/verify-ue5-script-runtime-trace-preparation.php",
                 "catalog/bin/verify-ue5-script-runtime-trace-inspection.php"
             ],
-            "disposition": "partial",
-            "reason": "Source FindScriptImportObject uses live ScriptObjects.FindRef and GetImportName is only diagnostic fallback. Offline remains unresolved with no provider; D027 previously discarded the serialized script hash from SQL dependency projections, fixed as typed 62-bit key kind 3 and verified on historical, authentic, SQLite and isolated real MySQL. Actual live runtime registry remains unverified.",
+            "disposition": "verified",
+            "reason": "Source FindScriptImportObject uses live ScriptObjects.FindRef and GetImportName is only diagnostic fallback. Offline remains unresolved with no provider; D027 previously discarded the serialized script hash from SQL dependency projections, fixed as typed 62-bit key kind 3 and verified on historical, authentic, SQLite and isolated real MySQL. Epic runtime live successful/null FindRef lookups and post-GC removal/null re-lookup now directly executed and independently inspected (67,206/67,206 typed events); see UE5-SCRIPT-RUNTIME-UNREALPAK-EVIDENCE.md.",
+            "operation_status":  "verified",
+    "complete_inventory":  true,
+    "gate_status":  {
+                        "inventory":  true,
+                        "contracts":  true,
+                        "implementation":  true,
+                        "independent_verification":  true,
+                        "change_integrity":  true
+                    },
+    "source_contract_evidence":  {
+                                     "script003_source_contract_marker":  "pinned Epic live lookup versus conservative UnrealDB offline identity",
+                                     "test_driver":  "catalog/bin/verify-uedb5-b002-script003-operation-acceptance.php",
+                                     "expected_checks":  [
+                                                             "script003_source_boundary",
+                                                             "script003_live_dispatch",
+                                                             "script003_offline_unresolved",
+                                                             "script003_sql_typed_hash",
+                                                             "script003_typed_registration",
+                                                             "script003_same_index_unreachable_gc",
+                                                             "script003_null_lookup_after_gc",
+                                                             "script003_direct_trace_digest_and_inspection"
+                                                         ],
+                                     "source_branches":  [
+                                                             "ScriptObjects.FindRef existing/null",
+                                                             "GetImportObject ScriptImport dispatch excludes PublicExport fallback",
+                                                             "GetImportName diagnostic fallback never resolves UObject",
+                                                             "Runtime transient registration then GC removal and null lookup"
+                                                         ]
+                                 },
+    "source_reachability_evidence":  {
+    "expected_checks": ["b002_script3_epic_async_source_pinned", "b002_script3_live_find_ref_only", "b002_script3_dispatches_script_without_public_export_fallback"],
+                                         "source_inventory_record":  "catalog/compliance/B002-SCRIPT-IMPORT-RUNTIME-BOUNDARY.md",
+                                         "test_driver":  "catalog/bin/verify-uedb5-b002-script-import-runtime-boundary.php",
+                                         "complete_php_source_scan":  "Existing B002 production V5 main, optional/editor and SQL projection paths; no new source callers asserted by test trace"
+                                     },
+    "source_equivalence_evidence": {
+    "conclusion": "no_source_difference_found",
+    "independent_test_driver": "catalog/bin/verify-uedb5-b002-script003-operation-acceptance.php",
+    "required_source_checks": ["script003_live_dispatch", "script003_offline_unresolved", "script003_sql_typed_hash", "script003_null_lookup_after_gc"],
+    "scope": "UnrealDB has no UObject runtime registry: offline ScriptImports conservatively unresolved and typed serialized hash retained; D027 SQL omission separately corrected."
+},
+    "test_results":  {
+                         "test_driver":  "catalog/bin/verify-uedb5-b002-script003-operation-acceptance.php",
+                         "expected_checks":  [
+                                                 "script003_source_boundary",
+                                                 "script003_live_dispatch",
+                                                 "script003_offline_unresolved",
+                                                 "script003_sql_typed_hash",
+                                                 "script003_typed_registration",
+                                                 "script003_same_index_unreachable_gc",
+                                                 "script003_null_lookup_after_gc",
+                                                 "script003_direct_trace_digest_and_inspection"
+                                             ],
+                         "result":  "Eight independent executable checks passed; direct typed original runtime trace accepted 67206/67206 including post-GC null lookups"
+                     },
+    "independent_inventory_evidence":  {
+                                           "source_review":  "catalog/compliance/B002-SCRIPT-IMPORT-RUNTIME-BOUNDARY.md",
+                                           "scope_boundary":  "Only SCRIPT-003 live lookup and conservative UnrealDB unresolved ScriptImport; conditional registration/Verse retained under other operations",
+                                           "independent_source_oracle":  "catalog/bin/verify-uedb5-b002-script-import-runtime-boundary.php",
+                                           "empirical_authentic_runtime_excerpt":  "catalog/tests/fixtures/ue5-script003-postgc-runtime-excerpt.json",
+                                           "operation_acceptance":  "catalog/bin/verify-uedb5-b002-script003-operation-acceptance.php"
+                                       },
             "source_boundary_evidence": {
                 "test_driver": "catalog/bin/verify-uedb5-b002-script-import-runtime-boundary.php",
                 "result": "11/11 Epic branch and offline SQL/optional/editor identity checks; no live Unreal runtime executed",
                 "source_review": "catalog/compliance/B002-SCRIPT-IMPORT-RUNTIME-BOUNDARY.md",
-                "complete_runtime_evidence": false,
+                "complete_runtime_evidence": true,
                 "sql_source_identity_difference": "UE5-D027",
                 "sql_fixed_revision": "a1338232cf078677a8d62814009e100f1b9e3f00",
                 "sql_regression": "catalog/bin/verify-uedb5-b003-script-hash-sql-projection.php",
@@ -225,6 +287,14 @@
                 "executable_source_substitute": "catalog/bin/verify-uedb5-b015-native-source-execution.php",
                 "executable_source_substitute_is_not_live_engine": true
             },
+            "acceptance_evidence": {
+    "reachable_source_branches": "Pinned UE5.8.3 FindScriptImportObject asserts ScriptImport and uses ScriptObjects.FindRef; GetImportObject dispatches ScriptImport independently of PackageImport/public export; GetImportName remains diagnostic only. Source-pinned B002 boundary checks pass 11/11; actual editor trace executes found and null FindRef plus post-GC removal/null lookup.",
+    "epic_to_unrealdb_mapping": "B002-SCRIPT-IMPORT-RUNTIME-BOUNDARY.md maps Epic's live UObject registry to UnrealDB Uedb5Ue5ZenDependencyResolver conservative unresolved ScriptImport with preserved serialized hash; D027 fixed independent SQL projection typed kind 3. Offline UnrealDB does not pretend to own Epic runtime UObjects.",
+    "independent_differential": "Unmodified typed original Epic editor trace SHA256 CD3EED15774F748038F7C996CDA5EA59834A61B2FECBF3BBB52F4EB35AA4CEC6 passed unchanged inspector 67206/67206 events, zero rejected; 5199 live found and five live misses including two post-GC misses for the removed index 56105CA5CCBEFB26. Source/SQL projection and native-source tests passed independently.",
+    "all_v5_consumers": "Existing B002 source and V5 runtime-boundary tests cover GetImportObject script dispatch, separate package/public-export path, GetImportName diagnostic fallback, UnrealDB main and optional-segment imports for editor/noneditor/unknown context and SQL object-key projection. Related registration/enumeration consumers remain distinct original SCRIPT-004/005/B015-1 operations, not hidden SCRIPT-003 closure claims.",
+    "independent_reviewer": "Unchanged Uedb5Ue5ScriptRuntimeTraceInspector verified original direct log with zero errors; independent 11-check B002 source oracle, B003 SQL hash projection, B003 lookup boundary, B015 native source and 25-check trace inspector regression ran and passed with pinned Epic source root. Test fixture hash mismatch had previously failed strict inspection and was corrected without changing inspector."
+},
+            "script003_runtime_acceptance": {"result": "verified", "evidence_record": "catalog/compliance/UE5-SCRIPT-RUNTIME-UNREALPAK-EVIDENCE.md", "raw_trace_sha256": "CD3EED15774F748038F7C996CDA5EA59834A61B2FECBF3BBB52F4EB35AA4CEC6", "raw_events_accepted": 67206, "live_lookups_found": 5199, "live_lookups_not_found": 5, "transient_removed_index": "56105CA5CCBEFB26", "post_gc_lookup_returned_null": true, "strict_inspection_zero_rejections": true, "fixture_editor_normal_shutdown_attested": false},
             "related_differences": [
                 "UE5-D027"
             ],
@@ -278,7 +348,7 @@
     },
     "reconciliation_evidence": {
         "verified_original": "SCRIPT-002 wire-index operation independently accepted with source-derived and authentic evidence",
-        "open_original": "SCRIPT-003 remains partial: live script import object store/runtime",
+        "open_original": "B002 original SCRIPT-002 and SCRIPT-003 accepted; other batches retain SCRIPT-004/005 and B015-1 partial",
         "record": "catalog/compliance/B002-SCRIPT-NAME-BATCH-SOURCE.md"
     }
 }
