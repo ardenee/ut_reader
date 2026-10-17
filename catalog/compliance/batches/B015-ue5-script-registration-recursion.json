@@ -30,7 +30,8 @@
                 "catalog/bin/verify-uedb5-b002-script-import-runtime-boundary.php",
                 "catalog/bin/verify-uedb5-b003-script-lookup-boundary-acceptance.php",
                 "catalog/bin/verify-uedb5-b015-native-source-execution.php",
-                "catalog/bin/verify-ue5-script-runtime-trace-preparation.php"
+                "catalog/bin/verify-ue5-script-runtime-trace-preparation.php",
+                "catalog/bin/verify-ue5-script-runtime-trace-inspection.php"
             ],
             "disposition": "partial",
             "reason": "All 23 source-fixture checks and 18-check, six-driver acceptance pass. Native GNU C++ now executes seven source-identical apart from normalized line endings Epic AsyncLoading2 function bodies under four editor/check/shipping/cooked-debug configurations against controlled stand-in UObject, UPackage and script map doubles. These are NOT real UE5 objects, engine startup, registration, GC or global import store; runtime operation remains partial.",
@@ -69,12 +70,16 @@
                 {
                     "path": "catalog/tests/fixtures/ue5_script_runtime_native_harness.cpp.tpl",
                     "sha256": "81d49fdd1122d85c547da94693b9dcceb5404fdb6d8abe43491266657e3f69c4"
+                },
+                {
+                    "path": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ScriptRuntimeTraceInspector.php",
+                    "sha256": "e6739f0d4c7a9b66ab1b19d4cf39efb5b69a3fe6f8e9d4058e58a02b78440fc1"
                 }
             ],
             "runtime_trace_preparation_evidence": {
                 "source_review": "catalog/compliance/UE5-SCRIPT-RUNTIME-TRACE-PREPARATION.md",
                 "generator": "catalog/bin/prepare-ue5-script-runtime-trace.php",
-                "generator_sha256": "ebd716995550ffc9e79a783de5475c8a73ce0150f815308dd79c48f5db204917",
+                "generator_sha256": "7d0211969b1d3fe5189a10036eed5a150abe2afa6a43c0f9896fe7144b7822aa",
                 "regression": "catalog/bin/verify-ue5-script-runtime-trace-preparation.php",
                 "regression_sha256": "041b3b7d0b049bbd2d5c4ca64c371a7d4c40cd08fece265e0baa8de98c84e28b",
                 "expected_source_sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9",
@@ -84,6 +89,24 @@
                 "real_runtime_events_collected": false,
                 "disposition": "preparation_only",
                 "remaining": "Controlled UE5.8.3 editor/game build, real runtime trace, independent source-to-UnrealDB acceptance"
+            },
+            "runtime_trace_inspection_evidence": {
+                "record": "catalog/compliance/UE5-SCRIPT-RUNTIME-TRACE-INSPECTION.md",
+                "inspector_path": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ScriptRuntimeTraceInspector.php",
+                "inspector_sha256": "e6739f0d4c7a9b66ab1b19d4cf39efb5b69a3fe6f8e9d4058e58a02b78440fc1",
+                "cli_path": "catalog/bin/inspect-ue5-script-runtime-trace.php",
+                "cli_sha256": "2d9244f9c6dd51b4a9904b48f7ab544fab7e6e9d6bce0d3835e4a3f45546e071",
+                "test_driver": "catalog/bin/verify-ue5-script-runtime-trace-inspection.php",
+                "test_sha256": "0435813f255a2e887600b0d96fb91d67a878d87a98c1af15476cb4ff5a0beaf2",
+                "tests": 25,
+                "observed_installed_engine_version": "5.8.3-58210709+++UE5+Release-5.8",
+                "installed_engine_source_matches_pinned_sha256": true,
+                "epic_launcher_installation_integrity_verified": false,
+                "uninstrumented_real_editor_log_contains_probe_events": false,
+                "runtime_provenance_attested": false,
+                "actual_script_store_runtime_evidence_collected": false,
+                "disposition": "trace_shape_only",
+                "remaining": "Official Launcher Verify for resaved Engine/Content; disposable instrumented engine build and real runtime provenance, branch and key differential acceptance"
             }
         },
         {

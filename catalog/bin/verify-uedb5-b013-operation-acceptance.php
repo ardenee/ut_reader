@@ -52,7 +52,10 @@ foreach(new RecursiveIteratorIterator(new RecursiveDirectoryIterator($root.'/cat
 }
 $check('hash_exhaustive_production_php_source_inventory',
  $files>=500
- &&$dynamic===['catalog/src/Infrastructure/Metadata/Uedb5Ue5ScriptRuntimeEnumerationAudit.php']
+ &&$dynamic===[
+  'catalog/src/Infrastructure/Metadata/Uedb5Ue5ScriptRuntimeEnumerationAudit.php',
+  'catalog/src/Infrastructure/Metadata/Uedb5Ue5ScriptRuntimeTraceInspector.php'
+ ]
  &&in_array('catalog/src/Infrastructure/Metadata/Uedb5Ue5ScriptRuntimeEnumerationAudit.php',$serialized,true)
  &&in_array('catalog/src/Infrastructure/Metadata/Uedb5ZenPackageReader.php',$serialized,true)
  &&in_array('catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenDependencyResolver.php',$serialized,true));

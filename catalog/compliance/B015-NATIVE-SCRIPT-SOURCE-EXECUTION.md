@@ -4,7 +4,7 @@
 
 ## Why this was built
 
-No `UnrealEditor.exe` or `UnrealEditor-Cmd.exe` exists in the checked **UE5.8.3** source tree. The authorized PRD machine has Satisfactory Dedicated Server installations, but those binaries cannot substitute for a source-identical UE5.8.3 editor or provide authoritative access to its private `FGlobalImportStore` maps. The existing synthetic PHP test suite interpreted the source. The present test strengthens it by **executing the original Epic C++ function bodies** with tiny stand-in engine types in an independent native executable.
+No `UnrealEditor.exe` or `UnrealEditor-Cmd.exe` exists in the checked **UE5.8.3** source tree. A separate UE5.8.3 Launcher binary was later found on DEV, but it was not built with our instrumentation; after an unintended asset resave, its Engine/Content requires Launcher Verify before any further runs. The authorized PRD machine has Satisfactory Dedicated Server installations, but those binaries cannot substitute for a source-identical UE5.8.3 editor or provide authoritative access to its private `FGlobalImportStore` maps. The existing synthetic PHP test suite interpreted the source. The present test strengthens it by **executing the original Epic C++ function bodies** with tiny stand-in engine types in an independent native executable.
 
 ## Exact source extraction and method
 

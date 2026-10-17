@@ -4,7 +4,7 @@
 
 ## Why this exists
 
-The local pinned UE5.8.3 tree at `L:\Source\Engine\UE5\UE 5.8.3` currently contains source but **no runnable `UnrealEditor.exe` or `UnrealEditor-Cmd.exe`**. The previous 7-function native execution used instrumented test doubles and cannot establish a genuine `FGlobalImportStore` state. This facility generates **a patch for a future actually compiled UE5.8.3 executable**; it never patches the pristine source itself.
+The pinned UE5.8.3 checkout at `L:\Source\Engine\UE5\UE 5.8.3` contains source but no built editor. A separate Epic Launcher UE5.8.3 installation **does** exist at `H:\Epic Games\UE_5.8`, with `AsyncLoading2.cpp` matching our pinned source byte-for-byte. However, that installed editor is not instrumented and its **Engine/Content integrity verification is still outstanding** after an unintended asset-resave commandlet; do not run it until Launcher Verify is confirmed. See [UE5-SCRIPT-RUNTIME-TRACE-INSPECTION.md](UE5-SCRIPT-RUNTIME-TRACE-INSPECTION.md). The previous 7-function native execution used test doubles and cannot establish a genuine `FGlobalImportStore` state. This facility only generates a patch for a future **disposable, instrumented build**; it never patches the pristine source itself.
 
 Source pin: `Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp`, SHA-256 `43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9`.
 
@@ -59,3 +59,5 @@ The real capture must exercise editor registration and public nested objects, `N
 - Regression: `catalog/bin/verify-ue5-script-runtime-trace-preparation.php` (**16** checks)
 - Earlier independent native source execution: `catalog/compliance/B015-NATIVE-SCRIPT-SOURCE-EXECUTION.md`
 - Original partial operations: `catalog/compliance/batches/B002-ue5-script-consumers.json`, `B003-ue5-runtime-script-registration.json`, `B015-ue5-script-registration-recursion.json`
+
+**Updated probe path contract:** nine trace log paths now use \`GetPathName()\` rather than class-prefixed \`GetFullName()\`, permitting independent B013 ScriptImport hash verification by the read-only inspector documented in [UE5-SCRIPT-RUNTIME-TRACE-INSPECTION.md](UE5-SCRIPT-RUNTIME-TRACE-INSPECTION.md). Do not apply the probe to the installed engine without a disposable build and prior Launcher Verify.

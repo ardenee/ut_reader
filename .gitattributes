@@ -11,3 +11,6 @@ catalog/tests/fixtures/ue5_script_runtime_native_harness.cpp.tpl text eol=lf
 catalog/src/Infrastructure/Metadata/Uedb5BinaryReader.php text eol=lf
 catalog/bin/prepare-ue5-script-runtime-trace.php text eol=lf
 catalog/bin/verify-ue5-script-runtime-trace-preparation.php text eol=lf
+catalog/src/Infrastructure/Metadata/Uedb5Ue5ScriptRuntimeTraceInspector.php text eol=lf
+catalog/bin/inspect-ue5-script-runtime-trace.php text eol=lf
+catalog/bin/verify-ue5-script-runtime-trace-inspection.php text eol=lf

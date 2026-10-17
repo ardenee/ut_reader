@@ -105,7 +105,7 @@
                     "hash_source_object_index_reader_still_passes",
                     "hash_not_a_claim_of_live_uobject_registration"
                 ],
-                "complete_source_inventory": "All catalog/src PHP enumerated per host (PRD 563, DEV count may differ). Exactly one new explicit opt-in dynamic hasher caller Uedb5Ue5ScriptRuntimeEnumerationAudit.php and two original already-serialized package reader/resolver consumers. New importer/restore/rebuilder/SQL hash calls remain forbidden.",
+                "complete_source_inventory": "All catalog/src PHP checked: exactly two explicitly reviewed dynamic-hasher diagnostic consumers (Uedb5Ue5ScriptRuntimeEnumerationAudit.php and Uedb5Ue5ScriptRuntimeTraceInspector.php), alongside serialized import readers/resolver. No unreviewed import/restore/publisher hash generation.",
                 "source_registration_path": "AsyncLoading2.cpp FPackageObjectIndex::FromScriptPath calls in registration, optional editor package, nested public objects; FromVersePath used for Verse VNI separately"
             },
             "guarded_implementation_files": [
@@ -157,7 +157,7 @@
                 "reachable_source_branches": "All ordinary script-path and Verse-path source branches pinned, plus Unicode TChar helper, CityHash64 block lengths and high-bit mask",
                 "epic_to_unrealdb_mapping": "Uedb5Ue5ScriptImportPathHasher::fromObjectPath/fromVersePath mapped by B013-SCRIPT-IMPORT-HASH-SOURCE.md; Uedb5Ue5CityHash64 pure PHP 64-bit limb arithmetic; typed package index handled by verified B004",
                 "independent_differential": "Full pinned C++ source compiled to a disposable program, 98 path inputs / 196 two-mode hashes agree exactly including unicode and length boundaries",
-                "all_v5_consumers": "All production PHP source enumerated. Exactly one explicit opt-in source diagnostic caller of Uedb5Ue5ScriptImportPathHasher, in Uedb5Ue5ScriptRuntimeEnumerationAudit.php; original V5 ZenPackageReader and ZenDependencyResolver still consume serialized import indices unchanged. No live registry inferred.",
+                "all_v5_consumers": "Two approved opt-in diagnostic consumers calculate path hashes (runtime enumeration expected-key audit and untrusted trace-inspection validator). Uedb5ZenPackageReader and Uedb5Ue5ZenDependencyResolver still consume serialized ScriptImport object indices; no production importer rehash.",
                 "independent_reviewer": "Executable four-driver operation gate, pinned engine oracle and authentic Satisfactory file identity"
             }
         }

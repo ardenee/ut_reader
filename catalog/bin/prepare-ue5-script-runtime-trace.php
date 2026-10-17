@@ -57,25 +57,25 @@ $replace('void AddScriptObject(FStringView PackageName, FStringView Name, UObjec
     'void RemoveUnreachableScriptObjects()',
     "\t\tScriptObjects.Add(PackageGlobalImportIndex, Object->GetOutermost());\n",
     "\t\tScriptObjects.Add(PackageGlobalImportIndex, Object->GetOutermost());\n"
-    ."\t\tUE_LOGF(LogStreaming, Display, \"UEDB_RT|event=add|kind=editor_package|index=%016llX|path=%ls\", PackageGlobalImportIndex.Value(), *Object->GetOutermost()->GetFullName());\n",
+    ."\t\tUE_LOGF(LogStreaming, Display, \"UEDB_RT|event=add|kind=editor_package|index=%016llX|path=%ls\", PackageGlobalImportIndex.Value(), *Object->GetOutermost()->GetPathName());\n",
     'add_editor_package');
 $replace('void AddScriptObject(FStringView PackageName, FStringView Name, UObject* Object)',
     'void RemoveUnreachableScriptObjects()',
     "\t\tScriptObjects.Add(GlobalImportIndex, Object);\n",
     "\t\tScriptObjects.Add(GlobalImportIndex, Object);\n"
-    ."\t\tUE_LOGF(LogStreaming, Display, \"UEDB_RT|event=add|kind=initial_object|index=%016llX|path=%ls\", GlobalImportIndex.Value(), *Object->GetFullName());\n",
+    ."\t\tUE_LOGF(LogStreaming, Display, \"UEDB_RT|event=add|kind=initial_object|index=%016llX|path=%ls\", GlobalImportIndex.Value(), *Object->GetPathName());\n",
     'add_initial');
 $replace('void AddScriptObject(FStringView PackageName, FStringView Name, UObject* Object)',
     'void RemoveUnreachableScriptObjects()',
     "\t\t\t\t\tScriptObjects.Add(SubObjectGlobalImportIndex, SubObject);\n",
     "\t\t\t\t\tScriptObjects.Add(SubObjectGlobalImportIndex, SubObject);\n"
-    ."\t\t\t\t\tUE_LOGF(LogStreaming, Display, \"UEDB_RT|event=add|kind=nested_public|index=%016llX|path=%ls\", SubObjectGlobalImportIndex.Value(), *SubObject->GetFullName());\n",
+    ."\t\t\t\t\tUE_LOGF(LogStreaming, Display, \"UEDB_RT|event=add|kind=nested_public|index=%016llX|path=%ls\", SubObjectGlobalImportIndex.Value(), *SubObject->GetPathName());\n",
     'add_nested_public');
 $replace('void RemoveUnreachableScriptObjects()',
     'void Shrink()',
     "\t\t\t\tUE_LOGF(LogStreaming, Verbose, \"RemoveUnreachableScriptObjects: %ls\", *ScriptObject->GetName());\n",
     "\t\t\t\tUE_LOGF(LogStreaming, Verbose, \"RemoveUnreachableScriptObjects: %ls\", *ScriptObject->GetName());\n"
-    ."\t\t\t\tUE_LOGF(LogStreaming, Display, \"UEDB_RT|event=remove_gc|index=%016llX|path=%ls\", Entry.Key.Value(), *ScriptObject->GetFullName());\n",
+    ."\t\t\t\tUE_LOGF(LogStreaming, Display, \"UEDB_RT|event=remove_gc|index=%016llX|path=%ls\", Entry.Key.Value(), *ScriptObject->GetPathName());\n",
     'remove_gc');
 $replace('void AddScriptCellPackage(Verse::VPackage* Package)',
     'struct FAsyncPackageHeaderData',
@@ -106,30 +106,30 @@ $replace('void FindAllRuntimeScriptPackages(FRuntimeScriptPackages& OutPackages)
     '#ifndef ALT2_VERIFY_LINKERLOAD_MATCHES_IMPORTSTORE',
     "\t\t\t\tOutPackages.Script.Add(Package);\n",
     "\t\t\t\tOutPackages.Script.Add(Package);\n"
-    ."\t\t\t\tUE_LOGF(LogStreaming, Display, \"UEDB_RT|event=eligible_package|kind=script|path=%ls\", *Package->GetFullName());\n",
+    ."\t\t\t\tUE_LOGF(LogStreaming, Display, \"UEDB_RT|event=eligible_package|kind=script|path=%ls\", *Package->GetPathName());\n",
     'package_script');
 $replace('void FindAllRuntimeScriptPackages(FRuntimeScriptPackages& OutPackages)',
     '#ifndef ALT2_VERIFY_LINKERLOAD_MATCHES_IMPORTSTORE',
     "\t\t\t\tOutPackages.VerseVNI.Add(Package);\n",
     "\t\t\t\tOutPackages.VerseVNI.Add(Package);\n"
-    ."\t\t\t\tUE_LOGF(LogStreaming, Display, \"UEDB_RT|event=eligible_package|kind=verse_vni|path=%ls\", *Package->GetFullName());\n",
+    ."\t\t\t\tUE_LOGF(LogStreaming, Display, \"UEDB_RT|event=eligible_package|kind=verse_vni|path=%ls\", *Package->GetPathName());\n",
     'package_verse_vni');
 $replace('void FGlobalImportStore::FindAllScriptObjects(bool bVerifyOnly)',
     '#if ALT2_ENABLE_SCRIPT_IMPORTS_DEBUGGING',
     "\t\t\t\t\tScriptObjects.Add(PackageGlobalImportIndex, Package);\n",
     "\t\t\t\t\tScriptObjects.Add(PackageGlobalImportIndex, Package);\n"
-    ."\t\t\t\t\tUE_LOGF(LogStreaming, Display, \"UEDB_RT|event=add|kind=enumerated_editor_package|index=%016llX|path=%ls\", PackageGlobalImportIndex.Value(), *Package->GetFullName());\n",
+    ."\t\t\t\t\tUE_LOGF(LogStreaming, Display, \"UEDB_RT|event=add|kind=enumerated_editor_package|index=%016llX|path=%ls\", PackageGlobalImportIndex.Value(), *Package->GetPathName());\n",
     'add_enumerated_package');
 $replace('void FGlobalImportStore::FindAllScriptObjects(bool bVerifyOnly)',
     '#if ALT2_ENABLE_SCRIPT_IMPORTS_DEBUGGING',
     "\t\t\t\t\t\t\tScriptObjects.Add(GlobalImportIndex, Object);\n",
     "\t\t\t\t\t\t\tScriptObjects.Add(GlobalImportIndex, Object);\n"
-    ."\t\t\t\t\t\t\tUE_LOGF(LogStreaming, Display, \"UEDB_RT|event=add|kind=enumerated_public|index=%016llX|path=%ls\", GlobalImportIndex.Value(), *Object->GetFullName());\n",
+    ."\t\t\t\t\t\t\tUE_LOGF(LogStreaming, Display, \"UEDB_RT|event=add|kind=enumerated_public|index=%016llX|path=%ls\", GlobalImportIndex.Value(), *Object->GetPathName());\n",
     'add_enumerated_public');
 $replace('void FGlobalImportStore::FindAllScriptObjects(bool bVerifyOnly)',
     '#if ALT2_ENABLE_SCRIPT_IMPORTS_DEBUGGING',
     "\t\t\t\t\t\t\tcontinue;\n",
-    "\t\t\t\t\t\t\tUE_LOGF(LogStreaming, Display, \"UEDB_RT|event=excluded|reason=verse_vni_non_uht|path=%ls\", *Object->GetFullName());\n"
+    "\t\t\t\t\t\t\tUE_LOGF(LogStreaming, Display, \"UEDB_RT|event=excluded|reason=verse_vni_non_uht|path=%ls\", *Object->GetPathName());\n"
     ."\t\t\t\t\t\t\tcontinue;\n",
     'excluded_verse_vni');
 $replace('void FGlobalImportStore::RegistrationComplete()',

@@ -68,6 +68,7 @@ $tests=[
  'verify-uedb5-b015-runtime-script-enumeration-acceptance.php',
  'verify-uedb5-b015-native-source-execution.php',
  'verify-ue5-script-runtime-trace-preparation.php',
+ 'verify-ue5-script-runtime-trace-inspection.php',
  'verify-uedb5-zen-script-objects-standalone.php',
  'verify-uedb5-zen-mounted-store-context.php',
  'verify-uedb5-zen-effective-store-context.php',
