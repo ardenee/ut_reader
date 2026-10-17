@@ -1,0 +1,58 @@
+{
+    "ok":  true,
+    "purpose":  "untrusted_runtime_trace_shape_review_only",
+    "runtime_origin_attested":  false,
+    "live_engine_behavior_independently_verified":  false,
+    "original_operation_dispositions_unchanged":  true,
+    "original_operations_remaining_partial":  [
+                                                  "UE5-583-SCRIPT-003",
+                                                  "UE5-583-SCRIPT-004",
+                                                  "UE5-583-SCRIPT-005",
+                                                  "UE5-583-B015-1"
+                                              ],
+    "log_sha256":  "cd3eed15774f748038f7c996cda5ea59834a61b2fecbf3bbb52f4eb35aa4cec6",
+    "source_marker_matches_pinned_ue583":  true,
+    "registration_complete_events":  1,
+    "snapshots":  [
+                      {
+                          "source_sha_match":  true,
+                          "editor":  1,
+                          "check":  1,
+                          "debug":  1,
+                          "script_object_count":  23560
+                      }
+                  ],
+    "events_seen":  67206,
+    "events_passed":  67206,
+    "event_counts":  {
+                         "add:editor_package":  14239,
+                         "add:initial_object":  14239,
+                         "add:nested_public":  9782,
+                         "lookup":  5204,
+                         "eligible_package:script":  182,
+                         "add:enumerated_editor_package":  182,
+                         "add:enumerated_public":  23376,
+                         "registration_complete":  1,
+                         "remove_gc":  1
+                     },
+    "live_lookups_reported":  {
+                                  "1":  5199,
+                                  "0":  5
+                              },
+    "diagnostic_names_reported":  [
+
+                                  ],
+    "distinct_registered_indices_seen":  24249,
+    "distinct_verse_cell_indices_seen":  0,
+    "hash_collision_indices_reported":  0,
+    "malformed_event_count":  0,
+    "rejected_semantic_event_count":  0,
+    "errors":  [
+
+               ],
+    "manual_review_required":  [
+                                   "Verify physical binary build/hash and trace provenance independently",
+                                   "Compare observed source paths/keys and editor/noneditor build settings with original Epic source",
+                                   "Prove actual live UObject and UHT/Verse behavior before accepting any original operation"
+                               ]
+}
