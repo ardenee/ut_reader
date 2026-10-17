@@ -210,6 +210,21 @@
         }
     ],
     "next_batch": "B004",
+    "direct_editor_runtime_trace_observation": {
+        "record": "catalog/compliance/UE5-SCRIPT-RUNTIME-UNREALPAK-EVIDENCE.md",
+        "actual_engine": "Epic UE5.8.3 disposable instrumented UnrealEditor-Cmd",
+        "original_log_sha256": "CD14DEF6828F4069ED9C4EE9617DD988157127A7A8B7E439E5BB72DF221C436A",
+        "inspector_accepted_original_unmodified_log": true,
+        "events_accepted": 67201,
+        "events_rejected": 0,
+        "live_lookups": 5202,
+        "enumerated_public_objects": 23376,
+        "eligible_script_packages": 182,
+        "registration_complete_editor_check_cooked_debug": true,
+        "normal_editor_shutdown_confirmed": false,
+        "verse_vni_scriptcells_gc_removal_and_cooked_name_fallback_executed": false,
+        "scope": "Additional partial runtime evidence only; no original operation acceptance or disposition change"
+    },
     "gate_status": {
         "inventory": false,
         "contracts": false,
