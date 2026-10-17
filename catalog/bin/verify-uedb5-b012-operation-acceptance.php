@@ -10,7 +10,8 @@ foreach([
  'source'=>'verify-uedb5-b012-optional-source.php',
  'iostore'=>'verify-uedb5-ue5-zen-package.php',
  'resolver'=>'verify-uedb5-ue5-zen-dependency-resolution.php',
- 'v5'=>'verify-uedb5-zen-version-staging-contract.php'
+ 'v5'=>'verify-uedb5-zen-version-staging-contract.php',
+ 'member_boundary'=>'verify-uedb5-b012-optional-member-publication.php'
 ] as $name=>$script){
  $lines=[];$exit=127;
  exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($root.'/bin/'.$script).' 2>&1',$lines,$exit);
@@ -62,6 +63,22 @@ $check('b012_cell_and_export_provider_modes_remain_distinct',
  &&$has('resolver','zen_noneditor_cell_import_does_not_search_optional_provider_cell_exports')
  &&$has('source','b012_optional_imports_not_flattened_into_main')
  &&$has('source','b012_resolver_checks_optional_import_bundle_identity'));
+$check('b012_d030_main_vs_optional_member_identity_separate',
+ $has('member_boundary','b012_d030_pinned_epic_583_chunk0_and_chunk1_source')
+ &&$has('member_boundary','b012_d030_original_toc_still_retains_all_export_bundle_chunks')
+ &&$has('member_boundary','b012_d030_optional_still_parsed_beneath_owning_main_snapshot')
+ &&$has('member_boundary','b012_d030_production_name_selection_executes_main_only_in_sqlite'));
+$check('b012_d030_all_publishing_paths_guard_optional_chunk1',
+ $has('member_boundary','b012_d030_name_job_reads_only_main_chunks')
+ &&$has('member_boundary','b012_d030_publish_job_queue_selects_main_only')
+ &&$has('member_boundary','b012_d030_real_viewer_rejects_optional_index_before_source_io')
+ &&$has('member_boundary','b012_d030_real_publisher_rejects_optional_ready_row_before_source_io')
+ &&$has('member_boundary','b012_d030_publish_counts_exclude_optional_failed_and_ready_rows'));
+$check('b012_d030_negative_before_positive_after_with_real_toc_boundary',
+ $has('member_boundary','b012_d030_negative_before_old_name_index_would_index_optional_chunk')
+ &&$has('member_boundary','b012_d030_historical_direct_publisher_accepted_metadata_chunk1')
+ &&$has('member_boundary','b012_d030_legacy_optional_rows_preserved_not_deleted')
+ &&$has('member_boundary','b012_d030_retained_real_satisfactory_export_bundle_identity'));
 $check('b012_v5_optional_segment_header_validation',
  $has('v5','malformed_optional_segment_versioning_rejected')
  &&$has('v5','missing_persisted_cell_offsets_rejected'));

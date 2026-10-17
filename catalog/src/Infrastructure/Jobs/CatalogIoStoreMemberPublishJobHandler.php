@@ -49,7 +49,7 @@ final class CatalogIoStoreMemberPublishJobHandler implements JobHandler
             if(!hash_equals(strtolower((string)$container['utoc_sha256']),strtolower($toc->tocSha256())))
                 throw new RuntimeException('Retained TOC checksum changed.');
             $rows=$this->db->prepare('SELECT toc_index FROM ue_iostore_packages '
-                .'WHERE container_id=? AND metadata_status="ready" AND publication_status<>"published" '
+                .'WHERE container_id=? AND chunk_index=0 AND metadata_status="ready" AND publication_status<>"published" '
                 .'ORDER BY toc_index LIMIT 10');
             $rows->execute([$id]);
             $published=0;
@@ -64,7 +64,7 @@ final class CatalogIoStoreMemberPublishJobHandler implements JobHandler
                .'SUM(metadata_status="ready" AND publication_status<>"published") remaining, '
                .'SUM(metadata_status="indexed") awaiting_names, '
                .'SUM(metadata_status="failed") failed_names '
-               .'FROM ue_iostore_packages WHERE container_id=?');
+               .'FROM ue_iostore_packages WHERE container_id=? AND chunk_index=0');
             $counts->execute([$id]);$c=$counts->fetch(PDO::FETCH_ASSOC);
             $state=['stage'=>'publishing_zen_members','container_id'=>$id,
                 'total'=>(int)$c['total'],'published'=>(int)$c['published'],

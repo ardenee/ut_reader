@@ -49,7 +49,7 @@ final class CatalogIoStorePackageNameIndexer
             if($resolved===false||!str_starts_with(strtolower(str_replace(chr(92),'/',$resolved)),strtolower(str_replace(chr(92),'/',$root)).'/')
                 ||filesize($resolved)!==(int)$part['file_size'])throw new RuntimeException('IoStore partition is missing or its size changed.');
         }
-        $members=$this->db->prepare('SELECT id,toc_index,HEX(package_id) package_id FROM ue_iostore_packages WHERE container_id=? AND metadata_status="indexed" ORDER BY toc_index LIMIT '.$limit);
+        $members=$this->db->prepare('SELECT id,toc_index,HEX(package_id) package_id FROM ue_iostore_packages WHERE container_id=? AND chunk_index=0 AND metadata_status="indexed" ORDER BY toc_index LIMIT '.$limit);
         $members->execute([$containerId]);
         $pending=$members->fetchAll(PDO::FETCH_ASSOC);
         $ok=$this->db->prepare('UPDATE ue_iostore_packages SET package_name=?,name_count=?,import_count=?,export_count=?,dependency_count=?,metadata_error=NULL,metadata_status="ready" WHERE id=? AND container_id=? AND metadata_status="indexed"');
@@ -59,7 +59,8 @@ final class CatalogIoStorePackageNameIndexer
             try{
                 $idx=(int)$item['toc_index'];$packageId=(string)$item['package_id'];
                 $chunk=$toc->chunks()[$idx]??null;
-                if(!is_array($chunk)||$chunk['package_id']!==$packageId||(int)$chunk['chunk_type']!==Uedb5IoStoreTocReader::CHUNK_TYPE_EXPORT_BUNDLE_DATA) {
+                if(!is_array($chunk)||$chunk['package_id']!==$packageId||(int)$chunk['chunk_type']!==Uedb5IoStoreTocReader::CHUNK_TYPE_EXPORT_BUNDLE_DATA
+                    ||(int)$chunk['chunk_index']!==0) {
                     throw new RuntimeException('Zen index differs from verified TOC.');
                 }
                 $snapshot=Uedb5Ue5ZenIoStoreSnapshotBuilder::build($toc,$packageId,[
@@ -79,7 +80,7 @@ final class CatalogIoStorePackageNameIndexer
             $processed++;
             if($tick!==null)$tick();
         }
-        $st=$this->db->prepare('SELECT COUNT(*) total,SUM(metadata_status="indexed") remaining FROM ue_iostore_packages WHERE container_id=?');
+        $st=$this->db->prepare('SELECT COUNT(*) total,SUM(metadata_status="indexed") remaining FROM ue_iostore_packages WHERE container_id=? AND chunk_index=0');
         $st->execute([$containerId]);$counts=$st->fetch(PDO::FETCH_ASSOC);
         return ['processed'=>$processed,'failed'=>$failures,
             'remaining'=>(int)($counts['remaining']??0),'total'=>(int)($counts['total']??0)];

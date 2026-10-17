@@ -23,7 +23,7 @@ final class CatalogIoStoreMemberCatalogPublisher
     {
         if($this->db->inTransaction())throw new RuntimeException('IoStore member publisher requires its own SQL transaction.');
         $query=$this->db->prepare(
-          'SELECT m.id member_id,m.file_id,m.publication_status,m.metadata_status,m.package_name,m.name_count,m.import_count,m.export_count,HEX(m.package_id) package_id,m.logical_size,'
+          'SELECT m.id member_id,m.file_id,m.publication_status,m.metadata_status,m.package_name,m.name_count,m.import_count,m.export_count,HEX(m.package_id) package_id,m.logical_size,m.chunk_index,'
          .'c.game_id,c.utoc_sha256,c.status container_status,g.slug '
          .'FROM ue_iostore_packages m JOIN ue_iostore_containers c ON c.id=m.container_id '
          .'JOIN ue_games g ON g.id=c.game_id WHERE m.container_id=? AND m.toc_index=?'
@@ -31,13 +31,16 @@ final class CatalogIoStoreMemberCatalogPublisher
         $query->execute([$containerId,$tocIndex]);$member=$query->fetch(PDO::FETCH_ASSOC);
         if(!is_array($member)||$member['container_status']!=='ready'||$member['metadata_status']!=='ready')
             throw new RuntimeException('IoStore container and member names must be indexed before catalog publication.');
+        if((int)$member['chunk_index']!==0)
+            throw new RuntimeException('Optional IoStore export bundle cannot be published as a separate file.');
         $logicalName=(string)$member['package_name'];
         if($logicalName===''||strlen($logicalName)>255)throw new RuntimeException('IoStore package name cannot fit the current catalog identity column.');
         if(!hash_equals(strtolower((string)$member['utoc_sha256']),strtolower($toc->tocSha256())))throw new RuntimeException('IoStore source TOC differs from retained container.');
         $chunk=$toc->chunks()[$tocIndex]??null;
         $packageId=(string)$member['package_id'];
         if(!is_array($chunk)||strtoupper((string)$chunk['package_id'])!==$packageId
-           ||(int)$chunk['chunk_type']!==Uedb5IoStoreTocReader::CHUNK_TYPE_EXPORT_BUNDLE_DATA)throw new RuntimeException('IoStore TOC member identity disagrees with the index.');
+           ||(int)$chunk['chunk_type']!==Uedb5IoStoreTocReader::CHUNK_TYPE_EXPORT_BUNDLE_DATA
+           ||(int)$chunk['chunk_index']!==0)throw new RuntimeException('IoStore TOC member identity disagrees with the index.');
         $gameId=(int)$member['game_id'];
         $memberId=(int)$member['member_id'];
         $slug=(string)$member['slug'];

@@ -15,3 +15,4 @@ catalog/src/Infrastructure/Metadata/Uedb5Ue5ScriptRuntimeTraceInspector.php text
 catalog/bin/inspect-ue5-script-runtime-trace.php text eol=lf
 catalog/bin/verify-ue5-script-runtime-trace-inspection.php text eol=lf
 catalog/bin/verify-uedb5-b006-container-header-source.php text eol=lf
+catalog/bin/verify-uedb5-b012-optional-member-publication.php text eol=lf

@@ -20,6 +20,7 @@ $tests=[
  'verify-uedb5-b011-operation-acceptance.php',
  'verify-uedb5-b012-optional-source.php',
  'verify-uedb5-b012-operation-acceptance.php',
+ 'verify-uedb5-b012-optional-member-publication.php',
  'verify-uedb5-zen-version-callers.php',
  'verify-uedb5-zen-version-staging-contract.php',
  'verify-uedb5-ue5-iostore-foundation.php',

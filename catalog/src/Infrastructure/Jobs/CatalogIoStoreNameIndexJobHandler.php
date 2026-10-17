@@ -51,7 +51,7 @@ final class CatalogIoStoreNameIndexJobHandler implements JobHandler
         if($result['remaining']>0){
             $context->defer(1,$progress,false);
         }
-        $failedQuery=$this->db->prepare('SELECT COUNT(*) FROM ue_iostore_packages WHERE container_id=? AND metadata_status="failed"');
+        $failedQuery=$this->db->prepare('SELECT COUNT(*) FROM ue_iostore_packages WHERE container_id=? AND chunk_index=0 AND metadata_status="failed"');
         $failedQuery->execute([$containerId]);
         return $result+['container_id'=>$containerId,'failed_total'=>(int)$failedQuery->fetchColumn(),'status'=>'indexed'];
     }

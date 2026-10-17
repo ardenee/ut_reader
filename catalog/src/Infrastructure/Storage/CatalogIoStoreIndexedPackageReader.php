@@ -63,6 +63,7 @@ final class CatalogIoStoreIndexedPackageReader
         $memberQ->execute([$containerId,$tocIndex]);
         $member=$memberQ->fetch(PDO::FETCH_ASSOC);
         if(!is_array($member))throw new RuntimeException('IoStore member is missing.');
+        if((int)$member['chunk_index']!==0)throw new RuntimeException('Optional IoStore chunk is a segment of its owning main Zen package, not an independent package.');
         $root=realpath($this->storageRoot);
         if($root===false)throw new RuntimeException('Configured IoStore storage is missing.');
         $safePath=static function(string $relative)use($root):string {
@@ -89,7 +90,8 @@ final class CatalogIoStoreIndexedPackageReader
         }
         $chunk=$toc->chunks()[$tocIndex]??null;
         if(!is_array($chunk)||((int)$chunk['chunk_type']!==Uedb5IoStoreTocReader::CHUNK_TYPE_EXPORT_BUNDLE_DATA)
-            ||strtoupper((string)$chunk['package_id'])!==(string)$member['package_id'])throw new RuntimeException('IoStore member does not match indexed TOC.');
+            ||strtoupper((string)$chunk['package_id'])!==(string)$member['package_id']
+            ||(int)$chunk['chunk_index']!==0)throw new RuntimeException('IoStore member does not match indexed TOC.');
         $snapshot=Uedb5Ue5ZenIoStoreSnapshotBuilder::build($toc,(string)$member['package_id'],[
             'id'=>(int)($member['file_id']?:$member['id']),
             'game_id'=>(int)$container['game_id'],
