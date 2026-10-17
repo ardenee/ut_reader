@@ -64,6 +64,8 @@ $tests=[
  'verify-uedb5-b003-script-lookup-boundary-acceptance.php',
  'verify-uedb5-b013-script-hash-native-source.php',
  'verify-uedb5-b013-operation-acceptance.php',
+ 'verify-uedb5-b015-runtime-script-enumeration-source.php',
+ 'verify-uedb5-b015-runtime-script-enumeration-acceptance.php',
  'verify-uedb5-zen-script-objects-standalone.php',
  'verify-uedb5-zen-mounted-store-context.php',
  'verify-uedb5-zen-effective-store-context.php',

@@ -23,10 +23,41 @@
                 "sha256": "d2eb027f822dd93df23d5b5807aaf9fa3911de9b185a4d61adb9cbc79d3435ff"
             },
             "tests": [
-                "catalog/bin/verify-uedb5-ue5-zen-dependency-resolution.php"
+                "catalog/bin/verify-uedb5-b015-runtime-script-enumeration-source.php",
+                "catalog/bin/verify-uedb5-b015-runtime-script-enumeration-acceptance.php",
+                "catalog/bin/verify-uedb5-b003-script-registration-source.php",
+                "catalog/bin/verify-uedb5-b013-operation-acceptance.php",
+                "catalog/bin/verify-uedb5-b002-script-import-runtime-boundary.php",
+                "catalog/bin/verify-uedb5-b003-script-lookup-boundary-acceptance.php"
             ],
             "disposition": "partial",
-            "reason": "Newly discovered during independent inventory reconciliation. Exact branching, operational applicability and parity tests not yet proven."
+            "reason": "Epic compiled-in script/Verse VNI enumeration, editor package registration, RF_Public nested objects, Verse UHT-only filter, noneditor DO_CHECK verify-only, shipping no-enumeration and ScriptCells separation source-audited with 23 branch/source fixture assertions and 14-check five-driver boundary acceptance. Opt-in expected identity audit from caller-supplied observations added. Actual live UPackage/UObject registry not executed; operation remains partial.",
+            "source_boundary_evidence": {
+                "record": "catalog/compliance/B015-RUNTIME-SCRIPT-ENUMERATION-SOURCE.md",
+                "test_driver": "catalog/bin/verify-uedb5-b015-runtime-script-enumeration-source.php",
+                "accepted_source_fixture_checks": 23,
+                "operation_test_driver": "catalog/bin/verify-uedb5-b015-runtime-script-enumeration-acceptance.php",
+                "accepted_operation_checks": 14,
+                "drivers": 5,
+                "branch_trace": [
+                    "FindAllRuntimeScriptPackages: UPackage only, compiled-in flag, case-sensitive script prefix or Verse VNI substring",
+                    "FindAllScriptObjects: nested GetObjectsWithOuter + RF_Public and UHT only for Verse VNI",
+                    "WITH_EDITOR: package/object ScriptObjects.Add; #elif DO_CHECK: missing-registration diagnostics only",
+                    "Noneditor with no DO_CHECK does not run enumeration from RegistrationComplete",
+                    "VM ScriptCells and compiled Verse exports use separate global maps"
+                ],
+                "runtime_recording_absent": true,
+                "real_uobject_registry_authoritative": false,
+                "source_derived_expected_key_audit": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ScriptRuntimeEnumerationAudit.php",
+                "expected_key_audit_sha256": "a253426dfb74a2812ce3363c6aaecee2de67a271a8ad789c41a0ee9ffc877dd3",
+                "remaining_acceptance": "Actual compiled Epic editor/noneditor run capturing registered and missing UObjects, public nested/UHT choices, build macros and global ScriptObjects/ScriptCells registries"
+            },
+            "guarded_implementation_files": [
+                {
+                    "path": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ScriptRuntimeEnumerationAudit.php",
+                    "sha256": "a253426dfb74a2812ce3363c6aaecee2de67a271a8ad789c41a0ee9ffc877dd3"
+                }
+            ]
         },
         {
             "id": "UE5-583-B015-2",

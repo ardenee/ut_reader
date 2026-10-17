@@ -51,7 +51,9 @@ foreach(new RecursiveIteratorIterator(new RecursiveDirectoryIterator($root.'/cat
  if(str_contains($src,"'script_import_hash'"))$serialized[]=$rel;
 }
 $check('hash_exhaustive_production_php_source_inventory',
- $files>=500&&$dynamic===[]
+ $files>=500
+ &&$dynamic===['catalog/src/Infrastructure/Metadata/Uedb5Ue5ScriptRuntimeEnumerationAudit.php']
+ &&in_array('catalog/src/Infrastructure/Metadata/Uedb5Ue5ScriptRuntimeEnumerationAudit.php',$serialized,true)
  &&in_array('catalog/src/Infrastructure/Metadata/Uedb5ZenPackageReader.php',$serialized,true)
  &&in_array('catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenDependencyResolver.php',$serialized,true));
 $check('hash_source_object_index_reader_still_passes',

@@ -6,3 +6,4 @@ catalog/src/Infrastructure/Metadata/Uedb5SqlProjectionContract.php text eol=lf
 catalog/src/Infrastructure/Metadata/Uedb5ZenScriptImportDiagnosticPreview.php text eol=lf
 catalog/src/Infrastructure/Metadata/Uedb5Ue5CityHash64.php text eol=lf
 catalog/src/Infrastructure/Metadata/Uedb5Ue5ScriptImportPathHasher.php text eol=lf
+catalog/src/Infrastructure/Metadata/Uedb5Ue5ScriptRuntimeEnumerationAudit.php text eol=lf
