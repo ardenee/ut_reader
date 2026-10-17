@@ -33,19 +33,22 @@
                 "catalog/bin/verify-uedb5-zen-mounted-store-context.php",
                 "catalog/bin/verify-uedb5-zen-context-options-standalone.php",
                 "catalog/bin/verify-uedb5-b006-container-header-source.php",
-                "catalog/bin/verify-uedb5-ue5-iostore-foundation.php"
+                "catalog/bin/verify-uedb5-ue5-iostore-foundation.php",
+                "catalog/bin/verify-uedb5-b006-container-retry-integrity.php"
             ],
             "related_differences": [
                 "UE5-D007",
                 "UE5-D008",
-                "UE5-D016"
+                "UE5-D016",
+                "UE5-D031"
             ],
             "disposition": "verified",
-            "reason": "B006 verified within source-defined mounted file-store policy: D008 first-mounted physical entry, D016 NAME_None refill, order/sequence, redirects/localization and backend priority/consumer checks; no whole-session mount authority inferred. Independent D007 IoContainerHeader load contract is now attached as a distinct version/serialization prerequisite with complete reader/snapshot caller inventory, without changing the B006 mount-precedence disposition.",
+            "reason": "B006 verified within source-defined mounted file-store policy: D008 first-mounted physical entry, D016 NAME_None refill, order/sequence, redirects/localization and backend priority/consumer checks; no whole-session mount authority inferred. Independent D007 IoContainerHeader load contract is now attached as a distinct version/serialization prerequisite with complete reader/snapshot caller inventory, without changing the B006 mount-precedence disposition. D031 adds a separate durable-retry index integrity prerequisite; Epic live SQL retry and MySQL concurrency are not claimed.",
             "correction_commits": [
                 "801ab77d",
                 "7a8708fb95f66b900e09ea70a89dc216bc96860a",
-                "f847f4ea"
+                "f847f4ea",
+                "1bb60bd9"
             ],
             "source_contract_evidence": {
                 "test_driver": "catalog/bin/verify-uedb5-b006-mounted-source.php",
@@ -103,6 +106,10 @@
                 {
                     "path": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenIoStoreSnapshotBuilder.php",
                     "sha256": "dccb03419fb8e64e143f49d452f02538b2bb98a03d4316e1c4de0d43950ccdc9"
+                },
+                {
+                    "path": "catalog/src/Infrastructure/Storage/CatalogIoStoreContainerIndexer.php",
+                    "sha256": "2e038e0778f63a074123d1952391d0c812620cbc04801fc1850eb7923be4b37f"
                 }
             ],
             "independent_inventory_evidence": {
@@ -131,15 +138,19 @@
                     "b006_driver_container_header_passes",
                     "b006_d007_container_source_is_separate_prerequisite_not_mount_precedence",
                     "b006_d007_real_reader_and_snapshot_consumer_guarded",
-                    "b006_d007_full_byte_fixture_preserves_epic_header_load_contract"
+                    "b006_d007_full_byte_fixture_preserves_epic_header_load_contract",
+                    "b006_driver_retry_passes",
+                    "b006_retry_retained_real_toc_identical_integrity",
+                    "b006_retry_negative_count_gate_and_exact_identity_guards",
+                    "b006_retry_header_inconsistency_and_repaired_repeat"
                 ],
-                "result": "Seven passing drivers and 16 mandatory assertions, including separately pinned D007 header source/parser/caller obligation (25 checks and 33-byte-fixture checks). Existing D008/D016 mount precedence unaffected. Live mount and independent cooked future header parity not inferred."
+                "result": "Seven passing drivers and 16 mandatory assertions, including separately pinned D007 header source/parser/caller obligation (25 checks and 33-byte-fixture checks). Existing D008/D016 mount precedence unaffected. Live mount and independent cooked future header parity not inferred. D031 eighth driver covers 21 tests: historic count-only acceptance, actual 27240-member retained TOC and 9 corrupt header/member variants rejected by current production indexer on SQLite."
             },
             "acceptance_evidence": {
                 "reachable_source_branches": "Pinned FilePackageStore mount stable sorting, package ID map, explicit redirect versus localized lookup, NAME_None fallback, WITH_EDITOR conditional and backend status behavior. Separate pinned IoContainerHeader.cpp/Header.h source contract: v3 lower minimum, v4 inline soft references, v5+ offset/size branch.",
                 "epic_to_unrealdb_mapping": "Source-to-method/caller mapping and production options in catalog/compliance/B006-FILE-STORE-SOURCE.md. Separate D007 documentation in B006-CONTAINER-HEADER-SOURCE.md.",
-                "independent_differential": "Independent source scanner and synthesized patch/base mount fixtures; D016 two red-before green-after branches; D008 real retained two-file Satisfactory header/SQL evidence separately documented. D007 four historical red-before/green-after fixture branches, 33 full-byte checks and retained real Satisfactory v5 header evidence (synthetic v6 only).",
-                "all_v5_consumers": "Game dependency pass per-game context, effective file-backend and multi-backend arbitration, PDO physical provider selector; source scanner guards all three direct builder call sites. Direct header parse in Uedb5Ue5ZenIoStoreSnapshotBuilder and all four observed publisher/reimport/reader/name-indexer entry points are explicitly scanned.",
+                "independent_differential": "Independent source scanner and synthesized patch/base mount fixtures; D016 two red-before green-after branches; D008 real retained two-file Satisfactory header/SQL evidence separately documented. D007 four historical red-before/green-after fixture branches, 33 full-byte checks and retained real Satisfactory v5 header evidence (synthetic v6 only). D031 historical count-only false acceptance versus real TOC row identity test; 21 checks on disposable SQLite.",
+                "all_v5_consumers": "Game dependency pass per-game context, effective file-backend and multi-backend arbitration, PDO physical provider selector; source scanner guards all three direct builder call sites. Direct header parse in Uedb5Ue5ZenIoStoreSnapshotBuilder and all four observed publisher/reimport/reader/name-indexer entry points are explicitly scanned. D031 protects indexed physical package member identity used by name-index, publish and inspect workflows.",
                 "independent_reviewer": "Separate source-derived oracle and six-driver acceptance. Not C++ runtime execution or external human review."
             },
             "additional_sources": [
@@ -203,6 +214,43 @@
                 "source_defined_version_6_branch_fixture_synthetic": true,
                 "actual_live_engine_mount_execution": false,
                 "original_operation_count_unchanged": 18
+            },
+            "retry_index_integrity_evidence": {
+                "difference": "UE5-D031",
+                "review": "catalog/compliance/B006-CONTAINER-RETRY-INTEGRITY.md",
+                "code_revision": "1bb60bd9",
+                "production_file": "catalog/src/Infrastructure/Storage/CatalogIoStoreContainerIndexer.php",
+                "production_sha256": "2e038e0778f63a074123d1952391d0c812620cbc04801fc1850eb7923be4b37f",
+                "test_driver": "catalog/bin/verify-uedb5-b006-container-retry-integrity.php",
+                "test_sha256": "bb87755d87123889ec26c12a731b15960f15c8d17c3e2d608fc1240113a5be50",
+                "expected_checks": [
+                    "iostore_retry_historical_count_only_false_acceptance",
+                    "iostore_retry_current_source_checks_complete_container_header",
+                    "iostore_retry_current_source_locks_and_streams_member_identity",
+                    "iostore_retry_current_source_requires_explicit_repair_not_silent_rewrite",
+                    "iostore_retry_sqlite_available",
+                    "iostore_retry_real_satisfactory_toc_first_index_indexed",
+                    "iostore_retry_identical_toc_and_stored_identity_accepted",
+                    "iostore_retry_real_toc_stored_all_main_chunks",
+                    "iostore_retry_historical_count_gate_would_accept_swapped_package_id",
+                    "iostore_retry_corrupt_package_id_requires_explicit_repair",
+                    "iostore_retry_corrupt_chunk_index_requires_explicit_repair",
+                    "iostore_retry_corrupt_logical_size_requires_explicit_repair",
+                    "iostore_retry_corrupt_toc_position_requires_explicit_repair",
+                    "iostore_retry_corrupt_header_version_requires_explicit_repair",
+                    "iostore_retry_corrupt_container_flags_requires_explicit_repair",
+                    "iostore_retry_corrupt_container_id_requires_explicit_repair",
+                    "iostore_retry_corrupt_persisted_package_count_requires_explicit_repair",
+                    "iostore_retry_unexpected_extra_chunk_requires_explicit_repair",
+                    "iostore_retry_missing_chunk_with_count_mismatch_requires_explicit_repair",
+                    "iostore_retry_exact_restored_identity_accepted_after_all_negative_cases",
+                    "iostore_retry_disposable_fixture_does_not_mutate_real_toc"
+                ],
+                "historical_negative_revision": "a880dc20",
+                "real_satisfactory_toc_chunks": 27240,
+                "actual_indexer_tested_in_sqlite": true,
+                "production_mysql_concurrency_executed": false,
+                "production_db_modified": false
             }
         }
     ],
@@ -219,6 +267,7 @@
         "record": "catalog/compliance/B006-FILE-STORE-SOURCE.md",
         "consumer_inventory": "Uedb5ZenMountedStoreContextBuilder, EffectivePackageStoreContextBuilder, Uedb5GameDependencyPassService, physical provider selector and backend arbitrator",
         "scope": "Source-defined mounted file-store priority, data mapping, redirects/localization, not proof of live full-runtime completeness",
-        "header_precondition": "Separate IoContainerHeader.cpp -> header parser -> snapshot builder source obligation D007; not mounted file-store sorting/priority semantics."
+        "header_precondition": "Separate IoContainerHeader.cpp -> header parser -> snapshot builder source obligation D007; not mounted file-store sorting/priority semantics.",
+        "retry_integrity": "catalog/compliance/B006-CONTAINER-RETRY-INTEGRITY.md"
     }
 }

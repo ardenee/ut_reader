@@ -39,6 +39,7 @@ $tests=[
  'verify-uedb5-b006-mounted-source.php',
  'verify-uedb5-b006-operation-acceptance.php',
  'verify-uedb5-b006-container-header-source.php',
+ 'verify-uedb5-b006-container-retry-integrity.php',
  'verify-uedb5-b008-import-redirect-source.php',
  'verify-uedb5-b008-operation-acceptance.php',
  'verify-uedb5-b007-public-export-source.php',

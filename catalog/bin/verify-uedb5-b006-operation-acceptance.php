@@ -10,6 +10,7 @@ $tests=[
  'backend'=>'verify-uedb5-zen-backend-arbitration.php',
  'selector'=>'verify-uedb5-physical-provider-selector.php',
  'container_header'=>'verify-uedb5-b006-container-header-source.php',
+ 'retry'=>'verify-uedb5-b006-container-retry-integrity.php',
 ];
 $reports=[];$drivers=[];$checks=[];$fails=[];
 $check=static function(string $name,bool $pass)use(&$checks,&$fails):void{
@@ -66,6 +67,25 @@ $check('b006_d007_full_byte_fixture_preserves_epic_header_load_contract',
  &&$has('container_header','d007_fixture_serial_offset_not_stream_cursor_gate')
  &&$has('container_header','d007_fixture_negative_default_serial_size')
  &&$has('container_header','d007_fixture_trailing_extension_accepted'));
+$check('b006_retry_retained_real_toc_identical_integrity',
+ $has('retry','iostore_retry_real_satisfactory_toc_first_index_indexed')
+ &&$has('retry','iostore_retry_identical_toc_and_stored_identity_accepted')
+ &&$has('retry','iostore_retry_real_toc_stored_all_main_chunks'));
+$check('b006_retry_negative_count_gate_and_exact_identity_guards',
+ $has('retry','iostore_retry_historical_count_only_false_acceptance')
+ &&$has('retry','iostore_retry_historical_count_gate_would_accept_swapped_package_id')
+ &&$has('retry','iostore_retry_corrupt_package_id_requires_explicit_repair')
+ &&$has('retry','iostore_retry_corrupt_chunk_index_requires_explicit_repair')
+ &&$has('retry','iostore_retry_corrupt_logical_size_requires_explicit_repair')
+ &&$has('retry','iostore_retry_corrupt_toc_position_requires_explicit_repair')
+ &&$has('retry','iostore_retry_unexpected_extra_chunk_requires_explicit_repair'));
+$check('b006_retry_header_inconsistency_and_repaired_repeat',
+ $has('retry','iostore_retry_corrupt_header_version_requires_explicit_repair')
+ &&$has('retry','iostore_retry_corrupt_container_flags_requires_explicit_repair')
+ &&$has('retry','iostore_retry_corrupt_container_id_requires_explicit_repair')
+ &&$has('retry','iostore_retry_corrupt_persisted_package_count_requires_explicit_repair')
+ &&$has('retry','iostore_retry_missing_chunk_with_count_mismatch_requires_explicit_repair')
+ &&$has('retry','iostore_retry_exact_restored_identity_accepted_after_all_negative_cases'));
 $check('b006_live_physical_selector_consumer',
  $has('selector','zen_mounted_file_backend_does_not_override_higher_pending_backend')
  &&$has('selector','zen_mounted_file_entries_without_authority_stay_ambiguous')

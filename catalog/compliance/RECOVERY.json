@@ -451,6 +451,14 @@
       "rationale": "Epic treats ExportBundleData index1 as optional segment of main index0; UnrealDB name, publish and viewer paths could promote it to a separate Zen file with mismatched main V5. c555f1c4 confines standalone identities to chunk0, preserves raw optional TOC/parent metadata, proves historical negatives and 27 corrected checks; no independently cooked optional sample.",
       "state": "fixed_regression_verified",
       "audit_escape": "none"
+    },
+    {
+      "id": "UE5-D031",
+      "kind": "mapped",
+      "operations": ["UE5-583-FILE-STORE-001"],
+      "rationale": "Count-only IoStore index retries accepted changed package IDs, chunk indexes and lengths. 1bb60bd9 rechecks every stored identity and container header under transactional row locking against retained TOC. 21 independent tests use 27240 real Satisfactory TOC entries in isolated SQLite. Actual MySQL concurrency not established.",
+      "state": "fixed_regression_verified",
+      "audit_escape": "none"
     }
   ],
   "coverage_gaps": [
