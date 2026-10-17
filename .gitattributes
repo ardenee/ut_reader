@@ -8,3 +8,4 @@ catalog/src/Infrastructure/Metadata/Uedb5Ue5CityHash64.php text eol=lf
 catalog/src/Infrastructure/Metadata/Uedb5Ue5ScriptImportPathHasher.php text eol=lf
 catalog/src/Infrastructure/Metadata/Uedb5Ue5ScriptRuntimeEnumerationAudit.php text eol=lf
 catalog/tests/fixtures/ue5_script_runtime_native_harness.cpp.tpl text eol=lf
+catalog/src/Infrastructure/Metadata/Uedb5BinaryReader.php text eol=lf

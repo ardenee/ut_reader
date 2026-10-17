@@ -136,7 +136,7 @@
                 },
                 {
                     "path": "catalog/src/Infrastructure/Metadata/Uedb5BinaryReader.php",
-                    "sha256": "e4404bfec9d8dcc20a49bd705a95994e78665e79dc46dbe7be5265ca36754230"
+                    "sha256": "2e737bfa4e6e1ea056e626cbcab1cd3ca7da67adf6537a0b36a321a758892169"
                 }
             ],
             "test_results": {

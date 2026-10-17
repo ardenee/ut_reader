@@ -30,7 +30,15 @@ $check('b0151_native_template_sha256_pinned',
 $check('b0151_native_test_template_available',str_contains($template,'__EPIC_FIND_PACKAGES__')
  &&str_contains($template,'__EPIC_FIND_OBJECTS__')
  &&str_contains($template,'__EPIC_REGISTRATION_COMPLETE__'));
-$compiler='C:/msys64/ucrt64/bin/g++.exe';
+$compiler='';
+foreach (array_filter([
+    getenv('UNREALDB_NATIVE_GXX') ?: null,
+    'C:/msys64/ucrt64/bin/g++.exe',
+    'D:/msys64/ucrt64/bin/g++.exe',
+    'Z:/msys64/ucrt64/bin/g++.exe'
+]) as $candidate) {
+    if (is_file($candidate)) { $compiler=$candidate; break; }
+}
 $check('b0151_native_cpp_compiler_available',is_file($compiler));
 $temp=sys_get_temp_dir().'/uedb5-b0151-epic-native-'.bin2hex(random_bytes(5));
 $files=[];$error=null;
@@ -74,7 +82,8 @@ try{
  $srcPath=$temp.'/test.cpp';
  file_put_contents($srcPath,$template);$files[]=$srcPath;
  $originalPath=getenv('PATH');
- putenv('PATH=C:/msys64/ucrt64/bin;C:/msys64/usr/bin;'.$originalPath);
+ $bin=str_replace('\\','/',dirname($compiler));
+ putenv('PATH='.$bin.';'.preg_replace('~/ucrt64/bin$~','/usr/bin',$bin).';'.$originalPath);
  foreach([
   'editor'=>[1,1,1,5,0],
   'check_only'=>[0,1,1,0,3],

@@ -46,7 +46,15 @@ $check('hash_epic_to_lower_only_ascii_not_unicode_fold',
 $check('hash_epic_city_is_64bit_not_other_hash',
  str_contains($source['city_cpp'],'uint64 CityHash64(const char *s, uint32 len)')
  &&str_contains($source['city_header'],'CityHash128to64('));
-$compiler='C:/msys64/ucrt64/bin/g++.exe';
+$compiler='';
+foreach (array_filter([
+    getenv('UNREALDB_NATIVE_GXX') ?: null,
+    'C:/msys64/ucrt64/bin/g++.exe',
+    'D:/msys64/ucrt64/bin/g++.exe',
+    'Z:/msys64/ucrt64/bin/g++.exe'
+]) as $candidate) {
+    if (is_file($candidate)) { $compiler=$candidate; break; }
+}
 $check('hash_native_cpp_compiler_available',is_file($compiler));
 $temp=sys_get_temp_dir().'/uedb5-b013-cityhash-'.bin2hex(random_bytes(5));
 $created=[];
@@ -115,7 +123,8 @@ static void hash(const std::string& utf8){
 int main(){std::string s;while(std::getline(std::cin,s))hash(s);}
 CPP);
  $envPath=(string)getenv('PATH');
- putenv('PATH=C:/msys64/ucrt64/bin;C:/msys64/usr/bin;'.$envPath);
+ $bin=str_replace('\\','/',dirname($compiler));
+ putenv('PATH='.$bin.';'.preg_replace('~/ucrt64/bin$~','/usr/bin',$bin).';'.$envPath);
  $command=[$compiler,'-std=c++17','-O2','-I',$temp,$temp.'/oracle.cpp',
   $temp.'/PinnedCityHash.cpp','-o',$temp.'/oracle.exe'];
  $proc=proc_open($command,[0=>['pipe','r'],1=>['pipe','w'],2=>['pipe','w']],$pipes);
