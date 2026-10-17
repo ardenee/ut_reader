@@ -3,3 +3,4 @@
 catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenDependencyResolver.php text eol=lf
 catalog/src/Infrastructure/Metadata/Uedb5DependencyProjectionBuilder.php text eol=lf
 catalog/src/Infrastructure/Metadata/Uedb5SqlProjectionContract.php text eol=lf
+catalog/src/Infrastructure/Metadata/Uedb5ZenScriptImportDiagnosticPreview.php text eol=lf
