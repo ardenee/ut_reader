@@ -10,7 +10,8 @@ foreach([
  'registration'=>'verify-uedb5-b003-script-registration-source.php',
  'hash'=>'verify-uedb5-b013-operation-acceptance.php',
  'lookup'=>'verify-uedb5-b002-script-import-runtime-boundary.php',
- 'diagnostic'=>'verify-uedb5-b003-script-lookup-boundary-acceptance.php'
+ 'diagnostic'=>'verify-uedb5-b003-script-lookup-boundary-acceptance.php',
+ 'native_source'=>'verify-uedb5-b015-native-source-execution.php'
 ] as $key=>$driver){
  $lines=[];$code=127;
  exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($root.'/bin/'.$driver).' 2>&1',$lines,$code);
@@ -47,6 +48,20 @@ $check('b0151_no_fabricated_live_provider_or_registration',
  &&($results['enumeration']['external_runtime_observations_supplied']??true)===false);
 $check('b0151_errors_do_not_hide_invalid_user_runtime_observation',
  $has('enumeration','b0151_invalid_external_runtime_observations_fail_closed'));
+$check('b0151_actual_epic_cpp_functions_executed_for_editor_check_shipping',
+ $has('native_source','b0151_native_editor_epic_branches_executed')
+ &&$has('native_source','b0151_native_check_only_epic_branches_executed')
+ &&$has('native_source','b0151_native_shipping_epic_branches_executed')
+ &&$has('native_source','b0151_native_check_no_debug_epic_branches_executed'));
+$check('b0151_actual_epic_script_registration_findref_gc_and_getimportname_extracted',
+ $has('native_source','b0151_native_exact_function___EPIC_FIND_SCRIPT_IMPORT___extracted')
+ &&$has('native_source','b0151_native_exact_function___EPIC_ADD_SCRIPT_OBJECT___extracted')
+ &&$has('native_source','b0151_native_exact_function___EPIC_REMOVE_UNREACHABLE___extracted')
+ &&$has('native_source','b0151_native_exact_function___EPIC_GET_IMPORT_NAME___extracted'));
+$check('b0151_native_source_doubles_not_real_ue5_loader',
+ ($results['native_source']['native_source_function_bodies_unmodified']??false)===true
+ &&($results['native_source']['actual_unreal_engine_executed']??true)===false
+ &&($results['native_source']['runtime_evidence_accepted']??true)===false);
 $check('b0151_original_sibling_operations_remain_separate',
  ($results['registration']['actual_epic_uobject_registry_executed']??true)===false
  &&($results['hash']['live_epic_registry_executed']??true)===false

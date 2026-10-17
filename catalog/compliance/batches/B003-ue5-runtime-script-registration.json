@@ -33,7 +33,8 @@
                 "catalog/bin/verify-uedb5-b003-script-registration-source.php",
                 "catalog/bin/verify-uedb5-b003-script-hash-sql-projection.php",
                 "catalog/bin/verify-uedb5-b003-script-hash-mysql-isolated.php",
-                "catalog/bin/verify-uedb5-b003-script-registration-boundary-acceptance.php"
+                "catalog/bin/verify-uedb5-b003-script-registration-boundary-acceptance.php",
+                "catalog/bin/verify-uedb5-b015-native-source-execution.php"
             ],
             "disposition": "partial",
             "reason": "Pinned Epic source covers Finished-only registration, WITH_EDITOR package identity, public nested objects, compiled-in/Verse VNI branches, live FindRef and GC cleanup. UE5-D027 SQL ScriptImport hash omission fixed and independently proven with historical red/green, authentic cooked hash, SQLite and session-temporary real MySQL. Actual Epic live UObject map and events were not executed, so SCRIPT-004 remains partial.",
@@ -61,7 +62,9 @@
                 "correction_difference": "UE5-D027",
                 "script_identity_sql_regression": "catalog/bin/verify-uedb5-b003-script-hash-sql-projection.php",
                 "isolated_mysql_roundtrip": "catalog/bin/verify-uedb5-b003-script-hash-mysql-isolated.php",
-                "boundary_acceptance": "catalog/bin/verify-uedb5-b003-script-registration-boundary-acceptance.php"
+                "boundary_acceptance": "catalog/bin/verify-uedb5-b003-script-registration-boundary-acceptance.php",
+                "executable_source_substitute": "catalog/bin/verify-uedb5-b015-native-source-execution.php",
+                "executable_source_substitute_is_not_live_engine": true
             }
         },
         {
@@ -90,7 +93,8 @@
             "tests": [
                 "catalog/bin/verify-uedb5-zen-script-objects-standalone.php",
                 "catalog/bin/verify-uedb5-b003-script-diagnostic-path-source.php",
-                "catalog/bin/verify-uedb5-b003-script-lookup-boundary-acceptance.php"
+                "catalog/bin/verify-uedb5-b003-script-lookup-boundary-acceptance.php",
+                "catalog/bin/verify-uedb5-b015-native-source-execution.php"
             ],
             "disposition": "partial",
             "reason": "Epic uses live ScriptObjects.FindRef first, GetImportName falls back to an optional compiled-in PreCDO cooked diagnostic path only on null; RegistrationComplete trims live indices but retains outers for missing cooked entries. UnrealDB previously decoded cooked names/outer links without a source-shaped diagnostic path/trim preview (D028). Opt-in offline preview fixed and tested on authentic Satisfactory 54,968 entries; no actual live UE5 registry/flags/GC execution, so original operation stays partial.",
@@ -115,7 +119,9 @@
                 "diagnostic_preview_sha256": "9faf0b096c8f355ba3a5f48f174299ab4007c81c6ed1ab09aeef9c5728c50e62",
                 "operation_acceptance": "catalog/bin/verify-uedb5-b003-script-lookup-boundary-acceptance.php",
                 "actual_epic_live_registry_executed": false,
-                "remaining": "Authoritative live registry and GetImportName fallback behavior in an actually running Epic loader with registration/debug flags"
+                "remaining": "Authoritative live registry and GetImportName fallback behavior in an actually running Epic loader with registration/debug flags",
+                "executable_source_substitute": "catalog/bin/verify-uedb5-b015-native-source-execution.php",
+                "executable_source_substitute_is_not_live_engine": true
             },
             "guarded_implementation_files": [
                 {

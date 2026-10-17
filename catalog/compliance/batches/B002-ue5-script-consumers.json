@@ -191,7 +191,8 @@
                 "sha256": "d2eb027f822dd93df23d5b5807aaf9fa3911de9b185a4d61adb9cbc79d3435ff"
             },
             "tests": [
-                "catalog/bin/verify-uedb5-ue5-zen-dependency-resolution.php"
+                "catalog/bin/verify-uedb5-ue5-zen-dependency-resolution.php",
+                "catalog/bin/verify-uedb5-b015-native-source-execution.php"
             ],
             "disposition": "partial",
             "reason": "Source FindScriptImportObject uses live ScriptObjects.FindRef and GetImportName is only diagnostic fallback. Offline remains unresolved with no provider; D027 previously discarded the serialized script hash from SQL dependency projections, fixed as typed 62-bit key kind 3 and verified on historical, authentic, SQLite and isolated real MySQL. Actual live runtime registry remains unverified.",
@@ -203,7 +204,9 @@
                 "sql_source_identity_difference": "UE5-D027",
                 "sql_fixed_revision": "a1338232cf078677a8d62814009e100f1b9e3f00",
                 "sql_regression": "catalog/bin/verify-uedb5-b003-script-hash-sql-projection.php",
-                "sql_mysql": "catalog/bin/verify-uedb5-b003-script-hash-mysql-isolated.php"
+                "sql_mysql": "catalog/bin/verify-uedb5-b003-script-hash-mysql-isolated.php",
+                "executable_source_substitute": "catalog/bin/verify-uedb5-b015-native-source-execution.php",
+                "executable_source_substitute_is_not_live_engine": true
             },
             "related_differences": [
                 "UE5-D027"
