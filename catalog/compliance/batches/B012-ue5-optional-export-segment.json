@@ -28,15 +28,18 @@
                 "catalog/bin/verify-uedb5-b012-optional-source.php",
                 "catalog/bin/verify-uedb5-b012-operation-acceptance.php",
                 "catalog/bin/verify-uedb5-ue5-zen-package.php",
-                "catalog/bin/verify-uedb5-zen-version-staging-contract.php"
+                "catalog/bin/verify-uedb5-zen-version-staging-contract.php",
+                "catalog/bin/verify-uedb5-b012-optional-member-publication.php"
             ],
             "disposition": "verified",
-            "reason": "Entire original B012 optional export-segment metadata/consumer operation verified under pinned Epic 5.8.3 source. D015 main-first public hash match fixed; 27 source oracle and 12 acceptance assertions; independent main/optional imported IDs; missing chunk rejection; editor/noneditor/unknown cases; V5 and dependency outcomes. Live editor runtime state not inferred.",
+            "reason": "Entire original B012 optional export-segment metadata/consumer operation verified under pinned Epic 5.8.3 source. D015 main-first public hash match fixed; 27 source oracle and 12 acceptance assertions; independent main/optional imported IDs; missing chunk rejection; editor/noneditor/unknown cases; V5 and dependency outcomes. Live editor runtime state not inferred. D030 fixes optional chunk1 published/inspected as an independent main package by main-only durable name, publish and viewer gates; real optional cooked parity not claimed.",
             "related_differences": [
-                "UE5-D015"
+                "UE5-D015",
+                "UE5-D030"
             ],
             "correction_commits": [
-                "27788226c68ae3a7179d3646a9405fd351d069a0"
+                "27788226c68ae3a7179d3646a9405fd351d069a0",
+                "c555f1c4"
             ],
             "source_contract_evidence": {
                 "test_driver": "catalog/bin/verify-uedb5-b012-optional-source.php",
@@ -98,6 +101,26 @@
                 {
                     "path": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenIoStoreSnapshotBuilder.php",
                     "sha256": "dccb03419fb8e64e143f49d452f02538b2bb98a03d4316e1c4de0d43950ccdc9"
+                },
+                {
+                    "path": "catalog/src/Infrastructure/Storage/CatalogIoStorePackageNameIndexer.php",
+                    "sha256": "7e3c37a42f53f9dbfac5d88f3319a885b87b5e864e9d5babc4d820d21663a1c1"
+                },
+                {
+                    "path": "catalog/src/Infrastructure/Jobs/CatalogIoStoreNameIndexJobHandler.php",
+                    "sha256": "edb1333bccaff87697f73419d48337d075883a8fac5a6f3625e46beeb6ac49d8"
+                },
+                {
+                    "path": "catalog/src/Infrastructure/Jobs/CatalogIoStoreMemberPublishJobHandler.php",
+                    "sha256": "3f526c52f1099bf291bf200c26067a6a3c2d47e88d37ac0407e378fe942a08cd"
+                },
+                {
+                    "path": "catalog/src/Infrastructure/Import/CatalogIoStoreMemberCatalogPublisher.php",
+                    "sha256": "6b3eba19a0eff7273c4a17d341d08ae6cb41656707ca25276d5f1e44087d350d"
+                },
+                {
+                    "path": "catalog/src/Infrastructure/Storage/CatalogIoStoreIndexedPackageReader.php",
+                    "sha256": "3bca1aaf71014b507f97c155f464134296707ed8f5ffc3847da16703c3345d45"
                 }
             ],
             "independent_inventory_evidence": {
@@ -122,16 +145,71 @@
                     "b012_optional_chunk_missing_rejected_and_main_retained",
                     "b012_runtime_editor_unknown_resolution_contract",
                     "b012_cell_and_export_provider_modes_remain_distinct",
-                    "b012_v5_optional_segment_header_validation"
+                    "b012_v5_optional_segment_header_validation",
+                    "b012_driver_member_boundary_passes",
+                    "b012_d030_main_vs_optional_member_identity_separate",
+                    "b012_d030_all_publishing_paths_guard_optional_chunk1",
+                    "b012_d030_negative_before_positive_after_with_real_toc_boundary"
                 ],
-                "result": "Source-pinned 27 assertions, synthetic real-chunk IoStore with distinct provider IDs, missing-chunk rejection, V5 persistence and real resolver; 12 required acceptance assertions rerun by formal verifier. Cross-segment duplicate public hash failed before D015 fix and passes after."
+                "result": "Source-pinned 27 assertions, synthetic real-chunk IoStore with distinct provider IDs, missing-chunk rejection, V5 persistence and real resolver; 12 required acceptance assertions rerun by formal verifier. Cross-segment duplicate public hash failed before D015 fix and passes after. D030 adds fifth member-boundary driver with 27 pinned source/historical/SQLite and real retained TOC assertions; 16/16 original acceptance. Independent cooked optional fixture absent."
             },
             "acceptance_evidence": {
-                "reachable_source_branches": "Pinned AsyncLoading2.cpp main/optional store, editor/runtime compile guards, separate imports/bundles/reads, chunk index 1, export archive branch, optional hash lookup after main, cross-segment offset.",
-                "epic_to_unrealdb_mapping": "catalog/compliance/B012-OPTIONAL-EXPORT-SEGMENT-SOURCE.md: main/optional reader, IoStore snapshot builder, independent V5 sections, dependency resolver and production option-guarded outcome reporting.",
-                "independent_differential": "Source-pinned scanner and four independent drivers; regression main+optional duplicate hash failed before 27788226; mutated synthetic IoStore fixture proves different main/optional provider ID mappings and absent chunk rejection; V5 roundtrip.",
-                "all_v5_consumers": "Direct reader and builder source inventory plus real dependency resolver optional import/provider/exports/cell paths and Uedb5MigrationValidator optional V5 layout checks.",
+                "reachable_source_branches": "Pinned AsyncLoading2.cpp main/optional store, editor/runtime compile guards, separate imports/bundles/reads, chunk index 1, export archive branch, optional hash lookup after main, cross-segment offset. D030 preserves main chunk0 versus optional chunk1 package identity for all catalog lifecycle routes.",
+                "epic_to_unrealdb_mapping": "catalog/compliance/B012-OPTIONAL-EXPORT-SEGMENT-SOURCE.md: main/optional reader, IoStore snapshot builder, independent V5 sections, dependency resolver and production option-guarded outcome reporting. See B012-OPTIONAL-MEMBER-PUBLICATION-SOURCE.md for five production callers.",
+                "independent_differential": "Source-pinned scanner and four independent drivers; regression main+optional duplicate hash failed before 27788226; mutated synthetic IoStore fixture proves different main/optional provider ID mappings and absent chunk rejection; V5 roundtrip. D030 four historical failing-before checks, disposable SQLite and real Satisfactory TOC (27240 main, 0 optional), no real cooked optional chunk.",
+                "all_v5_consumers": "Direct reader and builder source inventory plus real dependency resolver optional import/provider/exports/cell paths and Uedb5MigrationValidator optional V5 layout checks. D030 name indexer, name and publish durable jobs, direct member publisher and indexed read/extract.",
                 "independent_reviewer": "Source-derived executable oracle and distinct operation-level acceptance driver. This is not external human review or C++ editor execution."
+            },
+            "optional_member_publication_evidence": {
+                "difference": "UE5-D030",
+                "source_review": "catalog/compliance/B012-OPTIONAL-MEMBER-PUBLICATION-SOURCE.md",
+                "driver": "catalog/bin/verify-uedb5-b012-optional-member-publication.php",
+                "driver_sha256": "16c4b137f3d3b75336d055398351978764251d71dcb488dfcf4ae24c2dee5616",
+                "expected_checks": [
+                    "b012_d030_pinned_epic_583_chunk0_and_chunk1_source",
+                    "b012_d030_original_toc_still_retains_all_export_bundle_chunks",
+                    "b012_d030_optional_still_parsed_beneath_owning_main_snapshot",
+                    "b012_d030_name_job_reads_only_main_chunks",
+                    "b012_d030_name_indexer_rechecks_toc_segment_identity",
+                    "b012_d030_name_index_totals_ignore_legacy_optional_rows",
+                    "b012_d030_name_index_failed_counter_ignores_optional_rows",
+                    "b012_d030_publish_job_queue_selects_main_only",
+                    "b012_d030_publish_job_counts_only_main_rows",
+                    "b012_d030_direct_publisher_reads_and_rejects_optional_member",
+                    "b012_d030_direct_publisher_rechecks_toc_chunk0",
+                    "b012_d030_direct_inspection_rejects_optional_member",
+                    "b012_d030_parser_and_snapshot_code_unchanged",
+                    "b012_d030_pdo_sqlite_available",
+                    "b012_d030_historical_main_chunk_name_gate_was_absent",
+                    "b012_d030_historical_publish_queue_failed_to_exclude_optional",
+                    "b012_d030_historical_direct_publisher_accepted_metadata_chunk1",
+                    "b012_d030_historical_member_reader_lacked_chunk1_rejection",
+                    "b012_d030_production_name_selection_executes_main_only_in_sqlite",
+                    "b012_d030_production_name_count_excludes_optional_chunks",
+                    "b012_d030_negative_before_old_name_index_would_index_optional_chunk",
+                    "b012_d030_publish_queue_keeps_only_main_and_legacy_optional_does_not_block",
+                    "b012_d030_publish_counts_exclude_optional_failed_and_ready_rows",
+                    "b012_d030_real_viewer_rejects_optional_index_before_source_io",
+                    "b012_d030_real_publisher_rejects_optional_ready_row_before_source_io",
+                    "b012_d030_legacy_optional_rows_preserved_not_deleted",
+                    "b012_d030_retained_real_satisfactory_export_bundle_identity"
+                ],
+                "historical_before_revision": "6cf82b0d",
+                "code_correction_revision": "c555f1c4",
+                "source_scope": "Chunk0 main only for standalone catalog identities, chunk1 retained in raw TOC and parent V5 optional section",
+                "real_satisfactory_main_chunk_count": 27240,
+                "real_satisfactory_optional_chunk_count": 0,
+                "synthetic_optional_chunk_acceptance": true,
+                "independent_cooked_optional_chunk_acceptance": false,
+                "existing_raw_optional_rows_preserved": true,
+                "production_metadata_rewrite_performed": false,
+                "source_to_consumers": [
+                    "catalog/src/Infrastructure/Storage/CatalogIoStorePackageNameIndexer.php",
+                    "catalog/src/Infrastructure/Jobs/CatalogIoStoreNameIndexJobHandler.php",
+                    "catalog/src/Infrastructure/Jobs/CatalogIoStoreMemberPublishJobHandler.php",
+                    "catalog/src/Infrastructure/Import/CatalogIoStoreMemberCatalogPublisher.php",
+                    "catalog/src/Infrastructure/Storage/CatalogIoStoreIndexedPackageReader.php"
+                ]
             }
         }
     ],
@@ -150,6 +228,7 @@
         "exclusions": [
             "live WITH_EDITOR flag and editor-only optional chunk replacement authority",
             "unrelated UObject export payload execution and B007/B016 public hash/cell collisions"
-        ]
+        ],
+        "optional_member_consumers": "catalog/compliance/B012-OPTIONAL-MEMBER-PUBLICATION-SOURCE.md"
     }
 }

@@ -21,7 +21,7 @@ second competing audit system is introduced.
   editor branch model, real V5 selector/rebuilder and isolated temporary MySQL.
   B004, B009 and B010 now have complete source-defined, operation-level
   executable acceptance. **7 original evidence gates remain open.** Full application/engine compliance remains unverified.
-* D001-D029: twenty-nine known differences linked to original operations or
+* D001-D030: thirty known differences linked to original operations or
   explicitly categorized as cross-cutting or previously uncovered behavior.
   D010/D011 are now marked fixed and regression-verified. Original B009 and
   B010 now pass source-contract, implementation, caller, downstream V5 and
@@ -159,3 +159,5 @@ or blanket source scan is authorized by this baseline.
 **Outstanding real-engine capture:** \`catalog/compliance/UE5-SCRIPT-RUNTIME-TRACE-PREPARATION.md\` provides a pinned opt-in source probe and 16-check disposable Git patch verifier for the four partial SCRIPT-003/004/005/B015-1 operations. This is trace *preparation*, not actual runtime evidence; there is an uninstrumented UE5.8.3 Launcher editor, but its Engine/Content repair/verification is pending after an unintended resave commandlet. No actual instrumented runtime trace or additional verified operation exists.
 
 **Trace inspection and installation condition (17 Oct 2026):** A separate Launcher UE5.8.3 binary on DEV contains the exact pinned \`AsyncLoading2.cpp\` source, but a mistaken \`ResavePackages -help\` commandlet was stopped after confirmed asset saves. The 757 changed-timestamp Engine/Content files have verified post-incident snapshot copies; original installation integrity is unverified pending Epic Launcher **Verify**. A new 25-check read-only trace inspector validates source-hash-index mapping and rejects the genuine but uninstrumented Editor log (0 probe events); it does not assert live-object registration or close any of the original four partial operations. See [UE5-SCRIPT-RUNTIME-TRACE-INSPECTION.md](UE5-SCRIPT-RUNTIME-TRACE-INSPECTION.md).
+
+D030 remediation: B012-OPTIONAL-MEMBER-PUBLICATION-SOURCE.md documents a genuine main-chunk0 versus optional-chunk1 publish identity defect, correction c555f1c4 and 27 passing negative-before/positive-after/SQLite/retained-TOC checks. The existing B012 accepts 16 assertions over five drivers. All raw optional TOC rows remain; future cooked optional parity remains open.
