@@ -15,13 +15,13 @@ second competing audit system is introduced.
   reconciled. UE4.27.2 classic and UE5.8.3 classic/IoStore format targets
   are listed separately because the seven-game registry is not a complete
   list of supported format readers.
-* UE5 formal batch manifests: **15 containing 18 operations; 13 verified (B001, B002/SCRIPT-002, B004, B005, B006, B007, B008, B009, B010, B011, B012, B015-2, B016), 5 partial**.
+* UE5 formal batch manifests: **15 containing 18 operations; 14 verified (B001, B002/SCRIPT-002, B004, B005, B006, B007, B008, B009, B010, B011, B012, B013/SCRIPT-HASH-001, B015-2, B016), 4 partial**.
   Baseline was 33 formal open evidence gates. B005 now has exhaustive scoped
   source/inventory/implementation acceptance, including the pinned hybrid
   editor branch model, real V5 selector/rebuilder and isolated temporary MySQL.
   B004, B009 and B010 now have complete source-defined, operation-level
-  executable acceptance. **9 original evidence gates remain open.** Full application/engine compliance remains unverified.
-* D001-D028: twenty-eight known differences linked to original operations or
+  executable acceptance. **7 original evidence gates remain open.** Full application/engine compliance remains unverified.
+* D001-D029: twenty-nine known differences linked to original operations or
   explicitly categorized as cross-cutting or previously uncovered behavior.
   D010/D011 are now marked fixed and regression-verified. Original B009 and
   B010 now pass source-contract, implementation, caller, downstream V5 and
@@ -68,7 +68,7 @@ second competing audit system is introduced.
 | 14 | UE5-583-SCRIPT-003 | **PARTIAL:** Epic live ScriptObjects.FindRef vs cooked diagnostics; offline unverified resolution remains conservative, D027 now retains 62-bit script hash as kind-3 SQL key without fake provider; live lookup unverified. |
 | 15 | UE5-583-SCRIPT-004 | **PARTIAL:** pinned Epic NRP_Finished, WITH_EDITOR package identity, public nested objects and compiled-in/Verse VNI branches; offline ScriptImport SQL hash loss D027 fixed with historical/real MySQL tests; actual live UObject registry remains unverified. |
 | 16 | UE5-583-SCRIPT-005 | **PARTIAL:** source-pinned live FindRef vs optional cooked debug GetImportName; D028 diagnostic-only path and trim preview implemented, authentic 54,968-record source regression and four-driver acceptance; actual live runtime behavior remains unverified. |
-| 17 | UE5-583-SCRIPT-HASH-001 | TCHAR path normalization, CityHash64 and hash bit mask |
+| 17 | UE5-583-SCRIPT-HASH-001 | **VERIFIED:** pinned Epic CityHash.cpp and TChar ASCII-lower rules; 98 independently compiled native object/Verse hash vectors (196 exact comparisons), Unicode/UTF-16LE/UTF-8/mask, authentic GetRecipes + ObjectRedirector constants, full PHP consumer inventory. No live registration claimed. |
 | 18 | UE5-583-B015-1 | Script/Verse VNI enumeration, editor/runtime registration branches |
 
 The order is a dependency-driven *work queue*, not a claim that these

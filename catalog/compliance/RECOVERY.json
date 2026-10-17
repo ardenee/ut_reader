@@ -433,6 +433,16 @@
         "rationale": "Epic UE5.8.3 AsyncLoading2.cpp GetImportName returns live UObject name when FindRef succeeds, otherwise optionally cooked diagnostic GetPathName. The cooked debug map is trimmed against live ScriptObjects while retaining outer ancestors of missing entries, rendering paths with dot/colon/question separators. UnrealDB cooked reader retained names/outer indices but lacked a diagnostic-only path or trim preview. f3c960bb adds source-shaped explicit offline preview, tested against 54,968 authentic Satisfactory entries and synthetic trim/outer/cycle cases. No running UE5 registry or fallback selection is claimed; original SCRIPT-005 remains partial.",
         "state": "evidence_partial",
         "audit_escape": "none"
+    },
+    {
+        "id": "UE5-D029",
+        "kind": "mapped",
+        "operations": [
+            "UE5-583-SCRIPT-HASH-001"
+        ],
+        "rationale": "Epic UE5.8.3 AsyncLoading2.cpp hashes script paths with ASCII-only TChar::ToLower, dot/colon slash normalization, UTF16LE TCHAR CityHash64, and 62-bit mask; Verse paths hash unchanged UTF8. UnrealDB previously consumed serialized script_import_hash but lacked a callable independent source-equivalent path generator/native arithmetic oracle. Added pure PHP CityHash64 and typed path hasher; original Epic CityHash.cpp compiled as disposable native test oracle; 98 Unicode/ASCII/length vectors in both modes, real Satisfactory GetRecipes and ObjectRedirector hashes, and 13 independent acceptance assertions pass. No serialized package hashes are silently recalculated; no live script registry claim.",
+        "state": "fixed_regression_verified",
+        "audit_escape": "none"
     }
   ],
   "coverage_gaps": [

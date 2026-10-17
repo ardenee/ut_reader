@@ -1,42 +1,179 @@
 {
-  "schema": 1,
-  "batch": "B013",
-  "engine": "UE5",
-  "profile": "UE5.8.3",
-  "status": "partial",
-  "inventory_a": "script import constructor call path",
-  "inventory_b": "script path hashing field semantics",
-  "complete_inventory": false,
-  "operations": [
-    {
-      "id": "UE5-583-SCRIPT-HASH-001",
-      "summary": "Script import hash normalization, CityHash64 and upper type-bit mask",
-      "source": {
-        "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
-        "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9",
-        "symbols": [
-          "FPackageObjectIndex::GenerateImportHashFromObjectPath",
-          "FullImportPath",
-          "CityHash64"
-        ]
-      },
-      "implementation": {
-        "path": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenDependencyResolver.php",
-        "sha256": "d2eb027f822dd93df23d5b5807aaf9fa3911de9b185a4d61adb9cbc79d3435ff"
-      },
-      "tests": [
-        "catalog/bin/verify-uedb5-ue5-zen-dependency-resolution.php"
-      ],
-      "disposition": "partial",
-      "reason": "Epic normalizes . and : to /, lowercases TCHARs, applies CityHash64 over TCHAR bytes, and clears two high bits. Current offline resolver consumes serialized script_import_hash; no claim of source-equivalent independent path hashing. Need native/source differential fixtures before implementing."
+    "schema": 1,
+    "batch": "B013",
+    "engine": "UE5",
+    "profile": "UE5.8.3",
+    "status": "verified",
+    "inventory_a": "script import constructor call path",
+    "inventory_b": "script path hashing field semantics",
+    "complete_inventory": true,
+    "operations": [
+        {
+            "id": "UE5-583-SCRIPT-HASH-001",
+            "summary": "Script import hash normalization, CityHash64 and upper type-bit mask",
+            "source": {
+                "path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+                "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9",
+                "symbols": [
+                    "FPackageObjectIndex::GenerateImportHashFromObjectPath",
+                    "FullImportPath",
+                    "CityHash64"
+                ]
+            },
+            "implementation": {
+                "path": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ScriptImportPathHasher.php",
+                "sha256": "3da4caacb857fd8baf6be0762f3d71a32762f3c82f2db4ea6a63548a16d31c4b"
+            },
+            "tests": [
+                "catalog/bin/verify-uedb5-b013-script-hash-native-source.php",
+                "catalog/bin/verify-uedb5-b013-operation-acceptance.php",
+                "catalog/bin/verify-uedb5-b004-operation-acceptance.php",
+                "catalog/bin/verify-uedb5-b003-script-hash-sql-projection.php",
+                "catalog/bin/verify-uedb5-b003-script-registration-source.php"
+            ],
+            "disposition": "verified",
+            "reason": "Native Epic CityHash.cpp oracle across 98 vectors in both ordinary UTF16 TCHAR and Verse UTF8 modes, 4 pinned Epic C++ source files, source-specific ASCII-only TChar lowering, 62-bit mask, actual ObjectRedirector and Satisfactory GetRecipes identities, real consumer inventory, B004 type and B003 SQL contract preserved. No live UE object/registration claims.",
+            "status": "verified",
+            "related_differences": [
+                "UE5-D029"
+            ],
+            "correction_commits": [
+                "f8f6ea3f"
+            ],
+            "additional_sources": [
+                {
+                    "path": "Engine/Source/Runtime/Core/Private/Hash/CityHash.cpp",
+                    "sha256": "035965ffa9875cc2ad93694a44a45cd8bdc042101e4b84d355b22d089f070d62",
+                    "symbols": [
+                        "CityHash64(const char *s, uint32 len)",
+                        "HashLen33to64",
+                        "WeakHashLen32WithSeeds"
+                    ]
+                },
+                {
+                    "path": "Engine/Source/Runtime/Core/Public/Hash/CityHash.h",
+                    "sha256": "591ef28603dea447d857d5eccea607386f0b4a9b9df283160a5d375cdc6648be",
+                    "symbols": [
+                        "CityHash128to64",
+                        "CityHash64(const char"
+                    ]
+                },
+                {
+                    "path": "Engine/Source/Runtime/Core/Public/Misc/Char.h",
+                    "sha256": "b0a3b64758caddf5151a0396fdb042476bba4d9c9d1eaaeda94318b4b069a0e1",
+                    "symbols": [
+                        "struct TChar",
+                        "static CharType ToLower(CharType Char)"
+                    ]
+                }
+            ],
+            "source_contract_evidence": {
+                "test_driver": "catalog/bin/verify-uedb5-b013-script-hash-native-source.php",
+                "expected_checks": [
+                    "hash_epic_script_cpp_pinned",
+                    "hash_epic_city_cpp_pinned",
+                    "hash_epic_city_header_pinned",
+                    "hash_epic_tchar_header_pinned",
+                    "hash_epic_object_normalizes_dots_colons_lowercase_tchar",
+                    "hash_epic_verse_bytes_distinct_from_script_unicode",
+                    "hash_epic_mask_clears_upper_two_bits_both_branches",
+                    "hash_epic_to_lower_only_ascii_not_unicode_fold",
+                    "hash_epic_city_is_64bit_not_other_hash",
+                    "hash_native_cpp_compiler_available",
+                    "hash_native_oracle_compiled_from_exact_epic_cityhash_cpp",
+                    "hash_native_oracle_exact_count_and_zero_exit",
+                    "hash_native_ascii_unicode_all_cityhash_lengths_match",
+                    "hash_real_getrecipes_native_and_cooked_identity",
+                    "hash_original_objectredirector_native_and_resolver_constant",
+                    "hash_script_normalizes_but_verse_does_not",
+                    "hash_non_ascii_accent_casing_preserved_as_source_tchar",
+                    "hash_invalid_utf8_tchar_conversion_fails_closed",
+                    "hash_invalid_utf8_verse_raw_bytes_hashed_without_assumptions"
+                ],
+                "source_branches": [
+                    "Ordinary FPackageObjectIndex FromScriptPath per-TCHAR dot/colon to slash and ASCII-only TChar::ToLower",
+                    "Windows TCHAR UTF16LE bytes, CityHash64 exact pinned CityHash.cpp algorithm all 0..>256 byte blocks",
+                    "Verse FUtf8StringView raw UTF8 byte view no lowercasing or separator replacement",
+                    "Both input modes mask top two uint64 bits, producing exact 62-bit script import identity",
+                    "ObjectRedirector fixed index and actual Satisfactory GetRecipes identity independently match Epic oracle"
+                ]
+            },
+            "source_reachability_evidence": {
+                "test_driver": "catalog/bin/verify-uedb5-b013-operation-acceptance.php",
+                "expected_checks": [
+                    "hash_exhaustive_production_php_source_inventory",
+                    "hash_source_object_index_reader_still_passes",
+                    "hash_not_a_claim_of_live_uobject_registration"
+                ],
+                "complete_source_inventory": "Every catalog/src PHP file on host enumerated; PRD observed 562. Direct generator callers zero; two existing consumers use already serialized script_import_hash, no unexpected rehash.",
+                "source_registration_path": "AsyncLoading2.cpp FPackageObjectIndex::FromScriptPath calls in registration, optional editor package, nested public objects; FromVersePath used for Verse VNI separately"
+            },
+            "guarded_implementation_files": [
+                {
+                    "path": "catalog/src/Infrastructure/Metadata/Uedb5Ue5CityHash64.php",
+                    "sha256": "e24521d1e1cc1406c139863d392314e7736aa3d7aacba561b39f774afc6b21fb"
+                },
+                {
+                    "path": "catalog/src/Infrastructure/Metadata/Uedb5ZenPackageReader.php",
+                    "sha256": "6b79d5a8465d01bbe784f06aaf07f0033e9dc84300d6761b135eb29c74b871da"
+                },
+                {
+                    "path": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenDependencyResolver.php",
+                    "sha256": "d2eb027f822dd93df23d5b5807aaf9fa3911de9b185a4d61adb9cbc79d3435ff"
+                },
+                {
+                    "path": "catalog/src/Infrastructure/Metadata/Uedb5SqlProjectionContract.php",
+                    "sha256": "a06845204b5a007a218474e9c840822acbab4aff3dbdf001a504590d8bb3df89"
+                }
+            ],
+            "test_results": {
+                "test_driver": "catalog/bin/verify-uedb5-b013-operation-acceptance.php",
+                "expected_checks": [
+                    "hash_driver_native_passes",
+                    "hash_driver_index_passes",
+                    "hash_driver_sql_passes",
+                    "hash_driver_registration_passes",
+                    "hash_actual_epic_cityhash_98_native_vectors",
+                    "hash_tchar_unicode_ascii_only_lower_verified",
+                    "hash_utf16_vs_verse_utf8_and_mask_verified",
+                    "hash_objectredirector_and_authentic_getrecipes_verified",
+                    "hash_script_sql_key_kind_distinct_from_public_export",
+                    "hash_invalid_utf8_and_verse_raw_handled",
+                    "hash_exhaustive_production_php_source_inventory",
+                    "hash_source_object_index_reader_still_passes",
+                    "hash_not_a_claim_of_live_uobject_registration"
+                ],
+                "result": "4 drivers, 13 acceptance assertions, native Epic C++ CityHash compiled from exact SHA-pinned source and 98 independent two-mode path vectors (196 matches), authentic Satisfactory cooked identity, 562 PHP files inventoried"
+            },
+            "independent_inventory_evidence": {
+                "source_review": "catalog/compliance/B013-SCRIPT-IMPORT-HASH-SOURCE.md",
+                "independent_source_oracle": "catalog/bin/verify-uedb5-b013-script-hash-native-source.php",
+                "operation_acceptance": "catalog/bin/verify-uedb5-b013-operation-acceptance.php",
+                "original_commit": "5d3b0357",
+                "native_oracle": "Compile original Epic CityHash.cpp in isolated temp with minimal shims, 98 both-mode cases; no Epic binary checked in",
+                "scope_boundary": "Hash arithmetic and 62-bit script/Verse path encoding only; actual global import store live UObject registration/lookup remains in separately partial SCRIPT-003/004/005 and B015-1"
+            },
+            "acceptance_evidence": {
+                "reachable_source_branches": "All ordinary script-path and Verse-path source branches pinned, plus Unicode TChar helper, CityHash64 block lengths and high-bit mask",
+                "epic_to_unrealdb_mapping": "Uedb5Ue5ScriptImportPathHasher::fromObjectPath/fromVersePath mapped by B013-SCRIPT-IMPORT-HASH-SOURCE.md; Uedb5Ue5CityHash64 pure PHP 64-bit limb arithmetic; typed package index handled by verified B004",
+                "independent_differential": "Full pinned C++ source compiled to a disposable program, 98 path inputs / 196 two-mode hashes agree exactly including unicode and length boundaries",
+                "all_v5_consumers": "Exhaustively searched every production PHP source file. Existing V5 ZenPackageReader and ZenDependencyResolver consume exact serialized object indices; no caller recomputes a serialized import, new hasher is opt-in. B003 SQL ScriptImport kind-3 identity preserved.",
+                "independent_reviewer": "Executable four-driver operation gate, pinned engine oracle and authentic Satisfactory file identity"
+            }
+        }
+    ],
+    "next_batch": "B014",
+    "gate_status": {
+        "inventory": true,
+        "contracts": true,
+        "implementation": true,
+        "independent_verification": true,
+        "change_integrity": true
+    },
+    "reconciliation_evidence": {
+        "source": "Four pinned Epic source files, source branch inventory and UTF16 TCHAR/UTF8 Verse hash masks",
+        "unrealdb": "Two opt-in portable PHP classes, complete serialized source consumer inventory, B004 and B003 linked acceptance",
+        "empirical": "Native compiled CityHash.cpp C++ oracle 98 vectors 196 outputs; genuine Satisfactory script hash, ObjectRedirector source hash",
+        "limitations": "No engine live UObject registry or runtime registration was executed"
     }
-  ],
-  "next_batch": "B014",
-  "gate_status": {
-    "inventory": false,
-    "contracts": false,
-    "implementation": false,
-    "independent_verification": false,
-    "change_integrity": true
-  }
 }
