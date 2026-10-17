@@ -43,13 +43,31 @@ final class CatalogIoStoreContainerIndexer
         }
         $this->db->beginTransaction();
         try {
-            $q=$this->db->prepare('SELECT id,name,container_id,package_count FROM ue_iostore_containers WHERE game_id=? AND utoc_sha256=? FOR UPDATE');
+            $q=$this->db->prepare('SELECT id,container_id,toc_version,container_flags,package_count FROM ue_iostore_containers WHERE game_id=? AND utoc_sha256=? FOR UPDATE');
             $q->execute([$gameId,$sha]);$found=$q->fetch(PDO::FETCH_ASSOC);
             if ($found!==false) {
-                $count=$this->db->prepare('SELECT COUNT(*) FROM ue_iostore_packages WHERE container_id=?');
-                $count->execute([(int)$found['id']]);
-                if ((int)$count->fetchColumn()!==count($packages)) {
-                    throw new RuntimeException('Existing IoStore index is incomplete; explicit repair required.');
+                if ((string)$found['container_id']!==(string)$head['container_id']
+                    ||(int)$found['toc_version']!==(int)$head['version']
+                    ||(int)$found['container_flags']!==(int)$head['container_flags']
+                    ||(int)$found['package_count']!==count($packages)) {
+                    throw new RuntimeException('Existing IoStore container identity differs from the retained TOC; explicit repair required.');
+                }
+                // A matching SHA and row count do not prove that the stored
+                // per-chunk identities still match that TOC. Lock and compare
+                // every persisted member before accepting a retry.
+                $members=$this->db->prepare('SELECT toc_index,package_id,chunk_index,logical_size FROM ue_iostore_packages WHERE container_id=? ORDER BY toc_index FOR UPDATE');
+                $members->execute([(int)$found['id']]);
+                foreach ($packages as [$idx,$id,$chunkIdx,$bytes]) {
+                    $stored=$members->fetch(PDO::FETCH_ASSOC);
+                    if (!is_array($stored)||(int)$stored['toc_index']!==$idx
+                        ||!hash_equals($id,(string)$stored['package_id'])
+                        ||(int)$stored['chunk_index']!==$chunkIdx
+                        ||(int)$stored['logical_size']!==$bytes) {
+                        throw new RuntimeException('Existing IoStore member identity differs from the retained TOC; explicit repair required.');
+                    }
+                }
+                if ($members->fetch(PDO::FETCH_ASSOC)!==false) {
+                    throw new RuntimeException('Existing IoStore index has additional members; explicit repair required.');
                 }
                 $this->db->commit();
                 return ['container_id'=>(int)$found['id'],'package_count'=>count($packages),'status'=>'existing'];

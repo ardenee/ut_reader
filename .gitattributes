@@ -21,3 +21,5 @@ catalog/src/Infrastructure/Jobs/CatalogIoStoreNameIndexJobHandler.php text eol=l
 catalog/src/Infrastructure/Jobs/CatalogIoStoreMemberPublishJobHandler.php text eol=lf
 catalog/src/Infrastructure/Import/CatalogIoStoreMemberCatalogPublisher.php text eol=lf
 catalog/src/Infrastructure/Storage/CatalogIoStoreIndexedPackageReader.php text eol=lf
+catalog/src/Infrastructure/Storage/CatalogIoStoreContainerIndexer.php text eol=lf
+catalog/bin/verify-uedb5-b006-container-retry-integrity.php text eol=lf
