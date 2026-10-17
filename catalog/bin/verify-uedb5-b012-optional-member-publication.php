@@ -74,7 +74,8 @@ foreach([
  'catalog/src/Infrastructure/Storage/CatalogIoStoreIndexedPackageReader.php'
 ] as $rel){
  $output=[];$status=127;
- exec('git -C '.escapeshellarg($root).' show '.escapeshellarg('6cf82b0d:'.$rel).' 2>&1',$output,$status);
+ exec('git -c '.escapeshellarg('safe.directory='.str_replace('\\','/',$root))
+     .' -C '.escapeshellarg($root).' show '.escapeshellarg('6cf82b0d:'.$rel).' 2>&1',$output,$status);
  $historical[$rel]=$status===0?implode("\n",$output):'';
 }
 $check('b012_d030_historical_main_chunk_name_gate_was_absent',

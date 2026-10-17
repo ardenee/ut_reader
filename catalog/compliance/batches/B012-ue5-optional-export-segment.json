@@ -164,7 +164,7 @@
                 "difference": "UE5-D030",
                 "source_review": "catalog/compliance/B012-OPTIONAL-MEMBER-PUBLICATION-SOURCE.md",
                 "driver": "catalog/bin/verify-uedb5-b012-optional-member-publication.php",
-                "driver_sha256": "16c4b137f3d3b75336d055398351978764251d71dcb488dfcf4ae24c2dee5616",
+                "driver_sha256": "e3eb2656978504018f1a0d3ca1a56ca191a30ac29978f71177748eae1ee3c015",
                 "expected_checks": [
                     "b012_d030_pinned_epic_583_chunk0_and_chunk1_source",
                     "b012_d030_original_toc_still_retains_all_export_bundle_chunks",
