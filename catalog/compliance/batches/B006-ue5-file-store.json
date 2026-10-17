@@ -31,17 +31,21 @@
                 "catalog/bin/verify-uedb5-b006-mounted-source.php",
                 "catalog/bin/verify-uedb5-b006-operation-acceptance.php",
                 "catalog/bin/verify-uedb5-zen-mounted-store-context.php",
-                "catalog/bin/verify-uedb5-zen-context-options-standalone.php"
+                "catalog/bin/verify-uedb5-zen-context-options-standalone.php",
+                "catalog/bin/verify-uedb5-b006-container-header-source.php",
+                "catalog/bin/verify-uedb5-ue5-iostore-foundation.php"
             ],
             "related_differences": [
+                "UE5-D007",
                 "UE5-D008",
                 "UE5-D016"
             ],
             "disposition": "verified",
-            "reason": "B006 verified within source-defined mounted file-store policy: D008 first-mounted physical entry, D016 NAME_None refill, order/sequence, redirects/localization and backend priority/consumer checks; no whole-session mount authority inferred.",
+            "reason": "B006 verified within source-defined mounted file-store policy: D008 first-mounted physical entry, D016 NAME_None refill, order/sequence, redirects/localization and backend priority/consumer checks; no whole-session mount authority inferred. Independent D007 IoContainerHeader load contract is now attached as a distinct version/serialization prerequisite with complete reader/snapshot caller inventory, without changing the B006 mount-precedence disposition.",
             "correction_commits": [
                 "801ab77d",
-                "7a8708fb95f66b900e09ea70a89dc216bc96860a"
+                "7a8708fb95f66b900e09ea70a89dc216bc96860a",
+                "f847f4ea"
             ],
             "source_contract_evidence": {
                 "test_driver": "catalog/bin/verify-uedb5-b006-mounted-source.php",
@@ -91,6 +95,14 @@
                 {
                     "path": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
                     "sha256": "fa8bd1531e4a5a83fc1a67719be63fd5120bd1ebe0e4af78fc0d92f8ecd0724d"
+                },
+                {
+                    "path": "catalog/src/Infrastructure/Metadata/Uedb5IoStoreContainerHeaderReader.php",
+                    "sha256": "1cc24525c53ed5e50817f981cf0ae2dc1607ba0b54ba2afb9b301bd27361278a"
+                },
+                {
+                    "path": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenIoStoreSnapshotBuilder.php",
+                    "sha256": "dccb03419fb8e64e143f49d452f02538b2bb98a03d4316e1c4de0d43950ccdc9"
                 }
             ],
             "independent_inventory_evidence": {
@@ -98,7 +110,8 @@
                 "scope_boundary": "Only observed mounted container IDs/order/sequence/package entries; does not invent runtime-authoritative culture or editor state.",
                 "pinned_independent_source_oracle": "catalog/bin/verify-uedb5-b006-mounted-source.php",
                 "consumer_tests": "catalog/bin/verify-uedb5-physical-provider-selector.php",
-                "end_to_end_acceptance": "catalog/bin/verify-uedb5-b006-operation-acceptance.php"
+                "end_to_end_acceptance": "catalog/bin/verify-uedb5-b006-operation-acceptance.php",
+                "container_header_precondition": "catalog/compliance/B006-CONTAINER-HEADER-SOURCE.md"
             },
             "test_results": {
                 "test_driver": "catalog/bin/verify-uedb5-b006-operation-acceptance.php",
@@ -114,16 +127,82 @@
                     "b006_mount_and_evidenced_physical_selection",
                     "b006_cross_backend_priority_and_consumer_callers",
                     "b006_authority_and_game_isolation",
-                    "b006_live_physical_selector_consumer"
+                    "b006_live_physical_selector_consumer",
+                    "b006_driver_container_header_passes",
+                    "b006_d007_container_source_is_separate_prerequisite_not_mount_precedence",
+                    "b006_d007_real_reader_and_snapshot_consumer_guarded",
+                    "b006_d007_full_byte_fixture_preserves_epic_header_load_contract"
                 ],
-                "result": "Six passing drivers and 12 required assertions; NAME_None redirects/localizations each failed before D016 and pass after; existing first-wins tests and physical/provider/authority checks still pass."
+                "result": "Seven passing drivers and 16 mandatory assertions, including separately pinned D007 header source/parser/caller obligation (25 checks and 33-byte-fixture checks). Existing D008/D016 mount precedence unaffected. Live mount and independent cooked future header parity not inferred."
             },
             "acceptance_evidence": {
-                "reachable_source_branches": "Pinned FilePackageStore mount stable sorting, package ID map, explicit redirect versus localized lookup, NAME_None fallback, WITH_EDITOR conditional and backend status behavior.",
-                "epic_to_unrealdb_mapping": "Source-to-method/caller mapping and production options in catalog/compliance/B006-FILE-STORE-SOURCE.md.",
-                "independent_differential": "Independent source scanner and synthesized patch/base mount fixtures; D016 two red-before green-after branches; D008 real retained two-file Satisfactory header/SQL evidence separately documented.",
-                "all_v5_consumers": "Game dependency pass per-game context, effective file-backend and multi-backend arbitration, PDO physical provider selector; source scanner guards all three direct builder call sites.",
+                "reachable_source_branches": "Pinned FilePackageStore mount stable sorting, package ID map, explicit redirect versus localized lookup, NAME_None fallback, WITH_EDITOR conditional and backend status behavior. Separate pinned IoContainerHeader.cpp/Header.h source contract: v3 lower minimum, v4 inline soft references, v5+ offset/size branch.",
+                "epic_to_unrealdb_mapping": "Source-to-method/caller mapping and production options in catalog/compliance/B006-FILE-STORE-SOURCE.md. Separate D007 documentation in B006-CONTAINER-HEADER-SOURCE.md.",
+                "independent_differential": "Independent source scanner and synthesized patch/base mount fixtures; D016 two red-before green-after branches; D008 real retained two-file Satisfactory header/SQL evidence separately documented. D007 four historical red-before/green-after fixture branches, 33 full-byte checks and retained real Satisfactory v5 header evidence (synthetic v6 only).",
+                "all_v5_consumers": "Game dependency pass per-game context, effective file-backend and multi-backend arbitration, PDO physical provider selector; source scanner guards all three direct builder call sites. Direct header parse in Uedb5Ue5ZenIoStoreSnapshotBuilder and all four observed publisher/reimport/reader/name-indexer entry points are explicitly scanned.",
                 "independent_reviewer": "Separate source-derived oracle and six-driver acceptance. Not C++ runtime execution or external human review."
+            },
+            "additional_sources": [
+                {
+                    "path": "Engine/Source/Runtime/Core/Private/IO/IoContainerHeader.cpp",
+                    "sha256": "fcc949dc6f95befd0e621294b422773610896a325fd457294e640b9d9e12a590",
+                    "symbols": [
+                        "FArchive& operator<<(FArchive& Ar, FIoContainerHeader& ContainerHeader)",
+                        "Version < EIoContainerHeaderVersion::NoExportInfo",
+                        "Version >= EIoContainerHeaderVersion::SoftPackageReferencesOffset",
+                        "ContainerHeader.SoftPackageReferencesSerialInfo.Size > 0"
+                    ]
+                },
+                {
+                    "path": "Engine/Source/Runtime/Core/Public/IO/IoContainerHeader.h",
+                    "sha256": "03d325d4c496e3d75b0c91da4256be58162565496444b2942fbcad116aac3abd",
+                    "symbols": [
+                        "FIoContainerHeaderSerialInfo",
+                        "Size = -1"
+                    ]
+                }
+            ],
+            "container_header_source_obligation": {
+                "record": "catalog/compliance/B006-CONTAINER-HEADER-SOURCE.md",
+                "test_driver": "catalog/bin/verify-uedb5-b006-container-header-source.php",
+                "test_sha256": "4896952b1174ab2d91c782f493fa9bcac5d8852997e4eb700086727442421c74",
+                "difference": "UE5-D007",
+                "scope": "FIoContainerHeader source load rules consumed by FFilePackageStoreBackend, distinct from mounted order/redirect arbitration",
+                "expected_checks": [
+                    "d007_epic_container_header_cpp_pinned",
+                    "d007_epic_container_header_public_types_pinned",
+                    "d007_reader_implementation_hash_guard",
+                    "d007_snapshot_implementation_hash_guard",
+                    "d007_epic_no_export_info_lower_bound_not_upper_latest",
+                    "d007_epic_version4_serializes_inline_soft_reference",
+                    "d007_epic_version5_or_later_uses_offset_layout",
+                    "d007_epic_soft_size_positive_only_advances_current_stream",
+                    "d007_epic_read_path_has_no_offset_equals_current_cursor_gate",
+                    "d007_epic_no_strict_termination_or_trailing_bytes_rejection",
+                    "d007_epic_serialize_core_arrays_and_redirect_names",
+                    "d007_header_default_negative_serial_info_layout",
+                    "d007_unrealdb_offset_is_provenance_not_seek",
+                    "d007_snapshot_requires_one_chunk_and_matching_container_id",
+                    "d007_exhaustive_production_header_parser_caller_inventory",
+                    "d007_exhaustive_snapshot_entry_routes_from_import_repair_query_and_name_index",
+                    "d007_existing_full_byte_fixture_driver_fingerprint_guard",
+                    "d007_existing_full_iostore_fixture_passes",
+                    "d007_fixture_future_version_6_uses_source_layout",
+                    "d007_fixture_below_minimum_version_rejected",
+                    "d007_fixture_serial_offset_not_stream_cursor_gate",
+                    "d007_fixture_negative_default_serial_size",
+                    "d007_fixture_trailing_extension_accepted",
+                    "d007_fixture_container_entry_mapping",
+                    "d007_fixture_invalid_soft_bool_rejected"
+                ],
+                "total_source_branch_and_consumer_assertions": 25,
+                "byte_fixture_driver": "catalog/bin/verify-uedb5-ue5-iostore-foundation.php",
+                "byte_fixture_assertions": 33,
+                "retained_real_v5_read_only_fixture": "catalog/bin/verify-uedb5-satisfactory-header-readonly-isolated.php",
+                "actual_future_version_6_cooked_fixture": false,
+                "source_defined_version_6_branch_fixture_synthetic": true,
+                "actual_live_engine_mount_execution": false,
+                "original_operation_count_unchanged": 18
             }
         }
     ],
@@ -139,6 +218,7 @@
         "source": "Epic FilePackageStore.cpp:332-385,447-459,662-828, and PackageStore.cpp:565-593",
         "record": "catalog/compliance/B006-FILE-STORE-SOURCE.md",
         "consumer_inventory": "Uedb5ZenMountedStoreContextBuilder, EffectivePackageStoreContextBuilder, Uedb5GameDependencyPassService, physical provider selector and backend arbitrator",
-        "scope": "Source-defined mounted file-store priority, data mapping, redirects/localization, not proof of live full-runtime completeness"
+        "scope": "Source-defined mounted file-store priority, data mapping, redirects/localization, not proof of live full-runtime completeness",
+        "header_precondition": "Separate IoContainerHeader.cpp -> header parser -> snapshot builder source obligation D007; not mounted file-store sorting/priority semantics."
     }
 }

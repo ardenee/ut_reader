@@ -30,10 +30,7 @@ second competing audit system is introduced.
   real cooked versioned-header fixture is optional empirical differential
   evidence, not a prerequisite to establish Epic's actual source rules.
   A correction is not proof that its parent operation is complete.
-* D007 IoContainerHeader.cpp behavior is genuinely **unregistered** by the
-  existing formal manifests. Add its source-backed obligation in the
-  appropriate *existing* source area after reviewing its complete call path,
-  rather than disguising it as B006 mounted file-store precedence.
+* D007 IoContainerHeader.cpp load-version behavior was **unregistered**. Its source and public header, actual UnrealDB parser/snapshot builder and four downstream entry routes are now independently pinned under the **existing** B006 \`FILE-STORE-001\` operation as a separate header prerequisite, *not* mounted precedence. See [B006-CONTAINER-HEADER-SOURCE.md](B006-CONTAINER-HEADER-SOURCE.md). This resolves only the traceability gap: future cooked-v6 and full live mount evidence remain open.
 * D009 was a **rediscovered existing B005 open check**, not a new audit
   operation. D013 fixed the remaining selector/rebuilder evidence mismatch.
   **B005 is fully verified as the original backend-status/priority operation**

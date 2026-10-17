@@ -239,9 +239,9 @@
     },
     {
       "id": "UE5-D007",
-      "kind": "unregistered_source_behavior",
-      "operations": [],
-      "rationale": "IoContainerHeader.cpp serialization/version acceptance fix has no dedicated operation in the 15 manifests; must add an obligation within the existing applicable source area before source compliance can be accepted.",
+      "kind": "mapped",
+      "operations": ["UE5-583-FILE-STORE-001"],
+      "rationale": "The corrected IoContainerHeader.cpp serializer is separately pinned as a source/reader prerequisite of B006 FilePackageStoreBackend::Mount/Update, with 25 source/caller assertions, 33 byte fixtures and earlier read-only retained v5 header evidence; not mounted sort behavior or future cooked v6 acceptance.",
       "state": "evidence_partial",
       "audit_escape": "none"
     },
@@ -458,9 +458,18 @@
     },
     {
       "id": "UE5-IOSTORE-HEADER",
-      "status": "open",
+      "status": "accepted",
       "difference_id": "UE5-D007",
-      "reason": "Source-backed D007 fix lacks a formal behavioral obligation."
+      "reason": "The formerly unregistered D007 serializer/load source behavior is now explicitly attached and executable under existing B006. This closes source accountability only: independent future-cooked header parity and full runtime mount remain under separate open gaps.",
+      "closure_evidence": {
+        "operation": "UE5-583-FILE-STORE-001",
+        "source_record": "catalog/compliance/B006-CONTAINER-HEADER-SOURCE.md",
+        "test_driver": "catalog/bin/verify-uedb5-b006-container-header-source.php",
+        "source_checks": 25,
+        "byte_fixture_checks": 33,
+        "live_future_version_fixture": false,
+        "strict_global_compliance_still_unverified": true
+      }
     },
     {
       "id": "V5-WORKFLOW-CALLERS",

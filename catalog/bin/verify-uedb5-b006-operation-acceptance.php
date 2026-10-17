@@ -9,6 +9,7 @@ $tests=[
  'options'=>'verify-uedb5-zen-context-options-standalone.php',
  'backend'=>'verify-uedb5-zen-backend-arbitration.php',
  'selector'=>'verify-uedb5-physical-provider-selector.php',
+ 'container_header'=>'verify-uedb5-b006-container-header-source.php',
 ];
 $reports=[];$drivers=[];$checks=[];$fails=[];
 $check=static function(string $name,bool $pass)use(&$checks,&$fails):void{
@@ -49,6 +50,22 @@ $check('b006_authority_and_game_isolation',
  &&($reports['options']['unsupported_authority_rejected']??false)===true
  &&isset($reports['options']['mount_isolation'])
  &&isset($reports['options']['evidenced_mount_context']));
+$check('b006_d007_container_source_is_separate_prerequisite_not_mount_precedence',
+ $has('container_header','d007_epic_container_header_cpp_pinned')
+ &&$has('container_header','d007_epic_container_header_public_types_pinned')
+ &&$has('container_header','d007_epic_version5_or_later_uses_offset_layout'));
+$check('b006_d007_real_reader_and_snapshot_consumer_guarded',
+ $has('container_header','d007_reader_implementation_hash_guard')
+ &&$has('container_header','d007_snapshot_implementation_hash_guard')
+ &&$has('container_header','d007_exhaustive_production_header_parser_caller_inventory')
+ &&$has('container_header','d007_exhaustive_snapshot_entry_routes_from_import_repair_query_and_name_index'));
+$check('b006_d007_full_byte_fixture_preserves_epic_header_load_contract',
+ $has('container_header','d007_existing_full_iostore_fixture_passes')
+ &&$has('container_header','d007_fixture_future_version_6_uses_source_layout')
+ &&$has('container_header','d007_fixture_below_minimum_version_rejected')
+ &&$has('container_header','d007_fixture_serial_offset_not_stream_cursor_gate')
+ &&$has('container_header','d007_fixture_negative_default_serial_size')
+ &&$has('container_header','d007_fixture_trailing_extension_accepted'));
 $check('b006_live_physical_selector_consumer',
  $has('selector','zen_mounted_file_backend_does_not_override_higher_pending_backend')
  &&$has('selector','zen_mounted_file_entries_without_authority_stay_ambiguous')

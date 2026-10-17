@@ -192,6 +192,33 @@ foreach ($operations as $id=>$op) {
         'Original operation/difference reciprocity is incomplete: '.$id
         .' expected '.implode(',',$wanted).' got '.implode(',',$actual));
 }
+// D007 is a distinct IoContainerHeader load prerequisite of the original
+// B006 file-store path, not an unregistered area or a newly added operation.
+// Keep its independent source/reader/fixture obligation explicit: merely
+// linking D007 to a verified operation without the separately checked source
+// and full production header-parsing caller inventory is not acceptable.
+$d007Entries=array_values(array_filter($maps,
+    static fn(array $entry):bool=>($entry['id']??'')==='UE5-D007'));
+$require(count($d007Entries)===1
+    &&($d007Entries[0]['kind']??'')==='mapped'
+    &&($d007Entries[0]['operations']??[])===['UE5-583-FILE-STORE-001'],
+    'D007 container-header source behavior must be mapped to original B006, not orphaned.');
+$headerObligation=(array)($operations['UE5-583-FILE-STORE-001']['container_header_source_obligation']??[]);
+$headerSources=(array)($operations['UE5-583-FILE-STORE-001']['additional_sources']??[]);
+$sourceNames=array_column($headerSources,'path');
+$guardNames=array_column(
+    (array)($operations['UE5-583-FILE-STORE-001']['guarded_implementation_files']??[]),'path');
+$require(($headerObligation['difference']??'')==='UE5-D007'
+    &&($headerObligation['test_driver']??'')==='catalog/bin/verify-uedb5-b006-container-header-source.php'
+    &&count((array)($headerObligation['expected_checks']??[]))===25
+    &&($headerObligation['actual_future_version_6_cooked_fixture']??null)===false
+    &&in_array('Engine/Source/Runtime/Core/Private/IO/IoContainerHeader.cpp',$sourceNames,true)
+    &&in_array('Engine/Source/Runtime/Core/Public/IO/IoContainerHeader.h',$sourceNames,true)
+    &&in_array('catalog/src/Infrastructure/Metadata/Uedb5IoStoreContainerHeaderReader.php',$guardNames,true)
+    &&in_array('catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenIoStoreSnapshotBuilder.php',$guardNames,true)
+    &&in_array('catalog/bin/verify-uedb5-b006-container-header-source.php',
+        (array)($operations['UE5-583-FILE-STORE-001']['tests']??[]),true),
+    'D007 must retain a separate pinned header-to-snapshot source/caller acceptance obligation.');
 $gaps=(array)($baseline['coverage_gaps']??[]);
 $gapIds=[];$openGaps=0;$gapDiffIds=[];
 foreach($gaps as $gap){

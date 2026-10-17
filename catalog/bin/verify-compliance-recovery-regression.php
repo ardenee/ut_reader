@@ -30,8 +30,29 @@ try {
         &&($report['scope_denominator_known']??null)===false
         &&($report['registered_operations']??null)===18
         &&($report['ledger_differences']??null)===count($baseline['known_differences']));
-    $check('unregistered_iostore_behavior_exposed',
-        ($report['unregistered_source_differences']??[])===['UE5-D007']);
+    $d007=array_values(array_filter($baseline['known_differences'],
+        static fn(array $item):bool=>($item['id']??'')==='UE5-D007'));
+    $check('d007_container_header_source_obligation_registered',
+        ($report['unregistered_source_differences']??[])===[]
+        &&count($d007)===1
+        &&($d007[0]['kind']??null)==='mapped'
+        &&($d007[0]['operations']??[])===['UE5-583-FILE-STORE-001']);
+    $mutation=$baseline;
+    foreach($mutation['known_differences'] as &$difference){
+        if(($difference['id']??'')!=='UE5-D007')continue;
+        $difference['kind']='unregistered_source_behavior';
+        $difference['operations']=[];
+    }
+    unset($difference);
+    [$exit]=$run($mutation);
+    $check('d007_cannot_regress_to_unregistered_without_verifier_failure',$exit!==0);
+    $mutation=$baseline;
+    foreach($mutation['coverage_gaps'] as &$gap){
+        if(($gap['id']??'')==='UE5-IOSTORE-HEADER')unset($gap['closure_evidence']);
+    }
+    unset($gap);
+    [$exit]=$run($mutation);
+    $check('d007_cannot_claim_gap_closure_without_evidence',$exit!==0);
     [$exit,$report]=$run($baseline,true);
     $check('strict_denies_unfinished_source_coverage',
         $exit!==0&&($report['ok']??null)===false);
