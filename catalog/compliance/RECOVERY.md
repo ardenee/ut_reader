@@ -166,3 +166,5 @@ D031 original B006 index retry: code revision 1bb60bd9 validates the full existi
 
 
 **Real UE5.8.3 runtime probe (17 Oct 2026):** [UE5-SCRIPT-RUNTIME-UNREALPAK-EVIDENCE.md](UE5-SCRIPT-RUNTIME-UNREALPAK-EVIDENCE.md) records the disposable instrumented UnrealPak binary hashes, source-defined correction from masked 62-bit FPackageObjectIndex::Value() to typed indices, and a fresh unmodified 858/858 passing runtime trace. Observed noneditor/DO_CHECK registration covers 583 initial and 268 nested objects, but cannot close the four partial original runtime operations without editor, lookup, GC, Verse and cooked-debug differentials. No production parser or SQL metadata changed.
+
+**Actual editor probe 17 October:** [UE5-SCRIPT-RUNTIME-UNREALPAK-EVIDENCE.md](UE5-SCRIPT-RUNTIME-UNREALPAK-EVIDENCE.md) records a disposable crashing UE5.8.3 editor run with 67,159 source-instrumented events, 5,164 successful plus two unsuccessful lookups, and strict 67,159/67,159 inspection of a clearly labelled typed-index *derived copy*. Editor completion and missing branch coverage remain unverified; the four original runtime operations stay partial.
