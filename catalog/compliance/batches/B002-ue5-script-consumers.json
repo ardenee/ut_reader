@@ -36,7 +36,7 @@
                 "catalog/bin/verify-uedb5-ue5-zen-package.php"
             ],
             "disposition": "verified",
-            "reason": "Original source-defined offline cooked ScriptObjects NameBatch wire-index mapping verified with four pinned Epic sources, 18 branch/source checks, authentic 50640-name global chunk, 559/590 platform inventory and 11 accepted operation assertions. Live FNamePool/registration remains outside this original obligation; B002 sibling SCRIPT-003 still partial.",
+            "reason": "Original source-defined offline cooked ScriptObjects NameBatch wire-index mapping verified with four pinned Epic sources, 18 branch/source checks, authentic 50640-name global chunk, 559/590 platform inventory and 11 accepted operation assertions. Live FNamePool/registration remains outside this original obligation; B002 sibling SCRIPT-003 now independently accepted under its own live-runtime operation gate.",
             "operation_status": "verified",
             "complete_inventory": true,
             "direct_editor_runtime_trace_observation": {
@@ -173,7 +173,7 @@
             },
             "independent_inventory_evidence": {
                 "source_review": "catalog/compliance/B002-SCRIPT-NAME-BATCH-SOURCE.md",
-                "scope_boundary": "Offline cooked global NameBatch bytes, serialized indices and display name; live engine FNamePool/shard rehash/registration excluded, SCRIPT-003 remains partial",
+                "scope_boundary": "Offline cooked global NameBatch bytes, serialized indices and display name; live engine FNamePool/shard rehash/registration excluded, SCRIPT-003 now independently verified",
                 "independent_source_oracle": "catalog/bin/verify-uedb5-b002-name-batch-source.php",
                 "empirical_authentic_cooked_fixture": "catalog/bin/verify-uedb5-b001-authentic-scriptobjects.php",
                 "operation_acceptance": "catalog/bin/verify-uedb5-b002-operation-acceptance.php"
