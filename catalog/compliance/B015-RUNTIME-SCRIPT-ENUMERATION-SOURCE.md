@@ -146,3 +146,17 @@ The remaining runtime/codegen gap was checked against every supplied public/loca
 * Epic UBT separately requires the restricted AutoRTFM `verse-clang-cl.exe` toolchain to build the new Verse VM. The installed instrumentation Clang was already proven not to implement `-fautortfm`.
 
 Accordingly, there is **no further genuine B015-1 runtime or VNI-codegen acceptance path in the supplied UE5.8.3 source plus Launcher installation**. Closing the final runtime subgate would require new Epic material: a `WITH_VERSE_VM=1` binary/toolchain and the missing native VNI assembler/codegen provider (or authentic generated VNI output produced by such a provider). This is an external evidence prerequisite, not a newly discovered UnrealDB source-behavior difference. The original audit remains 17/18 verified with B015-1 partial; the locally executable investigation of that residual is exhausted.
+
+## Public-default build baseline clarification — 18 October 2026
+
+The acceptance scope must distinguish Epic's **public/default UE5.8.3 engine configuration** from an **optional VerseVM-enabled configuration**. This was rechecked directly against pinned Epic UBT source:
+
+- `Engine/Source/Programs/UnrealBuildTool/Configuration/Rules/TargetRules.cs`: `bUseVerseBPVM { get; set; } = true` (default).
+- `Engine/Source/Programs/UnrealBuildTool/Configuration/Rules/RulesAssembly.cs`: when no explicit override exists, `WITH_VERSE_VM` is `0` if `bUseVerseBPVM` is true and `1` otherwise.
+- `Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp`: `AddScriptCellPackage` and its notification call are gated by `#if WITH_VERSE_VM || defined(__INTELLISENSE__)`.
+- The actual disposable, normally compiled UnrealEditor `CoreUObject/Definitions.h` confirms `WITH_VERSE_VM=0`.
+
+**Audit-policy correction:** The unavailable restricted `verse-clang-cl.exe` must **not** be treated as necessary to build, execute, or validate Epic's default publicly available UE5.8.3 engine configuration, nor as a requirement imposed on UnrealDB. The optional `WITH_VERSE_VM=1` path and its unavailable genuine VNI generation are **separate optional-configuration coverage questions**, not evidence that UnrealDB diverges from default public-engine behaviour. Existing B015 real source-body, hashing, default-engine, and Shipping evidence remains valid.
+
+**No score changed by this documentation correction:** the original 18-operation audit currently counts B015-1 as partial because its previously recorded acceptance contract bundled optional VerseVM/VNI observations with default-engine registration. Before claiming 18/18, the compliance verifier and operation manifest must explicitly separate required **default-public-engine** acceptance from optional-configuration coverage, confirm every required branch and production consumer is verified, and retain optional gaps visibly rather than silently discarding them. No optional instrumentation or compiler is to be sought as a prerequisite for default UE5.8.3 parity.
+
