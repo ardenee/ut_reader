@@ -1,0 +1,8 @@
+.sympath H:\UE5-583-runtime-probe\Engine\Binaries\Win64;D:\Temp\uedb5-ue583-runtime\StagedCook\Windows\Engine\Binaries\Win64
+g
+.reload /f UnrealGame.exe
+bp /1 UnrealGame!FPackageImportStore::GetImportName ".echo UEDB_COOKED_REAL_GETIMPORTNAME_CALLED;kv;gc"
+bp /1 UnrealGame!FCookedScriptObjectsDebug::GetPathName ".echo UEDB_COOKED_REAL_DEBUG_PATH_CALLED;kv;gc"
+g
+g
+q

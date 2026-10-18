@@ -1,0 +1,8 @@
+.sympath H:\UE5-583-runtime-probe\Engine\Binaries\Win64;D:\Temp\uedb5-ue583-runtime\StagedCook\Windows\Engine\Binaries\Win64
+g
+.reload /f UnrealGame.exe
+bp /1 UnrealGame!FCookedScriptObjectsDebug::LoadDebugData+0x1e8 ".printf \"UEDB_COOKED_PARSED_RECORD_COUNT=%d\\n\", @edi;gc"
+bp /1 UnrealGame!FCookedScriptObjectsDebug::LoadDebugData+0x3e6 ".printf \"UEDB_COOKED_MAP_ALLOC=%d FREE=%d\\n\", dwo(@r14+8), dwo(@r14+34);gc"
+g
+g
+q

@@ -1,0 +1,10 @@
+.sympath H:\UE5-583-runtime-probe\Engine\Binaries\Win64;D:\Temp\uedb5-ue583-runtime\StagedCook\Windows\Engine\Binaries\Win64
+g
+.reload /f UnrealGame.exe
+bp /1 UnrealGame!FCookedScriptObjectsDebug::LoadDebugData+0xbc ".echo UEDB_COOKED_CHUNK_EXISTS_TRUE;gc"
+bp /1 UnrealGame!FCookedScriptObjectsDebug::LoadDebugData+0x150 ".echo UEDB_COOKED_READ_RESULT_PRESENT;gc"
+bp /1 UnrealGame!FCookedScriptObjectsDebug::LoadDebugData+0x2d0 ".echo UEDB_COOKED_RECORDS_DECODING;gc"
+bp /1 UnrealGame!FCookedScriptObjectsDebug::LoadDebugData+0x3e6 ".echo UEDB_COOKED_LOADER_EXIT;gc"
+g
+g
+q
