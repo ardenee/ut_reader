@@ -5,8 +5,8 @@
     "profile": "UE5.8.3",
     "status": "partial",
     "inventory_a": "Independent B014 seeded source discovery",
-    "inventory_b": "Targeted UE5 loader structure trace pending",
-    "complete_inventory": false,
+    "inventory_b": "Targeted UE5 loader/runtime inventory reconciled; remaining B015-1 limitation is external runtime/codegen evidence, not unidentified source scope",
+    "complete_inventory": true,
     "operations": [
         {
             "id": "UE5-583-B015-1",
@@ -34,7 +34,22 @@
                 "catalog/bin/verify-ue5-script-runtime-trace-inspection.php"
             ],
             "disposition": "partial",
-            "reason": "All 23 source-fixture checks and 18-check, six-driver acceptance pass. Native GNU C++ now executes seven source-identical apart from normalized line endings Epic AsyncLoading2 function bodies under four editor/check/shipping/cooked-debug configurations against controlled stand-in UObject, UPackage and script map doubles. These are NOT real UE5 objects, engine startup, registration, GC or global import store; runtime operation remains partial.",
+            "reason": "B015-1 source inventory is reconciled and all locally executable branches are covered by source-pinned, real editor, non-editor DO_CHECK, Shipping DO_CHECK=0, GC, VNI predicate and compiled source-body evidence. The remaining acceptance is genuine Verse toolchain provenance plus WITH_VERSE_VM=1 VPackage/VCell ScriptCells execution. The supplied UE5.8.3 source/Launcher installation lacks the native VNI assembler provider and restricted AutoRTFM verse-clang-cl toolchain, so this is an external Epic prerequisite rather than an unidentified UnrealDB source difference.",
+            "complete_inventory": true,
+            "locally_executable_investigation_exhausted": true,
+            "external_runtime_prerequisite": true,
+            "source_reachability_evidence": {
+                "test_driver": "catalog/bin/verify-uedb5-b015-runtime-script-enumeration-source.php",
+                "expected_checks": [
+                    "b0151_epic_compiledin_upackage_only",
+                    "b0151_epic_disjoint_script_and_verse_package_lists",
+                    "b0151_epic_editor_add_noneditor_check_shipping_no_enumeration",
+                    "b0151_epic_verse_vm_cells_use_separate_registry",
+                    "b0151_epic_compiled_verse_exports_separate_from_script_map"
+                ],
+                "source_inventory_record": "catalog/compliance/B015-RUNTIME-SCRIPT-ENUMERATION-SOURCE.md",
+                "scope": "Original B015-1 runtime-script package/object enumeration, editor/check/shipping conditional branches, Verse VNI filtering and separate VerseVM ScriptCells registry; remaining gap is execution provenance, not untraced source reachability"
+            },
             "runtime_gate_status_20261017": {"record": "catalog/compliance/UE5-REMAINING-RUNTIME-GATES-20261017.md", "editor_original_events_accepted": 67206, "editor_eligible_script_packages": 182, "editor_enumerated_public": 23376, "verse_vni_cases_observed": 0, "noneditor_cases_executed": false, "scriptcells_executed": false, "operation_acceptance": "partial"},
             "observed_noneditor_check_runtime": {"evidence_record": "catalog/compliance/B015-RUNTIME-SCRIPT-ENUMERATION-SOURCE.md", "actual_binary": "UnrealPak.exe", "original_log_sha256": "94E8C271FC147B9ACFF29183A0F95F41382C0EA7BB1624EEFD33B9F2DAC0C560", "strict_events_accepted": 858, "semantic_rejections": 0, "with_editor": false, "do_check": true, "registration_complete": true, "script_packages": 6, "initial_objects": 583, "nested_public": 268, "final_registered_count": 851, "deliberately_missing_key_diagnostic_exercised": false, "verse_vni_uht_and_scriptcells_exercised": false, "operation_disposition": "partial"},
             "observed_noneditor_check_missing_key": {"driver": "catalog/bin/verify-ue5-583-b015-noneditor-check-missing.php", "original_log": "catalog/tests/fixtures/ue5-b015-noneditor-check-missing-original.log", "sha256": "7B60CD877B43B61AE3C819B395FB3B4A502166EDEFF491BB31BA3EC02982EE09", "passed_checks": 6, "actual_epic_warning_produced": true, "original_mapping_restored": true, "do_check": true, "no_check_executed": false, "verse_and_scriptcells_executed": false, "operation": "partial"},
@@ -57,11 +72,11 @@
                     "Noneditor with no DO_CHECK does not run enumeration from RegistrationComplete",
                     "VM ScriptCells and compiled Verse exports use separate global maps"
                 ],
-                "runtime_recording_absent": true,
+                "runtime_recording_absent": false,
                 "real_uobject_registry_authoritative": false,
                 "source_derived_expected_key_audit": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ScriptRuntimeEnumerationAudit.php",
                 "expected_key_audit_sha256": "a253426dfb74a2812ce3363c6aaecee2de67a271a8ad789c41a0ee9ffc877dd3",
-                "remaining_acceptance": "Actual compiled Epic editor/noneditor run capturing registered and missing UObjects, public nested/UHT choices, build macros and global ScriptObjects/ScriptCells registries",
+                "remaining_acceptance": "External Epic prerequisite only: authentic UHT/Verse-compiler VNI output plus genuine WITH_VERSE_VM=1 VPackage/VCell ScriptCells execution; supplied source/Launcher build lacks the VNI assembler provider and restricted AutoRTFM verse-clang-cl toolchain",
                 "native_source_substitute_record": "catalog/compliance/B015-NATIVE-SCRIPT-SOURCE-EXECUTION.md",
                 "native_source_substitute_driver": "catalog/bin/verify-uedb5-b015-native-source-execution.php",
                 "native_source_substitute_fixture": "catalog/tests/fixtures/ue5_script_runtime_native_harness.cpp.tpl",
@@ -282,14 +297,14 @@
     ],
     "next_batch": "B016",
     "gate_status": {
-        "inventory": false,
+        "inventory": true,
         "contracts": false,
         "implementation": false,
         "independent_verification": false,
         "change_integrity": true
     },
     "reconciliation_evidence": {
-        "source": "UE5.8.3 AsyncLoading2.cpp:7158-7464, one independent source-defined operation accepted; sibling B015-1 remains partial.",
-        "record": "catalog/compliance/B015-RECURSIVE-IMPORT-SOURCE.md"
+        "source": "UE5.8.3 AsyncLoading2.cpp runtime-script and recursive-import branches are source-inventoried. B015-2 is verified; B015-1 source inventory is complete but runtime/codegen acceptance remains partial due unavailable external Epic Verse prerequisites.",
+        "record": "catalog/compliance/B015-RUNTIME-SCRIPT-ENUMERATION-SOURCE.md"
     }
 }

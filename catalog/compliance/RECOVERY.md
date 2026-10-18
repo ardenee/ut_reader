@@ -6,7 +6,15 @@ behavioral obligations remain [batches/](batches/); the existing fixes and
 evidence remain [DIFFERENCES.md](DIFFERENCES.md). No new checkpoint sequence or
 second competing audit system is introduced.
 
-## Confirmed baseline (2026-10-16)
+## Current UE5.8.3 closure state (2026-10-18)
+
+* The registered UE5.8.3 set contains **15 manifests / 18 original operations; 17 are verified**. `UE5-583-B015-1` is the sole partial operation.
+* B002 and B003 batch wrappers are reconciled to their already-verified operations. B015's **source inventory is complete**, but B015-1 runtime/codegen acceptance remains partial. The formal source-compliance verifier therefore has **one open operation gate**, not stale wrapper inventory work.
+* B015-1's locally executable investigation is exhausted: real editor/non-editor/Shipping registration branches, live lookup/GC behavior, VNI predicate behavior, the original `AddScriptCellPackage` body, exact `FromVersePath`/CityHash path, and unavailable-toolchain negative evidence are retained. Genuine Verse VNI/UHT code-generation provenance plus `WITH_VERSE_VM=1` `VPackage`/`VCell` ScriptCells execution require Epic components absent from the supplied source and Launcher installation.
+* The full verifier at this closure point checks 41 source hashes, 91 source symbols, 307 source-contract assertions, 115 reachability assertions and 17 consumer assertions with **zero issues**. This closes the locally actionable UE5.8.3 audit work without pretending the external B015 evidence exists.
+* This does **not** certify the whole UnrealDB/UE1-UE5 program: the seven historical game profiles, UE4.27.2 and broader workflow/source-denominator reconciliation remain separate work recorded in `RECOVERY.json`.
+
+## Historical confirmed baseline (2026-10-16)
 
 * Git starting revision: `f3fde99b`.
 * Active UEDB5 game profile registry: 7 game IDs (Unreal Gold, UT99,
@@ -15,12 +23,12 @@ second competing audit system is introduced.
   reconciled. UE4.27.2 classic and UE5.8.3 classic/IoStore format targets
   are listed separately because the seven-game registry is not a complete
   list of supported format readers.
-* UE5 formal batch manifests: **15 containing 18 operations; 14 verified (B001, B002/SCRIPT-002, B004, B005, B006, B007, B008, B009, B010, B011, B012, B013/SCRIPT-HASH-001, B015-2, B016), 4 partial**.
-  Baseline was 33 formal open evidence gates. B005 now has exhaustive scoped
+* **At this 2026-10-16 baseline**, the UE5 formal batch manifests were **15 containing 18 operations; 14 verified (B001, B002/SCRIPT-002, B004, B005, B006, B007, B008, B009, B010, B011, B012, B013/SCRIPT-HASH-001, B015-2, B016), 4 partial**.
+  The baseline began with 33 formal open evidence gates. By that historical checkpoint B005 had exhaustive scoped
   source/inventory/implementation acceptance, including the pinned hybrid
-  editor branch model, real V5 selector/rebuilder and isolated temporary MySQL.
-  B004, B009 and B010 now have complete source-defined, operation-level
-  executable acceptance. **7 original evidence gates remain open.** Full application/engine compliance remains unverified.
+  editor branch model, real V5 selector/rebuilder and isolated temporary MySQL;
+  B004, B009 and B010 also had complete source-defined, operation-level
+  executable acceptance, leaving **7 original evidence gates at that time**. This is superseded by the 18 October current state above.
 * D001-D031: thirty-one known differences linked to original operations or
   explicitly categorized as cross-cutting or previously uncovered behavior.
   D010/D011 are now marked fixed and regression-verified. Original B009 and
@@ -62,11 +70,11 @@ second competing audit system is introduced.
 | 11 | UE5-583-B015-2 | **VERIFIED**: Epic's offline ImportedPackageIds enumeration, source identity, optional editor gate, runtime status conservatism and exact provider requirements; original runtime scheduling is not simulated. |
 | 12 | UE5-583-SCRIPT-001 | **VERIFIED (offline debug reader):** Source-pinned FScriptObjectEntry, mapped-name lower-30-bit GetIndex D025, TMap last-wins D026, no strict EOF D024, real Satisfactory global.utoc 54,968 cooked entries; full 559-file PHP reachability inventory and runtime exclusion. |
 | 13 | UE5-583-SCRIPT-002 | **VERIFIED (offline global NameBatch):** pinned UnrealNames.cpp NameBatch count, UTF8/UTF16, hash/version metadata, input/shard order, 50,640 authentic Satisfactory names and one direct ScriptObjects diagnostic caller; no parser fix and no live FNamePool claims. SCRIPT-003 remains partial. |
-| 14 | UE5-583-SCRIPT-003 | **PARTIAL:** Epic live ScriptObjects.FindRef vs cooked diagnostics; offline unverified resolution remains conservative, D027 now retains 62-bit script hash as kind-3 SQL key without fake provider; live lookup unverified. |
-| 15 | UE5-583-SCRIPT-004 | **PARTIAL:** pinned Epic NRP_Finished, WITH_EDITOR package identity, public nested objects and compiled-in/Verse VNI branches; offline ScriptImport SQL hash loss D027 fixed with historical/real MySQL tests; actual live UObject registry remains unverified. |
-| 16 | UE5-583-SCRIPT-005 | **PARTIAL:** source-pinned live FindRef vs optional cooked debug GetImportName; D028 diagnostic-only path and trim preview implemented, authentic 54,968-record source regression and four-driver acceptance; actual live runtime behavior remains unverified. |
+| 14 | UE5-583-SCRIPT-003 | **VERIFIED:** Epic live `ScriptObjects.FindRef` success/null behavior, typed ScriptImport SQL identity D027, actual registration/GC removal and post-GC null lookup executed; original typed runtime trace accepted 67,206/67,206 events. |
+| 15 | UE5-583-SCRIPT-004 | **VERIFIED:** pinned Finished-only/editor/public-nested registration contract, D027 SQL correction, real editor typed registration/enumeration and GC removal accepted. Verse VNI provenance/ScriptCells remain isolated to B015-1 rather than keeping SCRIPT-004 open. |
+| 16 | UE5-583-SCRIPT-005 | **VERIFIED:** actual cooked PreCDO ScriptObjects load populated 23,672 entries and compiled `GetImportName` missing-live fallback returned the expected nonempty cooked path; D028 UnrealDB diagnostic preview independently matches it. |
 | 17 | UE5-583-SCRIPT-HASH-001 | **VERIFIED:** pinned Epic CityHash.cpp and TChar ASCII-lower rules; 98 independently compiled native object/Verse hash vectors (196 exact comparisons), Unicode/UTF-16LE/UTF-8/mask, authentic GetRecipes + ObjectRedirector constants, full PHP consumer inventory. No live registration claimed. |
-| 18 | UE5-583-B015-1 | **PARTIAL:** pinned Epic compiled-in script/Verse VNI, RF_Public/UHT, WITH_EDITOR add vs DO_CHECK verify-only and VM cell separation. Added opt-in explicit runtime-observation expected-key audit with 23 source checks and 18 operation checks across six drivers. Seven source-identical apart from normalized line endings Epic C++ functions also execute natively against controlled engine doubles in four configurations; no UE5 editor executable or authoritative live registry captured; no source mismatch claimed. |
+| 18 | UE5-583-B015-1 | **PARTIAL — external evidence prerequisite:** source inventory is complete. Real editor/non-editor/Shipping branches, live registry/GC evidence and VNI flag predicate are retained; Epic's exact `AddScriptCellPackage`, `FromVersePath`, Verse import hash and full CityHash source execute in the native harness. Genuine UHT/Verse-compiler VNI provenance and real `WITH_VERSE_VM=1` `VPackage`/`VCell` ScriptCells still require the missing Epic VNI assembler/AutoRTFM toolchain. Locally executable investigation is exhausted; do not infer acceptance. |
 
 The order is a dependency-driven *work queue*, not a claim that these
 18 operations exhaust UE5. Source coverage needs to be expanded and

@@ -3,10 +3,10 @@
     "batch": "B002",
     "engine": "UE5",
     "profile": "UE5.8.3",
-    "status": "partial",
+    "status": "verified",
     "inventory_a": "AsyncLoading2 entry-point call path",
     "inventory_b": "script-name/object index serialization",
-    "complete_inventory": false,
+    "complete_inventory": true,
     "operations": [
         {
             "id": "UE5-583-SCRIPT-002",
@@ -342,15 +342,15 @@
     ],
     "next_batch": "B003",
     "gate_status": {
-        "inventory": false,
-        "contracts": false,
-        "implementation": false,
-        "independent_verification": false,
+        "inventory": true,
+        "contracts": true,
+        "implementation": true,
+        "independent_verification": true,
         "change_integrity": true
     },
     "reconciliation_evidence": {
         "verified_original": "SCRIPT-002 wire-index operation independently accepted with source-derived and authentic evidence",
-        "open_original": "B002 original SCRIPT-002 and SCRIPT-003 accepted; other batches retain SCRIPT-004/005 and B015-1 partial",
+        "open_original": "B002 original SCRIPT-002 and SCRIPT-003 accepted; no open B002 original operation remains. B015-1 is the separate remaining UE5.8.3 partial operation",
         "record": "catalog/compliance/B002-SCRIPT-NAME-BATCH-SOURCE.md"
     }
 }

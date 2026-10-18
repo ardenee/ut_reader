@@ -3,10 +3,10 @@
     "batch": "B003",
     "engine": "UE5",
     "profile": "UE5.8.3",
-    "status": "partial",
+    "status": "verified",
     "inventory_a": "FGlobalImportStore call tracing",
     "inventory_b": "FPackageObjectIndex constructors, conditional registrations and cooked debug table",
-    "complete_inventory": false,
+    "complete_inventory": true,
     "operations": [
         {
             "id": "UE5-583-SCRIPT-004",
@@ -349,6 +349,11 @@
         }
     ],
     "next_batch": "B004",
+    "reconciliation_evidence": {
+        "verified_original": "B003 original SCRIPT-004 and SCRIPT-005 are independently accepted with pinned source, live editor/cooked runtime evidence and operation-level drivers",
+        "open_original": "No open B003 original operation remains. B015-1 Verse VNI/ScriptCells provenance is a separate original operation",
+        "record": "catalog/compliance/B003-SCRIPT-LOOKUP-DIAGNOSTICS-SOURCE.md"
+    },
     "direct_editor_runtime_trace_observation": {
         "record": "catalog/compliance/UE5-SCRIPT-RUNTIME-UNREALPAK-EVIDENCE.md",
         "actual_engine": "Epic UE5.8.3 disposable instrumented UnrealEditor-Cmd",
@@ -365,10 +370,10 @@
         "scope": "Additional partial runtime evidence only; no original operation acceptance or disposition change"
     },
     "gate_status": {
-        "inventory": false,
-        "contracts": false,
-        "implementation": false,
-        "independent_verification": false,
+        "inventory": true,
+        "contracts": true,
+        "implementation": true,
+        "independent_verification": true,
         "change_integrity": true
     }
 }

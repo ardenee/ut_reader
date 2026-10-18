@@ -2,12 +2,13 @@
 
 This is the **engineering audit tracker**, distinct from method classification and manifest source-symbol checks. Source inventory: [README](README.md). Recovery baseline and original-operation traceability: [RECOVERY.md](RECOVERY.md) and [RECOVERY.json](RECOVERY.json). Classification counts do not imply changes or compliance.
 
-## Current engineering status — 2026-10-16
+## Current engineering status — 2026-10-18
 
-- **Original source operations:** 15 manifests, 18 operations; **14 verified** (B001, B002/SCRIPT-002, B004, B005, B006, B007, B008, B009, B010, B011, B012, B013/SCRIPT-HASH-001, B015-2, B016), 4 partial and **7 open evidence gates**. No global Epic compliance claim.
-- **Engineering evidence:** Differences D001–D029 below link source rules, corrections, negative-before/positive-after fixtures and active boundaries. New source discoveries within an original operation retain that operation ID.
-- **Tests:** 43/43 source-focused PRD regression scripts passed after B007's D019/D020 corrections. GitHub/DEV deployments are confirmed separately by revision and running tests; historical revisions in the chronological rows are not current deployment status.
-- **Scope:** Complete UE1–UE4 source call graphs, all operational file paths and live mounted runtime state are not accepted. Runtime mount order, culture, flags and non-file backends must never be invented from a static container.
+- **UE5.8.3 original source operations:** 15 manifests, 18 operations; **17 verified, 1 partial**. `UE5-583-B015-1` is the only partial operation. Its source inventory is reconciled; the remaining genuine Verse VNI/UHT provenance and `WITH_VERSE_VM=1` ScriptCells execution are blocked on Epic components absent from the supplied source/Launcher distribution.
+- **Formal gates:** stale B002/B003 wrapper inventories have been reconciled and B015 is inventory-complete while behavior-partial. The full source-compliance verifier therefore reports **one open operation gate and zero issues**, with 41 source-hash checks, 91 source-symbol checks, 307 source-contract assertions, 115 reachability assertions and 17 consumer assertions.
+- **Engineering evidence:** Differences D001-D031 below link source rules, corrections, negative-before/positive-after fixtures and active boundaries. New discoveries within an original operation retain that operation ID rather than creating artificial work.
+- **Deployment:** the current closure revision is verified on DEV and PRD by the same full compliance path. Historical revisions and test counts in chronological ledger rows remain evidence for those milestones, not the current status.
+- **Scope:** this UE5.8.3 closure does not certify UE1-UE4, the seven historical game profiles, every operational workflow or live mounted runtime state. Runtime mount order, culture, flags and non-file backends must never be invented from a static container.
 
 ## Demonstrated differences / limitations
 
