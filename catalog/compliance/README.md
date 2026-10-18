@@ -20,6 +20,8 @@ The B015-1 boundary is now explicitly Epic's default BPVM build (`WITH_VERSE_VM=
 Broader UE1-UE4/game-profile/workflow scope is still open, so no
 overall cross-engine completion percentage is defensible.
 
+**Remaining UE5 full file/workflow parity:** [UE583-FULL-FILE-PARITY-SCOPE.md](UE583-FULL-FILE-PARITY-SCOPE.md) records what 18/18 does not prove, the active classic/IoStore processing entrypoints, default-build boundaries and the executable closure requirements. UE4 is paused.
+
 ## Layout and authoritative evidence
 
 - `batches/`: 15 registered *source-to-implementation obligations* (18 operations) for the compliance verifier. These are the formal gates. Preserve their stable operation IDs and hashes.
