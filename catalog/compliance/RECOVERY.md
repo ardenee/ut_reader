@@ -6,13 +6,13 @@ behavioral obligations remain [batches/](batches/); the existing fixes and
 evidence remain [DIFFERENCES.md](DIFFERENCES.md). No new checkpoint sequence or
 second competing audit system is introduced.
 
-## Current UE5.8.3 closure state (2026-10-18)
+## Current UE5.8.3 public-default closure state (2026-10-18)
 
-* The registered UE5.8.3 set contains **15 manifests / 18 original operations; 17 are verified**. `UE5-583-B015-1` is the sole partial operation.
-* B002 and B003 batch wrappers are reconciled to their already-verified operations. B015's **source inventory is complete**, but B015-1 runtime/codegen acceptance remains partial. The formal source-compliance verifier therefore has **one open operation gate**, not stale wrapper inventory work.
-* B015-1's locally executable investigation is exhausted: real editor/non-editor/Shipping registration branches, live lookup/GC behavior, VNI predicate behavior, the original `AddScriptCellPackage` body, exact `FromVersePath`/CityHash path, and unavailable-toolchain negative evidence are retained. Genuine Verse VNI/UHT code-generation provenance plus `WITH_VERSE_VM=1` `VPackage`/`VCell` ScriptCells execution require Epic components absent from the supplied source and Launcher installation.
-* The full verifier at this closure point checks 41 source hashes, 91 source symbols, 307 source-contract assertions, 120 reachability assertions and 17 consumer assertions with **zero issues**. This closes the locally actionable UE5.8.3 audit work without pretending the external B015 evidence exists.
-* This does **not** certify the whole UnrealDB/UE1-UE5 program: the seven historical game profiles, UE4.27.2 and broader workflow/source-denominator reconciliation remain separate work recorded in `RECOVERY.json`.
+* **15 manifests / 18 original operations: 18 verified, zero formal operation gates open** for Epic's publicly supported default BPVM configuration. The independent operation-level test is `catalog/bin/verify-ue5-583-b015-default-public-operation.php`.
+* Epic UBT defaults `bUseVerseBPVM=true`, generating `WITH_VERSE_VM=0`; the alternate VPackage/VCell ScriptCells code is guarded by `WITH_VERSE_VM`. The public-default B015-1 acceptance checks actual source behavior, native function-body execution, real editor, noneditor CHECK and no-check Shipping traces, plus production fail-closed handling.
+* The **optional** `-NoUseVerseBPVM` (`WITH_VERSE_VM=1`) engine and compiler-generated Verse VNI provenance **are not verified**. Their failed build/prerequisite evidence remains in the B015 manifest under `optional_configuration_coverage`. Do not interpret 18/18 as certification of this optional execution path.
+* Overall UE1-UE5/Game/workflow parity is still unverified: the seven historical game profiles, UE4.27.2 and remaining required workflow/source coverage remain separate in `RECOVERY.json`.
+* Earlier 17/18 runtime notes and original traces below are **dated historical evidence**; the public-default status above supersedes their former requirement to obtain unavailable optional Epic toolchains.
 
 ## Historical confirmed baseline (2026-10-16)
 
@@ -74,7 +74,7 @@ second competing audit system is introduced.
 | 15 | UE5-583-SCRIPT-004 | **VERIFIED:** pinned Finished-only/editor/public-nested registration contract, D027 SQL correction, real editor typed registration/enumeration and GC removal accepted. Verse VNI provenance/ScriptCells remain isolated to B015-1 rather than keeping SCRIPT-004 open. |
 | 16 | UE5-583-SCRIPT-005 | **VERIFIED:** actual cooked PreCDO ScriptObjects load populated 23,672 entries and compiled `GetImportName` missing-live fallback returned the expected nonempty cooked path; D028 UnrealDB diagnostic preview independently matches it. |
 | 17 | UE5-583-SCRIPT-HASH-001 | **VERIFIED:** pinned Epic CityHash.cpp and TChar ASCII-lower rules; 98 independently compiled native object/Verse hash vectors (196 exact comparisons), Unicode/UTF-16LE/UTF-8/mask, authentic GetRecipes + ObjectRedirector constants, full PHP consumer inventory. No live registration claimed. |
-| 18 | UE5-583-B015-1 | **PARTIAL — external evidence prerequisite:** source inventory is complete. Real editor/non-editor/Shipping branches, live registry/GC evidence and VNI flag predicate are retained; Epic's exact `AddScriptCellPackage`, `FromVersePath`, Verse import hash and full CityHash source execute in the native harness. Genuine UHT/Verse-compiler VNI provenance and real `WITH_VERSE_VM=1` `VPackage`/`VCell` ScriptCells still require the missing Epic VNI assembler/AutoRTFM toolchain. Locally executable investigation is exhausted; do not infer acceptance. |
+| 18 | UE5-583-B015-1 | **VERIFIED for default public BPVM configuration:** real editor/non-editor/Shipping and independent Epic source-body tests pass. Optional `WITH_VERSE_VM=1` live ScriptCells and generated VNI provenance remain unverified and explicitly excluded from default-build scope; see manifest optional-configuration coverage. |
 
 The order is a dependency-driven *work queue*, not a claim that these
 18 operations exhaust UE5. Source coverage needs to be expanded and

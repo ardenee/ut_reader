@@ -15,12 +15,9 @@ Run `catalog/bin/verify-compliance-recovery.php` and its negative regression
 before source acceptance. `verify-source-compliance.php --all` now checks
 recovery consistency as well as pinned source hashes. A passing consistency
 check is explicitly **not** a global UE1-UE5 compliance certificate. For the
-registered **UE5.8.3** operation set, **17 of 18 original operations are verified**
-and only `UE5-583-B015-1` remains partial. Its source inventory is reconciled; the
-remaining acceptance requires Epic Verse/VNI runtime material that is absent from the
-supplied source and Launcher installation. After reconciling stale B002/B003/B015
-batch-wrapper inventory flags, the formal verifier reports **one open operation gate**
-and zero issues. Broader UE1-UE4/game-profile/workflow scope is still open, so no
+registered **UE5.8.3 default-public-build** operation set, **18 of 18 original operations are verified**.
+The B015-1 boundary is now explicitly Epic's default BPVM build (`WITH_VERSE_VM=0`), proved with the new independently executable acceptance driver. Optional `WITH_VERSE_VM=1`/genuine generated-VNI behaviour remains **unverified optional coverage**, not a default-engine requirement. There are **zero open original-operation gates** and zero verifier issues.
+Broader UE1-UE4/game-profile/workflow scope is still open, so no
 overall cross-engine completion percentage is defensible.
 
 ## Layout and authoritative evidence
@@ -34,7 +31,7 @@ This is **not** a complete Unreal Engine file-format spec or a complete inventor
 
 ## Audit status and acceptance
 
-The historical B108 baseline had 18 operations, 0 verified and 33 open evidence gates. **Current UE5.8.3 formal result: 17/18 operations verified, one open operation gate, zero verifier issues.** The full source-compliance run executes pinned-source checks and the declared operation drivers; at the 18 October 2026 closure point it reports 41 source-hash checks, 91 source-symbol checks, 307 source-contract assertions, 120 reachability assertions and 17 consumer assertions. The sole partial operation is `UE5-583-B015-1`: genuine Verse VNI/UHT code-generation provenance and a real `WITH_VERSE_VM=1` `VPackage`/`VCell` ScriptCells runtime require Epic components not present in the supplied source/Launcher distribution. This is retained as an external evidence prerequisite rather than silently accepted or expanded into new audit work. A passing UE5 operation is still not a global UE1-UE5 compliance certificate; see `DIFFERENCES.md` and `RECOVERY.md` for the cross-engine backlog and exact evidence boundaries.
+The historical B108 baseline had 18 operations, 0 verified and 33 open evidence gates. **Current UE5.8.3 default-public-build formal result: 18/18 operations verified, zero open original-operation gates.** The formally accepted B015-1 test `catalog/bin/verify-ue5-583-b015-default-public-operation.php` independently verifies UBT's BPVM default, the `WITH_VERSE_VM=0` guard and retained Epic-source/native/editor/noneditor/Shipping behavior. The optional `-NoUseVerseBPVM`/generated-VNI/real VPackage-VCell runtime remains unverified and explicitly recorded under B015-1's `optional_configuration_coverage` (not silently accepted). No global UE1-UE5 or full optional-configuration compliance is claimed. The retained earlier 17/18 audit entries are historical, not the current status.
 
 For each actual divergence create a ledger entry containing: stable difference ID, affected engine/game, Epic source path/hash/lines and precise behavior, UnrealDB code reference, observed mismatch, correction commit, test fixture, passing/failing evidence and acceptance gate. Only mark **fixed+verified** when a negative-before/positive-after test and a source-compatible fixture prove the change. If not demonstrably mismatched use **unverified**, not **fixed**.
 

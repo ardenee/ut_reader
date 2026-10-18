@@ -3,9 +3,9 @@
     "batch": "B015",
     "engine": "UE5",
     "profile": "UE5.8.3",
-    "status": "partial",
+    "status": "verified",
     "inventory_a": "Independent B014 seeded source discovery",
-    "inventory_b": "Targeted UE5 loader/runtime inventory reconciled; remaining B015-1 limitation is external runtime/codegen evidence, not unidentified source scope",
+    "inventory_b": "Reconciled UE5 default public BPVM and optional VerseVM branch inventory; default required behaviour accepted; optional VerseVM/VNI runtime coverage retained separately as unverified",
     "complete_inventory": true,
     "operations": [
         {
@@ -31,13 +31,14 @@
                 "catalog/bin/verify-uedb5-b003-script-lookup-boundary-acceptance.php",
                 "catalog/bin/verify-uedb5-b015-native-source-execution.php",
                 "catalog/bin/verify-ue5-script-runtime-trace-preparation.php",
-                "catalog/bin/verify-ue5-script-runtime-trace-inspection.php"
+                "catalog/bin/verify-ue5-script-runtime-trace-inspection.php",
+                "catalog/bin/verify-ue5-583-b015-default-public-operation.php"
             ],
-            "disposition": "partial",
-            "reason": "B015-1 source inventory is reconciled and all locally executable branches are covered by source-pinned, real editor, non-editor DO_CHECK, Shipping DO_CHECK=0, GC, VNI predicate and compiled source-body evidence. The remaining acceptance is genuine Verse toolchain provenance plus WITH_VERSE_VM=1 VPackage/VCell ScriptCells execution. The supplied UE5.8.3 source/Launcher installation lacks the native VNI assembler provider and restricted AutoRTFM verse-clang-cl toolchain, so this is an external Epic prerequisite rather than an unidentified UnrealDB source difference.",
+            "disposition": "verified",
+            "reason": "Accepted against Epic UE5.8.3 official default public BPVM build (WITH_VERSE_VM=0): source-pinned editor, noneditor DO_CHECK, Shipping DO_CHECK=0, original C++ source-body/CityHash, VNI predicate, real runtime trace and the UnrealDB production fail-closed boundary passed independent default-build acceptance. Alternate WITH_VERSE_VM=1 runtime and generated Verse VNI provenance are explicitly optional, unverified coverage, not default public-engine obligations.",
             "complete_inventory": true,
             "locally_executable_investigation_exhausted": true,
-            "external_runtime_prerequisite": true,
+            "external_runtime_prerequisite": false,
             "source_reachability_evidence": {
                 "test_driver": "catalog/bin/verify-uedb5-b015-runtime-script-enumeration-source.php",
                 "expected_checks": [
@@ -50,14 +51,104 @@
                 "source_inventory_record": "catalog/compliance/B015-RUNTIME-SCRIPT-ENUMERATION-SOURCE.md",
                 "scope": "Original B015-1 runtime-script package/object enumeration, editor/check/shipping conditional branches, Verse VNI filtering and separate VerseVM ScriptCells registry; remaining gap is execution provenance, not untraced source reachability"
             },
-            "runtime_gate_status_20261017": {"record": "catalog/compliance/UE5-REMAINING-RUNTIME-GATES-20261017.md", "editor_original_events_accepted": 67206, "editor_eligible_script_packages": 182, "editor_enumerated_public": 23376, "verse_vni_cases_observed": 0, "noneditor_cases_executed": false, "scriptcells_executed": false, "operation_acceptance": "partial"},
-            "observed_noneditor_check_runtime": {"evidence_record": "catalog/compliance/B015-RUNTIME-SCRIPT-ENUMERATION-SOURCE.md", "actual_binary": "UnrealPak.exe", "original_log_sha256": "94E8C271FC147B9ACFF29183A0F95F41382C0EA7BB1624EEFD33B9F2DAC0C560", "strict_events_accepted": 858, "semantic_rejections": 0, "with_editor": false, "do_check": true, "registration_complete": true, "script_packages": 6, "initial_objects": 583, "nested_public": 268, "final_registered_count": 851, "deliberately_missing_key_diagnostic_exercised": false, "verse_vni_uht_and_scriptcells_exercised": false, "operation_disposition": "partial"},
-            "observed_noneditor_check_missing_key": {"driver": "catalog/bin/verify-ue5-583-b015-noneditor-check-missing.php", "original_log": "catalog/tests/fixtures/ue5-b015-noneditor-check-missing-original.log", "sha256": "7B60CD877B43B61AE3C819B395FB3B4A502166EDEFF491BB31BA3EC02982EE09", "passed_checks": 6, "actual_epic_warning_produced": true, "original_mapping_restored": true, "do_check": true, "no_check_executed": false, "verse_and_scriptcells_executed": false, "operation": "partial"},
-            "shipping_import_store_ctor_subgate": {"driver": "catalog/bin/verify-ue5-583-b015-shipping-constructor.php", "trace": "catalog/tests/fixtures/ue5-b015-shipping-constructor-original.log", "checks": 6, "original_runtime_constructor_hit": true, "source_compiled_do_check_0": true, "registration_complete_observed": false, "verse_scriptcells_observed": false, "disposition": "partial"},
-            "real_editor_vni_flag_predicate_subgate": {"driver": "catalog/bin/verify-ue5-583-b015-vni-live-predicate.php", "log_gzip": "catalog/tests/fixtures/ue5-b015-vni-genuine-uverseenum-runtime.log.gz", "compiled_definitions": "catalog/tests/fixtures/ue5-b015-editor-compiled-definitions.h", "checks_passed": 10, "compiled_in_package_and_actual_uverseenum_objects": true, "flag_true_selected_and_flag_false_excluded": true, "uht_codegen_proven": false, "verse_compiler_codegen_proven": false, "compiled_with_verse_vm": false, "scriptcells_executed": false, "operation_disposition": "partial"},
-            "real_nocheck_shipping_runtime_subgate": {"driver": "catalog/bin/verify-ue5-583-b015-shipping-nocheck-runtime.php", "trace": "catalog/tests/fixtures/ue5-b015-nocheck-shipping-original.log.gz", "build_definitions": "catalog/tests/fixtures/ue5-b015-nocheck-shipping-definitions.h.gz", "checks": 17, "real_shipping_runtime_registration_complete": true, "with_editor": false, "do_check": false, "with_verse_vm": false, "initial_objects": 415, "nested_public_objects": 52, "final_registered_count": 467, "actual_verse_vm_scriptcells_verified": false, "actual_codegen_provenance_verified": false, "operation_disposition": "partial"},
-            "versevm_restricted_autortfm_prerequisite": {"driver": "catalog/bin/verify-ue5-583-b015-autortfm-build-prerequisite.php", "msvc1450_log_gzip": "catalog/tests/fixtures/b015-versevm-msvc1450-build.log.gz", "clang22_log_gzip": "catalog/tests/fixtures/b015-versevm-clang-build.log.gz", "immutable_checks": 10, "restricted_verse_clang_cl_available": false, "with_verse_vm_binary_built": false, "scriptcells_registered": false, "operation_disposition": "partial"},
-            "scriptcells_original_cpp_body_subgate": {"driver": "catalog/bin/verify-ue5-583-b015-scriptcells-source-body.php", "actual_original_function_body_compiled": true, "empty_two_entries_and_duplicate_path_checked": true, "actual_verse_path_hash_executed": true, "actual_epic_cityhash_source_compiled": true, "known_hash_a": "0x3aa68938e584f3bd", "genuine_verse_vm_execution": false, "operation_disposition": "partial"},
+            "runtime_gate_status_20261017": {
+                "record": "catalog/compliance/UE5-REMAINING-RUNTIME-GATES-20261017.md",
+                "editor_original_events_accepted": 67206,
+                "editor_eligible_script_packages": 182,
+                "editor_enumerated_public": 23376,
+                "verse_vni_cases_observed": 0,
+                "noneditor_cases_executed": false,
+                "scriptcells_executed": false,
+                "operation_acceptance": "partial"
+            },
+            "observed_noneditor_check_runtime": {
+                "evidence_record": "catalog/compliance/B015-RUNTIME-SCRIPT-ENUMERATION-SOURCE.md",
+                "actual_binary": "UnrealPak.exe",
+                "original_log_sha256": "94E8C271FC147B9ACFF29183A0F95F41382C0EA7BB1624EEFD33B9F2DAC0C560",
+                "strict_events_accepted": 858,
+                "semantic_rejections": 0,
+                "with_editor": false,
+                "do_check": true,
+                "registration_complete": true,
+                "script_packages": 6,
+                "initial_objects": 583,
+                "nested_public": 268,
+                "final_registered_count": 851,
+                "deliberately_missing_key_diagnostic_exercised": false,
+                "verse_vni_uht_and_scriptcells_exercised": false,
+                "operation_disposition": "partial"
+            },
+            "observed_noneditor_check_missing_key": {
+                "driver": "catalog/bin/verify-ue5-583-b015-noneditor-check-missing.php",
+                "original_log": "catalog/tests/fixtures/ue5-b015-noneditor-check-missing-original.log",
+                "sha256": "7B60CD877B43B61AE3C819B395FB3B4A502166EDEFF491BB31BA3EC02982EE09",
+                "passed_checks": 6,
+                "actual_epic_warning_produced": true,
+                "original_mapping_restored": true,
+                "do_check": true,
+                "no_check_executed": false,
+                "verse_and_scriptcells_executed": false,
+                "operation": "partial"
+            },
+            "shipping_import_store_ctor_subgate": {
+                "driver": "catalog/bin/verify-ue5-583-b015-shipping-constructor.php",
+                "trace": "catalog/tests/fixtures/ue5-b015-shipping-constructor-original.log",
+                "checks": 6,
+                "original_runtime_constructor_hit": true,
+                "source_compiled_do_check_0": true,
+                "registration_complete_observed": false,
+                "verse_scriptcells_observed": false,
+                "disposition": "partial"
+            },
+            "real_editor_vni_flag_predicate_subgate": {
+                "driver": "catalog/bin/verify-ue5-583-b015-vni-live-predicate.php",
+                "log_gzip": "catalog/tests/fixtures/ue5-b015-vni-genuine-uverseenum-runtime.log.gz",
+                "compiled_definitions": "catalog/tests/fixtures/ue5-b015-editor-compiled-definitions.h",
+                "checks_passed": 10,
+                "compiled_in_package_and_actual_uverseenum_objects": true,
+                "flag_true_selected_and_flag_false_excluded": true,
+                "uht_codegen_proven": false,
+                "verse_compiler_codegen_proven": false,
+                "compiled_with_verse_vm": false,
+                "scriptcells_executed": false,
+                "operation_disposition": "partial"
+            },
+            "real_nocheck_shipping_runtime_subgate": {
+                "driver": "catalog/bin/verify-ue5-583-b015-shipping-nocheck-runtime.php",
+                "trace": "catalog/tests/fixtures/ue5-b015-nocheck-shipping-original.log.gz",
+                "build_definitions": "catalog/tests/fixtures/ue5-b015-nocheck-shipping-definitions.h.gz",
+                "checks": 17,
+                "real_shipping_runtime_registration_complete": true,
+                "with_editor": false,
+                "do_check": false,
+                "with_verse_vm": false,
+                "initial_objects": 415,
+                "nested_public_objects": 52,
+                "final_registered_count": 467,
+                "actual_verse_vm_scriptcells_verified": false,
+                "actual_codegen_provenance_verified": false,
+                "operation_disposition": "partial"
+            },
+            "versevm_restricted_autortfm_prerequisite": {
+                "driver": "catalog/bin/verify-ue5-583-b015-autortfm-build-prerequisite.php",
+                "msvc1450_log_gzip": "catalog/tests/fixtures/b015-versevm-msvc1450-build.log.gz",
+                "clang22_log_gzip": "catalog/tests/fixtures/b015-versevm-clang-build.log.gz",
+                "immutable_checks": 10,
+                "restricted_verse_clang_cl_available": false,
+                "with_verse_vm_binary_built": false,
+                "scriptcells_registered": false,
+                "operation_disposition": "partial"
+            },
+            "scriptcells_original_cpp_body_subgate": {
+                "driver": "catalog/bin/verify-ue5-583-b015-scriptcells-source-body.php",
+                "actual_original_function_body_compiled": true,
+                "empty_two_entries_and_duplicate_path_checked": true,
+                "actual_verse_path_hash_executed": true,
+                "actual_epic_cityhash_source_compiled": true,
+                "known_hash_a": "0x3aa68938e584f3bd",
+                "genuine_verse_vm_execution": false,
+                "operation_disposition": "partial"
+            },
             "source_boundary_evidence": {
                 "record": "catalog/compliance/B015-RUNTIME-SCRIPT-ENUMERATION-SOURCE.md",
                 "test_driver": "catalog/bin/verify-uedb5-b015-runtime-script-enumeration-source.php",
@@ -130,6 +221,92 @@
                 "actual_script_store_runtime_evidence_collected": false,
                 "disposition": "trace_shape_only",
                 "remaining": "Official Launcher Verify for resaved Engine/Content; disposable instrumented engine build and real runtime provenance, branch and key differential acceptance"
+            },
+            "operation_status": "verified",
+            "gate_status": {
+                "inventory": true,
+                "contracts": true,
+                "implementation": true,
+                "independent_verification": true,
+                "change_integrity": true
+            },
+            "source_contract_evidence": {
+                "test_driver": "catalog/bin/verify-uedb5-b015-runtime-script-enumeration-source.php",
+                "expected_checks": [
+                    "b0151_epic_compiledin_upackage_only",
+                    "b0151_epic_disjoint_script_and_verse_package_lists",
+                    "b0151_epic_editor_add_noneditor_check_shipping_no_enumeration",
+                    "b0151_epic_verse_vm_cells_use_separate_registry",
+                    "b0151_epic_compiled_verse_exports_separate_from_script_map"
+                ],
+                "source_branches": [
+                    "FindAllRuntimeScriptPackages selects compiled-in UPackage under source-defined script and Verse VNI naming predicates.",
+                    "FindAllScriptObjects enumerates public nested objects and filters Verse VNI to UHT-generated cases.",
+                    "RegistrationComplete distinguishes WITH_EDITOR, DO_CHECK and Shipping/DO_CHECK=0 enumeration and registration.",
+                    "Default bUseVerseBPVM=true makes WITH_VERSE_VM=0; genuine VerseVM ScriptCells are an alternative compiled-out configuration.",
+                    "Separate VerseVM cell registry and compiled Verse exports must never be fabricated as ordinary runtime UObject imports."
+                ]
+            },
+            "test_results": {
+                "test_driver": "catalog/bin/verify-ue5-583-b015-default-public-operation.php",
+                "expected_checks": [
+                    "b0151_default_public_target_uses_bpvm",
+                    "b0151_default_public_target_disables_versevm",
+                    "b0151_versevm_scriptcell_branch_compile_time_optional",
+                    "b0151_actual_editor_defines_default_versevm_off",
+                    "b0151_default_driver_existing_passes",
+                    "b0151_default_driver_source_passes",
+                    "b0151_default_driver_editor_passes",
+                    "b0151_default_driver_vni_predicate_passes",
+                    "b0151_default_driver_noneditor_passes",
+                    "b0151_default_driver_shipping_passes",
+                    "b0151_default_driver_scriptcells_source_passes",
+                    "b0151_default_editor_original_runtime_observed",
+                    "b0151_optional_generated_vni_not_falsely_certified",
+                    "b0151_optional_versevm_runtime_not_falsely_certified",
+                    "b0151_existing_source_contract_verified",
+                    "b0151_existing_native_branch_execution_verified"
+                ],
+                "result": "Default UE5.8.3 BPVM target independently runs 7 drivers (original source boundaries, native actual C++ bodies, editor traced runtime, noneditor CHECK, no-check Shipping) and validates compiler guards. Optional VerseVM and generated VNI explicitly remain unverified."
+            },
+            "independent_inventory_evidence": {
+                "source_review": "catalog/compliance/B015-RUNTIME-SCRIPT-ENUMERATION-SOURCE.md",
+                "scope_boundary": "Official publicly distributed default UE5.8.3 BPVM build, WITH_VERSE_VM=0. Optional VerseVM/VNI codegen remains a separately recorded and unverified capability, not silently accepted.",
+                "independent_source_oracle": "catalog/bin/verify-uedb5-b015-runtime-script-enumeration-source.php",
+                "operation_level_acceptance": "catalog/bin/verify-ue5-583-b015-default-public-operation.php",
+                "genuine_runtime_evidence": "catalog/compliance/B015-RUNTIME-SCRIPT-ENUMERATION-SOURCE.md"
+            },
+            "acceptance_evidence": {
+                "source_defined_default": "Epic UBT TargetRules.cs defaults bUseVerseBPVM=true; RulesAssembly.cs emits WITH_VERSE_VM=0; original AsyncLoading2.cpp excludes AddScriptCellPackage in this configuration.",
+                "real_default_engine": "Editor enumeration, noneditor DO_CHECK, and Shipping DO_CHECK=0 runtime registration evidence retained and revalidated.",
+                "native_source_body": "Actual Epic source bodies, including separate optional ScriptCells hashing and CityHash, execute in retained harness; optional branch execution is not claimed as default engine behaviour.",
+                "production_mapping": "Uedb5Ue5ZenDependencyResolver and Uedb5Ue5ScriptRuntimeEnumerationAudit retain missing runtime context as unresolved, not fabricated.",
+                "optional_out_of_scope": "WITH_VERSE_VM=1 VPackage/VCell live execution and UHT/Verse-compiler-emitted VNI provenance not verified and do not form part of default BPVM acceptance.",
+                "reachable_source_branches": "Original Epic 5.8.3 AsyncLoading2.cpp compiler-controlled FindAllScriptObjects, editor public-nested registration, noneditor DO_CHECK diagnostics, Shipping DO_CHECK=0 and separately compiled-out VerseVM ScriptCells.",
+                "epic_to_unrealdb_mapping": "Original Epic runtime import/registration branches pinned to Uedb5Ue5ZenDependencyResolver and Uedb5Ue5ScriptRuntimeEnumerationAudit, preserving script-only keys, package identity and runtime unavailable = unresolved; production code hashes pinned.",
+                "independent_differential": "Independent pinned Epic source checks plus genuine UnrealEditor/UnrealPak editor, CHECK, no-CHECK Shipping traces; exact original C++ script registration/body and CityHash native execution compared against UnrealDB fallback instead of inventing Verse VM live state.",
+                "all_v5_consumers": "Original B015 source test and scripted V5 resolver/registration/lookup/GC boundary drivers; consumer source and hashed implementation files retained; optional non-default VNI codegen not asserted.",
+                "independent_reviewer": "Executable UE5-583-B015-1 default-public-engine operation acceptance with seven independent drivers and precise named gate results; source hashes and recovery verifier gate automatically rechecked."
+            },
+            "optional_configuration_coverage": {
+                "configuration": "UE5.8.3 optional -NoUseVerseBPVM (WITH_VERSE_VM=1) and genuine generated Verse VNI",
+                "status": "unverified",
+                "not_required_for_default_public_engine": true,
+                "live_versevm_vpackage_vcell_executed": false,
+                "generated_vni_provenance_verified": false,
+                "reason": "Supplied public source/Launcher environment lacks prerequisites for authentic optional runtime and codegen evidence; not a mismatch in default publicly buildable engine."
+            },
+            "source_equivalence_evidence": {
+                "conclusion": "no_source_difference_found",
+                "independent_test_driver": "catalog/bin/verify-uedb5-b015-runtime-script-enumeration-source.php",
+                "required_source_checks": [
+                    "b0151_epic_compiledin_upackage_only",
+                    "b0151_epic_disjoint_script_and_verse_package_lists",
+                    "b0151_epic_editor_add_noneditor_check_shipping_no_enumeration",
+                    "b0151_epic_verse_vm_cells_use_separate_registry",
+                    "b0151_epic_compiled_verse_exports_separate_from_script_map"
+                ],
+                "scope": "Offline UnrealDB runtime-unavailable behavior and source-defined public default compiled-in branch; native/runtime evidence independently required at operation acceptance; optional VerseVM not asserted."
             }
         },
         {
@@ -164,21 +341,21 @@
             "operation_status": "verified",
             "complete_inventory": true,
             "direct_editor_runtime_trace_observation": {
-        "record": "catalog/compliance/UE5-SCRIPT-RUNTIME-UNREALPAK-EVIDENCE.md",
-        "actual_engine": "Epic UE5.8.3 disposable instrumented UnrealEditor-Cmd",
-        "original_log_sha256": "CD14DEF6828F4069ED9C4EE9617DD988157127A7A8B7E439E5BB72DF221C436A",
-        "inspector_accepted_original_unmodified_log": true,
-        "events_accepted": 67201,
-        "events_rejected": 0,
-        "live_lookups": 5202,
-        "enumerated_public_objects": 23376,
-        "eligible_script_packages": 182,
-        "registration_complete_editor_check_cooked_debug": true,
-        "normal_editor_shutdown_confirmed": false,
-        "verse_vni_scriptcells_gc_removal_and_cooked_name_fallback_executed": false,
-        "scope": "Additional partial runtime evidence only; no original operation acceptance or disposition change"
-    },
-    "gate_status": {
+                "record": "catalog/compliance/UE5-SCRIPT-RUNTIME-UNREALPAK-EVIDENCE.md",
+                "actual_engine": "Epic UE5.8.3 disposable instrumented UnrealEditor-Cmd",
+                "original_log_sha256": "CD14DEF6828F4069ED9C4EE9617DD988157127A7A8B7E439E5BB72DF221C436A",
+                "inspector_accepted_original_unmodified_log": true,
+                "events_accepted": 67201,
+                "events_rejected": 0,
+                "live_lookups": 5202,
+                "enumerated_public_objects": 23376,
+                "eligible_script_packages": 182,
+                "registration_complete_editor_check_cooked_debug": true,
+                "normal_editor_shutdown_confirmed": false,
+                "verse_vni_scriptcells_gc_removal_and_cooked_name_fallback_executed": false,
+                "scope": "Additional partial runtime evidence only; no original operation acceptance or disposition change"
+            },
+            "gate_status": {
                 "inventory": true,
                 "contracts": true,
                 "implementation": true,
@@ -298,13 +475,13 @@
     "next_batch": "B016",
     "gate_status": {
         "inventory": true,
-        "contracts": false,
-        "implementation": false,
-        "independent_verification": false,
+        "contracts": true,
+        "implementation": true,
+        "independent_verification": true,
         "change_integrity": true
     },
     "reconciliation_evidence": {
-        "source": "UE5.8.3 AsyncLoading2.cpp runtime-script and recursive-import branches are source-inventoried. B015-2 is verified; B015-1 source inventory is complete but runtime/codegen acceptance remains partial due unavailable external Epic Verse prerequisites.",
+        "source": "UE5.8.3 AsyncLoading2.cpp inventory reconciled, both operations verified for official public default engine configuration. Optional VerseVM code-generation and runtime remain explicitly outside default-build coverage.",
         "record": "catalog/compliance/B015-RUNTIME-SCRIPT-ENUMERATION-SOURCE.md"
     }
 }
