@@ -175,3 +175,7 @@ See [UE583-D032-VERSION-GUARD.md](UE583-D032-VERSION-GUARD.md). The UE5 reader n
 ## UE5-D033 - Zen dependency validator omitted serialized source requirements
 
 See [UE583-D033-ZEN-DEPENDENCY-COUNT.md](UE583-D033-ZEN-DEPENDENCY-COUNT.md). Real Satisfactory Zen package produced 98 correct Pass-2 dependency results but validator omitted `imported_package_ids` and read `target_type` rather than serialized bundle `kind`. The isolated genuine 98-result V5 snapshot now validates `ready=true`. PRD migration 202610150002 remains a pre-import prerequisite.
+
+## UE5-D034 - UE5 compact PAK v11 index unsupported
+
+See [UE583-D034-MODERN-PAK11.md](UE583-D034-MODERN-PAK11.md). Real Satisfactory version-11 PAK parsed as legacy flat index failed with `PAK FString read overrun`; source-backed modern compact directory index support now reads 4,761 entries and decodes five SHA1-pinned files using the configured Oodle DLL. Unsupported v10/v11 optional layouts and comprehensive PAK parity remain open.

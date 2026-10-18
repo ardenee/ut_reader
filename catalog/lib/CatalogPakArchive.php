@@ -12,6 +12,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/CatalogSupport.php';
+require_once __DIR__ . '/CatalogPakModernIndex.php';
 
 const CATALOG_PAK_MAGIC = 0x5A6F12E1;
 const CATALOG_PAK_FOOTER_SCAN_BYTES = 16777216; // 16 MB; allows signed/tacked-on data after the FPakInfo footer.
@@ -331,6 +332,9 @@ function catalog_pak_parse_entry(string $data, int &$offset, int $version): arra
 
 function catalog_pak_parse_index(string $path, array $footer): array
 {
+    if ((int)$footer['version'] >= 10) {
+        return catalog_pak_parse_modern_index($path, $footer);
+    }
     $index = catalog_pak_read_bytes($path, (int)$footer['index_offset'], (int)$footer['index_size']);
     $offset = 0;
     $mount = catalog_pak_read_fstring($index, $offset);
@@ -395,17 +399,30 @@ function catalog_pak_write_entry_data(string $pakPath, array $entry, string $des
         $payload = catalog_pak_read_bytes($pakPath, $dataOffset, (int)$entry['size']);
     } else {
         $blocks = $entry['blocks'] ?? [];
-        if (!is_array($blocks) || $blocks === []) {
+        if (!is_array($blocks) || $blocks === [] || !empty($entry['encrypted'])) {
             return false;
         }
+        $modern = !empty($entry['blocks_relative']);
+        $methodName = strtolower((string)($entry['compression_name'] ?? ''));
+        $chunkSize = (int)($entry['compression_block_size'] ?? 0);
         foreach ($blocks as $block) {
-            $start = (int)$block['start'];
-            $end = (int)$block['end'];
-            if ($end <= $start) {
+            $start = (int)$block['start'] + ($modern ? (int)$entry['offset'] : 0);
+            $end = (int)$block['end'] + ($modern ? (int)$entry['offset'] : 0);
+            if ($end <= $start || $chunkSize < 0) {
                 return false;
             }
             $compressed = catalog_pak_read_bytes($pakPath, $start, $end - $start);
-            $decoded = catalog_pak_archive_decode_payload($compressed);
+            if ($modern) {
+                $expectedBytes = min($chunkSize, (int)$entry['uncompressed_size'] - strlen($payload));
+                if ($expectedBytes <= 0) return false;
+                if (!class_exists(\UnrealDb\Catalog\Infrastructure\Metadata\Uedb5IoStoreCodec::class)) {
+                    throw new RuntimeException('The UE5 compression decoder is unavailable.');
+                }
+                $codec = new \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5IoStoreCodec();
+                $decoded = $codec->decode($methodName, $compressed, $expectedBytes);
+            } else {
+                $decoded = catalog_pak_archive_decode_payload($compressed);
+            }
             if (!is_string($decoded)) {
                 return false;
             }
