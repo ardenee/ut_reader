@@ -115,7 +115,7 @@
             ],
             "consumer_validation_evidence": {
                 "implementation_path": "catalog/src/Infrastructure/Metadata/Uedb5MigrationValidator.php",
-                "implementation_sha256": "89bdff85896937b46ebd0249aeafc31bf884022132ec8318c34742880be94b40",
+                "implementation_sha256": "ec5374803e5e611b831dd2bcf63f22ea9b523ea2b1512b7da25d764b458432c3",
                 "test_driver": "catalog/bin/verify-uedb5-zen-version-staging-contract.php",
                 "expected_checks": [
                     "valid_versioned_1015_passes",

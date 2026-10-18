@@ -24,3 +24,7 @@ The **source** fixture is the unmodified Satisfactory Dedicated Server experimen
 PRD MySQL `hwmvlite_ut_reader_catalog` was queried **read-only**. Its `ue_iostore_packages` DDL lacks columns added by the existing migration `202610150002_iostore_package_names.php`; that migration was applied only to the isolated DB for test continuation. The PRD migration must be deployed through its controlled migration path **before the user imports Satisfactory**. The Satisfactory game currently has no registered imported files or assigned game profile in PRD; this is intentional. Do not use a UE2 game/profile for production Satisfactory — only the disposable isolated fixture did so with temporary UE5 profile assignment.
 
 The **18 registered UE5 source operations** remain distinct from unverified broader workflow/source reachability; no production import or full-UE5 certification was performed.
+
+## B009/B010 consumer hash reattestation
+
+After changing the validator, the original B009 Zen-versioning and B010 Zen-conditional-layout manifests correctly invalidated their pinned consumer SHA-256 evidence. The shared independent consumer test `catalog/bin/verify-uedb5-zen-version-staging-contract.php` passed all checks, then both manifests were updated to the actual validator hash `ec5374803e5e611b831dd2bcf63f22ea9b523ea2b1512b7da25d764b458432c3`. With `UNREALDB_EPIC_SOURCE_ROOT=L:/Source/Engine/UE5/UE 5.8.3`, `verify-source-compliance.php --strict` completed: 18/18 original operations verified, 0 issues. This reattestation does not close UE5 end-to-end scope gaps.
