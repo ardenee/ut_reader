@@ -192,6 +192,23 @@ $check('unversioned_profile_uses_current_522_1018',
     && (int)($profileDefaults['assumed_unversioned_ue5_version'] ?? 0) === 1018,
     'UE5 5.8.3 unversioned classic packages must use GPackageFileUEVersion = UE4 522 / UE5 1018.');
 
+// Source-policy regression: an older UE5 component does not trigger a
+// manufactured minimum gate; the Epic serializer/reader decides format support.
+foreach ([999 => false, 1019 => true] as $component => $expectNewerRejection) {
+    $probe = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'unrealdb-ue5-version-' . $component . '.uasset';
+    file_put_contents($probe, substr_replace($fixture, $i32($component), 16, 4));
+    $error = '';
+    try {
+        $probeReader = new UnrealPackageReader5($probe);
+        $error = implode('; ', $probeReader->validatePackage());
+    } catch (Throwable $e) { $error = $e->getMessage(); }
+    @unlink($probe);
+    if ($expectNewerRejection) {
+        $check('ue5_source_rejects_future_component', str_contains($error, 'Unsupported future UE5 package version 1019'), $error);
+    } else {
+        $check('ue5_source_does_not_invent_lower_component_gate', !str_contains($error, 'Unsupported UE5 package version 999') && !str_contains($error, 'Unsupported future UE5 package version 999'), $error);
+    }
+}
 try {
     $summaryRoute = gp_read_legacy_summary($path);
     $reader = new UnrealPackageReader5($path);
