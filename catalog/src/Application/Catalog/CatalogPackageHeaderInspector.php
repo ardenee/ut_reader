@@ -98,6 +98,11 @@ final class CatalogPackageHeaderInspector
         $tag = self::u32Field($rows, $bytes, $offset, 'signature');
         $legacy = self::i32Field($rows, $bytes, $offset, 'legacyFileVersion', 'signed 32-bit UE4 marker');
         $legacyUe3 = null;
+        // UE4.27.2 stops reading an unknown future legacy summary layout before its fields.
+        // Diagnostic-only check: importing/parsing remains governed by the actual package reader.
+        if ($legacy < -7) {
+            return ['ok' => false, 'error' => 'Unsupported UE4 legacy package-summary layout: ' . $legacy, 'summary' => [], 'rows' => $rows];
+        }
         if ($legacy !== -4) {
             $legacyUe3 = self::i32Field($rows, $bytes, $offset, 'legacyUE3Version');
         }
