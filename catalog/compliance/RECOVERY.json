@@ -420,8 +420,8 @@
             "UE5-583-SCRIPT-003",
             "UE5-583-SCRIPT-004"
         ],
-        "rationale": "Epic UE5.8.3 FPackageObjectIndex::FromScriptPath generates a 62-bit script hash used by live ScriptObjects.FindRef. UnrealDB V5 dependency_results retained ScriptImport required_object_identity, but Uedb5DependencyProjectionBuilder stripped it from SQL dependency_edges (NULL kind and key). Fixed a1338232cf078677a8d62814009e100f1b9e3f00 by new distinct OBJECT_KEY_SCRIPT_IMPORT_HASH=3 and exact 8-byte binary identity without inventing package/provider/live registration. Historical baseline dropped the key; fixed source+authentic Satisfactory hash, SQLite publisher and session-temporary real MySQL tests passed. Both SCRIPT-003 and SCRIPT-004 remain partial for actual Epic live registry evidence.",
-        "state": "evidence_partial",
+        "rationale": "Epic UE5.8.3 FPackageObjectIndex::FromScriptPath generates a 62-bit script hash used by live ScriptObjects.FindRef. UnrealDB V5 dependency_results retained ScriptImport required_object_identity, but Uedb5DependencyProjectionBuilder stripped it from SQL dependency_edges (NULL kind and key). Fixed a1338232cf078677a8d62814009e100f1b9e3f00 by new distinct OBJECT_KEY_SCRIPT_IMPORT_HASH=3 and exact 8-byte binary identity without inventing package/provider/live registration. Historical baseline dropped the key; fixed source+authentic Satisfactory hash, SQLite publisher and session-temporary real MySQL tests passed. Subsequent authentic UE5.8.3 editor traces verified initial/editor/nested-public registrations, live find, real GC removal and post-GC null lookups. Independent SCRIPT-003 and SCRIPT-004 operation-level drivers passed, and both original operations have been formally verified; unrelated Verse VNI and ScriptCells branches remain with B015-1.",
+        "state": "fixed_regression_verified",
         "audit_escape": "none"
     },
     {
@@ -430,8 +430,8 @@
         "operations": [
             "UE5-583-SCRIPT-005"
         ],
-        "rationale": "Epic UE5.8.3 AsyncLoading2.cpp GetImportName returns live UObject name when FindRef succeeds, otherwise optionally cooked diagnostic GetPathName. The cooked debug map is trimmed against live ScriptObjects while retaining outer ancestors of missing entries, rendering paths with dot/colon/question separators. UnrealDB cooked reader retained names/outer indices but lacked a diagnostic-only path or trim preview. f3c960bb adds source-shaped explicit offline preview, tested against 54,968 authentic Satisfactory entries and synthetic trim/outer/cycle cases. No running UE5 registry or fallback selection is claimed; original SCRIPT-005 remains partial.",
-        "state": "evidence_partial",
+        "rationale": "Epic UE5.8.3 AsyncLoading2.cpp GetImportName returns live UObject name when FindRef succeeds, otherwise optionally cooked diagnostic GetPathName. The cooked debug map is trimmed against live ScriptObjects while retaining outer ancestors of missing entries, rendering paths with dot/colon/question separators. UnrealDB cooked reader retained names/outer indices but lacked a diagnostic-only path or trim preview. f3c960bb adds source-shaped explicit offline preview, tested against 54,968 authentic Satisfactory entries and synthetic trim/outer/cycle cases. Subsequent direct UE5.8.3 editor runtime verified live-first lookup and real GC; a freshly cooked real global.utoc ScriptObjects chunk decoded 23,672 entries and loaded all 23,672 into the real cooked PreCDO registry. The original compiled FPackageImportStore::GetImportName was explicitly invoked under CDB for cooked typed ScriptImport 5635D6648A5A6CB7 absent from the live registry: actual FCookedScriptObjectsDebug::GetPathName fired and returned /Script/ActionableMessage.ActionableMessageSubsystem, exactly matching corrected UnrealDB's opt-in offline preview. This was a controlled debugger fixture, not a naturally scheduled gameplay import. Original SCRIPT-005 now passes the composite 14-check operation driver plus 59 prerequisite source/boundary/runtime assertions. Distinct B015-1 Verse VNI/ScriptCells remains partial.",
+        "state": "fixed_regression_verified",
         "audit_escape": "none"
     },
     {

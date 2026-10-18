@@ -1,0 +1,89 @@
+Opened log file 'D:\Temp\uedb5-ue583-runtime\script005-cooked-nonempty-getimportname-original.log'
+1:004> r rip,rsp,rcx
+rip=00007ff6550382a0 rsp=0000001a9617c730 rcx=a9430536f9350000
+1:004> .echo UEDB_SCRIPT005_DIRECT_DEBUGGER_PROBE_BEGIN index=5635D6648A5A6CB7 expected=/Script/ActionableMessage.ActionableMessageSubsystem
+UEDB_SCRIPT005_DIRECT_DEBUGGER_PROBE_BEGIN index=5635D6648A5A6CB7 expected=/Script/ActionableMessage.ActionableMessageSubsystem
+1:004> bp /1 UnrealGame!FGlobalImportStore::RegistrationComplete
+1:004> bp /1 UnrealGame!FCookedScriptObjectsDebug::GetPathName ".echo UEDB_SCRIPT005_GETPATHNAME_FALLBACK_HIT;gc"
+1:004> r rsp=0000001a9617c728, rcx=0000016f68d40000, rdx=0000016f68d40400, r8=0000016f68d40100, r9=5635d6648a5a6cb7, rip=00007ff655024990
+1:004> r rip,rsp,rcx,rdx,r8,r9
+rip=00007ff655024990 rsp=0000001a9617c728 rcx=0000016f68d40000 rdx=0000016f68d40400 r8=0000016f68d40100 r9=5635d6648a5a6cb7
+1:004> r rip,rsp,rcx,rdx,r8,r9
+rip=00007ff655024990 rsp=0000001a9617c728 rcx=0000016f68d40000 rdx=0000016f68d40400 r8=0000016f68d40100 r9=5635d6648a5a6cb7
+1:004> g
+UEDB_SCRIPT005_GETPATHNAME_FALLBACK_HIT
+Breakpoint 0 hit
+UnrealGame!FGlobalImportStore::RegistrationComplete:
+00007ff6`550382a0 48895c2410      mov     qword ptr [rsp+10h],rbx ss:0000001a`9617c740={UnrealGame!FNullGameMoviePlayer::Initialize (00007ff6`5913c410)}
+1:004> dq 0000016f`68d40400 L2
+0000016f`68d40400  00007fea`9f417d20 00000038`00000035
+1:004> du 00007fea`9f417d20 L60
+00007fea`9f417d20  "/Script/ActionableMessage.Action"
+00007fea`9f417d60  "ableMessageSubsystem"
+1:004> r rsp=0000001a9617c758, rcx=00007ff31f05e548, rip=00007ff6550382a0
+1:004> r rip,rsp,rcx
+rip=00007ff6550382a0 rsp=0000001a9617c758 rcx=00007ff31f05e548
+1:004> g
+[2026.10.18-05.43.32:581][  0]LogEngine: Initializing Engine...
+[2026.10.18-05.43.32:593][  0]LogNetVersion: Set ProjectVersion to 1.0.0.0. Version Checksum will be recalculated on next use.
+[2026.10.18-05.43.32:593][  0]LogInit: Texture streaming: Disabled
+[2026.10.18-05.43.32:593][  0]LogCsvProfiler: Display: Metadata set : largeworldcoordinates="1"
+[2026.10.18-05.43.32:594][  0]LogChaosDD: Creating Chaos Debug Draw Scene for world Untitled
+[2026.10.18-05.43.32:595][  0]LogStreaming: Warning: LoadPackage: SkipPackage: /Water/Materials/MPC/MPC_Water (0x5F2D6BCD0B9491A0) - The package to load does not exist on disk or in the loader
+[2026.10.18-05.43.32:595][  0]LogUObjectGlobals: Warning: Failed to find object 'Object /Water/Materials/MPC/MPC_Water.MPC_Water'
+[2026.10.18-05.43.32:596][  0]LogNiagara: UAV Float16 is not supported, compressed GPU emitters will be disabled.
+[2026.10.18-05.43.32:597][  0]LogEngine: GameWindow did not exist.  Was created
+[2026.10.18-05.43.32:599][  0]LogSlate: Updating window title bar state: overlay mode, drag disabled, window buttons hidden, title bar hidden
+[2026.10.18-05.43.32:599][  0]LogInit: Display: Game Engine Initialized.
+[2026.10.18-05.43.32:600][  0]LogNNEDenoiser: Ray Tracing is not enabled, therefore NNEDenoiser is not registered!
+[2026.10.18-05.43.32:600][  0]LogMutable: Creating Mutable Customizable Object System.
+[2026.10.18-05.43.32:600][  0]LogStreaming: Warning: LoadPackage: SkipPackage: /DeformerGraph/Deformers/DG_LinearBlendSkin_Morph_Cloth (0xB8D066B7289A7706) - The package to load does not exist on disk or in the loader
+[2026.10.18-05.43.32:600][  0]LogUObjectGlobals: Warning: Failed to find object 'Object /DeformerGraph/Deformers/DG_LinearBlendSkin_Morph_Cloth.DG_LinearBlendSkin_Morph_Cloth'
+[2026.10.18-05.43.32:600][  0]LogStreaming: Warning: LoadPackage: SkipPackage: /DeformerGraph/Deformers/DG_LinearBlendSkin_Morph_Cloth_RecomputeNormals (0x90EE75615EED1473) - The package to load does not exist on disk or in the loader
+[2026.10.18-05.43.32:601][  0]LogUObjectGlobals: Warning: Failed to find object 'Object /DeformerGraph/Deformers/DG_LinearBlendSkin_Morph_Cloth_RecomputeNormals.DG_LinearBlendSkin_Morph_Cloth_RecomputeNormals'
+[2026.10.18-05.43.32:601][  0]LogCsvProfiler: Display: Metadata set : raytracing="0"
+[2026.10.18-05.43.32:614][  0]LogInit: Display: Starting Game.
+[2026.10.18-05.43.32:614][  0]LogGlobalStatus: UEngine::Browse Started Browse: "/Engine/Maps/Templates/OpenWorld?Name=Player"
+[2026.10.18-05.43.32:614][  0]LogNet: Browse: /Engine/Maps/Templates/OpenWorld?Name=Player
+[2026.10.18-05.43.32:614][  0]LogLoad: LoadMap: /Engine/Maps/Templates/OpenWorld?Name=Player
+[2026.10.18-05.43.32:614][  0]LogWorld: BeginTearingDown for /Temp/Untitled_0
+[2026.10.18-05.43.32:614][  0]LogWorld: UWorld::CleanupWorld for Untitled, bSessionEnded=true, bCleanupResources=true
+[2026.10.18-05.43.32:615][  0]LogSlate: InvalidateAllWidgets triggered.  All widgets were invalidated
+[2026.10.18-05.43.32:630][  0]LogUObjectHash: Compacting FUObjectHashTables data took   0.77ms
+[2026.10.18-05.43.32:630][  0]LogStreaming: Warning: LoadPackage: SkipPackage: /Engine/Maps/Templates/OpenWorld (0xE58A6A5F63716E87) - The package to load does not exist on disk or in the loader
+[2026.10.18-05.43.32:631][  0]LogLoad: Error: Failed to enter /Engine/Maps/Templates/OpenWorld: Failed to load package '/Engine/Maps/Templates/OpenWorld'. Please check the log for errors.
+[2026.10.18-05.43.32:631][  0]Message dialog closed, result: Ok, title: Message, text: The map specified on the commandline '/Engine/Maps/Templates/OpenWorld' could not be found. Exiting.
+[2026.10.18-05.43.32:631][  0]LogWindows: FPlatformMisc::RequestExit(0, UGameInstance::StartGameInstance.MapNotFound)
+[2026.10.18-05.43.32:631][  0]LogWindows: FPlatformMisc::RequestExitWithStatus(0, 0, UGameInstance::StartGameInstance.MapNotFound)
+[2026.10.18-05.43.32:631][  0]LogCore: Engine exit requested (reason: Win RequestExit)
+[2026.10.18-05.43.32:631][  0]LogPakFile: AllPaks IndexSizes: DirectoryHashSize=32, PathHashSize=16, EntriesSize=24576, DirTreeIndexSize=158264, TotalSize=182888
+[2026.10.18-05.43.32:631][  0]LogInit: Running DelayedAutoRegister Phase EndOfEngineInit
+[2026.10.18-05.43.32:632][  0]LogInit: Display: Engine is initialized. Leaving FEngineLoop::Init()
+[2026.10.18-05.43.32:632][  0]LogLoad: (Engine Initialization) Total time: 677.36 seconds
+[2026.10.18-05.43.32:632][  0]LogCore: Engine exit requested (reason: EngineExit() was called; note: exit was already requested)
+[2026.10.18-05.43.32:632][  0]LogInit: Display: PreExit Game.
+[2026.10.18-05.43.32:638][  0]LogRuntimeTelemetry: Recording EnginePreExit events
+[2026.10.18-05.43.33:587][  0]LogSlate: Request Window 'UE583Audit (64-bit Development PCD3D_SM6) ' being destroyed
+[2026.10.18-05.43.33:587][  0]LogSlate: Window 'UE583Audit (64-bit Development PCD3D_SM6) ' being destroyed
+[2026.10.18-05.43.33:589][  0]LogSlate: Slate User Destroyed.  User Index 0, Is Virtual User: 0
+[2026.10.18-05.43.33:589][  0]LogExit: Preparing to exit.
+[2026.10.18-05.43.33:595][  0]LogSlate: Updating window title bar state: overlay mode, drag disabled, window buttons hidden, title bar hidden
+[2026.10.18-05.43.33:595][  0]LogDemo: Cleaned up 0 splitscreen connections, owner deletion: enabled
+[2026.10.18-05.43.33:597][  0]LogExit: Game engine shut down
+[2026.10.18-05.43.33:627][  0]LogExit: Object subsystem successfully closed.
+[2026.10.18-05.43.33:643][  0]LogChaosDD: Chaos Debug Draw Shutdown
+[2026.10.18-05.43.33:656][  0]LogNFORDenoise: NFORDenoise function shutting down
+[2026.10.18-05.43.33:657][  0]LogPakFile: Destroying PakPlatformFile
+[2026.10.18-05.43.33:659][  0]LogExit: Exiting.
+ModLoad: 00007fff`b14d0000 00007fff`b14eb000   C:\WINDOWS\SYSTEM32\kernel.appcore.dll
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\atlmfc.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\ObjectiveC.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\concurrency.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\cpp_rest.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\stl.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\Windows.Data.Json.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\Windows.Devices.Geolocation.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\Windows.Devices.Sensors.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\Windows.Media.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\windows.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\Visualizers\winrt.natvis'

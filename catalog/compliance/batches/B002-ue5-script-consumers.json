@@ -295,6 +295,8 @@
     "independent_reviewer": "Unchanged Uedb5Ue5ScriptRuntimeTraceInspector verified original direct log with zero errors; independent 11-check B002 source oracle, B003 SQL hash projection, B003 lookup boundary, B015 native source and 25-check trace inspector regression ran and passed with pinned Epic source root. Test fixture hash mismatch had previously failed strict inspection and was corrected without changing inspector."
 },
             "script003_runtime_acceptance": {"result": "verified", "evidence_record": "catalog/compliance/UE5-SCRIPT-RUNTIME-UNREALPAK-EVIDENCE.md", "raw_trace_sha256": "CD3EED15774F748038F7C996CDA5EA59834A61B2FECBF3BBB52F4EB35AA4CEC6", "raw_events_accepted": 67206, "live_lookups_found": 5199, "live_lookups_not_found": 5, "transient_removed_index": "56105CA5CCBEFB26", "post_gc_lookup_returned_null": true, "strict_inspection_zero_rejections": true, "fixture_editor_normal_shutdown_attested": false},
+            "recovery_gate_status": {"inventory": true, "contracts": true, "implementation": true, "independent_verification": true, "change_integrity": true},
+            "correction_commits": ["a1338232cf078677a8d62814009e100f1b9e3f00"],
             "related_differences": [
                 "UE5-D027"
             ],

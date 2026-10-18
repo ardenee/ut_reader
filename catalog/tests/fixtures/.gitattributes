@@ -1,0 +1,3 @@
+# Original CDB transcripts are SHA-256-pinned and retained byte-for-byte.
+ue5-583-script005-direct-getimportname-original.log -text -diff
+ue5-583-script005-getimportname-symbols-original.log -text -diff

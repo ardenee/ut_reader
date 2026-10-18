@@ -78,7 +78,9 @@
   "independent_differential": "Original direct UE5.8.3 editor log SHA CD3EED15774F748038F7C996CDA5EA59834A61B2FECBF3BBB52F4EB35AA4CEC6 inspected 67206/67206 without rejection; 14239 editor package, 14239 initial, 9782 nested public, 23376 enumerated public adds; one GC removal.",
   "all_v5_consumers": "Existing B003 executable boundary driver covers dependency resolver, SQL projection, isolated MySQL, serialized script key; live registration retained under UE5's global UObject registry; distinct Verse branch requirements remain other original operations.",
   "independent_reviewer": "Unchanged independent B003 15-check source and 14-check boundary drivers plus strict 67206-event typed trace inspector and eight-check operation driver; mismatched registration-path negative fixture correctly failed before correction."
-},"related_differences": [
+},"recovery_gate_status": {"inventory": true, "contracts": true, "implementation": true, "independent_verification": true, "change_integrity": true},
+            "correction_commits": ["a1338232cf078677a8d62814009e100f1b9e3f00"],
+            "related_differences": [
                 "UE5-D027"
             ],
             "source_boundary_evidence": {
@@ -176,8 +178,103 @@
                 "catalog/bin/verify-ue5-script-runtime-trace-preparation.php",
                 "catalog/bin/verify-ue5-script-runtime-trace-inspection.php"
             ],
-            "disposition": "partial",
-            "reason": "Epic uses live ScriptObjects.FindRef first, GetImportName falls back to an optional compiled-in PreCDO cooked diagnostic path only on null; RegistrationComplete trims live indices but retains outers for missing cooked entries. UnrealDB previously decoded cooked names/outer links without a source-shaped diagnostic path/trim preview (D028). Opt-in offline preview fixed and tested on authentic Satisfactory 54,968 entries; no actual live UE5 registry/flags/GC execution, so original operation stays partial.",
+            "disposition": "verified",
+            "reason": "Epic uses live ScriptObjects.FindRef first, GetImportName falls back to an optional compiled-in PreCDO cooked diagnostic path only on null; RegistrationComplete trims live indices but retains outers for missing cooked entries. UnrealDB previously decoded cooked names/outer links without a source-shaped diagnostic path/trim preview (D028). D028 offline preview corrected and independently matched real original Epic cooked GetImportName output for typed ScriptImport, with actual editor live lookup/GC and cooked PreCDO 23,672-entry runtime map; controlled debugger invocation proves final nonempty fallback.",
+            "operation_status":  "verified",
+    "acceptance_evidence":  {
+                                "independent_differential":  "Real original cooked UE5.8.3 GetImportName typed index 5635D6648A5A6CB7 with missing live UObject hit the compiled GetPathName function and returned /Script/ActionableMessage.ActionableMessageSubsystem; independent UnrealDB preview for same 23672-entry cooked chunk returns identical path",
+                                "all_v5_consumers":  "Existing script lookup and diagnostic source and boundary acceptance, authentic editor/GC, cooked IoStore parser and runtime PreCDO map, D028 correction; unrelated Verse VNI/ScriptCells belongs to B015-1",
+                                "independent_reviewer":  "CDB original transcript hashes plus independent original PDB symbol log, 14-check composite executable driver, five previously independent drivers with 59 checks, fixed offline preview against original cooked global.utoc/.ucas",
+                                "reachable_source_branches":  "Pinned Epic live-first FindScriptImportObject and GetImportName, PreCDO cooked debug map, trim and GetPathName; source verifier 21/21",
+                                "epic_to_unrealdb_mapping":  "D028 opt-in ZenScriptImportDiagnosticPreview traverses authentic ScriptObjects name/outer chain, conservatively leaves runtime-object resolution unknown, matches compiled Epic fallback FString"
+                            },
+    "source_contract_evidence":  {
+                                     "expected_checks":  [
+                                                             "script005_original_cdb_log_sha256",
+                                                             "script005_original_pdb_symbol_log_sha256",
+                                                             "script005_pdb_symbol_getimportname_address",
+                                                             "script005_compiled_function_rip_and_index",
+                                                             "script005_actual_cooked_fallback_breakpoint",
+                                                             "script005_actual_return_fstring_nonempty",
+                                                             "script005_restored_original_calling_context",
+                                                             "script005_cooked_game_shutdown_after_probe",
+                                                             "script005_cooked_index_offline_oracle",
+                                                             "script005_source_prior_acceptance",
+                                                             "script005_boundary_prior_acceptance",
+                                                             "script005_live_prior_acceptance",
+                                                             "script005_cooked_prior_acceptance",
+                                                             "script005_precdo_prior_acceptance"
+                                                         ],
+                                     "source_branches":  [
+                                                             "actual Epic FindScriptImportObject live-first dispatch",
+                                                             "actual cooked PreCDO ScriptObjects chunk reader and 23672-entry runtime map",
+                                                             "actual FPackageImportStore::GetImportName null-live ScriptImport to GetPathName fallback",
+                                                             "actual nonempty returned cooked FString, corroborated by independent UnrealDB path decoder",
+                                                             "prior editor live name and empty fallback",
+                                                             "RegistrationComplete live object trimming retains missing cooked diagnostic entry"
+                                                         ],
+                                     "test_driver":  "catalog/bin/verify-ue5-583-script005-operation-acceptance.php"
+                                 },
+    "independent_inventory_evidence":  {
+                                           "scope_boundary":  "SCRIPT-005 covers live-first script lookup, optional cooked debug chunk load and a nonempty missing-live GetImportName diagnostic fallback; independent B015-1 Verse VNI/UHT/ScriptCells conditional registration remains open",
+                                           "independent_source_oracle":  "catalog/bin/verify-uedb5-b003-script-diagnostic-path-source.php",
+                                           "operation_acceptance":  "catalog/bin/verify-ue5-583-script005-operation-acceptance.php",
+                                           "source_review":  "catalog/compliance/B003-SCRIPT-LOOKUP-DIAGNOSTICS-SOURCE.md",
+                                           "empirical_authentic_runtime_record":  "catalog/compliance/UE5-REMAINING-RUNTIME-GATES-20261017.md"
+                                       },
+    "source_reachability_evidence":  {
+                                         "expected_checks":  [
+                                                                 "script005_source_prior_acceptance",
+                                                                 "script005_boundary_prior_acceptance",
+                                                                 "script005_compiled_function_rip_and_index",
+                                                                 "script005_actual_cooked_fallback_breakpoint",
+                                                                 "script005_precdo_prior_acceptance"
+                                                             ],
+                                         "complete_php_source_scan":  "Existing B003 bounded search over ZenScriptObjectsReader, ZenScriptImportDiagnosticPreview and production optional diagnostics; D028 original correction separately retained; direct cooked engine registry exists only in authentic engine binary",
+                                         "source_inventory_record":  "catalog/compliance/B003-SCRIPT-LOOKUP-DIAGNOSTICS-SOURCE.md",
+                                         "test_driver":  "catalog/bin/verify-ue5-583-script005-operation-acceptance.php"
+                                     },
+    "gate_status":  {
+                        "inventory":  true,
+                        "change_integrity":  true,
+                        "independent_verification":  true,
+                        "contracts":  true,
+                        "implementation":  true
+                    },
+    "test_results":  {
+                         "expected_checks":  [
+                                                 "script005_original_cdb_log_sha256",
+                                                 "script005_original_pdb_symbol_log_sha256",
+                                                 "script005_pdb_symbol_getimportname_address",
+                                                 "script005_compiled_function_rip_and_index",
+                                                 "script005_actual_cooked_fallback_breakpoint",
+                                                 "script005_actual_return_fstring_nonempty",
+                                                 "script005_restored_original_calling_context",
+                                                 "script005_cooked_game_shutdown_after_probe",
+                                                 "script005_cooked_index_offline_oracle",
+                                                 "script005_source_prior_acceptance",
+                                                 "script005_boundary_prior_acceptance",
+                                                 "script005_live_prior_acceptance",
+                                                 "script005_cooked_prior_acceptance",
+                                                 "script005_precdo_prior_acceptance"
+                                             ],
+                         "result":  "14/14 operation checks and 59 existing assertions passing against pinned UE5.8.3 source, preserved original editor and cooked debugger transcripts, genuine 23672-entry PreCDO cooked registry and D028-corrected UnrealDB offline decoder; synthetic input to real GetImportName was debugger-controlled, not organic gameplay import",
+                         "test_driver":  "catalog/bin/verify-ue5-583-script005-operation-acceptance.php"
+                     },
+    "source_equivalence_evidence":  {
+                                        "scope":  "D028 corrected offline diagnostic path reconstruction independently matches typed cooked index and actual real cooked Epic GetImportName fallback path. No further PHP correction was indicated.",
+                                        "conclusion":  "no_source_difference_found",
+                                        "required_source_checks":  [
+                                                                       "script005_source_prior_acceptance",
+                                                                       "script005_boundary_prior_acceptance",
+                                                                       "script005_cooked_index_offline_oracle",
+                                                                       "script005_actual_return_fstring_nonempty"
+                                                                   ],
+                                        "independent_test_driver":  "catalog/bin/verify-ue5-583-script005-operation-acceptance.php"
+                                    },
+    "complete_inventory":  true,
+            "recovery_gate_status": {"inventory": true, "contracts": true, "implementation": true, "independent_verification": true, "change_integrity": true},
+            "correction_commits": ["f3c960bbd151b9206b33a589ae5dbe4013ff940f"],
             "related_differences": [
                 "UE5-D028"
             ],
@@ -198,8 +295,8 @@
                 "diagnostic_preview": "catalog/src/Infrastructure/Metadata/Uedb5ZenScriptImportDiagnosticPreview.php",
                 "diagnostic_preview_sha256": "9faf0b096c8f355ba3a5f48f174299ab4007c81c6ed1ab09aeef9c5728c50e62",
                 "operation_acceptance": "catalog/bin/verify-uedb5-b003-script-lookup-boundary-acceptance.php",
-                "actual_epic_live_registry_executed": false,
-                "remaining": "Authoritative live registry and GetImportName fallback behavior in an actually running Epic loader with registration/debug flags",
+                "actual_epic_live_registry_executed": true,
+                "remaining": "None for SCRIPT-005; live cooked GetImportName nonempty diagnostic fallback independently accepted; B015-1 Verse/ScriptCells remains a distinct original operation",
                 "executable_source_substitute": "catalog/bin/verify-uedb5-b015-native-source-execution.php",
                 "executable_source_substitute_is_not_live_engine": true
             },
