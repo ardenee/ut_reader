@@ -478,7 +478,10 @@ final class Uedb5MigrationValidator
     /** @param array<string,mixed> $sections */
     private function zenHeaderDependencySourceCount(array $sections): int
     {
-        $count = 0;
+        // Epic's Zen ImportPackagesRecursiveInner consumes ImportedPackageIds
+        // separately from object imports. The resolver publishes one result
+        // per imported package ID, including IDs without object references.
+        $count = count((array)($sections['imported_package_ids'] ?? []));
         foreach (['imports','cell_imports'] as $section) {
             foreach ((array)($sections[$section] ?? []) as $row) {
                 if (in_array((string)((array)$row)['type'], ['PackageImport','ScriptImport'], true)) { $count++; }
@@ -487,8 +490,10 @@ final class Uedb5MigrationValidator
         $count += count((array)($sections['soft_package_references'] ?? []));
         foreach ((array)($sections['dependency_bundle_entries'] ?? []) as $edge) {
             $edge = (array)$edge;
-            if (($edge['target_type'] ?? null) === 'Export') { $count++; continue; }
-            if (($edge['target_type'] ?? null) !== 'Import') { continue; }
+            // FZenPackageHeader dependency bundles serialize `kind`; `target_type`
+            // is not present in Epic-produced Zen dependency bundle entries.
+            if (($edge['kind'] ?? null) === 'Export') { $count++; continue; }
+            if (($edge['kind'] ?? null) !== 'Import') { continue; }
             $combined = (int)($edge['combined_import_index'] ?? -1);
             $imports = array_values((array)($sections['imports'] ?? []));
             $cells = array_values((array)($sections['cell_imports'] ?? []));

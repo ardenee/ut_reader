@@ -171,3 +171,7 @@ The user provided an authoritative **isolated integration DB** check for `contai
 ## UE5-D032 - UE5 component minimum not imposed by Epic
 
 See [UE583-D032-VERSION-GUARD.md](UE583-D032-VERSION-GUARD.md). The UE5 reader no longer rejects a versioned package solely because its UE5 component is below 1000; original Epic UE4 oldest-loadable and upper-version layout gates remain. Reader, classic dependency and persistence regression tests pass. Full alternate-layout fixture coverage is not asserted.
+
+## UE5-D033 - Zen dependency validator omitted serialized source requirements
+
+See [UE583-D033-ZEN-DEPENDENCY-COUNT.md](UE583-D033-ZEN-DEPENDENCY-COUNT.md). Real Satisfactory Zen package produced 98 correct Pass-2 dependency results but validator omitted `imported_package_ids` and read `target_type` rather than serialized bundle `kind`. The isolated genuine 98-result V5 snapshot now validates `ready=true`. PRD migration 202610150002 remains a pre-import prerequisite.
