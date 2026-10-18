@@ -96,7 +96,11 @@ foreach (glob($root . '/migrations/*.php') ?: [] as $path) {
     $activeMigrationFiles[] = basename($path);
 }
 sort($activeMigrationFiles, SORT_STRING);
-$requiredPostBaselineMigrations = [];
+// The IoStore lifecycle was introduced after the consolidated baseline.
+$requiredPostBaselineMigrations = [
+    '202610150001_iostore_container_index.php',
+    '202610150002_iostore_package_names.php',
+];
 $record(
     'known_post_baseline_migrations_present',
     $activeMigrationFiles === $requiredPostBaselineMigrations,

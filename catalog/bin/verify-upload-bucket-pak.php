@@ -24,7 +24,6 @@ $read = static function (string $relative) use ($root): string {
 };
 
 $phpFiles = [
-    'migrations/202608170001_unverified_pak_members.php',
     'src/Infrastructure/Import/CatalogUploadBucketFilePolicy.php',
     'src/Infrastructure/Import/CatalogBucketPakContainerStore.php',
     'src/Infrastructure/Jobs/CatalogBucketPakJobHandler.php',
@@ -62,7 +61,8 @@ foreach ($phpFiles as $relative) {
 }
 $record('php_syntax', $syntaxFailures === [], implode(' | ', $syntaxFailures));
 
-$migration = $read('migrations/202608170001_unverified_pak_members.php');
+// The old standalone migration was consolidated into the canonical install schema.
+$migration = $read('install.sql');
 $policy = $read('src/Infrastructure/Import/CatalogUploadBucketFilePolicy.php');
 $container = $read('src/Infrastructure/Import/CatalogBucketPakContainerStore.php');
 $pakHandler = $read('src/Infrastructure/Jobs/CatalogBucketPakJobHandler.php');
@@ -192,7 +192,8 @@ $record(
 
 $record(
     'strict_ordinary_package_admission_is_unchanged',
-    str_contains($strictIndexer, 'does not contain a supported Unreal package header')
+    str_contains($strictIndexer, "if (empty(\$summary['ok']))")
+        && str_contains($strictIndexer, 'throw new CatalogInvalidPackageException')
         && str_contains($strictIndexer, 'missing the required package GUID')
         && str_contains($strictIndexer, 'Reading the Names table')
         && str_contains($strictIndexer, 'Reading the Imports table')

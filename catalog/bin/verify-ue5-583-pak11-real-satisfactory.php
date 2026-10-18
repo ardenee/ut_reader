@@ -30,6 +30,22 @@ foreach($expected as $name=>$expectedData){
    $ok=$pass&&$ok;
  }finally{if(is_file($tmp))unlink($tmp);}
 }
-echo json_encode(['ok'=>$ok,'archive_version'=>11,'entries'=>count($actual),'index_kind'=>$index['index_type']??null,'checks'=>$results],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;
+// Optional full extraction exercises the actual production archive helper.
+// All outputs remain under system temp and are deleted on completion/failure.
+$full=null;
+if(in_array('--full-extract',$argv,true)){
+ $extractedRoot=null;
+ try{
+  $archive=catalog_pak_archive_extract_to_temp(
+   ['pak_extract'=>['max_extracted_files'=>20000,'max_extracted_bytes'=>1073741824]],
+   $pak,basename($pak)
+  );
+  $extractedRoot=$archive['dir'];
+  $count=count($archive['files']);
+  $full=['ok'=>$count===count($actual),'files'=>$count,
+   'uncompressed_bytes'=>array_sum(array_column($archive['files'],'bytes'))];
+  $ok=$ok&&$full['ok'];
+ }finally{if(is_string($extractedRoot))catalog_pak_archive_delete_tree($extractedRoot);}
+}
+echo json_encode(['ok'=>$ok,'archive_version'=>11,'entries'=>count($actual),'index_kind'=>$index['index_type']??null,'checks'=>$results,'full_extraction'=>$full],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;
 exit($ok?0:2);
-
