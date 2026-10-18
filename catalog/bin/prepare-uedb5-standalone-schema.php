@@ -7,7 +7,25 @@ $id=$target->query('SELECT @@port port,@@datadir datadir')->fetch(PDO::FETCH_ASS
 if((int)$id['port']!==3339||strtolower(str_replace('\\','/',$id['datadir']))!=='c:/temp/uedb5-isolated-mysql/data/')throw new RuntimeException('Target is not standalone');
 $target->exec('CREATE DATABASE IF NOT EXISTS uedb5_isolated_integration');
 $target->exec('USE uedb5_isolated_integration');
-$prod=catalog_bootstrap(false)->db;
+// Production is the current schema authority; never write back to this connection.
+// Opt-in mode uses PRD's existing configuration over the DEV-to-PRD LAN link.
+$sourceMode = getenv('UEDB5_SCHEMA_SOURCE') ?: 'local';
+if ($sourceMode === 'prd') {
+ $configPath = getenv('UEDB5_PRD_CONFIG_PATH') ?: 'Z:/Apache24/htdocs/unrealdb/catalog/config.php';
+ $cfg = require $configPath;
+ $dbCfg = (array) ($cfg['db'] ?? []);
+ $prod = new PDO(
+  'mysql:host=192.168.0.55;port='.(int)($dbCfg['port'] ?? 3306).';dbname='.(string)($dbCfg['database'] ?? '').';charset=utf8mb4',
+  (string) ($dbCfg['username'] ?? ''), (string) ($dbCfg['password'] ?? ''),
+  [PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION, PDO::ATTR_TIMEOUT=>5]
+ );
+ $prod->exec('SET SESSION TRANSACTION READ ONLY');
+ $prod->beginTransaction();
+} elseif ($sourceMode === 'local') {
+ $prod=catalog_bootstrap(false)->db;
+} else {
+ throw new RuntimeException('Unknown UEDB5_SCHEMA_SOURCE mode.');
+}
 $rows=$prod->query('SHOW FULL TABLES')->fetchAll(PDO::FETCH_NUM);
 $created=0;$fail=[];
 foreach($rows as $r){
