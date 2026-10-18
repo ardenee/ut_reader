@@ -167,3 +167,7 @@ The user provided an authoritative **isolated integration DB** check for `contai
 - **Targeted regression evidence:** PRD `verify-upload-worker-contracts.php` and `verify-resumable-job-workflows.php` both passed (exit 0); these are bounded scripts, not full authenticated end-to-end acceptance.
 - **CompactSearchProjectionWriter:** preserved DEV version lacks the newer writer implementation (saved-version diff: 511 deletions compared with main). **Do not restore older file.** Separate source-to-writer behavior review remains open.
 - No older stash files have been restored. Further 60+ DEV and 22 PRD divergent files remain to triage; exclude old intentionally deprecated V4 files from restoration, but retain recovery stashes.
+
+## UE5-D032 - UE5 component minimum not imposed by Epic
+
+See [UE583-D032-VERSION-GUARD.md](UE583-D032-VERSION-GUARD.md). The UE5 reader no longer rejects a versioned package solely because its UE5 component is below 1000; original Epic UE4 oldest-loadable and upper-version layout gates remain. Reader, classic dependency and persistence regression tests pass. Full alternate-layout fixture coverage is not asserted.

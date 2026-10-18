@@ -1,0 +1,11 @@
+# UE5.8.3 version admission correction — source-backed
+
+**Finding UE5-D032 (2026-10-18).** Pinned Epic UE5.8.3 `Engine/Source/Runtime/CoreUObject/Public/UObject/PackageFileSummary.h::IsFileVersionTooOld` checks `FileVersionUE < VER_UE4_OLDEST_LOADABLE_PACKAGE` (UE4 component). `IsFileVersionTooNew` compares UE4 and UE5 components to current engine values. `Engine/Source/Runtime/CoreUObject/Private/UObject/LinkerLoad.cpp::SerializePackageFileSummary` fails on too old (line ~1537), and subject to `bLoaderNeedsEngineVersionChecks` on too new (line ~1623). `PackageFileSummary.cpp` separately rejects legacy-summary layouts newer than supported (`CurrentLegacyFileVersion=-9`). **There is no unconditional source check requiring UE5 component >= 1000**.
+
+**Observed UnrealDB divergence:** `UE5/UnrealPackageReader.php` formerly rejected any non-unversioned summary with `ue5Version < UE5_INITIAL_VERSION (1000)`, including serialized pre-UE5 enum values even if the UE4 component was loadable. This is an artificial lower-bound rule not found in the original Epic linker.
+
+**Fix:** Remove only the extra UE5-component *lower* gate. Preserve UE4 oldest-loadable and current maximum bounds, legacy-summary layout rejection and downstream parser layout validation. The change does **not** promise successful parsing of every older-layout file; actual source-defined structure/feature gates still apply. It does not relax arbitrary future UE5 versions or disable genuine Epic format/version checks.
+
+**Evidence:** Original Epic `PackageFileSummary.h`, `LinkerLoad.cpp`, `PackageFileSummary.cpp` versus reader guard; DEV test executables `verify-ue5-583-reader-contract.php`, `verify-uedb5-ue5-classic-dependency-resolution.php`, `verify-uedb5-ue5-classic-persistence.php` all returned exit 0 after correction. This is a **source-guard differential and retained reader regression**, not an independent cooked fixture for UE5 version 0; no fabricated runtime claim.
+
+**Audit boundary:** The registered 18 default-public-engine operations remain accepted; this fixes a separate discovered UE5 reader guard. Full UE5 source-to-workflow reachability, independent cooked artifact differential and guarded IoStore lifecycle tests remain open in `UE583-FULL-FILE-PARITY-SCOPE.md`.

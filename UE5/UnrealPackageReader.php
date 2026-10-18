@@ -361,9 +361,12 @@ final class UnrealPackageReader5
             $this->issues[] = 'Package is unversioned; using assumed UE5 parser versions UE4='
                 . $ue4Version . ' UE5=' . $ue5Version . ' from parser profile '
                 . (string)$this->header['parserProfileKey'] . ' for table parsing.';
-        } elseif ($ue5Version < self::UE5_INITIAL_VERSION || $ue5Version > self::CURRENT_UE5_VERSION) {
-            throw new RuntimeException('Unsupported UE5 package version ' . $ue5Version
-                . '; audited range=' . self::UE5_INITIAL_VERSION . '..' . self::CURRENT_UE5_VERSION);
+        } elseif ($ue5Version > self::CURRENT_UE5_VERSION) {
+            // Epic FPackageFileSummary::IsFileVersionTooOld checks the UE4
+            // component, not an invented minimum for the UE5 component.
+            // Versions predating the UE5 version enum remain reader-driven.
+            throw new RuntimeException('Unsupported future UE5 package version ' . $ue5Version
+                . '; engine maximum=' . self::CURRENT_UE5_VERSION);
         }
         if ($ue4Version < self::VER_OLDEST_LOADABLE_PACKAGE || $ue4Version > self::DEFAULT_ASSUMED_UNVERSIONED_UE4_VERSION) {
             throw new RuntimeException('Unsupported UE4 component of UE5 package version ' . $ue4Version . '.');
