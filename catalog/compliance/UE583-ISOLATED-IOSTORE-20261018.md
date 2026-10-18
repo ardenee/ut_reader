@@ -4,7 +4,7 @@
 
 **Isolation:** DEV `C:/Temp/uedb5-isolated-mysql/data`, port 3339 bound to 127.0.0.1, schema `uedb5_isolated_integration`. `UEDB5_SCHEMA_SOURCE=prd` in `catalog/bin/prepare-uedb5-standalone-schema.php` reads PRD table DDL and writes only to isolated DEV MySQL, after checking server datadir and port. Initial schema: 72 tables copied, 0 failures; rerun: 0 additions, 0 failures. Only game IDs 2 and 14 and their profile rows were copied into isolated MySQL to satisfy foreign keys. This is a disposable test environment and not a production data migration.
 
-**Passed, actual retained Satisfactory IoStore fixture:** 
+**Passed, actual retained Satisfactory IoStore fixture:**
 - `verify-iostore-container-index-standalone.php`: 27,240 `.utoc` members counted, stable repeat indexing.
 - `verify-iostore-container-retention-standalone.php`: `global.utoc` stored and hash-checked, repeated import reported existing; global container has 0 export-bundle package members, so does not prove cooked package extraction.
 - `verify-iostore-missing-part-standalone.php`: missing data part rejected, SQL rows unchanged.
