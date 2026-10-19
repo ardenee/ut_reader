@@ -27,8 +27,8 @@
 - `catalog/bin/verify-ue5-583-satisfactory-full-isolated.php` — 27,240/27,240 ready, 0 failed, exit 0; script checks isolated MySQL port and datadir.
 - `catalog/bin/verify-source-compliance.php --strict` with `UNREALDB_EPIC_SOURCE_ROOT=L:/Source/Engine/UE5/UE 5.8.3` — 18/18 registered operations, 0 issues.
 
-## Release blockers / remaining uncertainty
+## Remaining scope / current release evidence
 
-1. PRD `ue_iostore_packages` **still lacks all seven** columns introduced by existing migration `202610150002_iostore_package_names.php`, verified read-only. Apply the migration through the normal authenticated production migration process before user-initiated Satisfactory import; do not bypass with PHP side effects.
+1. **Resolved:** DEV and PRD migrations `202610150001` and `202610150002` are applied and independently schema-verified; the earlier pre-migration blocker is superseded. See `UE583-DEV-PRD-SCHEMA-SYNC-20261019.md`. No production Satisfactory import has been authorized.
 2. Exhaustive route tracing of package identification, upload, full archive import, repair/resync, and metadata search/queries, with failure/retry and returned UI behavior, remains open. Source format branches not exercised by these fixtures also remain open.
 3. The 16 workflow `coverage` fields are deliberately **not** bulk-changed. This document is evidence for already demonstrated subsets, not a fabricated completeness certification.
