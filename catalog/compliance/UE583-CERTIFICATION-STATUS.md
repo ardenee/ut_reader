@@ -27,6 +27,13 @@ This is the single current entry point for UE5.8.3 status. The strict Epic-sourc
 
 DEV: `game-amd`, code `C:/Users/arden/source/repos/ut_reader`. PRD: `Lelly-pc`, checkout `C:/Apache24/htdocs/unrealdb`. DEV and PRD application IoStore schema migrations `202610150001` and `202610150002` were applied and verified. They hold independent datasets. All large UE5 Satisfactory publication tests operate in separate DEV isolation. No production Satisfactory import has been authorized or performed.
 
+## Source-denominator and D035 checkpoint (19 October 2026)
+
+- The bounded source manifest [`UE583-SOURCE-DENOMINATOR.json`](UE583-SOURCE-DENOMINATOR.json) defines **11 format-behavior units** with explicit pinned Epic source, UnrealDB implementation, branch families and evidence. The executable `catalog/bin/verify-ue5-583-source-denominator.php` passed **33 source hashes, 42 source symbols, 24 implementation files and 21 evidence files**, with no integrity issues. The units are **5 verified / 6 partial**. An accounted unit is not necessarily semantically verified. The list is a controlled format-reader coverage model, not a claim to enumerate every Unreal Engine function.
+- `RECOVERY.json` and `DIFFERENCES.md` now reciprocally include **UE5-D032 through UE5-D035** and retain open coverage gates for their outstanding independent semantics. D035 removed the extra terminal TOC EOF rejection not present in Epic `FIoStoreTocResourceView::Read` / `FinalizeRead`; the new assertion failed on the old reader and passed after correction, with the full foundation fixture **34/34**.
+- The affected B001/B002/B006/B007/B008/B015/B016 acceptance drivers passed, followed by a full strict Epic-source verification (**18/18**, 41 hashes, 91 symbols, 312 contracts, 120 reachability assertions, zero issues). The recovery integrity verifier passes but reports **16/16 production workflows still unaccepted** and global scope incomplete.
+- Commit [`30dea3dd`](https://github.com/ardenee/ut_reader/commit/30dea3dd) was pushed to `main` and fast-forwarded to PRD; PRD has no modified tracked files. DEV's separate audit checkout is at the same commit. The older DEV live application checkout under `D:/Apache24/htdocs/unrealdb` has not been forcibly replaced.
+
 ## What blocks full UE5.8.3 certification
 
 1. **Finite Epic UE5 source denominator:** complete relevant public classic and Zen parser/IoStore/package-store branch inventory and explicitly document out-of-scope encrypted/private/unsupported layouts.
