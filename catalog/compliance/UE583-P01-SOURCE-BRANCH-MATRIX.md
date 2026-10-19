@@ -17,4 +17,4 @@ Source: pinned `PackageFileSummary.cpp` `operator<<(FStructuredArchive::FSlot, F
 
 Scope cautions: Epic's editor can reject unversioned content when `GAllowUnversionedContentInEditor` is disabled; UnrealDB is an offline metadata reader, not an editor. Epic also offers configurable future-version policy; UnrealDB uses its enabled-by-default policy for safe metadata decoding. These are documented differences in consumer policy, not evidence of identical engine execution.
 
-**P01 not closed:** independently decoded classic summary semantic oracle and complete negative/error-path differential remain open. P02 source issues discovered during P01 are sent to the secondary queue, not worked out of sequence.
+**P01 independent summary oracle:** 140 real packages and 5,279 Epic-native decoded fields matched with zero differences (`UE583-P01-EPIC-NATIVE-SUMMARY-DIFFERENTIAL.md`). Existing classic reader contract exercises wire admission and negative boundaries. Native field parity is sampled, not an exhaustive proof for unsupported/older formats. P02 source issues discovered during P01 are sent to the secondary queue, not worked out of sequence.

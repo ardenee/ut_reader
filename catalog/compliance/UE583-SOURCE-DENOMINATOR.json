@@ -21,7 +21,7 @@
       "id": "UE583-SRC-001",
       "area": "classic_package_summary_and_version_admission",
       "inventory_status": "accounted",
-      "verification_status": "partial",
+      "verification_status": "verified",
       "epic_sources": [
         {"path": "Engine/Source/Runtime/CoreUObject/Private/UObject/PackageFileSummary.cpp", "sha256": "45ba74addefec3877b18fe0c49a3eb398f24e1c35fe2f547afcecdef3ef12f8c"},
         {"path": "Engine/Source/Runtime/CoreUObject/Public/UObject/PackageFileSummary.h", "sha256": "38ba3bc134941cc8faa64e8b2bd05f02e797944488bdd03bfb24d465a3fd0dc6"},
@@ -47,9 +47,11 @@
       "evidence": [
         "catalog/compliance/UE583-D032-VERSION-GUARD.md",
         "catalog/bin/verify-ue5-583-reader-contract.php",
-        "catalog/bin/verify-ue5-583-real-classic-engine-content.php"
+        "catalog/bin/verify-ue5-583-real-classic-engine-content.php",
+        "catalog/bin/verify-ue5-583-epic-classic-native-summary.php",
+        "catalog/compliance/UE583-P01-EPIC-NATIVE-SUMMARY-DIFFERENTIAL.md"
       ],
-      "open_requirements": ["Independent classic semantic differential remains required for verification; source inventory is accounted."]
+      "open_requirements": []
     },
     {
       "id": "UE583-SRC-002",

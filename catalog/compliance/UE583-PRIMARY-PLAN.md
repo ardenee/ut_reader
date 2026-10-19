@@ -4,8 +4,8 @@ Baseline: c4a6c0a2 (2026-10-19). Frozen primary denominator: 11 areas from UE583
 
 | Priority | Unit | Scope | State |
 |---|---|---|---|
-| P01 | SRC-001 | Classic summary, versions and admission | IN PROGRESS |
-| P02 | SRC-002 | Classic name/import/export/dependency tables | queued |
+| P01 | SRC-001 | Classic summary, versions and admission | verified within supported scope — native 140-package field differential |
+| P02 | SRC-002 | Classic name/import/export/dependency tables | IN PROGRESS |
 | P03 | SRC-003 | Zen header and versioning | queued |
 | P04 | SRC-004 | Zen import/export/dependencies | queued |
 | P05 | SRC-005 | Script objects and identities | queued |
@@ -29,4 +29,4 @@ After P11, resolve secondary findings in order, then accept the **existing** 16 
 
 ## Checkpoint
 
-Active: P01 classic summary/version. No P01 closure claimed. Epic PackageFileSummary.cpp lines ~115-185 show -9 legacy admission, conditional future-version compatibility guard and unversioned handling; UnrealDB UE5/UnrealPackageReader.php lines ~318-385 require explicit comparison, especially upper UE4/UE5 gates. Resume here.
+P01 source branch matrix completed for supported classic summary layouts. Epic-native UnrealPackageTool differential passed 140 real packages / 5,279 fields; existing negative reader contract passed. Active: P02 classic name/import/export/dependency tables. S001 remains deferred until after P11 by the agreed secondary-queue rule.
