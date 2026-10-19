@@ -1,5 +1,7 @@
 # UE5-D033 — Zen dependency source counter omitted header packages and bundle edges
 
+**Update 19 October 2026 — PRD migrations verified complete:** On Lelly-pc, UnrealDB official migration runner applied `202610150001` and `202610150002` as batch 2, then `migrate.php verify` succeeded. Independent read-only DEV-to-PRD MySQL inspection confirmed all three `ue_iostore_*` tables, seven package metadata columns, and both required indexes. The earlier migration-pending statements below record their pre-migration state and are superseded by this dated verification. No Satisfactory production import was initiated.
+
 **Status:** source-backed defect corrected and reproduced against an actual Satisfactory Dedicated Server UE5 cooked container, in isolated MySQL only. **Not a claim that full UE5 reachability is complete.**
 
 ## Epic reference and affected consumer

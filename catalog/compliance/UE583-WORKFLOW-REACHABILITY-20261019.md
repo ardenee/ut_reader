@@ -1,5 +1,7 @@
 # UE5.8.3 — Production workflow reachability, verified subset (19 October 2026)
 
+**Update 19 October 2026 — PRD migrations verified complete:** On Lelly-pc, UnrealDB official migration runner applied `202610150001` and `202610150002` as batch 2, then `migrate.php verify` succeeded. Independent read-only DEV-to-PRD MySQL inspection confirmed all three `ue_iostore_*` tables, seven package metadata columns, and both required indexes. The earlier migration-pending statements below record their pre-migration state and are superseded by this dated verification. No Satisfactory production import was initiated.
+
 **Scope rule:** Evidence of a working Satisfactory file-format/IoStore path is not proof of all default Epic UE5.8.3 source branches or all 16 production workflows. Keep `RECOVERY.json.scope_complete=false` until actual production consumers and independent comparisons are mapped. No production Satisfactory import was run.
 
 ## Actual production entrypoint chains examined

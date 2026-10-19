@@ -1,5 +1,7 @@
 # UE5.8.3 Satisfactory IoStore end-to-end publication and Pass 2
 
+**Update 19 October 2026 — PRD migrations verified complete:** On Lelly-pc, UnrealDB official migration runner applied `202610150001` and `202610150002` as batch 2, then `migrate.php verify` succeeded. Independent read-only DEV-to-PRD MySQL inspection confirmed all three `ue_iostore_*` tables, seven package metadata columns, and both required indexes. The earlier migration-pending statements below record their pre-migration state and are superseded by this dated verification. No Satisfactory production import was initiated.
+
 Fixture: unmodified Satisfactory Dedicated Server experimental TOC/UCAS family on PRD, retained with SHA256 verification into isolated DEV storage, C:/Temp/uedb5-iostore-retention-test. Database: 127.0.0.1:3339/uedb5_isolated_integration; guard checks both port and dedicated MySQL datadir; production PRD catalog is never written. The disposable test records use game ID 2 with temporarily selected UE5 profile 19 **only inside isolated DEV MySQL**. They are not actual production Unreal II files. Satisfactory game 14 remains empty by design in production.
 
 ## Completed end-to-end stages
