@@ -49,6 +49,10 @@ final class Uedb5ZenPackageReader
         if ($headerSize < self::SUMMARY_SIZE || $headerSize > strlen($bytes)) {
             throw new RuntimeException('Zen HeaderSize is outside the reconstructed package chunk.');
         }
+        // Epic FZenPackageHeader::MakeView creates FMemoryReaderView from
+        // only the header span, never from the following export payload.
+        $reader = new Uedb5BinaryReader(substr($bytes, 0, $headerSize), 'Zen package header');
+        $reader->seek(self::SUMMARY_SIZE);
         // Epic's FZenPackageHeader::MakeView uses the serialized uint32 as a
         // truth value. Every nonzero value enters the versioning branch.
         $versioning = null;
