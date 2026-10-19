@@ -495,7 +495,7 @@
     {
       "id": "INDEPENDENT-DIFFERENTIAL",
       "status": "open",
-      "ue5_partial_independent_evidence": "Epic UE5.8.3 UnrealPak vs production PHP PAK11: 4761/4761 index entries and 4761/4761 decoded SHA256/size, 212783532 bytes. See catalog/compliance/UE583-PAK-EPIC-INDEPENDENT-DIFFERENTIAL-20261019.md; other Epic UE5 layouts and Zen/classic runtime semantics remain open",
+      "ue5_partial_independent_evidence": "Epic UE5.8.3 UnrealPak vs production PHP PAK11: 4761/4761 index entries and 4761/4761 decoded SHA256/size, 212783532 bytes. See catalog/compliance/UE583-PAK-EPIC-INDEPENDENT-DIFFERENTIAL-20261019.md; Epic UnrealPak native IoStore listing independently matches 27240/27240 Satisfactory Zen package names after correct cooked plugin mounts; see catalog/compliance/UE583-EPIC-NATIVE-ZEN-NAMES-20261019.md; Zen header/export/dependency semantics, other layouts and classic runtime comparisons remain open",
       "reason": "Synthetic tests and bounded fixture checks do not prove comprehensive independent Epic-versus-UnrealDB output equivalence."
     }
   ],
