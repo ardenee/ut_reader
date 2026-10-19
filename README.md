@@ -1,6 +1,6 @@
 # UnrealDB
 
-> **Current status:** [Current project status](docs/current-project-status.md) records the authoritative 15 October 2026 V5 production checkpoint.
+> **Current status:** [Current project status](docs/current-project-status.md) records the seven-game UEDB5 production checkpoint. [UE5.8.3 certification status](catalog/compliance/UE583-CERTIFICATION-STATUS.md) tracks the separate Epic-source, real-file and workflow audit (not yet certified).
 
 UnrealDB is a catalogue, dependency-analysis and preservation system for Unreal Engine game files.
 

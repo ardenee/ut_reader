@@ -2,6 +2,10 @@
 
 **Verified checkpoint: 15 October 2026.** This document is the navigation entry point for **current** production state. Dated migration and format design reports remain historical source/provenance records, even where their original text uses present tense.
 
+## UE5.8.3 audit update — 19 October 2026
+
+This section supersedes the historical UE5/IoStore limitation statement below, but does not change the seven-game production checkpoint. The strict pinned Epic verifier passed 18/18 registered operations (41 source hashes, 91 source symbols, 312 contract and 120 reachability assertions, zero issues). Isolated DEV Satisfactory Zen V5 publication, dependency Pass 2 and validation passed 27,240/27,240, and PAK v11 extraction passed 4,761/4,761. Production DEV/PRD IoStore schema migrations have both been applied. No Satisfactory production import has been started. **UE5.8.3 compliance certification remains open** pending exhaustive production workflow, branch inventory and independent Epic differential. See [UE5 certification status](../catalog/compliance/UE583-CERTIFICATION-STATUS.md) and [recovery register](../catalog/compliance/RECOVERY.json).
+
 ## Current production baseline
 
 - Production is **UEDB5-only**. All **235,239** verified files across Unreal Gold, UT99, Unreal II, UT2003, UT2004, UT3, and UT4 have format-5 registration and `validated` migration status.
