@@ -448,6 +448,11 @@ final class UnrealPackageReader5
         $this->header['compatibleWithEngineVersion'] = $ue4Version >= self::VER_PACKAGE_SUMMARY_HAS_COMPATIBLE_ENGINE_VERSION
             ? $this->readEngineVersion($r) : $this->header['savedByEngineVersion'];
         $this->header['compressionFlags'] = $r->u32();
+        // Epic FCompression::VerifyCompressionFlagsValid permits only the
+        // deprecated-format, options and purpose masks (0xF | 0xF0 | 0xF00).
+        if (($this->header['compressionFlags'] & ~0xFFF) !== 0) {
+            throw new RuntimeException('UE5 classic package has invalid compression flags.');
+        }
         $this->header['compressedChunks'] = $this->readCompressedChunks($r);
         if ($this->header['compressedChunks'] !== []) {
             // Epic FPackageFileSummary serialization invalidates package
