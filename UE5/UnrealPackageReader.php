@@ -150,6 +150,8 @@ final class UnrealPackageReader5
     private array $preloadDependencies = [];
     private array $dependsMap = [];
 
+    // Epic ObjectMacros.h RF_Load, used by ObjectResource.cpp FObjectExport load.
+    private const RF_LOAD = 0xA2D4083B;
     private const PACKAGE_FILE_TAG = 0x9E2A83C1;
     private const PACKAGE_FILE_TAG_SWAPPED = 0xC1832A9E;
 
@@ -780,7 +782,8 @@ final class UnrealPackageReader5
             $templateIndex = $ue4 >= self::VER_TEMPLATE_INDEX_IN_COOKED_EXPORTS ? $r->i32() : 0;
             $outerIndex = $r->i32();
             $objectName = $this->readFName($r);
-            $objectFlags = $r->u32();
+            $serializedObjectFlags = $r->u32();
+            $objectFlags = $serializedObjectFlags & self::RF_LOAD;
             if ($ue4 >= self::VER_64BIT_EXPORTMAP_SERIALSIZES) {
                 $serialSize = $r->i64(); $serialOffset = $r->i64();
             } else {
@@ -820,6 +823,7 @@ final class UnrealPackageReader5
                 'objectName' => $objectName, 'ObjectName' => $objectName,
                 'objectNameText' => $this->fnameText($objectName),
                 'objectFlags' => $objectFlags,
+                'serializedObjectFlags' => $serializedObjectFlags,
                 'serialSizeWidthBits' => $ue4 >= self::VER_64BIT_EXPORTMAP_SERIALSIZES ? 64 : 32,
                 'serialSize' => $serialSize, 'serialOffset' => $serialOffset,
                 'forcedExport' => $forcedExport,

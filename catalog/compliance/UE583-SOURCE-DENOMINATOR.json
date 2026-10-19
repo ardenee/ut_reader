@@ -88,9 +88,11 @@
         "catalog/bin/verify-ue5-583-real-classic-v5-roundtrip.php",
         "catalog/bin/verify-ue5-583-epic-classic-native-tables.php",
         "catalog/bin/verify-ue5-583-epic-classic-native-depends.php",
-        "catalog/compliance/UE583-P02-CLASSIC-DEPENDENCY-RECONCILIATION.md"
+        "catalog/compliance/UE583-P02-CLASSIC-DEPENDENCY-RECONCILIATION.md",
+        "catalog/compliance/UE583-S001-RF-LOAD-CORRECTION.md",
+        "catalog/bin/verify-ue5-583-s001-export-rf-load.php"
       ],
-      "open_requirements": ["S001 Epic RF_Load export flag semantic discrepancy is deferred to post-P11 secondary queue; independent DependsMap reference identity parity is still incomplete where native JSON collapses duplicate export paths."]
+      "open_requirements": ["S001 Epic RF_Load export flag semantics corrected and regression-tested; independent DependsMap reference identity parity is still incomplete where native JSON collapses duplicate export paths."]
     },
     {
       "id": "UE583-SRC-003",
