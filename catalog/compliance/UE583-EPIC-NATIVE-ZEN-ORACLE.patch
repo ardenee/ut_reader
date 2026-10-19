@@ -1,5 +1,5 @@
 diff --git a/Engine/Source/Programs/UnrealPackageTool/UnrealPackageTool.cpp b/Engine/Source/Programs/UnrealPackageTool/UnrealPackageTool.cpp
-index a7bf74d..90899c7 100644
+index a7bf74d..b192cfd 100644
 --- a/Engine/Source/Programs/UnrealPackageTool/UnrealPackageTool.cpp
 +++ b/Engine/Source/Programs/UnrealPackageTool/UnrealPackageTool.cpp
 @@ -13,6 +13,9 @@
@@ -12,7 +12,7 @@ index a7bf74d..90899c7 100644
  #include "Misc/ObjectThumbnail.h"
  #include "Misc/PackagePath.h"
  #include "Misc/Parse.h"
-@@ -1244,6 +1247,104 @@ INT32_MAIN_INT32_ARGC_TCHAR_ARGV()
+@@ -1244,6 +1247,133 @@ INT32_MAIN_INT32_ARGC_TCHAR_ARGV()
  {
  	using namespace UE::PackageTool;
  	int32 Ret = GEngineLoop.PreInit(ArgC, ArgV);
@@ -28,6 +28,17 @@ index a7bf74d..90899c7 100644
 +			return 3;
 +		}
 +		const FIoStoreTocHeader& H = View.Header;
++		auto ToUpperHex = [](const uint8* Data, int32 Length) -> std::string
++		{
++			static constexpr char HexDigits[] = "0123456789ABCDEF";
++			std::string Hex(static_cast<size_t>(Length) * 2, '0');
++			for (int32 I = 0; I < Length; ++I)
++			{
++				Hex[static_cast<size_t>(I) * 2] = HexDigits[Data[I] >> 4];
++				Hex[static_cast<size_t>(I) * 2 + 1] = HexDigits[Data[I] & 15];
++			}
++			return Hex;
++		};
 +		printf("UE583_NATIVE_TOC_ORACLE %u %u %u %u %u %u %u %u %u %u %u %u %d %d %d %d %d %d %d\\n",
 +			static_cast<uint32>(H.Version), H.TocHeaderSize, H.TocEntryCount, H.TocCompressedBlockEntryCount,
 +			H.TocCompressedBlockEntrySize, H.CompressionMethodNameCount, H.CompressionMethodNameLength,
@@ -50,6 +61,24 @@ index a7bf74d..90899c7 100644
 +				static_cast<unsigned long long>(B.GetOffset()), B.GetCompressedSize(), B.GetUncompressedSize(),
 +				static_cast<uint32>(B.GetCompressionMethodIndex()));
 +		}
++		for (int32 I = 0; I < View.ChunkIds.Num(); ++I)
++		{
++			printf("UE583_NATIVE_TOC_IDMETA %d %s %s %u\\n", I,
++				ToUpperHex(View.ChunkIds[I].GetData(), 12).c_str(),
++				ToUpperHex(View.ChunkMetas[I].ChunkHash.GetBytes(), 20).c_str(),
++				static_cast<uint32>(View.ChunkMetas[I].Flags));
++		}
++		for (int32 I = 0; I < View.ChunkPerfectHashSeeds.Num(); ++I)
++		{
++			printf("UE583_NATIVE_TOC_SEED %d %d\\n", I, View.ChunkPerfectHashSeeds[I]);
++		}
++		for (int32 I = 0; I < View.ChunkIndicesWithoutPerfectHash.Num(); ++I)
++		{
++			printf("UE583_NATIVE_TOC_OVERFLOW %d %d\\n", I, View.ChunkIndicesWithoutPerfectHash[I]);
++		}
++		FSHAHash DirectorySha1;
++		FSHA1::HashBuffer(View.DirectoryIndexBuffer.GetData(), View.DirectoryIndexBuffer.Num(), DirectorySha1.Hash);
++		printf("UE583_NATIVE_TOC_DIRECTORY_SHA1 %s\\n", ToUpperHex(DirectorySha1.Hash, 20).c_str());
 +		return 0;
 +	}
 +	FString ZenHeaderProbePath;

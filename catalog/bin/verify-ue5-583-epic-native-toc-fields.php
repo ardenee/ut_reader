@@ -37,4 +37,23 @@ foreach($nBlocks as $entry){
  $i=(int)$entry[1];$row=$blocks[$i]??[];
  foreach(['offset','compressed_size','uncompressed_size','compression_method_index'] as $j=>$key){$native=(int)$entry[$j+2];$local=(int)($row[$key]??-1);if($native!==$local)$errors[]="Block[$i].$key native=$native UnrealDB=$local";$compared++;}
 }
+preg_match_all('/^UE583_NATIVE_TOC_IDMETA (\\d+) ([0-9A-F]{24}) ([0-9A-F]{40}) (\\d+)$/m',$output,$nativeIdentity,PREG_SET_ORDER);
+if(count($nativeIdentity)!==count($c))$errors[]='Native chunk identity/metadata count mismatch';
+foreach($nativeIdentity as $entry){
+ $i=(int)$entry[1];$chunk=$c[$i]??[];$meta=$metas[$i]??[];
+ foreach(['raw'=>(string)($chunk['raw']??''),'chunk_hash'=>(string)($meta['chunk_hash']??'')] as $j=>$expectedHex){$position=$j==='raw'?2:3;if($entry[$position]!==$expectedHex)$errors[]="Chunk[$i].$j mismatch";$compared++;}
+ if((int)$entry[4]!==($meta['flags']??null))$errors[]="Chunk[$i].metadata flags mismatch";$compared++;
+}
+$wire=file_get_contents($toc);if(!is_string($wire))throw new RuntimeException('Cannot reread TOC source bytes');
+$cursor=144+count($c)*(12+10);
+$seedCount=(int)$h['perfect_hash_seed_count'];
+$overflowCount=(int)$h['chunks_without_perfect_hash_count'];
+preg_match_all('/^UE583_NATIVE_TOC_SEED (\\d+) (-?\\d+)$/m',$output,$nativeSeeds,PREG_SET_ORDER);
+if(count($nativeSeeds)!==$seedCount)$errors[]='Native perfect-hash seed count mismatch';
+foreach($nativeSeeds as $entry){$i=(int)$entry[1];$u=unpack('V',substr($wire,$cursor+$i*4,4))[1];$v=$u>=2147483648?$u-4294967296:$u;if($v!==(int)$entry[2])$errors[]="PerfectHashSeed[$i] mismatch";$compared++;}
+$cursor+=$seedCount*4;
+preg_match_all('/^UE583_NATIVE_TOC_OVERFLOW (\\d+) (-?\\d+)$/m',$output,$nativeOverflow,PREG_SET_ORDER);
+if(count($nativeOverflow)!==$overflowCount)$errors[]='Native perfect-hash overflow count mismatch';
+foreach($nativeOverflow as $entry){$i=(int)$entry[1];$u=unpack('V',substr($wire,$cursor+$i*4,4))[1];$v=$u>=2147483648?$u-4294967296:$u;if($v!==(int)$entry[2])$errors[]="PerfectHashOverflow[$i] mismatch";$compared++;}
+if(!preg_match('/^UE583_NATIVE_TOC_DIRECTORY_SHA1 ([0-9A-F]{40})$/m',$output,$dirMatch)||$dirMatch[1]!==strtoupper(sha1($ours->directoryIndexBytes())))$errors[]='Native directory-index SHA1 mismatch';$compared++;
 $ok=$errors===[];echo json_encode(['ok'=>$ok,'epic_native_toc_version'=>$values[0],'chunk_count'=>count($c),'block_count'=>count($blocks),'independent_field_comparisons'=>$compared,'failures'=>array_slice($errors,0,25)],JSON_PRETTY_PRINT),PHP_EOL;exit($ok?0:2);

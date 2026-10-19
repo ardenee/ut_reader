@@ -288,7 +288,7 @@
         "catalog/bin/verify-ue5-583-epic-native-toc-fields.php",
         "catalog/bin/verify-uedb5-ue5-iostore-foundation.php"
       ],
-      "open_requirements": ["Epic native 264746-field complete chunk/compression-block oracle passed; raw chunk identity, metadata, perfect-hash, directory content and legacy/signed TOC branches still require native parity."]
+      "open_requirements": ["Epic native 360091-field v8 TOC oracle passed all chunks/blocks, raw IDs, metadata, perfect-hash seeds and directory checksum; legacy/signed/encrypted and nonzero overflow branches remain."]
     },
     {
       "id": "UE583-SRC-009",
