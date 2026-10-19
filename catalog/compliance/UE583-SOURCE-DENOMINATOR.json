@@ -123,9 +123,9 @@
       "evidence": [
         "catalog/compliance/UE583-EPIC-IOSTORE-CONTENT-DIFFERENTIAL-20261019.md",
         "catalog/compliance/UE583-EPIC-NATIVE-ZEN-NAMES-20261019.md",
-        "catalog/compliance/UE583-P03-ZEN-HEADER-RECONCILIATION.md"
+        "catalog/compliance/UE583-P03-ZEN-HEADER-RECONCILIATION.md", "catalog/compliance/UE583-EPIC-NATIVE-ZEN-HEADER-FIELDS-20261019.md", "catalog/bin/verify-ue5-583-epic-native-zen-header-fields.php"
       ],
-      "open_requirements": ["Independent field-level Zen decoded metadata semantic comparison, not byte identity alone."]
+      "open_requirements": ["Epic native 100-package/2100-field unversioned summary/section-count comparison passed; versioned, optional, and per-row Zen semantics still require native comparison."]
     },
     {
       "id": "UE583-SRC-004",
@@ -155,7 +155,7 @@
         "catalog/src/Infrastructure/Metadata/Uedb5MigrationValidator.php"
       ],
       "differences": ["UE5-D033"],
-      "evidence": ["catalog/compliance/UE583-D033-ZEN-DEPENDENCY-COUNT.md", "catalog/compliance/UE583-P04-ZEN-DEPENDENCY-RECONCILIATION.md"],
+      "evidence": ["catalog/compliance/UE583-D033-ZEN-DEPENDENCY-COUNT.md", "catalog/compliance/UE583-P04-ZEN-DEPENDENCY-RECONCILIATION.md", "catalog/compliance/UE583-EPIC-NATIVE-ZEN-HEADER-FIELDS-20261019.md"],
       "open_requirements": ["Complete independent semantic oracle for decoded import/export/dependency rows."]
     },
     {
