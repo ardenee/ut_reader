@@ -609,6 +609,15 @@ try {
     $check($staged->manifest()['package_family'] === 'zen-iostore', 'zen_snapshot_uedb5_manifest_family');
     $check($staged->count('imports') === 1, 'zen_snapshot_uedb5_import_count');
     $check($staged->count('optional_segment') === 1, 'zen_snapshot_uedb5_optional_segment_count');
+    $roundTripSections = true;
+    foreach ($snapshot['sections'] as $section => $expectedRows) {
+        if ($staged->count($section) !== count($expectedRows)
+            || iterator_to_array($staged->scan($section), false) !== $expectedRows) {
+            $roundTripSections = false;
+            break;
+        }
+    }
+    $check($roundTripSections, 'zen_snapshot_all_sections_exact_decoded_row_round_trip');
     $summaryRoundTrip = $staged->page('package_summary', 0, 1);
     $check(
         ($summaryRoundTrip[0]['versioning_info']['zen_version'] ?? null) === 3
