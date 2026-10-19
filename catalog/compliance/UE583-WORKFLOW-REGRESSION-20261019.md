@@ -23,3 +23,7 @@ In addition, the dedicated read-only genuine classic file test `verify-ue5-583-r
 These are *targeted production-class and job integration acceptance checks*. They do not automatically satisfy `RECOVERY.json` workflow `accepted` requirements: complete source-to-entrypoint graph, every relevant failure/conditional, durable SQL and HTTP route evidence, cross-path recovery and independent review are still required. Keep all 16 workflow rows mapped but not accepted until such evidence is recorded. Epic Zen reconstructed bytes and modern PAK v11 independently matched all real fixture members; those are separate accepted fixture subsets.
 
 No production Satisfactory import, no schema migration, no change to live catalog content. Full UE5.8.3 certification remains open.
+
+## Additional production workflow contract rerun (commit 8ec135c6)
+
+Four further executable drivers independently returned exit 0: `verify-job-workflow-integration-contract.php`, `verify-ingress-workflow-isolation.php`, `verify-resumable-job-workflows.php`, and `verify-full-sync-workflow.php`. The new `verify-ue5-583-workflow-evidence-links.php` also returned `ok=true`: all 16 workflow mappings have existing referenced production source paths and documented partial test evidence (32 links). Compliance recovery itself passed `ok=true` while retaining `compliance_accepted=false`. This is not end-to-end proof for every UE5 application route and does not change the 16 workflow acceptance statuses.
