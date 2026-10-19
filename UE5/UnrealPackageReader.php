@@ -449,6 +449,11 @@ final class UnrealPackageReader5
             ? $this->readEngineVersion($r) : $this->header['savedByEngineVersion'];
         $this->header['compressionFlags'] = $r->u32();
         $this->header['compressedChunks'] = $this->readCompressedChunks($r);
+        if ($this->header['compressedChunks'] !== []) {
+            // Epic FPackageFileSummary serialization invalidates package
+            // versions and stops on obsolete package-level compression.
+            throw new RuntimeException('UE5 classic package-level compressed chunks are not loadable by Epic LinkerLoad.');
+        }
         $this->header['packageSource'] = $r->u32();
         $this->header['additionalPackagesToCook'] = $this->readStringArray($r);
         if ($legacy > -7) {
