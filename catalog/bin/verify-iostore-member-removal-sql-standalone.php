@@ -8,7 +8,7 @@ $i=$db->query('SELECT @@port port,@@datadir datadir')->fetch();
 if((int)$i['port']!==3339||stripos((string)$i['datadir'],'uedb5-isolated-mysql')===false)
  throw new RuntimeException('Wrong MySQL instance');
 if(!CatalogIoStoreContainerIndexer::schemaInstalled($db))throw new RuntimeException('IoStore schema missing.');
-$q=$db->prepare('SELECT id,file_id,publication_status FROM ue_iostore_packages WHERE container_id=1 AND file_id IS NOT NULL AND publication_status="published" ORDER BY toc_index LIMIT 1');
+$q=$db->prepare('SELECT id,file_id,publication_status FROM ue_iostore_packages WHERE container_id=4 AND file_id IS NOT NULL AND publication_status="published" ORDER BY toc_index LIMIT 1');
 $q->execute();$before=$q->fetch();
 if(!is_array($before))throw new RuntimeException('Published fixture missing.');
 $memberId=(int)$before['id'];$fileId=(int)$before['file_id'];
