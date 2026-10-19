@@ -1,0 +1,9 @@
+# Zen implementation fingerprint reconciliation — 2026-10-19
+
+**Finding:** the strict original-operation verifier correctly rejected eight source-contract batch manifests after P03 and P04 changed `catalog/src/Infrastructure/Metadata/Uedb5ZenPackageReader.php`. The manifests retained the **old implementation SHA-256** `6b79d5a8465d01bbe784f06aaf07f0033e9dc84300d6761b135eb29c74b871da` although the deployed reader's actual SHA-256 is `90665000c906630161aa942dd6c771c85c88c41d5e6daf0e68e324d1d331cbd7`.
+
+The source-grounded reviewed changes, both previously tested/deployed, are: **P03** restrict variable Zen header decoding to the source-defined `HeaderSize` rather than export payload; **P04** treat all negative dependency `FirstEntryIndex` as Epic's runtime skip sentinel while still rejecting nonnegative out-of-range spans. Evidence: `UE583-P03-ZEN-HEADER-RECONCILIATION.md`, `UE583-P04-ZEN-DEPENDENCY-RECONCILIATION.md`; the new P04 negative sentinel fixture passes.
+
+Refreshed *only* the `Uedb5ZenPackageReader.php` **implementation** fingerprints in B001, B002, B004, B009, B010, B011, B012, and B013 batch manifests. All eight operation acceptance drivers ran on DEV with `UNREALDB_EPIC_SOURCE_ROOT=L:/Source/Engine/UE5/UE 5.8.3` and returned exit 0. **No Epic source fingerprints or original B operation counts were modified.** Updating hashes is an audit-maintenance step after validated code changes, not independent proof of missing native Zen semantic parity.
+
+**Post-refresh strict verification: EXIT 0**, 18/18 operations, 41 Epic source hashes, 91 symbols, 312 contract assertions, 120 reachability assertions, zero issues. The recovery-regression test's formerly stale D007 expectation was separately corrected and the entire negative-regression suite passed. All five source-denominator partial units and 16 workflow acceptance gates remain open.

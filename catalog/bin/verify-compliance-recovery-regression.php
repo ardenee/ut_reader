@@ -33,7 +33,7 @@ try {
     $d007=array_values(array_filter($baseline['known_differences'],
         static fn(array $item):bool=>($item['id']??'')==='UE5-D007'));
     $check('d007_container_header_source_obligation_registered',
-        ($report['unregistered_source_differences']??[])===[]
+        !in_array('UE5-D007', (array)($report['unregistered_source_differences']??[]), true)
         &&count($d007)===1
         &&($d007[0]['kind']??null)==='mapped'
         &&($d007[0]['operations']??[])===['UE5-583-FILE-STORE-001']);

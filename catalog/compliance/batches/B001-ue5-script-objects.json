@@ -140,7 +140,7 @@
                 },
                 {
                     "path": "catalog/src/Infrastructure/Metadata/Uedb5ZenPackageReader.php",
-                    "sha256": "6b79d5a8465d01bbe784f06aaf07f0033e9dc84300d6761b135eb29c74b871da"
+                    "sha256": "90665000c906630161aa942dd6c771c85c88c41d5e6daf0e68e324d1d331cbd7"
                 },
                 {
                     "path": "catalog/src/Infrastructure/Metadata/Uedb5BinaryReader.php",
