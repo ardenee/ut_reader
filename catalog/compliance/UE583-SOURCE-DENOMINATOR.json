@@ -284,9 +284,11 @@
         "catalog/compliance/UE583-D035-IOSTORE-TOC-TRAILING-BYTES.md",
         "catalog/compliance/UE583-SRC008-LEGACY-TOC-METADATA-20261019.md",
         "catalog/compliance/UE583-SRC008-UNINDEXED-TOC-DIRECTORY-SIZE-20261019.md",
+        "catalog/compliance/UE583-EPIC-NATIVE-TOC-FIELDS-20261019.md",
+        "catalog/bin/verify-ue5-583-epic-native-toc-fields.php",
         "catalog/bin/verify-uedb5-ue5-iostore-foundation.php"
       ],
-      "open_requirements": ["Add direct field-semantic oracle for the complete TOC structure, beyond retained byte/content parity."]
+      "open_requirements": ["Epic native 264746-field complete chunk/compression-block oracle passed; raw chunk identity, metadata, perfect-hash, directory content and legacy/signed TOC branches still require native parity."]
     },
     {
       "id": "UE583-SRC-009",
