@@ -17,11 +17,11 @@ $queue=new PdoJobQueue($db);
 $routes=array_fill_keys(JobType::all(),static fn():array=>[]);
 $routes[JobType::BACKUP_IOSTORE_CONTAINER]=new CatalogIoStoreBackupJobHandler($db,['storage_path'=>$sourceRoot,'game_backups'=>['path'=>$backupRoot]]);
 $worker=new JobWorker($queue,$routes,$queueName,'isolated-zen-backup',120);
-$first=$queue->enqueue($queueName,JobType::BACKUP_IOSTORE_CONTAINER,['container_id'=>2,'backup_key'=>$backupKey],100,null,null,null,1);
+$first=$queue->enqueue($queueName,JobType::BACKUP_IOSTORE_CONTAINER,['container_id'=>3,'backup_key'=>$backupKey],100,null,null,null,1);
 $worker->runOne();
 $q=$db->prepare('SELECT status,result_json,last_error FROM ue_background_jobs WHERE id=?');
 $q->execute([$first]);$firstJob=$q->fetch();
-$hash=$db->query('SELECT utoc_sha256 FROM ue_iostore_containers WHERE id=2')->fetchColumn();
+$hash=$db->query('SELECT utoc_sha256 FROM ue_iostore_containers WHERE id=3')->fetchColumn();
 $routes[JobType::RESTORE_IOSTORE_CONTAINER]=new CatalogIoStoreBackupJobHandler($db,['storage_path'=>'C:/Temp/uedb5-iostore-queue-restored','game_backups'=>['path'=>$backupRoot]]);
 $worker=new JobWorker($queue,$routes,$queueName,'isolated-zen-restore',120);
 $second=$queue->enqueue($queueName,JobType::RESTORE_IOSTORE_CONTAINER,[
