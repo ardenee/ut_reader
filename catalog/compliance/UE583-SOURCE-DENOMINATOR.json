@@ -274,6 +274,7 @@
       "differences": ["UE5-D035"],
       "evidence": [
         "catalog/compliance/UE583-D035-IOSTORE-TOC-TRAILING-BYTES.md",
+        "catalog/compliance/UE583-SRC008-LEGACY-TOC-METADATA-20261019.md",
         "catalog/bin/verify-uedb5-ue5-iostore-foundation.php"
       ],
       "open_requirements": ["Add direct field-semantic oracle for the complete TOC structure, beyond retained byte/content parity."]

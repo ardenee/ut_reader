@@ -208,7 +208,7 @@
                 ],
                 "total_source_branch_and_consumer_assertions": 25,
                 "byte_fixture_driver": "catalog/bin/verify-uedb5-ue5-iostore-foundation.php",
-                "byte_fixture_assertions": 34,
+                "byte_fixture_assertions": 37,
                 "retained_real_v5_read_only_fixture": "catalog/bin/verify-uedb5-satisfactory-header-readonly-isolated.php",
                 "actual_future_version_6_cooked_fixture": false,
                 "source_defined_version_6_branch_fixture_synthetic": true,

@@ -241,6 +241,31 @@ try {
         $check(false, 'toc_unconsumed_extension_bytes_are_not_rejected');
     }
 
+    // Legacy IoStore TOCs retain 32-byte hashes plus one flag byte.
+    foreach ([2, 5] as $legacyVersion) {
+        $legacyBase = $temp . DIRECTORY_SEPARATOR . 'legacy-' . $legacyVersion;
+        $legacyBytes = substr($utoc, 0, -24 * count($chunks));
+        foreach ($chunks as $index => $_) {
+            $legacyBytes .= str_repeat(chr($index + 1), 32) . chr(1);
+        }
+        $legacyBytes[16] = chr($legacyVersion);
+        file_put_contents($legacyBase . '.utoc', $legacyBytes);
+        file_put_contents($legacyBase . '.ucas', $physical);
+        try {
+            $legacyToc = new Uedb5IoStoreTocReader($legacyBase . '.utoc');
+            $check($legacyToc->header()['version'] === $legacyVersion
+                && $legacyToc->chunkMetas()[1]['chunk_hash'] === str_repeat('02', 32)
+                && $legacyToc->readChunk(1) === $packageBytes,
+                'toc_legacy_v' . $legacyVersion . '_metadata_and_payload');
+            if ($legacyVersion === 2) {
+                $check($legacyToc->header()['partition_count'] === 1,
+                    'toc_v2_forces_single_partition');
+            }
+        } catch (RuntimeException) {
+            $check(false, 'toc_legacy_v' . $legacyVersion . '_metadata_and_payload');
+        }
+    }
+
     $containerChunkIndexes = $toc->chunkIndexesByType(Uedb5IoStoreTocReader::CHUNK_TYPE_CONTAINER_HEADER);
     $check($containerChunkIndexes === [0], 'container_header_chunk_type_selected');
     $check($toc->findPackageChunk($p1) === 1, 'package_chunk_selected_by_fpackageid');
