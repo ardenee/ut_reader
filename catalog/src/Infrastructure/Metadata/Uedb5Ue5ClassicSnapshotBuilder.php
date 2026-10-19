@@ -30,6 +30,7 @@ final class Uedb5Ue5ClassicSnapshotBuilder
         $exports = $reader->getExports();
         $soft = $reader->getStringAssetReferences();
         $preload = $reader->getPreloadDependencies();
+        $dependsMap = $reader->getDependsMap();
         self::assertReaderShape($header, $names, $imports, $exports, $soft, $preload);
 
         $fileId = (int)($file['id'] ?? 0);
@@ -60,6 +61,7 @@ final class Uedb5Ue5ClassicSnapshotBuilder
                 'exports' => array_map(self::exportRow(...), $exports),
                 'soft_package_references' => array_map(self::softReferenceRow(...), $soft),
                 'preload_dependencies' => array_map(self::preloadRow(...), $preload),
+                'depends_map' => array_values($dependsMap),
             ],
         ];
     }
@@ -74,6 +76,7 @@ final class Uedb5Ue5ClassicSnapshotBuilder
             'exports' => 'ue5.classic.object-export.v1',
             'soft_package_references' => 'ue5.classic.soft-package-reference.v1',
             'preload_dependencies' => 'ue5.classic.preload-dependency.v1',
+            'depends_map' => 'ue5.classic.depends-map.v1',
         ];
     }
 

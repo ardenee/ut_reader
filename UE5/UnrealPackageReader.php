@@ -148,6 +148,7 @@ final class UnrealPackageReader5
     private array $parserProfile = [];
     private array $stringAssetReferences = [];
     private array $preloadDependencies = [];
+    private array $dependsMap = [];
 
     private const PACKAGE_FILE_TAG = 0x9E2A83C1;
     private const PACKAGE_FILE_TAG_SWAPPED = 0xC1832A9E;
@@ -494,6 +495,7 @@ final class UnrealPackageReader5
         $this->readNames();
         $this->readImports();
         $this->readExports();
+        $this->readDependsMap();
         $this->readStringAssetReferences();
         $this->readPreloadDependencies();
     }
@@ -866,6 +868,31 @@ final class UnrealPackageReader5
         }
     }
 
+    private function readDependsMap(): void
+    {
+        // Epic LinkerLoad::SerializeDependsMap reads one TArray<FPackageIndex>
+        // per export for editor/commandlet metadata; cooked-only loaders skip it.
+        $offset = (int)($this->header['dependsOffset'] ?? 0);
+        $exports = (int)($this->header['exportCount'] ?? 0);
+        $headerSize = (int)($this->header['totalHeaderSize'] ?? 0);
+        if ($offset <= 0 || $exports <= 0 || $offset >= $headerSize) return;
+        $r = $this->tableReader($offset);
+        try {
+            for ($exportIndex = 0; $exportIndex < $exports; $exportIndex++) {
+                $count = $r->i32();
+                if ($count < 0 || $count > intdiv(max(0, $headerSize - $r->tell()), 4)) {
+                    throw new RuntimeException('Invalid UE5 DependsMap entry count at export ' . $exportIndex);
+                }
+                $references = [];
+                for ($i = 0; $i < $count; $i++) $references[] = $r->i32();
+                $this->dependsMap[] = ['export_index' => $exportIndex, 'references' => $references];
+            }
+        } catch (Throwable $e) {
+            $this->dependsMap = [];
+            $this->issues[] = 'Could not parse UE5 DependsMap: ' . $e->getMessage();
+        }
+    }
+
     private function readPreloadDependencies(): void
     {
         $count = (int)($this->header['preloadDependencyCount'] ?? 0);
@@ -907,6 +934,7 @@ final class UnrealPackageReader5
     public function getRawHeaderFields(): array { return $this->rawHeaderFields; }
     public function getStringAssetReferences(): array { return $this->stringAssetReferences; }
     public function getPreloadDependencies(): array { return $this->preloadDependencies; }
+    public function getDependsMap(): array { return $this->dependsMap; }
 
     public function nameByIndex(int $index, int $number = 0): string
     {

@@ -5,8 +5,8 @@ Baseline: c4a6c0a2 (2026-10-19). Frozen primary denominator: 11 areas from UE583
 | Priority | Unit | Scope | State |
 |---|---|---|---|
 | P01 | SRC-001 | Classic summary, versions and admission | verified within supported scope — native 140-package field differential |
-| P02 | SRC-002 | Classic name/import/export/dependency tables | IN PROGRESS |
-| P03 | SRC-003 | Zen header and versioning | queued |
+| P02 | SRC-002 | Classic name/import/export/dependency tables | Primary pass reviewed; native tables/dependency projection passed; S001 deferred |
+| P03 | SRC-003 | Zen header and versioning | IN PROGRESS |
 | P04 | SRC-004 | Zen import/export/dependencies | queued |
 | P05 | SRC-005 | Script objects and identities | queued |
 | P06 | SRC-006 | Package store backend arbitration | queued |
@@ -29,4 +29,4 @@ After P11, resolve secondary findings in order, then accept the **existing** 16 
 
 ## Checkpoint
 
-P01 source branch matrix completed for supported classic summary layouts. Epic-native UnrealPackageTool differential passed 140 real packages / 5,279 fields; existing negative reader contract passed. Active: P02 classic name/import/export/dependency tables. S001 remains deferred until after P11 by the agreed secondary-queue rule.
+P01 source branch matrix completed for supported classic summary layouts. Epic-native UnrealPackageTool differential passed 140 real packages / 5,279 fields; existing negative reader contract passed. P02 primary pass: 140 native packages / 44,840 name-import-export field comparisons; 50 native DependsMap packages / 253 export rows / 353 dependency refs matched length distributions. DependsMap now decoded and V5-persisted. SRC-002 remains partial because S001 is deferred after P11, as requested. Active P03: Zen header and versioning. Resume from commit containing UE583-P02-CLASSIC-DEPENDENCY-RECONCILIATION.md.
