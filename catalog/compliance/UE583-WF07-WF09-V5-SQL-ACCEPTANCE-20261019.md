@@ -1,0 +1,11 @@
+# UE5.8.3 workflows 07–09 — V5 staging, Pass 2 and SQL projections
+
+**WF07 stage_v5 ACCEPTED.** The production `Uedb5MetadataSnapshotWriter` writes decoded classic and Zen metadata to the persistent V5 container. Real 119 classic package exact decoded-row roundtrips and genuine Satisfactory 27,240/27,240 Zen V5 publication completed with zero missing/failed members. Current `verify-ue5-583-real-classic-v5-roundtrip.php` exit 0; `verify-uedb5-ue5-zen-package.php` exit 0 and strict source shape checks passed.
+
+**WF08 dependency_pass2 ACCEPTED.** `Uedb5GameDependencyPassService` and `Uedb5DependencyRebuilder` applied source-defined dependencies, provider status and imported object identity to the isolated genuine 27,240-file V5 dataset, zero failed members; B004/B005 acceptance and native object-index/backend oracles passed. Missing required providers and contradictory priority claims are recorded or rejected rather than fabricating successful resolution.
+
+**WF09 persist_sql_projections ACCEPTED within the tested durable isolated MySQL/SQLite projection contract.** `PdoUedb5BaseProjectionPublisher` and `PdoUedb5DependencyProjectionPublisher` persisted the same 27,240 real publication results on isolated MySQL 3339. Current bounded `verify-uedb5-dependency-projection-publisher.php`, `verify-uedb5-base-projection-contract.php`, and `verify-uedb5-sql-projection-contract.php` all exit 0, including stale-edge removal and transactional rollback/join behavior.
+
+**Explicit excluded test:** `verify-uedb5-compact-v2-rollback-fault.php` could not start fault injection because its historical default catalog database lacks `ue_uedb5_files`; it exited 2 during setup. This does not count as a pass and is not an Epic file-format mismatch. Existing isolated publisher-rollback evidence covers the accepted projection contract. Do not claim the historical seven-game rollback suite passed in this checkpoint. Production DB 3306 was not used for writable tests.
+
+Full-file re-extraction of 27,240 packages was not repeated. Under this UE5.8.3 metadata role, acceptance concerns the production route's snapshot, dependency and SQL outputs—not unrelated engine live UObject instantiation or unknown future cooked layouts.
