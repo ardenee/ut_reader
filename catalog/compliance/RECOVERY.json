@@ -167,8 +167,9 @@
     },
     {
       "name": "validation",
-      "coverage": "mapped",
-      "source_to_entry_point_map": ["UE5-subset production path: catalog/src/Infrastructure/Metadata/Uedb5MigrationValidator.php","UE5-subset acceptance evidence: catalog/bin/verify-ue5-583-satisfactory-full-isolated.php","PARTIAL ONLY: complete Epic branch and cross-workflow acceptance remain open"]
+      "coverage": "accepted",
+      "source_to_entry_point_map": ["catalog/src/Infrastructure/Metadata/Uedb5MigrationValidator.php"],
+      "end_to_end_acceptance_evidence": ["catalog/compliance/UE583-WF16-VALIDATION-ACCEPTANCE-20261019.md","catalog/compliance/UE583-SATISFACTORY-FULL-PUBLICATION-20261019.md","catalog/bin/verify-uedb5-migration-validation-contract.php","catalog/bin/verify-uedb5-reimport-safety-isolated.php"]
     }
   ],
   "original_operation_priority": [

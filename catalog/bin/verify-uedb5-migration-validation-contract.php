@@ -110,7 +110,7 @@ $scriptProjection=Uedb5DependencyProjectionBuilder::build([
 ]]]
 ]);
 $scriptEdge=(array)($scriptProjection['dependency_edges'][0]??[]);
-$check('script_import_hash_is_not_public_export_hash',($scriptEdge['required_object_key_kind']??null)===null&&($scriptEdge['required_object_key']??null)===null);
+$check('script_import_hash_is_not_public_export_hash',($scriptEdge['required_object_key_kind']??null)===Uedb5SqlProjectionContract::OBJECT_KEY_SCRIPT_IMPORT_HASH&&($scriptEdge['required_object_key']??null)===hex2bin('0123456789ABCDEF')&&($scriptEdge['required_object_key_kind']??null)!==Uedb5SqlProjectionContract::OBJECT_KEY_PUBLIC_EXPORT_HASH);
 $whitespaceProjection=Uedb5DependencyProjectionBuilder::build([
 'file'=>['id'=>9002,'game_id'=>3],
 'sections'=>['dependency_results'=>[[
