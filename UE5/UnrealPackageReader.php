@@ -388,7 +388,10 @@ final class UnrealPackageReader5
         }
         $this->header['packageName'] = $r->fstring();
         $this->header['folderName'] = $this->header['packageName'];
-        $this->header['packageFlags'] = $r->u32();
+        $serializedPackageFlags = $r->u32();
+        $this->header['serializedPackageFlags'] = $serializedPackageFlags;
+        // Epic clears PKG_TransientFlags when loading the package summary.
+        $this->header['packageFlags'] = $serializedPackageFlags & ~0x40008001;
         $filterEditorOnly = (((int)$this->header['packageFlags']) & self::PKG_FILTER_EDITOR_ONLY) !== 0;
         $this->header['nameCount'] = $r->i32();
         $this->header['nameOffset'] = $r->i32();
