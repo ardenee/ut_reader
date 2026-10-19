@@ -134,8 +134,9 @@
     },
     {
       "name": "metadata_query_search",
-      "coverage": "mapped",
-      "source_to_entry_point_map": ["UE5-subset production path: catalog/src/Infrastructure/Search/Uedb5CatalogMetadataSearch.php","UE5-subset acceptance evidence: catalog/bin/verify-ue5-583-real-zen-compact-search.php","PARTIAL ONLY: complete Epic branch and cross-workflow acceptance remain open"]
+      "coverage": "accepted",
+      "source_to_entry_point_map": ["catalog/src/Infrastructure/Search/PdoCatalogSearchRepository.php","catalog/src/Infrastructure/Search/Uedb5CatalogMetadataSearch.php"],
+      "end_to_end_acceptance_evidence": ["catalog/compliance/UE583-WF10-METADATA-SEARCH-ACCEPTANCE-20261019.md","catalog/bin/verify-ue5-583-real-zen-compact-search.php","catalog/bin/verify-search-descendant-prefix-contract.php"]
     },
     {
       "name": "upload",
