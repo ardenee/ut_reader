@@ -15,6 +15,10 @@ This is the single current entry point for UE5.8.3 status. The strict Epic-sourc
 - **Genuine classic UE5 inputs:** [pinned engine .uasset sample](UE583-REAL-CLASSIC-ENGINE-FIXTURES-20261019.md) accepted 475 UE5 classic assets spanning ten UE5 version values with no unexplained parser issues; 25 pre-UE5-summary legacy assets explicitly rejected by the dedicated UE5 reader. This is input coverage, **not yet a native field-by-field Epic comparison**. Additionally, [real classic V5 staging](UE583-REAL-CLASSIC-V5-ROUNDTRIP-20261019.md) passes 119 genuine UE5 assets from the reader through V5 builder, file write, and staging read, across versions 1004, 1006, 1007, 1009 and 1018, with 21 older assets separately excluded.
 - **Archive/member workflows:** ingress, file-content classification, nesting/retention and retries pass targeted regressions. The `JobFailureRetryPolicy` patch prevents futile automatic retries after immutable nested depth-limit errors without misreporting source corruption.
 
+## Latest full-file validation rerun
+
+[Retained Satisfactory verification, 19 October 2026](UE583-VALIDATION-RERUN-20261019.md): all 27,240 existing V5/Pass-2 files passed fresh read-only isolated validation, zero failures; the strict Epic-source verifier also passed all 18 registered operations again. These remain separate from exhaustive certification.
+
 ## Latest workflow regression evidence
 
 [The 19 October UE5 workflow regression checkpoint](UE583-WORKFLOW-REGRESSION-20261019.md) verified 13/13 archive, upload, repair, backup, search and V5 persistence drivers on DEV. These are passing targeted tests, **not** an automatic upgrade of all workflow rows from `mapped` to `accepted`.
