@@ -15,6 +15,10 @@ This is the single current entry point for UE5.8.3 status. The strict Epic-sourc
 - **Genuine classic UE5 inputs:** [pinned engine .uasset sample](UE583-REAL-CLASSIC-ENGINE-FIXTURES-20261019.md) accepted 475 UE5 classic assets spanning ten UE5 version values with no unexplained parser issues; 25 pre-UE5-summary legacy assets explicitly rejected by the dedicated UE5 reader. This is input coverage, **not yet a native field-by-field Epic comparison**. Additionally, [real classic V5 staging](UE583-REAL-CLASSIC-V5-ROUNDTRIP-20261019.md) passes 119 genuine UE5 assets from the reader through V5 builder, file write, and staging read, across versions 1004, 1006, 1007, 1009 and 1018, with 21 older assets separately excluded.
 - **Archive/member workflows:** ingress, file-content classification, nesting/retention and retries pass targeted regressions. The `JobFailureRetryPolicy` patch prevents futile automatic retries after immutable nested depth-limit errors without misreporting source corruption.
 
+## Latest workflow regression evidence
+
+[The 19 October UE5 workflow regression checkpoint](UE583-WORKFLOW-REGRESSION-20261019.md) verified 13/13 archive, upload, repair, backup, search and V5 persistence drivers on DEV. These are passing targeted tests, **not** an automatic upgrade of all workflow rows from `mapped` to `accepted`.
+
 ## Actual production environments
 
 DEV: `game-amd`, code `C:/Users/arden/source/repos/ut_reader`. PRD: `Lelly-pc`, checkout `C:/Apache24/htdocs/unrealdb`. DEV and PRD application IoStore schema migrations `202610150001` and `202610150002` were applied and verified. They hold independent datasets. All large UE5 Satisfactory publication tests operate in separate DEV isolation. No production Satisfactory import has been authorized or performed.
