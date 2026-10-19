@@ -1,5 +1,5 @@
 diff --git a/Engine/Source/Programs/UnrealPackageTool/UnrealPackageTool.cpp b/Engine/Source/Programs/UnrealPackageTool/UnrealPackageTool.cpp
-index a7bf74d..b192cfd 100644
+index a7bf74d..9d6a287 100644
 --- a/Engine/Source/Programs/UnrealPackageTool/UnrealPackageTool.cpp
 +++ b/Engine/Source/Programs/UnrealPackageTool/UnrealPackageTool.cpp
 @@ -13,6 +13,9 @@
@@ -12,10 +12,32 @@ index a7bf74d..b192cfd 100644
  #include "Misc/ObjectThumbnail.h"
  #include "Misc/PackagePath.h"
  #include "Misc/Parse.h"
-@@ -1244,6 +1247,133 @@ INT32_MAIN_INT32_ARGC_TCHAR_ARGV()
+@@ -1244,6 +1247,155 @@ INT32_MAIN_INT32_ARGC_TCHAR_ARGV()
  {
  	using namespace UE::PackageTool;
  	int32 Ret = GEngineLoop.PreInit(ArgC, ArgV);
++	FString DependsProbePath;
++	if (FParse::Value(FCommandLine::Get(), TEXT("DependsProbe="), DependsProbePath))
++	{
++		FPackageReader Reader;
++		TArray<TArray<FPackageIndex>> Depends;
++		if (!Reader.OpenPackageFile(DependsProbePath) || !Reader.GetDependsMap(Depends))
++		{
++			printf("UE583_NATIVE_DEPENDS_ERROR cannot_read\\n");
++			return 3;
++		}
++		printf("UE583_NATIVE_DEPENDS_COUNT %d\\n", Depends.Num());
++		for (int32 ExportIndex = 0; ExportIndex < Depends.Num(); ++ExportIndex)
++		{
++			printf("UE583_NATIVE_DEPENDS_ROW %d %d", ExportIndex, Depends[ExportIndex].Num());
++			for (const FPackageIndex& Reference : Depends[ExportIndex])
++			{
++				printf(" %d", Reference.ForDebugging());
++			}
++			printf("\\n");
++		}
++		return 0;
++	}
 +	FString TocProbePath;
 +	if (FParse::Value(FCommandLine::Get(), TEXT("TocProbe="), TocProbePath))
 +	{

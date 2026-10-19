@@ -1,0 +1,7 @@
+# P02 exact Epic classic DependsMap identity closure — 2026-10-19
+
+Built an additive `-DependsProbe` in the disposable UE5.8.3 `UnrealPackageTool.exe` using Epic's `FPackageReader::OpenPackageFile` and `GetDependsMap(TArray<TArray<FPackageIndex>>&)`. It emits the **raw signed `FPackageIndex::ForDebugging()` integers keyed by export array index**, not exported object path names. The reproducible source patch is `UE583-EPIC-NATIVE-ZEN-ORACLE.patch`; pinned Epic source at L: remains unchanged.
+
+`catalog/bin/verify-ue5-583-epic-native-classic-depends-indices.php` compares the native result to production `UE5/UnrealPackageReader.php::getDependsMap()` on identical genuine engine assets. **PASS: 140 real packages, 2,832 per-export dependency rows, 9,069 exact dependency reference identities, zero mismatches**. UE5 version distribution 1004=109, 1006=4, 1007=1, 1009=1, 1010=1, 1012=1, 1018=23. The native diagnostic bypasses the older `PackageInfo --depends` JSON format, where duplicate export path keys collapsed entries.
+
+Prior complementary P02 results: 140 real packages / 44,840 native name/import/export field comparisons and S001 effective `RF_Load` masking corrected in production and verified with a mutation fixture. Classic V5 stores decoded per-export DependsMap references separately from cooked preload dependencies. This completes the specific outstanding P02 independent dependency identity requirement; it does not claim broad engine application workflow acceptance.

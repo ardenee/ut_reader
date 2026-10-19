@@ -5,7 +5,7 @@ Baseline: c4a6c0a2 (2026-10-19). Frozen primary denominator: 11 areas from UE583
 | Priority | Unit | Scope | State |
 |---|---|---|---|
 | P01 | SRC-001 | Classic summary, versions and admission | verified within supported scope — native 140-package field differential |
-| P02 | SRC-002 | Classic name/import/export/dependency tables | 140 native table comparisons passed; S001 RF_Load fixed; exact DependsMap reference identity in duplicate-path cases remains |
+| P02 | SRC-002 | Classic name/import/export/dependency tables | VERIFIED: 140 native packages, 44,840 classic table fields, 2,832 DependsMap rows / 9,069 exact references; S001 RF_Load corrected |
 | P03 | SRC-003 | Zen header and versioning | 100 real Zen packages / 6,546 Epic-native decoded fields match; versioned and optional Zen layouts remain |
 | P04 | SRC-004 | Zen import/export/dependencies | Epic-native import IDs, public export hashes and dependency entries compare equal across 100 real packages; versioned/optional cases remain |
 | P05 | SRC-005 | Script objects and identities | reviewed; existing verified status reaffirmed |
