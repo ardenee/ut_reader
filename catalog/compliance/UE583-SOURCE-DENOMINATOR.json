@@ -153,7 +153,7 @@
         "catalog/src/Infrastructure/Metadata/Uedb5MigrationValidator.php"
       ],
       "differences": ["UE5-D033"],
-      "evidence": ["catalog/compliance/UE583-D033-ZEN-DEPENDENCY-COUNT.md"],
+      "evidence": ["catalog/compliance/UE583-D033-ZEN-DEPENDENCY-COUNT.md", "catalog/compliance/UE583-P04-ZEN-DEPENDENCY-RECONCILIATION.md"],
       "open_requirements": ["Complete independent semantic oracle for decoded import/export/dependency rows."]
     },
     {

@@ -680,13 +680,12 @@ final class Uedb5ZenPackageReader
         foreach ($headers as $header) {
             $first = (int)$header['first_entry_index'];
             $count = (int)$header['total_entry_count'];
-            if ($first === -1) {
-                if ($count !== 0) {
-                    throw new RuntimeException('Zen dependency bundle with FirstEntryIndex=-1 has non-zero entry counts.');
-                }
+            if ($first < 0) {
+                // Epic ProcessExportDependencies returns immediately for any
+                // negative FirstEntryIndex without consulting EntryCount.
                 continue;
             }
-            if ($first < 0 || $first + $count > $entryCount) {
+            if ($first + $count > $entryCount) {
                 throw new RuntimeException('Zen dependency bundle range exceeds DependencyBundleEntries.');
             }
         }

@@ -681,6 +681,20 @@ try {
 }
 $check($badDependencyRejected, 'zen_dependency_bundle_out_of_range_rejected');
 
+// Epic ProcessExportDependencies returns early for any negative
+// FirstEntryIndex, regardless of the serialized entry counts.
+$negativeFirstEntrySkipped = false;
+try {
+    $negative = substr_replace($packageBytes, pack('V', 0xFFFFFFFE), $dependencyHeadersOffset, 4);
+    $negative = substr_replace($negative, pack('V', 2), $dependencyHeadersOffset + 4, 4);
+    $parsedNegative = Uedb5ZenPackageReader::parse($negative, $packageId, $storeEntry);
+    $negativeFirstEntrySkipped = ($parsedNegative['dependency_bundle_headers'][0]['first_entry_index'] ?? null) === -2
+        && ($parsedNegative['dependency_bundle_headers'][0]['total_entry_count'] ?? 0) >= 2;
+} catch (RuntimeException) {
+    $negativeFirstEntrySkipped = false;
+}
+$check($negativeFirstEntrySkipped, 'zen_negative_dependency_first_entry_skipped_like_epic');
+
 echo json_encode([
     'ok' => $failures === [],
     'checks' => $checks,
