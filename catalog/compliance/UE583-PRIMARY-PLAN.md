@@ -6,8 +6,8 @@ Baseline: c4a6c0a2 (2026-10-19). Frozen primary denominator: 11 areas from UE583
 |---|---|---|---|
 | P01 | SRC-001 | Classic summary, versions and admission | verified within supported scope — native 140-package field differential |
 | P02 | SRC-002 | Classic name/import/export/dependency tables | VERIFIED: 140 native packages, 44,840 classic table fields, 2,832 DependsMap rows / 9,069 exact references; S001 RF_Load corrected |
-| P03 | SRC-003 | Zen header and versioning | 100 real Zen packages / 6,546 Epic-native decoded fields match; versioned and optional Zen layouts remain |
-| P04 | SRC-004 | Zen import/export/dependencies | Epic-native import IDs, public export hashes and dependency entries compare equal across 100 real packages; versioned/optional cases remain |
+| P03 | SRC-003 | Zen header and versioning | 100 real unversioned Zen packages / 6,546 native fields plus one versioned source-conforming fixture / 38 native fields match; optional runtime branch remains |
+| P04 | SRC-004 | Zen import/export/dependencies | Real unversioned and one native versioned import/export/dependency comparison passed; optional-segment mount/provider outcomes remain |
 | P05 | SRC-005 | Script objects and identities | reviewed; existing verified status reaffirmed |
 | P06 | SRC-006 | Package store backend arbitration | reviewed; existing verified status reaffirmed |
 | P07 | SRC-007 | File package store/container headers | reviewed; B006/foundation passed; mount/recovery remains open |

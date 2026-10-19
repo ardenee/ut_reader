@@ -125,9 +125,11 @@
       "evidence": [
         "catalog/compliance/UE583-EPIC-IOSTORE-CONTENT-DIFFERENTIAL-20261019.md",
         "catalog/compliance/UE583-EPIC-NATIVE-ZEN-NAMES-20261019.md",
-        "catalog/compliance/UE583-P03-ZEN-HEADER-RECONCILIATION.md", "catalog/compliance/UE583-EPIC-NATIVE-ZEN-HEADER-FIELDS-20261019.md", "catalog/bin/verify-ue5-583-epic-native-zen-header-fields.php"
+        "catalog/compliance/UE583-P03-ZEN-HEADER-RECONCILIATION.md", "catalog/compliance/UE583-EPIC-NATIVE-ZEN-HEADER-FIELDS-20261019.md", "catalog/bin/verify-ue5-583-epic-native-zen-header-fields.php",
+        "catalog/bin/verify-ue5-583-epic-native-versioned-zen.php",
+        "catalog/compliance/UE583-EPIC-NATIVE-VERSIONED-ZEN-20261019.md"
       ],
-      "open_requirements": ["Epic native 100-package/6546-field unversioned summary, import identities, ordinary export fields/hashes and dependency header/entry comparisons passed; versioned, optional and additional per-row reference semantics remain."]
+      "open_requirements": ["Epic native 100 real unversioned packages/6546 fields and one source-conforming versioned fixture/38 fields pass; independently cooked versioned examples and optional-segment runtime association remain."]
     },
     {
       "id": "UE583-SRC-004",
@@ -157,8 +159,8 @@
         "catalog/src/Infrastructure/Metadata/Uedb5MigrationValidator.php"
       ],
       "differences": ["UE5-D033"],
-      "evidence": ["catalog/compliance/UE583-D033-ZEN-DEPENDENCY-COUNT.md", "catalog/compliance/UE583-P04-ZEN-DEPENDENCY-RECONCILIATION.md", "catalog/compliance/UE583-EPIC-NATIVE-ZEN-HEADER-FIELDS-20261019.md"],
-      "open_requirements": ["Independent Epic 100-package/6546-field unversioned Zen per-row oracle passed; versioned/optional per-row and complete supported-branch coverage remain."]
+      "evidence": ["catalog/compliance/UE583-D033-ZEN-DEPENDENCY-COUNT.md", "catalog/compliance/UE583-P04-ZEN-DEPENDENCY-RECONCILIATION.md", "catalog/compliance/UE583-EPIC-NATIVE-ZEN-HEADER-FIELDS-20261019.md", "catalog/bin/verify-ue5-583-epic-native-versioned-zen.php", "catalog/compliance/UE583-EPIC-NATIVE-VERSIONED-ZEN-20261019.md"],
+      "open_requirements": ["Epic native 100 real unversioned packages/6546 fields and one versioned source-conforming fixture/38 fields pass; optional-segment imported package associations and missing-provider runtime branches remain."]
     },
     {
       "id": "UE583-SRC-005",

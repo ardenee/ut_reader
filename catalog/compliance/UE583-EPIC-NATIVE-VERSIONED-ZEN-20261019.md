@@ -1,0 +1,7 @@
+# P03/P04 — native Epic versioned Zen fixture comparison (2026-10-19)
+
+**PASS: 38/38 independent comparisons, zero mismatches.** Epic's UE5.8.3 `FZenPackageHeader::MakeView` decoded a versioned Zen fixture containing UE4=522 / UE5=1018, custom versions, cell imports/exports, bulk data, one imported package, one export and dependency-bundle entries. UnrealDB's production `Uedb5ZenPackageReader::parse()` decoded the same bytes. Compared 21 source-native summary and section-count values plus export offsets, sizes, flags, filter flags, 64-bit public hash (as exact hex, not imprecise PHP float), imported object identity, dependency-header fields and dependency entry identity.
+
+Reproducible driver: `catalog/bin/verify-ue5-583-epic-native-versioned-zen.php`. The driver synthesizes only an isolated temporary copy of the **existing** `verify-uedb5-ue5-zen-package.php` fixture generator; does not alter original acceptance fixture or its stored implementation hashes. The disposable Epic `UnrealPackageTool.exe -ZenHeaderProbe` provides the independently decoded fields. This is an **engine-schema-conforming synthetic**, not an independently cooked real versioned game package. It establishes the versioned source branch on the test bytes, not every real-world variant.
+
+**Still open:** an independent optional-segment association/mount oracle and broader real versioned package samples. P03/P04 remain partial. Source denominator integrity and other accepted areas remain unchanged.
