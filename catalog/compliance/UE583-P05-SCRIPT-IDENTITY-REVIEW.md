@@ -1,0 +1,9 @@
+# P05 — ScriptObjects names/import identity source review (2026-10-19)
+
+Pinned UE5.8.3 `CoreUObject/Private/Serialization/AsyncLoading2.cpp`: `FPackageObjectIndex::GenerateImportHashFromObjectPath`, `GenerateImportHashFromVersePath`, `FromScriptPath` and script dependency setup. `Core/Public/Misc/Char.h`, `Core/Private/Hash/CityHash.cpp`; format ScriptObjects chunk loader/diagnostic. UnrealDB `Uedb5Ue5ScriptImportPathHasher`, `Uedb5ZenScriptObjectsReader`.
+
+Reviewed source branches against production code: object paths change `.` and `:` to `/`, use TChar lowercasing and UTF-16LE `CityHash64` with high two bits cleared; Verse paths hash their original UTF-8 bytes and clear the same bits. The mapped-name type bits are ignored in cooked ScriptObjects diagnostic name lookup (index used), duplicate global indexes overwrite earlier values (TMap::Emplace), and an absent ScriptObjects chunk yields no synthesized objects. Cooked diagnostic records remain explicitly **non-authoritative** compared with live runtime script registration. No new source/code mismatch confirmed in these branches.
+
+DEV validation: `verify-uedb5-zen-script-objects-standalone.php`, `verify-uedb5-b001-authentic-scriptobjects.php`, `verify-uedb5-b013-script-hash-native-source.php`, `verify-uedb5-b013-operation-acceptance.php`, `verify-ue5-583-script005-operation-acceptance.php`: all exit 0. Existing SRC-005 verification stays verified, with no unnecessary new B workstream or changes to production reader.
+
+Practical implementation limits (not claims of executing native engine): UTF-8 API requires a lossless Unicode conversion for script object paths, and `maxObjects` is a configurable resource cap on cooked diagnostic loading. Live registration and object construction remain engine runtime responsibilities, not format parsing.

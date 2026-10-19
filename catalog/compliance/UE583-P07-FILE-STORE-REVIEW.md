@@ -1,0 +1,5 @@
+# P07 — FilePackageStore and IoContainerHeader primary checkpoint (2026-10-19)
+
+Pinned Epic `Engine/Source/Runtime/PakFile/Private/FilePackageStore.cpp`, `Engine/Source/Runtime/Core/Private/IO/IoContainerHeader.cpp` and public IoContainerHeader declaration are tracked by SRC-007. Existing code `Uedb5IoStoreContainerHeaderReader.php` and `Uedb5Ue5ZenIoStoreSnapshotBuilder.php` covers container ID, ordinary/optional package-store entries, mount-context lookup, localized packages and redirects, soft references, and header v3 minimum/v4 inline/v5+ offset policies. B006 source verification, B006 operation acceptance and UE5 IoStore foundation all EXIT 0 on DEV.
+
+**Still partial:** no observed runtime mount/recovery acceptance from an Epic-native file package-store instance and no adequate positive native future-version header fixture. The source-denominator unit remains partial; a passing synthetic reader test is not an Epic runtime mount result. No new production change made in this checkpoint. Next P08 TOC layout/chunk identities.

@@ -8,10 +8,10 @@ Baseline: c4a6c0a2 (2026-10-19). Frozen primary denominator: 11 areas from UE583
 | P02 | SRC-002 | Classic name/import/export/dependency tables | Primary pass reviewed; native tables/dependency projection passed; S001 deferred |
 | P03 | SRC-003 | Zen header and versioning | Primary pass reviewed; HeaderSize boundary corrected; native field oracle outstanding |
 | P04 | SRC-004 | Zen import/export/dependencies | Primary pass reviewed; negative dependency skip aligned; native per-row oracle outstanding |
-| P05 | SRC-005 | Script objects and identities | IN PROGRESS |
-| P06 | SRC-006 | Package store backend arbitration | queued |
-| P07 | SRC-007 | File package store/container headers | queued |
-| P08 | SRC-008 | IoStore TOC and chunk identities | queued |
+| P05 | SRC-005 | Script objects and identities | reviewed; existing verified status reaffirmed |
+| P06 | SRC-006 | Package store backend arbitration | reviewed; existing verified status reaffirmed |
+| P07 | SRC-007 | File package store/container headers | reviewed; B006/foundation passed; mount/recovery remains open |
+| P08 | SRC-008 | IoStore TOC and chunk identities | IN PROGRESS |
 | P09 | SRC-009 | IoStore reconstruction/crypto/compression | queued |
 | P10 | SRC-010 | Modern PAK index/directory | queued |
 | P11 | SRC-011 | Modern PAK payload/block decoding | queued |
@@ -29,4 +29,4 @@ After P11, resolve secondary findings in order, then accept the **existing** 16 
 
 ## Checkpoint
 
-P01 source branch matrix completed for supported classic summary layouts. Epic-native UnrealPackageTool differential passed 140 real packages / 5,279 fields; existing negative reader contract passed. P02 primary pass: 140 native packages / 44,840 name-import-export field comparisons; 50 native DependsMap packages / 253 export rows / 353 dependency refs matched length distributions. DependsMap now decoded and V5-persisted. SRC-002 remains partial because S001 is deferred after P11, as requested. P03 primary pass: Epic variable-header reader confined to HeaderSize, corrected in production and Zen regressions passed. SRC-003 remains partial for an independent Epic decoded Zen oracle; UnrealPackageTool does not decode extracted Zen .uheader. P04 primary pass: negative FirstEntryIndex dependency skip aligned with Epic, Zen and B004/B012 acceptances passed. SRC-004 remains partial for independent native decoded Zen import/export/dependency semantics. Active P05: script objects/names/import identities. See UE583-P04-ZEN-DEPENDENCY-RECONCILIATION.md.
+P01 source branch matrix completed for supported classic summary layouts. Epic-native UnrealPackageTool differential passed 140 real packages / 5,279 fields; existing negative reader contract passed. P02 primary pass: 140 native packages / 44,840 name-import-export field comparisons; 50 native DependsMap packages / 253 export rows / 353 dependency refs matched length distributions. DependsMap now decoded and V5-persisted. SRC-002 remains partial because S001 is deferred after P11, as requested. P03 primary pass: Epic variable-header reader confined to HeaderSize, corrected in production and Zen regressions passed. SRC-003 remains partial for an independent Epic decoded Zen oracle; UnrealPackageTool does not decode extracted Zen .uheader. P04 primary pass: negative FirstEntryIndex dependency skip aligned with Epic, Zen and B004/B012 acceptances passed. SRC-004 remains partial for independent native decoded Zen import/export/dependency semantics. P05 primary pass: native script hashing, ScriptObjects decoding and live-vs-cooked boundary reviewed; acceptance checks passed; existing SRC-005 remains verified. P06 source priority, terminal/fallback and redirect branches passed source oracle, arbitration, callers and B005 acceptance. SRC-006 remains verified. P07 B006 source, operation acceptance and IoStore foundation all passed. SRC-007 remains partial until native mount/recovery and future-version header semantics. Active P08: IoStore TOC layout/chunk identity; see UE583-P07-FILE-STORE-REVIEW.md.
