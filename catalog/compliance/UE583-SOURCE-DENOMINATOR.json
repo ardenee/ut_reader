@@ -125,7 +125,7 @@
         "catalog/compliance/UE583-EPIC-NATIVE-ZEN-NAMES-20261019.md",
         "catalog/compliance/UE583-P03-ZEN-HEADER-RECONCILIATION.md", "catalog/compliance/UE583-EPIC-NATIVE-ZEN-HEADER-FIELDS-20261019.md", "catalog/bin/verify-ue5-583-epic-native-zen-header-fields.php"
       ],
-      "open_requirements": ["Epic native 100-package/2100-field unversioned summary/section-count comparison passed; versioned, optional, and per-row Zen semantics still require native comparison."]
+      "open_requirements": ["Epic native 100-package/4647-field unversioned summary, ordinary export fields and dependency-header comparisons passed; versioned, optional and additional per-row reference semantics remain."]
     },
     {
       "id": "UE583-SRC-004",

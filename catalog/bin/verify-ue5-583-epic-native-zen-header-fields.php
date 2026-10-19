@@ -64,7 +64,7 @@ foreach($rows as $row){
   if(!isset($stores[$id]))throw new RuntimeException('Missing package-store entry '.$id);
   $z=Uedb5ZenPackageReader::parse($toc->readChunk($index),$id,$stores[$id]);
   $lines=[];$rc=0;exec(escapeshellarg($exe).' -ZenHeaderProbe='.escapeshellarg($path).' -unattended 2>&1',$lines,$rc);
-  $stdout=implode("\n",$lines);
+  $stdout=str_replace('\\n', "\n", implode("\n",$lines)); // Native probe row markers use literal backslash-n separators.
   if(!in_array($rc,[0,777006],true)||!preg_match('/UE583_NATIVE_ZEN_ORACLE (\{[^\r\n]+\})/',$stdout,$m))throw new RuntimeException('Epic native probe exit '.$rc.' '.substr($stdout,-450));
   $native=json_decode($m[1],true,512,JSON_THROW_ON_ERROR);
   foreach($mapping as $key=>$decode){
@@ -72,6 +72,25 @@ foreach($rows as $row){
    $epic=(int)$native[$key];$local=(int)$decode($z);
    if($epic!==$local)throw new RuntimeException($key.' Epic='.$epic.' UnrealDB='.$local);
    $compared++;
+  }
+  if(!preg_match_all('/^UE583_NATIVE_ZEN_EXPORT (\\d+) (\\d+) (\\d+) (\\d+) (\\d+) (\\d+)$/m',$stdout,$nativeExports,PREG_SET_ORDER))throw new RuntimeException('Missing native export row markers');
+  if(count($nativeExports)!==count($z['exports']))throw new RuntimeException('Native export row count mismatch');
+  foreach($nativeExports as $entry){
+   $i=(int)$entry[1];$row=$z['exports'][$i]??null;
+   if(!is_array($row))throw new RuntimeException('Missing UnrealDB export row '.$i);
+   foreach(['cooked_serial_offset'=>(int)$row['cooked_serial_offset'],'cooked_serial_size'=>(int)$row['cooked_serial_size'],'object_flags'=>hexdec($row['object_flags']),'filter_flags'=>(int)$row['filter_flags']] as $field=>$actual){
+    $column=['cooked_serial_offset'=>2,'cooked_serial_size'=>3,'object_flags'=>5,'filter_flags'=>6][$field];
+    if((int)$entry[$column]!==$actual)throw new RuntimeException('Export['.$i.'].'.$field.' native='.$entry[$column].' UnrealDB='.$actual);
+    $compared++;
+   }
+  }
+  if(!preg_match_all('/^UE583_NATIVE_ZEN_DEPHEADER (\\d+) (-?\\d+) (\\d+) (\\d+) (\\d+) (\\d+)$/m',$stdout,$nativeDeps,PREG_SET_ORDER))throw new RuntimeException('Missing native dependency header markers');
+  if(count($nativeDeps)!==count($z['dependency_bundle_headers']))throw new RuntimeException('Native dependency header row count mismatch');
+  foreach($nativeDeps as $entry){
+   $i=(int)$entry[1];$row=$z['dependency_bundle_headers'][$i]??null;
+   if(!is_array($row))throw new RuntimeException('Missing UnrealDB dependency header '.$i);
+   $actual=[(int)$row['first_entry_index'],(int)$row['entry_count'][0][0],(int)$row['entry_count'][0][1],(int)$row['entry_count'][1][0],(int)$row['entry_count'][1][1]];
+   foreach($actual as $j=>$value){if((int)$entry[$j+2]!==$value)throw new RuntimeException('DependencyHeader['.$i.'].field'.$j.' native='.$entry[$j+2].' UnrealDB='.$value);$compared++;}
   }
   $checked++;$v=(string)($z['versioning_info']['package_version']['ue5']??'unversioned');$versions[$v]=($versions[$v]??0)+1;
  }catch(Throwable $e){$fail[]=['package'=>$name,'message'=>$e->getMessage()];if(count($fail)>=8)break;}
