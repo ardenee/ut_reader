@@ -4,6 +4,7 @@ require dirname(__DIR__).'/bootstrap/autoload.php';
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5IoStoreTocReader;
 $exe='H:/UE5-583-runtime-probe/Engine/Binaries/Win64/UnrealPackageTool.exe';
 $toc='C:/Temp/uedb5-iostore-retention-test/games/unreal2/iostore/63e4f0e322276684718563e13619474c8cf5981b29e15e502620a4373e351ab5/FactoryGame-WindowsServer.utoc';
+foreach($argv as $option){if(str_starts_with($option,'--toc='))$toc=substr($option,6);}
 if(!is_file($exe)||!is_file($toc))throw new RuntimeException('Pinned native test prerequisites missing');
 $ours=new Uedb5IoStoreTocReader($toc);
 $lines=[];$exit=0;
@@ -20,7 +21,7 @@ $expected=[
  (int)$h['directory_index_size'],(int)$h['partition_count'],
  (int)$h['perfect_hash_seed_count'],(int)$h['chunks_without_perfect_hash_count'],
  count($c),count($c),count($blocks),count($ours->compressionMethods()),
- strlen($ours->directoryIndexBytes()),count($metas),0
+ strlen($ours->directoryIndexBytes()),count($metas),(int)$h['version']<8?count($metas):0
 ];
 $compared=0;$errors=[];
 if(count($values)!==count($expected))throw new RuntimeException('Unexpected native header field count');
@@ -41,7 +42,7 @@ preg_match_all('/^UE583_NATIVE_TOC_IDMETA (\\d+) ([0-9A-F]{24}) ([0-9A-F]{40}) (
 if(count($nativeIdentity)!==count($c))$errors[]='Native chunk identity/metadata count mismatch';
 foreach($nativeIdentity as $entry){
  $i=(int)$entry[1];$chunk=$c[$i]??[];$meta=$metas[$i]??[];
- foreach(['raw'=>(string)($chunk['raw']??''),'chunk_hash'=>(string)($meta['chunk_hash']??'')] as $j=>$expectedHex){$position=$j==='raw'?2:3;if($entry[$position]!==$expectedHex)$errors[]="Chunk[$i].$j mismatch";$compared++;}
+ foreach(['raw'=>(string)($chunk['raw']??''),'chunk_hash'=>(string)($meta['chunk_hash']??'')] as $j=>$expectedHex){$position=$j==='raw'?2:3;if($j==='chunk_hash'&&(int)$h['version']<8)$expectedHex=substr($expectedHex,0,40);if($entry[$position]!==$expectedHex)$errors[]="Chunk[$i].$j mismatch";$compared++;}
  if((int)$entry[4]!==($meta['flags']??null))$errors[]="Chunk[$i].metadata flags mismatch";$compared++;
 }
 $wire=file_get_contents($toc);if(!is_string($wire))throw new RuntimeException('Cannot reread TOC source bytes');

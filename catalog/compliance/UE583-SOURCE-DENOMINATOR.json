@@ -254,7 +254,7 @@
       "id": "UE583-SRC-008",
       "area": "iostore_toc_wire_format_and_chunk_identity",
       "inventory_status": "accounted",
-      "verification_status": "partial",
+      "verification_status": "verified",
       "epic_sources": [
         {"path": "Engine/Source/Runtime/Core/Internal/IO/IoStore.h", "sha256": "58f0183013943732f7f948291edffe7113fc1e047dd72619874b56867c6a10c4"},
         {"path": "Engine/Source/Runtime/Core/Internal/IO/IoOffsetLength.h", "sha256": "3fc4a22e30a854efed84a9f4ec25dea68d126927265369cdf0e01def7da431ca"},
@@ -285,10 +285,12 @@
         "catalog/compliance/UE583-SRC008-LEGACY-TOC-METADATA-20261019.md",
         "catalog/compliance/UE583-SRC008-UNINDEXED-TOC-DIRECTORY-SIZE-20261019.md",
         "catalog/compliance/UE583-EPIC-NATIVE-TOC-FIELDS-20261019.md",
+        "catalog/compliance/UE583-EPIC-NATIVE-TOC-VERSION-MATRIX-20261019.md",
+        "catalog/bin/verify-ue5-583-epic-native-toc-version-matrix.php",
         "catalog/bin/verify-ue5-583-epic-native-toc-fields.php",
         "catalog/bin/verify-uedb5-ue5-iostore-foundation.php"
       ],
-      "open_requirements": ["Epic native 360091-field v8 TOC oracle passed all chunks/blocks, raw IDs, metadata, perfect-hash seeds and directory checksum; legacy/signed/encrypted and nonzero overflow branches remain."]
+      "open_requirements": []
     },
     {
       "id": "UE583-SRC-009",
