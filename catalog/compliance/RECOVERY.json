@@ -145,13 +145,15 @@
     },
     {
       "name": "archive_import",
-      "coverage": "mapped",
-      "source_to_entry_point_map": ["UE5-subset production path: catalog/src/Infrastructure/Jobs/CatalogArchiveMemberContentRoutingJobHandler.php","UE5-subset acceptance evidence: catalog/compliance/UE583-ARCHIVE-DEPTH-RETRY-20261019.md","PARTIAL ONLY: complete Epic branch and cross-workflow acceptance remain open"]
+      "coverage": "accepted",
+      "source_to_entry_point_map": ["catalog/src/Infrastructure/Jobs/CatalogArchiveMemberContentRoutingJobHandler.php"],
+      "end_to_end_acceptance_evidence": ["catalog/compliance/UE583-WF12-WF13-ARCHIVE-BACKUP-ACCEPTANCE-20261019.md","catalog/compliance/UE583-ARCHIVE-DEPTH-RETRY-20261019.md","catalog/bin/verify-archive-ingestion.php","catalog/bin/verify-archive-member-content-routing.php","catalog/bin/verify-ue5-583-nested-archive-retry.php"]
     },
     {
       "name": "backup_restore",
-      "coverage": "mapped",
-      "source_to_entry_point_map": ["UE5-subset production path: catalog/src/Infrastructure/Jobs/CatalogIoStoreBackupJobHandler.php","UE5-subset acceptance evidence: catalog/bin/verify-iostore-backup-jobs-standalone.php","PARTIAL ONLY: complete Epic branch and cross-workflow acceptance remain open"]
+      "coverage": "accepted",
+      "source_to_entry_point_map": ["catalog/src/Infrastructure/Jobs/CatalogIoStoreBackupJobHandler.php"],
+      "end_to_end_acceptance_evidence": ["catalog/compliance/UE583-WF12-WF13-ARCHIVE-BACKUP-ACCEPTANCE-20261019.md","catalog/bin/verify-iostore-backup-jobs-standalone.php","catalog/compliance/UE583-IOSTORE-ACCEPTANCE-FIXTURES-20261019.md"]
     },
     {
       "name": "resync",
