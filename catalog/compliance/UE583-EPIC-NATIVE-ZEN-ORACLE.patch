@@ -1,8 +1,8 @@
 diff --git a/Engine/Source/Programs/UnrealPackageTool/UnrealPackageTool.cpp b/Engine/Source/Programs/UnrealPackageTool/UnrealPackageTool.cpp
-index a7bf74d..cad6448 100644
+index a7bf74d..72143db 100644
 --- a/Engine/Source/Programs/UnrealPackageTool/UnrealPackageTool.cpp
 +++ b/Engine/Source/Programs/UnrealPackageTool/UnrealPackageTool.cpp
-@@ -13,6 +13,10 @@
+@@ -13,6 +13,11 @@
  #include "HAL/FileManager.h"
  #include "HAL/PlatformFile.h"
  #include "Misc/CommandLine.h"
@@ -10,13 +10,109 @@ index a7bf74d..cad6448 100644
 +#include "Serialization/ZenPackageHeader.h"
 +#include "IO/IoStore.h"
 +#include "IO/IoContainerHeader.h"
++#include "FilePackageStore.h"
  #include "Misc/ObjectThumbnail.h"
  #include "Misc/PackagePath.h"
  #include "Misc/Parse.h"
-@@ -1244,6 +1248,198 @@ INT32_MAIN_INT32_ARGC_TCHAR_ARGV()
+@@ -1244,6 +1249,293 @@ INT32_MAIN_INT32_ARGC_TCHAR_ARGV()
  {
  	using namespace UE::PackageTool;
  	int32 Ret = GEngineLoop.PreInit(ArgC, ArgV);
++	FString FileStorePriorityProbePath;
++	if (FParse::Value(FCommandLine::Get(), TEXT("FileStorePriorityProbe="), FileStorePriorityProbePath))
++	{
++		TArray<uint8> Raw;
++		if (!FFileHelper::LoadFileToArray(Raw, *FileStorePriorityProbePath))
++		{
++			printf("UE583_NATIVE_PRIORITY_ERROR cannot_read\\n");
++			return 2;
++		}
++		FMemoryReader ReaderA(Raw, true);
++		FMemoryReader ReaderB(Raw, true);
++		FIoContainerHeader HeaderA, HeaderB;
++		ReaderA << HeaderA;
++		ReaderB << HeaderB;
++		if (ReaderA.IsError() || ReaderB.IsError() || HeaderB.StoreEntries.Num() < 24 || HeaderA.PackageIds.IsEmpty())
++		{
++			printf("UE583_NATIVE_PRIORITY_ERROR invalid_fixture\\n");
++			return 3;
++		}
++		const FPackageId Id = HeaderA.PackageIds[0];
++		FPackageId HighProvider = FPackageId::FromValue(0x1111222233334444ull);
++		FMemory::Memcpy(HeaderB.StoreEntries.GetData() + 16, &HighProvider, sizeof(FPackageId));
++		FFilePackageStoreBackend Backend;
++		Backend.Mount(&HeaderA, 10);
++		Backend.Mount(&HeaderB, 20);
++		Backend.BeginRead();
++		FPackageStoreEntry High;
++		const auto HighStatus = Backend.GetPackageStoreEntry(Id, NAME_None, High);
++		const uint64 HighId = High.ImportedPackageIds.Num() ? High.ImportedPackageIds[0].Value() : 0;
++		Backend.EndRead();
++		Backend.Unmount(&HeaderB);
++		Backend.BeginRead();
++		FPackageStoreEntry Restored;
++		const auto RestoreStatus = Backend.GetPackageStoreEntry(Id, NAME_None, Restored);
++		const uint64 RestoreId = Restored.ImportedPackageIds.Num() ? Restored.ImportedPackageIds[0].Value() : 0;
++		Backend.EndRead();
++		Backend.Unmount(&HeaderA);
++		Backend.BeginRead();
++		FPackageStoreEntry Removed;
++		const auto RemovedStatus = Backend.GetPackageStoreEntry(Id, NAME_None, Removed);
++		Backend.EndRead();
++		printf("UE583_NATIVE_FILESTORE_PRIORITY %d %016llX %d %016llX %d\\n",
++			static_cast<int32>(HighStatus), static_cast<unsigned long long>(HighId),
++			static_cast<int32>(RestoreStatus), static_cast<unsigned long long>(RestoreId),
++			static_cast<int32>(RemovedStatus));
++		return 0;
++	}
++	FString FileStoreProbePath;
++	if (FParse::Value(FCommandLine::Get(), TEXT("FileStoreProbe="), FileStoreProbePath))
++	{
++		TArray<uint8> Raw;
++		if (!FFileHelper::LoadFileToArray(Raw, *FileStoreProbePath))
++		{
++			printf("UE583_NATIVE_FILESTORE_ERROR cannot_read\\n");
++			return 2;
++		}
++		FMemoryReader Archive(Raw, true);
++		FIoContainerHeader Header;
++		Archive << Header;
++		if (Archive.IsError() || Header.PackageIds.IsEmpty())
++		{
++			printf("UE583_NATIVE_FILESTORE_ERROR invalid_header\\n");
++			return 3;
++		}
++		const FPackageId Id = Header.PackageIds[0];
++		const FPackageId MissingId = FPackageId::FromValue(0x9999111122223333ull);
++		FFilePackageStoreBackend Backend;
++		Backend.Mount(&Header, 10);
++		Backend.BeginRead();
++		FPackageStoreEntry Entry;
++		const EPackageStoreEntryStatus Status = Backend.GetPackageStoreEntry(Id, NAME_None, Entry);
++		FPackageStoreEntry MissingEntry;
++		const EPackageStoreEntryStatus MissingStatus = Backend.GetPackageStoreEntry(MissingId, NAME_None, MissingEntry);
++		FName RedirectName;
++		FPackageId RedirectTarget;
++		const bool HasRedirect = Backend.GetPackageRedirectInfo(FPackageId::FromValue(0xAAAA000000001111ull), RedirectName, RedirectTarget);
++		printf("UE583_NATIVE_FILESTORE_MOUNT %d %d %d %d %016llX\\n",
++			static_cast<int32>(Status), Entry.ImportedPackageIds.Num(), static_cast<int32>(MissingStatus),
++			static_cast<int32>(HasRedirect),
++			static_cast<unsigned long long>(HasRedirect ? RedirectTarget.Value() : 0));
++#if WITH_EDITOR
++		printf("UE583_NATIVE_FILESTORE_OPTIONAL %u %d\\n",
++			static_cast<uint32>(Entry.bHasOptionalSegment), Entry.OptionalSegmentImportedPackageIds.Num());
++#else
++		printf("UE583_NATIVE_FILESTORE_OPTIONAL_UNAVAILABLE editor_disabled\\n");
++#endif
++		Backend.EndRead();
++		Backend.Unmount(&Header);
++		Backend.BeginRead();
++		FPackageStoreEntry AfterUnmount;
++		const EPackageStoreEntryStatus UnmountedStatus = Backend.GetPackageStoreEntry(Id, NAME_None, AfterUnmount);
++		Backend.EndRead();
++		printf("UE583_NATIVE_FILESTORE_UNMOUNT %d\\n", static_cast<int32>(UnmountedStatus));
++		return 0;
++	}
 +	FString ContainerHeaderProbePath;
 +	if (FParse::Value(FCommandLine::Get(), TEXT("ContainerHeaderProbe="), ContainerHeaderProbePath))
 +	{
@@ -213,15 +309,22 @@ index a7bf74d..cad6448 100644
  	// Disable all logging because we want to output to stdout
  	FSelfRegisteringExec::StaticExec(nullptr, TEXT("log logunrealpackagetool only"), *GLog);
 diff --git a/Engine/Source/Programs/UnrealPackageTool/UnrealPackageTool.Build.cs b/Engine/Source/Programs/UnrealPackageTool/UnrealPackageTool.Build.cs
-index 326336d..b16039d 100644
+index 326336d..93aad21 100644
 --- a/Engine/Source/Programs/UnrealPackageTool/UnrealPackageTool.Build.cs
 +++ b/Engine/Source/Programs/UnrealPackageTool/UnrealPackageTool.Build.cs
-@@ -18,6 +18,8 @@ public class UnrealPackageTool : ModuleRules
+@@ -14,10 +14,14 @@ public class UnrealPackageTool : ModuleRules
+ 				"CoreUObject",
+ 				"Projects",
+ 				"SQLiteCore",
+-				"AssetRegistry"
++				"AssetRegistry",
++				"PakFile"
  			}
  		);
  
 +		PrivateIncludePaths.Add(System.IO.Path.Combine(EngineDirectory, "Source/Runtime/CoreUObject/Internal"));
 +		PrivateIncludePaths.Add(System.IO.Path.Combine(EngineDirectory, "Source/Runtime/Core/Internal"));
++		PrivateIncludePaths.Add(System.IO.Path.Combine(EngineDirectory, "Source/Runtime/PakFile/Private"));
  		bUseUnity = false;
  		PrivateDependencyModuleNames.Add("CLI11");
  		

@@ -225,7 +225,7 @@
       "id": "UE583-SRC-007",
       "area": "file_package_store_and_container_header",
       "inventory_status": "accounted",
-      "verification_status": "partial",
+      "verification_status": "verified",
       "epic_sources": [
         {"path": "Engine/Source/Runtime/PakFile/Private/FilePackageStore.cpp", "sha256": "dfdd4e226b3a41f36476ddd93225aa34284ea63943f1752216e0f2a25c2a2418"},
         {"path": "Engine/Source/Runtime/Core/Private/IO/IoContainerHeader.cpp", "sha256": "fcc949dc6f95befd0e621294b422773610896a325fd457294e640b9d9e12a590"},
@@ -252,9 +252,11 @@
       "differences": ["UE5-D007", "UE5-D008", "UE5-D016", "UE5-D031"],
       "evidence": [
         "catalog/compliance/B006-CONTAINER-HEADER-SOURCE.md",
-        "catalog/compliance/batches/B006-ue5-file-store.json"
+        "catalog/compliance/batches/B006-ue5-file-store.json",
+        "catalog/bin/verify-ue5-583-epic-native-optional-container.php",
+        "catalog/compliance/UE583-P07-EPIC-NATIVE-FILESTORE-MOUNT-20261019.md"
       ],
-      "open_requirements": ["Authentic future container-header layout and full live mount/recovery behavior remain workflow/runtime gates."]
+      "open_requirements": []
     },
     {
       "id": "UE583-SRC-008",

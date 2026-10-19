@@ -10,7 +10,7 @@ Baseline: c4a6c0a2 (2026-10-19). Frozen primary denominator: 11 areas from UE583
 | P04 | SRC-004 | Zen import/export/dependencies | Real unversioned and one native versioned import/export/dependency comparison passed; optional-segment mount/provider outcomes remain |
 | P05 | SRC-005 | Script objects and identities | reviewed; existing verified status reaffirmed |
 | P06 | SRC-006 | Package store backend arbitration | reviewed; existing verified status reaffirmed |
-| P07 | SRC-007 | File package store/container headers | reviewed; B006/foundation passed; mount/recovery remains open |
+| P07 | SRC-007 | File package store/container headers | VERIFIED within non-editor wire/mount scope: 70 Epic-native comparisons, v5/v6/v100 mount, redirect, priority, recovery |
 | P08 | SRC-008 | IoStore TOC and chunk identities | VERIFIED within TOC wire-format scope: 360,091 native real fields + 11 positive/5 negative native branch fixtures |
 | P09 | SRC-009 | IoStore reconstruction/crypto/compression | reviewed; prior 27,240 Epic byte differential verified |
 | P10 | SRC-010 | Modern PAK index/directory | reviewed; native PAK11 independent differential verified |

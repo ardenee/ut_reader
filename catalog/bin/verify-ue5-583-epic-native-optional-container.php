@@ -2,6 +2,7 @@
 declare(strict_types=1);
 require dirname(__DIR__).'/bootstrap/autoload.php';
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5IoStoreContainerHeaderReader;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5ZenMountedStoreContextBuilder;
 $exe='H:/UE5-583-runtime-probe/Engine/Binaries/Win64/UnrealPackageTool.exe';
 $builder=__DIR__.'/verify-uedb5-ue5-zen-package.php';
 $original=file_get_contents($builder);
@@ -42,6 +43,84 @@ try{
    $i=(int)$entry[1];$j=(int)$entry[2];$compared++;
    if($entry[3]!==($decoded[$key][$i]['imported_package_ids'][$j]??null))$errors[]=['section'=>$label,'entry'=>$i,'import'=>$j,'native'=>$entry[3]];
   }
+ }
+ // Native Epic FFilePackageStoreBackend performs an actual mount, read,
+ // redirect lookup and unmount rather than merely deserializing a header.
+ $checkNativeMount=static function(string $path,int $version,array $header) use($exe,&$compared,&$errors):void{
+  $mount=[
+   'container_id'=>$header['container_id'],'order'=>10,'sequence'=>0,
+   'package_redirects'=>$header['package_redirects'],
+   'localized_packages'=>$header['localized_packages'],
+   'package_entries'=>[['package_id'=>$header['package_ids'][0],'file_id'=>1234]]
+  ];
+  $context=Uedb5ZenMountedStoreContextBuilder::build([$mount]);
+  $localOk=($context['file_backend_entries'][$header['package_ids'][0]]['status']??null)==='Ok';
+  $localRedirect=$context['package_redirects'][0]['target_package_id']??null;
+  $out=[];$rc=0;
+  exec(escapeshellarg($exe).' -FileStoreProbe='.escapeshellarg($path).' -unattended 2>&1',$out,$rc);
+  $text=str_replace('\\n',"\n",implode("\n",$out));
+  if(!in_array($rc,[0,777006],true)||!preg_match('/^UE583_NATIVE_FILESTORE_MOUNT (\d+) (\d+) (\d+) (\d+) ([0-9A-F]{16})$/m',$text,$m)){
+   $errors[]=['version'=>$version,'native_filestore'=>'missing mount marker'];return;
+  }
+  $values=[(int)$m[1]===4&&$localOk,(int)$m[2]===count($header['store_entries'][0]['imported_package_ids']),(int)$m[3]===1,(int)$m[4]===1,$m[5]===$localRedirect];
+  foreach($values as $i=>$ok){$compared++;if(!$ok)$errors[]=['version'=>$version,'mount_field'=>$i];}
+  if(!preg_match('/^UE583_NATIVE_FILESTORE_UNMOUNT (\d+)$/m',$text,$unmount))$errors[]=['version'=>$version,'unmount'=>'marker missing'];
+  else{$compared++;if((int)$unmount[1]!==1)$errors[]=['version'=>$version,'unmount'=>'not Missing'];}
+ };
+ $checkNativeMount($nativePath,5,$decoded);
+ $checkNativePriority=static function(string $path,int $version,array $header) use($exe,&$compared,&$errors):void{
+  $id=$header['package_ids'][0];
+  $low=[
+   'container_id'=>$header['container_id'].'-low','order'=>10,'sequence'=>0,
+   'package_redirects'=>$header['package_redirects'],'localized_packages'=>$header['localized_packages'],
+   'package_entries'=>[['package_id'=>$id,'file_id'=>1001]]
+  ];
+  $high=[
+   'container_id'=>$header['container_id'].'-high','order'=>20,'sequence'=>1,
+   'package_redirects'=>$header['package_redirects'],'localized_packages'=>$header['localized_packages'],
+   'package_entries'=>[['package_id'=>$id,'file_id'=>2002]]
+  ];
+  $both=Uedb5ZenMountedStoreContextBuilder::build([$low,$high]);
+  $restored=Uedb5ZenMountedStoreContextBuilder::build([$low]);
+  $empty=Uedb5ZenMountedStoreContextBuilder::build([]);
+  $output=[];$rc=0;
+  exec(escapeshellarg($exe).' -FileStorePriorityProbe='.escapeshellarg($path).' -unattended 2>&1',$output,$rc);
+  $text=str_replace('\\n',"\n",implode("\n",$output));
+  if(!in_array($rc,[0,777006],true)||!preg_match('/^UE583_NATIVE_FILESTORE_PRIORITY (\d+) ([0-9A-F]{16}) (\d+) ([0-9A-F]{16}) (\d+)$/m',$text,$matches)){
+   $errors[]=['version'=>$version,'native_priority'=>'missing marker'];return;
+  }
+  $checks=[
+   (int)$matches[1]===4,
+   $matches[2]==='1111222233334444',
+   ($both['file_backend_entries'][$id]['file_id']??null)===2002,
+   (int)$matches[3]===4,
+   $matches[4]===($header['store_entries'][0]['imported_package_ids'][0]??''),
+   ($restored['file_backend_entries'][$id]['file_id']??null)===1001,
+   (int)$matches[5]===1,
+   !isset($empty['file_backend_entries'][$id])
+  ];
+  foreach($checks as $i=>$ok){$compared++;if(!$ok)$errors[]=['version'=>$version,'priority_field'=>$i];}
+ };
+ $checkNativePriority($nativePath,5,$decoded);
+ // Epic IoContainerHeader.cpp intentionally has no Latest upper-bound
+ // rejection: future versions follow the >= SoftPackageReferencesOffset branch.
+ $originalBytes=file_get_contents($nativePath);
+ $futureVersions=[6,100];
+ foreach($futureVersions as $version){
+  file_put_contents($nativePath,substr_replace($originalBytes,pack('V',$version),4,4));
+  $future=Uedb5IoStoreContainerHeaderReader::parse(file_get_contents($nativePath));
+  $futureOutput=[];$futureRc=0;
+  exec(escapeshellarg($exe).' -ContainerHeaderProbe='.escapeshellarg($nativePath).' -unattended 2>&1',$futureOutput,$futureRc);
+  $futureText=str_replace('\\n',"\n",implode("\n",$futureOutput));
+  if(!in_array($futureRc,[0,777006],true)||!preg_match('/^UE583_NATIVE_CONTAINER_COUNTS (\d+) (\d+) (\d+) (\d+) (\d+) (\d+)$/m',$futureText,$futureMatch))$errors[]=['version'=>$version,'error'=>'Epic future-version read failed'];
+  $expectedCounts=[count($future['package_ids']),count($future['optional_segment_package_ids']),24*count($future['store_entries']),24*count($future['optional_segment_store_entries']),count($future['localized_packages']),count($future['package_redirects'])];
+  foreach($expectedCounts as $i=>$count){$compared++;if((int)($futureMatch[$i+1]??-1)!==$count)$errors[]=['version'=>$version,'count_field'=>$i];}
+  foreach(['MAIN'=>'store_entries','OPTIONAL'=>'optional_segment_store_entries'] as $label=>$key){
+   if(!preg_match('/^UE583_NATIVE_CONTAINER_'.$label.'_IMPORT 0 0 ([0-9A-F]{16})$/m',$futureText,$futureImport)||$futureImport[1]!==$future[$key][0]['imported_package_ids'][0])$errors[]=['version'=>$version,'section'=>$label];
+   $compared++;
+  }
+  $checkNativeMount($nativePath,$version,$future);
+  $checkNativePriority($nativePath,$version,$future);
  }
  $ok=$errors===[];
  echo json_encode(['ok'=>$ok,'source_fixture'=>'existing optional-segment Zen regression','native_field_comparisons'=>$compared,'main_import'=>$decoded['store_entries'][0]['imported_package_ids'][0]??null,'optional_import'=>$decoded['optional_segment_store_entries'][0]['imported_package_ids'][0]??null,'errors'=>$errors],JSON_PRETTY_PRINT),PHP_EOL;
