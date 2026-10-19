@@ -255,6 +255,28 @@ try {
         $check(false, 'toc_unindexed_nonzero_directory_size_skipped_like_epic');
     }
 
+    // Epic overrides pre-v3 partition values, even when the serialized
+    // 64-bit field would otherwise exceed the host PHP integer range.
+    $oldPartitionBase = $temp . DIRECTORY_SEPARATOR . 'legacy-partition';
+    $oldPartitionBytes = $utoc;
+    $oldPartitionBytes[16] = chr(2);
+    $oldPartitionBytes = substr_replace($oldPartitionBytes, "\xFE\xFF\xFF\xFF\xFF\xFF\xFF\xFF", 88, 8);
+    $oldPartitionBytes = substr($oldPartitionBytes, 0, -24 * count($chunks));
+    foreach ($chunks as $index => $_) {
+        $oldPartitionBytes .= str_repeat(chr($index + 1), 32) . chr(1);
+    }
+    file_put_contents($oldPartitionBase . '.utoc', $oldPartitionBytes);
+    file_put_contents($oldPartitionBase . '.ucas', $physical);
+    try {
+        $oldPartitionToc = new Uedb5IoStoreTocReader($oldPartitionBase . '.utoc');
+        $check($oldPartitionToc->header()['partition_count'] === 1
+            && $oldPartitionToc->header()['partition_size'] === PHP_INT_MAX
+            && $oldPartitionToc->readChunk(1) === $packageBytes,
+            'toc_v2_unused_large_partition_field_ignored');
+    } catch (RuntimeException) {
+        $check(false, 'toc_v2_unused_large_partition_field_ignored');
+    }
+
     // Legacy IoStore TOCs retain 32-byte hashes plus one flag byte.
     foreach ([2, 5] as $legacyVersion) {
         $legacyBase = $temp . DIRECTORY_SEPARATOR . 'legacy-' . $legacyVersion;

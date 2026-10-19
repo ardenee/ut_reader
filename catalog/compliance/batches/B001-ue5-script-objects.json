@@ -136,7 +136,7 @@
             "guarded_implementation_files": [
                 {
                     "path": "catalog/src/Infrastructure/Metadata/Uedb5IoStoreTocReader.php",
-                    "sha256": "88664592ff6c2686e1910e021a29dcdd0a7f7d583692cf3d9f293d0a3afa409d"
+                    "sha256": "3c186fecf42f7fb947971f289aefc5625cb2d49dd35bbda5b44e5bf74f9a5746"
                 },
                 {
                     "path": "catalog/src/Infrastructure/Metadata/Uedb5ZenPackageReader.php",

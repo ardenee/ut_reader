@@ -92,14 +92,14 @@ $check('d007_exhaustive_snapshot_entry_routes_from_import_repair_query_and_name_
  ]);
 $fixture=$root.'/catalog/bin/verify-uedb5-ue5-iostore-foundation.php';
 $check('d007_existing_full_byte_fixture_driver_fingerprint_guard',
- is_file($fixture)&&hash_file('sha256',$fixture)==='bf005a5f7223d1d62993f31d84f4cc400db1b8f2c97df1514baa7d753e370b2c');
+ is_file($fixture)&&hash_file('sha256',$fixture)==='41cf40c59816d314269c9ee0ea809902f4873bc4a58000ceec6b3c9063b11929');
 $out=[];$exit=127;
 exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($fixture).' 2>&1',$out,$exit);
 $report=json_decode(implode("\n",$out),true);
 $reports['foundation']=is_array($report)?$report:[];
 $check('d007_existing_full_iostore_fixture_passes',
  $exit===0 &&($report['ok']??false)===true
- &&count((array)($report['checks']??[]))===38);
+ &&count((array)($report['checks']??[]))===39);
 foreach([
  'd007_fixture_future_version_6_uses_source_layout'=>'container_header_future_version_uses_ue5_source_layout',
  'd007_fixture_below_minimum_version_rejected'=>'container_header_version_below_epic_minimum_rejected',

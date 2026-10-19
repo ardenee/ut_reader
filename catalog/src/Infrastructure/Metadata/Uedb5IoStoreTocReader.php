@@ -293,17 +293,21 @@ final class Uedb5IoStoreTocReader
             throw new RuntimeException('Unsupported IoStore TOC version: ' . $version);
         }
 
-        $partitionSize = Uedb5BinaryReader::unsignedHexLeToIntOrNull($partitionSizeHex);
-        if ($partitionSize === null) {
-            if ($partitionSizeHex === 'FFFFFFFFFFFFFFFF') {
-                $partitionSize = PHP_INT_MAX;
-            } else {
-                throw new RuntimeException('IoStore partition size exceeds the staging reader integer range: ' . $partitionSizeHex);
-            }
-        }
         if ($version < 3) {
+            // Partition fields are not authoritative for pre-partition TOCs.
+            // Apply the historical single-partition layout before attempting
+            // to interpret the unused 64-bit header field as a PHP integer.
             $partitionCount = 1;
             $partitionSize = PHP_INT_MAX;
+        } else {
+            $partitionSize = Uedb5BinaryReader::unsignedHexLeToIntOrNull($partitionSizeHex);
+            if ($partitionSize === null) {
+                if ($partitionSizeHex === 'FFFFFFFFFFFFFFFF') {
+                    $partitionSize = PHP_INT_MAX;
+                } else {
+                    throw new RuntimeException('IoStore partition size exceeds the staging reader integer range: ' . $partitionSizeHex);
+                }
+            }
         }
 
         $this->header = [
