@@ -80,18 +80,21 @@
   "required_workflow_paths": [
     {
       "name": "identify",
-      "coverage": "mapped",
-      "source_to_entry_point_map": ["UE5-subset production path: catalog/src/Application/Catalog/CatalogPackageHeaderInspector.php","UE5-subset acceptance evidence: catalog/bin/verify-ue5-583-reader-contract.php","PARTIAL ONLY: classic file identification and Zen TOC ingest are separate paths; exhaustive Epic branches remain open"]
+      "coverage": "accepted",
+      "source_to_entry_point_map": ["catalog/src/Application/Catalog/CatalogPackageHeaderInspector.php","catalog/src/Infrastructure/Readers/CatalogReaderResolver.php","catalog/src/Infrastructure/Import/CatalogIoStoreUploadStager.php","catalog/src/Infrastructure/Jobs/CatalogIoStoreImportJobHandler.php"],
+      "end_to_end_acceptance_evidence": ["catalog/compliance/UE583-WF01-IDENTIFY-ACCEPTANCE-20261019.md","catalog/bin/verify-ue5-583-workflow-identify-inspector.php","catalog/bin/verify-iostore-durable-worker-standalone.php","catalog/bin/verify-iostore-worker-guards-standalone.php","catalog/bin/verify-header-only-staging-first-upload.php"]
     },
     {
       "name": "read_decode",
-      "coverage": "mapped",
-      "source_to_entry_point_map": ["UE5-subset production path: catalog/src/Infrastructure/Metadata/Uedb5IoStoreTocReader.php","UE5-subset acceptance evidence: catalog/bin/verify-ue5-583-satisfactory-full-isolated.php","PARTIAL ONLY: complete Epic branch and cross-workflow acceptance remain open"]
+      "coverage": "accepted",
+      "source_to_entry_point_map": ["catalog/src/Infrastructure/Metadata/Uedb5IoStoreTocReader.php","catalog/src/Infrastructure/Metadata/Uedb5IoStoreCodec.php","catalog/src/Infrastructure/Metadata/Uedb5ZenPackageReader.php"],
+      "end_to_end_acceptance_evidence": ["catalog/compliance/UE583-WF02-WF03-DECODE-EXTRACT-ACCEPTANCE-20261019.md","catalog/compliance/UE583-EPIC-IOSTORE-CONTENT-DIFFERENTIAL-20261019.md","catalog/compliance/UE583-EPIC-NATIVE-TOC-FIELDS-20261019.md","catalog/bin/verify-uedb5-ue5-iostore-foundation.php","catalog/bin/verify-ue5-583-satisfactory-full-isolated.php"]
     },
     {
       "name": "extract_import_export",
-      "coverage": "mapped",
-      "source_to_entry_point_map": ["UE5-subset production path: catalog/lib/CatalogPakModernIndex.php","UE5-subset acceptance evidence: catalog/bin/verify-ue5-583-pak11-real-satisfactory.php","PARTIAL ONLY: complete Epic branch and cross-workflow acceptance remain open"]
+      "coverage": "accepted",
+      "source_to_entry_point_map": ["catalog/lib/CatalogPakModernIndex.php","catalog/src/Infrastructure/Metadata/Uedb5ZenPackageReader.php","catalog/src/Infrastructure/Metadata/Uedb5Ue5ClassicSnapshotBuilder.php"],
+      "end_to_end_acceptance_evidence": ["catalog/compliance/UE583-WF02-WF03-DECODE-EXTRACT-ACCEPTANCE-20261019.md","catalog/compliance/UE583-PAK-EPIC-INDEPENDENT-DIFFERENTIAL-20261019.md","catalog/compliance/UE583-EPIC-NATIVE-ZEN-HEADER-FIELDS-20261019.md","catalog/bin/verify-ue5-583-pak11-real-satisfactory.php","catalog/bin/verify-uedb5-ue5-zen-package.php"]
     },
     {
       "name": "discover_dependencies",
