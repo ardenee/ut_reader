@@ -1,0 +1,5 @@
+# UE4.27.2 P01 — negative summary mutation matrix, 20 October 2026
+
+Executed `php catalog/bin/verify-ue427-summary-negative-branches.php` using genuine UE4.27 `DefaultAnimBoneCompressionSettings.uasset` as a source and isolated temporary copies for mutations. **6/6 expected accept/reject outcomes matched**: real unmodified input accepted; malformed future summary marker -8, version 213 (below `VER_UE4_OLDEST_LOADABLE_PACKAGE`), version 523 (above pinned UE4 package version 522), invalid tag and 16-byte truncated header rejected. Ephemeral mutations never alter installed engine data.
+
+These are UnrealDB observed outcomes grounded in Epic `PackageFileSummary.cpp` summary gates, **not an independent native UE4 deserializer result**. Along with `verify-ue427-real-summary-branches.php`, 100 genuine assets, five legacy layouts, 17 distinct versions and 51 custom-version entries are covered with no reader errors. P01 remains ACTIVE for native independently decoded summary fields, signed/swapped complete-archive fixtures, unversioned editor policy and licensee-version loader policy. No production parser patch was justified by the checked branches.
