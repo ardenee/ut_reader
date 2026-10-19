@@ -241,6 +241,20 @@ try {
         $check(false, 'toc_unconsumed_extension_bytes_are_not_rejected');
     }
 
+    // Epic skips DirectoryIndexSize when Indexed is absent; the size field
+    // alone is not a file rejection gate.
+    $unindexedBase = $temp . DIRECTORY_SEPARATOR . 'unindexed-size';
+    file_put_contents($unindexedBase . '.utoc', substr_replace($utoc, pack('V', 4), 48, 4));
+    file_put_contents($unindexedBase . '.ucas', $physical);
+    try {
+        $unindexedToc = new Uedb5IoStoreTocReader($unindexedBase . '.utoc');
+        $check($unindexedToc->directoryIndexBytes() === ''
+            && $unindexedToc->readChunk(1) === $packageBytes,
+            'toc_unindexed_nonzero_directory_size_skipped_like_epic');
+    } catch (RuntimeException) {
+        $check(false, 'toc_unindexed_nonzero_directory_size_skipped_like_epic');
+    }
+
     // Legacy IoStore TOCs retain 32-byte hashes plus one flag byte.
     foreach ([2, 5] as $legacyVersion) {
         $legacyBase = $temp . DIRECTORY_SEPARATOR . 'legacy-' . $legacyVersion;

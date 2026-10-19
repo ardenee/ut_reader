@@ -388,9 +388,9 @@ final class Uedb5IoStoreTocReader
 
         if (($containerFlags & self::CONTAINER_FLAG_INDEXED) !== 0) {
             $this->directoryIndex = $reader->read($directoryIndexSize);
-        } elseif ($directoryIndexSize !== 0) {
-            throw new RuntimeException('IoStore TOC has directory-index bytes without the Indexed container flag.');
         }
+        // Epic only consumes the directory index for Indexed containers.
+        // A nonzero header size without that flag is not itself rejected.
 
         $metaSize = $version >= self::TOC_VERSION_REPLACE_IO_CHUNK_HASH ? 24 : 33;
         for ($index = 0; $index < $tocEntryCount; $index++) {
