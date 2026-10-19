@@ -92,6 +92,15 @@ foreach($rows as $row){
    $actual=[(int)$row['first_entry_index'],(int)$row['entry_count'][0][0],(int)$row['entry_count'][0][1],(int)$row['entry_count'][1][0],(int)$row['entry_count'][1][1]];
    foreach($actual as $j=>$value){if((int)$entry[$j+2]!==$value)throw new RuntimeException('DependencyHeader['.$i.'].field'.$j.' native='.$entry[$j+2].' UnrealDB='.$value);$compared++;}
   }
+  preg_match_all('/^UE583_NATIVE_ZEN_IMPORT (\\d+) ([0-9A-F]{16})$/m',$stdout,$nativeImports,PREG_SET_ORDER);
+  if(count($nativeImports)!==count($z['import_map']))throw new RuntimeException('Native imported identity count mismatch');
+  foreach($nativeImports as $entry){$i=(int)$entry[1];$raw=(string)($z['import_map'][$i]['raw_type_and_id']??'');if($entry[2]!==$raw)throw new RuntimeException('Import['.$i.'] native='.$entry[2].' UnrealDB='.$raw);$compared++;}
+  preg_match_all('/^UE583_NATIVE_ZEN_PUBHASH (\\d+) ([0-9A-F]{16})$/m',$stdout,$nativeHashes,PREG_SET_ORDER);
+  if(count($nativeHashes)!==count($z['exports']))throw new RuntimeException('Native export hash count mismatch');
+  foreach($nativeHashes as $entry){$i=(int)$entry[1];$raw=(string)($z['exports'][$i]['public_export_hash']??'');if($entry[2]!==$raw)throw new RuntimeException('ExportHash['.$i.'] native='.$entry[2].' UnrealDB='.$raw);$compared++;}
+  preg_match_all('/^UE583_NATIVE_ZEN_DEPENTRY (\\d+) (-?\\d+)$/m',$stdout,$nativeEntries,PREG_SET_ORDER);
+  if(count($nativeEntries)!==count($z['dependency_bundle_entries']))throw new RuntimeException('Native dependency entry count mismatch');
+  foreach($nativeEntries as $entry){$i=(int)$entry[1];$raw=(int)($z['dependency_bundle_entries'][$i]['raw_package_index']??PHP_INT_MIN);if((int)$entry[2]!==$raw)throw new RuntimeException('DependencyEntry['.$i.'] native='.$entry[2].' UnrealDB='.$raw);$compared++;}
   $checked++;$v=(string)($z['versioning_info']['package_version']['ue5']??'unversioned');$versions[$v]=($versions[$v]??0)+1;
  }catch(Throwable $e){$fail[]=['package'=>$name,'message'=>$e->getMessage()];if(count($fail)>=8)break;}
  if($checked>=100)break;

@@ -1,5 +1,5 @@
 diff --git a/Engine/Source/Programs/UnrealPackageTool/UnrealPackageTool.cpp b/Engine/Source/Programs/UnrealPackageTool/UnrealPackageTool.cpp
-index a7bf74d..94d8faa 100644
+index a7bf74d..6930562 100644
 --- a/Engine/Source/Programs/UnrealPackageTool/UnrealPackageTool.cpp
 +++ b/Engine/Source/Programs/UnrealPackageTool/UnrealPackageTool.cpp
 @@ -13,6 +13,8 @@
@@ -11,7 +11,7 @@ index a7bf74d..94d8faa 100644
  #include "Misc/ObjectThumbnail.h"
  #include "Misc/PackagePath.h"
  #include "Misc/Parse.h"
-@@ -1244,6 +1246,51 @@ INT32_MAIN_INT32_ARGC_TCHAR_ARGV()
+@@ -1244,6 +1246,68 @@ INT32_MAIN_INT32_ARGC_TCHAR_ARGV()
  {
  	using namespace UE::PackageTool;
  	int32 Ret = GEngineLoop.PreInit(ArgC, ArgV);
@@ -57,6 +57,23 @@ index a7bf74d..94d8faa 100644
 +			const FDependencyBundleHeader& Row = Header.DependencyBundleHeaders[Index];
 +			printf("UE583_NATIVE_ZEN_DEPHEADER %d %d %u %u %u %u\\n", Index, Row.FirstEntryIndex,
 +				Row.EntryCount[0][0], Row.EntryCount[0][1], Row.EntryCount[1][0], Row.EntryCount[1][1]);
++		}
++		for (int32 Index = 0; Index < Header.ImportMap.Num(); ++Index)
++		{
++			const FPackageObjectIndex& Row = Header.ImportMap[Index];
++			const uint64 Raw = Row.IsNull() ? ~uint64(0) :
++				((uint64(Row.IsPackageImport() ? 2 : Row.IsScriptImport() ? 1 : 0) << 62) | Row.Value());
++			printf("UE583_NATIVE_ZEN_IMPORT %d %016llX\\n", Index, static_cast<unsigned long long>(Raw));
++		}
++		for (int32 Index = 0; Index < Header.ExportMap.Num(); ++Index)
++		{
++			printf("UE583_NATIVE_ZEN_PUBHASH %d %016llX\\n", Index,
++				static_cast<unsigned long long>(Header.ExportMap[Index].PublicExportHash));
++		}
++		for (int32 Index = 0; Index < Header.DependencyBundleEntries.Num(); ++Index)
++		{
++			printf("UE583_NATIVE_ZEN_DEPENTRY %d %d\\n", Index,
++				Header.DependencyBundleEntries[Index].LocalImportOrExportIndex.ForDebugging());
 +		}
 +		return 0;
 +	}
