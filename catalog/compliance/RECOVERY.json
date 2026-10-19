@@ -80,83 +80,83 @@
   "required_workflow_paths": [
     {
       "name": "identify",
-      "coverage": "unverified",
-      "source_to_entry_point_map": []
+      "coverage": "mapped",
+      "source_to_entry_point_map": ["UE5-subset production path: catalog/src/Application/Catalog/CatalogPackageHeaderInspector.php","UE5-subset acceptance evidence: catalog/bin/verify-ue5-583-reader-contract.php","PARTIAL ONLY: classic file identification and Zen TOC ingest are separate paths; exhaustive Epic branches remain open"]
     },
     {
       "name": "read_decode",
-      "coverage": "unverified",
-      "source_to_entry_point_map": []
+      "coverage": "mapped",
+      "source_to_entry_point_map": ["UE5-subset production path: catalog/src/Infrastructure/Metadata/Uedb5IoStoreTocReader.php","UE5-subset acceptance evidence: catalog/bin/verify-ue5-583-satisfactory-full-isolated.php","PARTIAL ONLY: complete Epic branch and cross-workflow acceptance remain open"]
     },
     {
       "name": "extract_import_export",
-      "coverage": "unverified",
-      "source_to_entry_point_map": []
+      "coverage": "mapped",
+      "source_to_entry_point_map": ["UE5-subset production path: catalog/lib/CatalogPakModernIndex.php","UE5-subset acceptance evidence: catalog/bin/verify-ue5-583-pak11-real-satisfactory.php","PARTIAL ONLY: complete Epic branch and cross-workflow acceptance remain open"]
     },
     {
       "name": "discover_dependencies",
-      "coverage": "unverified",
-      "source_to_entry_point_map": []
+      "coverage": "mapped",
+      "source_to_entry_point_map": ["UE5-subset production path: catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php","UE5-subset acceptance evidence: catalog/compliance/UE583-SATISFACTORY-FULL-PUBLICATION-20261019.md","PARTIAL ONLY: complete Epic branch and cross-workflow acceptance remain open"]
     },
     {
       "name": "select_physical_providers",
-      "coverage": "unverified",
-      "source_to_entry_point_map": []
+      "coverage": "mapped",
+      "source_to_entry_point_map": ["UE5-subset production path: catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php","UE5-subset acceptance evidence: catalog/compliance/UE583-SATISFACTORY-FULL-PUBLICATION-20261019.md","PARTIAL ONLY: complete Epic branch and cross-workflow acceptance remain open"]
     },
     {
       "name": "resolve_object_references",
-      "coverage": "unverified",
-      "source_to_entry_point_map": []
+      "coverage": "mapped",
+      "source_to_entry_point_map": ["UE5-subset production path: catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php","UE5-subset acceptance evidence: catalog/compliance/UE583-SATISFACTORY-FULL-PUBLICATION-20261019.md","PARTIAL ONLY: complete Epic branch and cross-workflow acceptance remain open"]
     },
     {
       "name": "stage_v5",
-      "coverage": "unverified",
-      "source_to_entry_point_map": []
+      "coverage": "mapped",
+      "source_to_entry_point_map": ["UE5-subset production path: catalog/src/Infrastructure/Metadata/Uedb5MetadataSnapshotWriter.php","UE5-subset acceptance evidence: catalog/compliance/UE583-SATISFACTORY-FULL-PUBLICATION-20261019.md","PARTIAL ONLY: complete Epic branch and cross-workflow acceptance remain open"]
     },
     {
       "name": "dependency_pass2",
-      "coverage": "unverified",
-      "source_to_entry_point_map": []
+      "coverage": "mapped",
+      "source_to_entry_point_map": ["UE5-subset production path: catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php","UE5-subset acceptance evidence: catalog/compliance/UE583-SATISFACTORY-FULL-PUBLICATION-20261019.md","PARTIAL ONLY: complete Epic branch and cross-workflow acceptance remain open"]
     },
     {
       "name": "persist_sql_projections",
-      "coverage": "unverified",
-      "source_to_entry_point_map": []
+      "coverage": "mapped",
+      "source_to_entry_point_map": ["UE5-subset production path: catalog/src/Infrastructure/Metadata/PdoUedb5BaseProjectionPublisher.php","UE5-subset acceptance evidence: catalog/compliance/UE583-SATISFACTORY-FULL-PUBLICATION-20261019.md","PARTIAL ONLY: complete Epic branch and cross-workflow acceptance remain open"]
     },
     {
       "name": "metadata_query_search",
-      "coverage": "unverified",
-      "source_to_entry_point_map": []
+      "coverage": "mapped",
+      "source_to_entry_point_map": ["UE5-subset production path: catalog/src/Infrastructure/Search/Uedb5CatalogMetadataSearch.php","UE5-subset acceptance evidence: catalog/bin/verify-ue5-583-real-zen-compact-search.php","PARTIAL ONLY: complete Epic branch and cross-workflow acceptance remain open"]
     },
     {
       "name": "upload",
-      "coverage": "unverified",
-      "source_to_entry_point_map": []
+      "coverage": "mapped",
+      "source_to_entry_point_map": ["UE5-subset production path: catalog/src/Infrastructure/Import/CatalogIoStoreUploadStager.php","UE5-subset acceptance evidence: catalog/compliance/UE583-LAST-TWO-IOSTORE-FIXTURE-RESULTS-20261019.md","PARTIAL ONLY: complete Epic branch and cross-workflow acceptance remain open"]
     },
     {
       "name": "archive_import",
-      "coverage": "unverified",
-      "source_to_entry_point_map": []
+      "coverage": "mapped",
+      "source_to_entry_point_map": ["UE5-subset production path: catalog/src/Infrastructure/Jobs/CatalogArchiveMemberContentRoutingJobHandler.php","UE5-subset acceptance evidence: catalog/compliance/UE583-ARCHIVE-DEPTH-RETRY-20261019.md","PARTIAL ONLY: complete Epic branch and cross-workflow acceptance remain open"]
     },
     {
       "name": "backup_restore",
-      "coverage": "unverified",
-      "source_to_entry_point_map": []
+      "coverage": "mapped",
+      "source_to_entry_point_map": ["UE5-subset production path: catalog/src/Infrastructure/Jobs/CatalogIoStoreBackupJobHandler.php","UE5-subset acceptance evidence: catalog/bin/verify-iostore-backup-jobs-standalone.php","PARTIAL ONLY: complete Epic branch and cross-workflow acceptance remain open"]
     },
     {
       "name": "resync",
-      "coverage": "unverified",
-      "source_to_entry_point_map": []
+      "coverage": "mapped",
+      "source_to_entry_point_map": ["UE5-subset production path: catalog/src/Infrastructure/Maintenance/CatalogFileMaintenanceReimportService.php","UE5-subset acceptance evidence: catalog/compliance/UE583-LAST-TWO-IOSTORE-FIXTURE-RESULTS-20261019.md","PARTIAL ONLY: complete Epic branch and cross-workflow acceptance remain open"]
     },
     {
       "name": "repair",
-      "coverage": "unverified",
-      "source_to_entry_point_map": []
+      "coverage": "mapped",
+      "source_to_entry_point_map": ["UE5-subset production path: catalog/src/Infrastructure/Maintenance/CatalogIoStoreMemberReimportService.php","UE5-subset acceptance evidence: catalog/bin/verify-iostore-missing-member-repair-standalone.php","PARTIAL ONLY: complete Epic branch and cross-workflow acceptance remain open"]
     },
     {
       "name": "validation",
-      "coverage": "unverified",
-      "source_to_entry_point_map": []
+      "coverage": "mapped",
+      "source_to_entry_point_map": ["UE5-subset production path: catalog/src/Infrastructure/Metadata/Uedb5MigrationValidator.php","UE5-subset acceptance evidence: catalog/bin/verify-ue5-583-satisfactory-full-isolated.php","PARTIAL ONLY: complete Epic branch and cross-workflow acceptance remain open"]
     }
   ],
   "original_operation_priority": [
@@ -495,6 +495,7 @@
     {
       "id": "INDEPENDENT-DIFFERENTIAL",
       "status": "open",
+      "ue5_partial_independent_evidence": "Epic UE5.8.3 UnrealPak vs production PHP PAK11: 4761/4761 index entries and 4761/4761 decoded SHA256/size, 212783532 bytes. See catalog/compliance/UE583-PAK-EPIC-INDEPENDENT-DIFFERENTIAL-20261019.md; other Epic UE5 layouts and Zen/classic runtime semantics remain open",
       "reason": "Synthetic tests and bounded fixture checks do not prove comprehensive independent Epic-versus-UnrealDB output equivalence."
     }
   ],
