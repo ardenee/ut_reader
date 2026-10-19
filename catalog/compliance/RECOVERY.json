@@ -140,8 +140,9 @@
     },
     {
       "name": "upload",
-      "coverage": "mapped",
-      "source_to_entry_point_map": ["UE5-subset production path: catalog/src/Infrastructure/Import/CatalogIoStoreUploadStager.php","UE5-subset acceptance evidence: catalog/compliance/UE583-LAST-TWO-IOSTORE-FIXTURE-RESULTS-20261019.md","PARTIAL ONLY: complete Epic branch and cross-workflow acceptance remain open"]
+      "coverage": "accepted",
+      "source_to_entry_point_map": ["catalog/src/Infrastructure/Import/CatalogIoStoreUploadStager.php","catalog/src/Infrastructure/Jobs/CatalogIoStoreImportJobHandler.php"],
+      "end_to_end_acceptance_evidence": ["catalog/compliance/UE583-WF11-WF14-WF15-FINAL-ACCEPTANCE-20261019.md","catalog/bin/verify-iostore-multipart-job-standalone.php","catalog/bin/verify-iostore-durable-worker-standalone.php","catalog/bin/verify-profiled-upload-ingress-isolation.php"]
     },
     {
       "name": "archive_import",
@@ -157,13 +158,15 @@
     },
     {
       "name": "resync",
-      "coverage": "mapped",
-      "source_to_entry_point_map": ["UE5-subset production path: catalog/src/Infrastructure/Maintenance/CatalogFileMaintenanceReimportService.php","UE5-subset acceptance evidence: catalog/compliance/UE583-LAST-TWO-IOSTORE-FIXTURE-RESULTS-20261019.md","PARTIAL ONLY: complete Epic branch and cross-workflow acceptance remain open"]
+      "coverage": "accepted",
+      "source_to_entry_point_map": ["catalog/src/Infrastructure/Maintenance/CatalogFileMaintenanceReimportService.php","catalog/src/Infrastructure/Maintenance/CatalogIoStoreMemberReimportService.php"],
+      "end_to_end_acceptance_evidence": ["catalog/compliance/UE583-WF11-WF14-WF15-FINAL-ACCEPTANCE-20261019.md","catalog/bin/verify-uedb5-reimport-safety-isolated.php","catalog/bin/verify-uedb5-reimport-rollback-isolated.php","catalog/bin/verify-uedb5-staged-repair-contract.php"]
     },
     {
       "name": "repair",
-      "coverage": "mapped",
-      "source_to_entry_point_map": ["UE5-subset production path: catalog/src/Infrastructure/Maintenance/CatalogIoStoreMemberReimportService.php","UE5-subset acceptance evidence: catalog/bin/verify-iostore-missing-member-repair-standalone.php","PARTIAL ONLY: complete Epic branch and cross-workflow acceptance remain open"]
+      "coverage": "accepted",
+      "source_to_entry_point_map": ["catalog/src/Infrastructure/Maintenance/CatalogIoStoreMemberReimportService.php"],
+      "end_to_end_acceptance_evidence": ["catalog/compliance/UE583-WF11-WF14-WF15-FINAL-ACCEPTANCE-20261019.md","catalog/bin/verify-iostore-missing-member-repair-standalone.php","catalog/bin/verify-uedb5-repair-workflow-isolated.php","catalog/bin/verify-uedb5-staged-repair-contract.php"]
     },
     {
       "name": "validation",
