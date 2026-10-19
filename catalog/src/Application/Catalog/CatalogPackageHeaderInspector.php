@@ -30,6 +30,11 @@ final class CatalogPackageHeaderInspector
             return ['ok' => false, 'error' => sprintf('Bad package tag 0x%08X', $tag), 'summary' => [], 'rows' => []];
         }
         $signed = self::i32($bytes, 4);
+        // UE5 summaries have additional version and layout fields. Epic's
+        // UE4-only diagnostic layout must not reject or misdecode them.
+        if ($signed <= -8) {
+            return self::inspectUe5($path);
+        }
         $legacyVersion = self::u32($bytes, 4) & 0xFFFF;
         $knownLegacyVersion = ($legacyVersion >= 40 && $legacyVersion <= 199)
             || ($legacyVersion >= 334 && $legacyVersion <= 867);
@@ -40,6 +45,39 @@ final class CatalogPackageHeaderInspector
     }
 
     /** @return array{ok:bool,error:string,summary:array<string,mixed>,rows:list<array<string,mixed>>} */
+    private static function inspectUe5(string $path): array
+    {
+        $readerPath = realpath(__DIR__ . '/../../../../UE5/UnrealPackageReader.php');
+        if ($readerPath === false) {
+            return ['ok' => false, 'error' => 'Dedicated UE5 package reader is unavailable.', 'summary' => [], 'rows' => []];
+        }
+        require_once $readerPath;
+        $reader = new \UnrealPackageReader5($path);
+        $issues = $reader->validatePackage();
+        if ($issues !== []) {
+            return ['ok' => false, 'error' => implode('; ', $issues), 'summary' => [], 'rows' => []];
+        }
+        $h = $reader->getHeader();
+        return [
+            'ok' => true,
+            'error' => '',
+            'summary' => [
+                'Signature' => sprintf('0x%08X', (int)($h['signature'] ?? 0)),
+                'Build' => 'UE5',
+                'Legacy File Version' => $h['legacyFileVersion'] ?? null,
+                'UE4 File Version' => $h['ue4Version'] ?? null,
+                'UE5 File Version' => $h['ue5Version'] ?? null,
+                'Licensee Version' => $h['licenseeVersion'] ?? null,
+                'Total Header Size' => $h['totalHeaderSize'] ?? null,
+                'Name Offset' => $h['nameOffset'] ?? null,
+                'Import Offset' => $h['importOffset'] ?? null,
+                'Export Offset' => $h['exportOffset'] ?? null,
+                'Counts' => 'N ' . count($reader->getNames()) . ' / I ' . count($reader->getImports()) . ' / E ' . count($reader->getExports()),
+            ],
+            'rows' => $reader->getRawHeaderFields(),
+        ];
+    }
+
     private static function inspectLegacy(string $bytes): array
     {
         $rows = [];

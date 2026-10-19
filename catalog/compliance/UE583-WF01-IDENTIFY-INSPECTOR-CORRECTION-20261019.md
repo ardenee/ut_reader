@@ -1,0 +1,7 @@
+# WF01 identify — real UE5 header diagnostic correction (2026-10-19)
+
+**Production discrepancy fixed:** `CatalogPackageHeaderInspector::inspect()` routed `.uasset`/`.umap` into the old UE4 diagnostic, which rejected `legacyFileVersion < -7`. A genuine pinned UE5.8.3 binary asset `Engine/Content/Animation/DefaultAnimBoneCompressionSettings.uasset` has `legacyFileVersion=-8`, and the dedicated `UnrealPackageReader5` accepts/decodes it. Hence the diagnostic incorrectly reported an unsupported UE4 header instead of showing actual UE5 summary. The fix dispatches legacy markers `<= -8` into the dedicated UE5 reader and returns its decoded summary, counts and any real raw fields. It does not increase the UE4 parser's supported layout range or fabricate fields from a different format.
+
+**Real asset regression:** `catalog/bin/verify-ue5-583-workflow-identify-inspector.php`, six of six assertions passed: genuine marker `-8`, inspection succeeds, build correctly reports UE5, displayed marker equals wire value, meaningful name/import/export counts returned, and UE5 file version >=1000 (observed 1004). No production data changed; PHP syntax passed. This is direct **application caller correction**, rather than merely another format roundtrip.
+
+**Acceptance classification:** this closes the observed header-inspection subpath discrepancy in WF01. The recovery workflow's `identify` gate remains `mapped` pending its other production ingestion and negative/error branches. Do not mark all 16 workflows accepted from this bounded acceptance check.
