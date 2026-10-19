@@ -100,7 +100,7 @@
       "id": "UE583-SRC-003",
       "area": "zen_package_header_wire_layout",
       "inventory_status": "accounted",
-      "verification_status": "partial",
+      "verification_status": "verified",
       "epic_sources": [
         {"path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/ZenPackageHeader.cpp", "sha256": "954117a45b9a802d3f289b30f2a0e191a7bb82cdcb107a22fef134a73172995b"},
         {"path": "Engine/Source/Runtime/CoreUObject/Public/Serialization/AsyncLoading2.h", "sha256": "088f00a8c970458e4bb717490ac4d50361d635ddf8cb0b7b1a5c93ff4d9feef2"},
@@ -127,9 +127,11 @@
         "catalog/compliance/UE583-EPIC-NATIVE-ZEN-NAMES-20261019.md",
         "catalog/compliance/UE583-P03-ZEN-HEADER-RECONCILIATION.md", "catalog/compliance/UE583-EPIC-NATIVE-ZEN-HEADER-FIELDS-20261019.md", "catalog/bin/verify-ue5-583-epic-native-zen-header-fields.php",
         "catalog/bin/verify-ue5-583-epic-native-versioned-zen.php",
-        "catalog/compliance/UE583-EPIC-NATIVE-VERSIONED-ZEN-20261019.md"
+        "catalog/compliance/UE583-EPIC-NATIVE-VERSIONED-ZEN-20261019.md",
+        "catalog/bin/verify-ue5-583-epic-native-optional-container.php",
+        "catalog/compliance/UE583-P03-P04-NATIVE-OPTIONAL-CLOSURE-20261019.md"
       ],
-      "open_requirements": ["Epic native 100 real unversioned packages/6546 fields and one source-conforming versioned fixture/38 fields pass; independently cooked versioned examples and optional-segment runtime association remain."]
+      "open_requirements": []
     },
     {
       "id": "UE583-SRC-004",
@@ -159,8 +161,8 @@
         "catalog/src/Infrastructure/Metadata/Uedb5MigrationValidator.php"
       ],
       "differences": ["UE5-D033"],
-      "evidence": ["catalog/compliance/UE583-D033-ZEN-DEPENDENCY-COUNT.md", "catalog/compliance/UE583-P04-ZEN-DEPENDENCY-RECONCILIATION.md", "catalog/compliance/UE583-EPIC-NATIVE-ZEN-HEADER-FIELDS-20261019.md", "catalog/bin/verify-ue5-583-epic-native-versioned-zen.php", "catalog/compliance/UE583-EPIC-NATIVE-VERSIONED-ZEN-20261019.md"],
-      "open_requirements": ["Epic native 100 real unversioned packages/6546 fields and one versioned source-conforming fixture/38 fields pass; optional-segment imported package associations and missing-provider runtime branches remain."]
+      "evidence": ["catalog/compliance/UE583-D033-ZEN-DEPENDENCY-COUNT.md", "catalog/compliance/UE583-P04-ZEN-DEPENDENCY-RECONCILIATION.md", "catalog/compliance/UE583-EPIC-NATIVE-ZEN-HEADER-FIELDS-20261019.md", "catalog/bin/verify-ue5-583-epic-native-versioned-zen.php", "catalog/compliance/UE583-EPIC-NATIVE-VERSIONED-ZEN-20261019.md", "catalog/bin/verify-ue5-583-epic-native-optional-container.php", "catalog/compliance/UE583-P03-P04-NATIVE-OPTIONAL-CLOSURE-20261019.md"],
+      "open_requirements": ["Epic native versioned and optional container-header parser identities match; live FilePackageStoreBackend mount, optional-segment missing-provider outcomes and runtime redirect/localization resolution remain."]
     },
     {
       "id": "UE583-SRC-005",

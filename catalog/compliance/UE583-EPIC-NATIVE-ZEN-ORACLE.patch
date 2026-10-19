@@ -1,21 +1,65 @@
 diff --git a/Engine/Source/Programs/UnrealPackageTool/UnrealPackageTool.cpp b/Engine/Source/Programs/UnrealPackageTool/UnrealPackageTool.cpp
-index a7bf74d..9d6a287 100644
+index a7bf74d..cad6448 100644
 --- a/Engine/Source/Programs/UnrealPackageTool/UnrealPackageTool.cpp
 +++ b/Engine/Source/Programs/UnrealPackageTool/UnrealPackageTool.cpp
-@@ -13,6 +13,9 @@
+@@ -13,6 +13,10 @@
  #include "HAL/FileManager.h"
  #include "HAL/PlatformFile.h"
  #include "Misc/CommandLine.h"
 +#include "Misc/FileHelper.h"
 +#include "Serialization/ZenPackageHeader.h"
 +#include "IO/IoStore.h"
++#include "IO/IoContainerHeader.h"
  #include "Misc/ObjectThumbnail.h"
  #include "Misc/PackagePath.h"
  #include "Misc/Parse.h"
-@@ -1244,6 +1247,155 @@ INT32_MAIN_INT32_ARGC_TCHAR_ARGV()
+@@ -1244,6 +1248,198 @@ INT32_MAIN_INT32_ARGC_TCHAR_ARGV()
  {
  	using namespace UE::PackageTool;
  	int32 Ret = GEngineLoop.PreInit(ArgC, ArgV);
++	FString ContainerHeaderProbePath;
++	if (FParse::Value(FCommandLine::Get(), TEXT("ContainerHeaderProbe="), ContainerHeaderProbePath))
++	{
++		TArray<uint8> Raw;
++		if (!FFileHelper::LoadFileToArray(Raw, *ContainerHeaderProbePath))
++		{
++			printf("UE583_NATIVE_CONTAINER_ERROR cannot_read\\n");
++			return 2;
++		}
++		FMemoryReader Archive(Raw, true);
++		FIoContainerHeader Header;
++		Archive << Header;
++		if (Archive.IsError())
++		{
++			printf("UE583_NATIVE_CONTAINER_ERROR deserialize\\n");
++			return 3;
++		}
++		printf("UE583_NATIVE_CONTAINER_COUNTS %d %d %d %d %d %d\\n",
++			Header.PackageIds.Num(), Header.OptionalSegmentPackageIds.Num(),
++			Header.StoreEntries.Num(), Header.OptionalSegmentStoreEntries.Num(),
++			Header.LocalizedPackages.Num(), Header.PackageRedirects.Num());
++		for (int32 I = 0; I < Header.PackageIds.Num(); ++I)
++		{
++			const auto* Entry = reinterpret_cast<const FFilePackageStoreEntry*>(Header.StoreEntries.GetData());
++			printf("UE583_NATIVE_CONTAINER_MAIN %d %016llX %d\\n", I,
++				static_cast<unsigned long long>(Header.PackageIds[I].Value()), Entry[I].ImportedPackages.Num());
++			for (uint32 J = 0; J < Entry[I].ImportedPackages.Num(); ++J)
++			{
++				printf("UE583_NATIVE_CONTAINER_MAIN_IMPORT %d %u %016llX\\n", I, J, static_cast<unsigned long long>(Entry[I].ImportedPackages[J].Value()));
++			}
++		}
++		for (int32 I = 0; I < Header.OptionalSegmentPackageIds.Num(); ++I)
++		{
++			const auto* Entry = reinterpret_cast<const FFilePackageStoreEntry*>(Header.OptionalSegmentStoreEntries.GetData());
++			printf("UE583_NATIVE_CONTAINER_OPTIONAL %d %016llX %d\\n", I,
++				static_cast<unsigned long long>(Header.OptionalSegmentPackageIds[I].Value()), Entry[I].ImportedPackages.Num());
++			for (uint32 J = 0; J < Entry[I].ImportedPackages.Num(); ++J)
++			{
++				printf("UE583_NATIVE_CONTAINER_OPTIONAL_IMPORT %d %u %016llX\\n", I, J, static_cast<unsigned long long>(Entry[I].ImportedPackages[J].Value()));
++			}
++		}
++		return 0;
++	}
 +	FString DependsProbePath;
 +	if (FParse::Value(FCommandLine::Get(), TEXT("DependsProbe="), DependsProbePath))
 +	{
