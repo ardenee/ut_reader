@@ -25,7 +25,11 @@ try {
    $staged=new Uedb5MetadataStagingReader($path,$id);
    $manifest=$staged->manifest();
    if(($manifest['package_family']??'')!==Uedb5Ue5ClassicSnapshotBuilder::PACKAGE_FAMILY)throw new RuntimeException('V5 package family missing');
-   foreach(['names','imports','exports'] as $part)if($staged->count($part)!==count($snap['sections'][$part]))throw new RuntimeException('Section mismatch '.$part);
+   foreach($snap['sections'] as $part=>$expectedRows){
+    if($staged->count($part)!==count($expectedRows))throw new RuntimeException('Section count mismatch '.$part);
+    $actualRows=iterator_to_array($staged->scan($part),false);
+    if($actualRows!==$expectedRows)throw new RuntimeException('Section row semantics mismatch '.$part);
+   }
    $v=(string)($reader->getHeader()['ue5Version']??'');$versions[$v]=($versions[$v]??0)+1;$checked++;
    unlink($path);
   }catch(Throwable $e){if(count($errors)<20)$errors[]=['file'=>$file->getFilename(),'error'=>$e->getMessage()];}
