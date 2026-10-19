@@ -147,7 +147,7 @@
                 },
                 {
                     "path": "catalog/src/Infrastructure/Metadata/Uedb5IoStoreTocReader.php",
-                    "sha256": "5abc88d9d0e9123c8c24c04d32f60b97279740b9382be88b20dbd987a7a26a73"
+                    "sha256": "00b3bd6f5dd070fbca5e60ab702d4cc3b38b58adf265f233cdad9dca03f67a4a"
                 },
                 {
                     "path": "catalog/src/Infrastructure/Metadata/Uedb5BinaryReader.php",

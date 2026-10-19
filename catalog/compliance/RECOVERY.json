@@ -241,7 +241,7 @@
       "id": "UE5-D007",
       "kind": "mapped",
       "operations": ["UE5-583-FILE-STORE-001"],
-      "rationale": "The corrected IoContainerHeader.cpp serializer is separately pinned as a source/reader prerequisite of B006 FilePackageStoreBackend::Mount/Update, with 25 source/caller assertions, 33 byte fixtures and earlier read-only retained v5 header evidence; not mounted sort behavior or future cooked v6 acceptance.",
+      "rationale": "The corrected IoContainerHeader.cpp serializer is separately pinned as a source/reader prerequisite of B006 FilePackageStoreBackend::Mount/Update, with 25 source/caller assertions, 34 byte fixtures and earlier read-only retained v5 header evidence; not mounted sort behavior or future cooked v6 acceptance.",
       "state": "evidence_partial",
       "audit_escape": "none"
     },
@@ -459,6 +459,38 @@
       "rationale": "Count-only IoStore index retries accepted changed package IDs, chunk indexes and lengths. 1bb60bd9 rechecks every stored identity and container header under transactional row locking against retained TOC. 21 independent tests use 27240 real Satisfactory TOC entries in isolated SQLite. Actual MySQL concurrency not established.",
       "state": "fixed_regression_verified",
       "audit_escape": "none"
+    },
+    {
+      "id": "UE5-D032",
+      "kind": "unregistered_source_behavior",
+      "operations": [],
+      "rationale": "Classic UE5 package admission had an UnrealDB-only UE5 component minimum of 1000. Epic's classic loader does not impose that standalone minimum. 1988f933 removed only the artificial lower bound while retaining source-backed serialized layout/version gates. The correction is regression-tested, but the classic source denominator and an independent alternate-layout differential are not yet complete.",
+      "state": "evidence_partial",
+      "audit_escape": "none"
+    },
+    {
+      "id": "UE5-D033",
+      "kind": "unregistered_source_behavior",
+      "operations": [],
+      "rationale": "Final Zen V5 dependency validation omitted imported_package_ids and interpreted a nonexistent target_type instead of serialized export-bundle kind. cbad1016 corrected the validator and the retained genuine Satisfactory snapshot now validates all 98 dependency results. Complete independent Zen metadata semantics remains a separate certification gate.",
+      "state": "evidence_partial",
+      "audit_escape": "none"
+    },
+    {
+      "id": "UE5-D034",
+      "kind": "unregistered_source_behavior",
+      "operations": [],
+      "rationale": "UnrealDB parsed real PAK v11 compact full-directory indexes as the legacy flat layout. 21790ec0 added the Epic UE5.8.3 compact directory/encoded-entry path. Epic UnrealPak independently matched 4761 entries and decoded size/hash evidence for the supported v11 full-directory subset. Optional modern PAK layouts explicitly remain unsupported and outside the present support claim.",
+      "state": "evidence_partial",
+      "audit_escape": "none"
+    },
+    {
+      "id": "UE5-D035",
+      "kind": "unregistered_source_behavior",
+      "operations": [],
+      "rationale": "Uedb5IoStoreTocReader rejected trailing bytes after the known TOC metadata table, but Epic FIoStoreTocResourceView::Read followed by FIoStoreTocResourceStorage::FinalizeRead imposes no EOF condition. The new source-derived extension fixture failed alone before the correction and the foundation suite passes 34/34 after removing only that extra gate. Complete IoStore semantic coverage remains open.",
+      "state": "evidence_partial",
+      "audit_escape": "none"
     }
   ],
   "coverage_gaps": [
@@ -473,6 +505,30 @@
       "reason": "Selected UE5.8.3 method classifications do not prove full reachable call graph, version branches, error and runtime context coverage."
     },
     {
+      "id": "UE5-CLASSIC-VERSION-ADMISSION",
+      "status": "open",
+      "difference_id": "UE5-D032",
+      "reason": "D032 is fixed and regression-tested, but the classic package source denominator and independent alternate-layout semantic differential are not yet complete."
+    },
+    {
+      "id": "UE5-ZEN-DEPENDENCY-VALIDATION",
+      "status": "open",
+      "difference_id": "UE5-D033",
+      "reason": "D033 is fixed against a genuine retained 98-result snapshot, but complete independent Zen metadata semantic comparison remains open."
+    },
+    {
+      "id": "UE5-PAK11-SUPPORTED-SUBSET",
+      "status": "open",
+      "difference_id": "UE5-D034",
+      "reason": "D034 has independent UnrealPak parity for the supported compact full-directory v11 subset; the finite source denominator must still explicitly bound supported versus unsupported modern PAK layouts."
+    },
+    {
+      "id": "UE5-IOSTORE-TOC-SEMANTICS",
+      "status": "open",
+      "difference_id": "UE5-D035",
+      "reason": "D035's extra EOF gate is corrected with a negative-before/positive-after regression, but the complete IoStore TOC/chunk source-semantic denominator remains open."
+    },
+    {
       "id": "UE5-IOSTORE-HEADER",
       "status": "accepted",
       "difference_id": "UE5-D007",
@@ -482,7 +538,7 @@
         "source_record": "catalog/compliance/B006-CONTAINER-HEADER-SOURCE.md",
         "test_driver": "catalog/bin/verify-uedb5-b006-container-header-source.php",
         "source_checks": 25,
-        "byte_fixture_checks": 33,
+        "byte_fixture_checks": 34,
         "live_future_version_fixture": false,
         "strict_global_compliance_still_unverified": true
       }

@@ -144,12 +144,12 @@
                     "b006_retry_negative_count_gate_and_exact_identity_guards",
                     "b006_retry_header_inconsistency_and_repaired_repeat"
                 ],
-                "result": "Seven passing drivers and 16 mandatory assertions, including separately pinned D007 header source/parser/caller obligation (25 checks and 33-byte-fixture checks). Existing D008/D016 mount precedence unaffected. Live mount and independent cooked future header parity not inferred. D031 eighth driver covers 21 tests: historic count-only acceptance, actual 27240-member retained TOC and 9 corrupt header/member variants rejected by current production indexer on SQLite."
+                "result": "Seven passing drivers and 16 mandatory assertions, including separately pinned D007 header source/parser/caller obligation (25 checks and 34-byte-fixture checks). Existing D008/D016 mount precedence unaffected. Live mount and independent cooked future header parity not inferred. D031 eighth driver covers 21 tests: historic count-only acceptance, actual 27240-member retained TOC and 9 corrupt header/member variants rejected by current production indexer on SQLite."
             },
             "acceptance_evidence": {
                 "reachable_source_branches": "Pinned FilePackageStore mount stable sorting, package ID map, explicit redirect versus localized lookup, NAME_None fallback, WITH_EDITOR conditional and backend status behavior. Separate pinned IoContainerHeader.cpp/Header.h source contract: v3 lower minimum, v4 inline soft references, v5+ offset/size branch.",
                 "epic_to_unrealdb_mapping": "Source-to-method/caller mapping and production options in catalog/compliance/B006-FILE-STORE-SOURCE.md. Separate D007 documentation in B006-CONTAINER-HEADER-SOURCE.md.",
-                "independent_differential": "Independent source scanner and synthesized patch/base mount fixtures; D016 two red-before green-after branches; D008 real retained two-file Satisfactory header/SQL evidence separately documented. D007 four historical red-before/green-after fixture branches, 33 full-byte checks and retained real Satisfactory v5 header evidence (synthetic v6 only). D031 historical count-only false acceptance versus real TOC row identity test; 21 checks on disposable SQLite.",
+                "independent_differential": "Independent source scanner and synthesized patch/base mount fixtures; D016 two red-before green-after branches; D008 real retained two-file Satisfactory header/SQL evidence separately documented. D007 four historical red-before/green-after fixture branches, 34 full-byte checks and retained real Satisfactory v5 header evidence (synthetic v6 only). D031 historical count-only false acceptance versus real TOC row identity test; 21 checks on disposable SQLite.",
                 "all_v5_consumers": "Game dependency pass per-game context, effective file-backend and multi-backend arbitration, PDO physical provider selector; source scanner guards all three direct builder call sites. Direct header parse in Uedb5Ue5ZenIoStoreSnapshotBuilder and all four observed publisher/reimport/reader/name-indexer entry points are explicitly scanned. D031 protects indexed physical package member identity used by name-index, publish and inspect workflows.",
                 "independent_reviewer": "Separate source-derived oracle and six-driver acceptance. Not C++ runtime execution or external human review."
             },
@@ -208,7 +208,7 @@
                 ],
                 "total_source_branch_and_consumer_assertions": 25,
                 "byte_fixture_driver": "catalog/bin/verify-uedb5-ue5-iostore-foundation.php",
-                "byte_fixture_assertions": 33,
+                "byte_fixture_assertions": 34,
                 "retained_real_v5_read_only_fixture": "catalog/bin/verify-uedb5-satisfactory-header-readonly-isolated.php",
                 "actual_future_version_6_cooked_fixture": false,
                 "source_defined_version_6_branch_fixture_synthetic": true,

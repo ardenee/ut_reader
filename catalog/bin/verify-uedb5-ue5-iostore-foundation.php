@@ -222,6 +222,25 @@ try {
     $check($toc->readChunk(1) === $packageBytes, 'ucas_midblock_package_chunk_reconstructed');
     $check($toc->readChunk(2) === $optionalPackageBytes, 'ucas_optional_segment_chunk_reconstructed');
 
+    // Epic UE5.8.3 FIoStoreTocResourceView::Read consumes the known TOC
+    // sections and FinalizeRead() does not impose an end-of-file check.
+    // A valid known-layout TOC prefix therefore must not be rejected only
+    // because later extension bytes remain after the metadata table.
+    $extendedBase = $temp . DIRECTORY_SEPARATOR . 'fixture-extended';
+    file_put_contents($extendedBase . '.utoc', $utoc . "EXT");
+    file_put_contents($extendedBase . '.ucas', $physical);
+    try {
+        $extendedToc = new Uedb5IoStoreTocReader($extendedBase . '.utoc');
+        $check(
+            $extendedToc->header()['version'] === 8
+            && count($extendedToc->chunks()) === 3
+            && $extendedToc->readChunk(1) === $packageBytes,
+            'toc_unconsumed_extension_bytes_are_not_rejected'
+        );
+    } catch (RuntimeException) {
+        $check(false, 'toc_unconsumed_extension_bytes_are_not_rejected');
+    }
+
     $containerChunkIndexes = $toc->chunkIndexesByType(Uedb5IoStoreTocReader::CHUNK_TYPE_CONTAINER_HEADER);
     $check($containerChunkIndexes === [0], 'container_header_chunk_type_selected');
     $check($toc->findPackageChunk($p1) === 1, 'package_chunk_selected_by_fpackageid');

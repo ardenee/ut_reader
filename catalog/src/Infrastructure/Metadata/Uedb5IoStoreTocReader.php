@@ -408,10 +408,10 @@ final class Uedb5IoStoreTocReader
             ];
         }
 
-        if ($reader->remaining() !== 0) {
-            throw new RuntimeException(
-                'IoStore TOC has ' . $reader->remaining() . ' unexpected trailing bytes after the metadata table.'
-            );
-        }
+        // Epic UE5.8.3 FIoStoreTocResourceView::Read consumes the sections
+        // defined by the current TOC version and then FinalizeRead() closes the
+        // backing file without requiring the archive cursor to reach EOF.
+        // Preserve that forward-compatible behavior: validated known sections
+        // remain authoritative even when later extension bytes follow them.
     }
 }

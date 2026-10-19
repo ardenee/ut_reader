@@ -1,0 +1,343 @@
+{
+  "schema": 1,
+  "engine": "UE5.8.3",
+  "source_root_env": "UNREALDB_EPIC_SOURCE_ROOT",
+  "denominator_locked": true,
+  "denominator_units": 11,
+  "scope": "Epic UE5.8.3 source behavior required by UnrealDB production classic-package, Zen/IoStore, package-store and supported modern PAK readers. Runtime/editor behavior that does not affect persisted metadata is outside this format denominator unless an existing registered operation explicitly depends on it.",
+  "change_control": "The unit count may change only when a production parser/publisher route or an explicitly supported format layout is added or discovered. Historical B014-B108 batches remain evidence, but B109+ is not the completion model.",
+  "completion_rule": "Source inventory is complete only when every unit has inventory_status=accounted or excluded with a rationale. UE5.8.3 format certification additionally requires every non-excluded unit to have verification_status=verified and all workflow/independent-differential gates to pass.",
+  "production_entrypoints": [
+    "UE5/UnrealPackageReader.php",
+    "catalog/src/Infrastructure/Metadata/Uedb5ZenPackageReader.php",
+    "catalog/src/Infrastructure/Metadata/Uedb5IoStoreTocReader.php",
+    "catalog/src/Infrastructure/Metadata/Uedb5IoStoreContainerHeaderReader.php",
+    "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenIoStoreSnapshotBuilder.php",
+    "catalog/lib/CatalogPakArchive.php",
+    "catalog/lib/CatalogPakModernIndex.php"
+  ],
+  "units": [
+    {
+      "id": "UE583-SRC-001",
+      "area": "classic_package_summary_and_version_admission",
+      "inventory_status": "accounted",
+      "verification_status": "partial",
+      "epic_sources": [
+        {"path": "Engine/Source/Runtime/CoreUObject/Private/UObject/PackageFileSummary.cpp", "sha256": "45ba74addefec3877b18fe0c49a3eb398f24e1c35fe2f547afcecdef3ef12f8c"},
+        {"path": "Engine/Source/Runtime/CoreUObject/Public/UObject/PackageFileSummary.h", "sha256": "38ba3bc134941cc8faa64e8b2bd05f02e797944488bdd03bfb24d465a3fd0dc6"},
+        {"path": "Engine/Source/Runtime/Core/Public/UObject/ObjectVersion.h", "sha256": "4c1ce99232b6bcd538654d67d0fb3e05fc55eea982b249883a3159303d020c87"},
+        {"path": "Engine/Source/Runtime/CoreUObject/Private/UObject/LinkerLoad.cpp", "sha256": "ef8fd898979342391585d906166344a34153ef00b24fcaad8d13b018386e6c24"}
+      ],
+      "symbols": [
+        "operator<<(FStructuredArchive::FSlot Slot, FPackageFileSummary& Sum)",
+        "FPackageFileSummary::IsFileVersionValid",
+        "EUnrealEngineObjectUE5Version",
+        "FLinkerLoad::SerializePackageFileSummaryInternal",
+        "FLinkerLoad::SerializePackageFileSummary"
+      ],
+      "branch_families": [
+        "package tag and legacy-version admission",
+        "UE4/UE5/licensee file-version serialization",
+        "unversioned package handling",
+        "custom versions and package flags",
+        "summary offsets/counts used by the production classic reader"
+      ],
+      "unrealdb_files": ["UE5/UnrealPackageReader.php"],
+      "differences": ["UE5-D032"],
+      "evidence": [
+        "catalog/compliance/UE583-D032-VERSION-GUARD.md",
+        "catalog/bin/verify-ue5-583-reader-contract.php",
+        "catalog/bin/verify-ue5-583-real-classic-engine-content.php"
+      ],
+      "open_requirements": ["Independent classic semantic differential remains required for verification; source inventory is accounted."]
+    },
+    {
+      "id": "UE583-SRC-002",
+      "area": "classic_name_import_export_and_dependency_tables",
+      "inventory_status": "accounted",
+      "verification_status": "partial",
+      "epic_sources": [
+        {"path": "Engine/Source/Runtime/CoreUObject/Private/UObject/LinkerLoad.cpp", "sha256": "ef8fd898979342391585d906166344a34153ef00b24fcaad8d13b018386e6c24"},
+        {"path": "Engine/Source/Runtime/CoreUObject/Private/UObject/PackageFileSummary.cpp", "sha256": "45ba74addefec3877b18fe0c49a3eb398f24e1c35fe2f547afcecdef3ef12f8c"},
+        {"path": "Engine/Source/Runtime/Core/Public/UObject/ObjectVersion.h", "sha256": "4c1ce99232b6bcd538654d67d0fb3e05fc55eea982b249883a3159303d020c87"},
+        {"path": "Engine/Source/Runtime/CoreUObject/Private/UObject/ObjectResource.cpp", "sha256": "572fb09a84b99a14e9349fa84fa1a6a76b640e10778e423488092ab863b11206"},
+        {"path": "Engine/Source/Runtime/CoreUObject/Public/UObject/ObjectResource.h", "sha256": "41899c81c7587cb6ab15a2366be93f02be133fff3e8379288864fcf2a0d7489c"}
+      ],
+      "symbols": [
+        "FLinkerLoad::SerializeNameMap",
+        "FLinkerLoad::SerializeImportMap",
+        "FLinkerLoad::SerializeExportMap",
+        "FLinkerLoad::SerializePreloadDependencies",
+        "operator<<(FStructuredArchive::FSlot Slot, FObjectImport& I)",
+        "operator<<(FStructuredArchive::FSlot Slot, FObjectExport& E)"
+      ],
+      "branch_families": [
+        "name table count/offset and serialized name variants",
+        "FObjectImport version-conditioned fields",
+        "FObjectExport version-conditioned fields and 32/64-bit serial sizes",
+        "soft package references",
+        "preload dependency table"
+      ],
+      "unrealdb_files": ["UE5/UnrealPackageReader.php"],
+      "differences": [],
+      "evidence": [
+        "catalog/bin/verify-ue5-583-reader-contract.php",
+        "catalog/bin/verify-ue5-583-real-classic-engine-content.php",
+        "catalog/bin/verify-ue5-583-real-classic-v5-roundtrip.php"
+      ],
+      "open_requirements": ["Independent decoded classic metadata comparison remains required for verification; source inventory is accounted."]
+    },
+    {
+      "id": "UE583-SRC-003",
+      "area": "zen_package_header_wire_layout",
+      "inventory_status": "accounted",
+      "verification_status": "partial",
+      "epic_sources": [
+        {"path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/ZenPackageHeader.cpp", "sha256": "954117a45b9a802d3f289b30f2a0e191a7bb82cdcb107a22fef134a73172995b"},
+        {"path": "Engine/Source/Runtime/CoreUObject/Public/Serialization/AsyncLoading2.h", "sha256": "088f00a8c970458e4bb717490ac4d50361d635ddf8cb0b7b1a5c93ff4d9feef2"},
+        {"path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp", "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9"}
+      ],
+      "symbols": [
+        "FZenPackageHeader::MakeView",
+        "FAsyncPackage2::Event_ProcessPackageSummary",
+        "FAsyncPackage2::InitializeExportArchive"
+      ],
+      "branch_families": [
+        "Zen summary/version/header-size validation",
+        "name/import/export/bundle graph views",
+        "optional segment header association",
+        "package header bounds and relative offsets"
+      ],
+      "unrealdb_files": [
+        "catalog/src/Infrastructure/Metadata/Uedb5ZenPackageReader.php",
+        "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenIoStoreSnapshotBuilder.php"
+      ],
+      "differences": [],
+      "evidence": [
+        "catalog/compliance/UE583-EPIC-IOSTORE-CONTENT-DIFFERENTIAL-20261019.md",
+        "catalog/compliance/UE583-EPIC-NATIVE-ZEN-NAMES-20261019.md"
+      ],
+      "open_requirements": ["Independent field-level Zen decoded metadata semantic comparison, not byte identity alone."]
+    },
+    {
+      "id": "UE583-SRC-004",
+      "area": "zen_dependencies_imports_exports_and_optional_segment",
+      "inventory_status": "accounted",
+      "verification_status": "partial",
+      "epic_sources": [
+        {"path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp", "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9"},
+        {"path": "Engine/Source/Runtime/CoreUObject/Public/Serialization/AsyncLoading2.h", "sha256": "088f00a8c970458e4bb717490ac4d50361d635ddf8cb0b7b1a5c93ff4d9feef2"}
+      ],
+      "symbols": [
+        "FAsyncPackage2::ImportPackagesRecursiveInner",
+        "FAsyncPackage2::Event_ProcessDependencies",
+        "FAsyncPackage2::ProcessExportDependencies",
+        "FAsyncPackage2::GetPublicExportIndex",
+        "FAsyncPackage2::EventDrivenIndexToObject"
+      ],
+      "branch_families": [
+        "imported package requirements",
+        "export bundle command kind and dependency arcs",
+        "public export identity",
+        "optional segment identity",
+        "redirect/localization and missing-provider outcomes"
+      ],
+      "unrealdb_files": [
+        "catalog/src/Infrastructure/Metadata/Uedb5ZenPackageReader.php",
+        "catalog/src/Infrastructure/Metadata/Uedb5MigrationValidator.php"
+      ],
+      "differences": ["UE5-D033"],
+      "evidence": ["catalog/compliance/UE583-D033-ZEN-DEPENDENCY-COUNT.md"],
+      "open_requirements": ["Complete independent semantic oracle for decoded import/export/dependency rows."]
+    },
+    {
+      "id": "UE583-SRC-005",
+      "area": "script_objects_names_and_import_identity",
+      "inventory_status": "accounted",
+      "verification_status": "verified",
+      "epic_sources": [
+        {"path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp", "sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9"},
+        {"path": "Engine/Source/Runtime/CoreUObject/Public/Serialization/AsyncLoading2.h", "sha256": "088f00a8c970458e4bb717490ac4d50361d635ddf8cb0b7b1a5c93ff4d9feef2"},
+        {"path": "Engine/Source/Runtime/Core/Private/Hash/CityHash.cpp", "sha256": "035965ffa9875cc2ad93694a44a45cd8bdc042101e4b84d355b22d089f070d62"},
+        {"path": "Engine/Source/Runtime/Core/Public/Hash/CityHash.h", "sha256": "591ef28603dea447d857d5eccEA607386f0b4a9b9df283160a5d375cdc6648be"},
+        {"path": "Engine/Source/Runtime/Core/Public/Misc/Char.h", "sha256": "b0a3b64758caddf5151a0396fdb042476bba4d9c9d1eaaeda94318b4b069a0e1"}
+      ],
+      "symbols": [
+        "GenerateImportHashFromObjectPath",
+        "GenerateImportHashFromVersePath",
+        "FPackageObjectIndex::FromScriptPath",
+        "FAsyncPackage2::SetupScriptDependencies"
+      ],
+      "branch_families": [
+        "cooked ScriptObjects NameBatch and object records",
+        "mapped-name type/index handling",
+        "duplicate global index replacement",
+        "script import hash generation",
+        "live-first diagnostic fallback boundary"
+      ],
+      "unrealdb_files": [
+        "catalog/src/Infrastructure/Metadata/Uedb5ZenScriptObjectsReader.php",
+        "catalog/src/Infrastructure/Metadata/Uedb5Ue5ScriptImportPathHasher.php"
+      ],
+      "differences": ["UE5-D025", "UE5-D026", "UE5-D027", "UE5-D028", "UE5-D029"],
+      "evidence": [
+        "catalog/compliance/batches/B001-ue5-script-objects.json",
+        "catalog/compliance/batches/B002-ue5-script-consumers.json",
+        "catalog/compliance/batches/B013-ue5-script-import-hashing.json"
+      ],
+      "open_requirements": []
+    },
+    {
+      "id": "UE583-SRC-006",
+      "area": "package_store_backend_arbitration",
+      "inventory_status": "accounted",
+      "verification_status": "verified",
+      "epic_sources": [
+        {"path": "Engine/Source/Runtime/CoreUObject/Private/Serialization/PackageStore.cpp", "sha256": "fb5c1930f5b8e6611392c3009dde16922661c7942f2eaa8d875492c8981f67b9"}
+      ],
+      "symbols": [
+        "FPackageStore::Mount",
+        "FPackageStore::GetPackageStoreEntry",
+        "FPackageStore::GetPackageRedirectInfo",
+        "FPackageStore::GetSoftReferences"
+      ],
+      "branch_families": ["backend priority", "terminal versus fallback status", "redirect lookup", "soft-reference lookup"],
+      "unrealdb_files": ["catalog/src/Infrastructure/Metadata/Uedb5ZenEffectivePackageStoreContextBuilder.php"],
+      "differences": ["UE5-D009"],
+      "evidence": ["catalog/compliance/batches/B005-ue5-backend-status.json"],
+      "open_requirements": []
+    },
+    {
+      "id": "UE583-SRC-007",
+      "area": "file_package_store_and_container_header",
+      "inventory_status": "accounted",
+      "verification_status": "partial",
+      "epic_sources": [
+        {"path": "Engine/Source/Runtime/PakFile/Private/FilePackageStore.cpp", "sha256": "dfdd4e226b3a41f36476ddd93225aa34284ea63943f1752216e0f2a25c2a2418"},
+        {"path": "Engine/Source/Runtime/Core/Private/IO/IoContainerHeader.cpp", "sha256": "fcc949dc6f95befd0e621294b422773610896a325fd457294e640b9d9e12a590"},
+        {"path": "Engine/Source/Runtime/Core/Public/IO/IoContainerHeader.h", "sha256": "03d325d4c496e3d75b0c91da4256be58162565496444b2942fbcad116aac3abd"}
+      ],
+      "symbols": [
+        "FFilePackageStoreBackend::GetPackageStoreEntry",
+        "FFilePackageStoreBackend::GetPackageRedirectInfo",
+        "FFilePackageStoreBackend::GetSoftReferences",
+        "FFilePackageStoreBackend::Mount",
+        "FFilePackageStoreBackend::Update"
+      ],
+      "branch_families": [
+        "mount order and entry replacement",
+        "package/optional entry views",
+        "localized and redirect maps",
+        "container header v3 minimum/v4 inline/v5+ soft-reference offset layout",
+        "retry identity integrity"
+      ],
+      "unrealdb_files": [
+        "catalog/src/Infrastructure/Metadata/Uedb5IoStoreContainerHeaderReader.php",
+        "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenIoStoreSnapshotBuilder.php"
+      ],
+      "differences": ["UE5-D007", "UE5-D008", "UE5-D016", "UE5-D031"],
+      "evidence": [
+        "catalog/compliance/B006-CONTAINER-HEADER-SOURCE.md",
+        "catalog/compliance/batches/B006-ue5-file-store.json"
+      ],
+      "open_requirements": ["Authentic future container-header layout and full live mount/recovery behavior remain workflow/runtime gates."]
+    },
+    {
+      "id": "UE583-SRC-008",
+      "area": "iostore_toc_wire_format_and_chunk_identity",
+      "inventory_status": "accounted",
+      "verification_status": "partial",
+      "epic_sources": [
+        {"path": "Engine/Source/Runtime/Core/Internal/IO/IoStore.h", "sha256": "58f0183013943732f7f948291edffe7113fc1e047dd72619874b56867c6a10c4"},
+        {"path": "Engine/Source/Runtime/Core/Internal/IO/IoOffsetLength.h", "sha256": "3fc4a22e30a854efed84a9f4ec25dea68d126927265369cdf0e01def7da431ca"},
+        {"path": "Engine/Source/Runtime/Core/Public/IO/IoChunkId.h", "sha256": "64ebf25a5cf436e1cc353a8fefbd16bbb231ef28ff914a4ef6296e27b20b30b1"},
+        {"path": "Engine/Source/Runtime/Core/Private/IO/IoStore.cpp", "sha256": "74746e575cfa0719d4fec38682a90d2dbc58d6f0c1c7877b161aafd4d57e38ed"}
+      ],
+      "symbols": [
+        "FIoStoreTocResourceView::Read",
+        "FIoStoreTocResourceStorage::FinalizeRead",
+        "FIoChunkId::GetChunkType",
+        "CreateIoChunkId"
+      ],
+      "branch_families": [
+        "TOC versions DirectoryIndex through Latest",
+        "144-byte header and 12-byte compressed-block entry",
+        "FIoChunkId byte layout",
+        "5-byte offset/length fields",
+        "perfect-hash and overflow sections",
+        "signature section",
+        "directory index section",
+        "legacy versus current entry metadata",
+        "known-section parsing without artificial EOF requirement"
+      ],
+      "unrealdb_files": ["catalog/src/Infrastructure/Metadata/Uedb5IoStoreTocReader.php"],
+      "differences": ["UE5-D035"],
+      "evidence": [
+        "catalog/compliance/UE583-D035-IOSTORE-TOC-TRAILING-BYTES.md",
+        "catalog/bin/verify-uedb5-ue5-iostore-foundation.php"
+      ],
+      "open_requirements": ["Add direct field-semantic oracle for the complete TOC structure, beyond retained byte/content parity."]
+    },
+    {
+      "id": "UE583-SRC-009",
+      "area": "iostore_chunk_reconstruction_decrypt_and_decompress",
+      "inventory_status": "accounted",
+      "verification_status": "verified",
+      "epic_sources": [
+        {"path": "Engine/Source/Runtime/Core/Private/IO/IoStore.cpp", "sha256": "74746e575cfa0719d4fec38682a90d2dbc58d6f0c1c7877b161aafd4d57e38ed"},
+        {"path": "Engine/Source/Runtime/Core/Internal/IO/IoStore.h", "sha256": "58f0183013943732f7f948291edffe7113fc1e047dd72619874b56867c6a10c4"}
+      ],
+      "symbols": ["FIoStoreReaderImpl::Read", "FIoStoreReaderImpl::ReadAsync"],
+      "branch_families": ["logical chunk to compression blocks", "partition offset", "AES block alignment/decryption", "None versus compressed method", "partial first/last block copy"],
+      "unrealdb_files": ["catalog/src/Infrastructure/Metadata/Uedb5IoStoreTocReader.php"],
+      "differences": [],
+      "evidence": ["catalog/compliance/UE583-EPIC-IOSTORE-CONTENT-DIFFERENTIAL-20261019.md"],
+      "open_requirements": []
+    },
+    {
+      "id": "UE583-SRC-010",
+      "area": "modern_pak_compact_full_directory_index",
+      "inventory_status": "accounted",
+      "verification_status": "verified",
+      "epic_sources": [
+        {"path": "Engine/Source/Runtime/PakFile/Private/PakFile.cpp", "sha256": "3c30bcf38ced7d63861d3eb28a4f7027fd95f7b00b4e2f263659079c938a9719"},
+        {"path": "Engine/Source/Runtime/PakFile/Public/IPlatformFilePak.h", "sha256": "7248e99dbfca680209d0d4b29a518376564059f2410753db3b0df82d3ebb515c"}
+      ],
+      "symbols": ["FPakFile::LoadIndexInternal", "FPakFile::LoadIndexInternal_DirectoryIndex", "FPakFile::DecodePakEntry"],
+      "branch_families": ["v10/v11 compact index", "full directory index", "encoded entries", "compression method table"],
+      "unrealdb_files": ["catalog/lib/CatalogPakArchive.php", "catalog/lib/CatalogPakModernIndex.php"],
+      "differences": ["UE5-D034"],
+      "evidence": [
+        "catalog/compliance/UE583-D034-MODERN-PAK11.md",
+        "catalog/compliance/UE583-PAK-EPIC-INDEPENDENT-DIFFERENTIAL-20261019.md"
+      ],
+      "open_requirements": []
+    },
+    {
+      "id": "UE583-SRC-011",
+      "area": "modern_pak_payload_offsets_blocks_and_decode",
+      "inventory_status": "accounted",
+      "verification_status": "verified",
+      "epic_sources": [
+        {"path": "Engine/Source/Runtime/PakFile/Private/PakFile.cpp", "sha256": "3c30bcf38ced7d63861d3eb28a4f7027fd95f7b00b4e2f263659079c938a9719"},
+        {"path": "Engine/Source/Runtime/PakFile/Public/IPlatformFilePak.h", "sha256": "7248e99dbfca680209d0d4b29a518376564059f2410753db3b0df82d3ebb515c"}
+      ],
+      "symbols": ["FPakFile::DecodePakEntry"],
+      "branch_families": ["entry header size", "relative compression blocks", "encrypted alignment boundary", "uncompressed versus compressed payload extraction"],
+      "unrealdb_files": ["catalog/lib/CatalogPakArchive.php", "catalog/lib/CatalogPakModernIndex.php"],
+      "differences": ["UE5-D034"],
+      "evidence": ["catalog/compliance/UE583-PAK-EPIC-INDEPENDENT-DIFFERENTIAL-20261019.md"],
+      "open_requirements": []
+    }
+  ],
+  "explicit_exclusions": [
+    {
+      "area": "modern_pak_optional_layouts",
+      "reason": "Path-hash-only index, unencoded entry list, encrypted index/entries and newer-than-v11 layouts are not currently claimed as supported by the production modern PAK reader."
+    },
+    {
+      "area": "unknown_future_iostore_toc_versions",
+      "reason": "Epic UE5.8.3 rejects TOC versions newer than EIoStoreTocVersion::Latest; D035 removes only an EOF condition after known sections and does not admit unknown future versions."
+    }
+  ]
+}
