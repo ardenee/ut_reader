@@ -203,7 +203,10 @@ final class JobFailureRetryPolicy
             }
         }
 
-        return self::isInvalidRedirectContentMessage($message)
+        // A retained nested archive cannot change depth on an automatic retry.
+        // An operator must change the nesting configuration or archive input.
+        return str_contains($message, 'nested archive depth limit of ')
+            || self::isInvalidRedirectContentMessage($message)
             || self::isInvalidPackageContentMessage($message);
     }
 

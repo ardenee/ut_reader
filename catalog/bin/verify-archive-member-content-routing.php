@@ -52,6 +52,7 @@ $record = static function (string $name, bool $ok, string $detail = '') use (&$c
     }
 };
 
+require_once $root . '/bootstrap/autoload.php';
 require_once $classifierPath;
 $classifierClass = 'UnrealDb\\Catalog\\Infrastructure\\Jobs\\CatalogArchiveMemberContentClassifier';
 $classifier = new $classifierClass();
