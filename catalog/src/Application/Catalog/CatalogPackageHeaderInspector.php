@@ -30,14 +30,18 @@ final class CatalogPackageHeaderInspector
             return ['ok' => false, 'error' => sprintf('Bad package tag 0x%08X', $tag), 'summary' => [], 'rows' => []];
         }
         $signed = self::i32($bytes, 4);
-        // UE5 summaries have additional version and layout fields. Epic's
-        // UE4-only diagnostic layout must not reject or misdecode them.
-        if ($signed <= -8) {
-            return self::inspectUe5($path);
-        }
         $legacyVersion = self::u32($bytes, 4) & 0xFFFF;
         $knownLegacyVersion = ($legacyVersion >= 40 && $legacyVersion <= 199)
             || ($legacyVersion >= 334 && $legacyVersion <= 867);
+        // A negative packed UE1/UE2/UE3 licensee/version word is not a UE5
+        // legacy summary marker. Let the dedicated source-aligned UE5 reader
+        // establish the actual header rather than extending the UE4 layout.
+        if (!$knownLegacyVersion && $signed <= -8) {
+            $ue5 = self::inspectUe5($path);
+            if ($ue5['ok'] || strtoupper((string)($file['engine_key'] ?? $file['engine'] ?? '')) === 'UE5') {
+                return $ue5;
+            }
+        }
         $extension = strtolower((string)($file['extension'] ?? ''));
         return (!$knownLegacyVersion && $signed < 0) || in_array($extension, ['uasset', 'umap'], true)
             ? self::inspectUe4($bytes, $file)
