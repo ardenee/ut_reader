@@ -1,0 +1,67 @@
+diff --git a/Engine/Source/Programs/UnrealAssetStringify/UnrealAssetStringify.Build.cs b/Engine/Source/Programs/UnrealAssetStringify/UnrealAssetStringify.Build.cs
+index 14d1563..50825f0 100644
+--- a/Engine/Source/Programs/UnrealAssetStringify/UnrealAssetStringify.Build.cs
++++ b/Engine/Source/Programs/UnrealAssetStringify/UnrealAssetStringify.Build.cs
+@@ -12,10 +12,12 @@ public class UnrealAssetStringify : ModuleRules
+ 				"Core",
+ 				"CoreUObject",
+ 				"Projects", // required for project manager..
+-				"JsonObjectGraph"
++				"JsonObjectGraph",
++				"PakFile"
+ 			}
+ 		);
+ 		
++		PrivateIncludePaths.Add(System.IO.Path.Combine(EngineDirectory, "Source/Runtime/PakFile/Private"));
+ 		bEnableExceptions = true;
+ 	}
+ }
+diff --git a/Engine/Source/Programs/UnrealAssetStringify/Private/UnrealAssetStringify.cpp b/Engine/Source/Programs/UnrealAssetStringify/Private/UnrealAssetStringify.cpp
+index 2496954..03b569a 100644
+--- a/Engine/Source/Programs/UnrealAssetStringify/Private/UnrealAssetStringify.cpp
++++ b/Engine/Source/Programs/UnrealAssetStringify/Private/UnrealAssetStringify.cpp
+@@ -1,6 +1,10 @@
+ // Copyright Epic Games, Inc. All Rights Reserved.
+ 
+ #include "JsonObjectGraph/Stringify.h"
++#include "FilePackageStore.h"
++#include "IO/IoContainerHeader.h"
++#include "Misc/FileHelper.h"
++#include "Serialization/MemoryReader.h"
+ #include "Logging/StructuredLog.h"
+ #include "UObject/UObjectGlobals.h"
+ #include "UObject/UObjectThreadContext.h"
+@@ -357,6 +361,33 @@ INT32_MAIN_INT32_ARGC_TCHAR_ARGV()
+ 		GConfig->SaveCurrentStateForBootstrap(*GetIniBootstrapFilename());
+ 	}
+ 
++	for (int32 I = 0; I < ArgC; ++I)
++	{
++		const FString Argument(ArgV[I]);
++		if (!Argument.StartsWith(TEXT("-NativeOptionalProbe="))) continue;
++		const FString Path = Argument.RightChop(21);
++		TArray<uint8> Raw;
++		if (!FFileHelper::LoadFileToArray(Raw, *Path)) { printf("UE583_EDITOR_OPTIONAL_ERROR read\\n"); return 3; }
++		FMemoryReader Archive(Raw, true);
++		FIoContainerHeader Header;
++		Archive << Header;
++		if (Archive.IsError() || Header.PackageIds.IsEmpty()) { printf("UE583_EDITOR_OPTIONAL_ERROR header\\n"); return 4; }
++		const FPackageId ProbePackageId = Header.PackageIds[0];
++		FFilePackageStoreBackend Backend;
++		Backend.Mount(&Header, 10);
++		Backend.BeginRead();
++		FPackageStoreEntry Entry;
++		const auto Status = Backend.GetPackageStoreEntry(ProbePackageId, NAME_None, Entry);
++		const uint64 MainId = Entry.ImportedPackageIds.Num() ? Entry.ImportedPackageIds[0].Value() : 0;
++		const uint64 OptionalId = Entry.OptionalSegmentImportedPackageIds.Num() ? Entry.OptionalSegmentImportedPackageIds[0].Value() : 0;
++		printf("UE583_EDITOR_OPTIONAL %d %d %d %u %016llX %016llX\\n",
++			static_cast<int32>(Status), Entry.ImportedPackageIds.Num(), Entry.OptionalSegmentImportedPackageIds.Num(),
++			static_cast<uint32>(Entry.bHasOptionalSegment),
++			static_cast<unsigned long long>(MainId), static_cast<unsigned long long>(OptionalId));
++		Backend.EndRead();
++		Backend.Unmount(&Header);
++		return 0;
++	}
+ 	FUnrealAssetStringifyArgs Args;
+ 	if(!FUnrealAssetStringifyArgs::ParseArgs(ArgC, ArgV, Args))
+ 	{
