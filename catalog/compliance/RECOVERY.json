@@ -98,18 +98,21 @@
     },
     {
       "name": "discover_dependencies",
-      "coverage": "mapped",
-      "source_to_entry_point_map": ["UE5-subset production path: catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php","UE5-subset acceptance evidence: catalog/compliance/UE583-SATISFACTORY-FULL-PUBLICATION-20261019.md","PARTIAL ONLY: complete Epic branch and cross-workflow acceptance remain open"]
+      "coverage": "accepted",
+      "source_to_entry_point_map": ["catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php","catalog/src/Infrastructure/Metadata/Uedb5ZenPackageReader.php"],
+      "end_to_end_acceptance_evidence": ["catalog/compliance/UE583-WF04-WF06-DEPENDENCY-ACCEPTANCE-20261019.md","catalog/compliance/UE583-SATISFACTORY-FULL-PUBLICATION-20261019.md","catalog/bin/verify-uedb5-ue5-zen-dependency-resolution.php","catalog/compliance/UE583-P02-EPIC-NATIVE-DEPENDS-IDENTITIES-20261019.md"]
     },
     {
       "name": "select_physical_providers",
-      "coverage": "mapped",
-      "source_to_entry_point_map": ["UE5-subset production path: catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php","UE5-subset acceptance evidence: catalog/compliance/UE583-SATISFACTORY-FULL-PUBLICATION-20261019.md","PARTIAL ONLY: complete Epic branch and cross-workflow acceptance remain open"]
+      "coverage": "accepted",
+      "source_to_entry_point_map": ["catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php","catalog/src/Infrastructure/Metadata/Uedb5ZenEffectivePackageStoreContextBuilder.php"],
+      "end_to_end_acceptance_evidence": ["catalog/compliance/UE583-WF04-WF06-DEPENDENCY-ACCEPTANCE-20261019.md","catalog/compliance/UE583-P07-EPIC-NATIVE-FILESTORE-MOUNT-20261019.md","catalog/bin/verify-uedb5-b005-operation-acceptance.php","catalog/bin/verify-uedb5-zen-backend-source-oracle.php"]
     },
     {
       "name": "resolve_object_references",
-      "coverage": "mapped",
-      "source_to_entry_point_map": ["UE5-subset production path: catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php","UE5-subset acceptance evidence: catalog/compliance/UE583-SATISFACTORY-FULL-PUBLICATION-20261019.md","PARTIAL ONLY: complete Epic branch and cross-workflow acceptance remain open"]
+      "coverage": "accepted",
+      "source_to_entry_point_map": ["catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php","catalog/src/Infrastructure/Metadata/Uedb5ZenPackageReader.php"],
+      "end_to_end_acceptance_evidence": ["catalog/compliance/UE583-WF04-WF06-DEPENDENCY-ACCEPTANCE-20261019.md","catalog/compliance/UE583-SATISFACTORY-FULL-PUBLICATION-20261019.md","catalog/bin/verify-uedb5-b004-operation-acceptance.php","catalog/bin/verify-uedb5-zen-object-index-source-oracle.php"]
     },
     {
       "name": "stage_v5",
