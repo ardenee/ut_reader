@@ -18,7 +18,7 @@
 
 ### Repeatable partial acceptance
 
-`php catalog/bin/verify-ue427-p07-partial-acceptance.php` now targets **5/5 bounded checkpoints**: UT4 v511 static matcher 37/37, UE4.27.2 native loaded-package 22/22 import identities, compiled native provider class identities, full UE4.27 import branch corpus, and V5 dependency-resolution regression. It also checks the explicit UT4 profile boundary and UE4.27 serialized `PackageName` retention. **This is a checkpoint, not P07 operation-level acceptance**.
+`php catalog/bin/verify-ue427-p07-partial-acceptance.php` now targets **6/6 bounded checkpoints**: UT4 v511 static matcher 37/37, UE4.27.2 native loaded-package 22/22 import identities, compiled native provider class identities, full UE4.27 import branch corpus, and V5 dependency-resolution regression. It also checks the explicit UT4 profile boundary and UE4.27 serialized `PackageName` retention. **This is a checkpoint, not P07 operation-level acceptance**.
 
 ## P07 added genuine-branch coverage and compiled provider-identity comparison
 
@@ -28,7 +28,19 @@
 
 The bundled source/oracle still uses the installed editor's `LoadPackage` and `LoadAllObjects`; a post-load `XObject` can exist without retained `SourceLinker`/`SourceIndex`. The 33 native provider-identity rows do **not** authorize treating 20 private exports as resolved dependencies; subsequent verification must explicitly trace the engine's private-import condition, missing-provider and redirector branches at the decision point.
 
-**Combined replay:** `php catalog/bin/verify-ue427-p07-partial-acceptance.php` now includes **5 bounded checkpoints** (UT4 v511 static 37-check regression, UE4.27 postload import identities, UE4.27 native class identities, full 1,749-file import-branch inventory, V5 dependency regression). This remains **P07 ACTIVE (6/10 primary operations verified)**.
+**Combined replay:** `php catalog/bin/verify-ue427-p07-partial-acceptance.php` now includes **6 bounded checkpoints** (UT4 v511 static 37-check regression, UE4.27 postload import identities, UE4.27 native class identities, full 1,749-file import-branch inventory, V5 dependency regression). This remains **P07 ACTIVE (6/10 primary operations verified)**.
+
+## Executed compiled-engine missing-provider negative — P07
+
+A retained executable mutation `php catalog/bin/generate-ue427-p07-missing-script-fixture.php` starts from a genuine installed `DefaultAnimBoneCompressionSettings.uasset` (4,861 bytes), copies it into `C:/Temp/UE427Oracle/Saved/UE427P07Probe/MissingNativeScript.uasset`, and changes **one byte** of a serialized `FNameEntrySerialized` name-map payload from `/Script/Engine` to `/Script/EnginZ`. Both the canonical and mutated files pass UnrealDB structural validation and preserve every file/table offset; the canonical source SHA-256 and fixture SHA-256 are logged to `C:/Temp/ue427-p07-missing-script-generator.json`.
+
+The **compiled UE4.27.2 Editor commandlet `LoadPackage`/`LoadAllObjects`** loaded the unaltered disposable copy in `C:/Temp/ue427-p07-path-probe.log` and the mutated copy in `C:/Temp/ue427-p07-missing-native-runtime.log`. Both runs exited 0 and had 7 corresponding source-serialized imports. Native import XObject counts changed from **5 loaded references (control)** to **1 (missing provider)**. The negative log contains real Epic `LogUObjectGlobals` warnings (`Failed to load '/Script/EnginZ': Can't find file`) and `LogLinker` class-load failures. These warning occurrences can be duplicated by the engine's normal message replay, so they do **not** represent a distinct import-failure count.
+
+Independent `php catalog/bin/verify-ue427-p07-native-missing-script.php` compares **7/7 import identities in each run**, the native count summaries, exact one-byte isolated mutation, absence/presence of the missing-provider warnings and the XObject delta: **zero discrepancies**. This is independent native runtime negative evidence for absent native script packages, but **NOT** direct instrumentation of the non-exported/private `VerifyImportInner` function and **NOT** proof of every optional, missing, native-transient or linker-selection branch. Keep this scope explicit.
+
+**Reproduce:** first `php catalog/bin/generate-ue427-p07-missing-script-fixture.php`; copy the unmodified genuine asset into `C:/Temp/UE427Oracle/Saved/UE427P07Probe/DefaultAnimBoneCompressionSettings.uasset`. Execute the compiled commandlet twice with `-P07Runtime=C:/Temp/UE427Oracle/Saved/UE427P07Probe/<filename>.uasset -unattended -nullrhi -nosplash -nop4 -NoSound`, once for each file, saving its complete output to the two paths above. Then `php catalog/bin/verify-ue427-p07-native-missing-script.php`. The regenerated fixture is in **Saved**, not Editor-scanned Content.
+
+Combined P07 partial acceptance now includes **6/6 checkpoints**. The fixed ten-operation audit stays **6/10, P07 ACTIVE** until native redirector, explicit PackageName cross-linker and private-provider branch decisions are independently accepted.
 
 ## Explicit outstanding P07 source branches
 

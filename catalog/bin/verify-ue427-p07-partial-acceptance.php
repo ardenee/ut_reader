@@ -15,6 +15,8 @@ $checks=[
  'stock_ue427_native_provider_class_identity'=>[__DIR__.'/verify-ue427-p07-native-export-identity.php',[],
   ['native_export_count'=>33,'mismatch_count'=>0]],
  'stock_ue427_import_branch_corpus'=>[__DIR__.'/verify-ue427-p07-import-branch-corpus.php',[],[]],
+ 'stock_ue427_native_missing_provider'=>[__DIR__.'/verify-ue427-p07-native-missing-script.php',[],
+  ['file_size'=>4861,'changed_single_byte_count'=>1]],
  'v5_dependency_resolution_regression'=>[__DIR__.'/verify-uedb5-unreal-classic-dependency-resolution.php',[],[]]
 ];
 $results=[];$errors=[];
