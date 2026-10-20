@@ -51,9 +51,9 @@ the original historical Epic source if that rule is to be accepted.
 - UE4.27 `VerifyImportInner` in-production native/runtime linker and
   redirected destination behavior; P07 remains ACTIVE, **not** accepted.
 - Source-path completeness: the Epic-only package checklist started with
-  232 original-source step/field/gate rows; **3** have bounded metadata
-  mappings, and **229** remain `NOT_CHECKED`. The 48-row P07 trace
-  only maps the PackageName metadata step, not its runtime action.
+  232 source points and three bounded metadata mappings; the expanded
+  250-point checklist and its current status are given below. The 48-row P07
+  trace still maps PackageName metadata only, **not** native linker behavior.
 - No stock UE4.27 game source profile currently exists in the production
   `Uedb5GameSourceRegistry`; its registered UE4 game is UT4. This is
   not repaired by manufacturing an unregistered game ID or routing
@@ -61,6 +61,32 @@ the original historical Epic source if that rule is to be accepted.
 - Previously persisted UEDB4 rows may still lack PackageName.
 - Older UE4 source branches and writer-specific format differences
   require their own pinned Epic sources, not guessed gates.
+
+## Subsequent Epic summary path corrections
+
+| Original Epic C++ | Production implementation | Independent scope verified |
+|---|---|---|
+| `CoreUObject/Private/UObject/PackageFileSummary.cpp:33-45` | `UnrealPackageReader4::fixCorruptEngineVersion` | Exact FEngineVersion 4.26.0 licensee-flag repair, `ObjectVersion < VER_UE4_CORRECT_LICENSEE_FLAG` (**522**) and changelist >= 12740027. Checks cover either side of the version and changelist boundaries. |
+| `Core/Private/Misc/EngineVersion.cpp:20-30,90-97` | `UnrealPackageReader4::readEngineVersion` | Changelist getter masks bit 31; `IsLicenseeVersion` reads bit 31. Serialized and effective 32-bit values are preserved separately. |
+| `CoreUObject/Private/UObject/PackageFileSummary.cpp:184-189`, `ObjectMacros.h:106` | `UnrealPackageReader4::parse` | The editor clears transient `PKG_NewlyCreated` (bit 0) after reading the serialized package flags. A bit-mutated copy of a genuine UE4.27 package confirms both serialized and effective values. |
+| `CoreUObject/Private/UObject/PackageFileSummary.cpp:346-351` | `UnrealPackageReader4::parse` | Legacy negative marker > -7 now rejects nonzero deprecated `NumTextureAllocations` in a source-derived -3 header fixture, instead of silently ignoring the value. |
+
+After extending the pinned source-only handbook to the additional C++ callers,
+the package-loader checklist contains **250** individual source points:
+**222 NOT_CHECKED**, **25 source-mapped (24 passing a targeted/corpus check,
+1 with a remaining legacy boundary check)** and **3 earlier bounded mappings
+whose native-runtime equivalence remains unverified**. These are individual
+source points, **not** 28 independently complete end-to-end operations.
+
+Focused verification:
+`catalog/bin/verify-ue427-epic-summary-corrections.php`: **6/6**;
+`catalog/bin/verify-ue4-427-reader-contract.php`: **15/15**;
+genuine 1,749-package table corpus, P04 malformed-record checks, P07
+import-branch corpus, and P05 acceptance suite all exited successfully.
+
+The legacy pre-336 `EngineChangelist` compatibility boundary, complete
+`VerifyImportInner` provider selection, object payload reading and remaining
+source paths are **not** accepted as full Epic-equivalent implementations.
 
 The correction is judged by the production behavior and source
 trace, not a new claim of whole-engine parity.

@@ -408,4 +408,121 @@
       </root>
     </mxGraphModel>
   </diagram>
+  <diagram name="version_correction" id="version_correction">
+    <mxGraphModel dx="1300" dy="950" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" page="1" pageScale="1" pageWidth="1050" pageHeight="1800">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="VERSION_CORRECTION01" parent="1" vertex="1" value="VERSION_CORRECTION01 static void FixCorruptEngineVersion(int ObjectVersion, FEngineVersi...&lt;br/&gt;PackageFileSummary.cpp:33" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="85" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="VERSION_CORRECTION02" parent="1" vertex="1" value="VERSION_CORRECTION02 if (ObjectVersion &amp;lt; VER_UE4_CORRECT_LICENSEE_FLAG&lt;br/&gt;PackageFileSummary.cpp:37" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="200" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="version_correction_e2" parent="1" edge="1" source="VERSION_CORRECTION01" target="VERSION_CORRECTION02" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="VERSION_CORRECTION03" parent="1" vertex="1" value="VERSION_CORRECTION03 &amp;&amp; Version.GetMajor() == 4&lt;br/&gt;PackageFileSummary.cpp:38" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="315" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="version_correction_e3" parent="1" edge="1" source="VERSION_CORRECTION02" target="VERSION_CORRECTION03" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="VERSION_CORRECTION04" parent="1" vertex="1" value="VERSION_CORRECTION04 &amp;&amp; Version.GetMinor() == 26&lt;br/&gt;PackageFileSummary.cpp:39" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="430" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="version_correction_e4" parent="1" edge="1" source="VERSION_CORRECTION03" target="VERSION_CORRECTION04" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="VERSION_CORRECTION05" parent="1" vertex="1" value="VERSION_CORRECTION05 &amp;&amp; Version.GetPatch() == 0&lt;br/&gt;PackageFileSummary.cpp:40" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="545" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="version_correction_e5" parent="1" edge="1" source="VERSION_CORRECTION04" target="VERSION_CORRECTION05" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="VERSION_CORRECTION06" parent="1" vertex="1" value="VERSION_CORRECTION06 &amp;&amp; Version.GetChangelist() &amp;gt;= 12740027&lt;br/&gt;PackageFileSummary.cpp:41" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="660" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="version_correction_e6" parent="1" edge="1" source="VERSION_CORRECTION05" target="VERSION_CORRECTION06" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="VERSION_CORRECTION07" parent="1" vertex="1" value="VERSION_CORRECTION07 &amp;&amp; Version.IsLicenseeVersion())&lt;br/&gt;PackageFileSummary.cpp:42" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="775" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="version_correction_e7" parent="1" edge="1" source="VERSION_CORRECTION06" target="VERSION_CORRECTION07" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="VERSION_CORRECTION08" parent="1" vertex="1" value="VERSION_CORRECTION08 Version.Set(4, 26, 0, Version.GetChangelist(), Version.GetBranch());&lt;br/&gt;PackageFileSummary.cpp:44" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="890" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="version_correction_e8" parent="1" edge="1" source="VERSION_CORRECTION07" target="VERSION_CORRECTION08" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram name="engine_changelist" id="engine_changelist">
+    <mxGraphModel dx="1300" dy="950" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" page="1" pageScale="1" pageWidth="1050" pageHeight="1800">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="ENGINE_CHANGELIST01" parent="1" vertex="1" value="ENGINE_CHANGELIST01 uint32 FEngineVersionBase::GetChangelist() const&lt;br/&gt;EngineVersion.cpp:20" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="85" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="ENGINE_CHANGELIST02" parent="1" vertex="1" value="ENGINE_CHANGELIST02 return Changelist &amp; (uint32)0x7fffffffU;&lt;br/&gt;EngineVersion.cpp:23" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="200" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="engine_changelist_e2" parent="1" edge="1" source="ENGINE_CHANGELIST01" target="ENGINE_CHANGELIST02" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ENGINE_CHANGELIST03" parent="1" vertex="1" value="ENGINE_CHANGELIST03 bool FEngineVersionBase::IsLicenseeVersion() const&lt;br/&gt;EngineVersion.cpp:26" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="315" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="engine_changelist_e3" parent="1" edge="1" source="ENGINE_CHANGELIST02" target="ENGINE_CHANGELIST03" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ENGINE_CHANGELIST04" parent="1" vertex="1" value="ENGINE_CHANGELIST04 return (Changelist &amp; (uint32)0x80000000U) != 0;&lt;br/&gt;EngineVersion.cpp:29" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="430" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="engine_changelist_e4" parent="1" edge="1" source="ENGINE_CHANGELIST03" target="ENGINE_CHANGELIST04" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ENGINE_CHANGELIST05" parent="1" vertex="1" value="ENGINE_CHANGELIST05 void FEngineVersion::Set(uint16 InMajor, uint16 InMinor, uint16 InP...&lt;br/&gt;EngineVersion.cpp:90" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="545" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="engine_changelist_e5" parent="1" edge="1" source="ENGINE_CHANGELIST04" target="ENGINE_CHANGELIST05" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ENGINE_CHANGELIST06" parent="1" vertex="1" value="ENGINE_CHANGELIST06 Changelist = InChangelist;&lt;br/&gt;EngineVersion.cpp:95" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="660" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="engine_changelist_e6" parent="1" edge="1" source="ENGINE_CHANGELIST05" target="ENGINE_CHANGELIST06" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram name="package_flags" id="package_flags">
+    <mxGraphModel dx="1300" dy="950" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" page="1" pageScale="1" pageWidth="1050" pageHeight="1800">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="PACKAGE_FLAGS01" parent="1" vertex="1" value="PACKAGE_FLAGS01 enum EPackageFlags&lt;br/&gt;ObjectMacros.h:103" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="85" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="PACKAGE_FLAGS02" parent="1" vertex="1" value="PACKAGE_FLAGS02 PKG_NewlyCreated&#09;&#09;&#09;&#09;= 0x00000001,&#09;///&amp;lt; Newly created package, no...&lt;br/&gt;ObjectMacros.h:106" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="200" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="package_flags_e2" parent="1" edge="1" source="PACKAGE_FLAGS01" target="PACKAGE_FLAGS02" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="PACKAGE_FLAGS03" parent="1" vertex="1" value="PACKAGE_FLAGS03 PKG_FilterEditorOnly&#09;&#09;&#09;= 0x80000000,&#09;///&amp;lt; Package has editor-onl...&lt;br/&gt;ObjectMacros.h:136" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="315" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="package_flags_e3" parent="1" edge="1" source="PACKAGE_FLAGS02" target="PACKAGE_FLAGS03" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
 </mxfile>

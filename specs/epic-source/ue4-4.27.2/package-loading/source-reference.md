@@ -6,7 +6,7 @@ authoritative when reading any abbreviated table or diagram.
 
 **Revision:** `d94b38ae3446da52224bedd2568c078f828b4039`
 **Source checkout:** `L:/Source/Engine/UE4/UE 4.27.2`
-**Completion:** **INCOMPLETE** — Original Epic C++ classic package linker initialization, summary serialization, FObjectImport/FObjectExport and table loading. Not a full engine behavior or object payload trace.
+**Completion:** **INCOMPLETE** — Original Epic C++ classic package linker initialization, summary serialization, FObjectImport/FObjectExport and table loading. Not a full engine behavior or object payload trace. Also includes Epic engine-version, package-flag C++ callees and legacy rejection behavior.
 
 ## Source integrity
 
@@ -18,6 +18,9 @@ authoritative when reading any abbreviated table or diagram.
 | `ObjectVersion.h` | `378C49E3AF3542C87C95D7259B81FCB77A98077D438CCCFA227B2F90870A000A` |
 | `SavePackage.cpp` | `F36086C193B2496982CC283AED14849695F16D5D68BB062FE3BADD00D1093202` |
 | `SavePackage2.cpp` | `FCAD38167A8612068F1300419447A9BD379253057E35F0AD2E08AF82609B4200` |
+| `EngineVersion.cpp` | `BCFCE393AF77F09527EF2C7BA4EA9E6550A07E7C037265FD8DD87A4E64D81DFB` |
+| `EngineVersionBase.h` | `13FA34A8F2D6D5C01AC492E998AF8D25543B7ED159296CD08BCD1EB29A6DFB4C` |
+| `ObjectMacros.h` | `2BCF3EB5BA3013602FB5C02325DCFEF9B427779D3391A32D0F90D5D7A12FE20F` |
 
 ## How to read these views
 
@@ -48,6 +51,7 @@ and applicable preprocessor conditions.
 | `VER_UE4_ADD_STRING_ASSET_REFERENCES_MAP` | `ObjectVersion.h:364` |
 | `VER_UE4_CHANGED_CHUNKID_TO_BE_AN_ARRAY_OF_CHUNKIDS` | `ObjectVersion.h:245` |
 | `VER_UE4_COOKED_ASSETS_IN_EDITOR_SUPPORT` | `ObjectVersion.h:569` |
+| `VER_UE4_CORRECT_LICENSEE_FLAG` | `ObjectVersion.h:643` |
 | `VER_UE4_ENGINE_VERSION_OBJECT` | `ObjectVersion.h:265` |
 | `VER_UE4_LOAD_FOR_EDITOR_GAME` | `ObjectVersion.h:326` |
 | `VER_UE4_NON_OUTER_PACKAGE_IMPORT` | `ObjectVersion.h:639` |
@@ -406,6 +410,84 @@ and applicable preprocessor conditions.
 | — | No direct SA_VALUE sites inside this section; follow its called serializer |
 
 **6 source-anchored navigation nodes; 3 original conditional-directive lines; 0 serialized field sites.**
+
+## Epic UE4.26 engine-version correction inside package summary
+
+**Epic function:** `PackageFileSummary.cpp:33`
+
+| Step | Original source location | Exact C++ statement |
+|---|---|---|
+| `VERSION_CORRECTION01` | `PackageFileSummary.cpp:33` | `static void FixCorruptEngineVersion(int ObjectVersion, FEngineVersion& Version)` |
+| `VERSION_CORRECTION02` | `PackageFileSummary.cpp:37` | `if (ObjectVersion < VER_UE4_CORRECT_LICENSEE_FLAG` |
+| `VERSION_CORRECTION03` | `PackageFileSummary.cpp:38` | `&& Version.GetMajor() == 4` |
+| `VERSION_CORRECTION04` | `PackageFileSummary.cpp:39` | `&& Version.GetMinor() == 26` |
+| `VERSION_CORRECTION05` | `PackageFileSummary.cpp:40` | `&& Version.GetPatch() == 0` |
+| `VERSION_CORRECTION06` | `PackageFileSummary.cpp:41` | `&& Version.GetChangelist() >= 12740027` |
+| `VERSION_CORRECTION07` | `PackageFileSummary.cpp:42` | `&& Version.IsLicenseeVersion())` |
+| `VERSION_CORRECTION08` | `PackageFileSummary.cpp:44` | `Version.Set(4, 26, 0, Version.GetChangelist(), Version.GetBranch());` |
+
+### Actual conditional statements in the original Epic source
+
+| Source line | Original C++ condition or compile-time directive |
+|---|---|
+| `PackageFileSummary.cpp:37` | `if (ObjectVersion < VER_UE4_CORRECT_LICENSEE_FLAG` |
+
+### Serialized field sites in the Epic implementation
+
+| Source line | Field written/read by Epic |
+|---|---|
+| — | No direct SA_VALUE sites inside this section; follow its called serializer |
+
+**8 source-anchored navigation nodes; 1 original conditional-directive lines; 0 serialized field sites.**
+
+## FEngineVersionBase licensee-bit decoding and normalisation
+
+**Epic function:** `EngineVersion.cpp:20`
+
+| Step | Original source location | Exact C++ statement |
+|---|---|---|
+| `ENGINE_CHANGELIST01` | `EngineVersion.cpp:20` | `uint32 FEngineVersionBase::GetChangelist() const` |
+| `ENGINE_CHANGELIST02` | `EngineVersion.cpp:23` | `return Changelist & (uint32)0x7fffffffU;` |
+| `ENGINE_CHANGELIST03` | `EngineVersion.cpp:26` | `bool FEngineVersionBase::IsLicenseeVersion() const` |
+| `ENGINE_CHANGELIST04` | `EngineVersion.cpp:29` | `return (Changelist & (uint32)0x80000000U) != 0;` |
+| `ENGINE_CHANGELIST05` | `EngineVersion.cpp:90` | `void FEngineVersion::Set(uint16 InMajor, uint16 InMinor, uint16 InPatch, uint32 InChangelist, const FString &InBranch)` |
+| `ENGINE_CHANGELIST06` | `EngineVersion.cpp:95` | `Changelist = InChangelist;` |
+
+### Actual conditional statements in the original Epic source
+
+| Source line | Original C++ condition or compile-time directive |
+|---|---|
+
+### Serialized field sites in the Epic implementation
+
+| Source line | Field written/read by Epic |
+|---|---|
+| — | No direct SA_VALUE sites inside this section; follow its called serializer |
+
+**6 source-anchored navigation nodes; 0 original conditional-directive lines; 0 serialized field sites.**
+
+## Editor-only transient package flag and editor filter flag
+
+**Epic function:** `ObjectMacros.h:102`
+
+| Step | Original source location | Exact C++ statement |
+|---|---|---|
+| `PACKAGE_FLAGS01` | `ObjectMacros.h:103` | `enum EPackageFlags` |
+| `PACKAGE_FLAGS02` | `ObjectMacros.h:106` | `PKG_NewlyCreated				= 0x00000001,	///< Newly created package, not saved yet. In editor only.` |
+| `PACKAGE_FLAGS03` | `ObjectMacros.h:136` | `PKG_FilterEditorOnly			= 0x80000000,	///< Package has editor-only data filtered out` |
+
+### Actual conditional statements in the original Epic source
+
+| Source line | Original C++ condition or compile-time directive |
+|---|---|
+
+### Serialized field sites in the Epic implementation
+
+| Source line | Field written/read by Epic |
+|---|---|
+| — | No direct SA_VALUE sites inside this section; follow its called serializer |
+
+**3 source-anchored navigation nodes; 0 original conditional-directive lines; 0 serialized field sites.**
 
 ## Unexpanded calls and formats
 

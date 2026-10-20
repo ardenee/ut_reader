@@ -342,7 +342,11 @@ final class UnrealPackageReader4
 
         $this->header['totalHeaderSize'] = $r->i32();
         $this->header['folderName'] = $r->fstring();
-        $this->header['packageFlags'] = $r->u32();
+        $serializedPackageFlags = $r->u32();
+        $this->header['serializedPackageFlags'] = $serializedPackageFlags;
+        // Epic PackageFileSummary.cpp:184-189 (WITH_EDITOR, IsLoading):
+        // PKG_NewlyCreated is a transient flag and must not survive loading.
+        $this->header['packageFlags'] = $serializedPackageFlags & ~0x00000001;
         $this->header['nameCount'] = $r->i32();
         $this->header['nameOffset'] = $r->i32();
         $filterEditorOnly = (((int)$this->header['packageFlags']) & 0x80000000) !== 0;
@@ -380,8 +384,23 @@ final class UnrealPackageReader4
             $this->header['generations'][] = ['exportCount' => $r->i32(), 'nameCount' => $r->i32()];
         }
 
-        $this->header['savedByEngineVersion'] = $ue4Version >= self::VER_ENGINE_VERSION_OBJECT ? $this->readEngineVersion($r) : ['changelist' => $r->i32()];
-        $this->header['compatibleWithEngineVersion'] = $ue4Version >= self::VER_PACKAGE_SUMMARY_HAS_COMPATIBLE_ENGINE_VERSION ? $this->readEngineVersion($r) : $this->header['savedByEngineVersion'];
+        if ($ue4Version >= self::VER_ENGINE_VERSION_OBJECT) {
+            $this->header['savedByEngineVersion'] =
+                $this->fixCorruptEngineVersion($this->readEngineVersion($r), $ue4Version);
+        } else {
+            // Epic PackageFileSummary.cpp:289-296: legacy nonzero changelist
+            // becomes FEngineVersion(4,0,0,EngineChangelist,TEXT("")).
+            $changelist = $r->i32();
+            $this->header['savedByEngineVersion'] = $changelist !== 0
+                ? ['major' => 4, 'minor' => 0, 'patch' => 0, 'changelist' => $changelist,
+                    'serializedChangelist' => $changelist, 'branch' => '']
+                : ['major' => 0, 'minor' => 0, 'patch' => 0, 'changelist' => 0,
+                    'serializedChangelist' => 0, 'branch' => ''];
+        }
+        $this->header['compatibleWithEngineVersion'] =
+            $ue4Version >= self::VER_PACKAGE_SUMMARY_HAS_COMPATIBLE_ENGINE_VERSION
+                ? $this->fixCorruptEngineVersion($this->readEngineVersion($r), $ue4Version)
+                : $this->header['savedByEngineVersion'];
         $this->header['compressionFlags'] = $r->u32();
         // Epic FCompression::VerifyCompressionFlagsValid permits only the
         // deprecated format and option masks (0x0F | 0xF0).
@@ -398,6 +417,11 @@ final class UnrealPackageReader4
         $this->header['additionalPackagesToCook'] = $this->readStringArray($r);
         if ($legacy > -7) {
             $this->header['textureAllocationsRemoved'] = $r->i32();
+            // Epic PackageFileSummary.cpp:346-351: the deprecated value
+            // MUST be zero (check(NumTextureAllocations == 0)).
+            if ($this->header['textureAllocationsRemoved'] !== 0) {
+                throw new RuntimeException('UE4 package has nonzero removed texture allocations count.');
+            }
         }
         $this->header['assetRegistryDataOffset'] = $r->i32();
         $this->header['bulkDataStartOffset'] = $r->i64();
@@ -466,7 +490,37 @@ final class UnrealPackageReader4
 
     private function readEngineVersion(UE4BinaryReader $r): array
     {
-        return ['major' => $r->u16(), 'minor' => $r->u16(), 'patch' => $r->u16(), 'changelist' => $r->u32(), 'branch' => $r->fstring()];
+        $major = $r->u16();
+        $minor = $r->u16();
+        $patch = $r->u16();
+        $rawChangelist = $r->u32();
+        return [
+            'major' => $major, 'minor' => $minor, 'patch' => $patch,
+            // Epic FEngineVersionBase::GetChangelist masks the licensee bit.
+            'changelist' => $rawChangelist & 0x7FFFFFFF,
+            'serializedChangelist' => $rawChangelist,
+            'effectiveChangelistRaw' => $rawChangelist,
+            'isLicenseeVersion' => ($rawChangelist & 0x80000000) !== 0,
+            'branch' => $r->fstring(),
+        ];
+    }
+
+    private function fixCorruptEngineVersion(array $engineVersion, int $ue4Version): array
+    {
+        // Exact Epic PackageFileSummary.cpp:33-45 conditions; this applies
+        // separately to SavedByEngineVersion and CompatibleWithEngineVersion.
+        if ($ue4Version < self::VER_CORRECT_LICENSEE_FLAG
+            && $engineVersion['major'] === 4
+            && $engineVersion['minor'] === 26
+            && $engineVersion['patch'] === 0
+            && $engineVersion['changelist'] >= 12740027
+            && $engineVersion['isLicenseeVersion']) {
+            // FEngineVersion::Set clears the incorrect licensee bit while
+            // the original on-disk 32-bit word remains separately available.
+            $engineVersion['effectiveChangelistRaw'] = $engineVersion['changelist'];
+            $engineVersion['isLicenseeVersion'] = false;
+        }
+        return $engineVersion;
     }
 
     private function readCompressedChunks(UE4BinaryReader $r): array

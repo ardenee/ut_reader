@@ -1,0 +1,12 @@
+flowchart TD
+  ENGINE_CHANGELIST01["ENGINE_CHANGELIST01 uint32 FEngineVersionBase::GetChangelist() const<br/>EngineVersion.cpp:20"]
+  ENGINE_CHANGELIST02["ENGINE_CHANGELIST02 return Changelist & (uint32)0x7fffffffU;<br/>EngineVersion.cpp:23"]
+  ENGINE_CHANGELIST01 --> ENGINE_CHANGELIST02
+  ENGINE_CHANGELIST03["ENGINE_CHANGELIST03 bool FEngineVersionBase::IsLicenseeVersion() const<br/>EngineVersion.cpp:26"]
+  ENGINE_CHANGELIST02 --> ENGINE_CHANGELIST03
+  ENGINE_CHANGELIST04["ENGINE_CHANGELIST04 return (Changelist & (uint32)0x80000000U) != 0;<br/>EngineVersion.cpp:29"]
+  ENGINE_CHANGELIST03 --> ENGINE_CHANGELIST04
+  ENGINE_CHANGELIST05["ENGINE_CHANGELIST05 void FEngineVersion::Set(uint16 InMajor, uint16 InMinor, uint16 InP...<br/>EngineVersion.cpp:90"]
+  ENGINE_CHANGELIST04 --> ENGINE_CHANGELIST05
+  ENGINE_CHANGELIST06["ENGINE_CHANGELIST06 Changelist = InChangelist;<br/>EngineVersion.cpp:95"]
+  ENGINE_CHANGELIST05 --> ENGINE_CHANGELIST06

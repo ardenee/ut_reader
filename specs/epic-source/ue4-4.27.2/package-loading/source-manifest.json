@@ -3,7 +3,7 @@
   "engine": "UE4.27.2",
   "pinned_source_revision": "d94b38ae3446da52224bedd2568c078f828b4039",
   "source_root": "L:/Source/Engine/UE4/UE 4.27.2",
-  "scope": "Original Epic C++ classic package linker initialization, summary serialization, FObjectImport/FObjectExport and table loading. Not a full engine behavior or object payload trace.",
+  "scope": "Original Epic C++ classic package linker initialization, summary serialization, FObjectImport/FObjectExport and table loading. Not a full engine behavior or object payload trace. Also includes Epic engine-version, package-flag C++ callees and legacy rejection behavior.",
   "end_to_end_complete": false,
   "files": [
     {
@@ -35,6 +35,21 @@
       "id": "SavePackage2.cpp",
       "path": "Engine/Source/Runtime/CoreUObject/Private/UObject/SavePackage2.cpp",
       "sha256": "FCAD38167A8612068F1300419447A9BD379253057E35F0AD2E08AF82609B4200"
+    },
+    {
+      "id": "EngineVersion.cpp",
+      "path": "Engine/Source/Runtime/Core/Private/Misc/EngineVersion.cpp",
+      "sha256": "BCFCE393AF77F09527EF2C7BA4EA9E6550A07E7C037265FD8DD87A4E64D81DFB"
+    },
+    {
+      "id": "EngineVersionBase.h",
+      "path": "Engine/Source/Runtime/Core/Public/Misc/EngineVersionBase.h",
+      "sha256": "13FA34A8F2D6D5C01AC492E998AF8D25543B7ED159296CD08BCD1EB29A6DFB4C"
+    },
+    {
+      "id": "ObjectMacros.h",
+      "path": "Engine/Source/Runtime/CoreUObject/Public/UObject/ObjectMacros.h",
+      "sha256": "2BCF3EB5BA3013602FB5C02325DCFEF9B427779D3391A32D0F90D5D7A12FE20F"
     }
   ],
   "groups": [
@@ -447,6 +462,142 @@
         [
           3736,
           3758
+        ]
+      ]
+    },
+    {
+      "id": "version_correction",
+      "title": "Epic UE4.26 engine-version correction inside package summary",
+      "file": "PackageFileSummary.cpp",
+      "function_line": 33,
+      "sections": [
+        [
+          33,
+          46
+        ]
+      ],
+      "steps": [
+        [
+          33,
+          "FixCorruptEngineVersion("
+        ],
+        [
+          37,
+          "ObjectVersion < VER_UE4_CORRECT_LICENSEE_FLAG"
+        ],
+        [
+          38,
+          "Version.GetMajor() == 4"
+        ],
+        [
+          39,
+          "Version.GetMinor() == 26"
+        ],
+        [
+          40,
+          "Version.GetPatch() == 0"
+        ],
+        [
+          41,
+          "Version.GetChangelist() >= 12740027"
+        ],
+        [
+          42,
+          "Version.IsLicenseeVersion()"
+        ],
+        [
+          44,
+          "Version.Set(4, 26, 0"
+        ]
+      ],
+      "condition_ranges": [
+        [
+          33,
+          46
+        ]
+      ]
+    },
+    {
+      "id": "engine_changelist",
+      "title": "FEngineVersionBase licensee-bit decoding and normalisation",
+      "file": "EngineVersion.cpp",
+      "function_line": 20,
+      "sections": [
+        [
+          20,
+          31
+        ],
+        [
+          90,
+          97
+        ]
+      ],
+      "steps": [
+        [
+          20,
+          "FEngineVersionBase::GetChangelist()"
+        ],
+        [
+          23,
+          "Changelist & (uint32)0x7fffffffU"
+        ],
+        [
+          26,
+          "FEngineVersionBase::IsLicenseeVersion()"
+        ],
+        [
+          29,
+          "Changelist & (uint32)0x80000000U"
+        ],
+        [
+          90,
+          "FEngineVersion::Set("
+        ],
+        [
+          95,
+          "Changelist = InChangelist"
+        ]
+      ],
+      "condition_ranges": [
+        [
+          20,
+          31
+        ],
+        [
+          90,
+          97
+        ]
+      ]
+    },
+    {
+      "id": "package_flags",
+      "title": "Editor-only transient package flag and editor filter flag",
+      "file": "ObjectMacros.h",
+      "function_line": 102,
+      "sections": [
+        [
+          102,
+          137
+        ]
+      ],
+      "steps": [
+        [
+          103,
+          "enum EPackageFlags"
+        ],
+        [
+          106,
+          "PKG_NewlyCreated"
+        ],
+        [
+          136,
+          "PKG_FilterEditorOnly"
+        ]
+      ],
+      "condition_ranges": [
+        [
+          102,
+          137
         ]
       ]
     }

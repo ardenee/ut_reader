@@ -19,6 +19,9 @@ th{background:#e9eff4}tr{page-break-inside:avoid}thead{display:table-header-grou
 <tr><td>ObjectVersion.h</td><td><code>378C49E3AF3542C87C95D7259B81FCB77A98077D438CCCFA227B2F90870A000A</code></td></tr>
 <tr><td>SavePackage.cpp</td><td><code>F36086C193B2496982CC283AED14849695F16D5D68BB062FE3BADD00D1093202</code></td></tr>
 <tr><td>SavePackage2.cpp</td><td><code>FCAD38167A8612068F1300419447A9BD379253057E35F0AD2E08AF82609B4200</code></td></tr>
+<tr><td>EngineVersion.cpp</td><td><code>BCFCE393AF77F09527EF2C7BA4EA9E6550A07E7C037265FD8DD87A4E64D81DFB</code></td></tr>
+<tr><td>EngineVersionBase.h</td><td><code>13FA34A8F2D6D5C01AC492E998AF8D25543B7ED159296CD08BCD1EB29A6DFB4C</code></td></tr>
+<tr><td>ObjectMacros.h</td><td><code>2BCF3EB5BA3013602FB5C02325DCFEF9B427779D3391A32D0F90D5D7A12FE20F</code></td></tr>
 </table><p>Diagram arrows show source statement order only. Every relevant
  C++ conditional must be followed at its cited source line.</p>
 <h2>Version symbols in the original Epic source</h2>
@@ -33,6 +36,7 @@ th{background:#e9eff4}tr{page-break-inside:avoid}thead{display:table-header-grou
 <tr><td><code>VER_UE4_ADD_STRING_ASSET_REFERENCES_MAP</code></td><td>ObjectVersion.h:364</td></tr>
 <tr><td><code>VER_UE4_CHANGED_CHUNKID_TO_BE_AN_ARRAY_OF_CHUNKIDS</code></td><td>ObjectVersion.h:245</td></tr>
 <tr><td><code>VER_UE4_COOKED_ASSETS_IN_EDITOR_SUPPORT</code></td><td>ObjectVersion.h:569</td></tr>
+<tr><td><code>VER_UE4_CORRECT_LICENSEE_FLAG</code></td><td>ObjectVersion.h:643</td></tr>
 <tr><td><code>VER_UE4_ENGINE_VERSION_OBJECT</code></td><td>ObjectVersion.h:265</td></tr>
 <tr><td><code>VER_UE4_LOAD_FOR_EDITOR_GAME</code></td><td>ObjectVersion.h:326</td></tr>
 <tr><td><code>VER_UE4_NON_OUTER_PACKAGE_IMPORT</code></td><td>ObjectVersion.h:639</td></tr>
@@ -322,6 +326,51 @@ th{background:#e9eff4}tr{page-break-inside:avoid}thead{display:table-header-grou
 <tr><td>SavePackage.cpp:3737</td><td class='snippet'>if (!(Linker-&gt;Summary.PackageFlags &amp; PKG_FilterEditorOnly))</td></tr>
 <tr><td>SavePackage.cpp:3744</td><td class='snippet'>if (!bTextFormat)</td></tr>
 <tr><td>SavePackage.cpp:3746</td><td class='snippet'>#if WITH_EDITOR</td></tr>
+</table>
+<h3>Serialized fields in source order</h3><table><tr><th>Source</th><th>Serialized field</th></tr>
+<tr><td>—</td><td>No direct SA_VALUE sites in this function</td></tr>
+</table>
+<h2>Epic UE4.26 engine-version correction inside package summary</h2>
+<p><b>Epic function:</b> PackageFileSummary.cpp:33</p>
+<table><thead><tr><th>Step</th><th>Source</th><th>Exact Epic statement</th></tr></thead><tbody>
+<tr><td>VERSION_CORRECTION01</td><td>PackageFileSummary.cpp:33</td><td class='snippet'>static void FixCorruptEngineVersion(int ObjectVersion, FEngineVersion&amp; Version)</td></tr>
+<tr><td>VERSION_CORRECTION02</td><td>PackageFileSummary.cpp:37</td><td class='snippet'>if (ObjectVersion &lt; VER_UE4_CORRECT_LICENSEE_FLAG</td></tr>
+<tr><td>VERSION_CORRECTION03</td><td>PackageFileSummary.cpp:38</td><td class='snippet'>&amp;&amp; Version.GetMajor() == 4</td></tr>
+<tr><td>VERSION_CORRECTION04</td><td>PackageFileSummary.cpp:39</td><td class='snippet'>&amp;&amp; Version.GetMinor() == 26</td></tr>
+<tr><td>VERSION_CORRECTION05</td><td>PackageFileSummary.cpp:40</td><td class='snippet'>&amp;&amp; Version.GetPatch() == 0</td></tr>
+<tr><td>VERSION_CORRECTION06</td><td>PackageFileSummary.cpp:41</td><td class='snippet'>&amp;&amp; Version.GetChangelist() &gt;= 12740027</td></tr>
+<tr><td>VERSION_CORRECTION07</td><td>PackageFileSummary.cpp:42</td><td class='snippet'>&amp;&amp; Version.IsLicenseeVersion())</td></tr>
+<tr><td>VERSION_CORRECTION08</td><td>PackageFileSummary.cpp:44</td><td class='snippet'>Version.Set(4, 26, 0, Version.GetChangelist(), Version.GetBranch());</td></tr>
+</tbody></table>
+<h3>Conditional statements in this original Epic source path</h3><table><tr><th>Source</th><th>Original C++ condition</th></tr>
+<tr><td>PackageFileSummary.cpp:37</td><td class='snippet'>if (ObjectVersion &lt; VER_UE4_CORRECT_LICENSEE_FLAG</td></tr>
+</table>
+<h3>Serialized fields in source order</h3><table><tr><th>Source</th><th>Serialized field</th></tr>
+<tr><td>—</td><td>No direct SA_VALUE sites in this function</td></tr>
+</table>
+<h2>FEngineVersionBase licensee-bit decoding and normalisation</h2>
+<p><b>Epic function:</b> EngineVersion.cpp:20</p>
+<table><thead><tr><th>Step</th><th>Source</th><th>Exact Epic statement</th></tr></thead><tbody>
+<tr><td>ENGINE_CHANGELIST01</td><td>EngineVersion.cpp:20</td><td class='snippet'>uint32 FEngineVersionBase::GetChangelist() const</td></tr>
+<tr><td>ENGINE_CHANGELIST02</td><td>EngineVersion.cpp:23</td><td class='snippet'>return Changelist &amp; (uint32)0x7fffffffU;</td></tr>
+<tr><td>ENGINE_CHANGELIST03</td><td>EngineVersion.cpp:26</td><td class='snippet'>bool FEngineVersionBase::IsLicenseeVersion() const</td></tr>
+<tr><td>ENGINE_CHANGELIST04</td><td>EngineVersion.cpp:29</td><td class='snippet'>return (Changelist &amp; (uint32)0x80000000U) != 0;</td></tr>
+<tr><td>ENGINE_CHANGELIST05</td><td>EngineVersion.cpp:90</td><td class='snippet'>void FEngineVersion::Set(uint16 InMajor, uint16 InMinor, uint16 InPatch, uint32 InChangelist, const FString &amp;InBranch)</td></tr>
+<tr><td>ENGINE_CHANGELIST06</td><td>EngineVersion.cpp:95</td><td class='snippet'>Changelist = InChangelist;</td></tr>
+</tbody></table>
+<h3>Conditional statements in this original Epic source path</h3><table><tr><th>Source</th><th>Original C++ condition</th></tr>
+</table>
+<h3>Serialized fields in source order</h3><table><tr><th>Source</th><th>Serialized field</th></tr>
+<tr><td>—</td><td>No direct SA_VALUE sites in this function</td></tr>
+</table>
+<h2>Editor-only transient package flag and editor filter flag</h2>
+<p><b>Epic function:</b> ObjectMacros.h:102</p>
+<table><thead><tr><th>Step</th><th>Source</th><th>Exact Epic statement</th></tr></thead><tbody>
+<tr><td>PACKAGE_FLAGS01</td><td>ObjectMacros.h:103</td><td class='snippet'>enum EPackageFlags</td></tr>
+<tr><td>PACKAGE_FLAGS02</td><td>ObjectMacros.h:106</td><td class='snippet'>PKG_NewlyCreated				= 0x00000001,	///&lt; Newly created package, not saved yet. In editor only.</td></tr>
+<tr><td>PACKAGE_FLAGS03</td><td>ObjectMacros.h:136</td><td class='snippet'>PKG_FilterEditorOnly			= 0x80000000,	///&lt; Package has editor-only data filtered out</td></tr>
+</tbody></table>
+<h3>Conditional statements in this original Epic source path</h3><table><tr><th>Source</th><th>Original C++ condition</th></tr>
 </table>
 <h3>Serialized fields in source order</h3><table><tr><th>Source</th><th>Serialized field</th></tr>
 <tr><td>—</td><td>No direct SA_VALUE sites in this function</td></tr>
