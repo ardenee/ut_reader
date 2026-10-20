@@ -20,7 +20,7 @@ I22,LinkerLoad.cpp:3209,return false;,,,NOT_CHECKED,
 I03,LinkerLoad.cpp:3221,if (Import.OuterIndex.IsNull() && Import.ClassName!=NAME_Package ),,,NOT_CHECKED,
 I23,LinkerLoad.cpp:3225,return false;,,,NOT_CHECKED,
 I04,LinkerLoad.cpp:3228,else if (Import.OuterIndex.IsNull()),,,NOT_CHECKED,
-I05,LinkerLoad.cpp:3241,if (Import.HasPackageName()),,,NOT_CHECKED,
+I05,LinkerLoad.cpp:3241,if (Import.HasPackageName()),UE4/UnrealPackageReader.php:691-713; catalog/src/Infrastructure/Metadata/CatalogParsedPackageMetadataSnapshotBuilder.php,CatalogParsedPackageMetadataSnapshotBuilder::buildParsedSections,SOURCE_METADATA_PRESERVED_RUNTIME_UNVERIFIED,Parsed PackageName is retained; native source linker acquisition and instancing not reproduced by this mapping.
 I06,LinkerLoad.cpp:3253,if (Import.OuterIndex.IsImport()),,,NOT_CHECKED,
 I07,LinkerLoad.cpp:3281,if (!Import.SourceLinker),,,NOT_CHECKED,
 I08,LinkerLoad.cpp:3288,check(Import.OuterIndex.IsExport());,,,NOT_CHECKED,

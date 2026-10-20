@@ -152,16 +152,16 @@ STEP_imports_02,ObjectResource.cpp:288,loader_step,"Record << SA_VALUE(TEXT(""Cl
 STEP_imports_03,ObjectResource.cpp:289,loader_step,"Record << SA_VALUE(TEXT(""OuterIndex""), I.OuterIndex);",,,NOT_CHECKED,
 STEP_imports_04,ObjectResource.cpp:290,loader_step,"Record << SA_VALUE(TEXT(""ObjectName""), I.ObjectName);",,,NOT_CHECKED,
 STEP_imports_05,ObjectResource.cpp:294,loader_step,if (Slot.GetUnderlyingArchive().UE4Ver() >= VER_UE4_NON_OUTER_PACKAGE_IMPORT && !Slot.GetUnderlyingArchive().IsFilterEditorOnly()),,,NOT_CHECKED,
-STEP_imports_06,ObjectResource.cpp:296,loader_step,"Record << SA_VALUE(TEXT(""PackageName""), I.PackageName);",,,NOT_CHECKED,
+STEP_imports_06,ObjectResource.cpp:296,loader_step,"Record << SA_VALUE(TEXT(""PackageName""), I.PackageName);",UE4/UnrealPackageReader.php:691-713; catalog/src/Infrastructure/Metadata/CatalogParsedPackageMetadataSnapshotBuilder.php,CatalogParsedPackageMetadataSnapshotBuilder::buildParsedSections,SOURCE_MAPPED_NOT_RUNTIME_VERIFIED,FObjectImport::PackageName is preserved if serialized; NAME_None is not a provider override. Full cross-linker VerifyImport semantics remain outstanding.
 STEP_imports_07,ObjectResource.cpp:302,loader_step,I.SourceLinker = NULL;,,,NOT_CHECKED,
 GATE_imports_293,ObjectResource.cpp:293,branch_gate,#if WITH_EDITORONLY_DATA,,,NOT_CHECKED,
-GATE_imports_294,ObjectResource.cpp:294,branch_gate,if (Slot.GetUnderlyingArchive().UE4Ver() >= VER_UE4_NON_OUTER_PACKAGE_IMPORT && !Slot.GetUnderlyingArchive().IsFilterEditorOnly()),,,NOT_CHECKED,
+GATE_imports_294,ObjectResource.cpp:294,branch_gate,if (Slot.GetUnderlyingArchive().UE4Ver() >= VER_UE4_NON_OUTER_PACKAGE_IMPORT && !Slot.GetUnderlyingArchive().IsFilterEditorOnly()),UE4/UnrealPackageReader.php:686-693,CatalogParsedPackageMetadataSnapshotBuilder::buildParsedSections,SOURCE_MAPPED_NOT_RUNTIME_VERIFIED,Version gate is defined by pinned Epic C++ 520; WITH_EDITORONLY_DATA and editor filtering remain target-configuration-sensitive.
 GATE_imports_300,ObjectResource.cpp:300,branch_gate,if (Slot.GetUnderlyingArchive().IsLoading()),,,NOT_CHECKED,
 FIELD_imports_287_ClassPackage,ObjectResource.cpp:287,wire_field,ClassPackage,,,NOT_CHECKED,
 FIELD_imports_288_ClassName,ObjectResource.cpp:288,wire_field,ClassName,,,NOT_CHECKED,
 FIELD_imports_289_OuterIndex,ObjectResource.cpp:289,wire_field,OuterIndex,,,NOT_CHECKED,
 FIELD_imports_290_ObjectName,ObjectResource.cpp:290,wire_field,ObjectName,,,NOT_CHECKED,
-FIELD_imports_296_PackageName,ObjectResource.cpp:296,wire_field,PackageName,,,NOT_CHECKED,
+FIELD_imports_296_PackageName,ObjectResource.cpp:296,wire_field,PackageName,UE4/UnrealPackageReader.php:691-713; catalog/src/Infrastructure/Metadata/CatalogParsedPackageMetadataSnapshotBuilder.php,CatalogParsedPackageMetadataSnapshotBuilder::buildParsedSections,SOURCE_MAPPED_NOT_RUNTIME_VERIFIED,The parser preserves FName index/number/text; newly built parsed snapshot preserves serialized PackageName. Existing persisted UEDB4 records are not migrated.
 STEP_exports_01,ObjectResource.cpp:110,loader_step,"Record << SA_VALUE(TEXT(""ClassIndex""), E.ClassIndex);",,,NOT_CHECKED,
 STEP_exports_02,ObjectResource.cpp:111,loader_step,"Record << SA_VALUE(TEXT(""SuperIndex""), E.SuperIndex);",,,NOT_CHECKED,
 STEP_exports_03,ObjectResource.cpp:113,loader_step,if (BaseArchive.UE4Ver() >= VER_UE4_TemplateIndex_IN_COOKED_EXPORTS),,,NOT_CHECKED,

@@ -284,7 +284,37 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
                 ? $this->fnameIndex($row['objectPackage'] ?? ($row['ObjectPackage'] ?? null))
                 : null;
             $objectNameIndex = $this->fnameIndex($row['objectName'] ?? ($row['ObjectName'] ?? null));
-            foreach (array_unique([$classPackageNameIndex, $classNameIndex, $objectPackageNameIndex, $objectNameIndex]) as $nameIndex) {
+            // UE4.27 ObjectResource.cpp::operator<<(FObjectImport&) writes an
+            // independent FName PackageName at the source-defined version /
+            // editor-only gate. Preserve it: the outer import may belong to
+            // a different package, so the outer path is not a substitute.
+            $serializedPackageNamePresent = $engineKey === 'UE4' && (
+                !empty($row['packageNamePresent'])
+                || (!array_key_exists('packageNamePresent', $row)
+                    && (array_key_exists('packageName', $row) || array_key_exists('PackageName', $row)))
+            );
+            $serializedPackageName = $serializedPackageNamePresent
+                ? ($row['packageName'] ?? $row['PackageName'] ?? null)
+                : null;
+            $serializedPackageNameText = $serializedPackageNamePresent
+                ? (string)($row['packageNameText'] ?? (
+                    is_array($serializedPackageName) ? ($serializedPackageName['text'] ?? '') : ''
+                ))
+                : '';
+            $serializedPackageNameIndex = $serializedPackageNamePresent
+                ? $this->fnameIndex($serializedPackageName)
+                : null;
+            $hasExplicitPackageName = $serializedPackageNamePresent
+                && $serializedPackageNameText !== ''
+                && strcasecmp($serializedPackageNameText, 'None') !== 0;
+            $outerRootPackage = $rootPackage;
+            // Epic VerifyImportInner selects Import.GetPackageName() when set,
+            // rather than always using the serialized outer's package. Keep
+            // outer-root identity separately for display and diagnostics.
+            if ($hasExplicitPackageName) {
+                $rootPackage = $serializedPackageNameText;
+            }
+            foreach (array_unique([$classPackageNameIndex, $classNameIndex, $objectPackageNameIndex, $objectNameIndex, $serializedPackageNameIndex]) as $nameIndex) {
                 if ($nameIndex !== null && isset($nameUsage[$nameIndex])) {
                     $nameUsage[$nameIndex]['imports_count']++;
                     $nameUsage[$nameIndex]['first_import_index'] ??= (int)$index;
@@ -303,8 +333,16 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
                 'object_package_present' => $objectPackagePresent ? 1 : 0,
                 'object_package' => $objectPackage,
                 'object_package_name_index' => $objectPackageNameIndex,
+                'serialized_package_name_present' => $serializedPackageNamePresent ? 1 : 0,
+                'serialized_package_name' => $serializedPackageNameText,
+                'serialized_package_name_index' => $serializedPackageNameIndex,
+                'serialized_package_name_number' => $serializedPackageNamePresent
+                    ? $this->fnameNumber($serializedPackageName) : null,
+                'package_name_present' => $hasExplicitPackageName ? 1 : 0,
+                'package_name' => $hasExplicitPackageName ? $serializedPackageNameText : '',
                 'outer_index' => (int)($row['outerIndex'] ?? $row['OuterIndex'] ?? $row['outer'] ?? 0),
                 'full_path' => $fullPath,
+                'outer_root_package' => $outerRootPackage,
                 'root_package' => $rootPackage,
                 'relative_object_path' => $relativeObjectPath,
                 'is_common' => in_array(strtolower($rootPackage), $common, true) ? 1 : 0,

@@ -65,34 +65,81 @@ $check(
         && str_contains($source, '$version = (int)$this->header[\'version\'];'),
     'UE4.27.2 serializes FObjectImport::PackageName only at VER_UE4_NON_OUTER_PACKAGE_IMPORT+ when editor-only data is not filtered.'
 );
+// The CURRENT Epic 4.27 writers emit FName references; the reader also
+// retains an earlier-format branch. This check only guards that behavior
+// and does not certify the historical format from 4.27 writer source.
 $check(
-    'soft_package_references_are_fname_entries',
+    'soft_package_references_preserve_explicit_format_branches',
     is_string($source)
-        && str_contains($source, '$path = $this->fnameText($this->readFName($r));')
-        && !str_contains($source, '$subPath = trim($r->fstring());'),
-    'UE4 SavePackage and SavePackage2 write SoftPackageReferenceList as FName entries (two int32 words), not FSoftObjectPath.'
+        && str_contains($source, '$legacyStrings =')
+        && str_contains($source, '? $r->fstring()')
+        && str_contains($source, ': $this->fnameText($this->readFName($r));'),
+    'Current Epic SavePackage/SavePackage2 use FName; the historical FString branch requires version-specific Epic evidence.'
 );
+
+// Compare the actual reader constant values with a JSON reference generated
+// exclusively from pinned Epic ObjectVersion.h (never PHP-shaped expectations).
+$epicEnumFile = dirname(__DIR__, 2) . '/specs/epic-source/ue4-4.27.2/package-loading/epic-version-enum.json';
+$epicEnum = is_file($epicEnumFile) ? json_decode((string)file_get_contents($epicEnumFile), true) : null;
+$versionMap = [
+    'VER_SERIALIZE_TEXT_IN_PACKAGES' => 'VER_UE4_SERIALIZE_TEXT_IN_PACKAGES',
+    'VER_ADD_STRING_ASSET_REFERENCES_MAP' => 'VER_UE4_ADD_STRING_ASSET_REFERENCES_MAP',
+    'VER_ADDED_SEARCHABLE_NAMES' => 'VER_UE4_ADDED_SEARCHABLE_NAMES',
+    'VER_ENGINE_VERSION_OBJECT' => 'VER_UE4_ENGINE_VERSION_OBJECT',
+    'VER_PACKAGE_SUMMARY_HAS_COMPATIBLE_ENGINE_VERSION' => 'VER_UE4_PACKAGE_SUMMARY_HAS_COMPATIBLE_ENGINE_VERSION',
+    'VER_WORLD_LEVEL_INFO' => 'VER_UE4_WORLD_LEVEL_INFO',
+    'VER_WORLD_LEVEL_INFO_UPDATED' => 'VER_UE4_WORLD_LEVEL_INFO_UPDATED',
+    'VER_WORLD_LEVEL_INFO_LOD_LIST' => 'VER_UE4_WORLD_LEVEL_INFO_LOD_LIST',
+    'VER_WORLD_LEVEL_INFO_ZORDER' => 'VER_UE4_WORLD_LEVEL_INFO_ZORDER',
+    'VER_WORLD_LAYER_ENABLE_DISTANCE_STREAMING' => 'VER_UE4_WORLD_LAYER_ENABLE_DISTANCE_STREAMING',
+    'VER_ADDED_CHUNKID_TO_ASSETDATA_AND_UPACKAGE' => 'VER_UE4_ADDED_CHUNKID_TO_ASSETDATA_AND_UPACKAGE',
+    'VER_CHANGED_CHUNKID_TO_BE_AN_ARRAY_OF_CHUNKIDS' => 'VER_UE4_CHANGED_CHUNKID_TO_BE_AN_ARRAY_OF_CHUNKIDS',
+    'VER_ASSETREGISTRY_DEPENDENCYFLAGS' => 'VER_UE4_ASSETREGISTRY_DEPENDENCYFLAGS',
+    'VER_PRELOAD_DEPENDENCIES_IN_COOKED_EXPORTS' => 'VER_UE4_PRELOAD_DEPENDENCIES_IN_COOKED_EXPORTS',
+    'VER_TEMPLATE_INDEX_IN_COOKED_EXPORTS' => 'VER_UE4_TemplateIndex_IN_COOKED_EXPORTS',
+    'VER_LOAD_FOR_EDITOR_GAME' => 'VER_UE4_LOAD_FOR_EDITOR_GAME',
+    'VER_COOKED_ASSETS_IN_EDITOR_SUPPORT' => 'VER_UE4_COOKED_ASSETS_IN_EDITOR_SUPPORT',
+    'VER_64BIT_EXPORTMAP_SERIALSIZES' => 'VER_UE4_64BIT_EXPORTMAP_SERIALSIZES',
+    'VER_NAME_HASHES_SERIALIZED' => 'VER_UE4_NAME_HASHES_SERIALIZED',
+    'VER_ADDED_SOFT_OBJECT_PATH' => 'VER_UE4_ADDED_SOFT_OBJECT_PATH',
+    'VER_ADDED_PACKAGE_SUMMARY_LOCALIZATION_ID' => 'VER_UE4_ADDED_PACKAGE_SUMMARY_LOCALIZATION_ID',
+    'VER_ADDED_PACKAGE_OWNER' => 'VER_UE4_ADDED_PACKAGE_OWNER',
+    'VER_NON_OUTER_PACKAGE_IMPORT' => 'VER_UE4_NON_OUTER_PACKAGE_IMPORT',
+    'VER_OLDEST_LOADABLE_PACKAGE' => 'VER_UE4_OLDEST_LOADABLE_PACKAGE',
+    'DEFAULT_ASSUMED_UNVERSIONED_UE4_VERSION' => 'VER_UE4_AUTOMATIC_VERSION',
+];
+$reflection = new ReflectionClass(UnrealPackageReader4::class);
+$expectedReaderConstants = [];
+foreach ($reflection->getReflectionConstants() as $constant) {
+    if (preg_match('/^(?:VER_[A-Z_0-9]+|DEFAULT_ASSUMED_UNVERSIONED_UE4_VERSION)$/', $constant->getName()) === 1) {
+        $expectedReaderConstants[] = $constant->getName();
+    }
+}
+sort($expectedReaderConstants);
+$mappedConstants = array_keys($versionMap);
+sort($mappedConstants);
+$sourceErrors = [];
+if (!is_array($epicEnum)
+    || ($epicEnum['epic_sha256'] ?? '') !== '378C49E3AF3542C87C95D7259B81FCB77A98077D438CCCFA227B2F90870A000A'
+    || $mappedConstants !== $expectedReaderConstants) {
+    $sourceErrors[] = 'Pinned Epic enum or complete UE4 reader constant inventory unavailable/mismatched.';
+} else {
+    foreach ($versionMap as $phpConstant => $epicName) {
+        $value = $epicEnum['members'][$epicName]['value'] ?? null;
+        $reflectionConstant = $reflection->getReflectionConstant($phpConstant);
+        if (!is_int($value)
+            || $reflectionConstant === false
+            || $reflectionConstant->getValue() !== $value) {
+            $sourceErrors[] = $phpConstant . ' does not match Epic ' . $epicName . '.';
+        }
+    }
+}
 $check(
     'ue4_427_version_gates_match_source_exactly',
-    is_string($source)
-        && str_contains($source, 'VER_SERIALIZE_TEXT_IN_PACKAGES = 459')
-        && str_contains($source, 'VER_ADD_STRING_ASSET_REFERENCES_MAP = 384')
-        && str_contains($source, 'VER_ENGINE_VERSION_OBJECT = 336')
-        && str_contains($source, 'VER_PACKAGE_SUMMARY_HAS_COMPATIBLE_ENGINE_VERSION = 444')
-        && str_contains($source, 'VER_LOAD_FOR_EDITOR_GAME = 365')
-        && str_contains($source, 'VER_COOKED_ASSETS_IN_EDITOR_SUPPORT = 485')
-        && str_contains($source, 'VER_NAME_HASHES_SERIALIZED = 504')
-        && str_contains($source, 'VER_PRELOAD_DEPENDENCIES_IN_COOKED_EXPORTS = 507')
-        && str_contains($source, 'VER_TEMPLATE_INDEX_IN_COOKED_EXPORTS = 508')
-        && str_contains($source, 'VER_ADDED_SEARCHABLE_NAMES = 510')
-        && str_contains($source, 'VER_64BIT_EXPORTMAP_SERIALSIZES = 511')
-        && str_contains($source, 'VER_ADDED_SOFT_OBJECT_PATH = 514')
-        && str_contains($source, 'VER_ADDED_PACKAGE_SUMMARY_LOCALIZATION_ID = 516')
-        && str_contains($source, 'VER_ADDED_PACKAGE_OWNER = 518')
-        && str_contains($source, 'VER_NON_OUTER_PACKAGE_IMPORT = 520')
-        && str_contains($source, 'DEFAULT_ASSUMED_UNVERSIONED_UE4_VERSION = 522')
-        && str_contains($source, 'VAR_UE4_ARRAY_PROPERTY_INNER_TAGS'),
-    'Reader constants must match the complete UE4.27.2 enum, including VAR_UE4_ARRAY_PROPERTY_INNER_TAGS; UT4 clean-master shares the historical values through v511.'
+    $sourceErrors === [],
+    $sourceErrors === []
+        ? count($versionMap) . ' PHP constant values equal pinned Epic C++ enum values, not PHP string assertions.'
+        : implode(' ', $sourceErrors)
 );
 
 $check(

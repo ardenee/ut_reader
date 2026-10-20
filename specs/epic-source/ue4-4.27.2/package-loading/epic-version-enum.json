@@ -1,0 +1,1252 @@
+{
+  "engine": "UE4.27.2",
+  "epic_source_file": "Engine/Source/Runtime/Core/Public/UObject/ObjectVersion.h",
+  "epic_sha256": "378C49E3AF3542C87C95D7259B81FCB77A98077D438CCCFA227B2F90870A000A",
+  "epic_enum": "EUnrealEngineObjectUE4Version",
+  "members": {
+    "VER_UE4_OLDEST_LOADABLE_PACKAGE": {
+      "value": 214,
+      "line": 18
+    },
+    "VER_UE4_BLUEPRINT_VARS_NOT_READ_ONLY": {
+      "value": 215,
+      "line": 21
+    },
+    "VER_UE4_STATIC_MESH_STORE_NAV_COLLISION": {
+      "value": 216,
+      "line": 23
+    },
+    "VER_UE4_ATMOSPHERIC_FOG_DECAY_NAME_CHANGE": {
+      "value": 217,
+      "line": 25
+    },
+    "VER_UE4_SCENECOMP_TRANSLATION_TO_LOCATION": {
+      "value": 218,
+      "line": 27
+    },
+    "VER_UE4_MATERIAL_ATTRIBUTES_REORDERING": {
+      "value": 219,
+      "line": 29
+    },
+    "VER_UE4_COLLISION_PROFILE_SETTING": {
+      "value": 220,
+      "line": 31
+    },
+    "VER_UE4_BLUEPRINT_SKEL_TEMPORARY_TRANSIENT": {
+      "value": 221,
+      "line": 33
+    },
+    "VER_UE4_BLUEPRINT_SKEL_SERIALIZED_AGAIN": {
+      "value": 222,
+      "line": 35
+    },
+    "VER_UE4_BLUEPRINT_SETS_REPLICATION": {
+      "value": 223,
+      "line": 37
+    },
+    "VER_UE4_WORLD_LEVEL_INFO": {
+      "value": 224,
+      "line": 39
+    },
+    "VER_UE4_AFTER_CAPSULE_HALF_HEIGHT_CHANGE": {
+      "value": 225,
+      "line": 41
+    },
+    "VER_UE4_ADDED_NAMESPACE_AND_KEY_DATA_TO_FTEXT": {
+      "value": 226,
+      "line": 43
+    },
+    "VER_UE4_ATTENUATION_SHAPES": {
+      "value": 227,
+      "line": 45
+    },
+    "VER_UE4_LIGHTCOMPONENT_USE_IES_TEXTURE_MULTIPLIER_ON_NON_IES_BRIGHTNESS": {
+      "value": 228,
+      "line": 47
+    },
+    "VER_UE4_REMOVE_INPUT_COMPONENTS_FROM_BLUEPRINTS": {
+      "value": 229,
+      "line": 49
+    },
+    "VER_UE4_VARK2NODE_USE_MEMBERREFSTRUCT": {
+      "value": 230,
+      "line": 51
+    },
+    "VER_UE4_REFACTOR_MATERIAL_EXPRESSION_SCENECOLOR_AND_SCENEDEPTH_INPUTS": {
+      "value": 231,
+      "line": 53
+    },
+    "VER_UE4_SPLINE_MESH_ORIENTATION": {
+      "value": 232,
+      "line": 55
+    },
+    "VER_UE4_REVERB_EFFECT_ASSET_TYPE": {
+      "value": 233,
+      "line": 57
+    },
+    "VER_UE4_MAX_TEXCOORD_INCREASED": {
+      "value": 234,
+      "line": 59
+    },
+    "VER_UE4_SPEEDTREE_STATICMESH": {
+      "value": 235,
+      "line": 61
+    },
+    "VER_UE4_LANDSCAPE_COMPONENT_LAZY_REFERENCES": {
+      "value": 236,
+      "line": 63
+    },
+    "VER_UE4_SWITCH_CALL_NODE_TO_USE_MEMBER_REFERENCE": {
+      "value": 237,
+      "line": 65
+    },
+    "VER_UE4_ADDED_SKELETON_ARCHIVER_REMOVAL": {
+      "value": 238,
+      "line": 67
+    },
+    "VER_UE4_ADDED_SKELETON_ARCHIVER_REMOVAL_SECOND_TIME": {
+      "value": 239,
+      "line": 69
+    },
+    "VER_UE4_BLUEPRINT_SKEL_CLASS_TRANSIENT_AGAIN": {
+      "value": 240,
+      "line": 71
+    },
+    "VER_UE4_ADD_COOKED_TO_UCLASS": {
+      "value": 241,
+      "line": 73
+    },
+    "VER_UE4_DEPRECATED_STATIC_MESH_THUMBNAIL_PROPERTIES_REMOVED": {
+      "value": 242,
+      "line": 75
+    },
+    "VER_UE4_COLLECTIONS_IN_SHADERMAPID": {
+      "value": 243,
+      "line": 77
+    },
+    "VER_UE4_REFACTOR_MOVEMENT_COMPONENT_HIERARCHY": {
+      "value": 244,
+      "line": 79
+    },
+    "VER_UE4_FIX_TERRAIN_LAYER_SWITCH_ORDER": {
+      "value": 245,
+      "line": 81
+    },
+    "VER_UE4_ALL_PROPS_TO_CONSTRAINTINSTANCE": {
+      "value": 246,
+      "line": 83
+    },
+    "VER_UE4_LOW_QUALITY_DIRECTIONAL_LIGHTMAPS": {
+      "value": 247,
+      "line": 85
+    },
+    "VER_UE4_ADDED_NOISE_EMITTER_COMPONENT": {
+      "value": 248,
+      "line": 87
+    },
+    "VER_UE4_ADD_TEXT_COMPONENT_VERTICAL_ALIGNMENT": {
+      "value": 249,
+      "line": 89
+    },
+    "VER_UE4_ADDED_FBX_ASSET_IMPORT_DATA": {
+      "value": 250,
+      "line": 91
+    },
+    "VER_UE4_REMOVE_LEVELBODYSETUP": {
+      "value": 251,
+      "line": 93
+    },
+    "VER_UE4_REFACTOR_CHARACTER_CROUCH": {
+      "value": 252,
+      "line": 95
+    },
+    "VER_UE4_SMALLER_DEBUG_MATERIALSHADER_UNIFORM_EXPRESSIONS": {
+      "value": 253,
+      "line": 97
+    },
+    "VER_UE4_APEX_CLOTH": {
+      "value": 254,
+      "line": 99
+    },
+    "VER_UE4_SAVE_COLLISIONRESPONSE_PER_CHANNEL": {
+      "value": 255,
+      "line": 103
+    },
+    "VER_UE4_ADDED_LANDSCAPE_SPLINE_EDITOR_MESH": {
+      "value": 256,
+      "line": 105
+    },
+    "VER_UE4_CHANGED_MATERIAL_REFACTION_TYPE": {
+      "value": 257,
+      "line": 107
+    },
+    "VER_UE4_REFACTOR_PROJECTILE_MOVEMENT": {
+      "value": 258,
+      "line": 109
+    },
+    "VER_UE4_REMOVE_PHYSICALMATERIALPROPERTY": {
+      "value": 259,
+      "line": 111
+    },
+    "VER_UE4_PURGED_FMATERIAL_COMPILE_OUTPUTS": {
+      "value": 260,
+      "line": 113
+    },
+    "VER_UE4_ADD_COOKED_TO_LANDSCAPE": {
+      "value": 261,
+      "line": 115
+    },
+    "VER_UE4_CONSUME_INPUT_PER_BIND": {
+      "value": 262,
+      "line": 117
+    },
+    "VER_UE4_SOUND_CLASS_GRAPH_EDITOR": {
+      "value": 263,
+      "line": 119
+    },
+    "VER_UE4_FIXUP_TERRAIN_LAYER_NODES": {
+      "value": 264,
+      "line": 121
+    },
+    "VER_UE4_RETROFIT_CLAMP_EXPRESSIONS_SWAP": {
+      "value": 265,
+      "line": 123
+    },
+    "VER_UE4_REMOVE_LIGHT_MOBILITY_CLASSES": {
+      "value": 266,
+      "line": 125
+    },
+    "VER_UE4_REFACTOR_PHYSICS_BLENDING": {
+      "value": 267,
+      "line": 127
+    },
+    "VER_UE4_WORLD_LEVEL_INFO_UPDATED": {
+      "value": 268,
+      "line": 129
+    },
+    "VER_UE4_STATIC_SKELETAL_MESH_SERIALIZATION_FIX": {
+      "value": 269,
+      "line": 131
+    },
+    "VER_UE4_REMOVE_STATICMESH_MOBILITY_CLASSES": {
+      "value": 270,
+      "line": 133
+    },
+    "VER_UE4_REFACTOR_PHYSICS_TRANSFORMS": {
+      "value": 271,
+      "line": 135
+    },
+    "VER_UE4_REMOVE_ZERO_TRIANGLE_SECTIONS": {
+      "value": 272,
+      "line": 137
+    },
+    "VER_UE4_CHARACTER_MOVEMENT_DECELERATION": {
+      "value": 273,
+      "line": 139
+    },
+    "VER_UE4_CAMERA_ACTOR_USING_CAMERA_COMPONENT": {
+      "value": 274,
+      "line": 141
+    },
+    "VER_UE4_CHARACTER_MOVEMENT_DEPRECATE_PITCH_ROLL": {
+      "value": 275,
+      "line": 143
+    },
+    "VER_UE4_REBUILD_TEXTURE_STREAMING_DATA_ON_LOAD": {
+      "value": 276,
+      "line": 145
+    },
+    "VER_UE4_SUPPORT_32BIT_STATIC_MESH_INDICES": {
+      "value": 277,
+      "line": 147
+    },
+    "VER_UE4_ADDED_CHUNKID_TO_ASSETDATA_AND_UPACKAGE": {
+      "value": 278,
+      "line": 149
+    },
+    "VER_UE4_CHARACTER_DEFAULT_MOVEMENT_BINDINGS": {
+      "value": 279,
+      "line": 151
+    },
+    "VER_UE4_APEX_CLOTH_LOD": {
+      "value": 280,
+      "line": 153
+    },
+    "VER_UE4_ATMOSPHERIC_FOG_CACHE_DATA": {
+      "value": 281,
+      "line": 155
+    },
+    "VAR_UE4_ARRAY_PROPERTY_INNER_TAGS": {
+      "value": 282,
+      "line": 157
+    },
+    "VER_UE4_KEEP_SKEL_MESH_INDEX_DATA": {
+      "value": 283,
+      "line": 159
+    },
+    "VER_UE4_BODYSETUP_COLLISION_CONVERSION": {
+      "value": 284,
+      "line": 161
+    },
+    "VER_UE4_REFLECTION_CAPTURE_COOKING": {
+      "value": 285,
+      "line": 163
+    },
+    "VER_UE4_REMOVE_DYNAMIC_VOLUME_CLASSES": {
+      "value": 286,
+      "line": 165
+    },
+    "VER_UE4_STORE_HASCOOKEDDATA_FOR_BODYSETUP": {
+      "value": 287,
+      "line": 167
+    },
+    "VER_UE4_REFRACTION_BIAS_TO_REFRACTION_DEPTH_BIAS": {
+      "value": 288,
+      "line": 169
+    },
+    "VER_UE4_REMOVE_SKELETALPHYSICSACTOR": {
+      "value": 289,
+      "line": 171
+    },
+    "VER_UE4_PC_ROTATION_INPUT_REFACTOR": {
+      "value": 290,
+      "line": 173
+    },
+    "VER_UE4_LANDSCAPE_PLATFORMDATA_COOKING": {
+      "value": 291,
+      "line": 175
+    },
+    "VER_UE4_CREATEEXPORTS_CLASS_LINKING_FOR_BLUEPRINTS": {
+      "value": 292,
+      "line": 177
+    },
+    "VER_UE4_REMOVE_NATIVE_COMPONENTS_FROM_BLUEPRINT_SCS": {
+      "value": 293,
+      "line": 179
+    },
+    "VER_UE4_REMOVE_SINGLENODEINSTANCE": {
+      "value": 294,
+      "line": 181
+    },
+    "VER_UE4_CHARACTER_BRAKING_REFACTOR": {
+      "value": 295,
+      "line": 183
+    },
+    "VER_UE4_VOLUME_SAMPLE_LOW_QUALITY_SUPPORT": {
+      "value": 296,
+      "line": 185
+    },
+    "VER_UE4_SPLIT_TOUCH_AND_CLICK_ENABLES": {
+      "value": 297,
+      "line": 187
+    },
+    "VER_UE4_HEALTH_DEATH_REFACTOR": {
+      "value": 298,
+      "line": 189
+    },
+    "VER_UE4_SOUND_NODE_ENVELOPER_CURVE_CHANGE": {
+      "value": 299,
+      "line": 191
+    },
+    "VER_UE4_POINT_LIGHT_SOURCE_RADIUS": {
+      "value": 300,
+      "line": 193
+    },
+    "VER_UE4_SCENE_CAPTURE_CAMERA_CHANGE": {
+      "value": 301,
+      "line": 195
+    },
+    "VER_UE4_MOVE_SKELETALMESH_SHADOWCASTING": {
+      "value": 302,
+      "line": 197
+    },
+    "VER_UE4_CHANGE_SETARRAY_BYTECODE": {
+      "value": 303,
+      "line": 199
+    },
+    "VER_UE4_MATERIAL_INSTANCE_BASE_PROPERTY_OVERRIDES": {
+      "value": 304,
+      "line": 201
+    },
+    "VER_UE4_COMBINED_LIGHTMAP_TEXTURES": {
+      "value": 305,
+      "line": 203
+    },
+    "VER_UE4_BUMPED_MATERIAL_EXPORT_GUIDS": {
+      "value": 306,
+      "line": 205
+    },
+    "VER_UE4_BLUEPRINT_INPUT_BINDING_OVERRIDES": {
+      "value": 307,
+      "line": 207
+    },
+    "VER_UE4_FIXUP_BODYSETUP_INVALID_CONVEX_TRANSFORM": {
+      "value": 308,
+      "line": 209
+    },
+    "VER_UE4_FIXUP_STIFFNESS_AND_DAMPING_SCALE": {
+      "value": 309,
+      "line": 211
+    },
+    "VER_UE4_REFERENCE_SKELETON_REFACTOR": {
+      "value": 310,
+      "line": 213
+    },
+    "VER_UE4_K2NODE_REFERENCEGUIDS": {
+      "value": 311,
+      "line": 215
+    },
+    "VER_UE4_FIXUP_ROOTBONE_PARENT": {
+      "value": 312,
+      "line": 217
+    },
+    "VER_UE4_TEXT_RENDER_COMPONENTS_WORLD_SPACE_SIZING": {
+      "value": 313,
+      "line": 219
+    },
+    "VER_UE4_MATERIAL_INSTANCE_BASE_PROPERTY_OVERRIDES_PHASE_2": {
+      "value": 314,
+      "line": 221
+    },
+    "VER_UE4_CLASS_NOTPLACEABLE_ADDED": {
+      "value": 315,
+      "line": 223
+    },
+    "VER_UE4_WORLD_LEVEL_INFO_LOD_LIST": {
+      "value": 316,
+      "line": 225
+    },
+    "VER_UE4_CHARACTER_MOVEMENT_VARIABLE_RENAMING_1": {
+      "value": 317,
+      "line": 227
+    },
+    "VER_UE4_FSLATESOUND_CONVERSION": {
+      "value": 318,
+      "line": 229
+    },
+    "VER_UE4_WORLD_LEVEL_INFO_ZORDER": {
+      "value": 319,
+      "line": 231
+    },
+    "VER_UE4_PACKAGE_REQUIRES_LOCALIZATION_GATHER_FLAGGING": {
+      "value": 320,
+      "line": 233
+    },
+    "VER_UE4_BP_ACTOR_VARIABLE_DEFAULT_PREVENTING": {
+      "value": 321,
+      "line": 235
+    },
+    "VER_UE4_TEST_ANIMCOMP_CHANGE": {
+      "value": 322,
+      "line": 237
+    },
+    "VER_UE4_EDITORONLY_BLUEPRINTS": {
+      "value": 323,
+      "line": 239
+    },
+    "VER_UE4_EDGRAPHPINTYPE_SERIALIZATION": {
+      "value": 324,
+      "line": 241
+    },
+    "VER_UE4_NO_MIRROR_BRUSH_MODEL_COLLISION": {
+      "value": 325,
+      "line": 243
+    },
+    "VER_UE4_CHANGED_CHUNKID_TO_BE_AN_ARRAY_OF_CHUNKIDS": {
+      "value": 326,
+      "line": 245
+    },
+    "VER_UE4_WORLD_NAMED_AFTER_PACKAGE": {
+      "value": 327,
+      "line": 247
+    },
+    "VER_UE4_SKY_LIGHT_COMPONENT": {
+      "value": 328,
+      "line": 249
+    },
+    "VER_UE4_WORLD_LAYER_ENABLE_DISTANCE_STREAMING": {
+      "value": 329,
+      "line": 251
+    },
+    "VER_UE4_REMOVE_ZONES_FROM_MODEL": {
+      "value": 330,
+      "line": 253
+    },
+    "VER_UE4_FIX_ANIMATIONBASEPOSE_SERIALIZATION": {
+      "value": 331,
+      "line": 255
+    },
+    "VER_UE4_SUPPORT_8_BONE_INFLUENCES_SKELETAL_MESHES": {
+      "value": 332,
+      "line": 257
+    },
+    "VER_UE4_ADD_OVERRIDE_GRAVITY_FLAG": {
+      "value": 333,
+      "line": 259
+    },
+    "VER_UE4_SUPPORT_GPUSKINNING_8_BONE_INFLUENCES": {
+      "value": 334,
+      "line": 261
+    },
+    "VER_UE4_ANIM_SUPPORT_NONUNIFORM_SCALE_ANIMATION": {
+      "value": 335,
+      "line": 263
+    },
+    "VER_UE4_ENGINE_VERSION_OBJECT": {
+      "value": 336,
+      "line": 265
+    },
+    "VER_UE4_PUBLIC_WORLDS": {
+      "value": 337,
+      "line": 267
+    },
+    "VER_UE4_SKELETON_GUID_SERIALIZATION": {
+      "value": 338,
+      "line": 269
+    },
+    "VER_UE4_CHARACTER_MOVEMENT_WALKABLE_FLOOR_REFACTOR": {
+      "value": 339,
+      "line": 271
+    },
+    "VER_UE4_INVERSE_SQUARED_LIGHTS_DEFAULT": {
+      "value": 340,
+      "line": 273
+    },
+    "VER_UE4_DISABLED_SCRIPT_LIMIT_BYTECODE": {
+      "value": 341,
+      "line": 275
+    },
+    "VER_UE4_PRIVATE_REMOTE_ROLE": {
+      "value": 342,
+      "line": 277
+    },
+    "VER_UE4_FOLIAGE_STATIC_MOBILITY": {
+      "value": 343,
+      "line": 279
+    },
+    "VER_UE4_BUILD_SCALE_VECTOR": {
+      "value": 344,
+      "line": 281
+    },
+    "VER_UE4_FOLIAGE_COLLISION": {
+      "value": 345,
+      "line": 283
+    },
+    "VER_UE4_SKY_BENT_NORMAL": {
+      "value": 346,
+      "line": 285
+    },
+    "VER_UE4_LANDSCAPE_COLLISION_DATA_COOKING": {
+      "value": 347,
+      "line": 287
+    },
+    "VER_UE4_MORPHTARGET_CPU_TANGENTZDELTA_FORMATCHANGE": {
+      "value": 348,
+      "line": 290
+    },
+    "VER_UE4_SOFT_CONSTRAINTS_USE_MASS": {
+      "value": 349,
+      "line": 292
+    },
+    "VER_UE4_REFLECTION_DATA_IN_PACKAGES": {
+      "value": 350,
+      "line": 294
+    },
+    "VER_UE4_FOLIAGE_MOVABLE_MOBILITY": {
+      "value": 351,
+      "line": 296
+    },
+    "VER_UE4_UNDO_BREAK_MATERIALATTRIBUTES_CHANGE": {
+      "value": 352,
+      "line": 298
+    },
+    "VER_UE4_ADD_CUSTOMPROFILENAME_CHANGE": {
+      "value": 353,
+      "line": 300
+    },
+    "VER_UE4_FLIP_MATERIAL_COORDS": {
+      "value": 354,
+      "line": 302
+    },
+    "VER_UE4_MEMBERREFERENCE_IN_PINTYPE": {
+      "value": 355,
+      "line": 304
+    },
+    "VER_UE4_VEHICLES_UNIT_CHANGE": {
+      "value": 356,
+      "line": 306
+    },
+    "VER_UE4_ANIMATION_REMOVE_NANS": {
+      "value": 357,
+      "line": 309
+    },
+    "VER_UE4_SKELETON_ASSET_PROPERTY_TYPE_CHANGE": {
+      "value": 358,
+      "line": 311
+    },
+    "VER_UE4_FIX_BLUEPRINT_VARIABLE_FLAGS": {
+      "value": 359,
+      "line": 314
+    },
+    "VER_UE4_VEHICLES_UNIT_CHANGE2": {
+      "value": 360,
+      "line": 316
+    },
+    "VER_UE4_UCLASS_SERIALIZE_INTERFACES_AFTER_LINKING": {
+      "value": 361,
+      "line": 318
+    },
+    "VER_UE4_STATIC_MESH_SCREEN_SIZE_LODS": {
+      "value": 362,
+      "line": 320
+    },
+    "VER_UE4_FIX_MATERIAL_COORDS": {
+      "value": 363,
+      "line": 322
+    },
+    "VER_UE4_SPEEDTREE_WIND_V7": {
+      "value": 364,
+      "line": 324
+    },
+    "VER_UE4_LOAD_FOR_EDITOR_GAME": {
+      "value": 365,
+      "line": 326
+    },
+    "VER_UE4_SERIALIZE_RICH_CURVE_KEY": {
+      "value": 366,
+      "line": 328
+    },
+    "VER_UE4_MOVE_LANDSCAPE_MICS_AND_TEXTURES_WITHIN_LEVEL": {
+      "value": 367,
+      "line": 330
+    },
+    "VER_UE4_FTEXT_HISTORY": {
+      "value": 368,
+      "line": 332
+    },
+    "VER_UE4_FIX_MATERIAL_COMMENTS": {
+      "value": 369,
+      "line": 334
+    },
+    "VER_UE4_STORE_BONE_EXPORT_NAMES": {
+      "value": 370,
+      "line": 336
+    },
+    "VER_UE4_MESH_EMITTER_INITIAL_ORIENTATION_DISTRIBUTION": {
+      "value": 371,
+      "line": 338
+    },
+    "VER_UE4_DISALLOW_FOLIAGE_ON_BLUEPRINTS": {
+      "value": 372,
+      "line": 340
+    },
+    "VER_UE4_FIXUP_MOTOR_UNITS": {
+      "value": 373,
+      "line": 342
+    },
+    "VER_UE4_DEPRECATED_MOVEMENTCOMPONENT_MODIFIED_SPEEDS": {
+      "value": 374,
+      "line": 344
+    },
+    "VER_UE4_RENAME_CANBECHARACTERBASE": {
+      "value": 375,
+      "line": 346
+    },
+    "VER_UE4_GAMEPLAY_TAG_CONTAINER_TAG_TYPE_CHANGE": {
+      "value": 376,
+      "line": 348
+    },
+    "VER_UE4_FOLIAGE_SETTINGS_TYPE": {
+      "value": 377,
+      "line": 350
+    },
+    "VER_UE4_STATIC_SHADOW_DEPTH_MAPS": {
+      "value": 378,
+      "line": 352
+    },
+    "VER_UE4_ADD_TRANSACTIONAL_TO_DATA_ASSETS": {
+      "value": 379,
+      "line": 354
+    },
+    "VER_UE4_ADD_LB_WEIGHTBLEND": {
+      "value": 380,
+      "line": 356
+    },
+    "VER_UE4_ADD_ROOTCOMPONENT_TO_FOLIAGEACTOR": {
+      "value": 381,
+      "line": 358
+    },
+    "VER_UE4_FIX_MATERIAL_PROPERTY_OVERRIDE_SERIALIZE": {
+      "value": 382,
+      "line": 360
+    },
+    "VER_UE4_ADD_LINEAR_COLOR_SAMPLER": {
+      "value": 383,
+      "line": 362
+    },
+    "VER_UE4_ADD_STRING_ASSET_REFERENCES_MAP": {
+      "value": 384,
+      "line": 364
+    },
+    "VER_UE4_BLUEPRINT_USE_SCS_ROOTCOMPONENT_SCALE": {
+      "value": 385,
+      "line": 366
+    },
+    "VER_UE4_LEVEL_STREAMING_DRAW_COLOR_TYPE_CHANGE": {
+      "value": 386,
+      "line": 368
+    },
+    "VER_UE4_CLEAR_NOTIFY_TRIGGERS": {
+      "value": 387,
+      "line": 370
+    },
+    "VER_UE4_SKELETON_ADD_SMARTNAMES": {
+      "value": 388,
+      "line": 372
+    },
+    "VER_UE4_ADDED_CURRENCY_CODE_TO_FTEXT": {
+      "value": 389,
+      "line": 374
+    },
+    "VER_UE4_ENUM_CLASS_SUPPORT": {
+      "value": 390,
+      "line": 376
+    },
+    "VER_UE4_FIXUP_WIDGET_ANIMATION_CLASS": {
+      "value": 391,
+      "line": 378
+    },
+    "VER_UE4_SOUND_COMPRESSION_TYPE_ADDED": {
+      "value": 392,
+      "line": 380
+    },
+    "VER_UE4_AUTO_WELDING": {
+      "value": 393,
+      "line": 382
+    },
+    "VER_UE4_RENAME_CROUCHMOVESCHARACTERDOWN": {
+      "value": 394,
+      "line": 384
+    },
+    "VER_UE4_LIGHTMAP_MESH_BUILD_SETTINGS": {
+      "value": 395,
+      "line": 386
+    },
+    "VER_UE4_RENAME_SM3_TO_ES3_1": {
+      "value": 396,
+      "line": 388
+    },
+    "VER_UE4_DEPRECATE_UMG_STYLE_ASSETS": {
+      "value": 397,
+      "line": 390
+    },
+    "VER_UE4_POST_DUPLICATE_NODE_GUID": {
+      "value": 398,
+      "line": 392
+    },
+    "VER_UE4_RENAME_CAMERA_COMPONENT_VIEW_ROTATION": {
+      "value": 399,
+      "line": 395
+    },
+    "VER_UE4_CASE_PRESERVING_FNAME": {
+      "value": 400,
+      "line": 397
+    },
+    "VER_UE4_RENAME_CAMERA_COMPONENT_CONTROL_ROTATION": {
+      "value": 401,
+      "line": 400
+    },
+    "VER_UE4_FIX_REFRACTION_INPUT_MASKING": {
+      "value": 402,
+      "line": 402
+    },
+    "VER_UE4_GLOBAL_EMITTER_SPAWN_RATE_SCALE": {
+      "value": 403,
+      "line": 404
+    },
+    "VER_UE4_CLEAN_DESTRUCTIBLE_SETTINGS": {
+      "value": 404,
+      "line": 406
+    },
+    "VER_UE4_CHARACTER_MOVEMENT_UPPER_IMPACT_BEHAVIOR": {
+      "value": 405,
+      "line": 408
+    },
+    "VER_UE4_BP_MATH_VECTOR_EQUALITY_USES_EPSILON": {
+      "value": 406,
+      "line": 410
+    },
+    "VER_UE4_FOLIAGE_STATIC_LIGHTING_SUPPORT": {
+      "value": 407,
+      "line": 412
+    },
+    "VER_UE4_SLATE_COMPOSITE_FONTS": {
+      "value": 408,
+      "line": 414
+    },
+    "VER_UE4_REMOVE_SAVEGAMESUMMARY": {
+      "value": 409,
+      "line": 416
+    },
+    "VER_UE4_REMOVE_SKELETALMESH_COMPONENT_BODYSETUP_SERIALIZATION": {
+      "value": 410,
+      "line": 419
+    },
+    "VER_UE4_SLATE_BULK_FONT_DATA": {
+      "value": 411,
+      "line": 421
+    },
+    "VER_UE4_ADD_PROJECTILE_FRICTION_BEHAVIOR": {
+      "value": 412,
+      "line": 423
+    },
+    "VER_UE4_MOVEMENTCOMPONENT_AXIS_SETTINGS": {
+      "value": 413,
+      "line": 425
+    },
+    "VER_UE4_GRAPH_INTERACTIVE_COMMENTBUBBLES": {
+      "value": 414,
+      "line": 427
+    },
+    "VER_UE4_LANDSCAPE_SERIALIZE_PHYSICS_MATERIALS": {
+      "value": 415,
+      "line": 429
+    },
+    "VER_UE4_RENAME_WIDGET_VISIBILITY": {
+      "value": 416,
+      "line": 431
+    },
+    "VER_UE4_ANIMATION_ADD_TRACKCURVES": {
+      "value": 417,
+      "line": 433
+    },
+    "VER_UE4_MONTAGE_BRANCHING_POINT_REMOVAL": {
+      "value": 418,
+      "line": 435
+    },
+    "VER_UE4_BLUEPRINT_ENFORCE_CONST_IN_FUNCTION_OVERRIDES": {
+      "value": 419,
+      "line": 437
+    },
+    "VER_UE4_ADD_PIVOT_TO_WIDGET_COMPONENT": {
+      "value": 420,
+      "line": 439
+    },
+    "VER_UE4_PAWN_AUTO_POSSESS_AI": {
+      "value": 421,
+      "line": 441
+    },
+    "VER_UE4_FTEXT_HISTORY_DATE_TIMEZONE": {
+      "value": 422,
+      "line": 443
+    },
+    "VER_UE4_SORT_ACTIVE_BONE_INDICES": {
+      "value": 423,
+      "line": 445
+    },
+    "VER_UE4_PERFRAME_MATERIAL_UNIFORM_EXPRESSIONS": {
+      "value": 424,
+      "line": 447
+    },
+    "VER_UE4_MIKKTSPACE_IS_DEFAULT": {
+      "value": 425,
+      "line": 449
+    },
+    "VER_UE4_LANDSCAPE_GRASS_COOKING": {
+      "value": 426,
+      "line": 451
+    },
+    "VER_UE4_FIX_SKEL_VERT_ORIENT_MESH_PARTICLES": {
+      "value": 427,
+      "line": 453
+    },
+    "VER_UE4_LANDSCAPE_STATIC_SECTION_OFFSET": {
+      "value": 428,
+      "line": 455
+    },
+    "VER_UE4_ADD_MODIFIERS_RUNTIME_GENERATION": {
+      "value": 429,
+      "line": 457
+    },
+    "VER_UE4_MATERIAL_MASKED_BLENDMODE_TIDY": {
+      "value": 430,
+      "line": 459
+    },
+    "VER_UE4_MERGED_ADD_MODIFIERS_RUNTIME_GENERATION_TO_4_7_DEPRECATED": {
+      "value": 431,
+      "line": 461
+    },
+    "VER_UE4_AFTER_MERGED_ADD_MODIFIERS_RUNTIME_GENERATION_TO_4_7_DEPRECATED": {
+      "value": 432,
+      "line": 463
+    },
+    "VER_UE4_MERGED_ADD_MODIFIERS_RUNTIME_GENERATION_TO_4_7": {
+      "value": 433,
+      "line": 465
+    },
+    "VER_UE4_AFTER_MERGING_ADD_MODIFIERS_RUNTIME_GENERATION_TO_4_7": {
+      "value": 434,
+      "line": 467
+    },
+    "VER_UE4_SERIALIZE_LANDSCAPE_GRASS_DATA": {
+      "value": 435,
+      "line": 469
+    },
+    "VER_UE4_OPTIONALLY_CLEAR_GPU_EMITTERS_ON_INIT": {
+      "value": 436,
+      "line": 471
+    },
+    "VER_UE4_SERIALIZE_LANDSCAPE_GRASS_DATA_MATERIAL_GUID": {
+      "value": 437,
+      "line": 473
+    },
+    "VER_UE4_BLUEPRINT_GENERATED_CLASS_COMPONENT_TEMPLATES_PUBLIC": {
+      "value": 438,
+      "line": 475
+    },
+    "VER_UE4_ACTOR_COMPONENT_CREATION_METHOD": {
+      "value": 439,
+      "line": 477
+    },
+    "VER_UE4_K2NODE_EVENT_MEMBER_REFERENCE": {
+      "value": 440,
+      "line": 479
+    },
+    "VER_UE4_STRUCT_GUID_IN_PROPERTY_TAG": {
+      "value": 441,
+      "line": 481
+    },
+    "VER_UE4_REMOVE_UNUSED_UPOLYS_FROM_UMODEL": {
+      "value": 442,
+      "line": 483
+    },
+    "VER_UE4_REBUILD_HIERARCHICAL_INSTANCE_TREES": {
+      "value": 443,
+      "line": 485
+    },
+    "VER_UE4_PACKAGE_SUMMARY_HAS_COMPATIBLE_ENGINE_VERSION": {
+      "value": 444,
+      "line": 487
+    },
+    "VER_UE4_TRACK_UCS_MODIFIED_PROPERTIES": {
+      "value": 445,
+      "line": 489
+    },
+    "VER_UE4_LANDSCAPE_SPLINE_CROSS_LEVEL_MESHES": {
+      "value": 446,
+      "line": 491
+    },
+    "VER_UE4_DEPRECATE_USER_WIDGET_DESIGN_SIZE": {
+      "value": 447,
+      "line": 493
+    },
+    "VER_UE4_ADD_EDITOR_VIEWS": {
+      "value": 448,
+      "line": 495
+    },
+    "VER_UE4_FOLIAGE_WITH_ASSET_OR_CLASS": {
+      "value": 449,
+      "line": 497
+    },
+    "VER_UE4_BODYINSTANCE_BINARY_SERIALIZATION": {
+      "value": 450,
+      "line": 499
+    },
+    "VER_UE4_SERIALIZE_BLUEPRINT_EVENTGRAPH_FASTCALLS_IN_UFUNCTION": {
+      "value": 451,
+      "line": 501
+    },
+    "VER_UE4_INTERPCURVE_SUPPORTS_LOOPING": {
+      "value": 452,
+      "line": 503
+    },
+    "VER_UE4_MATERIAL_INSTANCE_BASE_PROPERTY_OVERRIDES_DITHERED_LOD_TRANSITION": {
+      "value": 453,
+      "line": 505
+    },
+    "VER_UE4_SERIALIZE_LANDSCAPE_ES2_TEXTURES": {
+      "value": 454,
+      "line": 507
+    },
+    "VER_UE4_CONSTRAINT_INSTANCE_MOTOR_FLAGS": {
+      "value": 455,
+      "line": 509
+    },
+    "VER_UE4_SERIALIZE_PINTYPE_CONST": {
+      "value": 456,
+      "line": 511
+    },
+    "VER_UE4_LIBRARY_CATEGORIES_AS_FTEXT": {
+      "value": 457,
+      "line": 513
+    },
+    "VER_UE4_SKIP_DUPLICATE_EXPORTS_ON_SAVE_PACKAGE": {
+      "value": 458,
+      "line": 515
+    },
+    "VER_UE4_SERIALIZE_TEXT_IN_PACKAGES": {
+      "value": 459,
+      "line": 517
+    },
+    "VER_UE4_ADD_BLEND_MODE_TO_WIDGET_COMPONENT": {
+      "value": 460,
+      "line": 519
+    },
+    "VER_UE4_NEW_LIGHTMASS_PRIMITIVE_SETTING": {
+      "value": 461,
+      "line": 521
+    },
+    "VER_UE4_REPLACE_SPRING_NOZ_PROPERTY": {
+      "value": 462,
+      "line": 523
+    },
+    "VER_UE4_TIGHTLY_PACKED_ENUMS": {
+      "value": 463,
+      "line": 525
+    },
+    "VER_UE4_ASSET_IMPORT_DATA_AS_JSON": {
+      "value": 464,
+      "line": 527
+    },
+    "VER_UE4_TEXTURE_LEGACY_GAMMA": {
+      "value": 465,
+      "line": 529
+    },
+    "VER_UE4_ADDED_NATIVE_SERIALIZATION_FOR_IMMUTABLE_STRUCTURES": {
+      "value": 466,
+      "line": 531
+    },
+    "VER_UE4_DEPRECATE_UMG_STYLE_OVERRIDES": {
+      "value": 467,
+      "line": 533
+    },
+    "VER_UE4_STATIC_SHADOWMAP_PENUMBRA_SIZE": {
+      "value": 468,
+      "line": 535
+    },
+    "VER_UE4_NIAGARA_DATA_OBJECT_DEV_UI_FIX": {
+      "value": 469,
+      "line": 537
+    },
+    "VER_UE4_FIXED_DEFAULT_ORIENTATION_OF_WIDGET_COMPONENT": {
+      "value": 470,
+      "line": 539
+    },
+    "VER_UE4_REMOVED_MATERIAL_USED_WITH_UI_FLAG": {
+      "value": 471,
+      "line": 541
+    },
+    "VER_UE4_CHARACTER_MOVEMENT_ADD_BRAKING_FRICTION": {
+      "value": 472,
+      "line": 543
+    },
+    "VER_UE4_BSP_UNDO_FIX": {
+      "value": 473,
+      "line": 545
+    },
+    "VER_UE4_DYNAMIC_PARAMETER_DEFAULT_VALUE": {
+      "value": 474,
+      "line": 547
+    },
+    "VER_UE4_STATIC_MESH_EXTENDED_BOUNDS": {
+      "value": 475,
+      "line": 549
+    },
+    "VER_UE4_ADDED_NON_LINEAR_TRANSITION_BLENDS": {
+      "value": 476,
+      "line": 551
+    },
+    "VER_UE4_AO_MATERIAL_MASK": {
+      "value": 477,
+      "line": 553
+    },
+    "VER_UE4_NAVIGATION_AGENT_SELECTOR": {
+      "value": 478,
+      "line": 555
+    },
+    "VER_UE4_MESH_PARTICLE_COLLISIONS_CONSIDER_PARTICLE_SIZE": {
+      "value": 479,
+      "line": 557
+    },
+    "VER_UE4_BUILD_MESH_ADJ_BUFFER_FLAG_EXPOSED": {
+      "value": 480,
+      "line": 559
+    },
+    "VER_UE4_MAX_ANGULAR_VELOCITY_DEFAULT": {
+      "value": 481,
+      "line": 561
+    },
+    "VER_UE4_APEX_CLOTH_TESSELLATION": {
+      "value": 482,
+      "line": 563
+    },
+    "VER_UE4_DECAL_SIZE": {
+      "value": 483,
+      "line": 565
+    },
+    "VER_UE4_KEEP_ONLY_PACKAGE_NAMES_IN_STRING_ASSET_REFERENCES_MAP": {
+      "value": 484,
+      "line": 567
+    },
+    "VER_UE4_COOKED_ASSETS_IN_EDITOR_SUPPORT": {
+      "value": 485,
+      "line": 569
+    },
+    "VER_UE4_DIALOGUE_WAVE_NAMESPACE_AND_CONTEXT_CHANGES": {
+      "value": 486,
+      "line": 571
+    },
+    "VER_UE4_MAKE_ROT_RENAME_AND_REORDER": {
+      "value": 487,
+      "line": 573
+    },
+    "VER_UE4_K2NODE_VAR_REFERENCEGUIDS": {
+      "value": 488,
+      "line": 575
+    },
+    "VER_UE4_SOUND_CONCURRENCY_PACKAGE": {
+      "value": 489,
+      "line": 577
+    },
+    "VER_UE4_USERWIDGET_DEFAULT_FOCUSABLE_FALSE": {
+      "value": 490,
+      "line": 579
+    },
+    "VER_UE4_BLUEPRINT_CUSTOM_EVENT_CONST_INPUT": {
+      "value": 491,
+      "line": 581
+    },
+    "VER_UE4_USE_LOW_PASS_FILTER_FREQ": {
+      "value": 492,
+      "line": 583
+    },
+    "VER_UE4_NO_ANIM_BP_CLASS_IN_GAMEPLAY_CODE": {
+      "value": 493,
+      "line": 585
+    },
+    "VER_UE4_SCS_STORES_ALLNODES_ARRAY": {
+      "value": 494,
+      "line": 587
+    },
+    "VER_UE4_FBX_IMPORT_DATA_RANGE_ENCAPSULATION": {
+      "value": 495,
+      "line": 589
+    },
+    "VER_UE4_CAMERA_COMPONENT_ATTACH_TO_ROOT": {
+      "value": 496,
+      "line": 591
+    },
+    "VER_UE4_INSTANCED_STEREO_UNIFORM_UPDATE": {
+      "value": 497,
+      "line": 593
+    },
+    "VER_UE4_STREAMABLE_TEXTURE_MIN_MAX_DISTANCE": {
+      "value": 498,
+      "line": 595
+    },
+    "VER_UE4_INJECT_BLUEPRINT_STRUCT_PIN_CONVERSION_NODES": {
+      "value": 499,
+      "line": 597
+    },
+    "VER_UE4_INNER_ARRAY_TAG_INFO": {
+      "value": 500,
+      "line": 599
+    },
+    "VER_UE4_FIX_SLOT_NAME_DUPLICATION": {
+      "value": 501,
+      "line": 601
+    },
+    "VER_UE4_STREAMABLE_TEXTURE_AABB": {
+      "value": 502,
+      "line": 603
+    },
+    "VER_UE4_PROPERTY_GUID_IN_PROPERTY_TAG": {
+      "value": 503,
+      "line": 605
+    },
+    "VER_UE4_NAME_HASHES_SERIALIZED": {
+      "value": 504,
+      "line": 607
+    },
+    "VER_UE4_INSTANCED_STEREO_UNIFORM_REFACTOR": {
+      "value": 505,
+      "line": 609
+    },
+    "VER_UE4_COMPRESSED_SHADER_RESOURCES": {
+      "value": 506,
+      "line": 611
+    },
+    "VER_UE4_PRELOAD_DEPENDENCIES_IN_COOKED_EXPORTS": {
+      "value": 507,
+      "line": 613
+    },
+    "VER_UE4_TemplateIndex_IN_COOKED_EXPORTS": {
+      "value": 508,
+      "line": 615
+    },
+    "VER_UE4_PROPERTY_TAG_SET_MAP_SUPPORT": {
+      "value": 509,
+      "line": 617
+    },
+    "VER_UE4_ADDED_SEARCHABLE_NAMES": {
+      "value": 510,
+      "line": 619
+    },
+    "VER_UE4_64BIT_EXPORTMAP_SERIALSIZES": {
+      "value": 511,
+      "line": 621
+    },
+    "VER_UE4_SKYLIGHT_MOBILE_IRRADIANCE_MAP": {
+      "value": 512,
+      "line": 623
+    },
+    "VER_UE4_ADDED_SWEEP_WHILE_WALKING_FLAG": {
+      "value": 513,
+      "line": 625
+    },
+    "VER_UE4_ADDED_SOFT_OBJECT_PATH": {
+      "value": 514,
+      "line": 627
+    },
+    "VER_UE4_POINTLIGHT_SOURCE_ORIENTATION": {
+      "value": 515,
+      "line": 629
+    },
+    "VER_UE4_ADDED_PACKAGE_SUMMARY_LOCALIZATION_ID": {
+      "value": 516,
+      "line": 631
+    },
+    "VER_UE4_FIX_WIDE_STRING_CRC": {
+      "value": 517,
+      "line": 633
+    },
+    "VER_UE4_ADDED_PACKAGE_OWNER": {
+      "value": 518,
+      "line": 635
+    },
+    "VER_UE4_SKINWEIGHT_PROFILE_DATA_LAYOUT_CHANGES": {
+      "value": 519,
+      "line": 637
+    },
+    "VER_UE4_NON_OUTER_PACKAGE_IMPORT": {
+      "value": 520,
+      "line": 639
+    },
+    "VER_UE4_ASSETREGISTRY_DEPENDENCYFLAGS": {
+      "value": 521,
+      "line": 641
+    },
+    "VER_UE4_CORRECT_LICENSEE_FLAG": {
+      "value": 522,
+      "line": 643
+    },
+    "VER_UE4_AUTOMATIC_VERSION_PLUS_ONE": {
+      "value": 523,
+      "line": 647
+    },
+    "VER_UE4_AUTOMATIC_VERSION": {
+      "value": 522,
+      "line": 648
+    }
+  }
+}

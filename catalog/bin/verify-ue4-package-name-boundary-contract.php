@@ -41,6 +41,7 @@ $imports = [[
     'objectName' => ['index'=>2,'number'=>0,'text'=>'Thing'],
     'ObjectName' => ['index'=>2,'number'=>0,'text'=>'Thing'],
     'objectNameText' => 'Thing',
+    'packageNamePresent' => true,
     'packageName' => ['index'=>3,'number'=>0,'text'=>'/Game/ExternalProvider'],
     'PackageName' => ['index'=>3,'number'=>0,'text'=>'/Game/ExternalProvider'],
     'packageNameText' => '/Game/ExternalProvider',
@@ -68,30 +69,56 @@ $snapshot = $builder->buildParsedSections(
 $storedImport = (array)(($snapshot['imports'] ?? [])[0] ?? []);
 
 $checks = [];
-$checks['reader_gate_is_version_520'] = str_contains($readerSource, 'private const VER_NON_OUTER_PACKAGE_IMPORT = 520;');
+require_once dirname($root) . '/UE4/UnrealPackageReader.php';
+$epicVersionTable = json_decode(
+    (string)file_get_contents(dirname($root) . '/specs/epic-source/ue4-4.27.2/package-loading/epic-version-enum.json'),
+    true
+);
+$gate = (new ReflectionClass(UnrealPackageReader4::class))
+    ->getReflectionConstant('VER_NON_OUTER_PACKAGE_IMPORT');
+$checks['reader_gate_matches_epic_source'] = $gate !== false
+    && $gate->getValue() === ($epicVersionTable['members']['VER_UE4_NON_OUTER_PACKAGE_IMPORT']['value'] ?? null);
+
 $checks['reader_honors_editor_only_filter_gate'] = str_contains(
     $readerSource,
     '$version >= self::VER_NON_OUTER_PACKAGE_IMPORT && !$filterEditorOnly'
 );
 $checks['reader_retains_package_name_text'] = str_contains($readerSource, "'packageNameText' => \$this->fnameText(\$packageName)");
-$checks['v4_builder_drops_parser_package_name'] = !array_key_exists('packageNameText', $storedImport)
-    && !array_key_exists('package_name', $storedImport)
-    && !array_key_exists('package_name_text', $storedImport);
-$checks['audit_classifies_import_outer_uncertainty'] = str_contains(
-    $auditSource,
-    'cannot distinguish every non-empty ExternalPackage PackageName after persistence'
+$checks['v4_builder_preserves_parser_package_name'] =
+    !empty($storedImport['serialized_package_name_present'])
+    && !empty($storedImport['package_name_present'])
+    && ($storedImport['serialized_package_name'] ?? '') === '/Game/ExternalProvider'
+    && ($storedImport['package_name'] ?? '') === '/Game/ExternalProvider'
+    && ($storedImport['serialized_package_name_index'] ?? null) === 3
+    && ($storedImport['root_package'] ?? '') === '/Game/ExternalProvider'
+    && ($storedImport['outer_root_package'] ?? '') === '/Game/OuterProvider';
+
+// Actual V4 snapshot behavior: NAME_None is serialized but does not
+// override the outer package; absent wire field is not an explicit package.
+$noneImports = $imports;
+$noneImports[0]['packageName'] = ['index'=>0,'number'=>0,'text'=>'None'];
+$noneImports[0]['packageNameText'] = 'None';
+$noneSnapshot = $builder->buildParsedSections(
+    99, 7, '/Game/Consumer', 'Consumer.uasset', $names, $noneImports, []
 );
-$checks['audit_keeps_cross_linker_runtime_cases_out_of_static_resolution'] = str_contains(
-    $auditSource,
-    'pre-519 different-linker cases require runtime redirect/instancing state.'
-) && str_contains(
-    $auditSource,
-    'exact Import-outer explicit-PackageName reconstruction requires reparsing the original package or migrating to metadata that retains PackageName.'
+$noneRow = (array)(($noneSnapshot['imports'] ?? [])[0] ?? []);
+$checks['name_none_has_no_explicit_package_override'] =
+    !empty($noneRow['serialized_package_name_present'])
+    && empty($noneRow['package_name_present'])
+    && ($noneRow['package_name'] ?? '') === ''
+    && ($noneRow['root_package'] ?? '') === '/Game/OuterProvider';
+
+$absentImports = $imports;
+$absentImports[0]['packageNamePresent'] = false;
+$absentSnapshot = $builder->buildParsedSections(
+    99, 7, '/Game/Consumer', 'Consumer.uasset', $names, $absentImports, []
 );
-$checks['cross_linker_outer_requires_full_identity_match'] = str_contains(
-    $specSource,
-    "must match the consumer outer Import's `ObjectName`, `ClassName`, and `ClassPackage`"
-);
+$absentRow = (array)(($absentSnapshot['imports'] ?? [])[0] ?? []);
+$checks['absent_wire_field_has_no_explicit_package_override'] =
+    empty($absentRow['serialized_package_name_present'])
+    && empty($absentRow['package_name_present'])
+    && ($absentRow['package_name'] ?? '') === ''
+    && ($absentRow['root_package'] ?? '') === '/Game/OuterProvider';
 
 $failed = [];
 foreach ($checks as $name => $ok) {

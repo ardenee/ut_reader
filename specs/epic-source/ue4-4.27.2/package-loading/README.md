@@ -38,6 +38,18 @@ unknown decision destinations, or a mismatch between diagram tab count
 and the versioned manifest. The PDF is regenerated from Epic-derived HTML
 using the installed Calibre converter. The reference never reads PHP.
 
+## Original Epic UE4 version enumeration
+
+The source-only `epic-version-enum.json` contains all 311 entries of
+`EUnrealEngineObjectUE4Version`, derived directly from the pinned Epic
+`Core/Public/UObject/ObjectVersion.h`, including its explicit assignments.
+This prevents copying estimated version numbers into later reference sections.
+
+The related production PHP constants are generated separately using
+`py -3 catalog/bin/sync-ue427-epic-version-gates.py --write` on DEV.
+Without `--write`, that tool checks the source-derived PHP trait without
+modifying it.
+
 ## Production comparison (separate)
 
 `catalog/compliance/UE427-LOADER-EPIC-STEP-MAPPING.csv` contains **232**

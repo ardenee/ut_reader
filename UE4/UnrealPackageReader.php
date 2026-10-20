@@ -134,8 +134,12 @@ final class UE4BinaryReader
     }
 }
 
+require_once __DIR__ . '/EpicUE427VersionConstants.php';
+
 final class UnrealPackageReader4
 {
+    use EpicUE427VersionConstants;
+
     private string $path;
     private ?UE4BinaryReader $reader = null;
     private int $fileSize = 0;
@@ -159,38 +163,11 @@ final class UnrealPackageReader4
     private const PACKAGE_FILE_TAG = 0x9E2A83C1;
     private const PACKAGE_FILE_TAG_SWAPPED = 0xC1832A9E;
 
-    // Version gates matching Epic's EUnrealEngineObjectUE4Version exactly.
-    // The enum contains the typoed real member VAR_UE4_ARRAY_PROPERTY_INNER_TAGS;
-    // it must be counted when deriving every later numeric value.
-    // UT4 clean-master ends at VER_UE4_64BIT_EXPORTMAP_SERIALSIZES (package v511).
-    private const VER_SERIALIZE_TEXT_IN_PACKAGES = 459;
-    private const VER_ADD_STRING_ASSET_REFERENCES_MAP = 384;
-    private const VER_ADDED_SEARCHABLE_NAMES = 510;
-    private const VER_ENGINE_VERSION_OBJECT = 336;
-    private const VER_PACKAGE_SUMMARY_HAS_COMPATIBLE_ENGINE_VERSION = 444;
-    private const VER_WORLD_LEVEL_INFO = 224;
-    private const VER_WORLD_LEVEL_INFO_UPDATED = 268;
-    private const VER_WORLD_LEVEL_INFO_LOD_LIST = 316;
-    private const VER_WORLD_LEVEL_INFO_ZORDER = 319;
-    private const VER_WORLD_LAYER_ENABLE_DISTANCE_STREAMING = 329;
+    // All UE4 file-version gates are generated directly from pinned Epic
+    // EUnrealEngineObjectUE4Version, never manually transcribed here.
     private const FORTNITE_MAIN_BRANCH_VERSION_GUID = '601D1886-AC644F84-AA16D3DE-0DEAC7D6';
     private const FORTNITE_WORLD_TILE_3D_OFFSET_VERSION = 1;
-    private const VER_ADDED_CHUNKID_TO_ASSETDATA_AND_UPACKAGE = 278;
-    private const VER_CHANGED_CHUNKID_TO_BE_AN_ARRAY_OF_CHUNKIDS = 326;
-    // Confirmed as 521 from compiled Epic UE4.27.2 ObjectVersion.h enum.
-    private const VER_ASSETREGISTRY_DEPENDENCYFLAGS = 521;
-    private const VER_PRELOAD_DEPENDENCIES_IN_COOKED_EXPORTS = 507;
-    private const VER_TEMPLATE_INDEX_IN_COOKED_EXPORTS = 508;
-    private const VER_LOAD_FOR_EDITOR_GAME = 365;
-    private const VER_COOKED_ASSETS_IN_EDITOR_SUPPORT = 485;
-    private const VER_64BIT_EXPORTMAP_SERIALSIZES = 511;
-    private const VER_NAME_HASHES_SERIALIZED = 504;
-    private const VER_ADDED_SOFT_OBJECT_PATH = 514;
-    private const VER_ADDED_PACKAGE_SUMMARY_LOCALIZATION_ID = 516;
-    private const VER_ADDED_PACKAGE_OWNER = 518;
-    private const VER_NON_OUTER_PACKAGE_IMPORT = 520;
-    private const VER_OLDEST_LOADABLE_PACKAGE = 214;
-    private const DEFAULT_ASSUMED_UNVERSIONED_UE4_VERSION = 522;
+
     private const NAME_SIZE = 1024;
 
     public function __construct(string $path, array $options = [])
