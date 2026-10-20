@@ -18,7 +18,6 @@ foreach(explode("\n",$raw) as $line){
           'UE427_NATIVE_P06_THUMB|'=>'record'] as $marker=>$kind){
   $at=strpos($line,$marker);if($at===false)continue;
   $values=explode('|',trim(substr($line,$at+strlen($marker))));
-  $expected=count(['count'=>[3],'total'=>[2],'record'=>[6]][$kind]);
   $length=['count'=>3,'total'=>2,'record'=>6][$kind];
   if(count($values)!==$length){$issues[]=['invalid_native_'.$kind=>$values];break;}
   $i=(int)$values[0];

@@ -150,6 +150,8 @@ final class UnrealPackageReader4
     private array $preloadDependencies = [];
     private array $dependsMap = [];
     private array $thumbnailIndex = [];
+    private array $assetRegistryObjects = [];
+    private int $assetRegistryDependencyDataOffset = -1;
 
     private const PACKAGE_FILE_TAG = 0x9E2A83C1;
     private const PACKAGE_FILE_TAG_SWAPPED = 0xC1832A9E;
@@ -166,6 +168,8 @@ final class UnrealPackageReader4
     private const VER_WORLD_LEVEL_INFO = 224;
     private const VER_ADDED_CHUNKID_TO_ASSETDATA_AND_UPACKAGE = 278;
     private const VER_CHANGED_CHUNKID_TO_BE_AN_ARRAY_OF_CHUNKIDS = 326;
+    // Confirmed as 521 from compiled Epic UE4.27.2 ObjectVersion.h enum.
+    private const VER_ASSETREGISTRY_DEPENDENCYFLAGS = 521;
     private const VER_PRELOAD_DEPENDENCIES_IN_COOKED_EXPORTS = 507;
     private const VER_TEMPLATE_INDEX_IN_COOKED_EXPORTS = 508;
     private const VER_LOAD_FOR_EDITOR_GAME = 365;
@@ -440,6 +444,7 @@ final class UnrealPackageReader4
         $this->readStringAssetReferences();
         $this->readPreloadDependencies();
         $this->readThumbnailIndex();
+        $this->readAssetRegistryData();
     }
 
     private function readCustomVersions(UE4BinaryReader $r, int $legacy): array
@@ -850,6 +855,54 @@ final class UnrealPackageReader4
         }
     }
 
+    /**
+     * Source-shaped raw AssetRegistry main section, separate from the
+     * package-name synthesis and dependency bit arrays in FPackageReader.
+     * The cooker deliberately emits pre-dependency format for filtered
+     * editor-only packages, even when the package version is recent.
+     */
+    private function readAssetRegistryData(): void
+    {
+        $offset = (int)($this->header['assetRegistryDataOffset'] ?? 0);
+        if ($offset <= 0) return;
+        try {
+            $r = $this->tableReader($offset);
+            $isPreDependencyFormat =
+                (int)($this->header['version'] ?? 0) < self::VER_ASSETREGISTRY_DEPENDENCYFLAGS
+                || (((int)($this->header['packageFlags'] ?? 0) & 0x80000000) !== 0);
+            $dependencyOffset = $isPreDependencyFormat ? -1 : $r->i64();
+            $count = $r->i32();
+            $this->assertArrayCountFits($r, $count, 12, 'UE4 AssetRegistry object');
+            $objects = [];
+            for ($i = 0; $i < $count; $i++) {
+                $recordOffset = $r->tell();
+                $objectPath = $r->fstring();
+                $className = $r->fstring();
+                $tagCount = $r->i32();
+                $this->assertArrayCountFits($r, $tagCount, 8, 'UE4 AssetRegistry object tags');
+                $tags = [];
+                for ($j = 0; $j < $tagCount; $j++) {
+                    $tagOffset = $r->tell();
+                    $tags[] = [
+                        'index' => $j,
+                        'offset' => $tagOffset,
+                        'key' => $r->fstring(),
+                        'value' => $r->fstring(),
+                    ];
+                }
+                $objects[] = [
+                    'index' => $i, 'offset' => $recordOffset,
+                    'objectPath' => $objectPath, 'className' => $className,
+                    'tagCount' => $tagCount, 'tags' => $tags,
+                ];
+            }
+            $this->assetRegistryDependencyDataOffset = $dependencyOffset;
+            $this->assetRegistryObjects = $objects;
+        } catch (Throwable $e) {
+            $this->issues[] = 'Could not parse UE4 AssetRegistry main section: ' . $e->getMessage();
+        }
+    }
+
     private function readStringAssetReferences(): void
     {
         $count = (int)($this->header['stringAssetReferencesCount'] ?? 0);
@@ -986,6 +1039,8 @@ final class UnrealPackageReader4
     public function getPreloadDependencies(): array { return $this->preloadDependencies; }
     public function getDependsMap(): array { return $this->dependsMap; }
     public function getThumbnailIndex(): array { return $this->thumbnailIndex; }
+    public function getAssetRegistryObjects(): array { return $this->assetRegistryObjects; }
+    public function getAssetRegistryDependencyDataOffset(): int { return $this->assetRegistryDependencyDataOffset; }
 
     public function nameByIndex(int $index, int $number = 0): string
     {
