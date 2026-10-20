@@ -83,6 +83,7 @@ final class Uedb5Ut4SnapshotBuilder
                 'exports' => array_map(self::exportRow(...), $exports),
                 'string_asset_references' => array_values($reader->getStringAssetReferences()),
                 'preload_dependencies' => array_values($reader->getPreloadDependencies()),
+                'depends_map' => array_values($reader->getDependsMap()),
             ],
         ];
     }
@@ -97,6 +98,7 @@ final class Uedb5Ut4SnapshotBuilder
             'exports' => 'ue4.ut4.object-export.v1',
             'string_asset_references' => 'ue4.ut4.string-asset-reference.v1',
             'preload_dependencies' => 'ue4.ut4.preload-dependency.v1',
+            'depends_map' => 'ue4.ut4.depends-map.v1',
         ];
     }
 

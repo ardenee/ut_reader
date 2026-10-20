@@ -21,7 +21,7 @@ $nameEntry=static fn(string $name):string=>$fstring($name).$u16(0x11).$u16(0x22)
 $engineVersion=static fn():string=>$u16(4).$u16(15).$u16(0).$u32(12345).$fstring('UT4');
 $buildFixture=static function(int $version,?int $serializedVersion=null)use($u32,$i32,$i64,$fstring,$fname,$nameEntry,$engineVersion):string{
     $serializedVersion??=$version;
-    $names=['CoreUObject','Class','MyObject','MyExport'];
+    $names=['CoreUObject','Class','MyObject','MyExport','/Game/SoftPkg'];
     $nameBytes='';foreach($names as $name)$nameBytes.=$nameEntry($name);
     $importBytes=$fname(0).$fname(1).$i32(0).$fname(2);
     if($version>=520)$importBytes.=$fname(0);
@@ -30,17 +30,18 @@ $buildFixture=static function(int $version,?int $serializedVersion=null)use($u32
     $exportBytes.=$i32(0).$i32(0).$i32(0).str_repeat("\0",16).$u32(0);
     $exportBytes.=$i32(0).$i32(1);
     $exportBytes.=$i32(0).$i32(1).$i32(0).$i32(0).$i32(0);
-    $stringRefBytes=$version>=514?$fname(2).$fstring(''):$fstring('/Game/SoftPkg');
+    $dependsBytes=$i32(1).$i32(-1); // one import dependency for export zero
+    $stringRefBytes=$fname(4);
     $preloadBytes=$i32(1);
 
-    $buildSummary=static function(int $headerSize,int $nameOffset,int $importOffset,int $exportOffset,int $stringOffset,int $preloadOffset)
+    $buildSummary=static function(int $headerSize,int $nameOffset,int $importOffset,int $exportOffset,int $dependsOffset,int $stringOffset,int $preloadOffset)
         use($version,$serializedVersion,$u32,$i32,$i64,$fstring,$engineVersion):string{
         $b=$u32(0x9E2A83C1).$i32(-7).$i32(864).$i32($serializedVersion).$i32(0).$i32(0);
         $b.=$i32($headerSize).$fstring('/Game/Test').$u32(0);
-        $b.=$i32(4).$i32($nameOffset);
+        $b.=$i32(5).$i32($nameOffset);
         if($version>=516)$b.=$fstring('');
         $b.=$i32(0).$i32(0);
-        $b.=$i32(1).$i32($exportOffset).$i32(1).$i32($importOffset).$i32(0);
+        $b.=$i32(1).$i32($exportOffset).$i32(1).$i32($importOffset).$i32($dependsOffset);
         $b.=$i32(1).$i32($stringOffset);
         if($version>=510)$b.=$i32(0);
         $b.=$i32(0);
@@ -53,16 +54,17 @@ $buildFixture=static function(int $version,?int $serializedVersion=null)use($u32
         $b.=$i32(1).$i32($preloadOffset);
         return $b;
     };
-    $summary0=$buildSummary(0,0,0,0,0,0);
+    $summary0=$buildSummary(0,0,0,0,0,0,0);
     $nameOffset=strlen($summary0);
     $importOffset=$nameOffset+strlen($nameBytes);
     $exportOffset=$importOffset+strlen($importBytes);
-    $stringOffset=$exportOffset+strlen($exportBytes);
+    $dependsOffset=$exportOffset+strlen($exportBytes);
+    $stringOffset=$dependsOffset+strlen($dependsBytes);
     $preloadOffset=$stringOffset+strlen($stringRefBytes);
     $headerSize=$preloadOffset+strlen($preloadBytes);
-    $summary=$buildSummary($headerSize,$nameOffset,$importOffset,$exportOffset,$stringOffset,$preloadOffset);
+    $summary=$buildSummary($headerSize,$nameOffset,$importOffset,$exportOffset,$dependsOffset,$stringOffset,$preloadOffset);
     if(strlen($summary)!==strlen($summary0))throw new RuntimeException('UT4 fixture summary size changed.');
-    return $summary.$nameBytes.$importBytes.$exportBytes.$stringRefBytes.$preloadBytes;
+    return $summary.$nameBytes.$importBytes.$exportBytes.$dependsBytes.$stringRefBytes.$preloadBytes;
 };
 
 $temp=sys_get_temp_dir().DIRECTORY_SEPARATOR.'unrealdb-uedb5-ut4-'.bin2hex(random_bytes(5));
@@ -92,12 +94,14 @@ try{
     $check('ut4_v510_export_serial_width',(int)($export['serial_range_serialized_width_bits']??0)===32);
     $check('ut4_v510_export_source_fields',($export['object_name']['text']??'')==='MyExport'
         && ($export['object_flags']??'')==='00000004' && !empty($export['is_asset']));
+    $check('ut4_v510_depends_map_identity',($snapshot['sections']['depends_map'][0]['references'][0]??null)===-1);
     $check('ut4_v510_string_reference_retained',($snapshot['sections']['string_asset_references'][0]['path']??'')==='/Game/SoftPkg');
     $check('ut4_v510_preload_dependency_retained',(int)($snapshot['sections']['preload_dependencies'][0]['ref']??0)===1);
     $writer=new Uedb5MetadataSnapshotWriter($temp);$writer->write($snapshot,1024);
     $reader=new Uedb5MetadataReader($temp);$round=$reader->snapshot(7,7511);
     $check('ut4_v510_uedb5_roundtrip',($round['sections']['exports'][0]['object_name']['text']??'')==='MyExport'
-        && ($round['sections']['summary'][0]['parser_profile']['key']??'')==='ut4-alpha');
+        && ($round['sections']['summary'][0]['parser_profile']['key']??'')==='ut4-alpha'
+        && ($round['sections']['depends_map'][0]['references'][0]??null)===-1);
 
     $older=$temp.DIRECTORY_SEPARATOR.'fixture509.uasset';file_put_contents($older,$buildFixture(509));
     $p509=new \UnrealPackageReader4($older,$options);
