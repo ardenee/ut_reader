@@ -1,0 +1,1 @@
+{"FileVersion":3,"Version":1,"VersionName":"1.0","FriendlyName":"UE427Oracle","Description":"Local audit-only native oracle","Category":"Developer","CanContainContent":false,"Modules":[{"Name":"UE427Oracle","Type":"Editor","LoadingPhase":"Default"}]}

@@ -1,0 +1,1 @@
+{"FileVersion":3,"EngineAssociation":"4.27","Category":"Audit","Description":"Isolated native UE4 package oracle","Plugins":[{"Name":"UE427Oracle","Enabled":true}],"Modules":[]}
