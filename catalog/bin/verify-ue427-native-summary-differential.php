@@ -5,6 +5,7 @@ $log=$argv[1]??'C:/Temp/ue427-native-commandlet-stdout.log';
 $list=$argv[2]??'C:/Temp/ue427-p01-real-assets.txt';
 $raw=@file_get_contents($log);$paths=@file($list,FILE_IGNORE_NEW_LINES|FILE_SKIP_EMPTY_LINES);
 if(!is_string($raw)||!is_array($paths))throw new RuntimeException('Native Epic output or corpus list unavailable');
+if(isset($paths[0]))$paths[0]=preg_replace('/^\\xEF\\xBB\\xBF/', '', $paths[0]);
 if(str_starts_with($raw,chr(255).chr(254)))$raw=mb_convert_encoding(substr($raw,2),'UTF-8','UTF-16LE');
 $lines=explode("\n",$raw);
 $keys=['version','licenseeVersion','totalHeaderSize','nameCount','nameOffset','importCount','importOffset','exportCount','exportOffset','dependsOffset','stringAssetReferencesCount','stringAssetReferencesOffset','preloadDependencyCount','preloadDependencyOffset','assetRegistryDataOffset','thumbnailTableOffset','compressionFlags'];
