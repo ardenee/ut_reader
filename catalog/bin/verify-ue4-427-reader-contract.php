@@ -66,12 +66,11 @@ $check(
     'UE4.27.2 serializes FObjectImport::PackageName only at VER_UE4_NON_OUTER_PACKAGE_IMPORT+ when editor-only data is not filtered.'
 );
 $check(
-    'soft_object_path_layout_is_versioned',
+    'soft_package_references_are_fname_entries',
     is_string($source)
-        && str_contains($source, 'VER_ADDED_SOFT_OBJECT_PATH = 514')
-        && str_contains($source, '$assetPathName = $this->readFName($r);')
-        && str_contains($source, '$subPath = trim($r->fstring());'),
-    'VER_UE4_ADDED_SOFT_OBJECT_PATH changes soft references from FString to FName + FString.'
+        && str_contains($source, '$path = $this->fnameText($this->readFName($r));')
+        && !str_contains($source, '$subPath = trim($r->fstring());'),
+    'UE4 SavePackage and SavePackage2 write SoftPackageReferenceList as FName entries (two int32 words), not FSoftObjectPath.'
 );
 $check(
     'ue4_427_version_gates_match_source_exactly',
@@ -150,7 +149,7 @@ $check(
         && str_contains($source, '$importMinimum = 28 +')
         && str_contains($source, '$exportMinimum = 64;')
         && str_contains($source, 'VER_64BIT_EXPORTMAP_SERIALSIZES) $exportMinimum += 8;')
-        && str_contains($source, 'VER_ADDED_SOFT_OBJECT_PATH ? 12 : 4'),
+        && str_contains($source, "'stringAssetReferencesOffset', 8]"),
     'Minimum serialized table widths follow the UE4 version gates instead of imposing one fixed export size on every loadable UE4 version.'
 );
 

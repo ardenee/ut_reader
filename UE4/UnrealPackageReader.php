@@ -517,7 +517,7 @@ final class UnrealPackageReader4
         }
 
         foreach ([
-            ['soft package references', 'stringAssetReferencesCount', 'stringAssetReferencesOffset', $version >= self::VER_ADDED_SOFT_OBJECT_PATH ? 12 : 4],
+            ['soft package references', 'stringAssetReferencesCount', 'stringAssetReferencesOffset', 8],
             ['preload dependencies', 'preloadDependencyCount', 'preloadDependencyOffset', 4],
         ] as $table) {
             [$label, $countKey, $offsetKey, $minimumEntrySize] = $table;
@@ -738,15 +738,10 @@ final class UnrealPackageReader4
             $r = $this->tableReader($offset);
             for ($i = 0; $i < $count; $i++) {
                 $entryOffset = $r->tell();
-                if ((int)$this->header['version'] >= self::VER_ADDED_SOFT_OBJECT_PATH) {
-                    // FSoftObjectPath serializes AssetPathName (FName) followed by SubPathString (FString).
-                    $assetPathName = $this->readFName($r);
-                    $subPath = trim($r->fstring());
-                    $assetPath = $this->fnameText($assetPathName);
-                    $path = $assetPath . ($subPath !== '' ? ':' . $subPath : '');
-                } else {
-                    $path = trim($r->fstring());
-                }
+                // UE4 SavePackage.cpp/SavePackage2.cpp serialize each
+                // SoftPackageReferenceList entry as FName (two int32 words),
+                // not FSoftObjectPath or an FString.
+                $path = $this->fnameText($this->readFName($r));
                 if ($path !== '') {
                     $this->stringAssetReferences[] = ['index' => $i, 'offset' => $entryOffset, 'path' => $path, 'source' => 'summary_string_asset_reference'];
                 }
