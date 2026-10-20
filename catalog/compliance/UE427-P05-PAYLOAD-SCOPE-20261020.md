@@ -71,11 +71,36 @@ The disposable `UE427Oracle` project includes `Content/UE427PayloadProbe/Cube.ua
 
 Native log `C:/Temp/ue427-p05-owner-stream-final.log`; replay `php catalog/bin/verify-ue427-p05-owner-runtime.php C:/Temp/ue427-p05-owner-stream-final.log` verifies all eight cases, 56 exact runtime-field expectations, two mapped-region checks, native completeness markers and error-free output. Rebuild from the versioned `ue427-native-oracle` plugin using installed UE4.27 `RunUAT BuildPlugin`, then execute `UE4Editor-Cmd.exe C:/Temp/UE427Oracle/UE427Oracle.uproject -run=UE427Oracle -P05OwnerRuntime -unattended -nullrhi -nosplash -nop4 -NoSound`.
 
-**P05 still ACTIVE:** exact source-defined sidecar streaming/selection and real-linker fixups are now proven for these controlled inputs. Remaining full-scope decisions concern the direct `BulkData.MapFile` fast path on a runtime platform that supports memory-mapping alignment, genuine cooked optional/mapped inputs rather than locally generated sidecars, and whether active UnrealDB production consumers require new durable physical-sidecar identities (related P08/P09).
+**P05 still ACTIVE:** source-defined sidecar streaming/selection and real-linker fixups are proven for these controlled inputs. The Windows platform source excludes the forced pointer-mapping fast path (`SupportsMemoryMappedFiles=false`), which should not block Windows certification. Genuine cooked optional bulk assets remain the key uncaptured writer output; durable physical-sidecar identities/recovery are explicitly P08/P09 workflow obligations.
+
+## Production reader physical-export addressing — genuine corpus parity
+
+**New production reader capability:** `UE4/UnrealPackageReader.php::resolveExportPayloadSpan(int $exportIndex)` returns the source-defined logical `FObjectExport::SerialOffset/SerialSize` mapped to an actual physical `.uasset/.umap` or `.uexp` path/byte offset; does not copy payload bytes or assert bulk providers based on filenames. This makes previously metadata-only physical export ranges available to callers and prevents treating missing companions as satisfied reads.
+
+Pinned Epic evidence: `FLinkerLoad` reads exports with package-logical serial offsets; the installed cooker emits a `.uasset/.umap` header and `.uexp` data stream, so `.uexp` offsets subtract the original base-file byte length. The resolver chooses the base file only for a wholly contained span; otherwise it demands an existing separate `.uexp` and checks physical bounds. It rejects spans crossing the file boundary, arithmetic overflow, missing/truncated sidecars, invalid indices and negative sizes. It does **not** claim that `.uexp` alone contains `FBulkData` payload bytes or that arbitrary package-container compressed chunks have the same physical layout.
+
+Versioned independent verifier `php catalog/bin/verify-ue427-p05-export-providers.php C:/Temp/ue427-all-assets.txt C:/Temp/ue427-p05-cooked-manifest.txt`:
+
+| Evidence | Result |
+| --- | ---: |
+| Genuine installed unsplit UE4.27 packages | **1,749/1,749** |
+| Genuine Epic-cooked split packages | **244/244** |
+| In-file resolved export byte spans | **37,552/37,552**, 21,106,030 bytes |
+| `.uexp` resolved export spans | **380/380**, 63,530,600 bytes |
+| Negative/valid-control cases | **8/8** |
+| Physical-provider errors or mismatches | **0** |
+
+The eight checks comprise untouched split control, missing `.uexp`, truncated `.uexp`, invalid negative/oversized export indexes, in-memory metadata crossing the base/split boundary, signed-integer arithmetic overflow, and negative serial size. Negative mutation only affects disposable copies or in-memory decoded export metadata. Both corpus denominators are fixed to installed genuine assets, not synthetic fixtures. This API is a **new exported code path**, not yet a claim that PAK ingestion/backup uses it. P08/P09 must verify durable sidecar associations independently.
+
+## Windows memory mapping source-defined exclusion
+
+Pinned Epic `Core/Public/Windows/WindowsPlatformProperties.h::FWindowsPlatformProperties` inherits `FGenericPlatformProperties` without overriding `SupportsMemoryMappedFiles()` or `GetMemoryMappingAlignment()`. `Core/Public/GenericPlatform/GenericPlatformProperties.h` returns **false** and **0**, respectively. This applies to Windows Editor and WindowsNoEditor/UE4Game. Consequently, merely switching to `UE4Game.exe` does **not** furnish a supported alignment-enabled `FUntypedBulkData::MapFile` pointer fast path; do not demand or claim it passes on this Windows platform. The earlier asserted force-map fixture is retained as a failed unsupported-path attempt, excluded from successful runtime evidence.
+
+Pinned `SavePackage/SavePackageUtilities.cpp` gates mapped bulk archiving behind `TargetPlatform->SupportsFeature(ETargetPlatformFeatures::MemoryMappedFiles)`, and `BulkData.cpp` handles mapping as optional; the cooked Windows corpus has no `.m.ubulk` output. `.m.ubulk` physical sidecar routing and actual `OpenMapped/MapRegion` byte reads are already positively exercised by the controlled native loader/streaming fixtures, but that does **not** turn the platform-disabled pointer fast path into a supported requirement. A real map-enabled target platform is outside this Windows audit environment.
 
 ## Scope distinction
 
-Genuine split **exports**, genuine separate bulk payload layout, and compiled owner/linker-selected optional/mapped/duplicate sidecar **streaming** are verified on controlled inputs. The pointer-based `BulkData.MapFile` fast path, genuine cooked optional/mapped specimens, and durable production physical-provider linkage remain separate. **P05 is ACTIVE**, not certified.
+Genuine split **exports**, genuine separate bulk payload layout, and compiled owner/linker-selected optional/mapped/duplicate sidecar **streaming** are verified on controlled inputs. The pointer-based `BulkData.MapFile` fast path, genuine cooked optional/mapped specimens, and durable production physical-provider linkage remain separate. **P05 is ACTIVE**, pending genuine cooked optional-writer evidence; Windows-disabled pointer mapping is not an outstanding Windows test, and durable ingestion remains P08/P09.
 
 ## UnrealDB active inspection — no production change in this checkpoint
 
@@ -86,9 +111,9 @@ Genuine split **exports**, genuine separate bulk payload layout, and compiled ow
 
 ## Required next acceptance, not yet performed
 
-1. **Completed for UEXP/UBULK:** generate and preserve the genuine 244-package cooked corpus and verify its 380 split-export ranges. **Still missing:** positive optional `.uptnl` and memory-mapped `.m.ubulk` fixtures, which may require targeted Epic-native generation.
-2. **Completed for controlled positive paths:** compiled `FUntypedBulkData::Serialize` loaded 2 inline/tail null-owner cases and selected 8 real-owner/linker sidecar paths (including conditional fixup and optional duplicate fallback); `CreateStreamingRequest` returned all 128 expected sidecar bytes, and direct mapped-file regions returned another 32. **Still required:** an alignment-capable cooked runtime for `BulkData.MapFile(bAttemptFileMapping=true)`, and cooked optional/mapped asset specimens.
-3. **Covered through native controlled fixtures:** 64-bit element sizes, swapped-endian bulk headers, optional duplicate-presence/fallback, and two direct mapped-region reads all passed. Five failure mutations plus unchanged genuine control pass. **Still required:** full negative breadth for corrupted optional/mapped files in the compiled source loader, and missing-sidecar workflow behavior in production.
+1. **Completed for UEXP/UBULK:** generate and preserve the genuine 244-package cooked corpus, its 380 split export ranges and 123 ordinary bulk headers. Positive **native-controlled** `.uptnl` and `.m.ubulk` physical providers also pass the real owner/linker loader and streaming tests. **Still missing:** an actual **Epic-cooked `.uptnl` package specimen** rather than a native-created sidecar; Windows's disabled mapping feature rules out a normally cooked `.m.ubulk` specimen on this target.
+2. **Completed for controlled positive paths:** compiled `FUntypedBulkData::Serialize` loaded 2 inline/tail null-owner cases and selected 8 real-owner/linker sidecar paths (including conditional fixup and optional duplicate fallback); `CreateStreamingRequest` returned all 128 expected sidecar bytes, and direct mapped-file regions returned another 32. **Still required for P05:** genuine cooked optional-payload writer output; mapped-pointer loading is unsupported on pinned Windows and is excluded from the Windows acceptance denominator.
+3. **Covered through native controlled fixtures:** 64-bit element sizes, swapped-endian bulk headers, optional duplicate-presence/fallback and two direct mapped-region reads all passed. The 5-file corruption mutations plus genuine unchanged control and 8 export-provider control/negative scenarios pass. **Still required:** negative breadth for corrupt optional/mapped inputs in the compiled native loader; missing-sidecar workflow preservation is assigned to P08/P09.
 4. Trace actual production reader/V5 consumers and ensure metadata neither invents bytes in `.uasset` nor silently drops valid sidecars. P08/P09 will separately certify ingest/backup/dependency persistence.
 
-**No overall P05 source parity or production certification is claimed.** Genuine `.uexp`/`.ubulk` range coverage and controlled Epic owner/linker source dispatch, streaming, optional/mapped routing and fixups are established; the memory-mapped pointer fast path on an alignment-capable cooked target, genuinely cooked optional/mapped assets and production durable sidecar binding remain unverified. Commit the scope record and executable corpus verifiers. No new primary operation was added, and no PRD database writes are involved.
+**No overall P05 source parity or production certification is claimed.** Genuine `.uexp`/`.ubulk` range coverage and compiled Epic owner/linker dispatch, streaming, optional/mapped file selection and fixups are established. The remaining P05 specimen gap is genuine cooked optional bulk output. Windows-disabled pointer mapping is explicitly excluded; production durable sidecar binding is deferred to P08/P09. Commit the scope record and executable corpus verifiers. No new primary operation was added, and no PRD database writes are involved.

@@ -876,6 +876,63 @@ final class UnrealPackageReader4
         }
     }
 
+    /**
+     * Resolve Epic's logical FObjectExport SerialOffset/SerialSize into the
+     * underlying legacy package file, without reading or copying payloads.
+     * A split cooked package uses the byte length of its .uasset/.umap
+     * header as the boundary; the remaining stream lives in its .uexp.
+     *
+     * This is deliberately only export payload addressing. FUntypedBulkData
+     * chooses .ubulk/.uptnl/.m.ubulk according to serialized flags, linker
+     * state, and package source; do not infer bulk providers from this API.
+     *
+     * @return array{exportIndex:int,logicalOffset:int,size:int,path:string,physicalOffset:int,provider:string}
+     */
+    public function resolveExportPayloadSpan(int $exportIndex): array
+    {
+        $row = $this->exports[$exportIndex] ?? null;
+        if (!is_array($row)) {
+            throw new OutOfBoundsException("UE4 export index does not exist: $exportIndex");
+        }
+        $logicalOffset = (int)($row['serialOffset'] ?? -1);
+        $size = (int)($row['serialSize'] ?? -1);
+        if ($logicalOffset < 0 || $size < 0 || $logicalOffset > PHP_INT_MAX - $size) {
+            throw new OutOfBoundsException("Invalid UE4 export span index=$exportIndex offset=$logicalOffset size=$size");
+        }
+
+        $baseSize = @filesize($this->path);
+        if ($baseSize === false) {
+            throw new RuntimeException("Cannot stat UE4 package: {$this->path}");
+        }
+        $baseSize = (int)$baseSize;
+        if ($logicalOffset < $baseSize || ($logicalOffset === $baseSize && $size === 0)) {
+            if ($size > $baseSize - $logicalOffset) {
+                throw new OutOfBoundsException("UE4 export span crosses the base/split file boundary: $exportIndex");
+            }
+            return [
+                'exportIndex' => $exportIndex, 'logicalOffset' => $logicalOffset, 'size' => $size,
+                'path' => $this->path, 'physicalOffset' => $logicalOffset, 'provider' => 'uasset',
+            ];
+        }
+
+        $path = (string)($this->header['uexpPath'] ?? '');
+        if ($path === '' || !is_file($path)) {
+            throw new RuntimeException("UE4 export requires missing .uexp companion: index=$exportIndex");
+        }
+        $splitSize = @filesize($path);
+        if ($splitSize === false) {
+            throw new RuntimeException("Cannot stat UE4 .uexp companion: $path");
+        }
+        $physicalOffset = $logicalOffset - $baseSize;
+        if ($size > (int)$splitSize - $physicalOffset) {
+            throw new OutOfBoundsException("UE4 export span exceeds .uexp companion: index=$exportIndex");
+        }
+        return [
+            'exportIndex' => $exportIndex, 'logicalOffset' => $logicalOffset, 'size' => $size,
+            'path' => $path, 'physicalOffset' => $physicalOffset, 'provider' => 'uexp',
+        ];
+    }
+
     private function guessUexpPath(): string
     {
         $base = preg_replace('/\.(uasset|umap)$/i', '.uexp', $this->path);
