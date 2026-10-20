@@ -6,7 +6,7 @@
 declare(strict_types=1);
 $repo=dirname(__DIR__,2);
 $methods=[
- 'getThumbnailIndex','getThumbnailPayload','getAssetRegistryObjects',
+ 'getThumbnailIndex','getThumbnailPayload','getAssetRegistryObjects','getAssetRegistryAssetData',
  'getAssetRegistryDependencyDataOffset','getAssetRegistryDependencyBits','getWorldTileInfo'
 ];
 $areas=['catalog','UE4'];

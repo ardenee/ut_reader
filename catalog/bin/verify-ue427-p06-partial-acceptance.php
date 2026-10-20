@@ -27,6 +27,18 @@ $checks=[
    'counts.compressed_bytes_hashed'=>84244023,'counts.fields_compared'=>10374,
    'mismatch_count'=>0]],
  'thumbnail_payload_corruptions'=>['verify-ue427-p06-thumbnail-payload-negatives.php',[],[]],
+ 'semantic_assetdata_installed'=>['verify-ue427-p06-native-assetdata.php',[],
+  ['counts.packages'=>1749,'counts.asset_rows'=>1730,'counts.tags_compared'=>11442,
+   'counts.semantic_fields_compared'=>15570,'counts.filtered_empty_tags'=>616,
+   'mismatch_count'=>0]],
+ 'semantic_assetdata_fixtures'=>['verify-ue427-p06-native-assetdata.php',
+  ['C:/Temp/ue427-p06-asset-fixtures-manifest.txt','C:/Temp/ue427-p06-asset-fixtures-safe-native.log'],
+  ['counts.packages'=>3,'counts.asset_rows'=>3,'counts.synthetic_world_rows'=>1,
+   'counts.filtered_empty_tags'=>2,'mismatch_count'=>0]],
+ 'semantic_assetdata_negatives'=>['verify-ue427-p06-assetdata-negatives.php',[],
+  ['pass_count'=>16,'total_checks'=>16]],
+ 'production_caller_inventory'=>['verify-ue427-p06-production-use-inventory.php',[],
+  ['production_php_files_scanned'=>816,'p06_getter_call_count'=>0]],
  'p05_full_regression'=>['verify-ue427-p05-acceptance.php',[],['verified_operations'=>12]],
  'ut4_v5_regression'=>['verify-uedb5-ut4-persistence.php',[],[]],
 ];
@@ -48,9 +60,11 @@ foreach($checks as $name=>[$script,$params,$expected]){
  if($pass)$passed++;
 }
 $ok=$passed===count($checks);
-echo json_encode(['ok'=>$ok,'scope'=>'PARTIAL P06 native thumbnail compressed payloads, AssetRegistry and WorldTile/ChunkID wire acceptance; semantic publication remains open',
+echo json_encode(['ok'=>$ok,'scope'=>'PARTIAL P06 native thumbnail, WorldTile/ChunkID wire, and compiled FAssetData identity/tag-map parity; production publication remains open',
  'passed'=>$passed,'total'=>count($checks),
- 'remaining'=>['FAssetData synthesis','thumbnail pixel decompression/editor conditional loading',
-  'world tile legacy-version positive cases and semantic consumers','production usage'],
+ 'remaining'=>['production caller/publisher linkage for derived FAssetData',
+  'native localized-text translation and typed AssetBundleData outside tested English corpus',
+  'thumbnail pixel decompression and editor-only loading if used',
+  'historical world-tile variants outside the current corpus'],
  'results'=>$results],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;
 exit($ok?0:2);

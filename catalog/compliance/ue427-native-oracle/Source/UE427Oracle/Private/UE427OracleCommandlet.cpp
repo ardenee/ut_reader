@@ -17,6 +17,7 @@
 #include "UE427OracleP06Dependencies.h"
 #include "UE427OracleP06WorldChunk.h"
 #include "UE427OracleP06ThumbPayload.h"
+#include "UE427OracleP06AssetSemantic.h"
 
 // Preserve Epic's actual FObjectImport / FObjectExport operator<< and supply
 // the package-local FName mapping that FLinkerLoad::operator<<(FName&) uses.
@@ -124,6 +125,9 @@ UUE427OracleCommandlet::UUE427OracleCommandlet() {
  IsClient = false; IsServer = false; IsEditor = true; LogToConsole = true;
 }
 int32 UUE427OracleCommandlet::Main(const FString& Params) {
+ FString P06AssetFixtureDir;
+ if(FParse::Value(*Params,TEXT("P06AssetFixtureDir="),P06AssetFixtureDir))
+  return UE427MakeP06SemanticFixtures(P06AssetFixtureDir)?0:32;
  FString WorldFixtureDir;
  if(FParse::Value(*Params,TEXT("P06WorldChunkFixtureDir="),WorldFixtureDir))
   return UE427MakeP06WorldChunkFixtures(WorldFixtureDir)?0:28;
@@ -264,6 +268,7 @@ int32 UUE427OracleCommandlet::Main(const FString& Params) {
   if (FParse::Param(*Params,TEXT("P06Registry")) && !UE427DumpP06AssetRegistryRaw(*Ar,S,Checked))return 26;
   if (FParse::Param(*Params,TEXT("P06Dependencies")) && !UE427DumpP06RegistryDependencies(*Ar,S,Checked))return 27;
   if (FParse::Param(*Params,TEXT("P06WorldChunk")) && !UE427ReadP06WorldChunk(*Ar,S,Checked))return 29;
+  if (FParse::Param(*Params,TEXT("P06AssetData")) && !UE427DumpP06SemanticAssetData(*Ar,S,Checked,Path))return 31;
   if (FParse::Param(*Params,TEXT("P06Thumb")) && !UE427DumpP06ThumbnailIndex(*Ar,S,Checked))return 25;
   if (FParse::Param(*Params,TEXT("P06ThumbPayload")) && !UE427DumpP06ThumbnailPayloads(*Ar,S,Checked))return 30;
   if (FParse::Param(*Params,TEXT("P05Bulk")) && !UE427ProbeCookedBulkHeaders(Path,Checked)) return 17;

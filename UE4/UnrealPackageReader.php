@@ -1201,6 +1201,113 @@ final class UnrealPackageReader4
         ];
     }
 
+    /**
+     * Derive Epic FAssetData's public identity and filtered searchable tags
+     * from this reader's source-verified raw AssetRegistry records.
+     *
+     * PackageName is a caller-owned Unreal mount identity such as
+     * "/Engine/Animation/Asset"; it CANNOT be inferred from a host-local
+     * or staged physical file path. This does not publish a V5 projection.
+     *
+     * @return list<array<string,mixed>>
+     */
+    /**
+     * FAssetTagValueRef::AsString -> LocalizeIfComplexString in Epic
+     * AssetDataTagMap.cpp. In the pinned English-language fixture corpus
+     * localized NSLOCTEXT/LOCTEXT values resolve to their source string.
+     * Keep the original serialized expression separately in rawValue.
+     * This is not a replacement for an engine localization manager.
+     */
+    private static function assetDataTagDisplayValue(string $raw): string
+    {
+        if (preg_match('~^(?:NSLOCTEXT|LOCTEXT)\s*\(.*,\s*"((?:\\\\.|[^"\\\\])*)"\s*\)$~s', $raw, $m) === 1
+            || preg_match('~^INVTEXT\s*\(\s*"((?:\\\\.|[^"\\\\])*)"\s*\)$~s', $raw, $m) === 1) {
+            return stripcslashes($m[1]);
+        }
+        return $raw;
+    }
+
+    public function getAssetRegistryAssetData(string $packageName): array
+    {
+        if ($this->issues !== [] || (int)($this->header['assetRegistryDataOffset'] ?? 0) <= 0) {
+            throw new RuntimeException('Cannot derive UE4 FAssetData without a valid serialized AssetRegistry section.');
+        }
+        if (!preg_match('~^/[^\s./:][^\s.:]*$~u', $packageName)
+            || str_ends_with($packageName, '/')
+            || str_contains($packageName, '//')
+            || str_contains($packageName, '\\')) {
+            throw new InvalidArgumentException('UE4 FAssetData needs a valid explicit long package name.');
+        }
+        $leafAt = strrpos($packageName, '/');
+        $packageAssetName = substr($packageName, $leafAt + 1);
+        $packagePath = substr($packageName, 0, $leafAt);
+        $version = (int)($this->header['version'] ?? 0);
+        // Epic PackageFileSummary.cpp clears the transient PKG_NewlyCreated
+        // bit (0x1) while loading in WITH_EDITOR. Preserve original wire
+        // flags in getHeader(), but pass the effective native flags to
+        // FAssetData just as the compiled Editor's PackageReader does.
+        $flags = (int)($this->header['packageFlags'] ?? 0) & ~0x00000001;
+        $isMap = ($flags & 0x00020000) !== 0; // PKG_ContainsMap
+        $chunks = array_values((array)($this->header['chunkIDs'] ?? []));
+        $result = [];
+        // PackageReader.cpp::ReadPackageDataMain restores old/non-public
+        // World assets before iterating individual AssetRegistry object rows.
+        if ($isMap && ($version < 337 || $this->assetRegistryObjects === [])) {
+            $result[] = [
+                'sourceIndex' => -1, 'syntheticWorld' => true,
+                'packageName' => $packageName, 'packagePath' => $packagePath,
+                'objectPath' => $packageName . '.' . $packageAssetName,
+                'assetName' => $packageAssetName, 'assetClass' => 'World',
+                'tags' => [], 'chunkIDs' => $chunks, 'packageFlags' => $flags,
+            ];
+        }
+        foreach ($this->assetRegistryObjects as $row) {
+            $path = (string)$row['objectPath'];
+            if ($isMap && $version < 337 && $path !== $packageAssetName) {
+                continue;
+            }
+            $absolute = str_starts_with($path, '/');
+            if (!$absolute) {
+                if (str_contains($path, '.')) {
+                    continue; // FAssetData is not made for nested relative paths
+                }
+                $path = $packageName . '.' . $path;
+            } elseif ($version < 520) {
+                continue; // VER_UE4_NON_OUTER_PACKAGE_IMPORT
+            }
+            $assetName = substr($path, max((int)strrpos($path, '.'), (int)strrpos($path, ':')) + 1);
+            $tags = [];
+            $assetBundles = null;
+            foreach ($row['tags'] as $tag) {
+                $key = (string)$tag['key'];
+                $value = (string)$tag['value'];
+                if ($key === '' || $value === '') continue;
+                if (strcasecmp($key, 'AssetBundleData') === 0) {
+                    // Epic FAssetData::SetTagsAndAssetBundles extracts this
+                    // key into a typed field rather than TagsAndValues.
+                    $assetBundles = $value;
+                    continue;
+                }
+                // FName map keys compare case-insensitively. Keep the first
+                // key's display spelling and the most recent value.
+                $canonical = strtolower($key);
+                $previous = $tags[$canonical]['key'] ?? $key;
+                $tags[$canonical] = ['key' => $previous,
+                    'value' => self::assetDataTagDisplayValue($value),
+                    'rawValue' => $value];
+            }
+            $result[] = [
+                'sourceIndex' => (int)$row['index'], 'syntheticWorld' => false,
+                'packageName' => $packageName, 'packagePath' => $packagePath,
+                'objectPath' => $path, 'assetName' => $assetName,
+                'assetClass' => (string)$row['className'], 'tags' => array_values($tags),
+                'assetBundlesRaw' => $assetBundles, 'chunkIDs' => $chunks,
+                'packageFlags' => $flags,
+            ];
+        }
+        return $result;
+    }
+
     public function getAssetRegistryObjects(): array { return $this->assetRegistryObjects; }
     public function getAssetRegistryDependencyDataOffset(): int { return $this->assetRegistryDependencyDataOffset; }
     public function getAssetRegistryDependencyBits(): array { return $this->assetRegistryDependencyBits; }
