@@ -82,6 +82,25 @@ path only**, not a complete UE4.27.2 package-format handbook and not an
 acceptance of any existing PHP implementation. The dependencies in its trace
 must be expanded before calling that execution path complete.
 
+## UE4.27.2 source-only reference sections
+
+- [Package loader and serialized field layout](ue4-4.27.2/package-loading/README.md):
+  six sequence diagrams, a selected header true/false graph, exact source
+  field and version references, and a print-ready PDF. **Incomplete**;
+  genuinely untraced called functions are listed explicitly.
+- [VerifyImport source paths](ue4-4.27.2/verifyimport/source-path.md):
+  wrapper, inner operation and package-load lambda. Also **incomplete**.
+
+The package-handbook source-only regeneration command is:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File catalog/bin/build-epic-ue427-package-handbook.ps1
+```
+
+The separate source-to-UnrealDB implementation checklist is in
+`catalog/compliance/UE427-LOADER-EPIC-STEP-MAPPING.csv`. It never becomes
+an input for Epic reference document generation.
+
 ## Future per-release handbook format
 
 Produce a browsable Markdown/HTML source reference, an editable graph file and

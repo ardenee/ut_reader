@@ -1,0 +1,411 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mxfile host="app.diagrams.net" type="device" version="24.7.17">
+  <diagram name="loader" id="loader">
+    <mxGraphModel dx="1300" dy="950" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" page="1" pageScale="1" pageWidth="1050" pageHeight="1905">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="LOADER01" parent="1" vertex="1" value="LOADER01 Status = CreateLoader(TFunction&amp;lt;void()&amp;gt;([]() {}));&lt;br/&gt;LinkerLoad.cpp:715" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="85" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="LOADER02" parent="1" vertex="1" value="LOADER02 Status = SerializePackageFileSummary();&lt;br/&gt;LinkerLoad.cpp:724" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="200" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="loader_e2" parent="1" edge="1" source="LOADER01" target="LOADER02" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="LOADER03" parent="1" vertex="1" value="LOADER03 Status = SerializeNameMap();&lt;br/&gt;LinkerLoad.cpp:731" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="315" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="loader_e3" parent="1" edge="1" source="LOADER02" target="LOADER03" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="LOADER04" parent="1" vertex="1" value="LOADER04 Status = SerializeGatherableTextDataMap();&lt;br/&gt;LinkerLoad.cpp:738" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="430" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="loader_e4" parent="1" edge="1" source="LOADER03" target="LOADER04" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="LOADER05" parent="1" vertex="1" value="LOADER05 Status = SerializeImportMap();&lt;br/&gt;LinkerLoad.cpp:745" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="545" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="loader_e5" parent="1" edge="1" source="LOADER04" target="LOADER05" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="LOADER06" parent="1" vertex="1" value="LOADER06 Status = SerializeExportMap();&lt;br/&gt;LinkerLoad.cpp:752" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="660" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="loader_e6" parent="1" edge="1" source="LOADER05" target="LOADER06" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="LOADER07" parent="1" vertex="1" value="LOADER07 Status = ReconstructImportAndExportMap();&lt;br/&gt;LinkerLoad.cpp:760" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="775" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="loader_e7" parent="1" edge="1" source="LOADER06" target="LOADER07" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="LOADER08" parent="1" vertex="1" value="LOADER08 Status = FixupImportMap();&lt;br/&gt;LinkerLoad.cpp:768" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="890" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="loader_e8" parent="1" edge="1" source="LOADER07" target="LOADER08" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="LOADER09" parent="1" vertex="1" value="LOADER09 Status = PopulateInstancingContext();&lt;br/&gt;LinkerLoad.cpp:775" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="1005" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="loader_e9" parent="1" edge="1" source="LOADER08" target="LOADER09" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="LOADER10" parent="1" vertex="1" value="LOADER10 Status = FixupExportMap();&lt;br/&gt;LinkerLoad.cpp:782" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="1120" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="loader_e10" parent="1" edge="1" source="LOADER09" target="LOADER10" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="LOADER11" parent="1" vertex="1" value="LOADER11 Status = SerializeDependsMap();&lt;br/&gt;LinkerLoad.cpp:789" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="1235" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="loader_e11" parent="1" edge="1" source="LOADER10" target="LOADER11" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="LOADER12" parent="1" vertex="1" value="LOADER12 Status = CreateExportHash();&lt;br/&gt;LinkerLoad.cpp:796" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="1350" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="loader_e12" parent="1" edge="1" source="LOADER11" target="LOADER12" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="LOADER13" parent="1" vertex="1" value="LOADER13 Status = FindExistingExports();&lt;br/&gt;LinkerLoad.cpp:803" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="1465" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="loader_e13" parent="1" edge="1" source="LOADER12" target="LOADER13" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="LOADER14" parent="1" vertex="1" value="LOADER14 Status = SerializePreloadDependencies();&lt;br/&gt;LinkerLoad.cpp:809" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="1580" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="loader_e14" parent="1" edge="1" source="LOADER13" target="LOADER14" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="LOADER15" parent="1" vertex="1" value="LOADER15 Status = FinalizeCreation(ObjectNameWithOuterToExportMap);&lt;br/&gt;LinkerLoad.cpp:816" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="1695" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="loader_e15" parent="1" edge="1" source="LOADER14" target="LOADER15" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram name="summary" id="summary">
+    <mxGraphModel dx="1300" dy="950" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" page="1" pageScale="1" pageWidth="1050" pageHeight="2480">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="SUMMARY01" parent="1" vertex="1" value="SUMMARY01 Record &amp;lt;&amp;lt; SA_VALUE(TEXT('Tag'), Sum.Tag);&lt;br/&gt;PackageFileSummary.cpp:68" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="85" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="SUMMARY02" parent="1" vertex="1" value="SUMMARY02 if (Sum.Tag == PACKAGE_FILE_TAG || Sum.Tag == PACKAGE_FILE_TAG_SWAP...&lt;br/&gt;PackageFileSummary.cpp:71" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="200" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="summary_e2" parent="1" edge="1" source="SUMMARY01" target="SUMMARY02" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="SUMMARY03" parent="1" vertex="1" value="SUMMARY03 const int32 CurrentLegacyFileVersion = -7;&lt;br/&gt;PackageFileSummary.cpp:102" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="315" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="summary_e3" parent="1" edge="1" source="SUMMARY02" target="SUMMARY03" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="SUMMARY04" parent="1" vertex="1" value="SUMMARY04 Record &amp;lt;&amp;lt; SA_VALUE(TEXT('LegacyFileVersion'), LegacyFileVersi...&lt;br/&gt;PackageFileSummary.cpp:104" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="430" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="summary_e4" parent="1" edge="1" source="SUMMARY03" target="SUMMARY04" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="SUMMARY05" parent="1" vertex="1" value="SUMMARY05 Record &amp;lt;&amp;lt; SA_VALUE(TEXT('FileVersionUE4'), Sum.FileVersionUE4);&lt;br/&gt;PackageFileSummary.cpp:124" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="545" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="summary_e5" parent="1" edge="1" source="SUMMARY04" target="SUMMARY05" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="SUMMARY06" parent="1" vertex="1" value="SUMMARY06 Sum.CustomVersionContainer.Serialize(Record.EnterField(SA_FIELD_NAM...&lt;br/&gt;PackageFileSummary.cpp:129" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="660" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="summary_e6" parent="1" edge="1" source="SUMMARY05" target="SUMMARY06" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="SUMMARY07" parent="1" vertex="1" value="SUMMARY07 Record &amp;lt;&amp;lt; SA_VALUE(TEXT('TotalHeaderSize'), Sum.TotalHeaderSi...&lt;br/&gt;PackageFileSummary.cpp:180" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="775" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="summary_e7" parent="1" edge="1" source="SUMMARY06" target="SUMMARY07" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="SUMMARY08" parent="1" vertex="1" value="SUMMARY08 Record &amp;lt;&amp;lt; SA_VALUE(TEXT('PackageFlags'), Sum.PackageFlags);&lt;br/&gt;PackageFileSummary.cpp:182" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="890" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="summary_e8" parent="1" edge="1" source="SUMMARY07" target="SUMMARY08" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="SUMMARY09" parent="1" vertex="1" value="SUMMARY09 Record &amp;lt;&amp;lt; SA_VALUE(TEXT('NameCount'), Sum.NameCount) &amp;lt;&amp;lt;...&lt;br/&gt;PackageFileSummary.cpp:196" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="1005" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="summary_e9" parent="1" edge="1" source="SUMMARY08" target="SUMMARY09" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="SUMMARY10" parent="1" vertex="1" value="SUMMARY10 Record &amp;lt;&amp;lt; SA_VALUE(TEXT('ExportCount'), Sum.ExportCount) &amp;lt;...&lt;br/&gt;PackageFileSummary.cpp:208" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="1120" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="summary_e10" parent="1" edge="1" source="SUMMARY09" target="SUMMARY10" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="SUMMARY11" parent="1" vertex="1" value="SUMMARY11 Record &amp;lt;&amp;lt; SA_VALUE(TEXT('ImportCount'), Sum.ImportCount) &amp;lt;...&lt;br/&gt;PackageFileSummary.cpp:209" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="1235" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="summary_e11" parent="1" edge="1" source="SUMMARY10" target="SUMMARY11" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="SUMMARY12" parent="1" vertex="1" value="SUMMARY12 Record &amp;lt;&amp;lt; SA_VALUE(TEXT('DependsOffset'), Sum.DependsOffset);&lt;br/&gt;PackageFileSummary.cpp:210" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="1350" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="summary_e12" parent="1" edge="1" source="SUMMARY11" target="SUMMARY12" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="SUMMARY13" parent="1" vertex="1" value="SUMMARY13 Record &amp;lt;&amp;lt; SA_VALUE(TEXT('SoftPackageReferencesCount'), Sum.So...&lt;br/&gt;PackageFileSummary.cpp:219" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="1465" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="summary_e13" parent="1" edge="1" source="SUMMARY12" target="SUMMARY13" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="SUMMARY14" parent="1" vertex="1" value="SUMMARY14 Record &amp;lt;&amp;lt; SA_VALUE(TEXT('ThumbnailTableOffset'), Sum.Thumbnai...&lt;br/&gt;PackageFileSummary.cpp:227" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="1580" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="summary_e14" parent="1" edge="1" source="SUMMARY13" target="SUMMARY14" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="SUMMARY15" parent="1" vertex="1" value="SUMMARY15 Record &amp;lt;&amp;lt; SA_VALUE(TEXT('GenerationCount'), GenerationCount);&lt;br/&gt;PackageFileSummary.cpp:258" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="1695" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="summary_e15" parent="1" edge="1" source="SUMMARY14" target="SUMMARY15" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="SUMMARY16" parent="1" vertex="1" value="SUMMARY16 Record &amp;lt;&amp;lt; SA_VALUE(TEXT('CompressionFlags'), Sum.CompressionF...&lt;br/&gt;PackageFileSummary.cpp:320" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="1810" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="summary_e16" parent="1" edge="1" source="SUMMARY15" target="SUMMARY16" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="SUMMARY17" parent="1" vertex="1" value="SUMMARY17 Record &amp;lt;&amp;lt; SA_VALUE(TEXT('CompressedChunks'), CompressedChunks);&lt;br/&gt;PackageFileSummary.cpp:329" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="1925" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="summary_e17" parent="1" edge="1" source="SUMMARY16" target="SUMMARY17" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="SUMMARY18" parent="1" vertex="1" value="SUMMARY18 Record &amp;lt;&amp;lt; SA_VALUE(TEXT('AssetRegistryDataOffset'), Sum.Asset...&lt;br/&gt;PackageFileSummary.cpp:354" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="2040" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="summary_e18" parent="1" edge="1" source="SUMMARY17" target="SUMMARY18" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="SUMMARY19" parent="1" vertex="1" value="SUMMARY19 Record &amp;lt;&amp;lt; SA_VALUE(TEXT('BulkDataStartOffset'), Sum.BulkDataS...&lt;br/&gt;PackageFileSummary.cpp:355" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="2155" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="summary_e19" parent="1" edge="1" source="SUMMARY18" target="SUMMARY19" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="SUMMARY20" parent="1" vertex="1" value="SUMMARY20 Record &amp;lt;&amp;lt; SA_VALUE(TEXT('PreloadDependencyCount'), Sum.Preloa...&lt;br/&gt;PackageFileSummary.cpp:383" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="2270" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="summary_e20" parent="1" edge="1" source="SUMMARY19" target="SUMMARY20" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram name="imports" id="imports">
+    <mxGraphModel dx="1300" dy="950" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" page="1" pageScale="1" pageWidth="1050" pageHeight="1800">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="IMPORTS01" parent="1" vertex="1" value="IMPORTS01 Record &amp;lt;&amp;lt; SA_VALUE(TEXT('ClassPackage'), I.ClassPackage);&lt;br/&gt;ObjectResource.cpp:287" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="85" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="IMPORTS02" parent="1" vertex="1" value="IMPORTS02 Record &amp;lt;&amp;lt; SA_VALUE(TEXT('ClassName'), I.ClassName);&lt;br/&gt;ObjectResource.cpp:288" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="200" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="imports_e2" parent="1" edge="1" source="IMPORTS01" target="IMPORTS02" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="IMPORTS03" parent="1" vertex="1" value="IMPORTS03 Record &amp;lt;&amp;lt; SA_VALUE(TEXT('OuterIndex'), I.OuterIndex);&lt;br/&gt;ObjectResource.cpp:289" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="315" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="imports_e3" parent="1" edge="1" source="IMPORTS02" target="IMPORTS03" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="IMPORTS04" parent="1" vertex="1" value="IMPORTS04 Record &amp;lt;&amp;lt; SA_VALUE(TEXT('ObjectName'), I.ObjectName);&lt;br/&gt;ObjectResource.cpp:290" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="430" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="imports_e4" parent="1" edge="1" source="IMPORTS03" target="IMPORTS04" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="IMPORTS05" parent="1" vertex="1" value="IMPORTS05 if (Slot.GetUnderlyingArchive().UE4Ver() &amp;gt;= VER_UE4_NON_OUTER_PA...&lt;br/&gt;ObjectResource.cpp:294" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="545" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="imports_e5" parent="1" edge="1" source="IMPORTS04" target="IMPORTS05" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="IMPORTS06" parent="1" vertex="1" value="IMPORTS06 Record &amp;lt;&amp;lt; SA_VALUE(TEXT('PackageName'), I.PackageName);&lt;br/&gt;ObjectResource.cpp:296" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="660" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="imports_e6" parent="1" edge="1" source="IMPORTS05" target="IMPORTS06" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="IMPORTS07" parent="1" vertex="1" value="IMPORTS07 I.SourceLinker = NULL;&lt;br/&gt;ObjectResource.cpp:302" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="775" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="imports_e7" parent="1" edge="1" source="IMPORTS06" target="IMPORTS07" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram name="exports" id="exports">
+    <mxGraphModel dx="1300" dy="950" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" page="1" pageScale="1" pageWidth="1050" pageHeight="1800">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="EXPORTS01" parent="1" vertex="1" value="EXPORTS01 Record &amp;lt;&amp;lt; SA_VALUE(TEXT('ClassIndex'), E.ClassIndex);&lt;br/&gt;ObjectResource.cpp:110" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="85" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="EXPORTS02" parent="1" vertex="1" value="EXPORTS02 Record &amp;lt;&amp;lt; SA_VALUE(TEXT('SuperIndex'), E.SuperIndex);&lt;br/&gt;ObjectResource.cpp:111" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="200" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="exports_e2" parent="1" edge="1" source="EXPORTS01" target="EXPORTS02" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="EXPORTS03" parent="1" vertex="1" value="EXPORTS03 if (BaseArchive.UE4Ver() &amp;gt;= VER_UE4_TemplateIndex_IN_COOKED_EXPO...&lt;br/&gt;ObjectResource.cpp:113" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="315" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="exports_e3" parent="1" edge="1" source="EXPORTS02" target="EXPORTS03" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="EXPORTS04" parent="1" vertex="1" value="EXPORTS04 Record &amp;lt;&amp;lt; SA_VALUE(TEXT('OuterIndex'), E.OuterIndex);&lt;br/&gt;ObjectResource.cpp:118" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="430" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="exports_e4" parent="1" edge="1" source="EXPORTS03" target="EXPORTS04" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="EXPORTS05" parent="1" vertex="1" value="EXPORTS05 Record &amp;lt;&amp;lt; SA_VALUE(TEXT('ObjectName'), E.ObjectName);&lt;br/&gt;ObjectResource.cpp:119" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="545" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="exports_e5" parent="1" edge="1" source="EXPORTS04" target="EXPORTS05" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="EXPORTS06" parent="1" vertex="1" value="EXPORTS06 Record &amp;lt;&amp;lt; SA_VALUE(TEXT('ObjectFlags'), Save);&lt;br/&gt;ObjectResource.cpp:122" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="660" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="exports_e6" parent="1" edge="1" source="EXPORTS05" target="EXPORTS06" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="EXPORTS07" parent="1" vertex="1" value="EXPORTS07 if (BaseArchive.UE4Ver() &amp;lt; VER_UE4_64BIT_EXPORTMAP_SERIALSIZES)&lt;br/&gt;ObjectResource.cpp:129" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="775" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="exports_e7" parent="1" edge="1" source="EXPORTS06" target="EXPORTS07" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="EXPORTS08" parent="1" vertex="1" value="EXPORTS08 Record &amp;lt;&amp;lt; SA_VALUE(TEXT('bForcedExport'), E.bForcedExport);&lt;br/&gt;ObjectResource.cpp:145" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="890" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="exports_e8" parent="1" edge="1" source="EXPORTS07" target="EXPORTS08" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="EXPORTS09" parent="1" vertex="1" value="EXPORTS09 Record &amp;lt;&amp;lt; SA_VALUE(TEXT('PackageFlags'), E.PackageFlags);&lt;br/&gt;ObjectResource.cpp:152" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="1005" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="exports_e9" parent="1" edge="1" source="EXPORTS08" target="EXPORTS09" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="EXPORTS10" parent="1" vertex="1" value="EXPORTS10 if (BaseArchive.UE4Ver() &amp;gt;= VER_UE4_PRELOAD_DEPENDENCIES_IN_COOK...&lt;br/&gt;ObjectResource.cpp:164" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="1120" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="exports_e10" parent="1" edge="1" source="EXPORTS09" target="EXPORTS10" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram name="tables" id="tables">
+    <mxGraphModel dx="1300" dy="950" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" page="1" pageScale="1" pageWidth="1050" pageHeight="1800">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="TABLES01" parent="1" vertex="1" value="TABLES01 *this &amp;lt;&amp;lt; NameEntry;&lt;br/&gt;LinkerLoad.cpp:1544" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="85" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="TABLES02" parent="1" vertex="1" value="TABLES02 Stream.EnterElement() &amp;lt;&amp;lt; *Import;&lt;br/&gt;LinkerLoad.cpp:1613" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="200" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="tables_e2" parent="1" edge="1" source="TABLES01" target="TABLES02" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="TABLES03" parent="1" vertex="1" value="TABLES03 Stream.EnterElement() &amp;lt;&amp;lt; *Export;&lt;br/&gt;LinkerLoad.cpp:1893" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="315" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="tables_e3" parent="1" edge="1" source="TABLES02" target="TABLES03" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="TABLES04" parent="1" vertex="1" value="TABLES04 Stream.EnterElement() &amp;lt;&amp;lt; Depends;&lt;br/&gt;LinkerLoad.cpp:2118" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="430" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="tables_e4" parent="1" edge="1" source="TABLES03" target="TABLES04" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="TABLES05" parent="1" vertex="1" value="TABLES05 if (bHasSerializedPreloadDependencies || Summary.PreloadDependencyC...&lt;br/&gt;LinkerLoad.cpp:2134" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="545" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="tables_e5" parent="1" edge="1" source="TABLES04" target="TABLES05" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram name="writers" id="writers">
+    <mxGraphModel dx="1300" dy="950" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" page="1" pageScale="1" pageWidth="1050" pageHeight="1800">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="WRITERS01" parent="1" vertex="1" value="WRITERS01 Linker-&amp;gt;Summary.DependsOffset = Linker-&amp;gt;Tell();&lt;br/&gt;SavePackage.cpp:3720" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="85" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="WRITERS02" parent="1" vertex="1" value="WRITERS02 TArray&amp;lt;FPackageIndex&amp;gt;&amp; Depends = Linker-&amp;gt;DependsMap[i];&lt;br/&gt;SavePackage.cpp:3723" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="200" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="writers_e2" parent="1" edge="1" source="WRITERS01" target="WRITERS02" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="WRITERS03" parent="1" vertex="1" value="WRITERS03 DependsStream.EnterElement() &amp;lt;&amp;lt; Depends;&lt;br/&gt;SavePackage.cpp:3724" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="315" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="writers_e3" parent="1" edge="1" source="WRITERS02" target="WRITERS03" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="WRITERS04" parent="1" vertex="1" value="WRITERS04 Linker-&amp;gt;Summary.SoftPackageReferencesCount = Linker-&amp;gt;SoftPack...&lt;br/&gt;SavePackage.cpp:3743" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="430" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="writers_e4" parent="1" edge="1" source="WRITERS03" target="WRITERS04" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="WRITERS05" parent="1" vertex="1" value="WRITERS05 for (FName&amp; SoftPackageName : Linker-&amp;gt;SoftPackageReferenceList)&lt;br/&gt;SavePackage.cpp:3750" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="545" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="writers_e5" parent="1" edge="1" source="WRITERS04" target="WRITERS05" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="WRITERS06" parent="1" vertex="1" value="WRITERS06 SoftReferenceStream.EnterElement() &amp;lt;&amp;lt; SoftPackageName;&lt;br/&gt;SavePackage.cpp:3752" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="660" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="writers_e6" parent="1" edge="1" source="WRITERS05" target="WRITERS06" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

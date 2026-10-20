@@ -1,0 +1,14 @@
+flowchart TD
+  IMPORTS01["IMPORTS01 Record &lt;&lt; SA_VALUE(TEXT('ClassPackage'), I.ClassPackage);<br/>ObjectResource.cpp:287"]
+  IMPORTS02["IMPORTS02 Record &lt;&lt; SA_VALUE(TEXT('ClassName'), I.ClassName);<br/>ObjectResource.cpp:288"]
+  IMPORTS01 --> IMPORTS02
+  IMPORTS03["IMPORTS03 Record &lt;&lt; SA_VALUE(TEXT('OuterIndex'), I.OuterIndex);<br/>ObjectResource.cpp:289"]
+  IMPORTS02 --> IMPORTS03
+  IMPORTS04["IMPORTS04 Record &lt;&lt; SA_VALUE(TEXT('ObjectName'), I.ObjectName);<br/>ObjectResource.cpp:290"]
+  IMPORTS03 --> IMPORTS04
+  IMPORTS05["IMPORTS05 if (Slot.GetUnderlyingArchive().UE4Ver() &gt;= VER_UE4_NON_OUTER_PA...<br/>ObjectResource.cpp:294"]
+  IMPORTS04 --> IMPORTS05
+  IMPORTS06["IMPORTS06 Record &lt;&lt; SA_VALUE(TEXT('PackageName'), I.PackageName);<br/>ObjectResource.cpp:296"]
+  IMPORTS05 --> IMPORTS06
+  IMPORTS07["IMPORTS07 I.SourceLinker = NULL;<br/>ObjectResource.cpp:302"]
+  IMPORTS06 --> IMPORTS07

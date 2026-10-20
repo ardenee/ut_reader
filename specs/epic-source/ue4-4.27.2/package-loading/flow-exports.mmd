@@ -1,0 +1,20 @@
+flowchart TD
+  EXPORTS01["EXPORTS01 Record &lt;&lt; SA_VALUE(TEXT('ClassIndex'), E.ClassIndex);<br/>ObjectResource.cpp:110"]
+  EXPORTS02["EXPORTS02 Record &lt;&lt; SA_VALUE(TEXT('SuperIndex'), E.SuperIndex);<br/>ObjectResource.cpp:111"]
+  EXPORTS01 --> EXPORTS02
+  EXPORTS03["EXPORTS03 if (BaseArchive.UE4Ver() &gt;= VER_UE4_TemplateIndex_IN_COOKED_EXPO...<br/>ObjectResource.cpp:113"]
+  EXPORTS02 --> EXPORTS03
+  EXPORTS04["EXPORTS04 Record &lt;&lt; SA_VALUE(TEXT('OuterIndex'), E.OuterIndex);<br/>ObjectResource.cpp:118"]
+  EXPORTS03 --> EXPORTS04
+  EXPORTS05["EXPORTS05 Record &lt;&lt; SA_VALUE(TEXT('ObjectName'), E.ObjectName);<br/>ObjectResource.cpp:119"]
+  EXPORTS04 --> EXPORTS05
+  EXPORTS06["EXPORTS06 Record &lt;&lt; SA_VALUE(TEXT('ObjectFlags'), Save);<br/>ObjectResource.cpp:122"]
+  EXPORTS05 --> EXPORTS06
+  EXPORTS07["EXPORTS07 if (BaseArchive.UE4Ver() &lt; VER_UE4_64BIT_EXPORTMAP_SERIALSIZES)<br/>ObjectResource.cpp:129"]
+  EXPORTS06 --> EXPORTS07
+  EXPORTS08["EXPORTS08 Record &lt;&lt; SA_VALUE(TEXT('bForcedExport'), E.bForcedExport);<br/>ObjectResource.cpp:145"]
+  EXPORTS07 --> EXPORTS08
+  EXPORTS09["EXPORTS09 Record &lt;&lt; SA_VALUE(TEXT('PackageFlags'), E.PackageFlags);<br/>ObjectResource.cpp:152"]
+  EXPORTS08 --> EXPORTS09
+  EXPORTS10["EXPORTS10 if (BaseArchive.UE4Ver() &gt;= VER_UE4_PRELOAD_DEPENDENCIES_IN_COOK...<br/>ObjectResource.cpp:164"]
+  EXPORTS09 --> EXPORTS10

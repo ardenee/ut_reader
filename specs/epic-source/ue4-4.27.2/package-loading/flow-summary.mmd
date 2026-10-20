@@ -1,0 +1,40 @@
+flowchart TD
+  SUMMARY01["SUMMARY01 Record &lt;&lt; SA_VALUE(TEXT('Tag'), Sum.Tag);<br/>PackageFileSummary.cpp:68"]
+  SUMMARY02["SUMMARY02 if (Sum.Tag == PACKAGE_FILE_TAG || Sum.Tag == PACKAGE_FILE_TAG_SWAP...<br/>PackageFileSummary.cpp:71"]
+  SUMMARY01 --> SUMMARY02
+  SUMMARY03["SUMMARY03 const int32 CurrentLegacyFileVersion = -7;<br/>PackageFileSummary.cpp:102"]
+  SUMMARY02 --> SUMMARY03
+  SUMMARY04["SUMMARY04 Record &lt;&lt; SA_VALUE(TEXT('LegacyFileVersion'), LegacyFileVersi...<br/>PackageFileSummary.cpp:104"]
+  SUMMARY03 --> SUMMARY04
+  SUMMARY05["SUMMARY05 Record &lt;&lt; SA_VALUE(TEXT('FileVersionUE4'), Sum.FileVersionUE4);<br/>PackageFileSummary.cpp:124"]
+  SUMMARY04 --> SUMMARY05
+  SUMMARY06["SUMMARY06 Sum.CustomVersionContainer.Serialize(Record.EnterField(SA_FIELD_NAM...<br/>PackageFileSummary.cpp:129"]
+  SUMMARY05 --> SUMMARY06
+  SUMMARY07["SUMMARY07 Record &lt;&lt; SA_VALUE(TEXT('TotalHeaderSize'), Sum.TotalHeaderSi...<br/>PackageFileSummary.cpp:180"]
+  SUMMARY06 --> SUMMARY07
+  SUMMARY08["SUMMARY08 Record &lt;&lt; SA_VALUE(TEXT('PackageFlags'), Sum.PackageFlags);<br/>PackageFileSummary.cpp:182"]
+  SUMMARY07 --> SUMMARY08
+  SUMMARY09["SUMMARY09 Record &lt;&lt; SA_VALUE(TEXT('NameCount'), Sum.NameCount) &lt;&lt;...<br/>PackageFileSummary.cpp:196"]
+  SUMMARY08 --> SUMMARY09
+  SUMMARY10["SUMMARY10 Record &lt;&lt; SA_VALUE(TEXT('ExportCount'), Sum.ExportCount) &lt;...<br/>PackageFileSummary.cpp:208"]
+  SUMMARY09 --> SUMMARY10
+  SUMMARY11["SUMMARY11 Record &lt;&lt; SA_VALUE(TEXT('ImportCount'), Sum.ImportCount) &lt;...<br/>PackageFileSummary.cpp:209"]
+  SUMMARY10 --> SUMMARY11
+  SUMMARY12["SUMMARY12 Record &lt;&lt; SA_VALUE(TEXT('DependsOffset'), Sum.DependsOffset);<br/>PackageFileSummary.cpp:210"]
+  SUMMARY11 --> SUMMARY12
+  SUMMARY13["SUMMARY13 Record &lt;&lt; SA_VALUE(TEXT('SoftPackageReferencesCount'), Sum.So...<br/>PackageFileSummary.cpp:219"]
+  SUMMARY12 --> SUMMARY13
+  SUMMARY14["SUMMARY14 Record &lt;&lt; SA_VALUE(TEXT('ThumbnailTableOffset'), Sum.Thumbnai...<br/>PackageFileSummary.cpp:227"]
+  SUMMARY13 --> SUMMARY14
+  SUMMARY15["SUMMARY15 Record &lt;&lt; SA_VALUE(TEXT('GenerationCount'), GenerationCount);<br/>PackageFileSummary.cpp:258"]
+  SUMMARY14 --> SUMMARY15
+  SUMMARY16["SUMMARY16 Record &lt;&lt; SA_VALUE(TEXT('CompressionFlags'), Sum.CompressionF...<br/>PackageFileSummary.cpp:320"]
+  SUMMARY15 --> SUMMARY16
+  SUMMARY17["SUMMARY17 Record &lt;&lt; SA_VALUE(TEXT('CompressedChunks'), CompressedChunks);<br/>PackageFileSummary.cpp:329"]
+  SUMMARY16 --> SUMMARY17
+  SUMMARY18["SUMMARY18 Record &lt;&lt; SA_VALUE(TEXT('AssetRegistryDataOffset'), Sum.Asset...<br/>PackageFileSummary.cpp:354"]
+  SUMMARY17 --> SUMMARY18
+  SUMMARY19["SUMMARY19 Record &lt;&lt; SA_VALUE(TEXT('BulkDataStartOffset'), Sum.BulkDataS...<br/>PackageFileSummary.cpp:355"]
+  SUMMARY18 --> SUMMARY19
+  SUMMARY20["SUMMARY20 Record &lt;&lt; SA_VALUE(TEXT('PreloadDependencyCount'), Sum.Preloa...<br/>PackageFileSummary.cpp:383"]
+  SUMMARY19 --> SUMMARY20

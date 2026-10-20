@@ -1,0 +1,63 @@
+flowchart TD
+  B01["B01: Enter Epic summary serializer<br/>line 48"]
+  B02{"B02: Recognized tag?<br/>line 71"}
+  B03{"B03: Swapped-endian tag?<br/>line 75"}
+  B04["B04: Enable byte swap (if not already forced); the true branch can also disable it.<br/>line 86"]
+  B00{"B00: Loading instead of saving?<br/>line 106"}
+  B05{"B05: Modern negative legacy file version?<br/>line 108"}
+  B06{"B06: Marker newer than supported?<br/>line 110"}
+  B07{"B07: Should read legacy UE3 version?<br/>line 119"}
+  B08["B08: Read legacy UE3-version word.<br/>line 122"]
+  B09["B09: Read UE4 and licensee file versions.<br/>line 124"]
+  B10{"B10: Read serialized custom-version container?<br/>line 127"}
+  B11["B11: Read custom versions according to marker.<br/>line 129"]
+  B12{"B12: Both versions zero?<br/>line 132"}
+  B13{"B13: Editor disallows unversioned assets? (WITH_EDITOR)<br/>line 135"}
+  B96["B96: Unversioned load uses Epic current UE4 and licensee versions and custom versions.<br/>line 144"]
+  B14["B14: Continue with header data serialization.<br/>line 180"]
+  B15{"B15: Version outside supported range?<br/>line 212"}
+  B16["B16: Read flags and validate compression; other fields between B15 and B16 remain in the field table.<br/>line 320"]
+  B97{"B97: Compression flags valid?<br/>line 321"}
+  B17{"B17: Legacy compressed chunks present?<br/>line 331"}
+  B18["B18: Continue serialization of source-defined tail fields.<br/>line 354"]
+  B90["B90: No valid tag; the outer tag-guard does not serialize the body.<br/>line 391"]
+  B91["B91: Old UE3-style marker forces invalid UE4 version.<br/>line 152"]
+  B92["B92: Abort for future unsupported negative marker.<br/>line 116"]
+  B93["B93: Reject unversioned editor content when editor policy prohibits it.<br/>line 139"]
+  B94["B94: Stop reading below the unsupported file-version boundary.<br/>line 214"]
+  B95["B95: Reject legacy package-level compressed chunks.<br/>line 336"]
+  B99["B99: Save-side legacy version writing path: follow original source, not shown further in this load-only graph.<br/>line 171"]
+  B98["B98: Abort summary with invalid compression flags.<br/>line 325"]
+  B01 --> B02
+  B02 -->|yes| B03
+  B02 -->|no| B90
+  B03 -->|yes| B04
+  B03 -->|no| B00
+  B04 --> B00
+  B00 -->|loading| B05
+  B00 -->|saving| B99
+  B05 -->|yes| B06
+  B05 -->|no| B91
+  B06 -->|yes| B92
+  B06 -->|no| B07
+  B07 -->|yes| B08
+  B07 -->|no| B09
+  B08 --> B09
+  B09 --> B10
+  B10 -->|yes| B11
+  B10 -->|no| B12
+  B11 --> B12
+  B12 -->|yes| B13
+  B12 -->|no| B14
+  B13 -->|yes| B93
+  B13 -->|no| B96
+  B96 --> B14
+  B14 --> B15
+  B15 -->|yes| B94
+  B15 -->|no| B16
+  B16 --> B97
+  B97 -->|valid| B17
+  B97 -->|invalid| B98
+  B17 -->|yes| B95
+  B17 -->|no| B18
+  B91 --> B14

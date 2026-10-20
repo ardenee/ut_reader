@@ -1,0 +1,340 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<title>UE4.27.2 Epic source-only package loader and format</title>
+<style>@page{size:A4 landscape;margin:14mm 13mm}body{font:11px/1.4 Arial,sans-serif;color:#243244}
+h1{font-size:23px}h2{font-size:17px;page-break-before:always}
+h3{font-size:13px}code{font-family:Consolas,monospace;font-size:9px}
+table{border-collapse:collapse;width:100%;margin:12px 0 20px}
+th,td{border:1px solid #cbd5df;padding:5px 7px;vertical-align:top;text-align:left}
+th{background:#e9eff4}tr{page-break-inside:avoid}thead{display:table-header-group}
+.note{border-left:4px solid #506982;padding:10px;background:#eef3f7}
+.warning{font-weight:bold}td.snippet{overflow-wrap:anywhere;font-family:Consolas,monospace;font-size:9px}
+</style></head><body><h1>UE4.27.2 — Epic source-only package loader and format</h1>
+<div class="note">Authority: original Epic C++ only.<p>Revision: d94b38ae3446da52224bedd2568c078f828b4039
+<p>Source root: L:/Source/Engine/UE4/UE 4.27.2</p>
+<p class="warning">INCOMPLETE — this is a source navigation reference, not full-package format coverage or UnrealDB certification.</p></div>
+<h3>Pinned source integrity</h3><table><tr><th>Epic file</th><th>SHA-256</th></tr>
+<tr><td>LinkerLoad.cpp</td><td><code>39DB1F3E1A48D829E65991259EAEFB955680CCF6165D5E31B9DB862B02560569</code></td></tr>
+<tr><td>PackageFileSummary.cpp</td><td><code>8FF60DD29D5A0E50EB1222DA0D9C5DF71E088A1F2641E8512E6F6CE05CBA4146</code></td></tr>
+<tr><td>ObjectResource.cpp</td><td><code>5FB996D0AAFB7DC9B2615484976A487E97E1188B42E48229FDBA024BC5BC4DD5</code></td></tr>
+<tr><td>ObjectVersion.h</td><td><code>378C49E3AF3542C87C95D7259B81FCB77A98077D438CCCFA227B2F90870A000A</code></td></tr>
+<tr><td>SavePackage.cpp</td><td><code>F36086C193B2496982CC283AED14849695F16D5D68BB062FE3BADD00D1093202</code></td></tr>
+<tr><td>SavePackage2.cpp</td><td><code>FCAD38167A8612068F1300419447A9BD379253057E35F0AD2E08AF82609B4200</code></td></tr>
+</table><p>Diagram arrows show source statement order only. Every relevant
+ C++ conditional must be followed at its cited source line.</p>
+<h2>Version symbols in the original Epic source</h2>
+<p>Every source-defined version gate below is linked to its enum declaration.
+ No inferred numeric values are present.</p>
+<table><tr><th>Epic version symbol</th><th>Original source declaration</th></tr>
+<tr><td><code>VER_UE4_64BIT_EXPORTMAP_SERIALSIZES</code></td><td>ObjectVersion.h:621</td></tr>
+<tr><td><code>VER_UE4_ADDED_CHUNKID_TO_ASSETDATA_AND_UPACKAGE</code></td><td>ObjectVersion.h:149</td></tr>
+<tr><td><code>VER_UE4_ADDED_PACKAGE_OWNER</code></td><td>ObjectVersion.h:635</td></tr>
+<tr><td><code>VER_UE4_ADDED_PACKAGE_SUMMARY_LOCALIZATION_ID</code></td><td>ObjectVersion.h:631</td></tr>
+<tr><td><code>VER_UE4_ADDED_SEARCHABLE_NAMES</code></td><td>ObjectVersion.h:619</td></tr>
+<tr><td><code>VER_UE4_ADD_STRING_ASSET_REFERENCES_MAP</code></td><td>ObjectVersion.h:364</td></tr>
+<tr><td><code>VER_UE4_CHANGED_CHUNKID_TO_BE_AN_ARRAY_OF_CHUNKIDS</code></td><td>ObjectVersion.h:245</td></tr>
+<tr><td><code>VER_UE4_COOKED_ASSETS_IN_EDITOR_SUPPORT</code></td><td>ObjectVersion.h:569</td></tr>
+<tr><td><code>VER_UE4_ENGINE_VERSION_OBJECT</code></td><td>ObjectVersion.h:265</td></tr>
+<tr><td><code>VER_UE4_LOAD_FOR_EDITOR_GAME</code></td><td>ObjectVersion.h:326</td></tr>
+<tr><td><code>VER_UE4_NON_OUTER_PACKAGE_IMPORT</code></td><td>ObjectVersion.h:639</td></tr>
+<tr><td><code>VER_UE4_OLDEST_LOADABLE_PACKAGE</code></td><td>ObjectVersion.h:660</td></tr>
+<tr><td><code>VER_UE4_PACKAGE_SUMMARY_HAS_COMPATIBLE_ENGINE_VERSION</code></td><td>ObjectVersion.h:487</td></tr>
+<tr><td><code>VER_UE4_PRELOAD_DEPENDENCIES_IN_COOKED_EXPORTS</code></td><td>ObjectVersion.h:613</td></tr>
+<tr><td><code>VER_UE4_SERIALIZE_TEXT_IN_PACKAGES</code></td><td>ObjectVersion.h:517</td></tr>
+<tr><td><code>VER_UE4_TemplateIndex_IN_COOKED_EXPORTS</code></td><td>ObjectVersion.h:615</td></tr>
+<tr><td><code>VER_UE4_WORLD_LEVEL_INFO</code></td><td>ObjectVersion.h:39</td></tr>
+</table>
+<h2>Package linker initialization stages</h2>
+<p><b>Epic function:</b> LinkerLoad.cpp:689</p>
+<table><thead><tr><th>Step</th><th>Source</th><th>Exact Epic statement</th></tr></thead><tbody>
+<tr><td>LOADER01</td><td>LinkerLoad.cpp:715</td><td class='snippet'>Status = CreateLoader(TFunction&lt;void()&gt;([]() {}));</td></tr>
+<tr><td>LOADER02</td><td>LinkerLoad.cpp:724</td><td class='snippet'>Status = SerializePackageFileSummary();</td></tr>
+<tr><td>LOADER03</td><td>LinkerLoad.cpp:731</td><td class='snippet'>Status = SerializeNameMap();</td></tr>
+<tr><td>LOADER04</td><td>LinkerLoad.cpp:738</td><td class='snippet'>Status = SerializeGatherableTextDataMap();</td></tr>
+<tr><td>LOADER05</td><td>LinkerLoad.cpp:745</td><td class='snippet'>Status = SerializeImportMap();</td></tr>
+<tr><td>LOADER06</td><td>LinkerLoad.cpp:752</td><td class='snippet'>Status = SerializeExportMap();</td></tr>
+<tr><td>LOADER07</td><td>LinkerLoad.cpp:760</td><td class='snippet'>Status = ReconstructImportAndExportMap();</td></tr>
+<tr><td>LOADER08</td><td>LinkerLoad.cpp:768</td><td class='snippet'>Status = FixupImportMap();</td></tr>
+<tr><td>LOADER09</td><td>LinkerLoad.cpp:775</td><td class='snippet'>Status = PopulateInstancingContext();</td></tr>
+<tr><td>LOADER10</td><td>LinkerLoad.cpp:782</td><td class='snippet'>Status = FixupExportMap();</td></tr>
+<tr><td>LOADER11</td><td>LinkerLoad.cpp:789</td><td class='snippet'>Status = SerializeDependsMap();</td></tr>
+<tr><td>LOADER12</td><td>LinkerLoad.cpp:796</td><td class='snippet'>Status = CreateExportHash();</td></tr>
+<tr><td>LOADER13</td><td>LinkerLoad.cpp:803</td><td class='snippet'>Status = FindExistingExports();</td></tr>
+<tr><td>LOADER14</td><td>LinkerLoad.cpp:809</td><td class='snippet'>Status = SerializePreloadDependencies();</td></tr>
+<tr><td>LOADER15</td><td>LinkerLoad.cpp:816</td><td class='snippet'>Status = FinalizeCreation(ObjectNameWithOuterToExportMap);</td></tr>
+</tbody></table>
+<h3>Conditional statements in this original Epic source path</h3><table><tr><th>Source</th><th>Original C++ condition</th></tr>
+<tr><td>LinkerLoad.cpp:693</td><td class='snippet'>if( bHasFinishedInitialization == false )</td></tr>
+<tr><td>LinkerLoad.cpp:705</td><td class='snippet'>if (GEventDrivenLoaderEnabled)</td></tr>
+<tr><td>LinkerLoad.cpp:721</td><td class='snippet'>if (bCanSerializePackageFileSummary)</td></tr>
+<tr><td>LinkerLoad.cpp:728</td><td class='snippet'>if( Status == LINKER_Loaded )</td></tr>
+<tr><td>LinkerLoad.cpp:735</td><td class='snippet'>if( Status == LINKER_Loaded )</td></tr>
+<tr><td>LinkerLoad.cpp:742</td><td class='snippet'>if( Status == LINKER_Loaded )</td></tr>
+<tr><td>LinkerLoad.cpp:749</td><td class='snippet'>if( Status == LINKER_Loaded )</td></tr>
+<tr><td>LinkerLoad.cpp:755</td><td class='snippet'>#if WITH_TEXT_ARCHIVE_SUPPORT</td></tr>
+<tr><td>LinkerLoad.cpp:757</td><td class='snippet'>if (Status == LINKER_Loaded)</td></tr>
+<tr><td>LinkerLoad.cpp:765</td><td class='snippet'>if( Status == LINKER_Loaded )</td></tr>
+<tr><td>LinkerLoad.cpp:772</td><td class='snippet'>if (Status == LINKER_Loaded)</td></tr>
+<tr><td>LinkerLoad.cpp:779</td><td class='snippet'>if( Status == LINKER_Loaded )</td></tr>
+<tr><td>LinkerLoad.cpp:786</td><td class='snippet'>if( Status == LINKER_Loaded )</td></tr>
+<tr><td>LinkerLoad.cpp:793</td><td class='snippet'>if( Status == LINKER_Loaded )</td></tr>
+<tr><td>LinkerLoad.cpp:800</td><td class='snippet'>if( Status == LINKER_Loaded )</td></tr>
+<tr><td>LinkerLoad.cpp:806</td><td class='snippet'>if (Status == LINKER_Loaded)</td></tr>
+<tr><td>LinkerLoad.cpp:813</td><td class='snippet'>if( Status == LINKER_Loaded )</td></tr>
+<tr><td>LinkerLoad.cpp:825</td><td class='snippet'>if (Status == LINKER_Failed)</td></tr>
+<tr><td>LinkerLoad.cpp:828</td><td class='snippet'>#if WITH_EDITOR</td></tr>
+<tr><td>LinkerLoad.cpp:830</td><td class='snippet'>if (LoadProgressScope)</td></tr>
+</table>
+<h3>Serialized fields in source order</h3><table><tr><th>Source</th><th>Serialized field</th></tr>
+<tr><td>—</td><td>No direct SA_VALUE sites in this function</td></tr>
+</table>
+<h2>Package summary serialization</h2>
+<p><b>Epic function:</b> PackageFileSummary.cpp:48</p>
+<table><thead><tr><th>Step</th><th>Source</th><th>Exact Epic statement</th></tr></thead><tbody>
+<tr><td>SUMMARY01</td><td>PackageFileSummary.cpp:68</td><td class='snippet'>Record &lt;&lt; SA_VALUE(TEXT(&quot;Tag&quot;), Sum.Tag);</td></tr>
+<tr><td>SUMMARY02</td><td>PackageFileSummary.cpp:71</td><td class='snippet'>if (Sum.Tag == PACKAGE_FILE_TAG || Sum.Tag == PACKAGE_FILE_TAG_SWAPPED)</td></tr>
+<tr><td>SUMMARY03</td><td>PackageFileSummary.cpp:102</td><td class='snippet'>const int32 CurrentLegacyFileVersion = -7;</td></tr>
+<tr><td>SUMMARY04</td><td>PackageFileSummary.cpp:104</td><td class='snippet'>Record &lt;&lt; SA_VALUE(TEXT(&quot;LegacyFileVersion&quot;), LegacyFileVersion);</td></tr>
+<tr><td>SUMMARY05</td><td>PackageFileSummary.cpp:124</td><td class='snippet'>Record &lt;&lt; SA_VALUE(TEXT(&quot;FileVersionUE4&quot;), Sum.FileVersionUE4);</td></tr>
+<tr><td>SUMMARY06</td><td>PackageFileSummary.cpp:129</td><td class='snippet'>Sum.CustomVersionContainer.Serialize(Record.EnterField(SA_FIELD_NAME(TEXT(&quot;CustomVersions&quot;))), GetCustomVersionFormatForArchive(LegacyFileVersion));</td></tr>
+<tr><td>SUMMARY07</td><td>PackageFileSummary.cpp:180</td><td class='snippet'>Record &lt;&lt; SA_VALUE(TEXT(&quot;TotalHeaderSize&quot;), Sum.TotalHeaderSize);</td></tr>
+<tr><td>SUMMARY08</td><td>PackageFileSummary.cpp:182</td><td class='snippet'>Record &lt;&lt; SA_VALUE(TEXT(&quot;PackageFlags&quot;), Sum.PackageFlags);</td></tr>
+<tr><td>SUMMARY09</td><td>PackageFileSummary.cpp:196</td><td class='snippet'>Record &lt;&lt; SA_VALUE(TEXT(&quot;NameCount&quot;), Sum.NameCount) &lt;&lt; SA_VALUE(TEXT(&quot;NameOffset&quot;), Sum.NameOffset);</td></tr>
+<tr><td>SUMMARY10</td><td>PackageFileSummary.cpp:208</td><td class='snippet'>Record &lt;&lt; SA_VALUE(TEXT(&quot;ExportCount&quot;), Sum.ExportCount) &lt;&lt; SA_VALUE(TEXT(&quot;ExportOffset&quot;), Sum.ExportOffset);</td></tr>
+<tr><td>SUMMARY11</td><td>PackageFileSummary.cpp:209</td><td class='snippet'>Record &lt;&lt; SA_VALUE(TEXT(&quot;ImportCount&quot;), Sum.ImportCount) &lt;&lt; SA_VALUE(TEXT(&quot;ImportOffset&quot;), Sum.ImportOffset);</td></tr>
+<tr><td>SUMMARY12</td><td>PackageFileSummary.cpp:210</td><td class='snippet'>Record &lt;&lt; SA_VALUE(TEXT(&quot;DependsOffset&quot;), Sum.DependsOffset);</td></tr>
+<tr><td>SUMMARY13</td><td>PackageFileSummary.cpp:219</td><td class='snippet'>Record &lt;&lt; SA_VALUE(TEXT(&quot;SoftPackageReferencesCount&quot;), Sum.SoftPackageReferencesCount) &lt;&lt; SA_VALUE(TEXT(&quot;SoftPackageReferencesOffset&quot;), Sum.SoftPackageReferencesOffset);</td></tr>
+<tr><td>SUMMARY14</td><td>PackageFileSummary.cpp:227</td><td class='snippet'>Record &lt;&lt; SA_VALUE(TEXT(&quot;ThumbnailTableOffset&quot;), Sum.ThumbnailTableOffset);</td></tr>
+<tr><td>SUMMARY15</td><td>PackageFileSummary.cpp:258</td><td class='snippet'>Record &lt;&lt; SA_VALUE(TEXT(&quot;GenerationCount&quot;), GenerationCount);</td></tr>
+<tr><td>SUMMARY16</td><td>PackageFileSummary.cpp:320</td><td class='snippet'>Record &lt;&lt; SA_VALUE(TEXT(&quot;CompressionFlags&quot;), Sum.CompressionFlags);</td></tr>
+<tr><td>SUMMARY17</td><td>PackageFileSummary.cpp:329</td><td class='snippet'>Record &lt;&lt; SA_VALUE(TEXT(&quot;CompressedChunks&quot;), CompressedChunks);</td></tr>
+<tr><td>SUMMARY18</td><td>PackageFileSummary.cpp:354</td><td class='snippet'>Record &lt;&lt; SA_VALUE(TEXT(&quot;AssetRegistryDataOffset&quot;), Sum.AssetRegistryDataOffset);</td></tr>
+<tr><td>SUMMARY19</td><td>PackageFileSummary.cpp:355</td><td class='snippet'>Record &lt;&lt; SA_VALUE(TEXT(&quot;BulkDataStartOffset&quot;), Sum.BulkDataStartOffset);</td></tr>
+<tr><td>SUMMARY20</td><td>PackageFileSummary.cpp:383</td><td class='snippet'>Record &lt;&lt; SA_VALUE(TEXT(&quot;PreloadDependencyCount&quot;), Sum.PreloadDependencyCount) &lt;&lt; SA_VALUE(TEXT(&quot;PreloadDependencyOffset&quot;), Sum.PreloadDependencyOffset);</td></tr>
+</tbody></table>
+<h3>Conditional statements in this original Epic source path</h3><table><tr><th>Source</th><th>Original C++ condition</th></tr>
+<tr><td>PackageFileSummary.cpp:53</td><td class='snippet'>if (BaseArchive.IsLoading())</td></tr>
+<tr><td>PackageFileSummary.cpp:66</td><td class='snippet'>if (bCanStartSerializing)</td></tr>
+<tr><td>PackageFileSummary.cpp:71</td><td class='snippet'>if (Sum.Tag == PACKAGE_FILE_TAG || Sum.Tag == PACKAGE_FILE_TAG_SWAPPED)</td></tr>
+<tr><td>PackageFileSummary.cpp:75</td><td class='snippet'>if (Sum.Tag == PACKAGE_FILE_TAG_SWAPPED)</td></tr>
+<tr><td>PackageFileSummary.cpp:80</td><td class='snippet'>if (BaseArchive.ForceByteSwapping())</td></tr>
+<tr><td>PackageFileSummary.cpp:106</td><td class='snippet'>if (BaseArchive.IsLoading())</td></tr>
+<tr><td>PackageFileSummary.cpp:108</td><td class='snippet'>if (LegacyFileVersion &lt; 0) // means we have modern version numbers</td></tr>
+<tr><td>PackageFileSummary.cpp:110</td><td class='snippet'>if (LegacyFileVersion &lt; CurrentLegacyFileVersion)</td></tr>
+<tr><td>PackageFileSummary.cpp:119</td><td class='snippet'>if (LegacyFileVersion != -4)</td></tr>
+<tr><td>PackageFileSummary.cpp:127</td><td class='snippet'>if (LegacyFileVersion &lt;= -2)</td></tr>
+<tr><td>PackageFileSummary.cpp:132</td><td class='snippet'>if (!Sum.FileVersionUE4 &amp;&amp; !Sum.FileVersionLicenseeUE4)</td></tr>
+<tr><td>PackageFileSummary.cpp:134</td><td class='snippet'>#if WITH_EDITOR</td></tr>
+<tr><td>PackageFileSummary.cpp:135</td><td class='snippet'>if (!GAllowUnversionedContentInEditor)</td></tr>
+<tr><td>PackageFileSummary.cpp:158</td><td class='snippet'>if (Sum.bUnversioned)</td></tr>
+<tr><td>PackageFileSummary.cpp:184</td><td class='snippet'>#if WITH_EDITOR</td></tr>
+<tr><td>PackageFileSummary.cpp:185</td><td class='snippet'>if (BaseArchive.IsLoading())</td></tr>
+<tr><td>PackageFileSummary.cpp:192</td><td class='snippet'>if (Sum.PackageFlags &amp; PKG_FilterEditorOnly)</td></tr>
+<tr><td>PackageFileSummary.cpp:197</td><td class='snippet'>if (!BaseArchive.IsFilterEditorOnly())</td></tr>
+<tr><td>PackageFileSummary.cpp:199</td><td class='snippet'>if (BaseArchive.IsSaving() || Sum.FileVersionUE4 &gt;= VER_UE4_ADDED_PACKAGE_SUMMARY_LOCALIZATION_ID)</td></tr>
+<tr><td>PackageFileSummary.cpp:204</td><td class='snippet'>if (Sum.FileVersionUE4 &gt;= VER_UE4_SERIALIZE_TEXT_IN_PACKAGES)</td></tr>
+<tr><td>PackageFileSummary.cpp:212</td><td class='snippet'>if (BaseArchive.IsLoading() &amp;&amp; (Sum.FileVersionUE4 &lt; VER_UE4_OLDEST_LOADABLE_PACKAGE || Sum.FileVersionUE4 &gt; GPackageFileUE4Version))</td></tr>
+<tr><td>PackageFileSummary.cpp:217</td><td class='snippet'>if (BaseArchive.IsSaving() || Sum.FileVersionUE4 &gt;= VER_UE4_ADD_STRING_ASSET_REFERENCES_MAP)</td></tr>
+<tr><td>PackageFileSummary.cpp:222</td><td class='snippet'>if (BaseArchive.IsSaving() || Sum.FileVersionUE4 &gt;= VER_UE4_ADDED_SEARCHABLE_NAMES)</td></tr>
+<tr><td>PackageFileSummary.cpp:233</td><td class='snippet'>#if WITH_EDITORONLY_DATA</td></tr>
+<tr><td>PackageFileSummary.cpp:234</td><td class='snippet'>if (!BaseArchive.IsFilterEditorOnly())</td></tr>
+<tr><td>PackageFileSummary.cpp:236</td><td class='snippet'>if (BaseArchive.IsSaving() || Sum.FileVersionUE4 &gt;= VER_UE4_ADDED_PACKAGE_OWNER)</td></tr>
+<tr><td>PackageFileSummary.cpp:249</td><td class='snippet'>if (BaseArchive.IsLoading() &amp;&amp; Sum.FileVersionUE4 &gt;= VER_UE4_ADDED_PACKAGE_OWNER &amp;&amp; Sum.FileVersionUE4 &lt; VER_UE4_NON_OUTER_PACKAGE_IMPORT)</td></tr>
+<tr><td>PackageFileSummary.cpp:259</td><td class='snippet'>if (BaseArchive.IsLoading() &amp;&amp; GenerationCount &gt; 0)</td></tr>
+<tr><td>PackageFileSummary.cpp:269</td><td class='snippet'>if (BaseArchive.IsLoading() &amp;&amp; BaseArchive.IsError())</td></tr>
+<tr><td>PackageFileSummary.cpp:275</td><td class='snippet'>if (Sum.GetFileVersionUE4() &gt;= VER_UE4_ENGINE_VERSION_OBJECT)</td></tr>
+<tr><td>PackageFileSummary.cpp:277</td><td class='snippet'>if (BaseArchive.IsCooking() || (BaseArchive.IsSaving() &amp;&amp; !FEngineVersion::Current().HasChangelist()))</td></tr>
+<tr><td>PackageFileSummary.cpp:293</td><td class='snippet'>if (BaseArchive.IsLoading() &amp;&amp; EngineChangelist != 0)</td></tr>
+<tr><td>PackageFileSummary.cpp:299</td><td class='snippet'>if (Sum.GetFileVersionUE4() &gt;= VER_UE4_PACKAGE_SUMMARY_HAS_COMPATIBLE_ENGINE_VERSION)</td></tr>
+<tr><td>PackageFileSummary.cpp:301</td><td class='snippet'>if (BaseArchive.IsCooking() || (BaseArchive.IsSaving() &amp;&amp; !FEngineVersion::Current().HasChangelist()))</td></tr>
+<tr><td>PackageFileSummary.cpp:314</td><td class='snippet'>if (BaseArchive.IsLoading())</td></tr>
+<tr><td>PackageFileSummary.cpp:321</td><td class='snippet'>if (!FCompression::VerifyCompressionFlagsValid(Sum.CompressionFlags))</td></tr>
+<tr><td>PackageFileSummary.cpp:331</td><td class='snippet'>if (CompressedChunks.Num())</td></tr>
+<tr><td>PackageFileSummary.cpp:346</td><td class='snippet'>if (LegacyFileVersion &gt; -7)</td></tr>
+<tr><td>PackageFileSummary.cpp:357</td><td class='snippet'>if (Sum.GetFileVersionUE4() &gt;= VER_UE4_WORLD_LEVEL_INFO)</td></tr>
+<tr><td>PackageFileSummary.cpp:362</td><td class='snippet'>if (Sum.GetFileVersionUE4() &gt;= VER_UE4_CHANGED_CHUNKID_TO_BE_AN_ARRAY_OF_CHUNKIDS)</td></tr>
+<tr><td>PackageFileSummary.cpp:366</td><td class='snippet'>else if (Sum.GetFileVersionUE4() &gt;= VER_UE4_ADDED_CHUNKID_TO_ASSETDATA_AND_UPACKAGE)</td></tr>
+<tr><td>PackageFileSummary.cpp:369</td><td class='snippet'>if (BaseArchive.IsLoading())</td></tr>
+<tr><td>PackageFileSummary.cpp:375</td><td class='snippet'>if (ChunkID &gt;= 0)</td></tr>
+<tr><td>PackageFileSummary.cpp:381</td><td class='snippet'>if (BaseArchive.IsSaving() || Sum.FileVersionUE4 &gt;= VER_UE4_PRELOAD_DEPENDENCIES_IN_COOKED_EXPORTS)</td></tr>
+</table>
+<h3>Serialized fields in source order</h3><table><tr><th>Source</th><th>Serialized field</th></tr>
+<tr><td>PackageFileSummary.cpp:68</td><td><code>Tag</code></td></tr>
+<tr><td>PackageFileSummary.cpp:104</td><td><code>LegacyFileVersion</code></td></tr>
+<tr><td>PackageFileSummary.cpp:122</td><td><code>LegacyUE3Version</code></td></tr>
+<tr><td>PackageFileSummary.cpp:124</td><td><code>FileVersionUE4</code></td></tr>
+<tr><td>PackageFileSummary.cpp:125</td><td><code>FileVersionLicenseeUE4</code></td></tr>
+<tr><td>PackageFileSummary.cpp:161</td><td><code>LegacyUE3version</code></td></tr>
+<tr><td>PackageFileSummary.cpp:162</td><td><code>FileVersionUE4</code></td></tr>
+<tr><td>PackageFileSummary.cpp:163</td><td><code>FileVersionLicenseeUE4</code></td></tr>
+<tr><td>PackageFileSummary.cpp:172</td><td><code>LegacyUE3Version</code></td></tr>
+<tr><td>PackageFileSummary.cpp:173</td><td><code>FileVersionUE4</code></td></tr>
+<tr><td>PackageFileSummary.cpp:174</td><td><code>FileVersionLicenseeUE4</code></td></tr>
+<tr><td>PackageFileSummary.cpp:180</td><td><code>TotalHeaderSize</code></td></tr>
+<tr><td>PackageFileSummary.cpp:181</td><td><code>FolderName</code></td></tr>
+<tr><td>PackageFileSummary.cpp:182</td><td><code>PackageFlags</code></td></tr>
+<tr><td>PackageFileSummary.cpp:196</td><td><code>NameCount</code></td></tr>
+<tr><td>PackageFileSummary.cpp:196</td><td><code>NameOffset</code></td></tr>
+<tr><td>PackageFileSummary.cpp:201</td><td><code>LocalizationId</code></td></tr>
+<tr><td>PackageFileSummary.cpp:206</td><td><code>GatherableTextDataCount</code></td></tr>
+<tr><td>PackageFileSummary.cpp:206</td><td><code>GatherableTextDataOffset</code></td></tr>
+<tr><td>PackageFileSummary.cpp:208</td><td><code>ExportCount</code></td></tr>
+<tr><td>PackageFileSummary.cpp:208</td><td><code>ExportOffset</code></td></tr>
+<tr><td>PackageFileSummary.cpp:209</td><td><code>ImportCount</code></td></tr>
+<tr><td>PackageFileSummary.cpp:209</td><td><code>ImportOffset</code></td></tr>
+<tr><td>PackageFileSummary.cpp:210</td><td><code>DependsOffset</code></td></tr>
+<tr><td>PackageFileSummary.cpp:219</td><td><code>SoftPackageReferencesCount</code></td></tr>
+<tr><td>PackageFileSummary.cpp:219</td><td><code>SoftPackageReferencesOffset</code></td></tr>
+<tr><td>PackageFileSummary.cpp:224</td><td><code>SearchableNamesOffset</code></td></tr>
+<tr><td>PackageFileSummary.cpp:227</td><td><code>ThumbnailTableOffset</code></td></tr>
+<tr><td>PackageFileSummary.cpp:230</td><td><code>Guid</code></td></tr>
+<tr><td>PackageFileSummary.cpp:238</td><td><code>PersistentGuid</code></td></tr>
+<tr><td>PackageFileSummary.cpp:252</td><td><code>OwnerPersistentGuid</code></td></tr>
+<tr><td>PackageFileSummary.cpp:258</td><td><code>GenerationCount</code></td></tr>
+<tr><td>PackageFileSummary.cpp:280</td><td><code>SavedByEngineVersion</code></td></tr>
+<tr><td>PackageFileSummary.cpp:284</td><td><code>SavedByEngineVersion</code></td></tr>
+<tr><td>PackageFileSummary.cpp:291</td><td><code>EngineChangelist</code></td></tr>
+<tr><td>PackageFileSummary.cpp:304</td><td><code>CompatibleWithEngineVersion</code></td></tr>
+<tr><td>PackageFileSummary.cpp:308</td><td><code>CompatibleWithEngineVersion</code></td></tr>
+<tr><td>PackageFileSummary.cpp:320</td><td><code>CompressionFlags</code></td></tr>
+<tr><td>PackageFileSummary.cpp:329</td><td><code>CompressedChunks</code></td></tr>
+<tr><td>PackageFileSummary.cpp:339</td><td><code>PackageSource</code></td></tr>
+<tr><td>PackageFileSummary.cpp:344</td><td><code>AdditionalPackagesToCook</code></td></tr>
+<tr><td>PackageFileSummary.cpp:349</td><td><code>NumTextureAllocations</code></td></tr>
+<tr><td>PackageFileSummary.cpp:354</td><td><code>AssetRegistryDataOffset</code></td></tr>
+<tr><td>PackageFileSummary.cpp:355</td><td><code>BulkDataStartOffset</code></td></tr>
+<tr><td>PackageFileSummary.cpp:359</td><td><code>WorldTileInfoDataOffset</code></td></tr>
+<tr><td>PackageFileSummary.cpp:364</td><td><code>ChunkIDs</code></td></tr>
+<tr><td>PackageFileSummary.cpp:372</td><td><code>ChunkID</code></td></tr>
+<tr><td>PackageFileSummary.cpp:383</td><td><code>PreloadDependencyCount</code></td></tr>
+<tr><td>PackageFileSummary.cpp:383</td><td><code>PreloadDependencyOffset</code></td></tr>
+</table>
+<h2>Serialized FObjectImport</h2>
+<p><b>Epic function:</b> ObjectResource.cpp:283</p>
+<table><thead><tr><th>Step</th><th>Source</th><th>Exact Epic statement</th></tr></thead><tbody>
+<tr><td>IMPORTS01</td><td>ObjectResource.cpp:287</td><td class='snippet'>Record &lt;&lt; SA_VALUE(TEXT(&quot;ClassPackage&quot;), I.ClassPackage);</td></tr>
+<tr><td>IMPORTS02</td><td>ObjectResource.cpp:288</td><td class='snippet'>Record &lt;&lt; SA_VALUE(TEXT(&quot;ClassName&quot;), I.ClassName);</td></tr>
+<tr><td>IMPORTS03</td><td>ObjectResource.cpp:289</td><td class='snippet'>Record &lt;&lt; SA_VALUE(TEXT(&quot;OuterIndex&quot;), I.OuterIndex);</td></tr>
+<tr><td>IMPORTS04</td><td>ObjectResource.cpp:290</td><td class='snippet'>Record &lt;&lt; SA_VALUE(TEXT(&quot;ObjectName&quot;), I.ObjectName);</td></tr>
+<tr><td>IMPORTS05</td><td>ObjectResource.cpp:294</td><td class='snippet'>if (Slot.GetUnderlyingArchive().UE4Ver() &gt;= VER_UE4_NON_OUTER_PACKAGE_IMPORT &amp;&amp; !Slot.GetUnderlyingArchive().IsFilterEditorOnly())</td></tr>
+<tr><td>IMPORTS06</td><td>ObjectResource.cpp:296</td><td class='snippet'>Record &lt;&lt; SA_VALUE(TEXT(&quot;PackageName&quot;), I.PackageName);</td></tr>
+<tr><td>IMPORTS07</td><td>ObjectResource.cpp:302</td><td class='snippet'>I.SourceLinker = NULL;</td></tr>
+</tbody></table>
+<h3>Conditional statements in this original Epic source path</h3><table><tr><th>Source</th><th>Original C++ condition</th></tr>
+<tr><td>ObjectResource.cpp:293</td><td class='snippet'>#if WITH_EDITORONLY_DATA</td></tr>
+<tr><td>ObjectResource.cpp:294</td><td class='snippet'>if (Slot.GetUnderlyingArchive().UE4Ver() &gt;= VER_UE4_NON_OUTER_PACKAGE_IMPORT &amp;&amp; !Slot.GetUnderlyingArchive().IsFilterEditorOnly())</td></tr>
+<tr><td>ObjectResource.cpp:300</td><td class='snippet'>if (Slot.GetUnderlyingArchive().IsLoading())</td></tr>
+</table>
+<h3>Serialized fields in source order</h3><table><tr><th>Source</th><th>Serialized field</th></tr>
+<tr><td>ObjectResource.cpp:287</td><td><code>ClassPackage</code></td></tr>
+<tr><td>ObjectResource.cpp:288</td><td><code>ClassName</code></td></tr>
+<tr><td>ObjectResource.cpp:289</td><td><code>OuterIndex</code></td></tr>
+<tr><td>ObjectResource.cpp:290</td><td><code>ObjectName</code></td></tr>
+<tr><td>ObjectResource.cpp:296</td><td><code>PackageName</code></td></tr>
+</table>
+<h2>Serialized FObjectExport</h2>
+<p><b>Epic function:</b> ObjectResource.cpp:105</p>
+<table><thead><tr><th>Step</th><th>Source</th><th>Exact Epic statement</th></tr></thead><tbody>
+<tr><td>EXPORTS01</td><td>ObjectResource.cpp:110</td><td class='snippet'>Record &lt;&lt; SA_VALUE(TEXT(&quot;ClassIndex&quot;), E.ClassIndex);</td></tr>
+<tr><td>EXPORTS02</td><td>ObjectResource.cpp:111</td><td class='snippet'>Record &lt;&lt; SA_VALUE(TEXT(&quot;SuperIndex&quot;), E.SuperIndex);</td></tr>
+<tr><td>EXPORTS03</td><td>ObjectResource.cpp:113</td><td class='snippet'>if (BaseArchive.UE4Ver() &gt;= VER_UE4_TemplateIndex_IN_COOKED_EXPORTS)</td></tr>
+<tr><td>EXPORTS04</td><td>ObjectResource.cpp:118</td><td class='snippet'>Record &lt;&lt; SA_VALUE(TEXT(&quot;OuterIndex&quot;), E.OuterIndex);</td></tr>
+<tr><td>EXPORTS05</td><td>ObjectResource.cpp:119</td><td class='snippet'>Record &lt;&lt; SA_VALUE(TEXT(&quot;ObjectName&quot;), E.ObjectName);</td></tr>
+<tr><td>EXPORTS06</td><td>ObjectResource.cpp:122</td><td class='snippet'>Record &lt;&lt; SA_VALUE(TEXT(&quot;ObjectFlags&quot;), Save);</td></tr>
+<tr><td>EXPORTS07</td><td>ObjectResource.cpp:129</td><td class='snippet'>if (BaseArchive.UE4Ver() &lt; VER_UE4_64BIT_EXPORTMAP_SERIALSIZES)</td></tr>
+<tr><td>EXPORTS08</td><td>ObjectResource.cpp:145</td><td class='snippet'>Record &lt;&lt; SA_VALUE(TEXT(&quot;bForcedExport&quot;), E.bForcedExport);</td></tr>
+<tr><td>EXPORTS09</td><td>ObjectResource.cpp:152</td><td class='snippet'>Record &lt;&lt; SA_VALUE(TEXT(&quot;PackageFlags&quot;), E.PackageFlags);</td></tr>
+<tr><td>EXPORTS10</td><td>ObjectResource.cpp:164</td><td class='snippet'>if (BaseArchive.UE4Ver() &gt;= VER_UE4_PRELOAD_DEPENDENCIES_IN_COOKED_EXPORTS)</td></tr>
+</tbody></table>
+<h3>Conditional statements in this original Epic source path</h3><table><tr><th>Source</th><th>Original C++ condition</th></tr>
+<tr><td>ObjectResource.cpp:113</td><td class='snippet'>if (BaseArchive.UE4Ver() &gt;= VER_UE4_TemplateIndex_IN_COOKED_EXPORTS)</td></tr>
+<tr><td>ObjectResource.cpp:124</td><td class='snippet'>if (BaseArchive.IsLoading())</td></tr>
+<tr><td>ObjectResource.cpp:129</td><td class='snippet'>if (BaseArchive.UE4Ver() &lt; VER_UE4_64BIT_EXPORTMAP_SERIALSIZES)</td></tr>
+<tr><td>ObjectResource.cpp:154</td><td class='snippet'>if (BaseArchive.UE4Ver() &gt;= VER_UE4_LOAD_FOR_EDITOR_GAME)</td></tr>
+<tr><td>ObjectResource.cpp:159</td><td class='snippet'>if (BaseArchive.UE4Ver() &gt;= VER_UE4_COOKED_ASSETS_IN_EDITOR_SUPPORT)</td></tr>
+<tr><td>ObjectResource.cpp:164</td><td class='snippet'>if (BaseArchive.UE4Ver() &gt;= VER_UE4_PRELOAD_DEPENDENCIES_IN_COOKED_EXPORTS)</td></tr>
+</table>
+<h3>Serialized fields in source order</h3><table><tr><th>Source</th><th>Serialized field</th></tr>
+<tr><td>ObjectResource.cpp:110</td><td><code>ClassIndex</code></td></tr>
+<tr><td>ObjectResource.cpp:111</td><td><code>SuperIndex</code></td></tr>
+<tr><td>ObjectResource.cpp:115</td><td><code>TemplateIndex</code></td></tr>
+<tr><td>ObjectResource.cpp:118</td><td><code>OuterIndex</code></td></tr>
+<tr><td>ObjectResource.cpp:119</td><td><code>ObjectName</code></td></tr>
+<tr><td>ObjectResource.cpp:122</td><td><code>ObjectFlags</code></td></tr>
+<tr><td>ObjectResource.cpp:132</td><td><code>SerialSize</code></td></tr>
+<tr><td>ObjectResource.cpp:136</td><td><code>SerialOffset</code></td></tr>
+<tr><td>ObjectResource.cpp:141</td><td><code>SerialSize</code></td></tr>
+<tr><td>ObjectResource.cpp:142</td><td><code>SerialOffset</code></td></tr>
+<tr><td>ObjectResource.cpp:145</td><td><code>bForcedExport</code></td></tr>
+<tr><td>ObjectResource.cpp:146</td><td><code>bNotForClient</code></td></tr>
+<tr><td>ObjectResource.cpp:147</td><td><code>bNotForServer</code></td></tr>
+<tr><td>ObjectResource.cpp:150</td><td><code>PackageGuid</code></td></tr>
+<tr><td>ObjectResource.cpp:152</td><td><code>PackageFlags</code></td></tr>
+<tr><td>ObjectResource.cpp:156</td><td><code>bNotAlwaysLoadedForEditorGame</code></td></tr>
+<tr><td>ObjectResource.cpp:161</td><td><code>bIsAsset</code></td></tr>
+<tr><td>ObjectResource.cpp:166</td><td><code>FirstExportDependency</code></td></tr>
+<tr><td>ObjectResource.cpp:167</td><td><code>SerializationBeforeSerializationDependencies</code></td></tr>
+<tr><td>ObjectResource.cpp:168</td><td><code>CreateBeforeSerializationDependencies</code></td></tr>
+<tr><td>ObjectResource.cpp:169</td><td><code>SerializationBeforeCreateDependencies</code></td></tr>
+<tr><td>ObjectResource.cpp:170</td><td><code>CreateBeforeCreateDependencies</code></td></tr>
+</table>
+<h2>Named table readers</h2>
+<p><b>Epic function:</b> LinkerLoad.cpp:1496</p>
+<table><thead><tr><th>Step</th><th>Source</th><th>Exact Epic statement</th></tr></thead><tbody>
+<tr><td>TABLES01</td><td>LinkerLoad.cpp:1544</td><td class='snippet'>*this &lt;&lt; NameEntry;</td></tr>
+<tr><td>TABLES02</td><td>LinkerLoad.cpp:1613</td><td class='snippet'>Stream.EnterElement() &lt;&lt; *Import;</td></tr>
+<tr><td>TABLES03</td><td>LinkerLoad.cpp:1893</td><td class='snippet'>Stream.EnterElement() &lt;&lt; *Export;</td></tr>
+<tr><td>TABLES04</td><td>LinkerLoad.cpp:2118</td><td class='snippet'>Stream.EnterElement() &lt;&lt; Depends;</td></tr>
+<tr><td>TABLES05</td><td>LinkerLoad.cpp:2134</td><td class='snippet'>if (bHasSerializedPreloadDependencies || Summary.PreloadDependencyCount &lt; 1 || Summary.PreloadDependencyOffset &lt;= 0)</td></tr>
+</tbody></table>
+<h3>Conditional statements in this original Epic source path</h3><table><tr><th>Source</th><th>Original C++ condition</th></tr>
+<tr><td>LinkerLoad.cpp:1501</td><td class='snippet'>if (IsTextFormat())</td></tr>
+<tr><td>LinkerLoad.cpp:1511</td><td class='snippet'>if (NameMap.Num() == 0 &amp;&amp; NameCount &gt; 0)</td></tr>
+<tr><td>LinkerLoad.cpp:1516</td><td class='snippet'>if (Summary.TotalHeaderSize &gt; 0)</td></tr>
+<tr><td>LinkerLoad.cpp:1521</td><td class='snippet'>if (bIsAsyncLoader)</td></tr>
+<tr><td>LinkerLoad.cpp:1531</td><td class='snippet'>if (!bFinishedPrecaching)</td></tr>
+<tr><td>LinkerLoad.cpp:1548</td><td class='snippet'>if (Idx % TimeSliceGranularity == TimeSliceGranularity - 1 &amp;&amp;</td></tr>
+<tr><td>LinkerLoad.cpp:1598</td><td class='snippet'>if (IsTextFormat())</td></tr>
+<tr><td>LinkerLoad.cpp:1603</td><td class='snippet'>if(ImportMapIndex == 0 &amp;&amp; Summary.ImportCount &gt; 0 )</td></tr>
+<tr><td>LinkerLoad.cpp:1878</td><td class='snippet'>if (IsTextFormat())</td></tr>
+<tr><td>LinkerLoad.cpp:1883</td><td class='snippet'>if(ExportMapIndex == 0 &amp;&amp; Summary.ExportCount &gt; 0)</td></tr>
+<tr><td>LinkerLoad.cpp:2089</td><td class='snippet'>if( FPlatformProperties::RequiresCookedData()</td></tr>
+<tr><td>LinkerLoad.cpp:2096</td><td class='snippet'>if ( Summary.DependsOffset == 0 )</td></tr>
+<tr><td>LinkerLoad.cpp:2103</td><td class='snippet'>if (DependsMapIndex == 0 &amp;&amp; Summary.ExportCount &gt; 0)</td></tr>
+<tr><td>LinkerLoad.cpp:2105</td><td class='snippet'>if (!IsTextFormat())</td></tr>
+<tr><td>LinkerLoad.cpp:2134</td><td class='snippet'>if (bHasSerializedPreloadDependencies || Summary.PreloadDependencyCount &lt; 1 || Summary.PreloadDependencyOffset &lt;= 0)</td></tr>
+<tr><td>LinkerLoad.cpp:2139</td><td class='snippet'>if (!IsTextFormat())</td></tr>
+<tr><td>LinkerLoad.cpp:2146</td><td class='snippet'>if ((IsSaving()            // if we are saving, we always do the ordinary serialize as a way to make sure it matches up with bulk serialization</td></tr>
+</table>
+<h3>Serialized fields in source order</h3><table><tr><th>Source</th><th>Serialized field</th></tr>
+<tr><td>—</td><td>No direct SA_VALUE sites in this function</td></tr>
+</table>
+<h2>Classic package writer cross-check</h2>
+<p><b>Epic function:</b> SavePackage.cpp:3720</p>
+<table><thead><tr><th>Step</th><th>Source</th><th>Exact Epic statement</th></tr></thead><tbody>
+<tr><td>WRITERS01</td><td>SavePackage.cpp:3720</td><td class='snippet'>Linker-&gt;Summary.DependsOffset = Linker-&gt;Tell();</td></tr>
+<tr><td>WRITERS02</td><td>SavePackage.cpp:3723</td><td class='snippet'>TArray&lt;FPackageIndex&gt;&amp; Depends = Linker-&gt;DependsMap[i];</td></tr>
+<tr><td>WRITERS03</td><td>SavePackage.cpp:3724</td><td class='snippet'>DependsStream.EnterElement() &lt;&lt; Depends;</td></tr>
+<tr><td>WRITERS04</td><td>SavePackage.cpp:3743</td><td class='snippet'>Linker-&gt;Summary.SoftPackageReferencesCount = Linker-&gt;SoftPackageReferenceList.Num();</td></tr>
+<tr><td>WRITERS05</td><td>SavePackage.cpp:3750</td><td class='snippet'>for (FName&amp; SoftPackageName : Linker-&gt;SoftPackageReferenceList)</td></tr>
+<tr><td>WRITERS06</td><td>SavePackage.cpp:3752</td><td class='snippet'>SoftReferenceStream.EnterElement() &lt;&lt; SoftPackageName;</td></tr>
+</tbody></table>
+<h3>Conditional statements in this original Epic source path</h3><table><tr><th>Source</th><th>Original C++ condition</th></tr>
+<tr><td>SavePackage.cpp:3737</td><td class='snippet'>if (!(Linker-&gt;Summary.PackageFlags &amp; PKG_FilterEditorOnly))</td></tr>
+<tr><td>SavePackage.cpp:3744</td><td class='snippet'>if (!bTextFormat)</td></tr>
+<tr><td>SavePackage.cpp:3746</td><td class='snippet'>#if WITH_EDITOR</td></tr>
+</table>
+<h3>Serialized fields in source order</h3><table><tr><th>Source</th><th>Serialized field</th></tr>
+<tr><td>—</td><td>No direct SA_VALUE sites in this function</td></tr>
+</table>
+<h2>Unexpanded calls / format coverage</h2><p>These must be traced before any whole-file compliance claim.</p><ul>
+<li>CreateLoader dispatch and archive selection</li>
+<li>FixupImportMap / CoreRedirects and config</li>
+<li>FixupExportMap and class conversions</li>
+<li>GetPackageLinker / provider selection</li>
+<li>SerializePreloadDependencies full body</li>
+<li>FinaliseCreation / LoadAllObjects</li>
+<li>Object-property serialization and per-class payloads</li>
+<li>Bulk/UEXP/UBULK, compressed and optional data</li>
+<li>Platform, target, cooked, text archive, IoStore branch separation</li>
+<li>SavePackage2 complete writer branches</li>
+</ul></body></html>

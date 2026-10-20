@@ -1,0 +1,421 @@
+{
+  "source_file": "PackageFileSummary.cpp",
+  "pinned_sha256": "8FF60DD29D5A0E50EB1222DA0D9C5DF71E088A1F2641E8512E6F6CE05CBA4146",
+  "scope": "Selected branching decisions in Epic summary serializer; not exhaustive, conditional compilation and other fields remain in complete source trace",
+  "steps": [
+    {
+      "id": "B01",
+      "file": "PackageFileSummary.cpp",
+      "line": 48,
+      "needle": "FPackageFileSummary& Sum",
+      "description": "Enter Epic summary serializer",
+      "decision": false,
+      "edges": [
+        [
+          "B02",
+          ""
+        ]
+      ]
+    },
+    {
+      "id": "B02",
+      "file": "PackageFileSummary.cpp",
+      "line": 71,
+      "needle": "Sum.Tag == PACKAGE_FILE_TAG",
+      "description": "Recognized tag?",
+      "decision": true,
+      "edges": [
+        [
+          "B03",
+          "yes"
+        ],
+        [
+          "B90",
+          "no"
+        ]
+      ]
+    },
+    {
+      "id": "B03",
+      "file": "PackageFileSummary.cpp",
+      "line": 75,
+      "needle": "Sum.Tag == PACKAGE_FILE_TAG_SWAPPED",
+      "description": "Swapped-endian tag?",
+      "decision": true,
+      "edges": [
+        [
+          "B04",
+          "yes"
+        ],
+        [
+          "B00",
+          "no"
+        ]
+      ]
+    },
+    {
+      "id": "B04",
+      "file": "PackageFileSummary.cpp",
+      "line": 86,
+      "needle": "SetByteSwapping(true)",
+      "description": "Enable byte swap (if not already forced); the true branch can also disable it.",
+      "decision": false,
+      "edges": [
+        [
+          "B00",
+          ""
+        ]
+      ]
+    },
+    {
+      "id": "B00",
+      "file": "PackageFileSummary.cpp",
+      "line": 106,
+      "needle": "BaseArchive.IsLoading()",
+      "description": "Loading instead of saving?",
+      "decision": true,
+      "edges": [
+        [
+          "B05",
+          "loading"
+        ],
+        [
+          "B99",
+          "saving"
+        ]
+      ]
+    },
+    {
+      "id": "B05",
+      "file": "PackageFileSummary.cpp",
+      "line": 108,
+      "needle": "LegacyFileVersion < 0",
+      "description": "Modern negative legacy file version?",
+      "decision": true,
+      "edges": [
+        [
+          "B06",
+          "yes"
+        ],
+        [
+          "B91",
+          "no"
+        ]
+      ]
+    },
+    {
+      "id": "B06",
+      "file": "PackageFileSummary.cpp",
+      "line": 110,
+      "needle": "LegacyFileVersion < CurrentLegacyFileVersion",
+      "description": "Marker newer than supported?",
+      "decision": true,
+      "edges": [
+        [
+          "B92",
+          "yes"
+        ],
+        [
+          "B07",
+          "no"
+        ]
+      ]
+    },
+    {
+      "id": "B07",
+      "file": "PackageFileSummary.cpp",
+      "line": 119,
+      "needle": "LegacyFileVersion != -4",
+      "description": "Should read legacy UE3 version?",
+      "decision": true,
+      "edges": [
+        [
+          "B08",
+          "yes"
+        ],
+        [
+          "B09",
+          "no"
+        ]
+      ]
+    },
+    {
+      "id": "B08",
+      "file": "PackageFileSummary.cpp",
+      "line": 122,
+      "needle": "LegacyUE3Version",
+      "description": "Read legacy UE3-version word.",
+      "decision": false,
+      "edges": [
+        [
+          "B09",
+          ""
+        ]
+      ]
+    },
+    {
+      "id": "B09",
+      "file": "PackageFileSummary.cpp",
+      "line": 124,
+      "needle": "Sum.FileVersionUE4",
+      "description": "Read UE4 and licensee file versions.",
+      "decision": false,
+      "edges": [
+        [
+          "B10",
+          ""
+        ]
+      ]
+    },
+    {
+      "id": "B10",
+      "file": "PackageFileSummary.cpp",
+      "line": 127,
+      "needle": "LegacyFileVersion <= -2",
+      "description": "Read serialized custom-version container?",
+      "decision": true,
+      "edges": [
+        [
+          "B11",
+          "yes"
+        ],
+        [
+          "B12",
+          "no"
+        ]
+      ]
+    },
+    {
+      "id": "B11",
+      "file": "PackageFileSummary.cpp",
+      "line": 129,
+      "needle": "CustomVersionContainer.Serialize",
+      "description": "Read custom versions according to marker.",
+      "decision": false,
+      "edges": [
+        [
+          "B12",
+          ""
+        ]
+      ]
+    },
+    {
+      "id": "B12",
+      "file": "PackageFileSummary.cpp",
+      "line": 132,
+      "needle": "!Sum.FileVersionUE4 && !Sum.FileVersionLicenseeUE4",
+      "description": "Both versions zero?",
+      "decision": true,
+      "edges": [
+        [
+          "B13",
+          "yes"
+        ],
+        [
+          "B14",
+          "no"
+        ]
+      ]
+    },
+    {
+      "id": "B13",
+      "file": "PackageFileSummary.cpp",
+      "line": 135,
+      "needle": "!GAllowUnversionedContentInEditor",
+      "description": "Editor disallows unversioned assets? (WITH_EDITOR)",
+      "decision": true,
+      "edges": [
+        [
+          "B93",
+          "yes"
+        ],
+        [
+          "B96",
+          "no"
+        ]
+      ]
+    },
+    {
+      "id": "B96",
+      "file": "PackageFileSummary.cpp",
+      "line": 144,
+      "needle": "GPackageFileUE4Version",
+      "description": "Unversioned load uses Epic current UE4 and licensee versions and custom versions.",
+      "decision": false,
+      "edges": [
+        [
+          "B14",
+          ""
+        ]
+      ]
+    },
+    {
+      "id": "B14",
+      "file": "PackageFileSummary.cpp",
+      "line": 180,
+      "needle": "Sum.TotalHeaderSize",
+      "description": "Continue with header data serialization.",
+      "decision": false,
+      "edges": [
+        [
+          "B15",
+          ""
+        ]
+      ]
+    },
+    {
+      "id": "B15",
+      "file": "PackageFileSummary.cpp",
+      "line": 212,
+      "needle": "VER_UE4_OLDEST_LOADABLE_PACKAGE",
+      "description": "Version outside supported range?",
+      "decision": true,
+      "edges": [
+        [
+          "B94",
+          "yes"
+        ],
+        [
+          "B16",
+          "no"
+        ]
+      ]
+    },
+    {
+      "id": "B16",
+      "file": "PackageFileSummary.cpp",
+      "line": 320,
+      "needle": "Sum.CompressionFlags",
+      "description": "Read flags and validate compression; other fields between B15 and B16 remain in the field table.",
+      "decision": false,
+      "edges": [
+        [
+          "B97",
+          ""
+        ]
+      ]
+    },
+    {
+      "id": "B97",
+      "file": "PackageFileSummary.cpp",
+      "line": 321,
+      "needle": "VerifyCompressionFlagsValid",
+      "description": "Compression flags valid?",
+      "decision": true,
+      "edges": [
+        [
+          "B17",
+          "valid"
+        ],
+        [
+          "B98",
+          "invalid"
+        ]
+      ]
+    },
+    {
+      "id": "B17",
+      "file": "PackageFileSummary.cpp",
+      "line": 331,
+      "needle": "CompressedChunks.Num()",
+      "description": "Legacy compressed chunks present?",
+      "decision": true,
+      "edges": [
+        [
+          "B95",
+          "yes"
+        ],
+        [
+          "B18",
+          "no"
+        ]
+      ]
+    },
+    {
+      "id": "B18",
+      "file": "PackageFileSummary.cpp",
+      "line": 354,
+      "needle": "Sum.AssetRegistryDataOffset",
+      "description": "Continue serialization of source-defined tail fields.",
+      "decision": false,
+      "edges": []
+    },
+    {
+      "id": "B90",
+      "file": "PackageFileSummary.cpp",
+      "line": 391,
+      "needle": "}",
+      "description": "No valid tag; the outer tag-guard does not serialize the body.",
+      "decision": false,
+      "edges": []
+    },
+    {
+      "id": "B91",
+      "file": "PackageFileSummary.cpp",
+      "line": 152,
+      "needle": "Sum.FileVersionUE4 = 0",
+      "description": "Old UE3-style marker forces invalid UE4 version.",
+      "decision": false,
+      "edges": [
+        [
+          "B14",
+          ""
+        ]
+      ]
+    },
+    {
+      "id": "B92",
+      "file": "PackageFileSummary.cpp",
+      "line": 116,
+      "needle": "return;",
+      "description": "Abort for future unsupported negative marker.",
+      "decision": false,
+      "edges": []
+    },
+    {
+      "id": "B93",
+      "file": "PackageFileSummary.cpp",
+      "line": 139,
+      "needle": "return;",
+      "description": "Reject unversioned editor content when editor policy prohibits it.",
+      "decision": false,
+      "edges": []
+    },
+    {
+      "id": "B94",
+      "file": "PackageFileSummary.cpp",
+      "line": 214,
+      "needle": "return;",
+      "description": "Stop reading below the unsupported file-version boundary.",
+      "decision": false,
+      "edges": []
+    },
+    {
+      "id": "B95",
+      "file": "PackageFileSummary.cpp",
+      "line": 336,
+      "needle": "return;",
+      "description": "Reject legacy package-level compressed chunks.",
+      "decision": false,
+      "edges": []
+    },
+    {
+      "id": "B99",
+      "file": "PackageFileSummary.cpp",
+      "line": 171,
+      "needle": "LegacyUE3Version = 864",
+      "description": "Save-side legacy version writing path: follow original source, not shown further in this load-only graph.",
+      "decision": false,
+      "edges": []
+    },
+    {
+      "id": "B98",
+      "file": "PackageFileSummary.cpp",
+      "line": 325,
+      "needle": "return;",
+      "description": "Abort summary with invalid compression flags.",
+      "decision": false,
+      "edges": []
+    }
+  ]
+}

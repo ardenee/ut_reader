@@ -1,0 +1,466 @@
+{
+  "format_version": 1,
+  "engine": "UE4.27.2",
+  "pinned_source_revision": "d94b38ae3446da52224bedd2568c078f828b4039",
+  "source_root": "L:/Source/Engine/UE4/UE 4.27.2",
+  "scope": "Original Epic C++ classic package linker initialization, summary serialization, FObjectImport/FObjectExport and table loading. Not a full engine behavior or object payload trace.",
+  "end_to_end_complete": false,
+  "files": [
+    {
+      "id": "LinkerLoad.cpp",
+      "path": "Engine/Source/Runtime/CoreUObject/Private/UObject/LinkerLoad.cpp",
+      "sha256": "39DB1F3E1A48D829E65991259EAEFB955680CCF6165D5E31B9DB862B02560569"
+    },
+    {
+      "id": "PackageFileSummary.cpp",
+      "path": "Engine/Source/Runtime/CoreUObject/Private/UObject/PackageFileSummary.cpp",
+      "sha256": "8FF60DD29D5A0E50EB1222DA0D9C5DF71E088A1F2641E8512E6F6CE05CBA4146"
+    },
+    {
+      "id": "ObjectResource.cpp",
+      "path": "Engine/Source/Runtime/CoreUObject/Private/UObject/ObjectResource.cpp",
+      "sha256": "5FB996D0AAFB7DC9B2615484976A487E97E1188B42E48229FDBA024BC5BC4DD5"
+    },
+    {
+      "id": "ObjectVersion.h",
+      "path": "Engine/Source/Runtime/Core/Public/UObject/ObjectVersion.h",
+      "sha256": "378C49E3AF3542C87C95D7259B81FCB77A98077D438CCCFA227B2F90870A000A"
+    },
+    {
+      "id": "SavePackage.cpp",
+      "path": "Engine/Source/Runtime/CoreUObject/Private/UObject/SavePackage.cpp",
+      "sha256": "F36086C193B2496982CC283AED14849695F16D5D68BB062FE3BADD00D1093202"
+    },
+    {
+      "id": "SavePackage2.cpp",
+      "path": "Engine/Source/Runtime/CoreUObject/Private/UObject/SavePackage2.cpp",
+      "sha256": "FCAD38167A8612068F1300419447A9BD379253057E35F0AD2E08AF82609B4200"
+    }
+  ],
+  "groups": [
+    {
+      "id": "loader",
+      "title": "Package linker initialization stages",
+      "file": "LinkerLoad.cpp",
+      "function_line": 689,
+      "sections": [
+        [
+          689,
+          840
+        ]
+      ],
+      "steps": [
+        [
+          715,
+          "Status = CreateLoader("
+        ],
+        [
+          724,
+          "Status = SerializePackageFileSummary();"
+        ],
+        [
+          731,
+          "Status = SerializeNameMap();"
+        ],
+        [
+          738,
+          "Status = SerializeGatherableTextDataMap();"
+        ],
+        [
+          745,
+          "Status = SerializeImportMap();"
+        ],
+        [
+          752,
+          "Status = SerializeExportMap();"
+        ],
+        [
+          760,
+          "Status = ReconstructImportAndExportMap();"
+        ],
+        [
+          768,
+          "Status = FixupImportMap();"
+        ],
+        [
+          775,
+          "Status = PopulateInstancingContext();"
+        ],
+        [
+          782,
+          "Status = FixupExportMap();"
+        ],
+        [
+          789,
+          "Status = SerializeDependsMap();"
+        ],
+        [
+          796,
+          "Status = CreateExportHash();"
+        ],
+        [
+          803,
+          "Status = FindExistingExports();"
+        ],
+        [
+          809,
+          "Status = SerializePreloadDependencies();"
+        ],
+        [
+          816,
+          "Status = FinalizeCreation("
+        ]
+      ],
+      "condition_ranges": [
+        [
+          689,
+          840
+        ]
+      ]
+    },
+    {
+      "id": "summary",
+      "title": "Package summary serialization",
+      "file": "PackageFileSummary.cpp",
+      "function_line": 48,
+      "sections": [
+        [
+          48,
+          391
+        ]
+      ],
+      "steps": [
+        [
+          68,
+          "SA_VALUE(TEXT(\"Tag\")"
+        ],
+        [
+          71,
+          "Sum.Tag == PACKAGE_FILE_TAG"
+        ],
+        [
+          102,
+          "CurrentLegacyFileVersion = -7"
+        ],
+        [
+          104,
+          "SA_VALUE(TEXT(\"LegacyFileVersion\")"
+        ],
+        [
+          124,
+          "SA_VALUE(TEXT(\"FileVersionUE4\")"
+        ],
+        [
+          129,
+          "Sum.CustomVersionContainer.Serialize("
+        ],
+        [
+          180,
+          "SA_VALUE(TEXT(\"TotalHeaderSize\")"
+        ],
+        [
+          182,
+          "SA_VALUE(TEXT(\"PackageFlags\")"
+        ],
+        [
+          196,
+          "SA_VALUE(TEXT(\"NameCount\")"
+        ],
+        [
+          208,
+          "SA_VALUE(TEXT(\"ExportCount\")"
+        ],
+        [
+          209,
+          "SA_VALUE(TEXT(\"ImportCount\")"
+        ],
+        [
+          210,
+          "SA_VALUE(TEXT(\"DependsOffset\")"
+        ],
+        [
+          219,
+          "SA_VALUE(TEXT(\"SoftPackageReferencesCount\")"
+        ],
+        [
+          227,
+          "SA_VALUE(TEXT(\"ThumbnailTableOffset\")"
+        ],
+        [
+          258,
+          "SA_VALUE(TEXT(\"GenerationCount\")"
+        ],
+        [
+          320,
+          "SA_VALUE(TEXT(\"CompressionFlags\")"
+        ],
+        [
+          329,
+          "SA_VALUE(TEXT(\"CompressedChunks\")"
+        ],
+        [
+          354,
+          "SA_VALUE(TEXT(\"AssetRegistryDataOffset\")"
+        ],
+        [
+          355,
+          "SA_VALUE(TEXT(\"BulkDataStartOffset\")"
+        ],
+        [
+          383,
+          "SA_VALUE(TEXT(\"PreloadDependencyCount\")"
+        ]
+      ],
+      "condition_ranges": [
+        [
+          53,
+          389
+        ]
+      ]
+    },
+    {
+      "id": "imports",
+      "title": "Serialized FObjectImport",
+      "file": "ObjectResource.cpp",
+      "function_line": 283,
+      "sections": [
+        [
+          283,
+          306
+        ]
+      ],
+      "steps": [
+        [
+          287,
+          "SA_VALUE(TEXT(\"ClassPackage\")"
+        ],
+        [
+          288,
+          "SA_VALUE(TEXT(\"ClassName\")"
+        ],
+        [
+          289,
+          "SA_VALUE(TEXT(\"OuterIndex\")"
+        ],
+        [
+          290,
+          "SA_VALUE(TEXT(\"ObjectName\")"
+        ],
+        [
+          294,
+          "VER_UE4_NON_OUTER_PACKAGE_IMPORT"
+        ],
+        [
+          296,
+          "SA_VALUE(TEXT(\"PackageName\")"
+        ],
+        [
+          302,
+          "I.SourceLinker = NULL;"
+        ]
+      ],
+      "condition_ranges": [
+        [
+          283,
+          306
+        ]
+      ]
+    },
+    {
+      "id": "exports",
+      "title": "Serialized FObjectExport",
+      "file": "ObjectResource.cpp",
+      "function_line": 105,
+      "sections": [
+        [
+          105,
+          172
+        ]
+      ],
+      "steps": [
+        [
+          110,
+          "SA_VALUE(TEXT(\"ClassIndex\")"
+        ],
+        [
+          111,
+          "SA_VALUE(TEXT(\"SuperIndex\")"
+        ],
+        [
+          113,
+          "VER_UE4_TemplateIndex_IN_COOKED_EXPORTS"
+        ],
+        [
+          118,
+          "SA_VALUE(TEXT(\"OuterIndex\")"
+        ],
+        [
+          119,
+          "SA_VALUE(TEXT(\"ObjectName\")"
+        ],
+        [
+          122,
+          "SA_VALUE(TEXT(\"ObjectFlags\")"
+        ],
+        [
+          129,
+          "VER_UE4_64BIT_EXPORTMAP_SERIALSIZES"
+        ],
+        [
+          145,
+          "SA_VALUE(TEXT(\"bForcedExport\")"
+        ],
+        [
+          152,
+          "SA_VALUE(TEXT(\"PackageFlags\")"
+        ],
+        [
+          164,
+          "VER_UE4_PRELOAD_DEPENDENCIES_IN_COOKED_EXPORTS"
+        ]
+      ],
+      "condition_ranges": [
+        [
+          105,
+          172
+        ]
+      ]
+    },
+    {
+      "id": "tables",
+      "title": "Named table readers",
+      "file": "LinkerLoad.cpp",
+      "function_line": 1496,
+      "sections": [
+        [
+          1496,
+          1556
+        ],
+        [
+          1594,
+          1619
+        ],
+        [
+          1874,
+          1901
+        ],
+        [
+          2084,
+          2124
+        ],
+        [
+          2129,
+          2165
+        ]
+      ],
+      "steps": [
+        [
+          1544,
+          "*this << NameEntry;"
+        ],
+        [
+          1613,
+          "Stream.EnterElement() << *Import;"
+        ],
+        [
+          1893,
+          "Stream.EnterElement() << *Export;"
+        ],
+        [
+          2118,
+          "Stream.EnterElement() << Depends;"
+        ],
+        [
+          2134,
+          "bHasSerializedPreloadDependencies"
+        ]
+      ],
+      "condition_ranges": [
+        [
+          1496,
+          1556
+        ],
+        [
+          1594,
+          1619
+        ],
+        [
+          1874,
+          1901
+        ],
+        [
+          2084,
+          2124
+        ],
+        [
+          2129,
+          2165
+        ]
+      ]
+    },
+    {
+      "id": "writers",
+      "title": "Classic package writer cross-check",
+      "file": "SavePackage.cpp",
+      "function_line": 3720,
+      "sections": [
+        [
+          3715,
+          3727
+        ],
+        [
+          3736,
+          3758
+        ]
+      ],
+      "steps": [
+        [
+          3720,
+          "Summary.DependsOffset"
+        ],
+        [
+          3723,
+          "TArray<FPackageIndex>& Depends"
+        ],
+        [
+          3724,
+          "DependsStream.EnterElement() << Depends;"
+        ],
+        [
+          3743,
+          "Summary.SoftPackageReferencesCount"
+        ],
+        [
+          3750,
+          "for (FName& SoftPackageName"
+        ],
+        [
+          3752,
+          "SoftReferenceStream.EnterElement() << SoftPackageName;"
+        ]
+      ],
+      "condition_ranges": [
+        [
+          3715,
+          3727
+        ],
+        [
+          3736,
+          3758
+        ]
+      ]
+    }
+  ],
+  "not_yet_expanded": [
+    "CreateLoader dispatch and archive selection",
+    "FixupImportMap / CoreRedirects and config",
+    "FixupExportMap and class conversions",
+    "GetPackageLinker / provider selection",
+    "SerializePreloadDependencies full body",
+    "FinaliseCreation / LoadAllObjects",
+    "Object-property serialization and per-class payloads",
+    "Bulk/UEXP/UBULK, compressed and optional data",
+    "Platform, target, cooked, text archive, IoStore branch separation",
+    "SavePackage2 complete writer branches"
+  ]
+}

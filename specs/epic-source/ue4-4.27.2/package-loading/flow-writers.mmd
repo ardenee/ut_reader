@@ -1,0 +1,12 @@
+flowchart TD
+  WRITERS01["WRITERS01 Linker-&gt;Summary.DependsOffset = Linker-&gt;Tell();<br/>SavePackage.cpp:3720"]
+  WRITERS02["WRITERS02 TArray&lt;FPackageIndex&gt;& Depends = Linker-&gt;DependsMap[i];<br/>SavePackage.cpp:3723"]
+  WRITERS01 --> WRITERS02
+  WRITERS03["WRITERS03 DependsStream.EnterElement() &lt;&lt; Depends;<br/>SavePackage.cpp:3724"]
+  WRITERS02 --> WRITERS03
+  WRITERS04["WRITERS04 Linker-&gt;Summary.SoftPackageReferencesCount = Linker-&gt;SoftPack...<br/>SavePackage.cpp:3743"]
+  WRITERS03 --> WRITERS04
+  WRITERS05["WRITERS05 for (FName& SoftPackageName : Linker-&gt;SoftPackageReferenceList)<br/>SavePackage.cpp:3750"]
+  WRITERS04 --> WRITERS05
+  WRITERS06["WRITERS06 SoftReferenceStream.EnterElement() &lt;&lt; SoftPackageName;<br/>SavePackage.cpp:3752"]
+  WRITERS05 --> WRITERS06

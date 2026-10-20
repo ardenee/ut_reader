@@ -1,0 +1,10 @@
+flowchart TD
+  TABLES01["TABLES01 *this &lt;&lt; NameEntry;<br/>LinkerLoad.cpp:1544"]
+  TABLES02["TABLES02 Stream.EnterElement() &lt;&lt; *Import;<br/>LinkerLoad.cpp:1613"]
+  TABLES01 --> TABLES02
+  TABLES03["TABLES03 Stream.EnterElement() &lt;&lt; *Export;<br/>LinkerLoad.cpp:1893"]
+  TABLES02 --> TABLES03
+  TABLES04["TABLES04 Stream.EnterElement() &lt;&lt; Depends;<br/>LinkerLoad.cpp:2118"]
+  TABLES03 --> TABLES04
+  TABLES05["TABLES05 if (bHasSerializedPreloadDependencies || Summary.PreloadDependencyC...<br/>LinkerLoad.cpp:2134"]
+  TABLES04 --> TABLES05

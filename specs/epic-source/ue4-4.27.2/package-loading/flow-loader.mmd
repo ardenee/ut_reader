@@ -1,0 +1,30 @@
+flowchart TD
+  LOADER01["LOADER01 Status = CreateLoader(TFunction&lt;void()&gt;([]() {}));<br/>LinkerLoad.cpp:715"]
+  LOADER02["LOADER02 Status = SerializePackageFileSummary();<br/>LinkerLoad.cpp:724"]
+  LOADER01 --> LOADER02
+  LOADER03["LOADER03 Status = SerializeNameMap();<br/>LinkerLoad.cpp:731"]
+  LOADER02 --> LOADER03
+  LOADER04["LOADER04 Status = SerializeGatherableTextDataMap();<br/>LinkerLoad.cpp:738"]
+  LOADER03 --> LOADER04
+  LOADER05["LOADER05 Status = SerializeImportMap();<br/>LinkerLoad.cpp:745"]
+  LOADER04 --> LOADER05
+  LOADER06["LOADER06 Status = SerializeExportMap();<br/>LinkerLoad.cpp:752"]
+  LOADER05 --> LOADER06
+  LOADER07["LOADER07 Status = ReconstructImportAndExportMap();<br/>LinkerLoad.cpp:760"]
+  LOADER06 --> LOADER07
+  LOADER08["LOADER08 Status = FixupImportMap();<br/>LinkerLoad.cpp:768"]
+  LOADER07 --> LOADER08
+  LOADER09["LOADER09 Status = PopulateInstancingContext();<br/>LinkerLoad.cpp:775"]
+  LOADER08 --> LOADER09
+  LOADER10["LOADER10 Status = FixupExportMap();<br/>LinkerLoad.cpp:782"]
+  LOADER09 --> LOADER10
+  LOADER11["LOADER11 Status = SerializeDependsMap();<br/>LinkerLoad.cpp:789"]
+  LOADER10 --> LOADER11
+  LOADER12["LOADER12 Status = CreateExportHash();<br/>LinkerLoad.cpp:796"]
+  LOADER11 --> LOADER12
+  LOADER13["LOADER13 Status = FindExistingExports();<br/>LinkerLoad.cpp:803"]
+  LOADER12 --> LOADER13
+  LOADER14["LOADER14 Status = SerializePreloadDependencies();<br/>LinkerLoad.cpp:809"]
+  LOADER13 --> LOADER14
+  LOADER15["LOADER15 Status = FinalizeCreation(ObjectNameWithOuterToExportMap);<br/>LinkerLoad.cpp:816"]
+  LOADER14 --> LOADER15
