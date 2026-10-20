@@ -9,8 +9,8 @@ Pinned Epic source: `L:/Source/Engine/UE4/UE 4.27.2` at `d94b38ae3446da52224bedd
 | U427-P01 | Package tag, endian, legacy-summary marker, custom versions and package file-version policy | VERIFIED |
 | U427-P02 | Name map, FName wire representations and serialized string handling | VERIFIED |
 | U427-P03 | Import/export index, object flags, serialized offsets and table extents | VERIFIED |
-| U427-P04 | DependsMap, preload dependency blocks, soft/string asset references | ACTIVE |
-| U427-P05 | Bulk payload offsets, separate UEXP/UBULK and optional payloads | OPEN |
+| U427-P04 | DependsMap, preload dependency blocks, soft/string asset references | VERIFIED |
+| U427-P05 | Bulk payload offsets, separate UEXP/UBULK and optional payloads | ACTIVE |
 | U427-P06 | AssetRegistry data, thumbnails, world/chunk IDs, serialization conditions | OPEN |
 | U427-P07 | FLinkerLoad VerifyImportInner, redirects and optional/failed provider resolution | OPEN |
 | U427-P08 | Active production ingress (upload, archive, file add, profile dispatch) | OPEN |
@@ -21,4 +21,4 @@ Process: handle primary ID in order; compare all relevant Epic source-defined br
 
 ## Evidence and source boundaries
 
-Existing source audit resumption: `UE427-AUDIT-RESUMPTION-20261018.md`; existing specs `specs/ue4-4.27.2-package-format.md`, `specs/ue4-4.27.2-dependency-resolution.md`, and `specs/ue4-4.27.2-verifyimport-conformance-audit.md`. Historical V4-only diagnostic scripts retired in `ac5e4a8d` are **not** UE4.27.2 parity evidence. Main target is UnrealDB's source-aligned UE4 reader and its active V5 consumers. Test against isolated DB and real assets where possible; do not write PRD DB during acceptance. Current tally **3/10 VERIFIED**: P01 `UE427-P01-DEPRECATED-GUID-CLOSURE-20261020.md`; P02 `UE427-P02-FNAME-FSTRING-CLOSURE-20261020.md`; P03 `UE427-P03-NATIVE-RECORD-CLOSURE-20261020.md`. **P04 ACTIVE** (including deferred soft-reference observation U427-S003). These record-format acceptances do not certify the remaining seven operations or UE4.27.2 ingress/V5 production workflows.
+Existing source audit resumption: `UE427-AUDIT-RESUMPTION-20261018.md`; existing specs `specs/ue4-4.27.2-package-format.md`, `specs/ue4-4.27.2-dependency-resolution.md`, and `specs/ue4-4.27.2-verifyimport-conformance-audit.md`. Historical V4-only diagnostic scripts retired in `ac5e4a8d` are **not** UE4.27.2 parity evidence. Main target is UnrealDB's source-aligned UE4 reader and its active V5 consumers. Test against isolated DB and real assets where possible; do not write PRD DB during acceptance. Current tally **4/10 VERIFIED**: P01 `UE427-P01-DEPRECATED-GUID-CLOSURE-20261020.md`; P02 `UE427-P02-FNAME-FSTRING-CLOSURE-20261020.md`; P03 `UE427-P03-NATIVE-RECORD-CLOSURE-20261020.md`; P04 `UE427-P04-NATIVE-DEPENDENCY-CLOSURE-20261020.md` (also resolves secondary U427-S003). **P05 ACTIVE**. These format-reader acceptances do not certify the remaining six operations or UE4.27.2 ingress/V5 production workflows.

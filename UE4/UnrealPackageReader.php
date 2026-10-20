@@ -800,13 +800,14 @@ final class UnrealPackageReader4
         try {
             $r = $this->tableReader($offset);
             for ($i = 0; $i < $exportCount; $i++) {
+                $rowOffset = $r->tell();
                 $count = $r->i32();
                 $this->assertArrayCountFits($r, $count, 4, 'UE4 DependsMap export ' . $i);
                 $references = [];
                 for ($j = 0; $j < $count; $j++) {
                     $references[] = $r->i32();
                 }
-                $this->dependsMap[] = ['exportIndex' => $i, 'references' => $references];
+                $this->dependsMap[] = ['exportIndex' => $i, 'offset' => $rowOffset, 'references' => $references];
             }
         } catch (Throwable $e) {
             $this->issues[] = 'Could not parse UE4 DependsMap: ' . $e->getMessage();
@@ -823,17 +824,25 @@ final class UnrealPackageReader4
 
         try {
             $r = $this->tableReader($offset);
+            // Epic UE4 <=513 corpus stores this list as length-prefixed
+            // FStrings. The >=514 corpus follows UE4.27 SavePackage.cpp
+            // and SavePackage2.cpp: package-local FName index/number pairs.
+            // UT4 clean-master v511 is independently pinned and already uses
+            // FName pairs; its source profile must not inherit the stock
+            // historical UE4 wire interpretation.
+            $legacyStrings = (int)$this->header['version'] < self::VER_ADDED_SOFT_OBJECT_PATH
+                && (string)($this->header['parserProfileKey'] ?? '') !== 'ut4-alpha';
             for ($i = 0; $i < $count; $i++) {
                 $entryOffset = $r->tell();
-                // UE4 SavePackage.cpp/SavePackage2.cpp serialize each
-                // SoftPackageReferenceList entry as FName (two int32 words),
-                // not FSoftObjectPath or an FString.
-                // This soft-reference stream is reviewed under P04; do not impose
-                // P02 linker import/export NameMap rejection on its legacy
-                // decoder until its source-specific layout is accepted.
-                $path = $this->fnameText($this->readFName($r, false));
+                $path = $legacyStrings
+                    ? $r->fstring()
+                    : $this->fnameText($this->readFName($r));
                 if ($path !== '') {
-                    $this->stringAssetReferences[] = ['index' => $i, 'offset' => $entryOffset, 'path' => $path, 'source' => 'summary_string_asset_reference'];
+                    $this->stringAssetReferences[] = [
+                        'index' => $i, 'offset' => $entryOffset, 'path' => $path,
+                        'source' => 'summary_string_asset_reference',
+                        'wireFormat' => $legacyStrings ? 'fstring' : 'fname',
+                    ];
                 }
             }
         } catch (Throwable $e) {

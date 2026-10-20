@@ -8,6 +8,7 @@
 #include "Misc/Parse.h"
 #include "Serialization/ArchiveProxy.h"
 #include "UObject/ObjectResource.h"
+#include "UE427OracleP04.h"
 
 // Preserve Epic's actual FObjectImport / FObjectExport operator<< and supply
 // the package-local FName mapping that FLinkerLoad::operator<<(FName&) uses.
@@ -182,6 +183,35 @@ int32 UUE427OracleCommandlet::Main(const FString& Params) {
    if (!FFileHelper::SaveArrayToFile(Data,*Path)) return 12;
    UE_LOG(LogTemp,Display,TEXT("UE427_FIXTURE_WRITTEN|native-filtered-import.uasset|0|0|4096"));
   }
+  // Positive signed FPackageIndex preload arrays in both archive endians.
+  for (int32 Swap=0;Swap<2;++Swap) {
+   FPackageFileSummary Summary;
+   Summary.Tag=PACKAGE_FILE_TAG;
+   Summary.SetFileVersions(522,0,false);
+   Summary.TotalHeaderSize=4096;
+   Summary.PreloadDependencyCount=3;
+   Summary.PreloadDependencyOffset=512;
+   TArray<uint8> Data;
+   {
+    FMemoryWriter Writer(Data,true);
+    Writer.SetByteSwapping(Swap!=0);
+    Writer << Summary;
+    if (Writer.IsError() || Data.Num()>512) return 14;
+    Data.SetNumZeroed(4096);
+    Writer.Seek(512);
+    FPackageIndex Import=FPackageIndex::FromImport(0);
+    FPackageIndex Null;
+    FPackageIndex Export=FPackageIndex::FromExport(0);
+    Writer << Import;
+    Writer << Null;
+    Writer << Export;
+    if (Writer.IsError()) return 15;
+   }
+   const FString Name=Swap?TEXT("native-swapped-preload.uasset"):TEXT("native-little-preload.uasset");
+   const FString Path=FPaths::Combine(FixturesDir,Name);
+   if (!FFileHelper::SaveArrayToFile(Data,*Path)) return 16;
+   UE_LOG(LogTemp,Display,TEXT("UE427_FIXTURE_WRITTEN|%s|%d|0|4096"),*Name,Swap);
+  }
   return 0;
  }
  FString ListPath;
@@ -229,9 +259,12 @@ int32 UUE427OracleCommandlet::Main(const FString& Params) {
   if (FParse::Param(*Params, TEXT("Names"))) {
    Ar->SetUE4Ver(S.GetFileVersionUE4());
    UE_LOG(LogTemp,Display,TEXT("UE427_NATIVE_NAME_COUNT|%d|%d"), Checked, S.NameCount);
-   if (FParse::Param(*Params,TEXT("Records")) && S.NameCount == 0) {
+   if (S.NameCount == 0) {
     const TArray<FNameEntryId> EmptyNameMap;
-    if (!UE427DumpRecordMaps(*Ar,S,EmptyNameMap,Checked)) return 9;
+    if (FParse::Param(*Params,TEXT("Records")) &&
+      !UE427DumpRecordMaps(*Ar,S,EmptyNameMap,Checked)) return 9;
+    if (FParse::Param(*Params,TEXT("P04")) &&
+      !UE427DumpP04(*Ar,S,EmptyNameMap,Checked)) return 13;
    }
    if (S.NameCount > 0 && S.NameOffset > 0 && S.NameOffset < Ar->TotalSize()) {
     Ar->Seek(S.NameOffset);
@@ -261,6 +294,9 @@ int32 UUE427OracleCommandlet::Main(const FString& Params) {
     }
     if (FParse::Param(*Params,TEXT("Records"))) {
      if (!UE427DumpRecordMaps(*Ar,S,MappedNames,Checked)) return 9;
+    }
+    if (FParse::Param(*Params,TEXT("P04"))) {
+     if (!UE427DumpP04(*Ar,S,MappedNames,Checked)) return 13;
     }
     if (S.ImportCount > 0 && S.ImportOffset > 0 && !FParse::Param(*Params,TEXT("Records"))) {
      Ar->Seek(S.ImportOffset);
