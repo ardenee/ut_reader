@@ -8,3 +8,7 @@ This list captures discoveries outside the currently active primary item. A reco
 | U427-S002 | V4-era UT4 v511 metadata assertions for missing selected physical provider differ; UT4 has separate clean-master source. | Out-of-scope older UT4 integration | Review under future UT4 source audit, not UE4.27.2 |
 
 Add further findings here with stable U427-S IDs, source paths, production impact, and verification state. Do not expand U427-P01–P10.
+
+## U427-S003 — deferred P04 soft-reference decoding question
+
+During P02 source-defined linker FName index enforcement, some valid UE4.27 assets (including `TutorialTPP_PhysicsAsset.uasset` and `OculusControllerMaterial.uasset`) produced out-of-range integers in UnrealDB's existing soft-package-reference decoder. Import/export NameMap index validation remains strict; the soft-reference reader retains its previous behavior. This is **not yet a confirmed Epic discrepancy**: P04 must independently verify the serialized wire format and offsets using Epic source and native samples. The authentic 1,749-package corpus and 112 retained soft references must remain passing.

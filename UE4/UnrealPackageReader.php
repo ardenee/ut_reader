@@ -625,15 +625,26 @@ final class UnrealPackageReader4
         }
         $raw = $r->bytes($bytes);
         if (substr($raw, -2) === "\0\0") $raw = substr($raw, 0, -2);
-        $out = @mb_convert_encoding($raw, 'UTF-8', $r->isByteSwapping() ? 'UTF-16BE' : 'UTF-16LE');
+        // Epic Core/Private/UObject/UnrealNames.cpp FNameEntrySerialized::operator<<
+        // swaps the signed StringLen via Archive but reads UCS2CHAR bytes using
+        // Ar.Serialize() without element byte-swapping, even when the package
+        // tag requested ForceByteSwapping on a little-endian host.
+        // FNameEntrySerialized therefore differs from an archive FString.
+        $out = @mb_convert_encoding($raw, 'UTF-8', 'UTF-16LE');
         if ($out === false) throw new RuntimeException('Failed to decode UE4 wide name entry.');
         return $out;
     }
 
-    private function readFName(UE4BinaryReader $r): array
+    private function readFName(UE4BinaryReader $r, bool $enforceLinkerNameMapIndex = true): array
     {
         $idx = $r->i32();
         $num = $r->i32();
+        // Epic LinkerLoad.h::operator<<(FName&) checks NameMap.IsValidIndex
+        // and raises a critical archive error on an invalid serialized index.
+        // Silently inventing an empty FName loses source-defined corruption.
+        if ($enforceLinkerNameMapIndex && !isset($this->names[$idx])) {
+            throw new RuntimeException('UE4 FName index ' . $idx . ' is outside NameMap count ' . count($this->names));
+        }
         return ['index' => $idx, 'number' => $num, 'text' => $this->nameByIndex($idx, $num)];
     }
 
@@ -812,7 +823,10 @@ final class UnrealPackageReader4
                 // UE4 SavePackage.cpp/SavePackage2.cpp serialize each
                 // SoftPackageReferenceList entry as FName (two int32 words),
                 // not FSoftObjectPath or an FString.
-                $path = $this->fnameText($this->readFName($r));
+                // This soft-reference stream is reviewed under P04; do not impose
+                // P02 linker import/export NameMap rejection on its legacy
+                // decoder until its source-specific layout is accepted.
+                $path = $this->fnameText($this->readFName($r, false));
                 if ($path !== '') {
                     $this->stringAssetReferences[] = ['index' => $i, 'offset' => $entryOffset, 'path' => $path, 'source' => 'summary_string_asset_reference'];
                 }

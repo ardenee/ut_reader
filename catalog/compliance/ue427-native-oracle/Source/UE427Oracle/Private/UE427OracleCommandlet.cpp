@@ -79,6 +79,27 @@ int32 UUE427OracleCommandlet::Main(const FString& Params) {
     Checked, Version.Key.A, Version.Key.B, Version.Key.C, Version.Key.D,
     *Version.GetFriendlyName().ToString());
   }
+  if (FParse::Param(*Params, TEXT("Names"))) {
+   Ar->SetUE4Ver(S.GetFileVersionUE4());
+   UE_LOG(LogTemp,Display,TEXT("UE427_NATIVE_NAME_COUNT|%d|%d"), Checked, S.NameCount);
+   if (S.NameCount > 0 && S.NameOffset > 0 && S.NameOffset < Ar->TotalSize()) {
+    Ar->Seek(S.NameOffset);
+    FNameEntrySerialized NameEntry(ENAME_LinkerConstructor);
+    for (int32 NameIndex = 0; NameIndex < S.NameCount; ++NameIndex) {
+     const int64 EntryOffset = Ar->Tell();
+     *Ar << NameEntry;
+     if (Ar->IsError()) {
+      UE_LOG(LogTemp,Error,TEXT("UE427_NATIVE_NAME_ERROR|%d|%d"), Checked, NameIndex);
+      return 7;
+     }
+     const FString Name = NameEntry.GetPlainNameString();
+     FTCHARToUTF8 UTF8(*Name);
+     const FString Hex = BytesToHex((const uint8*)UTF8.Get(), UTF8.Length());
+     UE_LOG(LogTemp,Display,TEXT("UE427_NATIVE_NAME|%d|%d|%lld|%s"),
+      Checked, NameIndex, EntryOffset, *Hex);
+    }
+   }
+  }
   Checked++;
  }
  GAllowUnversionedContentInEditor = PreviousAllow;
