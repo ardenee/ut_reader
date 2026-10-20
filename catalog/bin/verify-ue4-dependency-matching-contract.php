@@ -387,13 +387,17 @@ $check(
     'ue4_provider_selected_before_verifyimport'
 );
 
-$auditSource = file_get_contents($root . '/bin/audit-ue4-missing-verifyimport.php') ?: '';
+// The old UEDB4-only missing-import reason audit was deliberately retired
+// by ac5e4a8d during the V5 cutover. It cannot be a live P07 acceptance gate.
+// Retain the retirement boundary while other assertions below verify the
+// current UE4 VerifyImport source outcomes and redirector classification.
+$obsoleteV4Audit = $root . '/bin/audit-ue4-missing-verifyimport.php';
+$sourceAuditSpec = file_get_contents(dirname($root) . '/specs/ue4-4.27.2-verifyimport-conformance-audit.md') ?: '';
 $check(
-    str_contains($auditSource, "'SELECT l.file_id,l.import_index,CONVERT(pkg.value_prefix USING utf8mb4) required_package '")
-        && str_contains($auditSource, '$missingRequiredSet')
-        && str_contains($auditSource, 'if (!isset($missingRequiredSet[$index])) continue;')
-        && str_contains($auditSource, 'Reason counts/examples include only object Imports whose persisted ue_dependency_links.status is missing (0).'),
-    'ue4_rejection_reason_audit_only_counts_persisted_missing_object_imports'
+    !is_file($obsoleteV4Audit)
+        && str_contains($sourceAuditSpec, '**Historical CLI references:**')
+        && str_contains($ue4Block, 'PdoUe4VerifyImportProjectionResolver::resolveProviderOutcome('),
+    'ue4_retired_v4_reason_audit_is_not_live_p07_acceptance'
 );
 
 $dependencyResolverSource = file_get_contents($root . '/src/Infrastructure/Persistence/PdoDependencyResolver.php') ?: '';
@@ -422,7 +426,7 @@ $result = [
         'one_physical_provider_is_used_without_invalidating_successful_siblings',
         'ut4_export_outer_is_a_clean_master_source_assert_boundary',
         'read_only_diagnostics_explain_object_class_outer_and_private_rejections',
-        'rejection_reason_audit_only_counts_persisted_missing_object_imports',
+        'retired_v4_missing_import_audit_not_used_as_live_p07_acceptance',
     ],
 ];
 echo json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . PHP_EOL;

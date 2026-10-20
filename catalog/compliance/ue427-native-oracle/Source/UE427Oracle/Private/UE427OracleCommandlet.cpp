@@ -18,6 +18,7 @@
 #include "UE427OracleP06WorldChunk.h"
 #include "UE427OracleP06ThumbPayload.h"
 #include "UE427OracleP06AssetSemantic.h"
+#include "UE427OracleP07Runtime.h"
 
 // Preserve Epic's actual FObjectImport / FObjectExport operator<< and supply
 // the package-local FName mapping that FLinkerLoad::operator<<(FName&) uses.
@@ -125,6 +126,9 @@ UUE427OracleCommandlet::UUE427OracleCommandlet() {
  IsClient = false; IsServer = false; IsEditor = true; LogToConsole = true;
 }
 int32 UUE427OracleCommandlet::Main(const FString& Params) {
+ FString NativeP07Paths;
+ if(FParse::Value(*Params,TEXT("P07Runtime="),NativeP07Paths))
+  return UE427ProbeP07Runtime(NativeP07Paths)?0:33;
  FString P06AssetFixtureDir;
  if(FParse::Value(*Params,TEXT("P06AssetFixtureDir="),P06AssetFixtureDir))
   return UE427MakeP06SemanticFixtures(P06AssetFixtureDir)?0:32;
