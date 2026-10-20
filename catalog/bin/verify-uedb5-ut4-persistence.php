@@ -100,8 +100,12 @@ try{
     $check('ut4_v510_name_hashes_retained',(int)($name['non_case_hash']??0)===0x11 && (int)($name['case_hash']??0)===0x22);
     $check('ut4_v510_import_fname_identity',($import['object_name']['text']??'')==='MyObject');
     $check('ut4_v510_export_serial_width',(int)($export['serial_range_serialized_width_bits']??0)===32);
+    // Both UT4 clean-master and stock UE4 ObjectResource.cpp load Save & RF_Load.
+    // The synthetic wire RF_MarkAsNative 0x4 is deliberately excluded.
     $check('ut4_v510_export_source_fields',($export['object_name']['text']??'')==='MyExport'
-        && ($export['object_flags']??'')==='00000004' && !empty($export['is_asset']));
+        && ($export['object_flags']??'')==='00000000'
+        && (int)($package->getExports()[0]['serializedObjectFlags']??-1)===4
+        && !empty($export['is_asset']));
     $check('ut4_v510_depends_map_identity',($snapshot['sections']['depends_map'][0]['references'][0]??null)===-1);
     $check('ut4_v510_string_reference_retained',($snapshot['sections']['string_asset_references'][0]['path']??'')==='/Game/SoftPkg');
     $check('ut4_v510_preload_dependency_retained',(int)($snapshot['sections']['preload_dependencies'][0]['ref']??0)===1);

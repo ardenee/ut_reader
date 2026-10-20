@@ -6,6 +6,110 @@
 #include "Misc/Paths.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Parse.h"
+#include "Serialization/ArchiveProxy.h"
+#include "UObject/ObjectResource.h"
+
+// Preserve Epic's actual FObjectImport / FObjectExport operator<< and supply
+// the package-local FName mapping that FLinkerLoad::operator<<(FName&) uses.
+// The byte reader, primitive serializer and record field gates are Epic code.
+class FUE427RecordArchive final : public FArchiveProxy
+{
+public:
+ explicit FUE427RecordArchive(FArchive& In, const TArray<FNameEntryId>& InNames)
+  : FArchiveProxy(In), Names(InNames) {}
+ using FArchiveProxy::operator<<;
+ TArray<TPair<int32,int32>> WireNames;
+ virtual FArchive& operator<<(FName& Name) override
+ {
+  int32 NameIndex = -1;
+  int32 Number = 0;
+  FArchive& Base = *this;
+  Base << NameIndex;
+  Base << Number;
+  if (!Names.IsValidIndex(NameIndex)) {
+   SetCriticalError();
+   Name = FName();
+  } else {
+   Name = FName::CreateFromDisplayId(Names[NameIndex],Number);
+  }
+  WireNames.Emplace(NameIndex,Number);
+  return *this;
+ }
+private:
+ const TArray<FNameEntryId>& Names;
+};
+
+static bool UE427DumpRecordMaps(FArchive& Source, const FPackageFileSummary& S,
+ const TArray<FNameEntryId>& MappedNames, int32 FileIndex)
+{
+ const bool bFiltered = (S.PackageFlags & PKG_FilterEditorOnly) != 0;
+ Source.SetFilterEditorOnly(bFiltered);
+ FUE427RecordArchive Reader(Source, MappedNames);
+ Reader.SetUE4Ver(S.GetFileVersionUE4());
+ // FArchiveProxy::SetFilterEditorOnly delegates to InnerArchive without
+ // updating its copied proxy state; explicitly initialize both states so
+ // FObjectImport's actual Epic operator sees the intended editor filter.
+ Reader.ArIsFilterEditorOnly = bFiltered;
+ UE_LOG(LogTemp,Display,TEXT("UE427_NATIVE_FILTER_STATE|%d|%u|%d|%d|%d"),
+  FileIndex,S.PackageFlags,bFiltered ? 1 : 0,
+  Source.IsFilterEditorOnly() ? 1 : 0,Reader.IsFilterEditorOnly() ? 1 : 0);
+ const bool HasPackageName = Reader.UE4Ver() >= VER_UE4_NON_OUTER_PACKAGE_IMPORT
+  && !Reader.IsFilterEditorOnly();
+ UE_LOG(LogTemp,Display,TEXT("UE427_NATIVE_RECORD_COUNT|%d|%d|%d|%d|%d"),
+  FileIndex,S.ImportCount,S.ExportCount,HasPackageName ? 1 : 0,Reader.UE4Ver());
+ if (S.ImportCount > 0) {
+  Reader.Seek(S.ImportOffset);
+  for (int32 Index = 0; Index < S.ImportCount; ++Index) {
+   Reader.WireNames.Reset();
+   const int64 Start = Reader.Tell();
+   FObjectImport Record;
+   Reader << Record;
+   if (Reader.IsError() || Reader.WireNames.Num() != (HasPackageName ? 4 : 3)) {
+    UE_LOG(LogTemp,Error,TEXT("UE427_NATIVE_RECORD_ERROR|%d|import|%d"),FileIndex,Index);
+    return false;
+   }
+   const int64 End = Reader.Tell();
+   const auto& Names = Reader.WireNames;
+   UE_LOG(LogTemp,Display,
+    TEXT("UE427_NATIVE_IMPORT|%d|%d|%lld|%lld|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d"),
+    FileIndex,Index,Start,End,Names[0].Key,Names[0].Value,Names[1].Key,
+    Names[1].Value,Record.OuterIndex.ForDebugging(),Names[2].Key,Names[2].Value,
+    HasPackageName ? 1 : 0,HasPackageName ? Names[3].Key : -1,
+    HasPackageName ? Names[3].Value : -1);
+  }
+ }
+ if (S.ExportCount > 0) {
+  Reader.Seek(S.ExportOffset);
+  for (int32 Index = 0; Index < S.ExportCount; ++Index) {
+   Reader.WireNames.Reset();
+   const int64 Start = Reader.Tell();
+   FObjectExport Record;
+   Reader << Record;
+   if (Reader.IsError() || Reader.WireNames.Num() != 1) {
+    UE_LOG(LogTemp,Error,TEXT("UE427_NATIVE_RECORD_ERROR|%d|export|%d"),FileIndex,Index);
+    return false;
+   }
+   const int64 End = Reader.Tell();
+   UE_LOG(LogTemp,Display,
+    TEXT("UE427_NATIVE_EXPORT|%d|%d|%lld|%lld|%d|%d|%d|%d|%d|%d|%u|%lld|%lld|%d|%d|%d|%u|%u|%u|%u|%u|%d|%d|%d|%d|%d|%d|%d"),
+    FileIndex,Index,Start,End,Record.ClassIndex.ForDebugging(),
+    Record.SuperIndex.ForDebugging(),Record.TemplateIndex.ForDebugging(),
+    Record.OuterIndex.ForDebugging(),Reader.WireNames[0].Key,
+    Reader.WireNames[0].Value,(uint32)Record.ObjectFlags,
+    Record.SerialSize,Record.SerialOffset,
+    Record.bForcedExport ? 1 : 0,Record.bNotForClient ? 1 : 0,
+    Record.bNotForServer ? 1 : 0,
+    Record.PackageGuid.A,Record.PackageGuid.B,
+    Record.PackageGuid.C,Record.PackageGuid.D,(uint32)Record.PackageFlags,
+    Record.bNotAlwaysLoadedForEditorGame ? 1 : 0,Record.bIsAsset ? 1 : 0,
+    Record.FirstExportDependency,Record.SerializationBeforeSerializationDependencies,
+    Record.CreateBeforeSerializationDependencies,
+    Record.SerializationBeforeCreateDependencies,
+    Record.CreateBeforeCreateDependencies);
+  }
+ }
+ return true;
+}
 
 UUE427OracleCommandlet::UUE427OracleCommandlet() {
  IsClient = false; IsServer = false; IsEditor = true; LogToConsole = true;
@@ -41,6 +145,42 @@ int32 UUE427OracleCommandlet::Main(const FString& Params) {
    }
    UE_LOG(LogTemp,Display,TEXT("UE427_FIXTURE_WRITTEN|%s|%d|%d|%d"),
     *FixtureName, bSwapped ? 1 : 0, bUnversioned ? 1 : 0, Data.Num());
+  }
+  // Positive WITH_EDITORONLY_DATA filtered UE4.27 import branch.
+  // Header is written by Epic FPackageFileSummary; name and import
+  // wire records use Epic's FMemoryWriter primitive serialization.
+  {
+   FPackageFileSummary Filtered;
+   Filtered.Tag = PACKAGE_FILE_TAG;
+   Filtered.SetFileVersions(522,0,false);
+   Filtered.TotalHeaderSize = 4096;
+   Filtered.PackageFlags = (uint32)PKG_FilterEditorOnly;
+   Filtered.NameCount = 1;
+   Filtered.NameOffset = 512;
+   Filtered.ImportCount = 1;
+   Filtered.ImportOffset = 1024;
+   TArray<uint8> Data;
+   {
+    FMemoryWriter Writer(Data,true);
+    Writer << Filtered;
+    if (Writer.IsError() || Data.Num() > 512) return 10;
+    Data.SetNumZeroed(4096);
+    Writer.Seek(512);
+    int32 NameLength = 7;
+    Writer << NameLength;
+    const ANSICHAR NameBytes[7] = {'O','b','j','e','c','t',0};
+    Writer.Serialize((void*)NameBytes,7);
+    uint16 ZeroHash = 0;
+    Writer << ZeroHash;
+    Writer << ZeroHash;
+    Writer.Seek(1024);
+    int32 ZeroWord = 0;
+    for (int32 Word=0;Word<7;++Word) Writer << ZeroWord;
+    if (Writer.IsError()) return 11;
+   }
+   const FString Path = FPaths::Combine(FixturesDir,TEXT("native-filtered-import.uasset"));
+   if (!FFileHelper::SaveArrayToFile(Data,*Path)) return 12;
+   UE_LOG(LogTemp,Display,TEXT("UE427_FIXTURE_WRITTEN|native-filtered-import.uasset|0|0|4096"));
   }
   return 0;
  }
@@ -89,6 +229,10 @@ int32 UUE427OracleCommandlet::Main(const FString& Params) {
   if (FParse::Param(*Params, TEXT("Names"))) {
    Ar->SetUE4Ver(S.GetFileVersionUE4());
    UE_LOG(LogTemp,Display,TEXT("UE427_NATIVE_NAME_COUNT|%d|%d"), Checked, S.NameCount);
+   if (FParse::Param(*Params,TEXT("Records")) && S.NameCount == 0) {
+    const TArray<FNameEntryId> EmptyNameMap;
+    if (!UE427DumpRecordMaps(*Ar,S,EmptyNameMap,Checked)) return 9;
+   }
    if (S.NameCount > 0 && S.NameOffset > 0 && S.NameOffset < Ar->TotalSize()) {
     Ar->Seek(S.NameOffset);
     FNameEntrySerialized NameEntry(ENAME_LinkerConstructor);
@@ -115,7 +259,10 @@ int32 UUE427OracleCommandlet::Main(const FString& Params) {
       UE_LOG(LogTemp,Display,TEXT("UE427_NATIVE_SUFFIX|%d|%d|43|%s"), Checked, NameIndex, *SuffixHex);
      }
     }
-    if (S.ImportCount > 0 && S.ImportOffset > 0) {
+    if (FParse::Param(*Params,TEXT("Records"))) {
+     if (!UE427DumpRecordMaps(*Ar,S,MappedNames,Checked)) return 9;
+    }
+    if (S.ImportCount > 0 && S.ImportOffset > 0 && !FParse::Param(*Params,TEXT("Records"))) {
      Ar->Seek(S.ImportOffset);
      int32 NameIndex = -1;
      int32 InstanceNumber = 0;

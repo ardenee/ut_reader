@@ -717,7 +717,11 @@ final class UnrealPackageReader4
             }
             $outerIndex = $r->i32();
             $objectName = $this->readFName($r);
-            $objectFlags = $r->u32();
+            $serializedObjectFlags = $r->u32();
+            // Epic ObjectResource.cpp::operator<<(FObjectExport&) loads only
+            // Save & RF_Load into E.ObjectFlags. The wire value is kept
+            // separately for byte-level audit and diagnostics.
+            $objectFlags = $serializedObjectFlags & 0x02D4003B;
             $serialSizeWidthBits = $version >= self::VER_64BIT_EXPORTMAP_SERIALSIZES ? 64 : 32;
             if ($serialSizeWidthBits === 64) {
                 $serialSize = $r->i64();
@@ -763,6 +767,7 @@ final class UnrealPackageReader4
                 'ObjectName' => $objectName,
                 'objectNameText' => $this->fnameText($objectName),
                 'objectFlags' => $objectFlags,
+                'serializedObjectFlags' => $serializedObjectFlags,
                 'serialSizeWidthBits' => $serialSizeWidthBits,
                 'serialSize' => $serialSize,
                 'serialOffset' => $serialOffset,
