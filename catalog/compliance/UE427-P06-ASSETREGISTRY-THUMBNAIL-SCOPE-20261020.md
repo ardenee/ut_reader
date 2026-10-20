@@ -79,13 +79,25 @@ Native log `C:/Temp/ue427-p06-deps-native.log`. The executable `php catalog/bin/
 
 These results certify the raw dependency-bit wire contract, **not** full `FAssetData` synthesis, publisher/search semantics, world-tile data or application durability.
 
+## World-tile data and chunk-ID version gates — U427-P06-D004
+
+**Corrected:** the production reader exposed `WorldTileInfoDataOffset` but not the pointed-to world composition record. `UnrealPackageReader4::getWorldTileInfo()` now decodes Epic `FWorldTileInfo` and `FWorldTileLayer` source structures: Fortnite custom-version 2D/3D position, FBox float bounds and validity, layer, parent, visibility, LOD records, Z-order, and UE4-version-dependent field presence. It reports malformed arrays and offsets. The existing `ChunkIDs` array versus single-ID summary version gates remain intact.
+
+**Compiled positive fixtures:** `UE427OracleP06WorldChunk.h` uses Epic `FPackageFileSummary` and `FWorldTileInfo` operators to generate little-endian and byte-swapped 4096-byte version-522 packages. Actual compiled Epic loads both: IDs `[3,7,19]`, position `(12,-34,56)`, bounds `[-100,-200,-300]` to `[100,200,300]`, layer `TestLayer`, streaming distance 75000, parent `/Game/Map/Parent`, LOD distance 12345 and Z-order -7.
+
+**Legacy genuine source:** `php catalog/bin/generate-ue427-p06-legacy-chunk-fixture.php` takes version-288 `StandardMacros.uasset`, makes an isolated copy, and mutates the confirmed 32-bit chunk-ID field from -1 to 7. The original Epic package is untouched; both the compiled native loader and UnrealDB return `[7]`. This is a validated real-asset *mutation*, not a claim Epic published the changed file.
+
+**Independent parity:** `php catalog/bin/verify-ue427-p06-native-world-chunks.php` verifies three native summary heads, two native world records, 7 chunk IDs and 38 world fields: **zero mismatches**. Native log `C:/Temp/ue427-p06-world-native-all.log`; manifest `C:/Temp/ue427-p06-world-manifest.txt`. `php catalog/bin/verify-ue427-p06-world-chunk-negatives.php` passes **11/11** controls and corruptions, including endian-aware oversized chunk arrays, corrupt world offsets, invalid FString, invalid LOD counts, and sentinel/zero legacy cases.
+
+**Limit:** positive world-record testing here covers current v522 plus the old v288 chunk-ID header. Historical 2D/custom-version world payloads, `FAssetData` semantics, thumbnail image bytes and production publication are not automatically certified. The 1,749 genuine installed files have no nonzero world-tile offset and no nonempty chunk arrays. No extra top-level audit IDs were created.
+
 ## Still open within P06
 
 1. **Completed raw main-section decoding:** both pre-dependency and new dependency-offset wire formats, object records and 12,058 tags match compiled Epic; cooked filtered empty sections also match. **Dependency bit arrays are verified** (35 genuine sections / 607 bits). **Still required:** asset-path/map-world synthesis, class/tag semantic transformations and any production publication consumers.
 2. Verify actual thumbnail image serialization / editor and non-editor skip conditions as applicable. The newly verified *index* is not a bitmap decoder.
-3. Produce or locate source-grounded genuine/controlled **world-tile** and **chunk-ID** version-gate fixtures and compare Epic-native summary/operator behavior, including invalid/extreme counts.
+3. **Current-format WorldTile/ChunkID fixtures pass native parity** (3 files, 7 IDs, 38 world fields, 11 negatives). Historical world-tile custom-version branches remain an explicit evidence limit.
 4. Trace the active UnrealDB consumers before claiming end-to-end publication, search or V5 parity for these P06 sections. Preserve separate P08/P09 workflow obligations.
 
-Single-command replay: `php catalog/bin/verify-ue427-p06-partial-acceptance.php`. Its nine independent scopes include native thumbnail, raw registry and dependency-bit comparisons, both real-asset negative suites, the full already-verified P05 replay, and UT4 V5 regression. A passing combined driver is **partial P06 evidence only** and must not flip the primary ledger to VERIFIED before the remaining source branches and production consumers are accepted.
+Single-command replay: `php catalog/bin/verify-ue427-p06-partial-acceptance.php`. Its eleven independent scopes include native thumbnail, raw registry and dependency-bit comparisons, both real-asset negative suites, the full already-verified P05 replay, and UT4 V5 regression. A passing combined driver is **partial P06 evidence only** and must not flip the primary ledger to VERIFIED before the remaining source branches and production consumers are accepted.
 
 **P06 remains ACTIVE; overall count stays 5/10.** No production database writes, canonical Epic source edits or unproven certification claims in this checkpoint.

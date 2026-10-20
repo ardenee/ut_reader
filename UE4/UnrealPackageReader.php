@@ -62,6 +62,7 @@ final class UE4BinaryReader
     public function u16(): int { return unpack($this->byteSwapping ? 'n' : 'v', $this->bytes(2))[1]; }
     public function u32(): int { return (int)unpack($this->byteSwapping ? 'N' : 'V', $this->bytes(4))[1]; }
     public function i32(): int { $v = $this->u32(); return ($v & 0x80000000) ? $v - 0x100000000 : $v; }
+    public function f32(): float { return (float)unpack($this->byteSwapping ? 'G' : 'g', $this->bytes(4))[1]; }
 
     public function u64(): int
     {
@@ -153,6 +154,7 @@ final class UnrealPackageReader4
     private array $assetRegistryObjects = [];
     private int $assetRegistryDependencyDataOffset = -1;
     private array $assetRegistryDependencyBits = [];
+    private array $worldTileInfo = [];
 
     private const PACKAGE_FILE_TAG = 0x9E2A83C1;
     private const PACKAGE_FILE_TAG_SWAPPED = 0xC1832A9E;
@@ -167,6 +169,12 @@ final class UnrealPackageReader4
     private const VER_ENGINE_VERSION_OBJECT = 336;
     private const VER_PACKAGE_SUMMARY_HAS_COMPATIBLE_ENGINE_VERSION = 444;
     private const VER_WORLD_LEVEL_INFO = 224;
+    private const VER_WORLD_LEVEL_INFO_UPDATED = 268;
+    private const VER_WORLD_LEVEL_INFO_LOD_LIST = 316;
+    private const VER_WORLD_LEVEL_INFO_ZORDER = 319;
+    private const VER_WORLD_LAYER_ENABLE_DISTANCE_STREAMING = 329;
+    private const FORTNITE_MAIN_BRANCH_VERSION_GUID = '601D1886-AC644F84-AA16D3DE-0DEAC7D6';
+    private const FORTNITE_WORLD_TILE_3D_OFFSET_VERSION = 1;
     private const VER_ADDED_CHUNKID_TO_ASSETDATA_AND_UPACKAGE = 278;
     private const VER_CHANGED_CHUNKID_TO_BE_AN_ARRAY_OF_CHUNKIDS = 326;
     // Confirmed as 521 from compiled Epic UE4.27.2 ObjectVersion.h enum.
@@ -447,6 +455,7 @@ final class UnrealPackageReader4
         $this->readThumbnailIndex();
         $this->readAssetRegistryData();
         $this->readAssetRegistryDependencies();
+        $this->readWorldTileInfo();
     }
 
     private function readCustomVersions(UE4BinaryReader $r, int $legacy): array
@@ -954,6 +963,76 @@ final class UnrealPackageReader4
         return $bits;
     }
 
+    /**
+     * The editor-only World Composition record is stored at the summary's
+     * WorldTileInfoDataOffset, independently of AssetRegistry and thumbnails.
+     * Decode the source-version and Fortnite-main custom-version gates used
+     * by Epic's FWorldTileInfo/FWorldTileLayer operator<<.
+     */
+    private function readWorldTileInfo(): void
+    {
+        $offset = (int)($this->header['worldTileInfoDataOffset'] ?? 0);
+        if ($offset === 0) return;
+        try {
+            if ($offset < 0 || $offset >= $this->fileSize) {
+                throw new OutOfBoundsException("UE4 WorldTileInfo offset is outside package: $offset");
+            }
+            $r = $this->tableReader($offset);
+            $version = (int)$this->header['version'];
+            $fortniteVersion = -1;
+            foreach ((array)($this->header['customVersions'] ?? []) as $custom) {
+                if (strtoupper((string)($custom['guid'] ?? '')) === self::FORTNITE_MAIN_BRANCH_VERSION_GUID) {
+                    $fortniteVersion = (int)$custom['version'];
+                    break;
+                }
+            }
+            $x = $r->i32();
+            $y = $r->i32();
+            $z = $fortniteVersion >= self::FORTNITE_WORLD_TILE_3D_OFFSET_VERSION ? $r->i32() : 0;
+            $boundsMin = [$r->f32(), $r->f32(), $r->f32()];
+            $boundsMax = [$r->f32(), $r->f32(), $r->f32()];
+            $boundsValid = $r->u8() !== 0;
+            $layerName = $r->fstring();
+            $reserved0 = $r->i32();
+            $reservedPosition = [$r->i32(), $r->i32()];
+            $distance = $version >= self::VER_WORLD_LEVEL_INFO_UPDATED ? $r->i32() : 50000;
+            // FArchive serializes bool as an int32, unlike FBox::IsValid (uint8).
+            $distanceEnabled = $version >= self::VER_WORLD_LAYER_ENABLE_DISTANCE_STREAMING
+                ? $r->i32() !== 0 : true;
+            $hidden = $version >= self::VER_WORLD_LEVEL_INFO_UPDATED ? $r->i32() !== 0 : false;
+            $parent = $version >= self::VER_WORLD_LEVEL_INFO_UPDATED ? $r->fstring() : '';
+            $lod = [];
+            if ($version >= self::VER_WORLD_LEVEL_INFO_LOD_LIST) {
+                $count = $r->i32();
+                $this->assertArrayCountFits($r, $count, 20, 'UE4 world tile LOD');
+                for ($i = 0; $i < $count; $i++) {
+                    $lod[] = [
+                        'relativeStreamingDistance' => $r->i32(),
+                        'reservedFloats' => [$r->f32(), $r->f32()],
+                        'reservedInts' => [$r->i32(), $r->i32()],
+                    ];
+                }
+            }
+            $zOrder = $version >= self::VER_WORLD_LEVEL_INFO_ZORDER ? $r->i32() : 0;
+            $this->worldTileInfo = [
+                'offset' => $offset, 'endOffset' => $r->tell(),
+                'position' => [$x, $y, $z],
+                'boundsMin' => $boundsMin, 'boundsMax' => $boundsMax,
+                'boundsValid' => $boundsValid,
+                'layerName' => $layerName, 'layerReserved0' => $reserved0,
+                'layerReservedPosition' => $reservedPosition,
+                'streamingDistance' => $distance,
+                'distanceStreamingEnabled' => $distanceEnabled,
+                'hideInTileView' => $hidden,
+                'parentTilePackageName' => $parent,
+                'lodList' => $lod, 'zOrder' => $zOrder,
+                'customVersion3D' => $fortniteVersion >= self::FORTNITE_WORLD_TILE_3D_OFFSET_VERSION,
+            ];
+        } catch (Throwable $e) {
+            $this->issues[] = 'Could not parse UE4 WorldTileInfo: ' . $e->getMessage();
+        }
+    }
+
     private function readStringAssetReferences(): void
     {
         $count = (int)($this->header['stringAssetReferencesCount'] ?? 0);
@@ -1093,6 +1172,7 @@ final class UnrealPackageReader4
     public function getAssetRegistryObjects(): array { return $this->assetRegistryObjects; }
     public function getAssetRegistryDependencyDataOffset(): int { return $this->assetRegistryDependencyDataOffset; }
     public function getAssetRegistryDependencyBits(): array { return $this->assetRegistryDependencyBits; }
+    public function getWorldTileInfo(): array { return $this->worldTileInfo; }
 
     public function nameByIndex(int $index, int $number = 0): string
     {
