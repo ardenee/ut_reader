@@ -148,6 +148,7 @@ final class UnrealPackageReader4
     private array $parserProfile = [];
     private array $stringAssetReferences = [];
     private array $preloadDependencies = [];
+    private array $dependsMap = [];
 
     private const PACKAGE_FILE_TAG = 0x9E2A83C1;
     private const PACKAGE_FILE_TAG_SWAPPED = 0xC1832A9E;
@@ -403,6 +404,7 @@ final class UnrealPackageReader4
         $this->readNames();
         $this->readImports();
         $this->readExports();
+        $this->readDependsMap();
         $this->readStringAssetReferences();
         $this->readPreloadDependencies();
     }
@@ -726,6 +728,33 @@ final class UnrealPackageReader4
         }
     }
 
+    /**
+     * Epic FLinkerLoad::SerializeDependsMap: one TArray<FPackageIndex>
+     * per export, serialized as count then signed package-index words.
+     */
+    private function readDependsMap(): void
+    {
+        $offset = (int)($this->header['dependsOffset'] ?? 0);
+        $exportCount = (int)($this->header['exportCount'] ?? 0);
+        if ($offset <= 0 || $exportCount <= 0) {
+            return; // Epic skips absent DependsOffset (common cooked packages).
+        }
+        try {
+            $r = $this->tableReader($offset);
+            for ($i = 0; $i < $exportCount; $i++) {
+                $count = $r->i32();
+                $this->assertArrayCountFits($r, $count, 4, 'UE4 DependsMap export ' . $i);
+                $references = [];
+                for ($j = 0; $j < $count; $j++) {
+                    $references[] = $r->i32();
+                }
+                $this->dependsMap[] = ['exportIndex' => $i, 'references' => $references];
+            }
+        } catch (Throwable $e) {
+            $this->issues[] = 'Could not parse UE4 DependsMap: ' . $e->getMessage();
+        }
+    }
+
     private function readStringAssetReferences(): void
     {
         $count = (int)($this->header['stringAssetReferencesCount'] ?? 0);
@@ -792,6 +821,7 @@ final class UnrealPackageReader4
     public function getRawHeaderFields(): array { return $this->rawHeaderFields; }
     public function getStringAssetReferences(): array { return $this->stringAssetReferences; }
     public function getPreloadDependencies(): array { return $this->preloadDependencies; }
+    public function getDependsMap(): array { return $this->dependsMap; }
 
     public function nameByIndex(int $index, int $number = 0): string
     {

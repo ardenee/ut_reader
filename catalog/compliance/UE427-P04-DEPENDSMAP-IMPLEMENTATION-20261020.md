@@ -1,0 +1,9 @@
+# UE4.27.2 — added source-defined classic DependsMap decoding (P04)
+
+**Production capability gap:** the `UE4/UnrealPackageReader.php` reader exposed names, imports, exports and preload dependencies but not `DependsMap`, despite Epic 4.27.2 serializing this table separately at `Summary.DependsOffset`. The pinned `Engine/Source/Runtime/CoreUObject/Private/UObject/LinkerLoad.cpp` around 2096–2122 allocates one `TArray<FPackageIndex>` per export, then deserializes each indexed list. `SavePackage.cpp` around 3720–3730 and `SavePackage2.cpp` around 1384 serialize the same per-export arrays.
+
+**Implementation:** `UE4/UnrealPackageReader.php::readDependsMap()` reads the source-defined export row count from the summary, then a signed int32 element count and that many signed FPackageIndex words for each export. Malformed lengths are guarded against the remaining archive size, and zero `DependsOffset` is treated as an intentionally omitted map. Exposes `getDependsMap()` for later V5 publication without guessing object identities.
+
+**Real corpus result:** `catalog/bin/verify-ue427-real-reader-table-corpus.php` now asserts each present DependsMap has a row for every export. **1,749/1,749** genuine installed UE4.27 Engine/Content assets parse successfully. **1,748 maps, 37,552 export rows, 91,218 dependency reference identities, zero failures.** Also 108,582 names, 20,207 imports, 37,552 exports, 2,271 custom versions and 112 soft references. This is reproducible on DEV without SQL writes.
+
+**Limit:** Epic-native independently decoded dependency array equality and the consuming V5 dependency publisher still need formal source-to-production acceptance. This is a verified source-defined parser operation and an implementation fix, **not** a complete P04 or entire UE4.27.2 certification claim.
