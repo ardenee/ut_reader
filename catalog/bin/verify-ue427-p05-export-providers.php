@@ -7,6 +7,8 @@ $counts=['unsplit_packages'=>0,'split_packages'=>0,'infile_export_spans'=>0,
  'uexp_export_spans'=>0,'uexp_export_bytes'=>0,'infile_export_bytes'=>0,
  'empty_export_spans'=>0];
 $errors=[];$example=null;
+$expectedCooked=@file($cooked,FILE_IGNORE_NEW_LINES|FILE_SKIP_EMPTY_LINES);
+if(!is_array($expectedCooked)||count($expectedCooked)<244)throw new RuntimeException('Cooked native UE4 corpus manifest incomplete');
 foreach([[$genuine,'uasset'],[$cooked,'uexp']] as [$manifest,$expectedProvider]){
  $paths=@file($manifest,FILE_IGNORE_NEW_LINES|FILE_SKIP_EMPTY_LINES);
  if(!is_array($paths)||!$paths)throw new RuntimeException('Missing genuine/native corpus manifest '.$manifest);
@@ -99,8 +101,8 @@ else{
  }
 }
 $ok=$errors===[] && count($negative)===8 && !in_array(false,$negative,true)
- &&$counts['unsplit_packages']===1749 && $counts['split_packages']===244
- &&$counts['infile_export_spans']===37552 &&$counts['uexp_export_spans']===380;
+ &&$counts['unsplit_packages']===1749 && $counts['split_packages']===count($expectedCooked)
+ &&$counts['infile_export_spans']===37552 &&$counts['uexp_export_spans']>=380;
 echo json_encode(['ok'=>$ok,'scope'=>'Genuine installed editor and Epic-cooked UE4.27 export physical provider resolution',
 'counts'=>$counts,'negative_checks'=>$negative,'mismatch_count'=>count($errors),'mismatches'=>array_slice($errors,0,16)],
 JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;

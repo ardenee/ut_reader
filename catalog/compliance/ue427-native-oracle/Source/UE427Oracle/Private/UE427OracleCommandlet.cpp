@@ -11,6 +11,7 @@
 #include "UE427OracleP04.h"
 #include "UE427OracleP05.h"
 #include "UE427OracleP05Policy.h"
+#include "UE427OracleP05Cook.h"
 
 // Preserve Epic's actual FObjectImport / FObjectExport operator<< and supply
 // the package-local FName mapping that FLinkerLoad::operator<<(FName&) uses.
@@ -118,6 +119,9 @@ UUE427OracleCommandlet::UUE427OracleCommandlet() {
  IsClient = false; IsServer = false; IsEditor = true; LogToConsole = true;
 }
 int32 UUE427OracleCommandlet::Main(const FString& Params) {
+ FString OptionalSourceDir;
+ if(FParse::Value(*Params,TEXT("P05OptionalTextureDir="),OptionalSourceDir))
+  return UE427GenerateCookableOptionalTexture(OptionalSourceDir)?0:23;
  if(FParse::Param(*Params,TEXT("P05OwnerProbe")))return UE427ProbeP05OwnerLinker()?0:21;
  if(FParse::Param(*Params,TEXT("P05OwnerRuntime")))return UE427ProbeP05OwnerRuntime()?0:22;
  FString BulkPolicyDir;
@@ -250,6 +254,7 @@ int32 UUE427OracleCommandlet::Main(const FString& Params) {
    *FPaths::GetCleanFilename(Path), S.GetFileVersionUE4(), S.bUnversioned ? 1 : 0,
    Ar->ForceByteSwapping() ? 1 : 0, Ar->IsError() ? 1 : 0, Ar->Tell(), S.TotalHeaderSize);
   if (FParse::Param(*Params,TEXT("P05Bulk")) && !UE427ProbeCookedBulkHeaders(Path,Checked)) return 17;
+  if (FParse::Param(*Params,TEXT("P05Optional")) && !UE427ProbeCookedOptionalHeaders(Path,Checked)) return 24;
   if (FParse::Param(*Params,TEXT("P05"))) {
    UE_LOG(LogTemp,Display,TEXT("UE427_NATIVE_P05_HEADER|%d|%d|%lld|%d"),
     Checked,S.TotalHeaderSize,S.BulkDataStartOffset,S.ExportCount);

@@ -1,6 +1,6 @@
 # UE4.27.2 P05 — split payload and bulk-data source-scope checkpoint
 
-**Status: U427-P05 ACTIVE, NOT VERIFIED.** The fixed denominator remains **4/10 verified**. This is a bounded first source/corpus inventory only, not split-file parity acceptance. P01–P04 remain closed.
+**Historical scope checkpoint, superseded by VERIFIED closure.** The final P05 disposition is **5/10 VERIFIED, P06 ACTIVE**, documented in `UE427-P05-NATIVE-SPLIT-OPTIONAL-CLOSURE-20261020.md`. This file intentionally retains the earlier limitations/gate notes as a chronological record; they are not the final acceptance status. The final native cook adds genuine optional payload evidence and a 12/12 executable compliance driver.
 
 ## Source rules to test
 
