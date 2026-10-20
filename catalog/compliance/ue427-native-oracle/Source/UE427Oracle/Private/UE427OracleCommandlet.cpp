@@ -10,6 +10,7 @@
 #include "UObject/ObjectResource.h"
 #include "UE427OracleP04.h"
 #include "UE427OracleP05.h"
+#include "UE427OracleP05Policy.h"
 
 // Preserve Epic's actual FObjectImport / FObjectExport operator<< and supply
 // the package-local FName mapping that FLinkerLoad::operator<<(FName&) uses.
@@ -117,6 +118,11 @@ UUE427OracleCommandlet::UUE427OracleCommandlet() {
  IsClient = false; IsServer = false; IsEditor = true; LogToConsole = true;
 }
 int32 UUE427OracleCommandlet::Main(const FString& Params) {
+ FString BulkPolicyDir;
+ if (FParse::Value(*Params,TEXT("P05PolicyDir="),BulkPolicyDir)) {
+  if(!UE427WriteP05PolicyFixtures(BulkPolicyDir))return 19;
+  return UE427ProbeP05NativeRuntimeLoad(BulkPolicyDir)?0:20;
+ }
  FString FixturesDir;
  if (FParse::Value(*Params, TEXT("FixturesDir="), FixturesDir)) {
   IFileManager::Get().MakeDirectory(*FixturesDir, true);
