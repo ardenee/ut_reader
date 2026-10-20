@@ -371,7 +371,17 @@ final class UnrealPackageReader4
         $this->header['savedByEngineVersion'] = $ue4Version >= self::VER_ENGINE_VERSION_OBJECT ? $this->readEngineVersion($r) : ['changelist' => $r->i32()];
         $this->header['compatibleWithEngineVersion'] = $ue4Version >= self::VER_PACKAGE_SUMMARY_HAS_COMPATIBLE_ENGINE_VERSION ? $this->readEngineVersion($r) : $this->header['savedByEngineVersion'];
         $this->header['compressionFlags'] = $r->u32();
+        // Epic FCompression::VerifyCompressionFlagsValid permits only the
+        // deprecated format and option masks (0x0F | 0xF0).
+        if (((int)$this->header['compressionFlags'] & ~0xFF) !== 0) {
+            throw new RuntimeException('UE4 package has invalid compression flags 0x' . strtoupper(dechex((int)$this->header['compressionFlags'])));
+        }
         $this->header['compressedChunks'] = $this->readCompressedChunks($r);
+        // UE4.27.2 FPackageFileSummary aborts on old package-level
+        // compression; decoding following offsets would be unsafe.
+        if ($this->header['compressedChunks'] !== []) {
+            throw new RuntimeException('UE4 package uses unsupported legacy package-level compressed chunks.');
+        }
         $this->header['packageSource'] = $r->u32();
         $this->header['additionalPackagesToCook'] = $this->readStringArray($r);
         if ($legacy > -7) {

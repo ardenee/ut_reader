@@ -19,7 +19,7 @@ $fstring=static fn(string $v):string=>$v===''?$i32(0):$i32(strlen($v)+1).$v."\0"
 $fname=static fn(int $index,int $number=0):string=>pack('V2',$index,$number);
 $nameEntry=static fn(string $name):string=>$fstring($name).$u16(0x11).$u16(0x22);
 $engineVersion=static fn():string=>$u16(4).$u16(15).$u16(0).$u32(12345).$fstring('UT4');
-$buildFixture=static function(int $version,?int $serializedVersion=null)use($u32,$i32,$i64,$fstring,$fname,$nameEntry,$engineVersion):string{
+$buildFixture=static function(int $version,?int $serializedVersion=null,int $compressionFlags=0,int $chunkCount=0)use($u32,$i32,$i64,$fstring,$fname,$nameEntry,$engineVersion):string{
     $serializedVersion??=$version;
     $names=['CoreUObject','Class','MyObject','MyExport','/Game/SoftPkg'];
     $nameBytes='';foreach($names as $name)$nameBytes.=$nameEntry($name);
@@ -35,7 +35,7 @@ $buildFixture=static function(int $version,?int $serializedVersion=null)use($u32
     $preloadBytes=$i32(1);
 
     $buildSummary=static function(int $headerSize,int $nameOffset,int $importOffset,int $exportOffset,int $dependsOffset,int $stringOffset,int $preloadOffset)
-        use($version,$serializedVersion,$u32,$i32,$i64,$fstring,$engineVersion):string{
+        use($version,$serializedVersion,$compressionFlags,$chunkCount,$u32,$i32,$i64,$fstring,$engineVersion):string{
         $b=$u32(0x9E2A83C1).$i32(-7).$i32(864).$i32($serializedVersion).$i32(0).$i32(0);
         $b.=$i32($headerSize).$fstring('/Game/Test').$u32(0);
         $b.=$i32(5).$i32($nameOffset);
@@ -49,7 +49,7 @@ $buildFixture=static function(int $version,?int $serializedVersion=null)use($u32
         if($version>=518)$b.=str_repeat("\0",16);
         $b.=$i32(0);
         $b.=$engineVersion().$engineVersion();
-        $b.=$u32(0).$i32(0).$u32(0).$i32(0);
+        $b.=$u32($compressionFlags).$i32($chunkCount).str_repeat("\0",16*$chunkCount).$u32(0).$i32(0);
         $b.=$i32(0).$i64(0).$i32(0).$i32(0);
         $b.=$i32(1).$i32($preloadOffset);
         return $b;
@@ -75,6 +75,14 @@ $options=['parser_profile'=>[
     'source_reference'=>'UT4 clean-master cc3df76429 / GPackageFileUE4Version',
 ]];
 try{
+    // Epic UE4.27.2 PackageFileSummary.cpp rejects flag bits above 0xFF
+    // and all nonempty legacy CompressedChunks arrays before loading tables.
+    foreach ([['invalid_flags',0x100,0],['legacy_compressed_chunk',0,1]] as [$case,$flags,$chunks]) {
+        $invalid=$temp.DIRECTORY_SEPARATOR.$case.'.uasset';
+        file_put_contents($invalid,$buildFixture(510,null,$flags,$chunks));
+        $negative=new \UnrealPackageReader4($invalid,$options);
+        $check('ue4_summary_rejects_'.$case,$negative->validatePackage()!==[]);
+    }
     $path=$temp.DIRECTORY_SEPARATOR.'fixture.uasset';file_put_contents($path,$buildFixture(510));
     $package=new \UnrealPackageReader4($path,$options);
     $check('ut4_v510_reader_has_no_issues',$package->validatePackage()===[]);
