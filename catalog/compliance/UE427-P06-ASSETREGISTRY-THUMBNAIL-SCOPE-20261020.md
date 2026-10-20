@@ -103,12 +103,20 @@ These results certify the raw dependency-bit wire contract, **not** full `FAsset
 
 **Remaining P06 scope:** automatic Unreal editor-only thumbnail-map policy, actual pixel decompression, `FAssetData` class/object path and tag semantics, and production publication/consumer behavior are not certified by raw compressed-byte matching.
 
+## Open production semantic gap — U427-P06-D006
+
+**Finding (OPEN; not a solved format mismatch):** Epic's `AssetRegistry/Private/PackageReader.cpp::UE::AssetRegistry::ReadPackageDataMain` does more than deserialize raw strings. It derives `PackagePath` from a caller-supplied logical long package name, synthesizes `World` FAssetData for some missing/legacy map records, drops empty tag keys/values, rejects legacy external object paths and invalid relative subobject paths, and constructs `FAssetData` via the source's `CoreUObject/Private/AssetRegistry/AssetData.cpp` constructors. Our reader currently exposes the native-verified raw objects and dependency flags but does **not** provide that complete semantic `FAssetData` derivation. A physical filename alone does not supply Epic's logical package mount path, so none should be guessed.
+
+**Production reachability measured:** `php catalog/bin/verify-ue427-p06-production-use-inventory.php` scanned **816 production PHP source files** under `catalog` and `UE4` (excluding audit commands, compliance artifacts, vendors and the reader method declarations). It found **zero direct production call sites** for the six P06 getters (`getThumbnailIndex`, `getThumbnailPayload`, `getAssetRegistryObjects`, `getAssetRegistryDependencyDataOffset`, `getAssetRegistryDependencyBits`, `getWorldTileInfo`). This negative inventory is source-static: reflection, dynamic method names and external code are not ruled out. The separate **UT4 clean-master v511** `Uedb5Ut4SnapshotBuilder` publishes summary offsets, name/import/export maps and some references, but has no AssetRegistry, thumbnail or WorldTile data sections; it must not be called a stock 4.27.2 `FAssetData` publisher.
+
+**Closure condition:** construct and independently verify Epic-equivalent semantic `FAssetData` output with explicit caller-supplied package identity (including map fallback, tag filtering and version gates), then decide and test the actual application consumer's requirements. This belongs to P06 and must not be silently treated as fulfilled by passing the raw 13/13 format gates. Durable archive ingestion, backup/recovery and V5 projectors are separately tracked by fixed P08/P09—not an excuse to invent a P11.
+
 ## Still open within P06
 
 1. **Completed raw main-section decoding:** both pre-dependency and new dependency-offset wire formats, object records and 12,058 tags match compiled Epic; cooked filtered empty sections also match. **Dependency bit arrays are verified** (35 genuine sections / 607 bits). **Still required:** asset-path/map-world synthesis, class/tag semantic transformations and any production publication consumers.
 2. **Thumbnail compressed-byte payload serialization is now verified** (1,729 native payloads, 84,244,023 bytes). Remaining: editor/non-editor linker thumbnail-map conditions and actual pixel decompression, only if used by production.
 3. **Current-format WorldTile/ChunkID fixtures pass native parity** (3 files, 7 IDs, 38 world fields, 11 negatives). Historical world-tile custom-version branches remain an explicit evidence limit.
-4. Trace the active UnrealDB consumers before claiming end-to-end publication, search or V5 parity for these P06 sections. Preserve separate P08/P09 workflow obligations.
+4. **Production consumers traced (816 PHP files, zero literal P06 getter callers):** the actual semantic FAssetData derivation/published use is still absent and is now recorded precisely as open finding D006. Preserve separate P08/P09 workflow obligations.
 
 Single-command replay: `php catalog/bin/verify-ue427-p06-partial-acceptance.php`. Its thirteen independent scopes include native thumbnail index/payload, raw registry and dependency-bit comparisons, both real-asset negative suites, the full already-verified P05 replay, and UT4 V5 regression. A passing combined driver is **partial P06 evidence only** and must not flip the primary ledger to VERIFIED before the remaining source branches and production consumers are accepted.
 
