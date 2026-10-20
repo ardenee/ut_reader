@@ -70,6 +70,13 @@ int32 UUE427OracleCommandlet::Main(const FString& Params) {
   UE_LOG(LogTemp,Display,TEXT("UE427_NATIVE_DIAGNOSTIC|%s|%d|%d|%d|%d|%lld|%d"),
    *FPaths::GetCleanFilename(Path), S.GetFileVersionUE4(), S.bUnversioned ? 1 : 0,
    Ar->ForceByteSwapping() ? 1 : 0, Ar->IsError() ? 1 : 0, Ar->Tell(), S.TotalHeaderSize);
+  if (FParse::Param(*Params, TEXT("Strings"))) {
+   const FTCHARToUTF8 Folder(*S.FolderName);
+   const FString FolderHex = BytesToHex((const uint8*)Folder.Get(), Folder.Length());
+   const FTCHARToUTF8 Localization(*S.LocalizationId);
+   const FString LocalizationHex = BytesToHex((const uint8*)Localization.Get(), Localization.Length());
+   UE_LOG(LogTemp,Display,TEXT("UE427_NATIVE_STRING|%d|%s|%s"), Checked, *FolderHex, *LocalizationHex);
+  }
   const FCustomVersionArray& Versions = S.GetCustomVersionContainer().GetAllVersions();
   UE_LOG(LogTemp,Display,TEXT("UE427_NATIVE_CUSTOM_COUNT|%d|%d"), Checked, Versions.Num());
   for (const FCustomVersion& Version : Versions) {
@@ -85,6 +92,8 @@ int32 UUE427OracleCommandlet::Main(const FString& Params) {
    if (S.NameCount > 0 && S.NameOffset > 0 && S.NameOffset < Ar->TotalSize()) {
     Ar->Seek(S.NameOffset);
     FNameEntrySerialized NameEntry(ENAME_LinkerConstructor);
+    TArray<FNameEntryId> MappedNames;
+    MappedNames.Reserve(S.NameCount);
     for (int32 NameIndex = 0; NameIndex < S.NameCount; ++NameIndex) {
      const int64 EntryOffset = Ar->Tell();
      *Ar << NameEntry;
@@ -92,11 +101,35 @@ int32 UUE427OracleCommandlet::Main(const FString& Params) {
       UE_LOG(LogTemp,Error,TEXT("UE427_NATIVE_NAME_ERROR|%d|%d"), Checked, NameIndex);
       return 7;
      }
+     MappedNames.Add(FName(NameEntry).GetDisplayIndex());
      const FString Name = NameEntry.GetPlainNameString();
      FTCHARToUTF8 UTF8(*Name);
      const FString Hex = BytesToHex((const uint8*)UTF8.Get(), UTF8.Length());
      UE_LOG(LogTemp,Display,TEXT("UE427_NATIVE_NAME|%d|%d|%lld|%s"),
       Checked, NameIndex, EntryOffset, *Hex);
+     if (FParse::Param(*Params, TEXT("FNameSuffix")) && NameIndex < 3) {
+      const FName Base(NameEntry);
+      const FString Suffix = FName::CreateFromDisplayId(Base.GetDisplayIndex(), 43).ToString();
+      const FTCHARToUTF8 SuffixUTF8(*Suffix);
+      const FString SuffixHex = BytesToHex((const uint8*)SuffixUTF8.Get(), SuffixUTF8.Length());
+      UE_LOG(LogTemp,Display,TEXT("UE427_NATIVE_SUFFIX|%d|%d|43|%s"), Checked, NameIndex, *SuffixHex);
+     }
+    }
+    if (S.ImportCount > 0 && S.ImportOffset > 0) {
+     Ar->Seek(S.ImportOffset);
+     int32 NameIndex = -1;
+     int32 InstanceNumber = 0;
+     *Ar << NameIndex;
+     *Ar << InstanceNumber;
+     if (!MappedNames.IsValidIndex(NameIndex)) {
+      UE_LOG(LogTemp,Error,TEXT("UE427_NATIVE_FNAME_WIRE_ERROR|%d|%d"),Checked,NameIndex);
+      return 8;
+     }
+     const FString Rendered = FName::CreateFromDisplayId(MappedNames[NameIndex],InstanceNumber).ToString();
+     const FTCHARToUTF8 UTF8(*Rendered);
+     const FString NameHex = BytesToHex((const uint8*)UTF8.Get(), UTF8.Length());
+     UE_LOG(LogTemp,Display,TEXT("UE427_NATIVE_FNAME_WIRE|%d|%d|%d|%s"),
+      Checked,NameIndex,InstanceNumber,*NameHex);
     }
    }
   }
