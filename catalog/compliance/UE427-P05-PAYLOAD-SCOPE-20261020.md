@@ -39,7 +39,21 @@ An isolated disposable project `C:/Temp/UE427Oracle/UE427Oracle.uproject` was co
 - All **244** `.uexp` files terminate with Epic's little-endian package-tag bytes `C1 83 2A 9E`. All 244 `Summary.TotalHeaderSize` values equal their corresponding `.uasset` size, and all `BulkDataStartOffset` values equal **UAssetFileSize + UExpFileSize - 4** (excluding the .uexp trailer tag).
 - The original 1,749 editor assets remain the separate unsplit reference corpus; do not add these 244 cooked assets to the established P01–P04 denominators.
 
-**Scope of this positive test:** genuine split **export** physical offset parity is independently verified. Presence/size of 38 `.ubulk` companions does *not* certify their per-object `FBulkData` flags, payload-offset fixups or optional storage decisions; P05 is still ACTIVE.
+## Genuine cooked UBULK native-header and physical-span acceptance
+
+The extended native oracle `UE427OracleP05.h`, invoked with `-P05Bulk` against the same 244-file cooked manifest, now reads candidate serialized bulk records from the real `.uexp` files using **Epic's compiled** `FMemoryReader` and `EBulkDataFlags::operator<<`, signed 32-bit element counts/sizes and signed 64-bit offsets. Candidate detection is deliberately restricted to the exact real-corpus observed flag value `0x10501` and positive extents; it is **not** a general-purpose bulk-header locator. The corresponding source flags from `BulkDataCommon.h` are `PayloadAtEndOfFile (0x1)`, `PayloadInSeperateFile (0x100)`, `Force_NOT_InlinePayload (0x400)` and `NoOffsetFixUp (0x10000)`. Therefore, the 64-bit wire offsets point directly into the real `.ubulk` without a `BulkDataStartOffset` adjustment.
+
+`php catalog/bin/verify-ue427-p05-native-bulk-headers.php C:/Temp/ue427-p05-native-bulk.log C:/Temp/ue427-p05-cooked-manifest.txt` independently re-reads each wire header and the referenced physical `.ubulk` bytes, checking equality with native decoded flags, counts, sizes, offsets, no overlapping spans and exact whole-file coverage:
+
+- **244/244** native package inventory rows; **38/38** real `.ubulk` files completely covered by **123/123** native-decoded bulk headers.
+- **43,916,288 bytes** physically read and hashed, all ranges contiguous, no mismatches. Reproducible aggregate SHA-256 of per-span digests: `c422bd963f3905b097c375eed491626c42fe31690f9b58deac0e406f2702a26d`.
+- Six disposable-copy tests through `verify-ue427-p05-bulk-negatives.php`: genuine untouched case accepted; one-byte truncation, missing `.ubulk`, mutated header flags, out-of-file bulk offset and missing `.uexp` all rejected. Original Epic-cooked files remain unchanged.
+
+**Scope:** this is authentic, strong positive proof of the **separate-file, no-offset-fixup, 32-bit-size** format that occurs in the generated corpus. It is not proof of all possible `FBulkData::Serialize` branches. The source may take distinct paths for Size64Bit, NoOffsetFixUp absent, inline data, duplicate optional payloads, `.uptnl`, `.m.ubulk` and IoStore. The native scanner must not be used to certify those unobserved formats.
+
+## Scope distinction
+
+Genuine split **exports** and the observed genuine separate **bulk** file layout are now verified. Optional/memory-mapped/duplicate payloads and runtime owner/linker filename selection still need distinct acceptance; **P05 remains ACTIVE**.
 
 ## UnrealDB active inspection — no production change in this checkpoint
 
@@ -50,8 +64,8 @@ An isolated disposable project `C:/Temp/UE427Oracle/UE427Oracle.uproject` was co
 ## Required next acceptance, not yet performed
 
 1. **Completed for UEXP/UBULK:** generate and preserve the genuine 244-package cooked corpus and verify its 380 split-export ranges. **Still missing:** positive optional `.uptnl` and memory-mapped `.m.ubulk` fixtures, which may require targeted Epic-native generation.
-2. Instrument compiled UE4.27 `FBulkData` serialization / real engine archive selection (or a targeted native probe) and compare bulk flags, raw offsets, conditional fixup, sidecar target and actual bytes/hashes to UnrealDB's physical-provider decisions. Must positively test inline, end-of-file, separate, optional and memory-mapped branches, with correct non-availability treatment.
-3. Test missing/truncated sidecar negatives, swapped-endian header words where supported, offset overflow and package-source physical-boundary assertions without changing the canonical engine.
+2. **Partly completed:** the native header reader and PHP physical verifier accept all 123 genuine separate/no-fixup bulk headers and their bytes. **Still required:** compiled `FBulkData::Serialize` owner/linker-driven path decisions, conditional offset-fixup (when `NoOffsetFixUp` is absent), actual optional/duplicate and memory-mapped path selection, plus inline/end-of-file variants.
+3. **Completed for existing genuine format:** five negative mutations (missing/truncated sidecars, flags and bulk offset) are rejected with a genuine unchanged positive control. **Still required:** swapped-endian bulk headers, 64-bit element sizes, optional absence/fallback and complete source-defined boundary handling.
 4. Trace actual production reader/V5 consumers and ensure metadata neither invents bytes in `.uasset` nor silently drops valid sidecars. P08/P09 will separately certify ingest/backup/dependency persistence.
 
-**No overall P05 source parity or production certification is claimed.** Genuine `.uexp` physical-range coverage is established; `.ubulk` header/flag and optional/memory-mapped routing remain unverified. Commit the scope record and executable corpus verifiers. No new primary operation was added, and no PRD database writes are involved.
+**No overall P05 source parity or production certification is claimed.** Genuine `.uexp` and existing `.ubulk` separate/no-fixup range coverage are established; optional/memory-mapped routing, other flag variants and actual loader owner/linker behavior remain unverified. Commit the scope record and executable corpus verifiers. No new primary operation was added, and no PRD database writes are involved.
