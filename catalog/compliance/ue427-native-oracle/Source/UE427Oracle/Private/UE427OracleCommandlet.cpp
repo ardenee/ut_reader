@@ -12,6 +12,7 @@
 #include "UE427OracleP05.h"
 #include "UE427OracleP05Policy.h"
 #include "UE427OracleP05Cook.h"
+#include "UE427OracleP06.h"
 
 // Preserve Epic's actual FObjectImport / FObjectExport operator<< and supply
 // the package-local FName mapping that FLinkerLoad::operator<<(FName&) uses.
@@ -253,6 +254,7 @@ int32 UUE427OracleCommandlet::Main(const FString& Params) {
   UE_LOG(LogTemp,Display,TEXT("UE427_NATIVE_DIAGNOSTIC|%s|%d|%d|%d|%d|%lld|%d"),
    *FPaths::GetCleanFilename(Path), S.GetFileVersionUE4(), S.bUnversioned ? 1 : 0,
    Ar->ForceByteSwapping() ? 1 : 0, Ar->IsError() ? 1 : 0, Ar->Tell(), S.TotalHeaderSize);
+  if (FParse::Param(*Params,TEXT("P06Thumb")) && !UE427DumpP06ThumbnailIndex(*Ar,S,Checked))return 25;
   if (FParse::Param(*Params,TEXT("P05Bulk")) && !UE427ProbeCookedBulkHeaders(Path,Checked)) return 17;
   if (FParse::Param(*Params,TEXT("P05Optional")) && !UE427ProbeCookedOptionalHeaders(Path,Checked)) return 24;
   if (FParse::Param(*Params,TEXT("P05"))) {

@@ -149,6 +149,7 @@ final class UnrealPackageReader4
     private array $stringAssetReferences = [];
     private array $preloadDependencies = [];
     private array $dependsMap = [];
+    private array $thumbnailIndex = [];
 
     private const PACKAGE_FILE_TAG = 0x9E2A83C1;
     private const PACKAGE_FILE_TAG_SWAPPED = 0xC1832A9E;
@@ -438,6 +439,7 @@ final class UnrealPackageReader4
         $this->readDependsMap();
         $this->readStringAssetReferences();
         $this->readPreloadDependencies();
+        $this->readThumbnailIndex();
     }
 
     private function readCustomVersions(UE4BinaryReader $r, int $legacy): array
@@ -814,6 +816,40 @@ final class UnrealPackageReader4
         }
     }
 
+    /**
+     * Epic FLinkerLoad::SerializeThumbnails reads the editor-only index as
+     * Count, then ObjectClassName FString, ObjectPath FString and FileOffset.
+     * This exposes the index only, without decoding thumbnail image bytes.
+     */
+    private function readThumbnailIndex(): void
+    {
+        $offset = (int)($this->header['thumbnailTableOffset'] ?? 0);
+        if ($offset <= 0) return;
+        try {
+            $r = $this->tableReader($offset);
+            $count = $r->i32();
+            $this->assertArrayCountFits($r, $count, 12, 'UE4 thumbnail index');
+            for ($i = 0; $i < $count; $i++) {
+                $recordOffset = $r->tell();
+                $className = $r->fstring();
+                $objectPath = $r->fstring();
+                $dataOffset = $r->i32();
+                if ($dataOffset < 0 || $dataOffset >= $this->fileSize) {
+                    throw new OutOfBoundsException("UE4 thumbnail payload offset invalid at entry $i");
+                }
+                $this->thumbnailIndex[] = [
+                    'index' => $i,
+                    'offset' => $recordOffset,
+                    'className' => $className,
+                    'objectPath' => $objectPath,
+                    'fileOffset' => $dataOffset,
+                ];
+            }
+        } catch (Throwable $e) {
+            $this->issues[] = 'Could not parse UE4 thumbnail index: ' . $e->getMessage();
+        }
+    }
+
     private function readStringAssetReferences(): void
     {
         $count = (int)($this->header['stringAssetReferencesCount'] ?? 0);
@@ -949,6 +985,7 @@ final class UnrealPackageReader4
     public function getStringAssetReferences(): array { return $this->stringAssetReferences; }
     public function getPreloadDependencies(): array { return $this->preloadDependencies; }
     public function getDependsMap(): array { return $this->dependsMap; }
+    public function getThumbnailIndex(): array { return $this->thumbnailIndex; }
 
     public function nameByIndex(int $index, int $number = 0): string
     {
