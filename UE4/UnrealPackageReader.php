@@ -314,10 +314,31 @@ final class UnrealPackageReader4
             $this->header['customVersions'] = $this->readCustomVersions($r, $legacy);
         }
         if ($ue4Version === 0 && $licensee === 0) {
+            // Epic PackageFileSummary.cpp returns early in WITH_EDITOR when
+            // GAllowUnversionedContentInEditor == 0 (the stock default).
+            // Explicit opt-in models the guarded editor/non-editor branch;
+            // normal production readers do not silently accept such assets.
+            $isUt4CleanMaster = (string)($this->parserProfile['profile_key'] ?? '') === 'ut4-alpha'
+                && $this->assumedUnversionedVersion() === 511;
+            $allowUnversioned = (bool)($this->readerOptions['allow_unversioned_content_in_editor']
+                ?? $this->parserProfile['allow_unversioned_content_in_editor'] ?? false);
+            if (!$isUt4CleanMaster && !$allowUnversioned) {
+                throw new RuntimeException('UE4.27.2 editor rejects unversioned package (GAllowUnversionedContentInEditor=0).');
+            }
             $ue4Version = $this->assumedUnversionedVersion();
             $this->header['unversioned'] = true;
             $this->header['version'] = $ue4Version;
-            $this->issues[] = 'Package is unversioned; using assumed UE4 parser version ' . $ue4Version . ' from parser profile ' . (string)$this->header['parserProfileKey'] . ' for table parsing.';
+            if ($isUt4CleanMaster) {
+                // The separately pinned UT4 v511 profile retains its existing
+                // informational notice consumed by Uedb5Ut4SnapshotBuilder.
+                $this->issues[] = 'Package is unversioned; using assumed UE4 parser version ' . $ue4Version
+                    . ' from parser profile ' . (string)$this->header['parserProfileKey'] . ' for table parsing.';
+            } else {
+                $this->header['unversionedEditorPolicy'] = 'explicitly_allowed';
+                // UE4.27.2 substitutes FCurrentCustomVersions::GetAll() at runtime;
+                // file bytes cannot independently establish those versions.
+                $this->header['unversionedUsesRuntimeCustomVersions'] = true;
+            }
         }
         // Epic 4.27.2 LinkerLoad.cpp refuses packages newer than the stock
         // engine's licensee version (VER_LIC_AUTOMATIC_VERSION == 0).
@@ -427,7 +448,18 @@ final class UnrealPackageReader4
         $out = [];
         for ($i = 0; $i < $count; $i++) {
             if ($legacy === -2) {
-                $out[] = ['format' => 'enum', 'key' => $r->i32(), 'version' => $r->i32()];
+                // Epic CustomVersion.cpp::FEnumCustomVersion_DEPRECATED
+                // converts its uint32 Tag into FGuid(0, 0, 0, Tag).
+                // Preserve the wire tag AND its effective Epic GUID identity.
+                $key = $r->u32();
+                $version = $r->i32();
+                $out[] = [
+                    'format' => 'enum',
+                    'key' => $key,
+                    'guid' => sprintf('%08X-%08X-%08X-%08X', 0, 0, 0, $key),
+                    'version' => $version,
+                    'friendlyName' => 'EnumTag' . $key,
+                ];
             } elseif ($legacy >= -5) {
                 $out[] = ['format' => 'guid-deprecated', 'guid' => $r->guid(), 'version' => $r->i32(), 'friendlyName' => $r->fstring()];
             } else {

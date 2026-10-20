@@ -1,5 +1,7 @@
 #include "UE427OracleCommandlet.h"
 #include "UObject/PackageFileSummary.h"
+#include "UObject/UObjectGlobals.h"
+#include "Serialization/MemoryWriter.h"
 #include "HAL/FileManager.h"
 #include "Misc/Paths.h"
 #include "Misc/FileHelper.h"
@@ -9,6 +11,39 @@ UUE427OracleCommandlet::UUE427OracleCommandlet() {
  IsClient = false; IsServer = false; IsEditor = true; LogToConsole = true;
 }
 int32 UUE427OracleCommandlet::Main(const FString& Params) {
+ FString FixturesDir;
+ if (FParse::Value(*Params, TEXT("FixturesDir="), FixturesDir)) {
+  IFileManager::Get().MakeDirectory(*FixturesDir, true);
+  for (int32 Index=0; Index<3; ++Index) {
+   const bool bSwapped = Index == 1;
+   const bool bUnversioned = Index == 2;
+   const FString FixtureName = Index == 0 ? TEXT("native-little.uasset") :
+    (Index == 1 ? TEXT("native-swapped.uasset") : TEXT("native-unversioned.uasset"));
+   FPackageFileSummary Summary;
+   Summary.Tag = PACKAGE_FILE_TAG;
+   Summary.SetFileVersions(522, 0, bUnversioned);
+   Summary.TotalHeaderSize = 4096;
+   TArray<uint8> Data;
+   {
+    FMemoryWriter Writer(Data, true);
+    Writer.SetByteSwapping(bSwapped);
+    Writer << Summary;
+    if (Writer.IsError() || Data.Num() > 4096) {
+     UE_LOG(LogTemp,Error,TEXT("UE427_FIXTURE_ERROR serialization %s %d"), *FixtureName, Data.Num());
+     return 5;
+    }
+   }
+   Data.SetNumZeroed(4096);
+   const FString FixturePath = FPaths::Combine(FixturesDir, FixtureName);
+   if (!FFileHelper::SaveArrayToFile(Data, *FixturePath)) {
+    UE_LOG(LogTemp,Error,TEXT("UE427_FIXTURE_ERROR save %s"), *FixturePath);
+    return 6;
+   }
+   UE_LOG(LogTemp,Display,TEXT("UE427_FIXTURE_WRITTEN|%s|%d|%d|%d"),
+    *FixtureName, bSwapped ? 1 : 0, bUnversioned ? 1 : 0, Data.Num());
+  }
+  return 0;
+ }
  FString ListPath;
  if (!FParse::Value(*Params, TEXT("List="), ListPath)) {
   UE_LOG(LogTemp,Error,TEXT("UE427_NATIVE_ERROR list_missing")); return 2;
@@ -17,10 +52,13 @@ int32 UUE427OracleCommandlet::Main(const FString& Params) {
  if (!FFileHelper::LoadFileToStringArray(Files,*ListPath)) {
   UE_LOG(LogTemp,Error,TEXT("UE427_NATIVE_ERROR list_unreadable")); return 3;
  }
+ const bool bAllow = FParse::Param(*Params,TEXT("AllowUnversionedInEditor"));
+ const int32 PreviousAllow = GAllowUnversionedContentInEditor;
+ GAllowUnversionedContentInEditor = bAllow ? 1 : 0;
  int32 Checked=0;
  for(const FString& Path:Files) {
   TUniquePtr<FArchive> Ar(IFileManager::Get().CreateFileReader(*Path));
-  if(!Ar) continue;
+  if(!Ar) { UE_LOG(LogTemp,Error,TEXT("UE427_NATIVE_ERROR unreadable %s"),*Path); continue; }
   FPackageFileSummary S;
   *Ar << S;
   UE_LOG(LogTemp,Display,TEXT("UE427_NATIVE_SUMMARY|%s|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d"),
@@ -29,8 +67,18 @@ int32 UUE427OracleCommandlet::Main(const FString& Params) {
    S.ExportCount,S.ExportOffset,S.DependsOffset,S.SoftPackageReferencesCount,
    S.SoftPackageReferencesOffset,S.PreloadDependencyCount,S.PreloadDependencyOffset,
    S.AssetRegistryDataOffset,S.ThumbnailTableOffset,S.CompressionFlags);
+  UE_LOG(LogTemp,Display,TEXT("UE427_NATIVE_DIAGNOSTIC|%s|%d|%d|%d|%d|%lld|%d"),
+   *FPaths::GetCleanFilename(Path), S.GetFileVersionUE4(), S.bUnversioned ? 1 : 0,
+   Ar->ForceByteSwapping() ? 1 : 0, Ar->IsError() ? 1 : 0, Ar->Tell(), S.TotalHeaderSize);
+  const FCustomVersionArray& Versions = S.GetCustomVersionContainer().GetAllVersions();
+  UE_LOG(LogTemp,Display,TEXT("UE427_NATIVE_CUSTOM_COUNT|%d|%d"), Checked, Versions.Num());
+  for (const FCustomVersion& Version : Versions) {
+   UE_LOG(LogTemp,Display,TEXT("UE427_NATIVE_CUSTOM|%d|%08X-%08X-%08X-%08X|%d"),
+    Checked, Version.Key.A, Version.Key.B, Version.Key.C, Version.Key.D, Version.Version);
+  }
   Checked++;
  }
+ GAllowUnversionedContentInEditor = PreviousAllow;
  UE_LOG(LogTemp,Display,TEXT("UE427_NATIVE_COUNT %d"),Checked);
  return Checked>0?0:4;
 }
