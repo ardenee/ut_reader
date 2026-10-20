@@ -152,6 +152,7 @@ final class UnrealPackageReader4
     private array $thumbnailIndex = [];
     private array $assetRegistryObjects = [];
     private int $assetRegistryDependencyDataOffset = -1;
+    private array $assetRegistryDependencyBits = [];
 
     private const PACKAGE_FILE_TAG = 0x9E2A83C1;
     private const PACKAGE_FILE_TAG_SWAPPED = 0xC1832A9E;
@@ -445,6 +446,7 @@ final class UnrealPackageReader4
         $this->readPreloadDependencies();
         $this->readThumbnailIndex();
         $this->readAssetRegistryData();
+        $this->readAssetRegistryDependencies();
     }
 
     private function readCustomVersions(UE4BinaryReader $r, int $legacy): array
@@ -903,6 +905,55 @@ final class UnrealPackageReader4
         }
     }
 
+    /**
+     * UE4 TBitArray<FDefaultBitArrayAllocator>::operator<< emits a signed
+     * bit count followed by ceil(count/32) raw 32-bit storage words. Epic
+     * FArchive::Serialize does not integer-byte-swap the word payload.
+     * Return decoded booleans in logical import/soft-package index order.
+     */
+    private function readAssetRegistryDependencies(): void
+    {
+        $offset = $this->assetRegistryDependencyDataOffset;
+        if ($offset === -1) return; // Older packages: Epic defaults all bits true.
+        try {
+            if ($offset <= 0 || $offset > $this->fileSize - 8) {
+                throw new OutOfBoundsException("UE4 AssetRegistry dependency section offset invalid: $offset");
+            }
+            $r = $this->tableReader($offset);
+            $imports = $this->readRegistryBitArray($r, 'imports');
+            $soft = $this->readRegistryBitArray($r, 'soft packages');
+            // Epic FPackageDependencyData::IsValid checks these exact sizes.
+            if (count($imports) !== count($this->imports)
+                || count($soft) !== (int)($this->header['stringAssetReferencesCount'] ?? 0)) {
+                throw new OutOfBoundsException('UE4 AssetRegistry dependency bit counts do not match source import/soft-reference maps');
+            }
+            $this->assetRegistryDependencyBits = [
+                'offset' => $offset,
+                'endOffset' => $r->tell(),
+                'importUsedInGame' => $imports,
+                'softPackageUsedInGame' => $soft,
+            ];
+        } catch (Throwable $e) {
+            $this->issues[] = 'Could not parse UE4 AssetRegistry dependencies: ' . $e->getMessage();
+        }
+    }
+
+    /** @return array<int,bool> */
+    private function readRegistryBitArray(UE4BinaryReader $r, string $label): array
+    {
+        $count = $r->i32();
+        if ($count < 0 || $count > (intdiv($r->remaining(), 4) * 32)) {
+            throw new OutOfBoundsException("Bad UE4 AssetRegistry $label bit count $count");
+        }
+        $words = intdiv($count + 31, 32);
+        $bytes = $r->bytes($words * 4);
+        $bits = [];
+        for ($i = 0; $i < $count; ++$i) {
+            $bits[] = ((ord($bytes[intdiv($i, 8)]) >> ($i & 7)) & 1) !== 0;
+        }
+        return $bits;
+    }
+
     private function readStringAssetReferences(): void
     {
         $count = (int)($this->header['stringAssetReferencesCount'] ?? 0);
@@ -1041,6 +1092,7 @@ final class UnrealPackageReader4
     public function getThumbnailIndex(): array { return $this->thumbnailIndex; }
     public function getAssetRegistryObjects(): array { return $this->assetRegistryObjects; }
     public function getAssetRegistryDependencyDataOffset(): int { return $this->assetRegistryDependencyDataOffset; }
+    public function getAssetRegistryDependencyBits(): array { return $this->assetRegistryDependencyBits; }
 
     public function nameByIndex(int $index, int $number = 0): string
     {

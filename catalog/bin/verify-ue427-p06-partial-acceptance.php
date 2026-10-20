@@ -13,6 +13,11 @@ $checks=[
   ['C:/Temp/ue427-p05-optional-manifest.txt','C:/Temp/ue427-p06-registry-cooked-native.log'],
   ['counts.packages'=>245,'counts.registry_objects'=>0,'counts.pre_dependency_format'=>245,'mismatch_count'=>0]],
  'registry_corruptions'=>['verify-ue427-p06-registry-negatives.php',[],[]],
+ 'registry_dependency_native'=>['verify-ue427-p06-native-dependencies.php',[],
+  ['counts.native_dependency_sections'=>35,'counts.php_dependency_sections'=>35,
+   'counts.import_bits'=>598,'counts.soft_bits'=>9,'counts.bit_fields_compared'=>747,
+   'mismatch_count'=>0]],
+ 'registry_dependency_corruptions'=>['verify-ue427-p06-dependency-negatives.php',[],[]],
  'p05_full_regression'=>['verify-ue427-p05-acceptance.php',[],['verified_operations'=>12]],
  'ut4_v5_regression'=>['verify-uedb5-ut4-persistence.php',[],[]],
 ];
@@ -36,7 +41,7 @@ foreach($checks as $name=>[$script,$params,$expected]){
 $ok=$passed===count($checks);
 echo json_encode(['ok'=>$ok,'scope'=>'PARTIAL P06 raw thumbnail and AssetRegistry main-section acceptance ONLY',
  'passed'=>$passed,'total'=>count($checks),
- 'remaining'=>['dependency bit arrays','FAssetData synthesis','thumbnail image bytes',
+ 'remaining'=>['FAssetData synthesis','thumbnail image bytes',
   'world tile/chunk ID branches','production usage'],
  'results'=>$results],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;
 exit($ok?0:2);

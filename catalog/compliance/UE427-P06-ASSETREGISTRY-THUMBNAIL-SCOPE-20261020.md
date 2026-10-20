@@ -58,15 +58,34 @@ Logs: `C:/Temp/ue427-p06-registry-installed-native.log` and `C:/Temp/ue427-p06-r
 
 `php catalog/bin/verify-ue427-p06-registry-negatives.php` passes seven disposable real-asset tests (authentic positive control; negative/excessive object count; oversized object FString; negative/excessive tag count; oversized tag FString). All corruptions produce reader issues. The genuine source and installed engine files remain unchanged.
 
-**Still unverified** in this subgate: separate AssetRegistry dependency bit arrays, path and map-world synthesis, editor filtering and class/tag semantics after `FAssetData` construction. Those are not equivalent to raw main-section parity and must be tested independently.
+**Still unverified** in this subgate: path and map-world synthesis, editor filtering and class/tag semantics after `FAssetData` construction. Separate AssetRegistry dependency bit arrays now have independent acceptance below. Those are not equivalent to raw main-section parity and must be tested independently.
+
+## Source-native AssetRegistry dependency-array parity — U427-P06-D003
+
+**Corrected:** the production reader retained only the AssetRegistry dependency-section offset; Epic's two serialized `TBitArray<>` fields were not decoded and unavailable to readers. `UnrealPackageReader4::getAssetRegistryDependencyBits()` now retains source-ordered booleans and the section physical start/end. Its decoder follows Epic `Core/Public/Containers/BitArray.h::operator<<(FArchive&, TBitArray&)`: signed `int32 NumBits` followed by `ceil(NumBits/32)` raw 32-bit words. `FArchive::Serialize` does not integer-swap the raw words; individual bit order is low-bit-first. The reader also enforces the import/soft reference counts required by Epic `AssetRegistry/Private/PackageDependencyData.h::IsValid`.
+
+Compiled `UE427OracleP06Dependencies.h` invokes Epic's own `TBitArray<>` archive operator on genuine files. Independent `php catalog/bin/verify-ue427-p06-native-dependencies.php` compares each decoded bit, array count, physical start and end across **all 1,749 installed packages**:
+
+| Acceptance | Result |
+|---|---:|
+| Older-format packages with no serialized bits | **1,714** |
+| Newer-format native/reader dependency sections | **35 / 35** |
+| Import-used bits | **598** (280 true) |
+| Soft-package-used bits | **9** (1 true) |
+| Exact compared bit/metadata fields | **747** |
+| Native mismatches | **0** |
+
+Native log `C:/Temp/ue427-p06-deps-native.log`. The executable `php catalog/bin/verify-ue427-p06-dependency-negatives.php` passes **8/8** disposable-genuine-asset tests: unchanged control, negative and excessive import counts, import map length mismatch, negative soft count, soft map length mismatch, invalid dependency-section offset, and valid one-bit mutation. Each malformed case reports a reader issue. Source files and actual Epic assets remain unchanged.
+
+These results certify the raw dependency-bit wire contract, **not** full `FAssetData` synthesis, publisher/search semantics, world-tile data or application durability.
 
 ## Still open within P06
 
-1. **Completed raw main-section decoding:** both pre-dependency and new dependency-offset wire formats, object records and 12,058 tags match compiled Epic; cooked filtered empty sections also match. **Still required:** actual dependency bit arrays, asset-path/map-world synthesis, class/tag semantic transformations and any production publication consumers.
+1. **Completed raw main-section decoding:** both pre-dependency and new dependency-offset wire formats, object records and 12,058 tags match compiled Epic; cooked filtered empty sections also match. **Dependency bit arrays are verified** (35 genuine sections / 607 bits). **Still required:** asset-path/map-world synthesis, class/tag semantic transformations and any production publication consumers.
 2. Verify actual thumbnail image serialization / editor and non-editor skip conditions as applicable. The newly verified *index* is not a bitmap decoder.
 3. Produce or locate source-grounded genuine/controlled **world-tile** and **chunk-ID** version-gate fixtures and compare Epic-native summary/operator behavior, including invalid/extreme counts.
 4. Trace the active UnrealDB consumers before claiming end-to-end publication, search or V5 parity for these P06 sections. Preserve separate P08/P09 workflow obligations.
 
-Single-command replay: `php catalog/bin/verify-ue427-p06-partial-acceptance.php`. Its seven independent scopes include native thumbnail and raw registry comparisons, both real-asset negative suites, the full already-verified P05 replay, and UT4 V5 regression. A passing combined driver is **partial P06 evidence only** and must not flip the primary ledger to VERIFIED before the remaining source branches and production consumers are accepted.
+Single-command replay: `php catalog/bin/verify-ue427-p06-partial-acceptance.php`. Its nine independent scopes include native thumbnail, raw registry and dependency-bit comparisons, both real-asset negative suites, the full already-verified P05 replay, and UT4 V5 regression. A passing combined driver is **partial P06 evidence only** and must not flip the primary ledger to VERIFIED before the remaining source branches and production consumers are accepted.
 
 **P06 remains ACTIVE; overall count stays 5/10.** No production database writes, canonical Epic source edits or unproven certification claims in this checkpoint.
