@@ -12,6 +12,9 @@ $checks=[
  'stock_ue427_compiled_postload'=>[__DIR__.'/verify-ue427-p07-native-runtime-imports.php',
   [],['packages_checked'=>2,'import_rows_compared'=>22,'serialized_identity_fields_compared'=>110,
       'runtime_xobject_loaded'=>16,'postload_source_linker_rows'=>0]],
+ 'stock_ue427_native_provider_class_identity'=>[__DIR__.'/verify-ue427-p07-native-export-identity.php',[],
+  ['native_export_count'=>33,'mismatch_count'=>0]],
+ 'stock_ue427_import_branch_corpus'=>[__DIR__.'/verify-ue427-p07-import-branch-corpus.php',[],[]],
  'v5_dependency_resolution_regression'=>[__DIR__.'/verify-uedb5-unreal-classic-dependency-resolution.php',[],[]]
 ];
 $results=[];$errors=[];

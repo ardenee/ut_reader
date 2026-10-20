@@ -128,7 +128,7 @@ UUE427OracleCommandlet::UUE427OracleCommandlet() {
 int32 UUE427OracleCommandlet::Main(const FString& Params) {
  FString NativeP07Paths;
  if(FParse::Value(*Params,TEXT("P07Runtime="),NativeP07Paths))
-  return UE427ProbeP07Runtime(NativeP07Paths)?0:33;
+  return UE427ProbeP07Runtime(NativeP07Paths,FParse::Param(*Params,TEXT("P07ExportIdentity")))?0:33;
  FString P06AssetFixtureDir;
  if(FParse::Value(*Params,TEXT("P06AssetFixtureDir="),P06AssetFixtureDir))
   return UE427MakeP06SemanticFixtures(P06AssetFixtureDir)?0:32;

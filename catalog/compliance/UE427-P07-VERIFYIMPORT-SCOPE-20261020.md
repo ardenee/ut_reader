@@ -18,7 +18,17 @@
 
 ### Repeatable partial acceptance
 
-`php catalog/bin/verify-ue427-p07-partial-acceptance.php` currently passes **3/3 bounded checkpoints**: UT4 v511 static matcher 37/37, UE4.27.2 native loaded-package 22/22 import-identity comparison, and V5 dependency-resolution regression. It also checks the explicit UT4 profile boundary and UE4.27 serialized `PackageName` retention. **This is a checkpoint, not P07 operation-level acceptance**.
+`php catalog/bin/verify-ue427-p07-partial-acceptance.php` now targets **5/5 bounded checkpoints**: UT4 v511 static matcher 37/37, UE4.27.2 native loaded-package 22/22 import identities, compiled native provider class identities, full UE4.27 import branch corpus, and V5 dependency-resolution regression. It also checks the explicit UT4 profile boundary and UE4.27 serialized `PackageName` retention. **This is a checkpoint, not P07 operation-level acceptance**.
+
+## P07 added genuine-branch coverage and compiled provider-identity comparison
+
+**20,207 genuine serialized imports:** `php catalog/bin/verify-ue427-p07-import-branch-corpus.php` inspected all 1,749 installed UE4.27.2 packages against the original `FObjectImport` wire parser. Observed 14,898 import-parent (`OuterIndex < 0`) records, 5,309 null-outer package records, 0 positive export-outers, 0 malformed reference indices. Precisely 1,002 imports across 61 version-520+ packages contain the serialized `PackageName` field, yet **none carry a nonempty explicit package name**. This confirms that testing the UE4.27 cross-linker/explicit-PackageName branch requires controlled native fixtures, and that absence from the installed corpus cannot establish branch correctness.
+
+**Compiled linker export identity:** the P07 runtime oracle's optional `-P07ExportIdentity` flag calls Epic's actual exported `FLinker::GetExportClassName` and `FLinkerLoad::GetExportClassPackage` for genuine installed assets. `php catalog/bin/verify-ue427-p07-native-export-identity.php` independently derives the identity from raw UE4 import/export graph entries. Comparison: **33/33 native exports, 198/198 fields, 0 mismatches**, with 33 imported-class indices, 13 public and 20 nonpublic exports. These are source-defined candidate class identities used by `VerifyImportInner`, **not the private method's executed decisions**. Compiled-native evidence: `C:/Temp/ue427-p07-native-export-identity.log`.
+
+The bundled source/oracle still uses the installed editor's `LoadPackage` and `LoadAllObjects`; a post-load `XObject` can exist without retained `SourceLinker`/`SourceIndex`. The 33 native provider-identity rows do **not** authorize treating 20 private exports as resolved dependencies; subsequent verification must explicitly trace the engine's private-import condition, missing-provider and redirector branches at the decision point.
+
+**Combined replay:** `php catalog/bin/verify-ue427-p07-partial-acceptance.php` now includes **5 bounded checkpoints** (UT4 v511 static 37-check regression, UE4.27 postload import identities, UE4.27 native class identities, full 1,749-file import-branch inventory, V5 dependency regression). This remains **P07 ACTIVE (6/10 primary operations verified)**.
 
 ## Explicit outstanding P07 source branches
 
