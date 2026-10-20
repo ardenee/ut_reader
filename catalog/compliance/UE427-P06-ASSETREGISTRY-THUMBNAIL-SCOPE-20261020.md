@@ -91,13 +91,25 @@ These results certify the raw dependency-bit wire contract, **not** full `FAsset
 
 **Limit:** positive world-record testing here covers current v522 plus the old v288 chunk-ID header. Historical 2D/custom-version world payloads, `FAssetData` semantics, thumbnail image bytes and production publication are not automatically certified. The 1,749 genuine installed files have no nonzero world-tile offset and no nonempty chunk arrays. No extra top-level audit IDs were created.
 
+## Genuine thumbnail compressed image data — U427-P06-D005
+
+**Corrected:** the production reader's thumbnail index exposed only class, object path and file offset. It now also provides `UnrealPackageReader4::getThumbnailPayload(int)`, which *lazily* reads one `FObjectThumbnail::Serialize` width/height/compressed-byte-array record and returns the exact compressed bytes, sizes and byte offsets. This does not decode or synthesize thumbnail image pixels and does not allocate all images when the package reader is constructed.
+
+**Source:** pinned Epic `Core/Private/Misc/ObjectThumbnail.cpp::FObjectThumbnail::Serialize` stores `int32 ImageWidth`, `int32 ImageHeight`, then `TArray<uint8> CompressedImageData` (signed count plus raw bytes). Its editor-only linker caller `CoreUObject/Private/UObject/LinkerLoad.cpp::SerializeThumbnails` skips loading when not in editor unless forced, and skips entirely without `WITH_EDITORONLY_DATA`; this reader API remains deliberately explicit rather than inventing an editor-only execution state.
+
+**Independent native evidence:** `UE427OracleP06ThumbPayload.h` invokes Epic's actual compiled `FObjectThumbnail::Serialize` on every indexed genuine thumbnail and uses `FSHA1::HashBuffer` over the retained compressed bytes. `php catalog/bin/verify-ue427-p06-native-thumbnail-payloads.php` calls the new lazy reader API and checks dimensions, physical offsets, array counts and exact SHA-1. Across **1,749 installed UE4 packages, 1,729 thumbnail payloads, 234 empty compressed payloads, and 84,244,023 compressed payload bytes**, the **10,374 compared native fields/hashes match with zero differences**. This is physical serialized-byte parity, not an image/decompression claim. Native log `C:/Temp/ue427-p06-thumppayload-native.log`.
+
+`php catalog/bin/verify-ue427-p06-thumbnail-payload-negatives.php` also passes **8/8** independent mutations against an isolated genuine asset: untouched positive, negative width/height, negative/excessive compressed count, truncation, a valid byte mutation changing the hash, and an invalid index. Neither Epic's installed content nor production databases are modified.
+
+**Remaining P06 scope:** automatic Unreal editor-only thumbnail-map policy, actual pixel decompression, `FAssetData` class/object path and tag semantics, and production publication/consumer behavior are not certified by raw compressed-byte matching.
+
 ## Still open within P06
 
 1. **Completed raw main-section decoding:** both pre-dependency and new dependency-offset wire formats, object records and 12,058 tags match compiled Epic; cooked filtered empty sections also match. **Dependency bit arrays are verified** (35 genuine sections / 607 bits). **Still required:** asset-path/map-world synthesis, class/tag semantic transformations and any production publication consumers.
-2. Verify actual thumbnail image serialization / editor and non-editor skip conditions as applicable. The newly verified *index* is not a bitmap decoder.
+2. **Thumbnail compressed-byte payload serialization is now verified** (1,729 native payloads, 84,244,023 bytes). Remaining: editor/non-editor linker thumbnail-map conditions and actual pixel decompression, only if used by production.
 3. **Current-format WorldTile/ChunkID fixtures pass native parity** (3 files, 7 IDs, 38 world fields, 11 negatives). Historical world-tile custom-version branches remain an explicit evidence limit.
 4. Trace the active UnrealDB consumers before claiming end-to-end publication, search or V5 parity for these P06 sections. Preserve separate P08/P09 workflow obligations.
 
-Single-command replay: `php catalog/bin/verify-ue427-p06-partial-acceptance.php`. Its eleven independent scopes include native thumbnail, raw registry and dependency-bit comparisons, both real-asset negative suites, the full already-verified P05 replay, and UT4 V5 regression. A passing combined driver is **partial P06 evidence only** and must not flip the primary ledger to VERIFIED before the remaining source branches and production consumers are accepted.
+Single-command replay: `php catalog/bin/verify-ue427-p06-partial-acceptance.php`. Its thirteen independent scopes include native thumbnail index/payload, raw registry and dependency-bit comparisons, both real-asset negative suites, the full already-verified P05 replay, and UT4 V5 regression. A passing combined driver is **partial P06 evidence only** and must not flip the primary ledger to VERIFIED before the remaining source branches and production consumers are accepted.
 
 **P06 remains ACTIVE; overall count stays 5/10.** No production database writes, canonical Epic source edits or unproven certification claims in this checkpoint.

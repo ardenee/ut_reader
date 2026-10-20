@@ -16,6 +16,7 @@
 #include "UE427OracleP06Registry.h"
 #include "UE427OracleP06Dependencies.h"
 #include "UE427OracleP06WorldChunk.h"
+#include "UE427OracleP06ThumbPayload.h"
 
 // Preserve Epic's actual FObjectImport / FObjectExport operator<< and supply
 // the package-local FName mapping that FLinkerLoad::operator<<(FName&) uses.
@@ -264,6 +265,7 @@ int32 UUE427OracleCommandlet::Main(const FString& Params) {
   if (FParse::Param(*Params,TEXT("P06Dependencies")) && !UE427DumpP06RegistryDependencies(*Ar,S,Checked))return 27;
   if (FParse::Param(*Params,TEXT("P06WorldChunk")) && !UE427ReadP06WorldChunk(*Ar,S,Checked))return 29;
   if (FParse::Param(*Params,TEXT("P06Thumb")) && !UE427DumpP06ThumbnailIndex(*Ar,S,Checked))return 25;
+  if (FParse::Param(*Params,TEXT("P06ThumbPayload")) && !UE427DumpP06ThumbnailPayloads(*Ar,S,Checked))return 30;
   if (FParse::Param(*Params,TEXT("P05Bulk")) && !UE427ProbeCookedBulkHeaders(Path,Checked)) return 17;
   if (FParse::Param(*Params,TEXT("P05Optional")) && !UE427ProbeCookedOptionalHeaders(Path,Checked)) return 24;
   if (FParse::Param(*Params,TEXT("P05"))) {

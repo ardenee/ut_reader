@@ -22,6 +22,11 @@ $checks=[
   ['counts.fixtures'=>3,'counts.native_head_rows'=>3,'counts.native_world_rows'=>2,
    'counts.chunk_ids_compared'=>7,'counts.world_fields_compared'=>38,'mismatch_count'=>0]],
  'world_chunk_corruptions'=>['verify-ue427-p06-world-chunk-negatives.php',[],[]],
+ 'thumbnail_payload_native'=>['verify-ue427-p06-native-thumbnail-payloads.php',[],
+  ['counts.packages'=>1749,'counts.payloads'=>1729,'counts.empty_payloads'=>234,
+   'counts.compressed_bytes_hashed'=>84244023,'counts.fields_compared'=>10374,
+   'mismatch_count'=>0]],
+ 'thumbnail_payload_corruptions'=>['verify-ue427-p06-thumbnail-payload-negatives.php',[],[]],
  'p05_full_regression'=>['verify-ue427-p05-acceptance.php',[],['verified_operations'=>12]],
  'ut4_v5_regression'=>['verify-uedb5-ut4-persistence.php',[],[]],
 ];
@@ -43,9 +48,9 @@ foreach($checks as $name=>[$script,$params,$expected]){
  if($pass)$passed++;
 }
 $ok=$passed===count($checks);
-echo json_encode(['ok'=>$ok,'scope'=>'PARTIAL P06 native thumbnail, AssetRegistry and WorldTile/ChunkID wire acceptance; semantic publication remains open',
+echo json_encode(['ok'=>$ok,'scope'=>'PARTIAL P06 native thumbnail compressed payloads, AssetRegistry and WorldTile/ChunkID wire acceptance; semantic publication remains open',
  'passed'=>$passed,'total'=>count($checks),
- 'remaining'=>['FAssetData synthesis','thumbnail image bytes',
+ 'remaining'=>['FAssetData synthesis','thumbnail pixel decompression/editor conditional loading',
   'world tile legacy-version positive cases and semantic consumers','production usage'],
  'results'=>$results],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;
 exit($ok?0:2);

@@ -1169,6 +1169,38 @@ final class UnrealPackageReader4
     public function getPreloadDependencies(): array { return $this->preloadDependencies; }
     public function getDependsMap(): array { return $this->dependsMap; }
     public function getThumbnailIndex(): array { return $this->thumbnailIndex; }
+    /**
+     * Lazily read the compressed bytes of one thumbnail via the FileOffset
+     * stored in the index. FObjectThumbnail::Serialize writes signed width,
+     * height and a signed TArray<uint8> length before the compressed payload.
+     * It does not decode image pixels; no bulk read occurs at construction.
+     *
+     * @return array<string,int|string>
+     */
+    public function getThumbnailPayload(int $index): array
+    {
+        if (!isset($this->thumbnailIndex[$index])) {
+            throw new OutOfBoundsException('UE4 thumbnail entry not found: ' . $index);
+        }
+        $entry = $this->thumbnailIndex[$index];
+        $r = $this->tableReader((int)$entry['fileOffset']);
+        $width = $r->i32();
+        $height = $r->i32();
+        $bytes = $r->i32();
+        if ($width < 0 || $height < 0 || $bytes < 0 || $bytes > $r->remaining()) {
+            throw new OutOfBoundsException('Invalid UE4 thumbnail dimensions or compressed byte count');
+        }
+        $data = $r->bytes($bytes);
+        return [
+            'fileOffset' => (int)$entry['fileOffset'],
+            'endOffset' => $r->tell(),
+            'width' => $width,
+            'height' => $height,
+            'compressedDataSize' => $bytes,
+            'compressedData' => $data,
+        ];
+    }
+
     public function getAssetRegistryObjects(): array { return $this->assetRegistryObjects; }
     public function getAssetRegistryDependencyDataOffset(): int { return $this->assetRegistryDependencyDataOffset; }
     public function getAssetRegistryDependencyBits(): array { return $this->assetRegistryDependencyBits; }
