@@ -318,6 +318,11 @@ final class UnrealPackageReader4
             $this->header['version'] = $ue4Version;
             $this->issues[] = 'Package is unversioned; using assumed UE4 parser version ' . $ue4Version . ' from parser profile ' . (string)$this->header['parserProfileKey'] . ' for table parsing.';
         }
+        // Epic 4.27.2 LinkerLoad.cpp refuses packages newer than the stock
+        // engine's licensee version (VER_LIC_AUTOMATIC_VERSION == 0).
+        if ($licensee > 0) {
+            throw new RuntimeException('UE4 package licensee version ' . $licensee . ' exceeds stock UE4.27.2 licensee version 0.');
+        }
         if ($ue4Version < self::VER_OLDEST_LOADABLE_PACKAGE || $ue4Version > self::DEFAULT_ASSUMED_UNVERSIONED_UE4_VERSION) {
             throw new RuntimeException('Unsupported UE4 package version ' . $ue4Version . '; supported range=' . self::VER_OLDEST_LOADABLE_PACKAGE . '..' . self::DEFAULT_ASSUMED_UNVERSIONED_UE4_VERSION);
         }

@@ -10,6 +10,7 @@ $cases=[
  'future_layout_minus8'=>[substr_replace($bytes,pack('V',0xfffffff8),4,4),false],
  'too_old_version_213'=>[substr_replace($bytes,pack('V',213),$offset,4),false],
  'too_new_version_523'=>[substr_replace($bytes,pack('V',523),$offset,4),false],
+ 'licensee_version_1_stock_engine'=>[substr_replace($bytes,pack('V',1),$offset+4,4),false],
  'corrupt_tag'=>[substr_replace($bytes,'FAIL',0,4),false],
  'truncated_summary'=>[substr($bytes,0,16),false],
 ];
