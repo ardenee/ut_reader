@@ -88,5 +88,48 @@ The legacy pre-336 `EngineChangelist` compatibility boundary, complete
 `VerifyImportInner` provider selection, object payload reading and remaining
 source paths are **not** accepted as full Epic-equivalent implementations.
 
+## Export record preservation and Epic flag source (subsequent batch)
+
+Original Epic source authority:
+
+- `CoreUObject/Public/UObject/ObjectMacros.h:483-524`: `EObjectFlags`,
+  `RF_Load` and `EPackageFlags`.
+- `CoreUObject/Private/UObject/ObjectResource.cpp:105-171`:
+  serialized `FObjectExport` fields and version conditions.
+- `CoreUObject/Public/UObject/Linker.h:528-553`:
+  `FLinker::FilterExport` including build-conditional editor treatment
+  and dedicated-server/client filtering.
+
+The existing PHP reader applied the numerically correct, but **manually
+copied**, `RF_Load = 0x02D4003B` mask. It now uses generated
+`EPIC_RF_LOAD_MASK`, `EPIC_PKG_NEWLY_CREATED`, and
+`EPIC_PKG_FILTER_EDITOR_ONLY` constants. These values are computed from
+the original `ObjectMacros.h` enum assignments and `RF_Load`
+expression, with source SHA-256 enforcement; this change is mechanical,
+not an invented replacement mask.
+
+The UEDB4 parsed-snapshot builder previously discarded export record
+inputs required by the native filter (including `bNotForClient`,
+`bNotForServer`, `bNotAlwaysLoadedForEditorGame`). Newly constructed
+**in-memory** parsed snapshots now retain these plus serialized vs.
+effective object flags, forced-export status, FName number, asset status,
+package GUID/flags, serial width, and preload dependency subfields.
+The targeted metadata check passes for deliberately distinct values.
+
+**Important limit:** preserving data does **not** execute native
+`FLinker::FilterExport`, nor does it establish that all new fields survive
+the existing UEDB4 SQL persistence schema. Native export filtering needs
+actual `WITH_EDITOR`, `FilterClientButNotServer`,
+`FilterServerButNotClient`, `bWasFiltered`, and
+`bExportLoadFailed` state. Those branches remain **NOT_CHECKED** for
+runtime behavioral equivalence; no provider has been filtered on an
+assumed environment. The source-only reference now includes `Linker.h`
+and a tenth diagram tab.
+
+The revised source comparison list contains **263** indexed original Epic
+source items: 221 `NOT_CHECKED`; 22 targeted-behavior mapped, 2
+corpus-mapped, 1 pending boundary, 3 limited source mappings, and 14
+export fields preserved in parsed metadata but not runtime certified.
+
 The correction is judged by the production behavior and source
 trace, not a new claim of whole-engine parity.

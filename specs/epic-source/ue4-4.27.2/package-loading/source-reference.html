@@ -22,6 +22,7 @@ th{background:#e9eff4}tr{page-break-inside:avoid}thead{display:table-header-grou
 <tr><td>EngineVersion.cpp</td><td><code>BCFCE393AF77F09527EF2C7BA4EA9E6550A07E7C037265FD8DD87A4E64D81DFB</code></td></tr>
 <tr><td>EngineVersionBase.h</td><td><code>13FA34A8F2D6D5C01AC492E998AF8D25543B7ED159296CD08BCD1EB29A6DFB4C</code></td></tr>
 <tr><td>ObjectMacros.h</td><td><code>2BCF3EB5BA3013602FB5C02325DCFEF9B427779D3391A32D0F90D5D7A12FE20F</code></td></tr>
+<tr><td>Linker.h</td><td><code>040C05FF670E730CDC5A4CE83A1F2985A88F7ABC1E72C369FC5FC6A75CE5E2B3</code></td></tr>
 </table><p>Diagram arrows show source statement order only. Every relevant
  C++ conditional must be followed at its cited source line.</p>
 <h2>Version symbols in the original Epic source</h2>
@@ -375,6 +376,28 @@ th{background:#e9eff4}tr{page-break-inside:avoid}thead{display:table-header-grou
 <h3>Serialized fields in source order</h3><table><tr><th>Source</th><th>Serialized field</th></tr>
 <tr><td>—</td><td>No direct SA_VALUE sites in this function</td></tr>
 </table>
+<h2>FLinker::FilterExport after serialization</h2>
+<p><b>Epic function:</b> Linker.h:528</p>
+<table><thead><tr><th>Step</th><th>Source</th><th>Exact Epic statement</th></tr></thead><tbody>
+<tr><td>EXPORT_FILTER01</td><td>Linker.h:528</td><td class='snippet'>bool FilterExport(const FObjectExport&amp; Export)</td></tr>
+<tr><td>EXPORT_FILTER02</td><td>Linker.h:530</td><td class='snippet'>if (Export.bExportLoadFailed || Export.bWasFiltered)</td></tr>
+<tr><td>EXPORT_FILTER03</td><td>Linker.h:535</td><td class='snippet'>if (!Export.bNotAlwaysLoadedForEditorGame) // Always load, even if is editor only</td></tr>
+<tr><td>EXPORT_FILTER04</td><td>Linker.h:540</td><td class='snippet'>if (FilterClientButNotServer &amp;&amp; Export.bNotForServer) // &quot;we are a dedicated server&quot;</td></tr>
+<tr><td>EXPORT_FILTER05</td><td>Linker.h:544</td><td class='snippet'>if (FilterServerButNotClient &amp;&amp; Export.bNotForClient) // &quot;we are a client only&quot;</td></tr>
+<tr><td>EXPORT_FILTER06</td><td>Linker.h:548</td><td class='snippet'>if (Export.ThisIndex.IsNull()) // Export is invalid and shouldn&#x27;t be processed.</td></tr>
+<tr><td>EXPORT_FILTER07</td><td>Linker.h:552</td><td class='snippet'>return false;</td></tr>
+</tbody></table>
+<h3>Conditional statements in this original Epic source path</h3><table><tr><th>Source</th><th>Original C++ condition</th></tr>
+<tr><td>Linker.h:530</td><td class='snippet'>if (Export.bExportLoadFailed || Export.bWasFiltered)</td></tr>
+<tr><td>Linker.h:534</td><td class='snippet'>#if WITH_EDITOR</td></tr>
+<tr><td>Linker.h:535</td><td class='snippet'>if (!Export.bNotAlwaysLoadedForEditorGame) // Always load, even if is editor only</td></tr>
+<tr><td>Linker.h:540</td><td class='snippet'>if (FilterClientButNotServer &amp;&amp; Export.bNotForServer) // &quot;we are a dedicated server&quot;</td></tr>
+<tr><td>Linker.h:544</td><td class='snippet'>if (FilterServerButNotClient &amp;&amp; Export.bNotForClient) // &quot;we are a client only&quot;</td></tr>
+<tr><td>Linker.h:548</td><td class='snippet'>if (Export.ThisIndex.IsNull()) // Export is invalid and shouldn&#x27;t be processed.</td></tr>
+</table>
+<h3>Serialized fields in source order</h3><table><tr><th>Source</th><th>Serialized field</th></tr>
+<tr><td>—</td><td>No direct SA_VALUE sites in this function</td></tr>
+</table>
 <h2>Unexpanded calls / format coverage</h2><p>These must be traced before any whole-file compliance claim.</p><ul>
 <li>CreateLoader dispatch and archive selection</li>
 <li>FixupImportMap / CoreRedirects and config</li>
@@ -386,4 +409,5 @@ th{background:#e9eff4}tr{page-break-inside:avoid}thead{display:table-header-grou
 <li>Bulk/UEXP/UBULK, compressed and optional data</li>
 <li>Platform, target, cooked, text archive, IoStore branch separation</li>
 <li>SavePackage2 complete writer branches</li>
+<li>FLinker::FilterExport target-context inputs: WITH_EDITOR, FilterClientButNotServer, FilterServerButNotClient, bExportLoadFailed and previously filtered state</li>
 </ul></body></html>

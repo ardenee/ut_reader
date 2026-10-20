@@ -525,4 +525,51 @@
       </root>
     </mxGraphModel>
   </diagram>
+  <diagram name="export_filter" id="export_filter">
+    <mxGraphModel dx="1300" dy="950" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" page="1" pageScale="1" pageWidth="1050" pageHeight="1800">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="EXPORT_FILTER01" parent="1" vertex="1" value="EXPORT_FILTER01 bool FilterExport(const FObjectExport&amp; Export)&lt;br/&gt;Linker.h:528" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="85" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="EXPORT_FILTER02" parent="1" vertex="1" value="EXPORT_FILTER02 if (Export.bExportLoadFailed || Export.bWasFiltered)&lt;br/&gt;Linker.h:530" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="200" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="export_filter_e2" parent="1" edge="1" source="EXPORT_FILTER01" target="EXPORT_FILTER02" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="EXPORT_FILTER03" parent="1" vertex="1" value="EXPORT_FILTER03 if (!Export.bNotAlwaysLoadedForEditorGame) // Always load, even if ...&lt;br/&gt;Linker.h:535" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="315" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="export_filter_e3" parent="1" edge="1" source="EXPORT_FILTER02" target="EXPORT_FILTER03" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="EXPORT_FILTER04" parent="1" vertex="1" value="EXPORT_FILTER04 if (FilterClientButNotServer &amp;&amp; Export.bNotForServer) // 'we are a ...&lt;br/&gt;Linker.h:540" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="430" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="export_filter_e4" parent="1" edge="1" source="EXPORT_FILTER03" target="EXPORT_FILTER04" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="EXPORT_FILTER05" parent="1" vertex="1" value="EXPORT_FILTER05 if (FilterServerButNotClient &amp;&amp; Export.bNotForClient) // 'we are a ...&lt;br/&gt;Linker.h:544" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="545" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="export_filter_e5" parent="1" edge="1" source="EXPORT_FILTER04" target="EXPORT_FILTER05" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="EXPORT_FILTER06" parent="1" vertex="1" value="EXPORT_FILTER06 if (Export.ThisIndex.IsNull()) // Export is invalid and shouldn't b...&lt;br/&gt;Linker.h:548" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="660" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="export_filter_e6" parent="1" edge="1" source="EXPORT_FILTER05" target="EXPORT_FILTER06" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="EXPORT_FILTER07" parent="1" vertex="1" value="EXPORT_FILTER07 return false;&lt;br/&gt;Linker.h:552" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="775" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="export_filter_e7" parent="1" edge="1" source="EXPORT_FILTER06" target="EXPORT_FILTER07" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
 </mxfile>

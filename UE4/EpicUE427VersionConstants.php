@@ -34,4 +34,7 @@ trait EpicUE427VersionConstants
     private const VER_WORLD_LEVEL_INFO_LOD_LIST = 316; // VER_UE4_WORLD_LEVEL_INFO_LOD_LIST
     private const VER_WORLD_LEVEL_INFO_UPDATED = 268; // VER_UE4_WORLD_LEVEL_INFO_UPDATED
     private const VER_WORLD_LEVEL_INFO_ZORDER = 319; // VER_UE4_WORLD_LEVEL_INFO_ZORDER
+    private const EPIC_RF_LOAD_MASK = 0x02D4003B; // ObjectMacros.h
+    private const EPIC_PKG_NEWLY_CREATED = 0x00000001; // ObjectMacros.h
+    private const EPIC_PKG_FILTER_EDITOR_ONLY = 0x80000000; // ObjectMacros.h
 }

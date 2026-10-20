@@ -379,12 +379,31 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
                 'template_index' => (int)($row['templateIndex'] ?? $row['archetype'] ?? $row['archetypeIndexRef'] ?? 0),
                 'object_name' => (string)($row['objectNameText'] ?? ''),
                 'object_name_index' => $objectNameIndex,
+                'object_name_number' => $this->fnameNumber($row['objectName'] ?? $row['ObjectName'] ?? null),
                 'outer_index' => (int)($row['outerIndex'] ?? $row['packageIndex'] ?? $row['outer'] ?? 0),
                 'local_path' => $localPath,
                 'full_path' => $fullPath,
+                // Epic ObjectResource.cpp:105-171 serializes all fields below.
+                // These are source data required for FLinker::FilterExport
+                // (Linker.h:528-553); do not infer a runtime filter outcome
+                // without the caller's WITH_EDITOR/client/server load state.
                 'object_flags' => isset($row['objectFlags']) ? (int)$row['objectFlags'] : null,
+                'serialized_object_flags' => isset($row['serializedObjectFlags'])
+                    ? (int)$row['serializedObjectFlags'] : null,
+                'forced_export' => (bool)($row['forcedExport'] ?? false),
+                'not_for_client' => (bool)($row['notForClient'] ?? false),
+                'not_for_server' => (bool)($row['notForServer'] ?? false),
+                'not_for_editor_game_present' => (bool)($row['notForEditorGamePresent'] ?? false),
+                'not_for_editor_game' => $row['notForEditorGame'] ?? null,
+                'is_asset_present' => (bool)($row['isAssetPresent'] ?? false),
+                'is_asset' => $row['isAsset'] ?? null,
+                'package_guid' => (string)($row['packageGuid'] ?? ''),
+                'package_flags' => isset($row['packageFlags']) ? (int)$row['packageFlags'] : null,
+                'serial_size_width_bits' => isset($row['serialSizeWidthBits']) ? (int)$row['serialSizeWidthBits'] : null,
                 'serial_size' => isset($row['serialSize']) ? (int)$row['serialSize'] : null,
                 'serial_offset' => isset($row['serialOffset']) ? (int)$row['serialOffset'] : null,
+                'preload_present' => (bool)($row['preloadPresent'] ?? false),
+                'preload' => (array)($row['preload'] ?? []),
             ];
             $exportPaths[(int)$index] = [
                 'local' => $localPath,

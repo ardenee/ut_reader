@@ -50,6 +50,11 @@
       "id": "ObjectMacros.h",
       "path": "Engine/Source/Runtime/CoreUObject/Public/UObject/ObjectMacros.h",
       "sha256": "2BCF3EB5BA3013602FB5C02325DCFEF9B427779D3391A32D0F90D5D7A12FE20F"
+    },
+    {
+      "id": "Linker.h",
+      "path": "Engine/Source/Runtime/CoreUObject/Public/UObject/Linker.h",
+      "sha256": "040C05FF670E730CDC5A4CE83A1F2985A88F7ABC1E72C369FC5FC6A75CE5E2B3"
     }
   ],
   "groups": [
@@ -600,6 +605,54 @@
           137
         ]
       ]
+    },
+    {
+      "id": "export_filter",
+      "title": "FLinker::FilterExport after serialization",
+      "file": "Linker.h",
+      "function_line": 528,
+      "sections": [
+        [
+          523,
+          553
+        ]
+      ],
+      "steps": [
+        [
+          528,
+          "bool FilterExport("
+        ],
+        [
+          530,
+          "Export.bExportLoadFailed || Export.bWasFiltered"
+        ],
+        [
+          535,
+          "!Export.bNotAlwaysLoadedForEditorGame"
+        ],
+        [
+          540,
+          "FilterClientButNotServer && Export.bNotForServer"
+        ],
+        [
+          544,
+          "FilterServerButNotClient && Export.bNotForClient"
+        ],
+        [
+          548,
+          "Export.ThisIndex.IsNull()"
+        ],
+        [
+          552,
+          "return false;"
+        ]
+      ],
+      "condition_ranges": [
+        [
+          528,
+          553
+        ]
+      ]
     }
   ],
   "not_yet_expanded": [
@@ -612,6 +665,7 @@
     "Object-property serialization and per-class payloads",
     "Bulk/UEXP/UBULK, compressed and optional data",
     "Platform, target, cooked, text archive, IoStore branch separation",
-    "SavePackage2 complete writer branches"
+    "SavePackage2 complete writer branches",
+    "FLinker::FilterExport target-context inputs: WITH_EDITOR, FilterClientButNotServer, FilterServerButNotClient, bExportLoadFailed and previously filtered state"
   ]
 }

@@ -21,6 +21,7 @@ authoritative when reading any abbreviated table or diagram.
 | `EngineVersion.cpp` | `BCFCE393AF77F09527EF2C7BA4EA9E6550A07E7C037265FD8DD87A4E64D81DFB` |
 | `EngineVersionBase.h` | `13FA34A8F2D6D5C01AC492E998AF8D25543B7ED159296CD08BCD1EB29A6DFB4C` |
 | `ObjectMacros.h` | `2BCF3EB5BA3013602FB5C02325DCFEF9B427779D3391A32D0F90D5D7A12FE20F` |
+| `Linker.h` | `040C05FF670E730CDC5A4CE83A1F2985A88F7ABC1E72C369FC5FC6A75CE5E2B3` |
 
 ## How to read these views
 
@@ -489,6 +490,39 @@ and applicable preprocessor conditions.
 
 **3 source-anchored navigation nodes; 0 original conditional-directive lines; 0 serialized field sites.**
 
+## FLinker::FilterExport after serialization
+
+**Epic function:** `Linker.h:528`
+
+| Step | Original source location | Exact C++ statement |
+|---|---|---|
+| `EXPORT_FILTER01` | `Linker.h:528` | `bool FilterExport(const FObjectExport& Export)` |
+| `EXPORT_FILTER02` | `Linker.h:530` | `if (Export.bExportLoadFailed \|\| Export.bWasFiltered)` |
+| `EXPORT_FILTER03` | `Linker.h:535` | `if (!Export.bNotAlwaysLoadedForEditorGame) // Always load, even if is editor only` |
+| `EXPORT_FILTER04` | `Linker.h:540` | `if (FilterClientButNotServer && Export.bNotForServer) // "we are a dedicated server"` |
+| `EXPORT_FILTER05` | `Linker.h:544` | `if (FilterServerButNotClient && Export.bNotForClient) // "we are a client only"` |
+| `EXPORT_FILTER06` | `Linker.h:548` | `if (Export.ThisIndex.IsNull()) // Export is invalid and shouldn't be processed.` |
+| `EXPORT_FILTER07` | `Linker.h:552` | `return false;` |
+
+### Actual conditional statements in the original Epic source
+
+| Source line | Original C++ condition or compile-time directive |
+|---|---|
+| `Linker.h:530` | `if (Export.bExportLoadFailed \|\| Export.bWasFiltered)` |
+| `Linker.h:534` | `#if WITH_EDITOR` |
+| `Linker.h:535` | `if (!Export.bNotAlwaysLoadedForEditorGame) // Always load, even if is editor only` |
+| `Linker.h:540` | `if (FilterClientButNotServer && Export.bNotForServer) // "we are a dedicated server"` |
+| `Linker.h:544` | `if (FilterServerButNotClient && Export.bNotForClient) // "we are a client only"` |
+| `Linker.h:548` | `if (Export.ThisIndex.IsNull()) // Export is invalid and shouldn't be processed.` |
+
+### Serialized field sites in the Epic implementation
+
+| Source line | Field written/read by Epic |
+|---|---|
+| — | No direct SA_VALUE sites inside this section; follow its called serializer |
+
+**7 source-anchored navigation nodes; 6 original conditional-directive lines; 0 serialized field sites.**
+
 ## Unexpanded calls and formats
 
 Not traced to their end here; no end-to-end completeness claim is permitted.
@@ -503,3 +537,4 @@ Not traced to their end here; no end-to-end completeness claim is permitted.
 - Bulk/UEXP/UBULK, compressed and optional data
 - Platform, target, cooked, text archive, IoStore branch separation
 - SavePackage2 complete writer branches
+- FLinker::FilterExport target-context inputs: WITH_EDITOR, FilterClientButNotServer, FilterServerButNotClient, bExportLoadFailed and previously filtered state

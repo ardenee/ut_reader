@@ -10,8 +10,8 @@ full file-format certification and not a declaration of PHP parity.
 
 1. [Epic source file inventory, field tables, and loader steps](source-reference.md)
 2. [Epic package-loading reference PDF](UE4.27.2-Epic-Source-Package-Format-and-Loader.pdf)
-3. [Editable nine-page sequence diagrams](source-reference.drawio):
-   `loader`, `summary`, `imports`, `exports`, `tables`, `writers`, `version_correction`, `engine_changelist`, `package_flags`
+3. [Editable ten-page sequence diagrams](source-reference.drawio):
+   `loader`, `summary`, `imports`, `exports`, `tables`, `writers`, `version_correction`, `engine_changelist`, `package_flags`, `export_filter`
 4. [True/false summary decision graph](summary-decision-graph.md)
 5. [Editable decision graph](summary-decision-graph.drawio)
 
@@ -52,7 +52,7 @@ modifying it.
 
 ## Production comparison (separate)
 
-`catalog/compliance/UE427-LOADER-EPIC-STEP-MAPPING.csv` contains **250**
+`catalog/compliance/UE427-LOADER-EPIC-STEP-MAPPING.csv` contains **263**
 source-indexed items as of the initial generation. Each is
 `NOT_CHECKED` until inspected against actual UnrealDB production PHP; individual implemented branches are marked separately and do not imply whole-path acceptance.
 It lives outside this folder to keep this reference free of UnrealDB

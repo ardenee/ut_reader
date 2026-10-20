@@ -101,6 +101,37 @@ for php_name,epic_name in sorted(aliases.items()):
         raise SystemExit(f"Source enum member absent: {epic_name}")
     generated_lines.append(
         f"    private const {php_name} = {members[epic_name]['value']}; // {epic_name}")
+# Extract *original Epic* ObjectMacros.h symbol assignments and the RF_Load
+# expression, not a copied constant / guessed aggregate bitmask.
+object_macros=Path("L:/Source/Engine/UE4/UE 4.27.2/Engine/Source/Runtime/CoreUObject/Public/UObject/ObjectMacros.h")
+object_macros_digest="2BCF3EB5BA3013602FB5C02325DCFEF9B427779D3391A32D0F90D5D7A12FE20F"
+raw_object_macros=object_macros.read_bytes()
+if hashlib.sha256(raw_object_macros).hexdigest().upper()!=object_macros_digest:
+    raise SystemExit("Pinned Epic ObjectMacros.h is absent or changed")
+object_macros_source=raw_object_macros.decode("utf-8-sig")
+object_flags={name:int(value,16) for name,value in re.findall(
+    r"^\s*(RF_[A-Za-z0-9_]+)\s*=\s*(0x[0-9a-fA-F]+)\s*,",
+    object_macros_source,re.M)}
+package_flags={name:int(value,16) for name,value in re.findall(
+    r"^\s*(PKG_[A-Za-z0-9_]+)\s*=\s*(0x[0-9a-fA-F]+)\s*,",
+    object_macros_source,re.M)}
+rf_match=re.search(r"^#define\s+RF_Load\s+\(\(EObjectFlags\)\(([^)]+)\)\)",
+    object_macros_source,re.M)
+if rf_match is None: raise SystemExit("Original Epic RF_Load macro missing")
+rf_names=[item.strip() for item in rf_match.group(1).split("|")]
+if not rf_names or any(name not in object_flags for name in rf_names):
+    raise SystemExit("Unsupported Epic RF_Load component; do not infer missing flags")
+rf_load=0
+for name in rf_names:rf_load|=object_flags[name]
+if "PKG_NewlyCreated" not in package_flags or "PKG_FilterEditorOnly" not in package_flags:
+    raise SystemExit("Required original Epic package flag definitions missing")
+source_flag_constants={
+    "EPIC_RF_LOAD_MASK":rf_load,
+    "EPIC_PKG_NEWLY_CREATED":package_flags["PKG_NewlyCreated"],
+    "EPIC_PKG_FILTER_EDITOR_ONLY":package_flags["PKG_FilterEditorOnly"],
+}
+for name,value in source_flag_constants.items():
+    generated_lines.append(f"    private const {name} = 0x{value:08X}; // ObjectMacros.h")
 generated_lines.extend(["}", ""])
 expected_generated="\n".join(generated_lines)
 if "--write" in sys.argv:

@@ -1,0 +1,14 @@
+flowchart TD
+  EXPORT_FILTER01["EXPORT_FILTER01 bool FilterExport(const FObjectExport& Export)<br/>Linker.h:528"]
+  EXPORT_FILTER02["EXPORT_FILTER02 if (Export.bExportLoadFailed || Export.bWasFiltered)<br/>Linker.h:530"]
+  EXPORT_FILTER01 --> EXPORT_FILTER02
+  EXPORT_FILTER03["EXPORT_FILTER03 if (!Export.bNotAlwaysLoadedForEditorGame) // Always load, even if ...<br/>Linker.h:535"]
+  EXPORT_FILTER02 --> EXPORT_FILTER03
+  EXPORT_FILTER04["EXPORT_FILTER04 if (FilterClientButNotServer && Export.bNotForServer) // 'we are a ...<br/>Linker.h:540"]
+  EXPORT_FILTER03 --> EXPORT_FILTER04
+  EXPORT_FILTER05["EXPORT_FILTER05 if (FilterServerButNotClient && Export.bNotForClient) // 'we are a ...<br/>Linker.h:544"]
+  EXPORT_FILTER04 --> EXPORT_FILTER05
+  EXPORT_FILTER06["EXPORT_FILTER06 if (Export.ThisIndex.IsNull()) // Export is invalid and shouldn't b...<br/>Linker.h:548"]
+  EXPORT_FILTER05 --> EXPORT_FILTER06
+  EXPORT_FILTER07["EXPORT_FILTER07 return false;<br/>Linker.h:552"]
+  EXPORT_FILTER06 --> EXPORT_FILTER07

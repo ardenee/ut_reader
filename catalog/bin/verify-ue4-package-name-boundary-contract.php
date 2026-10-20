@@ -120,6 +120,57 @@ $checks['absent_wire_field_has_no_explicit_package_override'] =
     && ($absentRow['package_name'] ?? '') === ''
     && ($absentRow['root_package'] ?? '') === '/Game/OuterProvider';
 
+// Original Epic FObjectExport fields used by FilterExport must survive
+// parsed-snapshot preparation. The actual filter result needs target state
+// and is NOT computed from file bytes alone.
+$sourceExport = [
+    'objectName' => ['index'=>2,'number'=>3,'text'=>'Thing_2'],
+    'objectNameText' => 'Thing_2',
+    'classIndex' => 0,
+    'superIndex' => 0,
+    'templateIndex' => 0,
+    'outerIndex' => 0,
+    'objectFlags' => 0x00000001,
+    'serializedObjectFlags' => 0x00000041,
+    'forcedExport' => true,
+    'notForClient' => true,
+    'notForServer' => false,
+    'notForEditorGamePresent' => true,
+    'notForEditorGame' => true,
+    'isAssetPresent' => true,
+    'isAsset' => false,
+    'packageFlags' => 0x00000200,
+    'packageGuid' => '00000000-00000000-00000000-00000000',
+    'serialSizeWidthBits' => 64,
+    'serialSize' => 7,
+    'serialOffset' => 812,
+    'preloadPresent' => true,
+    'preload' => ['firstExportDependency'=>3,
+        'serializationBeforeSerializationDependencies'=>1,
+        'createBeforeSerializationDependencies'=>2,
+        'serializationBeforeCreateDependencies'=>0,
+        'createBeforeCreateDependencies'=>0],
+];
+$exportSnapshot = $builder->buildParsedSections(
+    99, 7, '/Game/Consumer', 'Consumer.uasset', $names, $imports, [$sourceExport]
+);
+$storedExport = (array)(($exportSnapshot['exports'] ?? [])[0] ?? []);
+$checks['epic_export_filter_inputs_preserved'] =
+    ($storedExport['not_for_client'] ?? null) === true
+    && ($storedExport['not_for_server'] ?? null) === false
+    && ($storedExport['not_for_editor_game_present'] ?? null) === true
+    && ($storedExport['not_for_editor_game'] ?? null) === true
+    && ($storedExport['is_asset_present'] ?? null) === true
+    && ($storedExport['is_asset'] ?? null) === false;
+$checks['epic_export_record_serialized_fields_preserved'] =
+    ($storedExport['serialized_object_flags'] ?? null) === 0x00000041
+    && ($storedExport['object_flags'] ?? null) === 0x00000001
+    && ($storedExport['object_name_number'] ?? null) === 3
+    && ($storedExport['forced_export'] ?? null) === true
+    && ($storedExport['package_flags'] ?? null) === 0x00000200
+    && ($storedExport['serial_size_width_bits'] ?? null) === 64
+    && ($storedExport['preload']['firstExportDependency'] ?? null) === 3;
+
 $failed = [];
 foreach ($checks as $name => $ok) {
     fwrite(STDOUT, ($ok ? '[PASS] ' : '[FAIL] ') . $name . PHP_EOL);

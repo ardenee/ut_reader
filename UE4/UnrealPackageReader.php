@@ -346,10 +346,10 @@ final class UnrealPackageReader4
         $this->header['serializedPackageFlags'] = $serializedPackageFlags;
         // Epic PackageFileSummary.cpp:184-189 (WITH_EDITOR, IsLoading):
         // PKG_NewlyCreated is a transient flag and must not survive loading.
-        $this->header['packageFlags'] = $serializedPackageFlags & ~0x00000001;
+        $this->header['packageFlags'] = $serializedPackageFlags & ~self::EPIC_PKG_NEWLY_CREATED;
         $this->header['nameCount'] = $r->i32();
         $this->header['nameOffset'] = $r->i32();
-        $filterEditorOnly = (((int)$this->header['packageFlags']) & 0x80000000) !== 0;
+        $filterEditorOnly = (((int)$this->header['packageFlags']) & self::EPIC_PKG_FILTER_EDITOR_ONLY) !== 0;
         if (!$filterEditorOnly && $ue4Version >= self::VER_ADDED_PACKAGE_SUMMARY_LOCALIZATION_ID) {
             $this->header['localizationId'] = $r->fstring();
         }
@@ -582,7 +582,7 @@ final class UnrealPackageReader4
         }
 
         $version = (int)($this->header['version'] ?? 0);
-        $filterEditorOnly = (((int)($this->header['packageFlags'] ?? 0)) & 0x80000000) !== 0;
+        $filterEditorOnly = (((int)($this->header['packageFlags'] ?? 0)) & self::EPIC_PKG_FILTER_EDITOR_ONLY) !== 0;
         $nameMinimum = $version >= self::VER_NAME_HASHES_SERIALIZED ? 8 : 4;
         $importMinimum = 28 + (($version >= self::VER_NON_OUTER_PACKAGE_IMPORT && !$filterEditorOnly) ? 8 : 0);
         $exportMinimum = 64;
@@ -711,7 +711,7 @@ final class UnrealPackageReader4
         }
         $r = $this->tableReader($offset);
         $version = (int)$this->header['version'];
-        $filterEditorOnly = (((int)$this->header['packageFlags']) & 0x80000000) !== 0;
+        $filterEditorOnly = (((int)$this->header['packageFlags']) & self::EPIC_PKG_FILTER_EDITOR_ONLY) !== 0;
         for ($i = 0; $i < $count; $i++) {
             $start = $r->tell();
             $classPackage = $this->readFName($r);
@@ -770,7 +770,7 @@ final class UnrealPackageReader4
             // Epic ObjectResource.cpp::operator<<(FObjectExport&) loads only
             // Save & RF_Load into E.ObjectFlags. The wire value is kept
             // separately for byte-level audit and diagnostics.
-            $objectFlags = $serializedObjectFlags & 0x02D4003B;
+            $objectFlags = $serializedObjectFlags & self::EPIC_RF_LOAD_MASK;
             $serialSizeWidthBits = $version >= self::VER_64BIT_EXPORTMAP_SERIALSIZES ? 64 : 32;
             if ($serialSizeWidthBits === 64) {
                 $serialSize = $r->i64();
@@ -911,7 +911,7 @@ final class UnrealPackageReader4
             $r = $this->tableReader($offset);
             $isPreDependencyFormat =
                 (int)($this->header['version'] ?? 0) < self::VER_ASSETREGISTRY_DEPENDENCYFLAGS
-                || (((int)($this->header['packageFlags'] ?? 0) & 0x80000000) !== 0);
+                || (((int)($this->header['packageFlags'] ?? 0) & self::EPIC_PKG_FILTER_EDITOR_ONLY) !== 0);
             $dependencyOffset = $isPreDependencyFormat ? -1 : $r->i64();
             $count = $r->i32();
             $this->assertArrayCountFits($r, $count, 12, 'UE4 AssetRegistry object');
@@ -1277,7 +1277,7 @@ final class UnrealPackageReader4
         // bit (0x1) while loading in WITH_EDITOR. Preserve original wire
         // flags in getHeader(), but pass the effective native flags to
         // FAssetData just as the compiled Editor's PackageReader does.
-        $flags = (int)($this->header['packageFlags'] ?? 0) & ~0x00000001;
+        $flags = (int)($this->header['packageFlags'] ?? 0) & ~self::EPIC_PKG_NEWLY_CREATED;
         $isMap = ($flags & 0x00020000) !== 0; // PKG_ContainsMap
         $chunks = array_values((array)($this->header['chunkIDs'] ?? []));
         $result = [];
