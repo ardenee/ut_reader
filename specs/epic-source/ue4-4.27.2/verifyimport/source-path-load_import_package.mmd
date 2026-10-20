@@ -1,0 +1,21 @@
+%% VerifyImportInner::LoadImportPackage
+flowchart TD
+    L01["L01: Enter the lambda invoked for top-level package imports and explicit Package...<br/>LinkerLoad.cpp:3072"]
+    L02["L02: Select ObjectName or explicit PackageName; apply instancing remap.<br/>LinkerLoad.cpp:3082"]
+    L03["L03: Locate an existing in-memory UPackage; load when absent or not fully loaded...<br/>LinkerLoad.cpp:3095"]
+    L04["L04: Load package with LOAD_IsVerifying and controlled inherited flags.<br/>LinkerLoad.cpp:3122"]
+    L05["L05: For cooked IoStore packages in editor, populate imported objects from the l...<br/>LinkerLoad.cpp:3124"]
+    L06["L06: Create missing UPackage shell, including native cases where disk loading re...<br/>LinkerLoad.cpp:3145"]
+    L07{"L07: Reject null/compiling packages and skip verification while gathering depend...<br/>LinkerLoad.cpp:3150"}
+    L10["L10: Return no package when null or PKG_Compiling; no source linker can be acqui...<br/>LinkerLoad.cpp:3152"]
+    L08["L08: Acquire an existing or new source linker according to package and cooked/ed...<br/>LinkerLoad.cpp:3176"]
+    L09["L09: Return UPackage to the calling VerifyImportInner branch.<br/>LinkerLoad.cpp:3186"]
+    L01 --> L02
+    L02 --> L03
+    L03 --> L04
+    L04 --> L05
+    L05 --> L06
+    L06 --> L07
+    L07 -->|non-compiling| L08
+    L07 -->|null or compiling| L10
+    L08 --> L09

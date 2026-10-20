@@ -1,0 +1,792 @@
+{
+  "engine": "Unreal Engine 4.27.2",
+  "revision": "d94b38ae3446da52224bedd2568c078f828b4039",
+  "source_root": "L:\\Source\\Engine\\UE4\\UE 4.27.2",
+  "source_file": "Engine\\Source\\Runtime\\CoreUObject\\Private\\UObject\\LinkerLoad.cpp",
+  "sha256": "39DB1F3E1A48D829E65991259EAEFB955680CCF6165D5E31B9DB862B02560569",
+  "scope": "VerifyImport / VerifyImportInner / LoadImportPackage only",
+  "complete_package_loading_path": false,
+  "source_dependencies_to_expand": [
+    "LoadPackageInternal",
+    "GetPackageLinker",
+    "StaticFindAllImportObjects",
+    "FLinker::GetExportClassName",
+    "FLinkerLoad::GetExportClassPackage",
+    "FPackageName::GetShortFName",
+    "FindImportFast",
+    "ImportIsInAnyExport",
+    "AnyExportIsInImport",
+    "AnyExportShareOuterWithImport",
+    "Preload(UObjectRedirector)"
+  ],
+  "groups": [
+    {
+      "key": "verify_import",
+      "title": "FLinkerLoad::VerifyImport",
+      "description": "Wrapper, retry through ObjectRedirector, payload/class checks, failure policy",
+      "ids": [
+        "W01",
+        "W02",
+        "W03",
+        "W04",
+        "W05",
+        "W06",
+        "W07",
+        "W15",
+        "W08",
+        "W09",
+        "W10",
+        "W11",
+        "W12",
+        "W13",
+        "W14"
+      ]
+    },
+    {
+      "key": "verify_import_inner",
+      "title": "FLinkerLoad::VerifyImportInner",
+      "description": "Preconditions, outer/linker selection, export matching, private checks, runtime fallback",
+      "ids": [
+        "I01",
+        "I02",
+        "I22",
+        "I03",
+        "I23",
+        "I04",
+        "I05",
+        "I06",
+        "I07",
+        "I08",
+        "I09",
+        "I10",
+        "I11",
+        "I12",
+        "I13",
+        "I14",
+        "I15",
+        "I16",
+        "I17",
+        "I18",
+        "I19",
+        "I21",
+        "I20"
+      ]
+    },
+    {
+      "key": "load_import_package",
+      "title": "VerifyImportInner::LoadImportPackage",
+      "description": "Nested lambda invoked for top-level Package and explicit PackageName imports",
+      "ids": [
+        "L01",
+        "L02",
+        "L03",
+        "L04",
+        "L05",
+        "L06",
+        "L07",
+        "L10",
+        "L08",
+        "L09"
+      ]
+    }
+  ],
+  "steps": [
+    {
+      "id": "W01",
+      "line": 2792,
+      "needle": "FLinkerLoad::EVerifyResult FLinkerLoad::VerifyImport",
+      "action": "Enter VerifyImport with an ImportMap index.",
+      "to": [
+        [
+          "W02",
+          ""
+        ]
+      ],
+      "lane": 0,
+      "decision": false
+    },
+    {
+      "id": "W02",
+      "line": 2803,
+      "needle": "VerifyImportInner(ImportIndex, WarningAppend);",
+      "action": "Run the first VerifyImportInner attempt; its boolean controls later failure response.",
+      "to": [
+        [
+          "W03",
+          ""
+        ]
+      ],
+      "lane": 0,
+      "decision": false
+    },
+    {
+      "id": "W03",
+      "line": 2804,
+      "needle": "FPlatformProperties::HasEditorOnlyData() == false",
+      "action": "Disable fatal-on-failure behavior on platforms without editor-only data.",
+      "to": [
+        [
+          "W04",
+          ""
+        ]
+      ],
+      "lane": 0,
+      "decision": false
+    },
+    {
+      "id": "W04",
+      "line": 2813,
+      "needle": "Import.SourceLinker && Import.SourceIndex == INDEX_NONE",
+      "action": "Check whether a source linker exists but the object was not found, with a valid non-redirector import outer.",
+      "to": [
+        [
+          "W05",
+          "yes"
+        ],
+        [
+          "W14",
+          "no"
+        ]
+      ],
+      "lane": 0,
+      "decision": true
+    },
+    {
+      "id": "W05",
+      "line": 2819,
+      "needle": "Import.ClassName = NAME_ObjectRedirector;",
+      "action": "Temporarily substitute ObjectRedirector/CoreUObject and retry VerifyImportInner.",
+      "to": [
+        [
+          "W06",
+          ""
+        ]
+      ],
+      "lane": 0,
+      "decision": false
+    },
+    {
+      "id": "W06",
+      "line": 2826,
+      "needle": "if (Import.SourceIndex == INDEX_NONE)",
+      "action": "Check whether a redirector export was found; failure sets VERIFY_Failed.",
+      "to": [
+        [
+          "W07",
+          "found"
+        ],
+        [
+          "W11",
+          "missing"
+        ]
+      ],
+      "lane": 0,
+      "decision": true
+    },
+    {
+      "id": "W07",
+      "line": 2838,
+      "needle": "CreateExport(Import.SourceIndex)",
+      "action": "Create and cast the redirector export; do not Preload until the cast has succeeded.",
+      "to": [
+        [
+          "W15",
+          ""
+        ]
+      ],
+      "lane": 0,
+      "decision": false
+    },
+    {
+      "id": "W15",
+      "line": 2840,
+      "needle": "if (!Redir)",
+      "action": "If CreateExport failed, set VERIFY_Failed; otherwise set RF_NeedLoad and Preload to read DestinationObject.",
+      "to": [
+        [
+          "W11",
+          "null"
+        ],
+        [
+          "W08",
+          "exists"
+        ]
+      ],
+      "lane": 1,
+      "decision": true
+    },
+    {
+      "id": "W08",
+      "line": 2856,
+      "needle": "if (DestObject == nullptr)",
+      "action": "Reject an absent redirector destination.",
+      "to": [
+        [
+          "W09",
+          "present"
+        ],
+        [
+          "W11",
+          "null"
+        ]
+      ],
+      "lane": 0,
+      "decision": true
+    },
+    {
+      "id": "W09",
+      "line": 2863,
+      "needle": "DestObject->HasAnyFlags(RF_ClassDefaultObject)",
+      "action": "Accept class-default objects or find original class in the destination's superclass chain.",
+      "to": [
+        [
+          "W10",
+          "valid"
+        ],
+        [
+          "W11",
+          "invalid"
+        ]
+      ],
+      "lane": 0,
+      "decision": true
+    },
+    {
+      "id": "W10",
+      "line": 2887,
+      "needle": "Result = VERIFY_Redirected;",
+      "action": "Bind XObject to destination and mark the import as redirected.",
+      "to": [
+        [
+          "W11",
+          ""
+        ]
+      ],
+      "lane": 0,
+      "decision": false
+    },
+    {
+      "id": "W11",
+      "line": 2901,
+      "needle": "Import.ClassName = OriginalImport.ClassName;",
+      "action": "Restore serialized ClassName and ClassPackage after the fallback.",
+      "to": [
+        [
+          "W12",
+          ""
+        ]
+      ],
+      "lane": 0,
+      "decision": false
+    },
+    {
+      "id": "W12",
+      "line": 2905,
+      "needle": "if (Result != VERIFY_Failed)",
+      "action": "If successful update SourceIndex/SourceLinker from XObject; otherwise restore original import.",
+      "to": [
+        [
+          "W14",
+          "success"
+        ],
+        [
+          "W13",
+          "failure"
+        ]
+      ],
+      "lane": 0,
+      "decision": true
+    },
+    {
+      "id": "W13",
+      "line": 2918,
+      "needle": "if (bCrashOnFail)",
+      "action": "Apply Epic's fatal or warning/error response according to the original VerifyImportInner policy.",
+      "to": [
+        [
+          "W14",
+          ""
+        ]
+      ],
+      "lane": 1,
+      "decision": false
+    },
+    {
+      "id": "W14",
+      "line": 2978,
+      "needle": "return Result;",
+      "action": "Return VERIFY_Success, VERIFY_Failed, or VERIFY_Redirected.",
+      "to": [],
+      "lane": 0,
+      "decision": false
+    },
+    {
+      "id": "I01",
+      "line": 3068,
+      "needle": "bool FLinkerLoad::VerifyImportInner",
+      "action": "Enter the private VerifyImportInner implementation.",
+      "to": [
+        [
+          "I02",
+          ""
+        ]
+      ],
+      "lane": 0,
+      "decision": false
+    },
+    {
+      "id": "I02",
+      "line": 3203,
+      "needle": "Import.SourceLinker && Import.SourceIndex != INDEX_NONE",
+      "action": "Return early for already resolved imports or NAME_None identities.",
+      "to": [
+        [
+          "I22",
+          "already verified / None"
+        ],
+        [
+          "I03",
+          "continue"
+        ]
+      ],
+      "lane": 0,
+      "decision": true
+    },
+    {
+      "id": "I22",
+      "line": 3209,
+      "needle": "return false;",
+      "action": "Early return: already verified or not relevant in this context.",
+      "to": [],
+      "lane": 1,
+      "decision": false
+    },
+    {
+      "id": "I03",
+      "line": 3221,
+      "needle": "Import.OuterIndex.IsNull() && Import.ClassName!=NAME_Package",
+      "action": "Reject inappropriate null outer on a non-Package import.",
+      "to": [
+        [
+          "I23",
+          "inappropriate outer"
+        ],
+        [
+          "I04",
+          "valid outer"
+        ]
+      ],
+      "lane": 0,
+      "decision": true
+    },
+    {
+      "id": "I23",
+      "line": 3225,
+      "needle": "return false;",
+      "action": "Return after rejecting null outer on a non-Package import.",
+      "to": [],
+      "lane": 1,
+      "decision": false
+    },
+    {
+      "id": "I04",
+      "line": 3228,
+      "needle": "else if (Import.OuterIndex.IsNull())",
+      "action": "For top-level Package import, invoke LoadImportPackage; otherwise use non-null-outer path.",
+      "to": [
+        [
+          "L01",
+          "package"
+        ],
+        [
+          "I05",
+          "other"
+        ]
+      ],
+      "lane": 0,
+      "decision": true
+    },
+    {
+      "id": "I05",
+      "line": 3241,
+      "needle": "if (Import.HasPackageName())",
+      "action": "For a non-null outer with explicit PackageName, load that assigned package.",
+      "to": [
+        [
+          "I06",
+          ""
+        ]
+      ],
+      "lane": 0,
+      "decision": false
+    },
+    {
+      "id": "I06",
+      "line": 3253,
+      "needle": "if (Import.OuterIndex.IsImport())",
+      "action": "If outer is another import, recursively VerifyImport it.",
+      "to": [
+        [
+          "I07",
+          "import outer"
+        ],
+        [
+          "I08",
+          "export outer"
+        ]
+      ],
+      "lane": 0,
+      "decision": true
+    },
+    {
+      "id": "I07",
+      "line": 3281,
+      "needle": "if (!Import.SourceLinker)",
+      "action": "Use outer import's source linker only when the current import has none.",
+      "to": [
+        [
+          "I09",
+          ""
+        ]
+      ],
+      "lane": 0,
+      "decision": false
+    },
+    {
+      "id": "I08",
+      "line": 3288,
+      "needle": "check(Import.OuterIndex.IsExport())",
+      "action": "Export outer requires an explicit package name and package-linker acquisition.",
+      "to": [
+        [
+          "I09",
+          ""
+        ]
+      ],
+      "lane": 1,
+      "decision": false
+    },
+    {
+      "id": "I09",
+      "line": 3301,
+      "needle": "if( Import.SourceLinker )",
+      "action": "When a source linker exists, search its hashed ExportMap; otherwise continue to runtime lookup.",
+      "to": [
+        [
+          "I10",
+          "linker"
+        ],
+        [
+          "I16",
+          "none"
+        ]
+      ],
+      "lane": 0,
+      "decision": true
+    },
+    {
+      "id": "I10",
+      "line": 3310,
+      "needle": "bMatchesWithoutShortening = false",
+      "action": "First find whether any full class-package match exists; only otherwise allow short package names.",
+      "to": [
+        [
+          "I11",
+          ""
+        ]
+      ],
+      "lane": 0,
+      "decision": false
+    },
+    {
+      "id": "I11",
+      "line": 3340,
+      "needle": "for( int32 j=Import.SourceLinker->ExportHash",
+      "action": "Search matching export names/class identities through Epic's ExportHash chains.",
+      "to": [
+        [
+          "I12",
+          ""
+        ]
+      ],
+      "lane": 0,
+      "decision": false
+    },
+    {
+      "id": "I12",
+      "line": 3359,
+      "needle": "if( Import.OuterIndex.IsImport() )",
+      "action": "Validate export outer against the resolved import outer, including cross-linker import identity.",
+      "to": [
+        [
+          "I13",
+          "candidate valid"
+        ],
+        [
+          "I16",
+          "no candidate"
+        ]
+      ],
+      "lane": 0,
+      "decision": true
+    },
+    {
+      "id": "I13",
+      "line": 3403,
+      "needle": "auto IsPrivateImportAllowed =",
+      "action": "Apply editor-only private-import containment predicates.",
+      "to": [
+        [
+          "I14",
+          ""
+        ]
+      ],
+      "lane": 0,
+      "decision": false
+    },
+    {
+      "id": "I14",
+      "line": 3412,
+      "needle": "SourceExport.ObjectFlags & RF_Public",
+      "action": "For private exports apply SafeReplace rules and references from consumer import/export maps.",
+      "to": [
+        [
+          "I15",
+          "accepted"
+        ],
+        [
+          "I16",
+          "not bound"
+        ]
+      ],
+      "lane": 0,
+      "decision": true
+    },
+    {
+      "id": "I15",
+      "line": 3468,
+      "needle": "Import.SourceIndex = j;",
+      "action": "Store the matching export index in the source linker.",
+      "to": [
+        [
+          "I16",
+          ""
+        ]
+      ],
+      "lane": 0,
+      "decision": false
+    },
+    {
+      "id": "I16",
+      "line": 3477,
+      "needle": "if (!Pkg && TmpPkg &&",
+      "action": "Handle in-memory-only/instanced package cases before fallback object search.",
+      "to": [
+        [
+          "I17",
+          ""
+        ]
+      ],
+      "lane": 0,
+      "decision": false
+    },
+    {
+      "id": "I17",
+      "line": 3500,
+      "needle": "LOAD_FindIfFail",
+      "action": "When requested, allow the ANY_PACKAGE fallback search.",
+      "to": [
+        [
+          "I18",
+          ""
+        ]
+      ],
+      "lane": 0,
+      "decision": false
+    },
+    {
+      "id": "I18",
+      "line": 3534,
+      "needle": "FindImportFast(FindClass",
+      "action": "Try native/transient/class-default-object lookup under Epic's conditions.",
+      "to": [
+        [
+          "I19",
+          ""
+        ]
+      ],
+      "lane": 0,
+      "decision": false
+    },
+    {
+      "id": "I19",
+      "line": 3570,
+      "needle": "if (!Import.XObject && !SafeReplace)",
+      "action": "Return true only when the wrapper must treat missing import/redirector as fatal.",
+      "to": [
+        [
+          "I21",
+          "fatal policy"
+        ],
+        [
+          "I20",
+          "otherwise"
+        ]
+      ],
+      "lane": 0,
+      "decision": false
+    },
+    {
+      "id": "I21",
+      "line": 3572,
+      "needle": "return true;",
+      "action": "Ask wrapper to treat unredirected import failure as fatal.",
+      "to": [],
+      "lane": 1,
+      "decision": false
+    },
+    {
+      "id": "I20",
+      "line": 3581,
+      "needle": "return false;",
+      "action": "Otherwise return false from VerifyImportInner.",
+      "to": [],
+      "lane": 0,
+      "decision": false
+    },
+    {
+      "id": "L01",
+      "line": 3072,
+      "needle": "auto LoadImportPackage =",
+      "action": "Enter the lambda invoked for top-level package imports and explicit PackageName imports.",
+      "to": [
+        [
+          "L02",
+          ""
+        ]
+      ],
+      "lane": 0,
+      "decision": false
+    },
+    {
+      "id": "L02",
+      "line": 3082,
+      "needle": "Import.GetPackageName()",
+      "action": "Select ObjectName or explicit PackageName; apply instancing remap.",
+      "to": [
+        [
+          "L03",
+          ""
+        ]
+      ],
+      "lane": 0,
+      "decision": false
+    },
+    {
+      "id": "L03",
+      "line": 3095,
+      "needle": "FindObjectFast<UPackage>",
+      "action": "Locate an existing in-memory UPackage; load when absent or not fully loaded.",
+      "to": [
+        [
+          "L04",
+          ""
+        ]
+      ],
+      "lane": 0,
+      "decision": false
+    },
+    {
+      "id": "L04",
+      "line": 3122,
+      "needle": "LoadPackageInternal(Package",
+      "action": "Load package with LOAD_IsVerifying and controlled inherited flags.",
+      "to": [
+        [
+          "L05",
+          ""
+        ]
+      ],
+      "lane": 0,
+      "decision": false
+    },
+    {
+      "id": "L05",
+      "line": 3124,
+      "needle": "#if WITH_IOSTORE_IN_EDITOR",
+      "action": "For cooked IoStore packages in editor, populate imported objects from the loaded package.",
+      "to": [
+        [
+          "L06",
+          ""
+        ]
+      ],
+      "lane": 0,
+      "decision": false
+    },
+    {
+      "id": "L06",
+      "line": 3145,
+      "needle": "Package = CreatePackage(*PackageToLoad.ToString());",
+      "action": "Create missing UPackage shell, including native cases where disk loading returned null.",
+      "to": [
+        [
+          "L07",
+          ""
+        ]
+      ],
+      "lane": 0,
+      "decision": false
+    },
+    {
+      "id": "L07",
+      "line": 3150,
+      "needle": "Package->HasAnyPackageFlags(PKG_Compiling)",
+      "action": "Reject null/compiling packages and skip verification while gathering dependencies.",
+      "to": [
+        [
+          "L08",
+          "non-compiling"
+        ],
+        [
+          "L10",
+          "null or compiling"
+        ]
+      ],
+      "lane": 0,
+      "decision": true
+    },
+    {
+      "id": "L10",
+      "line": 3152,
+      "needle": "return nullptr;",
+      "action": "Return no package when null or PKG_Compiling; no source linker can be acquired in this branch.",
+      "to": [],
+      "lane": 1,
+      "decision": false
+    },
+    {
+      "id": "L08",
+      "line": 3176,
+      "needle": "GetPackageLinker(Package",
+      "action": "Acquire an existing or new source linker according to package and cooked/editor state.",
+      "to": [
+        [
+          "L09",
+          ""
+        ]
+      ],
+      "lane": 0,
+      "decision": false
+    },
+    {
+      "id": "L09",
+      "line": 3186,
+      "needle": "return Package;",
+      "action": "Return UPackage to the calling VerifyImportInner branch.",
+      "to": [],
+      "lane": 0,
+      "decision": false
+    }
+  ]
+}

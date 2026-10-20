@@ -1,0 +1,342 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mxfile host="app.diagrams.net" type="device" version="24.7.17">
+  <diagram id="verify_import" name="VerifyImport">
+    <mxGraphModel dx="1800" dy="1100" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="2600" math="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="W01" value="W01 | Enter VerifyImport with an ImportMap index.&lt;br&gt;&lt;font color='#666666'&gt;LinkerLoad.cpp:2792&lt;/font&gt;" style="shape=rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#f5f8fc;strokeColor=#516983;fontSize=13;spacing=9;" vertex="1" parent="1">
+          <mxGeometry x="120" y="100" width="365" height="84" as="geometry" />
+        </mxCell>
+        <mxCell id="W02" value="W02 | Run the first VerifyImportInner attempt; its boolean controls later failure response.&lt;br&gt;&lt;font color='#666666'&gt;LinkerLoad.cpp:2803&lt;/font&gt;" style="shape=rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#f5f8fc;strokeColor=#516983;fontSize=13;spacing=9;" vertex="1" parent="1">
+          <mxGeometry x="120" y="215" width="365" height="84" as="geometry" />
+        </mxCell>
+        <mxCell id="W03" value="W03 | Disable fatal-on-failure behavior on platforms without editor-only data.&lt;br&gt;&lt;font color='#666666'&gt;LinkerLoad.cpp:2804&lt;/font&gt;" style="shape=rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#f5f8fc;strokeColor=#516983;fontSize=13;spacing=9;" vertex="1" parent="1">
+          <mxGeometry x="120" y="330" width="365" height="84" as="geometry" />
+        </mxCell>
+        <mxCell id="W04" value="W04 | Check whether a source linker exists but the object was not found, with a valid non-r...&lt;br&gt;&lt;font color='#666666'&gt;LinkerLoad.cpp:2813&lt;/font&gt;" style="shape=rhombus;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#f5f8fc;strokeColor=#516983;fontSize=13;spacing=9;fillColor=#fff9e9;strokeColor=#a17b26;" vertex="1" parent="1">
+          <mxGeometry x="120" y="445" width="365" height="84" as="geometry" />
+        </mxCell>
+        <mxCell id="W05" value="W05 | Temporarily substitute ObjectRedirector/CoreUObject and retry VerifyImportInner.&lt;br&gt;&lt;font color='#666666'&gt;LinkerLoad.cpp:2819&lt;/font&gt;" style="shape=rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#f5f8fc;strokeColor=#516983;fontSize=13;spacing=9;" vertex="1" parent="1">
+          <mxGeometry x="120" y="560" width="365" height="84" as="geometry" />
+        </mxCell>
+        <mxCell id="W06" value="W06 | Check whether a redirector export was found; failure sets VERIFY_Failed.&lt;br&gt;&lt;font color='#666666'&gt;LinkerLoad.cpp:2826&lt;/font&gt;" style="shape=rhombus;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#f5f8fc;strokeColor=#516983;fontSize=13;spacing=9;fillColor=#fff9e9;strokeColor=#a17b26;" vertex="1" parent="1">
+          <mxGeometry x="120" y="675" width="365" height="84" as="geometry" />
+        </mxCell>
+        <mxCell id="W07" value="W07 | Create and cast the redirector export; do not Preload until the cast has succeeded.&lt;br&gt;&lt;font color='#666666'&gt;LinkerLoad.cpp:2838&lt;/font&gt;" style="shape=rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#f5f8fc;strokeColor=#516983;fontSize=13;spacing=9;" vertex="1" parent="1">
+          <mxGeometry x="120" y="790" width="365" height="84" as="geometry" />
+        </mxCell>
+        <mxCell id="W15" value="W15 | If CreateExport failed, set VERIFY_Failed; otherwise set RF_NeedLoad and Preload to r...&lt;br&gt;&lt;font color='#666666'&gt;LinkerLoad.cpp:2840&lt;/font&gt;" style="shape=rhombus;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#f5f8fc;strokeColor=#516983;fontSize=13;spacing=9;fillColor=#fff9e9;strokeColor=#a17b26;" vertex="1" parent="1">
+          <mxGeometry x="575" y="905" width="365" height="84" as="geometry" />
+        </mxCell>
+        <mxCell id="W08" value="W08 | Reject an absent redirector destination.&lt;br&gt;&lt;font color='#666666'&gt;LinkerLoad.cpp:2856&lt;/font&gt;" style="shape=rhombus;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#f5f8fc;strokeColor=#516983;fontSize=13;spacing=9;fillColor=#fff9e9;strokeColor=#a17b26;" vertex="1" parent="1">
+          <mxGeometry x="120" y="1020" width="365" height="84" as="geometry" />
+        </mxCell>
+        <mxCell id="W09" value="W09 | Accept class-default objects or find original class in the destination's superclass c...&lt;br&gt;&lt;font color='#666666'&gt;LinkerLoad.cpp:2863&lt;/font&gt;" style="shape=rhombus;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#f5f8fc;strokeColor=#516983;fontSize=13;spacing=9;fillColor=#fff9e9;strokeColor=#a17b26;" vertex="1" parent="1">
+          <mxGeometry x="120" y="1135" width="365" height="84" as="geometry" />
+        </mxCell>
+        <mxCell id="W10" value="W10 | Bind XObject to destination and mark the import as redirected.&lt;br&gt;&lt;font color='#666666'&gt;LinkerLoad.cpp:2887&lt;/font&gt;" style="shape=rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#f5f8fc;strokeColor=#516983;fontSize=13;spacing=9;" vertex="1" parent="1">
+          <mxGeometry x="120" y="1250" width="365" height="84" as="geometry" />
+        </mxCell>
+        <mxCell id="W11" value="W11 | Restore serialized ClassName and ClassPackage after the fallback.&lt;br&gt;&lt;font color='#666666'&gt;LinkerLoad.cpp:2901&lt;/font&gt;" style="shape=rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#f5f8fc;strokeColor=#516983;fontSize=13;spacing=9;" vertex="1" parent="1">
+          <mxGeometry x="120" y="1365" width="365" height="84" as="geometry" />
+        </mxCell>
+        <mxCell id="W12" value="W12 | If successful update SourceIndex/SourceLinker from XObject; otherwise restore origina...&lt;br&gt;&lt;font color='#666666'&gt;LinkerLoad.cpp:2905&lt;/font&gt;" style="shape=rhombus;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#f5f8fc;strokeColor=#516983;fontSize=13;spacing=9;fillColor=#fff9e9;strokeColor=#a17b26;" vertex="1" parent="1">
+          <mxGeometry x="120" y="1480" width="365" height="84" as="geometry" />
+        </mxCell>
+        <mxCell id="W13" value="W13 | Apply Epic's fatal or warning/error response according to the original VerifyImportIn...&lt;br&gt;&lt;font color='#666666'&gt;LinkerLoad.cpp:2918&lt;/font&gt;" style="shape=rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#f5f8fc;strokeColor=#516983;fontSize=13;spacing=9;" vertex="1" parent="1">
+          <mxGeometry x="575" y="1595" width="365" height="84" as="geometry" />
+        </mxCell>
+        <mxCell id="W14" value="W14 | Return VERIFY_Success, VERIFY_Failed, or VERIFY_Redirected.&lt;br&gt;&lt;font color='#666666'&gt;LinkerLoad.cpp:2978&lt;/font&gt;" style="shape=rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#f5f8fc;strokeColor=#516983;fontSize=13;spacing=9;" vertex="1" parent="1">
+          <mxGeometry x="120" y="1710" width="365" height="84" as="geometry" />
+        </mxCell>
+        <mxCell id="verify_import_edge_1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#637184;fontSize=11;" edge="1" parent="1" source="W01" target="W02">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="verify_import_edge_2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#637184;fontSize=11;" edge="1" parent="1" source="W02" target="W03">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="verify_import_edge_3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#637184;fontSize=11;" edge="1" parent="1" source="W03" target="W04">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="verify_import_edge_4" value="yes" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#637184;fontSize=11;" edge="1" parent="1" source="W04" target="W05">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="verify_import_edge_5" value="no" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#637184;fontSize=11;" edge="1" parent="1" source="W04" target="W14">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="verify_import_edge_6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#637184;fontSize=11;" edge="1" parent="1" source="W05" target="W06">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="verify_import_edge_7" value="found" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#637184;fontSize=11;" edge="1" parent="1" source="W06" target="W07">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="verify_import_edge_8" value="missing" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#637184;fontSize=11;" edge="1" parent="1" source="W06" target="W11">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="verify_import_edge_9" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#637184;fontSize=11;" edge="1" parent="1" source="W07" target="W15">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="verify_import_edge_10" value="null" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#637184;fontSize=11;" edge="1" parent="1" source="W15" target="W11">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="verify_import_edge_11" value="exists" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#637184;fontSize=11;" edge="1" parent="1" source="W15" target="W08">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="verify_import_edge_12" value="present" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#637184;fontSize=11;" edge="1" parent="1" source="W08" target="W09">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="verify_import_edge_13" value="null" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#637184;fontSize=11;" edge="1" parent="1" source="W08" target="W11">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="verify_import_edge_14" value="valid" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#637184;fontSize=11;" edge="1" parent="1" source="W09" target="W10">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="verify_import_edge_15" value="invalid" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#637184;fontSize=11;" edge="1" parent="1" source="W09" target="W11">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="verify_import_edge_16" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#637184;fontSize=11;" edge="1" parent="1" source="W10" target="W11">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="verify_import_edge_17" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#637184;fontSize=11;" edge="1" parent="1" source="W11" target="W12">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="verify_import_edge_18" value="success" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#637184;fontSize=11;" edge="1" parent="1" source="W12" target="W14">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="verify_import_edge_19" value="failure" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#637184;fontSize=11;" edge="1" parent="1" source="W12" target="W13">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="verify_import_edge_20" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#637184;fontSize=11;" edge="1" parent="1" source="W13" target="W14">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="verify_import_inner" name="VerifyImportInner">
+    <mxGraphModel dx="1800" dy="1100" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="3032" math="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="I01" value="I01 | Enter the private VerifyImportInner implementation.&lt;br&gt;&lt;font color='#666666'&gt;LinkerLoad.cpp:3068&lt;/font&gt;" style="shape=rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#f5f8fc;strokeColor=#516983;fontSize=13;spacing=9;" vertex="1" parent="1">
+          <mxGeometry x="120" y="100" width="365" height="84" as="geometry" />
+        </mxCell>
+        <mxCell id="I02" value="I02 | Return early for already resolved imports or NAME_None identities.&lt;br&gt;&lt;font color='#666666'&gt;LinkerLoad.cpp:3203&lt;/font&gt;" style="shape=rhombus;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#f5f8fc;strokeColor=#516983;fontSize=13;spacing=9;fillColor=#fff9e9;strokeColor=#a17b26;" vertex="1" parent="1">
+          <mxGeometry x="120" y="215" width="365" height="84" as="geometry" />
+        </mxCell>
+        <mxCell id="I22" value="I22 | Early return: already verified or not relevant in this context.&lt;br&gt;&lt;font color='#666666'&gt;LinkerLoad.cpp:3209&lt;/font&gt;" style="shape=rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#f5f8fc;strokeColor=#516983;fontSize=13;spacing=9;" vertex="1" parent="1">
+          <mxGeometry x="575" y="330" width="365" height="84" as="geometry" />
+        </mxCell>
+        <mxCell id="I03" value="I03 | Reject inappropriate null outer on a non-Package import.&lt;br&gt;&lt;font color='#666666'&gt;LinkerLoad.cpp:3221&lt;/font&gt;" style="shape=rhombus;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#f5f8fc;strokeColor=#516983;fontSize=13;spacing=9;fillColor=#fff9e9;strokeColor=#a17b26;" vertex="1" parent="1">
+          <mxGeometry x="120" y="445" width="365" height="84" as="geometry" />
+        </mxCell>
+        <mxCell id="I23" value="I23 | Return after rejecting null outer on a non-Package import.&lt;br&gt;&lt;font color='#666666'&gt;LinkerLoad.cpp:3225&lt;/font&gt;" style="shape=rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#f5f8fc;strokeColor=#516983;fontSize=13;spacing=9;" vertex="1" parent="1">
+          <mxGeometry x="575" y="560" width="365" height="84" as="geometry" />
+        </mxCell>
+        <mxCell id="I04" value="I04 | For top-level Package import, invoke LoadImportPackage; otherwise use non-null-outer ...&lt;br&gt;&lt;font color='#666666'&gt;LinkerLoad.cpp:3228&lt;/font&gt;" style="shape=rhombus;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#f5f8fc;strokeColor=#516983;fontSize=13;spacing=9;fillColor=#fff9e9;strokeColor=#a17b26;" vertex="1" parent="1">
+          <mxGeometry x="120" y="675" width="365" height="84" as="geometry" />
+        </mxCell>
+        <mxCell id="I05" value="I05 | For a non-null outer with explicit PackageName, load that assigned package.&lt;br&gt;&lt;font color='#666666'&gt;LinkerLoad.cpp:3241&lt;/font&gt;" style="shape=rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#f5f8fc;strokeColor=#516983;fontSize=13;spacing=9;" vertex="1" parent="1">
+          <mxGeometry x="120" y="790" width="365" height="84" as="geometry" />
+        </mxCell>
+        <mxCell id="I06" value="I06 | If outer is another import, recursively VerifyImport it.&lt;br&gt;&lt;font color='#666666'&gt;LinkerLoad.cpp:3253&lt;/font&gt;" style="shape=rhombus;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#f5f8fc;strokeColor=#516983;fontSize=13;spacing=9;fillColor=#fff9e9;strokeColor=#a17b26;" vertex="1" parent="1">
+          <mxGeometry x="120" y="905" width="365" height="84" as="geometry" />
+        </mxCell>
+        <mxCell id="I07" value="I07 | Use outer import's source linker only when the current import has none.&lt;br&gt;&lt;font color='#666666'&gt;LinkerLoad.cpp:3281&lt;/font&gt;" style="shape=rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#f5f8fc;strokeColor=#516983;fontSize=13;spacing=9;" vertex="1" parent="1">
+          <mxGeometry x="120" y="1020" width="365" height="84" as="geometry" />
+        </mxCell>
+        <mxCell id="I08" value="I08 | Export outer requires an explicit package name and package-linker acquisition.&lt;br&gt;&lt;font color='#666666'&gt;LinkerLoad.cpp:3288&lt;/font&gt;" style="shape=rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#f5f8fc;strokeColor=#516983;fontSize=13;spacing=9;" vertex="1" parent="1">
+          <mxGeometry x="575" y="1135" width="365" height="84" as="geometry" />
+        </mxCell>
+        <mxCell id="I09" value="I09 | When a source linker exists, search its hashed ExportMap; otherwise continue to runti...&lt;br&gt;&lt;font color='#666666'&gt;LinkerLoad.cpp:3301&lt;/font&gt;" style="shape=rhombus;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#f5f8fc;strokeColor=#516983;fontSize=13;spacing=9;fillColor=#fff9e9;strokeColor=#a17b26;" vertex="1" parent="1">
+          <mxGeometry x="120" y="1250" width="365" height="84" as="geometry" />
+        </mxCell>
+        <mxCell id="I10" value="I10 | First find whether any full class-package match exists; only otherwise allow short pa...&lt;br&gt;&lt;font color='#666666'&gt;LinkerLoad.cpp:3310&lt;/font&gt;" style="shape=rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#f5f8fc;strokeColor=#516983;fontSize=13;spacing=9;" vertex="1" parent="1">
+          <mxGeometry x="120" y="1365" width="365" height="84" as="geometry" />
+        </mxCell>
+        <mxCell id="I11" value="I11 | Search matching export names/class identities through Epic's ExportHash chains.&lt;br&gt;&lt;font color='#666666'&gt;LinkerLoad.cpp:3340&lt;/font&gt;" style="shape=rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#f5f8fc;strokeColor=#516983;fontSize=13;spacing=9;" vertex="1" parent="1">
+          <mxGeometry x="120" y="1480" width="365" height="84" as="geometry" />
+        </mxCell>
+        <mxCell id="I12" value="I12 | Validate export outer against the resolved import outer, including cross-linker impor...&lt;br&gt;&lt;font color='#666666'&gt;LinkerLoad.cpp:3359&lt;/font&gt;" style="shape=rhombus;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#f5f8fc;strokeColor=#516983;fontSize=13;spacing=9;fillColor=#fff9e9;strokeColor=#a17b26;" vertex="1" parent="1">
+          <mxGeometry x="120" y="1595" width="365" height="84" as="geometry" />
+        </mxCell>
+        <mxCell id="I13" value="I13 | Apply editor-only private-import containment predicates.&lt;br&gt;&lt;font color='#666666'&gt;LinkerLoad.cpp:3403&lt;/font&gt;" style="shape=rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#f5f8fc;strokeColor=#516983;fontSize=13;spacing=9;" vertex="1" parent="1">
+          <mxGeometry x="120" y="1710" width="365" height="84" as="geometry" />
+        </mxCell>
+        <mxCell id="I14" value="I14 | For private exports apply SafeReplace rules and references from consumer import/expor...&lt;br&gt;&lt;font color='#666666'&gt;LinkerLoad.cpp:3412&lt;/font&gt;" style="shape=rhombus;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#f5f8fc;strokeColor=#516983;fontSize=13;spacing=9;fillColor=#fff9e9;strokeColor=#a17b26;" vertex="1" parent="1">
+          <mxGeometry x="120" y="1825" width="365" height="84" as="geometry" />
+        </mxCell>
+        <mxCell id="I15" value="I15 | Store the matching export index in the source linker.&lt;br&gt;&lt;font color='#666666'&gt;LinkerLoad.cpp:3468&lt;/font&gt;" style="shape=rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#f5f8fc;strokeColor=#516983;fontSize=13;spacing=9;" vertex="1" parent="1">
+          <mxGeometry x="120" y="1940" width="365" height="84" as="geometry" />
+        </mxCell>
+        <mxCell id="I16" value="I16 | Handle in-memory-only/instanced package cases before fallback object search.&lt;br&gt;&lt;font color='#666666'&gt;LinkerLoad.cpp:3477&lt;/font&gt;" style="shape=rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#f5f8fc;strokeColor=#516983;fontSize=13;spacing=9;" vertex="1" parent="1">
+          <mxGeometry x="120" y="2055" width="365" height="84" as="geometry" />
+        </mxCell>
+        <mxCell id="I17" value="I17 | When requested, allow the ANY_PACKAGE fallback search.&lt;br&gt;&lt;font color='#666666'&gt;LinkerLoad.cpp:3500&lt;/font&gt;" style="shape=rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#f5f8fc;strokeColor=#516983;fontSize=13;spacing=9;" vertex="1" parent="1">
+          <mxGeometry x="120" y="2170" width="365" height="84" as="geometry" />
+        </mxCell>
+        <mxCell id="I18" value="I18 | Try native/transient/class-default-object lookup under Epic's conditions.&lt;br&gt;&lt;font color='#666666'&gt;LinkerLoad.cpp:3534&lt;/font&gt;" style="shape=rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#f5f8fc;strokeColor=#516983;fontSize=13;spacing=9;" vertex="1" parent="1">
+          <mxGeometry x="120" y="2285" width="365" height="84" as="geometry" />
+        </mxCell>
+        <mxCell id="I19" value="I19 | Return true only when the wrapper must treat missing import/redirector as fatal.&lt;br&gt;&lt;font color='#666666'&gt;LinkerLoad.cpp:3570&lt;/font&gt;" style="shape=rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#f5f8fc;strokeColor=#516983;fontSize=13;spacing=9;" vertex="1" parent="1">
+          <mxGeometry x="120" y="2400" width="365" height="84" as="geometry" />
+        </mxCell>
+        <mxCell id="I21" value="I21 | Ask wrapper to treat unredirected import failure as fatal.&lt;br&gt;&lt;font color='#666666'&gt;LinkerLoad.cpp:3572&lt;/font&gt;" style="shape=rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#f5f8fc;strokeColor=#516983;fontSize=13;spacing=9;" vertex="1" parent="1">
+          <mxGeometry x="575" y="2515" width="365" height="84" as="geometry" />
+        </mxCell>
+        <mxCell id="I20" value="I20 | Otherwise return false from VerifyImportInner.&lt;br&gt;&lt;font color='#666666'&gt;LinkerLoad.cpp:3581&lt;/font&gt;" style="shape=rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#f5f8fc;strokeColor=#516983;fontSize=13;spacing=9;" vertex="1" parent="1">
+          <mxGeometry x="120" y="2630" width="365" height="84" as="geometry" />
+        </mxCell>
+        <mxCell id="offpage_L01" value="Continue in other diagram tab: L01" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#eef1f5;strokeColor=#697d91;dashed=1;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="660" y="235" width="370" height="74" as="geometry" />
+        </mxCell>
+        <mxCell id="verify_import_inner_edge_1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#637184;fontSize=11;" edge="1" parent="1" source="I01" target="I02">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="verify_import_inner_edge_2" value="already verified / None" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#637184;fontSize=11;" edge="1" parent="1" source="I02" target="I22">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="verify_import_inner_edge_3" value="continue" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#637184;fontSize=11;" edge="1" parent="1" source="I02" target="I03">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="verify_import_inner_edge_4" value="inappropriate outer" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#637184;fontSize=11;" edge="1" parent="1" source="I03" target="I23">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="verify_import_inner_edge_5" value="valid outer" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#637184;fontSize=11;" edge="1" parent="1" source="I03" target="I04">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="verify_import_inner_edge_6" value="package" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#637184;fontSize=11;" edge="1" parent="1" source="I04" target="offpage_L01">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="verify_import_inner_edge_7" value="other" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#637184;fontSize=11;" edge="1" parent="1" source="I04" target="I05">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="verify_import_inner_edge_8" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#637184;fontSize=11;" edge="1" parent="1" source="I05" target="I06">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="verify_import_inner_edge_9" value="import outer" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#637184;fontSize=11;" edge="1" parent="1" source="I06" target="I07">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="verify_import_inner_edge_10" value="export outer" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#637184;fontSize=11;" edge="1" parent="1" source="I06" target="I08">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="verify_import_inner_edge_11" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#637184;fontSize=11;" edge="1" parent="1" source="I07" target="I09">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="verify_import_inner_edge_12" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#637184;fontSize=11;" edge="1" parent="1" source="I08" target="I09">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="verify_import_inner_edge_13" value="linker" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#637184;fontSize=11;" edge="1" parent="1" source="I09" target="I10">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="verify_import_inner_edge_14" value="none" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#637184;fontSize=11;" edge="1" parent="1" source="I09" target="I16">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="verify_import_inner_edge_15" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#637184;fontSize=11;" edge="1" parent="1" source="I10" target="I11">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="verify_import_inner_edge_16" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#637184;fontSize=11;" edge="1" parent="1" source="I11" target="I12">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="verify_import_inner_edge_17" value="candidate valid" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#637184;fontSize=11;" edge="1" parent="1" source="I12" target="I13">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="verify_import_inner_edge_18" value="no candidate" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#637184;fontSize=11;" edge="1" parent="1" source="I12" target="I16">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="verify_import_inner_edge_19" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#637184;fontSize=11;" edge="1" parent="1" source="I13" target="I14">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="verify_import_inner_edge_20" value="accepted" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#637184;fontSize=11;" edge="1" parent="1" source="I14" target="I15">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="verify_import_inner_edge_21" value="not bound" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#637184;fontSize=11;" edge="1" parent="1" source="I14" target="I16">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="verify_import_inner_edge_22" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#637184;fontSize=11;" edge="1" parent="1" source="I15" target="I16">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="verify_import_inner_edge_23" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#637184;fontSize=11;" edge="1" parent="1" source="I16" target="I17">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="verify_import_inner_edge_24" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#637184;fontSize=11;" edge="1" parent="1" source="I17" target="I18">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="verify_import_inner_edge_25" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#637184;fontSize=11;" edge="1" parent="1" source="I18" target="I19">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="verify_import_inner_edge_26" value="fatal policy" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#637184;fontSize=11;" edge="1" parent="1" source="I19" target="I21">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="verify_import_inner_edge_27" value="otherwise" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#637184;fontSize=11;" edge="1" parent="1" source="I19" target="I20">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="load_import_package" name="LoadImportPackage">
+    <mxGraphModel dx="1800" dy="1100" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="2600" math="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="L01" value="L01 | Enter the lambda invoked for top-level package imports and explicit PackageName imports.&lt;br&gt;&lt;font color='#666666'&gt;LinkerLoad.cpp:3072&lt;/font&gt;" style="shape=rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#f5f8fc;strokeColor=#516983;fontSize=13;spacing=9;" vertex="1" parent="1">
+          <mxGeometry x="120" y="100" width="365" height="84" as="geometry" />
+        </mxCell>
+        <mxCell id="L02" value="L02 | Select ObjectName or explicit PackageName; apply instancing remap.&lt;br&gt;&lt;font color='#666666'&gt;LinkerLoad.cpp:3082&lt;/font&gt;" style="shape=rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#f5f8fc;strokeColor=#516983;fontSize=13;spacing=9;" vertex="1" parent="1">
+          <mxGeometry x="120" y="215" width="365" height="84" as="geometry" />
+        </mxCell>
+        <mxCell id="L03" value="L03 | Locate an existing in-memory UPackage; load when absent or not fully loaded.&lt;br&gt;&lt;font color='#666666'&gt;LinkerLoad.cpp:3095&lt;/font&gt;" style="shape=rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#f5f8fc;strokeColor=#516983;fontSize=13;spacing=9;" vertex="1" parent="1">
+          <mxGeometry x="120" y="330" width="365" height="84" as="geometry" />
+        </mxCell>
+        <mxCell id="L04" value="L04 | Load package with LOAD_IsVerifying and controlled inherited flags.&lt;br&gt;&lt;font color='#666666'&gt;LinkerLoad.cpp:3122&lt;/font&gt;" style="shape=rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#f5f8fc;strokeColor=#516983;fontSize=13;spacing=9;" vertex="1" parent="1">
+          <mxGeometry x="120" y="445" width="365" height="84" as="geometry" />
+        </mxCell>
+        <mxCell id="L05" value="L05 | For cooked IoStore packages in editor, populate imported objects from the loaded pack...&lt;br&gt;&lt;font color='#666666'&gt;LinkerLoad.cpp:3124&lt;/font&gt;" style="shape=rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#f5f8fc;strokeColor=#516983;fontSize=13;spacing=9;" vertex="1" parent="1">
+          <mxGeometry x="120" y="560" width="365" height="84" as="geometry" />
+        </mxCell>
+        <mxCell id="L06" value="L06 | Create missing UPackage shell, including native cases where disk loading returned null.&lt;br&gt;&lt;font color='#666666'&gt;LinkerLoad.cpp:3145&lt;/font&gt;" style="shape=rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#f5f8fc;strokeColor=#516983;fontSize=13;spacing=9;" vertex="1" parent="1">
+          <mxGeometry x="120" y="675" width="365" height="84" as="geometry" />
+        </mxCell>
+        <mxCell id="L07" value="L07 | Reject null/compiling packages and skip verification while gathering dependencies.&lt;br&gt;&lt;font color='#666666'&gt;LinkerLoad.cpp:3150&lt;/font&gt;" style="shape=rhombus;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#f5f8fc;strokeColor=#516983;fontSize=13;spacing=9;fillColor=#fff9e9;strokeColor=#a17b26;" vertex="1" parent="1">
+          <mxGeometry x="120" y="790" width="365" height="84" as="geometry" />
+        </mxCell>
+        <mxCell id="L10" value="L10 | Return no package when null or PKG_Compiling; no source linker can be acquired in thi...&lt;br&gt;&lt;font color='#666666'&gt;LinkerLoad.cpp:3152&lt;/font&gt;" style="shape=rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#f5f8fc;strokeColor=#516983;fontSize=13;spacing=9;" vertex="1" parent="1">
+          <mxGeometry x="575" y="905" width="365" height="84" as="geometry" />
+        </mxCell>
+        <mxCell id="L08" value="L08 | Acquire an existing or new source linker according to package and cooked/editor state.&lt;br&gt;&lt;font color='#666666'&gt;LinkerLoad.cpp:3176&lt;/font&gt;" style="shape=rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#f5f8fc;strokeColor=#516983;fontSize=13;spacing=9;" vertex="1" parent="1">
+          <mxGeometry x="120" y="1020" width="365" height="84" as="geometry" />
+        </mxCell>
+        <mxCell id="L09" value="L09 | Return UPackage to the calling VerifyImportInner branch.&lt;br&gt;&lt;font color='#666666'&gt;LinkerLoad.cpp:3186&lt;/font&gt;" style="shape=rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#f5f8fc;strokeColor=#516983;fontSize=13;spacing=9;" vertex="1" parent="1">
+          <mxGeometry x="120" y="1135" width="365" height="84" as="geometry" />
+        </mxCell>
+        <mxCell id="load_import_package_edge_1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#637184;fontSize=11;" edge="1" parent="1" source="L01" target="L02">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="load_import_package_edge_2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#637184;fontSize=11;" edge="1" parent="1" source="L02" target="L03">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="load_import_package_edge_3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#637184;fontSize=11;" edge="1" parent="1" source="L03" target="L04">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="load_import_package_edge_4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#637184;fontSize=11;" edge="1" parent="1" source="L04" target="L05">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="load_import_package_edge_5" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#637184;fontSize=11;" edge="1" parent="1" source="L05" target="L06">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="load_import_package_edge_6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#637184;fontSize=11;" edge="1" parent="1" source="L06" target="L07">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="load_import_package_edge_7" value="non-compiling" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#637184;fontSize=11;" edge="1" parent="1" source="L07" target="L08">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="load_import_package_edge_8" value="null or compiling" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#637184;fontSize=11;" edge="1" parent="1" source="L07" target="L10">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="load_import_package_edge_9" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#637184;fontSize=11;" edge="1" parent="1" source="L08" target="L09">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

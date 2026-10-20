@@ -1,0 +1,37 @@
+%% FLinkerLoad::VerifyImport
+flowchart TD
+    W01["W01: Enter VerifyImport with an ImportMap index.<br/>LinkerLoad.cpp:2792"]
+    W02["W02: Run the first VerifyImportInner attempt; its boolean controls later failure...<br/>LinkerLoad.cpp:2803"]
+    W03["W03: Disable fatal-on-failure behavior on platforms without editor-only data.<br/>LinkerLoad.cpp:2804"]
+    W04{"W04: Check whether a source linker exists but the object was not found, with a v...<br/>LinkerLoad.cpp:2813"}
+    W05["W05: Temporarily substitute ObjectRedirector/CoreUObject and retry VerifyImportI...<br/>LinkerLoad.cpp:2819"]
+    W06{"W06: Check whether a redirector export was found; failure sets VERIFY_Failed.<br/>LinkerLoad.cpp:2826"}
+    W07["W07: Create and cast the redirector export; do not Preload until the cast has su...<br/>LinkerLoad.cpp:2838"]
+    W15{"W15: If CreateExport failed, set VERIFY_Failed; otherwise set RF_NeedLoad and Pr...<br/>LinkerLoad.cpp:2840"}
+    W08{"W08: Reject an absent redirector destination.<br/>LinkerLoad.cpp:2856"}
+    W09{"W09: Accept class-default objects or find original class in the destination's su...<br/>LinkerLoad.cpp:2863"}
+    W10["W10: Bind XObject to destination and mark the import as redirected.<br/>LinkerLoad.cpp:2887"]
+    W11["W11: Restore serialized ClassName and ClassPackage after the fallback.<br/>LinkerLoad.cpp:2901"]
+    W12{"W12: If successful update SourceIndex/SourceLinker from XObject; otherwise resto...<br/>LinkerLoad.cpp:2905"}
+    W13["W13: Apply Epic's fatal or warning/error response according to the original Veri...<br/>LinkerLoad.cpp:2918"]
+    W14["W14: Return VERIFY_Success, VERIFY_Failed, or VERIFY_Redirected.<br/>LinkerLoad.cpp:2978"]
+    W01 --> W02
+    W02 --> W03
+    W03 --> W04
+    W04 -->|yes| W05
+    W04 -->|no| W14
+    W05 --> W06
+    W06 -->|found| W07
+    W06 -->|missing| W11
+    W07 --> W15
+    W15 -->|null| W11
+    W15 -->|exists| W08
+    W08 -->|present| W09
+    W08 -->|null| W11
+    W09 -->|valid| W10
+    W09 -->|invalid| W11
+    W10 --> W11
+    W11 --> W12
+    W12 -->|success| W14
+    W12 -->|failure| W13
+    W13 --> W14

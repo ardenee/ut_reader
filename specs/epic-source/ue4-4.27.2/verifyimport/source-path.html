@@ -1,0 +1,85 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+    <title>UE4.27.2 Epic VerifyImport source trace</title>
+    <style>
+    @page { size: A4 landscape; margin: 15mm 13mm; }
+    body { font: 11px/1.4 Arial, sans-serif; color:#1b2736; }
+    h1 { font-size:23px; } h2 { font-size:17px; margin-top:24px; }
+    .meta { border-left:4px solid #455f7a; padding:8px 12px; background:#f1f5f9; }
+    table { width:100%; border-collapse:collapse; margin-top:10px; }
+    thead { display:table-header-group; }
+    th { background:#eaf0f6; }
+    th,td { border:1px solid #cbd5df; text-align:left; padding:5px 7px; vertical-align:top; }
+    tr { page-break-inside:avoid; }
+    td.source { width:31%; font-family:Consolas,monospace; font-size:9px; overflow-wrap:anywhere; }
+    td.step { width:8%; } td.loc { width:11%; }
+    code { font-family:Consolas,monospace; }
+    .group { page-break-before:always; }
+    footer { color:#536474; font-size:9px; }
+    </style></head><body>
+    <h1>UE4.27.2 - Epic source-only VerifyImport trace</h1>
+<div class='meta'><p><b>Authority:</b> Original Epic C++ only; no UnrealDB implementations or test outcomes.</p>
+<p><b>Epic revision:</b> <code>d94b38ae3446da52224bedd2568c078f828b4039</code><br>
+<b>Source:</b> <code>L:\Source\Engine\UE4\UE 4.27.2\Engine\Source\Runtime\CoreUObject\Private\UObject\LinkerLoad.cpp</code><br>
+<b>Source SHA-256:</b> <code>39DB1F3E1A48D829E65991259EAEFB955680CCF6165D5E31B9DB862B02560569</code></p>
+<p><b>Scope:</b> VerifyImport, VerifyImportInner and LoadImportPackage lambda only. <b>Not a complete package-loading path or full UE4.27.2 file-format reference.</b></p></div>
+<section class='group'><h2>FLinkerLoad::VerifyImport</h2>
+<p>Wrapper, retry through ObjectRedirector, payload/class checks, failure policy</p>
+<table><thead><tr><th>Step</th><th>Epic source</th><th>Exact C++ statement</th><th>Source-derived operation / next step</th></tr></thead><tbody>
+<tr><td class='step'>W01</td><td class='loc'>LinkerLoad.cpp:2792</td><td class='source'>FLinkerLoad::EVerifyResult FLinkerLoad::VerifyImport(int32 ImportIndex)</td><td>Enter VerifyImport with an ImportMap index.<br><b>Next:</b> W02</td></tr>
+<tr><td class='step'>W02</td><td class='loc'>LinkerLoad.cpp:2803</td><td class='source'>bool bCrashOnFail = VerifyImportInner(ImportIndex, WarningAppend);</td><td>Run the first VerifyImportInner attempt; its boolean controls later failure response.<br><b>Next:</b> W03</td></tr>
+<tr><td class='step'>W03</td><td class='loc'>LinkerLoad.cpp:2804</td><td class='source'>if (FPlatformProperties::HasEditorOnlyData() == false)</td><td>Disable fatal-on-failure behavior on platforms without editor-only data.<br><b>Next:</b> W04</td></tr>
+<tr><td class='step'>W04</td><td class='loc'>LinkerLoad.cpp:2813</td><td class='source'>if (Import.SourceLinker &amp;&amp; Import.SourceIndex == INDEX_NONE &amp;&amp; Import.XObject == NULL &amp;&amp; !Import.OuterIndex.IsNull() &amp;&amp; Import.ObjectName != NAME_ObjectRedirector)</td><td>Check whether a source linker exists but the object was not found, with a valid non-redirector import outer.<br><b>Next:</b> W05 yes, W14 no</td></tr>
+<tr><td class='step'>W05</td><td class='loc'>LinkerLoad.cpp:2819</td><td class='source'>Import.ClassName = NAME_ObjectRedirector;</td><td>Temporarily substitute ObjectRedirector/CoreUObject and retry VerifyImportInner.<br><b>Next:</b> W06</td></tr>
+<tr><td class='step'>W06</td><td class='loc'>LinkerLoad.cpp:2826</td><td class='source'>if (Import.SourceIndex == INDEX_NONE) //-V547</td><td>Check whether a redirector export was found; failure sets VERIFY_Failed.<br><b>Next:</b> W07 found, W11 missing</td></tr>
+<tr><td class='step'>W07</td><td class='loc'>LinkerLoad.cpp:2838</td><td class='source'>UObjectRedirector* Redir = dynamic_cast&lt;UObjectRedirector*&gt;(Import.SourceLinker-&gt;CreateExport(Import.SourceIndex));</td><td>Create and cast the redirector export; do not Preload until the cast has succeeded.<br><b>Next:</b> W15</td></tr>
+<tr><td class='step'>W15</td><td class='loc'>LinkerLoad.cpp:2840</td><td class='source'>if (!Redir)</td><td>If CreateExport failed, set VERIFY_Failed; otherwise set RF_NeedLoad and Preload to read DestinationObject.<br><b>Next:</b> W11 null, W08 exists</td></tr>
+<tr><td class='step'>W08</td><td class='loc'>LinkerLoad.cpp:2856</td><td class='source'>if (DestObject == nullptr)</td><td>Reject an absent redirector destination.<br><b>Next:</b> W09 present, W11 null</td></tr>
+<tr><td class='step'>W09</td><td class='loc'>LinkerLoad.cpp:2863</td><td class='source'>bool bIsValidClass = DestObject-&gt;HasAnyFlags(RF_ClassDefaultObject);</td><td>Accept class-default objects or find original class in the destination&#x27;s superclass chain.<br><b>Next:</b> W10 valid, W11 invalid</td></tr>
+<tr><td class='step'>W10</td><td class='loc'>LinkerLoad.cpp:2887</td><td class='source'>Result = VERIFY_Redirected;</td><td>Bind XObject to destination and mark the import as redirected.<br><b>Next:</b> W11</td></tr>
+<tr><td class='step'>W11</td><td class='loc'>LinkerLoad.cpp:2901</td><td class='source'>Import.ClassName = OriginalImport.ClassName;</td><td>Restore serialized ClassName and ClassPackage after the fallback.<br><b>Next:</b> W12</td></tr>
+<tr><td class='step'>W12</td><td class='loc'>LinkerLoad.cpp:2905</td><td class='source'>if (Result != VERIFY_Failed) //-V547</td><td>If successful update SourceIndex/SourceLinker from XObject; otherwise restore original import.<br><b>Next:</b> W14 success, W13 failure</td></tr>
+<tr><td class='step'>W13</td><td class='loc'>LinkerLoad.cpp:2918</td><td class='source'>if (bCrashOnFail)</td><td>Apply Epic&#x27;s fatal or warning/error response according to the original VerifyImportInner policy.<br><b>Next:</b> W14</td></tr>
+<tr><td class='step'>W14</td><td class='loc'>LinkerLoad.cpp:2978</td><td class='source'>return Result;</td><td>Return VERIFY_Success, VERIFY_Failed, or VERIFY_Redirected.<br><b>Next:</b> Return</td></tr>
+</tbody></table></section>
+<section class='group'><h2>FLinkerLoad::VerifyImportInner</h2>
+<p>Preconditions, outer/linker selection, export matching, private checks, runtime fallback</p>
+<table><thead><tr><th>Step</th><th>Epic source</th><th>Exact C++ statement</th><th>Source-derived operation / next step</th></tr></thead><tbody>
+<tr><td class='step'>I01</td><td class='loc'>LinkerLoad.cpp:3068</td><td class='source'>bool FLinkerLoad::VerifyImportInner(const int32 ImportIndex, FString&amp; WarningSuffix)</td><td>Enter the private VerifyImportInner implementation.<br><b>Next:</b> I02</td></tr>
+<tr><td class='step'>I02</td><td class='loc'>LinkerLoad.cpp:3203</td><td class='source'>(	(Import.SourceLinker &amp;&amp; Import.SourceIndex != INDEX_NONE)</td><td>Return early for already resolved imports or NAME_None identities.<br><b>Next:</b> I22 already verified / None, I03 continue</td></tr>
+<tr><td class='step'>I22</td><td class='loc'>LinkerLoad.cpp:3209</td><td class='source'>return false;</td><td>Early return: already verified or not relevant in this context.<br><b>Next:</b> Return</td></tr>
+<tr><td class='step'>I03</td><td class='loc'>LinkerLoad.cpp:3221</td><td class='source'>if (Import.OuterIndex.IsNull() &amp;&amp; Import.ClassName!=NAME_Package )</td><td>Reject inappropriate null outer on a non-Package import.<br><b>Next:</b> I23 inappropriate outer, I04 valid outer</td></tr>
+<tr><td class='step'>I23</td><td class='loc'>LinkerLoad.cpp:3225</td><td class='source'>return false;</td><td>Return after rejecting null outer on a non-Package import.<br><b>Next:</b> Return</td></tr>
+<tr><td class='step'>I04</td><td class='loc'>LinkerLoad.cpp:3228</td><td class='source'>else if (Import.OuterIndex.IsNull())</td><td>For top-level Package import, invoke LoadImportPackage; otherwise use non-null-outer path.<br><b>Next:</b> L01 package, I05 other</td></tr>
+<tr><td class='step'>I05</td><td class='loc'>LinkerLoad.cpp:3241</td><td class='source'>if (Import.HasPackageName())</td><td>For a non-null outer with explicit PackageName, load that assigned package.<br><b>Next:</b> I06</td></tr>
+<tr><td class='step'>I06</td><td class='loc'>LinkerLoad.cpp:3253</td><td class='source'>if (Import.OuterIndex.IsImport())</td><td>If outer is another import, recursively VerifyImport it.<br><b>Next:</b> I07 import outer, I08 export outer</td></tr>
+<tr><td class='step'>I07</td><td class='loc'>LinkerLoad.cpp:3281</td><td class='source'>if (!Import.SourceLinker)</td><td>Use outer import&#x27;s source linker only when the current import has none.<br><b>Next:</b> I09</td></tr>
+<tr><td class='step'>I08</td><td class='loc'>LinkerLoad.cpp:3288</td><td class='source'>check(Import.OuterIndex.IsExport());</td><td>Export outer requires an explicit package name and package-linker acquisition.<br><b>Next:</b> I09</td></tr>
+<tr><td class='step'>I09</td><td class='loc'>LinkerLoad.cpp:3301</td><td class='source'>if( Import.SourceLinker )</td><td>When a source linker exists, search its hashed ExportMap; otherwise continue to runtime lookup.<br><b>Next:</b> I10 linker, I16 none</td></tr>
+<tr><td class='step'>I10</td><td class='loc'>LinkerLoad.cpp:3310</td><td class='source'>bool bMatchesWithoutShortening = false;</td><td>First find whether any full class-package match exists; only otherwise allow short package names.<br><b>Next:</b> I11</td></tr>
+<tr><td class='step'>I11</td><td class='loc'>LinkerLoad.cpp:3340</td><td class='source'>for( int32 j=Import.SourceLinker-&gt;ExportHash[iHash]; j!=INDEX_NONE; j=Import.SourceLinker-&gt;ExportMap[j].HashNext )</td><td>Search matching export names/class identities through Epic&#x27;s ExportHash chains.<br><b>Next:</b> I12</td></tr>
+<tr><td class='step'>I12</td><td class='loc'>LinkerLoad.cpp:3359</td><td class='source'>if( Import.OuterIndex.IsImport() )</td><td>Validate export outer against the resolved import outer, including cross-linker import identity.<br><b>Next:</b> I13 candidate valid, I16 no candidate</td></tr>
+<tr><td class='step'>I13</td><td class='loc'>LinkerLoad.cpp:3403</td><td class='source'>auto IsPrivateImportAllowed = [this](int32 InImportIndex)</td><td>Apply editor-only private-import containment predicates.<br><b>Next:</b> I14</td></tr>
+<tr><td class='step'>I14</td><td class='loc'>LinkerLoad.cpp:3412</td><td class='source'>const bool bIsImportPublic = !!(SourceExport.ObjectFlags &amp; RF_Public);</td><td>For private exports apply SafeReplace rules and references from consumer import/export maps.<br><b>Next:</b> I15 accepted, I16 not bound</td></tr>
+<tr><td class='step'>I15</td><td class='loc'>LinkerLoad.cpp:3468</td><td class='source'>Import.SourceIndex = j;</td><td>Store the matching export index in the source linker.<br><b>Next:</b> I16</td></tr>
+<tr><td class='step'>I16</td><td class='loc'>LinkerLoad.cpp:3477</td><td class='source'>if (!Pkg &amp;&amp; TmpPkg &amp;&amp;</td><td>Handle in-memory-only/instanced package cases before fallback object search.<br><b>Next:</b> I17</td></tr>
+<tr><td class='step'>I17</td><td class='loc'>LinkerLoad.cpp:3500</td><td class='source'>if( (Pkg == nullptr) &amp;&amp; ((LoadFlags &amp; LOAD_FindIfFail) != 0) )</td><td>When requested, allow the ANY_PACKAGE fallback search.<br><b>Next:</b> I18</td></tr>
+<tr><td class='step'>I18</td><td class='loc'>LinkerLoad.cpp:3534</td><td class='source'>UObject* FindObject = FindImportFast(FindClass, bAnyPackage ? nullptr : FindOuter, Import.ObjectName, bAnyPackage);</td><td>Try native/transient/class-default-object lookup under Epic&#x27;s conditions.<br><b>Next:</b> I19</td></tr>
+<tr><td class='step'>I19</td><td class='loc'>LinkerLoad.cpp:3570</td><td class='source'>if (!Import.XObject &amp;&amp; !SafeReplace)</td><td>Return true only when the wrapper must treat missing import/redirector as fatal.<br><b>Next:</b> I21 fatal policy, I20 otherwise</td></tr>
+<tr><td class='step'>I21</td><td class='loc'>LinkerLoad.cpp:3572</td><td class='source'>return true;</td><td>Ask wrapper to treat unredirected import failure as fatal.<br><b>Next:</b> Return</td></tr>
+<tr><td class='step'>I20</td><td class='loc'>LinkerLoad.cpp:3581</td><td class='source'>return false;</td><td>Otherwise return false from VerifyImportInner.<br><b>Next:</b> Return</td></tr>
+</tbody></table></section>
+<section class='group'><h2>VerifyImportInner::LoadImportPackage</h2>
+<p>Nested lambda invoked for top-level Package and explicit PackageName imports</p>
+<table><thead><tr><th>Step</th><th>Epic source</th><th>Exact C++ statement</th><th>Source-derived operation / next step</th></tr></thead><tbody>
+<tr><td class='step'>L01</td><td class='loc'>LinkerLoad.cpp:3072</td><td class='source'>auto LoadImportPackage = [this, ImportIndex](FObjectImport&amp; Import, TOptional&lt;FScopedSlowTask&gt;&amp; SlowTask) -&gt; UPackage*</td><td>Enter the lambda invoked for top-level package imports and explicit PackageName imports.<br><b>Next:</b> L02</td></tr>
+<tr><td class='step'>L02</td><td class='loc'>LinkerLoad.cpp:3082</td><td class='source'>FName PackageToLoad = !Import.HasPackageName() ? Import.ObjectName : Import.GetPackageName();</td><td>Select ObjectName or explicit PackageName; apply instancing remap.<br><b>Next:</b> L03</td></tr>
+<tr><td class='step'>L03</td><td class='loc'>LinkerLoad.cpp:3095</td><td class='source'>Package = FindObjectFast&lt;UPackage&gt;(nullptr, PackageToLoadInto);</td><td>Locate an existing in-memory UPackage; load when absent or not fully loaded.<br><b>Next:</b> L04</td></tr>
+<tr><td class='step'>L04</td><td class='loc'>LinkerLoad.cpp:3122</td><td class='source'>Package = LoadPackageInternal(Package, *PackageToLoad.ToString(), InternalLoadFlags | LOAD_IsVerifying, this, nullptr, nullptr);</td><td>Load package with LOAD_IsVerifying and controlled inherited flags.<br><b>Next:</b> L05</td></tr>
+<tr><td class='step'>L05</td><td class='loc'>LinkerLoad.cpp:3124</td><td class='source'>#if WITH_IOSTORE_IN_EDITOR</td><td>For cooked IoStore packages in editor, populate imported objects from the loaded package.<br><b>Next:</b> L06</td></tr>
+<tr><td class='step'>L06</td><td class='loc'>LinkerLoad.cpp:3145</td><td class='source'>Package = CreatePackage(*PackageToLoad.ToString());</td><td>Create missing UPackage shell, including native cases where disk loading returned null.<br><b>Next:</b> L07</td></tr>
+<tr><td class='step'>L07</td><td class='loc'>LinkerLoad.cpp:3150</td><td class='source'>if (!Package || Package-&gt;HasAnyPackageFlags(PKG_Compiling))</td><td>Reject null/compiling packages and skip verification while gathering dependencies.<br><b>Next:</b> L08 non-compiling, L10 null or compiling</td></tr>
+<tr><td class='step'>L10</td><td class='loc'>LinkerLoad.cpp:3152</td><td class='source'>return nullptr;</td><td>Return no package when null or PKG_Compiling; no source linker can be acquired in this branch.<br><b>Next:</b> Return</td></tr>
+<tr><td class='step'>L08</td><td class='loc'>LinkerLoad.cpp:3176</td><td class='source'>Import.SourceLinker = !bWasFullyLoaded ? GetPackageLinker(Package, nullptr, InternalLoadFlags, nullptr, nullptr, nullptr, &amp;SerializeContext) : FindExistingLinkerForPackage(Package);</td><td>Acquire an existing or new source linker according to package and cooked/editor state.<br><b>Next:</b> L09</td></tr>
+<tr><td class='step'>L09</td><td class='loc'>LinkerLoad.cpp:3186</td><td class='source'>return Package;</td><td>Return UPackage to the calling VerifyImportInner branch.<br><b>Next:</b> Return</td></tr>
+</tbody></table></section>
+<footer>Source-only navigation. Use the editable multi-page source-path.drawio for flow arrows. All unexpanded callees prevent any completeness claim.</footer></body></html>

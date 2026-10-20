@@ -1,0 +1,51 @@
+%% FLinkerLoad::VerifyImportInner
+flowchart TD
+    I01["I01: Enter the private VerifyImportInner implementation.<br/>LinkerLoad.cpp:3068"]
+    I02{"I02: Return early for already resolved imports or NAME_None identities.<br/>LinkerLoad.cpp:3203"}
+    I22["I22: Early return: already verified or not relevant in this context.<br/>LinkerLoad.cpp:3209"]
+    I03{"I03: Reject inappropriate null outer on a non-Package import.<br/>LinkerLoad.cpp:3221"}
+    I23["I23: Return after rejecting null outer on a non-Package import.<br/>LinkerLoad.cpp:3225"]
+    I04{"I04: For top-level Package import, invoke LoadImportPackage; otherwise use non-n...<br/>LinkerLoad.cpp:3228"}
+    I05["I05: For a non-null outer with explicit PackageName, load that assigned package.<br/>LinkerLoad.cpp:3241"]
+    I06{"I06: If outer is another import, recursively VerifyImport it.<br/>LinkerLoad.cpp:3253"}
+    I07["I07: Use outer import's source linker only when the current import has none.<br/>LinkerLoad.cpp:3281"]
+    I08["I08: Export outer requires an explicit package name and package-linker acquisiti...<br/>LinkerLoad.cpp:3288"]
+    I09{"I09: When a source linker exists, search its hashed ExportMap; otherwise continu...<br/>LinkerLoad.cpp:3301"}
+    I10["I10: First find whether any full class-package match exists; only otherwise allo...<br/>LinkerLoad.cpp:3310"]
+    I11["I11: Search matching export names/class identities through Epic's ExportHash cha...<br/>LinkerLoad.cpp:3340"]
+    I12{"I12: Validate export outer against the resolved import outer, including cross-li...<br/>LinkerLoad.cpp:3359"}
+    I13["I13: Apply editor-only private-import containment predicates.<br/>LinkerLoad.cpp:3403"]
+    I14{"I14: For private exports apply SafeReplace rules and references from consumer im...<br/>LinkerLoad.cpp:3412"}
+    I15["I15: Store the matching export index in the source linker.<br/>LinkerLoad.cpp:3468"]
+    I16["I16: Handle in-memory-only/instanced package cases before fallback object search...<br/>LinkerLoad.cpp:3477"]
+    I17["I17: When requested, allow the ANY_PACKAGE fallback search.<br/>LinkerLoad.cpp:3500"]
+    I18["I18: Try native/transient/class-default-object lookup under Epic's conditions.<br/>LinkerLoad.cpp:3534"]
+    I19["I19: Return true only when the wrapper must treat missing import/redirector as f...<br/>LinkerLoad.cpp:3570"]
+    I21["I21: Ask wrapper to treat unredirected import failure as fatal.<br/>LinkerLoad.cpp:3572"]
+    I20["I20: Otherwise return false from VerifyImportInner.<br/>LinkerLoad.cpp:3581"]
+    I01 --> I02
+    I02 -->|already verified / None| I22
+    I02 -->|continue| I03
+    I03 -->|inappropriate outer| I23
+    I03 -->|valid outer| I04
+    I04 -->|other| I05
+    I05 --> I06
+    I06 -->|import outer| I07
+    I06 -->|export outer| I08
+    I07 --> I09
+    I08 --> I09
+    I09 -->|linker| I10
+    I09 -->|none| I16
+    I10 --> I11
+    I11 --> I12
+    I12 -->|candidate valid| I13
+    I12 -->|no candidate| I16
+    I13 --> I14
+    I14 -->|accepted| I15
+    I14 -->|not bound| I16
+    I15 --> I16
+    I16 --> I17
+    I17 --> I18
+    I18 --> I19
+    I19 -->|fatal policy| I21
+    I19 -->|otherwise| I20
