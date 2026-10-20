@@ -29,6 +29,18 @@ Reproducible `php catalog/bin/verify-ue427-p05-payload-inventory.php C:/Temp/ue4
 
 A positive `BulkDataStartOffset` field is **not** evidence that any payload is actually stored out-of-line. This corpus is unsuitable for independently certifying companion-file selection, offset fixups, optional payloads or cooked exporter behavior.
 
+## Additional genuine UE4.27 cooked split-package acceptance
+
+An isolated disposable project `C:/Temp/UE427Oracle/UE427Oracle.uproject` was cooked by the installed authentic UE4.27 editor, using an asset copied from Engine/Content into `Content/UE427PayloadProbe/Cube.uasset` (no Epic canonical source/assets modified). Executed `UE4Editor-Cmd.exe UE427Oracle.uproject -run=Cook -TargetPlatform=WindowsNoEditor -CookAll -unattended -nop4 -NoSound -nullrhi`. Cook exited 0 with zero engine errors; temporary output `Saved/Cooked/WindowsNoEditor`.
+
+- **244** stock-v522 cooked packages, **244 .uasset/.umap + 244 matching .uexp** files, **38 .ubulk** companions totalling **43,916,288 bytes**. No optional `.uptnl` or memory-mapped `.m.ubulk` sidecar appeared.
+- Native `UE427Oracle -Names -Records` imported all 244 cooked headers through compiled Epic `FObjectImport/FObjectExport` operators and independently matched UnrealDB across **1,415 imports, 380 exports and 23,866 record fields**, zero mismatches. An additional native `-P05` mode reads `FPackageFileSummary::TotalHeaderSize`, `BulkDataStartOffset` and `ExportCount`: `php catalog/bin/verify-ue427-p05-native-header.php C:/Temp/ue427-p05-native-summary.log C:/Temp/ue427-p05-cooked-manifest.txt` passed **732/732 Epic-native header fields**, zero mismatches. Native log `C:/Temp/ue427-p05-cooked-native-records.log`, manifest `C:/Temp/ue427-p05-cooked-manifest.txt`, verifier `catalog/bin/verify-ue427-native-records.php`.
+- Versioned `php catalog/bin/verify-ue427-p05-cooked-split.php` checked actual physical export reads from `.uexp` using `SerialOffset - UAssetFileSize`: **380/380** ranges, totalling **63,530,600 bytes**, no invalid spans or short reads. Aggregate SHA-256 of individual physical-span digests `d2a3d33d074976adf7cc237287b3eeb822fedf374ada8295b225e178ea318b6e`.
+- All **244** `.uexp` files terminate with Epic's little-endian package-tag bytes `C1 83 2A 9E`. All 244 `Summary.TotalHeaderSize` values equal their corresponding `.uasset` size, and all `BulkDataStartOffset` values equal **UAssetFileSize + UExpFileSize - 4** (excluding the .uexp trailer tag).
+- The original 1,749 editor assets remain the separate unsplit reference corpus; do not add these 244 cooked assets to the established P01–P04 denominators.
+
+**Scope of this positive test:** genuine split **export** physical offset parity is independently verified. Presence/size of 38 `.ubulk` companions does *not* certify their per-object `FBulkData` flags, payload-offset fixups or optional storage decisions; P05 is still ACTIVE.
+
 ## UnrealDB active inspection — no production change in this checkpoint
 
 - `UE4/UnrealPackageReader.php` parses `bulkDataStartOffset` and raw export `serialOffset`/`serialSize`. It derives `uexpPath` and `hasUexp` by looking for a companion filename, but does **not** thereby prove that a serialized export or bulk payload can be opened through the correct physical provider. Do not call this a confirmed Epic incompatibility until the actual production consumer is tested.
@@ -37,9 +49,9 @@ A positive `BulkDataStartOffset` field is **not** evidence that any payload is a
 
 ## Required next acceptance, not yet performed
 
-1. Obtain controlled, **genuine cooked UE4.27** package sets with `.uasset/.uexp/.ubulk` and optional `.uptnl/.m.ubulk` when possible, or produce precise native Epic serializer fixtures for branches that cannot be cooked reliably.
+1. **Completed for UEXP/UBULK:** generate and preserve the genuine 244-package cooked corpus and verify its 380 split-export ranges. **Still missing:** positive optional `.uptnl` and memory-mapped `.m.ubulk` fixtures, which may require targeted Epic-native generation.
 2. Instrument compiled UE4.27 `FBulkData` serialization / real engine archive selection (or a targeted native probe) and compare bulk flags, raw offsets, conditional fixup, sidecar target and actual bytes/hashes to UnrealDB's physical-provider decisions. Must positively test inline, end-of-file, separate, optional and memory-mapped branches, with correct non-availability treatment.
 3. Test missing/truncated sidecar negatives, swapped-endian header words where supported, offset overflow and package-source physical-boundary assertions without changing the canonical engine.
 4. Trace actual production reader/V5 consumers and ensure metadata neither invents bytes in `.uasset` nor silently drops valid sidecars. P08/P09 will separately certify ingest/backup/dependency persistence.
 
-**No P05 source parity or production certification is claimed.** Commit only this scope record and executable inventory. No new primary operation was added, and no PRD database writes are involved.
+**No overall P05 source parity or production certification is claimed.** Genuine `.uexp` physical-range coverage is established; `.ubulk` header/flag and optional/memory-mapped routing remain unverified. Commit the scope record and executable corpus verifiers. No new primary operation was added, and no PRD database writes are involved.
