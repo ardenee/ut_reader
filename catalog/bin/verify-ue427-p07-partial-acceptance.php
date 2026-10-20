@@ -17,6 +17,10 @@ $checks=[
  'stock_ue427_import_branch_corpus'=>[__DIR__.'/verify-ue427-p07-import-branch-corpus.php',[],[]],
  'stock_ue427_native_missing_provider'=>[__DIR__.'/verify-ue427-p07-native-missing-script.php',[],
   ['file_size'=>4861,'changed_single_byte_count'=>1]],
+ 'stock_ue427_native_redirector_destinations'=>[__DIR__.'/verify-ue427-p07-native-redirectors.php',[],
+  ['genuine_redirector_payloads_compared'=>4,'distinct_destinations'=>2]],
+ 'stock_ue427_native_explicit_package_name'=>[__DIR__.'/verify-ue427-p07-native-explicit-package.php',[],
+  ['source_version'=>520,'source_file_size'=>3355,'package_name_wire_offset'=>1307]],
  'v5_dependency_resolution_regression'=>[__DIR__.'/verify-uedb5-unreal-classic-dependency-resolution.php',[],[]]
 ];
 $results=[];$errors=[];
@@ -46,8 +50,8 @@ echo json_encode(['ok'=>$ok,'scope'=>'PARTIAL UE4.27 P07, not closure',
  'total_checkpoints'=>count($results),
  'results'=>$results,'errors'=>$errors,
  'unverified'=>[
- 'Direct compiled VerifyImport/VerifyImportInner per-import source decisions and redirector DestinationObject',
- 'Cross-linker PackageName and version-policy provider matching against actual engine packages',
+ 'Direct compiled VerifyImport/VerifyImportInner per-import source decisions, including the VERIFY_Redirected result (genuine redirector DestinationObject data is verified separately)',
+ 'Cross-linker PackageName provider selection at the native decision point (the v520 wire field and compiled full load are verified separately)',
  'Negative/missing provider warning, optional and failed-linker runtime classification',
  'Stock UE4.27 catalog V5 production dispatch is P08/P09, not established by UT4 v511 contracts'
  ]],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;

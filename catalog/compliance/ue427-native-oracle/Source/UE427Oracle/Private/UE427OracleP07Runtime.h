@@ -2,6 +2,7 @@
 #include "UObject/LinkerLoad.h"
 #include "UObject/UObjectGlobals.h"
 #include "UObject/Package.h"
+#include "UObject/ObjectRedirector.h"
 
 // Calls the *compiled* UE4.27.2 LoadPackage runtime on genuine engine assets.
 // This probe does NOT invoke VerifyImportInner and does not claim which
@@ -26,6 +27,19 @@ static bool UE427ProbeP07Runtime(const FString& PackageList,bool bExportIdentity
   // Exercise actual compiled package load, then inspect post-load state.
   // This is NOT direct VerifyImportInner instrumentation or provider proof.
   Linker->LoadAllObjects(true);
+  // Native redirector payload is materialized in the actual compiled engine.
+  // A serialized redirector class alone cannot establish its destination.
+  for(int32 E=0;E<Linker->ExportMap.Num();++E){
+   if(Linker->GetExportClassName(E)!=UObjectRedirector::StaticClass()->GetFName())continue;
+   const FObjectExport& Ex=Linker->ExportMap[E];
+   UObjectRedirector* Redir=Cast<UObjectRedirector>(Ex.Object);
+   UObject* Destination=Redir?Redir->DestinationObject:nullptr;
+   UE_LOG(LogTemp,Display,TEXT("UE427_NATIVE_P07_REDIRECTOR|%s|%d|%s|%s|%s|%d"),
+    *Name,E,*UE427P06Hex(Ex.ObjectName.ToString()),
+    *UE427P06Hex(Destination?Destination->GetPathName():TEXT("")),
+    *UE427P06Hex(Destination?Destination->GetClass()->GetName():TEXT("")),
+    Redir?1:0);
+  }
   ++Checked;
   UE_LOG(LogTemp,Display,TEXT("UE427_NATIVE_P07_PACKAGE|%s|1|%d"),*Name,Linker->ImportMap.Num());
   if(bExportIdentity){
@@ -46,6 +60,11 @@ static bool UE427ProbeP07Runtime(const FString& PackageList,bool bExportIdentity
    const bool bLoaded=Imp.XObject!=nullptr;
    if(bLinked)++Linked;else ++Unlinked;
    if(bLoaded)++Loaded;
+   if(Imp.HasPackageName())UE_LOG(LogTemp,Display,TEXT("UE427_NATIVE_P07_EXPLICIT|%s|%d|%s"),
+    *Name,I,*UE427P06Hex(Imp.GetPackageName().ToString()));
+   if(bLoaded)UE_LOG(LogTemp,Display,TEXT("UE427_NATIVE_P07_OBJECT|%s|%d|%s|%s"),
+    *Name,I,*UE427P06Hex(Imp.XObject->GetPathName()),
+    *UE427P06Hex(Imp.XObject->GetClass()->GetName()));
    const FString Provider=bLinked?Imp.SourceLinker->LinkerRoot->GetName():TEXT("");
    UE_LOG(LogTemp,Display,TEXT("UE427_NATIVE_P07_IMPORT|%s|%d|%s|%s|%s|%d|%d|%d|%s"),
     *Name,I,*Imp.ClassPackage.ToString(),*Imp.ClassName.ToString(),
