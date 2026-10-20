@@ -118,6 +118,8 @@ UUE427OracleCommandlet::UUE427OracleCommandlet() {
  IsClient = false; IsServer = false; IsEditor = true; LogToConsole = true;
 }
 int32 UUE427OracleCommandlet::Main(const FString& Params) {
+ if(FParse::Param(*Params,TEXT("P05OwnerProbe")))return UE427ProbeP05OwnerLinker()?0:21;
+ if(FParse::Param(*Params,TEXT("P05OwnerRuntime")))return UE427ProbeP05OwnerRuntime()?0:22;
  FString BulkPolicyDir;
  if (FParse::Value(*Params,TEXT("P05PolicyDir="),BulkPolicyDir)) {
   if(!UE427WriteP05PolicyFixtures(BulkPolicyDir))return 19;
