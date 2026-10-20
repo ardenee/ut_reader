@@ -6,8 +6,8 @@ Pinned Epic source: `L:/Source/Engine/UE4/UE 4.27.2` at `d94b38ae3446da52224bedd
 
 | ID | Epic-to-UnrealDB operation | Status |
 |---|---|---|
-| U427-P01 | Package tag, endian, legacy-summary marker, custom versions and package file-version policy | ACTIVE |
-| U427-P02 | Name map, FName wire representations and serialized string handling | OPEN |
+| U427-P01 | Package tag, endian, legacy-summary marker, custom versions and package file-version policy | VERIFIED |
+| U427-P02 | Name map, FName wire representations and serialized string handling | ACTIVE |
 | U427-P03 | Import/export index, object flags, serialized offsets and table extents | OPEN |
 | U427-P04 | DependsMap, preload dependency blocks, soft/string asset references | OPEN |
 | U427-P05 | Bulk payload offsets, separate UEXP/UBULK and optional payloads | OPEN |
@@ -21,4 +21,4 @@ Process: handle primary ID in order; compare all relevant Epic source-defined br
 
 ## Evidence and source boundaries
 
-Existing source audit resumption: `UE427-AUDIT-RESUMPTION-20261018.md`; existing specs `specs/ue4-4.27.2-package-format.md`, `specs/ue4-4.27.2-dependency-resolution.md`, and `specs/ue4-4.27.2-verifyimport-conformance-audit.md`. Historical V4-only diagnostic scripts retired in `ac5e4a8d` are **not** UE4.27.2 parity evidence. Main target is UnrealDB's source-aligned UE4 reader and its active V5 consumers. Test against isolated DB and real assets where possible; do not write PRD DB during acceptance. Current tally 0/10 verified, P01 active.
+Existing source audit resumption: `UE427-AUDIT-RESUMPTION-20261018.md`; existing specs `specs/ue4-4.27.2-package-format.md`, `specs/ue4-4.27.2-dependency-resolution.md`, and `specs/ue4-4.27.2-verifyimport-conformance-audit.md`. Historical V4-only diagnostic scripts retired in `ac5e4a8d` are **not** UE4.27.2 parity evidence. Main target is UnrealDB's source-aligned UE4 reader and its active V5 consumers. Test against isolated DB and real assets where possible; do not write PRD DB during acceptance. Current tally **1/10 verified**, P01 closed under `UE427-P01-DEPRECATED-GUID-CLOSURE-20261020.md`, P02 active. P01 closure does not certify the remaining nine operations or UE4.27.2 production workflows.

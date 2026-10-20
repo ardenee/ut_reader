@@ -75,6 +75,9 @@ int32 UUE427OracleCommandlet::Main(const FString& Params) {
   for (const FCustomVersion& Version : Versions) {
    UE_LOG(LogTemp,Display,TEXT("UE427_NATIVE_CUSTOM|%d|%08X-%08X-%08X-%08X|%d"),
     Checked, Version.Key.A, Version.Key.B, Version.Key.C, Version.Key.D, Version.Version);
+   UE_LOG(LogTemp,Display,TEXT("UE427_NATIVE_CUSTOM_FRIENDLY|%d|%08X-%08X-%08X-%08X|%s"),
+    Checked, Version.Key.A, Version.Key.B, Version.Key.C, Version.Key.D,
+    *Version.GetFriendlyName().ToString());
   }
   Checked++;
  }
