@@ -39,6 +39,7 @@ final class CatalogUE1OriginalStagingMetadata
                 'resource_import_lookup' => \UnrealDb\Catalog\Domain\Package\CatalogUE1OriginalResourceImportResolver::project($imports),
                 'resource_exports' => $exports,
                 'resource_headers' => $raw['resource_headers'],
+                'resource_database_headers' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalResourceDatabaseReader::read($path, false),
                 'unconsumed_header_bytes' => $raw['unconsumed_header_bytes'],
                 'payload_decoded' => false,
             ];
@@ -53,6 +54,8 @@ final class CatalogUE1OriginalStagingMetadata
                 'summary' => $raw['summary'],
                 'declared_dependencies' => $raw['dependencies'],
                 'object_bases' => $objects,
+                'unrealfile_class_schemas' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileClassSchemaReader::read($path, false),
+                'unrealfile_binary_properties' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileBinaryPropertyReader::read($path, false),
                 'serialized_stack_prefixes' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileStackReader::read($path, false),
                 'payload_decoded' => false,
             ];
