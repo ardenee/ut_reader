@@ -29,6 +29,15 @@ function catalog_try_read_package_header(array $config, string $engineKey, strin
 {
     $class = catalog_load_reader_class($config, $engineKey);
     $reader = new $class($path);
+    // The canonical UE1 reader captures decoding exceptions in its issue
+    // list and substitutes an empty header. Source scans must not mistake
+    // that fallback for a successfully loaded Epic package summary.
+    if (strtoupper($engineKey) === 'UE1' && method_exists($reader, 'validatePackage')) {
+        $issues = $reader->validatePackage();
+        if ($issues !== []) {
+            throw new RuntimeException('UE1 package header validation failed: ' . implode('; ', $issues));
+        }
+    }
     if (!method_exists($reader, 'getHeader')) {
         throw new RuntimeException('Reader missing getHeader()');
     }

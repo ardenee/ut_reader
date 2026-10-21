@@ -37,6 +37,14 @@ Test `catalog/bin/verify-ue1-early-format-identification.php` contains synthetic
 
 `CatalogPackageHeaderInspector::inspect()` previously used the generic global tag policy even for rows explicitly marked `engine_key=UE1`. That allowed a Killing Floor-specific tag to show as a valid UE1 package header. It now requires `CatalogUnrealPackageTag::STANDARD` for a UE1-labelled file. Generic/UE2 handling is untouched. Verified by the two opposite controls in the new 9-check test.
 
+## UE1-D005 — production header-only helper discarded reader failures (INCORRECT → CORRECTED, O01 open)
+
+Epic reference: UT99 v400 `Core/Src/UnLinker.h:354-369` loads a summary then throws/aborts when the package tag is incorrect; it does not substitute a successful empty package. The real UnrealDB helper `catalog/lib/CatalogParser.php::catalog_try_read_package_header()` previously instantiated `CatalogUE1PackageReader` and returned `getHeader()` without invoking `validatePackage()`. Because `CatalogLegacyPackageReaderBase::__construct` catches parser exceptions and replaces the header with a blank structure, callers silently received an empty header on a wrong tag, a truncated file, or an early `Unrealfile` input.
+
+The same helper is used by `CatalogSourceScanRunner.php` (source-scan GUID path), `CatalogHttpSourceScanService.php` (HTTP deep GUID scan) and `CatalogUnverifiedQueueStorage.php` (queue identity). In B03, the helper checks validation issues for **UE1 only** before returning a header, and throws a descriptive RuntimeException on failure. UE2/UE3/UE4/UE5 behaviour is unchanged pending their respective acceptance work.
+
+Test `catalog/bin/verify-ue1-header-route-validation.php`: valid v68 summary succeeds; UE2-only tag, truncated file and v23 early header must throw instead of returning a blank fallback. Baseline 3/4 failed; after the patch 4/4 pass. All 15 selected adjacent regression scripts pass, including source-scan boundaries and profile reader admission. This establishes one bounded caller-path fix, not O01 acceptance.
+
 ## Real callers identified, whole operation still to trace
 
 - `catalog/lib/GameProfiles.php`: summary identification and classification; `gp_classify_file` is the header/profile admission entry.

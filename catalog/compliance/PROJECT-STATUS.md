@@ -14,8 +14,8 @@ Updated: **2026-10-21**. This is the canonical recovery/handover file for this p
 | Active engine / operation | **UE1 / O01 — file identification and version dispatch** |
 | Current O01 status | **IMPLEMENTING**, not accepted |
 | Primary acceptance metric | **0 accepted / not-yet-frozen UE1 operation scope** |
-| Latest completed work batch | **UE1-B02 — early Unrealfile recognition and UE1-specific header inspection** |
-| Latest verified code checkpoint | `b5f4a214` — B02 committed/pushed; seven changed files deployed to PRD with SHA-256 parity |
+| Latest completed work batch | **UE1-B03 — reject invalid UE1 fallback headers in real scanner/queue/HTTP helper** |
+| Latest verified code checkpoint | `b5f4a214` — B02 committed/pushed/deployed (7/7 SHA); B03 verified locally (commit/deployment recorded below after completion) |
 
 ## Engine sequence
 
@@ -72,10 +72,11 @@ All paths above are under `L:\Source\Games\Unreal`, `L:\Source\Games\UT99`, or `
 | UE1-D002: source-defined minimum version prompt vs noninteractive product policy | OPEN investigation | `catalog/lib/GameProfiles.php`, UE1 reader | Minimum is 22 (old v0.867), 34 (v1.200), or 60 (UT99 v400), dependent on branch |
 | UE1-D003: original 32-byte Unrealfile header incorrectly treated as generic unknown magic | CORRECTED classification; reader MISSING | `catalog/lib/GameProfiles.php`, `catalog/src/Application/Catalog/CatalogPackageHeaderInspector.php` | 9/9 new checks after reproducing five baseline failures |
 | UE1-D004: file-examine header inspector still admitted UE2 tag as UE1 | CORRECTED for engine-specific inspection | `catalog/src/Application/Catalog/CatalogPackageHeaderInspector.php` | Same 9-check test; preserves UE2 tag |
+| UE1-D005: production header-only helper returned fallback blank headers after reader failures | CORRECTED for UE1 only | `catalog/lib/CatalogParser.php` | New 4-check real-entry-point test (three failed before fix, 4/4 pass after); 15/15 selected regressions passed |
 
 The early `Unrealfile` header now returns an explicit **unsupported format** result with UE1 identity/version at classification. It is **not** deserialized or accepted as a usable package. This is a genuine unresolved feature gap.
 
-B02 checks passed: `verify-ue1-early-format-identification.php` **9/9**, plus **12/12** selected UE1/UE2/UE4/UE5 regression scripts, PHP syntax and source-anchored tests. Synthetic fixtures isolate branch decisions; native engine and genuine-package corpus equivalence are **not** established. The `.u` files sampled in the v0.86x/v0.867 source directories are script text, not binary package corpus.
+B02 checks passed: `verify-ue1-early-format-identification.php` **9/9**, plus **12/12** selected UE1/UE2/UE4/UE5 regression scripts, PHP syntax and source-anchored tests. B03 checked the live header-only helper: 4/4 assertions passed after three baseline failures, plus **15/15** selected regressions. Synthetic fixtures isolate branch decisions; native engine and genuine-package corpus equivalence are **not** established. The `.u` files sampled in the v0.86x/v0.867 source directories are script text, not binary package corpus.
 
 ## Durable reference files
 
@@ -86,6 +87,7 @@ B02 checks passed: `verify-ue1-early-format-identification.php` **9/9**, plus **
 - Original Unreal 0.867 source: `specs/epic-source/ue1/unreal-v0867/01-unrealfile-entry.md`
 - Primary test B01: `catalog/bin/verify-ue1-package-tag-source.php`
 - Primary test B02: `catalog/bin/verify-ue1-early-format-identification.php`
+- Primary test B03: `catalog/bin/verify-ue1-header-route-validation.php`
 
 ## Exact next actions — restart here
 

@@ -24,6 +24,7 @@ Run all of these on DEV via the local PHP CLI:
 cd C:\Users\arden\source\repos\ut_reader
 $tests = @(
     'verify-ue1-early-format-identification.php',
+    'verify-ue1-header-route-validation.php',
     'verify-ue1-package-tag-source.php',
     'verify-header-only-staging-first-upload.php',
     'verify-killing-floor-package-tag.php',
@@ -34,10 +35,20 @@ $tests = @(
     'verify-epic-ue123-reader-parity.php',
     'verify-uedb5-ut99-persistence.php',
     'verify-ue427-legacy-summary-inspector.php',
-    'verify-ue5-583-workflow-identify-inspector.php'
+    'verify-ue5-583-workflow-identify-inspector.php',
+    'verify-source-scan-boundaries.php',
+    'verify-profile-reader-admission.php'
 )
 foreach ($t in $tests) { php ("catalog/bin/" + $t); if ($LASTEXITCODE -ne 0) { throw $t } }
 ```
+
+## B03 — header-only production callers must reject failed UE1 parses
+
+Native source: UT99 v400 `Core/Src/UnLinker.h:354-369` (bad package tag aborts). UnrealDB `catalog/lib/CatalogParser.php` is used by source-scan, HTTP-scan and queue-identity callers. Before correction, it silently returned the canonical UE1 reader's fallback blank header instead of examining `validatePackage()` failures.
+
+`php catalog/bin/verify-ue1-header-route-validation.php` reproduced **three failing assertions out of four** before the patch: the UE2-only tag, truncated data and old Unrealfile header did not throw. After the UE1-only validation guard, **4/4 pass**, including unchanged success on a valid v68 summary. A combined selection of **15/15** scripts passed, including B01/B02 tests, source-scan boundaries, profile reader admission, UE2, UE4 and UE5 checks. Both changed PHP files lint.
+
+B03 remains a narrow source-corresponding entry-point correction, not full engine or workflow acceptance.
 
 **Evidence limits:** The early v23 fixture is synthetic but source-anchored; no authentic compiled v0.867 linker oracle or genuine matching binary package has yet been compared. The `.u` files sampled from v0.86x/v0.867 `Classes` are text source files and must not be represented as binary-package test inputs. Do not mark O01 accepted on classification alone.
 
@@ -47,6 +58,7 @@ foreach ($t in $tests) { php ("catalog/bin/" + $t); if ($LASTEXITCODE -ne 0) { t
 - [x] Source-confirm original v0.867 and UT99 v400 tag decisions.
 - [x] Correct cross-engine tag leaks in reader and file-examine inspection.
 - [x] Recognise early Unrealfile signature with honest unsupported reporting.
+- [x] Ensure real UE1 header-only callers cannot promote a failed parser's blank fallback header.
 - [ ] Implement or explicitly agree support boundaries for the genuinely different early format.
 - [ ] Trace every real production entry point, profile rule, reader selection, validation and V5 published output.
 - [ ] Source-check version/minimum/recovery decisions for each supported revision.
