@@ -68,3 +68,13 @@ The read-only verifier `catalog/bin/verify-ue1-genuine-texture-corpus.php` check
 - Staging, download/archive, unverified processing, failure handling, V5 persistence still need full entry-to-result maps.
 
 **Scope boundary:** Original pre-package Unrealfile structures and source branches with missing C++ are not equivalent to the later classic package reader. Record them explicitly rather than inventing compatibility.
+
+## B05 / UE1-D007 — genuine v68/v69 packages, full V5 roundtrip and UE1 admission tag (CORRECTED)
+
+Installed source tree produced a separate SHA-256-pinned **31-package** corpus at `catalog/compliance/inventory/ue1-packages-v68-v69.csv`. Versions: UT99 27 × v68; Unreal v227 2 × v68, 1 × v69, and 1 × v69 with licensee 227. Original C++ anchors: UT99 v400 `Core/Src/UnLinker.h:144-204`, Unreal v227 `Core/Inc/UnLinker.h:97-170`. Independent little-endian inspection of tag/version/licensee, names/imports/exports, inline GUID, generation count and package field layout agrees with the canonical reader and file inspection **31/31**.
+
+Actual production integration `catalog/bin/verify-ue1-genuine-production-paths.php` checks **92/92** genuine installed files through `gp_classify_file` with isolated SQLite UE1 profiles, `Uedb5SourceSnapshotFactory::buildForGameId` (Unreal or UT99), `Uedb5MetadataSnapshotWriter::write` and `Uedb5MetadataReader::snapshot`. Every V5 summary, name, import and export section agrees with its source snapshot. Files are written to and deleted from unique temporary storage, with no live production SQL/storage changes.
+
+**Remaining source difference UE1-D007 found and corrected:** Before patch, the preliminary `gp_read_legacy_summary` (shared across engines) recognised the UE2/Killing Floor tag `0x9E2A83C2`; `gp_classify_file` for a game explicitly assigned to UE1 then returned a successful `header_ok` and `ok_for_selected_game`. This contradicted Epic UT99 v400's UE1 linker tag check (`Core/Src/UnLinker.h:354-369`), although the later canonical reader and source snapshot rejected the package. The real production path's negative-control test failed before correction. `catalog/lib/GameProfiles.php` now sets an explicit invalid-for-selected-engine status/error for UE1 tag variants other than `standard`, without changing global UE2 tag recognition. Both invalid-tag and corrupt-name-offset cases pass, with UE2 retained as a positive admission control.
+
+**Verification:** 19/19 selected production, original source, UE1/UE2/UE4/UE5 regression scripts exited 0; all modified PHP files pass lint. This is not final UE1 O01 source compliance or a live SQL publisher acceptance test. The original v0.867 string-tagged `Unrealfile` requires independent format support.

@@ -87,3 +87,13 @@ cd C:\Users\arden\source\repos\ut_reader
 php catalog/bin/verify-ue1-genuine-texture-corpus.php
 php catalog/bin/verify-ue1-pre68-heritage-inspector.php
 ```
+
+## B05 — v68/v69 original installed packages, UE1 tag admission and true V5 container roundtrip (2026-10-21)
+
+**New SHA-256 inventory:** `catalog/compliance/inventory/ue1-packages-v68-v69.csv`, and explanation `catalog/compliance/inventory/UE1-V68-V69-CORPUS.md`. Files: **31**, with the UT99 v400 version 68 and Unreal v227 version 68/69 source families including `LicenseeVersion=227`. Test `php catalog/bin/verify-ue1-v68-v69-genuine-corpus.php` passes **31/31** with source-defined direct-byte checks; the old corpus still passes **61/61**.
+
+**Real production pathway:** `php catalog/bin/verify-ue1-genuine-production-paths.php` uses a disposable in-memory SQLite catalog game/profile model (game IDs 3 UT99, 12 Unreal). Against the two SHA manifests (92 file paths) it calls the actual `gp_classify_file`, actual UE1 reader resolver and `Uedb5SourceSnapshotFactory`, then writes each source snapshot with the production V5 block container writer. The production V5 reader reads each snapshot back, with **92/92 exact section comparisons for summary/names/imports/exports**. Only unique temporary test storage is written; production MySQL and persisted catalog rows are untouched. By source: **65 Unreal**, **27 UT99**.
+
+**Found UE1-D007:** The initial classifier still admitted the UE2-only Killing Floor tag for a UE1 selected game. Independent negative test failed before patch; after engine-specific admission protection in `catalog/lib/GameProfiles.php` it rejects the UE2 tag, while UE2 classification continues to admit it. Separate truncated/invalid-name-table source input is rejected by reader and V5 factory without any persisted V5 snapshot. Both negative checks now pass.
+
+**Broader regressions:** 19/19 selected verifier scripts passed, including all B01–B05 tests, Unreal/UT99 builder persistence, UE2/Killing Floor, UE4/UE5 header inspection, source scan bounds and profile admission. This does **not** demonstrate compiled Epic C++ execution, early Unrealfile support, actual MySQL projection/publishing/search or all source forks; O01 still IMPLEMENTING and **0 fully accepted** operations.

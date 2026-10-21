@@ -287,6 +287,24 @@ function gp_classify_file(PDO $db, int $selectedGameId, string $path, string $or
         $detectedEngine = 'UNKNOWN';
     }
     $selectedEngine = strtoupper((string)($profile['engine_key'] ?? ''));
+    // Epic UE1 ULinkerLoad admits PACKAGE_FILE_TAG only (0x9E2A83C1).
+    // The shared preliminary tag scanner also knows Killing Floor's UE2
+    // exception. Do not promote that UE2-only tag for a UE1-selected game.
+    // Preserve its admission when the selected reader is UE2.
+    if ($selectedEngine === 'UE1'
+        && ($summary['format'] ?? '') === 'legacy_package'
+        && ($summary['package_tag_variant'] ?? '') !== 'standard') {
+        $summary['ok'] = false;
+        $version = null;
+        $licensee = null;
+        $summary['reason'] = 'UE1 requires the standard Epic package tag; the detected variant belongs to another engine.';
+        $summary['error_code'] = 'unreal.package_tag_invalid_for_engine';
+        $summary['error_arguments'] = [
+            'engine_key' => 'UE1',
+            'actual_tag_variant' => (string)($summary['package_tag_variant'] ?? 'unknown'),
+            'expected_tag_variant' => 'standard',
+        ];
+    }
     $notes = [];
     $signedPackageVersion = in_array(($summary['format'] ?? ''), ['ue4_package', 'ue5_package'], true);
     $headerOk = !empty($summary['ok']);

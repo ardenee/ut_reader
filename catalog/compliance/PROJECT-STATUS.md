@@ -14,7 +14,7 @@ Updated: **2026-10-21**. This is the canonical recovery/handover file for this p
 | Active engine / operation | **UE1 / O01 — file identification and version dispatch** |
 | Current O01 status | **IMPLEMENTING**, not accepted |
 | Primary acceptance metric | **0 accepted / not-yet-frozen UE1 operation scope** |
-| Latest completed work batch | **UE1-B04 — genuine UE1 v35–61 corpus verification and pre-68 heritage inspector source parity** |
+| Latest completed work batch | **UE1-B05 — genuine UE1 v68/v69 source corpus, 92-file V5 roundtrips, UE1 classifier tag correction** |
 | Latest verified code checkpoint | `4d56c729` — B04 code/tests/status committed and pushed; 6/6 changed files SHA-256 matched PRD. Corpus inventory originally committed at `73d9c25c`. |
 
 ## Engine sequence
@@ -74,6 +74,7 @@ All paths above are under `L:\Source\Games\Unreal`, `L:\Source\Games\UT99`, or `
 | UE1-D004: file-examine header inspector still admitted UE2 tag as UE1 | CORRECTED for engine-specific inspection | `catalog/src/Application/Catalog/CatalogPackageHeaderInspector.php` | Same 9-check test; preserves UE2 tag |
 | UE1-D005: production header-only helper returned fallback blank headers after reader failures | CORRECTED for UE1 only | `catalog/lib/CatalogParser.php` | New 4-check real-entry-point test (three failed before fix, 4/4 pass after); 15/15 selected regressions passed |
 | UE1-D006: pre-68 inspector assumed heritage GUID always inline at byte 44 | CORRECTED; reader already source-aligned | `catalog/src/Application/Catalog/CatalogPackageHeaderInspector.php` | 4 of 5 source-anchored variant checks failed before fix; 5/5 pass after; genuine 61/61 corpus and 15/15 regression scripts pass |
+| UE1-D007: preliminary UE1 game admission still accepted UE2-only Killing Floor tag | CORRECTED in B05; UE2 still admitted | `catalog/lib/GameProfiles.php::gp_classify_file()` | Real profile/classifier/V5 test reproduced failure; two negative path checks pass after fix; 92/92 genuine source/V5 disk roundtrips and 19/19 selected scripts pass |
 
 The early `Unrealfile` header now returns an explicit **unsupported format** result with UE1 identity/version at classification. It is **not** deserialized or accepted as a usable package. This is a genuine unresolved feature gap.
 
@@ -93,6 +94,9 @@ B02 checks passed: `verify-ue1-early-format-identification.php` **9/9**, plus **
 - Primary test B03: `catalog/bin/verify-ue1-header-route-validation.php`
 - Primary test B04: `catalog/bin/verify-ue1-genuine-texture-corpus.php` (requires DEV or an explicit `UE1_GENUINE_TEXTURE_ROOT` environment variable)
 - Heritage source parity: `catalog/bin/verify-ue1-pre68-heritage-inspector.php`
+- B05 source corpus: `catalog/compliance/inventory/ue1-packages-v68-v69.csv` and `catalog/compliance/inventory/UE1-V68-V69-CORPUS.md`
+- B05 native-layout direct-byte test: `catalog/bin/verify-ue1-v68-v69-genuine-corpus.php`
+- B05 full 92-file classification/profile/source/V5 file roundtrip: `catalog/bin/verify-ue1-genuine-production-paths.php`
 
 ## Exact next actions — restart here
 
@@ -100,7 +104,7 @@ B02 checks passed: `verify-ue1-early-format-identification.php` **9/9**, plus **
 2. Complete UE1 source branch inventory: classify v0.82/v0.83/v0.84a file formats, source availability, and remaining branch forks. Cross-check v0.86x vs v0.867, v1.200, v1.224, v1.227, UT99 v400 and v430/v432 without assuming shared version rules.
 3. Trace the full O01 production entry-to-result graph: `gp_read_legacy_summary` → `gp_classify_file` → game profile/compatibility decision → catalog reader resolver → staging/indexing/metadata/V5; include file-examine, HTTP scan, alternate import routes and negative/error paths.
 4. Establish a fixed supported-format and operation register with explicit branch/reader support. **Implement the dedicated early Unrealfile reader where in scope**; do not silently turn recognised format into accepted supported data.
-5. Expand genuine-package testing beyond the current **61/61 passing v35–61 textures**: source-linked checks on genuine version-68/69 Unreal/UT99 packages, special licensee branches, and any actual pre-modern `Unrealfile` binary corpus. Compare to compiled Epic behavior where possible. The five synthetic heritage variants passed but are NOT a native oracle. Work one complete operation at a time.
+5. **Already passed:** 61/61 genuine v35–61 files plus 31/31 genuine v68/v69 files, including a v69/licensee-227 sample; 92/92 real classification→reader→source builder→isolated V5 write/read roundtrips. Next source evidence needed: genuine early string-tagged `Unrealfile` binary corpus, branch variants omitted from current corpus and (where feasible) a compiled original Epic UE1 linker oracle. Do not interpret container roundtrips as equivalent to native Epic execution.
 6. Run relevant verifier scripts; commit via local Git CLI, `git push origin main`, deploy changed files with Robocopy to PRD (excluding storage/config), SHA-256 compare, update this page and repeat.
 
 **Recovery rule:** reading this page plus `UE1-IMPLEMENTATION.md` and `UE1-ACCEPTANCE.md` should suffice for a fresh chat. Do not reopen earlier engine audits or create arbitrary new backlog identifiers. Never mark O01 ACCEPTED until complete source-linked workflow and independent acceptance evidence is available.
