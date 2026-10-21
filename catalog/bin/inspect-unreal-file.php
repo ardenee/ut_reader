@@ -301,6 +301,20 @@ function inspect_unreal_file(string $inputPath, bool $full = false): array
             $result['validation_arguments'] = is_array($firstValidation['arguments'] ?? null)
                 ? $firstValidation['arguments']
                 : [];
+            // A source-defined metadata decoder is available for original
+            // Unreal 1996 resource tables. Surface its real records in CLI
+            // without claiming that unimplemented resource data is valid.
+            if (($summary['format'] ?? '') === 'early_unreal_resource'
+                && in_array((int)($summary['version'] ?? 0), [9, 10], true)) {
+                try {
+                    $result['original_resource_metadata'] =
+                        \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalResourceTableReader::read($parsePath);
+                    $result['original_resource_metadata_status'] = 'DECODED';
+                } catch (Throwable $error) {
+                    $result['original_resource_metadata_status'] = 'FAILED';
+                    $result['original_resource_metadata_error'] = $error->getMessage();
+                }
+            }
         }
 
         if (strlen($header) >= 16) {
