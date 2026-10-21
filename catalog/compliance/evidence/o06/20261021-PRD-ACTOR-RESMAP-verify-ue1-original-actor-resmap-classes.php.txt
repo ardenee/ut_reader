@@ -1,0 +1,9 @@
+﻿PRD verify-ue1-original-actor-resmap-classes.php
+Exit: 0
+Input-SHA256: BB22A3C31A7EC62DD83C618FFB09163251165B1DC9ED932BD6BA08CFAAE65EAA
+{
+    "ok": true,
+    "passed": 26,
+    "total": 26,
+    "failures": []
+}
