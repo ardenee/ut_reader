@@ -310,6 +310,15 @@ function inspect_unreal_file(string $inputPath, bool $full = false): array
                     $result['original_resource_metadata'] =
                         \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalResourceTableReader::read($parsePath);
                     $result['original_resource_metadata_status'] = 'DECODED';
+                    try {
+                        $headers = \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalResourceHeaderReader::read($parsePath);
+                        $result['original_resource_headers'] = $headers['resource_headers'];
+                        $result['original_resource_headers_status'] = 'DECODED';
+                        $result['original_resource_unconsumed_header_bytes'] = $headers['unconsumed_header_bytes'];
+                    } catch (Throwable $headerError) {
+                        $result['original_resource_headers_status'] = 'FAILED';
+                        $result['original_resource_headers_error'] = $headerError->getMessage();
+                    }
                 } catch (Throwable $error) {
                     $result['original_resource_metadata_status'] = 'FAILED';
                     $result['original_resource_metadata_error'] = $error->getMessage();
