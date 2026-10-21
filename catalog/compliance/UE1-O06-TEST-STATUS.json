@@ -1,8 +1,8 @@
 ﻿{
-    "updated_at_utc":  "2026-10-21T16:15:47.6041337Z",
-    "head_commit":  "1acfabeb",
-    "current_target":  "PRD",
-    "current_source_sha256":  "7ae6616384a7a5afd578c6339227f9b576ed9be78ec38471ac5461ec04169565",
+    "updated_at_utc":  "2026-10-21T16:18:19.0597789Z",
+    "head_commit":  "6ea36023",
+    "current_target":  "DEV",
+    "current_source_sha256":  "fbd0ebeb1e830bc47d51c1278d13339fb60285d86d9c209b48a36cd0cb71d615",
     "tests":  [
                   {
                       "key":  "DEV:verify-ue1-classic-tagged-properties.php",
@@ -147,6 +147,18 @@
                       "run_id":  "20261021T160905954Z-76c41aab",
                       "exit_code":  0,
                       "log":  "catalog\\compliance\\evidence\\o06\\20261021T160905954Z-76c41aab-DEV-verify-ue1-original-unrealfile-class-schemas.php.txt"
+                  },
+                  {
+                      "key":  "DEV:verify-ue1-original-unrealfile-inheritance.php",
+                      "test":  "verify-ue1-original-unrealfile-inheritance.php",
+                      "target":  "DEV",
+                      "state":  "PASS",
+                      "event_at_utc":  "2026-10-21T16:18:19.0558067Z",
+                      "source_sha256":  "fbd0ebeb1e830bc47d51c1278d13339fb60285d86d9c209b48a36cd0cb71d615",
+                      "test_sha256":  "fd8c49d49790deea14e02d30a8261c94fde2cd7e89874897c6acb863c529c5a7",
+                      "run_id":  "20261021T161818878Z-771601c7",
+                      "exit_code":  0,
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261021T161818878Z-771601c7-DEV-verify-ue1-original-unrealfile-inheritance.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-original-unrealfile-object-bases.php",
