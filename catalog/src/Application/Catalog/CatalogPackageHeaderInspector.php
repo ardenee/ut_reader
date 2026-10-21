@@ -25,8 +25,20 @@ final class CatalogPackageHeaderInspector
         if ($bytes === false || strlen($bytes) < 40) {
             return ['ok' => false, 'error' => 'Stored package file is too small to parse header.', 'summary' => [], 'rows' => []];
         }
+        // Original UE1 0.86x/v0.867 has a fixed 32-byte "Unrealfile" tag,
+        // not the later package header. Do not interpret its bytes as UE1
+        // package summary fields; a dedicated reader is still required.
+        if (str_starts_with($bytes, "Unrealfile\x1A\0")) {
+            $version = self::u32($bytes, 32);
+            return ['ok' => false,
+                'error' => 'Early Unrealfile format (version ' . $version . ') requires a dedicated reader.',
+                'summary' => [], 'rows' => []];
+        }
         $tag = self::u32($bytes, 0);
-        if (!\UnrealDb\Catalog\Domain\Package\CatalogUnrealPackageTag::isSupportedLittleEndianValue($tag)) {
+        $engine = strtoupper(trim((string)($file['engine_key'] ?? $file['engine'] ?? '')));
+        if (($engine === 'UE1'
+                && $tag !== \UnrealDb\Catalog\Domain\Package\CatalogUnrealPackageTag::STANDARD)
+            || !\UnrealDb\Catalog\Domain\Package\CatalogUnrealPackageTag::isSupportedLittleEndianValue($tag)) {
             return ['ok' => false, 'error' => sprintf('Bad package tag 0x%08X', $tag), 'summary' => [], 'rows' => []];
         }
         $signed = self::i32($bytes, 4);

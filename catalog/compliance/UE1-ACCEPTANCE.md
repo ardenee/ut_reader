@@ -1,42 +1,57 @@
-# UE1 — acceptance evidence
+# UE1 — acceptance evidence and runnable checkpoints
 
-Started 2026-10-21. **No UE1 operation is accepted** under the new definition of done. O01 is implementing.
+Updated 2026-10-21. No UE1 operation has passed the new acceptance definition. **O01 remains IMPLEMENTING.**
 
-## Verified bounded defect: UE1-D001
+## B01 — numeric UE1 package tag boundary
 
-Source anchors: UT99 v400 `Core/Inc/UnObjVer.h:20-26` and `Core/Src/UnLinker.h:354-376`; Unreal v227 `Core/Inc/UnObjVer.h:23`.
+Pinned source: UT99 v400 `Core/Inc/UnObjVer.h:20-27`, `Core/Src/UnLinker.h:354-376`; Unreal v227 `Core/Inc/UnObjVer.h:23`.
 
-Procedure on DEV:
+Before: 2/6 checks failed because a UE1 reader admitted 0x9E2A83C2. After: 6/6 passed with UE2/Killing Floor acceptance retained. Eight relevant regression scripts passed. Committed/deployed in `698f028f`; DEV/PRD SHA-256 matched for six files.
+
+## B02 — early Unrealfile detection and header-inspector parity
+
+Pinned original-source evidence: `specs/epic-source/ue1/unreal-v0867/01-unrealfile-entry.md`; exact v0.867 C++ linker header and tag defined by `UnBuild.h:108` and `UnLinker.h:258-310,428-454`.
+
+Before changes: 5/9 expected cases failed in `verify-ue1-early-format-identification.php`, including generic unrecognised-magic outcome and UE1-tag misclassification in file-examine. After: **9/9 passed**.
+
+The test verifies: early fixed-string magic detection, meaningful unsupported error, UE1 identity, version byte 32 (23), negative near-miss, modern v68 header unaffected, UE1 rejection of UE2-only tag, and preserved UE2 acceptance.
+
+Additional selected regressions: **12/12 scripts exited 0**, including `verify-header-only-staging-first-upload.php`, `verify-killing-floor-package-tag.php`, `verify-ue1-package-tag-source.php`, `verify-ue1-pre50-import-layout.php`, `verify-ue1-root-import-integrity.php`, `verify-ue1-verify-import-profile-contract.php`, `verify-unreal-v227-summary-contract.php`, `verify-epic-ue123-reader-parity.php`, `verify-uedb5-ut99-persistence.php`, `verify-ue427-legacy-summary-inspector.php`, and `verify-ue5-583-workflow-identify-inspector.php`. Production modifications and verifier pass PHP syntax checks.
+
+Run all of these on DEV via the local PHP CLI:
 
 ```powershell
 cd C:\Users\arden\source\repos\ut_reader
-php catalog/bin/verify-ue1-package-tag-source.php
-php catalog/bin/verify-killing-floor-package-tag.php
-php catalog/bin/verify-ue1-pre50-import-layout.php
-php catalog/bin/verify-ue1-root-import-integrity.php
-php catalog/bin/verify-ue1-verify-import-profile-contract.php
-php catalog/bin/verify-unreal-v227-summary-contract.php
-php catalog/bin/verify-epic-ue123-reader-parity.php
-php catalog/bin/verify-uedb5-ut99-persistence.php
+$tests = @(
+    'verify-ue1-early-format-identification.php',
+    'verify-ue1-package-tag-source.php',
+    'verify-header-only-staging-first-upload.php',
+    'verify-killing-floor-package-tag.php',
+    'verify-ue1-pre50-import-layout.php',
+    'verify-ue1-root-import-integrity.php',
+    'verify-ue1-verify-import-profile-contract.php',
+    'verify-unreal-v227-summary-contract.php',
+    'verify-epic-ue123-reader-parity.php',
+    'verify-uedb5-ut99-persistence.php',
+    'verify-ue427-legacy-summary-inspector.php',
+    'verify-ue5-583-workflow-identify-inspector.php'
+)
+foreach ($t in $tests) { php ("catalog/bin/" + $t); if ($LASTEXITCODE -ne 0) { throw $t } }
 ```
 
-**Baseline before fix:** 2 of 6 checks failed (UE1 v400 and v227 incorrectly accepted tag 0x9E2A83C2). **After fix:** all 6 checks pass. All 8 executed scripts exit 0.
+**Evidence limits:** The early v23 fixture is synthetic but source-anchored; no authentic compiled v0.867 linker oracle or genuine matching binary package has yet been compared. The `.u` files sampled from v0.86x/v0.867 `Classes` are text source files and must not be represented as binary-package test inputs. Do not mark O01 accepted on classification alone.
 
-The new fixture tests intentionally hold the summary at UE1 version 68, zero tables and a deterministic GUID to isolate the Epic tag decision. The expected tag derives from the pinned C++ source, not UnrealDB.
+## O01 complete acceptance conditions (OPEN)
 
-**Evidence limit:** these are PHP source-anchored negative/positive tests, not a comparison with a running compiled Epic engine. They do not prove all O01 branches, production admission, actual caller-visible outcomes, genuine package corpus parity, or the whole engine.
+- [ ] Pin/classify each applicable UE1 game and community source branch; define supported old-format policy.
+- [x] Source-confirm original v0.867 and UT99 v400 tag decisions.
+- [x] Correct cross-engine tag leaks in reader and file-examine inspection.
+- [x] Recognise early Unrealfile signature with honest unsupported reporting.
+- [ ] Implement or explicitly agree support boundaries for the genuinely different early format.
+- [ ] Trace every real production entry point, profile rule, reader selection, validation and V5 published output.
+- [ ] Source-check version/minimum/recovery decisions for each supported revision.
+- [ ] Independently compare genuine package and native behaviours wherever possible, including errors and version boundaries.
+- [ ] Verify production persistence/search paths and acceptance after patch.
+- [ ] Commit, push, deploy and verify final accepted implementation.
 
-## O01 acceptance checklist (OPEN)
-
-- [ ] Pin exact supported UE1/UT99 game source revisions and provenance.
-- [ ] Agree the supported engine/package version and game-fork matrix.
-- [x] Identify reference tag branch in inspected v400 / v227 source.
-- [x] Compare and fix shared UE1 parser's cross-engine tag admission.
-- [x] Verify UE2/Killing Floor behavior remains intact.
-- [ ] Trace all real production file identification, dispatch, profile, upload and inspection paths.
-- [ ] Verify exact applicable version-gate behavior and supported product policy.
-- [ ] Compare sufficient genuine package inputs and failure paths independently.
-- [ ] Verify normalized data and observable production outputs.
-- [ ] Complete O01 evidence and mark ACCEPTED only when every agreed requirement passes.
-
-Deployment and commit details are recorded in the master dashboard when verified.
+One passed helper test is not a whole-operation acceptance. The master dashboard contains exact next actions and operational recovery.

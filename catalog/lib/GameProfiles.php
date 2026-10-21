@@ -149,6 +149,27 @@ function gp_read_legacy_summary(string $path): array
         return ['ok' => false, 'reason' => 'Could not open file', 'error_code' => 'unreal.header_read_failed'];
     }
     $bytes = fread($fh, 24);
+    // UE1 v0.86x/v0.867 used an entirely different FUnrealfileSummary,
+    // with a 32-byte string tag, before the 0x9E2A83C1 package format.
+    // Recognize its exact original tag, but never route it into the
+    // later UE1/UE2 package reader as though it were compatible.
+    if (is_string($bytes) && str_starts_with($bytes, "Unrealfile\x1A\0")) {
+        $rest = fread($fh, 12);
+        fclose($fh);
+        $prefix = $bytes . (is_string($rest) ? $rest : '');
+        $version = strlen($prefix) >= 36
+            ? (int)unpack('Vversion', substr($prefix, 32, 4))['version']
+            : null;
+        return [
+            'ok' => false,
+            'reason' => 'Early Unrealfile format requires a separate original-format reader.',
+            'error_code' => 'unreal.early_unrealfile_unsupported',
+            'error_arguments' => ['format' => 'early_unrealfile', 'version' => $version],
+            'format' => 'early_unrealfile',
+            'version' => $version,
+            'engine_hint' => 'UE1',
+        ];
+    }
     fclose($fh);
     if ($bytes === false) {
         return ['ok' => false, 'reason' => 'Could not read package header', 'error_code' => 'unreal.header_read_failed'];
