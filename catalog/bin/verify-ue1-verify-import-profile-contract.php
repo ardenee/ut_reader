@@ -156,6 +156,36 @@ $pre50Root=[0=>['import_index'=>0,'class_package'=>'Engine','class_name'=>'Textu
 $check('v4_pre50_root_comes_from_object_package',$rootMethod->invoke(null,$pre50Root,0)==='LegacyPkg');
 $objectMethod=new ReflectionMethod(PdoDependencyResolver::class,'isSourceObjectImport');
 $check('v4_pre50_object_import_does_not_use_zero_outer_as_package_only',$objectMethod->invoke(null,$pre50Root[0],'UE1')===true);
+// V4 SQL and V5 snapshot dependency projections share Epic's exact
+// post-v50 Core.Package root identity requirement. A pre50 _ObjectPackage
+// row is not a PackageIndex=0 root and must remain unaffected.
+$rootRule=\UnrealDb\Catalog\Domain\Package\CatalogUE1RootImportRule::class;
+$invalidRoot=[
+ 0=>['import_index'=>0,'class_package'=>'Engine','class_name'=>'Package','object_name'=>'TestPkg','outer_index'=>0],
+ 1=>['import_index'=>1,'class_package'=>'Engine','class_name'=>'Texture','object_name'=>'Tex','outer_index'=>-1],
+ 2=>['import_index'=>2,'class_package'=>'Core','class_name'=>'Package','object_name'=>'GoodPkg','outer_index'=>0],
+ 3=>['import_index'=>3,'class_package'=>'Engine','class_name'=>'Texture','object_name'=>'GoodTex','outer_index'=>-3],
+];
+$check('shared_ue1_wrong_root_rejected',$rootRule::invalidRoot($invalidRoot,0));
+$check('shared_ue1_invalid_ancestor_rejected',$rootRule::invalidRoot($invalidRoot,1));
+$check('shared_ue1_valid_root_preserved',!$rootRule::invalidRoot($invalidRoot,2));
+$check('shared_ue1_valid_child_preserved',!$rootRule::invalidRoot($invalidRoot,3));
+$invalidRoot[0]['object_package_present']=true;
+$invalidRoot[0]['object_package']='LegacyPkg';
+$check('shared_ue1_pre50_object_package_exempt',!$rootRule::invalidRoot($invalidRoot,0)
+    && !$rootRule::invalidRoot($invalidRoot,1));
+unset($invalidRoot[0]['object_package_present']);
+$invalidRoot[0]['class_package']='None';
+$check('shared_ue1_name_none_exempt',!$rootRule::invalidRoot($invalidRoot,0));
+$invalidRoot[0]['class_package']='Core';
+$invalidRoot[0]['class_name']='PACKAGE';
+$check('shared_ue1_case_insensitive_core_package',!$rootRule::invalidRoot($invalidRoot,0));
+$check('v4_invalid_root_precedes_common_and_package_only',
+    strpos((string)file_get_contents($root.'/src/Infrastructure/Persistence/PdoDependencyResolver.php'),
+        'CatalogUE1RootImportRule::invalidRoot') <
+    strpos((string)file_get_contents($root.'/src/Infrastructure/Persistence/PdoDependencyResolver.php'),
+        "elseif (self::isCommonImport") );
+
 $v4Source=(string)file_get_contents($root.'/src/Infrastructure/Persistence/PdoDependencyResolver.php');
 $check('v4_ue1_uses_profile_resolver_and_ut99_only_package_retry',
     str_contains($v4Source,'PdoUe1VerifyImportProjectionResolver::resolveProviderOutcome')

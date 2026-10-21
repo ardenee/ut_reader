@@ -379,6 +379,22 @@ final class PdoDependencyResolver
                     'source' => 'source_irrelevant_name_none',
                     'confidence' => 'source_irrelevant',
                 ];
+            } elseif ($engineKey === 'UE1' && $ue1Profile !== null
+                && (int)$fileIdentity['version'] >= 50
+                && \UnrealDb\Catalog\Domain\Package\CatalogUE1RootImportRule::invalidRoot(
+                    $importsByIndex, $importIndex
+                )) {
+                // VerifyImport requires Core.Package at the linker root.
+                // Neither a "common" flag nor package_only is sufficient
+                // evidence of a valid source-linked dependency.
+                $result = [
+                    'status' => 'unresolved',
+                    'resolved_file_id' => null,
+                    'resolved_export_id' => null,
+                    'resolved_export_index' => null,
+                    'source' => 'ue1_invalid_root_package_import',
+                    'confidence' => 'source_invalid',
+                ];
             } elseif ($ue4VerifyImport && self::sourceNameNoneImport($import)) {
                 $result = [
                     'status'=>'unresolved','resolved_file_id'=>null,'resolved_export_id'=>null,'resolved_export_index'=>null,

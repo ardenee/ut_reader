@@ -880,26 +880,9 @@ final class Uedb5ClassicDependencyResolver
      */
     private static function ue1InvalidRootPackageImport(array $imports, int $importIndex): bool
     {
-        $seen = [];
-        while (isset($imports[$importIndex]) && !isset($seen[$importIndex])) {
-            $seen[$importIndex] = true;
-            $row = $imports[$importIndex];
-            if (!empty($row['object_package_present']) || self::isSourceIrrelevantNoneImport($row)) {
-                return false;
-            }
-            $outer = (int)($row['outer_index'] ?? 0);
-            if ($outer === 0) {
-                return self::key((string)($row['class_package'] ?? '')) !== 'core'
-                    || self::key((string)($row['class_name'] ?? '')) !== 'package';
-            }
-            if ($outer > 0) {
-                return false;
-            }
-            $importIndex = -$outer - 1;
-        }
-        // Missing/cyclic ancestors remain unresolved in the ordinary path;
-        // don't invent a root identity to classify them.
-        return false;
+        return \UnrealDb\Catalog\Domain\Package\CatalogUE1RootImportRule::invalidRoot(
+            $imports, $importIndex
+        );
     }
 
     /** @param array<int,array<string,mixed>> $imports */
