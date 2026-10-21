@@ -38,6 +38,23 @@ struct FBspNode {
  INDEX iBound;BYTE iZone[2],NumVertices,Pad1;
  INDEX iDynamic[2];
 };
+struct FScale {FVector Scale;FLOAT SheerRate;INT SheerAxis;};
+struct FBoundingVolume : FBoundingRect {FVector Sphere;};
+struct UModelLayout {
+ BYTE Base[76];DWORD Vectors,Points,BspNodes,BspSurfs,VertPool,Polys,LightMesh,Bounds,Terrain;
+ FVector Location;FRotation Rotation;FVector PrePivot;FScale Scale;
+ INT CsgOper;DWORD LockType,Color,PolyFlags,ModelFlags;
+ FVector PostPivot;FScale PostScale,TempScale;
+ FBoundingVolume Bound[2];BYTE Pad[32];
+};
+struct PBeginPlayLayout {
+ DWORD bNetCooperative:1,bNetDeathMatch:1,bNetPersistent:1,bNetNoMonsters:1;
+ BYTE Difficulty;
+};
+struct ULevelLayout {
+ BYTE Base[76];INT State;PBeginPlayLayout PlayInfo;
+ DWORD Model,ActorList,PlayerList,BrushArray,Misc,TextBlocks[16];
+};
 struct FLightMeshIndex {
  INT DataOffset,TextureUStart,TextureVStart,MeshUSize,MeshVSize,
      MeshSpacing,NumStaticLights,NumDynamicLights;
@@ -73,6 +90,11 @@ static_assert(sizeof(FVertPool)==8,"two signed INDEX");
 static_assert(sizeof(FTerrainIndex)==16,"four signed INT");
 static_assert(sizeof(FZoneProperties)==24,"packed4 1996 zone properties");
 static_assert(sizeof(FBspNode)==64,"source FBspNode is 64 bytes");
+static_assert(sizeof(FScale)==24,"native 1996 FScale");
+static_assert(sizeof(FBoundingVolume)==48,"native 1996 FBoundingVolume");
+static_assert(sizeof(PBeginPlayLayout)==8,"native PBeginPlay struct");
+static_assert(sizeof(UModelLayout)==392,"original UModel native header");
+static_assert(sizeof(ULevelLayout)==172,"original ULevel native header");
 static_assert(sizeof(FLightMeshIndex)==100,"native light mesh index 100 bytes");
 static_assert(sizeof(FPoly)==352,"source native FPoly with 20 FVector records");
 static_assert(sizeof(FBspSurf)==48,"source FBspSurf record is 48 bytes");
