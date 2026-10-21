@@ -316,6 +316,8 @@ function inspect_unreal_file(string $inputPath, bool $full = false): array
                         $result['original_resource_headers_status'] = 'DECODED';
                         $result['original_resource_simple_database_records'] =
                             \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalResourceSimpleDatabaseReader::read($parsePath, false);
+                        $result['original_resource_meshmap_records'] =
+                            \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalResourceMeshMapReader::read($parsePath, false);
                         $result['original_resource_geometry_records'] =
                             \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalResourceGeometryReader::read($parsePath, false);
                         $result['original_resource_font_records'] =
