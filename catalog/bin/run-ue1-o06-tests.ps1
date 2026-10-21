@@ -29,6 +29,9 @@ $inputs=@(Get-ChildItem -LiteralPath (Join-Path $testRoot 'catalog\src\Infrastru
  Select-Object -ExpandProperty FullName)
 $inputs+=@(Join-Path $testRoot 'catalog\src\Infrastructure\Unverified\CatalogUE1OriginalStagingMetadata.php')
 $inputs+=@(Join-Path $testRoot 'catalog\bin\inspect-unreal-file.php')
+# Compiler fixture is executable acceptance input; changing it must invalidate
+# previous ABI passes even when the PHP verifier is unchanged.
+$inputs+=@(Join-Path $testRoot 'catalog\compliance\evidence\o06\ue1-1996-msvc-abi.cpp')
 $sourceSig=($inputs|Sort-Object|ForEach-Object{if(Test-Path -LiteralPath $_){$_+':'+(Get-FileHash -LiteralPath $_ -Algorithm SHA256).Hash}})-join "`n"
 $sourceSha=Get-TextSha $sourceSig
 $commit=(&git -C $repo rev-parse --short=8 HEAD).Trim()

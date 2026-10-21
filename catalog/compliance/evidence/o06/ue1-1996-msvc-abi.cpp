@@ -38,6 +38,14 @@ struct FBspNode {
  INDEX iBound;BYTE iZone[2],NumVertices,Pad1;
  INDEX iDynamic[2];
 };
+struct FPoly {
+ FVector Base,Normal,TextureU,TextureV,Vertex[16];
+ DWORD PolyFlags;
+ DWORD Brush,Texture;
+ WORD GroupName,ItemName;
+ INDEX NumVertices,iLink,iBrushPoly;
+ BYTE PanU,PanV,iZone[2];
+};
 struct FBspSurf {
  DWORD Texture,Brush,PolyFlags;
  INDEX pBase,vNormal,vTextureU,vTextureV,iLightMesh,iBrushPoly;
@@ -59,6 +67,7 @@ static_assert(sizeof(FVertPool)==8,"two signed INDEX");
 static_assert(sizeof(FTerrainIndex)==16,"four signed INT");
 static_assert(sizeof(FZoneProperties)==24,"packed4 1996 zone properties");
 static_assert(sizeof(FBspNode)==64,"source FBspNode is 64 bytes");
+static_assert(sizeof(FPoly)==352,"source native FPoly with 20 FVector records");
 static_assert(sizeof(FBspSurf)==48,"source FBspSurf record is 48 bytes");
 static_assert(sizeof(UBspNodesExtension)==1552,"zone table header extension");
 static_assert(sizeof(UBspNodesExtension)+84==1636,"UBspNodes total resource header");
