@@ -328,6 +328,8 @@ function inspect_unreal_file(string $inputPath, bool $full = false): array
                             \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalResourcePolysReader::read($parsePath, false);
                         $result['original_resource_bsp_records'] =
                             \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalResourceBspReader::read($parsePath, false);
+                        $result['original_resource_bsp_surface_records'] =
+                            \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalResourceBspSurfsReader::read($parsePath, false);
                         $result['original_resource_mesh_records'] =
                             \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalResourceMeshReader::read($parsePath, false);
                         $result['original_resource_script_records'] =
