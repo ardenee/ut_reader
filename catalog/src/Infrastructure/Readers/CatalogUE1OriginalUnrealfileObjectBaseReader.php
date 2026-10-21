@@ -134,6 +134,27 @@ final class CatalogUE1OriginalUnrealfileObjectBaseReader
                 }
                 $objects[] = $entry;
             }
+            // Epic loads the entire UObjectBase map and then converts each
+            // serialized nonzero DWORD reference to ResMap[reference-1].
+            // Forward references are therefore valid. Resolve only the
+            // source-table identity here; actual runtime ResMap objects may
+            // be null/filtered until original LoadAllObjects completes.
+            foreach ($objects as &$object) {
+                if (!isset($object['class_preload'])) {
+                    continue;
+                }
+                $parentIndex = $object['class_preload']['parent_object_index'];
+                $object['class_preload']['parent_serialized_target'] = $parentIndex === null
+                    ? null
+                    : [
+                        'object_index' => $parentIndex,
+                        'kind' => $objects[$parentIndex]['kind'],
+                        'name' => $objects[$parentIndex]['name'],
+                        'class_name' => $objects[$parentIndex]['class_name'],
+                    ];
+                $object['class_preload']['parent_runtime_resolution'] = 'not_evaluated';
+            }
+            unset($object);
             $metadata['object_bases'] = $objects;
             $metadata['object_bases_decoded'] = true;
             return $metadata;

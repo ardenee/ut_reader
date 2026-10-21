@@ -68,6 +68,24 @@ try {
             && ($bases[1]['class_preload']['class_flags']??null)===0xCAFED00D
             && ($bases[1]['class_preload']['resource_this_header_size']??null)===32);
         $check("v{$version}_preload_parent_reference_index",($bases[1]['class_preload']['parent_object_index']??null)===0);
+        $parentTarget=$bases[1]['class_preload']['parent_serialized_target']??[];
+        $check("v{$version}_parent_resmap_import_identity",
+            ($parentTarget['object_index']??null)===0
+            && ($parentTarget['kind']??null)==='import'
+            && ($parentTarget['name']??null)==='ImportedTex'
+            && ($parentTarget['class_name']??null)==='Texture'
+            && ($bases[1]['class_preload']['parent_runtime_resolution']??null)==='not_evaluated');
+        $stageClass='UnrealDb\\Catalog\\Infrastructure\\Unverified\\CatalogUE1OriginalStagingMetadata';
+        $stage=$stageClass::decode($path,['format'=>'early_unrealfile','version'=>$version]);
+        $check("v{$version}_stage_resmap_identity",($stage['native_metadata']['object_bases'][1]['class_preload']['parent_serialized_target']['name']??null)==='ImportedTex'
+            && ($stage['native_metadata']['object_bases'][1]['class_preload']['parent_runtime_resolution']??null)==='not_evaluated');
+        $builderClass='UnrealDb\\Catalog\\Infrastructure\\Unverified\\CatalogUnverifiedMetadataSnapshotBuilder';
+        $builder=new $builderClass(new PDO('sqlite::memory:'));
+        $snapshot=$builder->fromOriginalNative(2,'EarlyFile',$stage['names'],$stage['native_metadata']);
+        $stored=json_decode(json_encode($snapshot,JSON_THROW_ON_ERROR),true,512,JSON_THROW_ON_ERROR);
+        $check("v{$version}_stage_snapshot_resmap_roundtrip",$stored===$snapshot
+            && ($snapshot['native_metadata']['object_bases'][1]['class_preload']['parent_serialized_target']['name']??null)==='ImportedTex'
+            && ($snapshot['verified']??true)===false);
         $check("v{$version}_ordinary_export",($bases[2]['kind']??'')==='export'
             && ($bases[2]['name_index']??null)===4
             && ($bases[2]['class_index']??null)===6
@@ -110,7 +128,20 @@ try {
         $zeroParent=CatalogUE1OriginalUnrealfileObjectBaseReader::read($path);
         $check("v{$version}_null_class_parent_reference",($zeroParent['object_bases'][1]['class_preload']['parent_object_reference']??-1)===0
             && array_key_exists('parent_object_index',$zeroParent['object_bases'][1]['class_preload'])
-            && $zeroParent['object_bases'][1]['class_preload']['parent_object_index']===null);
+            && $zeroParent['object_bases'][1]['class_preload']['parent_object_index']===null
+            && array_key_exists('parent_serialized_target',$zeroParent['object_bases'][1]['class_preload'])
+            && $zeroParent['object_bases'][1]['class_preload']['parent_serialized_target']===null);
+
+        // ResMap is populated after the full table is loaded: a class may
+        // point forward to a serialized object not yet encountered.
+        file_put_contents($path,substr_replace($fx['bytes'],pack('V',3),$parentWordOffset,4));
+        $forwardParent=CatalogUE1OriginalUnrealfileObjectBaseReader::read($path);
+        $forward=$forwardParent['object_bases'][1]['class_preload']['parent_serialized_target']??[];
+        $check("v{$version}_forward_resmap_export_identity",
+            ($forward['object_index']??null)===2
+            && ($forward['name']??null)==='MyTexture'
+            && ($forward['kind']??null)==='export'
+            && ($forwardParent['object_bases'][1]['class_preload']['parent_runtime_resolution']??null)==='not_evaluated');
 
         file_put_contents($path,substr($fx['bytes'],0,-3));
         try{CatalogUE1OriginalUnrealfileObjectBaseReader::read($path);$rejected=false;}
