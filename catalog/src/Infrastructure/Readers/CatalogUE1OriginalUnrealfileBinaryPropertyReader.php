@@ -106,7 +106,12 @@ final class CatalogUE1OriginalUnrealfileBinaryPropertyReader
                         case 8:
                             $val=array_values(unpack('g3',$read(12)));break;
                         case 9:
-                            $val=array_values(unpack('V3',$read(12)));break;
+                            // FRotation uses signed 32-bit ANGLE_TYPE
+                            // (Epic v0.867 UnMath.h/UnPort.h).
+                            $angles=array_values(unpack('V3',$read(12)));
+                            $val=array_map(static fn(int $a):int=>
+                                $a>=0x80000000?$a-0x100000000:$a,$angles);
+                            break;
                         case 10:break; // Enum definition stores no instance data.
                         case 7:
                             // v0.867 Src/Inc/UnArc.h FArchive::String reads
