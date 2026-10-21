@@ -45,6 +45,16 @@ try {
     foreach([9,10] as $version) {
         $f=$fixture($version);
         file_put_contents($p,$f['bytes']);
+        $serialized=\UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalSerializedObjectReader::read($p,'early_unreal_resource');
+        $segments=$serialized['object_ranges'];
+        $check("v{$version}_source_payload_ranges",
+            count($segments)===2
+            && $segments[0]['header']['offset']===$f['headerOffset']
+            && $segments[0]['header']['size']===76
+            && $segments[0]['data']['offset']===$f['dataOffset']
+            && $segments[0]['data']['sha256']===hash('sha256','DATA')
+            && $segments[1]['data']['sha256']===hash('sha256','MORE')
+            && $serialized['class_property_schema_decoded']===false);
         $data=CatalogUE1OriginalResourceHeaderReader::read($p);
         $entries=$data['resource_headers']??[];
         $check("v{$version}_two_native_headers",($data['resource_headers_decoded']??false)===true

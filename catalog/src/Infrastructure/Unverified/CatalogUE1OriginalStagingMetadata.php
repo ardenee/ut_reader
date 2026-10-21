@@ -53,6 +53,7 @@ final class CatalogUE1OriginalStagingMetadata
                 'summary' => $raw['summary'],
                 'declared_dependencies' => $raw['dependencies'],
                 'object_bases' => $objects,
+                'serialized_stack_prefixes' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileStackReader::read($path, false),
                 'payload_decoded' => false,
             ];
             $counts = ['names' => count($raw['names']), 'imports' => count($imports), 'exports' => count($exports)];
@@ -64,6 +65,9 @@ final class CatalogUE1OriginalStagingMetadata
             );
         }
 
+        // O06: source-typed byte boundaries/digests. Actual class member
+        // values are NOT yet decoded; do not mark the staged file verified.
+        $native['serialized_object_ranges'] = \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalSerializedObjectReader::read($path, $format);
         $names = array_map(
             static fn(array $r):array => [
                 'name' => (string)$r['name'],

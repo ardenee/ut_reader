@@ -44,6 +44,16 @@ try {
     foreach([22,23] as $version) {
         $fx=$fixture($version);
         file_put_contents($path,$fx['bytes']);
+        $serialized=\UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalSerializedObjectReader::read($path,'early_unrealfile');
+        $segments=$serialized['object_ranges'];
+        $check("v{$version}_independent_header_data_sections",
+            count($segments)===2
+            && $segments[0]['header']['offset']===$fx['head1']
+            && $segments[0]['header']['sha256']===hash('sha256','hdr')
+            && $segments[0]['data']['sha256']===hash('sha256','DATA')
+            && $segments[1]['header']['sha256']===hash('sha256','HEAD')
+            && $segments[1]['data']['sha256']===hash('sha256','data++')
+            && $serialized['runtime_objects_created']===false);
         $result=CatalogUE1OriginalUnrealfileObjectBaseReader::read($path);
         $bases=$result['object_bases']??[];
         $check("v{$version}_decoded_three_objects",($result['object_bases_decoded']??false)===true

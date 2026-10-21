@@ -314,6 +314,8 @@ function inspect_unreal_file(string $inputPath, bool $full = false): array
                         $headers = \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalResourceHeaderReader::read($parsePath);
                         $result['original_resource_headers'] = $headers['resource_headers'];
                         $result['original_resource_headers_status'] = 'DECODED';
+                        $result['original_resource_serialized_objects'] =
+                            \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalSerializedObjectReader::read($parsePath, 'early_unreal_resource');
                         $result['original_resource_unconsumed_header_bytes'] = $headers['unconsumed_header_bytes'];
                     } catch (Throwable $headerError) {
                         $result['original_resource_headers_status'] = 'FAILED';
@@ -322,6 +324,44 @@ function inspect_unreal_file(string $inputPath, bool $full = false): array
                 } catch (Throwable $error) {
                     $result['original_resource_metadata_status'] = 'FAILED';
                     $result['original_resource_metadata_error'] = $error->getMessage();
+                }
+            }
+            // Source-specific UE1 UObject::Serialize/FPropertyTag envelope.
+            // This is a partial payload inspection, not class-native loading
+            // or full property/engine validation. Limit CLI output size.
+            if (($result['reader_engine'] ?? '') === 'UE1'
+                && ($result['full_validation'] ?? '') === 'OK'
+                && (int)($summary['version'] ?? 0) >= 34
+                && (int)($summary['version'] ?? 0) <= 69) {
+                try {
+                    $objectReader = new \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1PackageReader($parsePath);
+                    $objectReader->validatePackage();
+                    $exportCount = count($objectReader->getExports());
+                    $samples = [];
+                    $maxPreview = min($exportCount, 32);
+                    for ($i = 0; $i < $maxPreview; $i++) {
+                        try {
+                            $tagged = \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1ClassicTaggedPropertyReader::inspect(
+                                $parsePath, $objectReader, $i
+                            );
+                            $tagged['native_object'] = \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1ClassicNativeObjectReader::inspect(
+                                $parsePath, $objectReader, $i, $tagged
+                            );
+                            $samples[] = $tagged;
+                        } catch (Throwable $propertyError) {
+                            $samples[] = [
+                                'export_index' => $i,
+                                'status' => 'unverified_class_specific_or_invalid_layout',
+                                'detail' => $propertyError->getMessage(),
+                            ];
+                        }
+                    }
+                    $result['ue1_object_payload_preview'] = $samples;
+                    $result['ue1_object_payload_preview_limit'] = 32;
+                    $result['ue1_object_payload_preview_truncated'] = $exportCount > $maxPreview;
+                    $result['ue1_object_payload_scope'] = 'source_tagged_properties_and_known_class_native_records; bulk_bytes_and_runtime_class_defaults_not_certified';
+                } catch (Throwable $objectError) {
+                    $result['ue1_object_payload_preview_error'] = $objectError->getMessage();
                 }
             }
             if (($summary['format'] ?? '') === 'early_unrealfile'
@@ -334,6 +374,10 @@ function inspect_unreal_file(string $inputPath, bool $full = false): array
                         $result['original_unrealfile_object_bases'] =
                             \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileObjectBaseReader::read($parsePath)['object_bases'];
                         $result['original_unrealfile_object_bases_status'] = 'DECODED';
+                        $result['original_unrealfile_stack_prefixes'] =
+                            \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileStackReader::read($parsePath, false);
+                        $result['original_unrealfile_serialized_objects'] =
+                            \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalSerializedObjectReader::read($parsePath, 'early_unrealfile');
                     } catch (Throwable $objectError) {
                         $result['original_unrealfile_object_bases_status'] = 'FAILED';
                         $result['original_unrealfile_object_bases_error'] = $objectError->getMessage();
