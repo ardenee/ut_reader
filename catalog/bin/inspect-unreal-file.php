@@ -314,6 +314,10 @@ function inspect_unreal_file(string $inputPath, bool $full = false): array
                         $headers = \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalResourceHeaderReader::read($parsePath);
                         $result['original_resource_headers'] = $headers['resource_headers'];
                         $result['original_resource_headers_status'] = 'DECODED';
+                        $result['original_resource_simple_database_records'] =
+                            \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalResourceSimpleDatabaseReader::read($parsePath, false);
+                        $result['original_resource_texture_headers'] =
+                            \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalResourceTextureReader::read($parsePath, false);
                         $result['original_resource_database_headers'] =
                             \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalResourceDatabaseReader::read($parsePath, false);
                         $result['original_resource_serialized_objects'] =

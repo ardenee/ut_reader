@@ -73,7 +73,7 @@ final class CatalogUE1OriginalUnrealfileBinaryPropertyReader
             $pos=(int)$stack['serialized_prefix_bytes'];
             $bytes=self::slice($path,$hOff,$hSize);
             $read=static function(int $n)use($bytes,&$pos):string{
-                if($n<0||$n>strlen($bytes)-$pos)throw new RuntimeException('UClass binary property exceeds serialized object header');
+                if($n<0||$n>strlen($bytes)-$pos)throw new RuntimeException('UClass binary property exceeds serialized object header at relative byte '.$pos.' of '.strlen($bytes).' (request '.$n.')');
                 $data=substr($bytes,$pos,$n);$pos+=$n;return $data;
             };
             $values=[];
@@ -109,10 +109,24 @@ final class CatalogUE1OriginalUnrealfileBinaryPropertyReader
                             $val=array_values(unpack('V3',$read(12)));break;
                         case 10:break; // Enum definition stores no instance data.
                         case 7:
-                            // v0.867 Ar.String uses source class ElementSize;
-                            // non-fixed/unknown string layout is not guessed.
-                            $entry['status']='binary_string_serializer_requires_length_contract';
-                            $results[]=$entry;continue 4;
+                            // v0.867 Src/Inc/UnArc.h FArchive::String reads
+                            // up to ElementSize-1 bytes, stopping at NUL,
+                            // and writes a forced terminator in memory.
+                            $max=(int)$prop['element_size'];
+                            if($max<=0||$max>65536){
+                                $entry['status']='binary_string_requires_valid_ElementSize';
+                                $results[]=$entry;continue 4;
+                            }
+                            $raw='';
+                            for($k=0;$k<$max-1;$k++){
+                                $ch=$read(1);
+                                if($ch==="\0")break;
+                                $raw.=$ch;
+                            }
+                            // Serialized source ANSI bytes are preserved;
+                            // no locale/UTF-8 identity is manufactured.
+                            $val=['ansi_bytes_hex'=>strtoupper(bin2hex($raw)),
+                                'source_max_length'=>$max];break;
                         default:throw new RuntimeException('Unsupported native FProperty type '.$type);
                     }
                     $items[]=$val;
