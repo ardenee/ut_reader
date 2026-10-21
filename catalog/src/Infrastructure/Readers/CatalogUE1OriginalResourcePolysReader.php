@@ -1,88 +1,86 @@
 <?php
 /**
- * Unreal original 1996 v9/v10 UPolys source-native FPoly records.
- * Epic v0.84a UnRes.h::FPoly, UnFPoly.cpp::UPolys::Register;
- * FPoly=352 bytes under /Zp4: 20 FVector (16 bytes each), flags,
- * raw native model/texture pointers, two FName WORDs, three INDEXes
- * and four BYTEs. Size independently MSVC static_assert verified.
+ * 1996 UPolys native FPoly records, v9/v10 (RES_Polys=20).
+ * Source: Epic v0.84a UnRes.h::FPoly / UnFPoly.cpp::QueryDataReferences.
+ * Win32 FPoly = FVector[4] (48) + FVector Vertex[16] (192) +
+ * DWORD PolyFlags(4), two 32-bit UModel/UTexture pointer words(8), FName[2](4),
+ * INDEX NumVertices/iLink/iBrushPoly(12), 4 bytes pan/zone = 272.
+ * Resource/name words remain unresolved until Epic-style callbacks.
  */
 declare(strict_types=1);
 namespace UnrealDb\Catalog\Infrastructure\Readers;
 use RuntimeException;
 final class CatalogUE1OriginalResourcePolysReader
 {
-    private const RECORD_BYTES=352;
     /** @return array<string,mixed> */
     public static function read(string $path,bool $strict=false):array
     {
         $db=CatalogUE1OriginalResourceDatabaseReader::read($path,$strict)['database_headers'];
-        $headers=CatalogUE1OriginalResourceHeaderReader::read($path)['resource_headers'];
+        $hdrs=CatalogUE1OriginalResourceHeaderReader::read($path)['resource_headers'];
         $out=[];$fp=@fopen($path,'rb');
-        if(!$fp)throw new RuntimeException('Cannot open source UPolys');
+        if(!$fp)throw new RuntimeException('Cannot read original UPolys package');
         try{
             foreach($db as $i=>$row){
                 if((int)$row['resource_type']!==20)continue;
-                $h=$headers[$i];
-                $brief=['export_index'=>(int)$h['export_index'],
-                    'status'=>'incomplete_source_polys_header','runtime_references_resolved'=>false];
+                $h=$hdrs[$i];$entry=['export_index'=>(int)$h['export_index'],
+                    'status'=>'incomplete_native_polygon_header',
+                    'runtime_reference_fixups_evaluated'=>false];
                 if(($row['status']??null)!=='native_database_num_max_decoded'
-                    ||(int)$h['serialized_length']<84){
-                    if($strict)throw new RuntimeException('UPolys header shorter than UDatabase base');
-                    $out[]=$brief;continue;
+                   ||(int)$h['serialized_length']<84){
+                    if($strict)throw new RuntimeException('UPolys lacks source UDatabase header');
+                    $out[]=$entry;continue;
                 }
-                $num=(int)$row['database_count'];$max=(int)$row['database_capacity'];
-                if($num>100000 || $max>intdiv(PHP_INT_MAX,self::RECORD_BYTES)
-                   || $max*self::RECORD_BYTES!==(int)$h['file_data_size'])
-                    throw new RuntimeException('UPolys Num/Max versus FPoly native size mismatch');
+                $num=(int)$row['database_count'];
+                if($num>intdiv(PHP_INT_MAX,272)||
+                    (int)$h['file_data_size']!==$num*272)
+                    throw new RuntimeException('UPolys data size differs from Num*sizeof(FPoly)');
                 if(fseek($fp,(int)$h['file_data_offset'],SEEK_SET)!==0)
-                    throw new RuntimeException('Cannot seek FPoly database');
-                $entries=[];
+                    throw new RuntimeException('Cannot seek FPoly data');
+                $polys=[];
                 $signed=static fn(int $v):int=>$v>=0x80000000?$v-0x100000000:$v;
-                $vector=static function(string $bytes,int $offset):array{
-                    $f=array_values(unpack('g3',substr($bytes,$offset,12)));
-                    return ['xyz'=>$f,
-                        'w_or_flags_raw_word'=>(int)unpack('V',substr($bytes,$offset+12,4))[1]];
-                };
                 for($j=0;$j<$num;$j++){
-                    $bytes=fread($fp,self::RECORD_BYTES);
-                    if(!is_string($bytes)||strlen($bytes)!==self::RECORD_BYTES)
-                        throw new RuntimeException('Truncated source native FPoly record');
-                    $verts=[];for($k=0;$k<16;$k++)$verts[]=$vector($bytes,64+$k*16);
-                    $words=unpack('Vflags/Vbrush/Vtexture',substr($bytes,320,12));
-                    $names=unpack('vgroup/vitem',substr($bytes,332,4));
-                    $index=unpack('Vvertices/Vlink/Vpoly',substr($bytes,336,12));
-                    $count=$signed((int)$index['vertices']);
-                    if($count<0||$count>16)
-                        throw new RuntimeException('FPoly exceeds source MAX_FPOLY_VERTICES 16');
-                    $entries[]=[
-                        'index'=>$j,'base'=>$vector($bytes,0),
-                        'normal'=>$vector($bytes,16),
-                        'texture_u'=>$vector($bytes,32),
-                        'texture_v'=>$vector($bytes,48),
-                        'active_vertices'=>array_slice($verts,0,$count),
-                        'serialized_vertex_capacity'=>16,
-                        'poly_flags'=>(int)$words['flags'],
-                        'brush_reference_raw_word'=>(int)$words['brush'],
-                        'texture_reference_raw_word'=>(int)$words['texture'],
-                        'group_name_index_raw_word'=>(int)$names['group'],
-                        'item_name_index_raw_word'=>(int)$names['item'],
-                        'vertex_count'=>$count,
-                        'link_index'=>$signed((int)$index['link']),
-                        'brush_poly_index'=>$signed((int)$index['poly']),
-                        'pan_u'=>ord($bytes[348]),'pan_v'=>ord($bytes[349]),
-                        'zones'=>[ord($bytes[350]),ord($bytes[351])],
+                    $bytes=fread($fp,272);
+                    if(!is_string($bytes)||strlen($bytes)!==272)
+                        throw new RuntimeException('Truncated native FPoly');
+                    $base=array_values(unpack('g3',substr($bytes,0,12)));
+                    $normal=array_values(unpack('g3',substr($bytes,12,12)));
+                    $u=array_values(unpack('g3',substr($bytes,24,12)));
+                    $v=array_values(unpack('g3',substr($bytes,36,12)));
+                    $vertices=[];for($k=0;$k<16;$k++)
+                        $vertices[]=array_values(unpack('g3',substr($bytes,48+$k*12,12)));
+                    $w=array_values(unpack('V3',substr($bytes,240,12)));
+                    $names=array_values(unpack('v2',substr($bytes,252,4)));
+                    $indexes=array_values(unpack('V3',substr($bytes,256,12)));
+                    if($indexes[0]>16)
+                        throw new RuntimeException('FPoly NumVertices exceeds MAX_FPOLY_VERTICES');
+                    $tail=array_values(unpack('C4',substr($bytes,268,4)));
+                    $polys[]=[
+                        'index'=>$j,'base'=>$base,'normal'=>$normal,
+                        'texture_u'=>$u,'texture_v'=>$v,
+                        'vertices'=>array_slice($vertices,0,$indexes[0]),
+                        'poly_flags'=>$w[0],
+                        'brush_raw_reference'=>$w[1],
+                        'texture_raw_reference'=>$w[2],
+                        'group_name_raw_word'=>$names[0],
+                        'item_name_raw_word'=>$names[1],
+                        'num_vertices'=>$indexes[0],
+                        'linked_polygon_index'=>$signed($indexes[1]),
+                        'source_brush_polygon_index'=>$signed($indexes[2]),
+                        'pan_u'=>$tail[0],'pan_v'=>$tail[1],
+                        'zones'=>[$tail[2],$tail[3]],
+                        'runtime_reference_fixups_evaluated'=>false,
                     ];
                 }
                 $out[]=['export_index'=>(int)$h['export_index'],
-                    'native_class'=>'UPolys','status'=>'native_polys_records_decoded',
-                    'record_count'=>$num,'record_capacity'=>$max,
-                    'record_stride'=>self::RECORD_BYTES,
-                    'source_header_bytes'=>84,
-                    'records'=>$entries,
-                    'runtime_references_resolved'=>false];
+                    'status'=>'native_polygon_records_decoded',
+                    'record_count'=>$num,'record_capacity'=>(int)$row['database_capacity'],
+                    'record_size_bytes'=>272,
+                    'additional_header_bytes'=>(int)$h['serialized_length']-84,
+                    'polygon_records'=>$polys,
+                    'runtime_reference_fixups_evaluated'=>false];
             }
         }finally{fclose($fp);}
-        return ['source_family'=>'early_unreal_resource','polys_resources'=>$out,
-            'runtime_references_resolved'=>false];
+        return ['source_family'=>'early_unreal_resource',
+            'polygon_resources'=>$out,'runtime_references_resolved'=>false];
     }
 }

@@ -1,0 +1,15 @@
+﻿{
+    "ok": false,
+    "passed": 8,
+    "total": 16,
+    "failures": [
+        "resource_mysql_indexed_unverified",
+        "resource_exact_native_counts",
+        "resource_mysql_global_resarray_lookup_preserved",
+        "resource_persistent_native_metadata",
+        "resource_no_modern_identity_fakes",
+        "resource_nonmisleading_scan_notes",
+        "resource_ansi_name_survives_mysql_storage",
+        "resource_mysql_compressed_payload_persists"
+    ]
+}

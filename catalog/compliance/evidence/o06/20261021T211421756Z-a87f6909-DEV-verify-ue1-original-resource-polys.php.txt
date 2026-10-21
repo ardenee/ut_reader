@@ -1,0 +1,2 @@
+﻿
+Parse error: syntax error, unexpected token "," in C:\Users\arden\source\repos\ut_reader\catalog\src\Infrastructure\Readers\CatalogUE1OriginalResourcePolysReader.php on line 6
