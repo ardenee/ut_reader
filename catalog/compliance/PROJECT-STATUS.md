@@ -14,8 +14,8 @@ Updated: **2026-10-21**. This is the canonical recovery/handover file for this p
 | Active engine / operation | **UE1 / O02 — original/standard package summary and metadata** |
 | O01 status | **ACCEPTED — 6/6 fixed identification/dispatch criteria passed**; see `UE1-ACCEPTANCE.md`. Original full readers are O02 work. |
 | Primary acceptance metric | **UE1: 1 accepted operation (O01); O02 implementing.** Ten source-dependent categories currently listed; UE1 overall NOT accepted. |
-| Latest completed work batch | **UE1 O01 — completed original resource v9/v10 EOF identification and error-safe production dispatch** |
-| Latest verified code checkpoint | **`0b457f84`** — O02 original Unrealfile v22/v23 reader (summary, dependencies and names) committed/pushed/deployed; 3/3 DEV–PRD hashes and PRD 19/19 tests. Prior v9/v10 reader `e71ecf8f` PRD 21/21 tests; DEV 22/22 regression scripts passed. |
+| Latest completed work batch | **UE1 O02 — original 1996 resource headers and 1997 UObjectBase tables now decode in native read-only inspector** |
+| Latest verified code checkpoint | **`f939cea1`** — O02 native v9/v10 resource-header decoder committed/pushed/deployed (3/3 DEV–PRD hashes, 18/18 new tests). **`5dd501a9`** — O02 v22/v23 UObjectBase object/table/class-preload reader committed/pushed/deployed (3/3 hashes, 19/19 tests). DEV 24/24 regression scripts passed; PRD genuine package workflow remains 92/92. |
 
 ## Engine sequence
 
@@ -34,7 +34,7 @@ Do not move to UE2 before UE1 acceptance. Earlier VERIFIED work cannot be substi
 | ID | Category | Status |
 |---|---|---|
 | O01 | File identification and version dispatch | **ACCEPTED (6/6 source-backed scoped requirements)** |
-| O02 | Package summary and metadata | **IMPLEMENTING** — 1996 v9/v10 resource summary/names/import/export decoded; 1997 v22/v23 Unrealfile summary/dependencies/names decoded; original object bases and resource payloads NOT decoded |
+| O02 | Package summary and metadata | **IMPLEMENTING** — 1996 v9/v10 native resource headers/data references and tables decode; 1997 v22/v23 UObjectBase imports/exports/class-preloads decode; type-specific payloads and full production ingest NOT implemented |
 | O03 | Names | NOT STARTED |
 | O04 | Imports/exports | NOT STARTED |
 | O05 | Dependency resolution | NOT STARTED |
@@ -117,10 +117,10 @@ B02 checks passed: `verify-ue1-early-format-identification.php` **9/9**, plus **
 ## Exact next actions — restart here
 
 1. Verify DEV device, `git status --short --branch`, `git log -1`, compare `origin/main`, and ensure prior committed changes reached PRD. Preserve any unrelated user edits.
-2. **O02 in implementation:** both original 1996 resource v9/v10 and 1997 Unrealfile v22/v23 source-defined metadata readers exist and are CLI-accessible. Complete remaining original 1997 UObjectBase and 1996 resource-header/object payload decoding from Epic source; do not confuse these with modern UObject package tables.
-3. O02 now decodes both source-defined early families: 1996 EOF resource v9/v10 fixed tables (36-byte names, 44-byte import/export records) and 1997 `FUnrealfileSummary` v22/v23 variable dependency/name strings. CLI `--full --json` surfaces decoded metadata **without claiming full package validity**. Next implement native original `UObjectBase` object-table headers and 1996 resource header/payload handling from supplied C++; verify serialized object identities.
-4. Verify O02 with native-source-layout fixtures, real packages where available and existing reader regressions. Find genuine old files but do not wait for them when exact original C++ source is available. Keep source semantics authoritative over generic format assumptions.
-5. Existing O01 **6/6 accepted**. O02 1996 resource-table reader **21/21** tests DEV/PRD and 1997 Unrealfile v22/v23 metadata reader **19/19** tests DEV/PRD. Full original object/payload reading remains **not implemented**. Broader DEV regression **22/22** scripts passed; source is authority, no unsupported full-reader claims.
+2. **O02 implementation in place:** original 1996 resource v9/v10 metadata/tables/native header fields and 1997 Unrealfile v22/v23 metadata/names/dependencies/UObjectBase imports/exports/class-preloads now decode through the real read-only inspector. Epic source remains master: do not represent stored pointer words as object references or header decoding as full payload support.
+3. **Next coding milestone:** source-specific resource/object SerializeHeader/SerializeData semantics, original reference remapping, genuine ingestion of early-format metadata into catalog without assigning false verified status, and real production entry-point coverage. Do not conflate metadata-only inspection with successful Epic-equivalent full file parsing.
+4. **Production schema distinction:** original `FResNameFileEntry` and `UObjectBase` records are not later FObjectImport/FObjectExport tables. `CatalogUnverifiedMetadataSnapshotBuilder::fromParsed` expects modern object paths and class/outer indices; do **not** force original records into it (that would fabricate identities). Build a source-specific metadata adapter retaining the original record type and explicit unverified/partial status before enabling catalog indexing. Finish resource-specific SerializeHeader/SerializeData implementation separately.
+5. **Tests:** O01 accepted 6/6; O02 v9/v10 tables 21/21, native headers 18/18, v22/v23 summary/dependencies/names 19/19, UObjectBase + class preload 19/19. DEV **24/24** regressions, PRD targeted tests and genuine **92/92** package workflow passed. O02 is NOT fully accepted: early formats have source-aligned metadata-only inspection but still need native per-object payload and production indexing support.
 6. Run relevant verifier scripts; commit via local Git CLI, `git push origin main`, deploy changed files with Robocopy to PRD (excluding storage/config), SHA-256 compare, update this page and repeat.
 
 **Recovery rule:** read this page plus `UE1-IMPLEMENTATION.md` and `UE1-ACCEPTANCE.md`; source C++ is master truth. O01 is accepted for its frozen identification scope; do not reopen it for O02–O10 decoding, object or SQL work. Advance one bounded operation at a time and deploy verified code promptly.
