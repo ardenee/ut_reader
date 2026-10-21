@@ -321,6 +321,14 @@ function inspect_unreal_file(string $inputPath, bool $full = false): array
                     $result['original_unrealfile_metadata'] =
                         \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileMetadataReader::read($parsePath);
                     $result['original_unrealfile_metadata_status'] = 'DECODED';
+                    try {
+                        $result['original_unrealfile_object_bases'] =
+                            \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileObjectBaseReader::read($parsePath)['object_bases'];
+                        $result['original_unrealfile_object_bases_status'] = 'DECODED';
+                    } catch (Throwable $objectError) {
+                        $result['original_unrealfile_object_bases_status'] = 'FAILED';
+                        $result['original_unrealfile_object_bases_error'] = $objectError->getMessage();
+                    }
                 } catch (Throwable $error) {
                     $result['original_unrealfile_metadata_status'] = 'FAILED';
                     $result['original_unrealfile_metadata_error'] = $error->getMessage();
