@@ -67,3 +67,21 @@ B03 committed/pushed as `aa3eb737`; all 5 changed code/test/documentation files 
 - [ ] Commit, push, deploy and verify final accepted implementation.
 
 One passed helper test is not a whole-operation acceptance. The master dashboard contains exact next actions and operational recovery.
+
+## B04 — original Unreal v35–61 corpus and heritage inspector correction (2026-10-21)
+
+**Source:** Unreal v1.200 `Core/Src/UnLinker.h:303-339` defines the pre-68 summary fields (package flags are serialized from version 34). UT99 v400 `Core/Src/UnLinker.h:173-200` defines the distinction between pre-68 heritage GUIDs (offset/count, last GUID wins) and version-68+ inline GUIDs.
+
+**Real-file check:** `php catalog/bin/verify-ue1-genuine-texture-corpus.php` reads all 61 SHA-256-pinned `.utx` packages from `L:\Source\Engine\UE1\Source\Unreal\Textures`. All **61/61 passed** across 13 serialized package versions 35–61. The check independently unpacks 11 native serialized summary fields directly from the physical first 44 bytes and compares them to the canonical reader; also verifies names/imports/exports counts, source/HTTP/queue-facing header helper and file-examine GUID agreement. All 61 genuine files have exactly one heritage record at byte 44, which limits this sample's variation.
+
+**Defect UE1-D006:** the UI inspection route was incorrectly reading a GUID at byte 44 unconditionally for pre-68 summaries. `verify-ue1-pre68-heritage-inspector.php` reproduced **4 failures out of 5** before the correction (multi-record/offset, zero heritage, GUID past 1 MiB, invalid bounds); after patch **5/5 passed**, including unchanged version-68 inline GUID handling. The inspector now obtains the last GUID from the validated heritage table. An additional **15/15 existing regression scripts passed**; modified PHP and both new test scripts lint.
+
+**Limits:** the B04 fixtures prove genuine-input parser operation and source-defined byte layout checks, not a compiled Epic engine oracle or property/object payload, V5 persistence or full end-to-end acceptance. O01 remains IMPLEMENTING; UE1 acceptance is still **0 operations accepted**.
+
+Run on DEV:
+
+```powershell
+cd C:\Users\arden\source\repos\ut_reader
+php catalog/bin/verify-ue1-genuine-texture-corpus.php
+php catalog/bin/verify-ue1-pre68-heritage-inspector.php
+```

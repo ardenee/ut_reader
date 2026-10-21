@@ -24,3 +24,11 @@ The entire sorted per-file inventory, including relative path, byte length, seri
 **Reproducibility:** `.utx` little-endian bytes 0–3 are the standard tag `0x9E2A83C1`; bytes 4–5 contain the package version, bytes 6–7 the licensee version. In this observed corpus, the licensee high word is zero. `.pcx` files have independent PCX format signatures and no Unreal package version.
 
 **Relevance to UE1 O01/O02:** provides 61 real pre-v62 package fixtures, especially 59 older than the current v61 baseline. Next acceptance work should exercise UnrealDB's actual canonical UE1 reader against all 61 files, compare decoded fields to source-backed expectations, and separately test early original `Unrealfile\x1A` format if genuine binary instances are found. Header signatures alone do not establish successful loading or authenticity of file provenance.
+
+## Completed limited parser validation (B04, 2026-10-21)
+
+The existing reader was executed, not just the header signature scanner. `catalog/bin/verify-ue1-genuine-texture-corpus.php` passed on 61/61 genuine packages: inventory hash/size, all 11 source-specified summary fields independently unpacked from file bytes, canonical UE1 name/import/export table count checks, real production header reader, and file-examine GUID agreement.
+
+All 61 genuine cases have `HeritageCount=1`, `HeritageOffset=44`. This apparent success alone cannot detect a bug in other heritage layouts. A separate source-based synthetic five-case test `verify-ue1-pre68-heritage-inspector.php` reproduced four incorrect inspector outcomes before correction and passed all five after correction.
+
+These results remain **bounded verification**, not a native Epic C++ runtime oracle, not proof of property/object payload equivalence, and not acceptance of UE1 O01.

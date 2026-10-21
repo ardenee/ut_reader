@@ -57,7 +57,7 @@ final class CatalogPackageHeaderInspector
         $extension = strtolower((string)($file['extension'] ?? ''));
         return (!$knownLegacyVersion && $signed < 0) || in_array($extension, ['uasset', 'umap'], true)
             ? self::inspectUe4($bytes, $file)
-            : self::inspectLegacy($bytes);
+            : self::inspectLegacy($bytes, $path);
     }
 
     /** @return array{ok:bool,error:string,summary:array<string,mixed>,rows:list<array<string,mixed>>} */
@@ -94,7 +94,7 @@ final class CatalogPackageHeaderInspector
         ];
     }
 
-    private static function inspectLegacy(string $bytes): array
+    private static function inspectLegacy(string $bytes, string $path): array
     {
         $rows = [];
         $offset = 0;
@@ -112,12 +112,45 @@ final class CatalogPackageHeaderInspector
         $importCount = self::i32Field($rows, $bytes, $offset, 'importCount');
         $importOffset = self::i32Field($rows, $bytes, $offset, 'importOffset');
         $heritage = 'n/a';
-        if ($version < 68 && self::has($bytes, $offset, 8)) {
+        $guid = '';
+        if ($version < 68) {
+            // Epic UE1 pre-68 FPackageFileSummary serializes HeritageCount and
+            // HeritageOffset, not an inline GUID. It seeks to the heritage
+            // array, loads each FGuid and retains the final entry.
+            if (!self::has($bytes, $offset, 8)) {
+                return ['ok' => false, 'error' => 'Truncated legacy heritage summary.', 'summary' => [], 'rows' => $rows];
+            }
             $heritageCount = self::i32Field($rows, $bytes, $offset, 'heritageCount');
             $heritageOffset = self::i32Field($rows, $bytes, $offset, 'heritageOffset');
             $heritage = $heritageCount . ' / ' . $heritageOffset;
+            clearstatcache(true, $path);
+            $size = @filesize($path);
+            if ($size === false || $heritageCount < 0 || $heritageOffset < 0
+                || $heritageOffset > $size
+                || $heritageCount > intdiv($size - $heritageOffset, 16)) {
+                return ['ok' => false, 'error' => 'Invalid legacy heritage table.', 'summary' => [], 'rows' => $rows];
+            }
+            if ($heritageCount > 0) {
+                $guidOffset = $heritageOffset + ($heritageCount - 1) * 16;
+                $guidBytes = self::has($bytes, $guidOffset, 16)
+                    ? substr($bytes, $guidOffset, 16)
+                    : @file_get_contents($path, false, null, $guidOffset, 16);
+                if (!is_string($guidBytes) || strlen($guidBytes) !== 16) {
+                    return ['ok' => false, 'error' => 'Cannot read legacy heritage GUID.', 'summary' => [], 'rows' => $rows];
+                }
+                $guid = sprintf('%08X-%08X-%08X-%08X',
+                    self::u32($guidBytes, 0), self::u32($guidBytes, 4),
+                    self::u32($guidBytes, 8), self::u32($guidBytes, 12));
+                $rows[] = [
+                    'offset' => $guidOffset, 'size' => 16, 'field' => 'guid',
+                    'type' => 'FGuid', 'value' => $guid,
+                    'hex' => strtoupper(trim(chunk_split(bin2hex($guidBytes), 2, ' '))),
+                    'note' => 'Final GUID in legacy heritage table, not an inline header field.',
+                ];
+            }
+        } else {
+            $guid = self::has($bytes, $offset, 16) ? self::guidField($rows, $bytes, $offset) : '';
         }
-        $guid = self::has($bytes, $offset, 16) ? self::guidField($rows, $bytes, $offset) : '';
         $generations = null;
         if ($version >= 68 && self::has($bytes, $offset, 4)) {
             $generations = self::i32Field($rows, $bytes, $offset, 'generationCount');
