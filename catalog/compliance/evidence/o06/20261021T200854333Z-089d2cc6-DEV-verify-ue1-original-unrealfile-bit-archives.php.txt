@@ -1,0 +1,11 @@
+﻿{
+    "ok": false,
+    "passed": 18,
+    "total": 22,
+    "failures": [
+        "v22_array_bad_capacity_or_bits_rejected",
+        "v22_matrix_bad_capacity_or_bits_rejected",
+        "v23_array_bad_capacity_or_bits_rejected",
+        "v23_matrix_bad_capacity_or_bits_rejected"
+    ]
+}
