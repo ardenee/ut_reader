@@ -11,11 +11,11 @@ Updated: **2026-10-21**. This is the canonical recovery/handover file for this p
 | Reference sources | `L:\Source\Engine` and `L:\Source\Games` |
 | Deployment | `Z:\Apache24\htdocs\unrealdb` on DEV is PRD `Lelly-pc` |
 | GitHub | `https://github.com/ardenee/ut_reader` |
-| Active engine / operation | **UE1 / O04 — original and classic import/export records** |
+| Active engine / operation | **UE1 / O05 — dependency and object reference resolution** |
 | O01 status | **ACCEPTED — 6/6 fixed identification/dispatch criteria passed**. Original structural metadata O02 is also accepted; type-specific object/payload parsing belongs to O06/O07. |
-| Primary acceptance metric | **UE1: O01/O02/O03 accepted within explicit operation contracts. O04 active; O05–O10 open.** Overall engine not yet Epic-equivalent. |
-| Latest completed work batch | **UE1 O03 — source-defined ANSI byte identity, safe classic FString name boundaries, native name indexing and explicit load contexts corrected in production code** |
-| Latest verified code checkpoint | **`80651482`** O03 unsafe classic FString names rejected (14/14, baseline 8/14); **`87d9f753`** ANSI byte identity for original/classic formats (24/24 classic, 18/18 original, 15/15 MySQL). Both pushed and PRD deployed (**10/10 file SHA-256 matches**); DEV **31/31** regressions, PRD targeted **6/6** scripts including genuine **92/92**. O03 name-serialization contract accepted; cross-package FName internment/resolution belongs to O05. |
+| Primary acceptance metric | **UE1: O01–O04 accepted within bounded source-backed contracts; O05 active, O06–O10 open.** Full engine equivalence NOT achieved. |
+| Latest completed work batch | **UE1 O04 — classic signed import/export table references and serial ranges, original Unrealfile UClass parent preload object references validated in production code** |
+| Latest verified code checkpoint | **`afecd553`** UE1 O04 native signed import/export reference bounds, positive serial ranges and v22/v23 UClass parent-object reference parity. Baseline **4/32** classic structural cases; fixed **44/44** including 12 added serial-range cases; v22/v23 original object tests **25/25**. DEV **32/32** scripts, genuine classic **92/92**, PRD **9/9** targeted scripts, **4/4** changed files SHA-256 matched. Committed/pushed/deployed. |
 
 ## Engine sequence
 
@@ -36,8 +36,8 @@ Do not move to UE2 before UE1 acceptance. Earlier VERIFIED work cannot be substi
 | O01 | File identification and version dispatch | **ACCEPTED (6/6 source-backed scoped requirements)** |
 | O02 | Package summary and metadata | **ACCEPTED (source-defined structural metadata only)** — original 1996 resource v9/v10, original 1997 Unrealfile v22/v23, genuine classic v35–69, and correct unverified MySQL persistence; NOT payload/full-reader acceptance |
 | O03 | Names | **ACCEPTED (name serialization and context mapping)** — source ANSI byte identity, v9/10 fixed strings, v22/23 one-based names, v35–69 classic entries, explicit load contexts, malformed bounds rejected. Cross-package runtime internment O05. |
-| O04 | Imports/exports | **NEXT** — verify native import/export table semantics and references against each Epic branch, integrate with production reader without synthetic modern identities |
-| O05 | Dependency resolution | NOT STARTED |
+| O04 | Imports/exports | **ACCEPTED — structural tables and source-defined reference bounds only**. v9/v10 resource entries, v22/v23 UObjectBase with class preload object index, classic v35–69 compact signed references/outer gates/serial ranges. Runtime binding is O05. |
+| O05 | Dependency resolution | **NEXT** — source-driven local and cross-package binding, class/outer paths, import verification and dependency consumers; never fabricate unresolved identities |
 | O06 | Object and property serialization | NOT STARTED |
 | O07 | Bulk/external data | NOT STARTED |
 | O08 | Cooked and game-specific formats | NOT STARTED |
@@ -118,9 +118,9 @@ B02 checks passed: `verify-ue1-early-format-identification.php` **9/9**, plus **
 
 1. Verify DEV device, `git status --short --branch`, `git log -1`, compare `origin/main`, and ensure prior committed changes reached PRD. Preserve any unrelated user edits.
 2. **O02 accepted for structural metadata**: original resource v9/v10 and Unrealfile v22/v23 native records preserve Epic fields in MySQL unverified staging. Classic v35–69 genuine corpus also passes. Do NOT promote early files as verified or normalize original records into modern class/outer paths; payloads are separate O06/O07 operations.
-3. **Start O04 import/export semantics:** source-compare UE1 v9/v10 `FResNameFileEntry`, v22/v23 `UObjectBase` (imports/exports differentiated by `FileHeaderOffset`) and classic v35–69 `FObjectImport/FObjectExport`. Implement and test differences in class/name indices, outer/package, header and data references, version gates and invalid records. Do not fabricate a modern object hierarchy for original files. Cross-file resolution is O05, full object payloads O06.
+3. **Start O05 dependency/object reference resolution:** follow actual UE1 `ULinkerLoad::VerifyImport`, `IndexToObject`, export class/package and `ParentIndex/SuperIndex` paths across v35–69, then original v22/v23 `ResMap` and v9/v10 resource imports. Correct existing UnrealDB consumers using source-defined identity, explicit unresolved status and bounded records; test with genuine 92-file source corpus, isolated MySQL/V5 and negative references. Full property/object serialization is O06.
 4. **Completed O02 production distinction:** `CatalogUE1OriginalStagingMetadata` retains original typed records and `CatalogUnverifiedMetadataSnapshotBuilder::fromOriginalNative` stores them separately; `ue_files` counts native imports/exports without populating unsupported modern import/export paths. Original-format `scan_status` and compatibility remain unverified; genuine source-specific full payload work is still open.
-5. **Tests:** O01/O02/O03 accepted within operation scopes. O03 name bounds 8/8, context 15/15, classic ANSI 24/24, original ANSI 18/18, classic FString safety 14/14; actual unverified MySQL including extended-byte name rows 15/15. DEV **31/31** scripts, PRD **6/6** targeted scripts including genuine classic **92/92**, **10/10** new code/test files SHA-256 matched. O04–O10 remain open; original full data serialization still unimplemented.
+5. **Tests:** O01–O04 accepted against bounded contracts, NOT full engine validity. O04 baseline 4/32 classic references fixed to 44/44 (including serial ranges); v22/v23 parent object reference tests 25/25. DEV **32/32** regressions, PRD **9/9**, genuine classic **92/92**. **4/4** new code/test files SHA-256 match. O05–O10 remain open. Original 1996/1997 full object data still unsupported.
 6. Run relevant verifier scripts; commit via local Git CLI, `git push origin main`, deploy changed files with Robocopy to PRD (excluding storage/config), SHA-256 compare, update this page and repeat.
 
 **Recovery rule:** read this page plus `UE1-IMPLEMENTATION.md` and `UE1-ACCEPTANCE.md`; source C++ is master truth. O01 is accepted for its frozen identification scope; do not reopen it for O02–O10 decoding, object or SQL work. Advance one bounded operation at a time and deploy verified code promptly.

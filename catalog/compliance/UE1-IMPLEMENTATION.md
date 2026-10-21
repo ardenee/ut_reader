@@ -1,6 +1,6 @@
 # UE1 — source-to-production implementation register
 
-Updated 2026-10-21. **O01 identification/dispatch ACCEPTED** (6/6); **O02 original/standard summary and structural metadata ACCEPTED** with native unverified MySQL staging (`123de5b8`); **O03 serialized names ACCEPTED** (classic/original ANSI byte identity, source indices, bounded FString, context filtering); **O04 imports/exports NEXT**. Epic serialization source remains the authoritative implementation reference. Full original object/payload processing is still open in O06/O07.
+Updated 2026-10-21. **O01 identification/dispatch ACCEPTED** (6/6); **O02 original/standard summary and structural metadata ACCEPTED** with native unverified MySQL staging (`123de5b8`); **O03 serialized names ACCEPTED** (classic/original ANSI byte identity, source indices, bounded FString, context filtering); **O04 structural imports/exports ACCEPTED** (`afecd553` source signed references and native parent indices, 44/44 classic, 25/25 early original, 32/32 regressions); **O05 dependency resolution NEXT**. Epic serialization source remains the authoritative implementation reference. Full original object/payload processing is still open in O06/O07.
 
 ## Source revisions and relevant roots
 
