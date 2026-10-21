@@ -111,6 +111,7 @@ final class CatalogUE1OriginalResourceActorReader
             'w_or_flags_raw_word'=>(int)unpack('V',substr($bytes,$off+12,4))[1]
         ];
         return [
+            ...CatalogUE1OriginalNativeActorValueReader::read($bytes),
             'class_reference_raw_word'=>$class,
             'location'=>$vec(4),'velocity'=>$vec(20),
             'draw_rotation'=>self::signedTriplet($bytes,36),

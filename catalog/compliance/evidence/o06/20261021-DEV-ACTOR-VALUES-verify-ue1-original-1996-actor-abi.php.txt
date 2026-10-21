@@ -1,0 +1,14 @@
+﻿DEV verify-ue1-original-1996-actor-abi.php
+Exit: 0
+Input-SHA256: F18C690B52B8DC746B76FB5D96E653BAEE9A31AC19E825807013EACBD2540899
+{
+    "ok": true,
+    "passed": 4,
+    "total": 4,
+    "failures": [],
+    "source_sha256": "793e0e2e9a7d226a6d1480530f9dee218bbbdc26ab054487ef025cef47c0092d",
+    "compiler": "C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.50.35717/bin/Hostx64/x86/cl.exe",
+    "compiler_output": [
+        "ue1-1996-actor-layout.cpp"
+    ]
+}

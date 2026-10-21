@@ -1,0 +1,144 @@
+﻿ue1-1996-actor-layout.cpp
+
+class AActorBase	size(304):
+	+---
+ 0	| Class
+ 4	| FVector Location
+20	| FVector Velocity
+36	| FRotation DrawRot
+48	| FRotation ViewRot
+60	| iParent
+64	| iWeapon
+68	| DrawType
+69	| BlitType
+  	| <alignment member> (size=2)
+72	| Texture
+76	| MeshMap
+80	| Brush
+84	| DrawScale
+88	| InherentGlow
+  	| <alignment member> (size=3)
+92	| AmbientSound
+96	| SoundRadius
+97	| SoundVolume
+98	| AnimSeq
+  	| <alignment member> (size=1)
+100	| AnimRate
+104	| AnimBase
+108	| AnimCount
+109	| AnimFirst
+110	| AnimLast
+  	| <alignment member> (size=1)
+112	| AnimMessage
+116	| CollisionRadius
+120	| CollisionHeight
+124	| LightType
+125	| LightEffect
+126	| LightBrightness
+127	| LightHue
+128	| LightSaturation
+129	| LightRadius
+130	| LightPeriod
+131	| LightPhase
+132	| LightCone
+133	| VolumeBrightness
+134	| VolumeRadius
+  	| <alignment member> (size=1)
+136.	| bStatic (bitstart=0,nbits=1)
+136.	| bHidden (bitstart=1,nbits=1)
+136.	| bHiddenEd (bitstart=2,nbits=1)
+136.	| bDirectional (bitstart=3,nbits=1)
+136.	| bTemplateClass (bitstart=4,nbits=1)
+136.	| bSelected (bitstart=5,nbits=1)
+136.	| bNoDelete (bitstart=6,nbits=1)
+136.	| bTempLightChanged (bitstart=7,nbits=1)
+136.	| bTempDynamicLight (bitstart=8,nbits=1)
+136.	| bUser0 (bitstart=9,nbits=1)
+136.	| bUser1 (bitstart=10,nbits=1)
+136.	| bUser2 (bitstart=11,nbits=1)
+136.	| bUser3 (bitstart=12,nbits=1)
+136.	| bUser4 (bitstart=13,nbits=1)
+136.	| bUser5 (bitstart=14,nbits=1)
+136.	| bUser6 (bitstart=15,nbits=1)
+136.	| bUser7 (bitstart=16,nbits=1)
+136.	| bSpecialLit (bitstart=17,nbits=1)
+136.	| bOnHorizon (bitstart=18,nbits=1)
+136.	| bActorShadows (bitstart=19,nbits=1)
+136.	| bAnimate (bitstart=20,nbits=1)
+136.	| bMeshWet (bitstart=21,nbits=1)
+136.	| bMeshShadowCast (bitstart=22,nbits=1)
+136.	| bMeshEnviroMap (bitstart=23,nbits=1)
+136.	| bUnlit (bitstart=24,nbits=1)
+136.	| bNoSmooth (bitstart=25,nbits=1)
+136.	| bCollideActors (bitstart=26,nbits=1)
+136.	| bCollideWorld (bitstart=27,nbits=1)
+136.	| bBlocksActors (bitstart=28,nbits=1)
+136.	| bBlocksPlayers (bitstart=29,nbits=1)
+136.	| bBehindView (bitstart=30,nbits=1)
+136.	| bPad0 (bitstart=31,nbits=1)
+140.	| bPad1 (bitstart=0,nbits=1)
+140.	| bPad2 (bitstart=1,nbits=1)
+140.	| bPad3 (bitstart=2,nbits=1)
+140.	| bPad4 (bitstart=3,nbits=1)
+140.	| bPad5 (bitstart=4,nbits=1)
+140.	| bPad6 (bitstart=5,nbits=1)
+140.	| bPad7 (bitstart=6,nbits=1)
+144	| FName Name
+146	| FName Event
+148	| Zone
+  	| <alignment member> (size=3)
+152	| iMe
+156	| iTarget
+160	| iInventory
+164	| iFloor
+168	| iInstigator
+172	| Mass
+176	| WaterSinkRate
+180.	| bGravity (bitstart=0,nbits=1)
+180.	| bMomentum (bitstart=1,nbits=1)
+180.	| bDifficulty1 (bitstart=2,nbits=1)
+180.	| bDifficulty2 (bitstart=3,nbits=1)
+180.	| bDifficulty3 (bitstart=4,nbits=1)
+180.	| bDifficulty4 (bitstart=5,nbits=1)
+180.	| bNetCooperative (bitstart=6,nbits=1)
+180.	| bNetDeathMatch (bitstart=7,nbits=1)
+180.	| bNetPersistent (bitstart=8,nbits=1)
+180.	| bNetNoMonsters (bitstart=9,nbits=1)
+180.	| bProjTarget (bitstart=10,nbits=1)
+180.	| bCanBeTeleported (bitstart=11,nbits=1)
+180.	| bIsSecretGoal (bitstart=12,nbits=1)
+180.	| bIsKillGoal (bitstart=13,nbits=1)
+180.	| bIsItemGoal (bitstart=14,nbits=1)
+184	| iTouchingActors
+200.	| bWasTouchedByPlayer (bitstart=0,nbits=1)
+200.	| bSleeping (bitstart=1,nbits=1)
+200.	| bTempEditor (bitstart=2,nbits=1)
+200.	| bJustDeleted (bitstart=3,nbits=1)
+204	| ScriptCountdown
+205	| ScriptTickRate
+  	| <alignment member> (size=2)
+208	| TimerCountdown
+212	| FName TimerMessage
+214	| FName DefaultEdCategory
+216	| BlockedClasses
+228	| PassedClasses
+240	| ChanceOfExistence
+241	| RandomizerDivider
+242	| RandomizerRemainder
+  	| <alignment member> (size=1)
+244	| LifeSpan
+248	| Age
+252	| Era
+256	| TriggerSequences
+266	| TriggerFrames
+276	| TriggerValues
+286	| WhichTriggers
+  	| <alignment member> (size=1)
+288	| TextureList
+292	| TextureCount
+293	| AITask
+  	| <alignment member> (size=2)
+296	| iPendingTeleporter
+300	| TeleportDelay
+  	| <alignment member> (size=3)
+	+---
