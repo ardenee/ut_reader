@@ -1,0 +1,11 @@
+﻿{
+    "compiler": "C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.50.35717/bin/Hostx64/x86/cl.exe",
+    "source_sha256": "5cec7aef339d46335f9d7303092180493347759aa9200c2e7612b774500507b6",
+    "ok": true,
+    "passed": 4,
+    "total": 4,
+    "failures": [],
+    "compiler_output": [
+        "ue1-1996-msvc-abi.cpp"
+    ]
+}
