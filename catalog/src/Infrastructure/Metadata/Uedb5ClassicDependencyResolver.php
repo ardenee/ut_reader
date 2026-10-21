@@ -185,6 +185,18 @@ final class Uedb5ClassicDependencyResolver
                 );
                 continue;
             }
+            // Epic UE1 VerifyImport checks that a version>=50 root import
+            // (PackageIndex==0) is exactly Core.Package. Do not let the
+            // wrapper's package_only/common shortcuts promote an invalid
+            // root or any child dependent on it before source verification.
+            if ($engine === 'ue1' && $ue1Profile !== null
+                && self::ue1InvalidRootPackageImport($consumer['imports'], (int)$importIndex)) {
+                $resolved[(int)$importIndex] = self::result(
+                    'unresolved', '', null, null, 'invalid_ue1_root_package_import',
+                    $engine, 'runtime_derived'
+                );
+                continue;
+            }
             if ($root !== '' && self::isCommon($root, $engine, $common)) {
                 $resolved[(int)$importIndex] = self::result(
                     'common', $root, null, null, 'common_or_script_package', $engine
@@ -856,6 +868,38 @@ final class Uedb5ClassicDependencyResolver
             return PdoUe2VerifyImportProjectionResolver::PROFILE_UT2004_V129;
         }
         return null;
+    }
+
+    /**
+     * Epic UE1 v1.200 / UT99 v400 VerifyImport: a real linker-root import
+     * at PackageIndex==0 must be Core.Package. Pre-v50 imports serialize a
+     * separate ObjectPackage FName and have no PackageIndex on disk.
+     * This is a source validity check, not a cross-package lookup.
+     *
+     * @param array<int,array<string,mixed>> $imports
+     */
+    private static function ue1InvalidRootPackageImport(array $imports, int $importIndex): bool
+    {
+        $seen = [];
+        while (isset($imports[$importIndex]) && !isset($seen[$importIndex])) {
+            $seen[$importIndex] = true;
+            $row = $imports[$importIndex];
+            if (!empty($row['object_package_present']) || self::isSourceIrrelevantNoneImport($row)) {
+                return false;
+            }
+            $outer = (int)($row['outer_index'] ?? 0);
+            if ($outer === 0) {
+                return self::key((string)($row['class_package'] ?? '')) !== 'core'
+                    || self::key((string)($row['class_name'] ?? '')) !== 'package';
+            }
+            if ($outer > 0) {
+                return false;
+            }
+            $importIndex = -$outer - 1;
+        }
+        // Missing/cyclic ancestors remain unresolved in the ordinary path;
+        // don't invent a root identity to classify them.
+        return false;
     }
 
     /** @param array<int,array<string,mixed>> $imports */

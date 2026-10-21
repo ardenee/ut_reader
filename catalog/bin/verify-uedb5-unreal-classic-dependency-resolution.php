@@ -91,6 +91,54 @@ $private = Uedb5ClassicDependencyResolver::resolve($ut99Consumer, [[
 ]]);
 $check(($private[1]['status'] ?? null) === 'missing', 'ut99_private_export_is_rejected');
 
+// Epic UT99 v400 ULinkerLoad::VerifyImport requires the root
+// (PackageIndex==0) to be Core.Package. The wrapper must NOT short-circuit
+// an invalid root (or its descendant) to package_only/common before
+// consulting source verification.
+$invalidRoot = $ut99Consumer;
+$invalidRoot['sections']['imports'][0]['class_package'] = $fname('Engine');
+$invalidRootResolution = Uedb5ClassicDependencyResolver::resolve($invalidRoot, [[
+    'package_name'=>'Provider','provider_id'=>41002,'snapshot'=>$ut99Public,
+]]);
+$check(($invalidRootResolution[0]['status'] ?? null) === 'unresolved'
+    && ($invalidRootResolution[0]['reason'] ?? null) === 'invalid_ue1_root_package_import',
+    'ue1_non_core_package_root_is_not_package_only');
+$check(($invalidRootResolution[1]['status'] ?? null) !== 'resolved'
+    && ($invalidRootResolution[1]['status'] ?? null) !== 'package_only',
+    'ue1_descendant_of_invalid_root_not_resolved');
+$commonInvalid = Uedb5ClassicDependencyResolver::resolve($invalidRoot, [[
+    'package_name'=>'Provider','provider_id'=>41002,'snapshot'=>$ut99Public,
+]], ['common_packages'=>['Provider']]);
+$check(($commonInvalid[0]['status'] ?? null) !== 'common'
+    && ($commonInvalid[1]['status'] ?? null) !== 'common',
+    'ue1_invalid_root_not_silently_marked_common');
+
+$wrongRootClass = $ut99Consumer;
+$wrongRootClass['sections']['imports'][0]['class_name'] = $fname('Texture');
+$wrongClassResolution = Uedb5ClassicDependencyResolver::resolve($wrongRootClass, [[
+    'package_name'=>'Provider','provider_id'=>41002,'snapshot'=>$ut99Public,
+]]);
+$check(($wrongClassResolution[0]['reason'] ?? null) === 'invalid_ue1_root_package_import',
+    'ue1_root_class_name_must_be_package');
+
+$pre50 = $ut99Consumer;
+$pre50['source_policy'] = 'ue1-unreal-v120-loadable-v34-59';
+$pre50['section_schemas']['imports'] = 'ue1.unreal.object-import.v2';
+$pre50['section_schemas']['exports'] = 'ue1.unreal.object-export.v2';
+$pre50['sections']['summary'][0]['package_version'] = 49;
+$pre50['sections']['imports'][0]['class_package'] = $fname('Engine');
+$pre50['sections']['imports'][0]['class_name'] = $fname('Texture');
+$pre50['sections']['imports'][0]['object_package_present'] = true;
+$pre50['sections']['imports'][0]['object_package'] = $fname('Provider');
+$pre50Result = Uedb5ClassicDependencyResolver::resolve($pre50, [[
+    'package_name'=>'Provider','provider_id'=>41002,'snapshot'=>$ut99Public,
+]]);
+$check(($pre50Result[0]['reason'] ?? null) !== 'invalid_ue1_root_package_import'
+    && ($pre50Result[0]['status'] ?? null) !== 'package_only',
+    'ue1_pre50_separate_object_package_not_reinterpreted_as_root');
+
+
+
 $whitespaceConsumer = $snapshot(
     41004, 'WhitespaceConsumer', 'classic-linkerload', 'ue1.ut99', 'ue1-ut99-retail-v1400-1999-11-30',
     [$import(0, 'WhitespaceProvider', 'Core', 'Package', 0), $import(1, ' ', 'Core', 'Package', -1)], []
