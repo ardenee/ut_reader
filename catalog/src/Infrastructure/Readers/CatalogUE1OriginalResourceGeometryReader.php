@@ -4,7 +4,7 @@
  *
  * Source: v0.84a Src/Inc/UnRes.h UVectors(FVector), UTerrain(FTerrainIndex),
  * Src/Engine/UnModel.cpp Register/QueryHeaderReferences.
- * UVectors: 3 FLOAT32 = 12-byte FVector per DB record.
+ * UVectors: FVector is 16 bytes: X/Y/Z float32 plus W/Flags word.
  * UVertPool: 2 INDEX (signed 32-bit) = 8-byte FVertPool per record;
  * UDatabase 84 bytes followed by NumSharedSides INT = 88-byte header.
  * UTerrain: 4 INT32 = 16-byte FTerrainIndex per DB record;
@@ -41,7 +41,7 @@ final class CatalogUE1OriginalResourceGeometryReader
                     $records[]=$row;continue;
                 }
                 $count=(int)$entry['database_count'];
-                $bytesPer=match($type){16=>12,29=>8,33=>24,34=>16};
+                $bytesPer=match($type){16=>16,29=>8,33=>32,34=>16};
                 $length=(int)$h['file_data_size'];
                 if($count>intdiv(PHP_INT_MAX,$bytesPer)||$length!==$count*$bytesPer)
                     throw new RuntimeException($name.' QueryMinSize does not match file data bytes');
@@ -79,20 +79,25 @@ final class CatalogUE1OriginalResourceGeometryReader
                     if(!is_string($bytes)||strlen($bytes)!==$bytesPer)
                         throw new RuntimeException('Truncated geometry record');
                     if($type===16){
-                        $nums=array_values(unpack('g3',$bytes));
+                        $nums=array_values(unpack('g3',substr($bytes,0,12)));
                         $items[]=['index'=>$j,'x'=>(float)$nums[0],
-                            'y'=>(float)$nums[1],'z'=>(float)$nums[2]];
+                            'y'=>(float)$nums[1],'z'=>(float)$nums[2],
+                            'w_or_flags_raw_word'=>(int)unpack('V',substr($bytes,12,4))[1]];
                     }elseif($type===29){
                         $nums=array_values(unpack('V2',$bytes));
                         $signed=static fn(int $v):int=>$v>=0x80000000?$v-0x100000000:$v;
                         $items[]=['index'=>$j,'point_vertex'=>$signed((int)$nums[0]),
                             'shared_side'=>$signed((int)$nums[1])];
                     }elseif($type===33){
-                        $v=array_values(unpack('g6',$bytes));
+                        $low=array_values(unpack('g3',substr($bytes,0,12)));
+                        $high=array_values(unpack('g3',substr($bytes,16,12)));
                         $items[]=['index'=>$j,
-                            'min_x'=>(float)$v[0],'min_y'=>(float)$v[1],
-                            'min_z'=>(float)$v[2],'max_x'=>(float)$v[3],
-                            'max_y'=>(float)$v[4],'max_z'=>(float)$v[5]];
+                            'min_x'=>(float)$low[0],'min_y'=>(float)$low[1],
+                            'min_z'=>(float)$low[2],
+                            'min_w_or_flags_raw_word'=>(int)unpack('V',substr($bytes,12,4))[1],
+                            'max_x'=>(float)$high[0],'max_y'=>(float)$high[1],
+                            'max_z'=>(float)$high[2],
+                            'max_w_or_flags_raw_word'=>(int)unpack('V',substr($bytes,28,4))[1]];
                     }else{
                         $numbers=array_values(unpack('V4',$bytes));
                         $signed=static fn(int $v):int=>$v>=0x80000000?$v-0x100000000:$v;

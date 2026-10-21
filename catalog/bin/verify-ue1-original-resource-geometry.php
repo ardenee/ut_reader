@@ -14,9 +14,11 @@ $make=static function(int $version,int $type):array{
     $names=pack('a32V','LOCATION',0);
     $dataOff=$nameOff+strlen($names);
     $data=match($type){
-        16=>pack('g6',1.25,-2.5,3.75,7.0,0.5,-1.0),
+        16=>pack('g3Vg3V',1.25,-2.5,3.75,0x12345678,7.0,0.5,-1.0,0x23456789),
         29=>pack('V4',1,2,12,0xffffffff),
-        33=>pack('g12',-10.0,-5.0,-2.5,10.0,5.0,2.5,-20.0,-4.0,-1.0,20.0,4.0,1.0),
+        33=>pack('g3Vg3Vg3Vg3V',
+            -10.0,-5.0,-2.5,11,10.0,5.0,2.5,22,
+            -20.0,-4.0,-1.0,33,20.0,4.0,1.0,44),
         34=>pack('V8',0,256,4,128,32,64,72,88),
     };
     $exportOff=$dataOff+strlen($data);
@@ -49,7 +51,7 @@ try {
         $check("{$id}_native_record_dimensions",
             ($r['status']??null)==='native_geometry_records_decoded'
             && $r['record_count']===2
-            && $r['record_size_bytes']===match($type){16=>12,29=>8,33=>24,34=>16}
+            && $r['record_size_bytes']===match($type){16=>16,29=>8,33=>32,34=>16}
             && $r['serialized_header_bytes']===match($type){16=>84,29=>88,33=>84,34=>692}
             && $r['additional_header_bytes']===0);
         if($type===16){
@@ -57,6 +59,7 @@ try {
                 ($r['record_values'][0]['x']??null)===1.25
                 && ($r['record_values'][0]['y']??null)===-2.5
                 && ($r['record_values'][1]['z']??null)===-1.0
+                && ($r['record_values'][0]['w_or_flags_raw_word']??null)===0x12345678
                 && $r['terrain_header']===null);
         }elseif($type===29){
             $check("{$id}_vertex_pool_signed_indices",
@@ -68,7 +71,9 @@ try {
         }elseif($type===33){
             $check("{$id}_bounds_floats",($r['record_values'][0]['min_x']??null)===-10.0
                 && ($r['record_values'][0]['max_x']??null)===10.0
-                && ($r['record_values'][1]['max_z']??null)===1.0);
+                && ($r['record_values'][1]['max_z']??null)===1.0
+                && ($r['record_values'][0]['min_w_or_flags_raw_word']??null)===11
+                && ($r['record_values'][1]['max_w_or_flags_raw_word']??null)===44);
         }else{
             $check("{$id}_terrain_grid_and_raw_header",
                 ($r['record_values'][0]['grid_x1']??null)===256

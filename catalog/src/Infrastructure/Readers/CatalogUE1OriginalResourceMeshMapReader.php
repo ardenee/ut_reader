@@ -3,7 +3,7 @@
  * Original Unreal 1996 v9/v10 UMeshMap (RES_MeshMap=32).
  * Source: v0.84a Src/Inc/UnRes.h, Src/Engine/UnMesh.cpp.
  * 32-bit UResource 76B + UMesh* 4B + MaxTextures DWORD 4B
- * + AndFlags DWORD 4B + OrFlags DWORD 4B + Scale FVector 12B = 104B.
+ * + AndFlags DWORD 4B + OrFlags DWORD 4B + Scale FVector 16B = 108B.
  * QueryMinSize = MaxTextures * sizeof(UTexture*) = count*4.
  * Pointer words are source-serialized identifiers, not live pointers.
  */
@@ -25,17 +25,17 @@ final class CatalogUE1OriginalResourceMeshMapReader
                     'source_class'=>'UMeshMap',
                     'status'=>'incomplete_source_meshmap_header',
                     'runtime_mesh_or_texture_references_resolved'=>false];
-                if((int)$h['serialized_length']<104){
-                    if($strict)throw new RuntimeException('UMeshMap native header must be at least 104 bytes');
+                if((int)$h['serialized_length']<108){
+                    if($strict)throw new RuntimeException('UMeshMap native header must be at least 108 bytes');
                     $records[]=$row;continue;
                 }
                 $hOff=(int)$h['serialized_offset'];
                 if(fseek($fp,$hOff+76,SEEK_SET)!==0)
                     throw new RuntimeException('Cannot seek UMeshMap fields');
-                $fields=fread($fp,28);
-                if(!is_string($fields)||strlen($fields)!==28)
+                $fields=fread($fp,32);
+                if(!is_string($fields)||strlen($fields)!==32)
                     throw new RuntimeException('Truncated UMeshMap native header fields');
-                $v=unpack('Vmesh/Vmax/Vand/Vor/gx/gy/gz',$fields);
+                $v=unpack('Vmesh/Vmax/Vand/Vor/gx/gy/gz/Vw',$fields);
                 $count=(int)$v['max'];$dataSize=(int)$h['file_data_size'];
                 if($count>intdiv(PHP_INT_MAX,4)||$count*4!==$dataSize)
                     throw new RuntimeException('UMeshMap QueryMinSize mismatch for MaxTextures');
@@ -54,10 +54,11 @@ final class CatalogUE1OriginalResourceMeshMapReader
                     'mesh_reference_raw_word'=>(int)$v['mesh'],
                     'texture_count'=>$count,
                     'and_flags'=>(int)$v['and'],'or_flags'=>(int)$v['or'],
-                    'scale'=>['x'=>(float)$v['x'],'y'=>(float)$v['y'],'z'=>(float)$v['z']],
+                    'scale'=>['x'=>(float)$v['x'],'y'=>(float)$v['y'],'z'=>(float)$v['z'],
+                        'w_or_flags_raw_word'=>(int)$v['w']],
                     'texture_reference_raw_words'=>$textures,
-                    'serialized_header_bytes'=>104,
-                    'additional_header_bytes'=>(int)$h['serialized_length']-104,
+                    'serialized_header_bytes'=>108,
+                    'additional_header_bytes'=>(int)$h['serialized_length']-108,
                     'serialized_texture_bytes'=>$dataSize,
                     'runtime_mesh_or_texture_references_resolved'=>false,
                 ];

@@ -15,19 +15,19 @@ $make=static function(int $ver):array{
  $vertex=pack('V',1|(2046<<11)|(3<<22));
  $index=pack('V2',1,0);
  $links=pack('v',0);
- $bound=pack('g6',-1.0,-2.0,-3.0,1.0,2.0,3.0);
+ $bound=pack('g3Vg3V',-1.0,-2.0,-3.0,11,1.0,2.0,3.0,22);
  $seq=pack('v2V3',1,0,0,1,30);
  $raw=$triangle.$vertex.$index.$links.$bound.$seq;
- if(strlen($raw)!==70)throw new RuntimeException('UMesh section source fixture must be 70 bytes');
+ if(strlen($raw)!==78)throw new RuntimeException('UMesh section source fixture must be 78 bytes');
  $dataOff=$nameOff+strlen($names);$exportOff=$dataOff+strlen($raw);
- $ex=pack('a32VVV','MeshOne',1,14,164);$hOff=$exportOff+strlen($ex);
- $hdr=pack('V2a32V9',0,14,'MeshOne',0,0,1,0xffffffff,0,$dataOff,70,0,0)
-    .pack('g3',1.0,2.0,3.0)
+ $ex=pack('a32VVV','MeshOne',1,14,176);$hOff=$exportOff+strlen($ex);
+ $hdr=pack('V2a32V9',0,14,'MeshOne',0,0,1,0xffffffff,0,$dataOff,78,0,0)
+    .pack('g3V',1.0,2.0,3.0,33)
     .pack('V3',100,200,300)
-    .pack('g6',-5.0,-6.0,-7.0,5.0,6.0,7.0)
+    .pack('g3Vg3V',-5.0,-6.0,-7.0,44,5.0,6.0,7.0,55)
     .pack('V10',1,1,1,1,1,1,1,1,1,1);
- if(strlen($hdr)!==164)throw new RuntimeException('UMesh header source fixture must be 164 bytes');
- $tail=pack('V9',$ver,1,0,1,$nameOff,0,$exportOff,$hOff,164)
+ if(strlen($hdr)!==176)throw new RuntimeException('UMesh header source fixture must be 176 bytes');
+ $tail=pack('V9',$ver,1,0,1,$nameOff,0,$exportOff,$hOff,176)
     .str_repeat("\0",16).str_repeat("\0",80).pack('a32',"Unreal Resource\x1A");
  return ['bytes'=>$prefix.$names.$raw.$ex.$hdr.'[SUMMARY]'.$tail,
    'header'=>$hOff,'export'=>$exportOff];
@@ -40,8 +40,9 @@ try {
    $out=Mesh::read($tmp,true)['mesh_records'][0]??[];
    $check("v{$v}_native_header_and_sections",
      ($out['status']??null)==='native_mesh_records_decoded'
-     && ($out['header_bytes']??null)===164
+     && ($out['header_bytes']??null)===176
      && ($out['origin']??null)===[1.0,2.0,3.0]
+     && ($out['origin_w_or_flags_raw_word']??null)===33
      && ($out['rotation_raw_ints']??null)===[100,200,300]
      && ($out['counts']['triangles']['num']??null)===1
      && ($out['sections']['animation_sequences']['size']??null)===16);
@@ -53,6 +54,8 @@ try {
    $check("v{$v}_link_bounds_and_animation",
      ($out['vertex_link_indices'][0]['num_triangles']??null)===1
      && ($out['frame_bounds'][0]['min']??null)===[-1.0,-2.0,-3.0]
+     && ($out['frame_bounds'][0]['min_w_or_flags_raw_word']??null)===11
+     && ($out['frame_bounds'][0]['max_w_or_flags_raw_word']??null)===22
      && ($out['animation_sequences'][0]['name_reference_raw_word']??null)===1
      && ($out['animation_sequences'][0]['rate']??null)===30
      && ($out['runtime_name_references_resolved']??true)===false);
@@ -64,13 +67,13 @@ try {
      ($s['status']??null)==='native_mesh_records_decoded'
      && ($staged['parse_complete']??true)===false
      && ($s['internal_mesh_animation_evaluated']??true)===false);
-   file_put_contents($tmp,substr_replace($f['bytes'],pack('V',2),$f['header']+124,4));
+   file_put_contents($tmp,substr_replace($f['bytes'],pack('V',2),$f['header']+136,4));
    try{Mesh::read($tmp,true);$rejected=false;}catch(RuntimeException){$rejected=true;}
    $check("v{$v}_count_gt_capacity_rejected",$rejected);
-   file_put_contents($tmp,substr_replace($f['bytes'],pack('V',71),$f['header']+64,4));
+   file_put_contents($tmp,substr_replace($f['bytes'],pack('V',79),$f['header']+64,4));
    try{Mesh::read($tmp,true);$rejected=false;}catch(RuntimeException){$rejected=true;}
    $check("v{$v}_incorrect_totalmax_rejected",$rejected);
-   file_put_contents($tmp,substr_replace($f['bytes'],pack('V',160),$f['export']+40,4));
+   file_put_contents($tmp,substr_replace($f['bytes'],pack('V',172),$f['export']+40,4));
    $incomplete=Mesh::read($tmp,false)['mesh_records'][0]??[];
    try{Mesh::read($tmp,true);$rejected=false;}catch(RuntimeException){$rejected=true;}
    $check("v{$v}_short_header_rejected",

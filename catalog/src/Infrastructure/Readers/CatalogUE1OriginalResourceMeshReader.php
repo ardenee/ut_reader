@@ -3,11 +3,11 @@
  * UE1 original 1996 UMesh v9/v10 class-native serializer.
  *
  * Epic v0.84a Src/Inc/UnRes.h, Src/Engine/UnMesh.cpp GetMeshResInfo:
- * Header: UResource 76, FVector Origin 12, FRotation 12, FBoundingRect
- * 24, five Num/Max INT pairs 40 -> 164 bytes.
+ * Header: UResource 76, FVector Origin 16, FRotation 12, FBoundingRect
+ * 32, five Num/Max INT pairs 40 -> 176 bytes.
  * Sections by Max capacities:
  * FMeshTriangle 16, packed FMeshVertex 4, FMeshVertLinkIndex 8,
- * WORD VertLink 2, FBoundingRect 24, FMeshAnimSeq 16.
+ * WORD VertLink 2, FBoundingRect 32, FMeshAnimSeq 16.
  * FName references and mesh animation scripting remain unresolved.
  */
 declare(strict_types=1);
@@ -16,7 +16,7 @@ use RuntimeException;
 
 final class CatalogUE1OriginalResourceMeshReader
 {
-    private const HEADER=164;
+    private const HEADER=176;
     /** @return array<string,mixed> */
     public static function read(string $path,bool $strict=false):array
     {
@@ -30,18 +30,22 @@ final class CatalogUE1OriginalResourceMeshReader
                     'status'=>'incomplete_source_mesh_header',
                     'runtime_name_references_resolved'=>false];
                 if((int)$h['serialized_length']<self::HEADER){
-                    if($strict)throw new RuntimeException('UMesh header is shorter than 164-byte source layout');
+                    if($strict)throw new RuntimeException('UMesh header is shorter than 176-byte source layout');
                     $out[]=$row;continue;
                 }
                 if(fseek($fp,(int)$h['serialized_offset']+76,SEEK_SET)!==0)
                     throw new RuntimeException('Cannot seek UMesh header');
-                $bytes=fread($fp,88);
-                if(!is_string($bytes)||strlen($bytes)!==88)
+                $bytes=fread($fp,100);
+                if(!is_string($bytes)||strlen($bytes)!==100)
                     throw new RuntimeException('Truncated native UMesh header');
                 $origin=array_values(unpack('g3',substr($bytes,0,12)));
-                $rotation=array_values(unpack('V3',substr($bytes,12,12)));
-                $bound=array_values(unpack('g6',substr($bytes,24,24)));
-                $cap=array_values(unpack('V10',substr($bytes,48,40)));
+                $originW=(int)unpack('V',substr($bytes,12,4))[1];
+                $rotation=array_values(unpack('V3',substr($bytes,16,12)));
+                $boundMin=array_values(unpack('g3',substr($bytes,28,12)));
+                $boundMinW=(int)unpack('V',substr($bytes,40,4))[1];
+                $boundMax=array_values(unpack('g3',substr($bytes,44,12)));
+                $boundMaxW=(int)unpack('V',substr($bytes,56,4))[1];
+                $cap=array_values(unpack('V10',substr($bytes,60,40)));
                 $names=['triangles','vertices','vertex_links','frames','sequences'];
                 $counts=[];
                 for($i=0;$i<5;$i++){
@@ -56,7 +60,7 @@ final class CatalogUE1OriginalResourceMeshReader
                     'vertices'=>[$max['frames']['max']*$max['vertices']['max'],4],
                     'vertex_link_indices'=>[$max['vertices']['max'],8],
                     'vertex_links'=>[$max['vertex_links']['max'],2],
-                    'bounds'=>[$max['frames']['max'],24],
+                    'bounds'=>[$max['frames']['max'],32],
                     'animation_sequences'=>[$max['sequences']['max'],16],
                 ];
                 $ranges=[];$cursor=(int)$h['file_data_offset'];
@@ -120,11 +124,13 @@ final class CatalogUE1OriginalResourceMeshReader
                     });
                 $linkWords=$decode($ranges['vertex_links']['offset'],$max['vertex_links']['num'],2,
                     static fn(string $v,int $i):int=>(int)unpack('v',$v)[1]);
-                $bounds=$decode($ranges['bounds']['offset'],$max['frames']['num'],24,
+                $bounds=$decode($ranges['bounds']['offset'],$max['frames']['num'],32,
                     static function(string $v,int $i):array{
-                        $f=array_values(unpack('g6',$v));
-                        return ['frame'=>$i,'min'=>array_slice($f,0,3),
-                            'max'=>array_slice($f,3,3)];
+                        $low=array_values(unpack('g3',substr($v,0,12)));
+                        $high=array_values(unpack('g3',substr($v,16,12)));
+                        return ['frame'=>$i,'min'=>$low,'max'=>$high,
+                            'min_w_or_flags_raw_word'=>(int)unpack('V',substr($v,12,4))[1],
+                            'max_w_or_flags_raw_word'=>(int)unpack('V',substr($v,28,4))[1]];
                     });
                 $seq=$decode($ranges['animation_sequences']['offset'],$max['sequences']['num'],16,
                     static function(string $v,int $i)use($signed):array{
@@ -136,8 +142,11 @@ final class CatalogUE1OriginalResourceMeshReader
                 $out[]=['export_index'=>(int)$h['export_index'],'source_class'=>'UMesh',
                     'status'=>'native_mesh_records_decoded',
                     'header_bytes'=>self::HEADER,'origin'=>$origin,
+                    'origin_w_or_flags_raw_word'=>$originW,
                     'rotation_raw_ints'=>array_map($signed,$rotation),
-                    'bound_min'=>array_slice($bound,0,3),'bound_max'=>array_slice($bound,3,3),
+                    'bound_min'=>$boundMin,'bound_max'=>$boundMax,
+                    'bound_min_w_or_flags_raw_word'=>$boundMinW,
+                    'bound_max_w_or_flags_raw_word'=>$boundMaxW,
                     'counts'=>$counts,'sections'=>$ranges,
                     'triangles'=>$tri,'animated_vertices'=>$vert,'vertex_link_indices'=>$links,
                     'vertex_links'=>$linkWords,'frame_bounds'=>$bounds,'animation_sequences'=>$seq,

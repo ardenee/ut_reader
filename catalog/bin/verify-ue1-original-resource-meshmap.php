@@ -14,12 +14,12 @@ $make=static function(int $version):array{
  $textureWords=pack('V3',1,2,0);
  $dataOff=$nameOff+strlen($names);
  $exportOff=$dataOff+strlen($textureWords);
- $export=pack('a32VVV','MMOne',1,32,104);
+ $export=pack('a32VVV','MMOne',1,32,108);
  $headOff=$exportOff+strlen($export);
  $head=pack('V2a32V9',0,32,'MMOne',0,0,1,0xffffffff,0,$dataOff,strlen($textureWords),0,0)
-     .pack('V4g3',42,3,0x1234,0x5678,1.5,2.0,-3.0);
- if(strlen($head)!==104)throw new RuntimeException('Wrong UMeshMap native fixture header');
- $trailer=pack('V9',$version,1,0,1,$nameOff,0,$exportOff,$headOff,104)
+     .pack('V4g3V',42,3,0x1234,0x5678,1.5,2.0,-3.0,0x12345678);
+ if(strlen($head)!==108)throw new RuntimeException('Wrong UMeshMap native fixture header');
+ $trailer=pack('V9',$version,1,0,1,$nameOff,0,$exportOff,$headOff,108)
    .str_repeat("\0",16).str_repeat("\0",80).pack('a32',"Unreal Resource\x1A");
  return ['bytes'=>$prefix.$names.$textureWords.$export.$head.'[SUMMARY]'.$trailer,
    'header'=>$headOff,'export'=>$exportOff];
@@ -37,9 +37,9 @@ try{
    && ($row['texture_count']??null)===3
    && ($row['and_flags']??null)===0x1234
    && ($row['or_flags']??null)===0x5678
-   && ($row['serialized_header_bytes']??null)===104);
+   && ($row['serialized_header_bytes']??null)===108);
   $check("v{$v}_native_scaling_and_unresolved_textures",
-   ($row['scale']??null)===['x'=>1.5,'y'=>2.0,'z'=>-3.0]
+   ($row['scale']??null)===['x'=>1.5,'y'=>2.0,'z'=>-3.0,'w_or_flags_raw_word'=>0x12345678]
    && ($row['texture_reference_raw_words']??null)===[1,2,0]
    && ($row['runtime_mesh_or_texture_references_resolved']??true)===false);
   $stage=\UnrealDb\Catalog\Infrastructure\Unverified\CatalogUE1OriginalStagingMetadata::decode(
