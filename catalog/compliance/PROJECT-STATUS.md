@@ -13,9 +13,9 @@ Updated: **2026-10-21**. This is the canonical recovery/handover file for this p
 | GitHub | `https://github.com/ardenee/ut_reader` |
 | Active engine / operation | **UE1 / O03 — name serialization and reference mapping** |
 | O01 status | **ACCEPTED — 6/6 fixed identification/dispatch criteria passed**. Original structural metadata O02 is also accepted; type-specific object/payload parsing belongs to O06/O07. |
-| Primary acceptance metric | **UE1: O01 and O02 accepted against bounded contracts; O03 next.** UE1 overall NOT accepted; the remaining source-defined operations remain open. |
-| Latest completed work batch | **UE1 O02 — early native metadata is decoded AND stored through actual unverified MySQL staging without fabricated modern object identities** |
-| Latest verified code checkpoint | **`123de5b8`** — O02 real unverified staging with source-typed original records committed/pushed/deployed (6/6 SHA-256 matches). DEV 27/27 native-staging tests, 13/13 actual MySQL temporary-table checks, 26/26 regressions; PRD 8/8 targeted scripts. O02 summary/structural-metadata scope accepted; payloads remain O06/O07. |
+| Primary acceptance metric | **UE1: O01/O02 accepted; O03 implementing**, O04–O10 open. Overall engine not yet Epic-equivalent. |
+| Latest completed work batch | **UE1 O03 implementation — source-strict classic FName reference handling and explicit original Unrealfile load-context mapping** |
+| Latest verified code checkpoint | **`14599c2e`** O03 explicit v22/v23 client/server/editor NameMap semantics (15/15 tests); **`3da09743`** O03 classic UE1 source NameMap bounds rejection (8/8, baseline 2/8). Both committed/pushed/deployed, **4/4 SHA-256 matched** and 28/28 DEV regressions passed, including the 92-file genuine corpus. O03 not accepted yet. |
 
 ## Engine sequence
 
@@ -35,7 +35,7 @@ Do not move to UE2 before UE1 acceptance. Earlier VERIFIED work cannot be substi
 |---|---|---|
 | O01 | File identification and version dispatch | **ACCEPTED (6/6 source-backed scoped requirements)** |
 | O02 | Package summary and metadata | **ACCEPTED (source-defined structural metadata only)** — original 1996 resource v9/v10, original 1997 Unrealfile v22/v23, genuine classic v35–69, and correct unverified MySQL persistence; NOT payload/full-reader acceptance |
-| O03 | Names | **NEXT** — verify and correct name maps, index references, case and version semantics across source families |
+| O03 | Names | **IMPLEMENTING** — fixed UE1 classic invalid FName index false-success; added explicit editor/client/server context NameMap for original v22/v23, preserving raw source names. Pending remaining name edge/casing/encoding contracts. |
 | O04 | Imports/exports | NOT STARTED |
 | O05 | Dependency resolution | NOT STARTED |
 | O06 | Object and property serialization | NOT STARTED |
@@ -118,9 +118,9 @@ B02 checks passed: `verify-ue1-early-format-identification.php` **9/9**, plus **
 
 1. Verify DEV device, `git status --short --branch`, `git log -1`, compare `origin/main`, and ensure prior committed changes reached PRD. Preserve any unrelated user edits.
 2. **O02 accepted for structural metadata**: original resource v9/v10 and Unrealfile v22/v23 native records preserve Epic fields in MySQL unverified staging. Classic v35–69 genuine corpus also passes. Do NOT promote early files as verified or normalize original records into modern class/outer paths; payloads are separate O06/O07 operations.
-3. **Begin O03 names:** compare original per-format name reading, indices, flags, bounds and remapping against every supplied Epic branch and UnrealDB's real name consumers. Fix discrepancies with source-conformant fixtures and native/genuine tests; defer object property/payload SerializeHeader/SerializeData to O06, bulk bytes to O07, verified UEDB5 publication/search to O09.
+3. **Finish O03 name semantics:** source-confirm all 1996/1997/classic branch-specific FName case/encoding and name-length behaviour. Done so far: classic UE1 strict `NameMap.IsValidIndex` checks (6 baseline failures fixed, `verify-ue1-name-reference-bounds.php` 8/8); original v0.86x/v0.867 per-context name filtering (15/15). Preserve raw names, never guess runtime context. Run genuine 92-file regression and new negative cases; then accept O03 if remaining source definitions are matched. Object/property data is O06, bulk O07, verified SQL/search O09.
 4. **Completed O02 production distinction:** `CatalogUE1OriginalStagingMetadata` retains original typed records and `CatalogUnverifiedMetadataSnapshotBuilder::fromOriginalNative` stores them separately; `ue_files` counts native imports/exports without populating unsupported modern import/export paths. Original-format `scan_status` and compatibility remain unverified; genuine source-specific full payload work is still open.
-5. **Tests:** O01 6/6 accepted, O02 fixed structural metadata accepted after v9/v10 tables 21/21, headers 18/18, v22/v23 metadata 19/19, UObjectBase 19/19; native staging 27/27, real MySQL 13/13, DEV 26/26 scripts, PRD 8/8, classic genuine 92/92. O03–O10 and engine-wide Epic equivalence remain OPEN.
+5. **Tests:** O01 accepted; O02 structural metadata accepted (1996 v9/v10, 1997 v22/v23, classic v35–69; native MySQL staging 13/13). O03 name-reference bounds 8/8 and original context 15/15; DEV **28/28** scripts including genuine classic **92/92** passed. PRD both new name verifiers passed (8/8 and 15/15), old original object-base regression 19/19; **4/4 code/test SHA-256 matched**. O03 and O04–O10 remain open.
 6. Run relevant verifier scripts; commit via local Git CLI, `git push origin main`, deploy changed files with Robocopy to PRD (excluding storage/config), SHA-256 compare, update this page and repeat.
 
 **Recovery rule:** read this page plus `UE1-IMPLEMENTATION.md` and `UE1-ACCEPTANCE.md`; source C++ is master truth. O01 is accepted for its frozen identification scope; do not reopen it for O02–O10 decoding, object or SQL work. Advance one bounded operation at a time and deploy verified code promptly.
