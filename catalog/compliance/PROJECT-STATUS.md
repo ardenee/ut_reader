@@ -43,6 +43,8 @@ Updated: **2026-10-21**. This is the canonical recovery/handover file for this p
 
 **O06 original 1997 primitive database checkpoint (2026-10-21):** Nine source `UDatabase` descendants (`Buffer`, `TextBuffer`, `Words`, `Ints`, `Array`, `EnumDef`, `Floats`, `Vectors`, `Dependencies`) now have actual `Num`-bounded typed `SerializeData` records in UnrealDB; `UTextBuffer` Pos/Top and source v22/v23 name/object reference bounds verified. DEV **20/20** source-defined native fixtures, staging and isolated MySQL pass. Does not decode other native classes, link runtime references, or certify external class schemas. O06 remains **IMPLEMENTING** until those gaps pass their own acceptance.
 
+**O06 1997 FReachSpec checkpoint (2026-10-21):** `CatalogUE1OriginalUnrealfileDatabaseDataReader` now includes `UReachSpecs` (source `UnPath.h::FReachSpec::operator<<`): 36-byte records containing distance, Goal/Start/End references, collision radius/height, jump/drop floats and reach flags, preserving unresolved runtime actor references. Updated v22/v23 source-defined database test **22/22 DEV PASS**; staging and isolated MySQL PASS. The previous v22/v23 database **20/20** and primitive UDatabase records remain covered. O06 still **IMPLEMENTING** — other source serializers and 1996 actor inherited properties remain open.
+
 ## Engine sequence
 
 | Phase | Engine | New-process status |

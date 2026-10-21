@@ -19,6 +19,7 @@ $types=[
  'Floats'=>[2,4,pack('g2',1.5,-2.25),'floats'],
  'Vectors'=>[1,2,pack('g3',1.0,-2.0,3.0),'vectors'],
  'Dependencies'=>[1,2,pack('V2',1,0xaabbccdd),'dependencies'],
+ 'ReachSpecs'=>[1,2,pack('gV3g4V',10.5,1,0,2,32.0,48.0,2.5,-1.0,0x12),'reach_specs'],
 ];
 // Buffer uses four bytes and Num=4.
 $types['Buffer']=[4,5,"\x00\xffAB",'bytes'];
@@ -57,8 +58,8 @@ try{
    $rows=$parsed['database_records']??[];
    $by=[];
    foreach($rows as $r)$by[substr((string)$r['native_class'],1)]=$r;
-   $check("v{$ver}_nine_source_database_classes",
-      count($rows)===9&&($parsed['other_class_serializers_decoded']??true)===false);
+   $check("v{$ver}_ten_source_database_classes",
+      count($rows)===10&&($parsed['other_class_serializers_decoded']??true)===false);
    $check("v{$ver}_byte_and_text_data",
        ($by['Buffer']['opaque_byte_stream_hex']??null)==='00FF4142'
        && ($by['TextBuffer']['opaque_byte_stream_hex']??null)==='4869'
@@ -77,6 +78,15 @@ try{
    $check("v{$ver}_FDependency_class_and_crc",
       ($by['Dependencies']['record_values']??null)===[[
          'class_ref'=>1,'class_object_index'=>0,'script_text_crc'=>0xaabbccdd]]);
+   $check("v{$ver}_reach_specs_source_record",
+      ($by['ReachSpecs']['serialized_record_bytes']??null)===36
+      && ($by['ReachSpecs']['record_values'][0]['distance']??null)===10.5
+      && ($by['ReachSpecs']['record_values'][0]['goal_ref']??null)===1
+      && ($by['ReachSpecs']['record_values'][0]['start_ref']??null)===0
+      && ($by['ReachSpecs']['record_values'][0]['end_ref']??null)===2
+      && ($by['ReachSpecs']['record_values'][0]['collision_radius']??null)===32.0
+      && ($by['ReachSpecs']['record_values'][0]['reach_flags']??null)===0x12
+      && ($by['ReachSpecs']['record_values'][0]['runtime_actors_resolved']??true)===false);
    $check("v{$ver}_float_and_archive_vector",
        ($by['Floats']['record_values']??null)===[1.5,-2.25]
        && ($by['Vectors']['record_values']??null)===[[1.0,-2.0,3.0]]
@@ -85,17 +95,17 @@ try{
        $tmp,['format'=>'early_unrealfile','version'=>$ver]);
    $r=$stage['native_metadata']['unrealfile_database_records']['database_records']??[];
    $check("v{$ver}_native_staging_unverified",
-       count($r)===9&&($stage['parse_complete']??true)===false);
+       count($r)===10&&($stage['parse_complete']??true)===false);
    $p=$fx['positions']['Words']['header'];
    file_put_contents($tmp,substr_replace($fx['bytes'],pack('V',9),$p+16,4));
    try{DB::read($tmp,true);$reject=false;}catch(RuntimeException){$reject=true;}
    $check("v{$ver}_invalid_active_count_rejected",$reject);
    $p=$fx['positions']['Array']['data'];
-   file_put_contents($tmp,substr_replace($fx['bytes'],pack('V',10),$p,4));
+   file_put_contents($tmp,substr_replace($fx['bytes'],pack('V',count($types)+1),$p,4));
    try{DB::read($tmp,true);$reject=false;}catch(RuntimeException){$reject=true;}
    $check("v{$ver}_invalid_object_ref_rejected",$reject);
    $p=$fx['positions']['EnumDef']['data'];
-   file_put_contents($tmp,substr_replace($fx['bytes'],pack('v',19),$p,2));
+   file_put_contents($tmp,substr_replace($fx['bytes'],pack('v',count($types)*2+1),$p,2));
    try{DB::read($tmp,true);$reject=false;}catch(RuntimeException){$reject=true;}
    $check("v{$ver}_invalid_name_ref_rejected",$reject);
  }

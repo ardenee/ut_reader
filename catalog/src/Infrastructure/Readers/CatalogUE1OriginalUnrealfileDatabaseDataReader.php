@@ -27,6 +27,7 @@ final class CatalogUE1OriginalUnrealfileDatabaseDataReader
         'floats'=>['Floats',4,'floats'],
         'vectors'=>['Vectors',12,'vectors'],
         'dependencies'=>['Dependencies',8,'dependencies'],
+        'reachspecs'=>['ReachSpecs',36,'reach_specs'],
     ];
 
     /** @return array<string,mixed> */
@@ -87,6 +88,23 @@ final class CatalogUE1OriginalUnrealfileDatabaseDataReader
                             case 'ints':$items[]=$signed((int)unpack('V',$v)[1]);break;
                             case 'floats':$items[]=(float)unpack('g',$v)[1];break;
                             case 'vectors':$items[]=array_values(unpack('g3',$v));break;
+                            case 'reach_specs':
+                                // UnPath.h FReachSpec::operator<<: distance,
+                                // Goal/Start/End, 4 float extents, flags.
+                                $distance=(float)unpack('g',substr($v,0,4))[1];
+                                $refs=array_values(unpack('V3',substr($v,4,12)));
+                                foreach($refs as $ref){
+                                    if($ref>$objectCount)throw new RuntimeException('FReachSpec actor reference exceeds ResMap');
+                                }
+                                $extents=array_values(unpack('g4',substr($v,16,16)));
+                                $items[]=['distance'=>$distance,
+                                    'goal_ref'=>$refs[0], 'start_ref'=>$refs[1],
+                                    'end_ref'=>$refs[2],
+                                    'collision_radius'=>$extents[0],
+                                    'collision_height'=>$extents[1],
+                                    'jump_z'=>$extents[2], 'drop_z'=>$extents[3],
+                                    'reach_flags'=>(int)unpack('V',substr($v,32,4))[1],
+                                    'runtime_actors_resolved'=>false];break;
                             case 'dependencies':
                                 $words=unpack('Vref/Vcrc',$v);
                                 $ref=(int)$words['ref'];
