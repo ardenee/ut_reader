@@ -19,6 +19,8 @@ Updated: **2026-10-21**. This is the canonical recovery/handover file for this p
 
 **O06 test-resume protocol:** Before running any UE1 O06 tests, read `catalog/compliance/UE1-O06-TEST-STATUS.json` and append-only `UE1-O06-TEST-EVENTS.jsonl`. Use `catalog/bin/run-ue1-o06-tests.ps1 -Tests <named-test.php>` (optional `-TargetRoot 'Z:\Apache24\htdocs\unrealdb'` for PRD). Each test has a flushed STARTED event and a terminal PASS/FAIL, exit code, code/test SHA-256 fingerprint and full output under `catalog/compliance/evidence/o06`. Incomplete STARTED events are interrupted. Skip only a latest matching PASS, rerun after source changes. The historical pre-journal 41/41 DEV suite is separately documented; it is not fabricated as a journal entry. Latest code checkpoint `c18214c0` implements 1996 texture/primitive database records and 1997 serialized strings. O06 remains OPEN for other per-class serializers and external/inherited schemas.
 
+**Latest deployed verification (2026-10-21):** O06 source checkpoint `c18214c0`, durable runner checkpoint `b44882da`, **31/31 modified source/test/evidence files SHA-256 matched DEV→PRD**, **7/7 PRD targeted tests passed**, including the 92-file classic corpus and O05 acceptance. Latest O06 journal snapshot: **12 DEV and 7 PRD test names PASS**, with previous failures preserved historically and output logs/checksums retained. This is **not** acceptance for unimplemented original per-class serializers. If a future test starts but does not finish, its latest STARTED event identifies the interrupted run; do not restart successful unchanged tests.
+
 ## Engine sequence
 
 | Phase | Engine | New-process status |

@@ -1,0 +1,61 @@
+﻿{
+    "ok": true,
+    "operation": "UE1 O05 file metadata dependency projection",
+    "accepted_scope": "source-determined serialized import/export and provider resolution; explicit unknown runtime states",
+    "runtime_engine_oracle": "not_claimed",
+    "gates_passed": 10,
+    "gates_total": 10,
+    "checks": {
+        "original_resource_lookup": {
+            "passed": true,
+            "exit_code": 0,
+            "checks": 17
+        },
+        "original_resource_stage": {
+            "passed": true,
+            "exit_code": 0,
+            "checks": 29
+        },
+        "original_native_mysql": {
+            "passed": true,
+            "exit_code": 0,
+            "checks": 16
+        },
+        "original_resmap": {
+            "passed": true,
+            "exit_code": 0,
+            "checks": 35
+        },
+        "classic_verify_import": {
+            "passed": true,
+            "exit_code": 0,
+            "checks": 35
+        },
+        "v5_provider_resolution": {
+            "passed": true,
+            "exit_code": 0,
+            "checks": 47
+        },
+        "v4_source_root_mysql": {
+            "passed": true,
+            "exit_code": 0,
+            "checks": 7
+        },
+        "v4_binary_provider_mysql": {
+            "passed": true,
+            "exit_code": 0,
+            "checks": 8
+        },
+        "genuine_ut99_provider_maps": {
+            "passed": true,
+            "exit_code": 0,
+            "checks": 75
+        },
+        "genuine_ue1_corpus_workflow": {
+            "passed": true,
+            "exit_code": 0,
+            "checks": 92
+        }
+    },
+    "failed": []
+}
