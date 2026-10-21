@@ -1,0 +1,9 @@
+﻿PRD verify-ue1-original-actor-class-values.php
+Exit: 0
+Input-SHA256: 5E1C24D17CE9CD163788A94F6703D12A31209E88D59AC87E9AAA6A7EF6592867
+{
+    "ok": true,
+    "passed": 15,
+    "total": 15,
+    "failures": []
+}

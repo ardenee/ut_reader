@@ -17,7 +17,10 @@ final class CatalogUE1OriginalResourceActorReader
     public static function read(string $path,bool $strict=false):array
     {
         $db=CatalogUE1OriginalResourceDatabaseReader::read($path,$strict)['database_headers'];
-        $headers=CatalogUE1OriginalResourceHeaderReader::read($path)['resource_headers'];
+        $meta=CatalogUE1OriginalResourceHeaderReader::read($path);
+        $headers=$meta['resource_headers'];
+        $importCount=count($meta['imports']);
+        $resmapCount=$importCount+count($meta['exports']);
         $propertyTables=[];
         foreach(CatalogUE1OriginalResourceClassPropertyReader::read($path,false)['class_property_tables'] as $table){
             if(($table['status']??null)==='native_UClass_property_records_decoded')
@@ -26,6 +29,18 @@ final class CatalogUE1OriginalResourceActorReader
         $out=[];$fp=@fopen($path,'rb');
         if(!$fp)throw new RuntimeException('Cannot open native original actor records');
         try{
+            $classFrames=[];
+            foreach($headers as $candidate){
+                if((int)$candidate['resource_type']!==10
+                    ||(int)$candidate['serialized_length']<1272)continue;
+                $id=(int)$candidate['export_index'];
+                if(!isset($propertyTables[$id]))continue;
+                $classFrames[$id]=[
+                    'raw'=>self::slice($fp,(int)$candidate['serialized_offset']+124,self::ACTOR_BYTES),
+                    'properties'=>$propertyTables[$id],
+                    'resource_name'=>$candidate['resource_name']
+                ];
+            }
             foreach($db as $i=>$row){
                 $type=(int)$row['resource_type'];
                 if($type!==10 && $type!==11)continue;
@@ -90,8 +105,32 @@ final class CatalogUE1OriginalResourceActorReader
                     $actors=[];
                     for($j=0;$j<$num;$j++){
                         $offset=(int)$h['file_data_offset']+$j*self::ACTOR_BYTES;
-                        $actor=self::decodeActor(self::slice($fp,$offset,self::ACTOR_BYTES));
+                        $rawActor=self::slice($fp,$offset,self::ACTOR_BYTES);
+                        $actor=self::decodeActor($rawActor);
                         $actor['record_index']=$j;
+                        $actor['class_reference_status']='unresolved';
+                        $actor['class_property_values']=null;
+                        $ref=(int)$actor['class_reference_raw_word'];
+                        if($ref===0){
+                            $actor['class_reference_status']='null_UClass';
+                        }elseif($ref>$resmapCount){
+                            $actor['class_reference_status']='one_based_resmap_ref_out_of_range';
+                        }elseif($ref<=$importCount){
+                            $actor['class_reference_status']='imported_UClass_provider_unavailable';
+                        }else{
+                            $exportId=$ref-$importCount-1;
+                            if(isset($classFrames[$exportId])){
+                                $sourceClass=$classFrames[$exportId];
+                                $actor['class_property_values']=CatalogUE1OriginalActorClassPropertyValueReader::read(
+                                    $rawActor,$sourceClass['properties'],$sourceClass['raw']
+                                );
+                                $actor['class_reference_status']='source_local_export_UClass';
+                                $actor['class_export_index']=$exportId;
+                                $actor['class_resource_name']=$sourceClass['resource_name'];
+                            }else{
+                                $actor['class_reference_status']='resmap_export_not_decoded_UClass';
+                            }
+                        }
                         $actors[]=$actor;
                     }
                     $out[]=[

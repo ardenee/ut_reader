@@ -1,0 +1,9 @@
+﻿DEV verify-ue1-original-resource-actors.php
+Exit: 0
+Input-SHA256: 594AABCB0E8FC46DC573E70B08F2A9F6321692129EC27FA0B3520E7F1275EA96
+{
+    "ok": true,
+    "passed": 24,
+    "total": 24,
+    "failures": []
+}
