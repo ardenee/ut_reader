@@ -50,9 +50,9 @@ These are planning categories, not evidence of ten accepted/independent operatio
 
 | Source tree | Mechanically observed file version / minimum | Distinction and remaining work |
 |---|---|---|
-| `Unreal [v0.82]` | Not extracted | No `UnObjVer.h` in inspected tree; classify surviving source/assets |
-| `Unreal [v0.83]` | Not extracted | No `UnObjVer.h`; classify |
-| `Unreal [v0.84a]` | Not extracted | No `UnObjVer.h`; classify |
+| `Unreal [v0.82]` | `RES_FILE_VERSION=0x0009` | SOURCE FOUND: `Src/Engine/UnRes.cpp::FGlobalResourceManager::AddFile`, `Src/Inc/UnResTyp.h::FResourceFileTrailer`, `Src/Inc/UnBuild.h`; **trailer at EOF** tagged `Unreal Resource\x1A`, not a later `.u` package header; reader NOT implemented |
+| `Unreal [v0.83]` | `RES_FILE_VERSION=0x0009` | SOURCE FOUND: same resource-trailer format family and native read/write paths in `Src/Engine/UnRes.cpp`, `Src/Inc/UnResTyp.h`; reader NOT implemented |
+| `Unreal [v0.84a]` | `RES_FILE_VERSION=0x000A` | SOURCE FOUND: `Src/Engine/UnRes.cpp`, `Src/Inc/UnResTyp.h`, `Src/Inc/UnBuild.h`; trailer format version changes to 10; reader NOT implemented |
 | `Unreal [v0.86x]` | `UNREAL_FILE_VERSION=23`, min 22 | Early 32-byte `Unrealfile\x1A` header; separate format |
 | `Unreal [v0.867]` | Version 23, min 22 | `FUnrealfileSummary`, not modern UE1 package summary |
 | `Unreal [v1.200]` | `PACKAGE_FILE_VERSION=61`, min 34 | Classic numeric tag; different pre-v68 summary serializer; original complete source |
@@ -63,6 +63,8 @@ These are planning categories, not evidence of ten accepted/independent operatio
 | `Engine\UE1` | Version 61, min 34 | Community-maintained version-200-derived baseline; git HEAD previously `403fe5e` |
 
 All paths above are under `L:\Source\Games\Unreal`, `L:\Source\Games\UT99`, or `L:\Source\Engine\UE1`. Each relevant fork must be traced under its correct file-format family. UE2 and newer game roots are reserved for later phases.
+
+**Source coverage clarification (2026-10-21):** Source-code absence is **not** a blocker for the early v0.82/0.83/0.84a resource formats or v0.86x/v0.867 Unrealfile format. Both loading and serialization structures are present, but corresponding UnrealDB readers have not been implemented. The v0.82/0.83 resource versions are **9** and v0.84a is **10**, distinct from later classic package versions 35–69. Unreal v1.224 directory genuinely contains mostly headers (8 C++ files observed); v1.227 contains the file summary/layout headers, while some specific linker implementations are absent. Nearby complete source branches can inform shared behaviour but must not automatically be treated as identical. Genuine old-format binary fixtures and native runtime runs improve *independent validation*; **neither is a prerequisite to read/implement the available documented source**. The remaining production MySQL/search work is an **UnrealDB implementation test**, not an Epic-source gap. See `catalog/compliance/UE1-IMPLEMENTATION.md`.
 
 ## Actual completed findings, code, and evidence
 
@@ -103,10 +105,10 @@ B02 checks passed: `verify-ue1-early-format-identification.php` **9/9**, plus **
 ## Exact next actions — restart here
 
 1. Verify DEV device, `git status --short --branch`, `git log -1`, compare `origin/main`, and ensure prior committed changes reached PRD. Preserve any unrelated user edits.
-2. Complete UE1 source branch inventory: classify v0.82/v0.83/v0.84a file formats, source availability, and remaining branch forks. Cross-check v0.86x vs v0.867, v1.200, v1.224, v1.227, UT99 v400 and v430/v432 without assuming shared version rules.
+2. **Early formats now source-classified:** v0.82/0.83 resource trailer v9, v0.84a resource trailer v10 and v0.86x/v0.867 string-tagged Unrealfile v23 all have loader/writer definitions in the provided source. Use these to implement dedicated earlier readers; do not wait for an old executable. For v1.224/v1.227 and v430/v432, verify only actual code differences and missing specific bodies against the available overlapping source, without assuming forks are identical.
 3. Trace the full O01 production entry-to-result graph: `gp_read_legacy_summary` → `gp_classify_file` → game profile/compatibility decision → catalog reader resolver → staging/indexing/metadata/V5; include file-examine, HTTP scan, alternate import routes and negative/error paths.
 4. Establish a fixed supported-format and operation register with explicit branch/reader support. **Implement the dedicated early Unrealfile reader where in scope**; do not silently turn recognised format into accepted supported data.
-5. **Already passed:** 61/61 genuine v35–61 files plus 31/31 genuine v68/v69 files, including a v69/licensee-227 sample; 92/92 real classification→reader→source builder→isolated V5 write/read roundtrips. Next source evidence needed: genuine early string-tagged `Unrealfile` binary corpus, branch variants omitted from current corpus and (where feasible) a compiled original Epic UE1 linker oracle. Do not interpret container roundtrips as equivalent to native Epic execution.
+5. **Already passed:** 61/61 genuine v35–61 files plus 31/31 genuine v68/v69 files, including a v69/licensee-227 sample; 92/92 real classification→reader→source builder→isolated V5 write/read roundtrips. Validate newly implemented old-format readers against source-driven positive/negative fixtures now; seek genuine early-format files or a compiled original oracle *if available* as additional independent evidence, not as an excuse to postpone implementation. Do not treat V5 roundtrips as equivalent to native Epic execution.
 6. Run relevant verifier scripts; commit via local Git CLI, `git push origin main`, deploy changed files with Robocopy to PRD (excluding storage/config), SHA-256 compare, update this page and repeat.
 
 **Recovery rule:** reading this page plus `UE1-IMPLEMENTATION.md` and `UE1-ACCEPTANCE.md` should suffice for a fresh chat. Do not reopen earlier engine audits or create arbitrary new backlog identifiers. Never mark O01 ACCEPTED until complete source-linked workflow and independent acceptance evidence is available.
