@@ -15,7 +15,7 @@ Updated: **2026-10-21**. This is the canonical recovery/handover file for this p
 | Current O01 status | **IMPLEMENTING**, not accepted |
 | Primary acceptance metric | **0 accepted / not-yet-frozen UE1 operation scope** |
 | Latest completed work batch | **UE1-B05 — genuine UE1 v68/v69 source corpus, 92-file V5 roundtrips, UE1 classifier tag correction** |
-| Latest verified code checkpoint | `4d56c729` — B04 code/tests/status committed and pushed; 6/6 changed files SHA-256 matched PRD. Corpus inventory originally committed at `73d9c25c`. |
+| Latest verified code checkpoint | `1bbb837a` — B05 code, two executable corpus/production tests and 31-file SHA manifest committed/pushed, **8/8** files SHA-256 matched on PRD; 6 PRD regression scripts passed. |
 
 ## Engine sequence
 
@@ -79,6 +79,8 @@ All paths above are under `L:\Source\Games\Unreal`, `L:\Source\Games\UT99`, or `
 The early `Unrealfile` header now returns an explicit **unsupported format** result with UE1 identity/version at classification. It is **not** deserialized or accepted as a usable package. This is a genuine unresolved feature gap.
 
 **Genuine legacy corpus discovered 2026-10-21:** `L:\Source\Engine\UE1\Source\Unreal\Textures` contains 61 standard-magic `.utx` packages: 59 are versions 35–60, and two are version 61; all licensee versions are zero. The other 85 files are PCX images. Per-file SHA-256/version inventory at `catalog/compliance/inventory/ue1-textures-v35-v61.csv`, explanation at `catalog/compliance/inventory/UE1-TEXTURES-CORPUS.md`. **B04 VERIFIED (limited):** all 61/61 SHA-verified files parse via the canonical UE1 reader without reported issues, including matching name/import/export counts and actual production header helper; an independent direct-byte source-defined 44-byte summary read matches all 11 serialized header fields in 61/61 files, and file-examine GUIDs agree in 61/61. These files all have heritageCount=1, heritageOffset=44; they do **not** cover other heritage arrangements. Original compiled Epic engine/runtime comparison and full workflow acceptance remain OPEN.
+
+**B05 verified (bounded):** new installed genuine UE1 v68/v69 corpus 31/31; aggregate genuine-file profile/reader/source-specific V5 container write/read 92/92, including version69/licensee227. The UE1 preliminary classifier no longer admits the UE2-only Killing Floor tag (UE1-D007); UE2-only tag remains admitted under UE2. Two negative controls passed, 19/19 selected regression scripts passed on DEV, and six relevant executable checks passed on deployed PRD. Actual production MySQL publishing and search, early string-tagged binary reader, missing source fork coverage and native Epic executable parity remain **OPEN**.
 
 B02 checks passed: `verify-ue1-early-format-identification.php` **9/9**, plus **12/12** selected UE1/UE2/UE4/UE5 regression scripts, PHP syntax and source-anchored tests. B03 checked the live header-only helper: 4/4 assertions passed after three baseline failures, plus **15/15** selected regressions. Synthetic fixtures isolate branch decisions; native engine and genuine-package corpus equivalence are **not** established. The `.u` files sampled in the v0.86x/v0.867 source directories are script text, not binary package corpus.
 
