@@ -16,7 +16,7 @@ use RuntimeException;
 final class CatalogUE1OriginalUnrealfileBinaryPropertyReader
 {
     /** @return array<string,mixed> */
-    public static function read(string $path, bool $strict = false): array
+    public static function read(string $path, bool $strict = false, array $declaredDependencyProviders = []): array
     {
         $meta=CatalogUE1OriginalUnrealfileObjectBaseReader::read($path);
         $schemas=CatalogUE1OriginalUnrealfileClassSchemaReader::read($path,false)['class_schemas'];
@@ -49,7 +49,7 @@ final class CatalogUE1OriginalUnrealfileBinaryPropertyReader
                 $entry['status']='incomplete_native_stack_prefix';
                 $results[]=$entry;continue;
             }
-            $all=[];$visited=[];$class=$matches[0];$missingParent=false;
+            $all=[];$visited=[];$class=$matches[0];$missingParent=false;$externalSources=[];
             while(true){
                 $classId=(int)$class['object_index'];
                 if(isset($visited[$classId]))throw new RuntimeException('Cyclic original UClass ancestry');
@@ -60,6 +60,19 @@ final class CatalogUE1OriginalUnrealfileBinaryPropertyReader
                 if($parentRef>$numObjects)throw new RuntimeException('UClass parent reference exceeds ResMap');
                 $index=$parentRef-1;
                 if(!isset($byIndex[$index])){
+                    if($declaredDependencyProviders!==[]){
+                        $resolution=CatalogUE1OriginalUnrealfileExternalSchemaResolver::resolve(
+                            $path,$index,$declaredDependencyProviders
+                        );
+                        if(($resolution['status']??null)==='resolved'){
+                            foreach($resolution['property_descriptors'] as $prop){
+                                if((int)$prop['bin']===1)$all[]=$prop;
+                            }
+                            $externalSources=$resolution['sources'];
+                            break;
+                        }
+                        $entry['external_schema_status']=$resolution['status'];
+                    }
                     $missingParent=true;break;
                 }
                 $class=$byIndex[$index];
@@ -143,6 +156,8 @@ final class CatalogUE1OriginalUnrealfileBinaryPropertyReader
             $left=$hSize-$pos;
             if($strict&&$left!==0)throw new RuntimeException('Original binary object has additional native class header data');
             $entry['property_values']=$values;
+            $entry['external_property_schema_sources']=$externalSources;
+            $entry['runtime_external_classes_loaded']=false;
             $entry['class_schema_object_index']=$matches[0]['object_index'];
             $entry['consumed_class_member_bytes']=$pos-(int)$stack['serialized_prefix_bytes'];
             $entry['remaining_class_member_bytes']=$left;

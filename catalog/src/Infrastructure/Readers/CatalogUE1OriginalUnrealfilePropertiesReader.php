@@ -16,7 +16,7 @@ use RuntimeException;
 final class CatalogUE1OriginalUnrealfilePropertiesReader
 {
     /** @return array<string,mixed> */
-    public static function read(string $path,bool $strict=false):array
+    public static function read(string $path,bool $strict=false,array $declaredDependencyProviders=[]):array
     {
         $meta=CatalogUE1OriginalUnrealfileObjectBaseReader::read($path);
         $stackBy=[];foreach(CatalogUE1OriginalUnrealfileStackReader::read($path,false)['stack_prefixes'] as $stack)
@@ -52,23 +52,52 @@ final class CatalogUE1OriginalUnrealfilePropertiesReader
                     'runtime_class_preload_evaluated'=>false,
                     'runtime_class_references_resolved'=>false
                 ];
-                if($classRef===0||!isset($byClass[$classRef-1])){
+                $properties=[];$externalSources=[];$missing=false;
+                if($classRef===0){
                     $result['status']='class_schema_unavailable_or_external';
                     $results[]=$result;continue;
                 }
-                $properties=[];$visited=[];$source=$byClass[$classRef-1];$missing=false;
-                while(true){
-                    $sid=(int)$source['object_index'];
-                    if(isset($visited[$sid]))throw new RuntimeException('Cycle in UProperties native class ancestry');
-                    $visited[$sid]=true;
-                    foreach($source['properties'] as $prop)
+                if(!isset($byClass[$classRef-1])){
+                    $resolved=$declaredDependencyProviders!==[]
+                        ? CatalogUE1OriginalUnrealfileExternalSchemaResolver::resolve(
+                            $path,$classRef-1,$declaredDependencyProviders)
+                        : ['status'=>'no_explicit_dependency_provider'];
+                    if(($resolved['status']??null)!=='resolved'){
+                        $result['status']='class_schema_unavailable_or_external';
+                        $result['external_schema_status']=$resolved['status'];
+                        $results[]=$result;continue;
+                    }
+                    foreach($resolved['property_descriptors'] as $prop)
                         if((int)$prop['bin']===$bin)$properties[]=$prop;
-                    $parent=(int)$source['parent_class_ref'];
-                    if($parent===0)break;
-                    if($parent>$objectCount)
-                        throw new RuntimeException('Invalid UProperties parent-class native ResMap ref');
-                    if(!isset($byClass[$parent-1])){$missing=true;break;}
-                    $source=$byClass[$parent-1];
+                    $externalSources=$resolved['sources'];
+                }else{
+                    $visited=[];$source=$byClass[$classRef-1];
+                    while(true){
+                        $sid=(int)$source['object_index'];
+                        if(isset($visited[$sid]))throw new RuntimeException('Cycle in UProperties native class ancestry');
+                        $visited[$sid]=true;
+                        foreach($source['properties'] as $prop)
+                            if((int)$prop['bin']===$bin)$properties[]=$prop;
+                        $parent=(int)$source['parent_class_ref'];
+                        if($parent===0)break;
+                        if($parent>$objectCount)
+                            throw new RuntimeException('Invalid UProperties parent-class native ResMap ref');
+                        if(!isset($byClass[$parent-1])){
+                            if($declaredDependencyProviders!==[]){
+                                $resolved=CatalogUE1OriginalUnrealfileExternalSchemaResolver::resolve(
+                                    $path,$parent-1,$declaredDependencyProviders);
+                                if(($resolved['status']??null)==='resolved'){
+                                    foreach($resolved['property_descriptors'] as $prop)
+                                        if((int)$prop['bin']===$bin)$properties[]=$prop;
+                                    $externalSources=$resolved['sources'];
+                                    break;
+                                }
+                                $result['external_schema_status']=$resolved['status'];
+                            }
+                            $missing=true;break;
+                        }
+                        $source=$byClass[$parent-1];
+                    }
                 }
                 if($missing){
                     $result['status']='parent_class_schema_unavailable';
@@ -140,6 +169,8 @@ final class CatalogUE1OriginalUnrealfilePropertiesReader
                 $result['status']=$extra===0?'native_UClass_bin_properties_decoded':
                     'native_UClass_bin_properties_trailing_bytes';
                 $result['class_schema_object_index']=$classRef-1;
+                $result['external_property_schema_sources']=$externalSources;
+                $result['runtime_external_classes_loaded']=false;
                 $result['property_values']=$values;
                 $result['serialized_bytes_consumed']=$pos;
                 $result['serialized_bytes_remaining']=$extra;

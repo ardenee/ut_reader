@@ -1,0 +1,9 @@
+﻿DEV test: verify-ue1-original-unrealfile-inheritance.php
+Exit code: 0
+Test SHA256: FD8C49D49790DEEA14E02D30A8261C94FDE2CD7E89874897C6ACB863C529C5A7
+{
+    "ok": true,
+    "passed": 12,
+    "total": 12,
+    "failures": []
+}

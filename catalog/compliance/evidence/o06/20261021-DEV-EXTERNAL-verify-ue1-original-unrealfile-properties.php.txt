@@ -1,0 +1,9 @@
+﻿DEV test: verify-ue1-original-unrealfile-properties.php
+Exit code: 0
+Test SHA256: 1C171908F0A2F232739C8FCEF481A1E524BEC52C799BF7EEC13E9162ECAD1710
+{
+    "ok": true,
+    "passed": 14,
+    "total": 14,
+    "failures": []
+}
