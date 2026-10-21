@@ -1,6 +1,6 @@
 # UE1 — source-to-production implementation register
 
-Updated 2026-10-21. Scope: new source-defined acceptance process, not earlier audit counts. The current operation is **O01**, which remains open.
+Updated 2026-10-21. **O01 identification/dispatch ACCEPTED** (6/6 fixed requirements). **O02 original/standard summary and metadata decoding IMPLEMENTING**. Epic serialization source is the authoritative implementation reference.
 
 ## Source revisions and relevant roots
 
@@ -89,3 +89,9 @@ The previously unclassified 1996 versions **have original reader/writer source**
 - v0.86x and v0.867: `Src\Inc\UnLinker.h:258–310,413–490` describes a *different* beginning-of-file `FUnrealfileSummary` and its names/objects/dependencies. The source is available to implement a dedicated loader; no need to wait for an archived compiled executable.
 
 **Correction to prior audit wording:** the 1996 cases are **implementation work**, not lack of source. The filename suffix `.RES` in the v0.82 Visual C++ `Release` build folders refers to Windows linker resource artifacts; it is not evidence of authentic original Unreal resource-package files. Native executables and genuine old-format package fixtures are independent evidence, not mandatory prerequisites for source-based implementation. Genuine partial-source limitations mainly apply to the v1.224/v1.227 subbranches, for which later/nearby source may help only after equivalence is demonstrated.
+
+## O01 accepted — original 1996 resource-file identification completed (2026-10-21)
+
+Production `CatalogUE1OriginalResourceFormat::identify()` checks Epic's **leading** `Unreal Resource\x1A\0` and reads the 164-byte `FResourceFileTrailer` from **EOF**. This is intentionally not a modern package header. Its fields are nine native 32-bit little-endian values plus 16-byte padding, 80-byte delta filename and 32-byte duplicated tag. Tested original resource versions 9 and 10, unknown version 11, and malformed/truncated inputs. Epic `FGlobalResourceManager::AddFile` does **not** require the writer's `[SUMMARY]` marker or duplicated trailer tag; these two pieces of information must not become extra rejection criteria.
+
+Source-backed behaviour implemented in `GameProfiles.php`, `CatalogPackageHeaderInspector.php`, `CatalogParser.php`, `CatalogUnverifiedStagingIndex.php` and `CatalogUnverifiedQueueStorage.php`: preserve known serialized format/version, stop routing unsupported v9/v10/v23 originals into the later UE1 reader, return a true source-family diagnostic, retain queue hashes without invented GUIDs. Test `verify-ue1-original-resource-identification.php` **36/36**; 20/20 DEV regressions and 9/9 PRD tests; code commit `4dad9618`, 7/7 code/test files deployed and SHA-256 matched. **O01 acceptance is strictly identification**, not full early file support. O02 must implement the actual Epic original-format reader data handling.

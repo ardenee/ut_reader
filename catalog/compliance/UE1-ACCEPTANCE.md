@@ -52,20 +52,20 @@ B03 committed/pushed as `aa3eb737`; all 5 changed code/test/documentation files 
 
 **Evidence limits:** The early v23 fixture is synthetic but source-anchored; no authentic compiled v0.867 linker oracle or genuine matching binary package has yet been compared. The `.u` files sampled from v0.86x/v0.867 `Classes` are text source files and must not be represented as binary-package test inputs. Do not mark O01 accepted on classification alone.
 
-## O01 — FROZEN acceptance contract: IDENTIFY / DISPATCH only (OPEN)
+## O01 — ACCEPTED: IDENTIFY / DISPATCH (2026-10-21)
 
 **Responsibility:** Given real package bytes and a selected-game profile, identify source-defined UE1 format family and serialized version/licensee where available, route to the correct supported reader, or explicitly report the format unsupported/invalid. Do not accept another engine's tag into UE1. Only read the byte ranges necessary to identify; do **not** require full package deserialization.
 
 - [x] Source-map original 1996 resource trailers (v9/v10), 1997 `Unrealfile` summary (v23), and 1998+ numeric package headers (v34–69) to corresponding supplied engine/game source and identify distinct format families.
 - [x] Enforce UE1 numeric package tag, header reader failure propagation, original `Unrealfile` signature recognition, UE2-tag isolation and source-aligned v68/v69 licensee extraction on the currently tested paths.
-- [ ] Recognise `Unreal Resource\x1A` at the **end of file** using the original resource-file trailer and report resource versions 9/10 without routing into the newer UE1 parser.
-- [ ] Verify branch-specific version classification and deterministic noninteractive admission/unsupported statuses (including minimum-version cases) against source-defined positive and negative cases.
-- [ ] Verify every **identification and dispatch** entry point: staging/classifier, source/HTTP scans, unverified queue, file inspection and header-only helper. Confirm errors cannot silently promote a failed UE1 read.
-- [ ] Run the frozen O01 tests and adjacent regressions, record exact results, commit/push, deploy and SHA-256 compare DEV/PRD; only then mark **O01 ACCEPTED** and proceed to O02.
+- [x] Recognise the original **leading** `Unreal Resource\x1A` tag plus **EOF** `FResourceFileTrailer` and report resource versions 9/10 without routing into the later UE1 parser. The `[SUMMARY]` marker and duplicated trailer tag are **informational** in Epic's loader and are deliberately not required.
+- [x] Branch-specific header and version policy verified: v9/v10 resource trailers, v23 Unrealfile, versions 35–61 and 68/69 standard packages, nonstandard licensee 227, and source-defined minimum-version prompting replaced by noninteractive reader-validation policy rather than a false global version cutoff. Invalid and unknown versions are not reported as fully parsed.
+- [x] Production entry-point coverage: actual `gp_classify_file`, `CatalogVerifiedPackageInspector::inspect`, `CatalogUnverifiedStagingIndex::detectEngine/parse`, `CatalogUnverifiedQueueStorage::identity`, `catalog_try_read_package_header` (shared source/HTTP/queue entry), and `CatalogPackageHeaderInspector::inspect`, with explicit unsupported outcomes and no fabricated GUID. Shared callers verified by the existing scan-boundary regression.
+- [x] DEV original-resource test **36/36**, genuine UE1 files **92/92** and relevant regression scripts **20/20**; seven PHP files passed syntax checks. Production code/tests commit `4dad9618` pushed to GitHub, all **7/7** changed files SHA-256 matched on PRD. Nine relevant PRD scripts passed, including 36/36 original-format tests and 92/92 genuine-file roundtrips. **O01 ACCEPTED; O02 is next.**
 
 **Explicitly deferred, not O01 gates:** original v9/v10/v23 full readers and complete summary tables (O02); name/import/export decoding (O03/O04); object data (O06/O07); live MySQL publication/search (O09); end-to-end workflow checks (O10). A compiled original Epic executable and authentic early-game binaries are useful independent corroboration when available, but their absence cannot indefinitely block a source-defined O01 identification contract. Do not add unrelated acceptance gates to O01.
 
-One passed helper is not sufficient for O01; once these six bounded criteria are met, do not hold its acceptance hostage to other operations.
+All six frozen identification/dispatch criteria passed. **UE1 is not fully supported**: original resource/unrealfile full metadata and object readers are still absent. This O01 acceptance does not certify O02–O10, native runtime equivalence or processing of source-identified unsupported formats.
 
 ## B04 — original Unreal v35–61 corpus and heritage inspector correction (2026-10-21)
 

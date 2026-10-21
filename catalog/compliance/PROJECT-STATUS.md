@@ -11,11 +11,11 @@ Updated: **2026-10-21**. This is the canonical recovery/handover file for this p
 | Reference sources | `L:\Source\Engine` and `L:\Source\Games` |
 | Deployment | `Z:\Apache24\htdocs\unrealdb` on DEV is PRD `Lelly-pc` |
 | GitHub | `https://github.com/ardenee/ut_reader` |
-| Active engine / operation | **UE1 / O01 — file identification and version dispatch** |
-| Current O01 status | **IMPLEMENTING — 2 of 6 fixed O01 checklist gates recorded satisfied, 4 open.** See `UE1-ACCEPTANCE.md`. No reader/data publishing prerequisite. |
-| Primary acceptance metric | **UE1 O01: 0/1 accepted (identification/dispatch only).** UE1 operation-register denominator: 10 provisional categories; freeze per-engine after complete source inventory. |
-| Latest completed work batch | **UE1-B05 — genuine UE1 v68/v69 source corpus, 92-file V5 roundtrips, UE1 classifier tag correction** |
-| Latest verified code checkpoint | `1bbb837a` — B05 code, two executable corpus/production tests and 31-file SHA manifest committed/pushed, **8/8** files SHA-256 matched on PRD; 6 PRD regression scripts passed. |
+| Active engine / operation | **UE1 / O02 — original/standard package summary and metadata** |
+| O01 status | **ACCEPTED — 6/6 fixed identification/dispatch criteria passed**; see `UE1-ACCEPTANCE.md`. Original full readers are O02 work. |
+| Primary acceptance metric | **UE1: 1 accepted operation (O01); O02 implementing.** Ten source-dependent categories currently listed; UE1 overall NOT accepted. |
+| Latest completed work batch | **UE1 O01 — completed original resource v9/v10 EOF identification and error-safe production dispatch** |
+| Latest verified code checkpoint | `4dad9618` — production code and 36-check original-format verifier committed/pushed; **7/7 DEV–PRD SHA-256 parity**. DEV 20/20 regressions, PRD 9/9 targeted scripts. |
 
 ## Engine sequence
 
@@ -33,8 +33,8 @@ Do not move to UE2 before UE1 acceptance. Earlier VERIFIED work cannot be substi
 
 | ID | Category | Status |
 |---|---|---|
-| O01 | File identification and version dispatch | IMPLEMENTING |
-| O02 | Package summary and metadata | NOT STARTED; pre-1998 format reader missing |
+| O01 | File identification and version dispatch | **ACCEPTED (6/6 source-backed scoped requirements)** |
+| O02 | Package summary and metadata | **IMPLEMENTING** — build original v9/v10 resource and v23 Unrealfile summary/table readers from supplied Epic code |
 | O03 | Names | NOT STARTED |
 | O04 | Imports/exports | NOT STARTED |
 | O05 | Dependency resolution | NOT STARTED |
@@ -117,10 +117,10 @@ B02 checks passed: `verify-ue1-early-format-identification.php` **9/9**, plus **
 ## Exact next actions — restart here
 
 1. Verify DEV device, `git status --short --branch`, `git log -1`, compare `origin/main`, and ensure prior committed changes reached PRD. Preserve any unrelated user edits.
-2. **Early formats are source-classified:** v0.82/0.83 resource-trailer v9, v0.84a resource-trailer v10 and v0.86x/v0.867 string-tagged Unrealfile v23. In O01 identify/route or explicitly reject them; implement their **full dedicated readers in O02** from the already available source. Do not wait for old executables. For v1.224/v1.227 and v430/v432, compare overlapping source implementations rather than assuming differences or equivalence.
-3. Finish **O01 only**: identify the source-defined 1996 EOF resource trailer (format version 9/10); verify recognition of the 1997 Unrealfile v23 and 1998+ numeric package revisions. Require source-verified expected identity or explicit unsupported/invalid classification, never a fake supported reader.
-4. Execute O01 admission/dispatch through the actual stage, file-examine, source/HTTP and queue call sites with source-defined positives and negatives; finish minimum-version classification policy. The **six immutable O01 gates** are in `catalog/compliance/UE1-ACCEPTANCE.md`. Do not reopen O01 to implement full early readers or V5 SQL.
-5. **Existing evidence**: 61/61 genuine v35–61 plus 31/31 genuine v68/v69, with 92/92 genuine reader→V5 isolated roundtrips. For O01, run final fixed classification tests, targeted regressions and deployment; **mark O01 accepted when its six scoped gates pass and move straight to O02**, where original v9/v10/v23 reader implementation belongs. Do not require live SQL or a compiled oracle for O01.
+2. **O01 closed; start O02** from Epic source: original 1996 `UnRes.cpp`, `UnResTyp.h` (resource v9/v10 EOF summary and table layouts); 1997 `UnLinker.h` (`FUnrealfileSummary` v23, objects/names/dependencies); 1998+ `FPackageFileSummary` classic package versions. Implement actual reader data output, not more identification heuristics.
+3. For O02 implement separate format-specific summary/table loaders, use byte-exact source definitions, enforce checked bounds and preserve serialized identities. Feed their source-defined output into real UnrealDB reader pathways, rather than discarding supported old-format metadata as invalid modern magic.
+4. Verify O02 with native-source-layout fixtures, real packages where available and existing reader regressions. Find genuine old files but do not wait for them when exact original C++ source is available. Keep source semantics authoritative over generic format assumptions.
+5. Existing O01 evidence: **6/6 accepted**; DEV 20/20 relevant scripts, PRD 9/9, 92/92 original installed classic packages. **O02 is implementing**, NOT accepted, and the early resource/unrealfile formats remain unsupported as complete packages until reader work is done. Do not count detection as decoding.
 6. Run relevant verifier scripts; commit via local Git CLI, `git push origin main`, deploy changed files with Robocopy to PRD (excluding storage/config), SHA-256 compare, update this page and repeat.
 
-**Recovery rule:** reading this page plus `UE1-IMPLEMENTATION.md` and `UE1-ACCEPTANCE.md` should suffice for a fresh chat. Do not reopen earlier engine audits or create arbitrary new backlog identifiers. Never mark O01 ACCEPTED until complete source-linked workflow and independent acceptance evidence is available.
+**Recovery rule:** read this page plus `UE1-IMPLEMENTATION.md` and `UE1-ACCEPTANCE.md`; source C++ is master truth. O01 is accepted for its frozen identification scope; do not reopen it for O02–O10 decoding, object or SQL work. Advance one bounded operation at a time and deploy verified code promptly.
