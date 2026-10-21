@@ -1,0 +1,9 @@
+﻿PRD verify-ue1-original-unrealfile-class-schemas.php
+Exit: 0
+Input SHA256: F2CDA42C2105751B142C9DE9F6B397279539258CC778733211518048F816D87B
+{
+    "ok": true,
+    "passed": 20,
+    "total": 20,
+    "failures": []
+}
