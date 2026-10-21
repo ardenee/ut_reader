@@ -110,6 +110,32 @@ $pre50Exports=[['export_index'=>0,'class_index'=>-7,'object_name'=>'LegacyObject
 $pre50=Ue1::resolveInMemoryOutcome(Ue1::PROFILE_UNREAL_V120,$pre50Consumer,$providerImports,$pre50Exports,'TestPkg',49,49);
 $check('unreal_pre50_uses_object_package_and_skips_outer_check',($pre50[0]['export_index']??null)===0);
 
+// Epic Unreal v1.200 ULinkerLoad::GenerateExportInfo, pre-v50:
+// ClassPackage comes from the imported class's serialized _ObjectPackage,
+// not from PackageIndex (which does not exist in those packages).
+$nativePre50Consumer=[[
+    'import_index'=>0,'class_package'=>'Engine','class_name'=>'Texture',
+    'object_name'=>'EarlyTexture','outer_index'=>0,
+    'object_package_present'=>true,'object_package'=>'Provider',
+]];
+$nativePre50ClassImports=[[
+    'import_index'=>0,'class_package'=>'Core','class_name'=>'Class',
+    'object_name'=>'Texture','outer_index'=>0,
+    'object_package_present'=>true,'object_package'=>'Engine',
+]];
+$nativePre50Exports=[[
+    'export_index'=>0,'class_index'=>-1,'object_name'=>'EarlyTexture',
+    'outer_index'=>0,'object_flags'=>4,
+]];
+$nativePre50=Ue1::resolveInMemoryOutcome(
+    Ue1::PROFILE_UNREAL_V120, $nativePre50Consumer,
+    $nativePre50ClassImports, $nativePre50Exports, 'Provider', 49, 49
+);
+$check('unreal_pre50_export_class_package_comes_from_object_package',
+    ($nativePre50[0]['status']??null)==='resolved'
+    && ($nativePre50[0]['export_index']??null)===0);
+
+
 $missingConsumer=[
  ['import_index'=>0,'class_package'=>'Core','class_name'=>'Package','object_name'=>'TestPkg','outer_index'=>0],
  ['import_index'=>1,'class_package'=>'Engine','class_name'=>'OtherClass','object_name'=>'MissingObject','outer_index'=>-1],

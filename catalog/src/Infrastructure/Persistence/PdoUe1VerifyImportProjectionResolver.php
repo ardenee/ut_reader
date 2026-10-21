@@ -144,6 +144,14 @@ final class PdoUe1VerifyImportProjectionResolver
             $classImport = $providerImports[-$classIndex - 1] ?? null;
             if (!is_array($classImport)) { return ['', '']; }
             $className = (string)($classImport['object_name'] ?? '');
+            // Epic Unreal v1.200 ULinkerLoad::GenerateExportInfo, Ver()<50:
+            // the class package is FObjectImport::_ObjectPackage (an FName).
+            // The native import has no PackageIndex in these revisions.
+            // Persisted object_package_present records this serialization
+            // boundary; never infer the package from its synthetic outer=0.
+            if (!empty($classImport['object_package_present'])) {
+                return [(string)($classImport['object_package'] ?? ''), $className];
+            }
             $classOuter = (int)($classImport['outer_index'] ?? $classImport['package_index'] ?? 0);
             if ($classOuter >= 0) { return ['', $className]; }
             $classPackageImport = $providerImports[-$classOuter - 1] ?? null;
