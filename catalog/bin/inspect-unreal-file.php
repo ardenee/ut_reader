@@ -315,6 +315,17 @@ function inspect_unreal_file(string $inputPath, bool $full = false): array
                     $result['original_resource_metadata_error'] = $error->getMessage();
                 }
             }
+            if (($summary['format'] ?? '') === 'early_unrealfile'
+                && in_array((int)($summary['version'] ?? 0), [22, 23], true)) {
+                try {
+                    $result['original_unrealfile_metadata'] =
+                        \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileMetadataReader::read($parsePath);
+                    $result['original_unrealfile_metadata_status'] = 'DECODED';
+                } catch (Throwable $error) {
+                    $result['original_unrealfile_metadata_status'] = 'FAILED';
+                    $result['original_unrealfile_metadata_error'] = $error->getMessage();
+                }
+            }
         }
 
         if (strlen($header) >= 16) {
