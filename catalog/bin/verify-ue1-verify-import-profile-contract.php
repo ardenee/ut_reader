@@ -86,6 +86,37 @@ $private=$exports;$private[0]['object_flags']=0;
 $ut99=Ue1::resolveInMemoryOutcome(Ue1::PROFILE_UT99_V1400,$consumer,$providerImports,$private,'TestPkg',68,68);
 $check('ut99_private_export_fails_before_runtime_fallback',($ut99[1]['status']??'')==='private_export'&&($ut99[1]['candidate_export_index']??null)===0);
 
+// Epic UT99 VerifyImport aborts on an inaccessible parent (RF_Public unset).
+// The dependent import cannot be independently matched as a child of a
+// different top-level export, even when that export has the same name/class.
+$privateParentProvider=$exports;
+$privateParentProvider[0]['object_flags']=0;
+$privateParentProvider[1]['outer_index']=0;
+$privateChild=Ue1::resolveInMemoryOutcome(
+    Ue1::PROFILE_UT99_V1400,$consumer,$providerImports,$privateParentProvider,'TestPkg',68,68
+);
+$check('ut99_private_parent_fails',$privateChild[1]['status']==='private_export');
+$check('ut99_private_parent_must_not_resolve_child',
+    ($privateChild[2]['status']??'')!=='resolved'
+    && ($privateChild[2]['source_linker']??false)===false);
+
+// Different native branch: a genuinely missing parent still has a selected
+// SourceLinker, with SourceIndex == INDEX_NONE. UT99 VerifyImport permits a
+// child to match a root export (PackageIndex==0) in that selected linker.
+$missingParentProvider=$exports;
+$missingParentProvider[0]['object_name']='OtherParent';
+$missingParentProvider[1]['outer_index']=0;
+$missingParent=Ue1::resolveInMemoryOutcome(
+    Ue1::PROFILE_UT99_V1400,$consumer,$providerImports,$missingParentProvider,'TestPkg',68,68
+);
+$check('ut99_runtime_only_parent_does_not_fabricate_parent_export',
+    ($missingParent[1]['status']??null)==='runtime_only'
+    && ($missingParent[1]['source_linker']??false)===true);
+$check('ut99_runtime_only_parent_allows_source_root_candidate',
+    ($missingParent[2]['status']??null)==='resolved'
+    && ($missingParent[2]['export_index']??null)===1);
+
+
 $noneConsumer=[
  ['import_index'=>0,'class_package'=>'Core','class_name'=>'Package','object_name'=>'TestPkg','outer_index'=>0],
  ['import_index'=>1,'class_package'=>'None','class_name'=>'None','object_name'=>'None','outer_index'=>-1],

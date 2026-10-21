@@ -292,7 +292,8 @@ final class PdoDependencyResolver
                     (int)$candidate['file_id'],
                     $imports,
                     $ue1Profile,
-                    $consumerVersion
+                    $consumerVersion,
+                    $storageRoot
                 );
             }
         } elseif ($engineKey === 'UE2' && $ue2Profile !== null) {

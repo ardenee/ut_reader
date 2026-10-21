@@ -90,6 +90,17 @@ $private = Uedb5ClassicDependencyResolver::resolve($ut99Consumer, [[
     'package_name'=>'Provider','provider_id'=>41003,'snapshot'=>$ut99Private,
 ]]);
 $check(($private[1]['status'] ?? null) === 'missing', 'ut99_private_export_is_rejected');
+$nestedPrivateConsumer=$ut99Consumer;
+$nestedPrivateConsumer['sections']['imports'][]=$import(2,'Child','Core','Class',-2);
+$nestedPrivateProvider=$ut99Private;
+$nestedPrivateProvider['sections']['exports'][]=$export(1,'Child','00000004',0);
+$nestedPrivateOutcomes=Uedb5ClassicDependencyResolver::resolve(
+    $nestedPrivateConsumer,
+    [['package_name'=>'Provider','provider_id'=>41003,'snapshot'=>$nestedPrivateProvider]]
+);
+$check(($nestedPrivateOutcomes[1]['status']??null)==='missing'
+    && ($nestedPrivateOutcomes[2]['status']??null)!=='resolved',
+    'ut99_private_parent_cannot_resolve_descendant_as_top_level');
 
 // Epic UT99 v400 ULinkerLoad::VerifyImport requires the root
 // (PackageIndex==0) to be Core.Package. The wrapper must NOT short-circuit

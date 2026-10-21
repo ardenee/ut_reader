@@ -24,16 +24,20 @@ final class PdoUe1VerifyImportProjectionResolver
         int $providerFileId,
         array $consumerImports,
         string $profile,
-        ?int $consumerVersion = null
+        ?int $consumerVersion = null,
+        ?string $storageRoot = null
     ): array {
         if ($providerFileId < 1) {
             return [];
         }
-        if (!function_exists('catalog_config')) {
-            throw new RuntimeException('Catalog configuration is required for authoritative UE1 VerifyImport resolution.');
+        if ($storageRoot === null) {
+            if (!function_exists('catalog_config')) {
+                throw new RuntimeException('Catalog configuration is required for authoritative UE1 VerifyImport resolution.');
+            }
+            $config = \catalog_config();
+            $storageRoot = (string)($config['storage_path'] ?? '');
         }
-        $config = \catalog_config();
-        $storageRoot = trim((string)($config['storage_path'] ?? ''));
+        $storageRoot = trim($storageRoot);
         if ($storageRoot === '') {
             throw new RuntimeException('Catalog storage_path is required for authoritative UE1 VerifyImport resolution.');
         }
@@ -257,8 +261,11 @@ final class PdoUe1VerifyImportProjectionResolver
         $ut99Mesh = $profile === self::PROFILE_UT99_V1400
             && self::same((string)($import['class_name'] ?? ''), 'Mesh');
         if ($match['status'] === 'private_export') {
+            // VerifyImport throws for a private export unless LOAD_Forgiving,
+            // which reports a broken link and returns without SourceIndex.
+            // A child cannot proceed through this rejected ancestor.
             unset($resolving[$index]);
-            return $results[$index] = $match + ['source_linker' => $sourceLinker];
+            return $results[$index] = array_replace($match, ['source_linker' => false]);
         }
         if ($match['status'] === 'resolved' && !$ut99Mesh) {
             unset($resolving[$index]);
@@ -295,7 +302,9 @@ final class PdoUe1VerifyImportProjectionResolver
                 $lod['reason'] = $lod['status'] === 'resolved'
                     ? 'ut99_mesh_to_lodmesh'
                     : 'private_export';
-                return $results[$index] = $lod + ['source_linker' => $sourceLinker];
+                return $results[$index] = $lod + [
+                    'source_linker' => $lod['status'] === 'private_export' ? false : $sourceLinker,
+                ];
             }
             if (is_array($meshMatch)) {
                 unset($resolving[$index]);

@@ -11,11 +11,11 @@ Updated: **2026-10-21**. This is the canonical recovery/handover file for this p
 | Reference sources | `L:\Source\Engine` and `L:\Source\Games` |
 | Deployment | `Z:\Apache24\htdocs\unrealdb` on DEV is PRD `Lelly-pc` |
 | GitHub | `https://github.com/ardenee/ut_reader` |
-| Active engine / operation | **UE1 / O05 — dependency and object reference resolution** |
+| Active engine / operation | **UE1 / O06 — object and property serialization** |
 | O01 status | **ACCEPTED — 6/6 fixed identification/dispatch criteria passed**. Original structural metadata O02 is also accepted; type-specific object/payload parsing belongs to O06/O07. |
-| Primary acceptance metric | **UE1: O01–O04 accepted within bounded source-backed contracts; O05 active, O06–O10 open.** Full engine equivalence NOT achieved. |
-| Latest completed work batch | **UE1 O05 — added source-defined 1996 resource import lookup, preserving loaded-registry uncertainty and numeric ResArray slot priority through native unverified staging** |
-| Latest verified code checkpoint | **`8b16c0fd`** original v9/v10 `FGlobalResourceManager::FindResource` name/type source lookup, native metadata integration, and explicit `runtime_registry_not_available` status; follow-up numeric ResArray slot-order correction tested. Resource lookup **17/17**, native staging **29/29**, real MySQL **16/16**. Initial DEV **35/35** regressions, PRD **9/9** targeted tests, original five files **5/5 SHA-256 matched**. O05 implementing; no original compiled runtime or genuine 1996 assets tested. |
+| Primary acceptance metric | **UE1: O01–O05 accepted within explicit source-backed file-handling contracts; O06–O10 open.** Runtime engine and full production equivalence NOT established. |
+| Latest completed work batch | **UE1 O05 — fixed private-parent child misbinding and isolated V4 provider loading; verified 75 imports against 27 genuine UT99 provider maps; completed executable acceptance** |
+| Latest verified code checkpoint | **O05 closure acceptance driver `catalog/bin/verify-ue1-o05-acceptance.php` 10/10**: original native lookup 17/17, 1997 ResMap 33/33, native MySQL 16/16, V4 real MySQL source roots 7/7 and isolated UEDB5 provider 8/8, V5 source/class/private-ancestor cases, genuine 27 UT99 provider files (1,335 exports, 75 matches/75 wrong-class rejects), complete classic corpus 92/92. O05 accepted for static file-metadata dependency projections, not a runtime-engine oracle. See UE1-ACCEPTANCE.md. |
 
 ## Engine sequence
 
@@ -29,7 +29,7 @@ Updated: **2026-10-21**. This is the canonical recovery/handover file for this p
 
 Do not move to UE2 before UE1 acceptance. Earlier VERIFIED work cannot be substituted for the new acceptance requirements.
 
-## Provisional UE1 operation categories (denominator not frozen)
+## UE1 operation register (10 fixed categories)
 
 | ID | Category | Status |
 |---|---|---|
@@ -37,14 +37,14 @@ Do not move to UE2 before UE1 acceptance. Earlier VERIFIED work cannot be substi
 | O02 | Package summary and metadata | **ACCEPTED (source-defined structural metadata only)** — original 1996 resource v9/v10, original 1997 Unrealfile v22/v23, genuine classic v35–69, and correct unverified MySQL persistence; NOT payload/full-reader acceptance |
 | O03 | Names | **ACCEPTED (name serialization and context mapping)** — source ANSI byte identity, v9/10 fixed strings, v22/23 one-based names, v35–69 classic entries, explicit load contexts, malformed bounds rejected. Cross-package runtime internment O05. |
 | O04 | Imports/exports | **ACCEPTED — structural tables and source-defined reference bounds only**. v9/v10 resource entries, v22/v23 UObjectBase with class preload object index, classic v35–69 compact signed references/outer gates/serial ranges. Runtime binding is O05. |
-| O05 | Dependency resolution | **IMPLEMENTING** — V4/V5 root validation, pre-v50 class package, 1997 v22/v23 serialized `ResMap`, and 1996 v9/v10 global resource name/type lookup keys. True loaded-registry binding, complete cross-package class/outer matching and runtime fallback remain open. |
+| O05 | Dependency resolution | **ACCEPTED — source-determined static dependencies**. Original v9/v10 global ResArray lookup keys; original v22/v23 serialized ResMap/declared filenames; classic v34–69 source VerifyImport including class/outer/privacy, V4 SQL + V5 provider matching. Native-only runtime state remains explicitly unresolved, NOT falsely marked linked. Frozen 10/10 executable gates. |
 | O06 | Object and property serialization | NOT STARTED |
 | O07 | Bulk/external data | NOT STARTED |
 | O08 | Cooked and game-specific formats | NOT STARTED |
 | O09 | Production data integration | NOT STARTED |
 | O10 | Complete production workflows | NOT STARTED |
 
-These ten categories are the current operation register; an operation is accepted only against its **own stated responsibility**. Do not enlarge one operation to require later operations. The categories are provisional until source inspection verifies relevance to UE1; do not calculate an engine-wide completion percentage from them.
+These TEN categories are fixed for UE1; new findings go under an existing operation as defects rather than inventing endless new operation IDs. Acceptance covers each explicitly bounded responsibility, NOT engine-wide parity. Runtime object-loading and actual workflow verification remain O10; property serialization O06 and bulk data O07.
 
 ## Mandatory source-first execution and acceptance discipline (2026-10-21)
 
@@ -62,9 +62,9 @@ The source-first rule is mandatory for UE1 and repeats unchanged for UE2/2.5, UE
 
 | Source tree | Mechanically observed file version / minimum | Distinction and remaining work |
 |---|---|---|
-| `Unreal [v0.82]` | `RES_FILE_VERSION=0x0009` | SOURCE FOUND: `Src/Engine/UnRes.cpp::FGlobalResourceManager::AddFile`, `Src/Inc/UnResTyp.h::FResourceFileTrailer`, `Src/Inc/UnBuild.h`; **trailer at EOF** tagged `Unreal Resource\x1A`, not a later `.u` package header; reader NOT implemented |
-| `Unreal [v0.83]` | `RES_FILE_VERSION=0x0009` | SOURCE FOUND: same resource-trailer format family and native read/write paths in `Src/Engine/UnRes.cpp`, `Src/Inc/UnResTyp.h`; reader NOT implemented |
-| `Unreal [v0.84a]` | `RES_FILE_VERSION=0x000A` | SOURCE FOUND: `Src/Engine/UnRes.cpp`, `Src/Inc/UnResTyp.h`, `Src/Inc/UnBuild.h`; trailer format version changes to 10; reader NOT implemented |
+| `Unreal [v0.82]` | `RES_FILE_VERSION=0x0009` | Original EOF resource trailer, source-defined names/imports/exports/native headers and unverified staging implemented. **Type-specific object payloads O06 still open** |
+| `Unreal [v0.83]` | `RES_FILE_VERSION=0x0009` | Same source-defined v9 family structurally read and staged; true loaded ResArray runtime binding unavailable, recorded as not-evaluated; payloads O06 |
+| `Unreal [v0.84a]` | `RES_FILE_VERSION=0x000A` | Original v10 structural tables/headers read and staged; type/name source lookup projected, payloads O06 |
 | `Unreal [v0.86x]` | `UNREAL_FILE_VERSION=23`, min 22 | Early 32-byte `Unrealfile\x1A` header; separate format |
 | `Unreal [v0.867]` | Version 23, min 22 | `FUnrealfileSummary`, not modern UE1 package summary |
 | `Unreal [v1.200]` | `PACKAGE_FILE_VERSION=61`, min 34 | Classic numeric tag; different pre-v68 summary serializer; original complete source |
@@ -76,7 +76,7 @@ The source-first rule is mandatory for UE1 and repeats unchanged for UE2/2.5, UE
 
 All paths above are under `L:\Source\Games\Unreal`, `L:\Source\Games\UT99`, or `L:\Source\Engine\UE1`. Each relevant fork must be traced under its correct file-format family. UE2 and newer game roots are reserved for later phases.
 
-**Source coverage clarification (2026-10-21):** Source-code absence is **not** a blocker for the early v0.82/0.83/0.84a resource formats or v0.86x/v0.867 Unrealfile format. Both loading and serialization structures are present, but corresponding UnrealDB readers have not been implemented. The v0.82/0.83 resource versions are **9** and v0.84a is **10**, distinct from later classic package versions 35–69. Unreal v1.224 directory genuinely contains mostly headers (8 C++ files observed); v1.227 contains the file summary/layout headers, while some specific linker implementations are absent. Nearby complete source branches can inform shared behaviour but must not automatically be treated as identical. Genuine old-format binary fixtures and native runtime runs improve *independent validation*; **neither is a prerequisite to read/implement the available documented source**. The remaining production MySQL/search work is an **UnrealDB implementation test**, not an Epic-source gap. See `catalog/compliance/UE1-IMPLEMENTATION.md`.
+**Source coverage clarification (2026-10-21):** Source-code absence is **not** a blocker for the early v0.82/0.83/0.84a resource formats or v0.86x/v0.867 Unrealfile format. Their structural/native metadata readers and typed unverified staging are now implemented, but complete object/property/payload readers remain O06 and onward. The v0.82/0.83 resource versions are **9** and v0.84a is **10**, distinct from later classic package versions 35–69. Unreal v1.224 directory genuinely contains mostly headers (8 C++ files observed); v1.227 contains the file summary/layout headers, while some specific linker implementations are absent. Nearby complete source branches can inform shared behaviour but must not automatically be treated as identical. Genuine old-format binary fixtures and native runtime runs improve *independent validation*; **neither is a prerequisite to read/implement the available documented source**. The remaining production MySQL/search work is an **UnrealDB implementation test**, not an Epic-source gap. See `catalog/compliance/UE1-IMPLEMENTATION.md`.
 
 ## Actual completed findings, code, and evidence
 
@@ -118,9 +118,9 @@ B02 checks passed: `verify-ue1-early-format-identification.php` **9/9**, plus **
 
 1. Verify DEV device, `git status --short --branch`, `git log -1`, compare `origin/main`, and ensure prior committed changes reached PRD. Preserve any unrelated user edits.
 2. **O02 accepted for structural metadata**: original resource v9/v10 and Unrealfile v22/v23 native records preserve Epic fields in MySQL unverified staging. Classic v35–69 genuine corpus also passes. Do NOT promote early files as verified or normalize original records into modern class/outer paths; payloads are separate O06/O07 operations.
-3. **Continue O05 cross-package binding:** V4 SQL/V5 shared UE1 roots and pre-v50 `_ObjectPackage` are fixed; 1997 v22/v23 `ResMap` source indices are preserved. Original 1996 v9/v10 imports now retain Epic type/name global-ResArray lookup semantics with no false binding when runtime registry is unavailable; the explicit lookup can use a supplied ordered loaded registry but does not reconstruct Epic's running environment. Next verify V4/V5 provider class/outer ancestry, native runtime-only outcomes, and actual 1996 loaded-registry binding. Payloads are O06.
+3. **Begin O06 object/property serialization:** O05 now passes a frozen 10/10 executable dependency-projection contract. Implement the original 1996 per-resource header/data serializers and 1997 Unrealfile UObject headers/payloads by native class, then classic UObject property decoding. Keep source metadata and runtime-loaded identities distinct; actual loaded-register and runtime-only import outcomes remain not-evaluated for O10 runtime workflow acceptance.
 4. **Completed O02 production distinction:** `CatalogUE1OriginalStagingMetadata` retains original typed records and `CatalogUnverifiedMetadataSnapshotBuilder::fromOriginalNative` stores them separately; `ue_files` counts native imports/exports without populating unsupported modern import/export paths. Original-format `scan_status` and compatibility remain unverified; genuine source-specific full payload work is still open.
-5. **Tests:** O01–O04 accepted within bounded contracts; O05 implementing. New 1996 import lookup **17/17**, original staging **29/29**, MySQL staging **16/16**. Initial DEV **35/35** regression scripts; PRD **9/9** targeted scripts, classic genuine UE1 **92/92**; deployed first batch **5/5 SHA-256** match. Added numeric-slot order negative case failed 16/17 before correction, now 17/17. Original early-format tests are source-defined fixtures, NOT compiled original runtime. O05 and O06–O10 remain open.
+5. **Tests:** O01–O05 source-scoped acceptance; O05 acceptance **10/10** gates, real V4 MySQL binary-provider matching **8/8**, genuine UT99 providers **27** (1,335 export entries, 75 matches/75 class negatives), full classic UE1 corpus **92/92**. Original 1996/1997 evidence remains source-defined synthetic fixtures rather than original compiled runtime. Complete engine runtime and production workflow equivalence remain open in O10; O06–O10 are the remaining operations.
 6. Run relevant verifier scripts; commit via local Git CLI, `git push origin main`, deploy changed files with Robocopy to PRD (excluding storage/config), SHA-256 compare, update this page and repeat.
 
 **Recovery rule:** read this page plus `UE1-IMPLEMENTATION.md` and `UE1-ACCEPTANCE.md`; source C++ is master truth. O01 is accepted for its frozen identification scope; do not reopen it for O02–O10 decoding, object or SQL work. Advance one bounded operation at a time and deploy verified code promptly.
