@@ -12,7 +12,7 @@ Before: 2/6 checks failed because a UE1 reader admitted 0x9E2A83C2. After: 6/6 p
 
 Pinned original-source evidence: `specs/epic-source/ue1/unreal-v0867/01-unrealfile-entry.md`; exact v0.867 C++ linker header and tag defined by `UnBuild.h:108` and `UnLinker.h:258-310,428-454`.
 
-Before changes: 5/9 expected cases failed in `verify-ue1-early-format-identification.php`, including generic unrecognised-magic outcome and UE1-tag misclassification in file-examine. After: **9/9 passed**.
+Before changes: 5/9 expected cases failed in `verify-ue1-early-format-identification.php`, including generic unrecognised-magic outcome and UE1-tag misclassification in file-examine. After: **9/9 passed**. Commit `b5f4a214` pushed to GitHub. All seven changed B02 code/test/source/evidence files deployed to PRD through targeted Robocopy, with SHA-256 parity **7/7**.
 
 The test verifies: early fixed-string magic detection, meaningful unsupported error, UE1 identity, version byte 32 (23), negative near-miss, modern v68 header unaffected, UE1 rejection of UE2-only tag, and preserved UE2 acceptance.
 

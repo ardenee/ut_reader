@@ -15,7 +15,7 @@ Updated: **2026-10-21**. This is the canonical recovery/handover file for this p
 | Current O01 status | **IMPLEMENTING**, not accepted |
 | Primary acceptance metric | **0 accepted / not-yet-frozen UE1 operation scope** |
 | Latest completed work batch | **UE1-B02 — early Unrealfile recognition and UE1-specific header inspection** |
-| Last known committed base when B02 began | `698f028f` (always inspect HEAD on resumption; newer commits may supersede) |
+| Latest verified code checkpoint | `b5f4a214` — B02 committed/pushed; seven changed files deployed to PRD with SHA-256 parity |
 
 ## Engine sequence
 
