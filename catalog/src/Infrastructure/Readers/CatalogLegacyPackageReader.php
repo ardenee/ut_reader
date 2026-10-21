@@ -460,10 +460,14 @@ abstract class CatalogLegacyPackageReaderBase
                     $error
                 );
             }
-            $classPackageText = $this->nameByIndex($classPackage);
-            $classNameText = $this->nameByIndex($className);
-            $objectPackageText = $objectPackage !== null ? $this->nameByIndex($objectPackage) : null;
-            $objectNameText = $this->nameByIndex($objectName);
+            // Epic ULinkerLoad::operator<<(FName&) aborts when the serialized
+            // NameMap index is invalid. Never turn a broken UE1 object identity
+            // into an empty name that downstream cataloguing could accept.
+            $classPackageText = $this->sourceNameByIndex($classPackage, 'Import.ClassPackage');
+            $classNameText = $this->sourceNameByIndex($className, 'Import.ClassName');
+            $objectPackageText = $objectPackage !== null
+                ? $this->sourceNameByIndex($objectPackage, 'Import.ObjectPackage') : null;
+            $objectNameText = $this->sourceNameByIndex($objectName, 'Import.ObjectName');
             $this->imports[] = [
                 'index' => $index,
                 'offset' => $entryOffset,
@@ -538,7 +542,7 @@ abstract class CatalogLegacyPackageReaderBase
                 'objectName' => $objectName,
                 'nameIndex' => $objectName,
                 'nameNumber' => 0,
-                'objectNameText' => $this->nameByIndex($objectName),
+                'objectNameText' => $this->sourceNameByIndex($objectName, 'Export.ObjectName'),
                 'objectFlags' => $flags,
                 'serialSize' => $serialSize,
                 'serialOffset' => $serialOffset,
@@ -644,6 +648,16 @@ abstract class CatalogLegacyPackageReaderBase
     {
         $size = filesize($this->path);
         return $size === false ? '' : number_format((int)$size) . ' bytes';
+    }
+
+    /** Validate UE1's original strict ULinkerLoad FName index contract. */
+    private function sourceNameByIndex(int $index, string $field): string
+    {
+        if ($this->engineKey === 'UE1' && !array_key_exists($index, $this->names)) {
+            throw new RuntimeException('Invalid UE1 ' . $field . ' name index '
+                . $index . '/' . count($this->names) . ' (Epic NameMap::IsValidIndex).');
+        }
+        return $this->nameByIndex($index);
     }
 
     public function nameByIndex(int $index, int $number = 0): string
