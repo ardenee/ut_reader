@@ -67,6 +67,7 @@ try {
             && ($bases[1]['class_preload']['package_name']??null)==='Package'
             && ($bases[1]['class_preload']['class_flags']??null)===0xCAFED00D
             && ($bases[1]['class_preload']['resource_this_header_size']??null)===32);
+        $check("v{$version}_preload_parent_reference_index",($bases[1]['class_preload']['parent_object_index']??null)===0);
         $check("v{$version}_ordinary_export",($bases[2]['kind']??'')==='export'
             && ($bases[2]['name_index']??null)===4
             && ($bases[2]['class_index']??null)===6
@@ -96,6 +97,20 @@ try {
         try{CatalogUE1OriginalUnrealfileObjectBaseReader::read($path);$rejected=false;}
         catch(RuntimeException){$rejected=true;}
         $check("v{$version}_out_of_bounds_export_offset_rejected",$rejected);
+
+        // Epic FArchiveResLoad::operator<<(UObject*) converts positive
+        // disk index to ResMap[index-1], validating against NumObjects.
+        // The UClass preload parent pointer is a DWORD, not a name index.
+        $parentWordOffset=$fx['objectOffset']+12+28;
+        file_put_contents($path,substr_replace($fx['bytes'],pack('V',4),$parentWordOffset,4));
+        try{CatalogUE1OriginalUnrealfileObjectBaseReader::read($path);$rejected=false;}
+        catch(RuntimeException){$rejected=true;}
+        $check("v{$version}_invalid_class_parent_object_reference_rejected",$rejected);
+        file_put_contents($path,substr_replace($fx['bytes'],pack('V',0),$parentWordOffset,4));
+        $zeroParent=CatalogUE1OriginalUnrealfileObjectBaseReader::read($path);
+        $check("v{$version}_null_class_parent_reference",($zeroParent['object_bases'][1]['class_preload']['parent_object_reference']??-1)===0
+            && array_key_exists('parent_object_index',$zeroParent['object_bases'][1]['class_preload'])
+            && $zeroParent['object_bases'][1]['class_preload']['parent_object_index']===null);
 
         file_put_contents($path,substr($fx['bytes'],0,-3));
         try{CatalogUE1OriginalUnrealfileObjectBaseReader::read($path);$rejected=false;}

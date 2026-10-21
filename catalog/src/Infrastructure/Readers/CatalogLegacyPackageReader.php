@@ -405,6 +405,9 @@ abstract class CatalogLegacyPackageReaderBase
         $this->readNames($version);
         $this->readImports($version);
         $this->readExports($version);
+        if ($this->engineKey === 'UE1') {
+            $this->validateUE1ObjectReferences($version, $reader->size());
+        }
     }
 
     private function readGuid(CatalogLegacyBinaryStream $reader): void
@@ -581,6 +584,63 @@ abstract class CatalogLegacyPackageReaderBase
                 'componentMap' => [],
                 'exportFlags' => 0,
             ];
+        }
+    }
+
+    /**
+     * Source-defined signed package index: >0 is a one-based ExportMap slot;
+     * <0 is a minus-one-based ImportMap slot; zero is NULL/root.
+     * Epic UT99 v400 ULinkerLoad::IndexToObject fails on invalid indices;
+     * Unreal v1.200 GenerateExportInfo also directly dereferences ClassIndex.
+     * Package versions <50 do not serialize import/export PackageIndex.
+     */
+    private function validateUE1ObjectReferences(int $version, int $fileSize): void
+    {
+        $imports = count($this->imports);
+        $exports = count($this->exports);
+        foreach ($this->imports as $i => $import) {
+            if ($version >= 50) {
+                $parent = (int)$import['outerIndex'];
+                // Import.PackageIndex is either the root package (zero),
+                // or another import. Epic VerifyImport asserts it is <0.
+                if ($parent > 0 || $parent < -$imports) {
+                    throw new RuntimeException('Invalid UE1 Import[' . $i
+                        . '] PackageIndex reference ' . $parent
+                        . ' (expected 0 or -1..-' . $imports . ').');
+                }
+            }
+        }
+        foreach ($this->exports as $i => $export) {
+            foreach (['ClassIndex' => 'classIndex', 'SuperIndex' => 'superIndex'] as $field => $key) {
+                $this->validateUE1SignedReference((int)$export[$key], $field, $i, $imports, $exports);
+            }
+            if ($version >= 50) {
+                $this->validateUE1SignedReference(
+                    (int)$export['outerIndex'], 'PackageIndex', $i, $imports, $exports
+                );
+            }
+            // Native Preload seeks SerialOffset and reads SerialSize bytes.
+            // Check positive lengths without changing the original compact
+            // signed values: legacy source still serializes offsets for ANY
+            // non-zero size, including a negative value.
+            $serialSize = (int)$export['serialSize'];
+            $serialOffset = (int)$export['serialOffset'];
+            if ($serialSize > 0 && ($serialOffset < 0 || $serialOffset > $fileSize
+                || $serialSize > $fileSize - $serialOffset)) {
+                throw new RuntimeException('Invalid UE1 Export[' . $i
+                    . '] serial data range (offset=' . $serialOffset
+                    . ', size=' . $serialSize . ', file=' . $fileSize . ').');
+            }
+        }
+    }
+
+    private function validateUE1SignedReference(
+        int $index, string $field, int $exportIndex, int $importCount, int $exportCount
+    ): void {
+        if ($index > $exportCount || $index < -$importCount) {
+            throw new RuntimeException('Invalid UE1 Export[' . $exportIndex . '] '
+                . $field . ' reference ' . $index . ' (exports 1..'
+                . $exportCount . ', imports -1..-' . $importCount . ').');
         }
     }
 

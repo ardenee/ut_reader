@@ -112,8 +112,19 @@ final class CatalogUE1OriginalUnrealfileObjectBaseReader
                         $preload = unpack('VparentObjectReference/vpackageNameIndex/'
                             . 'VclassFlags/VresourceHeaderSize', self::exact($handle, 14));
                         $packageIndex = (int)$preload['packageNameIndex'];
+                        $parentReference = (int)$preload['parentObjectReference'];
+                        // Epic v0.867 FArchiveResLoad::operator<<(UObject*)
+                        // decodes DWORD ResMap[index-1], with 0 meaning NULL.
+                        // The map's size is Summary.NumObjects. Do not treat
+                        // this as a name index or invent a resolved identity.
+                        if ($parentReference > $count) {
+                            throw new RuntimeException('Original Unrealfile class preload has '
+                                . 'invalid one-based object reference ' . $parentReference
+                                . '/' . $count . '.');
+                        }
                         $entry['class_preload'] = [
-                            'parent_object_reference' => (int)$preload['parentObjectReference'],
+                            'parent_object_reference' => $parentReference,
+                            'parent_object_index' => $parentReference === 0 ? null : $parentReference - 1,
                             'package_name_index' => $packageIndex,
                             'package_name' => self::mappedName($packageIndex, $names),
                             'class_flags' => (int)$preload['classFlags'],
