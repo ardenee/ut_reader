@@ -15,7 +15,7 @@ Updated: **2026-10-21**. This is the canonical recovery/handover file for this p
 | Current O01 status | **IMPLEMENTING**, not accepted |
 | Primary acceptance metric | **0 accepted / not-yet-frozen UE1 operation scope** |
 | Latest completed work batch | **UE1-B03 — reject invalid UE1 fallback headers in real scanner/queue/HTTP helper** |
-| Latest verified code checkpoint | `b5f4a214` — B02 committed/pushed/deployed (7/7 SHA); B03 verified locally (commit/deployment recorded below after completion) |
+| Latest verified code checkpoint | `aa3eb737` — B03 committed/pushed; 5/5 files deployed and SHA-256 verified on PRD. Earlier B02 commit `b5f4a214` deployed 7/7 files. |
 
 ## Engine sequence
 

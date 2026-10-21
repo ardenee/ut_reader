@@ -48,7 +48,7 @@ Native source: UT99 v400 `Core/Src/UnLinker.h:354-369` (bad package tag aborts).
 
 `php catalog/bin/verify-ue1-header-route-validation.php` reproduced **three failing assertions out of four** before the patch: the UE2-only tag, truncated data and old Unrealfile header did not throw. After the UE1-only validation guard, **4/4 pass**, including unchanged success on a valid v68 summary. A combined selection of **15/15** scripts passed, including B01/B02 tests, source-scan boundaries, profile reader admission, UE2, UE4 and UE5 checks. Both changed PHP files lint.
 
-B03 remains a narrow source-corresponding entry-point correction, not full engine or workflow acceptance.
+B03 committed/pushed as `aa3eb737`; all 5 changed code/test/documentation files deployed to PRD and SHA-256 verified 5/5. B03 remains a narrow source-corresponding entry-point correction, not full engine or workflow acceptance.
 
 **Evidence limits:** The early v23 fixture is synthetic but source-anchored; no authentic compiled v0.867 linker oracle or genuine matching binary package has yet been compared. The `.u` files sampled from v0.86x/v0.867 `Classes` are text source files and must not be represented as binary-package test inputs. Do not mark O01 accepted on classification alone.
 
