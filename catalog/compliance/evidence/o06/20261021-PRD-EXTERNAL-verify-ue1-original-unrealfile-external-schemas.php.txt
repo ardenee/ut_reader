@@ -1,0 +1,9 @@
+﻿PRD test: verify-ue1-original-unrealfile-external-schemas.php
+Exit code: 0
+Test SHA256: 4C3707A2C39B0EAE91DDFC32AAAD1B2C38E7E897827E43287A5DA52525F14E65
+{
+    "ok": true,
+    "passed": 14,
+    "total": 14,
+    "failures": []
+}

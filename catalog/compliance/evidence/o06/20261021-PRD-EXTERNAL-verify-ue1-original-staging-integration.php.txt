@@ -1,0 +1,9 @@
+﻿PRD test: verify-ue1-original-staging-integration.php
+Exit code: 0
+Test SHA256: C462897E0475F95DC770172D1E18B6A1C23274F9E17C25307D802472DA9E9486
+{
+    "ok": true,
+    "passed": 29,
+    "total": 29,
+    "failures": []
+}
