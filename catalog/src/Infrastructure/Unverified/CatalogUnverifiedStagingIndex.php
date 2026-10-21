@@ -166,7 +166,14 @@ final class CatalogUnverifiedStagingIndex
         int $queueGameId,
         string $sourceRelativePath
     ): array {
-        [$engine] = self::detectEngine($path, $name);
+        [$engine, $identity] = self::detectEngine($path, $name);
+        // Epic's original resource/Unrealfile summaries require their own
+        // table loaders. Preserve the identified family and clear diagnostic;
+        // never try a classic ULinker parser and mislabel its tag failure.
+        if (empty($identity['ok']) && in_array(($identity['format'] ?? ''),
+            ['early_unreal_resource', 'early_unrealfile'], true)) {
+            throw new RuntimeException((string)($identity['reason'] ?? 'Original Unreal format is not supported.'));
+        }
         if (!in_array($engine, ['UE1', 'UE2', 'UE3', 'UE4', 'UE5'], true)) {
             throw new RuntimeException('No Unreal package reader could be selected from serialized package header data.');
         }
@@ -310,7 +317,7 @@ final class CatalogUnverifiedStagingIndex
             $guid = trim((string)($header['guid'] ?? ''));
             $version = array_key_exists('version', $header)
                 ? (int)$header['version']
-                : (!empty($summary['ok']) ? (int)($summary['version'] ?? 0) : 0);
+                : (isset($summary['version']) ? (int)$summary['version'] : 0);
             $licensee = array_key_exists('licensee', $header)
                 ? (int)$header['licensee']
                 : (array_key_exists('licenseeVersion', $header)
@@ -342,7 +349,7 @@ final class CatalogUnverifiedStagingIndex
                         $queueName, $relativePath,
                         \catalog_clean_unreal_extension((string)pathinfo($parsedName, PATHINFO_EXTENSION)),
                         $detectedEngine,
-                        !empty($summary['ok']) ? (int)($summary['version'] ?? 0) : null,
+                        isset($summary['version']) ? (int)$summary['version'] : null,
                         ($summary['licensee'] ?? null) !== null ? (int)$summary['licensee'] : null,
                         $confidence, $scanNotes, $size, strtolower($md5), strtolower($sha1),
                         $guid !== '' ? $guid : null, !empty($header['compressed']) ? 1 : 0,
@@ -366,7 +373,7 @@ final class CatalogUnverifiedStagingIndex
                         $queueName, $relativePath,
                         \catalog_clean_unreal_extension((string)pathinfo($parsedName, PATHINFO_EXTENSION)),
                         $detectedEngine,
-                        !empty($summary['ok']) ? (int)($summary['version'] ?? 0) : null,
+                        isset($summary['version']) ? (int)$summary['version'] : null,
                         ($summary['licensee'] ?? null) !== null ? (int)$summary['licensee'] : null,
                         $confidence, 'unverified', null, $scanNotes, $size, strtolower($md5), strtolower($sha1),
                         $guid !== '' ? $guid : null, !empty($header['compressed']) ? 1 : 0,

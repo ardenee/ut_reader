@@ -22,7 +22,15 @@ final class CatalogPackageHeaderInspector
             return ['ok' => false, 'error' => 'Stored package file is not available on disk.', 'summary' => [], 'rows' => []];
         }
         $bytes = @file_get_contents($path, false, null, 0, 1048576);
-        if ($bytes === false || strlen($bytes) < 40) {
+        if ($bytes === false) {
+            return ['ok' => false, 'error' => 'Stored package file could not be read.', 'summary' => [], 'rows' => []];
+        }
+        if (str_starts_with($bytes, "Unreal Resource\x1A\0")) {
+            $original = \UnrealDb\Catalog\Domain\Package\CatalogUE1OriginalResourceFormat::identify($path, $bytes);
+            return ['ok' => false, 'error' => (string)($original['reason'] ?? 'Malformed original Unreal resource file.'),
+                'summary' => [], 'rows' => []];
+        }
+        if (strlen($bytes) < 40) {
             return ['ok' => false, 'error' => 'Stored package file is too small to parse header.', 'summary' => [], 'rows' => []];
         }
         // Original UE1 0.86x/v0.867 has a fixed 32-byte "Unrealfile" tag,

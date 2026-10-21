@@ -264,7 +264,10 @@ final class CatalogUnverifiedQueueStorage
         $header = [
             'ok' => !empty($legacy['ok']),
             'engine' => (string)($legacy['engine_hint'] ?? 'UNKNOWN'),
-            'version' => !empty($legacy['ok']) ? (int)($legacy['version'] ?? 0) : null,
+            // Original UE1 resource and Unrealfile format versions are known
+            // even though their full reader is not yet supported. Preserve
+            // the version without falsely changing the successful-parse flag.
+            'version' => isset($legacy['version']) ? (int)$legacy['version'] : null,
             'licensee' => !empty($legacy['ok']) ? (int)($legacy['licensee'] ?? 0) : null,
             'note' => !empty($legacy['ok']) ? '' : (string)($legacy['reason'] ?? ''),
         ];

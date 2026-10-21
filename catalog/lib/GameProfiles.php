@@ -149,6 +149,15 @@ function gp_read_legacy_summary(string $path): array
         return ['ok' => false, 'reason' => 'Could not open file', 'error_code' => 'unreal.header_read_failed'];
     }
     $bytes = fread($fh, 24);
+    // Epic Unreal v0.82-v0.84a first writes the resource tag, but stores
+    // FResourceFileTrailer at EOF after [SUMMARY]. Never treat those bytes
+    // as the later ULinker package header or the v0.867 Unrealfile header.
+    if (is_string($bytes) && str_starts_with($bytes, "Unreal Resource\x1A\0")) {
+        fclose($fh);
+        return \UnrealDb\Catalog\Domain\Package\CatalogUE1OriginalResourceFormat::identify($path, $bytes)
+            ?? ['ok' => false, 'reason' => 'Original resource identification failed.',
+                'error_code' => 'unreal.early_resource_malformed'];
+    }
     // UE1 v0.86x/v0.867 used an entirely different FUnrealfileSummary,
     // with a 32-byte string tag, before the 0x9E2A83C1 package format.
     // Recognize its exact original tag, but never route it into the
@@ -278,7 +287,9 @@ function gp_classify_file(PDO $db, int $selectedGameId, string $path, string $or
     $cleanOriginalName = catalog_clean_unreal_filename($originalName);
     $ext = catalog_clean_unreal_extension((string)pathinfo($cleanOriginalName, PATHINFO_EXTENSION));
     $summary = gp_read_legacy_summary($path);
-    $version = $summary['ok'] ? (int)$summary['version'] : null;
+    // Preserve source-decoded versions for recognised but unsupported original
+    // UE1 formats; admission stays false and must never imply a parsed package.
+    $version = isset($summary['version']) ? (int)$summary['version'] : null;
     $licensee = $summary['ok'] && array_key_exists('licensee', $summary) && $summary['licensee'] !== null
         ? (int)$summary['licensee']
         : null;

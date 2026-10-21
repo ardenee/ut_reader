@@ -35,6 +35,13 @@ function catalog_try_read_package_header(array $config, string $engineKey, strin
     if (strtoupper($engineKey) === 'UE1' && method_exists($reader, 'validatePackage')) {
         $issues = $reader->validatePackage();
         if ($issues !== []) {
+            // A rejected original file must retain its real Epic-format
+            // diagnostic, not appear to be a corrupt modern package tag.
+            require_once __DIR__ . '/GameProfiles.php';
+            $identity = gp_read_legacy_summary($path);
+            if (in_array(($identity['format'] ?? ''), ['early_unreal_resource', 'early_unrealfile'], true)) {
+                throw new RuntimeException('UE1 original format: ' . (string)($identity['reason'] ?? 'reader unsupported'));
+            }
             throw new RuntimeException('UE1 package header validation failed: ' . implode('; ', $issues));
         }
     }
