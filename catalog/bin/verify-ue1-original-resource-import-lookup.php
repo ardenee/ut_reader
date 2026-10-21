@@ -42,6 +42,10 @@ $matches=R::project($imports,$inventory);
 $check('ascii_case_insensitive_name',($matches[0]['status']??null)==='matched_supplied_registry');
 $check('native_resource_type_must_match',($matches[0]['loaded_resource_slot']??null)===3);
 $check('first_global_slot_wins',($matches[0]['loaded_resource_slot']??null)===3);
+$unordered=[8=>['name'=>'ImportedTex','resource_type'=>3],
+           2=>['name'=>'IMPORTEDTEX','resource_type'=>3]];
+$check('global_slot_numeric_order_not_array_insertion_order',
+    (R::project([$imports[0]],$unordered)[0]['loaded_resource_slot']??null)===2);
 $check('resource_version_is_not_lookup_key',($matches[0]['loaded_resource_slot']??null)===3
     && $imports[0]['resource_version']!==$inventory[3]['resource_version']);
 $check('resource_header_size_not_lookup_key',($matches[0]['loaded_resource_slot']??null)===3

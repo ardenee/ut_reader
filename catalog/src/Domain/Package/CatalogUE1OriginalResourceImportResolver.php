@@ -48,11 +48,13 @@ final class CatalogUE1OriginalResourceImportResolver
                 continue;
             }
 
-            // FindResource walks ResArray from lowest slot to highest.
-            // Retain caller-provided slot order; do not select by filename,
-            // export index, package path or resource version.
+            // FindResource walks ResArray by numeric slot from 0 upward.
+            // A snapshot's PHP insertion order can differ from slot order.
+            // Do not select by filename, package or resource version.
+            $orderedSlots = $loadedResources;
+            ksort($orderedSlots, SORT_NUMERIC);
             $result['status'] = 'not_found_in_supplied_registry';
-            foreach ($loadedResources as $slot => $candidate) {
+            foreach ($orderedSlots as $slot => $candidate) {
                 if ($candidate === null) {
                     // Empty ResArray slots are skipped by native FindResource.
                     continue;
