@@ -16,17 +16,34 @@ declare(strict_types=1);
 namespace UnrealDb\Catalog\Infrastructure\Readers;
 
 use RuntimeException;
+use UnrealDb\Catalog\Infrastructure\Metadata\CatalogLegacyNameMapPreprocessor;
 
 final class CatalogUE1OriginalUnrealfileObjectBaseReader
 {
     /** @return array<string,mixed> */
-    public static function read(string $path): array
+    public static function read(string $path, ?int $loadContextFlags = null): array
     {
         $metadata = CatalogUE1OriginalUnrealfileMetadataReader::read($path);
+        // Source LoadNames maps entries to NAME_None when not required by
+        // the explicitly selected editor/client/server runtime context.
+        $effectiveNames = null;
+        if ($loadContextFlags !== null) {
+            if (($loadContextFlags & CatalogLegacyNameMapPreprocessor::ALL_LOAD_CONTEXTS) === 0
+                || ($loadContextFlags & ~CatalogLegacyNameMapPreprocessor::ALL_LOAD_CONTEXTS) !== 0) {
+                throw new RuntimeException('Unrealfile name resolution requires a source-defined load context.');
+            }
+            $effectiveNames = CatalogLegacyNameMapPreprocessor::effectiveNameMap(
+                $metadata['names'], $loadContextFlags, 31
+            );
+        }
         $summary = $metadata['summary'];
         $count = (int)$summary['object_count'];
         $offset = (int)$summary['objects_offset'];
         $names = $metadata['names'];
+        if ($effectiveNames !== null) {
+            $metadata['resolved_name_context_flags'] = $loadContextFlags;
+            $metadata['effective_names'] = $effectiveNames;
+        }
         if ($count === 0) {
             $metadata['object_bases_decoded'] = true;
             $metadata['object_bases'] = [];
@@ -63,6 +80,14 @@ final class CatalogUE1OriginalUnrealfileObjectBaseReader
                     'file_header_offset' => $headerOffset,
                     'kind' => $headerOffset === 0 ? 'import' : 'export',
                 ];
+                if ($effectiveNames !== null) {
+                    // Native Unrealfile NAME_INDEX is one-based. The
+                    // serialized NameMap table itself starts at index zero.
+                    $entry['effective_name'] = $nameIndex === 0
+                        ? 'None' : (string)$effectiveNames[$nameIndex - 1];
+                    $entry['effective_class_name'] = $classIndex === 0
+                        ? 'None' : (string)$effectiveNames[$classIndex - 1];
+                }
 
                 if ($headerOffset !== 0) {
                     $info = unpack('Vcrc/VdataOffset/VheaderSize/VdataSize', self::exact($handle, 16));
