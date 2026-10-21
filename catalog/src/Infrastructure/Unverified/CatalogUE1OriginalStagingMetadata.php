@@ -41,6 +41,7 @@ final class CatalogUE1OriginalStagingMetadata
                 'resource_headers' => $raw['resource_headers'],
                 'resource_database_headers' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalResourceDatabaseReader::read($path, false),
                 'resource_texture_headers' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalResourceTextureReader::read($path, false),
+                'resource_sound_headers' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalResourceSoundReader::read($path, false),
                 'resource_simple_database_records' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalResourceSimpleDatabaseReader::read($path, false),
                 'unconsumed_header_bytes' => $raw['unconsumed_header_bytes'],
                 'payload_decoded' => false,
