@@ -5,6 +5,7 @@ declare(strict_types=1);
 require_once dirname(__DIR__).'/bootstrap/autoload.php';
 use UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileBinaryPropertyReader as Binary;
 use UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfilePropertiesReader as Properties;
+use UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileExternalSchemaResolver as External;
 $checks=[];$fail=[];
 $check=static function(string $name,bool $okay)use(&$checks,&$fail):void{
     $checks[$name]=$okay;if(!$okay)$fail[]=$name;
@@ -57,6 +58,11 @@ $consumer=static function(int $version)use($stack,$names,$class):array{
 $provPath=tempnam(sys_get_temp_dir(),'ue1BaseProvider');
 $consumerPath=tempnam(sys_get_temp_dir(),'ue1DerivedConsumer');
 if(!is_string($provPath)||!is_string($consumerPath))throw new RuntimeException('No fixture temp path');
+$folder=sys_get_temp_dir().DIRECTORY_SEPARATOR.'ue1-o06-siblings-'.bin2hex(random_bytes(6));
+if(!mkdir($folder,0700))throw new RuntimeException('Cannot create dependency fixture folder');
+$siblingProvider=$folder.DIRECTORY_SEPARATOR.'BASE.original';
+$siblingConsumer=$folder.DIRECTORY_SEPARATOR.'Child.original';
+$siblingDuplicate=$folder.DIRECTORY_SEPARATOR.'BASE.duplicate';
 try{
     foreach([22,23] as $version){
         $p=$provider($version);$c=$consumer($version);
@@ -96,6 +102,27 @@ try{
         $check("v{$version}_production_unbound_marked_unverified",
             ($unverified['native_metadata']['unrealfile_binary_properties']['objects'][0]['status']??null)==='parent_UClass_schema_unavailable'
             && ($unverified['parse_complete']??true)===false);
+        file_put_contents($siblingProvider,$p['bytes']);
+        file_put_contents($siblingConsumer,$c['bytes']);
+        $discovered=External::discoverSiblingProviders($siblingConsumer);
+        $check("v{$version}_declared_sibling_selected",
+            ($discovered['providers']['BASE']??null)===$siblingProvider);
+        $auto=\UnrealDb\Catalog\Infrastructure\Unverified\CatalogUE1OriginalStagingMetadata::decode(
+            $siblingConsumer,['format'=>'early_unrealfile','version'=>$version]);
+        $autoBin=$auto['native_metadata']['unrealfile_binary_properties']['objects'][0]??[];
+        $autoProps=$auto['native_metadata']['unrealfile_properties_bin']['properties_objects'][0]??[];
+        $check("v{$version}_staging_reads_declared_provider",
+            ($autoBin['property_values'][1]['values'][0]??null)===222
+            && ($autoProps['property_values'][0]['values'][0]??null)===333
+            && ($auto['parse_complete']??true)===false);
+        file_put_contents($siblingDuplicate,$p['bytes']);
+        $ambiguous=External::discoverSiblingProviders($siblingConsumer);
+        $check("v{$version}_ambiguous_sibling_refused",
+            ($ambiguous['providers']??null)===[]);
+        @unlink($siblingDuplicate);@unlink($siblingProvider);
+        $missing=External::discoverSiblingProviders($siblingConsumer);
+        $check("v{$version}_missing_sibling_explicit",
+            ($missing['providers']??null)===[]);
         // The provider's own parent reference cannot refer to itself.
         file_put_contents($provPath,substr_replace($p['bytes'],pack('V',1),$p['header']+24,4));
         try{
@@ -104,7 +131,7 @@ try{
         }catch(RuntimeException){$rejected=true;}
         $check("v{$version}_cyclic_external_parent_rejected",$rejected);
     }
-}finally{@unlink($provPath);@unlink($consumerPath);}
+}finally{@unlink($provPath);@unlink($consumerPath);@unlink($siblingProvider);@unlink($siblingConsumer);@unlink($siblingDuplicate);@rmdir($folder);}
 echo json_encode(['ok'=>$fail===[],'passed'=>count($checks)-count($fail),
     'total'=>count($checks),'failures'=>$fail],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;
 exit($fail===[]?0:1);

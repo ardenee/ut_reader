@@ -15,6 +15,69 @@ use RuntimeException;
 final class CatalogUE1OriginalUnrealfileExternalSchemaResolver
 {
     /**
+     * Source-declared same-directory providers only. This is a conservative
+     * static metadata lookup, NOT the engine's global runtime file search.
+     * No recursive walking, guessed paths, or ambiguous-name selection.
+     *
+     * @return array{providers:array<string,string>,diagnostics:array<int,array<string,string>>}
+     */
+    public static function discoverSiblingProviders(string $path): array
+    {
+        $real=self::canonical($path);
+        $meta=CatalogUE1OriginalUnrealfileObjectBaseReader::read($real);
+        if($meta['dependencies']===[])return ['providers'=>[],'diagnostics'=>[]];
+        $dir=dirname($real);
+        $files=[];
+        foreach(new \DirectoryIterator($dir) as $entry){
+            if(!$entry->isFile())continue;
+            $candidate=$entry->getRealPath();
+            if($candidate===false || strcasecmp($candidate,$real)===0
+                || strcasecmp(dirname($candidate),$dir)!==0)continue;
+            $files[]=$candidate;
+        }
+        $providers=[];$diagnostics=[];$seen=[];
+        foreach($meta['dependencies'] as $dependency){
+            $dependency=(string)$dependency;
+            if($dependency==='' || str_contains($dependency,'/')
+                || str_contains($dependency,'\\') || str_contains($dependency,'..')){
+                $diagnostics[]=['dependency'=>$dependency,'status'=>'unsafe_declared_dependency_name'];
+                continue;
+            }
+            $exact=[];$stem=[];
+            foreach($files as $candidate){
+                $filename=basename($candidate);
+                if(strcasecmp($filename,$dependency)===0)$exact[]=$candidate;
+                if(strcasecmp(pathinfo($filename,PATHINFO_FILENAME),
+                    pathinfo($dependency,PATHINFO_FILENAME))===0)$stem[]=$candidate;
+            }
+            $candidates=$exact!==[]?$exact:$stem;
+            if(count($candidates)!==1){
+                $diagnostics[]=['dependency'=>$dependency,
+                    'status'=>count($candidates)===0
+                        ? 'source_declared_sibling_unavailable'
+                        : 'ambiguous_sibling_dependency'];
+                continue;
+            }
+            try{
+                CatalogUE1OriginalUnrealfileMetadataReader::read($candidates[0]);
+            }catch(RuntimeException){
+                $diagnostics[]=['dependency'=>$dependency,'status'=>'sibling_not_original_unrealfile'];
+                continue;
+            }
+            $key=strtolower($dependency);
+            if(isset($seen[$key])){
+                $diagnostics[]=['dependency'=>$dependency,'status'=>'duplicate_declared_dependency'];
+                unset($providers[$seen[$key]]);
+                continue;
+            }
+            $seen[$key]=$dependency;
+            $providers[$dependency]=$candidates[0];
+            $diagnostics[]=['dependency'=>$dependency,'status'=>'source_declared_sibling_selected'];
+        }
+        return ['providers'=>$providers,'diagnostics'=>$diagnostics];
+    }
+
+    /**
      * @param array<string,string> $providers declared dependency name => file path
      * @return array<string,mixed> explicit status, property descriptors, provenance
      */
@@ -105,7 +168,7 @@ final class CatalogUE1OriginalUnrealfileExternalSchemaResolver
             $properties=$schema['properties'];
             $sources=[[
                 'file_sha256'=>$cache[self::canonical($source)]['sha256'],
-                'source_path'=>$source,
+                'source_filename'=>basename($source),
                 'class_object_index'=>$sourceIndex,
                 'class_name'=>$schema['class_name'],
             ]];

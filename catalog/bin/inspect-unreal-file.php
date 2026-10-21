@@ -412,10 +412,12 @@ function inspect_unreal_file(string $inputPath, bool $full = false): array
                         $result['original_unrealfile_object_bases'] =
                             \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileObjectBaseReader::read($parsePath)['object_bases'];
                         $result['original_unrealfile_object_bases_status'] = 'DECODED';
+                        $externalDiscovery = \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileExternalSchemaResolver::discoverSiblingProviders($parsePath);
+                        $result['original_unrealfile_external_class_discovery'] = $externalDiscovery['diagnostics'];
                         $result['original_unrealfile_script_expressions'] =
                             \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileScriptExpressionReader::read($parsePath, false);
                         $result['original_unrealfile_properties_bin'] =
-                            \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfilePropertiesReader::read($parsePath, false);
+                            \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfilePropertiesReader::read($parsePath, false, $externalDiscovery['providers']);
                         $result['original_unrealfile_bit_archive'] =
                             \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileBitArrayReader::read($parsePath, false);
                         $result['original_unrealfile_audio_records'] =
@@ -423,7 +425,7 @@ function inspect_unreal_file(string $inputPath, bool $full = false): array
                         $result['original_unrealfile_database_records'] =
                             \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileDatabaseDataReader::read($parsePath, false);
                         $result['original_unrealfile_binary_properties'] =
-                            \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileBinaryPropertyReader::read($parsePath, false);
+                            \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileBinaryPropertyReader::read($parsePath, false, $externalDiscovery['providers']);
                         $result['original_unrealfile_class_schemas'] =
                             \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileClassSchemaReader::read($parsePath, false);
                         $result['original_unrealfile_stack_prefixes'] =

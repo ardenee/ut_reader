@@ -64,6 +64,7 @@ final class CatalogUE1OriginalStagingMetadata
             $counts = ['names' => count($raw['names']), 'imports' => count($imports), 'exports' => count($exports)];
         } elseif ($format === 'early_unrealfile' && in_array($version, [22, 23], true)) {
             $raw = CatalogUE1OriginalUnrealfileObjectBaseReader::read($path);
+            $externalDiscovery = \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileExternalSchemaResolver::discoverSiblingProviders($path);
             $objects = $raw['object_bases'];
             $imports = array_values(array_filter($objects, static fn(array $r):bool => $r['kind'] === 'import'));
             $exports = array_values(array_filter($objects, static fn(array $r):bool => $r['kind'] === 'export'));
@@ -71,13 +72,15 @@ final class CatalogUE1OriginalStagingMetadata
                 'source_record_family' => 'UObjectBase',
                 'summary' => $raw['summary'],
                 'declared_dependencies' => $raw['dependencies'],
+                'external_class_dependency_discovery' => $externalDiscovery['diagnostics'],
+                'external_class_provider_names' => array_keys($externalDiscovery['providers']),
                 'object_bases' => $objects,
                 'unrealfile_class_schemas' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileClassSchemaReader::read($path, false),
-                'unrealfile_binary_properties' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileBinaryPropertyReader::read($path, false),
+                'unrealfile_binary_properties' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileBinaryPropertyReader::read($path, false, $externalDiscovery['providers']),
                 'unrealfile_database_records' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileDatabaseDataReader::read($path, false),
                 'unrealfile_audio_records' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileAudioReader::read($path, false),
                 'unrealfile_bit_archive' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileBitArrayReader::read($path, false),
-                'unrealfile_properties_bin' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfilePropertiesReader::read($path, false),
+                'unrealfile_properties_bin' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfilePropertiesReader::read($path, false, $externalDiscovery['providers']),
                 'unrealfile_script_expressions' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileScriptExpressionReader::read($path, false),
                 'serialized_stack_prefixes' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileStackReader::read($path, false),
                 'payload_decoded' => false,
