@@ -1,8 +1,8 @@
 ﻿{
-    "updated_at_utc":  "2026-10-21T17:13:20.9688765Z",
-    "head_commit":  "b53d7063",
-    "current_target":  "DEV",
-    "current_source_sha256":  "9206e06808f81ba83319ebaf2fda8af4664adf505d8fef43888adca66bb0b6dd",
+    "updated_at_utc":  "2026-10-21T17:14:44.0379092Z",
+    "head_commit":  "ffa9f1c3",
+    "current_target":  "PRD",
+    "current_source_sha256":  "0e272812b34fee5bd882717b65005b728502d28aab5ca683a77154802c5fdbc5",
     "tests":  [
                   {
                       "key":  "DEV:verify-ue1-classic-tagged-properties.php",
@@ -293,6 +293,18 @@
                       "log":  "catalog\\compliance\\evidence\\o06\\20261021T170751186Z-9e9d6426-PRD-verify-ue1-original-resource-meshmap.php.txt"
                   },
                   {
+                      "key":  "PRD:verify-ue1-original-resource-script.php",
+                      "test":  "verify-ue1-original-resource-script.php",
+                      "target":  "PRD",
+                      "state":  "PASS",
+                      "event_at_utc":  "2026-10-21T17:14:43.1904491Z",
+                      "source_sha256":  "0e272812b34fee5bd882717b65005b728502d28aab5ca683a77154802c5fdbc5",
+                      "test_sha256":  "aa509c1583a97a148bd05e7c86355aecf8f6b07ad7a11fbb5d322e49b06fd293",
+                      "run_id":  "20261021T171442970Z-73654cf8",
+                      "exit_code":  0,
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261021T171442970Z-73654cf8-PRD-verify-ue1-original-resource-script.php.txt"
+                  },
+                  {
                       "key":  "PRD:verify-ue1-original-resource-sound.php",
                       "test":  "verify-ue1-original-resource-sound.php",
                       "target":  "PRD",
@@ -333,24 +345,24 @@
                       "test":  "verify-ue1-original-staging-integration.php",
                       "target":  "PRD",
                       "state":  "PASS",
-                      "event_at_utc":  "2026-10-21T17:07:51.9667990Z",
-                      "source_sha256":  "e69851277df1805e191428cf6b03b2369df3c4fc72ca0f2e390f9e37db2cee35",
+                      "event_at_utc":  "2026-10-21T17:14:43.8316650Z",
+                      "source_sha256":  "0e272812b34fee5bd882717b65005b728502d28aab5ca683a77154802c5fdbc5",
                       "test_sha256":  "c462897e0475f95dc770172d1e18b6a1c23274f9e17c25307d802472da9e9486",
-                      "run_id":  "20261021T170751436Z-c8d091a6",
+                      "run_id":  "20261021T171443212Z-8bdd313a",
                       "exit_code":  0,
-                      "log":  "catalog\\compliance\\evidence\\o06\\20261021T170751436Z-c8d091a6-PRD-verify-ue1-original-staging-integration.php.txt"
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261021T171443212Z-8bdd313a-PRD-verify-ue1-original-staging-integration.php.txt"
                   },
                   {
                       "key":  "PRD:verify-ue1-original-staging-mysql-isolated.php",
                       "test":  "verify-ue1-original-staging-mysql-isolated.php",
                       "target":  "PRD",
                       "state":  "PASS",
-                      "event_at_utc":  "2026-10-21T17:07:52.1798690Z",
-                      "source_sha256":  "e69851277df1805e191428cf6b03b2369df3c4fc72ca0f2e390f9e37db2cee35",
+                      "event_at_utc":  "2026-10-21T17:14:44.0349129Z",
+                      "source_sha256":  "0e272812b34fee5bd882717b65005b728502d28aab5ca683a77154802c5fdbc5",
                       "test_sha256":  "c9f942791e87f3add0b113731453ad7a51f57cc92c649729cc251332e368276d",
-                      "run_id":  "20261021T170751997Z-b6978fa7",
+                      "run_id":  "20261021T171443848Z-2780ccda",
                       "exit_code":  0,
-                      "log":  "catalog\\compliance\\evidence\\o06\\20261021T170751997Z-b6978fa7-PRD-verify-ue1-original-staging-mysql-isolated.php.txt"
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261021T171443848Z-2780ccda-PRD-verify-ue1-original-staging-mysql-isolated.php.txt"
                   },
                   {
                       "key":  "PRD:verify-ue1-original-unrealfile-class-schemas.php",
