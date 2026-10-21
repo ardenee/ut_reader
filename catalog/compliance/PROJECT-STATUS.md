@@ -63,6 +63,8 @@ Updated: **2026-10-21**. This is the canonical recovery/handover file for this p
 
 **O06 native original 1996 actor member checkpoint (2026-10-21):** Source-transcribed x86 MSVC compiler field-layout report persisted under `catalog/compliance/evidence/o06/ue1-1996-actor-x86-msvc-layout.txt`, 144 lines, compiler exit 0. New `CatalogUE1OriginalNativeActorValueReader` decodes all named native **AActorBase 304-byte members** and bitfields within `UClass`/`UActorList` 1148-byte actors. Member offset checks **10/10**, original actor records **24/24**, x86 ABI **4/4**, class descriptors, staging and isolated MySQL all pass (**6/6 named DEV tests**). PropertyPad[643] and runtime PropertyBins/AIInfo remain opaque and explicitly unverified. Full 1996 AActor class-defined script properties and actual engine-runtime linking are NOT certified. O06 remains IMPLEMENTING.
 
+**O06 1996 native actor class-property values (2026-10-21):** New `CatalogUE1OriginalActorClassPropertyValueReader` uses Epic's `FClassProperty` descriptors plus PROPBIN_Global (actor) / PROPBIN_Static (UClass default actor), with proper 1996 scalar types, packed Boolean flags, raw names/references, ANSI, FVector, FRotation and 944-byte field bounds; PROPBIN_Local remains runtime-only. Embedded `UClass` native default-actor values now decode through `CatalogUE1OriginalResourceActorReader`. New source-defined **15/15** verifier and **7/7 DEV affected regression tests** pass. Source/input SHA, exit codes and output logs are persisted under `evidence/o06/20261021-DEV-ACTOR-CLASS-*`. AActorList per-instance class identities and live execution bins remain unresolved; O06 IMPLEMENTING.
+
 ## Engine sequence
 
 | Phase | Engine | New-process status |

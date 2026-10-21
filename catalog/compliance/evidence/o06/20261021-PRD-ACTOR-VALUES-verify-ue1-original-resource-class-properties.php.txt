@@ -1,0 +1,9 @@
+﻿PRD verify-ue1-original-resource-class-properties.php
+Exit: 0
+Input-SHA256: 8025E2E2D711716F24BDA08D0B8C2D2B20F64B5A80C3514E2C846FD7044B2926
+{
+    "ok": true,
+    "passed": 12,
+    "total": 12,
+    "failures": []
+}

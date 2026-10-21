@@ -1,0 +1,9 @@
+﻿DEV verify-ue1-original-native-actor-values.php
+Exit: 0
+Input-SHA256: C32647DA1C1A3C83B8DC88256E389A09E7839EF820C4A8107581AB21FD07F88F
+{
+    "ok": true,
+    "passed": 10,
+    "total": 10,
+    "failures": []
+}

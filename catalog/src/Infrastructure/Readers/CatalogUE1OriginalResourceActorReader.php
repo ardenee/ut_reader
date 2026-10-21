@@ -18,6 +18,11 @@ final class CatalogUE1OriginalResourceActorReader
     {
         $db=CatalogUE1OriginalResourceDatabaseReader::read($path,$strict)['database_headers'];
         $headers=CatalogUE1OriginalResourceHeaderReader::read($path)['resource_headers'];
+        $propertyTables=[];
+        foreach(CatalogUE1OriginalResourceClassPropertyReader::read($path,false)['class_property_tables'] as $table){
+            if(($table['status']??null)==='native_UClass_property_records_decoded')
+                $propertyTables[(int)$table['export_index']]=$table['properties'];
+        }
         $out=[];$fp=@fopen($path,'rb');
         if(!$fp)throw new RuntimeException('Cannot open native original actor records');
         try{
@@ -47,7 +52,11 @@ final class CatalogUE1OriginalResourceActorReader
                     $memberOffset=(int)$h['serialized_offset']+84;
                     $head=self::slice($fp,$memberOffset,40);
                     $w=array_values(unpack('V10',$head));
-                    $actor=self::decodeActor(self::slice($fp,(int)$h['serialized_offset']+124,self::ACTOR_BYTES));
+                    $rawActor=self::slice($fp,(int)$h['serialized_offset']+124,self::ACTOR_BYTES);
+                    $actor=self::decodeActor($rawActor);
+                    $defaultValues=CatalogUE1OriginalActorClassPropertyValueReader::read(
+                        $rawActor,$propertyTables[(int)$h['export_index']]??[],$rawActor
+                    );
                     $out[]=[
                         'export_index'=>(int)$h['export_index'],'native_class'=>'UClass',
                         'status'=>'native_UClass_default_actor_core_decoded',
@@ -63,6 +72,9 @@ final class CatalogUE1OriginalResourceActorReader
                         'parent_text_crc'=>$w[6],
                         'reserved_words'=>array_slice($w,7,3),
                         'default_actor'=>$actor,
+                        'default_actor_class_properties'=>$defaultValues,
+                        'actor_UClass_properties_decoded'=>true,
+                        'actor_UClass_runtime_local_bin_resolved'=>false,
                         'property_record_count'=>$num,'property_record_capacity'=>$max,
                         'runtime_class_links_resolved'=>false,
                         'all_native_actor_members_decoded'=>false,
