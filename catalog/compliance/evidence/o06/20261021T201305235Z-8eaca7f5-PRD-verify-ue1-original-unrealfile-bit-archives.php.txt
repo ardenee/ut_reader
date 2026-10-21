@@ -1,0 +1,6 @@
+﻿
+Fatal error: Uncaught Error: Class "UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileDatabaseDataReader" not found in Z:\Apache24\htdocs\unrealdb\catalog\src\Infrastructure\Unverified\CatalogUE1OriginalStagingMetadata.php:73
+Stack trace:
+#0 Z:\Apache24\htdocs\unrealdb\catalog\bin\verify-ue1-original-unrealfile-bit-archives.php(47): UnrealDb\Catalog\Infrastructure\Unverified\CatalogUE1OriginalStagingMetadata::decode('C:\\Users\\arden\\...', Array)
+#1 {main}
+  thrown in Z:\Apache24\htdocs\unrealdb\catalog\src\Infrastructure\Unverified\CatalogUE1OriginalStagingMetadata.php on line 73

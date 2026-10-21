@@ -1,0 +1,14 @@
+﻿{
+    "ok": false,
+    "passed": 9,
+    "total": 16,
+    "failures": [
+        "unrealfile_mysql_indexed_unverified",
+        "unrealfile_exact_native_counts",
+        "unrealfile_persistent_native_metadata",
+        "unrealfile_no_modern_identity_fakes",
+        "unrealfile_nonmisleading_scan_notes",
+        "unrealfile_ansi_name_survives_mysql_storage",
+        "unrealfile_mysql_compressed_payload_persists"
+    ]
+}
