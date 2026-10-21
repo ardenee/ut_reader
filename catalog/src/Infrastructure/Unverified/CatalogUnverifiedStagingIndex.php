@@ -167,12 +167,12 @@ final class CatalogUnverifiedStagingIndex
         string $sourceRelativePath
     ): array {
         [$engine, $identity] = self::detectEngine($path, $name);
-        // Epic's original resource/Unrealfile summaries require their own
-        // table loaders. Preserve the identified family and clear diagnostic;
-        // never try a classic ULinker parser and mislabel its tag failure.
-        if (empty($identity['ok']) && in_array(($identity['format'] ?? ''),
+        // Original 1996 resource tables and 1997 UObjectBase records are not
+        // classic package imports/exports. Decode their native metadata into
+        // a typed staging envelope; never route them through modern ULinker.
+        if (in_array(($identity['format'] ?? ''),
             ['early_unreal_resource', 'early_unrealfile'], true)) {
-            throw new RuntimeException((string)($identity['reason'] ?? 'Original Unreal format is not supported.'));
+            return CatalogUE1OriginalStagingMetadata::decode($path, $identity);
         }
         if (!in_array($engine, ['UE1', 'UE2', 'UE3', 'UE4', 'UE5'], true)) {
             throw new RuntimeException('No Unreal package reader could be selected from serialized package header data.');
@@ -294,6 +294,7 @@ final class CatalogUnverifiedStagingIndex
             $imports = [];
             $exports = [];
             $notes = [];
+            $nativeMetadata = null;
             $parseError = null;
             try {
                 $parsed = $this->parse($parsePath, $parsedName, $queueGameId, $sourceRelativePath);
@@ -302,6 +303,8 @@ final class CatalogUnverifiedStagingIndex
                 $imports = $parsed['imports'];
                 $exports = $parsed['exports'];
                 $notes = $parsed['notes'];
+                $nativeMetadata = is_array($parsed['native_metadata'] ?? null)
+                    ? $parsed['native_metadata'] : null;
             } catch (Throwable $error) {
                 $parseError = trim($error->getMessage()) ?: 'Package tables could not be read.';
                 $notes[] = 'Unverified table parse failed: ' . $parseError;
@@ -323,7 +326,14 @@ final class CatalogUnverifiedStagingIndex
                 : (array_key_exists('licenseeVersion', $header)
                     ? (int)$header['licenseeVersion']
                     : (($summary['licensee'] ?? null) !== null ? (int)$summary['licensee'] : 0));
-            $confidence = $parseError === null ? 'high' : (!empty($summary['ok']) ? 'medium' : 'unknown');
+            // Structural metadata is known, but original resource/class payloads
+            // have NOT passed the current verified-package reader contract.
+            $confidence = $nativeMetadata !== null ? 'medium'
+                : ($parseError === null ? 'high' : (!empty($summary['ok']) ? 'medium' : 'unknown'));
+            $nativeCounts = $nativeMetadata !== null ? (array)($nativeMetadata['counts'] ?? []) : [];
+            $nameCount = $nativeCounts !== [] ? (int)($nativeCounts['names'] ?? 0) : count($names);
+            $importCount = $nativeCounts !== [] ? (int)($nativeCounts['imports'] ?? 0) : count($imports);
+            $exportCount = $nativeCounts !== [] ? (int)($nativeCounts['exports'] ?? 0) : count($exports);
             $relativePath = self::storageRelative($this->config, $path);
             $scanNotes = implode("\n", array_values(array_filter(
                 array_map('trim', $notes),
@@ -354,7 +364,7 @@ final class CatalogUnverifiedStagingIndex
                         $confidence, $scanNotes, $size, strtolower($md5), strtolower($sha1),
                         $guid !== '' ? $guid : null, !empty($header['compressed']) ? 1 : 0,
                         (int)($header['compressionFlags'] ?? 0), $version, $licensee,
-                        count($names), count($imports), count($exports), $scanNotes, $uploadedBy,
+                        $nameCount, $importCount, $exportCount, $scanNotes, $uploadedBy,
                         $queueGameId, $queueName, $reason, $fileId,
                     ]);
                 } else {
@@ -378,20 +388,22 @@ final class CatalogUnverifiedStagingIndex
                         $confidence, 'unverified', null, $scanNotes, $size, strtolower($md5), strtolower($sha1),
                         $guid !== '' ? $guid : null, !empty($header['compressed']) ? 1 : 0,
                         (int)($header['compressionFlags'] ?? 0), $version, $licensee,
-                        count($names), count($imports), count($exports), $scanNotes, $uploadedBy,
+                        $nameCount, $importCount, $exportCount, $scanNotes, $uploadedBy,
                         $key, $queueGameId, $queueName, $reason,
                     ]);
                     $fileId = (int)$this->db->lastInsertId();
                 }
 
-                $snapshot = $this->snapshots->fromParsed(
-                    $fileId,
-                    $packageName,
-                    $names,
-                    $imports,
-                    $exports,
-                    array_values((array)($this->config['common_packages'] ?? []))
-                );
+                $snapshot = $nativeMetadata !== null
+                    ? $this->snapshots->fromOriginalNative($fileId, $packageName, $names, $nativeMetadata)
+                    : $this->snapshots->fromParsed(
+                        $fileId,
+                        $packageName,
+                        $names,
+                        $imports,
+                        $exports,
+                        array_values((array)($this->config['common_packages'] ?? []))
+                    );
                 $this->metadata->write($snapshot);
                 $this->db->commit();
             } catch (Throwable $error) {
@@ -404,9 +416,11 @@ final class CatalogUnverifiedStagingIndex
             return [
                 'status' => $existing ? 'updated' : 'indexed',
                 'file_id' => $fileId,
-                'message' => $parseError === null
-                    ? 'Indexed compressed package metadata'
-                    : 'Indexed basic metadata; package tables could not be read',
+                'message' => $nativeMetadata !== null
+                    ? 'Indexed original UE1 source metadata (partial, unverified; no modern object identities inferred)'
+                    : ($parseError === null
+                        ? 'Indexed compressed package metadata'
+                        : 'Indexed basic metadata; package tables could not be read'),
                 'parse_error' => $parseError,
             ];
         } finally {

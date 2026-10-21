@@ -22,6 +22,60 @@ final class CatalogUnverifiedMetadataSnapshotBuilder
     }
 
     /**
+     * Retain exact native original UE1 records without inventing modern
+     * FObjectImport/FObjectExport package identities. Shared name rows are
+     * valid source-indexed names; the original import/export records live
+     * ONLY in native_metadata, not in modern outer/path reference columns.
+     *
+     * @param list<array<string,mixed>> $names
+     * @param array<string,mixed> $native
+     * @return array<string,mixed>
+     */
+    public function fromOriginalNative(
+        int $fileId,
+        string $packageName,
+        array $names,
+        array $native
+    ): array {
+        if ($fileId < 1 || trim($packageName) === ''
+            || !in_array(($native['serialized_format'] ?? ''), ['early_unreal_resource', 'early_unrealfile'], true)
+            || empty($native['source_record_family'])) {
+            throw new RuntimeException('Original UE1 staging requires a native format and valid identities.');
+        }
+        $counts = (array)($native['counts'] ?? []);
+        if ((int)($counts['names'] ?? -1) !== count($names)) {
+            throw new RuntimeException('Original UE1 native name count mismatch.');
+        }
+        $nameRows = [];
+        foreach (array_values($names) as $index => $name) {
+            if (!is_array($name) || !array_key_exists('name', $name)) {
+                throw new RuntimeException('Original UE1 native name table contains an invalid record.');
+            }
+            $nameRows[] = [
+                'id' => $this->virtualId($fileId, $index),
+                'file_id' => $fileId,
+                'name_index' => $index,
+                'name_text' => (string)$name['name'],
+                'flags' => isset($name['flags']) ? (int)$name['flags'] : null,
+                'serialized_offset' => (int)($name['serialized_offset'] ?? 0),
+            ];
+        }
+        return [
+            'file_id' => $fileId,
+            'package_name' => $packageName,
+            'names' => $nameRows,
+            // No "modern" object paths are source-defined for these records.
+            'imports' => [],
+            'exports' => [],
+            'paths' => ['imports' => [], 'exports' => []],
+            'source_format' => 'original-ue1-native-partial',
+            'source_complete' => false,
+            'verified' => false,
+            'native_metadata' => $native,
+        ];
+    }
+
+    /**
      * @param array<int,mixed> $names
      * @param array<int,mixed> $imports
      * @param array<int,mixed> $exports

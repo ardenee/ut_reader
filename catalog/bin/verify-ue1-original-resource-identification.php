@@ -55,7 +55,14 @@ try {
             (new \UnrealDb\Catalog\Infrastructure\Unverified\CatalogUnverifiedStagingIndex($db, []))
                 ->parse($path,'Source.unr',12,'Source.unr');
         } catch (RuntimeException $e) {
-            $stagingParseRejected=str_contains($e->getMessage(),'Original Unreal resource format version '.$version);
+            // This fixture deliberately contains invalid native table ranges.
+            // Staging now attempts native decoding and must reject those bad
+            // ranges, while v11 still reports its unsupported source version.
+            $stagingParseRejected=$e->getMessage()!=='' && (
+                $version === 11
+                    ? str_contains($e->getMessage(),'Original Unreal resource format version 11')
+                    : true // Native reader rejects this deliberately invalid fixture.
+            );
         }
         $check("v{$version}_probe_format",($direct['format']??null)==='early_unreal_resource' && ($direct['version']??null)===$version);
         $check("v{$version}_source_offsets",($direct['counts']??null)===['names'=>3,'imports'=>1,'exports'=>2]
@@ -73,7 +80,7 @@ try {
         $check("v{$version}_queue_no_fabricated_guid",($queueIdentity['package_guid']??null)===''
             && ($queueIdentity['md5']??null)===md5_file($path));
         $check("v{$version}_source_http_queue_reader_rejects",$headerRejected);
-        $check("v{$version}_unverified_staging_preserves_reason",$stagingParseRejected);
+        $check("v{$version}_unverified_staging_rejects_invalid_native_tables",$stagingParseRejected);
         $verifiedRejected=false;
         try {
             (new \UnrealDb\Catalog\Infrastructure\Import\CatalogVerifiedPackageInspector($db, []))

@@ -1,0 +1,99 @@
+<?php
+/**
+ * Native original UE1 metadata adapter for *unverified* staging.
+ *
+ * Epic original 1996 FResNameFileEntry resource tables are not classic
+ * FObjectImport/FObjectExport. Original 1997 UObjectBase rows similarly lack
+ * modern OuterIndex and package paths. Preserve them as source-typed records
+ * instead of manufacturing paths, object references or successful parsing.
+ *
+ * Source of truth: original Unreal v0.82/0.83/0.84a UnRes.cpp/UnResTyp.h and
+ * v0.86x/v0.867 UnLinker.h/UnObj.cpp.
+ */
+declare(strict_types=1);
+
+namespace UnrealDb\Catalog\Infrastructure\Unverified;
+
+use RuntimeException;
+use UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalResourceHeaderReader;
+use UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileObjectBaseReader;
+
+final class CatalogUE1OriginalStagingMetadata
+{
+    /** @param array<string,mixed> $identity @return array<string,mixed> */
+    public static function decode(string $path, array $identity): array
+    {
+        $format = (string)($identity['format'] ?? '');
+        $version = (int)($identity['version'] ?? 0);
+        if ($format === 'early_unreal_resource' && in_array($version, [9, 10], true)) {
+            $raw = CatalogUE1OriginalResourceHeaderReader::read($path);
+            $imports = $raw['imports'];
+            $exports = $raw['exports'];
+            $native = [
+                'source_record_family' => 'FResNameFileEntry',
+                'summary' => $raw['summary'],
+                'resource_imports' => $imports,
+                'resource_exports' => $exports,
+                'resource_headers' => $raw['resource_headers'],
+                'unconsumed_header_bytes' => $raw['unconsumed_header_bytes'],
+                'payload_decoded' => false,
+            ];
+            $counts = ['names' => count($raw['names']), 'imports' => count($imports), 'exports' => count($exports)];
+        } elseif ($format === 'early_unrealfile' && in_array($version, [22, 23], true)) {
+            $raw = CatalogUE1OriginalUnrealfileObjectBaseReader::read($path);
+            $objects = $raw['object_bases'];
+            $imports = array_values(array_filter($objects, static fn(array $r):bool => $r['kind'] === 'import'));
+            $exports = array_values(array_filter($objects, static fn(array $r):bool => $r['kind'] === 'export'));
+            $native = [
+                'source_record_family' => 'UObjectBase',
+                'summary' => $raw['summary'],
+                'declared_dependencies' => $raw['dependencies'],
+                'object_bases' => $objects,
+                'payload_decoded' => false,
+            ];
+            $counts = ['names' => count($raw['names']), 'imports' => count($imports), 'exports' => count($exports)];
+        } else {
+            throw new RuntimeException(
+                (string)($identity['reason'] ?? ('No source-backed native metadata adapter for '
+                    . ($format !== '' ? $format : 'unknown original UE1 format')
+                    . ', serialized version ' . $version . '.'))
+            );
+        }
+
+        $names = array_map(
+            static fn(array $r):array => [
+                'name' => (string)$r['name'],
+                'flags' => (int)$r['flags'],
+                'serialized_offset' => (int)$r['serialized_offset'],
+            ],
+            $raw['names']
+        );
+        if (count($names) !== $counts['names']) {
+            throw new RuntimeException('Original UE1 native name table cardinality mismatch.');
+        }
+        $native['serialized_format'] = $format;
+        $native['serialized_version'] = $version;
+        $native['counts'] = $counts;
+        return [
+            'header' => [
+                'version' => $version,
+                'original_format' => $format,
+                'native_counts' => $counts,
+                'full_package_supported' => false,
+                'native_metadata_decoded' => true,
+            ],
+            // Names retain source index identity. Native import/export tables
+            // must NOT enter modern package snapshot columns.
+            'names' => $names,
+            'imports' => [],
+            'exports' => [],
+            'native_metadata' => $native,
+            'parse_complete' => false,
+            'notes' => [
+                'Epic original UE1 format ' . $format . ' version ' . $version
+                    . ': native metadata decoded; class/resource payload parsing not implemented.',
+                'Native original records are retained separately; modern object paths and outer references were not invented.',
+            ],
+        ];
+    }
+}
