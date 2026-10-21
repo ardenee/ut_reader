@@ -16,10 +16,11 @@ $make=static function(int $version,int $type):array{
     $data=match($type){
         16=>pack('g6',1.25,-2.5,3.75,7.0,0.5,-1.0),
         29=>pack('V4',1,2,12,0xffffffff),
+        33=>pack('g12',-10.0,-5.0,-2.5,10.0,5.0,2.5,-20.0,-4.0,-1.0,20.0,4.0,1.0),
         34=>pack('V8',0,256,4,128,32,64,72,88),
     };
     $exportOff=$dataOff+strlen($data);
-    $headSize=match($type){16=>84,29=>88,34=>692};
+    $headSize=match($type){16=>84,29=>88,33=>84,34=>692};
     $ex=pack('a32VVV','GeoOne',1,$type,$headSize);
     $headerOff=$exportOff+strlen($ex);
     $extension=$type===29?pack('V',4):'';
@@ -41,15 +42,15 @@ $make=static function(int $version,int $type):array{
 $tmp=tempnam(sys_get_temp_dir(),'ue1geometry');
 if(!is_string($tmp))throw new RuntimeException('Unable to create fixture');
 try {
-    foreach([9,10] as $ver)foreach([16,29,34] as $type){
+    foreach([9,10] as $ver)foreach([16,29,33,34] as $type){
         $fx=$make($ver,$type);file_put_contents($tmp,$fx['bytes']);
         $r=Geo::read($tmp,true)['geometry_records'][0]??[];
         $id="v{$ver}_type{$type}";
         $check("{$id}_native_record_dimensions",
             ($r['status']??null)==='native_geometry_records_decoded'
             && $r['record_count']===2
-            && $r['record_size_bytes']===match($type){16=>12,29=>8,34=>16}
-            && $r['serialized_header_bytes']===match($type){16=>84,29=>88,34=>692}
+            && $r['record_size_bytes']===match($type){16=>12,29=>8,33=>24,34=>16}
+            && $r['serialized_header_bytes']===match($type){16=>84,29=>88,33=>84,34=>692}
             && $r['additional_header_bytes']===0);
         if($type===16){
             $check("{$id}_float_values",
@@ -64,6 +65,10 @@ try {
                 && ($r['record_values'][1]['point_vertex']??null)===12
                 && ($r['record_values'][1]['shared_side']??null)===-1
                 && ($r['terrain_header']['num_shared_sides']??null)===4);
+        }elseif($type===33){
+            $check("{$id}_bounds_floats",($r['record_values'][0]['min_x']??null)===-10.0
+                && ($r['record_values'][0]['max_x']??null)===10.0
+                && ($r['record_values'][1]['max_z']??null)===1.0);
         }else{
             $check("{$id}_terrain_grid_and_raw_header",
                 ($r['record_values'][0]['grid_x1']??null)===256
@@ -85,7 +90,7 @@ try {
         file_put_contents($tmp,substr_replace($fx['bytes'],pack('V',3),$fx['native']+76,4));
         try{Geo::read($tmp,true);$rejected=false;}catch(RuntimeException){$rejected=true;}
         $check("{$id}_bad_count_rejected",$rejected);
-        file_put_contents($tmp,substr_replace($fx['bytes'],pack('V',match($type){16=>80,29=>84,34=>688}),$fx['export']+40,4));
+        file_put_contents($tmp,substr_replace($fx['bytes'],pack('V',match($type){16=>80,29=>84,33=>80,34=>688}),$fx['export']+40,4));
         $relaxed=Geo::read($tmp,false)['geometry_records'][0]??[];
         try{Geo::read($tmp,true);$rejected=false;}catch(RuntimeException){$rejected=true;}
         $check("{$id}_short_header_unverified",

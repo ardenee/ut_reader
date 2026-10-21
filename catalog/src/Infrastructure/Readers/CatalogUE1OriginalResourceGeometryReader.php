@@ -28,20 +28,20 @@ final class CatalogUE1OriginalResourceGeometryReader
         try {
             foreach($db as $i=>$entry){
                 $type=(int)$entry['resource_type'];
-                if(!in_array($type,[16,29,34],true)) continue;
+                if(!in_array($type,[16,29,33,34],true)) continue;
                 $h=$headers[$i];
-                $name=match($type){16=>'UVectors',29=>'UVertPool',34=>'UTerrain'};
+                $name=match($type){16=>'UVectors',29=>'UVertPool',33=>'UBounds',34=>'UTerrain'};
                 $row=['export_index'=>(int)$h['export_index'],'native_class'=>$name,
                     'status'=>'incomplete_source_geometry_header',
                     'runtime_resource_fixups_evaluated'=>false];
-                $minHeader=match($type){16=>84,29=>88,34=>692};
+                $minHeader=match($type){16=>84,29=>88,33=>84,34=>692};
                 if(($entry['status']??'')!=='native_database_num_max_decoded'
                     ||(int)$h['serialized_length']<$minHeader){
                     if($strict) throw new RuntimeException($name.' header is shorter than the native source layout');
                     $records[]=$row;continue;
                 }
                 $count=(int)$entry['database_count'];
-                $bytesPer=match($type){16=>12,29=>8,34=>16};
+                $bytesPer=match($type){16=>12,29=>8,33=>24,34=>16};
                 $length=(int)$h['file_data_size'];
                 if($count>intdiv(PHP_INT_MAX,$bytesPer)||$length!==$count*$bytesPer)
                     throw new RuntimeException($name.' QueryMinSize does not match file data bytes');
@@ -87,6 +87,12 @@ final class CatalogUE1OriginalResourceGeometryReader
                         $signed=static fn(int $v):int=>$v>=0x80000000?$v-0x100000000:$v;
                         $items[]=['index'=>$j,'point_vertex'=>$signed((int)$nums[0]),
                             'shared_side'=>$signed((int)$nums[1])];
+                    }elseif($type===33){
+                        $v=array_values(unpack('g6',$bytes));
+                        $items[]=['index'=>$j,
+                            'min_x'=>(float)$v[0],'min_y'=>(float)$v[1],
+                            'min_z'=>(float)$v[2],'max_x'=>(float)$v[3],
+                            'max_y'=>(float)$v[4],'max_z'=>(float)$v[5]];
                     }else{
                         $numbers=array_values(unpack('V4',$bytes));
                         $signed=static fn(int $v):int=>$v>=0x80000000?$v-0x100000000:$v;
