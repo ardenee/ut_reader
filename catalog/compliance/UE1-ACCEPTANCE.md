@@ -76,6 +76,8 @@ One passed helper test is not a whole-operation acceptance. The master dashboard
 
 **Defect UE1-D006:** the UI inspection route was incorrectly reading a GUID at byte 44 unconditionally for pre-68 summaries. `verify-ue1-pre68-heritage-inspector.php` reproduced **4 failures out of 5** before the correction (multi-record/offset, zero heritage, GUID past 1 MiB, invalid bounds); after patch **5/5 passed**, including unchanged version-68 inline GUID handling. The inspector now obtains the last GUID from the validated heritage table. An additional **15/15 existing regression scripts passed**; modified PHP and both new test scripts lint.
 
+**Deployment evidence:** B04 commit `4d56c729` pushed to GitHub; six changed source/test/evidence files copied DEV→PRD with 6/6 SHA-256 identity checks. The final implementation-register and recovery cursor were recorded separately afterwards.
+
 **Limits:** the B04 fixtures prove genuine-input parser operation and source-defined byte layout checks, not a compiled Epic engine oracle or property/object payload, V5 persistence or full end-to-end acceptance. O01 remains IMPLEMENTING; UE1 acceptance is still **0 operations accepted**.
 
 Run on DEV:

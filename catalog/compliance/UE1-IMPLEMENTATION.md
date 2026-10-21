@@ -45,6 +45,18 @@ The same helper is used by `CatalogSourceScanRunner.php` (source-scan GUID path)
 
 Test `catalog/bin/verify-ue1-header-route-validation.php`: valid v68 summary succeeds; UE2-only tag, truncated file and v23 early header must throw instead of returning a blank fallback. Baseline 3/4 failed; after the patch 4/4 pass. All 15 selected adjacent regression scripts pass, including source-scan boundaries and profile reader admission. This establishes one bounded caller-path fix, not O01 acceptance.
 
+## UE1-D006 — pre-68 heritage GUID inspector (CORRECTED; O01 remains open)
+
+**Epic:** UT99 v400 `Core/Src/UnLinker.h:173-200` serializes heritage count and offset below version 68; it seeks to the GUID array, reads its entries, and retains the last GUID. At version 68+, GUID is inline. Unreal v1.200 `Core/Src/UnLinker.h:303-339` independently confirms the older summary layout.
+
+**Discrepancy:** `CatalogPackageHeaderInspector::inspectLegacy()` always read byte 44 as though an inline GUID were present. All 61 newly found genuine texture packages happened to have a single heritage entry starting at byte 44, which hid the error. Controlled tests reproduced four failures: multi-record GUID offset, zero-entry fabricated GUID, GUID past the first MiB, and malformed heritage bounds. Version 68 inline handling was already correct.
+
+**Fix:** read and validate `HeritageCount/HeritageOffset` against physical bounds, retrieve the last record even beyond the inspection prefix, and attach its actual offset to the diagnostic row; preserve the v68+ inline GUID path. The test `catalog/bin/verify-ue1-pre68-heritage-inspector.php` passes **5/5** after **1/5** pre-fix. Production inspector and 61 genuine v35–61 packages agree on GUID, including independent source summary field comparison. This is bounded verification, **not** compiled-engine acceptance.
+
+## B04 — genuine UE1 version 35–61 corpus
+
+The read-only verifier `catalog/bin/verify-ue1-genuine-texture-corpus.php` checks SHA-256 pinned source packages, 11 independent direct-byte summary fields, canonical reader name/import/export counts, real header-reader helper, and file-examine GUID. All **61/61 passed** across 13 package versions. All 61 have `HeritageCount=1` and `HeritageOffset=44`. Synthetic heritage variants cover omitted arrangement cases, but no real Epic compiled oracle, object serialization, or V5 database workflows have been accepted.
+
 ## Real callers identified, whole operation still to trace
 
 - `catalog/lib/GameProfiles.php`: summary identification and classification; `gp_classify_file` is the header/profile admission entry.

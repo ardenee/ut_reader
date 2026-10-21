@@ -15,7 +15,7 @@ Updated: **2026-10-21**. This is the canonical recovery/handover file for this p
 | Current O01 status | **IMPLEMENTING**, not accepted |
 | Primary acceptance metric | **0 accepted / not-yet-frozen UE1 operation scope** |
 | Latest completed work batch | **UE1-B04 — genuine UE1 v35–61 corpus verification and pre-68 heritage inspector source parity** |
-| Latest verified code checkpoint | `73d9c25c` — genuine corpus inventory (61 SHA-pinned files); B04 source-parity fix tested locally, commit/deployment verification recorded below |
+| Latest verified code checkpoint | `4d56c729` — B04 code/tests/status committed and pushed; 6/6 changed files SHA-256 matched PRD. Corpus inventory originally committed at `73d9c25c`. |
 
 ## Engine sequence
 
