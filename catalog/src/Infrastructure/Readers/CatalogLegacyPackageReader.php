@@ -274,7 +274,12 @@ abstract class CatalogLegacyPackageReaderBase
     {
         $reader = new CatalogLegacyBinaryStream($this->path);
         $tag = $reader->u32();
-        if (!\UnrealDb\Catalog\Domain\Package\CatalogUnrealPackageTag::isSupportedLittleEndianValue($tag)) {
+        // Epic UE1 linkers admit only PACKAGE_FILE_TAG (0x9E2A83C1).
+        // The shared UE2 reader also admits the Killing Floor-specific tag,
+        // but that UE2 exception must not leak into UE1 package loading.
+        if (($this->engineKey === 'UE1'
+                && $tag !== \UnrealDb\Catalog\Domain\Package\CatalogUnrealPackageTag::STANDARD)
+            || !\UnrealDb\Catalog\Domain\Package\CatalogUnrealPackageTag::isSupportedLittleEndianValue($tag)) {
             throw new RuntimeException(sprintf('Bad package tag 0x%08X.', $tag));
         }
         $packed = $reader->u32();
