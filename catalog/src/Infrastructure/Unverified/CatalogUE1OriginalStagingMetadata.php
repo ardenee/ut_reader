@@ -73,6 +73,7 @@ final class CatalogUE1OriginalStagingMetadata
                 'unrealfile_database_records' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileDatabaseDataReader::read($path, false),
                 'unrealfile_bit_archive' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileBitArrayReader::read($path, false),
                 'unrealfile_properties_bin' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfilePropertiesReader::read($path, false),
+                'unrealfile_script_expressions' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileScriptExpressionReader::read($path, false),
                 'serialized_stack_prefixes' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileStackReader::read($path, false),
                 'payload_decoded' => false,
             ];

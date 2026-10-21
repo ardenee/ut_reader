@@ -20,6 +20,7 @@ $types=[
  'Vectors'=>[1,2,pack('g3',1.0,-2.0,3.0),'vectors'],
  'Dependencies'=>[1,2,pack('V2',1,0xaabbccdd),'dependencies'],
  'ReachSpecs'=>[1,2,pack('gV3g4V',10.5,1,0,2,32.0,48.0,2.5,-1.0,0x12),'reach_specs'],
+ 'TextureSet'=>[2,3,pack('V2',1,0),'object_references'],
 ];
 // Buffer uses four bytes and Num=4.
 $types['Buffer']=[4,5,"\x00\xffAB",'bytes'];
@@ -58,8 +59,8 @@ try{
    $rows=$parsed['database_records']??[];
    $by=[];
    foreach($rows as $r)$by[substr((string)$r['native_class'],1)]=$r;
-   $check("v{$ver}_ten_source_database_classes",
-      count($rows)===10&&($parsed['other_class_serializers_decoded']??true)===false);
+   $check("v{$ver}_eleven_source_database_classes",
+      count($rows)===11&&($parsed['other_class_serializers_decoded']??true)===false);
    $check("v{$ver}_byte_and_text_data",
        ($by['Buffer']['opaque_byte_stream_hex']??null)==='00FF4142'
        && ($by['TextBuffer']['opaque_byte_stream_hex']??null)==='4869'
@@ -95,7 +96,7 @@ try{
        $tmp,['format'=>'early_unrealfile','version'=>$ver]);
    $r=$stage['native_metadata']['unrealfile_database_records']['database_records']??[];
    $check("v{$ver}_native_staging_unverified",
-       count($r)===10&&($stage['parse_complete']??true)===false);
+       count($r)===11&&($stage['parse_complete']??true)===false);
    $p=$fx['positions']['Words']['header'];
    file_put_contents($tmp,substr_replace($fx['bytes'],pack('V',9),$p+16,4));
    try{DB::read($tmp,true);$reject=false;}catch(RuntimeException){$reject=true;}

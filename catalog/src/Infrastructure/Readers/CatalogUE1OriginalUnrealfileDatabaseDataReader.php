@@ -28,6 +28,7 @@ final class CatalogUE1OriginalUnrealfileDatabaseDataReader
         'vectors'=>['Vectors',12,'vectors'],
         'dependencies'=>['Dependencies',8,'dependencies'],
         'reachspecs'=>['ReachSpecs',36,'reach_specs'],
+        'textureset'=>['TextureSet',4,'object_references'],
     ];
 
     /** @return array<string,mixed> */
