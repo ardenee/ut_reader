@@ -55,6 +55,11 @@ struct ULevelLayout {
  BYTE Base[76];INT State;PBeginPlayLayout PlayInfo;
  DWORD Model,ActorList,PlayerList,BrushArray,Misc,TextBlocks[16];
 };
+struct FClassPropertyLayout {
+ WORD Name,Category;
+ INT Type,Offset,Flags,ArrayDim,ElementSize,Bin;
+ DWORD Extra;
+};
 struct FLightMeshIndex {
  INT DataOffset,TextureUStart,TextureVStart,MeshUSize,MeshVSize,
      MeshSpacing,NumStaticLights,NumDynamicLights;
@@ -95,6 +100,7 @@ static_assert(sizeof(FBoundingVolume)==48,"native 1996 FBoundingVolume");
 static_assert(sizeof(PBeginPlayLayout)==8,"native PBeginPlay struct");
 static_assert(sizeof(UModelLayout)==392,"original UModel native header");
 static_assert(sizeof(ULevelLayout)==172,"original ULevel native header");
+static_assert(sizeof(FClassPropertyLayout)==32,"1996 FClassProperty native member descriptor");
 static_assert(sizeof(FLightMeshIndex)==100,"native light mesh index 100 bytes");
 static_assert(sizeof(FPoly)==352,"source native FPoly with 20 FVector records");
 static_assert(sizeof(FBspSurf)==48,"source FBspSurf record is 48 bytes");
