@@ -94,8 +94,7 @@ final class CatalogUE1OriginalResourceTableReader
                 throw new RuntimeException('Truncated original Unreal ' . $kind . ' record ' . $i);
             }
             $rawName = substr($bytes, 0, self::NAME_WIDTH);
-            $nul = strpos($rawName, "\0");
-            $name = $nul === false ? $rawName : substr($rawName, 0, $nul);
+            $name = \UnrealDb\Catalog\Domain\Package\CatalogUE1AnsiName::fromFixedBytes($rawName);
             if ($kind === 'names') {
                 $decoded = unpack('Vflags', $bytes, self::NAME_WIDTH);
                 $records[] = [

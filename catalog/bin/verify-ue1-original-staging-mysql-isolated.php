@@ -33,7 +33,7 @@ try{
         if($type==='resource'){
             $tag="Unreal Resource\x1A";
             $prefix=$tag."\0";
-            $names=pack('a32V','SourceName',0x42);
+            $names=pack('a32V',"Source\xC3\xA9",0x42);
             $nameOffset=strlen($prefix);
             $importOffset=$nameOffset+strlen($names);
             $imports=pack('a32VVV','ImportRes',3,2,76);
@@ -46,7 +46,7 @@ try{
                 .str_repeat("\0",16).str_repeat("\0",80).pack('a32',$tag);
             return $prefix.$names.$imports.$exports.'DATA'.$header.'[SUMMARY]'.$trailer;
         }
-        $names="Class\0".pack('V',42)."Thing\0".pack('V',43);
+        $names="Class\0".pack('V',42)."Thing\xC3\xA9\0".pack('V',43);
         $body='DATA';
         $objectsOffset=56+strlen($names)+strlen($body);
         $object=pack('vvVV',2,1,0,0);
@@ -90,10 +90,13 @@ try{
             str_contains((string)($row['scan_notes']??''),'payload')
             && str_contains((string)($result['message']??''),'partial')
             && ($result['parse_error']??'')==='');
+        $check($type.'_ansi_name_survives_mysql_storage',
+            ($snapshot['names'][$type==='resource'?0:1]['name_text']??null)===
+                ($type==='resource'?"Source\xC3\x83\xC2\xA9":"Thing\xC3\x83\xC2\xA9"));
         $check($type.'_mysql_compressed_payload_persists',
             ($type==='resource'
                 ? ($snapshot['native_metadata']['resource_exports'][0]['name']??null)==='ExportRes'
-                : ($snapshot['native_metadata']['object_bases'][0]['name']??null)==='Thing')
+                : ($snapshot['native_metadata']['object_bases'][0]['name']??null)==="Thing\xC3\x83\xC2\xA9")
             && is_array($snapshot['native_metadata']['summary']??null));
     }
     $check('session_temporary_rows_exact',

@@ -129,7 +129,7 @@ final class CatalogUE1OriginalUnrealfileMetadataReader
             }
             $name .= $c;
         }
-        return $name;
+        return \UnrealDb\Catalog\Domain\Package\CatalogUE1AnsiName::fromBytes($name);
     }
 
     private static function exact($fh, int $length): string

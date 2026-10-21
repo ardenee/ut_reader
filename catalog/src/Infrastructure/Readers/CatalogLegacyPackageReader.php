@@ -177,25 +177,25 @@ final class CatalogLegacyBinaryStream
         return $this->compactIndex();
     }
 
-    public function cstring(): string
+    public function cstring(bool $sourceAnsi = false): string
     {
         $value = '';
         while ($this->remaining() > 0) {
             $character = $this->bytes(1);
             if ($character === "\0") {
-                return self::toUtf8($value);
+                return $sourceAnsi ? self::fromSourceAnsi($value) : self::toUtf8($value);
             }
             $value .= $character;
         }
         throw new RuntimeException('Legacy package string reaches end of file without a terminator.');
     }
 
-    public function fstring(int $version): string
+    public function fstring(int $version, bool $sourceAnsi = false): string
     {
-        return $this->stringByLength($this->packageIndex($version));
+        return $this->stringByLength($this->packageIndex($version), $sourceAnsi);
     }
 
-    private function stringByLength(int $length): string
+    private function stringByLength(int $length, bool $sourceAnsi): string
     {
         if ($length === 0) {
             return '';
@@ -209,7 +209,7 @@ final class CatalogLegacyBinaryStream
             if ($terminator !== false) {
                 $raw = substr($raw, 0, $terminator);
             }
-            return self::toUtf8($raw);
+            return $sourceAnsi ? self::fromSourceAnsi($raw) : self::toUtf8($raw);
         }
 
         $characters = -$length;
@@ -226,6 +226,17 @@ final class CatalogLegacyBinaryStream
         }
         $converted = @mb_convert_encoding($raw, 'UTF-8', 'UTF-16LE');
         return $converted === false ? '' : $converted;
+    }
+
+    /**
+     * Epic Core.h::FromAnsi maps each ANSICHAR separately to its unsigned
+     * character value. A valid UTF-8-looking byte pair is NOT one character;
+     * 0x80 is U+0080, not the Windows-1252 euro sign. UTF-8 is only our
+     * lossless presentation format for the engine's 8-bit name characters.
+     */
+    public static function fromSourceAnsi(string $raw): string
+    {
+        return \UnrealDb\Catalog\Domain\Package\CatalogUE1AnsiName::fromBytes($raw);
     }
 
     public static function toUtf8(string $raw): string
@@ -396,7 +407,9 @@ abstract class CatalogLegacyPackageReaderBase
         for ($index = 0; $index < $count; $index++) {
             $entryOffset = $reader->tell();
             try {
-                $name = $version < 64 ? $reader->cstring() : $reader->fstring($version);
+                $name = $version < 64
+                    ? $reader->cstring($this->engineKey === 'UE1')
+                    : $reader->fstring($version, $this->engineKey === 'UE1');
                 $flags = $reader->u32();
             } catch (Throwable $error) {
                 throw new RuntimeException(

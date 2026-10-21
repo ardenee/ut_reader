@@ -55,8 +55,7 @@ final class CatalogUE1OriginalResourceHeaderReader
                 $recordOffset = $offset + $position;
                 $bytes = self::exact($h, $length);
                 $nameBytes = substr($bytes, 8, 32);
-                $zero = strpos($nameBytes, "\0");
-                $name = $zero === false ? $nameBytes : substr($nameBytes, 0, $zero);
+                $name = \UnrealDb\Catalog\Domain\Package\CatalogUE1AnsiName::fromFixedBytes($nameBytes);
                 $common = unpack(
                     'VresourceType/VdataPointer/Vindex/VresourceVersion/VfileNumber/Vflags/'
                     . 'VdataOffset/VdataSize/Vcrc/Vunused',
