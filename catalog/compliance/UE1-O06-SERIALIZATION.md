@@ -21,6 +21,10 @@ This operation is concerned with bytes serialized by each source UE1 generation'
 - Version 35 object property data uses a compact package reference in the genuine DProj corpus even when the tag size field is 4; this is recorded as a version-scoped corpus exception, not asserted to be a native-runtime trace.
 - v400 FPropertyTag type/size/array rules and UTexture/UFont/USound/UPalette/FireTexture class serializers are implemented for records represented in the pinned corpus. Unprocessed color/audio/mip bulk bytes belong to O07, not a false property decode.
 
+## Durable test journal and timeout recovery
+
+Every O06 test is invoked through `catalog/bin/run-ue1-o06-tests.ps1 -Tests <named verifier>` rather than from an unrecorded terminal loop. `UE1-O06-TEST-EVENTS.jsonl` is append-only: it writes `STARTED` before invoking PHP, then `PASS`/`FAIL`, exit code, elapsed time, Git commit, source/test SHA-256 fingerprint and the persisted full stdout/stderr file under `evidence/o06/`. `UE1-O06-TEST-STATUS.json` is refreshed before and after **each** test, and identifies the latest state. A STARTED row with no later terminal event is **interrupted**, not passed. Previous failures remain in the event history; fixed tests get a separate new run entry. Tests can be skipped only when the *latest* run for the same target and exact source/test hashes passed; `-Force` re-executes. Use `-TargetRoot 'Z:\Apache24\htdocs\unrealdb'` to journal PRD acceptance separately. Do not assume historical pre-journal passes were logged by this runner; those remain in prior acceptance documentation.
+
 ## Repeatable commands
 
 `php catalog/bin/verify-ue1-classic-tagged-properties.php` — pinned 92-file property/class-native corpus, counts and SHA-256; reject loss of existing coverage.

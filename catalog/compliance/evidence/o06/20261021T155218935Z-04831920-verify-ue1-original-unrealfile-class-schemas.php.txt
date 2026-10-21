@@ -1,0 +1,7 @@
+﻿
+Fatal error: Uncaught RuntimeException: UClass binary property exceeds serialized object header in C:\Users\arden\source\repos\ut_reader\catalog\src\Infrastructure\Readers\CatalogUE1OriginalUnrealfileBinaryPropertyReader.php:76
+Stack trace:
+#0 C:\Users\arden\source\repos\ut_reader\catalog\src\Infrastructure\Readers\CatalogUE1OriginalUnrealfileBinaryPropertyReader.php(122): UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileBinaryPropertyReader::{closure:UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileBinaryPropertyReader::read():75}(1)
+#1 C:\Users\arden\source\repos\ut_reader\catalog\bin\verify-ue1-original-unrealfile-class-schemas.php(111): UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileBinaryPropertyReader::read('C:\\Users\\arden\\...', true)
+#2 {main}
+  thrown in C:\Users\arden\source\repos\ut_reader\catalog\src\Infrastructure\Readers\CatalogUE1OriginalUnrealfileBinaryPropertyReader.php on line 76
