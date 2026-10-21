@@ -11,6 +11,8 @@ foreach ($tool in @($calibre,$extract,$pdfinfo)) {
 }
 & py -3 $python
 if ($LASTEXITCODE -ne 0) { throw 'Pinned Epic C++ source check failed' }
+& py -3 (Join-Path $PSScriptRoot 'build-epic-ue427-export-filter-flow.py')
+if ($LASTEXITCODE -ne 0) { throw 'Pinned Epic export-filter decision graph check failed' }
 & py -3 (Join-Path $PSScriptRoot 'build-epic-source-branch-diagram.py')
 if ($LASTEXITCODE -ne 0) { throw 'Epic decision-graph source check failed' }
 & py -3 (Join-Path $PSScriptRoot 'build-epic-ue427-comparison-checklist.py')

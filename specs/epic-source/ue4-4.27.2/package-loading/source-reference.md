@@ -523,6 +523,38 @@ and applicable preprocessor conditions.
 
 **7 source-anchored navigation nodes; 6 original conditional-directive lines; 0 serialized field sites.**
 
+## FObjectExport constructor defaults before archive version gates
+
+**Epic function:** `ObjectResource.cpp:30`
+
+| Step | Original source location | Exact C++ statement |
+|---|---|---|
+| `EXPORT_DEFAULTS01` | `ObjectResource.cpp:43` | `, bForcedExport(false)` |
+| `EXPORT_DEFAULTS02` | `ObjectResource.cpp:44` | `, bNotForClient(false)` |
+| `EXPORT_DEFAULTS03` | `ObjectResource.cpp:45` | `, bNotForServer(false)` |
+| `EXPORT_DEFAULTS04` | `ObjectResource.cpp:46` | `, bNotAlwaysLoadedForEditorGame(true)` |
+| `EXPORT_DEFAULTS05` | `ObjectResource.cpp:47` | `, bIsAsset(false)` |
+| `EXPORT_DEFAULTS06` | `ObjectResource.cpp:48` | `, bExportLoadFailed(false)` |
+| `EXPORT_DEFAULTS07` | `ObjectResource.cpp:50` | `, bWasFiltered(false)` |
+| `EXPORT_DEFAULTS08` | `ObjectResource.cpp:52` | `, FirstExportDependency(-1)` |
+| `EXPORT_DEFAULTS09` | `ObjectResource.cpp:53` | `, SerializationBeforeSerializationDependencies(0)` |
+| `EXPORT_DEFAULTS10` | `ObjectResource.cpp:54` | `, CreateBeforeSerializationDependencies(0)` |
+| `EXPORT_DEFAULTS11` | `ObjectResource.cpp:55` | `, SerializationBeforeCreateDependencies(0)` |
+| `EXPORT_DEFAULTS12` | `ObjectResource.cpp:56` | `, CreateBeforeCreateDependencies(0)` |
+
+### Actual conditional statements in the original Epic source
+
+| Source line | Original C++ condition or compile-time directive |
+|---|---|
+
+### Serialized field sites in the Epic implementation
+
+| Source line | Field written/read by Epic |
+|---|---|
+| — | No direct SA_VALUE sites inside this section; follow its called serializer |
+
+**12 source-anchored navigation nodes; 0 original conditional-directive lines; 0 serialized field sites.**
+
 ## Unexpanded calls and formats
 
 Not traced to their end here; no end-to-end completeness claim is permitted.

@@ -4,7 +4,7 @@
 h1{font-size:23px}h2{font-size:17px;page-break-before:always}
 h3{font-size:13px}code{font-family:Consolas,monospace;font-size:9px}
 table{border-collapse:collapse;width:100%;margin:12px 0 20px}
-th,td{border:1px solid #cbd5df;padding:5px 7px;vertical-align:top;text-align:left}
+th,td{border:1px solid #cbd5df;padding:4px 6px;vertical-align:top;text-align:left}
 th{background:#e9eff4}tr{page-break-inside:avoid}thead{display:table-header-group}
 .note{border-left:4px solid #506982;padding:10px;background:#eef3f7}
 .warning{font-weight:bold}td.snippet{overflow-wrap:anywhere;font-family:Consolas,monospace;font-size:9px}
@@ -394,6 +394,27 @@ th{background:#e9eff4}tr{page-break-inside:avoid}thead{display:table-header-grou
 <tr><td>Linker.h:540</td><td class='snippet'>if (FilterClientButNotServer &amp;&amp; Export.bNotForServer) // &quot;we are a dedicated server&quot;</td></tr>
 <tr><td>Linker.h:544</td><td class='snippet'>if (FilterServerButNotClient &amp;&amp; Export.bNotForClient) // &quot;we are a client only&quot;</td></tr>
 <tr><td>Linker.h:548</td><td class='snippet'>if (Export.ThisIndex.IsNull()) // Export is invalid and shouldn&#x27;t be processed.</td></tr>
+</table>
+<h3>Serialized fields in source order</h3><table><tr><th>Source</th><th>Serialized field</th></tr>
+<tr><td>—</td><td>No direct SA_VALUE sites in this function</td></tr>
+</table>
+<h2>FObjectExport constructor defaults before archive version gates</h2>
+<p><b>Epic function:</b> ObjectResource.cpp:30</p>
+<table><thead><tr><th>Step</th><th>Source</th><th>Exact Epic statement</th></tr></thead><tbody>
+<tr><td>EXPORT_DEFAULTS01</td><td>ObjectResource.cpp:43</td><td class='snippet'>, bForcedExport(false)</td></tr>
+<tr><td>EXPORT_DEFAULTS02</td><td>ObjectResource.cpp:44</td><td class='snippet'>, bNotForClient(false)</td></tr>
+<tr><td>EXPORT_DEFAULTS03</td><td>ObjectResource.cpp:45</td><td class='snippet'>, bNotForServer(false)</td></tr>
+<tr><td>EXPORT_DEFAULTS04</td><td>ObjectResource.cpp:46</td><td class='snippet'>, bNotAlwaysLoadedForEditorGame(true)</td></tr>
+<tr><td>EXPORT_DEFAULTS05</td><td>ObjectResource.cpp:47</td><td class='snippet'>, bIsAsset(false)</td></tr>
+<tr><td>EXPORT_DEFAULTS06</td><td>ObjectResource.cpp:48</td><td class='snippet'>, bExportLoadFailed(false)</td></tr>
+<tr><td>EXPORT_DEFAULTS07</td><td>ObjectResource.cpp:50</td><td class='snippet'>, bWasFiltered(false)</td></tr>
+<tr><td>EXPORT_DEFAULTS08</td><td>ObjectResource.cpp:52</td><td class='snippet'>, FirstExportDependency(-1)</td></tr>
+<tr><td>EXPORT_DEFAULTS09</td><td>ObjectResource.cpp:53</td><td class='snippet'>, SerializationBeforeSerializationDependencies(0)</td></tr>
+<tr><td>EXPORT_DEFAULTS10</td><td>ObjectResource.cpp:54</td><td class='snippet'>, CreateBeforeSerializationDependencies(0)</td></tr>
+<tr><td>EXPORT_DEFAULTS11</td><td>ObjectResource.cpp:55</td><td class='snippet'>, SerializationBeforeCreateDependencies(0)</td></tr>
+<tr><td>EXPORT_DEFAULTS12</td><td>ObjectResource.cpp:56</td><td class='snippet'>, CreateBeforeCreateDependencies(0)</td></tr>
+</tbody></table>
+<h3>Conditional statements in this original Epic source path</h3><table><tr><th>Source</th><th>Original C++ condition</th></tr>
 </table>
 <h3>Serialized fields in source order</h3><table><tr><th>Source</th><th>Serialized field</th></tr>
 <tr><td>—</td><td>No direct SA_VALUE sites in this function</td></tr>

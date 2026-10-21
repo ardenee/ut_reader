@@ -1,0 +1,77 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mxfile host="app.diagrams.net" type="device" version="24.7.17">
+  <diagram id="filter-decisions" name="FLinker FilterExport">
+    <mxGraphModel dx="1800" dy="1250" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" page="1" pageScale="1" pageWidth="1700" pageHeight="1750">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="START" value="START — Enter FLinker::FilterExport&lt;br&gt;Linker.h:528" parent="1" vertex="1" style="shape=rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#f3f6f9;strokeColor=#5d758e;fontSize=13;">
+          <mxGeometry x="500" y="45" width="340" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="FAILED" value="FAILED — Previous failure or filter?&lt;br&gt;Linker.h:530" parent="1" vertex="1" style="shape=rhombus;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#f3f6f9;strokeColor=#5d758e;fontSize=13;">
+          <mxGeometry x="500" y="215" width="340" height="102" as="geometry" />
+        </mxCell>
+        <mxCell id="EDITOR" value="EDITOR — Is this compiled with WITH_EDITOR?&lt;br&gt;Linker.h:534" parent="1" vertex="1" style="shape=rhombus;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#f3f6f9;strokeColor=#5d758e;fontSize=13;">
+          <mxGeometry x="500" y="405" width="340" height="102" as="geometry" />
+        </mxCell>
+        <mxCell id="ALWAYS" value="ALWAYS — Always loaded for editor game?&lt;br&gt;Linker.h:535" parent="1" vertex="1" style="shape=rhombus;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#f3f6f9;strokeColor=#5d758e;fontSize=13;">
+          <mxGeometry x="120" y="600" width="340" height="102" as="geometry" />
+        </mxCell>
+        <mxCell id="SERVER" value="SERVER — Dedicated-server filtering?&lt;br&gt;Linker.h:540" parent="1" vertex="1" style="shape=rhombus;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#f3f6f9;strokeColor=#5d758e;fontSize=13;">
+          <mxGeometry x="500" y="805" width="340" height="102" as="geometry" />
+        </mxCell>
+        <mxCell id="CLIENT" value="CLIENT — Client-only filtering?&lt;br&gt;Linker.h:544" parent="1" vertex="1" style="shape=rhombus;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#f3f6f9;strokeColor=#5d758e;fontSize=13;">
+          <mxGeometry x="500" y="1030" width="340" height="102" as="geometry" />
+        </mxCell>
+        <mxCell id="INVALID" value="INVALID — Null export package index?&lt;br&gt;Linker.h:548" parent="1" vertex="1" style="shape=rhombus;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#f3f6f9;strokeColor=#5d758e;fontSize=13;">
+          <mxGeometry x="500" y="1245" width="340" height="102" as="geometry" />
+        </mxCell>
+        <mxCell id="FILTER" value="FILTER — Return true (filtered)&lt;br&gt;Linker.h:550" parent="1" vertex="1" style="shape=rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#f3f6f9;strokeColor=#5d758e;fontSize=13;">
+          <mxGeometry x="1100" y="805" width="340" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="LOAD" value="LOAD — Return false (not filtered)&lt;br&gt;Linker.h:552" parent="1" vertex="1" style="shape=rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#f3f6f9;strokeColor=#5d758e;fontSize=13;">
+          <mxGeometry x="1100" y="1350" width="340" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_0" parent="1" edge="1" source="START" target="FAILED" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#6b8196;fontSize=11;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_1" parent="1" edge="1" source="FAILED" target="FILTER" value="true" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#6b8196;fontSize=11;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_2" parent="1" edge="1" source="FAILED" target="EDITOR" value="false" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#6b8196;fontSize=11;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_3" parent="1" edge="1" source="EDITOR" target="ALWAYS" value="WITH_EDITOR" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#6b8196;fontSize=11;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_4" parent="1" edge="1" source="EDITOR" target="SERVER" value="not compiled" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#6b8196;fontSize=11;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_5" parent="1" edge="1" source="ALWAYS" target="LOAD" value="true" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#6b8196;fontSize=11;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_6" parent="1" edge="1" source="ALWAYS" target="SERVER" value="false" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#6b8196;fontSize=11;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_7" parent="1" edge="1" source="SERVER" target="FILTER" value="true" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#6b8196;fontSize=11;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_8" parent="1" edge="1" source="SERVER" target="CLIENT" value="false" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#6b8196;fontSize=11;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_9" parent="1" edge="1" source="CLIENT" target="FILTER" value="true" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#6b8196;fontSize=11;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_10" parent="1" edge="1" source="CLIENT" target="INVALID" value="false" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#6b8196;fontSize=11;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_11" parent="1" edge="1" source="INVALID" target="FILTER" value="true" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#6b8196;fontSize=11;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_12" parent="1" edge="1" source="INVALID" target="LOAD" value="false" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#6b8196;fontSize=11;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

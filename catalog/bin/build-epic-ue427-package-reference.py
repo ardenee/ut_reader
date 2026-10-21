@@ -80,7 +80,7 @@ def main():
             'h1{font-size:23px}h2{font-size:17px;page-break-before:always}',
             'h3{font-size:13px}code{font-family:Consolas,monospace;font-size:9px}',
             'table{border-collapse:collapse;width:100%;margin:12px 0 20px}',
-            'th,td{border:1px solid #cbd5df;padding:5px 7px;vertical-align:top;text-align:left}',
+            'th,td{border:1px solid #cbd5df;padding:4px 6px;vertical-align:top;text-align:left}',
             'th{background:#e9eff4}tr{page-break-inside:avoid}thead{display:table-header-group}',
             '.note{border-left:4px solid #506982;padding:10px;background:#eef3f7}',
             '.warning{font-weight:bold}td.snippet{overflow-wrap:anywhere;font-family:Consolas,monospace;font-size:9px}',

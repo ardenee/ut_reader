@@ -131,5 +131,46 @@ source items: 221 `NOT_CHECKED`; 22 targeted-behavior mapped, 2
 corpus-mapped, 1 pending boundary, 3 limited source mappings, and 14
 export fields preserved in parsed metadata but not runtime certified.
 
+## Epic export defaults and actual load-filter order (next batch)
+
+Epic source `CoreUObject/Private/UObject/ObjectResource.cpp:29-58`
+constructs `FObjectExport` with
+`bNotAlwaysLoadedForEditorGame=true`, `bIsAsset=false`,
+`FirstExportDependency=-1`, and all four dependency counters zero.
+These in-memory defaults exist **even when a version gate omits their
+serialized fields**. The UE4 reader had previously exposed null or
+empty structures for omitted fields. It now reproduces the constructor
+defaults while keeping the existing `...Present` indicators to show
+whether the value came from disk.
+
+Epic source `CoreUObject/Public/UObject/Linker.h:528-553`
+implements `FLinker::FilterExport` in this order:
+
+1. A previously failed/filtered export is filtered.
+2. Under `WITH_EDITOR`, `!bNotAlwaysLoadedForEditorGame` is not filtered.
+3. `FilterClientButNotServer && bNotForServer` is filtered.
+4. `FilterServerButNotClient && bNotForClient` is filtered.
+5. A null `ThisIndex` is filtered; otherwise it is not.
+
+The UE4 reader now exposes
+`UnrealPackageReader4::filterExportForLinkerContext` with those
+exact conditions and **requires all five caller-owned linker/build
+state values**. It rejects omitted values rather than assuming a
+server/client/editor environment. Its 19 targeted checks passed, including direct v214 reader deserialization of omitted version-gated fields.
+`SerializeExportMap` assigns non-null `FromExport` indices to
+genuine loaded exports; the method preserves that source condition.
+
+**Still outstanding:** catalog dependency processing does not yet call
+this operation with the engine runtime context. There is **no
+assertion of complete production/native load equivalence**.
+This batch establishes the correct function when context is actually
+available; it does not fabricate missing UObject/linker state.
+
+The pinned Epic-only reference includes a source-anchored constructor
+defaults diagram and a separate true/false `FilterExport` decision
+diagram. The expanded 275-step source comparison explicitly separates
+the 12 constructor defaults and 13 callable-policy steps from the
+remaining 208 unchecked items.
+
 The correction is judged by the production behavior and source
 trace, not a new claim of whole-engine parity.

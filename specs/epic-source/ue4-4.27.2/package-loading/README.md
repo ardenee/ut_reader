@@ -10,10 +10,17 @@ full file-format certification and not a declaration of PHP parity.
 
 1. [Epic source file inventory, field tables, and loader steps](source-reference.md)
 2. [Epic package-loading reference PDF](UE4.27.2-Epic-Source-Package-Format-and-Loader.pdf)
-3. [Editable ten-page sequence diagrams](source-reference.drawio):
-   `loader`, `summary`, `imports`, `exports`, `tables`, `writers`, `version_correction`, `engine_changelist`, `package_flags`, `export_filter`
+3. [Editable eleven-page sequence diagrams](source-reference.drawio):
+   `loader`, `summary`, `imports`, `exports`, `tables`, `writers`, `version_correction`, `engine_changelist`, `package_flags`, `export_filter`, `export_defaults`
 4. [True/false summary decision graph](summary-decision-graph.md)
-5. [Editable decision graph](summary-decision-graph.drawio)
+5. [Editable header decision graph](summary-decision-graph.drawio)
+6. [Editable export-filter true/false decision graph](flow-export_filter-decisions.drawio)
+
+The original Epic FObjectExport constructor defaults are separately listed
+in the `export_defaults` diagram; optional version-gated fields do not
+become nullable engine members when their serialized data is absent.
+The explicit `FilterExport` true/false branches are in
+`flow-export_filter-decisions.drawio` and its Mermaid companion.
 
 The diagrams can be opened in https://app.diagrams.net/ or diagrams.net
 desktop. Use the `.drawio` format to preserve editable decision nodes,
@@ -52,9 +59,9 @@ modifying it.
 
 ## Production comparison (separate)
 
-`catalog/compliance/UE427-LOADER-EPIC-STEP-MAPPING.csv` contains **263**
+`catalog/compliance/UE427-LOADER-EPIC-STEP-MAPPING.csv` contains **275**
 source-indexed items as of the initial generation. Each is
-`NOT_CHECKED` until inspected against actual UnrealDB production PHP; individual implemented branches are marked separately and do not imply whole-path acceptance.
+`NOT_CHECKED` until inspected against actual UnrealDB production PHP; individually implemented branches are marked separately and do not imply whole-path acceptance.
 It lives outside this folder to keep this reference free of UnrealDB
 assumptions. Enter both the equivalent code location and its real caller
 when mapping; do not mark complete from a test assertion alone.

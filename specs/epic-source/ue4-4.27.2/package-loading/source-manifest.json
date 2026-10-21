@@ -653,6 +653,74 @@
           553
         ]
       ]
+    },
+    {
+      "id": "export_defaults",
+      "title": "FObjectExport constructor defaults before archive version gates",
+      "file": "ObjectResource.cpp",
+      "function_line": 30,
+      "sections": [
+        [
+          29,
+          58
+        ]
+      ],
+      "steps": [
+        [
+          43,
+          "bForcedExport(false)"
+        ],
+        [
+          44,
+          "bNotForClient(false)"
+        ],
+        [
+          45,
+          "bNotForServer(false)"
+        ],
+        [
+          46,
+          "bNotAlwaysLoadedForEditorGame(true)"
+        ],
+        [
+          47,
+          "bIsAsset(false)"
+        ],
+        [
+          48,
+          "bExportLoadFailed(false)"
+        ],
+        [
+          50,
+          "bWasFiltered(false)"
+        ],
+        [
+          52,
+          "FirstExportDependency(-1)"
+        ],
+        [
+          53,
+          "SerializationBeforeSerializationDependencies(0)"
+        ],
+        [
+          54,
+          "CreateBeforeSerializationDependencies(0)"
+        ],
+        [
+          55,
+          "SerializationBeforeCreateDependencies(0)"
+        ],
+        [
+          56,
+          "CreateBeforeCreateDependencies(0)"
+        ]
+      ],
+      "condition_ranges": [
+        [
+          29,
+          58
+        ]
+      ]
     }
   ],
   "not_yet_expanded": [

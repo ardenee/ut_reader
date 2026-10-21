@@ -85,7 +85,7 @@ must be expanded before calling that execution path complete.
 ## UE4.27.2 source-only reference sections
 
 - [Package loader and serialized field layout](ue4-4.27.2/package-loading/README.md):
-  ten sequence diagrams, a selected header true/false graph, exact source
+  eleven sequence diagrams, a selected header true/false graph, exact source
   field and version references, and a print-ready PDF. **Incomplete**;
   genuinely untraced called functions are listed explicitly.
 - [VerifyImport source paths](ue4-4.27.2/verifyimport/source-path.md):

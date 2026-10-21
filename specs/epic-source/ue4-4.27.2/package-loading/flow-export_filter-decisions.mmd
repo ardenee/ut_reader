@@ -1,0 +1,23 @@
+flowchart TD
+    START["START — Enter FLinker::FilterExport (Linker.h:528)"]
+    FAILED{"FAILED — Previous failure or filter? (Linker.h:530)"}
+    EDITOR{"EDITOR — Is this compiled with WITH_EDITOR? (Linker.h:534)"}
+    ALWAYS{"ALWAYS — Always loaded for editor game? (Linker.h:535)"}
+    SERVER{"SERVER — Dedicated-server filtering? (Linker.h:540)"}
+    CLIENT{"CLIENT — Client-only filtering? (Linker.h:544)"}
+    INVALID{"INVALID — Null export package index? (Linker.h:548)"}
+    FILTER["FILTER — Return true (filtered) (Linker.h:550)"]
+    LOAD["LOAD — Return false (not filtered) (Linker.h:552)"]
+    START --> FAILED
+    FAILED -->|true| FILTER
+    FAILED -->|false| EDITOR
+    EDITOR -->|WITH_EDITOR| ALWAYS
+    EDITOR -->|not compiled| SERVER
+    ALWAYS -->|true| LOAD
+    ALWAYS -->|false| SERVER
+    SERVER -->|true| FILTER
+    SERVER -->|false| CLIENT
+    CLIENT -->|true| FILTER
+    CLIENT -->|false| INVALID
+    INVALID -->|true| FILTER
+    INVALID -->|false| LOAD

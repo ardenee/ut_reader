@@ -572,4 +572,81 @@
       </root>
     </mxGraphModel>
   </diagram>
+  <diagram name="export_defaults" id="export_defaults">
+    <mxGraphModel dx="1300" dy="950" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" page="1" pageScale="1" pageWidth="1050" pageHeight="1800">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="EXPORT_DEFAULTS01" parent="1" vertex="1" value="EXPORT_DEFAULTS01 , bForcedExport(false)&lt;br/&gt;ObjectResource.cpp:43" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="85" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="EXPORT_DEFAULTS02" parent="1" vertex="1" value="EXPORT_DEFAULTS02 , bNotForClient(false)&lt;br/&gt;ObjectResource.cpp:44" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="200" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="export_defaults_e2" parent="1" edge="1" source="EXPORT_DEFAULTS01" target="EXPORT_DEFAULTS02" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="EXPORT_DEFAULTS03" parent="1" vertex="1" value="EXPORT_DEFAULTS03 , bNotForServer(false)&lt;br/&gt;ObjectResource.cpp:45" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="315" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="export_defaults_e3" parent="1" edge="1" source="EXPORT_DEFAULTS02" target="EXPORT_DEFAULTS03" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="EXPORT_DEFAULTS04" parent="1" vertex="1" value="EXPORT_DEFAULTS04 , bNotAlwaysLoadedForEditorGame(true)&lt;br/&gt;ObjectResource.cpp:46" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="430" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="export_defaults_e4" parent="1" edge="1" source="EXPORT_DEFAULTS03" target="EXPORT_DEFAULTS04" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="EXPORT_DEFAULTS05" parent="1" vertex="1" value="EXPORT_DEFAULTS05 , bIsAsset(false)&lt;br/&gt;ObjectResource.cpp:47" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="545" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="export_defaults_e5" parent="1" edge="1" source="EXPORT_DEFAULTS04" target="EXPORT_DEFAULTS05" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="EXPORT_DEFAULTS06" parent="1" vertex="1" value="EXPORT_DEFAULTS06 , bExportLoadFailed(false)&lt;br/&gt;ObjectResource.cpp:48" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="660" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="export_defaults_e6" parent="1" edge="1" source="EXPORT_DEFAULTS05" target="EXPORT_DEFAULTS06" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="EXPORT_DEFAULTS07" parent="1" vertex="1" value="EXPORT_DEFAULTS07 , bWasFiltered(false)&lt;br/&gt;ObjectResource.cpp:50" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="775" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="export_defaults_e7" parent="1" edge="1" source="EXPORT_DEFAULTS06" target="EXPORT_DEFAULTS07" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="EXPORT_DEFAULTS08" parent="1" vertex="1" value="EXPORT_DEFAULTS08 , FirstExportDependency(-1)&lt;br/&gt;ObjectResource.cpp:52" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="890" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="export_defaults_e8" parent="1" edge="1" source="EXPORT_DEFAULTS07" target="EXPORT_DEFAULTS08" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="EXPORT_DEFAULTS09" parent="1" vertex="1" value="EXPORT_DEFAULTS09 , SerializationBeforeSerializationDependencies(0)&lt;br/&gt;ObjectResource.cpp:53" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="1005" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="export_defaults_e9" parent="1" edge="1" source="EXPORT_DEFAULTS08" target="EXPORT_DEFAULTS09" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="EXPORT_DEFAULTS10" parent="1" vertex="1" value="EXPORT_DEFAULTS10 , CreateBeforeSerializationDependencies(0)&lt;br/&gt;ObjectResource.cpp:54" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="1120" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="export_defaults_e10" parent="1" edge="1" source="EXPORT_DEFAULTS09" target="EXPORT_DEFAULTS10" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="EXPORT_DEFAULTS11" parent="1" vertex="1" value="EXPORT_DEFAULTS11 , SerializationBeforeCreateDependencies(0)&lt;br/&gt;ObjectResource.cpp:55" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="1235" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="export_defaults_e11" parent="1" edge="1" source="EXPORT_DEFAULTS10" target="EXPORT_DEFAULTS11" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="EXPORT_DEFAULTS12" parent="1" vertex="1" value="EXPORT_DEFAULTS12 , CreateBeforeCreateDependencies(0)&lt;br/&gt;ObjectResource.cpp:56" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="1350" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="export_defaults_e12" parent="1" edge="1" source="EXPORT_DEFAULTS11" target="EXPORT_DEFAULTS12" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
 </mxfile>

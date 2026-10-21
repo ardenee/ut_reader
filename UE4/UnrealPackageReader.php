@@ -786,10 +786,21 @@ final class UnrealPackageReader4
             $packageFlags = $r->u32();
             $notForEditorGamePresent = $version >= self::VER_LOAD_FOR_EDITOR_GAME;
             $isAssetPresent = $version >= self::VER_COOKED_ASSETS_IN_EDITOR_SUPPORT;
-            $notForEditorGame = $notForEditorGamePresent ? $r->i32() !== 0 : null;
-            $isAsset = $isAssetPresent ? $r->i32() !== 0 : null;
+            // Epic ObjectResource.cpp:46-47 initializes these members before
+            // deserializing; older package versions omit their wire fields.
+            // Absent data does NOT mean an unknown/nullable runtime value.
+            $notForEditorGame = $notForEditorGamePresent ? $r->i32() !== 0 : true;
+            $isAsset = $isAssetPresent ? $r->i32() !== 0 : false;
             $preloadPresent = $version >= self::VER_PRELOAD_DEPENDENCIES_IN_COOKED_EXPORTS;
-            $preload = [];
+            // Epic FObjectExport default constructor (ObjectResource.cpp:
+            // 52-56), used by SerializeExportMap before its gated fields.
+            $preload = [
+                'firstExportDependency' => -1,
+                'serializationBeforeSerializationDependencies' => 0,
+                'createBeforeSerializationDependencies' => 0,
+                'serializationBeforeCreateDependencies' => 0,
+                'createBeforeCreateDependencies' => 0,
+            ];
             if ($preloadPresent) {
                 $preload = [
                     'firstExportDependency' => $r->i32(),
@@ -1193,6 +1204,53 @@ final class UnrealPackageReader4
     public function getNames(): array { return $this->names; }
     public function getImports(): array { return $this->imports; }
     public function getExports(): array { return $this->exports; }
+    /**
+     * Evaluate Epic FLinker::FilterExport (CoreUObject/Public/UObject/Linker.h
+     * lines 528-553) against one deserialized export.
+     *
+     * The native branch depends on the engine build and on *live* linker
+     * state, not on the package bytes. Require every such input explicitly;
+     * do not silently treat a missing editor/client/server context as false.
+     *
+     * @param array{withEditor:bool,filterClientButNotServer:bool,
+     *     filterServerButNotClient:bool,exportLoadFailed:bool,wasFiltered:bool} $linkerState
+     */
+    public function filterExportForLinkerContext(int $exportIndex, array $linkerState): bool
+    {
+        if (!array_key_exists($exportIndex, $this->exports)) {
+            throw new OutOfBoundsException('UE4 export index is outside ExportMap: ' . $exportIndex);
+        }
+        foreach ([
+            'withEditor', 'filterClientButNotServer', 'filterServerButNotClient',
+            'exportLoadFailed', 'wasFiltered',
+        ] as $key) {
+            if (!array_key_exists($key, $linkerState) || !is_bool($linkerState[$key])) {
+                throw new InvalidArgumentException('Epic FLinker::FilterExport requires boolean linker context: ' . $key);
+            }
+        }
+
+        $export = $this->exports[$exportIndex];
+        // Original source: Linker.h:530-553, in exact decision order.
+        if ($linkerState['exportLoadFailed'] || $linkerState['wasFiltered']) {
+            return true;
+        }
+        if ($linkerState['withEditor'] && !$export['notForEditorGame']) {
+            return false;
+        }
+        if ($linkerState['filterClientButNotServer'] && $export['notForServer']) {
+            return true;
+        }
+        if ($linkerState['filterServerButNotClient'] && $export['notForClient']) {
+            return true;
+        }
+        // SerializeExportMap assigns FPackageIndex::FromExport(ExportMapIndex),
+        // so an actually deserialized export has a non-null ThisIndex.
+        if ((int)($export['ref'] ?? 0) === 0) {
+            return true;
+        }
+        return false;
+    }
+
     public function validatePackage(): array { return $this->issues; }
     public function getFileSize(): string { return is_file($this->path) ? number_format(filesize($this->path)) . ' bytes' : ''; }
     public function getRawHeaderFields(): array { return $this->rawHeaderFields; }
