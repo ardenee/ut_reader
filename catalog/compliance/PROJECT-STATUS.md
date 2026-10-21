@@ -11,11 +11,11 @@ Updated: **2026-10-21**. This is the canonical recovery/handover file for this p
 | Reference sources | `L:\Source\Engine` and `L:\Source\Games` |
 | Deployment | `Z:\Apache24\htdocs\unrealdb` on DEV is PRD `Lelly-pc` |
 | GitHub | `https://github.com/ardenee/ut_reader` |
-| Active engine / operation | **UE1 / O02 — original/standard package summary and metadata** |
-| O01 status | **ACCEPTED — 6/6 fixed identification/dispatch criteria passed**; see `UE1-ACCEPTANCE.md`. Original full readers are O02 work. |
-| Primary acceptance metric | **UE1: 1 accepted operation (O01); O02 implementing.** Ten source-dependent categories currently listed; UE1 overall NOT accepted. |
-| Latest completed work batch | **UE1 O02 — original 1996 resource headers and 1997 UObjectBase tables now decode in native read-only inspector** |
-| Latest verified code checkpoint | **`f939cea1`** — O02 native v9/v10 resource-header decoder committed/pushed/deployed (3/3 DEV–PRD hashes, 18/18 new tests). **`5dd501a9`** — O02 v22/v23 UObjectBase object/table/class-preload reader committed/pushed/deployed (3/3 hashes, 19/19 tests). DEV 24/24 regression scripts passed; PRD genuine package workflow remains 92/92. |
+| Active engine / operation | **UE1 / O03 — name serialization and reference mapping** |
+| O01 status | **ACCEPTED — 6/6 fixed identification/dispatch criteria passed**. Original structural metadata O02 is also accepted; type-specific object/payload parsing belongs to O06/O07. |
+| Primary acceptance metric | **UE1: O01 and O02 accepted against bounded contracts; O03 next.** UE1 overall NOT accepted; the remaining source-defined operations remain open. |
+| Latest completed work batch | **UE1 O02 — early native metadata is decoded AND stored through actual unverified MySQL staging without fabricated modern object identities** |
+| Latest verified code checkpoint | **`123de5b8`** — O02 real unverified staging with source-typed original records committed/pushed/deployed (6/6 SHA-256 matches). DEV 27/27 native-staging tests, 13/13 actual MySQL temporary-table checks, 26/26 regressions; PRD 8/8 targeted scripts. O02 summary/structural-metadata scope accepted; payloads remain O06/O07. |
 
 ## Engine sequence
 
@@ -34,8 +34,8 @@ Do not move to UE2 before UE1 acceptance. Earlier VERIFIED work cannot be substi
 | ID | Category | Status |
 |---|---|---|
 | O01 | File identification and version dispatch | **ACCEPTED (6/6 source-backed scoped requirements)** |
-| O02 | Package summary and metadata | **IMPLEMENTING** — 1996 v9/v10 native resource headers/data references and tables decode; 1997 v22/v23 UObjectBase imports/exports/class-preloads decode; type-specific payloads and full production ingest NOT implemented |
-| O03 | Names | NOT STARTED |
+| O02 | Package summary and metadata | **ACCEPTED (source-defined structural metadata only)** — original 1996 resource v9/v10, original 1997 Unrealfile v22/v23, genuine classic v35–69, and correct unverified MySQL persistence; NOT payload/full-reader acceptance |
+| O03 | Names | **NEXT** — verify and correct name maps, index references, case and version semantics across source families |
 | O04 | Imports/exports | NOT STARTED |
 | O05 | Dependency resolution | NOT STARTED |
 | O06 | Object and property serialization | NOT STARTED |
@@ -117,10 +117,10 @@ B02 checks passed: `verify-ue1-early-format-identification.php` **9/9**, plus **
 ## Exact next actions — restart here
 
 1. Verify DEV device, `git status --short --branch`, `git log -1`, compare `origin/main`, and ensure prior committed changes reached PRD. Preserve any unrelated user edits.
-2. **O02 implementation in place:** original 1996 resource v9/v10 metadata/tables/native header fields and 1997 Unrealfile v22/v23 metadata/names/dependencies/UObjectBase imports/exports/class-preloads now decode through the real read-only inspector. Epic source remains master: do not represent stored pointer words as object references or header decoding as full payload support.
-3. **Next coding milestone:** source-specific resource/object SerializeHeader/SerializeData semantics, original reference remapping, genuine ingestion of early-format metadata into catalog without assigning false verified status, and real production entry-point coverage. Do not conflate metadata-only inspection with successful Epic-equivalent full file parsing.
-4. **Production schema distinction:** original `FResNameFileEntry` and `UObjectBase` records are not later FObjectImport/FObjectExport tables. `CatalogUnverifiedMetadataSnapshotBuilder::fromParsed` expects modern object paths and class/outer indices; do **not** force original records into it (that would fabricate identities). Build a source-specific metadata adapter retaining the original record type and explicit unverified/partial status before enabling catalog indexing. Finish resource-specific SerializeHeader/SerializeData implementation separately.
-5. **Tests:** O01 accepted 6/6; O02 v9/v10 tables 21/21, native headers 18/18, v22/v23 summary/dependencies/names 19/19, UObjectBase + class preload 19/19. DEV **24/24** regressions, PRD targeted tests and genuine **92/92** package workflow passed. O02 is NOT fully accepted: early formats have source-aligned metadata-only inspection but still need native per-object payload and production indexing support.
+2. **O02 accepted for structural metadata**: original resource v9/v10 and Unrealfile v22/v23 native records preserve Epic fields in MySQL unverified staging. Classic v35–69 genuine corpus also passes. Do NOT promote early files as verified or normalize original records into modern class/outer paths; payloads are separate O06/O07 operations.
+3. **Begin O03 names:** compare original per-format name reading, indices, flags, bounds and remapping against every supplied Epic branch and UnrealDB's real name consumers. Fix discrepancies with source-conformant fixtures and native/genuine tests; defer object property/payload SerializeHeader/SerializeData to O06, bulk bytes to O07, verified UEDB5 publication/search to O09.
+4. **Completed O02 production distinction:** `CatalogUE1OriginalStagingMetadata` retains original typed records and `CatalogUnverifiedMetadataSnapshotBuilder::fromOriginalNative` stores them separately; `ue_files` counts native imports/exports without populating unsupported modern import/export paths. Original-format `scan_status` and compatibility remain unverified; genuine source-specific full payload work is still open.
+5. **Tests:** O01 6/6 accepted, O02 fixed structural metadata accepted after v9/v10 tables 21/21, headers 18/18, v22/v23 metadata 19/19, UObjectBase 19/19; native staging 27/27, real MySQL 13/13, DEV 26/26 scripts, PRD 8/8, classic genuine 92/92. O03–O10 and engine-wide Epic equivalence remain OPEN.
 6. Run relevant verifier scripts; commit via local Git CLI, `git push origin main`, deploy changed files with Robocopy to PRD (excluding storage/config), SHA-256 compare, update this page and repeat.
 
 **Recovery rule:** read this page plus `UE1-IMPLEMENTATION.md` and `UE1-ACCEPTANCE.md`; source C++ is master truth. O01 is accepted for its frozen identification scope; do not reopen it for O02–O10 decoding, object or SQL work. Advance one bounded operation at a time and deploy verified code promptly.

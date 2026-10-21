@@ -1,6 +1,6 @@
 # UE1 — acceptance evidence and runnable checkpoints
 
-Updated 2026-10-21. No UE1 operation has passed the new acceptance definition. **O01 remains IMPLEMENTING.**
+Updated 2026-10-21. **O01 accepted (identification/dispatch); O02 accepted (source-defined summary and native structural metadata, NOT full payloads); O03 next.** UE1 overall not accepted.
 
 ## B01 — numeric UE1 package tag boundary
 
@@ -65,7 +65,21 @@ B03 committed/pushed as `aa3eb737`; all 5 changed code/test/documentation files 
 
 **Explicitly deferred, not O01 gates:** original v9/v10/v23 full readers and complete summary tables (O02); name/import/export decoding (O03/O04); object data (O06/O07); live MySQL publication/search (O09); end-to-end workflow checks (O10). A compiled original Epic executable and authentic early-game binaries are useful independent corroboration when available, but their absence cannot indefinitely block a source-defined O01 identification contract. Do not add unrelated acceptance gates to O01.
 
-All six frozen identification/dispatch criteria passed. **UE1 is not fully supported**: original resource/unrealfile full metadata and object readers are still absent. This O01 acceptance does not certify O02–O10, native runtime equivalence or processing of source-identified unsupported formats.
+All six frozen identification/dispatch criteria passed. O01 is narrowly accepted; original native structural metadata has since been implemented under O02. Neither operation claims that original files' complete object/property/payload serializers are implemented.
+
+## O02 — ACCEPTED: source-defined summary and structural metadata (2026-10-21)
+
+**Responsibility:** Decode the original UE1 package/resource summary and native structural name/import/export/object-base records according to their specific source serializers. Correctly retain this information in the unverified staging system without inventing modern Unreal object hierarchy, class-package references or false verified state. **Full payload deserialization is O06/O07**, not an O02 acceptance gate.
+
+- [x] 1996 Unreal v0.82/0.83 resource version 9 and v0.84a resource version 10: original EOF 164-byte trailer, 36-byte name entries, 44-byte resource import/export entries, native 32-bit resource headers and physical data offsets. Source: `UnResTyp.h` and `UnRes.cpp` from each original game tree.
+- [x] 1997 Unreal v0.86x/v0.867 Unrealfile version 22/23: fixed summary tag and variable-length serialized dependencies/name table, 16-bit one-based FName references, variable-size UObjectBase import/export entries and exported-class preload records. Source: `UnLinker.h`, `UnArc.h`, `UnName.h`, `UnObj.cpp`. No fabricated outer/index paths.
+- [x] Original structural records integrated into actual `CatalogUnverifiedStagingIndex::parse/indexPath`; `CatalogUE1OriginalStagingMetadata` preserves typed native records, `CatalogUnverifiedMetadataSnapshotBuilder::fromOriginalNative` isolates native object records from classic modern import/export rows. True source counts and flags retained. Original files remain unverified; supported name rows retain their original indices.
+- [x] Real MySQL/PDO acceptance uses session-temporary `ue_files` and `ue_unverified_metadata` tables: **13/13** roundtrip/count/status assertions, with zero permanent catalogue updates. Structural native-path tests **27/27**, legacy invalid-format negatives **36/36**.
+- [x] Classic genuine UE1 package metadata covers **92/92** files (61 versions 35–61 plus 31 versions 68/69). Selected DEV regression scripts **26/26** and PRD **8/8** passed; **6/6** changed code/test files SHA-256 matched on PRD. Source-parity code committed/pushed as `123de5b8`.
+
+**Explicitly outside O02 acceptance:** name-resolution edge behaviours (O03), full cross-object dependency and import-resolution semantics (O04/O05), type-specific SerializeHeader/SerializeData and property values (O06), bulk/external resources (O07), complete verified UEDB5 publishing/search (O09), and full engine workflow acceptance (O10). Metadata-only staged files are not equivalent to Epic's runtime-loaded packages. No genuine original 1996/1997 binaries or compiled original runtime oracle were used in these tests; the early layouts were verified with source-defined fixtures and native code inspection.
+
+O02 **accepted within this scope**, not an engine-wide compliance claim.
 
 ## B04 — original Unreal v35–61 corpus and heritage inspector correction (2026-10-21)
 
