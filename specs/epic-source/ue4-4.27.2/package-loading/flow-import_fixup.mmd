@@ -1,0 +1,62 @@
+flowchart TD
+  IMPORT_FIXUP01["IMPORT_FIXUP01 FLinkerLoad::ELinkerStatus FLinkerLoad::FixupImportMap()<br/>LinkerLoad.cpp:1624"]
+  IMPORT_FIXUP02["IMPORT_FIXUP02 if( bHasFixedUpImportMap == false )<br/>LinkerLoad.cpp:1628"]
+  IMPORT_FIXUP01 --> IMPORT_FIXUP02
+  IMPORT_FIXUP03["IMPORT_FIXUP03 if (!FPlatformProperties::RequiresCookedData())<br/>LinkerLoad.cpp:1637"]
+  IMPORT_FIXUP02 --> IMPORT_FIXUP03
+  IMPORT_FIXUP04["IMPORT_FIXUP04 TArray&lt;int32&gt; PackageIndexesToClear;<br/>LinkerLoad.cpp:1641"]
+  IMPORT_FIXUP03 --> IMPORT_FIXUP04
+  IMPORT_FIXUP05["IMPORT_FIXUP05 while (!bDone)<br/>LinkerLoad.cpp:1644"]
+  IMPORT_FIXUP04 --> IMPORT_FIXUP05
+  IMPORT_FIXUP06["IMPORT_FIXUP06 for( int32 i=0; i&lt;ImportMap.Num(); i++ )<br/>LinkerLoad.cpp:1649"]
+  IMPORT_FIXUP05 --> IMPORT_FIXUP06
+  IMPORT_FIXUP07["IMPORT_FIXUP07 FCoreRedirects::RedirectNameAndValues(ECoreRedirectFlags::Type_Clas...<br/>LinkerLoad.cpp:1657"]
+  IMPORT_FIXUP06 --> IMPORT_FIXUP07
+  IMPORT_FIXUP08["IMPORT_FIXUP08 const FString* NewInstanceName = ClassValueRedirect-&gt;ValueChange...<br/>LinkerLoad.cpp:1662"]
+  IMPORT_FIXUP07 --> IMPORT_FIXUP08
+  IMPORT_FIXUP09["IMPORT_FIXUP09 Import.ObjectName = FName(**NewInstanceName);<br/>LinkerLoad.cpp:1667"]
+  IMPORT_FIXUP08 --> IMPORT_FIXUP09
+  IMPORT_FIXUP10["IMPORT_FIXUP10 FCoreRedirectObjectName OldObjectName(GetImportPathName(i)), NewObj...<br/>LinkerLoad.cpp:1681"]
+  IMPORT_FIXUP09 --> IMPORT_FIXUP10
+  IMPORT_FIXUP11["IMPORT_FIXUP11 FCoreRedirects::RedirectNameAndValues(ObjectRedirectFlags, OldObjec...<br/>LinkerLoad.cpp:1685"]
+  IMPORT_FIXUP10 --> IMPORT_FIXUP11
+  IMPORT_FIXUP12["IMPORT_FIXUP12 if (ValueRedirect && ValueRedirect-&gt;OverrideClassName.IsValid())<br/>LinkerLoad.cpp:1687"]
+  IMPORT_FIXUP11 --> IMPORT_FIXUP12
+  IMPORT_FIXUP13["IMPORT_FIXUP13 if (NewObjectName != OldObjectName)<br/>LinkerLoad.cpp:1693"]
+  IMPORT_FIXUP12 --> IMPORT_FIXUP13
+  IMPORT_FIXUP14["IMPORT_FIXUP14 if (Import.OuterIndex.IsNull())<br/>LinkerLoad.cpp:1695"]
+  IMPORT_FIXUP13 --> IMPORT_FIXUP14
+  IMPORT_FIXUP15["IMPORT_FIXUP15 PackageIndexesToClear.Add(i);<br/>LinkerLoad.cpp:1699"]
+  IMPORT_FIXUP14 --> IMPORT_FIXUP15
+  IMPORT_FIXUP16["IMPORT_FIXUP16 if (NewObjectName.OuterName == NAME_None && NewObjectName.PackageNa...<br/>LinkerLoad.cpp:1704"]
+  IMPORT_FIXUP15 --> IMPORT_FIXUP16
+  IMPORT_FIXUP17["IMPORT_FIXUP17 if (FindImportPackage(NewObjectName.PackageName, NewPackageIndex))<br/>LinkerLoad.cpp:1708"]
+  IMPORT_FIXUP16 --> IMPORT_FIXUP17
+  IMPORT_FIXUP18["IMPORT_FIXUP18 Import.OuterIndex = NewPackageIndex;<br/>LinkerLoad.cpp:1711"]
+  IMPORT_FIXUP17 --> IMPORT_FIXUP18
+  IMPORT_FIXUP19["IMPORT_FIXUP19 NewPackageImports.AddUnique(NewObjectName.PackageName);<br/>LinkerLoad.cpp:1716"]
+  IMPORT_FIXUP18 --> IMPORT_FIXUP19
+  IMPORT_FIXUP20["IMPORT_FIXUP20 if (NewClassName != OldClassName)<br/>LinkerLoad.cpp:1736"]
+  IMPORT_FIXUP19 --> IMPORT_FIXUP20
+  IMPORT_FIXUP21["IMPORT_FIXUP21 if (!FindImportPackage(NewClassName.PackageName, NewPackageIndex))<br/>LinkerLoad.cpp:1743"]
+  IMPORT_FIXUP20 --> IMPORT_FIXUP21
+  IMPORT_FIXUP22["IMPORT_FIXUP22 NewPackageImports.AddUnique(NewClassName.PackageName);<br/>LinkerLoad.cpp:1746"]
+  IMPORT_FIXUP21 --> IMPORT_FIXUP22
+  IMPORT_FIXUP23["IMPORT_FIXUP23 Import.ClassPackage = NewClassName.PackageName;<br/>LinkerLoad.cpp:1755"]
+  IMPORT_FIXUP22 --> IMPORT_FIXUP23
+  IMPORT_FIXUP24["IMPORT_FIXUP24 if (NewDefaultObjectName.StartsWith(DEFAULT_OBJECT_PREFIX))<br/>LinkerLoad.cpp:1761"]
+  IMPORT_FIXUP23 --> IMPORT_FIXUP24
+  IMPORT_FIXUP25["IMPORT_FIXUP25 Import.ObjectName = FName(*NewDefaultObjectName);<br/>LinkerLoad.cpp:1765"]
+  IMPORT_FIXUP24 --> IMPORT_FIXUP25
+  IMPORT_FIXUP26["IMPORT_FIXUP26 for (FName NewPackage : NewPackageImports)<br/>LinkerLoad.cpp:1773"]
+  IMPORT_FIXUP25 --> IMPORT_FIXUP26
+  IMPORT_FIXUP27["IMPORT_FIXUP27 FObjectImport* NewImport = new (ImportMap) FObjectImport();<br/>LinkerLoad.cpp:1776"]
+  IMPORT_FIXUP26 --> IMPORT_FIXUP27
+  IMPORT_FIXUP28["IMPORT_FIXUP28 // Clear any packages that got renamed, once all children have been...<br/>LinkerLoad.cpp:1788"]
+  IMPORT_FIXUP27 --> IMPORT_FIXUP28
+  IMPORT_FIXUP29["IMPORT_FIXUP29 Import.ObjectName = NAME_None;<br/>LinkerLoad.cpp:1793"]
+  IMPORT_FIXUP28 --> IMPORT_FIXUP29
+  IMPORT_FIXUP30["IMPORT_FIXUP30 bHasFixedUpImportMap = true;<br/>LinkerLoad.cpp:1798"]
+  IMPORT_FIXUP29 --> IMPORT_FIXUP30
+  IMPORT_FIXUP31["IMPORT_FIXUP31 return IsTimeLimitExceeded( TEXT('fixing up import map') ) ? LINKER...<br/>LinkerLoad.cpp:1800"]
+  IMPORT_FIXUP30 --> IMPORT_FIXUP31

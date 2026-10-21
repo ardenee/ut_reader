@@ -23,6 +23,7 @@ th{background:#e9eff4}tr{page-break-inside:avoid}thead{display:table-header-grou
 <tr><td>EngineVersionBase.h</td><td><code>13FA34A8F2D6D5C01AC492E998AF8D25543B7ED159296CD08BCD1EB29A6DFB4C</code></td></tr>
 <tr><td>ObjectMacros.h</td><td><code>2BCF3EB5BA3013602FB5C02325DCFEF9B427779D3391A32D0F90D5D7A12FE20F</code></td></tr>
 <tr><td>Linker.h</td><td><code>040C05FF670E730CDC5A4CE83A1F2985A88F7ABC1E72C369FC5FC6A75CE5E2B3</code></td></tr>
+<tr><td>ObjectResource.h</td><td><code>E5ACE0B0A756ED4E1E0F79427F5B48F9F7086779CA4B1E7DD0E4124F2A038B57</code></td></tr>
 </table><p>Diagram arrows show source statement order only. Every relevant
  C++ conditional must be followed at its cited source line.</p>
 <h2>Version symbols in the original Epic source</h2>
@@ -35,6 +36,7 @@ th{background:#e9eff4}tr{page-break-inside:avoid}thead{display:table-header-grou
 <tr><td><code>VER_UE4_ADDED_PACKAGE_SUMMARY_LOCALIZATION_ID</code></td><td>ObjectVersion.h:631</td></tr>
 <tr><td><code>VER_UE4_ADDED_SEARCHABLE_NAMES</code></td><td>ObjectVersion.h:619</td></tr>
 <tr><td><code>VER_UE4_ADD_STRING_ASSET_REFERENCES_MAP</code></td><td>ObjectVersion.h:364</td></tr>
+<tr><td><code>VER_UE4_BLUEPRINT_GENERATED_CLASS_COMPONENT_TEMPLATES_PUBLIC</code></td><td>ObjectVersion.h:475</td></tr>
 <tr><td><code>VER_UE4_CHANGED_CHUNKID_TO_BE_AN_ARRAY_OF_CHUNKIDS</code></td><td>ObjectVersion.h:245</td></tr>
 <tr><td><code>VER_UE4_COOKED_ASSETS_IN_EDITOR_SUPPORT</code></td><td>ObjectVersion.h:569</td></tr>
 <tr><td><code>VER_UE4_CORRECT_LICENSEE_FLAG</code></td><td>ObjectVersion.h:643</td></tr>
@@ -45,6 +47,7 @@ th{background:#e9eff4}tr{page-break-inside:avoid}thead{display:table-header-grou
 <tr><td><code>VER_UE4_PACKAGE_SUMMARY_HAS_COMPATIBLE_ENGINE_VERSION</code></td><td>ObjectVersion.h:487</td></tr>
 <tr><td><code>VER_UE4_PRELOAD_DEPENDENCIES_IN_COOKED_EXPORTS</code></td><td>ObjectVersion.h:613</td></tr>
 <tr><td><code>VER_UE4_SERIALIZE_TEXT_IN_PACKAGES</code></td><td>ObjectVersion.h:517</td></tr>
+<tr><td><code>VER_UE4_SKIP_DUPLICATE_EXPORTS_ON_SAVE_PACKAGE</code></td><td>ObjectVersion.h:515</td></tr>
 <tr><td><code>VER_UE4_TemplateIndex_IN_COOKED_EXPORTS</code></td><td>ObjectVersion.h:615</td></tr>
 <tr><td><code>VER_UE4_WORLD_LEVEL_INFO</code></td><td>ObjectVersion.h:39</td></tr>
 </table>
@@ -419,10 +422,170 @@ th{background:#e9eff4}tr{page-break-inside:avoid}thead{display:table-header-grou
 <h3>Serialized fields in source order</h3><table><tr><th>Source</th><th>Serialized field</th></tr>
 <tr><td>—</td><td>No direct SA_VALUE sites in this function</td></tr>
 </table>
+<h2>FLinkerLoad::FixupImportMap — CoreRedirects and package additions</h2>
+<p><b>Epic function:</b> LinkerLoad.cpp:1624</p>
+<table><thead><tr><th>Step</th><th>Source</th><th>Exact Epic statement</th></tr></thead><tbody>
+<tr><td>IMPORT_FIXUP01</td><td>LinkerLoad.cpp:1624</td><td class='snippet'>FLinkerLoad::ELinkerStatus FLinkerLoad::FixupImportMap()</td></tr>
+<tr><td>IMPORT_FIXUP02</td><td>LinkerLoad.cpp:1628</td><td class='snippet'>if( bHasFixedUpImportMap == false )</td></tr>
+<tr><td>IMPORT_FIXUP03</td><td>LinkerLoad.cpp:1637</td><td class='snippet'>if (!FPlatformProperties::RequiresCookedData())</td></tr>
+<tr><td>IMPORT_FIXUP04</td><td>LinkerLoad.cpp:1641</td><td class='snippet'>TArray&lt;int32&gt; PackageIndexesToClear;</td></tr>
+<tr><td>IMPORT_FIXUP05</td><td>LinkerLoad.cpp:1644</td><td class='snippet'>while (!bDone)</td></tr>
+<tr><td>IMPORT_FIXUP06</td><td>LinkerLoad.cpp:1649</td><td class='snippet'>for( int32 i=0; i&lt;ImportMap.Num(); i++ )</td></tr>
+<tr><td>IMPORT_FIXUP07</td><td>LinkerLoad.cpp:1657</td><td class='snippet'>FCoreRedirects::RedirectNameAndValues(ECoreRedirectFlags::Type_Class, OldClassName, NewClassName, &amp;ClassValueRedirect);</td></tr>
+<tr><td>IMPORT_FIXUP08</td><td>LinkerLoad.cpp:1662</td><td class='snippet'>const FString* NewInstanceName = ClassValueRedirect-&gt;ValueChanges.Find(Import.ObjectName.ToString());</td></tr>
+<tr><td>IMPORT_FIXUP09</td><td>LinkerLoad.cpp:1667</td><td class='snippet'>Import.ObjectName = FName(**NewInstanceName);</td></tr>
+<tr><td>IMPORT_FIXUP10</td><td>LinkerLoad.cpp:1681</td><td class='snippet'>FCoreRedirectObjectName OldObjectName(GetImportPathName(i)), NewObjectName;</td></tr>
+<tr><td>IMPORT_FIXUP11</td><td>LinkerLoad.cpp:1685</td><td class='snippet'>FCoreRedirects::RedirectNameAndValues(ObjectRedirectFlags, OldObjectName, NewObjectName, &amp;ValueRedirect);</td></tr>
+<tr><td>IMPORT_FIXUP12</td><td>LinkerLoad.cpp:1687</td><td class='snippet'>if (ValueRedirect &amp;&amp; ValueRedirect-&gt;OverrideClassName.IsValid())</td></tr>
+<tr><td>IMPORT_FIXUP13</td><td>LinkerLoad.cpp:1693</td><td class='snippet'>if (NewObjectName != OldObjectName)</td></tr>
+<tr><td>IMPORT_FIXUP14</td><td>LinkerLoad.cpp:1695</td><td class='snippet'>if (Import.OuterIndex.IsNull())</td></tr>
+<tr><td>IMPORT_FIXUP15</td><td>LinkerLoad.cpp:1699</td><td class='snippet'>PackageIndexesToClear.Add(i);</td></tr>
+<tr><td>IMPORT_FIXUP16</td><td>LinkerLoad.cpp:1704</td><td class='snippet'>if (NewObjectName.OuterName == NAME_None &amp;&amp; NewObjectName.PackageName != OldObjectName.PackageName)</td></tr>
+<tr><td>IMPORT_FIXUP17</td><td>LinkerLoad.cpp:1708</td><td class='snippet'>if (FindImportPackage(NewObjectName.PackageName, NewPackageIndex))</td></tr>
+<tr><td>IMPORT_FIXUP18</td><td>LinkerLoad.cpp:1711</td><td class='snippet'>Import.OuterIndex = NewPackageIndex;</td></tr>
+<tr><td>IMPORT_FIXUP19</td><td>LinkerLoad.cpp:1716</td><td class='snippet'>NewPackageImports.AddUnique(NewObjectName.PackageName);</td></tr>
+<tr><td>IMPORT_FIXUP20</td><td>LinkerLoad.cpp:1736</td><td class='snippet'>if (NewClassName != OldClassName)</td></tr>
+<tr><td>IMPORT_FIXUP21</td><td>LinkerLoad.cpp:1743</td><td class='snippet'>if (!FindImportPackage(NewClassName.PackageName, NewPackageIndex))</td></tr>
+<tr><td>IMPORT_FIXUP22</td><td>LinkerLoad.cpp:1746</td><td class='snippet'>NewPackageImports.AddUnique(NewClassName.PackageName);</td></tr>
+<tr><td>IMPORT_FIXUP23</td><td>LinkerLoad.cpp:1755</td><td class='snippet'>Import.ClassPackage = NewClassName.PackageName;</td></tr>
+<tr><td>IMPORT_FIXUP24</td><td>LinkerLoad.cpp:1761</td><td class='snippet'>if (NewDefaultObjectName.StartsWith(DEFAULT_OBJECT_PREFIX))</td></tr>
+<tr><td>IMPORT_FIXUP25</td><td>LinkerLoad.cpp:1765</td><td class='snippet'>Import.ObjectName = FName(*NewDefaultObjectName);</td></tr>
+<tr><td>IMPORT_FIXUP26</td><td>LinkerLoad.cpp:1773</td><td class='snippet'>for (FName NewPackage : NewPackageImports)</td></tr>
+<tr><td>IMPORT_FIXUP27</td><td>LinkerLoad.cpp:1776</td><td class='snippet'>FObjectImport* NewImport = new (ImportMap) FObjectImport();</td></tr>
+<tr><td>IMPORT_FIXUP28</td><td>LinkerLoad.cpp:1788</td><td class='snippet'>// Clear any packages that got renamed, once all children have been fixed up</td></tr>
+<tr><td>IMPORT_FIXUP29</td><td>LinkerLoad.cpp:1793</td><td class='snippet'>Import.ObjectName = NAME_None;</td></tr>
+<tr><td>IMPORT_FIXUP30</td><td>LinkerLoad.cpp:1798</td><td class='snippet'>bHasFixedUpImportMap = true;</td></tr>
+<tr><td>IMPORT_FIXUP31</td><td>LinkerLoad.cpp:1800</td><td class='snippet'>return IsTimeLimitExceeded( TEXT(&quot;fixing up import map&quot;) ) ? LINKER_TimedOut : LINKER_Loaded;</td></tr>
+</tbody></table>
+<h3>Conditional statements in this original Epic source path</h3><table><tr><th>Source</th><th>Original C++ condition</th></tr>
+<tr><td>LinkerLoad.cpp:1628</td><td class='snippet'>if( bHasFixedUpImportMap == false )</td></tr>
+<tr><td>LinkerLoad.cpp:1630</td><td class='snippet'>#if WITH_EDITOR</td></tr>
+<tr><td>LinkerLoad.cpp:1631</td><td class='snippet'>if (LoadProgressScope)</td></tr>
+<tr><td>LinkerLoad.cpp:1637</td><td class='snippet'>if (!FPlatformProperties::RequiresCookedData())</td></tr>
+<tr><td>LinkerLoad.cpp:1659</td><td class='snippet'>if (ClassValueRedirect)</td></tr>
+<tr><td>LinkerLoad.cpp:1663</td><td class='snippet'>if (NewInstanceName)</td></tr>
+<tr><td>LinkerLoad.cpp:1669</td><td class='snippet'>if (Import.ObjectName != NAME_None)</td></tr>
+<tr><td>LinkerLoad.cpp:1687</td><td class='snippet'>if (ValueRedirect &amp;&amp; ValueRedirect-&gt;OverrideClassName.IsValid())</td></tr>
+<tr><td>LinkerLoad.cpp:1693</td><td class='snippet'>if (NewObjectName != OldObjectName)</td></tr>
+<tr><td>LinkerLoad.cpp:1695</td><td class='snippet'>if (Import.OuterIndex.IsNull())</td></tr>
+<tr><td>LinkerLoad.cpp:1704</td><td class='snippet'>if (NewObjectName.OuterName == NAME_None &amp;&amp; NewObjectName.PackageName != OldObjectName.PackageName)</td></tr>
+<tr><td>LinkerLoad.cpp:1708</td><td class='snippet'>if (FindImportPackage(NewObjectName.PackageName, NewPackageIndex))</td></tr>
+<tr><td>LinkerLoad.cpp:1721</td><td class='snippet'>#if WITH_EDITOR</td></tr>
+<tr><td>LinkerLoad.cpp:1723</td><td class='snippet'>if (ObjectRedirectFlags == ECoreRedirectFlags::Type_Class)</td></tr>
+<tr><td>LinkerLoad.cpp:1736</td><td class='snippet'>if (NewClassName != OldClassName)</td></tr>
+<tr><td>LinkerLoad.cpp:1739</td><td class='snippet'>if (Import.ClassPackage != NewClassName.PackageName &amp;&amp; !IsCoreUObjectPackage(NewClassName.PackageName))</td></tr>
+<tr><td>LinkerLoad.cpp:1743</td><td class='snippet'>if (!FindImportPackage(NewClassName.PackageName, NewPackageIndex))</td></tr>
+<tr><td>LinkerLoad.cpp:1751</td><td class='snippet'>#if WITH_EDITOR</td></tr>
+<tr><td>LinkerLoad.cpp:1761</td><td class='snippet'>if (NewDefaultObjectName.StartsWith(DEFAULT_OBJECT_PREFIX))</td></tr>
+</table>
+<h3>Serialized fields in source order</h3><table><tr><th>Source</th><th>Serialized field</th></tr>
+<tr><td>—</td><td>No direct SA_VALUE sites in this function</td></tr>
+</table>
+<h2>FLinkerLoad::PopulateInstancingContext — source package mapping</h2>
+<p><b>Epic function:</b> LinkerLoad.cpp:1803</p>
+<table><thead><tr><th>Step</th><th>Source</th><th>Exact Epic statement</th></tr></thead><tbody>
+<tr><td>INSTANCING_FIXUP01</td><td>LinkerLoad.cpp:1803</td><td class='snippet'>FLinkerLoad::ELinkerStatus FLinkerLoad::PopulateInstancingContext()</td></tr>
+<tr><td>INSTANCING_FIXUP02</td><td>LinkerLoad.cpp:1807</td><td class='snippet'>if (!bHasPopulatedInstancingContext)</td></tr>
+<tr><td>INSTANCING_FIXUP03</td><td>LinkerLoad.cpp:1809</td><td class='snippet'>#if WITH_EDITOR</td></tr>
+<tr><td>INSTANCING_FIXUP04</td><td>LinkerLoad.cpp:1811</td><td class='snippet'>if (IsContextInstanced())</td></tr>
+<tr><td>INSTANCING_FIXUP05</td><td>LinkerLoad.cpp:1817</td><td class='snippet'>for (const FObjectExport&amp; Export : ExportMap)</td></tr>
+<tr><td>INSTANCING_FIXUP06</td><td>LinkerLoad.cpp:1819</td><td class='snippet'>if (Export.OuterIndex.IsImport())</td></tr>
+<tr><td>INSTANCING_FIXUP07</td><td>LinkerLoad.cpp:1822</td><td class='snippet'>while (Import-&gt;OuterIndex.IsImport())</td></tr>
+<tr><td>INSTANCING_FIXUP08</td><td>LinkerLoad.cpp:1824</td><td class='snippet'>if (Import-&gt;HasPackageName())</td></tr>
+<tr><td>INSTANCING_FIXUP09</td><td>LinkerLoad.cpp:1826</td><td class='snippet'>InstancingPackageName.Add(Import-&gt;PackageName);</td></tr>
+<tr><td>INSTANCING_FIXUP10</td><td>LinkerLoad.cpp:1830</td><td class='snippet'>check(Import-&gt;OuterIndex.IsNull() &amp;&amp; !Import-&gt;HasPackageName());</td></tr>
+<tr><td>INSTANCING_FIXUP11</td><td>LinkerLoad.cpp:1836</td><td class='snippet'>auto HasExportOuterChain = [this](const FObjectImport* InImport) -&gt; bool</td></tr>
+<tr><td>INSTANCING_FIXUP12</td><td>LinkerLoad.cpp:1845</td><td class='snippet'>for (const FObjectImport&amp; Import : ImportMap)</td></tr>
+<tr><td>INSTANCING_FIXUP13</td><td>LinkerLoad.cpp:1847</td><td class='snippet'>if (Import.HasPackageName() &amp;&amp; HasExportOuterChain(&amp;Import))</td></tr>
+<tr><td>INSTANCING_FIXUP14</td><td>LinkerLoad.cpp:1849</td><td class='snippet'>InstancingPackageName.Add(Import.PackageName);</td></tr>
+<tr><td>INSTANCING_FIXUP15</td><td>LinkerLoad.cpp:1854</td><td class='snippet'>for (const FName&amp; InstancingName : InstancingPackageName)</td></tr>
+<tr><td>INSTANCING_FIXUP16</td><td>LinkerLoad.cpp:1856</td><td class='snippet'>FName&amp; InstancedName = InstancingContext.Mapping.FindOrAdd(InstancingName);</td></tr>
+<tr><td>INSTANCING_FIXUP17</td><td>LinkerLoad.cpp:1858</td><td class='snippet'>if (InstancedName.IsNone())</td></tr>
+<tr><td>INSTANCING_FIXUP18</td><td>LinkerLoad.cpp:1860</td><td class='snippet'>InstancedName = *FString::Printf(TEXT(&quot;%s_InstanceOf_%s&quot;), *InstancingName.ToString(), *LinkerPackageName);</td></tr>
+<tr><td>INSTANCING_FIXUP19</td><td>LinkerLoad.cpp:1866</td><td class='snippet'>bHasPopulatedInstancingContext = true;</td></tr>
+<tr><td>INSTANCING_FIXUP20</td><td>LinkerLoad.cpp:1868</td><td class='snippet'>return IsTimeLimitExceeded(TEXT(&quot;populating instancing context&quot;)) ? LINKER_TimedOut : LINKER_Loaded;</td></tr>
+</tbody></table>
+<h3>Conditional statements in this original Epic source path</h3><table><tr><th>Source</th><th>Original C++ condition</th></tr>
+<tr><td>LinkerLoad.cpp:1807</td><td class='snippet'>if (!bHasPopulatedInstancingContext)</td></tr>
+<tr><td>LinkerLoad.cpp:1809</td><td class='snippet'>#if WITH_EDITOR</td></tr>
+<tr><td>LinkerLoad.cpp:1811</td><td class='snippet'>if (IsContextInstanced())</td></tr>
+<tr><td>LinkerLoad.cpp:1819</td><td class='snippet'>if (Export.OuterIndex.IsImport())</td></tr>
+<tr><td>LinkerLoad.cpp:1824</td><td class='snippet'>if (Import-&gt;HasPackageName())</td></tr>
+<tr><td>LinkerLoad.cpp:1847</td><td class='snippet'>if (Import.HasPackageName() &amp;&amp; HasExportOuterChain(&amp;Import))</td></tr>
+<tr><td>LinkerLoad.cpp:1858</td><td class='snippet'>if (InstancedName.IsNone())</td></tr>
+</table>
+<h3>Serialized fields in source order</h3><table><tr><th>Source</th><th>Serialized field</th></tr>
+<tr><td>—</td><td>No direct SA_VALUE sites in this function</td></tr>
+</table>
+<h2>FLinkerLoad::FixupExportMap — class validation, corrections, redirects</h2>
+<p><b>Epic function:</b> LinkerLoad.cpp:5814</p>
+<table><thead><tr><th>Step</th><th>Source</th><th>Exact Epic statement</th></tr></thead><tbody>
+<tr><td>EXPORT_FIXUP01</td><td>LinkerLoad.cpp:5814</td><td class='snippet'>FLinkerLoad::ELinkerStatus FLinkerLoad::FixupExportMap()</td></tr>
+<tr><td>EXPORT_FIXUP02</td><td>LinkerLoad.cpp:5818</td><td class='snippet'>#if WITH_EDITOR</td></tr>
+<tr><td>EXPORT_FIXUP03</td><td>LinkerLoad.cpp:5819</td><td class='snippet'>if (UE4Ver() &lt; VER_UE4_SKIP_DUPLICATE_EXPORTS_ON_SAVE_PACKAGE &amp;&amp; !bExportsDuplicatesFixed)</td></tr>
+<tr><td>EXPORT_FIXUP04</td><td>LinkerLoad.cpp:5821</td><td class='snippet'>FixupDuplicateExports();</td></tr>
+<tr><td>EXPORT_FIXUP05</td><td>LinkerLoad.cpp:5827</td><td class='snippet'>if (!FPlatformProperties::RequiresCookedData())</td></tr>
+<tr><td>EXPORT_FIXUP06</td><td>LinkerLoad.cpp:5829</td><td class='snippet'>if (bFixupExportMapDone)</td></tr>
+<tr><td>EXPORT_FIXUP07</td><td>LinkerLoad.cpp:5834</td><td class='snippet'>for ( int32 ExportMapIdx = 0; ExportMapIdx &lt; ExportMap.Num(); ExportMapIdx++ )</td></tr>
+<tr><td>EXPORT_FIXUP08</td><td>LinkerLoad.cpp:5837</td><td class='snippet'>if (!IsValidPackageIndex(Export.ClassIndex))</td></tr>
+<tr><td>EXPORT_FIXUP09</td><td>LinkerLoad.cpp:5848</td><td class='snippet'>if (UE4Ver() &lt; VER_UE4_BLUEPRINT_GENERATED_CLASS_COMPONENT_TEMPLATES_PUBLIC)</td></tr>
+<tr><td>EXPORT_FIXUP10</td><td>LinkerLoad.cpp:5850</td><td class='snippet'>if ((Export.ObjectFlags &amp; RF_Public) == 0)</td></tr>
+<tr><td>EXPORT_FIXUP11</td><td>LinkerLoad.cpp:5855</td><td class='snippet'>if (OuterClassName == NAME_BlueprintGeneratedClass || OuterClassName == NAME_Blueprint)</td></tr>
+<tr><td>EXPORT_FIXUP12</td><td>LinkerLoad.cpp:5865</td><td class='snippet'>if (    ((Class != nullptr) &amp;&amp; Class-&gt;IsChildOf(ActorComponentClass))</td></tr>
+<tr><td>EXPORT_FIXUP13</td><td>LinkerLoad.cpp:5868</td><td class='snippet'>Export.ObjectFlags |= RF_Public;</td></tr>
+<tr><td>EXPORT_FIXUP14</td><td>LinkerLoad.cpp:5877</td><td class='snippet'>const TMap&lt;FString, FString&gt;* ValueChanges = FCoreRedirects::GetValueRedirects(ECoreRedirectFlags::Type_Class, OldClassName);</td></tr>
+<tr><td>EXPORT_FIXUP15</td><td>LinkerLoad.cpp:5879</td><td class='snippet'>if (ValueChanges)</td></tr>
+<tr><td>EXPORT_FIXUP16</td><td>LinkerLoad.cpp:5883</td><td class='snippet'>if (NewInstanceName)</td></tr>
+<tr><td>EXPORT_FIXUP17</td><td>LinkerLoad.cpp:5887</td><td class='snippet'>Export.ObjectName = FName(**NewInstanceName);</td></tr>
+<tr><td>EXPORT_FIXUP18</td><td>LinkerLoad.cpp:5896</td><td class='snippet'>Export.bExportLoadFailed = true;</td></tr>
+<tr><td>EXPORT_FIXUP19</td><td>LinkerLoad.cpp:5903</td><td class='snippet'>if (!StrObjectName.StartsWith(DEFAULT_OBJECT_PREFIX))</td></tr>
+<tr><td>EXPORT_FIXUP20</td><td>LinkerLoad.cpp:5905</td><td class='snippet'>FCoreRedirectObjectName NewClassInstanceName = FCoreRedirects::GetRedirectedName(ECoreRedirectFlags::Type_Class | ECoreRedirectFlags::Category_InstanceOnly, OldClassName);</td></tr>
+<tr><td>EXPORT_FIXUP21</td><td>LinkerLoad.cpp:5907</td><td class='snippet'>bool bClassInstanceDeleted = FCoreRedirects::IsKnownMissing(ECoreRedirectFlags::Type_Class | ECoreRedirectFlags::Category_InstanceOnly, OldClassName);</td></tr>
+<tr><td>EXPORT_FIXUP22</td><td>LinkerLoad.cpp:5908</td><td class='snippet'>if (bClassInstanceDeleted)</td></tr>
+<tr><td>EXPORT_FIXUP23</td><td>LinkerLoad.cpp:5913</td><td class='snippet'>Export.ClassIndex = FPackageIndex();</td></tr>
+<tr><td>EXPORT_FIXUP24</td><td>LinkerLoad.cpp:5915</td><td class='snippet'>Export.ObjectName = NAME_None;</td></tr>
+<tr><td>EXPORT_FIXUP25</td><td>LinkerLoad.cpp:5920</td><td class='snippet'>else if (NewClassInstanceName != OldClassName)</td></tr>
+<tr><td>EXPORT_FIXUP26</td><td>LinkerLoad.cpp:5925</td><td class='snippet'>if (CreateImportClassAndPackage(NewClassInstanceName.ObjectName, NewClassInstanceName.PackageName, NewClassIndex, NewPackageIndex))</td></tr>
+<tr><td>EXPORT_FIXUP27</td><td>LinkerLoad.cpp:5927</td><td class='snippet'>Export.ClassIndex = NewClassIndex;</td></tr>
+<tr><td>EXPORT_FIXUP28</td><td>LinkerLoad.cpp:5942</td><td class='snippet'>bFixupExportMapDone = true;</td></tr>
+<tr><td>EXPORT_FIXUP29</td><td>LinkerLoad.cpp:5943</td><td class='snippet'>return !IsTimeLimitExceeded( TEXT(&quot;fixing up export map&quot;) ) ? LINKER_Loaded : LINKER_TimedOut;</td></tr>
+</tbody></table>
+<h3>Conditional statements in this original Epic source path</h3><table><tr><th>Source</th><th>Original C++ condition</th></tr>
+<tr><td>LinkerLoad.cpp:5818</td><td class='snippet'>#if WITH_EDITOR</td></tr>
+<tr><td>LinkerLoad.cpp:5819</td><td class='snippet'>if (UE4Ver() &lt; VER_UE4_SKIP_DUPLICATE_EXPORTS_ON_SAVE_PACKAGE &amp;&amp; !bExportsDuplicatesFixed)</td></tr>
+<tr><td>LinkerLoad.cpp:5827</td><td class='snippet'>if (!FPlatformProperties::RequiresCookedData())</td></tr>
+<tr><td>LinkerLoad.cpp:5829</td><td class='snippet'>if (bFixupExportMapDone)</td></tr>
+<tr><td>LinkerLoad.cpp:5837</td><td class='snippet'>if (!IsValidPackageIndex(Export.ClassIndex))</td></tr>
+<tr><td>LinkerLoad.cpp:5848</td><td class='snippet'>if (UE4Ver() &lt; VER_UE4_BLUEPRINT_GENERATED_CLASS_COMPONENT_TEMPLATES_PUBLIC)</td></tr>
+<tr><td>LinkerLoad.cpp:5850</td><td class='snippet'>if ((Export.ObjectFlags &amp; RF_Public) == 0)</td></tr>
+<tr><td>LinkerLoad.cpp:5855</td><td class='snippet'>if (OuterClassName == NAME_BlueprintGeneratedClass || OuterClassName == NAME_Blueprint)</td></tr>
+<tr><td>LinkerLoad.cpp:5865</td><td class='snippet'>if (    ((Class != nullptr) &amp;&amp; Class-&gt;IsChildOf(ActorComponentClass))</td></tr>
+<tr><td>LinkerLoad.cpp:5879</td><td class='snippet'>if (ValueChanges)</td></tr>
+<tr><td>LinkerLoad.cpp:5883</td><td class='snippet'>if (NewInstanceName)</td></tr>
+<tr><td>LinkerLoad.cpp:5889</td><td class='snippet'>if (Export.ObjectName != NAME_None)</td></tr>
+<tr><td>LinkerLoad.cpp:5903</td><td class='snippet'>if (!StrObjectName.StartsWith(DEFAULT_OBJECT_PREFIX))</td></tr>
+<tr><td>LinkerLoad.cpp:5908</td><td class='snippet'>if (bClassInstanceDeleted)</td></tr>
+<tr><td>LinkerLoad.cpp:5916</td><td class='snippet'>#if WITH_EDITOR</td></tr>
+<tr><td>LinkerLoad.cpp:5920</td><td class='snippet'>else if (NewClassInstanceName != OldClassName)</td></tr>
+<tr><td>LinkerLoad.cpp:5925</td><td class='snippet'>if (CreateImportClassAndPackage(NewClassInstanceName.ObjectName, NewClassInstanceName.PackageName, NewClassIndex, NewPackageIndex))</td></tr>
+<tr><td>LinkerLoad.cpp:5928</td><td class='snippet'>#if WITH_EDITOR</td></tr>
+</table>
+<h3>Serialized fields in source order</h3><table><tr><th>Source</th><th>Serialized field</th></tr>
+<tr><td>—</td><td>No direct SA_VALUE sites in this function</td></tr>
+</table>
+<h2>FPackageIndex default null constructor</h2>
+<p><b>Epic function:</b> ObjectResource.h:38</p>
+<table><thead><tr><th>Step</th><th>Source</th><th>Exact Epic statement</th></tr></thead><tbody>
+<tr><td>PACKAGE_INDEX_CTOR01</td><td>ObjectResource.h:38</td><td class='snippet'>FORCEINLINE FPackageIndex()</td></tr>
+<tr><td>PACKAGE_INDEX_CTOR02</td><td>ObjectResource.h:39</td><td class='snippet'>: Index(0)</td></tr>
+</tbody></table>
+<h3>Conditional statements in this original Epic source path</h3><table><tr><th>Source</th><th>Original C++ condition</th></tr>
+</table>
+<h3>Serialized fields in source order</h3><table><tr><th>Source</th><th>Serialized field</th></tr>
+<tr><td>—</td><td>No direct SA_VALUE sites in this function</td></tr>
+</table>
 <h2>Unexpanded calls / format coverage</h2><p>These must be traced before any whole-file compliance claim.</p><ul>
 <li>CreateLoader dispatch and archive selection</li>
-<li>FixupImportMap / CoreRedirects and config</li>
-<li>FixupExportMap and class conversions</li>
 <li>GetPackageLinker / provider selection</li>
 <li>SerializePreloadDependencies full body</li>
 <li>FinaliseCreation / LoadAllObjects</li>
@@ -431,4 +594,7 @@ th{background:#e9eff4}tr{page-break-inside:avoid}thead{display:table-header-grou
 <li>Platform, target, cooked, text archive, IoStore branch separation</li>
 <li>SavePackage2 complete writer branches</li>
 <li>FLinker::FilterExport target-context inputs: WITH_EDITOR, FilterClientButNotServer, FilterServerButNotClient, bExportLoadFailed and previously filtered state</li>
+<li>FCoreRedirects registered source configuration, RedirectNameAndValues and ValueChanges implementation</li>
+<li>FLinkerLoad::FixupDuplicateExports, FindImportPackage and CreateImportClassAndPackage implementation</li>
+<li>Runtime HasExportOuterChain, linker instancing remap inputs, UObject actor-component class hierarchy and target platform cooked-data state</li>
 </ul></body></html>

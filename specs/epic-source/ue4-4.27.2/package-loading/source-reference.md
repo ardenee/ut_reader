@@ -22,6 +22,7 @@ authoritative when reading any abbreviated table or diagram.
 | `EngineVersionBase.h` | `13FA34A8F2D6D5C01AC492E998AF8D25543B7ED159296CD08BCD1EB29A6DFB4C` |
 | `ObjectMacros.h` | `2BCF3EB5BA3013602FB5C02325DCFEF9B427779D3391A32D0F90D5D7A12FE20F` |
 | `Linker.h` | `040C05FF670E730CDC5A4CE83A1F2985A88F7ABC1E72C369FC5FC6A75CE5E2B3` |
+| `ObjectResource.h` | `E5ACE0B0A756ED4E1E0F79427F5B48F9F7086779CA4B1E7DD0E4124F2A038B57` |
 
 ## How to read these views
 
@@ -50,6 +51,7 @@ and applicable preprocessor conditions.
 | `VER_UE4_ADDED_PACKAGE_SUMMARY_LOCALIZATION_ID` | `ObjectVersion.h:631` |
 | `VER_UE4_ADDED_SEARCHABLE_NAMES` | `ObjectVersion.h:619` |
 | `VER_UE4_ADD_STRING_ASSET_REFERENCES_MAP` | `ObjectVersion.h:364` |
+| `VER_UE4_BLUEPRINT_GENERATED_CLASS_COMPONENT_TEMPLATES_PUBLIC` | `ObjectVersion.h:475` |
 | `VER_UE4_CHANGED_CHUNKID_TO_BE_AN_ARRAY_OF_CHUNKIDS` | `ObjectVersion.h:245` |
 | `VER_UE4_COOKED_ASSETS_IN_EDITOR_SUPPORT` | `ObjectVersion.h:569` |
 | `VER_UE4_CORRECT_LICENSEE_FLAG` | `ObjectVersion.h:643` |
@@ -60,6 +62,7 @@ and applicable preprocessor conditions.
 | `VER_UE4_PACKAGE_SUMMARY_HAS_COMPATIBLE_ENGINE_VERSION` | `ObjectVersion.h:487` |
 | `VER_UE4_PRELOAD_DEPENDENCIES_IN_COOKED_EXPORTS` | `ObjectVersion.h:613` |
 | `VER_UE4_SERIALIZE_TEXT_IN_PACKAGES` | `ObjectVersion.h:517` |
+| `VER_UE4_SKIP_DUPLICATE_EXPORTS_ON_SAVE_PACKAGE` | `ObjectVersion.h:515` |
 | `VER_UE4_TemplateIndex_IN_COOKED_EXPORTS` | `ObjectVersion.h:615` |
 | `VER_UE4_WORLD_LEVEL_INFO` | `ObjectVersion.h:39` |
 
@@ -555,13 +558,217 @@ and applicable preprocessor conditions.
 
 **12 source-anchored navigation nodes; 0 original conditional-directive lines; 0 serialized field sites.**
 
+## FLinkerLoad::FixupImportMap — CoreRedirects and package additions
+
+**Epic function:** `LinkerLoad.cpp:1624`
+
+| Step | Original source location | Exact C++ statement |
+|---|---|---|
+| `IMPORT_FIXUP01` | `LinkerLoad.cpp:1624` | `FLinkerLoad::ELinkerStatus FLinkerLoad::FixupImportMap()` |
+| `IMPORT_FIXUP02` | `LinkerLoad.cpp:1628` | `if( bHasFixedUpImportMap == false )` |
+| `IMPORT_FIXUP03` | `LinkerLoad.cpp:1637` | `if (!FPlatformProperties::RequiresCookedData())` |
+| `IMPORT_FIXUP04` | `LinkerLoad.cpp:1641` | `TArray<int32> PackageIndexesToClear;` |
+| `IMPORT_FIXUP05` | `LinkerLoad.cpp:1644` | `while (!bDone)` |
+| `IMPORT_FIXUP06` | `LinkerLoad.cpp:1649` | `for( int32 i=0; i<ImportMap.Num(); i++ )` |
+| `IMPORT_FIXUP07` | `LinkerLoad.cpp:1657` | `FCoreRedirects::RedirectNameAndValues(ECoreRedirectFlags::Type_Class, OldClassName, NewClassName, &ClassValueRedirect);` |
+| `IMPORT_FIXUP08` | `LinkerLoad.cpp:1662` | `const FString* NewInstanceName = ClassValueRedirect->ValueChanges.Find(Import.ObjectName.ToString());` |
+| `IMPORT_FIXUP09` | `LinkerLoad.cpp:1667` | `Import.ObjectName = FName(**NewInstanceName);` |
+| `IMPORT_FIXUP10` | `LinkerLoad.cpp:1681` | `FCoreRedirectObjectName OldObjectName(GetImportPathName(i)), NewObjectName;` |
+| `IMPORT_FIXUP11` | `LinkerLoad.cpp:1685` | `FCoreRedirects::RedirectNameAndValues(ObjectRedirectFlags, OldObjectName, NewObjectName, &ValueRedirect);` |
+| `IMPORT_FIXUP12` | `LinkerLoad.cpp:1687` | `if (ValueRedirect && ValueRedirect->OverrideClassName.IsValid())` |
+| `IMPORT_FIXUP13` | `LinkerLoad.cpp:1693` | `if (NewObjectName != OldObjectName)` |
+| `IMPORT_FIXUP14` | `LinkerLoad.cpp:1695` | `if (Import.OuterIndex.IsNull())` |
+| `IMPORT_FIXUP15` | `LinkerLoad.cpp:1699` | `PackageIndexesToClear.Add(i);` |
+| `IMPORT_FIXUP16` | `LinkerLoad.cpp:1704` | `if (NewObjectName.OuterName == NAME_None && NewObjectName.PackageName != OldObjectName.PackageName)` |
+| `IMPORT_FIXUP17` | `LinkerLoad.cpp:1708` | `if (FindImportPackage(NewObjectName.PackageName, NewPackageIndex))` |
+| `IMPORT_FIXUP18` | `LinkerLoad.cpp:1711` | `Import.OuterIndex = NewPackageIndex;` |
+| `IMPORT_FIXUP19` | `LinkerLoad.cpp:1716` | `NewPackageImports.AddUnique(NewObjectName.PackageName);` |
+| `IMPORT_FIXUP20` | `LinkerLoad.cpp:1736` | `if (NewClassName != OldClassName)` |
+| `IMPORT_FIXUP21` | `LinkerLoad.cpp:1743` | `if (!FindImportPackage(NewClassName.PackageName, NewPackageIndex))` |
+| `IMPORT_FIXUP22` | `LinkerLoad.cpp:1746` | `NewPackageImports.AddUnique(NewClassName.PackageName);` |
+| `IMPORT_FIXUP23` | `LinkerLoad.cpp:1755` | `Import.ClassPackage = NewClassName.PackageName;` |
+| `IMPORT_FIXUP24` | `LinkerLoad.cpp:1761` | `if (NewDefaultObjectName.StartsWith(DEFAULT_OBJECT_PREFIX))` |
+| `IMPORT_FIXUP25` | `LinkerLoad.cpp:1765` | `Import.ObjectName = FName(*NewDefaultObjectName);` |
+| `IMPORT_FIXUP26` | `LinkerLoad.cpp:1773` | `for (FName NewPackage : NewPackageImports)` |
+| `IMPORT_FIXUP27` | `LinkerLoad.cpp:1776` | `FObjectImport* NewImport = new (ImportMap) FObjectImport();` |
+| `IMPORT_FIXUP28` | `LinkerLoad.cpp:1788` | `// Clear any packages that got renamed, once all children have been fixed up` |
+| `IMPORT_FIXUP29` | `LinkerLoad.cpp:1793` | `Import.ObjectName = NAME_None;` |
+| `IMPORT_FIXUP30` | `LinkerLoad.cpp:1798` | `bHasFixedUpImportMap = true;` |
+| `IMPORT_FIXUP31` | `LinkerLoad.cpp:1800` | `return IsTimeLimitExceeded( TEXT("fixing up import map") ) ? LINKER_TimedOut : LINKER_Loaded;` |
+
+### Actual conditional statements in the original Epic source
+
+| Source line | Original C++ condition or compile-time directive |
+|---|---|
+| `LinkerLoad.cpp:1628` | `if( bHasFixedUpImportMap == false )` |
+| `LinkerLoad.cpp:1630` | `#if WITH_EDITOR` |
+| `LinkerLoad.cpp:1631` | `if (LoadProgressScope)` |
+| `LinkerLoad.cpp:1637` | `if (!FPlatformProperties::RequiresCookedData())` |
+| `LinkerLoad.cpp:1659` | `if (ClassValueRedirect)` |
+| `LinkerLoad.cpp:1663` | `if (NewInstanceName)` |
+| `LinkerLoad.cpp:1669` | `if (Import.ObjectName != NAME_None)` |
+| `LinkerLoad.cpp:1687` | `if (ValueRedirect && ValueRedirect->OverrideClassName.IsValid())` |
+| `LinkerLoad.cpp:1693` | `if (NewObjectName != OldObjectName)` |
+| `LinkerLoad.cpp:1695` | `if (Import.OuterIndex.IsNull())` |
+| `LinkerLoad.cpp:1704` | `if (NewObjectName.OuterName == NAME_None && NewObjectName.PackageName != OldObjectName.PackageName)` |
+| `LinkerLoad.cpp:1708` | `if (FindImportPackage(NewObjectName.PackageName, NewPackageIndex))` |
+| `LinkerLoad.cpp:1721` | `#if WITH_EDITOR` |
+| `LinkerLoad.cpp:1723` | `if (ObjectRedirectFlags == ECoreRedirectFlags::Type_Class)` |
+| `LinkerLoad.cpp:1736` | `if (NewClassName != OldClassName)` |
+| `LinkerLoad.cpp:1739` | `if (Import.ClassPackage != NewClassName.PackageName && !IsCoreUObjectPackage(NewClassName.PackageName))` |
+| `LinkerLoad.cpp:1743` | `if (!FindImportPackage(NewClassName.PackageName, NewPackageIndex))` |
+| `LinkerLoad.cpp:1751` | `#if WITH_EDITOR` |
+| `LinkerLoad.cpp:1761` | `if (NewDefaultObjectName.StartsWith(DEFAULT_OBJECT_PREFIX))` |
+
+### Serialized field sites in the Epic implementation
+
+| Source line | Field written/read by Epic |
+|---|---|
+| — | No direct SA_VALUE sites inside this section; follow its called serializer |
+
+**31 source-anchored navigation nodes; 19 original conditional-directive lines; 0 serialized field sites.**
+
+## FLinkerLoad::PopulateInstancingContext — source package mapping
+
+**Epic function:** `LinkerLoad.cpp:1803`
+
+| Step | Original source location | Exact C++ statement |
+|---|---|---|
+| `INSTANCING_FIXUP01` | `LinkerLoad.cpp:1803` | `FLinkerLoad::ELinkerStatus FLinkerLoad::PopulateInstancingContext()` |
+| `INSTANCING_FIXUP02` | `LinkerLoad.cpp:1807` | `if (!bHasPopulatedInstancingContext)` |
+| `INSTANCING_FIXUP03` | `LinkerLoad.cpp:1809` | `#if WITH_EDITOR` |
+| `INSTANCING_FIXUP04` | `LinkerLoad.cpp:1811` | `if (IsContextInstanced())` |
+| `INSTANCING_FIXUP05` | `LinkerLoad.cpp:1817` | `for (const FObjectExport& Export : ExportMap)` |
+| `INSTANCING_FIXUP06` | `LinkerLoad.cpp:1819` | `if (Export.OuterIndex.IsImport())` |
+| `INSTANCING_FIXUP07` | `LinkerLoad.cpp:1822` | `while (Import->OuterIndex.IsImport())` |
+| `INSTANCING_FIXUP08` | `LinkerLoad.cpp:1824` | `if (Import->HasPackageName())` |
+| `INSTANCING_FIXUP09` | `LinkerLoad.cpp:1826` | `InstancingPackageName.Add(Import->PackageName);` |
+| `INSTANCING_FIXUP10` | `LinkerLoad.cpp:1830` | `check(Import->OuterIndex.IsNull() && !Import->HasPackageName());` |
+| `INSTANCING_FIXUP11` | `LinkerLoad.cpp:1836` | `auto HasExportOuterChain = [this](const FObjectImport* InImport) -> bool` |
+| `INSTANCING_FIXUP12` | `LinkerLoad.cpp:1845` | `for (const FObjectImport& Import : ImportMap)` |
+| `INSTANCING_FIXUP13` | `LinkerLoad.cpp:1847` | `if (Import.HasPackageName() && HasExportOuterChain(&Import))` |
+| `INSTANCING_FIXUP14` | `LinkerLoad.cpp:1849` | `InstancingPackageName.Add(Import.PackageName);` |
+| `INSTANCING_FIXUP15` | `LinkerLoad.cpp:1854` | `for (const FName& InstancingName : InstancingPackageName)` |
+| `INSTANCING_FIXUP16` | `LinkerLoad.cpp:1856` | `FName& InstancedName = InstancingContext.Mapping.FindOrAdd(InstancingName);` |
+| `INSTANCING_FIXUP17` | `LinkerLoad.cpp:1858` | `if (InstancedName.IsNone())` |
+| `INSTANCING_FIXUP18` | `LinkerLoad.cpp:1860` | `InstancedName = *FString::Printf(TEXT("%s_InstanceOf_%s"), *InstancingName.ToString(), *LinkerPackageName);` |
+| `INSTANCING_FIXUP19` | `LinkerLoad.cpp:1866` | `bHasPopulatedInstancingContext = true;` |
+| `INSTANCING_FIXUP20` | `LinkerLoad.cpp:1868` | `return IsTimeLimitExceeded(TEXT("populating instancing context")) ? LINKER_TimedOut : LINKER_Loaded;` |
+
+### Actual conditional statements in the original Epic source
+
+| Source line | Original C++ condition or compile-time directive |
+|---|---|
+| `LinkerLoad.cpp:1807` | `if (!bHasPopulatedInstancingContext)` |
+| `LinkerLoad.cpp:1809` | `#if WITH_EDITOR` |
+| `LinkerLoad.cpp:1811` | `if (IsContextInstanced())` |
+| `LinkerLoad.cpp:1819` | `if (Export.OuterIndex.IsImport())` |
+| `LinkerLoad.cpp:1824` | `if (Import->HasPackageName())` |
+| `LinkerLoad.cpp:1847` | `if (Import.HasPackageName() && HasExportOuterChain(&Import))` |
+| `LinkerLoad.cpp:1858` | `if (InstancedName.IsNone())` |
+
+### Serialized field sites in the Epic implementation
+
+| Source line | Field written/read by Epic |
+|---|---|
+| — | No direct SA_VALUE sites inside this section; follow its called serializer |
+
+**20 source-anchored navigation nodes; 7 original conditional-directive lines; 0 serialized field sites.**
+
+## FLinkerLoad::FixupExportMap — class validation, corrections, redirects
+
+**Epic function:** `LinkerLoad.cpp:5814`
+
+| Step | Original source location | Exact C++ statement |
+|---|---|---|
+| `EXPORT_FIXUP01` | `LinkerLoad.cpp:5814` | `FLinkerLoad::ELinkerStatus FLinkerLoad::FixupExportMap()` |
+| `EXPORT_FIXUP02` | `LinkerLoad.cpp:5818` | `#if WITH_EDITOR` |
+| `EXPORT_FIXUP03` | `LinkerLoad.cpp:5819` | `if (UE4Ver() < VER_UE4_SKIP_DUPLICATE_EXPORTS_ON_SAVE_PACKAGE && !bExportsDuplicatesFixed)` |
+| `EXPORT_FIXUP04` | `LinkerLoad.cpp:5821` | `FixupDuplicateExports();` |
+| `EXPORT_FIXUP05` | `LinkerLoad.cpp:5827` | `if (!FPlatformProperties::RequiresCookedData())` |
+| `EXPORT_FIXUP06` | `LinkerLoad.cpp:5829` | `if (bFixupExportMapDone)` |
+| `EXPORT_FIXUP07` | `LinkerLoad.cpp:5834` | `for ( int32 ExportMapIdx = 0; ExportMapIdx < ExportMap.Num(); ExportMapIdx++ )` |
+| `EXPORT_FIXUP08` | `LinkerLoad.cpp:5837` | `if (!IsValidPackageIndex(Export.ClassIndex))` |
+| `EXPORT_FIXUP09` | `LinkerLoad.cpp:5848` | `if (UE4Ver() < VER_UE4_BLUEPRINT_GENERATED_CLASS_COMPONENT_TEMPLATES_PUBLIC)` |
+| `EXPORT_FIXUP10` | `LinkerLoad.cpp:5850` | `if ((Export.ObjectFlags & RF_Public) == 0)` |
+| `EXPORT_FIXUP11` | `LinkerLoad.cpp:5855` | `if (OuterClassName == NAME_BlueprintGeneratedClass \|\| OuterClassName == NAME_Blueprint)` |
+| `EXPORT_FIXUP12` | `LinkerLoad.cpp:5865` | `if (    ((Class != nullptr) && Class->IsChildOf(ActorComponentClass))` |
+| `EXPORT_FIXUP13` | `LinkerLoad.cpp:5868` | `Export.ObjectFlags \|= RF_Public;` |
+| `EXPORT_FIXUP14` | `LinkerLoad.cpp:5877` | `const TMap<FString, FString>* ValueChanges = FCoreRedirects::GetValueRedirects(ECoreRedirectFlags::Type_Class, OldClassName);` |
+| `EXPORT_FIXUP15` | `LinkerLoad.cpp:5879` | `if (ValueChanges)` |
+| `EXPORT_FIXUP16` | `LinkerLoad.cpp:5883` | `if (NewInstanceName)` |
+| `EXPORT_FIXUP17` | `LinkerLoad.cpp:5887` | `Export.ObjectName = FName(**NewInstanceName);` |
+| `EXPORT_FIXUP18` | `LinkerLoad.cpp:5896` | `Export.bExportLoadFailed = true;` |
+| `EXPORT_FIXUP19` | `LinkerLoad.cpp:5903` | `if (!StrObjectName.StartsWith(DEFAULT_OBJECT_PREFIX))` |
+| `EXPORT_FIXUP20` | `LinkerLoad.cpp:5905` | `FCoreRedirectObjectName NewClassInstanceName = FCoreRedirects::GetRedirectedName(ECoreRedirectFlags::Type_Class \| ECoreRedirectFlags::Category_InstanceOnly, OldClassName);` |
+| `EXPORT_FIXUP21` | `LinkerLoad.cpp:5907` | `bool bClassInstanceDeleted = FCoreRedirects::IsKnownMissing(ECoreRedirectFlags::Type_Class \| ECoreRedirectFlags::Category_InstanceOnly, OldClassName);` |
+| `EXPORT_FIXUP22` | `LinkerLoad.cpp:5908` | `if (bClassInstanceDeleted)` |
+| `EXPORT_FIXUP23` | `LinkerLoad.cpp:5913` | `Export.ClassIndex = FPackageIndex();` |
+| `EXPORT_FIXUP24` | `LinkerLoad.cpp:5915` | `Export.ObjectName = NAME_None;` |
+| `EXPORT_FIXUP25` | `LinkerLoad.cpp:5920` | `else if (NewClassInstanceName != OldClassName)` |
+| `EXPORT_FIXUP26` | `LinkerLoad.cpp:5925` | `if (CreateImportClassAndPackage(NewClassInstanceName.ObjectName, NewClassInstanceName.PackageName, NewClassIndex, NewPackageIndex))` |
+| `EXPORT_FIXUP27` | `LinkerLoad.cpp:5927` | `Export.ClassIndex = NewClassIndex;` |
+| `EXPORT_FIXUP28` | `LinkerLoad.cpp:5942` | `bFixupExportMapDone = true;` |
+| `EXPORT_FIXUP29` | `LinkerLoad.cpp:5943` | `return !IsTimeLimitExceeded( TEXT("fixing up export map") ) ? LINKER_Loaded : LINKER_TimedOut;` |
+
+### Actual conditional statements in the original Epic source
+
+| Source line | Original C++ condition or compile-time directive |
+|---|---|
+| `LinkerLoad.cpp:5818` | `#if WITH_EDITOR` |
+| `LinkerLoad.cpp:5819` | `if (UE4Ver() < VER_UE4_SKIP_DUPLICATE_EXPORTS_ON_SAVE_PACKAGE && !bExportsDuplicatesFixed)` |
+| `LinkerLoad.cpp:5827` | `if (!FPlatformProperties::RequiresCookedData())` |
+| `LinkerLoad.cpp:5829` | `if (bFixupExportMapDone)` |
+| `LinkerLoad.cpp:5837` | `if (!IsValidPackageIndex(Export.ClassIndex))` |
+| `LinkerLoad.cpp:5848` | `if (UE4Ver() < VER_UE4_BLUEPRINT_GENERATED_CLASS_COMPONENT_TEMPLATES_PUBLIC)` |
+| `LinkerLoad.cpp:5850` | `if ((Export.ObjectFlags & RF_Public) == 0)` |
+| `LinkerLoad.cpp:5855` | `if (OuterClassName == NAME_BlueprintGeneratedClass \|\| OuterClassName == NAME_Blueprint)` |
+| `LinkerLoad.cpp:5865` | `if (    ((Class != nullptr) && Class->IsChildOf(ActorComponentClass))` |
+| `LinkerLoad.cpp:5879` | `if (ValueChanges)` |
+| `LinkerLoad.cpp:5883` | `if (NewInstanceName)` |
+| `LinkerLoad.cpp:5889` | `if (Export.ObjectName != NAME_None)` |
+| `LinkerLoad.cpp:5903` | `if (!StrObjectName.StartsWith(DEFAULT_OBJECT_PREFIX))` |
+| `LinkerLoad.cpp:5908` | `if (bClassInstanceDeleted)` |
+| `LinkerLoad.cpp:5916` | `#if WITH_EDITOR` |
+| `LinkerLoad.cpp:5920` | `else if (NewClassInstanceName != OldClassName)` |
+| `LinkerLoad.cpp:5925` | `if (CreateImportClassAndPackage(NewClassInstanceName.ObjectName, NewClassInstanceName.PackageName, NewClassIndex, NewPackageIndex))` |
+| `LinkerLoad.cpp:5928` | `#if WITH_EDITOR` |
+
+### Serialized field sites in the Epic implementation
+
+| Source line | Field written/read by Epic |
+|---|---|
+| — | No direct SA_VALUE sites inside this section; follow its called serializer |
+
+**29 source-anchored navigation nodes; 18 original conditional-directive lines; 0 serialized field sites.**
+
+## FPackageIndex default null constructor
+
+**Epic function:** `ObjectResource.h:38`
+
+| Step | Original source location | Exact C++ statement |
+|---|---|---|
+| `PACKAGE_INDEX_CTOR01` | `ObjectResource.h:38` | `FORCEINLINE FPackageIndex()` |
+| `PACKAGE_INDEX_CTOR02` | `ObjectResource.h:39` | `: Index(0)` |
+
+### Actual conditional statements in the original Epic source
+
+| Source line | Original C++ condition or compile-time directive |
+|---|---|
+
+### Serialized field sites in the Epic implementation
+
+| Source line | Field written/read by Epic |
+|---|---|
+| — | No direct SA_VALUE sites inside this section; follow its called serializer |
+
+**2 source-anchored navigation nodes; 0 original conditional-directive lines; 0 serialized field sites.**
+
 ## Unexpanded calls and formats
 
 Not traced to their end here; no end-to-end completeness claim is permitted.
 
 - CreateLoader dispatch and archive selection
-- FixupImportMap / CoreRedirects and config
-- FixupExportMap and class conversions
 - GetPackageLinker / provider selection
 - SerializePreloadDependencies full body
 - FinaliseCreation / LoadAllObjects
@@ -570,3 +777,6 @@ Not traced to their end here; no end-to-end completeness claim is permitted.
 - Platform, target, cooked, text archive, IoStore branch separation
 - SavePackage2 complete writer branches
 - FLinker::FilterExport target-context inputs: WITH_EDITOR, FilterClientButNotServer, FilterServerButNotClient, bExportLoadFailed and previously filtered state
+- FCoreRedirects registered source configuration, RedirectNameAndValues and ValueChanges implementation
+- FLinkerLoad::FixupDuplicateExports, FindImportPackage and CreateImportClassAndPackage implementation
+- Runtime HasExportOuterChain, linker instancing remap inputs, UObject actor-component class hierarchy and target platform cooked-data state

@@ -197,7 +197,9 @@ final class Uedb5Ut4SnapshotBuilder
             'class_index' => (int)($row['classIndex'] ?? 0),
             'super_index' => (int)($row['superIndex'] ?? 0),
             'template_index_present' => (bool)($row['templateIndexPresent'] ?? false),
-            'template_index' => !empty($row['templateIndexPresent']) ? (int)($row['templateIndex'] ?? 0) : null,
+            // FPackageIndex() is null index 0 in original ObjectResource.h:38-40.
+            // Absent pre-508 wire field does not make the in-memory value null.
+            'template_index' => (int)($row['templateIndex'] ?? 0),
             'outer_index' => (int)($row['outerIndex'] ?? 0),
             'object_name' => self::fname((array)($row['objectName'] ?? [])),
             'object_flags' => self::u32Hex((int)($row['objectFlags'] ?? 0)),
@@ -209,13 +211,22 @@ final class Uedb5Ut4SnapshotBuilder
             'not_for_client' => (bool)($row['notForClient'] ?? false),
             'not_for_server' => (bool)($row['notForServer'] ?? false),
             'not_for_editor_game_present' => (bool)($row['notForEditorGamePresent'] ?? false),
-            'not_for_editor_game' => $row['notForEditorGame'] ?? null,
+            // Epic FObjectExport() constructor applies these values even
+            // before the version gates introduced their wire fields.
+            // Preserve the *effective* values plus separate presence bits.
+            'not_for_editor_game' => (bool)($row['notForEditorGame'] ?? true),
             'is_asset_present' => (bool)($row['isAssetPresent'] ?? false),
-            'is_asset' => $row['isAsset'] ?? null,
+            'is_asset' => (bool)($row['isAsset'] ?? false),
             'package_guid' => (string)($row['packageGuid'] ?? ''),
             'package_flags' => self::u32Hex((int)($row['packageFlags'] ?? 0)),
             'preload_present' => (bool)($row['preloadPresent'] ?? false),
-            'preload' => !empty($row['preloadPresent']) ? (array)($row['preload'] ?? []) : null,
+            'preload' => (array)($row['preload'] ?? [
+                'firstExportDependency' => -1,
+                'serializationBeforeSerializationDependencies' => 0,
+                'createBeforeSerializationDependencies' => 0,
+                'serializationBeforeCreateDependencies' => 0,
+                'createBeforeCreateDependencies' => 0,
+            ]),
         ];
     }
     /** @param array<string,mixed> $value @return array{name_index:int,number:int,text:string} */

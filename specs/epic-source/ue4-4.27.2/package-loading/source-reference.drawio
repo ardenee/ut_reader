@@ -649,4 +649,516 @@
       </root>
     </mxGraphModel>
   </diagram>
+  <diagram name="import_fixup" id="import_fixup">
+    <mxGraphModel dx="1300" dy="950" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" page="1" pageScale="1" pageWidth="1050" pageHeight="3745">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="IMPORT_FIXUP01" parent="1" vertex="1" value="IMPORT_FIXUP01 FLinkerLoad::ELinkerStatus FLinkerLoad::FixupImportMap()&lt;br/&gt;LinkerLoad.cpp:1624" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="85" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="IMPORT_FIXUP02" parent="1" vertex="1" value="IMPORT_FIXUP02 if( bHasFixedUpImportMap == false )&lt;br/&gt;LinkerLoad.cpp:1628" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="200" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="import_fixup_e2" parent="1" edge="1" source="IMPORT_FIXUP01" target="IMPORT_FIXUP02" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="IMPORT_FIXUP03" parent="1" vertex="1" value="IMPORT_FIXUP03 if (!FPlatformProperties::RequiresCookedData())&lt;br/&gt;LinkerLoad.cpp:1637" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="315" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="import_fixup_e3" parent="1" edge="1" source="IMPORT_FIXUP02" target="IMPORT_FIXUP03" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="IMPORT_FIXUP04" parent="1" vertex="1" value="IMPORT_FIXUP04 TArray&amp;lt;int32&amp;gt; PackageIndexesToClear;&lt;br/&gt;LinkerLoad.cpp:1641" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="430" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="import_fixup_e4" parent="1" edge="1" source="IMPORT_FIXUP03" target="IMPORT_FIXUP04" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="IMPORT_FIXUP05" parent="1" vertex="1" value="IMPORT_FIXUP05 while (!bDone)&lt;br/&gt;LinkerLoad.cpp:1644" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="545" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="import_fixup_e5" parent="1" edge="1" source="IMPORT_FIXUP04" target="IMPORT_FIXUP05" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="IMPORT_FIXUP06" parent="1" vertex="1" value="IMPORT_FIXUP06 for( int32 i=0; i&amp;lt;ImportMap.Num(); i++ )&lt;br/&gt;LinkerLoad.cpp:1649" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="660" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="import_fixup_e6" parent="1" edge="1" source="IMPORT_FIXUP05" target="IMPORT_FIXUP06" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="IMPORT_FIXUP07" parent="1" vertex="1" value="IMPORT_FIXUP07 FCoreRedirects::RedirectNameAndValues(ECoreRedirectFlags::Type_Clas...&lt;br/&gt;LinkerLoad.cpp:1657" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="775" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="import_fixup_e7" parent="1" edge="1" source="IMPORT_FIXUP06" target="IMPORT_FIXUP07" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="IMPORT_FIXUP08" parent="1" vertex="1" value="IMPORT_FIXUP08 const FString* NewInstanceName = ClassValueRedirect-&amp;gt;ValueChange...&lt;br/&gt;LinkerLoad.cpp:1662" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="890" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="import_fixup_e8" parent="1" edge="1" source="IMPORT_FIXUP07" target="IMPORT_FIXUP08" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="IMPORT_FIXUP09" parent="1" vertex="1" value="IMPORT_FIXUP09 Import.ObjectName = FName(**NewInstanceName);&lt;br/&gt;LinkerLoad.cpp:1667" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="1005" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="import_fixup_e9" parent="1" edge="1" source="IMPORT_FIXUP08" target="IMPORT_FIXUP09" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="IMPORT_FIXUP10" parent="1" vertex="1" value="IMPORT_FIXUP10 FCoreRedirectObjectName OldObjectName(GetImportPathName(i)), NewObj...&lt;br/&gt;LinkerLoad.cpp:1681" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="1120" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="import_fixup_e10" parent="1" edge="1" source="IMPORT_FIXUP09" target="IMPORT_FIXUP10" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="IMPORT_FIXUP11" parent="1" vertex="1" value="IMPORT_FIXUP11 FCoreRedirects::RedirectNameAndValues(ObjectRedirectFlags, OldObjec...&lt;br/&gt;LinkerLoad.cpp:1685" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="1235" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="import_fixup_e11" parent="1" edge="1" source="IMPORT_FIXUP10" target="IMPORT_FIXUP11" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="IMPORT_FIXUP12" parent="1" vertex="1" value="IMPORT_FIXUP12 if (ValueRedirect &amp;&amp; ValueRedirect-&amp;gt;OverrideClassName.IsValid())&lt;br/&gt;LinkerLoad.cpp:1687" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="1350" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="import_fixup_e12" parent="1" edge="1" source="IMPORT_FIXUP11" target="IMPORT_FIXUP12" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="IMPORT_FIXUP13" parent="1" vertex="1" value="IMPORT_FIXUP13 if (NewObjectName != OldObjectName)&lt;br/&gt;LinkerLoad.cpp:1693" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="1465" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="import_fixup_e13" parent="1" edge="1" source="IMPORT_FIXUP12" target="IMPORT_FIXUP13" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="IMPORT_FIXUP14" parent="1" vertex="1" value="IMPORT_FIXUP14 if (Import.OuterIndex.IsNull())&lt;br/&gt;LinkerLoad.cpp:1695" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="1580" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="import_fixup_e14" parent="1" edge="1" source="IMPORT_FIXUP13" target="IMPORT_FIXUP14" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="IMPORT_FIXUP15" parent="1" vertex="1" value="IMPORT_FIXUP15 PackageIndexesToClear.Add(i);&lt;br/&gt;LinkerLoad.cpp:1699" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="1695" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="import_fixup_e15" parent="1" edge="1" source="IMPORT_FIXUP14" target="IMPORT_FIXUP15" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="IMPORT_FIXUP16" parent="1" vertex="1" value="IMPORT_FIXUP16 if (NewObjectName.OuterName == NAME_None &amp;&amp; NewObjectName.PackageNa...&lt;br/&gt;LinkerLoad.cpp:1704" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="1810" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="import_fixup_e16" parent="1" edge="1" source="IMPORT_FIXUP15" target="IMPORT_FIXUP16" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="IMPORT_FIXUP17" parent="1" vertex="1" value="IMPORT_FIXUP17 if (FindImportPackage(NewObjectName.PackageName, NewPackageIndex))&lt;br/&gt;LinkerLoad.cpp:1708" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="1925" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="import_fixup_e17" parent="1" edge="1" source="IMPORT_FIXUP16" target="IMPORT_FIXUP17" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="IMPORT_FIXUP18" parent="1" vertex="1" value="IMPORT_FIXUP18 Import.OuterIndex = NewPackageIndex;&lt;br/&gt;LinkerLoad.cpp:1711" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="2040" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="import_fixup_e18" parent="1" edge="1" source="IMPORT_FIXUP17" target="IMPORT_FIXUP18" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="IMPORT_FIXUP19" parent="1" vertex="1" value="IMPORT_FIXUP19 NewPackageImports.AddUnique(NewObjectName.PackageName);&lt;br/&gt;LinkerLoad.cpp:1716" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="2155" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="import_fixup_e19" parent="1" edge="1" source="IMPORT_FIXUP18" target="IMPORT_FIXUP19" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="IMPORT_FIXUP20" parent="1" vertex="1" value="IMPORT_FIXUP20 if (NewClassName != OldClassName)&lt;br/&gt;LinkerLoad.cpp:1736" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="2270" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="import_fixup_e20" parent="1" edge="1" source="IMPORT_FIXUP19" target="IMPORT_FIXUP20" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="IMPORT_FIXUP21" parent="1" vertex="1" value="IMPORT_FIXUP21 if (!FindImportPackage(NewClassName.PackageName, NewPackageIndex))&lt;br/&gt;LinkerLoad.cpp:1743" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="2385" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="import_fixup_e21" parent="1" edge="1" source="IMPORT_FIXUP20" target="IMPORT_FIXUP21" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="IMPORT_FIXUP22" parent="1" vertex="1" value="IMPORT_FIXUP22 NewPackageImports.AddUnique(NewClassName.PackageName);&lt;br/&gt;LinkerLoad.cpp:1746" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="2500" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="import_fixup_e22" parent="1" edge="1" source="IMPORT_FIXUP21" target="IMPORT_FIXUP22" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="IMPORT_FIXUP23" parent="1" vertex="1" value="IMPORT_FIXUP23 Import.ClassPackage = NewClassName.PackageName;&lt;br/&gt;LinkerLoad.cpp:1755" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="2615" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="import_fixup_e23" parent="1" edge="1" source="IMPORT_FIXUP22" target="IMPORT_FIXUP23" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="IMPORT_FIXUP24" parent="1" vertex="1" value="IMPORT_FIXUP24 if (NewDefaultObjectName.StartsWith(DEFAULT_OBJECT_PREFIX))&lt;br/&gt;LinkerLoad.cpp:1761" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="2730" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="import_fixup_e24" parent="1" edge="1" source="IMPORT_FIXUP23" target="IMPORT_FIXUP24" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="IMPORT_FIXUP25" parent="1" vertex="1" value="IMPORT_FIXUP25 Import.ObjectName = FName(*NewDefaultObjectName);&lt;br/&gt;LinkerLoad.cpp:1765" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="2845" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="import_fixup_e25" parent="1" edge="1" source="IMPORT_FIXUP24" target="IMPORT_FIXUP25" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="IMPORT_FIXUP26" parent="1" vertex="1" value="IMPORT_FIXUP26 for (FName NewPackage : NewPackageImports)&lt;br/&gt;LinkerLoad.cpp:1773" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="2960" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="import_fixup_e26" parent="1" edge="1" source="IMPORT_FIXUP25" target="IMPORT_FIXUP26" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="IMPORT_FIXUP27" parent="1" vertex="1" value="IMPORT_FIXUP27 FObjectImport* NewImport = new (ImportMap) FObjectImport();&lt;br/&gt;LinkerLoad.cpp:1776" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="3075" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="import_fixup_e27" parent="1" edge="1" source="IMPORT_FIXUP26" target="IMPORT_FIXUP27" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="IMPORT_FIXUP28" parent="1" vertex="1" value="IMPORT_FIXUP28 // Clear any packages that got renamed, once all children have been...&lt;br/&gt;LinkerLoad.cpp:1788" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="3190" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="import_fixup_e28" parent="1" edge="1" source="IMPORT_FIXUP27" target="IMPORT_FIXUP28" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="IMPORT_FIXUP29" parent="1" vertex="1" value="IMPORT_FIXUP29 Import.ObjectName = NAME_None;&lt;br/&gt;LinkerLoad.cpp:1793" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="3305" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="import_fixup_e29" parent="1" edge="1" source="IMPORT_FIXUP28" target="IMPORT_FIXUP29" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="IMPORT_FIXUP30" parent="1" vertex="1" value="IMPORT_FIXUP30 bHasFixedUpImportMap = true;&lt;br/&gt;LinkerLoad.cpp:1798" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="3420" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="import_fixup_e30" parent="1" edge="1" source="IMPORT_FIXUP29" target="IMPORT_FIXUP30" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="IMPORT_FIXUP31" parent="1" vertex="1" value="IMPORT_FIXUP31 return IsTimeLimitExceeded( TEXT('fixing up import map') ) ? LINKER...&lt;br/&gt;LinkerLoad.cpp:1800" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="3535" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="import_fixup_e31" parent="1" edge="1" source="IMPORT_FIXUP30" target="IMPORT_FIXUP31" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram name="instancing_fixup" id="instancing_fixup">
+    <mxGraphModel dx="1300" dy="950" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" page="1" pageScale="1" pageWidth="1050" pageHeight="2480">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="INSTANCING_FIXUP01" parent="1" vertex="1" value="INSTANCING_FIXUP01 FLinkerLoad::ELinkerStatus FLinkerLoad::PopulateInstancingContext()&lt;br/&gt;LinkerLoad.cpp:1803" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="85" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="INSTANCING_FIXUP02" parent="1" vertex="1" value="INSTANCING_FIXUP02 if (!bHasPopulatedInstancingContext)&lt;br/&gt;LinkerLoad.cpp:1807" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="200" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="instancing_fixup_e2" parent="1" edge="1" source="INSTANCING_FIXUP01" target="INSTANCING_FIXUP02" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="INSTANCING_FIXUP03" parent="1" vertex="1" value="INSTANCING_FIXUP03 #if WITH_EDITOR&lt;br/&gt;LinkerLoad.cpp:1809" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="315" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="instancing_fixup_e3" parent="1" edge="1" source="INSTANCING_FIXUP02" target="INSTANCING_FIXUP03" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="INSTANCING_FIXUP04" parent="1" vertex="1" value="INSTANCING_FIXUP04 if (IsContextInstanced())&lt;br/&gt;LinkerLoad.cpp:1811" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="430" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="instancing_fixup_e4" parent="1" edge="1" source="INSTANCING_FIXUP03" target="INSTANCING_FIXUP04" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="INSTANCING_FIXUP05" parent="1" vertex="1" value="INSTANCING_FIXUP05 for (const FObjectExport&amp; Export : ExportMap)&lt;br/&gt;LinkerLoad.cpp:1817" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="545" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="instancing_fixup_e5" parent="1" edge="1" source="INSTANCING_FIXUP04" target="INSTANCING_FIXUP05" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="INSTANCING_FIXUP06" parent="1" vertex="1" value="INSTANCING_FIXUP06 if (Export.OuterIndex.IsImport())&lt;br/&gt;LinkerLoad.cpp:1819" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="660" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="instancing_fixup_e6" parent="1" edge="1" source="INSTANCING_FIXUP05" target="INSTANCING_FIXUP06" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="INSTANCING_FIXUP07" parent="1" vertex="1" value="INSTANCING_FIXUP07 while (Import-&amp;gt;OuterIndex.IsImport())&lt;br/&gt;LinkerLoad.cpp:1822" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="775" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="instancing_fixup_e7" parent="1" edge="1" source="INSTANCING_FIXUP06" target="INSTANCING_FIXUP07" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="INSTANCING_FIXUP08" parent="1" vertex="1" value="INSTANCING_FIXUP08 if (Import-&amp;gt;HasPackageName())&lt;br/&gt;LinkerLoad.cpp:1824" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="890" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="instancing_fixup_e8" parent="1" edge="1" source="INSTANCING_FIXUP07" target="INSTANCING_FIXUP08" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="INSTANCING_FIXUP09" parent="1" vertex="1" value="INSTANCING_FIXUP09 InstancingPackageName.Add(Import-&amp;gt;PackageName);&lt;br/&gt;LinkerLoad.cpp:1826" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="1005" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="instancing_fixup_e9" parent="1" edge="1" source="INSTANCING_FIXUP08" target="INSTANCING_FIXUP09" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="INSTANCING_FIXUP10" parent="1" vertex="1" value="INSTANCING_FIXUP10 check(Import-&amp;gt;OuterIndex.IsNull() &amp;&amp; !Import-&amp;gt;HasPackageName());&lt;br/&gt;LinkerLoad.cpp:1830" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="1120" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="instancing_fixup_e10" parent="1" edge="1" source="INSTANCING_FIXUP09" target="INSTANCING_FIXUP10" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="INSTANCING_FIXUP11" parent="1" vertex="1" value="INSTANCING_FIXUP11 auto HasExportOuterChain = [this](const FObjectImport* InImport) -&amp;...&lt;br/&gt;LinkerLoad.cpp:1836" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="1235" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="instancing_fixup_e11" parent="1" edge="1" source="INSTANCING_FIXUP10" target="INSTANCING_FIXUP11" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="INSTANCING_FIXUP12" parent="1" vertex="1" value="INSTANCING_FIXUP12 for (const FObjectImport&amp; Import : ImportMap)&lt;br/&gt;LinkerLoad.cpp:1845" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="1350" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="instancing_fixup_e12" parent="1" edge="1" source="INSTANCING_FIXUP11" target="INSTANCING_FIXUP12" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="INSTANCING_FIXUP13" parent="1" vertex="1" value="INSTANCING_FIXUP13 if (Import.HasPackageName() &amp;&amp; HasExportOuterChain(&amp;Import))&lt;br/&gt;LinkerLoad.cpp:1847" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="1465" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="instancing_fixup_e13" parent="1" edge="1" source="INSTANCING_FIXUP12" target="INSTANCING_FIXUP13" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="INSTANCING_FIXUP14" parent="1" vertex="1" value="INSTANCING_FIXUP14 InstancingPackageName.Add(Import.PackageName);&lt;br/&gt;LinkerLoad.cpp:1849" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="1580" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="instancing_fixup_e14" parent="1" edge="1" source="INSTANCING_FIXUP13" target="INSTANCING_FIXUP14" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="INSTANCING_FIXUP15" parent="1" vertex="1" value="INSTANCING_FIXUP15 for (const FName&amp; InstancingName : InstancingPackageName)&lt;br/&gt;LinkerLoad.cpp:1854" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="1695" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="instancing_fixup_e15" parent="1" edge="1" source="INSTANCING_FIXUP14" target="INSTANCING_FIXUP15" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="INSTANCING_FIXUP16" parent="1" vertex="1" value="INSTANCING_FIXUP16 FName&amp; InstancedName = InstancingContext.Mapping.FindOrAdd(Instanci...&lt;br/&gt;LinkerLoad.cpp:1856" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="1810" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="instancing_fixup_e16" parent="1" edge="1" source="INSTANCING_FIXUP15" target="INSTANCING_FIXUP16" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="INSTANCING_FIXUP17" parent="1" vertex="1" value="INSTANCING_FIXUP17 if (InstancedName.IsNone())&lt;br/&gt;LinkerLoad.cpp:1858" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="1925" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="instancing_fixup_e17" parent="1" edge="1" source="INSTANCING_FIXUP16" target="INSTANCING_FIXUP17" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="INSTANCING_FIXUP18" parent="1" vertex="1" value="INSTANCING_FIXUP18 InstancedName = *FString::Printf(TEXT('%s_InstanceOf_%s'), *Instanc...&lt;br/&gt;LinkerLoad.cpp:1860" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="2040" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="instancing_fixup_e18" parent="1" edge="1" source="INSTANCING_FIXUP17" target="INSTANCING_FIXUP18" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="INSTANCING_FIXUP19" parent="1" vertex="1" value="INSTANCING_FIXUP19 bHasPopulatedInstancingContext = true;&lt;br/&gt;LinkerLoad.cpp:1866" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="2155" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="instancing_fixup_e19" parent="1" edge="1" source="INSTANCING_FIXUP18" target="INSTANCING_FIXUP19" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="INSTANCING_FIXUP20" parent="1" vertex="1" value="INSTANCING_FIXUP20 return IsTimeLimitExceeded(TEXT('populating instancing context')) ?...&lt;br/&gt;LinkerLoad.cpp:1868" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="2270" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="instancing_fixup_e20" parent="1" edge="1" source="INSTANCING_FIXUP19" target="INSTANCING_FIXUP20" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram name="export_fixup" id="export_fixup">
+    <mxGraphModel dx="1300" dy="950" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" page="1" pageScale="1" pageWidth="1050" pageHeight="3515">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="EXPORT_FIXUP01" parent="1" vertex="1" value="EXPORT_FIXUP01 FLinkerLoad::ELinkerStatus FLinkerLoad::FixupExportMap()&lt;br/&gt;LinkerLoad.cpp:5814" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="85" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="EXPORT_FIXUP02" parent="1" vertex="1" value="EXPORT_FIXUP02 #if WITH_EDITOR&lt;br/&gt;LinkerLoad.cpp:5818" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="200" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="export_fixup_e2" parent="1" edge="1" source="EXPORT_FIXUP01" target="EXPORT_FIXUP02" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="EXPORT_FIXUP03" parent="1" vertex="1" value="EXPORT_FIXUP03 if (UE4Ver() &amp;lt; VER_UE4_SKIP_DUPLICATE_EXPORTS_ON_SAVE_PACKAGE &amp;&amp;...&lt;br/&gt;LinkerLoad.cpp:5819" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="315" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="export_fixup_e3" parent="1" edge="1" source="EXPORT_FIXUP02" target="EXPORT_FIXUP03" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="EXPORT_FIXUP04" parent="1" vertex="1" value="EXPORT_FIXUP04 FixupDuplicateExports();&lt;br/&gt;LinkerLoad.cpp:5821" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="430" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="export_fixup_e4" parent="1" edge="1" source="EXPORT_FIXUP03" target="EXPORT_FIXUP04" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="EXPORT_FIXUP05" parent="1" vertex="1" value="EXPORT_FIXUP05 if (!FPlatformProperties::RequiresCookedData())&lt;br/&gt;LinkerLoad.cpp:5827" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="545" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="export_fixup_e5" parent="1" edge="1" source="EXPORT_FIXUP04" target="EXPORT_FIXUP05" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="EXPORT_FIXUP06" parent="1" vertex="1" value="EXPORT_FIXUP06 if (bFixupExportMapDone)&lt;br/&gt;LinkerLoad.cpp:5829" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="660" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="export_fixup_e6" parent="1" edge="1" source="EXPORT_FIXUP05" target="EXPORT_FIXUP06" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="EXPORT_FIXUP07" parent="1" vertex="1" value="EXPORT_FIXUP07 for ( int32 ExportMapIdx = 0; ExportMapIdx &amp;lt; ExportMap.Num(); Ex...&lt;br/&gt;LinkerLoad.cpp:5834" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="775" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="export_fixup_e7" parent="1" edge="1" source="EXPORT_FIXUP06" target="EXPORT_FIXUP07" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="EXPORT_FIXUP08" parent="1" vertex="1" value="EXPORT_FIXUP08 if (!IsValidPackageIndex(Export.ClassIndex))&lt;br/&gt;LinkerLoad.cpp:5837" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="890" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="export_fixup_e8" parent="1" edge="1" source="EXPORT_FIXUP07" target="EXPORT_FIXUP08" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="EXPORT_FIXUP09" parent="1" vertex="1" value="EXPORT_FIXUP09 if (UE4Ver() &amp;lt; VER_UE4_BLUEPRINT_GENERATED_CLASS_COMPONENT_TEMPL...&lt;br/&gt;LinkerLoad.cpp:5848" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="1005" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="export_fixup_e9" parent="1" edge="1" source="EXPORT_FIXUP08" target="EXPORT_FIXUP09" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="EXPORT_FIXUP10" parent="1" vertex="1" value="EXPORT_FIXUP10 if ((Export.ObjectFlags &amp; RF_Public) == 0)&lt;br/&gt;LinkerLoad.cpp:5850" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="1120" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="export_fixup_e10" parent="1" edge="1" source="EXPORT_FIXUP09" target="EXPORT_FIXUP10" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="EXPORT_FIXUP11" parent="1" vertex="1" value="EXPORT_FIXUP11 if (OuterClassName == NAME_BlueprintGeneratedClass || OuterClassNam...&lt;br/&gt;LinkerLoad.cpp:5855" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="1235" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="export_fixup_e11" parent="1" edge="1" source="EXPORT_FIXUP10" target="EXPORT_FIXUP11" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="EXPORT_FIXUP12" parent="1" vertex="1" value="EXPORT_FIXUP12 if (    ((Class != nullptr) &amp;&amp; Class-&amp;gt;IsChildOf(ActorComponentCl...&lt;br/&gt;LinkerLoad.cpp:5865" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="1350" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="export_fixup_e12" parent="1" edge="1" source="EXPORT_FIXUP11" target="EXPORT_FIXUP12" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="EXPORT_FIXUP13" parent="1" vertex="1" value="EXPORT_FIXUP13 Export.ObjectFlags |= RF_Public;&lt;br/&gt;LinkerLoad.cpp:5868" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="1465" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="export_fixup_e13" parent="1" edge="1" source="EXPORT_FIXUP12" target="EXPORT_FIXUP13" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="EXPORT_FIXUP14" parent="1" vertex="1" value="EXPORT_FIXUP14 const TMap&amp;lt;FString, FString&amp;gt;* ValueChanges = FCoreRedirects::...&lt;br/&gt;LinkerLoad.cpp:5877" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="1580" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="export_fixup_e14" parent="1" edge="1" source="EXPORT_FIXUP13" target="EXPORT_FIXUP14" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="EXPORT_FIXUP15" parent="1" vertex="1" value="EXPORT_FIXUP15 if (ValueChanges)&lt;br/&gt;LinkerLoad.cpp:5879" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="1695" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="export_fixup_e15" parent="1" edge="1" source="EXPORT_FIXUP14" target="EXPORT_FIXUP15" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="EXPORT_FIXUP16" parent="1" vertex="1" value="EXPORT_FIXUP16 if (NewInstanceName)&lt;br/&gt;LinkerLoad.cpp:5883" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="1810" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="export_fixup_e16" parent="1" edge="1" source="EXPORT_FIXUP15" target="EXPORT_FIXUP16" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="EXPORT_FIXUP17" parent="1" vertex="1" value="EXPORT_FIXUP17 Export.ObjectName = FName(**NewInstanceName);&lt;br/&gt;LinkerLoad.cpp:5887" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="1925" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="export_fixup_e17" parent="1" edge="1" source="EXPORT_FIXUP16" target="EXPORT_FIXUP17" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="EXPORT_FIXUP18" parent="1" vertex="1" value="EXPORT_FIXUP18 Export.bExportLoadFailed = true;&lt;br/&gt;LinkerLoad.cpp:5896" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="2040" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="export_fixup_e18" parent="1" edge="1" source="EXPORT_FIXUP17" target="EXPORT_FIXUP18" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="EXPORT_FIXUP19" parent="1" vertex="1" value="EXPORT_FIXUP19 if (!StrObjectName.StartsWith(DEFAULT_OBJECT_PREFIX))&lt;br/&gt;LinkerLoad.cpp:5903" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="2155" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="export_fixup_e19" parent="1" edge="1" source="EXPORT_FIXUP18" target="EXPORT_FIXUP19" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="EXPORT_FIXUP20" parent="1" vertex="1" value="EXPORT_FIXUP20 FCoreRedirectObjectName NewClassInstanceName = FCoreRedirects::GetR...&lt;br/&gt;LinkerLoad.cpp:5905" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="2270" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="export_fixup_e20" parent="1" edge="1" source="EXPORT_FIXUP19" target="EXPORT_FIXUP20" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="EXPORT_FIXUP21" parent="1" vertex="1" value="EXPORT_FIXUP21 bool bClassInstanceDeleted = FCoreRedirects::IsKnownMissing(ECoreRe...&lt;br/&gt;LinkerLoad.cpp:5907" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="2385" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="export_fixup_e21" parent="1" edge="1" source="EXPORT_FIXUP20" target="EXPORT_FIXUP21" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="EXPORT_FIXUP22" parent="1" vertex="1" value="EXPORT_FIXUP22 if (bClassInstanceDeleted)&lt;br/&gt;LinkerLoad.cpp:5908" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="2500" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="export_fixup_e22" parent="1" edge="1" source="EXPORT_FIXUP21" target="EXPORT_FIXUP22" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="EXPORT_FIXUP23" parent="1" vertex="1" value="EXPORT_FIXUP23 Export.ClassIndex = FPackageIndex();&lt;br/&gt;LinkerLoad.cpp:5913" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="2615" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="export_fixup_e23" parent="1" edge="1" source="EXPORT_FIXUP22" target="EXPORT_FIXUP23" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="EXPORT_FIXUP24" parent="1" vertex="1" value="EXPORT_FIXUP24 Export.ObjectName = NAME_None;&lt;br/&gt;LinkerLoad.cpp:5915" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="2730" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="export_fixup_e24" parent="1" edge="1" source="EXPORT_FIXUP23" target="EXPORT_FIXUP24" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="EXPORT_FIXUP25" parent="1" vertex="1" value="EXPORT_FIXUP25 else if (NewClassInstanceName != OldClassName)&lt;br/&gt;LinkerLoad.cpp:5920" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="2845" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="export_fixup_e25" parent="1" edge="1" source="EXPORT_FIXUP24" target="EXPORT_FIXUP25" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="EXPORT_FIXUP26" parent="1" vertex="1" value="EXPORT_FIXUP26 if (CreateImportClassAndPackage(NewClassInstanceName.ObjectName, Ne...&lt;br/&gt;LinkerLoad.cpp:5925" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="2960" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="export_fixup_e26" parent="1" edge="1" source="EXPORT_FIXUP25" target="EXPORT_FIXUP26" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="EXPORT_FIXUP27" parent="1" vertex="1" value="EXPORT_FIXUP27 Export.ClassIndex = NewClassIndex;&lt;br/&gt;LinkerLoad.cpp:5927" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="3075" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="export_fixup_e27" parent="1" edge="1" source="EXPORT_FIXUP26" target="EXPORT_FIXUP27" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="EXPORT_FIXUP28" parent="1" vertex="1" value="EXPORT_FIXUP28 bFixupExportMapDone = true;&lt;br/&gt;LinkerLoad.cpp:5942" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="3190" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="export_fixup_e28" parent="1" edge="1" source="EXPORT_FIXUP27" target="EXPORT_FIXUP28" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="EXPORT_FIXUP29" parent="1" vertex="1" value="EXPORT_FIXUP29 return !IsTimeLimitExceeded( TEXT('fixing up export map') ) ? LINKE...&lt;br/&gt;LinkerLoad.cpp:5943" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="3305" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="export_fixup_e29" parent="1" edge="1" source="EXPORT_FIXUP28" target="EXPORT_FIXUP29" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram name="package_index_ctor" id="package_index_ctor">
+    <mxGraphModel dx="1300" dy="950" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" page="1" pageScale="1" pageWidth="1050" pageHeight="1800">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="PACKAGE_INDEX_CTOR01" parent="1" vertex="1" value="PACKAGE_INDEX_CTOR01 FORCEINLINE FPackageIndex()&lt;br/&gt;ObjectResource.h:38" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="85" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="PACKAGE_INDEX_CTOR02" parent="1" vertex="1" value="PACKAGE_INDEX_CTOR02 : Index(0)&lt;br/&gt;ObjectResource.h:39" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3f6f9;strokeColor=#667d92;fontSize=13;spacing=9;">
+          <mxGeometry x="100" y="200" width="700" height="77" as="geometry" />
+        </mxCell>
+        <mxCell id="package_index_ctor_e2" parent="1" edge="1" source="PACKAGE_INDEX_CTOR01" target="PACKAGE_INDEX_CTOR02" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#667d92;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
 </mxfile>

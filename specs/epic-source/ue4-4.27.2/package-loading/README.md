@@ -10,8 +10,8 @@ full file-format certification and not a declaration of PHP parity.
 
 1. [Epic source file inventory, field tables, and loader steps](source-reference.md)
 2. [Epic package-loading reference PDF](UE4.27.2-Epic-Source-Package-Format-and-Loader.pdf)
-3. [Editable eleven-page sequence diagrams](source-reference.drawio):
-   `loader`, `summary`, `imports`, `exports`, `tables`, `writers`, `version_correction`, `engine_changelist`, `package_flags`, `export_filter`, `export_defaults`
+3. [Editable fifteen-page source-navigation diagrams](source-reference.drawio):
+   `loader`, `summary`, `imports`, `exports`, `tables`, `writers`, `version_correction`, `engine_changelist`, `package_flags`, `export_filter`, `export_defaults`, `import_fixup`, `instancing_fixup`, `export_fixup`, `package_index_ctor`
 4. [True/false summary decision graph](summary-decision-graph.md)
 5. [Editable header decision graph](summary-decision-graph.drawio)
 6. [Editable export-filter true/false decision graph](flow-export_filter-decisions.drawio)
@@ -59,14 +59,21 @@ modifying it.
 
 ## Production comparison (separate)
 
-`catalog/compliance/UE427-LOADER-EPIC-STEP-MAPPING.csv` contains **275**
-source-indexed items as of the initial generation. Each is
+`catalog/compliance/UE427-LOADER-EPIC-STEP-MAPPING.csv` contains **401**
+source-indexed items across the expanded trace. The increased number reflects
+source-defined branches newly enumerated, not an invented work backlog. Each is
 `NOT_CHECKED` until inspected against actual UnrealDB production PHP; individually implemented branches are marked separately and do not imply whole-path acceptance.
 It lives outside this folder to keep this reference free of UnrealDB
 assumptions. Enter both the equivalent code location and its real caller
 when mapping; do not mark complete from a test assertion alone.
 
 ## Deliberately unexpanded
+
+The newly traced `FixupImportMap`, `PopulateInstancingContext` and
+`FixupExportMap` diagrams show source operations and branch gates, but do
+not include every implementation of `FCoreRedirects`, duplicate-export
+fixups, `FindImportPackage`, object class hierarchy and runtime target
+context. They are not complete end-to-end behavior graphs.
 
 The original source functions, runtime state, per-class object data,
 property layout, bytecode, bulk sidecars, IoStore and cooked/text archive

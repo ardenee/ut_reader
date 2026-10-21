@@ -1,0 +1,58 @@
+flowchart TD
+  EXPORT_FIXUP01["EXPORT_FIXUP01 FLinkerLoad::ELinkerStatus FLinkerLoad::FixupExportMap()<br/>LinkerLoad.cpp:5814"]
+  EXPORT_FIXUP02["EXPORT_FIXUP02 #if WITH_EDITOR<br/>LinkerLoad.cpp:5818"]
+  EXPORT_FIXUP01 --> EXPORT_FIXUP02
+  EXPORT_FIXUP03["EXPORT_FIXUP03 if (UE4Ver() &lt; VER_UE4_SKIP_DUPLICATE_EXPORTS_ON_SAVE_PACKAGE &&...<br/>LinkerLoad.cpp:5819"]
+  EXPORT_FIXUP02 --> EXPORT_FIXUP03
+  EXPORT_FIXUP04["EXPORT_FIXUP04 FixupDuplicateExports();<br/>LinkerLoad.cpp:5821"]
+  EXPORT_FIXUP03 --> EXPORT_FIXUP04
+  EXPORT_FIXUP05["EXPORT_FIXUP05 if (!FPlatformProperties::RequiresCookedData())<br/>LinkerLoad.cpp:5827"]
+  EXPORT_FIXUP04 --> EXPORT_FIXUP05
+  EXPORT_FIXUP06["EXPORT_FIXUP06 if (bFixupExportMapDone)<br/>LinkerLoad.cpp:5829"]
+  EXPORT_FIXUP05 --> EXPORT_FIXUP06
+  EXPORT_FIXUP07["EXPORT_FIXUP07 for ( int32 ExportMapIdx = 0; ExportMapIdx &lt; ExportMap.Num(); Ex...<br/>LinkerLoad.cpp:5834"]
+  EXPORT_FIXUP06 --> EXPORT_FIXUP07
+  EXPORT_FIXUP08["EXPORT_FIXUP08 if (!IsValidPackageIndex(Export.ClassIndex))<br/>LinkerLoad.cpp:5837"]
+  EXPORT_FIXUP07 --> EXPORT_FIXUP08
+  EXPORT_FIXUP09["EXPORT_FIXUP09 if (UE4Ver() &lt; VER_UE4_BLUEPRINT_GENERATED_CLASS_COMPONENT_TEMPL...<br/>LinkerLoad.cpp:5848"]
+  EXPORT_FIXUP08 --> EXPORT_FIXUP09
+  EXPORT_FIXUP10["EXPORT_FIXUP10 if ((Export.ObjectFlags & RF_Public) == 0)<br/>LinkerLoad.cpp:5850"]
+  EXPORT_FIXUP09 --> EXPORT_FIXUP10
+  EXPORT_FIXUP11["EXPORT_FIXUP11 if (OuterClassName == NAME_BlueprintGeneratedClass || OuterClassNam...<br/>LinkerLoad.cpp:5855"]
+  EXPORT_FIXUP10 --> EXPORT_FIXUP11
+  EXPORT_FIXUP12["EXPORT_FIXUP12 if (    ((Class != nullptr) && Class-&gt;IsChildOf(ActorComponentCl...<br/>LinkerLoad.cpp:5865"]
+  EXPORT_FIXUP11 --> EXPORT_FIXUP12
+  EXPORT_FIXUP13["EXPORT_FIXUP13 Export.ObjectFlags |= RF_Public;<br/>LinkerLoad.cpp:5868"]
+  EXPORT_FIXUP12 --> EXPORT_FIXUP13
+  EXPORT_FIXUP14["EXPORT_FIXUP14 const TMap&lt;FString, FString&gt;* ValueChanges = FCoreRedirects::...<br/>LinkerLoad.cpp:5877"]
+  EXPORT_FIXUP13 --> EXPORT_FIXUP14
+  EXPORT_FIXUP15["EXPORT_FIXUP15 if (ValueChanges)<br/>LinkerLoad.cpp:5879"]
+  EXPORT_FIXUP14 --> EXPORT_FIXUP15
+  EXPORT_FIXUP16["EXPORT_FIXUP16 if (NewInstanceName)<br/>LinkerLoad.cpp:5883"]
+  EXPORT_FIXUP15 --> EXPORT_FIXUP16
+  EXPORT_FIXUP17["EXPORT_FIXUP17 Export.ObjectName = FName(**NewInstanceName);<br/>LinkerLoad.cpp:5887"]
+  EXPORT_FIXUP16 --> EXPORT_FIXUP17
+  EXPORT_FIXUP18["EXPORT_FIXUP18 Export.bExportLoadFailed = true;<br/>LinkerLoad.cpp:5896"]
+  EXPORT_FIXUP17 --> EXPORT_FIXUP18
+  EXPORT_FIXUP19["EXPORT_FIXUP19 if (!StrObjectName.StartsWith(DEFAULT_OBJECT_PREFIX))<br/>LinkerLoad.cpp:5903"]
+  EXPORT_FIXUP18 --> EXPORT_FIXUP19
+  EXPORT_FIXUP20["EXPORT_FIXUP20 FCoreRedirectObjectName NewClassInstanceName = FCoreRedirects::GetR...<br/>LinkerLoad.cpp:5905"]
+  EXPORT_FIXUP19 --> EXPORT_FIXUP20
+  EXPORT_FIXUP21["EXPORT_FIXUP21 bool bClassInstanceDeleted = FCoreRedirects::IsKnownMissing(ECoreRe...<br/>LinkerLoad.cpp:5907"]
+  EXPORT_FIXUP20 --> EXPORT_FIXUP21
+  EXPORT_FIXUP22["EXPORT_FIXUP22 if (bClassInstanceDeleted)<br/>LinkerLoad.cpp:5908"]
+  EXPORT_FIXUP21 --> EXPORT_FIXUP22
+  EXPORT_FIXUP23["EXPORT_FIXUP23 Export.ClassIndex = FPackageIndex();<br/>LinkerLoad.cpp:5913"]
+  EXPORT_FIXUP22 --> EXPORT_FIXUP23
+  EXPORT_FIXUP24["EXPORT_FIXUP24 Export.ObjectName = NAME_None;<br/>LinkerLoad.cpp:5915"]
+  EXPORT_FIXUP23 --> EXPORT_FIXUP24
+  EXPORT_FIXUP25["EXPORT_FIXUP25 else if (NewClassInstanceName != OldClassName)<br/>LinkerLoad.cpp:5920"]
+  EXPORT_FIXUP24 --> EXPORT_FIXUP25
+  EXPORT_FIXUP26["EXPORT_FIXUP26 if (CreateImportClassAndPackage(NewClassInstanceName.ObjectName, Ne...<br/>LinkerLoad.cpp:5925"]
+  EXPORT_FIXUP25 --> EXPORT_FIXUP26
+  EXPORT_FIXUP27["EXPORT_FIXUP27 Export.ClassIndex = NewClassIndex;<br/>LinkerLoad.cpp:5927"]
+  EXPORT_FIXUP26 --> EXPORT_FIXUP27
+  EXPORT_FIXUP28["EXPORT_FIXUP28 bFixupExportMapDone = true;<br/>LinkerLoad.cpp:5942"]
+  EXPORT_FIXUP27 --> EXPORT_FIXUP28
+  EXPORT_FIXUP29["EXPORT_FIXUP29 return !IsTimeLimitExceeded( TEXT('fixing up export map') ) ? LINKE...<br/>LinkerLoad.cpp:5943"]
+  EXPORT_FIXUP28 --> EXPORT_FIXUP29

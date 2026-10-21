@@ -172,5 +172,47 @@ diagram. The expanded 275-step source comparison explicitly separates
 the 12 constructor defaults and 13 callable-policy steps from the
 remaining 208 unchecked items.
 
+## 2026-10-21 — production V5 export-default preservation and Epic fixup subpaths
+
+The existing `Uedb5Ut4SnapshotBuilder::exportRow` still stored null for
+`template_index`, `not_for_editor_game`, `is_asset` and `preload`
+when the corresponding version-gated source field was not on disk.
+This lost the effective values that Epic's constructors establish before
+deserialization, including `FPackageIndex()` returning numeric index
+zero at `CoreUObject/Public/UObject/ObjectResource.h:38-40`.
+
+**Production correction:** retain `TemplateIndex=0`,
+`bNotAlwaysLoadedForEditorGame=true`, `bIsAsset=false` and the
+five source-defined preload defaults in V5 metadata, while separately
+retaining every `..._present=false` serialized-presence indicator.
+The original UE4 reader defaults were corrected in the previous batch;
+this correction ensures the production V5 publisher does not undo them.
+
+**Actual integration verification:** `catalog/bin/verify-uedb5-ut4-persistence.php`
+now exercises the source-shaped absent-field export through the production
+export-row normalization, durable `Uedb5MetadataSnapshotWriter`,
+and `Uedb5MetadataReader` readback. Both new checks pass; original
+V5/UT4 acceptance tests still pass. The normal exporter path remains
+active, without inventing editor or server state.
+
+**Expanded source-only trace:** pinned
+`LinkerLoad.cpp:1624-1801` (`FixupImportMap`),
+`1803-1869` (`PopulateInstancingContext`),
+`5814-5949` (`FixupExportMap`) and pinned
+`ObjectResource.h:38-40` (`FPackageIndex()`) are included in the
+original-Epic-only handbook. The remaining callees and state required by
+`FCoreRedirects`, `FindImportPackage`, `FixupDuplicateExports`,
+UObject class hierarchy, per-package instancing and actual cooked/editor
+runtime are **not** implemented by the static PHP reader. A missing
+redirect configuration must not silently be interpreted as proof that
+no redirects exist.
+
+The source-indexed checklist grew from 275 to **401** recorded C++ items
+because three Epic function bodies and a constructor were *newly indexed*
+rather than formerly omitted. **331 items remain `NOT_CHECKED`**, and
+the ten entries marked `SOURCE_DEFAULT_V5_PUBLISHER_ROUNDTRIP_PASSED`
+are bounded field-level checks, not ten completed end-to-end operations.
+Full UE4.27 `VerifyImport` parity remains OPEN.
+
 The correction is judged by the production behavior and source
 trace, not a new claim of whole-engine parity.

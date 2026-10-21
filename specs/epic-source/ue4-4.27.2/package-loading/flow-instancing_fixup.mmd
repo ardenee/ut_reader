@@ -1,0 +1,40 @@
+flowchart TD
+  INSTANCING_FIXUP01["INSTANCING_FIXUP01 FLinkerLoad::ELinkerStatus FLinkerLoad::PopulateInstancingContext()<br/>LinkerLoad.cpp:1803"]
+  INSTANCING_FIXUP02["INSTANCING_FIXUP02 if (!bHasPopulatedInstancingContext)<br/>LinkerLoad.cpp:1807"]
+  INSTANCING_FIXUP01 --> INSTANCING_FIXUP02
+  INSTANCING_FIXUP03["INSTANCING_FIXUP03 #if WITH_EDITOR<br/>LinkerLoad.cpp:1809"]
+  INSTANCING_FIXUP02 --> INSTANCING_FIXUP03
+  INSTANCING_FIXUP04["INSTANCING_FIXUP04 if (IsContextInstanced())<br/>LinkerLoad.cpp:1811"]
+  INSTANCING_FIXUP03 --> INSTANCING_FIXUP04
+  INSTANCING_FIXUP05["INSTANCING_FIXUP05 for (const FObjectExport& Export : ExportMap)<br/>LinkerLoad.cpp:1817"]
+  INSTANCING_FIXUP04 --> INSTANCING_FIXUP05
+  INSTANCING_FIXUP06["INSTANCING_FIXUP06 if (Export.OuterIndex.IsImport())<br/>LinkerLoad.cpp:1819"]
+  INSTANCING_FIXUP05 --> INSTANCING_FIXUP06
+  INSTANCING_FIXUP07["INSTANCING_FIXUP07 while (Import-&gt;OuterIndex.IsImport())<br/>LinkerLoad.cpp:1822"]
+  INSTANCING_FIXUP06 --> INSTANCING_FIXUP07
+  INSTANCING_FIXUP08["INSTANCING_FIXUP08 if (Import-&gt;HasPackageName())<br/>LinkerLoad.cpp:1824"]
+  INSTANCING_FIXUP07 --> INSTANCING_FIXUP08
+  INSTANCING_FIXUP09["INSTANCING_FIXUP09 InstancingPackageName.Add(Import-&gt;PackageName);<br/>LinkerLoad.cpp:1826"]
+  INSTANCING_FIXUP08 --> INSTANCING_FIXUP09
+  INSTANCING_FIXUP10["INSTANCING_FIXUP10 check(Import-&gt;OuterIndex.IsNull() && !Import-&gt;HasPackageName());<br/>LinkerLoad.cpp:1830"]
+  INSTANCING_FIXUP09 --> INSTANCING_FIXUP10
+  INSTANCING_FIXUP11["INSTANCING_FIXUP11 auto HasExportOuterChain = [this](const FObjectImport* InImport) -&...<br/>LinkerLoad.cpp:1836"]
+  INSTANCING_FIXUP10 --> INSTANCING_FIXUP11
+  INSTANCING_FIXUP12["INSTANCING_FIXUP12 for (const FObjectImport& Import : ImportMap)<br/>LinkerLoad.cpp:1845"]
+  INSTANCING_FIXUP11 --> INSTANCING_FIXUP12
+  INSTANCING_FIXUP13["INSTANCING_FIXUP13 if (Import.HasPackageName() && HasExportOuterChain(&Import))<br/>LinkerLoad.cpp:1847"]
+  INSTANCING_FIXUP12 --> INSTANCING_FIXUP13
+  INSTANCING_FIXUP14["INSTANCING_FIXUP14 InstancingPackageName.Add(Import.PackageName);<br/>LinkerLoad.cpp:1849"]
+  INSTANCING_FIXUP13 --> INSTANCING_FIXUP14
+  INSTANCING_FIXUP15["INSTANCING_FIXUP15 for (const FName& InstancingName : InstancingPackageName)<br/>LinkerLoad.cpp:1854"]
+  INSTANCING_FIXUP14 --> INSTANCING_FIXUP15
+  INSTANCING_FIXUP16["INSTANCING_FIXUP16 FName& InstancedName = InstancingContext.Mapping.FindOrAdd(Instanci...<br/>LinkerLoad.cpp:1856"]
+  INSTANCING_FIXUP15 --> INSTANCING_FIXUP16
+  INSTANCING_FIXUP17["INSTANCING_FIXUP17 if (InstancedName.IsNone())<br/>LinkerLoad.cpp:1858"]
+  INSTANCING_FIXUP16 --> INSTANCING_FIXUP17
+  INSTANCING_FIXUP18["INSTANCING_FIXUP18 InstancedName = *FString::Printf(TEXT('%s_InstanceOf_%s'), *Instanc...<br/>LinkerLoad.cpp:1860"]
+  INSTANCING_FIXUP17 --> INSTANCING_FIXUP18
+  INSTANCING_FIXUP19["INSTANCING_FIXUP19 bHasPopulatedInstancingContext = true;<br/>LinkerLoad.cpp:1866"]
+  INSTANCING_FIXUP18 --> INSTANCING_FIXUP19
+  INSTANCING_FIXUP20["INSTANCING_FIXUP20 return IsTimeLimitExceeded(TEXT('populating instancing context')) ?...<br/>LinkerLoad.cpp:1868"]
+  INSTANCING_FIXUP19 --> INSTANCING_FIXUP20

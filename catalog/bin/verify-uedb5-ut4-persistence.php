@@ -115,6 +115,53 @@ try{
         && ($round['sections']['summary'][0]['parser_profile']['key']??'')==='ut4-alpha'
         && ($round['sections']['depends_map'][0]['references'][0]??null)===-1);
 
+    // Epic ObjectResource.cpp FObjectExport ctor establishes values before
+    // the later version-gated wire fields. The UT4 publisher must not turn
+    // the effective values back into null during V5 serialization.
+    $legacyExport=$package->getExports()[0];
+    $legacyExport['templateIndexPresent']=false;
+    $legacyExport['templateIndex']=0;
+    $legacyExport['notForEditorGamePresent']=false;
+    $legacyExport['notForEditorGame']=true;
+    $legacyExport['isAssetPresent']=false;
+    $legacyExport['isAsset']=false;
+    $legacyExport['preloadPresent']=false;
+    $legacyExport['preload']=[
+        'firstExportDependency'=>-1,
+        'serializationBeforeSerializationDependencies'=>0,
+        'createBeforeSerializationDependencies'=>0,
+        'serializationBeforeCreateDependencies'=>0,
+        'createBeforeCreateDependencies'=>0,
+    ];
+    $exportNormalizer=new ReflectionMethod(Uedb5Ut4SnapshotBuilder::class,'exportRow');
+    $sourceDefaultRow=(array)$exportNormalizer->invoke(null,$legacyExport);
+    $check('ut4_export_default_fields_survive_v5_normalization',
+        ($sourceDefaultRow['template_index_present']??null)===false
+        && ($sourceDefaultRow['template_index']??null)===0
+        && ($sourceDefaultRow['not_for_editor_game_present']??null)===false
+        && ($sourceDefaultRow['not_for_editor_game']??null)===true
+        && ($sourceDefaultRow['is_asset_present']??null)===false
+        && ($sourceDefaultRow['is_asset']??null)===false
+        && ($sourceDefaultRow['preload_present']??null)===false
+        && ($sourceDefaultRow['preload']['firstExportDependency']??null)===-1
+        && ($sourceDefaultRow['preload']['createBeforeCreateDependencies']??null)===0);
+    $defaultSnapshot=$snapshot;
+    $defaultSnapshot['file']['id']=7514;
+    $defaultSnapshot['sections']['exports'][0]=$sourceDefaultRow;
+    $writer->write($defaultSnapshot,1024);
+    $defaultRound=(array)$reader->snapshot(7,7514);
+    $persistedDefault=(array)($defaultRound['sections']['exports'][0]??[]);
+    $check('ut4_export_ctor_defaults_survive_actual_v5_roundtrip',
+        ($persistedDefault['template_index_present']??null)===false
+        && ($persistedDefault['template_index']??null)===0
+        && ($persistedDefault['not_for_editor_game_present']??null)===false
+        && ($persistedDefault['not_for_editor_game']??null)===true
+        && ($persistedDefault['is_asset_present']??null)===false
+        && ($persistedDefault['is_asset']??null)===false
+        && ($persistedDefault['preload_present']??null)===false
+        && ($persistedDefault['preload']['firstExportDependency']??null)===-1
+        && ($persistedDefault['preload']['serializationBeforeCreateDependencies']??null)===0);
+
     $older=$temp.DIRECTORY_SEPARATOR.'fixture509.uasset';file_put_contents($older,$buildFixture(509));
     $p509=new \UnrealPackageReader4($older,$options);
     $s509=Uedb5Ut4SnapshotBuilder::build($p509,['id'=>7509,'game_id'=>7,'package_name'=>'Old','original_name'=>'Old.uasset']);

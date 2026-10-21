@@ -55,6 +55,11 @@
       "id": "Linker.h",
       "path": "Engine/Source/Runtime/CoreUObject/Public/UObject/Linker.h",
       "sha256": "040C05FF670E730CDC5A4CE83A1F2985A88F7ABC1E72C369FC5FC6A75CE5E2B3"
+    },
+    {
+      "id": "ObjectResource.h",
+      "path": "Engine/Source/Runtime/CoreUObject/Public/UObject/ObjectResource.h",
+      "sha256": "E5ACE0B0A756ED4E1E0F79427F5B48F9F7086779CA4B1E7DD0E4124F2A038B57"
     }
   ],
   "groups": [
@@ -721,12 +726,418 @@
           58
         ]
       ]
+    },
+    {
+      "id": "import_fixup",
+      "title": "FLinkerLoad::FixupImportMap \u2014 CoreRedirects and package additions",
+      "file": "LinkerLoad.cpp",
+      "function_line": 1624,
+      "sections": [
+        [
+          1624,
+          1801
+        ]
+      ],
+      "steps": [
+        [
+          1624,
+          "FLinkerLoad::ELinkerStatus FLinkerLoad::FixupImportMap()"
+        ],
+        [
+          1628,
+          "bHasFixedUpImportMap == false"
+        ],
+        [
+          1637,
+          "!FPlatformProperties::RequiresCookedData()"
+        ],
+        [
+          1641,
+          "PackageIndexesToClear"
+        ],
+        [
+          1644,
+          "while (!bDone)"
+        ],
+        [
+          1649,
+          "ImportMap.Num()"
+        ],
+        [
+          1657,
+          "FCoreRedirects::RedirectNameAndValues"
+        ],
+        [
+          1662,
+          "ClassValueRedirect->ValueChanges.Find"
+        ],
+        [
+          1667,
+          "Import.ObjectName = FName"
+        ],
+        [
+          1681,
+          "FCoreRedirectObjectName OldObjectName"
+        ],
+        [
+          1685,
+          "FCoreRedirects::RedirectNameAndValues"
+        ],
+        [
+          1687,
+          "ValueRedirect && ValueRedirect->OverrideClassName.IsValid()"
+        ],
+        [
+          1693,
+          "NewObjectName != OldObjectName"
+        ],
+        [
+          1695,
+          "Import.OuterIndex.IsNull()"
+        ],
+        [
+          1699,
+          "PackageIndexesToClear.Add"
+        ],
+        [
+          1704,
+          "NewObjectName.OuterName == NAME_None"
+        ],
+        [
+          1708,
+          "FindImportPackage"
+        ],
+        [
+          1711,
+          "Import.OuterIndex = NewPackageIndex"
+        ],
+        [
+          1716,
+          "NewPackageImports.AddUnique"
+        ],
+        [
+          1736,
+          "NewClassName != OldClassName"
+        ],
+        [
+          1743,
+          "FindImportPackage"
+        ],
+        [
+          1746,
+          "NewPackageImports.AddUnique"
+        ],
+        [
+          1755,
+          "Import.ClassPackage = NewClassName.PackageName"
+        ],
+        [
+          1761,
+          "NewDefaultObjectName.StartsWith(DEFAULT_OBJECT_PREFIX)"
+        ],
+        [
+          1765,
+          "Import.ObjectName = FName"
+        ],
+        [
+          1773,
+          "for (FName NewPackage : NewPackageImports)"
+        ],
+        [
+          1776,
+          "new (ImportMap) FObjectImport()"
+        ],
+        [
+          1788,
+          "Clear any packages"
+        ],
+        [
+          1793,
+          "Import.ObjectName = NAME_None"
+        ],
+        [
+          1798,
+          "bHasFixedUpImportMap = true"
+        ],
+        [
+          1800,
+          "IsTimeLimitExceeded"
+        ]
+      ],
+      "condition_ranges": [
+        [
+          1624,
+          1801
+        ]
+      ]
+    },
+    {
+      "id": "instancing_fixup",
+      "title": "FLinkerLoad::PopulateInstancingContext \u2014 source package mapping",
+      "file": "LinkerLoad.cpp",
+      "function_line": 1803,
+      "sections": [
+        [
+          1803,
+          1869
+        ]
+      ],
+      "steps": [
+        [
+          1803,
+          "FLinkerLoad::ELinkerStatus FLinkerLoad::PopulateInstancingContext()"
+        ],
+        [
+          1807,
+          "!bHasPopulatedInstancingContext"
+        ],
+        [
+          1809,
+          "#if WITH_EDITOR"
+        ],
+        [
+          1811,
+          "IsContextInstanced()"
+        ],
+        [
+          1817,
+          "for (const FObjectExport& Export : ExportMap)"
+        ],
+        [
+          1819,
+          "Export.OuterIndex.IsImport()"
+        ],
+        [
+          1822,
+          "while (Import->OuterIndex.IsImport())"
+        ],
+        [
+          1824,
+          "Import->HasPackageName()"
+        ],
+        [
+          1826,
+          "InstancingPackageName.Add(Import->PackageName)"
+        ],
+        [
+          1830,
+          "!Import->HasPackageName()"
+        ],
+        [
+          1836,
+          "HasExportOuterChain ="
+        ],
+        [
+          1845,
+          "for (const FObjectImport& Import : ImportMap)"
+        ],
+        [
+          1847,
+          "Import.HasPackageName() && HasExportOuterChain(&Import)"
+        ],
+        [
+          1849,
+          "InstancingPackageName.Add(Import.PackageName)"
+        ],
+        [
+          1854,
+          "for (const FName& InstancingName : InstancingPackageName)"
+        ],
+        [
+          1856,
+          "InstancingContext.Mapping.FindOrAdd"
+        ],
+        [
+          1858,
+          "InstancedName.IsNone()"
+        ],
+        [
+          1860,
+          "InstancedName = *FString::Printf"
+        ],
+        [
+          1866,
+          "bHasPopulatedInstancingContext = true"
+        ],
+        [
+          1868,
+          "IsTimeLimitExceeded"
+        ]
+      ],
+      "condition_ranges": [
+        [
+          1803,
+          1869
+        ]
+      ]
+    },
+    {
+      "id": "export_fixup",
+      "title": "FLinkerLoad::FixupExportMap \u2014 class validation, corrections, redirects",
+      "file": "LinkerLoad.cpp",
+      "function_line": 5814,
+      "sections": [
+        [
+          5814,
+          5949
+        ]
+      ],
+      "steps": [
+        [
+          5814,
+          "FLinkerLoad::ELinkerStatus FLinkerLoad::FixupExportMap()"
+        ],
+        [
+          5818,
+          "#if WITH_EDITOR"
+        ],
+        [
+          5819,
+          "UE4Ver() < VER_UE4_SKIP_DUPLICATE_EXPORTS_ON_SAVE_PACKAGE"
+        ],
+        [
+          5821,
+          "FixupDuplicateExports()"
+        ],
+        [
+          5827,
+          "!FPlatformProperties::RequiresCookedData()"
+        ],
+        [
+          5829,
+          "bFixupExportMapDone"
+        ],
+        [
+          5834,
+          "for ( int32 ExportMapIdx"
+        ],
+        [
+          5837,
+          "!IsValidPackageIndex(Export.ClassIndex)"
+        ],
+        [
+          5848,
+          "UE4Ver() < VER_UE4_BLUEPRINT_GENERATED_CLASS_COMPONENT_TEMPLATES_PUBLIC"
+        ],
+        [
+          5850,
+          "(Export.ObjectFlags & RF_Public) == 0"
+        ],
+        [
+          5855,
+          "OuterClassName == NAME_BlueprintGeneratedClass"
+        ],
+        [
+          5865,
+          "Class != nullptr"
+        ],
+        [
+          5868,
+          "Export.ObjectFlags |= RF_Public"
+        ],
+        [
+          5877,
+          "FCoreRedirects::GetValueRedirects"
+        ],
+        [
+          5879,
+          "if (ValueChanges)"
+        ],
+        [
+          5883,
+          "if (NewInstanceName)"
+        ],
+        [
+          5887,
+          "Export.ObjectName = FName"
+        ],
+        [
+          5896,
+          "Export.bExportLoadFailed = true"
+        ],
+        [
+          5903,
+          "!StrObjectName.StartsWith(DEFAULT_OBJECT_PREFIX)"
+        ],
+        [
+          5905,
+          "FCoreRedirects::GetRedirectedName"
+        ],
+        [
+          5907,
+          "FCoreRedirects::IsKnownMissing"
+        ],
+        [
+          5908,
+          "if (bClassInstanceDeleted)"
+        ],
+        [
+          5913,
+          "Export.ClassIndex = FPackageIndex()"
+        ],
+        [
+          5915,
+          "Export.ObjectName = NAME_None"
+        ],
+        [
+          5920,
+          "NewClassInstanceName != OldClassName"
+        ],
+        [
+          5925,
+          "CreateImportClassAndPackage"
+        ],
+        [
+          5927,
+          "Export.ClassIndex = NewClassIndex"
+        ],
+        [
+          5942,
+          "bFixupExportMapDone = true"
+        ],
+        [
+          5943,
+          "IsTimeLimitExceeded"
+        ]
+      ],
+      "condition_ranges": [
+        [
+          5814,
+          5949
+        ]
+      ]
+    },
+    {
+      "id": "package_index_ctor",
+      "title": "FPackageIndex default null constructor",
+      "file": "ObjectResource.h",
+      "function_line": 38,
+      "sections": [
+        [
+          37,
+          42
+        ]
+      ],
+      "steps": [
+        [
+          38,
+          "FORCEINLINE FPackageIndex()"
+        ],
+        [
+          39,
+          ": Index(0)"
+        ]
+      ],
+      "condition_ranges": [
+        [
+          37,
+          42
+        ]
+      ]
     }
   ],
   "not_yet_expanded": [
     "CreateLoader dispatch and archive selection",
-    "FixupImportMap / CoreRedirects and config",
-    "FixupExportMap and class conversions",
     "GetPackageLinker / provider selection",
     "SerializePreloadDependencies full body",
     "FinaliseCreation / LoadAllObjects",
@@ -734,6 +1145,9 @@
     "Bulk/UEXP/UBULK, compressed and optional data",
     "Platform, target, cooked, text archive, IoStore branch separation",
     "SavePackage2 complete writer branches",
-    "FLinker::FilterExport target-context inputs: WITH_EDITOR, FilterClientButNotServer, FilterServerButNotClient, bExportLoadFailed and previously filtered state"
+    "FLinker::FilterExport target-context inputs: WITH_EDITOR, FilterClientButNotServer, FilterServerButNotClient, bExportLoadFailed and previously filtered state",
+    "FCoreRedirects registered source configuration, RedirectNameAndValues and ValueChanges implementation",
+    "FLinkerLoad::FixupDuplicateExports, FindImportPackage and CreateImportClassAndPackage implementation",
+    "Runtime HasExportOuterChain, linker instancing remap inputs, UObject actor-component class hierarchy and target platform cooked-data state"
   ]
 }
