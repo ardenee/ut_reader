@@ -12,8 +12,8 @@ Updated: **2026-10-21**. This is the canonical recovery/handover file for this p
 | Deployment | `Z:\Apache24\htdocs\unrealdb` on DEV is PRD `Lelly-pc` |
 | GitHub | `https://github.com/ardenee/ut_reader` |
 | Active engine / operation | **UE1 / O01 — file identification and version dispatch** |
-| Current O01 status | **IMPLEMENTING**, not accepted |
-| Primary acceptance metric | **0 accepted / not-yet-frozen UE1 operation scope** |
+| Current O01 status | **IMPLEMENTING — 2 of 6 fixed O01 checklist gates recorded satisfied, 4 open.** See `UE1-ACCEPTANCE.md`. No reader/data publishing prerequisite. |
+| Primary acceptance metric | **UE1 O01: 0/1 accepted (identification/dispatch only).** UE1 operation-register denominator: 10 provisional categories; freeze per-engine after complete source inventory. |
 | Latest completed work batch | **UE1-B05 — genuine UE1 v68/v69 source corpus, 92-file V5 roundtrips, UE1 classifier tag correction** |
 | Latest verified code checkpoint | `1bbb837a` — B05 code, two executable corpus/production tests and 31-file SHA manifest committed/pushed, **8/8** files SHA-256 matched on PRD; 6 PRD regression scripts passed. |
 
@@ -44,7 +44,19 @@ Do not move to UE2 before UE1 acceptance. Earlier VERIFIED work cannot be substi
 | O09 | Production data integration | NOT STARTED |
 | O10 | Complete production workflows | NOT STARTED |
 
-These are planning categories, not evidence of ten accepted/independent operations. Freeze supported source revisions and actual workflows before reporting progress as a percentage.
+These ten categories are the current operation register; an operation is accepted only against its **own stated responsibility**. Do not enlarge one operation to require later operations. The categories are provisional until source inspection verifies relevance to UE1; do not calculate an engine-wide completion percentage from them.
+
+## Mandatory source-first execution and acceptance discipline (2026-10-21)
+
+**Policy correction after repeated source-coverage misses and O01 scope expansion:**
+
+1. **Inventory source before interpreting or editing a format.** For each engine, recursively enumerate ALL supplied engine/game source roots and relevant C++ load/save code; search format tags, headers AND EOF trailers, version gates, serializers, loader functions, and all source revisions. Register the exact source file, symbol/line and branch difference. The absent `UnObjVer.h` is NOT evidence of absent source: original Unreal v0.82–0.84a use `UnRes.cpp` and trailer metadata, not the later `ULinker`.
+2. **No unsupported "source gap" assumptions.** Before calling information unavailable, search alternative file names, legacy subsystems, adjacent versions, engine and game trees, actual loader/writer implementations, and compiled artifacts where useful; record searches and distinguish (a) source genuinely absent for a particular fork, (b) UnrealDB reader not yet built, and (c) independent test fixture not yet available. Treat source definitions as implementation authority; do not delay source-driven work pending an optional old executable.
+3. **Freeze a narrow operation contract BEFORE coding.** O01 is file-format identification, version/licensee extraction, selected-game dispatch and honest unsupported/invalid results. Full name/import/export decoding is O02–O04; dependencies O05; payloads O06/O07; production SQL/search O09; complete workflow acceptance O10. Later operation failures must not block earlier acceptance unless they actually change its inputs or outputs.
+4. **Work each operation in one bounded source→diff→fix→accept sequence:** exhaustive source mapping once, real production caller coverage, minimal correction, source-anchored positive/negative tests, standard regressions, evidence of observed differences, Git commit/push and immediate PRD SHA-256 deployment. Never add arbitrary B-number cycles or new acceptance conditions after work begins without a demonstrated scope error.
+5. **Publish measurable results:** per-operation PASS/FAIL and exact open acceptance checks; genuine corpus and regression counts separately; source findings with true status (source present, code absent, or test missing). Do not conflate tests passed with engine accepted. After closing O01, **advance to O02** without reopening O01 for unrelated improvements.
+
+The source-first rule is mandatory for UE1 and repeats unchanged for UE2/2.5, UE3/UDK, UE4 and UE5. Review all supplied code branches before stating that any engine information is missing.
 
 ## UE1 source branch matrix — discovered, not assumed equivalent
 
@@ -105,10 +117,10 @@ B02 checks passed: `verify-ue1-early-format-identification.php` **9/9**, plus **
 ## Exact next actions — restart here
 
 1. Verify DEV device, `git status --short --branch`, `git log -1`, compare `origin/main`, and ensure prior committed changes reached PRD. Preserve any unrelated user edits.
-2. **Early formats now source-classified:** v0.82/0.83 resource trailer v9, v0.84a resource trailer v10 and v0.86x/v0.867 string-tagged Unrealfile v23 all have loader/writer definitions in the provided source. Use these to implement dedicated earlier readers; do not wait for an old executable. For v1.224/v1.227 and v430/v432, verify only actual code differences and missing specific bodies against the available overlapping source, without assuming forks are identical.
-3. Trace the full O01 production entry-to-result graph: `gp_read_legacy_summary` → `gp_classify_file` → game profile/compatibility decision → catalog reader resolver → staging/indexing/metadata/V5; include file-examine, HTTP scan, alternate import routes and negative/error paths.
-4. Establish a fixed supported-format and operation register with explicit branch/reader support. **Implement the dedicated early Unrealfile reader where in scope**; do not silently turn recognised format into accepted supported data.
-5. **Already passed:** 61/61 genuine v35–61 files plus 31/31 genuine v68/v69 files, including a v69/licensee-227 sample; 92/92 real classification→reader→source builder→isolated V5 write/read roundtrips. Validate newly implemented old-format readers against source-driven positive/negative fixtures now; seek genuine early-format files or a compiled original oracle *if available* as additional independent evidence, not as an excuse to postpone implementation. Do not treat V5 roundtrips as equivalent to native Epic execution.
+2. **Early formats are source-classified:** v0.82/0.83 resource-trailer v9, v0.84a resource-trailer v10 and v0.86x/v0.867 string-tagged Unrealfile v23. In O01 identify/route or explicitly reject them; implement their **full dedicated readers in O02** from the already available source. Do not wait for old executables. For v1.224/v1.227 and v430/v432, compare overlapping source implementations rather than assuming differences or equivalence.
+3. Finish **O01 only**: identify the source-defined 1996 EOF resource trailer (format version 9/10); verify recognition of the 1997 Unrealfile v23 and 1998+ numeric package revisions. Require source-verified expected identity or explicit unsupported/invalid classification, never a fake supported reader.
+4. Execute O01 admission/dispatch through the actual stage, file-examine, source/HTTP and queue call sites with source-defined positives and negatives; finish minimum-version classification policy. The **six immutable O01 gates** are in `catalog/compliance/UE1-ACCEPTANCE.md`. Do not reopen O01 to implement full early readers or V5 SQL.
+5. **Existing evidence**: 61/61 genuine v35–61 plus 31/31 genuine v68/v69, with 92/92 genuine reader→V5 isolated roundtrips. For O01, run final fixed classification tests, targeted regressions and deployment; **mark O01 accepted when its six scoped gates pass and move straight to O02**, where original v9/v10/v23 reader implementation belongs. Do not require live SQL or a compiled oracle for O01.
 6. Run relevant verifier scripts; commit via local Git CLI, `git push origin main`, deploy changed files with Robocopy to PRD (excluding storage/config), SHA-256 compare, update this page and repeat.
 
 **Recovery rule:** reading this page plus `UE1-IMPLEMENTATION.md` and `UE1-ACCEPTANCE.md` should suffice for a fresh chat. Do not reopen earlier engine audits or create arbitrary new backlog identifiers. Never mark O01 ACCEPTED until complete source-linked workflow and independent acceptance evidence is available.
