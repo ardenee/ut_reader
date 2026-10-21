@@ -26,6 +26,7 @@ final class CatalogUE1OriginalUnrealfileDatabaseDataReader
         'enumdef'=>['EnumDef',2,'name_references'],
         'floats'=>['Floats',4,'floats'],
         'vectors'=>['Vectors',12,'vectors'],
+        'dependencies'=>['Dependencies',8,'dependencies'],
     ];
 
     /** @return array<string,mixed> */
@@ -86,6 +87,13 @@ final class CatalogUE1OriginalUnrealfileDatabaseDataReader
                             case 'ints':$items[]=$signed((int)unpack('V',$v)[1]);break;
                             case 'floats':$items[]=(float)unpack('g',$v)[1];break;
                             case 'vectors':$items[]=array_values(unpack('g3',$v));break;
+                            case 'dependencies':
+                                $words=unpack('Vref/Vcrc',$v);
+                                $ref=(int)$words['ref'];
+                                if($ref>$objectCount)throw new RuntimeException('FDependency UClass reference exceeds ResMap');
+                                $items[]=['class_ref'=>$ref,
+                                    'class_object_index'=>$ref===0?null:$ref-1,
+                                    'script_text_crc'=>(int)$words['crc']];break;
                             case 'object_references':
                                 $ref=(int)unpack('V',$v)[1];
                                 if($ref>$objectCount)throw new RuntimeException('Original database UObject* ref exceeds ResMap');

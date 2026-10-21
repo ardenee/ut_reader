@@ -18,6 +18,7 @@ $types=[
  'EnumDef'=>[2,4,pack('v2',1,0),'name_references'],
  'Floats'=>[2,4,pack('g2',1.5,-2.25),'floats'],
  'Vectors'=>[1,2,pack('g3',1.0,-2.0,3.0),'vectors'],
+ 'Dependencies'=>[1,2,pack('V2',1,0xaabbccdd),'dependencies'],
 ];
 // Buffer uses four bytes and Num=4.
 $types['Buffer']=[4,5,"\x00\xffAB",'bytes'];
@@ -56,8 +57,8 @@ try{
    $rows=$parsed['database_records']??[];
    $by=[];
    foreach($rows as $r)$by[substr((string)$r['native_class'],1)]=$r;
-   $check("v{$ver}_eight_source_database_classes",
-      count($rows)===8&&($parsed['other_class_serializers_decoded']??true)===false);
+   $check("v{$ver}_nine_source_database_classes",
+      count($rows)===9&&($parsed['other_class_serializers_decoded']??true)===false);
    $check("v{$ver}_byte_and_text_data",
        ($by['Buffer']['opaque_byte_stream_hex']??null)==='00FF4142'
        && ($by['TextBuffer']['opaque_byte_stream_hex']??null)==='4869'
@@ -73,6 +74,9 @@ try{
        && ($by['EnumDef']['record_values']??null)===[
            ['raw_one_based_ref'=>1,'name'=>'Buffer'],
            ['raw_one_based_ref'=>0,'name'=>null]]);
+   $check("v{$ver}_FDependency_class_and_crc",
+      ($by['Dependencies']['record_values']??null)===[[
+         'class_ref'=>1,'class_object_index'=>0,'script_text_crc'=>0xaabbccdd]]);
    $check("v{$ver}_float_and_archive_vector",
        ($by['Floats']['record_values']??null)===[1.5,-2.25]
        && ($by['Vectors']['record_values']??null)===[[1.0,-2.0,3.0]]
@@ -81,17 +85,17 @@ try{
        $tmp,['format'=>'early_unrealfile','version'=>$ver]);
    $r=$stage['native_metadata']['unrealfile_database_records']['database_records']??[];
    $check("v{$ver}_native_staging_unverified",
-       count($r)===8&&($stage['parse_complete']??true)===false);
+       count($r)===9&&($stage['parse_complete']??true)===false);
    $p=$fx['positions']['Words']['header'];
    file_put_contents($tmp,substr_replace($fx['bytes'],pack('V',9),$p+16,4));
    try{DB::read($tmp,true);$reject=false;}catch(RuntimeException){$reject=true;}
    $check("v{$ver}_invalid_active_count_rejected",$reject);
    $p=$fx['positions']['Array']['data'];
-   file_put_contents($tmp,substr_replace($fx['bytes'],pack('V',9),$p,4));
+   file_put_contents($tmp,substr_replace($fx['bytes'],pack('V',10),$p,4));
    try{DB::read($tmp,true);$reject=false;}catch(RuntimeException){$reject=true;}
    $check("v{$ver}_invalid_object_ref_rejected",$reject);
    $p=$fx['positions']['EnumDef']['data'];
-   file_put_contents($tmp,substr_replace($fx['bytes'],pack('v',17),$p,2));
+   file_put_contents($tmp,substr_replace($fx['bytes'],pack('v',19),$p,2));
    try{DB::read($tmp,true);$reject=false;}catch(RuntimeException){$reject=true;}
    $check("v{$ver}_invalid_name_ref_rejected",$reject);
  }
