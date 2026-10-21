@@ -1,8 +1,8 @@
 ﻿{
-    "updated_at_utc":  "2026-10-21T21:16:13.2064594Z",
-    "head_commit":  "8084fe20",
-    "current_target":  "PRD",
-    "current_source_sha256":  "b2ff260dd48acccc917e19357f4ba03cbc9e4eba878361a64034edc292e69c02",
+    "updated_at_utc":  "2026-10-21T21:19:23.4939571Z",
+    "head_commit":  "86324503",
+    "current_target":  "DEV",
+    "current_source_sha256":  "076cb45071495c2d0c137a09347b9054ebf3205780c8377b7d99ff5526343035",
     "tests":  [
                   {
                       "key":  "DEV:verify-ue1-classic-tagged-properties.php",
@@ -189,12 +189,12 @@
                       "test":  "verify-ue1-original-resource-lightmesh.php",
                       "target":  "DEV",
                       "state":  "PASS",
-                      "event_at_utc":  "2026-10-21T19:13:16.6717995Z",
-                      "source_sha256":  "49a7ccae36329cdbf676eca54602fe1f840175640fc78282d844b140a42c53d1",
-                      "test_sha256":  "471ff6db4e9915de350631492f092f96872a0d7287d950cbd0a41d7475a49c02",
-                      "run_id":  "20261021T191316447Z-400b48bf",
+                      "event_at_utc":  "2026-10-21T21:19:23.1265160Z",
+                      "source_sha256":  "076cb45071495c2d0c137a09347b9054ebf3205780c8377b7d99ff5526343035",
+                      "test_sha256":  "6584cab4d8716563f8363eec919c00258ef368643b16c9e5d810a10e97009b70",
+                      "run_id":  "20261021T211922899Z-16a20415",
                       "exit_code":  0,
-                      "log":  "catalog\\compliance\\evidence\\o06\\20261021T191316447Z-400b48bf-DEV-verify-ue1-original-resource-lightmesh.php.txt"
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261021T211922899Z-16a20415-DEV-verify-ue1-original-resource-lightmesh.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-original-resource-mesh.php",
@@ -297,24 +297,24 @@
                       "test":  "verify-ue1-original-staging-integration.php",
                       "target":  "DEV",
                       "state":  "PASS",
-                      "event_at_utc":  "2026-10-21T21:14:48.1017149Z",
-                      "source_sha256":  "b5fd7fd0f4ad96991873c151184bb0e261116d8d30799cfc0983a25958dfd68a",
+                      "event_at_utc":  "2026-10-21T21:19:23.3099889Z",
+                      "source_sha256":  "076cb45071495c2d0c137a09347b9054ebf3205780c8377b7d99ff5526343035",
                       "test_sha256":  "c462897e0475f95dc770172d1e18b6a1c23274f9e17c25307d802472da9e9486",
-                      "run_id":  "20261021T211447934Z-54196538",
+                      "run_id":  "20261021T211923142Z-e7bf7516",
                       "exit_code":  0,
-                      "log":  "catalog\\compliance\\evidence\\o06\\20261021T211447934Z-54196538-DEV-verify-ue1-original-staging-integration.php.txt"
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261021T211923142Z-e7bf7516-DEV-verify-ue1-original-staging-integration.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-original-staging-mysql-isolated.php",
                       "test":  "verify-ue1-original-staging-mysql-isolated.php",
                       "target":  "DEV",
                       "state":  "PASS",
-                      "event_at_utc":  "2026-10-21T21:14:48.2837013Z",
-                      "source_sha256":  "b5fd7fd0f4ad96991873c151184bb0e261116d8d30799cfc0983a25958dfd68a",
+                      "event_at_utc":  "2026-10-21T21:19:23.4889635Z",
+                      "source_sha256":  "076cb45071495c2d0c137a09347b9054ebf3205780c8377b7d99ff5526343035",
                       "test_sha256":  "c9f942791e87f3add0b113731453ad7a51f57cc92c649729cc251332e368276d",
-                      "run_id":  "20261021T211448117Z-0639918e",
+                      "run_id":  "20261021T211923325Z-287b305b",
                       "exit_code":  0,
-                      "log":  "catalog\\compliance\\evidence\\o06\\20261021T211448117Z-0639918e-DEV-verify-ue1-original-staging-mysql-isolated.php.txt"
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261021T211923325Z-287b305b-DEV-verify-ue1-original-staging-mysql-isolated.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-original-unrealfile-bit-archives.php",

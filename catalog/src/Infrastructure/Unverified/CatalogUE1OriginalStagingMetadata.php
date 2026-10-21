@@ -50,6 +50,7 @@ final class CatalogUE1OriginalStagingMetadata
                 'resource_bsp_surface_records' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalResourceBspSurfsReader::read($path, false),
                 'resource_bsp_node_records' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalResourceBspNodesReader::read($path, false),
                 'resource_polygon_records' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalResourcePolysReader::read($path, false),
+                'resource_lightmesh_records' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalResourceLightMeshReader::read($path, false),
                 'resource_bsp_records' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalResourceBspReader::read($path, false),
                 'resource_polys_records' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalResourcePolysReader::read($path, false),
                 'resource_lightmesh_records' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalResourceLightMeshReader::read($path, false),
