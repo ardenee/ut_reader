@@ -201,11 +201,20 @@ final class CatalogLegacyBinaryStream
             return '';
         }
         if ($length > 0) {
+            // Native UE1 FNameEntry has TCHAR Name[64]. Source v400 copies
+            // the decoded FString into this fixed buffer; values without a
+            // terminator or above 63 characters cannot yield a valid name.
+            if ($sourceAnsi && $length > 64) {
+                throw new RuntimeException('Invalid UE1 FName FString exceeds NAME_SIZE=64.');
+            }
             if ($length > $this->remaining()) {
                 throw new OutOfBoundsException('Invalid legacy FString byte length: ' . $length);
             }
             $raw = $this->bytes($length);
             $terminator = strpos($raw, "\0");
+            if ($sourceAnsi && $terminator === false) {
+                throw new RuntimeException('Invalid UE1 FName FString has no NUL terminator.');
+            }
             if ($terminator !== false) {
                 $raw = substr($raw, 0, $terminator);
             }
@@ -213,16 +222,24 @@ final class CatalogLegacyBinaryStream
         }
 
         $characters = -$length;
+        if ($sourceAnsi && $characters > 64) {
+            throw new RuntimeException('Invalid UE1 wide FName exceeds NAME_SIZE=64.');
+        }
         $bytes = $characters * 2;
         if ($characters > intdiv(PHP_INT_MAX, 2) || $bytes > $this->remaining()) {
             throw new OutOfBoundsException('Invalid legacy wide FString length: ' . $length);
         }
         $raw = $this->bytes($bytes);
+        $hasTerminator = false;
         for ($offset = 0; $offset + 1 < strlen($raw); $offset += 2) {
             if ($raw[$offset] === "\0" && $raw[$offset + 1] === "\0") {
+                $hasTerminator = true;
                 $raw = substr($raw, 0, $offset);
                 break;
             }
+        }
+        if ($sourceAnsi && !$hasTerminator) {
+            throw new RuntimeException('Invalid UE1 wide FName has no UTF-16 NUL terminator.');
         }
         $converted = @mb_convert_encoding($raw, 'UTF-8', 'UTF-16LE');
         return $converted === false ? '' : $converted;
