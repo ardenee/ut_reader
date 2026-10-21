@@ -404,6 +404,8 @@ function inspect_unreal_file(string $inputPath, bool $full = false): array
                         $result['original_unrealfile_object_bases'] =
                             \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileObjectBaseReader::read($parsePath)['object_bases'];
                         $result['original_unrealfile_object_bases_status'] = 'DECODED';
+                        $result['original_unrealfile_properties_bin'] =
+                            \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfilePropertiesReader::read($parsePath, false);
                         $result['original_unrealfile_bit_archive'] =
                             \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileBitArrayReader::read($parsePath, false);
                         $result['original_unrealfile_database_records'] =

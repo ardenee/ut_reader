@@ -1,0 +1,11 @@
+﻿{
+    "ok": false,
+    "passed": 16,
+    "total": 20,
+    "failures": [
+        "v22_invalid_object_ref_rejected",
+        "v22_invalid_name_ref_rejected",
+        "v23_invalid_object_ref_rejected",
+        "v23_invalid_name_ref_rejected"
+    ]
+}
