@@ -32,7 +32,27 @@ $inputs+=@(Join-Path $testRoot 'catalog\bin\inspect-unreal-file.php')
 # Compiler fixture is executable acceptance input; changing it must invalidate
 # previous ABI passes even when the PHP verifier is unchanged.
 $inputs+=@(Join-Path $testRoot 'catalog\compliance\evidence\o06\ue1-1996-msvc-abi.cpp')
+# Original source is an acceptance dependency: any change in Epic's pinned
+# 1996 headers/implementations invalidates previous source-parity passes.
+$epic1996='L:\Source\Games\Unreal\Unreal [v0.84a] [1996-12-11]\Src'
+if(Test-Path -LiteralPath $epic1996){
+ $inputs+=@(Get-ChildItem -LiteralPath $epic1996 -Recurse -File |
+   Where-Object { $_.Extension -in @('.cpp','.h') } |
+   Select-Object -ExpandProperty FullName)
+}else{
+ $sourceSigMissing1996='MISSING_EPIC_1996_SOURCE'
+}
+$epic1997='L:\Source\Games\Unreal\Unreal [v0.867] [1997-07-25]\Src'
+if(Test-Path -LiteralPath $epic1997){
+ $inputs+=@(Get-ChildItem -LiteralPath $epic1997 -Recurse -File |
+   Where-Object { $_.Extension -in @('.cpp','.h') } |
+   Select-Object -ExpandProperty FullName)
+}else{
+ $sourceSigMissing1997='MISSING_EPIC_1997_SOURCE'
+}
 $sourceSig=($inputs|Sort-Object|ForEach-Object{if(Test-Path -LiteralPath $_){$_+':'+(Get-FileHash -LiteralPath $_ -Algorithm SHA256).Hash}})-join "`n"
+if($sourceSigMissing1996){$sourceSig+="`n"+$sourceSigMissing1996}
+if($sourceSigMissing1997){$sourceSig+="`n"+$sourceSigMissing1997}
 $sourceSha=Get-TextSha $sourceSig
 $commit=(&git -C $repo rev-parse --short=8 HEAD).Trim()
 $history=@()
