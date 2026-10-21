@@ -1,0 +1,9 @@
+﻿Target: PRD
+Test: verify-ue1-original-staging-mysql-isolated.php
+Exit: 0
+{
+    "ok": true,
+    "passed": 16,
+    "total": 16,
+    "failures": []
+}

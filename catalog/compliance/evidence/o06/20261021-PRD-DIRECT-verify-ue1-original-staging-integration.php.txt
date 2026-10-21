@@ -1,0 +1,9 @@
+﻿Target: PRD
+Test: verify-ue1-original-staging-integration.php
+Exit: 0
+{
+    "ok": true,
+    "passed": 29,
+    "total": 29,
+    "failures": []
+}

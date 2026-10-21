@@ -90,7 +90,7 @@ final class CatalogUE1OriginalUnrealfileAudioReader
     /** Hash the exact archive payload without treating it as decoded media. */
     private static function digest($fp, int $offset, int $length): string
     {
-        if ($length < 0 || $length > 268435456 || fseek($fp, $offset, SEEK_SET) !== 0)
+        if ($length < 0 || fseek($fp, $offset, SEEK_SET) !== 0)
             throw new RuntimeException('Invalid native audio archive span');
         $ctx = hash_init('sha256');
         while ($length > 0) {
