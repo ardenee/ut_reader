@@ -75,6 +75,15 @@ try{
             && (int)($row['import_count']??-1)===$expectedImports
             && (int)($row['export_count']??-1)===$expectedExports
             && (int)($row['detected_package_version']??-1)===$expectedVersion);
+        if($type==='resource'){
+            $binding=$snapshot['native_metadata']['resource_import_lookup'][0]??[];
+            $check('resource_mysql_global_resarray_lookup_preserved',
+                ($binding['resource_name']??null)==='ImportRes'
+                && ($binding['resource_type']??null)===2
+                && ($binding['status']??null)==='runtime_registry_not_available'
+                && array_key_exists('runtime_object_loaded',$binding)
+                && $binding['runtime_object_loaded']===null);
+        }
         $check($type.'_persistent_native_metadata',
             ($snapshot['source_format']??null)==='original-ue1-native-partial'
             && ($snapshot['native_metadata']['serialized_version']??null)===$expectedVersion

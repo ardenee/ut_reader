@@ -56,6 +56,15 @@ try {
         $parsed=$staging->parse($p,'original.res',0,'');
         $check("resource{$version}_native_counts",($parsed['header']['native_counts']??null)===[
             'names'=>1,'imports'=>1,'exports'=>1] && ($parsed['header']['version']??null)===$version);
+        $lookup=$parsed['native_metadata']['resource_import_lookup'][0]??[];
+        $check("resource{$version}_global_registry_dependency_key",
+            ($lookup['resource_name']??null)==='ImportedTex'
+            && ($lookup['resource_type']??null)===3
+            && ($lookup['status']??null)==='runtime_registry_not_available'
+            && array_key_exists('runtime_object_loaded',$lookup)
+            && $lookup['runtime_object_loaded']===null
+            && array_key_exists('loaded_resource_slot',$lookup)
+            && $lookup['loaded_resource_slot']===null);
         $check("resource{$version}_native_records",($parsed['native_metadata']['source_record_family']??null)==='FResNameFileEntry'
             && ($parsed['native_metadata']['resource_imports'][0]['name']??null)==='ImportedTex'
             && ($parsed['native_metadata']['resource_exports'][0]['name']??null)==='ExportedTex'

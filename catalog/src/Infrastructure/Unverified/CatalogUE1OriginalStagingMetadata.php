@@ -33,6 +33,10 @@ final class CatalogUE1OriginalStagingMetadata
                 'source_record_family' => 'FResNameFileEntry',
                 'summary' => $raw['summary'],
                 'resource_imports' => $imports,
+                // Epic resolves these against the *already-loaded* global
+                // ResArray. A catalog file alone cannot establish that state.
+                // Persist the native lookup keys without a fabricated match.
+                'resource_import_lookup' => \UnrealDb\Catalog\Domain\Package\CatalogUE1OriginalResourceImportResolver::project($imports),
                 'resource_exports' => $exports,
                 'resource_headers' => $raw['resource_headers'],
                 'unconsumed_header_bytes' => $raw['unconsumed_header_bytes'],
