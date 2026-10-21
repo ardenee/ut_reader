@@ -32,6 +32,7 @@ $inputs+=@(Join-Path $testRoot 'catalog\bin\inspect-unreal-file.php')
 # Compiler fixture is executable acceptance input; changing it must invalidate
 # previous ABI passes even when the PHP verifier is unchanged.
 $inputs+=@(Join-Path $testRoot 'catalog\compliance\evidence\o06\ue1-1996-msvc-abi.cpp')
+$inputs+=@(Join-Path $testRoot 'catalog\compliance\evidence\o06\ue1-1996-actor-layout.cpp')
 # Original source is an acceptance dependency: any change in Epic's pinned
 # 1996 headers/implementations invalidates previous source-parity passes.
 $epic1996='L:\Source\Games\Unreal\Unreal [v0.84a] [1996-12-11]\Src'

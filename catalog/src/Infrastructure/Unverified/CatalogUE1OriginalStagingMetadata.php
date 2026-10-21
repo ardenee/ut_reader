@@ -52,6 +52,7 @@ final class CatalogUE1OriginalStagingMetadata
                 'resource_lightmesh_records' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalResourceLightMeshReader::read($path, false),
                 'resource_model_level_headers' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalResourceModelLevelReader::read($path, false),
                 'resource_class_property_tables' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalResourceClassPropertyReader::read($path, false),
+                'resource_actor_records' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalResourceActorReader::read($path, false),
                 'resource_simple_database_records' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalResourceSimpleDatabaseReader::read($path, false),
                 'unconsumed_header_bytes' => $raw['unconsumed_header_bytes'],
                 'payload_decoded' => false,
