@@ -39,6 +39,8 @@ Updated: **2026-10-21**. This is the canonical recovery/handover file for this p
 
 **O06 critical source ABI correction (2026-10-21):** Epic v0.84a native `FVector` is **16 bytes** (`X/Y/Z` plus `W`/flags word), and `FBoundingRect` is **32 bytes**. The earlier 12-/24-byte synthetic reader fixtures were wrong despite PASS results. Fixed UVectors/UBounds record strides, UMeshMap header to **108 bytes**, UMesh header to **176 bytes**, frame bounds to **32 bytes**, preserving the native fourth word verbatim. Corrected source-defined DEV verifiers: geometry **40/40**, MeshMap **10/10**, Mesh **14/14**, staging and isolated MySQL both PASS. Epic v0.867 `FArchive::operator<<(FVector&)` serializes only `X/Y/Z`, so the 1997 binary property FVector remains 12 bytes. All original compiled 1996/1997 runtime oracles still **UNAVAILABLE** and O06 still **NOT ACCEPTED**. See `UE1-O06-SERIALIZATION.md` and the durable per-test journal.
 
+**O06 original 1997 primitive database checkpoint (2026-10-21):** Eight source `UDatabase` descendants (`Buffer`, `TextBuffer`, `Words`, `Ints`, `Array`, `EnumDef`, `Floats`, `Vectors`) now have actual `Num`-bounded typed `SerializeData` records in UnrealDB; `UTextBuffer` Pos/Top and source v22/v23 name/object reference bounds verified. DEV **18/18** source-defined native fixtures, staging and isolated MySQL pass. Does not decode other native classes, link runtime references, or certify external class schemas. O06 remains **IMPLEMENTING** until those gaps pass their own acceptance.
+
 ## Engine sequence
 
 | Phase | Engine | New-process status |
