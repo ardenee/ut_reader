@@ -35,7 +35,9 @@ final class CatalogUE1ClassicTaggedPropertyReader
             'serial_offset'=>$offset,'serial_size'=>$size,'tags'=>[],'native_tail_bytes'=>null,
             'schema_verified'=>false];
         if ($size <= 0) { return $base+['status'=>'no_serialized_object']; }
-        if ((int)$export['classIndex']===0) { return $base+['status'=>'class_defined_binary_serialization']; }
+        if ((int)$export['classIndex']===0) {
+            return array_replace($base,CatalogUE1ClassicClassMetadataReader::inspect($path,$package,$exportIndex));
+        }
         // Unreal v1.200 UObject::Serialize always serializes MainFrame
         // in file versions <47, independent of RF_HasStack. In later
         // versions a flagged StateFrame still precedes tagged properties.

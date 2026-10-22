@@ -29,6 +29,10 @@ final class CatalogUE1ClassicNativeObjectReader
             ? (string)($imports[-$classIndex-1]['objectNameText']??'')
             : ($classIndex>0?(string)($exports[$classIndex-1]['objectNameText']??''):'Class');
         $record=['export_index'=>$index,'class_name'=>$className,'status'=>'class_specific_serializer_unimplemented'];
+        if($classIndex===0){
+            return array_replace($record,['status'=>'class_metadata_decoded_in_class_reader',
+                'metadata_status'=>$propertyStream['status']??'unknown']);
+        }
         if(($propertyStream['status']??'')!=='tag_envelope_decoded'){
             return array_replace($record,['status'=>'property_envelope_unavailable']);
         }
