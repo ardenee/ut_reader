@@ -40,7 +40,7 @@ final class CatalogUE1ClassicNativeObjectReader
         }
         $nativeKind=strtolower($className);
         if(!in_array($nativeKind,[
-            'texture','palette','sound','font','package','firetexture','wettexture','scriptedtexture','textbuffer','enum'
+            'texture','palette','sound','font','package','firetexture','wettexture','scriptedtexture','textbuffer','enum','const'
         ],true)){return $record;}
         $fp=fopen($path,'rb');
         if($fp===false){throw new RuntimeException('Cannot open native UE1 payload');}
@@ -113,6 +113,47 @@ final class CatalogUE1ClassicNativeObjectReader
                     'status'=>$pos===$limit?'native_enum_record_complete':'native_enum_has_extension',
                     'super_field_reference'=>$superField,'next_field_reference'=>$nextField,
                     'name_count'=>$numNames,'names'=>$enumNames,
+                    'extension_bytes'=>$limit-$pos,
+                ]);
+            }
+            if($nativeKind==='const'){
+                // Epic Core/Src/UnClass.cpp UConst::Serialize:
+                // UField::Serialize (SuperField, Next), then FString Value.
+                // v1.200 FString=TArray<char>; UT99 v400 signed compact
+                // FString permits ANSI and UTF-16LE, as in UTextBuffer.
+                $ref=static function()use($compact,$pkg):int{
+                    $id=$compact();
+                    if($id<0&&-$id>count($pkg->getImports())
+                        ||$id>count($pkg->getExports())){
+                        throw new RuntimeException('UConst UField reference out of package bounds');
+                    }
+                    return $id;
+                };
+                $superField=$ref();$nextField=$ref();
+                $signedCount=$compact();$wide=$signedCount<0;
+                if($wide&&$ver<64){
+                    throw new RuntimeException('UConst wide FString not valid in ANSI-only version');
+                }
+                $count=abs($signedCount);
+                $remaining=$limit-$pos;
+                if($count>($wide?intdiv($remaining,2):$remaining)){
+                    throw new RuntimeException('UConst value exceeds export SerialSize');
+                }
+                $raw=$read($count*($wide?2:1));
+                if($count>0){
+                    $ending=$wide?"\x00\x00":"\x00";
+                    if(!str_ends_with($raw,$ending)){
+                        throw new RuntimeException('UConst Value FString missing NUL terminator');
+                    }
+                    $chars=substr($raw,0,-strlen($ending));
+                }else{$chars='';}
+                $value=$chars===''?'':@iconv($wide?'UTF-16LE':'Windows-1252','UTF-8',$chars);
+                if($value===false){throw new RuntimeException('UConst invalid character encoding');}
+                return array_replace($record,[
+                    'status'=>$pos===$limit?'native_const_record_complete':'native_const_has_extension',
+                    'super_field_reference'=>$superField,'next_field_reference'=>$nextField,
+                    'value'=>$value,'value_encoding'=>$wide?'UTF-16LE':'Windows-1252',
+                    'value_count'=>$count,'value_sha256'=>hash('sha256',$raw),
                     'extension_bytes'=>$limit-$pos,
                 ]);
             }
