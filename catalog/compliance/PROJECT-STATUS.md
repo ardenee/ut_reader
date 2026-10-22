@@ -9,6 +9,7 @@ Updated: **2026-10-22**. This is the canonical recovery/handover file for this p
 | DEV | `game-amd`, `192.168.0.51`; Desktop Commander account `aaron@arden.ie` |
 | Repo | `C:\Users\arden\source\repos\ut_reader` (branch `main`) |
 | Reference sources | `L:\Source\Engine` and `L:\Source\Games` |
+| DEV Graphify code graph (optional) | **INSTALLED / PILOT VERIFIED** — local `graphifyy 0.9.93`, MCP stdio handshake and graph query PASS; UnrealDB and UE1 v0.867 indexes at `C:\Users\arden\Graphify\`. See [GRAPHIFY-DEV-SETUP.md](GRAPHIFY-DEV-SETUP.md). Graph relationships are advisory, not Epic parity acceptance. |
 | Deployment | `Z:\Apache24\htdocs\unrealdb` on DEV is PRD `Lelly-pc` |
 | GitHub | `https://github.com/ardenee/ut_reader` |
 | Active engine / operation | **UE1 / O06 — 172 source entries, 134 classified, 83 with latest test outcome; statuses DISCOVERED=38, EXCLUDED=5, GAP=44, MAPPED=5, PARTIAL=80. Six fixed gates remain OPEN; see live table below.** |
