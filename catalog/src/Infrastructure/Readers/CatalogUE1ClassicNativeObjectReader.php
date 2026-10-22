@@ -40,7 +40,7 @@ final class CatalogUE1ClassicNativeObjectReader
         }
         $nativeKind=strtolower($className);
         if(!in_array($nativeKind,[
-            'texture','palette','sound','font','package','firetexture','wettexture','scriptedtexture'
+            'texture','palette','sound','font','package','firetexture','wettexture','scriptedtexture','textbuffer','enum'
         ],true)){return $record;}
         $fp=fopen($path,'rb');
         if($fp===false){throw new RuntimeException('Cannot open native UE1 payload');}
@@ -79,6 +79,95 @@ final class CatalogUE1ClassicNativeObjectReader
                 return array_replace($record,[
                     'status'=>$nativeLength===0?'native_package_record_complete':'native_package_unexpected_tail',
                     'extension_bytes'=>$nativeLength,
+                ]);
+            }
+            if($nativeKind==='enum'){
+                // Epic v1.200 Core/Src/UnClass.cpp UField::Serialize
+                // writes SuperField and Next after UObject::Serialize.
+                // Core/Src/UnObj.cpp UEnum::Serialize then writes Names:
+                // TArray<FName> compact count followed by compact FName refs.
+                // Same source order in UT99 v400.
+                $objectRef=static function()use($compact,$pkg):int{
+                    $ref=$compact();
+                    if(($ref<0&&-$ref>count($pkg->getImports()))
+                        ||($ref>0&&$ref>count($pkg->getExports()))){
+                        throw new RuntimeException('Enum UField reference outside package object map');
+                    }
+                    return $ref;
+                };
+                $superField=$objectRef();$nextField=$objectRef();
+                $numNames=$compact();
+                if($numNames<0||$numNames>$limit-$pos){
+                    throw new RuntimeException('Enum FName array exceeds native export bounds');
+                }
+                $names=$pkg->getNames();$enumNames=[];
+                for($i=0;$i<$numNames;$i++){
+                    $nameIndex=$compact();
+                    if($nameIndex<0||!isset($names[$nameIndex])){
+                        throw new RuntimeException('Enum FName index outside package name map');
+                    }
+                    $enumNames[]=['name_index'=>$nameIndex,
+                        'name'=>(string)$names[$nameIndex]['name']];
+                }
+                return array_replace($record,[
+                    'status'=>$pos===$limit?'native_enum_record_complete':'native_enum_has_extension',
+                    'super_field_reference'=>$superField,'next_field_reference'=>$nextField,
+                    'name_count'=>$numNames,'names'=>$enumNames,
+                    'extension_bytes'=>$limit-$pos,
+                ]);
+            }
+            if($nativeKind==='textbuffer'){
+                // Epic Unreal v1.200 Core/Src/UnObj.cpp UTextBuffer::Serialize:
+                // UObject::Serialize then Ar << Pos << Top << Text.
+                // Unreal v1.200 FString serializes TArray<char> (compact count,
+                // ANSI bytes); UT99 v400 Core/Src/UnMisc.cpp supports a signed
+                // compact count: positive ANSI, negative UTF-16LE TCHAR.
+                $signed32=static function()use($int):int{
+                    $n=$int();return $n>=0x80000000?$n-0x100000000:$n;
+                };
+                $textPos=$signed32();$top=$signed32();
+                $length=$compact();$wide=$length<0;
+                if($wide&&$ver<64){
+                    throw new RuntimeException('Wide FString not defined by v1.200 ANSI archive');
+                }
+                if($wide){
+                    $count=-$length;
+                    if($count>intdiv($limit-$pos,2)){
+                        throw new RuntimeException('TextBuffer UTF-16 FString exceeds export bounds');
+                    }
+                    $size=$count*2;
+                }else{
+                    if($length>$limit-$pos){
+                        throw new RuntimeException('TextBuffer ANSI FString exceeds export bounds');
+                    }
+                    $count=$length;$size=$count;
+                }
+                $textOffset=$pos;$raw=$read($size);
+                if($count>0){
+                    if($wide){
+                        if(substr($raw,-2)!=="\x00\x00"){
+                            throw new RuntimeException('TextBuffer wide FString lacks final NUL');
+                        }
+                        $encoded=substr($raw,0,-2);
+                    }else{
+                        if(substr($raw,-1)!=="\x00"){
+                            throw new RuntimeException('TextBuffer ANSI FString lacks final NUL');
+                        }
+                        $encoded=substr($raw,0,-1);
+                    }
+                }else{$encoded='';}
+                $decoded=$encoded===''?'':@iconv($wide?'UTF-16LE':'Windows-1252','UTF-8',$encoded);
+                if($decoded===false){
+                    throw new RuntimeException('Invalid TextBuffer character sequence');
+                }
+                return array_replace($record,[
+                    'status'=>$pos===$limit?'native_textbuffer_record_complete':'native_textbuffer_has_extension',
+                    'position'=>$textPos,'top'=>$top,'text'=>$decoded,
+                    'text_encoding'=>$wide?'UTF-16LE':'Windows-1252',
+                    'text_character_count'=>$count>0?$count-1:0,
+                    'text_raw_bytes'=>$size,'text_raw_offset'=>$textOffset,
+                    'text_raw_sha256'=>hash('sha256',$raw),
+                    'extension_bytes'=>$limit-$pos,
                 ]);
             }
             if($nativeKind==='sound'){

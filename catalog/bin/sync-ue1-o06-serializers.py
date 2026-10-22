@@ -107,7 +107,7 @@ def render(entries):
         head.append("")
     head += [END]
     return "\n".join(head)
-def save(entries):
+def save(entries, activity_override=None):
     items=sorted(entries.values(),key=lambda e:(list(ROOTS).index(e["branch"]),e["symbol"]))
     DATA.write_text(json.dumps({"schema":1,"updated_at_utc":NOW,"entries":items},indent=2,ensure_ascii=False)+"\n",encoding="utf-8")
     body=DOC.read_text(encoding="utf-8-sig")
@@ -131,7 +131,7 @@ def save(entries):
     body=re.sub(r"(?m)^\| Active engine / operation \|[^\n]*$",lambda _:current,body,count=1)
     modified=max(items,key=lambda e:e.get("updated_at_utc",""))
     v=modified.get("last_verification")
-    activity=(modified["id"]+" -> "+modified["status"]+
+    activity=activity_override or (modified["id"]+" -> "+modified["status"]+
               ("; latest "+v["target"]+" "+v["state"]+" at "+v["at_utc"] if v else "")+
               "; recorded "+modified.get("updated_at_utc",""))
     activity_line="| Latest serializer status event | "+activity.replace("|","/")+" |"
@@ -242,6 +242,17 @@ def main():
                 e["updated_at_utc"]=NOW
                 count+=1
         print("JOURNAL_TEST_ROWS_REFRESHED="+str(count))
-    save(old)
+    activity_override=None
+    if args.record_test:
+        named=[x for x in tests if x.get("test")==args.record_test[0]
+               and x.get("target")==args.record_test[1]
+               and x.get("state") in ("STARTED","PASS","FAIL")]
+        if named:
+            last=max(named,key=lambda x:x.get("event_at_utc",""))
+            affected=sum(x.get("test")==args.record_test[0] for x in old.values())
+            activity_override=("named test "+args.record_test[0]+" "+args.record_test[1]
+                 +" -> "+last["state"]+" at "+last.get("event_at_utc","")
+                 +"; source-linked entries="+str(affected))
+    save(old, activity_override)
     print("NEW_DISCOVERIES="+str(new))
 if __name__=="__main__":main()
