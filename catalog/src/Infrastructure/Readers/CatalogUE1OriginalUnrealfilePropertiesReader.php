@@ -104,7 +104,17 @@ final class CatalogUE1OriginalUnrealfilePropertiesReader
                     $result['status']='parent_class_schema_unavailable';
                     $results[]=$result;continue;
                 }
-                if(CatalogUE1OriginalUnrealfilePropertySerializationGate::unresolved($properties,$sourceLineage)){
+                // An exact fixed-width class-bin data segment can distinguish
+                // May (0x1000 saved) from July (0x1000 omitted) without
+                // guessing the engine build from shared Unrealfile v23.
+                $effectiveLineage=$sourceLineage;
+                if($effectiveLineage===null
+                    && CatalogUE1OriginalUnrealfilePropertySerializationGate::unresolved($properties,null)){
+                    $effectiveLineage=CatalogUE1OriginalUnrealfilePropertySerializationGate::inferUPropertiesByDataBytes(
+                        $properties,(int)$o['file_data_size']
+                    );
+                }
+                if(CatalogUE1OriginalUnrealfilePropertySerializationGate::unresolved($properties,$effectiveLineage)){
                     if($strict)throw new RuntimeException('Original May/July 1997 CPF_Intrinsic file-serialization behavior ambiguous: source lineage required');
                     $result['status']='source_1997_property_lineage_required';
                     $result['source_lineage']=null;
@@ -121,7 +131,7 @@ final class CatalogUE1OriginalUnrealfilePropertiesReader
                 };
                 $values=[];
                 foreach($properties as $p){
-                    if(!CatalogUE1OriginalUnrealfilePropertySerializationGate::serialized((int)$p['flags'],$sourceLineage))continue;
+                    if(!CatalogUE1OriginalUnrealfilePropertySerializationGate::serialized((int)$p['flags'],$effectiveLineage))continue;
                     $type=(int)$p['property_type'];$dim=(int)$p['array_dim'];
                     if($dim<0||$dim>1000000)throw new RuntimeException('Invalid property ArrayDim');
                     $items=[];$start=$pos;
@@ -178,7 +188,9 @@ final class CatalogUE1OriginalUnrealfilePropertiesReader
                     'native_UClass_bin_properties_trailing_bytes';
                 $result['class_schema_object_index']=$classRef-1;
                 $result['external_property_schema_sources']=$externalSources;
-                $result['source_lineage']=$sourceLineage;
+                $result['source_lineage']=$effectiveLineage;
+                $result['source_lineage_inferred_from_exact_data_bytes']=$sourceLineage===null
+                    && $effectiveLineage!==null;
                 $result['runtime_external_classes_loaded']=false;
                 $result['property_values']=$values;
                 $result['serialized_bytes_consumed']=$pos;

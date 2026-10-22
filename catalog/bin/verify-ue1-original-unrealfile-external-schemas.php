@@ -142,12 +142,15 @@ try{
         file_put_contents($provPath,$mayProvider['bytes']);
         file_put_contents($consumerPath,$mayConsumer['bytes']);
         $unknown=Properties::read($consumerPath,false,['BASE'=>$provPath])['properties_objects'][0]??[];
-        $check("v{$version}_properties_external_schema_intrinsic_requires_lineage",
-            ($unknown['status']??null)==='source_1997_property_lineage_required'
-            &&($unknown['property_values']??null)===[]);
-        try{Properties::read($consumerPath,true,['BASE'=>$provPath]);$reject=false;}
-        catch(RuntimeException){$reject=true;}
-        $check("v{$version}_strict_properties_ambiguous_lineage_rejected",$reject);
+        $check("v{$version}_properties_may_exact_bytes_infers_source",
+            ($unknown['status']??null)==='native_UClass_bin_properties_decoded'
+            &&($unknown['source_lineage']??null)===$gate::MAY
+            &&($unknown['source_lineage_inferred_from_exact_data_bytes']??false)===true
+            &&($unknown['property_values'][0]['values']??null)===[333]);
+        $auto=Properties::read($consumerPath,true,['BASE'=>$provPath])['properties_objects'][0]??[];
+        $check("v{$version}_strict_exact_May_native_bytes_accepted",
+            ($auto['status']??null)==='native_UClass_bin_properties_decoded'
+            &&($auto['serialized_bytes_consumed']??null)===4);
         $mayDecoded=Properties::read($consumerPath,true,['BASE'=>$provPath],$gate::MAY)['properties_objects'][0]??[];
         $check("v{$version}_may_properties_intrinsic_bit_serialized",
             ($mayDecoded['status']??null)==='native_UClass_bin_properties_decoded'
@@ -162,9 +165,29 @@ try{
             &&($julDecoded['serialized_bytes_consumed']??-1)===0
             &&($julDecoded['source_lineage']??null)===$gate::JULY);
         $stillUnknown=Properties::read($consumerPath,false,['BASE'=>$provPath])['properties_objects'][0]??[];
-        $check("v{$version}_july_properties_no_guess_by_payload_size",
-            ($stillUnknown['status']??null)==='source_1997_property_lineage_required');
+        $check("v{$version}_july_properties_exact_zero_bytes_auto_detected",
+            ($stillUnknown['status']??null)==='native_UClass_bin_properties_decoded'
+            &&($stillUnknown['source_lineage']??null)===$gate::JULY
+            &&($stillUnknown['source_lineage_inferred_from_exact_data_bytes']??false)===true
+            &&($stillUnknown['serialized_bytes_consumed']??-1)===0);
+        // A malformed two-byte stream matches NEITHER Epic branch and cannot
+        // be misidentified from an otherwise identical package version.
+        file_put_contents($consumerPath,substr($mayConsumer['bytes'],0,-4).pack('V',2));
+        $unknown=Properties::read($consumerPath,false,['BASE'=>$provPath])['properties_objects'][0]??[];
+        $check("v{$version}_neither_exact_native_width_stays_ambiguous",
+            ($unknown['status']??null)==='source_1997_property_lineage_required'
+            &&($unknown['property_values']??null)===[]);
+        try{Properties::read($consumerPath,true,['BASE'=>$provPath]);$reject=false;}
+        catch(RuntimeException){$reject=true;}
+        $check("v{$version}_malformed_native_width_strict_rejected",$reject);
     }
+    $fixed=[['flags'=>0x1000,'property_type'=>2,'array_dim'=>1,'bool_bitmask'=>null]];
+    $check('May_UProperties_four_byte_int_exact', $gate::inferUPropertiesByDataBytes($fixed,4)===$gate::MAY);
+    $check('July_UProperties_zero_byte_int_exact', $gate::inferUPropertiesByDataBytes($fixed,0)===$gate::JULY);
+    $check('neither_May_nor_July_exact_width', $gate::inferUPropertiesByDataBytes($fixed,2)===null);
+    $check('invalid_negative_data_byte_count_not_identified', $gate::inferUPropertiesByDataBytes($fixed,-1)===null);
+    $check('variable_length_string_never_guessed', $gate::inferUPropertiesByDataBytes([['flags'=>0,'property_type'=>7,'array_dim'=>1]],4)===null);
+    $check('equal_sized_intrinsic_enum_remains_ambiguous', $gate::inferUPropertiesByDataBytes([['flags'=>0x1000,'property_type'=>10,'array_dim'=>1]],0)===null);
 }finally{@unlink($provPath);@unlink($consumerPath);@unlink($siblingProvider);@unlink($siblingConsumer);@unlink($siblingDuplicate);@rmdir($folder);}
 echo json_encode(['ok'=>$fail===[],'passed'=>count($checks)-count($fail),
     'total'=>count($checks),'failures'=>$fail],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;

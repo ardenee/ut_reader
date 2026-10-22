@@ -72,6 +72,55 @@ final class CatalogUE1OriginalUnrealfilePropertySerializationGate
         return true;
     }
 
+    /**
+     * UProperties::SerializeData consists only of its class-defined Bin,
+     * unlike ordinary UObject headers, which can also hold native fields.
+     * Infer a branch ONLY when all property widths are fixed and precisely
+     * ONE Epic on-disk layout consumes the declared full data segment.
+     * Variable ANSI strings or equal/unknown lengths remain unresolved.
+     *
+     * @param array<int,array<string,mixed>> $properties
+     */
+    public static function inferUPropertiesByDataBytes(array $properties, int $bytes): ?string
+    {
+        if ($bytes < 0) {
+            return null;
+        }
+        $matches = [];
+        foreach ([self::MAY, self::JULY] as $family) {
+            $total = 0;
+            foreach ($properties as $p) {
+                if (!self::serialized((int)$p['flags'], $family)) {
+                    continue;
+                }
+                $dimension = (int)$p['array_dim'];
+                if ($dimension < 0 || $dimension > 1000000) {
+                    return null;
+                }
+                $width = match ((int)$p['property_type']) {
+                    1 => 1, // CPT_Byte
+                    2, 4, 5 => 4, // CPT_Int, Float, Object
+                    3 => (int)$p['bool_bitmask'] === 1 ? 4 : 0, // CPT_Bool
+                    6 => 2, // CPT_Name, WORD FName index
+                    8, 9 => 12, // FVector, FRotation
+                    10 => 0, // CPT_EnumDef
+                    default => null, // CPT_String is variable-length
+                };
+                if ($width === null) {
+                    return null;
+                }
+                $total += $width * $dimension;
+                if ($total > 16000000) {
+                    return null;
+                }
+            }
+            if ($total === $bytes) {
+                $matches[] = $family;
+            }
+        }
+        return count($matches) === 1 ? $matches[0] : null;
+    }
+
     /** @param array<int,array<string,mixed>> $properties */
     public static function unresolved(array $properties, ?string $sourceLineage): bool
     {
