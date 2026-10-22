@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_at_utc": "2026-10-22T17:39:09+00:00",
+  "updated_at_utc": "2026-10-22T18:58:04+00:00",
   "entries": [
     {
       "id": "R82:UActorList",
@@ -1709,12 +1709,20 @@
           "line": 129
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+      "status": "GAP",
+      "reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "test": "verify-ue1-original-unrealfile-mesh-records.php",
+      "evidence": "Source comparison: May v0.86x Src/Inc/UnMath.h FRotation::operator<< uses WORD Pitch/Yaw/Roll (6B); July v0.867 writes INT Pitch/Yaw/Roll (12B). Both FBoundingRect/FBoundingBox IsValid are BYTE and FArchive BYTE operator in Src/Inc/UnArc.h serializes 1B, so FBoundingVolume archive is 41B (not the current 44B php assumption); distinct source node operators FBspNode May iBound vs July iCollisionBound+iRenderBound, with possible NodeFlags width differences. Both files version 23.",
+      "remaining": "CONFIRMED incorrect or absent source-specific May C++ on-disk FRotation/BoundingVolume/FBspNode serializations; implement exact May and July paths and journal DEV/PRD fixtures before PARTIAL.",
+      "updated_at_utc": "2026-10-22T18:58:03+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T18:58:03.8522819Z",
+        "test_sha256": "0cae7fee26bb46629a0e4e11c6239b7fb3f30690007f08d0b65d7802d3221e12",
+        "source_sha256": "76a4ea1b1bc361a7d3ad90f0f6c4dd2b52fb2c0039b77153a8997d8301efb355",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T185803402Z-322928e0-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt"
+      }
     },
     {
       "id": "U86:UBspNodes",
@@ -1726,12 +1734,20 @@
           "line": 51
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+      "status": "GAP",
+      "reader": "CatalogUE1OriginalUnrealfileBspRecordsReader.php",
+      "test": "verify-ue1-original-unrealfile-bsp-records.php",
+      "evidence": "Source comparison: May v0.86x Src/Inc/UnMath.h FRotation::operator<< uses WORD Pitch/Yaw/Roll (6B); July v0.867 writes INT Pitch/Yaw/Roll (12B). Both FBoundingRect/FBoundingBox IsValid are BYTE and FArchive BYTE operator in Src/Inc/UnArc.h serializes 1B, so FBoundingVolume archive is 41B (not the current 44B php assumption); distinct source node operators FBspNode May iBound vs July iCollisionBound+iRenderBound, with possible NodeFlags width differences. Both files version 23.",
+      "remaining": "CONFIRMED incorrect or absent source-specific May C++ on-disk FRotation/BoundingVolume/FBspNode serializations; implement exact May and July paths and journal DEV/PRD fixtures before PARTIAL.",
+      "updated_at_utc": "2026-10-22T18:58:04+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T18:58:04.3612846Z",
+        "test_sha256": "c4a0efe59ceb8b1930b58adfff2326e44dd7a322208b09a9ec83e1687a79385b",
+        "source_sha256": "76a4ea1b1bc361a7d3ad90f0f6c4dd2b52fb2c0039b77153a8997d8301efb355",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T185804032Z-840c3360-PRD-verify-ue1-original-unrealfile-bsp-records.php.txt"
+      }
     },
     {
       "id": "U86:UBspSurfs",
@@ -1781,12 +1797,20 @@
           "line": 51
         }
       ],
-      "status": "DISCOVERED",
+      "status": "EXCLUDED",
       "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+      "test": "verify-ue1-o06-g2-camera-transient.php",
+      "evidence": "Epic May v0.86x and July v0.867 Inc/UnCamera.h UCamera::BaseFlags=CLASS_Intrinsic|CLASS_Transient|CLASS_PreKill, Engine/UnCamera.cpp IMPLEMENT_CLASS(UCamera). Editor Inc/UnEdTran.h UTransBuffer::BaseFlags=CLASS_Intrinsic|CLASS_Transient, Editor/UnEdTran.cpp SerializeData explicitly says object is NOT SAVEABLE and walks runtime GC references only. Original registered classes are not disk-format requirements.",
+      "remaining": "None for persisted Unrealfile O06. Runtime camera editor/undo GC references are O10, not serialized package content.",
+      "updated_at_utc": "2026-10-22T18:49:46+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T18:49:46.1485150Z",
+        "test_sha256": "3673ee60d8f0cb3df20786373e0c00417422d1acc8d78a080f581d8c7261846b",
+        "source_sha256": "e6a0b387959e171e29390b9f17a6b0d1d0a7d9ae2ef8f0d241d95ae7d0ce46d1",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T184945850Z-6f48e77d-PRD-verify-ue1-o06-g2-camera-transient.php.txt"
+      }
     },
     {
       "id": "U86:UClass",
@@ -2058,12 +2082,20 @@
           "line": 91
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileMeshHeaderReader.php",
+      "test": "verify-ue1-original-unrealfile-mesh.php",
+      "evidence": "Epic May v0.86x and July v0.867 Src/Inc/UnMath.h FBoundingRect/FBoundingBox min,max, BYTE IsValid, FPlane => 41 serialized bytes (FArchive BYTE operator UnArc.h writes 1B, not sizeof in-memory padding). May FRotation operator<< converts Pitch,Yaw,Roll to WORD 6B; July writes INT Pitch,Yaw,Roll 12B. UMesh SerializeHeader Src/Inc/UnMesh.h native May=127B, July=133B. UModel Src/Inc/UnModel.h native May=240B, July=246B. Both Unrealfile version23. Implemented shared native FArchive math and unique exact member length auto-discrimination with strict invalid/trailing rejection and full v22/v23 May/July source fixtures.",
+      "remaining": "Source-defined typed May/July FRotation and FBoundingVolume now implemented and real v22/v23 envelopes pass. Missing independent engine/genuine package matching and related UBounds/FBspNode source variants remain G2/G5; runtime mesh/model object linking O10 and geometry interpretation O07 excluded.",
+      "updated_at_utc": "2026-10-22T18:58:01+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T18:58:01.0722295Z",
+        "test_sha256": "515b56377e562a5697afe6ca9e76543f92fe35b1f2c2bbba43e63abc4d2e15ec",
+        "source_sha256": "76a4ea1b1bc361a7d3ad90f0f6c4dd2b52fb2c0039b77153a8997d8301efb355",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T185800618Z-3bbab861-PRD-verify-ue1-original-unrealfile-mesh.php.txt"
+      }
     },
     {
       "id": "U86:UMeshAnimNotifys",
@@ -2160,12 +2192,20 @@
           "line": 261
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileModelHeaderReader.php",
+      "test": "verify-ue1-original-unrealfile-model.php",
+      "evidence": "Epic May v0.86x and July v0.867 Src/Inc/UnMath.h FBoundingRect/FBoundingBox min,max, BYTE IsValid, FPlane => 41 serialized bytes (FArchive BYTE operator UnArc.h writes 1B, not sizeof in-memory padding). May FRotation operator<< converts Pitch,Yaw,Roll to WORD 6B; July writes INT Pitch,Yaw,Roll 12B. UMesh SerializeHeader Src/Inc/UnMesh.h native May=127B, July=133B. UModel Src/Inc/UnModel.h native May=240B, July=246B. Both Unrealfile version23. Implemented shared native FArchive math and unique exact member length auto-discrimination with strict invalid/trailing rejection and full v22/v23 May/July source fixtures.",
+      "remaining": "Source-defined typed May/July FRotation and FBoundingVolume now implemented and real v22/v23 envelopes pass. Missing independent engine/genuine package matching and related UBounds/FBspNode source variants remain G2/G5; runtime mesh/model object linking O10 and geometry interpretation O07 excluded.",
+      "updated_at_utc": "2026-10-22T18:58:01+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T18:58:01.5852012Z",
+        "test_sha256": "a11eb3b8dcb36d7cfa85104223ae6fc5eafe7b5a7a98fcbeae10616449cad803",
+        "source_sha256": "76a4ea1b1bc361a7d3ad90f0f6c4dd2b52fb2c0039b77153a8997d8301efb355",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T185801253Z-aee1d619-PRD-verify-ue1-original-unrealfile-model.php.txt"
+      }
     },
     {
       "id": "U86:UMusic",
@@ -2278,12 +2318,20 @@
           "line": 17
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+      "status": "GAP",
+      "reader": "CatalogUE1OriginalUnrealfileMeshHeaderReader.php",
+      "test": "verify-ue1-original-unrealfile-mesh.php",
+      "evidence": "Source comparison: May v0.86x Src/Inc/UnMath.h FRotation::operator<< uses WORD Pitch/Yaw/Roll (6B); July v0.867 writes INT Pitch/Yaw/Roll (12B). Both FBoundingRect/FBoundingBox IsValid are BYTE and FArchive BYTE operator in Src/Inc/UnArc.h serializes 1B, so FBoundingVolume archive is 41B (not the current 44B php assumption); distinct source node operators FBspNode May iBound vs July iCollisionBound+iRenderBound, with possible NodeFlags width differences. Both files version 23.",
+      "remaining": "CONFIRMED incorrect or absent source-specific May C++ on-disk FRotation/BoundingVolume/FBspNode serializations; implement exact May and July paths and journal DEV/PRD fixtures before PARTIAL.",
+      "updated_at_utc": "2026-10-22T18:58:01+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T18:58:01.0722295Z",
+        "test_sha256": "515b56377e562a5697afe6ca9e76543f92fe35b1f2c2bbba43e63abc4d2e15ec",
+        "source_sha256": "76a4ea1b1bc361a7d3ad90f0f6c4dd2b52fb2c0039b77153a8997d8301efb355",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T185800618Z-3bbab861-PRD-verify-ue1-original-unrealfile-mesh.php.txt"
+      }
     },
     {
       "id": "U86:UProperties",
@@ -2451,12 +2499,20 @@
           "line": 882
         }
       ],
-      "status": "DISCOVERED",
+      "status": "EXCLUDED",
       "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+      "test": "verify-ue1-o06-g2-camera-transient.php",
+      "evidence": "Epic May v0.86x and July v0.867 Inc/UnCamera.h UCamera::BaseFlags=CLASS_Intrinsic|CLASS_Transient|CLASS_PreKill, Engine/UnCamera.cpp IMPLEMENT_CLASS(UCamera). Editor Inc/UnEdTran.h UTransBuffer::BaseFlags=CLASS_Intrinsic|CLASS_Transient, Editor/UnEdTran.cpp SerializeData explicitly says object is NOT SAVEABLE and walks runtime GC references only. Original registered classes are not disk-format requirements.",
+      "remaining": "None for persisted Unrealfile O06. Runtime camera editor/undo GC references are O10, not serialized package content.",
+      "updated_at_utc": "2026-10-22T18:49:46+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T18:49:46.1485150Z",
+        "test_sha256": "3673ee60d8f0cb3df20786373e0c00417422d1acc8d78a080f581d8c7261846b",
+        "source_sha256": "e6a0b387959e171e29390b9f17a6b0d1d0a7d9ae2ef8f0d241d95ae7d0ce46d1",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T184945850Z-6f48e77d-PRD-verify-ue1-o06-g2-camera-transient.php.txt"
+      }
     },
     {
       "id": "U86:UVectors",
@@ -2703,14 +2759,14 @@
       "test": "verify-ue1-original-unrealfile-mesh-records.php",
       "evidence": "PRD historical PASS at 2026-10-22T09:02:16.6918324Z; catalog\\compliance\\evidence\\o06\\20261022T090216239Z-8383499e-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt; scoped test, not full class acceptance",
       "remaining": "Individual source-derived database record types have fixture coverage; final distinct-method and inherited path review G2 remains",
-      "updated_at_utc": "2026-10-22T09:32:47+00:00",
+      "updated_at_utc": "2026-10-22T18:58:03+00:00",
       "last_verification": {
-        "target": "DEV",
+        "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T09:29:18.0054259Z",
+        "at_utc": "2026-10-22T18:58:03.8522819Z",
         "test_sha256": "0cae7fee26bb46629a0e4e11c6239b7fb3f30690007f08d0b65d7802d3221e12",
-        "source_sha256": "a23bdac456be5ae3d5bf3c8f611f8d41cf364d7e1ea5f8a2d80c7e7287991b5a",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T092917500Z-e3ce6180-DEV-verify-ue1-original-unrealfile-mesh-records.php.txt"
+        "source_sha256": "76a4ea1b1bc361a7d3ad90f0f6c4dd2b52fb2c0039b77153a8997d8301efb355",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T185803402Z-322928e0-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt"
       }
     },
     {
@@ -2728,14 +2784,14 @@
       "test": "verify-ue1-original-unrealfile-bsp-records.php",
       "evidence": "PRD historical PASS at 2026-10-22T07:36:34.1306759Z; catalog\\compliance\\evidence\\o06\\20261022T073633853Z-12773e2e-PRD-verify-ue1-original-unrealfile-bsp-records.php.txt; scoped test, not full class acceptance",
       "remaining": "BSP records/source header typed; no runtime linking O10",
-      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "updated_at_utc": "2026-10-22T18:58:04+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T07:36:34.1306759Z",
+        "at_utc": "2026-10-22T18:58:04.3612846Z",
         "test_sha256": "c4a0efe59ceb8b1930b58adfff2326e44dd7a322208b09a9ec83e1687a79385b",
-        "source_sha256": "cda93078f2c7932b9d5e8de76053c64f61cf4e827c3dd3765cb5f69cc92958bc",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T073633853Z-12773e2e-PRD-verify-ue1-original-unrealfile-bsp-records.php.txt"
+        "source_sha256": "76a4ea1b1bc361a7d3ad90f0f6c4dd2b52fb2c0039b77153a8997d8301efb355",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T185804032Z-840c3360-PRD-verify-ue1-original-unrealfile-bsp-records.php.txt"
       }
     },
     {
@@ -2753,14 +2809,14 @@
       "test": "verify-ue1-original-unrealfile-bsp-records.php",
       "evidence": "PRD historical PASS at 2026-10-22T07:36:34.1306759Z; catalog\\compliance\\evidence\\o06\\20261022T073633853Z-12773e2e-PRD-verify-ue1-original-unrealfile-bsp-records.php.txt; scoped test, not full class acceptance",
       "remaining": "BSP records/source header typed; no runtime linking O10",
-      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "updated_at_utc": "2026-10-22T18:58:04+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T07:36:34.1306759Z",
+        "at_utc": "2026-10-22T18:58:04.3612846Z",
         "test_sha256": "c4a0efe59ceb8b1930b58adfff2326e44dd7a322208b09a9ec83e1687a79385b",
-        "source_sha256": "cda93078f2c7932b9d5e8de76053c64f61cf4e827c3dd3765cb5f69cc92958bc",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T073633853Z-12773e2e-PRD-verify-ue1-original-unrealfile-bsp-records.php.txt"
+        "source_sha256": "76a4ea1b1bc361a7d3ad90f0f6c4dd2b52fb2c0039b77153a8997d8301efb355",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T185804032Z-840c3360-PRD-verify-ue1-original-unrealfile-bsp-records.php.txt"
       }
     },
     {
@@ -2798,19 +2854,19 @@
           "line": 50
         }
       ],
-      "status": "PARTIAL",
-      "reader": "CatalogUE1OriginalUnrealfileSpecialHeadersReader.php",
-      "test": "verify-ue1-original-unrealfile-special-headers.php",
-      "evidence": "PRD historical PASS at 2026-10-22T07:25:34.3693613Z; catalog\\compliance\\evidence\\o06\\20261022T072534021Z-75c965c2-PRD-verify-ue1-original-unrealfile-special-headers.php.txt; scoped test, not full class acceptance",
-      "remaining": "Texture header source-tested; class saveability and inherited data review G2",
-      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "status": "EXCLUDED",
+      "reader": "",
+      "test": "verify-ue1-o06-g2-camera-transient.php",
+      "evidence": "Epic May v0.86x and July v0.867 Inc/UnCamera.h UCamera::BaseFlags=CLASS_Intrinsic|CLASS_Transient|CLASS_PreKill, Engine/UnCamera.cpp IMPLEMENT_CLASS(UCamera). Editor Inc/UnEdTran.h UTransBuffer::BaseFlags=CLASS_Intrinsic|CLASS_Transient, Editor/UnEdTran.cpp SerializeData explicitly says object is NOT SAVEABLE and walks runtime GC references only. Original registered classes are not disk-format requirements.",
+      "remaining": "None for persisted Unrealfile O06. Runtime camera editor/undo GC references are O10, not serialized package content.",
+      "updated_at_utc": "2026-10-22T18:49:46+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T07:25:34.3693613Z",
-        "test_sha256": "a68bd09362e13dbee5dbb41710adee3d27e87d3d18b7a71f57442bbd4c49bb47",
-        "source_sha256": "1a202f63a1ff1977bd28e54b6d87ec669cda74735bceae7eede3d1bdee84a154",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T072534021Z-75c965c2-PRD-verify-ue1-original-unrealfile-special-headers.php.txt"
+        "at_utc": "2026-10-22T18:49:46.1485150Z",
+        "test_sha256": "3673ee60d8f0cb3df20786373e0c00417422d1acc8d78a080f581d8c7261846b",
+        "source_sha256": "e6a0b387959e171e29390b9f17a6b0d1d0a7d9ae2ef8f0d241d95ae7d0ce46d1",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T184945850Z-6f48e77d-PRD-verify-ue1-o06-g2-camera-transient.php.txt"
       }
     },
     {
@@ -3126,16 +3182,16 @@
       "status": "PARTIAL",
       "reader": "CatalogUE1OriginalUnrealfileMeshHeaderReader.php",
       "test": "verify-ue1-original-unrealfile-mesh.php",
-      "evidence": "PRD historical PASS at 2026-10-22T06:57:10.4464375Z; catalog\\compliance\\evidence\\o06\\20261022T065710224Z-8c70a237-PRD-verify-ue1-original-unrealfile-mesh.php.txt; scoped test, not full class acceptance",
-      "remaining": "Mesh object header and refs tested; child data covered by DB tests; linking O10",
-      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "evidence": "Epic May v0.86x and July v0.867 Src/Inc/UnMath.h FBoundingRect/FBoundingBox min,max, BYTE IsValid, FPlane => 41 serialized bytes (FArchive BYTE operator UnArc.h writes 1B, not sizeof in-memory padding). May FRotation operator<< converts Pitch,Yaw,Roll to WORD 6B; July writes INT Pitch,Yaw,Roll 12B. UMesh SerializeHeader Src/Inc/UnMesh.h native May=127B, July=133B. UModel Src/Inc/UnModel.h native May=240B, July=246B. Both Unrealfile version23. Implemented shared native FArchive math and unique exact member length auto-discrimination with strict invalid/trailing rejection and full v22/v23 May/July source fixtures.",
+      "remaining": "Source-defined typed May/July FRotation and FBoundingVolume now implemented and real v22/v23 envelopes pass. Missing independent engine/genuine package matching and related UBounds/FBspNode source variants remain G2/G5; runtime mesh/model object linking O10 and geometry interpretation O07 excluded.",
+      "updated_at_utc": "2026-10-22T18:58:01+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T06:57:10.4464375Z",
-        "test_sha256": "389dc34779be0333f9f46865468f5874ea9324e8c2bbb1e0dfe203a0f7e1e438",
-        "source_sha256": "52d2d451f22dd614cb80a718e328aed068d0920903a6339c6807adb37058a571",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T065710224Z-8c70a237-PRD-verify-ue1-original-unrealfile-mesh.php.txt"
+        "at_utc": "2026-10-22T18:58:01.0722295Z",
+        "test_sha256": "515b56377e562a5697afe6ca9e76543f92fe35b1f2c2bbba43e63abc4d2e15ec",
+        "source_sha256": "76a4ea1b1bc361a7d3ad90f0f6c4dd2b52fb2c0039b77153a8997d8301efb355",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T185800618Z-3bbab861-PRD-verify-ue1-original-unrealfile-mesh.php.txt"
       }
     },
     {
@@ -3153,14 +3209,14 @@
       "test": "verify-ue1-original-unrealfile-mesh-records.php",
       "evidence": "PRD historical PASS at 2026-10-22T09:02:16.6918324Z; catalog\\compliance\\evidence\\o06\\20261022T090216239Z-8383499e-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt; scoped test, not full class acceptance",
       "remaining": "Individual source-derived database record types have fixture coverage; final distinct-method and inherited path review G2 remains",
-      "updated_at_utc": "2026-10-22T09:32:47+00:00",
+      "updated_at_utc": "2026-10-22T18:58:03+00:00",
       "last_verification": {
-        "target": "DEV",
+        "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T09:29:18.0054259Z",
+        "at_utc": "2026-10-22T18:58:03.8522819Z",
         "test_sha256": "0cae7fee26bb46629a0e4e11c6239b7fb3f30690007f08d0b65d7802d3221e12",
-        "source_sha256": "a23bdac456be5ae3d5bf3c8f611f8d41cf364d7e1ea5f8a2d80c7e7287991b5a",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T092917500Z-e3ce6180-DEV-verify-ue1-original-unrealfile-mesh-records.php.txt"
+        "source_sha256": "76a4ea1b1bc361a7d3ad90f0f6c4dd2b52fb2c0039b77153a8997d8301efb355",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T185803402Z-322928e0-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt"
       }
     },
     {
@@ -3178,14 +3234,14 @@
       "test": "verify-ue1-original-unrealfile-mesh-records.php",
       "evidence": "PRD historical PASS at 2026-10-22T09:02:16.6918324Z; catalog\\compliance\\evidence\\o06\\20261022T090216239Z-8383499e-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt; scoped test, not full class acceptance",
       "remaining": "Individual source-derived database record types have fixture coverage; final distinct-method and inherited path review G2 remains",
-      "updated_at_utc": "2026-10-22T09:32:47+00:00",
+      "updated_at_utc": "2026-10-22T18:58:03+00:00",
       "last_verification": {
-        "target": "DEV",
+        "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T09:29:18.0054259Z",
+        "at_utc": "2026-10-22T18:58:03.8522819Z",
         "test_sha256": "0cae7fee26bb46629a0e4e11c6239b7fb3f30690007f08d0b65d7802d3221e12",
-        "source_sha256": "a23bdac456be5ae3d5bf3c8f611f8d41cf364d7e1ea5f8a2d80c7e7287991b5a",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T092917500Z-e3ce6180-DEV-verify-ue1-original-unrealfile-mesh-records.php.txt"
+        "source_sha256": "76a4ea1b1bc361a7d3ad90f0f6c4dd2b52fb2c0039b77153a8997d8301efb355",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T185803402Z-322928e0-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt"
       }
     },
     {
@@ -3203,14 +3259,14 @@
       "test": "verify-ue1-original-unrealfile-mesh-records.php",
       "evidence": "PRD historical PASS at 2026-10-22T09:02:16.6918324Z; catalog\\compliance\\evidence\\o06\\20261022T090216239Z-8383499e-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt; scoped test, not full class acceptance",
       "remaining": "Individual source-derived database record types have fixture coverage; final distinct-method and inherited path review G2 remains",
-      "updated_at_utc": "2026-10-22T09:32:47+00:00",
+      "updated_at_utc": "2026-10-22T18:58:03+00:00",
       "last_verification": {
-        "target": "DEV",
+        "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T09:29:18.0054259Z",
+        "at_utc": "2026-10-22T18:58:03.8522819Z",
         "test_sha256": "0cae7fee26bb46629a0e4e11c6239b7fb3f30690007f08d0b65d7802d3221e12",
-        "source_sha256": "a23bdac456be5ae3d5bf3c8f611f8d41cf364d7e1ea5f8a2d80c7e7287991b5a",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T092917500Z-e3ce6180-DEV-verify-ue1-original-unrealfile-mesh-records.php.txt"
+        "source_sha256": "76a4ea1b1bc361a7d3ad90f0f6c4dd2b52fb2c0039b77153a8997d8301efb355",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T185803402Z-322928e0-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt"
       }
     },
     {
@@ -3228,14 +3284,14 @@
       "test": "verify-ue1-original-unrealfile-mesh-records.php",
       "evidence": "PRD historical PASS at 2026-10-22T09:02:16.6918324Z; catalog\\compliance\\evidence\\o06\\20261022T090216239Z-8383499e-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt; scoped test, not full class acceptance",
       "remaining": "Individual source-derived database record types have fixture coverage; final distinct-method and inherited path review G2 remains",
-      "updated_at_utc": "2026-10-22T09:32:47+00:00",
+      "updated_at_utc": "2026-10-22T18:58:03+00:00",
       "last_verification": {
-        "target": "DEV",
+        "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T09:29:18.0054259Z",
+        "at_utc": "2026-10-22T18:58:03.8522819Z",
         "test_sha256": "0cae7fee26bb46629a0e4e11c6239b7fb3f30690007f08d0b65d7802d3221e12",
-        "source_sha256": "a23bdac456be5ae3d5bf3c8f611f8d41cf364d7e1ea5f8a2d80c7e7287991b5a",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T092917500Z-e3ce6180-DEV-verify-ue1-original-unrealfile-mesh-records.php.txt"
+        "source_sha256": "76a4ea1b1bc361a7d3ad90f0f6c4dd2b52fb2c0039b77153a8997d8301efb355",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T185803402Z-322928e0-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt"
       }
     },
     {
@@ -3253,14 +3309,14 @@
       "test": "verify-ue1-original-unrealfile-mesh-records.php",
       "evidence": "PRD historical PASS at 2026-10-22T09:02:16.6918324Z; catalog\\compliance\\evidence\\o06\\20261022T090216239Z-8383499e-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt; scoped test, not full class acceptance",
       "remaining": "Individual source-derived database record types have fixture coverage; final distinct-method and inherited path review G2 remains",
-      "updated_at_utc": "2026-10-22T09:32:47+00:00",
+      "updated_at_utc": "2026-10-22T18:58:03+00:00",
       "last_verification": {
-        "target": "DEV",
+        "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T09:29:18.0054259Z",
+        "at_utc": "2026-10-22T18:58:03.8522819Z",
         "test_sha256": "0cae7fee26bb46629a0e4e11c6239b7fb3f30690007f08d0b65d7802d3221e12",
-        "source_sha256": "a23bdac456be5ae3d5bf3c8f611f8d41cf364d7e1ea5f8a2d80c7e7287991b5a",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T092917500Z-e3ce6180-DEV-verify-ue1-original-unrealfile-mesh-records.php.txt"
+        "source_sha256": "76a4ea1b1bc361a7d3ad90f0f6c4dd2b52fb2c0039b77153a8997d8301efb355",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T185803402Z-322928e0-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt"
       }
     },
     {
@@ -3276,16 +3332,16 @@
       "status": "PARTIAL",
       "reader": "CatalogUE1OriginalUnrealfileModelHeaderReader.php",
       "test": "verify-ue1-original-unrealfile-model.php",
-      "evidence": "PRD historical PASS at 2026-10-22T07:03:01.2217614Z; catalog\\compliance\\evidence\\o06\\20261022T070300960Z-9a8dd6ef-PRD-verify-ue1-original-unrealfile-model.php.txt; scoped test, not full class acceptance",
-      "remaining": "Model source header typed; linking O10",
-      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "evidence": "Epic May v0.86x and July v0.867 Src/Inc/UnMath.h FBoundingRect/FBoundingBox min,max, BYTE IsValid, FPlane => 41 serialized bytes (FArchive BYTE operator UnArc.h writes 1B, not sizeof in-memory padding). May FRotation operator<< converts Pitch,Yaw,Roll to WORD 6B; July writes INT Pitch,Yaw,Roll 12B. UMesh SerializeHeader Src/Inc/UnMesh.h native May=127B, July=133B. UModel Src/Inc/UnModel.h native May=240B, July=246B. Both Unrealfile version23. Implemented shared native FArchive math and unique exact member length auto-discrimination with strict invalid/trailing rejection and full v22/v23 May/July source fixtures.",
+      "remaining": "Source-defined typed May/July FRotation and FBoundingVolume now implemented and real v22/v23 envelopes pass. Missing independent engine/genuine package matching and related UBounds/FBspNode source variants remain G2/G5; runtime mesh/model object linking O10 and geometry interpretation O07 excluded.",
+      "updated_at_utc": "2026-10-22T18:58:01+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T07:03:01.2217614Z",
-        "test_sha256": "b265df39b4fd59056d711c6fbbc003f992c1306cb8db05392cb1f22c260b31ce",
-        "source_sha256": "b3774114b2a9914662efe260ac98fdc188fe31158a8feabe359ef1d6480abe15",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T070300960Z-9a8dd6ef-PRD-verify-ue1-original-unrealfile-model.php.txt"
+        "at_utc": "2026-10-22T18:58:01.5852012Z",
+        "test_sha256": "a11eb3b8dcb36d7cfa85104223ae6fc5eafe7b5a7a98fcbeae10616449cad803",
+        "source_sha256": "76a4ea1b1bc361a7d3ad90f0f6c4dd2b52fb2c0039b77153a8997d8301efb355",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T185801253Z-aee1d619-PRD-verify-ue1-original-unrealfile-model.php.txt"
       }
     },
     {
@@ -3357,14 +3413,14 @@
       "test": "verify-ue1-original-unrealfile-mesh-records.php",
       "evidence": "PRD historical PASS at 2026-10-22T09:02:16.6918324Z; catalog\\compliance\\evidence\\o06\\20261022T090216239Z-8383499e-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt; scoped test, not full class acceptance",
       "remaining": "Individual source-derived database record types have fixture coverage; final distinct-method and inherited path review G2 remains",
-      "updated_at_utc": "2026-10-22T09:32:47+00:00",
+      "updated_at_utc": "2026-10-22T18:58:03+00:00",
       "last_verification": {
-        "target": "DEV",
+        "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T09:29:18.0054259Z",
+        "at_utc": "2026-10-22T18:58:03.8522819Z",
         "test_sha256": "0cae7fee26bb46629a0e4e11c6239b7fb3f30690007f08d0b65d7802d3221e12",
-        "source_sha256": "a23bdac456be5ae3d5bf3c8f611f8d41cf364d7e1ea5f8a2d80c7e7287991b5a",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T092917500Z-e3ce6180-DEV-verify-ue1-original-unrealfile-mesh-records.php.txt"
+        "source_sha256": "76a4ea1b1bc361a7d3ad90f0f6c4dd2b52fb2c0039b77153a8997d8301efb355",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T185803402Z-322928e0-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt"
       }
     },
     {
@@ -3432,14 +3488,14 @@
       "test": "verify-ue1-original-unrealfile-mesh.php",
       "evidence": "PRD historical PASS at 2026-10-22T06:57:10.4464375Z; catalog\\compliance\\evidence\\o06\\20261022T065710224Z-8c70a237-PRD-verify-ue1-original-unrealfile-mesh.php.txt; scoped test, not full class acceptance",
       "remaining": "Primitive bound archive source-tested; derived serial method review G2",
-      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "updated_at_utc": "2026-10-22T18:58:01+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T06:57:10.4464375Z",
-        "test_sha256": "389dc34779be0333f9f46865468f5874ea9324e8c2bbb1e0dfe203a0f7e1e438",
-        "source_sha256": "52d2d451f22dd614cb80a718e328aed068d0920903a6339c6807adb37058a571",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T065710224Z-8c70a237-PRD-verify-ue1-original-unrealfile-mesh.php.txt"
+        "at_utc": "2026-10-22T18:58:01.0722295Z",
+        "test_sha256": "515b56377e562a5697afe6ca9e76543f92fe35b1f2c2bbba43e63abc4d2e15ec",
+        "source_sha256": "76a4ea1b1bc361a7d3ad90f0f6c4dd2b52fb2c0039b77153a8997d8301efb355",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T185800618Z-3bbab861-PRD-verify-ue1-original-unrealfile-mesh.php.txt"
       }
     },
     {
@@ -3654,10 +3710,18 @@
       ],
       "status": "EXCLUDED",
       "reader": "",
-      "test": "",
-      "evidence": "v0.867 UnEdTran.h CLASS_Transient and UnEdTran.cpp notes object not saveable; editor transaction runtime only",
-      "remaining": "",
-      "updated_at_utc": "2026-10-22T09:27:26+00:00"
+      "test": "verify-ue1-o06-g2-camera-transient.php",
+      "evidence": "Epic May v0.86x and July v0.867 Inc/UnCamera.h UCamera::BaseFlags=CLASS_Intrinsic|CLASS_Transient|CLASS_PreKill, Engine/UnCamera.cpp IMPLEMENT_CLASS(UCamera). Editor Inc/UnEdTran.h UTransBuffer::BaseFlags=CLASS_Intrinsic|CLASS_Transient, Editor/UnEdTran.cpp SerializeData explicitly says object is NOT SAVEABLE and walks runtime GC references only. Original registered classes are not disk-format requirements.",
+      "remaining": "None for persisted Unrealfile O06. Runtime camera editor/undo GC references are O10, not serialized package content.",
+      "updated_at_utc": "2026-10-22T18:49:46+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T18:49:46.1485150Z",
+        "test_sha256": "3673ee60d8f0cb3df20786373e0c00417422d1acc8d78a080f581d8c7261846b",
+        "source_sha256": "e6a0b387959e171e29390b9f17a6b0d1d0a7d9ae2ef8f0d241d95ae7d0ce46d1",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T184945850Z-6f48e77d-PRD-verify-ue1-o06-g2-camera-transient.php.txt"
+      }
     },
     {
       "id": "U97:UVectors",

@@ -1,0 +1,26 @@
+﻿{
+    "ok": true,
+    "gate": "UE1-O06-G2-source-nonsaveable-runtime-classes",
+    "passed": 18,
+    "total": 18,
+    "failures": [],
+    "source_sha256": {
+        "U86": {
+            "Inc\\UnCamera.h": "42d4d778c1dcbf2fe4c85c32ba83b921109faadcc46b631bde2946c7629c8113",
+            "Engine\\UnCamera.cpp": "39b4e1a6092d33e16eb77ef6ea26a9f8cf76fa5305aa3a3f323f84619026d2e2",
+            "Inc\\UnEdTran.h": "46a26d108d0b5e8db1892a2b903d32f9a77d306be45c1eda115bd0063db1d120",
+            "Editor\\UnEdTran.cpp": "6b215e299b134359338b8508ce739dc8b83b81313eb7e6ac57816eeb8330b321"
+        },
+        "U97": {
+            "Inc\\UnCamera.h": "c2d6e777acbedaa75c258826341470cacc4cfa72b703ba62b995d0654918a334",
+            "Engine\\UnCamera.cpp": "bcdfe93b5daaa7e714c566592d566618c91be2f32ad2731d12deffb2eb7f1bea",
+            "Inc\\UnEdTran.h": "46a26d108d0b5e8db1892a2b903d32f9a77d306be45c1eda115bd0063db1d120",
+            "Editor\\UnEdTran.cpp": "6b215e299b134359338b8508ce739dc8b83b81313eb7e6ac57816eeb8330b321"
+        }
+    },
+    "excluded_classes": [
+        "UCamera",
+        "UTransBuffer"
+    ],
+    "remaining": "Other 1997 source-registered persistent serializers; no invented on-disk camera/transaction archive"
+}
