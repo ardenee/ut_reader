@@ -422,6 +422,8 @@ function inspect_unreal_file(string $inputPath, bool $full = false): array
                             \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileBitArrayReader::read($parsePath, false);
                         $result['original_unrealfile_audio_records'] =
                             \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileAudioReader::read($parsePath, false);
+                        $result['original_unrealfile_lightmesh_records'] =
+                            \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileLightMeshDataReader::read($parsePath, false);
                         $result['original_unrealfile_bsp_records'] =
                             \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileBspRecordsReader::read($parsePath, false);
                         $result['original_unrealfile_special_headers'] =
