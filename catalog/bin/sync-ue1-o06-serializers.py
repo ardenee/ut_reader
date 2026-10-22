@@ -77,7 +77,7 @@ def render(entries):
     "(3) Record test script, evidence and exact outcome when run; change the same row before starting another task. "+
     "(4) Commit/push/deploy the updated status with each bounded checkpoint. "+
     "(5) Never turn a registration or a corpus-only result into serializer acceptance. "+
-    "Never replace an older failure without retaining its journal. The six O06 gates remain fixed even if new rows are discovered.",
+    "Never replace an older failure without retaining its journal. The O06 test runner records STARTED then PASS/FAIL here automatically, while leaving class-level acceptance unchanged. The six O06 gates remain fixed even if new rows are discovered.",
     "",
     "Machine-readable file: "+BT+"catalog/compliance/UE1-O06-SERIALIZER-REGISTER.json"+BT+
     ". Regenerate/update using "+BT+"python catalog/bin/sync-ue1-o06-serializers.py"+BT+
@@ -94,8 +94,12 @@ def render(entries):
             source="; ".join(x["path"]+":"+str(x["line"]) for x in e["locations"])
             targets="; ".join(v for v in (e.get("reader",""),e.get("test","")) if v) or "—"
             reason="; ".join(v for v in (e.get("remaining",""),e.get("evidence","")) if v) or "—"
+            verify=e.get("last_verification")
+            state=e["status"]
+            if verify:
+                state+="; latest "+verify["target"]+" test "+verify["state"]
             head.append("| "+BT+clean(e["symbol"])+BT+" | "+BT+clean(source)+BT+
-                        " | **"+clean(e["status"])+"** | "+clean(targets)+" | "+clean(reason)+" |")
+                        " | **"+clean(state)+"** | "+clean(targets)+" | "+clean(reason)+" |")
         head.append("")
     head += [END]
     return "\n".join(head)
@@ -111,6 +115,31 @@ def save(entries):
         anchor="## O06 fixed closure board"
         if anchor not in body:raise RuntimeError("O06 insertion anchor missing")
         body=body.replace(anchor,report+"\n\n"+anchor,1)
+    # Refresh recovery summary at the same moment as each source/test change.
+    counts=Counter(e["status"] for e in items)
+    mapped=len(items)-counts["DISCOVERED"]
+    with_tests=sum(bool(e.get("last_verification")) for e in items)
+    current="| Active engine / operation | **UE1 / O06 — "+str(len(items))+(
+        " source entries, "+str(mapped)+" classified, "+str(with_tests)+
+        " with latest test outcome; statuses "+
+        ", ".join(k+"="+str(counts[k]) for k in sorted(counts))+
+        ". Six fixed gates remain OPEN; see live table below.** |")
+    body=re.sub(r"(?m)^\| Active engine / operation \|[^\n]*$",lambda _:current,body,count=1)
+    with_latest=[e for e in items if e.get("last_verification")]
+    modified=max(with_latest,key=lambda e:e["last_verification"].get("at_utc","")) if with_latest else max(items,key=lambda e:e.get("updated_at_utc",""))
+    v=modified.get("last_verification")
+    activity=(modified["id"]+" -> "+modified["status"]+
+              ("; latest "+v["target"]+" "+v["state"]+" at "+v["at_utc"] if v else "")+
+              "; recorded "+modified.get("updated_at_utc",""))
+    activity_line="| Latest serializer status event | "+activity.replace("|","/")+" |"
+    if "| Latest serializer status event |" in body:
+        body=re.sub(r"(?m)^\| Latest serializer status event \|[^\n]*$",
+                    lambda _:activity_line,body,count=1)
+    else:
+        body=body.replace(current,current+"\n"+activity_line,1)
+    today=datetime.datetime.now().astimezone().date().isoformat()
+    body=re.sub(r"(?m)^Updated: \*\*\d{4}-\d{2}-\d{2}\*\*",
+                "Updated: **"+today+"**",body,count=1)
     DOC.write_text(body,encoding="utf-8")
     print("REGISTER_ENTRIES="+str(len(items)))
     print("BRANCHES="+str(dict(Counter(x["branch"] for x in items))))
@@ -121,9 +150,12 @@ def main():
     for name in ("reader","test","evidence","remaining"):
         ap.add_argument("--"+name)
     ap.add_argument("--add-entry",nargs=4,metavar=("ID","BRANCH","SYMBOL","PATH:LINE"))
+    ap.add_argument("--bulk-json",help="File containing an array of explicit mapping/status updates")
+    ap.add_argument("--sync-journal",action="store_true",help="Refresh latest named DEV/PRD test outcome on each mapped entry")
+    ap.add_argument("--record-test",nargs=2,metavar=("TEST","TARGET"),help="Update status immediately after a journalled named test")
     args=ap.parse_args()
     old={x["id"]:x for x in json.loads(DATA.read_text(encoding="utf-8-sig"))["entries"]} if DATA.exists() else {}
-    found=find_symbols()
+    found={} if args.sync_journal or args.record_test else find_symbols()
     new=0
     for key,entry in found.items():
         if key in old:old[key]["locations"]=entry["locations"]
@@ -149,6 +181,62 @@ def main():
         if state in ("PARTIAL","GAP","BLOCKED") and not e["remaining"]:
             ap.error("Unresolved state needs remaining-work details")
         e["status"]=state;e["updated_at_utc"]=NOW
+    if args.bulk_json:
+        updates=json.loads(Path(args.bulk_json).read_text(encoding="utf-8-sig"))
+        if not isinstance(updates,list):ap.error("Bulk status input must be an array")
+        for update in updates:
+            key=update.get("id");state=update.get("status")
+            if key not in old:ap.error("Unknown serializer ID: "+str(key))
+            if state not in STATES:ap.error("Invalid state: "+str(state))
+            e=old[key]
+            for field in ("reader","test","evidence","remaining"):
+                if field in update:e[field]=update[field]
+            if state in ("DEV_PASS","PRD_PASS","ACCEPTED") and (not e["test"] or not e["evidence"]):
+                ap.error("PASS requires named test and evidence: "+key)
+            if state in ("PARTIAL","GAP","BLOCKED") and not e["remaining"]:
+                ap.error("Missing reason for incomplete state: "+key)
+            if e.get("test") and not (REPO/"catalog/bin"/e["test"]).exists():
+                ap.error("Referenced test is missing: "+str(e["test"]))
+            if e.get("test") and not e.get("evidence"):
+                journal=REPO/"catalog/compliance/UE1-O06-TEST-STATUS.json"
+                if journal.exists():
+                    rows=json.loads(journal.read_text(encoding="utf-8-sig")).get("tests",[])
+                    passed=[t for t in rows if t.get("test")==e["test"] and
+                            t.get("state")=="PASS"]
+                    passed.sort(key=lambda t:(t.get("target")=="PRD",t.get("event_at_utc","")),reverse=True)
+                    if passed:
+                        last=passed[0]
+                        e["evidence"]=(last.get("target","DEV")+" historical PASS at "+
+                                        last.get("event_at_utc","")+"; "+
+                                        last.get("log","")+"; scoped test, not full class acceptance")
+                    else:
+                        e["evidence"]="Named source fixture exists; no journaled PASS confirmed"
+            e["status"]=state;e["updated_at_utc"]=NOW
+    if args.sync_journal or args.record_test:
+        journal=REPO/"catalog/compliance/UE1-O06-TEST-STATUS.json"
+        if not journal.exists():ap.error("O06 test journal status missing")
+        tests=json.loads(journal.read_text(encoding="utf-8-sig")).get("tests",[])
+        count=0
+        for e in old.values():
+            if not e.get("test"):continue
+            if args.record_test and e["test"]!=args.record_test[0]:continue
+            relevant=[x for x in tests if x.get("test")==e["test"] and
+                       x.get("state") in ("PASS","FAIL","STARTED")]
+            if args.record_test:
+                relevant=[x for x in relevant if x.get("target")==args.record_test[1]]
+            if not relevant:continue
+            latest=max(relevant,key=lambda x:x.get("event_at_utc",""))
+            e["last_verification"]={
+                "target":latest.get("target","DEV"),
+                "state":latest["state"],
+                "at_utc":latest.get("event_at_utc",""),
+                "test_sha256":latest.get("test_sha256",""),
+                "source_sha256":latest.get("source_sha256",""),
+                "log":latest.get("log",""),
+            }
+            e["updated_at_utc"]=NOW
+            count+=1
+        print("JOURNAL_TEST_ROWS_REFRESHED="+str(count))
     save(old)
     print("NEW_DISCOVERIES="+str(new))
 if __name__=="__main__":main()

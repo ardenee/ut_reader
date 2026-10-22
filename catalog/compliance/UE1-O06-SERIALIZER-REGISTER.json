@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_at_utc": "2026-10-22T09:24:05+00:00",
+  "updated_at_utc": "2026-10-22T09:32:47+00:00",
   "entries": [
     {
       "id": "R96:UActorList",
@@ -12,12 +12,20 @@
           "line": 746
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalResourceActorReader.php",
+      "test": "verify-ue1-original-actor-imported-class.php",
+      "evidence": "PRD historical PASS at 2026-10-22T06:43:41.9089773Z; catalog\\compliance\\evidence\\o06\\20261022T064341447Z-a426bb30-PRD-verify-ue1-original-actor-imported-class.php.txt; scoped test, not full class acceptance",
+      "remaining": "Actor property values/source import mapping covered in fixtures; reconcile full original class-defined actor serialization; live linking is O10",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T06:43:41.9089773Z",
+        "test_sha256": "6ee1b84ab651c6e92b344ad14304c360ad52a89afd1cfeb90a43d8a0d20b3e8f",
+        "source_sha256": "8b756787649e93623ad97de73850db0004f5916841953d6a97ba11d0aebc8144",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T064341447Z-a426bb30-PRD-verify-ue1-original-actor-imported-class.php.txt"
+      }
     },
     {
       "id": "R96:UArray",
@@ -29,12 +37,20 @@
           "line": 2238
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalResourceSimpleDatabaseReader.php",
+      "test": "verify-ue1-original-simple-database.php",
+      "evidence": "PRD historical PASS at 2026-10-21T16:05:14.7451799Z; catalog\\compliance\\evidence\\o06\\20261021T160514568Z-bd8492b8-PRD-verify-ue1-original-simple-database.php.txt; scoped test, not full class acceptance",
+      "remaining": "Confirm full subclass source contract in G1 inventory",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "DEV",
+        "state": "PASS",
+        "at_utc": "2026-10-21T16:09:05.9453351Z",
+        "test_sha256": "e07d2f282280ce17c8d09f082eff23d004285a1d499e58fd6a87b2ec772c9649",
+        "source_sha256": "15a2780045bcea10a3ba1c770a5cfd49a2d1e50c48fec0e234a45730d23b013a",
+        "log": "catalog\\compliance\\evidence\\o06\\20261021T160905802Z-7ffb0e86-DEV-verify-ue1-original-simple-database.php.txt"
+      }
     },
     {
       "id": "R96:UBounds",
@@ -46,12 +62,20 @@
           "line": 226
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalResourceGeometryReader.php",
+      "test": "verify-ue1-original-resource-geometry.php",
+      "evidence": "PRD historical PASS at 2026-10-21T17:42:49.2476362Z; catalog\\compliance\\evidence\\o06\\20261021T174248908Z-e67c8053-PRD-verify-ue1-original-resource-geometry.php.txt; scoped test, not full class acceptance",
+      "remaining": "Confirm all v9/v10 source version branches in G1",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-21T17:42:49.2476362Z",
+        "test_sha256": "a2180f1fe2cf9f60665b293f7e6538b0af016157d363febd86eaeb1135aad296",
+        "source_sha256": "fcf286fc553d255dde97720aa66da08f4b8809fb5bfd3b62ae999f5d22395c18",
+        "log": "catalog\\compliance\\evidence\\o06\\20261021T174248908Z-e67c8053-PRD-verify-ue1-original-resource-geometry.php.txt"
+      }
     },
     {
       "id": "R96:UBspNodes",
@@ -63,12 +87,20 @@
           "line": 52
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalResourceBspNodesReader.php",
+      "test": "verify-ue1-original-resource-bsp-nodes.php",
+      "evidence": "PRD historical PASS at 2026-10-21T21:10:54.3798727Z; catalog\\compliance\\evidence\\o06\\20261021T211054114Z-27c35047-PRD-verify-ue1-original-resource-bsp-nodes.php.txt; scoped test, not full class acceptance",
+      "remaining": "Validate full source definition and native record variants for G1",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-21T21:10:54.3798727Z",
+        "test_sha256": "d52aa2a266329f8bc8f3682b27cb06ac176e8a0804653bb0588a18860a8db5a0",
+        "source_sha256": "97f2049b426ad735152405cb1b3681e6a16cdec4d3f89896ccba3a7defd0d377",
+        "log": "catalog\\compliance\\evidence\\o06\\20261021T211054114Z-27c35047-PRD-verify-ue1-original-resource-bsp-nodes.php.txt"
+      }
     },
     {
       "id": "R96:UBspSurfs",
@@ -80,12 +112,20 @@
           "line": 89
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalResourceBspSurfsReader.php",
+      "test": "verify-ue1-original-resource-bsp-surfs.php",
+      "evidence": "PRD historical PASS at 2026-10-21T21:06:15.5917312Z; catalog\\compliance\\evidence\\o06\\20261021T210615333Z-a34b1f69-PRD-verify-ue1-original-resource-bsp-surfs.php.txt; scoped test, not full class acceptance",
+      "remaining": "Validate full source definition and native record variants for G1",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-21T21:06:15.5917312Z",
+        "test_sha256": "004b9219c057a6d9bbfc57daa89bb4ac16f76658af2f8e43a160103dec26a87f",
+        "source_sha256": "46fa51b4f7e6dafc8510d002ec622f7f9760aae47735934bb2226a7733f1d1bc",
+        "log": "catalog\\compliance\\evidence\\o06\\20261021T210615333Z-a34b1f69-PRD-verify-ue1-original-resource-bsp-surfs.php.txt"
+      }
     },
     {
       "id": "R96:UBuffer",
@@ -97,12 +137,20 @@
           "line": 2643
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalResourceSimpleDatabaseReader.php",
+      "test": "verify-ue1-original-simple-database.php",
+      "evidence": "PRD historical PASS at 2026-10-21T16:05:14.7451799Z; catalog\\compliance\\evidence\\o06\\20261021T160514568Z-bd8492b8-PRD-verify-ue1-original-simple-database.php.txt; scoped test, not full class acceptance",
+      "remaining": "Confirm full subclass source contract in G1 inventory",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "DEV",
+        "state": "PASS",
+        "at_utc": "2026-10-21T16:09:05.9453351Z",
+        "test_sha256": "e07d2f282280ce17c8d09f082eff23d004285a1d499e58fd6a87b2ec772c9649",
+        "source_sha256": "15a2780045bcea10a3ba1c770a5cfd49a2d1e50c48fec0e234a45730d23b013a",
+        "log": "catalog\\compliance\\evidence\\o06\\20261021T160905802Z-7ffb0e86-DEV-verify-ue1-original-simple-database.php.txt"
+      }
     },
     {
       "id": "R96:UCamera",
@@ -114,12 +162,20 @@
           "line": 82
         }
       ],
-      "status": "DISCOVERED",
+      "status": "EXCLUDED",
       "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "test": "verify-ue1-o06-original-saveability.php",
+      "evidence": "v0.84a source save operation throws; documented source-backed exclusion, not a disk requirement",
+      "remaining": "",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-21T19:27:36.5971253Z",
+        "test_sha256": "c304d60fa11cd88cabfd972323836da01ecd2543b533c8acf59dd0041ea0a01b",
+        "source_sha256": "e37e00867954fb1fc86b1af43475bafd96ee78b7455dce428611687ed0bccdba",
+        "log": "catalog\\compliance\\evidence\\o06\\20261021T192736425Z-e1d46869-PRD-verify-ue1-o06-original-saveability.php.txt"
+      }
     },
     {
       "id": "R96:UClass",
@@ -131,12 +187,20 @@
           "line": 436
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalResourceClassPropertyReader.php",
+      "test": "verify-ue1-original-resource-class-properties.php",
+      "evidence": "PRD historical PASS at 2026-10-21T19:48:12.1536333Z; catalog\\compliance\\evidence\\o06\\20261021T194811389Z-9640ddbc-PRD-verify-ue1-original-resource-class-properties.php.txt; scoped test, not full class acceptance",
+      "remaining": "Descriptor/default actor handling has scoped tests; complete G1 source branch reconciliation",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-21T19:48:12.1536333Z",
+        "test_sha256": "8025e2e2d711716f24bda08d0b8c2d2b20f64b5a80c3514e2c846fd7044b2926",
+        "source_sha256": "c89ec5e8d327005e1bbd521a1c29274afa2ac50d25c650d2cd89f00523df35e0",
+        "log": "catalog\\compliance\\evidence\\o06\\20261021T194811389Z-9640ddbc-PRD-verify-ue1-original-resource-class-properties.php.txt"
+      }
     },
     {
       "id": "R96:UEnum",
@@ -148,12 +212,20 @@
           "line": 2569
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalResourceSimpleDatabaseReader.php",
+      "test": "verify-ue1-original-simple-database.php",
+      "evidence": "PRD historical PASS at 2026-10-21T16:05:14.7451799Z; catalog\\compliance\\evidence\\o06\\20261021T160514568Z-bd8492b8-PRD-verify-ue1-original-simple-database.php.txt; scoped test, not full class acceptance",
+      "remaining": "Confirm full subclass source contract in G1 inventory",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "DEV",
+        "state": "PASS",
+        "at_utc": "2026-10-21T16:09:05.9453351Z",
+        "test_sha256": "e07d2f282280ce17c8d09f082eff23d004285a1d499e58fd6a87b2ec772c9649",
+        "source_sha256": "15a2780045bcea10a3ba1c770a5cfd49a2d1e50c48fec0e234a45730d23b013a",
+        "log": "catalog\\compliance\\evidence\\o06\\20261021T160905802Z-7ffb0e86-DEV-verify-ue1-original-simple-database.php.txt"
+      }
     },
     {
       "id": "R96:UFont",
@@ -165,12 +237,20 @@
           "line": 1144
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalResourceFontReader.php",
+      "test": "verify-ue1-original-resource-font.php",
+      "evidence": "PRD historical PASS at 2026-10-21T16:15:46.8182745Z; catalog\\compliance\\evidence\\o06\\20261021T161546601Z-f63916c1-PRD-verify-ue1-original-resource-font.php.txt; scoped test, not full class acceptance",
+      "remaining": "Glyph/native header source-fixtures pass; reconcile remaining source branches in G1",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-21T16:15:46.8182745Z",
+        "test_sha256": "86146978af28591df663de8838474e4935c9d1f22eedf45f6ed8e4d5218dc1eb",
+        "source_sha256": "7ae6616384a7a5afd578c6339227f9b576ed9be78ec38471ac5461ec04169565",
+        "log": "catalog\\compliance\\evidence\\o06\\20261021T161546601Z-f63916c1-PRD-verify-ue1-original-resource-font.php.txt"
+      }
     },
     {
       "id": "R96:ULevel",
@@ -182,12 +262,20 @@
           "line": 478
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalResourceModelLevelReader.php",
+      "test": "verify-ue1-original-resource-model-level.php",
+      "evidence": "PRD historical PASS at 2026-10-21T19:37:08.2962423Z; catalog\\compliance\\evidence\\o06\\20261021T193708022Z-1fcb5780-PRD-verify-ue1-original-resource-model-level.php.txt; scoped test, not full class acceptance",
+      "remaining": "Native header tested; runtime reference fixing in O10; G1 saveable path inventory",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-21T19:37:08.2962423Z",
+        "test_sha256": "6ca1763c92f61cd0f9a9c0cf5b84b3986762f1507882ae46778172341de30d40",
+        "source_sha256": "769673bfe6206da433faab8ff337fc9b57e4ed17ce2d6c564c019230453fab20",
+        "log": "catalog\\compliance\\evidence\\o06\\20261021T193708022Z-1fcb5780-PRD-verify-ue1-original-resource-model-level.php.txt"
+      }
     },
     {
       "id": "R96:ULightMesh",
@@ -199,12 +287,20 @@
           "line": 139
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalResourceLightMeshReader.php",
+      "test": "verify-ue1-original-resource-lightmesh.php",
+      "evidence": "PRD historical PASS at 2026-10-21T21:20:44.3070078Z; catalog\\compliance\\evidence\\o06\\20261021T212044004Z-bda64d70-PRD-verify-ue1-original-resource-lightmesh.php.txt; scoped test, not full class acceptance",
+      "remaining": "Native FLightMeshIndex tested; light sample interpretation O07",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-21T21:20:44.3070078Z",
+        "test_sha256": "6584cab4d8716563f8363eec919c00258ef368643b16c9e5d810a10e97009b70",
+        "source_sha256": "5dda38087e1ac0119b6955afd33f23655630fcbace9fe749e8239e48902ed823",
+        "log": "catalog\\compliance\\evidence\\o06\\20261021T212044004Z-bda64d70-PRD-verify-ue1-original-resource-lightmesh.php.txt"
+      }
     },
     {
       "id": "R96:UMesh",
@@ -216,12 +312,20 @@
           "line": 138
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalResourceMeshReader.php",
+      "test": "verify-ue1-original-resource-mesh.php",
+      "evidence": "PRD historical PASS at 2026-10-21T17:42:49.5317600Z; catalog\\compliance\\evidence\\o06\\20261021T174249403Z-f97bff91-PRD-verify-ue1-original-resource-mesh.php.txt; scoped test, not full class acceptance",
+      "remaining": "Native mesh six-section records tested; verify remaining G1 source branches",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-21T17:42:49.5317600Z",
+        "test_sha256": "fa547258338445a51afa3e2f95bb00824d18911e33bbfc390d199f738dcb085b",
+        "source_sha256": "fcf286fc553d255dde97720aa66da08f4b8809fb5bfd3b62ae999f5d22395c18",
+        "log": "catalog\\compliance\\evidence\\o06\\20261021T174249403Z-f97bff91-PRD-verify-ue1-original-resource-mesh.php.txt"
+      }
     },
     {
       "id": "R96:UMeshMap",
@@ -233,12 +337,20 @@
           "line": 214
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalResourceMeshMapReader.php",
+      "test": "verify-ue1-original-resource-meshmap.php",
+      "evidence": "PRD historical PASS at 2026-10-21T17:42:49.3887218Z; catalog\\compliance\\evidence\\o06\\20261021T174249263Z-39802194-PRD-verify-ue1-original-resource-meshmap.php.txt; scoped test, not full class acceptance",
+      "remaining": "Source layout corrected; reconcile G1 complete native/array branches",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-21T17:42:49.3887218Z",
+        "test_sha256": "0f00746b3a38bfd516e9a33ff00d2aec774c474cfb023e5035b969ae9768d34c",
+        "source_sha256": "fcf286fc553d255dde97720aa66da08f4b8809fb5bfd3b62ae999f5d22395c18",
+        "log": "catalog\\compliance\\evidence\\o06\\20261021T174249263Z-39802194-PRD-verify-ue1-original-resource-meshmap.php.txt"
+      }
     },
     {
       "id": "R96:UModel",
@@ -250,12 +362,20 @@
           "line": 431
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalResourceModelLevelReader.php",
+      "test": "verify-ue1-original-resource-model-level.php",
+      "evidence": "PRD historical PASS at 2026-10-21T19:37:08.2962423Z; catalog\\compliance\\evidence\\o06\\20261021T193708022Z-1fcb5780-PRD-verify-ue1-original-resource-model-level.php.txt; scoped test, not full class acceptance",
+      "remaining": "Native model header/layout tested; linked BSP topology O10",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-21T19:37:08.2962423Z",
+        "test_sha256": "6ca1763c92f61cd0f9a9c0cf5b84b3986762f1507882ae46778172341de30d40",
+        "source_sha256": "769673bfe6206da433faab8ff337fc9b57e4ed17ce2d6c564c019230453fab20",
+        "log": "catalog\\compliance\\evidence\\o06\\20261021T193708022Z-1fcb5780-PRD-verify-ue1-original-resource-model-level.php.txt"
+      }
     },
     {
       "id": "R96:UPalette",
@@ -267,12 +387,20 @@
           "line": 731
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalResourceDatabaseReader.php",
+      "test": "verify-ue1-original-resource-database.php",
+      "evidence": "PRD historical PASS at 2026-10-21T16:05:14.8686558Z; catalog\\compliance\\evidence\\o06\\20261021T160514759Z-8f38fba0-PRD-verify-ue1-original-resource-database.php.txt; scoped test, not full class acceptance",
+      "remaining": "Palette record tests exist; validate all native data semantics under G1",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-21T16:05:14.8686558Z",
+        "test_sha256": "fd9be0c275c1c019c565a08b825c483087afbb5a21d3da775a4bbb1eefed7d61",
+        "source_sha256": "3ee7982efc7cb5c1fc35704a33bfa53988e3e75ce2c5c5a23442f7c764ce8482",
+        "log": "catalog\\compliance\\evidence\\o06\\20261021T160514759Z-8f38fba0-PRD-verify-ue1-original-resource-database.php.txt"
+      }
     },
     {
       "id": "R96:UPlayer",
@@ -284,12 +412,20 @@
           "line": 360
         }
       ],
-      "status": "DISCOVERED",
+      "status": "EXCLUDED",
       "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "test": "verify-ue1-o06-original-saveability.php",
+      "evidence": "v0.84a source save operation throws; documented source-backed exclusion, not a disk requirement",
+      "remaining": "",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-21T19:27:36.5971253Z",
+        "test_sha256": "c304d60fa11cd88cabfd972323836da01ecd2543b533c8acf59dd0041ea0a01b",
+        "source_sha256": "e37e00867954fb1fc86b1af43475bafd96ee78b7455dce428611687ed0bccdba",
+        "log": "catalog\\compliance\\evidence\\o06\\20261021T192736425Z-e1d46869-PRD-verify-ue1-o06-original-saveability.php.txt"
+      }
     },
     {
       "id": "R96:UPolys",
@@ -301,12 +437,20 @@
           "line": 691
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalResourcePolysReader.php",
+      "test": "verify-ue1-original-resource-polys.php",
+      "evidence": "PRD historical PASS at 2026-10-21T21:16:12.3865176Z; catalog\\compliance\\evidence\\o06\\20261021T211612107Z-2a52997f-PRD-verify-ue1-original-resource-polys.php.txt; scoped test, not full class acceptance",
+      "remaining": "FPoly typed records source-tested; runtime editor functions excluded",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-21T21:16:12.3865176Z",
+        "test_sha256": "fba0113a6c6f0a0a6796d72664383c6e1c3fbd89eaad350f6eb71e5ba7b88ada",
+        "source_sha256": "b2ff260dd48acccc917e19357f4ba03cbc9e4eba878361a64034edc292e69c02",
+        "log": "catalog\\compliance\\evidence\\o06\\20261021T211612107Z-2a52997f-PRD-verify-ue1-original-resource-polys.php.txt"
+      }
     },
     {
       "id": "R96:UScript",
@@ -318,12 +462,20 @@
           "line": 2781
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalResourceScriptReader.php",
+      "test": "verify-ue1-original-resource-script.php",
+      "evidence": "PRD historical PASS at 2026-10-21T17:14:43.1904491Z; catalog\\compliance\\evidence\\o06\\20261021T171442970Z-73654cf8-PRD-verify-ue1-original-resource-script.php.txt; scoped test, not full class acceptance",
+      "remaining": "Native script header/code read tested; remaining source serialization dispatch reconciliation G1",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-21T17:14:43.1904491Z",
+        "test_sha256": "aa509c1583a97a148bd05e7c86355aecf8f6b07ad7a11fbb5d322e49b06fd293",
+        "source_sha256": "0e272812b34fee5bd882717b65005b728502d28aab5ca683a77154802c5fdbc5",
+        "log": "catalog\\compliance\\evidence\\o06\\20261021T171442970Z-73654cf8-PRD-verify-ue1-original-resource-script.php.txt"
+      }
     },
     {
       "id": "R96:USound",
@@ -335,12 +487,20 @@
           "line": 289
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalResourceSoundReader.php",
+      "test": "verify-ue1-original-resource-sound.php",
+      "evidence": "PRD historical PASS at 2026-10-21T16:10:00.2663840Z; catalog\\compliance\\evidence\\o06\\20261021T161000052Z-601c2acf-PRD-verify-ue1-original-resource-sound.php.txt; scoped test, not full class acceptance",
+      "remaining": "Native sound fields source-tested; audio interpretation O07",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-21T16:10:00.2663840Z",
+        "test_sha256": "543107fdd13ab72afca20d9bd91484d0a74a68137b21f9a57873800ff7994400",
+        "source_sha256": "9a98d5a891e438ef3c4c4c89110e1e54562c81ac42d79905753e5472fd85dc7f",
+        "log": "catalog\\compliance\\evidence\\o06\\20261021T161000052Z-601c2acf-PRD-verify-ue1-original-resource-sound.php.txt"
+      }
     },
     {
       "id": "R96:UTerrain",
@@ -352,12 +512,20 @@
           "line": 279
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalResourceGeometryReader.php",
+      "test": "verify-ue1-original-resource-geometry.php",
+      "evidence": "PRD historical PASS at 2026-10-21T17:42:49.2476362Z; catalog\\compliance\\evidence\\o06\\20261021T174248908Z-e67c8053-PRD-verify-ue1-original-resource-geometry.php.txt; scoped test, not full class acceptance",
+      "remaining": "Geometry layout source-tested; remaining source variants G1",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-21T17:42:49.2476362Z",
+        "test_sha256": "a2180f1fe2cf9f60665b293f7e6538b0af016157d363febd86eaeb1135aad296",
+        "source_sha256": "fcf286fc553d255dde97720aa66da08f4b8809fb5bfd3b62ae999f5d22395c18",
+        "log": "catalog\\compliance\\evidence\\o06\\20261021T174248908Z-e67c8053-PRD-verify-ue1-original-resource-geometry.php.txt"
+      }
     },
     {
       "id": "R96:UTextBuffer",
@@ -369,12 +537,20 @@
           "line": 2199
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalResourceSimpleDatabaseReader.php",
+      "test": "verify-ue1-original-simple-database.php",
+      "evidence": "PRD historical PASS at 2026-10-21T16:05:14.7451799Z; catalog\\compliance\\evidence\\o06\\20261021T160514568Z-bd8492b8-PRD-verify-ue1-original-simple-database.php.txt; scoped test, not full class acceptance",
+      "remaining": "Source-defined typed buffer; G1 source variants",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "DEV",
+        "state": "PASS",
+        "at_utc": "2026-10-21T16:09:05.9453351Z",
+        "test_sha256": "e07d2f282280ce17c8d09f082eff23d004285a1d499e58fd6a87b2ec772c9649",
+        "source_sha256": "15a2780045bcea10a3ba1c770a5cfd49a2d1e50c48fec0e234a45730d23b013a",
+        "log": "catalog\\compliance\\evidence\\o06\\20261021T160905802Z-7ffb0e86-DEV-verify-ue1-original-simple-database.php.txt"
+      }
     },
     {
       "id": "R96:UTexture",
@@ -386,12 +562,20 @@
           "line": 354
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalResourceTextureReader.php",
+      "test": "verify-ue1-original-resource-texture.php",
+      "evidence": "PRD historical PASS at 2026-10-21T16:05:14.5511542Z; catalog\\compliance\\evidence\\o06\\20261021T160514331Z-ea3523a0-PRD-verify-ue1-original-resource-texture.php.txt; scoped test, not full class acceptance",
+      "remaining": "Texture header/mips source-tested; raster O07",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "DEV",
+        "state": "PASS",
+        "at_utc": "2026-10-21T16:09:05.7933329Z",
+        "test_sha256": "430e5d7d013ece151c9bd1ccdb70e1338f7df29282e23a8e617e20612751a25c",
+        "source_sha256": "15a2780045bcea10a3ba1c770a5cfd49a2d1e50c48fec0e234a45730d23b013a",
+        "log": "catalog\\compliance\\evidence\\o06\\20261021T160905679Z-35daf44f-DEV-verify-ue1-original-resource-texture.php.txt"
+      }
     },
     {
       "id": "R96:UTransBuffer",
@@ -403,12 +587,20 @@
           "line": 1026
         }
       ],
-      "status": "DISCOVERED",
+      "status": "EXCLUDED",
       "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "test": "verify-ue1-o06-original-saveability.php",
+      "evidence": "v0.84a source save operation throws; documented source-backed exclusion, not a disk requirement",
+      "remaining": "",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-21T19:27:36.5971253Z",
+        "test_sha256": "c304d60fa11cd88cabfd972323836da01ecd2543b533c8acf59dd0041ea0a01b",
+        "source_sha256": "e37e00867954fb1fc86b1af43475bafd96ee78b7455dce428611687ed0bccdba",
+        "log": "catalog\\compliance\\evidence\\o06\\20261021T192736425Z-e1d46869-PRD-verify-ue1-o06-original-saveability.php.txt"
+      }
     },
     {
       "id": "R96:UVectors",
@@ -420,12 +612,20 @@
           "line": 163
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalResourceGeometryReader.php",
+      "test": "verify-ue1-original-resource-geometry.php",
+      "evidence": "PRD historical PASS at 2026-10-21T17:42:49.2476362Z; catalog\\compliance\\evidence\\o06\\20261021T174248908Z-e67c8053-PRD-verify-ue1-original-resource-geometry.php.txt; scoped test, not full class acceptance",
+      "remaining": "16-byte FVector source correction tested; G1 source variants",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-21T17:42:49.2476362Z",
+        "test_sha256": "a2180f1fe2cf9f60665b293f7e6538b0af016157d363febd86eaeb1135aad296",
+        "source_sha256": "fcf286fc553d255dde97720aa66da08f4b8809fb5bfd3b62ae999f5d22395c18",
+        "log": "catalog\\compliance\\evidence\\o06\\20261021T174248908Z-e67c8053-PRD-verify-ue1-original-resource-geometry.php.txt"
+      }
     },
     {
       "id": "R96:UVertPool",
@@ -437,12 +637,20 @@
           "line": 202
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalResourceGeometryReader.php",
+      "test": "verify-ue1-original-resource-geometry.php",
+      "evidence": "PRD historical PASS at 2026-10-21T17:42:49.2476362Z; catalog\\compliance\\evidence\\o06\\20261021T174248908Z-e67c8053-PRD-verify-ue1-original-resource-geometry.php.txt; scoped test, not full class acceptance",
+      "remaining": "Native geometry records tested; G1 source variants",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-21T17:42:49.2476362Z",
+        "test_sha256": "a2180f1fe2cf9f60665b293f7e6538b0af016157d363febd86eaeb1135aad296",
+        "source_sha256": "fcf286fc553d255dde97720aa66da08f4b8809fb5bfd3b62ae999f5d22395c18",
+        "log": "catalog\\compliance\\evidence\\o06\\20261021T174248908Z-e67c8053-PRD-verify-ue1-original-resource-geometry.php.txt"
+      }
     },
     {
       "id": "U97:AActor",
@@ -522,12 +730,20 @@
           "line": 2287
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "test": "verify-ue1-original-unrealfile-database-records.php",
+      "evidence": "PRD historical PASS at 2026-10-22T09:02:16.8847605Z; catalog\\compliance\\evidence\\o06\\20261022T090216725Z-7f4a6857-PRD-verify-ue1-original-unrealfile-database-records.php.txt; scoped test, not full class acceptance",
+      "remaining": "Individual source-derived database record types have fixture coverage; final distinct-method and inherited path review G2 remains",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T09:02:16.8847605Z",
+        "test_sha256": "c5898b4c3125c734717435ddb020d8eca6abeb5621dca2683ff2db1b767ac964",
+        "source_sha256": "dcd6c8d09354b366f3c2fda8f120d0e1a51acd030d082b8ac9ff25f90759a88d",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T090216725Z-7f4a6857-PRD-verify-ue1-original-unrealfile-database-records.php.txt"
+      }
     },
     {
       "id": "U97:UBitArray",
@@ -539,12 +755,20 @@
           "line": 2670
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileBitArrayReader.php",
+      "test": "verify-ue1-original-unrealfile-bit-archives.php",
+      "evidence": "PRD historical PASS at 2026-10-21T20:14:33.4716309Z; catalog\\compliance\\evidence\\o06\\20261021T201433273Z-d9c463a1-PRD-verify-ue1-original-unrealfile-bit-archives.php.txt; scoped test, not full class acceptance",
+      "remaining": "Bit RLE source-tested; review whole class/interface methods G2",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "DEV",
+        "state": "PASS",
+        "at_utc": "2026-10-22T07:21:19.9997700Z",
+        "test_sha256": "f4273d23fdf75913da0157a2b33f6d34208fad1b7f1d551583c86c973915d0f2",
+        "source_sha256": "9cd63d7b0497101b42ec37c1b738b0c1713cf5533978e3c56506bb223db44a8a",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T072119840Z-dbc6661a-DEV-verify-ue1-original-unrealfile-bit-archives.php.txt"
+      }
     },
     {
       "id": "U97:UBitMatrix",
@@ -556,12 +780,20 @@
           "line": 2671
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileBitArrayReader.php",
+      "test": "verify-ue1-original-unrealfile-bit-archives.php",
+      "evidence": "PRD historical PASS at 2026-10-21T20:14:33.4716309Z; catalog\\compliance\\evidence\\o06\\20261021T201433273Z-d9c463a1-PRD-verify-ue1-original-unrealfile-bit-archives.php.txt; scoped test, not full class acceptance",
+      "remaining": "Bit matrix source-tested; review inherited/subclass G2",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "DEV",
+        "state": "PASS",
+        "at_utc": "2026-10-22T07:21:19.9997700Z",
+        "test_sha256": "f4273d23fdf75913da0157a2b33f6d34208fad1b7f1d551583c86c973915d0f2",
+        "source_sha256": "9cd63d7b0497101b42ec37c1b738b0c1713cf5533978e3c56506bb223db44a8a",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T072119840Z-dbc6661a-DEV-verify-ue1-original-unrealfile-bit-archives.php.txt"
+      }
     },
     {
       "id": "U97:UBounds",
@@ -573,12 +805,20 @@
           "line": 123
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "test": "verify-ue1-original-unrealfile-mesh-records.php",
+      "evidence": "PRD historical PASS at 2026-10-22T09:02:16.6918324Z; catalog\\compliance\\evidence\\o06\\20261022T090216239Z-8383499e-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt; scoped test, not full class acceptance",
+      "remaining": "Individual source-derived database record types have fixture coverage; final distinct-method and inherited path review G2 remains",
+      "updated_at_utc": "2026-10-22T09:32:47+00:00",
+      "last_verification": {
+        "target": "DEV",
+        "state": "PASS",
+        "at_utc": "2026-10-22T09:29:18.0054259Z",
+        "test_sha256": "0cae7fee26bb46629a0e4e11c6239b7fb3f30690007f08d0b65d7802d3221e12",
+        "source_sha256": "a23bdac456be5ae3d5bf3c8f611f8d41cf364d7e1ea5f8a2d80c7e7287991b5a",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T092917500Z-e3ce6180-DEV-verify-ue1-original-unrealfile-mesh-records.php.txt"
+      }
     },
     {
       "id": "U97:UBspNodes",
@@ -590,12 +830,20 @@
           "line": 45
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileBspRecordsReader.php",
+      "test": "verify-ue1-original-unrealfile-bsp-records.php",
+      "evidence": "PRD historical PASS at 2026-10-22T07:36:34.1306759Z; catalog\\compliance\\evidence\\o06\\20261022T073633853Z-12773e2e-PRD-verify-ue1-original-unrealfile-bsp-records.php.txt; scoped test, not full class acceptance",
+      "remaining": "BSP records/source header typed; no runtime linking O10",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T07:36:34.1306759Z",
+        "test_sha256": "c4a0efe59ceb8b1930b58adfff2326e44dd7a322208b09a9ec83e1687a79385b",
+        "source_sha256": "cda93078f2c7932b9d5e8de76053c64f61cf4e827c3dd3765cb5f69cc92958bc",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T073633853Z-12773e2e-PRD-verify-ue1-original-unrealfile-bsp-records.php.txt"
+      }
     },
     {
       "id": "U97:UBspSurfs",
@@ -607,12 +855,20 @@
           "line": 81
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileBspRecordsReader.php",
+      "test": "verify-ue1-original-unrealfile-bsp-records.php",
+      "evidence": "PRD historical PASS at 2026-10-22T07:36:34.1306759Z; catalog\\compliance\\evidence\\o06\\20261022T073633853Z-12773e2e-PRD-verify-ue1-original-unrealfile-bsp-records.php.txt; scoped test, not full class acceptance",
+      "remaining": "BSP records/source header typed; no runtime linking O10",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T07:36:34.1306759Z",
+        "test_sha256": "c4a0efe59ceb8b1930b58adfff2326e44dd7a322208b09a9ec83e1687a79385b",
+        "source_sha256": "cda93078f2c7932b9d5e8de76053c64f61cf4e827c3dd3765cb5f69cc92958bc",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T073633853Z-12773e2e-PRD-verify-ue1-original-unrealfile-bsp-records.php.txt"
+      }
     },
     {
       "id": "U97:UBuffer",
@@ -624,12 +880,20 @@
           "line": 2437
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "test": "verify-ue1-original-unrealfile-database-records.php",
+      "evidence": "PRD historical PASS at 2026-10-22T09:02:16.8847605Z; catalog\\compliance\\evidence\\o06\\20261022T090216725Z-7f4a6857-PRD-verify-ue1-original-unrealfile-database-records.php.txt; scoped test, not full class acceptance",
+      "remaining": "Individual source-derived database record types have fixture coverage; final distinct-method and inherited path review G2 remains",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T09:02:16.8847605Z",
+        "test_sha256": "c5898b4c3125c734717435ddb020d8eca6abeb5621dca2683ff2db1b767ac964",
+        "source_sha256": "dcd6c8d09354b366f3c2fda8f120d0e1a51acd030d082b8ac9ff25f90759a88d",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T090216725Z-7f4a6857-PRD-verify-ue1-original-unrealfile-database-records.php.txt"
+      }
     },
     {
       "id": "U97:UCamera",
@@ -641,12 +905,20 @@
           "line": 50
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileSpecialHeadersReader.php",
+      "test": "verify-ue1-original-unrealfile-special-headers.php",
+      "evidence": "PRD historical PASS at 2026-10-22T07:25:34.3693613Z; catalog\\compliance\\evidence\\o06\\20261022T072534021Z-75c965c2-PRD-verify-ue1-original-unrealfile-special-headers.php.txt; scoped test, not full class acceptance",
+      "remaining": "Texture header source-tested; class saveability and inherited data review G2",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T07:25:34.3693613Z",
+        "test_sha256": "a68bd09362e13dbee5dbb41710adee3d27e87d3d18b7a71f57442bbd4c49bb47",
+        "source_sha256": "1a202f63a1ff1977bd28e54b6d87ec669cda74735bceae7eede3d1bdee84a154",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T072534021Z-75c965c2-PRD-verify-ue1-original-unrealfile-special-headers.php.txt"
+      }
     },
     {
       "id": "U97:UClass",
@@ -658,12 +930,20 @@
           "line": 405
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileClassSchemaReader.php",
+      "test": "verify-ue1-original-unrealfile-class-schemas.php",
+      "evidence": "PRD historical PASS at 2026-10-21T17:28:19.5542389Z; catalog\\compliance\\evidence\\o06\\20261021T172819350Z-3e563cbb-PRD-verify-ue1-original-unrealfile-class-schemas.php.txt; scoped test, not full class acceptance",
+      "remaining": "FProperty descriptors and local classes tested; class-specific source contract reconciliation G2; runtime Preload O10",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "DEV",
+        "state": "PASS",
+        "at_utc": "2026-10-21T20:57:40.7388757Z",
+        "test_sha256": "f2cda42c2105751b142c9de9f6b397279539258cc778733211518048f816d87b",
+        "source_sha256": "56e80edb0d77963e8dcb4397230975a9933dc717b3b483cfc60404b853e18c42",
+        "log": "catalog\\compliance\\evidence\\o06\\20261021T205740516Z-cc5b592a-DEV-verify-ue1-original-unrealfile-class-schemas.php.txt"
+      }
     },
     {
       "id": "U97:UDatabase",
@@ -675,12 +955,20 @@
           "line": 897
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "test": "verify-ue1-original-unrealfile-database-records.php",
+      "evidence": "PRD historical PASS at 2026-10-22T09:02:16.8847605Z; catalog\\compliance\\evidence\\o06\\20261022T090216725Z-7f4a6857-PRD-verify-ue1-original-unrealfile-database-records.php.txt; scoped test, not full class acceptance",
+      "remaining": "Individual source-derived database record types have fixture coverage; final distinct-method and inherited path review G2 remains",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T09:02:16.8847605Z",
+        "test_sha256": "c5898b4c3125c734717435ddb020d8eca6abeb5621dca2683ff2db1b767ac964",
+        "source_sha256": "dcd6c8d09354b366f3c2fda8f120d0e1a51acd030d082b8ac9ff25f90759a88d",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T090216725Z-7f4a6857-PRD-verify-ue1-original-unrealfile-database-records.php.txt"
+      }
     },
     {
       "id": "U97:UDependencies",
@@ -692,12 +980,20 @@
           "line": 864
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "test": "verify-ue1-original-unrealfile-database-records.php",
+      "evidence": "PRD historical PASS at 2026-10-22T09:02:16.8847605Z; catalog\\compliance\\evidence\\o06\\20261022T090216725Z-7f4a6857-PRD-verify-ue1-original-unrealfile-database-records.php.txt; scoped test, not full class acceptance",
+      "remaining": "Individual source-derived database record types have fixture coverage; final distinct-method and inherited path review G2 remains",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T09:02:16.8847605Z",
+        "test_sha256": "c5898b4c3125c734717435ddb020d8eca6abeb5621dca2683ff2db1b767ac964",
+        "source_sha256": "dcd6c8d09354b366f3c2fda8f120d0e1a51acd030d082b8ac9ff25f90759a88d",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T090216725Z-7f4a6857-PRD-verify-ue1-original-unrealfile-database-records.php.txt"
+      }
     },
     {
       "id": "U97:UEnumDef",
@@ -709,12 +1005,20 @@
           "line": 2394
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "test": "verify-ue1-original-unrealfile-database-records.php",
+      "evidence": "PRD historical PASS at 2026-10-22T09:02:16.8847605Z; catalog\\compliance\\evidence\\o06\\20261022T090216725Z-7f4a6857-PRD-verify-ue1-original-unrealfile-database-records.php.txt; scoped test, not full class acceptance",
+      "remaining": "Individual source-derived database record types have fixture coverage; final distinct-method and inherited path review G2 remains",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T09:02:16.8847605Z",
+        "test_sha256": "c5898b4c3125c734717435ddb020d8eca6abeb5621dca2683ff2db1b767ac964",
+        "source_sha256": "dcd6c8d09354b366f3c2fda8f120d0e1a51acd030d082b8ac9ff25f90759a88d",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T090216725Z-7f4a6857-PRD-verify-ue1-original-unrealfile-database-records.php.txt"
+      }
     },
     {
       "id": "U97:UFloats",
@@ -726,12 +1030,20 @@
           "line": 99
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "test": "verify-ue1-original-unrealfile-database-records.php",
+      "evidence": "PRD historical PASS at 2026-10-22T09:02:16.8847605Z; catalog\\compliance\\evidence\\o06\\20261022T090216725Z-7f4a6857-PRD-verify-ue1-original-unrealfile-database-records.php.txt; scoped test, not full class acceptance",
+      "remaining": "Individual source-derived database record types have fixture coverage; final distinct-method and inherited path review G2 remains",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T09:02:16.8847605Z",
+        "test_sha256": "c5898b4c3125c734717435ddb020d8eca6abeb5621dca2683ff2db1b767ac964",
+        "source_sha256": "dcd6c8d09354b366f3c2fda8f120d0e1a51acd030d082b8ac9ff25f90759a88d",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T090216725Z-7f4a6857-PRD-verify-ue1-original-unrealfile-database-records.php.txt"
+      }
     },
     {
       "id": "U97:UFont",
@@ -743,12 +1055,20 @@
           "line": 517
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileSpecialHeadersReader.php",
+      "test": "verify-ue1-original-unrealfile-special-headers.php",
+      "evidence": "PRD historical PASS at 2026-10-22T07:25:34.3693613Z; catalog\\compliance\\evidence\\o06\\20261022T072534021Z-75c965c2-PRD-verify-ue1-original-unrealfile-special-headers.php.txt; scoped test, not full class acceptance",
+      "remaining": "Glyph and source header typed; source branch inventory G2",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T07:25:34.3693613Z",
+        "test_sha256": "a68bd09362e13dbee5dbb41710adee3d27e87d3d18b7a71f57442bbd4c49bb47",
+        "source_sha256": "1a202f63a1ff1977bd28e54b6d87ec669cda74735bceae7eede3d1bdee84a154",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T072534021Z-75c965c2-PRD-verify-ue1-original-unrealfile-special-headers.php.txt"
+      }
     },
     {
       "id": "U97:UInts",
@@ -760,12 +1080,20 @@
           "line": 2664
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "test": "verify-ue1-original-unrealfile-database-records.php",
+      "evidence": "PRD historical PASS at 2026-10-22T09:02:16.8847605Z; catalog\\compliance\\evidence\\o06\\20261022T090216725Z-7f4a6857-PRD-verify-ue1-original-unrealfile-database-records.php.txt; scoped test, not full class acceptance",
+      "remaining": "Individual source-derived database record types have fixture coverage; final distinct-method and inherited path review G2 remains",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T09:02:16.8847605Z",
+        "test_sha256": "c5898b4c3125c734717435ddb020d8eca6abeb5621dca2683ff2db1b767ac964",
+        "source_sha256": "dcd6c8d09354b366f3c2fda8f120d0e1a51acd030d082b8ac9ff25f90759a88d",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T090216725Z-7f4a6857-PRD-verify-ue1-original-unrealfile-database-records.php.txt"
+      }
     },
     {
       "id": "U97:ULevel",
@@ -777,12 +1105,20 @@
           "line": 391
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileLevelReader.php",
+      "test": "verify-ue1-original-unrealfile-level.php",
+      "evidence": "PRD historical PASS at 2026-10-22T06:51:18.2935289Z; catalog\\compliance\\evidence\\o06\\20261022T065118074Z-1a09a928-PRD-verify-ue1-original-unrealfile-level.php.txt; scoped test, not full class acceptance",
+      "remaining": "Actor refs and level headers source-tested; linking O10",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T06:51:18.2935289Z",
+        "test_sha256": "b014757d36f3449a45a7867421b6040abad04bc2108db0b2a569cd6afd24587a",
+        "source_sha256": "e99a6328b4f09e8c8bb52237f9a43f71498d86ff4644a94ce43ac89be16c86e1",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T065118074Z-1a09a928-PRD-verify-ue1-original-unrealfile-level.php.txt"
+      }
     },
     {
       "id": "U97:ULightMesh",
@@ -794,12 +1130,20 @@
           "line": 87
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileLightMeshDataReader.php",
+      "test": "verify-ue1-original-unrealfile-lightmesh-data.php",
+      "evidence": "PRD historical PASS at 2026-10-22T07:42:39.1452324Z; catalog\\compliance\\evidence\\o06\\20261022T074238920Z-5fd4d772-PRD-verify-ue1-original-unrealfile-lightmesh-data.php.txt; scoped test, not full class acceptance",
+      "remaining": "Typed lightmesh data record; light samples O07",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T07:42:39.1452324Z",
+        "test_sha256": "f03a8996d689148064d661365028952053199154894fa172eb732756e805bde0",
+        "source_sha256": "5637714ca8bfa38e28b8c4cc55123a58d35d189c47529bd7ac35a27de9e97226",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T074238920Z-5fd4d772-PRD-verify-ue1-original-unrealfile-lightmesh-data.php.txt"
+      }
     },
     {
       "id": "U97:ULinker",
@@ -862,12 +1206,20 @@
           "line": 90
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileMeshHeaderReader.php",
+      "test": "verify-ue1-original-unrealfile-mesh.php",
+      "evidence": "PRD historical PASS at 2026-10-22T06:57:10.4464375Z; catalog\\compliance\\evidence\\o06\\20261022T065710224Z-8c70a237-PRD-verify-ue1-original-unrealfile-mesh.php.txt; scoped test, not full class acceptance",
+      "remaining": "Mesh object header and refs tested; child data covered by DB tests; linking O10",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T06:57:10.4464375Z",
+        "test_sha256": "389dc34779be0333f9f46865468f5874ea9324e8c2bbb1e0dfe203a0f7e1e438",
+        "source_sha256": "52d2d451f22dd614cb80a718e328aed068d0920903a6339c6807adb37058a571",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T065710224Z-8c70a237-PRD-verify-ue1-original-unrealfile-mesh.php.txt"
+      }
     },
     {
       "id": "U97:UMeshAnimNotifys",
@@ -879,12 +1231,20 @@
           "line": 23
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "test": "verify-ue1-original-unrealfile-mesh-records.php",
+      "evidence": "PRD historical PASS at 2026-10-22T09:02:16.6918324Z; catalog\\compliance\\evidence\\o06\\20261022T090216239Z-8383499e-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt; scoped test, not full class acceptance",
+      "remaining": "Individual source-derived database record types have fixture coverage; final distinct-method and inherited path review G2 remains",
+      "updated_at_utc": "2026-10-22T09:32:47+00:00",
+      "last_verification": {
+        "target": "DEV",
+        "state": "PASS",
+        "at_utc": "2026-10-22T09:29:18.0054259Z",
+        "test_sha256": "0cae7fee26bb46629a0e4e11c6239b7fb3f30690007f08d0b65d7802d3221e12",
+        "source_sha256": "a23bdac456be5ae3d5bf3c8f611f8d41cf364d7e1ea5f8a2d80c7e7287991b5a",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T092917500Z-e3ce6180-DEV-verify-ue1-original-unrealfile-mesh-records.php.txt"
+      }
     },
     {
       "id": "U97:UMeshAnimSeqs",
@@ -896,12 +1256,20 @@
           "line": 22
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "test": "verify-ue1-original-unrealfile-mesh-records.php",
+      "evidence": "PRD historical PASS at 2026-10-22T09:02:16.6918324Z; catalog\\compliance\\evidence\\o06\\20261022T090216239Z-8383499e-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt; scoped test, not full class acceptance",
+      "remaining": "Individual source-derived database record types have fixture coverage; final distinct-method and inherited path review G2 remains",
+      "updated_at_utc": "2026-10-22T09:32:47+00:00",
+      "last_verification": {
+        "target": "DEV",
+        "state": "PASS",
+        "at_utc": "2026-10-22T09:29:18.0054259Z",
+        "test_sha256": "0cae7fee26bb46629a0e4e11c6239b7fb3f30690007f08d0b65d7802d3221e12",
+        "source_sha256": "a23bdac456be5ae3d5bf3c8f611f8d41cf364d7e1ea5f8a2d80c7e7287991b5a",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T092917500Z-e3ce6180-DEV-verify-ue1-original-unrealfile-mesh-records.php.txt"
+      }
     },
     {
       "id": "U97:UMeshTris",
@@ -913,12 +1281,20 @@
           "line": 21
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "test": "verify-ue1-original-unrealfile-mesh-records.php",
+      "evidence": "PRD historical PASS at 2026-10-22T09:02:16.6918324Z; catalog\\compliance\\evidence\\o06\\20261022T090216239Z-8383499e-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt; scoped test, not full class acceptance",
+      "remaining": "Individual source-derived database record types have fixture coverage; final distinct-method and inherited path review G2 remains",
+      "updated_at_utc": "2026-10-22T09:32:47+00:00",
+      "last_verification": {
+        "target": "DEV",
+        "state": "PASS",
+        "at_utc": "2026-10-22T09:29:18.0054259Z",
+        "test_sha256": "0cae7fee26bb46629a0e4e11c6239b7fb3f30690007f08d0b65d7802d3221e12",
+        "source_sha256": "a23bdac456be5ae3d5bf3c8f611f8d41cf364d7e1ea5f8a2d80c7e7287991b5a",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T092917500Z-e3ce6180-DEV-verify-ue1-original-unrealfile-mesh-records.php.txt"
+      }
     },
     {
       "id": "U97:UMeshVertConnects",
@@ -930,12 +1306,20 @@
           "line": 24
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "test": "verify-ue1-original-unrealfile-mesh-records.php",
+      "evidence": "PRD historical PASS at 2026-10-22T09:02:16.6918324Z; catalog\\compliance\\evidence\\o06\\20261022T090216239Z-8383499e-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt; scoped test, not full class acceptance",
+      "remaining": "Individual source-derived database record types have fixture coverage; final distinct-method and inherited path review G2 remains",
+      "updated_at_utc": "2026-10-22T09:32:47+00:00",
+      "last_verification": {
+        "target": "DEV",
+        "state": "PASS",
+        "at_utc": "2026-10-22T09:29:18.0054259Z",
+        "test_sha256": "0cae7fee26bb46629a0e4e11c6239b7fb3f30690007f08d0b65d7802d3221e12",
+        "source_sha256": "a23bdac456be5ae3d5bf3c8f611f8d41cf364d7e1ea5f8a2d80c7e7287991b5a",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T092917500Z-e3ce6180-DEV-verify-ue1-original-unrealfile-mesh-records.php.txt"
+      }
     },
     {
       "id": "U97:UMeshVerts",
@@ -947,12 +1331,20 @@
           "line": 20
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "test": "verify-ue1-original-unrealfile-mesh-records.php",
+      "evidence": "PRD historical PASS at 2026-10-22T09:02:16.6918324Z; catalog\\compliance\\evidence\\o06\\20261022T090216239Z-8383499e-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt; scoped test, not full class acceptance",
+      "remaining": "Individual source-derived database record types have fixture coverage; final distinct-method and inherited path review G2 remains",
+      "updated_at_utc": "2026-10-22T09:32:47+00:00",
+      "last_verification": {
+        "target": "DEV",
+        "state": "PASS",
+        "at_utc": "2026-10-22T09:29:18.0054259Z",
+        "test_sha256": "0cae7fee26bb46629a0e4e11c6239b7fb3f30690007f08d0b65d7802d3221e12",
+        "source_sha256": "a23bdac456be5ae3d5bf3c8f611f8d41cf364d7e1ea5f8a2d80c7e7287991b5a",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T092917500Z-e3ce6180-DEV-verify-ue1-original-unrealfile-mesh-records.php.txt"
+      }
     },
     {
       "id": "U97:UModel",
@@ -964,12 +1356,20 @@
           "line": 252
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileModelHeaderReader.php",
+      "test": "verify-ue1-original-unrealfile-model.php",
+      "evidence": "PRD historical PASS at 2026-10-22T07:03:01.2217614Z; catalog\\compliance\\evidence\\o06\\20261022T070300960Z-9a8dd6ef-PRD-verify-ue1-original-unrealfile-model.php.txt; scoped test, not full class acceptance",
+      "remaining": "Model source header typed; linking O10",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T07:03:01.2217614Z",
+        "test_sha256": "b265df39b4fd59056d711c6fbbc003f992c1306cb8db05392cb1f22c260b31ce",
+        "source_sha256": "b3774114b2a9914662efe260ac98fdc188fe31158a8feabe359ef1d6480abe15",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T070300960Z-9a8dd6ef-PRD-verify-ue1-original-unrealfile-model.php.txt"
+      }
     },
     {
       "id": "U97:UMusic",
@@ -985,12 +1385,20 @@
           "line": 459
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileAudioReader.php",
+      "test": "verify-ue1-original-unrealfile-audio.php",
+      "evidence": "PRD historical PASS at 2026-10-22T06:43:43.0109772Z; catalog\\compliance\\evidence\\o06\\20261022T064342876Z-2e4a58fd-PRD-verify-ue1-original-unrealfile-audio.php.txt; scoped test, not full class acceptance",
+      "remaining": "Data-size/header source-tested; payload interpretation O07",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T06:43:43.0109772Z",
+        "test_sha256": "7644e182f22de167a71cd2257484162d40582770058d21ceb8ed9efa754a4856",
+        "source_sha256": "8b756787649e93623ad97de73850db0004f5916841953d6a97ba11d0aebc8144",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T064342876Z-2e4a58fd-PRD-verify-ue1-original-unrealfile-audio.php.txt"
+      }
     },
     {
       "id": "U97:UObject",
@@ -1002,12 +1410,20 @@
           "line": 736
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileObjectBaseReader.php",
+      "test": "verify-ue1-original-unrealfile-object-bases.php",
+      "evidence": "DEV historical PASS at 2026-10-21T20:57:41.6838818Z; catalog\\compliance\\evidence\\o06\\20261021T205741266Z-38cef92f-DEV-verify-ue1-original-unrealfile-object-bases.php.txt; scoped test, not full class acceptance",
+      "remaining": "Base archive structural fields tested; G2 source class inheritance audit",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "DEV",
+        "state": "PASS",
+        "at_utc": "2026-10-21T20:57:41.6838818Z",
+        "test_sha256": "6e122a2d14ee687750eb5c1f6584e35d4ddf6a4eac6907a139fad33d43a5759b",
+        "source_sha256": "56e80edb0d77963e8dcb4397230975a9933dc717b3b483cfc60404b853e18c42",
+        "log": "catalog\\compliance\\evidence\\o06\\20261021T205741266Z-38cef92f-DEV-verify-ue1-original-unrealfile-object-bases.php.txt"
+      }
     },
     {
       "id": "U97:UPalette",
@@ -1019,12 +1435,20 @@
           "line": 1295
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "test": "verify-ue1-original-unrealfile-mesh-records.php",
+      "evidence": "PRD historical PASS at 2026-10-22T09:02:16.6918324Z; catalog\\compliance\\evidence\\o06\\20261022T090216239Z-8383499e-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt; scoped test, not full class acceptance",
+      "remaining": "Individual source-derived database record types have fixture coverage; final distinct-method and inherited path review G2 remains",
+      "updated_at_utc": "2026-10-22T09:32:47+00:00",
+      "last_verification": {
+        "target": "DEV",
+        "state": "PASS",
+        "at_utc": "2026-10-22T09:29:18.0054259Z",
+        "test_sha256": "0cae7fee26bb46629a0e4e11c6239b7fb3f30690007f08d0b65d7802d3221e12",
+        "source_sha256": "a23bdac456be5ae3d5bf3c8f611f8d41cf364d7e1ea5f8a2d80c7e7287991b5a",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T092917500Z-e3ce6180-DEV-verify-ue1-original-unrealfile-mesh-records.php.txt"
+      }
     },
     {
       "id": "U97:UPlayer",
@@ -1053,12 +1477,20 @@
           "line": 697
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfilePolysDataReader.php",
+      "test": "verify-ue1-original-unrealfile-polys-data.php",
+      "evidence": "PRD historical PASS at 2026-10-22T07:50:25.0466134Z; catalog\\compliance\\evidence\\o06\\20261022T075024807Z-1072c7bf-PRD-verify-ue1-original-unrealfile-polys-data.php.txt; scoped test, not full class acceptance",
+      "remaining": "FPoly archive source-tested; runtime editor functions not O06",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T07:50:25.0466134Z",
+        "test_sha256": "ef529ccfa1b2ef5c63860aeb84231ff00aa117df4d8e2a84d4b0ae3e434f0563",
+        "source_sha256": "a11511497655399328706aca5bdc513940dc6c0e91cad805d78d8b36ab2318bb",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T075024807Z-1072c7bf-PRD-verify-ue1-original-unrealfile-polys-data.php.txt"
+      }
     },
     {
       "id": "U97:UPrimitive",
@@ -1070,12 +1502,20 @@
           "line": 17
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileMeshHeaderReader.php",
+      "test": "verify-ue1-original-unrealfile-mesh.php",
+      "evidence": "PRD historical PASS at 2026-10-22T06:57:10.4464375Z; catalog\\compliance\\evidence\\o06\\20261022T065710224Z-8c70a237-PRD-verify-ue1-original-unrealfile-mesh.php.txt; scoped test, not full class acceptance",
+      "remaining": "Primitive bound archive source-tested; derived serial method review G2",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T06:57:10.4464375Z",
+        "test_sha256": "389dc34779be0333f9f46865468f5874ea9324e8c2bbb1e0dfe203a0f7e1e438",
+        "source_sha256": "52d2d451f22dd614cb80a718e328aed068d0920903a6339c6807adb37058a571",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T065710224Z-8c70a237-PRD-verify-ue1-original-unrealfile-mesh.php.txt"
+      }
     },
     {
       "id": "U97:UProperties",
@@ -1087,12 +1527,20 @@
           "line": 832
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfilePropertiesReader.php",
+      "test": "verify-ue1-original-unrealfile-properties.php",
+      "evidence": "PRD historical PASS at 2026-10-21T20:59:05.1812253Z; catalog\\compliance\\evidence\\o06\\20261021T205904995Z-e03a1cb3-PRD-verify-ue1-original-unrealfile-properties.php.txt; scoped test, not full class acceptance",
+      "remaining": "SerializeBin source-fixtures including local/external schemas; full G2 family review",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-21T20:59:05.1812253Z",
+        "test_sha256": "1c171908f0a2f232739c8fcef481a1e524bec52c799bf7eec13e9162ecad1710",
+        "source_sha256": "b011237762bd19748163a7cd0df881b70c543fcf2b07820f30761bace9130981",
+        "log": "catalog\\compliance\\evidence\\o06\\20261021T205904995Z-e03a1cb3-PRD-verify-ue1-original-unrealfile-properties.php.txt"
+      }
     },
     {
       "id": "U97:UReachSpecs",
@@ -1104,12 +1552,20 @@
           "line": 21
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "test": "verify-ue1-original-unrealfile-database-records.php",
+      "evidence": "PRD historical PASS at 2026-10-22T09:02:16.8847605Z; catalog\\compliance\\evidence\\o06\\20261022T090216725Z-7f4a6857-PRD-verify-ue1-original-unrealfile-database-records.php.txt; scoped test, not full class acceptance",
+      "remaining": "Individual source-derived database record types have fixture coverage; final distinct-method and inherited path review G2 remains",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T09:02:16.8847605Z",
+        "test_sha256": "c5898b4c3125c734717435ddb020d8eca6abeb5621dca2683ff2db1b767ac964",
+        "source_sha256": "dcd6c8d09354b366f3c2fda8f120d0e1a51acd030d082b8ac9ff25f90759a88d",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T090216725Z-7f4a6857-PRD-verify-ue1-original-unrealfile-database-records.php.txt"
+      }
     },
     {
       "id": "U97:UScript",
@@ -1121,12 +1577,20 @@
           "line": 5158
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileScriptExpressionReader.php",
+      "test": "verify-ue1-original-unrealfile-expression-token-inventory.php",
+      "evidence": "PRD historical PASS at 2026-10-22T08:14:11.2490258Z; catalog\\compliance\\evidence\\o06\\20261022T081411099Z-f6a7cd42-PRD-verify-ue1-original-unrealfile-expression-token-inventory.php.txt; scoped test, not full class acceptance",
+      "remaining": "50/50 SerializeExpr switch cases statically mapped; runtime execution O10; variable branches source review G2",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T08:14:11.2490258Z",
+        "test_sha256": "36299cd933e23a67618b64fc6d5d61cf94372d1f7e9add612fff6e3b9981ec3b",
+        "source_sha256": "45ae383bb7e8448bc6bb1f2af5c99d1842a9d121846070d7c8c681b70d9e2117",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T081411099Z-f6a7cd42-PRD-verify-ue1-original-unrealfile-expression-token-inventory.php.txt"
+      }
     },
     {
       "id": "U97:USound",
@@ -1138,12 +1602,20 @@
           "line": 220
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileAudioReader.php",
+      "test": "verify-ue1-original-unrealfile-audio.php",
+      "evidence": "PRD historical PASS at 2026-10-22T06:43:43.0109772Z; catalog\\compliance\\evidence\\o06\\20261022T064342876Z-2e4a58fd-PRD-verify-ue1-original-unrealfile-audio.php.txt; scoped test, not full class acceptance",
+      "remaining": "Sound header/payload range source-tested; audio decode O07",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T06:43:43.0109772Z",
+        "test_sha256": "7644e182f22de167a71cd2257484162d40582770058d21ceb8ed9efa754a4856",
+        "source_sha256": "8b756787649e93623ad97de73850db0004f5916841953d6a97ba11d0aebc8144",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T064342876Z-2e4a58fd-PRD-verify-ue1-original-unrealfile-audio.php.txt"
+      }
     },
     {
       "id": "U97:UStackTree",
@@ -1155,12 +1627,20 @@
           "line": 5200
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileStackTreeDataReader.php",
+      "test": "verify-ue1-original-unrealfile-stacktree-data.php",
+      "evidence": "PRD historical PASS at 2026-10-22T07:57:39.7967064Z; catalog\\compliance\\evidence\\o06\\20261022T075739470Z-3b6a4fd4-PRD-verify-ue1-original-unrealfile-stacktree-data.php.txt; scoped test, not full class acceptance",
+      "remaining": "FStackNode archive source-tested; linking O10",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T07:57:39.7967064Z",
+        "test_sha256": "ff036413645cfa5886be7d865e780be54b31b50e7f0b53bcac133eb4eb1c6151",
+        "source_sha256": "42df281001c2c6034b8b8e1ba1b29dc3afef0ace290b47f8e59b6cdf72defa1e",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T075739470Z-3b6a4fd4-PRD-verify-ue1-original-unrealfile-stacktree-data.php.txt"
+      }
     },
     {
       "id": "U97:UTextBuffer",
@@ -1172,12 +1652,20 @@
           "line": 2224
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "test": "verify-ue1-original-unrealfile-database-records.php",
+      "evidence": "PRD historical PASS at 2026-10-22T09:02:16.8847605Z; catalog\\compliance\\evidence\\o06\\20261022T090216725Z-7f4a6857-PRD-verify-ue1-original-unrealfile-database-records.php.txt; scoped test, not full class acceptance",
+      "remaining": "Individual source-derived database record types have fixture coverage; final distinct-method and inherited path review G2 remains",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T09:02:16.8847605Z",
+        "test_sha256": "c5898b4c3125c734717435ddb020d8eca6abeb5621dca2683ff2db1b767ac964",
+        "source_sha256": "dcd6c8d09354b366f3c2fda8f120d0e1a51acd030d082b8ac9ff25f90759a88d",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T090216725Z-7f4a6857-PRD-verify-ue1-original-unrealfile-database-records.php.txt"
+      }
     },
     {
       "id": "U97:UTexture",
@@ -1189,12 +1677,20 @@
           "line": 513
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileTextureHeaderReader.php",
+      "test": "verify-ue1-original-unrealfile-texture.php",
+      "evidence": "PRD historical PASS at 2026-10-22T07:09:59.8439556Z; catalog\\compliance\\evidence\\o06\\20261022T070959621Z-2ea6a097-PRD-verify-ue1-original-unrealfile-texture.php.txt; scoped test, not full class acceptance",
+      "remaining": "Mip/header source-tested; pixel O07",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T07:09:59.8439556Z",
+        "test_sha256": "5993fb39d360acdc42737fc7b14bade0beb03ad3079575a7998e98eebb9508db",
+        "source_sha256": "cf65636dce8a4f218dc533089ca8a44b2a619deadb3afcda2b17214b14de2f12",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T070959621Z-2ea6a097-PRD-verify-ue1-original-unrealfile-texture.php.txt"
+      }
     },
     {
       "id": "U97:UTextureSet",
@@ -1206,12 +1702,20 @@
           "line": 519
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "test": "verify-ue1-original-unrealfile-database-records.php",
+      "evidence": "PRD historical PASS at 2026-10-22T09:02:16.8847605Z; catalog\\compliance\\evidence\\o06\\20261022T090216725Z-7f4a6857-PRD-verify-ue1-original-unrealfile-database-records.php.txt; scoped test, not full class acceptance",
+      "remaining": "Individual source-derived database record types have fixture coverage; final distinct-method and inherited path review G2 remains",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T09:02:16.8847605Z",
+        "test_sha256": "c5898b4c3125c734717435ddb020d8eca6abeb5621dca2683ff2db1b767ac964",
+        "source_sha256": "dcd6c8d09354b366f3c2fda8f120d0e1a51acd030d082b8ac9ff25f90759a88d",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T090216725Z-7f4a6857-PRD-verify-ue1-original-unrealfile-database-records.php.txt"
+      }
     },
     {
       "id": "U97:UTransBuffer",
@@ -1223,12 +1727,12 @@
           "line": 882
         }
       ],
-      "status": "DISCOVERED",
+      "status": "EXCLUDED",
       "reader": "",
       "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "evidence": "v0.867 UnEdTran.h CLASS_Transient and UnEdTran.cpp notes object not saveable; editor transaction runtime only",
+      "remaining": "",
+      "updated_at_utc": "2026-10-22T09:27:26+00:00"
     },
     {
       "id": "U97:UVectors",
@@ -1240,12 +1744,20 @@
           "line": 93
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "test": "verify-ue1-original-unrealfile-database-records.php",
+      "evidence": "PRD historical PASS at 2026-10-22T09:02:16.8847605Z; catalog\\compliance\\evidence\\o06\\20261022T090216725Z-7f4a6857-PRD-verify-ue1-original-unrealfile-database-records.php.txt; scoped test, not full class acceptance",
+      "remaining": "Individual source-derived database record types have fixture coverage; final distinct-method and inherited path review G2 remains",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T09:02:16.8847605Z",
+        "test_sha256": "c5898b4c3125c734717435ddb020d8eca6abeb5621dca2683ff2db1b767ac964",
+        "source_sha256": "dcd6c8d09354b366f3c2fda8f120d0e1a51acd030d082b8ac9ff25f90759a88d",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T090216725Z-7f4a6857-PRD-verify-ue1-original-unrealfile-database-records.php.txt"
+      }
     },
     {
       "id": "U97:UVerts",
@@ -1257,12 +1769,20 @@
           "line": 117
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileSpecialHeadersReader.php",
+      "test": "verify-ue1-original-unrealfile-special-headers.php",
+      "evidence": "PRD historical PASS at 2026-10-22T07:25:34.3693613Z; catalog\\compliance\\evidence\\o06\\20261022T072534021Z-75c965c2-PRD-verify-ue1-original-unrealfile-special-headers.php.txt; scoped test, not full class acceptance",
+      "remaining": "Vert pair/native header source-tested; G2 inheritance review",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T07:25:34.3693613Z",
+        "test_sha256": "a68bd09362e13dbee5dbb41710adee3d27e87d3d18b7a71f57442bbd4c49bb47",
+        "source_sha256": "1a202f63a1ff1977bd28e54b6d87ec669cda74735bceae7eede3d1bdee84a154",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T072534021Z-75c965c2-PRD-verify-ue1-original-unrealfile-special-headers.php.txt"
+      }
     },
     {
       "id": "U97:UWords",
@@ -1274,12 +1794,20 @@
           "line": 2663
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "test": "verify-ue1-original-unrealfile-database-records.php",
+      "evidence": "PRD historical PASS at 2026-10-22T09:02:16.8847605Z; catalog\\compliance\\evidence\\o06\\20261022T090216725Z-7f4a6857-PRD-verify-ue1-original-unrealfile-database-records.php.txt; scoped test, not full class acceptance",
+      "remaining": "Individual source-derived database record types have fixture coverage; final distinct-method and inherited path review G2 remains",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T09:02:16.8847605Z",
+        "test_sha256": "c5898b4c3125c734717435ddb020d8eca6abeb5621dca2683ff2db1b767ac964",
+        "source_sha256": "dcd6c8d09354b366f3c2fda8f120d0e1a51acd030d082b8ac9ff25f90759a88d",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T090216725Z-7f4a6857-PRD-verify-ue1-original-unrealfile-database-records.php.txt"
+      }
     },
     {
       "id": "D97:UBitArray::SerializeData",
@@ -1291,12 +1819,20 @@
           "line": 2686
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileBitArrayReader.php",
+      "test": "verify-ue1-original-unrealfile-bit-archives.php",
+      "evidence": "PRD historical PASS at 2026-10-21T20:14:33.4716309Z; catalog\\compliance\\evidence\\o06\\20261021T201433273Z-d9c463a1-PRD-verify-ue1-original-unrealfile-bit-archives.php.txt; scoped test, not full class acceptance",
+      "remaining": "Source-defined custom data routine tested in named fixtures; verify full G2 inherited/version contract before accepting",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "DEV",
+        "state": "PASS",
+        "at_utc": "2026-10-22T07:21:19.9997700Z",
+        "test_sha256": "f4273d23fdf75913da0157a2b33f6d34208fad1b7f1d551583c86c973915d0f2",
+        "source_sha256": "9cd63d7b0497101b42ec37c1b738b0c1713cf5533978e3c56506bb223db44a8a",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T072119840Z-dbc6661a-DEV-verify-ue1-original-unrealfile-bit-archives.php.txt"
+      }
     },
     {
       "id": "D97:UMusic::SerializeData",
@@ -1308,12 +1844,20 @@
           "line": 176
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileAudioReader.php",
+      "test": "verify-ue1-original-unrealfile-audio.php",
+      "evidence": "PRD historical PASS at 2026-10-22T06:43:43.0109772Z; catalog\\compliance\\evidence\\o06\\20261022T064342876Z-2e4a58fd-PRD-verify-ue1-original-unrealfile-audio.php.txt; scoped test, not full class acceptance",
+      "remaining": "Source-defined custom data routine tested in named fixtures; verify full G2 inherited/version contract before accepting",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T06:43:43.0109772Z",
+        "test_sha256": "7644e182f22de167a71cd2257484162d40582770058d21ceb8ed9efa754a4856",
+        "source_sha256": "8b756787649e93623ad97de73850db0004f5916841953d6a97ba11d0aebc8144",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T064342876Z-2e4a58fd-PRD-verify-ue1-original-unrealfile-audio.php.txt"
+      }
     },
     {
       "id": "D97:UObject::SerializeData",
@@ -1325,12 +1869,12 @@
           "line": 729
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
+      "status": "MAPPED",
+      "reader": "CatalogUE1OriginalUnrealfileObjectBaseReader.php",
       "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "evidence": "Default base SerializeData source function found; verify whether it serializes any on-disk member bytes",
+      "remaining": "",
+      "updated_at_utc": "2026-10-22T09:27:26+00:00"
     },
     {
       "id": "D97:UProperties::SerializeData",
@@ -1342,12 +1886,20 @@
           "line": 817
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfilePropertiesReader.php",
+      "test": "verify-ue1-original-unrealfile-properties.php",
+      "evidence": "PRD historical PASS at 2026-10-21T20:59:05.1812253Z; catalog\\compliance\\evidence\\o06\\20261021T205904995Z-e03a1cb3-PRD-verify-ue1-original-unrealfile-properties.php.txt; scoped test, not full class acceptance",
+      "remaining": "Source-defined custom data routine tested in named fixtures; verify full G2 inherited/version contract before accepting",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-21T20:59:05.1812253Z",
+        "test_sha256": "1c171908f0a2f232739c8fcef481a1e524bec52c799bf7eec13e9162ecad1710",
+        "source_sha256": "b011237762bd19748163a7cd0df881b70c543fcf2b07820f30761bace9130981",
+        "log": "catalog\\compliance\\evidence\\o06\\20261021T205904995Z-e03a1cb3-PRD-verify-ue1-original-unrealfile-properties.php.txt"
+      }
     },
     {
       "id": "D97:UScript::SerializeData",
@@ -1359,12 +1911,20 @@
           "line": 5146
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileScriptExpressionReader.php",
+      "test": "verify-ue1-original-unrealfile-script-expressions.php",
+      "evidence": "PRD historical PASS at 2026-10-22T08:14:11.4736463Z; catalog\\compliance\\evidence\\o06\\20261022T081411274Z-263d247c-PRD-verify-ue1-original-unrealfile-script-expressions.php.txt; scoped test, not full class acceptance",
+      "remaining": "Source-defined custom data routine tested in named fixtures; verify full G2 inherited/version contract before accepting",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T08:14:11.4736463Z",
+        "test_sha256": "2ae84e40b59367cfc51ba705f791bd387e91dd14ee37b556eea29776ebe05d3d",
+        "source_sha256": "45ae383bb7e8448bc6bb1f2af5c99d1842a9d121846070d7c8c681b70d9e2117",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T081411274Z-263d247c-PRD-verify-ue1-original-unrealfile-script-expressions.php.txt"
+      }
     },
     {
       "id": "D97:USound::SerializeData",
@@ -1376,12 +1936,20 @@
           "line": 206
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileAudioReader.php",
+      "test": "verify-ue1-original-unrealfile-audio.php",
+      "evidence": "PRD historical PASS at 2026-10-22T06:43:43.0109772Z; catalog\\compliance\\evidence\\o06\\20261022T064342876Z-2e4a58fd-PRD-verify-ue1-original-unrealfile-audio.php.txt; scoped test, not full class acceptance",
+      "remaining": "Source-defined custom data routine tested in named fixtures; verify full G2 inherited/version contract before accepting",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T06:43:43.0109772Z",
+        "test_sha256": "7644e182f22de167a71cd2257484162d40582770058d21ceb8ed9efa754a4856",
+        "source_sha256": "8b756787649e93623ad97de73850db0004f5916841953d6a97ba11d0aebc8144",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T064342876Z-2e4a58fd-PRD-verify-ue1-original-unrealfile-audio.php.txt"
+      }
     },
     {
       "id": "D97:UTransBuffer::SerializeData",
@@ -1393,12 +1961,12 @@
           "line": 868
         }
       ],
-      "status": "DISCOVERED",
+      "status": "EXCLUDED",
       "reader": "",
       "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "evidence": "Source comment: transient editor transaction object is not saveable; reference traversal is runtime-only",
+      "remaining": "",
+      "updated_at_utc": "2026-10-22T09:27:26+00:00"
     },
     {
       "id": "C98:AActor::Serialize",
@@ -1410,12 +1978,12 @@
           "line": 351
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
+      "status": "MAPPED",
+      "reader": "CatalogUE1ClassicTaggedPropertyReader.php",
       "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "evidence": "Source implementation delegates only to Super::Serialize; tagged property envelope exists but schema/inherited source reconciliation remains",
+      "remaining": "",
+      "updated_at_utc": "2026-10-22T09:27:26+00:00"
     },
     {
       "id": "C98:UBitArray::Serialize",
@@ -1444,12 +2012,12 @@
           "line": 298
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
+      "status": "GAP",
+      "reader": "CatalogUE1ClassicTaggedPropertyReader.php",
       "test": "",
       "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "remaining": "Persistent class/property metadata and default/member schema serializer not decoded. Current classIndex=0 returns class_defined_binary_serialization",
+      "updated_at_utc": "2026-10-22T09:27:26+00:00"
     },
     {
       "id": "C98:UByteProperty::Serialize",
@@ -1461,12 +2029,12 @@
           "line": 208
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
+      "status": "GAP",
+      "reader": "CatalogUE1ClassicTaggedPropertyReader.php",
       "test": "",
       "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "remaining": "Persistent class/property metadata and default/member schema serializer not decoded. Current classIndex=0 returns class_defined_binary_serialization",
+      "updated_at_utc": "2026-10-22T09:27:26+00:00"
     },
     {
       "id": "C98:UClass::Serialize",
@@ -1478,12 +2046,12 @@
           "line": 921
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
+      "status": "GAP",
+      "reader": "CatalogUE1ClassicTaggedPropertyReader.php",
       "test": "",
       "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "remaining": "Persistent class/property metadata and default/member schema serializer not decoded. Current classIndex=0 returns class_defined_binary_serialization",
+      "updated_at_utc": "2026-10-22T09:27:26+00:00"
     },
     {
       "id": "C98:UClassProperty::Serialize",
@@ -1495,12 +2063,12 @@
           "line": 460
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
+      "status": "GAP",
+      "reader": "CatalogUE1ClassicTaggedPropertyReader.php",
       "test": "",
       "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "remaining": "Persistent class/property metadata and default/member schema serializer not decoded. Current classIndex=0 returns class_defined_binary_serialization",
+      "updated_at_utc": "2026-10-22T09:27:26+00:00"
     },
     {
       "id": "C98:UClient::Serialize",
@@ -1529,12 +2097,12 @@
           "line": 1463
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
+      "status": "GAP",
+      "reader": "CatalogUE1ClassicTaggedPropertyReader.php",
       "test": "",
       "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "remaining": "Persistent class/property metadata and default/member schema serializer not decoded. Current classIndex=0 returns class_defined_binary_serialization",
+      "updated_at_utc": "2026-10-22T09:27:26+00:00"
     },
     {
       "id": "C98:UDatabase::Serialize",
@@ -1597,12 +2165,12 @@
           "line": 3076
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
+      "status": "GAP",
+      "reader": "CatalogUE1ClassicNativeObjectReader.php",
       "test": "",
       "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "remaining": "Explicit persisted native serializer is outside current eight-class reader; requires source version-gated implementation",
+      "updated_at_utc": "2026-10-22T09:27:26+00:00"
     },
     {
       "id": "C98:UField::Serialize",
@@ -1614,12 +2182,12 @@
           "line": 236
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
+      "status": "GAP",
+      "reader": "CatalogUE1ClassicTaggedPropertyReader.php",
       "test": "",
       "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "remaining": "Persistent class/property metadata and default/member schema serializer not decoded. Current classIndex=0 returns class_defined_binary_serialization",
+      "updated_at_utc": "2026-10-22T09:27:26+00:00"
     },
     {
       "id": "C98:UFireTexture::Serialize",
@@ -1631,12 +2199,12 @@
           "line": 4214
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
+      "status": "MAPPED",
+      "reader": "CatalogUE1ClassicNativeObjectReader.php",
       "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "evidence": "Source FireTexture/spark structural support exists; no complete distinct-class source fixture proof yet",
+      "remaining": "",
+      "updated_at_utc": "2026-10-22T09:27:26+00:00"
     },
     {
       "id": "C98:UFont::Serialize",
@@ -1648,12 +2216,20 @@
           "line": 19
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1ClassicNativeObjectReader.php",
+      "test": "verify-ue1-classic-tagged-properties.php",
+      "evidence": "PRD historical PASS at 2026-10-21T16:05:16.3071623Z; catalog\\compliance\\evidence\\o06\\20261021T160515641Z-af18800f-PRD-verify-ue1-classic-tagged-properties.php.txt; scoped test, not full class acceptance",
+      "remaining": "Current pinned 92-package corpus passes; additional source branches/version-specific cases are not covered by corpus",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "DEV",
+        "state": "PASS",
+        "at_utc": "2026-10-21T20:57:42.9218845Z",
+        "test_sha256": "a43435273ceed564f9cb0de064c3c0cd77d26ec7647bc3bd9f9c9df1a8c6506f",
+        "source_sha256": "56e80edb0d77963e8dcb4397230975a9933dc717b3b483cfc60404b853e18c42",
+        "log": "catalog\\compliance\\evidence\\o06\\20261021T205741717Z-a2f0b568-DEV-verify-ue1-classic-tagged-properties.php.txt"
+      }
     },
     {
       "id": "C98:UFunction::Serialize",
@@ -1665,12 +2241,12 @@
           "line": 1358
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
+      "status": "GAP",
+      "reader": "CatalogUE1ClassicTaggedPropertyReader.php",
       "test": "",
       "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "remaining": "Persistent class/property metadata and default/member schema serializer not decoded. Current classIndex=0 returns class_defined_binary_serialization",
+      "updated_at_utc": "2026-10-22T09:27:26+00:00"
     },
     {
       "id": "C98:UGameEngine::Serialize",
@@ -1716,12 +2292,12 @@
           "line": 150
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
+      "status": "GAP",
+      "reader": "CatalogUE1ClassicNativeObjectReader.php",
       "test": "",
       "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "remaining": "Explicit persisted native serializer is outside current eight-class reader; requires source version-gated implementation",
+      "updated_at_utc": "2026-10-22T09:27:26+00:00"
     },
     {
       "id": "C98:ULevelBase::Serialize",
@@ -1750,12 +2326,12 @@
           "line": 32
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
+      "status": "GAP",
+      "reader": "CatalogUE1ClassicNativeObjectReader.php",
       "test": "",
       "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "remaining": "Explicit persisted native serializer is outside current eight-class reader; requires source version-gated implementation",
+      "updated_at_utc": "2026-10-22T09:27:26+00:00"
     },
     {
       "id": "C98:UModel::Serialize",
@@ -1767,12 +2343,12 @@
           "line": 291
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
+      "status": "GAP",
+      "reader": "CatalogUE1ClassicNativeObjectReader.php",
       "test": "",
       "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "remaining": "Explicit persisted native serializer is outside current eight-class reader; requires source version-gated implementation",
+      "updated_at_utc": "2026-10-22T09:27:26+00:00"
     },
     {
       "id": "C98:UMusic::Serialize",
@@ -1784,12 +2360,12 @@
           "line": 467
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
+      "status": "GAP",
+      "reader": "CatalogUE1ClassicNativeObjectReader.php",
       "test": "",
       "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "remaining": "Explicit persisted native serializer is outside current eight-class reader; requires source version-gated implementation",
+      "updated_at_utc": "2026-10-22T09:27:26+00:00"
     },
     {
       "id": "C98:UNetConnection::Serialize",
@@ -1835,12 +2411,20 @@
           "line": 433
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1ClassicTaggedPropertyReader.php",
+      "test": "verify-ue1-classic-tagged-properties.php",
+      "evidence": "PRD historical PASS at 2026-10-21T16:05:16.3071623Z; catalog\\compliance\\evidence\\o06\\20261021T160515641Z-af18800f-PRD-verify-ue1-classic-tagged-properties.php.txt; scoped test, not full class acceptance",
+      "remaining": "Tagged-properties decoder succeeds on pinned corpus; class-defined binary/defaults and complete source gates not covered",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "DEV",
+        "state": "PASS",
+        "at_utc": "2026-10-21T20:57:42.9218845Z",
+        "test_sha256": "a43435273ceed564f9cb0de064c3c0cd77d26ec7647bc3bd9f9c9df1a8c6506f",
+        "source_sha256": "56e80edb0d77963e8dcb4397230975a9933dc717b3b483cfc60404b853e18c42",
+        "log": "catalog\\compliance\\evidence\\o06\\20261021T205741717Z-a2f0b568-DEV-verify-ue1-classic-tagged-properties.php.txt"
+      }
     },
     {
       "id": "C98:UObjectProperty::Serialize",
@@ -1852,12 +2436,12 @@
           "line": 390
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
+      "status": "GAP",
+      "reader": "CatalogUE1ClassicTaggedPropertyReader.php",
       "test": "",
       "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "remaining": "Persistent class/property metadata and default/member schema serializer not decoded. Current classIndex=0 returns class_defined_binary_serialization",
+      "updated_at_utc": "2026-10-22T09:27:26+00:00"
     },
     {
       "id": "C98:UPackage::Serialize",
@@ -1869,12 +2453,20 @@
           "line": 3391
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1ClassicNativeObjectReader.php",
+      "test": "verify-ue1-classic-tagged-properties.php",
+      "evidence": "PRD historical PASS at 2026-10-21T16:05:16.3071623Z; catalog\\compliance\\evidence\\o06\\20261021T160515641Z-af18800f-PRD-verify-ue1-classic-tagged-properties.php.txt; scoped test, not full class acceptance",
+      "remaining": "Current pinned 92-package corpus passes; additional source branches/version-specific cases are not covered by corpus",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "DEV",
+        "state": "PASS",
+        "at_utc": "2026-10-21T20:57:42.9218845Z",
+        "test_sha256": "a43435273ceed564f9cb0de064c3c0cd77d26ec7647bc3bd9f9c9df1a8c6506f",
+        "source_sha256": "56e80edb0d77963e8dcb4397230975a9933dc717b3b483cfc60404b853e18c42",
+        "log": "catalog\\compliance\\evidence\\o06\\20261021T205741717Z-a2f0b568-DEV-verify-ue1-classic-tagged-properties.php.txt"
+      }
     },
     {
       "id": "C98:UPalette::Serialize",
@@ -1886,12 +2478,20 @@
           "line": 715
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1ClassicNativeObjectReader.php",
+      "test": "verify-ue1-classic-tagged-properties.php",
+      "evidence": "PRD historical PASS at 2026-10-21T16:05:16.3071623Z; catalog\\compliance\\evidence\\o06\\20261021T160515641Z-af18800f-PRD-verify-ue1-classic-tagged-properties.php.txt; scoped test, not full class acceptance",
+      "remaining": "Current pinned 92-package corpus passes; additional source branches/version-specific cases are not covered by corpus",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "DEV",
+        "state": "PASS",
+        "at_utc": "2026-10-21T20:57:42.9218845Z",
+        "test_sha256": "a43435273ceed564f9cb0de064c3c0cd77d26ec7647bc3bd9f9c9df1a8c6506f",
+        "source_sha256": "56e80edb0d77963e8dcb4397230975a9933dc717b3b483cfc60404b853e18c42",
+        "log": "catalog\\compliance\\evidence\\o06\\20261021T205741717Z-a2f0b568-DEV-verify-ue1-classic-tagged-properties.php.txt"
+      }
     },
     {
       "id": "C98:UPlayer::Serialize",
@@ -1920,12 +2520,12 @@
           "line": 22
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
+      "status": "GAP",
+      "reader": "CatalogUE1ClassicNativeObjectReader.php",
       "test": "",
       "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "remaining": "Explicit persisted native serializer is outside current eight-class reader; requires source version-gated implementation",
+      "updated_at_utc": "2026-10-22T09:27:26+00:00"
     },
     {
       "id": "C98:UProperty::Serialize",
@@ -1937,12 +2537,12 @@
           "line": 101
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
+      "status": "GAP",
+      "reader": "CatalogUE1ClassicTaggedPropertyReader.php",
       "test": "",
       "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "remaining": "Persistent class/property metadata and default/member schema serializer not decoded. Current classIndex=0 returns class_defined_binary_serialization",
+      "updated_at_utc": "2026-10-22T09:27:26+00:00"
     },
     {
       "id": "C98:USound::Serialize",
@@ -1954,12 +2554,20 @@
           "line": 16
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1ClassicNativeObjectReader.php",
+      "test": "verify-ue1-classic-tagged-properties.php",
+      "evidence": "PRD historical PASS at 2026-10-21T16:05:16.3071623Z; catalog\\compliance\\evidence\\o06\\20261021T160515641Z-af18800f-PRD-verify-ue1-classic-tagged-properties.php.txt; scoped test, not full class acceptance",
+      "remaining": "Current pinned 92-package corpus passes; additional source branches/version-specific cases are not covered by corpus",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "DEV",
+        "state": "PASS",
+        "at_utc": "2026-10-21T20:57:42.9218845Z",
+        "test_sha256": "a43435273ceed564f9cb0de064c3c0cd77d26ec7647bc3bd9f9c9df1a8c6506f",
+        "source_sha256": "56e80edb0d77963e8dcb4397230975a9933dc717b3b483cfc60404b853e18c42",
+        "log": "catalog\\compliance\\evidence\\o06\\20261021T205741717Z-a2f0b568-DEV-verify-ue1-classic-tagged-properties.php.txt"
+      }
     },
     {
       "id": "C98:UState::Serialize",
@@ -1971,12 +2579,12 @@
           "line": 1440
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
+      "status": "GAP",
+      "reader": "CatalogUE1ClassicTaggedPropertyReader.php",
       "test": "",
       "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "remaining": "Persistent class/property metadata and default/member schema serializer not decoded. Current classIndex=0 returns class_defined_binary_serialization",
+      "updated_at_utc": "2026-10-22T09:27:26+00:00"
     },
     {
       "id": "C98:UStringProperty::Serialize",
@@ -1988,12 +2596,12 @@
           "line": 519
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
+      "status": "GAP",
+      "reader": "CatalogUE1ClassicTaggedPropertyReader.php",
       "test": "",
       "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "remaining": "Persistent class/property metadata and default/member schema serializer not decoded. Current classIndex=0 returns class_defined_binary_serialization",
+      "updated_at_utc": "2026-10-22T09:27:26+00:00"
     },
     {
       "id": "C98:UStruct::Serialize",
@@ -2005,12 +2613,12 @@
           "line": 476
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
+      "status": "GAP",
+      "reader": "CatalogUE1ClassicTaggedPropertyReader.php",
       "test": "",
       "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "remaining": "Persistent class/property metadata and default/member schema serializer not decoded. Current classIndex=0 returns class_defined_binary_serialization",
+      "updated_at_utc": "2026-10-22T09:27:26+00:00"
     },
     {
       "id": "C98:UStructProperty::Serialize",
@@ -2022,12 +2630,12 @@
           "line": 577
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
+      "status": "GAP",
+      "reader": "CatalogUE1ClassicTaggedPropertyReader.php",
       "test": "",
       "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "remaining": "Persistent class/property metadata and default/member schema serializer not decoded. Current classIndex=0 returns class_defined_binary_serialization",
+      "updated_at_utc": "2026-10-22T09:27:26+00:00"
     },
     {
       "id": "C98:UTextBuffer::Serialize",
@@ -2039,12 +2647,12 @@
           "line": 3033
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
+      "status": "GAP",
+      "reader": "CatalogUE1ClassicNativeObjectReader.php",
       "test": "",
       "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "remaining": "Explicit persisted native serializer is outside current eight-class reader; requires source version-gated implementation",
+      "updated_at_utc": "2026-10-22T09:27:26+00:00"
     },
     {
       "id": "C98:UTexture::Serialize",
@@ -2056,12 +2664,20 @@
           "line": 270
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1ClassicNativeObjectReader.php",
+      "test": "verify-ue1-classic-tagged-properties.php",
+      "evidence": "PRD historical PASS at 2026-10-21T16:05:16.3071623Z; catalog\\compliance\\evidence\\o06\\20261021T160515641Z-af18800f-PRD-verify-ue1-classic-tagged-properties.php.txt; scoped test, not full class acceptance",
+      "remaining": "Current pinned 92-package corpus passes; additional source branches/version-specific cases are not covered by corpus",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "DEV",
+        "state": "PASS",
+        "at_utc": "2026-10-21T20:57:42.9218845Z",
+        "test_sha256": "a43435273ceed564f9cb0de064c3c0cd77d26ec7647bc3bd9f9c9df1a8c6506f",
+        "source_sha256": "56e80edb0d77963e8dcb4397230975a9933dc717b3b483cfc60404b853e18c42",
+        "log": "catalog\\compliance\\evidence\\o06\\20261021T205741717Z-a2f0b568-DEV-verify-ue1-classic-tagged-properties.php.txt"
+      }
     },
     {
       "id": "C98:UTransBuffer::Serialize",
@@ -2107,12 +2723,12 @@
           "line": 963
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
+      "status": "MAPPED",
+      "reader": "CatalogUE1ClassicTaggedPropertyReader.php",
       "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "evidence": "Source implementation delegates only to Super::Serialize; tagged property envelope exists but schema/inherited source reconciliation remains",
+      "remaining": "",
+      "updated_at_utc": "2026-10-22T09:27:26+00:00"
     },
     {
       "id": "T99:UArrayProperty::Serialize",
@@ -2124,12 +2740,12 @@
           "line": 1099
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
+      "status": "GAP",
+      "reader": "CatalogUE1ClassicTaggedPropertyReader.php",
       "test": "",
       "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "remaining": "Persistent class/property metadata and default/member schema serializer not decoded. Current classIndex=0 returns class_defined_binary_serialization",
+      "updated_at_utc": "2026-10-22T09:27:26+00:00"
     },
     {
       "id": "T99:UBitArray::Serialize",
@@ -2158,12 +2774,12 @@
           "line": 475
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
+      "status": "GAP",
+      "reader": "CatalogUE1ClassicTaggedPropertyReader.php",
       "test": "",
       "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "remaining": "Persistent class/property metadata and default/member schema serializer not decoded. Current classIndex=0 returns class_defined_binary_serialization",
+      "updated_at_utc": "2026-10-22T09:27:26+00:00"
     },
     {
       "id": "T99:UByteProperty::Serialize",
@@ -2175,12 +2791,12 @@
           "line": 324
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
+      "status": "GAP",
+      "reader": "CatalogUE1ClassicTaggedPropertyReader.php",
       "test": "",
       "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "remaining": "Persistent class/property metadata and default/member schema serializer not decoded. Current classIndex=0 returns class_defined_binary_serialization",
+      "updated_at_utc": "2026-10-22T09:27:26+00:00"
     },
     {
       "id": "T99:UClass::Serialize",
@@ -2192,12 +2808,12 @@
           "line": 914
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
+      "status": "GAP",
+      "reader": "CatalogUE1ClassicTaggedPropertyReader.php",
       "test": "",
       "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "remaining": "Persistent class/property metadata and default/member schema serializer not decoded. Current classIndex=0 returns class_defined_binary_serialization",
+      "updated_at_utc": "2026-10-22T09:27:26+00:00"
     },
     {
       "id": "T99:UClassFactoryNew::Serialize",
@@ -2226,12 +2842,12 @@
           "line": 743
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
+      "status": "GAP",
+      "reader": "CatalogUE1ClassicTaggedPropertyReader.php",
       "test": "",
       "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "remaining": "Persistent class/property metadata and default/member schema serializer not decoded. Current classIndex=0 returns class_defined_binary_serialization",
+      "updated_at_utc": "2026-10-22T09:27:26+00:00"
     },
     {
       "id": "T99:UClient::Serialize",
@@ -2260,12 +2876,12 @@
           "line": 1438
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
+      "status": "GAP",
+      "reader": "CatalogUE1ClassicTaggedPropertyReader.php",
       "test": "",
       "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "remaining": "Persistent class/property metadata and default/member schema serializer not decoded. Current classIndex=0 returns class_defined_binary_serialization",
+      "updated_at_utc": "2026-10-22T09:27:26+00:00"
     },
     {
       "id": "T99:UEditorEngine::Serialize",
@@ -2311,12 +2927,12 @@
           "line": 3604
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
+      "status": "GAP",
+      "reader": "CatalogUE1ClassicNativeObjectReader.php",
       "test": "",
       "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "remaining": "Explicit persisted native serializer is outside current eight-class reader; requires source version-gated implementation",
+      "updated_at_utc": "2026-10-22T09:27:26+00:00"
     },
     {
       "id": "T99:UExporter::Serialize",
@@ -2362,12 +2978,12 @@
           "line": 239
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
+      "status": "GAP",
+      "reader": "CatalogUE1ClassicTaggedPropertyReader.php",
       "test": "",
       "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "remaining": "Persistent class/property metadata and default/member schema serializer not decoded. Current classIndex=0 returns class_defined_binary_serialization",
+      "updated_at_utc": "2026-10-22T09:27:26+00:00"
     },
     {
       "id": "T99:UFireTexture::Serialize",
@@ -2379,12 +2995,12 @@
           "line": 4227
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
+      "status": "MAPPED",
+      "reader": "CatalogUE1ClassicNativeObjectReader.php",
       "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "evidence": "Source FireTexture/spark structural support exists; no complete distinct-class source fixture proof yet",
+      "remaining": "",
+      "updated_at_utc": "2026-10-22T09:27:26+00:00"
     },
     {
       "id": "T99:UFixedArrayProperty::Serialize",
@@ -2396,12 +3012,12 @@
           "line": 954
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
+      "status": "GAP",
+      "reader": "CatalogUE1ClassicTaggedPropertyReader.php",
       "test": "",
       "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "remaining": "Persistent class/property metadata and default/member schema serializer not decoded. Current classIndex=0 returns class_defined_binary_serialization",
+      "updated_at_utc": "2026-10-22T09:27:26+00:00"
     },
     {
       "id": "T99:UFont::Serialize",
@@ -2413,12 +3029,20 @@
           "line": 19
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1ClassicNativeObjectReader.php",
+      "test": "verify-ue1-classic-tagged-properties.php",
+      "evidence": "PRD historical PASS at 2026-10-21T16:05:16.3071623Z; catalog\\compliance\\evidence\\o06\\20261021T160515641Z-af18800f-PRD-verify-ue1-classic-tagged-properties.php.txt; scoped test, not full class acceptance",
+      "remaining": "Current pinned 92-package corpus passes; additional source branches/version-specific cases are not covered by corpus",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "DEV",
+        "state": "PASS",
+        "at_utc": "2026-10-21T20:57:42.9218845Z",
+        "test_sha256": "a43435273ceed564f9cb0de064c3c0cd77d26ec7647bc3bd9f9c9df1a8c6506f",
+        "source_sha256": "56e80edb0d77963e8dcb4397230975a9933dc717b3b483cfc60404b853e18c42",
+        "log": "catalog\\compliance\\evidence\\o06\\20261021T205741717Z-a2f0b568-DEV-verify-ue1-classic-tagged-properties.php.txt"
+      }
     },
     {
       "id": "T99:UFunction::Serialize",
@@ -2430,12 +3054,12 @@
           "line": 1342
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
+      "status": "GAP",
+      "reader": "CatalogUE1ClassicTaggedPropertyReader.php",
       "test": "",
       "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "remaining": "Persistent class/property metadata and default/member schema serializer not decoded. Current classIndex=0 returns class_defined_binary_serialization",
+      "updated_at_utc": "2026-10-22T09:27:26+00:00"
     },
     {
       "id": "T99:UGameEngine::Serialize",
@@ -2481,12 +3105,12 @@
           "line": 186
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
+      "status": "GAP",
+      "reader": "CatalogUE1ClassicNativeObjectReader.php",
       "test": "",
       "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "remaining": "Explicit persisted native serializer is outside current eight-class reader; requires source version-gated implementation",
+      "updated_at_utc": "2026-10-22T09:27:26+00:00"
     },
     {
       "id": "T99:ULevelBase::Serialize",
@@ -2532,12 +3156,12 @@
           "line": 23
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
+      "status": "GAP",
+      "reader": "CatalogUE1ClassicNativeObjectReader.php",
       "test": "",
       "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "remaining": "Explicit persisted native serializer is outside current eight-class reader; requires source version-gated implementation",
+      "updated_at_utc": "2026-10-22T09:27:26+00:00"
     },
     {
       "id": "T99:UMapProperty::Serialize",
@@ -2549,12 +3173,12 @@
           "line": 1282
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
+      "status": "GAP",
+      "reader": "CatalogUE1ClassicTaggedPropertyReader.php",
       "test": "",
       "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "remaining": "Persistent class/property metadata and default/member schema serializer not decoded. Current classIndex=0 returns class_defined_binary_serialization",
+      "updated_at_utc": "2026-10-22T09:27:26+00:00"
     },
     {
       "id": "T99:UMesh::Serialize",
@@ -2566,12 +3190,12 @@
           "line": 32
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
+      "status": "GAP",
+      "reader": "CatalogUE1ClassicNativeObjectReader.php",
       "test": "",
       "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "remaining": "Explicit persisted native serializer is outside current eight-class reader; requires source version-gated implementation",
+      "updated_at_utc": "2026-10-22T09:27:26+00:00"
     },
     {
       "id": "T99:UModel::Serialize",
@@ -2583,12 +3207,12 @@
           "line": 182
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
+      "status": "GAP",
+      "reader": "CatalogUE1ClassicNativeObjectReader.php",
       "test": "",
       "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "remaining": "Explicit persisted native serializer is outside current eight-class reader; requires source version-gated implementation",
+      "updated_at_utc": "2026-10-22T09:27:26+00:00"
     },
     {
       "id": "T99:UMusic::Serialize",
@@ -2600,12 +3224,12 @@
           "line": 518
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
+      "status": "GAP",
+      "reader": "CatalogUE1ClassicNativeObjectReader.php",
       "test": "",
       "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "remaining": "Explicit persisted native serializer is outside current eight-class reader; requires source version-gated implementation",
+      "updated_at_utc": "2026-10-22T09:27:26+00:00"
     },
     {
       "id": "T99:UNetConnection::Serialize",
@@ -2651,12 +3275,20 @@
           "line": 478
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1ClassicTaggedPropertyReader.php",
+      "test": "verify-ue1-classic-tagged-properties.php",
+      "evidence": "PRD historical PASS at 2026-10-21T16:05:16.3071623Z; catalog\\compliance\\evidence\\o06\\20261021T160515641Z-af18800f-PRD-verify-ue1-classic-tagged-properties.php.txt; scoped test, not full class acceptance",
+      "remaining": "Tagged-properties decoder succeeds on pinned corpus; class-defined binary/defaults and complete source gates not covered",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "DEV",
+        "state": "PASS",
+        "at_utc": "2026-10-21T20:57:42.9218845Z",
+        "test_sha256": "a43435273ceed564f9cb0de064c3c0cd77d26ec7647bc3bd9f9c9df1a8c6506f",
+        "source_sha256": "56e80edb0d77963e8dcb4397230975a9933dc717b3b483cfc60404b853e18c42",
+        "log": "catalog\\compliance\\evidence\\o06\\20261021T205741717Z-a2f0b568-DEV-verify-ue1-classic-tagged-properties.php.txt"
+      }
     },
     {
       "id": "T99:UObjectProperty::Serialize",
@@ -2668,12 +3300,12 @@
           "line": 673
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
+      "status": "GAP",
+      "reader": "CatalogUE1ClassicTaggedPropertyReader.php",
       "test": "",
       "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "remaining": "Persistent class/property metadata and default/member schema serializer not decoded. Current classIndex=0 returns class_defined_binary_serialization",
+      "updated_at_utc": "2026-10-22T09:27:26+00:00"
     },
     {
       "id": "T99:UPackage::Serialize",
@@ -2685,12 +3317,20 @@
           "line": 3721
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1ClassicNativeObjectReader.php",
+      "test": "verify-ue1-classic-tagged-properties.php",
+      "evidence": "PRD historical PASS at 2026-10-21T16:05:16.3071623Z; catalog\\compliance\\evidence\\o06\\20261021T160515641Z-af18800f-PRD-verify-ue1-classic-tagged-properties.php.txt; scoped test, not full class acceptance",
+      "remaining": "Current pinned 92-package corpus passes; additional source branches/version-specific cases are not covered by corpus",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "DEV",
+        "state": "PASS",
+        "at_utc": "2026-10-21T20:57:42.9218845Z",
+        "test_sha256": "a43435273ceed564f9cb0de064c3c0cd77d26ec7647bc3bd9f9c9df1a8c6506f",
+        "source_sha256": "56e80edb0d77963e8dcb4397230975a9933dc717b3b483cfc60404b853e18c42",
+        "log": "catalog\\compliance\\evidence\\o06\\20261021T205741717Z-a2f0b568-DEV-verify-ue1-classic-tagged-properties.php.txt"
+      }
     },
     {
       "id": "T99:UPackageMap::Serialize",
@@ -2719,12 +3359,20 @@
           "line": 611
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1ClassicNativeObjectReader.php",
+      "test": "verify-ue1-classic-tagged-properties.php",
+      "evidence": "PRD historical PASS at 2026-10-21T16:05:16.3071623Z; catalog\\compliance\\evidence\\o06\\20261021T160515641Z-af18800f-PRD-verify-ue1-classic-tagged-properties.php.txt; scoped test, not full class acceptance",
+      "remaining": "Current pinned 92-package corpus passes; additional source branches/version-specific cases are not covered by corpus",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "DEV",
+        "state": "PASS",
+        "at_utc": "2026-10-21T20:57:42.9218845Z",
+        "test_sha256": "a43435273ceed564f9cb0de064c3c0cd77d26ec7647bc3bd9f9c9df1a8c6506f",
+        "source_sha256": "56e80edb0d77963e8dcb4397230975a9933dc717b3b483cfc60404b853e18c42",
+        "log": "catalog\\compliance\\evidence\\o06\\20261021T205741717Z-a2f0b568-DEV-verify-ue1-classic-tagged-properties.php.txt"
+      }
     },
     {
       "id": "T99:UPlayer::Serialize",
@@ -2753,12 +3401,12 @@
           "line": 22
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
+      "status": "GAP",
+      "reader": "CatalogUE1ClassicNativeObjectReader.php",
       "test": "",
       "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "remaining": "Explicit persisted native serializer is outside current eight-class reader; requires source version-gated implementation",
+      "updated_at_utc": "2026-10-22T09:27:26+00:00"
     },
     {
       "id": "T99:UProperty::Serialize",
@@ -2770,12 +3418,12 @@
           "line": 117
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
+      "status": "GAP",
+      "reader": "CatalogUE1ClassicTaggedPropertyReader.php",
       "test": "",
       "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "remaining": "Persistent class/property metadata and default/member schema serializer not decoded. Current classIndex=0 returns class_defined_binary_serialization",
+      "updated_at_utc": "2026-10-22T09:27:26+00:00"
     },
     {
       "id": "T99:USound::Serialize",
@@ -2787,12 +3435,20 @@
           "line": 126
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1ClassicNativeObjectReader.php",
+      "test": "verify-ue1-classic-tagged-properties.php",
+      "evidence": "PRD historical PASS at 2026-10-21T16:05:16.3071623Z; catalog\\compliance\\evidence\\o06\\20261021T160515641Z-af18800f-PRD-verify-ue1-classic-tagged-properties.php.txt; scoped test, not full class acceptance",
+      "remaining": "Current pinned 92-package corpus passes; additional source branches/version-specific cases are not covered by corpus",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "DEV",
+        "state": "PASS",
+        "at_utc": "2026-10-21T20:57:42.9218845Z",
+        "test_sha256": "a43435273ceed564f9cb0de064c3c0cd77d26ec7647bc3bd9f9c9df1a8c6506f",
+        "source_sha256": "56e80edb0d77963e8dcb4397230975a9933dc717b3b483cfc60404b853e18c42",
+        "log": "catalog\\compliance\\evidence\\o06\\20261021T205741717Z-a2f0b568-DEV-verify-ue1-classic-tagged-properties.php.txt"
+      }
     },
     {
       "id": "T99:UState::Serialize",
@@ -2804,12 +3460,12 @@
           "line": 712
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
+      "status": "GAP",
+      "reader": "CatalogUE1ClassicTaggedPropertyReader.php",
       "test": "",
       "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "remaining": "Persistent class/property metadata and default/member schema serializer not decoded. Current classIndex=0 returns class_defined_binary_serialization",
+      "updated_at_utc": "2026-10-22T09:27:26+00:00"
     },
     {
       "id": "T99:UStrProperty::Serialize",
@@ -2821,12 +3477,12 @@
           "line": 859
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
+      "status": "GAP",
+      "reader": "CatalogUE1ClassicTaggedPropertyReader.php",
       "test": "",
       "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "remaining": "Persistent class/property metadata and default/member schema serializer not decoded. Current classIndex=0 returns class_defined_binary_serialization",
+      "updated_at_utc": "2026-10-22T09:27:26+00:00"
     },
     {
       "id": "T99:UStruct::Serialize",
@@ -2838,12 +3494,12 @@
           "line": 593
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
+      "status": "GAP",
+      "reader": "CatalogUE1ClassicTaggedPropertyReader.php",
       "test": "",
       "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "remaining": "Persistent class/property metadata and default/member schema serializer not decoded. Current classIndex=0 returns class_defined_binary_serialization",
+      "updated_at_utc": "2026-10-22T09:27:26+00:00"
     },
     {
       "id": "T99:UStructProperty::Serialize",
@@ -2855,12 +3511,12 @@
           "line": 1491
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
+      "status": "GAP",
+      "reader": "CatalogUE1ClassicTaggedPropertyReader.php",
       "test": "",
       "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "remaining": "Persistent class/property metadata and default/member schema serializer not decoded. Current classIndex=0 returns class_defined_binary_serialization",
+      "updated_at_utc": "2026-10-22T09:27:26+00:00"
     },
     {
       "id": "T99:UTextBuffer::Serialize",
@@ -2872,12 +3528,12 @@
           "line": 3588
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
+      "status": "GAP",
+      "reader": "CatalogUE1ClassicNativeObjectReader.php",
       "test": "",
       "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "remaining": "Explicit persisted native serializer is outside current eight-class reader; requires source version-gated implementation",
+      "updated_at_utc": "2026-10-22T09:27:26+00:00"
     },
     {
       "id": "T99:UTexture::Serialize",
@@ -2889,12 +3545,20 @@
           "line": 326
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1ClassicNativeObjectReader.php",
+      "test": "verify-ue1-classic-tagged-properties.php",
+      "evidence": "PRD historical PASS at 2026-10-21T16:05:16.3071623Z; catalog\\compliance\\evidence\\o06\\20261021T160515641Z-af18800f-PRD-verify-ue1-classic-tagged-properties.php.txt; scoped test, not full class acceptance",
+      "remaining": "Current pinned 92-package corpus passes; additional source branches/version-specific cases are not covered by corpus",
+      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "last_verification": {
+        "target": "DEV",
+        "state": "PASS",
+        "at_utc": "2026-10-21T20:57:42.9218845Z",
+        "test_sha256": "a43435273ceed564f9cb0de064c3c0cd77d26ec7647bc3bd9f9c9df1a8c6506f",
+        "source_sha256": "56e80edb0d77963e8dcb4397230975a9933dc717b3b483cfc60404b853e18c42",
+        "log": "catalog\\compliance\\evidence\\o06\\20261021T205741717Z-a2f0b568-DEV-verify-ue1-classic-tagged-properties.php.txt"
+      }
     },
     {
       "id": "T99:UTextureFactoryNew::Serialize",

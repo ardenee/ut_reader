@@ -86,6 +86,15 @@ function Update-TestStatus {
  [IO.File]::WriteAllText($tmp,($doc|ConvertTo-Json -Depth 7),[Text.Encoding]::UTF8)
  Move-Item -LiteralPath $tmp -Destination $statusFile -Force
 }
+# Keep the source-linked PROJECT-STATUS register current at STARTED and
+# PASS/FAIL, so interruptions preserve the actual in-progress serializer.
+$serializerSync=Join-Path $repo 'catalog\bin\sync-ue1-o06-serializers.py'
+function Update-LiveSerializerRegister([string]$testName) {
+ if(Test-Path -LiteralPath $serializerSync){
+   & python $serializerSync --record-test $testName $target | Out-Null
+   if($LASTEXITCODE -ne 0){throw "Cannot update live O06 serializer register for $testName"}
+ }
+}
 $failed=0;$passed=0;$skipped=0
 foreach($t in $Tests){
  $name=[IO.Path]::GetFileName($t)
@@ -109,6 +118,7 @@ foreach($t in $Tests){
  [IO.File]::AppendAllText($events, (($begin|ConvertTo-Json -Compress -Depth 6)+"`n"), [Text.Encoding]::UTF8)
  $history+=([pscustomobject]$begin)
  Update-TestStatus
+ Update-LiveSerializerRegister $name
  Write-Output ("START {0} {1}" -f $name,$runId)
  $clock=[Diagnostics.Stopwatch]::StartNew()
  $exit=255
@@ -131,6 +141,7 @@ foreach($t in $Tests){
  [IO.File]::AppendAllText($events, (($complete|ConvertTo-Json -Compress -Depth 6)+"`n"),[Text.Encoding]::UTF8)
  $history+=([pscustomobject]$complete)
  Update-TestStatus
+ Update-LiveSerializerRegister $name
  Write-Output ("{0} {1} exit={2} duration_ms={3}" -f $state,$name,$exit,$clock.ElapsedMilliseconds)
  if($exit -eq 0){$passed++}else{
    $failed++;Get-Content -LiteralPath $logFile |Select-Object -Last 18
