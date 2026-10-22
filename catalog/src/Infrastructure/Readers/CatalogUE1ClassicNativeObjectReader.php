@@ -44,7 +44,7 @@ final class CatalogUE1ClassicNativeObjectReader
         }
         $nativeKind=strtolower($className);
         if(!in_array($nativeKind,[
-            'texture','palette','sound','music','font','package','primitive','model','level','mesh','lodmesh','firetexture','wettexture','scriptedtexture','textbuffer','enum','const','bitarray','bitmatrix',
+            'texture','palette','sound','music','font','package','primitive','model','level','mesh','lodmesh','firetexture','wettexture','scriptedtexture','textbuffer','enum','const','bitarray','bitmatrix','factory','exporter','levelfactorynew','classfactorynew','texturefactorynew',
             ...CatalogUE1ClassicPropertyNativeReader::KINDS,
             ...CatalogUE1ClassicStructNativeReader::KINDS,
         ],true)){return $record;}
@@ -108,6 +108,16 @@ final class CatalogUE1ClassicNativeObjectReader
             if($nativeKind==='bitarray'||$nativeKind==='bitmatrix'){
                 return array_replace($record,CatalogUE1ClassicBitArrayNativeReader::inspect(
                     $nativeKind,$read,$compact,$pos,$limit));
+            }
+            if(in_array($nativeKind,['factory','exporter','levelfactorynew','classfactorynew','texturefactorynew'],true)){
+                if($ver<60){
+                    return array_replace($record,[
+                        'status'=>'source_ut99_editor_serializer_version_unverified',
+                        'extension_bytes'=>$nativeLength,
+                    ]);
+                }
+                return array_replace($record,CatalogUE1ClassicEditorSerializerReader::inspect(
+                    $nativeKind,$pkg,$ver,$read,$compact,$pos,$limit));
             }
             if($nativeKind==='package'){
                 return array_replace($record,[

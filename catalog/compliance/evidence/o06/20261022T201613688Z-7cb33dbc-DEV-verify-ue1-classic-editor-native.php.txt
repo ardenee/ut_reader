@@ -1,0 +1,8 @@
+﻿{
+    "ok": true,
+    "checks": 74,
+    "passed": 74,
+    "failed": [],
+    "source": "UT99 v400 Core/Src/UExporter.cpp UFactory.cpp",
+    "limits": "direct names only; subclass inheritance not proven"
+}
