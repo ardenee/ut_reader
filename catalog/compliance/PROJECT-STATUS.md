@@ -71,6 +71,8 @@ Updated: **2026-10-21**. This is the canonical recovery/handover file for this p
 
 **O06 1997 ULevel checkpoint (2026-10-22):** Added source-defined native `ULevel` header and per-actor object-reference serialization for original v22/v23. **16/16** native cases PASS plus staging and isolated MySQL tests PASS. Original native references remain one-based serialized identities, not runtime actors. Full O06 acceptance remains OPEN for additional classes/source contracts and genuine-oracle limitations; see `UE1-O06-SERIALIZATION.md` and test ledger.
 
+**O06 1997 UMesh checkpoint (2026-10-22):** Original v22/v23 `UPrimitive` LocalBound (44-byte archive) plus `UMesh` (92 additional bytes: eight child refs, FrameVerts/AnimFrames, flags, Scale, Origin, signed RotOrigin, editor indices) are now source-typed through `CatalogUE1OriginalUnrealfileMeshHeaderReader`. **16/16** v22/v23 native positive/negative checks PASS; original staging/MySQL PASS, no linked or instantiated runtime object claimed. Together with preceding `ULevel` 16/16 checkpoint, these address two original derived-header gaps. O06 not yet accepted: `UModel` and other original 1997 custom serializer cases still require closure inventory and class-specific validation.
+
 ## Engine sequence
 
 | Phase | Engine | New-process status |
