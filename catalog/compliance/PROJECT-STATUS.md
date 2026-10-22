@@ -75,6 +75,8 @@ Updated: **2026-10-21**. This is the canonical recovery/handover file for this p
 
 **O06 1997 UModel checkpoint (2026-10-22):** `CatalogUE1OriginalUnrealfileModelHeaderReader` handles Epic source-defined v22/v23 `UPrimitive` + `UModel` archive (252 native bytes including nine references, transforms, scales, CSG/model flags, two bounds); **14/14 source fixture checks** and DEV staging/MySQL PASS. PRD deployment/results follow separate evidence batch. Runtime BSP/model linkage not claimed; O06 implementing, not accepted until the source inventory is reconciled.
 
+**O06 1997 UTexture checkpoint (2026-10-22):** Source-defined v22/v23 native `UTexture` header decodes 138 serialized member bytes, including Num/Max, source-typed references, dimensions, flags, color channels and 12 mip offsets, **14/14** fixture tests PASS plus staging/MySQL PASS. Pixel interpretation belongs to O07 and runtime mip fixup to O10. O06 still OPEN for remaining v0.867 specialized archive handlers. Track deployment/evidence in journal.
+
 ## Engine sequence
 
 | Phase | Engine | New-process status |
