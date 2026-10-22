@@ -73,6 +73,8 @@ Updated: **2026-10-21**. This is the canonical recovery/handover file for this p
 
 **O06 1997 UMesh checkpoint (2026-10-22):** Original v22/v23 `UPrimitive` LocalBound (44-byte archive) plus `UMesh` (92 additional bytes: eight child refs, FrameVerts/AnimFrames, flags, Scale, Origin, signed RotOrigin, editor indices) are now source-typed through `CatalogUE1OriginalUnrealfileMeshHeaderReader`. **16/16** v22/v23 native positive/negative checks PASS; original staging/MySQL PASS, no linked or instantiated runtime object claimed. Together with preceding `ULevel` 16/16 checkpoint, these address two original derived-header gaps. O06 not yet accepted: `UModel` and other original 1997 custom serializer cases still require closure inventory and class-specific validation.
 
+**O06 1997 UModel checkpoint (2026-10-22):** `CatalogUE1OriginalUnrealfileModelHeaderReader` handles Epic source-defined v22/v23 `UPrimitive` + `UModel` archive (252 native bytes including nine references, transforms, scales, CSG/model flags, two bounds); **14/14 source fixture checks** and DEV staging/MySQL PASS. PRD deployment/results follow separate evidence batch. Runtime BSP/model linkage not claimed; O06 implementing, not accepted until the source inventory is reconciled.
+
 ## Engine sequence
 
 | Phase | Engine | New-process status |
