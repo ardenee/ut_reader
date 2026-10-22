@@ -16,8 +16,9 @@ use RuntimeException;
 final class CatalogUE1OriginalUnrealfileBinaryPropertyReader
 {
     /** @return array<string,mixed> */
-    public static function read(string $path, bool $strict = false, array $declaredDependencyProviders = []): array
+    public static function read(string $path, bool $strict = false, array $declaredDependencyProviders = [], ?string $sourceLineage = null): array
     {
+        CatalogUE1OriginalUnrealfilePropertySerializationGate::validate($sourceLineage);
         $meta=CatalogUE1OriginalUnrealfileObjectBaseReader::read($path);
         $schemas=CatalogUE1OriginalUnrealfileClassSchemaReader::read($path,false)['class_schemas'];
         $byName=[];$byIndex=[];
@@ -81,6 +82,13 @@ final class CatalogUE1OriginalUnrealfileBinaryPropertyReader
                 $entry['status']='parent_UClass_schema_unavailable';
                 $results[]=$entry;continue;
             }
+            if(CatalogUE1OriginalUnrealfilePropertySerializationGate::unresolved($all,$sourceLineage)){
+                if($strict)throw new RuntimeException('Original May/July 1997 CPF_Intrinsic file-serialization behavior ambiguous: source lineage required');
+                $entry['status']='source_1997_property_lineage_required';
+                $entry['source_lineage']=null;
+                $entry['ambiguity']='May 1997 serializes flag 0x1000; July 1997 skips it (both file version 23)';
+                $results[]=$entry;continue;
+            }
             $hOff=(int)$o['file_header_offset'];
             $hSize=(int)$o['file_header_size'];
             $pos=(int)$stack['serialized_prefix_bytes'];
@@ -92,7 +100,7 @@ final class CatalogUE1OriginalUnrealfileBinaryPropertyReader
             $values=[];
             foreach($all as $prop){
                 $type=(int)$prop['property_type'];$flags=(int)$prop['flags'];
-                if(($flags&0x3000)!==0)continue; // CPF_Transient | CPF_Intrinsic
+                if(!CatalogUE1OriginalUnrealfilePropertySerializationGate::serialized($flags,$sourceLineage))continue;
                 $dim=(int)$prop['array_dim'];
                 if($dim<0||$dim>1000000)throw new RuntimeException('Invalid property ArrayDim');
                 $items=[];
@@ -157,6 +165,7 @@ final class CatalogUE1OriginalUnrealfileBinaryPropertyReader
             if($strict&&$left!==0)throw new RuntimeException('Original binary object has additional native class header data');
             $entry['property_values']=$values;
             $entry['external_property_schema_sources']=$externalSources;
+            $entry['source_lineage']=$sourceLineage;
             $entry['runtime_external_classes_loaded']=false;
             $entry['class_schema_object_index']=$matches[0]['object_index'];
             $entry['consumed_class_member_bytes']=$pos-(int)$stack['serialized_prefix_bytes'];

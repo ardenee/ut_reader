@@ -16,8 +16,9 @@ use RuntimeException;
 final class CatalogUE1OriginalUnrealfilePropertiesReader
 {
     /** @return array<string,mixed> */
-    public static function read(string $path,bool $strict=false,array $declaredDependencyProviders=[]):array
+    public static function read(string $path,bool $strict=false,array $declaredDependencyProviders=[],?string $sourceLineage=null):array
     {
+        CatalogUE1OriginalUnrealfilePropertySerializationGate::validate($sourceLineage);
         $meta=CatalogUE1OriginalUnrealfileObjectBaseReader::read($path);
         $stackBy=[];foreach(CatalogUE1OriginalUnrealfileStackReader::read($path,false)['stack_prefixes'] as $stack)
             $stackBy[(int)$stack['object_index']]=$stack;
@@ -103,6 +104,13 @@ final class CatalogUE1OriginalUnrealfilePropertiesReader
                     $result['status']='parent_class_schema_unavailable';
                     $results[]=$result;continue;
                 }
+                if(CatalogUE1OriginalUnrealfilePropertySerializationGate::unresolved($properties,$sourceLineage)){
+                    if($strict)throw new RuntimeException('Original May/July 1997 CPF_Intrinsic file-serialization behavior ambiguous: source lineage required');
+                    $result['status']='source_1997_property_lineage_required';
+                    $result['source_lineage']=null;
+                    $result['ambiguity']='May 1997 serializes flag 0x1000; July 1997 skips it (both file version 23)';
+                    $results[]=$result;continue;
+                }
                 $len=(int)$o['file_data_size'];
                 if($len<0||$len>16000000)throw new RuntimeException('Native property data exceeds bounded stream');
                 $bytes=self::span($fp,(int)$o['file_data_offset'],$len);
@@ -113,7 +121,7 @@ final class CatalogUE1OriginalUnrealfilePropertiesReader
                 };
                 $values=[];
                 foreach($properties as $p){
-                    if(((int)$p['flags']&0x3000)!==0)continue; // transient/intrinsic
+                    if(!CatalogUE1OriginalUnrealfilePropertySerializationGate::serialized((int)$p['flags'],$sourceLineage))continue;
                     $type=(int)$p['property_type'];$dim=(int)$p['array_dim'];
                     if($dim<0||$dim>1000000)throw new RuntimeException('Invalid property ArrayDim');
                     $items=[];$start=$pos;
@@ -170,6 +178,7 @@ final class CatalogUE1OriginalUnrealfilePropertiesReader
                     'native_UClass_bin_properties_trailing_bytes';
                 $result['class_schema_object_index']=$classRef-1;
                 $result['external_property_schema_sources']=$externalSources;
+                $result['source_lineage']=$sourceLineage;
                 $result['runtime_external_classes_loaded']=false;
                 $result['property_values']=$values;
                 $result['serialized_bytes_consumed']=$pos;

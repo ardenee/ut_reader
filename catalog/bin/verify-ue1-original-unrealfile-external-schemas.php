@@ -19,10 +19,10 @@ $class=static function(int $num,int $parent):string{
         .pack('V8',28,12,0,0,0,0,0,0);
 };
 $stack=pack('V2',0,0).str_repeat("\xff",8);
-$provider=static function(int $version)use($stack,$names,$class):array{
+$provider=static function(int $version,int $baseFlags=0)use($stack,$names,$class):array{
     $nm=$names(['Class','BaseClass','BaseScore']);
     $head=$stack.$class(1,0);
-    $prop=pack('vvV6',3,0,2,0,0,1,4,1);
+    $prop=pack('vvV6',3,0,2,0,$baseFlags,1,4,1);
     $headOff=56+strlen($nm);$dataOff=$headOff+strlen($head);
     $objOff=$dataOff+strlen($prop);
     $obj=pack('vvVV',2,1,0,$headOff)
@@ -31,7 +31,7 @@ $provider=static function(int $version)use($stack,$names,$class):array{
     $summary=pack('a32V6',"Unrealfile\x1A",$version,1,3,56,$objOff,0);
     return ['bytes'=>$summary.$nm.$head.$prop.$obj,'header'=>$headOff];
 };
-$consumer=static function(int $version)use($stack,$names,$class):array{
+$consumer=static function(int $version,bool $omitNativePropertyValue=false)use($stack,$names,$class):array{
     $dep="BASE\0";$nm=$names(['Class','BaseClass','DerivedClass','ChildScore','Instance','Properties','PropertySet']);
     $head=$stack.$class(1,1);
     $prop=pack('vvV6',4,0,2,0,0,1,4,1);
@@ -40,7 +40,7 @@ $consumer=static function(int $version)use($stack,$names,$class):array{
     $propOff=$headOff+strlen($head);
     $instanceOff=$propOff+strlen($prop);
     $setHeader=$stack.pack('V4',4,4,1,1);
-    $setData=pack('V',333);
+    $setData=$omitNativePropertyValue?'':pack('V',333);
     $setHeaderOff=$instanceOff+strlen($instance);
     $setDataOff=$setHeaderOff+strlen($setHeader);
     $objOff=$setDataOff+strlen($setData);
@@ -130,6 +130,40 @@ try{
             $rejected=false;
         }catch(RuntimeException){$rejected=true;}
         $check("v{$version}_cyclic_external_parent_rejected",$rejected);
+    }
+    // Native UProperties with externally declared class schema exercises
+    // the SAME source gate as ordinary actor binary properties. Both
+    // May/July Epic source trees report Unrealfile v23, yet intrinsic
+    // properties are only filtered by July's FProperty writer.
+    $gate=\UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfilePropertySerializationGate::class;
+    foreach([22,23] as $version){
+        $mayProvider=$provider($version,0x1000);
+        $mayConsumer=$consumer($version,false);
+        file_put_contents($provPath,$mayProvider['bytes']);
+        file_put_contents($consumerPath,$mayConsumer['bytes']);
+        $unknown=Properties::read($consumerPath,false,['BASE'=>$provPath])['properties_objects'][0]??[];
+        $check("v{$version}_properties_external_schema_intrinsic_requires_lineage",
+            ($unknown['status']??null)==='source_1997_property_lineage_required'
+            &&($unknown['property_values']??null)===[]);
+        try{Properties::read($consumerPath,true,['BASE'=>$provPath]);$reject=false;}
+        catch(RuntimeException){$reject=true;}
+        $check("v{$version}_strict_properties_ambiguous_lineage_rejected",$reject);
+        $mayDecoded=Properties::read($consumerPath,true,['BASE'=>$provPath],$gate::MAY)['properties_objects'][0]??[];
+        $check("v{$version}_may_properties_intrinsic_bit_serialized",
+            ($mayDecoded['status']??null)==='native_UClass_bin_properties_decoded'
+            &&($mayDecoded['property_values'][0]['values']??null)===[333]
+            &&($mayDecoded['source_lineage']??null)===$gate::MAY);
+        $julyConsumer=$consumer($version,true);
+        file_put_contents($consumerPath,$julyConsumer['bytes']);
+        $julDecoded=Properties::read($consumerPath,true,['BASE'=>$provPath],$gate::JULY)['properties_objects'][0]??[];
+        $check("v{$version}_july_properties_intrinsic_bit_skipped",
+            ($julDecoded['status']??null)==='native_UClass_bin_properties_decoded'
+            &&($julDecoded['property_values']??null)===[]
+            &&($julDecoded['serialized_bytes_consumed']??-1)===0
+            &&($julDecoded['source_lineage']??null)===$gate::JULY);
+        $stillUnknown=Properties::read($consumerPath,false,['BASE'=>$provPath])['properties_objects'][0]??[];
+        $check("v{$version}_july_properties_no_guess_by_payload_size",
+            ($stillUnknown['status']??null)==='source_1997_property_lineage_required');
     }
 }finally{@unlink($provPath);@unlink($consumerPath);@unlink($siblingProvider);@unlink($siblingConsumer);@unlink($siblingDuplicate);@rmdir($folder);}
 echo json_encode(['ok'=>$fail===[],'passed'=>count($checks)-count($fail),
