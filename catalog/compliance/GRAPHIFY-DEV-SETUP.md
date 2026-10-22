@@ -91,3 +91,14 @@ Verification was performed by `Test-MCP.py` using an MCP Python client via stdio
 - The initial code-only UnrealDB scan skipped 7 SQL files without the optional grammar; `graphifyy[mcp,sql]` is now installed and the incremental refresh completed successfully.
 - Graphify node/edge counts indicate searchable coverage, **not** UnrealDB serializer correctness. No O06 acceptance status was changed due to Graphify.
 - Developer graph outputs may contain snippets or metadata from proprietary Epic source. Keep these files on DEV; do not push generated `graph.json` or `graph.html` to public GitHub or external Graphify Cloud.
+
+## Windows Network Shortcut / WSL case-sensitive index fix (2026-10-22)
+
+MeMeMe submitted using Windows Network Shortcuts `target.lnk` or the direct WSL UNC path. Two independent failures were reproduced and fixed locally on DEV.
+
+1. Graphify 0.9.93 `graphify/cache.py::_normalize_path` used `os.path.normcase` on case-sensitive WSL UNC paths, lowercasing e.g. `Console/Commands/ArchiveLocationShards.php` and preventing physical `file_hash`. Saved the pre-patch installed package as `cache.py.original-0.9.93`; normalize normal Windows paths as before and preserve physical casing for `\\wsl.localhost\...` and `\\wsl$\...` paths. This is a LOCAL uv-installed package adjustment which may be replaced by a future Graphify upgrade.
+2. `C:\Users\arden\Graphify\Local-Dashboard-Server.py` now resolves Windows Network Shortcuts' `target.lnk` through `Resolve-Network-Shortcut.ps1` only when the source lies inside Windows' official Network Shortcuts directory; the scanner metadata stores the real WSL directory, not the .lnk folder. `Index-Code.ps1` also supports shortcut paths for CLI use and judges external commands by exit code, not benign stderr warnings. A warning about a large non-UTF-8 `fulldump.sql` previously aborted the wrapper despite being informational.
+
+End-to-end proof: the existing MeMeMe project was indexed through POST `/api/add` using the same shortcut source, API 202, index event STARTED then PASS(exit 0), graph JSON 3,033,358 bytes with **3,127 nodes and 5,756 links**, HTML browser endpoint HTTP 200. 543 source code files discovered. `C:\Users\arden\Graphify\Test-WSL-Shortcut-Index.py` asserts physical WSL file SHA-256, standard Windows normalization, shortcut target resolution, canonical project source, graph stats and HTTP/index journal status; all PASS. Index output is local-only; no Epic engine source or UnrealDB package parser changed by this tooling fix.
+
+If graphifyy is upgraded, recheck the installed `cache.py` WSL path behavior and rerun the local test before depending on WSL scanning. These Graphify results are advisory to code navigation, not proof of Unreal byte-format parity.
