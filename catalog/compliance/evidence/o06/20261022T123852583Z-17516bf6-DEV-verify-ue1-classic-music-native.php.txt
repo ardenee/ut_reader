@@ -1,0 +1,26 @@
+﻿{
+    "ok": true,
+    "passed": 13,
+    "total": 13,
+    "failed": [],
+    "cases": {
+        "v50_Umusic_source_TArray": true,
+        "v50_no_confusion_with_UObject_state_names": true,
+        "v61_TArray_boundary": true,
+        "v69_lazy_seekpos": true,
+        "v69_bytes_preserved_sha256": true,
+        "v69_empty_data": true,
+        "extension_not_reported_complete": true,
+        "reject_negative_array_count": true,
+        "reject_oversized_array_count": true,
+        "reject_invalid_name_ref": true,
+        "reject_bad_lazy_seekpos": true,
+        "reject_bad_lazy_seekpos_backward": true,
+        "reject_truncated_payload": true
+    },
+    "source": [
+        "Epic v1.200 Engine/Src/UnAudio.cpp:467-480, Engine/Inc/UnAudio.h:76-83",
+        "UT99 v400 Engine/Src/UnAudio.cpp:518-531, Engine/Inc/UnAudio.h:105-113",
+        "UT99 Core/Inc/UnTemplate.h::TLazyArray operator<< version>61 SeekPos"
+    ]
+}

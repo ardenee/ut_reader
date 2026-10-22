@@ -44,7 +44,7 @@ final class CatalogUE1ClassicNativeObjectReader
         }
         $nativeKind=strtolower($className);
         if(!in_array($nativeKind,[
-            'texture','palette','sound','font','package','firetexture','wettexture','scriptedtexture','textbuffer','enum','const',
+            'texture','palette','sound','music','font','package','firetexture','wettexture','scriptedtexture','textbuffer','enum','const',
             ...CatalogUE1ClassicPropertyNativeReader::KINDS,
             ...CatalogUE1ClassicStructNativeReader::KINDS,
         ],true)){return $record;}
@@ -225,16 +225,20 @@ final class CatalogUE1ClassicNativeObjectReader
                     'extension_bytes'=>$limit-$pos,
                 ]);
             }
-            if($nativeKind==='sound'){
-                // USound::Serialize: FName FileType, TLazyArray<BYTE> Data.
+            if($nativeKind==='sound'||$nativeKind==='music'){
+                // Epic Engine/Src/UnAudio.cpp USound/UMusic::Serialize:
+                // Ar << FileType << Data. Original v1.200 UMusic uses
+                // TArray<BYTE>; UT99 v400 UMusic uses TLazyArray<BYTE>,
+                // whose version>61 archive writes an absolute SeekPos.
+                // Both preserve bytes for O07 interpretation.
                 $nameIndex=$compact();$names=$pkg->getNames();
-                if($nameIndex<0||!isset($names[$nameIndex])){throw new RuntimeException('Sound FileType FName out of range');}
+                if($nameIndex<0||!isset($names[$nameIndex])){throw new RuntimeException('Audio FileType FName out of range');}
                 $seekEnd=$ver>61?$int():null;
                 $dataSize=$compact();
-                if($dataSize<0||$dataSize>$limit-$pos){throw new RuntimeException('Sound lazy audio bytes exceed export bounds');}
+                if($dataSize<0||$dataSize>$limit-$pos){throw new RuntimeException('Audio byte array exceeds export bounds');}
                 $dataStart=$pos;$seek($pos+$dataSize);
-                if($seekEnd!==null&&$seekEnd!==$pos){throw new RuntimeException('Sound lazy SeekPos mismatch');}
-                return array_replace($record,['status'=>$pos===$limit?'native_sound_record_complete':'native_sound_has_extension',
+                if($seekEnd!==null&&$seekEnd!==$pos){throw new RuntimeException('Audio lazy SeekPos mismatch');}
+                return array_replace($record,['status'=>$pos===$limit?('native_'.$nativeKind.'_record_complete'):('native_'.$nativeKind.'_has_extension'),
                     'file_type_name'=>(string)$names[$nameIndex]['name'],
                     'audio_data_offset'=>$dataStart,'audio_data_bytes'=>$dataSize,
                     'lazy_seek_pos'=>$seekEnd,'extension_bytes'=>$limit-$pos,
