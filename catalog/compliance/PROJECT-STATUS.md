@@ -69,6 +69,8 @@ Updated: **2026-10-21**. This is the canonical recovery/handover file for this p
 
 **O06 1996 UActorList in-file class association (2026-10-21):** Epic `FGlobalResourceManager::AddFile` builds native `ResMap=[imports...,exports...]`; serialized actor Class word is a 1-based map index (`GetActualResource` when RF_Unlinked). UnrealDB now decodes original UActorList per-instance global/static native class properties when the source ResMap points to a local in-file `UClass` export (even when that class is later in header order); imported, non-class or out-of-range refs are explicitly unresolved. New v9/v10 with/without import native fixtures **26/26 PASS**, eight DEV and eight PRD affected source/ABI/actor/class/staging/MySQL tests **8/8 each PASS** after commit `35460f78` (**19/19 file SHA-256 matches**) with individual output/exit/digest files `evidence/o06/20261021-DEV-ACTOR-RESMAP-*`. First fixture had wrong resource-trailer count order (exports before names) and a null assertion error; corrected, intermediate failures documented, not converted into fake journal passes. Still OPEN: actual cross-file imported class resolution and runtime processing; O06 implementing.
 
+**O06 1997 ULevel checkpoint (2026-10-22):** Added source-defined native `ULevel` header and per-actor object-reference serialization for original v22/v23. **16/16** native cases PASS plus staging and isolated MySQL tests PASS. Original native references remain one-based serialized identities, not runtime actors. Full O06 acceptance remains OPEN for additional classes/source contracts and genuine-oracle limitations; see `UE1-O06-SERIALIZATION.md` and test ledger.
+
 ## Engine sequence
 
 | Phase | Engine | New-process status |

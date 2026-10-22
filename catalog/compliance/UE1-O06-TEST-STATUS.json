@@ -1,8 +1,8 @@
 ﻿{
-    "updated_at_utc":  "2026-10-22T06:43:44.5189786Z",
-    "head_commit":  "3fb023a5",
-    "current_target":  "PRD",
-    "current_source_sha256":  "8b756787649e93623ad97de73850db0004f5916841953d6a97ba11d0aebc8144",
+    "updated_at_utc":  "2026-10-22T06:49:34.8677377Z",
+    "head_commit":  "432b9db4",
+    "current_target":  "DEV",
+    "current_source_sha256":  "162d2a6546b6093e71b4f772d06bb7da6c96a942a7422f3ad3005b602dbb8855",
     "tests":  [
                   {
                       "key":  "DEV:verify-ue1-classic-tagged-properties.php",
@@ -345,24 +345,24 @@
                       "test":  "verify-ue1-original-staging-integration.php",
                       "target":  "DEV",
                       "state":  "PASS",
-                      "event_at_utc":  "2026-10-22T06:41:29.6562444Z",
-                      "source_sha256":  "650ca36bfdd6872ac36dc41899519351b6d2a01da06f328c8b7dac8fbfebf72f",
+                      "event_at_utc":  "2026-10-22T06:49:34.6795926Z",
+                      "source_sha256":  "162d2a6546b6093e71b4f772d06bb7da6c96a942a7422f3ad3005b602dbb8855",
                       "test_sha256":  "c462897e0475f95dc770172d1e18b6a1c23274f9e17c25307d802472da9e9486",
-                      "run_id":  "20261022T064129489Z-e54e5249",
+                      "run_id":  "20261022T064934506Z-845d7a26",
                       "exit_code":  0,
-                      "log":  "catalog\\compliance\\evidence\\o06\\20261022T064129489Z-e54e5249-DEV-verify-ue1-original-staging-integration.php.txt"
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261022T064934506Z-845d7a26-DEV-verify-ue1-original-staging-integration.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-original-staging-mysql-isolated.php",
                       "test":  "verify-ue1-original-staging-mysql-isolated.php",
                       "target":  "DEV",
                       "state":  "PASS",
-                      "event_at_utc":  "2026-10-22T06:41:29.8452433Z",
-                      "source_sha256":  "650ca36bfdd6872ac36dc41899519351b6d2a01da06f328c8b7dac8fbfebf72f",
+                      "event_at_utc":  "2026-10-22T06:49:34.8627477Z",
+                      "source_sha256":  "162d2a6546b6093e71b4f772d06bb7da6c96a942a7422f3ad3005b602dbb8855",
                       "test_sha256":  "c9f942791e87f3add0b113731453ad7a51f57cc92c649729cc251332e368276d",
-                      "run_id":  "20261022T064129679Z-733b8ab0",
+                      "run_id":  "20261022T064934695Z-9b60dcc0",
                       "exit_code":  0,
-                      "log":  "catalog\\compliance\\evidence\\o06\\20261022T064129679Z-733b8ab0-DEV-verify-ue1-original-staging-mysql-isolated.php.txt"
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261022T064934695Z-9b60dcc0-DEV-verify-ue1-original-staging-mysql-isolated.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-original-unrealfile-audio.php",
@@ -423,6 +423,18 @@
                       "run_id":  "20261021T205740772Z-2d6b2e53",
                       "exit_code":  0,
                       "log":  "catalog\\compliance\\evidence\\o06\\20261021T205740772Z-2d6b2e53-DEV-verify-ue1-original-unrealfile-inheritance.php.txt"
+                  },
+                  {
+                      "key":  "DEV:verify-ue1-original-unrealfile-level.php",
+                      "test":  "verify-ue1-original-unrealfile-level.php",
+                      "target":  "DEV",
+                      "state":  "PASS",
+                      "event_at_utc":  "2026-10-22T06:49:34.4866318Z",
+                      "source_sha256":  "162d2a6546b6093e71b4f772d06bb7da6c96a942a7422f3ad3005b602dbb8855",
+                      "test_sha256":  "b014757d36f3449a45a7867421b6040abad04bc2108db0b2a569cd6afd24587a",
+                      "run_id":  "20261022T064934285Z-9422c9a0",
+                      "exit_code":  0,
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261022T064934285Z-9422c9a0-DEV-verify-ue1-original-unrealfile-level.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-original-unrealfile-object-bases.php",
