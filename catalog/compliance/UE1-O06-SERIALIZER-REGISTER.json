@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_at_utc": "2026-10-22T17:03:08+00:00",
+  "updated_at_utc": "2026-10-22T17:12:03+00:00",
   "entries": [
     {
       "id": "R82:UActorList",
@@ -2409,12 +2409,20 @@
           "line": 496
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileTextureHeaderReader.php",
+      "test": "verify-ue1-original-unrealfile-texture.php",
+      "evidence": "Epic v0.86x May Src/Inc/UnObj.h UTexture::SerializeHeader writes Num/Max, Palette, DiffuseC SpecularC FrictionC ReflectivityC, FootstepSound/HitSound, flags/bits/dims/CameraCaps/FColors/mips = 122B native; v0.867 July adds BumpMap DetailTexture MacroTexture AnimNext and changes order to DiffuseC SpecularC ReflectivityC FrictionC = 138B native. Both Inc/UnObjVer.h UNREAL_FILE_VERSION 23. Typed PHP UTexture reader decodes explicitly selected source lineage, no guessing.",
+      "remaining": "Only explicit unreal_1997_may/july lineage authorizes decoded 122B/138B native texture fields; unknown lineage => source_1997_texture_lineage_required, strict throws. Matching genuine source-family discrimination and additional original file classes remain G2/G5, pixel interpretation O07.",
+      "updated_at_utc": "2026-10-22T17:12:00+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T17:12:00.2891633Z",
+        "test_sha256": "c3494b6e0ef12a43a20834582be3a15b88f777aaf670079eab8c38ffd9733ecc",
+        "source_sha256": "64802f870c3cdda7097cde1a1666ee97fbb5fd59939b9f244dd0dc4676ea82d7",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T171159820Z-6dd8c831-PRD-verify-ue1-original-unrealfile-texture.php.txt"
+      }
     },
     {
       "id": "U86:UTextureSet",
@@ -2820,14 +2828,14 @@
       "test": "verify-ue1-original-unrealfile-class-schemas.php",
       "evidence": "PRD historical PASS at 2026-10-21T17:28:19.5542389Z; catalog\\compliance\\evidence\\o06\\20261021T172819350Z-3e563cbb-PRD-verify-ue1-original-unrealfile-class-schemas.php.txt; scoped test, not full class acceptance",
       "remaining": "FProperty descriptors and local classes tested; class-specific source contract reconciliation G2; runtime Preload O10",
-      "updated_at_utc": "2026-10-22T16:49:38+00:00",
+      "updated_at_utc": "2026-10-22T17:12:03+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T16:49:38.2302102Z",
+        "at_utc": "2026-10-22T17:12:03.7073226Z",
         "test_sha256": "f2cda42c2105751b142c9de9f6b397279539258cc778733211518048f816d87b",
-        "source_sha256": "ad4cc9cf2a3176151d9691899afbb40c3a5ae66635df67bf1824370771475619",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T164937910Z-da67cbb0-PRD-verify-ue1-original-unrealfile-class-schemas.php.txt"
+        "source_sha256": "64802f870c3cdda7097cde1a1666ee97fbb5fd59939b9f244dd0dc4676ea82d7",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T171203355Z-97980e4b-PRD-verify-ue1-original-unrealfile-class-schemas.php.txt"
       }
     },
     {
@@ -3324,14 +3332,14 @@
       "test": "verify-ue1-original-unrealfile-object-bases.php",
       "evidence": "DEV historical PASS at 2026-10-21T20:57:41.6838818Z; catalog\\compliance\\evidence\\o06\\20261021T205741266Z-38cef92f-DEV-verify-ue1-original-unrealfile-object-bases.php.txt; scoped test, not full class acceptance",
       "remaining": "Base archive structural fields tested; G2 source class inheritance audit",
-      "updated_at_utc": "2026-10-22T17:03:08+00:00",
+      "updated_at_utc": "2026-10-22T17:12:03+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T17:03:08.3670111Z",
+        "at_utc": "2026-10-22T17:12:03.1583218Z",
         "test_sha256": "6e122a2d14ee687750eb5c1f6584e35d4ddf6a4eac6907a139fad33d43a5759b",
-        "source_sha256": "44d5e6472a04b4fe603133e1c4780f25a0eadf17db3822c96dffe642b7d0175d",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T170307761Z-8a324ae6-PRD-verify-ue1-original-unrealfile-object-bases.php.txt"
+        "source_sha256": "64802f870c3cdda7097cde1a1666ee97fbb5fd59939b9f244dd0dc4676ea82d7",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T171202308Z-33186362-PRD-verify-ue1-original-unrealfile-object-bases.php.txt"
       }
     },
     {
@@ -3597,16 +3605,16 @@
       "status": "PARTIAL",
       "reader": "CatalogUE1OriginalUnrealfileTextureHeaderReader.php",
       "test": "verify-ue1-original-unrealfile-texture.php",
-      "evidence": "PRD historical PASS at 2026-10-22T07:09:59.8439556Z; catalog\\compliance\\evidence\\o06\\20261022T070959621Z-2ea6a097-PRD-verify-ue1-original-unrealfile-texture.php.txt; scoped test, not full class acceptance",
-      "remaining": "Mip/header source-tested; pixel O07",
-      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "evidence": "Epic v0.86x May Src/Inc/UnObj.h UTexture::SerializeHeader writes Num/Max, Palette, DiffuseC SpecularC FrictionC ReflectivityC, FootstepSound/HitSound, flags/bits/dims/CameraCaps/FColors/mips = 122B native; v0.867 July adds BumpMap DetailTexture MacroTexture AnimNext and changes order to DiffuseC SpecularC ReflectivityC FrictionC = 138B native. Both Inc/UnObjVer.h UNREAL_FILE_VERSION 23. Typed PHP UTexture reader decodes explicitly selected source lineage, no guessing.",
+      "remaining": "Only explicit unreal_1997_may/july lineage authorizes decoded 122B/138B native texture fields; unknown lineage => source_1997_texture_lineage_required, strict throws. Matching genuine source-family discrimination and additional original file classes remain G2/G5, pixel interpretation O07.",
+      "updated_at_utc": "2026-10-22T17:12:00+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T07:09:59.8439556Z",
-        "test_sha256": "5993fb39d360acdc42737fc7b14bade0beb03ad3079575a7998e98eebb9508db",
-        "source_sha256": "cf65636dce8a4f218dc533089ca8a44b2a619deadb3afcda2b17214b14de2f12",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T070959621Z-2ea6a097-PRD-verify-ue1-original-unrealfile-texture.php.txt"
+        "at_utc": "2026-10-22T17:12:00.2891633Z",
+        "test_sha256": "c3494b6e0ef12a43a20834582be3a15b88f777aaf670079eab8c38ffd9733ecc",
+        "source_sha256": "64802f870c3cdda7097cde1a1666ee97fbb5fd59939b9f244dd0dc4676ea82d7",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T171159820Z-6dd8c831-PRD-verify-ue1-original-unrealfile-texture.php.txt"
       }
     },
     {
