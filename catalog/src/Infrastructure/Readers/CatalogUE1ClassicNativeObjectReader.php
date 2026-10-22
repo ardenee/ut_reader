@@ -46,6 +46,7 @@ final class CatalogUE1ClassicNativeObjectReader
         if(!in_array($nativeKind,[
             'texture','palette','sound','font','package','firetexture','wettexture','scriptedtexture','textbuffer','enum','const',
             ...CatalogUE1ClassicPropertyNativeReader::KINDS,
+            ...CatalogUE1ClassicStructNativeReader::KINDS,
         ],true)){return $record;}
         $fp=fopen($path,'rb');
         if($fp===false){throw new RuntimeException('Cannot open native UE1 payload');}
@@ -82,6 +83,10 @@ final class CatalogUE1ClassicNativeObjectReader
             $ver=(int)($pkg->getHeader()['version']??0);
             if(in_array($nativeKind,CatalogUE1ClassicPropertyNativeReader::KINDS,true)){
                 return array_replace($record,CatalogUE1ClassicPropertyNativeReader::inspect(
+                    $nativeKind,$pkg,$ver,$read,$compact,$int,$pos,$limit));
+            }
+            if(in_array($nativeKind,CatalogUE1ClassicStructNativeReader::KINDS,true)){
+                return array_replace($record,CatalogUE1ClassicStructNativeReader::inspect(
                     $nativeKind,$pkg,$ver,$read,$compact,$int,$pos,$limit));
             }
             if($nativeKind==='package'){
