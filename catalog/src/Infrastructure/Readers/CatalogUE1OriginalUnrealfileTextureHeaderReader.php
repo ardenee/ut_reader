@@ -7,7 +7,8 @@
  * July adds BumpMap,DetailTexture,MacroTexture,AnimNext before Palette
  * and SWAPS the last two float coefficients (Reflectivity then Friction):
  * native tail 138B. Both branches report Unrealfile version 23.
- * No source lineage means native field interpretation is unresolved.
+ * Exact complete native-header length identifies May/July; unknown or
+ * extended native field lengths remain explicitly unresolved.
  * All mip pixel bytes live in the UDatabase::SerializeData byte stream
  * and their interpretation belongs to O07. No PostLoad mip fixup here.
  */
@@ -27,9 +28,6 @@ final class CatalogUE1OriginalUnrealfileTextureHeaderReader
     public static function read(string $path,bool $strict=false,?string $sourceLineage=null):array
     {
         CatalogUE1OriginalUnrealfilePropertySerializationGate::validate($sourceLineage);
-        $may=$sourceLineage===CatalogUE1OriginalUnrealfilePropertySerializationGate::MAY;
-        $nativeBytes=$may?self::MAY_NATIVE_BYTES:self::JULY_NATIVE_BYTES;
-        $firstRefs=$may?self::MAY_FIRST_REFS:self::JULY_FIRST_REFS;
         $meta=CatalogUE1OriginalUnrealfileObjectBaseReader::read($path);
         $count=(int)$meta['summary']['object_count'];
         $stack=CatalogUE1OriginalUnrealfileStackReader::read($path,false)['stack_prefixes'];
@@ -40,6 +38,13 @@ final class CatalogUE1OriginalUnrealfileTextureHeaderReader
             foreach($meta['object_bases'] as $o){
                 if($o['kind']!=='export'||strcasecmp((string)$o['class_name'],'Texture')!==0)continue;
                 $s=$by[(int)$o['index']]??[];
+                $effectiveLineage=CatalogUE1OriginalUnrealfilePropertySerializationGate::fromNativeHeaderLength(
+                    (int)($s['class_member_bytes_remaining']??0),
+                    self::MAY_NATIVE_BYTES,self::JULY_NATIVE_BYTES,$sourceLineage
+                );
+                $may=$effectiveLineage===CatalogUE1OriginalUnrealfilePropertySerializationGate::MAY;
+                $nativeBytes=$may?self::MAY_NATIVE_BYTES:self::JULY_NATIVE_BYTES;
+                $firstRefs=$may?self::MAY_FIRST_REFS:self::JULY_FIRST_REFS;
                 $partial=['object_index'=>(int)$o['index'],'object_name'=>$o['name'],
                     'native_class'=>'UTexture','status'=>'incomplete_original_texture_header',
                     'texture_pixels_decoded'=>false,'runtime_mipmaps_fixed'=>false];
@@ -48,8 +53,8 @@ final class CatalogUE1OriginalUnrealfileTextureHeaderReader
                     if($strict)throw new RuntimeException('Original UTexture header shorter than the selected source lineage layout');
                     $out[]=$partial;continue;
                 }
-                if($sourceLineage===null){
-                    if($strict)throw new RuntimeException('Original May/July 1997 UTexture native header has different serialized field order and byte count; source lineage required');
+                if($effectiveLineage===null){
+                    if($strict)throw new RuntimeException('Original May/July 1997 UTexture native header length is not one of the two source-defined layouts; source lineage required');
                     $partial['status']='source_1997_texture_lineage_required';
                     $partial['source_lineage']=null;
                     $partial['ambiguity']='May: 122B, Palette only, Friction then Reflectivity; July: 138B, four additional refs and opposite float order';
@@ -115,7 +120,8 @@ final class CatalogUE1OriginalUnrealfileTextureHeaderReader
                     'color_bytes'=>$dims[2],'camera_caps'=>$caps,
                     'colors_rgba_source_bytes'=>$colors,'mip_offsets'=>$mipOffsets,
                     'native_header_bytes'=>$nativeBytes,
-                    'source_lineage'=>$sourceLineage,
+                    'source_lineage'=>$effectiveLineage,
+                    'source_lineage_inferred_from_native_header_bytes'=>$sourceLineage===null,
                     'unconsumed_header_bytes'=>$extra,
                     'texture_pixels_decoded'=>false,
                     'runtime_mipmaps_fixed'=>false,'runtime_references_resolved'=>false,

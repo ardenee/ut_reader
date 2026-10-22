@@ -67,9 +67,11 @@ try{
     $tmp,['format'=>'early_unrealfile','version'=>$v]
   );
   $s=$stage['native_metadata']['unrealfile_texture_headers']['texture_headers'][0]??[];
-  $check("v{$v}_source_lineage_unresolved_staging",
-    ($s['status']??null)==='source_1997_texture_lineage_required'
-    && !isset($s['mip_offsets'])
+  $check("v{$v}_source_lineage_inferred_staging",
+    ($s['status']??null)==='native_texture_header_decoded'
+    && ($s['source_lineage']??null)===Gate::JULY
+    && ($s['source_lineage_inferred_from_native_header_bytes']??false)===true
+    && ($s['mip_offsets'][0]??null)===0
     && ($stage['parse_complete']??true)===false);
   file_put_contents($tmp,substr_replace($f['bytes'],pack('V',2),$f['native']+8,4));
   try{Texture::read($tmp,true,Gate::JULY);$reject=false;}catch(RuntimeException){$reject=true;}
@@ -90,11 +92,14 @@ try{
   // correct field count and coefficient order before anything is decoded.
   file_put_contents($tmp,$f['bytes']);
   $unknown=Texture::read($tmp,false)['texture_headers'][0]??[];
-  $check("v{$v}_july_version_alone_does_not_select_layout",
-    ($unknown['status']??null)==='source_1997_texture_lineage_required'
-    &&!isset($unknown['object_references']));
-  try{Texture::read($tmp,true);$reject=false;}catch(RuntimeException){$reject=true;}
-  $check("v{$v}_strict_unknown_july_lineage_rejected",$reject);
+  $check("v{$v}_exact_july_native_length_selects_layout",
+    ($unknown['status']??null)==='native_texture_header_decoded'
+    &&($unknown['source_lineage']??null)===Gate::JULY
+    &&($unknown['source_lineage_inferred_from_native_header_bytes']??false)===true
+    &&($unknown['native_header_bytes']??null)===138);
+  $inferred=Texture::read($tmp,true)['texture_headers'][0]??[];
+  $check("v{$v}_strict_july_auto_decode",
+    count($inferred['object_references']??[])===7);
   $check("v{$v}_july_diffuse_specular_reflectivity_friction_order",
     abs(($r['reflectivity_coefficient']??-1)-0.25)<0.00001
     &&abs(($r['friction_coefficient']??-1)-0.95)<0.00001
@@ -122,11 +127,14 @@ try{
     &&($m['polygon_flags']??null)===0x1234
     &&($m['colors_rgba_source_bytes']['mip_zero']??null)===[10,20,30,40]);
   $unknown=Texture::read($tmp,false)['texture_headers'][0]??[];
-  $check("v{$v}_may_version_alone_does_not_select_layout",
-    ($unknown['status']??null)==='source_1997_texture_lineage_required'
-    &&!isset($unknown['mip_offsets']));
-  try{Texture::read($tmp,true);$reject=false;}catch(RuntimeException){$reject=true;}
-  $check("v{$v}_strict_unknown_may_lineage_rejected",$reject);
+  $check("v{$v}_exact_may_native_length_selects_layout",
+    ($unknown['status']??null)==='native_texture_header_decoded'
+    &&($unknown['source_lineage']??null)===Gate::MAY
+    &&($unknown['source_lineage_inferred_from_native_header_bytes']??false)===true
+    &&($unknown['native_header_bytes']??null)===122);
+  $inferred=Texture::read($tmp,true)['texture_headers'][0]??[];
+  $check("v{$v}_strict_may_auto_decode",
+    count($inferred['object_references']??[])===3);
   // Native May mip offsets begin 16 bytes before the July offsets.
   file_put_contents($tmp,substr_replace($may['bytes'],pack('V',16),$may['native']+74,4));
   try{Texture::read($tmp,true,Gate::MAY);$reject=false;}catch(RuntimeException){$reject=true;}
@@ -139,6 +147,17 @@ try{
   try{Texture::read($tmp,true,Gate::MAY);$reject=false;}catch(RuntimeException){$reject=true;}
   $check("v{$v}_may_short_header_rejected",
     ($short['status']??null)==='incomplete_original_texture_header'&&$reject);
+  // Header sizes which do not match an Epic-supported May/July on-disk
+  // layout stay unresolved; guessing the next-largest branch misleads.
+  foreach([['july',$f,156],['may',$may,140]] as [$label,$fx,$size]){
+    file_put_contents($tmp,substr_replace($fx['bytes'],pack('V',$size),$fx['table']+20,4));
+    $unknown=Texture::read($tmp,false)['texture_headers'][0]??[];
+    $check("v{$v}_{$label}_unknown_extension_unresolved",
+        ($unknown['status']??null)==='source_1997_texture_lineage_required'
+        &&!isset($unknown['mip_offsets']));
+    try{Texture::read($tmp,true);$reject=false;}catch(RuntimeException){$reject=true;}
+    $check("v{$v}_{$label}_unknown_extension_strict_rejected",$reject);
+  }
  }
  try{Texture::read($tmp,false,'made_up_1997_branch');$bad=false;}
  catch(InvalidArgumentException){$bad=true;}

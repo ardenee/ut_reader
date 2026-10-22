@@ -53,9 +53,10 @@ try{
     $staged=\UnrealDb\Catalog\Infrastructure\Unverified\CatalogUE1OriginalStagingMetadata::decode(
         $tmp,['format'=>'early_unrealfile','version'=>$v]);
     $n=$staged['native_metadata']['unrealfile_level_records']['level_records'][0]??[];
-    $check("v{$v}_source_lineage_unresolved_staging",
-        ($n['status']??null)==='source_1997_level_lineage_required'
-        && ($n['active_actor_count']??null)===null
+    $check("v{$v}_source_lineage_inferred_staging",
+        ($n['status']??null)==='native_level_header_and_data_decoded'
+        && ($n['source_lineage']??null)===Gate::JULY
+        && ($n['source_lineage_inferred_from_native_header_bytes']??false)===true
         && ($staged['parse_complete']??true)===false);
     // Num > Max must be rejected.
     file_put_contents($tmp,substr_replace($f['bytes'],pack('V',4),$f['native'],4));
@@ -78,11 +79,14 @@ try{
     // Neither source branch can be chosen solely from Unrealfile v22/v23.
     file_put_contents($tmp,$f['bytes']);
     $ambiguous=Level::read($tmp,false)['level_records'][0]??[];
-    $check("v{$v}_july_envelope_without_lineage_stays_partial",
-        ($ambiguous['status']??null)==='source_1997_level_lineage_required'
-        &&(!isset($ambiguous['model_raw_one_based_ref'])));
-    try{Level::read($tmp,true);$bad=false;}catch(RuntimeException){$bad=true;}
-    $check("v{$v}_strict_july_without_lineage_rejected",$bad);
+    $check("v{$v}_exact_july_native_length_auto_detected",
+        ($ambiguous['status']??null)==='native_level_header_and_data_decoded'
+        &&($ambiguous['source_lineage']??null)===Gate::JULY
+        &&($ambiguous['source_lineage_inferred_from_native_header_bytes']??false)===true
+        &&($ambiguous['native_member_bytes']??null)===84);
+    $auto=Level::read($tmp,true)['level_records'][0]??[];
+    $check("v{$v}_strict_july_auto_decode",
+        ($auto['reach_specs_raw_one_based_ref']??null)===1);
 
     $m=$make($v,true);
     file_put_contents($tmp,$m['bytes']);
@@ -97,11 +101,14 @@ try{
         &&count($mr['text_block_raw_one_based_refs']??[])===16
         &&count($mr['actor_records']??[])===2);
     $ambiguous=Level::read($tmp,false)['level_records'][0]??[];
-    $check("v{$v}_may_envelope_without_lineage_stays_partial",
-        ($ambiguous['status']??null)==='source_1997_level_lineage_required'
-        &&(!isset($ambiguous['misc_raw_one_based_ref'])));
-    try{Level::read($tmp,true);$bad=false;}catch(RuntimeException){$bad=true;}
-    $check("v{$v}_strict_may_without_lineage_rejected",$bad);
+    $check("v{$v}_exact_may_native_length_auto_detected",
+        ($ambiguous['status']??null)==='native_level_header_and_data_decoded'
+        &&($ambiguous['source_lineage']??null)===Gate::MAY
+        &&($ambiguous['source_lineage_inferred_from_native_header_bytes']??false)===true
+        &&($ambiguous['native_member_bytes']??null)===88);
+    $auto=Level::read($tmp,true)['level_records'][0]??[];
+    $check("v{$v}_strict_may_auto_decode",
+        ($auto['misc_raw_one_based_ref']??null)===1);
     // The third native reference exists only for the May source branch.
     file_put_contents($tmp,substr_replace($m['bytes'],pack('V',2),$m['native']+16,4));
     try{Level::read($tmp,true,Gate::MAY);$bad=false;}catch(RuntimeException){$bad=true;}
@@ -109,6 +116,17 @@ try{
     file_put_contents($tmp,substr_replace($m['bytes'],pack('V',84),$m['object']+20,4));
     try{Level::read($tmp,true,Gate::MAY);$bad=false;}catch(RuntimeException){$bad=true;}
     $check("v{$v}_may_short_layout_rejected",$bad);
+    // Neither unsupported extension size is an exact source contract:
+    // do not infer a May/July lineage based on a near match.
+    foreach([['july',$f,102],['may',$m,106]] as [$name,$layout,$size]){
+        file_put_contents($tmp,substr_replace($layout['bytes'],pack('V',$size),$layout['object']+20,4));
+        $unknown=Level::read($tmp,false)['level_records'][0]??[];
+        $check("v{$v}_{$name}_unknown_extension_not_guessed",
+            ($unknown['status']??null)==='source_1997_level_lineage_required'
+            &&!isset($unknown['model_raw_one_based_ref']));
+        try{Level::read($tmp,true);$bad=false;}catch(RuntimeException){$bad=true;}
+        $check("v{$v}_{$name}_unknown_extension_strict_rejected",$bad);
+    }
  }
  try{Level::read($tmp,false,'imaginary_1997_release');$bad=false;}
  catch(InvalidArgumentException){$bad=true;}

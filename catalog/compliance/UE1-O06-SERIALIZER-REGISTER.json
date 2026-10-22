@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_at_utc": "2026-10-22T17:12:03+00:00",
+  "updated_at_utc": "2026-10-22T17:22:00+00:00",
   "entries": [
     {
       "id": "R82:UActorList",
@@ -1551,14 +1551,14 @@
       "test": "verify-ue1-original-unrealfile-inheritance.php",
       "evidence": "Epic v0.86x/v0.867 Src/Inc/Root.h DECLARE_CLASS/native actor inheritance, Src/Engine/UnObj.cpp UObject::SerializeHeader -> GetClass()->SerializeBin(PROPBIN_PerObject) and empty UObject::SerializeData; no actor-specific SerializeData/SerializeHeader override. BinaryPropertyReader handles local/external UClass descriptor chains.",
       "remaining": "Actor uses inherited per-object UClass::SerializeBin; existing typed schema reader follows native FProperty descriptors. Full per-actor schema for genuine files, custom ancestor properties/external declared providers and independent compiled-source oracle unaccepted; no separate actor-native serializer required by source.",
-      "updated_at_utc": "2026-10-22T17:03:06+00:00",
+      "updated_at_utc": "2026-10-22T17:21:23+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T17:03:06.1593218Z",
+        "at_utc": "2026-10-22T17:21:23.2431046Z",
         "test_sha256": "87c98b7a809b230839fbb1f8815718f3db9075a648666a02a7a3a911051f73be",
-        "source_sha256": "44d5e6472a04b4fe603133e1c4780f25a0eadf17db3822c96dffe642b7d0175d",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T170305788Z-0e7371ed-PRD-verify-ue1-original-unrealfile-inheritance.php.txt"
+        "source_sha256": "a36fc52eca31008684c6ebdc489dd25fa7d846fbce3a299d070188626f848e9d",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T172122897Z-ddb26341-PRD-verify-ue1-original-unrealfile-inheritance.php.txt"
       }
     },
     {
@@ -1576,14 +1576,14 @@
       "test": "verify-ue1-original-unrealfile-inheritance.php",
       "evidence": "Epic v0.86x/v0.867 Src/Inc/Root.h DECLARE_CLASS/native actor inheritance, Src/Engine/UnObj.cpp UObject::SerializeHeader -> GetClass()->SerializeBin(PROPBIN_PerObject) and empty UObject::SerializeData; no actor-specific SerializeData/SerializeHeader override. BinaryPropertyReader handles local/external UClass descriptor chains.",
       "remaining": "Actor uses inherited per-object UClass::SerializeBin; existing typed schema reader follows native FProperty descriptors. Full per-actor schema for genuine files, custom ancestor properties/external declared providers and independent compiled-source oracle unaccepted; no separate actor-native serializer required by source.",
-      "updated_at_utc": "2026-10-22T17:03:06+00:00",
+      "updated_at_utc": "2026-10-22T17:21:23+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T17:03:06.1593218Z",
+        "at_utc": "2026-10-22T17:21:23.2431046Z",
         "test_sha256": "87c98b7a809b230839fbb1f8815718f3db9075a648666a02a7a3a911051f73be",
-        "source_sha256": "44d5e6472a04b4fe603133e1c4780f25a0eadf17db3822c96dffe642b7d0175d",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T170305788Z-0e7371ed-PRD-verify-ue1-original-unrealfile-inheritance.php.txt"
+        "source_sha256": "a36fc52eca31008684c6ebdc489dd25fa7d846fbce3a299d070188626f848e9d",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T172122897Z-ddb26341-PRD-verify-ue1-original-unrealfile-inheritance.php.txt"
       }
     },
     {
@@ -1601,14 +1601,14 @@
       "test": "verify-ue1-original-unrealfile-inheritance.php",
       "evidence": "Epic v0.86x/v0.867 Src/Inc/Root.h DECLARE_CLASS/native actor inheritance, Src/Engine/UnObj.cpp UObject::SerializeHeader -> GetClass()->SerializeBin(PROPBIN_PerObject) and empty UObject::SerializeData; no actor-specific SerializeData/SerializeHeader override. BinaryPropertyReader handles local/external UClass descriptor chains.",
       "remaining": "Actor uses inherited per-object UClass::SerializeBin; existing typed schema reader follows native FProperty descriptors. Full per-actor schema for genuine files, custom ancestor properties/external declared providers and independent compiled-source oracle unaccepted; no separate actor-native serializer required by source.",
-      "updated_at_utc": "2026-10-22T17:03:06+00:00",
+      "updated_at_utc": "2026-10-22T17:21:23+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T17:03:06.1593218Z",
+        "at_utc": "2026-10-22T17:21:23.2431046Z",
         "test_sha256": "87c98b7a809b230839fbb1f8815718f3db9075a648666a02a7a3a911051f73be",
-        "source_sha256": "44d5e6472a04b4fe603133e1c4780f25a0eadf17db3822c96dffe642b7d0175d",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T170305788Z-0e7371ed-PRD-verify-ue1-original-unrealfile-inheritance.php.txt"
+        "source_sha256": "a36fc52eca31008684c6ebdc489dd25fa7d846fbce3a299d070188626f848e9d",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T172122897Z-ddb26341-PRD-verify-ue1-original-unrealfile-inheritance.php.txt"
       }
     },
     {
@@ -1626,14 +1626,14 @@
       "test": "verify-ue1-original-unrealfile-inheritance.php",
       "evidence": "Epic v0.86x/v0.867 Src/Inc/Root.h DECLARE_CLASS/native actor inheritance, Src/Engine/UnObj.cpp UObject::SerializeHeader -> GetClass()->SerializeBin(PROPBIN_PerObject) and empty UObject::SerializeData; no actor-specific SerializeData/SerializeHeader override. BinaryPropertyReader handles local/external UClass descriptor chains.",
       "remaining": "Actor uses inherited per-object UClass::SerializeBin; existing typed schema reader follows native FProperty descriptors. Full per-actor schema for genuine files, custom ancestor properties/external declared providers and independent compiled-source oracle unaccepted; no separate actor-native serializer required by source.",
-      "updated_at_utc": "2026-10-22T17:03:06+00:00",
+      "updated_at_utc": "2026-10-22T17:21:23+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T17:03:06.1593218Z",
+        "at_utc": "2026-10-22T17:21:23.2431046Z",
         "test_sha256": "87c98b7a809b230839fbb1f8815718f3db9075a648666a02a7a3a911051f73be",
-        "source_sha256": "44d5e6472a04b4fe603133e1c4780f25a0eadf17db3822c96dffe642b7d0175d",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T170305788Z-0e7371ed-PRD-verify-ue1-original-unrealfile-inheritance.php.txt"
+        "source_sha256": "a36fc52eca31008684c6ebdc489dd25fa7d846fbce3a299d070188626f848e9d",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T172122897Z-ddb26341-PRD-verify-ue1-original-unrealfile-inheritance.php.txt"
       }
     },
     {
@@ -1932,16 +1932,16 @@
       "status": "PARTIAL",
       "reader": "CatalogUE1OriginalUnrealfileLevelReader.php",
       "test": "verify-ue1-original-unrealfile-level.php",
-      "evidence": "Epic May v0.86x Src/Inc/UnLevel.h ULevel::SerializeHeader => UDatabase Num/Max + Model,BrushArray,Misc,ReachSpecs,TextBlocks[16] (88B), July v0.867 same header without Misc (84B). Both Inc/UnObjVer.h file version 23. Production CatalogUE1OriginalUnrealfileLevelReader requires explicit lineage, implements both layouts and validates reference bounds, no guess.",
-      "remaining": "Explicit unreal_1997_may or unreal_1997_july selects source-correct 88B or 84B persisted header. Without independently established source provenance, returns source_1997_level_lineage_required (strict throws). Real May/July compatible matching packages and further ULevel serialized member headers pending G2/G5; runtime actor initialization O10.",
-      "updated_at_utc": "2026-10-22T17:03:04+00:00",
+      "evidence": "May ULevel::SerializeHeader native fixed 88 bytes (Num/Max + Model/BrushArray/Misc/ReachSpecs/16 TextBlocks); July 84B without Misc; both source UnObjVer.h 23. Exact decoded native header bytes infer source automatically, else explicit source lineage, else partial.",
+      "remaining": "Source-original May/July native level tail auto-inferred from exact 88/84B after authentic FExecStackMain; unknown/extended header size source_1997_level_lineage_required. 39/39 native May/July fixture tests and affected DEV/PRD 7/7. Genuine source field/parent-oracle matching still G5, runtime actor linking O10.",
+      "updated_at_utc": "2026-10-22T17:22:00+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T17:03:04.1765084Z",
-        "test_sha256": "ad9d40cadd87ae57953d6963bc75b6771d11ea12cb600af68b8fd8ec5a5bf613",
-        "source_sha256": "44d5e6472a04b4fe603133e1c4780f25a0eadf17db3822c96dffe642b7d0175d",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T170303773Z-6a7798bf-PRD-verify-ue1-original-unrealfile-level.php.txt"
+        "at_utc": "2026-10-22T17:21:21.0088297Z",
+        "test_sha256": "210dc098d203e6a631e5e6444f00ada446e7c4d555346270590fb8aa25d765f5",
+        "source_sha256": "a36fc52eca31008684c6ebdc489dd25fa7d846fbce3a299d070188626f848e9d",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T172120523Z-c1d63616-PRD-verify-ue1-original-unrealfile-level.php.txt"
       }
     },
     {
@@ -2300,14 +2300,14 @@
       "test": "verify-ue1-original-unrealfile-external-schemas.php",
       "evidence": "v0.86x May and v0.867 July Src/Inc/UnObjVer.h both version 23, but Src/Engine/UnProp.cpp:26 May only CPF_Transient=0x2000 suppresses FProperty archive; July additionally CPF_Intrinsic=0x1000 suppresses it. Shared CatalogUE1OriginalUnrealfilePropertySerializationGate refuses implicit choice, direct 32/32 external provider test and 25/25 actor inheritance test; DEV/PRD 7/7 regressions.",
       "remaining": "UProperties SerializeBin source flag 0x1000 decoded when caller explicitly supplies May/July lineage; absent lineage returns status source_1997_property_lineage_required, never silent July skip. Real provider/package lineage discrimination and all class source branch compatibility remain G2/G5 open.",
-      "updated_at_utc": "2026-10-22T17:03:07+00:00",
+      "updated_at_utc": "2026-10-22T17:21:24+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T17:03:06.9534717Z",
+        "at_utc": "2026-10-22T17:21:24.0331666Z",
         "test_sha256": "d7d2bf2d680ce763570f66d7f887cc1a3ae7d2a2b9da6908b07b0e990324ed87",
-        "source_sha256": "44d5e6472a04b4fe603133e1c4780f25a0eadf17db3822c96dffe642b7d0175d",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T170306367Z-421c949d-PRD-verify-ue1-original-unrealfile-external-schemas.php.txt"
+        "source_sha256": "a36fc52eca31008684c6ebdc489dd25fa7d846fbce3a299d070188626f848e9d",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T172123443Z-9728824e-PRD-verify-ue1-original-unrealfile-external-schemas.php.txt"
       }
     },
     {
@@ -2412,16 +2412,16 @@
       "status": "PARTIAL",
       "reader": "CatalogUE1OriginalUnrealfileTextureHeaderReader.php",
       "test": "verify-ue1-original-unrealfile-texture.php",
-      "evidence": "Epic v0.86x May Src/Inc/UnObj.h UTexture::SerializeHeader writes Num/Max, Palette, DiffuseC SpecularC FrictionC ReflectivityC, FootstepSound/HitSound, flags/bits/dims/CameraCaps/FColors/mips = 122B native; v0.867 July adds BumpMap DetailTexture MacroTexture AnimNext and changes order to DiffuseC SpecularC ReflectivityC FrictionC = 138B native. Both Inc/UnObjVer.h UNREAL_FILE_VERSION 23. Typed PHP UTexture reader decodes explicitly selected source lineage, no guessing.",
-      "remaining": "Only explicit unreal_1997_may/july lineage authorizes decoded 122B/138B native texture fields; unknown lineage => source_1997_texture_lineage_required, strict throws. Matching genuine source-family discrimination and additional original file classes remain G2/G5, pixel interpretation O07.",
-      "updated_at_utc": "2026-10-22T17:12:00+00:00",
+      "evidence": "May UTexture::SerializeHeader native 122B, 3 persisted refs and FrictionC before ReflectivityC; July native 138B adds 4 refs and swaps coefficient order; both source version 23. Exact source-native member length after FExecStackMain auto-selects source without guessing by version.",
+      "remaining": "Native May/July texture tail selected by exact 122/138B source layout; unrecognized length source_1997_texture_lineage_required. 45/45 native source fixtures and affected DEV/PRD 7/7. Genuine source matching still G5, pixel interpretation O07.",
+      "updated_at_utc": "2026-10-22T17:22:00+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T17:12:00.2891633Z",
-        "test_sha256": "c3494b6e0ef12a43a20834582be3a15b88f777aaf670079eab8c38ffd9733ecc",
-        "source_sha256": "64802f870c3cdda7097cde1a1666ee97fbb5fd59939b9f244dd0dc4676ea82d7",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T171159820Z-6dd8c831-PRD-verify-ue1-original-unrealfile-texture.php.txt"
+        "at_utc": "2026-10-22T17:21:21.6068330Z",
+        "test_sha256": "85707097e0a55ed5abeaf7a9488998fa0f2de2936765c4d114804009c07af949",
+        "source_sha256": "a36fc52eca31008684c6ebdc489dd25fa7d846fbce3a299d070188626f848e9d",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T172121201Z-a64ba427-PRD-verify-ue1-original-unrealfile-texture.php.txt"
       }
     },
     {
@@ -2528,14 +2528,14 @@
       "test": "verify-ue1-original-unrealfile-inheritance.php",
       "evidence": "Epic v0.86x/v0.867 Src/Inc/Root.h DECLARE_CLASS/native actor inheritance, Src/Engine/UnObj.cpp UObject::SerializeHeader -> GetClass()->SerializeBin(PROPBIN_PerObject) and empty UObject::SerializeData; no actor-specific SerializeData/SerializeHeader override. BinaryPropertyReader handles local/external UClass descriptor chains.",
       "remaining": "Actor uses inherited per-object UClass::SerializeBin; existing typed schema reader follows native FProperty descriptors. Full per-actor schema for genuine files, custom ancestor properties/external declared providers and independent compiled-source oracle unaccepted; no separate actor-native serializer required by source.",
-      "updated_at_utc": "2026-10-22T17:03:06+00:00",
+      "updated_at_utc": "2026-10-22T17:21:23+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T17:03:06.1593218Z",
+        "at_utc": "2026-10-22T17:21:23.2431046Z",
         "test_sha256": "87c98b7a809b230839fbb1f8815718f3db9075a648666a02a7a3a911051f73be",
-        "source_sha256": "44d5e6472a04b4fe603133e1c4780f25a0eadf17db3822c96dffe642b7d0175d",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T170305788Z-0e7371ed-PRD-verify-ue1-original-unrealfile-inheritance.php.txt"
+        "source_sha256": "a36fc52eca31008684c6ebdc489dd25fa7d846fbce3a299d070188626f848e9d",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T172122897Z-ddb26341-PRD-verify-ue1-original-unrealfile-inheritance.php.txt"
       }
     },
     {
@@ -2553,14 +2553,14 @@
       "test": "verify-ue1-original-unrealfile-inheritance.php",
       "evidence": "Epic v0.86x/v0.867 Src/Inc/Root.h DECLARE_CLASS/native actor inheritance, Src/Engine/UnObj.cpp UObject::SerializeHeader -> GetClass()->SerializeBin(PROPBIN_PerObject) and empty UObject::SerializeData; no actor-specific SerializeData/SerializeHeader override. BinaryPropertyReader handles local/external UClass descriptor chains.",
       "remaining": "Actor uses inherited per-object UClass::SerializeBin; existing typed schema reader follows native FProperty descriptors. Full per-actor schema for genuine files, custom ancestor properties/external declared providers and independent compiled-source oracle unaccepted; no separate actor-native serializer required by source.",
-      "updated_at_utc": "2026-10-22T17:03:06+00:00",
+      "updated_at_utc": "2026-10-22T17:21:23+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T17:03:06.1593218Z",
+        "at_utc": "2026-10-22T17:21:23.2431046Z",
         "test_sha256": "87c98b7a809b230839fbb1f8815718f3db9075a648666a02a7a3a911051f73be",
-        "source_sha256": "44d5e6472a04b4fe603133e1c4780f25a0eadf17db3822c96dffe642b7d0175d",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T170305788Z-0e7371ed-PRD-verify-ue1-original-unrealfile-inheritance.php.txt"
+        "source_sha256": "a36fc52eca31008684c6ebdc489dd25fa7d846fbce3a299d070188626f848e9d",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T172122897Z-ddb26341-PRD-verify-ue1-original-unrealfile-inheritance.php.txt"
       }
     },
     {
@@ -2578,14 +2578,14 @@
       "test": "verify-ue1-original-unrealfile-inheritance.php",
       "evidence": "Epic v0.86x/v0.867 Src/Inc/Root.h DECLARE_CLASS/native actor inheritance, Src/Engine/UnObj.cpp UObject::SerializeHeader -> GetClass()->SerializeBin(PROPBIN_PerObject) and empty UObject::SerializeData; no actor-specific SerializeData/SerializeHeader override. BinaryPropertyReader handles local/external UClass descriptor chains.",
       "remaining": "Actor uses inherited per-object UClass::SerializeBin; existing typed schema reader follows native FProperty descriptors. Full per-actor schema for genuine files, custom ancestor properties/external declared providers and independent compiled-source oracle unaccepted; no separate actor-native serializer required by source.",
-      "updated_at_utc": "2026-10-22T17:03:06+00:00",
+      "updated_at_utc": "2026-10-22T17:21:23+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T17:03:06.1593218Z",
+        "at_utc": "2026-10-22T17:21:23.2431046Z",
         "test_sha256": "87c98b7a809b230839fbb1f8815718f3db9075a648666a02a7a3a911051f73be",
-        "source_sha256": "44d5e6472a04b4fe603133e1c4780f25a0eadf17db3822c96dffe642b7d0175d",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T170305788Z-0e7371ed-PRD-verify-ue1-original-unrealfile-inheritance.php.txt"
+        "source_sha256": "a36fc52eca31008684c6ebdc489dd25fa7d846fbce3a299d070188626f848e9d",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T172122897Z-ddb26341-PRD-verify-ue1-original-unrealfile-inheritance.php.txt"
       }
     },
     {
@@ -2603,14 +2603,14 @@
       "test": "verify-ue1-original-unrealfile-inheritance.php",
       "evidence": "Epic v0.86x/v0.867 Src/Inc/Root.h DECLARE_CLASS/native actor inheritance, Src/Engine/UnObj.cpp UObject::SerializeHeader -> GetClass()->SerializeBin(PROPBIN_PerObject) and empty UObject::SerializeData; no actor-specific SerializeData/SerializeHeader override. BinaryPropertyReader handles local/external UClass descriptor chains.",
       "remaining": "Actor uses inherited per-object UClass::SerializeBin; existing typed schema reader follows native FProperty descriptors. Full per-actor schema for genuine files, custom ancestor properties/external declared providers and independent compiled-source oracle unaccepted; no separate actor-native serializer required by source.",
-      "updated_at_utc": "2026-10-22T17:03:06+00:00",
+      "updated_at_utc": "2026-10-22T17:21:23+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T17:03:06.1593218Z",
+        "at_utc": "2026-10-22T17:21:23.2431046Z",
         "test_sha256": "87c98b7a809b230839fbb1f8815718f3db9075a648666a02a7a3a911051f73be",
-        "source_sha256": "44d5e6472a04b4fe603133e1c4780f25a0eadf17db3822c96dffe642b7d0175d",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T170305788Z-0e7371ed-PRD-verify-ue1-original-unrealfile-inheritance.php.txt"
+        "source_sha256": "a36fc52eca31008684c6ebdc489dd25fa7d846fbce3a299d070188626f848e9d",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T172122897Z-ddb26341-PRD-verify-ue1-original-unrealfile-inheritance.php.txt"
       }
     },
     {
@@ -3001,16 +3001,16 @@
       "status": "PARTIAL",
       "reader": "CatalogUE1OriginalUnrealfileLevelReader.php",
       "test": "verify-ue1-original-unrealfile-level.php",
-      "evidence": "Epic May v0.86x Src/Inc/UnLevel.h ULevel::SerializeHeader => UDatabase Num/Max + Model,BrushArray,Misc,ReachSpecs,TextBlocks[16] (88B), July v0.867 same header without Misc (84B). Both Inc/UnObjVer.h file version 23. Production CatalogUE1OriginalUnrealfileLevelReader requires explicit lineage, implements both layouts and validates reference bounds, no guess.",
-      "remaining": "Explicit unreal_1997_may or unreal_1997_july selects source-correct 88B or 84B persisted header. Without independently established source provenance, returns source_1997_level_lineage_required (strict throws). Real May/July compatible matching packages and further ULevel serialized member headers pending G2/G5; runtime actor initialization O10.",
-      "updated_at_utc": "2026-10-22T17:03:04+00:00",
+      "evidence": "May ULevel::SerializeHeader native fixed 88 bytes (Num/Max + Model/BrushArray/Misc/ReachSpecs/16 TextBlocks); July 84B without Misc; both source UnObjVer.h 23. Exact decoded native header bytes infer source automatically, else explicit source lineage, else partial.",
+      "remaining": "Source-original May/July native level tail auto-inferred from exact 88/84B after authentic FExecStackMain; unknown/extended header size source_1997_level_lineage_required. 39/39 native May/July fixture tests and affected DEV/PRD 7/7. Genuine source field/parent-oracle matching still G5, runtime actor linking O10.",
+      "updated_at_utc": "2026-10-22T17:22:00+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T17:03:04.1765084Z",
-        "test_sha256": "ad9d40cadd87ae57953d6963bc75b6771d11ea12cb600af68b8fd8ec5a5bf613",
-        "source_sha256": "44d5e6472a04b4fe603133e1c4780f25a0eadf17db3822c96dffe642b7d0175d",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T170303773Z-6a7798bf-PRD-verify-ue1-original-unrealfile-level.php.txt"
+        "at_utc": "2026-10-22T17:21:21.0088297Z",
+        "test_sha256": "210dc098d203e6a631e5e6444f00ada446e7c4d555346270590fb8aa25d765f5",
+        "source_sha256": "a36fc52eca31008684c6ebdc489dd25fa7d846fbce3a299d070188626f848e9d",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T172120523Z-c1d63616-PRD-verify-ue1-original-unrealfile-level.php.txt"
       }
     },
     {
@@ -3332,14 +3332,14 @@
       "test": "verify-ue1-original-unrealfile-object-bases.php",
       "evidence": "DEV historical PASS at 2026-10-21T20:57:41.6838818Z; catalog\\compliance\\evidence\\o06\\20261021T205741266Z-38cef92f-DEV-verify-ue1-original-unrealfile-object-bases.php.txt; scoped test, not full class acceptance",
       "remaining": "Base archive structural fields tested; G2 source class inheritance audit",
-      "updated_at_utc": "2026-10-22T17:12:03+00:00",
+      "updated_at_utc": "2026-10-22T17:21:24+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T17:12:03.1583218Z",
+        "at_utc": "2026-10-22T17:21:24.8312921Z",
         "test_sha256": "6e122a2d14ee687750eb5c1f6584e35d4ddf6a4eac6907a139fad33d43a5759b",
-        "source_sha256": "64802f870c3cdda7097cde1a1666ee97fbb5fd59939b9f244dd0dc4676ea82d7",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T171202308Z-33186362-PRD-verify-ue1-original-unrealfile-object-bases.php.txt"
+        "source_sha256": "a36fc52eca31008684c6ebdc489dd25fa7d846fbce3a299d070188626f848e9d",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T172124224Z-c43127c5-PRD-verify-ue1-original-unrealfile-object-bases.php.txt"
       }
     },
     {
@@ -3457,14 +3457,14 @@
       "test": "verify-ue1-original-unrealfile-external-schemas.php",
       "evidence": "v0.86x May and v0.867 July Src/Inc/UnObjVer.h both version 23, but Src/Engine/UnProp.cpp:26 May only CPF_Transient=0x2000 suppresses FProperty archive; July additionally CPF_Intrinsic=0x1000 suppresses it. Shared CatalogUE1OriginalUnrealfilePropertySerializationGate refuses implicit choice, direct 32/32 external provider test and 25/25 actor inheritance test; DEV/PRD 7/7 regressions.",
       "remaining": "UProperties SerializeBin source flag 0x1000 decoded when caller explicitly supplies May/July lineage; absent lineage returns status source_1997_property_lineage_required, never silent July skip. Real provider/package lineage discrimination and all class source branch compatibility remain G2/G5 open.",
-      "updated_at_utc": "2026-10-22T17:03:07+00:00",
+      "updated_at_utc": "2026-10-22T17:21:24+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T17:03:06.9534717Z",
+        "at_utc": "2026-10-22T17:21:24.0331666Z",
         "test_sha256": "d7d2bf2d680ce763570f66d7f887cc1a3ae7d2a2b9da6908b07b0e990324ed87",
-        "source_sha256": "44d5e6472a04b4fe603133e1c4780f25a0eadf17db3822c96dffe642b7d0175d",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T170306367Z-421c949d-PRD-verify-ue1-original-unrealfile-external-schemas.php.txt"
+        "source_sha256": "a36fc52eca31008684c6ebdc489dd25fa7d846fbce3a299d070188626f848e9d",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T172123443Z-9728824e-PRD-verify-ue1-original-unrealfile-external-schemas.php.txt"
       }
     },
     {
@@ -3605,16 +3605,16 @@
       "status": "PARTIAL",
       "reader": "CatalogUE1OriginalUnrealfileTextureHeaderReader.php",
       "test": "verify-ue1-original-unrealfile-texture.php",
-      "evidence": "Epic v0.86x May Src/Inc/UnObj.h UTexture::SerializeHeader writes Num/Max, Palette, DiffuseC SpecularC FrictionC ReflectivityC, FootstepSound/HitSound, flags/bits/dims/CameraCaps/FColors/mips = 122B native; v0.867 July adds BumpMap DetailTexture MacroTexture AnimNext and changes order to DiffuseC SpecularC ReflectivityC FrictionC = 138B native. Both Inc/UnObjVer.h UNREAL_FILE_VERSION 23. Typed PHP UTexture reader decodes explicitly selected source lineage, no guessing.",
-      "remaining": "Only explicit unreal_1997_may/july lineage authorizes decoded 122B/138B native texture fields; unknown lineage => source_1997_texture_lineage_required, strict throws. Matching genuine source-family discrimination and additional original file classes remain G2/G5, pixel interpretation O07.",
-      "updated_at_utc": "2026-10-22T17:12:00+00:00",
+      "evidence": "May UTexture::SerializeHeader native 122B, 3 persisted refs and FrictionC before ReflectivityC; July native 138B adds 4 refs and swaps coefficient order; both source version 23. Exact source-native member length after FExecStackMain auto-selects source without guessing by version.",
+      "remaining": "Native May/July texture tail selected by exact 122/138B source layout; unrecognized length source_1997_texture_lineage_required. 45/45 native source fixtures and affected DEV/PRD 7/7. Genuine source matching still G5, pixel interpretation O07.",
+      "updated_at_utc": "2026-10-22T17:22:00+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T17:12:00.2891633Z",
-        "test_sha256": "c3494b6e0ef12a43a20834582be3a15b88f777aaf670079eab8c38ffd9733ecc",
-        "source_sha256": "64802f870c3cdda7097cde1a1666ee97fbb5fd59939b9f244dd0dc4676ea82d7",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T171159820Z-6dd8c831-PRD-verify-ue1-original-unrealfile-texture.php.txt"
+        "at_utc": "2026-10-22T17:21:21.6068330Z",
+        "test_sha256": "85707097e0a55ed5abeaf7a9488998fa0f2de2936765c4d114804009c07af949",
+        "source_sha256": "a36fc52eca31008684c6ebdc489dd25fa7d846fbce3a299d070188626f848e9d",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T172121201Z-a64ba427-PRD-verify-ue1-original-unrealfile-texture.php.txt"
       }
     },
     {

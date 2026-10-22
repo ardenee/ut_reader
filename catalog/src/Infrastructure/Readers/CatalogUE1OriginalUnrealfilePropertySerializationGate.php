@@ -32,6 +32,28 @@ final class CatalogUE1OriginalUnrealfilePropertySerializationGate
     }
 
     /**
+     * An EXACT complete native-header length can distinguish distinct Epic
+     * fixed layouts without guessing from the shared file version 23.
+     * Unknown/extended/truncated layouts cannot select either source.
+     */
+    public static function fromNativeHeaderLength(
+        int $bytes, int $mayBytes, int $julyBytes, ?string $explicit = null
+    ): ?string {
+        self::validate($explicit);
+        if ($explicit !== null) {
+            return $explicit;
+        }
+        if ($mayBytes <= 0 || $julyBytes <= 0 || $mayBytes === $julyBytes) {
+            throw new InvalidArgumentException('Source native header lengths must be distinct and positive');
+        }
+        return match ($bytes) {
+            $mayBytes => self::MAY,
+            $julyBytes => self::JULY,
+            default => null,
+        };
+    }
+
+    /**
      * null = ambiguous persisted bytes, not a false success.
      * A version number never selects the May/July source lineage.
      */
