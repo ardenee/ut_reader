@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_at_utc": "2026-10-22T20:44:46+00:00",
+  "updated_at_utc": "2026-10-22T20:49:52+00:00",
   "entries": [
     {
       "id": "R82:UActorList",
@@ -4291,12 +4291,12 @@
           "line": 264
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T20:41:08+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1ClassicBspSurfsNativeReader.php via CatalogUE1ClassicNativeObjectReader.php",
+      "test": "verify-ue1-classic-bspsurfs-native.php",
+      "evidence": "Source-anchored Epic C98 full package fixture 60/60 DEV PASS, 4 related DEV regressions PASS; journaled SHA-tested source and results",
+      "remaining": "Compiled C98 native engine oracle and genuine nonempty FBspSurf package corpus remain unverified; later v62+ source deliberately not inferred",
+      "updated_at_utc": "2026-10-22T20:49:52+00:00"
     },
     {
       "id": "C98:UByteProperty::Serialize",
@@ -4430,14 +4430,14 @@
       "test": "verify-ue1-classic-level-native.php",
       "evidence": "DEV source-anchored full-package v35/39/40/41/50/53/54/58/59/60/61/62/63/64/69 regression 50/50 PASS including 6 direct Epic C++ contract checks and malformed actor bounds, 4 affected named DEV regressions PASS; evidence in append-only journal",
       "remaining": "Verified inherited UDatabase actor SerializeData only through ULevel for relevant versions; other concrete database subclasses and genuine compiled engine/corpus are outside this fixture.",
-      "updated_at_utc": "2026-10-22T20:40:07+00:00",
+      "updated_at_utc": "2026-10-22T20:49:34+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-22T20:40:07.6863051Z",
+        "at_utc": "2026-10-22T20:49:34.5705990Z",
         "test_sha256": "605c82cf808ee09b8f985a9b3675056972d5c8d45c8226de3e469c62607d2a48",
-        "source_sha256": "733803dff25ab801b7b2fdfcba479c1a9980512c22530c5f35a7768e8520316b",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T204007341Z-b1da53c6-DEV-verify-ue1-classic-level-native.php.txt"
+        "source_sha256": "17c99d31b066bacb75e3dfc440d079f2b8c080812fe043b8402170d459005cab",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T204934174Z-92b8a840-DEV-verify-ue1-classic-level-native.php.txt"
       }
     },
     {
@@ -4556,14 +4556,14 @@
       "test": "verify-ue1-classic-tagged-properties.php",
       "evidence": "PRD historical PASS at 2026-10-21T16:05:16.3071623Z; catalog\\compliance\\evidence\\o06\\20261021T160515641Z-af18800f-PRD-verify-ue1-classic-tagged-properties.php.txt; scoped test, not full class acceptance",
       "remaining": "Current pinned 92-package corpus passes; additional source branches/version-specific cases are not covered by corpus",
-      "updated_at_utc": "2026-10-22T20:43:55+00:00",
+      "updated_at_utc": "2026-10-22T20:49:36+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-22T20:43:54.9642762Z",
+        "at_utc": "2026-10-22T20:49:36.0432686Z",
         "test_sha256": "a43435273ceed564f9cb0de064c3c0cd77d26ec7647bc3bd9f9c9df1a8c6506f",
-        "source_sha256": "733803dff25ab801b7b2fdfcba479c1a9980512c22530c5f35a7768e8520316b",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T204354067Z-7c53b524-DEV-verify-ue1-classic-tagged-properties.php.txt"
+        "source_sha256": "17c99d31b066bacb75e3dfc440d079f2b8c080812fe043b8402170d459005cab",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T204935247Z-6420c60e-DEV-verify-ue1-classic-tagged-properties.php.txt"
       }
     },
     {
@@ -4640,14 +4640,14 @@
       "test": "verify-ue1-classic-level-native.php",
       "evidence": "DEV source-anchored full-package v35/39/40/41/50/53/54/58/59/60/61/62/63/64/69 regression 50/50 PASS including 6 direct Epic C++ contract checks and malformed actor bounds, 4 affected named DEV regressions PASS; evidence in append-only journal",
       "remaining": "Source-defined native actor database, URL, reach specs, model, time, 16 text refs and travel data handled; source overlap v60/v61 shares on-disk actor layout, but genuine matching levels and native executable parity still open; runtime fixups O10.",
-      "updated_at_utc": "2026-10-22T20:40:07+00:00",
+      "updated_at_utc": "2026-10-22T20:49:34+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-22T20:40:07.6863051Z",
+        "at_utc": "2026-10-22T20:49:34.5705990Z",
         "test_sha256": "605c82cf808ee09b8f985a9b3675056972d5c8d45c8226de3e469c62607d2a48",
-        "source_sha256": "733803dff25ab801b7b2fdfcba479c1a9980512c22530c5f35a7768e8520316b",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T204007341Z-b1da53c6-DEV-verify-ue1-classic-level-native.php.txt"
+        "source_sha256": "17c99d31b066bacb75e3dfc440d079f2b8c080812fe043b8402170d459005cab",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T204934174Z-92b8a840-DEV-verify-ue1-classic-level-native.php.txt"
       }
     },
     {
@@ -4665,7 +4665,15 @@
       "test": "verify-ue1-classic-level-native.php",
       "evidence": "Epic v1.200 source-defined on-disk macro implementation; DEV named full-package fixtures PASS (Vectors/Verts 71/71, ULevel 50/50). Source assertions included. Source/test hash and last run in append-only O06 test journal.",
       "remaining": "Genuine C98 v35-v61 native export and compiled engine oracle not yet demonstrated; other subclasses and independently versioned source families not covered; runtime pointer fixups out of scope.",
-      "updated_at_utc": "2026-10-22T20:42:41+00:00"
+      "updated_at_utc": "2026-10-22T20:49:34+00:00",
+      "last_verification": {
+        "target": "DEV",
+        "state": "PASS",
+        "at_utc": "2026-10-22T20:49:34.5705990Z",
+        "test_sha256": "605c82cf808ee09b8f985a9b3675056972d5c8d45c8226de3e469c62607d2a48",
+        "source_sha256": "17c99d31b066bacb75e3dfc440d079f2b8c080812fe043b8402170d459005cab",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T204934174Z-92b8a840-DEV-verify-ue1-classic-level-native.php.txt"
+      }
     },
     {
       "id": "C98:ULevelBase::Serialize",
@@ -4682,14 +4690,14 @@
       "test": "verify-ue1-classic-level-native.php",
       "evidence": "DEV source-anchored full-package v35/39/40/41/50/53/54/58/59/60/61/62/63/64/69 regression 50/50 PASS including 6 direct Epic C++ contract checks and malformed actor bounds, 4 affected named DEV regressions PASS; evidence in append-only journal",
       "remaining": "Source-defined native actor database, URL, reach specs, model, time, 16 text refs and travel data handled; source overlap v60/v61 shares on-disk actor layout, but genuine matching levels and native executable parity still open; runtime fixups O10.",
-      "updated_at_utc": "2026-10-22T20:40:07+00:00",
+      "updated_at_utc": "2026-10-22T20:49:34+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-22T20:40:07.6863051Z",
+        "at_utc": "2026-10-22T20:49:34.5705990Z",
         "test_sha256": "605c82cf808ee09b8f985a9b3675056972d5c8d45c8226de3e469c62607d2a48",
-        "source_sha256": "733803dff25ab801b7b2fdfcba479c1a9980512c22530c5f35a7768e8520316b",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T204007341Z-b1da53c6-DEV-verify-ue1-classic-level-native.php.txt"
+        "source_sha256": "17c99d31b066bacb75e3dfc440d079f2b8c080812fe043b8402170d459005cab",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T204934174Z-92b8a840-DEV-verify-ue1-classic-level-native.php.txt"
       }
     },
     {
@@ -4707,7 +4715,15 @@
       "test": "verify-ue1-classic-level-native.php",
       "evidence": "Epic v1.200 source-defined on-disk macro implementation; DEV named full-package fixtures PASS (Vectors/Verts 71/71, ULevel 50/50). Source assertions included. Source/test hash and last run in append-only O06 test journal.",
       "remaining": "Genuine C98 v35-v61 native export and compiled engine oracle not yet demonstrated; other subclasses and independently versioned source families not covered; runtime pointer fixups out of scope.",
-      "updated_at_utc": "2026-10-22T20:42:41+00:00"
+      "updated_at_utc": "2026-10-22T20:49:34+00:00",
+      "last_verification": {
+        "target": "DEV",
+        "state": "PASS",
+        "at_utc": "2026-10-22T20:49:34.5705990Z",
+        "test_sha256": "605c82cf808ee09b8f985a9b3675056972d5c8d45c8226de3e469c62607d2a48",
+        "source_sha256": "17c99d31b066bacb75e3dfc440d079f2b8c080812fe043b8402170d459005cab",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T204934174Z-92b8a840-DEV-verify-ue1-classic-level-native.php.txt"
+      }
     },
     {
       "id": "C98:UMesh::Serialize",
@@ -4749,14 +4765,14 @@
       "test": "verify-ue1-classic-model-native.php",
       "evidence": "Epic Unreal v1.200 Engine/Src/UnModel.cpp:291-332, Engine/Inc/UnObj.h FLeaf/FLightMapIndex; UT99 v400 Engine/Src/UnModel.cpp:182-239; v35/41/42/43/44/50/53/61/62/69 UE1 package fixtures",
       "remaining": "UPrimitive native inheritance plus 6 legacy BSP object references, source-defined light maps/bits/bounds/leaves/actor refs/flags and modern empty-geometry/vector branch decoded. 28/28 source-fixture checks. Nonempty modern FBspNode/FBspSurf/FVert/ZoneProperties still explicitly unsupported; genuine applicable UModel corpus, native runtime oracle, other source-version gates and full class behavior unverified.",
-      "updated_at_utc": "2026-10-22T20:43:55+00:00",
+      "updated_at_utc": "2026-10-22T20:49:35+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-22T20:43:55.4613025Z",
+        "at_utc": "2026-10-22T20:49:35.0558712Z",
         "test_sha256": "51d78ef8463a523a03ef55f5d38c4ca496ca310ae4d07686b1ab9fbf138f47fe",
-        "source_sha256": "733803dff25ab801b7b2fdfcba479c1a9980512c22530c5f35a7768e8520316b",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T204355152Z-9d1b4dc2-DEV-verify-ue1-classic-model-native.php.txt"
+        "source_sha256": "17c99d31b066bacb75e3dfc440d079f2b8c080812fe043b8402170d459005cab",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T204934752Z-fd160a17-DEV-verify-ue1-classic-model-native.php.txt"
       }
     },
     {
@@ -4833,14 +4849,14 @@
       "test": "verify-ue1-classic-tagged-properties.php",
       "evidence": "PRD historical PASS at 2026-10-21T16:05:16.3071623Z; catalog\\compliance\\evidence\\o06\\20261021T160515641Z-af18800f-PRD-verify-ue1-classic-tagged-properties.php.txt; scoped test, not full class acceptance",
       "remaining": "Tagged-properties decoder succeeds on pinned corpus; class-defined binary/defaults and complete source gates not covered",
-      "updated_at_utc": "2026-10-22T20:43:55+00:00",
+      "updated_at_utc": "2026-10-22T20:49:36+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-22T20:43:54.9642762Z",
+        "at_utc": "2026-10-22T20:49:36.0432686Z",
         "test_sha256": "a43435273ceed564f9cb0de064c3c0cd77d26ec7647bc3bd9f9c9df1a8c6506f",
-        "source_sha256": "733803dff25ab801b7b2fdfcba479c1a9980512c22530c5f35a7768e8520316b",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T204354067Z-7c53b524-DEV-verify-ue1-classic-tagged-properties.php.txt"
+        "source_sha256": "17c99d31b066bacb75e3dfc440d079f2b8c080812fe043b8402170d459005cab",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T204935247Z-6420c60e-DEV-verify-ue1-classic-tagged-properties.php.txt"
       }
     },
     {
@@ -4883,14 +4899,14 @@
       "test": "verify-ue1-classic-tagged-properties.php",
       "evidence": "PRD historical PASS at 2026-10-21T16:05:16.3071623Z; catalog\\compliance\\evidence\\o06\\20261021T160515641Z-af18800f-PRD-verify-ue1-classic-tagged-properties.php.txt; scoped test, not full class acceptance",
       "remaining": "Current pinned 92-package corpus passes; additional source branches/version-specific cases are not covered by corpus",
-      "updated_at_utc": "2026-10-22T20:43:55+00:00",
+      "updated_at_utc": "2026-10-22T20:49:36+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-22T20:43:54.9642762Z",
+        "at_utc": "2026-10-22T20:49:36.0432686Z",
         "test_sha256": "a43435273ceed564f9cb0de064c3c0cd77d26ec7647bc3bd9f9c9df1a8c6506f",
-        "source_sha256": "733803dff25ab801b7b2fdfcba479c1a9980512c22530c5f35a7768e8520316b",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T204354067Z-7c53b524-DEV-verify-ue1-classic-tagged-properties.php.txt"
+        "source_sha256": "17c99d31b066bacb75e3dfc440d079f2b8c080812fe043b8402170d459005cab",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T204935247Z-6420c60e-DEV-verify-ue1-classic-tagged-properties.php.txt"
       }
     },
     {
@@ -4908,14 +4924,14 @@
       "test": "verify-ue1-classic-tagged-properties.php",
       "evidence": "PRD historical PASS at 2026-10-21T16:05:16.3071623Z; catalog\\compliance\\evidence\\o06\\20261021T160515641Z-af18800f-PRD-verify-ue1-classic-tagged-properties.php.txt; scoped test, not full class acceptance",
       "remaining": "Current pinned 92-package corpus passes; additional source branches/version-specific cases are not covered by corpus",
-      "updated_at_utc": "2026-10-22T20:43:55+00:00",
+      "updated_at_utc": "2026-10-22T20:49:36+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-22T20:43:54.9642762Z",
+        "at_utc": "2026-10-22T20:49:36.0432686Z",
         "test_sha256": "a43435273ceed564f9cb0de064c3c0cd77d26ec7647bc3bd9f9c9df1a8c6506f",
-        "source_sha256": "733803dff25ab801b7b2fdfcba479c1a9980512c22530c5f35a7768e8520316b",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T204354067Z-7c53b524-DEV-verify-ue1-classic-tagged-properties.php.txt"
+        "source_sha256": "17c99d31b066bacb75e3dfc440d079f2b8c080812fe043b8402170d459005cab",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T204935247Z-6420c60e-DEV-verify-ue1-classic-tagged-properties.php.txt"
       }
     },
     {
@@ -5017,14 +5033,14 @@
       "test": "verify-ue1-classic-tagged-properties.php",
       "evidence": "PRD historical PASS at 2026-10-21T16:05:16.3071623Z; catalog\\compliance\\evidence\\o06\\20261021T160515641Z-af18800f-PRD-verify-ue1-classic-tagged-properties.php.txt; scoped test, not full class acceptance",
       "remaining": "Current pinned 92-package corpus passes; additional source branches/version-specific cases are not covered by corpus",
-      "updated_at_utc": "2026-10-22T20:43:55+00:00",
+      "updated_at_utc": "2026-10-22T20:49:36+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-22T20:43:54.9642762Z",
+        "at_utc": "2026-10-22T20:49:36.0432686Z",
         "test_sha256": "a43435273ceed564f9cb0de064c3c0cd77d26ec7647bc3bd9f9c9df1a8c6506f",
-        "source_sha256": "733803dff25ab801b7b2fdfcba479c1a9980512c22530c5f35a7768e8520316b",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T204354067Z-7c53b524-DEV-verify-ue1-classic-tagged-properties.php.txt"
+        "source_sha256": "17c99d31b066bacb75e3dfc440d079f2b8c080812fe043b8402170d459005cab",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T204935247Z-6420c60e-DEV-verify-ue1-classic-tagged-properties.php.txt"
       }
     },
     {
@@ -5167,14 +5183,14 @@
       "test": "verify-ue1-classic-tagged-properties.php",
       "evidence": "PRD historical PASS at 2026-10-21T16:05:16.3071623Z; catalog\\compliance\\evidence\\o06\\20261021T160515641Z-af18800f-PRD-verify-ue1-classic-tagged-properties.php.txt; scoped test, not full class acceptance",
       "remaining": "Current pinned 92-package corpus passes; additional source branches/version-specific cases are not covered by corpus",
-      "updated_at_utc": "2026-10-22T20:43:55+00:00",
+      "updated_at_utc": "2026-10-22T20:49:36+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-22T20:43:54.9642762Z",
+        "at_utc": "2026-10-22T20:49:36.0432686Z",
         "test_sha256": "a43435273ceed564f9cb0de064c3c0cd77d26ec7647bc3bd9f9c9df1a8c6506f",
-        "source_sha256": "733803dff25ab801b7b2fdfcba479c1a9980512c22530c5f35a7768e8520316b",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T204354067Z-7c53b524-DEV-verify-ue1-classic-tagged-properties.php.txt"
+        "source_sha256": "17c99d31b066bacb75e3dfc440d079f2b8c080812fe043b8402170d459005cab",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T204935247Z-6420c60e-DEV-verify-ue1-classic-tagged-properties.php.txt"
       }
     },
     {
@@ -5740,14 +5756,14 @@
       "test": "verify-ue1-classic-tagged-properties.php",
       "evidence": "PRD historical PASS at 2026-10-21T16:05:16.3071623Z; catalog\\compliance\\evidence\\o06\\20261021T160515641Z-af18800f-PRD-verify-ue1-classic-tagged-properties.php.txt; scoped test, not full class acceptance",
       "remaining": "Current pinned 92-package corpus passes; additional source branches/version-specific cases are not covered by corpus",
-      "updated_at_utc": "2026-10-22T20:43:55+00:00",
+      "updated_at_utc": "2026-10-22T20:49:36+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-22T20:43:54.9642762Z",
+        "at_utc": "2026-10-22T20:49:36.0432686Z",
         "test_sha256": "a43435273ceed564f9cb0de064c3c0cd77d26ec7647bc3bd9f9c9df1a8c6506f",
-        "source_sha256": "733803dff25ab801b7b2fdfcba479c1a9980512c22530c5f35a7768e8520316b",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T204354067Z-7c53b524-DEV-verify-ue1-classic-tagged-properties.php.txt"
+        "source_sha256": "17c99d31b066bacb75e3dfc440d079f2b8c080812fe043b8402170d459005cab",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T204935247Z-6420c60e-DEV-verify-ue1-classic-tagged-properties.php.txt"
       }
     },
     {
@@ -5824,14 +5840,14 @@
       "test": "verify-ue1-classic-level-native.php",
       "evidence": "DEV source-anchored full-package v35/39/40/41/50/53/54/58/59/60/61/62/63/64/69 regression 50/50 PASS including 6 direct Epic C++ contract checks and malformed actor bounds, 4 affected named DEV regressions PASS; evidence in append-only journal",
       "remaining": "Source-defined native actor database, URL, reach specs, model, time, 16 text refs and travel data handled; source overlap v60/v61 shares on-disk actor layout, but genuine matching levels and native executable parity still open; runtime fixups O10.",
-      "updated_at_utc": "2026-10-22T20:40:07+00:00",
+      "updated_at_utc": "2026-10-22T20:49:34+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-22T20:40:07.6863051Z",
+        "at_utc": "2026-10-22T20:49:34.5705990Z",
         "test_sha256": "605c82cf808ee09b8f985a9b3675056972d5c8d45c8226de3e469c62607d2a48",
-        "source_sha256": "733803dff25ab801b7b2fdfcba479c1a9980512c22530c5f35a7768e8520316b",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T204007341Z-b1da53c6-DEV-verify-ue1-classic-level-native.php.txt"
+        "source_sha256": "17c99d31b066bacb75e3dfc440d079f2b8c080812fe043b8402170d459005cab",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T204934174Z-92b8a840-DEV-verify-ue1-classic-level-native.php.txt"
       }
     },
     {
@@ -5849,14 +5865,14 @@
       "test": "verify-ue1-classic-level-native.php",
       "evidence": "DEV source-anchored full-package v35/39/40/41/50/53/54/58/59/60/61/62/63/64/69 regression 50/50 PASS including 6 direct Epic C++ contract checks and malformed actor bounds, 4 affected named DEV regressions PASS; evidence in append-only journal",
       "remaining": "Source-defined native actor database, URL, reach specs, model, time, 16 text refs and travel data handled; source overlap v60/v61 shares on-disk actor layout, but genuine matching levels and native executable parity still open; runtime fixups O10.",
-      "updated_at_utc": "2026-10-22T20:40:07+00:00",
+      "updated_at_utc": "2026-10-22T20:49:34+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-22T20:40:07.6863051Z",
+        "at_utc": "2026-10-22T20:49:34.5705990Z",
         "test_sha256": "605c82cf808ee09b8f985a9b3675056972d5c8d45c8226de3e469c62607d2a48",
-        "source_sha256": "733803dff25ab801b7b2fdfcba479c1a9980512c22530c5f35a7768e8520316b",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T204007341Z-b1da53c6-DEV-verify-ue1-classic-level-native.php.txt"
+        "source_sha256": "17c99d31b066bacb75e3dfc440d079f2b8c080812fe043b8402170d459005cab",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T204934174Z-92b8a840-DEV-verify-ue1-classic-level-native.php.txt"
       }
     },
     {
@@ -5966,14 +5982,14 @@
       "test": "verify-ue1-classic-model-native.php",
       "evidence": "Epic Unreal v1.200 Engine/Src/UnModel.cpp:291-332, Engine/Inc/UnObj.h FLeaf/FLightMapIndex; UT99 v400 Engine/Src/UnModel.cpp:182-239; v35/41/42/43/44/50/53/61/62/69 UE1 package fixtures",
       "remaining": "UPrimitive native inheritance plus 6 legacy BSP object references, source-defined light maps/bits/bounds/leaves/actor refs/flags and modern empty-geometry/vector branch decoded. 28/28 source-fixture checks. Nonempty modern FBspNode/FBspSurf/FVert/ZoneProperties still explicitly unsupported; genuine applicable UModel corpus, native runtime oracle, other source-version gates and full class behavior unverified.",
-      "updated_at_utc": "2026-10-22T20:43:55+00:00",
+      "updated_at_utc": "2026-10-22T20:49:35+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-22T20:43:55.4613025Z",
+        "at_utc": "2026-10-22T20:49:35.0558712Z",
         "test_sha256": "51d78ef8463a523a03ef55f5d38c4ca496ca310ae4d07686b1ab9fbf138f47fe",
-        "source_sha256": "733803dff25ab801b7b2fdfcba479c1a9980512c22530c5f35a7768e8520316b",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T204355152Z-9d1b4dc2-DEV-verify-ue1-classic-model-native.php.txt"
+        "source_sha256": "17c99d31b066bacb75e3dfc440d079f2b8c080812fe043b8402170d459005cab",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T204934752Z-fd160a17-DEV-verify-ue1-classic-model-native.php.txt"
       }
     },
     {
@@ -6050,14 +6066,14 @@
       "test": "verify-ue1-classic-tagged-properties.php",
       "evidence": "PRD historical PASS at 2026-10-21T16:05:16.3071623Z; catalog\\compliance\\evidence\\o06\\20261021T160515641Z-af18800f-PRD-verify-ue1-classic-tagged-properties.php.txt; scoped test, not full class acceptance",
       "remaining": "Tagged-properties decoder succeeds on pinned corpus; class-defined binary/defaults and complete source gates not covered",
-      "updated_at_utc": "2026-10-22T20:43:55+00:00",
+      "updated_at_utc": "2026-10-22T20:49:36+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-22T20:43:54.9642762Z",
+        "at_utc": "2026-10-22T20:49:36.0432686Z",
         "test_sha256": "a43435273ceed564f9cb0de064c3c0cd77d26ec7647bc3bd9f9c9df1a8c6506f",
-        "source_sha256": "733803dff25ab801b7b2fdfcba479c1a9980512c22530c5f35a7768e8520316b",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T204354067Z-7c53b524-DEV-verify-ue1-classic-tagged-properties.php.txt"
+        "source_sha256": "17c99d31b066bacb75e3dfc440d079f2b8c080812fe043b8402170d459005cab",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T204935247Z-6420c60e-DEV-verify-ue1-classic-tagged-properties.php.txt"
       }
     },
     {
@@ -6100,14 +6116,14 @@
       "test": "verify-ue1-classic-tagged-properties.php",
       "evidence": "PRD historical PASS at 2026-10-21T16:05:16.3071623Z; catalog\\compliance\\evidence\\o06\\20261021T160515641Z-af18800f-PRD-verify-ue1-classic-tagged-properties.php.txt; scoped test, not full class acceptance",
       "remaining": "Current pinned 92-package corpus passes; additional source branches/version-specific cases are not covered by corpus",
-      "updated_at_utc": "2026-10-22T20:43:55+00:00",
+      "updated_at_utc": "2026-10-22T20:49:36+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-22T20:43:54.9642762Z",
+        "at_utc": "2026-10-22T20:49:36.0432686Z",
         "test_sha256": "a43435273ceed564f9cb0de064c3c0cd77d26ec7647bc3bd9f9c9df1a8c6506f",
-        "source_sha256": "733803dff25ab801b7b2fdfcba479c1a9980512c22530c5f35a7768e8520316b",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T204354067Z-7c53b524-DEV-verify-ue1-classic-tagged-properties.php.txt"
+        "source_sha256": "17c99d31b066bacb75e3dfc440d079f2b8c080812fe043b8402170d459005cab",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T204935247Z-6420c60e-DEV-verify-ue1-classic-tagged-properties.php.txt"
       }
     },
     {
@@ -6142,14 +6158,14 @@
       "test": "verify-ue1-classic-tagged-properties.php",
       "evidence": "PRD historical PASS at 2026-10-21T16:05:16.3071623Z; catalog\\compliance\\evidence\\o06\\20261021T160515641Z-af18800f-PRD-verify-ue1-classic-tagged-properties.php.txt; scoped test, not full class acceptance",
       "remaining": "Current pinned 92-package corpus passes; additional source branches/version-specific cases are not covered by corpus",
-      "updated_at_utc": "2026-10-22T20:43:55+00:00",
+      "updated_at_utc": "2026-10-22T20:49:36+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-22T20:43:54.9642762Z",
+        "at_utc": "2026-10-22T20:49:36.0432686Z",
         "test_sha256": "a43435273ceed564f9cb0de064c3c0cd77d26ec7647bc3bd9f9c9df1a8c6506f",
-        "source_sha256": "733803dff25ab801b7b2fdfcba479c1a9980512c22530c5f35a7768e8520316b",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T204354067Z-7c53b524-DEV-verify-ue1-classic-tagged-properties.php.txt"
+        "source_sha256": "17c99d31b066bacb75e3dfc440d079f2b8c080812fe043b8402170d459005cab",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T204935247Z-6420c60e-DEV-verify-ue1-classic-tagged-properties.php.txt"
       }
     },
     {
@@ -6234,14 +6250,14 @@
       "test": "verify-ue1-classic-tagged-properties.php",
       "evidence": "PRD historical PASS at 2026-10-21T16:05:16.3071623Z; catalog\\compliance\\evidence\\o06\\20261021T160515641Z-af18800f-PRD-verify-ue1-classic-tagged-properties.php.txt; scoped test, not full class acceptance",
       "remaining": "Current pinned 92-package corpus passes; additional source branches/version-specific cases are not covered by corpus",
-      "updated_at_utc": "2026-10-22T20:43:55+00:00",
+      "updated_at_utc": "2026-10-22T20:49:36+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-22T20:43:54.9642762Z",
+        "at_utc": "2026-10-22T20:49:36.0432686Z",
         "test_sha256": "a43435273ceed564f9cb0de064c3c0cd77d26ec7647bc3bd9f9c9df1a8c6506f",
-        "source_sha256": "733803dff25ab801b7b2fdfcba479c1a9980512c22530c5f35a7768e8520316b",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T204354067Z-7c53b524-DEV-verify-ue1-classic-tagged-properties.php.txt"
+        "source_sha256": "17c99d31b066bacb75e3dfc440d079f2b8c080812fe043b8402170d459005cab",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T204935247Z-6420c60e-DEV-verify-ue1-classic-tagged-properties.php.txt"
       }
     },
     {
@@ -6384,14 +6400,14 @@
       "test": "verify-ue1-classic-tagged-properties.php",
       "evidence": "PRD historical PASS at 2026-10-21T16:05:16.3071623Z; catalog\\compliance\\evidence\\o06\\20261021T160515641Z-af18800f-PRD-verify-ue1-classic-tagged-properties.php.txt; scoped test, not full class acceptance",
       "remaining": "Current pinned 92-package corpus passes; additional source branches/version-specific cases are not covered by corpus",
-      "updated_at_utc": "2026-10-22T20:43:55+00:00",
+      "updated_at_utc": "2026-10-22T20:49:36+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-22T20:43:54.9642762Z",
+        "at_utc": "2026-10-22T20:49:36.0432686Z",
         "test_sha256": "a43435273ceed564f9cb0de064c3c0cd77d26ec7647bc3bd9f9c9df1a8c6506f",
-        "source_sha256": "733803dff25ab801b7b2fdfcba479c1a9980512c22530c5f35a7768e8520316b",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T204354067Z-7c53b524-DEV-verify-ue1-classic-tagged-properties.php.txt"
+        "source_sha256": "17c99d31b066bacb75e3dfc440d079f2b8c080812fe043b8402170d459005cab",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T204935247Z-6420c60e-DEV-verify-ue1-classic-tagged-properties.php.txt"
       }
     },
     {
