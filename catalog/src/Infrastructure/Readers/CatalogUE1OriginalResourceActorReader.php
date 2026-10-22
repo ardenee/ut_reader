@@ -41,6 +41,7 @@ final class CatalogUE1OriginalResourceActorReader
                     'resource_name'=>$candidate['resource_name']
                 ];
             }
+            $sourceImportProviders=null;
             foreach($db as $i=>$row){
                 $type=(int)$row['resource_type'];
                 if($type!==10 && $type!==11)continue;
@@ -116,7 +117,30 @@ final class CatalogUE1OriginalResourceActorReader
                         }elseif($ref>$resmapCount){
                             $actor['class_reference_status']='one_based_resmap_ref_out_of_range';
                         }elseif($ref<=$importCount){
-                            $actor['class_reference_status']='imported_UClass_provider_unavailable';
+                            if($sourceImportProviders===null){
+                                $sourceImportProviders=CatalogUE1OriginalResourceClassImportResolver::discover(
+                                    $path,$meta['imports']
+                                );
+                            }
+                            $provider=$sourceImportProviders['class_providers'][$ref-1]??null;
+                            if(is_array($provider)){
+                                $actor['class_property_values']=CatalogUE1OriginalActorClassPropertyValueReader::read(
+                                    $rawActor,$provider['properties'],$provider['raw_default_actor']
+                                );
+                                $actor['class_reference_status']='source_unique_sibling_import_UClass';
+                                $actor['class_resource_name']=$provider['resource_name'];
+                                $actor['class_provider_filename']=$provider['provider_file_name'];
+                                $actor['class_provider_sha256']=$provider['provider_file_sha256'];
+                                $actor['class_provider_export_index']=$provider['provider_export_index'];
+                            }else{
+                                $actor['class_reference_status']='imported_UClass_provider_unavailable';
+                                foreach($sourceImportProviders['diagnostics'] as $diagnostic){
+                                    if((int)$diagnostic['import_index']===$ref-1){
+                                        $actor['class_import_resolution_status']=$diagnostic['status'];
+                                        break;
+                                    }
+                                }
+                            }
                         }else{
                             $exportId=$ref-$importCount-1;
                             if(isset($classFrames[$exportId])){
@@ -150,7 +174,9 @@ final class CatalogUE1OriginalResourceActorReader
             }
         }finally{fclose($fp);}
         return ['source_family'=>'early_unreal_resource',
-            'actor_resources'=>$out,'runtime_class_links_resolved'=>false,
+            'actor_resources'=>$out,
+            'source_import_class_diagnostics'=>$sourceImportProviders['diagnostics']??[],
+            'runtime_class_links_resolved'=>false,
             'all_native_actor_members_decoded'=>false];
     }
     /** @return array<string,mixed> */
