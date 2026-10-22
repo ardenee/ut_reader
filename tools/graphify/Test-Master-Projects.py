@@ -46,7 +46,9 @@ try:
     created=json.loads(raw)["id"]
     status,raw=request("/api/masters")
     assert created in {m["id"] for m in json.loads(raw)["masters"]}
-    print("CREATE_NEW_MASTER_API_PASS",created)
+    status,page=request("/?master="+created)
+    assert status==200 and f'"id": "{created}"' in page, "Created master not published to dashboard"
+    print("CREATE_NEW_MASTER_API_AND_UI_PASS",created)
 finally:
     if created:
         file=ROOT/"masters.json"

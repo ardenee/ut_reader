@@ -111,6 +111,8 @@ class Handler(BaseHTTPRequestHandler):
             if endpoint == "/api/masters":
                 with LOCK:
                     master_id=MASTER_LIB.add_master(request.get("name", ""))
+                    subprocess.run([sys.executable,str(ROOT / "Build-Dashboard.py")],check=True,
+                                   stdout=subprocess.DEVNULL,stderr=subprocess.PIPE,timeout=50)
                 return self.send_json(201, {"ok": True, "id": master_id})
             master = MASTER_LIB.validate_master(request.get("master", "unrealdb"))
             folder = request.get("folder", "")
@@ -145,7 +147,7 @@ class Handler(BaseHTTPRequestHandler):
                 threading.Thread(target=scan, args=(slug, source), daemon=True).start()
             return self.send_json(202, {"ok": True, "id": slug, "source": str(source),
                                          "message": "Index started. Dashboard will refresh when ready."})
-        except (ValueError, TypeError, json.JSONDecodeError, OSError) as exc:
+        except (ValueError, TypeError, json.JSONDecodeError, OSError, subprocess.CalledProcessError, subprocess.TimeoutExpired) as exc:
             return self.send_json(400, {"error": str(exc)})
 
 def main():
