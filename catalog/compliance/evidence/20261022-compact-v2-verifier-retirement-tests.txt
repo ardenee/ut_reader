@@ -1,0 +1,60 @@
+﻿2026-10-22 V5 compact publisher legacy seven-game verifier retirement
+Source: PROD ue_uedb5_files remains active; only obsolete CLI seven-game fixture test retired.
+TEST verify-uedb5-base-projection-contract.php
+{
+    "ok": true,
+    "checks": {
+        "one_primary_provider_key": true,
+        "fname_candidates_deduplicate_case_insensitively": true,
+        "object_candidates_are_one_per_export": true,
+        "search_dictionary_is_distinct": true,
+        "object_projection_does_not_copy_source_graph": true,
+        "name_candidates_do_not_repeat_text": true,
+        "public_export_hash_is_binary_8_bytes": true,
+        "base_pass_leaves_dependencies_for_second_pass": true,
+        "publisher_never_writes_live_v4_registration": true,
+        "publisher_clears_stale_dependency_projection": true,
+        "publisher_uses_compact_v5_candidates": true,
+        "publisher_compact_candidates_share_outer_transaction": true,
+        "publisher_search_dictionary_is_insert_only": true,
+        "publisher_search_dictionary_precedes_file_transaction": true,
+        "publisher_sorts_file_candidates_for_secondary_indexes": true
+    },
+    "failures": []
+}
+EXIT_CODE=0
+TEST verify-uedb5-compact-candidate-source-contract.php
+{
+    "ok": true,
+    "checks": 7,
+    "failures": [],
+    "source_only": true,
+    "database_writes": false
+}
+EXIT_CODE=0
+TEST verify-uedb5-compact-schema-temp.php
+{
+    "ok": true,
+    "temporary_tables_only": true,
+    "ddl_tables_created": 3,
+    "indexes": {
+        "u5_schema_probe_name_dictionary": [
+            "PRIMARY",
+            "uq_uedb5_compact_name_fingerprint",
+            "idx_uedb5_compact_name_lookup"
+        ],
+        "u5_schema_probe_name_candidates": [
+            "PRIMARY",
+            "idx_uedb5_compact_names_lookup"
+        ],
+        "u5_schema_probe_object_candidates": [
+            "PRIMARY",
+            "idx_uedb5_compact_objects_lookup",
+            "idx_uedb5_compact_public_export"
+        ]
+    },
+    "foreign_keys": "Not validated: MySQL TEMPORARY tables do not support foreign keys",
+    "production_schema_unchanged": true
+}
+EXIT_CODE=0
+3/3 TEST SCRIPTS PASS; no permanent SQL changes requested.

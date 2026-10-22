@@ -72,7 +72,7 @@ def render(entries):
     "**Current per-entry status:** "+", ".join(k+"="+str(counts[k]) for k in sorted(counts))+".",
     "",
     "**States:** "+BT+"DISCOVERED"+BT+" = located in Epic source only; "+BT+"MAPPED"+BT+" = source behavior/reader mapped; "+
-    BT+"PARTIAL"+BT+" = implementation or tests exist but contract incomplete; "+
+    BT+"PARTIAL"+BT+" = a subset of the source-defined serializer is implemented/tested, but remaining source-branch verification or code fixes are unresolved; "+
     BT+"GAP"+BT+" = confirmed missing implementation; "+BT+"BLOCKED"+BT+" = named prerequisite; "+
     BT+"EXCLUDED"+BT+" = proven non-saveable or runtime-only; "+
     BT+"DEV_PASS"+BT+"/"+BT+"PRD_PASS"+BT+" = explicit source-scoped named tests passed at that target; "+
@@ -83,7 +83,7 @@ def render(entries):
     "(3) Record test script, evidence and exact outcome when run; change the same row before starting another task. "+
     "(4) Commit/push/deploy the updated status with each bounded checkpoint. "+
     "(5) Never turn a registration or a corpus-only result into serializer acceptance. "+
-    "Never replace an older failure without retaining its journal. The O06 test runner records STARTED then PASS/FAIL here automatically, while leaving class-level acceptance unchanged. The six O06 gates remain fixed even if new rows are discovered.",
+    "A latest DEV/PRD PASS means only that the named fixture passed there; it NEVER means class acceptance while the status is PARTIAL. Check the Outstanding / evidence column for the precise unfinished work. Some PARTIAL entries need only verification; others still need code. When the complete source contract is demonstrated, promote that row explicitly to ACCEPTED with evidence. Never replace an older failure without retaining its journal. The O06 test runner records STARTED then PASS/FAIL here automatically, while leaving class-level acceptance unchanged. The six O06 gates remain fixed even if new rows are discovered.",
     "",
     "Machine-readable file: "+BT+"catalog/compliance/UE1-O06-SERIALIZER-REGISTER.json"+BT+
     ". Regenerate/update using "+BT+"python catalog/bin/sync-ue1-o06-serializers.py"+BT+
@@ -94,18 +94,16 @@ def render(entries):
     for branch in ROOTS:
         rows=[e for e in entries if e["branch"]==branch]
         head += ["### "+branch+": "+LABELS[branch]+" ("+str(len(rows))+")","",
-        "| Serializer / class | Epic source path:line | State | Reader / test | Outstanding / evidence |",
-        "|---|---|---|---|---|"]
+        "| Serializer / class | Epic source path:line | Acceptance status | Latest named test | Reader / test | Remaining work / evidence |",
+        "|---|---|---|---|---|---|"]
         for e in rows:
             source="; ".join(x["path"]+":"+str(x["line"]) for x in e["locations"])
             targets="; ".join(v for v in (e.get("reader",""),e.get("test","")) if v) or "—"
             reason="; ".join(v for v in (e.get("remaining",""),e.get("evidence","")) if v) or "—"
             verify=e.get("last_verification")
-            state=e["status"]
-            if verify:
-                state+="; latest "+verify["target"]+" test "+verify["state"]
+            result=("**"+verify["target"]+" "+verify["state"]+"** on "+verify.get("at_utc","") if verify else "Not run / not linked")
             head.append("| "+BT+clean(e["symbol"])+BT+" | "+BT+clean(source)+BT+
-                        " | **"+clean(state)+"** | "+clean(targets)+" | "+clean(reason)+" |")
+                        " | **"+clean(e["status"])+"** | "+clean(result)+" | "+clean(targets)+" | "+clean(reason)+" |")
         head.append("")
     head += [END]
     return "\n".join(head)

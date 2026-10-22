@@ -50,6 +50,7 @@ h1{font-size:clamp(32px,4.8vw,56px);letter-spacing:-.045em;margin:6px 0 10px;lin
 .lead{color:var(--dim);max-width:760px;margin:0}.stamp{border:1px solid var(--line);background:#112436;padding:9px 13px;border-radius:9px;color:var(--dim);white-space:nowrap;font-size:12px}
 .summary{margin:34px 0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
 .stat{background:#142338ad;border:1px solid var(--line);padding:18px 20px;border-radius:12px}.stat b{display:block;font-size:27px;letter-spacing:-.03em}.stat span{color:var(--dim);font-size:12px}
+.add-panel{background:#142338ad;border:1px solid var(--line);border-radius:12px;padding:17px 19px;margin-bottom:22px}.add-panel h2{margin:0 0 10px;font-size:19px}.add-panel form{display:flex;gap:9px;flex-wrap:wrap}.add-panel input{flex:2;min-width:240px}.add-panel input[name="name"]{flex:1;min-width:170px}.add-panel button{background:#1b776e;border:1px solid #3daca4;border-radius:9px;color:white;padding:10px 18px;cursor:pointer;font:inherit}.add-panel p{font-size:12px;color:var(--dim);margin:8px 0 0}.add-panel .message{margin:9px 0;color:var(--accent)}
 .toolbar{display:flex;gap:12px;align-items:center;margin-bottom:18px;flex-wrap:wrap}input,select{background:var(--panel);border:1px solid #34465b;border-radius:10px;color:var(--text);padding:12px 14px;font:inherit}
 input{flex:1;min-width:220px}select{min-width:150px}
 .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:15px}
@@ -76,6 +77,7 @@ HTML=r"""<!DOCTYPE html>
 <p class="lead">Explore local code relationships by engine and project. Code-only indexes run on DEV; no cloud service or account required. New indexes automatically appear here when built using the index script.</p></div>
 <div class="stamp">Updated __STAMP__</div></header>
 <section class="summary" id="summary" aria-label="Graph totals"></section>
+<section class="add-panel"><h2>Add project</h2><form id="new-project"><input id="source-folder" name="folder" required placeholder="Folder on DEV, e.g. L:\Source\Engine\UE1" aria-label="Folder to index"><input name="name" id="project-name" placeholder="Project name (optional)" aria-label="Optional project name"><button type="submit" id="start-index">Add &amp; scan</button></form><p id="server-help">Scanning requires the local dashboard service at <a href="http://127.0.0.1:8765/">http://127.0.0.1:8765/</a>. Indexes are created on DEV, not uploaded.</p><p class="message" id="scan-status" role="status"></p></section>
 <div class="toolbar"><input id="filter" type="search" placeholder="Search project, version, source…" aria-label="Search graphs">
 <select id="family" aria-label="Filter engine"><option value="">All categories</option></select>
 <select id="order" aria-label="Sort graphs"><option value="family">Group by engine</option><option value="newest">Most recently indexed</option><option value="nodes">Largest graph first</option><option value="name">Name A–Z</option></select></div>
@@ -83,10 +85,50 @@ HTML=r"""<!DOCTYPE html>
 <section id="drawer"><button class="copy" id="copy">Copy command</button><h2>Refresh index</h2><p>Run this command in PowerShell on DEV. Browsers do not have permission to execute local programs.</p><pre id="command"></pre></section>
 <footer>All graphs are stored under <code>C:\Users\arden\Graphify</code>. The HTML views aggregate large graphs; use CLI/MCP for full symbol-level queries.
 Data comes from the last local extraction and may be stale. Graph relationships help discovery but do not prove Epic serialization equivalence.
-<strong>Nothing in this dashboard exposes an HTTP service.</strong></footer></main>
+<strong>The optional local scanner listens only on DEV loopback (127.0.0.1), not the LAN or Internet.</strong></footer></main>
 <script>
 const projects=__DATA__;
 const $=id=>document.getElementById(id), fmt=x=>Number(x).toLocaleString('en-IE');
+let trackedJob=null;
+const localService=location.protocol==='http:' && ['localhost','127.0.0.1'].includes(location.hostname);
+if(localService){
+ $('server-help').textContent='Folder paths are checked and indexed only on DEV. The source is not uploaded.';
+}
+$('new-project').onsubmit=async event=>{
+ event.preventDefault();
+ if(!localService||typeof LOCAL_GRAPHIFY_TOKEN==='undefined'){
+  $('scan-status').textContent='Open http://127.0.0.1:8765/ on DEV to add and scan projects.';
+  return;
+ }
+ const folder=$('source-folder').value.trim();
+ const name=$('project-name').value.trim();
+ $('start-index').disabled=true;
+ $('scan-status').textContent='Submitting source folder...';
+ try{
+  const response=await fetch('/api/add',{method:'POST',headers:{'Content-Type':'application/json','X-Graphify-Token':LOCAL_GRAPHIFY_TOKEN},body:JSON.stringify({folder,name})});
+  const result=await response.json();
+  if(!response.ok)throw new Error(result.error||'Cannot start index');
+  trackedJob=result.id;
+  $('scan-status').textContent='Scanning '+result.source+' (ID: '+result.id+'). The dashboard will update when finished.';
+  pollJob();
+ }catch(error){
+  $('scan-status').textContent='Index not started: '+error.message;
+  $('start-index').disabled=false;
+ }
+};
+async function pollJob(){
+ if(!trackedJob)return;
+ try{
+  const response=await fetch('/api/status',{cache:'no-store'});
+  if(!response.ok)throw new Error('Service unavailable');
+  const result=await response.json();
+  const job=result.jobs[trackedJob];
+  if(job&&job.state==='PASS'){location.reload();return;}
+  if(job&&job.state==='FAIL'){$('scan-status').textContent='Index failed: see C:\\Users\\arden\\Graphify\\'+trackedJob+'\\scan.log';$('start-index').disabled=false;trackedJob=null;return;}
+  $('scan-status').textContent='Indexing '+trackedJob+'... Check back here for completion.';
+  setTimeout(pollJob,2500);
+ }catch(error){$('scan-status').textContent='Scanner disconnected: '+error.message;$('start-index').disabled=false;trackedJob=null;}
+}
 function el(tag,cls,text){const v=document.createElement(tag);if(cls)v.className=cls;if(text!==undefined)v.textContent=text;return v}
 let lastCommand='';
 function command(p){
