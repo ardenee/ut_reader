@@ -44,7 +44,7 @@ final class CatalogUE1ClassicNativeObjectReader
         }
         $nativeKind=strtolower($className);
         if(!in_array($nativeKind,[
-            'texture','palette','sound','music','font','package','primitive','firetexture','wettexture','scriptedtexture','textbuffer','enum','const',
+            'texture','palette','sound','music','font','package','primitive','model','firetexture','wettexture','scriptedtexture','textbuffer','enum','const',
             ...CatalogUE1ClassicPropertyNativeReader::KINDS,
             ...CatalogUE1ClassicStructNativeReader::KINDS,
         ],true)){return $record;}
@@ -92,6 +92,10 @@ final class CatalogUE1ClassicNativeObjectReader
             if($nativeKind==='primitive'){
                 return array_replace($record,CatalogUE1ClassicPrimitiveNativeReader::inspect(
                     $ver,$read,$pos,$limit));
+            }
+            if($nativeKind==='model'){
+                return array_replace($record,CatalogUE1ClassicModelNativeReader::inspect(
+                    $pkg,$ver,$read,$compact,$int,$pos,$limit));
             }
             if($nativeKind==='package'){
                 return array_replace($record,[

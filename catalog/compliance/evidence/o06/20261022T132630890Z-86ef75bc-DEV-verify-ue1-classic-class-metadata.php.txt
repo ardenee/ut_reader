@@ -1,0 +1,32 @@
+﻿{
+    "ok": true,
+    "passed": 20,
+    "total": 20,
+    "failures": [],
+    "cases": {
+        "v50_class_disk_fields": true,
+        "v50_dependency_and_package_import": true,
+        "native_class_route_no_double_property_parse": true,
+        "v69_class_source_gate": true,
+        "v35_legacy_database_and_mainframe": true,
+        "nonempty_script_never_falsely_complete": true,
+        "nonempty_defaults_never_falsely_complete": true,
+        "unexpected_extension_not_complete": true,
+        "RF_HasStack_not_guessed": true,
+        "bad_super_ref_rejected": true,
+        "bad_children_ref_rejected": true,
+        "friendly_None_rejected": true,
+        "negative_script_size_rejected": true,
+        "dependency_count_overflow": true,
+        "dependency_ref_out_of_range": true,
+        "invalid_package_import_name": true,
+        "invalid_config_name": true,
+        "invalid_class_within": true,
+        "negative_package_import_count": true,
+        "truncated_body_rejected": true
+    },
+    "source": [
+        "v1.200 Core/Src/UnObj.cpp:433-521, UnClass.cpp:236,476,921,1067,1440",
+        "UT99 v400 Core/Src/UnObj.cpp:478-546, UnClass.cpp:239,593,712,914,1048"
+    ]
+}
