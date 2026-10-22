@@ -30,6 +30,21 @@ All outputs contain `graph.html` as an aggregated browser-viewable community gra
 
 **Reusable local scripts:** `C:\Users\arden\Graphify\Build-Dashboard.py`, `Local-Dashboard-Server.py`, `Start-Dashboard.ps1`, `Index-Code.ps1`, `Index-UE1-Sources.ps1`, and `Test-MCP.py`; versioned backups live under repository `tools/graphify/`. `Index-UE1-Sources.ps1` preserves an append-only `UE1-Index-Journal.jsonl` with STARTED and terminal PASS/FAIL for each graph, and skips graphs already saved. For any new project, use `Index-Code.ps1 -Name <new-id> -Source <directory> -Workers 4`; its dashboard entry is then added without further manual page editing. No Graphify Cloud account or *network-facing* HTTP service is involved; the optional interactive dashboard uses loopback HTTP on DEV only.
 
+## Master projects and scoped code search (2026-10-22)
+
+Graphify's **local dashboard** at `http://127.0.0.1:8765/` now has master projects. This is our local grouping layer over Graphify, not a Graphify Cloud feature. Existing UnrealDB and UE1 graphs belong to **UnrealDB & Unreal Engine** (`unrealdb`); a separate **Other Projects** (`other`) master is created for unrelated work. Use **Create master** for another project grouping, select that master, then **Add & scan** a folder. All new child graphs store an explicit `master` ID in their `project.json`. New non-UnrealDB child storage IDs are prefixed with the master ID, avoiding simple collisions across unrelated projects.
+
+The browser search and displayed graph totals operate on **only the selected master's children**. The selected master is stored in `?master=<id>` in the URL. Master definitions are local in `C:\Users\arden\Graphify\masters.json`; no private graph JSONs are added to the public repository.
+
+**For assistant/CLI graph searches**, do not query every graph globally. Use the scoped `Query-Master.py` launcher, with an explicit master and optionally one child; Graphify's underlying MCP still takes a *specific graph path*, not a composite master ID:
+
+```powershell
+python "C:\Users\arden\Graphify\Query-Master.py" --master unrealdb --child ue1-v0867 --query "Inc/UnClass.h::UClass" --budget 500
+python "C:\Users\arden\Graphify\Query-Master.py" --master other --query "MySymbol" --budget 500
+```
+
+Omitting `--child` searches only graphs assigned to that master. Individual Graphify MCP sessions can be launched with a single child `--graph` file path, avoiding unrelated groups. Master creation, membership validation and cross-master query blocking were exercised in `tools/graphify/Test-Master-Projects.py` (PASS). Existing graphs are preserved without reindexing.
+
 ## Usage from any PowerShell terminal on DEV
 
 ```powershell

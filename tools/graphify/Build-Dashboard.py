@@ -6,8 +6,12 @@ import re
 import html
 from datetime import datetime, timezone
 from pathlib import Path
+import importlib.util
 
 ROOT = Path(__file__).resolve().parent
+MASTER_SPEC=importlib.util.spec_from_file_location('graphify_masters',ROOT/'Project-Masters.py')
+MASTER_LIB=importlib.util.module_from_spec(MASTER_SPEC)
+MASTER_SPEC.loader.exec_module(MASTER_LIB)
 OUTPUT = ROOT / "index.html"
 
 def entries():
@@ -28,6 +32,7 @@ def entries():
                 "id":directory.name,
                 "name":str(meta.get("name") or directory.name),
                 "family":str(meta.get("family") or ("UE1" if "ue1" in directory.name.lower() else "Other")),
+                "master":str(meta.get("master") or "unrealdb"),
                 "version":str(meta.get("version") or ""),
                 "source":str(meta.get("source") or ""),
                 "detail":str(meta.get("detail") or ""),
@@ -50,6 +55,7 @@ h1{font-size:clamp(32px,4.8vw,56px);letter-spacing:-.045em;margin:6px 0 10px;lin
 .lead{color:var(--dim);max-width:760px;margin:0}.stamp{border:1px solid var(--line);background:#112436;padding:9px 13px;border-radius:9px;color:var(--dim);white-space:nowrap;font-size:12px}
 .summary{margin:34px 0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
 .stat{background:#142338ad;border:1px solid var(--line);padding:18px 20px;border-radius:12px}.stat b{display:block;font-size:27px;letter-spacing:-.03em}.stat span{color:var(--dim);font-size:12px}
+.master-panel{display:flex;gap:13px;align-items:end;flex-wrap:wrap;margin:22px 0 16px;background:#132b40;border:1px solid #396579;border-radius:12px;padding:16px}.master-panel label{display:block;color:var(--dim);font-size:12px;margin-bottom:5px}.master-panel select{min-width:220px}.master-panel form{display:flex;gap:8px;flex:1;flex-wrap:wrap}.master-panel form input{min-width:170px;flex:1}.master-panel form button{padding:10px 15px;background:#1b776e;color:white;border:1px solid #328c86;border-radius:9px;cursor:pointer}.master-panel p{color:var(--accent);font-size:12px;margin:0;width:100%}
 .add-panel{background:#142338ad;border:1px solid var(--line);border-radius:12px;padding:17px 19px;margin-bottom:22px}.add-panel h2{margin:0 0 10px;font-size:19px}.add-panel form{display:flex;gap:9px;flex-wrap:wrap}.add-panel input{flex:2;min-width:240px}.add-panel input[name="name"]{flex:1;min-width:170px}.add-panel button{background:#1b776e;border:1px solid #3daca4;border-radius:9px;color:white;padding:10px 18px;cursor:pointer;font:inherit}.add-panel p{font-size:12px;color:var(--dim);margin:8px 0 0}.add-panel .message{margin:9px 0;color:var(--accent)}
 .toolbar{display:flex;gap:12px;align-items:center;margin-bottom:18px;flex-wrap:wrap}input,select{background:var(--panel);border:1px solid #34465b;border-radius:10px;color:var(--text);padding:12px 14px;font:inherit}
 input{flex:1;min-width:220px}select{min-width:150px}
@@ -76,8 +82,9 @@ HTML=r"""<!DOCTYPE html>
 <body><main><header class="top"><div><div class="brand">Graphify · Local Intelligence</div><h1>Source Graph Library</h1>
 <p class="lead">Explore local code relationships by engine and project. Code-only indexes run on DEV; no cloud service or account required. New indexes automatically appear here when built using the index script.</p></div>
 <div class="stamp">Updated __STAMP__</div></header>
+<section class="master-panel"><div><label for="master-project">Master project</label><select id="master-project" aria-label="Select master project"></select></div><form id="new-master"><input id="new-master-name" placeholder="New master project name" required maxlength="80" aria-label="New master project name"><button type="submit">Create master</button></form><p id="master-message" role="status"></p></section>
 <section class="summary" id="summary" aria-label="Graph totals"></section>
-<section class="add-panel"><h2>Add project</h2><form id="new-project"><input id="source-folder" name="folder" required placeholder="Folder on DEV, e.g. L:\Source\Engine\UE1" aria-label="Folder to index"><input name="name" id="project-name" placeholder="Project name (optional)" aria-label="Optional project name"><button type="submit" id="start-index">Add &amp; scan</button></form><p id="server-help">Scanning requires the local dashboard service at <a href="http://127.0.0.1:8765/">http://127.0.0.1:8765/</a>. Indexes are created on DEV, not uploaded.</p><p class="message" id="scan-status" role="status"></p></section>
+<section class="add-panel"><h2>Add child project to selected master</h2><form id="new-project"><input id="source-folder" name="folder" required placeholder="Folder on DEV, e.g. L:\Source\Engine\UE1" aria-label="Folder to index"><input name="name" id="project-name" placeholder="Project name (optional)" aria-label="Optional project name"><button type="submit" id="start-index">Add &amp; scan</button></form><p id="server-help">Scanning requires the local dashboard service at <a href="http://127.0.0.1:8765/">http://127.0.0.1:8765/</a>. Indexes are created on DEV, not uploaded.</p><p class="message" id="scan-status" role="status"></p></section>
 <div class="toolbar"><input id="filter" type="search" placeholder="Search project, version, source…" aria-label="Search graphs">
 <select id="family" aria-label="Filter engine"><option value="">All categories</option></select>
 <select id="order" aria-label="Sort graphs"><option value="family">Group by engine</option><option value="newest">Most recently indexed</option><option value="nodes">Largest graph first</option><option value="name">Name A–Z</option></select></div>
@@ -88,6 +95,9 @@ Data comes from the last local extraction and may be stale. Graph relationships 
 <strong>The optional local scanner listens only on DEV loopback (127.0.0.1), not the LAN or Internet.</strong></footer></main>
 <script>
 const projects=__DATA__;
+const masters=__MASTERS__;
+const masterParam=new URLSearchParams(location.search).get("master");
+let chosenMaster=masters.some(m=>m.id===masterParam)?masterParam:(masters.length?masters[0].id:"unrealdb");
 const $=id=>document.getElementById(id), fmt=x=>Number(x).toLocaleString('en-IE');
 let trackedJob=null;
 const localService=location.protocol==='http:' && ['localhost','127.0.0.1'].includes(location.hostname);
@@ -102,10 +112,11 @@ $('new-project').onsubmit=async event=>{
  }
  const folder=$('source-folder').value.trim();
  const name=$('project-name').value.trim();
+ const master=chosenMaster;
  $('start-index').disabled=true;
  $('scan-status').textContent='Submitting source folder...';
  try{
-  const response=await fetch('/api/add',{method:'POST',headers:{'Content-Type':'application/json','X-Graphify-Token':LOCAL_GRAPHIFY_TOKEN},body:JSON.stringify({folder,name})});
+  const response=await fetch('/api/add',{method:'POST',headers:{'Content-Type':'application/json','X-Graphify-Token':LOCAL_GRAPHIFY_TOKEN},body:JSON.stringify({folder,name,master})});
   const result=await response.json();
   if(!response.ok)throw new Error(result.error||'Cannot start index');
   trackedJob=result.id;
@@ -137,13 +148,35 @@ function command(p){
 }
 function showCommand(p){lastCommand=command(p);$('command').textContent=lastCommand;$('drawer').style.display='block';$('drawer').scrollIntoView({behavior:'smooth',block:'nearest'})}
 $('copy').onclick=async()=>{try{await navigator.clipboard.writeText(lastCommand);$('copy').textContent='Copied'}catch(e){$('copy').textContent='Select command above to copy'}};
+const masterSelect=$('master-project');
+for(const m of masters){let op=el('option',null,m.name);op.value=m.id;masterSelect.append(op)}
+masterSelect.value=chosenMaster;
+masterSelect.onchange=()=>{chosenMaster=masterSelect.value;history.replaceState(null,"","/?master="+encodeURIComponent(chosenMaster));draw()};
+$('new-master').onsubmit=async event=>{
+ event.preventDefault();
+ if(!localService||typeof LOCAL_GRAPHIFY_TOKEN==='undefined'){
+  $('master-message').textContent='Open http://127.0.0.1:8765/ on DEV to create master projects.';return;
+ }
+ const name=$('new-master-name').value.trim();
+ try{
+  const response=await fetch('/api/masters',{method:'POST',headers:{'Content-Type':'application/json','X-Graphify-Token':LOCAL_GRAPHIFY_TOKEN},body:JSON.stringify({name})});
+  const obj=await response.json();
+  if(!response.ok)throw new Error(obj.error||'Could not create master');
+  location.href="/?master="+encodeURIComponent(obj.id);
+ }catch(err){$('master-message').textContent=err.message}
+};
 const families=[...new Set(projects.map(p=>p.family))].sort();
 for(const f of families){const o=el('option',null,f);o.value=f;$('family').append(o)}
-const totals=[['Indexed projects',projects.length],['Source nodes',projects.reduce((a,p)=>a+p.nodes,0)],['Relationships',projects.reduce((a,p)=>a+p.edges,0)],['Graph JSON size',((projects.reduce((a,p)=>a+p.size,0))/1048576).toFixed(1)+' MiB']];
-totals.forEach(([name,value])=>{let stat=el('div','stat');stat.append(el('b',null,typeof value==='number'?fmt(value):value),el('span',null,name));$('summary').append(stat)});
+function updateTotals(){
+ const selected=projects.filter(p=>p.master===chosenMaster);
+ const totals=[['Child projects',selected.length],['Source nodes',selected.reduce((a,p)=>a+p.nodes,0)],['Relationships',selected.reduce((a,p)=>a+p.edges,0)],['Graph JSON size',((selected.reduce((a,p)=>a+p.size,0))/1048576).toFixed(1)+' MiB']];
+ $('summary').replaceChildren();
+ totals.forEach(([name,value])=>{let stat=el('div','stat');stat.append(el('b',null,typeof value==='number'?fmt(value):value),el('span',null,name));$('summary').append(stat)});
+}
 function draw(){
  const q=$('filter').value.toLowerCase().trim(),fam=$('family').value,sort=$('order').value;
- let rows=projects.filter(p=>(!fam||p.family===fam)&&[p.name,p.version,p.source,p.id,p.detail].join(' ').toLowerCase().includes(q));
+ let rows=projects.filter(p=>p.master===chosenMaster&&(!fam||p.family===fam)&&[p.name,p.version,p.source,p.id,p.detail].join(' ').toLowerCase().includes(q));
+ updateTotals();
  rows.sort((a,b)=>sort==='newest'?b.date.localeCompare(a.date):sort==='nodes'?b.nodes-a.nodes:sort==='name'?a.name.localeCompare(b.name):a.family.localeCompare(b.family)||a.name.localeCompare(b.name));
  $('cards').replaceChildren();$('none').style.display=rows.length?'none':'block';
  for(const p of rows){
@@ -168,6 +201,7 @@ def main():
     data=entries()
     output=HTML.replace("__STYLE__",STYLE).replace("__STAMP__",html.escape(datetime.now().astimezone().strftime("%Y-%m-%d %H:%M %Z")))
     output=output.replace("__DATA__",json.dumps(data,ensure_ascii=False).replace("</","<\\/"))
+    output=output.replace("__MASTERS__",json.dumps(MASTER_LIB.read_masters(),ensure_ascii=False).replace("</","<\\/"))
     OUTPUT.write_text(output,encoding="utf-8")
     print(f"DASHBOARD_UPDATED path={OUTPUT} graphs={len(data)} nodes={sum(p['nodes'] for p in data)}")
     for project in data:print("  ",project["id"],project["nodes"],project["edges"],project["visual"])

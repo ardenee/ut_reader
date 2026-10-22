@@ -11,6 +11,10 @@ from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
+import importlib.util
+MASTER_SPEC = importlib.util.spec_from_file_location('graphify_masters', Path(__file__).with_name('Project-Masters.py'))
+MASTER_LIB = importlib.util.module_from_spec(MASTER_SPEC)
+MASTER_SPEC.loader.exec_module(MASTER_LIB)
 
 HOST, PORT = "127.0.0.1", 8765
 ROOT = Path.home() / "Graphify"
@@ -76,6 +80,8 @@ class Handler(BaseHTTPRequestHandler):
             data = INDEX.read_text(encoding="utf-8")
             data = data.replace("<script>", f'<script>const LOCAL_GRAPHIFY_TOKEN={json.dumps(TOKEN)};</script><script>', 1)
             return self.send_body(200, data.encode("utf-8"), "text/html; charset=utf-8")
+        if path == "/api/masters":
+            return self.send_json(200, {"masters": MASTER_LIB.read_masters()})
         if path == "/api/status":
             with LOCK:
                 jobs = dict(ACTIVE)
@@ -89,7 +95,8 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         if not self.safe_host():
             return self.send_json(403, {"error": "Unrecognized Host"})
-        if urlsplit(self.path).path != "/api/add":
+        endpoint = urlsplit(self.path).path
+        if endpoint not in ("/api/add", "/api/masters"):
             return self.send_json(404, {"error": "Not found"})
         if self.headers.get("Origin") not in (f"http://127.0.0.1:{PORT}", f"http://localhost:{PORT}"):
             return self.send_json(403, {"error": "Origin must be local dashboard"})
@@ -101,6 +108,11 @@ class Handler(BaseHTTPRequestHandler):
             size = int(self.headers.get("Content-Length", "0"))
             if not 0 < size <= 4096: raise ValueError("Request size invalid")
             request = json.loads(self.rfile.read(size))
+            if endpoint == "/api/masters":
+                with LOCK:
+                    master_id=MASTER_LIB.add_master(request.get("name", ""))
+                return self.send_json(201, {"ok": True, "id": master_id})
+            master = MASTER_LIB.validate_master(request.get("master", "unrealdb"))
             folder = request.get("folder", "")
             custom_name = request.get("name", "")
             if not isinstance(folder, str) or len(folder) > 1024: raise ValueError("Invalid folder")
@@ -111,6 +123,9 @@ class Handler(BaseHTTPRequestHandler):
             name = custom_name.strip() or source.name
             slug = re.sub(r"[^a-z0-9_.-]+", "-", name.lower()).strip(".-")
             if not slug or len(slug) > 64: raise ValueError("Invalid project name")
+            # Keep existing UnrealDB graph IDs stable; namespace all other masters.
+            if master != "unrealdb":
+                slug = master[:28] + "-" + slug[:35]
             with LOCK:
                 if any(job["state"] == "STARTED" for job in ACTIVE.values()):
                     return self.send_json(409, {"error": "Another graph is being indexed. Try again after it finishes."})
@@ -122,11 +137,11 @@ class Handler(BaseHTTPRequestHandler):
                         return self.send_json(409, {"error": f"Project ID '{slug}' exists for another source. Enter a unique project name."})
                 target.mkdir(parents=True, exist_ok=True)
                 family = next((n for n in ("UE1", "UE2", "UE3", "UE4", "UE5") if n.lower() in slug), "Project")
-                meta = {"name": name, "family": family, "version": "", "source": str(source),
+                meta = {"name": name, "family": family, "master": master, "version": "", "source": str(source),
                         "detail": "Added from local dashboard; code-only graph"}
                 existing.write_text(json.dumps(meta, indent=2), encoding="utf-8")
                 ACTIVE[slug] = {"state": "STARTED", "at_utc": time_now()}
-                save_event({"id": slug, "state": "STARTED", "source": str(source)})
+                save_event({"id": slug, "state": "STARTED", "source": str(source), "master": master})
                 threading.Thread(target=scan, args=(slug, source), daemon=True).start()
             return self.send_json(202, {"ok": True, "id": slug, "source": str(source),
                                          "message": "Index started. Dashboard will refresh when ready."})
