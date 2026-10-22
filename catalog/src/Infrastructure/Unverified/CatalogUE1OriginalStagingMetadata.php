@@ -86,6 +86,7 @@ final class CatalogUE1OriginalStagingMetadata
                 'unrealfile_bsp_records' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileBspRecordsReader::read($path, false),
                 'unrealfile_lightmesh_records' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileLightMeshDataReader::read($path, false),
                 'unrealfile_polygon_records' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfilePolysDataReader::read($path, false),
+                'unrealfile_stacktree_records' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileStackTreeDataReader::read($path, false),
                 'unrealfile_audio_records' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileAudioReader::read($path, false),
                 'unrealfile_bit_archive' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileBitArrayReader::read($path, false),
                 'unrealfile_properties_bin' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfilePropertiesReader::read($path, false, $externalDiscovery['providers']),
