@@ -8,14 +8,20 @@ REPO=Path(__file__).resolve().parents[2]
 DOC=REPO/"catalog/compliance/PROJECT-STATUS.md"
 DATA=REPO/"catalog/compliance/UE1-O06-SERIALIZER-REGISTER.json"
 ROOTS={
+"R82":Path(r"L:\Source\Games\Unreal\Unreal [v0.82] [1996-00-00]\SRC"),
+"R83":Path(r"L:\Source\Games\Unreal\Unreal [v0.83] [1996-10-01]\Src"),
 "R96":Path(r"L:\Source\Games\Unreal\Unreal [v0.84a] [1996-12-11]\Src"),
+"U86":Path(r"L:\Source\Games\Unreal\Unreal [v0.86x] [1997-05-25]\Src"),
 "U97":Path(r"L:\Source\Games\Unreal\Unreal [v0.867] [1997-07-25]\Src"),
 "D97":Path(r"L:\Source\Games\Unreal\Unreal [v0.867] [1997-07-25]\Src"),
 "C98":Path(r"L:\Source\Games\Unreal\Unreal [v1.200] [1998-05-19]"),
+"C227":Path(r"L:\Source\Games\Unreal\Unreal [v1.227]"),
 "T99":Path(r"L:\Source\Games\UT99\Unreal Tournament [v1.400] [1999-11-30]"),
 }
-LABELS={"R96":"1996 resource registrations", "U97":"1997 object class registrations",
+LABELS={"R82":"1996 v0.82 resource registrations", "R83":"1996 v0.83 resource registrations",
+"R96":"1996 v0.84a resource registrations", "U86":"1997 v0.86x object class registrations", "U97":"1997 v0.867 object class registrations",
 "D97":"1997 custom SerializeData definitions", "C98":"1998 v1.200 archive Serialize definitions",
+"C227":"v1.227 source Serialize definitions (version-specific, provenance to verify)",
 "T99":"1999 UT99 v400 archive Serialize definitions"}
 STATES={"DISCOVERED","MAPPED","PARTIAL","DEV_PASS","PRD_PASS","ACCEPTED","GAP","EXCLUDED","BLOCKED"}
 BEGIN="<!-- UE1-O06-LIVE-REGISTER-BEGIN -->"
@@ -31,10 +37,10 @@ def find_symbols():
             except OSError: continue
             for lineno,line in enumerate(lines,1):
                 sym=None
-                if branch=="R96":
+                if branch in ("R82","R83","R96"):
                     m=re.search(r"\bAUTOREGISTER_RESOURCE\s*\(\s*RES_\w+\s*,\s*(U\w+)\s*,",line)
                     if m: sym=m[1]
-                elif branch=="U97":
+                elif branch in ("U86","U97"):
                     m=re.search(r"\bIMPLEMENT_(?:DB_)?CLASS\s*\(\s*([AU]\w+)\s*\)",line)
                     if m: sym=m[1]
                 elif branch=="D97":

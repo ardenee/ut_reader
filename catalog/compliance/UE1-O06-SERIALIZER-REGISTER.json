@@ -1,7 +1,891 @@
 {
   "schema": 1,
-  "updated_at_utc": "2026-10-22T09:32:47+00:00",
+  "updated_at_utc": "2026-10-22T10:40:00+00:00",
   "entries": [
+    {
+      "id": "R82:UActorList",
+      "branch": "R82",
+      "symbol": "UActorList",
+      "locations": [
+        {
+          "path": "ENGINE/UNACTLST.CPP",
+          "line": 623
+        }
+      ],
+      "status": "MAPPED",
+      "reader": "UE1 v9 original resource reader family (specific fields pending G1 comparison)",
+      "test": "",
+      "evidence": "SOURCE_IDENTITY_PASS 200/200 byte-identical C++/H, zero missing; catalog/compliance/evidence/o06/20261022-ue1-v9-v082-v083-source-identity.txt; combined manifest SHA-256 0b4af276183e52365492ada44fb4789778761ea2cf589c4c13c600e24f5b8105",
+      "remaining": "Reconcile v9 per-resource serialized structure, query sizes and source-specific semantics to UnrealDB reader/tests; no source-wide acceptance yet",
+      "updated_at_utc": "2026-10-22T10:40:00+00:00"
+    },
+    {
+      "id": "R82:UArray",
+      "branch": "R82",
+      "symbol": "UArray",
+      "locations": [
+        {
+          "path": "ENGINE/UNRES.CPP",
+          "line": 2089
+        }
+      ],
+      "status": "MAPPED",
+      "reader": "UE1 v9 original resource reader family (specific fields pending G1 comparison)",
+      "test": "",
+      "evidence": "SOURCE_IDENTITY_PASS 200/200 byte-identical C++/H, zero missing; catalog/compliance/evidence/o06/20261022-ue1-v9-v082-v083-source-identity.txt; combined manifest SHA-256 0b4af276183e52365492ada44fb4789778761ea2cf589c4c13c600e24f5b8105",
+      "remaining": "Reconcile v9 per-resource serialized structure, query sizes and source-specific semantics to UnrealDB reader/tests; no source-wide acceptance yet",
+      "updated_at_utc": "2026-10-22T10:40:00+00:00"
+    },
+    {
+      "id": "R82:UBounds",
+      "branch": "R82",
+      "symbol": "UBounds",
+      "locations": [
+        {
+          "path": "ENGINE/UNMODEL.CPP",
+          "line": 180
+        }
+      ],
+      "status": "MAPPED",
+      "reader": "UE1 v9 original resource reader family (specific fields pending G1 comparison)",
+      "test": "",
+      "evidence": "SOURCE_IDENTITY_PASS 200/200 byte-identical C++/H, zero missing; catalog/compliance/evidence/o06/20261022-ue1-v9-v082-v083-source-identity.txt; combined manifest SHA-256 0b4af276183e52365492ada44fb4789778761ea2cf589c4c13c600e24f5b8105",
+      "remaining": "Reconcile v9 per-resource serialized structure, query sizes and source-specific semantics to UnrealDB reader/tests; no source-wide acceptance yet",
+      "updated_at_utc": "2026-10-22T10:40:00+00:00"
+    },
+    {
+      "id": "R82:UBspNodes",
+      "branch": "R82",
+      "symbol": "UBspNodes",
+      "locations": [
+        {
+          "path": "ENGINE/UNMODEL.CPP",
+          "line": 51
+        }
+      ],
+      "status": "MAPPED",
+      "reader": "UE1 v9 original resource reader family (specific fields pending G1 comparison)",
+      "test": "",
+      "evidence": "SOURCE_IDENTITY_PASS 200/200 byte-identical C++/H, zero missing; catalog/compliance/evidence/o06/20261022-ue1-v9-v082-v083-source-identity.txt; combined manifest SHA-256 0b4af276183e52365492ada44fb4789778761ea2cf589c4c13c600e24f5b8105",
+      "remaining": "Reconcile v9 per-resource serialized structure, query sizes and source-specific semantics to UnrealDB reader/tests; no source-wide acceptance yet",
+      "updated_at_utc": "2026-10-22T10:40:00+00:00"
+    },
+    {
+      "id": "R82:UBspSurfs",
+      "branch": "R82",
+      "symbol": "UBspSurfs",
+      "locations": [
+        {
+          "path": "ENGINE/UNMODEL.CPP",
+          "line": 79
+        }
+      ],
+      "status": "MAPPED",
+      "reader": "UE1 v9 original resource reader family (specific fields pending G1 comparison)",
+      "test": "",
+      "evidence": "SOURCE_IDENTITY_PASS 200/200 byte-identical C++/H, zero missing; catalog/compliance/evidence/o06/20261022-ue1-v9-v082-v083-source-identity.txt; combined manifest SHA-256 0b4af276183e52365492ada44fb4789778761ea2cf589c4c13c600e24f5b8105",
+      "remaining": "Reconcile v9 per-resource serialized structure, query sizes and source-specific semantics to UnrealDB reader/tests; no source-wide acceptance yet",
+      "updated_at_utc": "2026-10-22T10:40:00+00:00"
+    },
+    {
+      "id": "R82:UBuffer",
+      "branch": "R82",
+      "symbol": "UBuffer",
+      "locations": [
+        {
+          "path": "ENGINE/UNRES.CPP",
+          "line": 2423
+        }
+      ],
+      "status": "MAPPED",
+      "reader": "UE1 v9 original resource reader family (specific fields pending G1 comparison)",
+      "test": "",
+      "evidence": "SOURCE_IDENTITY_PASS 200/200 byte-identical C++/H, zero missing; catalog/compliance/evidence/o06/20261022-ue1-v9-v082-v083-source-identity.txt; combined manifest SHA-256 0b4af276183e52365492ada44fb4789778761ea2cf589c4c13c600e24f5b8105",
+      "remaining": "Reconcile v9 per-resource serialized structure, query sizes and source-specific semantics to UnrealDB reader/tests; no source-wide acceptance yet",
+      "updated_at_utc": "2026-10-22T10:40:00+00:00"
+    },
+    {
+      "id": "R82:UCamera",
+      "branch": "R82",
+      "symbol": "UCamera",
+      "locations": [
+        {
+          "path": "ENGINE/UNCAMERA.CPP",
+          "line": 76
+        }
+      ],
+      "status": "MAPPED",
+      "reader": "UE1 v9 original resource reader family (specific fields pending G1 comparison)",
+      "test": "",
+      "evidence": "SOURCE_IDENTITY_PASS 200/200 byte-identical C++/H, zero missing; catalog/compliance/evidence/o06/20261022-ue1-v9-v082-v083-source-identity.txt; combined manifest SHA-256 0b4af276183e52365492ada44fb4789778761ea2cf589c4c13c600e24f5b8105",
+      "remaining": "Reconcile v9 per-resource serialized structure, query sizes and source-specific semantics to UnrealDB reader/tests; no source-wide acceptance yet",
+      "updated_at_utc": "2026-10-22T10:40:00+00:00"
+    },
+    {
+      "id": "R82:UClass",
+      "branch": "R82",
+      "symbol": "UClass",
+      "locations": [
+        {
+          "path": "ENGINE/UNCLASS.CPP",
+          "line": 405
+        }
+      ],
+      "status": "MAPPED",
+      "reader": "UE1 v9 original resource reader family (specific fields pending G1 comparison)",
+      "test": "",
+      "evidence": "SOURCE_IDENTITY_PASS 200/200 byte-identical C++/H, zero missing; catalog/compliance/evidence/o06/20261022-ue1-v9-v082-v083-source-identity.txt; combined manifest SHA-256 0b4af276183e52365492ada44fb4789778761ea2cf589c4c13c600e24f5b8105",
+      "remaining": "Reconcile v9 per-resource serialized structure, query sizes and source-specific semantics to UnrealDB reader/tests; no source-wide acceptance yet",
+      "updated_at_utc": "2026-10-22T10:40:00+00:00"
+    },
+    {
+      "id": "R82:UEnum",
+      "branch": "R82",
+      "symbol": "UEnum",
+      "locations": [
+        {
+          "path": "ENGINE/UNRES.CPP",
+          "line": 2365
+        }
+      ],
+      "status": "MAPPED",
+      "reader": "UE1 v9 original resource reader family (specific fields pending G1 comparison)",
+      "test": "",
+      "evidence": "SOURCE_IDENTITY_PASS 200/200 byte-identical C++/H, zero missing; catalog/compliance/evidence/o06/20261022-ue1-v9-v082-v083-source-identity.txt; combined manifest SHA-256 0b4af276183e52365492ada44fb4789778761ea2cf589c4c13c600e24f5b8105",
+      "remaining": "Reconcile v9 per-resource serialized structure, query sizes and source-specific semantics to UnrealDB reader/tests; no source-wide acceptance yet",
+      "updated_at_utc": "2026-10-22T10:40:00+00:00"
+    },
+    {
+      "id": "R82:UFont",
+      "branch": "R82",
+      "symbol": "UFont",
+      "locations": [
+        {
+          "path": "ENGINE/UNGFX.CPP",
+          "line": 1169
+        }
+      ],
+      "status": "MAPPED",
+      "reader": "UE1 v9 original resource reader family (specific fields pending G1 comparison)",
+      "test": "",
+      "evidence": "SOURCE_IDENTITY_PASS 200/200 byte-identical C++/H, zero missing; catalog/compliance/evidence/o06/20261022-ue1-v9-v082-v083-source-identity.txt; combined manifest SHA-256 0b4af276183e52365492ada44fb4789778761ea2cf589c4c13c600e24f5b8105",
+      "remaining": "Reconcile v9 per-resource serialized structure, query sizes and source-specific semantics to UnrealDB reader/tests; no source-wide acceptance yet",
+      "updated_at_utc": "2026-10-22T10:40:00+00:00"
+    },
+    {
+      "id": "R82:ULevel",
+      "branch": "R82",
+      "symbol": "ULevel",
+      "locations": [
+        {
+          "path": "ENGINE/UNLEVEL.CPP",
+          "line": 376
+        }
+      ],
+      "status": "MAPPED",
+      "reader": "UE1 v9 original resource reader family (specific fields pending G1 comparison)",
+      "test": "",
+      "evidence": "SOURCE_IDENTITY_PASS 200/200 byte-identical C++/H, zero missing; catalog/compliance/evidence/o06/20261022-ue1-v9-v082-v083-source-identity.txt; combined manifest SHA-256 0b4af276183e52365492ada44fb4789778761ea2cf589c4c13c600e24f5b8105",
+      "remaining": "Reconcile v9 per-resource serialized structure, query sizes and source-specific semantics to UnrealDB reader/tests; no source-wide acceptance yet",
+      "updated_at_utc": "2026-10-22T10:40:00+00:00"
+    },
+    {
+      "id": "R82:ULightMesh",
+      "branch": "R82",
+      "symbol": "ULightMesh",
+      "locations": [
+        {
+          "path": "ENGINE/UNMODEL.CPP",
+          "line": 120
+        }
+      ],
+      "status": "MAPPED",
+      "reader": "UE1 v9 original resource reader family (specific fields pending G1 comparison)",
+      "test": "",
+      "evidence": "SOURCE_IDENTITY_PASS 200/200 byte-identical C++/H, zero missing; catalog/compliance/evidence/o06/20261022-ue1-v9-v082-v083-source-identity.txt; combined manifest SHA-256 0b4af276183e52365492ada44fb4789778761ea2cf589c4c13c600e24f5b8105",
+      "remaining": "Reconcile v9 per-resource serialized structure, query sizes and source-specific semantics to UnrealDB reader/tests; no source-wide acceptance yet",
+      "updated_at_utc": "2026-10-22T10:40:00+00:00"
+    },
+    {
+      "id": "R82:UMesh",
+      "branch": "R82",
+      "symbol": "UMesh",
+      "locations": [
+        {
+          "path": "ENGINE/UNMESH.CPP",
+          "line": 124
+        }
+      ],
+      "status": "MAPPED",
+      "reader": "UE1 v9 original resource reader family (specific fields pending G1 comparison)",
+      "test": "",
+      "evidence": "SOURCE_IDENTITY_PASS 200/200 byte-identical C++/H, zero missing; catalog/compliance/evidence/o06/20261022-ue1-v9-v082-v083-source-identity.txt; combined manifest SHA-256 0b4af276183e52365492ada44fb4789778761ea2cf589c4c13c600e24f5b8105",
+      "remaining": "Reconcile v9 per-resource serialized structure, query sizes and source-specific semantics to UnrealDB reader/tests; no source-wide acceptance yet",
+      "updated_at_utc": "2026-10-22T10:40:00+00:00"
+    },
+    {
+      "id": "R82:UMeshMap",
+      "branch": "R82",
+      "symbol": "UMeshMap",
+      "locations": [
+        {
+          "path": "ENGINE/UNMESH.CPP",
+          "line": 183
+        }
+      ],
+      "status": "MAPPED",
+      "reader": "UE1 v9 original resource reader family (specific fields pending G1 comparison)",
+      "test": "",
+      "evidence": "SOURCE_IDENTITY_PASS 200/200 byte-identical C++/H, zero missing; catalog/compliance/evidence/o06/20261022-ue1-v9-v082-v083-source-identity.txt; combined manifest SHA-256 0b4af276183e52365492ada44fb4789778761ea2cf589c4c13c600e24f5b8105",
+      "remaining": "Reconcile v9 per-resource serialized structure, query sizes and source-specific semantics to UnrealDB reader/tests; no source-wide acceptance yet",
+      "updated_at_utc": "2026-10-22T10:40:00+00:00"
+    },
+    {
+      "id": "R82:UModel",
+      "branch": "R82",
+      "symbol": "UModel",
+      "locations": [
+        {
+          "path": "ENGINE/UNMODEL.CPP",
+          "line": 370
+        }
+      ],
+      "status": "MAPPED",
+      "reader": "UE1 v9 original resource reader family (specific fields pending G1 comparison)",
+      "test": "",
+      "evidence": "SOURCE_IDENTITY_PASS 200/200 byte-identical C++/H, zero missing; catalog/compliance/evidence/o06/20261022-ue1-v9-v082-v083-source-identity.txt; combined manifest SHA-256 0b4af276183e52365492ada44fb4789778761ea2cf589c4c13c600e24f5b8105",
+      "remaining": "Reconcile v9 per-resource serialized structure, query sizes and source-specific semantics to UnrealDB reader/tests; no source-wide acceptance yet",
+      "updated_at_utc": "2026-10-22T10:40:00+00:00"
+    },
+    {
+      "id": "R82:UPalette",
+      "branch": "R82",
+      "symbol": "UPalette",
+      "locations": [
+        {
+          "path": "ENGINE/UNTEX.CPP",
+          "line": 764
+        }
+      ],
+      "status": "MAPPED",
+      "reader": "UE1 v9 original resource reader family (specific fields pending G1 comparison)",
+      "test": "",
+      "evidence": "SOURCE_IDENTITY_PASS 200/200 byte-identical C++/H, zero missing; catalog/compliance/evidence/o06/20261022-ue1-v9-v082-v083-source-identity.txt; combined manifest SHA-256 0b4af276183e52365492ada44fb4789778761ea2cf589c4c13c600e24f5b8105",
+      "remaining": "Reconcile v9 per-resource serialized structure, query sizes and source-specific semantics to UnrealDB reader/tests; no source-wide acceptance yet",
+      "updated_at_utc": "2026-10-22T10:40:00+00:00"
+    },
+    {
+      "id": "R82:UPlayer",
+      "branch": "R82",
+      "symbol": "UPlayer",
+      "locations": [
+        {
+          "path": "ENGINE/UNSERVER.CPP",
+          "line": 359
+        }
+      ],
+      "status": "MAPPED",
+      "reader": "UE1 v9 original resource reader family (specific fields pending G1 comparison)",
+      "test": "",
+      "evidence": "SOURCE_IDENTITY_PASS 200/200 byte-identical C++/H, zero missing; catalog/compliance/evidence/o06/20261022-ue1-v9-v082-v083-source-identity.txt; combined manifest SHA-256 0b4af276183e52365492ada44fb4789778761ea2cf589c4c13c600e24f5b8105",
+      "remaining": "Reconcile v9 per-resource serialized structure, query sizes and source-specific semantics to UnrealDB reader/tests; no source-wide acceptance yet",
+      "updated_at_utc": "2026-10-22T10:40:00+00:00"
+    },
+    {
+      "id": "R82:UPolys",
+      "branch": "R82",
+      "symbol": "UPolys",
+      "locations": [
+        {
+          "path": "ENGINE/UNFPOLY.CPP",
+          "line": 689
+        }
+      ],
+      "status": "MAPPED",
+      "reader": "UE1 v9 original resource reader family (specific fields pending G1 comparison)",
+      "test": "",
+      "evidence": "SOURCE_IDENTITY_PASS 200/200 byte-identical C++/H, zero missing; catalog/compliance/evidence/o06/20261022-ue1-v9-v082-v083-source-identity.txt; combined manifest SHA-256 0b4af276183e52365492ada44fb4789778761ea2cf589c4c13c600e24f5b8105",
+      "remaining": "Reconcile v9 per-resource serialized structure, query sizes and source-specific semantics to UnrealDB reader/tests; no source-wide acceptance yet",
+      "updated_at_utc": "2026-10-22T10:40:00+00:00"
+    },
+    {
+      "id": "R82:UScript",
+      "branch": "R82",
+      "symbol": "UScript",
+      "locations": [
+        {
+          "path": "ENGINE/UNSCRIPT.CPP",
+          "line": 2572
+        }
+      ],
+      "status": "MAPPED",
+      "reader": "UE1 v9 original resource reader family (specific fields pending G1 comparison)",
+      "test": "",
+      "evidence": "SOURCE_IDENTITY_PASS 200/200 byte-identical C++/H, zero missing; catalog/compliance/evidence/o06/20261022-ue1-v9-v082-v083-source-identity.txt; combined manifest SHA-256 0b4af276183e52365492ada44fb4789778761ea2cf589c4c13c600e24f5b8105",
+      "remaining": "Reconcile v9 per-resource serialized structure, query sizes and source-specific semantics to UnrealDB reader/tests; no source-wide acceptance yet",
+      "updated_at_utc": "2026-10-22T10:40:00+00:00"
+    },
+    {
+      "id": "R82:USound",
+      "branch": "R82",
+      "symbol": "USound",
+      "locations": [
+        {
+          "path": "ENGINE/UNSOUND.CPP",
+          "line": 274
+        }
+      ],
+      "status": "MAPPED",
+      "reader": "UE1 v9 original resource reader family (specific fields pending G1 comparison)",
+      "test": "",
+      "evidence": "SOURCE_IDENTITY_PASS 200/200 byte-identical C++/H, zero missing; catalog/compliance/evidence/o06/20261022-ue1-v9-v082-v083-source-identity.txt; combined manifest SHA-256 0b4af276183e52365492ada44fb4789778761ea2cf589c4c13c600e24f5b8105",
+      "remaining": "Reconcile v9 per-resource serialized structure, query sizes and source-specific semantics to UnrealDB reader/tests; no source-wide acceptance yet",
+      "updated_at_utc": "2026-10-22T10:40:00+00:00"
+    },
+    {
+      "id": "R82:UTerrain",
+      "branch": "R82",
+      "symbol": "UTerrain",
+      "locations": [
+        {
+          "path": "ENGINE/UNMODEL.CPP",
+          "line": 227
+        }
+      ],
+      "status": "MAPPED",
+      "reader": "UE1 v9 original resource reader family (specific fields pending G1 comparison)",
+      "test": "",
+      "evidence": "SOURCE_IDENTITY_PASS 200/200 byte-identical C++/H, zero missing; catalog/compliance/evidence/o06/20261022-ue1-v9-v082-v083-source-identity.txt; combined manifest SHA-256 0b4af276183e52365492ada44fb4789778761ea2cf589c4c13c600e24f5b8105",
+      "remaining": "Reconcile v9 per-resource serialized structure, query sizes and source-specific semantics to UnrealDB reader/tests; no source-wide acceptance yet",
+      "updated_at_utc": "2026-10-22T10:40:00+00:00"
+    },
+    {
+      "id": "R82:UTextBuffer",
+      "branch": "R82",
+      "symbol": "UTextBuffer",
+      "locations": [
+        {
+          "path": "ENGINE/UNRES.CPP",
+          "line": 2064
+        }
+      ],
+      "status": "MAPPED",
+      "reader": "UE1 v9 original resource reader family (specific fields pending G1 comparison)",
+      "test": "",
+      "evidence": "SOURCE_IDENTITY_PASS 200/200 byte-identical C++/H, zero missing; catalog/compliance/evidence/o06/20261022-ue1-v9-v082-v083-source-identity.txt; combined manifest SHA-256 0b4af276183e52365492ada44fb4789778761ea2cf589c4c13c600e24f5b8105",
+      "remaining": "Reconcile v9 per-resource serialized structure, query sizes and source-specific semantics to UnrealDB reader/tests; no source-wide acceptance yet",
+      "updated_at_utc": "2026-10-22T10:40:00+00:00"
+    },
+    {
+      "id": "R82:UTexture",
+      "branch": "R82",
+      "symbol": "UTexture",
+      "locations": [
+        {
+          "path": "ENGINE/UNTEX.CPP",
+          "line": 405
+        }
+      ],
+      "status": "MAPPED",
+      "reader": "UE1 v9 original resource reader family (specific fields pending G1 comparison)",
+      "test": "",
+      "evidence": "SOURCE_IDENTITY_PASS 200/200 byte-identical C++/H, zero missing; catalog/compliance/evidence/o06/20261022-ue1-v9-v082-v083-source-identity.txt; combined manifest SHA-256 0b4af276183e52365492ada44fb4789778761ea2cf589c4c13c600e24f5b8105",
+      "remaining": "Reconcile v9 per-resource serialized structure, query sizes and source-specific semantics to UnrealDB reader/tests; no source-wide acceptance yet",
+      "updated_at_utc": "2026-10-22T10:40:00+00:00"
+    },
+    {
+      "id": "R82:UTransBuffer",
+      "branch": "R82",
+      "symbol": "UTransBuffer",
+      "locations": [
+        {
+          "path": "EDITOR/UNEDTRAN.CPP",
+          "line": 1020
+        }
+      ],
+      "status": "MAPPED",
+      "reader": "UE1 v9 original resource reader family (specific fields pending G1 comparison)",
+      "test": "",
+      "evidence": "SOURCE_IDENTITY_PASS 200/200 byte-identical C++/H, zero missing; catalog/compliance/evidence/o06/20261022-ue1-v9-v082-v083-source-identity.txt; combined manifest SHA-256 0b4af276183e52365492ada44fb4789778761ea2cf589c4c13c600e24f5b8105",
+      "remaining": "Reconcile v9 per-resource serialized structure, query sizes and source-specific semantics to UnrealDB reader/tests; no source-wide acceptance yet",
+      "updated_at_utc": "2026-10-22T10:40:00+00:00"
+    },
+    {
+      "id": "R82:UVectors",
+      "branch": "R82",
+      "symbol": "UVectors",
+      "locations": [
+        {
+          "path": "ENGINE/UNMODEL.CPP",
+          "line": 135
+        }
+      ],
+      "status": "MAPPED",
+      "reader": "UE1 v9 original resource reader family (specific fields pending G1 comparison)",
+      "test": "",
+      "evidence": "SOURCE_IDENTITY_PASS 200/200 byte-identical C++/H, zero missing; catalog/compliance/evidence/o06/20261022-ue1-v9-v082-v083-source-identity.txt; combined manifest SHA-256 0b4af276183e52365492ada44fb4789778761ea2cf589c4c13c600e24f5b8105",
+      "remaining": "Reconcile v9 per-resource serialized structure, query sizes and source-specific semantics to UnrealDB reader/tests; no source-wide acceptance yet",
+      "updated_at_utc": "2026-10-22T10:40:00+00:00"
+    },
+    {
+      "id": "R82:UVertPool",
+      "branch": "R82",
+      "symbol": "UVertPool",
+      "locations": [
+        {
+          "path": "ENGINE/UNMODEL.CPP",
+          "line": 165
+        }
+      ],
+      "status": "MAPPED",
+      "reader": "UE1 v9 original resource reader family (specific fields pending G1 comparison)",
+      "test": "",
+      "evidence": "SOURCE_IDENTITY_PASS 200/200 byte-identical C++/H, zero missing; catalog/compliance/evidence/o06/20261022-ue1-v9-v082-v083-source-identity.txt; combined manifest SHA-256 0b4af276183e52365492ada44fb4789778761ea2cf589c4c13c600e24f5b8105",
+      "remaining": "Reconcile v9 per-resource serialized structure, query sizes and source-specific semantics to UnrealDB reader/tests; no source-wide acceptance yet",
+      "updated_at_utc": "2026-10-22T10:40:00+00:00"
+    },
+    {
+      "id": "R83:UActorList",
+      "branch": "R83",
+      "symbol": "UActorList",
+      "locations": [
+        {
+          "path": "Engine/UnActLst.cpp",
+          "line": 623
+        }
+      ],
+      "status": "MAPPED",
+      "reader": "UE1 v9 original resource reader family (specific fields pending G1 comparison)",
+      "test": "",
+      "evidence": "SOURCE_IDENTITY_PASS 200/200 byte-identical C++/H, zero missing; catalog/compliance/evidence/o06/20261022-ue1-v9-v082-v083-source-identity.txt; combined manifest SHA-256 0b4af276183e52365492ada44fb4789778761ea2cf589c4c13c600e24f5b8105",
+      "remaining": "Reconcile v9 per-resource serialized structure, query sizes and source-specific semantics to UnrealDB reader/tests; no source-wide acceptance yet",
+      "updated_at_utc": "2026-10-22T10:40:00+00:00"
+    },
+    {
+      "id": "R83:UArray",
+      "branch": "R83",
+      "symbol": "UArray",
+      "locations": [
+        {
+          "path": "Engine/UnRes.cpp",
+          "line": 2089
+        }
+      ],
+      "status": "MAPPED",
+      "reader": "UE1 v9 original resource reader family (specific fields pending G1 comparison)",
+      "test": "",
+      "evidence": "SOURCE_IDENTITY_PASS 200/200 byte-identical C++/H, zero missing; catalog/compliance/evidence/o06/20261022-ue1-v9-v082-v083-source-identity.txt; combined manifest SHA-256 0b4af276183e52365492ada44fb4789778761ea2cf589c4c13c600e24f5b8105",
+      "remaining": "Reconcile v9 per-resource serialized structure, query sizes and source-specific semantics to UnrealDB reader/tests; no source-wide acceptance yet",
+      "updated_at_utc": "2026-10-22T10:40:00+00:00"
+    },
+    {
+      "id": "R83:UBounds",
+      "branch": "R83",
+      "symbol": "UBounds",
+      "locations": [
+        {
+          "path": "Engine/UnModel.cpp",
+          "line": 180
+        }
+      ],
+      "status": "MAPPED",
+      "reader": "UE1 v9 original resource reader family (specific fields pending G1 comparison)",
+      "test": "",
+      "evidence": "SOURCE_IDENTITY_PASS 200/200 byte-identical C++/H, zero missing; catalog/compliance/evidence/o06/20261022-ue1-v9-v082-v083-source-identity.txt; combined manifest SHA-256 0b4af276183e52365492ada44fb4789778761ea2cf589c4c13c600e24f5b8105",
+      "remaining": "Reconcile v9 per-resource serialized structure, query sizes and source-specific semantics to UnrealDB reader/tests; no source-wide acceptance yet",
+      "updated_at_utc": "2026-10-22T10:40:00+00:00"
+    },
+    {
+      "id": "R83:UBspNodes",
+      "branch": "R83",
+      "symbol": "UBspNodes",
+      "locations": [
+        {
+          "path": "Engine/UnModel.cpp",
+          "line": 51
+        }
+      ],
+      "status": "MAPPED",
+      "reader": "UE1 v9 original resource reader family (specific fields pending G1 comparison)",
+      "test": "",
+      "evidence": "SOURCE_IDENTITY_PASS 200/200 byte-identical C++/H, zero missing; catalog/compliance/evidence/o06/20261022-ue1-v9-v082-v083-source-identity.txt; combined manifest SHA-256 0b4af276183e52365492ada44fb4789778761ea2cf589c4c13c600e24f5b8105",
+      "remaining": "Reconcile v9 per-resource serialized structure, query sizes and source-specific semantics to UnrealDB reader/tests; no source-wide acceptance yet",
+      "updated_at_utc": "2026-10-22T10:40:00+00:00"
+    },
+    {
+      "id": "R83:UBspSurfs",
+      "branch": "R83",
+      "symbol": "UBspSurfs",
+      "locations": [
+        {
+          "path": "Engine/UnModel.cpp",
+          "line": 79
+        }
+      ],
+      "status": "MAPPED",
+      "reader": "UE1 v9 original resource reader family (specific fields pending G1 comparison)",
+      "test": "",
+      "evidence": "SOURCE_IDENTITY_PASS 200/200 byte-identical C++/H, zero missing; catalog/compliance/evidence/o06/20261022-ue1-v9-v082-v083-source-identity.txt; combined manifest SHA-256 0b4af276183e52365492ada44fb4789778761ea2cf589c4c13c600e24f5b8105",
+      "remaining": "Reconcile v9 per-resource serialized structure, query sizes and source-specific semantics to UnrealDB reader/tests; no source-wide acceptance yet",
+      "updated_at_utc": "2026-10-22T10:40:00+00:00"
+    },
+    {
+      "id": "R83:UBuffer",
+      "branch": "R83",
+      "symbol": "UBuffer",
+      "locations": [
+        {
+          "path": "Engine/UnRes.cpp",
+          "line": 2423
+        }
+      ],
+      "status": "MAPPED",
+      "reader": "UE1 v9 original resource reader family (specific fields pending G1 comparison)",
+      "test": "",
+      "evidence": "SOURCE_IDENTITY_PASS 200/200 byte-identical C++/H, zero missing; catalog/compliance/evidence/o06/20261022-ue1-v9-v082-v083-source-identity.txt; combined manifest SHA-256 0b4af276183e52365492ada44fb4789778761ea2cf589c4c13c600e24f5b8105",
+      "remaining": "Reconcile v9 per-resource serialized structure, query sizes and source-specific semantics to UnrealDB reader/tests; no source-wide acceptance yet",
+      "updated_at_utc": "2026-10-22T10:40:00+00:00"
+    },
+    {
+      "id": "R83:UCamera",
+      "branch": "R83",
+      "symbol": "UCamera",
+      "locations": [
+        {
+          "path": "Engine/UnCamera.cpp",
+          "line": 76
+        }
+      ],
+      "status": "MAPPED",
+      "reader": "UE1 v9 original resource reader family (specific fields pending G1 comparison)",
+      "test": "",
+      "evidence": "SOURCE_IDENTITY_PASS 200/200 byte-identical C++/H, zero missing; catalog/compliance/evidence/o06/20261022-ue1-v9-v082-v083-source-identity.txt; combined manifest SHA-256 0b4af276183e52365492ada44fb4789778761ea2cf589c4c13c600e24f5b8105",
+      "remaining": "Reconcile v9 per-resource serialized structure, query sizes and source-specific semantics to UnrealDB reader/tests; no source-wide acceptance yet",
+      "updated_at_utc": "2026-10-22T10:40:00+00:00"
+    },
+    {
+      "id": "R83:UClass",
+      "branch": "R83",
+      "symbol": "UClass",
+      "locations": [
+        {
+          "path": "Engine/UnClass.cpp",
+          "line": 405
+        }
+      ],
+      "status": "MAPPED",
+      "reader": "UE1 v9 original resource reader family (specific fields pending G1 comparison)",
+      "test": "",
+      "evidence": "SOURCE_IDENTITY_PASS 200/200 byte-identical C++/H, zero missing; catalog/compliance/evidence/o06/20261022-ue1-v9-v082-v083-source-identity.txt; combined manifest SHA-256 0b4af276183e52365492ada44fb4789778761ea2cf589c4c13c600e24f5b8105",
+      "remaining": "Reconcile v9 per-resource serialized structure, query sizes and source-specific semantics to UnrealDB reader/tests; no source-wide acceptance yet",
+      "updated_at_utc": "2026-10-22T10:40:00+00:00"
+    },
+    {
+      "id": "R83:UEnum",
+      "branch": "R83",
+      "symbol": "UEnum",
+      "locations": [
+        {
+          "path": "Engine/UnRes.cpp",
+          "line": 2365
+        }
+      ],
+      "status": "MAPPED",
+      "reader": "UE1 v9 original resource reader family (specific fields pending G1 comparison)",
+      "test": "",
+      "evidence": "SOURCE_IDENTITY_PASS 200/200 byte-identical C++/H, zero missing; catalog/compliance/evidence/o06/20261022-ue1-v9-v082-v083-source-identity.txt; combined manifest SHA-256 0b4af276183e52365492ada44fb4789778761ea2cf589c4c13c600e24f5b8105",
+      "remaining": "Reconcile v9 per-resource serialized structure, query sizes and source-specific semantics to UnrealDB reader/tests; no source-wide acceptance yet",
+      "updated_at_utc": "2026-10-22T10:40:00+00:00"
+    },
+    {
+      "id": "R83:UFont",
+      "branch": "R83",
+      "symbol": "UFont",
+      "locations": [
+        {
+          "path": "Engine/UnGfx.cpp",
+          "line": 1169
+        }
+      ],
+      "status": "MAPPED",
+      "reader": "UE1 v9 original resource reader family (specific fields pending G1 comparison)",
+      "test": "",
+      "evidence": "SOURCE_IDENTITY_PASS 200/200 byte-identical C++/H, zero missing; catalog/compliance/evidence/o06/20261022-ue1-v9-v082-v083-source-identity.txt; combined manifest SHA-256 0b4af276183e52365492ada44fb4789778761ea2cf589c4c13c600e24f5b8105",
+      "remaining": "Reconcile v9 per-resource serialized structure, query sizes and source-specific semantics to UnrealDB reader/tests; no source-wide acceptance yet",
+      "updated_at_utc": "2026-10-22T10:40:00+00:00"
+    },
+    {
+      "id": "R83:ULevel",
+      "branch": "R83",
+      "symbol": "ULevel",
+      "locations": [
+        {
+          "path": "Engine/UnLevel.cpp",
+          "line": 376
+        }
+      ],
+      "status": "MAPPED",
+      "reader": "UE1 v9 original resource reader family (specific fields pending G1 comparison)",
+      "test": "",
+      "evidence": "SOURCE_IDENTITY_PASS 200/200 byte-identical C++/H, zero missing; catalog/compliance/evidence/o06/20261022-ue1-v9-v082-v083-source-identity.txt; combined manifest SHA-256 0b4af276183e52365492ada44fb4789778761ea2cf589c4c13c600e24f5b8105",
+      "remaining": "Reconcile v9 per-resource serialized structure, query sizes and source-specific semantics to UnrealDB reader/tests; no source-wide acceptance yet",
+      "updated_at_utc": "2026-10-22T10:40:00+00:00"
+    },
+    {
+      "id": "R83:ULightMesh",
+      "branch": "R83",
+      "symbol": "ULightMesh",
+      "locations": [
+        {
+          "path": "Engine/UnModel.cpp",
+          "line": 120
+        }
+      ],
+      "status": "MAPPED",
+      "reader": "UE1 v9 original resource reader family (specific fields pending G1 comparison)",
+      "test": "",
+      "evidence": "SOURCE_IDENTITY_PASS 200/200 byte-identical C++/H, zero missing; catalog/compliance/evidence/o06/20261022-ue1-v9-v082-v083-source-identity.txt; combined manifest SHA-256 0b4af276183e52365492ada44fb4789778761ea2cf589c4c13c600e24f5b8105",
+      "remaining": "Reconcile v9 per-resource serialized structure, query sizes and source-specific semantics to UnrealDB reader/tests; no source-wide acceptance yet",
+      "updated_at_utc": "2026-10-22T10:40:00+00:00"
+    },
+    {
+      "id": "R83:UMesh",
+      "branch": "R83",
+      "symbol": "UMesh",
+      "locations": [
+        {
+          "path": "Engine/UnMesh.cpp",
+          "line": 124
+        }
+      ],
+      "status": "MAPPED",
+      "reader": "UE1 v9 original resource reader family (specific fields pending G1 comparison)",
+      "test": "",
+      "evidence": "SOURCE_IDENTITY_PASS 200/200 byte-identical C++/H, zero missing; catalog/compliance/evidence/o06/20261022-ue1-v9-v082-v083-source-identity.txt; combined manifest SHA-256 0b4af276183e52365492ada44fb4789778761ea2cf589c4c13c600e24f5b8105",
+      "remaining": "Reconcile v9 per-resource serialized structure, query sizes and source-specific semantics to UnrealDB reader/tests; no source-wide acceptance yet",
+      "updated_at_utc": "2026-10-22T10:40:00+00:00"
+    },
+    {
+      "id": "R83:UMeshMap",
+      "branch": "R83",
+      "symbol": "UMeshMap",
+      "locations": [
+        {
+          "path": "Engine/UnMesh.cpp",
+          "line": 183
+        }
+      ],
+      "status": "MAPPED",
+      "reader": "UE1 v9 original resource reader family (specific fields pending G1 comparison)",
+      "test": "",
+      "evidence": "SOURCE_IDENTITY_PASS 200/200 byte-identical C++/H, zero missing; catalog/compliance/evidence/o06/20261022-ue1-v9-v082-v083-source-identity.txt; combined manifest SHA-256 0b4af276183e52365492ada44fb4789778761ea2cf589c4c13c600e24f5b8105",
+      "remaining": "Reconcile v9 per-resource serialized structure, query sizes and source-specific semantics to UnrealDB reader/tests; no source-wide acceptance yet",
+      "updated_at_utc": "2026-10-22T10:40:00+00:00"
+    },
+    {
+      "id": "R83:UModel",
+      "branch": "R83",
+      "symbol": "UModel",
+      "locations": [
+        {
+          "path": "Engine/UnModel.cpp",
+          "line": 370
+        }
+      ],
+      "status": "MAPPED",
+      "reader": "UE1 v9 original resource reader family (specific fields pending G1 comparison)",
+      "test": "",
+      "evidence": "SOURCE_IDENTITY_PASS 200/200 byte-identical C++/H, zero missing; catalog/compliance/evidence/o06/20261022-ue1-v9-v082-v083-source-identity.txt; combined manifest SHA-256 0b4af276183e52365492ada44fb4789778761ea2cf589c4c13c600e24f5b8105",
+      "remaining": "Reconcile v9 per-resource serialized structure, query sizes and source-specific semantics to UnrealDB reader/tests; no source-wide acceptance yet",
+      "updated_at_utc": "2026-10-22T10:40:00+00:00"
+    },
+    {
+      "id": "R83:UPalette",
+      "branch": "R83",
+      "symbol": "UPalette",
+      "locations": [
+        {
+          "path": "Engine/UnTex.cpp",
+          "line": 764
+        }
+      ],
+      "status": "MAPPED",
+      "reader": "UE1 v9 original resource reader family (specific fields pending G1 comparison)",
+      "test": "",
+      "evidence": "SOURCE_IDENTITY_PASS 200/200 byte-identical C++/H, zero missing; catalog/compliance/evidence/o06/20261022-ue1-v9-v082-v083-source-identity.txt; combined manifest SHA-256 0b4af276183e52365492ada44fb4789778761ea2cf589c4c13c600e24f5b8105",
+      "remaining": "Reconcile v9 per-resource serialized structure, query sizes and source-specific semantics to UnrealDB reader/tests; no source-wide acceptance yet",
+      "updated_at_utc": "2026-10-22T10:40:00+00:00"
+    },
+    {
+      "id": "R83:UPlayer",
+      "branch": "R83",
+      "symbol": "UPlayer",
+      "locations": [
+        {
+          "path": "Engine/UnServer.cpp",
+          "line": 359
+        }
+      ],
+      "status": "MAPPED",
+      "reader": "UE1 v9 original resource reader family (specific fields pending G1 comparison)",
+      "test": "",
+      "evidence": "SOURCE_IDENTITY_PASS 200/200 byte-identical C++/H, zero missing; catalog/compliance/evidence/o06/20261022-ue1-v9-v082-v083-source-identity.txt; combined manifest SHA-256 0b4af276183e52365492ada44fb4789778761ea2cf589c4c13c600e24f5b8105",
+      "remaining": "Reconcile v9 per-resource serialized structure, query sizes and source-specific semantics to UnrealDB reader/tests; no source-wide acceptance yet",
+      "updated_at_utc": "2026-10-22T10:40:00+00:00"
+    },
+    {
+      "id": "R83:UPolys",
+      "branch": "R83",
+      "symbol": "UPolys",
+      "locations": [
+        {
+          "path": "Engine/UnFPoly.cpp",
+          "line": 689
+        }
+      ],
+      "status": "MAPPED",
+      "reader": "UE1 v9 original resource reader family (specific fields pending G1 comparison)",
+      "test": "",
+      "evidence": "SOURCE_IDENTITY_PASS 200/200 byte-identical C++/H, zero missing; catalog/compliance/evidence/o06/20261022-ue1-v9-v082-v083-source-identity.txt; combined manifest SHA-256 0b4af276183e52365492ada44fb4789778761ea2cf589c4c13c600e24f5b8105",
+      "remaining": "Reconcile v9 per-resource serialized structure, query sizes and source-specific semantics to UnrealDB reader/tests; no source-wide acceptance yet",
+      "updated_at_utc": "2026-10-22T10:40:00+00:00"
+    },
+    {
+      "id": "R83:UScript",
+      "branch": "R83",
+      "symbol": "UScript",
+      "locations": [
+        {
+          "path": "Engine/UnScript.cpp",
+          "line": 2572
+        }
+      ],
+      "status": "MAPPED",
+      "reader": "UE1 v9 original resource reader family (specific fields pending G1 comparison)",
+      "test": "",
+      "evidence": "SOURCE_IDENTITY_PASS 200/200 byte-identical C++/H, zero missing; catalog/compliance/evidence/o06/20261022-ue1-v9-v082-v083-source-identity.txt; combined manifest SHA-256 0b4af276183e52365492ada44fb4789778761ea2cf589c4c13c600e24f5b8105",
+      "remaining": "Reconcile v9 per-resource serialized structure, query sizes and source-specific semantics to UnrealDB reader/tests; no source-wide acceptance yet",
+      "updated_at_utc": "2026-10-22T10:40:00+00:00"
+    },
+    {
+      "id": "R83:USound",
+      "branch": "R83",
+      "symbol": "USound",
+      "locations": [
+        {
+          "path": "Engine/UnSound.cpp",
+          "line": 274
+        }
+      ],
+      "status": "MAPPED",
+      "reader": "UE1 v9 original resource reader family (specific fields pending G1 comparison)",
+      "test": "",
+      "evidence": "SOURCE_IDENTITY_PASS 200/200 byte-identical C++/H, zero missing; catalog/compliance/evidence/o06/20261022-ue1-v9-v082-v083-source-identity.txt; combined manifest SHA-256 0b4af276183e52365492ada44fb4789778761ea2cf589c4c13c600e24f5b8105",
+      "remaining": "Reconcile v9 per-resource serialized structure, query sizes and source-specific semantics to UnrealDB reader/tests; no source-wide acceptance yet",
+      "updated_at_utc": "2026-10-22T10:40:00+00:00"
+    },
+    {
+      "id": "R83:UTerrain",
+      "branch": "R83",
+      "symbol": "UTerrain",
+      "locations": [
+        {
+          "path": "Engine/UnModel.cpp",
+          "line": 227
+        }
+      ],
+      "status": "MAPPED",
+      "reader": "UE1 v9 original resource reader family (specific fields pending G1 comparison)",
+      "test": "",
+      "evidence": "SOURCE_IDENTITY_PASS 200/200 byte-identical C++/H, zero missing; catalog/compliance/evidence/o06/20261022-ue1-v9-v082-v083-source-identity.txt; combined manifest SHA-256 0b4af276183e52365492ada44fb4789778761ea2cf589c4c13c600e24f5b8105",
+      "remaining": "Reconcile v9 per-resource serialized structure, query sizes and source-specific semantics to UnrealDB reader/tests; no source-wide acceptance yet",
+      "updated_at_utc": "2026-10-22T10:40:00+00:00"
+    },
+    {
+      "id": "R83:UTextBuffer",
+      "branch": "R83",
+      "symbol": "UTextBuffer",
+      "locations": [
+        {
+          "path": "Engine/UnRes.cpp",
+          "line": 2064
+        }
+      ],
+      "status": "MAPPED",
+      "reader": "UE1 v9 original resource reader family (specific fields pending G1 comparison)",
+      "test": "",
+      "evidence": "SOURCE_IDENTITY_PASS 200/200 byte-identical C++/H, zero missing; catalog/compliance/evidence/o06/20261022-ue1-v9-v082-v083-source-identity.txt; combined manifest SHA-256 0b4af276183e52365492ada44fb4789778761ea2cf589c4c13c600e24f5b8105",
+      "remaining": "Reconcile v9 per-resource serialized structure, query sizes and source-specific semantics to UnrealDB reader/tests; no source-wide acceptance yet",
+      "updated_at_utc": "2026-10-22T10:40:00+00:00"
+    },
+    {
+      "id": "R83:UTexture",
+      "branch": "R83",
+      "symbol": "UTexture",
+      "locations": [
+        {
+          "path": "Engine/UnTex.cpp",
+          "line": 405
+        }
+      ],
+      "status": "MAPPED",
+      "reader": "UE1 v9 original resource reader family (specific fields pending G1 comparison)",
+      "test": "",
+      "evidence": "SOURCE_IDENTITY_PASS 200/200 byte-identical C++/H, zero missing; catalog/compliance/evidence/o06/20261022-ue1-v9-v082-v083-source-identity.txt; combined manifest SHA-256 0b4af276183e52365492ada44fb4789778761ea2cf589c4c13c600e24f5b8105",
+      "remaining": "Reconcile v9 per-resource serialized structure, query sizes and source-specific semantics to UnrealDB reader/tests; no source-wide acceptance yet",
+      "updated_at_utc": "2026-10-22T10:40:00+00:00"
+    },
+    {
+      "id": "R83:UTransBuffer",
+      "branch": "R83",
+      "symbol": "UTransBuffer",
+      "locations": [
+        {
+          "path": "Editor/UnEdTran.cpp",
+          "line": 1020
+        }
+      ],
+      "status": "MAPPED",
+      "reader": "UE1 v9 original resource reader family (specific fields pending G1 comparison)",
+      "test": "",
+      "evidence": "SOURCE_IDENTITY_PASS 200/200 byte-identical C++/H, zero missing; catalog/compliance/evidence/o06/20261022-ue1-v9-v082-v083-source-identity.txt; combined manifest SHA-256 0b4af276183e52365492ada44fb4789778761ea2cf589c4c13c600e24f5b8105",
+      "remaining": "Reconcile v9 per-resource serialized structure, query sizes and source-specific semantics to UnrealDB reader/tests; no source-wide acceptance yet",
+      "updated_at_utc": "2026-10-22T10:40:00+00:00"
+    },
+    {
+      "id": "R83:UVectors",
+      "branch": "R83",
+      "symbol": "UVectors",
+      "locations": [
+        {
+          "path": "Engine/UnModel.cpp",
+          "line": 135
+        }
+      ],
+      "status": "MAPPED",
+      "reader": "UE1 v9 original resource reader family (specific fields pending G1 comparison)",
+      "test": "",
+      "evidence": "SOURCE_IDENTITY_PASS 200/200 byte-identical C++/H, zero missing; catalog/compliance/evidence/o06/20261022-ue1-v9-v082-v083-source-identity.txt; combined manifest SHA-256 0b4af276183e52365492ada44fb4789778761ea2cf589c4c13c600e24f5b8105",
+      "remaining": "Reconcile v9 per-resource serialized structure, query sizes and source-specific semantics to UnrealDB reader/tests; no source-wide acceptance yet",
+      "updated_at_utc": "2026-10-22T10:40:00+00:00"
+    },
+    {
+      "id": "R83:UVertPool",
+      "branch": "R83",
+      "symbol": "UVertPool",
+      "locations": [
+        {
+          "path": "Engine/UnModel.cpp",
+          "line": 165
+        }
+      ],
+      "status": "MAPPED",
+      "reader": "UE1 v9 original resource reader family (specific fields pending G1 comparison)",
+      "test": "",
+      "evidence": "SOURCE_IDENTITY_PASS 200/200 byte-identical C++/H, zero missing; catalog/compliance/evidence/o06/20261022-ue1-v9-v082-v083-source-identity.txt; combined manifest SHA-256 0b4af276183e52365492ada44fb4789778761ea2cf589c4c13c600e24f5b8105",
+      "remaining": "Reconcile v9 per-resource serialized structure, query sizes and source-specific semantics to UnrealDB reader/tests; no source-wide acceptance yet",
+      "updated_at_utc": "2026-10-22T10:40:00+00:00"
+    },
     {
       "id": "R96:UActorList",
       "branch": "R96",
@@ -651,6 +1535,895 @@
         "source_sha256": "fcf286fc553d255dde97720aa66da08f4b8809fb5bfd3b62ae999f5d22395c18",
         "log": "catalog\\compliance\\evidence\\o06\\20261021T174248908Z-e67c8053-PRD-verify-ue1-original-resource-geometry.php.txt"
       }
+    },
+    {
+      "id": "U86:AActor",
+      "branch": "U86",
+      "symbol": "AActor",
+      "locations": [
+        {
+          "path": "Engine/UnActor.cpp",
+          "line": 17
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+    },
+    {
+      "id": "U86:ABrush",
+      "branch": "U86",
+      "symbol": "ABrush",
+      "locations": [
+        {
+          "path": "Engine/UnDynBsp.cpp",
+          "line": 66
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+    },
+    {
+      "id": "U86:AMover",
+      "branch": "U86",
+      "symbol": "AMover",
+      "locations": [
+        {
+          "path": "Game/UnMover.cpp",
+          "line": 18
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+    },
+    {
+      "id": "U86:APawn",
+      "branch": "U86",
+      "symbol": "APawn",
+      "locations": [
+        {
+          "path": "Game/UnPawn.cpp",
+          "line": 19
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+    },
+    {
+      "id": "U86:UArray",
+      "branch": "U86",
+      "symbol": "UArray",
+      "locations": [
+        {
+          "path": "Engine/UnObj.cpp",
+          "line": 2241
+        },
+        {
+          "path": "Engine/UnRes.cpp",
+          "line": 2216
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+    },
+    {
+      "id": "U86:UBitArray",
+      "branch": "U86",
+      "symbol": "UBitArray",
+      "locations": [
+        {
+          "path": "Engine/UnObj.cpp",
+          "line": 2623
+        },
+        {
+          "path": "Engine/UnRes.cpp",
+          "line": 2584
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+    },
+    {
+      "id": "U86:UBitMatrix",
+      "branch": "U86",
+      "symbol": "UBitMatrix",
+      "locations": [
+        {
+          "path": "Engine/UnObj.cpp",
+          "line": 2624
+        },
+        {
+          "path": "Engine/UnRes.cpp",
+          "line": 2585
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+    },
+    {
+      "id": "U86:UBounds",
+      "branch": "U86",
+      "symbol": "UBounds",
+      "locations": [
+        {
+          "path": "Engine/UnModel.cpp",
+          "line": 129
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+    },
+    {
+      "id": "U86:UBspNodes",
+      "branch": "U86",
+      "symbol": "UBspNodes",
+      "locations": [
+        {
+          "path": "Engine/UnModel.cpp",
+          "line": 51
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+    },
+    {
+      "id": "U86:UBspSurfs",
+      "branch": "U86",
+      "symbol": "UBspSurfs",
+      "locations": [
+        {
+          "path": "Engine/UnModel.cpp",
+          "line": 87
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+    },
+    {
+      "id": "U86:UBuffer",
+      "branch": "U86",
+      "symbol": "UBuffer",
+      "locations": [
+        {
+          "path": "Engine/UnObj.cpp",
+          "line": 2390
+        },
+        {
+          "path": "Engine/UnRes.cpp",
+          "line": 2365
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+    },
+    {
+      "id": "U86:UCamera",
+      "branch": "U86",
+      "symbol": "UCamera",
+      "locations": [
+        {
+          "path": "Engine/UnCamera.cpp",
+          "line": 51
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+    },
+    {
+      "id": "U86:UClass",
+      "branch": "U86",
+      "symbol": "UClass",
+      "locations": [
+        {
+          "path": "Engine/UnClass.cpp",
+          "line": 405
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+    },
+    {
+      "id": "U86:UDatabase",
+      "branch": "U86",
+      "symbol": "UDatabase",
+      "locations": [
+        {
+          "path": "Engine/UnObj.cpp",
+          "line": 854
+        },
+        {
+          "path": "Engine/UnRes.cpp",
+          "line": 861
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+    },
+    {
+      "id": "U86:UDependencies",
+      "branch": "U86",
+      "symbol": "UDependencies",
+      "locations": [
+        {
+          "path": "Engine/UnClass.cpp",
+          "line": 849
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+    },
+    {
+      "id": "U86:UEnumDef",
+      "branch": "U86",
+      "symbol": "UEnumDef",
+      "locations": [
+        {
+          "path": "Engine/UnObj.cpp",
+          "line": 2348
+        },
+        {
+          "path": "Engine/UnRes.cpp",
+          "line": 2323
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+    },
+    {
+      "id": "U86:UFloats",
+      "branch": "U86",
+      "symbol": "UFloats",
+      "locations": [
+        {
+          "path": "Engine/UnModel.cpp",
+          "line": 105
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+    },
+    {
+      "id": "U86:UFont",
+      "branch": "U86",
+      "symbol": "UFont",
+      "locations": [
+        {
+          "path": "Engine/UnFont.cpp",
+          "line": 517
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+    },
+    {
+      "id": "U86:UInts",
+      "branch": "U86",
+      "symbol": "UInts",
+      "locations": [
+        {
+          "path": "Engine/UnObj.cpp",
+          "line": 2617
+        },
+        {
+          "path": "Engine/UnRes.cpp",
+          "line": 2578
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+    },
+    {
+      "id": "U86:ULevel",
+      "branch": "U86",
+      "symbol": "ULevel",
+      "locations": [
+        {
+          "path": "Engine/UnLevel.cpp",
+          "line": 375
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+    },
+    {
+      "id": "U86:ULightMesh",
+      "branch": "U86",
+      "symbol": "ULightMesh",
+      "locations": [
+        {
+          "path": "Engine/UnModel.cpp",
+          "line": 93
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+    },
+    {
+      "id": "U86:ULinker",
+      "branch": "U86",
+      "symbol": "ULinker",
+      "locations": [
+        {
+          "path": "Engine/UnObj.cpp",
+          "line": 2608
+        },
+        {
+          "path": "Engine/UnRes.cpp",
+          "line": 2569
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+    },
+    {
+      "id": "U86:ULinkerLoad",
+      "branch": "U86",
+      "symbol": "ULinkerLoad",
+      "locations": [
+        {
+          "path": "Engine/UnObj.cpp",
+          "line": 2609
+        },
+        {
+          "path": "Engine/UnRes.cpp",
+          "line": 2570
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+    },
+    {
+      "id": "U86:ULinkerSave",
+      "branch": "U86",
+      "symbol": "ULinkerSave",
+      "locations": [
+        {
+          "path": "Engine/UnObj.cpp",
+          "line": 2610
+        },
+        {
+          "path": "Engine/UnRes.cpp",
+          "line": 2571
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+    },
+    {
+      "id": "U86:UMesh",
+      "branch": "U86",
+      "symbol": "UMesh",
+      "locations": [
+        {
+          "path": "Engine/UnMesh.cpp",
+          "line": 91
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+    },
+    {
+      "id": "U86:UMeshAnimNotifys",
+      "branch": "U86",
+      "symbol": "UMeshAnimNotifys",
+      "locations": [
+        {
+          "path": "Engine/UnMesh.cpp",
+          "line": 23
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+    },
+    {
+      "id": "U86:UMeshAnimSeqs",
+      "branch": "U86",
+      "symbol": "UMeshAnimSeqs",
+      "locations": [
+        {
+          "path": "Engine/UnMesh.cpp",
+          "line": 22
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+    },
+    {
+      "id": "U86:UMeshTris",
+      "branch": "U86",
+      "symbol": "UMeshTris",
+      "locations": [
+        {
+          "path": "Engine/UnMesh.cpp",
+          "line": 21
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+    },
+    {
+      "id": "U86:UMeshVertConnects",
+      "branch": "U86",
+      "symbol": "UMeshVertConnects",
+      "locations": [
+        {
+          "path": "Engine/UnMesh.cpp",
+          "line": 24
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+    },
+    {
+      "id": "U86:UMeshVerts",
+      "branch": "U86",
+      "symbol": "UMeshVerts",
+      "locations": [
+        {
+          "path": "Engine/UnMesh.cpp",
+          "line": 20
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+    },
+    {
+      "id": "U86:UModel",
+      "branch": "U86",
+      "symbol": "UModel",
+      "locations": [
+        {
+          "path": "Engine/UnModel.cpp",
+          "line": 261
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+    },
+    {
+      "id": "U86:UMusic",
+      "branch": "U86",
+      "symbol": "UMusic",
+      "locations": [
+        {
+          "path": "Engine/UnMusic.cpp",
+          "line": 191
+        },
+        {
+          "path": "Engine/UnMusic.cpp",
+          "line": 459
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+    },
+    {
+      "id": "U86:UObject",
+      "branch": "U86",
+      "symbol": "UObject",
+      "locations": [
+        {
+          "path": "Engine/UnObj.cpp",
+          "line": 693
+        },
+        {
+          "path": "Engine/UnRes.cpp",
+          "line": 700
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+    },
+    {
+      "id": "U86:UPalette",
+      "branch": "U86",
+      "symbol": "UPalette",
+      "locations": [
+        {
+          "path": "Engine/UnTex.cpp",
+          "line": 1270
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+    },
+    {
+      "id": "U86:UPlayer",
+      "branch": "U86",
+      "symbol": "UPlayer",
+      "locations": [
+        {
+          "path": "Engine/UnServer.cpp",
+          "line": 308
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+    },
+    {
+      "id": "U86:UPolys",
+      "branch": "U86",
+      "symbol": "UPolys",
+      "locations": [
+        {
+          "path": "Engine/UnFPoly.cpp",
+          "line": 725
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+    },
+    {
+      "id": "U86:UPrimitive",
+      "branch": "U86",
+      "symbol": "UPrimitive",
+      "locations": [
+        {
+          "path": "Engine/UnModel.cpp",
+          "line": 17
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+    },
+    {
+      "id": "U86:UProperties",
+      "branch": "U86",
+      "symbol": "UProperties",
+      "locations": [
+        {
+          "path": "Engine/UnClass.cpp",
+          "line": 817
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+    },
+    {
+      "id": "U86:UReachSpecs",
+      "branch": "U86",
+      "symbol": "UReachSpecs",
+      "locations": [
+        {
+          "path": "Engine/UnRoute.cpp",
+          "line": 21
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+    },
+    {
+      "id": "U86:UScript",
+      "branch": "U86",
+      "symbol": "UScript",
+      "locations": [
+        {
+          "path": "Engine/UnScript.cpp",
+          "line": 4518
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+    },
+    {
+      "id": "U86:USound",
+      "branch": "U86",
+      "symbol": "USound",
+      "locations": [
+        {
+          "path": "Engine/UnSound.cpp",
+          "line": 220
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+    },
+    {
+      "id": "U86:UStackTree",
+      "branch": "U86",
+      "symbol": "UStackTree",
+      "locations": [
+        {
+          "path": "Engine/UnScript.cpp",
+          "line": 4560
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+    },
+    {
+      "id": "U86:UTextBuffer",
+      "branch": "U86",
+      "symbol": "UTextBuffer",
+      "locations": [
+        {
+          "path": "Engine/UnObj.cpp",
+          "line": 2178
+        },
+        {
+          "path": "Engine/UnRes.cpp",
+          "line": 2153
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+    },
+    {
+      "id": "U86:UTexture",
+      "branch": "U86",
+      "symbol": "UTexture",
+      "locations": [
+        {
+          "path": "Engine/UnTex.cpp",
+          "line": 496
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+    },
+    {
+      "id": "U86:UTextureSet",
+      "branch": "U86",
+      "symbol": "UTextureSet",
+      "locations": [
+        {
+          "path": "Engine/UnTex.cpp",
+          "line": 502
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+    },
+    {
+      "id": "U86:UTransBuffer",
+      "branch": "U86",
+      "symbol": "UTransBuffer",
+      "locations": [
+        {
+          "path": "Editor/UnEdTran.cpp",
+          "line": 882
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+    },
+    {
+      "id": "U86:UVectors",
+      "branch": "U86",
+      "symbol": "UVectors",
+      "locations": [
+        {
+          "path": "Engine/UnModel.cpp",
+          "line": 99
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+    },
+    {
+      "id": "U86:UVerts",
+      "branch": "U86",
+      "symbol": "UVerts",
+      "locations": [
+        {
+          "path": "Engine/UnModel.cpp",
+          "line": 123
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+    },
+    {
+      "id": "U86:UWords",
+      "branch": "U86",
+      "symbol": "UWords",
+      "locations": [
+        {
+          "path": "Engine/UnObj.cpp",
+          "line": 2616
+        },
+        {
+          "path": "Engine/UnRes.cpp",
+          "line": 2577
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T10:35:15+00:00"
     },
     {
       "id": "U97:AActor",
@@ -2712,6 +4485,91 @@
       "evidence": "",
       "remaining": "Source-to-reader/test classification not yet completed",
       "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "C227:AEmitterGarbageCollector::Serialize",
+      "branch": "C227",
+      "symbol": "AEmitterGarbageCollector::Serialize",
+      "locations": [
+        {
+          "path": "Emitter/Src/EmitterRender.cpp",
+          "line": 71
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+    },
+    {
+      "id": "C227:AXBeamEmitter::Serialize",
+      "branch": "C227",
+      "symbol": "AXBeamEmitter::Serialize",
+      "locations": [
+        {
+          "path": "Emitter/Src/BeamEmitter.cpp",
+          "line": 42
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+    },
+    {
+      "id": "C227:AXParticleEmitter::Serialize",
+      "branch": "C227",
+      "symbol": "AXParticleEmitter::Serialize",
+      "locations": [
+        {
+          "path": "Emitter/Src/AXEmitter.cpp",
+          "line": 101
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+    },
+    {
+      "id": "C227:AXRopeDeco::Serialize",
+      "branch": "C227",
+      "symbol": "AXRopeDeco::Serialize",
+      "locations": [
+        {
+          "path": "Emitter/Src/EmitterPhysX.cpp",
+          "line": 1392
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+    },
+    {
+      "id": "C227:UBeamMesh::Serialize",
+      "branch": "C227",
+      "symbol": "UBeamMesh::Serialize",
+      "locations": [
+        {
+          "path": "Emitter/Src/BeamEmitter.cpp",
+          "line": 299
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T10:35:15+00:00"
     },
     {
       "id": "T99:AActor::Serialize",

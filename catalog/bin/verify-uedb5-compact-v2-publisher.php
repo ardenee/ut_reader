@@ -56,5 +56,3 @@ echo json_encode(['ok'=>$fail===[]&&$passed===7,'session_temporary_tables_only'=
  'games_passed'=>$passed,'rollback_passed'=>$rollback,'failures'=>$fail],
  JSON_PRETTY_PRINT|JSON_INVALID_UTF8_SUBSTITUTE),PHP_EOL;
 exit($fail===[]&&$passed===7?0:2);
-
-[executed on device: Lelly-pc (1e6f9b87-60aa-4fe3-bf48-4166e6555d43)]

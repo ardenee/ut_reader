@@ -15,14 +15,20 @@ Status: **INSTALLED AND VERIFIED**. This is an OPTIONAL development/search tool.
 - End-to-end MCP test: `C:\Users\arden\Graphify\Test-MCP.py`.
 - All generated indexes, including metadata and rendered HTML, live **outside the Git checkout** under `C:\Users\arden\Graphify\`, not PRD.
 
-## Verified pilot graphs (2026-10-22)
+## Verified local graphs and interactive dashboard (2026-10-22)
 
 | Graph | Source path | Graph JSON | AST extraction | Result |
 |---|---|---|---|---|
 | `unrealdb` | `C:\Users\arden\source\repos\ut_reader` | `C:\Users\arden\Graphify\unrealdb\graphify-out\graph.json` | 1,727 initial code files; incremental refresh after SQL dependency added | 10,792 nodes / 22,725 edges / 856 communities, 12,431,199 JSON bytes |
 | `ue1-v0867` | `L:\Source\Games\Unreal\Unreal [v0.867] [1997-07-25]\Src` | `C:\Users\arden\Graphify\ue1-v0867\graphify-out\graph.json` | 237 code files | 9,659 nodes / 15,888 edges / 459 communities, 6,360,278 JSON bytes |
 
-Both outputs also contain `graph.html` as an aggregated browser-viewable community graph, generated with `graphify export html --node-limit 2400`. The complete individual nodes remain available in `graph.json` and via CLI/MCP.
+All outputs contain `graph.html` as an aggregated browser-viewable community graph (generated with `graphify export html --node-limit 2400`). The complete individual nodes remain available in `graph.json` and via CLI/MCP.
+
+**Dashboard:** open `C:\Users\arden\Graphify\index.html` on DEV; it searches/filters source graphs and links directly to their HTML views. `Build-Dashboard.py` automatically scans saved `graph.json` files and each project's `project.json`; `Index-Code.ps1` now updates the dashboard and HTML view after every successful extraction. Browser refresh controls show/copy PowerShell commands; they deliberately do not execute commands.
+
+**12 currently indexed projects:** UnrealDB, UE1 v0.82, v0.83, v0.84a, v0.86x, v0.867, v1.200, v1.224 (INCOMPLETE), v1.227, UT v400, UT v432, and the separate `L:\Source\Engine\UE1\Source` tree (version unknown). **127,682 graph nodes** across these *separate*, overlapping source trees; these are not distinct source objects. Current total local dashboard/graph/cache storage is **approximately 218 MiB**. All nine additional Games version trees plus the unversioned Engine/Source tree completed code-only indexing and HTML export successfully. Some source files could not be fully parsed; see limitations.
+
+**Reusable local scripts:** `C:\Users\arden\Graphify\Build-Dashboard.py`, `Index-Code.ps1`, `Index-UE1-Sources.ps1`, and `Test-MCP.py`; versioned backups live under repository `tools/graphify/`. `Index-UE1-Sources.ps1` preserves an append-only `UE1-Index-Journal.jsonl` with STARTED and terminal PASS/FAIL for each graph, and skips graphs already saved. For any new project, use `Index-Code.ps1 -Name <new-id> -Source <directory> -Workers 4`; its dashboard entry is then added without further manual page editing. No Graphify Cloud account or HTTP service is involved.
 
 ## Usage from any PowerShell terminal on DEV
 
@@ -66,7 +72,7 @@ Verification was performed by `Test-MCP.py` using an MCP Python client via stdio
 ## Limitations and distinct source findings
 
 - Original Unreal v0.867 uses non-UTF8 code and extensive C++ macros; Graphify reported **41 files with syntax/extraction issues**, and some may be only partially parsed. Use `rg`, compiler probes and actual Epic source for verification.
-- A PHP file `catalog/bin/verify-uedb5-compact-v2-publisher.php` has a **genuine parse error at line 60** confirmed independently by `php -l` (exit 255). This unrelated issue was *observed*, not fixed as part of installing Graphify.
+- Graphify located an existing actual PHP syntax error in `catalog/bin/verify-uedb5-compact-v2-publisher.php`: a stray Desktop Commander output line appended to the source at line 60. **Removed 2026-10-22; DEV and PRD `php -l` PASS, SHA-256 synchronized.** Attempted the real regression on both local DEV and PRD paths: both exit 2 before cases because required `ue_uedb5_files` table is absent in the configured `hwmvlite_ut_reader_catalog` database. **Runtime verification remains BLOCKED; do not claim 7/7 PASS.** Script was otherwise untouched.
 - The initial code-only UnrealDB scan skipped 7 SQL files without the optional grammar; `graphifyy[mcp,sql]` is now installed and the incremental refresh completed successfully.
 - Graphify node/edge counts indicate searchable coverage, **not** UnrealDB serializer correctness. No O06 acceptance status was changed due to Graphify.
 - Developer graph outputs may contain snippets or metadata from proprietary Epic source. Keep these files on DEV; do not push generated `graph.json` or `graph.html` to public GitHub or external Graphify Cloud.
