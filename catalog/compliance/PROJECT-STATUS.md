@@ -11,7 +11,7 @@ Updated: **2026-10-21**. This is the canonical recovery/handover file for this p
 | Reference sources | `L:\Source\Engine` and `L:\Source\Games` |
 | Deployment | `Z:\Apache24\htdocs\unrealdb` on DEV is PRD `Lelly-pc` |
 | GitHub | `https://github.com/ardenee/ut_reader` |
-| Active engine / operation | **UE1 / O06 — object and property serialization** |
+| Active engine / operation | **UE1 / O06 — object and property serialization. Latest implementation: v22/v23 six specialized class headers + full UVerts/UFont records, source-defined 60/60, DEV staging/MySQL passed; pending PRD and inventory closure.** |
 | O01 status | **ACCEPTED — 6/6 fixed identification/dispatch criteria passed**. Original structural metadata O02 is also accepted; type-specific object/payload parsing belongs to O06/O07. |
 | Primary acceptance metric | **UE1: O01–O05 accepted within explicit source-backed file-handling contracts; O06–O10 open.** Runtime engine and full production equivalence NOT established. |
 | Latest completed work batch | **UE1 O06 — 1996 UTexture and UDatabase subclass native records; 1997 UClass/FProperty plus source-defined instance values incl. FArchive::String; genuine classic 2,465 exports remain fully covered in pinned corpus. O06 IMPLEMENTING.** |
