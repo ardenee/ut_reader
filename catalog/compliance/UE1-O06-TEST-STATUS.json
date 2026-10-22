@@ -1,20 +1,20 @@
 ﻿{
-    "updated_at_utc":  "2026-10-22T14:55:18.1837078Z",
-    "head_commit":  "859884db",
+    "updated_at_utc":  "2026-10-22T15:06:21.1197285Z",
+    "head_commit":  "c1b20b65",
     "current_target":  "PRD",
-    "current_source_sha256":  "9de5130639f170b8802a4ee89919ce08c50ed02f4fa27eee491b0115486c976f",
+    "current_source_sha256":  "829d47c3e4f2ac0d90f2a35feb1edd0abd5e742140a38b4f44bb51b92b63ccf0",
     "tests":  [
                   {
                       "key":  "DEV:verify-ue1-classic-class-metadata.php",
                       "test":  "verify-ue1-classic-class-metadata.php",
                       "target":  "DEV",
                       "state":  "PASS",
-                      "event_at_utc":  "2026-10-22T14:54:47.0430642Z",
-                      "source_sha256":  "d116476b8d406216dc956ffc1ffb632a9b7204caf8ebd8ea2cc0a6362da760f4",
-                      "test_sha256":  "30821c14e1b6b900e9ef114f85cc6d7e70683065936b3d5c64737d56edd10226",
-                      "run_id":  "20261022T145446753Z-40672f79",
+                      "event_at_utc":  "2026-10-22T15:05:52.1525083Z",
+                      "source_sha256":  "e5b803f805f84d95e30821be6b30632548705f4583dfa3b92decb637fe204020",
+                      "test_sha256":  "d104ed10d9a147c41d3156dee8e590e37fa6e82a3d877fc63ec7c94463ff51c2",
+                      "run_id":  "20261022T150551763Z-736aaeb2",
                       "exit_code":  0,
-                      "log":  "catalog\\compliance\\evidence\\o06\\20261022T145446753Z-40672f79-DEV-verify-ue1-classic-class-metadata.php.txt"
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261022T150551763Z-736aaeb2-DEV-verify-ue1-classic-class-metadata.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-classic-const-native.php",
@@ -105,12 +105,12 @@
                       "test":  "verify-ue1-classic-property-native.php",
                       "target":  "DEV",
                       "state":  "PASS",
-                      "event_at_utc":  "2026-10-22T14:54:47.5911291Z",
-                      "source_sha256":  "d116476b8d406216dc956ffc1ffb632a9b7204caf8ebd8ea2cc0a6362da760f4",
+                      "event_at_utc":  "2026-10-22T15:05:53.6462482Z",
+                      "source_sha256":  "e5b803f805f84d95e30821be6b30632548705f4583dfa3b92decb637fe204020",
                       "test_sha256":  "b46f424186bbd2883f6c502d349e1208bd88a64f6f8b0610a7505c7dd6417fba",
-                      "run_id":  "20261022T145447225Z-f8e053ce",
+                      "run_id":  "20261022T150553312Z-617f4972",
                       "exit_code":  0,
-                      "log":  "catalog\\compliance\\evidence\\o06\\20261022T145447225Z-f8e053ce-DEV-verify-ue1-classic-property-native.php.txt"
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261022T150553312Z-617f4972-DEV-verify-ue1-classic-property-native.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-classic-struct-native.php",
@@ -129,12 +129,12 @@
                       "test":  "verify-ue1-classic-tagged-properties.php",
                       "target":  "DEV",
                       "state":  "PASS",
-                      "event_at_utc":  "2026-10-22T14:54:49.8755223Z",
-                      "source_sha256":  "d116476b8d406216dc956ffc1ffb632a9b7204caf8ebd8ea2cc0a6362da760f4",
+                      "event_at_utc":  "2026-10-22T15:05:53.1334870Z",
+                      "source_sha256":  "e5b803f805f84d95e30821be6b30632548705f4583dfa3b92decb637fe204020",
                       "test_sha256":  "a43435273ceed564f9cb0de064c3c0cd77d26ec7647bc3bd9f9c9df1a8c6506f",
-                      "run_id":  "20261022T145449093Z-41ebe7d7",
+                      "run_id":  "20261022T150552337Z-e1d28925",
                       "exit_code":  0,
-                      "log":  "catalog\\compliance\\evidence\\o06\\20261022T145449093Z-41ebe7d7-DEV-verify-ue1-classic-tagged-properties.php.txt"
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261022T150552337Z-e1d28925-DEV-verify-ue1-classic-tagged-properties.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-classic-textbuffer-native.php",
@@ -177,12 +177,12 @@
                       "test":  "verify-ue1-o06-payload-negatives.php",
                       "target":  "DEV",
                       "state":  "PASS",
-                      "event_at_utc":  "2026-10-22T14:54:50.4211431Z",
-                      "source_sha256":  "d116476b8d406216dc956ffc1ffb632a9b7204caf8ebd8ea2cc0a6362da760f4",
+                      "event_at_utc":  "2026-10-22T15:05:54.1885183Z",
+                      "source_sha256":  "e5b803f805f84d95e30821be6b30632548705f4583dfa3b92decb637fe204020",
                       "test_sha256":  "be58ffc16478d4eb446eed331b121ac178e171fae65195daa20baa9a6987edee",
-                      "run_id":  "20261022T145450055Z-7c21769b",
+                      "run_id":  "20261022T150553820Z-3b4d0d30",
                       "exit_code":  0,
-                      "log":  "catalog\\compliance\\evidence\\o06\\20261022T145450055Z-7c21769b-DEV-verify-ue1-o06-payload-negatives.php.txt"
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261022T150553820Z-3b4d0d30-DEV-verify-ue1-o06-payload-negatives.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-original-1996-actor-abi.php",
@@ -741,12 +741,12 @@
                       "test":  "verify-ue1-classic-class-metadata.php",
                       "target":  "PRD",
                       "state":  "PASS",
-                      "event_at_utc":  "2026-10-22T14:55:14.4423046Z",
-                      "source_sha256":  "9de5130639f170b8802a4ee89919ce08c50ed02f4fa27eee491b0115486c976f",
-                      "test_sha256":  "30821c14e1b6b900e9ef114f85cc6d7e70683065936b3d5c64737d56edd10226",
-                      "run_id":  "20261022T145514155Z-83dfba9d",
+                      "event_at_utc":  "2026-10-22T15:06:18.6780001Z",
+                      "source_sha256":  "829d47c3e4f2ac0d90f2a35feb1edd0abd5e742140a38b4f44bb51b92b63ccf0",
+                      "test_sha256":  "d104ed10d9a147c41d3156dee8e590e37fa6e82a3d877fc63ec7c94463ff51c2",
+                      "run_id":  "20261022T150618234Z-d8b24607",
                       "exit_code":  0,
-                      "log":  "catalog\\compliance\\evidence\\o06\\20261022T145514155Z-83dfba9d-PRD-verify-ue1-classic-class-metadata.php.txt"
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261022T150618234Z-d8b24607-PRD-verify-ue1-classic-class-metadata.php.txt"
                   },
                   {
                       "key":  "PRD:verify-ue1-classic-const-native.php",
@@ -837,12 +837,12 @@
                       "test":  "verify-ue1-classic-property-native.php",
                       "target":  "PRD",
                       "state":  "PASS",
-                      "event_at_utc":  "2026-10-22T14:55:14.9766163Z",
-                      "source_sha256":  "9de5130639f170b8802a4ee89919ce08c50ed02f4fa27eee491b0115486c976f",
+                      "event_at_utc":  "2026-10-22T15:06:20.2225849Z",
+                      "source_sha256":  "829d47c3e4f2ac0d90f2a35feb1edd0abd5e742140a38b4f44bb51b92b63ccf0",
                       "test_sha256":  "b46f424186bbd2883f6c502d349e1208bd88a64f6f8b0610a7505c7dd6417fba",
-                      "run_id":  "20261022T145514631Z-f7d1959a",
+                      "run_id":  "20261022T150619881Z-19bb7636",
                       "exit_code":  0,
-                      "log":  "catalog\\compliance\\evidence\\o06\\20261022T145514631Z-f7d1959a-PRD-verify-ue1-classic-property-native.php.txt"
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261022T150619881Z-19bb7636-PRD-verify-ue1-classic-property-native.php.txt"
                   },
                   {
                       "key":  "PRD:verify-ue1-classic-struct-native.php",
@@ -861,12 +861,12 @@
                       "test":  "verify-ue1-classic-tagged-properties.php",
                       "target":  "PRD",
                       "state":  "PASS",
-                      "event_at_utc":  "2026-10-22T14:55:17.3107600Z",
-                      "source_sha256":  "9de5130639f170b8802a4ee89919ce08c50ed02f4fa27eee491b0115486c976f",
+                      "event_at_utc":  "2026-10-22T15:06:19.6815537Z",
+                      "source_sha256":  "829d47c3e4f2ac0d90f2a35feb1edd0abd5e742140a38b4f44bb51b92b63ccf0",
                       "test_sha256":  "a43435273ceed564f9cb0de064c3c0cd77d26ec7647bc3bd9f9c9df1a8c6506f",
-                      "run_id":  "20261022T145516530Z-7c346e13",
+                      "run_id":  "20261022T150618857Z-eab59e0a",
                       "exit_code":  0,
-                      "log":  "catalog\\compliance\\evidence\\o06\\20261022T145516530Z-7c346e13-PRD-verify-ue1-classic-tagged-properties.php.txt"
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261022T150618857Z-eab59e0a-PRD-verify-ue1-classic-tagged-properties.php.txt"
                   },
                   {
                       "key":  "PRD:verify-ue1-classic-textbuffer-native.php",
@@ -909,12 +909,12 @@
                       "test":  "verify-ue1-o06-payload-negatives.php",
                       "target":  "PRD",
                       "state":  "PASS",
-                      "event_at_utc":  "2026-10-22T14:55:18.1766975Z",
-                      "source_sha256":  "9de5130639f170b8802a4ee89919ce08c50ed02f4fa27eee491b0115486c976f",
+                      "event_at_utc":  "2026-10-22T15:06:21.1117010Z",
+                      "source_sha256":  "829d47c3e4f2ac0d90f2a35feb1edd0abd5e742140a38b4f44bb51b92b63ccf0",
                       "test_sha256":  "be58ffc16478d4eb446eed331b121ac178e171fae65195daa20baa9a6987edee",
-                      "run_id":  "20261022T145517498Z-5303da11",
+                      "run_id":  "20261022T150620402Z-1f6da132",
                       "exit_code":  0,
-                      "log":  "catalog\\compliance\\evidence\\o06\\20261022T145517498Z-5303da11-PRD-verify-ue1-o06-payload-negatives.php.txt"
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261022T150620402Z-1f6da132-PRD-verify-ue1-o06-payload-negatives.php.txt"
                   },
                   {
                       "key":  "PRD:verify-ue1-original-1996-actor-abi.php",

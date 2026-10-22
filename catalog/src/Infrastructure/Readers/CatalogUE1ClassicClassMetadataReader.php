@@ -159,12 +159,23 @@ final class CatalogUE1ClassicClassMetadataReader
                 $record['class_config_name']=['index'=>null,'text'=>'System'];
             }
             $record['defaults_serial_offset']=$position;
-            $defaultsFirst=$name('default property tag');
-            if(strcasecmp($defaultsFirst['text'],'None')!==0){
+            // Epic UClass::Serialize invokes UObject::SerializeTaggedProperties
+            // for the class defaults, using precisely the SAME FPropertyTag
+            // archive as ordinary UObject properties. Structural envelopes
+            // decode here; accurate value semantics still require the class
+            // property schema, not merely the encoded tag type.
+            $defaults=CatalogUE1ClassicTaggedPropertyReader::inspectClassDefaults(
+                $path,$pkg,$position,$end,$version);
+            $position=$defaults['tag_end_offset'];
+            $record['default_property_tags']=$defaults['tags'];
+            $record['defaults_tag_count']=count($defaults['tags']);
+            $record['defaults_schema_verified']=false;
+            if($record['defaults_tag_count']>0){
                 return array_replace($record,[
-                    'status'=>'class_default_tag_properties_unimplemented',
-                    'first_default_property_name'=>$defaultsFirst,
+                    'status'=>'class_default_tags_structurally_decoded_schema_unverified',
+                    'script_has_unparsed_expressions'=>false,
                     'unparsed_bytes'=>$end-$position,
+                    'extension_bytes'=>$end-$position,
                 ]);
             }
             return array_replace($record,[

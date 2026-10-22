@@ -16,7 +16,7 @@ $compact=static function(int $n):string{
     return $s;
 };
 $build=static function(int $ver,string $body,int $flags=0)use($compact):string{
-    $names=['None','Class','Example','Core','Friendly','System','Package'];
+    $names=['None','Class','Example','Core','Friendly','System','Package','MyInt','Flag','Color','Vector'];
     $nbytes='';
     foreach($names as $name){$nbytes.=($ver>=64?$compact(strlen($name)+1):'').$name."\0".pack('V',0);}
     $hdrSize=$ver>=68?56:44;
@@ -53,7 +53,7 @@ $body=static function(int $ver,array $opt=[])use($compact):string{
     $packageImports=$compact((int)($opt['importCount']??1))
       .(($opt['importCount']??1)===1?$compact((int)($opt['importName']??3)):'');
     $within=$ver>=62?$compact((int)($opt['within']??1)).$compact((int)($opt['config']??5)):'';
-    $defaults=$compact((int)($opt['firstDefault']??0));
+    $defaults=$opt['defaultRaw']??$compact((int)($opt['firstDefault']??0));
     return $prefix.$state.$native.$dependencies.$packageImports.$within.$defaults.($opt['extension']??'');
 };
 $paths=[];$checks=[];$fail=[];
@@ -103,10 +103,48 @@ try{
     $check('nonempty_script_never_falsely_complete',
         $s['status']==='class_script_expr_unimplemented'
         &&$s['script_size']===1&&$s['unparsed_bytes']===1);
-    [$de]=$parse(69,$body(69,['firstDefault'=>4]));
-    $check('nonempty_defaults_never_falsely_complete',
-        $de['status']==='class_default_tag_properties_unimplemented'
-        &&$de['first_default_property_name']['text']==='Friendly');
+    $intTag=$compact(7)."\x22".pack('V',1234).$compact(0);
+    [$de]=$parse(69,$body(69,['defaultRaw'=>$intTag]));
+    $check('class_default_int_tag_decoded_schema_not_fabricated',
+        $de['status']==='class_default_tags_structurally_decoded_schema_unverified'
+        &&$de['defaults_tag_count']===1
+        &&$de['default_property_tags'][0]['name']==='MyInt'
+        &&$de['default_property_tags'][0]['value']===1234
+        &&$de['default_property_tags'][0]['on_disk_value_bytes']===4
+        &&$de['defaults_schema_verified']===false);
+    $check('class_default_metadata_preserves_native_tail',
+        $de['class_guid_raw_hex']==='01000000020000000300000004000000'
+        &&$de['script_size']===0&&$de['unparsed_bytes']===0);
+    $boolTag=$compact(8)."\x83".$compact(0);
+    [$bool]=$parse(50,$body(50,['defaultRaw'=>$boolTag]));
+    $check('class_default_bool_tag_no_payload',
+        $bool['status']==='class_default_tags_structurally_decoded_schema_unverified'
+        &&$bool['default_property_tags'][0]['bool_value']===true
+        &&$bool['default_property_tags'][0]['on_disk_value_bytes']===0);
+    $colorTag=$compact(9)."\x2a".$compact(9)."\x01\x02\x03\x04".$compact(0);
+    [$color]=$parse(69,$body(69,['defaultRaw'=>$colorTag]));
+    $check('class_default_struct_color_tag_shared_codec',
+        $color['default_property_tags'][0]['struct_name']['text']==='Color'
+        &&$color['default_property_tags'][0]['value_kind']==='fcolor_serialized_bytes'
+        &&$color['default_property_tags'][0]['value']['serialized_channel_bytes']===[1,2,3,4]);
+    $arrTag=$compact(7)."\xa2".chr(3).pack('V',99).$compact(0);
+    [$arr]=$parse(69,$body(69,['defaultRaw'=>$arrTag]));
+    $check('class_default_array_index_uses_same_epic_tag_codec',
+        $arr['default_property_tags'][0]['array_index']===3
+        &&$arr['default_property_tags'][0]['value']===99);
+    [$ext]=$parse(69,$body(69,['defaultRaw'=>$intTag.'x']));
+    $check('nonempty_class_defaults_with_unknown_extra_bytes_are_partial',
+        $ext['status']==='class_default_tags_structurally_decoded_schema_unverified'
+        &&$ext['unparsed_bytes']===1);
+    $check('missing_default_tag_info_rejected',$bad(69,$body(69,['firstDefault'=>4])));
+    $check('invalid_default_tag_type_rejected',$bad(69,$body(69,['defaultRaw'=>$compact(7)."\x00".$compact(0)])));
+    $check('invalid_default_tag_name_rejected',$bad(69,$body(69,['defaultRaw'=>$compact(123).$compact(0)])));
+    $check('default_tag_value_overrun_rejected',$bad(69,$body(69,['defaultRaw'=>$compact(7)."\x22"."\x01"])));
+    $check('missing_default_None_terminator_rejected',$bad(69,$body(69,['defaultRaw'=>$compact(7)."\x22".pack('V',2)])));
+    [$v35ref]=$parse(35,$body(35,['defaultRaw'=>$compact(7)."\x25".$compact(-1).$compact(0)]));
+    $check('v35_legacy_compact_default_object_ref',
+        $v35ref['default_property_tags'][0]['value_kind']==='v35_compact_object_reference'
+        &&$v35ref['default_property_tags'][0]['value']===-1);
     [$ex]=$parse(69,$body(69,['extension'=>"\xab"]));
     $check('unexpected_extension_not_complete',
         $ex['status']==='class_metadata_has_extension' &&$ex['extension_bytes']===1);
