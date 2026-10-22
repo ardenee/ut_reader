@@ -11,14 +11,14 @@ $checks=[];$fail=[];
 $check=static function(string $name,bool $ok)use(&$checks,&$fail):void{
  $checks[$name]=$ok;if(!$ok)$fail[]=$name;
 };
-$make=static function(int $version):array{
+$make=static function(int $version,bool $nullFinal=false):array{
  $labels=['Script','ScriptOne','FunctionLabel'];
  $names='';foreach($labels as $name){$names.=$name."\0".pack('V',0);}
  $data=
      chr(0x1d).pack('V',0xffffffd6)                      // EX_IntConst -42
     .chr(0x23).pack('g3',1.5,-2.0,3.0)                   // EX_VectorConst
     .chr(0x1b).pack('v',3).chr(0x24).chr(7).chr(0x16)    // EX_VirtualFunction
-    .chr(0x1c).pack('V2',1,3).chr(0x25).chr(0x16)        // EX_FinalFunction
+    .chr(0x1c).($nullFinal?pack('V',0):pack('V2',1,3)).chr(0x25).chr(0x16) // EX_FinalFunction
     .chr(0x38).chr(0x1d).pack('V',17)                    // conversion
     .chr(0x60).chr(0x01).chr(0x24).chr(4).chr(0x16)     // extended intrinsic
     .chr(0x70).chr(0x16)                                // normal intrinsic
@@ -94,6 +94,21 @@ try{
   file_put_contents($tmp,substr_replace($f['bytes'],chr(0x1f),$f['data']+strlen($f['stream'])-1,1));
   try{Script::read($tmp,true);$reject=false;}catch(RuntimeException){$reject=true;}
   $check("{$id}_unterminated_string_rejected",$reject);
+  // A NULL FStackNodePtr serializes only the one-based Class word,
+  // not the absent iNode field; the following 0x25 must remain aligned.
+  $null=$make($v,true);file_put_contents($tmp,$null['bytes']);
+  $nullexpr=Script::read($tmp,true)['script_expressions'][0]['expression_tree']??[];
+  $check("{$id}_null_final_function_omits_node_index",
+    ($nullexpr[3]['fields']['class_reference_raw']??-1)===0
+    && array_key_exists('stack_node_index',$nullexpr[3]['fields']??[])
+    && $nullexpr[3]['fields']['stack_node_index']===null
+    && ($nullexpr[3]['children'][0]['token']??null)===0x25
+    && strlen($null['stream'])===strlen($f['stream'])-4);
+  $offset=strpos($f['stream'],chr(0x2d).chr(0x20).pack('v',2));
+  if($offset===false)throw new RuntimeException('Missing EX_BoolVariable negative fixture');
+  file_put_contents($tmp,substr_replace($f['bytes'],chr(0xe0),$f['data']+$offset+1,1));
+  try{Script::read($tmp,true);$reject=false;}catch(RuntimeException){$reject=true;}
+  $check("{$id}_source_bool_variable_bin_rejected",$reject);
  }
 }finally{@unlink($tmp);}
 echo json_encode(['ok'=>$fail===[],'passed'=>count($checks)-count($fail),'total'=>count($checks),

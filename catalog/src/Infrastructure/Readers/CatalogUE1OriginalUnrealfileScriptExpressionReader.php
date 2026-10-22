@@ -112,6 +112,11 @@ final class CatalogUE1OriginalUnrealfileScriptExpressionReader
                 $fields['property_index_raw_word']=self::word($c);break;
             case 0x2d:
                 $fields['bool_variable_selector']=self::byte($c);
+                // Epic UnScript.cpp:4931-4932 validates selector >> 5.
+                // 0=local, 1=object, 2=static; 3+ is not a valid source bin.
+                $bin=$fields['bool_variable_selector']>>5;
+                if(!in_array($bin,[0,1,2],true))
+                    throw new RuntimeException('Invalid source EX_BoolVariable property bin');
                 $fields['property_index_raw_word']=self::word($c);break;
             case 0x0b:case 0x16:case 0x25:case 0x26:case 0x27:
             case 0x28:case 0x2a:case 0x17:case 0x30:case 0x15:
@@ -127,7 +132,9 @@ final class CatalogUE1OriginalUnrealfileScriptExpressionReader
                 $children=$untilEnd();break;
             case 0x1c:
                 $fields['class_reference_raw']=self::objectRef($c);
-                $fields['stack_node_index']=self::int($c);
+                // FStackNodePtr::operator<< only archives iNode when Class != NULL.
+                $fields['stack_node_index']=$fields['class_reference_raw']===0
+                    ?null:self::int($c);
                 $children=$untilEnd();break;
             case 0x1d:$fields['int_constant']=self::int($c);break;
             case 0x1e:$fields['float_constant']=self::float($c);break;
