@@ -1,11 +1,14 @@
 <?php
 /**
- * Epic original v0.867 FBspNode / FBspSurf FArchive operators.
+ * Epic original May v0.86x / July v0.867 FBspNode / FBspSurf FArchive operators.
  * Src/Inc/UnObj.h:692-700,795-805; UDatabase::SerializeData emits Num
  * records, NOT an in-memory fixed C++ sizeof(FBspNode) dump.
  *
- * FBspNode: FPlane 16, ZoneMask QWORD 8, NodeFlags BYTE 1,
- * 7 INDEX 28, iZone[2] 2, NumVertices BYTE 1 => 56 bytes.
+ * May FBspNode: FPlane16, QWORD ZoneMask8, INDEX NodeFlags4,
+ * 6 INDEX (iVertPool/iSurf/3 children/iBound)=24, zones2, verts1 => 55B.
+ * July: BYTE NodeFlags1, 7 INDEX incl collision/render bounds28 => 56B.
+ * Both source trees label packages version 23; only Num*exact stride
+ * or explicit source provenance selects a persisted node record layout.
  * FBspSurf: 9 DWORD/INDEX/reference 36, PanU/PanV SWORD 4,
  * Actor reference 4 => 44 bytes.
  */
@@ -16,8 +19,9 @@ use RuntimeException;
 final class CatalogUE1OriginalUnrealfileBspRecordsReader
 {
     /** @return array<string,mixed> */
-    public static function read(string $path,bool $strict=false):array
+    public static function read(string $path,bool $strict=false,?string $sourceLineage=null):array
     {
+        CatalogUE1OriginalUnrealfilePropertySerializationGate::validate($sourceLineage);
         $meta=CatalogUE1OriginalUnrealfileObjectBaseReader::read($path);
         $stacks=CatalogUE1OriginalUnrealfileStackReader::read($path,false)['stack_prefixes'];
         $by=[];foreach($stacks as $s)$by[(int)$s['object_index']]=$s;
@@ -45,9 +49,22 @@ final class CatalogUE1OriginalUnrealfileBspRecordsReader
                 $num=(int)$n['num'];$max=(int)$n['max'];
                 if($num>$max||$num>100000||$max>100000)
                     throw new RuntimeException('BSP invalid Num/Max');
-                $stride=$type==='bspnodes'?56:44;
+                $nodeLineage=null;
+                if($type==='bspnodes'&&$num>0){
+                    $nodeLineage=CatalogUE1OriginalUnrealfilePropertySerializationGate::fromNativeHeaderLength(
+                        (int)$o['file_data_size'],$num*55,$num*56,$sourceLineage
+                    );
+                    if($nodeLineage===null){
+                        if($strict)throw new RuntimeException('May/July FBspNode original record layout unidentified');
+                        $row['status']='source_1997_bsp_node_lineage_required';
+                        $result[]=$row;continue;
+                    }
+                }
+                $stride=$type==='bspnodes'
+                    ?($nodeLineage===CatalogUE1OriginalUnrealfilePropertySerializationGate::MAY?55:56)
+                    :44;
                 if($num*$stride!==(int)$o['file_data_size'])
-                    throw new RuntimeException('BSP archive Num does not match record byte count');
+                    throw new RuntimeException('BSP archive Num does not match source record byte count');
                 if($type==='bspnodes'){
                     $special=CatalogUE1OriginalUnrealfileSpecialHeadersReader::read($path,false);
                     $match=null;
@@ -72,15 +89,20 @@ final class CatalogUE1OriginalUnrealfileBspRecordsReader
                     if($type==='bspnodes'){
                         $plane=array_values(unpack('g4',substr($v,0,16)));
                         $mask=array_values(unpack('V2',substr($v,16,8)));
-                        $flags=ord($v[24]);
-                        $idx=array_map($signed,array_values(unpack('V7',substr($v,25,28))));
-                        $zones=[ord($v[53]),ord($v[54])];
-                        $vertices=ord($v[55]);
+                        $may=$nodeLineage===CatalogUE1OriginalUnrealfilePropertySerializationGate::MAY;
+                        $flags=$may?(int)unpack('V',substr($v,24,4))[1]:ord($v[24]);
+                        $idx=array_map($signed,array_values(unpack(
+                            'V'.($may?6:7),substr($v,$may?28:25,$may?24:28)
+                        )));
+                        $zones=[ord($v[$may?52:53]),ord($v[$may?53:54])];
+                        $vertices=ord($v[$may?54:55]);
                         if($vertices>16)throw new RuntimeException('Original FBspNode NumVertices exceeds 16');
                         $rows[]=['index'=>$i,'plane'=>$plane,'zone_mask_words_le'=>$mask,
                             'node_flags'=>$flags,'vertex_pool_index'=>$idx[0],
                             'surface_index'=>$idx[1],'children'=>array_slice($idx,2,3),
-                            'collision_bound'=>$idx[5],'render_bound'=>$idx[6],
+                            'original_bound_index'=>$may?$idx[5]:null,
+                            'collision_bound'=>$may?null:$idx[5],
+                            'render_bound'=>$may?null:$idx[6],
                             'zone_indices'=>$zones,'num_vertices'=>$vertices];
                     }else{
                         $w=array_values(unpack('V9',substr($v,0,36)));
@@ -99,6 +121,9 @@ final class CatalogUE1OriginalUnrealfileBspRecordsReader
                 $result[]=array_merge($row,[
                     'status'=>'native_bsp_records_decoded',
                     'source_record_stride'=>$stride,'record_count'=>$num,
+                    'source_lineage'=>$type==='bspnodes'?$nodeLineage:null,
+                    'source_lineage_inferred_from_record_extent'=>$type==='bspnodes'&&$num>0
+                        &&$sourceLineage===null,
                     'record_capacity'=>$max,'records'=>$rows,
                     'runtime_references_resolved'=>false
                 ]);

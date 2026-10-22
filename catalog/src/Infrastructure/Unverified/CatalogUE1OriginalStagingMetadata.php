@@ -79,6 +79,7 @@ final class CatalogUE1OriginalStagingMetadata
                 'unrealfile_binary_properties' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileBinaryPropertyReader::read($path, false, $externalDiscovery['providers']),
                 'unrealfile_database_records' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileDatabaseDataReader::read($path, false),
                 'unrealfile_level_records' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileLevelReader::read($path, false),
+                'unrealfile_primitive_headers' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfilePrimitiveHeaderReader::read($path, false),
                 'unrealfile_mesh_headers' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileMeshHeaderReader::read($path, false),
                 'unrealfile_model_headers' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileModelHeaderReader::read($path, false),
                 'unrealfile_texture_headers' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileTextureHeaderReader::read($path, false),

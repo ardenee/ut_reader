@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_at_utc": "2026-10-22T18:58:04+00:00",
+  "updated_at_utc": "2026-10-22T19:09:41+00:00",
   "entries": [
     {
       "id": "R82:UActorList",
@@ -1709,19 +1709,19 @@
           "line": 129
         }
       ],
-      "status": "GAP",
+      "status": "PARTIAL",
       "reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
       "test": "verify-ue1-original-unrealfile-mesh-records.php",
-      "evidence": "Source comparison: May v0.86x Src/Inc/UnMath.h FRotation::operator<< uses WORD Pitch/Yaw/Roll (6B); July v0.867 writes INT Pitch/Yaw/Roll (12B). Both FBoundingRect/FBoundingBox IsValid are BYTE and FArchive BYTE operator in Src/Inc/UnArc.h serializes 1B, so FBoundingVolume archive is 41B (not the current 44B php assumption); distinct source node operators FBspNode May iBound vs July iCollisionBound+iRenderBound, with possible NodeFlags width differences. Both files version 23.",
-      "remaining": "CONFIRMED incorrect or absent source-specific May C++ on-disk FRotation/BoundingVolume/FBspNode serializations; implement exact May and July paths and journal DEV/PRD fixtures before PARTIAL.",
-      "updated_at_utc": "2026-10-22T18:58:03+00:00",
+      "evidence": "Epic May v0.86x Src/Inc/UnMath.h FBoundingRect::operator<< and July v0.867 FBoundingBox::operator<< are wire-identical: FVector Min and Max 24B plus BYTE IsValid 1B (UnArc.h operator<< BYTE Serialize(&B,1)). UBounds::IMPLEMENT_DB_CLASS and UDatabase Num/Max+records. Existing DatabaseDataReader stride25 is source-correct; verify-ue1-original-unrealfile-mesh-records.php v22/v23 76/76 source fixtures, DEV/PRD named PASS.",
+      "remaining": "Source-identical archive layout 25B validated in existing v22/23 fixtures; source native May/July original package oracle still G5 OPEN.",
+      "updated_at_utc": "2026-10-22T19:09:39+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T18:58:03.8522819Z",
+        "at_utc": "2026-10-22T19:09:39.4744001Z",
         "test_sha256": "0cae7fee26bb46629a0e4e11c6239b7fb3f30690007f08d0b65d7802d3221e12",
-        "source_sha256": "76a4ea1b1bc361a7d3ad90f0f6c4dd2b52fb2c0039b77153a8997d8301efb355",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T185803402Z-322928e0-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt"
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T190938990Z-80e5819a-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt"
       }
     },
     {
@@ -1734,19 +1734,19 @@
           "line": 51
         }
       ],
-      "status": "GAP",
+      "status": "PARTIAL",
       "reader": "CatalogUE1OriginalUnrealfileBspRecordsReader.php",
       "test": "verify-ue1-original-unrealfile-bsp-records.php",
-      "evidence": "Source comparison: May v0.86x Src/Inc/UnMath.h FRotation::operator<< uses WORD Pitch/Yaw/Roll (6B); July v0.867 writes INT Pitch/Yaw/Roll (12B). Both FBoundingRect/FBoundingBox IsValid are BYTE and FArchive BYTE operator in Src/Inc/UnArc.h serializes 1B, so FBoundingVolume archive is 41B (not the current 44B php assumption); distinct source node operators FBspNode May iBound vs July iCollisionBound+iRenderBound, with possible NodeFlags width differences. Both files version 23.",
-      "remaining": "CONFIRMED incorrect or absent source-specific May C++ on-disk FRotation/BoundingVolume/FBspNode serializations; implement exact May and July paths and journal DEV/PRD fixtures before PARTIAL.",
-      "updated_at_utc": "2026-10-22T18:58:04+00:00",
+      "evidence": "Epic May v0.86x Src/Inc/UnObj.h FBspNode::operator<< stores FPlane16, ZoneMask8, INDEX NodeFlags4, six INDEX (VertPool,Surf,three children,iBound)=24, zone two BYTE and NumVertices BYTE =55B. July v0.867 stores BYTE NodeFlags, seven INDEX incl iCollisionBound/iRenderBound =56B. Exact active Num*55 vs Num*56 identifies layout, absent otherwise explicit; source UBspNodes::SerializeHeader zone fields identical. Typed v22/v23 May/July fixtures 38/38 and affected DEV 6/6 PRD 6/6 PASS.",
+      "remaining": "May 55B and July 56B FBspNode records decoded with exact stride evidence. Independent real original May/July BSP corpus/G5 not yet accepted. No O10 runtime model linking.",
+      "updated_at_utc": "2026-10-22T19:09:37+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T18:58:04.3612846Z",
-        "test_sha256": "c4a0efe59ceb8b1930b58adfff2326e44dd7a322208b09a9ec83e1687a79385b",
-        "source_sha256": "76a4ea1b1bc361a7d3ad90f0f6c4dd2b52fb2c0039b77153a8997d8301efb355",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T185804032Z-840c3360-PRD-verify-ue1-original-unrealfile-bsp-records.php.txt"
+        "at_utc": "2026-10-22T19:09:37.7003508Z",
+        "test_sha256": "9a3d95016580d070a48220241f035dcda25ba1d23d267cbd463c0baa29e67d87",
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T190937325Z-f13cba49-PRD-verify-ue1-original-unrealfile-bsp-records.php.txt"
       }
     },
     {
@@ -1759,12 +1759,20 @@
           "line": 87
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileBspRecordsReader.php",
+      "test": "verify-ue1-original-unrealfile-bsp-records.php",
+      "evidence": "Epic May v0.86x and July v0.867 Src/Inc/UnObj.h FBspSurf::operator<< same serialized 44B: Texture/Brush references, polygon flags, indices, PanU/PanV SWORD, Actor ref. Both years original record reader tests/zone dependencies, 38/38 fixtures and DEV/PRD 6/6 regression PASS. No source-specific on-disk mismatch.",
+      "remaining": "44B persisted record same between May and July; complete known source fields tested. Genuine matching package/oracle G5 pending; no runtime indexing O10.",
+      "updated_at_utc": "2026-10-22T19:09:37+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T19:09:37.7003508Z",
+        "test_sha256": "9a3d95016580d070a48220241f035dcda25ba1d23d267cbd463c0baa29e67d87",
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T190937325Z-f13cba49-PRD-verify-ue1-original-unrealfile-bsp-records.php.txt"
+      }
     },
     {
       "id": "U86:UBuffer",
@@ -2087,14 +2095,14 @@
       "test": "verify-ue1-original-unrealfile-mesh.php",
       "evidence": "Epic May v0.86x and July v0.867 Src/Inc/UnMath.h FBoundingRect/FBoundingBox min,max, BYTE IsValid, FPlane => 41 serialized bytes (FArchive BYTE operator UnArc.h writes 1B, not sizeof in-memory padding). May FRotation operator<< converts Pitch,Yaw,Roll to WORD 6B; July writes INT Pitch,Yaw,Roll 12B. UMesh SerializeHeader Src/Inc/UnMesh.h native May=127B, July=133B. UModel Src/Inc/UnModel.h native May=240B, July=246B. Both Unrealfile version23. Implemented shared native FArchive math and unique exact member length auto-discrimination with strict invalid/trailing rejection and full v22/v23 May/July source fixtures.",
       "remaining": "Source-defined typed May/July FRotation and FBoundingVolume now implemented and real v22/v23 envelopes pass. Missing independent engine/genuine package matching and related UBounds/FBspNode source variants remain G2/G5; runtime mesh/model object linking O10 and geometry interpretation O07 excluded.",
-      "updated_at_utc": "2026-10-22T18:58:01+00:00",
+      "updated_at_utc": "2026-10-22T19:09:38+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T18:58:01.0722295Z",
+        "at_utc": "2026-10-22T19:09:38.2713778Z",
         "test_sha256": "515b56377e562a5697afe6ca9e76543f92fe35b1f2c2bbba43e63abc4d2e15ec",
-        "source_sha256": "76a4ea1b1bc361a7d3ad90f0f6c4dd2b52fb2c0039b77153a8997d8301efb355",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T185800618Z-3bbab861-PRD-verify-ue1-original-unrealfile-mesh.php.txt"
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T190937894Z-cd071bef-PRD-verify-ue1-original-unrealfile-mesh.php.txt"
       }
     },
     {
@@ -2197,14 +2205,14 @@
       "test": "verify-ue1-original-unrealfile-model.php",
       "evidence": "Epic May v0.86x and July v0.867 Src/Inc/UnMath.h FBoundingRect/FBoundingBox min,max, BYTE IsValid, FPlane => 41 serialized bytes (FArchive BYTE operator UnArc.h writes 1B, not sizeof in-memory padding). May FRotation operator<< converts Pitch,Yaw,Roll to WORD 6B; July writes INT Pitch,Yaw,Roll 12B. UMesh SerializeHeader Src/Inc/UnMesh.h native May=127B, July=133B. UModel Src/Inc/UnModel.h native May=240B, July=246B. Both Unrealfile version23. Implemented shared native FArchive math and unique exact member length auto-discrimination with strict invalid/trailing rejection and full v22/v23 May/July source fixtures.",
       "remaining": "Source-defined typed May/July FRotation and FBoundingVolume now implemented and real v22/v23 envelopes pass. Missing independent engine/genuine package matching and related UBounds/FBspNode source variants remain G2/G5; runtime mesh/model object linking O10 and geometry interpretation O07 excluded.",
-      "updated_at_utc": "2026-10-22T18:58:01+00:00",
+      "updated_at_utc": "2026-10-22T19:09:38+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T18:58:01.5852012Z",
+        "at_utc": "2026-10-22T19:09:38.7954004Z",
         "test_sha256": "a11eb3b8dcb36d7cfa85104223ae6fc5eafe7b5a7a98fcbeae10616449cad803",
-        "source_sha256": "76a4ea1b1bc361a7d3ad90f0f6c4dd2b52fb2c0039b77153a8997d8301efb355",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T185801253Z-aee1d619-PRD-verify-ue1-original-unrealfile-model.php.txt"
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T190938453Z-1cd6de5a-PRD-verify-ue1-original-unrealfile-model.php.txt"
       }
     },
     {
@@ -2318,19 +2326,19 @@
           "line": 17
         }
       ],
-      "status": "GAP",
-      "reader": "CatalogUE1OriginalUnrealfileMeshHeaderReader.php",
-      "test": "verify-ue1-original-unrealfile-mesh.php",
-      "evidence": "Source comparison: May v0.86x Src/Inc/UnMath.h FRotation::operator<< uses WORD Pitch/Yaw/Roll (6B); July v0.867 writes INT Pitch/Yaw/Roll (12B). Both FBoundingRect/FBoundingBox IsValid are BYTE and FArchive BYTE operator in Src/Inc/UnArc.h serializes 1B, so FBoundingVolume archive is 41B (not the current 44B php assumption); distinct source node operators FBspNode May iBound vs July iCollisionBound+iRenderBound, with possible NodeFlags width differences. Both files version 23.",
-      "remaining": "CONFIRMED incorrect or absent source-specific May C++ on-disk FRotation/BoundingVolume/FBspNode serializations; implement exact May and July paths and journal DEV/PRD fixtures before PARTIAL.",
-      "updated_at_utc": "2026-10-22T18:58:01+00:00",
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfilePrimitiveHeaderReader.php",
+      "test": "verify-ue1-original-unrealfile-primitive.php",
+      "evidence": "Original Epic May v0.86x Src/Inc/UnPrim.h:UPrimitive::SerializeHeader and July v0.867 write UObject::SerializeHeader followed by LocalBound FBoundingVolume. Both source trees use an identical FArchive bound on disk: min/max FVector24, BYTE IsValid1, FPlane Sphere16 =41B; runtime bCheckCollision NOT serialized. Implemented dedicated production CatalogUE1OriginalUnrealfilePrimitiveHeaderReader and staging dispatch (rather than improperly mapping a direct Primitive export through Mesh-only reader). Source-defined original v22/v23 positive/negative packages 14/14 verify typed bound, zero validity, malformed BYTE flag, truncated/extra bytes and exact incomplete staging.",
+      "remaining": "Direct persisted UPrimitive May/July local bound source-accurate, 41B, named source fixture PASSED. Independent genuine 1997 UPrimitive exports and G5 native oracle not yet accepted, no O10 collision/runtime state.",
+      "updated_at_utc": "2026-10-22T19:09:37+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T18:58:01.0722295Z",
-        "test_sha256": "515b56377e562a5697afe6ca9e76543f92fe35b1f2c2bbba43e63abc4d2e15ec",
-        "source_sha256": "76a4ea1b1bc361a7d3ad90f0f6c4dd2b52fb2c0039b77153a8997d8301efb355",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T185800618Z-3bbab861-PRD-verify-ue1-original-unrealfile-mesh.php.txt"
+        "at_utc": "2026-10-22T19:09:37.1403841Z",
+        "test_sha256": "53e187cb2b4f44b6f79eef0077e98d844e4c66fc53370546c6ccfc8718a04811",
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T190936733Z-3f6488bf-PRD-verify-ue1-original-unrealfile-primitive.php.txt"
       }
     },
     {
@@ -2759,14 +2767,14 @@
       "test": "verify-ue1-original-unrealfile-mesh-records.php",
       "evidence": "PRD historical PASS at 2026-10-22T09:02:16.6918324Z; catalog\\compliance\\evidence\\o06\\20261022T090216239Z-8383499e-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt; scoped test, not full class acceptance",
       "remaining": "Individual source-derived database record types have fixture coverage; final distinct-method and inherited path review G2 remains",
-      "updated_at_utc": "2026-10-22T18:58:03+00:00",
+      "updated_at_utc": "2026-10-22T19:09:39+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T18:58:03.8522819Z",
+        "at_utc": "2026-10-22T19:09:39.4744001Z",
         "test_sha256": "0cae7fee26bb46629a0e4e11c6239b7fb3f30690007f08d0b65d7802d3221e12",
-        "source_sha256": "76a4ea1b1bc361a7d3ad90f0f6c4dd2b52fb2c0039b77153a8997d8301efb355",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T185803402Z-322928e0-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt"
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T190938990Z-80e5819a-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt"
       }
     },
     {
@@ -2782,16 +2790,16 @@
       "status": "PARTIAL",
       "reader": "CatalogUE1OriginalUnrealfileBspRecordsReader.php",
       "test": "verify-ue1-original-unrealfile-bsp-records.php",
-      "evidence": "PRD historical PASS at 2026-10-22T07:36:34.1306759Z; catalog\\compliance\\evidence\\o06\\20261022T073633853Z-12773e2e-PRD-verify-ue1-original-unrealfile-bsp-records.php.txt; scoped test, not full class acceptance",
-      "remaining": "BSP records/source header typed; no runtime linking O10",
-      "updated_at_utc": "2026-10-22T18:58:04+00:00",
+      "evidence": "Epic May v0.86x Src/Inc/UnObj.h FBspNode::operator<< stores FPlane16, ZoneMask8, INDEX NodeFlags4, six INDEX (VertPool,Surf,three children,iBound)=24, zone two BYTE and NumVertices BYTE =55B. July v0.867 stores BYTE NodeFlags, seven INDEX incl iCollisionBound/iRenderBound =56B. Exact active Num*55 vs Num*56 identifies layout, absent otherwise explicit; source UBspNodes::SerializeHeader zone fields identical. Typed v22/v23 May/July fixtures 38/38 and affected DEV 6/6 PRD 6/6 PASS.",
+      "remaining": "Both May/July source-aware record parsing and strict rejected invalid strides. Real native cooked/package oracle and entire class source acceptance still G5 open.",
+      "updated_at_utc": "2026-10-22T19:09:37+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T18:58:04.3612846Z",
-        "test_sha256": "c4a0efe59ceb8b1930b58adfff2326e44dd7a322208b09a9ec83e1687a79385b",
-        "source_sha256": "76a4ea1b1bc361a7d3ad90f0f6c4dd2b52fb2c0039b77153a8997d8301efb355",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T185804032Z-840c3360-PRD-verify-ue1-original-unrealfile-bsp-records.php.txt"
+        "at_utc": "2026-10-22T19:09:37.7003508Z",
+        "test_sha256": "9a3d95016580d070a48220241f035dcda25ba1d23d267cbd463c0baa29e67d87",
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T190937325Z-f13cba49-PRD-verify-ue1-original-unrealfile-bsp-records.php.txt"
       }
     },
     {
@@ -2809,14 +2817,14 @@
       "test": "verify-ue1-original-unrealfile-bsp-records.php",
       "evidence": "PRD historical PASS at 2026-10-22T07:36:34.1306759Z; catalog\\compliance\\evidence\\o06\\20261022T073633853Z-12773e2e-PRD-verify-ue1-original-unrealfile-bsp-records.php.txt; scoped test, not full class acceptance",
       "remaining": "BSP records/source header typed; no runtime linking O10",
-      "updated_at_utc": "2026-10-22T18:58:04+00:00",
+      "updated_at_utc": "2026-10-22T19:09:37+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T18:58:04.3612846Z",
-        "test_sha256": "c4a0efe59ceb8b1930b58adfff2326e44dd7a322208b09a9ec83e1687a79385b",
-        "source_sha256": "76a4ea1b1bc361a7d3ad90f0f6c4dd2b52fb2c0039b77153a8997d8301efb355",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T185804032Z-840c3360-PRD-verify-ue1-original-unrealfile-bsp-records.php.txt"
+        "at_utc": "2026-10-22T19:09:37.7003508Z",
+        "test_sha256": "9a3d95016580d070a48220241f035dcda25ba1d23d267cbd463c0baa29e67d87",
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T190937325Z-f13cba49-PRD-verify-ue1-original-unrealfile-bsp-records.php.txt"
       }
     },
     {
@@ -3009,14 +3017,14 @@
       "test": "verify-ue1-original-unrealfile-special-headers.php",
       "evidence": "PRD historical PASS at 2026-10-22T07:25:34.3693613Z; catalog\\compliance\\evidence\\o06\\20261022T072534021Z-75c965c2-PRD-verify-ue1-original-unrealfile-special-headers.php.txt; scoped test, not full class acceptance",
       "remaining": "Glyph and source header typed; source branch inventory G2",
-      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "updated_at_utc": "2026-10-22T19:05:13+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T07:25:34.3693613Z",
+        "at_utc": "2026-10-22T19:05:13.5075700Z",
         "test_sha256": "a68bd09362e13dbee5dbb41710adee3d27e87d3d18b7a71f57442bbd4c49bb47",
-        "source_sha256": "1a202f63a1ff1977bd28e54b6d87ec669cda74735bceae7eede3d1bdee84a154",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T072534021Z-75c965c2-PRD-verify-ue1-original-unrealfile-special-headers.php.txt"
+        "source_sha256": "6ba1c72a43c782a45bcf2838e26766c05e296900480071b693bb40456c675293",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T190513083Z-12852227-PRD-verify-ue1-original-unrealfile-special-headers.php.txt"
       }
     },
     {
@@ -3184,14 +3192,14 @@
       "test": "verify-ue1-original-unrealfile-mesh.php",
       "evidence": "Epic May v0.86x and July v0.867 Src/Inc/UnMath.h FBoundingRect/FBoundingBox min,max, BYTE IsValid, FPlane => 41 serialized bytes (FArchive BYTE operator UnArc.h writes 1B, not sizeof in-memory padding). May FRotation operator<< converts Pitch,Yaw,Roll to WORD 6B; July writes INT Pitch,Yaw,Roll 12B. UMesh SerializeHeader Src/Inc/UnMesh.h native May=127B, July=133B. UModel Src/Inc/UnModel.h native May=240B, July=246B. Both Unrealfile version23. Implemented shared native FArchive math and unique exact member length auto-discrimination with strict invalid/trailing rejection and full v22/v23 May/July source fixtures.",
       "remaining": "Source-defined typed May/July FRotation and FBoundingVolume now implemented and real v22/v23 envelopes pass. Missing independent engine/genuine package matching and related UBounds/FBspNode source variants remain G2/G5; runtime mesh/model object linking O10 and geometry interpretation O07 excluded.",
-      "updated_at_utc": "2026-10-22T18:58:01+00:00",
+      "updated_at_utc": "2026-10-22T19:09:38+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T18:58:01.0722295Z",
+        "at_utc": "2026-10-22T19:09:38.2713778Z",
         "test_sha256": "515b56377e562a5697afe6ca9e76543f92fe35b1f2c2bbba43e63abc4d2e15ec",
-        "source_sha256": "76a4ea1b1bc361a7d3ad90f0f6c4dd2b52fb2c0039b77153a8997d8301efb355",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T185800618Z-3bbab861-PRD-verify-ue1-original-unrealfile-mesh.php.txt"
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T190937894Z-cd071bef-PRD-verify-ue1-original-unrealfile-mesh.php.txt"
       }
     },
     {
@@ -3209,14 +3217,14 @@
       "test": "verify-ue1-original-unrealfile-mesh-records.php",
       "evidence": "PRD historical PASS at 2026-10-22T09:02:16.6918324Z; catalog\\compliance\\evidence\\o06\\20261022T090216239Z-8383499e-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt; scoped test, not full class acceptance",
       "remaining": "Individual source-derived database record types have fixture coverage; final distinct-method and inherited path review G2 remains",
-      "updated_at_utc": "2026-10-22T18:58:03+00:00",
+      "updated_at_utc": "2026-10-22T19:09:39+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T18:58:03.8522819Z",
+        "at_utc": "2026-10-22T19:09:39.4744001Z",
         "test_sha256": "0cae7fee26bb46629a0e4e11c6239b7fb3f30690007f08d0b65d7802d3221e12",
-        "source_sha256": "76a4ea1b1bc361a7d3ad90f0f6c4dd2b52fb2c0039b77153a8997d8301efb355",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T185803402Z-322928e0-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt"
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T190938990Z-80e5819a-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt"
       }
     },
     {
@@ -3234,14 +3242,14 @@
       "test": "verify-ue1-original-unrealfile-mesh-records.php",
       "evidence": "PRD historical PASS at 2026-10-22T09:02:16.6918324Z; catalog\\compliance\\evidence\\o06\\20261022T090216239Z-8383499e-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt; scoped test, not full class acceptance",
       "remaining": "Individual source-derived database record types have fixture coverage; final distinct-method and inherited path review G2 remains",
-      "updated_at_utc": "2026-10-22T18:58:03+00:00",
+      "updated_at_utc": "2026-10-22T19:09:39+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T18:58:03.8522819Z",
+        "at_utc": "2026-10-22T19:09:39.4744001Z",
         "test_sha256": "0cae7fee26bb46629a0e4e11c6239b7fb3f30690007f08d0b65d7802d3221e12",
-        "source_sha256": "76a4ea1b1bc361a7d3ad90f0f6c4dd2b52fb2c0039b77153a8997d8301efb355",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T185803402Z-322928e0-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt"
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T190938990Z-80e5819a-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt"
       }
     },
     {
@@ -3259,14 +3267,14 @@
       "test": "verify-ue1-original-unrealfile-mesh-records.php",
       "evidence": "PRD historical PASS at 2026-10-22T09:02:16.6918324Z; catalog\\compliance\\evidence\\o06\\20261022T090216239Z-8383499e-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt; scoped test, not full class acceptance",
       "remaining": "Individual source-derived database record types have fixture coverage; final distinct-method and inherited path review G2 remains",
-      "updated_at_utc": "2026-10-22T18:58:03+00:00",
+      "updated_at_utc": "2026-10-22T19:09:39+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T18:58:03.8522819Z",
+        "at_utc": "2026-10-22T19:09:39.4744001Z",
         "test_sha256": "0cae7fee26bb46629a0e4e11c6239b7fb3f30690007f08d0b65d7802d3221e12",
-        "source_sha256": "76a4ea1b1bc361a7d3ad90f0f6c4dd2b52fb2c0039b77153a8997d8301efb355",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T185803402Z-322928e0-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt"
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T190938990Z-80e5819a-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt"
       }
     },
     {
@@ -3284,14 +3292,14 @@
       "test": "verify-ue1-original-unrealfile-mesh-records.php",
       "evidence": "PRD historical PASS at 2026-10-22T09:02:16.6918324Z; catalog\\compliance\\evidence\\o06\\20261022T090216239Z-8383499e-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt; scoped test, not full class acceptance",
       "remaining": "Individual source-derived database record types have fixture coverage; final distinct-method and inherited path review G2 remains",
-      "updated_at_utc": "2026-10-22T18:58:03+00:00",
+      "updated_at_utc": "2026-10-22T19:09:39+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T18:58:03.8522819Z",
+        "at_utc": "2026-10-22T19:09:39.4744001Z",
         "test_sha256": "0cae7fee26bb46629a0e4e11c6239b7fb3f30690007f08d0b65d7802d3221e12",
-        "source_sha256": "76a4ea1b1bc361a7d3ad90f0f6c4dd2b52fb2c0039b77153a8997d8301efb355",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T185803402Z-322928e0-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt"
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T190938990Z-80e5819a-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt"
       }
     },
     {
@@ -3309,14 +3317,14 @@
       "test": "verify-ue1-original-unrealfile-mesh-records.php",
       "evidence": "PRD historical PASS at 2026-10-22T09:02:16.6918324Z; catalog\\compliance\\evidence\\o06\\20261022T090216239Z-8383499e-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt; scoped test, not full class acceptance",
       "remaining": "Individual source-derived database record types have fixture coverage; final distinct-method and inherited path review G2 remains",
-      "updated_at_utc": "2026-10-22T18:58:03+00:00",
+      "updated_at_utc": "2026-10-22T19:09:39+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T18:58:03.8522819Z",
+        "at_utc": "2026-10-22T19:09:39.4744001Z",
         "test_sha256": "0cae7fee26bb46629a0e4e11c6239b7fb3f30690007f08d0b65d7802d3221e12",
-        "source_sha256": "76a4ea1b1bc361a7d3ad90f0f6c4dd2b52fb2c0039b77153a8997d8301efb355",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T185803402Z-322928e0-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt"
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T190938990Z-80e5819a-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt"
       }
     },
     {
@@ -3334,14 +3342,14 @@
       "test": "verify-ue1-original-unrealfile-model.php",
       "evidence": "Epic May v0.86x and July v0.867 Src/Inc/UnMath.h FBoundingRect/FBoundingBox min,max, BYTE IsValid, FPlane => 41 serialized bytes (FArchive BYTE operator UnArc.h writes 1B, not sizeof in-memory padding). May FRotation operator<< converts Pitch,Yaw,Roll to WORD 6B; July writes INT Pitch,Yaw,Roll 12B. UMesh SerializeHeader Src/Inc/UnMesh.h native May=127B, July=133B. UModel Src/Inc/UnModel.h native May=240B, July=246B. Both Unrealfile version23. Implemented shared native FArchive math and unique exact member length auto-discrimination with strict invalid/trailing rejection and full v22/v23 May/July source fixtures.",
       "remaining": "Source-defined typed May/July FRotation and FBoundingVolume now implemented and real v22/v23 envelopes pass. Missing independent engine/genuine package matching and related UBounds/FBspNode source variants remain G2/G5; runtime mesh/model object linking O10 and geometry interpretation O07 excluded.",
-      "updated_at_utc": "2026-10-22T18:58:01+00:00",
+      "updated_at_utc": "2026-10-22T19:09:38+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T18:58:01.5852012Z",
+        "at_utc": "2026-10-22T19:09:38.7954004Z",
         "test_sha256": "a11eb3b8dcb36d7cfa85104223ae6fc5eafe7b5a7a98fcbeae10616449cad803",
-        "source_sha256": "76a4ea1b1bc361a7d3ad90f0f6c4dd2b52fb2c0039b77153a8997d8301efb355",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T185801253Z-aee1d619-PRD-verify-ue1-original-unrealfile-model.php.txt"
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T190938453Z-1cd6de5a-PRD-verify-ue1-original-unrealfile-model.php.txt"
       }
     },
     {
@@ -3413,14 +3421,14 @@
       "test": "verify-ue1-original-unrealfile-mesh-records.php",
       "evidence": "PRD historical PASS at 2026-10-22T09:02:16.6918324Z; catalog\\compliance\\evidence\\o06\\20261022T090216239Z-8383499e-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt; scoped test, not full class acceptance",
       "remaining": "Individual source-derived database record types have fixture coverage; final distinct-method and inherited path review G2 remains",
-      "updated_at_utc": "2026-10-22T18:58:03+00:00",
+      "updated_at_utc": "2026-10-22T19:09:39+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T18:58:03.8522819Z",
+        "at_utc": "2026-10-22T19:09:39.4744001Z",
         "test_sha256": "0cae7fee26bb46629a0e4e11c6239b7fb3f30690007f08d0b65d7802d3221e12",
-        "source_sha256": "76a4ea1b1bc361a7d3ad90f0f6c4dd2b52fb2c0039b77153a8997d8301efb355",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T185803402Z-322928e0-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt"
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T190938990Z-80e5819a-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt"
       }
     },
     {
@@ -3484,18 +3492,18 @@
         }
       ],
       "status": "PARTIAL",
-      "reader": "CatalogUE1OriginalUnrealfileMeshHeaderReader.php",
-      "test": "verify-ue1-original-unrealfile-mesh.php",
-      "evidence": "PRD historical PASS at 2026-10-22T06:57:10.4464375Z; catalog\\compliance\\evidence\\o06\\20261022T065710224Z-8c70a237-PRD-verify-ue1-original-unrealfile-mesh.php.txt; scoped test, not full class acceptance",
-      "remaining": "Primitive bound archive source-tested; derived serial method review G2",
-      "updated_at_utc": "2026-10-22T18:58:01+00:00",
+      "reader": "CatalogUE1OriginalUnrealfilePrimitiveHeaderReader.php",
+      "test": "verify-ue1-original-unrealfile-primitive.php",
+      "evidence": "Original Epic May v0.86x Src/Inc/UnPrim.h:UPrimitive::SerializeHeader and July v0.867 write UObject::SerializeHeader followed by LocalBound FBoundingVolume. Both source trees use an identical FArchive bound on disk: min/max FVector24, BYTE IsValid1, FPlane Sphere16 =41B; runtime bCheckCollision NOT serialized. Implemented dedicated production CatalogUE1OriginalUnrealfilePrimitiveHeaderReader and staging dispatch (rather than improperly mapping a direct Primitive export through Mesh-only reader). Source-defined original v22/v23 positive/negative packages 14/14 verify typed bound, zero validity, malformed BYTE flag, truncated/extra bytes and exact incomplete staging.",
+      "remaining": "Direct persisted UPrimitive May/July local bound source-accurate, 41B, named source fixture PASSED. Independent genuine 1997 UPrimitive exports and G5 native oracle not yet accepted, no O10 collision/runtime state.",
+      "updated_at_utc": "2026-10-22T19:09:37+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T18:58:01.0722295Z",
-        "test_sha256": "515b56377e562a5697afe6ca9e76543f92fe35b1f2c2bbba43e63abc4d2e15ec",
-        "source_sha256": "76a4ea1b1bc361a7d3ad90f0f6c4dd2b52fb2c0039b77153a8997d8301efb355",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T185800618Z-3bbab861-PRD-verify-ue1-original-unrealfile-mesh.php.txt"
+        "at_utc": "2026-10-22T19:09:37.1403841Z",
+        "test_sha256": "53e187cb2b4f44b6f79eef0077e98d844e4c66fc53370546c6ccfc8718a04811",
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T190936733Z-3f6488bf-PRD-verify-ue1-original-unrealfile-primitive.php.txt"
       }
     },
     {
@@ -3763,14 +3771,14 @@
       "test": "verify-ue1-original-unrealfile-special-headers.php",
       "evidence": "PRD historical PASS at 2026-10-22T07:25:34.3693613Z; catalog\\compliance\\evidence\\o06\\20261022T072534021Z-75c965c2-PRD-verify-ue1-original-unrealfile-special-headers.php.txt; scoped test, not full class acceptance",
       "remaining": "Vert pair/native header source-tested; G2 inheritance review",
-      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "updated_at_utc": "2026-10-22T19:05:13+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T07:25:34.3693613Z",
+        "at_utc": "2026-10-22T19:05:13.5075700Z",
         "test_sha256": "a68bd09362e13dbee5dbb41710adee3d27e87d3d18b7a71f57442bbd4c49bb47",
-        "source_sha256": "1a202f63a1ff1977bd28e54b6d87ec669cda74735bceae7eede3d1bdee84a154",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T072534021Z-75c965c2-PRD-verify-ue1-original-unrealfile-special-headers.php.txt"
+        "source_sha256": "6ba1c72a43c782a45bcf2838e26766c05e296900480071b693bb40456c675293",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T190513083Z-12852227-PRD-verify-ue1-original-unrealfile-special-headers.php.txt"
       }
     },
     {
