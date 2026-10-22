@@ -1,0 +1,7 @@
+﻿{
+    "ok": true,
+    "checks": 41,
+    "passed": 41,
+    "failed": [],
+    "scope": "Epic v1.200 / UT99 v400 UBitArray/UBitMatrix native archive RLE"
+}

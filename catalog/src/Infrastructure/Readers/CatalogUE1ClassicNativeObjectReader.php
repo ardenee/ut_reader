@@ -44,7 +44,7 @@ final class CatalogUE1ClassicNativeObjectReader
         }
         $nativeKind=strtolower($className);
         if(!in_array($nativeKind,[
-            'texture','palette','sound','music','font','package','primitive','model','level','mesh','lodmesh','firetexture','wettexture','scriptedtexture','textbuffer','enum','const',
+            'texture','palette','sound','music','font','package','primitive','model','level','mesh','lodmesh','firetexture','wettexture','scriptedtexture','textbuffer','enum','const','bitarray','bitmatrix',
             ...CatalogUE1ClassicPropertyNativeReader::KINDS,
             ...CatalogUE1ClassicStructNativeReader::KINDS,
         ],true)){return $record;}
@@ -104,6 +104,10 @@ final class CatalogUE1ClassicNativeObjectReader
             if($nativeKind==='mesh'||$nativeKind==='lodmesh'){
                 return array_replace($record,CatalogUE1ClassicMeshNativeReader::inspect(
                     $nativeKind,$pkg,$ver,$read,$compact,$int,$pos,$limit));
+            }
+            if($nativeKind==='bitarray'||$nativeKind==='bitmatrix'){
+                return array_replace($record,CatalogUE1ClassicBitArrayNativeReader::inspect(
+                    $nativeKind,$read,$compact,$pos,$limit));
             }
             if($nativeKind==='package'){
                 return array_replace($record,[

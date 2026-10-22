@@ -12,6 +12,11 @@ param(
  [string]$TargetRoot = ''
 )
 $ErrorActionPreference='Stop'
+# Single execution authority: run O06 acceptance on DEV only. PRD receives
+# deployed files and byte-identity checks; re-running the same tests is wasteful.
+if($TargetRoot){
+ throw 'O06 PRD test execution is disabled: verify once on DEV, deploy, then compare file hashes.'
+}
 $repo=(Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
 $target=if($TargetRoot){'PRD'}else{'DEV'}
 $testRoot=if($TargetRoot){(Resolve-Path -LiteralPath $TargetRoot).Path}else{$repo}

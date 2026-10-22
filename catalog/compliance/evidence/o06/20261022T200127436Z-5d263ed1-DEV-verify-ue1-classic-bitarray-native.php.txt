@@ -1,0 +1,9 @@
+﻿{
+    "ok": false,
+    "checks": 41,
+    "passed": 40,
+    "failed": [
+        "two_byte_300_run"
+    ],
+    "scope": "Epic v1.200 / UT99 v400 UBitArray/UBitMatrix native archive RLE"
+}
