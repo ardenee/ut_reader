@@ -131,8 +131,7 @@ def save(entries):
         ", ".join(k+"="+str(counts[k]) for k in sorted(counts))+
         ". Six fixed gates remain OPEN; see live table below.** |")
     body=re.sub(r"(?m)^\| Active engine / operation \|[^\n]*$",lambda _:current,body,count=1)
-    with_latest=[e for e in items if e.get("last_verification")]
-    modified=max(with_latest,key=lambda e:e["last_verification"].get("at_utc","")) if with_latest else max(items,key=lambda e:e.get("updated_at_utc",""))
+    modified=max(items,key=lambda e:e.get("updated_at_utc",""))
     v=modified.get("last_verification")
     activity=(modified["id"]+" -> "+modified["status"]+
               ("; latest "+v["target"]+" "+v["state"]+" at "+v["at_utc"] if v else "")+
@@ -232,7 +231,7 @@ def main():
                 relevant=[x for x in relevant if x.get("target")==args.record_test[1]]
             if not relevant:continue
             latest=max(relevant,key=lambda x:x.get("event_at_utc",""))
-            e["last_verification"]={
+            new_verification={
                 "target":latest.get("target","DEV"),
                 "state":latest["state"],
                 "at_utc":latest.get("event_at_utc",""),
@@ -240,8 +239,10 @@ def main():
                 "source_sha256":latest.get("source_sha256",""),
                 "log":latest.get("log",""),
             }
-            e["updated_at_utc"]=NOW
-            count+=1
+            if e.get("last_verification")!=new_verification:
+                e["last_verification"]=new_verification
+                e["updated_at_utc"]=NOW
+                count+=1
         print("JOURNAL_TEST_ROWS_REFRESHED="+str(count))
     save(old)
     print("NEW_DISCOVERIES="+str(new))
