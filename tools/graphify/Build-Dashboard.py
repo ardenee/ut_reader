@@ -56,7 +56,7 @@ h1{font-size:clamp(32px,4.8vw,56px);letter-spacing:-.045em;margin:6px 0 10px;lin
 .summary{margin:34px 0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
 .stat{background:#142338ad;border:1px solid var(--line);padding:18px 20px;border-radius:12px}.stat b{display:block;font-size:27px;letter-spacing:-.03em}.stat span{color:var(--dim);font-size:12px}
 .master-panel{display:flex;gap:13px;align-items:end;flex-wrap:wrap;margin:22px 0 16px;background:#132b40;border:1px solid #396579;border-radius:12px;padding:16px}.master-panel label{display:block;color:var(--dim);font-size:12px;margin-bottom:5px}.master-panel select{min-width:220px}.master-panel form{display:flex;gap:8px;flex:1;flex-wrap:wrap}.master-panel form input{min-width:170px;flex:1}.master-panel form button{padding:10px 15px;background:#1b776e;color:white;border:1px solid #328c86;border-radius:9px;cursor:pointer}.master-panel p{color:var(--accent);font-size:12px;margin:0;width:100%}
-.add-panel{background:#142338ad;border:1px solid var(--line);border-radius:12px;padding:17px 19px;margin-bottom:22px}.add-panel h2{margin:0 0 10px;font-size:19px}.add-panel form{display:flex;gap:9px;flex-wrap:wrap}.add-panel input{flex:2;min-width:240px}.add-panel input[name="name"]{flex:1;min-width:170px}.add-panel button{background:#1b776e;border:1px solid #3daca4;border-radius:9px;color:white;padding:10px 18px;cursor:pointer;font:inherit}.add-panel p{font-size:12px;color:var(--dim);margin:8px 0 0}.add-panel .message{margin:9px 0;color:var(--accent)}
+.viewer-panel{background:#142338ad;border:1px solid var(--line);border-radius:12px;padding:17px 19px;margin-bottom:22px}.viewer-panel h2{margin:0 0 7px;font-size:19px}.viewer-panel p{color:var(--dim);font-size:12px;margin:6px 0}.viewer-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap}.viewer-row input[type=range]{flex:1;min-width:190px;padding:0;accent-color:var(--accent);cursor:pointer}.viewer-row output{min-width:90px;font-size:19px;font-weight:700;font-variant-numeric:tabular-nums}.viewer-row button{padding:10px 18px;background:#1b776e;border:1px solid #3daca4;border-radius:9px;color:white;font:inherit;cursor:pointer}.viewer-row button:disabled{opacity:.45;cursor:wait}.viewer-panel .message{color:var(--accent);margin:9px 0 0}.add-panel{background:#142338ad;border:1px solid var(--line);border-radius:12px;padding:17px 19px;margin-bottom:22px}.add-panel h2{margin:0 0 10px;font-size:19px}.add-panel form{display:flex;gap:9px;flex-wrap:wrap}.add-panel input{flex:2;min-width:240px}.add-panel input[name="name"]{flex:1;min-width:170px}.add-panel button{background:#1b776e;border:1px solid #3daca4;border-radius:9px;color:white;padding:10px 18px;cursor:pointer;font:inherit}.add-panel p{font-size:12px;color:var(--dim);margin:8px 0 0}.add-panel .message{margin:9px 0;color:var(--accent)}
 .toolbar{display:flex;gap:12px;align-items:center;margin-bottom:18px;flex-wrap:wrap}input,select{background:var(--panel);border:1px solid #34465b;border-radius:10px;color:var(--text);padding:12px 14px;font:inherit}
 input{flex:1;min-width:220px}select{min-width:150px}
 .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:15px}
@@ -83,6 +83,10 @@ HTML=r"""<!DOCTYPE html>
 <p class="lead">Explore local code relationships by engine and project. Code-only indexes run on DEV; no cloud service or account required. New indexes automatically appear here when built using the index script.</p></div>
 <div class="stamp">Updated __STAMP__</div></header>
 <section class="master-panel"><div><label for="master-project">Master project</label><select id="master-project" aria-label="Select master project"></select></div><form id="new-master"><input id="new-master-name" placeholder="New master project name" required maxlength="80" aria-label="New master project name"><button type="submit">Create master</button></form><p id="master-message" role="status"></p></section>
+<section class="viewer-panel" aria-label="HTML viewer node limit"><h2>HTML viewer node limit</h2>
+<div class="viewer-row"><label for="viewer-limit">Nodes displayed before community condensation</label><input type="range" id="viewer-limit" min="2000" max="5000" step="500" value="5000" aria-label="HTML viewer maximum nodes"><output id="viewer-value" for="viewer-limit">5,000</output><button id="apply-viewer" type="button">Apply to HTML viewers</button></div>
+<p>2,000–5,000 nodes. Larger graphs are condensed in the browser only. Full graph.json, original symbols, relationships and MCP queries are never limited or renamed.</p>
+<p class="message" id="viewer-status" role="status"></p></section>
 <section class="summary" id="summary" aria-label="Graph totals"></section>
 <section class="add-panel"><h2>Add child project to selected master</h2><form id="new-project"><input id="source-folder" name="folder" required placeholder="Folder on DEV, e.g. L:\Source\Engine\UE1" aria-label="Folder to index"><input name="name" id="project-name" placeholder="Project name (optional)" aria-label="Optional project name"><button type="submit" id="start-index">Add &amp; scan</button></form><p id="server-help">Scanning requires the local dashboard service at <a href="http://127.0.0.1:8765/">http://127.0.0.1:8765/</a>. Indexes are created on DEV, not uploaded.</p><p class="message" id="scan-status" role="status"></p></section>
 <div class="toolbar"><input id="filter" type="search" placeholder="Search project, version, source…" aria-label="Search graphs">
@@ -104,6 +108,52 @@ const localService=location.protocol==='http:' && ['localhost','127.0.0.1'].incl
 if(localService){
  $('server-help').textContent='Folder paths are checked and indexed only on DEV. The source is not uploaded.';
 }
+const viewerSlider=$('viewer-limit'), viewerValue=$('viewer-value'), viewerApply=$('apply-viewer');
+viewerSlider.addEventListener('input',()=>{viewerValue.textContent=fmt(viewerSlider.value)});
+viewerApply.disabled=!localService;
+if(!localService)$('viewer-status').textContent='Open the local dashboard at http://127.0.0.1:8765/ to apply changes.';
+async function viewerState(){
+ if(!localService)return;
+ const r=await fetch('/api/viewer',{cache:'no-store'});
+ if(!r.ok)throw new Error('Viewer settings unavailable');
+ return r.json();
+}
+async function pollViewer(){
+ try{
+  const state=await viewerState();
+  if(state.viewer.state==='STARTED'){
+   viewerApply.disabled=true;
+   $('viewer-status').textContent='Updating local HTML views to '+fmt(state.node_limit)+' nodes. Indexed source graph and MCP queries are unchanged.';
+   setTimeout(pollViewer,2500);return;
+  }
+  viewerApply.disabled=false;
+  if(state.viewer.state==='PASS'){
+   $('viewer-status').textContent='HTML viewer update complete. Refresh an open graph to see the result.';
+  }else if(state.viewer.state==='FAIL'){
+   $('viewer-status').textContent='HTML update failed. See C:\\Users\\arden\\Graphify\\viewer-refresh.log.';
+  }else{
+   $('viewer-status').textContent='Current HTML limit: '+fmt(state.node_limit)+' nodes.';
+  }
+ }catch(e){viewerApply.disabled=false;$('viewer-status').textContent='Viewer service unavailable: '+e.message}
+}
+viewerApply.onclick=async()=>{
+ if(!localService||typeof LOCAL_GRAPHIFY_TOKEN==='undefined')return;
+ const limit=Number(viewerSlider.value);
+ viewerApply.disabled=true;
+ $('viewer-status').textContent='Applying '+fmt(limit)+'-node HTML viewer limit...';
+ try{
+  const resp=await fetch('/api/viewer',{method:'POST',
+   headers:{'Content-Type':'application/json','X-Graphify-Token':LOCAL_GRAPHIFY_TOKEN},
+   body:JSON.stringify({node_limit:limit})});
+  const result=await resp.json();
+  if(!resp.ok)throw new Error(result.error||'HTML viewer setting rejected');
+  pollViewer();
+ }catch(e){viewerApply.disabled=false;$('viewer-status').textContent='Not applied: '+e.message}
+};
+if(localService)viewerState().then(state=>{
+ viewerSlider.value=state.node_limit;viewerValue.textContent=fmt(state.node_limit);
+ pollViewer();
+}).catch(e=>{$('viewer-status').textContent=e.message});
 $('new-project').onsubmit=async event=>{
  event.preventDefault();
  if(!localService||typeof LOCAL_GRAPHIFY_TOKEN==='undefined'){

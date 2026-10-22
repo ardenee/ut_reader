@@ -20,8 +20,58 @@ HOST, PORT = "127.0.0.1", 8765
 ROOT = Path.home() / "Graphify"
 INDEX = ROOT / "index.html"
 SCRIPT = ROOT / "Index-Code.ps1"
+SHORTCUT_RESOLVER = ROOT / "Resolve-Network-Shortcut.ps1"
+VIEWER_CONFIG = ROOT / "viewer-settings.json"
+VIEWER_SCRIPT = ROOT / "Refresh-Community-Labels.ps1"
+VIEWER_MIN, VIEWER_MAX, VIEWER_STEP = 2000, 5000, 500
+
+def checked_limit(value):
+    if type(value) is not int or value < VIEWER_MIN or value > VIEWER_MAX or (value - VIEWER_MIN) % VIEWER_STEP:
+        raise ValueError("HTML viewer node limit must be 2000–5000 in steps of 500")
+    return value
+
+def read_viewer_limit():
+    if not VIEWER_CONFIG.exists():
+        return VIEWER_MAX
+    config = json.loads(VIEWER_CONFIG.read_text(encoding="utf-8-sig"))
+    return checked_limit(config["node_limit"])
+
+def store_viewer_limit(limit):
+    checked_limit(limit)
+    temporary = VIEWER_CONFIG.with_suffix(".tmp")
+    temporary.write_text(json.dumps({"node_limit": limit}, indent=2), encoding="utf-8")
+    temporary.replace(VIEWER_CONFIG)
+
+
+def resolve_index_source(folder):
+    """Resolve Windows Network Shortcuts metadata folders to their targets.
+
+    A Network Shortcuts folder is not the referenced filesystem tree. Only
+    interpret target.lnk when the parent belongs to Windows' own shortcuts
+    directory; do not follow arbitrary .lnk files in project directories.
+    """
+    source = Path(folder)
+    shortcuts = Path.home() / "AppData/Roaming/Microsoft/Windows/Network Shortcuts"
+    try:
+        source.relative_to(shortcuts)
+    except ValueError:
+        return source
+    link = source / "target.lnk"
+    if not link.is_file():
+        return source
+    result = subprocess.run(
+        ["powershell.exe", "-NoProfile", "-NonInteractive", "-ExecutionPolicy",
+         "Bypass", "-File", str(SHORTCUT_RESOLVER), "-Link", str(link)],
+        capture_output=True, text=True, timeout=12, check=False)
+    if result.returncode != 0 or not result.stdout.strip():
+        raise ValueError("Windows Network Shortcut target could not be resolved")
+    target = Path(result.stdout.strip())
+    if not target.is_dir():
+        raise ValueError("Windows Network Shortcut target is not an accessible folder on DEV")
+    return target
 TOKEN = secrets.token_urlsafe(32)
 ACTIVE = {}
+VIEWER = {"state": "IDLE", "at_utc": None}
 LOCK = threading.Lock()
 LOG = ROOT / "dashboard-service.log"
 
@@ -57,6 +107,30 @@ def scan(name, folder):
         with LOCK:
             ACTIVE[name] = {"state": "FAIL", "at_utc": time_now()}
 
+def apply_viewer_limit(limit):
+    log = ROOT / "viewer-refresh.log"
+    try:
+        with log.open("a", encoding="utf-8") as out:
+            out.write(f"\n=== {time_now()} HTML VIEW NODE LIMIT {limit} START ===\n")
+            out.flush()
+            result = subprocess.run(
+                ["powershell.exe", "-NoProfile", "-NonInteractive", "-ExecutionPolicy",
+                 "Bypass", "-File", str(VIEWER_SCRIPT), "-NodeLimit", str(limit)],
+                stdout=out, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL,
+                shell=False, check=False)
+            out.write(f"\n=== {time_now()} HTML VIEW EXIT {result.returncode} ===\n")
+        state = "PASS" if result.returncode == 0 else "FAIL"
+        with LOCK:
+            VIEWER.update({"state": state, "at_utc": time_now(),
+                           "exit_code": result.returncode, "limit": limit})
+    except Exception:
+        with log.open("a", encoding="utf-8") as out:
+            traceback.print_exc(file=out)
+        with LOCK:
+            VIEWER.update({"state": "FAIL", "at_utc": time_now(),
+                           "limit": limit, "error": "See viewer-refresh.log"})
+
+
 class Handler(BaseHTTPRequestHandler):
     def safe_host(self):
         return self.headers.get("Host") in (f"127.0.0.1:{PORT}", f"localhost:{PORT}")
@@ -86,6 +160,12 @@ class Handler(BaseHTTPRequestHandler):
             with LOCK:
                 jobs = dict(ACTIVE)
             return self.send_json(200, {"jobs": jobs, "local_only": True})
+        if path == "/api/viewer":
+            with LOCK:
+                view_state = dict(VIEWER)
+            return self.send_json(200, {"node_limit": read_viewer_limit(),
+                  "minimum": VIEWER_MIN, "maximum": VIEWER_MAX, "step": VIEWER_STEP,
+                  "viewer": view_state, "graph_data_unchanged": True})
         m = re.fullmatch(r"/([a-z0-9][a-z0-9_.-]{0,63})/graphify-out/graph\.html", path)
         if m:
             file = ROOT / m[1] / "graphify-out" / "graph.html"
@@ -96,7 +176,7 @@ class Handler(BaseHTTPRequestHandler):
         if not self.safe_host():
             return self.send_json(403, {"error": "Unrecognized Host"})
         endpoint = urlsplit(self.path).path
-        if endpoint not in ("/api/add", "/api/masters"):
+        if endpoint not in ("/api/add", "/api/masters", "/api/viewer"):
             return self.send_json(404, {"error": "Not found"})
         if self.headers.get("Origin") not in (f"http://127.0.0.1:{PORT}", f"http://localhost:{PORT}"):
             return self.send_json(403, {"error": "Origin must be local dashboard"})
@@ -108,6 +188,20 @@ class Handler(BaseHTTPRequestHandler):
             size = int(self.headers.get("Content-Length", "0"))
             if not 0 < size <= 4096: raise ValueError("Request size invalid")
             request = json.loads(self.rfile.read(size))
+            if endpoint == "/api/viewer":
+                limit = checked_limit(request.get("node_limit"))
+                with LOCK:
+                    if VIEWER["state"] == "STARTED" or any(
+                        job["state"] == "STARTED" for job in ACTIVE.values()
+                    ):
+                        return self.send_json(409, {"error": "Wait for current graph work to finish"})
+                    store_viewer_limit(limit)
+                    VIEWER.update({"state": "STARTED", "at_utc": time_now(),
+                                   "limit": limit, "exit_code": None})
+                    threading.Thread(target=apply_viewer_limit,
+                                     args=(limit,), daemon=True).start()
+                return self.send_json(202, {"ok": True, "node_limit": limit,
+                    "message": "Regenerating HTML viewers only; full graph and MCP unchanged"})
             if endpoint == "/api/masters":
                 with LOCK:
                     master_id=MASTER_LIB.add_master(request.get("name", ""))
@@ -119,7 +213,7 @@ class Handler(BaseHTTPRequestHandler):
             custom_name = request.get("name", "")
             if not isinstance(folder, str) or len(folder) > 1024: raise ValueError("Invalid folder")
             folder = folder.strip().strip('"')
-            source = Path(folder)
+            source = resolve_index_source(folder)
             if not source.is_dir(): raise ValueError("Folder does not exist on DEV")
             if not isinstance(custom_name, str) or len(custom_name) > 64: raise ValueError("Invalid project name")
             name = custom_name.strip() or source.name
@@ -129,8 +223,8 @@ class Handler(BaseHTTPRequestHandler):
             if master != "unrealdb":
                 slug = master[:28] + "-" + slug[:35]
             with LOCK:
-                if any(job["state"] == "STARTED" for job in ACTIVE.values()):
-                    return self.send_json(409, {"error": "Another graph is being indexed. Try again after it finishes."})
+                if VIEWER["state"] == "STARTED" or any(job["state"] == "STARTED" for job in ACTIVE.values()):
+                    return self.send_json(409, {"error": "Graph indexing or HTML-view rebuilding is already running."})
                 target = ROOT / slug
                 existing = target / "project.json"
                 if existing.exists():

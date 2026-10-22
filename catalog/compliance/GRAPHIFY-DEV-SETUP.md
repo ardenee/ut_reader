@@ -122,3 +122,21 @@ To regenerate and verify after updating Graphify:
 & python 'C:\Users\arden\Graphify\Test-Community-Labels.py'
 ```
 Keep the full `graph.json` and source content on DEV, not in the public repository or PRD website. This is **visual display identification only**; Epic-source serialization correctness is independent and O06 remains open.
+
+## HTML-only viewer slider, 2,000–5,000 nodes (2026-10-22; supersedes previous unlimited-HTML export)
+
+The dashboard on DEV at http://127.0.0.1:8765/ now has a visible **HTML viewer node limit** slider directly below **Master project**, ranging from 2,000 to 5,000 in increments of 500. **Apply to HTML viewers** saves the choice and starts an asynchronous, HTML-only rebuild of existing views. Moving the slider alone does not change anything. The default/applied setting is 5,000 nodes.
+
+The slider changes Graphify's HTML exporter threshold ONLY. Full graph.json content, all original source symbols, relationships, node IDs, Graphify MCP output, Query-Master.py access and all source files remain unchanged. At/below the limit, individual graph nodes have original names (with #2/#3 suffixes added ONLY to duplicate HTML display labels). Above the limit, Graphify's own HTML exporter shows descriptive communities; the indexed full graph remains intact. Neither source names nor graph.json are overwritten or renamed.
+
+**Configuration and automation:** local-only C:\Users\arden\Graphify\viewer-settings.json stores node_limit=5000. Index-Code.ps1 reads this setting on future scans and passes it ONLY to graphify export html --node-limit. Refresh-Community-Labels.ps1 -NodeLimit 5000 regenerates existing HTML without source rescanning, journaling PASS/FAIL and source-graph SHA-256 after EACH project. The old graph-communities.html filename now uses the SAME selected cap as graph.html and is a compatibility alias, not an unlimited bypass. GET /api/viewer reports current limit and job state; authenticated POST /api/viewer validates 2000..5000 in steps of 500, CSRF token and local Origin, and disallows overlapping scan/update jobs. Dashboard displays STARTED/PASS/FAIL; logs in viewer-refresh.log.
+
+**Acceptance evidence, 2026-10-22:**
+- Live local dashboard HTTP 200 with real slider; JavaScript syntax PASS. API minimum 2000, maximum 5000, step 500, default 5000.
+- Invalid values 1999, 5001, 4250, string and boolean rejected HTTP 400; unauthorized/missing Origin rejected HTTP 403; valid POST 5000 accepted HTTP 202, job STARTED then PASS exit 0.
+- 27/27 existing HTML-only exports at limit 5000 PASS: 13 full-detail views and 14 descriptive community views. Logs record each individual PASS, plus overall 27/27.
+- At limit 2000, 3,127-node MeMeMe graph displays 361 communities. At limit 5000, all 3,127 source nodes display individually. The original graph.json SHA-256 is unchanged.
+- Test-Viewer-Limit.py verify: full original graph JSON SHA-256, individual/aggregated node counts and original identities **27/27 PASS**. Test-Community-Labels.py: original IDs and visual name disambiguation **27/27 PASS**.
+- No UE1 O06 serializer acceptance or modification; Epic source and native behavior remain authoritative.
+
+**Repository scripts:** tools/graphify/Build-Dashboard.py, Local-Dashboard-Server.py, Index-Code.ps1, Refresh-Community-Labels.ps1, Build-Community-Labels.py, Disambiguate-Graph-HTML.py, Test-Viewer-Limit.py, Test-Community-Labels.py. Local settings, generated graphs and source contents stay on DEV; no Graphify SaaS required.
