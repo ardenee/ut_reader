@@ -16,7 +16,7 @@ Updated 2026-10-22. This is a bounded unresolved list, NOT additional operation 
 | UBspNodes / FBspNode | Src/Inc/UnObj.h, FBspNode operator<< (near 692-700) | **IMPLEMENTED:** 56-byte archive records, plane/zone mask/flags/indices; source fixtures and bounds tests 20/20 combined with FBspSurf; DEV staging/MySQL PASS; PRD pending |
 | UBspSurfs / FBspSurf | Src/Inc/UnObj.h, FBspSurf operator<< (near 795-805) | **IMPLEMENTED:** 44-byte archive records, typed texture/brush/actor references and signed panning; same 20/20 combined source fixtures; PRD pending |
 | ULightMesh / FLightMeshIndex | Src/Inc/UnObj.h, operator<< (near 929-944) | **IMPLEMENTED:** variable 8×INT + 3×BYTE + NumStaticLights+NumDynamicLights one-based actor refs, max16; 12/12 v22/v23 source tests and DEV staging/MySQL PASS; PRD pending |
-| UPolys / FPoly | Src/Inc/UnObj.h, operator<< (near 1065-1078) | Decode variable vertex counts and FVector fields, names/object references, and malformed bounds |
+| UPolys / FPoly | Src/Inc/UnObj.h, operator<< (near 1065-1078) | **IMPLEMENTED:** 82+12×NumVertices variable archive records, max16, signed panning, names/brush/texture references; 16/16 source v22/v23 tests plus DEV staging/MySQL PASS; PRD pending |
 | UStackTree / FStackNode | Src/Inc/UnScript.h, FStackNode declaration (near 274-325), native operator<< implementation | Decode class scope, links, name and union branch and source data order; validate one-based references |
 | UScript source tokens | Src/Engine/UnScript.cpp, SerializeData / SerializeExpr | Audit full supported serialized expression token inventory, not just the currently fixture-tested tokens; add exact negative and valid cases |
 
