@@ -1,0 +1,105 @@
+﻿{
+    "ok": true,
+    "gate": "UE1-O06-G1",
+    "status": "SOURCE_MAPPING_ACCEPTED_G5_STILL_OPEN",
+    "source_registered": 26,
+    "saveable": 23,
+    "source_excluded": 3,
+    "source_cpp_files": 14,
+    "mapped_saveable_readers": 23,
+    "named_tests_each_target": 26,
+    "passed_checks": 291,
+    "total_checks": 291,
+    "issues": [],
+    "registered_classes": [
+        "UActorList",
+        "UArray",
+        "UBounds",
+        "UBspNodes",
+        "UBspSurfs",
+        "UBuffer",
+        "UCamera",
+        "UClass",
+        "UEnum",
+        "UFont",
+        "ULevel",
+        "ULightMesh",
+        "UMesh",
+        "UMeshMap",
+        "UModel",
+        "UPalette",
+        "UPlayer",
+        "UPolys",
+        "UScript",
+        "USound",
+        "UTerrain",
+        "UTextBuffer",
+        "UTexture",
+        "UTransBuffer",
+        "UVectors",
+        "UVertPool"
+    ],
+    "source_sha256": [
+        {
+            "file": "L:\\Source\\Games\\Unreal\\Unreal [v0.84a] [1996-12-11]\\Src\\Editor\\UnEdTran.cpp",
+            "sha256": "e003dc5e3f2046364b6820b3632628b157aafbfb9995751fac02ab9f45a94e4a"
+        },
+        {
+            "file": "L:\\Source\\Games\\Unreal\\Unreal [v0.84a] [1996-12-11]\\Src\\Engine\\UnActLst.cpp",
+            "sha256": "74cbf861b94f9af5818a1b9f87c5068aa98acf051d5eafd26f6cf0a19e45a96b"
+        },
+        {
+            "file": "L:\\Source\\Games\\Unreal\\Unreal [v0.84a] [1996-12-11]\\Src\\Engine\\UnCamera.cpp",
+            "sha256": "d823cf14e6d4e6c1788441085bdf1eda9e725129eea53bedec095902b3caa778"
+        },
+        {
+            "file": "L:\\Source\\Games\\Unreal\\Unreal [v0.84a] [1996-12-11]\\Src\\Engine\\UnClass.cpp",
+            "sha256": "fe92981b1861eb531d233797cb2f9b7e2d5a963a04429e0658cf792c97b21ee0"
+        },
+        {
+            "file": "L:\\Source\\Games\\Unreal\\Unreal [v0.84a] [1996-12-11]\\Src\\Engine\\UnFPoly.cpp",
+            "sha256": "805ffb5ab909e6cc1270472a1ef1e55613c589742b6a8ceda402e4d3e21ba7e2"
+        },
+        {
+            "file": "L:\\Source\\Games\\Unreal\\Unreal [v0.84a] [1996-12-11]\\Src\\Engine\\UnGfx.cpp",
+            "sha256": "871cf09ffa8745be9aac65f674fbdcbdf5947862714446174ce05c1d01b1249c"
+        },
+        {
+            "file": "L:\\Source\\Games\\Unreal\\Unreal [v0.84a] [1996-12-11]\\Src\\Engine\\UnLevel.cpp",
+            "sha256": "72d76026b5d01b521ec066c260264a0b565b5767066ad9aa24c9a23949f02e11"
+        },
+        {
+            "file": "L:\\Source\\Games\\Unreal\\Unreal [v0.84a] [1996-12-11]\\Src\\Engine\\UnMesh.cpp",
+            "sha256": "57f215c9bcb0ddcb9c2f6072c431053b7dbbb07160976db067b721ba6607c0b7"
+        },
+        {
+            "file": "L:\\Source\\Games\\Unreal\\Unreal [v0.84a] [1996-12-11]\\Src\\Engine\\UnModel.cpp",
+            "sha256": "61fbb7463619a41c9822b8c954dac24aa467ec6efe92b9e375db008a1c71109c"
+        },
+        {
+            "file": "L:\\Source\\Games\\Unreal\\Unreal [v0.84a] [1996-12-11]\\Src\\Engine\\UnRes.cpp",
+            "sha256": "7ccd2742192ba569be4fc2bf8b6b5d0fcfa81f133a3dacd0ed4a66d8926a9185"
+        },
+        {
+            "file": "L:\\Source\\Games\\Unreal\\Unreal [v0.84a] [1996-12-11]\\Src\\Engine\\UnScript.cpp",
+            "sha256": "1a13647d2b174de5e23460fff465b56ce1cbc0246b9c68d70e70d7b2d1d60e96"
+        },
+        {
+            "file": "L:\\Source\\Games\\Unreal\\Unreal [v0.84a] [1996-12-11]\\Src\\Engine\\UnServer.cpp",
+            "sha256": "27bca8c174e53b4fae5d6e16d95ca61650f0b743e9e7ced3d0f43c02f0f4e9bd"
+        },
+        {
+            "file": "L:\\Source\\Games\\Unreal\\Unreal [v0.84a] [1996-12-11]\\Src\\Engine\\UnSound.cpp",
+            "sha256": "64c0d385fb8e7cdf6ce642bc43e56d4f138a901162044d267817c9649e35ba22"
+        },
+        {
+            "file": "L:\\Source\\Games\\Unreal\\Unreal [v0.84a] [1996-12-11]\\Src\\Engine\\UnTex.cpp",
+            "sha256": "7679117b6b056fc98cfc87148591b7309e88e403649aae00b0853c767d93a74f"
+        }
+    ],
+    "out_of_scope_for_G1": [
+        "G5 real matching package corpus",
+        "O07 texture/audio payload interpretation",
+        "O10 runtime reference fixup, object instantiation, class linking"
+    ]
+}
