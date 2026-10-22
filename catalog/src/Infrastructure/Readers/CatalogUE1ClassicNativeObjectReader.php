@@ -44,7 +44,7 @@ final class CatalogUE1ClassicNativeObjectReader
         }
         $nativeKind=strtolower($className);
         if(!in_array($nativeKind,[
-            'texture','palette','sound','music','font','package','primitive','model','level','firetexture','wettexture','scriptedtexture','textbuffer','enum','const',
+            'texture','palette','sound','music','font','package','primitive','model','level','mesh','lodmesh','firetexture','wettexture','scriptedtexture','textbuffer','enum','const',
             ...CatalogUE1ClassicPropertyNativeReader::KINDS,
             ...CatalogUE1ClassicStructNativeReader::KINDS,
         ],true)){return $record;}
@@ -100,6 +100,10 @@ final class CatalogUE1ClassicNativeObjectReader
             if($nativeKind==='level'){
                 return array_replace($record,CatalogUE1ClassicLevelNativeReader::inspect(
                     $pkg,$ver,$read,$compact,$int,$pos,$limit));
+            }
+            if($nativeKind==='mesh'||$nativeKind==='lodmesh'){
+                return array_replace($record,CatalogUE1ClassicMeshNativeReader::inspect(
+                    $nativeKind,$pkg,$ver,$read,$compact,$int,$pos,$limit));
             }
             if($nativeKind==='package'){
                 return array_replace($record,[

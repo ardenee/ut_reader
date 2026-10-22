@@ -1,0 +1,27 @@
+﻿{
+    "ok": true,
+    "passed": 15,
+    "total": 15,
+    "failed": [],
+    "cases": {
+        "v35_FBox_legacy_plane": true,
+        "v35_UObject_old_framing": true,
+        "v40_old_plane_branch": true,
+        "v41_FSphere_FVector_only": true,
+        "v61_FSphere_vector_only": true,
+        "v62_full_sphere_FPlane": true,
+        "v69_FBox_IsValid_byte": true,
+        "v69_invalid_box_flag_retained_not_invented": true,
+        "FBox_raw_flag_preserved": true,
+        "extension_never_claimed_complete": true,
+        "reject_short_v35_plane": true,
+        "reject_short_v41_sphere": true,
+        "reject_short_v69_sphere": true,
+        "reject_short_FBox": true,
+        "reject_empty_native": true
+    },
+    "epic_source": [
+        "v1.200 Engine/Src/UnPrim.cpp:22-35, Engine/Inc/UnMath.h FVector/FBox/FPlane",
+        "UT99 v400 Engine/Src/UnPrim.cpp:22-29, Core/Inc/UnMath.h FBox/FSphere (Ver<=61)"
+    ]
+}
