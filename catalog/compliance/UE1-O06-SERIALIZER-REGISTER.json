@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_at_utc": "2026-10-22T19:47:24+00:00",
+  "updated_at_utc": "2026-10-22T19:52:11+00:00",
   "entries": [
     {
       "id": "R82:UActorList",
@@ -2054,14 +2054,14 @@
       "test": "verify-ue1-original-unrealfile-level.php",
       "evidence": "May ULevel::SerializeHeader native fixed 88 bytes (Num/Max + Model/BrushArray/Misc/ReachSpecs/16 TextBlocks); July 84B without Misc; both source UnObjVer.h 23. Exact decoded native header bytes infer source automatically, else explicit source lineage, else partial.",
       "remaining": "Source-original May/July native level tail auto-inferred from exact 88/84B after authentic FExecStackMain; unknown/extended header size source_1997_level_lineage_required. 39/39 native May/July fixture tests and affected DEV/PRD 7/7. Genuine source field/parent-oracle matching still G5, runtime actor linking O10.",
-      "updated_at_utc": "2026-10-22T17:22:00+00:00",
+      "updated_at_utc": "2026-10-22T19:51:29+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T17:21:21.0088297Z",
+        "at_utc": "2026-10-22T19:51:29.0986165Z",
         "test_sha256": "210dc098d203e6a631e5e6444f00ada446e7c4d555346270590fb8aa25d765f5",
-        "source_sha256": "a36fc52eca31008684c6ebdc489dd25fa7d846fbce3a299d070188626f848e9d",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T172120523Z-c1d63616-PRD-verify-ue1-original-unrealfile-level.php.txt"
+        "source_sha256": "0245b1a2515f82114de7285dc9073908dc069e89a1a242623c37baa81e8f1199",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T195128768Z-d3b1117f-PRD-verify-ue1-original-unrealfile-level.php.txt"
       }
     },
     {
@@ -2191,14 +2191,14 @@
       "test": "verify-ue1-original-unrealfile-mesh.php",
       "evidence": "Epic May v0.86x and July v0.867 Src/Inc/UnMath.h FBoundingRect/FBoundingBox min,max, BYTE IsValid, FPlane => 41 serialized bytes (FArchive BYTE operator UnArc.h writes 1B, not sizeof in-memory padding). May FRotation operator<< converts Pitch,Yaw,Roll to WORD 6B; July writes INT Pitch,Yaw,Roll 12B. UMesh SerializeHeader Src/Inc/UnMesh.h native May=127B, July=133B. UModel Src/Inc/UnModel.h native May=240B, July=246B. Both Unrealfile version23. Implemented shared native FArchive math and unique exact member length auto-discrimination with strict invalid/trailing rejection and full v22/v23 May/July source fixtures.",
       "remaining": "Source-defined typed May/July FRotation and FBoundingVolume now implemented and real v22/v23 envelopes pass. Missing independent engine/genuine package matching and related UBounds/FBspNode source variants remain G2/G5; runtime mesh/model object linking O10 and geometry interpretation O07 excluded.",
-      "updated_at_utc": "2026-10-22T19:09:38+00:00",
+      "updated_at_utc": "2026-10-22T19:51:30+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T19:09:38.2713778Z",
+        "at_utc": "2026-10-22T19:51:30.2356680Z",
         "test_sha256": "515b56377e562a5697afe6ca9e76543f92fe35b1f2c2bbba43e63abc4d2e15ec",
-        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T190937894Z-cd071bef-PRD-verify-ue1-original-unrealfile-mesh.php.txt"
+        "source_sha256": "0245b1a2515f82114de7285dc9073908dc069e89a1a242623c37baa81e8f1199",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T195129836Z-8313dfbc-PRD-verify-ue1-original-unrealfile-mesh.php.txt"
       }
     },
     {
@@ -2341,14 +2341,14 @@
       "test": "verify-ue1-original-unrealfile-model.php",
       "evidence": "Epic May v0.86x and July v0.867 Src/Inc/UnMath.h FBoundingRect/FBoundingBox min,max, BYTE IsValid, FPlane => 41 serialized bytes (FArchive BYTE operator UnArc.h writes 1B, not sizeof in-memory padding). May FRotation operator<< converts Pitch,Yaw,Roll to WORD 6B; July writes INT Pitch,Yaw,Roll 12B. UMesh SerializeHeader Src/Inc/UnMesh.h native May=127B, July=133B. UModel Src/Inc/UnModel.h native May=240B, July=246B. Both Unrealfile version23. Implemented shared native FArchive math and unique exact member length auto-discrimination with strict invalid/trailing rejection and full v22/v23 May/July source fixtures.",
       "remaining": "Source-defined typed May/July FRotation and FBoundingVolume now implemented and real v22/v23 envelopes pass. Missing independent engine/genuine package matching and related UBounds/FBspNode source variants remain G2/G5; runtime mesh/model object linking O10 and geometry interpretation O07 excluded.",
-      "updated_at_utc": "2026-10-22T19:09:38+00:00",
+      "updated_at_utc": "2026-10-22T19:51:30+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T19:09:38.7954004Z",
+        "at_utc": "2026-10-22T19:51:30.7596669Z",
         "test_sha256": "a11eb3b8dcb36d7cfa85104223ae6fc5eafe7b5a7a98fcbeae10616449cad803",
-        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T190938453Z-1cd6de5a-PRD-verify-ue1-original-unrealfile-model.php.txt"
+        "source_sha256": "0245b1a2515f82114de7285dc9073908dc069e89a1a242623c37baa81e8f1199",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T195130420Z-867c0367-PRD-verify-ue1-original-unrealfile-model.php.txt"
       }
     },
     {
@@ -2524,14 +2524,14 @@
       "test": "verify-ue1-original-unrealfile-external-schemas.php",
       "evidence": "May 1997 Src/Engine/UnProp.cpp FProperty::SerializeProperty skips CPF_Transient only, July additionally skips CPF_Intrinsic; both original file version 23. Reader now uses fixed-width-only full UProperties SerializeData bytes to identify exactly one May/July source family, with explicit provenance fallback. External UClass provider native fixture test 42/42, affected DEV 6/6 + PRD 6/6 current source/test hash; no variable-length/equal-width guessing.",
       "remaining": "Source May/July intrinsic bin now auto-decoded only where fixed-length expected bytes uniquely equal the entire UProperties data segment; in other cases source_1997_property_lineage_required is retained. Broader schema/declared external family and genuine original 1997 package oracle remain G2/G5; runtime class preload/fixup O10.",
-      "updated_at_utc": "2026-10-22T17:39:09+00:00",
+      "updated_at_utc": "2026-10-22T19:51:28+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T17:37:51.9071482Z",
+        "at_utc": "2026-10-22T19:51:28.5676138Z",
         "test_sha256": "ea038ed3a1a88c39fa3acf580e780413df6d81d5c81d5ecbdae2102687e7512e",
-        "source_sha256": "e6a0b387959e171e29390b9f17a6b0d1d0a7d9ae2ef8f0d241d95ae7d0ce46d1",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T173751191Z-2854d5cf-PRD-verify-ue1-original-unrealfile-external-schemas.php.txt"
+        "source_sha256": "0245b1a2515f82114de7285dc9073908dc069e89a1a242623c37baa81e8f1199",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T195127947Z-4e4f95a8-PRD-verify-ue1-original-unrealfile-external-schemas.php.txt"
       }
     },
     {
@@ -2572,16 +2572,16 @@
       "status": "PARTIAL",
       "reader": "CatalogUE1OriginalUnrealfileScriptExpressionReader.php",
       "test": "verify-ue1-original-unrealfile-script-may-july.php",
-      "evidence": "Epic v0.86x May Src/Engine/UnScript.cpp:4260 SerializeExpr, Src/Inc/UnScript.h conversion range EX_MinConversion=0x30 EX_MaxConversion=0x53, FRotationConst WORD3=6B, no iterator tokens. July v0.867 Src/Engine/UnScript.cpp:4894 and Inc/UnScript.h conversion 0x38..0x59, EX_Iterator/Pop/Next=0x2f/30/31, FRotationConst INT3=12B. Both original Unrealfile v22/23. Production UScript reader parses exact source-specific streams with optional caller lineage; when unspecified it tests both and does NOT invent meaning for syntactically valid ambiguous casts (0x40 May NameToBool vs July BoolToByte), with semantic conversion_name tied to actual source opcode. Ambiguous staging reports source_1997_script_lineage_required, no fabricated expression_tree. New native package verifier 26/26, existing July native 24/24 and two-source source inventory 68/68 (all 33 symbolic conversion names source-checked in BOTH May/July C++ enum tables).",
-      "remaining": "May and July v22/v23 UScript source-typed bytecode conversion/iterator/rotation branches implemented, with source ambiguity protected. Need genuine independent Epic package/engine oracle per source, wider archive branch corpus, instance identity/fixup excluded to O10. Not source-wide accepted.",
-      "updated_at_utc": "2026-10-22T19:47:24+00:00",
+      "evidence": "Epic v0.86x May Src/Engine/UnScript.cpp:4260 SerializeExpr, Src/Inc/UnScript.h conversion range EX_MinConversion=0x30 EX_MaxConversion=0x53, FRotationConst WORD3=6B, no iterator tokens. July v0.867 Src/Engine/UnScript.cpp:4894 and Inc/UnScript.h conversion 0x38..0x59, EX_Iterator/Pop/Next=0x2f/30/31, FRotationConst INT3=12B. Both original Unrealfile v22/23. Production UScript reader parses exact source-specific streams with optional caller lineage; when unspecified it tests both and does NOT invent meaning for syntactically valid ambiguous casts (0x40 May NameToBool vs July BoolToByte), with semantic conversion_name tied to actual source opcode. Ambiguous staging reports source_1997_script_lineage_required, no fabricated expression_tree. New native package verifier 34/34 incl explicit May/July staging propagation and invalid provenance rejection, existing July native 24/24 and two-source source inventory 68/68 (all 33 symbolic conversion names source-checked in BOTH May/July C++ enum tables).",
+      "remaining": "May and July v22/v23 UScript source-typed bytecode conversion/iterator/rotation branches implemented, with source ambiguity protected. Need genuine independent Epic package/engine oracle per source, wider archive branch corpus, instance identity/fixup excluded to O10. Not source-wide accepted. Production original staging now carries only caller-explicit source lineage across eligible 1997 native readers; unknown source still returns ambiguous when not uniquely parseable.",
+      "updated_at_utc": "2026-10-22T19:52:11+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T19:40:54.2828413Z",
-        "test_sha256": "1e1f6e008f02389b2c0c16586da004431b85dfd7b5d89326ce38c5473509883f",
-        "source_sha256": "069b15617b3723f4f8642b898ff9298abe540ea0ef8f1682aabec29a9def5116",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T194053874Z-99311fe6-PRD-verify-ue1-original-unrealfile-script-may-july.php.txt"
+        "at_utc": "2026-10-22T19:51:27.2286623Z",
+        "test_sha256": "27884cb436283ba27a4f85b997ede868eca1b41906a718312cba64244ed61b85",
+        "source_sha256": "0245b1a2515f82114de7285dc9073908dc069e89a1a242623c37baa81e8f1199",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T195126770Z-35ada96e-PRD-verify-ue1-original-unrealfile-script-may-july.php.txt"
       }
     },
     {
@@ -2678,14 +2678,14 @@
       "test": "verify-ue1-original-unrealfile-texture.php",
       "evidence": "May UTexture::SerializeHeader native 122B, 3 persisted refs and FrictionC before ReflectivityC; July native 138B adds 4 refs and swaps coefficient order; both source version 23. Exact source-native member length after FExecStackMain auto-selects source without guessing by version.",
       "remaining": "Native May/July texture tail selected by exact 122/138B source layout; unrecognized length source_1997_texture_lineage_required. 45/45 native source fixtures and affected DEV/PRD 7/7. Genuine source matching still G5, pixel interpretation O07.",
-      "updated_at_utc": "2026-10-22T17:22:00+00:00",
+      "updated_at_utc": "2026-10-22T19:51:29+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T17:21:21.6068330Z",
+        "at_utc": "2026-10-22T19:51:29.6286675Z",
         "test_sha256": "85707097e0a55ed5abeaf7a9488998fa0f2de2936765c4d114804009c07af949",
-        "source_sha256": "a36fc52eca31008684c6ebdc489dd25fa7d846fbce3a299d070188626f848e9d",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T172121201Z-a64ba427-PRD-verify-ue1-original-unrealfile-texture.php.txt"
+        "source_sha256": "0245b1a2515f82114de7285dc9073908dc069e89a1a242623c37baa81e8f1199",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T195129293Z-ea038c75-PRD-verify-ue1-original-unrealfile-texture.php.txt"
       }
     },
     {
@@ -3307,14 +3307,14 @@
       "test": "verify-ue1-original-unrealfile-level.php",
       "evidence": "May ULevel::SerializeHeader native fixed 88 bytes (Num/Max + Model/BrushArray/Misc/ReachSpecs/16 TextBlocks); July 84B without Misc; both source UnObjVer.h 23. Exact decoded native header bytes infer source automatically, else explicit source lineage, else partial.",
       "remaining": "Source-original May/July native level tail auto-inferred from exact 88/84B after authentic FExecStackMain; unknown/extended header size source_1997_level_lineage_required. 39/39 native May/July fixture tests and affected DEV/PRD 7/7. Genuine source field/parent-oracle matching still G5, runtime actor linking O10.",
-      "updated_at_utc": "2026-10-22T17:22:00+00:00",
+      "updated_at_utc": "2026-10-22T19:51:29+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T17:21:21.0088297Z",
+        "at_utc": "2026-10-22T19:51:29.0986165Z",
         "test_sha256": "210dc098d203e6a631e5e6444f00ada446e7c4d555346270590fb8aa25d765f5",
-        "source_sha256": "a36fc52eca31008684c6ebdc489dd25fa7d846fbce3a299d070188626f848e9d",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T172120523Z-c1d63616-PRD-verify-ue1-original-unrealfile-level.php.txt"
+        "source_sha256": "0245b1a2515f82114de7285dc9073908dc069e89a1a242623c37baa81e8f1199",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T195128768Z-d3b1117f-PRD-verify-ue1-original-unrealfile-level.php.txt"
       }
     },
     {
@@ -3432,14 +3432,14 @@
       "test": "verify-ue1-original-unrealfile-mesh.php",
       "evidence": "Epic May v0.86x and July v0.867 Src/Inc/UnMath.h FBoundingRect/FBoundingBox min,max, BYTE IsValid, FPlane => 41 serialized bytes (FArchive BYTE operator UnArc.h writes 1B, not sizeof in-memory padding). May FRotation operator<< converts Pitch,Yaw,Roll to WORD 6B; July writes INT Pitch,Yaw,Roll 12B. UMesh SerializeHeader Src/Inc/UnMesh.h native May=127B, July=133B. UModel Src/Inc/UnModel.h native May=240B, July=246B. Both Unrealfile version23. Implemented shared native FArchive math and unique exact member length auto-discrimination with strict invalid/trailing rejection and full v22/v23 May/July source fixtures.",
       "remaining": "Source-defined typed May/July FRotation and FBoundingVolume now implemented and real v22/v23 envelopes pass. Missing independent engine/genuine package matching and related UBounds/FBspNode source variants remain G2/G5; runtime mesh/model object linking O10 and geometry interpretation O07 excluded.",
-      "updated_at_utc": "2026-10-22T19:09:38+00:00",
+      "updated_at_utc": "2026-10-22T19:51:30+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T19:09:38.2713778Z",
+        "at_utc": "2026-10-22T19:51:30.2356680Z",
         "test_sha256": "515b56377e562a5697afe6ca9e76543f92fe35b1f2c2bbba43e63abc4d2e15ec",
-        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T190937894Z-cd071bef-PRD-verify-ue1-original-unrealfile-mesh.php.txt"
+        "source_sha256": "0245b1a2515f82114de7285dc9073908dc069e89a1a242623c37baa81e8f1199",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T195129836Z-8313dfbc-PRD-verify-ue1-original-unrealfile-mesh.php.txt"
       }
     },
     {
@@ -3582,14 +3582,14 @@
       "test": "verify-ue1-original-unrealfile-model.php",
       "evidence": "Epic May v0.86x and July v0.867 Src/Inc/UnMath.h FBoundingRect/FBoundingBox min,max, BYTE IsValid, FPlane => 41 serialized bytes (FArchive BYTE operator UnArc.h writes 1B, not sizeof in-memory padding). May FRotation operator<< converts Pitch,Yaw,Roll to WORD 6B; July writes INT Pitch,Yaw,Roll 12B. UMesh SerializeHeader Src/Inc/UnMesh.h native May=127B, July=133B. UModel Src/Inc/UnModel.h native May=240B, July=246B. Both Unrealfile version23. Implemented shared native FArchive math and unique exact member length auto-discrimination with strict invalid/trailing rejection and full v22/v23 May/July source fixtures.",
       "remaining": "Source-defined typed May/July FRotation and FBoundingVolume now implemented and real v22/v23 envelopes pass. Missing independent engine/genuine package matching and related UBounds/FBspNode source variants remain G2/G5; runtime mesh/model object linking O10 and geometry interpretation O07 excluded.",
-      "updated_at_utc": "2026-10-22T19:09:38+00:00",
+      "updated_at_utc": "2026-10-22T19:51:30+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T19:09:38.7954004Z",
+        "at_utc": "2026-10-22T19:51:30.7596669Z",
         "test_sha256": "a11eb3b8dcb36d7cfa85104223ae6fc5eafe7b5a7a98fcbeae10616449cad803",
-        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T190938453Z-1cd6de5a-PRD-verify-ue1-original-unrealfile-model.php.txt"
+        "source_sha256": "0245b1a2515f82114de7285dc9073908dc069e89a1a242623c37baa81e8f1199",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T195130420Z-867c0367-PRD-verify-ue1-original-unrealfile-model.php.txt"
       }
     },
     {
@@ -3761,14 +3761,14 @@
       "test": "verify-ue1-original-unrealfile-external-schemas.php",
       "evidence": "July v0.867 original FProperty::SerializeProperty filters CPF_Transient|CPF_Intrinsic, unlike May v0.86x (same version 23). UProperties class-bin reader infers source only from complete fixed-width data bytes if unique, or respects explicit family; else remains unresolved. Exact May 4B / July 0B intrinsic Int, malformed 2B, variable FString, same-size Enum branch native tests 42/42; affected DEV 6/6 PRD 6/6.",
       "remaining": "No invented July default for ambiguous 0x1000 fields; dynamic FString/equal width/native stream extensions require real provenance. G2 source-wide 1997 class map and G5 genuine independent oracle remain open, O10 runtime references excluded.",
-      "updated_at_utc": "2026-10-22T17:39:09+00:00",
+      "updated_at_utc": "2026-10-22T19:51:28+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T17:37:51.9071482Z",
+        "at_utc": "2026-10-22T19:51:28.5676138Z",
         "test_sha256": "ea038ed3a1a88c39fa3acf580e780413df6d81d5c81d5ecbdae2102687e7512e",
-        "source_sha256": "e6a0b387959e171e29390b9f17a6b0d1d0a7d9ae2ef8f0d241d95ae7d0ce46d1",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T173751191Z-2854d5cf-PRD-verify-ue1-original-unrealfile-external-schemas.php.txt"
+        "source_sha256": "0245b1a2515f82114de7285dc9073908dc069e89a1a242623c37baa81e8f1199",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T195127947Z-4e4f95a8-PRD-verify-ue1-original-unrealfile-external-schemas.php.txt"
       }
     },
     {
@@ -3809,16 +3809,16 @@
       "status": "PARTIAL",
       "reader": "CatalogUE1OriginalUnrealfileScriptExpressionReader.php",
       "test": "verify-ue1-original-unrealfile-script-may-july.php",
-      "evidence": "Epic v0.86x May Src/Engine/UnScript.cpp:4260 SerializeExpr, Src/Inc/UnScript.h conversion range EX_MinConversion=0x30 EX_MaxConversion=0x53, FRotationConst WORD3=6B, no iterator tokens. July v0.867 Src/Engine/UnScript.cpp:4894 and Inc/UnScript.h conversion 0x38..0x59, EX_Iterator/Pop/Next=0x2f/30/31, FRotationConst INT3=12B. Both original Unrealfile v22/23. Production UScript reader parses exact source-specific streams with optional caller lineage; when unspecified it tests both and does NOT invent meaning for syntactically valid ambiguous casts (0x40 May NameToBool vs July BoolToByte), with semantic conversion_name tied to actual source opcode. Ambiguous staging reports source_1997_script_lineage_required, no fabricated expression_tree. New native package verifier 26/26, existing July native 24/24 and two-source source inventory 68/68 (all 33 symbolic conversion names source-checked in BOTH May/July C++ enum tables).",
-      "remaining": "May and July v22/v23 UScript source-typed bytecode conversion/iterator/rotation branches implemented, with source ambiguity protected. Need genuine independent Epic package/engine oracle per source, wider archive branch corpus, instance identity/fixup excluded to O10. Not source-wide accepted.",
-      "updated_at_utc": "2026-10-22T19:47:24+00:00",
+      "evidence": "Epic v0.86x May Src/Engine/UnScript.cpp:4260 SerializeExpr, Src/Inc/UnScript.h conversion range EX_MinConversion=0x30 EX_MaxConversion=0x53, FRotationConst WORD3=6B, no iterator tokens. July v0.867 Src/Engine/UnScript.cpp:4894 and Inc/UnScript.h conversion 0x38..0x59, EX_Iterator/Pop/Next=0x2f/30/31, FRotationConst INT3=12B. Both original Unrealfile v22/23. Production UScript reader parses exact source-specific streams with optional caller lineage; when unspecified it tests both and does NOT invent meaning for syntactically valid ambiguous casts (0x40 May NameToBool vs July BoolToByte), with semantic conversion_name tied to actual source opcode. Ambiguous staging reports source_1997_script_lineage_required, no fabricated expression_tree. New native package verifier 34/34 incl explicit May/July staging propagation and invalid provenance rejection, existing July native 24/24 and two-source source inventory 68/68 (all 33 symbolic conversion names source-checked in BOTH May/July C++ enum tables).",
+      "remaining": "May and July v22/v23 UScript source-typed bytecode conversion/iterator/rotation branches implemented, with source ambiguity protected. Need genuine independent Epic package/engine oracle per source, wider archive branch corpus, instance identity/fixup excluded to O10. Not source-wide accepted. Production original staging now carries only caller-explicit source lineage across eligible 1997 native readers; unknown source still returns ambiguous when not uniquely parseable.",
+      "updated_at_utc": "2026-10-22T19:52:11+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T19:40:54.2828413Z",
-        "test_sha256": "1e1f6e008f02389b2c0c16586da004431b85dfd7b5d89326ce38c5473509883f",
-        "source_sha256": "069b15617b3723f4f8642b898ff9298abe540ea0ef8f1682aabec29a9def5116",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T194053874Z-99311fe6-PRD-verify-ue1-original-unrealfile-script-may-july.php.txt"
+        "at_utc": "2026-10-22T19:51:27.2286623Z",
+        "test_sha256": "27884cb436283ba27a4f85b997ede868eca1b41906a718312cba64244ed61b85",
+        "source_sha256": "0245b1a2515f82114de7285dc9073908dc069e89a1a242623c37baa81e8f1199",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T195126770Z-35ada96e-PRD-verify-ue1-original-unrealfile-script-may-july.php.txt"
       }
     },
     {
@@ -3911,14 +3911,14 @@
       "test": "verify-ue1-original-unrealfile-texture.php",
       "evidence": "May UTexture::SerializeHeader native 122B, 3 persisted refs and FrictionC before ReflectivityC; July native 138B adds 4 refs and swaps coefficient order; both source version 23. Exact source-native member length after FExecStackMain auto-selects source without guessing by version.",
       "remaining": "Native May/July texture tail selected by exact 122/138B source layout; unrecognized length source_1997_texture_lineage_required. 45/45 native source fixtures and affected DEV/PRD 7/7. Genuine source matching still G5, pixel interpretation O07.",
-      "updated_at_utc": "2026-10-22T17:22:00+00:00",
+      "updated_at_utc": "2026-10-22T19:51:29+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T17:21:21.6068330Z",
+        "at_utc": "2026-10-22T19:51:29.6286675Z",
         "test_sha256": "85707097e0a55ed5abeaf7a9488998fa0f2de2936765c4d114804009c07af949",
-        "source_sha256": "a36fc52eca31008684c6ebdc489dd25fa7d846fbce3a299d070188626f848e9d",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T172121201Z-a64ba427-PRD-verify-ue1-original-unrealfile-texture.php.txt"
+        "source_sha256": "0245b1a2515f82114de7285dc9073908dc069e89a1a242623c37baa81e8f1199",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T195129293Z-ea038c75-PRD-verify-ue1-original-unrealfile-texture.php.txt"
       }
     },
     {
@@ -4153,14 +4153,14 @@
       "test": "verify-ue1-original-unrealfile-script-expressions.php",
       "evidence": "PRD historical PASS at 2026-10-22T08:14:11.4736463Z; catalog\\compliance\\evidence\\o06\\20261022T081411274Z-263d247c-PRD-verify-ue1-original-unrealfile-script-expressions.php.txt; scoped test, not full class acceptance",
       "remaining": "Source-defined custom data routine tested in named fixtures; verify full G2 inherited/version contract before accepting",
-      "updated_at_utc": "2026-10-22T19:40:54+00:00",
+      "updated_at_utc": "2026-10-22T19:51:27+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T19:40:54.7978536Z",
+        "at_utc": "2026-10-22T19:51:27.7396149Z",
         "test_sha256": "7b7ae19081c152d1cd6c436bc845158e8cfabbca394a6981db9505c9b927af39",
-        "source_sha256": "069b15617b3723f4f8642b898ff9298abe540ea0ef8f1682aabec29a9def5116",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T194054469Z-af863b49-PRD-verify-ue1-original-unrealfile-script-expressions.php.txt"
+        "source_sha256": "0245b1a2515f82114de7285dc9073908dc069e89a1a242623c37baa81e8f1199",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T195127416Z-a79646f5-PRD-verify-ue1-original-unrealfile-script-expressions.php.txt"
       }
     },
     {

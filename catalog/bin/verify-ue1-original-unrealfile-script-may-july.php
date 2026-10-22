@@ -101,6 +101,31 @@ try{
         $check($key.'ambiguous_staging_reports_incomplete',
             ($s['status']??null)==='source_1997_script_lineage_required'
             &&!isset($s['expression_tree'])&&($staged['parse_complete']??true)===false);
+        // Caller-supplied source provenance is carried by the production
+        // unverified staging adapter to the source-family code reader.
+        foreach(['unreal_1997_may'=>'NameToBool','unreal_1997_july'=>'BoolToByte'] as $family=>$semantic){
+            $r=\UnrealDb\Catalog\Infrastructure\Unverified\CatalogUE1OriginalStagingMetadata::decode(
+                $tmp,['format'=>'early_unrealfile','version'=>$v,'source_lineage'=>$family]);
+            $read=$r['native_metadata']['unrealfile_script_expressions']['script_expressions'][0]??[];
+            $check($key.'explicit_'.$family.'_staging_preserves_semantic',
+                ($r['native_metadata']['source_lineage_provenance']??null)==='caller_explicit'
+                &&($r['native_metadata']['source_lineage_provided']??null)===$family
+                &&($read['source_lineage']??null)===$family
+                &&($read['expression_tree'][0]['fields']['conversion_name']??null)===$semantic
+                &&($r['parse_complete']??true)===false);
+        }
+        try{
+            \UnrealDb\Catalog\Infrastructure\Unverified\CatalogUE1OriginalStagingMetadata::decode(
+                $tmp,['format'=>'early_unrealfile','version'=>$v,'source_lineage'=>'incorrect_build']);
+            $badLineage=false;
+        }catch(InvalidArgumentException){$badLineage=true;}
+        $check($key.'invalid_explicit_staging_lineage_rejected',$badLineage);
+        try{
+            \UnrealDb\Catalog\Infrastructure\Unverified\CatalogUE1OriginalStagingMetadata::decode(
+                $tmp,['format'=>'early_unrealfile','version'=>$v,'source_lineage'=>false]);
+            $badType=false;
+        }catch(RuntimeException){$badType=true;}
+        $check($key.'non_string_source_provenance_rejected',$badType);
         file_put_contents($tmp,$pack($v,chr(0x22).pack('v2',1,2)));
         try{Script::read($tmp,true);$rejected=false;}
         catch(RuntimeException){$rejected=true;}

@@ -63,6 +63,17 @@ final class CatalogUE1OriginalStagingMetadata
             ];
             $counts = ['names' => count($raw['names']), 'imports' => count($imports), 'exports' => count($exports)];
         } elseif ($format === 'early_unrealfile' && in_array($version, [22, 23], true)) {
+            // Same serialized v22/v23 can originate from May or July 1997.
+            // Never infer the build from this version number. Only an
+            // explicitly caller-supplied, validated Epic source lineage
+            // disambiguates otherwise compatible native/bytecode archives.
+            $sourceLineage = $identity['source_lineage'] ?? null;
+            if ($sourceLineage !== null) {
+                if (!is_string($sourceLineage)) {
+                    throw new RuntimeException('Original Unrealfile source lineage must be a string');
+                }
+                \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfilePropertySerializationGate::validate($sourceLineage);
+            }
             $raw = CatalogUE1OriginalUnrealfileObjectBaseReader::read($path);
             $externalDiscovery = \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileExternalSchemaResolver::discoverSiblingProviders($path);
             $objects = $raw['object_bases'];
@@ -70,28 +81,30 @@ final class CatalogUE1OriginalStagingMetadata
             $exports = array_values(array_filter($objects, static fn(array $r):bool => $r['kind'] === 'export'));
             $native = [
                 'source_record_family' => 'UObjectBase',
+                'source_lineage_provenance' => $sourceLineage === null ? null : 'caller_explicit',
+                'source_lineage_provided' => $sourceLineage,
                 'summary' => $raw['summary'],
                 'declared_dependencies' => $raw['dependencies'],
                 'external_class_dependency_discovery' => $externalDiscovery['diagnostics'],
                 'external_class_provider_names' => array_keys($externalDiscovery['providers']),
                 'object_bases' => $objects,
                 'unrealfile_class_schemas' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileClassSchemaReader::read($path, false),
-                'unrealfile_binary_properties' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileBinaryPropertyReader::read($path, false, $externalDiscovery['providers']),
+                'unrealfile_binary_properties' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileBinaryPropertyReader::read($path, false, $externalDiscovery['providers'], $sourceLineage),
                 'unrealfile_database_records' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileDatabaseDataReader::read($path, false),
-                'unrealfile_level_records' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileLevelReader::read($path, false),
+                'unrealfile_level_records' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileLevelReader::read($path, false, $sourceLineage),
                 'unrealfile_primitive_headers' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfilePrimitiveHeaderReader::read($path, false),
-                'unrealfile_mesh_headers' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileMeshHeaderReader::read($path, false),
-                'unrealfile_model_headers' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileModelHeaderReader::read($path, false),
-                'unrealfile_texture_headers' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileTextureHeaderReader::read($path, false),
+                'unrealfile_mesh_headers' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileMeshHeaderReader::read($path, false, $sourceLineage),
+                'unrealfile_model_headers' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileModelHeaderReader::read($path, false, $sourceLineage),
+                'unrealfile_texture_headers' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileTextureHeaderReader::read($path, false, $sourceLineage),
                 'unrealfile_special_headers' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileSpecialHeadersReader::read($path, false),
-                'unrealfile_bsp_records' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileBspRecordsReader::read($path, false),
+                'unrealfile_bsp_records' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileBspRecordsReader::read($path, false, $sourceLineage),
                 'unrealfile_lightmesh_records' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileLightMeshDataReader::read($path, false),
                 'unrealfile_polygon_records' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfilePolysDataReader::read($path, false),
                 'unrealfile_stacktree_records' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileStackTreeDataReader::read($path, false),
                 'unrealfile_audio_records' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileAudioReader::read($path, false),
                 'unrealfile_bit_archive' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileBitArrayReader::read($path, false),
-                'unrealfile_properties_bin' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfilePropertiesReader::read($path, false, $externalDiscovery['providers']),
-                'unrealfile_script_expressions' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileScriptExpressionReader::read($path, false),
+                'unrealfile_properties_bin' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfilePropertiesReader::read($path, false, $externalDiscovery['providers'], $sourceLineage),
+                'unrealfile_script_expressions' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileScriptExpressionReader::read($path, false, $sourceLineage),
                 'serialized_stack_prefixes' => \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileStackReader::read($path, false),
                 'payload_decoded' => false,
             ];
