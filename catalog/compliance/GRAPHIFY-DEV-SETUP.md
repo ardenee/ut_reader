@@ -102,3 +102,23 @@ MeMeMe submitted using Windows Network Shortcuts `target.lnk` or the direct WSL 
 End-to-end proof: the existing MeMeMe project was indexed through POST `/api/add` using the same shortcut source, API 202, index event STARTED then PASS(exit 0), graph JSON 3,033,358 bytes with **3,127 nodes and 5,756 links**, HTML browser endpoint HTTP 200. 543 source code files discovered. `C:\Users\arden\Graphify\Test-WSL-Shortcut-Index.py` asserts physical WSL file SHA-256, standard Windows normalization, shortcut target resolution, canonical project source, graph stats and HTTP/index journal status; all PASS. Index output is local-only; no Epic engine source or UnrealDB package parser changed by this tooling fix.
 
 If graphifyy is upgraded, recheck the installed `cache.py` WSL path behavior and rerun the local test before depending on WSL scanning. These Graphify results are advisory to code navigation, not proof of Unreal byte-format parity.
+
+## Descriptive offline community/node labels for local Graphify (2026-10-22)
+
+Graphify 0.9.93 FREE local exporter supports `graphify export html --graph <graph.json> --labels <labels.json> --node-limit 2400`. Previously `Index-Code.ps1` omitted `--labels`, so the aggregated community views showed only `Community 0`, `Community 1`, etc. This is not a subscription or paid-SaaS limitation.
+
+Implemented DEV-local, LLM-free, deterministic presentation naming:
+- `C:\Users\arden\Graphify\Build-Community-Labels.py` reads each original `graph.json`, calculates actual graph degree and chooses the highest-degree recognizable **source-backed class/function/file** in each community, avoiding ambiguous one-letter minifier functions and source-less external references where appropriate. Uses original node names; repeated community names receive `#2`, `#3`, etc. Writes `graphify-out\.graphify_display_labels.json` for Graphify's supported native `--labels` option.
+- `C:\Users\arden\Graphify\Disambiguate-Graph-HTML.py` handles graphs under the visualization limit, which display *individual* original nodes rather than communities: only visually repeated names get numeric suffixes. Native HTML rendering preserves source node IDs; it does NOT rewrite the source graph.
+- `C:\Users\arden\Graphify\Index-Code.ps1` now runs both naming steps automatically after extraction/export, before dashboard refresh.
+- `C:\Users\arden\Graphify\Refresh-Community-Labels.ps1` regenerates all local graph HTML views WITHOUT rescanning Epic or project source files and checks SHA-256 of original graph JSON before/after each project; writes PASS/FAIL after each project to `Community-Labels-Journal.jsonl`.
+- `C:\Users\arden\Graphify\Test-Community-Labels.py` checks every project's community labels, stable identities, duplicate disambiguation, valid embedded JS node JSON, and latest per-project journal PASS; no API key or cloud request is used.
+
+Accepted local proof: **27/27 indexed project HTML views PASS** (15 aggregated community diagrams, 12 individual-node views), **1,049 otherwise identical individual node labels disambiguated** without rewriting graph.json. Representative cases: MeMeMe `Community 0` becomes `TestCase` (source-backed); `AdminController` / `AdminController #2`; UnrealDB `Community 0` becomes `PdoCatalogSourcePathStore`; minifier-generated `x()` communities can be identified as `files/jquery.qtip-2012-04-26.min.js`. Three dashboard HTML endpoints return HTTP 200. A fresh incremental scan on `archive_backend_test` (18 source nodes) confirmed the future-indexing path runs the label builder, HTML exporter and individual name validator successfully.
+
+To regenerate and verify after updating Graphify:
+```powershell
+& 'C:\Users\arden\Graphify\Refresh-Community-Labels.ps1'
+& python 'C:\Users\arden\Graphify\Test-Community-Labels.py'
+```
+Keep the full `graph.json` and source content on DEV, not in the public repository or PRD website. This is **visual display identification only**; Epic-source serialization correctness is independent and O06 remains open.
