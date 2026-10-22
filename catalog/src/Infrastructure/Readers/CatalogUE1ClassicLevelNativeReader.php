@@ -87,25 +87,11 @@ final class CatalogUE1ClassicLevelNativeReader
         // otherwise serializes DbNum/DbMax before SerializeData(AActor*).
         // Epic UT99 ULevelBase serializes the same count/capacity + actors
         // for every supported non-transaction package archive (>=60).
-        if($ver<40){
-            if($legacyDatabase===null){
-                throw new RuntimeException('ULevel pre-v40 UObject legacy database header unavailable');
-            }
-            $dbNum=(int)($legacyDatabase['count']??-1);
-            $dbMax=(int)($legacyDatabase['capacity']??-1);
-            if($dbNum>=0x80000000){$dbNum-=0x100000000;}
-            if($dbMax>=0x80000000){$dbMax-=0x100000000;}
-        }else{
-            $dbNum=$int();$dbMax=$int();
-        }
-        if($dbNum<0||$dbMax<$dbNum||$dbNum>$limit-$position){
-            throw new RuntimeException('ULevel actor DbNum/DbMax invalid');
-        }
+        $database=CatalogUE1ClassicDatabaseCounts::read(
+            $ver,$int,$legacyDatabase,$limit-$position);
         $actors=[];
-        for($i=0;$i<$dbNum;$i++){$actors[]=$ref('Actors');}
-        $result['actor_database']=['count'=>$dbNum,'capacity'=>$dbMax,
-                                   'actors'=>$actors,
-                                   'counts_in_uobject_prefix'=>$ver<40];
+        for($i=0;$i<$database['count'];$i++){$actors[]=$ref('Actors');}
+        $result['actor_database']=$database+['actors'=>$actors];
         if($ver>=59){
             $result['url']=$url();
         }else{

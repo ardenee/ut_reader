@@ -49,6 +49,13 @@ def find_symbols():
                 else:
                     m=re.match(r"^\s*(?:\w+\s+)*([A-Za-z_]\w*)::Serialize\s*\(\s*FArchive\s*&",line)
                     if m: sym=m[1]+"::Serialize"
+                    # Unreal v1.200 defines native UDatabase::SerializeData
+                    # implementations via IMPLEMENT_DB_CLASS in UnModel.cpp.
+                    # No explicit Class::SerializeData C++ signature exists.
+                    # These are real disk serializers, not mere registrations.
+                    elif branch=="C98":
+                        m=re.search(r"\bIMPLEMENT_DB_CLASS\s*\(\s*(U\w+)\s*\)",line)
+                        if m: sym=m[1]+"::SerializeData"
                 if sym is None: continue
                 key=branch+":"+sym
                 pos={"path":file.relative_to(root).as_posix(),"line":lineno}
