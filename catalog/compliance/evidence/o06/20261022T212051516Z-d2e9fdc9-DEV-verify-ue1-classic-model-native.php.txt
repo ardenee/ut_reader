@@ -1,0 +1,40 @@
+﻿{
+    "ok": true,
+    "passed": 28,
+    "total": 28,
+    "failed": [],
+    "cases": {
+        "complete_model_v35": true,
+        "complete_model_v41": true,
+        "complete_model_v42": true,
+        "complete_model_v43": true,
+        "complete_model_v44": true,
+        "complete_model_v50": true,
+        "complete_model_v53": true,
+        "complete_model_v61": true,
+        "complete_model_v62": true,
+        "complete_model_v69": true,
+        "v35_LightMap_old_serializer": true,
+        "v50_single_lightmap_scale": true,
+        "lightbits_real_serial_bytes_digest": true,
+        "v53_separate_lightmap_scales": true,
+        "modern_vector_geometry_and_polys": true,
+        "modern_nonempty_nodes_explicitly_incomplete": true,
+        "modern_nonempty_zones_explicitly_incomplete": true,
+        "legacy_all_references_source_order": true,
+        "zero_arrays_complete": true,
+        "extension_explicitly_incomplete": true,
+        "reject_outside_UModel_reference": true,
+        "reject_negative_lightmap_count": true,
+        "reject_bad_light_reference": true,
+        "reject_invalid_legacy_leaf_reference": true,
+        "reject_negative_num_zones": true,
+        "reject_excess_num_zones": true,
+        "reject_truncated_model": true,
+        "reject_truncated_light_bits": true
+    },
+    "sources": [
+        "Unreal v1.200 Engine/Src/UnModel.cpp:291-332, Engine/Inc/UnObj.h FLeaf/FLightMapIndex",
+        "UT99 v400 Engine/Src/UnModel.cpp:182-239, Engine/Inc/UnObj.h FLeaf/FLightMapIndex"
+    ]
+}

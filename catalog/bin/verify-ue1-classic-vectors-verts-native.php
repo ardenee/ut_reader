@@ -146,9 +146,39 @@ try{
   $check('native_count_bounds_'.$kind,$reject($kind,50,$raw,$prefix));
   [$raw,$prefix]=$database(61,$kind,[[0,0,0]]);
   $check('truncated_payload_'.$kind,$reject($kind,61,substr($raw,0,-1),$prefix));
-  [$pre62]=$parse($kind,62,'');
-  $check('no_unsupported_ut99_class_inference_'.$kind,
-    $pre62['status']==='source_c98_database_class_version_unverified');
+ }
+ $utModel=@file_get_contents('L:\Source\Games\UT99\Unreal Tournament [v1.400] [1999-11-30]\Engine\Src\UnModel.cpp');
+ $check('ut99_legacy_vectors_and_verts_source_classes',
+   is_string($utModel)
+   &&str_contains($utModel,'class ENGINE_API UVectors : public UObject')
+   &&str_contains($utModel,'class ENGINE_API UVerts : public UObject')
+   &&str_contains($utModel,'Ar << DbNum << DbMax;')
+   &&str_contains($utModel,'Ar << Element(i);')
+   &&str_contains($utModel,'Ar << AR_INDEX(NumSharedSides);'));
+ foreach([62,68,69] as $ver){
+  foreach(['Vectors','Verts'] as $kind){
+   $records=$kind==='Vectors'?[[1.5,-2.25,3.5],[0.0,9.0,-11.0]]:
+     [[0,-1],[16383,2]];
+   [$wire,$prefix]=$database($ver,$kind,$records,['max'=>7,'shared'=>5]);
+   [$rec]=$parse($kind,$ver,$wire,$prefix);
+   $check('ut99_legacy_database_load_'.$kind.'_v'.$ver,
+     $rec['status']==='native_'.strtolower($kind).'_database_complete'
+     &&$rec['archive_family']==='UT99-v400-legacy-database'
+     &&$rec['count']===2&&$rec['capacity']===7
+     &&$rec['counts_in_uobject_prefix']===false);
+   $check('ut99_native_values_'.$kind.'_v'.$ver,
+     $kind==='Vectors'?($rec['records_preview'][0]['x']===1.5
+       &&$rec['records_preview'][1]['z']===-11.0)
+       :($rec['records_preview'][1]['vertex_index']===16383
+         &&$rec['records_preview'][0]['side_index']===-1
+         &&$rec['num_shared_sides']===5));
+   [$bad,$opts]=$database($ver,$kind,$records,['num'=>2,'max'=>1,'shared'=>5]);
+   $check('ut99_invalid_capacity_'.$kind.'_v'.$ver,
+     $reject($kind,$ver,$bad,$opts));
+   [$short,$opts]=$database($ver,$kind,$records,['shared'=>5]);
+   $check('ut99_truncated_record_'.$kind.'_v'.$ver,
+     $reject($kind,$ver,substr($short,0,-1),$opts));
+  }
  }
  [$raw,$prefix]=$database(61,'Verts',[[0,0,0]]);
  $check('verts_negative_shared_sides_rejected',
@@ -165,6 +195,6 @@ try{
 $ok=$failed===[];
 echo json_encode(['ok'=>$ok,'passed'=>count($checks)-count($failed),
  'total'=>count($checks),'failed'=>$failed,
- 'notes'=>'Epic v1.200 inherited UDatabase; v62+ explicit source unverified; source assertions and synthetic package fixtures'],
+ 'notes'=>'Epic v1.200 inherited UDatabase; UT99 v400 legacy loaders; source assertions and full-package fixtures'],
  JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;
 exit($ok?0:1);

@@ -2,8 +2,12 @@
 /**
  * Unreal v1.200 Engine/Inc/UnObj.h FPoly::operator<< native disk grammar.
  * UPolys : UDatabase calls generated SerializeData -> FPoly per element.
- * Version <45 additionally reads two BYTEs; masked+translucent flags
- * clear PF_Masked during Epic's load, without altering original disk bytes.
+ * Version <45 additionally reads two BYTEs; Unreal v1.200 old-family
+ * load clears PF_Masked for masked+translucent flags.
+ * UT99 v400 Engine/Inc/UnObj.h UPolys::Serialize (TTransArray, nontransaction)
+ * persists INT32 DbNum/DbMax and identical FPoly element wire ordering.
+ * UT99 Engine/Src/UnModel.cpp::operator<<(FPoly&) clears PF_Transient
+ * (PF_Highlighted = 0x10000000) instead. Preserve original disk flags.
  */
 declare(strict_types=1);
 namespace UnrealDb\Catalog\Infrastructure\Readers;
@@ -17,10 +21,10 @@ final class CatalogUE1ClassicPolysNativeReader
         callable $read,callable $compact,callable $uint,
         int &$pos,int $limit,?array $legacyDatabase=null
     ): array {
-        if($version>61){
-            return ['status'=>'source_c98_polys_version_unverified',
-                'extension_bytes'=>$limit-$pos];
-        }
+        // UT99 v400 package loading takes its nontransactional path.
+        // The compact FPoly element grammar is identical, but the flag
+        // cleanup after read differs by the source family selected here.
+        $sourceFamily=$version>61?'UT99-v400':'Unreal-v1200';
         $int=static function()use($uint):int{
             $v=$uint();return $v>=0x80000000?$v-0x100000000:$v;
         };
@@ -72,8 +76,10 @@ final class CatalogUE1ClassicPolysNativeReader
             $panU=$signed16();$panV=$signed16();
             $legacy=null;
             if($version<45){$legacy=[ord($read(1)),ord($read(1))];}
-            // Epic code explicitly clears PF_Masked when both set on load.
-            $after=($flags&0x6)===0x6 ? ($flags&~0x2) : $flags;
+            // Unreal-v1200 FPoly clears masked when translucent+masked.
+            // UT99-v400 instead clears PF_Transient/PF_Highlighted.
+            $after=$version>61 ? ($flags&~0x10000000)
+                : ((($flags&0x6)===0x6) ? ($flags&~0x2) : $flags);
             if(count($preview)<16){
                 $preview[]=['num_vertices'=>$count,'base'=>$base,
                     'normal'=>$normal,'texture_u'=>$texU,'texture_v'=>$texV,
@@ -87,6 +93,7 @@ final class CatalogUE1ClassicPolysNativeReader
             }
         }
         return $db+[
+            'archive_family'=>$sourceFamily,
             'status'=>$pos===$limit?'native_polys_database_complete':
                 'native_polys_database_has_extension',
             'polys_preview'=>$preview,'extension_bytes'=>$limit-$pos,

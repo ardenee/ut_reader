@@ -84,6 +84,25 @@ try{
  $check('source_database_registration',is_string($hdr)
    &&str_contains($hdr,'DECLARE_DB_CLASS(UPolys,UDatabase,FPoly)')
    &&is_string($impl)&&str_contains($impl,'IMPLEMENT_DB_CLASS(UPolys);'));
+ $t99='L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]';
+ $t99Hdr=@file_get_contents($t99.'\\Engine\\Inc\\UnObj.h');
+ $t99Model=@file_get_contents($t99.'\\Engine\\Src\\UnModel.cpp');
+ $check('ut99_upolys_nontransaction_array_serialization',is_string($t99Hdr)
+   &&str_contains($t99Hdr,'class ENGINE_API UPolys : public UObject')
+   &&str_contains($t99Hdr,'INT DbNum=Element.Num(), DbMax=DbNum;')
+   &&str_contains($t99Hdr,'Ar << DbNum << DbMax;')
+   &&str_contains($t99Hdr,'Ar << Element(i);'));
+ $check('ut99_fpoly_operator_source_identical_field_order',is_string($t99Model)
+   &&str_contains($t99Model,'operator<<( FArchive& Ar, FPoly& Poly )')
+   &&str_contains($t99Model,'Ar << Poly.Base << Poly.Normal << Poly.TextureU << Poly.TextureV;')
+   &&str_contains($t99Model,'Ar << Poly.Actor << Poly.Texture << Poly.ItemName;')
+   &&str_contains($t99Model,'AR_INDEX(Poly.iLink) << AR_INDEX(Poly.iBrushPoly)'));
+ $check('ut99_fpoly_transient_flags_source',is_string($t99Hdr)
+   &&str_contains($t99Hdr,'PF_Transient')
+   &&str_contains($t99Hdr,'PF_Highlighted')
+   &&str_contains($t99Hdr,'PF_Highlighted      = 0x10000000')
+   &&is_string($t99Model)
+   &&str_contains($t99Model,'Poly.PolyFlags &= ~PF_Transient;'));
  foreach([35,39,40,44,45,50,61] as $ver){
   [$wire,$prefix]=$disk($ver,2,7,$poly($ver).$poly($ver,1,0x1));
   $parsed=$parse($ver,$wire,$prefix);
@@ -141,9 +160,49 @@ try{
  $check('bounded_preview_18_polys',
    $large['status']==='native_polys_database_complete'
    &&$large['count']===18&&count($large['polys_preview'])===16);
- $unverified=$parse(62,'');
- $check('ut99_unproven_class_not_guessed',
-   $unverified['status']==='source_c98_polys_version_unverified');
+ foreach([62,63,68,69] as $ver){
+  // UT99 v400 FPoly removes PF_Transient (PF_Highlighted), not PF_Masked.
+  [$wire,$prefix]=$disk($ver,2,5,
+    $poly($ver,2,0x10000006).$poly($ver,1,0x10000001));
+  $ut=$parse($ver,$wire,$prefix);
+  $check('ut99_nontransaction_upolys_records_v'.$ver,
+    $ut['status']==='native_polys_database_complete'
+    &&$ut['archive_family']==='UT99-v400'
+    &&$ut['count']===2&&$ut['capacity']===5
+    &&count($ut['polys_preview'])===2);
+  $check('ut99_transient_removed_masked_preserved_v'.$ver,
+    $ut['polys_preview'][0]['poly_flags_serialized']===0x10000006
+    &&$ut['polys_preview'][0]['poly_flags_after_epic_load']===0x6
+    &&$ut['polys_preview'][1]['poly_flags_after_epic_load']===1);
+  $check('ut99_no_1998_legacy_trailer_v'.$ver,
+    $ut['polys_preview'][0]['legacy_two_bytes']===null
+    &&$ut['polys_preview'][0]['num_vertices']===2
+    &&$ut['polys_preview'][0]['texture_reference']===1);
+  $check('ut99_complex_arrays_fields_v'.$ver,
+    $ut['polys_preview'][0]['vertices'][1]===[1.0,-1.0,5.0]
+    &&$ut['polys_preview'][0]['link_index']===300
+    &&$ut['polys_preview'][0]['pan_u']===-123);
+  [$wire,$pre]=$disk($ver,0,0,'');
+  $empty=$parse($ver,$wire,$pre);
+  $check('ut99_empty_fpoly_array_v'.$ver,
+    $empty['status']==='native_polys_database_complete'&&$empty['count']===0);
+  [$wire,$pre]=$disk($ver,1,1,substr($poly($ver,2),0,-1));
+  $check('ut99_truncated_fpoly_rejected_v'.$ver,$reject($ver,$wire,$pre));
+  [$wire,$pre]=$disk($ver,1,1,$poly($ver,17));
+  $check('ut99_invalid_polygon_vertex_count_v'.$ver,$reject($ver,$wire,$pre));
+  [$wire,$pre]=$disk($ver,1,0,$poly($ver));
+  $check('ut99_count_capacity_rejected_v'.$ver,$reject($ver,$wire,$pre));
+  [$wire,$pre]=$disk($ver,1,1,$poly($ver,1,0,-2));
+  $check('ut99_bad_actor_reference_rejected_v'.$ver,$reject($ver,$wire,$pre));
+  [$wire,$pre]=$disk($ver,1,1,$poly($ver,1,0,0,0,99));
+  $check('ut99_bad_fname_rejected_v'.$ver,$reject($ver,$wire,$pre));
+  [$wire,$pre]=$disk($ver,0,0,'');
+  $tail=$parse($ver,$wire."\xfa",$pre);
+  $check('ut99_no_false_accept_on_extension_v'.$ver,
+    $tail['status']==='native_polys_database_has_extension'
+    &&$tail['extension_bytes']===1);
+ }
+
 }finally{foreach($paths as $p){@unlink($p);}}
 echo json_encode(['ok'=>count($fail)===0,'total'=>count($tests),
  'passed'=>count($tests)-count($fail),'failed'=>$fail,

@@ -134,8 +134,45 @@ try{
     $large['status']==='native_bspnodes_database_complete'
     &&$large['count']===18&&count($large['nodes_preview'])===16
     &&$large['num_zones']===18&&count($large['zones_preview'])===16);
- $unknown=$parse(62,'');
- $check('ut99_source_absent_explicit',$unknown['status']==='source_c98_bspnodes_version_unverified');
+ $utModel=@file_get_contents('L:\Source\Games\UT99\Unreal Tournament [v1.400] [1999-11-30]\Engine\Src\UnModel.cpp');
+ $utHeader=@file_get_contents('L:\Source\Games\UT99\Unreal Tournament [v1.400] [1999-11-30]\Engine\Inc\UnObj.h');
+ $check('ut99_old_bsp_nodes_loading_only_archive_source',
+   is_string($utModel)
+   &&str_contains($utModel,'class ENGINE_API UBspNodes : public UObject')
+   &&str_contains($utModel,'Ar << DbNum << DbMax;')
+   &&str_contains($utModel,'Ar << AR_INDEX(_NumZones);')
+   &&str_contains($utModel,'Ar << _Zones[i];'));
+ $check('ut99_node_transient_load_clear_source',
+   is_string($utModel)
+   &&str_contains($utModel,'N.NodeFlags &= ~(NF_IsNew|NF_IsFront|NF_IsBack);')
+   &&is_string($utHeader)
+   &&str_contains($utHeader,'return Ar << *(UObject**)&P.ZoneActor << P.Connectivity << P.Visibility;'));
+ foreach([62,68,69] as $ver){
+  [$wire,$prefix]=$disk($ver,2,7,$node(0xe3).$node(0xa2),2,$zone(-1).$zone(1));
+  $rec=$parse($ver,$wire,$prefix);
+  $check('ut99_old_bsp_node_loader_v'.$ver,
+    $rec['status']==='native_bspnodes_database_complete'
+    &&$rec['archive_family']==='UT99-v400-legacy-database'
+    &&$rec['count']===2&&$rec['capacity']===7
+    &&$rec['num_zones']===2);
+  $check('ut99_node_flags_clear_e0_on_load_v'.$ver,
+    $rec['nodes_preview'][0]['node_flags']===0xe3
+    &&$rec['nodes_preview'][0]['node_flags_after_epic_load']===3
+    &&$rec['nodes_preview'][1]['node_flags_after_epic_load']===2);
+  $check('ut99_zone_fields_not_last_render_time_v'.$ver,
+    $rec['zones_preview'][0]['actor_reference']===-1
+    &&$rec['zones_preview'][0]['visibility_le_hex']==='0011223344556677'
+    &&$rec['last_render_time_serialized']===false);
+  [$wire,$prefix]=$disk($ver,2,1,$node());
+  $check('ut99_invalid_node_db_capacity_v'.$ver,$reject($ver,$wire,$prefix));
+  [$wire,$prefix]=$disk($ver,1,1,$node(),1,substr($zone(),0,-1));
+  $check('ut99_truncated_zone_mask_v'.$ver,$reject($ver,$wire,$prefix));
+  [$wire,$prefix]=$disk($ver,1,1,$node(),65);
+  $check('ut99_invalid_zone_count_v'.$ver,$reject($ver,$wire,$prefix));
+  [$wire,$prefix]=$disk($ver,1,1,$node(),1,$zone(-2));
+  $check('ut99_invalid_zone_actor_v'.$ver,$reject($ver,$wire,$prefix));
+ }
+
 }finally{foreach($paths as $p){@unlink($p);}}
 echo json_encode(['ok'=>count($fail)===0,'total'=>count($tests),
  'passed'=>count($tests)-count($fail),'failed'=>$fail,

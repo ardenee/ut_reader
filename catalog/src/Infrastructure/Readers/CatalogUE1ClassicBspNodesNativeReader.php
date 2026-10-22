@@ -18,10 +18,8 @@ final class CatalogUE1ClassicBspNodesNativeReader
         callable $read,callable $compact,callable $uint,
         int &$pos,int $limit,?array $legacyDatabase=null
     ): array {
-        if($version>61){
-            return ['status'=>'source_c98_bspnodes_version_unverified',
-                'extension_bytes'=>$limit-$pos];
-        }
+        // UT99 v400 old UBspNodes class still loads the same nodes/zones
+        // database; its FBspNode operator clears NF_IsNew/Front/Back on load.
         $signed=static function()use($uint):int{
             $v=$uint();return $v>=0x80000000?$v-0x100000000:$v;
         };
@@ -56,7 +54,9 @@ final class CatalogUE1ClassicBspNodesNativeReader
             $leafBack=$signed();$leafFront=$signed();
             if(count($nodes)<16){
                 $nodes[]=['plane'=>$plane,'zone_mask_le_hex'=>$zoneMask,
-                    'node_flags'=>$flags,'indices'=>$indices,
+                    'node_flags'=>$flags,
+                    'node_flags_after_epic_load'=>$version>61?($flags&~0xE0):$flags,
+                    'indices'=>$indices,
                     'zones'=>[$zoneBack,$zoneFront],
                     'num_vertices'=>$vertices,
                     'leaves'=>[$leafBack,$leafFront]];
@@ -79,6 +79,7 @@ final class CatalogUE1ClassicBspNodesNativeReader
             }
         }
         return $db+[
+            'archive_family'=>$version>61?'UT99-v400-legacy-database':'Unreal-v1200',
             'status'=>$pos===$limit?'native_bspnodes_database_complete':
                 'native_bspnodes_database_has_extension',
             'nodes_preview'=>$nodes,'num_zones'=>$numZones,

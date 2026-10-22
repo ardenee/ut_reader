@@ -11,10 +11,9 @@ final class CatalogUE1ClassicBspSurfsNativeReader
         callable $read,callable $compact,callable $uint,
         int &$pos,int $limit,?array $legacyDatabase=null
     ): array {
-        if($version>61){
-            return ['status'=>'source_c98_bspsurfs_version_unverified',
-                'extension_bytes'=>$limit-$pos];
-        }
+        // UT99 v400 Engine/Src/UnModel.cpp old UBspSurfs class still
+        // loads DbNum/DbMax and FBspSurf array. Its operator<< clears
+        // PF_Transient on load and skips Decals on file archives.
         $int=static function()use($uint):int{
             $v=$uint();return $v>=0x80000000?$v-0x100000000:$v;
         };
@@ -47,11 +46,13 @@ final class CatalogUE1ClassicBspSurfsNativeReader
             $panU=$signed16();$panV=$signed16();$actor=$ref('Actor');
             if(count($preview)<16){
                 $preview[]=['texture_reference'=>$texture,'poly_flags'=>$flags,
+                    'poly_flags_after_epic_load'=>$version>61?($flags&~0x10000000):$flags,
                     'indices'=>$indices,'pan_u'=>$panU,'pan_v'=>$panV,
                     'actor_reference'=>$actor];
             }
         }
-        return $db+['status'=>$pos===$limit?'native_bspsurfs_database_complete':
+        return $db+['archive_family'=>$version>61?'UT99-v400-legacy-database':'Unreal-v1200',
+            'status'=>$pos===$limit?'native_bspsurfs_database_complete':
                 'native_bspsurfs_database_has_extension',
             'surfaces_preview'=>$preview,'extension_bytes'=>$limit-$pos];
     }

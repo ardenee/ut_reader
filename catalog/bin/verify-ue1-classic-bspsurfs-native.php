@@ -122,8 +122,41 @@ try{
  $check('bounded_preview_18_surfaces',
    $large['count']===18&&count($large['surfaces_preview'])===16
    &&$large['status']==='native_bspsurfs_database_complete');
- $next=$parse(62,'');
- $check('ut99_absent_class_not_guessed',$next['status']==='source_c98_bspsurfs_version_unverified');
+ $t99Model=@file_get_contents('L:\Source\Games\UT99\Unreal Tournament [v1.400] [1999-11-30]\Engine\Src\UnModel.cpp');
+ $check('ut99_old_bsp_surfs_loader_source',
+   is_string($t99Model)
+   &&str_contains($t99Model,'class ENGINE_API UBspSurfs : public UObject')
+   &&str_contains($t99Model,'Ar << DbNum << DbMax;')
+   &&str_contains($t99Model,'Ar << Element(i);'));
+ $check('ut99_surf_load_clears_transient_not_file_decals',
+   is_string($t99Model)
+   &&str_contains($t99Model,'Surf.PolyFlags &= ~PF_Transient;')
+   &&str_contains($t99Model,'if( !Ar.IsLoading() && !Ar.IsSaving() )')
+   &&str_contains($t99Model,'Ar << Surf.Decals;'));
+ foreach([62,68,69] as $ver){
+  [$wire,$pre]=$disk($ver,2,5,
+    $surf(0,-1,0x10000006).$surf(1,1,0x10000001));
+  $rec=$parse($ver,$wire,$pre);
+  $check('ut99_surfs_loader_v'.$ver,
+    $rec['status']==='native_bspsurfs_database_complete'
+    &&$rec['archive_family']==='UT99-v400-legacy-database'
+    &&$rec['count']===2&&$rec['capacity']===5);
+  $check('ut99_surfs_transient_clear_v'.$ver,
+    $rec['surfaces_preview'][0]['poly_flags']===0x10000006
+    &&$rec['surfaces_preview'][0]['poly_flags_after_epic_load']===6
+    &&$rec['surfaces_preview'][1]['poly_flags_after_epic_load']===1);
+  $check('ut99_surfs_references_and_pan_v'.$ver,
+    $rec['surfaces_preview'][0]['actor_reference']===-1
+    &&$rec['surfaces_preview'][1]['texture_reference']===1
+    &&$rec['surfaces_preview'][0]['pan_u']===-320);
+  [$wire,$pre]=$disk($ver,1,1,substr($surf(),0,-1));
+  $check('ut99_surfs_truncated_actor_v'.$ver,$reject($ver,$wire,$pre));
+  [$wire,$pre]=$disk($ver,1,0,$surf());
+  $check('ut99_surfs_invalid_capacity_v'.$ver,$reject($ver,$wire,$pre));
+  [$wire,$pre]=$disk($ver,1,1,$surf(-2,0));
+  $check('ut99_surfs_invalid_texture_v'.$ver,$reject($ver,$wire,$pre));
+ }
+
 }finally{foreach($paths as $p){@unlink($p);}}
 echo json_encode(['ok'=>!$fails,'total'=>count($checks),
  'passed'=>count($checks)-count($fails),'failed'=>$fails,

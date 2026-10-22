@@ -27,10 +27,10 @@ final class CatalogUE1ClassicDatabaseNativeReader
         if(!in_array($kind,['vectors','verts'],true)){
             throw new RuntimeException('Not a classic UE1 vector/vertex database');
         }
-        if($version>61){
-            return ['status'=>'source_c98_database_class_version_unverified',
-                'extension_bytes'=>$limit-$position];
-        }
+        // UT99 v400 Engine/Src/UnModel.cpp keeps legacy UVectors/UVerts
+        // UObject loaders for compatible archives: on IsLoading() it reads
+        // DbNum/DbMax, each FVector/FVert, and UVerts NumSharedSides.
+        // Unreal v1.200 uses inherited UDatabase with the same element wire.
         $int=static function()use($uint):int{
             $v=$uint();return $v>=0x80000000?$v-0x100000000:$v;
         };
@@ -67,6 +67,7 @@ final class CatalogUE1ClassicDatabaseNativeReader
             $extra=['num_shared_sides'=>$shared];
         }
         return $db+$extra+[
+            'archive_family'=>$version>61?'UT99-v400-legacy-database':'Unreal-v1200',
             'status'=>$position===$limit?'native_'.$kind.'_database_complete':
                 'native_'.$kind.'_database_has_extension',
             'records_preview'=>$preview,
