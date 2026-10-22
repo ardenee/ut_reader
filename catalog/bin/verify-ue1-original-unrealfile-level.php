@@ -4,22 +4,23 @@
 declare(strict_types=1);
 require_once dirname(__DIR__).'/bootstrap/autoload.php';
 use UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileLevelReader as Level;
+use UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfilePropertySerializationGate as Gate;
 $checks=[];$errors=[];
 $check=static function(string $id,bool $ok)use(&$checks,&$errors):void{
     $checks[$id]=$ok;if(!$ok)$errors[]=$id;
 };
-$make=static function(int $version):array{
+$make=static function(int $version,bool $may=false):array{
     $names="Level\0".pack('V',0)."MyLevel\0".pack('V',0);
     $nameOff=56;$stack=pack('V2',0,0).str_repeat("\xff",8);
     $texts=array_fill(0,16,0);$texts[0]=1;$texts[15]=1;
-    $native=pack('V21',2,3,1,0,1,...$texts);
-    if(strlen($native)!==84)throw new RuntimeException('Bad ULevel native fixture header');
+    $native=$may?pack('V22',2,3,1,0,1,1,...$texts):pack('V21',2,3,1,0,1,...$texts);
+    if(strlen($native)!==($may?88:84))throw new RuntimeException('Bad ULevel native fixture header');
     $header=$stack.$native;
     $headOff=$nameOff+strlen($names);
     $data=pack('V2',1,0);
     $dataOff=$headOff+strlen($header);
     $objectsOff=$dataOff+strlen($data);
-    $object=pack('vvVV',2,1,0,$headOff).pack('V4',0,$dataOff,100,8);
+    $object=pack('vvVV',2,1,0,$headOff).pack('V4',0,$dataOff,strlen($header),8);
     $summary=pack('a32V6',"Unrealfile\x1A",$version,1,2,$nameOff,$objectsOff,0);
     return ['bytes'=>$summary.$names.$header.$data.$object,
         'header'=>$headOff,'native'=>$headOff+16,
@@ -30,7 +31,7 @@ if(!is_string($tmp))throw new RuntimeException('No temporary file');
 try{
  foreach([22,23] as $v){
     $f=$make($v);file_put_contents($tmp,$f['bytes']);
-    $rows=Level::read($tmp,true)['level_records'];$r=$rows[0]??[];
+    $rows=Level::read($tmp,true,Gate::JULY)['level_records'];$r=$rows[0]??[];
     $check("v{$v}_source_header_counts",
         count($rows)===1
         && ($r['status']??null)==='native_level_header_and_data_decoded'
@@ -52,28 +53,66 @@ try{
     $staged=\UnrealDb\Catalog\Infrastructure\Unverified\CatalogUE1OriginalStagingMetadata::decode(
         $tmp,['format'=>'early_unrealfile','version'=>$v]);
     $n=$staged['native_metadata']['unrealfile_level_records']['level_records'][0]??[];
-    $check("v{$v}_source_typed_staging",
-        ($n['active_actor_count']??null)===2
+    $check("v{$v}_source_lineage_unresolved_staging",
+        ($n['status']??null)==='source_1997_level_lineage_required'
+        && ($n['active_actor_count']??null)===null
         && ($staged['parse_complete']??true)===false);
     // Num > Max must be rejected.
     file_put_contents($tmp,substr_replace($f['bytes'],pack('V',4),$f['native'],4));
-    try{Level::read($tmp,true);$bad=false;}catch(RuntimeException){$bad=true;}
+    try{Level::read($tmp,true,Gate::JULY);$bad=false;}catch(RuntimeException){$bad=true;}
     $check("v{$v}_invalid_num_max_rejected",$bad);
     // ULevel header UObject references are strictly one-based ResMap.
     file_put_contents($tmp,substr_replace($f['bytes'],pack('V',2),$f['native']+8,4));
-    try{Level::read($tmp,true);$bad=false;}catch(RuntimeException){$bad=true;}
+    try{Level::read($tmp,true,Gate::JULY);$bad=false;}catch(RuntimeException){$bad=true;}
     $check("v{$v}_out_of_range_header_ref_rejected",$bad);
     // Data contains Num UObject references, each 32-bit.
     file_put_contents($tmp,substr_replace($f['bytes'],pack('V',2),$f['data'],4));
-    try{Level::read($tmp,true);$bad=false;}catch(RuntimeException){$bad=true;}
+    try{Level::read($tmp,true,Gate::JULY);$bad=false;}catch(RuntimeException){$bad=true;}
     $check("v{$v}_out_of_range_actor_ref_rejected",$bad);
     // Native fixed members must be present, never guessed.
     file_put_contents($tmp,substr_replace($f['bytes'],pack('V',96),$f['object']+20,4));
-    $partial=Level::read($tmp,false)['level_records'][0]??[];
-    try{Level::read($tmp,true);$bad=false;}catch(RuntimeException){$bad=true;}
+    $partial=Level::read($tmp,false,Gate::JULY)['level_records'][0]??[];
+    try{Level::read($tmp,true,Gate::JULY);$bad=false;}catch(RuntimeException){$bad=true;}
     $check("v{$v}_short_native_header_stays_unverified",
         ($partial['status']??null)==='incomplete_original_level_header'&&$bad);
+    // Neither source branch can be chosen solely from Unrealfile v22/v23.
+    file_put_contents($tmp,$f['bytes']);
+    $ambiguous=Level::read($tmp,false)['level_records'][0]??[];
+    $check("v{$v}_july_envelope_without_lineage_stays_partial",
+        ($ambiguous['status']??null)==='source_1997_level_lineage_required'
+        &&(!isset($ambiguous['model_raw_one_based_ref'])));
+    try{Level::read($tmp,true);$bad=false;}catch(RuntimeException){$bad=true;}
+    $check("v{$v}_strict_july_without_lineage_rejected",$bad);
+
+    $m=$make($v,true);
+    file_put_contents($tmp,$m['bytes']);
+    $mr=Level::read($tmp,true,Gate::MAY)['level_records'][0]??[];
+    $check("v{$v}_may_extra_Misc_field_and_actor_data",
+        ($mr['status']??null)==='native_level_header_and_data_decoded'
+        &&($mr['native_member_bytes']??null)===88
+        &&($mr['model_raw_one_based_ref']??null)===1
+        &&($mr['brush_array_raw_one_based_ref']??null)===0
+        &&($mr['misc_raw_one_based_ref']??null)===1
+        &&($mr['reach_specs_raw_one_based_ref']??null)===1
+        &&count($mr['text_block_raw_one_based_refs']??[])===16
+        &&count($mr['actor_records']??[])===2);
+    $ambiguous=Level::read($tmp,false)['level_records'][0]??[];
+    $check("v{$v}_may_envelope_without_lineage_stays_partial",
+        ($ambiguous['status']??null)==='source_1997_level_lineage_required'
+        &&(!isset($ambiguous['misc_raw_one_based_ref'])));
+    try{Level::read($tmp,true);$bad=false;}catch(RuntimeException){$bad=true;}
+    $check("v{$v}_strict_may_without_lineage_rejected",$bad);
+    // The third native reference exists only for the May source branch.
+    file_put_contents($tmp,substr_replace($m['bytes'],pack('V',2),$m['native']+16,4));
+    try{Level::read($tmp,true,Gate::MAY);$bad=false;}catch(RuntimeException){$bad=true;}
+    $check("v{$v}_may_invalid_Misc_ref_rejected",$bad);
+    file_put_contents($tmp,substr_replace($m['bytes'],pack('V',84),$m['object']+20,4));
+    try{Level::read($tmp,true,Gate::MAY);$bad=false;}catch(RuntimeException){$bad=true;}
+    $check("v{$v}_may_short_layout_rejected",$bad);
  }
+ try{Level::read($tmp,false,'imaginary_1997_release');$bad=false;}
+ catch(InvalidArgumentException){$bad=true;}
+ $check('invalid_source_lineage_rejected',$bad);
 }finally{@unlink($tmp);}
 echo json_encode(['ok'=>$errors===[],'passed'=>count($checks)-count($errors),
  'total'=>count($checks),'failures'=>$errors],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;

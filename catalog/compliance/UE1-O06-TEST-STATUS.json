@@ -1,8 +1,8 @@
 ﻿{
-    "updated_at_utc":  "2026-10-22T16:49:41.1551721Z",
-    "head_commit":  "25f135fb",
+    "updated_at_utc":  "2026-10-22T17:03:08.3740398Z",
+    "head_commit":  "7ae9900b",
     "current_target":  "PRD",
-    "current_source_sha256":  "ad4cc9cf2a3176151d9691899afbb40c3a5ae66635df67bf1824370771475619",
+    "current_source_sha256":  "44d5e6472a04b4fe603133e1c4780f25a0eadf17db3822c96dffe642b7d0175d",
     "tests":  [
                   {
                       "key":  "DEV:verify-ue1-classic-class-metadata.php",
@@ -201,12 +201,12 @@
                       "test":  "verify-ue1-o06-payload-negatives.php",
                       "target":  "DEV",
                       "state":  "PASS",
-                      "event_at_utc":  "2026-10-22T16:49:06.6962013Z",
-                      "source_sha256":  "0516f4d771cf2a7b2911b34335d6df5bd6b1eb20b63e4622e222a7cc445b5a8c",
+                      "event_at_utc":  "2026-10-22T17:02:40.7352547Z",
+                      "source_sha256":  "9252e1b173501f2fa1b80a8904f3ad173b6afe32116edf08f802001d9130c9a6",
                       "test_sha256":  "be58ffc16478d4eb446eed331b121ac178e171fae65195daa20baa9a6987edee",
-                      "run_id":  "20261022T164906340Z-a621cd05",
+                      "run_id":  "20261022T170240322Z-3cd7331d",
                       "exit_code":  0,
-                      "log":  "catalog\\compliance\\evidence\\o06\\20261022T164906340Z-a621cd05-DEV-verify-ue1-o06-payload-negatives.php.txt"
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261022T170240322Z-3cd7331d-DEV-verify-ue1-o06-payload-negatives.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-original-1996-actor-abi.php",
@@ -513,12 +513,12 @@
                       "test":  "verify-ue1-original-staging-integration.php",
                       "target":  "DEV",
                       "state":  "PASS",
-                      "event_at_utc":  "2026-10-22T16:49:06.1592068Z",
-                      "source_sha256":  "0516f4d771cf2a7b2911b34335d6df5bd6b1eb20b63e4622e222a7cc445b5a8c",
+                      "event_at_utc":  "2026-10-22T17:02:38.2347016Z",
+                      "source_sha256":  "9252e1b173501f2fa1b80a8904f3ad173b6afe32116edf08f802001d9130c9a6",
                       "test_sha256":  "c462897e0475f95dc770172d1e18b6a1c23274f9e17c25307d802472da9e9486",
-                      "run_id":  "20261022T164905805Z-29e6f132",
+                      "run_id":  "20261022T170237865Z-faa949e1",
                       "exit_code":  0,
-                      "log":  "catalog\\compliance\\evidence\\o06\\20261022T164905805Z-29e6f132-DEV-verify-ue1-original-staging-integration.php.txt"
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261022T170237865Z-faa949e1-DEV-verify-ue1-original-staging-integration.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-original-staging-mysql-isolated.php",
@@ -609,36 +609,36 @@
                       "test":  "verify-ue1-original-unrealfile-external-schemas.php",
                       "target":  "DEV",
                       "state":  "PASS",
-                      "event_at_utc":  "2026-10-22T16:49:03.9462363Z",
-                      "source_sha256":  "0516f4d771cf2a7b2911b34335d6df5bd6b1eb20b63e4622e222a7cc445b5a8c",
+                      "event_at_utc":  "2026-10-22T17:02:40.1472592Z",
+                      "source_sha256":  "9252e1b173501f2fa1b80a8904f3ad173b6afe32116edf08f802001d9130c9a6",
                       "test_sha256":  "d7d2bf2d680ce763570f66d7f887cc1a3ae7d2a2b9da6908b07b0e990324ed87",
-                      "run_id":  "20261022T164903374Z-2a3fa2b7",
+                      "run_id":  "20261022T170239572Z-fa1c7fa4",
                       "exit_code":  0,
-                      "log":  "catalog\\compliance\\evidence\\o06\\20261022T164903374Z-2a3fa2b7-DEV-verify-ue1-original-unrealfile-external-schemas.php.txt"
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261022T170239572Z-fa1c7fa4-DEV-verify-ue1-original-unrealfile-external-schemas.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-original-unrealfile-inheritance.php",
                       "test":  "verify-ue1-original-unrealfile-inheritance.php",
                       "target":  "DEV",
                       "state":  "PASS",
-                      "event_at_utc":  "2026-10-22T16:49:03.1912079Z",
-                      "source_sha256":  "0516f4d771cf2a7b2911b34335d6df5bd6b1eb20b63e4622e222a7cc445b5a8c",
+                      "event_at_utc":  "2026-10-22T17:02:39.3732159Z",
+                      "source_sha256":  "9252e1b173501f2fa1b80a8904f3ad173b6afe32116edf08f802001d9130c9a6",
                       "test_sha256":  "87c98b7a809b230839fbb1f8815718f3db9075a648666a02a7a3a911051f73be",
-                      "run_id":  "20261022T164902843Z-f9c74011",
+                      "run_id":  "20261022T170239045Z-6f841b7e",
                       "exit_code":  0,
-                      "log":  "catalog\\compliance\\evidence\\o06\\20261022T164902843Z-f9c74011-DEV-verify-ue1-original-unrealfile-inheritance.php.txt"
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261022T170239045Z-6f841b7e-DEV-verify-ue1-original-unrealfile-inheritance.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-original-unrealfile-level.php",
                       "test":  "verify-ue1-original-unrealfile-level.php",
                       "target":  "DEV",
                       "state":  "PASS",
-                      "event_at_utc":  "2026-10-22T06:49:34.4866318Z",
-                      "source_sha256":  "162d2a6546b6093e71b4f772d06bb7da6c96a942a7422f3ad3005b602dbb8855",
-                      "test_sha256":  "b014757d36f3449a45a7867421b6040abad04bc2108db0b2a569cd6afd24587a",
-                      "run_id":  "20261022T064934285Z-9422c9a0",
+                      "event_at_utc":  "2026-10-22T17:02:37.6853885Z",
+                      "source_sha256":  "9252e1b173501f2fa1b80a8904f3ad173b6afe32116edf08f802001d9130c9a6",
+                      "test_sha256":  "ad9d40cadd87ae57953d6963bc75b6771d11ea12cb600af68b8fd8ec5a5bf613",
+                      "run_id":  "20261022T170237350Z-9894e53e",
                       "exit_code":  0,
-                      "log":  "catalog\\compliance\\evidence\\o06\\20261022T064934285Z-9422c9a0-DEV-verify-ue1-original-unrealfile-level.php.txt"
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261022T170237350Z-9894e53e-DEV-verify-ue1-original-unrealfile-level.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-original-unrealfile-lightmesh-data.php",
@@ -693,12 +693,12 @@
                       "test":  "verify-ue1-original-unrealfile-object-bases.php",
                       "target":  "DEV",
                       "state":  "PASS",
-                      "event_at_utc":  "2026-10-22T16:49:05.6282020Z",
-                      "source_sha256":  "0516f4d771cf2a7b2911b34335d6df5bd6b1eb20b63e4622e222a7cc445b5a8c",
+                      "event_at_utc":  "2026-10-22T17:02:41.4532539Z",
+                      "source_sha256":  "9252e1b173501f2fa1b80a8904f3ad173b6afe32116edf08f802001d9130c9a6",
                       "test_sha256":  "6e122a2d14ee687750eb5c1f6584e35d4ddf6a4eac6907a139fad33d43a5759b",
-                      "run_id":  "20261022T164905069Z-c0bc310e",
+                      "run_id":  "20261022T170240922Z-48ae768f",
                       "exit_code":  0,
-                      "log":  "catalog\\compliance\\evidence\\o06\\20261022T164905069Z-c0bc310e-DEV-verify-ue1-original-unrealfile-object-bases.php.txt"
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261022T170240922Z-48ae768f-DEV-verify-ue1-original-unrealfile-object-bases.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-original-unrealfile-polys-data.php",
@@ -717,12 +717,12 @@
                       "test":  "verify-ue1-original-unrealfile-properties.php",
                       "target":  "DEV",
                       "state":  "PASS",
-                      "event_at_utc":  "2026-10-22T16:49:04.8802333Z",
-                      "source_sha256":  "0516f4d771cf2a7b2911b34335d6df5bd6b1eb20b63e4622e222a7cc445b5a8c",
+                      "event_at_utc":  "2026-10-22T17:02:38.8046975Z",
+                      "source_sha256":  "9252e1b173501f2fa1b80a8904f3ad173b6afe32116edf08f802001d9130c9a6",
                       "test_sha256":  "1c171908f0a2f232739c8fcef481a1e524bec52c799bf7eec13e9162ecad1710",
-                      "run_id":  "20261022T164904594Z-4f1c366c",
+                      "run_id":  "20261022T170238437Z-e099ee2d",
                       "exit_code":  0,
-                      "log":  "catalog\\compliance\\evidence\\o06\\20261022T164904594Z-4f1c366c-DEV-verify-ue1-original-unrealfile-properties.php.txt"
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261022T170238437Z-e099ee2d-DEV-verify-ue1-original-unrealfile-properties.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-original-unrealfile-script-expressions.php",
@@ -981,12 +981,12 @@
                       "test":  "verify-ue1-o06-payload-negatives.php",
                       "target":  "PRD",
                       "state":  "PASS",
-                      "event_at_utc":  "2026-10-22T16:49:41.1471722Z",
-                      "source_sha256":  "ad4cc9cf2a3176151d9691899afbb40c3a5ae66635df67bf1824370771475619",
+                      "event_at_utc":  "2026-10-22T17:03:07.5739714Z",
+                      "source_sha256":  "44d5e6472a04b4fe603133e1c4780f25a0eadf17db3822c96dffe642b7d0175d",
                       "test_sha256":  "be58ffc16478d4eb446eed331b121ac178e171fae65195daa20baa9a6987edee",
-                      "run_id":  "20261022T164940719Z-29f8c299",
+                      "run_id":  "20261022T170307128Z-34f4cef1",
                       "exit_code":  0,
-                      "log":  "catalog\\compliance\\evidence\\o06\\20261022T164940719Z-29f8c299-PRD-verify-ue1-o06-payload-negatives.php.txt"
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261022T170307128Z-34f4cef1-PRD-verify-ue1-o06-payload-negatives.php.txt"
                   },
                   {
                       "key":  "PRD:verify-ue1-original-1996-actor-abi.php",
@@ -1293,12 +1293,12 @@
                       "test":  "verify-ue1-original-staging-integration.php",
                       "target":  "PRD",
                       "state":  "PASS",
-                      "event_at_utc":  "2026-10-22T16:49:40.5321915Z",
-                      "source_sha256":  "ad4cc9cf2a3176151d9691899afbb40c3a5ae66635df67bf1824370771475619",
+                      "event_at_utc":  "2026-10-22T17:03:05.1023246Z",
+                      "source_sha256":  "44d5e6472a04b4fe603133e1c4780f25a0eadf17db3822c96dffe642b7d0175d",
                       "test_sha256":  "c462897e0475f95dc770172d1e18b6a1c23274f9e17c25307d802472da9e9486",
-                      "run_id":  "20261022T164940040Z-20c4b74e",
+                      "run_id":  "20261022T170304355Z-36e26291",
                       "exit_code":  0,
-                      "log":  "catalog\\compliance\\evidence\\o06\\20261022T164940040Z-20c4b74e-PRD-verify-ue1-original-staging-integration.php.txt"
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261022T170304355Z-36e26291-PRD-verify-ue1-original-staging-integration.php.txt"
                   },
                   {
                       "key":  "PRD:verify-ue1-original-staging-mysql-isolated.php",
@@ -1389,36 +1389,36 @@
                       "test":  "verify-ue1-original-unrealfile-external-schemas.php",
                       "target":  "PRD",
                       "state":  "PASS",
-                      "event_at_utc":  "2026-10-22T16:49:37.7291706Z",
-                      "source_sha256":  "ad4cc9cf2a3176151d9691899afbb40c3a5ae66635df67bf1824370771475619",
+                      "event_at_utc":  "2026-10-22T17:03:06.9534717Z",
+                      "source_sha256":  "44d5e6472a04b4fe603133e1c4780f25a0eadf17db3822c96dffe642b7d0175d",
                       "test_sha256":  "d7d2bf2d680ce763570f66d7f887cc1a3ae7d2a2b9da6908b07b0e990324ed87",
-                      "run_id":  "20261022T164937129Z-700cdd66",
+                      "run_id":  "20261022T170306367Z-421c949d",
                       "exit_code":  0,
-                      "log":  "catalog\\compliance\\evidence\\o06\\20261022T164937129Z-700cdd66-PRD-verify-ue1-original-unrealfile-external-schemas.php.txt"
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261022T170306367Z-421c949d-PRD-verify-ue1-original-unrealfile-external-schemas.php.txt"
                   },
                   {
                       "key":  "PRD:verify-ue1-original-unrealfile-inheritance.php",
                       "test":  "verify-ue1-original-unrealfile-inheritance.php",
                       "target":  "PRD",
                       "state":  "PASS",
-                      "event_at_utc":  "2026-10-22T16:49:36.9450739Z",
-                      "source_sha256":  "ad4cc9cf2a3176151d9691899afbb40c3a5ae66635df67bf1824370771475619",
+                      "event_at_utc":  "2026-10-22T17:03:06.1593218Z",
+                      "source_sha256":  "44d5e6472a04b4fe603133e1c4780f25a0eadf17db3822c96dffe642b7d0175d",
                       "test_sha256":  "87c98b7a809b230839fbb1f8815718f3db9075a648666a02a7a3a911051f73be",
-                      "run_id":  "20261022T164936504Z-a009041c",
+                      "run_id":  "20261022T170305788Z-0e7371ed",
                       "exit_code":  0,
-                      "log":  "catalog\\compliance\\evidence\\o06\\20261022T164936504Z-a009041c-PRD-verify-ue1-original-unrealfile-inheritance.php.txt"
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261022T170305788Z-0e7371ed-PRD-verify-ue1-original-unrealfile-inheritance.php.txt"
                   },
                   {
                       "key":  "PRD:verify-ue1-original-unrealfile-level.php",
                       "test":  "verify-ue1-original-unrealfile-level.php",
                       "target":  "PRD",
                       "state":  "PASS",
-                      "event_at_utc":  "2026-10-22T06:51:18.2935289Z",
-                      "source_sha256":  "e99a6328b4f09e8c8bb52237f9a43f71498d86ff4644a94ce43ac89be16c86e1",
-                      "test_sha256":  "b014757d36f3449a45a7867421b6040abad04bc2108db0b2a569cd6afd24587a",
-                      "run_id":  "20261022T065118074Z-1a09a928",
+                      "event_at_utc":  "2026-10-22T17:03:04.1765084Z",
+                      "source_sha256":  "44d5e6472a04b4fe603133e1c4780f25a0eadf17db3822c96dffe642b7d0175d",
+                      "test_sha256":  "ad9d40cadd87ae57953d6963bc75b6771d11ea12cb600af68b8fd8ec5a5bf613",
+                      "run_id":  "20261022T170303773Z-6a7798bf",
                       "exit_code":  0,
-                      "log":  "catalog\\compliance\\evidence\\o06\\20261022T065118074Z-1a09a928-PRD-verify-ue1-original-unrealfile-level.php.txt"
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261022T170303773Z-6a7798bf-PRD-verify-ue1-original-unrealfile-level.php.txt"
                   },
                   {
                       "key":  "PRD:verify-ue1-original-unrealfile-lightmesh-data.php",
@@ -1473,12 +1473,12 @@
                       "test":  "verify-ue1-original-unrealfile-object-bases.php",
                       "target":  "PRD",
                       "state":  "PASS",
-                      "event_at_utc":  "2026-10-22T16:49:39.8554264Z",
-                      "source_sha256":  "ad4cc9cf2a3176151d9691899afbb40c3a5ae66635df67bf1824370771475619",
+                      "event_at_utc":  "2026-10-22T17:03:08.3670111Z",
+                      "source_sha256":  "44d5e6472a04b4fe603133e1c4780f25a0eadf17db3822c96dffe642b7d0175d",
                       "test_sha256":  "6e122a2d14ee687750eb5c1f6584e35d4ddf6a4eac6907a139fad33d43a5759b",
-                      "run_id":  "20261022T164938925Z-4a43be3d",
+                      "run_id":  "20261022T170307761Z-8a324ae6",
                       "exit_code":  0,
-                      "log":  "catalog\\compliance\\evidence\\o06\\20261022T164938925Z-4a43be3d-PRD-verify-ue1-original-unrealfile-object-bases.php.txt"
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261022T170307761Z-8a324ae6-PRD-verify-ue1-original-unrealfile-object-bases.php.txt"
                   },
                   {
                       "key":  "PRD:verify-ue1-original-unrealfile-polys-data.php",
@@ -1497,12 +1497,12 @@
                       "test":  "verify-ue1-original-unrealfile-properties.php",
                       "target":  "PRD",
                       "state":  "PASS",
-                      "event_at_utc":  "2026-10-22T16:49:38.7261839Z",
-                      "source_sha256":  "ad4cc9cf2a3176151d9691899afbb40c3a5ae66635df67bf1824370771475619",
+                      "event_at_utc":  "2026-10-22T17:03:05.6013214Z",
+                      "source_sha256":  "44d5e6472a04b4fe603133e1c4780f25a0eadf17db3822c96dffe642b7d0175d",
                       "test_sha256":  "1c171908f0a2f232739c8fcef481a1e524bec52c799bf7eec13e9162ecad1710",
-                      "run_id":  "20261022T164938424Z-62bb0618",
+                      "run_id":  "20261022T170305302Z-e0ab7a9b",
                       "exit_code":  0,
-                      "log":  "catalog\\compliance\\evidence\\o06\\20261022T164938424Z-62bb0618-PRD-verify-ue1-original-unrealfile-properties.php.txt"
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261022T170305302Z-e0ab7a9b-PRD-verify-ue1-original-unrealfile-properties.php.txt"
                   },
                   {
                       "key":  "PRD:verify-ue1-original-unrealfile-script-expressions.php",
