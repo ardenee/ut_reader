@@ -1,0 +1,132 @@
+﻿{
+    "ok": true,
+    "packages": 92,
+    "tagged_exports": 2465,
+    "tag_count": 15475,
+    "native_tail_bytes": 30017974,
+    "unsupported_exports": 0,
+    "statuses": {
+        "tag_envelope_decoded": 2465
+    },
+    "native_statuses": {
+        "native_palette_record_complete": 805,
+        "native_texture_record_complete": 1228,
+        "native_font_record_complete": 22,
+        "native_sound_record_complete": 396,
+        "native_package_record_complete": 14
+    },
+    "unimplemented_classes": [],
+    "value_kinds": {
+        "boolean_tag_bit": 670,
+        "package_object_index": 1985,
+        "byte": 3089,
+        "int32": 7417,
+        "fcolor_serialized_bytes": 1855,
+        "float32": 355,
+        "v35_compact_object_reference": 59,
+        "water_texture_adrop": 45
+    },
+    "tag_types": {
+        "BoolProperty": 670,
+        "ObjectProperty": 2044,
+        "ByteProperty": 3089,
+        "IntProperty": 7417,
+        "StructProperty": 1900,
+        "FloatProperty": 355
+    },
+    "struct_types": {
+        "Color@4": 1855,
+        "ADrop@8": 45
+    },
+    "success_by_version": {
+        "44": 22,
+        "35": 46,
+        "56": 347,
+        "41": 71,
+        "61": 63,
+        "59": 34,
+        "60": 15,
+        "37": 32,
+        "54": 2,
+        "57": 8,
+        "42": 8,
+        "58": 17,
+        "55": 6,
+        "68": 1693,
+        "69": 101
+    },
+    "errors_by_version": [],
+    "samples": [
+        {
+            "path": "Blood.utx",
+            "export": "bld_a02",
+            "tag_count": 13,
+            "first": "bMasked",
+            "native_tail_bytes": 5556
+        },
+        {
+            "path": "Blood.utx",
+            "export": "bld_a03",
+            "tag_count": 13,
+            "first": "bMasked",
+            "native_tail_bytes": 5556
+        },
+        {
+            "path": "Blood.utx",
+            "export": "bld_a04",
+            "tag_count": 13,
+            "first": "bMasked",
+            "native_tail_bytes": 5556
+        },
+        {
+            "path": "Blood.utx",
+            "export": "bld_a08",
+            "tag_count": 12,
+            "first": "bMasked",
+            "native_tail_bytes": 5556
+        },
+        {
+            "path": "Blood.utx",
+            "export": "bld_a06",
+            "tag_count": 13,
+            "first": "bMasked",
+            "native_tail_bytes": 5556
+        },
+        {
+            "path": "Blood.utx",
+            "export": "bld_a07",
+            "tag_count": 13,
+            "first": "bMasked",
+            "native_tail_bytes": 5556
+        },
+        {
+            "path": "Blood.utx",
+            "export": "bld_a01",
+            "tag_count": 13,
+            "first": "bMasked",
+            "native_tail_bytes": 5556
+        },
+        {
+            "path": "Blood.utx",
+            "export": "bld_a05",
+            "tag_count": 13,
+            "first": "bMasked",
+            "native_tail_bytes": 5556
+        },
+        {
+            "path": "Blood.utx",
+            "export": "bld_a00",
+            "tag_count": 15,
+            "first": "bMasked",
+            "native_tail_bytes": 5556
+        },
+        {
+            "path": "Bloodeffect1.utx",
+            "export": "Bloodeffect1",
+            "tag_count": 30,
+            "first": "SparkType",
+            "native_tail_bytes": 29
+        }
+    ],
+    "errors": []
+}
