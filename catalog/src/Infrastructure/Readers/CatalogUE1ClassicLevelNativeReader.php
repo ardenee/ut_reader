@@ -3,15 +3,18 @@
  * Source-ordered UE1 ULevel native file data.
  *
  * Unreal v1.200 Engine/Src/UnLevel.cpp and UnReach.h:
- *   UObject -> [URL if >=59] -> Model, ReachSpecs, float TimeSeconds,
- *   FirstDeleted, 16 TextBlocks, optional TravelNames/TravelItems >=61.
+ *   UObject -> UDatabase::Serialize (v<40 uses UObject TempNum/TempMax,
+ *   v>=40 writes DbNum/DbMax, followed by DbNum compact actor references)
+ *   -> [FURL if >=59] -> Model, ReachSpecs, TimeSeconds, FirstDeleted,
+ *   16 TextBlocks, and TravelNames/TravelItems for >=61.
  * UT99 v400 Engine/Src/UnLevel.cpp and UnReach.h:
- *   UObject -> DbNum/DbMax actor list + FURL -> Model, ReachSpecs,
- *   float ApproxTime, FirstDeleted, 16 TextBlocks, versioned TravelInfo.
+ *   UObject -> serialized actor DbNum/DbMax and actor references -> FURL
+ *   -> Model, ReachSpecs, ApproxTime, FirstDeleted, 16 TextBlocks,
+ *   versioned TravelInfo. The actor database wire sequence is the SAME
+ *   as Unreal v1.200 for versions 60/61; source ancestry is different.
  *
- * Only package archive bytes; no runtime Preload, actor fixup, or networking.
- * Source families overlap historically. v<=61 uses 1998 source branch,
- * v>=62 uses v400 branch; classification is PARTIAL pending genuine samples.
+ * Only file archive bytes; no runtime Preload, actor fixup, or networking.
+ * Genuine matching samples and complete archive-family identity remain open.
  */
 declare(strict_types=1);
 namespace UnrealDb\Catalog\Infrastructure\Readers;
@@ -22,7 +25,8 @@ final class CatalogUE1ClassicLevelNativeReader
     /** @return array<string,mixed> */
     public static function inspect(
         CatalogUE1PackageReader $pkg,int $ver,callable $read,
-        callable $compact,callable $uint,int &$position,int $limit
+        callable $compact,callable $uint,int &$position,int $limit,
+        ?array $legacyDatabase=null
     ): array {
         $int=static function()use($uint):int {
             $v=$uint(); return $v>=0x80000000?$v-0x100000000:$v;
@@ -75,18 +79,33 @@ final class CatalogUE1ClassicLevelNativeReader
                     'portal'=>$str(),'options'=>$stringArray('FURL.Op'),
                     'port'=>$int(),'valid'=>$int()];
         };
-        $result=['archive_family'=>$ver<=61?'Unreal-v1200':'UT99-v400',
+        $result=['archive_family'=>$ver<60?'Unreal-v1200':
+                   ($ver<=61?'Unreal-v1200-and-UT99-v400-common-actor-wire':'UT99-v400'),
                  'actors_runtime_fixed_up'=>false];
-        if($ver>=62){
-            // UT99 ULevelBase::Serialize: only non-transactional package case.
-            $dbNum=$int();$dbMax=$int();
-            if($dbNum<0||$dbMax<$dbNum||$dbNum>$limit-$position){
-                throw new RuntimeException('ULevel actor DbNum/DbMax invalid');
+        // Epic v1.200 ULevelBase inherits UDatabase. UDatabase::Serialize
+        // reads TempNum/TempMax from the UObject prefix for versions <40,
+        // otherwise serializes DbNum/DbMax before SerializeData(AActor*).
+        // Epic UT99 ULevelBase serializes the same count/capacity + actors
+        // for every supported non-transaction package archive (>=60).
+        if($ver<40){
+            if($legacyDatabase===null){
+                throw new RuntimeException('ULevel pre-v40 UObject legacy database header unavailable');
             }
-            $actors=[];
-            for($i=0;$i<$dbNum;$i++){$actors[]=$ref('Actors');}
-            $result['actor_database']=['count'=>$dbNum,'capacity'=>$dbMax,'actors'=>$actors];
+            $dbNum=(int)($legacyDatabase['count']??-1);
+            $dbMax=(int)($legacyDatabase['capacity']??-1);
+            if($dbNum>=0x80000000){$dbNum-=0x100000000;}
+            if($dbMax>=0x80000000){$dbMax-=0x100000000;}
+        }else{
+            $dbNum=$int();$dbMax=$int();
         }
+        if($dbNum<0||$dbMax<$dbNum||$dbNum>$limit-$position){
+            throw new RuntimeException('ULevel actor DbNum/DbMax invalid');
+        }
+        $actors=[];
+        for($i=0;$i<$dbNum;$i++){$actors[]=$ref('Actors');}
+        $result['actor_database']=['count'=>$dbNum,'capacity'=>$dbMax,
+                                   'actors'=>$actors,
+                                   'counts_in_uobject_prefix'=>$ver<40];
         if($ver>=59){
             $result['url']=$url();
         }else{

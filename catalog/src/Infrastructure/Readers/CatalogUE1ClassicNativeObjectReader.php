@@ -99,7 +99,8 @@ final class CatalogUE1ClassicNativeObjectReader
             }
             if($nativeKind==='level'){
                 return array_replace($record,CatalogUE1ClassicLevelNativeReader::inspect(
-                    $pkg,$ver,$read,$compact,$int,$pos,$limit));
+                    $pkg,$ver,$read,$compact,$int,$pos,$limit,
+                    $propertyStream['legacy_database']??null));
             }
             if($nativeKind==='mesh'||$nativeKind==='lodmesh'){
                 return array_replace($record,CatalogUE1ClassicMeshNativeReader::inspect(

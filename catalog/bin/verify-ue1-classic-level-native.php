@@ -23,12 +23,12 @@ $str=static function(int $v,string $text,bool $wide=false)use($idx):string{
 };
 $source=static function(int $v,array $o=[])use($idx,$str):string {
  $raw='';
- if($v>=62){
-  $actors=$o['actors']??[-1,1];
+ $actors=$o['actors']??($v<40?[]:[-1,1]);
+ if($v>=40){
   $num=$o['badActorCount']??count($actors);
   $raw.=pack('V2',$num&0xffffffff,($o['actorMax']??count($actors))&0xffffffff);
-  foreach($actors as $a){$raw.=$idx($a);}
  }
+ foreach($actors as $a){$raw.=$idx($a);}
  if($v>=59){
   $f=$o['badUrlWide']??false;
   $raw.=$str($v,'unreal').$str($v,'localhost').$str($v,'ExampleMap')
@@ -55,11 +55,12 @@ $source=static function(int $v,array $o=[])use($idx,$str):string {
  }
  return $raw.($o['extension']??'');
 };
-$build=static function(int $v,string $payload)use($idx):string{
+$build=static function(int $v,string $payload,array $o=[])use($idx):string{
  $names=['None','Level','TestLevel','Engine','Class'];$nameBytes='';
  foreach($names as $n){$nameBytes.=($v>=64?$idx(strlen($n)+1):'').$n."\0".pack('V',0);}
  $imp=$idx(3).$idx(4).($v<50?$idx(0):pack('V',0)).$idx(1);
- $prefix=$v<40?pack('V2',0,0):'';
+ $prefix=$v<40?pack('V2',($o['legacyCount']??0)&0xffffffff,
+   ($o['legacyMax']??0)&0xffffffff):'';
  if($v<47){$prefix.=$idx(0).$idx(0).str_repeat("\0",8);}
  $body=$prefix."\0".($v<57?"\0":"").($v<58?"\0":"").$payload;
  $summarySize=$v>=68?56:44;
@@ -76,21 +77,57 @@ $paths=[];$checks=[];$failed=[];
 $check=static function(string $case,bool $ok)use(&$checks,&$failed):void{
  $checks[$case]=$ok;if(!$ok)$failed[]=$case;
 };
-$parse=static function(int $v,string $raw)use($build,&$paths):array{
+$parse=static function(int $v,string $raw,array $o=[])use($build,&$paths):array{
  $p=tempnam(sys_get_temp_dir(),'ue1level');
  if(!$p)throw new RuntimeException('Cannot create fixture');
- $paths[]=$p;file_put_contents($p,$build($v,$raw));
+ $paths[]=$p;file_put_contents($p,$build($v,$raw,$o));
  $pkg=new Package($p);
  if($pkg->validatePackage()!==[])throw new RuntimeException('Invalid synthetic UE1 package');
  $props=Tag::inspect($p,$pkg,0);
  if(($props['status']??'')!=='tag_envelope_decoded')throw new RuntimeException('Missing decoded UObject properties');
  return [Native::inspect($p,$pkg,0,$props),$props];
 };
-$reject=static function(int $v,string $raw)use($parse):bool{
- try{$parse($v,$raw);return false;}catch(RuntimeException){return true;}
+$reject=static function(int $v,string $raw,array $o=[])use($parse):bool{
+ try{$parse($v,$raw,$o);return false;}catch(RuntimeException){return true;}
 };
 try{
- foreach([35,50,53,54,58,59,60,61,62,63,64,69] as $v){
+ $c98='L:\Source\Games\Unreal\Unreal [v1.200] [1998-05-19]';
+ $t99='L:\Source\Games\UT99\Unreal Tournament [v1.400] [1999-11-30]';
+ $oldHdr=@file_get_contents($c98.'\Engine\Inc\UnLevel.h');
+ $oldDb=@file_get_contents($c98.'\Engine\Src\UnModel.cpp');
+ $oldObj=@file_get_contents($c98.'\Core\Src\UnObj.cpp');
+ $oldLevel=@file_get_contents($c98.'\Engine\Src\UnLevel.cpp');
+ $newHdr=@file_get_contents($t99.'\Engine\Inc\UnLevel.h');
+ $newLevel=@file_get_contents($t99.'\Engine\Src\UnLevel.cpp');
+ $check('c98_source_database_inheritance',
+    is_string($oldHdr)
+    &&str_contains($oldHdr,'ULevelBase : public UDatabase')
+    &&str_contains($oldHdr,'DECLARE_DB_CLASS(ULevelBase,UDatabase,AActor*)'));
+ $check('c98_source_db_num_max_gate_and_serialized_actor_data',
+    is_string($oldDb)
+    &&str_contains($oldDb,'void UDatabase::Serialize( FArchive& Ar )')
+    &&str_contains($oldDb,'Ar << DbNum << DbMax')
+    &&str_contains($oldDb,'DbNum = GObj.GetTempNum()')
+    &&str_contains($oldDb,'DbMax = GObj.GetTempMax()')
+    &&str_contains($oldDb,'SerializeData( Ar );'));
+ $check('c98_source_uobject_legacy_prefix',
+    is_string($oldObj) &&str_contains($oldObj,'Ar << GObj.TempNum << GObj.TempMax;'));
+ $check('c98_source_levelbase_url_gate',
+    is_string($oldLevel)
+    &&str_contains($oldLevel,'void ULevelBase::Serialize( FArchive& Ar )')
+    &&str_contains($oldLevel,'if( Ar.Ver()>=59 )')
+    &&str_contains($oldLevel,'Ar << URL;'));
+ $check('t99_source_levelbase_direct_actor_database_and_url',
+    is_string($newHdr)&&str_contains($newHdr,'ULevelBase : public UObject')
+    &&is_string($newLevel)
+    &&str_contains($newLevel,'Ar << DbNum << DbMax;')
+    &&str_contains($newLevel,'Ar << Actors(i);')
+    &&str_contains($newLevel,'Ar << URL;'));
+ $check('t99_source_level_travel_version_gate',
+    is_string($newLevel)
+    &&str_contains($newLevel,'else if( Ar.Ver()>=61 )')
+    &&str_contains($newLevel,'Ar << Names << Items;'));
+ foreach([35,39,40,41,50,53,54,58,59,60,61,62,63,64,69] as $v){
   [$rec]=$parse($v,$source($v));
   $ok=$rec['status']==='native_level_record_complete'
     &&count($rec['reach_specs'])===1
@@ -112,9 +149,10 @@ try{
     $a['reach_specs'][0]['collision_radius']===12
     &&$a['reach_specs'][0]['pruned']===1);
  [$a]=$parse(59,$source(59));
- $check('v59_url_added_not_actor_table',
+ $check('v59_url_and_1998_database_present',
     $a['url']['protocol']['value']==='unreal'
-    &&!isset($a['actor_database'])
+    &&$a['actor_database']['count']===2
+    &&$a['actor_database']['actors']===[-1,1]
     &&$a['url']['options'][1]['value']==='SpectatorOnly');
  [$a]=$parse(61,$source(61));
  $check('v61_old_travel_names_and_items',
@@ -137,6 +175,37 @@ try{
  [$a]=$parse(69,$source(69,['extension'=>"\xff"]));
  $check('unknown_extension_not_accepted',$a['status']==='native_level_has_extension'
     &&$a['extension_bytes']===1);
+ foreach([35,39] as $ver){
+  [$legacy,$tags]=$parse($ver,$source($ver,['actors'=>[-1,1]]),
+    ['legacyCount'=>2,'legacyMax'=>4]);
+  $check('legacy_uobject_temp_database_v'.$ver,
+    $legacy['status']==='native_level_record_complete'
+    &&$legacy['actor_database']['actors']===[-1,1]
+    &&$legacy['actor_database']['count']===2
+    &&$legacy['actor_database']['capacity']===4
+    &&$legacy['actor_database']['counts_in_uobject_prefix']===true
+    &&$tags['legacy_database']['count']===2);
+ }
+ foreach([40,41,50,59,60,61] as $ver){
+  [$db]=$parse($ver,$source($ver,['actors'=>[-1,1],'actorMax'=>7]));
+  $check('1998_native_actor_database_v'.$ver,
+    $db['status']==='native_level_record_complete'
+    &&$db['actor_database']['capacity']===7
+    &&$db['actor_database']['actors']===[-1,1]
+    &&$db['actor_database']['counts_in_uobject_prefix']===false);
+ }
+ [$shared]=$parse(61,$source(61));
+ $check('v61_actor_wire_shared_with_ut99',
+    $shared['archive_family']==='Unreal-v1200-and-UT99-v400-common-actor-wire'
+    &&$shared['actor_database']['count']===2);
+ $check('legacy_negative_count_rejected',$reject(35,$source(35),
+    ['legacyCount'=>-1,'legacyMax'=>2]));
+ $check('legacy_insufficient_capacity_rejected',$reject(35,$source(35,['actors'=>[-1,1]]),
+    ['legacyCount'=>2,'legacyMax'=>1]));
+ $check('v40_native_count_over_capacity_rejected',
+    $reject(40,$source(40,['actorMax'=>1])));
+ $check('v50_native_actor_reference_outside_object_map',
+    $reject(50,$source(50,['actors'=>[-2,1]])));
  $check('bad_model_ref',$reject(59,$source(59,['modelRef'=>-2])));
  $check('bad_reach_start_ref',$reject(50,str_replace($idx(-1),$idx(-2),$source(50))));
  $check('bad_actor_capacity',$reject(69,$source(69,['actorMax'=>1])));
