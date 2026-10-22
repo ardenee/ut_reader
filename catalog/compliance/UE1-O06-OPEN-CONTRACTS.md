@@ -22,6 +22,10 @@ Updated 2026-10-22. This is a bounded unresolved list, NOT additional operation 
 
 Additional source-defined class-specific handlers discovered through the pinned Epic tree must be mapped here, or explicitly excluded with a source citation/proof. v0.867 UCamera, UFont, UVerts, ULightMesh, UBspNodes and UStackTree headers are already decoded; do NOT count them as complete data serializers unless their data is verified.
 
+## Final mesh and bounds source inventory additions (2026-10-22)
+
+Epic `v0.867 Src/Inc/UnMesh.h` declares five independent saveable `UDatabase` serializers referenced by `UMesh`: `UMeshVerts` (`FMeshVert`, 4-byte packed signed 11:11:10 vertex), `UMeshTris` (`FMeshTri`, 16-byte vertex/UV/flags), `UMeshAnimSeqs` (`FMeshAnimSeq`, 14 bytes), `UMeshAnimNotifys` (`FMeshAnimNotify`, 6 bytes), and `UMeshVertConnects` (`FMeshVertConnect`, 8 bytes). Additionally, `UBounds` in `UnObj.h` uses `UnMath.h::operator<<(FBoundingBox)` (2 FVector + BYTE IsValid = 25 archive bytes). All six are source-typed in `CatalogUE1OriginalUnrealfileDatabaseDataReader`, **64/64 v22/v23 individual checks PASS DEV**, including invalid Num/Max, stream size and typed-invalid reference/IsValid cases; original database regression and staging/MySQL PASS. PRD verification pending. This source-derived inventory prevents false acceptance based solely on the parent UMesh header.
+
 ## Acceptance and separation
 
 O06 may be accepted only after every **saveable, source-required** versioned header, data record and property serializer in this inventory is either (a) implemented, source-typed and tested using at least one positive and one malformed-boundary case, or (b) explicitly proven non-serialized in the pinned source. Check both original v9/v10 and v22/v23 branches and the classic pinned corpus. Each affected DEV verifier and PRD integration test needs a finished PASS event plus matching deployed source/test SHA-256.

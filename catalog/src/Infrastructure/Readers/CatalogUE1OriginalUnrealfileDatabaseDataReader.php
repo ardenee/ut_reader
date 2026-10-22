@@ -29,6 +29,13 @@ final class CatalogUE1OriginalUnrealfileDatabaseDataReader
         'dependencies'=>['Dependencies',8,'dependencies'],
         'reachspecs'=>['ReachSpecs',36,'reach_specs'],
         'textureset'=>['TextureSet',4,'object_references'],
+        // Epic v0.867 UnMesh.h::operator<< and UnMath.h::FBoundingBox.
+        'meshverts'=>['MeshVerts',4,'mesh_vertices'],
+        'meshtris'=>['MeshTris',16,'mesh_triangles'],
+        'meshanimseqs'=>['MeshAnimSeqs',14,'mesh_anim_sequences'],
+        'meshanimnotifys'=>['MeshAnimNotifys',6,'mesh_anim_notifies'],
+        'meshvertconnects'=>['MeshVertConnects',8,'mesh_vert_connects'],
+        'bounds'=>['Bounds',25,'bounding_boxes'],
     ];
 
     /** @return array<string,mixed> */
@@ -89,6 +96,44 @@ final class CatalogUE1OriginalUnrealfileDatabaseDataReader
                             case 'ints':$items[]=$signed((int)unpack('V',$v)[1]);break;
                             case 'floats':$items[]=(float)unpack('g',$v)[1];break;
                             case 'vectors':$items[]=array_values(unpack('g3',$v));break;
+                            case 'mesh_vertices':
+                                $w=(int)unpack('V',$v)[1];
+                                $component=static function(int $value,int $bits):int{
+                                    $mask=(1<<$bits)-1;$value&=$mask;
+                                    return ($value&(1<<($bits-1)))!==0?$value-($mask+1):$value;
+                                };
+                                $items[]=['x'=>$component($w,11),'y'=>$component($w>>11,11),
+                                    'z'=>$component($w>>22,10)];break;
+                            case 'mesh_triangles':
+                                $vertices=array_values(unpack('v3',substr($v,0,6)));
+                                $items[]=['vertex_indices'=>$vertices,'type'=>ord($v[6]),
+                                    'color'=>ord($v[7]),
+                                    'texture_uv_bytes'=>array_values(unpack('C6',substr($v,8,6))),
+                                    'texture_number'=>ord($v[14]),'flags'=>ord($v[15])];break;
+                            case 'mesh_anim_sequences':
+                                $n=array_values(unpack('v5',substr($v,0,10)));
+                                if($n[0]>$nameCount)throw new RuntimeException('MeshAnimSeq FName exceeds NameMap');
+                                $items[]=['name_ref'=>$n[0],
+                                    'name'=>$n[0]===0?null:$names[$n[0]-1]['name'],
+                                    'start_frame'=>$n[1],'num_frames'=>$n[2],
+                                    'start_notify'=>$n[3],'num_notifies'=>$n[4],
+                                    'rate'=>(float)unpack('g',substr($v,10,4))[1]];break;
+                            case 'mesh_anim_notifies':
+                                $nameRef=(int)unpack('v',substr($v,4,2))[1];
+                                if($nameRef>$nameCount)throw new RuntimeException('MeshAnimNotify FName exceeds NameMap');
+                                $items[]=['time'=>(float)unpack('g',substr($v,0,4))[1],
+                                    'function_ref'=>$nameRef,
+                                    'function_name'=>$nameRef===0?null:$names[$nameRef-1]['name']];break;
+                            case 'mesh_vert_connects':
+                                $pair=array_values(unpack('V2',$v));
+                                $items[]=['num_vertex_triangles'=>$signed($pair[0]),
+                                    'triangle_list_offset'=>$signed($pair[1])];break;
+                            case 'bounding_boxes':
+                                $vectors=array_values(unpack('g6',substr($v,0,24)));
+                                $valid=ord($v[24]);
+                                if($valid>1)throw new RuntimeException('FBoundingBox IsValid must be 0 or 1');
+                                $items[]=['min'=>array_slice($vectors,0,3),
+                                    'max'=>array_slice($vectors,3,3),'is_valid'=>$valid];break;
                             case 'reach_specs':
                                 // UnPath.h FReachSpec::operator<<: distance,
                                 // Goal/Start/End, 4 float extents, flags.
