@@ -44,7 +44,7 @@ if(!is_string($tmp))throw new RuntimeException('Cannot create temporary script f
 try{
  foreach([22,23] as $v){
   $f=$make($v);file_put_contents($tmp,$f['bytes']);
-  $res=Script::read($tmp,true);
+  $res=Script::read($tmp,true,'unreal_1997_july');
   $row=$res['script_expressions'][0]??[];
   $expr=$row['expression_tree']??[];
   $id="v{$v}";
@@ -73,31 +73,33 @@ try{
   );
   $staged=$stage['native_metadata']['unrealfile_script_expressions']['script_expressions'][0]??[];
   $check("{$id}_stage_preserves_unverified_code",
-    ($staged['expression_count']??null)===11
+    ($staged['status']??null)==='source_1997_script_lineage_required'
+    && ($staged['source_branch_candidates']??[])===['unreal_1997_may','unreal_1997_july']
+    && !isset($staged['expression_tree'])
     && ($staged['bytecode_executed']??true)===false
     && ($stage['parse_complete']??true)===false);
   file_put_contents($tmp,substr_replace($f['bytes'],pack('V',strlen($f['stream'])-1),$f['header']+16,4));
-  try{Script::read($tmp,true);$reject=false;}catch(RuntimeException){$reject=true;}
+  try{Script::read($tmp,true,'unreal_1997_july');$reject=false;}catch(RuntimeException){$reject=true;}
   $check("{$id}_native_num_must_match_script_archive_bytes",$reject);
   file_put_contents($tmp,substr_replace($f['bytes'],pack('V',2),$f['header']+24,4));
-  try{Script::read($tmp,true);$reject=false;}catch(RuntimeException){$reject=true;}
+  try{Script::read($tmp,true,'unreal_1997_july');$reject=false;}catch(RuntimeException){$reject=true;}
   $check("{$id}_invalid_native_class_ref_rejected",$reject);
   file_put_contents($tmp,substr_replace($f['bytes'],"\x32",$f['data'],1));
-  try{Script::read($tmp,true);$reject=false;}catch(RuntimeException){$reject=true;}
+  try{Script::read($tmp,true,'unreal_1997_july');$reject=false;}catch(RuntimeException){$reject=true;}
   $check("{$id}_unknown_token_rejected",$reject);
   file_put_contents($tmp,substr_replace($f['bytes'],pack('v',4),$f['data']+19,2));
-  try{Script::read($tmp,true);$reject=false;}catch(RuntimeException){$reject=true;}
+  try{Script::read($tmp,true,'unreal_1997_july');$reject=false;}catch(RuntimeException){$reject=true;}
   $check("{$id}_bad_name_ref_rejected",$reject);
   file_put_contents($tmp,substr_replace($f['bytes'],pack('V',2),$f['data']+25,4));
-  try{Script::read($tmp,true);$reject=false;}catch(RuntimeException){$reject=true;}
+  try{Script::read($tmp,true,'unreal_1997_july');$reject=false;}catch(RuntimeException){$reject=true;}
   $check("{$id}_bad_object_ref_rejected",$reject);
   file_put_contents($tmp,substr_replace($f['bytes'],chr(0x1f),$f['data']+strlen($f['stream'])-1,1));
-  try{Script::read($tmp,true);$reject=false;}catch(RuntimeException){$reject=true;}
+  try{Script::read($tmp,true,'unreal_1997_july');$reject=false;}catch(RuntimeException){$reject=true;}
   $check("{$id}_unterminated_string_rejected",$reject);
   // A NULL FStackNodePtr serializes only the one-based Class word,
   // not the absent iNode field; the following 0x25 must remain aligned.
   $null=$make($v,true);file_put_contents($tmp,$null['bytes']);
-  $nullexpr=Script::read($tmp,true)['script_expressions'][0]['expression_tree']??[];
+  $nullexpr=Script::read($tmp,true,'unreal_1997_july')['script_expressions'][0]['expression_tree']??[];
   $check("{$id}_null_final_function_omits_node_index",
     ($nullexpr[3]['fields']['class_reference_raw']??-1)===0
     && array_key_exists('stack_node_index',$nullexpr[3]['fields']??[])
@@ -107,7 +109,7 @@ try{
   $offset=strpos($f['stream'],chr(0x2d).chr(0x20).pack('v',2));
   if($offset===false)throw new RuntimeException('Missing EX_BoolVariable negative fixture');
   file_put_contents($tmp,substr_replace($f['bytes'],chr(0xe0),$f['data']+$offset+1,1));
-  try{Script::read($tmp,true);$reject=false;}catch(RuntimeException){$reject=true;}
+  try{Script::read($tmp,true,'unreal_1997_july');$reject=false;}catch(RuntimeException){$reject=true;}
   $check("{$id}_source_bool_variable_bin_rejected",$reject);
  }
 }finally{@unlink($tmp);}

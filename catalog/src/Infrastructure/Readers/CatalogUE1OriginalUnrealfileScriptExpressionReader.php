@@ -1,8 +1,10 @@
 <?php
 /**
  * Source-native Unrealfile v22/v23 UScript::SerializeExpr archive traversal.
- * Source: Epic v0.867 Src/Engine/UnScript.cpp:4894-5154,
- * Src/Inc/UnScript.h EExprToken.
+ * Epic May v0.86x Src/Engine/UnScript.cpp:4260+ and July v0.867
+ * Src/Engine/UnScript.cpp:4894+, Inc/UnScript.h EExprToken.
+ * May conversion opcode range 0x30–0x52 and WORD rotations differ from
+ * July's 0x38–0x59 conversions, iterator tokens 0x2F–0x31 and INT rotations.
  *
  * Reads archive fields in source order; preserves source token and raw refs.
  * Does NOT execute script, compile expressions, resolve runtime classes
@@ -15,8 +17,9 @@ use RuntimeException;
 final class CatalogUE1OriginalUnrealfileScriptExpressionReader
 {
     /** @return array<string,mixed> */
-    public static function read(string $path,bool $strict=false):array
+    public static function read(string $path,bool $strict=false,?string $sourceLineage=null):array
     {
+        CatalogUE1OriginalUnrealfilePropertySerializationGate::validate($sourceLineage);
         $meta=CatalogUE1OriginalUnrealfileObjectBaseReader::read($path);
         $stacks=[];foreach(CatalogUE1OriginalUnrealfileStackReader::read($path,false)['stack_prefixes'] as $s)
             $stacks[(int)$s['object_index']]=$s;
@@ -53,14 +56,37 @@ final class CatalogUE1OriginalUnrealfileScriptExpressionReader
                 if($num!==$length)
                     throw new RuntimeException('UScript serialized byte count differs from Num');
                 $bytes=self::slice($fp,(int)$o['file_data_offset'],$length);
-                $ctx=['bytes'=>$bytes,'pos'=>0,'steps'=>0,'objectCount'=>$objectCount,
-                    'nameCount'=>$nameCount,'nodes'=>0];
-                $nodes=[];
-                while($ctx['pos']<strlen($bytes)){
-                    $nodes[]=self::expression($ctx,0);
-                    if($ctx['nodes']>1000000)
-                        throw new RuntimeException('Script token traversal exceeds node limit');
+                $families=$sourceLineage===null
+                    ?[CatalogUE1OriginalUnrealfilePropertySerializationGate::MAY,
+                      CatalogUE1OriginalUnrealfilePropertySerializationGate::JULY]
+                    :[$sourceLineage];
+                $success=[];$errors=[];
+                foreach($families as $family){
+                    try{$success[$family]=self::parseStream($bytes,$objectCount,$nameCount,$family);}
+                    catch(RuntimeException $e){$errors[$family]=$e;}
                 }
+                if($success===[]){
+                    throw reset($errors);
+                }
+                if(count($success)===2){
+                    $may=$success[CatalogUE1OriginalUnrealfilePropertySerializationGate::MAY];
+                    $july=$success[CatalogUE1OriginalUnrealfilePropertySerializationGate::JULY];
+                    // Identical decoded trees are safe regardless of version.
+                    // Distinct, *both valid* token interpretations are not.
+                    if($may['nodes']!==$july['nodes']){
+                        if($strict)throw new RuntimeException(
+                            'Unrealfile v22/v23 UScript bytes parse as distinct May/July opcode semantics; source lineage required'
+                        );
+                        $result['status']='source_1997_script_lineage_required';
+                        $result['serialized_byte_count']=$length;
+                        $result['source_branch_candidates']=array_keys($success);
+                        $out[]=$result;continue;
+                    }
+                }
+                $effective=count($success)===1?array_key_first($success):null;
+                $decoded=reset($success);
+                $nodes=$decoded['nodes'];
+                $ctx=$decoded['context'];
                 $unconsumed=$length-$ctx['pos'];
                 if($strict&&$unconsumed!==0)
                     throw new RuntimeException('Serialized script data includes unconsumed bytes');
@@ -74,6 +100,10 @@ final class CatalogUE1OriginalUnrealfileScriptExpressionReader
                     'expression_count'=>count($nodes),'parsed_token_count'=>$ctx['nodes'],
                     'serialized_bytes_consumed'=>$ctx['pos'],
                     'expression_tree'=>$nodes,
+                    'source_lineage'=>$effective,
+                    'source_lineage_inferred_from_exact_script_parse'=>$sourceLineage===null
+                        &&$effective!==null,
+                    'source_lineage_wire_equivalent'=>$effective===null,
                     'bytecode_executed'=>false,
                     'runtime_class_links_resolved'=>false,
                 ];
@@ -82,6 +112,19 @@ final class CatalogUE1OriginalUnrealfileScriptExpressionReader
         return ['source_format'=>'early_unrealfile','script_expressions'=>$out,
             'bytecode_executed'=>false];
     }
+    /** @return array{nodes:array<int,array<string,mixed>>,context:array<string,mixed>} */
+    private static function parseStream(string $bytes,int $objectCount,int $nameCount,string $family):array
+    {
+        $c=['bytes'=>$bytes,'pos'=>0,'steps'=>0,'objectCount'=>$objectCount,
+            'nameCount'=>$nameCount,'nodes'=>0,'sourceLineage'=>$family];
+        $nodes=[];
+        while($c['pos']<strlen($bytes)){
+            $nodes[]=self::expression($c,0);
+            if($c['nodes']>1000000)throw new RuntimeException('Script token traversal exceeds node limit');
+        }
+        return ['nodes'=>$nodes,'context'=>$c];
+    }
+
     /** @param array<string,mixed> $c @return array<string,mixed> */
     private static function expression(array &$c,int $depth):array
     {
@@ -100,8 +143,31 @@ final class CatalogUE1OriginalUnrealfileScriptExpressionReader
             }while($sub['token']!==0x16);
             return $args;
         };
-        if($token>=0x38&&$token<0x5a){
-            $fields['conversion_token']=$token;$children[]=$next();
+        $may=$c['sourceLineage']===CatalogUE1OriginalUnrealfilePropertySerializationGate::MAY;
+        $minConversion=$may?0x30:0x38;
+        $maxConversion=$may?0x53:0x5a;
+        if($token>=$minConversion&&$token<$maxConversion){
+            // Epic's EX_*To* conversion IDs shifted by eight in July.
+            // The same archive byte (e.g. 0x40) means DIFFERENT casts,
+            // even when the nested byte stream has identical length.
+            // Keep source-defined semantics, not only the token byte.
+            $names=[
+                'RotationToVector','ByteToInt','ByteToBool','ByteToFloat',
+                'IntToByte','IntToBool','IntToFloat','BoolToByte',
+                'BoolToInt','BoolToFloat','FloatToByte','FloatToInt',
+                'FloatToBool','ObjectToInt','ObjectToBool','NameToBool',
+                'StringToByte','StringToInt','StringToBool','StringToFloat',
+                'StringToVector','StringToRotation','VectorToBool',
+                'VectorToRotation','RotationToBool','ByteToString',
+                'IntToString','BoolToString','FloatToString',
+                'ObjectToString','NameToString','VectorToString',
+                'RotationToString',
+            ];
+            $conversionIndex=$token-($may?0x31:0x39);
+            $fields['conversion_token']=$token;
+            $fields['conversion_name']=$names[$conversionIndex]??null;
+            $fields['conversion_is_source_defined']=$fields['conversion_name']!==null;
+            $children[]=$next();
         }elseif($token>=0x70){
             $fields['intrinsic_id']=$token;$children=$untilEnd();
         }elseif($token>=0x60){
@@ -132,7 +198,8 @@ final class CatalogUE1OriginalUnrealfileScriptExpressionReader
                 $children=$untilEnd();break;
             case 0x1c:
                 $fields['class_reference_raw']=self::objectRef($c);
-                // FStackNodePtr::operator<< only archives iNode when Class != NULL.
+                // May FStackNodeLink / July FStackNodePtr share the same
+                // archive contract (Class then optional iNode).
                 $fields['stack_node_index']=$fields['class_reference_raw']===0
                     ?null:self::int($c);
                 $children=$untilEnd();break;
@@ -149,8 +216,13 @@ final class CatalogUE1OriginalUnrealfileScriptExpressionReader
                 $fields['ansi_hex']=strtoupper(bin2hex($bytes));break;
             case 0x20:$fields['object_reference_raw']=self::objectRef($c);break;
             case 0x21:$fields['name_reference_raw']=self::nameRef($c);break;
-            case 0x22:$fields['rotation_signed']=[
-                self::int($c),self::int($c),self::int($c)];break;
+            case 0x22:
+                // May UScript::SerializeExpr archives three WORDs (6 bytes);
+                // July archives three INTs (12 bytes), same file version.
+                $fields['rotation_signed']=$may
+                    ?[self::word($c),self::word($c),self::word($c)]
+                    :[self::int($c),self::int($c),self::int($c)];
+                break;
             case 0x23:$fields['vector_float']=[
                 self::float($c),self::float($c),self::float($c)];break;
             case 0x24:case 0x2c:
@@ -162,6 +234,8 @@ final class CatalogUE1OriginalUnrealfileScriptExpressionReader
                 $fields['class_reference_raw']=self::objectRef($c);
                 $children[]=$next();break;
             case 0x07:case 0x2f:
+                if($token===0x2f&&$may)
+                    throw new RuntimeException('May 1997 does not define EX_Iterator 0x2F');
                 if($token===0x07){
                     $fields['jump_offset']=self::word($c);$children[]=$next();
                 }else{

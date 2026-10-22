@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_at_utc": "2026-10-22T19:15:21+00:00",
+  "updated_at_utc": "2026-10-22T19:40:58+00:00",
   "entries": [
     {
       "id": "R82:UActorList",
@@ -1867,14 +1867,14 @@
       "test": "verify-ue1-original-unrealfile-class-schemas.php",
       "evidence": "Found original May v0.86x Epic registered class at Engine/UnClass.cpp:405 and corresponding July v0.867 registered class Engine/UnClass.cpp:405; existing production typed handler CatalogUE1OriginalUnrealfileClassSchemaReader.php and source-defined verifier verify-ue1-original-unrealfile-class-schemas.php found. May and July both use original Unrealfile v22/v23; known cross-source disk differences UTexture, ULevel, FRotation, FBoundingVolume, FBspNode and CPF_Intrinsic were separately corrected; no automatic inference of byte parity for this class from name/version alone.",
       "remaining": "CLASS RECONCILED TO HANDLER ONLY, NOT SOURCE-ACCEPTED: verify this class's May v0.86x inherited/native SerializeHeader, SerializeData/record operator and source-specific bytecode or version variants against Epic May source and independent matching package oracle; existing named test can cover July/sample fixtures and must not be overclaimed as complete May parity. SCRIPT/CLASS SOURCE FAMILY HIGH RISK: May vs July expression opcode/source classes need dedicated source-gated fixtures.",
-      "updated_at_utc": "2026-10-22T19:15:16+00:00",
+      "updated_at_utc": "2026-10-22T19:40:55+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T19:15:15.9045050Z",
+        "at_utc": "2026-10-22T19:40:55.8148621Z",
         "test_sha256": "f2cda42c2105751b142c9de9f6b397279539258cc778733211518048f816d87b",
-        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T191515581Z-161422b8-PRD-verify-ue1-original-unrealfile-class-schemas.php.txt"
+        "source_sha256": "069b15617b3723f4f8642b898ff9298abe540ea0ef8f1682aabec29a9def5116",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T194055504Z-f295251f-PRD-verify-ue1-original-unrealfile-class-schemas.php.txt"
       }
     },
     {
@@ -2571,17 +2571,17 @@
       ],
       "status": "PARTIAL",
       "reader": "CatalogUE1OriginalUnrealfileScriptExpressionReader.php",
-      "test": "verify-ue1-original-unrealfile-expression-token-inventory.php",
-      "evidence": "Found original May v0.86x Epic registered class at Engine/UnScript.cpp:4518 and corresponding July v0.867 registered class Engine/UnScript.cpp:5158; existing production typed handler CatalogUE1OriginalUnrealfileScriptExpressionReader.php and source-defined verifier verify-ue1-original-unrealfile-expression-token-inventory.php found. May and July both use original Unrealfile v22/v23; known cross-source disk differences UTexture, ULevel, FRotation, FBoundingVolume, FBspNode and CPF_Intrinsic were separately corrected; no automatic inference of byte parity for this class from name/version alone.",
-      "remaining": "CLASS RECONCILED TO HANDLER ONLY, NOT SOURCE-ACCEPTED: verify this class's May v0.86x inherited/native SerializeHeader, SerializeData/record operator and source-specific bytecode or version variants against Epic May source and independent matching package oracle; existing named test can cover July/sample fixtures and must not be overclaimed as complete May parity. SCRIPT/CLASS SOURCE FAMILY HIGH RISK: May vs July expression opcode/source classes need dedicated source-gated fixtures.",
-      "updated_at_utc": "2026-10-22T19:15:17+00:00",
+      "test": "verify-ue1-original-unrealfile-script-may-july.php",
+      "evidence": "Epic v0.86x May Src/Engine/UnScript.cpp:4260 SerializeExpr, Src/Inc/UnScript.h conversion range EX_MinConversion=0x30 EX_MaxConversion=0x53, FRotationConst WORD3=6B, no iterator tokens. July v0.867 Src/Engine/UnScript.cpp:4894 and Inc/UnScript.h conversion 0x38..0x59, EX_Iterator/Pop/Next=0x2f/30/31, FRotationConst INT3=12B. Both original Unrealfile v22/23. Production UScript reader parses exact source-specific streams with optional caller lineage; when unspecified it tests both and does NOT invent meaning for syntactically valid ambiguous casts (0x40 May NameToBool vs July BoolToByte), with semantic conversion_name tied to actual source opcode. Ambiguous staging reports source_1997_script_lineage_required, no fabricated expression_tree. New native package verifier 26/26, existing July native 24/24 and two-source source inventory 33/33.",
+      "remaining": "May and July v22/v23 UScript source-typed bytecode conversion/iterator/rotation branches implemented, with source ambiguity protected. Need genuine independent Epic package/engine oracle per source, wider archive branch corpus, instance identity/fixup excluded to O10. Not source-wide accepted.",
+      "updated_at_utc": "2026-10-22T19:40:54+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T19:15:16.8965068Z",
-        "test_sha256": "36299cd933e23a67618b64fc6d5d61cf94372d1f7e9add612fff6e3b9981ec3b",
-        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T191516640Z-5b26c90c-PRD-verify-ue1-original-unrealfile-expression-token-inventory.php.txt"
+        "at_utc": "2026-10-22T19:40:54.2828413Z",
+        "test_sha256": "1e1f6e008f02389b2c0c16586da004431b85dfd7b5d89326ce38c5473509883f",
+        "source_sha256": "069b15617b3723f4f8642b898ff9298abe540ea0ef8f1682aabec29a9def5116",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T194053874Z-99311fe6-PRD-verify-ue1-original-unrealfile-script-may-july.php.txt"
       }
     },
     {
@@ -2624,14 +2624,14 @@
       "test": "verify-ue1-original-unrealfile-stacktree-data.php",
       "evidence": "Found original May v0.86x Epic registered class at Engine/UnScript.cpp:4560 and corresponding July v0.867 registered class Engine/UnScript.cpp:5200; existing production typed handler CatalogUE1OriginalUnrealfileStackTreeDataReader.php and source-defined verifier verify-ue1-original-unrealfile-stacktree-data.php found. May and July both use original Unrealfile v22/v23; known cross-source disk differences UTexture, ULevel, FRotation, FBoundingVolume, FBspNode and CPF_Intrinsic were separately corrected; no automatic inference of byte parity for this class from name/version alone.",
       "remaining": "CLASS RECONCILED TO HANDLER ONLY, NOT SOURCE-ACCEPTED: verify this class's May v0.86x inherited/native SerializeHeader, SerializeData/record operator and source-specific bytecode or version variants against Epic May source and independent matching package oracle; existing named test can cover July/sample fixtures and must not be overclaimed as complete May parity. SCRIPT/CLASS SOURCE FAMILY HIGH RISK: May vs July expression opcode/source classes need dedicated source-gated fixtures.",
-      "updated_at_utc": "2026-10-22T19:15:21+00:00",
+      "updated_at_utc": "2026-10-22T19:40:56+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T19:15:20.9916972Z",
+        "at_utc": "2026-10-22T19:40:56.3478415Z",
         "test_sha256": "ff036413645cfa5886be7d865e780be54b31b50e7f0b53bcac133eb4eb1c6151",
-        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T191520687Z-53334203-PRD-verify-ue1-original-unrealfile-stacktree-data.php.txt"
+        "source_sha256": "069b15617b3723f4f8642b898ff9298abe540ea0ef8f1682aabec29a9def5116",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T194056015Z-05a94bde-PRD-verify-ue1-original-unrealfile-stacktree-data.php.txt"
       }
     },
     {
@@ -3132,14 +3132,14 @@
       "test": "verify-ue1-original-unrealfile-class-schemas.php",
       "evidence": "PRD historical PASS at 2026-10-21T17:28:19.5542389Z; catalog\\compliance\\evidence\\o06\\20261021T172819350Z-3e563cbb-PRD-verify-ue1-original-unrealfile-class-schemas.php.txt; scoped test, not full class acceptance",
       "remaining": "FProperty descriptors and local classes tested; class-specific source contract reconciliation G2; runtime Preload O10",
-      "updated_at_utc": "2026-10-22T19:15:16+00:00",
+      "updated_at_utc": "2026-10-22T19:40:55+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T19:15:15.9045050Z",
+        "at_utc": "2026-10-22T19:40:55.8148621Z",
         "test_sha256": "f2cda42c2105751b142c9de9f6b397279539258cc778733211518048f816d87b",
-        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T191515581Z-161422b8-PRD-verify-ue1-original-unrealfile-class-schemas.php.txt"
+        "source_sha256": "069b15617b3723f4f8642b898ff9298abe540ea0ef8f1682aabec29a9def5116",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T194055504Z-f295251f-PRD-verify-ue1-original-unrealfile-class-schemas.php.txt"
       }
     },
     {
@@ -3808,17 +3808,17 @@
       ],
       "status": "PARTIAL",
       "reader": "CatalogUE1OriginalUnrealfileScriptExpressionReader.php",
-      "test": "verify-ue1-original-unrealfile-expression-token-inventory.php",
-      "evidence": "PRD historical PASS at 2026-10-22T08:14:11.2490258Z; catalog\\compliance\\evidence\\o06\\20261022T081411099Z-f6a7cd42-PRD-verify-ue1-original-unrealfile-expression-token-inventory.php.txt; scoped test, not full class acceptance",
-      "remaining": "50/50 SerializeExpr switch cases statically mapped; runtime execution O10; variable branches source review G2",
-      "updated_at_utc": "2026-10-22T19:15:17+00:00",
+      "test": "verify-ue1-original-unrealfile-script-may-july.php",
+      "evidence": "Epic v0.86x May Src/Engine/UnScript.cpp:4260 SerializeExpr, Src/Inc/UnScript.h conversion range EX_MinConversion=0x30 EX_MaxConversion=0x53, FRotationConst WORD3=6B, no iterator tokens. July v0.867 Src/Engine/UnScript.cpp:4894 and Inc/UnScript.h conversion 0x38..0x59, EX_Iterator/Pop/Next=0x2f/30/31, FRotationConst INT3=12B. Both original Unrealfile v22/23. Production UScript reader parses exact source-specific streams with optional caller lineage; when unspecified it tests both and does NOT invent meaning for syntactically valid ambiguous casts (0x40 May NameToBool vs July BoolToByte), with semantic conversion_name tied to actual source opcode. Ambiguous staging reports source_1997_script_lineage_required, no fabricated expression_tree. New native package verifier 26/26, existing July native 24/24 and two-source source inventory 33/33.",
+      "remaining": "May and July v22/v23 UScript source-typed bytecode conversion/iterator/rotation branches implemented, with source ambiguity protected. Need genuine independent Epic package/engine oracle per source, wider archive branch corpus, instance identity/fixup excluded to O10. Not source-wide accepted.",
+      "updated_at_utc": "2026-10-22T19:40:54+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T19:15:16.8965068Z",
-        "test_sha256": "36299cd933e23a67618b64fc6d5d61cf94372d1f7e9add612fff6e3b9981ec3b",
-        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T191516640Z-5b26c90c-PRD-verify-ue1-original-unrealfile-expression-token-inventory.php.txt"
+        "at_utc": "2026-10-22T19:40:54.2828413Z",
+        "test_sha256": "1e1f6e008f02389b2c0c16586da004431b85dfd7b5d89326ce38c5473509883f",
+        "source_sha256": "069b15617b3723f4f8642b898ff9298abe540ea0ef8f1682aabec29a9def5116",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T194053874Z-99311fe6-PRD-verify-ue1-original-unrealfile-script-may-july.php.txt"
       }
     },
     {
@@ -3861,14 +3861,14 @@
       "test": "verify-ue1-original-unrealfile-stacktree-data.php",
       "evidence": "PRD historical PASS at 2026-10-22T07:57:39.7967064Z; catalog\\compliance\\evidence\\o06\\20261022T075739470Z-3b6a4fd4-PRD-verify-ue1-original-unrealfile-stacktree-data.php.txt; scoped test, not full class acceptance",
       "remaining": "FStackNode archive source-tested; linking O10",
-      "updated_at_utc": "2026-10-22T19:15:21+00:00",
+      "updated_at_utc": "2026-10-22T19:40:56+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T19:15:20.9916972Z",
+        "at_utc": "2026-10-22T19:40:56.3478415Z",
         "test_sha256": "ff036413645cfa5886be7d865e780be54b31b50e7f0b53bcac133eb4eb1c6151",
-        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T191520687Z-53334203-PRD-verify-ue1-original-unrealfile-stacktree-data.php.txt"
+        "source_sha256": "069b15617b3723f4f8642b898ff9298abe540ea0ef8f1682aabec29a9def5116",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T194056015Z-05a94bde-PRD-verify-ue1-original-unrealfile-stacktree-data.php.txt"
       }
     },
     {
@@ -4153,14 +4153,14 @@
       "test": "verify-ue1-original-unrealfile-script-expressions.php",
       "evidence": "PRD historical PASS at 2026-10-22T08:14:11.4736463Z; catalog\\compliance\\evidence\\o06\\20261022T081411274Z-263d247c-PRD-verify-ue1-original-unrealfile-script-expressions.php.txt; scoped test, not full class acceptance",
       "remaining": "Source-defined custom data routine tested in named fixtures; verify full G2 inherited/version contract before accepting",
-      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "updated_at_utc": "2026-10-22T19:40:54+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T08:14:11.4736463Z",
-        "test_sha256": "2ae84e40b59367cfc51ba705f791bd387e91dd14ee37b556eea29776ebe05d3d",
-        "source_sha256": "45ae383bb7e8448bc6bb1f2af5c99d1842a9d121846070d7c8c681b70d9e2117",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T081411274Z-263d247c-PRD-verify-ue1-original-unrealfile-script-expressions.php.txt"
+        "at_utc": "2026-10-22T19:40:54.7978536Z",
+        "test_sha256": "7b7ae19081c152d1cd6c436bc845158e8cfabbca394a6981db9505c9b927af39",
+        "source_sha256": "069b15617b3723f4f8642b898ff9298abe540ea0ef8f1682aabec29a9def5116",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T194054469Z-af863b49-PRD-verify-ue1-original-unrealfile-script-expressions.php.txt"
       }
     },
     {

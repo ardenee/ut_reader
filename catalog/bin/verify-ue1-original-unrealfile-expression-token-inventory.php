@@ -54,7 +54,9 @@ foreach($required as $name=>$value)$check('source_enum_'.$name,($names[$name]??n
 $check('epic_conversion_range_exists',
     str_contains($body,'Expr >= EX_MinConversion && Expr < EX_MaxConversion'));
 $check('php_conversion_range_matches',
-    (bool)preg_match('/\$token\s*>=\s*0x38\s*&&\s*\$token\s*<\s*0x5a/',$php));
+    str_contains($php,'$minConversion=$may?0x30:0x38;')
+    &&str_contains($php,'$maxConversion=$may?0x53:0x5a;')
+    &&str_contains($php,'$token>=$minConversion&&$token<$maxConversion'));
 $check('epic_intrinsic_order_uses_normal_then_extended',
     strpos($body,'Expr >= EX_FirstIntrinsic')<strpos($body,'Expr >= EX_ExtendedIntrinsic'));
 $check('php_intrinsic_ranges_match',
@@ -79,6 +81,52 @@ $check('source_recurses_until_end_params',
     (bool)preg_match('/while\s*\(\s*SerializeExpr\(\s*Script\s*,\s*iCode\s*,\s*Ar\s*\)\s*!=\s*EX_EndFunctionParms\s*\)/',$body));
 $check('php_recurses_until_end_params',
     str_contains($php,"}while(\$sub['token']!==0x16)"));
+// Pin BOTH original sources; the 1997 May and July C++ cases are not
+// interchangeable merely because both files advertise Unrealfile v23.
+$mayRoot='L:/Source/Games/Unreal/Unreal [v0.86x] [1997-05-25]/Src';
+$maySourceFile=$mayRoot.'/Engine/UnScript.cpp';
+$mayHeaderFile=$mayRoot.'/Inc/UnScript.h';
+$maySource=@file_get_contents($maySourceFile);
+$mayHeader=@file_get_contents($mayHeaderFile);
+$check('original_may_epic_script_source_available',
+    is_string($maySource)&&is_string($mayHeader));
+$mayStart=is_string($maySource)?strpos($maySource,'static EExprToken SerializeExpr('):false;
+$mayEnd=$mayStart===false?false:strpos($maySource,'void UScript::SerializeData(',$mayStart);
+$check('may_source_serializeexpr_boundaries',
+    $mayStart!==false&&$mayEnd!==false&&$mayEnd>$mayStart);
+$mayBody=($mayStart!==false&&$mayEnd!==false)
+    ?substr($maySource,$mayStart,$mayEnd-$mayStart):'';
+preg_match_all('/\b(EX_[A-Za-z0-9_]+)\s*=\s*0x([a-fA-F0-9]+)/',$mayHeader?:'',$mayEnums,PREG_SET_ORDER);
+$mayNames=[];
+foreach($mayEnums as $m)$mayNames[$m[1]]=hexdec($m[2]);
+$check('may_source_conversion_range_30_53',
+    ($mayNames['EX_MinConversion']??null)===0x30
+    &&($mayNames['EX_MaxConversion']??null)===0x53
+    &&($mayNames['EX_NameToBool']??null)===0x40
+    &&($names['EX_BoolToByte']??null)===0x40);
+$check('may_no_iterator_july_iterator_2f',
+    !isset($mayNames['EX_Iterator'])&&($names['EX_Iterator']??null)===0x2f);
+$check('may_source_word_rotation_archive',
+    (bool)preg_match('/case\s+EX_RotationConst\s*:[\s\S]*?Ar\s*<<\s*\*\(WORD\*\)[\s\S]*?iCode\s*\+=\s*6/',$mayBody));
+$check('july_source_int_rotation_archive',
+    (bool)preg_match('/case\s+EX_RotationConst\s*:[\s\S]*?Ar\s*<<\s*\*\(INT\*\)[\s\S]*?iCode\s*\+=\s*12/',$body));
+$check('php_version_gate_rotation_and_semantic_casts',
+    str_contains($php,'?['.'self::word($c),self::word($c),self::word($c)')
+    &&str_contains($php,'$conversionIndex=$token-($may?0x31:0x39);')
+    &&str_contains($php,"'conversion_name'"));
+preg_match_all('/\bcase\s+(EX_[A-Za-z0-9_]+)\s*:/',$mayBody,$mayCases,PREG_SET_ORDER);
+$mayMissing=[];$mayUnmapped=[];
+foreach($mayCases as $m){
+    $n=$m[1];
+    if(!isset($mayNames[$n]))$mayUnmapped[$n]=true;
+    elseif(!isset($covered[$mayNames[$n]]))$mayMissing[$n]=true;
+}
+$check('every_explicit_may_case_has_php_dispatch',
+    count($mayCases)>=45&&$mayMissing===[]&&$mayUnmapped===[]);
+$check('php_refuses_ambiguous_source_inference',
+    str_contains($php,"'source_1997_script_lineage_required'")
+    &&str_contains($php,'if(count($success)===2)'));
+
 echo json_encode([
  'ok'=>$fail===[],'passed'=>count($tests)-count($fail),'total'=>count($tests),
  'source_case_count'=>count($sourceCases),
