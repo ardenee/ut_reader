@@ -36,6 +36,7 @@ final class CatalogUE1OriginalUnrealfileDatabaseDataReader
         'meshanimnotifys'=>['MeshAnimNotifys',6,'mesh_anim_notifies'],
         'meshvertconnects'=>['MeshVertConnects',8,'mesh_vert_connects'],
         'bounds'=>['Bounds',25,'bounding_boxes'],
+        'palette'=>['Palette',4,'rgba_colors'],
     ];
 
     /** @return array<string,mixed> */
@@ -128,6 +129,12 @@ final class CatalogUE1OriginalUnrealfileDatabaseDataReader
                                 $pair=array_values(unpack('V2',$v));
                                 $items[]=['num_vertex_triangles'=>$signed($pair[0]),
                                     'triangle_list_offset'=>$signed($pair[1])];break;
+                            case 'rgba_colors':
+                                // v0.867 UnObj.h FColor::operator<< serializes
+                                // R, G, B, RemapIndex as four individual BYTEs.
+                                $values=array_values(unpack('C4',$v));
+                                $items[]=['r'=>$values[0],'g'=>$values[1],
+                                    'b'=>$values[2],'remap_index'=>$values[3]];break;
                             case 'bounding_boxes':
                                 $vectors=array_values(unpack('g6',substr($v,0,24)));
                                 $valid=ord($v[24]);

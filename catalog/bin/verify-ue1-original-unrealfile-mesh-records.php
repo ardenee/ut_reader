@@ -1,6 +1,6 @@
 #!/usr/bin/env php
 <?php
-/** Epic v0.867 UnMesh.h and UnMath.h six native record serializers. */
+/** Epic v0.867 UnMesh.h, UnMath.h and UnObj.h native record serializers. */
 declare(strict_types=1);
 require_once dirname(__DIR__).'/bootstrap/autoload.php';
 use UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileDatabaseDataReader as DB;
@@ -15,6 +15,7 @@ $cases=[
  'MeshAnimNotifys'=>[pack('gv',0.5,4),6],
  'MeshVertConnects'=>[pack('V2',2,9),8],
  'Bounds'=>[pack('g6C',-1.0,-2.0,-3.0,1.0,2.0,3.0,1),25],
+ 'Palette'=>[pack('C4',10,20,30,40),4],
 ];
 $make=static function(int $version,string $class,string $payload):array{
  $names='';
@@ -55,6 +56,7 @@ try{
     && $v['num_vertex_triangles']===2&&$v['triangle_list_offset']===9,
    'Bounds'=>is_array($v)&&$v['min']===[-1.0,-2.0,-3.0]
     && $v['max']===[1.0,2.0,3.0]&&$v['is_valid']===1,
+   'Palette'=>is_array($v)&&$v===['r'=>10,'g'=>20,'b'=>30,'remap_index'=>40],
   };
   $check($prefix.'_typed_values',$expected);
   $stage=\UnrealDb\Catalog\Infrastructure\Unverified\CatalogUE1OriginalStagingMetadata::decode(
