@@ -1,0 +1,40 @@
+﻿{
+    "ok": true,
+    "passed": 28,
+    "total": 28,
+    "failed": [],
+    "checks": {
+        "source_level_v35": true,
+        "source_level_v50": true,
+        "source_level_v53": true,
+        "source_level_v54": true,
+        "source_level_v58": true,
+        "source_level_v59": true,
+        "source_level_v60": true,
+        "source_level_v61": true,
+        "source_level_v62": true,
+        "source_level_v63": true,
+        "source_level_v64": true,
+        "source_level_v69": true,
+        "v35_legacy_float_reach_spec": true,
+        "v54_integer_reach_spec_and_pruned": true,
+        "v59_url_added_not_actor_table": true,
+        "v61_old_travel_names_and_items": true,
+        "v62_ut_actor_db_and_travel_arrays": true,
+        "v63_travel_TMap_pairs_source_order": true,
+        "v69_utf16_travel_pair": true,
+        "unknown_extension_not_accepted": true,
+        "bad_model_ref": true,
+        "bad_reach_start_ref": true,
+        "bad_actor_capacity": true,
+        "negative_actor_num": true,
+        "reach_array_huge": true,
+        "url_unicode_before_v64": true,
+        "truncated_16_textblocks": true,
+        "bad_firstdeleted_ref": true
+    },
+    "sources": [
+        "Unreal v1.200 Engine/Src/UnLevel.cpp:20,148; UnReach.h:40-64; UnURL.cpp:46",
+        "UT99 v400 Engine/Src/UnLevel.cpp:22,186; UnReach.h:49-56; UnURL.cpp:62; Core/Inc/UnTemplate.h:1340,1499"
+    ]
+}
