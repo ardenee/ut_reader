@@ -127,6 +127,25 @@ $check('php_refuses_ambiguous_source_inference',
     str_contains($php,"'source_1997_script_lineage_required'")
     &&str_contains($php,'if(count($success)===2)'));
 
+// Every conversion name must agree with BOTH original Epic C++ enum
+// definitions, not just the parser's numeric byte ranges.
+$conversionMatch=[];
+$check('php_source_conversion_name_table_present',
+    preg_match('/\\$names=\\[([\\s\\S]*?)\\];/',$php,$conversionMatch)===1);
+$conversionLabels=[];
+if(isset($conversionMatch[1])){
+    preg_match_all("/'([A-Za-z]+)'/",$conversionMatch[1],$matchedLabels);
+    $conversionLabels=$matchedLabels[1]??[];
+}
+$check('all_33_defined_conversion_semantics_enumerated',
+    count($conversionLabels)===33);
+foreach($conversionLabels as $i=>$label){
+    $cpp='EX_'.$label;
+    $check('may_july_conversion_symbol_'.$label,
+        ($mayNames[$cpp]??null)===$i+0x31
+        &&($names[$cpp]??null)===$i+0x39);
+}
+
 echo json_encode([
  'ok'=>$fail===[],'passed'=>count($tests)-count($fail),'total'=>count($tests),
  'source_case_count'=>count($sourceCases),

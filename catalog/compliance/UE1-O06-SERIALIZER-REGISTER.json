@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_at_utc": "2026-10-22T19:40:58+00:00",
+  "updated_at_utc": "2026-10-22T19:47:24+00:00",
   "entries": [
     {
       "id": "R82:UActorList",
@@ -2572,9 +2572,9 @@
       "status": "PARTIAL",
       "reader": "CatalogUE1OriginalUnrealfileScriptExpressionReader.php",
       "test": "verify-ue1-original-unrealfile-script-may-july.php",
-      "evidence": "Epic v0.86x May Src/Engine/UnScript.cpp:4260 SerializeExpr, Src/Inc/UnScript.h conversion range EX_MinConversion=0x30 EX_MaxConversion=0x53, FRotationConst WORD3=6B, no iterator tokens. July v0.867 Src/Engine/UnScript.cpp:4894 and Inc/UnScript.h conversion 0x38..0x59, EX_Iterator/Pop/Next=0x2f/30/31, FRotationConst INT3=12B. Both original Unrealfile v22/23. Production UScript reader parses exact source-specific streams with optional caller lineage; when unspecified it tests both and does NOT invent meaning for syntactically valid ambiguous casts (0x40 May NameToBool vs July BoolToByte), with semantic conversion_name tied to actual source opcode. Ambiguous staging reports source_1997_script_lineage_required, no fabricated expression_tree. New native package verifier 26/26, existing July native 24/24 and two-source source inventory 33/33.",
+      "evidence": "Epic v0.86x May Src/Engine/UnScript.cpp:4260 SerializeExpr, Src/Inc/UnScript.h conversion range EX_MinConversion=0x30 EX_MaxConversion=0x53, FRotationConst WORD3=6B, no iterator tokens. July v0.867 Src/Engine/UnScript.cpp:4894 and Inc/UnScript.h conversion 0x38..0x59, EX_Iterator/Pop/Next=0x2f/30/31, FRotationConst INT3=12B. Both original Unrealfile v22/23. Production UScript reader parses exact source-specific streams with optional caller lineage; when unspecified it tests both and does NOT invent meaning for syntactically valid ambiguous casts (0x40 May NameToBool vs July BoolToByte), with semantic conversion_name tied to actual source opcode. Ambiguous staging reports source_1997_script_lineage_required, no fabricated expression_tree. New native package verifier 26/26, existing July native 24/24 and two-source source inventory 68/68 (all 33 symbolic conversion names source-checked in BOTH May/July C++ enum tables).",
       "remaining": "May and July v22/v23 UScript source-typed bytecode conversion/iterator/rotation branches implemented, with source ambiguity protected. Need genuine independent Epic package/engine oracle per source, wider archive branch corpus, instance identity/fixup excluded to O10. Not source-wide accepted.",
-      "updated_at_utc": "2026-10-22T19:40:54+00:00",
+      "updated_at_utc": "2026-10-22T19:47:24+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
@@ -3809,9 +3809,9 @@
       "status": "PARTIAL",
       "reader": "CatalogUE1OriginalUnrealfileScriptExpressionReader.php",
       "test": "verify-ue1-original-unrealfile-script-may-july.php",
-      "evidence": "Epic v0.86x May Src/Engine/UnScript.cpp:4260 SerializeExpr, Src/Inc/UnScript.h conversion range EX_MinConversion=0x30 EX_MaxConversion=0x53, FRotationConst WORD3=6B, no iterator tokens. July v0.867 Src/Engine/UnScript.cpp:4894 and Inc/UnScript.h conversion 0x38..0x59, EX_Iterator/Pop/Next=0x2f/30/31, FRotationConst INT3=12B. Both original Unrealfile v22/23. Production UScript reader parses exact source-specific streams with optional caller lineage; when unspecified it tests both and does NOT invent meaning for syntactically valid ambiguous casts (0x40 May NameToBool vs July BoolToByte), with semantic conversion_name tied to actual source opcode. Ambiguous staging reports source_1997_script_lineage_required, no fabricated expression_tree. New native package verifier 26/26, existing July native 24/24 and two-source source inventory 33/33.",
+      "evidence": "Epic v0.86x May Src/Engine/UnScript.cpp:4260 SerializeExpr, Src/Inc/UnScript.h conversion range EX_MinConversion=0x30 EX_MaxConversion=0x53, FRotationConst WORD3=6B, no iterator tokens. July v0.867 Src/Engine/UnScript.cpp:4894 and Inc/UnScript.h conversion 0x38..0x59, EX_Iterator/Pop/Next=0x2f/30/31, FRotationConst INT3=12B. Both original Unrealfile v22/23. Production UScript reader parses exact source-specific streams with optional caller lineage; when unspecified it tests both and does NOT invent meaning for syntactically valid ambiguous casts (0x40 May NameToBool vs July BoolToByte), with semantic conversion_name tied to actual source opcode. Ambiguous staging reports source_1997_script_lineage_required, no fabricated expression_tree. New native package verifier 26/26, existing July native 24/24 and two-source source inventory 68/68 (all 33 symbolic conversion names source-checked in BOTH May/July C++ enum tables).",
       "remaining": "May and July v22/v23 UScript source-typed bytecode conversion/iterator/rotation branches implemented, with source ambiguity protected. Need genuine independent Epic package/engine oracle per source, wider archive branch corpus, instance identity/fixup excluded to O10. Not source-wide accepted.",
-      "updated_at_utc": "2026-10-22T19:40:54+00:00",
+      "updated_at_utc": "2026-10-22T19:47:24+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
