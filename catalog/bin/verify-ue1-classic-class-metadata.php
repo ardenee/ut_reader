@@ -42,7 +42,7 @@ $body=static function(int $ver,array $opt=[])use($compact):string{
           .$compact(0).$compact((int)($opt['children']??0))
           .$compact((int)($opt['friendly']??4))
           .pack('V2',51,22).pack('V',$scriptSize&0xffffffff);
-    if($scriptSize!==0&&!array_key_exists('scriptBytes',$opt)){return $prefix."\x53";}
+    if($scriptSize!==0&&!array_key_exists('scriptBytes',$opt)){return $prefix."\x03";}
     $prefix.=$opt['scriptBytes']??'';
     $state=str_repeat("\x11",8).str_repeat("\x22",8).pack('vV',12,0x12345678);
     $native=($ver<=61?pack('V',64):'').pack('V',0x0f0f0f0f)
@@ -143,6 +143,89 @@ try{
         $bad(69,$body(69,['scriptSize'=>5,'scriptBytes'=>"\x20".$compact(-2)])));
     $check('reject_script_bad_name_ref',
         $bad(69,$body(69,['scriptSize'=>5,'scriptBytes'=>"\x21".$compact(200)])));
+    // Independent source-ordered nested expression fixtures. The ScriptSize
+    // column is the decoded C++ iCode in-memory width, not disk length.
+    $nestedCases=[
+        ['ut99_return_child',69,"\x04\x2c\x07",3,3],
+        ['v1998_return_no_child',50,"\x04",1,1],
+        ['ut99_let_property_then_int',69,"\x0f\x00".$compact(-1)."\x1d".pack('V',77),11,8],
+        ['v1998_let_nested',50,"\x0f\x00".$compact(-1)."\x26",7,4],
+        ['ut99_type_conversion',69,"\x3a\x24\x05",3,3],
+        ['ut99_conversion_upper_range',69,"\x5a\x27",2,2],
+        ['ut99_final_function_one_argument',69,"\x1c".$compact(-1)."\x26\x16",7,4],
+        ['v1998_intrinsic_params',50,"\x70\x26\x16",3,3],
+        ['ut99_extended_native_call',69,"\x60\x5f\x16",3,3],
+        ['v1998_extended_intrinsic_call',50,"\x60\x5f\x16",3,3],
+        ['ut99_context_null_skip',69,"\x19\x17".pack('v',9)."\x03\x26",6,6],
+        ['ut99_iterator_then_word',69,"\x2f\x27".pack('v',44),4,4],
+        ['ut99_case_no_condition',69,"\x0a\xff\xff",3,3],
+        ['v1998_case_with_condition',50,"\x0a".pack('v',10)."\x27",4,4],
+        ['ut99_fname_function_with_end_params',69,"\x1b".$compact(4)."\x26\x16",7,4],
+        ['ut99_dynamic_array_two_args',69,"\x10\x25\x26",3,3],
+        ['ut99_new_four_args',69,"\x11\x25\x26\x27\x28",5,5],
+        ['v1998_begin_function_param_layout',50,"\x14\x04\x01\x02\x00\x00",6,6],
+        ['ut99_letbool_two_args',69,"\x14\x25\x27",3,3],
+        ['ut99_unicode_source_high_byte_termination',69,"\x34\x41\x00",3,3],
+        ['ut99_struct_member_ref_nested',69,"\x36".$compact(-1)."\x17",6,3],
+        ['ut99_struct_comparison_two_args',69,"\x32".$compact(-1)."\x25\x26",7,4],
+        ['v1998_resize_string',50,"\x2b\x08\x26",3,3],
+        ['ut99_eatstring_expression',69,"\x0e\x1fHi\x00",5,5],
+        ['v1998_validate_object_nooperand',50,"\x0e",1,1],
+        ['ut99_label_table_aligned',69,"\x25\x25\x25\x0c".$compact(4).pack('V',8).$compact(0).pack('V',0),20,14],
+        ['ut99_switch_byte_and_expression',69,"\x05\x04\x26",3,3],
+        ['ut99_meta_cast_class_expression',69,"\x13".$compact(-1)."\x27",6,3],
+    ];
+    foreach($nestedCases as [$label,$v,$exprBytes,$memoryBytes,$archiveBytes]){
+        [$decoded]=$parse($v,$body($v,['scriptSize'=>$memoryBytes,'scriptBytes'=>$exprBytes]));
+        $archive=$decoded['script_archive']??[];
+        $check('source_nested_'.$label,
+            $decoded['status']==='class_metadata_supported_script_no_defaults_decoded'
+            &&($archive['script_memory_decoded']??-1)===$memoryBytes
+            &&($archive['archive_bytes_consumed']??-1)===$archiveBytes
+            &&($archive['unsupported_branch']??null)===null
+            &&($decoded['class_flags']??null)===0x0f0f0f0f
+            &&($decoded['defaults_tag_count']??null)===0
+        );
+    }
+    $check('reject_truncated_ut99_nested_return_operand',
+        $bad(69,$body(69,['scriptSize'=>1,'scriptBytes'=>"\x04"])));
+    $check('reject_script_missing_end_function_params',
+        $bad(69,$body(69,['scriptSize'=>6,'scriptBytes'=>"\x1c".$compact(-1)."\x26"])));
+    [$unknownOld]=$parse(50,$body(50,['scriptSize'=>1,'scriptBytes'=>"\x34"]));
+    $check('v1998_structconst_without_source_archive_case_stays_partial',
+        $unknownOld['status']==='class_script_expr_unimplemented'
+        &&$unknownOld['script_archive']['unsupported_branch']!==null);
+    $withDefaults=$compact(7)."\x22".pack('V',1402).$compact(0);
+    [$scriptDefaults]=$parse(69,$body(69,[
+        'scriptSize'=>7,
+        'scriptBytes'=>"\x1c".$compact(-1)."\x26\x16",
+        'defaultRaw'=>$withDefaults,
+    ]));
+    $check('script_nested_function_then_nonempty_class_defaults',
+        $scriptDefaults['status']==='class_default_tags_structurally_decoded_schema_unverified'
+        &&$scriptDefaults['script_archive']['script_memory_decoded']===7
+        &&$scriptDefaults['script_archive']['archive_bytes_consumed']===4
+        &&$scriptDefaults['default_property_tags'][0]['value']===1402
+        &&$scriptDefaults['defaults_schema_verified']===false);
+    [$highUnicode]=$parse(69,$body(69,[
+        'scriptSize'=>5, 'scriptBytes'=>"\x34\x01\x01\x41\x00",
+    ]));
+    $check('ut99_unicode_script_exact_cpp_high_byte_condition',
+        $highUnicode['status']==='class_metadata_supported_script_no_defaults_decoded'
+        &&$highUnicode['script_archive']['expression_preview'][0]['value']===[257,65]);
+    [$nestedUnknown]=$parse(69,$body(69,[
+        'scriptSize'=>2, 'scriptBytes'=>"\x39\x03",
+    ]));
+    $check('unknown_nested_expression_explicitly_partial',
+        $nestedUnknown['status']==='class_script_expr_unimplemented'
+        &&$nestedUnknown['script_archive']['script_memory_decoded']===2
+        &&$nestedUnknown['script_archive']['unsupported_branch']!==null);
+    $check('misaligned_UT99_label_table_rejected',
+        $bad(69,$body(69,['scriptSize'=>9,
+            'scriptBytes'=>"\x0c".$compact(0).pack('V',0)])));
+    $check('excessive_nested_conversion_recursion_rejected',
+        $bad(69,$body(69,['scriptSize'=>132,
+            'scriptBytes'=>str_repeat("\x39",131)."\x25"])));
     $intTag=$compact(7)."\x22".pack('V',1234).$compact(0);
     [$de]=$parse(69,$body(69,['defaultRaw'=>$intTag]));
     $check('class_default_int_tag_decoded_schema_not_fabricated',

@@ -79,7 +79,7 @@ try{
     $check('v50_UStruct_source_fields',$s['status']==='native_struct_record_complete'
         &&$s['script_size']===0&&$s['source_line']===12
         &&$s['source_text_pos']===9&&$s['friendly_name']['text']==='Friendly');
-    [$s]=$inspect('Struct',69,$struct(2)."\x53");
+    [$s]=$inspect('Struct',69,$struct(2)."\x03");
     $check('UStruct_nonzero_code_not_accepted',$s['status']==='native_struct_script_expr_unimplemented'
         &&$s['script_size']===2
         &&$s['script_archive']['script_memory_decoded']===1
