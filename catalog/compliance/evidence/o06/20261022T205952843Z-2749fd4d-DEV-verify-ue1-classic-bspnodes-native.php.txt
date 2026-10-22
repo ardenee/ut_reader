@@ -1,0 +1,7 @@
+﻿{
+    "ok": true,
+    "total": 65,
+    "passed": 65,
+    "failed": [],
+    "scope": "Epic v1.200 FBspNode FZoneProperties UDatabase native disk archive"
+}

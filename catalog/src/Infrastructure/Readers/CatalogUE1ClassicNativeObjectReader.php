@@ -44,7 +44,7 @@ final class CatalogUE1ClassicNativeObjectReader
         }
         $nativeKind=strtolower($className);
         if(!in_array($nativeKind,[
-            'texture','palette','sound','music','font','package','primitive','model','level','mesh','lodmesh','firetexture','wettexture','scriptedtexture','textbuffer','enum','const','bitarray','bitmatrix','vectors','verts','bspsurfs','bspnodes','factory','exporter','levelfactorynew','classfactorynew','texturefactorynew',
+            'texture','palette','sound','music','font','package','primitive','model','level','mesh','lodmesh','firetexture','wettexture','scriptedtexture','textbuffer','enum','const','bitarray','bitmatrix','vectors','verts','bspsurfs','bspnodes','polys','factory','exporter','levelfactorynew','classfactorynew','texturefactorynew',
             ...CatalogUE1ClassicPropertyNativeReader::KINDS,
             ...CatalogUE1ClassicStructNativeReader::KINDS,
         ],true)){return $record;}
@@ -96,6 +96,11 @@ final class CatalogUE1ClassicNativeObjectReader
             if($nativeKind==='model'){
                 return array_replace($record,CatalogUE1ClassicModelNativeReader::inspect(
                     $pkg,$ver,$read,$compact,$int,$pos,$limit));
+            }
+            if($nativeKind==='polys'){
+                return array_replace($record,CatalogUE1ClassicPolysNativeReader::inspect(
+                    $pkg,$ver,$read,$compact,$int,$pos,$limit,
+                    $propertyStream['legacy_database']??null));
             }
             if($nativeKind==='bspnodes'){
                 return array_replace($record,CatalogUE1ClassicBspNodesNativeReader::inspect(
