@@ -50,11 +50,11 @@ final class CatalogUE1ClassicDatabaseNativeReader
                 hash_update($digest,$raw);
                 $item=['x'=>$v['x'],'y'=>$v['y'],'z'=>$v['z']];
             }else{
-                $point=$compact();$side=$compact();
-                // Canonical decoded record digest, not a digest of compact
-                // bytes (the compact decoder does not expose the raw bytes).
-                hash_update($digest,pack('V2',$point & 0xffffffff,$side & 0xffffffff));
-                $item=['vertex_index'=>$point,'side_index'=>$side];
+                $item=CatalogUE1ClassicGeometryRecordReader::vert($compact);
+                // Canonical decoded record digest, not compact wire bytes.
+                hash_update($digest,pack('V2',
+                    $item['vertex_index'] & 0xffffffff,
+                    $item['side_index'] & 0xffffffff));
             }
             if(count($preview)<16){$preview[]=$item;}
         }

@@ -24,32 +24,11 @@ final class CatalogUE1ClassicBspSurfsNativeReader
         if($db['count']>intdiv($limit-$pos,16)){
             throw new RuntimeException('UE1 BSP surface records exceed SerialSize');
         }
-        $ref=static function(string $field)use($compact,$pkg):int{
-            $v=$compact();
-            if(($v<0&&-$v>count($pkg->getImports()))
-                ||($v>0&&$v>count($pkg->getExports()))){
-                throw new RuntimeException('Invalid FBspSurf '.$field.' object ref');
-            }
-            return $v;
-        };
-        $signed16=static function()use($read):int{
-            $v=(int)unpack('v',$read(2))[1];
-            return $v>=0x8000?$v-0x10000:$v;
-        };
         $preview=[];
         for($i=0;$i<$db['count'];$i++){
-            $texture=$ref('Texture');$flags=$uint();$indices=[];
-            foreach(['p_base','v_normal','v_texture_u','v_texture_v',
-                     'light_map','brush_poly'] as $name){
-                $indices[$name]=$compact();
-            }
-            $panU=$signed16();$panV=$signed16();$actor=$ref('Actor');
-            if(count($preview)<16){
-                $preview[]=['texture_reference'=>$texture,'poly_flags'=>$flags,
-                    'poly_flags_after_epic_load'=>$version>61?($flags&~0x10000000):$flags,
-                    'indices'=>$indices,'pan_u'=>$panU,'pan_v'=>$panV,
-                    'actor_reference'=>$actor];
-            }
+            $surf=CatalogUE1ClassicGeometryRecordReader::bspSurf(
+                $pkg,$version,$read,$compact,$uint);
+            if($i<16){$preview[]=$surf;}
         }
         return $db+['archive_family'=>$version>61?'UT99-v400-legacy-database':'Unreal-v1200',
             'status'=>$pos===$limit?'native_bspsurfs_database_complete':

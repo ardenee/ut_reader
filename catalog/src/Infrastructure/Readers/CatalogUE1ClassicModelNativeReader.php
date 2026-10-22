@@ -6,10 +6,11 @@
  * UT99 v400 Engine/Src/UnModel.cpp:182-239. Inherits the real
  * UPrimitive FBox/FSphere serializer, not a guessed fixed offset.
  *
- * Historical object-referenced BSP (<=61) is decoded with the
- * source-defined lightmap, bounds, leaf and light tables. In modern
- * model arrays, nonempty FBspNode/FBspSurf/FVert and FZoneProperties
- * remain explicitly incomplete instead of shifting later fields.
+ * Historical object-referenced BSP (<=61) and the modern UT99 v400
+ * inline TArray<FBspNode/FBspSurf/FVert>, NumSharedSides, NumZones and
+ * FZoneProperties are decoded in original Epic serialization order.
+ * Source operators are shared with compatibility database loaders; only
+ * previews are retained for large inline geometry. Runtime fixup is O10.
  */
 declare(strict_types=1);
 namespace UnrealDb\Catalog\Infrastructure\Readers;
@@ -75,27 +76,45 @@ final class CatalogUE1ClassicModelNativeReader
             // UT99 v400 TTransArray<> serializes as TArray<> for !IsTrans().
             $model['vectors']=$readMany('Vectors',$vector,12);
             $model['points']=$readMany('Points',$vector,12);
-            foreach(['nodes','surfs','verts'] as $field){
-                $n=$count($field);
-                $model[$field.'_count']=$n;
-                if($n!==0){
-                    return $result+[
-                        'status'=>'native_model_inline_geometry_unimplemented',
-                        'model'=>$model,'unparsed_bytes'=>$limit-$position,
-                    ];
-                }
+            // UT99 Engine/Src/UnModel.cpp::UModel::Serialize:
+            // Nodes, Surfs, Verts are inline TArray archives, using the
+            // same operator<< record grammars as the old load-only classes.
+            // Decode every record; retain a bounded preview of each.
+            $nodeCount=$count('Nodes',43);
+            $model['nodes_count']=$nodeCount;
+            $model['nodes_preview']=[];
+            for($i=0;$i<$nodeCount;$i++){
+                $node=CatalogUE1ClassicGeometryRecordReader::bspNode(
+                    $version,$read,$compact,$u32);
+                if($i<16){$model['nodes_preview'][]=$node;}
+            }
+            $surfCount=$count('Surfs',16);
+            $model['surfs_count']=$surfCount;
+            $model['surfs_preview']=[];
+            for($i=0;$i<$surfCount;$i++){
+                $surf=CatalogUE1ClassicGeometryRecordReader::bspSurf(
+                    $pkg,$version,$read,$compact,$u32);
+                if($i<16){$model['surfs_preview'][]=$surf;}
+            }
+            $vertCount=$count('Verts',2);
+            $model['verts_count']=$vertCount;
+            $model['verts_preview']=[];
+            for($i=0;$i<$vertCount;$i++){
+                $vert=CatalogUE1ClassicGeometryRecordReader::vert($compact);
+                if($i<16){$model['verts_preview'][]=$vert;}
             }
             $model['num_shared_sides']=$i32();
             $zoneCount=$i32();
-            if($zoneCount<0||$zoneCount>64){
-                throw new RuntimeException('Invalid UModel NumZones');
+            if($zoneCount<0||$zoneCount>64
+                ||$zoneCount>intdiv($limit-$position,17)){
+                throw new RuntimeException('Invalid UModel NumZones or truncated zones');
             }
             $model['num_zones']=$zoneCount;
-            if($zoneCount!==0){
-                return $result+[
-                    'status'=>'native_model_zone_properties_unimplemented',
-                    'model'=>$model,'unparsed_bytes'=>$limit-$position,
-                ];
+            $model['zones_preview']=[];
+            for($i=0;$i<$zoneCount;$i++){
+                $zone=CatalogUE1ClassicGeometryRecordReader::zone(
+                    $pkg,$read,$compact);
+                if($i<16){$model['zones_preview'][]=$zone;}
             }
             $model['polys_reference']=$ref('Polys');
         }

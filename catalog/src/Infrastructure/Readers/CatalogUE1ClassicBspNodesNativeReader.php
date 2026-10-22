@@ -23,14 +23,6 @@ final class CatalogUE1ClassicBspNodesNativeReader
         $signed=static function()use($uint):int{
             $v=$uint();return $v>=0x80000000?$v-0x100000000:$v;
         };
-        $ref=static function(string $field)use($compact,$pkg):int{
-            $n=$compact();
-            if(($n<0&&-$n>count($pkg->getImports()))
-                ||($n>0&&$n>count($pkg->getExports()))){
-                throw new RuntimeException('UE1 BSP zone '.$field.' object ref outside package');
-            }
-            return $n;
-        };
         $db=CatalogUE1ClassicDatabaseCounts::read(
             $version,$signed,$legacyDatabase,$limit-$pos);
         // FBspNode: Plane(16), ZoneMask(8), Flags(1),
@@ -41,26 +33,9 @@ final class CatalogUE1ClassicBspNodesNativeReader
         }
         $nodes=[];
         for($i=0;$i<$db['count'];$i++){
-            $plane=array_values(unpack('g4',$read(16))?:[]);
-            $zoneMask=bin2hex($read(8));
-            $flags=ord($read(1));
-            $indices=[];
-            foreach(['vertex_pool','surface','child_back','child_front',
-                     'child_plane','collision_bound','render_bound'] as $field){
-                $indices[$field]=$compact();
-            }
-            $zoneBack=ord($read(1));$zoneFront=ord($read(1));
-            $vertices=ord($read(1));
-            $leafBack=$signed();$leafFront=$signed();
-            if(count($nodes)<16){
-                $nodes[]=['plane'=>$plane,'zone_mask_le_hex'=>$zoneMask,
-                    'node_flags'=>$flags,
-                    'node_flags_after_epic_load'=>$version>61?($flags&~0xE0):$flags,
-                    'indices'=>$indices,
-                    'zones'=>[$zoneBack,$zoneFront],
-                    'num_vertices'=>$vertices,
-                    'leaves'=>[$leafBack,$leafFront]];
-            }
+            $node=CatalogUE1ClassicGeometryRecordReader::bspNode(
+                $version,$read,$compact,$uint);
+            if($i<16){$nodes[]=$node;}
         }
         $numZones=$compact();
         if($numZones<0||$numZones>64
@@ -69,14 +44,9 @@ final class CatalogUE1ClassicBspNodesNativeReader
         }
         $zones=[];
         for($i=0;$i<$numZones;$i++){
-            $actor=$ref('ZoneActor');
-            $connectivity=bin2hex($read(8));
-            $visibility=bin2hex($read(8));
-            if(count($zones)<16){
-                $zones[]=['actor_reference'=>$actor,
-                    'connectivity_le_hex'=>$connectivity,
-                    'visibility_le_hex'=>$visibility];
-            }
+            $zone=CatalogUE1ClassicGeometryRecordReader::zone(
+                $pkg,$read,$compact);
+            if($i<16){$zones[]=$zone;}
         }
         return $db+[
             'archive_family'=>$version>61?'UT99-v400-legacy-database':'Unreal-v1200',
