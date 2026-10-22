@@ -81,7 +81,27 @@ try{
         &&$s['source_text_pos']===9&&$s['friendly_name']['text']==='Friendly');
     [$s]=$inspect('Struct',69,$struct(2)."\x53");
     $check('UStruct_nonzero_code_not_accepted',$s['status']==='native_struct_script_expr_unimplemented'
-        &&$s['script_size']===2&&$s['unparsed_bytes']===1);
+        &&$s['script_size']===2
+        &&$s['script_archive']['script_memory_decoded']===1
+        &&$s['script_archive']['unsupported_branch']!==null);
+    [$ss]=$inspect('Struct',50,$struct(5)."\x20".$compact(-1));
+    $check('v50_UStruct_compact_object_ref_script_archive',
+        $ss['status']==='native_struct_record_complete'
+        &&$ss['script_archive']['script_memory_decoded']===5
+        &&$ss['script_archive']['archive_bytes_consumed']===2
+        &&$ss['script_archive']['expression_preview'][0]['value']===-1);
+    [$ss]=$inspect('Struct',69,$struct(2)."\x25\x26");
+    $check('v69_UStruct_source_token_expressions',
+        $ss['status']==='native_struct_record_complete'
+        &&$ss['script_archive']['script_memory_decoded']===2
+        &&count($ss['script_archive']['expression_preview'])===2);
+    [$st]=$inspect('State',69,$struct(2)."\x25\x26".$state());
+    $check('v69_UState_script_then_StateFlags',
+        $st['status']==='native_state_record_complete'
+        &&$st['script_archive']['script_memory_decoded']===2
+        &&$st['state_flags']===0x99112233);
+    $check('reject_Struct_memwidth_overrun',
+        $reject('Struct',69,$struct(1)."\x20".$compact(-1)));
     [$s]=$inspect('State',69,$struct().$state());
     $check('v69_UState_masks_and_flags',$s['status']==='native_state_record_complete'
         &&$s['probe_mask_hex']==='3333333333333333'

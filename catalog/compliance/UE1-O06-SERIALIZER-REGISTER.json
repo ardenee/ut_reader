@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_at_utc": "2026-10-22T15:06:21+00:00",
+  "updated_at_utc": "2026-10-22T15:16:57+00:00",
   "entries": [
     {
       "id": "R82:UActorList",
@@ -3790,14 +3790,14 @@
       "test": "verify-ue1-classic-property-native.php",
       "evidence": "Epic v1.200 Core/Src/UnProp.cpp:101-114,208,298,390,460,519,576; UT99 v400 Core/Src/UnProp.cpp:117-134,324,475,673,743,859,954,1099,1282,1491; synthetic UE1 packages v50/v69",
       "remaining": "Source-defined native UProperty LOAD/SAVE and subclass fields decoded, with 32/32 version 50/69 package positive/negative fixtures; genuine property-class corpus, older per-version gates, complete classIndex=0 UClass/UStruct metadata and runtime property linking remain unverified.",
-      "updated_at_utc": "2026-10-22T15:06:20+00:00",
+      "updated_at_utc": "2026-10-22T15:16:56+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T15:06:20.2225849Z",
+        "at_utc": "2026-10-22T15:16:56.6764225Z",
         "test_sha256": "b46f424186bbd2883f6c502d349e1208bd88a64f6f8b0610a7505c7dd6417fba",
-        "source_sha256": "829d47c3e4f2ac0d90f2a35feb1edd0abd5e742140a38b4f44bb51b92b63ccf0",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T150619881Z-19bb7636-PRD-verify-ue1-classic-property-native.php.txt"
+        "source_sha256": "e03918f62ddc8c9bd7dba47d8a5e536d9d5a2437475591d5b9a18192c9a34db0",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T151656331Z-19209421-PRD-verify-ue1-classic-property-native.php.txt"
       }
     },
     {
@@ -3815,14 +3815,14 @@
       "test": "verify-ue1-classic-property-native.php",
       "evidence": "Epic v1.200 Core/Src/UnProp.cpp:101-114,208,298,390,460,519,576; UT99 v400 Core/Src/UnProp.cpp:117-134,324,475,673,743,859,954,1099,1282,1491; synthetic UE1 packages v50/v69",
       "remaining": "Source-defined native UProperty LOAD/SAVE and subclass fields decoded, with 32/32 version 50/69 package positive/negative fixtures; genuine property-class corpus, older per-version gates, complete classIndex=0 UClass/UStruct metadata and runtime property linking remain unverified.",
-      "updated_at_utc": "2026-10-22T15:06:20+00:00",
+      "updated_at_utc": "2026-10-22T15:16:56+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T15:06:20.2225849Z",
+        "at_utc": "2026-10-22T15:16:56.6764225Z",
         "test_sha256": "b46f424186bbd2883f6c502d349e1208bd88a64f6f8b0610a7505c7dd6417fba",
-        "source_sha256": "829d47c3e4f2ac0d90f2a35feb1edd0abd5e742140a38b4f44bb51b92b63ccf0",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T150619881Z-19bb7636-PRD-verify-ue1-classic-property-native.php.txt"
+        "source_sha256": "e03918f62ddc8c9bd7dba47d8a5e536d9d5a2437475591d5b9a18192c9a34db0",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T151656331Z-19209421-PRD-verify-ue1-classic-property-native.php.txt"
       }
     },
     {
@@ -3836,18 +3836,18 @@
         }
       ],
       "status": "PARTIAL",
-      "reader": "CatalogUE1ClassicClassMetadataReader.php + shared CatalogUE1ClassicTaggedPropertyReader.php::parseTags",
+      "reader": "CatalogUE1ClassicScriptArchiveReader.php and CatalogUE1ClassicClassMetadataReader.php",
       "test": "verify-ue1-classic-class-metadata.php",
-      "evidence": "Epic Unreal v1.200 Core/Src/UnClass.cpp:921+ UClass::Serialize invokes SerializeTaggedProperties; UT99 v400 Core/Src/UnClass.cpp:914+; existing UObject class tag reader shared FPropertyTag source codec. Source-defined v35/v50/v69 31/31 direct checks incl nonempty Int/Bool/FColor/array index defaults, malformed tags and None termination.",
-      "remaining": "UClass classIndex=0 no-script class native fields and now nonempty class default FPropertyTag envelopes decoded with same source codec as UObject tags (31/31 fixture cases). Default value semantics remain schema unverified, script bytecode SerializeExpr nonzero still explicitly unimplemented, flagged StateFrame, genuine class corpus/native oracle, version source-family overlap and class inheritance schema remain unresolved. No claim of full UClass contract.",
-      "updated_at_utc": "2026-10-22T15:06:18+00:00",
+      "evidence": "Epic v1.200 Core/Src/UnClass.cpp:1095+ EExprToken Core/Inc/UnScript.h; UT99 v400 Core/Src/UnClass.cpp:1076+ Core/Inc/UnStack.h; scalar/compact FArchive XFER(T) ScriptSize tests.",
+      "remaining": "Epic UStruct::SerializeExpr partial source-typed scalar/no-operand tokens with correct ScriptSize in-memory sizeof(T) vs archive compact FName/UObject refs (class 40/40, struct/state/function 26/26 source fixtures). Unsupported nested function/control-flow expressions, conversions, label tables, class-default schema linking, complete real script package/native oracle and version-family discrimination remain O06, not accepted; VM runtime execution O10.",
+      "updated_at_utc": "2026-10-22T15:16:54+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T15:06:18.6780001Z",
-        "test_sha256": "d104ed10d9a147c41d3156dee8e590e37fa6e82a3d877fc63ec7c94463ff51c2",
-        "source_sha256": "829d47c3e4f2ac0d90f2a35feb1edd0abd5e742140a38b4f44bb51b92b63ccf0",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T150618234Z-d8b24607-PRD-verify-ue1-classic-class-metadata.php.txt"
+        "at_utc": "2026-10-22T15:16:54.6721209Z",
+        "test_sha256": "b4ca3f0d6f971fab6b4df09c0b5af60e63349c8d05ef9e407ba8400dc3ece8ac",
+        "source_sha256": "e03918f62ddc8c9bd7dba47d8a5e536d9d5a2437475591d5b9a18192c9a34db0",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T151654210Z-1e52dae9-PRD-verify-ue1-classic-class-metadata.php.txt"
       }
     },
     {
@@ -3865,14 +3865,14 @@
       "test": "verify-ue1-classic-property-native.php",
       "evidence": "Epic v1.200 Core/Src/UnProp.cpp:101-114,208,298,390,460,519,576; UT99 v400 Core/Src/UnProp.cpp:117-134,324,475,673,743,859,954,1099,1282,1491; synthetic UE1 packages v50/v69",
       "remaining": "Source-defined native UProperty LOAD/SAVE and subclass fields decoded, with 32/32 version 50/69 package positive/negative fixtures; genuine property-class corpus, older per-version gates, complete classIndex=0 UClass/UStruct metadata and runtime property linking remain unverified.",
-      "updated_at_utc": "2026-10-22T15:06:20+00:00",
+      "updated_at_utc": "2026-10-22T15:16:56+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T15:06:20.2225849Z",
+        "at_utc": "2026-10-22T15:16:56.6764225Z",
         "test_sha256": "b46f424186bbd2883f6c502d349e1208bd88a64f6f8b0610a7505c7dd6417fba",
-        "source_sha256": "829d47c3e4f2ac0d90f2a35feb1edd0abd5e742140a38b4f44bb51b92b63ccf0",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T150619881Z-19bb7636-PRD-verify-ue1-classic-property-native.php.txt"
+        "source_sha256": "e03918f62ddc8c9bd7dba47d8a5e536d9d5a2437475591d5b9a18192c9a34db0",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T151656331Z-19209421-PRD-verify-ue1-classic-property-native.php.txt"
       }
     },
     {
@@ -4008,14 +4008,14 @@
       "test": "verify-ue1-classic-struct-native.php",
       "evidence": "Epic v1.200 Core/Src/UnClass.cpp:236,476,1358,1440; UT99 v400 Core/Src/UnClass.cpp:239,593,712,1342; synthetic v35/v50/v69 source fixtures",
       "remaining": "UField refs, UStruct source headers (zero-script only), UState masks/flags and UFunction version-gated legacy/native/rep fields decoded. 22/22 source-defined package fixtures PASS. Nonzero SerializeExpr bytecode, genuine matching corpus, runtime field linking and broader source-version gates remain outstanding; not ACCEPTED.",
-      "updated_at_utc": "2026-10-22T14:55:14+00:00",
+      "updated_at_utc": "2026-10-22T15:16:55+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T14:55:13.9738739Z",
-        "test_sha256": "00b59a9ac1d4e47e6048d27c98213a084f73c10b56299062139a0e430c4f991d",
-        "source_sha256": "9de5130639f170b8802a4ee89919ce08c50ed02f4fa27eee491b0115486c976f",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T145513678Z-361bc100-PRD-verify-ue1-classic-struct-native.php.txt"
+        "at_utc": "2026-10-22T15:16:55.1598756Z",
+        "test_sha256": "8668c940ace5c18663f0257440a7b8b45545b198383f3f76c03c672ba39251d8",
+        "source_sha256": "e03918f62ddc8c9bd7dba47d8a5e536d9d5a2437475591d5b9a18192c9a34db0",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T151654845Z-7066160e-PRD-verify-ue1-classic-struct-native.php.txt"
       }
     },
     {
@@ -4050,14 +4050,14 @@
       "test": "verify-ue1-classic-tagged-properties.php",
       "evidence": "PRD historical PASS at 2026-10-21T16:05:16.3071623Z; catalog\\compliance\\evidence\\o06\\20261021T160515641Z-af18800f-PRD-verify-ue1-classic-tagged-properties.php.txt; scoped test, not full class acceptance",
       "remaining": "Current pinned 92-package corpus passes; additional source branches/version-specific cases are not covered by corpus",
-      "updated_at_utc": "2026-10-22T15:06:19+00:00",
+      "updated_at_utc": "2026-10-22T15:16:56+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T15:06:19.6815537Z",
+        "at_utc": "2026-10-22T15:16:56.1444119Z",
         "test_sha256": "a43435273ceed564f9cb0de064c3c0cd77d26ec7647bc3bd9f9c9df1a8c6506f",
-        "source_sha256": "829d47c3e4f2ac0d90f2a35feb1edd0abd5e742140a38b4f44bb51b92b63ccf0",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T150618857Z-eab59e0a-PRD-verify-ue1-classic-tagged-properties.php.txt"
+        "source_sha256": "e03918f62ddc8c9bd7dba47d8a5e536d9d5a2437475591d5b9a18192c9a34db0",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T151655345Z-01f53eb0-PRD-verify-ue1-classic-tagged-properties.php.txt"
       }
     },
     {
@@ -4071,18 +4071,18 @@
         }
       ],
       "status": "PARTIAL",
-      "reader": "CatalogUE1ClassicStructNativeReader.php (via CatalogUE1ClassicNativeObjectReader.php)",
+      "reader": "CatalogUE1ClassicScriptArchiveReader.php and CatalogUE1ClassicStructNativeReader.php",
       "test": "verify-ue1-classic-struct-native.php",
-      "evidence": "Epic v1.200 Core/Src/UnClass.cpp:236,476,1358,1440; UT99 v400 Core/Src/UnClass.cpp:239,593,712,1342; synthetic v35/v50/v69 source fixtures",
-      "remaining": "UField refs, UStruct source headers (zero-script only), UState masks/flags and UFunction version-gated legacy/native/rep fields decoded. 22/22 source-defined package fixtures PASS. Nonzero SerializeExpr bytecode, genuine matching corpus, runtime field linking and broader source-version gates remain outstanding; not ACCEPTED.",
-      "updated_at_utc": "2026-10-22T14:55:14+00:00",
+      "evidence": "Epic v1.200 Core/Src/UnClass.cpp:1095+ EExprToken Core/Inc/UnScript.h; UT99 v400 Core/Src/UnClass.cpp:1076+ Core/Inc/UnStack.h; scalar/compact FArchive XFER(T) ScriptSize tests.",
+      "remaining": "Epic UStruct::SerializeExpr partial source-typed scalar/no-operand tokens with correct ScriptSize in-memory sizeof(T) vs archive compact FName/UObject refs (class 40/40, struct/state/function 26/26 source fixtures). Unsupported nested function/control-flow expressions, conversions, label tables, class-default schema linking, complete real script package/native oracle and version-family discrimination remain O06, not accepted; VM runtime execution O10.",
+      "updated_at_utc": "2026-10-22T15:16:55+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T14:55:13.9738739Z",
-        "test_sha256": "00b59a9ac1d4e47e6048d27c98213a084f73c10b56299062139a0e430c4f991d",
-        "source_sha256": "9de5130639f170b8802a4ee89919ce08c50ed02f4fa27eee491b0115486c976f",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T145513678Z-361bc100-PRD-verify-ue1-classic-struct-native.php.txt"
+        "at_utc": "2026-10-22T15:16:55.1598756Z",
+        "test_sha256": "8668c940ace5c18663f0257440a7b8b45545b198383f3f76c03c672ba39251d8",
+        "source_sha256": "e03918f62ddc8c9bd7dba47d8a5e536d9d5a2437475591d5b9a18192c9a34db0",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T151654845Z-7066160e-PRD-verify-ue1-classic-struct-native.php.txt"
       }
     },
     {
@@ -4285,14 +4285,14 @@
       "test": "verify-ue1-classic-tagged-properties.php",
       "evidence": "PRD historical PASS at 2026-10-21T16:05:16.3071623Z; catalog\\compliance\\evidence\\o06\\20261021T160515641Z-af18800f-PRD-verify-ue1-classic-tagged-properties.php.txt; scoped test, not full class acceptance",
       "remaining": "Tagged-properties decoder succeeds on pinned corpus; class-defined binary/defaults and complete source gates not covered",
-      "updated_at_utc": "2026-10-22T15:06:19+00:00",
+      "updated_at_utc": "2026-10-22T15:16:56+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T15:06:19.6815537Z",
+        "at_utc": "2026-10-22T15:16:56.1444119Z",
         "test_sha256": "a43435273ceed564f9cb0de064c3c0cd77d26ec7647bc3bd9f9c9df1a8c6506f",
-        "source_sha256": "829d47c3e4f2ac0d90f2a35feb1edd0abd5e742140a38b4f44bb51b92b63ccf0",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T150618857Z-eab59e0a-PRD-verify-ue1-classic-tagged-properties.php.txt"
+        "source_sha256": "e03918f62ddc8c9bd7dba47d8a5e536d9d5a2437475591d5b9a18192c9a34db0",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T151655345Z-01f53eb0-PRD-verify-ue1-classic-tagged-properties.php.txt"
       }
     },
     {
@@ -4310,14 +4310,14 @@
       "test": "verify-ue1-classic-property-native.php",
       "evidence": "Epic v1.200 Core/Src/UnProp.cpp:101-114,208,298,390,460,519,576; UT99 v400 Core/Src/UnProp.cpp:117-134,324,475,673,743,859,954,1099,1282,1491; synthetic UE1 packages v50/v69",
       "remaining": "Source-defined native UProperty LOAD/SAVE and subclass fields decoded, with 32/32 version 50/69 package positive/negative fixtures; genuine property-class corpus, older per-version gates, complete classIndex=0 UClass/UStruct metadata and runtime property linking remain unverified.",
-      "updated_at_utc": "2026-10-22T15:06:20+00:00",
+      "updated_at_utc": "2026-10-22T15:16:56+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T15:06:20.2225849Z",
+        "at_utc": "2026-10-22T15:16:56.6764225Z",
         "test_sha256": "b46f424186bbd2883f6c502d349e1208bd88a64f6f8b0610a7505c7dd6417fba",
-        "source_sha256": "829d47c3e4f2ac0d90f2a35feb1edd0abd5e742140a38b4f44bb51b92b63ccf0",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T150619881Z-19bb7636-PRD-verify-ue1-classic-property-native.php.txt"
+        "source_sha256": "e03918f62ddc8c9bd7dba47d8a5e536d9d5a2437475591d5b9a18192c9a34db0",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T151656331Z-19209421-PRD-verify-ue1-classic-property-native.php.txt"
       }
     },
     {
@@ -4335,14 +4335,14 @@
       "test": "verify-ue1-classic-tagged-properties.php",
       "evidence": "PRD historical PASS at 2026-10-21T16:05:16.3071623Z; catalog\\compliance\\evidence\\o06\\20261021T160515641Z-af18800f-PRD-verify-ue1-classic-tagged-properties.php.txt; scoped test, not full class acceptance",
       "remaining": "Current pinned 92-package corpus passes; additional source branches/version-specific cases are not covered by corpus",
-      "updated_at_utc": "2026-10-22T15:06:19+00:00",
+      "updated_at_utc": "2026-10-22T15:16:56+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T15:06:19.6815537Z",
+        "at_utc": "2026-10-22T15:16:56.1444119Z",
         "test_sha256": "a43435273ceed564f9cb0de064c3c0cd77d26ec7647bc3bd9f9c9df1a8c6506f",
-        "source_sha256": "829d47c3e4f2ac0d90f2a35feb1edd0abd5e742140a38b4f44bb51b92b63ccf0",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T150618857Z-eab59e0a-PRD-verify-ue1-classic-tagged-properties.php.txt"
+        "source_sha256": "e03918f62ddc8c9bd7dba47d8a5e536d9d5a2437475591d5b9a18192c9a34db0",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T151655345Z-01f53eb0-PRD-verify-ue1-classic-tagged-properties.php.txt"
       }
     },
     {
@@ -4360,14 +4360,14 @@
       "test": "verify-ue1-classic-tagged-properties.php",
       "evidence": "PRD historical PASS at 2026-10-21T16:05:16.3071623Z; catalog\\compliance\\evidence\\o06\\20261021T160515641Z-af18800f-PRD-verify-ue1-classic-tagged-properties.php.txt; scoped test, not full class acceptance",
       "remaining": "Current pinned 92-package corpus passes; additional source branches/version-specific cases are not covered by corpus",
-      "updated_at_utc": "2026-10-22T15:06:19+00:00",
+      "updated_at_utc": "2026-10-22T15:16:56+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T15:06:19.6815537Z",
+        "at_utc": "2026-10-22T15:16:56.1444119Z",
         "test_sha256": "a43435273ceed564f9cb0de064c3c0cd77d26ec7647bc3bd9f9c9df1a8c6506f",
-        "source_sha256": "829d47c3e4f2ac0d90f2a35feb1edd0abd5e742140a38b4f44bb51b92b63ccf0",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T150618857Z-eab59e0a-PRD-verify-ue1-classic-tagged-properties.php.txt"
+        "source_sha256": "e03918f62ddc8c9bd7dba47d8a5e536d9d5a2437475591d5b9a18192c9a34db0",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T151655345Z-01f53eb0-PRD-verify-ue1-classic-tagged-properties.php.txt"
       }
     },
     {
@@ -4427,14 +4427,14 @@
       "test": "verify-ue1-classic-property-native.php",
       "evidence": "Epic v1.200 Core/Src/UnProp.cpp:101-114,208,298,390,460,519,576; UT99 v400 Core/Src/UnProp.cpp:117-134,324,475,673,743,859,954,1099,1282,1491; synthetic UE1 packages v50/v69",
       "remaining": "Source-defined native UProperty LOAD/SAVE and subclass fields decoded, with 32/32 version 50/69 package positive/negative fixtures; genuine property-class corpus, older per-version gates, complete classIndex=0 UClass/UStruct metadata and runtime property linking remain unverified.",
-      "updated_at_utc": "2026-10-22T15:06:20+00:00",
+      "updated_at_utc": "2026-10-22T15:16:56+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T15:06:20.2225849Z",
+        "at_utc": "2026-10-22T15:16:56.6764225Z",
         "test_sha256": "b46f424186bbd2883f6c502d349e1208bd88a64f6f8b0610a7505c7dd6417fba",
-        "source_sha256": "829d47c3e4f2ac0d90f2a35feb1edd0abd5e742140a38b4f44bb51b92b63ccf0",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T150619881Z-19bb7636-PRD-verify-ue1-classic-property-native.php.txt"
+        "source_sha256": "e03918f62ddc8c9bd7dba47d8a5e536d9d5a2437475591d5b9a18192c9a34db0",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T151656331Z-19209421-PRD-verify-ue1-classic-property-native.php.txt"
       }
     },
     {
@@ -4452,14 +4452,14 @@
       "test": "verify-ue1-classic-tagged-properties.php",
       "evidence": "PRD historical PASS at 2026-10-21T16:05:16.3071623Z; catalog\\compliance\\evidence\\o06\\20261021T160515641Z-af18800f-PRD-verify-ue1-classic-tagged-properties.php.txt; scoped test, not full class acceptance",
       "remaining": "Current pinned 92-package corpus passes; additional source branches/version-specific cases are not covered by corpus",
-      "updated_at_utc": "2026-10-22T15:06:19+00:00",
+      "updated_at_utc": "2026-10-22T15:16:56+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T15:06:19.6815537Z",
+        "at_utc": "2026-10-22T15:16:56.1444119Z",
         "test_sha256": "a43435273ceed564f9cb0de064c3c0cd77d26ec7647bc3bd9f9c9df1a8c6506f",
-        "source_sha256": "829d47c3e4f2ac0d90f2a35feb1edd0abd5e742140a38b4f44bb51b92b63ccf0",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T150618857Z-eab59e0a-PRD-verify-ue1-classic-tagged-properties.php.txt"
+        "source_sha256": "e03918f62ddc8c9bd7dba47d8a5e536d9d5a2437475591d5b9a18192c9a34db0",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T151655345Z-01f53eb0-PRD-verify-ue1-classic-tagged-properties.php.txt"
       }
     },
     {
@@ -4473,18 +4473,18 @@
         }
       ],
       "status": "PARTIAL",
-      "reader": "CatalogUE1ClassicStructNativeReader.php (via CatalogUE1ClassicNativeObjectReader.php)",
+      "reader": "CatalogUE1ClassicScriptArchiveReader.php and CatalogUE1ClassicStructNativeReader.php",
       "test": "verify-ue1-classic-struct-native.php",
-      "evidence": "Epic v1.200 Core/Src/UnClass.cpp:236,476,1358,1440; UT99 v400 Core/Src/UnClass.cpp:239,593,712,1342; synthetic v35/v50/v69 source fixtures",
-      "remaining": "UField refs, UStruct source headers (zero-script only), UState masks/flags and UFunction version-gated legacy/native/rep fields decoded. 22/22 source-defined package fixtures PASS. Nonzero SerializeExpr bytecode, genuine matching corpus, runtime field linking and broader source-version gates remain outstanding; not ACCEPTED.",
-      "updated_at_utc": "2026-10-22T14:55:14+00:00",
+      "evidence": "Epic v1.200 Core/Src/UnClass.cpp:1095+ EExprToken Core/Inc/UnScript.h; UT99 v400 Core/Src/UnClass.cpp:1076+ Core/Inc/UnStack.h; scalar/compact FArchive XFER(T) ScriptSize tests.",
+      "remaining": "Epic UStruct::SerializeExpr partial source-typed scalar/no-operand tokens with correct ScriptSize in-memory sizeof(T) vs archive compact FName/UObject refs (class 40/40, struct/state/function 26/26 source fixtures). Unsupported nested function/control-flow expressions, conversions, label tables, class-default schema linking, complete real script package/native oracle and version-family discrimination remain O06, not accepted; VM runtime execution O10.",
+      "updated_at_utc": "2026-10-22T15:16:55+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T14:55:13.9738739Z",
-        "test_sha256": "00b59a9ac1d4e47e6048d27c98213a084f73c10b56299062139a0e430c4f991d",
-        "source_sha256": "9de5130639f170b8802a4ee89919ce08c50ed02f4fa27eee491b0115486c976f",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T145513678Z-361bc100-PRD-verify-ue1-classic-struct-native.php.txt"
+        "at_utc": "2026-10-22T15:16:55.1598756Z",
+        "test_sha256": "8668c940ace5c18663f0257440a7b8b45545b198383f3f76c03c672ba39251d8",
+        "source_sha256": "e03918f62ddc8c9bd7dba47d8a5e536d9d5a2437475591d5b9a18192c9a34db0",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T151654845Z-7066160e-PRD-verify-ue1-classic-struct-native.php.txt"
       }
     },
     {
@@ -4502,14 +4502,14 @@
       "test": "verify-ue1-classic-property-native.php",
       "evidence": "Epic v1.200 Core/Src/UnProp.cpp:101-114,208,298,390,460,519,576; UT99 v400 Core/Src/UnProp.cpp:117-134,324,475,673,743,859,954,1099,1282,1491; synthetic UE1 packages v50/v69",
       "remaining": "Source-defined native UProperty LOAD/SAVE and subclass fields decoded, with 32/32 version 50/69 package positive/negative fixtures; genuine property-class corpus, older per-version gates, complete classIndex=0 UClass/UStruct metadata and runtime property linking remain unverified.",
-      "updated_at_utc": "2026-10-22T15:06:20+00:00",
+      "updated_at_utc": "2026-10-22T15:16:56+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T15:06:20.2225849Z",
+        "at_utc": "2026-10-22T15:16:56.6764225Z",
         "test_sha256": "b46f424186bbd2883f6c502d349e1208bd88a64f6f8b0610a7505c7dd6417fba",
-        "source_sha256": "829d47c3e4f2ac0d90f2a35feb1edd0abd5e742140a38b4f44bb51b92b63ccf0",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T150619881Z-19bb7636-PRD-verify-ue1-classic-property-native.php.txt"
+        "source_sha256": "e03918f62ddc8c9bd7dba47d8a5e536d9d5a2437475591d5b9a18192c9a34db0",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T151656331Z-19209421-PRD-verify-ue1-classic-property-native.php.txt"
       }
     },
     {
@@ -4523,18 +4523,18 @@
         }
       ],
       "status": "PARTIAL",
-      "reader": "CatalogUE1ClassicStructNativeReader.php (via CatalogUE1ClassicNativeObjectReader.php)",
+      "reader": "CatalogUE1ClassicScriptArchiveReader.php and CatalogUE1ClassicStructNativeReader.php",
       "test": "verify-ue1-classic-struct-native.php",
-      "evidence": "Epic v1.200 Core/Src/UnClass.cpp:236,476,1358,1440; UT99 v400 Core/Src/UnClass.cpp:239,593,712,1342; synthetic v35/v50/v69 source fixtures",
-      "remaining": "UField refs, UStruct source headers (zero-script only), UState masks/flags and UFunction version-gated legacy/native/rep fields decoded. 22/22 source-defined package fixtures PASS. Nonzero SerializeExpr bytecode, genuine matching corpus, runtime field linking and broader source-version gates remain outstanding; not ACCEPTED.",
-      "updated_at_utc": "2026-10-22T14:55:14+00:00",
+      "evidence": "Epic v1.200 Core/Src/UnClass.cpp:1095+ EExprToken Core/Inc/UnScript.h; UT99 v400 Core/Src/UnClass.cpp:1076+ Core/Inc/UnStack.h; scalar/compact FArchive XFER(T) ScriptSize tests.",
+      "remaining": "Epic UStruct::SerializeExpr partial source-typed scalar/no-operand tokens with correct ScriptSize in-memory sizeof(T) vs archive compact FName/UObject refs (class 40/40, struct/state/function 26/26 source fixtures). Unsupported nested function/control-flow expressions, conversions, label tables, class-default schema linking, complete real script package/native oracle and version-family discrimination remain O06, not accepted; VM runtime execution O10.",
+      "updated_at_utc": "2026-10-22T15:16:55+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T14:55:13.9738739Z",
-        "test_sha256": "00b59a9ac1d4e47e6048d27c98213a084f73c10b56299062139a0e430c4f991d",
-        "source_sha256": "9de5130639f170b8802a4ee89919ce08c50ed02f4fa27eee491b0115486c976f",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T145513678Z-361bc100-PRD-verify-ue1-classic-struct-native.php.txt"
+        "at_utc": "2026-10-22T15:16:55.1598756Z",
+        "test_sha256": "8668c940ace5c18663f0257440a7b8b45545b198383f3f76c03c672ba39251d8",
+        "source_sha256": "e03918f62ddc8c9bd7dba47d8a5e536d9d5a2437475591d5b9a18192c9a34db0",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T151654845Z-7066160e-PRD-verify-ue1-classic-struct-native.php.txt"
       }
     },
     {
@@ -4552,14 +4552,14 @@
       "test": "verify-ue1-classic-property-native.php",
       "evidence": "Epic v1.200 Core/Src/UnProp.cpp:101-114,208,298,390,460,519,576; UT99 v400 Core/Src/UnProp.cpp:117-134,324,475,673,743,859,954,1099,1282,1491; synthetic UE1 packages v50/v69",
       "remaining": "Source-defined native UProperty LOAD/SAVE and subclass fields decoded, with 32/32 version 50/69 package positive/negative fixtures; genuine property-class corpus, older per-version gates, complete classIndex=0 UClass/UStruct metadata and runtime property linking remain unverified.",
-      "updated_at_utc": "2026-10-22T15:06:20+00:00",
+      "updated_at_utc": "2026-10-22T15:16:56+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T15:06:20.2225849Z",
+        "at_utc": "2026-10-22T15:16:56.6764225Z",
         "test_sha256": "b46f424186bbd2883f6c502d349e1208bd88a64f6f8b0610a7505c7dd6417fba",
-        "source_sha256": "829d47c3e4f2ac0d90f2a35feb1edd0abd5e742140a38b4f44bb51b92b63ccf0",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T150619881Z-19bb7636-PRD-verify-ue1-classic-property-native.php.txt"
+        "source_sha256": "e03918f62ddc8c9bd7dba47d8a5e536d9d5a2437475591d5b9a18192c9a34db0",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T151656331Z-19209421-PRD-verify-ue1-classic-property-native.php.txt"
       }
     },
     {
@@ -4602,14 +4602,14 @@
       "test": "verify-ue1-classic-tagged-properties.php",
       "evidence": "PRD historical PASS at 2026-10-21T16:05:16.3071623Z; catalog\\compliance\\evidence\\o06\\20261021T160515641Z-af18800f-PRD-verify-ue1-classic-tagged-properties.php.txt; scoped test, not full class acceptance",
       "remaining": "Current pinned 92-package corpus passes; additional source branches/version-specific cases are not covered by corpus",
-      "updated_at_utc": "2026-10-22T15:06:19+00:00",
+      "updated_at_utc": "2026-10-22T15:16:56+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T15:06:19.6815537Z",
+        "at_utc": "2026-10-22T15:16:56.1444119Z",
         "test_sha256": "a43435273ceed564f9cb0de064c3c0cd77d26ec7647bc3bd9f9c9df1a8c6506f",
-        "source_sha256": "829d47c3e4f2ac0d90f2a35feb1edd0abd5e742140a38b4f44bb51b92b63ccf0",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T150618857Z-eab59e0a-PRD-verify-ue1-classic-tagged-properties.php.txt"
+        "source_sha256": "e03918f62ddc8c9bd7dba47d8a5e536d9d5a2437475591d5b9a18192c9a34db0",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T151655345Z-01f53eb0-PRD-verify-ue1-classic-tagged-properties.php.txt"
       }
     },
     {
@@ -4763,14 +4763,14 @@
       "test": "verify-ue1-classic-property-native.php",
       "evidence": "Epic v1.200 Core/Src/UnProp.cpp:101-114,208,298,390,460,519,576; UT99 v400 Core/Src/UnProp.cpp:117-134,324,475,673,743,859,954,1099,1282,1491; synthetic UE1 packages v50/v69",
       "remaining": "Source-defined native UProperty LOAD/SAVE and subclass fields decoded, with 32/32 version 50/69 package positive/negative fixtures; genuine property-class corpus, older per-version gates, complete classIndex=0 UClass/UStruct metadata and runtime property linking remain unverified.",
-      "updated_at_utc": "2026-10-22T15:06:20+00:00",
+      "updated_at_utc": "2026-10-22T15:16:56+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T15:06:20.2225849Z",
+        "at_utc": "2026-10-22T15:16:56.6764225Z",
         "test_sha256": "b46f424186bbd2883f6c502d349e1208bd88a64f6f8b0610a7505c7dd6417fba",
-        "source_sha256": "829d47c3e4f2ac0d90f2a35feb1edd0abd5e742140a38b4f44bb51b92b63ccf0",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T150619881Z-19bb7636-PRD-verify-ue1-classic-property-native.php.txt"
+        "source_sha256": "e03918f62ddc8c9bd7dba47d8a5e536d9d5a2437475591d5b9a18192c9a34db0",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T151656331Z-19209421-PRD-verify-ue1-classic-property-native.php.txt"
       }
     },
     {
@@ -4805,14 +4805,14 @@
       "test": "verify-ue1-classic-property-native.php",
       "evidence": "Epic v1.200 Core/Src/UnProp.cpp:101-114,208,298,390,460,519,576; UT99 v400 Core/Src/UnProp.cpp:117-134,324,475,673,743,859,954,1099,1282,1491; synthetic UE1 packages v50/v69",
       "remaining": "Source-defined native UProperty LOAD/SAVE and subclass fields decoded, with 32/32 version 50/69 package positive/negative fixtures; genuine property-class corpus, older per-version gates, complete classIndex=0 UClass/UStruct metadata and runtime property linking remain unverified.",
-      "updated_at_utc": "2026-10-22T15:06:20+00:00",
+      "updated_at_utc": "2026-10-22T15:16:56+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T15:06:20.2225849Z",
+        "at_utc": "2026-10-22T15:16:56.6764225Z",
         "test_sha256": "b46f424186bbd2883f6c502d349e1208bd88a64f6f8b0610a7505c7dd6417fba",
-        "source_sha256": "829d47c3e4f2ac0d90f2a35feb1edd0abd5e742140a38b4f44bb51b92b63ccf0",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T150619881Z-19bb7636-PRD-verify-ue1-classic-property-native.php.txt"
+        "source_sha256": "e03918f62ddc8c9bd7dba47d8a5e536d9d5a2437475591d5b9a18192c9a34db0",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T151656331Z-19209421-PRD-verify-ue1-classic-property-native.php.txt"
       }
     },
     {
@@ -4830,14 +4830,14 @@
       "test": "verify-ue1-classic-property-native.php",
       "evidence": "Epic v1.200 Core/Src/UnProp.cpp:101-114,208,298,390,460,519,576; UT99 v400 Core/Src/UnProp.cpp:117-134,324,475,673,743,859,954,1099,1282,1491; synthetic UE1 packages v50/v69",
       "remaining": "Source-defined native UProperty LOAD/SAVE and subclass fields decoded, with 32/32 version 50/69 package positive/negative fixtures; genuine property-class corpus, older per-version gates, complete classIndex=0 UClass/UStruct metadata and runtime property linking remain unverified.",
-      "updated_at_utc": "2026-10-22T15:06:20+00:00",
+      "updated_at_utc": "2026-10-22T15:16:56+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T15:06:20.2225849Z",
+        "at_utc": "2026-10-22T15:16:56.6764225Z",
         "test_sha256": "b46f424186bbd2883f6c502d349e1208bd88a64f6f8b0610a7505c7dd6417fba",
-        "source_sha256": "829d47c3e4f2ac0d90f2a35feb1edd0abd5e742140a38b4f44bb51b92b63ccf0",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T150619881Z-19bb7636-PRD-verify-ue1-classic-property-native.php.txt"
+        "source_sha256": "e03918f62ddc8c9bd7dba47d8a5e536d9d5a2437475591d5b9a18192c9a34db0",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T151656331Z-19209421-PRD-verify-ue1-classic-property-native.php.txt"
       }
     },
     {
@@ -4851,18 +4851,18 @@
         }
       ],
       "status": "PARTIAL",
-      "reader": "CatalogUE1ClassicClassMetadataReader.php + shared CatalogUE1ClassicTaggedPropertyReader.php::parseTags",
+      "reader": "CatalogUE1ClassicScriptArchiveReader.php and CatalogUE1ClassicClassMetadataReader.php",
       "test": "verify-ue1-classic-class-metadata.php",
-      "evidence": "Epic Unreal v1.200 Core/Src/UnClass.cpp:921+ UClass::Serialize invokes SerializeTaggedProperties; UT99 v400 Core/Src/UnClass.cpp:914+; existing UObject class tag reader shared FPropertyTag source codec. Source-defined v35/v50/v69 31/31 direct checks incl nonempty Int/Bool/FColor/array index defaults, malformed tags and None termination.",
-      "remaining": "UClass classIndex=0 no-script class native fields and now nonempty class default FPropertyTag envelopes decoded with same source codec as UObject tags (31/31 fixture cases). Default value semantics remain schema unverified, script bytecode SerializeExpr nonzero still explicitly unimplemented, flagged StateFrame, genuine class corpus/native oracle, version source-family overlap and class inheritance schema remain unresolved. No claim of full UClass contract.",
-      "updated_at_utc": "2026-10-22T15:06:18+00:00",
+      "evidence": "Epic v1.200 Core/Src/UnClass.cpp:1095+ EExprToken Core/Inc/UnScript.h; UT99 v400 Core/Src/UnClass.cpp:1076+ Core/Inc/UnStack.h; scalar/compact FArchive XFER(T) ScriptSize tests.",
+      "remaining": "Epic UStruct::SerializeExpr partial source-typed scalar/no-operand tokens with correct ScriptSize in-memory sizeof(T) vs archive compact FName/UObject refs (class 40/40, struct/state/function 26/26 source fixtures). Unsupported nested function/control-flow expressions, conversions, label tables, class-default schema linking, complete real script package/native oracle and version-family discrimination remain O06, not accepted; VM runtime execution O10.",
+      "updated_at_utc": "2026-10-22T15:16:54+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T15:06:18.6780001Z",
-        "test_sha256": "d104ed10d9a147c41d3156dee8e590e37fa6e82a3d877fc63ec7c94463ff51c2",
-        "source_sha256": "829d47c3e4f2ac0d90f2a35feb1edd0abd5e742140a38b4f44bb51b92b63ccf0",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T150618234Z-d8b24607-PRD-verify-ue1-classic-class-metadata.php.txt"
+        "at_utc": "2026-10-22T15:16:54.6721209Z",
+        "test_sha256": "b4ca3f0d6f971fab6b4df09c0b5af60e63349c8d05ef9e407ba8400dc3ece8ac",
+        "source_sha256": "e03918f62ddc8c9bd7dba47d8a5e536d9d5a2437475591d5b9a18192c9a34db0",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T151654210Z-1e52dae9-PRD-verify-ue1-classic-class-metadata.php.txt"
       }
     },
     {
@@ -4897,14 +4897,14 @@
       "test": "verify-ue1-classic-property-native.php",
       "evidence": "Epic v1.200 Core/Src/UnProp.cpp:101-114,208,298,390,460,519,576; UT99 v400 Core/Src/UnProp.cpp:117-134,324,475,673,743,859,954,1099,1282,1491; synthetic UE1 packages v50/v69",
       "remaining": "Source-defined native UProperty LOAD/SAVE and subclass fields decoded, with 32/32 version 50/69 package positive/negative fixtures; genuine property-class corpus, older per-version gates, complete classIndex=0 UClass/UStruct metadata and runtime property linking remain unverified.",
-      "updated_at_utc": "2026-10-22T15:06:20+00:00",
+      "updated_at_utc": "2026-10-22T15:16:56+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T15:06:20.2225849Z",
+        "at_utc": "2026-10-22T15:16:56.6764225Z",
         "test_sha256": "b46f424186bbd2883f6c502d349e1208bd88a64f6f8b0610a7505c7dd6417fba",
-        "source_sha256": "829d47c3e4f2ac0d90f2a35feb1edd0abd5e742140a38b4f44bb51b92b63ccf0",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T150619881Z-19bb7636-PRD-verify-ue1-classic-property-native.php.txt"
+        "source_sha256": "e03918f62ddc8c9bd7dba47d8a5e536d9d5a2437475591d5b9a18192c9a34db0",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T151656331Z-19209421-PRD-verify-ue1-classic-property-native.php.txt"
       }
     },
     {
@@ -5057,14 +5057,14 @@
       "test": "verify-ue1-classic-struct-native.php",
       "evidence": "Epic v1.200 Core/Src/UnClass.cpp:236,476,1358,1440; UT99 v400 Core/Src/UnClass.cpp:239,593,712,1342; synthetic v35/v50/v69 source fixtures",
       "remaining": "UField refs, UStruct source headers (zero-script only), UState masks/flags and UFunction version-gated legacy/native/rep fields decoded. 22/22 source-defined package fixtures PASS. Nonzero SerializeExpr bytecode, genuine matching corpus, runtime field linking and broader source-version gates remain outstanding; not ACCEPTED.",
-      "updated_at_utc": "2026-10-22T14:55:14+00:00",
+      "updated_at_utc": "2026-10-22T15:16:55+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T14:55:13.9738739Z",
-        "test_sha256": "00b59a9ac1d4e47e6048d27c98213a084f73c10b56299062139a0e430c4f991d",
-        "source_sha256": "9de5130639f170b8802a4ee89919ce08c50ed02f4fa27eee491b0115486c976f",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T145513678Z-361bc100-PRD-verify-ue1-classic-struct-native.php.txt"
+        "at_utc": "2026-10-22T15:16:55.1598756Z",
+        "test_sha256": "8668c940ace5c18663f0257440a7b8b45545b198383f3f76c03c672ba39251d8",
+        "source_sha256": "e03918f62ddc8c9bd7dba47d8a5e536d9d5a2437475591d5b9a18192c9a34db0",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T151654845Z-7066160e-PRD-verify-ue1-classic-struct-native.php.txt"
       }
     },
     {
@@ -5099,14 +5099,14 @@
       "test": "verify-ue1-classic-property-native.php",
       "evidence": "Epic v1.200 Core/Src/UnProp.cpp:101-114,208,298,390,460,519,576; UT99 v400 Core/Src/UnProp.cpp:117-134,324,475,673,743,859,954,1099,1282,1491; synthetic UE1 packages v50/v69",
       "remaining": "Source-defined native UProperty LOAD/SAVE and subclass fields decoded, with 32/32 version 50/69 package positive/negative fixtures; genuine property-class corpus, older per-version gates, complete classIndex=0 UClass/UStruct metadata and runtime property linking remain unverified.",
-      "updated_at_utc": "2026-10-22T15:06:20+00:00",
+      "updated_at_utc": "2026-10-22T15:16:56+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T15:06:20.2225849Z",
+        "at_utc": "2026-10-22T15:16:56.6764225Z",
         "test_sha256": "b46f424186bbd2883f6c502d349e1208bd88a64f6f8b0610a7505c7dd6417fba",
-        "source_sha256": "829d47c3e4f2ac0d90f2a35feb1edd0abd5e742140a38b4f44bb51b92b63ccf0",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T150619881Z-19bb7636-PRD-verify-ue1-classic-property-native.php.txt"
+        "source_sha256": "e03918f62ddc8c9bd7dba47d8a5e536d9d5a2437475591d5b9a18192c9a34db0",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T151656331Z-19209421-PRD-verify-ue1-classic-property-native.php.txt"
       }
     },
     {
@@ -5124,14 +5124,14 @@
       "test": "verify-ue1-classic-tagged-properties.php",
       "evidence": "PRD historical PASS at 2026-10-21T16:05:16.3071623Z; catalog\\compliance\\evidence\\o06\\20261021T160515641Z-af18800f-PRD-verify-ue1-classic-tagged-properties.php.txt; scoped test, not full class acceptance",
       "remaining": "Current pinned 92-package corpus passes; additional source branches/version-specific cases are not covered by corpus",
-      "updated_at_utc": "2026-10-22T15:06:19+00:00",
+      "updated_at_utc": "2026-10-22T15:16:56+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T15:06:19.6815537Z",
+        "at_utc": "2026-10-22T15:16:56.1444119Z",
         "test_sha256": "a43435273ceed564f9cb0de064c3c0cd77d26ec7647bc3bd9f9c9df1a8c6506f",
-        "source_sha256": "829d47c3e4f2ac0d90f2a35feb1edd0abd5e742140a38b4f44bb51b92b63ccf0",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T150618857Z-eab59e0a-PRD-verify-ue1-classic-tagged-properties.php.txt"
+        "source_sha256": "e03918f62ddc8c9bd7dba47d8a5e536d9d5a2437475591d5b9a18192c9a34db0",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T151655345Z-01f53eb0-PRD-verify-ue1-classic-tagged-properties.php.txt"
       }
     },
     {
@@ -5145,18 +5145,18 @@
         }
       ],
       "status": "PARTIAL",
-      "reader": "CatalogUE1ClassicStructNativeReader.php (via CatalogUE1ClassicNativeObjectReader.php)",
+      "reader": "CatalogUE1ClassicScriptArchiveReader.php and CatalogUE1ClassicStructNativeReader.php",
       "test": "verify-ue1-classic-struct-native.php",
-      "evidence": "Epic v1.200 Core/Src/UnClass.cpp:236,476,1358,1440; UT99 v400 Core/Src/UnClass.cpp:239,593,712,1342; synthetic v35/v50/v69 source fixtures",
-      "remaining": "UField refs, UStruct source headers (zero-script only), UState masks/flags and UFunction version-gated legacy/native/rep fields decoded. 22/22 source-defined package fixtures PASS. Nonzero SerializeExpr bytecode, genuine matching corpus, runtime field linking and broader source-version gates remain outstanding; not ACCEPTED.",
-      "updated_at_utc": "2026-10-22T14:55:14+00:00",
+      "evidence": "Epic v1.200 Core/Src/UnClass.cpp:1095+ EExprToken Core/Inc/UnScript.h; UT99 v400 Core/Src/UnClass.cpp:1076+ Core/Inc/UnStack.h; scalar/compact FArchive XFER(T) ScriptSize tests.",
+      "remaining": "Epic UStruct::SerializeExpr partial source-typed scalar/no-operand tokens with correct ScriptSize in-memory sizeof(T) vs archive compact FName/UObject refs (class 40/40, struct/state/function 26/26 source fixtures). Unsupported nested function/control-flow expressions, conversions, label tables, class-default schema linking, complete real script package/native oracle and version-family discrimination remain O06, not accepted; VM runtime execution O10.",
+      "updated_at_utc": "2026-10-22T15:16:55+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T14:55:13.9738739Z",
-        "test_sha256": "00b59a9ac1d4e47e6048d27c98213a084f73c10b56299062139a0e430c4f991d",
-        "source_sha256": "9de5130639f170b8802a4ee89919ce08c50ed02f4fa27eee491b0115486c976f",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T145513678Z-361bc100-PRD-verify-ue1-classic-struct-native.php.txt"
+        "at_utc": "2026-10-22T15:16:55.1598756Z",
+        "test_sha256": "8668c940ace5c18663f0257440a7b8b45545b198383f3f76c03c672ba39251d8",
+        "source_sha256": "e03918f62ddc8c9bd7dba47d8a5e536d9d5a2437475591d5b9a18192c9a34db0",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T151654845Z-7066160e-PRD-verify-ue1-classic-struct-native.php.txt"
       }
     },
     {
@@ -5292,14 +5292,14 @@
       "test": "verify-ue1-classic-property-native.php",
       "evidence": "Epic v1.200 Core/Src/UnProp.cpp:101-114,208,298,390,460,519,576; UT99 v400 Core/Src/UnProp.cpp:117-134,324,475,673,743,859,954,1099,1282,1491; synthetic UE1 packages v50/v69",
       "remaining": "Source-defined native UProperty LOAD/SAVE and subclass fields decoded, with 32/32 version 50/69 package positive/negative fixtures; genuine property-class corpus, older per-version gates, complete classIndex=0 UClass/UStruct metadata and runtime property linking remain unverified.",
-      "updated_at_utc": "2026-10-22T15:06:20+00:00",
+      "updated_at_utc": "2026-10-22T15:16:56+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T15:06:20.2225849Z",
+        "at_utc": "2026-10-22T15:16:56.6764225Z",
         "test_sha256": "b46f424186bbd2883f6c502d349e1208bd88a64f6f8b0610a7505c7dd6417fba",
-        "source_sha256": "829d47c3e4f2ac0d90f2a35feb1edd0abd5e742140a38b4f44bb51b92b63ccf0",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T150619881Z-19bb7636-PRD-verify-ue1-classic-property-native.php.txt"
+        "source_sha256": "e03918f62ddc8c9bd7dba47d8a5e536d9d5a2437475591d5b9a18192c9a34db0",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T151656331Z-19209421-PRD-verify-ue1-classic-property-native.php.txt"
       }
     },
     {
@@ -5426,14 +5426,14 @@
       "test": "verify-ue1-classic-tagged-properties.php",
       "evidence": "PRD historical PASS at 2026-10-21T16:05:16.3071623Z; catalog\\compliance\\evidence\\o06\\20261021T160515641Z-af18800f-PRD-verify-ue1-classic-tagged-properties.php.txt; scoped test, not full class acceptance",
       "remaining": "Tagged-properties decoder succeeds on pinned corpus; class-defined binary/defaults and complete source gates not covered",
-      "updated_at_utc": "2026-10-22T15:06:19+00:00",
+      "updated_at_utc": "2026-10-22T15:16:56+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T15:06:19.6815537Z",
+        "at_utc": "2026-10-22T15:16:56.1444119Z",
         "test_sha256": "a43435273ceed564f9cb0de064c3c0cd77d26ec7647bc3bd9f9c9df1a8c6506f",
-        "source_sha256": "829d47c3e4f2ac0d90f2a35feb1edd0abd5e742140a38b4f44bb51b92b63ccf0",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T150618857Z-eab59e0a-PRD-verify-ue1-classic-tagged-properties.php.txt"
+        "source_sha256": "e03918f62ddc8c9bd7dba47d8a5e536d9d5a2437475591d5b9a18192c9a34db0",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T151655345Z-01f53eb0-PRD-verify-ue1-classic-tagged-properties.php.txt"
       }
     },
     {
@@ -5451,14 +5451,14 @@
       "test": "verify-ue1-classic-property-native.php",
       "evidence": "Epic v1.200 Core/Src/UnProp.cpp:101-114,208,298,390,460,519,576; UT99 v400 Core/Src/UnProp.cpp:117-134,324,475,673,743,859,954,1099,1282,1491; synthetic UE1 packages v50/v69",
       "remaining": "Source-defined native UProperty LOAD/SAVE and subclass fields decoded, with 32/32 version 50/69 package positive/negative fixtures; genuine property-class corpus, older per-version gates, complete classIndex=0 UClass/UStruct metadata and runtime property linking remain unverified.",
-      "updated_at_utc": "2026-10-22T15:06:20+00:00",
+      "updated_at_utc": "2026-10-22T15:16:56+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T15:06:20.2225849Z",
+        "at_utc": "2026-10-22T15:16:56.6764225Z",
         "test_sha256": "b46f424186bbd2883f6c502d349e1208bd88a64f6f8b0610a7505c7dd6417fba",
-        "source_sha256": "829d47c3e4f2ac0d90f2a35feb1edd0abd5e742140a38b4f44bb51b92b63ccf0",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T150619881Z-19bb7636-PRD-verify-ue1-classic-property-native.php.txt"
+        "source_sha256": "e03918f62ddc8c9bd7dba47d8a5e536d9d5a2437475591d5b9a18192c9a34db0",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T151656331Z-19209421-PRD-verify-ue1-classic-property-native.php.txt"
       }
     },
     {
@@ -5476,14 +5476,14 @@
       "test": "verify-ue1-classic-tagged-properties.php",
       "evidence": "PRD historical PASS at 2026-10-21T16:05:16.3071623Z; catalog\\compliance\\evidence\\o06\\20261021T160515641Z-af18800f-PRD-verify-ue1-classic-tagged-properties.php.txt; scoped test, not full class acceptance",
       "remaining": "Current pinned 92-package corpus passes; additional source branches/version-specific cases are not covered by corpus",
-      "updated_at_utc": "2026-10-22T15:06:19+00:00",
+      "updated_at_utc": "2026-10-22T15:16:56+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T15:06:19.6815537Z",
+        "at_utc": "2026-10-22T15:16:56.1444119Z",
         "test_sha256": "a43435273ceed564f9cb0de064c3c0cd77d26ec7647bc3bd9f9c9df1a8c6506f",
-        "source_sha256": "829d47c3e4f2ac0d90f2a35feb1edd0abd5e742140a38b4f44bb51b92b63ccf0",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T150618857Z-eab59e0a-PRD-verify-ue1-classic-tagged-properties.php.txt"
+        "source_sha256": "e03918f62ddc8c9bd7dba47d8a5e536d9d5a2437475591d5b9a18192c9a34db0",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T151655345Z-01f53eb0-PRD-verify-ue1-classic-tagged-properties.php.txt"
       }
     },
     {
@@ -5518,14 +5518,14 @@
       "test": "verify-ue1-classic-tagged-properties.php",
       "evidence": "PRD historical PASS at 2026-10-21T16:05:16.3071623Z; catalog\\compliance\\evidence\\o06\\20261021T160515641Z-af18800f-PRD-verify-ue1-classic-tagged-properties.php.txt; scoped test, not full class acceptance",
       "remaining": "Current pinned 92-package corpus passes; additional source branches/version-specific cases are not covered by corpus",
-      "updated_at_utc": "2026-10-22T15:06:19+00:00",
+      "updated_at_utc": "2026-10-22T15:16:56+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T15:06:19.6815537Z",
+        "at_utc": "2026-10-22T15:16:56.1444119Z",
         "test_sha256": "a43435273ceed564f9cb0de064c3c0cd77d26ec7647bc3bd9f9c9df1a8c6506f",
-        "source_sha256": "829d47c3e4f2ac0d90f2a35feb1edd0abd5e742140a38b4f44bb51b92b63ccf0",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T150618857Z-eab59e0a-PRD-verify-ue1-classic-tagged-properties.php.txt"
+        "source_sha256": "e03918f62ddc8c9bd7dba47d8a5e536d9d5a2437475591d5b9a18192c9a34db0",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T151655345Z-01f53eb0-PRD-verify-ue1-classic-tagged-properties.php.txt"
       }
     },
     {
@@ -5585,14 +5585,14 @@
       "test": "verify-ue1-classic-property-native.php",
       "evidence": "Epic v1.200 Core/Src/UnProp.cpp:101-114,208,298,390,460,519,576; UT99 v400 Core/Src/UnProp.cpp:117-134,324,475,673,743,859,954,1099,1282,1491; synthetic UE1 packages v50/v69",
       "remaining": "Source-defined native UProperty LOAD/SAVE and subclass fields decoded, with 32/32 version 50/69 package positive/negative fixtures; genuine property-class corpus, older per-version gates, complete classIndex=0 UClass/UStruct metadata and runtime property linking remain unverified.",
-      "updated_at_utc": "2026-10-22T15:06:20+00:00",
+      "updated_at_utc": "2026-10-22T15:16:56+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T15:06:20.2225849Z",
+        "at_utc": "2026-10-22T15:16:56.6764225Z",
         "test_sha256": "b46f424186bbd2883f6c502d349e1208bd88a64f6f8b0610a7505c7dd6417fba",
-        "source_sha256": "829d47c3e4f2ac0d90f2a35feb1edd0abd5e742140a38b4f44bb51b92b63ccf0",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T150619881Z-19bb7636-PRD-verify-ue1-classic-property-native.php.txt"
+        "source_sha256": "e03918f62ddc8c9bd7dba47d8a5e536d9d5a2437475591d5b9a18192c9a34db0",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T151656331Z-19209421-PRD-verify-ue1-classic-property-native.php.txt"
       }
     },
     {
@@ -5610,14 +5610,14 @@
       "test": "verify-ue1-classic-tagged-properties.php",
       "evidence": "PRD historical PASS at 2026-10-21T16:05:16.3071623Z; catalog\\compliance\\evidence\\o06\\20261021T160515641Z-af18800f-PRD-verify-ue1-classic-tagged-properties.php.txt; scoped test, not full class acceptance",
       "remaining": "Current pinned 92-package corpus passes; additional source branches/version-specific cases are not covered by corpus",
-      "updated_at_utc": "2026-10-22T15:06:19+00:00",
+      "updated_at_utc": "2026-10-22T15:16:56+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T15:06:19.6815537Z",
+        "at_utc": "2026-10-22T15:16:56.1444119Z",
         "test_sha256": "a43435273ceed564f9cb0de064c3c0cd77d26ec7647bc3bd9f9c9df1a8c6506f",
-        "source_sha256": "829d47c3e4f2ac0d90f2a35feb1edd0abd5e742140a38b4f44bb51b92b63ccf0",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T150618857Z-eab59e0a-PRD-verify-ue1-classic-tagged-properties.php.txt"
+        "source_sha256": "e03918f62ddc8c9bd7dba47d8a5e536d9d5a2437475591d5b9a18192c9a34db0",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T151655345Z-01f53eb0-PRD-verify-ue1-classic-tagged-properties.php.txt"
       }
     },
     {
@@ -5631,18 +5631,18 @@
         }
       ],
       "status": "PARTIAL",
-      "reader": "CatalogUE1ClassicStructNativeReader.php (via CatalogUE1ClassicNativeObjectReader.php)",
+      "reader": "CatalogUE1ClassicScriptArchiveReader.php and CatalogUE1ClassicStructNativeReader.php",
       "test": "verify-ue1-classic-struct-native.php",
-      "evidence": "Epic v1.200 Core/Src/UnClass.cpp:236,476,1358,1440; UT99 v400 Core/Src/UnClass.cpp:239,593,712,1342; synthetic v35/v50/v69 source fixtures",
-      "remaining": "UField refs, UStruct source headers (zero-script only), UState masks/flags and UFunction version-gated legacy/native/rep fields decoded. 22/22 source-defined package fixtures PASS. Nonzero SerializeExpr bytecode, genuine matching corpus, runtime field linking and broader source-version gates remain outstanding; not ACCEPTED.",
-      "updated_at_utc": "2026-10-22T14:55:14+00:00",
+      "evidence": "Epic v1.200 Core/Src/UnClass.cpp:1095+ EExprToken Core/Inc/UnScript.h; UT99 v400 Core/Src/UnClass.cpp:1076+ Core/Inc/UnStack.h; scalar/compact FArchive XFER(T) ScriptSize tests.",
+      "remaining": "Epic UStruct::SerializeExpr partial source-typed scalar/no-operand tokens with correct ScriptSize in-memory sizeof(T) vs archive compact FName/UObject refs (class 40/40, struct/state/function 26/26 source fixtures). Unsupported nested function/control-flow expressions, conversions, label tables, class-default schema linking, complete real script package/native oracle and version-family discrimination remain O06, not accepted; VM runtime execution O10.",
+      "updated_at_utc": "2026-10-22T15:16:55+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T14:55:13.9738739Z",
-        "test_sha256": "00b59a9ac1d4e47e6048d27c98213a084f73c10b56299062139a0e430c4f991d",
-        "source_sha256": "9de5130639f170b8802a4ee89919ce08c50ed02f4fa27eee491b0115486c976f",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T145513678Z-361bc100-PRD-verify-ue1-classic-struct-native.php.txt"
+        "at_utc": "2026-10-22T15:16:55.1598756Z",
+        "test_sha256": "8668c940ace5c18663f0257440a7b8b45545b198383f3f76c03c672ba39251d8",
+        "source_sha256": "e03918f62ddc8c9bd7dba47d8a5e536d9d5a2437475591d5b9a18192c9a34db0",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T151654845Z-7066160e-PRD-verify-ue1-classic-struct-native.php.txt"
       }
     },
     {
@@ -5660,14 +5660,14 @@
       "test": "verify-ue1-classic-property-native.php",
       "evidence": "Epic v1.200 Core/Src/UnProp.cpp:101-114,208,298,390,460,519,576; UT99 v400 Core/Src/UnProp.cpp:117-134,324,475,673,743,859,954,1099,1282,1491; synthetic UE1 packages v50/v69",
       "remaining": "Source-defined native UProperty LOAD/SAVE and subclass fields decoded, with 32/32 version 50/69 package positive/negative fixtures; genuine property-class corpus, older per-version gates, complete classIndex=0 UClass/UStruct metadata and runtime property linking remain unverified.",
-      "updated_at_utc": "2026-10-22T15:06:20+00:00",
+      "updated_at_utc": "2026-10-22T15:16:56+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T15:06:20.2225849Z",
+        "at_utc": "2026-10-22T15:16:56.6764225Z",
         "test_sha256": "b46f424186bbd2883f6c502d349e1208bd88a64f6f8b0610a7505c7dd6417fba",
-        "source_sha256": "829d47c3e4f2ac0d90f2a35feb1edd0abd5e742140a38b4f44bb51b92b63ccf0",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T150619881Z-19bb7636-PRD-verify-ue1-classic-property-native.php.txt"
+        "source_sha256": "e03918f62ddc8c9bd7dba47d8a5e536d9d5a2437475591d5b9a18192c9a34db0",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T151656331Z-19209421-PRD-verify-ue1-classic-property-native.php.txt"
       }
     },
     {
@@ -5681,18 +5681,18 @@
         }
       ],
       "status": "PARTIAL",
-      "reader": "CatalogUE1ClassicStructNativeReader.php (via CatalogUE1ClassicNativeObjectReader.php)",
+      "reader": "CatalogUE1ClassicScriptArchiveReader.php and CatalogUE1ClassicStructNativeReader.php",
       "test": "verify-ue1-classic-struct-native.php",
-      "evidence": "Epic v1.200 Core/Src/UnClass.cpp:236,476,1358,1440; UT99 v400 Core/Src/UnClass.cpp:239,593,712,1342; synthetic v35/v50/v69 source fixtures",
-      "remaining": "UField refs, UStruct source headers (zero-script only), UState masks/flags and UFunction version-gated legacy/native/rep fields decoded. 22/22 source-defined package fixtures PASS. Nonzero SerializeExpr bytecode, genuine matching corpus, runtime field linking and broader source-version gates remain outstanding; not ACCEPTED.",
-      "updated_at_utc": "2026-10-22T14:55:14+00:00",
+      "evidence": "Epic v1.200 Core/Src/UnClass.cpp:1095+ EExprToken Core/Inc/UnScript.h; UT99 v400 Core/Src/UnClass.cpp:1076+ Core/Inc/UnStack.h; scalar/compact FArchive XFER(T) ScriptSize tests.",
+      "remaining": "Epic UStruct::SerializeExpr partial source-typed scalar/no-operand tokens with correct ScriptSize in-memory sizeof(T) vs archive compact FName/UObject refs (class 40/40, struct/state/function 26/26 source fixtures). Unsupported nested function/control-flow expressions, conversions, label tables, class-default schema linking, complete real script package/native oracle and version-family discrimination remain O06, not accepted; VM runtime execution O10.",
+      "updated_at_utc": "2026-10-22T15:16:55+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T14:55:13.9738739Z",
-        "test_sha256": "00b59a9ac1d4e47e6048d27c98213a084f73c10b56299062139a0e430c4f991d",
-        "source_sha256": "9de5130639f170b8802a4ee89919ce08c50ed02f4fa27eee491b0115486c976f",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T145513678Z-361bc100-PRD-verify-ue1-classic-struct-native.php.txt"
+        "at_utc": "2026-10-22T15:16:55.1598756Z",
+        "test_sha256": "8668c940ace5c18663f0257440a7b8b45545b198383f3f76c03c672ba39251d8",
+        "source_sha256": "e03918f62ddc8c9bd7dba47d8a5e536d9d5a2437475591d5b9a18192c9a34db0",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T151654845Z-7066160e-PRD-verify-ue1-classic-struct-native.php.txt"
       }
     },
     {
@@ -5710,14 +5710,14 @@
       "test": "verify-ue1-classic-property-native.php",
       "evidence": "Epic v1.200 Core/Src/UnProp.cpp:101-114,208,298,390,460,519,576; UT99 v400 Core/Src/UnProp.cpp:117-134,324,475,673,743,859,954,1099,1282,1491; synthetic UE1 packages v50/v69",
       "remaining": "Source-defined native UProperty LOAD/SAVE and subclass fields decoded, with 32/32 version 50/69 package positive/negative fixtures; genuine property-class corpus, older per-version gates, complete classIndex=0 UClass/UStruct metadata and runtime property linking remain unverified.",
-      "updated_at_utc": "2026-10-22T15:06:20+00:00",
+      "updated_at_utc": "2026-10-22T15:16:56+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T15:06:20.2225849Z",
+        "at_utc": "2026-10-22T15:16:56.6764225Z",
         "test_sha256": "b46f424186bbd2883f6c502d349e1208bd88a64f6f8b0610a7505c7dd6417fba",
-        "source_sha256": "829d47c3e4f2ac0d90f2a35feb1edd0abd5e742140a38b4f44bb51b92b63ccf0",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T150619881Z-19bb7636-PRD-verify-ue1-classic-property-native.php.txt"
+        "source_sha256": "e03918f62ddc8c9bd7dba47d8a5e536d9d5a2437475591d5b9a18192c9a34db0",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T151656331Z-19209421-PRD-verify-ue1-classic-property-native.php.txt"
       }
     },
     {
@@ -5760,14 +5760,14 @@
       "test": "verify-ue1-classic-tagged-properties.php",
       "evidence": "PRD historical PASS at 2026-10-21T16:05:16.3071623Z; catalog\\compliance\\evidence\\o06\\20261021T160515641Z-af18800f-PRD-verify-ue1-classic-tagged-properties.php.txt; scoped test, not full class acceptance",
       "remaining": "Current pinned 92-package corpus passes; additional source branches/version-specific cases are not covered by corpus",
-      "updated_at_utc": "2026-10-22T15:06:19+00:00",
+      "updated_at_utc": "2026-10-22T15:16:56+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T15:06:19.6815537Z",
+        "at_utc": "2026-10-22T15:16:56.1444119Z",
         "test_sha256": "a43435273ceed564f9cb0de064c3c0cd77d26ec7647bc3bd9f9c9df1a8c6506f",
-        "source_sha256": "829d47c3e4f2ac0d90f2a35feb1edd0abd5e742140a38b4f44bb51b92b63ccf0",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T150618857Z-eab59e0a-PRD-verify-ue1-classic-tagged-properties.php.txt"
+        "source_sha256": "e03918f62ddc8c9bd7dba47d8a5e536d9d5a2437475591d5b9a18192c9a34db0",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T151655345Z-01f53eb0-PRD-verify-ue1-classic-tagged-properties.php.txt"
       }
     },
     {

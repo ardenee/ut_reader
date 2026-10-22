@@ -118,10 +118,18 @@ final class CatalogUE1ClassicClassMetadataReader
             if($scriptSize<0){throw new RuntimeException('Negative UClass script size');}
             $record['script_size']=$scriptSize;
             if($scriptSize>0){
-                // SerializeExpr archives *tokens*; physical bytes cannot be
-                // skipped using ScriptSize (script VM size != archive span).
-                return array_replace($record,['status'=>'class_script_expr_unimplemented',
-                    'unparsed_bytes'=>$end-$position]);
+                // Epic iCode advances in memory by sizeof(T) for every
+                // XFER(T), whereas the archive uses compact object/name
+                // references. Exact supported token traversal is required.
+                $script=CatalogUE1ClassicScriptArchiveReader::inspect(
+                    $pkg,$version,$scriptSize,$read,$compact,$position);
+                $record['script_archive']=$script;
+                if($script['status']!=='script_archive_expressions_decoded'){
+                    return array_replace($record,[
+                        'status'=>'class_script_expr_unimplemented',
+                        'unparsed_bytes'=>$end-$position,
+                    ]);
+                }
             }
             // UState::Serialize
             $record['probe_mask_hex']=bin2hex($read(8));
@@ -179,7 +187,9 @@ final class CatalogUE1ClassicClassMetadataReader
                 ]);
             }
             return array_replace($record,[
-                'status'=>$position===$end?'class_metadata_no_script_no_defaults_complete'
+                'status'=>$position===$end
+                    ?($scriptSize>0?'class_metadata_supported_script_no_defaults_decoded'
+                        :'class_metadata_no_script_no_defaults_complete')
                     :'class_metadata_has_extension',
                 'script_has_unparsed_expressions'=>false,
                 'defaults_tag_count'=>0,'extension_bytes'=>$end-$position,

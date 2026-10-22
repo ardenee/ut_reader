@@ -71,10 +71,15 @@ final class CatalogUE1ClassicStructNativeReader
         if($scriptSize<0){throw new RuntimeException('Negative UStruct ScriptSize');}
         $record['script_size']=$scriptSize;
         if($scriptSize!==0){
-            return array_replace($record,[
-                'status'=>'native_struct_script_expr_unimplemented',
-                'unparsed_bytes'=>$limit-$position,
-            ]);
+            $script=CatalogUE1ClassicScriptArchiveReader::inspect(
+                $pkg,$version,$scriptSize,$read,$compact,$position);
+            $record['script_archive']=$script;
+            if($script['status']!=='script_archive_expressions_decoded'){
+                return array_replace($record,[
+                    'status'=>'native_struct_script_expr_unimplemented',
+                    'unparsed_bytes'=>$limit-$position,
+                ]);
+            }
         }
         if($kind==='struct'){
             return array_replace($record,[

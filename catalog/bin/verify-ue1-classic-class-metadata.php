@@ -42,7 +42,8 @@ $body=static function(int $ver,array $opt=[])use($compact):string{
           .$compact(0).$compact((int)($opt['children']??0))
           .$compact((int)($opt['friendly']??4))
           .pack('V2',51,22).pack('V',$scriptSize&0xffffffff);
-    if($scriptSize!==0){return $prefix."\x53";}
+    if($scriptSize!==0&&!array_key_exists('scriptBytes',$opt)){return $prefix."\x53";}
+    $prefix.=$opt['scriptBytes']??'';
     $state=str_repeat("\x11",8).str_repeat("\x22",8).pack('vV',12,0x12345678);
     $native=($ver<=61?pack('V',64):'').pack('V',0x0f0f0f0f)
         .pack('V4',1,2,3,4);
@@ -102,7 +103,46 @@ try{
     [$s]=$parse(69,$body(69,['scriptSize'=>1]));
     $check('nonempty_script_never_falsely_complete',
         $s['status']==='class_script_expr_unimplemented'
-        &&$s['script_size']===1&&$s['unparsed_bytes']===1);
+        &&$s['script_size']===1
+        &&$s['script_archive']['unsupported_branch']!==null
+        &&$s['script_archive']['script_memory_decoded']===1);
+    [$op]=$parse(69,$body(69,['scriptSize'=>2,'scriptBytes'=>"\x25\x26"]));
+    $check('v69_token_only_script_then_UClass_tail',
+        $op['status']==='class_metadata_supported_script_no_defaults_decoded'
+        &&$op['script_archive']['script_memory_decoded']===2
+        &&$op['script_archive']['archive_bytes_consumed']===2
+        &&$op['class_flags']===0x0f0f0f0f);
+    [$i]=$parse(69,$body(69,['scriptSize'=>5,'scriptBytes'=>"\x1d".pack('V',1234)]));
+    $check('v69_int_constant_typed_expression',
+        $i['status']==='class_metadata_supported_script_no_defaults_decoded'
+        &&$i['script_archive']['expression_preview'][0]['value']===1234
+        &&$i['script_archive']['script_memory_decoded']===5);
+    [$ref]=$parse(50,$body(50,['scriptSize'=>5,'scriptBytes'=>"\x20".$compact(-1)]));
+    $check('v50_compact_object_script_archive_vs_memory_span',
+        $ref['status']==='class_metadata_supported_script_no_defaults_decoded'
+        &&$ref['script_archive']['script_memory_decoded']===5
+        &&$ref['script_archive']['archive_bytes_consumed']===2
+        &&$ref['script_archive']['expression_preview'][0]['value']===-1
+        &&$ref['old_class_record_size']===64);
+    [$nm]=$parse(69,$body(69,['scriptSize'=>5,'scriptBytes'=>"\x21".$compact(4)]));
+    $check('v69_fname_constant_compact_archive',
+        $nm['script_archive']['expression_preview'][0]['value']['name']==='Friendly'
+        &&$nm['script_archive']['script_memory_decoded']===5
+        &&$nm['script_archive']['archive_bytes_consumed']===2);
+    [$str]=$parse(50,$body(50,['scriptSize'=>4,'scriptBytes'=>"\x1fHi\x00"]));
+    $check('v50_terminated_ansi_script_constant',
+        $str['script_archive']['expression_preview'][0]['value']==='Hi'
+        &&$str['script_archive']['script_memory_decoded']===4);
+    [$jmp]=$parse(69,$body(69,['scriptSize'=>3,'scriptBytes'=>"\x06".pack('v',123)]));
+    $check('v69_jump_word_source_memory_archive',
+        $jmp['script_archive']['expression_preview'][0]['value']===123
+        &&$jmp['script_archive']['archive_bytes_consumed']===3);
+    $check('reject_script_memory_overflow',
+        $bad(69,$body(69,['scriptSize'=>1,'scriptBytes'=>"\x1d".pack('V',2)])));
+    $check('reject_script_bad_object_ref',
+        $bad(69,$body(69,['scriptSize'=>5,'scriptBytes'=>"\x20".$compact(-2)])));
+    $check('reject_script_bad_name_ref',
+        $bad(69,$body(69,['scriptSize'=>5,'scriptBytes'=>"\x21".$compact(200)])));
     $intTag=$compact(7)."\x22".pack('V',1234).$compact(0);
     [$de]=$parse(69,$body(69,['defaultRaw'=>$intTag]));
     $check('class_default_int_tag_decoded_schema_not_fabricated',
